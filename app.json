@@ -10,14 +10,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shimizutechnology.littleisland",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
       "privacyManifests": {
         "NSPrivacyTracking": false,
         "NSPrivacyCollectedDataTypes": []
-      }
+      },
+      "appleTeamId": "4T358A5S74"
     },
     "android": {
       "package": "com.shimizutechnology.littleisland",
@@ -53,6 +54,12 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8147346d-095e-4e2a-88ed-f5711aa74940"
+      }
+    },
+    "owner": "shimizutechnology"
   }
 }
