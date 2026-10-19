@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { AppState, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { Button, C, Copy, Heading, Label } from "../components/ui";
 import { COURSES, CourseId, raceCourse } from "./courses";
 import {
@@ -27,6 +27,9 @@ export const raceTime = (ticks: number) =>
   `${Math.floor(ticks / 3600)}:${((ticks / 60) % 60).toFixed(1).padStart(4, "0")}`;
 /** Parent persists onSave transactionally. Remount after external backup replacement. */
 export function RaceScreen({ session, records = {}, onSave, onExit, active = true }: RaceScreenProps) {
+  const viewport = useWindowDimensions();
+  const shortLandscape = viewport.width > viewport.height && viewport.height < 520;
+  const previousLayout = useRef(shortLandscape);
   const [initial] = useState(() => (session && validRaceSession(session) ? pauseRace(session) : createRaceSession()));
   const current = useRef(initial),
     saveCallback = useRef(onSave),
@@ -62,6 +65,13 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
     },
     [clear, persist]
   );
+  useEffect(() => {
+    if (previousLayout.current !== shortLandscape) {
+      previousLayout.current = shortLandscape;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Suspend held input after an external orientation change.
+      pause("Paused after turning your device. Resume when ready.");
+    }
+  }, [shortLandscape, pause]);
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
       if (state !== "active") pause("Paused while you were away. Resume when you are ready.");
@@ -240,7 +250,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
     player = snapshot.runners[0],
     running = snapshot.status === "running",
     terminal = snapshot.status === "finished" || snapshot.status === "timedout";
-  const sceneHeight = width > 650 ? 260 : 255;
+  const sceneHeight = shortLandscape ? 170 : width > 650 ? 260 : 255;
   const best = records[`${snapshot.course}:${snapshot.mode}`];
   return (
     <View style={s.root}>
@@ -249,7 +259,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
           <Label>
             {snapshot.mode === "race" && snapshot.course !== "training" ? "Race · computer runners" : "Solo practice"}
           </Label>
-          <Heading style={{ fontSize: 26 }}>{course.name}</Heading>
+          <Heading style={{ fontSize: shortLandscape ? 21 : 26 }}>{course.name}</Heading>
         </View>
         <Button
           compact
@@ -289,160 +299,203 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
           Flag {player.checkpoint + 1}/{course.checkpoints.length}
         </Text>
       </View>
-      <View onLayout={(e) => setWidth(Math.max(260, e.nativeEvent.layout.width))}>
-        <RaceScene
-          key={snapshot.id}
-          ref={scene}
-          initial={snapshot}
-          width={width}
-          height={sceneHeight}
-          reducedMotion={true}
-        />
-      </View>
-      <View
-        accessible
-        accessibilityLabel={`Course progress ${Math.round((player.x / course.length) * 100)} percent. ${player.falls} recoveries.`}
-        style={s.progress}
-      >
-        <View style={[s.progressFill, { width: `${Math.max(0, Math.min(100, (player.x / course.length) * 100))}%` }]} />
-      </View>
-      {terminal ? (
-        <View style={s.panel} accessibilityLiveRegion="polite">
-          <Heading style={{ fontSize: 25 }}>
-            {snapshot.status === "finished"
-              ? snapshot.runners.length > 1
-                ? `Finished ${["", "1st", "2nd", "3rd", "4th"][racePlacement(snapshot)]}!`
-                : "You reached the finish!"
-              : "Time for another try"}
-          </Heading>
-          <Copy>
-            {snapshot.status === "finished"
-              ? `${raceTime(player.finishTick!)} · ${player.falls} ${player.falls === 1 ? "recovery" : "recoveries"}. ${best ? `Your best: ${raceTime(best.ticks)}.` : "Your time is saved on this device."}`
-              : "The three-minute race ended. Try Practice to learn the jumps, or race again."}
-          </Copy>
-          {snapshot.runners.length > 1 &&
-            snapshot.runners.map((r) => (
-              <Text key={r.id} style={s.small}>
-                {r.name}:{" "}
-                {r.finishTick !== null
-                  ? raceTime(r.finishTick)
-                  : `still on course (${Math.round((r.x / course.length) * 100)}%)`}
-              </Text>
-            ))}
-          <View style={s.row}>
-            <Button onPress={() => begin(snapshot.course, snapshot.mode)}>Race again</Button>
-            <Button quiet onPress={() => setChoosing(true)}>
-              Choose a course
-            </Button>
+      <View style={shortLandscape ? { flexDirection: "row", gap: 16, alignItems: "flex-start" } : { gap: 12 }}>
+        <View style={shortLandscape ? { flex: 1, gap: 8 } : { gap: 12 }}>
+          <View onLayout={(e) => setWidth(Math.max(260, e.nativeEvent.layout.width))}>
+            <RaceScene
+              key={snapshot.id}
+              ref={scene}
+              initial={snapshot}
+              width={width}
+              height={sceneHeight}
+              reducedMotion={true}
+            />
+          </View>
+          <View
+            accessible
+            accessibilityLabel={`Course progress ${Math.round((player.x / course.length) * 100)} percent. ${player.falls} recoveries.`}
+            style={s.progress}
+          >
+            <View
+              style={[s.progressFill, { width: `${Math.max(0, Math.min(100, (player.x / course.length) * 100))}%` }]}
+            />
           </View>
         </View>
-      ) : (
-        <>
-          {!running && (
-            <View style={s.panel}>
-              <Text accessibilityRole="header" style={s.courseTitle}>
-                {snapshot.status === "ready" ? "At the starting line" : "Paused · your place is saved"}
-              </Text>
+        <View style={shortLandscape ? { width: 260, gap: 8 } : { gap: 12 }}>
+          {terminal ? (
+            <View style={s.panel} accessibilityLiveRegion="polite">
+              <Heading style={{ fontSize: 25 }}>
+                {snapshot.status === "finished"
+                  ? snapshot.runners.length > 1
+                    ? `Finished ${["", "1st", "2nd", "3rd", "4th"][racePlacement(snapshot)]}!`
+                    : "You reached the finish!"
+                  : "Time for another try"}
+              </Heading>
               <Copy>
-                {snapshot.status === "ready"
-                  ? course.lesson
-                  : "Every runner and the timer will continue from this moment. Held controls have been cleared."}
+                {snapshot.status === "finished"
+                  ? `${raceTime(player.finishTick!)} · ${player.falls} ${player.falls === 1 ? "recovery" : "recoveries"}. ${best ? `Your best: ${raceTime(best.ticks)}.` : "Your time is saved on this device."}`
+                  : "The three-minute race ended. Try Practice to learn the jumps, or race again."}
               </Copy>
-              <Button disabled={!active || help} onPress={resume}>
-                {snapshot.status === "ready" ? "Start" : "Resume"}
-              </Button>
+              {snapshot.runners.length > 1 &&
+                snapshot.runners.map((r) => (
+                  <Text key={r.id} style={s.small}>
+                    {r.name}:{" "}
+                    {r.finishTick !== null
+                      ? raceTime(r.finishTick)
+                      : `still on course (${Math.round((r.x / course.length) * 100)}%)`}
+                  </Text>
+                ))}
+              <View style={s.row}>
+                <Button onPress={() => begin(snapshot.course, snapshot.mode)}>Race again</Button>
+                <Button quiet onPress={() => setChoosing(true)}>
+                  Choose a course
+                </Button>
+              </View>
             </View>
+          ) : (
+            <>
+              {!running && (
+                <View style={s.panel}>
+                  <Text accessibilityRole="header" style={s.courseTitle}>
+                    {snapshot.status === "ready" ? "At the starting line" : "Paused · your place is saved"}
+                  </Text>
+                  {!shortLandscape && (
+                    <Copy>
+                      {snapshot.status === "ready"
+                        ? course.lesson
+                        : "Every runner and the timer will continue from this moment. Held controls have been cleared."}
+                    </Copy>
+                  )}
+                  <Button disabled={!active || help} onPress={resume}>
+                    {snapshot.status === "ready" ? "Start" : "Resume"}
+                  </Button>
+                </View>
+              )}
+              {shortLandscape && !running && (
+                <Button
+                  compact
+                  quiet
+                  onPress={() => {
+                    pause();
+                    setChoosing(true);
+                  }}
+                >
+                  Choose a course
+                </Button>
+              )}
+              {(!shortLandscape || running) && (
+                <>
+                  <View style={s.controls}>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Hold to run left"
+                      accessibilityState={{ disabled: !running }}
+                      disabled={!running}
+                      onPressIn={() => {
+                        held.current.left = true;
+                      }}
+                      onPressOut={() => {
+                        held.current.left = false;
+                      }}
+                      style={({ pressed }) => [s.pad, !running && s.disabled, pressed && s.pressed]}
+                    >
+                      <Text style={s.padText}>←</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Hold to run right"
+                      accessibilityState={{ disabled: !running }}
+                      disabled={!running}
+                      onPressIn={() => {
+                        held.current.right = true;
+                      }}
+                      onPressOut={() => {
+                        held.current.right = false;
+                      }}
+                      style={({ pressed }) => [s.pad, !running && s.disabled, pressed && s.pressed]}
+                    >
+                      <Text style={s.padText}>→</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Jump"
+                      accessibilityState={{ disabled: !running }}
+                      disabled={!running}
+                      onPressIn={() => {
+                        jumpFromPressIn.current = true;
+                        held.current.jump = true;
+                      }}
+                      onPress={() => {
+                        if (!jumpFromPressIn.current) held.current.jump = true;
+                        jumpFromPressIn.current = false;
+                      }}
+                      onAccessibilityTap={() => {
+                        held.current.jump = true;
+                      }}
+                      style={({ pressed }) => [s.pad, s.jump, !running && s.disabled, pressed && s.pressed]}
+                    >
+                      <Text style={[s.padText, { color: C.paper, fontSize: 20 }]}>Jump ↑</Text>
+                    </Pressable>
+                  </View>
+                  <View style={s.row}>
+                    <Button compact quiet disabled={!running} onPress={toggleRun}>
+                      {autoRunning ? "Stop running" : "Start running"}
+                    </Button>
+                    <Button
+                      compact
+                      quiet
+                      disabled={!running}
+                      onPress={() => {
+                        held.current.nudge = Math.min(60, held.current.nudge + 18);
+                      }}
+                    >
+                      Take a step
+                    </Button>
+                    {running && (
+                      <Button compact quiet onPress={() => pause()}>
+                        Pause
+                      </Button>
+                    )}
+                    {shortLandscape && (
+                      <Button
+                        compact
+                        quiet
+                        onPress={() => {
+                          pause();
+                          setChoosing(true);
+                        }}
+                        label="Choose a course"
+                      >
+                        Courses
+                      </Button>
+                    )}
+                  </View>
+                </>
+              )}
+              {!shortLandscape && (
+                <Copy style={s.small}>
+                  {message ||
+                    (player.recovery > 0
+                      ? "Back to your flag. Ready to try again!"
+                      : "Hold a direction + tap Jump, or use Start running for one-tap controls.")}
+                </Copy>
+              )}
+              {!shortLandscape && (
+                <Button
+                  compact
+                  quiet
+                  onPress={() => {
+                    pause();
+                    setChoosing(true);
+                  }}
+                >
+                  Choose a course
+                </Button>
+              )}
+            </>
           )}
-          <View style={s.controls}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Hold to run left"
-              accessibilityState={{ disabled: !running }}
-              disabled={!running}
-              onPressIn={() => {
-                held.current.left = true;
-              }}
-              onPressOut={() => {
-                held.current.left = false;
-              }}
-              style={({ pressed }) => [s.pad, !running && s.disabled, pressed && s.pressed]}
-            >
-              <Text style={s.padText}>←</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Hold to run right"
-              accessibilityState={{ disabled: !running }}
-              disabled={!running}
-              onPressIn={() => {
-                held.current.right = true;
-              }}
-              onPressOut={() => {
-                held.current.right = false;
-              }}
-              style={({ pressed }) => [s.pad, !running && s.disabled, pressed && s.pressed]}
-            >
-              <Text style={s.padText}>→</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Jump"
-              accessibilityState={{ disabled: !running }}
-              disabled={!running}
-              onPressIn={() => {
-                jumpFromPressIn.current = true;
-                held.current.jump = true;
-              }}
-              onPress={() => {
-                if (!jumpFromPressIn.current) held.current.jump = true;
-                jumpFromPressIn.current = false;
-              }}
-              onAccessibilityTap={() => {
-                held.current.jump = true;
-              }}
-              style={({ pressed }) => [s.pad, s.jump, !running && s.disabled, pressed && s.pressed]}
-            >
-              <Text style={[s.padText, { color: C.paper, fontSize: 20 }]}>Jump ↑</Text>
-            </Pressable>
-          </View>
-          <View style={s.row}>
-            <Button compact quiet disabled={!running} onPress={toggleRun}>
-              {autoRunning ? "Stop running" : "Start running"}
-            </Button>
-            <Button
-              compact
-              quiet
-              disabled={!running}
-              onPress={() => {
-                held.current.nudge = Math.min(60, held.current.nudge + 18);
-              }}
-            >
-              Take a step
-            </Button>
-            {running && (
-              <Button compact quiet onPress={() => pause()}>
-                Pause
-              </Button>
-            )}
-          </View>
-          <Copy style={s.small}>
-            {message ||
-              (player.recovery > 0
-                ? "Back to your flag. Ready to try again!"
-                : "Hold a direction + tap Jump, or use Start running for one-tap controls.")}
-          </Copy>
-          <Button
-            compact
-            quiet
-            onPress={() => {
-              pause();
-              setChoosing(true);
-            }}
-          >
-            Choose a course
-          </Button>
-        </>
-      )}
+        </View>
+      </View>
       {onExit && (
         <Button
           compact
