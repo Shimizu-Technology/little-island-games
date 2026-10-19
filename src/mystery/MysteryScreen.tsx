@@ -371,6 +371,10 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback 
   const [name, setName] = useState("Player"),
     [pin, setPin] = useState(""),
     [answer, setAnswer] = useState("");
+  const saveCallback = useRef(onSave);
+  React.useLayoutEffect(() => {
+    saveCallback.current = onSave;
+  }, [onSave]);
   const latest = useRef(state),
     controller = useRef<NearbyMystery | null>(null);
   useEffect(() => {
@@ -417,12 +421,12 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback 
       if (previous) {
         const next = soloMysteryTick(previous);
         latest.current = next;
-        onSave(next, previous);
+        saveCallback.current(next, previous);
       }
     }, 1000);
     return () => clearInterval(timer);
     // Revisions are read through latest; recreating the timer after every move would let movement stall the clock.
-  }, [playing, mode, state?.id, state?.result, onSave]);
+  }, [playing, mode, state?.id, state?.result]);
   const view =
     mode === "solo" && state ? mysteryView(state, state.players[0].id) : mode === "nearby" ? remote.view : null;
   const intent = (action: MysteryIntent) => {
@@ -435,7 +439,7 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback 
         const next = applyMysteryIntent(previous, previous.players[0].id, action, previous.revision);
         if (next !== previous) {
           latest.current = next;
-          onSave(next, previous);
+          saveCallback.current(next, previous);
         }
       }
     }
@@ -693,7 +697,7 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback 
             const previous = latest.current;
             const next = createMysterySession(undefined, undefined, role);
             latest.current = next;
-            onSave(next, previous);
+            saveCallback.current(next, previous);
             closeOverlays();
             setMode("solo");
           }}
