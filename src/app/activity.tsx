@@ -35,7 +35,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
   const store = useStore(),
     focused = useIsFocused(),
     { width } = useWindowDimensions();
-  const epoch = useRef(store.epoch).current;
+  const [epoch] = useState(store.epoch);
   const expectedId = useRef(store.save.activities?.[id]?.id ?? null);
   const saved = store.save.activities?.[id];
   const [freshCard] = useState(() =>
@@ -59,7 +59,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
     return accepted;
   };
   const cards = saved?.game === "go-fish" || saved?.game === "crazy-eights" ? saved : freshCard;
-  // An unpersisted initial deck is committed by the first accepted action.
+  // The first action can race the initial-deal effect, so both use the same missing-save guard.
   const cardChange = (next: CardSession, previous: CardSession) =>
     save(next, expectedId.current === null ? undefined : previous);
   return (

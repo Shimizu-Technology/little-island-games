@@ -54,7 +54,6 @@ function ExploreReady() {
     return () => sub.remove();
   }, [stop]);
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- External sound/route suspension.
     if (!focused || !store.save.settings.sound || status.didJustFinish) stop();
   }, [focused, store.save.settings.sound, status.didJustFinish, stop]);
   return (
