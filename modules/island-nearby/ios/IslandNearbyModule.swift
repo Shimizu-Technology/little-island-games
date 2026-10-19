@@ -49,7 +49,8 @@ private final class FamilyTransport: NSObject, MCSessionDelegate, MCNearbyServic
   private var peers: [String: MCPeerID] = [:]
   private var rooms: [String: String] = [:]
   private var invitations: [String: (Bool, MCSession?) -> Void] = [:]
-  private var invitationDates: [String: Date] = [:]
+  private var invitationTokens: [String: UUID] = [:]
+  private var joinAttempt = UUID()
   private var hosting = false
   private var room = "", pin = ""
   private var hostPeer: MCPeerID?
@@ -57,7 +58,8 @@ private final class FamilyTransport: NSObject, MCSessionDelegate, MCNearbyServic
   private var attemptTimes: [Date] = []
   private let emit: ([String: Any]) -> Void
   init(name: String, emit: @escaping ([String: Any]) -> Void) throws {
-    guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.count <= 20 else { throw FamilyError("Choose a name of 1–20 characters.") }
+    guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.count <= 20, name.utf8.count <= 63,
+      name.unicodeScalars.allSatisfy({ !CharacterSet.controlCharacters.contains($0) }) else { throw FamilyError("Choose a short name without control characters (at most 63 UTF-8 bytes).") }
     self.me = MCPeerID(displayName: name); self.emit = emit
     super.init()
     session = MCSession(peer: me, securityIdentity: nil, encryptionPreference: .required)
@@ -88,16 +90,17 @@ private final class FamilyTransport: NSObject, MCSessionDelegate, MCNearbyServic
   func join(peer: String, room: String, pin: String) throws {
     guard !hosting, session.connectedPeers.isEmpty, hostPeer == nil, let target = peers[peer], rooms[peer] == room, validPin(pin) else { throw FamilyError("Choose a discovered family room and its six-digit PIN.") }
     let data = try JSONSerialization.data(withJSONObject: ["v": 1, "room": room, "pin": pin])
+    let attempt = UUID(); joinAttempt = attempt
     self.room = room; hostPeer = target
     browser?.invitePeer(target, to: session, withContext: data, timeout: 25)
     publish(["type": "status", "status": "waiting", "message": "Waiting for the parent to approve this device."])
     DispatchQueue.main.asyncAfter(deadline: .now() + 28) { [weak self] in
-      guard let self, !self.closed, self.session.connectedPeers.isEmpty else { return }
+      guard let self, !self.closed, self.joinAttempt == attempt, self.hostPeer == target, !self.session.connectedPeers.contains(target) else { return }
       self.hostPeer = nil; self.publish(["type": "status", "status": "join-failed", "message": "Join was not accepted. Check the PIN, parent approval and Local Network permission, then try again."])
     }
   }
   func approve(peer: String, approved: Bool) {
-    guard let handler = invitations.removeValue(forKey: peer) else { return }; invitationDates.removeValue(forKey: peer)
+    guard let handler = invitations.removeValue(forKey: peer) else { return }; invitationTokens.removeValue(forKey: peer)
     handler(approved && session.connectedPeers.count < 7, approved ? session : nil)
   }
   func send(peer: String, payload: String) throws {
@@ -110,7 +113,7 @@ private final class FamilyTransport: NSObject, MCSessionDelegate, MCNearbyServic
   func close() {
     guard !closed else { return }; closed = true
     advertiser?.stopAdvertisingPeer(); browser?.stopBrowsingForPeers()
-    invitations.values.forEach { $0(false, nil) }; invitations.removeAll(); invitationDates.removeAll()
+    invitations.values.forEach { $0(false, nil) }; invitations.removeAll(); invitationTokens.removeAll(); joinAttempt = UUID()
     session?.disconnect(); session?.delegate = nil; advertiser?.delegate = nil; browser?.delegate = nil
     NotificationCenter.default.removeObserver(self)
   }
@@ -127,9 +130,13 @@ private final class FamilyTransport: NSObject, MCSessionDelegate, MCNearbyServic
         data["room"] as? String == self.room, let supplied = data["pin"] as? String, self.matchesPin(supplied) else { invitationHandler(false, nil); return }
       let id = self.handle(peerID)
       guard self.invitations[id] == nil else { invitationHandler(false, nil); return }
-      self.invitations[id] = invitationHandler; self.invitationDates[id] = Date()
+      let invitation = UUID()
+      self.invitations[id] = invitationHandler; self.invitationTokens[id] = invitation
       self.publish(["type": "invitation", "peer": id, "name": String(peerID.displayName.prefix(20))])
-      DispatchQueue.main.asyncAfter(deadline: .now() + 22) { [weak self] in self?.approve(peer: id, approved: false) }
+      DispatchQueue.main.asyncAfter(deadline: .now() + 22) { [weak self] in
+        guard let self, self.invitationTokens[id] == invitation else { return }
+        self.approve(peer: id, approved: false)
+      }
     }
   }
   func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
