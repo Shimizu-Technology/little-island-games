@@ -155,3 +155,20 @@ describe("Island race physics, courses and truthful results", () => {
     expect(validRaceRecord({ ...raceRecord(autopilot("training")), entrants: 99 })).toBe(false);
   });
 });
+
+it("can pause, validate and resume every airborne finish-line crossing", () => {
+  for (const course of COURSES) {
+    let s = startRace(createRaceSession(course.id, "practice"));
+    const ground = course.platforms.find((p) => p.from <= course.length && p.to >= course.length)!;
+    s = { ...s, runners: [{ ...s.runners[0], x: course.length - 0.5, y: ground.y, vx: 4.8, grounded: true }] };
+    s = stepRace(s, { direction: 1, jump: true });
+    for (let i = 0; i < 90 && s.status === "running"; i++) {
+      expect(validRaceSession(s)).toBe(true);
+      const paused = pauseRace(s);
+      expect(validRaceSession(paused)).toBe(true);
+      s = stepRace(startRace(paused), { direction: 1 });
+    }
+    expect(s.status).toBe("finished");
+    expect(validRaceSession(s)).toBe(true);
+  }
+});

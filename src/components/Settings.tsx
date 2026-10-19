@@ -50,7 +50,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
         Checkers move markers · {store.save.settings.help ? "On" : "Off"}
       </Button>
       <Copy>
-        All games work offline. Saves stay on this device. There are no accounts, ads, trackers, or in-app purchases.
+        Games and Explore work without internet. Nearby family rooms use a local connection between approved devices. Saves stay on this device. There are no accounts, ads, trackers, or in-app purchases.
       </Copy>
       <View style={{ height: 1, backgroundColor: "#DBE3DA" }} />
       <Heading style={{ fontSize: 19 }}>For grown-ups</Heading>
@@ -76,7 +76,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
         <>
           <Copy>
             A backup lets you move progress to another device. Deleting the app can remove its local saves. Keep backups
-            in a private place; a family secret word may be included.
+            in a private place; family names and secret game roles may be included. Nearby room credentials are never backed up.
           </Copy>
           <Button
             quiet
@@ -107,7 +107,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
             </>
           )}
           <Copy>
-            Family preview · Version 1.0.0. Public release and physical-device acceptance are separate milestones.
+            Family preview · Version 1.1.0. Public release and physical-device acceptance are separate milestones.
           </Copy>
         </>
       )}

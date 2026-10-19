@@ -6,7 +6,13 @@ import { Save, emptySave, parseSave } from "./validation";
 import { preserveAndReplace } from "./replacement";
 import { applySessionAction } from "./sessionAction";
 import { recordWordRound } from "./wordRecords";
+import { ActivityId, ActivitySession } from "./activities";
+import { ActivityExpected, applyActivitySave } from "./activityAction";
+import { topicById } from "../explore/content";
 type Store = {
+  epoch: number;
+  activityUpdate: (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => boolean;
+  toggleFavorite: (topic: string) => void;
   save: Save;
   ready: boolean;
   error: string | null;
@@ -26,6 +32,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [error, setError] = useState<string | null>(null),
     [recovery, setRecovery] = useState<string | null>(null),
     [raw, setRaw] = useState<string | null>(null);
+  const [epoch, setEpoch] = useState(0);
+  const generation = useRef(0);
   const latest = useRef(save),
     queue = useRef(Promise.resolve()),
     mounted = useRef(true),
@@ -49,6 +57,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const encoded = await storage.get();
       setRaw(encoded);
       const next = encoded ? parseSave(encoded) : emptySave();
+      generation.current += 1;
+      setEpoch(generation.current);
       latest.current = next;
       setSave(next);
       setRecovery(null);
@@ -94,7 +104,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     (game: GameId, next: GameState, expected?: GameState) => {
       const current = latest.current;
       if (expected && current.sessions[game] !== expected) return;
-      commit({ ...current, sessions: { ...current.sessions, [game]: next }, recent: game });
+      commit({ ...current, sessions: { ...current.sessions, [game]: next }, recent: game, recentActivity: null });
     },
     [commit]
   );
@@ -102,6 +112,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     (game: GameId, roundId: string, transition: (current: GameState) => GameState) => {
       const next = applySessionAction(latest.current, game, roundId, transition);
       if (next !== latest.current) commit(next);
+    },
+    [commit]
+  );
+  const activityUpdate = useCallback(
+    (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => {
+      if (restoring.current) return false;
+      const updated = applyActivitySave(latest.current, game, next, expected, generation.current);
+      if (updated === latest.current) return false;
+      commit(updated);
+      return true;
+    },
+    [commit]
+  );
+  const toggleFavorite = useCallback(
+    (topic: string) => {
+      if (!topicById(topic)) return;
+      const favorites = latest.current.explore?.favorites ?? [];
+      commit({
+        ...latest.current,
+        explore: {
+          favorites: favorites.includes(topic) ? favorites.filter((id) => id !== topic) : [...favorites, topic],
+        },
+      });
     },
     [commit]
   );
@@ -118,6 +151,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       try {
         await queue.current;
         await preserveAndReplace(storage, JSON.stringify(next), recovery ? null : JSON.stringify(latest.current));
+        generation.current += 1;
+        setEpoch(generation.current);
         latest.current = next;
         setSave(next);
         setRaw(JSON.stringify(next));
@@ -137,6 +172,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     <Context.Provider
       value={{
         save,
+        epoch,
+        activityUpdate,
+        toggleFavorite,
         ready,
         error,
         recovery,

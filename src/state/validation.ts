@@ -3,6 +3,9 @@ import { checkersResult } from "../games/checkers";
 import { ticOutcome, lines } from "../games/tic";
 import { memorySymbols } from "../games/memory";
 import { WordRecords, validWordRecords } from "./wordRecords";
+import { Activities, ActivityId, activityIds, validActivities, validActivityRecords } from "./activities";
+import type { RaceRecords } from "../racer/engine";
+import { normalizeExploreFavorites, topicById } from "../explore/content";
 export type Settings = { sound: boolean; help: boolean };
 export type Save = {
   version: 1;
@@ -10,6 +13,10 @@ export type Save = {
   sessions: Partial<Record<GameId, GameState>>;
   recent: GameId | null;
   wordRecords?: WordRecords;
+  activities?: Activities;
+  recentActivity?: ActivityId | null;
+  raceRecords?: RaceRecords;
+  explore?: { favorites: string[] };
 };
 export const emptySave = (): Save => ({
   version: 1,
@@ -276,7 +283,18 @@ export function parseSave(raw: string): Save {
     Object.keys(v.sessions).some((k) => !gameIds.includes(k as GameId)) ||
     !Object.entries(v.sessions).every(([k, s]) => validSession(s) && s.game === k) ||
     (v.recent !== null && !gameIds.includes(v.recent as GameId)) ||
-    (v.wordRecords !== undefined && !validWordRecords(v.wordRecords))
+    (v.wordRecords !== undefined && !validWordRecords(v.wordRecords)) ||
+    (v.activities !== undefined && !validActivities(v.activities)) ||
+    (v.recentActivity !== undefined &&
+      v.recentActivity !== null &&
+      !activityIds.includes(v.recentActivity as ActivityId)) ||
+    (v.raceRecords !== undefined && !validActivityRecords(v.raceRecords)) ||
+    (v.explore !== undefined &&
+      (!obj(v.explore) ||
+        !Array.isArray(v.explore.favorites) ||
+        v.explore.favorites.length > 50 ||
+        !v.explore.favorites.every((id: unknown) => typeof id === "string" && !!topicById(id)) ||
+        normalizeExploreFavorites(v.explore.favorites).length !== v.explore.favorites.length))
   )
     throw new Error("Some saved game data is invalid. Your original has been kept.");
   return v as unknown as Save;

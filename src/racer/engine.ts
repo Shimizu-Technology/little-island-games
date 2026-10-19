@@ -152,7 +152,7 @@ function moveRunner(r: Runner, input: RaceInput, course: Course, tick: number): 
   const vx = r.vx + Math.max(-30 * dt, Math.min(30 * dt, target - r.vx));
   let vy = jumping ? JUMP : r.vy;
   vy -= GRAVITY * dt;
-  let x = Math.max(-1, r.x + (vx + (grounded && !jumping ? (support?.belt ?? 0) : 0)) * dt),
+  let x = Math.min(course.length, Math.max(-1, r.x + (vx + (grounded && !jumping ? (support?.belt ?? 0) : 0)) * dt)),
     y = r.y + vy * dt,
     landed = false;
   // A platform can be landed on only from above; its solid side cannot be walked through.
