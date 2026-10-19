@@ -5,7 +5,7 @@ import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { GameId, GameState, Options, createGame, difficultyLabel, gameIds, games, isFinished } from "../games";
 import { defaultOptions } from "../games/types";
 import { positionKey } from "../games/checkers";
-import { createWord, customWord, WORDS } from "../games/words";
+import { createWord, customWord, guessLetter, wordHint, WORDS } from "../games/words";
 import { useStore } from "../state/Store";
 import { Button, C, Chip, Copy, Heading, Label, Sheet, styles } from "../components/ui";
 import { useSounds } from "../components/Audio";
@@ -137,7 +137,19 @@ function Game({ id }: { id: GameId }) {
         {s?.game === "tic-tac-toe" ? (
           <TicBoard key={`${s.id}:${s.history.length}`} {...boardProps} state={s} commit={commit} />
         ) : s?.game === "word-rescue" ? (
-          <WordBoard {...boardProps} state={s} commit={commit} />
+          <WordBoard
+            {...boardProps}
+            state={s}
+            commit={commit}
+            guess={(letter) =>
+              store.act(id, s.id, (current) =>
+                current.game === "word-rescue" ? guessLetter(current, letter) : current
+              )
+            }
+            reveal={() =>
+              store.act(id, s.id, (current) => (current.game === "word-rescue" ? wordHint(current) : current))
+            }
+          />
         ) : s?.game === "memory" ? (
           <MemoryBoard
             key={`${s.id}:${s.turns}:${s.open.join()}:${s.matched.length}`}

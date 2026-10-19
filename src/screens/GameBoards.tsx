@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { GameState } from "../games";
 import { TicState, ticChoice, ticMove, ticOutcome, ticTurn, ticUndo, lines } from "../games/tic";
-import { WordState, guessLetter, wordDone, wordHint } from "../games/words";
+import { WordState, wordDone } from "../games/words";
 import { MemoryState, closeMismatch, flipCard, memoryDone } from "../games/memory";
 import {
   CheckersState,
@@ -158,7 +158,13 @@ export function TicBoard({ state: s, commit, width, sound, active }: Props<TicSt
     </>
   );
 }
-export function WordBoard({ state: s, commit, width, sound }: Props<WordState>) {
+export function WordBoard({
+  state: s,
+  width,
+  sound,
+  guess,
+  reveal,
+}: Props<WordState> & { guess: (letter: string) => void; reveal: () => void }) {
   const { fontScale } = useWindowDimensions();
   const done = wordDone(s),
     letters = [...new Set(s.word)],
@@ -221,7 +227,15 @@ export function WordBoard({ state: s, commit, width, sound }: Props<WordState>) 
               justifyContent: "center",
             }}
           >
-            <Text style={{ fontSize: 26, fontWeight: "800", color: C.ink }}>{s.guessed.includes(l) ? l : ""}</Text>
+            {s.guessed.includes(l) && (
+              <Text
+                key={`${s.id}:${i}:${l}`}
+                accessible={false}
+                style={{ width: "100%", textAlign: "center", fontSize: 26, fontWeight: "800", color: C.ink }}
+              >
+                {l}
+              </Text>
+            )}
           </View>
         ))}
       </View>
@@ -245,7 +259,7 @@ export function WordBoard({ state: s, commit, width, sound }: Props<WordState>) 
               label={`Letter ${l}${used ? (correct ? ", found in word" : ", already tried") : ""}`}
               disabled={used || done}
               onPress={() => {
-                commit(guessLetter(s, l));
+                guess(l);
                 sound(s.word.includes(l) ? "match" : "tap");
               }}
               style={{
@@ -287,7 +301,7 @@ export function WordBoard({ state: s, commit, width, sound }: Props<WordState>) 
             quiet
             disabled={done}
             onPress={() => {
-              commit(wordHint(s));
+              reveal();
               sound("match");
             }}
           >

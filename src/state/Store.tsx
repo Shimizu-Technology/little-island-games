@@ -4,6 +4,7 @@ import { GameId, GameState } from "../games";
 import { storage } from "./storage";
 import { Save, emptySave, parseSave } from "./validation";
 import { preserveAndReplace } from "./replacement";
+import { applySessionAction } from "./sessionAction";
 type Store = {
   save: Save;
   ready: boolean;
@@ -11,6 +12,7 @@ type Store = {
   recovery: string | null;
   raw: string | null;
   update: (game: GameId, next: GameState, expected?: GameState) => void;
+  act: (game: GameId, roundId: string, transition: (current: GameState) => GameState) => void;
   settings: (next: Partial<Save["settings"]>) => void;
   restore: (raw: string) => Promise<void>;
   retry: () => Promise<void>;
@@ -87,6 +89,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     [commit]
   );
+  const act = useCallback(
+    (game: GameId, roundId: string, transition: (current: GameState) => GameState) => {
+      const next = applySessionAction(latest.current, game, roundId, transition);
+      if (next !== latest.current) commit(next);
+    },
+    [commit]
+  );
   const settings = useCallback(
     (next: Partial<Save["settings"]>) =>
       commit({ ...latest.current, settings: { ...latest.current.settings, ...next } }),
@@ -124,6 +133,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         recovery,
         raw,
         update,
+        act,
         settings,
         restore,
         retry: recovery ? load : () => persist(latest.current),
