@@ -204,3 +204,127 @@ describe("nearby controller operation ownership", () => {
     expect(fake.listeners.size).toBe(0);
   });
 });
+
+describe("nearby invitation recovery", () => {
+  const room = "11111111-1111-4111-8111-111111111111";
+  const secret = "22222222-2222-4222-8222-222222222222";
+  const welcome = (peer: string) =>
+    emit({
+      type: "data",
+      peer,
+      payload: JSON.stringify({ v: 1, room, type: "welcome", seq: 1, playerId: "p1", resume: secret }),
+    });
+  const discovered = () => emit({ type: "found", peer: "parent", room, name: "Parent" });
+
+  it("an initial disconnect keeps the discovered room retryable without inventing a seat", async () => {
+    const { c, last } = connection();
+    await c.browse("Guest Two");
+    discovered();
+    await c.join("parent", room, "123456");
+    emit({ type: "disconnected", peer: "parent" });
+    expect(last()).toMatchObject({
+      mode: "client", error: true, playerId: null, lobby: null, view: null, canRejoin: false,
+      rooms: [{ peer: "parent", room, name: "Parent" }],
+    });
+    expect(last().message).toContain("Could not join this room yet");
+    expect(last().message).not.toContain("host disconnected");
+    await c.join("parent", room, "654321");
+    emit({ type: "connected", peer: "parent" });
+    await flush();
+    expect(fake.native.join).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(fake.native.send.mock.calls.at(-1)![1])).toMatchObject({ name: "Guest Two", resume: null });
+    welcome("parent");
+    expect(last()).toMatchObject({ error: false, playerId: "p1", canRejoin: true });
+  });
+
+  it.each(["timeout-first", "disconnect-first"])("%s has one truthful retry outcome", async (order) => {
+    const { c, last } = connection();
+    await c.browse("Guest");
+    discovered();
+    await c.join("parent", room, "123456");
+    const timeout = { type: "status", status: "join-failed", message: "Native timeout" };
+    const disconnect = { type: "disconnected", peer: "parent" };
+    emit(order === "timeout-first" ? timeout : disconnect);
+    const failure = last();
+    emit(order === "timeout-first" ? disconnect : timeout);
+    expect(last()).toEqual(failure);
+    expect(last().mode).toBe("client");
+    expect(last().message).toContain("Could not join this room yet");
+    await c.join("parent", room, "123456");
+    expect(fake.native.join).toHaveBeenCalledTimes(2);
+  });
+
+  it("transport connection without a welcome is still an unfinished join", async () => {
+    const { c, last } = connection();
+    await c.browse("Guest");
+    await c.join("parent", room, "123456");
+    emit({ type: "connected", peer: "parent" });
+    await flush();
+    emit({ type: "disconnected", peer: "parent" });
+    expect(last()).toMatchObject({ mode: "client", canRejoin: false, playerId: null });
+    expect(last().message).toContain("Could not join this room yet");
+  });
+
+  it("a late timeout cannot replace a successfully welcomed seat", async () => {
+    const { c, last } = connection();
+    await c.browse("Guest");
+    await c.join("parent", room, "123456");
+    welcome("parent");
+    const approved = last();
+    emit({ type: "status", status: "join-failed", message: "Late failure" });
+    expect(last()).toEqual(approved);
+    expect(last().message).toBe("Approved. Waiting for the parent to start.");
+  });
+
+  it("established host loss retains the seat and its existing recovery semantics", async () => {
+    const { c, last } = connection();
+    await c.browse("Guest");
+    await c.join("parent", room, "123456");
+    welcome("parent");
+    emit({ type: "disconnected", peer: "parent" });
+    expect(last()).toMatchObject({ mode: "idle", error: true, lobby: null, view: null, canRejoin: true });
+    expect(last().message).toContain("The host disconnected");
+    await c.browse("Guest", true);
+    await c.join("new-parent", room, "123456");
+    emit({ type: "connected", peer: "new-parent" });
+    await flush();
+    expect(JSON.parse(fake.native.send.mock.calls.at(-1)![1]).resume).toBe(secret);
+  });
+
+  it("a failed rejoin is distinct from new host loss and preserves the older seat credential", async () => {
+    const { c, last } = connection();
+    await c.browse("Guest");
+    await c.join("parent", room, "123456");
+    welcome("parent");
+    await c.pause();
+    await c.browse("Guest", true);
+    await c.join("new-parent", room, "123456");
+    emit({ type: "disconnected", peer: "new-parent" });
+    expect(last()).toMatchObject({ mode: "client", canRejoin: true, playerId: null });
+    expect(last().message).toContain("Could not rejoin this room yet");
+    await c.join("new-parent", room, "123456");
+    emit({ type: "connected", peer: "new-parent" });
+    await flush();
+    expect(JSON.parse(fake.native.send.mock.calls.at(-1)![1]).resume).toBe(secret);
+    await c.leave();
+    await c.browse("Guest", true);
+    await c.join("parent", room, "123456");
+    emit({ type: "connected", peer: "parent" });
+    await flush();
+    expect(JSON.parse(fake.native.send.mock.calls.at(-1)![1]).resume).toBeNull();
+  });
+
+  it("a stale attempt listener cannot overwrite the replacement seat", async () => {
+    const { c, last } = connection();
+    await c.browse("Guest");
+    await c.join("parent", room, "123456");
+    const oldListener = [...fake.listeners][0];
+    emit({ type: "disconnected", peer: "parent" });
+    await c.join("parent", room, "123456");
+    welcome("parent");
+    const approved = last();
+    oldListener({ type: "status", status: "join-failed", message: "Stale timeout" });
+    oldListener({ type: "disconnected", peer: "parent" });
+    expect(last()).toEqual(approved);
+  });
+});

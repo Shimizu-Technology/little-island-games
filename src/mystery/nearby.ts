@@ -41,6 +41,7 @@ export class NearbyMystery {
   private operations: Promise<void> = Promise.resolve();
   private changing = false;
   private joining = false;
+  private joined = false;
   private timer: ReturnType<typeof setInterval> | null = null;
   constructor(private changed: (state: NearbyState) => void) {}
   private update(patch: Partial<NearbyState>) {
@@ -88,6 +89,7 @@ export class NearbyMystery {
     this.host = null;
     this.hostPeer = null;
     this.joining = false;
+    this.joined = false;
     this.subscription?.remove();
     this.subscription = null;
     this.room = "";
@@ -187,6 +189,7 @@ export class NearbyMystery {
       if (this.savedSeat?.room !== room) this.savedSeat = null;
       this.room = room;
       this.hostPeer = peer;
+      this.joined = false;
       this.sequence = 1;
       this.received = 0;
       this.listen(generation);
@@ -235,6 +238,10 @@ export class NearbyMystery {
     if (e.type === "status") {
       if (e.status === "background") {
         await this.pause();
+      } else if (e.status === "join-failed") {
+        // A transport timeout does not prove the parent received the invitation,
+        // nor that this attempt ever owned a seat. Late failure cannot undo welcome.
+        if (this.state.mode === "client" && !this.joined) this.joinFailed();
       } else {
         if (["error", "join-failed"].includes(e.status)) this.joining = false;
         this.update({ message: e.message, error: ["error", "join-failed"].includes(e.status) });
@@ -269,6 +276,10 @@ export class NearbyMystery {
         this.sync();
         await this.send(this.host.snapshots());
       } else if (e.peer === this.hostPeer) {
+        if (!this.joined) {
+          this.joinFailed();
+          return;
+        }
         this.hostPeer = null;
         this.joining = false;
         this.update({
@@ -292,6 +303,7 @@ export class NearbyMystery {
         this.received = p.seq;
         if (p.type === "welcome") {
           this.joining = false;
+          this.joined = true;
           this.savedSeat = { room: this.room, token: p.resume };
           this.update({
             playerId: p.playerId,
@@ -307,6 +319,21 @@ export class NearbyMystery {
         }
       }
     }
+  }
+  private joinFailed() {
+    this.hostPeer = null;
+    this.joining = false;
+    this.update({
+      mode: "client",
+      view: null,
+      lobby: null,
+      playerId: null,
+      canRejoin: !!this.savedSeat,
+      error: true,
+      message: this.savedSeat
+        ? "Could not rejoin this room yet. Check the PIN with the parent, ask them to approve this device, and try again."
+        : "Could not join this room yet. Check the PIN with the parent, ask them to approve this device, and try again.",
+    });
   }
   /** Route leave/background: host closes room; a client keeps only its in-memory seat credential. */
   pause() {
