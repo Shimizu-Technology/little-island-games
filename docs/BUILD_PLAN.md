@@ -10,8 +10,8 @@
 - [x] Parent settings, progress backup/restore, privacy and storage recovery.
 - [x] Rule/save tests, full gate, independent review and material fixes.
 - [ ] Browser and native installed release-build acceptance with exact evidence.
-- [ ] Private repository/PR delivery; build/signing status and physical-device limits documented.
+- [x] Private repository/PR delivery; build/signing status and physical-device limits documented.
 
 Future: Four in a Row, tangrams, Dots and Boxes, word search, reviewed CHamoru content. Cloud sync and separate-device play are separate projects.
 
-Current acceptance: browser journeys and source review have passed their recorded dimensions. Native installed release testing, signed family installation and Stassie’s physical-device observation remain separate required gates in docs/QA.md.
+Current acceptance: browser journeys and source review have passed their recorded dimensions. Native installed release journeys and update preservation are recorded. The remaining mode/device matrix, signed family installation and Stassie’s physical-device observation remain separate required gates in docs/QA.md.

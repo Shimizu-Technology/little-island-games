@@ -2,23 +2,23 @@
 
 Executor: agent for automated/browser/simulator checks; Leon/Stassie for physical-device usability. Comprehensive first-release scope. Record exact source/build and evidence before calling a scenario passed. Case status includes every required device dimension; browser-only coverage remains partial until native acceptance is recorded.
 
-| ID  | Required journey                              | Expected outcome                                                  | Status                                   |
-| --- | --------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------- |
-| A01 | Home, game choice, help, return and new round | Every game reachable; clear controls and preserved progress       | PARTIAL — browser passed; native pending |
-| A02 | Tic-tac-toe solo/together                     | Legal moves, win/draw, difficulty, hint, complete decision undo   | PARTIAL — browser passed; native pending |
-| A03 | Word Rescue pack/parent word                  | Valid secret handling, hints, reveal/audio, replay                | PARTIAL — browser passed; native pending |
-| A04 | Memory solo/cooperative/together              | Matching/scoring/turns, interrupted mismatch recovery             | PARTIAL — browser passed; native pending |
-| A05 | Checkers tutorial/solo/together               | Correct captures/chains/kings/win/draw; responsive opponent; undo | PARTIAL — browser passed; native pending |
-| A06 | Maze explore/undo/hint                        | Every maze solvable; wall rejection; visible finish               | PARTIAL — browser passed; native pending |
-| A07 | Number Island roll/select/close               | Dice targets, legal sums, counting/addition, clear completion     | PARTIAL — browser passed; native pending |
-| A08 | Force-close/resume, including AI turn         | Exact valid game resumes without duplicate moves                  | PARTIAL — browser passed; native pending |
-| A09 | Native release app cold launch without server | All games/content/audio work offline                              | NOT RUN                                  |
-| A10 | Update installed app with saves               | Existing progress/settings preserved                              | NOT RUN                                  |
-| A11 | Parent backup/restore and bad/older saves     | Validated restore; errors recoverable without losing original     | PARTIAL — browser passed; native pending |
-| A12 | iPhone/iPad portrait/landscape                | Reachable touch controls, legible boards, no clipped content      | PARTIAL — browser passed; native pending |
-| A13 | Sound off, larger text, screen-reader labels  | Essential instructions remain understandable                      | PARTIAL — browser passed; native pending |
-| A14 | Stassie physical iPad observation             | Independently choose/move/help/resume/replay                      | BLOCKED — physical device unavailable    |
-| A15 | Signed family install                         | Registered-device artifact installable on target device           | BLOCKED — physical device unavailable    |
+| ID  | Required journey                              | Expected outcome                                                  | Status                                                           |
+| --- | --------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------- |
+| A01 | Home, game choice, help, return and new round | Every game reachable; clear controls and preserved progress       | PARTIAL — recorded browser/native passes; remaining matrix below |
+| A02 | Tic-tac-toe solo/together                     | Legal moves, win/draw, difficulty, hint, complete decision undo   | PARTIAL — recorded browser/native passes; remaining matrix below |
+| A03 | Word Rescue pack/parent word                  | Valid secret handling, hints, reveal/audio, replay                | PARTIAL — recorded browser/native passes; remaining matrix below |
+| A04 | Memory solo/cooperative/together              | Matching/scoring/turns, interrupted mismatch recovery             | PARTIAL — recorded browser/native passes; remaining matrix below |
+| A05 | Checkers tutorial/solo/together               | Correct captures/chains/kings/win/draw; responsive opponent; undo | PARTIAL — recorded browser/native passes; remaining matrix below |
+| A06 | Maze explore/undo/hint                        | Every maze solvable; wall rejection; visible finish               | PARTIAL — recorded browser/native passes; remaining matrix below |
+| A07 | Number Island roll/select/close               | Dice targets, legal sums, counting/addition, clear completion     | PARTIAL — recorded browser/native passes; remaining matrix below |
+| A08 | Force-close/resume, including AI turn         | Exact valid game resumes without duplicate moves                  | PARTIAL — recorded browser/native passes; remaining matrix below |
+| A09 | Native release app cold launch without server | All games/content/audio work offline                              | PARTIAL — native cold launch; physical airplane/audio pending    |
+| A10 | Update installed app with saves               | Existing progress/settings preserved                              | PASSED — iPad 1→2 and iPhone 2→3; exact saved data               |
+| A11 | Parent backup/restore and bad/older saves     | Validated restore; errors recoverable without losing original     | PARTIAL — recorded browser/native passes; remaining matrix below |
+| A12 | iPhone/iPad portrait/landscape                | Reachable touch controls, legible boards, no clipped content      | PARTIAL — recorded browser/native passes; remaining matrix below |
+| A13 | Sound off, larger text, screen-reader labels  | Essential instructions remain understandable                      | PARTIAL — recorded browser/native passes; remaining matrix below |
+| A14 | Stassie physical iPad observation             | Independently choose/move/help/resume/replay                      | BLOCKED — physical device unavailable                            |
+| A15 | Signed family install                         | Registered-device artifact installable on target device           | BLOCKED — physical device unavailable                            |
 
 Simulator/browser checks do not establish physical-device or child usability acceptance. Do not conflate automated checks, review, merged source, build success, and family installation.
 
@@ -33,7 +33,7 @@ Source 8383e007eed5b8145dd44610f5fb1315667e6a70, Expo 58 browser export 337654db
 - Maze: followed actual UI route through a generated5×5 maze in19cells, completion visible, undo resumed exploration.
 - Number Island: rolled, selected valid combination, closed numbers, reached a no-combination end state, then undo restored prior dice/open numbers.
 - Backups: UI export produced JSON download; UI import/confirmation restored all six sessions and sound settings. Bad startup JSON fixture displayed recovery; explicit fresh start preserved corrupt original before replacement; valid backup restored all six sessions.
-- Offline: stopped owned static server PID42108, verified no listener on43821. All six routes cold-reloaded from service-worker cache (158entries), instructions audio loaded with no console error, Number Island hint/close updated its persisted turn. This establishes browser offline behavior, not native airplane-mode proof.
+- Offline: stopped owned static server PID42108, verified no listener on 43821. All six routes cold-reloaded from service-worker cache (158entries), instructions audio loaded with no console error, Number Island hint/close updated its persisted turn. This establishes browser offline behavior, not native airplane-mode proof.
 - Browser screenshots: browser-screenshot-127-0-0-1-mvf2lq7r-36d7e006.png (tablet), browser-screenshot-127-0-0-1-mvf2lqa3-ceba0c5c.png (phone), under local T3 browser-artifacts.
 - Remaining: native installed release build, force-close/AI interruption, native keyboard/rotation/larger text, update preservation, signed family installation, and physical Stassie playtest. Do not mark these passed from browser results.
 
@@ -56,3 +56,31 @@ The first generic/universal simulator compile failed importing ExpoModulesJSI fr
 The serialized, six-worker arm64 simulator Release build succeeded (log: /tmp/little-island-sim-final.log). The successful device Release and simulator Release both embed JavaScript/assets; no task Metro server was started. Installed simulator journeys and build1→build2 preservation are being recorded next.
 
 Native large-text recovery exposed clipped lower buttons in landscape because Recovery used a non-scrolling View. Changed it to a ScrollView within the existing SafeAreaView; regression acceptance is recorded against build3 below. Original screenshot: docs/evidence/recovery-large-before-native.png.
+
+## Final installed native and web verification — 2026-10-19
+
+Executor: agent with isolated fixtures. Native targets were an iPad mini (6th generation) and iPhone 16 Pro, both on iOS 18.5. These were task-owned simulators, not family hardware. Source 85aaf18 produced build 2; source 2643aa6 produced build 3 with the Recovery scrolling fix. Device and simulator Release builds succeeded for build 3; device signature verification returned 0. No task Metro server was started.
+
+- iPad: reached and started all six games through home/setup. Tic together moves 1,4,2,5,3 showed X's win. Force termination/reopen restored the exact five-move board from SQLite; undo returned to four moves.
+- Word Rescue: native pack SUN completed with three reveal actions; clue and word playback controls invoked without an error. Family word STAR stayed masked in the keyboard, started correctly and saved a found letter. Physical audible quality and airplane-mode playback remain operator checks.
+- Memory: boat/kite mismatch survived force termination and home Continue. Explicit turnover changed player. Six actual matching pairs completed in seven turns; final scores 0–6 stayed visible.
+- Checkers: solo B6–A5 received a computer response. All four lessons exercised a step, compulsory capture, two-jump chain and crowning. SQLite comparison verified exact original position/history restoration afterward. Complete-decision undo returned from four plies to two. A termination attempt found the computer had already replied; it proves completed-turn recovery, not interruption during an in-flight search.
+- Maze: a blocked up move left path [0]. Hint and ten actual cell moves completed a generated 5×5 maze; undo reopened exploration.
+- Number Island: roll 2, combination hint and close persisted turn 1 with number 2 closed. At accessibility-large in landscape, scrolled to controls and undid to the prior die/open numbers.
+- Native backup: export created valid JSON with six sessions and opened the iOS share sheet. Save to Files dismissed the sheet without a confirmed destination; destination persistence is NOT PASSED. Copied that exported fixture into the owned simulator's local Files provider, selected it through the actual import picker, confirmed replacement, and verified six sessions/sound-off restored plus a recovery copy of the preceding save.
+- Corrupt-save recovery: while terminated, replaced only the owned fixture's save with unreadable JSON. Cold launch displayed recovery. Build 3 at accessibility-large in iPad landscape scrolled to both fresh-start controls, preserved the exact corrupt original before creating a fresh save, then restored all six sessions through the Files picker. Recovery data remained present after restoration. Screenshots record the clipping before the fix and the reachable controls afterward.
+- Update preservation: installed iPad build 2 over build 1 without uninstalling; all six sessions and settings were exactly equal. Installed iPhone build 3 over build 2; all three phone sessions were exactly equal. Verified installed CFBundleVersion after each update.
+- iPhone: native solo Tic human/computer turn, hint and full undo; secure STAR keyboard entry, Return dismissal, start and letter guess; Checkers B6–A5 and computer response. Safe-area controls and scrolling were reachable. Phone screenshot records the keyboard. Phone landscape and its remaining three game boards were not run.
+- iPad portrait/landscape and larger text were exercised. Actual VoiceOver speech/focus, minimum-iOS hardware performance, real touch accuracy and Stassie's independent usability remain unverified.
+
+Final web regression on source 2643aa6: at 375×375, Recovery's scroll container had clientHeight 375 and scrollHeight 521; an actual container scroll reached scrollTop 146. Fresh-start confirmation preserved the malformed original. At 375×667, Tic moves 1,2,3,5,4,6,8,7,9 showed “A good draw!”; undo persisted eight moves. This refresh covers the shared Recovery source change.
+
+Engineering on source 2643aa6: typecheck, lint, 44 regression tests, production web export and Expo Doctor 21/21 passed again. Recovery's advisory design scan returned []. Independent UI review approved the final scrolling change and unchanged recovery/save handlers. CodeRabbit reported “Review limit reached”; its walkthrough is not a completed review. Completed independent engine/save and UI/config reviews provide the repository's advisory fallback.
+
+### Remaining required acceptance
+
+A10 update preservation passed on both owned simulators. Other rows remain partial where the full mode/device matrix, actual audio/VoiceOver, native Files destination, or in-flight AI interruption is unverified. A14/A15 are blocked because no family iPad/iPhone is connected and the iPad's exact model/OS/profile eligibility is unknown. The PR stays held. Passing engineering/source review and extensive simulator journeys do not finish family release acceptance. Execute each remaining matrix before marking its whole case passed.
+
+The development-signed build 3 IPA and SHA256/source manifest are local in the sibling little-island-games-artifacts directory. This is not an App Store/TestFlight release. The one-device profile does not establish Stassie's iPad eligibility. Public distribution also retains the content-rights and dependency gates documented elsewhere.
+
+Final source web cache fingerprint: 82820aa3c993. Stopped owned static server PID 69995 and verified no listener on 43821. All six routes cold-reloaded again from this cache without console errors. Task-owned native simulators were shut down by exact UDID after closing their Device panels; borrowed simulators/services were left running.
