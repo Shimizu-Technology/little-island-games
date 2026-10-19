@@ -23,12 +23,14 @@ parser.add_argument('--only', help='Regenerate exactly one existing speech clip 
 args=parser.parse_args()
 speech.update({
   'instructions-tic-tac-toe':'Take turns placing your shape in an empty square. Make three in a row, across, down, or diagonally. You can ask for a hint.',
-  'instructions-word-rescue':'Choose letters to discover the secret word. Listen to the clue, and try any letter. There is no guess limit. Reveal a letter whenever you need one.',
+  'instructions-word-rescue':'Choose letters to discover the secret word. In Challenge, six different wrong letters end the round. Find the word before the picture is complete. You may reveal one letter for help; that makes an assisted win. A correct letter reveals every place it belongs. In Practice, you can keep trying with no guess limit.',
   'instructions-memory':'Tap two cards. If their pictures match, the pair stays open. If they are different, look carefully. Turn them over when you are ready, and try again.',
   'instructions-checkers':'Red goes first. Tap a piece, then its next square. Ordinary pieces move and jump diagonally forward. Friendly games let you choose a jump or move another piece. Classic games require a jump whenever one is available. In both games, finish a jump chain with the same piece. Reach the far row to earn a king. Kings move forward and backward. Try the four little lessons below the board.',
   'instructions-maze':'Start at the boat and find your way to the flag. Tap a neighboring square, or use the arrow buttons. You cannot cross a wall. Go back whenever you like. A hint shows the next step.',
   'instructions-numbers':'Roll the dice. Tap open numbers that add up to your roll. For example, a roll of five can close five, or two and three. Close every number to clear the island. You can ask for a combination hint.',
 })
+
+speech.update(json.loads((ROOT/"scripts/explore-audio.json").read_text()))
 
 def speak(item):
     key,text=item

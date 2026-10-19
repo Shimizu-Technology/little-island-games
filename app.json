@@ -2,7 +2,7 @@
   "expo": {
     "name": "Little Island",
     "slug": "little-island-games",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "scheme": "littleisland",
@@ -10,9 +10,13 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shimizutechnology.littleisland",
-      "buildNumber": "5",
+      "buildNumber": "6",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocalNetworkUsageDescription": "Join a grown-up-created Little Island family room on nearby devices. No internet account is needed.",
+        "NSBonjourServices": [
+          "_li-mystery._tcp"
+        ]
       },
       "privacyManifests": {
         "NSPrivacyTracking": false,

@@ -1,6 +1,6 @@
 import { Difficulty, GameId, Options } from "./types";
 import { TicState, createTic, ticOutcome } from "./tic";
-import { WordState, createWord, wordDone } from "./words";
+import { WordState, createWord, wordStatus } from "./words";
 import { MemoryState, createMemory, memoryDone } from "./memory";
 import { CheckersState, createCheckers } from "./checkers";
 import { MazeState, createMaze, mazeDone } from "./maze";
@@ -32,12 +32,12 @@ export const games: Record<
     together: "Two players",
   },
   "word-rescue": {
-    name: "Friendly Hangman",
-    tag: "Word Rescue · a little word play",
-    description: "Guess the word. Build your rocket.",
+    name: "Hangman",
+    tag: "A little word challenge",
+    description: "Find the word before six wrong guesses.",
     color: "#A04F38",
     surface: "#FBE8DE",
-    help: "A friendly take on Hangman: choose letters to discover the secret word and build a rocket. There are no lost lives or guess limits. Correct letters add parts to your rocket; other letters stay marked so you can try something new. Use the clue or reveal a letter whenever you need one. A grown-up can also choose a secret family word.",
+    help: "Guess one letter at a time. A correct letter fills every matching space. In Challenge, each new wrong letter adds one part to the stick figure. Find the whole word before six wrong guesses to win. At six, the round ends and shows the answer. Tapping an already-used letter never costs another guess. One optional hint reveals a missing letter and marks the result assisted. Practice has unlimited attempts and hints. A grown-up can choose a private family word. Hear the clue during play and the answer after the round.",
     solo: "Word packs",
     together: "Family secret word",
   },
@@ -103,7 +103,7 @@ export function isFinished(s: GameState): boolean {
     case "tic-tac-toe":
       return !!ticOutcome(s.board);
     case "word-rescue":
-      return wordDone(s);
+      return wordStatus(s) !== "playing";
     case "memory":
       return memoryDone(s);
     case "checkers":

@@ -24,7 +24,7 @@ describe("rapid player intents", () => {
     ]);
   });
   it("composes reveal and repeated-letter guesses without skipping or double-counting", () => {
-    const round = customWord(defaultOptions, "MAMA")!;
+    const round = customWord({ ...defaultOptions, wordRules: "practice" }, "MAMA")!;
     let save = { ...emptySave(), sessions: { "word-rescue": round } };
     const reveal = () => {
       save = applySessionAction(save, "word-rescue", round.id, (current) =>

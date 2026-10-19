@@ -1,8 +1,10 @@
+import { Text } from "../components/Text";
 import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { GameState } from "../games";
 import { TicState, ticChoice, ticMove, ticOutcome, ticTurn, ticUndo, lines } from "../games/tic";
-import { WordState, wordDone } from "../games/words";
+import { WordState, wordRules, wordStatus, wrongLetters } from "../games/words";
+import { HangmanFigure } from "../components/HangmanFigure";
 import { MemoryState, closeMismatch, flipCard, memoryDone } from "../games/memory";
 import {
   CheckersState,
@@ -166,78 +168,136 @@ export function WordBoard({
   reveal,
 }: Props<WordState> & { guess: (letter: string) => void; reveal: () => void }) {
   const { fontScale } = useWindowDimensions();
-  const done = wordDone(s),
-    letters = [...new Set(s.word)],
+  const status = wordStatus(s),
+    done = status !== "playing",
+    won = status === "won",
+    lost = status === "lost";
+  const challenge = wordRules(s) === "challenge",
+    mistakes = wrongLetters(s),
+    remaining = 6 - mistakes.length;
+  const letters = [...new Set(s.word)],
     found = letters.filter((l) => s.guessed.includes(l)).length;
+  const hintAvailable = !done && (!challenge || s.hints === 0);
   return (
     <>
       <Status
-        title={done ? "Ready for lift-off!" : s.category}
-        detail={done ? `You found ${s.word.toLowerCase()}. ${s.clue}` : s.clue}
-        success={done}
+        title={won ? "You solved the word!" : lost ? "No guesses left" : s.category}
+        detail={
+          won
+            ? `${s.word}. ${s.hints ? "Solved with a hint. " : ""}${s.clue}`
+            : lost
+              ? `The word was ${s.word}. ${s.clue} Try a fresh round when you’re ready.`
+              : s.clue
+        }
+        success={won}
       />
       <View
         accessible
         accessibilityRole="progressbar"
-        accessibilityLabel="Rocket building progress"
-        accessibilityValue={{
-          min: 0,
-          max: letters.length,
-          now: found,
-          text: `${found} of ${letters.length} different letters found`,
-        }}
+        accessibilityLabel={challenge ? "Wrong guesses" : "Rocket building progress"}
+        accessibilityValue={
+          challenge
+            ? {
+                min: 0,
+                max: 6,
+                now: mistakes.length,
+                text: `${mistakes.length} of 6 wrong guesses. ${remaining} left.`,
+              }
+            : { min: 0, max: letters.length, now: found, text: `${found} of ${letters.length} different letters found` }
+        }
         style={{
           flexDirection: "row",
           alignSelf: "center",
           alignItems: "center",
           gap: 14,
-          marginBottom: 16,
+          marginBottom: 20,
           paddingHorizontal: 16,
-          paddingVertical: 8,
-          borderRadius: 20,
+          paddingVertical: 10,
+          borderRadius: 22,
           backgroundColor: "#F5EFE3",
           maxWidth: "100%",
         }}
       >
-        <RocketProgress progress={found / letters.length} size={88} />
+        {challenge ? (
+          <HangmanFigure mistakes={mistakes.length} won={won} />
+        ) : (
+          <RocketProgress progress={found / letters.length} size={88} />
+        )}
         <View style={{ flexShrink: 1 }}>
-          <Text style={{ fontFamily: font, fontSize: 16, fontWeight: "700", color: C.ink }}>
-            {done ? "Your rocket is ready!" : "Let’s build your rocket"}
+          <Text style={{ fontFamily: font, fontSize: 17, fontWeight: "700", color: C.ink }}>
+            {challenge
+              ? won
+                ? "Word found!"
+                : lost
+                  ? "Round finished"
+                  : `${remaining} ${remaining === 1 ? "guess" : "guesses"} left`
+              : won
+                ? "Your rocket is ready!"
+                : "Let’s build your rocket"}
           </Text>
           <Copy style={{ fontSize: 13, lineHeight: 20, marginTop: 4 }}>
-            {found} of {letters.length} letters found
+            {found} of {letters.length} different letters found
           </Copy>
-          <Copy style={{ fontSize: 12, lineHeight: 18 }}>Keep guessing. No lost lives.</Copy>
+          <Copy style={{ fontSize: 12, lineHeight: 18 }}>
+            {challenge ? "Challenge · six wrong guesses" : "Practice · unlimited attempts"}
+          </Copy>
+          {challenge && (
+            <View accessible={false} style={{ flexDirection: "row", gap: 5, marginTop: 10 }}>
+              {Array.from({ length: 6 }, (_, i) => (
+                <View
+                  key={i}
+                  style={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: 6,
+                    backgroundColor: i < mistakes.length ? C.coral : C.paper,
+                    borderColor: i < mistakes.length ? C.coral : "#B7BAAF",
+                    borderWidth: 1,
+                  }}
+                />
+              ))}
+            </View>
+          )}
         </View>
       </View>
-      <View style={{ flexDirection: "row", justifyContent: "center", flexWrap: "wrap", gap: 6, marginBottom: 24 }}>
-        {[...s.word].map((l, i) => (
-          <View
-            key={i}
-            accessible
-            accessibilityLabel={`Letter ${i + 1} of ${s.word.length}: ${s.guessed.includes(l) ? l : "not found"}`}
-            style={{
-              width: Math.max(26 * fontScale + 14, Math.min(48, (width - 30) / Math.min(s.word.length, 6))),
-              height: Math.max(54, 26 * fontScale + 14),
-              borderRadius: 10,
-              borderBottomWidth: 3,
-              borderColor: C.teal,
-              backgroundColor: C.paper,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {s.guessed.includes(l) && (
-              <Text
-                key={`${s.id}:${i}:${l}`}
-                accessible={false}
-                style={{ width: "100%", textAlign: "center", fontSize: 26, fontWeight: "800", color: C.ink }}
-              >
-                {l}
-              </Text>
-            )}
-          </View>
-        ))}
+      <View style={{ flexDirection: "row", justifyContent: "center", flexWrap: "wrap", gap: 6, marginBottom: 22 }}>
+        {[...s.word].map((letter, i) => {
+          const guessed = s.guessed.includes(letter),
+            visible = guessed || lost;
+          return (
+            <View
+              key={i}
+              accessible
+              accessibilityLabel={`Letter ${i + 1} of ${s.word.length}: ${guessed ? letter : lost ? `${letter}, revealed answer` : "not found"}`}
+              style={{
+                width: Math.max(26 * fontScale + 14, Math.min(48, (width - 30) / Math.min(s.word.length, 6))),
+                height: Math.max(54, 26 * fontScale + 14),
+                borderRadius: 10,
+                borderBottomWidth: 3,
+                borderColor: guessed ? C.teal : lost ? C.coral : C.line,
+                backgroundColor: C.paper,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {visible && (
+                <Text
+                  key={`${s.id}:${i}:${letter}:${guessed}`}
+                  accessible={false}
+                  style={{
+                    width: "100%",
+                    textAlign: "center",
+                    fontSize: 26,
+                    fontWeight: "800",
+                    color: guessed ? C.ink : C.coral,
+                  }}
+                >
+                  {letter}
+                </Text>
+              )}
+            </View>
+          );
+        })}
       </View>
       <View
         accessibilityLabel="Choose a letter"
@@ -250,17 +310,17 @@ export function WordBoard({
           maxWidth: 540,
         }}
       >
-        {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((l) => {
-          const used = s.guessed.includes(l),
-            correct = used && s.word.includes(l);
+        {"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letter) => {
+          const used = s.guessed.includes(letter),
+            correct = used && s.word.includes(letter);
           return (
             <Cell
-              key={l}
-              label={`Letter ${l}${used ? (correct ? ", found in word" : ", already tried") : ""}`}
+              key={letter}
+              label={`Letter ${letter}${used ? (correct ? ", found in word" : ", already tried") : ""}`}
               disabled={used || done}
               onPress={() => {
-                guess(l);
-                sound(s.word.includes(l) ? "match" : "tap");
+                guess(letter);
+                sound(s.word.includes(letter) ? "match" : "tap");
               }}
               style={{
                 width: Math.max(44, 19 * fontScale + 16),
@@ -279,15 +339,18 @@ export function WordBoard({
                   color: used && !correct ? "#7C817B" : C.ink,
                 }}
               >
-                {l}
+                {letter}
               </Text>
             </Cell>
           );
         })}
       </View>
-      {s.guessed.some((l) => !s.word.includes(l)) && (
-        <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 12 }}>
-          Other letters tried: {s.guessed.filter((l) => !s.word.includes(l)).join(" · ")}
+      {mistakes.length > 0 && (
+        <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 12 }}>Wrong letters: {mistakes.join(" · ")}</Copy>
+      )}
+      {lost && (
+        <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 8 }}>
+          The coral letters show the answer you had not found.
         </Copy>
       )}
       <Controls>
@@ -299,13 +362,13 @@ export function WordBoard({
         {!done && (
           <Button
             quiet
-            disabled={done}
+            disabled={!hintAvailable}
             onPress={() => {
               reveal();
               sound("match");
             }}
           >
-            Reveal a letter
+            {challenge ? (s.hints ? "Hint used" : "Reveal a letter · 1 hint") : "Reveal a letter"}
           </Button>
         )}
         {done && !s.custom && (
@@ -314,8 +377,12 @@ export function WordBoard({
           </Button>
         )}
       </Controls>
-      <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 16 }}>
-        Take your time. Every letter is a chance to discover.
+      <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 14 }}>
+        {challenge
+          ? s.hints
+            ? "This round used a hint. Assisted wins have their own record."
+            : "Find every letter before your six wrong guesses run out."
+          : "Take your time. Every letter is a chance to discover."}
       </Copy>
     </>
   );

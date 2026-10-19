@@ -1,3 +1,4 @@
+import { Text } from "./Text";
 import React from "react";
 import {
   KeyboardAvoidingView,
@@ -5,7 +6,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
   ViewStyle,
   Platform,

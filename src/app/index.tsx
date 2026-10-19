@@ -1,5 +1,6 @@
+import { Text } from "../components/Text";
 import React, { useState } from "react";
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { GameId, gameIds, games, isFinished } from "../games";
@@ -8,6 +9,45 @@ import { GameArt, Island } from "../components/Art";
 import { Settings } from "../components/Settings";
 import { Recovery } from "../components/Recovery";
 import { useStore } from "../state/Store";
+import { ActivityId } from "../state/activities";
+import { FeatureArt } from "../components/FeatureArt";
+const extraGames: { id: ActivityId; name: string; description: string; surface: string; filters: string[] }[] = [
+  {
+    id: "go-fish",
+    name: "Go Fish",
+    description: "Collect matching families of cards.",
+    surface: "#DEEDF2",
+    filters: ["Words & numbers", "Play together"],
+  },
+  {
+    id: "crazy-eights",
+    name: "Crazy Eights",
+    description: "Match a suit. Change it with an eight.",
+    surface: "#F4E8CB",
+    filters: ["Think & explore", "Play together"],
+  },
+  {
+    id: "racer",
+    name: "Island Dash",
+    description: "Run, jump, and race island trails.",
+    surface: "#DDECD7",
+    filters: ["Think & explore"],
+  },
+  {
+    id: "island-mystery",
+    name: "Picnic Mystery",
+    description: "Do island jobs. Find the mischief maker.",
+    surface: "#E5E9D5",
+    filters: ["Think & explore", "Play together"],
+  },
+  {
+    id: "word-imposter",
+    name: "Secret Word",
+    description: "One secret. One Imposter. Play together.",
+    surface: "#E8E1F3",
+    filters: ["Words & numbers", "Play together"],
+  },
+];
 const filters = ["All games", "Words & numbers", "Think & explore", "Play together"];
 export default function Home() {
   const insets = useSafeAreaInsets();
@@ -114,7 +154,39 @@ export default function Home() {
             </Button>
           </View>
         )}
-        {resume && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Explore and learn, fifty offline discoveries"
+          onPress={() => router.push("/explore")}
+          style={({ pressed }) => ({
+            borderRadius: 22,
+            backgroundColor: "#DFEAF0",
+            padding: 18,
+            marginBottom: 20,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+            opacity: pressed ? 0.8 : 1,
+          })}
+        >
+          <FeatureArt kind="explore" size={68} />
+          <View style={{ flex: 1 }}>
+            <Label>A LITTLE CURIOSITY</Label>
+            <Heading style={{ fontSize: 23, marginTop: 4 }}>Explore & learn</Heading>
+            <Copy style={{ fontSize: 13, lineHeight: 19, marginTop: 4 }}>
+              Space, oceans, animals, weather, and our world. Fifty discoveries to take anywhere.
+            </Copy>
+          </View>
+        </Pressable>
+        {store.save.recentActivity && store.save.activities?.[store.save.recentActivity] && (
+          <Button
+            quiet
+            onPress={() => router.push({ pathname: "/activity", params: { game: store.save.recentActivity! } })}
+          >
+            Continue {extraGames.find((g) => g.id === store.save.recentActivity)?.name ?? "your adventure"}
+          </Button>
+        )}
+        {!store.save.recentActivity && resume && (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Continue ${games[resume.game].name}, your saved round`}
@@ -142,7 +214,9 @@ export default function Home() {
         )}
         <View style={{ marginBottom: 12 }}>
           <Heading style={{ fontSize: 24 }}>What feels fun today?</Heading>
-          <Copy style={{ marginTop: 3, fontSize: 13, lineHeight: 20 }}>Six games. Ready whenever you are.</Copy>
+          <Copy style={{ marginTop: 3, fontSize: 13, lineHeight: 20 }}>
+            Games, stories, and discoveries. Ready whenever you are.
+          </Copy>
         </View>
         <ScrollView
           horizontal
@@ -160,6 +234,48 @@ export default function Home() {
           ))}
         </ScrollView>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+          {extraGames
+            .filter((g) => filter === "All games" || g.filters.includes(filter))
+            .map((g) => (
+              <Pressable
+                key={g.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Play ${g.name}`}
+                onPress={() => router.push({ pathname: "/activity", params: { game: g.id } })}
+                style={({ pressed }) => ({
+                  width: cardWidth,
+                  borderRadius: 22,
+                  overflow: "hidden",
+                  backgroundColor: C.paper,
+                  borderWidth: 1,
+                  borderColor: C.line,
+                  opacity: pressed ? 0.8 : 1,
+                })}
+              >
+                <View
+                  style={{
+                    height: tablet ? 132 : 108,
+                    backgroundColor: g.surface,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <FeatureArt kind={g.id} size={tablet ? 110 : 94} />
+                </View>
+                <View style={{ padding: tablet ? 18 : 13, flex: 1 }}>
+                  <Heading style={{ fontSize: tablet ? 23 : 19, letterSpacing: -0.45 }}>{g.name}</Heading>
+                  <Copy style={{ fontSize: 13, lineHeight: 19, marginTop: 5, minHeight: 38 }}>{g.description}</Copy>
+                  <View style={[styles.row, { justifyContent: "space-between", marginTop: 12 }]}>
+                    <Text style={{ color: C.teal, fontFamily: font, fontWeight: "700", fontSize: 13 }}>
+                      {store.save.activities?.[g.id] ? "Continue" : "Let’s play"}
+                    </Text>
+                    <Text style={{ fontSize: 22, color: C.teal }} accessibilityElementsHidden>
+                      →
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            ))}
           {choices.map((id) => {
             const g = games[id],
               saved = store.save.sessions[id],

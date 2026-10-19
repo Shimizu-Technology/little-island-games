@@ -77,7 +77,7 @@ export function createWord(options: Options, category = "All", previous: string[
   const fresh = pool.filter((w) => !previous.includes(w[0]));
   const chosen = shuffle(fresh.length ? fresh : pool)[0] ?? WORDS[0];
   return {
-    ...base("word-rescue", options),
+    ...base("word-rescue", { ...options, wordRules: options.wordRules ?? "challenge" }),
     game: "word-rescue",
     word: chosen[0],
     category: chosen[1],
@@ -92,7 +92,7 @@ export function customWord(options: Options, raw: string): WordState | null {
   const word = raw.trim().toUpperCase();
   if (!/^[A-Z]{2,12}$/.test(word)) return null;
   return {
-    ...base("word-rescue", options),
+    ...base("word-rescue", { ...options, wordRules: options.wordRules ?? "challenge" }),
     game: "word-rescue",
     word,
     category: "Family word",
@@ -104,11 +104,19 @@ export function customWord(options: Options, raw: string): WordState | null {
   };
 }
 export const wordDone = (s: WordState) => [...s.word].every((letter) => s.guessed.includes(letter));
+// Missing rules belong to pre-V2, unlimited Practice rounds. Never change a saved round's rules on update.
+export const wordRules = (s: WordState) => s.options.wordRules ?? "practice";
+export const wrongLetters = (s: WordState) => s.guessed.filter((letter) => !s.word.includes(letter));
+export function wordStatus(s: WordState): "playing" | "won" | "lost" {
+  if (wordRules(s) === "challenge" && wrongLetters(s).length >= 6) return "lost";
+  return wordDone(s) ? "won" : "playing";
+}
 export function guessLetter(s: WordState, letter: string): WordState {
-  if (!/^[A-Z]$/.test(letter) || s.guessed.includes(letter) || wordDone(s)) return s;
+  if (!/^[A-Z]$/.test(letter) || s.guessed.includes(letter) || wordStatus(s) !== "playing") return s;
   return { ...s, guessed: [...s.guessed, letter] };
 }
 export function wordHint(s: WordState): WordState {
+  if (wordStatus(s) !== "playing" || (wordRules(s) === "challenge" && s.hints >= 1)) return s;
   const letter = [...s.word].find((l) => !s.guessed.includes(l));
   return letter ? { ...guessLetter(s, letter), hints: s.hints + 1 } : s;
 }
