@@ -8,16 +8,18 @@ import { GameArt, Island } from "../components/Art";
 import { Settings } from "../components/Settings";
 import { Recovery } from "../components/Recovery";
 import { useStore } from "../state/Store";
+const filters = ["All games", "Words & numbers", "Think & explore", "Play together"];
 export default function Home() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions(),
-    store = useStore(),
-    [settings, setSettings] = useState(false),
+  const { width, fontScale } = useWindowDimensions(),
+    store = useStore();
+  const [settings, setSettings] = useState(false),
     [filter, setFilter] = useState("All games");
   const availableWidth = width - insets.left - insets.right;
-  const columns = availableWidth >= 980 ? 3 : availableWidth >= 600 ? 2 : 1,
-    contentWidth = Math.min(availableWidth, 1080) - 44,
-    cardWidth = (contentWidth - 16 * (columns - 1)) / columns;
+  const tablet = availableWidth >= 600;
+  const columns = fontScale > 1.3 || availableWidth < 350 ? 1 : availableWidth >= 900 ? 3 : 2;
+  const contentWidth = Math.min(availableWidth, 1080) - 40;
+  const cardWidth = (contentWidth - 12 * (columns - 1)) / columns;
   const choices = gameIds.filter(
     (id) =>
       filter === "All games" ||
@@ -25,8 +27,8 @@ export default function Home() {
       (filter === "Think & explore" && ["tic-tac-toe", "checkers", "maze"].includes(id)) ||
       (filter === "Play together" && ["tic-tac-toe", "memory", "checkers"].includes(id))
   );
-  const recent = store.save.recent && store.save.sessions[store.save.recent],
-    resume = recent && !isFinished(recent) ? recent : null;
+  const recent = store.save.recent && store.save.sessions[store.save.recent];
+  const resume = recent && !isFinished(recent) ? recent : null;
   function open(game: GameId) {
     router.push({ pathname: "/play", params: { game } });
   }
@@ -46,60 +48,58 @@ export default function Home() {
     );
   return (
     <SafeAreaView style={styles.page}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={[styles.row, { paddingVertical: 22, justifyContent: "space-between" }]}>
-          <View style={styles.row}>
+      <ScrollView contentContainerStyle={[styles.content, { paddingHorizontal: 20 }]}>
+        <View style={[styles.row, { paddingVertical: 14, justifyContent: "space-between", flexWrap: "wrap" }]}>
+          <View style={[styles.row, { gap: 9 }]}>
             <View
               style={{
-                width: 39,
-                height: 39,
-                borderRadius: 15,
+                width: 34,
+                height: 34,
+                borderRadius: 12,
                 backgroundColor: "#E8D4A7",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Text style={{ fontSize: 24, color: C.teal, fontWeight: "800" }}>li</Text>
+              <Text style={{ fontSize: 22, color: C.teal, fontWeight: "800" }}>li</Text>
             </View>
-            <Text style={{ fontFamily: font, fontSize: 21, fontWeight: "800", color: C.ink, letterSpacing: -0.5 }}>
+            <Text style={{ fontFamily: font, fontSize: 20, fontWeight: "700", color: C.ink, letterSpacing: -0.5 }}>
               little island
             </Text>
           </View>
-          <Button
-            quiet
-            onPress={() => setSettings(true)}
-            label="Open sound settings and grown-up backups"
-            style={{ paddingHorizontal: 14 }}
-          >
+          <Button compact quiet onPress={() => setSettings(true)} label="Open sound settings and grown-up backups">
             Settings
           </Button>
         </View>
         <View
           style={{
-            borderRadius: 28,
+            borderRadius: 24,
             backgroundColor: "#EAF0DF",
-            padding: width > 600 ? 30 : 24,
-            minHeight: width > 600 ? 235 : 260,
+            padding: tablet ? 26 : 20,
             overflow: "hidden",
-            marginBottom: 24,
+            marginBottom: 22,
           }}
         >
-          <View style={{ zIndex: 1, maxWidth: width > 600 ? "65%" : "100%" }}>
-            <Label>A place to play, at your pace</Label>
-            <Heading style={{ fontSize: width > 600 ? 43 : 35, lineHeight: width > 600 ? 51 : 42, marginTop: 12 }}>
+          <View style={{ zIndex: 1, maxWidth: fontScale > 1.3 ? "100%" : tablet ? "70%" : "78%" }}>
+            <Label>YOUR LITTLE PLACE TO PLAY</Label>
+            <Heading style={{ fontSize: tablet ? 36 : 28, lineHeight: tablet ? 43 : 34, marginTop: 8 }}>
               A little play.{`\n`}A lot to discover.
             </Heading>
-            <Copy style={{ marginTop: 12, maxWidth: 340, color: "#4F6856" }}>
-              Small adventures for curious minds.{`\n`}Pick a game and make it your own.
+            <Copy style={{ marginTop: 8, fontSize: 14, lineHeight: 21, color: "#4F6856" }}>
+              Pick a game. Take your time.
             </Copy>
           </View>
-          {width > 600 ? (
-            <View style={{ position: "absolute", right: 12, bottom: 3 }}>
-              <Island width={280} />
-            </View>
-          ) : (
-            <View style={{ position: "absolute", right: -20, bottom: -39, opacity: 0.27 }}>
-              <Island width={205} />
+          {fontScale <= 1.3 && (
+            <View
+              pointerEvents="none"
+              style={{
+                position: "absolute",
+                right: tablet ? 16 : -36,
+                bottom: tablet ? -5 : -13,
+                opacity: tablet ? 0.9 : 0.55,
+              }}
+            >
+              <Island width={tablet ? 235 : 155} />
             </View>
           )}
         </View>
@@ -115,38 +115,51 @@ export default function Home() {
           </View>
         )}
         {resume && (
-          <View
-            style={{
-              borderWidth: 1,
-              borderColor: C.line,
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Continue ${games[resume.game].name}, your saved round`}
+            onPress={() => open(resume.game)}
+            style={({ pressed }) => ({
+              padding: 15,
               borderRadius: 20,
-              padding: 18,
-              marginBottom: 23,
+              backgroundColor: C.soft,
+              marginBottom: 20,
               flexDirection: "row",
               alignItems: "center",
-              justifyContent: "space-between",
               gap: 12,
-            }}
+              opacity: pressed ? 0.75 : 1,
+            })}
           >
+            <GameArt game={resume.game} size={48} />
             <View style={{ flex: 1 }}>
-              <Label>Right where you left off</Label>
-              <Heading style={{ fontSize: 20, marginTop: 5 }}>{games[resume.game].name}</Heading>
+              <Label>Keep your adventure going</Label>
+              <Heading style={{ fontSize: 19, marginTop: 4 }}>{games[resume.game].name}</Heading>
             </View>
-            <Button onPress={() => open(resume.game)}>Continue</Button>
-          </View>
+            <Text style={{ color: C.teal, fontSize: 26 }} accessibilityElementsHidden>
+              →
+            </Text>
+          </Pressable>
         )}
-        <View style={{ marginBottom: 18 }}>
-          <Heading style={{ fontSize: 25 }}>What feels fun today?</Heading>
-          <Copy style={{ marginTop: 4, fontSize: 14 }}>Six little worlds. Always ready to play offline.</Copy>
+        <View style={{ marginBottom: 12 }}>
+          <Heading style={{ fontSize: 24 }}>What feels fun today?</Heading>
+          <Copy style={{ marginTop: 3, fontSize: 13, lineHeight: 20 }}>Six games. Ready whenever you are.</Copy>
         </View>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 23 }}>
-          {["All games", "Words & numbers", "Think & explore", "Play together"].map((f) => (
+        <ScrollView
+          horizontal
+          directionalLockEnabled
+          showsHorizontalScrollIndicator={false}
+          accessibilityLabel="Game categories"
+          accessibilityHint="Swipe left or right to explore all categories."
+          style={{ marginHorizontal: -20, marginBottom: 18, flexGrow: 0 }}
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingVertical: 3, alignItems: "center" }}
+        >
+          {filters.map((f) => (
             <Chip key={f} selected={f === filter} onPress={() => setFilter(f)}>
               {f}
             </Chip>
           ))}
-        </View>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
+        </ScrollView>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
           {choices.map((id) => {
             const g = games[id],
               saved = store.save.sessions[id],
@@ -159,52 +172,59 @@ export default function Home() {
                 onPress={() => open(id)}
                 style={({ pressed }) => ({
                   width: cardWidth,
-                  borderRadius: 24,
+                  borderRadius: 22,
                   overflow: "hidden",
                   backgroundColor: C.paper,
                   borderWidth: 1,
                   borderColor: C.line,
-                  opacity: pressed ? 0.75 : 1,
+                  opacity: pressed ? 0.8 : 1,
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
                 })}
               >
                 <View
-                  style={{ height: 145, backgroundColor: g.surface, alignItems: "center", justifyContent: "center" }}
+                  style={{
+                    height: tablet ? 132 : 108,
+                    backgroundColor: g.surface,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  <GameArt game={id} size={125} />
+                  <GameArt game={id} size={tablet ? 110 : 94} />
                   {ongoing && (
                     <View
                       style={{
                         position: "absolute",
-                        top: 12,
-                        left: 12,
-                        paddingVertical: 5,
-                        paddingHorizontal: 9,
+                        top: 8,
+                        left: 8,
+                        paddingVertical: 4,
+                        paddingHorizontal: 7,
                         backgroundColor: C.paper,
                         borderRadius: 20,
                       }}
                     >
-                      <Text style={{ fontSize: 11, fontWeight: "700", color: C.teal }}>Saved round</Text>
+                      <Text style={{ fontSize: 10, fontWeight: "700", color: C.teal }}>Saved</Text>
                     </View>
                   )}
                 </View>
-                <View style={{ padding: 20 }}>
-                  <Label style={{ color: g.color, fontSize: 10 }}>{g.tag}</Label>
-                  <Heading style={{ fontSize: 23, marginTop: 7 }}>{g.name}</Heading>
-                  <Copy style={{ fontSize: 14, lineHeight: 21, marginTop: 5, minHeight: 42 }}>{g.description}</Copy>
-                  <View style={[styles.row, { justifyContent: "space-between", marginTop: 18 }]}>
-                    <Text style={{ color: g.color, fontWeight: "800", fontSize: 14 }}>
-                      {ongoing ? "Keep playing" : "Let’s play"}
+                <View style={{ padding: tablet ? 18 : 13, flex: 1 }}>
+                  <Heading style={{ fontSize: tablet ? 23 : 19, letterSpacing: -0.45 }}>{g.name}</Heading>
+                  <Copy style={{ fontSize: 13, lineHeight: 19, marginTop: 5, minHeight: 38 }}>{g.description}</Copy>
+                  <View style={[styles.row, { justifyContent: "space-between", marginTop: 12 }]}>
+                    <Text style={{ color: g.color, fontFamily: font, fontWeight: "700", fontSize: 13 }}>
+                      {ongoing ? "Continue" : "Let’s play"}
                     </Text>
-                    <Text style={{ fontSize: 24, color: g.color }}>→</Text>
+                    <Text style={{ fontSize: 22, color: g.color }} accessibilityElementsHidden>
+                      →
+                    </Text>
                   </View>
                 </View>
               </Pressable>
             );
           })}
         </View>
-        <View style={{ alignItems: "center", marginTop: 30, gap: 5 }}>
-          <Copy style={{ fontSize: 13 }}>Made for little moments together.</Copy>
-          <Text style={{ fontSize: 11, letterSpacing: 1, color: C.muted }}>NO ADS · NO ACCOUNTS · JUST PLAY</Text>
+        <View style={{ alignItems: "center", marginTop: 25, gap: 4 }}>
+          <Copy style={{ fontSize: 12 }}>Made for little moments together.</Copy>
+          <Text style={{ fontSize: 10, letterSpacing: 1, color: C.muted }}>OFFLINE · NO ADS · JUST PLAY</Text>
         </View>
       </ScrollView>
       <Settings visible={settings} onClose={() => setSettings(false)} />

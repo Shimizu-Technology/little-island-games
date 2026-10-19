@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { GameState } from "../games";
 import { TicState, ticChoice, ticMove, ticOutcome, ticTurn, ticUndo, lines } from "../games/tic";
 import { WordState, guessLetter, wordDone, wordHint } from "../games/words";
@@ -29,7 +29,7 @@ import {
   undoNumbers,
 } from "../games/numbers";
 import { Button, C, Controls, Copy, Status, font } from "../components/ui";
-import { GameArt, Symbol } from "../components/Art";
+import { RocketProgress, Symbol, TicMark } from "../components/Art";
 export type Sound = (key: string) => void;
 type Props<S extends GameState> = {
   state: S;
@@ -91,6 +91,7 @@ export function TicBoard({ state: s, commit, width, sound, active }: Props<TicSt
   }, [s, computer, commit, active]);
   const winning = lines.find(([a, b, c]) => s.board[a] && s.board[a] === s.board[b] && s.board[a] === s.board[c]) ?? [];
   const size = Math.min(width, 370);
+  const cellSize = (size - 26 - 16) / 3;
   const title =
     outcome === "draw"
       ? "A good draw!"
@@ -116,36 +117,35 @@ export function TicBoard({ state: s, commit, width, sound, active }: Props<TicSt
         {s.board.map((mark, i) => (
           <Cell
             key={i}
-            label={`Square ${i + 1}, ${mark ?? "empty"}${hint === i ? ", suggested move" : ""}`}
+            label={`Square ${i + 1}, ${mark ?? "empty"}${hint === i ? ", suggested move" : ""}${winning.includes(i) ? ", winning line" : ""}`}
             disabled={!!mark || computer || !!outcome}
             onPress={() => {
               commit(ticMove(s, i));
               sound("tap");
             }}
             style={{
-              width: "32%",
-              height: "32%",
-              borderRadius: 20,
+              width: cellSize,
+              height: cellSize,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: winning.includes(i) ? "#91B488" : "#F2F0E8",
               backgroundColor: winning.includes(i) ? "#D8E9CD" : hint === i ? "#FBE7B3" : C.paper,
             }}
           >
-            <Text
-              style={{
-                fontFamily: font,
-                fontSize: size / 6,
-                fontWeight: "800",
-                color: mark === "X" ? C.coral : C.teal,
-              }}
-            >
-              {mark}
-            </Text>
+            {mark ? (
+              <TicMark mark={mark} size={cellSize * 0.62} />
+            ) : hint === i ? (
+              <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: C.teal }} />
+            ) : null}
           </Cell>
         ))}
       </View>
       <Controls>
-        <Button quiet onPress={() => setHint(ticChoice(s, () => 0.5, true))} disabled={computer || !!outcome}>
-          Show a hint
-        </Button>
+        {!outcome && (
+          <Button quiet onPress={() => setHint(ticChoice(s, () => 0.5, true))} disabled={computer}>
+            Show a hint
+          </Button>
+        )}
         <Button
           quiet
           onPress={() => commit(ticUndo(s))}
@@ -158,6 +158,7 @@ export function TicBoard({ state: s, commit, width, sound, active }: Props<TicSt
   );
 }
 export function WordBoard({ state: s, commit, width, sound }: Props<WordState>) {
+  const { fontScale } = useWindowDimensions();
   const done = wordDone(s),
     letters = [...new Set(s.word)],
     found = letters.filter((l) => s.guessed.includes(l)).length;
@@ -168,19 +169,49 @@ export function WordBoard({ state: s, commit, width, sound }: Props<WordState>) 
         detail={done ? `You found ${s.word.toLowerCase()}. ${s.clue}` : s.clue}
         success={done}
       />
-      <View style={{ alignItems: "center", marginBottom: 14 }}>
-        <GameArt game="word-rescue" size={105} />
-        <Copy style={{ fontSize: 13 }}>
-          {found} of {letters.length} different letters found
-        </Copy>
+      <View
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityLabel="Rocket building progress"
+        accessibilityValue={{
+          min: 0,
+          max: letters.length,
+          now: found,
+          text: `${found} of ${letters.length} different letters found`,
+        }}
+        style={{
+          flexDirection: "row",
+          alignSelf: "center",
+          alignItems: "center",
+          gap: 14,
+          marginBottom: 16,
+          paddingHorizontal: 16,
+          paddingVertical: 8,
+          borderRadius: 20,
+          backgroundColor: "#F5EFE3",
+          maxWidth: "100%",
+        }}
+      >
+        <RocketProgress progress={found / letters.length} size={88} />
+        <View style={{ flexShrink: 1 }}>
+          <Text style={{ fontFamily: font, fontSize: 16, fontWeight: "700", color: C.ink }}>
+            {done ? "Your rocket is ready!" : "Let’s build your rocket"}
+          </Text>
+          <Copy style={{ fontSize: 13, lineHeight: 20, marginTop: 4 }}>
+            {found} of {letters.length} letters found
+          </Copy>
+          <Copy style={{ fontSize: 12, lineHeight: 18 }}>Keep guessing. No lost lives.</Copy>
+        </View>
       </View>
       <View style={{ flexDirection: "row", justifyContent: "center", flexWrap: "wrap", gap: 6, marginBottom: 24 }}>
         {[...s.word].map((l, i) => (
           <View
             key={i}
+            accessible
+            accessibilityLabel={`Letter ${i + 1} of ${s.word.length}: ${s.guessed.includes(l) ? l : "not found"}`}
             style={{
-              width: Math.min(48, (width - 30) / Math.min(s.word.length, 6)),
-              height: 54,
+              width: Math.max(26 * fontScale + 14, Math.min(48, (width - 30) / Math.min(s.word.length, 6))),
+              height: Math.max(54, 26 * fontScale + 14),
               borderRadius: 10,
               borderBottomWidth: 3,
               borderColor: C.teal,
@@ -194,6 +225,7 @@ export function WordBoard({ state: s, commit, width, sound }: Props<WordState>) 
         ))}
       </View>
       <View
+        accessibilityLabel="Choose a letter"
         style={{
           flexDirection: "row",
           flexWrap: "wrap",
@@ -216,8 +248,8 @@ export function WordBoard({ state: s, commit, width, sound }: Props<WordState>) 
                 sound(s.word.includes(l) ? "match" : "tap");
               }}
               style={{
-                width: 44,
-                height: 48,
+                width: Math.max(44, 19 * fontScale + 16),
+                height: Math.max(48, 19 * fontScale + 16),
                 borderWidth: 1,
                 borderColor: used ? "transparent" : C.line,
                 borderRadius: 12,
@@ -238,22 +270,29 @@ export function WordBoard({ state: s, commit, width, sound }: Props<WordState>) 
           );
         })}
       </View>
+      {s.guessed.some((l) => !s.word.includes(l)) && (
+        <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 12 }}>
+          Other letters tried: {s.guessed.filter((l) => !s.word.includes(l)).join(" · ")}
+        </Copy>
+      )}
       <Controls>
         {!done && !s.custom && (
           <Button quiet onPress={() => sound(`clue-${s.word.toLowerCase()}`)}>
             Hear the clue
           </Button>
         )}
-        <Button
-          quiet
-          disabled={done}
-          onPress={() => {
-            commit(wordHint(s));
-            sound("match");
-          }}
-        >
-          Reveal a letter
-        </Button>
+        {!done && (
+          <Button
+            quiet
+            disabled={done}
+            onPress={() => {
+              commit(wordHint(s));
+              sound("match");
+            }}
+          >
+            Reveal a letter
+          </Button>
+        )}
         {done && !s.custom && (
           <Button quiet onPress={() => sound(s.word.toLowerCase())}>
             Hear the word
@@ -385,7 +424,7 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
     displayBoard[path[path.length - 1]] = s.position.board[from];
   }
   const size = Math.min(width, 512),
-    cellSize = size / 8,
+    cellSize = (size - 16) / 8,
     outcome = s.position.outcome;
   const lessonComplete = s.lesson !== null && s.history.length > 0;
   function select(i: number) {
@@ -442,13 +481,17 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
         style={{
           alignSelf: "center",
           width: size,
-          borderRadius: 12,
+          borderRadius: 20,
           overflow: "hidden",
           borderWidth: 2,
-          borderColor: C.ink,
+          borderColor: "#466859",
+          backgroundColor: "#547565",
+          padding: 6,
         }}
       >
-        <View style={{ flexDirection: "row", flexWrap: "wrap", width: size }}>
+        <View
+          style={{ flexDirection: "row", flexWrap: "wrap", width: size - 16, borderRadius: 10, overflow: "hidden" }}
+        >
           {displayBoard.map((piece, i) => {
             const dark = (row(i) + col(i)) % 2 === 1,
               canMove = moves.some((m) => m.from === i),
@@ -812,9 +855,11 @@ const S = StyleSheet.create({
     alignSelf: "center",
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: "2%",
+    gap: 8,
     backgroundColor: "#E7E9DC",
-    padding: 0,
-    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#D7DCCD",
+    padding: 12,
+    borderRadius: 28,
   },
 });

@@ -43,6 +43,7 @@ export function Button({
   quiet = false,
   disabled = false,
   selected = false,
+  compact = false,
   label,
   style,
 }: {
@@ -51,6 +52,7 @@ export function Button({
   quiet?: boolean;
   disabled?: boolean;
   selected?: boolean;
+  compact?: boolean;
   label?: string;
   style?: ViewStyle;
 }) {
@@ -67,14 +69,15 @@ export function Button({
       style={({ pressed }) => [
         styles.button,
         quiet && styles.quiet,
-        selected && { backgroundColor: C.soft, borderColor: C.teal },
+        compact && { minHeight: 44, paddingHorizontal: 13, paddingVertical: 9 },
+        selected && { backgroundColor: C.teal, borderColor: C.teal },
         disabled && { opacity: 0.45 },
         pressed && { opacity: 0.72 },
         focused && { outlineColor: C.blue, outlineWidth: 3 },
         style,
       ]}
     >
-      <Text style={[styles.buttonText, quiet && { color: C.ink }]}>{children}</Text>
+      <Text style={[styles.buttonText, quiet && { color: C.ink }, selected && { color: C.paper }]}>{children}</Text>
     </Pressable>
   );
 }
@@ -92,7 +95,7 @@ export function Chip({
       onPress={onPress}
       quiet
       selected={selected}
-      style={{ borderRadius: 24, paddingHorizontal: 16, minHeight: 44 }}
+      style={{ borderRadius: 24, paddingHorizontal: 16, minHeight: 44, flexShrink: 0 }}
     >
       {children}
     </Button>
@@ -138,8 +141,8 @@ export function Sheet({
 export function Status({ title, detail, success = false }: { title: string; detail?: string; success?: boolean }) {
   return (
     <View accessibilityLiveRegion="polite" style={[styles.status, success && { backgroundColor: "#E3EFE3" }]}>
-      <Heading style={{ fontSize: 23 }}>{title}</Heading>
-      {detail && <Copy style={{ marginTop: 5 }}>{detail}</Copy>}
+      <Heading style={{ fontSize: 20 }}>{title}</Heading>
+      {detail && <Copy style={{ marginTop: 4, fontSize: 14, lineHeight: 21 }}>{detail}</Copy>}
     </View>
   );
 }
@@ -149,7 +152,7 @@ export function Controls({ children }: { children: React.ReactNode }) {
 export const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: C.cream },
   content: { width: "100%", maxWidth: 1080, alignSelf: "center", paddingHorizontal: 22, paddingBottom: 36 },
-  heading: { fontFamily: font, fontSize: 32, fontWeight: "800", color: C.ink, letterSpacing: -0.7 },
+  heading: { fontFamily: font, fontSize: 32, fontWeight: "700", color: C.ink, letterSpacing: -0.6 },
   copy: { fontFamily: font, fontSize: 16, lineHeight: 25, color: C.muted },
   label: {
     fontFamily: font,
@@ -181,7 +184,7 @@ export const styles = StyleSheet.create({
     padding: 18,
   },
   sheet: { width: "100%", maxWidth: 560, maxHeight: "90%", padding: 22, borderRadius: 26, backgroundColor: C.cream },
-  status: { alignSelf: "stretch", padding: 18, borderRadius: 20, backgroundColor: "#F0F1E8", marginBottom: 20 },
+  status: { alignSelf: "stretch", padding: 14, borderRadius: 18, backgroundColor: "#F0F1E8", marginBottom: 16 },
   board: { alignSelf: "center", overflow: "hidden", borderRadius: 20, borderWidth: 2, borderColor: C.ink },
   input: {
     borderWidth: 1,

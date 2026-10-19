@@ -172,6 +172,53 @@ export function GameArt({ game, size = 112 }: { game: GameId; size?: number }) {
     </Svg>
   );
 }
+export function TicMark({ mark, size }: { mark: "X" | "O"; size: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 64 64" accessibilityElementsHidden>
+      {mark === "X" ? (
+        <Path d="M15 15 49 49M49 15 15 49" fill="none" stroke="#C56D50" strokeWidth="9" strokeLinecap="round" />
+      ) : (
+        <Circle cx="32" cy="32" r="21" fill="none" stroke="#246858" strokeWidth="8" />
+      )}
+    </Svg>
+  );
+}
+export function RocketProgress({ progress, size = 100 }: { progress: number; size?: number }) {
+  const ghost = "#D5D8CA",
+    outline = "#819483";
+  return (
+    <Svg width={size} height={size} viewBox="0 0 120 120" accessibilityElementsHidden>
+      <Ellipse cx="60" cy="108" rx="30" ry="5" fill="#E1E5D7" />
+      <G>
+        <Path d="M42 76 33 99l21-13M78 76l9 23-21-13" fill={progress >= 0.5 ? "#BD7054" : ghost} />
+        <Path
+          d="M44 80V51q0-28 16-39 16 11 16 39v29Z"
+          fill={progress > 0 ? "#FFF9E9" : "#ECEEE4"}
+          stroke={outline}
+          strokeWidth="2"
+          strokeDasharray={progress > 0 ? undefined : "4 4"}
+        />
+        <Path d="M46 34q14-30 28 0" fill={progress >= 0.3 ? "#C87961" : ghost} />
+        <Circle
+          cx="60"
+          cy="54"
+          r="10"
+          fill={progress >= 0.65 ? "#99C9CF" : ghost}
+          stroke={progress >= 0.65 ? "#285F58" : outline}
+          strokeWidth="3"
+        />
+        {progress >= 1 && (
+          <>
+            <Path d="M51 88q9 35 18 0" fill="#E8BC58" />
+            <Path d="M56 88q4 18 8 0" fill="#E6944D" />
+            <Path d="m20 32 3-7 3 7 7 3-7 3-3 7-3-7-7-3Z" fill="#E1B251" />
+            <Circle cx="96" cy="51" r="4" fill="#E1B251" />
+          </>
+        )}
+      </G>
+    </Svg>
+  );
+}
 export function Island({ width = 250 }: { width?: number }) {
   return (
     <Svg width={width} height={width * 0.65} viewBox="0 0 300 195" accessibilityElementsHidden>

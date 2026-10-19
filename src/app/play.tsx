@@ -90,23 +90,28 @@ function Game({ id }: { id: GameId }) {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[styles.content, { maxWidth: 800, paddingHorizontal: 16 }]}
       >
-        <View style={[styles.row, { paddingVertical: 18, justifyContent: "space-between", flexWrap: "wrap" }]}>
-          <Button quiet onPress={() => router.replace("/")}>
+        <View style={[styles.row, { paddingVertical: 12, justifyContent: "space-between", flexWrap: "wrap" }]}>
+          <Button compact quiet onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}>
             ‹ Games
           </Button>
           <View style={[styles.row, { gap: 8 }]}>
-            <Button quiet onPress={() => store.settings({ sound: !store.save.settings.sound })}>
+            <Button
+              compact
+              quiet
+              label={store.save.settings.sound ? "Sound on. Turn sound off" : "Sound off. Turn sound on"}
+              onPress={() => store.settings({ sound: !store.save.settings.sound })}
+            >
               {store.save.settings.sound ? "Sound on" : "Sound off"}
             </Button>
-            <Button quiet onPress={() => setHelp(true)}>
+            <Button compact quiet onPress={() => setHelp(true)}>
               How to play
             </Button>
           </View>
         </View>
-        <Label style={{ color: g.color, marginTop: 8 }}>{g.tag}</Label>
-        <Heading style={{ fontSize: width > 600 ? 37 : 31, marginTop: 7, marginBottom: 9 }}>{g.name}</Heading>
+        <Label style={{ color: g.color, marginTop: 5 }}>{g.tag}</Label>
+        <Heading style={{ fontSize: width > 600 ? 34 : 28, marginTop: 5, marginBottom: 5 }}>{g.name}</Heading>
         {s && (
-          <Copy style={{ fontSize: 13, marginBottom: 22 }}>
+          <Copy style={{ fontSize: 13, marginBottom: 15 }}>
             {difficultyLabel[s.options.difficulty]} · {s.options.mode === "together" ? g.together : g.solo}
           </Copy>
         )}
@@ -146,7 +151,7 @@ function Game({ id }: { id: GameId }) {
         ) : null}
         {s && (
           <View
-            style={{ alignItems: "center", marginTop: 28, paddingTop: 21, borderTopWidth: 1, borderTopColor: C.line }}
+            style={{ alignItems: "center", marginTop: 20, paddingTop: 18, borderTopWidth: 1, borderTopColor: C.line }}
           >
             <Button onPress={newRound}>{finished ? "Play a fresh round" : "New round & options"}</Button>
             <Copy style={{ fontSize: 12, marginTop: 12, textAlign: "center" }}>
