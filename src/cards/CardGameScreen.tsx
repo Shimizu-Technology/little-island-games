@@ -1,5 +1,6 @@
+import { Text } from "../components/Text";
 import React, { useEffect, useRef, useState } from "react";
-import { AppState, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AppState, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Svg, { Circle, Path, Polygon } from "react-native-svg";
 import { Button, C, Copy, Heading, Label, Sheet, Status, font } from "../components/ui";
 import {
@@ -16,6 +17,7 @@ import {
   rank,
   rankName,
   suit,
+  suitName,
 } from "./engine";
 
 const colors: Record<Suit, string> = { shell: "#A44E37", leaf: "#246858", sun: "#916500", wave: "#386C9A" };
@@ -73,7 +75,9 @@ function CardFace({
         focused && { outlineWidth: 3, outlineColor: C.blue },
       ]}
     >
-      <Text style={[s.rank, { color: colors[suit(card)] }]}>{rankName(rank(card))}</Text>
+      <Text style={[s.rank, { color: colors[suit(card)] }]}>
+        {({ 1: "A", 11: "J", 12: "Q", 13: "K" } as Record<number, string>)[rank(card)] ?? rank(card)}
+      </Text>
       <SuitMark kind={suit(card)} />
       <Text style={s.suit}>{suit(card)}</Text>
     </Pressable>
@@ -231,7 +235,7 @@ function CardGameRound({ state, onChange, width, active, sound, onFeedback }: Ca
         </View>
         <Copy style={{ textAlign: "center", color: C.ink }}>
           {state.game === "crazy-eights"
-            ? `Match ${state.activeSuit}s or ${rankName(rank(state.discard.at(-1)!))}. Eights are wild.`
+            ? `Match ${suitName(state.activeSuit)} or ${rankName(rank(state.discard.at(-1)!))}. Eights are wild.`
             : "Collect all four cards of a rank to make a book."}
         </Copy>
         <Copy style={{ textAlign: "center" }}>
@@ -374,7 +378,7 @@ function CardGameRound({ state, onChange, width, active, sound, onFeedback }: Ca
                 setWild(null);
               }}
             >
-              {kind}s
+              {suitName(kind)}
             </Button>
           ))}
         </View>

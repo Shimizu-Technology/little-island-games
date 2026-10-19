@@ -1,14 +1,6 @@
+import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  BackHandler,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  useWindowDimensions,
-} from "react-native";
+import { BackHandler, Pressable, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { Button, C, Chip, Copy, Heading, Label, Status, font } from "../components/ui";

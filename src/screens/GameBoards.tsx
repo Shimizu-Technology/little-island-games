@@ -1,5 +1,6 @@
+import { Text } from "../components/Text";
 import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { GameState } from "../games";
 import { TicState, ticChoice, ticMove, ticOutcome, ticTurn, ticUndo, lines } from "../games/tic";
 import { WordState, wordRules, wordStatus, wrongLetters } from "../games/words";

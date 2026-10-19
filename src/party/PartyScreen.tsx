@@ -1,5 +1,6 @@
+import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, Platform, StyleSheet, Text, TextInput, View } from "react-native";
+import { AppState, Platform, StyleSheet, TextInput, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { Button, C, Copy, Heading, Label, Sheet } from "../components/ui";
 import { PARTY_PACKS, PartyPackId, partyPack, partyWord } from "./content";

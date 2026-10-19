@@ -1,5 +1,6 @@
+import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { AppState, Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Button, C, Copy, Heading, Label } from "../components/ui";
 import { COURSES, CourseId, raceCourse } from "./courses";
 import {

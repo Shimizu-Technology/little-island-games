@@ -1,5 +1,6 @@
+import { Text } from "../components/Text";
 import React, { useState } from "react";
-import { Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Pressable, ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { GameId, gameIds, games, isFinished } from "../games";

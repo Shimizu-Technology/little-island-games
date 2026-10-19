@@ -8,7 +8,8 @@ export const rank = (card: Card) => (card % 13) + 1;
 export const suit = (card: Card): Suit => SUITS[Math.floor(card / 13)];
 export const rankName = (r: number) =>
   ["", "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"][r];
-export const cardName = (c: Card) => `${rankName(rank(c))} of ${suit(c) === "leaf" ? "leaves" : `${suit(c)}s`}`;
+export const suitName = (kind: Suit) => kind === "leaf" ? "leaves" : `${kind}s`;
+export const cardName = (c: Card) => `${rankName(rank(c))} of ${suitName(suit(c))}`;
 export const points = (c: Card) => (rank(c) === 8 ? 50 : Math.min(rank(c), 10));
 export type CardResult = {
   winner: 0 | 1 | "tie";
@@ -172,7 +173,7 @@ export function cardAction(
     s.activeSuit = rank(action.card) === 8 ? action.suit! : suit(action.card);
     s.drawn = null;
     s.passes = 0;
-    s.message = `Player ${p + 1} played ${cardName(action.card)}.${rank(action.card) === 8 ? ` Match ${s.activeSuit}s next.` : ""}`;
+    s.message = `Player ${p + 1} played ${cardName(action.card)}.${rank(action.card) === 8 ? ` Match ${suitName(s.activeSuit)} next.` : ""}`;
     if (!s.hands[p].length) eightsResult(s, "empty-hand");
     else s.turn = q;
   } else if (action.type === "draw") {
