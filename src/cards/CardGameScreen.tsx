@@ -119,8 +119,17 @@ function CardGameRound({ state, onChange, width, active, sound, onFeedback }: Ca
       setForeground(value === "active");
       if (value !== "active") conceal();
     });
-    const blur = Platform.OS === "android" ? AppState.addEventListener("blur", conceal) : null;
-    if (Platform.OS === "web") window.addEventListener("blur", conceal);
+    const suspend = () => {
+      setForeground(false);
+      conceal();
+    };
+    const focus = () => setForeground(Platform.OS === "web" ? !document.hidden : AppState.currentState === "active");
+    const blur = Platform.OS === "android" ? AppState.addEventListener("blur", suspend) : null;
+    const focused = Platform.OS === "android" ? AppState.addEventListener("focus", focus) : null;
+    if (Platform.OS === "web") {
+      window.addEventListener("blur", suspend);
+      window.addEventListener("focus", focus);
+    }
     const webVisibility = () => {
       setForeground(!document.hidden);
       conceal();
@@ -130,7 +139,11 @@ function CardGameRound({ state, onChange, width, active, sound, onFeedback }: Ca
     return () => {
       subscription.remove();
       blur?.remove();
-      if (Platform.OS === "web") window.removeEventListener("blur", conceal);
+      focused?.remove();
+      if (Platform.OS === "web") {
+        window.removeEventListener("blur", suspend);
+        window.removeEventListener("focus", focus);
+      }
       if (Platform.OS === "web" && typeof document !== "undefined")
         document.removeEventListener("visibilitychange", webVisibility);
     };
