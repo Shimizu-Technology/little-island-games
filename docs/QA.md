@@ -1,5 +1,7 @@
 # Acceptance ledger
 
+This is the historical first-release ledger. Current V2 source/build evidence, remaining integration gates and physical family checks are recorded in [V2_QA.md](V2_QA.md). Leon has explicitly authorized reviewed source integration and an internal beta; physical/child and public-release acceptance remain separate.
+
 Executor: agent for automated/browser/simulator checks; Leon/Stassie for physical-device usability. Comprehensive first-release scope. Record exact source/build and evidence before calling a scenario passed. Case status includes every required device dimension; browser-only coverage remains partial until native acceptance is recorded.
 
 | ID  | Required journey                              | Expected outcome                                                  | Status                                                           |
