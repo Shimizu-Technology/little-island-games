@@ -60,7 +60,7 @@ describe("Word Rescue", () => {
     expect(WORDS.every((w) => /^[A-Z]{2,12}$/.test(w[0]) && w[2].length > 10)).toBe(true);
   });
   it("gives unlimited attempts and free hints until solved", () => {
-    let s = customWord(opts, "mama")!;
+    let s = customWord({ ...opts, wordRules: "practice" }, "mama")!;
     s = guessLetter(s, "Z");
     expect(s.guessed).toEqual(["Z"]);
     expect(guessLetter(s, "Z")).toBe(s);

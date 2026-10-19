@@ -5,7 +5,7 @@ import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { GameId, GameState, Options, createGame, difficultyLabel, gameIds, games, isFinished } from "../games";
 import { defaultOptions } from "../games/types";
 import { positionKey } from "../games/checkers";
-import { createWord, customWord, guessLetter, wordHint, WORDS } from "../games/words";
+import { createWord, customWord, guessLetter, wordHint, wordRules, wordStatus, WORDS } from "../games/words";
 import { useStore } from "../state/Store";
 import { Button, C, Chip, Copy, Heading, Label, Sheet, styles } from "../components/ui";
 import { useSounds } from "../components/Audio";
@@ -35,14 +35,15 @@ function Game({ id }: { id: GameId }) {
   const sound = useSounds(store.save.settings.sound),
     finished = s ? isFinished(s) : false,
     wasFinished = useRef(finished);
+  const lostWord = s?.game === "word-rescue" && wordStatus(s) === "lost";
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => setActive(state === "active"));
     return () => sub.remove();
   }, []);
   useEffect(() => {
-    if (finished && !wasFinished.current) sound("win");
+    if (finished && !wasFinished.current) sound(lostWord ? "tap" : "win");
     wasFinished.current = finished;
-  }, [finished, sound]);
+  }, [finished, sound, lostWord]);
   const update = store.update;
   const commit = useCallback((next: GameState) => update(id, next, s), [id, s, update]);
   function start() {
@@ -117,6 +118,7 @@ function Game({ id }: { id: GameId }) {
         {s && (
           <Copy style={{ fontSize: 13, marginBottom: 15 }}>
             {difficultyLabel[s.options.difficulty]} · {s.options.mode === "together" ? g.together : g.solo}
+            {s.game === "word-rescue" && ` · ${wordRules(s) === "challenge" ? "Six-guess Challenge" : "Practice"}`}
             {id === "checkers" &&
               (s.game === "checkers" && s.lesson !== null
                 ? " · Classic practice lesson"
@@ -169,6 +171,15 @@ function Game({ id }: { id: GameId }) {
         ) : s?.game === "numbers" ? (
           <NumbersBoard {...boardProps} state={s} commit={commit} />
         ) : null}
+        {s?.game === "word-rescue" && store.save.wordRecords && (
+          <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 20 }}>
+            Challenge record: {store.save.wordRecords.wins} won · {store.save.wordRecords.losses} lost ·{" "}
+            {store.save.wordRecords.assistedWins} assisted wins
+            {store.save.wordRecords.bestWrong !== null
+              ? ` · Best: ${store.save.wordRecords.bestWrong} wrong guesses without a hint`
+              : ""}
+          </Copy>
+        )}
         {s && (
           <View
             style={{ alignItems: "center", marginTop: 20, paddingTop: 18, borderTopWidth: 1, borderTopColor: C.line }}
@@ -207,6 +218,30 @@ function Game({ id }: { id: GameId }) {
             </Chip>
           ))}
         </View>
+        {id === "word-rescue" && (
+          <>
+            <Heading style={{ fontSize: 18 }}>Choose your rules</Heading>
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              <Chip
+                selected={options.wordRules !== "practice"}
+                onPress={() => setOptions({ ...options, wordRules: "challenge" })}
+              >
+                Challenge
+              </Chip>
+              <Chip
+                selected={options.wordRules === "practice"}
+                onPress={() => setOptions({ ...options, wordRules: "practice" })}
+              >
+                Practice
+              </Chip>
+            </View>
+            <Copy>
+              {options.wordRules === "practice"
+                ? "Unlimited attempts and letter hints. Practice rounds do not change your Challenge record."
+                : "Find the word before six wrong letter guesses. One optional hint marks the result assisted."}
+            </Copy>
+          </>
+        )}
         {id === "checkers" && (
           <>
             <Heading style={{ fontSize: 18 }}>Choose your rules</Heading>
@@ -293,6 +328,30 @@ function Game({ id }: { id: GameId }) {
           Listen to the instructions
         </Button>
         {!store.save.settings.sound && <Copy>Turn sound on to hear the instructions.</Copy>}
+        {id === "word-rescue" && (
+          <>
+            <Heading style={{ fontSize: 18 }}>Choose your rules</Heading>
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              <Chip
+                selected={options.wordRules !== "practice"}
+                onPress={() => setOptions({ ...options, wordRules: "challenge" })}
+              >
+                Challenge
+              </Chip>
+              <Chip
+                selected={options.wordRules === "practice"}
+                onPress={() => setOptions({ ...options, wordRules: "practice" })}
+              >
+                Practice
+              </Chip>
+            </View>
+            <Copy>
+              {options.wordRules === "practice"
+                ? "Unlimited attempts and letter hints. Practice rounds do not change your Challenge record."
+                : "Find the word before six wrong letter guesses. One optional hint marks the result assisted."}
+            </Copy>
+          </>
+        )}
         {id === "checkers" && (
           <Copy>
             The four little lessons are below the board. “Back to my game” restores your full round. Your board keeps

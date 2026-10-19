@@ -2,12 +2,14 @@ import { GameId, GameState, gameIds } from "../games";
 import { checkersResult } from "../games/checkers";
 import { ticOutcome, lines } from "../games/tic";
 import { memorySymbols } from "../games/memory";
+import { WordRecords, validWordRecords } from "./wordRecords";
 export type Settings = { sound: boolean; help: boolean };
 export type Save = {
   version: 1;
   settings: Settings;
   sessions: Partial<Record<GameId, GameState>>;
   recent: GameId | null;
+  wordRecords?: WordRecords;
 };
 export const emptySave = (): Save => ({
   version: 1,
@@ -64,7 +66,8 @@ export function validSession(v: unknown): v is GameState {
     !["easy", "medium", "hard"].includes(v.options.difficulty as string) ||
     !["solo", "together"].includes(v.options.mode as string) ||
     typeof v.options.computerFirst !== "boolean" ||
-    (v.options.checkersRules !== undefined && !["friendly", "classic"].includes(v.options.checkersRules as string))
+    (v.options.checkersRules !== undefined && !["friendly", "classic"].includes(v.options.checkersRules as string)) ||
+    (v.options.wordRules !== undefined && !["practice", "challenge"].includes(v.options.wordRules as string))
   )
     return false;
   switch (v.game) {
@@ -91,8 +94,8 @@ export function validSession(v: unknown): v is GameState {
         );
       });
     }
-    case "word-rescue":
-      return (
+    case "word-rescue": {
+      const valid =
         typeof v.word === "string" &&
         /^[A-Z]{2,12}$/.test(v.word) &&
         typeof v.clue === "string" &&
@@ -104,8 +107,18 @@ export function validSession(v: unknown): v is GameState {
         v.guessed.every((l) => /^[A-Z]$/.test(l)) &&
         int(v.hints, 0, 12) &&
         typeof v.custom === "boolean" &&
-        strings(v.seen, 12, 60)
+        strings(v.seen, 12, 60);
+      if (!valid) return false;
+      const word = v.word as string,
+        guessed = v.guessed as string[];
+      const found = [...new Set(word)].filter((letter) => guessed.includes(letter)).length;
+      const wrong = guessed.filter((letter) => !word.includes(letter)).length;
+      return (
+        (v.hints as number) <= found &&
+        (v.options.wordRules !== "challenge" ||
+          ((v.hints as number) <= 1 && wrong <= 6 && !(wrong === 6 && found === new Set(word).size)))
       );
+    }
     case "memory": {
       if (
         !strings(v.cards, 20, 24) ||
@@ -262,7 +275,8 @@ export function parseSave(raw: string): Save {
     !obj(v.sessions) ||
     Object.keys(v.sessions).some((k) => !gameIds.includes(k as GameId)) ||
     !Object.entries(v.sessions).every(([k, s]) => validSession(s) && s.game === k) ||
-    (v.recent !== null && !gameIds.includes(v.recent as GameId))
+    (v.recent !== null && !gameIds.includes(v.recent as GameId)) ||
+    (v.wordRecords !== undefined && !validWordRecords(v.wordRecords))
   )
     throw new Error("Some saved game data is invalid. Your original has been kept.");
   return v as unknown as Save;

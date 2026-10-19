@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { Save, emptySave, parseSave } from "./validation";
 import { preserveAndReplace } from "./replacement";
 import { applySessionAction } from "./sessionAction";
+import { recordWordRound } from "./wordRecords";
 type Store = {
   save: Save;
   ready: boolean;
@@ -75,6 +76,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const commit = useCallback(
     (next: Save) => {
       if (restoring.current) return;
+      const previousWord = latest.current.sessions["word-rescue"],
+        nextWord = next.sessions["word-rescue"];
+      const records = recordWordRound(
+        previousWord?.game === "word-rescue" ? previousWord : undefined,
+        nextWord?.game === "word-rescue" ? nextWord : undefined,
+        next.wordRecords
+      );
+      if (records !== next.wordRecords) next = { ...next, wordRecords: records };
       latest.current = next;
       setSave(next);
       void persist(next);

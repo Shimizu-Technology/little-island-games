@@ -2,7 +2,14 @@ export type GameId = "tic-tac-toe" | "word-rescue" | "memory" | "checkers" | "ma
 export type Difficulty = "easy" | "medium" | "hard";
 export type Mode = "solo" | "together";
 export type CheckersRules = "friendly" | "classic";
-export type Options = { difficulty: Difficulty; mode: Mode; computerFirst: boolean; checkersRules?: CheckersRules };
+export type WordRules = "challenge" | "practice";
+export type Options = {
+  difficulty: Difficulty;
+  mode: Mode;
+  computerFirst: boolean;
+  checkersRules?: CheckersRules;
+  wordRules?: WordRules;
+};
 export const defaultOptions: Options = { difficulty: "easy", mode: "solo", computerFirst: false };
 export type Base = { game: GameId; id: string; options: Options };
 export function base(game: GameId, options: Options): Base {
