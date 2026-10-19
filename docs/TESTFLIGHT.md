@@ -27,4 +27,24 @@ Success requires an App Store Connect record for this exact bundle ID, an upload
 
 Keep this beta limited to Leon's adult tester account. The existing child-account and speech-distribution limitations in PRIVACY.md remain. Physical offline launch/audio, Files backup round trip, accessibility, and the remaining device/mode matrix still need acceptance. The draft implementation PR remains held until its required gates pass.
 
-Current setup: the App Store Connect record and signing are ready. Build, upload, processing, and tester availability have not yet been verified.
+## Local build 4
+
+The cloud service rejected the build because the account’s free monthly iOS allowance was exhausted. No cloud build was created and no plan upgrade was purchased. A local Xcode 26.6 archive and `app-store-connect` distribution export succeeded instead.
+
+- Source: `567b5174146123dc630e13cd09d69e99f7e7d2c8`; runtime game code remains the reviewed build 3 source.
+- Artifact: `LittleIsland.ipa`, 19,819,035 bytes.
+- SHA-256: `0b50449522be1e97b8c90fc970059f1840955ee413548286e323773265f53359`.
+- Verified version 1.0.0 (4), exact bundle ID, minimum OS 16.4, both device families, and strict code signature.
+- Embedded App Store profile has beta entitlement, no device list, and debugging disabled.
+- Existing credentials were reused. The temporary signing keychain, private files, and task-installed profile were removed; the original keychain search list was restored.
+- Internal group `Leon` (`95450b29-136b-4227-8df6-7eb3c67ceff9`) contains Leon’s existing account only; automatic distribution is off.
+
+Submit the exact locally verified artifact:
+
+```sh
+eas submit --platform ios --profile production --path /absolute/path/to/LittleIsland.ipa --non-interactive
+```
+
+Local artifact paths, signatures, source, and delivery receipts stay outside Git in the sibling `little-island-games-artifacts/testflight` directory. Submission `6e2572ae-676d-4c08-8b2f-9113efdf16cc` finished successfully. Apple processing completed. App Store Connect’s **Leon** group shows **1.0.0 (4) — Testing**, **1 Tester / 1 Build**, and the existing tester account is **Invited**. Apple build ID: `25e90130-e46b-46b0-a271-f3dc0ea3e38d`. Availability was verified through the signed-in UI; a final API receipt timed out. See [delivery evidence](evidence/testflight-build4.json).
+
+Open TestFlight on the family device with the invited account, accept the invitation, and install **Little Island: Family Games 1.0.0 (4)**. No physical installation has been verified. TestFlight delivery is complete; the remaining QA.md acceptance cases and draft PR hold remain.

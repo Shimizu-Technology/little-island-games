@@ -15,3 +15,5 @@
 Future: Four in a Row, tangrams, Dots and Boxes, word search, reviewed CHamoru content. Cloud sync and separate-device play are separate projects.
 
 Current acceptance: browser journeys and source review have passed their recorded dimensions. Native installed release journeys and update preservation are recorded. The remaining mode/device matrix, signed family installation and Stassie’s physical-device observation remain separate required gates in docs/QA.md.
+
+Internal TestFlight 1.0.0 (4) is available to Leon; see docs/TESTFLIGHT.md. This delivery provides the physical testing route and does not mark the remaining acceptance checkbox complete.

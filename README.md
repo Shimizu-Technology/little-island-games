@@ -34,13 +34,15 @@ A Release build embeds JavaScript and assets and runs without Metro. `npm run io
 
 ## Family installation
 
-`eas.json` supplies Release profiles for a simulator (`simulator`) and registered family devices (`family`). EAS project/account configuration and signing credentials must be available before a cloud build can run:
+Internal TestFlight testing uses the separate **Little Island: Family Games** App Store Connect record and Leon’s internal tester group. See [TestFlight release details](docs/TESTFLIGHT.md) for the exact build and delivery status. TestFlight installation does not require registering device IDs. Physical acceptance remains in the [acceptance ledger](docs/QA.md).
+
+For direct development/ad hoc installation, `eas.json` also supplies Release profiles for a simulator (`simulator`) and registered family devices (`family`). Signing credentials and available cloud-build allowance are needed:
 
 ```sh
 npx eas-cli@latest build --platform ios --profile family
 ```
 
-Register the actual iPad and iPhones before producing an internal distribution build, then install the resulting signed artifact on those devices. This repository does not contain credentials or provisioning profiles. Public store submission is outside the family preview. See the acceptance ledger for the actual build/install status; configuration alone is not an installed app.
+Register the actual iPad and iPhones before producing an internal distribution build, then install the resulting signed artifact on those devices. This repository does not contain credentials or provisioning profiles. Public App Store release is outside this family beta. See the acceptance ledger for the actual build/install status; configuration alone is not an installed app.
 
 Before Stassie uses it, verify her device's Settings → General → About model and iPadOS version, install a compatible signed build, then observe choosing a game, asking for help, leaving/resuming, and replaying. Verify cold launch, audio and saves in airplane mode. Export a backup before replacing or uninstalling a family build.
 
