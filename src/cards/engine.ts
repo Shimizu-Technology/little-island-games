@@ -8,7 +8,7 @@ export const rank = (card: Card) => (card % 13) + 1;
 export const suit = (card: Card): Suit => SUITS[Math.floor(card / 13)];
 export const rankName = (r: number) =>
   ["", "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"][r];
-export const cardName = (c: Card) => `${rankName(rank(c))} of ${suit(c)}s`;
+export const cardName = (c: Card) => `${rankName(rank(c))} of ${suit(c) === "leaf" ? "leaves" : `${suit(c)}s`}`;
 export const points = (c: Card) => (rank(c) === 8 ? 50 : Math.min(rank(c), 10));
 export type CardResult = {
   winner: 0 | 1 | "tie";

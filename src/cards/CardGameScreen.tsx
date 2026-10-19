@@ -109,7 +109,7 @@ function CardGameRound({ state, onChange, width, active, sound, onFeedback }: Ca
   const turnKey = `${state.id}:${state.turn}`;
   const playing = active && foreground && !help && !setup;
   const cpu = state.options.mode === "solo" && state.turn === 1 && !state.result;
-  const visible = playing && !cpu && reveal === turnKey;
+  const visible = playing && !cpu && (state.options.mode === "solo" || reveal === turnKey);
   useEffect(() => {
     const conceal = () => {
       setReveal(null);
@@ -194,7 +194,7 @@ function CardGameRound({ state, onChange, width, active, sound, onFeedback }: Ca
             ? state.game === "go-fish"
               ? `All 13 books found. ${result.scores[0]} – ${result.scores[1]}.`
               : `${result.reason === "blocked" ? "Neither player can move. Lowest hand total wins." : "An empty hand wins the round."} Round points: ${result.scores[0]} – ${result.scores[1]}.`
-            : state.message
+            : state.message.replace(/Player 1/g, playerName(0)).replace(/Player 2/g, playerName(1))
         }
         success={!!result}
       />
