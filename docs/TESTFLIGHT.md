@@ -53,8 +53,16 @@ Open TestFlight on the family device with the invited account, accept the invita
 
 Build 5 delivered the PR1 family-feedback changes. Source `97f010851e8f15b08457bf546a82cc2cdbe416d6` has the same application tree as merged main `e4ba26a42ea7bd6ede424b23c0e34943674c7367`. The exact 19,857,178-byte IPA SHA256 is `f5cc2a91d1b1eca1e6b4d496c96e78364898f63264836ada5e7905be42a7302b`; strict signature, App Store profile, bundle/version/families/minimum OS were verified. Submission `d054d8a2-6f1b-43ac-9ad1-650b106be10b` finished. Apple build `5aa8804f-3ac7-4718-aa70-531694403de3` is `VALID` / `IN_BETA_TESTING`, attached to the existing Leon group (one adult, automatic distribution off). Local receipts are `ipa-build5.json`, `submission-build5.json` and `apple-build5.json` in the artifact directory above. Physical installation is not established by that API receipt.
 
-## V2 target: 1.1.0 (6), not delivered yet
+## V2 internal beta: 1.1.0 (6), available
 
 Leon explicitly authorized the full V2 implementation, reviewed main integration and next internal TestFlight build. [V2_RELEASE.md](V2_RELEASE.md) defines scope; [V2_QA.md](V2_QA.md) records completed journeys and unresolved gates. Local simulator artifact iteration names such as “Native7” still identify 1.1.0 (6), not a TestFlight build 7.
 
-App Store Connect preflight confirmed build 6 is unused and the existing Leon group still has one adult tester, automatic distribution off, and only builds 4/5 attached. Build6 helper copies are prepared outside Git; no V2 signing, submission or availability is claimed. After required integration acceptance, record exact merged main source, archive/IPA hash and identity, submission, Apple processing state and existing-group availability here. Continue using the local archive/export fallback if cloud quota remains exhausted; do not purchase a plan or change shared credentials.
+PR#2 merged to main as `e9445d113487862f5388fef8efb4d53c3a89d2ee`. Its final PR validation and post-merge main validation passed. A fresh CNG workspace and pods were generated from that clean main commit, then the local archive/export fallback produced the signed IPA. Existing signing credentials were reused; the temporary keychain, private files and task-installed profile were removed.
+
+- IPA: 28,978,652 bytes; SHA256 `e8b2af97cc57cbb5c81d6bb61a2c6b696c10ed7b9cb2b03f1001af0a5d681b8b`.
+- Embedded JS SHA256 `ff0d1e28d476385289846e13479af27f88b9c1b8262ee0ea03bc8d6ec6a4b2ca` matches the sealed archive. Strict code signature, signed App Store entitlements, bundle ID, version/build, minimum16.4, both device families and Bonjour configuration were verified.
+- All50 Explore narration files in the signed IPA match their source bytes. This verifies bundling; physical audio playback and pronunciation remain operator checks.
+- EAS submission `9f75b440-1505-47e1-b90b-29fcab7eb868` finished. The exact completed Apple upload links to build `73bc73b2-8786-49eb-8cb2-26a1f57c4fa6`.
+- At `2026-10-19T22:51:07.482Z`, App Store Connect reports `VALID` / `IN_BETA_TESTING`, attached to the existing **Leon** internal group with one adult tester and automatic distribution off. Updated English testing notes were verified. No public group or public release was created.
+
+Open TestFlight and update **Little Island: Family Games** to **1.1.0 (6)**. Availability does not prove installation or physical family acceptance. See [delivery evidence](evidence/testflight-build6.json) and [the V2 acceptance ledger](V2_QA.md) for remaining device/operator checks. Local archive, signature, source and delivery receipts remain outside Git in the artifact directory above.
