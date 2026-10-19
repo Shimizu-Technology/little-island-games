@@ -18,7 +18,7 @@ Executor: agent for automated/browser/simulator checks; Leon/Stassie for physica
 | A12 | iPhone/iPad portrait/landscape                | Reachable touch controls, legible boards, no clipped content      | PARTIAL — recorded browser/native passes; remaining matrix below |
 | A13 | Sound off, larger text, screen-reader labels  | Essential instructions remain understandable                      | PARTIAL — recorded browser/native passes; remaining matrix below |
 | A14 | Stassie physical iPad observation             | Independently choose/move/help/resume/replay                      | BLOCKED — physical device unavailable                            |
-| A15 | Signed family install                         | Registered-device artifact installable on target device           | BLOCKED — physical device unavailable                            |
+| A15 | Signed family install                         | TestFlight artifact installs on a family device                   | PARTIAL — Leon reports phone installation/use; iPad unverified   |
 
 Simulator/browser checks do not establish physical-device or child usability acceptance. Do not conflate automated checks, review, merged source, build success, and family installation.
 
@@ -85,7 +85,6 @@ The development-signed build 3 IPA and SHA256/source manifest are local in the s
 
 Final source web cache fingerprint: 82820aa3c993. Stopped owned static server PID 69995 and verified no listener on 43821. All six routes cold-reloaded again from this cache without console errors. Task-owned native simulators were shut down by exact UDID after closing their Device panels; borrowed simulators/services were left running.
 
-
 ## Internal TestFlight delivery, October 19, 2026
 
 Leon requested TestFlight for his own testing after the family preview. Source `567b5174146123dc630e13cd09d69e99f7e7d2c8` produced a local Xcode 26.6 Release archive and App Store distribution export, version 1.0.0 (4). The runtime game code is unchanged from the recorded build 3 tests. The source configuration gate passed typecheck, lint, 44 tests, web export and Expo Doctor 21/21; CI passed the release configuration, and an independent reviewer approved it. Strict signature, exact bundle/version, both device families, minimum OS16.4 and App Store profile entitlements passed. The temporary signing credentials/keychain/profile were cleaned.
@@ -93,3 +92,7 @@ Leon requested TestFlight for his own testing after the family preview. Source `
 EAS cloud build creation was rejected because the free monthly iOS allowance was exhausted; no upgrade was purchased. The local artifact was submitted instead. Submission `6e2572ae-676d-4c08-8b2f-9113efdf16cc` finished. App Store Connect app `6824481437` processed Apple build `25e90130-e46b-46b0-a271-f3dc0ea3e38d`. Agent-executed UI verification confirmed the Leon internal group has one tester and one build, **1.0.0 (4) — Testing**, with the existing tester account **Invited**. Automatic distribution is off; no public link was created. The final API check timed out, so the final availability evidence comes from the actual group/tester views. See [release details](TESTFLIGHT.md) and [structured evidence](evidence/testflight-build4.json).
 
 This passes beta delivery to the invited account. It does not pass physical installation or the remaining acceptance matrix above. TestFlight no longer requires registering the iPad’s device ID for this route. Its actual model/iPadOS, offline audio and cold launch, Files export/import round trip, VoiceOver, remaining modes/devices and family usability still need verification before overall release acceptance and merge.
+
+## Family feedback integration, October 19, 2026
+
+Leon explicitly requested review, fixes and merge of PR1 after testing TestFlight build4 on his phone. His screenshots establish adult phone installation, home/Tic/checkers/word play and the reported defects. They do not establish Stassie/iPad/offline/audio/VoiceOver acceptance. TestFlight installation supersedes device-registration requirements for A15. Earlier blanket PR holds above describe the previous agent's release workflow; the current source-integration gates and execution ledger are in [POLISH_REVIEW.md](POLISH_REVIEW.md). Public release and the unfinished family acceptance matrix remain separate and unpassed.

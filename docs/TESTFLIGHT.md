@@ -25,7 +25,7 @@ EAS owns the signing credentials. No private keys, certificates, passwords, or p
 
 Success requires an App Store Connect record for this exact bundle ID, an uploaded build that finishes processing, and internal access for Leon. A successful upload alone does not establish that the build is available in TestFlight or installed on a device. Record the exact source, build ID, Apple processing state, tester group, and remaining checks after delivery.
 
-Keep this beta limited to Leon's adult tester account. The existing child-account and speech-distribution limitations in PRIVACY.md remain. Physical offline launch/audio, Files backup round trip, accessibility, and the remaining device/mode matrix still need acceptance. The draft implementation PR remains held until its required gates pass.
+Keep this beta limited to Leon's adult tester account. The existing child-account and speech-distribution limitations in PRIVACY.md remain. Physical offline launch/audio, Files backup round trip, accessibility, and the remaining device/mode matrix still need acceptance. PR1 source integration now follows the explicit family-feedback gates in POLISH_REVIEW.md; public and physical/child acceptance remain separate.
 
 ## Local build 4
 
@@ -47,4 +47,4 @@ eas submit --platform ios --profile production --path /absolute/path/to/LittleIs
 
 Local artifact paths, signatures, source, and delivery receipts stay outside Git in the sibling `little-island-games-artifacts/testflight` directory. Submission `6e2572ae-676d-4c08-8b2f-9113efdf16cc` finished successfully. Apple processing completed. App Store Connect’s **Leon** group shows **1.0.0 (4) — Testing**, **1 Tester / 1 Build**, and the existing tester account is **Invited**. Apple build ID: `25e90130-e46b-46b0-a271-f3dc0ea3e38d`. Availability was verified through the signed-in UI; a final API receipt timed out. See [delivery evidence](evidence/testflight-build4.json).
 
-Open TestFlight on the family device with the invited account, accept the invitation, and install **Little Island: Family Games 1.0.0 (4)**. No physical installation has been verified. TestFlight delivery is complete; the remaining QA.md acceptance cases and draft PR hold remain.
+Open TestFlight on the family device with the invited account, accept the invitation, and install **Little Island: Family Games 1.0.0 (4)**. Leon subsequently reported successful phone use and supplied screenshots. The iPad and child acceptance remain unverified. Build4 delivery is complete; PR1 is being updated under the new family-feedback integration gates.
