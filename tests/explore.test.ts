@@ -8,6 +8,7 @@ import {
   topicNarration,
 } from "../src/explore/content";
 import {
+  dayNightDot,
   FOOD_CHAIN,
   HABITATS,
   PLACES,
@@ -57,6 +58,8 @@ describe("five offline discovery activities", () => {
   it("turns a marked place through day and night and returns after one complete turn", () => {
     let state = newLab();
     const start = state.turn;
+    expect(dayNightDot(1).y).toBeLessThan(0); // Counterclockwise from above the North Pole.
+    expect(dayNightDot(4).x).toBeLessThan(0); // Sunlight enters from the left.
     expect(isDay(state.turn)).toBe(false);
     for (let i = 0; i < 4; i++) state = labAction(state, { type: "turn", by: 1 });
     expect(isDay(state.turn)).toBe(true);

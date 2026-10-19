@@ -1,7 +1,7 @@
 import React from "react";
 import Svg, { Circle, Ellipse, G, Line, Path, Rect } from "react-native-svg";
 import { ExploreTopic, WORLDS, WorldId } from "./content";
-import { PLACES } from "./activities";
+import { PLACES, dayNightDot } from "./activities";
 const ink = "#254E4B",
   blue = "#91C5D0",
   green = "#80A97D",
@@ -322,8 +322,9 @@ export function WorldGlyph({ world, size = 80 }: { world: WorldId; size?: number
   );
 }
 export function EarthLabArt({ turn }: { turn: number }) {
-  const x = 219 + Math.cos((turn * Math.PI) / 4) * 48,
-    y = 95 + Math.sin((turn * Math.PI) / 4) * 48;
+  const position = dayNightDot(turn);
+  const x = 219 + position.x * 48,
+    y = 95 + position.y * 48;
   return (
     <Svg width="100%" height={190} viewBox="0 0 340 190" accessibilityElementsHidden>
       <Rect width={340} height={190} rx={20} fill="#EEEAF6" />
@@ -332,8 +333,10 @@ export function EarthLabArt({ turn }: { turn: number }) {
         <Path key={y} d={`M93 ${y}h56m-7-4 7 4-7 4`} stroke="#D4AC59" strokeWidth={3} fill="none" />
       ))}
       <Circle cx={219} cy={95} r={57} fill={blue} />
-      <Path d="M219 38a57 57 0 0 1 0 114Z" fill="#4D5877" />
-      <Path d="m183 60 21 8-6 25-24 16m51-45 25 24-8 28" fill={green} />
+      <G rotation={-turn * 45} origin="219,95">
+        <Path d="m183 60 21 8-6 25-24 16m51-45 25 24-8 28" fill={green} />
+      </G>
+      <Path d="M219 38a57 57 0 0 1 0 114Z" fill="#25304E" opacity={0.72} />
       <Circle cx={x} cy={y} r={8} fill={coral} stroke="#FFF" strokeWidth={3} />
     </Svg>
   );

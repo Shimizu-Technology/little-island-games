@@ -192,6 +192,9 @@ export const WATER_ACTIONS: Record<WaterPlace, { action: string; label: string; 
       },
     ],
   };
+export function dayNightDot(turn: number) {
+  return { x: Math.cos((turn * Math.PI) / 4), y: -Math.sin((turn * Math.PI) / 4) };
+}
 export function isDay(turn: number): boolean {
   return Math.cos(((turn % 8) * Math.PI) / 4) < -0.001;
 }
