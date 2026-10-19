@@ -24,9 +24,9 @@ Simulator/browser checks do not establish physical-device or child usability acc
 
 ## Agent run — 2026-10-19
 
-Source 8383e007eed5b8145dd44610f5fb1315667e6a70, Expo58 browser export 337654db8081. Native toolchain is being aligned to the proven Expo57/RN0.86.3 reference after an upstream artifact download connection reset; integration acceptance will be refreshed after that change.
+Source 8383e007eed5b8145dd44610f5fb1315667e6a70, Expo 58 browser export 337654db8081. Native toolchain is being aligned to the proven Expo 57/RN 0.86.3 reference after an upstream artifact download connection reset; integration acceptance will be refreshed after that change.
 
-- Engineering: typecheck, lint, 44 regression tests and web export passed; Expo Doctor20/20; advisory Impeccable scan returned[] (not usability acceptance).
+- Engineering: typecheck, lint, 44 regression tests and web export passed; Expo Doctor 20/20; advisory Impeccable scan returned[] (not usability acceptance).
 - Browser at iPad-mini768×1024 and compact-phone375×667: six home choices and no horizontal overflow. Completed two-player Tic win (5moves), reloaded exact board, undid to4moves. Word-pack BLUE completed with hints; clue/word audio loaded without console errors. Family secret STAR typed securely, one letter persisted across reload.
 - Memory: a mismatch survived reload, explicit turn-over changed player, six matching pairs completed; final scores0–6 remained visible.
 - Checkers: full solo human/computer decision, all four playable lessons including forced multi-jump and crowning, then exact original full-round position/history restored. Undo returned to original player decision.
@@ -37,14 +37,20 @@ Source 8383e007eed5b8145dd44610f5fb1315667e6a70, Expo58 browser export 337654db8
 - Browser screenshots: browser-screenshot-127-0-0-1-mvf2lq7r-36d7e006.png (tablet), browser-screenshot-127-0-0-1-mvf2lqa3-ceba0c5c.png (phone), under local T3 browser-artifacts.
 - Remaining: native installed release build, force-close/AI interruption, native keyboard/rotation/larger text, update preservation, signed family installation, and physical Stassie playtest. Do not mark these passed from browser results.
 
-Review: independent engine reviewer found/fixed oversized checkers saves, stale restore snapshots, invalid imported states, and recovery-key collision. Independent UI reviewer found/fixed tutorial replacing full round and hidden final memory scores. Final engine/save recheck and UI/config review passed after Expo57 alignment; no remaining material source objections. Native artifact acceptance remains separate.
+Review: independent engine reviewer found/fixed oversized checkers saves, stale restore snapshots, invalid imported states, and recovery-key collision. Independent UI reviewer found/fixed tutorial replacing full round and hidden final memory scores. Final engine/save recheck and UI/config review passed after Expo 57 alignment; no remaining material source objections. Native artifact acceptance remains separate.
 
-## SDK57 integration refresh — 2026-10-19
+## SDK 57 integration refresh — 2026-10-19
 
-Source 8383e00 plus the committed dependency/tooling alignment (see Git history). Expo57/RN0.86.3 export fingerprint9d450c5136ee. Engineering gate passed again: typecheck, lint,44 tests, web export, Expo Doctor21/21.
+Source 8383e00 plus the committed dependency/tooling alignment (see Git history). Expo 57/RN 0.86.3 export fingerprint 9d450c5136ee. Engineering gate passed again: typecheck, lint,44 tests, web export, Expo Doctor 21/21.
 
-At768×1024, completed/reloaded a two-player Tic win and verified the exact five-move saved board. Started all other five games through their setup UI. At375×667, Number Island roll/hint/close updated persisted progress with no horizontal overflow. Stopped and released owned static server PID87902; all six saved game routes cold-reloaded with no console errors from cache9d450c5136ee (153entries after route visits). A further Number Island roll/hint/close saved turn2 with the server stopped. Closed the owned browser tab.
+At768×1024, completed/reloaded a two-player Tic win and verified the exact five-move saved board. Started all other five games through their setup UI. At375×667, Number Island roll/hint/close updated persisted progress with no horizontal overflow. Stopped and released owned static server PID87902; all six saved game routes cold-reloaded with no console errors from cache 9d450c5136ee (153 entries after route visits). A further Number Island roll/hint/close saved turn 2 with the server stopped. Closed the owned browser tab.
 
-Native dependencies installed using React Native's supported local-tarball environment overrides with matching0.86.3 and Hermes250829098.0.17 archives already present on this machine. These environment values and absolute paths are local QA inputs, not committed app configuration. Native Release compilation and acceptance results follow below when available.
+Native dependencies installed using React Native's supported local-tarball environment overrides with matching 0.86.3 and Hermes 250829098.0.17 archives already present on this machine. These environment values and absolute paths are local QA inputs, not committed app configuration. Native Release compilation and acceptance results follow below when available.
 
 Dependency audit residuals are tracked in [DEPENDENCIES.md](DEPENDENCIES.md); the report is not clean and public release requires review of the remaining upstream advisories. Final tooling/docs integration review also found no actionable material issues. CodeRabbit has not supplied a review on the new private repository at the initial PR inspection; independent engine/save and UI/config reviewers are the completed source-review fallback, not a claim of CodeRabbit approval.
+
+Signed native device Release 1.0.0/build 1 succeeded on Xcode 26.6/iphoneos26.5; `codesign --verify --deep --strict` returned 0. The local development profile contains one registered device and expires 2027-02-19. This does not establish Stassie's iPad eligibility or installation. The 13.99 MB local IPA and a SHA256/source manifest are under the sibling `little-island-games-artifacts` directory, outside Git because provisioning metadata belongs locally. No family device was connected at verification.
+
+The first generic/universal simulator compile failed importing ExpoModulesJSI from ExpoModulesCore during ExpoSymbols compilation. A serialized simulator-only build for the owned iPad mini architecture is being verified; do not treat the successful device compile as a simulator acceptance pass.
+
+The serialized, six-worker arm64 simulator Release build succeeded (log: /tmp/little-island-sim-final.log). The successful device Release and simulator Release both embed JavaScript/assets; no task Metro server was started. Installed simulator journeys and build1→build2 preservation are being recorded next.

@@ -23,7 +23,7 @@ Native configuration uses Expo SDK 57 and React Native 0.86.3, with iOS/iPadOS 1
 
 ```sh
 bundle install
-npx expo prebuild --platform ios --no-install
+npx expo prebuild --platform ios --no-install --no-clean
 cd ios
 bundle exec pod install
 cd ..
@@ -46,6 +46,6 @@ Before Stassie uses it, verify her device's Settings → General → About model
 
 ## Source and content
 
-Rules live in `src/games/`; screens consume those same rules for moves, opponents and hints. Versioned save validation and recovery live in `src/storage/`. Regression tests cover rule edge cases, imported-state validation, interrupted saves and recovery races.
+Rules live in `src/games/`; screens consume those same rules for moves, opponents and hints. Versioned save validation and recovery live in `src/state/`. Regression tests cover rule edge cases, imported-state validation, interrupted saves and recovery races.
 
 `scripts/generate-icons.py` makes original geometric app artwork. `scripts/generate-audio.py` generates local preview speech and tones; checked-in audio works offline. The speech distribution-rights gate is documented in the privacy notes. This repository started from the Expo blank TypeScript template; its original license is retained in LICENSE.
