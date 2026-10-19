@@ -1,4 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Recovery } from "../components/Recovery";
+import { Copy, styles } from "../components/ui";
 import { AppState } from "react-native";
 import { router, useIsFocused } from "expo-router";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
@@ -6,6 +9,22 @@ import { ExploreScreen } from "../explore/ExploreScreen";
 import { useStore } from "../state/Store";
 import { sources } from "../content/audioSources";
 export default function Explore() {
+  const store = useStore();
+  if (!store.ready)
+    return (
+      <SafeAreaView style={styles.page}>
+        <Copy>Opening your discoveries…</Copy>
+      </SafeAreaView>
+    );
+  if (store.recovery)
+    return (
+      <SafeAreaView style={styles.page}>
+        <Recovery />
+      </SafeAreaView>
+    );
+  return <ExploreReady key={store.epoch} />;
+}
+function ExploreReady() {
   const store = useStore(),
     focused = useIsFocused(),
     player = useAudioPlayer(null),

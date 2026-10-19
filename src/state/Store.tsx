@@ -85,7 +85,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [persist, ready, recovery]);
   const commit = useCallback(
     (next: Save) => {
-      if (restoring.current) return;
+      if (!ready || recovery || restoring.current) return;
       const previousWord = latest.current.sessions["word-rescue"],
         nextWord = next.sessions["word-rescue"];
       const records = recordWordRound(
@@ -98,7 +98,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setSave(next);
       void persist(next);
     },
-    [persist]
+    [persist, ready, recovery]
   );
   const update = useCallback(
     (game: GameId, next: GameState, expected?: GameState) => {
@@ -117,13 +117,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
   const activityUpdate = useCallback(
     (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => {
-      if (restoring.current) return false;
+      if (!ready || recovery || restoring.current) return false;
       const updated = applyActivitySave(latest.current, game, next, expected, generation.current);
       if (updated === latest.current) return false;
       commit(updated);
       return true;
     },
-    [commit]
+    [commit, ready, recovery]
   );
   const toggleFavorite = useCallback(
     (topic: string) => {
