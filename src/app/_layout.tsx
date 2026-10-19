@@ -1,0 +1,17 @@
+import React from "react";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { StoreProvider } from "../state/Store";
+export default function Layout() {
+  return (
+    <SafeAreaProvider>
+      <StoreProvider>
+        <StatusBar style="dark" />
+        <Stack
+          screenOptions={{ headerShown: false, animation: "none", contentStyle: { backgroundColor: "#FCFAF4" } }}
+        />
+      </StoreProvider>
+    </SafeAreaProvider>
+  );
+}

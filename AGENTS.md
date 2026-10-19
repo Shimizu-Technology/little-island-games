@@ -1,5 +1,17 @@
 This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
 
+## Little Island contract
+
+- Read docs/PRD.md and docs/QA.md. Family-first offline game collection; public release remains a separate gate.
+- One independently writable task per branch/worktree. Preserve other sessions' resources.
+- Start: `npm start` (Metro strict port 43820), or `npm run export:web && npm run preview` (static preview port 43821, override LITTLE_ISLAND_PORT).
+- Stop: terminate the exact owned root process with SIGTERM; scripts/serve.mjs closes its listener. No Docker services or persistent resources belong to this app.
+- Full gate: `npm run check` and `npm run doctor`. Native release/simulator tests and real family device acceptance are recorded separately in docs/QA.md.
+- Node >=22.13.0. Use the lockfile and `npm ci`.
+- Rules and hints must share the same pure engines. Store only validated, versioned sessions; preserve original data during recovery/restore.
+- CodeRabbit is advisory unless repository protection says otherwise. A skipped/unavailable review is not approval; use completed independent final-code review when advisory review is unavailable.
+- Do not publish the family preview to a public store. Clear speech distribution rights, child-facing metadata/privacy, and real-device acceptance first. Family device builds are authorized; interactive account/device registration may still be required.
+
 ## Expo has changed — do not trust your training data
 
 Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:

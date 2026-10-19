@@ -2,6 +2,8 @@
 
 # dependencies
 node_modules/
+.bundle/
+vendor/bundle/
 
 # Expo
 .expo/
@@ -39,3 +41,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Local continuation notes
+.codex/handoffs/

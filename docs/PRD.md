@@ -32,4 +32,4 @@ Pure TypeScript rule engines and serializable game sessions; shared rules for mo
 
 ## Release and unknowns
 
-Family installation via signed registered-device build; adult TestFlight only (Apple excludes under 13). Public App Store release needs separate child-facing privacy/metadata/review acceptance. Device models and OS versions awaiting Leon; SDK selected from current stable compatibility, documented minimum iOS 16.4. No public release or child usability claim without real-device/family evidence.
+Family installation via signed registered-device build; adult TestFlight only (Apple excludes under 13). Public App Store release needs separate child-facing privacy/metadata/review acceptance. Leon reports an iPad mini purchased around 2020/21; exact model and installed OS remain unconfirmed. SDK 57 uses a documented iOS/iPadOS 16.4 minimum. Check Settings → General → About before the family install. Apple model identification: https://support.apple.com/en-us/108043. No public release or child usability claim without real-device/family evidence.
