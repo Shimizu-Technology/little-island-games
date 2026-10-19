@@ -57,7 +57,7 @@ export const games: Record<
     description: "Hop, plan, and earn your crown.",
     color: "#286B5D",
     surface: "#E2F1E9",
-    help: "Red goes first. Ordinary pieces move and jump diagonally forward. You must jump if a jump is available, and keep jumping with the same piece. Reaching the far row makes a king and ends your turn. Kings move and jump in both directions. Win when the other player has no legal move. We automatically call a draw on three repeated positions or 40 turns each without a capture or ordinary-piece move.",
+    help: "Red goes first. Ordinary pieces move and jump diagonally forward. Choose Friendly for optional jumps: you can jump or move another piece. Classic uses standard American rules: you must jump when one is available. In both modes, finish a chosen jump chain with the same piece. Reaching the far row makes a king and ends your turn. Kings move and jump in both directions. Win when the other player has no legal move. We automatically call a draw on three repeated positions or 40 turns each without a capture or ordinary-piece move.",
     solo: "Play the computer",
     together: "Two players",
   },

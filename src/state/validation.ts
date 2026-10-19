@@ -63,7 +63,8 @@ export function validSession(v: unknown): v is GameState {
     !obj(v.options) ||
     !["easy", "medium", "hard"].includes(v.options.difficulty as string) ||
     !["solo", "together"].includes(v.options.mode as string) ||
-    typeof v.options.computerFirst !== "boolean"
+    typeof v.options.computerFirst !== "boolean" ||
+    (v.options.checkersRules !== undefined && !["friendly", "classic"].includes(v.options.checkersRules as string))
   )
     return false;
   switch (v.game) {

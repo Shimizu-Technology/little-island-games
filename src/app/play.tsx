@@ -25,7 +25,9 @@ function Game({ id }: { id: GameId }) {
     g = games[id];
   const [setup, setSetup] = useState(false),
     [help, setHelp] = useState(false),
-    [options, setOptions] = useState<Options>(s?.options ?? defaultOptions),
+    [options, setOptions] = useState<Options>(
+      s?.options ?? { ...defaultOptions, ...(id === "checkers" ? { checkersRules: "friendly" as const } : {}) }
+    ),
     [category, setCategory] = useState("All"),
     [secret, setSecret] = useState(""),
     [error, setError] = useState(""),
@@ -61,7 +63,9 @@ function Game({ id }: { id: GameId }) {
     setError("");
   }
   function newRound() {
-    setOptions(s?.options ?? defaultOptions);
+    setOptions(
+      s?.options ?? { ...defaultOptions, ...(id === "checkers" ? { checkersRules: "friendly" as const } : {}) }
+    );
     setSecret("");
     setError("");
     setSetup(true);
@@ -113,6 +117,10 @@ function Game({ id }: { id: GameId }) {
         {s && (
           <Copy style={{ fontSize: 13, marginBottom: 15 }}>
             {difficultyLabel[s.options.difficulty]} · {s.options.mode === "together" ? g.together : g.solo}
+            {id === "checkers" &&
+              (s.game === "checkers" && s.lesson !== null
+                ? " · Classic practice lesson"
+                : ` · ${s.options.checkersRules === "friendly" ? "Friendly · jumps optional" : "Classic · must jump"}`)}
           </Copy>
         )}
         {store.error && (
@@ -187,6 +195,33 @@ function Game({ id }: { id: GameId }) {
             </Chip>
           ))}
         </View>
+        {id === "checkers" && (
+          <>
+            <Heading style={{ fontSize: 18 }}>Choose your rules</Heading>
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              <Chip
+                selected={options.checkersRules === "friendly"}
+                onPress={() => setOptions({ ...options, checkersRules: "friendly" })}
+              >
+                Friendly
+              </Chip>
+              <Chip
+                selected={options.checkersRules !== "friendly"}
+                onPress={() => setOptions({ ...options, checkersRules: "classic" })}
+              >
+                Classic
+              </Chip>
+            </View>
+            <Copy>
+              {options.checkersRules === "friendly"
+                ? "Jumps are optional. Choose a jump or move another piece. Once you start a jump chain, finish it with the same piece."
+                : "Standard American checkers: take a jump whenever one is available, and finish the whole jump chain."}
+            </Copy>
+            <Copy style={{ fontSize: 13 }}>
+              The computer follows the same rules. Changing rules starts a new round.
+            </Copy>
+          </>
+        )}
         {id === "tic-tac-toe" && options.mode === "solo" && (
           <View style={[styles.row, { flexWrap: "wrap" }]}>
             <Chip selected={!options.computerFirst} onPress={() => setOptions({ ...options, computerFirst: false })}>

@@ -8,6 +8,7 @@ import {
   CheckersState,
   CheckersMove,
   checkersChoice,
+  checkersRules,
   checkersLesson,
   checkersMoves,
   checkersMove,
@@ -397,7 +398,8 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
   const [from, setFrom] = useState<number | null>(null),
     [path, setPath] = useState<number[]>([]),
     [hint, setHint] = useState<CheckersMove | null>(null);
-  const moves = useMemo(() => checkersMoves(s.position), [s.position]),
+  const rules = checkersRules(s);
+  const moves = useMemo(() => checkersMoves(s.position, rules), [s.position, rules]),
     lesson = s.lesson === null ? null : LESSONS[s.lesson];
   const computer = s.lesson === null && s.options.mode === "solo" && s.position.turn === -1 && !s.position.outcome;
   useEffect(() => {
@@ -472,7 +474,9 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
               : locked
                 ? "Keep jumping with this same piece."
                 : moves.some((m) => m.captured.length)
-                  ? "A jump is available. You must take a jump."
+                  ? rules === "friendly"
+                    ? "A jump is available. You can jump or choose another move."
+                    : "A jump is available. Classic rules: take a jump."
                   : "Tap a piece, then tap its next square."
         }
         success={!!outcome || lessonComplete}

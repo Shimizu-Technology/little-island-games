@@ -4,20 +4,28 @@ Replace/review speech rights and recordings before any public distribution.
 Feedback tones are original generated waveforms and have no external assets.
 """
 from pathlib import Path
-import concurrent.futures, math, re, subprocess, tempfile, wave, struct
+import concurrent.futures, json, math, re, subprocess, tempfile, wave, struct, argparse
 
 ROOT=Path(__file__).resolve().parent.parent
 OUT=ROOT/'assets/audio'
 OUT.mkdir(parents=True,exist_ok=True)
-words=re.findall(r"\['([A-Z]+)'",(ROOT/'src/games/words.ts').read_text())
-speech={word.lower():word.lower() for word in words}
-for word,clue in re.findall(r"\['([A-Z]+)','[^']+','([^']+)'\]",(ROOT/'src/games/words.ts').read_text()):
+# WORDS is a JSON-compatible literal; do not silently erase mappings if its format changes.
+source=(ROOT/'src/games/words.ts').read_text()
+match=re.search(r'export const WORDS = (\[.*?\]) as const;', source, re.S)
+if not match: raise RuntimeError('Could not locate the curated WORDS array')
+word_rows=json.loads(re.sub(r',\s*([\]\}])', r'\1', match.group(1)))
+if len(word_rows) < 40: raise RuntimeError('Unexpectedly small word list')
+speech={word.lower():word.lower() for word,_,_ in word_rows}
+for word,_,clue in word_rows:
     speech[f'clue-{word.lower()}']=clue
+parser=argparse.ArgumentParser()
+parser.add_argument('--only', help='Regenerate exactly one existing speech clip without changing the source map')
+args=parser.parse_args()
 speech.update({
   'instructions-tic-tac-toe':'Take turns placing your shape in an empty square. Make three in a row, across, down, or diagonally. You can ask for a hint.',
   'instructions-word-rescue':'Choose letters to discover the secret word. Listen to the clue, and try any letter. There is no guess limit. Reveal a letter whenever you need one.',
   'instructions-memory':'Tap two cards. If their pictures match, the pair stays open. If they are different, look carefully. Turn them over when you are ready, and try again.',
-  'instructions-checkers':'Red goes first. Tap a piece, then its next square. Ordinary pieces move and jump diagonally forward. You must take a jump when one is available. Keep jumping with the same piece. Reach the far row to earn a king. Kings move forward and backward. Try the four little lessons below the board.',
+  'instructions-checkers':'Red goes first. Tap a piece, then its next square. Ordinary pieces move and jump diagonally forward. Friendly games let you choose a jump or move another piece. Classic games require a jump whenever one is available. In both games, finish a jump chain with the same piece. Reach the far row to earn a king. Kings move forward and backward. Try the four little lessons below the board.',
   'instructions-maze':'Start at the boat and find your way to the flag. Tap a neighboring square, or use the arrow buttons. You cannot cross a wall. Go back whenever you like. A hint shows the next step.',
   'instructions-numbers':'Roll the dice. Tap open numbers that add up to your roll. For example, a roll of five can close five, or two and three. Close every number to clear the island. You can ask for a combination hint.',
 })
@@ -30,6 +38,13 @@ def speak(item):
         aiff=Path(temp)/'speech.aiff'
         subprocess.run(['say','-v','Samantha','-r','155','-o',str(aiff),text],check=True)
         subprocess.run(['afconvert','-f','m4af','-d','aac','-b','48000',str(aiff),str(target)],check=True)
+
+if args.only:
+    if args.only not in speech: raise ValueError('Unknown speech clip')
+    (OUT/f'{args.only}.m4a').unlink(missing_ok=True)
+    speak((args.only,speech[args.only]))
+    print(f'Regenerated {args.only}; all other audio and mappings preserved.')
+    raise SystemExit(0)
 
 with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
     list(pool.map(speak,speech.items()))

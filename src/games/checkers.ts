@@ -1,4 +1,4 @@
-import { Base, Options, base } from "./types";
+import { Base, Options, CheckersRules, base } from "./types";
 export type Side = 1 | -1;
 export type CheckersMove = { from: number; path: number[]; captured: number[] };
 export type Position = {
@@ -15,6 +15,9 @@ export type CheckersState = Base & {
   lesson: number | null;
   lessonBackup: { position: Position; history: Position[] } | null;
 };
+// Missing rules belong to pre-variant saves and retain Classic behavior.
+export const checkersRules = (s: CheckersState): CheckersRules =>
+  s.lesson !== null ? "classic" : (s.options.checkersRules ?? "classic");
 export const row = (i: number) => Math.floor(i / 8);
 export const col = (i: number) => i % 8;
 export const side = (piece: number) => Math.sign(piece) as Side;
@@ -41,7 +44,7 @@ function square(r: number, c: number): number | null {
 function crowned(piece: number, to: number) {
   return Math.abs(piece) === 1 && (side(piece) === 1 ? row(to) === 7 : row(to) === 0);
 }
-export function checkersMoves(p: Pick<Position, "board" | "turn">): CheckersMove[] {
+export function checkersMoves(p: Pick<Position, "board" | "turn">, rules: CheckersRules = "classic"): CheckersMove[] {
   const captures: CheckersMove[] = [],
     walks: CheckersMove[] = [];
   function jump(board: number[], from: number, current: number, path: number[], taken: number[]) {
@@ -72,14 +75,14 @@ export function checkersMoves(p: Pick<Position, "board" | "turn">): CheckersMove
       if (to !== null && !p.board[to]) walks.push({ from, path: [to], captured: [] });
     }
   });
-  return captures.length ? captures : walks;
+  return captures.length && rules === "classic" ? captures : [...captures, ...walks];
 }
-export function checkersResult(p: Position): Position["outcome"] {
-  if (!checkersMoves(p).length) return p.turn === 1 ? "blue" : "red";
+export function checkersResult(p: Position, rules: CheckersRules = "classic"): Position["outcome"] {
+  if (!checkersMoves(p, rules).length) return p.turn === 1 ? "blue" : "red";
   if (p.quiet >= 80 || p.repetitions[positionKey(p.board, p.turn)] >= 3) return "draw";
   return null;
 }
-export function applyCheckers(p: Position, move: CheckersMove): Position {
+export function applyCheckers(p: Position, move: CheckersMove, rules: CheckersRules = "classic"): Position {
   const board = [...p.board],
     piece = board[move.from],
     to = move.path[move.path.length - 1];
@@ -96,7 +99,7 @@ export function applyCheckers(p: Position, move: CheckersMove): Position {
     repetitions: irreversible ? { [key]: 1 } : { ...p.repetitions, [key]: (p.repetitions[key] ?? 0) + 1 },
     outcome: null,
   };
-  next.outcome = checkersResult(next);
+  next.outcome = checkersResult(next, rules);
   return next;
 }
 export function createCheckers(options: Options): CheckersState {
@@ -113,9 +116,12 @@ export function createCheckers(options: Options): CheckersState {
 }
 export function checkersMove(s: CheckersState, move: CheckersMove): CheckersState {
   if (s.position.outcome) return s;
-  const legal = checkersMoves(s.position).find((m) => m.from === move.from && m.path.join(",") === move.path.join(","));
+  const rules = checkersRules(s);
+  const legal = checkersMoves(s.position, rules).find(
+    (m) => m.from === move.from && m.path.join(",") === move.path.join(",")
+  );
   if (!legal) return s;
-  return { ...s, position: applyCheckers(s.position, legal), history: [...s.history, s.position].slice(-160) };
+  return { ...s, position: applyCheckers(s.position, legal, rules), history: [...s.history, s.position].slice(-160) };
 }
 export function checkersUndo(s: CheckersState): CheckersState {
   if (!s.history.length) return s;
@@ -124,8 +130,8 @@ export function checkersUndo(s: CheckersState): CheckersState {
   if (s.options.mode === "solo" && s.lesson === null && p.turn === -1 && history.length) p = history.pop()!;
   return { ...s, position: p, history };
 }
-function evaluate(p: Position, player: Side): number {
-  const result = p.outcome ?? checkersResult(p);
+function evaluate(p: Position, player: Side, rules: CheckersRules): number {
+  const result = p.outcome ?? checkersResult(p, rules);
   if (result) return result === "draw" ? 0 : (result === "red" ? 1 : -1) === player ? 10000 : -10000;
   return p.board.reduce(
     (sum, piece, i) =>
@@ -142,7 +148,8 @@ export async function checkersChoice(
   cancelled: () => boolean = () => false
 ): Promise<CheckersMove | null> {
   if (s.position.outcome) return null;
-  const moves = checkersMoves(s.position);
+  const rules = checkersRules(s),
+    moves = checkersMoves(s.position, rules);
   if (!moves.length) return null;
   if (s.options.difficulty === "easy") return moves[Math.floor(Math.random() * moves.length)];
   let best = moves[0],
@@ -157,12 +164,12 @@ export async function checkersChoice(
     const deadline = Date.now() + 8;
     function search(p: Position, remaining: number, alpha: number, beta: number): number {
       nodes++;
-      if (!remaining || p.outcome || nodes >= maxNodes || Date.now() > deadline) return evaluate(p, player);
-      const children = checkersMoves(p);
-      if (!children.length) return evaluate(p, player);
+      if (!remaining || p.outcome || nodes >= maxNodes || Date.now() > deadline) return evaluate(p, player, rules);
+      const children = checkersMoves(p, rules);
+      if (!children.length) return evaluate(p, player, rules);
       let score = p.turn === player ? -Infinity : Infinity;
       for (const child of children) {
-        const value = search(applyCheckers(p, child), remaining - 1, alpha, beta);
+        const value = search(applyCheckers(p, child, rules), remaining - 1, alpha, beta);
         if (p.turn === player) {
           score = Math.max(score, value);
           alpha = Math.max(alpha, score);
@@ -174,7 +181,7 @@ export async function checkersChoice(
       }
       return score;
     }
-    const value = search(applyCheckers(s.position, move), depth - 1, -Infinity, Infinity);
+    const value = search(applyCheckers(s.position, move, rules), depth - 1, -Infinity, Infinity);
     if (value > bestScore) {
       bestScore = value;
       best = move;
@@ -192,7 +199,7 @@ export const LESSONS = [
   },
   {
     title: "Make a jump",
-    text: "A jump is available! Hop over the blue piece. In checkers, you must take a jump when you can.",
+    text: "A jump is available! Hop over the blue piece. In Classic checkers, you must take a jump when you can. Friendly games let you choose.",
     red: [[2, 1]],
     blue: [[3, 2]],
   },

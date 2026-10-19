@@ -205,3 +205,107 @@ it("keeps a full checkers round safe while lessons are played and resumed", () =
   expect(restored.history).toEqual(original.history);
   expect(restored.lesson).toBeNull();
 });
+
+describe("Friendly checkers rules and saved-game compatibility", () => {
+  const options = { ...defaultOptions, checkersRules: "friendly" as const };
+  it("allows another piece to walk past an available jump only in Friendly", () => {
+    const p = fixture(
+      [
+        [2, 1],
+        [2, 5],
+      ],
+      [
+        [3, 2],
+        [6, 7],
+      ]
+    );
+    const quiet = { from: at(2, 5), path: [at(3, 4)], captured: [] };
+    const classic = { ...createCheckers(defaultOptions), position: p };
+    const friendly = { ...createCheckers(options), position: p };
+    expect(checkersMoves(p).every((m) => m.captured.length > 0)).toBe(true);
+    expect(checkersMoves(p, "friendly")).toContainEqual(quiet);
+    expect(checkersMove(classic, quiet)).toBe(classic);
+    const moved = checkersMove(friendly, quiet);
+    expect(moved.position.board[at(3, 4)]).toBe(1);
+    expect(moved.position.board[at(3, 2)]).toBe(-1);
+    expect(moved.position.turn).toBe(-1);
+    expect(checkersUndo(moved)).toEqual(friendly);
+  });
+  it("still requires a whole chosen jump chain and ends a crowning turn", () => {
+    const s = {
+      ...createCheckers(options),
+      position: fixture(
+        [[2, 1]],
+        [
+          [3, 2],
+          [5, 4],
+        ]
+      ),
+    };
+    expect(checkersMove(s, { from: at(2, 1), path: [at(4, 3)], captured: [at(3, 2)] })).toBe(s);
+    const chain = checkersMoves(s.position, "friendly").find((m) => m.captured.length === 2)!;
+    const moved = checkersMove(s, chain);
+    expect(moved.position.board[at(6, 5)]).toBe(1);
+    expect(moved.position.outcome).toBe("red");
+    const crowned = {
+      ...createCheckers(options),
+      position: fixture(
+        [[5, 0]],
+        [
+          [6, 1],
+          [6, 3],
+        ]
+      ),
+    };
+    const jump = checkersMoves(crowned.position, "friendly").find((m) => m.captured.length)!;
+    expect(jump.path).toEqual([at(7, 2)]);
+    expect(checkersMove(crowned, jump).position.board[at(7, 2)]).toBe(2);
+    expect(checkersMove(crowned, jump).position.turn).toBe(-1);
+  });
+  it.each(["easy", "medium", "hard"] as const)(
+    "uses the same Friendly legal moves for %s computer play",
+    async (difficulty) => {
+      let s = {
+        ...createCheckers({ ...options, difficulty }),
+        position: fixture(
+          [
+            [2, 1],
+            [2, 5],
+          ],
+          [
+            [3, 2],
+            [6, 7],
+          ]
+        ),
+      };
+      for (let n = 0; n < 8 && !s.position.outcome; n++) {
+        const move = await checkersChoice(s);
+        expect(checkersMoves(s.position, "friendly")).toContainEqual(move);
+        const next = checkersMove(s, move!);
+        expect(next).not.toBe(s);
+        expect(validSession(next)).toBe(true);
+        s = next;
+      }
+    }
+  );
+  it("preserves new rules and legacy Classic behavior through backups and lessons", () => {
+    const save = emptySave();
+    save.sessions.checkers = createCheckers(defaultOptions);
+    const legacy = parseSave(JSON.stringify(save)).sessions.checkers!;
+    expect(legacy.options.checkersRules).toBeUndefined();
+    let s = createCheckers(options);
+    s = checkersMove(s, checkersMoves(s.position, "friendly")[0]);
+    const original = s;
+    s = checkersLesson(s, 1);
+    // The Classic capture lesson has no optional walk, even for a Friendly saved round.
+    expect(checkersMove(s, { from: at(2, 1), path: [at(3, 0)], captured: [] })).toBe(s);
+    save.sessions.checkers = s;
+    s = parseSave(JSON.stringify(save)).sessions.checkers as typeof s;
+    const restored = finishCheckersLessons(s);
+    expect(restored.options.checkersRules).toBe("friendly");
+    expect(restored.position).toEqual(original.position);
+    expect(restored.history).toEqual(original.history);
+    expect(validSession({ ...restored, options: { ...restored.options, checkersRules: "unknown" } })).toBe(false);
+    expect(validSession({ ...restored, options: { ...restored.options, checkersRules: null } })).toBe(false);
+  });
+});
