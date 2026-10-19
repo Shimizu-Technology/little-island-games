@@ -68,7 +68,6 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
   useEffect(() => {
     if (previousLayout.current !== shortLandscape) {
       previousLayout.current = shortLandscape;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Suspend held input after an external orientation change.
       pause("Paused after turning your device. Resume when ready.");
     }
   }, [shortLandscape, pause]);
