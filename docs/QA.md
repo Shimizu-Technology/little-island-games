@@ -54,3 +54,5 @@ Signed native device Release 1.0.0/build 1 succeeded on Xcode 26.6/iphoneos26.5;
 The first generic/universal simulator compile failed importing ExpoModulesJSI from ExpoModulesCore during ExpoSymbols compilation. A serialized simulator-only build for the owned iPad mini architecture is being verified; do not treat the successful device compile as a simulator acceptance pass.
 
 The serialized, six-worker arm64 simulator Release build succeeded (log: /tmp/little-island-sim-final.log). The successful device Release and simulator Release both embed JavaScript/assets; no task Metro server was started. Installed simulator journeys and build1→build2 preservation are being recorded next.
+
+Native large-text recovery exposed clipped lower buttons in landscape because Recovery used a non-scrolling View. Changed it to a ScrollView within the existing SafeAreaView; regression acceptance is recorded against build3 below. Original screenshot: docs/evidence/recovery-large-before-native.png.

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { ScrollView } from "react-native";
 import { Button, Copy, Heading, styles } from "./ui";
 import { useStore } from "../state/Store";
 import { exportBackup } from "../state/backup";
@@ -15,7 +15,7 @@ export function Recovery() {
     }
   }
   return (
-    <View style={[styles.content, { paddingTop: 50, gap: 18 }]}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={[styles.content, { paddingTop: 50, gap: 18 }]}>
       <Heading>Let’s look after your saved games.</Heading>
       <Copy>{store.recovery}</Copy>
       <Copy>
@@ -37,6 +37,6 @@ export function Recovery() {
       <Button quiet onPress={() => (confirm ? void fresh() : setConfirm(true))}>
         {confirm ? "Confirm: preserve original and start fresh" : "Start fresh instead"}
       </Button>
-    </View>
+    </ScrollView>
   );
 }
