@@ -89,7 +89,51 @@ export function Motif({ name }: { name: string }) {
         <Circle cx={102} cy={51} r={2} fill={ink} />
       </G>
     );
-  if (["fish", "foodchain", "dolphin"].includes(name))
+  if (name === "dolphin")
+    return (
+      <G>
+        {/* Arched mammal body, beak, dorsal fin, pectoral flipper and broad tail flukes. */}
+        <Path
+          d="M9 65q15-23 45-27l5-19q14 4 17 22 14 6 24 17l10-8 9-1-5 13 5 14-11-3-10-6q-25 18-57 7L17 77l-10-5 17-4Z"
+          fill="#82AEB7"
+          {...stroke}
+        />
+        <Path d="M31 67q27 12 53-1" stroke="#D9E7E5" strokeWidth={5} fill="none" strokeLinecap="round" />
+        <Path d="M55 65q7 15 22 18l-9-20" fill="#5F8C9D" {...stroke} />
+        <Circle cx={25} cy={58} r={2.8} fill={ink} />
+        <Path d="M41 43l6-1" stroke={ink} strokeWidth={3} strokeLinecap="round" />
+      </G>
+    );
+  if (name === "tadpole")
+    return (
+      <G>
+        {/* A swimming larva: rounded body and a long finned tail, with no adult legs. */}
+        <Path d="M57 57q30-37 55-19-22 9-19 26 1 20-31 20Z" fill="#9DBCA6" {...stroke} />
+        <Path d="M58 66q23-14 37-19" fill="none" stroke="#D7E4C3" strokeWidth={4} />
+        <Ellipse cx={40} cy={75} rx={27} ry={22} fill={green} {...stroke} />
+        <Circle cx={29} cy={68} r={3} fill={ink} />
+        <Path d="M24 84q7 5 14 1" fill="none" {...stroke} />
+      </G>
+    );
+  if (name === "caterpillar")
+    return (
+      <G>
+        {/* Leaf-eating larva: segmented body and short legs; no adult wings. */}
+        <Path d="M10 99q43-42 101-10-39 28-101 10Z" fill="#B8CDA0" {...stroke} />
+        <Path d="M15 98l87-6" stroke="#80A97D" strokeWidth={2} />
+        {[30, 46, 62, 78].map((x, i) => (
+          <G key={x}>
+            <Path d={`M${x} 78v10m7-10 2 9`} {...stroke} />
+            <Circle cx={x} cy={68 - (i % 2) * 3} r={13} fill={i % 2 ? "#A9C38B" : green} {...stroke} />
+          </G>
+        ))}
+        <Circle cx={93} cy={59} r={16} fill="#A9C38B" {...stroke} />
+        <Path d="M87 44l-5-10m16 9 5-10" fill="none" {...stroke} />
+        <Circle cx={99} cy={55} r={3} fill={ink} />
+        <Path d="M98 65q5 3 9-1" fill="none" {...stroke} />
+      </G>
+    );
+  if (["fish", "foodchain"].includes(name))
     return (
       <G>
         <Path d="M12 59q38-46 76 0-38 46-76 0Zm76 0 27-23v46Z" fill={blue} {...stroke} />

@@ -46,13 +46,13 @@ export const HABITATS = [
   },
   {
     animal: "Tadpole",
-    art: "frog",
+    art: "tadpole",
     home: "Freshwater pond",
     why: "Many tadpoles grow and swim in freshwater. They are not ready for a salty reef.",
   },
   {
     animal: "Caterpillar",
-    art: "butterfly",
+    art: "caterpillar",
     home: "Leafy garden",
     why: "A caterpillar needs a suitable food plant. Not every leaf is food for every caterpillar.",
   },
