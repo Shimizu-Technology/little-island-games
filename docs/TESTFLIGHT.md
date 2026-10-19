@@ -6,6 +6,7 @@ Leon requested an internal TestFlight build on October 19, 2026 so he can test o
 
 - Apple team: `4T358A5S74` (existing individual membership).
 - Bundle ID: `com.shimizutechnology.littleisland`.
+- App Store Connect: `6824481437`, **Little Island: Family Games** (the shorter name was unavailable).
 - EAS project: `8147346d-095e-4e2a-88ed-f5711aa74940`, `@shimizutechnology/little-island-games`.
 - First TestFlight target: version 1.0.0, build 4; iPhone and iPad, minimum iOS/iPadOS 16.4.
 - Existing distribution certificate reused: `88CUWN8J2G`; separate active App Store profile: `2STXA6SVLC`.
@@ -26,4 +27,4 @@ Success requires an App Store Connect record for this exact bundle ID, an upload
 
 Keep this beta limited to Leon's adult tester account. The existing child-account and speech-distribution limitations in PRIVACY.md remain. Physical offline launch/audio, Files backup round trip, accessibility, and the remaining device/mode matrix still need acceptance. The draft implementation PR remains held until its required gates pass.
 
-Current setup: signing is ready. Build, upload, processing, and tester availability have not yet been verified.
+Current setup: the App Store Connect record and signing are ready. Build, upload, processing, and tester availability have not yet been verified.

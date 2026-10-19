@@ -24,5 +24,14 @@
         "buildConfiguration": "Release"
       }
     }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "shimizutechnology@gmail.com",
+        "appleTeamId": "4T358A5S74",
+        "ascAppId": "6824481437"
+      }
+    }
   }
 }
