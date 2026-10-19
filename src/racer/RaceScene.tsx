@@ -17,7 +17,11 @@ export type RaceSceneHandle = { draw: (session: RaceSession) => void };
 /** Static world is memoized. Only camera, runner and obstacle SVG transforms change per frame. */
 export const RaceScene = memo(
   forwardRef<RaceSceneHandle, { initial: RaceSession; width: number; height: number; reducedMotion: boolean }>(
-    function RaceScene({ initial, width, height }, ref) {
+    function RaceScene({ initial, width: frameWidth, height: frameHeight }, ref) {
+      // Preserve full jump headroom when a short landscape viewport scales the world down.
+      const scale = Math.min(1, frameHeight / 255),
+        width = frameWidth / scale,
+        height = frameHeight / scale;
       const camera = useRef<Node | null>(null),
         actors = useRef<(Node | null)[]>([]),
         hazards = useRef<(Node | null)[]>([]);
@@ -49,7 +53,7 @@ export const RaceScene = memo(
             backgroundColor: course.sky,
           }}
         >
-          <Svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} accessible={false}>
+          <Svg width="100%" height={frameHeight} viewBox={`0 0 ${width} ${height}`} accessible={false}>
             <Rect width={width} height={height} fill={course.sky} />
             <Circle cx={width * 0.83} cy={height * 0.18} r={24} fill="#F6D784" />
             <Path
