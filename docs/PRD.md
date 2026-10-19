@@ -1,35 +1,35 @@
 # Little Island product brief
 
-Established 2026-10-19 from Leon's family-first approval and request to implement the full plan.
+Updated 2026-10-20 from Leon's family-first approval and full V2 implementation request. The detailed scope and source/family acceptance boundaries are in [V2_RELEASE.md](V2_RELEASE.md); current evidence is in [V2_QA.md](V2_QA.md).
 
 ## People and purpose
 
-A seven-year-old chooses short, enjoyable games independently or plays alongside a parent on one device. Practice opportunities include familiar spelling, numbers, planning, and spatial exploration. No claims of measured educational improvement.
+A seven-year-old chooses enjoyable games and discoveries independently or plays with family. Activities practice spelling, numbers, planning, observation and spatial exploration. There is no claim of measured educational improvement.
 
-Local reference source checked: TraceBuddy edf4696 (local saves/family activities), Party Games Hub a9d1524 (shared-device patterns), Håfa Recipes 067ca9b (Expo releases), HåfaGPT 609a8eb (reviewed language-content practices). These are local source observations, not fresh production audits. Private family notes informed short, encouraging activities; no sensitive family context belongs in this repository.
+Local reference sources checked during orientation: TraceBuddy edf4696 (local saves/family activities), Party Games Hub a9d1524 (shared-device patterns), Håfa Recipes 067ca9b (Expo releases), HåfaGPT 609a8eb (reviewed content practices). These are local source observations, not current production audits. TraceBuddy remains a separate app; live conversational AI is deferred.
 
 ## Scope
 
-Universal Expo/React Native iOS app and shared web build. All six games, essential audio, and content bundled. No accounts, advertising, analytics, backend, live AI, purchases, or remote multiplayer. Local saves do not sync between devices and uninstalling can remove them. Parent backup export/import supports recovery and future transfer.
+Universal Expo/React Native iPhone/iPad app and shared offline web build. Eleven games: Tic-tac-toe, Hangman, Memory Pairs, Checkers, Maze Explorer, Number Island, Go Fish, original Crazy Eights, Secret Word, Island Dash and Picnic Mystery. All games have offline solo or shared-device modes; Secret Word requires at least three people sharing one device. Picnic Mystery adds parent-approved private nearby iPhone/iPad rooms for three to eight players. There are no accounts, ads, analytics, purchases, cloud sync, public matchmaking or live-AI backend.
 
-Games: Tic-tac-toe (local opponent/two players), Word Rescue (curated word packs/parent secret word), Memory Pairs (solo/cooperative/two players), English/American Checkers (local opponent/two players/tutorial), Maze Explorer (generated solvable mazes/hints), Number Island (Shut the Box style counting/addition).
+Explore bundles fifty reviewed topics across Space, Oceans, Animals, Weather and Guam & Our World. Each has an original explanation, deeper fact, question/activity, illustration, transcript, narration and source/review metadata. Five interactive lessons accompany the map, search, favorites and internal related topics. Reference URLs do not open an unrestricted browser.
 
-Difficulty is explicit and reversible through a new-round setup. Assistance is free. No timers, streak penalties, lost lives, required wins, or locked games. Stop after a round or return home at any point. Child-facing language is concrete and brief.
+Hangman defaults to Challenge: six distinct misses end the round, one reveal marks an assisted result, and both wins and losses are recorded locally once. Practice and legacy rounds remain unlimited. Island Dash has training, three obstacle courses, computer racers, checkpoints, race/practice modes and local records. The three-minute course limit and interruption behavior are explained in the game. Other games keep their explicit, reversible difficulty and mode choices. No streak penalties, purchases, required daily play or locked games.
 
-## Design
+## Design and journeys
 
-Working name: Little Island. Warm cream, deep teal, coral, lagoon blue and mustard; original vector illustrations rather than emoji. Large tap targets, readable text, clear focus/selected states, color plus shape for pieces, portrait and landscape, phone and tablet. Motion limited to immediate pressed-state feedback; system reduced motion remains respected.
+Warm cream, deep teal, coral, lagoon blue and mustard; original vector art, large touch targets and explicit focus/selected states. Color and shape distinguish pieces. Support phone/tablet, portrait/landscape and larger text. Motion has a purpose; gameplay movement remains necessary and decorative motion is limited.
 
-Journey: choose game → start/resume → understand first action → play/request help/undo → finish → replay or return. Returning home and interrupting a computer turn must preserve a valid resumable state.
+Choose a game → start/resume → understand the first action → play/help → finish → replay or return. Secret hands/roles conceal on interruption and handoff. Explore preserves topic/search context while following related discoveries. Parent settings provide sound, backups and recovery. Local saves do not sync automatically; deleting the app can remove them.
 
-## Architecture
+## Architecture and domain rules
 
-Pure TypeScript rule engines and serializable game sessions; shared rules for moves, AI, hints, and validation. Bounded local opponents. Versioned local saves with ordered writes and validation; native SQLite transactional key/value storage, web localStorage adapter. Preserve incompatible/corrupt saves and show recovery rather than silently replacing them. Settings separate from game progress. No outbound network dependency in core play.
+Pure TypeScript engines drive moves, computer choices, terminal outcomes and validation. Local opponents have bounded policies; card and mystery bots use their own knowledge. Serializable sessions use bounded validated saves, ordered writes and native SQLite transactions; web uses localStorage. Preserve incompatible/corrupt originals and show recovery. Backup replacement blocks ordinary writes and invalidates stale callbacks. Nearby authority, peer binding, recipient redaction, sequence checks and lifecycle rules are documented in V2_MYSTERY.md.
 
-## Checkers contract
-
-8×8, 12 pieces/side, red starts and moves down rows. Men move/capture forward. Captures compulsory; no maximum-capture requirement. Continue chains with the same piece. Crowning ends the turn. Kings move one square/jump adjacent enemies diagonally either way. No legal move loses. Automatic threefold repetition and 80 quiet plies are explicit casual-app adaptations of claim-based draw provisions. A man move or capture resets quiet count. Undo restores a complete player decision, including a computer response in solo play. Source: https://wcdf.net/rules/rules_of_checkers_english.pdf
+Checkers: 8×8, twelve pieces per side, red starts and moves down rows. Men move/jump forward; kings move/jump either way. Friendly rules default to optional captures; Classic requires a capture whenever available. Both finish a started jump chain with the same piece; crowning ends that turn. No legal move loses. Threefold repetition and eighty quiet plies are explicit casual-app adaptations; a man move or capture resets quiet count. Undo restores a complete player decision including a solo computer response. Reference: https://wcdf.net/rules/rules_of_checkers_english.pdf
 
 ## Release and unknowns
 
-Family installation via signed registered-device build; adult TestFlight only (Apple excludes under 13). Public App Store release needs separate child-facing privacy/metadata/review acceptance. Leon reports an iPad mini purchased around 2020/21; exact model and installed OS remain unconfirmed. SDK 57 uses a documented iOS/iPadOS 16.4 minimum. Check Settings → General → About before the family install. Apple model identification: https://support.apple.com/en-us/108043. No public release or child usability claim without real-device/family evidence.
+Target internal TestFlight 1.1.0 (6) for Leon's existing adult tester group, with no public store release. Exact source, artifact, processing and tester availability require delivery evidence. Public distribution also requires speech rights, child-facing privacy/metadata review and physical family acceptance.
+
+Leon reports an iPad mini purchased around 2020/21; exact model/OS remain unknown. Deployment minimum is iOS/iPadOS16.4. Simulator success does not establish physical performance, touch/VoiceOver behavior, audio, battery/thermal behavior or Stassie's independent usability. Those remain operator checks on the family hardware.

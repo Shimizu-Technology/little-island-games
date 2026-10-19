@@ -1,6 +1,6 @@
 # Little Island
 
-Six offline family games for iPad and iPhone: Tic-tac-toe, Word Rescue, Memory Pairs, Checkers, Maze Explorer, and Number Island. A shared web build supports offline play after its first successful load.
+Eleven offline family games for iPad and iPhone, plus fifty illustrated Explore discoveries: Tic-tac-toe, Hangman, Memory Pairs, Checkers, Maze Explorer, Number Island, Go Fish, Crazy Eights, Secret Word, Island Dash, and Picnic Mystery. A shared web build supports offline play after its first successful load. Picnic Mystery also offers parent-approved nearby iPhone/iPad family rooms; solo play and all learning content need no internet.
 
 The app includes local opponents, same-device play, three difficulty choices, hints, undo, playable Checkers lessons, bundled spoken clues/instructions, automatic saves, and grown-up backup/restore. There are no accounts, ads, purchases, analytics, or backend. Saves stay on each device; exporting a backup is the transfer/recovery option.
 
