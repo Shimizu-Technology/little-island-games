@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, router, useLocalSearchParams, useIsFocused } from "expo-router";
@@ -42,6 +42,10 @@ function ActivityGame({ id }: { id: ActivityId }) {
     id === "go-fish" || id === "crazy-eights" ? createCardSession(id, defaultOptions) : null
   );
   const sound = useSounds(store.save.settings.sound);
+  const activityUpdate = store.activityUpdate;
+  useEffect(() => {
+    if (freshCard && !saved && activityUpdate(id, freshCard, { id: null, epoch })) expectedId.current = freshCard.id;
+  }, [activityUpdate, id, freshCard, saved, epoch]);
   const save = (
     next: Parameters<typeof store.activityUpdate>[1],
     previous?: { id: string; revision: number } | null

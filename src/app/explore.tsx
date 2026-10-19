@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Recovery } from "../components/Recovery";
 import { Copy, styles } from "../components/ui";
@@ -30,8 +30,21 @@ function ExploreReady() {
     player = useAudioPlayer(null),
     status = useAudioPlayerStatus(player);
   const [speaking, setSpeaking] = useState<string>();
+  const ownedPlayer = useRef<typeof player | null>(player);
+  useLayoutEffect(() => {
+    ownedPlayer.current = player;
+    // Mark disposed before the audio hook releases its native shared object and child passive cleanups run.
+    return () => {
+      ownedPlayer.current = null;
+    };
+  }, [player]);
   const stop = useCallback(() => {
-    player.pause();
+    if (ownedPlayer.current !== player) return;
+    try {
+      player.pause();
+    } catch {
+      /* The transcript stays available when native audio is unavailable. */
+    }
     setSpeaking(undefined);
   }, [player]);
   useEffect(() => {
@@ -54,7 +67,7 @@ function ExploreReady() {
       narrationEnabled={store.save.settings.sound}
       speakingTopicId={speaking}
       onSpeak={(id) => {
-        if (!store.save.settings.sound || !sources[`explore-${id}`]) return;
+        if (ownedPlayer.current !== player || !store.save.settings.sound || !sources[`explore-${id}`]) return;
         try {
           player.replace(sources[`explore-${id}`]);
           player.play();
