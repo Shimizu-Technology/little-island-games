@@ -1,3 +1,4 @@
+import appConfig from "../../app.json";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { useStore } from "../state/Store";
@@ -107,7 +108,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
             </>
           )}
           <Copy>
-            Family preview · Version 1.1.0. Public release and physical-device acceptance are separate milestones.
+            Family preview · Version {appConfig.expo.version}. Public release and physical-device acceptance are separate milestones.
           </Copy>
         </>
       )}
