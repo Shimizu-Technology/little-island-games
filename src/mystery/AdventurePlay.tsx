@@ -1,3 +1,4 @@
+import { mysteryInstructions } from "./instructions";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Pressable, View, useWindowDimensions } from "react-native";
 import { Text } from "../components/Text";
@@ -12,6 +13,8 @@ export function AdventurePlay({
   showRole,
   setShowRole,
   intent,
+  onSpeakInstruction,
+  onStopInstruction,
 }: {
   view: MysteryView;
   width: number;
@@ -19,6 +22,8 @@ export function AdventurePlay({
   showRole: boolean;
   setShowRole: (show: boolean) => void;
   intent: (intent: MysteryIntent) => void;
+  onSpeakInstruction?: (key: keyof typeof mysteryInstructions) => void;
+  onStopInstruction?: () => void;
 }) {
   const viewport = useWindowDimensions();
   const roundKey = `${view.id}:${view.adventure?.round ?? 0}`;
@@ -293,6 +298,12 @@ export function AdventurePlay({
           )}
         </View>
         <View style={{ gap: 10, width: short ? 250 : "100%", maxWidth: 520 }}>
+          {onSpeakInstruction && enabled && (
+            <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+              <Button compact quiet onPress={() => onSpeakInstruction(view.phase !== "explore" || atBell ? "mystery-meeting" : atPump ? "mystery-pump" : task ? `mystery-${task.id}` : "mystery-welcome")}>Listen to this place</Button>
+              <Button compact quiet onPress={() => onStopInstruction?.()}>Stop reading</Button>
+            </View>
+          )}
           {exploring && self.out && (
             <Copy style={{ fontSize: 13 }}>
               The vote made you a helper. Keep moving, finishing jobs and collecting clues. You do not vote again this

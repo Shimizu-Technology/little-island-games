@@ -117,7 +117,7 @@ function Game({ id }: { id: GameId }) {
         <Heading style={{ fontSize: width > 600 ? 34 : 28, marginTop: 5, marginBottom: 5 }}>{g.name}</Heading>
         {s && (
           <Copy style={{ fontSize: 13, marginBottom: 15 }}>
-            {s.game === "word-rescue" ? ({ easy: "Short words", medium: "Longer words", hard: "Big words" })[s.options.difficulty] : difficultyLabel[s.options.difficulty]} · {s.options.mode === "together" ? g.together : g.solo}
+            {s.game === "word-rescue" ? (s.custom ? "" : `${({ easy: "Short words", medium: "Longer words", hard: "Big words" })[s.options.difficulty]} · `) : `${difficultyLabel[s.options.difficulty]} · `}{s.options.mode === "together" ? g.together : g.solo}
             {s.game === "word-rescue" && ` · ${wordRules(s) === "challenge" ? "Six-guess Challenge" : "Practice"}`}
             {s.game === "numbers" && s.options.difficulty === "hard" && s.maxNumber === undefined && " · Earlier round: numbers 1–9"}
             {id === "checkers" &&
@@ -211,6 +211,7 @@ function Game({ id }: { id: GameId }) {
             {g.together}
           </Chip>
         </View>
+        {!(id === "word-rescue" && options.mode === "together") && <>
         <Heading style={{ fontSize: 18 }}>{id === "word-rescue" ? "Word length" : "Choose your pace"}</Heading>
         <View style={[styles.row, { flexWrap: "wrap" }]}>
           {(["easy", "medium", "hard"] as const).map((d) => (
@@ -219,6 +220,7 @@ function Game({ id }: { id: GameId }) {
             </Chip>
           ))}
         </View>
+        </>}
         {id === "word-rescue" && (
           <>
             <Heading style={{ fontSize: 18 }}>Choose your rules</Heading>

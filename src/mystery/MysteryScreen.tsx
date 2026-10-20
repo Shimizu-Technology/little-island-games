@@ -27,8 +27,13 @@ export type MysteryScreenProps = {
   active: boolean;
   sound: boolean;
   onFeedback?: () => void;
+  onSpeakInstruction?: (key: keyof typeof mysteryInstructions) => void;
+  onStopInstruction?: () => void;
 };
-export function MysteryScreen({ state, onSave, width, active, sound, onFeedback }: MysteryScreenProps) {
+export function MysteryScreen({ state, onSave, width, active, sound, onFeedback, onSpeakInstruction, onStopInstruction }: MysteryScreenProps) {
+  const stopSpeech = useRef(onStopInstruction);
+  React.useLayoutEffect(() => { stopSpeech.current = onStopInstruction; }, [onStopInstruction]);
+  useEffect(() => () => stopSpeech.current?.(), []);
   const [mode, setMode] = useState<"menu" | "solo" | "nearby">("menu");
   const [remote, setRemote] = useState<NearbyState>(initialNearby);
   const [foreground, setForeground] = useState(AppState.currentState === "active" || AppState.currentState === null);
@@ -279,6 +284,8 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback 
           showRole={showRole && playing}
           setShowRole={setShowRole}
           intent={intent}
+          onSpeakInstruction={sound ? onSpeakInstruction : undefined}
+          onStopInstruction={onStopInstruction}
         />
       )}
       {mode === "nearby" && remote.mode === "host" && remote.view?.result && (
@@ -332,9 +339,12 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback 
           </Button>
         </View>
       )}
-      <Sheet visible={help} title="Picnic Island rules" onClose={() => setHelp(false)}>
+      <Sheet visible={help} title="Picnic Island rules" onClose={() => { setHelp(false); onStopInstruction?.(); }}>
         {Object.entries(mysteryInstructions).map(([key, text]) => (
-          <Copy key={key}>{text}</Copy>
+          <View key={key} style={{ gap: 8 }}>
+            <Copy>{text}</Copy>
+            <Button quiet compact disabled={!sound || !onSpeakInstruction} onPress={() => onSpeakInstruction?.(key as keyof typeof mysteryInstructions)}>Listen: {key.slice(8)}</Button>
+          </View>
         ))}
         <Copy>
           Nearby active players pause the round when away. Voted helpers can disconnect without stopping it. Parent can

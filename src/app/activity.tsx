@@ -89,6 +89,8 @@ function ActivityGame({ id }: { id: ActivityId }) {
             width={Math.min(width - 40, 1000)}
             sound={store.save.settings.sound}
             onFeedback={() => sound("tap")}
+            onSpeakInstruction={(key) => sound(key)}
+            onStopInstruction={stopSound}
           />
         ) : id === "racer" ? (
           <RaceScreen

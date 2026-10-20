@@ -250,3 +250,31 @@ describe("same approved room rematch", () => {
     expect(host.rematch()).toBe(false);
   });
 });
+
+describe("reviewed Mystery clue boundaries", () => {
+  it("does not identify a hidden ribbon actor through a blocked path", () => {
+    let s=fresh("mischief");
+    s={...s,tick:20};
+    s=at(at(at(s,"host",2,2),"p1",2,1),"p2",4,2);
+    expect(validMysterySession(s)).toBe(true);
+    expect(mysteryView(s,"p2").players.find(p=>p.id==="host")?.visible).toBe(false);
+    const next=action(s,"host",{type:"prank",target:"p1"});
+    expect(next).not.toBe(s);
+    expect(mysteryView(next,"p2").clues.some(c=>c.includes("Parent tied a ribbon"))).toBe(false);
+    expect(mysteryView(next,"p1").clues.some(c=>c.includes("Parent tied a ribbon"))).toBe(true);
+    expect(validMysterySession(next)).toBe(true);
+  });
+  it("eight longest legal names cannot generate an invalid completion clue or packet view", () => {
+    const names=Array.from({length:8},(_,i)=>({id:`p${i}`,name:`P${i}${"a".repeat(18)}`}));
+    let s=createMysterySession(names,42,"crew","long-name-room");
+    s={...s,players:s.players.map(p=>({...p,x:1,y:1}))};
+    for(const choice of [0,1,2])s=action(s,"p0",{type:"task",task:"garden",choice});
+    expect(s.tasks.garden).toBe(3);
+    expect(validMysterySession(s)).toBe(true);
+    for(const p of s.players){
+      expect(validMysteryView(mysteryView(s,p.id))).toBe(true);
+      expect(p.clues.every(c=>c.length<=200)).toBe(true);
+    }
+    expect(s.players[0].clues.at(-1)).toContain("5 others");
+  });
+});

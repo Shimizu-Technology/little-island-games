@@ -1,3 +1,4 @@
+import { mysteryInstructions } from "../src/mystery/instructions";
 import { readFileSync, existsSync } from "node:fs";
 import { QUALITY_GUIDANCE } from "../src/explore/guidance";
 import { newExploreProgress } from "../src/explore/progress";
@@ -12,7 +13,7 @@ import { advanceRace, createRaceSession, startRace } from "../src/racer/engine";
 describe("quality release regressions", () => {
   it("bundles exact guidance transcripts and preserves valid Explore progress through backup", () => {
     const audio = JSON.parse(readFileSync("scripts/quality-audio.json", "utf8"));
-    for (const [key, text] of Object.entries(QUALITY_GUIDANCE)) {
+    for (const [key, text] of Object.entries({...QUALITY_GUIDANCE, ...mysteryInstructions})) {
       expect(audio[key]).toBe(text);
       expect(existsSync(`assets/audio/${key}.m4a`)).toBe(true);
     }

@@ -340,12 +340,13 @@ export function applyMysteryIntent(
             } else addClue(p, "Dock tip: choose a boat rope, then its matching shore cleat. Match shape and color.");
           }
           if (s.tasks[task.id] === 3) {
-            note(s, `${p.name} finished ${task.name.toLowerCase()}.`);
+            note(s, `${task.name} is complete.`);
             witnesses(s, p, `${p.name} finished a real job at ${task.name.toLowerCase()}.`);
-            const nearby = s.players.filter((w) => w.id !== p.id && w.connected && close(w, p, 2)).map((w) => w.name);
+            const nearby = s.players.filter((w) => w.id !== p.id && w.connected && sightDistance(w, p) <= 3).map((w) => w.name);
+            const neighbors = nearby.slice(0, 2).join(" and ") + (nearby.length > 2 ? ` and ${nearby.length - 2} others` : "");
             addClue(
               p,
-              `You finished ${task.name.toLowerCase()}. ${nearby.length ? nearby.join(" and ") + " were nearby." : "Nobody was nearby."}`
+              `You finished ${task.name.toLowerCase()}. ${nearby.length ? neighbors + " were nearby." : "Nobody was nearby."}`
             );
           }
         } else if (intent.choice === task.order[s.tasks[task.id]]) {
@@ -950,7 +951,7 @@ function addClue(p: MysteryPlayer, message: string) {
   if (p.clues.at(-1) !== message) p.clues = [...p.clues.slice(-5), message];
 }
 function witnesses(s: MysterySession, actor: MysteryPlayer, message: string) {
-  s.players.filter((w) => w.id !== actor.id && w.connected && close(w, actor, 2)).forEach((w) => addClue(w, message));
+  s.players.filter((w) => w.id !== actor.id && w.connected && (s.adventure ? sightDistance(w, actor) <= 3 : close(w, actor, 2))).forEach((w) => addClue(w, message));
 }
 /** Solo time is a deliberate turn, never time spent reading. Legacy saves retain old rules but use this explicit pace in the UI. */
 export function playSoloIntent(state: MysterySession, intent: MysteryIntent): MysterySession {

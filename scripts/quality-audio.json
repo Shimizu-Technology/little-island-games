@@ -10,5 +10,14 @@
   "term-zooplankton": "Zooplankton. Say: zoe oh plank ton. These tiny drifting animals eat other living things. Some eat phytoplankton. Small fish can eat them.",
   "term-habitat": "Habitat means the place where a living thing gets what it needs: food, water, shelter, and space. A nest is only one small part of a bird’s habitat.",
   "term-water-vapor": "Water vapor is water in its invisible gas form. The white cloud you can see is made of tiny liquid drops or ice, not invisible vapor.",
-  "instructions-word-imposter": "Gather three to eight people. Each person privately reveals a card, then hides it before passing. Everyone knows the same secret word except the Imposter. Follow the named turns and give a clue without saying the word. Then each person votes privately for someone else. Catch the Imposter to win. Tied suspects get one more vote. Every player can be the Imposter next round, even the person who just had that role."
+  "instructions-word-imposter": "Gather three to eight people. Each person privately reveals a card, then hides it before passing. Everyone knows the same secret word except the Imposter. Follow the named turns and give a clue without saying the word. Then each person votes privately for someone else. Catch the Imposter to win. Tied suspects get one more vote. Every player can be the Imposter next round, even the person who just had that role.",
+  "mystery-welcome": "Welcome to Picnic Island. Touch a place to walk there. The island waits while you read in practice. Finish the garden, telescope, picnic basket and boat ropes. One islander secretly makes mischief.",
+  "mystery-crew": "You are crew. Finish four jobs together, or find the trickster at a meeting. A ribbon does not take you out. You can unwrap it and keep helping. Watch who is nearby and check your private notebook.",
+  "mystery-mischief": "You make mischief. Make three ribbon tricks before the crew finishes its jobs or finds you. You must be close to someone and wait between tricks. At the pump you can turn off the water. Everyone keeps playing.",
+  "mystery-garden": "Three garden beds need water. Touch each thirsty plant. A tall green plant has enough water. You can water them in any order.",
+  "mystery-stars": "Turn the telescope pointer left or right until it meets the glowing star. Then touch Align. Find all three stars. Look at the picture; this is not a memory test.",
+  "mystery-picnic": "Put water, fruit and bread into the basket. Touch each picture. The packed food stays in the basket. Any order works.",
+  "mystery-dock": "Connect the boat to shore. Choose a rope on the boat, then its matching shore cleat. Match the shape as well as the color. Connect all three ropes.",
+  "mystery-pump": "The water is off. Go to the blue pump. Open the supply, close the valve, then connect the pipe. The picture shows your progress. During a nearby disconnection the countdown waits.",
+  "mystery-meeting": "Talk about what you saw. Your notebook holds private observations. When you are ready, vote for one player or skip. A crew member who gets a wrong vote can still help with jobs. Only the parent can start a nearby rematch."
 }
