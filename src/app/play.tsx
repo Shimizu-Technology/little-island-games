@@ -1,3 +1,4 @@
+import { SaveStatus } from "../components/SaveStatus";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, ScrollView, TextInput, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -71,6 +72,12 @@ function Game({ id }: { id: GameId }) {
     setError("");
     setSetup(true);
   }
+  function replay() {
+    if (!s || !finished) return;
+    if (s.game === "word-rescue" && s.custom) { newRound(); return; }
+    const next = s.game === "word-rescue" ? createWord(s.options, s.category, s.seen) : createGame(id, s.options);
+    store.update(id, next, s);
+  }
   const boardProps = {
     width: Math.min(width - insets.left - insets.right - 32, 720),
     sound,
@@ -126,17 +133,7 @@ function Game({ id }: { id: GameId }) {
                 : ` · ${s.options.checkersRules === "friendly" ? "Friendly · jumps optional" : "Classic · must jump"}`)}
           </Copy>
         )}
-        {store.error && (
-          <View
-            accessibilityRole="alert"
-            style={{ padding: 15, backgroundColor: "#FBE8DE", borderRadius: 16, marginBottom: 16, gap: 8 }}
-          >
-            <Copy>{store.error}</Copy>
-            <Button quiet onPress={() => void store.retry()}>
-              Try saving again
-            </Button>
-          </View>
-        )}
+        <SaveStatus />
         {s?.game === "tic-tac-toe" ? (
           <TicBoard key={`${s.id}:${s.history.length}`} {...boardProps} state={s} commit={commit} />
         ) : s?.game === "word-rescue" ? (
@@ -185,7 +182,8 @@ function Game({ id }: { id: GameId }) {
           <View
             style={{ alignItems: "center", marginTop: 20, paddingTop: 18, borderTopWidth: 1, borderTopColor: C.line }}
           >
-            <Button onPress={newRound}>{finished ? "Play a fresh round" : "New round & options"}</Button>
+            {finished && <Button onPress={replay}>{s.game === "word-rescue" && s.custom ? "Choose a new family word" : "Play again"}</Button>}
+            <Button quiet={finished} onPress={newRound}>New round & options</Button>
             <Copy style={{ fontSize: 12, marginTop: 12, textAlign: "center" }}>
               Your current round saves on this device.
             </Copy>

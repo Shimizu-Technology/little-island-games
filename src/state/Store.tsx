@@ -1,19 +1,20 @@
 import { ExploreProgress, validExploreProgress } from "../explore/progress";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
-import { GameId, GameState } from "../games";
+import { GameId, GameState, gameIds } from "../games";
 import { storage } from "./storage";
 import { Save, emptySave, parseSave } from "./validation";
 import { preserveAndReplace } from "./replacement";
 import { applySessionAction } from "./sessionAction";
 import { recordWordRound } from "./wordRecords";
-import { ActivityId, ActivitySession } from "./activities";
+import { ActivityId, ActivitySession, activityIds } from "./activities";
 import { ActivityExpected, applyActivitySave } from "./activityAction";
 import { topicById } from "../explore/content";
 type Store = {
   epoch: number;
   activityUpdate: (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => boolean;
   toggleFavorite: (topic: string) => void;
+  toggleGameFavorite: (game: GameId | ActivityId) => void;
   exploreUpdate: (next: ExploreProgress, expectedEpoch: number) => void;
   save: Save;
   ready: boolean;
@@ -147,6 +148,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (JSON.stringify(current.explore?.progress) === JSON.stringify(progress)) return;
     commit({ ...current, explore: { favorites: [], ...current.explore, progress } });
   }, [commit]);
+  const toggleGameFavorite = useCallback((game: GameId | ActivityId) => {
+    if (![...gameIds, ...activityIds].includes(game)) return;
+    const favorites = latest.current.favoriteGames ?? [];
+    commit({ ...latest.current, favoriteGames: favorites.includes(game) ? favorites.filter((id) => id !== game) : [...favorites, game] });
+  }, [commit]);
   const settings = useCallback(
     (next: Partial<Save["settings"]>) =>
       commit({ ...latest.current, settings: { ...latest.current.settings, ...next } }),
@@ -184,6 +190,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         epoch,
         activityUpdate,
         toggleFavorite,
+        toggleGameFavorite,
         exploreUpdate,
         ready,
         error,
