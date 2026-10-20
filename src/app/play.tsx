@@ -117,7 +117,7 @@ function Game({ id }: { id: GameId }) {
         <Heading style={{ fontSize: width > 600 ? 34 : 28, marginTop: 5, marginBottom: 5 }}>{g.name}</Heading>
         {s && (
           <Copy style={{ fontSize: 13, marginBottom: 15 }}>
-            {difficultyLabel[s.options.difficulty]} · {s.options.mode === "together" ? g.together : g.solo}
+            {s.game === "word-rescue" ? ({ easy: "Short words", medium: "Longer words", hard: "Big words" })[s.options.difficulty] : difficultyLabel[s.options.difficulty]} · {s.options.mode === "together" ? g.together : g.solo}
             {s.game === "word-rescue" && ` · ${wordRules(s) === "challenge" ? "Six-guess Challenge" : "Practice"}`}
             {s.game === "numbers" && s.options.difficulty === "hard" && s.maxNumber === undefined && " · Earlier round: numbers 1–9"}
             {id === "checkers" &&

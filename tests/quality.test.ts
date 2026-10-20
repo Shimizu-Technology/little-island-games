@@ -8,7 +8,7 @@ import { emptySave, parseSave, validSession } from "../src/state/validation";
 import { createPartySession, partyAction, partyActor, rematchParty, validPartySession } from "../src/party/engine";
 import { createTic, ticHintReason } from "../src/games/tic";
 import { activityFinished } from "../src/state/activities";
-import { createRaceSession } from "../src/racer/engine";
+import { advanceRace, createRaceSession, startRace } from "../src/racer/engine";
 describe("quality release regressions", () => {
   it("bundles exact guidance transcripts and preserves valid Explore progress through backup", () => {
     const audio = JSON.parse(readFileSync("scripts/quality-audio.json", "utf8"));
@@ -76,6 +76,23 @@ describe("quality release regressions", () => {
     const s=createTic(defaultOptions);
     expect(ticHintReason({...s,board:["X","X",null,"O","O",null,null,null,null]},2)).toMatch(/completes/);
     expect(ticHintReason({...s,board:["X","X",null,"O",null,null,null,null,null]},2)).toMatch(/Block/);
+  });
+  it("an accessible eighteen-tick step travels the same distance at slow or fast frame cadences", () => {
+    const results = [1/60,0.1,0.2,0.4,0.5].map(dt => {
+      let state = startRace(createRaceSession("training", "practice", 1)), remainder=0, nudge=18;
+      state = {...state, runners: state.runners.map(r=>({...r,x:5.8}))};
+      for(let wall=0;wall<2-1e-8;wall+=dt) {
+        const before=state.tick;
+        const frame=advanceRace(state,{direction:1,directionTicks:nudge},dt,remainder);
+        state=frame.session; remainder=frame.remainder; nudge=Math.max(0,nudge-(state.tick-before));
+      }
+      return {tick:state.tick,x:state.runners[0].x,falls:state.runners[0].falls};
+    });
+    for(const result of results) {
+      expect(result.tick).toBe(120);
+      expect(result.falls).toBe(0);
+      expect(result.x).toBeCloseTo(results[0].x,8);
+    }
   });
   it("does not advertise finished or timed-out races as resumable", () => {
     const s=createRaceSession();

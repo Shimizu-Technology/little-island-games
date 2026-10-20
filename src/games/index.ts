@@ -77,7 +77,7 @@ export const games: Record<
     description: "Roll the dice. Make a perfect match.",
     color: "#2F737C",
     surface: "#E0F1F2",
-    help: "Roll the dice. Tap open numbers that add up to your roll, then close them. For example, a roll of 5 can close 5, or 2 and 3. Easy has one die and numbers 1–6; other levels use two dice and 1–9. Close every number to clear the island. If no combination fits, the round ends—try another or undo.",
+    help: "Roll the dice. Tap open numbers that add up to your roll, then close them. For example, a roll of 5 can close 5, or 2 and 3. Easy has one die and numbers 1–6; Growing uses two dice and 1–9; Challenge uses two dice and 1–12. Close every number to clear the island. If no combination fits, the round ends—try another or undo.",
     solo: "Your own challenge",
     together: "Solve together",
   },

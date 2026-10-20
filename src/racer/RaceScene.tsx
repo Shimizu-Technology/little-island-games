@@ -16,6 +16,12 @@ function move(node: Node | null, x: number, y: number, sy = 1, sx = 1, angle = 0
     >[0]);
   else node.setNativeProps({ matrix });
 }
+// WebShape only applies imperative presentation values inside style; native Shape accepts SVG props.
+function presentation(node: Node | Path | null, props: { opacity?: number; fill?: string }) {
+  if (!node) return;
+  const target = node as Node; // Both SVG shapes accept these common presentation attributes.
+  target.setNativeProps((Platform.OS === "web" ? { style: props } : props) as unknown as Parameters<Node["setNativeProps"]>[0]);
+}
 export type RaceSceneHandle = { draw: (session: RaceSession) => void };
 /** Static world is memoized. Only camera, runner and obstacle SVG transforms change per frame. */
 export const RaceScene = memo(
@@ -57,11 +63,11 @@ export const RaceScene = memo(
           );
           move(feet.current[i * 2], -3, -2, 1, 1, stride * 0.6);
           move(feet.current[i * 2 + 1], 3, -2, 1, 1, -stride * 0.6);
-          recoveryRings.current[i]?.setNativeProps({ opacity: r.recovery > 0 ? 1 : 0 });
-          bodies.current[i]?.setNativeProps({ opacity: r.recovery > 0 ? 0.45 : 1 });
+          presentation(recoveryRings.current[i], { opacity: r.recovery > 0 ? 1 : 0 });
+          presentation(bodies.current[i], { opacity: r.recovery > 0 ? 0.45 : 1 });
         }
         for (const [i, flag] of flagFills.current.entries())
-          flag?.setNativeProps({ fill: i <= s.runners[0].checkpoint ? "#E8B64E" : "#FFF7DC" });
+          presentation(flag, { fill: i <= s.runners[0].checkpoint ? "#E8B64E" : "#FFF7DC" });
         for (const [i, o] of course.obstacles.entries()) {
           const p = obstaclePosition(o, s.tick);
           // No cosmetic spin/bob; mechanical movement remains truthful with reduced motion.

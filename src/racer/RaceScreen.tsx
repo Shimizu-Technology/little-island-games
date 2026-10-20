@@ -187,7 +187,10 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
               : input.nudge > 0
                 ? input.stepDirection
                 : 0;
-          const result = advanceRace(before, { direction, jump: input.jump }, elapsed, remainder);
+          const result = advanceRace(before, {
+            direction, jump: input.jump,
+            directionTicks: input.left || input.right || input.toggle ? undefined : input.nudge,
+          }, elapsed, remainder);
           remainder = result.remainder;
           if (result.session.tick !== before.tick) {
             input.jump = false;

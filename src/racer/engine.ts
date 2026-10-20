@@ -15,7 +15,7 @@ const HEIGHT = 0.8,
   JUMP = 8.7,
   SPEED = 4.8;
 export type RaceMode = "practice" | "race";
-export type RaceInput = { direction: -1 | 0 | 1; jump?: boolean };
+export type RaceInput = { direction: -1 | 0 | 1; jump?: boolean; directionTicks?: number };
 export type Runner = {
   id: string;
   name: string;
@@ -298,8 +298,12 @@ export function advanceRace(
   const total = seconds + (Number.isFinite(remainder) ? Math.max(0, Math.min(remainder, 1 / RACE_HZ)) : 0);
   const steps = Math.floor(total * RACE_HZ + 1e-8);
   let next = session;
+  const directionTicks = input.directionTicks === undefined ? Infinity : Math.max(0, Math.floor(input.directionTicks));
   for (let i = 0; i < steps; i++)
-    next = next.status === "finished" ? stepFinishers(next) : stepRace(next, { ...input, jump: i === 0 && input.jump });
+    next = next.status === "finished" ? stepFinishers(next) : stepRace(next, {
+      direction: i < directionTicks ? input.direction : 0,
+      jump: i === 0 && input.jump,
+    });
   return { session: next, remainder: Math.max(0, total - steps / RACE_HZ), interrupted: false };
 }
 export function validRaceSession(value: unknown): value is RaceSession {
