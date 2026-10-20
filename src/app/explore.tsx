@@ -2,7 +2,8 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Recovery } from "../components/Recovery";
 import { Copy, styles } from "../components/ui";
-import { AppState } from "react-native";
+import { AppState, View } from "react-native";
+import { SaveStatus } from "../components/SaveStatus";
 import { router, useIsFocused } from "expo-router";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { ExploreScreen } from "../explore/ExploreScreen";
@@ -57,6 +58,8 @@ function ExploreReady() {
     if (!focused || !store.save.settings.sound || status.didJustFinish) stop();
   }, [focused, store.save.settings.sound, status.didJustFinish, stop]);
   return (
+    <View style={{ flex: 1 }}>
+      {store.error && <SafeAreaView edges={["top", "left", "right"]} style={{ backgroundColor: "#FCFAF4", paddingHorizontal: 18 }}><SaveStatus /></SafeAreaView>}
     <ExploreScreen
       key={store.epoch}
       favorites={store.save.explore?.favorites ?? []}
@@ -86,5 +89,6 @@ function ExploreReady() {
         }
       }}
     />
+    </View>
   );
 }

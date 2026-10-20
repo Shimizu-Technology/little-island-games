@@ -1,3 +1,4 @@
+import { SaveStatus } from "../components/SaveStatus";
 import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -76,11 +77,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
             Sound {store.save.settings.sound ? "on" : "off"}
           </Button>
         </View>
-        {store.error && (
-          <View accessibilityRole="alert">
-            <Copy>{store.error}</Copy>
-          </View>
-        )}
+        <SaveStatus />
         {id === "island-mystery" ? (
           <MysteryScreen
             state={saved?.game === "island-mystery" ? saved : null}

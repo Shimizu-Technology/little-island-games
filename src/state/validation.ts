@@ -7,12 +7,14 @@ import { WordRecords, validWordRecords } from "./wordRecords";
 import { Activities, ActivityId, activityIds, validActivities, validActivityRecords } from "./activities";
 import type { RaceRecords } from "../racer/engine";
 import { normalizeExploreFavorites, topicById } from "../explore/content";
+import { WORDS } from "../games/words";
 export type Settings = { sound: boolean; help: boolean };
 export type Save = {
   version: 1;
   settings: Settings;
   sessions: Partial<Record<GameId, GameState>>;
   recent: GameId | null;
+  favoriteGames?: (GameId | ActivityId)[];
   wordRecords?: WordRecords;
   activities?: Activities;
   recentActivity?: ActivityId | null;
@@ -110,6 +112,7 @@ export function validSession(v: unknown): v is GameState {
         v.clue.length <= 300 &&
         typeof v.category === "string" &&
         v.category.length <= 50 &&
+        (v.pack === undefined || v.pack === "All" || WORDS.some((word) => word[1] === v.pack)) &&
         strings(v.guessed, 1, 26) &&
         unique(v.guessed) &&
         v.guessed.every((l) => /^[A-Z]$/.test(l)) &&
@@ -286,6 +289,9 @@ export function parseSave(raw: string): Save {
     Object.keys(v.sessions).some((k) => !gameIds.includes(k as GameId)) ||
     !Object.entries(v.sessions).every(([k, s]) => validSession(s) && s.game === k) ||
     (v.recent !== null && !gameIds.includes(v.recent as GameId)) ||
+    (v.favoriteGames !== undefined &&
+      (!Array.isArray(v.favoriteGames) || v.favoriteGames.length > gameIds.length + activityIds.length ||
+        !unique(v.favoriteGames) || !v.favoriteGames.every((id) => [...gameIds, ...activityIds].includes(id)))) ||
     (v.wordRecords !== undefined && !validWordRecords(v.wordRecords)) ||
     (v.activities !== undefined && !validActivities(v.activities)) ||
     (v.recentActivity !== undefined &&

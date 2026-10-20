@@ -6,6 +6,7 @@ import { Button, C, Copy, Heading } from "../components/ui";
 import { BELL, MysteryIntent, MysteryView, Point, PUMP, TASKS, TRICK_GOAL, pathStep, playerColor } from "./engine";
 import { IslandScene, LandmarkArt, PLACES, placeName } from "./IslandArt";
 import { IslandJob, PumpJob } from "./IslandJobs";
+import { firstJobGuide } from "./firstJobGuide";
 export function AdventurePlay({
   view,
   width,
@@ -30,6 +31,7 @@ export function AdventurePlay({
   const [revealedRound, setRevealedRound] = useState<string | null>(null);
   const [notebook, setNotebook] = useState(false);
   const [goal, setGoal] = useState<Point | null>(null);
+  const [dismissedGuideRound, setDismissedGuideRound] = useState<string | null>(null);
   const [measured, setMeasured] = useState(Math.min(width - 40, 720));
   const current = useRef({ view, intent });
   useLayoutEffect(() => {
@@ -46,6 +48,8 @@ export function AdventurePlay({
   const atPump = self.x === PUMP.x && self.y === PUMP.y;
   const atBell = self.x === BELL.x && self.y === BELL.y;
   const completed = TASKS.filter((t) => view.tasks[t.id] === 3).length;
+  const guide = enabled && !view.paused && dismissedGuideRound !== roundKey ? firstJobGuide(view) : null;
+  const garden = TASKS.find((t) => t.id === "garden")!;
   const near = view.players.filter(
     (p) => !p.out && p.id !== self.id && p.visible !== false && Math.abs(p.x - self.x) + Math.abs(p.y - self.y) <= 1
   );
@@ -93,26 +97,73 @@ export function AdventurePlay({
                 ? "Share what you noticed"
                 : view.phase === "voting"
                   ? "Who made the mischief?"
-                  : "Picnic Island"}
+                  : guide
+                    ? guide.stage === "explore"
+                      ? "Garden ready!"
+                      : "First job: Garden"
+                    : "Picnic Island"}
         </Heading>
-        <Copy style={{ fontSize: 13, lineHeight: 19 }}>
-          {view.result
-            ? {
-                tasks: "All four island jobs are ready. Everyone helped the picnic!",
-                caught: "The vote found the mischief maker.",
-                pranks: view.adventure
-                  ? "Three ribbon tricks! Nobody was left out of the adventure."
-                  : "The mischief maker surprised enough crew members.",
-                sabotage: "The water stayed off too long. Try again and watch the pump.",
-              }[view.result.reason]
-            : view.paused
-              ? "An active player is away. Moves and timers wait; helper spectators can leave without pausing everyone."
-              : view.solo
-                ? "Practice waits while you read. Each move, job action or Watch advances one beat."
-                : view.phase === "explore"
-                  ? "Touch a place to walk there. Watch your friends, help with jobs, and gather clues."
-                  : `${view.phaseLeft} seconds · ${view.phase === "discussion" ? `${view.readyCount} ready` : `${view.votesCast} votes cast`}`}
-        </Copy>
+        {guide ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <LandmarkArt kind="garden" size={40} complete={guide.stage === "explore"} />
+            <Copy style={{ flex: 1, fontSize: 13, lineHeight: 19 }}>
+              {guide.stage === "walk"
+                ? "Let’s help the plants grow. Walk to the Garden to try a job."
+                : guide.stage === "water"
+                  ? `Tap each thirsty bed below the map. Any order! ${guide.growing} of 3 growing.`
+                  : "All three beds are growing. A job for the crew! Explore another place or look for clues with friends."}
+            </Copy>
+          </View>
+        ) : (
+          <Copy style={{ fontSize: 13, lineHeight: 19 }}>
+            {view.result
+              ? {
+                  tasks: "All four island jobs are ready. Everyone helped the picnic!",
+                  caught: "The vote found the mischief maker.",
+                  pranks: view.adventure
+                    ? "Three ribbon tricks! Nobody was left out of the adventure."
+                    : "The mischief maker surprised enough crew members.",
+                  sabotage: "The water stayed off too long. Try again and watch the pump.",
+                }[view.result.reason]
+              : view.paused
+                ? "An active player is away. Moves and timers wait; helper spectators can leave without pausing everyone."
+                : view.solo
+                  ? "Practice waits while you read. Each move, job action or Watch advances one beat."
+                  : view.phase === "explore"
+                    ? "Touch a place to walk there. Watch your friends, help with jobs, and gather clues."
+                    : `${view.phaseLeft} seconds · ${view.phase === "discussion" ? `${view.readyCount} ready` : `${view.votesCast} votes cast`}`}
+          </Copy>
+        )}
+        {guide && (
+          <View style={{ flexDirection: "row", gap: 7, flexWrap: "wrap" }}>
+            {guide.stage === "walk" && (
+              <Button compact disabled={!exploring} label="First job: walk to the Garden" onPress={() => walk(garden)}>
+                {goal?.x === garden.x && goal?.y === garden.y ? "Walking to Garden…" : "Walk to Garden"}
+              </Button>
+            )}
+            {guide.stage === "explore" && (
+              <Button
+                compact
+                quiet
+                label="Open your private notebook for clues"
+                onPress={() => {
+                  setNotebook(true);
+                  setDismissedGuideRound(roundKey);
+                }}
+              >
+                Look at clues
+              </Button>
+            )}
+            <Button
+              compact
+              quiet
+              label="Dismiss first-job guide and explore freely"
+              onPress={() => setDismissedGuideRound(roundKey)}
+            >
+              Explore my way
+            </Button>
+          </View>
+        )}
         {!view.adventure && (
           <Copy style={{ fontSize: 12 }}>
             Earlier saved round · original rules. Start fresh practice for the new ribbon adventure.

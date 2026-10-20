@@ -1,6 +1,6 @@
 # Little Island product brief
 
-Updated 2026-10-20 from Leon's family-first approval and full V2 implementation request. The detailed scope and source/family acceptance boundaries are in [V2_RELEASE.md](V2_RELEASE.md); current evidence is in [V2_QA.md](V2_QA.md).
+Updated 2026-10-21. The shipped quality-release evidence is in [QUALITY_QA.md](QUALITY_QA.md). The next source improvements for independent play, fun and discovery are scoped and tested in [FAMILY_EASE.md](FAMILY_EASE.md); they are separate from the installed TestFlight build.
 
 ## People and purpose
 
@@ -22,6 +22,8 @@ Warm cream, deep teal, coral, lagoon blue and mustard; original vector art, larg
 
 Choose a game → start/resume → understand the first action → play/help → finish → replay or return. Secret hands/roles conceal on interruption and handoff. Explore preserves topic/search context while following related discoveries. Parent settings provide sound, backups and recovery. Local saves do not sync automatically; deleting the app can remove them.
 
+Home puts familiar games first, supports local game favorites and alone/together browsing. Original games offer quick replay with the previous choices; private family words require fresh entry. Explore offers direct entries to five hands-on activities. Solo crew practice can show a dismissible first Garden job guide. Failed saves have an explicit retry, and grown-ups can inspect/export preserved copies and confirm a restore while keeping the replaced data.
+
 ## Architecture and domain rules
 
 Pure TypeScript engines drive moves, computer choices, terminal outcomes and validation. Local opponents have bounded policies; card and mystery bots use their own knowledge. Serializable sessions use bounded validated saves, ordered writes and native SQLite transactions; web uses localStorage. Preserve incompatible/corrupt originals and show recovery. Backup replacement blocks ordinary writes and invalidates stale callbacks. Nearby authority, peer binding, recipient redaction, sequence checks and lifecycle rules are documented in V2_MYSTERY.md.
@@ -30,6 +32,6 @@ Checkers: 8×8, twelve pieces per side, red starts and moves down rows. Men move
 
 ## Release and unknowns
 
-Target internal TestFlight 1.1.0 (6) for Leon's existing adult tester group, with no public store release. Exact source, artifact, processing and tester availability require delivery evidence. Public distribution also requires speech rights, child-facing privacy/metadata review and physical family acceptance.
+Latest recorded internal TestFlight delivery is 1.2.0 (7) for Leon's existing adult tester group; see [TESTFLIGHT.md](TESTFLIGHT.md) for source and delivery evidence. Subsequent source changes require a separate build/upload before they appear there. Public distribution also requires speech rights, child-facing privacy/metadata review and physical family acceptance.
 
 Leon reports an iPad mini purchased around 2020/21; exact model/OS remain unknown. Deployment minimum is iOS/iPadOS16.4. Simulator success does not establish physical performance, touch/VoiceOver behavior, audio, battery/thermal behavior or Stassie's independent usability. Those remain operator checks on the family hardware.

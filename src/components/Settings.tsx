@@ -5,15 +5,18 @@ import { useStore } from "../state/Store";
 import { exportBackup, importBackup } from "../state/backup";
 import { parseSave } from "../state/validation";
 import { Button, Copy, Heading, Sheet } from "./ui";
+import { PreviousSaves } from "./PreviousSaves";
 export function Settings({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const store = useStore(),
     [unlocked, setUnlocked] = useState(false),
     [message, setMessage] = useState(""),
     [pending, setPending] = useState<string | null>(null),
+    [history, setHistory] = useState(false),
     [busy, setBusy] = useState(false);
   function close() {
     setUnlocked(false);
     setPending(null);
+    setHistory(false);
     setMessage("");
     onClose();
   }
@@ -34,6 +37,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
     try {
       await store.restore(pending);
       setPending(null);
+      setHistory(false);
       setMessage("Your games and settings have been restored.");
     } catch {
       setMessage("The backup could not be restored. Your current games are still kept.");
@@ -44,10 +48,10 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
   return (
     <Sheet visible={visible} onClose={close} title="Your little island">
       <Heading style={{ fontSize: 19 }}>Make yourself comfortable</Heading>
-      <Button quiet onPress={() => store.settings({ sound: !store.save.settings.sound })}>
+      <Button quiet disabled={busy} onPress={() => store.settings({ sound: !store.save.settings.sound })}>
         Sound · {store.save.settings.sound ? "On" : "Off"}
       </Button>
-      <Button quiet onPress={() => store.settings({ help: !store.save.settings.help })}>
+      <Button quiet disabled={busy} onPress={() => store.settings({ help: !store.save.settings.help })}>
         Checkers piece hints · {store.save.settings.help ? "On" : "Off"}
       </Button>
       <Copy>
@@ -93,6 +97,10 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
           <Button quiet disabled={busy} onPress={() => void read()}>
             Choose a backup to restore
           </Button>
+          <Button quiet disabled={busy} onPress={() => { setPending(null); setHistory(!history); }}>
+            {history ? "Close previous saves" : "Previous saves"}
+          </Button>
+          {history && !pending && <PreviousSaves onChoose={(raw) => { setPending(raw); setMessage(""); }} />}
           {pending && (
             <>
               <Copy>

@@ -1,3 +1,4 @@
+import { SaveStatus } from "../components/SaveStatus";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, ScrollView, TextInput, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -5,7 +6,7 @@ import { Redirect, router, useLocalSearchParams, useIsFocused } from "expo-route
 import { GameId, GameState, Options, createGame, difficultyLabel, gameIds, games, isFinished } from "../games";
 import { defaultOptions } from "../games/types";
 import { positionKey } from "../games/checkers";
-import { createWord, customWord, guessLetter, wordHint, wordRules, wordStatus, WORDS } from "../games/words";
+import { createWord, customWord, guessLetter, replayWord, wordHint, wordRules, wordStatus, WORDS } from "../games/words";
 import { useStore } from "../state/Store";
 import { Button, C, Chip, Copy, Heading, Label, Sheet, styles } from "../components/ui";
 import { useSounds } from "../components/Audio";
@@ -28,7 +29,7 @@ function Game({ id }: { id: GameId }) {
     [options, setOptions] = useState<Options>(
       s?.options ?? { ...defaultOptions, ...(id === "checkers" ? { checkersRules: "friendly" as const } : {}) }
     ),
-    [category, setCategory] = useState("All"),
+    [category, setCategory] = useState(s?.game === "word-rescue" ? s.pack ?? "All" : "All"),
     [secret, setSecret] = useState(""),
     [error, setError] = useState(""),
     [active, setActive] = useState(AppState.currentState === "active");
@@ -70,6 +71,12 @@ function Game({ id }: { id: GameId }) {
     setSecret("");
     setError("");
     setSetup(true);
+  }
+  function replay() {
+    if (!s || !finished) return;
+    if (s.game === "word-rescue" && s.custom) { newRound(); return; }
+    const next = s.game === "word-rescue" ? replayWord(s)! : createGame(id, s.options);
+    store.update(id, next, s);
   }
   const boardProps = {
     width: Math.min(width - insets.left - insets.right - 32, 720),
@@ -126,17 +133,7 @@ function Game({ id }: { id: GameId }) {
                 : ` · ${s.options.checkersRules === "friendly" ? "Friendly · jumps optional" : "Classic · must jump"}`)}
           </Copy>
         )}
-        {store.error && (
-          <View
-            accessibilityRole="alert"
-            style={{ padding: 15, backgroundColor: "#FBE8DE", borderRadius: 16, marginBottom: 16, gap: 8 }}
-          >
-            <Copy>{store.error}</Copy>
-            <Button quiet onPress={() => void store.retry()}>
-              Try saving again
-            </Button>
-          </View>
-        )}
+        <SaveStatus />
         {s?.game === "tic-tac-toe" ? (
           <TicBoard key={`${s.id}:${s.history.length}`} {...boardProps} state={s} commit={commit} />
         ) : s?.game === "word-rescue" ? (
@@ -185,7 +182,8 @@ function Game({ id }: { id: GameId }) {
           <View
             style={{ alignItems: "center", marginTop: 20, paddingTop: 18, borderTopWidth: 1, borderTopColor: C.line }}
           >
-            <Button onPress={newRound}>{finished ? "Play a fresh round" : "New round & options"}</Button>
+            {finished && <Button onPress={replay}>{s.game === "word-rescue" && s.custom ? "Choose a new family word" : "Play again"}</Button>}
+            <Button quiet={finished} onPress={newRound}>New round & options</Button>
             <Copy style={{ fontSize: 12, marginTop: 12, textAlign: "center" }}>
               Your current round saves on this device.
             </Copy>

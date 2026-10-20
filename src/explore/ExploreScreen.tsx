@@ -27,6 +27,13 @@ export interface ExploreScreenProps {
 }
 type Location = ExploreLocation;
 const locationKey = exploreLocationKey;
+const activityInvitations: Record<WorldId, string> = {
+  space: "Turn Earth",
+  oceans: "Build a food chain",
+  animals: "Match animal homes",
+  weather: "Move a water drop",
+  world: "Follow map clues",
+};
 export function ExploreScreen({
   favorites,
   onToggleFavorite,
@@ -213,7 +220,10 @@ export function ExploreScreen({
             <Label>Follow your curiosity</Label>
             <Heading style={s.title}>Where shall we go?</Heading>
             <Copy>Five worlds. Fifty discoveries. Ready without Wi-Fi.</Copy>
-            <DiscoveryMap onChoose={(id) => go({ kind: "world", world: id })} />
+            <DiscoveryMap
+              onChoose={(id) => go({ kind: "world", world: id })}
+              onActivity={(id) => go({ kind: "activity", world: id })}
+            />
           </>
         )}
         {location.kind === "world" && world && (
@@ -324,7 +334,10 @@ export function ExploreScreen({
     </SafeAreaView>
   );
 }
-function DiscoveryMap({ onChoose }: { onChoose: (id: WorldId) => void }) {
+function DiscoveryMap({ onChoose, onActivity }: {
+  onChoose: (id: WorldId) => void;
+  onActivity: (id: WorldId) => void;
+}) {
   const [focused, setFocused] = useState<string>();
   return (
     <View style={s.discoveryMap}>
@@ -370,6 +383,23 @@ function DiscoveryMap({ onChoose }: { onChoose: (id: WorldId) => void }) {
         ))}
       </View>
       <Copy style={{ fontSize: 12, textAlign: "center" }}>An imaginary map of ideas. Tap an island to explore.</Copy>
+      <View style={s.activityShelf}>
+        <Heading style={{ fontSize: 21 }}>Try it yourself</Heading>
+        <View style={s.row}>
+          {WORLDS.map((world) => (
+            <Button
+              key={world.id}
+              quiet
+              compact
+              label={`Try: ${world.activity}. ${activityInvitations[world.id]}`}
+              onPress={() => onActivity(world.id)}
+              style={{ backgroundColor: world.tint, borderColor: world.color, flexShrink: 1 }}
+            >
+              {activityInvitations[world.id]} ›
+            </Button>
+          ))}
+        </View>
+      </View>
     </View>
   );
 }
@@ -459,6 +489,7 @@ function TopicView({
       </View>
       {!narrationEnabled && <Copy>Sound is off. You can read every word below.</Copy>}
       <Copy style={s.short}>{topic.short}</Copy>
+      <Button onPress={onActivity}>Try: {world.activity}</Button>
       <View style={s.deeper}>
         <Label>A little deeper</Label>
         <Copy style={{ color: C.ink }}>{topic.deeper}</Copy>
@@ -467,7 +498,6 @@ function TopicView({
         <Label>Something to try</Label>
         <Heading style={{ fontSize: 21 }}>{topic.question}</Heading>
       </View>
-      <Button onPress={onActivity}>Try: {world.activity}</Button>
       <Heading style={{ fontSize: 24 }}>Keep wondering</Heading>
       <View style={{ gap: 10 }}>
         {topic.related.map((id) => {
@@ -730,6 +760,7 @@ const s = StyleSheet.create({
   sourceTitle: { fontFamily: font, fontSize: 14, color: C.ink, fontWeight: "700" },
   sourceUrl: { fontFamily: font, fontSize: 12, color: C.muted, flexShrink: 1 },
   discoveryMap: { overflow: "hidden", borderRadius: 26, padding: 14, gap: 14 },
+  activityShelf: { backgroundColor: C.paper, borderRadius: 20, padding: 16, gap: 12 },
   mapGrid: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 14, paddingVertical: 8 },
   mapIsland: {
     flexGrow: 1,

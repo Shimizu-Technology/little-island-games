@@ -5,9 +5,10 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { router } from "expo-router";
 import { GameId, gameIds, games, isFinished } from "../games";
 import { Button, C, Chip, Copy, Heading, Label, font, styles } from "../components/ui";
-import { GameArt, Island } from "../components/Art";
+import { GameArt } from "../components/Art";
 import { Settings } from "../components/Settings";
 import { Recovery } from "../components/Recovery";
+import { SaveStatus } from "../components/SaveStatus";
 import { useStore } from "../state/Store";
 import { ActivityId, activityFinished } from "../state/activities";
 import { FeatureArt } from "../components/FeatureArt";
@@ -53,304 +54,83 @@ const extraGames: { id: ActivityId; name: string; description: string; surface: 
     filters: ["Words & numbers", "Play together"],
   },
 ];
-const filters = ["All games", "Words & numbers", "Think & explore", "Play together"];
+type ShelfId = GameId | ActivityId;
+const shelf = [
+  ...gameIds.map((id) => ({ id: id as ShelfId, ...games[id],
+    players: id === "maze" || id === "numbers" ? "1 player or solve together" : id === "word-rescue" ? "Word packs or family word" : "1 or 2 players · one device",
+    filters: ["Play alone", "Play together", ...(["word-rescue", "numbers"].includes(id) ? ["Words & numbers"] : ["Think & explore"])],
+  })),
+  ...extraGames.map((g) => ({ ...g, filters: [...g.filters, ...(g.id === "word-imposter" ? [] : ["Play alone"])] })),
+];
+const filters = ["All games", "Play alone", "Play together", "Favorites", "Words & numbers", "Think & explore"];
 export default function Home() {
   const insets = useSafeAreaInsets();
-  const { width, fontScale } = useWindowDimensions(),
-    store = useStore();
-  const [settings, setSettings] = useState(false),
-    [filter, setFilter] = useState("All games");
+  const { width, fontScale } = useWindowDimensions(), store = useStore();
+  const [settings, setSettings] = useState(false), [filter, setFilter] = useState("All games");
   const availableWidth = width - insets.left - insets.right;
-  const tablet = availableWidth >= 600;
   const columns = fontScale > 1.3 || availableWidth < 350 ? 1 : availableWidth >= 900 ? 3 : 2;
-  const contentWidth = Math.min(availableWidth, 1080) - 40;
-  const cardWidth = (contentWidth - 12 * (columns - 1)) / columns;
-  const choices = gameIds.filter(
-    (id) =>
-      filter === "All games" ||
-      (filter === "Words & numbers" && ["word-rescue", "numbers"].includes(id)) ||
-      (filter === "Think & explore" && ["tic-tac-toe", "checkers", "maze"].includes(id)) ||
-      (filter === "Play together" && ["tic-tac-toe", "memory", "checkers"].includes(id))
-  );
+  const cardWidth = (Math.min(availableWidth, 1080) - 40 - 12 * (columns - 1)) / columns;
+  const favorites = store.save.favoriteGames ?? [];
   const recent = store.save.recent && store.save.sessions[store.save.recent];
-  const resume = recent && !isFinished(recent) ? recent : null;
   const recentActivity = store.save.recentActivity && store.save.activities?.[store.save.recentActivity];
-  const resumeActivity = recentActivity && !activityFinished(recentActivity) ? recentActivity : null;
-  function open(game: GameId) {
-    router.push({ pathname: "/play", params: { game } });
+  const resumeId: ShelfId | null = recentActivity && !activityFinished(recentActivity) ? store.save.recentActivity! : recent && !isFinished(recent) ? recent.game : null;
+  const choices = shelf.filter((g) => filter === "All games" || (filter === "Favorites" ? favorites.includes(g.id) : g.filters.includes(filter)));
+  function open(id: ShelfId) {
+    if (gameIds.includes(id as GameId)) router.push({ pathname: "/play", params: { game: id } });
+    else router.push({ pathname: "/activity", params: { game: id } });
   }
-  if (!store.ready)
-    return (
-      <SafeAreaView style={styles.page}>
-        <View style={[styles.content, { paddingTop: 60 }]}>
-          <Heading>Getting your island ready…</Heading>
-        </View>
-      </SafeAreaView>
-    );
-  if (store.recovery)
-    return (
-      <SafeAreaView style={styles.page}>
-        <Recovery />
-      </SafeAreaView>
-    );
+  function ongoing(id: ShelfId) {
+    const original = store.save.sessions[id as GameId], activity = store.save.activities?.[id as ActivityId];
+    return original ? !isFinished(original) : activity ? !activityFinished(activity) : false;
+  }
+  if (!store.ready) return <SafeAreaView style={styles.page}><View style={styles.content}><Heading>Getting your island ready…</Heading></View></SafeAreaView>;
+  if (store.recovery) return <SafeAreaView style={styles.page}><Recovery /></SafeAreaView>;
   return (
     <SafeAreaView style={styles.page}>
-      <ScrollView contentContainerStyle={[styles.content, { paddingHorizontal: 20 }]}>
-        <View style={[styles.row, { paddingVertical: 14, justifyContent: "space-between", flexWrap: "wrap" }]}>
-          <View style={[styles.row, { gap: 9 }]}>
-            <View
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: 12,
-                backgroundColor: "#E8D4A7",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text style={{ fontSize: 22, color: C.teal, fontWeight: "800" }}>li</Text>
-            </View>
-            <Text style={{ fontFamily: font, fontSize: 20, fontWeight: "700", color: C.ink, letterSpacing: -0.5 }}>
-              little island
-            </Text>
-          </View>
-          <Button compact quiet onPress={() => setSettings(true)} label="Open sound settings and grown-up backups">
-            Settings
-          </Button>
+      <ScrollView contentContainerStyle={[styles.content, { paddingHorizontal: 20, gap: 14 }]}>
+        <View style={[styles.row, { paddingTop: 12, justifyContent: "space-between", flexWrap: "wrap" }]}>
+          <Text style={{ fontFamily: font, fontSize: 22, fontWeight: "800", color: C.ink }}>little island</Text>
+          <Button compact quiet onPress={() => setSettings(true)} label="Open sound settings and grown-up backups">Settings</Button>
         </View>
-        <View
-          style={{
-            borderRadius: 24,
-            backgroundColor: "#EAF0DF",
-            padding: tablet ? 26 : 20,
-            overflow: "hidden",
-            marginBottom: 22,
-          }}
-        >
-          <View style={{ zIndex: 1, maxWidth: fontScale > 1.3 ? "100%" : tablet ? "70%" : "78%" }}>
-            <Label>YOUR LITTLE PLACE TO PLAY</Label>
-            <Heading style={{ fontSize: tablet ? 36 : 28, lineHeight: tablet ? 43 : 34, marginTop: 8 }}>
-              A little play.{`\n`}A lot to discover.
-            </Heading>
-            <Copy style={{ marginTop: 8, fontSize: 14, lineHeight: 21, color: "#4F6856" }}>
-              Pick a game. Take your time.
-            </Copy>
+        <SaveStatus />
+        <Heading style={{ fontSize: availableWidth >= 600 ? 34 : 28 }}>What shall we play?</Heading>
+        {resumeId && <Button onPress={() => open(resumeId)} label={`Continue ${shelf.find((g) => g.id === resumeId)?.name}, your saved round`}>Continue {shelf.find((g) => g.id === resumeId)?.name}</Button>}
+        {favorites.length > 0 && <View style={{ gap: 8 }}>
+          <Label>Your favorites</Label>
+          <View style={[styles.row, { flexWrap: "wrap", gap: 8 }]}>
+            {favorites.map((id) => <Button key={id} quiet compact onPress={() => open(id)} label={`Open favorite ${shelf.find((g) => g.id === id)?.name}`}>{shelf.find((g) => g.id === id)?.name}</Button>)}
           </View>
-          {fontScale <= 1.3 && (
-            <View
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                right: tablet ? 16 : -36,
-                bottom: tablet ? -5 : -13,
-                opacity: tablet ? 0.9 : 0.55,
-              }}
-            >
-              <Island width={tablet ? 235 : 155} />
-            </View>
-          )}
-        </View>
-        {store.error && (
-          <View
-            accessibilityRole="alert"
-            style={{ padding: 15, backgroundColor: "#FBE8DE", borderRadius: 16, marginBottom: 16, gap: 10 }}
-          >
-            <Copy>{store.error}</Copy>
-            <Button quiet onPress={() => void store.retry()}>
-              Try saving again
-            </Button>
-          </View>
-        )}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Explore and learn, fifty offline discoveries"
-          onPress={() => router.push("/explore")}
-          style={({ pressed }) => ({
-            borderRadius: 22,
-            backgroundColor: "#DFEAF0",
-            padding: 18,
-            marginBottom: 20,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 14,
-            opacity: pressed ? 0.8 : 1,
-          })}
-        >
-          <FeatureArt kind="explore" size={68} />
-          <View style={{ flex: 1 }}>
-            <Label>A LITTLE CURIOSITY</Label>
-            <Heading style={{ fontSize: 23, marginTop: 4 }}>Explore & learn</Heading>
-            <Copy style={{ fontSize: 13, lineHeight: 19, marginTop: 4 }}>
-              Space, oceans, animals, weather, and our world. Fifty discoveries to take anywhere.
-            </Copy>
-          </View>
+        </View>}
+        <Pressable accessibilityRole="button" accessibilityLabel="Explore and learn, fifty offline discoveries" onPress={() => router.push("/explore")}
+          style={({ pressed }) => ({ backgroundColor: "#DFEAF0", borderRadius: 18, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, opacity: pressed ? 0.75 : 1 })}>
+          <FeatureArt kind="explore" size={44} />
+          <View style={{ flex: 1 }}><Heading style={{ fontSize: 20 }}>Explore & learn</Heading><Copy style={{ fontSize: 13 }}>Listen, discover, and try an experiment.</Copy></View>
+          <Text style={{ fontSize: 24, color: C.teal }} accessibilityElementsHidden>→</Text>
         </Pressable>
-        {resumeActivity && (
-          <Button
-            quiet
-            onPress={() => router.push({ pathname: "/activity", params: { game: store.save.recentActivity! } })}
-          >
-            Continue {extraGames.find((g) => g.id === store.save.recentActivity)?.name ?? "your adventure"}
-          </Button>
-        )}
-        {!resumeActivity && resume && (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Continue ${games[resume.game].name}, your saved round`}
-            onPress={() => open(resume.game)}
-            style={({ pressed }) => ({
-              padding: 15,
-              borderRadius: 20,
-              backgroundColor: C.soft,
-              marginBottom: 20,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              opacity: pressed ? 0.75 : 1,
-            })}
-          >
-            <GameArt game={resume.game} size={48} />
-            <View style={{ flex: 1 }}>
-              <Label>Keep your adventure going</Label>
-              <Heading style={{ fontSize: 19, marginTop: 4 }}>{games[resume.game].name}</Heading>
-            </View>
-            <Text style={{ color: C.teal, fontSize: 26 }} accessibilityElementsHidden>
-              →
-            </Text>
-          </Pressable>
-        )}
-        <View style={{ marginBottom: 12 }}>
-          <Heading style={{ fontSize: 24 }}>What feels fun today?</Heading>
-          <Copy style={{ marginTop: 3, fontSize: 13, lineHeight: 20 }}>
-            Games, stories, and discoveries. Ready whenever you are.
-          </Copy>
-        </View>
-        <ScrollView
-          horizontal
-          directionalLockEnabled
-          showsHorizontalScrollIndicator={false}
-          accessibilityLabel="Game categories"
-          accessibilityHint="Swipe left or right to explore all categories."
-          style={{ marginHorizontal: -20, marginBottom: 18, flexGrow: 0 }}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingVertical: 3, alignItems: "center" }}
-        >
-          {filters.map((f) => (
-            <Chip key={f} selected={f === filter} onPress={() => setFilter(f)}>
-              {f}
-            </Chip>
-          ))}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} accessibilityLabel="Game categories" accessibilityHint="Swipe for favorites, words and numbers, and thinking games." style={{ flexGrow: 0, marginHorizontal: -20 }} contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingVertical: 3 }}>
+          {filters.map((f) => <Chip key={f} selected={f === filter} onPress={() => setFilter(f)}>{f}</Chip>)}
         </ScrollView>
+        {filter === "Favorites" && choices.length === 0 && <Copy>Tap Favorite under a game to keep it close by.</Copy>}
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-          {extraGames
-            .filter((g) => filter === "All games" || g.filters.includes(filter))
-            .map((g) => (
-              <Pressable
-                key={g.id}
-                accessibilityRole="button"
-                accessibilityLabel={`Play ${g.name}`}
-                onPress={() => router.push({ pathname: "/activity", params: { game: g.id } })}
-                style={({ pressed }) => ({
-                  width: cardWidth,
-                  borderRadius: 22,
-                  overflow: "hidden",
-                  backgroundColor: C.paper,
-                  borderWidth: 1,
-                  borderColor: C.line,
-                  opacity: pressed ? 0.8 : 1,
-                })}
-              >
-                <View
-                  style={{
-                    height: tablet ? 132 : 108,
-                    backgroundColor: g.surface,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <FeatureArt kind={g.id} size={tablet ? 110 : 94} />
+          {choices.map((g) => {
+            const original = gameIds.includes(g.id as GameId), live = ongoing(g.id), favorite = favorites.includes(g.id);
+            return <View key={g.id} style={{ width: cardWidth, borderRadius: 20, overflow: "hidden", backgroundColor: C.paper, borderWidth: 1, borderColor: C.line }}>
+              <Pressable accessibilityRole="button" accessibilityLabel={`Play ${g.name}${live ? ", saved round available" : ""}`} onPress={() => open(g.id)} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.72 : 1 })}>
+                <View style={{ height: 88, backgroundColor: g.surface, alignItems: "center", justifyContent: "center" }}>
+                  {original ? <GameArt game={g.id as GameId} size={74} /> : <FeatureArt kind={g.id as ActivityId} size={74} />}
                 </View>
-                <View style={{ padding: tablet ? 18 : 13, flex: 1 }}>
-                  <Heading style={{ fontSize: tablet ? 23 : 19, letterSpacing: -0.45 }}>{g.name}</Heading>
-                  <Copy style={{ fontSize: 12, lineHeight: 18, marginTop: 5, color: C.teal }}>{g.players}</Copy>
-                  <Copy style={{ fontSize: 13, lineHeight: 19, marginTop: 5, minHeight: 38 }}>{g.description}</Copy>
-                  <View style={[styles.row, { justifyContent: "space-between", marginTop: 12 }]}>
-                    <Text style={{ color: C.teal, fontFamily: font, fontWeight: "700", fontSize: 13 }}>
-                      {store.save.activities?.[g.id] ? activityFinished(store.save.activities[g.id]!) ? "Play again" : "Continue" : "Let’s play"}
-                    </Text>
-                    <Text style={{ fontSize: 22, color: C.teal }} accessibilityElementsHidden>
-                      →
-                    </Text>
-                  </View>
+                <View style={{ padding: 12, gap: 5, flex: 1 }}>
+                  <Heading style={{ fontSize: 20 }}>{g.name}</Heading>
+                  <Copy style={{ fontSize: 12, lineHeight: 18, color: C.teal }}>{g.players}</Copy>
+                  <Copy style={{ fontSize: 13, lineHeight: 19 }}>{g.description}</Copy>
+                  <Text style={{ color: C.teal, fontFamily: font, fontWeight: "700", fontSize: 14, marginTop: 5 }}>{live ? "Continue →" : "Let’s play →"}</Text>
                 </View>
               </Pressable>
-            ))}
-          {choices.map((id) => {
-            const g = games[id],
-              saved = store.save.sessions[id],
-              ongoing = saved && !isFinished(saved);
-            return (
-              <Pressable
-                key={id}
-                accessibilityRole="button"
-                accessibilityLabel={`Play ${g.name}${ongoing ? ", saved round available" : ""}`}
-                onPress={() => open(id)}
-                style={({ pressed }) => ({
-                  width: cardWidth,
-                  borderRadius: 22,
-                  overflow: "hidden",
-                  backgroundColor: C.paper,
-                  borderWidth: 1,
-                  borderColor: C.line,
-                  opacity: pressed ? 0.8 : 1,
-                  transform: [{ scale: pressed ? 0.98 : 1 }],
-                })}
-              >
-                <View
-                  style={{
-                    height: tablet ? 132 : 108,
-                    backgroundColor: g.surface,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <GameArt game={id} size={tablet ? 110 : 94} />
-                  {ongoing && (
-                    <View
-                      style={{
-                        position: "absolute",
-                        top: 8,
-                        left: 8,
-                        paddingVertical: 4,
-                        paddingHorizontal: 7,
-                        backgroundColor: C.paper,
-                        borderRadius: 20,
-                      }}
-                    >
-                      <Text style={{ fontSize: 10, fontWeight: "700", color: C.teal }}>Saved</Text>
-                    </View>
-                  )}
-                </View>
-                <View style={{ padding: tablet ? 18 : 13, flex: 1 }}>
-                  <Heading style={{ fontSize: tablet ? 23 : 19, letterSpacing: -0.45 }}>{g.name}</Heading>
-                  <Copy style={{ fontSize: 12, lineHeight: 18, marginTop: 5, color: C.teal }}>{id === "maze" || id === "numbers" ? "1 player or solve together" : id === "word-rescue" ? "Word packs or family word" : "1 or 2 players · one device"}</Copy>
-                  <Copy style={{ fontSize: 13, lineHeight: 19, marginTop: 5, minHeight: 38 }}>{g.description}</Copy>
-                  <View style={[styles.row, { justifyContent: "space-between", marginTop: 12 }]}>
-                    <Text style={{ color: g.color, fontFamily: font, fontWeight: "700", fontSize: 13 }}>
-                      {ongoing ? "Continue" : "Let’s play"}
-                    </Text>
-                    <Text style={{ fontSize: 22, color: g.color }} accessibilityElementsHidden>
-                      →
-                    </Text>
-                  </View>
-                </View>
-              </Pressable>
-            );
+              <Button compact quiet selected={favorite} label={`${favorite ? "Remove favorite" : "Favorite"} ${g.name}`} onPress={() => store.toggleGameFavorite(g.id)} style={{ borderRadius: 0, borderWidth: 0, borderTopWidth: 1 }}>{favorite ? "Favorited" : "Favorite"}</Button>
+            </View>;
           })}
         </View>
-        <View style={{ alignItems: "center", marginTop: 25, gap: 4 }}>
-          <Copy style={{ fontSize: 12 }}>Made for little moments together.</Copy>
-          <Text style={{ fontSize: 10, letterSpacing: 1, color: C.muted }}>OFFLINE · NO ADS · JUST PLAY</Text>
-        </View>
+        <Copy style={{ fontSize: 12, textAlign: "center", paddingVertical: 10 }}>Offline · No ads · Made for little moments together.</Copy>
       </ScrollView>
       <Settings visible={settings} onClose={() => setSettings(false)} />
     </SafeAreaView>

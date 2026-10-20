@@ -66,6 +66,7 @@ export type WordState = Base & {
   word: string;
   clue: string;
   category: string;
+  pack?: string;
   guessed: string[];
   hints: number;
   custom: boolean;
@@ -81,12 +82,16 @@ export function createWord(options: Options, category = "All", previous: string[
     game: "word-rescue",
     word: chosen[0],
     category: chosen[1],
+    pack: category,
     clue: chosen[2],
     guessed: [],
     hints: 0,
     custom: false,
     seen: [...previous.slice(-59), chosen[0]],
   };
+}
+export function replayWord(state: WordState): WordState | null {
+  return state.custom ? null : createWord(state.options, state.pack ?? "All", state.seen);
 }
 export function customWord(options: Options, raw: string): WordState | null {
   const word = raw.trim().toUpperCase();

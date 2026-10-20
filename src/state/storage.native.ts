@@ -1,6 +1,7 @@
 import { openDatabaseAsync } from "expo-sqlite";
 import type { StorageAdapter } from "./storage";
 import { recoveryKey } from "./recoveryKey";
+import { recoveryEntries } from "./recoveryHistory";
 const database = (async () => {
   const db = await openDatabaseAsync("little-island.db");
   await db.execAsync(
@@ -24,5 +25,15 @@ export const storage: StorageAdapter = {
   preserve: async (value) => {
     const db = await database;
     await db.runAsync("INSERT INTO app_data (key,value) VALUES (?,?)", recoveryKey(), value);
+  },
+  listRecovery: async () => {
+    const db = await database;
+    const rows = await db.getAllAsync<{ key: string }>("SELECT key FROM app_data WHERE key LIKE ?", "recovery-%");
+    return recoveryEntries(rows.map((row) => row.key));
+  },
+  readRecovery: async (key) => {
+    if (!key.startsWith("recovery-")) return null;
+    const db = await database;
+    return (await db.getFirstAsync<{ value: string }>("SELECT value FROM app_data WHERE key = ?", key))?.value ?? null;
   },
 };

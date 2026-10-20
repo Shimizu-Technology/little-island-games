@@ -17,6 +17,8 @@ function memory(initial: string | null) {
     preserve: async (old) => {
       preserved.push(old);
     },
+    listRecovery: async () => [],
+    readRecovery: async () => null,
   };
   return { adapter, preserved, value: () => value };
 }
