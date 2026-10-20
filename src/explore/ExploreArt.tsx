@@ -385,7 +385,7 @@ export function EarthLabArt({ turn }: { turn: number }) {
     </Svg>
   );
 }
-export function GlobeMap({ selected }: { selected?: string }) {
+export function GlobeMap({ selected, showPins = true }: { selected?: string; showPins?: boolean }) {
   return (
     <Svg width="100%" height={220} viewBox="0 0 400 220" accessibilityElementsHidden>
       <Rect width={400} height={220} rx={18} fill="#DBEDF0" />
@@ -399,37 +399,38 @@ export function GlobeMap({ selected }: { selected?: string }) {
         strokeWidth={1.5}
       />
       <Path d="M367 23v27m-7-18 7-9 7 9" fill="none" stroke={ink} strokeWidth={2} />
-      {PLACES.map((p, i) => (
-        <G key={p.id}>
-          <Circle
-            cx={p.x}
-            cy={p.y}
-            r={selected === p.id ? 12 : 7}
-            fill={selected === p.id ? coral : "#285F58"}
-            stroke="#FFF"
-            strokeWidth={2}
-          />
-          <Line x1={p.x} y1={p.y} x2={p.x + 17} y2={p.y - 10} stroke={ink} />
-          <Circle cx={p.x + 22} cy={p.y - 13} r={8} fill="#FFF9E6" />
-          {/* The accessible numbered destination list below provides readable labels at every text size. */}
-          <Path
-            d={
-              i === 0
-                ? `M${p.x + 22} ${p.y - 17}v8`
-                : i === 1
-                  ? `M${p.x + 19} ${p.y - 16}q6-5 6 0l-6 7h7`
-                  : i === 2
-                    ? `M${p.x + 19} ${p.y - 17}q8-2 4 4 7 7-4 5`
-                    : i === 3
-                      ? `m${p.x + 23} ${p.y - 18}-5 7h8m-3-7v12`
-                      : `M${p.x + 25} ${p.y - 17}h-6v5q10-4 6 5h-6`
-            }
-            stroke={ink}
-            strokeWidth={1.4}
-            fill="none"
-          />
-        </G>
-      ))}
+      {showPins &&
+        PLACES.map((p, i) => (
+          <G key={p.id}>
+            <Circle
+              cx={p.x}
+              cy={p.y}
+              r={selected === p.id ? 12 : 7}
+              fill={selected === p.id ? coral : "#285F58"}
+              stroke="#FFF"
+              strokeWidth={2}
+            />
+            <Line x1={p.x} y1={p.y} x2={p.x + 17} y2={p.y - 10} stroke={ink} />
+            <Circle cx={p.x + 22} cy={p.y - 13} r={8} fill="#FFF9E6" />
+            {/* The accessible numbered destination list below provides readable labels at every text size. */}
+            <Path
+              d={
+                i === 0
+                  ? `M${p.x + 22} ${p.y - 17}v8`
+                  : i === 1
+                    ? `M${p.x + 19} ${p.y - 16}q6-5 6 0l-6 7h7`
+                    : i === 2
+                      ? `M${p.x + 19} ${p.y - 17}q8-2 4 4 7 7-4 5`
+                      : i === 3
+                        ? `m${p.x + 23} ${p.y - 18}-5 7h8m-3-7v12`
+                        : `M${p.x + 25} ${p.y - 17}h-6v5q10-4 6 5h-6`
+              }
+              stroke={ink}
+              strokeWidth={1.4}
+              fill="none"
+            />
+          </G>
+        ))}
     </Svg>
   );
 }

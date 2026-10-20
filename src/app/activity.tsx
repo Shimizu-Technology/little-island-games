@@ -12,7 +12,7 @@ import { PartyScreen } from "../party/PartyScreen";
 import { defaultOptions } from "../games/types";
 import { Button, Copy, Heading, styles } from "../components/ui";
 import { Recovery } from "../components/Recovery";
-import { useSounds } from "../components/Audio";
+import { useSoundControls } from "../components/Audio";
 export default function Activity() {
   const { game } = useLocalSearchParams<{ game?: string }>(),
     store = useStore();
@@ -39,9 +39,9 @@ function ActivityGame({ id }: { id: ActivityId }) {
   const expectedId = useRef(store.save.activities?.[id]?.id ?? null);
   const saved = store.save.activities?.[id];
   const [freshCard] = useState(() =>
-    id === "go-fish" || id === "crazy-eights" ? createCardSession(id, defaultOptions) : null
+    id === "go-fish" || id === "crazy-eights" ? createCardSession(id, defaultOptions, undefined, undefined, { round: "quick", pace: "step" }) : null
   );
-  const sound = useSounds(store.save.settings.sound);
+  const { play: sound, stop: stopSound } = useSoundControls(store.save.settings.sound && focused);
   const activityUpdate = store.activityUpdate;
   useEffect(() => {
     if (freshCard && !saved && activityUpdate(id, freshCard, { id: null, epoch })) expectedId.current = freshCard.id;
@@ -69,7 +69,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
         keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.row, { justifyContent: "space-between", paddingTop: 12 }]}>
-          <Button compact quiet onPress={() => router.back()}>
+          <Button compact quiet onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}>
             ‹ Games
           </Button>
           <Button compact quiet onPress={() => store.settings({ sound: !store.save.settings.sound })}>
@@ -89,6 +89,8 @@ function ActivityGame({ id }: { id: ActivityId }) {
             width={Math.min(width - 40, 1000)}
             sound={store.save.settings.sound}
             onFeedback={() => sound("tap")}
+            onSpeakInstruction={(key) => sound(key)}
+            onStopInstruction={stopSound}
           />
         ) : id === "racer" ? (
           <RaceScreen
@@ -96,6 +98,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
             records={store.save.raceRecords}
             onSave={(next) => save(next)}
             active={focused}
+            onFeedback={(event) => sound(event === "finish" ? "win" : event === "checkpoint" ? "match" : "tap")}
           />
         ) : id === "word-imposter" ? (
           <PartyScreen
@@ -104,6 +107,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
             active={focused}
             width={Math.min(width - 40, 1000)}
             sound={store.save.settings.sound}
+            onSpeakInstructions={() => sound("instructions-word-imposter")}
           />
         ) : cards ? (
           <>
@@ -115,6 +119,8 @@ function ActivityGame({ id }: { id: ActivityId }) {
               active={focused}
               sound={store.save.settings.sound}
               onFeedback={() => sound("tap")}
+              onSpeakInstruction={(key) => sound(key)}
+              onStopInstruction={stopSound}
             />
           </>
         ) : null}

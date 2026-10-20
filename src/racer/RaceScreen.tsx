@@ -1,6 +1,6 @@
 import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, AppState, Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Button, C, Copy, Heading, Label } from "../components/ui";
 import { COURSES, CourseId, raceCourse } from "./courses";
 import {
@@ -9,6 +9,8 @@ import {
   pauseRace,
   racePlacement,
   raceRecord,
+  formatRaceTime as raceTime,
+  RACE_LIMIT_TICKS,
   RaceMode,
   RaceRecord,
   RaceRecords,
@@ -17,41 +19,63 @@ import {
   validRaceSession,
 } from "./engine";
 import { RaceScene, RaceSceneHandle } from "./RaceScene";
+export type RaceFeedback = "jump" | "land" | "recover" | "checkpoint" | "finish";
 export type RaceScreenProps = {
+  onFeedback?: (event: RaceFeedback) => void;
   session?: RaceSession | null;
   records?: RaceRecords;
   onSave: (session: RaceSession, record: RaceRecord | null) => void;
   onExit?: () => void;
   active?: boolean;
 };
-export const raceTime = (ticks: number) =>
-  `${Math.floor(ticks / 3600)}:${((ticks / 60) % 60).toFixed(1).padStart(4, "0")}`;
+export { formatRaceTime as raceTime } from "./engine";
 /** Parent persists onSave transactionally. Remount after external backup replacement. */
-export function RaceScreen({ session, records = {}, onSave, onExit, active = true }: RaceScreenProps) {
+export function RaceScreen({ session, records = {}, onSave, onExit, active = true, onFeedback }: RaceScreenProps) {
   const viewport = useWindowDimensions();
   const shortLandscape = viewport.width > viewport.height && viewport.height < 520;
-  const previousLayout = useRef(shortLandscape);
+  const landscape = viewport.width > viewport.height;
+  const previousLayout = useRef(landscape);
   const [initial] = useState(() => (session && validRaceSession(session) ? pauseRace(session) : createRaceSession()));
   const current = useRef(initial),
     saveCallback = useRef(onSave),
-    scene = useRef<RaceSceneHandle>(null);
+    scene = useRef<RaceSceneHandle>(null),
+    feedback = useRef(onFeedback);
   React.useLayoutEffect(() => {
     saveCallback.current = onSave;
-  }, [onSave]);
+    feedback.current = onFeedback;
+  }, [onSave, onFeedback]);
   const [snapshot, setSnapshot] = useState(initial),
     [choosing, setChoosing] = useState(!session),
     [hasRound, setHasRound] = useState(!!session),
     [mode, setMode] = useState<RaceMode>("race");
   const [autoRunning, setAutoRunning] = useState(false);
+  const [foreground, setForeground] = useState(AppState.currentState === "active" || AppState.currentState === null);
+  const [controlStyle, setControlStyle] = useState<"run" | "hold" | "step">("run");
+  const [reducedMotion, setReducedMotion] = useState(true);
+  useEffect(() => {
+    let mounted = true;
+    void AccessibilityInfo.isReduceMotionEnabled()
+      .then((value) => {
+        if (mounted) setReducedMotion(value);
+      })
+      .catch(() => {
+        /* Keep the conservative reduced-motion fallback. */
+      });
+    const sub = AccessibilityInfo.addEventListener("reduceMotionChanged", setReducedMotion);
+    return () => {
+      mounted = false;
+      sub.remove();
+    };
+  }, []);
   const [width, setWidth] = useState(340),
     [help, setHelp] = useState(false),
     [message, setMessage] = useState("");
   const jumpFromPressIn = useRef(false);
-  const held = useRef({ left: false, right: false, jump: false, toggle: false, nudge: 0 });
+  const held = useRef({ left: false, right: false, jump: false, toggle: false, nudge: 0, stepDirection: 1 as -1 | 1 });
   const clear = useCallback(() => {
     setAutoRunning(false);
     jumpFromPressIn.current = false;
-    held.current = { left: false, right: false, jump: false, toggle: false, nudge: 0 };
+    held.current = { left: false, right: false, jump: false, toggle: false, nudge: 0, stepDirection: 1 as -1 | 1 };
   }, []);
   const persist = useCallback((next: RaceSession) => {
     saveCallback.current(next, raceRecord(next));
@@ -67,13 +91,14 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
     [clear, persist]
   );
   useEffect(() => {
-    if (previousLayout.current !== shortLandscape) {
-      previousLayout.current = shortLandscape;
+    if (previousLayout.current !== landscape) {
+      previousLayout.current = landscape;
       pause("Paused after turning your device. Resume when ready.");
     }
-  }, [shortLandscape, pause]);
+  }, [landscape, pause]);
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
+      setForeground(state === "active");
       if (state !== "active") pause("Paused while you were away. Resume when you are ready.");
     });
     return () => {
@@ -90,16 +115,22 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
   useEffect(() => {
     if (Platform.OS !== "web" || typeof document === "undefined") return;
     const visibility = () => {
+      setForeground(!document.hidden);
       if (document.hidden) pause("Paused while you were away.");
     };
-    const blur = () => pause("Paused after changing windows.");
+    const blur = () => {
+      setForeground(false);
+      pause("Paused after changing windows.");
+    };
+    const focus = () => setForeground(!document.hidden);
     const keydown = (e: KeyboardEvent) => {
       if (
         !active ||
         choosing ||
         help ||
         current.current.status !== "running" ||
-        (e.target instanceof HTMLElement && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName))
+        (e.target instanceof HTMLElement &&
+          (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || (e.key === " " && e.target.closest("button,[role=button]"))))
       )
         return;
       if (["ArrowLeft", "ArrowRight", " ", "ArrowUp"].includes(e.key)) e.preventDefault();
@@ -114,61 +145,104 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
     };
     document.addEventListener("visibilitychange", visibility);
     window.addEventListener("blur", blur);
+    window.addEventListener("focus", focus);
     window.addEventListener("keydown", keydown);
     window.addEventListener("keyup", keyup);
     return () => {
       document.removeEventListener("visibilitychange", visibility);
       window.removeEventListener("blur", blur);
+      window.removeEventListener("focus", focus);
       window.removeEventListener("keydown", keydown);
       window.removeEventListener("keyup", keyup);
     };
   }, [active, choosing, help, pause]);
+  const finishing =
+    snapshot.status === "finished" &&
+    snapshot.runners.some((r) => r.finishTick === null) &&
+    snapshot.tick < RACE_LIMIT_TICKS;
   useEffect(() => {
-    if (!active || choosing || help || snapshot.status !== "running") {
+    if (!active || !foreground || choosing || help || (snapshot.status !== "running" && !finishing)) {
       scene.current?.draw(current.current);
       return;
     }
     let frame = 0,
-      previous = 0,
+      previous = performance.now(),
       remainder = 0,
       lastHud = -1,
       lastSaved = current.current.tick;
     const update = (time: number) => {
-      const elapsed = previous ? (time - previous) / 1000 : 0;
+      const elapsed = Math.max(0, (time - previous) / 1000);
       previous = time;
-      if (current.current.status === "running") {
+      if (current.current.status === "running" || current.current.status === "finished") {
         if (elapsed > 0.5) {
           pause("Paused after an interruption. Resume to continue.");
           remainder = 0;
         } else {
           const input = held.current,
             before = current.current;
-          const direction = input.left ? -1 : input.right || input.toggle || input.nudge > 0 ? 1 : 0;
-          const result = advanceRace(before, { direction, jump: input.jump }, elapsed, remainder);
+          const direction = input.left
+            ? -1
+            : input.right || input.toggle
+              ? 1
+              : input.nudge > 0
+                ? input.stepDirection
+                : 0;
+          const result = advanceRace(before, {
+            direction, jump: input.jump,
+            directionTicks: input.left || input.right || input.toggle ? undefined : input.nudge,
+          }, elapsed, remainder);
           remainder = result.remainder;
           if (result.session.tick !== before.tick) {
             input.jump = false;
             input.nudge = Math.max(0, input.nudge - (result.session.tick - before.tick));
           }
           current.current = result.session;
-          const checkpoint = before.runners[0].checkpoint !== result.session.runners[0].checkpoint;
-          if (result.session.status !== "running" || checkpoint || result.session.tick - lastSaved >= 120) {
-            persist(result.session);
+          const oldRunner = before.runners[0],
+            runner = result.session.runners[0];
+          const checkpoint = oldRunner.checkpoint !== runner.checkpoint;
+          let event: RaceFeedback | undefined;
+          if (runner.finishTick !== oldRunner.finishTick) event = "finish";
+          else if (runner.falls !== oldRunner.falls) event = "recover";
+          else if (checkpoint) event = "checkpoint";
+          else if (runner.landedAt !== oldRunner.landedAt) event = "land";
+          else if (runner.vy > 0 && oldRunner.vy <= 0) event = "jump";
+          if (event) {
+            feedback.current?.(event);
+            if (event === "jump") setMessage("");
+            if (event === "recover") setMessage("Splash or bump! Back at your flag — try jumping a little earlier.");
+            if (event === "checkpoint") setMessage(`Flag ${runner.checkpoint + 1} saved! Your next try starts here.`);
+            if (event === "finish")
+              setMessage("Across the line! Your finish time is locked. Watch the other runners arrive.");
+          }
+          if (
+            result.session.status !== before.status ||
+            checkpoint ||
+            runner.falls !== oldRunner.falls ||
+            result.session.tick === RACE_LIMIT_TICKS ||
+            result.session.runners.some((r, i) => r.finishTick !== before.runners[i].finishTick) ||
+            result.session.tick - lastSaved >= 120
+          ) {
+            // Finishing CPU racers are also persisted, without changing your recorded time.
+            if (result.session !== before) persist(result.session);
             lastSaved = result.session.tick;
           }
           if (result.session.status !== before.status) clear();
         }
       }
       scene.current?.draw(current.current);
-      if (time - lastHud > 200 || current.current.status !== "running") {
+      const done =
+        current.current.status === "finished" &&
+        (current.current.runners.every((r) => r.finishTick !== null) || current.current.tick >= RACE_LIMIT_TICKS);
+      if (time - lastHud > 200 || current.current.status !== snapshot.status || done) {
         setSnapshot(current.current);
         lastHud = time;
       }
-      frame = requestAnimationFrame(update);
+      if (!done && current.current.status !== "paused" && current.current.status !== "timedout")
+        frame = requestAnimationFrame(update);
     };
     frame = requestAnimationFrame(update);
     return () => cancelAnimationFrame(frame);
-  }, [active, choosing, help, snapshot.status, clear, pause, persist]);
+  }, [active, foreground, choosing, help, snapshot.status, finishing, clear, pause, persist]);
   const begin = useCallback(
     (course: CourseId, selectedMode = mode) => {
       clear();
@@ -189,6 +263,11 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
   const resume = () => {
     clear();
     current.current = startRace(current.current);
+    // Starting and moving are one action in the primary control model.
+    if (controlStyle === "run") {
+      held.current.toggle = true;
+      setAutoRunning(true);
+    }
     setSnapshot(current.current);
     persist(current.current);
     setMessage("");
@@ -196,7 +275,11 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
   const toggleRun = () => {
     held.current.toggle = !held.current.toggle;
     setAutoRunning(held.current.toggle);
-    setMessage(held.current.toggle ? "Running forward. Tap Stop running to stop." : "Stopped running.");
+    setMessage(
+      held.current.toggle
+        ? "Running forward. Jump before the next obstacle."
+        : "Standing still. The clock and the other runners keep going."
+    );
   };
   if (choosing)
     return (
@@ -233,7 +316,10 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
               <Copy style={{ fontSize: 14 }}>{course.subtitle}</Copy>
               {records[`${course.id}:${course.id === "training" ? "practice" : mode}`] && (
                 <Text style={s.small}>
-                  Best {raceTime(records[`${course.id}:${course.id === "training" ? "practice" : mode}`]!.ticks)}
+                  {records[`${course.id}:${course.id === "training" ? "practice" : mode}`]!.edition === 2
+                    ? "Best"
+                    : "Earlier course best"}{" "}
+                  {raceTime(records[`${course.id}:${course.id === "training" ? "practice" : mode}`]!.ticks)}
                 </Text>
               )}
             </View>
@@ -241,12 +327,12 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
           </Pressable>
         ))}
         <Copy style={s.small}>
-          Training is always solo. Race opponents run, jump and collide on the same course as you. No network or other
-          people are involved.
+          Training is always solo. Computer runners face the same obstacles. You can pass through each other. No network
+          or other people are involved.
         </Copy>
       </View>
     );
-  const course = raceCourse(snapshot.course),
+  const course = raceCourse(snapshot.course, snapshot.edition ?? 1),
     player = snapshot.runners[0],
     running = snapshot.status === "running",
     terminal = snapshot.status === "finished" || snapshot.status === "timedout";
@@ -276,13 +362,40 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
         <View style={s.panel}>
           <Copy>{course.lesson}</Copy>
           <Copy>
-            Hold the left or right arrow, and tap Jump with your other finger. Or use Start running and Jump, which work
-            with one tap at a time. Take a step moves a short distance. Keyboard: Left / Right and Space. Escape pauses.
+            Run & go moves you forward. Tap Jump before a block or water gap; tap Stop to wait for a gate. A slightly
+            early or late jump still counts. Choose another control style below if you prefer. Keyboard: Left / Right
+            and Space. Escape pauses.
+          </Copy>
+          <View style={s.row}>
+            {(
+              [
+                ["run", "Run & Jump"],
+                ["hold", "Hold arrows"],
+                ["step", "Tap steps"],
+              ] as const
+            ).map(([value, label]) => (
+              <Button
+                key={value}
+                compact
+                quiet
+                selected={controlStyle === value}
+                onPress={() => {
+                  clear();
+                  setControlStyle(value);
+                }}
+              >
+                {label}
+              </Button>
+            ))}
+          </View>
+          <Copy style={s.small}>
+            Run & Jump needs one tap at a time. Hold arrows supports two fingers. Tap steps moves a short distance per
+            activation; every action also works with accessibility activation.
           </Copy>
           <Copy>
             Touching an obstacle or falling sends you to your last flag. The timer continues through that recovery. A
             race has a three-minute limit. Pausing stops every runner and the clock. The app also pauses after an
-            interruption.
+            interruption longer than half a second. Short slow frames keep all elapsed gameplay time.
           </Copy>
           <Copy>
             Ranks compare actual runner progress. Finish placement counts computer runners that crossed before you.
@@ -290,8 +403,13 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
           </Copy>
         </View>
       )}
+      {snapshot.edition !== 2 && (
+        <Copy style={s.small}>
+          Resuming your earlier course exactly where you left it. Choose a new course to try the new island routes.
+        </Copy>
+      )}
       <View style={s.scoreRow} accessibilityLiveRegion="none">
-        <Text style={s.metric}>Time {raceTime(snapshot.tick)}</Text>
+        <Text style={s.metric}>Time {raceTime(player.finishTick ?? snapshot.tick)}</Text>
         <Text style={s.metric}>
           {snapshot.runners.length > 1 ? `${racePlacement(snapshot)} / ${snapshot.runners.length}` : "Practice"}
         </Text>
@@ -308,7 +426,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
               initial={snapshot}
               width={width}
               height={sceneHeight}
-              reducedMotion={true}
+              reducedMotion={reducedMotion}
             />
           </View>
           <View
@@ -333,16 +451,27 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
               </Heading>
               <Copy>
                 {snapshot.status === "finished"
-                  ? `${raceTime(player.finishTick!)} · ${player.falls} ${player.falls === 1 ? "recovery" : "recoveries"}. ${best ? `Your best: ${raceTime(best.ticks)}.` : "Your time is saved on this device."}`
+                  ? `${raceTime(player.finishTick!)} · ${player.falls} ${player.falls === 1 ? "recovery" : "recoveries"}. ${best && best.edition === snapshot.edition ? `Your best: ${raceTime(best.ticks)}.` : "Your time is saved on this device."}`
                   : "The three-minute race ended. Try Practice to learn the jumps, or race again."}
               </Copy>
+              {snapshot.status === "finished" && (
+                <Text style={s.courseTitle}>
+                  {player.falls === 0
+                    ? "Clean run! Every jump landed."
+                    : player.falls <= 2
+                      ? "Brave finish! You kept going."
+                      : "Island explorer! Every retry helped."}
+                </Text>
+              )}
               {snapshot.runners.length > 1 &&
                 snapshot.runners.map((r) => (
                   <Text key={r.id} style={s.small}>
                     {r.name}:{" "}
                     {r.finishTick !== null
                       ? raceTime(r.finishTick)
-                      : `still on course (${Math.round((r.x / course.length) * 100)}%)`}
+                      : snapshot.tick >= RACE_LIMIT_TICKS
+                        ? "Did not finish in 3 minutes"
+                        : `racing… ${Math.round((r.x / course.length) * 100)}%`}
                   </Text>
                 ))}
               <View style={s.row}>
@@ -366,8 +495,14 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
                         : "Every runner and the timer will continue from this moment. Held controls have been cleared."}
                     </Copy>
                   )}
-                  <Button disabled={!active || help} onPress={resume}>
-                    {snapshot.status === "ready" ? "Start" : "Resume"}
+                  <Button disabled={!active || !foreground || help} onPress={resume}>
+                    {snapshot.status === "ready"
+                      ? controlStyle === "run"
+                        ? "Run & go!"
+                        : "Start course"
+                      : controlStyle === "run"
+                        ? "Resume & run"
+                        : "Resume"}
                   </Button>
                 </View>
               )}
@@ -386,36 +521,77 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
               {(!shortLandscape || running) && (
                 <>
                   <View style={s.controls}>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Hold to run left"
-                      accessibilityState={{ disabled: !running }}
-                      disabled={!running}
-                      onPressIn={() => {
-                        held.current.left = true;
-                      }}
-                      onPressOut={() => {
-                        held.current.left = false;
-                      }}
-                      style={({ pressed }) => [s.pad, !running && s.disabled, pressed && s.pressed]}
-                    >
-                      <Text style={s.padText}>←</Text>
-                    </Pressable>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Hold to run right"
-                      accessibilityState={{ disabled: !running }}
-                      disabled={!running}
-                      onPressIn={() => {
-                        held.current.right = true;
-                      }}
-                      onPressOut={() => {
-                        held.current.right = false;
-                      }}
-                      style={({ pressed }) => [s.pad, !running && s.disabled, pressed && s.pressed]}
-                    >
-                      <Text style={s.padText}>→</Text>
-                    </Pressable>
+                    {controlStyle === "run" && (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={autoRunning ? "Stop running" : "Run forward"}
+                        disabled={!running}
+                        accessibilityState={{ disabled: !running }}
+                        onPress={toggleRun}
+                        style={({ pressed }) => [s.pad, !running && s.disabled, pressed && s.pressed]}
+                      >
+                        <Text style={[s.padText, { fontSize: 20 }]}>{autoRunning ? "Stop ■" : "Run →"}</Text>
+                      </Pressable>
+                    )}
+                    {controlStyle === "step" && (
+                      <View style={{ flex: 1, gap: 8 }}>
+                        {([-1, 1] as const).map((direction) => (
+                          <Button
+                            key={direction}
+                            quiet
+                            disabled={!running}
+                            onPress={() => {
+                              held.current.stepDirection = direction;
+                              held.current.nudge = Math.min(60, held.current.nudge + 18);
+                            }}
+                          >
+                            {direction === -1 ? "Step ←" : "Step →"}
+                          </Button>
+                        ))}
+                      </View>
+                    )}
+                    {controlStyle === "hold" && (
+                      <>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Hold to run left"
+                          accessibilityState={{ disabled: !running }}
+                          disabled={!running}
+                          onAccessibilityTap={() => {
+                            held.current.stepDirection = -1;
+                            held.current.nudge = 18;
+                          }}
+                          onPressIn={() => {
+                            held.current.left = true;
+                          }}
+                          onPressOut={() => {
+                            held.current.left = false;
+                          }}
+                          style={({ pressed }) => [s.pad, !running && s.disabled, pressed && s.pressed]}
+                        >
+                          <Text style={s.padText}>←</Text>
+                        </Pressable>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Hold to run right"
+                          accessibilityState={{ disabled: !running }}
+                          disabled={!running}
+                          onAccessibilityTap={() => {
+                            held.current.stepDirection = 1;
+                            held.current.nudge = 18;
+                          }}
+                          onPressIn={() => {
+                            held.current.right = true;
+                          }}
+                          onPressOut={() => {
+                            held.current.right = false;
+                          }}
+                          style={({ pressed }) => [s.pad, !running && s.disabled, pressed && s.pressed]}
+                        >
+                          <Text style={s.padText}>→</Text>
+                        </Pressable>
+                      </>
+                    )}
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel="Jump"
@@ -438,19 +614,6 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
                     </Pressable>
                   </View>
                   <View style={s.row}>
-                    <Button compact quiet disabled={!running} onPress={toggleRun}>
-                      {autoRunning ? "Stop running" : "Start running"}
-                    </Button>
-                    <Button
-                      compact
-                      quiet
-                      disabled={!running}
-                      onPress={() => {
-                        held.current.nudge = Math.min(60, held.current.nudge + 18);
-                      }}
-                    >
-                      Take a step
-                    </Button>
                     {running && (
                       <Button compact quiet onPress={() => pause()}>
                         Pause
@@ -477,7 +640,11 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
                   {message ||
                     (player.recovery > 0
                       ? "Back to your flag. Ready to try again!"
-                      : "Hold a direction + tap Jump, or use Start running for one-tap controls.")}
+                      : controlStyle === "run"
+                        ? "Run forward. Jump at the signs. Stop to choose your moment."
+                        : controlStyle === "hold"
+                          ? "Hold an arrow and tap Jump with your other finger."
+                          : "Tap a step, then Jump. You can use one control at a time.")}
                 </Copy>
               )}
               {!shortLandscape && (
@@ -532,10 +699,12 @@ const s = StyleSheet.create({
   panel: { gap: 10, backgroundColor: C.soft, padding: 16, borderRadius: 20 },
   scoreRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", gap: 8 },
   metric: { color: C.ink, fontSize: 15, fontWeight: "700", fontVariant: ["tabular-nums"] },
-  controls: { flexDirection: "row", gap: 10 },
+  controls: { flexDirection: "row", gap: 10, alignItems: "stretch" },
   pad: {
     minWidth: 64,
-    minHeight: 64,
+    minHeight: 76,
+    paddingHorizontal: 10,
+    paddingVertical: 14,
     flex: 1,
     backgroundColor: "#E4EDE0",
     borderColor: "#BCCFBC",

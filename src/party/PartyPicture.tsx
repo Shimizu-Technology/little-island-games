@@ -1,10 +1,28 @@
 import React from "react";
 import Svg, { Circle, Ellipse, G, Line, Path } from "react-native-svg";
+import { Symbol } from "../components/Art";
 import { PartyWordId } from "./content";
 /** Original pictures, decorative to the visible word. Never mount this inside a concealed role. */
 export function PartyPicture({ word, size = 180 }: { word: PartyWordId; size?: number }) {
   let art: React.ReactNode;
   switch (word) {
+    case "star": case "kite": case "shell": case "crab":
+      return <Symbol name={word} size={size * 0.8} />;
+    case "rabbit":
+      art = <G><Ellipse cx="76" cy="43" rx="16" ry="38" fill="#D6BBA9" /><Ellipse cx="124" cy="43" rx="16" ry="38" fill="#D6BBA9" /><Ellipse cx="76" cy="43" rx="7" ry="27" fill="#EBC7BF" /><Ellipse cx="124" cy="43" rx="7" ry="27" fill="#EBC7BF" /><Ellipse cx="100" cy="99" rx="55" ry="45" fill="#D6BBA9" /><Circle cx="79" cy="92" r="5" fill="#244F46" /><Circle cx="121" cy="92" r="5" fill="#244F46" /><Path d="M93 107H107L100 114Z M100 114V122M84 121Q100 134 116 121" fill="none" stroke="#735140" strokeWidth="3" /></G>;
+      break;
+    case "owl":
+      art = <G><Path d="M48 49L44 19 79 39Q100 32 121 39L156 19 152 49Q171 145 100 148Q29 145 48 49" fill="#9E7954" /><Circle cx="77" cy="75" r="26" fill="#F6E3B7" /><Circle cx="123" cy="75" r="26" fill="#F6E3B7" /><Circle cx="77" cy="75" r="9" fill="#244F46" /><Circle cx="123" cy="75" r="9" fill="#244F46" /><Path d="M91 91H109L100 107Z" fill="#E7BB58" /><Path d="M58 109L75 125M142 109L125 125" stroke="#D6BBA9" strokeWidth="5" /></G>;
+      break;
+    case "coconut":
+      art = <G><Circle cx="100" cy="83" r="61" fill="#9B704B" /><Path d="M54 47L49 117M72 28L63 137M124 28L141 125M145 43L154 111" stroke="#B88C5C" strokeWidth="4" /><Circle cx="85" cy="62" r="7" fill="#624E39" /><Circle cx="108" cy="57" r="7" fill="#624E39" /><Circle cx="99" cy="80" r="7" fill="#624E39" /></G>;
+      break;
+    case "grapes":
+      art = <G><Path d="M101 35L114 12M104 28Q143 4 145 26Q128 43 104 28" fill="#79A579" stroke="#46785D" strokeWidth="4" />{[[73,53],[104,49],[134,53],[88,80],[119,80],[103,108],[103,135]].map(([cx,cy],i)=><Circle key={i} cx={cx} cy={cy} r="19" fill={i%2 ? "#9D85AD" : "#806A98"} stroke="#F4E8CB" strokeWidth="2" />)}</G>;
+      break;
+    case "mango":
+      art = <G><Path d="M116 33Q49 13 40 81Q30 143 91 147Q147 151 160 94Q174 45 116 33" fill="#E7BB58" /><Path d="M116 33Q49 13 40 81Q30 125 64 141Q37 88 80 52" fill="#D89659" /><Path d="M112 34Q113 9 143 10Q146 30 112 34" fill="#79A579" /></G>;
+      break;
     case "cat":
       art = (
         <G>

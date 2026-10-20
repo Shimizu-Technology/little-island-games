@@ -2,7 +2,7 @@ import { Text } from "../components/Text";
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { GameState } from "../games";
-import { TicState, ticChoice, ticMove, ticOutcome, ticTurn, ticUndo, lines } from "../games/tic";
+import { TicState, ticChoice, ticMove, ticOutcome, ticTurn, ticUndo, ticHintReason, lines } from "../games/tic";
 import { WordState, wordRules, wordStatus, wrongLetters } from "../games/words";
 import { HangmanFigure } from "../components/HangmanFigure";
 import { MemoryState, closeMismatch, flipCard, memoryDone } from "../games/memory";
@@ -25,6 +25,7 @@ import {
   NumbersState,
   closeNumbers,
   numberChoices,
+  numberLimit,
   numberTarget,
   numbersStatus,
   rollNumbers,
@@ -32,7 +33,7 @@ import {
   undoNumbers,
 } from "../games/numbers";
 import { Button, C, Controls, Copy, Status, font } from "../components/ui";
-import { RocketProgress, Symbol, TicMark } from "../components/Art";
+import { Symbol, TicMark } from "../components/Art";
 export type Sound = (key: string) => void;
 type Props<S extends GameState> = {
   state: S;
@@ -157,6 +158,7 @@ export function TicBoard({ state: s, commit, width, sound, active }: Props<TicSt
           Undo my turn
         </Button>
       </Controls>
+      {hint !== null && !outcome && !computer && <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 10 }}>{ticHintReason(s, hint)}</Copy>}
     </>
   );
 }
@@ -194,7 +196,7 @@ export function WordBoard({
       <View
         accessible
         accessibilityRole="progressbar"
-        accessibilityLabel={challenge ? "Wrong guesses" : "Rocket building progress"}
+        accessibilityLabel={challenge ? "Wrong guesses" : "Letters found in practice"}
         accessibilityValue={
           challenge
             ? {
@@ -218,11 +220,7 @@ export function WordBoard({
           maxWidth: "100%",
         }}
       >
-        {challenge ? (
-          <HangmanFigure mistakes={mistakes.length} won={won} />
-        ) : (
-          <RocketProgress progress={found / letters.length} size={88} />
-        )}
+        <HangmanFigure mistakes={challenge ? mistakes.length : 0} won={won} />
         <View style={{ flexShrink: 1 }}>
           <Text style={{ fontFamily: font, fontSize: 17, fontWeight: "700", color: C.ink }}>
             {challenge
@@ -232,8 +230,8 @@ export function WordBoard({
                   ? "Round finished"
                   : `${remaining} ${remaining === 1 ? "guess" : "guesses"} left`
               : won
-                ? "Your rocket is ready!"
-                : "Let’s build your rocket"}
+                ? "Word found!"
+                : "Practice · keep guessing"}
           </Text>
           <Copy style={{ fontSize: 13, lineHeight: 20, marginTop: 4 }}>
             {found} of {letters.length} different letters found
@@ -377,13 +375,13 @@ export function WordBoard({
           </Button>
         )}
       </Controls>
-      <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 14 }}>
+      {!done && <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 14 }}>
         {challenge
           ? s.hints
             ? "This round used a hint. Assisted wins have their own record."
             : "Find every letter before your six wrong guesses run out."
           : "Take your time. Every letter is a chance to discover."}
-      </Copy>
+      </Copy>}
     </>
   );
 }
@@ -404,7 +402,9 @@ export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryStat
       <Status
         title={
           done
-            ? "Every picture found its pair!"
+            ? s.options.mode === "together"
+              ? s.scores[0] === s.scores[1] ? "It’s a tie!" : `Player ${s.scores[0] > s.scores[1] ? 1 : 2} wins!`
+              : "Every picture found its pair!"
             : s.options.mode === "together"
               ? `Player ${s.player + 1}’s turn`
               : "Find two that belong together"
@@ -461,11 +461,11 @@ export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryStat
       <Controls>
         {mismatch ? (
           <Button onPress={() => commit(closeMismatch(s))}>Turn them over</Button>
-        ) : (
+        ) : s.options.mode === "solo" ? (
           <Button quiet disabled={done || peek || s.open.length > 0} onPress={() => setPeek(true)}>
             Take a little peek
           </Button>
-        )}
+        ) : null}
       </Controls>
       <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 14 }}>
         {mismatch
@@ -506,7 +506,7 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
     if (route) route.captured.slice(0, path.length).forEach((i) => (displayBoard[i] = 0));
     displayBoard[path[path.length - 1]] = s.position.board[from];
   }
-  const size = Math.min(width, 512),
+  const size = Math.min(width + 32, 512),
     cellSize = (size - 16) / 8,
     outcome = s.position.outcome;
   const lessonComplete = s.lesson !== null && s.history.length > 0;
@@ -566,6 +566,7 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
         style={{
           alignSelf: "center",
           width: size,
+          marginHorizontal: -16,
           borderRadius: 20,
           overflow: "hidden",
           borderWidth: 2,
@@ -626,19 +627,10 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
                   </View>
                 ) : destination ? (
                   <View style={{ width: 12, height: 12, borderRadius: 8, backgroundColor: C.teal }} />
-                ) : help && canMove && !from && dark ? (
-                  <View
-                    style={{
-                      position: "absolute",
-                      bottom: 3,
-                      right: 3,
-                      width: 5,
-                      height: 5,
-                      borderRadius: 3,
-                      backgroundColor: C.teal,
-                    }}
-                  />
                 ) : null}
+                {help && canMove && from === null && !computer && !outcome && (
+                  <View style={{ position: "absolute", bottom: 2, right: 2, width: 7, height: 7, borderRadius: 4, backgroundColor: C.ink, borderWidth: 1, borderColor: C.paper }} />
+                )}
               </Cell>
             );
           })}
@@ -661,7 +653,7 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
               quiet
               disabled={computer || !!outcome || lessonComplete}
               onPress={() => {
-                const m = moves[0];
+                const m = [...moves].sort((a, b) => b.captured.length - a.captured.length)[0];
                 if (m) {
                   setHint(m);
                   setFrom(m.from);
@@ -676,6 +668,11 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
           </>
         )}
       </Controls>
+      {hint && !computer && !outcome && (
+        <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 10 }}>
+          {hint.captured.length ? `Jump from ${coords(hint.from)} to ${coords(hint.path[0])} to capture. Finish each jump in the chain.` : `Move from ${coords(hint.from)} to ${coords(hint.path[0])}. Ordinary pieces travel diagonally toward the far row to become kings.`}
+        </Copy>
+      )}
       {lesson ? (
         <Controls>
           <Button
@@ -705,8 +702,8 @@ export function MazeBoard({ state: s, commit, width, sound }: Props<MazeState>) 
   const [hint, setHint] = useState<number | null>(null);
   const done = mazeDone(s),
     current = s.path[s.path.length - 1],
-    size = Math.min(width, 470),
-    cellSize = size / s.size;
+    cellSize = Math.floor(Math.min(width, 470) / s.size),
+    size = cellSize * s.size;
   function move(i: number) {
     const next = mazeMove(s, i);
     if (next !== s) {
@@ -721,10 +718,11 @@ export function MazeBoard({ state: s, commit, width, sound }: Props<MazeState>) 
         detail={done ? "A whole little adventure, one step at a time." : "Find your way from the boat to the flag."}
         success={done}
       />
-      <View
-        style={{ alignSelf: "center", width: size, flexDirection: "row", flexWrap: "wrap", backgroundColor: C.paper }}
-      >
-        {s.walls.map((wall, i) => {
+      <View style={{ alignSelf: "center", width: size, backgroundColor: C.paper }}>
+        {Array.from({ length: s.size }, (_, r) => (
+          <View key={r} style={{ width: size, height: cellSize, flexDirection: "row" }}>
+        {s.walls.slice(r * s.size, (r + 1) * s.size).map((wall, c) => {
+          const i = r * s.size + c;
           const here = current === i,
             visited = s.path.includes(i);
           return (
@@ -754,6 +752,8 @@ export function MazeBoard({ state: s, commit, width, sound }: Props<MazeState>) 
             </Cell>
           );
         })}
+          </View>
+        ))}
       </View>
       <View style={{ alignItems: "center", marginTop: 16, gap: 8 }}>
         <Button quiet disabled={done} label="Move up" onPress={() => move(current - s.size)} style={{ width: 64 }}>
@@ -820,10 +820,11 @@ function Die({ value, size = 72 }: { value: number; size?: number }) {
   );
 }
 export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersState>) {
+  const { fontScale } = useWindowDimensions();
   const status = numbersStatus(s),
     target = numberTarget(s),
     sum = s.selected.reduce((a, b) => a + b, 0),
-    max = s.options.difficulty === "easy" ? 6 : 9;
+    max = numberLimit(s);
   return (
     <>
       <Status
@@ -847,9 +848,9 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
       />
       <View style={{ flexDirection: "row", justifyContent: "center", gap: 14, marginVertical: 12 }}>
         {s.dice.length ? (
-          s.dice.map((d, i) => <Die key={i} value={d} />)
+          s.dice.map((d, i) => <Die key={i} value={d} size={56} />)
         ) : (
-          <View style={{ alignItems: "center", height: 80, justifyContent: "center" }}>
+          <View style={{ alignItems: "center", height: 56, justifyContent: "center" }}>
             <Copy>Your dice are waiting.</Copy>
           </View>
         )}
@@ -877,7 +878,7 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
               onPress={() => commit(selectNumber(s, n))}
               style={{
                 width: Math.min(96, (width - 30) / 3),
-                height: 80,
+                height: Math.max(max > 9 ? 60 : 72, 38 * fontScale + 12),
                 borderRadius: 17,
                 borderWidth: 2,
                 borderColor: selected ? C.teal : available ? C.line : "transparent",

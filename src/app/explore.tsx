@@ -61,16 +61,26 @@ function ExploreReady() {
       key={store.epoch}
       favorites={store.save.explore?.favorites ?? []}
       onToggleFavorite={store.toggleFavorite}
-      onBack={() => router.back()}
+      onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
       onStop={stop}
       narrationEnabled={store.save.settings.sound}
-      speakingTopicId={speaking}
+      speakingTopicId={speaking?.startsWith("explore-") ? speaking.slice(8) : undefined}
+      progress={store.save.explore?.progress}
+      onProgressChange={(next) => store.exploreUpdate(next, store.epoch)}
+      onToggleSound={() => store.settings({ sound: !store.save.settings.sound })}
+      speakingInstructionId={speaking && !speaking.startsWith("explore-") ? speaking : undefined}
+      onStopInstruction={stop}
+      onSpeakInstruction={(key) => {
+        if (ownedPlayer.current !== player || !store.save.settings.sound || !sources[key]) return;
+        try { player.replace(sources[key]); player.play(); setSpeaking(key); }
+        catch { setSpeaking(undefined); }
+      }}
       onSpeak={(id) => {
         if (ownedPlayer.current !== player || !store.save.settings.sound || !sources[`explore-${id}`]) return;
         try {
           player.replace(sources[`explore-${id}`]);
           player.play();
-          setSpeaking(id);
+          setSpeaking(`explore-${id}`);
         } catch {
           setSpeaking(undefined);
         }

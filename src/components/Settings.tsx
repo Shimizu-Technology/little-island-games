@@ -1,3 +1,4 @@
+import appConfig from "../../app.json";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { useStore } from "../state/Store";
@@ -47,7 +48,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
         Sound · {store.save.settings.sound ? "On" : "Off"}
       </Button>
       <Button quiet onPress={() => store.settings({ help: !store.save.settings.help })}>
-        Checkers move markers · {store.save.settings.help ? "On" : "Off"}
+        Checkers piece hints · {store.save.settings.help ? "On" : "Off"}
       </Button>
       <Copy>
         Games and Explore work without internet. Nearby family rooms use a local connection between approved devices. Saves stay on this device. There are no accounts, ads, trackers, or in-app purchases.
@@ -107,7 +108,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
             </>
           )}
           <Copy>
-            Family preview · Version 1.1.0. Public release and physical-device acceptance are separate milestones.
+            Family preview · Version {appConfig.expo.version}. Public release and physical-device acceptance are separate milestones.
           </Copy>
         </>
       )}

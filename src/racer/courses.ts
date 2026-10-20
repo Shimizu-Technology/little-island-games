@@ -1,6 +1,6 @@
 /** Original Little Island courses. World units, left-to-right; y is height above sea. */
 export type CourseId = "training" | "lagoon" | "canopy" | "sunset";
-export type Platform = { from: number; to: number; y: number; belt?: number };
+export type Platform = { from: number; to: number; y: number; belt?: number; oneWay?: boolean };
 export type Obstacle = {
   x: number;
   y: number;
@@ -24,13 +24,13 @@ export type Course = {
   obstacles: readonly Obstacle[];
   checkpoints: readonly number[];
 };
-export const COURSES: readonly Course[] = [
+const LEGACY_COURSES: readonly Course[] = [
   {
     id: "training",
     name: "First footsteps",
     subtitle: "Learn to run, jump and land",
     lesson:
-      "Hold Run to move. Jump over the coral block, then leap across the little water gap. A flag saves your checkpoint.",
+      "Tap Run & go to move. Jump over the coral block, then leap across the little water gap. A flag saves your checkpoint.",
     length: 31,
     sky: "#DFF2F0",
     land: "#B4D8AB",
@@ -117,6 +117,101 @@ export const COURSES: readonly Course[] = [
     checkpoints: [1, 20, 36, 52, 69],
   },
 ];
-export function raceCourse(id: CourseId): Course {
-  return COURSES.find((c) => c.id === id)!;
+/** Edition 1 geometry is frozen for pre-quality-release saved rounds. */
+export const COURSES: readonly Course[] = LEGACY_COURSES.map((course): Course => {
+  const choices: Partial<Record<CourseId, readonly Platform[]>> = {
+    lagoon: [
+      { from: 23, to: 27.4, y: 1.05, oneWay: true, belt: 0.65 },
+      { from: 58.5, to: 63.4, y: 1, oneWay: true },
+    ],
+    canopy: [
+      { from: 18.5, to: 23.4, y: 1.4, oneWay: true, belt: 0.8 },
+      { from: 32.5, to: 38.3, y: 1.85, oneWay: true, belt: 0.8 },
+    ],
+    sunset: [
+      { from: 35.5, to: 41.3, y: 1.15, oneWay: true, belt: 1.35 },
+      { from: 51.5, to: 57.4, y: 1.35, oneWay: true, belt: 1.1 },
+    ],
+  };
+  const extensions: Partial<
+    Record<
+      CourseId,
+      { length: number; platforms: readonly Platform[]; obstacles: readonly Obstacle[]; checkpoints: readonly number[] }
+    >
+  > = {
+    lagoon: {
+      length: 104,
+      platforms: [
+        { from: 77, to: 90, y: 0.2 },
+        { from: 92, to: 107, y: 0 },
+        { from: 79.5, to: 84.4, y: 1.2, oneWay: true, belt: 0.6 },
+      ],
+      obstacles: [
+        { x: 83, y: 0.2, width: 0.7, height: 0.7, kind: "roller", travel: 0.8, period: 2.7 },
+        { x: 99, y: 0, width: 0.7, height: 0.75, kind: "hurdle" },
+      ],
+      checkpoints: [80, 96],
+    },
+    canopy: {
+      length: 119,
+      platforms: [
+        { from: 80.4, to: 94, y: 0.6 },
+        { from: 96, to: 108, y: 1 },
+        { from: 109.5, to: 122, y: 0 },
+        { from: 83, to: 88.4, y: 1.65, oneWay: true, belt: 0.8 },
+        { from: 98.5, to: 103.4, y: 2.05, oneWay: true, belt: 0.9 },
+      ],
+      obstacles: [
+        { x: 87, y: 0.6, width: 0.65, height: 0.85, kind: "gate", period: 2.8 },
+        { x: 102, y: 1, width: 0.65, height: 0.8, kind: "gate", period: 3.1, phase: 1.8 },
+        { x: 115, y: 0, width: 0.7, height: 0.7, kind: "roller", travel: 0.8, period: 3 },
+      ],
+      checkpoints: [84, 100, 113],
+    },
+    sunset: {
+      length: 130,
+      platforms: [
+        { from: 87, to: 101, y: 0, belt: -1.15 },
+        { from: 103, to: 119, y: 0, belt: 1.25 },
+        { from: 121, to: 133, y: 0.3 },
+        { from: 89, to: 95.3, y: 1.1, oneWay: true, belt: 1.7 },
+      ],
+      obstacles: [
+        { x: 94, y: 0, width: 0.75, height: 0.75, kind: "roller", travel: 1, period: 3.4 },
+        { x: 111, y: 0, width: 0.65, height: 0.75, kind: "hurdle" },
+        { x: 126, y: 0.3, width: 0.7, height: 0.8, kind: "gate", period: 3.3 },
+      ],
+      checkpoints: [90, 107, 124],
+    },
+  };
+  const extension = extensions[course.id];
+  const lessons: Record<CourseId, string> = {
+    training:
+      "Tap Run & go, then Jump at the coral sign. Jump again before the water. Your flag catches you if you fall. Stop gives you time to choose your next jump.",
+    lagoon:
+      "Low coral, rolling coconuts and open water! Jump onto the shell bridges to pass above the coconuts, or keep to the lower trail and jump the rollers. Both paths reach the next flag.",
+    canopy:
+      "Choose your way through the treetops: leap onto the fast hanging bridges, or stay on the terraces and time the rising gates. Jump early when the next island is higher.",
+    sunset:
+      "Read the arrows: the sand belts carry you forward or push you back. The high boardwalk skips a slow belt, but you must land your jump. Stop before a gate to choose its low moment.",
+  };
+  return {
+    ...course,
+    lesson: lessons[course.id],
+    length: extension?.length ?? course.length,
+    platforms: [...course.platforms, ...(choices[course.id] ?? []), ...(extension?.platforms ?? [])],
+    obstacles: [...course.obstacles, ...(extension?.obstacles ?? [])],
+    checkpoints: [...course.checkpoints, ...(extension?.checkpoints ?? [])],
+    subtitle:
+      course.id === "lagoon"
+        ? "Shell bridges or the coral trail?"
+        : course.id === "canopy"
+          ? "Treetop shortcuts & rising gates"
+          : course.id === "sunset"
+            ? "Fast boardwalks & shifting sand"
+            : course.subtitle,
+  };
+});
+export function raceCourse(id: CourseId, edition: 1 | 2 = 2): Course {
+  return (edition === 1 ? LEGACY_COURSES : COURSES).find((c) => c.id === id)!;
 }

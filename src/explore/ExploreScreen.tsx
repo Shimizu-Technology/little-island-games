@@ -1,24 +1,15 @@
 import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { BackHandler, Pressable, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
+import { AppState, BackHandler, Platform, Pressable, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Svg, { Circle, Path, Rect } from "react-native-svg";
+import Svg, { Path, Rect } from "react-native-svg";
 import { Button, C, Chip, Copy, Heading, Label, Status, font } from "../components/ui";
 import { ExploreTopic, WORLDS, WorldId, searchTopics, topicById, topicNarration } from "./content";
-import {
-  FOOD_CHAIN,
-  HABITATS,
-  HABITAT_CHOICES,
-  LabAction,
-  LabState,
-  PLACES,
-  WATER_ACTIONS,
-  activityTopic,
-  isDay,
-  labAction,
-  newLab,
-} from "./activities";
-import { EarthLabArt, GlobeMap, Motif, TopicArt, WorldGlyph } from "./ExploreArt";
+import { HABITATS, LabAction, LabState, PLACES, WATER_ACTIONS, activityTopic, isDay, labAction } from "./activities";
+import { GuidanceKey } from "./guidance";
+import { ExploreLocation, ExploreProgress, exploreLocationKey, restoreExploreProgress } from "./progress";
+import { LabManipulative, LabGuidance } from "./LabManipulatives";
+import { TopicArt, WorldGlyph } from "./ExploreArt";
 export interface ExploreScreenProps {
   favorites: readonly string[];
   onToggleFavorite: (topicId: string) => void;
@@ -27,18 +18,15 @@ export interface ExploreScreenProps {
   onStop: () => void;
   narrationEnabled?: boolean;
   speakingTopicId?: string;
+  progress?: ExploreProgress;
+  onProgressChange?: (next: ExploreProgress) => void;
+  onToggleSound?: () => void;
+  onSpeakInstruction?: (key: GuidanceKey) => void;
+  onStopInstruction?: () => void;
+  speakingInstructionId?: string;
 }
-type Location =
-  | { kind: "map" }
-  | { kind: "world"; world: WorldId }
-  | { kind: "topic"; id: string }
-  | { kind: "activity"; world: WorldId };
-const locationKey = (location: Location) =>
-  location.kind === "topic"
-    ? `topic:${location.id}`
-    : location.kind === "map"
-      ? "map"
-      : `${location.kind}:${location.world}`;
+type Location = ExploreLocation;
+const locationKey = exploreLocationKey;
 export function ExploreScreen({
   favorites,
   onToggleFavorite,
@@ -47,45 +35,87 @@ export function ExploreScreen({
   onStop,
   narrationEnabled = true,
   speakingTopicId,
+  progress,
+  onProgressChange,
+  onToggleSound,
+  onSpeakInstruction,
+  onStopInstruction,
+  speakingInstructionId,
 }: ExploreScreenProps) {
   const { width, fontScale } = useWindowDimensions();
-  const [location, setLocation] = useState<Location>({ kind: "map" });
-  const [history, setHistory] = useState<Location[]>([]);
-  const [query, setQuery] = useState("");
-  const [onlyFavorites, setOnlyFavorites] = useState(false);
-  const [labs, setLabs] = useState<Record<WorldId, LabState>>({
-    space: newLab(),
-    oceans: newLab(),
-    animals: newLab(),
-    weather: newLab(),
-    world: newLab(),
-  });
+  const [initial] = useState(() => restoreExploreProgress(progress));
+  const [location, setLocation] = useState<Location>(initial.location);
+  const [history, setHistory] = useState<Location[]>(initial.history);
+  const [query, setQuery] = useState(initial.query);
+  const [onlyFavorites, setOnlyFavorites] = useState(initial.onlyFavorites);
+  const [labs, setLabs] = useState<Record<WorldId, LabState>>(initial.labs);
   const scroll = useRef<ScrollView>(null);
-  const positions = useRef<Record<string, number>>({});
-  const currentY = useRef(0);
+  const positions = useRef<Record<string, number>>(initial.positions);
+  const currentY = useRef(initial.positions[locationKey(initial.location)] ?? 0);
   const pendingRestore = useRef(true);
   const currentKey = locationKey(location);
-  const stopRef = useRef(onStop);
-  useEffect(() => {
-    stopRef.current = onStop;
-  }, [onStop]);
+  const stopRef = useRef(() => { onStop(); onStopInstruction?.(); });
+  React.useLayoutEffect(() => {
+    stopRef.current = () => { onStop(); onStopInstruction?.(); };
+  }, [onStop, onStopInstruction]);
   useEffect(() => () => stopRef.current(), []);
+  const latestProgress = useRef<ExploreProgress>(initial);
+  const saveProgress = useRef(onProgressChange);
+  React.useLayoutEffect(() => {
+    saveProgress.current = onProgressChange;
+  }, [onProgressChange]);
+  React.useLayoutEffect(() => {
+    latestProgress.current = {
+      version: 1,
+      location,
+      history,
+      query,
+      onlyFavorites,
+      labs,
+      positions: { ...positions.current },
+    };
+    saveProgress.current?.(latestProgress.current);
+  }, [location, history, query, onlyFavorites, labs]);
+  const scrollSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rememberScroll = useCallback(() => {
+    if (scrollSaveTimer.current) clearTimeout(scrollSaveTimer.current);
+    scrollSaveTimer.current = null;
+    latestProgress.current = { ...latestProgress.current, positions: { ...positions.current } };
+    saveProgress.current?.(latestProgress.current);
+  }, []);
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") rememberScroll();
+    });
+    // Wheel/keyboard scrolling on web does not emit native drag-end events.
+    if (Platform.OS === "web" && typeof window !== "undefined") window.addEventListener("pagehide", rememberScroll);
+    return () => {
+      subscription.remove();
+      if (Platform.OS === "web" && typeof window !== "undefined") window.removeEventListener("pagehide", rememberScroll);
+      rememberScroll();
+    };
+  }, [rememberScroll]);
   const go = (next: Location) => {
     onStop();
+    onStopInstruction?.();
     positions.current[currentKey] = currentY.current;
     pendingRestore.current = true;
-    setHistory((previous) => [...previous, location]);
+    setHistory((previous) => [...previous, location].slice(-24));
     setLocation(next);
   };
   const back = useCallback(() => {
     onStop();
+    onStopInstruction?.();
     positions.current[locationKey(location)] = currentY.current;
     pendingRestore.current = true;
     if (history.length) {
       setLocation(history[history.length - 1]);
       setHistory(history.slice(0, -1));
-    } else onBack();
-  }, [history, location, onBack, onStop]);
+    } else {
+      saveProgress.current?.({ ...latestProgress.current, positions: { ...positions.current } });
+      onBack();
+    }
+  }, [history, location, onBack, onStop, onStopInstruction]);
   useEffect(() => {
     const listener = BackHandler.addEventListener("hardwareBackPress", () => {
       back();
@@ -125,16 +155,51 @@ export function ExploreScreen({
         >
           ‹ {history.length ? "Back" : "Little Island"}
         </Button>
-        <Label style={{ flexShrink: 1 }}>Explore</Label>
+        {history.length > 0 ? (
+          <Button
+            quiet
+            compact
+            label="Back to Little Island, keep my discovery place"
+            onPress={() => {
+              onStop();
+              onStopInstruction?.();
+              rememberScroll();
+              onBack();
+            }}
+          >
+            Games
+          </Button>
+        ) : (
+          <Label style={{ flexShrink: 1 }}>Explore</Label>
+        )}
+        {onToggleSound && (
+          <Button
+            quiet
+            compact
+            onPress={() => {
+              onStop();
+              onStopInstruction?.();
+              onToggleSound();
+            }}
+          >
+            Sound {narrationEnabled ? "on" : "off"}
+          </Button>
+        )}
       </View>
       <ScrollView
         ref={scroll}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         onScroll={(event) => {
-          currentY.current = event.nativeEvent.contentOffset.y;
+          currentY.current = Math.max(0, Math.min(1000000, event.nativeEvent.contentOffset.y));
+          if (pendingRestore.current) return;
+          positions.current[currentKey] = currentY.current;
+          if (scrollSaveTimer.current) clearTimeout(scrollSaveTimer.current);
+          scrollSaveTimer.current = setTimeout(rememberScroll, 180);
         }}
         scrollEventThrottle={80}
+        onScrollEndDrag={rememberScroll}
+        onMomentumScrollEnd={rememberScroll}
         onContentSizeChange={() => {
           if (pendingRestore.current) {
             pendingRestore.current = false;
@@ -234,6 +299,13 @@ export function ExploreScreen({
           <>
             <Label>{world.title} · Try it yourself</Label>
             <Heading style={s.title}>{world.activity}</Heading>
+            <LabGuidance
+              world={world.id}
+              sound={narrationEnabled}
+              onSpeak={onSpeakInstruction}
+              onStop={onStopInstruction}
+              speaking={speakingInstructionId}
+            />
             <Lab world={world.id} state={labs[world.id]} act={(action) => act(world.id, action)} />
             <View style={s.row}>
               <Button quiet onPress={() => act(world.id, { type: "reset" })}>
@@ -442,7 +514,7 @@ function Lab({ world, state, act }: { world: WorldId; state: LabState; act: (act
         <Copy>
           Turn Earth while the Sun stays on the left. Follow the coral-colored dot: it marks one place on Earth.
         </Copy>
-        <EarthLabArt turn={state.turn} />
+        <LabManipulative world="space" state={state} act={act} />
         <Status
           title={
             edge
@@ -472,31 +544,7 @@ function Lab({ world, state, act }: { world: WorldId; state: LabState; act: (act
         <Copy>
           Build one possible ocean food chain. Start with the energy source, then choose who receives that energy next.
         </Copy>
-        <View style={s.chain}>
-          {state.chain.length ? (
-            state.chain.map((item, i) => (
-              <View key={item} style={s.chainItem}>
-                <Label>Link {i + 1}</Label>
-                <Heading style={{ fontSize: 19 }}>{item}</Heading>
-                {i < state.chain.length - 1 && <Copy>↓ energy moves to</Copy>}
-              </View>
-            ))
-          ) : (
-            <Copy>Your first link goes here.</Copy>
-          )}
-        </View>
-        <View style={s.row}>
-          {[3, 0, 4, 2, 1].map((index) => (
-            <Button
-              key={index}
-              quiet
-              disabled={state.chain.includes(FOOD_CHAIN[index]) || state.chain.length === 5}
-              onPress={() => act({ type: "chain", item: FOOD_CHAIN[index] })}
-            >
-              {FOOD_CHAIN[index]}
-            </Button>
-          ))}
-        </View>
+        <LabManipulative world="oceans" state={state} act={act} />
         <Button quiet disabled={!state.chain.length} onPress={() => act({ type: "unchain" })}>
           Remove last link
         </Button>
@@ -523,19 +571,7 @@ function Lab({ world, state, act }: { world: WorldId; state: LabState; act: (act
         </Copy>
         {animal ? (
           <>
-            <View style={s.labPicture}>
-              <Svg width={130} height={130} viewBox="0 0 120 120" accessibilityElementsHidden>
-                <Motif name={animal.art} />
-              </Svg>
-            </View>
-            <Heading style={{ fontSize: 26 }}>{animal.animal}</Heading>
-            <View style={s.row}>
-              {HABITAT_CHOICES.map((choice) => (
-                <Button key={choice} quiet onPress={() => act({ type: "habitat", choice })}>
-                  {choice}
-                </Button>
-              ))}
-            </View>
+            <LabManipulative world="animals" state={state} act={act} />
           </>
         ) : (
           <Status
@@ -558,7 +594,7 @@ function Lab({ world, state, act }: { world: WorldId; state: LabState; act: (act
         <Copy>
           Move a drop through water's different states. Choose an action, watch what changes, and try a different route.
         </Copy>
-        <WaterPicture place={state.water} />
+        <LabManipulative world="weather" state={state} act={act} />
         <Status
           title={
             {
@@ -604,7 +640,7 @@ function Lab({ world, state, act }: { world: WorldId; state: LabState; act: (act
         Follow five clues around a simplified world map. Tap a numbered destination below the map to choose it. North is
         up.
       </Copy>
-      <GlobeMap selected={state.visited.at(-1)} />
+      <LabManipulative world="world" state={state} act={act} />
       <Copy style={{ fontSize: 13 }}>
         Green = land · Blue = ocean · Numbered dots = destinations. Shapes are simplified and polar land is stretched.
       </Copy>
@@ -641,79 +677,11 @@ function Lab({ world, state, act }: { world: WorldId; state: LabState; act: (act
     </>
   );
 }
-function WaterPicture({ place }: { place: LabState["water"] }) {
-  return (
-    <View style={s.labPicture}>
-      <Svg width="100%" height={180} viewBox="0 0 320 180" accessibilityElementsHidden>
-        <Rect width={320} height={180} rx={20} fill="#E4F1F2" />
-        {place === "vapor" ? (
-          <>
-            {[110, 160, 210].map((x) => (
-              <Path
-                key={x}
-                d={`M${x} 140q-20-20 0-40t0-40`}
-                stroke="#6A8792"
-                strokeWidth={4}
-                strokeDasharray="4 6"
-                fill="none"
-              />
-            ))}
-            <Circle cx={47} cy={40} r={19} fill="#F0D397" />
-          </>
-        ) : place === "ice" ? (
-          <Path
-            d="m95 47 65-23 65 23v79l-65 25-65-25Zm0 0 65 24 65-24M160 71v80"
-            fill="#B5D9E4"
-            stroke="#477487"
-            strokeWidth={3}
-          />
-        ) : place === "ground" ? (
-          <>
-            <Path d="M0 58h320v122H0Z" fill="#D6B899" />
-            {[83, 131, 179, 227].map((x, i) => (
-              <Path key={x} d={`M${x} ${80 + (i % 2) * 25}q-17 20 0 24 17-4 0-24Z`} fill="#528FA8" />
-            ))}
-          </>
-        ) : place === "ocean" ? (
-          <>
-            {[85, 112, 139].map((y) => (
-              <Path
-                key={y}
-                d={`M0 ${y}q30-20 60 0t60 0 60 0 60 0 80 0`}
-                stroke="#5997B1"
-                strokeWidth={12}
-                fill="none"
-              />
-            ))}
-            <Circle cx={48} cy={34} r={20} fill="#F0D397" />
-          </>
-        ) : (
-          <GCloud rain={place === "rain"} />
-        )}
-      </Svg>
-    </View>
-  );
-}
-function GCloud({ rain }: { rain: boolean }) {
-  return (
-    <>
-      <Path
-        d="M98 90C52 89 64 37 106 46c7-48 80-44 88 1 46-9 65 44 16 50Z"
-        fill="#FFF"
-        stroke="#6B8790"
-        strokeWidth={3}
-      />
-      {rain &&
-        [109, 159, 209].map((x) => (
-          <Path key={x} d={`m${x} 115-12 26`} stroke="#5997B1" strokeWidth={5} strokeLinecap="round" />
-        ))}
-    </>
-  );
-}
 const s = StyleSheet.create({
   page: { flex: 1, backgroundColor: C.cream },
   topbar: {
     flexDirection: "row",
+    flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 18,

@@ -219,15 +219,27 @@ export class NearbyMystery {
     this.sync();
     await this.send(this.host.snapshots());
   }
-  async intent(intent: MysteryIntent) {
+  async rematch(round = this.state.view?.adventure?.round ?? 0) {
+    if (this.changing || this.closed) return;
+    if (!this.host?.rematch(undefined, round)) {
+      this.update({
+        error: true,
+        message: "Need at least three connected family players and a completed round to rematch.",
+      });
+      return;
+    }
+    this.sync();
+    await this.send(this.host.snapshots());
+  }
+  async intent(intent: MysteryIntent, round = this.state.view?.adventure?.round ?? 0) {
     if (this.changing || this.closed) return;
     if (this.host) {
-      this.host.local(intent);
+      this.host.local(intent, round);
       this.sync();
       await this.send(this.host.snapshots());
     } else if (this.hostPeer) {
       try {
-        await nearby!.send(this.hostPeer, intentPacket(this.room, ++this.sequence, intent));
+        await nearby!.send(this.hostPeer, intentPacket(this.room, ++this.sequence, intent, round));
       } catch (e) {
         this.fail(e);
       }

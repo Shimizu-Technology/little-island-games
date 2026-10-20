@@ -68,7 +68,7 @@ describe("Secret-word Imposter complete private party rules", () => {
         }
         for (let i = 0; i < n * clueRounds; i++) {
           expect(s.phase).toBe("clues");
-          expect(partyActor(s)).toBe(i % n);
+          expect(partyActor(s)).toBe(((s.firstClue ?? 0) + i) % n);
           s = action(s, "clue-done");
           expect(validPartySession(s)).toBe(true);
         }
@@ -157,7 +157,7 @@ describe("Secret-word Imposter complete private party rules", () => {
     expect(next.pack).toBe(s.pack);
     expect(next.clueRounds).toBe(2);
     expect(next.wordId).not.toBe(s.wordId);
-    expect(next.imposter).not.toBe(s.imposter);
+    expect(next.firstClue).toBe(((s.firstClue ?? 0) + 1) % names.length);
     expect(next.id).not.toBe(s.id);
     expect(next.revision).toBe(0);
     expect(partyPack(next.pack).words.some((w) => w.id === next.wordId)).toBe(true);

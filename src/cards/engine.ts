@@ -8,7 +8,7 @@ export const rank = (card: Card) => (card % 13) + 1;
 export const suit = (card: Card): Suit => SUITS[Math.floor(card / 13)];
 export const rankName = (r: number) =>
   ["", "Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King"][r];
-export const suitName = (kind: Suit) => kind === "leaf" ? "leaves" : `${kind}s`;
+export const suitName = (kind: Suit) => (kind === "leaf" ? "leaves" : `${kind}s`);
 export const cardName = (c: Card) => `${rankName(rank(c))} of ${suitName(suit(c))}`;
 export const points = (c: Card) => (rank(c) === 8 ? 50 : Math.min(rank(c), 10));
 export type CardResult = {
@@ -16,8 +16,30 @@ export type CardResult = {
   scores: [number, number];
   reason: "books" | "empty-hand" | "blocked";
 };
+export type CardRound = "quick" | "full";
+export type CardPace = "step" | "steady";
+/** New cards are private to actor. Only played cards and requested ranks are public. */
+export type CardEvent = {
+  revision: number;
+  actor: 0 | 1;
+  action: CardAction["type"];
+  rank?: number;
+  played?: Card;
+  activeSuit?: Suit;
+  received: number;
+  continues: boolean;
+  newCards: Card[];
+  books: [number[], number[]];
+};
+export const cardRound = (s: Pick<CardSession, "round">): CardRound => s.round ?? "full";
+export const cardPace = (s: Pick<CardSession, "pace">): CardPace => s.pace ?? "step";
+export const cardRanks = (s: Pick<CardSession, "round">) => (cardRound(s) === "quick" ? 8 : 13);
+export const cardDeal = (s: Pick<CardSession, "round">) => (cardRound(s) === "quick" ? 5 : 7);
 export type CardSession = {
   version: 1;
+  round?: CardRound;
+  pace?: CardPace;
+  events?: CardEvent[];
   game: CardGame;
   id: string;
   options: Options;
@@ -47,12 +69,12 @@ function collect(s: CardSession, p: 0 | 1) {
 }
 function refill(s: CardSession, p: 0 | 1) {
   while (!s.hands[p].length && s.stock.length) {
-    s.hands[p].push(...s.stock.splice(0, Math.min(7, s.stock.length)));
+    s.hands[p].push(...s.stock.splice(0, Math.min(cardDeal(s), s.stock.length)));
     collect(s, p);
   }
 }
 function fishResult(s: CardSession) {
-  if (s.books[0].length + s.books[1].length === 13) {
+  if (s.books[0].length + s.books[1].length === cardRanks(s)) {
     const scores: [number, number] = [s.books[0].length, s.books[1].length];
     s.result = { winner: scores[0] === scores[1] ? "tie" : scores[0] > scores[1] ? 0 : 1, scores, reason: "books" };
   }
@@ -61,20 +83,24 @@ export function createCardSession(
   game: CardGame,
   options: Options,
   seed = Date.now() >>> 0,
-  id = `${game}-${Date.now().toString(36)}-${seed}`
+  id = `${game}-${Date.now().toString(36)}-${seed}`,
+  settings: { round?: CardRound; pace?: CardPace } = {}
 ): CardSession {
   const stock = shuffle(
-    Array.from({ length: 52 }, (_, i) => i),
+    Array.from({ length: 52 }, (_, i) => i).filter((c) => rank(c) <= (settings.round === "quick" ? 8 : 13)),
     random(seed)
   );
   const s: CardSession = {
     version: 1,
+    round: settings.round ?? "full",
+    pace: settings.pace ?? "step",
+    events: [],
     game,
     id,
     options: { ...options },
     seed: seed >>> 0,
     revision: 0,
-    hands: [stock.splice(0, 7), stock.splice(0, 7)],
+    hands: [stock.splice(0, settings.round === "quick" ? 5 : 7), stock.splice(0, settings.round === "quick" ? 5 : 7)],
     stock,
     discard: [],
     books: [[], []],
@@ -83,7 +109,7 @@ export function createCardSession(
     drawn: null,
     passes: 0,
     requests: [[], []],
-    message: "Seven cards each. Your island card adventure begins.",
+    message: `${settings.round === "quick" ? "Five" : "Seven"} cards each. Choose a card to begin.`,
     result: null,
   };
   if (game === "go-fish") {
@@ -195,6 +221,21 @@ export function cardAction(
     if (s.passes >= 2) eightsResult(s, "blocked");
   } else return state;
   s.revision++;
+  const event: CardEvent = {
+    revision: s.revision,
+    actor: p,
+    action: action.type,
+    continues: s.turn === p && !s.result,
+    ...(action.type === "ask" ? { rank: action.rank } : {}),
+    ...(action.type === "play" ? { played: action.card, activeSuit: s.activeSuit } : {}),
+    received: action.type === "ask" ? state.hands[q].filter((c) => rank(c) === action.rank).length : 0,
+    newCards: s.hands[p].filter((c) => !state.hands[p].includes(c)),
+    books: [
+      s.books[0].filter((r) => !state.books[0].includes(r)),
+      s.books[1].filter((r) => !state.books[1].includes(r)),
+    ],
+  };
+  s.events = [...(state.events ?? []), event].slice(-4);
   return s;
 }
 /** The CPU contract intentionally contains no opponent cards or stock order. */
@@ -312,6 +353,11 @@ export function validCardSession(value: unknown): value is CardSession {
   )
     return false;
   if (s.result !== null && !record(s.result)) return false;
+  if (
+    (s.round !== undefined && !["quick", "full"].includes(s.round as string)) ||
+    (s.pace !== undefined && !["step", "steady"].includes(s.pace as string))
+  )
+    return false;
   const cs = value as unknown as CardSession;
   if (cs.requests.some((r) => new Set(r).size !== r.length)) return false;
   const cards = [
@@ -320,7 +366,17 @@ export function validCardSession(value: unknown): value is CardSession {
     ...cs.discard,
     ...cs.books.flatMap((b) => b.flatMap((r) => SUITS.map((_, i) => i * 13 + r - 1))),
   ];
-  if (cards.length !== 52 || new Set(cards).size !== 52) return false;
+  const total = cardRanks(cs) * 4;
+  if (cards.length !== total || new Set(cards).size !== total || cards.some((c) => rank(c) > cardRanks(cs)))
+    return false;
+  if (cs.requests.flat().some((r) => r > cardRanks(cs))) return false;
+  if (
+    cs.events !== undefined &&
+    (!Array.isArray(cs.events) ||
+      cs.events.length > 4 ||
+      cs.events.some((e, i) => !validCardEvent(e, cs, i ? cs.events![i - 1].revision : -1)))
+  )
+    return false;
   if (cs.game === "go-fish") {
     if (
       cs.discard.length ||
@@ -331,8 +387,8 @@ export function validCardSession(value: unknown): value is CardSession {
       )
     )
       return false;
-    if (!cs.result && (cs.books.flat().length === 13 || !cs.hands[cs.turn].length)) return false;
-    if (cs.result && (cs.result.reason !== "books" || cs.books.flat().length !== 13)) return false;
+    if (!cs.result && (cs.books.flat().length === cardRanks(cs) || !cs.hands[cs.turn].length)) return false;
+    if (cs.result && (cs.result.reason !== "books" || cs.books.flat().length !== cardRanks(cs))) return false;
   } else {
     if (!cs.discard.length || cs.books.flat().length || cs.requests.flat().length) return false;
     if (rank(cs.discard.at(-1)!) !== 8 && suit(cs.discard.at(-1)!) !== cs.activeSuit) return false;
@@ -369,4 +425,69 @@ export function validCardSession(value: unknown): value is CardSession {
       return false;
   }
   return true;
+}
+
+function validCardEvent(v: unknown, s: CardSession, previous: number): v is CardEvent {
+  if (!record(v)) return false;
+  const max = cardRanks(s);
+  return (
+    Number.isInteger(v.revision) &&
+    (v.revision as number) > previous &&
+    (v.revision as number) <= s.revision &&
+    [0, 1].includes(v.actor as number) &&
+    ["ask", "draw", "play", "pass"].includes(v.action as string) &&
+    (v.rank === undefined || (Number.isInteger(v.rank) && (v.rank as number) >= 1 && (v.rank as number) <= max)) &&
+    (v.played === undefined ||
+      (Number.isInteger(v.played) &&
+        (v.played as number) >= 0 &&
+        (v.played as number) < 52 &&
+        rank(v.played as number) <= max)) &&
+    (v.activeSuit === undefined || SUITS.includes(v.activeSuit as Suit)) &&
+    typeof v.continues === "boolean" &&
+    Number.isInteger(v.received) &&
+    (v.received as number) >= 0 &&
+    (v.received as number) <= 4 &&
+    ints(v.newCards, 0, 51) &&
+    new Set(v.newCards).size === v.newCards.length &&
+    v.newCards.every((c) => rank(c) <= max) &&
+    Array.isArray(v.books) &&
+    v.books.length === 2 &&
+    v.books.every((b) => ints(b, 1, max, max) && new Set(b).size === b.length) &&
+    (v.action !== "ask" || (s.game === "go-fish" && v.rank !== undefined)) &&
+    (v.action !== "play" || (s.game === "crazy-eights" && v.played !== undefined && v.activeSuit !== undefined))
+  );
+}
+/** A recipient-safe projection: hidden draws never appear in public/pass-device history. */
+export function cardEventText(event: CardEvent, viewer: 0 | 1 | null, mode: Options["mode"]): string {
+  const who =
+    event.actor === viewer ? "You" : mode === "solo" && event.actor === 1 ? "Computer" : `Player ${event.actor + 1}`;
+  const verb = event.actor === viewer ? "have" : "has";
+  let text =
+    event.action === "ask"
+      ? `${who} asked for ${rankName(event.rank!)}s. ${event.received ? `${event.received} received.` : "Go fish!"}`
+      : event.action === "play"
+        ? `${who} played ${cardName(event.played!)}. Match ${suitName(event.activeSuit!)}.`
+        : event.action === "draw"
+          ? `${who} drew one card.`
+          : `${who} finished the turn.`;
+  if (viewer === event.actor && event.newCards.length)
+    text +=
+      event.newCards.length > 3
+        ? ` ${event.newCards.length} new cards in your hand.`
+        : ` New: ${event.newCards.map(cardName).join(", ")}.`;
+  else if (event.action === "ask" && !event.received && event.newCards.length) text += ` ${who} ${verb} new cards.`;
+  if (event.action === "ask") text += event.continues ? " Ask again!" : " Turn passes.";
+  for (const player of [0, 1] as const)
+    if (event.books[player].length)
+      text += ` ${viewer === player ? "You" : mode === "solo" && player === 1 ? "Computer" : `Player ${player + 1}`} made a book of ${event.books[player].map(rankName).join(", ")}.`;
+  return text;
+}
+export function newCardIds(s: CardSession, viewer: 0 | 1): Card[] {
+  const event = s.events?.at(-1);
+  return event?.actor === viewer ? event.newCards.filter((c) => s.hands[viewer].includes(c)) : [];
+}
+
+/** Changing pacing is a saved decision too; stale taps from before the sheet cannot act afterward. */
+export function setCardPace(state: CardSession, pace: CardPace): CardSession {
+  return cardPace(state) === pace ? state : { ...state, pace, revision: state.revision + 1 };
 }

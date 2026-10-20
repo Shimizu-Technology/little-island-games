@@ -55,8 +55,29 @@ export type MysteryPlayer = Point & {
   prankReady: number;
   clues: string[];
 };
+/** Absent on build-6 saves: those rounds retain their original rules until a fresh round. */
+export type Adventure = {
+  edition: 2;
+  round: number;
+  pranks: number;
+  taskData: { garden: number; stars: number; picnic: number; dock: number; rope: number };
+  ribbons: Record<string, number>;
+  moves: Record<string, { tick: number; count: number }>;
+};
+export const TRICK_GOAL = 3;
+export const STAR_TARGETS = [2, 5, 1];
+export const countBits = (mask: number) => [1, 2, 4].filter((bit) => mask & bit).length;
+export const prankDelay = (solo: boolean) => (solo ? 10 : 25);
+export const openingDelay = (solo: boolean) => (solo ? 8 : 20);
+export function playerColor(id: string) {
+  const known: Record<string, number> = { host: 0, you: 0, mango: 1, pearl: 2, coco: 3 };
+  const index =
+    known[id] ?? (/^p[1-7]$/.test(id) ? Number(id.slice(1)) : [...id].reduce((a, c) => a + c.charCodeAt(0), 0) % 8);
+  return ["#BC6548", "#3D7197", "#387B64", "#80649E", "#956D24", "#AC567E", "#367E89", "#637237"][index];
+}
 export type MysterySession = {
   version: 1;
+  adventure?: Adventure;
   game: "island-mystery";
   id: string;
   seed: number;
@@ -77,6 +98,9 @@ export type MysterySession = {
 };
 export type MysteryIntent =
   | { type: "move"; dx: number; dy: number }
+  | { type: "step"; fromX: number; fromY: number; dx: number; dy: number }
+  | { type: "wait" }
+  | { type: "rescue"; target: string }
   | { type: "task"; task: TaskId; choice: number }
   | { type: "repair"; choice: number }
   | { type: "sabotage" }
@@ -88,7 +112,7 @@ export const REPAIR_ORDER = [2, 0, 1];
 export const REPAIR_CHOICES = ["Close valve", "Connect pipe", "Open supply"];
 const close = (a: Point, b: Point, distance = 0) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) <= distance;
 export const walkable = (p: Point) => Number.isInteger(p.x) && Number.isInteger(p.y) && MAP[p.y]?.[p.x] === ".";
-export const pausedMystery = (s: MysterySession) => !s.solo && s.players.some((p) => !p.connected);
+export const pausedMystery = (s: MysterySession) => !s.solo && s.players.some((p) => !p.connected && !p.out);
 const alive = (s: MysterySession) => s.players.filter((p) => !p.out);
 function note(s: MysterySession, message: string) {
   s.events = [...s.events.slice(-11), message];
@@ -103,7 +127,11 @@ function outcome(s: MysterySession) {
   if (s.result) return;
   if (!alive(s).some((p) => p.role === "mischief")) end(s, "crew", "caught");
   else if (TASKS.every((t) => s.tasks[t.id] === 3)) end(s, "crew", "tasks");
-  else if (alive(s).filter((p) => p.role === "crew").length <= alive(s).filter((p) => p.role === "mischief").length)
+  else if (
+    s.adventure
+      ? s.adventure.pranks >= TRICK_GOAL
+      : alive(s).filter((p) => p.role === "crew").length <= alive(s).filter((p) => p.role === "mischief").length
+  )
     end(s, "mischief", "pranks");
 }
 export function createMysterySession(
@@ -115,7 +143,8 @@ export function createMysterySession(
   ],
   seed = Date.now() >>> 0,
   soloRole?: Role,
-  id = `mystery-${Date.now().toString(36)}-${seed}`
+  id = `mystery-${Date.now().toString(36)}-${seed}`,
+  round = 1
 ): MysterySession {
   if (seats.length < 3 || seats.length > 8 || new Set(seats.map((p) => p.id)).size !== seats.length)
     throw new Error("Mystery needs 3–8 unique players.");
@@ -141,6 +170,14 @@ export function createMysterySession(
   ];
   return {
     version: 1,
+    adventure: {
+      edition: 2,
+      round,
+      pranks: 0,
+      taskData: { garden: 0, stars: 0, picnic: 0, dock: 0, rope: -1 },
+      ribbons: {},
+      moves: {},
+    },
     game: "island-mystery",
     id,
     seed: seed >>> 0,
@@ -155,7 +192,7 @@ export function createMysterySession(
       out: false,
       role: p.id === mischiefId ? "mischief" : "crew",
       meetings: 2,
-      prankReady: 12,
+      prankReady: openingDelay(seats.some((p) => p.bot)),
       clues: [],
       ...starts[i],
     })),
@@ -163,17 +200,29 @@ export function createMysterySession(
     phaseLeft: 0,
     tasks: { garden: 0, stars: 0, picnic: 0, dock: 0 },
     sabotage: null,
-    sabotageReady: 20,
+    sabotageReady: seats.some((p) => p.bot) ? 12 : 25,
     votes: {},
     ready: [],
     lastMeeting: -10,
-    events: ["Four jobs before the picnic. One player makes mischief. Talk together to solve the mystery!"],
+    events: [
+      "Welcome to Picnic Island. Crew: finish four jobs or find the trickster. Mischief: make three ribbon tricks. Everyone keeps playing!",
+    ],
     result: null,
   };
 }
 function copy(s: MysterySession): MysterySession {
   return {
     ...s,
+    ...(s.adventure
+      ? {
+          adventure: {
+            ...s.adventure,
+            taskData: { ...s.adventure.taskData },
+            ribbons: { ...s.adventure.ribbons },
+            moves: Object.fromEntries(Object.entries(s.adventure.moves).map(([id, m]) => [id, { ...m }])),
+          },
+        }
+      : {}),
     players: s.players.map((p) => ({ ...p, clues: p.clues.slice() })),
     tasks: { ...s.tasks },
     sabotage: s.sabotage ? { ...s.sabotage } : null,
@@ -192,7 +241,7 @@ function resolveVotes(s: MysterySession) {
   if (selected && selected[0] !== "skip" && selected[1] > (ordered[1]?.[1] ?? 0)) {
     const p = s.players.find((p) => p.id === selected[0])!;
     p.out = true;
-    note(s, `${p.name} leaves the round: ${p.role === "crew" ? "a crew member" : "the mischief maker"}.`);
+    note(s, `${p.name} was ${p.role === "crew" ? "crew and can still help with jobs" : "the mischief maker"}.`);
   } else note(s, "No clear vote. Everyone stays this time.");
   s.phase = "explore";
   s.phaseLeft = 0;
@@ -207,6 +256,12 @@ export function applyMysteryIntent(
   intent: MysteryIntent,
   expectedRevision?: number
 ): MysterySession {
+  if (intent.type === "step") {
+    if (!validMysteryIntent(intent)) return state;
+    const actor = state.players.find((p) => p.id === actorId);
+    if (!actor || actor.x !== intent.fromX || actor.y !== intent.fromY) return state;
+    return applyMysteryIntent(state, actorId, { type: "move", dx: intent.dx, dy: intent.dy }, expectedRevision);
+  }
   if (
     state.result ||
     pausedMystery(state) ||
@@ -215,10 +270,20 @@ export function applyMysteryIntent(
   )
     return state;
   const original = state.players.find((p) => p.id === actorId);
-  if (!original || original.out || !original.connected) return state;
+  if (!original || !original.connected) return state;
+  if (
+    original.out &&
+    (!state.adventure ||
+      original.role !== "crew" ||
+      !["move", "task", "repair", "rescue", "wait"].includes(intent.type))
+  )
+    return state;
   const s = copy(state),
     p = s.players.find((p) => p.id === actorId)!;
-  if (intent.type === "ready") {
+  if (intent.type === "wait") {
+    if (!s.solo) return state;
+    // Explicit practice beat. Reading or opening the notebook never advances this clock.
+  } else if (intent.type === "ready") {
     if (s.phase !== "discussion" || s.ready.includes(p.id)) return state;
     s.ready.push(p.id);
     if (s.ready.length === alive(s).length) {
@@ -239,23 +304,69 @@ export function applyMysteryIntent(
     if (intent.type === "move") {
       const next = { x: p.x + intent.dx, y: p.y + intent.dy };
       if (!walkable(next)) return state;
+      if (s.adventure && !s.solo) {
+        const moved = s.adventure.moves[p.id];
+        if (moved?.tick === s.tick && moved.count >= 4) return state;
+        s.adventure.moves[p.id] = { tick: s.tick, count: moved?.tick === s.tick ? moved.count + 1 : 1 };
+      }
       p.x = next.x;
       p.y = next.y;
     } else if (intent.type === "task") {
       const task = TASKS.find((t) => t.id === intent.task)!;
       if (!close(p, task) || s.tasks[task.id] === 3 || s.sabotage) return state;
       if (p.role === "crew") {
-        if (intent.choice === task.order[s.tasks[task.id]]) {
+        if (s.adventure) {
+          const data = s.adventure.taskData;
+          if (task.id === "garden" || task.id === "picnic") {
+            if (intent.choice > 2) return state;
+            if (data[task.id] & (1 << intent.choice)) return state;
+            data[task.id] |= 1 << intent.choice;
+            s.tasks[task.id] = countBits(data[task.id]);
+          } else if (task.id === "stars") {
+            if (intent.choice === 0) data.stars = (data.stars + 7) % 8;
+            else if (intent.choice === 1) data.stars = (data.stars + 1) % 8;
+            else if (intent.choice === 2) {
+              if (data.stars === STAR_TARGETS[s.tasks.stars]) s.tasks.stars++;
+              else addClue(p, "Telescope tip: turn the pointer until it meets the glowing star, then align.");
+            } else return state;
+          } else {
+            if (intent.choice < 3) {
+              if (data.dock & (1 << intent.choice) || data.rope === intent.choice) return state;
+              data.rope = intent.choice;
+            } else if (data.rope === intent.choice - 3) {
+              data.dock |= 1 << data.rope;
+              data.rope = -1;
+              s.tasks.dock = countBits(data.dock);
+            } else addClue(p, "Dock tip: choose a boat rope, then its matching shore cleat. Match shape and color.");
+          }
+          if (s.tasks[task.id] === 3) {
+            note(s, `${task.name} is complete.`);
+            witnesses(s, p, `${p.name} finished a real job at ${task.name.toLowerCase()}.`);
+            const nearby = s.players.filter((w) => w.id !== p.id && w.connected && sightDistance(w, p) <= 3).map((w) => w.name);
+            const neighbors = nearby.slice(0, 2).join(" and ") + (nearby.length > 2 ? ` and ${nearby.length - 2} others` : "");
+            addClue(
+              p,
+              `You finished ${task.name.toLowerCase()}. ${nearby.length ? neighbors + " were nearby." : "Nobody was nearby."}`
+            );
+          }
+        } else if (intent.choice === task.order[s.tasks[task.id]]) {
           s.tasks[task.id]++;
           if (s.tasks[task.id] === 3) note(s, `${p.name} finished ${task.name.toLowerCase()}.`);
         } else {
           s.tasks[task.id] = 0;
-          p.clues = [...p.clues.slice(-5), "Try the task pattern again from the beginning."];
+          addClue(p, "Try the task pattern again from the beginning.");
         }
-      } else p.clues = [...p.clues.slice(-5), "Pretend task checked. Only crew actions fill the shared jobs."];
+      } else
+        addClue(
+          p,
+          s.adventure
+            ? "You checked this station as a disguise. Only crew can finish shared jobs."
+            : "Pretend task checked. Only crew actions fill the shared jobs."
+        );
     } else if (intent.type === "sabotage") {
       if (p.role !== "mischief" || !close(p, PUMP) || s.sabotage || s.tick < s.sabotageReady) return state;
       s.sabotage = { left: 60, progress: 0 };
+      if (s.adventure) witnesses(s, p, `${p.name} turned off the water at the pump.`);
       s.sabotageReady = s.tick + 35;
       note(s, "The picnic water supply is off! Repair the pump before time runs out.");
     } else if (intent.type === "repair") {
@@ -277,14 +388,37 @@ export function applyMysteryIntent(
         !close(p, target, 1)
       )
         return state;
-      target.out = true;
-      p.prankReady = s.tick + 18;
-      s.players
-        .filter((w) => w.id !== p.id && close(w, p, 2))
-        .forEach((w) => {
-          w.clues = [...w.clues.slice(-5), `${p.name} made the prank near ${target.name}.`];
-        });
-      note(s, `${target.name} was sent to the hammock by a silly prank. They can watch this round.`);
+      if (s.adventure) {
+        if ((s.adventure.ribbons[target.id] ?? 0) > s.tick) return state;
+        s.adventure.ribbons[target.id] = s.tick + (s.solo ? 12 : 40);
+        s.adventure.pranks++;
+        p.prankReady = s.tick + prankDelay(s.solo);
+        witnesses(s, p, `${p.name} tied a ribbon near ${target.name}.`);
+        note(
+          s,
+          `${target.name} found a surprise ribbon! Everyone can still move and do jobs. ${s.adventure.pranks}/${TRICK_GOAL} tricks.`
+        );
+      } else {
+        target.out = true;
+        p.prankReady = s.tick + 18;
+        witnesses(s, p, `${p.name} made the prank near ${target.name}.`);
+        note(s, `${target.name} was sent to the hammock by a silly prank. They can watch this round.`);
+      }
+    } else if (intent.type === "rescue") {
+      const target = s.players.find((t) => t.id === intent.target);
+      if (
+        !s.adventure ||
+        p.role !== "crew" ||
+        !target ||
+        !close(p, target, 1) ||
+        (s.adventure.ribbons[target.id] ?? 0) <= s.tick
+      )
+        return state;
+      delete s.adventure.ribbons[target.id];
+      note(
+        s,
+        `${p.name} unwrapped ${target.id === p.id ? "their" : target.name + "’s"} ribbon. Back to the adventure!`
+      );
     } else if (intent.type === "meeting") {
       if (!close(p, BELL) || p.meetings <= 0 || s.tick - s.lastMeeting < 10 || s.sabotage) return state;
       p.meetings--;
@@ -332,19 +466,32 @@ export function mysteryConnection(state: MysterySession, id: string, connected: 
   s.revision++;
   note(
     s,
-    connected ? "A family player rejoined." : "A family player disconnected. The round is paused until they rejoin."
+    connected
+      ? "A family player rejoined."
+      : state.players.find((p) => p.id === id)?.out
+        ? "A helper disconnected. The adventure continues."
+        : "A family player disconnected. The round is paused until they rejoin."
   );
   return s;
 }
+export type AdventureView = Adventure;
 export type MysteryView = {
   version: 1;
+  adventure?: AdventureView;
   id: string;
   revision: number;
   tick: number;
   solo: boolean;
   selfId: string;
   ownRole: Role;
-  players: (Point & { id: string; name: string; out: boolean; connected: boolean; meetings: number })[];
+  players: (Point & {
+    id: string;
+    name: string;
+    out: boolean;
+    connected: boolean;
+    meetings: number;
+    visible?: boolean;
+  })[];
   phase: Phase;
   phaseLeft: number;
   tasks: MysterySession["tasks"];
@@ -366,21 +513,35 @@ export function mysteryView(s: MysterySession, recipient: string): MysteryView {
   if (!p) throw new Error("Unknown recipient.");
   return {
     version: 1,
+    ...(s.adventure
+      ? {
+          adventure: {
+            ...s.adventure,
+            taskData: { ...s.adventure.taskData },
+            ribbons: { ...s.adventure.ribbons },
+            moves: Object.fromEntries(Object.entries(s.adventure.moves).map(([id, m]) => [id, { ...m }])),
+          },
+        }
+      : {}),
     id: s.id,
     revision: s.revision,
     tick: s.tick,
     solo: s.solo,
     selfId: recipient,
     ownRole: p.role,
-    players: s.players.map(({ id, name, x, y, out, connected, meetings }) => ({
-      id,
-      name,
-      x,
-      y,
-      out,
-      connected,
-      meetings,
-    })),
+    players: s.players.map(({ id, name, x, y, out, connected, meetings }) => {
+      const visible = !s.adventure || id === recipient || sightDistance(p, { x, y }) <= 3;
+      return {
+        id,
+        name,
+        x: visible ? x : -1,
+        y: visible ? y : -1,
+        out,
+        connected,
+        meetings,
+        ...(s.adventure ? { visible } : {}),
+      };
+    }),
     phase: s.phase,
     phaseLeft: s.phaseLeft,
     tasks: { ...s.tasks },
@@ -430,12 +591,21 @@ export function pathStep(from: Point, goal: Point): Point | null {
 /** Bot policy consumes the same redacted view a human receives. */
 export function chooseMysteryBot(v: MysteryView): MysteryIntent | null {
   const p = v.players.find((p) => p.id === v.selfId)!;
-  if (p.out || v.paused || v.result) return null;
-  if (v.phase === "discussion") return !v.selfReady && v.phaseLeft < 17 ? { type: "ready" } : null;
+  if ((p.out && !v.adventure) || v.paused || v.result) return null;
+  if (v.phase === "discussion")
+    return !p.out && !v.selfReady && (v.adventure || v.phaseLeft < 17) ? { type: "ready" } : null;
   if (v.phase === "voting") {
-    if (v.selfVoted) return null;
+    if (v.selfVoted || p.out) return null;
     const suspect = v.players.find(
-      (t) => !t.out && t.id !== p.id && v.clues.some((c) => c.startsWith(`${t.name} made the prank`))
+      (t) =>
+        !t.out &&
+        t.id !== p.id &&
+        v.clues.some(
+          (c) =>
+            c.startsWith(`${t.name} made the prank`) ||
+            c.startsWith(`${t.name} tied a ribbon`) ||
+            c.startsWith(`${t.name} turned off`)
+        )
     );
     return { type: "vote", target: suspect?.id ?? "skip" };
   }
@@ -446,10 +616,14 @@ export function chooseMysteryBot(v: MysteryView): MysteryIntent | null {
     if (close(p, goal)) return { type: "repair", choice: REPAIR_ORDER[v.sabotage.progress] };
   } else if (v.ownRole === "mischief") {
     const targets = v.players
-      .filter((t) => !t.out && t.id !== p.id)
+      .filter((t) => !t.out && t.id !== p.id && t.visible !== false)
       .sort((a, b) => Math.abs(a.x - p.x) + Math.abs(a.y - p.y) - (Math.abs(b.x - p.x) + Math.abs(b.y - p.y)));
-    const target = targets[0];
-    if (!target) return null;
+    const target = targets.find((t) => !v.adventure || (v.adventure.ribbons[t.id] ?? 0) <= v.tick);
+    if (!target) {
+      const patrol = TASKS[(v.players.findIndex((t) => t.id === p.id) + Math.floor(v.tick / 12)) % TASKS.length];
+      const step = pathStep(p, patrol);
+      return step ? { type: "move", dx: step.x, dy: step.y } : { type: "wait" };
+    }
     if (!v.prankReadyIn && close(p, target, 1)) return { type: "prank", target: target.id };
     if (!v.sabotage && !v.sabotageReadyIn && v.tick % 3 === 0) {
       goal = PUMP;
@@ -457,9 +631,17 @@ export function chooseMysteryBot(v: MysteryView): MysteryIntent | null {
     } else goal = target;
   } else {
     const sawPrank = v.players.some(
-      (t) => !t.out && t.id !== p.id && v.clues.some((c) => c.startsWith(`${t.name} made the prank`))
+      (t) =>
+        !t.out &&
+        t.id !== p.id &&
+        v.clues.some(
+          (c) =>
+            c.startsWith(`${t.name} made the prank`) ||
+            c.startsWith(`${t.name} tied a ribbon`) ||
+            c.startsWith(`${t.name} turned off`)
+        )
     );
-    if (sawPrank && v.canMeet) {
+    if (sawPrank && v.canMeet && !p.out) {
       goal = BELL;
       if (close(p, goal)) return { type: "meeting" };
     } else {
@@ -467,13 +649,24 @@ export function chooseMysteryBot(v: MysteryView): MysteryIntent | null {
       if (!remaining.length) return null;
       const task = remaining[(v.players.findIndex((t) => t.id === p.id) + Math.floor(v.tick / 30)) % remaining.length];
       goal = task;
-      if (close(p, goal)) return { type: "task", task: task.id, choice: task.order[v.tasks[task.id]] };
+      if (close(p, goal)) {
+        let choice: number = task.order[v.tasks[task.id]];
+        if (v.adventure) {
+          const data = v.adventure.taskData;
+          if (task.id === "garden" || task.id === "picnic")
+            choice = [0, 1, 2].find((i) => !(data[task.id] & (1 << i)))!;
+          else if (task.id === "stars") choice = data.stars === STAR_TARGETS[v.tasks.stars] ? 2 : 1;
+          else choice = data.rope < 0 ? [0, 1, 2].find((i) => !(data.dock & (1 << i)))! : data.rope + 3;
+        }
+        return { type: "task", task: task.id, choice };
+      }
     }
   }
   const step = pathStep(p, goal);
   return step ? { type: "move", dx: step.x, dy: step.y } : null;
 }
 export function soloMysteryTick(s: MysterySession): MysterySession {
+  if (s.adventure) return s;
   let next = tickMystery(s);
   if (next.tick % 2 !== 0 || next.result) return next;
   for (const bot of next.players.filter((p) => p.bot)) {
@@ -495,17 +688,32 @@ export function validMysteryIntent(v: unknown): v is MysteryIntent {
   if (!object(v)) return false;
   const keys = Object.keys(v).sort().join(",");
   switch (v.type) {
+    case "step":
+      return (
+        keys === "dx,dy,fromX,fromY,type" &&
+        integer(v.fromX, 1, 7) &&
+        integer(v.fromY, 1, 5) &&
+        integer(v.dx, -1, 1) &&
+        integer(v.dy, -1, 1) &&
+        Math.abs(v.dx) + Math.abs(v.dy) === 1
+      );
     case "move":
       return (
         keys === "dx,dy,type" && integer(v.dx, -1, 1) && integer(v.dy, -1, 1) && Math.abs(v.dx) + Math.abs(v.dy) === 1
       );
     case "task":
-      return keys === "choice,task,type" && TASKS.some((t) => t.id === v.task) && integer(v.choice, 0, 2);
+      return (
+        keys === "choice,task,type" &&
+        TASKS.some((t) => t.id === v.task) &&
+        integer(v.choice, 0, v.task === "dock" ? 5 : 2)
+      );
     case "repair":
       return keys === "choice,type" && integer(v.choice, 0, 2);
     case "prank":
+    case "rescue":
     case "vote":
       return keys === "target,type" && text(v.target, 64);
+    case "wait":
     case "sabotage":
     case "meeting":
     case "ready":
@@ -540,13 +748,22 @@ export function validMysterySession(v: unknown): v is MysterySession {
         typeof p.out === "boolean" &&
         typeof p.connected === "boolean" &&
         integer(p.meetings, 0, 2) &&
-        integer(p.prankReady, 0, 1000018) &&
+        integer(p.prankReady, 0, 1000040) &&
         strings(p.clues, 6) &&
         walkable(p as Point)
     )
   )
     return false;
   const s = v as unknown as MysterySession;
+  if (
+    s.adventure !== undefined &&
+    !validAdventure(
+      s.adventure,
+      s.players.map((p) => p.id),
+      s.tick
+    )
+  )
+    return false;
   if (
     new Set(s.players.map((p) => p.name.toLowerCase())).size !== s.players.length ||
     new Set(s.players.map((p) => p.id)).size !== s.players.length ||
@@ -588,12 +805,34 @@ export function validMysterySession(v: unknown): v is MysterySession {
     (s.phase !== "discussion" && s.phase !== "voting" && s.ready.length)
   )
     return false;
+  if (
+    s.adventure &&
+    ["garden", "picnic", "dock"].some(
+      (id) => s.tasks[id as TaskId] !== countBits(s.adventure!.taskData[id as "garden"])
+    )
+  )
+    return false;
+  if (s.adventure) {
+    const troublemaker = s.players.find((p) => p.role === "mischief")!;
+    const { pranks, taskData, ribbons } = s.adventure;
+    const delay = prankDelay(s.solo);
+    // A backup cannot manufacture early points, erase the trickster's cooldown,
+    // or claim a rope is both connected and still selected for connecting.
+    if (
+      Object.keys(ribbons).length > pranks ||
+      (taskData.rope >= 0 && !!(taskData.dock & (1 << taskData.rope))) ||
+      troublemaker.prankReady < openingDelay(s.solo) + pranks * delay ||
+      troublemaker.prankReady > s.tick + delay ||
+      (pranks > 0 && s.tick < openingDelay(s.solo) + (pranks - 1) * delay)
+    )
+      return false;
+  }
   if (s.result === null) {
     if (
       s.phase === "finished" ||
       !alive(s).some((p) => p.role === "mischief") ||
       TASKS.every((t) => s.tasks[t.id] === 3) ||
-      alive(s).filter((p) => p.role === "crew").length <= 1 ||
+      (s.adventure ? s.adventure.pranks >= TRICK_GOAL : alive(s).filter((p) => p.role === "crew").length <= 1) ||
       s.sabotage?.left === 0
     )
       return false;
@@ -611,7 +850,8 @@ export function validMysterySession(v: unknown): v is MysterySession {
       return false;
     if (
       s.result.reason === "pranks" &&
-      (s.result.winner !== "mischief" || alive(s).filter((p) => p.role === "crew").length > 1)
+      (s.result.winner !== "mischief" ||
+        (s.adventure ? s.adventure.pranks < TRICK_GOAL : alive(s).filter((p) => p.role === "crew").length > 1))
     )
       return false;
     if (s.result.reason === "sabotage" && (s.result.winner !== "mischief" || s.sabotage?.left !== 0)) return false;
@@ -623,7 +863,8 @@ export function validMysteryView(v: unknown): v is MysteryView {
   if (
     !object(v) ||
     Object.keys(v).sort().join(",") !==
-      "canMeet,clues,events,id,ownRole,paused,phase,phaseLeft,players,prankReadyIn,readyCount,result,revision,sabotage,sabotageReadyIn,selfId,selfReady,selfVoted,solo,tasks,tick,version,votesCast"
+      (v.adventure === undefined ? "" : "adventure,") +
+        "canMeet,clues,events,id,ownRole,paused,phase,phaseLeft,players,prankReadyIn,readyCount,result,revision,sabotage,sabotageReadyIn,selfId,selfReady,selfVoted,solo,tasks,tick,version,votesCast"
   )
     return false;
   if (
@@ -644,10 +885,15 @@ export function validMysteryView(v: unknown): v is MysteryView {
     !v.players.every(
       (p) =>
         object(p) &&
-        Object.keys(p).sort().join(",") === "connected,id,meetings,name,out,x,y" &&
+        Object.keys(p).sort().join(",") ===
+          (v.adventure === undefined
+            ? "connected,id,meetings,name,out,x,y"
+            : "connected,id,meetings,name,out,visible,x,y") &&
         text(p.id, 64) &&
         text(p.name, 20) &&
-        walkable(p as Point) &&
+        (v.adventure === undefined
+          ? walkable(p as Point)
+          : typeof p.visible === "boolean" && (p.visible ? walkable(p as Point) : p.x === -1 && p.y === -1)) &&
         typeof p.connected === "boolean" &&
         typeof p.out === "boolean" &&
         integer(p.meetings, 0, 2)
@@ -655,7 +901,7 @@ export function validMysteryView(v: unknown): v is MysteryView {
   )
     return false;
   if (
-    !v.players.some((p) => p.id === v.selfId) ||
+    !v.players.some((p) => p.id === v.selfId && p.visible !== false) ||
     new Set(v.players.map((p) => p.id)).size !== v.players.length ||
     !["explore", "discussion", "voting", "finished"].includes(v.phase as string) ||
     !integer(v.phaseLeft, 0, 25) ||
@@ -671,7 +917,7 @@ export function validMysteryView(v: unknown): v is MysteryView {
     return false;
   if (
     !integer(v.sabotageReadyIn, 0, 1000035) ||
-    !integer(v.prankReadyIn, 0, 1000018) ||
+    !integer(v.prankReadyIn, 0, 1000040) ||
     !strings(v.clues, 6) ||
     !strings(v.events, 12) ||
     !integer(v.readyCount, 0, 8) ||
@@ -682,6 +928,15 @@ export function validMysteryView(v: unknown): v is MysteryView {
     typeof v.paused !== "boolean"
   )
     return false;
+  if (
+    v.adventure !== undefined &&
+    !validAdventure(
+      v.adventure,
+      v.players.map((p) => p.id as string),
+      v.tick as number
+    )
+  )
+    return false;
   if ((v.phase === "discussion" || v.phase === "voting") !== (v.phaseLeft as number) > 0) return false;
   if (v.result === null) return v.phase !== "finished";
   return (
@@ -690,4 +945,83 @@ export function validMysteryView(v: unknown): v is MysteryView {
     ["crew", "mischief"].includes(v.result.winner as string) &&
     ["tasks", "caught", "pranks", "sabotage"].includes(v.result.reason as string)
   );
+}
+
+function addClue(p: MysteryPlayer, message: string) {
+  if (p.clues.at(-1) !== message) p.clues = [...p.clues.slice(-5), message];
+}
+function witnesses(s: MysterySession, actor: MysteryPlayer, message: string) {
+  s.players.filter((w) => w.id !== actor.id && w.connected && (s.adventure ? sightDistance(w, actor) <= 3 : close(w, actor, 2))).forEach((w) => addClue(w, message));
+}
+/** Solo time is a deliberate turn, never time spent reading. Legacy saves retain old rules but use this explicit pace in the UI. */
+export function playSoloIntent(state: MysterySession, intent: MysteryIntent): MysterySession {
+  const human = state.players.find((p) => !p.bot);
+  if (!human || !state.solo) return state;
+  if (!state.adventure && human.out && intent.type === "wait") return soloMysteryTick(state);
+  let next = applyMysteryIntent(state, human.id, intent, state.revision);
+  if (next === state || next.result) return next;
+  next = tickMystery(next);
+  if (!next.adventure) return soloMysteryTick(next);
+  // Bots move half as often as the player. Meeting responses are immediate once the human is ready.
+  if (next.tick % 2 === 0 || next.phase === "discussion" || next.phase === "voting") {
+    for (const bot of next.players.filter((p) => p.bot)) {
+      const action = chooseMysteryBot(mysteryView(next, bot.id));
+      if (action) next = applyMysteryIntent(next, bot.id, action);
+    }
+  }
+  return next;
+}
+function validAdventure(v: unknown, ids: string[], tick: number): v is Adventure {
+  if (
+    !object(v) ||
+    Object.keys(v).sort().join(",") !== "edition,moves,pranks,ribbons,round,taskData" ||
+    v.edition !== 2 ||
+    !integer(v.round, 1, 1000) ||
+    !integer(v.pranks, 0, TRICK_GOAL) ||
+    !object(v.taskData) ||
+    Object.keys(v.taskData).sort().join(",") !== "dock,garden,picnic,rope,stars" ||
+    !["garden", "picnic", "dock", "stars"].every((key) =>
+      integer((v.taskData as Record<string, unknown>)[key], 0, 7)
+    ) ||
+    !integer(v.taskData.rope, -1, 2) ||
+    !object(v.ribbons) ||
+    Object.keys(v.ribbons).length > ids.length ||
+    !object(v.moves) ||
+    Object.entries(v.moves).some(
+      ([id, m]) =>
+        !ids.includes(id) ||
+        !object(m) ||
+        Object.keys(m).sort().join(",") !== "count,tick" ||
+        !integer(m.tick, 0, tick) ||
+        !integer(m.count, 1, 4)
+    ) ||
+    Object.entries(v.ribbons).some(([id, until]) => !ids.includes(id) || !integer(until, 0, tick + 40))
+  )
+    return false;
+  return true;
+}
+
+/** Nearby bushes and paths limit observations. Hidden coordinates never enter recipient packets. */
+function sightDistance(from: Point, to: Point) {
+  const queue = [{ ...from, distance: 0 }],
+    seen = new Set([`${from.x},${from.y}`]);
+  for (let i = 0; i < queue.length; i++) {
+    const point = queue[i];
+    if (point.x === to.x && point.y === to.y) return point.distance;
+    if (point.distance >= 3) continue;
+    for (const d of [
+      { x: 1, y: 0 },
+      { x: -1, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: -1 },
+    ]) {
+      const next = { x: point.x + d.x, y: point.y + d.y, distance: point.distance + 1 },
+        key = `${next.x},${next.y}`;
+      if (walkable(next) && !seen.has(key)) {
+        seen.add(key);
+        queue.push(next);
+      }
+    }
+  }
+  return Infinity;
 }

@@ -1,23 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, Platform, StyleSheet, TextInput, View } from "react-native";
-import Svg, { Circle, Path, Rect } from "react-native-svg";
+import { AdventurePlay } from "./AdventurePlay";
+import { mysteryInstructions } from "./instructions";
 import { Button, C, Copy, Heading, Label, Sheet, Status, font } from "../components/ui";
 import { nearby, nearbyUnavailable } from "../../modules/island-nearby";
-import {
-  BELL,
-  MAP,
-  MysteryIntent,
-  MysterySession,
-  MysteryView,
-  PUMP,
-  REPAIR_CHOICES,
-  Role,
-  TASKS,
-  applyMysteryIntent,
-  createMysterySession,
-  mysteryView,
-  soloMysteryTick,
-} from "./engine";
+import { MysteryIntent, MysterySession, Role, playSoloIntent, createMysterySession, mysteryView } from "./engine";
 import { NearbyMystery, NearbyState } from "./nearby";
 
 const initialNearby: NearbyState = {
@@ -40,325 +27,13 @@ export type MysteryScreenProps = {
   active: boolean;
   sound: boolean;
   onFeedback?: () => void;
+  onSpeakInstruction?: (key: keyof typeof mysteryInstructions) => void;
+  onStopInstruction?: () => void;
 };
-const AVATAR_COLORS = [C.coral, C.blue, C.teal, "#88639B", "#906B26", "#A44D75", "#4A7981", "#647243"];
-function IslandMap({ view, width }: { view: MysteryView; width: number }) {
-  const size = Math.min(620, Math.max(200, width));
-  return (
-    <View
-      accessibilityLabel="Island map. Use the movement buttons and location labels below."
-      style={{ width: "100%", alignItems: "center" }}
-    >
-      <Svg width={size} height={(size * 7) / 9} viewBox="0 0 450 350" accessible={false}>
-        <Rect width="450" height="350" rx="25" fill="#D9EAF0" />
-        {MAP.flatMap((row, y) =>
-          [...row].map((tile, x) =>
-            tile === "." ? (
-              <Rect key={`${x}:${y}`} x={x * 50 + 1} y={y * 50 + 1} width="48" height="48" rx="10" fill="#EEE6CE" />
-            ) : null
-          )
-        )}
-        {TASKS.map((task, i) => (
-          <React.Fragment key={task.id}>
-            <Rect
-              x={task.x * 50 + 7}
-              y={task.y * 50 + 7}
-              width="36"
-              height="36"
-              rx="10"
-              fill={view.tasks[task.id] === 3 ? "#A6C9A4" : "#F4CF77"}
-            />
-            <Path
-              d={
-                i === 0
-                  ? `M${task.x * 50 + 25} ${task.y * 50 + 36}v-20m0 7q-18-15-15 0q10 7 15 0q15-18 15-3q-3 9-15 3`
-                  : `M${task.x * 50 + 14} ${task.y * 50 + 25}h22m-11-11v22`
-              }
-              stroke={C.ink}
-              strokeWidth="3"
-              fill="none"
-            />
-          </React.Fragment>
-        ))}
-        <Circle cx={BELL.x * 50 + 25} cy={BELL.y * 50 + 25} r="17" fill="#E1B251" />
-        <Path d="M215 179h20m-17-3v-12q7-10 14 0v12m-8 8h3" stroke={C.ink} strokeWidth="3" fill="none" />
-        <Rect
-          x={PUMP.x * 50 + 11}
-          y={PUMP.y * 50 + 8}
-          width="28"
-          height="34"
-          rx="5"
-          fill={view.sabotage ? C.coral : C.blue}
-        />
-        {view.players
-          .filter((p) => !p.out && p.connected)
-          .map((p, i) => (
-            <React.Fragment key={p.id}>
-              <Circle
-                cx={p.x * 50 + 25 + ((i % 3) - 1) * 6}
-                cy={p.y * 50 + 25 + (Math.floor(i / 3) - 1) * 5}
-                r={p.id === view.selfId ? 14 : 10}
-                fill={AVATAR_COLORS[i]}
-                stroke={p.id === view.selfId ? C.ink : C.cream}
-                strokeWidth={p.id === view.selfId ? 4 : 2}
-              />
-              <Circle
-                cx={p.x * 50 + 24 + ((i % 3) - 1) * 6}
-                cy={p.y * 50 + 21 + (Math.floor(i / 3) - 1) * 5}
-                r="2"
-                fill={C.cream}
-              />
-            </React.Fragment>
-          ))}
-      </Svg>
-    </View>
-  );
-}
-function MysteryPlay({
-  view,
-  width,
-  enabled,
-  showRole,
-  setShowRole,
-  intent,
-}: {
-  view: MysteryView;
-  width: number;
-  enabled: boolean;
-  showRole: boolean;
-  setShowRole: (v: boolean) => void;
-  intent: (i: MysteryIntent) => void;
-}) {
-  const p = view.players.find((p) => p.id === view.selfId)!;
-  const living = view.players.filter((p) => !p.out);
-  const at = (point: { x: number; y: number }) => p.x === point.x && p.y === point.y;
-  const nearbyPlayers = living.filter((t) => t.id !== p.id && Math.abs(t.x - p.x) + Math.abs(t.y - p.y) <= 1);
-  const task = TASKS.find(at);
-  const canAct = enabled && !view.paused && !p.out && !view.result;
-  const caption = view.result
-    ? view.result.winner === "crew"
-      ? "The crew saved the picnic!"
-      : "Mischief wins this round!"
-    : view.paused
-      ? "Waiting for family to rejoin"
-      : p.out
-        ? "Watching from the hammock"
-        : view.phase === "discussion"
-          ? "Share your clues aloud"
-          : view.phase === "voting"
-            ? "Who made the mischief?"
-            : "Explore Picnic Island";
-  return (
-    <View style={{ gap: 14 }}>
-      <Status
-        title={caption}
-        detail={
-          view.result
-            ? {
-                tasks: "All four jobs are complete.",
-                caught: "The vote found the mischief maker.",
-                pranks: "The mischief maker surprised enough crew members.",
-                sabotage: "The water supply was not repaired in time.",
-              }[view.result.reason]
-            : view.paused
-              ? "Timers and moves are paused. Disconnected players keep their seats and roles."
-              : p.out
-                ? "You can follow the public story. Your movement and vote are finished for this round."
-                : view.phase === "discussion" || view.phase === "voting"
-                  ? `${view.phaseLeft} seconds remaining. ${view.phase === "voting" ? `${view.votesCast} of ${living.length} votes cast.` : `${view.readyCount} of ${living.length} ready.`}`
-                  : view.events.at(-1)
-        }
-        success={view.result?.winner === "crew"}
-      />
-      {enabled && (
-        <View style={s.role}>
-          <Button quiet onPress={() => setShowRole(!showRole)}>
-            {showRole ? "Hide my role and clues" : "Reveal my role and clues"}
-          </Button>
-          {showRole && (
-            <>
-              <Heading style={{ fontSize: 23 }}>
-                {view.ownRole === "crew" ? "You are crew" : "You make mischief"}
-              </Heading>
-              <Copy>
-                {view.ownRole === "crew"
-                  ? "Finish the four jobs, repair sabotage, and use clues to find the mischief maker."
-                  : "Pretend to help. At the pump, turn off the water; near a crew member, play a silly prank. Avoid the vote."}
-              </Copy>
-            </>
-          )}
-        </View>
-      )}
-      <IslandMap view={view} width={width} />
-      <Copy style={{ textAlign: "center" }}>
-        You are at column {p.x}, row {p.y}.{" "}
-        {at(BELL) ? "Meeting bell." : at(PUMP) ? "Water pump." : task ? task.name : "Island path."}
-      </Copy>
-      {view.phase === "explore" && (
-        <>
-          <View style={{ alignItems: "center", gap: 8 }}>
-            <Button compact disabled={!canAct} onPress={() => intent({ type: "move", dx: 0, dy: -1 })} label="Move up">
-              Up
-            </Button>
-            <View style={s.row}>
-              <Button
-                compact
-                disabled={!canAct}
-                onPress={() => intent({ type: "move", dx: -1, dy: 0 })}
-                label="Move left"
-              >
-                Left
-              </Button>
-              <Button
-                compact
-                disabled={!canAct}
-                onPress={() => intent({ type: "move", dx: 0, dy: 1 })}
-                label="Move down"
-              >
-                Down
-              </Button>
-              <Button
-                compact
-                disabled={!canAct}
-                onPress={() => intent({ type: "move", dx: 1, dy: 0 })}
-                label="Move right"
-              >
-                Right
-              </Button>
-            </View>
-          </View>
-          {view.sabotage && (
-            <Status
-              title={`Repair the pump: ${view.sabotage.left} seconds`}
-              detail="Jobs are paused. Go to the pump at column 4, row 1. Order: open supply, close valve, connect pipe."
-            />
-          )}
-          {at(PUMP) && view.sabotage && (
-            <View style={s.activity}>
-              <Heading style={{ fontSize: 21 }}>Fix the water supply · {view.sabotage.progress}/3</Heading>
-              <View style={s.row}>
-                {REPAIR_CHOICES.map((choice, i) => (
-                  <Button
-                    quiet
-                    compact
-                    key={choice}
-                    disabled={!canAct}
-                    onPress={() => intent({ type: "repair", choice: i })}
-                  >
-                    {choice}
-                  </Button>
-                ))}
-              </View>
-            </View>
-          )}
-          {task && (
-            <View style={s.activity}>
-              <Heading style={{ fontSize: 21 }}>
-                {task.name} · {view.tasks[task.id]}/3
-              </Heading>
-              <Copy>{view.tasks[task.id] === 3 ? "Job complete. Find another island station." : task.prompt}</Copy>
-              <View style={s.row}>
-                {task.choices.map((choice, i) => (
-                  <Button
-                    quiet
-                    compact
-                    key={choice}
-                    disabled={!canAct || !!view.sabotage || view.tasks[task.id] === 3}
-                    onPress={() => intent({ type: "task", task: task.id, choice: i })}
-                  >
-                    {choice}
-                  </Button>
-                ))}
-              </View>
-            </View>
-          )}
-          {at(BELL) && (
-            <Button disabled={!canAct || !view.canMeet} onPress={() => intent({ type: "meeting" })}>
-              Ring meeting bell · {p.meetings} left
-            </Button>
-          )}
-          {showRole && view.ownRole === "mischief" && (
-            <View style={s.activity}>
-              <Copy>
-                Prank ready in {view.prankReadyIn}s. Pump sabotage ready in {view.sabotageReadyIn}s.
-              </Copy>
-              {at(PUMP) && (
-                <Button
-                  disabled={!canAct || !!view.sabotage || view.sabotageReadyIn > 0}
-                  onPress={() => intent({ type: "sabotage" })}
-                >
-                  Turn off the water
-                </Button>
-              )}
-              {nearbyPlayers.map((target) => (
-                <Button
-                  key={target.id}
-                  quiet
-                  disabled={!canAct || view.prankReadyIn > 0}
-                  onPress={() => intent({ type: "prank", target: target.id })}
-                >
-                  Silly prank on {target.name}
-                </Button>
-              ))}
-            </View>
-          )}
-        </>
-      )}
-      {view.phase === "discussion" && (
-        <>
-          <Copy>Say what you saw. Nobody needs to type or chat online. When everyone is ready, the vote opens.</Copy>
-          <Button disabled={!canAct || view.selfReady} onPress={() => intent({ type: "ready" })}>
-            {view.selfReady ? "Waiting for others" : "Ready to vote"}
-          </Button>
-        </>
-      )}
-      {view.phase === "voting" && (
-        <View style={s.row}>
-          {living.map((target) => (
-            <Button
-              quiet
-              key={target.id}
-              disabled={!canAct || view.selfVoted}
-              onPress={() => intent({ type: "vote", target: target.id })}
-            >
-              Vote {target.name}
-            </Button>
-          ))}
-          <Button quiet disabled={!canAct || view.selfVoted} onPress={() => intent({ type: "vote", target: "skip" })}>
-            Skip vote
-          </Button>
-        </View>
-      )}
-      <View style={s.activity}>
-        <Label>Four island jobs</Label>
-        {TASKS.map((t) => (
-          <Copy key={t.id}>
-            {view.tasks[t.id] === 3 ? "Complete" : `${view.tasks[t.id]}/3`} · {t.name} · column {t.x}, row {t.y}
-          </Copy>
-        ))}
-      </View>
-      {enabled && showRole && view.clues.length > 0 && (
-        <View style={s.activity}>
-          <Label>My private clues</Label>
-          {view.clues.map((clue, i) => (
-            <Copy key={`${i}:${clue}`}>{clue}</Copy>
-          ))}
-        </View>
-      )}
-      <View style={s.row}>
-        {view.players.map((player, i) => (
-          <Copy key={player.id} style={{ color: AVATAR_COLORS[i] }}>
-            {player.name}
-            {player.id === view.selfId ? " (you)" : ""}:{" "}
-            {player.out ? "watching" : !player.connected ? "disconnected" : "playing"}
-          </Copy>
-        ))}
-      </View>
-      <Copy style={{ fontSize: 13 }}>Last island event: {view.events.at(-1)}</Copy>
-    </View>
-  );
-}
-export function MysteryScreen({ state, onSave, width, active, sound, onFeedback }: MysteryScreenProps) {
+export function MysteryScreen({ state, onSave, width, active, sound, onFeedback, onSpeakInstruction, onStopInstruction }: MysteryScreenProps) {
+  const stopSpeech = useRef(onStopInstruction);
+  React.useLayoutEffect(() => { stopSpeech.current = onStopInstruction; }, [onStopInstruction]);
+  useEffect(() => () => stopSpeech.current?.(), []);
   const [mode, setMode] = useState<"menu" | "solo" | "nearby">("menu");
   const [remote, setRemote] = useState<NearbyState>(initialNearby);
   const [foreground, setForeground] = useState(AppState.currentState === "active" || AppState.currentState === null);
@@ -377,7 +52,7 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback 
   }, [onSave]);
   const latest = useRef(state),
     controller = useRef<NearbyMystery | null>(null);
-  useEffect(() => {
+  React.useLayoutEffect(() => {
     latest.current = state;
   }, [state]);
   useEffect(() => {
@@ -414,29 +89,16 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback 
     }
   }, [active]);
   const playing = active && foreground && !help && !setup && !parent && !exit;
-  useEffect(() => {
-    if (!playing || mode !== "solo" || !state?.id || state.result) return;
-    const timer = setInterval(() => {
-      const previous = latest.current;
-      if (previous) {
-        const next = soloMysteryTick(previous);
-        latest.current = next;
-        saveCallback.current(next, previous);
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-    // Revisions are read through latest; recreating the timer after every move would let movement stall the clock.
-  }, [playing, mode, state?.id, state?.result]);
   const view =
     mode === "solo" && state ? mysteryView(state, state.players[0].id) : mode === "nearby" ? remote.view : null;
   const intent = (action: MysteryIntent) => {
     if (!playing) return;
     if (sound) onFeedback?.();
-    if (mode === "nearby") void controller.current?.intent(action);
+    if (mode === "nearby") void controller.current?.intent(action, remote.view?.adventure?.round ?? 0);
     else {
       const previous = latest.current;
       if (previous) {
-        const next = applyMysteryIntent(previous, previous.players[0].id, action, previous.revision);
+        const next = playSoloIntent(previous, action);
         if (next !== previous) {
           latest.current = next;
           saveCallback.current(next, previous);
@@ -461,7 +123,10 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback 
           />
           <View style={s.activity}>
             <Heading style={{ fontSize: 24 }}>Solo practice</Heading>
-            <Copy>Play crew or mischief with three computer islanders. Practice rounds save on this device.</Copy>
+            <Copy>
+              Play crew or mischief with three computer islanders. Practice rounds save on this device. Time only moves
+              after your actions.
+            </Copy>
             {state && (
               <Button
                 onPress={() => {
@@ -486,7 +151,7 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback 
             <Heading style={{ fontSize: 24 }}>Nearby family</Heading>
             <Copy>
               Three to eight people, each with an iPhone or iPad. A parent opens and approves a private room. No
-              internet account or public chat.
+              internet account or public chat. Update every device to the same app version before joining.
             </Copy>
             {nearby ? (
               <Button
@@ -611,14 +276,35 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback 
           </View>
         ))}
       {view && (
-        <MysteryPlay
+        <AdventurePlay
+          key={`${view.id}:${view.adventure?.round ?? 0}`}
           view={view}
           width={width}
           enabled={playing}
           showRole={showRole && playing}
           setShowRole={setShowRole}
           intent={intent}
+          onSpeakInstruction={sound ? onSpeakInstruction : undefined}
+          onStopInstruction={onStopInstruction}
         />
+      )}
+      {mode === "nearby" && remote.mode === "host" && remote.view?.result && (
+        <View style={s.activity}>
+          <Heading style={{ fontSize: 21 }}>Same family, another mystery?</Heading>
+          <Copy>
+            Keep this approved room and deal fresh secret roles. Disconnected helpers can sit this one out. Everyone
+            updates to the same app version.
+          </Copy>
+          <Button
+            disabled={!playing || (remote.lobby?.players.filter((p) => p.connected).length ?? 0) < 3}
+            onPress={() => {
+              setShowRole(false);
+              if (playing) void controller.current?.rematch(remote.view?.adventure?.round ?? 0);
+            }}
+          >
+            Play again in this room
+          </Button>
+        </View>
       )}
       {mode !== "menu" && (
         <View style={s.row}>
@@ -653,29 +339,16 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback 
           </Button>
         </View>
       )}
-      <Sheet visible={help} title="Picnic Island rules" onClose={() => setHelp(false)}>
+      <Sheet visible={help} title="Picnic Island rules" onClose={() => { setHelp(false); onStopInstruction?.(); }}>
+        {Object.entries(mysteryInstructions).map(([key, text]) => (
+          <View key={key} style={{ gap: 8 }}>
+            <Copy>{text}</Copy>
+            <Button quiet compact disabled={!sound || !onSpeakInstruction} onPress={() => onSpeakInstruction?.(key as keyof typeof mysteryInstructions)}>Listen: {key.slice(8)}</Button>
+          </View>
+        ))}
         <Copy>
-          Crew wins by completing the four three-step jobs or voting out the one mischief maker. Look at the map, move
-          with the arrows, and use the choices at each station. A wrong task choice restarts its three-step pattern.
-        </Copy>
-        <Copy>
-          Mischief wins by surprising crew until only one crew member remains, or by turning off the water for 60
-          seconds. Pranks require an adjacent player and an 18-second cooldown. Nearby witnesses get a private clue. No
-          fighting or scary pictures.
-        </Copy>
-        <Copy>
-          The pump is at column 4, row 1. Repair in order: open supply, close valve, connect pipe. Sabotage pauses jobs;
-          its timer stops during disconnection.
-        </Copy>
-        <Copy>
-          The bell is at column 4, row 3. Each player has two meetings, at least 10 seconds apart; meetings cannot
-          interrupt sabotage. Share clues aloud for up to 20 seconds, then each active player votes once. Highest vote
-          leaves; ties and skip keep everyone. The vote closes after 25 seconds; missing votes become skip.
-        </Copy>
-        <Copy>
-          Computer players use their own role and private clues plus public positions/jobs. Nearby games are
-          host-authoritative and private. If a guest pauses or disconnects, everyone waits for their approved rejoin. If
-          the parent host leaves/backgrounds, the room closes and a new room is needed.
+          Nearby active players pause the round when away. Voted helpers can disconnect without stopping it. Parent can
+          rematch here after a result. Practice uses beats, so reading never loses the round.
         </Copy>
       </Sheet>
       <Sheet visible={setup} title="Fresh solo mystery" onClose={() => setSetup(false)}>
@@ -733,7 +406,9 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback 
           {mode === "nearby"
             ? remote.mode === "host"
               ? "Leaving closes this family room for everyone. Start a new room to play again."
-              : "Leaving disconnects your seat and pauses the family round until you rejoin. Ask the parent before leaving."
+              : remote.view?.players.find((p) => p.id === remote.playerId)?.out
+                ? "You can leave your helper seat. The family adventure continues, and you can rejoin while this room stays open."
+                : "Leaving disconnects your seat and pauses the family round until you rejoin. Ask the parent before leaving."
             : "Your practice is saved. You can continue later."}
         </Copy>
         <Button

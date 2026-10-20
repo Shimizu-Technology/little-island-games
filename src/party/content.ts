@@ -1,4 +1,4 @@
-/** Child-reviewed everyday vocabulary; all accompanying vector pictures are original. */
+/** Curated everyday vocabulary; all accompanying vector pictures are original. */
 export const PARTY_PACKS = [
   {
     id: "animals",
@@ -11,6 +11,9 @@ export const PARTY_PACKS = [
       { id: "turtle", word: "Turtle" },
       { id: "butterfly", word: "Butterfly" },
       { id: "snail", word: "Snail" },
+      { id: "crab", word: "Crab" },
+      { id: "rabbit", word: "Rabbit" },
+      { id: "owl", word: "Owl" },
     ],
   },
   {
@@ -24,6 +27,9 @@ export const PARTY_PACKS = [
       { id: "carrot", word: "Carrot" },
       { id: "pizza", word: "Pizza" },
       { id: "icecream", word: "Ice cream" },
+      { id: "coconut", word: "Coconut" },
+      { id: "grapes", word: "Grapes" },
+      { id: "mango", word: "Mango" },
     ],
   },
   {
@@ -37,6 +43,9 @@ export const PARTY_PACKS = [
       { id: "flower", word: "Flower" },
       { id: "cloud", word: "Cloud" },
       { id: "rainbow", word: "Rainbow" },
+      { id: "star", word: "Star" },
+      { id: "kite", word: "Kite" },
+      { id: "shell", word: "Shell" },
     ],
   },
 ] as const;

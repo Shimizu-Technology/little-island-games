@@ -22,3 +22,7 @@ export function validActivities(value: unknown): value is Activities {
 export function validActivityRecords(value: unknown): value is RaceRecords {
   return validRaceRecords(value);
 }
+
+export function activityFinished(session: ActivitySession): boolean {
+  return session.game === "racer" ? ["finished", "timedout"].includes(session.status) : session.result !== null;
+}

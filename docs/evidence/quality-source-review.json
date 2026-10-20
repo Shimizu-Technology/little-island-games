@@ -1,0 +1,61 @@
+{
+  "baseline": "9d568b4e2742f438c7f86e9d612d4e85d3d894c9",
+  "reviewed_game_source": "69b3d9fb6d6b9f52890fa2205a030aed80f3aa6c",
+  "final_application_source": "ca5464dd7c0c8e5195d44eb7879ee70fb495801e",
+  "method": "Independent delegated source review by agents other than slice author; material findings fixed and reviewed again. Actual journeys recorded separately in QUALITY_QA.md. This receipt is not a CodeRabbit review.",
+  "reviews": [
+    {
+      "scope": "Original games, state validation, shared shell, setup, party",
+      "reviewer": "v2_racer_implementation",
+      "source": "69b3d9f",
+      "result": "No unresolved material findings"
+    },
+    {
+      "scope": "Cards and Explore, Store integration, audio lifecycle",
+      "reviewer": "game_engine_review",
+      "source": "7876902",
+      "result": "No unresolved material findings after food-chain and audio lifecycle fixes; later unrelated Mystery changes did not modify this slice"
+    },
+    {
+      "scope": "Dash physics, timing, input, rendering and course edition compatibility",
+      "reviewer": "v2_explore_implementation",
+      "source": "69b3d9f",
+      "result": "No unresolved material findings after web SVG presentation, feedback and fixed-substep tap budget fixes"
+    },
+    {
+      "scope": "Mystery authority, jobs, privacy, participation, rematch protocol and shared integration",
+      "reviewer": "game_engine_review",
+      "source": "69b3d9f",
+      "result": "No unresolved material findings after witness visibility and bounded private clues"
+    },
+    {
+      "scope": "Direct-entry Games fallback, Explore scroll persistence/suspension/epoch, Settings config version",
+      "reviewer": "game_engine_review",
+      "source": "ca5464d",
+      "result": "No material findings; browser recovery retests passed"
+    }
+  ],
+  "gate_at_final_application_source": {
+    "check": {
+      "tests": 199,
+      "test_files": 16,
+      "typecheck": true,
+      "lint": true,
+      "web_export": true
+    },
+    "doctor": "21/21 passed",
+    "simulator_release_compile": true,
+    "impeccable_advisory": "No findings on changed UI plus recovery delta"
+  },
+  "remaining_release_gates": "Final QA-only documentation-head CI and readiness inspection; clean main CNG/archive/signature/source binding; Apple processing and internal tester availability. Required agent Q01-Q15 acceptance is recorded in QUALITY_QA.md. Public and physical-family acceptance remain separate.",
+  "final_native_nearby_acceptance": {
+    "application_source": "ca5464dd7c0c8e5195d44eb7879ee70fb495801e",
+    "version": "1.2.0",
+    "build": "7",
+    "environment": "Three iOS18.5 simulators using actual Multipeer transport",
+    "result": "Bounded Q05 passed: approval, private roles, helper contribution/disconnect, active pause/same-seat recovery, caught terminal, host-only same-room rematch, fresh-round action and host-close handling",
+    "firewall_cleanup": "Temporary exact LittleIsland exception removed; original34rules unchanged; firewall enabled",
+    "runtime_cleanup": "All3owned app sessions/panels closed, simulators shutdown, claims released; no active runtime handoff",
+    "limitations": "No physical-family acceptance, exact hidden-clock measurement, maximum8players, all-four-job nearby victory or full Round2 terminal claimed"
+  }
+}

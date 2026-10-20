@@ -21,6 +21,7 @@ export type PartyScreenProps = {
   active?: boolean;
   width?: number;
   sound?: boolean;
+  onSpeakInstructions?: () => void;
 };
 function CardBack() {
   return (
@@ -40,7 +41,7 @@ function CardBack() {
   );
 }
 /** Secret visibility and unconfirmed vote selection are never serialized. */
-export function PartyScreen({ session, onChange, active = true, width = 340 }: PartyScreenProps) {
+export function PartyScreen({ session, onChange, active = true, width = 340, sound, onSpeakInstructions }: PartyScreenProps) {
   const latest = useRef(session),
     change = useRef(onChange);
   React.useLayoutEffect(() => {
@@ -374,6 +375,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340 }: P
         </Button>
       )}
       <Sheet title="How to play Secret-word Imposter" visible={help} onClose={() => setHelp(false)}>
+        <Button quiet disabled={!sound || !onSpeakInstructions} onPress={() => onSpeakInstructions?.()}>Listen to the instructions</Button>
         <Copy>
           1. Gather 3–8 people in the same room. Take turns privately revealing a card. Everyone gets the same word and
           picture, except one player who sees “You are the Imposter”. Hide the card before passing.

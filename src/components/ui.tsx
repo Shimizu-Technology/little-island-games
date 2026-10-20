@@ -184,7 +184,7 @@ export const styles = StyleSheet.create({
     padding: 18,
   },
   sheet: { width: "100%", maxWidth: 560, maxHeight: "90%", padding: 22, borderRadius: 26, backgroundColor: C.cream },
-  status: { alignSelf: "stretch", padding: 14, borderRadius: 18, backgroundColor: "#F0F1E8", marginBottom: 16 },
+  status: { alignSelf: "stretch", padding: 12, borderRadius: 16, backgroundColor: "#F0F1E8", marginBottom: 12 },
   board: { alignSelf: "center", overflow: "hidden", borderRadius: 20, borderWidth: 2, borderColor: C.ink },
   input: {
     borderWidth: 1,
