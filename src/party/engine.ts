@@ -17,6 +17,7 @@ export type PartySession = {
   phase: "roles" | "clues" | "voting" | "runoff" | "result";
   roleCursor: number;
   clueCursor: number;
+  firstClue?: number;
   ballots: number[];
   runoffBallots: number[];
   result: PartyResult | null;
@@ -36,6 +37,7 @@ export type PartySetup = {
   id?: string;
   previousWord?: PartyWordId;
   previousImposter?: number;
+  firstClue?: number;
 };
 export function validPartyNames(players: unknown): players is string[] {
   return (
@@ -68,8 +70,10 @@ export function createPartySession(setup: PartySetup): PartySession {
   const seed = (setup.seed ?? Math.floor(Math.random() * 0xffffffff)) >>> 0;
   const candidates = words.filter((w) => w.id !== setup.previousWord),
     wordId = candidates[seed % candidates.length].id;
-  const imposters = players.map((_, i) => i).filter((i) => i !== setup.previousImposter),
-    imposter = imposters[randomStep(seed) % imposters.length];
+  // Every player remains eligible, including the previous Imposter.
+  const imposter = randomStep(seed) % players.length;
+  const firstClue = setup.firstClue ?? randomStep(randomStep(seed)) % players.length;
+  if (!Number.isInteger(firstClue) || firstClue < 0 || firstClue >= players.length) throw new Error("Choose a valid first clue giver.");
   return {
     version: 1,
     game: "word-imposter",
@@ -83,6 +87,7 @@ export function createPartySession(setup: PartySetup): PartySession {
     phase: "roles",
     roleCursor: 0,
     clueCursor: 0,
+    firstClue,
     ballots: [],
     runoffBallots: [],
     result: null,
@@ -95,7 +100,7 @@ export function partyActor(s: PartySession): number | null {
   return s.phase === "roles"
     ? s.roleCursor
     : s.phase === "clues"
-      ? s.clueCursor % s.players.length
+      ? ((s.firstClue ?? 0) + s.clueCursor) % s.players.length
       : s.phase === "voting"
         ? s.ballots.length
         : s.phase === "runoff"
@@ -183,6 +188,7 @@ export function validPartySession(value: unknown): value is PartySession {
     !Number.isInteger(s.imposter) ||
     s.imposter < 0 ||
     s.imposter >= s.players.length ||
+    (s.firstClue !== undefined && (!Number.isInteger(s.firstClue) || s.firstClue < 0 || s.firstClue >= s.players.length)) ||
     ![1, 2].includes(s.clueRounds) ||
     !["roles", "clues", "voting", "runoff", "result"].includes(s.phase)
   )
@@ -237,5 +243,6 @@ export function rematchParty(s: PartySession): PartySession {
     clueRounds: s.clueRounds,
     previousWord: s.wordId,
     previousImposter: s.imposter,
+    firstClue: ((s.firstClue ?? 0) + 1) % s.players.length,
   });
 }

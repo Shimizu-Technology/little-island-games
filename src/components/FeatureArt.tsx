@@ -22,7 +22,17 @@ export function FeatureArt({ kind, size = 96 }: { kind: string; size?: number })
             strokeLinecap="round"
           />
         </>
-      ) : kind === "word-imposter" || kind === "island-mystery" ? (
+      ) : kind === "island-mystery" ? (
+        <>
+          <Ellipse cx="50" cy="66" rx="46" ry="26" fill="#8CC0CB" />
+          <Ellipse cx="50" cy="59" rx="39" ry="24" fill="#DCCB97" />
+          <Path d="M20 58Q50 24 80 58L71 74H28Z" fill="#A4BD83" />
+          <Path d="M31 52V23M29 32Q8 20 16 17Q33 17 31 32M31 31Q45 8 51 20Q46 31 31 31" fill="#46785D" stroke="#46785D" strokeWidth="3" />
+          <Path d="M53 65L64 48 83 61 71 74Z" fill="#E3A16D" />
+          <Circle cx="48" cy="49" r="8" fill="#C56D50" />
+          <Path d="M41 61Q48 52 55 61V71H41Z" fill="#386C9A" />
+        </>
+      ) : kind === "word-imposter" ? (
         <>
           <Path d="M20 73V45Q20 19 50 19T80 45V73L65 67 50 76 35 67Z" fill="#477668" />
           <Rect x="29" y="34" width="42" height="20" rx="10" fill="#C4E2E6" />

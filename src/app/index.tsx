@@ -9,12 +9,13 @@ import { GameArt, Island } from "../components/Art";
 import { Settings } from "../components/Settings";
 import { Recovery } from "../components/Recovery";
 import { useStore } from "../state/Store";
-import { ActivityId } from "../state/activities";
+import { ActivityId, activityFinished } from "../state/activities";
 import { FeatureArt } from "../components/FeatureArt";
-const extraGames: { id: ActivityId; name: string; description: string; surface: string; filters: string[] }[] = [
+const extraGames: { id: ActivityId; name: string; description: string; surface: string; players: string; filters: string[] }[] = [
   {
     id: "go-fish",
     name: "Go Fish",
+    players: "1 player or pass & play",
     description: "Collect matching families of cards.",
     surface: "#DEEDF2",
     filters: ["Words & numbers", "Play together"],
@@ -22,6 +23,7 @@ const extraGames: { id: ActivityId; name: string; description: string; surface: 
   {
     id: "crazy-eights",
     name: "Crazy Eights",
+    players: "1 player or pass & play",
     description: "Match a suit. Change it with an eight.",
     surface: "#F4E8CB",
     filters: ["Think & explore", "Play together"],
@@ -29,6 +31,7 @@ const extraGames: { id: ActivityId; name: string; description: string; surface: 
   {
     id: "racer",
     name: "Island Dash",
+    players: "1 player · touch controls",
     description: "Run, jump, and race island trails.",
     surface: "#DDECD7",
     filters: ["Think & explore"],
@@ -36,6 +39,7 @@ const extraGames: { id: ActivityId; name: string; description: string; surface: 
   {
     id: "island-mystery",
     name: "Picnic Mystery",
+    players: "Solo or 3–8 nearby devices",
     description: "Do island jobs. Find the mischief maker.",
     surface: "#E5E9D5",
     filters: ["Think & explore", "Play together"],
@@ -43,6 +47,7 @@ const extraGames: { id: ActivityId; name: string; description: string; surface: 
   {
     id: "word-imposter",
     name: "Secret Word",
+    players: "3–8 people · one device",
     description: "One secret. One Imposter. Play together.",
     surface: "#E8E1F3",
     filters: ["Words & numbers", "Play together"],
@@ -69,6 +74,8 @@ export default function Home() {
   );
   const recent = store.save.recent && store.save.sessions[store.save.recent];
   const resume = recent && !isFinished(recent) ? recent : null;
+  const recentActivity = store.save.recentActivity && store.save.activities?.[store.save.recentActivity];
+  const resumeActivity = recentActivity && !activityFinished(recentActivity) ? recentActivity : null;
   function open(game: GameId) {
     router.push({ pathname: "/play", params: { game } });
   }
@@ -178,7 +185,7 @@ export default function Home() {
             </Copy>
           </View>
         </Pressable>
-        {store.save.recentActivity && store.save.activities?.[store.save.recentActivity] && (
+        {resumeActivity && (
           <Button
             quiet
             onPress={() => router.push({ pathname: "/activity", params: { game: store.save.recentActivity! } })}
@@ -186,7 +193,7 @@ export default function Home() {
             Continue {extraGames.find((g) => g.id === store.save.recentActivity)?.name ?? "your adventure"}
           </Button>
         )}
-        {!store.save.recentActivity && resume && (
+        {!resumeActivity && resume && (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Continue ${games[resume.game].name}, your saved round`}
@@ -264,10 +271,11 @@ export default function Home() {
                 </View>
                 <View style={{ padding: tablet ? 18 : 13, flex: 1 }}>
                   <Heading style={{ fontSize: tablet ? 23 : 19, letterSpacing: -0.45 }}>{g.name}</Heading>
+                  <Copy style={{ fontSize: 12, lineHeight: 18, marginTop: 5, color: C.teal }}>{g.players}</Copy>
                   <Copy style={{ fontSize: 13, lineHeight: 19, marginTop: 5, minHeight: 38 }}>{g.description}</Copy>
                   <View style={[styles.row, { justifyContent: "space-between", marginTop: 12 }]}>
                     <Text style={{ color: C.teal, fontFamily: font, fontWeight: "700", fontSize: 13 }}>
-                      {store.save.activities?.[g.id] ? "Continue" : "Let’s play"}
+                      {store.save.activities?.[g.id] ? activityFinished(store.save.activities[g.id]!) ? "Play again" : "Continue" : "Let’s play"}
                     </Text>
                     <Text style={{ fontSize: 22, color: C.teal }} accessibilityElementsHidden>
                       →
@@ -324,6 +332,7 @@ export default function Home() {
                 </View>
                 <View style={{ padding: tablet ? 18 : 13, flex: 1 }}>
                   <Heading style={{ fontSize: tablet ? 23 : 19, letterSpacing: -0.45 }}>{g.name}</Heading>
+                  <Copy style={{ fontSize: 12, lineHeight: 18, marginTop: 5, color: C.teal }}>{id === "maze" || id === "numbers" ? "1 player or solve together" : id === "word-rescue" ? "Word packs or family word" : "1 or 2 players · one device"}</Copy>
                   <Copy style={{ fontSize: 13, lineHeight: 19, marginTop: 5, minHeight: 38 }}>{g.description}</Copy>
                   <View style={[styles.row, { justifyContent: "space-between", marginTop: 12 }]}>
                     <Text style={{ color: g.color, fontFamily: font, fontWeight: "700", fontSize: 13 }}>

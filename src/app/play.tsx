@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, ScrollView, TextInput, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Redirect, router, useLocalSearchParams } from "expo-router";
+import { Redirect, router, useLocalSearchParams, useIsFocused } from "expo-router";
 import { GameId, GameState, Options, createGame, difficultyLabel, gameIds, games, isFinished } from "../games";
 import { defaultOptions } from "../games/types";
 import { positionKey } from "../games/checkers";
@@ -18,7 +18,7 @@ export default function Play() {
   return <Game key={id} id={id} />;
 }
 function Game({ id }: { id: GameId }) {
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets(), focused = useIsFocused();
   const { width } = useWindowDimensions(),
     store = useStore(),
     s = store.save.sessions[id],
@@ -32,7 +32,7 @@ function Game({ id }: { id: GameId }) {
     [secret, setSecret] = useState(""),
     [error, setError] = useState(""),
     [active, setActive] = useState(AppState.currentState === "active");
-  const sound = useSounds(store.save.settings.sound),
+  const sound = useSounds(store.save.settings.sound && focused),
     finished = s ? isFinished(s) : false,
     wasFinished = useRef(finished);
   const lostWord = s?.game === "word-rescue" && wordStatus(s) === "lost";
@@ -75,7 +75,7 @@ function Game({ id }: { id: GameId }) {
     width: Math.min(width - insets.left - insets.right - 32, 720),
     sound,
     help: store.save.settings.help,
-    active: active && !setup && !help,
+    active: active && focused && !setup && !help,
   };
   if (!store.ready)
     return (
@@ -310,12 +310,12 @@ function Game({ id }: { id: GameId }) {
         {id === "memory" && (
           <Copy>
             {options.difficulty === "easy" ? "Six" : options.difficulty === "medium" ? "Eight" : "Twelve"} picture
-            pairs. Take a peek whenever you need one.
+            pairs. {options.mode === "solo" ? "Practice with a peek whenever you need one." : "Two-player match: no peeks. Most pairs wins; equal pairs is a tie."}
           </Copy>
         )}
         {id === "numbers" && (
           <Copy>
-            {options.difficulty === "easy" ? "One die and numbers 1–6." : "Two dice and numbers 1–9."} You can use a
+            {options.difficulty === "easy" ? "Gentle: one die and numbers 1–6." : options.difficulty === "medium" ? "Growing: two dice and numbers 1–9." : "Challenge: two dice and numbers 1–12. Plan which totals to save."} You can use a
             combination hint whenever you like.
           </Copy>
         )}
@@ -328,28 +328,13 @@ function Game({ id }: { id: GameId }) {
           Listen to the instructions
         </Button>
         {!store.save.settings.sound && <Copy>Turn sound on to hear the instructions.</Copy>}
-        {id === "word-rescue" && (
+        {s?.game === "word-rescue" && (
           <>
-            <Heading style={{ fontSize: 18 }}>Choose your rules</Heading>
-            <View style={[styles.row, { flexWrap: "wrap" }]}>
-              <Chip
-                selected={options.wordRules !== "practice"}
-                onPress={() => setOptions({ ...options, wordRules: "challenge" })}
-              >
-                Challenge
-              </Chip>
-              <Chip
-                selected={options.wordRules === "practice"}
-                onPress={() => setOptions({ ...options, wordRules: "practice" })}
-              >
-                Practice
-              </Chip>
-            </View>
-            <Copy>
-              {options.wordRules === "practice"
-                ? "Unlimited attempts and letter hints. Practice rounds do not change your Challenge record."
-                : "Find the word before six wrong letter guesses. One optional hint marks the result assisted."}
-            </Copy>
+            <Heading style={{ fontSize: 18 }}>This round: {wordRules(s) === "practice" ? "Practice" : "Challenge"}</Heading>
+            <Copy>{wordRules(s) === "practice"
+              ? "Unlimited attempts and letter hints. Practice does not change your Challenge record."
+              : "Six wrong letters end the round. One optional letter hint marks the result assisted."}</Copy>
+            <Button quiet onPress={() => { setHelp(false); newRound(); }}>Choose rules for a fresh round</Button>
           </>
         )}
         {id === "checkers" && (

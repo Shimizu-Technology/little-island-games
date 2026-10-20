@@ -1,6 +1,7 @@
 import { Base, Options, base, random } from "./types";
 export type NumbersState = Base & {
   game: "numbers";
+  maxNumber?: 6 | 9 | 12;
   available: number[];
   dice: number[];
   selected: number[];
@@ -12,7 +13,8 @@ export function createNumbers(options: Options): NumbersState {
   return {
     ...base("numbers", options),
     game: "numbers",
-    available: Array.from({ length: options.difficulty === "easy" ? 6 : 9 }, (_, i) => i + 1),
+    maxNumber: options.difficulty === "easy" ? 6 : options.difficulty === "medium" ? 9 : 12,
+    available: Array.from({ length: options.difficulty === "easy" ? 6 : options.difficulty === "medium" ? 9 : 12 }, (_, i) => i + 1),
     dice: [],
     selected: [],
     seed: Math.floor(Math.random() * 0x7fffffff),
@@ -20,6 +22,7 @@ export function createNumbers(options: Options): NumbersState {
     history: [],
   };
 }
+export const numberLimit = (s: NumbersState) => s.maxNumber ?? (s.options.difficulty === "easy" ? 6 : 9);
 export function numberChoices(available: number[], target: number): number[][] {
   const result: number[][] = [];
   for (let bits = 1; bits < 1 << available.length; bits++) {

@@ -62,3 +62,13 @@ export function ticUndo(s: TicState): TicState {
   if (s.options.mode === "solo" && ticTurn(board) !== s.human && history.length) board = history.pop()!;
   return { ...s, board, history };
 }
+
+export function ticHintReason(s: TicState, index: number): string {
+  const player = ticTurn(s.board), other = player === "X" ? "O" : "X";
+  const after = [...s.board]; after[index] = player;
+  if (ticOutcome(after) === player) return "This square completes your line of three.";
+  after[index] = other;
+  if (ticOutcome(after) === other) return "Block here: the other shape already has two in this line.";
+  const opportunities = lines.filter(line => line.includes(index) && line.every(i => s.board[i] === null || s.board[i] === player)).length;
+  return opportunities > 1 ? "This square helps more than one possible line. Watch across, down, and diagonally." : "Try this square to keep a line open while defending against the other shape.";
+}

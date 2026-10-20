@@ -1,17 +1,32 @@
 import { useAudioPlayer, setAudioModeAsync } from "expo-audio";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { AppState, Platform } from "react-native";
 import { sources } from "../content/audioSources";
 export function useSounds(enabled: boolean) {
   const player = useAudioPlayer(null);
+  const foreground = useRef(AppState.currentState === "active" || Platform.OS === "web");
+  useEffect(() => {
+    const pause = () => { try { player.pause(); } catch { /* Native player may already be disposed. */ } };
+    const sub = AppState.addEventListener("change", state => {
+      foreground.current = state === "active";
+      if (!foreground.current) pause();
+    });
+    const visibility = () => { if (document.hidden) pause(); };
+    if (Platform.OS === "web" && typeof document !== "undefined") document.addEventListener("visibilitychange", visibility);
+    return () => {
+      sub.remove();
+      if (Platform.OS === "web" && typeof document !== "undefined") document.removeEventListener("visibilitychange", visibility);
+    };
+  }, [player]);
   useEffect(() => {
     void setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: false }).catch(() => {});
   }, []);
   useEffect(() => {
-    if (!enabled) player.pause();
+    if (!enabled) { try { player.pause(); } catch { /* Transcript remains available. */ } }
   }, [enabled, player]);
   return useCallback(
     (key: string) => {
-      if (!enabled || !sources[key]) return;
+      if (!enabled || !foreground.current || !sources[key]) return;
       try {
         player.replace(sources[key]);
         player.play();

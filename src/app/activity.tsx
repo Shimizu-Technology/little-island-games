@@ -41,7 +41,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
   const [freshCard] = useState(() =>
     id === "go-fish" || id === "crazy-eights" ? createCardSession(id, defaultOptions) : null
   );
-  const sound = useSounds(store.save.settings.sound);
+  const sound = useSounds(store.save.settings.sound && focused);
   const activityUpdate = store.activityUpdate;
   useEffect(() => {
     if (freshCard && !saved && activityUpdate(id, freshCard, { id: null, epoch })) expectedId.current = freshCard.id;
@@ -104,6 +104,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
             active={focused}
             width={Math.min(width - 40, 1000)}
             sound={store.save.settings.sound}
+            onSpeakInstructions={() => sound("instructions-word-imposter")}
           />
         ) : cards ? (
           <>

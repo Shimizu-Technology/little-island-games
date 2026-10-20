@@ -111,13 +111,11 @@ export function GameArt({ game, size = 112 }: { game: GameId; size?: number }) {
           <Circle cx="33" cy="87" r="9" fill="none" stroke="#397263" strokeWidth="5" />
         </G>
       ) : game === "word-rescue" ? (
-        <G rotation="14" origin="60,60">
-          <Path d="M42 76 33 99l21-13M78 76l9 23-21-13" fill="#BD7054" />
-          <Path d="M44 80V51q0-28 16-39 16 11 16 39v29Z" fill="#FFF9E9" />
-          <Path d="M46 34q14-30 28 0" fill="#C87961" />
-          <Circle cx="60" cy="54" r="10" fill="#99C9CF" stroke="#285F58" strokeWidth="4" />
-          <Path d="M51 88q9 35 18 0" fill="#E8BC58" />
-          <Path d="M56 88q4 18 8 0" fill="#E6944D" />
+        <G>
+          <Rect x="12" y="10" width="96" height="100" rx="20" fill="#FFF9E9" />
+          <Path d="M24 94H92M34 94V24H75V34M34 39L49 24" fill="none" stroke="#A99774" strokeWidth="4" strokeLinecap="round" />
+          <Circle cx="75" cy="46" r="11" fill="none" stroke="#246858" strokeWidth="3" />
+          <Path d="M75 57V78M75 63L61 69M75 63L89 69M75 78L63 91M75 78L86 91" fill="none" stroke="#246858" strokeWidth="3" strokeLinecap="round" />
         </G>
       ) : game === "memory" ? (
         <G rotation="-9" origin="60,60">

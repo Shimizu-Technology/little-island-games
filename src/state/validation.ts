@@ -240,7 +240,9 @@ export function validSession(v: unknown): v is GameState {
       );
     }
     case "numbers": {
-      const max = v.options.difficulty === "easy" ? 6 : 9,
+      const expectedMax = v.options.difficulty === "easy" ? 6 : v.options.difficulty === "medium" ? 9 : 12;
+      if (v.maxNumber !== undefined && v.maxNumber !== expectedMax) return false;
+      const max = (v.maxNumber ?? (v.options.difficulty === "easy" ? 6 : 9)) as number,
         count = v.options.difficulty === "easy" ? 1 : 2;
       const valid = (x: unknown) =>
         obj(x) &&
