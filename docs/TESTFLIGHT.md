@@ -60,9 +60,27 @@ Leon explicitly authorized the full V2 implementation, reviewed main integration
 PR#2 merged to main as `e9445d113487862f5388fef8efb4d53c3a89d2ee`. Its final PR validation and post-merge main validation passed. A fresh CNG workspace and pods were generated from that clean main commit, then the local archive/export fallback produced the signed IPA. Existing signing credentials were reused; the temporary keychain, private files and task-installed profile were removed.
 
 - IPA: 28,978,652 bytes; SHA256 `e8b2af97cc57cbb5c81d6bb61a2c6b696c10ed7b9cb2b03f1001af0a5d681b8b`.
-- Embedded JS SHA256 `ff0d1e28d476385289846e13479af27f88b9c1b8262ee0ea03bc8d6ec6a4b2ca` matches the sealed archive. Strict code signature, signed App Store entitlements, bundle ID, version/build, minimum16.4, both device families and Bonjour configuration were verified.
+- Embedded JS SHA256 `ff0d1e28d476385289846e13479af27f88b9c1b8262ee0ea03bc8d6ec6a4b2ca` matches the sealed archive. Strict code signature, signed App Store entitlements, bundle ID, version/build, minimum 16.4, both device families and Bonjour configuration were verified.
 - All50 Explore narration files in the signed IPA match their source bytes. This verifies bundling; physical audio playback and pronunciation remain operator checks.
 - EAS submission `9f75b440-1505-47e1-b90b-29fcab7eb868` finished. The exact completed Apple upload links to build `73bc73b2-8786-49eb-8cb2-26a1f57c4fa6`.
 - At `2026-10-19T22:51:07.482Z`, App Store Connect reports `VALID` / `IN_BETA_TESTING`, attached to the existing **Leon** internal group with one adult tester and automatic distribution off. Updated English testing notes were verified. No public group or public release was created.
 
 Open TestFlight and update **Little Island: Family Games** to **1.1.0 (6)**. Availability does not prove installation or physical family acceptance. See [delivery evidence](evidence/testflight-build6.json) and [the V2 acceptance ledger](V2_QA.md) for remaining device/operator checks. Local archive, signature, source and delivery receipts remain outside Git in the artifact directory above.
+
+
+## Quality release: 1.2.0 (7), available
+
+PR#4 merged as `f830c79591678a090b661eb3b88319f0bf01e9a6`. Its tree matches final validated PR head `0717009`; the application source is the reviewed `ca5464d`. Final-head CI passed, and the independent final-code and merge-readiness reviews found no unresolved material issues. CodeRabbit supplied a Free-plan walkthrough/summary, with no review object or actionable inline comments; the repository's advisory-unavailable fallback is the completed independent review. [QUALITY_QA.md](QUALITY_QA.md) records the executed journeys and limits.
+
+The exact clean merge was regenerated with lockfile installation, Expo CNG and scoped CocoaPods before a local Xcode 26.6 archive/export. Existing credentials were reused; temporary signing files, keychain and task-installed profile were removed.
+
+- Signed IPA:30,664,091 bytes; SHA256 `cd85fa49c94656397ece9e7f4e335d371ee890a8e529b3f4bbc5e07841c7baa0`.
+- Embedded JS SHA256 `9de392b9da5e4a7b43dacf12f85f96ac23aa47aca897bdeaeb9284e9e662a844` matches the archive. Strict signature, App Store profile, signed entitlements, exact bundle/version/build, minimum 16.4, iPhone/iPad families and Bonjour declaration passed verification.
+- All 197 referenced audio files match the signed IPA bytes. This verifies bundling, not audible playback, pronunciation or speech distribution rights.
+- EAS submission `d65a14bc-b132-41d4-9cac-8904d12eb8c3` finished. Its immutable local submit receipt binds the verified IPA hash/source to the captured EAS job. The exact completed Apple upload links to build `b78e1528-fe42-49d4-b0f8-04d03054eabb`. At `2026-10-20T03:25:51.443Z`, Apple reports `VALID` / `IN_BETA_TESTING`, attached to the existing **Leon** internal group: one adult tester, automatic distribution off. Updated English testing notes were verified. No public group or release was created.
+
+Nearby protocol 2 requires every family device to update together. The actual three-device simulator session passed parent approval, private roles, helper contribution/disconnect, active pause/same-seat recovery, shared terminal, same-approved-room rematch, new-round action and host closure. All task-owned devices/panels/runtimes were cleaned. The temporary LittleIsland incoming exception was removed; all original 34 firewall rules stayed unchanged and the firewall remained enabled.
+
+Physical family installation, touch, audio/VoiceOver, native Files backup operation and enjoyment remain operator checks. Public release is held. Local generation, archive, signature, submission and Apple receipts remain outside Git in the sibling artifact directory above.
+
+Open TestFlight and update **Little Island: Family Games** to **1.2.0 (7)**. Every nearby player must update. See [build7 delivery evidence](evidence/testflight-build7.json); availability does not establish a physical installation.

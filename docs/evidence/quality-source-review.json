@@ -47,7 +47,7 @@
     "simulator_release_compile": true,
     "impeccable_advisory": "No findings on changed UI plus recovery delta"
   },
-  "remaining_release_gates": "Final QA-only documentation-head CI and readiness inspection; clean main CNG/archive/signature/source binding; Apple processing and internal tester availability. Required agent Q01-Q15 acceptance is recorded in QUALITY_QA.md. Public and physical-family acceptance remain separate.",
+  "remaining_release_gates": "Internal TestFlight delivery completed: see testflight-build7.json. Physical-family and public-release acceptance remain separate.",
   "final_native_nearby_acceptance": {
     "application_source": "ca5464dd7c0c8e5195d44eb7879ee70fb495801e",
     "version": "1.2.0",
@@ -57,5 +57,6 @@
     "firewall_cleanup": "Temporary exact LittleIsland exception removed; original34rules unchanged; firewall enabled",
     "runtime_cleanup": "All3owned app sessions/panels closed, simulators shutdown, claims released; no active runtime handoff",
     "limitations": "No physical-family acceptance, exact hidden-clock measurement, maximum8players, all-four-job nearby victory or full Round2 terminal claimed"
-  }
+  },
+  "delivery_evidence": "testflight-build7.json"
 }
