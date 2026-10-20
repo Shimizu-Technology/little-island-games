@@ -39,6 +39,11 @@ describe("quality release regressions", () => {
       const assigned = new Set(Array.from({length:100},(_,seed)=>createPartySession({players,seed,previousImposter:previous}).imposter));
       expect(assigned).toEqual(new Set([0,1,2,3]));
     }
+    const pairs = new Set(Array.from({length:200},(_,seed)=>{
+      const s=createPartySession({players,seed});
+      return `${s.firstClue}:${s.imposter}`;
+    }));
+    expect(pairs.size).toBe(16); // Public first speaker must not determine the hidden role.
     let s=createPartySession({players,seed:2,firstClue:2});
     while(s.phase==="roles") s=partyAction(s,{sessionId:s.id,revision:s.revision,player:partyActor(s)!,type:"role-done"});
     expect(partyActor(s)).toBe(2);

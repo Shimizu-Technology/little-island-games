@@ -375,13 +375,13 @@ export function WordBoard({
           </Button>
         )}
       </Controls>
-      <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 14 }}>
+      {!done && <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 14 }}>
         {challenge
           ? s.hints
             ? "This round used a hint. Assisted wins have their own record."
             : "Find every letter before your six wrong guesses run out."
           : "Take your time. Every letter is a chance to discover."}
-      </Copy>
+      </Copy>}
     </>
   );
 }
@@ -820,6 +820,7 @@ function Die({ value, size = 72 }: { value: number; size?: number }) {
   );
 }
 export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersState>) {
+  const { fontScale } = useWindowDimensions();
   const status = numbersStatus(s),
     target = numberTarget(s),
     sum = s.selected.reduce((a, b) => a + b, 0),
@@ -847,9 +848,9 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
       />
       <View style={{ flexDirection: "row", justifyContent: "center", gap: 14, marginVertical: 12 }}>
         {s.dice.length ? (
-          s.dice.map((d, i) => <Die key={i} value={d} />)
+          s.dice.map((d, i) => <Die key={i} value={d} size={56} />)
         ) : (
-          <View style={{ alignItems: "center", height: 80, justifyContent: "center" }}>
+          <View style={{ alignItems: "center", height: 56, justifyContent: "center" }}>
             <Copy>Your dice are waiting.</Copy>
           </View>
         )}
@@ -877,7 +878,7 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
               onPress={() => commit(selectNumber(s, n))}
               style={{
                 width: Math.min(96, (width - 30) / 3),
-                height: 80,
+                height: Math.max(max > 9 ? 60 : 72, 38 * fontScale + 12),
                 borderRadius: 17,
                 borderWidth: 2,
                 borderColor: selected ? C.teal : available ? C.line : "transparent",

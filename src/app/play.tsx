@@ -119,6 +119,7 @@ function Game({ id }: { id: GameId }) {
           <Copy style={{ fontSize: 13, marginBottom: 15 }}>
             {difficultyLabel[s.options.difficulty]} · {s.options.mode === "together" ? g.together : g.solo}
             {s.game === "word-rescue" && ` · ${wordRules(s) === "challenge" ? "Six-guess Challenge" : "Practice"}`}
+            {s.game === "numbers" && s.options.difficulty === "hard" && s.maxNumber === undefined && " · Earlier round: numbers 1–9"}
             {id === "checkers" &&
               (s.game === "checkers" && s.lesson !== null
                 ? " · Classic practice lesson"
@@ -210,11 +211,11 @@ function Game({ id }: { id: GameId }) {
             {g.together}
           </Chip>
         </View>
-        <Heading style={{ fontSize: 18 }}>Choose your pace</Heading>
+        <Heading style={{ fontSize: 18 }}>{id === "word-rescue" ? "Word length" : "Choose your pace"}</Heading>
         <View style={[styles.row, { flexWrap: "wrap" }]}>
           {(["easy", "medium", "hard"] as const).map((d) => (
             <Chip key={d} selected={options.difficulty === d} onPress={() => setOptions({ ...options, difficulty: d })}>
-              {difficultyLabel[d]}
+              {id === "word-rescue" ? ({ easy: "Short words", medium: "Longer words", hard: "Big words" })[d] : difficultyLabel[d]}
             </Chip>
           ))}
         </View>

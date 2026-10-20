@@ -1,3 +1,4 @@
+import { random } from "../games/types";
 import { PartyPackId, PartyWordId, PARTY_PACKS, partyPack } from "./content";
 export type PartyResult = {
   winner: "family" | "imposter";
@@ -55,9 +56,6 @@ export function validPartyNames(players: unknown): players is string[] {
     new Set(players.map((p) => p.normalize("NFKC").toLowerCase())).size === players.length
   );
 }
-function randomStep(seed: number) {
-  return (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-}
 export function createPartySession(setup: PartySetup): PartySession {
   if (setup.id !== undefined && (typeof setup.id !== "string" || setup.id.length < 1 || setup.id.length > 120))
     throw new Error("Invalid round identity.");
@@ -71,8 +69,9 @@ export function createPartySession(setup: PartySetup): PartySession {
   const candidates = words.filter((w) => w.id !== setup.previousWord),
     wordId = candidates[seed % candidates.length].id;
   // Every player remains eligible, including the previous Imposter.
-  const imposter = randomStep(seed) % players.length;
-  const firstClue = setup.firstClue ?? randomStep(randomStep(seed)) % players.length;
+  const rng = random(seed);
+  const imposter = Math.floor(rng() * players.length);
+  const firstClue = setup.firstClue ?? Math.floor(rng() * players.length);
   if (!Number.isInteger(firstClue) || firstClue < 0 || firstClue >= players.length) throw new Error("Choose a valid first clue giver.");
   return {
     version: 1,
