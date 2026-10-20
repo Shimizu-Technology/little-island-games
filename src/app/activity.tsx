@@ -69,7 +69,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
         keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.row, { justifyContent: "space-between", paddingTop: 12 }]}>
-          <Button compact quiet onPress={() => router.back()}>
+          <Button compact quiet onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}>
             ‹ Games
           </Button>
           <Button compact quiet onPress={() => store.settings({ sound: !store.save.settings.sound })}>

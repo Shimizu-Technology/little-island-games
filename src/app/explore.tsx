@@ -61,7 +61,7 @@ function ExploreReady() {
       key={store.epoch}
       favorites={store.save.explore?.favorites ?? []}
       onToggleFavorite={store.toggleFavorite}
-      onBack={() => router.back()}
+      onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
       onStop={stop}
       narrationEnabled={store.save.settings.sound}
       speakingTopicId={speaking?.startsWith("explore-") ? speaking.slice(8) : undefined}
