@@ -96,6 +96,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
             records={store.save.raceRecords}
             onSave={(next) => save(next)}
             active={focused}
+            onFeedback={(event) => sound(event === "finish" ? "win" : event === "checkpoint" ? "match" : "tap")}
           />
         ) : id === "word-imposter" ? (
           <PartyScreen

@@ -54,10 +54,10 @@ export function ExploreScreen({
   const currentY = useRef(initial.positions[locationKey(initial.location)] ?? 0);
   const pendingRestore = useRef(true);
   const currentKey = locationKey(location);
-  const stopRef = useRef(onStop);
-  useEffect(() => {
-    stopRef.current = onStop;
-  }, [onStop]);
+  const stopRef = useRef(() => { onStop(); onStopInstruction?.(); });
+  React.useLayoutEffect(() => {
+    stopRef.current = () => { onStop(); onStopInstruction?.(); };
+  }, [onStop, onStopInstruction]);
   useEffect(() => () => stopRef.current(), []);
   const latestProgress = useRef<ExploreProgress>(initial);
   const saveProgress = useRef(onProgressChange);

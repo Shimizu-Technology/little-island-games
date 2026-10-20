@@ -132,9 +132,9 @@ function Tile({
     </Pressable>
   );
 }
-function FoodPicture({ index }: { index: number }) {
+function FoodPicture({ index, compact = false }: { index: number; compact?: boolean }) {
   return (
-    <Svg width={72} height={64} viewBox="0 0 100 80" accessible={false}>
+    <Svg width={compact ? 45 : 72} height={compact ? 40 : 64} viewBox="0 0 100 80" accessible={false}>
       {index === 0 ? (
         <G transform="translate(15,0) scale(.6)">
           <Motif name="sun" />
@@ -270,12 +270,14 @@ export function LabManipulative({
   if (world === "oceans")
     return (
       <View style={{ gap: 10 }}>
-        <View style={s.row}>
+        <View style={{ alignItems: "stretch" }}>
           {state.chain.map((item, i) => (
-            <View key={item} style={s.link}>
-              <FoodPicture index={i} />
-              <Text style={s.small}>{item}</Text>
-              {i < state.chain.length - 1 && <Text style={s.arrow}>↓</Text>}
+            <View key={item}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 8, borderRadius: 14, backgroundColor: "#E6F0DD" }}>
+                <FoodPicture index={i} compact />
+                <Text style={[s.small, { flex: 1 }]}>{item}</Text>
+              </View>
+              {i < state.chain.length - 1 && <Text accessibilityLabel="energy moves to" style={[s.arrow, { textAlign: "center" }]}>↓</Text>}
             </View>
           ))}
         </View>
