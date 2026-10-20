@@ -12,7 +12,7 @@ import { PartyScreen } from "../party/PartyScreen";
 import { defaultOptions } from "../games/types";
 import { Button, Copy, Heading, styles } from "../components/ui";
 import { Recovery } from "../components/Recovery";
-import { useSounds } from "../components/Audio";
+import { useSoundControls } from "../components/Audio";
 export default function Activity() {
   const { game } = useLocalSearchParams<{ game?: string }>(),
     store = useStore();
@@ -41,7 +41,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
   const [freshCard] = useState(() =>
     id === "go-fish" || id === "crazy-eights" ? createCardSession(id, defaultOptions, undefined, undefined, { round: "quick", pace: "step" }) : null
   );
-  const sound = useSounds(store.save.settings.sound && focused);
+  const { play: sound, stop: stopSound } = useSoundControls(store.save.settings.sound && focused);
   const activityUpdate = store.activityUpdate;
   useEffect(() => {
     if (freshCard && !saved && activityUpdate(id, freshCard, { id: null, epoch })) expectedId.current = freshCard.id;
@@ -118,7 +118,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
               sound={store.save.settings.sound}
               onFeedback={() => sound("tap")}
               onSpeakInstruction={(key) => sound(key)}
-              onStopInstruction={sound.stop}
+              onStopInstruction={stopSound}
             />
           </>
         ) : null}

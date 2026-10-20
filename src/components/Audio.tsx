@@ -1,8 +1,8 @@
 import { useAudioPlayer, setAudioModeAsync } from "expo-audio";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { AppState, Platform } from "react-native";
 import { sources } from "../content/audioSources";
-export function useSounds(enabled: boolean) {
+export function useSoundControls(enabled: boolean) {
   const player = useAudioPlayer(null);
   const foreground = useRef(AppState.currentState === "active" || Platform.OS === "web");
   useEffect(() => {
@@ -37,5 +37,7 @@ export function useSounds(enabled: boolean) {
     [enabled, player]
   );
   const stop = useCallback(() => { try { player.pause(); } catch { /* Player may already be disposed on route teardown. */ } }, [player]);
-  return useMemo(() => Object.assign(play, { stop }), [play, stop]);
+  return { play, stop };
 }
+
+export function useSounds(enabled: boolean) { return useSoundControls(enabled).play; }
