@@ -25,7 +25,13 @@ const seats = [
   { id: "p2", name: "Pearl" },
   { id: "p3", name: "Coco" },
 ];
-const fresh = (role: "crew" | "mischief" = "crew") => createMysterySession(seats, 42, role, "fixture-mystery");
+const legacy = (s: MysterySession): MysterySession => ({
+  ...s,
+  adventure: undefined,
+  players: s.players.map((p) => ({ ...p, prankReady: 12 })),
+  sabotageReady: 20,
+});
+const fresh = (role: "crew" | "mischief" = "crew") => legacy(createMysterySession(seats, 42, role, "fixture-mystery"));
 function at(s: MysterySession, actor: string, point: { x: number; y: number }) {
   return { ...s, players: s.players.map((p) => (p.id === actor ? { ...p, x: point.x, y: point.y } : p)) };
 }
@@ -176,7 +182,7 @@ describe("Picnic Island authoritative game", () => {
       expect(p).toEqual({ x: goal.x, y: goal.y });
     }
     for (let seed = 0; seed < 25; seed++) {
-      let s = createMysterySession(undefined, seed, "crew");
+      let s = legacy(createMysterySession(undefined, seed, "crew"));
       for (let i = 0; i < 300 && !s.result; i++) {
         s = soloMysteryTick(s);
         expect(validMysterySession(s)).toBe(true);
@@ -229,7 +235,8 @@ describe("peer-bound private room protocol", () => {
     host.start(42);
     const before = host.state!;
     const forged = JSON.stringify({
-      v: 1,
+      v: 2,
+      round: 1,
       room,
       type: "intent",
       seq: 2,
@@ -246,7 +253,10 @@ describe("peer-bound private room protocol", () => {
     host.receive("native-peer-a", intentPacket(room, 2, { type: "move", dx: -1, dy: 0 }));
     expect(host.state).toBe(moved);
     expect(
-      host.receive("native-peer-a", JSON.stringify({ v: 1, room, type: "intent", seq: 3, intent: { type: "tick" } }))
+      host.receive(
+        "native-peer-a",
+        JSON.stringify({ v: 2, room, round: 1, type: "intent", seq: 3, intent: { type: "tick" } })
+      )
     ).toEqual([]);
   });
   it("sends per-recipient roles without full state or any other seat secret", () => {

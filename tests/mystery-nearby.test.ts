@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NearbyMystery, NearbyState } from "../src/mystery/nearby";
-import { helloPacket } from "../src/mystery/protocol";
+import { helloPacket, intentPacket } from "../src/mystery/protocol";
+import { createMysterySession } from "../src/mystery/engine";
 const fake = vi.hoisted(() => ({
   listeners: new Set<(event: unknown) => void>(),
   native: {
@@ -28,6 +29,11 @@ const flush = async () => {
 const emit = (event: unknown) => {
   for (const listener of [...fake.listeners]) listener(event);
 };
+const familySeats = [
+  { id: "host", name: "Parent" },
+  { id: "p1", name: "Mango" },
+  { id: "p2", name: "Pearl" },
+];
 let controllers: NearbyMystery[];
 function connection() {
   const states: NearbyState[] = [];
@@ -66,6 +72,53 @@ afterEach(async () => {
 });
 
 describe("nearby controller operation ownership", () => {
+  it("rematches in the approved transport with one clock and rejects an old round's host commands", async () => {
+    let seed = 0;
+    while (createMysterySession(familySeats, seed).players[0].role !== "mischief") seed++;
+    vi.setSystemTime(seed);
+    const { c, last } = connection();
+    await c.create("Parent");
+    const room = fake.native.host.mock.calls.at(-1)![1] as string;
+    emit({ type: "data", peer: "a", payload: helloPacket(room, "Mango", null) });
+    emit({ type: "data", peer: "b", payload: helloPacket(room, "Pearl", null) });
+    await flush();
+    await c.start();
+    expect(last().view?.ownRole).toBe("mischief");
+    const finish = async (round: number, sequence: number) => {
+      await c.intent({ type: "meeting" }, round);
+      await c.intent({ type: "ready" }, round);
+      for (const peer of ["a", "b"])
+        emit({ type: "data", peer, payload: intentPacket(room, sequence, { type: "ready" }, round) });
+      await flush();
+      await c.intent({ type: "vote", target: "host" }, round);
+      for (const peer of ["a", "b"])
+        emit({
+          type: "data",
+          peer,
+          payload: intentPacket(room, sequence + 1, { type: "vote", target: "host" }, round),
+        });
+      await flush();
+    };
+    await finish(1, 2);
+    expect(last().view?.result).toEqual({ winner: "crew", reason: "caught" });
+    await c.rematch(1);
+    expect(last().view?.adventure?.round).toBe(2);
+    expect(fake.native.host).toHaveBeenCalledTimes(1);
+    expect(fake.native.close).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(1);
+    await c.intent({ type: "move", dx: 1, dy: 0 }, 1);
+    expect(last().view?.players[0].x).toBe(4);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(last().view?.tick).toBe(1);
+    await finish(2, 4);
+    expect(last().view?.result).not.toBeNull();
+    await c.rematch(1);
+    expect(last().view?.adventure?.round).toBe(2);
+    await c.rematch(2);
+    expect(last().view?.adventure?.round).toBe(3);
+    expect(vi.getTimerCount()).toBe(1);
+    expect(fake.native.host).toHaveBeenCalledTimes(1);
+  });
   it("rapid concurrent creates open only the latest host and own one removable clock", async () => {
     const { c, last } = connection();
     await Promise.all([c.create("First"), c.create("Second")]);
@@ -174,7 +227,7 @@ describe("nearby controller operation ownership", () => {
     emit({
       type: "data",
       peer: "peer-a",
-      payload: JSON.stringify({ v: 1, room, type: "welcome", seq: 1, playerId: "p1", resume: secret }),
+      payload: JSON.stringify({ v: 2, room, type: "welcome", seq: 1, playerId: "p1", resume: secret }),
     });
     await c.pause();
     await c.browse("Guest", true);
@@ -212,7 +265,7 @@ describe("nearby invitation recovery", () => {
     emit({
       type: "data",
       peer,
-      payload: JSON.stringify({ v: 1, room, type: "welcome", seq: 1, playerId: "p1", resume: secret }),
+      payload: JSON.stringify({ v: 2, room, type: "welcome", seq: 1, playerId: "p1", resume: secret }),
     });
   const discovered = () => emit({ type: "found", peer: "parent", room, name: "Parent" });
 
@@ -223,7 +276,12 @@ describe("nearby invitation recovery", () => {
     await c.join("parent", room, "123456");
     emit({ type: "disconnected", peer: "parent" });
     expect(last()).toMatchObject({
-      mode: "client", error: true, playerId: null, lobby: null, view: null, canRejoin: false,
+      mode: "client",
+      error: true,
+      playerId: null,
+      lobby: null,
+      view: null,
+      canRejoin: false,
       rooms: [{ peer: "parent", room, name: "Parent" }],
     });
     expect(last().message).toContain("Could not join this room yet");

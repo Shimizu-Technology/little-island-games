@@ -10,7 +10,7 @@ import {
   validMysteryIntent,
   validMysteryView,
 } from "./engine";
-export const PROTOCOL = 1,
+export const PROTOCOL = 2,
   MAX_MESSAGE = 16384;
 export type LobbyView = {
   room: string;
@@ -19,9 +19,9 @@ export type LobbyView = {
   started: boolean;
 };
 export type RoomPacket =
-  | { v: 1; room: string; type: "snapshot"; seq: number; lobby: LobbyView; view: MysteryView | null }
-  | { v: 1; room: string; type: "welcome"; seq: number; playerId: string; resume: string }
-  | { v: 1; room: string; type: "error"; seq: number; message: string };
+  | { v: 2; room: string; type: "snapshot"; seq: number; lobby: LobbyView; view: MysteryView | null }
+  | { v: 2; room: string; type: "welcome"; seq: number; playerId: string; resume: string }
+  | { v: 2; room: string; type: "error"; seq: number; message: string };
 type Seat = {
   id: string;
   name: string;
@@ -80,8 +80,19 @@ export class MysteryHost {
     this.game = createMysterySession(this.seats, seed, undefined, this.room);
     return true;
   }
-  local(intent: MysteryIntent) {
-    if (this.game) this.game = applyMysteryIntent(this.game, "host", intent);
+  rematch(seed = Date.now() >>> 0, expectedRound = this.game?.adventure?.round ?? 0) {
+    if (!this.game?.result || expectedRound !== (this.game.adventure?.round ?? 0) || expectedRound >= 1000)
+      return false;
+    const connected = this.seats.filter((seat) => seat.connected);
+    if (connected.length < 3) return false;
+    const round = (this.game.adventure?.round ?? 1) + 1;
+    this.seats = connected;
+    this.game = createMysterySession(this.seats, seed, undefined, this.room, round);
+    return true;
+  }
+  local(intent: MysteryIntent, round = this.game?.adventure?.round ?? 0) {
+    if (this.game && round === (this.game.adventure?.round ?? 0))
+      this.game = applyMysteryIntent(this.game, "host", intent);
   }
   tick() {
     if (this.game) this.game = tickMystery(this.game);
@@ -96,7 +107,7 @@ export class MysteryHost {
     }
   }
   private error(peer: string, message: string): Outgoing[] {
-    return [{ peer, packet: { v: 1, room: this.room, seq: ++this.counter, type: "error", message } }];
+    return [{ peer, packet: { v: 2, room: this.room, seq: ++this.counter, type: "error", message } }];
   }
   receive(peer: string, payload: string, now = Date.now()): Outgoing[] {
     const p = parse(payload);
@@ -144,7 +155,7 @@ export class MysteryHost {
         {
           peer,
           packet: {
-            v: 1,
+            v: 2,
             room: this.room,
             type: "welcome",
             seq: ++this.counter,
@@ -159,8 +170,9 @@ export class MysteryHost {
       !seat ||
       !seat.connected ||
       p.seq <= seat.lastSeq ||
-      Object.keys(p).sort().join(",") !== "intent,room,seq,type,v" ||
+      Object.keys(p).sort().join(",") !== "intent,room,round,seq,type,v" ||
       p.type !== "intent" ||
+      p.round !== (this.game?.adventure?.round ?? 0) ||
       !validMysteryIntent(p.intent)
     )
       return [];
@@ -178,7 +190,7 @@ export class MysteryHost {
       .map((s) => ({
         peer: s.peer!,
         packet: {
-          v: 1,
+          v: 2,
           room: this.room,
           type: "snapshot",
           seq: sequence,
@@ -189,10 +201,10 @@ export class MysteryHost {
   }
 }
 export function helloPacket(room: string, name: string, resume: string | null) {
-  return JSON.stringify({ v: 1, room, type: "hello", seq: 1, name, resume });
+  return JSON.stringify({ v: 2, room, type: "hello", seq: 1, name, resume });
 }
-export function intentPacket(room: string, sequence: number, intent: MysteryIntent) {
-  return JSON.stringify({ v: 1, room, type: "intent", seq: sequence, intent });
+export function intentPacket(room: string, sequence: number, intent: MysteryIntent, round = 1) {
+  return JSON.stringify({ v: 2, room, type: "intent", seq: sequence, round, intent });
 }
 export function validLobby(v: unknown): v is LobbyView {
   if (
@@ -223,7 +235,7 @@ export function validLobby(v: unknown): v is LobbyView {
 }
 export function parseRoomPacket(payload: string, room: string, after: number): RoomPacket | null {
   const p = parse(payload);
-  if (!p || p.v !== 1 || p.room !== room || !seq(p.seq) || p.seq <= after) return null;
+  if (!p || p.v !== PROTOCOL || p.room !== room || !seq(p.seq) || p.seq <= after) return null;
   if (
     p.type === "welcome" &&
     Object.keys(p).sort().join(",") === "playerId,resume,room,seq,type,v" &&
