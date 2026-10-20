@@ -84,3 +84,7 @@ Nearby protocol 2 requires every family device to update together. The actual th
 Physical family installation, touch, audio/VoiceOver, native Files backup operation and enjoyment remain operator checks. Public release is held. Local generation, archive, signature, submission and Apple receipts remain outside Git in the sibling artifact directory above.
 
 Open TestFlight and update **Little Island: Family Games** to **1.2.0 (7)**. Every nearby player must update. See [build7 delivery evidence](evidence/testflight-build7.json); availability does not establish a physical installation.
+
+## Family ease beta — 1.2.0 (8), 21 October 2026
+
+Build 8 is available to the existing Leon internal group (one adult tester). Apple processing is VALID and internal state is IN_BETA_TESTING. It includes the merged favorites, quick replay, Explore activity entries, first Garden job guide and preserved-save recovery improvements. Release source is `2c4626a69ba54f9ca7bafc52761d8f4eb7a0a9b3`; EAS submission `9b599825-9b5e-4a5b-a694-08cd2d0c4fca` finished; Apple build/upload `b4c6c59d-db63-4be7-bd43-d9d2215b46d2` is attached. No new testers or public release. See [build 8 execution and limits](TESTFLIGHT_BUILD8.md) and [delivery receipt](evidence/testflight-build8.json). Physical installation and family acceptance remain operator checks. Temporary signing resources were cleaned.

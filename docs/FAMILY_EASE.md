@@ -39,3 +39,7 @@ Evidence stays in sibling `little-island-games-artifacts/family-ease`: browser e
 Toolchain: first install inherited Node22.0 in the new worktree and omitted the optional Rolldown native binding. The exact lockfile-matching1.2.14 binding was reused from the existing checkout; final checks used Node22.22.3. CocoaPods regenerated its task-local Node environment under22.22.3 before the final Release build. No shared Node/Ruby configuration or dependencies changed.
 
 This is a source integration, not a new TestFlight upload or public release. Family device acceptance and distribution rights remain separate. Lifecycle final status and resource cleanup are verified before completion; no runtime handoff is intended.
+
+## TestFlight delivery
+
+On 21 October 2026, the changes above shipped to the existing adult Leon internal group as 1.2.0 (8). Apple build `b4c6c59d-db63-4be7-bd43-d9d2215b46d2` is VALID / IN_BETA_TESTING and attached. See [release evidence](TESTFLIGHT_BUILD8.md). Earlier statements that source integration had not yet been uploaded describe the pre-release state; physical family acceptance and public distribution remain separate.
