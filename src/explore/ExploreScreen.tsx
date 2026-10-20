@@ -1,6 +1,6 @@
 import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { BackHandler, Pressable, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
+import { AppState, BackHandler, Platform, Pressable, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path, Rect } from "react-native-svg";
 import { Button, C, Chip, Copy, Heading, Label, Status, font } from "../components/ui";
@@ -76,11 +76,25 @@ export function ExploreScreen({
     };
     saveProgress.current?.(latestProgress.current);
   }, [location, history, query, onlyFavorites, labs]);
-  const rememberScroll = () => {
-    positions.current[currentKey] = Math.max(0, Math.min(1000000, currentY.current));
+  const scrollSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rememberScroll = useCallback(() => {
+    if (scrollSaveTimer.current) clearTimeout(scrollSaveTimer.current);
+    scrollSaveTimer.current = null;
     latestProgress.current = { ...latestProgress.current, positions: { ...positions.current } };
     saveProgress.current?.(latestProgress.current);
-  };
+  }, []);
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") rememberScroll();
+    });
+    // Wheel/keyboard scrolling on web does not emit native drag-end events.
+    if (Platform.OS === "web" && typeof window !== "undefined") window.addEventListener("pagehide", rememberScroll);
+    return () => {
+      subscription.remove();
+      if (Platform.OS === "web" && typeof window !== "undefined") window.removeEventListener("pagehide", rememberScroll);
+      rememberScroll();
+    };
+  }, [rememberScroll]);
   const go = (next: Location) => {
     onStop();
     onStopInstruction?.();
@@ -178,6 +192,10 @@ export function ExploreScreen({
         keyboardDismissMode="on-drag"
         onScroll={(event) => {
           currentY.current = Math.max(0, Math.min(1000000, event.nativeEvent.contentOffset.y));
+          if (pendingRestore.current) return;
+          positions.current[currentKey] = currentY.current;
+          if (scrollSaveTimer.current) clearTimeout(scrollSaveTimer.current);
+          scrollSaveTimer.current = setTimeout(rememberScroll, 180);
         }}
         scrollEventThrottle={80}
         onScrollEndDrag={rememberScroll}
