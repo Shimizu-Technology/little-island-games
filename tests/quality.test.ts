@@ -1,3 +1,6 @@
+import { readFileSync, existsSync } from "node:fs";
+import { QUALITY_GUIDANCE } from "../src/explore/guidance";
+import { newExploreProgress } from "../src/explore/progress";
 import { describe, expect, it } from "vitest";
 import { createNumbers, numberLimit, rollNumbers, selectNumber, closeNumbers, undoNumbers } from "../src/games/numbers";
 import { defaultOptions } from "../src/games/types";
@@ -7,6 +10,21 @@ import { createTic, ticHintReason } from "../src/games/tic";
 import { activityFinished } from "../src/state/activities";
 import { createRaceSession } from "../src/racer/engine";
 describe("quality release regressions", () => {
+  it("bundles exact guidance transcripts and preserves valid Explore progress through backup", () => {
+    const audio = JSON.parse(readFileSync("scripts/quality-audio.json", "utf8"));
+    for (const [key, text] of Object.entries(QUALITY_GUIDANCE)) {
+      expect(audio[key]).toBe(text);
+      expect(existsSync(`assets/audio/${key}.m4a`)).toBe(true);
+    }
+    const progress = newExploreProgress();
+    progress.query = "turtle";
+    progress.location = { kind: "activity", world: "oceans" };
+    const save = {...emptySave(), explore: { favorites: ["sun"], progress }};
+    // Real topic identity comes from the content, not arbitrary imported strings.
+    save.explore.favorites = [];
+    expect(parseSave(JSON.stringify(save))).toEqual(save);
+    expect(() => parseSave(JSON.stringify({...save, explore: {...save.explore, progress: {...progress, query:"x".repeat(101)}}}))).toThrow();
+  });
   it("new number difficulties differ and all twelve Challenge numbers survive save/undo", () => {
     for (const [difficulty, max] of [["easy", 6], ["medium", 9], ["hard", 12]] as const) {
       const s = createNumbers({ ...defaultOptions, difficulty });

@@ -1,3 +1,4 @@
+import { ExploreProgress, validExploreProgress } from "../explore/progress";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { GameId, GameState } from "../games";
@@ -13,6 +14,7 @@ type Store = {
   epoch: number;
   activityUpdate: (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => boolean;
   toggleFavorite: (topic: string) => void;
+  exploreUpdate: (next: ExploreProgress, expectedEpoch: number) => void;
   save: Save;
   ready: boolean;
   error: string | null;
@@ -132,12 +134,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       commit({
         ...latest.current,
         explore: {
+          ...latest.current.explore,
           favorites: favorites.includes(topic) ? favorites.filter((id) => id !== topic) : [...favorites, topic],
         },
       });
     },
     [commit]
   );
+  const exploreUpdate = useCallback((progress: ExploreProgress, expectedEpoch: number) => {
+    if (expectedEpoch !== generation.current || !validExploreProgress(progress)) return;
+    const current = latest.current;
+    if (JSON.stringify(current.explore?.progress) === JSON.stringify(progress)) return;
+    commit({ ...current, explore: { favorites: [], ...current.explore, progress } });
+  }, [commit]);
   const settings = useCallback(
     (next: Partial<Save["settings"]>) =>
       commit({ ...latest.current, settings: { ...latest.current.settings, ...next } }),
@@ -175,6 +184,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         epoch,
         activityUpdate,
         toggleFavorite,
+        exploreUpdate,
         ready,
         error,
         recovery,

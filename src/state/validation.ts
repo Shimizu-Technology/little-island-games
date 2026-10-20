@@ -1,3 +1,4 @@
+import { ExploreProgress, validExploreProgress } from "../explore/progress";
 import { GameId, GameState, gameIds } from "../games";
 import { checkersResult } from "../games/checkers";
 import { ticOutcome, lines } from "../games/tic";
@@ -16,7 +17,7 @@ export type Save = {
   activities?: Activities;
   recentActivity?: ActivityId | null;
   raceRecords?: RaceRecords;
-  explore?: { favorites: string[] };
+  explore?: { favorites: string[]; progress?: ExploreProgress };
 };
 export const emptySave = (): Save => ({
   version: 1,
@@ -296,7 +297,8 @@ export function parseSave(raw: string): Save {
         !Array.isArray(v.explore.favorites) ||
         v.explore.favorites.length > 50 ||
         !v.explore.favorites.every((id: unknown) => typeof id === "string" && !!topicById(id)) ||
-        normalizeExploreFavorites(v.explore.favorites).length !== v.explore.favorites.length))
+        normalizeExploreFavorites(v.explore.favorites).length !== v.explore.favorites.length ||
+        (v.explore.progress !== undefined && !validExploreProgress(v.explore.progress))))
   )
     throw new Error("Some saved game data is invalid. Your original has been kept.");
   return v as unknown as Save;

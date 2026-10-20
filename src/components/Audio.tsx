@@ -1,5 +1,5 @@
 import { useAudioPlayer, setAudioModeAsync } from "expo-audio";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { AppState, Platform } from "react-native";
 import { sources } from "../content/audioSources";
 export function useSounds(enabled: boolean) {
@@ -24,7 +24,7 @@ export function useSounds(enabled: boolean) {
   useEffect(() => {
     if (!enabled) { try { player.pause(); } catch { /* Transcript remains available. */ } }
   }, [enabled, player]);
-  return useCallback(
+  const play = useCallback(
     (key: string) => {
       if (!enabled || !foreground.current || !sources[key]) return;
       try {
@@ -36,4 +36,6 @@ export function useSounds(enabled: boolean) {
     },
     [enabled, player]
   );
+  const stop = useCallback(() => { try { player.pause(); } catch { /* Player may already be disposed on route teardown. */ } }, [player]);
+  return useMemo(() => Object.assign(play, { stop }), [play, stop]);
 }

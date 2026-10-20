@@ -39,7 +39,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
   const expectedId = useRef(store.save.activities?.[id]?.id ?? null);
   const saved = store.save.activities?.[id];
   const [freshCard] = useState(() =>
-    id === "go-fish" || id === "crazy-eights" ? createCardSession(id, defaultOptions) : null
+    id === "go-fish" || id === "crazy-eights" ? createCardSession(id, defaultOptions, undefined, undefined, { round: "quick", pace: "step" }) : null
   );
   const sound = useSounds(store.save.settings.sound && focused);
   const activityUpdate = store.activityUpdate;
@@ -116,6 +116,8 @@ function ActivityGame({ id }: { id: ActivityId }) {
               active={focused}
               sound={store.save.settings.sound}
               onFeedback={() => sound("tap")}
+              onSpeakInstruction={(key) => sound(key)}
+              onStopInstruction={sound.stop}
             />
           </>
         ) : null}
