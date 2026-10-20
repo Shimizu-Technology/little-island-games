@@ -1,8 +1,9 @@
 import { Text } from "../components/Text";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { GuidanceKey, QUALITY_GUIDANCE } from "../explore/guidance";
 import Svg, { Circle, Path, Polygon } from "react-native-svg";
-import { Button, C, Copy, Heading, Label, Sheet, Status, font } from "../components/ui";
+import { Button, C, Copy, Heading, Label, Sheet, font } from "../components/ui";
 import {
   Card,
   CardAction,
@@ -18,6 +19,14 @@ import {
   rankName,
   suit,
   suitName,
+  cardRound,
+  cardRanks,
+  cardPace,
+  CardPace,
+  CardRound,
+  cardEventText,
+  newCardIds,
+  setCardPace,
 } from "./engine";
 
 const colors: Record<Suit, string> = { shell: "#A44E37", leaf: "#246858", sun: "#916500", wave: "#386C9A" };
@@ -49,11 +58,13 @@ export function SuitMark({ kind, size = 30 }: { kind: Suit; size?: number }) {
 function CardFace({
   card,
   selected,
+  fresh,
   disabled,
   onPress,
 }: {
   card: Card;
   selected?: boolean;
+  fresh?: boolean;
   disabled?: boolean;
   onPress?: () => void;
 }) {
@@ -63,14 +74,14 @@ function CardFace({
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       accessibilityRole={onPress ? "button" : "image"}
-      accessibilityLabel={cardName(card)}
+      accessibilityLabel={`${cardName(card)}${fresh ? ", new card" : ""}`}
       accessibilityState={{ disabled: !!disabled, selected: !!selected }}
       disabled={disabled || !onPress}
       onPress={onPress}
       style={({ pressed }) => [
         s.card,
-        { borderColor: selected ? C.teal : C.line, borderWidth: selected ? 3 : 1 },
-        disabled && { opacity: 0.55 },
+        { borderColor: fresh ? "#A44E37" : selected ? C.teal : C.line, borderWidth: selected || fresh ? 3 : 1 },
+        disabled && { borderStyle: "dashed" },
         pressed && { opacity: 0.7 },
         focused && { outlineWidth: 3, outlineColor: C.blue },
       ]}
@@ -79,45 +90,60 @@ function CardFace({
         {({ 1: "A", 11: "J", 12: "Q", 13: "K" } as Record<number, string>)[rank(card)] ?? rank(card)}
       </Text>
       <SuitMark kind={suit(card)} />
-      <Text style={s.suit}>{suit(card)}</Text>
+      <Text style={s.suit}>{fresh ? "NEW" : suit(card)}</Text>
     </Pressable>
   );
 }
 export type CardGameScreenProps = {
   state: CardSession;
-  /** Persist atomically only if previous still matches the saved round/revision. */
   onChange: (next: CardSession, previous: CardSession) => void;
   width: number;
-  /** Must be false while routing away or while any parent modal overlays this screen. */
   active: boolean;
   sound: boolean;
-  /** Optional existing app sound hook; never called while muted. */
   onFeedback?: () => void;
+  onSpeakInstruction?: (key: GuidanceKey) => void;
+  onStopInstruction?: () => void;
 };
 export function CardGameScreen(props: CardGameScreenProps) {
-  // Remount private UI for each new recipient or parent visibility change.
-  // This prevents a revealed hand from surviving a route/modal handoff.
   return <CardGameRound key={`${props.state.id}:${props.state.turn}:${props.active}`} {...props} />;
 }
-function CardGameRound({ state, onChange, width, active, sound, onFeedback }: CardGameScreenProps) {
+function CardGameRound({
+  state,
+  onChange,
+  width,
+  active,
+  sound,
+  onFeedback,
+  onSpeakInstruction,
+  onStopInstruction,
+}: CardGameScreenProps) {
   const latest = useRef(state);
-  useEffect(() => {
+  React.useLayoutEffect(() => {
     latest.current = state;
   }, [state]);
-  const [reveal, setReveal] = useState<string | null>(null);
+  const [reveal, setReveal] = useState(false);
   const [foreground, setForeground] = useState(AppState.currentState === "active" || AppState.currentState === null);
   const [help, setHelp] = useState(false),
-    [setup, setSetup] = useState(false);
-  const [mode, setMode] = useState(state.options.mode);
+    [setup, setSetup] = useState(false),
+    [history, setHistory] = useState(false);
+  const [mode, setMode] = useState(state.options.mode),
+    [round, setRound] = useState<CardRound>(cardRound(state)),
+    [pace, setPace] = useState<CardPace>(cardPace(state));
   const [wild, setWild] = useState<Card | null>(null);
-  const turnKey = `${state.id}:${state.turn}`;
   const playing = active && foreground && !help && !setup;
   const cpu = state.options.mode === "solo" && state.turn === 1 && !state.result;
-  const visible = playing && !cpu && (state.options.mode === "solo" || reveal === turnKey);
+  const owner: 0 | 1 = state.options.mode === "solo" ? 0 : state.turn;
+  const visible = playing && (state.options.mode === "solo" || reveal);
+  const canAct = visible && !cpu && !state.result;
+  const stop = useRef(onStopInstruction);
+  React.useLayoutEffect(() => {
+    stop.current = onStopInstruction;
+  }, [onStopInstruction]);
   useEffect(() => {
     const conceal = () => {
-      setReveal(null);
+      setReveal(false);
       setWild(null);
+      stop.current?.();
     };
     const subscription = AppState.addEventListener("change", (value) => {
       setForeground(value === "active");
@@ -130,252 +156,281 @@ function CardGameRound({ state, onChange, width, active, sound, onFeedback }: Ca
     const focus = () => setForeground(Platform.OS === "web" ? !document.hidden : AppState.currentState === "active");
     const blur = Platform.OS === "android" ? AppState.addEventListener("blur", suspend) : null;
     const focused = Platform.OS === "android" ? AppState.addEventListener("focus", focus) : null;
-    if (Platform.OS === "web") {
-      window.addEventListener("blur", suspend);
-      window.addEventListener("focus", focus);
-    }
     const webVisibility = () => {
       setForeground(!document.hidden);
       conceal();
     };
-    if (Platform.OS === "web" && typeof document !== "undefined")
+    if (Platform.OS === "web") {
+      window.addEventListener("blur", suspend);
+      window.addEventListener("focus", focus);
       document.addEventListener("visibilitychange", webVisibility);
+    }
     return () => {
       subscription.remove();
       blur?.remove();
       focused?.remove();
+      stop.current?.();
       if (Platform.OS === "web") {
         window.removeEventListener("blur", suspend);
         window.removeEventListener("focus", focus);
-      }
-      if (Platform.OS === "web" && typeof document !== "undefined")
         document.removeEventListener("visibilitychange", webVisibility);
+      }
     };
   }, []);
   const commit = (next: CardSession, previous: CardSession) => {
     if (next === previous) return;
     latest.current = next;
     if (next.turn !== previous.turn || next.id !== previous.id) {
-      setReveal(null);
+      setReveal(false);
       setWild(null);
     }
     if (sound) onFeedback?.();
     onChange(next, previous);
   };
   const act = (action: CardAction) => {
-    if (!visible || latest.current.result) return;
+    if (canAct) {
+      const previous = latest.current;
+      commit(cardAction(previous, action, state.turn, state.revision), previous);
+    }
+  };
+  const computerStep = () => {
     const previous = latest.current;
-    commit(cardAction(previous, action, state.turn, state.revision), previous);
+    if (
+      playing &&
+      previous.options.mode === "solo" &&
+      previous.turn === 1 &&
+      !previous.result &&
+      previous.revision === state.revision
+    )
+      commit(computerCardTurn(previous), previous);
   };
   useEffect(() => {
-    if (!playing || !cpu) return;
-    const timer = setTimeout(() => {
-      const previous = latest.current;
-      if (previous.id === state.id && previous.revision === state.revision)
-        commit(computerCardTurn(previous), previous);
-    }, 650);
+    if (!playing || !cpu || cardPace(state) !== "steady") return;
+    const timer = setTimeout(computerStep, 1600);
     return () => clearTimeout(timer);
-    // The timer is tied to a single committed revision. A modal/background cancels it.
+    // A single committed revision owns each turn. Interruption cancels it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.id, state.revision, cpu, playing]);
-  const p = state.turn,
-    opponent = p === 0 ? 1 : 0;
-  const playerName = (n: number) =>
-    state.options.mode === "solo" ? (n === 0 ? "You" : "Island computer") : `Player ${n + 1}`;
-  const ranks = [...new Set(state.hands[p].map(rank))].sort((a, b) => a - b);
+  }, [state.id, state.revision, state.pace, cpu, playing]);
+  const name = (n: number) => (state.options.mode === "solo" ? (n === 0 ? "You" : "Computer") : `Player ${n + 1}`);
   const plays = state.game === "crazy-eights" ? legalCardPlays(state) : [];
+  const fresh = newCardIds(state, owner);
+  const result = state.result;
+  const event = state.events?.at(-1);
+  const transcript = `cards-${state.game}` as GuidanceKey;
+  const title = result
+    ? result.winner === "tie"
+      ? "A tie!"
+      : `${name(result.winner)} ${result.winner === 0 && state.options.mode === "solo" ? "win" : "wins"}!`
+    : cpu
+      ? "Computer’s turn"
+      : state.options.mode === "solo"
+        ? "Your turn"
+        : `${name(state.turn)}’s turn`;
+  const legacyMessage = state.message
+    .replace(/Player 1's/g, state.options.mode === "solo" ? "Your" : "Player 1's")
+    .replace(/Player 1/g, name(0))
+    .replace(/Player 2/g, name(1));
+  const closeHelp = () => {
+    setHelp(false);
+    onStopInstruction?.();
+  };
   const openHelp = () => {
-    setReveal(null);
+    setReveal(false);
     setWild(null);
     setHelp(true);
   };
-  const result = state.result;
-  const winner =
-    result?.winner === "tie"
-      ? "A tie!"
-      : result
-        ? `${playerName(result.winner)} ${result.winner === 0 && state.options.mode === "solo" ? "win" : "wins"}!`
-        : "";
   return (
-    <View style={{ width: "100%", maxWidth: 850, alignSelf: "center", gap: 16 }}>
-      <Status
-        title={
-          result
-            ? winner
-            : cpu
-              ? "Island computer is thinking…"
-              : `${playerName(p)}${state.options.mode === "solo" && p === 0 ? "r" : "’s"} turn`
-        }
-        detail={
-          result
+    <View style={s.root}>
+      <View accessibilityLiveRegion="polite" style={s.notice}>
+        <Heading style={{ fontSize: 22 }}>{title}</Heading>
+        <Copy style={s.small}>
+          {result
             ? state.game === "go-fish"
-              ? `All 13 books found. ${result.scores[0]} – ${result.scores[1]}.`
-              : `${result.reason === "blocked" ? "Neither player can move. Lowest hand total wins." : "An empty hand wins the round."} Round points: ${result.scores[0]} – ${result.scores[1]}.`
-            : state.message
-                .replace(/Player 1's/g, state.options.mode === "solo" ? "Your" : "Player 1's")
-                .replace(/Player 1/g, playerName(0))
-                .replace(/Player 2/g, playerName(1))
-        }
-        success={!!result}
-      />
+              ? `${cardRanks(state)} books found. ${result.scores[0]} – ${result.scores[1]}.`
+              : `${result.reason === "blocked" ? "No moves remain. Lower hand total wins." : "An empty hand wins."} Points: ${result.scores[0]} – ${result.scores[1]}.`
+            : event
+              ? cardEventText(event, visible ? owner : null, state.options.mode)
+              : legacyMessage}
+        </Copy>
+      </View>
       <View style={s.table}>
-        <Label>{state.game === "go-fish" ? "The fishing pond" : "Island Eights"}</Label>
-        <View style={s.tableRow}>
-          <View style={s.pile} accessibilityLabel={`${state.stock.length} cards in draw pile`}>
-            <Text style={s.back}>li</Text>
-            <Copy style={{ color: C.cream }}>{state.stock.length} left</Copy>
-          </View>
-          {state.game === "crazy-eights" ? (
+        {state.game === "crazy-eights" ? (
+          <>
             <CardFace card={state.discard.at(-1)!} />
-          ) : (
-            <View style={{ gap: 5 }}>
-              <Heading style={{ fontSize: 22 }}>
-                {state.books[0].length} : {state.books[1].length}
+            <View style={{ flex: 1, minWidth: 120, gap: 5 }}>
+              <Label>Match this card</Label>
+              <Heading style={{ fontSize: 20 }}>
+                {suitName(state.activeSuit)} or {rankName(rank(state.discard.at(-1)!))}
               </Heading>
-              <Copy>books collected</Copy>
+              <Copy style={s.small}>Eight = choose any suit</Copy>
+              <Copy style={s.small}>
+                {state.stock.length} in draw pile · {name(1 - owner)}: {state.hands[1 - owner].length} cards
+              </Copy>
             </View>
-          )}
-        </View>
-        <Copy style={{ textAlign: "center", color: C.ink }}>
-          {state.game === "crazy-eights"
-            ? `Match ${suitName(state.activeSuit)} or ${rankName(rank(state.discard.at(-1)!))}. Eights are wild.`
-            : "Collect all four cards of a rank to make a book."}
-        </Copy>
-        <Copy style={{ textAlign: "center" }}>
-          {playerName(opponent)}: {state.hands[opponent].length} cards
-          {state.game === "go-fish" ? ` · ${state.books[opponent].length} books` : ""}
-        </Copy>
+          </>
+        ) : (
+          <View style={{ flex: 1, gap: 4 }}>
+            <View style={s.tableRow}>
+              <Label>Four of a rank = one book</Label>
+              <Text style={s.score}>
+                {state.books[0].length} : {state.books[1].length}
+              </Text>
+            </View>
+            <Copy style={s.small}>
+              {name(0)} / {name(1)} · {state.stock.length} in pond · {state.hands[1 - owner].length} opponent cards
+            </Copy>
+            <Copy style={s.small}>
+              {cardRound(state) === "quick" ? "Quick · A–8 · 8 books" : "Full · A–K · 13 books"}
+            </Copy>
+          </View>
+        )}
       </View>
       {!result && !visible && (
         <View style={s.cover}>
-          <Heading style={{ fontSize: 24, textAlign: "center" }}>
-            {cpu ? "Cards are private" : "Your cards are hidden"}
-          </Heading>
-          <Copy style={{ textAlign: "center" }}>
-            {cpu
-              ? "The computer only knows its own cards and public information."
-              : `Pass the device to ${playerName(p)}. Everyone else looks away.`}
+          <Heading style={{ fontSize: 23 }}>Cards are hidden</Heading>
+          <Copy>
+            {state.options.mode === "together"
+              ? `Pass to ${name(owner)}. Everyone else, look away.`
+              : "Return to the game to see your hand."}
           </Copy>
-          {playing && !cpu && (
-            <Button onPress={() => setReveal(turnKey)}>
-              {state.options.mode === "solo" ? "Show my cards" : `I’m ${playerName(p)} — show my cards`}
-            </Button>
-          )}
+          {playing && <Button onPress={() => setReveal(true)}>I’m {name(owner)} · show my cards</Button>}
         </View>
       )}
       {!result && visible && (
-        <View style={{ gap: 12 }}>
+        <View style={{ gap: 8 }}>
           <View style={s.tableRow}>
-            <Heading style={{ fontSize: 23, flex: 1 }}>
-              {playerName(p)}
-              {state.options.mode === "solo" ? "r" : "’s"} hand
+            <Heading style={{ fontSize: 21 }}>
+              {state.options.mode === "solo" ? "Your" : `${name(owner)}’s`} hand · {state.hands[owner].length}
             </Heading>
             {state.options.mode === "together" && (
               <Button
                 compact
                 quiet
                 onPress={() => {
-                  setReveal(null);
+                  setReveal(false);
                   setWild(null);
                 }}
               >
-                Hide cards
+                Hide
               </Button>
             )}
           </View>
-          {state.game === "go-fish" && (
-            <>
-              <Copy>Choose a rank in your hand to ask for every matching card.</Copy>
-              <View style={s.wrap}>
-                {ranks.map((r) => (
-                  <Button compact quiet key={r} onPress={() => act({ type: "ask", rank: r })}>
-                    Ask for {rankName(r)}s
-                  </Button>
-                ))}
-              </View>
-            </>
-          )}
+          <Copy style={s.small}>
+            {cpu
+              ? "Keep your hand in view. Read the turn story, then let the computer play."
+              : state.game === "go-fish"
+                ? "Tap a card to ask for that rank."
+                : "Tap an outlined matching card. Tap an eight to choose a suit."}
+          </Copy>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator
-            contentContainerStyle={{ gap: 10, paddingVertical: 4, paddingHorizontal: 3 }}
-            style={{ width: "100%", maxWidth: Math.min(850, Math.max(0, width)) }}
+            accessibilityLabel="Your cards. Swipe to see the whole hand."
+            style={{ maxWidth: Math.min(850, width) }}
+            contentContainerStyle={{ gap: 8, paddingVertical: 5, paddingHorizontal: 3 }}
           >
-            {state.hands[p]
+            {state.hands[owner]
               .slice()
               .sort((a, b) => rank(a) - rank(b) || a - b)
               .map((card) => (
                 <CardFace
                   key={card}
                   card={card}
-                  selected={state.game === "crazy-eights" && plays.includes(card)}
-                  disabled={state.game === "crazy-eights" && !plays.includes(card)}
-                  onPress={
-                    state.game === "crazy-eights"
-                      ? () => {
-                          if (rank(card) === 8) setWild(card);
-                          else act({ type: "play", card });
-                        }
-                      : undefined
-                  }
+                  fresh={fresh.includes(card)}
+                  selected={!cpu && (state.game === "go-fish" || plays.includes(card))}
+                  disabled={!canAct || (state.game === "crazy-eights" && !plays.includes(card))}
+                  onPress={() => {
+                    if (state.game === "go-fish") act({ type: "ask", rank: rank(card) });
+                    else if (rank(card) === 8) setWild(card);
+                    else act({ type: "play", card });
+                  }}
                 />
               ))}
           </ScrollView>
-          {state.game === "crazy-eights" && (
-            <>
-              <Copy>
-                {plays.length
-                  ? "Outlined cards can be played. Tap an eight to choose the next suit."
-                  : state.drawn !== null
-                    ? "That card does not match. Finish your turn."
-                    : "No matching card? Draw one."}
-              </Copy>
-              <View style={s.wrap}>
-                {state.drawn === null && !plays.length && (state.stock.length || state.discard.length > 1) ? (
-                  <Button onPress={() => act({ type: "draw" })}>Draw one card</Button>
-                ) : null}
-                {state.drawn !== null || (!plays.length && !state.stock.length && state.discard.length === 1) ? (
-                  <Button onPress={() => act({ type: "pass" })}>Finish my turn</Button>
-                ) : null}
-              </View>
-            </>
+          {state.game === "crazy-eights" && canAct && (
+            <View style={s.wrap}>
+              {state.drawn === null && !plays.length && (state.stock.length || state.discard.length > 1) ? (
+                <Button onPress={() => act({ type: "draw" })}>Draw one card</Button>
+              ) : null}
+              {state.drawn !== null || (!plays.length && !state.stock.length && state.discard.length === 1) ? (
+                <Button onPress={() => act({ type: "pass" })}>Finish my turn</Button>
+              ) : null}
+            </View>
           )}
         </View>
       )}
-      {state.game === "go-fish" && state.books.flat().length > 0 && (
-        <View style={s.wrap}>
-          {state.books.map((books, n) => (
-            <Copy key={n}>
-              {playerName(n)} books: {books.map(rankName).join(", ") || "none yet"}
-            </Copy>
+      {cpu && playing && (
+        <Button onPress={computerStep}>
+          {cardPace(state) === "step" ? "Let the computer play" : "Computer plays soon · play now"}
+        </Button>
+      )}
+      {!!state.books.flat().length && (
+        <View style={s.bookShelf}>
+          {([0, 1] as const).map((n) => (
+            <View key={n} style={{ gap: 4 }}>
+              <Label>{name(n)} books</Label>
+              <View style={s.wrap}>
+                {state.books[n].length ? (
+                  state.books[n].map((r) => (
+                    <View key={r} style={s.book}>
+                      <Text style={s.score}>{rankName(r)}</Text>
+                      <Text style={s.small}>×4</Text>
+                    </View>
+                  ))
+                ) : (
+                  <Copy style={s.small}>None yet</Copy>
+                )}
+              </View>
+            </View>
           ))}
         </View>
       )}
       <View style={s.wrap}>
-        <Button quiet onPress={openHelp}>
+        <Button compact quiet onPress={openHelp}>
           How to play
         </Button>
+        <Button compact quiet onPress={() => setHistory(!history)}>
+          {history ? "Hide" : "Turn"} story
+        </Button>
         <Button
+          compact
+          quiet
           onPress={() => {
-            setReveal(null);
+            setReveal(false);
             setWild(null);
             setMode(state.options.mode);
+            setRound(cardRound(state));
+            setPace(cardPace(state));
             setSetup(true);
           }}
         >
-          {result ? "Play a fresh round" : "New round"}
+          {result ? "Play again" : "Round options"}
         </Button>
       </View>
-      <Copy style={{ textAlign: "center", fontSize: 13 }}>
-        Progress saves on this device. Hands hide when you leave or pause.
-      </Copy>
-      <Sheet visible={wild !== null && visible} title="Choose the next suit" onClose={() => setWild(null)}>
-        <Copy>An eight is wild. Which suit should the next player match?</Copy>
+      {history && (
+        <View style={s.notice}>
+          <Label>Last four moves · private draws only for their owner</Label>
+          {state.events?.length ? (
+            state.events
+              .slice()
+              .reverse()
+              .map((e) => (
+                <Copy key={e.revision} style={s.small}>
+                  {cardEventText(e, visible ? owner : null, state.options.mode)}
+                </Copy>
+              ))
+          ) : (
+            <Copy style={s.small}>Your next move starts the story.</Copy>
+          )}
+        </View>
+      )}
+      <Sheet visible={wild !== null && canAct} title="Choose the next suit" onClose={() => setWild(null)}>
+        <Copy>An eight is wild. Choose what your partner must match.</Copy>
         <View style={s.wrap}>
           {SUITS.map((kind) => (
             <Button
-              quiet
               key={kind}
+              quiet
               onPress={() => {
                 if (wild !== null) act({ type: "play", card: wild, suit: kind });
                 setWild(null);
@@ -388,105 +443,154 @@ function CardGameRound({ state, onChange, width, active, sound, onFeedback }: Ca
       </Sheet>
       <Sheet
         visible={help}
-        title={state.game === "go-fish" ? "Go Fish rules" : "Island Eights rules"}
-        onClose={() => setHelp(false)}
+        title={state.game === "go-fish" ? "Go Fish · watch, ask, collect" : "Crazy Eights · match, draw, finish"}
+        onClose={closeHelp}
       >
+        <Copy>{QUALITY_GUIDANCE[transcript]}</Copy>
+        {onSpeakInstruction && (
+          <Button disabled={!sound} onPress={() => onSpeakInstruction(transcript)}>
+            Listen to the instructions
+          </Button>
+        )}
+        {onStopInstruction && (
+          <Button quiet onPress={onStopInstruction}>
+            Stop reading
+          </Button>
+        )}
         {state.game === "go-fish" ? (
           <>
+            <View style={s.tableRow}>
+              {[5, 18, 31, 44].map((card) => (
+                <CardFace key={card} card={card} />
+              ))}
+            </View>
+            <Heading style={{ fontSize: 21 }}>Four sixes make a book.</Heading>
             <Copy>
-              Two players, 52 cards, seven cards each. Ask for a rank you hold. The other player gives you every card of
-              that rank. If you receive any, ask again.
-            </Copy>
-            <Copy>
-              If they have none, draw one: go fish! If you draw the rank you asked for, ask again. Otherwise the turn
-              passes. Four matching ranks make a book automatically.
-            </Copy>
-            <Copy>
-              An empty hand refills with up to seven cards while the pond has cards. When it is empty, a player with no
-              cards waits. All 13 books ends the round; most books wins.
+              Ask for any rank in your hand. Receive matching cards? Ask again. If the other player has none, draw one.
+              If it is the rank you asked for, ask again. Otherwise your turn ends. An empty hand refills while the pond
+              has cards. When the pond is empty, an empty-handed player waits. Most books wins after every rank is
+              collected.
             </Copy>
           </>
         ) : (
           <>
             <Copy>
-              Two players, 52 cards, seven cards each. Play one card matching the top card’s rank or the chosen suit.
-              Any eight is wild: choose the next suit, even if it is your final card.
+              Example: on a six of shells, play any six, any shell, or an eight. You cannot draw while holding a
+              playable card. After drawing, only that new card can be played; you may instead finish the turn. There are
+              no skip, stacking or draw-two cards.
             </Copy>
             <Copy>
-              If you cannot play, draw one card. You may play that new card if it matches, or finish your turn. You
-              cannot draw while you already have a playable card. There are no stacking, skip, or draw-two cards.
-            </Copy>
-            <Copy>
-              The first empty hand wins. Eights score 50, picture cards 10, aces 1, and other cards their number. The
-              winner earns the other hand’s points. If the draw pile empties, shuffle the used pile except its top card.
-              If both players are blocked, the lower hand total wins the difference; equal totals tie.
+              First empty hand wins. Eights are50points, picture cards10, aces1, and numbers their value. The winner
+              receives the other hand’s points. If stock runs out, used cards shuffle except the top. If both are
+              blocked, the lower total wins the difference; equal totals tie.
             </Copy>
           </>
         )}
         <Copy>
-          Play alone against the island computer, or choose Two players for private pass-the-device hands. The computer
-          never looks at your hidden cards.
+          Quick:32cards, ranksA–8, five cards each. Full:52cards, ranksA–K, seven each. The same rules apply to both
+          players. Computer choices use only its own cards and public information.
+        </Copy>
+        <Copy>
+          Step pace waits for your Let the computer play button. Steady pace takes one computer action about
+          every1.6seconds. Turn story keeps the last four actions. Private draws are concealed during handoff. All
+          progress saves on this device.
         </Copy>
       </Sheet>
-      <Sheet visible={setup} title="Fresh card round" onClose={() => setSetup(false)}>
-        <Copy>
-          {result ? "Choose who is playing." : "Starting a new round replaces this saved round. Cancel to keep it."}
-        </Copy>
+      <Sheet visible={setup} title="Round options" onClose={() => setSetup(false)}>
+        <Heading style={{ fontSize: 21 }}>Who is playing?</Heading>
         <View style={s.wrap}>
           <Button quiet selected={mode === "solo"} onPress={() => setMode("solo")}>
-            Play the computer
+            Play computer
           </Button>
           <Button quiet selected={mode === "together"} onPress={() => setMode("together")}>
             Two players
           </Button>
         </View>
+        <Heading style={{ fontSize: 21 }}>How much time?</Heading>
+        <View style={s.wrap}>
+          <Button quiet selected={round === "quick"} onPress={() => setRound("quick")}>
+            Quick ·32cards
+          </Button>
+          <Button quiet selected={round === "full"} onPress={() => setRound("full")}>
+            Full ·52cards
+          </Button>
+        </View>
+        <Copy>
+          Quick usesA–8 and5cards each; Full usesA–K and7each. Choosing either replaces this saved round when you deal.
+        </Copy>
+        <Heading style={{ fontSize: 21 }}>Computer pace</Heading>
+        <View style={s.wrap}>
+          <Button quiet selected={pace === "step"} onPress={() => setPace("step")}>
+            I choose when
+          </Button>
+          <Button quiet selected={pace === "steady"} onPress={() => setPace("steady")}>
+            Steady
+          </Button>
+        </View>
         <Button
+          quiet
           onPress={() => {
             const previous = latest.current;
-            commit(createCardSession(state.game, { ...state.options, mode }), previous);
+            commit(setCardPace(previous, pace), previous);
             setSetup(false);
           }}
         >
-          Deal seven cards each
+          Keep hand · apply pace
+        </Button>
+        <Button
+          onPress={() => {
+            const previous = latest.current;
+            commit(
+              createCardSession(state.game, { ...state.options, mode }, undefined, undefined, { round, pace }),
+              previous
+            );
+            setSetup(false);
+          }}
+        >
+          Deal {round === "quick" ? "five" : "seven"} cards each
         </Button>
       </Sheet>
     </View>
   );
 }
 const s = StyleSheet.create({
-  table: { backgroundColor: "#E7EFE3", borderRadius: 24, borderWidth: 1, borderColor: "#CCDCC9", padding: 18, gap: 14 },
-  tableRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 18, flexWrap: "wrap" },
-  wrap: { flexDirection: "row", flexWrap: "wrap", gap: 10, justifyContent: "center" },
+  root: { width: "100%", maxWidth: 850, alignSelf: "center", gap: 10 },
+  notice: { backgroundColor: "#E7EFE3", padding: 12, borderRadius: 18, gap: 6 },
+  table: {
+    backgroundColor: "#F1ECD9",
+    padding: 12,
+    borderRadius: 18,
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "center",
+    flexWrap: "wrap",
+  },
+  tableRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" },
+  wrap: { flexDirection: "row", flexWrap: "wrap", gap: 8, alignItems: "center" },
+  small: { fontSize: 14, lineHeight: 21, color: C.ink },
+  score: { fontSize: 20, fontWeight: "800", color: C.ink },
   card: {
-    width: 86,
-    minHeight: 132,
-    borderRadius: 13,
+    width: 68,
+    minHeight: 96,
+    borderRadius: 12,
     backgroundColor: C.paper,
-    padding: 10,
+    padding: 7,
     justifyContent: "space-between",
     alignItems: "center",
-    gap: 5,
+    gap: 4,
   },
-  rank: { fontFamily: font, fontWeight: "800", fontSize: 21 },
-  suit: { fontFamily: font, fontSize: 12, color: C.ink },
-  pile: {
-    width: 86,
-    minHeight: 132,
-    borderRadius: 13,
-    borderWidth: 3,
-    borderColor: "#8AAE9A",
-    backgroundColor: C.teal,
-    padding: 8,
+  rank: { fontFamily: font, fontWeight: "800", fontSize: 22 },
+  suit: { fontSize: 11, color: C.ink },
+  bookShelf: { padding: 10, backgroundColor: "#F5F0DF", borderRadius: 16, gap: 8 },
+  book: {
+    backgroundColor: "#FFF",
+    borderWidth: 1,
+    borderColor: "#D5D8C8",
+    padding: 6,
+    borderRadius: 9,
+    flexDirection: "row",
+    gap: 4,
     alignItems: "center",
-    justifyContent: "center",
   },
-  back: { fontFamily: font, color: C.cream, fontSize: 35, fontWeight: "800" },
-  cover: {
-    backgroundColor: "#F0E8D5",
-    padding: 22,
-    borderRadius: 22,
-    minHeight: 180,
-    justifyContent: "center",
-    gap: 14,
-  },
+  cover: { backgroundColor: "#F0E8D5", padding: 16, borderRadius: 18, gap: 10 },
 });
