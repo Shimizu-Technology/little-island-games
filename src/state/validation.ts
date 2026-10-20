@@ -7,6 +7,7 @@ import { WordRecords, validWordRecords } from "./wordRecords";
 import { Activities, ActivityId, activityIds, validActivities, validActivityRecords } from "./activities";
 import type { RaceRecords } from "../racer/engine";
 import { normalizeExploreFavorites, topicById } from "../explore/content";
+import { WORDS } from "../games/words";
 export type Settings = { sound: boolean; help: boolean };
 export type Save = {
   version: 1;
@@ -111,6 +112,7 @@ export function validSession(v: unknown): v is GameState {
         v.clue.length <= 300 &&
         typeof v.category === "string" &&
         v.category.length <= 50 &&
+        (v.pack === undefined || v.pack === "All" || WORDS.some((word) => word[1] === v.pack)) &&
         strings(v.guessed, 1, 26) &&
         unique(v.guessed) &&
         v.guessed.every((l) => /^[A-Z]$/.test(l)) &&

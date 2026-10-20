@@ -6,7 +6,7 @@ import { Redirect, router, useLocalSearchParams, useIsFocused } from "expo-route
 import { GameId, GameState, Options, createGame, difficultyLabel, gameIds, games, isFinished } from "../games";
 import { defaultOptions } from "../games/types";
 import { positionKey } from "../games/checkers";
-import { createWord, customWord, guessLetter, wordHint, wordRules, wordStatus, WORDS } from "../games/words";
+import { createWord, customWord, guessLetter, replayWord, wordHint, wordRules, wordStatus, WORDS } from "../games/words";
 import { useStore } from "../state/Store";
 import { Button, C, Chip, Copy, Heading, Label, Sheet, styles } from "../components/ui";
 import { useSounds } from "../components/Audio";
@@ -29,7 +29,7 @@ function Game({ id }: { id: GameId }) {
     [options, setOptions] = useState<Options>(
       s?.options ?? { ...defaultOptions, ...(id === "checkers" ? { checkersRules: "friendly" as const } : {}) }
     ),
-    [category, setCategory] = useState("All"),
+    [category, setCategory] = useState(s?.game === "word-rescue" ? s.pack ?? "All" : "All"),
     [secret, setSecret] = useState(""),
     [error, setError] = useState(""),
     [active, setActive] = useState(AppState.currentState === "active");
@@ -75,7 +75,7 @@ function Game({ id }: { id: GameId }) {
   function replay() {
     if (!s || !finished) return;
     if (s.game === "word-rescue" && s.custom) { newRound(); return; }
-    const next = s.game === "word-rescue" ? createWord(s.options, s.category, s.seen) : createGame(id, s.options);
+    const next = s.game === "word-rescue" ? replayWord(s)! : createGame(id, s.options);
     store.update(id, next, s);
   }
   const boardProps = {
