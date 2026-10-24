@@ -174,7 +174,7 @@ export function wordPool(difficulty: Options["difficulty"], category = "All") {
 /** Keep all letters on one row unless accessible text needs a larger tile. */
 export function wordTiles(length: number, available: number, fontScale = 1) {
   const gap = length >= 10 ? 4 : 6,
-    floor = 24 * Math.max(1, fontScale);
+    floor = 22 * Math.max(1, fontScale);
   const rows = Math.min(
     length,
     Math.max(1, Math.ceil(length / Math.max(1, Math.floor((available + gap) / (floor + gap)))))

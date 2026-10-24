@@ -67,11 +67,12 @@ describe("word length levels and fitting", () => {
       expect(createWord({ ...defaultOptions, difficulty }, "Earlier unknown pack").word).toBeTruthy();
     }
   );
-  it.each([343, 358])("fits eleven and twelve letters on one row in %s points", (width) => {
+  // 319 and 334 are the real board widths on 375- and 390-point phones (page and panel padding removed).
+  it.each([319, 334, 343, 358])("fits eleven and twelve letters on one row in %s points", (width) => {
     for (const length of [11, 12]) {
       const { tile, gap, sizes } = wordTiles(length, width);
       expect(sizes).toEqual([length]);
-      expect(tile).toBeGreaterThanOrEqual(24);
+      expect(tile).toBeGreaterThanOrEqual(22);
       expect(tile * length + gap * (length - 1)).toBeLessThanOrEqual(width + 0.001);
     }
     expect(wordTiles(12, width, 2).sizes).toEqual([6, 6]);

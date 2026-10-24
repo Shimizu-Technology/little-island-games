@@ -26,7 +26,7 @@ Lead: Claude (foundation, Home/Settings, integration, QA, release). Codex worker
 | P04 | Memory/Checkers matches, solo Checkers flipped, Maze/Numbers/Hangman controls reachable without scrolling at 390×844 and 1024×768 | Pass (browser); SE 375×667 needs a short scroll for the last Memory row and Number close |
 | P05 | Cards, Secret Word, Dash (worker A) and Picnic/Explore (worker B) slice journeys | Pass (workers' browser QA) |
 | P06 | Every route at phone/tablet: no page errors or horizontal overflow; Home filter kept after closing a first setup | Pass |
-| P07 | Native Release on owned iPhone 16 Pro / iPad mini simulators (iOS 18.5) | Recorded below |
+| P07 | Native Release on owned iPhone 16 Pro / iPad mini (A17 Pro) simulators (iOS 18.5), no Metro | Pass — Maestro 52-step flow on both: native keyboard BUTTERFLIES with Start visible above the keyboard and Return/go starting the round, one-row tiles, Tic names/win/Play again score, Settings gate, solo Checkers at the bottom, Picnic Garden actions in view. iPad landscape Maze two-column with arrows beside the board |
 | P08 | Independent final-code review and CodeRabbit | Recorded in the PR |
 
-Physical family devices, VoiceOver speech, audible speech quality, haptics on hardware and nearby multi-device play are not covered by agent QA.
+Native evidence (screenshots, Maestro logs/flows) is in sibling `little-island-games-artifacts/polish-1.3.0`. The simulator build was generated before the version bump, so it reported 1.2.0 (8) with identical application code. Host load (load average above 600) delayed the Maestro driver until owned simulators were reduced; T3 device tools were unavailable (daemon lock). Physical family devices, VoiceOver speech, audible speech quality, haptics on hardware and nearby multi-device play are not covered by agent QA.

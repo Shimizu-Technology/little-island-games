@@ -307,7 +307,8 @@ export function TicBoard({ state: s, commit, width, sound, active }: Props<TicSt
   const winning =
     lines.find(([a, b, c]) => s.board[a] && s.board[a] === s.board[b] && s.board[a] === s.board[c]) ?? [];
   const { height } = useWindowDimensions();
-  const size = Math.min(width, 560, height - 290);
+  // Fit short windows, but never below a comfortable touch size; the page scrolls instead.
+  const size = Math.max(Math.min(width, 560, height - 290), Math.min(width, 264));
   const cellSize = (size - 26 - 16) / 3;
   const title =
     outcome === "draw"

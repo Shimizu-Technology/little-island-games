@@ -1,4 +1,3 @@
-import { Text } from "../components/Text";
 import { PlayerNames } from "../components/Match";
 import { newMatch, Seat } from "../games/match";
 import { Mark, replayTic } from "../games/tic";
@@ -452,31 +451,23 @@ function Game({ id }: { id: GameId }) {
               <Copy>
                 A grown-up chooses a secret word, then passes the device. The word stays hidden while typing.
               </Copy>
-              <View style={{ position: "relative" }}>
-                <TextInput
-                  accessibilityLabel="Secret family word"
-                  placeholder="One secret word"
-                  value={secret}
-                  onChangeText={setSecret}
-                  textContentType="none"
-                  autoComplete="off"
-                  returnKeyType="go"
-                  onSubmitEditing={start}
-                  autoCapitalize="characters"
-                  autoCorrect={false}
-                  maxLength={12}
-                  style={[styles.input, !showSecret && { color: "transparent" }]}
-                />
-                {!showSecret && !!secret && (
-                  <Text
-                    pointerEvents="none"
-                    accessible={false}
-                    style={{ position: "absolute", left: 15, top: 14, fontSize: 18, color: C.ink }}
-                  >
-                    {"•".repeat(secret.length)}
-                  </Text>
-                )}
-              </View>
+              <TextInput
+                accessibilityLabel="Secret family word"
+                placeholder="One secret word"
+                value={secret}
+                onChangeText={setSecret}
+                // Real secure entry keeps the word out of screen-reader and copy semantics while hidden.
+                // A one-time-code content type stops iOS offering its Passwords bar for this field.
+                secureTextEntry={!showSecret}
+                textContentType={showSecret ? "none" : "oneTimeCode"}
+                autoComplete="off"
+                returnKeyType="go"
+                onSubmitEditing={start}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                maxLength={12}
+                style={styles.input}
+              />
               <Button
                 quiet
                 compact
