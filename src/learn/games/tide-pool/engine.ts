@@ -203,9 +203,9 @@ export const engine: LearnEngine<TideState> = {
       integer(p.heat, 0, 2) &&
       integer(p.algae, 0, 3) &&
       typeof p.grazed === "boolean" &&
+      Array.isArray(p.creatures) &&
       (!p.grazed || (p.high && p.creatures.includes("snail") && p.algae <= 1)) &&
       (!(p.high && p.light && p.creatures.includes("snail")) || p.grazed) &&
-      Array.isArray(p.creatures) &&
       p.creatures.length <= 6 &&
       new Set(p.creatures).size === p.creatures.length &&
       p.creatures.every((c) => creatures.includes(c)) &&

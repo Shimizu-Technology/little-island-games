@@ -2874,8 +2874,7 @@ export const WORDS = [
     "pace": "hard",
     "tiles": [
       "l",
-      "e",
-      "a",
+      "ea",
       "f"
     ]
   },

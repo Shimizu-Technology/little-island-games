@@ -352,20 +352,71 @@ export function ObjectGlyph({
         );
         break;
       case "mat":
+        // A flat woven rectangle — clearly different from the fringed oval rug.
+        shape = (
+          <>
+            <Rect x="8" y="52" width="84" height="30" rx="4" fill={fill} />
+            <Path d="M22 52 L22 82 M36 52 L36 82 M50 52 L50 82 M64 52 L64 82 M78 52 L78 82" stroke="#F9EDC9" />
+          </>
+        );
+        break;
       case "rug":
+        shape = (
+          <>
+            <Path d="M4 60 L0 56 M4 66 L-1 66 M4 72 L0 76 M96 60 L100 56 M96 66 L101 66 M96 72 L100 76" />
+            <Ellipse cx="50" cy="66" rx="44" ry="20" fill={fill} />
+            <Path d="M18 66 L28 58 L38 66 L48 58 L58 66 L68 58 L78 66" stroke="#F9EDC9" fill="none" />
+          </>
+        );
+        break;
       case "road":
         shape = (
           <>
-            <Ellipse cx="50" cy="66" rx="44" ry="24" fill={name === "road" ? "#B5B8AD" : fill} />
+            <Ellipse cx="50" cy="66" rx="44" ry="24" fill="#B5B8AD" />
             <Path d="M20 60 L78 60 M22 72 L75 72" stroke="#F9EDC9" />
           </>
         );
         break;
       case "cup":
+        // A small teacup on a saucer.
+        shape = (
+          <>
+            <Ellipse cx="50" cy="84" rx="40" ry="7" fill="#F9EDC9" />
+            <Path d="M66 56 C86 50 84 74 64 72" fill="none" />
+            <Path d="M24 50 L72 50 Q70 80 48 81 Q27 80 24 50 Z" fill={fill} />
+          </>
+        );
+        break;
       case "mug":
-      case "pot":
+        // A tall straight mug with a big handle.
+        shape = (
+          <>
+            <Path d="M68 32 C98 30 98 70 68 68" fill="none" strokeWidth={6} />
+            <Rect x="24" y="22" width="46" height="64" rx="8" fill={fill} />
+            <Path d="M30 34 L64 34" stroke="#F9EDC9" />
+          </>
+        );
+        break;
       case "tub":
+        // A wide, low wash tub.
+        shape = (
+          <>
+            <Path d="M4 46 L96 46 L86 82 L14 82 Z" fill={fill} />
+            <Path d="M2 46 L98 46" strokeWidth={5} />
+            <Ellipse cx="50" cy="46" rx="44" ry="6" fill="#9BD0E0" />
+          </>
+        );
+        break;
       case "jar":
+        // A tall jar with a lid.
+        shape = (
+          <>
+            <Rect x="32" y="12" width="36" height="12" rx="3" fill="#E1B251" />
+            <Path d="M30 26 L70 26 Q80 34 80 50 L80 80 Q80 88 70 88 L30 88 Q20 88 20 80 L20 50 Q20 34 30 26 Z" fill={fill} />
+          </>
+        );
+        break;
+      case "pot":
         shape = (
           <>
             <Path d="M77 40 C108 23 103 78 76 65" fill="none" />

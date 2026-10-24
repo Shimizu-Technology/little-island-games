@@ -105,11 +105,11 @@ export const ORDERS: MarketOrder[] = [
     id: "easy-compare-3",
     pace: "easy",
     kind: "compare",
-    a: 20,
+    a: 12,
     b: 20,
     target: 20,
     skill: "num.compare",
-    prompt: "Auntie wants 20 mangoes. Kiko wants 20. Who wants more?",
+    prompt: "Auntie wants 12 mangoes. Kiko wants 20. Who wants more?",
   },
   {
     id: "easy-compare-4",

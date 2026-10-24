@@ -107,3 +107,31 @@ describe("learning saves", () => {
     expect(applyLearnSave(saved, id, next, { id: first.id, revision: 0, epoch: 0 }, 0).learn?.[id]).toBe(next);
   });
 });
+
+describe("review regressions", () => {
+  it("rejects a malformed Tide Pool save without throwing", async () => {
+    const { engines: all } = await import("../src/learn/engines");
+    const opts = { mode: "solo" as const, pace: "easy" as const };
+    const s = startSession("tide-pool", { options: opts }, {}, 5).state as Record<string, unknown>;
+    const broken = JSON.parse(JSON.stringify(s));
+    const pool = Object.values(broken).find((v) => v && typeof v === "object" && "creatures" in (v as object)) as Record<string, unknown> | undefined;
+    if (pool) {
+      pool.creatures = null;
+      pool.high = true;
+      pool.light = true;
+    }
+    expect(() => all["tide-pool"].validate(broken, opts)).not.toThrow();
+    expect(all["tide-pool"].validate(broken, opts)).toBe(false);
+  });
+  it("never asks 'who wants more' with equal amounts", async () => {
+    const mod = await import("../src/learn/games/island-market/orders");
+    const orders = Object.values(mod).find(Array.isArray) as { kind: string; a?: number; b?: number }[];
+    for (const o of orders.filter((o) => o.kind === "compare")) expect(o.a).not.toBe(o.b);
+  });
+  it("treats vowel teams as one sound tile", async () => {
+    const { wordBank } = await import("../src/learn/kit/reading");
+    for (const w of wordBank)
+      for (const team of ["ee", "ea", "ai", "oa", "oo"])
+        if (w.word.includes(team)) expect(w.tiles.some((t) => t.includes(team)), w.word).toBe(true);
+  });
+});
