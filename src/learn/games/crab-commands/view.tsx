@@ -165,7 +165,6 @@ export function Board({ session, update, practice, sound, width, height, active 
   return (
     <View style={{ gap: 8 }}>
       <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-        {" "}
         <Copy style={{ fontWeight: "700", color: C.ink, flex: 1 }}>
           {done ? "Every crab is home!" : `Beach ${s.completed.length + 1} of 3 · collect all shells, then home`}
         </Copy>

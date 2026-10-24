@@ -74,13 +74,14 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const update = useCallback(
     (state: unknown) => {
       if (!saved) return;
-      save({ ...saved, state, revision: saved.revision + 1 });
+      const revision = Math.max(saved.revision, expected.current.revision ?? 0) + 1;
+      save({ ...saved, state, revision });
     },
     [saved, save]
   );
 
   function start() {
-    const next = startSession(id, { options, names, starter, alternate }, store.save.skills);
+    const next = startSession(id, { options, names, starter: options.mode === "solo" ? 0 : starter, alternate }, store.save.skills);
     if (options.mode !== "solo") store.rememberPlayers(names);
     if (save(next)) setSetup(false);
   }
@@ -92,6 +93,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
     if (saved) {
       setOptions(saved.options);
       setAlternate(saved.match?.alternate ?? true);
+      setStarter(saved.starter ?? 0);
     }
     setSetup(true);
   }

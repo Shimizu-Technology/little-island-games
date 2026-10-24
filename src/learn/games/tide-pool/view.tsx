@@ -13,7 +13,7 @@ import {
   explanation,
   initialPool,
   observed,
-  missionMet,
+  missionDiscovered,
   missions,
   nextExperiment,
   tryChange,
@@ -366,7 +366,7 @@ export function Board({ session, update, practice, sound, width, active }: Board
               update({ ...nextExperiment(s), starter: together ? (((s.starter + 1) % 2) as 0 | 1) : s.starter })
             }
           >
-            {missionMet(s) ? "Mission discovered · next" : "Try another change"}
+            {missionDiscovered(s) ? "Mission discovered · next" : "Try another change"}
           </Button>
         </>
       )}

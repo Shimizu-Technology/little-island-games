@@ -27,7 +27,8 @@ export function Board({ session, update, practice, sound, soundOn, active, width
     const correct = !spy || id === target?.id;
     const next = tapItem(s, id);
     if (next !== s) {
-      practice(chamoruWord(spy ? target!.id : id)!.skill, correct);
+      // Exploring is browsing, not an answer: only I spy finds count as practice.
+      if (spy) practice(chamoruWord(target!.id)!.skill, correct);
       update(next);
     }
     sound(spy && !correct ? "hafa-adai-compare" : wordAudioKey(id));

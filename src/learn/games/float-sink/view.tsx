@@ -171,7 +171,6 @@ export function Board({ session, update, practice, sound, width, active }: Board
   return (
     <View style={{ gap: 9 }}>
       <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-        {" "}
         <Copy style={{ fontWeight: "700", color: C.ink, flex: 1 }}>
           {boatPhase ? "Boat workshop" : `${d.index + 1} of ${s.items.length} · ${object?.name}`}
           {o.mode === "versus" && boatPhase && d.phase !== "done" ? ` · ${name}` : ""}

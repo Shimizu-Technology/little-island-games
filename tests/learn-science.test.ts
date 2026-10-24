@@ -12,6 +12,7 @@ import {
   missionMet,
   nextExperiment,
   tryChange,
+  missionDiscovered,
 } from "../src/learn/games/tide-pool/engine";
 import { act, capacity, dock, engine as floats, objects, shapes } from "../src/learn/games/float-sink/engine";
 import {
@@ -73,10 +74,10 @@ describe("tide pool", () => {
     const o: LearnOptions = { mode: "solo", pace: "hard" };
     let s = tide.create(o, ctx());
     const paths: Record<string, (typeof actions)[number][]> = {
-      coral: ["snail"],
+      coral: ["temperature", "temperature"],
       crab: ["crab"],
       snail: ["snail"],
-      light: ["snail"],
+      light: ["sun", "sun"],
       rain: ["rain", "tide", "tide"],
       heat: ["temperature", "snail"],
     };
@@ -87,10 +88,20 @@ describe("tide pool", () => {
       };
       for (const a of path) {
         s = tryChange({ ...s, action: a, guesses: [(1 - expected(s.pool, a)) as 0 | 1] }, false);
-        if (!missionMet(s)) s = nextExperiment(s);
+        if (!missionDiscovered(s)) s = nextExperiment(s);
       }
-      expect(missionMet(s), id).toBe(true);
+      expect(missionDiscovered(s), id).toBe(true);
       expect(nextExperiment(s).index).toBe(1);
+    }
+  });
+  it("an unrelated change never discovers a mission the pool already meets", () => {
+    const o: LearnOptions = { mode: "solo", pace: "hard" };
+    for (const id of ["coral", "light"]) {
+      const s = { ...tide.create(o, ctx()), missions: [id, "crab", "snail", "rain", "heat"] };
+      const after = tryChange({ ...s, action: "crab", guesses: [expected(s.pool, "crab")] }, false);
+      expect(missionMet(after), id).toBe(true);
+      expect(missionDiscovered(after), id).toBe(false);
+      expect(nextExperiment(after).index).toBe(0);
     }
   });
   it("rejects malformed, oversized, inconsistent and unknown-key saves", () => {

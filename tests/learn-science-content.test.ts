@@ -29,7 +29,9 @@ describe("science content delivery", () => {
           while (!engine.outcome(s, options) && attempts++ < 50) {
             const p = s.pool,
               m = s.missions[s.index];
-            let a: Action = "fish";
+            // When the pool already meets a mission, try a change that relates to it (a sun or tide
+            // toggle and back), since an unrelated change no longer counts as a discovery.
+            let a: Action = (({ coral: "sun", light: "sun", snail: "sun", crab: "tide", rain: "tide" }) as Record<string, Action>)[m] ?? "fish";
             if (m === "heat") a = !p.creatures.includes("coral") ? "coral" : !p.warm ? "temperature" : "fish";
             else if (m === "rain" && !s.rained) a = "rain";
             else if (m === "coral" && !p.creatures.includes("coral")) a = "coral";

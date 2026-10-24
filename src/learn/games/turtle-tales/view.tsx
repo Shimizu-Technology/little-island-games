@@ -78,6 +78,8 @@ export function Board({ session, update, practice, sound, soundOn, width, height
               onPress={() => {
                 const next = talePick(s, i);
                 practice("read.meaning", next.solved);
+                // The story's phonics skill is credited only by understanding it on the first try.
+                if (s.wrong === null) practice(t.skill, next.solved);
                 sound(next.solved ? "match" : "turtle-tales-look");
                 update(next);
               }}
@@ -169,10 +171,8 @@ export function Board({ session, update, practice, sound, soundOn, width, height
           const next = taleTap(s, i);
           if (!complete) {
             practice("read.careful-reading", i === s.word);
-            if (i === s.word) {
-              practice(t.skill, true);
-              sound("tap");
-            } else sound("turtle-tales-next-word");
+            if (i === s.word) sound("tap");
+            else sound("turtle-tales-next-word");
             update(next);
           }
         }}

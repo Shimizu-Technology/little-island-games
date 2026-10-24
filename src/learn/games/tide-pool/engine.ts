@@ -135,6 +135,21 @@ export function missionMet(s: TideState) {
             ? s.rained && p.high && p.salt === 2
             : p.creatures.includes("coral") && p.heat === 2;
 }
+/** Changes that can actually answer each mission, so an unrelated change never "discovers" it. */
+const missionActions: Record<string, readonly string[]> = {
+  coral: ["temperature", "sun", "tide", "rain", "coral"],
+  crab: ["crab", "tide", "rain"],
+  snail: ["snail", "tide", "sun"],
+  light: ["sun", "tide", "seaweed"],
+  rain: ["rain", "tide"],
+};
+/** The mission is discovered by this result: the pool meets it and the change was relevant. */
+export function missionDiscovered(s: TideState) {
+  const id = s.missions[s.index];
+  // Watching warmth "over time" (the heat mission) counts any change as time passing.
+  const relevant = missionActions[id];
+  return s.result && s.last !== null && (!relevant || relevant.includes(s.last)) && missionMet(s);
+}
 export function tryChange(s: TideState, together: boolean): TideState {
   if (!s.action || s.result || s.guesses.length !== (together ? 2 : 1) || s.index >= s.missions.length) return s;
   return {
@@ -147,7 +162,7 @@ export function tryChange(s: TideState, together: boolean): TideState {
 }
 export function nextExperiment(s: TideState): TideState {
   if (!s.result) return s;
-  const met = missionMet(s);
+  const met = missionDiscovered(s);
   return { ...s, index: s.index + (met ? 1 : 0), action: null, guesses: [], result: false, last: null };
 }
 export const engine: LearnEngine<TideState> = {
