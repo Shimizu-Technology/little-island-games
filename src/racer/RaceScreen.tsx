@@ -1,7 +1,8 @@
 import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, AppState, Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
-import { Button, C, Copy, Heading, Label } from "../components/ui";
+import { AppState, Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Button, C, Copy, GameHeader, Heading, PressableScale, Sheet } from "../components/ui";
+import { useReducedMotion } from "../components/motion";
 import { COURSES, CourseId, raceCourse } from "./courses";
 import {
   advanceRace,
@@ -27,10 +28,12 @@ export type RaceScreenProps = {
   onSave: (session: RaceSession, record: RaceRecord | null) => void;
   onExit?: () => void;
   active?: boolean;
+  sound?: boolean;
+  onToggleSound?: () => void;
 };
 export { formatRaceTime as raceTime } from "./engine";
 /** Parent persists onSave transactionally. Remount after external backup replacement. */
-export function RaceScreen({ session, records = {}, onSave, onExit, active = true, onFeedback }: RaceScreenProps) {
+export function RaceScreen({ session, records = {}, onSave, onExit, active = true, onFeedback, sound, onToggleSound }: RaceScreenProps) {
   const viewport = useWindowDimensions();
   const shortLandscape = viewport.width > viewport.height && viewport.height < 520;
   const landscape = viewport.width > viewport.height;
@@ -51,22 +54,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
   const [autoRunning, setAutoRunning] = useState(false);
   const [foreground, setForeground] = useState(AppState.currentState === "active" || AppState.currentState === null);
   const [controlStyle, setControlStyle] = useState<"run" | "hold" | "step">("run");
-  const [reducedMotion, setReducedMotion] = useState(true);
-  useEffect(() => {
-    let mounted = true;
-    void AccessibilityInfo.isReduceMotionEnabled()
-      .then((value) => {
-        if (mounted) setReducedMotion(value);
-      })
-      .catch(() => {
-        /* Keep the conservative reduced-motion fallback. */
-      });
-    const sub = AccessibilityInfo.addEventListener("reduceMotionChanged", setReducedMotion);
-    return () => {
-      mounted = false;
-      sub.remove();
-    };
-  }, []);
+  const reducedMotion = useReducedMotion();
   const [width, setWidth] = useState(340),
     [help, setHelp] = useState(false),
     [message, setMessage] = useState("");
@@ -209,7 +197,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
           if (event) {
             feedback.current?.(event);
             if (event === "jump") setMessage("");
-            if (event === "recover") setMessage("Splash or bump! Back at your flag — try jumping a little earlier.");
+            if (event === "recover") setMessage("Back at your flag. Take a look at the next obstacle and try again when you’re ready.");
             if (event === "checkpoint") setMessage(`Flag ${runner.checkpoint + 1} saved! Your next try starts here.`);
             if (event === "finish")
               setMessage("Across the line! Your finish time is locked. Watch the other runners arrive.");
@@ -284,8 +272,8 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
   if (choosing)
     return (
       <View style={s.root}>
-        <Label>Little Island races</Label>
-        <Heading>Ready, set, island!</Heading>
+        {onExit && <GameHeader title="Island Dash" onBack={onExit} sound={onToggleSound ? { on: !!sound, toggle: onToggleSound } : undefined} />}
+        <Heading style={{ fontSize: 24 }}>Ready, set, island!</Heading>
         <Copy>Leap over coral, race rolling coconuts and find your next checkpoint. Everything plays offline.</Copy>
         {hasRound && (
           <Button quiet onPress={() => setChoosing(false)}>
@@ -301,12 +289,12 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
           </Button>
         </View>
         {COURSES.map((course, i) => (
-          <Pressable
+          <PressableScale
             key={course.id}
             accessibilityRole="button"
             accessibilityLabel={`${course.name}. ${course.subtitle}. ${course.id === "training" ? "Practice" : mode}`}
             onPress={() => begin(course.id)}
-            style={({ pressed }) => [s.course, { backgroundColor: course.sky, opacity: pressed ? 0.75 : 1 }]}
+            style={[s.course, { backgroundColor: course.sky }]}
           >
             <View style={[s.number, { backgroundColor: course.edge }]}>
               <Text style={s.numberText}>{i === 0 ? "GO" : String(i)}</Text>
@@ -324,7 +312,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
               )}
             </View>
             <Text style={s.arrow}>›</Text>
-          </Pressable>
+          </PressableScale>
         ))}
         <Copy style={s.small}>
           Training is always solo. Computer runners face the same obstacles. You can pass through each other. No network
@@ -340,26 +328,9 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
   const best = records[`${snapshot.course}:${snapshot.mode}`];
   return (
     <View style={s.root}>
-      <View style={s.row}>
-        <View style={{ flex: 1 }}>
-          <Label>
-            {snapshot.mode === "race" && snapshot.course !== "training" ? "Race · computer runners" : "Solo practice"}
-          </Label>
-          <Heading style={{ fontSize: shortLandscape ? 21 : 26 }}>{course.name}</Heading>
-        </View>
-        <Button
-          compact
-          quiet
-          onPress={() => {
-            pause();
-            setHelp((v) => !v);
-          }}
-        >
-          {help ? "Close help" : "How to race"}
-        </Button>
-      </View>
-      {help && (
-        <View style={s.panel}>
+      {onExit && <GameHeader title="Island Dash" onBack={onExit} sound={onToggleSound ? { on: !!sound, toggle: onToggleSound } : undefined} onHelp={() => { pause(); setHelp(true); }} />}
+      <View style={s.row}><Heading style={{ flex: 1, fontSize: 23 }}>{course.name}</Heading>{!onExit && <Button compact quiet onPress={() => { pause(); setHelp(true); }}>How to race</Button>}</View>
+      <Sheet visible={help} title="How to race" onClose={() => setHelp(false)} footer={<Button onPress={() => setHelp(false)}>Back to race</Button>}>
           <Copy>{course.lesson}</Copy>
           <Copy>
             Run & go moves you forward. Tap Jump before a block or water gap; tap Stop to wait for a gate. A slightly
@@ -401,8 +372,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
             Ranks compare actual runner progress. Finish placement counts computer runners that crossed before you.
             Practice has no opponents. Best times are separate for each course and mode.
           </Copy>
-        </View>
-      )}
+      </Sheet>
       {snapshot.edition !== 2 && (
         <Copy style={s.small}>
           Resuming your earlier course exactly where you left it. Choose a new course to try the new island routes.

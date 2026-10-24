@@ -75,7 +75,10 @@ export function playerColor(id: string) {
     known[id] ?? (/^p[1-7]$/.test(id) ? Number(id.slice(1)) : [...id].reduce((a, c) => a + c.charCodeAt(0), 0) % 8);
   return ["#BC6548", "#3D7197", "#387B64", "#80649E", "#956D24", "#AC567E", "#367E89", "#637237"][index];
 }
+export type VoteSummary = { accusedId: string | null; role: Role | null; tally: Record<string, number> };
 export type MysterySession = {
+  /** Public result only. Optional so original version-1 saves remain valid. */
+  voteSummary?: VoteSummary;
   version: 1;
   adventure?: Adventure;
   game: "island-mystery";
@@ -226,6 +229,7 @@ function copy(s: MysterySession): MysterySession {
     players: s.players.map((p) => ({ ...p, clues: p.clues.slice() })),
     tasks: { ...s.tasks },
     sabotage: s.sabotage ? { ...s.sabotage } : null,
+    ...(s.voteSummary ? { voteSummary: { ...s.voteSummary, tally: { ...s.voteSummary.tally } } } : {}),
     votes: { ...s.votes },
     ready: s.ready.slice(),
     events: s.events.slice(),
@@ -238,17 +242,31 @@ function resolveVotes(s: MysterySession) {
   });
   const ordered = Object.entries(tally).sort((a, b) => b[1] - a[1]);
   const selected = ordered[0];
+  s.voteSummary = { accusedId: null, role: null, tally };
   if (selected && selected[0] !== "skip" && selected[1] > (ordered[1]?.[1] ?? 0)) {
     const p = s.players.find((p) => p.id === selected[0])!;
     p.out = true;
+    s.voteSummary.accusedId = p.id;
+    s.voteSummary.role = p.role;
     note(s, `${p.name} was ${p.role === "crew" ? "crew and can still help with jobs" : "the mischief maker"}.`);
   } else note(s, "No clear vote. Everyone stays this time.");
+  note(s, voteSummaryText(s));
   s.phase = "explore";
   s.phaseLeft = 0;
   s.votes = {};
   s.ready = [];
   s.lastMeeting = s.tick;
   outcome(s);
+}
+/** Public aggregate, never individual ballots or unrevealed roles. Uses the existing event wire field. */
+export function voteSummaryText(s: MysterySession): string {
+  const summary = s.voteSummary;
+  if (!summary) return "";
+  const accused = s.players.find((p) => p.id === summary.accusedId);
+  const result = accused
+    ? `${accused.name} was accused: ${summary.role === "mischief" ? "mischief maker caught!" : "crew, now a helper."}`
+    : "No one was accused. Everyone stays.";
+  return `Vote result: ${result}`;
 }
 export function applyMysteryIntent(
   state: MysterySession,
@@ -508,6 +526,14 @@ export type MysteryView = {
   events: string[];
   result: MysterySession["result"];
 };
+function publicEvents(s: MysterySession): string[] {
+  if (!s.voteSummary) return s.events.slice();
+  const summary = [voteSummaryText(s), ...Object.entries(s.voteSummary.tally).map(([id, count]) =>
+    `Vote tally: ${id === "skip" ? "Skip" : s.players.find((p) => p.id === id)!.name}: ${count}`)];
+  const recent = s.events.filter((event) => !event.startsWith("Vote result:") && !event.startsWith("Vote tally:"));
+  // Keep the latest live event last, while retaining the public result within the existing 12-event bound.
+  return [...summary, ...recent.slice(-(12 - summary.length))];
+}
 export function mysteryView(s: MysterySession, recipient: string): MysteryView {
   const p = s.players.find((p) => p.id === recipient);
   if (!p) throw new Error("Unknown recipient.");
@@ -555,7 +581,7 @@ export function mysteryView(s: MysterySession, recipient: string): MysteryView {
     votesCast: Object.keys(s.votes).length,
     canMeet: p.meetings > 0 && s.tick - s.lastMeeting >= 10 && !s.sabotage,
     paused: pausedMystery(s),
-    events: s.events.slice(),
+    events: publicEvents(s),
     result: s.result ? { ...s.result } : null,
   };
 }
@@ -764,6 +790,18 @@ export function validMysterySession(v: unknown): v is MysterySession {
     )
   )
     return false;
+  if (s.voteSummary !== undefined) {
+    const r = s.voteSummary;
+    if (!object(r) || Object.keys(r).sort().join(",") !== "accusedId,role,tally" || !object(r.tally)) return false;
+    const entries = Object.entries(r.tally);
+    if (!entries.length || entries.length > s.players.length + 1 ||
+      entries.some(([id, count]) => (id !== "skip" && !s.players.some((p) => p.id === id)) || !integer(count, 1, 8)) ||
+      entries.reduce((sum, [, n]) => sum + n, 0) > s.players.length) return false;
+    const ranked = entries.sort((a, b) => b[1] - a[1]);
+    const winner = ranked[0][0] !== "skip" && ranked[0][1] > (ranked[1]?.[1] ?? 0) ? ranked[0][0] : null;
+    const accused = s.players.find((p) => p.id === r.accusedId);
+    if (r.accusedId !== winner || (winner === null ? r.role !== null : !accused?.out || accused.role !== r.role)) return false;
+  }
   if (
     new Set(s.players.map((p) => p.name.toLowerCase())).size !== s.players.length ||
     new Set(s.players.map((p) => p.id)).size !== s.players.length ||

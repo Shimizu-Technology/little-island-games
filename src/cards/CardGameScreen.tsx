@@ -1,9 +1,12 @@
 import { Text } from "../components/Text";
 import React, { useEffect, useRef, useState } from "react";
-import { AppState, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { AppState, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { useStore } from "../state/Store";
+import { PlayerNames, Scoreboard } from "../components/Match";
+import { newMatch, Seat } from "../games/match";
 import { GuidanceKey, QUALITY_GUIDANCE } from "../explore/guidance";
 import Svg, { Circle, Path, Polygon } from "react-native-svg";
-import { Button, C, Copy, Heading, Label, Sheet, font } from "../components/ui";
+import { Button, C, Copy, GameHeader, Heading, Label, PressableScale, Sheet, font, ToggleRow } from "../components/ui";
 import {
   Card,
   CardAction,
@@ -27,6 +30,7 @@ import {
   cardEventText,
   newCardIds,
   setCardPace,
+  points, cardMatch, cardStarter, cardMatchResult, cardMatchPoints, rematchCards,
 } from "./engine";
 
 const colors: Record<Suit, string> = { shell: "#A44E37", leaf: "#246858", sun: "#916500", wave: "#386C9A" };
@@ -68,22 +72,17 @@ function CardFace({
   disabled?: boolean;
   onPress?: () => void;
 }) {
-  const [focused, setFocused] = useState(false);
   return (
-    <Pressable
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
+    <PressableScale
       accessibilityRole={onPress ? "button" : "image"}
       accessibilityLabel={`${cardName(card)}${fresh ? ", new card" : ""}`}
       accessibilityState={{ disabled: !!disabled, selected: !!selected }}
       disabled={disabled || !onPress}
       onPress={onPress}
-      style={({ pressed }) => [
+      style={[
         s.card,
         { borderColor: fresh ? "#A44E37" : selected ? C.teal : C.line, borderWidth: selected || fresh ? 3 : 1 },
         disabled && { borderStyle: "dashed" },
-        pressed && { opacity: 0.7 },
-        focused && { outlineWidth: 3, outlineColor: C.blue },
       ]}
     >
       <Text style={[s.rank, { color: colors[suit(card)] }]}>
@@ -91,7 +90,7 @@ function CardFace({
       </Text>
       <SuitMark kind={suit(card)} />
       <Text style={s.suit}>{fresh ? "NEW" : suit(card)}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 export type CardGameScreenProps = {
@@ -103,6 +102,8 @@ export type CardGameScreenProps = {
   onFeedback?: () => void;
   onSpeakInstruction?: (key: GuidanceKey) => void;
   onStopInstruction?: () => void;
+  onBack?: () => void;
+  onToggleSound?: () => void;
 };
 export function CardGameScreen(props: CardGameScreenProps) {
   return <CardGameRound key={`${props.state.id}:${props.state.turn}:${props.active}`} {...props} />;
@@ -116,7 +117,14 @@ function CardGameRound({
   onFeedback,
   onSpeakInstruction,
   onStopInstruction,
+  onBack, onToggleSound,
 }: CardGameScreenProps) {
+  const store = useStore();
+  const match = cardMatch(state);
+  const [names, setNames] = useState<[string, string]>(match.names);
+  const [starter, setStarter] = useState<Seat>(cardStarter(state));
+  const [alternate, setAlternate] = useState(match.alternate);
+  const [scoring, setScoring] = useState(false);
   const latest = useRef(state);
   React.useLayoutEffect(() => {
     latest.current = state;
@@ -211,7 +219,7 @@ function CardGameRound({
     // A single committed revision owns each turn. Interruption cancels it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.id, state.revision, state.pace, cpu, playing]);
-  const name = (n: number) => (state.options.mode === "solo" ? (n === 0 ? "You" : "Computer") : `Player ${n + 1}`);
+  const name = (n: number) => match.names[n];
   const plays = state.game === "crazy-eights" ? legalCardPlays(state) : [];
   const fresh = newCardIds(state, owner);
   const result = state.result;
@@ -220,16 +228,16 @@ function CardGameRound({
   const title = result
     ? result.winner === "tie"
       ? "A tie!"
-      : `${name(result.winner)} ${result.winner === 0 && state.options.mode === "solo" ? "win" : "wins"}!`
+      : `${name(result.winner)} ${name(result.winner) === "You" ? "win" : "wins"}!`
     : cpu
-      ? "Computer’s turn"
+      ? `${name(1)}’s turn`
       : state.options.mode === "solo"
         ? "Your turn"
         : `${name(state.turn)}’s turn`;
   const legacyMessage = state.message
-    .replace(/Player 1's/g, state.options.mode === "solo" ? "Your" : "Player 1's")
-    .replace(/Player 1/g, name(0))
-    .replace(/Player 2/g, name(1));
+    .replace(/Player 1's/g, () => `${name(0)}’s`)
+    .replace(/Player 1/g, () => name(0))
+    .replace(/Player 2/g, () => name(1));
   const closeHelp = () => {
     setHelp(false);
     onStopInstruction?.();
@@ -241,6 +249,10 @@ function CardGameRound({
   };
   return (
     <View style={s.root}>
+      {onBack && <GameHeader title={state.game === "go-fish" ? "Go Fish" : "Crazy Eights"} onBack={onBack}
+        sound={onToggleSound ? { on: sound, toggle: onToggleSound } : undefined} onHelp={openHelp} />}
+      <Scoreboard match={match} result={cardMatchResult(state)} active={result ? null : state.turn} />
+      {state.game === "crazy-eights" && <Copy style={s.small}>Match points · {name(0)} {cardMatchPoints(state)[0]} · {name(1)} {cardMatchPoints(state)[1]}</Copy>}
       <View accessibilityLiveRegion="polite" style={s.notice}>
         <Heading style={{ fontSize: 22 }}>{title}</Heading>
         <Copy style={s.small}>
@@ -249,10 +261,24 @@ function CardGameRound({
               ? `${cardRanks(state)} books found. ${result.scores[0]} – ${result.scores[1]}.`
               : `${result.reason === "blocked" ? "No moves remain. Lower hand total wins." : "An empty hand wins."} Points: ${result.scores[0]} – ${result.scores[1]}.`
             : event
-              ? cardEventText(event, visible ? owner : null, state.options.mode)
+              ? cardEventText(event, visible ? owner : null, state.options.mode, match.names)
               : legacyMessage}
         </Copy>
       </View>
+      {result && <View style={{ gap: 10 }}>
+        <Button onPress={() => { const previous = latest.current; if (previous.id === state.id && previous.result) commit(rematchCards(previous), previous); }}>Play again</Button>
+        {state.game === "crazy-eights" && <>
+          <Button quiet onPress={() => setScoring(!scoring)}>{scoring ? "Hide scoring" : "Show scoring"}</Button>
+          {scoring && <View style={s.notice}>
+            {([0, 1] as const).filter((n) => result.reason === "blocked" || n !== result.winner).map((n) => <View key={n} style={{ gap: 4 }}>
+              <Heading style={{ fontSize: 18 }}>{name(n)}’s remaining hand</Heading>
+              {state.hands[n].map((c) => <Copy key={c} style={s.small}>{cardName(c)} · {points(c)} points</Copy>)}
+              <Copy style={s.small}>Hand total: {state.hands[n].reduce((sum, c) => sum + points(c), 0)} points.</Copy>
+            </View>)}
+            <Copy style={s.small}>{result.winner === "tie" ? "Equal hand totals: no points awarded." : `${name(result.winner)} earns ${result.scores[result.winner]} points${result.reason === "blocked" ? " (the difference between hand totals)" : " from the other hand"}.`}</Copy>
+          </View>}
+        </>}
+      </View>}
       <View style={s.table}>
         {state.game === "crazy-eights" ? (
           <>
@@ -386,9 +412,7 @@ function CardGameRound({
         </View>
       )}
       <View style={s.wrap}>
-        <Button compact quiet onPress={openHelp}>
-          How to play
-        </Button>
+        {!onBack && <Button compact quiet onPress={openHelp}>How to play</Button>}
         <Button compact quiet onPress={() => setHistory(!history)}>
           {history ? "Hide" : "Turn"} story
         </Button>
@@ -401,10 +425,13 @@ function CardGameRound({
             setMode(state.options.mode);
             setRound(cardRound(state));
             setPace(cardPace(state));
+            setNames(match.names);
+            setStarter(cardStarter(state));
+            setAlternate(match.alternate);
             setSetup(true);
           }}
         >
-          {result ? "Play again" : "Round options"}
+          {result ? "New match & options" : "Round options"}
         </Button>
       </View>
       {history && (
@@ -416,7 +443,7 @@ function CardGameRound({
               .reverse()
               .map((e) => (
                 <Copy key={e.revision} style={s.small}>
-                  {cardEventText(e, visible ? owner : null, state.options.mode)}
+                  {cardEventText(e, visible ? owner : null, state.options.mode, match.names)}
                 </Copy>
               ))
           ) : (
@@ -480,43 +507,57 @@ function CardGameRound({
               no skip, stacking or draw-two cards.
             </Copy>
             <Copy>
-              First empty hand wins. Eights are50points, picture cards10, aces1, and numbers their value. The winner
-              receives the other hand’s points. If stock runs out, used cards shuffle except the top. If both are
+              First empty hand wins. The winner receives the other hand’s points. If stock runs out, used cards shuffle except the top. If both are
               blocked, the lower total wins the difference; equal totals tie.
             </Copy>
+            <Copy>{"Eights: 50 points\nPicture cards: 10 points\nAces: 1 point\nNumber cards: their number"}</Copy>
           </>
         )}
         <Copy>
-          Quick:32cards, ranksA–8, five cards each. Full:52cards, ranksA–K, seven each. The same rules apply to both
+          Quick: 32 cards, ranks A–8, five cards each. Full: 52 cards, ranks A–K, seven each. The same rules apply to both
           players. Computer choices use only its own cards and public information.
         </Copy>
         <Copy>
           Step pace waits for your Let the computer play button. Steady pace takes one computer action about
-          every1.6seconds. Turn story keeps the last four actions. Private draws are concealed during handoff. All
+          every 1.6 seconds. Turn story keeps the last four actions. Private draws are concealed during handoff. All
           progress saves on this device.
         </Copy>
       </Sheet>
-      <Sheet visible={setup} title="Round options" onClose={() => setSetup(false)}>
+      <Sheet visible={setup} title="Round options" onClose={() => setSetup(false)} footer={
+        <Button onPress={() => {
+          const previous = latest.current;
+          const freshMatch = newMatch(names.map((n, i) => n.trim() || (mode === "solo" ? ["You", "Computer"][i] : `Player ${i + 1}`)), alternate);
+          store.rememberPlayers(freshMatch.names.filter((n) => n !== "Computer" && n !== "You"));
+          commit(createCardSession(state.game, { ...state.options, mode, computerFirst: starter === 1 }, undefined, undefined,
+            { round, pace, match: freshMatch, starter }), previous);
+          setSetup(false);
+        }}>Deal {round === "quick" ? "five" : "seven"} cards each · new match</Button>
+      }>
         <Heading style={{ fontSize: 21 }}>Who is playing?</Heading>
         <View style={s.wrap}>
-          <Button quiet selected={mode === "solo"} onPress={() => setMode("solo")}>
+          <Button quiet selected={mode === "solo"} onPress={() => { setMode("solo"); setNames([names[0] === "Player 1" ? "You" : names[0], names[1] === "Player 2" ? "Computer" : names[1]]); }}>
             Play computer
           </Button>
-          <Button quiet selected={mode === "together"} onPress={() => setMode("together")}>
+          <Button quiet selected={mode === "together"} onPress={() => { setMode("together"); setNames([names[0] === "You" ? "" : names[0], names[1] === "Computer" ? "" : names[1]]); }}>
             Two players
           </Button>
         </View>
+        <PlayerNames names={names} onChange={setNames} remembered={store.save.players} labels={mode === "solo" ? ["Your name (optional)", "Computer name (optional)"] : undefined} />
+        <Heading style={{ fontSize: 21 }}>Who starts this match?</Heading>
+        <View style={s.wrap}>{([0, 1] as const).map((seat) => <Button key={seat} quiet selected={starter === seat} onPress={() => setStarter(seat)}>{names[seat] || (mode === "solo" ? ["You", "Computer"][seat] : `Player ${seat + 1}`)}</Button>)}</View>
+        <ToggleRow label="Take turns starting" detail="Swap who goes first after each round" value={alternate} onChange={setAlternate} />
+        <Copy style={s.small}>Dealing here starts a new match with zero wins and points. Play again keeps your tally.</Copy>
         <Heading style={{ fontSize: 21 }}>How much time?</Heading>
         <View style={s.wrap}>
           <Button quiet selected={round === "quick"} onPress={() => setRound("quick")}>
-            Quick ·32cards
+            Quick · 32 cards
           </Button>
           <Button quiet selected={round === "full"} onPress={() => setRound("full")}>
-            Full ·52cards
+            Full · 52 cards
           </Button>
         </View>
         <Copy>
-          Quick usesA–8 and5cards each; Full usesA–K and7each. Choosing either replaces this saved round when you deal.
+          Quick uses A–8 and 5 cards each; Full uses A–K and 7 each. Choosing either replaces this saved round when you deal.
         </Copy>
         <Heading style={{ fontSize: 21 }}>Computer pace</Heading>
         <View style={s.wrap}>
@@ -536,18 +577,6 @@ function CardGameRound({
           }}
         >
           Keep hand · apply pace
-        </Button>
-        <Button
-          onPress={() => {
-            const previous = latest.current;
-            commit(
-              createCardSession(state.game, { ...state.options, mode }, undefined, undefined, { round, pace }),
-              previous
-            );
-            setSetup(false);
-          }}
-        >
-          Deal {round === "quick" ? "five" : "seven"} cards each
         </Button>
       </Sheet>
     </View>

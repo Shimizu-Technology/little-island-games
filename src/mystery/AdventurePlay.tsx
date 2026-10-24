@@ -1,8 +1,8 @@
 import { mysteryInstructions } from "./instructions";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Pressable, View, useWindowDimensions } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import { Text } from "../components/Text";
-import { Button, C, Copy, Heading } from "../components/ui";
+import { Button, C, Copy, Heading, PressableScale } from "../components/ui";
 import { BELL, MysteryIntent, MysteryView, Point, PUMP, TASKS, TRICK_GOAL, pathStep, playerColor } from "./engine";
 import { IslandScene, LandmarkArt, PLACES, placeName } from "./IslandArt";
 import { IslandJob, PumpJob } from "./IslandJobs";
@@ -43,7 +43,7 @@ export function AdventurePlay({
   const visibleRole = enabled && showRole && revealedRound === roundKey;
   const short = viewport.width > viewport.height && viewport.height < 520;
   const available = Math.max(260, Math.min(measured, 760));
-  const mapWidth = short ? Math.max(250, available - 266) : Math.min(available, 520);
+  const mapWidth = short ? Math.max(250, available - 266) : Math.min(available, view.phase !== "explore" || TASKS.some((t) => t.x === self.x && t.y === self.y) || view.sabotage ? 340 : 520);
   const task = TASKS.find((t) => t.x === self.x && t.y === self.y);
   const atPump = self.x === PUMP.x && self.y === PUMP.y;
   const atBell = self.x === BELL.x && self.y === BELL.y;
@@ -83,6 +83,11 @@ export function AdventurePlay({
     setGoal(null);
     intent({ type: "step", fromX: self.x, fromY: self.y, dx, dy });
   };
+  const votePanel = view.events.some((event) => event.startsWith("Vote result:")) ? (
+    <View accessibilityLiveRegion="polite" style={{ padding: 12, borderRadius: 16, backgroundColor: C.sand }}>
+      <Copy>{view.events.filter((event) => event.startsWith("Vote result:") || event.startsWith("Vote tally:")).join("\n")}</Copy>
+    </View>
+  ) : null;
   return (
     <View onLayout={(event) => setMeasured(event.nativeEvent.layout.width)} style={{ gap: 12 }}>
       <View style={{ padding: 13, backgroundColor: view.result ? "#E2EDD9" : "#EDF0E3", borderRadius: 18, gap: 4 }}>
@@ -110,7 +115,7 @@ export function AdventurePlay({
               {guide.stage === "walk"
                 ? "Let’s help the plants grow. Walk to the Garden to try a job."
                 : guide.stage === "water"
-                  ? `Tap each thirsty bed below the map. Any order! ${guide.growing} of 3 growing.`
+                  ? `Tap each thirsty bed. Any order! ${guide.growing} of 3 growing.`
                   : "All three beds are growing. A job for the crew! Explore another place or look for clues with friends."}
             </Copy>
           </View>
@@ -287,12 +292,13 @@ export function AdventurePlay({
           <Copy style={{ fontSize: 12 }}>Only you can read these notes. Share a clue aloud at the bell.</Copy>
         </View>
       )}
+      {view.result && votePanel}
       {view.solo && canAct && view.phase !== "explore" && (
         <Button compact quiet onPress={() => intent({ type: "wait" })}>
           Let the islanders respond · 1 beat
         </Button>
       )}
-      {view.sabotage && (
+      {view.sabotage && !atPump && (
         <View style={{ borderRadius: 15, padding: 12, backgroundColor: "#F5DFC8", gap: 5 }}>
           <Heading style={{ fontSize: 19 }}>
             Water is off · {view.sabotage.left} {view.solo ? "beats" : "seconds"}
@@ -308,46 +314,6 @@ export function AdventurePlay({
       <View
         style={short ? { flexDirection: "row", gap: 14, alignItems: "flex-start" } : { gap: 12, alignItems: "center" }}
       >
-        <View style={{ gap: 7, alignItems: "center" }}>
-          <IslandScene view={view} width={mapWidth} goal={goal} onGoal={walk} enabled={exploring} />
-          <Text
-            accessibilityLabel={`You are at column ${self.x}, row ${self.y}. ${placeName(self)}.`}
-            style={{ fontSize: 12, color: C.muted }}
-          >
-            {placeName(self)}
-            {self.out ? " · helping after the vote" : ""}
-            {goal ? ` → ${placeName(goal)}` : ""}
-          </Text>
-          {view.phase === "explore" && (
-            <View
-              style={{ flexDirection: "row", gap: 5, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}
-            >
-              {[
-                { label: "Move left", text: "←", x: -1, y: 0 },
-                { label: "Move up", text: "↑", x: 0, y: -1 },
-                { label: "Move down", text: "↓", x: 0, y: 1 },
-                { label: "Move right", text: "→", x: 1, y: 0 },
-              ].map((d) => (
-                <Button
-                  key={d.label}
-                  compact
-                  quiet
-                  label={d.label}
-                  style={{ width: 48, minHeight: 46, paddingHorizontal: 5 }}
-                  disabled={!exploring}
-                  onPress={() => move(d.x, d.y)}
-                >
-                  {d.text}
-                </Button>
-              ))}
-              {view.solo && (
-                <Button compact quiet disabled={!canAct} onPress={() => intent({ type: "wait" })}>
-                  Watch · 1 beat
-                </Button>
-              )}
-            </View>
-          )}
-        </View>
         <View style={{ gap: 10, width: short ? 250 : "100%", maxWidth: 520 }}>
           {onSpeakInstruction && enabled && (
             <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
@@ -426,15 +392,16 @@ export function AdventurePlay({
                 : "Talk to your family about what you notice."}
             </Copy>
           )}
+          {!view.result && votePanel}
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
             {TASKS.map((t) => (
-              <Pressable
+              <PressableScale
                 key={t.id}
                 accessibilityRole="button"
                 accessibilityLabel={`Walk to ${PLACES.find((p) => p.id === t.id)?.name}, ${view.tasks[t.id]} of 3 ready`}
                 disabled={!exploring}
                 onPress={() => walk(t)}
-                style={({ pressed }) => ({
+                style={{
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 5,
@@ -444,16 +411,56 @@ export function AdventurePlay({
                   borderWidth: 1,
                   borderColor: "#D9E0D0",
                   backgroundColor: "#FFFDF5",
-                  opacity: !exploring ? 0.5 : pressed ? 0.7 : 1,
-                })}
+                  opacity: !exploring ? 0.5 : 1,
+                }}
               >
                 <LandmarkArt kind={t.id} size={28} complete={view.tasks[t.id] === 3} />
                 <Text style={{ fontSize: 12, color: C.ink, fontWeight: "700" }}>
                   {PLACES.find((p) => p.id === t.id)?.name} · {view.tasks[t.id]}/3
                 </Text>
-              </Pressable>
+              </PressableScale>
             ))}
           </View>
+        </View>
+        <View style={{ gap: 7, alignItems: "center" }}>
+          <IslandScene view={view} width={mapWidth} goal={goal} onGoal={walk} enabled={exploring} />
+          <Text
+            accessibilityLabel={`You are at column ${self.x}, row ${self.y}. ${placeName(self)}.`}
+            style={{ fontSize: 12, color: C.muted }}
+          >
+            {placeName(self)}
+            {self.out ? (view.ownRole === "mischief" ? " · caught mischief maker" : " · helping after the vote") : ""}
+            {goal ? ` → ${placeName(goal)}` : ""}
+          </Text>
+          {view.phase === "explore" && (
+            <View
+              style={{ flexDirection: "row", gap: 5, alignItems: "center", flexWrap: "wrap", justifyContent: "center" }}
+            >
+              {[
+                { label: "Move left", text: "←", x: -1, y: 0 },
+                { label: "Move up", text: "↑", x: 0, y: -1 },
+                { label: "Move down", text: "↓", x: 0, y: 1 },
+                { label: "Move right", text: "→", x: 1, y: 0 },
+              ].map((d) => (
+                <Button
+                  key={d.label}
+                  compact
+                  quiet
+                  label={d.label}
+                  style={{ width: 48, minHeight: 46, paddingHorizontal: 5 }}
+                  disabled={!exploring}
+                  onPress={() => move(d.x, d.y)}
+                >
+                  {d.text}
+                </Button>
+              ))}
+              {view.solo && (
+                <Button compact quiet disabled={!canAct} onPress={() => intent({ type: "wait" })}>
+                  Watch · 1 beat
+                </Button>
+              )}
+            </View>
+          )}
         </View>
       </View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
@@ -461,7 +468,7 @@ export function AdventurePlay({
           <Text key={p.id} style={{ fontSize: 12, fontWeight: "700", color: playerColor(p.id) }}>
             {p.name}
             {p.id === view.selfId ? " (you)" : ""} ·{" "}
-            {p.out ? "helper" : !p.connected ? "away" : p.visible === false ? "out of sight" : "nearby"}
+            {p.out ? (view.result?.reason === "caught" && view.result.winner === "crew" ? (view.events.some((e) => e.startsWith(`Vote result: ${p.name} was accused: mischief maker`)) ? "caught mischief maker" : "helper") : "helper") : !p.connected ? "away" : p.visible === false ? "out of sight" : "nearby"}
           </Text>
         ))}
       </View>

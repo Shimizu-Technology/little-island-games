@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { AppState, Platform, StyleSheet, TextInput, View } from "react-native";
 import { AdventurePlay } from "./AdventurePlay";
 import { mysteryInstructions } from "./instructions";
-import { Button, C, Copy, Heading, Label, Sheet, Status, font } from "../components/ui";
+import { Button, C, Copy, Heading, Label, Sheet, Status, font, GameHeader } from "../components/ui";
 import { nearby, nearbyUnavailable } from "../../modules/island-nearby";
-import { MysteryIntent, MysterySession, Role, playSoloIntent, createMysterySession, mysteryView } from "./engine";
+import { MysteryIntent, MysterySession, Role, playSoloIntent, createMysterySession, mysteryView, TASKS, PUMP, BELL } from "./engine";
 import { NearbyMystery, NearbyState } from "./nearby";
 
 const initialNearby: NearbyState = {
@@ -20,6 +20,7 @@ const initialNearby: NearbyState = {
   canRejoin: false,
 };
 export type MysteryScreenProps = {
+  onActionFocus?: () => void;
   state: MysterySession | null;
   onSave: (next: MysterySession, previous: MysterySession | null) => void;
   width: number;
@@ -29,8 +30,11 @@ export type MysteryScreenProps = {
   onFeedback?: () => void;
   onSpeakInstruction?: (key: keyof typeof mysteryInstructions) => void;
   onStopInstruction?: () => void;
+  /** Shown only on the start menu; a round has its own Leave header. */
+  menuHeader?: React.ReactNode;
+  soundControl?: { on: boolean; toggle: () => void };
 };
-export function MysteryScreen({ state, onSave, width, active, sound, onFeedback, onSpeakInstruction, onStopInstruction }: MysteryScreenProps) {
+export function MysteryScreen({ onActionFocus, state, onSave, width, active, sound, onFeedback, onSpeakInstruction, onStopInstruction, menuHeader, soundControl }: MysteryScreenProps) {
   const stopSpeech = useRef(onStopInstruction);
   React.useLayoutEffect(() => { stopSpeech.current = onStopInstruction; }, [onStopInstruction]);
   useEffect(() => () => stopSpeech.current?.(), []);
@@ -41,6 +45,7 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback,
     [setup, setSetup] = useState(false),
     [parent, setParent] = useState(false),
     [exit, setExit] = useState(false);
+  const [roomDetails, setRoomDetails] = useState(false);
   const [role, setRole] = useState<Role>("crew"),
     [showRole, setShowRole] = useState(false);
   const [name, setName] = useState("Player"),
@@ -91,6 +96,15 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback,
   const playing = active && foreground && !help && !setup && !parent && !exit;
   const view =
     mode === "solo" && state ? mysteryView(state, state.players[0].id) : mode === "nearby" ? remote.view : null;
+  const self = view?.players.find((p) => p.id === view.selfId);
+  const station = self && [...TASKS, { ...PUMP, id: "pump" }, { ...BELL, id: "bell" }].find((p) => p.x === self.x && p.y === self.y)?.id;
+  const actionFocusKey = view ? `${view.id}:${view.phase}:${station ?? "walking"}:${station === "pump" && !!view.sabotage}` : "";
+  const focusAction = useRef(onActionFocus);
+  React.useLayoutEffect(() => { focusAction.current = onActionFocus; }, [onActionFocus]);
+  const focusNeeded = !!station || (!!view && view.phase !== "explore");
+  useEffect(() => {
+    if (focusNeeded) focusAction.current?.();
+  }, [actionFocusKey, focusNeeded]);
   const intent = (action: MysteryIntent) => {
     if (!playing) return;
     if (sound) onFeedback?.();
@@ -112,9 +126,21 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback,
     setSetup(false);
     setParent(false);
     setExit(false);
+    setRoomDetails(false);
   };
   return (
     <View style={{ width: "100%", maxWidth: 850, alignSelf: "center", gap: 16 }}>
+      {mode === "menu" && menuHeader}
+      {mode !== "menu" && (
+        <GameHeader title="Mystery" backLabel="Leave" onBack={() => { setShowRole(false); setExit(true); }}
+          sound={soundControl}
+          onHelp={() => { setShowRole(false); setHelp(true); }}>
+          {mode === "nearby" && remote.mode === "host" && remote.pin && (
+            <Button compact quiet onPress={() => { setShowRole(false); setRoomDetails(true); }}>Room details</Button>
+          )}
+          {mode === "solo" && <Button compact quiet label="Fresh practice" onPress={() => { setShowRole(false); setSetup(true); }}>New</Button>}
+        </GameHeader>
+      )}
       {mode === "menu" && (
         <>
           <Status
@@ -306,39 +332,11 @@ export function MysteryScreen({ state, onSave, width, active, sound, onFeedback,
           </Button>
         </View>
       )}
-      {mode !== "menu" && (
-        <View style={s.row}>
-          <Button
-            quiet
-            onPress={() => {
-              setShowRole(false);
-              setHelp(true);
-            }}
-          >
-            How to play
-          </Button>
-          {mode === "solo" && (
-            <Button
-              quiet
-              onPress={() => {
-                setShowRole(false);
-                setSetup(true);
-              }}
-            >
-              Fresh practice
-            </Button>
-          )}
-          <Button
-            quiet
-            onPress={() => {
-              setShowRole(false);
-              setExit(true);
-            }}
-          >
-            Leave mystery
-          </Button>
-        </View>
-      )}
+
+      <Sheet visible={roomDetails && active && foreground} title="Private room details" onClose={() => setRoomDetails(false)}>
+        <Copy>Share this PIN only with your family. A returning guest needs your approval.</Copy>
+        <Heading>{remote.pin}</Heading>
+      </Sheet>
       <Sheet visible={help} title="Picnic Island rules" onClose={() => { setHelp(false); onStopInstruction?.(); }}>
         {Object.entries(mysteryInstructions).map(([key, text]) => (
           <View key={key} style={{ gap: 8 }}>

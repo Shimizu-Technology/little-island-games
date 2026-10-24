@@ -1,11 +1,12 @@
 import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, BackHandler, Platform, Pressable, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
+import { AppState, BackHandler, Platform, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path, Rect } from "react-native-svg";
-import { Button, C, Chip, Copy, Heading, Label, Status, font } from "../components/ui";
+import { Button, C, Chip, Copy, Heading, Label, Status, font, GameHeader, PressableScale } from "../components/ui";
 import { ExploreTopic, WORLDS, WorldId, searchTopics, topicById, topicNarration } from "./content";
 import { HABITATS, LabAction, LabState, PLACES, WATER_ACTIONS, activityTopic, isDay, labAction } from "./activities";
+import { labAudioKey, LabAudioKey } from "./labAudio";
 import { GuidanceKey } from "./guidance";
 import { ExploreLocation, ExploreProgress, exploreLocationKey, restoreExploreProgress } from "./progress";
 import { LabManipulative, LabGuidance } from "./LabManipulatives";
@@ -21,7 +22,7 @@ export interface ExploreScreenProps {
   progress?: ExploreProgress;
   onProgressChange?: (next: ExploreProgress) => void;
   onToggleSound?: () => void;
-  onSpeakInstruction?: (key: GuidanceKey) => void;
+  onSpeakInstruction?: (key: GuidanceKey | LabAudioKey) => void;
   onStopInstruction?: () => void;
   speakingInstructionId?: string;
 }
@@ -57,6 +58,10 @@ export function ExploreScreen({
   const [onlyFavorites, setOnlyFavorites] = useState(initial.onlyFavorites);
   const [labs, setLabs] = useState<Record<WorldId, LabState>>(initial.labs);
   const scroll = useRef<ScrollView>(null);
+  const searchInput = useRef<TextInput>(null);
+  const searchY = useRef(0);
+  const searchAllRequested = useRef(false);
+  const [showActivities, setShowActivities] = useState(false);
   const positions = useRef<Record<string, number>>(initial.positions);
   const currentY = useRef(initial.positions[locationKey(initial.location)] ?? 0);
   const pendingRestore = useRef(true);
@@ -153,47 +158,14 @@ export function ExploreScreen({
     setLabs((previous) => ({ ...previous, [id]: labAction(previous[id], action) }));
   return (
     <SafeAreaView style={s.page} edges={["top", "left", "right", "bottom"]}>
-      <View style={s.topbar}>
-        <Button
-          quiet
-          compact
-          onPress={back}
-          label={history.length ? "Back to previous discovery" : "Back to Little Island"}
-        >
-          ‹ {history.length ? "Back" : "Little Island"}
-        </Button>
-        {history.length > 0 ? (
-          <Button
-            quiet
-            compact
-            label="Back to Little Island, keep my discovery place"
-            onPress={() => {
-              onStop();
-              onStopInstruction?.();
-              rememberScroll();
-              onBack();
-            }}
-          >
-            Games
-          </Button>
-        ) : (
-          <Label style={{ flexShrink: 1 }}>Explore</Label>
-        )}
-        {onToggleSound && (
-          <Button
-            quiet
-            compact
-            onPress={() => {
-              onStop();
-              onStopInstruction?.();
-              onToggleSound();
-            }}
-          >
-            Sound {narrationEnabled ? "on" : "off"}
-          </Button>
-        )}
+      <View style={{ paddingHorizontal: 18 }}>
+        <GameHeader title="Explore" onBack={back} backLabel={history.length ? "Back" : "Games"}
+          sound={onToggleSound ? { on: narrationEnabled, toggle: () => { stopRef.current(); onToggleSound(); } } : undefined}>
+          {history.length > 0 && <Button quiet compact label="Back to Little Island, keep my discovery place" onPress={() => { stopRef.current(); rememberScroll(); onBack(); }}>Games</Button>}
+        </GameHeader>
       </View>
       <ScrollView
+        key={currentKey}
         ref={scroll}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
@@ -220,6 +192,12 @@ export function ExploreScreen({
             <Label>Follow your curiosity</Label>
             <Heading style={s.title}>Where shall we go?</Heading>
             <Copy>Five worlds. Fifty discoveries. Ready without Wi-Fi.</Copy>
+            <View style={s.row}>
+              <Button compact quiet onPress={() => { scroll.current?.scrollTo({ y: searchY.current, animated: false }); searchInput.current?.focus(); }}>Search</Button>
+              <Button compact quiet onPress={() => { setOnlyFavorites(true); scroll.current?.scrollTo({ y: searchY.current, animated: false }); }}>Favorites</Button>
+              <Button compact quiet selected={showActivities} onPress={() => setShowActivities(!showActivities)}>Activities</Button>
+            </View>
+            {showActivities && <View style={s.row}>{WORLDS.map((w) => <Button key={w.id} compact quiet onPress={() => go({ kind: "activity", world: w.id })}>{activityInvitations[w.id]}</Button>)}</View>}
             <DiscoveryMap
               onChoose={(id) => go({ kind: "world", world: id })}
               onActivity={(id) => go({ kind: "activity", world: id })}
@@ -241,7 +219,14 @@ export function ExploreScreen({
         )}
         {(location.kind === "map" || location.kind === "world") && (
           <>
-            <View style={s.sectionHeading}>
+            <View onLayout={(event) => {
+              searchY.current = event.nativeEvent.layout.y;
+              if (searchAllRequested.current && location.kind === "map") {
+                searchAllRequested.current = false;
+                positions.current.map = searchY.current;
+                requestAnimationFrame(() => scroll.current?.scrollTo({ y: searchY.current, animated: false }));
+              }
+            }} style={s.sectionHeading}>
               <Heading style={{ fontSize: 24 }}>
                 {location.kind === "map" ? "Find a discovery" : "Wonder about…"}
               </Heading>
@@ -250,6 +235,7 @@ export function ExploreScreen({
               </Copy>
             </View>
             <TextInput
+              ref={searchInput}
               style={s.input}
               accessibilityLabel="Search discoveries"
               placeholder="Search sky, turtles, space…"
@@ -262,21 +248,25 @@ export function ExploreScreen({
             />
             <View style={s.row}>
               <Chip selected={!onlyFavorites} onPress={() => setOnlyFavorites(false)}>
-                All discoveries
+                Include non-favorites
               </Chip>
               <Chip selected={onlyFavorites} onPress={() => setOnlyFavorites(true)}>
                 Favorites ({favorites.length})
               </Chip>
             </View>
             {topics.length === 0 && (
-              <Status
+              <View style={{ gap: 10 }}><Status
                 title={onlyFavorites && !favorites.length ? "Your discoveries can live here" : "No discoveries found"}
                 detail={
                   onlyFavorites && !favorites.length
-                    ? "Open a topic and tap Save favorite. Try All discoveries to start exploring."
-                    : "Try a shorter search, another world, or All discoveries."
+                    ? "Open a topic and tap Save favorite. Try Include non-favorites to start exploring."
+                    : "Keep your search and look in every world, or clear the search to try again."
                 }
               />
+              <View style={s.row}>
+                {location.kind === "world" && <Button compact onPress={() => { searchAllRequested.current = true; go({ kind: "map" }); }}>Search all worlds</Button>}
+                <Button compact quiet onPress={() => setQuery("")}>Clear search</Button>
+              </View></View>
             )}
             <View style={s.grid}>
               {topics.map((item) => (
@@ -316,7 +306,7 @@ export function ExploreScreen({
               onStop={onStopInstruction}
               speaking={speakingInstructionId}
             />
-            <Lab world={world.id} state={labs[world.id]} act={(action) => act(world.id, action)} />
+            <Lab world={world.id} state={labs[world.id]} act={(action) => { stopRef.current(); act(world.id, action); }} sound={narrationEnabled} onHear={onSpeakInstruction} />
             <View style={s.row}>
               <Button quiet onPress={() => act(world.id, { type: "reset" })}>
                 Start activity again
@@ -338,7 +328,6 @@ function DiscoveryMap({ onChoose, onActivity }: {
   onChoose: (id: WorldId) => void;
   onActivity: (id: WorldId) => void;
 }) {
-  const [focused, setFocused] = useState<string>();
   return (
     <View style={s.discoveryMap}>
       <View pointerEvents="none" style={StyleSheet.absoluteFill}>
@@ -359,27 +348,23 @@ function DiscoveryMap({ onChoose, onActivity }: {
       <Label style={{ textAlign: "center", paddingTop: 12 }}>Your discovery map</Label>
       <View style={s.mapGrid}>
         {WORLDS.map((world, i) => (
-          <Pressable
+          <PressableScale
             accessibilityRole="button"
             accessibilityLabel={`Explore ${world.title}, 10 discoveries and ${world.activity}`}
             key={world.id}
-            onFocus={() => setFocused(world.id)}
-            onBlur={() => setFocused(undefined)}
             onPress={() => onChoose(world.id)}
-            style={({ pressed }) => [
+            style={[
               s.mapIsland,
               {
                 backgroundColor: world.tint,
                 borderColor: world.color,
                 transform: [{ rotate: `${i % 2 ? 2 : -2}deg` }],
               },
-              pressed && { opacity: 0.7 },
-              focused === world.id && { outlineColor: C.blue, outlineWidth: 3 },
             ]}
           >
             <WorldGlyph world={world.id} size={68} />
             <Text style={s.islandLabel}>{world.title}</Text>
-          </Pressable>
+          </PressableScale>
         ))}
       </View>
       <Copy style={{ fontSize: 12, textAlign: "center" }}>An imaginary map of ideas. Tap an island to explore.</Copy>
@@ -415,19 +400,14 @@ function TopicCard({
   twoColumns: boolean;
 }) {
   const world = WORLDS.find((w) => w.id === topic.world)!;
-  const [focused, setFocused] = useState(false);
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={`${topic.title}${favorite ? ", saved favorite" : ""}. ${world.title}`}
       onPress={onPress}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      style={({ pressed }) => [
+      style={[
         s.card,
         { width: twoColumns ? "48.5%" : "100%" },
-        pressed && { opacity: 0.75 },
-        focused && { outlineColor: C.blue, outlineWidth: 3 },
       ]}
     >
       <TopicArt topic={topic} compact />
@@ -440,7 +420,7 @@ function TopicCard({
         <Copy style={{ fontSize: 14, lineHeight: 22 }}>{topic.short}</Copy>
         <Text style={s.read}>Let's find out ›</Text>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 function TopicView({
@@ -536,7 +516,11 @@ function TopicView({
     </>
   );
 }
-function Lab({ world, state, act }: { world: WorldId; state: LabState; act: (action: LabAction) => void }) {
+function Lab({ world, state, act, sound, onHear }: { world: WorldId; state: LabState; act: (action: LabAction) => void; sound: boolean; onHear?: (key: GuidanceKey | LabAudioKey) => void }) {
+  const feedback = (title: string, success = false) => state.message ? <View accessibilityLiveRegion="polite" style={{ gap: 6 }}>
+    <Status title={title} detail={state.message} success={success} />
+    {onHear && labAudioKey(state.message) && <Button compact quiet disabled={!sound} onPress={() => onHear(labAudioKey(state.message)!)}>Hear this</Button>}
+  </View> : null;
   if (world === "space") {
     const edge = state.turn === 2 || state.turn === 6;
     return (
@@ -568,55 +552,27 @@ function Lab({ world, state, act }: { world: WorldId; state: LabState; act: (act
       </>
     );
   }
-  if (world === "oceans")
-    return (
-      <>
-        <Copy>
-          Build one possible ocean food chain. Start with the energy source, then choose who receives that energy next.
-        </Copy>
-        <LabManipulative world="oceans" state={state} act={act} />
-        <Button quiet disabled={!state.chain.length} onPress={() => act({ type: "unchain" })}>
-          Remove last link
-        </Button>
-        {state.message && (
-          <Status
-            title={state.chain.length === 5 ? "You built a chain!" : "Try the next connection"}
-            detail={state.message}
-            success={state.chain.length === 5}
-          />
-        )}
-        <Copy>
-          Phytoplankton use sunlight. Some zooplankton eat phytoplankton; some small fish eat zooplankton; larger fish
-          can eat smaller fish. Animals often have several foods, so real life forms a web.
-        </Copy>
-      </>
-    );
+  if (world === "oceans") return <>
+    <Copy>Build one possible ocean food chain. Start with the energy source, then choose who receives that energy next.</Copy>
+    {feedback(state.chain.length === 5 ? "You built a chain!" : "Try the next connection", state.chain.length === 5)}
+    {state.chain.length === 5 ? <View style={s.deeper}><Heading style={{ fontSize: 23 }}>Your food chain is complete</Heading><Copy>{state.chain.join(" → ")}</Copy><Button onPress={() => act({ type: "reset" })}>Build another chain</Button></View> : <>
+      <LabManipulative world="oceans" state={state} act={act} />
+      <Button quiet disabled={!state.chain.length} onPress={() => act({ type: "unchain" })}>Remove last link</Button>
+    </>}
+    <Copy>Phytoplankton use sunlight. Some zooplankton eat phytoplankton; some small fish eat zooplankton; larger fish can eat smaller fish. Real life forms a web.</Copy>
+  </>;
   if (world === "animals") {
-    const animal = HABITATS[state.habitat];
-    return (
-      <>
-        <Copy>Find a suitable habitat for each animal. Think about its food, water, shelter, and space.</Copy>
-        <Copy>
-          {state.matched.length} of {HABITATS.length} habitats found
-        </Copy>
-        {animal ? (
-          <>
-            <LabManipulative world="animals" state={state} act={act} />
-          </>
-        ) : (
-          <Status
-            title="Six good habitat matches!"
-            detail="Different living things need different homes. You found a suitable place for each one."
-            success
-          />
-        )}
-        {state.message && <Status title="Habitat clue" detail={state.message} />}
-        <Copy>
-          These are examples of suitable habitats. An animal's whole habitat is larger than one nest, leaf, or hiding
-          place.
-        </Copy>
-      </>
-    );
+    const done = state.habitat === HABITATS.length && !state.habitatFeedback;
+    // Old saves advanced immediately: never put their previous animal's explanation under the next one.
+    const oldExplanation = !state.habitatFeedback && HABITATS.some((animal) => animal.why === state.message);
+    return <>
+      <Copy>Find a suitable habitat for each animal. Think about food, water, shelter, and space.</Copy>
+      <Copy>{state.matched.length} of {HABITATS.length} habitats found</Copy>
+      {!oldExplanation && feedback(state.habitatFeedback ? "A good habitat match!" : "Habitat clue", !!state.habitatFeedback)}
+      {done ? <View style={s.deeper}><Status title="Six good habitat matches!" detail="You found a suitable place for each animal." success /><Button onPress={() => act({ type: "reset" })}>Match animals again</Button></View> : <LabManipulative world="animals" state={state} act={act} />}
+      {state.habitatFeedback && <Button onPress={() => act({ type: "next-animal" })}>{state.habitat === HABITATS.length ? "See all matches" : "Next animal"}</Button>}
+      <Copy>These are examples of suitable habitats. An animal's whole habitat is larger than one nest, leaf, or hiding place.</Copy>
+    </>;
   }
   if (world === "weather")
     return (
@@ -624,7 +580,6 @@ function Lab({ world, state, act }: { world: WorldId; state: LabState; act: (act
         <Copy>
           Move a drop through water's different states. Choose an action, watch what changes, and try a different route.
         </Copy>
-        <LabManipulative world="weather" state={state} act={act} />
         <Status
           title={
             {
@@ -638,6 +593,8 @@ function Lab({ world, state, act }: { world: WorldId; state: LabState; act: (act
           }
           detail={state.message || "Choose what happens to the water next."}
         />
+        {state.message && onHear && labAudioKey(state.message) && <Button compact quiet disabled={!sound} onPress={() => onHear(labAudioKey(state.message)!)}>Hear this</Button>}
+        <LabManipulative world="weather" state={state} act={act} />
         <View style={s.row}>
           {WATER_ACTIONS[state.water].map((choice) => (
             <Button key={choice.action} onPress={() => act({ type: "water", action: choice.action })}>
@@ -670,7 +627,8 @@ function Lab({ world, state, act }: { world: WorldId; state: LabState; act: (act
         Follow five clues around a simplified world map. Tap a numbered destination below the map to choose it. North is
         up.
       </Copy>
-      <LabManipulative world="world" state={state} act={act} />
+      {feedback("Expedition notebook")}
+      {state.expedition !== PLACES.length && <LabManipulative world="world" state={state} act={act} />}
       <Copy style={{ fontSize: 13 }}>
         Green = land · Blue = ocean · Numbered dots = destinations. Shapes are simplified and polar land is stretched.
       </Copy>
@@ -687,7 +645,7 @@ function Lab({ world, state, act }: { world: WorldId; state: LabState; act: (act
         }
         success={state.expedition === PLACES.length}
       />
-      <View style={s.row}>
+      {state.expedition === PLACES.length ? <Button onPress={() => act({ type: "reset" })}>Explore the map again</Button> : <View style={s.row}>
         {PLACES.map((place, index) => (
           <Button
             key={place.id}
@@ -699,8 +657,8 @@ function Lab({ world, state, act }: { world: WorldId; state: LabState; act: (act
             {index + 1}. {place.name}
           </Button>
         ))}
-      </View>
-      {state.message && <Status title="Expedition notebook" detail={state.message} />}
+      </View>}
+
       <Copy>
         {state.visited.length} of {PLACES.length} destinations found. This map is for learning, not travel directions.
       </Copy>

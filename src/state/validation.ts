@@ -8,6 +8,7 @@ import { Activities, ActivityId, activityIds, validActivities, validActivityReco
 import type { RaceRecords } from "../racer/engine";
 import { normalizeExploreFavorites, topicById } from "../explore/content";
 import { WORDS } from "../games/words";
+import { validMatch, validSeat, validPlayers } from "../games/match";
 export type Settings = { sound: boolean; help: boolean };
 export type Save = {
   version: 1;
@@ -20,6 +21,8 @@ export type Save = {
   recentActivity?: ActivityId | null;
   raceRecords?: RaceRecords;
   explore?: { favorites: string[]; progress?: ExploreProgress };
+  /** Family names remembered for quick two-player setup; most recent first. */
+  players?: string[];
 };
 export const emptySave = (): Save => ({
   version: 1,
@@ -76,19 +79,36 @@ export function validSession(v: unknown): v is GameState {
     !["easy", "medium", "hard"].includes(v.options.difficulty as string) ||
     !["solo", "together"].includes(v.options.mode as string) ||
     typeof v.options.computerFirst !== "boolean" ||
-    (v.options.checkersRules !== undefined && !["friendly", "classic"].includes(v.options.checkersRules as string)) ||
+    (v.options.checkersRules !== undefined &&
+      !["friendly", "classic"].includes(v.options.checkersRules as string)) ||
     (v.options.wordRules !== undefined && !["practice", "challenge"].includes(v.options.wordRules as string))
+  )
+    return false;
+  if (
+    ["tic-tac-toe", "memory", "checkers"].includes(v.game as string) &&
+    ((v.match !== undefined && !validMatch(v.match)) || (v.starter !== undefined && !validSeat(v.starter)))
   )
     return false;
   switch (v.game) {
     case "tic-tac-toe": {
       if (
-        !validBoard(v.board) ||
+        (v.first !== undefined && v.first !== "X" && v.first !== "O") ||
+        (v.xSeat !== undefined && !validSeat(v.xSeat))
+      )
+        return false;
+      const validRoundBoard = (board: unknown) =>
+        validBoard(
+          v.first === "O" && Array.isArray(board)
+            ? board.map((m) => (m === "X" ? "O" : m === "O" ? "X" : m))
+            : board,
+        );
+      if (
+        !validRoundBoard(v.board) ||
         !["X", "O"].includes(v.human as string) ||
         !Array.isArray(v.history) ||
         v.history.length > 9 ||
-        !v.history.every(validBoard) ||
-        v.history.length !== v.board.filter(Boolean).length
+        !v.history.every(validRoundBoard) ||
+        v.history.length !== (v.board as unknown[]).filter(Boolean).length
       )
         return false;
       const states = [...v.history, v.board] as ("X" | "O" | null)[][];
@@ -100,7 +120,7 @@ export function validSession(v: unknown): v is GameState {
           !ticOutcome(previous) &&
           changed.length === 1 &&
           previous[changed[0]] === null &&
-          b[changed[0]] === (j % 2 === 1 ? "X" : "O")
+          b[changed[0]] === (j % 2 === 1 ? (v.first ?? "X") : v.first === "O" ? "X" : "O")
         );
       });
     }
@@ -132,6 +152,26 @@ export function validSession(v: unknown): v is GameState {
     }
     case "memory": {
       if (
+        v.history !== undefined &&
+        (!Array.isArray(v.history) ||
+          v.history.length > 40 ||
+          !v.history.every(
+            (h) =>
+              obj(h) &&
+              Object.keys(h).every((key) => ["matched", "open", "turns", "player", "scores"].includes(key)) &&
+              validSession({
+                ...v,
+                matched: h.matched,
+                open: h.open,
+                turns: h.turns,
+                player: h.player,
+                scores: h.scores,
+                history: undefined,
+              }),
+          ))
+      )
+        return false;
+      if (
         !strings(v.cards, 20, 24) ||
         ![12, 16, 24].includes(v.cards.length) ||
         !nums(v.matched, 0, v.cards.length - 1, 24) ||
@@ -149,9 +189,10 @@ export function validSession(v: unknown): v is GameState {
       const counts = v.cards.reduce<Record<string, number>>((a, c) => ({ ...a, [c]: (a[c] ?? 0) + 1 }), {});
       const matchedCounts = v.matched.reduce<Record<string, number>>(
         (a, i) => ({ ...a, [(v.cards as string[])[i]]: (a[(v.cards as string[])[i]] ?? 0) + 1 }),
-        {}
+        {},
       );
-      const expectedCards = v.options.difficulty === "easy" ? 12 : v.options.difficulty === "medium" ? 16 : 24;
+      const expectedCards =
+        v.options.difficulty === "easy" ? 12 : v.options.difficulty === "medium" ? 16 : 24;
       return (
         v.cards.length === expectedCards &&
         v.cards.every((c) => memorySymbols.includes(c)) &&
@@ -298,6 +339,7 @@ export function parseSave(raw: string): Save {
       v.recentActivity !== null &&
       !activityIds.includes(v.recentActivity as ActivityId)) ||
     (v.raceRecords !== undefined && !validActivityRecords(v.raceRecords)) ||
+    (v.players !== undefined && !validPlayers(v.players)) ||
     (v.explore !== undefined &&
       (!obj(v.explore) ||
         !Array.isArray(v.explore.favorites) ||

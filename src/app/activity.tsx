@@ -1,6 +1,6 @@
 import { SaveStatus } from "../components/SaveStatus";
 import React, { useEffect, useRef, useState } from "react";
-import { ScrollView, View, useWindowDimensions } from "react-native";
+import { ScrollView, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, router, useLocalSearchParams, useIsFocused } from "expo-router";
 import { ActivityId, activityIds } from "../state/activities";
@@ -11,7 +11,7 @@ import { RaceScreen } from "../racer/RaceScreen";
 import { MysteryScreen } from "../mystery/MysteryScreen";
 import { PartyScreen } from "../party/PartyScreen";
 import { defaultOptions } from "../games/types";
-import { Button, Copy, Heading, styles } from "../components/ui";
+import { Copy, GameHeader, styles } from "../components/ui";
 import { Recovery } from "../components/Recovery";
 import { useSoundControls } from "../components/Audio";
 export default function Activity() {
@@ -37,6 +37,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
     focused = useIsFocused(),
     { width } = useWindowDimensions();
   const [epoch] = useState(store.epoch);
+  const mysteryScroll = useRef<ScrollView>(null);
   const expectedId = useRef(store.save.activities?.[id]?.id ?? null);
   const saved = store.save.activities?.[id];
   const [freshCard] = useState(() =>
@@ -63,23 +64,26 @@ function ActivityGame({ id }: { id: ActivityId }) {
   // The first action can race the initial-deal effect, so both use the same missing-save guard.
   const cardChange = (next: CardSession, previous: CardSession) =>
     save(next, expectedId.current === null ? undefined : previous);
+  const mysterySound = { on: store.save.settings.sound, toggle: () => store.settings({ sound: !store.save.settings.sound }) };
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView
+        ref={id === "island-mystery" ? mysteryScroll : undefined}
         contentContainerStyle={[styles.content, { paddingHorizontal: 20, gap: 16 }]}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[styles.row, { justifyContent: "space-between", paddingTop: 12 }]}>
-          <Button compact quiet onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}>
-            ‹ Games
-          </Button>
-          <Button compact quiet onPress={() => store.settings({ sound: !store.save.settings.sound })}>
-            Sound {store.save.settings.sound ? "on" : "off"}
-          </Button>
-        </View>
         <SaveStatus />
         {id === "island-mystery" ? (
           <MysteryScreen
+            menuHeader={
+              <GameHeader
+                title="Picnic Mystery"
+                onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+                sound={mysterySound}
+              />
+            }
+            soundControl={mysterySound}
+            onActionFocus={() => mysteryScroll.current?.scrollTo({ y: 0, animated: false })}
             state={saved?.game === "island-mystery" ? saved : null}
             onSave={(next, previous) => save(next, previous)}
             active={focused}
@@ -94,6 +98,9 @@ function ActivityGame({ id }: { id: ActivityId }) {
             session={saved?.game === "racer" ? saved : null}
             records={store.save.raceRecords}
             onSave={(next) => save(next)}
+            onExit={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+            sound={store.save.settings.sound}
+            onToggleSound={() => store.settings({ sound: !store.save.settings.sound })}
             active={focused}
             onFeedback={(event) => sound(event === "finish" ? "win" : event === "checkpoint" ? "match" : "tap")}
           />
@@ -105,10 +112,11 @@ function ActivityGame({ id }: { id: ActivityId }) {
             width={Math.min(width - 40, 1000)}
             sound={store.save.settings.sound}
             onSpeakInstructions={() => sound("instructions-word-imposter")}
+            onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+            onToggleSound={() => store.settings({ sound: !store.save.settings.sound })}
           />
         ) : cards ? (
           <>
-            <Heading>{id === "go-fish" ? "Go Fish" : "Crazy Eights"}</Heading>
             <CardGameScreen
               state={cards}
               onChange={cardChange}
@@ -118,6 +126,8 @@ function ActivityGame({ id }: { id: ActivityId }) {
               onFeedback={() => sound("tap")}
               onSpeakInstruction={(key) => sound(key)}
               onStopInstruction={stopSound}
+              onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+              onToggleSound={() => store.settings({ sound: !store.save.settings.sound })}
             />
           </>
         ) : null}

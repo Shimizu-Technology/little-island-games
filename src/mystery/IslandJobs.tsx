@@ -1,8 +1,8 @@
 import React from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import Svg, { Circle, Ellipse, G, Line, Path, Polygon, Rect } from "react-native-svg";
 import { Text } from "../components/Text";
-import { Button, C, Copy, Heading } from "../components/ui";
+import { Button, C, Copy, Heading, PressableScale } from "../components/ui";
 import { MysteryIntent, MysteryView, REPAIR_CHOICES, STAR_TARGETS, TASKS, TaskId } from "./engine";
 import { LandmarkArt } from "./IslandArt";
 const colors = ["#BD684B", "#367B85", "#8668A3"];
@@ -123,26 +123,26 @@ export function IslandJob({
             {[0, 1, 2].map((i) => {
               const grown = !!(data.garden & (1 << i));
               return (
-                <Pressable
+                <PressableScale
                   key={i}
                   disabled={blocked || grown}
                   accessibilityRole="button"
                   accessibilityLabel={`Water garden bed ${i + 1}${grown ? ", already growing" : ""}`}
                   onPress={() => action(i)}
-                  style={({ pressed }) => ({
+                  style={{
                     minWidth: 70,
                     minHeight: 104,
                     alignItems: "center",
                     borderRadius: 14,
                     backgroundColor: grown ? "#E4EDD3" : "#F2E8D3",
-                    opacity: pressed ? 0.7 : 1,
-                  })}
+
+                  }}
                 >
                   <Plot grown={grown} />
                   <Text style={{ fontWeight: "700", color: C.ink, fontSize: 13 }}>
                     {grown ? "Growing!" : `Water ${i + 1}`}
                   </Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>
@@ -198,13 +198,13 @@ export function IslandJob({
             {["Water", "Fruit", "Bread"].map((name, i) => {
               const packed = !!(data.picnic & (1 << i));
               return (
-                <Pressable
+                <PressableScale
                   key={name}
                   disabled={blocked || packed}
                   accessibilityRole="button"
                   accessibilityLabel={`Pack ${name.toLowerCase()}${packed ? ", packed" : ""}`}
                   onPress={() => action(i)}
-                  style={({ pressed }) => ({
+                  style={{
                     minWidth: 75,
                     minHeight: 94,
                     borderRadius: 14,
@@ -213,12 +213,12 @@ export function IslandJob({
                     borderWidth: 2,
                     borderColor: packed ? "#93B28E" : "#E7DBBE",
                     backgroundColor: packed ? "#E9EFD9" : "#FCF6E7",
-                    opacity: pressed ? 0.7 : 1,
-                  })}
+
+                  }}
                 >
                   <Food index={i} />
                   <Text style={{ color: C.ink, fontSize: 13, fontWeight: "700" }}>{packed ? "Packed!" : name}</Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>
@@ -265,7 +265,7 @@ export function IslandJob({
             </Svg>
             {[0, 1, 2].map((i) => (
               <React.Fragment key={i}>
-                <Pressable
+                <PressableScale
                   disabled={blocked || !!(data.dock & (1 << i))}
                   accessibilityRole="button"
                   accessibilityLabel={`Choose ${shapes[i]} boat rope`}
@@ -286,8 +286,8 @@ export function IslandJob({
                   }}
                 >
                   <Shape index={i} />
-                </Pressable>
-                <Pressable
+                </PressableScale>
+                <PressableScale
                   disabled={blocked || !!(data.dock & (1 << i))}
                   accessibilityRole="button"
                   accessibilityLabel={`Connect to ${shapes[i]} shore cleat`}
@@ -307,7 +307,7 @@ export function IslandJob({
                   }}
                 >
                   <Shape index={i} />
-                </Pressable>
+                </PressableScale>
               </React.Fragment>
             ))}
           </View>
@@ -331,7 +331,7 @@ export function PumpJob({
   const progress = view.sabotage?.progress ?? 0;
   return (
     <View style={{ padding: 14, borderRadius: 20, backgroundColor: "#E5EFF0", gap: 10 }}>
-      <Heading style={{ fontSize: 20 }}>Restore the water</Heading>
+      <Heading style={{ fontSize: 20 }}>Restore the water · {view.sabotage?.left} {view.solo ? "beats" : "seconds"}</Heading>
       <Copy style={{ fontSize: 13 }}>Open supply → close valve → connect pipe.</Copy>
       <Svg width="100%" height="54" viewBox="0 0 280 54" accessibilityElementsHidden>
         {[0, 1, 2].map((i) => (

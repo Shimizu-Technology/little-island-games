@@ -10,11 +10,14 @@ import { recordWordRound } from "./wordRecords";
 import { ActivityId, ActivitySession, activityIds } from "./activities";
 import { ActivityExpected, applyActivitySave } from "./activityAction";
 import { topicById } from "../explore/content";
+import { rememberNames } from "../games/match";
 type Store = {
   epoch: number;
   activityUpdate: (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => boolean;
   toggleFavorite: (topic: string) => void;
   toggleGameFavorite: (game: GameId | ActivityId) => void;
+  /** Remember family names used in a two-player setup (no-op when unchanged). */
+  rememberPlayers: (names: string[]) => void;
   exploreUpdate: (next: ExploreProgress, expectedEpoch: number) => void;
   save: Save;
   ready: boolean;
@@ -153,6 +156,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const favorites = latest.current.favoriteGames ?? [];
     commit({ ...latest.current, favoriteGames: favorites.includes(game) ? favorites.filter((id) => id !== game) : [...favorites, game] });
   }, [commit]);
+  const rememberPlayers = useCallback((names: string[]) => {
+    const current = latest.current.players ?? [];
+    const next = rememberNames(current, names);
+    if (next.length === current.length && next.every((n, i) => n === current[i])) return;
+    commit({ ...latest.current, players: next });
+  }, [commit]);
   const settings = useCallback(
     (next: Partial<Save["settings"]>) =>
       commit({ ...latest.current, settings: { ...latest.current.settings, ...next } }),
@@ -191,6 +200,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         activityUpdate,
         toggleFavorite,
         toggleGameFavorite,
+        rememberPlayers,
         exploreUpdate,
         ready,
         error,

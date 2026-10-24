@@ -82,7 +82,14 @@ describe("five offline discovery activities", () => {
   it("preserves the current habitat on a wrong answer and completes all six matches exactly once", () => {
     let state = labAction(newLab(), { type: "habitat", choice: "Freshwater pond" });
     expect(state.habitat).toBe(0);
-    for (const habitat of HABITATS) state = labAction(state, { type: "habitat", choice: habitat.home });
+    for (const habitat of HABITATS) {
+      state = labAction(state, { type: "habitat", choice: habitat.home });
+      expect(state.message).toBe(habitat.why);
+      expect(state.habitatFeedback).toBe(true);
+      expect(labAction(state, { type: "habitat", choice: habitat.home })).toBe(state);
+      state = labAction(state, { type: "next-animal" });
+      expect(state.message).toBe("");
+    }
     expect(state.matched).toEqual([0, 1, 2, 3, 4, 5]);
     expect(labAction(state, { type: "habitat", choice: "Coral reef" })).toBe(state);
   });
@@ -124,7 +131,7 @@ describe("five offline discovery activities", () => {
     for (const action of actions) state = labAction(state, action);
     const resumed = JSON.parse(JSON.stringify(state));
     expect(labAction(resumed, { type: "water", action: "cool" }).water).toBe("cloud");
-    expect(labAction(resumed, { type: "habitat", choice: HABITATS[1].home }).matched).toEqual([0, 1]);
+    expect(labAction(labAction(resumed, { type: "next-animal" }), { type: "habitat", choice: HABITATS[1].home }).matched).toEqual([0, 1]);
     expect(labAction(state, { type: "reset" })).toEqual(newLab());
     expect(state.chain).toEqual(["Sunlight"]);
   });

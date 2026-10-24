@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import Svg, { Circle, G, Path, Rect } from "react-native-svg";
 import { Text } from "../components/Text";
-import { Button, C, Copy, Heading, Label } from "../components/ui";
+import { Button, C, Copy, Heading, Label, PressableScale } from "../components/ui";
 import { WorldId } from "./content";
 import { EarthLabArt, GlobeMap, Motif } from "./ExploreArt";
 import {
@@ -107,31 +107,15 @@ function Tile({
   onPress: () => void;
   children: React.ReactNode;
 }) {
-  const [focus, setFocus] = useState(false);
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ selected: !!selected, disabled: !!disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      onFocus={() => setFocus(true)}
-      onBlur={() => setFocus(false)}
-      style={({ pressed }) => [
-        s.tile,
-        {
-          borderColor: selected ? C.teal : C.line,
-          backgroundColor: selected ? "#E1EDD8" : "#FFF",
-          opacity: disabled ? 0.5 : pressed ? 0.7 : 1,
-        },
-        focus && { outlineColor: C.blue, outlineWidth: 3 },
-      ]}
-    >
-      {children}
-      <Text style={s.tileText}>{label}</Text>
-    </Pressable>
+    <PressableScale accessibilityRole="button" accessibilityLabel={label}
+      accessibilityState={{ selected: !!selected, disabled: !!disabled }} disabled={disabled} onPress={onPress}
+      style={[s.tile, { borderColor: selected ? C.teal : C.line, backgroundColor: selected ? C.success : C.paper, opacity: disabled ? 0.5 : 1 }]}>
+      {children}<Text style={s.tileText}>{label}</Text>
+    </PressableScale>
   );
 }
+
 function FoodPicture({ index, compact = false }: { index: number; compact?: boolean }) {
   return (
     <Svg width={compact ? 45 : 72} height={compact ? 40 : 64} viewBox="0 0 100 80" accessible={false}>
@@ -298,7 +282,7 @@ export function LabManipulative({
       </View>
     );
   if (world === "animals") {
-    const animal = HABITATS[state.habitat];
+    const animal = HABITATS[state.habitatFeedback ? state.habitat - 1 : state.habitat];
     if (!animal) return null;
     return (
       <View style={{ gap: 10 }}>
@@ -307,15 +291,15 @@ export function LabManipulative({
             <Motif name={animal.art} />
           </Svg>
           <Heading style={{ fontSize: 23 }}>{animal.animal}</Heading>
-          <Copy style={s.small}>Where could I live?</Copy>
+          <Copy style={s.small}>{state.habitatFeedback ? `Matched: ${animal.home}` : "Where could I live?"}</Copy>
         </View>
-        <View style={s.row}>
+        {!state.habitatFeedback && <View style={s.row}>
           {HABITAT_CHOICES.map((kind) => (
             <Tile key={kind} label={kind} onPress={() => act({ type: "habitat", choice: kind })}>
               <HabitatPicture kind={kind} />
             </Tile>
           ))}
-        </View>
+        </View>}
       </View>
     );
   }
