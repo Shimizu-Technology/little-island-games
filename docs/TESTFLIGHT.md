@@ -88,3 +88,12 @@ Open TestFlight and update **Little Island: Family Games** to **1.2.0 (7)**. Eve
 ## Family ease beta — 1.2.0 (8), 21 October 2026
 
 Build 8 is available to the existing Leon internal group (one adult tester). Apple processing is VALID and internal state is IN_BETA_TESTING. It includes the merged favorites, quick replay, Explore activity entries, first Garden job guide and preserved-save recovery improvements. Release source is `2c4626a69ba54f9ca7bafc52761d8f4eb7a0a9b3`; EAS submission `9b599825-9b5e-4a5b-a694-08cd2d0c4fca` finished; Apple build/upload `b4c6c59d-db63-4be7-bd43-d9d2215b46d2` is attached. No new testers or public release. See [build 8 execution and limits](TESTFLIGHT_BUILD8.md) and [delivery receipt](evidence/testflight-build8.json). Physical installation and family acceptance remain operator checks. Temporary signing resources were cleaned.
+
+## Design and family-play polish — 1.3.0 (9), 24 October 2026
+
+Leon asked for the 24 October audit to be implemented and delivered to TestFlight. PR #9 merged as `66c035e36a9d0fdfece9011dd01aefe88decaf3a` (tree equal to the reviewed head `b7a77f5`); scope and acceptance are in [AUDIT_POLISH.md](AUDIT_POLISH.md). A clean release checkout of that merge ran `npm ci`, Expo CNG and CocoaPods, then the full check (261 tests) and Doctor 21/21 before the local Xcode 26.6 archive/export. Existing credentials were reused in a temporary keychain that was removed afterwards; the original keychain search list was restored.
+
+- Signed IPA: 32,645,835 bytes; SHA256 `165677579d3570317f5aa90ed2e98be9794efad71ade90a64f7c26b9850abc73`. Embedded JS matches the archive; strict signature, App Store profile and signed entitlements passed; version 1.3.0 (9), iPhone/iPad, minimum 16.4. All 312 referenced audio files match source bytes.
+- EAS submission `a90e2ba4-cfc3-438e-9d21-413d6bf674c2` finished. Apple build `555b871c-d094-4a1f-ab40-c58244353a45` is `VALID` / `IN_BETA_TESTING`, attached to the existing **Leon** internal group (one adult tester, automatic distribution off), with English testing notes verified. An extra empty upload reservation for build 9 has no attached build.
+
+Open TestFlight and update **Little Island: Family Games** to **1.3.0 (9)**. Physical installation, haptics, audio and family acceptance remain operator checks. See [build 9 delivery evidence](evidence/testflight-build9.json).

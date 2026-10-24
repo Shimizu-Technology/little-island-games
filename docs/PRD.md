@@ -1,6 +1,6 @@
 # Little Island product brief
 
-Updated 2026-10-24. The shipped quality-release evidence is in [QUALITY_QA.md](QUALITY_QA.md). Family-ease improvements ([FAMILY_EASE.md](FAMILY_EASE.md)) shipped in TestFlight 1.2.0 (8). The 24 October design and family-play polish (family matches with names and scores, reachable controls, motion/haptics, Hangman word ranges) is recorded in [AUDIT_POLISH.md](AUDIT_POLISH.md) for 1.3.0 (9).
+Updated 2026-10-24. The shipped quality-release evidence is in [QUALITY_QA.md](QUALITY_QA.md). Family-ease improvements ([FAMILY_EASE.md](FAMILY_EASE.md)) shipped in TestFlight 1.2.0 (8). The 24 October design and family-play polish (family matches with names and scores, reachable controls, motion/haptics, Hangman word ranges) is recorded in [AUDIT_POLISH.md](AUDIT_POLISH.md) and shipped to internal TestFlight as 1.3.0 (9).
 
 ## People and purpose
 
@@ -32,6 +32,6 @@ Checkers: 8×8, twelve pieces per side, red starts and moves down rows. Men move
 
 ## Release and unknowns
 
-Latest recorded internal TestFlight delivery is 1.2.0 (8) for Leon's existing adult tester group; see [TESTFLIGHT.md](TESTFLIGHT.md) for source and delivery evidence. Subsequent source changes require a separate build/upload before they appear there. Public distribution also requires speech rights, child-facing privacy/metadata review and physical family acceptance.
+Latest recorded internal TestFlight delivery is 1.3.0 (9) for Leon's existing adult tester group; see [TESTFLIGHT.md](TESTFLIGHT.md) for source and delivery evidence. Subsequent source changes require a separate build/upload before they appear there. Public distribution also requires speech rights, child-facing privacy/metadata review and physical family acceptance.
 
 Leon reports an iPad mini purchased around 2020/21; exact model/OS remain unknown. Deployment minimum is iOS/iPadOS16.4. Simulator success does not establish physical performance, touch/VoiceOver behavior, audio, battery/thermal behavior or Stassie's independent usability. Those remain operator checks on the family hardware.
