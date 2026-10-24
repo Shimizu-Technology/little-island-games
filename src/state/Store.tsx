@@ -11,6 +11,8 @@ import { ActivityId, ActivitySession, activityIds } from "./activities";
 import { ActivityExpected, applyActivitySave } from "./activityAction";
 import { topicById } from "../explore/content";
 import { rememberNames } from "../games/match";
+import type { LearnId, LearnSession } from "../learn/types";
+import { LearnExpected, applyLearnSave, applyPractice } from "./learnAction";
 type Store = {
   epoch: number;
   activityUpdate: (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => boolean;
@@ -18,6 +20,10 @@ type Store = {
   toggleGameFavorite: (game: GameId | ActivityId) => void;
   /** Remember family names used in a two-player setup (no-op when unchanged). */
   rememberPlayers: (names: string[]) => void;
+  /** Save a learning-game round; false when the round was replaced or a backup was restored meanwhile. */
+  learnUpdate: (game: LearnId, next: LearnSession, expected: LearnExpected) => boolean;
+  /** Record one attempt at a learning skill. */
+  practice: (skill: string, correct: boolean) => void;
   exploreUpdate: (next: ExploreProgress, expectedEpoch: number) => void;
   save: Save;
   ready: boolean;
@@ -110,7 +116,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     (game: GameId, next: GameState, expected?: GameState) => {
       const current = latest.current;
       if (expected && current.sessions[game] !== expected) return;
-      commit({ ...current, sessions: { ...current.sessions, [game]: next }, recent: game, recentActivity: null });
+      commit({ ...current, sessions: { ...current.sessions, [game]: next }, recent: game, recentActivity: null, recentLearn: null });
     },
     [commit]
   );
@@ -156,6 +162,23 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const favorites = latest.current.favoriteGames ?? [];
     commit({ ...latest.current, favoriteGames: favorites.includes(game) ? favorites.filter((id) => id !== game) : [...favorites, game] });
   }, [commit]);
+  const learnUpdate = useCallback(
+    (game: LearnId, next: LearnSession, expected: LearnExpected) => {
+      if (!ready || recovery || restoring.current) return false;
+      const updated = applyLearnSave(latest.current, game, next, expected, generation.current);
+      if (updated === latest.current) return false;
+      commit(updated);
+      return true;
+    },
+    [commit, ready, recovery]
+  );
+  const practice = useCallback(
+    (skill: string, correct: boolean) => {
+      const updated = applyPractice(latest.current, skill, correct);
+      if (updated !== latest.current) commit(updated);
+    },
+    [commit]
+  );
   const rememberPlayers = useCallback((names: string[]) => {
     const current = latest.current.players ?? [];
     const next = rememberNames(current, names);
@@ -201,6 +224,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         toggleFavorite,
         toggleGameFavorite,
         rememberPlayers,
+        learnUpdate,
+        practice,
         exploreUpdate,
         ready,
         error,

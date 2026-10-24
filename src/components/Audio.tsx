@@ -1,8 +1,10 @@
 import { useAudioPlayer, setAudioModeAsync } from "expo-audio";
 import { useCallback, useEffect, useRef } from "react";
 import { AppState, Platform } from "react-native";
-import { sources } from "../content/audioSources";
+import { sources as baseSources } from "../content/audioSources";
+import { learnSources } from "../content/learnAudio";
 import { feel, toneFeel } from "./feel";
+const sources: Record<string, number> = { ...baseSources, ...learnSources };
 // expo-audio's web player calls HTMLMediaElement.play() without handling its promise. A quick
 // second tone interrupts the first and the browser rejects it with AbortError; that is expected.
 if (Platform.OS === "web" && typeof window !== "undefined")

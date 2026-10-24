@@ -9,6 +9,10 @@ import type { RaceRecords } from "../racer/engine";
 import { normalizeExploreFavorites, topicById } from "../explore/content";
 import { WORDS } from "../games/words";
 import { validMatch, validSeat, validPlayers } from "../games/match";
+import type { LearnId, LearnSession, SkillProgress } from "../learn/types";
+import { learnIds } from "../learn/types";
+import { validLearn } from "../learn/session";
+import { validSkills } from "../learn/skills";
 export type Settings = { sound: boolean; help: boolean };
 export type Save = {
   version: 1;
@@ -23,6 +27,11 @@ export type Save = {
   explore?: { favorites: string[]; progress?: ExploreProgress };
   /** Family names remembered for quick two-player setup; most recent first. */
   players?: string[];
+  /** Learning games (src/learn): one saved round per game. */
+  learn?: Partial<Record<LearnId, LearnSession>>;
+  recentLearn?: LearnId | null;
+  /** Quiet spacing memory for learning games; never shown as a grade. */
+  skills?: SkillProgress;
 };
 export const emptySave = (): Save => ({
   version: 1,
@@ -340,6 +349,9 @@ export function parseSave(raw: string): Save {
       !activityIds.includes(v.recentActivity as ActivityId)) ||
     (v.raceRecords !== undefined && !validActivityRecords(v.raceRecords)) ||
     (v.players !== undefined && !validPlayers(v.players)) ||
+    (v.learn !== undefined && !validLearn(v.learn)) ||
+    (v.recentLearn !== undefined && v.recentLearn !== null && !learnIds.includes(v.recentLearn as LearnId)) ||
+    (v.skills !== undefined && !validSkills(v.skills)) ||
     (v.explore !== undefined &&
       (!obj(v.explore) ||
         !Array.isArray(v.explore.favorites) ||

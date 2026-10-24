@@ -12,5 +12,5 @@ export function applySessionAction(
   if (!current || current.id !== roundId) return save;
   const next = transition(current);
   if (next === current || next.game !== game || next.id !== roundId) return save;
-  return { ...save, sessions: { ...save.sessions, [game]: next }, recent: game, recentActivity: null };
+  return { ...save, sessions: { ...save.sessions, [game]: next }, recent: game, recentActivity: null, recentLearn: null };
 }

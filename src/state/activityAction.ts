@@ -24,6 +24,7 @@ export function applyActivitySave(
     ...save,
     activities: { ...save.activities, [game]: next },
     recentActivity: game,
+    recentLearn: null,
     ...(next.game === "racer" ? { raceRecords: mergeRaceRecord(save.raceRecords ?? {}, raceRecord(next)) } : {}),
   };
 }
