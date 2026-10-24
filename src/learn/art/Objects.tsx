@@ -146,7 +146,7 @@ export function ObjectGlyph({
             <Ellipse cx="66" cy="84" rx="11" ry="5" fill={fill} />
           </>
         )}
-        {["cat", "fox", "dog", "pig"].includes(name) && (
+        {["cat", "fox", "dog"].includes(name) && (
           <>
             <Polygon points="49,33 49,8 64,25" fill={fill} />
             <Polygon points="70,24 85,8 85,40" fill={fill} />
@@ -204,7 +204,17 @@ export function ObjectGlyph({
         {name === "hen" && <Path d="M58 22 Q52 4 63 10 Q71 0 74 18" fill="#C56D50" />}
         {["bird", "hen"].includes(name) && <Path d="M84 42 L99 48 L84 54 Z" fill="#E1B251" />}
         {name === "duck" && <Path d="M83 43 Q99 40 99 48 Q98 56 83 53 Z" fill="#E1B251" />}
-        {name === "pig" && <Ellipse cx="76" cy="53" rx="12" ry="8" fill="#F4B59A" />}
+        {name === "pig" && (
+          <>
+            {/* Floppy ears, a round snout with nostrils and a curly tail: clearly not a cat. */}
+            <Path d="M50 30 Q46 12 60 22 Q58 30 50 30 Z" fill={fill} />
+            <Path d="M80 22 Q94 12 90 30 Q82 30 80 22 Z" fill={fill} />
+            <Ellipse cx="77" cy="52" rx="12" ry="9" fill="#F7C6B2" />
+            <Ellipse cx="73" cy="52" rx="2.2" ry="3" fill={ink} />
+            <Ellipse cx="81" cy="52" rx="2.2" ry="3" fill={ink} />
+            <Path d="M19 56 q-9 -3 -6 -10 q4 -5 7 0 q2 5 -5 6" fill="none" />
+          </>
+        )}
         {name === "bee" && (
           <>
             <Line x1="29" y1="43" x2="29" y2="79" />
