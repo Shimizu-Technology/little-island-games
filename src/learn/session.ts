@@ -1,0 +1,101 @@
+import { Seat, cleanName, defaultNames, newMatch, nextStarter, settle, validMatch, validSeat, NAME_MAX, nameLength } from "../games/match";
+import { random } from "../games/types";
+import { engines } from "./engines";
+import { dayNumber } from "./skills";
+import { LearnId, LearnOptions, LearnSession, Outcome, SkillProgress, learnIds } from "./types";
+
+const MODES = ["solo", "together", "versus"] as const;
+const PACES = ["easy", "medium", "hard"] as const;
+
+export function outcomeOf(session: LearnSession): Outcome {
+  return engines[session.game].outcome(session.state, session.options);
+}
+export const finished = (session: LearnSession) => outcomeOf(session) !== null;
+
+export type StartChoices = {
+  options: LearnOptions;
+  names?: readonly string[];
+  starter?: Seat;
+  alternate?: boolean;
+};
+
+/** A fresh round from the setup sheet. */
+export function startSession(game: LearnId, choices: StartChoices, skills: SkillProgress | undefined, seed = Date.now() >>> 0): LearnSession {
+  const engine = engines[game];
+  const options = { ...choices.options };
+  const starter: Seat = choices.starter ?? 0;
+  const twoPlayer = options.mode !== "solo";
+  const names: [string, string] | undefined = twoPlayer
+    ? [cleanName(choices.names?.[0] ?? "", defaultNames[0]), cleanName(choices.names?.[1] ?? "", defaultNames[1])]
+    : undefined;
+  return {
+    game,
+    version: 1,
+    id: `${game}-${seed.toString(36)}-${Math.floor(random(seed)() * 1e9).toString(36)}`,
+    revision: 0,
+    options,
+    ...(names ? { names } : {}),
+    ...(twoPlayer ? { starter } : {}),
+    ...(options.mode === "versus" ? { match: newMatch(names, choices.alternate ?? true) } : {}),
+    state: engine.create(options, { skills: skills ?? {}, rng: random(seed ^ 0x5bd1e995), starter, today: dayNumber() }),
+  };
+}
+
+/** "Play again": same players and options, score carried, starter alternated when chosen. */
+export function replaySession(previous: LearnSession, skills: SkillProgress | undefined, seed = Date.now() >>> 0): LearnSession {
+  const engine = engines[previous.game];
+  const result = outcomeOf(previous);
+  const match = previous.match ? settle(previous.match, result === "done" ? null : result) : undefined;
+  const starter: Seat = previous.match ? nextStarter(previous.match, previous.starter ?? 0) : previous.options.mode === "together" ? ((previous.starter ?? 0) === 0 ? 1 : 0) : 0;
+  return {
+    ...previous,
+    id: `${previous.game}-${seed.toString(36)}-${Math.floor(random(seed)() * 1e9).toString(36)}`,
+    revision: 0,
+    ...(match ? { match } : {}),
+    ...(previous.options.mode !== "solo" ? { starter } : {}),
+    state: engine.create(previous.options, {
+      previous: previous.state,
+      skills: skills ?? {},
+      rng: random(seed ^ 0x5bd1e995),
+      starter,
+      today: dayNumber(),
+    }),
+  };
+}
+
+const obj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
+const validName = (v: unknown) => typeof v === "string" && v.trim().length > 0 && nameLength(v) <= NAME_MAX;
+
+export function validLearnSession(value: unknown, key?: string): value is LearnSession {
+  if (!obj(value) || !learnIds.includes(value.game as LearnId) || (key !== undefined && value.game !== key)) return false;
+  const o = value.options;
+  if (
+    value.version !== 1 ||
+    typeof value.id !== "string" ||
+    value.id.length < 3 ||
+    value.id.length > 120 ||
+    typeof value.revision !== "number" ||
+    !Number.isInteger(value.revision) ||
+    value.revision < 0 ||
+    value.revision > 1_000_000 ||
+    !obj(o) ||
+    !MODES.includes(o.mode as (typeof MODES)[number]) ||
+    !PACES.includes(o.pace as (typeof PACES)[number]) ||
+    (o.language !== undefined && o.language !== "en" && o.language !== "ch") ||
+    Object.keys(o).some((k) => !["mode", "pace", "language"].includes(k))
+  )
+    return false;
+  const engine = engines[value.game as LearnId];
+  if (!engine.modes.includes(o.mode as LearnOptions["mode"])) return false;
+  if (o.language === "ch" && !engine.languages?.includes("ch")) return false;
+  const twoPlayer = o.mode !== "solo";
+  if (value.names !== undefined && (!Array.isArray(value.names) || value.names.length !== 2 || !value.names.every(validName))) return false;
+  if (value.starter !== undefined && !validSeat(value.starter)) return false;
+  if (!twoPlayer && (value.match !== undefined || value.starter !== undefined || value.names !== undefined)) return false;
+  if (o.mode === "versus" ? !validMatch(value.match) : value.match !== undefined) return false;
+  return engine.validate(value.state, o as LearnOptions);
+}
+
+export function validLearn(value: unknown): value is Partial<Record<LearnId, LearnSession>> {
+  return obj(value) && Object.entries(value).every(([key, session]) => validLearnSession(session, key));
+}

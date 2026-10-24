@@ -2,20 +2,24 @@ import { ExploreProgress, validExploreProgress } from "../explore/progress";
 import { GameId, GameState, gameIds } from "../games";
 import { checkersResult } from "../games/checkers";
 import { ticOutcome, lines } from "../games/tic";
-import { memorySymbols } from "../games/memory";
+import { memoryKey, validMemoryCard } from "../games/memory";
 import { WordRecords, validWordRecords } from "./wordRecords";
 import { Activities, ActivityId, activityIds, validActivities, validActivityRecords } from "./activities";
 import type { RaceRecords } from "../racer/engine";
 import { normalizeExploreFavorites, topicById } from "../explore/content";
 import { WORDS } from "../games/words";
 import { validMatch, validSeat, validPlayers } from "../games/match";
+import type { LearnId, LearnSession, SkillProgress } from "../learn/types";
+import { learnIds } from "../learn/types";
+import { validLearn } from "../learn/session";
+import { validSkills } from "../learn/skills";
 export type Settings = { sound: boolean; help: boolean };
 export type Save = {
   version: 1;
   settings: Settings;
   sessions: Partial<Record<GameId, GameState>>;
   recent: GameId | null;
-  favoriteGames?: (GameId | ActivityId)[];
+  favoriteGames?: (GameId | ActivityId | LearnId)[];
   wordRecords?: WordRecords;
   activities?: Activities;
   recentActivity?: ActivityId | null;
@@ -23,6 +27,11 @@ export type Save = {
   explore?: { favorites: string[]; progress?: ExploreProgress };
   /** Family names remembered for quick two-player setup; most recent first. */
   players?: string[];
+  /** Learning games (src/learn): one saved round per game. */
+  learn?: Partial<Record<LearnId, LearnSession>>;
+  recentLearn?: LearnId | null;
+  /** Quiet spacing memory for learning games; never shown as a grade. */
+  skills?: SkillProgress;
 };
 export const emptySave = (): Save => ({
   version: 1,
@@ -151,6 +160,7 @@ export function validSession(v: unknown): v is GameState {
       );
     }
     case "memory": {
+      if (v.pack !== undefined && v.pack !== "pictures" && v.pack !== "chamoru") return false;
       if (
         v.history !== undefined &&
         (!Array.isArray(v.history) ||
@@ -172,7 +182,7 @@ export function validSession(v: unknown): v is GameState {
       )
         return false;
       if (
-        !strings(v.cards, 20, 24) ||
+        !strings(v.cards, v.pack === "chamoru" ? 80 : 20, 24) ||
         ![12, 16, 24].includes(v.cards.length) ||
         !nums(v.matched, 0, v.cards.length - 1, 24) ||
         !unique(v.matched) ||
@@ -186,21 +196,22 @@ export function validSession(v: unknown): v is GameState {
         v.scores.length !== 2
       )
         return false;
-      const counts = v.cards.reduce<Record<string, number>>((a, c) => ({ ...a, [c]: (a[c] ?? 0) + 1 }), {});
+      const counts = v.cards.reduce<Record<string, number>>((a, c) => ({ ...a, [memoryKey(c)]: (a[memoryKey(c)] ?? 0) + 1 }), {});
       const matchedCounts = v.matched.reduce<Record<string, number>>(
-        (a, i) => ({ ...a, [(v.cards as string[])[i]]: (a[(v.cards as string[])[i]] ?? 0) + 1 }),
+        (a, i) => ({ ...a, [memoryKey((v.cards as string[])[i])]: (a[memoryKey((v.cards as string[])[i])] ?? 0) + 1 }),
         {},
       );
       const expectedCards =
         v.options.difficulty === "easy" ? 12 : v.options.difficulty === "medium" ? 16 : 24;
       return (
         v.cards.length === expectedCards &&
-        v.cards.every((c) => memorySymbols.includes(c)) &&
+        v.cards.every((c) => validMemoryCard(c, v.pack)) &&
+        (v.pack !== "chamoru" || unique(v.cards)) &&
         Object.values(counts).every((n) => n === 2) &&
         Object.values(matchedCounts).every((n) => n === 2) &&
         v.scores[0] + v.scores[1] === v.matched.length / 2 &&
         v.turns >= v.matched.length / 2 &&
-        (v.open.length < 2 || v.cards[v.open[0]] !== v.cards[v.open[1]])
+        (v.open.length < 2 || memoryKey(v.cards[v.open[0]]) !== memoryKey(v.cards[v.open[1]]))
       );
     }
     case "checkers":
@@ -331,8 +342,8 @@ export function parseSave(raw: string): Save {
     !Object.entries(v.sessions).every(([k, s]) => validSession(s) && s.game === k) ||
     (v.recent !== null && !gameIds.includes(v.recent as GameId)) ||
     (v.favoriteGames !== undefined &&
-      (!Array.isArray(v.favoriteGames) || v.favoriteGames.length > gameIds.length + activityIds.length ||
-        !unique(v.favoriteGames) || !v.favoriteGames.every((id) => [...gameIds, ...activityIds].includes(id)))) ||
+      (!Array.isArray(v.favoriteGames) || v.favoriteGames.length > gameIds.length + activityIds.length + learnIds.length ||
+        !unique(v.favoriteGames) || !v.favoriteGames.every((id) => [...gameIds, ...activityIds, ...learnIds].includes(id)))) ||
     (v.wordRecords !== undefined && !validWordRecords(v.wordRecords)) ||
     (v.activities !== undefined && !validActivities(v.activities)) ||
     (v.recentActivity !== undefined &&
@@ -340,6 +351,9 @@ export function parseSave(raw: string): Save {
       !activityIds.includes(v.recentActivity as ActivityId)) ||
     (v.raceRecords !== undefined && !validActivityRecords(v.raceRecords)) ||
     (v.players !== undefined && !validPlayers(v.players)) ||
+    (v.learn !== undefined && !validLearn(v.learn)) ||
+    (v.recentLearn !== undefined && v.recentLearn !== null && !learnIds.includes(v.recentLearn as LearnId)) ||
+    (v.skills !== undefined && !validSkills(v.skills)) ||
     (v.explore !== undefined &&
       (!obj(v.explore) ||
         !Array.isArray(v.explore.favorites) ||
