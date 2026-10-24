@@ -10,8 +10,8 @@ export const STORIES: Tale[] = [
       {
         "text": "Cat has a big red hat.",
         "scene": {
-          "subject": "cat",
-          "object": "hat",
+          "subject": "hat",
+          "object": "cat",
           "relation": "beside",
           "color": "red",
           "size": "big"
@@ -40,8 +40,8 @@ export const STORIES: Tale[] = [
       {
         "text": "Hop, hop, hop! Pup hit the hat.",
         "scene": {
-          "subject": "dog",
-          "object": "hat",
+          "subject": "hat",
+          "object": "dog",
           "relation": "beside",
           "color": "red",
           "size": "big"
@@ -680,8 +680,8 @@ export const STORIES: Tale[] = [
       {
         "text": "Duck has a red ship.",
         "scene": {
-          "subject": "duck",
-          "object": "ship",
+          "subject": "ship",
+          "object": "duck",
           "relation": "beside",
           "color": "red",
           "size": "big"
@@ -693,7 +693,7 @@ export const STORIES: Tale[] = [
           "subject": "frog",
           "object": "ship",
           "relation": "in",
-          "color": "red",
+          "color": "coral",
           "size": "big"
         }
       },
@@ -713,7 +713,7 @@ export const STORIES: Tale[] = [
           "subject": "duck",
           "object": "ship",
           "relation": "in",
-          "color": "red",
+          "color": "coral",
           "size": "big"
         }
       },
@@ -723,7 +723,7 @@ export const STORIES: Tale[] = [
           "subject": "frog",
           "object": "ship",
           "relation": "beside",
-          "color": "red",
+          "color": "coral",
           "size": "big"
         }
       },
@@ -747,21 +747,21 @@ export const STORIES: Tale[] = [
             "subject": "frog",
             "object": "ship",
             "relation": "in",
-            "color": "red",
+            "color": "coral",
             "size": "big"
           },
           {
             "subject": "frog",
             "object": "ship",
             "relation": "on",
-            "color": "red",
+            "color": "coral",
             "size": "big"
           },
           {
             "subject": "duck",
             "object": "ship",
             "relation": "in",
-            "color": "red",
+            "color": "coral",
             "size": "big"
           }
         ],
@@ -776,22 +776,22 @@ export const STORIES: Tale[] = [
         "prompt": "What has Duck got?",
         "scenes": [
           {
-            "subject": "duck",
-            "object": "ship",
+            "subject": "ship",
+            "object": "duck",
             "relation": "beside",
             "color": "red",
             "size": "big"
           },
           {
-            "subject": "duck",
-            "object": "ship",
+            "subject": "ship",
+            "object": "duck",
             "relation": "beside",
             "color": "blue",
             "size": "big"
           },
           {
-            "subject": "duck",
-            "object": "boat",
+            "subject": "boat",
+            "object": "duck",
             "relation": "beside",
             "color": "red",
             "size": "big"
@@ -1350,8 +1350,8 @@ export const STORIES: Tale[] = [
       {
         "text": "Crab has a red kite.",
         "scene": {
-          "subject": "crab",
-          "object": "kite",
+          "subject": "kite",
+          "object": "crab",
           "relation": "beside",
           "color": "red",
           "size": "big"
