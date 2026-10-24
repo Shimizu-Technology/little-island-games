@@ -32,6 +32,6 @@ Checkers: 8×8, twelve pieces per side, red starts and moves down rows. Men move
 
 ## Release and unknowns
 
-Latest recorded internal TestFlight delivery is 1.3.0 (9) for Leon's existing adult tester group; see [TESTFLIGHT.md](TESTFLIGHT.md) for source and delivery evidence. Subsequent source changes require a separate build/upload before they appear there. Public distribution also requires speech rights, child-facing privacy/metadata review and physical family acceptance.
+Latest recorded internal TestFlight delivery is 1.4.0 (10) for Leon's existing adult tester group; see [TESTFLIGHT.md](TESTFLIGHT.md) for source and delivery evidence. Subsequent source changes require a separate build/upload before they appear there. Public distribution also requires speech rights, child-facing privacy/metadata review and physical family acceptance.
 
 Leon reports an iPad mini purchased around 2020/21; exact model/OS remain unknown. Deployment minimum is iOS/iPadOS16.4. Simulator success does not establish physical performance, touch/VoiceOver behavior, audio, battery/thermal behavior or Stassie's independent usability. Those remain operator checks on the family hardware.

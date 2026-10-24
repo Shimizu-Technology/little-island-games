@@ -97,3 +97,13 @@ Leon asked for the 24 October audit to be implemented and delivered to TestFligh
 - EAS submission `a90e2ba4-cfc3-438e-9d21-413d6bf674c2` finished. Apple build `555b871c-d094-4a1f-ab40-c58244353a45` is `VALID` / `IN_BETA_TESTING`, attached to the existing **Leon** internal group (one adult tester, automatic distribution off), with English testing notes verified. An extra empty upload reservation for build 9 has no attached build.
 
 Open TestFlight and update **Little Island: Family Games** to **1.3.0 (9)**. Physical installation, haptics, audio and family acceptance remain operator checks. See [build 9 delivery evidence](evidence/testflight-build9.json).
+
+## Learning games — 1.4.0 (10), 25 October 2026
+
+PR #11 merged as `3ae09363432a3a3430293a252be16a05561c0af4` (tree equal to the reviewed head `3c35129`); scope and acceptance in [LEARNING_WAVE1.md](LEARNING_WAVE1.md). A clean release checkout ran `npm ci`, Expo CNG and CocoaPods, the full check (429 tests) and Doctor 21/21 before the local Xcode 26.6 archive/export. Existing credentials were reused in a temporary keychain that was removed; the original keychain search list was restored.
+
+- Signed IPA: 53,214,652 bytes; SHA256 `7b42985670cad9a428d68de61f0ecc81f01cc1cbc1c5523b434cdf16dee6e8d6`. Embedded JS matches the archive; strict signature, App Store profile and signed entitlements passed; 1.4.0 (10), iPhone/iPad, minimum 16.4. All 1,643 referenced audio files match source bytes.
+- EAS submission `a5c72781-d13d-43dd-a0af-7be58e9459a9` finished. Apple build `7b4956fb-9e22-41d7-b1c2-f39c5e544162` is `VALID` / `IN_BETA_TESTING`, attached to the existing **Leon** internal group (one adult tester, automatic distribution off), with English testing notes verified.
+
+Open TestFlight and update **Little Island: Family Games** to **1.4.0 (10)**. Physical installation, audio, CHamoru native review and family acceptance remain operator checks. See [build 10 delivery evidence](evidence/testflight-build10.json).
+
