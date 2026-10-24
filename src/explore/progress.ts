@@ -49,6 +49,8 @@ function validLab(v: unknown): v is LabState {
     v.message.length > 600
   )
     return false;
+  if (v.habitatFeedback !== undefined && (typeof v.habitatFeedback !== "boolean" ||
+    (v.habitatFeedback && (v.habitat === 0 || v.message !== HABITATS[(v.habitat as number) - 1].why)))) return false;
   if (!Array.isArray(v.chain) || v.chain.length > FOOD_CHAIN.length || v.chain.some((x, i) => x !== FOOD_CHAIN[i]))
     return false;
   if (!Array.isArray(v.matched) || v.matched.length !== v.habitat || v.matched.some((x, i) => x !== i)) return false;

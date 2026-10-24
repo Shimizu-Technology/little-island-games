@@ -3,6 +3,7 @@ export interface LabState {
   turn: number;
   chain: string[];
   habitat: number;
+  habitatFeedback?: boolean;
   matched: number[];
   water: WaterPlace;
   journey: WaterPlace[];
@@ -15,6 +16,7 @@ export type LabAction =
   | { type: "turn"; by: 1 | -1 }
   | { type: "chain"; item: string }
   | { type: "unchain" }
+  | { type: "next-animal" }
   | { type: "habitat"; choice: string }
   | { type: "water"; action: string }
   | { type: "place"; id: string }
@@ -223,11 +225,13 @@ export function labAction(state: LabState, action: LabAction): LabState {
           : `${action.item} added. Choose the next link.`,
     };
   }
+  if (action.type === "next-animal") return state.habitatFeedback ? { ...state, habitatFeedback: false, message: "" } : state;
   if (action.type === "habitat") {
+    if (state.habitatFeedback) return state;
     if (state.habitat >= HABITATS.length) return state;
     const target = HABITATS[state.habitat];
     return action.choice === target.home
-      ? { ...state, habitat: state.habitat + 1, matched: [...state.matched, state.habitat], message: target.why }
+      ? { ...state, habitat: state.habitat + 1, matched: [...state.matched, state.habitat], habitatFeedback: true, message: target.why }
       : {
           ...state,
           message: `Think about what ${target.animal.toLowerCase()} needs to eat, breathe, and grow. Try a different habitat.`,
