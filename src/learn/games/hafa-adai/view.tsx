@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { Button, C, Chip, Copy, Heading, PressableScale, styles } from "../../../components/ui";
 import type { BoardProps } from "../../types";
@@ -12,11 +12,14 @@ export function Board({ session, update, practice, sound, soundOn, active, width
   const [selected, setSelected] = useState<string | null>(null), [english, setEnglish] = useState(false);
   const target = chamoruWord(s.items[p.cursor]), shown = chamoruWord(selected ?? s.taps.at(-1) ?? "");
   const spy = s.activity === "spy", gentle = options.pace === "easy";
-  const columns = width >= 600 ? 4 : 3, tileWidth = (width - 20 - (columns - 1) * 6) / columns;
+  const columns = width >= 600 ? 4 : 3, tileWidth = (width - 24 - (columns - 1) * 6) / columns;
   const pictureSize = Math.max(38, Math.min(78, tileWidth - 12));
   const promptKey = p.done ? "hafa-adai-done" : !spy ? "hafa-adai-explore" : gentle && target ? `hafa-adai-find-${target.id.replaceAll(".", "-").replaceAll("_", "-")}` : "hafa-adai-spy";
   useEffect(() => {
-    if (active && soundOn) sound(promptKey);
+    // Web reloads have no user activation yet. The visible directions button remains
+    // available; only auto-play after a gesture, so browsers never reject initial speech.
+    const canAutoPlay = Platform.OS !== "web" || (typeof navigator !== "undefined" && navigator.userActivation?.hasBeenActive);
+    if (active && soundOn && canAutoPlay) sound(promptKey);
   }, [active, soundOn, sound, promptKey]);
   function select(id: string) {
     if (!active) return;
@@ -44,7 +47,7 @@ export function Board({ session, update, practice, sound, soundOn, active, width
     </View>
     {/* One calm island scene: flags over a market table, picnic blanket, shells and friends. */}
     <View style={{ backgroundColor: "#F5E5BB", borderRadius: 20, padding: 10, gap: 6, borderWidth: 1, borderColor: "#DCC895", overflow: "hidden" }}>
-      <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none"><Svg width="100%" height="100%" viewBox="0 0 300 300" preserveAspectRatio="none"><Rect width={300} height={85} fill="#D6E9E8" /><Path d="M0 70q75-15 150 0t150 0v40H0z" fill="#8DC5C7" /><Path d="M0 100q150-25 300 0v200H0z" fill="#F5E5BB" /><Circle cx={270} cy={22} r={12} fill="#EFC96D" /></Svg></View>
+      <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none"><Svg width="100%" height="100%" viewBox="0 0 300 300" preserveAspectRatio="none"><Rect width={300} height={85} fill="#D6E9E8" /><Path d="M0 70q75-15 150 0t150 0v40H0z" fill="#8DC5C7" /><Path d="M0 100q150-25 300 0v200H0z" fill="#F5E5BB" /></Svg></View>
       <View style={{ height: 22 }}><Svg width="100%" height={22} viewBox="0 0 300 22"><Path d="M0 4q150 25 300 0" fill="none" stroke="#8E9F83" strokeWidth={2} />{[35,80,125,170,215,260].map((x,i)=><Path key={x} d={`M${x} 10l18 2-9 10z`} fill={["#C56D50","#72A5B6","#E1B251"][i%3]} />)}</Svg></View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
         {[...s.items].sort().map(id => {

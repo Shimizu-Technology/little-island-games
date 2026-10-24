@@ -629,6 +629,7 @@ export function WordBoard({
   );
 }
 export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryState>) {
+  const { fontScale } = useWindowDimensions();
   const [peek, setPeek] = useState(false);
   useEffect(() => {
     if (!peek) return;
@@ -636,9 +637,9 @@ export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryStat
     return () => clearTimeout(timer);
   }, [peek]);
   const done = memoryDone(s),
-    columns = s.pack === "chamoru" ? (width >= 600 ? 6 : 3) : width >= 460 ? 6 : 4,
+    columns = s.pack === "chamoru" ? (fontScale > 1.3 ? 2 : width >= 600 ? 6 : 4) : width >= 460 ? 6 : 4,
     gap = 9,
-    cardSize = Math.min(88, (width - gap * (columns - 1)) / columns);
+    cardSize = Math.min(s.pack === "chamoru" && fontScale > 1.3 ? 140 : 88, (width - gap * (columns - 1)) / columns);
   const names = s.match?.names ?? ["Player 1", "Player 2"];
   const mismatch = s.open.length === 2;
   return (
