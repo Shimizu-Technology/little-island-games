@@ -60,6 +60,7 @@ export function ExploreScreen({
   const scroll = useRef<ScrollView>(null);
   const searchInput = useRef<TextInput>(null);
   const searchY = useRef(0);
+  const searchAllRequested = useRef(false);
   const [showActivities, setShowActivities] = useState(false);
   const positions = useRef<Record<string, number>>(initial.positions);
   const currentY = useRef(initial.positions[locationKey(initial.location)] ?? 0);
@@ -217,7 +218,14 @@ export function ExploreScreen({
         )}
         {(location.kind === "map" || location.kind === "world") && (
           <>
-            <View onLayout={(event) => { searchY.current = event.nativeEvent.layout.y; }} style={s.sectionHeading}>
+            <View onLayout={(event) => {
+              searchY.current = event.nativeEvent.layout.y;
+              if (searchAllRequested.current && location.kind === "map") {
+                searchAllRequested.current = false;
+                positions.current.map = searchY.current;
+                requestAnimationFrame(() => scroll.current?.scrollTo({ y: searchY.current, animated: false }));
+              }
+            }} style={s.sectionHeading}>
               <Heading style={{ fontSize: 24 }}>
                 {location.kind === "map" ? "Find a discovery" : "Wonder about…"}
               </Heading>
@@ -255,7 +263,7 @@ export function ExploreScreen({
                 }
               />
               <View style={s.row}>
-                {location.kind === "world" && <Button compact onPress={() => { positions.current.map = 0; go({ kind: "map" }); }}>Search all worlds</Button>}
+                {location.kind === "world" && <Button compact onPress={() => { searchAllRequested.current = true; go({ kind: "map" }); }}>Search all worlds</Button>}
                 <Button compact quiet onPress={() => setQuery("")}>Clear search</Button>
               </View></View>
             )}
