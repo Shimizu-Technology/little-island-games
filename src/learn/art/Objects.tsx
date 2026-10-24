@@ -126,7 +126,13 @@ export function ObjectGlyph({
     const fish = name === "fish" || name === "seal";
     shape = (
       <>
-        {fish ? <Polygon points="17,50 3,30 3,74" fill={fill} /> : <Path d="M22 60 Q3 38 12 32" fill="none" />}
+        {name === "fish" ? (
+          <Polygon points="17,50 3,30 3,74" fill={fill} />
+        ) : name === "seal" ? (
+          <Ellipse cx="18" cy="72" rx="15" ry="8" fill={fill} />
+        ) : (
+          <Path d="M22 60 Q3 38 12 32" fill="none" />
+        )}
         {wings && (
           <>
             <Ellipse cx="38" cy="30" rx="15" ry="19" fill="#F9EDC9" />
@@ -140,13 +146,35 @@ export function ObjectGlyph({
             <Ellipse cx="66" cy="84" rx="11" ry="5" fill={fill} />
           </>
         )}
-        {["cat", "fox", "cub", "rat", "dog", "pig"].includes(name) && (
+        {["cat", "fox", "dog", "pig"].includes(name) && (
           <>
             <Polygon points="49,33 49,8 64,25" fill={fill} />
             <Polygon points="70,24 85,8 85,40" fill={fill} />
           </>
         )}
+        {(name === "rat" || name === "cub") && (
+          <>
+            <Circle cx="50" cy="20" r="12" fill={fill} />
+            <Circle cx="82" cy="20" r="12" fill={fill} />
+          </>
+        )}
         <Circle cx="66" cy="44" r="23" fill={fill} />
+        {name === "fox" && (
+          <>
+            <Path d="M45 45 L65 53 L86 44 Q81 66 66 67 Q51 66 45 45 Z" fill="#FCFAF4" />
+            <Path d="M19 50 Q-1 47 4 70 L20 76 Z" fill={fill} />
+            <Path d="M4 62 L13 70 L8 73 L3 69 Z" fill="#FCFAF4" />
+          </>
+        )}
+        {name === "cat" && <Path d="M48 48 L37 45 M48 53 L36 54 M82 48 L94 45 M82 53 L94 56" fill="none" />}
+        {name === "seal" && (
+          <>
+            <Ellipse cx="35" cy="83" rx="15" ry="6" fill={fill} />
+            <Ellipse cx="71" cy="81" rx="13" ry="7" fill={fill} />
+            <Path d="M53 49 L42 45 M53 54 L41 55 M78 49 L91 45 M78 54 L92 55" fill="none" />
+            <Ellipse cx="67" cy="47" rx="4" ry="3" fill={ink} />
+          </>
+        )}
         {name === "goat" && (
           <>
             <Path d="M54 22 Q40 2 52 5 M75 22 Q90 1 80 6" fill="none" />
@@ -174,7 +202,8 @@ export function ObjectGlyph({
           </>
         )}
         {name === "hen" && <Path d="M58 22 Q52 4 63 10 Q71 0 74 18" fill="#C56D50" />}
-        {["bird", "hen", "duck"].includes(name) && <Path d="M84 42 L99 48 L84 54 Z" fill="#E1B251" />}
+        {["bird", "hen"].includes(name) && <Path d="M84 42 L99 48 L84 54 Z" fill="#E1B251" />}
+        {name === "duck" && <Path d="M83 43 Q99 40 99 48 Q98 56 83 53 Z" fill="#E1B251" />}
         {name === "pig" && <Ellipse cx="76" cy="53" rx="12" ry="8" fill="#F4B59A" />}
         {name === "bee" && (
           <>
