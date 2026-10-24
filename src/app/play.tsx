@@ -1,7 +1,7 @@
 import { PlayerNames } from "../components/Match";
 import { newMatch, Seat } from "../games/match";
 import { Mark, replayTic } from "../games/tic";
-import { replayMemory } from "../games/memory";
+import { createMemory, replayMemory } from "../games/memory";
 import { SaveStatus } from "../components/SaveStatus";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, ScrollView, TextInput, View, useWindowDimensions } from "react-native";
@@ -62,6 +62,7 @@ function Game({ id }: { id: GameId }) {
     [xSeat, setXSeat] = useState<Seat>(0),
     [alternate, setAlternate] = useState(true),
     [human, setHuman] = useState<Mark>("X");
+  const [memoryPack, setMemoryPack] = useState<"pictures" | "chamoru">(s?.game === "memory" ? s.pack ?? "pictures" : "pictures");
   const [showSecret, setShowSecret] = useState(false),
     [clue, setClue] = useState("");
   const [setup, setSetup] = useState(false),
@@ -101,7 +102,8 @@ function Game({ id }: { id: GameId }) {
         }
         next = custom;
       } else next = createWord(options, category, s?.game === "word-rescue" ? s.seen : []);
-    } else next = createGame(id, options);
+    } else if (id === "memory") next = createMemory(options, starter, memoryPack);
+    else next = createGame(id, options);
     if (next.game === "tic-tac-toe" || next.game === "memory" || next.game === "checkers") {
       const family = options.mode === "together";
       const match = newMatch(family ? names : ["You", "Island friend"], alternate);
@@ -128,6 +130,7 @@ function Game({ id }: { id: GameId }) {
     setError("");
   }
   function newRound() {
+    if (s?.game === "memory") setMemoryPack(s.pack ?? "pictures");
     setOptions(
       s?.options ?? {
         ...defaultOptions,
@@ -502,13 +505,21 @@ function Game({ id }: { id: GameId }) {
             </>
           ))}
         {id === "memory" && (
+          <>
+          <Heading style={{ fontSize: 18 }}>Cards</Heading>
+          <View style={[styles.row, { flexWrap: "wrap" }]}>
+            <Chip selected={memoryPack === "pictures"} onPress={() => setMemoryPack("pictures")}>Pictures</Chip>
+            <Chip selected={memoryPack === "chamoru"} onPress={() => setMemoryPack("chamoru")}>CHamoru words</Chip>
+          </View>
+          {memoryPack === "chamoru" && <Copy>Match each picture with its CHamoru word. Small English words help you compare. CHamoru words are text only.</Copy>}
           <Copy>
             {options.difficulty === "easy" ? "Six" : options.difficulty === "medium" ? "Eight" : "Twelve"}{" "}
-            picture pairs.{" "}
+            {memoryPack === "chamoru" ? "picture and word pairs." : "picture pairs."}{" "}
             {options.mode === "solo"
               ? "Practice with a peek whenever you need one."
               : "Two-player match: no peeks. Most pairs wins; equal pairs is a tie."}
           </Copy>
+          </>
         )}
         {id === "numbers" && (
           <Copy>
