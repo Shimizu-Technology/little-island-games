@@ -106,6 +106,7 @@ export function Board({ session, update, practice, sound, active, width }: Board
           </Copy>
           <Button
             disabled={!active}
+            style={{ alignSelf: "center", minWidth: 220, maxWidth: 420 }}
             onPress={() => {
               update(openOrder(s));
               sound(money ? "island-market-change" : "island-market-pack");
