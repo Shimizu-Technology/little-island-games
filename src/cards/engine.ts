@@ -1,4 +1,5 @@
 import { Options, random, shuffle } from "../games/types";
+import { Match, Seat, newMatch, nextStarter, settle, validMatch, validSeat } from "../games/match";
 
 export type CardGame = "go-fish" | "crazy-eights";
 export const SUITS = ["shell", "leaf", "sun", "wave"] as const;
@@ -37,6 +38,10 @@ export const cardRanks = (s: Pick<CardSession, "round">) => (cardRound(s) === "q
 export const cardDeal = (s: Pick<CardSession, "round">) => (cardRound(s) === "quick" ? 5 : 7);
 export type CardSession = {
   version: 1;
+  /** Earlier rounds only; the current result is derived live. Optional for legacy saves. */
+  match?: Match;
+  starter?: Seat;
+  matchPoints?: [number, number];
   round?: CardRound;
   pace?: CardPace;
   events?: CardEvent[];
@@ -84,7 +89,7 @@ export function createCardSession(
   options: Options,
   seed = Date.now() >>> 0,
   id = `${game}-${Date.now().toString(36)}-${seed}`,
-  settings: { round?: CardRound; pace?: CardPace } = {}
+  settings: { round?: CardRound; pace?: CardPace; match?: Match; starter?: Seat; matchPoints?: [number, number] } = {}
 ): CardSession {
   const stock = shuffle(
     Array.from({ length: 52 }, (_, i) => i).filter((c) => rank(c) <= (settings.round === "quick" ? 8 : 13)),
@@ -92,6 +97,9 @@ export function createCardSession(
   );
   const s: CardSession = {
     version: 1,
+    match: settings.match ?? newMatch(options.mode === "solo" ? ["You", "Computer"] : undefined),
+    starter: settings.starter ?? (options.mode === "solo" && options.computerFirst ? 1 : 0),
+    matchPoints: settings.matchPoints ?? [0, 0],
     round: settings.round ?? "full",
     pace: settings.pace ?? "step",
     events: [],
@@ -104,7 +112,7 @@ export function createCardSession(
     stock,
     discard: [],
     books: [[], []],
-    turn: options.mode === "solo" && options.computerFirst ? 1 : 0,
+    turn: settings.starter ?? (options.mode === "solo" && options.computerFirst ? 1 : 0),
     activeSuit: "shell",
     drawn: null,
     passes: 0,
@@ -302,6 +310,9 @@ const ints = (v: unknown, min: number, max: number, length = 52): v is number[] 
 export function validCardSession(value: unknown): value is CardSession {
   if (!record(value)) return false;
   const s = value;
+  if ((s.match !== undefined && !validMatch(s.match)) ||
+      (s.starter !== undefined && !validSeat(s.starter)) ||
+      (s.matchPoints !== undefined && (!ints(s.matchPoints, 0, CARD_POINTS_MAX, 2) || s.matchPoints.length !== 2))) return false;
   if (
     s.version !== 1 ||
     !["go-fish", "crazy-eights"].includes(s.game as string) ||
@@ -458,9 +469,9 @@ function validCardEvent(v: unknown, s: CardSession, previous: number): v is Card
   );
 }
 /** A recipient-safe projection: hidden draws never appear in public/pass-device history. */
-export function cardEventText(event: CardEvent, viewer: 0 | 1 | null, mode: Options["mode"]): string {
-  const who =
-    event.actor === viewer ? "You" : mode === "solo" && event.actor === 1 ? "Computer" : `Player ${event.actor + 1}`;
+export function cardEventText(event: CardEvent, viewer: 0 | 1 | null, mode: Options["mode"], names?: readonly string[]): string {
+  const name = (player: Seat) => names?.[player] ?? (mode === "solo" && player === 1 ? "Computer" : `Player ${player + 1}`);
+  const who = event.actor === viewer ? "You" : name(event.actor);
   const verb = event.actor === viewer ? "have" : "has";
   let text =
     event.action === "ask"
@@ -479,7 +490,7 @@ export function cardEventText(event: CardEvent, viewer: 0 | 1 | null, mode: Opti
   if (event.action === "ask") text += event.continues ? " Ask again!" : " Turn passes.";
   for (const player of [0, 1] as const)
     if (event.books[player].length)
-      text += ` ${viewer === player ? "You" : mode === "solo" && player === 1 ? "Computer" : `Player ${player + 1}`} made a book of ${event.books[player].map(rankName).join(", ")}.`;
+      text += ` ${viewer === player ? "You" : name(player)} made a book of ${event.books[player].map(rankName).join(", ")}.`;
   return text;
 }
 export function newCardIds(s: CardSession, viewer: 0 | 1): Card[] {
@@ -490,4 +501,20 @@ export function newCardIds(s: CardSession, viewer: 0 | 1): Card[] {
 /** Changing pacing is a saved decision too; stale taps from before the sheet cannot act afterward. */
 export function setCardPace(state: CardSession, pace: CardPace): CardSession {
   return cardPace(state) === pace ? state : { ...state, pace, revision: state.revision + 1 };
+}
+
+/** Bounded cumulative points, using the same earlier-round convention as Match. */
+export const CARD_POINTS_MAX = 2600 * 9999;
+export const cardMatch = (s: CardSession): Match => s.match ?? newMatch(s.options.mode === "solo" ? ["You", "Computer"] : undefined);
+export const cardStarter = (s: CardSession): Seat => s.starter ?? (s.options.mode === "solo" && s.options.computerFirst ? 1 : 0);
+export const cardMatchResult = (s: CardSession) => s.result?.winner === "tie" ? "draw" as const : s.result?.winner ?? null;
+export function cardMatchPoints(s: CardSession): [number, number] {
+  return [0, 1].map((i) => Math.min(CARD_POINTS_MAX, (s.matchPoints?.[i] ?? 0) + (s.game === "crazy-eights" ? s.result?.scores[i] ?? 0 : 0))) as [number, number];
+}
+export function rematchCards(s: CardSession, seed?: number, id?: string): CardSession {
+  const match = cardMatch(s);
+  return createCardSession(s.game, s.options, seed, id, {
+    round: cardRound(s), pace: cardPace(s), match: settle(match, cardMatchResult(s)),
+    starter: nextStarter(match, cardStarter(s)), matchPoints: cardMatchPoints(s),
+  });
 }
