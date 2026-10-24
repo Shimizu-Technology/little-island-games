@@ -210,6 +210,8 @@ function WalkingPlayer({
       <Text
         numberOfLines={1}
         style={{
+          position: "absolute",
+          top: -16,
           fontSize: self ? 11 : 10,
           fontWeight: "800",
           color: "#234E43",
