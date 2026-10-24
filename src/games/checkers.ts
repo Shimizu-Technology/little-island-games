@@ -1,4 +1,5 @@
 import { Base, Options, CheckersRules, base } from "./types";
+import { Match, Seat, RoundResult, newMatch, settle, nextStarter } from "./match";
 export type Side = 1 | -1;
 export type CheckersMove = { from: number; path: number[]; captured: number[] };
 export type Position = {
@@ -10,6 +11,8 @@ export type Position = {
 };
 export type CheckersState = Base & {
   game: "checkers";
+  match?: Match;
+  starter?: Seat;
   position: Position;
   history: Position[];
   lesson: number | null;
@@ -245,4 +248,14 @@ export function finishCheckersLessons(s: CheckersState): CheckersState {
         lessonBackup: null,
       }
     : createCheckers(s.options);
+}
+
+/** Red always starts. Alternating the starting seat swaps the family colours. */
+export function checkersResultSeat(s: CheckersState): RoundResult {
+  const result = s.lesson === null ? s.position.outcome : null;
+  return !result || result === "draw" ? result : result === "red" ? (s.starter ?? 0) : (s.starter ?? 0) === 0 ? 1 : 0;
+}
+export function replayCheckers(s: CheckersState): CheckersState {
+  const match = settle(s.match ?? newMatch(), checkersResultSeat(s));
+  return { ...createCheckers(s.options), match, starter: nextStarter(match, s.starter ?? 0) };
 }
