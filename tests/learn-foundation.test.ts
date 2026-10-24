@@ -135,3 +135,16 @@ describe("review regressions", () => {
         if (w.word.includes(team)) expect(w.tiles.some((t) => t.includes(team)), w.word).toBe(true);
   });
 });
+
+describe("reading pictures make sense", () => {
+  it("only puts things 'in' objects you can be inside", async () => {
+    const { insideStyle } = await import("../src/learn/kit/scene");
+    const { SENTENCES } = await import("../src/learn/content/reading/sentences");
+    const { STORIES } = await import("../src/learn/content/reading/stories");
+    const scenes = [
+      ...SENTENCES.flatMap((s) => s.scenes),
+      ...STORIES.flatMap((t) => [...t.pages.map((p) => p.scene), ...t.questions.flatMap((q) => q.scenes)]),
+    ];
+    for (const sc of scenes) if (sc.relation === "in") expect(insideStyle[sc.object], `${sc.subject} in ${sc.object}`).toBeTruthy();
+  });
+});

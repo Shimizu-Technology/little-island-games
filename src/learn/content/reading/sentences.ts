@@ -357,7 +357,7 @@ export const SENTENCES: PictureSentence[] = [
       {
         "subject": "cat",
         "object": "rug",
-        "relation": "in",
+        "relation": "under",
         "color": "coral",
         "size": "big"
       },
@@ -371,7 +371,7 @@ export const SENTENCES: PictureSentence[] = [
     ],
     "difference": [
       "",
-      "in",
+      "under",
       "dog"
     ]
   },
@@ -697,7 +697,7 @@ export const SENTENCES: PictureSentence[] = [
       {
         "subject": "crab",
         "object": "rock",
-        "relation": "in",
+        "relation": "under",
         "color": "coral",
         "size": "big"
       },
@@ -711,7 +711,7 @@ export const SENTENCES: PictureSentence[] = [
     ],
     "difference": [
       "",
-      "in",
+      "under",
       "fish"
     ]
   },
@@ -731,7 +731,7 @@ export const SENTENCES: PictureSentence[] = [
       {
         "subject": "fish",
         "object": "rock",
-        "relation": "in",
+        "relation": "under",
         "color": "coral",
         "size": "big"
       },
@@ -745,7 +745,7 @@ export const SENTENCES: PictureSentence[] = [
     ],
     "difference": [
       "",
-      "in",
+      "under",
       "duck"
     ]
   },
@@ -799,7 +799,7 @@ export const SENTENCES: PictureSentence[] = [
       {
         "subject": "frog",
         "object": "rock",
-        "relation": "in",
+        "relation": "under",
         "color": "coral",
         "size": "big"
       },
@@ -813,7 +813,7 @@ export const SENTENCES: PictureSentence[] = [
     ],
     "difference": [
       "",
-      "in",
+      "under",
       "moth"
     ]
   },
@@ -833,7 +833,7 @@ export const SENTENCES: PictureSentence[] = [
       {
         "subject": "moth",
         "object": "rock",
-        "relation": "in",
+        "relation": "under",
         "color": "coral",
         "size": "big"
       },
@@ -847,7 +847,7 @@ export const SENTENCES: PictureSentence[] = [
     ],
     "difference": [
       "",
-      "in",
+      "under",
       "crab"
     ]
   },
@@ -1581,7 +1581,7 @@ export const SENTENCES: PictureSentence[] = [
       {
         "subject": "sheep",
         "object": "bike",
-        "relation": "in",
+        "relation": "under",
         "color": "coral",
         "size": "big"
       },
@@ -1595,7 +1595,7 @@ export const SENTENCES: PictureSentence[] = [
     ],
     "difference": [
       "",
-      "in",
+      "under",
       "toad"
     ]
   },
@@ -1615,7 +1615,7 @@ export const SENTENCES: PictureSentence[] = [
       {
         "subject": "toad",
         "object": "bike",
-        "relation": "in",
+        "relation": "under",
         "color": "coral",
         "size": "big"
       },
@@ -1629,7 +1629,7 @@ export const SENTENCES: PictureSentence[] = [
     ],
     "difference": [
       "",
-      "in",
+      "under",
       "seal"
     ]
   },
@@ -1683,7 +1683,7 @@ export const SENTENCES: PictureSentence[] = [
       {
         "subject": "bee",
         "object": "bike",
-        "relation": "in",
+        "relation": "under",
         "color": "coral",
         "size": "big"
       },
@@ -1697,7 +1697,7 @@ export const SENTENCES: PictureSentence[] = [
     ],
     "difference": [
       "",
-      "in",
+      "under",
       "goat"
     ]
   },

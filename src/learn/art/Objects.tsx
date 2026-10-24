@@ -1,6 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import Svg, { Circle, Ellipse, G, Line, Path, Polygon, Rect } from "react-native-svg";
+import { insideStyle, objectTop } from "../kit/scene";
 import type { ReadingScene } from "../kit/reading";
 import { sceneLabel } from "../kit/reading";
 
@@ -146,7 +147,7 @@ export function ObjectGlyph({
             <Ellipse cx="66" cy="84" rx="11" ry="5" fill={fill} />
           </>
         )}
-        {["cat", "fox", "dog"].includes(name) && (
+        {["cat", "fox"].includes(name) && (
           <>
             <Polygon points="49,33 49,8 64,25" fill={fill} />
             <Polygon points="70,24 85,8 85,40" fill={fill} />
@@ -194,7 +195,15 @@ export function ObjectGlyph({
             <Circle cx="26" cy="70" r="3" fill="#F9EDC9" />
           </>
         )}
-        {name === "dog" && <Ellipse cx="85" cy="36" rx="8" ry="19" fill="#986C4E" />}
+        {name === "dog" && (
+          <>
+            <Ellipse cx="47" cy="40" rx="8" ry="17" fill="#986C4E" />
+            <Ellipse cx="86" cy="40" rx="8" ry="17" fill="#986C4E" />
+            <Ellipse cx="72" cy="55" rx="13" ry="9" fill="#F9EDC9" />
+            <Ellipse cx="72" cy="50" rx="5" ry="3.5" fill={ink} />
+            <Path d="M70 60 Q72 66 75 60" fill="#E58C8C" />
+          </>
+        )}
         {(name === "frog" || name === "toad") && (
           <>
             <Circle cx="54" cy="23" r="9" fill={fill} />
@@ -648,41 +657,38 @@ export function PictureObject({ name, size = 100, color = "coral" }: { name: str
 export function Scene({ scene, width = 180, height = 124 }: { scene: ReadingScene; width?: number; height?: number }) {
   const small = scene.size === "little",
     s = small ? 39 : 61;
-  const objectY = scene.relation === "under" ? 0 : scene.relation === "on" ? 65 : 43;
-  const subjectY = scene.relation === "on" ? 8 : scene.relation === "under" ? 62 : 42;
+  const objectSize = scene.relation === "under" ? 62 : 82;
+  const objectY = scene.relation === "under" ? 0 : scene.relation === "on" ? 50 : 43;
+  const inside = scene.relation === "in" ? insideStyle[scene.object] ?? "container" : null;
+  // Feet sit on the object's top edge for "on"; inside a canopy they sit among the leaves.
+  const subjectY =
+    scene.relation === "on"
+      ? Math.max(0, objectY + ((objectTop[scene.object] ?? 25) * objectSize) / 100 - 0.88 * s)
+      : scene.relation === "under"
+        ? 62
+        : inside === "canopy"
+          ? 18
+          : 42;
+  const front =
+    inside === "water" ? "#91C6D3" : inside === "buried" ? "#E6D3AC" : scene.object === "bed" ? "#E1B251" : "#D7B482";
   return (
     <View accessible accessibilityLabel={sceneLabel(scene)}>
       <Svg width={width} height={height} viewBox="0 0 180 140">
         <Rect width="180" height="140" rx="16" fill="#FCFAF4" />
         <Ellipse cx="91" cy="124" rx="78" ry="9" fill="#E5EFE5" />
-        <ObjectGlyph
-          name={scene.object}
-          x={scene.relation === "beside" ? 98 : 49}
-          y={objectY}
-          size={scene.relation === "under" ? 62 : 82}
-          color="gold"
-        />
+        <ObjectGlyph name={scene.object} x={scene.relation === "beside" ? 98 : 49} y={objectY} size={objectSize} color="gold" />
         <ObjectGlyph
           name={scene.subject}
           x={scene.relation === "beside" ? 13 : 89 - s / 2}
           y={subjectY}
-          size={s}
+          size={inside === "canopy" ? s * 0.8 : s}
           color={scene.color}
         />
-        {scene.relation === "in" && (
+        {inside === "water" && <Path d="M40 92 Q90 82 140 92 L140 112 Q90 122 40 112 Z" fill={front} opacity={0.85} />}
+        {inside === "buried" && <Path d="M40 118 Q90 78 140 118 Z" fill={front} stroke={ink} strokeWidth="2" />}
+        {inside === "container" && (
           <>
-            <Path
-              d="M52 87 L128 87 L123 119 L58 119 Z"
-              fill={
-                scene.object === "pond" || scene.object === "sea" || scene.object === "pool"
-                  ? "#91C6D3"
-                  : scene.object === "bed"
-                    ? "#E1B251"
-                    : "#D7B482"
-              }
-              stroke={ink}
-              strokeWidth="2.5"
-            />
+            <Path d="M52 87 L128 87 L123 119 L58 119 Z" fill={front} stroke={ink} strokeWidth="2.5" />
             <Path d="M63 97 L117 97" stroke="#B8875C" strokeWidth="3" />
           </>
         )}
