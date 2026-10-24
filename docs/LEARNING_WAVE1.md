@@ -28,14 +28,14 @@ Saves stay version 1; new fields are optional and validated. Old saves load unch
 
 | Case | Scenario | Status |
 | --- | --- | --- |
-| L01 | Full gate: typecheck, lint, tests (incl. contract test for all nine engines), web export, Doctor | Pending |
-| L02 | Every learning game: every offered mode to a finished round, Play again, reload mid-round, phone and iPad layouts | Pending |
-| L03 | Reading content passes the decodability checker; stories/sentences/words have speech | Pending |
-| L04 | Home: islands → shelf → game → back keeps shelf; Continue resumes the latest of any kind; favorites incl. learning games; Try today + Shuffle | Pending |
-| L05 | Grown-up practice view shows recent skills without numbers | Pending |
-| L06 | CHamoru: only source-backed terms, exact spelling, no CHamoru audio; Håfa Adai Island and Memory pack | Pending |
-| L07 | Legacy saves from 1.3.0 load and play | Pending |
-| L08 | Native Release on owned iPhone and iPad simulators | Pending |
+| L01 | Full gate: typecheck, lint, tests (incl. contract test for all nine engines), web export, Doctor | Pass — 424 tests / 32 files (contract test for all nine engines), typecheck, lint, web export (1,665 offline resources), Doctor 21/21, Impeccable `[]` |
+| L02 | Every learning game: every offered mode to a finished round, Play again, reload mid-round, phone and iPad layouts | Pass — each worker played every offered mode to a finished round with Play again and mid-round reload at 390×844, 375×667, 768×1024 and 1024×768 (numbers 24 layouts, science 24 cases, reading 28, home 23); lead combined pass opened every game at phone and iPad landscape without page errors or overflow |
+| L03 | Reading content passes the decodability checker; stories/sentences/words have speech | Pass — decodability checker runs over every word, sentence, story, prompt and question (tests); speech exists for all of them. Lead rewrote the 12 stories with small plots, fixed letter-name segment hints (now 'Back has three sounds'), the pig drawing and red-object scenes |
+| L04 | Home: islands → shelf → game → back keeps shelf; Continue resumes the latest of any kind; favorites incl. learning games; Try today + Shuffle | Pass — browser and native: Try today + Shuffle, islands → shelf → game → back keeps the shelf, Continue resumes the latest learning game, favorites include learning games |
+| L05 | Grown-up practice view shows recent skills without numbers | Pass (browser, worker) — gated practice view lists recent skills as 'getting easier' / 'practicing' with no numbers |
+| L06 | CHamoru: only source-backed terms, exact spelling, no CHamoru audio; Håfa Adai Island and Memory pack | Pass — 51 source-backed HåfaGPT terms match the source spelling exactly (lead re-verified); all bundled speech is English directions; Håfa Adai Island and the CHamoru Memory pack play solo and take-turns |
+| L07 | Legacy saves from 1.3.0 load and play | Pass — save tests keep every legacy shape valid; new fields optional and strictly validated |
+| L08 | Native Release on owned iPhone and iPad simulators | Pass — Release build on owned iPhone 16 Pro and iPad mini (A17 Pro) simulators, iOS 18.5, no Metro: Maestro 49-step flow on both (Home, Try today, islands, a full Turtle Tales page read word by word, every learning game opened, Continue) plus iPad landscape Home and Island Market |
 | L09 | Independent final-code review | Pending |
 
 Physical family devices, VoiceOver speech, audio quality, and whether Stassie chooses these games on her own remain operator checks after TestFlight.
