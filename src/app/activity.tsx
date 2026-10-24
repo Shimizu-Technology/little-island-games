@@ -1,6 +1,6 @@
 import { SaveStatus } from "../components/SaveStatus";
 import React, { useEffect, useRef, useState } from "react";
-import { ScrollView, View, useWindowDimensions } from "react-native";
+import { ScrollView, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, router, useLocalSearchParams, useIsFocused } from "expo-router";
 import { ActivityId, activityIds } from "../state/activities";
@@ -11,7 +11,7 @@ import { RaceScreen } from "../racer/RaceScreen";
 import { MysteryScreen } from "../mystery/MysteryScreen";
 import { PartyScreen } from "../party/PartyScreen";
 import { defaultOptions } from "../games/types";
-import { Button, Copy, styles } from "../components/ui";
+import { Copy, GameHeader, styles } from "../components/ui";
 import { Recovery } from "../components/Recovery";
 import { useSoundControls } from "../components/Audio";
 export default function Activity() {
@@ -71,14 +71,13 @@ function ActivityGame({ id }: { id: ActivityId }) {
         contentContainerStyle={[styles.content, { paddingHorizontal: 20, gap: 16 }]}
         keyboardShouldPersistTaps="handled"
       >
-        {id === "island-mystery" && <View style={[styles.row, { justifyContent: "space-between", paddingTop: 12 }]}>
-          <Button compact quiet onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}>
-            ‹ Games
-          </Button>
-          <Button compact quiet onPress={() => store.settings({ sound: !store.save.settings.sound })}>
-            Sound {store.save.settings.sound ? "on" : "off"}
-          </Button>
-        </View>}
+        {id === "island-mystery" && (
+          <GameHeader
+            title="Picnic Mystery"
+            onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+            sound={{ on: store.save.settings.sound, toggle: () => store.settings({ sound: !store.save.settings.sound }) }}
+          />
+        )}
         <SaveStatus />
         {id === "island-mystery" ? (
           <MysteryScreen
