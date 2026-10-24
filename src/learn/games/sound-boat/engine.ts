@@ -81,7 +81,7 @@ export const engine: LearnEngine<BoatState> = {
   island: "reading",
   tagline: "Load a boat, one sound at a time.",
   description: "Hear a word, count its sounds and load its letters. Change one sound to sail along a word ladder.",
-  help: "Hear the picture word. Add one box for each sound, then tap Load letters. Pick the letters for each empty box. Two letters can make one sound, like sh. In a ladder, keep the sounds that stay the same. A line under a vowel means silent e, as in a_e. Together, one person counts and says the sounds; the other loads letters. Swap jobs for the next word. Take turns: a rung without a hint or retry earns a point. There is no clock.",
+  help: "Hear the picture word. Add one box for each sound, then tap Load letters. Pick the letters for each empty box. Sometimes two letters make one sound, like in ship. In a ladder, keep the sounds that stay the same. In words like cake, the e at the end is silent and helps the a say its name. Together, one person counts and says the sounds; the other loads letters. Swap jobs for the next word. Take turns: a rung without a hint or retry earns a point. There is no clock.",
   helpAudio: "sound-boat-help",
   color: "#386C9A",
   surface: "#E3EEF8",
