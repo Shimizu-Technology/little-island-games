@@ -8,6 +8,7 @@ import { Activities, ActivityId, activityIds, validActivities, validActivityReco
 import type { RaceRecords } from "../racer/engine";
 import { normalizeExploreFavorites, topicById } from "../explore/content";
 import { WORDS } from "../games/words";
+import { validPlayers } from "../games/match";
 export type Settings = { sound: boolean; help: boolean };
 export type Save = {
   version: 1;
@@ -20,6 +21,8 @@ export type Save = {
   recentActivity?: ActivityId | null;
   raceRecords?: RaceRecords;
   explore?: { favorites: string[]; progress?: ExploreProgress };
+  /** Family names remembered for quick two-player setup; most recent first. */
+  players?: string[];
 };
 export const emptySave = (): Save => ({
   version: 1,
@@ -298,6 +301,7 @@ export function parseSave(raw: string): Save {
       v.recentActivity !== null &&
       !activityIds.includes(v.recentActivity as ActivityId)) ||
     (v.raceRecords !== undefined && !validActivityRecords(v.raceRecords)) ||
+    (v.players !== undefined && !validPlayers(v.players)) ||
     (v.explore !== undefined &&
       (!obj(v.explore) ||
         !Array.isArray(v.explore.favorites) ||

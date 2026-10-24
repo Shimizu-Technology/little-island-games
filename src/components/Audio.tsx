@@ -2,6 +2,7 @@ import { useAudioPlayer, setAudioModeAsync } from "expo-audio";
 import { useCallback, useEffect, useRef } from "react";
 import { AppState, Platform } from "react-native";
 import { sources } from "../content/audioSources";
+import { feel, toneFeel } from "./feel";
 export function useSoundControls(enabled: boolean) {
   const player = useAudioPlayer(null);
   const foreground = useRef(AppState.currentState === "active" || Platform.OS === "web");
@@ -26,6 +27,8 @@ export function useSoundControls(enabled: boolean) {
   }, [enabled, player]);
   const play = useCallback(
     (key: string) => {
+      // Feedback tones also give a light haptic, even with sound off.
+      if (foreground.current && toneFeel[key]) feel(toneFeel[key]);
       if (!enabled || !foreground.current || !sources[key]) return;
       try {
         player.replace(sources[key]);
