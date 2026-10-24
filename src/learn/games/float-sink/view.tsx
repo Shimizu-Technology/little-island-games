@@ -175,6 +175,7 @@ export function Board({ session, update, practice, sound, width, active }: Board
         <IconButton icon="sound-on" label="Hear this instruction" onPress={() => sound(prompt)} />
       </View>
       <Tank
+        key={boatPhase ? d.shape || "clay" : object!.id}
         object={boatPhase ? d.shape || "clay" : object!.id}
         sunk={sunk}
         dropped={boatPhase ? d.shape !== null : d.phase === "sort"}
