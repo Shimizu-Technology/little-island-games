@@ -1,6 +1,6 @@
 # Little Island product brief
 
-Updated 2026-10-21. The shipped quality-release evidence is in [QUALITY_QA.md](QUALITY_QA.md). The next source improvements for independent play, fun and discovery are scoped and tested in [FAMILY_EASE.md](FAMILY_EASE.md); they are included in TestFlight 1.2.0 (8).
+Updated 2026-10-24. The shipped quality-release evidence is in [QUALITY_QA.md](QUALITY_QA.md). Family-ease improvements ([FAMILY_EASE.md](FAMILY_EASE.md)) shipped in TestFlight 1.2.0 (8). The 24 October design and family-play polish (family matches with names and scores, reachable controls, motion/haptics, Hangman word ranges) is recorded in [AUDIT_POLISH.md](AUDIT_POLISH.md) for 1.3.0 (9).
 
 ## People and purpose
 
@@ -14,7 +14,7 @@ Universal Expo/React Native iPhone/iPad app and shared offline web build. Eleven
 
 Explore bundles fifty reviewed topics across Space, Oceans, Animals, Weather and Guam & Our World. Each has an original explanation, deeper fact, question/activity, illustration, transcript, narration and source/review metadata. Five interactive lessons accompany the map, search, favorites and internal related topics. Reference URLs do not open an unrestricted browser.
 
-Hangman defaults to Challenge: six distinct misses end the round, one reveal marks an assisted result, and both wins and losses are recorded locally once. Practice and legacy rounds remain unlimited. Island Dash has training, three obstacle courses, computer racers, checkpoints, race/practice modes and local records. The three-minute course limit and interruption behavior are explained in the game. Other games keep their explicit, reversible difficulty and mode choices. No streak penalties, purchases, required daily play or locked games.
+Two-player Tic-tac-toe, Memory, Checkers, Go Fish and Crazy Eights keep a family match: optional names, who starts or alternate, and a running score stored with the round. Hangman levels are word-length ranges (3–4, 5, 6+). Hangman defaults to Challenge: six distinct misses end the round, one reveal marks an assisted result, and both wins and losses are recorded locally once. Practice and legacy rounds remain unlimited. Island Dash has training, three obstacle courses, computer racers, checkpoints, race/practice modes and local records. The three-minute course limit and interruption behavior are explained in the game. Other games keep their explicit, reversible difficulty and mode choices. No streak penalties, purchases, required daily play or locked games.
 
 ## Design and journeys
 
