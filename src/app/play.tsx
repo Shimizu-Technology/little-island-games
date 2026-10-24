@@ -1,17 +1,47 @@
+import { Text } from "../components/Text";
+import { PlayerNames } from "../components/Match";
+import { newMatch, Seat } from "../games/match";
+import { Mark, replayTic } from "../games/tic";
+import { replayMemory } from "../games/memory";
 import { SaveStatus } from "../components/SaveStatus";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, ScrollView, TextInput, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Redirect, router, useLocalSearchParams, useIsFocused } from "expo-router";
-import { GameId, GameState, Options, createGame, difficultyLabel, gameIds, games, isFinished } from "../games";
+import {
+  GameId,
+  GameState,
+  Options,
+  createGame,
+  difficultyLabel,
+  gameIds,
+  games,
+  isFinished,
+} from "../games";
 import { defaultOptions } from "../games/types";
-import { positionKey } from "../games/checkers";
-import { createWord, customWord, guessLetter, replayWord, wordHint, wordRules, wordStatus, WORDS } from "../games/words";
+import { replayCheckers, positionKey } from "../games/checkers";
+import {
+  createWord,
+  customWord,
+  guessLetter,
+  replayWord,
+  wordHint,
+  wordRules,
+  wordStatus,
+  WORDS,
+} from "../games/words";
 import { useStore } from "../state/Store";
-import { Button, C, Chip, Copy, Heading, Label, Sheet, styles } from "../components/ui";
+import { Button, C, Chip, Copy, Heading, GameHeader, Sheet, styles } from "../components/ui";
 import { useSounds } from "../components/Audio";
 import { Recovery } from "../components/Recovery";
-import { CheckersBoard, MemoryBoard, MazeBoard, NumbersBoard, TicBoard, WordBoard } from "../screens/GameBoards";
+import {
+  CheckersBoard,
+  MemoryBoard,
+  MazeBoard,
+  NumbersBoard,
+  TicBoard,
+  WordBoard,
+} from "../screens/GameBoards";
 export default function Play() {
   const params = useLocalSearchParams<{ game?: string }>(),
     id = params.game as GameId;
@@ -19,17 +49,31 @@ export default function Play() {
   return <Game key={id} id={id} />;
 }
 function Game({ id }: { id: GameId }) {
-  const insets = useSafeAreaInsets(), focused = useIsFocused();
-  const { width } = useWindowDimensions(),
+  const insets = useSafeAreaInsets(),
+    focused = useIsFocused();
+  const { width, height } = useWindowDimensions(),
     store = useStore(),
     s = store.save.sessions[id],
     g = games[id];
+  const landscape = width >= 900 && width > height;
+  const [names, setNames] = useState<[string, string]>(
+    s && "match" in s && s.match ? s.match.names : ["", ""]
+  );
+  const [starter, setStarter] = useState<Seat>(0),
+    [xSeat, setXSeat] = useState<Seat>(0),
+    [alternate, setAlternate] = useState(true),
+    [human, setHuman] = useState<Mark>("X");
+  const [showSecret, setShowSecret] = useState(false),
+    [clue, setClue] = useState("");
   const [setup, setSetup] = useState(false),
     [help, setHelp] = useState(false),
     [options, setOptions] = useState<Options>(
-      s?.options ?? { ...defaultOptions, ...(id === "checkers" ? { checkersRules: "friendly" as const } : {}) }
+      s?.options ?? {
+        ...defaultOptions,
+        ...(id === "checkers" ? { checkersRules: "friendly" as const } : {}),
+      }
     ),
-    [category, setCategory] = useState(s?.game === "word-rescue" ? s.pack ?? "All" : "All"),
+    [category, setCategory] = useState(s?.game === "word-rescue" ? (s.pack ?? "All") : "All"),
     [secret, setSecret] = useState(""),
     [error, setError] = useState(""),
     [active, setActive] = useState(AppState.currentState === "active");
@@ -51,7 +95,7 @@ function Game({ id }: { id: GameId }) {
     let next: GameState;
     if (id === "word-rescue") {
       if (options.mode === "together") {
-        const custom = customWord(options, secret);
+        const custom = customWord(options, secret, clue);
         if (!custom) {
           setError("Use one word with 2–12 letters, A to Z.");
           return;
@@ -59,27 +103,67 @@ function Game({ id }: { id: GameId }) {
         next = custom;
       } else next = createWord(options, category, s?.game === "word-rescue" ? s.seen : []);
     } else next = createGame(id, options);
+    if (next.game === "tic-tac-toe" || next.game === "memory" || next.game === "checkers") {
+      const family = options.mode === "together";
+      const match = newMatch(family ? names : ["You", "Island friend"], alternate);
+      if (family) store.rememberPlayers(match.names);
+      next = { ...next, match, starter: family ? starter : 0 };
+      if (next.game === "tic-tac-toe") {
+        const assignedX = family ? xSeat : human === "X" ? 0 : 1;
+        const firstSeat = family ? starter : options.computerFirst ? 1 : 0;
+        next = {
+          ...next,
+          human,
+          xSeat: assignedX,
+          starter: firstSeat,
+          first: firstSeat === assignedX ? "X" : "O",
+        };
+      }
+      if (next.game === "memory") next = { ...next, player: next.starter ?? 0 };
+    }
     store.update(id, next);
     setSetup(false);
     setSecret("");
+    setClue("");
+    setShowSecret(false);
     setError("");
   }
   function newRound() {
     setOptions(
-      s?.options ?? { ...defaultOptions, ...(id === "checkers" ? { checkersRules: "friendly" as const } : {}) }
+      s?.options ?? {
+        ...defaultOptions,
+        ...(id === "checkers" ? { checkersRules: "friendly" as const } : {}),
+      }
     );
     setSecret("");
+    setClue("");
+    setShowSecret(false);
     setError("");
     setSetup(true);
   }
   function replay() {
     if (!s || !finished) return;
-    if (s.game === "word-rescue" && s.custom) { newRound(); return; }
-    const next = s.game === "word-rescue" ? replayWord(s)! : createGame(id, s.options);
+    if (s.game === "word-rescue" && s.custom) {
+      newRound();
+      return;
+    }
+    const next =
+      s.game === "word-rescue"
+        ? replayWord(s)!
+        : s.game === "tic-tac-toe"
+          ? replayTic(s)
+          : s.game === "memory"
+            ? replayMemory(s)
+            : s.game === "checkers"
+              ? replayCheckers(s)
+              : createGame(id, s.options);
     store.update(id, next, s);
   }
   const boardProps = {
-    width: Math.min(width - insets.left - insets.right - 32, 720),
+    width: Math.min(
+      width - insets.left - insets.right - 32,
+      landscape ? Math.min(width * 0.56 - 32, height - 150) : 720
+    ),
     sound,
     help: store.save.settings.help,
     active: active && focused && !setup && !help,
@@ -100,33 +184,31 @@ function Game({ id }: { id: GameId }) {
     <SafeAreaView style={styles.page}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.content, { maxWidth: 800, paddingHorizontal: 16 }]}
+        contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}
       >
-        <View style={[styles.row, { paddingVertical: 12, justifyContent: "space-between", flexWrap: "wrap" }]}>
-          <Button compact quiet onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}>
-            ‹ Games
-          </Button>
-          <View style={[styles.row, { gap: 8 }]}>
-            <Button
-              compact
-              quiet
-              label={store.save.settings.sound ? "Sound on. Turn sound off" : "Sound off. Turn sound on"}
-              onPress={() => store.settings({ sound: !store.save.settings.sound })}
-            >
-              {store.save.settings.sound ? "Sound on" : "Sound off"}
-            </Button>
-            <Button compact quiet onPress={() => setHelp(true)}>
-              How to play
-            </Button>
-          </View>
-        </View>
-        <Label style={{ color: g.color, marginTop: 5 }}>{g.tag}</Label>
-        <Heading style={{ fontSize: width > 600 ? 34 : 28, marginTop: 5, marginBottom: 5 }}>{g.name}</Heading>
+        <GameHeader
+          title={g.name}
+          onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+          sound={{
+            on: store.save.settings.sound,
+            toggle: () => store.settings({ sound: !store.save.settings.sound }),
+          }}
+          onHelp={() => setHelp(true)}
+        />
         {s && (
-          <Copy style={{ fontSize: 13, marginBottom: 15 }}>
-            {s.game === "word-rescue" ? (s.custom ? "" : `${({ easy: "Short words", medium: "Longer words", hard: "Big words" })[s.options.difficulty]} · `) : `${difficultyLabel[s.options.difficulty]} · `}{s.options.mode === "together" ? g.together : g.solo}
-            {s.game === "word-rescue" && ` · ${wordRules(s) === "challenge" ? "Six-guess Challenge" : "Practice"}`}
-            {s.game === "numbers" && s.options.difficulty === "hard" && s.maxNumber === undefined && " · Earlier round: numbers 1–9"}
+          <Copy style={{ fontSize: 12, marginBottom: 8 }}>
+            {s.game === "word-rescue"
+              ? s.custom
+                ? ""
+                : `${{ easy: "Short words", medium: "Longer words", hard: "Big words" }[s.options.difficulty]} · `
+              : `${(s.game === "tic-tac-toe" || s.game === "checkers") && s.options.mode === "together" ? "" : `${difficultyLabel[s.options.difficulty]} · `}`}
+            {s.options.mode === "together" ? g.together : g.solo}
+            {s.game === "word-rescue" &&
+              ` · ${wordRules(s) === "challenge" ? "Six-guess Challenge" : "Practice"}`}
+            {s.game === "numbers" &&
+              s.options.difficulty === "hard" &&
+              s.maxNumber === undefined &&
+              " · Earlier round: numbers 1–9"}
             {id === "checkers" &&
               (s.game === "checkers" && s.lesson !== null
                 ? " · Classic practice lesson"
@@ -134,41 +216,40 @@ function Game({ id }: { id: GameId }) {
           </Copy>
         )}
         <SaveStatus />
-        {s?.game === "tic-tac-toe" ? (
-          <TicBoard key={`${s.id}:${s.history.length}`} {...boardProps} state={s} commit={commit} />
-        ) : s?.game === "word-rescue" ? (
-          <WordBoard
-            {...boardProps}
-            state={s}
-            commit={commit}
-            guess={(letter) =>
-              store.act(id, s.id, (current) =>
-                current.game === "word-rescue" ? guessLetter(current, letter) : current
-              )
-            }
-            reveal={() =>
-              store.act(id, s.id, (current) => (current.game === "word-rescue" ? wordHint(current) : current))
-            }
-          />
-        ) : s?.game === "memory" ? (
-          <MemoryBoard
-            key={`${s.id}:${s.turns}:${s.open.join()}:${s.matched.length}`}
-            {...boardProps}
-            state={s}
-            commit={commit}
-          />
-        ) : s?.game === "checkers" ? (
-          <CheckersBoard
-            key={`${s.id}:${s.history.length}:${positionKey(s.position.board, s.position.turn)}`}
-            {...boardProps}
-            state={s}
-            commit={commit}
-          />
-        ) : s?.game === "maze" ? (
-          <MazeBoard key={`${s.id}:${s.path.join()}`} {...boardProps} state={s} commit={commit} />
-        ) : s?.game === "numbers" ? (
-          <NumbersBoard {...boardProps} state={s} commit={commit} />
-        ) : null}
+        <View style={{ backgroundColor: g.surface, borderRadius: 22, paddingVertical: 10 }}>
+          {s?.game === "tic-tac-toe" ? (
+            <TicBoard key={s.id} {...boardProps} state={s} commit={commit} />
+          ) : s?.game === "word-rescue" ? (
+            <WordBoard
+              {...boardProps}
+              state={s}
+              commit={commit}
+              guess={(letter) =>
+                store.act(id, s.id, (current) =>
+                  current.game === "word-rescue" ? guessLetter(current, letter) : current
+                )
+              }
+              reveal={() =>
+                store.act(id, s.id, (current) =>
+                  current.game === "word-rescue" ? wordHint(current) : current
+                )
+              }
+            />
+          ) : s?.game === "memory" ? (
+            <MemoryBoard key={s.id} {...boardProps} state={s} commit={commit} />
+          ) : s?.game === "checkers" ? (
+            <CheckersBoard
+              key={`${s.id}:${s.history.length}:${positionKey(s.position.board, s.position.turn)}`}
+              {...boardProps}
+              state={s}
+              commit={commit}
+            />
+          ) : s?.game === "maze" ? (
+            <MazeBoard key={`${s.id}:${s.path.join()}`} {...boardProps} state={s} commit={commit} />
+          ) : s?.game === "numbers" ? (
+            <NumbersBoard {...boardProps} state={s} commit={commit} />
+          ) : null}
+        </View>
         {s?.game === "word-rescue" && store.save.wordRecords && (
           <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 20 }}>
             Challenge record: {store.save.wordRecords.wins} won · {store.save.wordRecords.losses} lost ·{" "}
@@ -180,10 +261,23 @@ function Game({ id }: { id: GameId }) {
         )}
         {s && (
           <View
-            style={{ alignItems: "center", marginTop: 20, paddingTop: 18, borderTopWidth: 1, borderTopColor: C.line }}
+            style={{
+              alignItems: "center",
+              gap: 10,
+              marginTop: 14,
+              paddingTop: 12,
+              borderTopWidth: 1,
+              borderTopColor: C.line,
+            }}
           >
-            {finished && <Button onPress={replay}>{s.game === "word-rescue" && s.custom ? "Choose a new family word" : "Play again"}</Button>}
-            <Button quiet={finished} onPress={newRound}>New round & options</Button>
+            {finished && (
+              <Button onPress={replay}>
+                {s.game === "word-rescue" && s.custom ? "Choose a new family word" : "Play again"}
+              </Button>
+            )}
+            <Button quiet={finished} onPress={newRound}>
+              New round & options
+            </Button>
             <Copy style={{ fontSize: 12, marginTop: 12, textAlign: "center" }}>
               Your current round saves on this device.
             </Copy>
@@ -194,31 +288,52 @@ function Game({ id }: { id: GameId }) {
         visible={setup || !s}
         onClose={() => (s ? setSetup(false) : router.replace("/"))}
         title={s ? "A fresh little round" : `Let’s play ${g.name}`}
+        footer={<Button onPress={start}>{s ? "Start a new round" : "Start playing"}</Button>}
       >
         <Copy>
           {s && !finished
             ? "Starting a new round replaces this game’s current round. Your other games stay saved."
             : g.description}
         </Copy>
-        <Heading style={{ fontSize: 18 }}>How shall we play?</Heading>
-        <View style={[styles.row, { flexWrap: "wrap" }]}>
-          <Chip selected={options.mode === "solo"} onPress={() => setOptions({ ...options, mode: "solo" })}>
-            {g.solo}
-          </Chip>
-          <Chip selected={options.mode === "together"} onPress={() => setOptions({ ...options, mode: "together" })}>
-            {g.together}
-          </Chip>
-        </View>
-        {!(id === "word-rescue" && options.mode === "together") && <>
-        <Heading style={{ fontSize: 18 }}>{id === "word-rescue" ? "Word length" : "Choose your pace"}</Heading>
-        <View style={[styles.row, { flexWrap: "wrap" }]}>
-          {(["easy", "medium", "hard"] as const).map((d) => (
-            <Chip key={d} selected={options.difficulty === d} onPress={() => setOptions({ ...options, difficulty: d })}>
-              {id === "word-rescue" ? ({ easy: "Short words", medium: "Longer words", hard: "Big words" })[d] : difficultyLabel[d]}
-            </Chip>
-          ))}
-        </View>
-        </>}
+        {id !== "maze" && id !== "numbers" && (
+          <>
+            <Heading style={{ fontSize: 18 }}>How shall we play?</Heading>
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              <Chip
+                selected={options.mode === "solo"}
+                onPress={() => setOptions({ ...options, mode: "solo" })}
+              >
+                {g.solo}
+              </Chip>
+              <Chip
+                selected={options.mode === "together"}
+                onPress={() => setOptions({ ...options, mode: "together" })}
+              >
+                {g.together}
+              </Chip>
+            </View>
+          </>
+        )}
+        {!(options.mode === "together" && ["word-rescue", "tic-tac-toe", "checkers"].includes(id)) && (
+          <>
+            <Heading style={{ fontSize: 18 }}>
+              {id === "word-rescue" ? "Word length" : "Choose your pace"}
+            </Heading>
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              {(["easy", "medium", "hard"] as const).map((d) => (
+                <Chip
+                  key={d}
+                  selected={options.difficulty === d}
+                  onPress={() => setOptions({ ...options, difficulty: d })}
+                >
+                  {id === "word-rescue"
+                    ? { easy: "Short words", medium: "Longer words", hard: "Big words" }[d]
+                    : difficultyLabel[d]}
+                </Chip>
+              ))}
+            </View>
+          </>
+        )}
         {id === "word-rescue" && (
           <>
             <Heading style={{ fontSize: 18 }}>Choose your rules</Heading>
@@ -270,29 +385,112 @@ function Game({ id }: { id: GameId }) {
             </Copy>
           </>
         )}
+        {["tic-tac-toe", "memory", "checkers"].includes(id) && options.mode === "together" && (
+          <>
+            <PlayerNames names={names} onChange={setNames} remembered={store.save.players} />
+            {id === "tic-tac-toe" && (
+              <>
+                <Heading style={{ fontSize: 18 }}>Who plays X?</Heading>
+                <View style={[styles.row, { flexWrap: "wrap" }]}>
+                  {([0, 1] as const).map((seat) => (
+                    <Chip key={seat} selected={xSeat === seat} onPress={() => setXSeat(seat)}>
+                      {names[seat] || `Player ${seat + 1}`} · X
+                    </Chip>
+                  ))}
+                </View>
+              </>
+            )}
+            <Heading style={{ fontSize: 18 }}>
+              {id === "checkers" ? "Who plays Red and starts?" : "Who starts this round?"}
+            </Heading>
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              {([0, 1] as const).map((seat) => (
+                <Chip key={seat} selected={starter === seat} onPress={() => setStarter(seat)}>
+                  {names[seat] || `Player ${seat + 1}`}
+                </Chip>
+              ))}
+            </View>
+            <Chip selected={alternate} onPress={() => setAlternate(!alternate)}>
+              Take turns starting{id === "checkers" ? " · swap colours" : ""}
+            </Chip>
+          </>
+        )}
         {id === "tic-tac-toe" && options.mode === "solo" && (
-          <View style={[styles.row, { flexWrap: "wrap" }]}>
-            <Chip selected={!options.computerFirst} onPress={() => setOptions({ ...options, computerFirst: false })}>
-              I’ll start · X
-            </Chip>
-            <Chip selected={options.computerFirst} onPress={() => setOptions({ ...options, computerFirst: true })}>
-              Computer starts · X
-            </Chip>
-          </View>
+          <>
+            <Heading style={{ fontSize: 18 }}>Your shape</Heading>
+            <View style={styles.row}>
+              {(["X", "O"] as const).map((mark) => (
+                <Chip key={mark} selected={human === mark} onPress={() => setHuman(mark)}>
+                  {mark}
+                </Chip>
+              ))}
+            </View>
+            <Heading style={{ fontSize: 18 }}>Who starts?</Heading>
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              <Chip
+                selected={!options.computerFirst}
+                onPress={() => setOptions({ ...options, computerFirst: false })}
+              >
+                I’ll start
+              </Chip>
+              <Chip
+                selected={options.computerFirst}
+                onPress={() => setOptions({ ...options, computerFirst: true })}
+              >
+                Island friend starts
+              </Chip>
+            </View>
+          </>
         )}
         {id === "word-rescue" &&
           (options.mode === "together" ? (
             <>
-              <Copy>A grown-up chooses a secret word, then passes the device. The word stays hidden while typing.</Copy>
+              <Copy>
+                A grown-up chooses a secret word, then passes the device. The word stays hidden while typing.
+              </Copy>
+              <View style={{ position: "relative" }}>
+                <TextInput
+                  accessibilityLabel="Secret family word"
+                  placeholder="One secret word"
+                  value={secret}
+                  onChangeText={setSecret}
+                  textContentType="none"
+                  autoComplete="off"
+                  returnKeyType="go"
+                  onSubmitEditing={start}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  maxLength={12}
+                  style={[styles.input, !showSecret && { color: "transparent" }]}
+                />
+                {!showSecret && !!secret && (
+                  <Text
+                    pointerEvents="none"
+                    accessible={false}
+                    style={{ position: "absolute", left: 15, top: 14, fontSize: 18, color: C.ink }}
+                  >
+                    {"•".repeat(secret.length)}
+                  </Text>
+                )}
+              </View>
+              <Button
+                quiet
+                compact
+                icon={showSecret ? "eye-off" : "eye"}
+                onPress={() => setShowSecret(!showSecret)}
+              >
+                {showSecret ? "Hide word" : "Show word"}
+              </Button>
               <TextInput
-                accessibilityLabel="Secret family word"
-                placeholder="One secret word"
-                value={secret}
-                onChangeText={setSecret}
-                secureTextEntry
-                autoCapitalize="characters"
-                autoCorrect={false}
-                maxLength={12}
+                accessibilityLabel="Optional family clue"
+                placeholder="A clue (optional)"
+                value={clue}
+                onChangeText={setClue}
+                maxLength={80}
+                autoComplete="off"
+                textContentType="none"
+                returnKeyType="go"
+                onSubmitEditing={start}
                 style={styles.input}
               />
             </>
@@ -310,18 +508,24 @@ function Game({ id }: { id: GameId }) {
           ))}
         {id === "memory" && (
           <Copy>
-            {options.difficulty === "easy" ? "Six" : options.difficulty === "medium" ? "Eight" : "Twelve"} picture
-            pairs. {options.mode === "solo" ? "Practice with a peek whenever you need one." : "Two-player match: no peeks. Most pairs wins; equal pairs is a tie."}
+            {options.difficulty === "easy" ? "Six" : options.difficulty === "medium" ? "Eight" : "Twelve"}{" "}
+            picture pairs.{" "}
+            {options.mode === "solo"
+              ? "Practice with a peek whenever you need one."
+              : "Two-player match: no peeks. Most pairs wins; equal pairs is a tie."}
           </Copy>
         )}
         {id === "numbers" && (
           <Copy>
-            {options.difficulty === "easy" ? "Gentle: one die and numbers 1–6." : options.difficulty === "medium" ? "Growing: two dice and numbers 1–9." : "Challenge: two dice and numbers 1–12. Plan which totals to save."} You can use a
-            combination hint whenever you like.
+            {options.difficulty === "easy"
+              ? "Gentle: one die and numbers 1–6."
+              : options.difficulty === "medium"
+                ? "Growing: two dice and numbers 1–9."
+                : "Challenge: two dice and numbers 1–12. Plan which totals to save."}{" "}
+            You can use a combination hint whenever you like.
           </Copy>
         )}
         {!!error && <Copy style={{ color: "#9C432D" }}>{error}</Copy>}
-        <Button onPress={start}>{s ? "Start a new round" : "Start playing"}</Button>
       </Sheet>
       <Sheet visible={help} onClose={() => setHelp(false)} title={`How to play ${g.name}`}>
         <Copy>{g.help}</Copy>
@@ -331,17 +535,29 @@ function Game({ id }: { id: GameId }) {
         {!store.save.settings.sound && <Copy>Turn sound on to hear the instructions.</Copy>}
         {s?.game === "word-rescue" && (
           <>
-            <Heading style={{ fontSize: 18 }}>This round: {wordRules(s) === "practice" ? "Practice" : "Challenge"}</Heading>
-            <Copy>{wordRules(s) === "practice"
-              ? "Unlimited attempts and letter hints. Practice does not change your Challenge record."
-              : "Six wrong letters end the round. One optional letter hint marks the result assisted."}</Copy>
-            <Button quiet onPress={() => { setHelp(false); newRound(); }}>Choose rules for a fresh round</Button>
+            <Heading style={{ fontSize: 18 }}>
+              This round: {wordRules(s) === "practice" ? "Practice" : "Challenge"}
+            </Heading>
+            <Copy>
+              {wordRules(s) === "practice"
+                ? "Unlimited attempts and letter hints. Practice does not change your Challenge record."
+                : "Six wrong letters end the round. One optional letter hint marks the result assisted."}
+            </Copy>
+            <Button
+              quiet
+              onPress={() => {
+                setHelp(false);
+                newRound();
+              }}
+            >
+              Choose rules for a fresh round
+            </Button>
           </>
         )}
         {id === "checkers" && (
           <Copy>
-            The four little lessons are below the board. “Back to my game” restores your full round. Your board keeps
-            the same direction for both players.
+            The four little lessons are below the board. “Back to my game” restores your full round. Your
+            board keeps the same direction for both players.
           </Copy>
         )}
       </Sheet>

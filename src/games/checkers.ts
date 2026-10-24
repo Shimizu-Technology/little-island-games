@@ -24,7 +24,8 @@ export const checkersRules = (s: CheckersState): CheckersRules =>
 export const row = (i: number) => Math.floor(i / 8);
 export const col = (i: number) => i % 8;
 export const side = (piece: number) => Math.sign(piece) as Side;
-export const positionKey = (board: number[], turn: Side) => `${turn}:${board.map((piece) => piece + 2).join("")}`;
+export const positionKey = (board: number[], turn: Side) =>
+  `${turn}:${board.map((piece) => piece + 2).join("")}`;
 export function position(board: number[], turn: Side = 1): Position {
   return { board: [...board], turn, quiet: 0, repetitions: { [positionKey(board, turn)]: 1 }, outcome: null };
 }
@@ -47,7 +48,10 @@ function square(r: number, c: number): number | null {
 function crowned(piece: number, to: number) {
   return Math.abs(piece) === 1 && (side(piece) === 1 ? row(to) === 7 : row(to) === 0);
 }
-export function checkersMoves(p: Pick<Position, "board" | "turn">, rules: CheckersRules = "classic"): CheckersMove[] {
+export function checkersMoves(
+  p: Pick<Position, "board" | "turn">,
+  rules: CheckersRules = "classic"
+): CheckersMove[] {
   const captures: CheckersMove[] = [],
     walks: CheckersMove[] = [];
   function jump(board: number[], from: number, current: number, path: number[], taken: number[]) {
@@ -56,7 +60,13 @@ export function checkersMoves(p: Pick<Position, "board" | "turn">, rules: Checke
     for (const [dr, dc] of steps(piece)) {
       const middle = square(row(current) + dr, col(current) + dc),
         to = square(row(current) + 2 * dr, col(current) + 2 * dc);
-      if (middle === null || to === null || !board[middle] || side(board[middle]) === side(piece) || board[to])
+      if (
+        middle === null ||
+        to === null ||
+        !board[middle] ||
+        side(board[middle]) === side(piece) ||
+        board[to]
+      )
         continue;
       continued = true;
       const next = [...board];
@@ -107,7 +117,8 @@ export function applyCheckers(p: Position, move: CheckersMove, rules: CheckersRu
 }
 export function createCheckers(options: Options): CheckersState {
   const board = Array<number>(64).fill(0);
-  for (let i = 0; i < 64; i++) if ((row(i) + col(i)) % 2 === 1) board[i] = row(i) < 3 ? 1 : row(i) > 4 ? -1 : 0;
+  for (let i = 0; i < 64; i++)
+    if ((row(i) + col(i)) % 2 === 1) board[i] = row(i) < 3 ? 1 : row(i) > 4 ? -1 : 0;
   return {
     ...base("checkers", options),
     game: "checkers",
@@ -124,7 +135,11 @@ export function checkersMove(s: CheckersState, move: CheckersMove): CheckersStat
     (m) => m.from === move.from && m.path.join(",") === move.path.join(",")
   );
   if (!legal) return s;
-  return { ...s, position: applyCheckers(s.position, legal, rules), history: [...s.history, s.position].slice(-160) };
+  return {
+    ...s,
+    position: applyCheckers(s.position, legal, rules),
+    history: [...s.history, s.position].slice(-160),
+  };
 }
 export function checkersUndo(s: CheckersState): CheckersState {
   if (!s.history.length) return s;
@@ -140,7 +155,9 @@ function evaluate(p: Position, player: Side, rules: CheckersRules): number {
     (sum, piece, i) =>
       sum +
       (piece
-        ? side(piece) * player * (Math.abs(piece) === 2 ? 175 : 100 + (side(piece) === 1 ? row(i) : 7 - row(i)) * 3)
+        ? side(piece) *
+          player *
+          (Math.abs(piece) === 2 ? 175 : 100 + (side(piece) === 1 ? row(i) : 7 - row(i)) * 3)
         : 0),
     0
   );
@@ -167,7 +184,8 @@ export async function checkersChoice(
     const deadline = Date.now() + 8;
     function search(p: Position, remaining: number, alpha: number, beta: number): number {
       nodes++;
-      if (!remaining || p.outcome || nodes >= maxNodes || Date.now() > deadline) return evaluate(p, player, rules);
+      if (!remaining || p.outcome || nodes >= maxNodes || Date.now() > deadline)
+        return evaluate(p, player, rules);
       const children = checkersMoves(p, rules);
       if (!children.length) return evaluate(p, player, rules);
       let score = p.turn === player ? -Infinity : Infinity;
@@ -253,7 +271,13 @@ export function finishCheckersLessons(s: CheckersState): CheckersState {
 /** Red always starts. Alternating the starting seat swaps the family colours. */
 export function checkersResultSeat(s: CheckersState): RoundResult {
   const result = s.lesson === null ? s.position.outcome : null;
-  return !result || result === "draw" ? result : result === "red" ? (s.starter ?? 0) : (s.starter ?? 0) === 0 ? 1 : 0;
+  return !result || result === "draw"
+    ? result
+    : result === "red"
+      ? (s.starter ?? 0)
+      : (s.starter ?? 0) === 0
+        ? 1
+        : 0;
 }
 export function replayCheckers(s: CheckersState): CheckersState {
   const match = settle(s.match ?? newMatch(), checkersResultSeat(s));

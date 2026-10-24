@@ -79,16 +79,29 @@ export function validSession(v: unknown): v is GameState {
     !["easy", "medium", "hard"].includes(v.options.difficulty as string) ||
     !["solo", "together"].includes(v.options.mode as string) ||
     typeof v.options.computerFirst !== "boolean" ||
-    (v.options.checkersRules !== undefined && !["friendly", "classic"].includes(v.options.checkersRules as string)) ||
+    (v.options.checkersRules !== undefined &&
+      !["friendly", "classic"].includes(v.options.checkersRules as string)) ||
     (v.options.wordRules !== undefined && !["practice", "challenge"].includes(v.options.wordRules as string))
   )
     return false;
-  if (["tic-tac-toe", "memory", "checkers"].includes(v.game as string) &&
-    ((v.match !== undefined && !validMatch(v.match)) || (v.starter !== undefined && !validSeat(v.starter)))) return false;
+  if (
+    ["tic-tac-toe", "memory", "checkers"].includes(v.game as string) &&
+    ((v.match !== undefined && !validMatch(v.match)) || (v.starter !== undefined && !validSeat(v.starter)))
+  )
+    return false;
   switch (v.game) {
     case "tic-tac-toe": {
-      if ((v.first !== undefined && v.first !== "X" && v.first !== "O") || (v.xSeat !== undefined && !validSeat(v.xSeat))) return false;
-      const validRoundBoard = (board: unknown) => validBoard(v.first === "O" && Array.isArray(board) ? board.map(m => m === "X" ? "O" : m === "O" ? "X" : m) : board);
+      if (
+        (v.first !== undefined && v.first !== "X" && v.first !== "O") ||
+        (v.xSeat !== undefined && !validSeat(v.xSeat))
+      )
+        return false;
+      const validRoundBoard = (board: unknown) =>
+        validBoard(
+          v.first === "O" && Array.isArray(board)
+            ? board.map((m) => (m === "X" ? "O" : m === "O" ? "X" : m))
+            : board,
+        );
       if (
         !validRoundBoard(v.board) ||
         !["X", "O"].includes(v.human as string) ||
@@ -138,9 +151,26 @@ export function validSession(v: unknown): v is GameState {
       );
     }
     case "memory": {
-      if (v.history !== undefined && (!Array.isArray(v.history) || v.history.length > 40 || !v.history.every(h =>
-        obj(h) && Object.keys(h).every(key => ["matched", "open", "turns", "player", "scores"].includes(key)) && validSession({ ...v, matched: h.matched, open: h.open, turns: h.turns, player: h.player, scores: h.scores, history: undefined })
-      ))) return false;
+      if (
+        v.history !== undefined &&
+        (!Array.isArray(v.history) ||
+          v.history.length > 40 ||
+          !v.history.every(
+            (h) =>
+              obj(h) &&
+              Object.keys(h).every((key) => ["matched", "open", "turns", "player", "scores"].includes(key)) &&
+              validSession({
+                ...v,
+                matched: h.matched,
+                open: h.open,
+                turns: h.turns,
+                player: h.player,
+                scores: h.scores,
+                history: undefined,
+              }),
+          ))
+      )
+        return false;
       if (
         !strings(v.cards, 20, 24) ||
         ![12, 16, 24].includes(v.cards.length) ||
@@ -159,9 +189,10 @@ export function validSession(v: unknown): v is GameState {
       const counts = v.cards.reduce<Record<string, number>>((a, c) => ({ ...a, [c]: (a[c] ?? 0) + 1 }), {});
       const matchedCounts = v.matched.reduce<Record<string, number>>(
         (a, i) => ({ ...a, [(v.cards as string[])[i]]: (a[(v.cards as string[])[i]] ?? 0) + 1 }),
-        {}
+        {},
       );
-      const expectedCards = v.options.difficulty === "easy" ? 12 : v.options.difficulty === "medium" ? 16 : 24;
+      const expectedCards =
+        v.options.difficulty === "easy" ? 12 : v.options.difficulty === "medium" ? 16 : 24;
       return (
         v.cards.length === expectedCards &&
         v.cards.every((c) => memorySymbols.includes(c)) &&

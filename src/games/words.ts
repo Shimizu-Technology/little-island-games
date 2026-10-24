@@ -160,17 +160,30 @@ export function wordHint(s: WordState): WordState {
 }
 
 export function wordPool(difficulty: Options["difficulty"], category = "All") {
-  const categoryWords = WORDS.filter(w => category === "All" || w[1] === category);
+  const categoryWords = WORDS.filter((w) => category === "All" || w[1] === category);
   const available = categoryWords.length ? categoryWords : [...WORDS];
-  const distance = (length: number) => difficulty === "easy" ? Math.max(3 - length, length - 4, 0) : difficulty === "medium" ? Math.abs(length - 5) : Math.max(6 - length, 0);
-  const closest = Math.min(...available.map(w => distance(w[0].length)));
-  return available.filter(w => distance(w[0].length) === closest);
+  const distance = (length: number) =>
+    difficulty === "easy"
+      ? Math.max(3 - length, length - 4, 0)
+      : difficulty === "medium"
+        ? Math.abs(length - 5)
+        : Math.max(6 - length, 0);
+  const closest = Math.min(...available.map((w) => distance(w[0].length)));
+  return available.filter((w) => distance(w[0].length) === closest);
 }
 /** Keep all letters on one row unless accessible text needs a larger tile. */
 export function wordTiles(length: number, available: number, fontScale = 1) {
-  const gap = length >= 10 ? 4 : 6, floor = 24 * Math.max(1, fontScale);
-  const rows = Math.min(length, Math.max(1, Math.ceil(length / Math.max(1, Math.floor((available + gap) / (floor + gap))))));
-  const count = Math.ceil(length / rows), tile = Math.min(48 * Math.max(1, fontScale), (available - gap * (count - 1)) / count);
-  const sizes = Array.from({ length: rows }, (_, i) => Math.floor(length / rows) + (i < length % rows ? 1 : 0));
+  const gap = length >= 10 ? 4 : 6,
+    floor = 24 * Math.max(1, fontScale);
+  const rows = Math.min(
+    length,
+    Math.max(1, Math.ceil(length / Math.max(1, Math.floor((available + gap) / (floor + gap)))))
+  );
+  const count = Math.ceil(length / rows),
+    tile = Math.min(48 * Math.max(1, fontScale), (available - gap * (count - 1)) / count);
+  const sizes = Array.from(
+    { length: rows },
+    (_, i) => Math.floor(length / rows) + (i < length % rows ? 1 : 0)
+  );
   return { gap, tile, sizes };
 }

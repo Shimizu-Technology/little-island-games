@@ -54,7 +54,11 @@ export function flipCard(s: MemoryState, index: number): MemoryState {
     return s;
   if (!s.open.length) {
     const { matched, open, turns, player, scores } = s;
-    return { ...s, open: [index], history: [...(s.history ?? []).slice(-39), { matched, open, turns, player, scores }] };
+    return {
+      ...s,
+      open: [index],
+      history: [...(s.history ?? []).slice(-39), { matched, open, turns, player, scores }],
+    };
   }
   const first = s.open[0];
   const turns = s.turns + 1;
@@ -75,7 +79,8 @@ export function memoryResult(s: MemoryState): RoundResult {
   return !memoryDone(s) ? null : s.scores[0] === s.scores[1] ? "draw" : s.scores[0] > s.scores[1] ? 0 : 1;
 }
 export function replayMemory(s: MemoryState): MemoryState {
-  const match = settle(s.match ?? newMatch(), memoryResult(s)), starter = nextStarter(match, s.starter ?? 0);
+  const match = settle(s.match ?? newMatch(), memoryResult(s)),
+    starter = nextStarter(match, s.starter ?? 0);
   return { ...createMemory(s.options, starter), match };
 }
 
