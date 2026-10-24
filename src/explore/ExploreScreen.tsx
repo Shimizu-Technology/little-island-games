@@ -165,6 +165,7 @@ export function ExploreScreen({
         </GameHeader>
       </View>
       <ScrollView
+        key={currentKey}
         ref={scroll}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
