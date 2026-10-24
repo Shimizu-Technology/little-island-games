@@ -80,7 +80,7 @@ export function memoryResult(s: MemoryState): RoundResult {
 }
 export function replayMemory(s: MemoryState): MemoryState {
   const match = settle(s.match ?? newMatch(), memoryResult(s)),
-    starter = nextStarter(match, s.starter ?? 0);
+    starter = s.options.mode === "together" ? nextStarter(match, s.starter ?? 0) : 0;
   return { ...createMemory(s.options, starter), match };
 }
 

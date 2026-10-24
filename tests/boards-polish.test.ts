@@ -167,6 +167,22 @@ describe("O-first tic and reversible family tally", () => {
   });
 });
 describe("Memory and Checkers family matches", () => {
+  it("keeps solo Memory on the same seat and the child's Checkers pieces red on rematch", () => {
+    const memory = replayMemory(createMemory(defaultOptions));
+    expect(memory.player).toBe(0);
+    expect(memory.starter).toBe(0);
+    const board = Array(64).fill(0);
+    board[17] = 1;
+    board[26] = -1;
+    let s = { ...createCheckers(defaultOptions), position: position(board) };
+    s = checkersMove(s, checkersMoves(s.position)[0]);
+    expect(checkersResultSeat(s)).toBe(0);
+    const next = replayCheckers(s);
+    expect(next.starter).toBe(0);
+    expect(next.position.turn).toBe(1);
+    expect(next.match?.wins).toEqual([1, 0]);
+    expect(validSession(next)).toBe(true);
+  });
   it("starts Memory with the chosen seat, switches on mismatch, credits matches and carries a draw", () => {
     let s = { ...createMemory(options, 1), match: newMatch(["Ada", "Bo"]) };
     expect(s.player).toBe(1);

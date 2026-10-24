@@ -271,15 +271,17 @@ export function finishCheckersLessons(s: CheckersState): CheckersState {
 /** Red always starts. Alternating the starting seat swaps the family colours. */
 export function checkersResultSeat(s: CheckersState): RoundResult {
   const result = s.lesson === null ? s.position.outcome : null;
-  return !result || result === "draw"
-    ? result
-    : result === "red"
-      ? (s.starter ?? 0)
-      : (s.starter ?? 0) === 0
-        ? 1
-        : 0;
+  const redSeat = s.options.mode === "solo" ? 0 : (s.starter ?? 0);
+  return !result || result === "draw" ? result : result === "red" ? redSeat : redSeat === 0 ? 1 : 0;
 }
 export function replayCheckers(s: CheckersState): CheckersState {
-  const match = settle(s.match ?? newMatch(), checkersResultSeat(s));
-  return { ...createCheckers(s.options), match, starter: nextStarter(match, s.starter ?? 0) };
+  const match = settle(
+    s.match ?? newMatch(s.options.mode === "solo" ? ["You", "Island friend"] : undefined),
+    checkersResultSeat(s)
+  );
+  return {
+    ...createCheckers(s.options),
+    match,
+    starter: s.options.mode === "together" ? nextStarter(match, s.starter ?? 0) : 0,
+  };
 }
