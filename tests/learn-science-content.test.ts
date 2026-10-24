@@ -11,7 +11,7 @@ const speech = JSON.parse(readFileSync(new URL("../scripts/learn/science.json", 
 describe("science content delivery", () => {
   it("bundles every curated speech key with its exact module mapping", () => {
     const module = readFileSync(new URL("../src/content/learnAudio/science.ts", import.meta.url), "utf8");
-    expect(Object.keys(speech).length).toBe(128);
+    expect(Object.keys(speech).length).toBe(129);
     for (const [key, text] of Object.entries(speech)) {
       expect(key).toMatch(/^(tide-pool|float-sink|crab-commands)-/);
       expect(text.trim().length).toBeGreaterThan(0);

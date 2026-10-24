@@ -158,12 +158,16 @@ export function Board({ session, update, practice, sound, width, active }: Board
               ? d.pebbles > 0
                 ? `float-sink-count-${d.pebbles}`
                 : `float-sink-shape-${d.shape}`
-              : `float-sink-sank-${d.pebbles}`;
+              : d.shape === "ball"
+                ? "float-sink-ball-sank"
+                : `float-sink-sank-${d.pebbles}`;
   useEffect(() => {
     if (active && d.phase !== "predict") sound(prompt);
   }, [active, d.phase, prompt, sound]);
   const boatPhase = ["shape", "load", "pass", "done"].includes(d.phase),
-    sunk = boatPhase ? !!d.shape && d.pebbles > capacity(d.shape, o.pace === "hard") : !!object && !object.floats;
+    sunk = boatPhase
+      ? !!d.shape && (d.shape === "ball" || d.pebbles > capacity(d.shape, o.pace === "hard"))
+      : !!object && !object.floats;
   return (
     <View style={{ gap: 9 }}>
       <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
@@ -290,8 +294,16 @@ export function Board({ session, update, practice, sound, width, active }: Board
       )}
       {(d.phase === "pass" || d.phase === "done") && (
         <>
-          <Copy>The boat sank. It held {capacity(d.shape!, o.pace === "hard")} pebbles before the next one.</Copy>
-          <Copy style={{ fontSize: 13 }}>The next pebble made it too heavy for the water it could push aside.</Copy>
+          <Copy>
+            {d.shape === "ball"
+              ? "The solid clay ball sank with no pebbles."
+              : `The boat sank. It held ${capacity(d.shape!, o.pace === "hard")} pebbles before the next one.`}
+          </Copy>
+          <Copy style={{ fontSize: 13 }}>
+            {d.shape === "ball"
+              ? "The same clay in a hollow bowl can push more water aside."
+              : "The next pebble made it too heavy for the water it could push aside."}
+          </Copy>
           {d.phase === "pass" ? (
             <Button compact onPress={() => send({ kind: "pass" })}>
               Pass to the next boat builder

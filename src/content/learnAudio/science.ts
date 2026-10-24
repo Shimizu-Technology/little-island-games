@@ -13,6 +13,7 @@ const sources: Record<string, number> = {
   'crab-commands-hint': require('../../../assets/audio/crab-commands-hint.m4a'),
   'crab-commands-home': require('../../../assets/audio/crab-commands-home.m4a'),
   'crab-commands-plan': require('../../../assets/audio/crab-commands-plan.m4a'),
+  'float-sink-ball-sank': require('../../../assets/audio/float-sink-ball-sank.m4a'),
   'float-sink-build': require('../../../assets/audio/float-sink-build.m4a'),
   'float-sink-count-0': require('../../../assets/audio/float-sink-count-0.m4a'),
   'float-sink-count-1': require('../../../assets/audio/float-sink-count-1.m4a'),

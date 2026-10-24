@@ -126,5 +126,6 @@
   "crab-commands-card-forward": "Forward",
   "crab-commands-card-turn-left": "Turn left",
   "crab-commands-card-turn-right": "Turn right",
-  "crab-commands-card-repeat": "Repeat the previous card two more times"
+  "crab-commands-card-repeat": "Repeat the previous card two more times",
+  "float-sink-ball-sank": "Zero pebbles. The solid clay ball sank by itself. The same clay in a hollow bowl can push more water aside. Try a new shape next round, or pass to the next builder."
 }

@@ -153,6 +153,21 @@ describe("float dock", () => {
       expect(floats.validate({ ...s, events }, o)).toBe(false);
     expect(floats.validate({ ...s, items: ["no"] }, o)).toBe(false);
   });
+  it("a solid clay ball sinks before any pebble is added", () => {
+    for (const mode of floats.modes) {
+      const o: LearnOptions = { mode, pace: "easy" };
+      let s = floats.create(o, ctx());
+      for (const id of s.items) {
+        const value = objects.find((x) => x.id === id)!.floats ? 0 : 1;
+        s = act(act(act(s, { kind: "predict", value }, o), { kind: "drop" }, o), { kind: "sort", value }, o);
+      }
+      s = act(s, { kind: "shape", value: "ball" }, o);
+      expect(dock(s, o)?.phase).toBe(mode === "solo" ? "done" : "pass");
+      expect(dock(s, o)?.pebbles).toBe(0);
+      expect(act(s, { kind: "load" }, o)).toBe(s);
+      expect(floats.validate(s, o)).toBe(true);
+    }
+  });
   it("covers 16 varied objects and every boat shape", () => {
     expect(objects).toHaveLength(16);
     for (const s of shapes) expect(capacity(s, false)).toBeGreaterThanOrEqual(0);

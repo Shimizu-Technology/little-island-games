@@ -181,7 +181,7 @@ export function dock(s: FloatState, o: LearnOptions): Dock | null {
       d.phase = d.index === s.items.length ? "shape" : "predict";
     } else if (d.phase === "shape" && exact(e, ["kind", "value"]) && e.kind === "shape" && shapes.includes(e.value)) {
       d.shape = e.value;
-      d.phase = "load";
+      d.phase = e.value === "ball" ? (o.mode === "versus" && d.boat === 0 ? "pass" : "done") : "load";
       d.pebbles = 0;
     } else if (d.phase === "load" && exact(e, ["kind"]) && e.kind === "load" && d.shape) {
       d.pebbles++;
