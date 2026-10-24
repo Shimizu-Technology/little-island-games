@@ -287,7 +287,7 @@ function Game({ id }: { id: GameId }) {
       </ScrollView>
       <Sheet
         visible={setup || !s}
-        onClose={() => (s ? setSetup(false) : router.replace("/"))}
+        onClose={() => (s ? setSetup(false) : router.canGoBack() ? router.back() : router.replace("/"))}
         title={s ? "A fresh little round" : `Let’s play ${g.name}`}
         footer={<Button onPress={start}>{s ? "Start a new round" : "Start playing"}</Button>}
       >
