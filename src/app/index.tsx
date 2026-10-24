@@ -1,10 +1,11 @@
 import { Text } from "../components/Text";
 import React, { useState } from "react";
-import { Pressable, ScrollView, View, useWindowDimensions } from "react-native";
+import { ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { GameId, gameIds, games, isFinished } from "../games";
-import { Button, C, Chip, Copy, Heading, Label, font, styles } from "../components/ui";
+import { Button, C, Chip, Copy, Heading, IconButton, Label, PressableScale, font, styles } from "../components/ui";
+import { Icon } from "../components/Icon";
 import { GameArt } from "../components/Art";
 import { Settings } from "../components/Settings";
 import { Recovery } from "../components/Recovery";
@@ -16,7 +17,7 @@ const extraGames: { id: ActivityId; name: string; description: string; surface: 
   {
     id: "go-fish",
     name: "Go Fish",
-    players: "1 player or pass & play",
+    players: "1 or 2 players",
     description: "Collect matching families of cards.",
     surface: "#DEEDF2",
     filters: ["Words & numbers", "Play together"],
@@ -24,7 +25,7 @@ const extraGames: { id: ActivityId; name: string; description: string; surface: 
   {
     id: "crazy-eights",
     name: "Crazy Eights",
-    players: "1 player or pass & play",
+    players: "1 or 2 players",
     description: "Match a suit. Change it with an eight.",
     surface: "#F4E8CB",
     filters: ["Think & explore", "Play together"],
@@ -32,7 +33,7 @@ const extraGames: { id: ActivityId; name: string; description: string; surface: 
   {
     id: "racer",
     name: "Island Dash",
-    players: "1 player · touch controls",
+    players: "1 player",
     description: "Run, jump, and race island trails.",
     surface: "#DDECD7",
     filters: ["Think & explore"],
@@ -40,7 +41,7 @@ const extraGames: { id: ActivityId; name: string; description: string; surface: 
   {
     id: "island-mystery",
     name: "Picnic Mystery",
-    players: "Solo or 3–8 nearby devices",
+    players: "Solo or 3–8 devices",
     description: "Do island jobs. Find the mischief maker.",
     surface: "#E5E9D5",
     filters: ["Think & explore", "Play together"],
@@ -48,7 +49,7 @@ const extraGames: { id: ActivityId; name: string; description: string; surface: 
   {
     id: "word-imposter",
     name: "Secret Word",
-    players: "3–8 people · one device",
+    players: "3–8 players",
     description: "One secret. One Imposter. Play together.",
     surface: "#E8E1F3",
     filters: ["Words & numbers", "Play together"],
@@ -57,7 +58,7 @@ const extraGames: { id: ActivityId; name: string; description: string; surface: 
 type ShelfId = GameId | ActivityId;
 const shelf = [
   ...gameIds.map((id) => ({ id: id as ShelfId, ...games[id],
-    players: id === "maze" || id === "numbers" ? "1 player or solve together" : id === "word-rescue" ? "Word packs or family word" : "1 or 2 players · one device",
+    players: id === "maze" || id === "numbers" ? "Alone or together" : id === "word-rescue" ? "Word packs or family word" : "1 or 2 players",
     filters: ["Play alone", "Play together", ...(["word-rescue", "numbers"].includes(id) ? ["Words & numbers"] : ["Think & explore"])],
   })),
   ...extraGames.map((g) => ({ ...g, filters: [...g.filters, ...(g.id === "word-imposter" ? [] : ["Play alone"])] })),
@@ -101,21 +102,21 @@ export default function Home() {
             {favorites.map((id) => <Button key={id} quiet compact onPress={() => open(id)} label={`Open favorite ${shelf.find((g) => g.id === id)?.name}`}>{shelf.find((g) => g.id === id)?.name}</Button>)}
           </View>
         </View>}
-        <Pressable accessibilityRole="button" accessibilityLabel="Explore and learn, fifty offline discoveries" onPress={() => router.push("/explore")}
-          style={({ pressed }) => ({ backgroundColor: "#DFEAF0", borderRadius: 18, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, opacity: pressed ? 0.75 : 1 })}>
+        <PressableScale accessibilityRole="button" accessibilityLabel="Explore and learn, fifty offline discoveries" onPress={() => router.push("/explore")}
+          amount={0.98} style={{ backgroundColor: "#DFEAF0", borderRadius: 18, padding: 14, flexDirection: "row", alignItems: "center", gap: 12 }}>
           <FeatureArt kind="explore" size={44} />
           <View style={{ flex: 1 }}><Heading style={{ fontSize: 20 }}>Explore & learn</Heading><Copy style={{ fontSize: 13 }}>Listen, discover, and try an experiment.</Copy></View>
-          <Text style={{ fontSize: 24, color: C.teal }} accessibilityElementsHidden>→</Text>
-        </Pressable>
+          <Icon name="right" size={24} color={C.teal} />
+        </PressableScale>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} accessibilityLabel="Game categories" accessibilityHint="Swipe for favorites, words and numbers, and thinking games." style={{ flexGrow: 0, marginHorizontal: -20 }} contentContainerStyle={{ paddingHorizontal: 20, gap: 8, paddingVertical: 3 }}>
           {filters.map((f) => <Chip key={f} selected={f === filter} onPress={() => setFilter(f)}>{f}</Chip>)}
         </ScrollView>
-        {filter === "Favorites" && choices.length === 0 && <Copy>Tap Favorite under a game to keep it close by.</Copy>}
+        {filter === "Favorites" && choices.length === 0 && <Copy>Tap the star on a game to keep it close by.</Copy>}
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
           {choices.map((g) => {
             const original = gameIds.includes(g.id as GameId), live = ongoing(g.id), favorite = favorites.includes(g.id);
             return <View key={g.id} style={{ width: cardWidth, borderRadius: 20, overflow: "hidden", backgroundColor: C.paper, borderWidth: 1, borderColor: C.line }}>
-              <Pressable accessibilityRole="button" accessibilityLabel={`Play ${g.name}${live ? ", saved round available" : ""}`} onPress={() => open(g.id)} style={({ pressed }) => ({ flex: 1, opacity: pressed ? 0.72 : 1 })}>
+              <PressableScale accessibilityRole="button" accessibilityLabel={`Play ${g.name}${live ? ", saved round available" : ""}`} onPress={() => open(g.id)} amount={0.98} style={{ flex: 1 }}>
                 <View style={{ height: 88, backgroundColor: g.surface, alignItems: "center", justifyContent: "center" }}>
                   {original ? <GameArt game={g.id as GameId} size={74} /> : <FeatureArt kind={g.id as ActivityId} size={74} />}
                 </View>
@@ -123,10 +124,12 @@ export default function Home() {
                   <Heading style={{ fontSize: 20 }}>{g.name}</Heading>
                   <Copy style={{ fontSize: 12, lineHeight: 18, color: C.teal }}>{g.players}</Copy>
                   <Copy style={{ fontSize: 13, lineHeight: 19 }}>{g.description}</Copy>
-                  <Text style={{ color: C.teal, fontFamily: font, fontWeight: "700", fontSize: 14, marginTop: 5 }}>{live ? "Continue →" : "Let’s play →"}</Text>
+                  <Text style={{ color: C.teal, fontFamily: font, fontWeight: "700", fontSize: 14, marginTop: "auto", paddingTop: 5 }}>{live ? "Continue →" : "Let’s play →"}</Text>
                 </View>
-              </Pressable>
-              <Button compact quiet selected={favorite} label={`${favorite ? "Remove favorite" : "Favorite"} ${g.name}`} onPress={() => store.toggleGameFavorite(g.id)} style={{ borderRadius: 0, borderWidth: 0, borderTopWidth: 1 }}>{favorite ? "Favorited" : "Favorite"}</Button>
+              </PressableScale>
+              <View style={{ position: "absolute", top: 8, right: 8 }}>
+                <IconButton icon={favorite ? "star-filled" : "star"} selected={favorite} size={40} label={`${favorite ? "Remove favorite" : "Favorite"} ${g.name}`} onPress={() => store.toggleGameFavorite(g.id)} />
+              </View>
             </View>;
           })}
         </View>
