@@ -5,6 +5,11 @@ import type { ReadingScene } from "../kit/reading";
 import { sceneLabel } from "../kit/reading";
 
 export const objectNames = [
+  "shop",
+  "chip",
+  "back",
+  "cape",
+  "tape",
   "cat",
   "dog",
   "fox",
@@ -220,6 +225,60 @@ export function ObjectGlyph({
             <Path d="M49 64 L49 10 L83 53 L49 53" fill="#FCFAF4" />
             {name === "ship" && <Rect x="17" y="48" width="24" height="16" rx="3" fill="#E1B251" />}
             <Path d="M5 94 Q25 85 45 94 T95 94" fill="none" stroke="#5B9ABA" />
+          </>
+        );
+        break;
+      case "shop":
+        shape = (
+          <>
+            <Rect x="16" y="35" width="68" height="54" rx="3" fill="#E6D3AC" />
+            <Rect x="26" y="51" width="26" height="24" fill="#D9EDF0" />
+            <Rect x="61" y="53" width="16" height="36" fill="#B8875C" />
+            <Path d="M11 37 L20 16 L80 16 L89 37 Z" fill={fill} />
+            <Path
+              d="M29 17 L26 37 M46 17 L45 37 M63 17 L65 37 M80 17 L85 37"
+              fill="none"
+              stroke="#FCFAF4"
+              strokeWidth="7"
+            />
+            <Path d="M11 37 L89 37" />
+          </>
+        );
+        break;
+      case "chip":
+        shape = (
+          <>
+            <Ellipse cx="50" cy="80" rx="42" ry="12" fill="#FCFAF4" />
+            <Path d="M17 52 Q30 15 61 30 Q87 30 80 64 Q66 84 39 72 Q16 74 17 52 Z" fill="#E1B251" />
+            <Path d="M28 50 Q47 33 68 44 M29 60 Q48 42 70 54" fill="none" stroke="#B8875C" />
+          </>
+        );
+        break;
+      case "back":
+        shape = (
+          <>
+            <Circle cx="50" cy="23" r="17" fill="#B8875C" />
+            <Path d="M29 50 Q50 34 71 50 L80 75 L63 75 L62 95 L38 95 L37 75 L20 75 Z" fill={fill} />
+            <Path d="M50 48 L50 78" fill="none" />
+            <Path d="M93 63 L67 63 M74 55 L66 63 L74 71" fill="none" stroke="#386C9A" strokeWidth="4" />
+          </>
+        );
+        break;
+      case "cape":
+        shape = (
+          <>
+            <Path d="M35 16 Q50 27 65 16 L91 88 Q70 82 50 93 Q30 82 9 88 Z" fill={fill} />
+            <Path d="M35 16 Q50 3 65 16 M50 23 L42 36 M50 23 L58 36" fill="none" />
+            <Path d="M35 39 L27 77 M65 39 L73 77" fill="none" stroke="#FCFAF4" />
+          </>
+        );
+        break;
+      case "tape":
+        shape = (
+          <>
+            <Circle cx="45" cy="49" r="34" fill="#E1B251" />
+            <Circle cx="45" cy="49" r="19" fill="#FCFAF4" />
+            <Path d="M65 21 Q88 37 78 61 L69 84 L93 84 L93 94 L55 94 L67 61" fill="#E6D3AC" />
           </>
         );
         break;

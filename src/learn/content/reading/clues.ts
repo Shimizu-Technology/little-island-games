@@ -179,6 +179,11 @@ export const actionPictures: Record<string, string> = {
 };
 
 export const directPictures = [
+  "shop",
+  "chip",
+  "back",
+  "cape",
+  "tape",
   "cat",
   "dog",
   "fox",

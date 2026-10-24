@@ -86,6 +86,7 @@ describe("curated reading content", () => {
     for (const ladder of LADDERS)
       for (let i = 0; i < ladder.words.length; i++) {
         const w = ladder.words[i];
+        expect(pictureFor(w), w).toBeTruthy();
         expect(checkDecodability(w, ladder.pace)).toEqual([]);
         if (i) {
           const a = phonemes(ladder.words[i - 1]),
