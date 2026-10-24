@@ -85,10 +85,19 @@ export function Board({ session, update, practice, sound, soundOn, active, width
       : "reef-race-step";
   useEffect(() => {
     if (!active || r.phase === "move") return;
-    const delay = hasMoved ? 1800 : 0;
+    const delay = r.phase === "done" ? 3500 : hasMoved ? 1800 : 0;
     const timer = setTimeout(() => sound(phaseAudio), delay);
     return () => clearTimeout(timer);
   }, [active, phaseAudio, sound, hasMoved, r.phase]);
+  // The frame plays a finish chime. Repeat the last count after it so the final
+  // spoken number is heard in full before the ending narration.
+  const lastAction = s.history[s.history.length - 1];
+  const finalCount = r.phase === "done" && typeof lastAction === "number" ? lastAction : null;
+  useEffect(() => {
+    if (!active || finalCount === null) return;
+    const timer = setTimeout(() => sound(`reef-race-number-${finalCount}`), 1300);
+    return () => clearTimeout(timer);
+  }, [active, finalCount, sound]);
   // Computer takes the same numbered steps; pausing a sheet cancels the pending step.
   useEffect(() => {
     if (!active || !computer) return;
