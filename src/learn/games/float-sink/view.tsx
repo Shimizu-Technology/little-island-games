@@ -265,6 +265,7 @@ export function Board({ session, update, practice, sound, width, active }: Board
                   alignItems: "center",
                 }}
                 onPress={() => {
+                  practice("sci.shape-buoyancy", shape !== "ball");
                   send({ kind: "shape", value: shape });
                 }}
               >
