@@ -31,7 +31,7 @@ import {
   WORDS,
 } from "../games/words";
 import { useStore } from "../state/Store";
-import { Button, C, Chip, Copy, Heading, GameHeader, Sheet, styles } from "../components/ui";
+import { Button, C, Chip, Copy, Heading, GameHeader, Sheet, styles, ToggleRow } from "../components/ui";
 import { useSounds } from "../components/Audio";
 import { Recovery } from "../components/Recovery";
 import {
@@ -160,8 +160,9 @@ function Game({ id }: { id: GameId }) {
     store.update(id, next, s);
   }
   const boardProps = {
+    // 32 page padding + 24 for the tinted board panel's inner padding.
     width: Math.min(
-      width - insets.left - insets.right - 32,
+      width - insets.left - insets.right - 56,
       landscape ? Math.min(width * 0.56 - 32, height - 150) : 720
     ),
     sound,
@@ -216,7 +217,7 @@ function Game({ id }: { id: GameId }) {
           </Copy>
         )}
         <SaveStatus />
-        <View style={{ backgroundColor: g.surface, borderRadius: 22, paddingVertical: 10 }}>
+        <View style={{ backgroundColor: g.surface, borderRadius: 22, paddingVertical: 12, paddingHorizontal: 12 }}>
           {s?.game === "tic-tac-toe" ? (
             <TicBoard key={s.id} {...boardProps} state={s} commit={commit} />
           ) : s?.game === "word-rescue" ? (
@@ -410,9 +411,12 @@ function Game({ id }: { id: GameId }) {
                 </Chip>
               ))}
             </View>
-            <Chip selected={alternate} onPress={() => setAlternate(!alternate)}>
-              Take turns starting{id === "checkers" ? " · swap colours" : ""}
-            </Chip>
+            <ToggleRow
+              label="Take turns starting"
+              detail={id === "checkers" ? "Swap colours after each round" : "Swap who goes first after each round"}
+              value={alternate}
+              onChange={setAlternate}
+            />
           </>
         )}
         {id === "tic-tac-toe" && options.mode === "solo" && (

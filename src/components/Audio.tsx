@@ -3,6 +3,12 @@ import { useCallback, useEffect, useRef } from "react";
 import { AppState, Platform } from "react-native";
 import { sources } from "../content/audioSources";
 import { feel, toneFeel } from "./feel";
+// expo-audio's web player calls HTMLMediaElement.play() without handling its promise. A quick
+// second tone interrupts the first and the browser rejects it with AbortError; that is expected.
+if (Platform.OS === "web" && typeof window !== "undefined")
+  window.addEventListener("unhandledrejection", (event) => {
+    if ((event.reason as { name?: string } | undefined)?.name === "AbortError") event.preventDefault();
+  });
 export function useSoundControls(enabled: boolean) {
   const player = useAudioPlayer(null);
   const foreground = useRef(AppState.currentState === "active" || Platform.OS === "web");

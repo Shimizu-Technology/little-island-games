@@ -1,11 +1,11 @@
 import appConfig from "../../app.json";
 import React, { useState } from "react";
-import { Switch, TextInput, View } from "react-native";
+import { TextInput, View } from "react-native";
 import { Text } from "./Text";
 import { useStore } from "../state/Store";
 import { exportBackup, importBackup } from "../state/backup";
 import { parseSave } from "../state/validation";
-import { Button, C, Copy, Heading, Sheet, font, styles } from "./ui";
+import { Button, C, Copy, Heading, Sheet, ToggleRow, font, styles } from "./ui";
 import { Gate, gateAccepts, makeGate } from "../state/grownUpGate";
 import { PreviousSaves } from "./PreviousSaves";
 export function Settings({ visible, onClose }: { visible: boolean; onClose: () => void }) {
@@ -64,14 +64,14 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
   return (
     <Sheet visible={visible} onClose={close} title="Your little island">
       <Heading style={{ fontSize: 19 }}>Make yourself comfortable</Heading>
-      <Toggle
+      <ToggleRow
         label="Sound"
         detail="Clues, narration and little feedback tones"
         value={store.save.settings.sound}
         disabled={busy}
         onChange={(sound) => store.settings({ sound })}
       />
-      <Toggle
+      <ToggleRow
         label="Checkers piece hints"
         detail="A small dot on pieces that can move"
         value={store.save.settings.help}
@@ -151,36 +151,5 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
       )}
       {!!message && <Copy style={{ color: C.ink }}>{message}</Copy>}
     </Sheet>
-  );
-}
-function Toggle({
-  label,
-  detail,
-  value,
-  disabled,
-  onChange,
-}: {
-  label: string;
-  detail: string;
-  value: boolean;
-  disabled?: boolean;
-  onChange: (value: boolean) => void;
-}) {
-  return (
-    <View style={[styles.row, { backgroundColor: C.paper, borderRadius: 16, borderWidth: 1, borderColor: C.line, padding: 14, gap: 12 }]}>
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: font, fontSize: 17, fontWeight: "700", color: C.ink }}>{label}</Text>
-        <Copy style={{ fontSize: 13, lineHeight: 18 }}>{detail}</Copy>
-      </View>
-      <Switch
-        accessibilityLabel={label}
-        value={value}
-        disabled={disabled}
-        onValueChange={onChange}
-        trackColor={{ true: C.teal, false: "#CBD3CA" }}
-        thumbColor="#FFFFFF"
-        ios_backgroundColor="#CBD3CA"
-      />
-    </View>
   );
 }

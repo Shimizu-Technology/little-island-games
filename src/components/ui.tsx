@@ -9,6 +9,7 @@ import {
   PressableProps,
   ScrollView,
   StyleSheet,
+  Switch,
   View,
   ViewStyle,
   Platform,
@@ -215,6 +216,38 @@ export function Chip({
     >
       {children}
     </Button>
+  );
+}
+/** A labelled on/off setting row with the platform switch. */
+export function ToggleRow({
+  label,
+  detail,
+  value,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  detail?: string;
+  value: boolean;
+  disabled?: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <View style={[styles.row, { backgroundColor: C.paper, borderRadius: 16, borderWidth: 1, borderColor: C.line, padding: 14, gap: 12 }]}>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontFamily: font, fontSize: 17, fontWeight: "700", color: C.ink }}>{label}</Text>
+        {detail && <Copy style={{ fontSize: 13, lineHeight: 18 }}>{detail}</Copy>}
+      </View>
+      <Switch
+        accessibilityLabel={label}
+        value={value}
+        disabled={disabled}
+        onValueChange={onChange}
+        trackColor={{ true: C.teal, false: "#CBD3CA" }}
+        thumbColor="#FFFFFF"
+        ios_backgroundColor="#CBD3CA"
+      />
+    </View>
   );
 }
 /**

@@ -6,7 +6,7 @@ import { PlayerNames, Scoreboard } from "../components/Match";
 import { newMatch, Seat } from "../games/match";
 import { GuidanceKey, QUALITY_GUIDANCE } from "../explore/guidance";
 import Svg, { Circle, Path, Polygon } from "react-native-svg";
-import { Button, C, Copy, GameHeader, Heading, Label, PressableScale, Sheet, font } from "../components/ui";
+import { Button, C, Copy, GameHeader, Heading, Label, PressableScale, Sheet, font, ToggleRow } from "../components/ui";
 import {
   Card,
   CardAction,
@@ -545,7 +545,7 @@ function CardGameRound({
         <PlayerNames names={names} onChange={setNames} remembered={store.save.players} labels={mode === "solo" ? ["Your name (optional)", "Computer name (optional)"] : undefined} />
         <Heading style={{ fontSize: 21 }}>Who starts this match?</Heading>
         <View style={s.wrap}>{([0, 1] as const).map((seat) => <Button key={seat} quiet selected={starter === seat} onPress={() => setStarter(seat)}>{names[seat] || (mode === "solo" ? ["You", "Computer"][seat] : `Player ${seat + 1}`)}</Button>)}</View>
-        <Button quiet selected={alternate} onPress={() => setAlternate(!alternate)}>Alternate each rematch · {alternate ? "on" : "off"}</Button>
+        <ToggleRow label="Take turns starting" detail="Swap who goes first after each round" value={alternate} onChange={setAlternate} />
         <Copy style={s.small}>Dealing here starts a new match with zero wins and points. Play again keeps your tally.</Copy>
         <Heading style={{ fontSize: 21 }}>How much time?</Heading>
         <View style={s.wrap}>

@@ -313,7 +313,11 @@ export function TicBoard({ state: s, commit, width, sound, active }: Props<TicSt
     outcome === "draw"
       ? "A good draw!"
       : outcome
-        ? `${outcome} made a line!`
+        ? s.options.mode === "solo"
+          ? outcome === s.human
+            ? "You made a line!"
+            : "Your island friend made a line!"
+          : `${(s.match?.names ?? ["Player 1", "Player 2"])[outcome === "X" ? ticXSeat(s) : ticXSeat(s) === 0 ? 1 : 0]} made a line!`
         : computer
           ? "Your island friend is thinking…"
           : s.options.mode === "solo"
@@ -727,6 +731,22 @@ export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryStat
     </BoardLayout>
   );
 }
+/** Scoreboard mark that matches the board's own pieces. */
+function Piece({ red = false }: { red?: boolean }) {
+  return (
+    <View
+      accessibilityElementsHidden
+      style={{
+        width: 22,
+        height: 22,
+        borderRadius: 11,
+        borderWidth: 2,
+        borderColor: red ? "#F0BE97" : "#86B1C2",
+        backgroundColor: red ? "#A64F37" : "#315D79",
+      }}
+    />
+  );
+}
 export function CheckersBoard({ state: s, commit, width, sound, help, active }: Props<CheckersState>) {
   const [from, setFrom] = useState<number | null>(null),
     [path, setPath] = useState<number[]>([]),
@@ -759,7 +779,7 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
     if (route) route.captured.slice(0, path.length).forEach((i) => (displayBoard[i] = 0));
     displayBoard[path[path.length - 1]] = s.position.board[from];
   }
-  const size = Math.min(width, 560),
+  const size = Math.min(width + 24, 560),
     cellSize = (size - 16) / 8,
     outcome = s.position.outcome;
   const lessonComplete = s.lesson !== null && s.history.length > 0;
@@ -825,8 +845,8 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
             }
             marks={
               (s.starter ?? 0) === 0
-                ? [<Text key="r">🔴</Text>, <Text key="b">🔵</Text>]
-                : [<Text key="b">🔵</Text>, <Text key="r">🔴</Text>]
+                ? [<Piece key="r" red />, <Piece key="b" />]
+                : [<Piece key="b" />, <Piece key="r" red />]
             }
           />
         )}
@@ -834,7 +854,7 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
           style={{
             alignSelf: "center",
             width: size,
-            marginHorizontal: -16,
+            marginHorizontal: -12,
             borderRadius: 20,
             overflow: "hidden",
             borderWidth: 2,
