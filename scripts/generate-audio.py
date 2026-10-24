@@ -66,10 +66,16 @@ for name,notes in {'tap':[600],'match':[523.25,659.25],'win':[523.25,659.25,783.
 
 mapping=ROOT/'src/content/audioSources.ts'
 existing=mapping.read_text()
+has=lambda key: re.search(r"['\"]"+re.escape(key)+r"['\"]\s*:", existing)
 word_keys=[key for word,_,_ in word_rows for key in (word.lower(), f'clue-{word.lower()}')]
-missing=[key for key in word_keys if not re.search(r"['\"]"+re.escape(key)+r"['\"]\s*:", existing)]
-entries=[f"  '{key}': require('../../assets/audio/{key}.m4a')," for key in missing]
-# Insert in the existing word section, before instruction clips. Preserve all other mappings.
+missing_words=[key for key in word_keys if not has(key)]
+# Every other generated clip (instructions, Explore, labs, guidance) must be mapped too, or it never plays.
+missing_other=[key for key in speech if key not in word_keys and not has(key)]
+line=lambda key: f"  '{key}': require('../../assets/audio/{key}.m4a'),"
+# Words go in the existing word section, before instruction clips; others append at the end. Existing mappings are preserved.
 anchor=existing.index("  'instructions-")
-mapping.write_text(existing[:anchor]+'\n'.join(entries)+('\n' if entries else '')+existing[anchor:])
-print(f'Added {len(entries)} word audio mappings; other source sections preserved.')
+existing=existing[:anchor]+''.join(line(k)+'\n' for k in missing_words)+existing[anchor:]
+end=existing.rindex('};')
+existing=existing[:end]+''.join(line(k)+'\n' for k in missing_other)+existing[end:]
+mapping.write_text(existing)
+print(f'Added {len(missing_words)} word and {len(missing_other)} other audio mappings; existing mappings preserved.')

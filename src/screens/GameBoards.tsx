@@ -295,7 +295,9 @@ export function TicBoard({ state: s, commit, width, sound, active }: Props<TicSt
   const outcome = ticOutcome(s.board),
     turn = ticTurn(s.board, s.first),
     computer = s.options.mode === "solo" && turn !== s.human && !outcome;
-  const [hint, setHint] = useState<number | null>(null);
+  // A hint belongs to the position it was asked for; any move or undo makes it stale.
+  const [asked, setAsked] = useState<{ square: number | null; at: number } | null>(null);
+  const hint = asked && asked.at === s.history.length ? asked.square : null;
   useEffect(() => {
     if (!computer || !active) return;
     const timer = setTimeout(() => {
@@ -379,7 +381,7 @@ export function TicBoard({ state: s, commit, width, sound, active }: Props<TicSt
       </BoardArea>
       <Controls>
         {!outcome && (
-          <Button quiet onPress={() => setHint(ticChoice(s, () => 0.5, true))} disabled={computer}>
+          <Button quiet onPress={() => setAsked({ square: ticChoice(s, () => 0.5, true), at: s.history.length })} disabled={computer}>
             Show a hint
           </Button>
         )}
