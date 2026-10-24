@@ -31,6 +31,7 @@ speech.update({
 })
 
 speech.update(json.loads((ROOT/"scripts/explore-audio.json").read_text()))
+speech.update(json.loads((ROOT/"scripts/lab-audio.json").read_text()))
 speech.update(json.loads((ROOT/"scripts/quality-audio.json").read_text()))
 
 def speak(item):
