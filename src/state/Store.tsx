@@ -1,23 +1,24 @@
 import { ExploreProgress, validExploreProgress } from "../explore/progress";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
-import { GameId, GameState, gameIds } from "../games";
+import { GameId, GameState } from "../games";
 import { storage } from "./storage";
 import { Save, emptySave, parseSave } from "./validation";
 import { preserveAndReplace } from "./replacement";
 import { applySessionAction } from "./sessionAction";
 import { recordWordRound } from "./wordRecords";
-import { ActivityId, ActivitySession, activityIds } from "./activities";
+import { ActivityId, ActivitySession } from "./activities";
 import { ActivityExpected, applyActivitySave } from "./activityAction";
 import { topicById } from "../explore/content";
 import { rememberNames } from "../games/match";
 import type { LearnId, LearnSession } from "../learn/types";
+import { toggleShelfFavorite } from "../learn/home";
 import { LearnExpected, applyLearnSave, applyPractice } from "./learnAction";
 type Store = {
   epoch: number;
   activityUpdate: (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => boolean;
   toggleFavorite: (topic: string) => void;
-  toggleGameFavorite: (game: GameId | ActivityId) => void;
+  toggleGameFavorite: (game: GameId | ActivityId | LearnId) => void;
   /** Remember family names used in a two-player setup (no-op when unchanged). */
   rememberPlayers: (names: string[]) => void;
   /** Save a learning-game round; false when the round was replaced or a backup was restored meanwhile. */
@@ -157,10 +158,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (JSON.stringify(current.explore?.progress) === JSON.stringify(progress)) return;
     commit({ ...current, explore: { favorites: [], ...current.explore, progress } });
   }, [commit]);
-  const toggleGameFavorite = useCallback((game: GameId | ActivityId) => {
-    if (![...gameIds, ...activityIds].includes(game)) return;
-    const favorites = latest.current.favoriteGames ?? [];
-    commit({ ...latest.current, favoriteGames: favorites.includes(game) ? favorites.filter((id) => id !== game) : [...favorites, game] });
+  const toggleGameFavorite = useCallback((game: GameId | ActivityId | LearnId) => {
+    const next = toggleShelfFavorite(latest.current, game);
+    if (next !== latest.current) commit(next);
   }, [commit]);
   const learnUpdate = useCallback(
     (game: LearnId, next: LearnSession, expected: LearnExpected) => {

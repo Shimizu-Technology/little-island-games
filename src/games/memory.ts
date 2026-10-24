@@ -1,3 +1,4 @@
+import { chamoruWords, chamoruWord } from "../learn/content/chamoru";
 import { Base, Options, base, shuffle } from "./types";
 import { Match, Seat, RoundResult, newMatch, settle, nextStarter } from "./match";
 export const memorySymbols = [
@@ -17,6 +18,8 @@ export const memorySymbols = [
 export type MemoryState = Base & {
   game: "memory";
   cards: string[];
+  /** Absent in legacy rounds: identical picture pairs. */
+  pack?: "pictures" | "chamoru";
   matched: number[];
   open: number[];
   turns: number;
@@ -26,13 +29,15 @@ export type MemoryState = Base & {
   match?: Match;
   starter?: Seat;
 };
-export function createMemory(options: Options, starter: Seat = 0): MemoryState {
+export function createMemory(options: Options, starter: Seat = 0, pack: "pictures" | "chamoru" = "pictures"): MemoryState {
   const count = options.difficulty === "easy" ? 6 : options.difficulty === "medium" ? 8 : 12;
   const symbols = shuffle(memorySymbols).slice(0, count);
+  const words = pack === "chamoru" ? shuffle(chamoruWords).slice(0, count) : [];
   return {
     ...base("memory", options),
     game: "memory",
-    cards: shuffle([...symbols, ...symbols]),
+    cards: pack === "chamoru" ? shuffle(words.flatMap(w => [`ch:${w.id}:picture`, `ch:${w.id}:word`])) : shuffle([...symbols, ...symbols]),
+    ...(pack === "chamoru" ? { pack } : {}),
     matched: [],
     open: [],
     turns: 0,
@@ -62,7 +67,7 @@ export function flipCard(s: MemoryState, index: number): MemoryState {
   }
   const first = s.open[0];
   const turns = s.turns + 1;
-  if (s.cards[first] === s.cards[index]) {
+  if (memoryKey(s.cards[first]) === memoryKey(s.cards[index])) {
     const scores: [number, number] = [...s.scores];
     scores[s.player]++;
     return { ...s, turns, open: [], matched: [...s.matched, first, index], scores };
@@ -81,10 +86,19 @@ export function memoryResult(s: MemoryState): RoundResult {
 export function replayMemory(s: MemoryState): MemoryState {
   const match = settle(s.match ?? newMatch(), memoryResult(s)),
     starter = s.options.mode === "together" ? nextStarter(match, s.starter ?? 0) : 0;
-  return { ...createMemory(s.options, starter), match };
+  return { ...createMemory(s.options, starter, s.pack), match };
 }
 
 export function memoryUndo(s: MemoryState): MemoryState {
   if (!s.history?.length) return s;
   return { ...s, ...s.history[s.history.length - 1], history: s.history.slice(0, -1) };
 }
+
+/** A CHamoru pair has one picture and one word face; both retain the same reviewed content id. */
+export function chamoruCard(card: string) {
+  const match = /^ch:([a-z_]+\.[a-z_]+):(picture|word)$/.exec(card);
+  const word = match && chamoruWord(match[1]);
+  return word ? { word, face: match![2] as "picture" | "word" } : null;
+}
+export const memoryKey = (card: string) => chamoruCard(card)?.word.id ?? card;
+export const validMemoryCard = (card: string, pack: unknown) => pack === "chamoru" ? !!chamoruCard(card) : memorySymbols.includes(card);

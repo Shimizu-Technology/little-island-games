@@ -8,6 +8,10 @@ import { parseSave } from "../state/validation";
 import { Button, C, Copy, Heading, Sheet, ToggleRow, font, styles } from "./ui";
 import { Gate, gateAccepts, makeGate } from "../state/grownUpGate";
 import { PreviousSaves } from "./PreviousSaves";
+import { practiceSummary } from "../learn/skills";
+import { engines, skillLabels } from "../learn/engines";
+import { islandNames } from "../learn/home";
+import type { Island } from "../learn/types";
 export function Settings({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const store = useStore(),
     [unlocked, setUnlocked] = useState(false),
@@ -17,6 +21,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
     [busy, setBusy] = useState(false),
     [gate, setGate] = useState<Gate>(() => makeGate()),
     [answer, setAnswer] = useState("");
+  const practice = practiceSummary(store.save.skills, skillLabels());
   function check() {
     if (gateAccepts(gate, answer)) {
       setUnlocked(true);
@@ -85,7 +90,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
       <Heading style={{ fontSize: 19 }}>For grown-ups</Heading>
       {!unlocked ? (
         <>
-          <Copy>Backups are for grown-ups. Type the answer to unlock.</Copy>
+          <Copy>Practice notes and backups are for grown-ups. Type the answer to unlock.</Copy>
           <View style={[styles.row, { gap: 10 }]}>
             <Text style={{ fontFamily: font, fontSize: 20, fontWeight: "700", color: C.ink }}>
               {gate.a} × {gate.b} =
@@ -108,6 +113,17 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
         </>
       ) : (
         <>
+          <Heading style={{ fontSize: 19 }}>What she’s been practicing</Heading>
+          {!practice.length && <Copy>No recent practice yet. As she explores the learning islands, the words and ideas she tries will appear here.</Copy>}
+          {(["reading", "numbers", "science", "thinking"] as Island[]).map(island => {
+            const labels = new Set(Object.values(engines).filter(e => e.island === island).flatMap(e => Object.keys(e.skills)));
+            const lines = practice.filter(line => labels.has(line.skill));
+            return !lines.length ? null : <View key={island} style={{ gap: 6 }}>
+              <Heading style={{ fontSize: 17 }}>{islandNames[island]}</Heading>
+              {lines.map(line => <Copy key={line.skill}>{line.label} — {line.state === "getting-easier" ? "getting easier" : "practicing"}</Copy>)}
+            </View>;
+          })}
+          <View style={{ height: 1, backgroundColor: C.line }} />
           <Copy>
             A backup lets you move progress to another device. Deleting the app can remove its local saves. Keep backups
             in a private place; family names and secret game roles may be included. Nearby room credentials are never backed up.

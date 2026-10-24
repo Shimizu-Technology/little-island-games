@@ -1,3 +1,4 @@
+import { WordPicture } from "../learn/games/hafa-adai/pictures";
 import { Text } from "../components/Text";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Platform, StyleSheet, View, useWindowDimensions } from "react-native";
@@ -16,7 +17,7 @@ import {
 } from "../games/tic";
 import { WordState, wordTiles, wordRules, wordStatus, wrongLetters } from "../games/words";
 import { HangmanFigure } from "../components/HangmanFigure";
-import { MemoryState, closeMismatch, flipCard, memoryDone, memoryResult, memoryUndo } from "../games/memory";
+import { MemoryState, chamoruCard, closeMismatch, flipCard, memoryDone, memoryResult, memoryUndo } from "../games/memory";
 import {
   checkersResultSeat,
   CheckersState,
@@ -635,13 +636,14 @@ export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryStat
     return () => clearTimeout(timer);
   }, [peek]);
   const done = memoryDone(s),
-    columns = width >= 460 ? 6 : 4,
+    columns = s.pack === "chamoru" ? (width >= 600 ? 6 : 3) : width >= 460 ? 6 : 4,
     gap = 9,
     cardSize = Math.min(88, (width - gap * (columns - 1)) / columns);
   const names = s.match?.names ?? ["Player 1", "Player 2"];
   const mismatch = s.open.length === 2;
   return (
     <BoardLayout>
+      {s.pack === "chamoru" && <><Copy style={{ textAlign: "center", fontSize: 13 }}>Match a picture with its CHamoru word. English is shown small.</Copy><Button quiet compact onPress={() => sound("hafa-adai-memory")}>Hear the card directions</Button></>}
       <Status
         title={
           done
@@ -683,10 +685,12 @@ export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryStat
           {s.cards.map((symbol, i) => {
             const matched = s.matched.includes(i),
               open = matched || s.open.includes(i) || peek;
+            const ch = s.pack === "chamoru" ? chamoruCard(symbol) : null;
+            const faceLabel = ch ? (ch.face === "picture" ? `picture of ${ch.word.english}` : `${ch.word.term}, ${ch.word.english}`) : symbol;
             return (
               <Cell
                 key={i}
-                label={`Card ${i + 1}, ${open ? symbol : "face down"}${matched ? ", matched" : ""}`}
+                label={`Card ${i + 1}, ${open ? faceLabel : "face down"}${matched ? ", matched" : ""}`}
                 disabled={matched || s.open.includes(i) || mismatch || peek}
                 onPress={() => {
                   const next = flipCard(s, i);
@@ -695,7 +699,7 @@ export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryStat
                 }}
                 style={{
                   width: cardSize,
-                  height: cardSize * 1.06,
+                  height: cardSize * (s.pack === "chamoru" ? 1.35 : 1.06),
                   borderRadius: 16,
                   borderWidth: 2,
                   borderColor: matched ? "#BED3B7" : open ? "#D5CBDD" : "#74719B",
@@ -704,7 +708,7 @@ export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryStat
               >
                 <MemoryFace open={open}>
                   {open ? (
-                    <Symbol name={symbol} size={cardSize * 0.68} />
+                    ch ? ch.face === "picture" ? <WordPicture word={ch.word} size={cardSize * 0.8} /> : <View style={{ padding: 4, gap: 3 }}><Text style={{ fontSize: 14, lineHeight: 17, fontWeight: "700", color: C.ink, textAlign: "center" }}>{ch.word.term}</Text><Text style={{ fontSize: 10, lineHeight: 12, color: C.muted, textAlign: "center" }}>{ch.word.english.split(" / ")[0]}</Text></View> : <Symbol name={symbol} size={cardSize * 0.68} />
                   ) : (
                     <Text style={{ color: "#FFF8DE", fontSize: 29, fontWeight: "700" }}>?</Text>
                   )}

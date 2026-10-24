@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, BackHandler, Platform, ScrollView, StyleSheet, TextInput, View, useWindowDimensions } from "react-native";
@@ -446,6 +447,7 @@ function TopicView({
 }) {
   const [showSources, setShowSources] = useState(false);
   const world = WORLDS.find((w) => w.id === topic.world)!;
+  const learnGame = ["coral", "tides", "reef"].includes(topic.id) ? { id: "tide-pool", name: "Tide Pool Lab" } : ["boats", "floating", "salty", "waves"].includes(topic.id) ? { id: "float-sink", name: "Float or Sink" } : null;
   return (
     <>
       <Label>{world.title}</Label>
@@ -470,6 +472,7 @@ function TopicView({
       {!narrationEnabled && <Copy>Sound is off. You can read every word below.</Copy>}
       <Copy style={s.short}>{topic.short}</Copy>
       <Button onPress={onActivity}>Try: {world.activity}</Button>
+      {learnGame && <Button quiet onPress={() => router.push({ pathname: "/learn", params: { game: learnGame.id } })}>Try it: {learnGame.name}</Button>}
       <View style={s.deeper}>
         <Label>A little deeper</Label>
         <Copy style={{ color: C.ink }}>{topic.deeper}</Copy>
