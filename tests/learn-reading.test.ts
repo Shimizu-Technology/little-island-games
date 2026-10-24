@@ -234,7 +234,9 @@ describe("Turtle Tales: ordered words, model once per page and sentence turns", 
         let s = tales.create(o, ctx());
         const t = tale(s);
         for (let p = 0; p < t.pages.length; p++) {
-          expect(taleTurn(s)).toBe((s.starter + p) % 2);
+          // Together mode alternates readers by sentence, so count the sentences on earlier pages.
+          const sentencesBefore = t.pages.slice(0, p).reduce((n, page) => n + (page.text.match(/[.!?]/g)?.length ?? 1), 0);
+          expect(taleTurn(s)).toBe((s.starter + sentencesBefore) % 2);
           const before = s.word;
           s = taleTap(s, before + 1);
           expect(s.word).toBe(before);

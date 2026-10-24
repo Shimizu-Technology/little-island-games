@@ -3364,5 +3364,75 @@ export const WORDS = [
       "i_e",
       "s"
     ]
+  },
+  {
+    "word": "not",
+    "skill": "read.short-o",
+    "pace": "easy",
+    "tiles": [
+      "n",
+      "o",
+      "t"
+    ]
+  },
+  {
+    "word": "did",
+    "skill": "read.short-i",
+    "pace": "easy",
+    "tiles": [
+      "d",
+      "i",
+      "d"
+    ]
+  },
+  {
+    "word": "it",
+    "skill": "read.short-i",
+    "pace": "easy",
+    "tiles": [
+      "i",
+      "t"
+    ]
+  },
+  {
+    "word": "at",
+    "skill": "read.short-a",
+    "pace": "easy",
+    "tiles": [
+      "a",
+      "t"
+    ]
+  },
+  {
+    "word": "got",
+    "skill": "read.short-o",
+    "pace": "easy",
+    "tiles": [
+      "g",
+      "o",
+      "t"
+    ]
+  },
+  {
+    "word": "just",
+    "skill": "read.blend-end",
+    "pace": "medium",
+    "tiles": [
+      "j",
+      "u",
+      "s",
+      "t"
+    ]
+  },
+  {
+    "word": "plop",
+    "skill": "read.blend-start",
+    "pace": "medium",
+    "tiles": [
+      "p",
+      "l",
+      "o",
+      "p"
+    ]
   }
 ] as const;
