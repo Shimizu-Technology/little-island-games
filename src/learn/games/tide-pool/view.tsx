@@ -280,7 +280,7 @@ export function Board({ session, update, practice, sound, width, active }: Board
         </Copy>
       )}
       <Animated.View style={{ opacity: fade }}>
-        <PoolScene pool={s.pool} width={Math.min(width, 560)} />
+        <PoolScene pool={s.pool} width={Math.min(width, 360)} />
       </Animated.View>
       <Copy style={{ fontSize: 12 }}>
         {s.pool.warm ? "Warm water" : "Cool water"} · {s.pool.high ? "High tide" : "Low tide"} ·{" "}
