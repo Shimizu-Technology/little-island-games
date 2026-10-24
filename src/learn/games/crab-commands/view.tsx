@@ -181,7 +181,7 @@ export function Board({ session, update, practice, sound, width, height, active 
           card.
         </Copy>
       )}
-      <Beach level={l} walker={w} size={Math.min(width, height < 740 ? 210 : 260)} />
+      <Beach level={l} walker={w} size={Math.min(width, height < 740 ? 175 : 260)} />
       {!done && (
         <>
           <ScrollView ref={strip} nestedScrollEnabled style={{ maxHeight: 112 }}>
