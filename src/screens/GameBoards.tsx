@@ -44,7 +44,7 @@ import {
   selectNumber,
   undoNumbers,
 } from "../games/numbers";
-import { Button, C, Controls, Copy, Status, font, PressableScale } from "../components/ui";
+import { Button, C, Controls, Copy, Status, font, PressableScale, IconButton } from "../components/ui";
 import { Scoreboard } from "../components/Match";
 import { newMatch } from "../games/match";
 import { Icon } from "../components/Icon";
@@ -1065,27 +1065,23 @@ export function MazeBoard({ state: s, commit, width, sound }: Props<MazeState>) 
         </View>
       </BoardArea>
       <View style={{ alignItems: "center", marginTop: 12, gap: 8 }}>
-        <Button
-          quiet
+        <IconButton
+          icon="up"
+          size={48}
           disabled={done}
           label="Move up"
           onPress={() => move(current - s.size)}
-          style={{ width: 64 }}
-        >
-          <Icon name="up" />
-        </Button>
+        />
         <View style={{ flexDirection: "row", gap: 9 }}>
           {[3, 2, 1].map((d) => (
-            <Button
+            <IconButton
               key={d}
-              quiet
+              icon={d === 3 ? "left" : d === 2 ? "down" : "right"}
+              size={48}
               disabled={done}
               label={`Move ${directions[d].name.toLowerCase()}`}
               onPress={() => move(current + directions[d].dr * s.size + directions[d].dc)}
-              style={{ width: 64 }}
-            >
-              <Icon name={d === 3 ? "left" : d === 2 ? "down" : "right"} />
-            </Button>
+            />
           ))}
         </View>
       </View>
