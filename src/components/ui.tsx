@@ -274,7 +274,7 @@ export function GameHeader({
       <Button compact quiet icon="back" label={backLabel === "Leave" ? "Leave this round" : backLabel === "Back" ? "Go back" : `Back to ${backLabel.toLowerCase()}`} onPress={onBack} style={{ paddingLeft: 9 }}>
         {backLabel}
       </Button>
-      <Text accessibilityRole="header" numberOfLines={1} style={[styles.heading, { flex: 1, fontSize: 21, letterSpacing: -0.3 }]}>
+      <Text accessibilityRole="header" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75} style={[styles.heading, { flex: 1, fontSize: 21, letterSpacing: -0.3 }]}>
         {title}
       </Text>
       {children}
