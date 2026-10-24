@@ -1,3 +1,4 @@
+import { nameLength } from "../games/match";
 import { random } from "../games/types";
 import { PartyPackId, PartyWordId, PARTY_PACKS, partyPack } from "./content";
 export type PartyResult = {
@@ -40,6 +41,16 @@ export type PartySetup = {
   previousImposter?: number;
   firstClue?: number;
 };
+export const PARTY_NAME_MAX = 24;
+/** The same field-level rule is used by setup and imported-session validation. */
+export function partyNameError(name: string, players: readonly string[], index: number): string | null {
+  const tidy = name.trim();
+  if (!tidy) return "Enter a name (1–24 characters).";
+  if (nameLength(tidy) > PARTY_NAME_MAX) return `${nameLength(tidy)} characters · limit ${PARTY_NAME_MAX}.`;
+  if (/[\u0000-\u001f\u007f]/.test(tidy)) return "Use a name without control characters.";
+  if (players.some((p, i) => i !== index && p.trim().normalize("NFKC").toLowerCase() === tidy.normalize("NFKC").toLowerCase())) return "Choose a different name for each player.";
+  return null;
+}
 export function validPartyNames(players: unknown): players is string[] {
   return (
     Array.isArray(players) &&
@@ -50,7 +61,7 @@ export function validPartyNames(players: unknown): players is string[] {
         typeof p === "string" &&
         p.trim() === p &&
         p.length >= 1 &&
-        Array.from(p).length <= 24 &&
+        nameLength(p) <= PARTY_NAME_MAX &&
         !/[\u0000-\u001f\u007f]/.test(p)
     ) &&
     new Set(players.map((p) => p.normalize("NFKC").toLowerCase())).size === players.length

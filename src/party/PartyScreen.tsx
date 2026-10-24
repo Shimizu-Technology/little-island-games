@@ -2,7 +2,7 @@ import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Platform, StyleSheet, TextInput, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
-import { Button, C, Copy, Heading, Label, Sheet } from "../components/ui";
+import { Button, C, Copy, GameHeader, Heading, IconButton, Label, Sheet } from "../components/ui";
 import { PARTY_PACKS, PartyPackId, partyPack, partyWord } from "./content";
 import {
   createPartySession,
@@ -13,6 +13,7 @@ import {
   PartySession,
   rematchParty,
   validPartyNames,
+  partyNameError,
 } from "./engine";
 import { PartyPicture } from "./PartyPicture";
 export type PartyScreenProps = {
@@ -22,6 +23,8 @@ export type PartyScreenProps = {
   width?: number;
   sound?: boolean;
   onSpeakInstructions?: () => void;
+  onBack?: () => void;
+  onToggleSound?: () => void;
 };
 function CardBack() {
   return (
@@ -41,7 +44,7 @@ function CardBack() {
   );
 }
 /** Secret visibility and unconfirmed vote selection are never serialized. */
-export function PartyScreen({ session, onChange, active = true, width = 340, sound, onSpeakInstructions }: PartyScreenProps) {
+export function PartyScreen({ session, onChange, active = true, width = 340, sound, onSpeakInstructions, onBack, onToggleSound }: PartyScreenProps) {
   const latest = useRef(session),
     change = useRef(onChange);
   React.useLayoutEffect(() => {
@@ -130,24 +133,11 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
   const namesValid = validPartyNames(players.map((p) => p.trim()));
   return (
     <View style={s.root}>
-      <View style={s.row}>
-        <View style={{ flex: 1 }}>
-          <Label>A little family mystery</Label>
-          <Heading style={{ fontSize: 30 }}>Secret-word Imposter</Heading>
-        </View>
-        <Button
-          compact
-          quiet
-          onPress={() => {
-            conceal();
-            setHelp(true);
-          }}
-        >
-          How to play
-        </Button>
-      </View>
+      {onBack ? <GameHeader title="Secret Word" onBack={onBack} sound={onToggleSound ? { on: !!sound, toggle: onToggleSound } : undefined} onHelp={() => { conceal(); setHelp(true); }} /> : <View style={s.row}><Heading style={{ flex: 1, fontSize: 24 }}>Secret Word</Heading><IconButton icon="help" label="How to play Secret Word" onPress={() => { conceal(); setHelp(true); }} /></View>}
       {setup || !session ? (
-        <>
+        <Sheet visible={setup || !session} title="Secret Word · players & pack" onClose={() => { if (session) setSetup(false); else onBack?.(); }} footer={
+          <Button disabled={!namesValid || !active} onPress={start}>Deal the secret roles</Button>
+        }>
           <Copy>
             Gather 3–8 people and pass one device. Everyone sees the same secret word except one Imposter. Can your
             clues help you spot them?
@@ -156,12 +146,12 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
             <Heading style={{ fontSize: 22 }}>Who is playing?</Heading>
             <Copy style={s.small}>Nicknames are fine. Each name must be different.</Copy>
             {players.map((name, i) => (
-              <View style={s.nameRow} key={i}>
+              <View key={i} style={{ gap: 4 }}><View style={s.nameRow}>
                 <Text style={s.playerNumber}>{i + 1}</Text>
                 <TextInput
                   accessibilityLabel={`Player ${i + 1} name`}
                   value={name}
-                  maxLength={48}
+                  maxLength={96}
                   onChangeText={(value) => setPlayers((old) => old.map((p, n) => (n === i ? value : p)))}
                   style={s.input}
                   placeholder={`Player ${i + 1}`}
@@ -178,6 +168,8 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
                     Remove
                   </Button>
                 )}
+              </View>
+              {partyNameError(name, players, i) && <Copy style={{ color: C.error, fontSize: 14 }}>{partyNameError(name, players, i)}</Copy>}
               </View>
             ))}
             {players.length < 8 && (
@@ -219,9 +211,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
           <Copy style={s.small}>
             Each person gives one clue out loud per circle. No reading, recording or speech service is required.
           </Copy>
-          <Button disabled={!namesValid || !active} onPress={start}>
-            Deal the secret roles
-          </Button>
+          <Copy style={s.small}>Practice example: for BICYCLE you could say “wheels”. Keep the word itself secret.</Copy>
           {session && (
             <Button
               quiet
@@ -233,7 +223,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
               Return to current game
             </Button>
           )}
-        </>
+        </Sheet>
       ) : session.phase === "result" ? (
         <View style={s.result}>
           <Label>Everyone can look now</Label>
@@ -323,23 +313,18 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
               </Button>
             </View>
           ) : (
-            <View style={s.panel}>
-              <Heading style={{ fontSize: 25 }}>{session.players[actor!]}, who is the Imposter?</Heading>
-              <Copy>Pick one other player, then confirm. Your choice stays private.</Copy>
-              {partyCandidates(session)
-                .filter((i) => i !== actor)
-                .map((i) => (
-                  <Button key={i} quiet selected={selection === i} onPress={() => setSelection(i)}>
-                    {session.players[i]}
-                  </Button>
-                ))}
+            <Sheet visible={shown && voting} title={`${session.players[actor!]}’s private vote`} onClose={conceal} footer={<>
               <Button disabled={selection === null} onPress={() => act("vote", selection!)}>
-                Confirm private vote & hide
+                {selection === null ? "Choose a name to confirm" : `Confirm · ${session.players[selection]} & hide`}
               </Button>
-              <Button quiet onPress={conceal}>
-                Hide without voting
-              </Button>
-            </View>
+              <Button quiet onPress={conceal}>Hide without voting</Button>
+            </>}>
+              <Heading style={{ fontSize: 23 }}>Who is the Imposter?</Heading>
+              <Copy>Pick one other player, then confirm. Your choice stays private.</Copy>
+              {partyCandidates(session).filter((i) => i !== actor).map((i) => (
+                <Button key={i} quiet selected={selection === i} onPress={() => setSelection(i)}>{session.players[i]}</Button>
+              ))}
+            </Sheet>
           )}
         </>
       ) : (
@@ -384,6 +369,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
           2. Follow the named turns. Give one short clue out loud without saying or spelling the secret word. The
           Imposter listens and tries to blend in. There are one or two complete clue circles, chosen during setup.
         </Copy>
+        <Copy>Practice example: for BICYCLE you could say “wheels”. This is only a practice example.</Copy>
         <Copy>
           3. Pass the device again. Each person votes privately for one other person. You cannot vote for yourself.
           Previous votes are never shown.
@@ -418,8 +404,7 @@ const s = StyleSheet.create({
   nameRow: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
   playerNumber: { color: C.teal, fontSize: 18, fontWeight: "800", width: 20 },
   input: {
-    flexGrow: 1,
-    flexShrink: 1,
+    flex: 1,
     minWidth: 100,
     minHeight: 48,
     borderRadius: 12,
