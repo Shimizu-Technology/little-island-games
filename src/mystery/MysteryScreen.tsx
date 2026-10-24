@@ -30,8 +30,11 @@ export type MysteryScreenProps = {
   onFeedback?: () => void;
   onSpeakInstruction?: (key: keyof typeof mysteryInstructions) => void;
   onStopInstruction?: () => void;
+  /** Shown only on the start menu; a round has its own Leave header. */
+  menuHeader?: React.ReactNode;
+  soundControl?: { on: boolean; toggle: () => void };
 };
-export function MysteryScreen({ onActionFocus, state, onSave, width, active, sound, onFeedback, onSpeakInstruction, onStopInstruction }: MysteryScreenProps) {
+export function MysteryScreen({ onActionFocus, state, onSave, width, active, sound, onFeedback, onSpeakInstruction, onStopInstruction, menuHeader, soundControl }: MysteryScreenProps) {
   const stopSpeech = useRef(onStopInstruction);
   React.useLayoutEffect(() => { stopSpeech.current = onStopInstruction; }, [onStopInstruction]);
   useEffect(() => () => stopSpeech.current?.(), []);
@@ -127,8 +130,10 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
   };
   return (
     <View style={{ width: "100%", maxWidth: 850, alignSelf: "center", gap: 16 }}>
+      {mode === "menu" && menuHeader}
       {mode !== "menu" && (
         <GameHeader title="Mystery" backLabel="Leave" onBack={() => { setShowRole(false); setExit(true); }}
+          sound={soundControl}
           onHelp={() => { setShowRole(false); setHelp(true); }}>
           {mode === "nearby" && remote.mode === "host" && remote.pin && (
             <Button compact quiet onPress={() => { setShowRole(false); setRoomDetails(true); }}>Room details</Button>

@@ -64,6 +64,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
   // The first action can race the initial-deal effect, so both use the same missing-save guard.
   const cardChange = (next: CardSession, previous: CardSession) =>
     save(next, expectedId.current === null ? undefined : previous);
+  const mysterySound = { on: store.save.settings.sound, toggle: () => store.settings({ sound: !store.save.settings.sound }) };
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView
@@ -71,16 +72,17 @@ function ActivityGame({ id }: { id: ActivityId }) {
         contentContainerStyle={[styles.content, { paddingHorizontal: 20, gap: 16 }]}
         keyboardShouldPersistTaps="handled"
       >
-        {id === "island-mystery" && (
-          <GameHeader
-            title="Picnic Mystery"
-            onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
-            sound={{ on: store.save.settings.sound, toggle: () => store.settings({ sound: !store.save.settings.sound }) }}
-          />
-        )}
         <SaveStatus />
         {id === "island-mystery" ? (
           <MysteryScreen
+            menuHeader={
+              <GameHeader
+                title="Picnic Mystery"
+                onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
+                sound={mysterySound}
+              />
+            }
+            soundControl={mysterySound}
             onActionFocus={() => mysteryScroll.current?.scrollTo({ y: 0, animated: false })}
             state={saved?.game === "island-mystery" ? saved : null}
             onSave={(next, previous) => save(next, previous)}

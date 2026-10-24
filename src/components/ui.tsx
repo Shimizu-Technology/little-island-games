@@ -271,7 +271,7 @@ export function GameHeader({
 }) {
   return (
     <View style={[styles.row, { paddingVertical: 8, gap: 8 }]}>
-      <Button compact quiet icon="back" label={`Back to ${backLabel.toLowerCase()}`} onPress={onBack} style={{ paddingLeft: 9 }}>
+      <Button compact quiet icon="back" label={backLabel === "Leave" ? "Leave this round" : `Back to ${backLabel.toLowerCase()}`} onPress={onBack} style={{ paddingLeft: 9 }}>
         {backLabel}
       </Button>
       <Text accessibilityRole="header" numberOfLines={1} style={[styles.heading, { flex: 1, fontSize: 21, letterSpacing: -0.3 }]}>
