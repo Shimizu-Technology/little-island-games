@@ -91,6 +91,10 @@ export const pictures: Record<string, string> = {
   train: "bus",
 };
 export const actionPictures: Record<string, string> = {
+  bad: "rain",
+  bin: "box",
+  ten: "person",
+  meet: "person",
   met: "person",
   pet: "cat",
   pick: "person",
@@ -165,7 +169,7 @@ export const actionPictures: Record<string, string> = {
   wide: "boat",
   fine: "sun",
   hope: "person",
-  rose: "leaf",
+  rose: "rose",
   need: "person",
   reach: "person",
   cool: "moon",

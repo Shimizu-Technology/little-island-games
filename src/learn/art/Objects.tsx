@@ -66,6 +66,7 @@ export const objectNames = [
   "seed",
   "boot",
   "jar",
+  "rose",
   "person",
   "goat",
   "moth",
@@ -296,6 +297,15 @@ export function ObjectGlyph({
             <Rect x="10" y="50" width="82" height="29" rx="6" fill={fill} />
             <Rect x="14" y="35" width="28" height="23" rx="7" fill="#FCFAF4" />
             <Path d="M8 28 L8 94 M92 44 L92 94" />
+          </>
+        );
+        break;
+      case "rose":
+        shape = (
+          <>
+            <Path d="M50 85 L50 37 M50 70 Q25 50 24 67 Q35 82 50 75 M50 61 Q75 43 78 59 Q68 75 50 70" fill="#79AB80" />
+            <Circle cx="50" cy="29" r="23" fill="#C56D50" />
+            <Path d="M39 21 Q62 8 65 30 Q59 47 41 39 Q30 29 47 23 Q59 23 55 33 Q47 39 44 31" fill="none" />
           </>
         );
         break;

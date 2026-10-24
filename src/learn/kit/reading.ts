@@ -16,6 +16,10 @@ export const paceRank: Record<Pace, number> = { easy: 0, medium: 1, hard: 2 };
 /** Deliberate exceptions, visible to the adult; never inferred from spelling. */
 export const trickyWords: Record<Pace, readonly string[]> = {
   easy: [
+    "where",
+    "what",
+    "does",
+    "have",
     "the",
     "a",
     "is",

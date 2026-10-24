@@ -1,5 +1,5 @@
 import type { ReadingScene } from "../../kit/reading";
-export type Tale = { id: string; pace: "easy" | "medium" | "hard"; title: string; skill: string; pages: { text: string; scene: ReadingScene }[]; questions: { text: string; scenes: ReadingScene[]; difference: string[] }[] };
+export type Tale = { id: string; pace: "easy" | "medium" | "hard"; title: string; skill: string; pages: { text: string; scene: ReadingScene }[]; questions: { text: string; prompt: string; scenes: ReadingScene[]; difference: string[] }[] };
 export const STORIES: Tale[] = [
   {
     "id": "tale-0",
@@ -98,38 +98,40 @@ export const STORIES: Tale[] = [
           "",
           "under",
           "dog"
-        ]
+        ],
+        "prompt": "Where is the cat?"
       },
       {
-        "text": "The cat has a hat.",
+        "text": "The cat is in the hat.",
         "scenes": [
           {
             "subject": "cat",
             "object": "hat",
-            "relation": "beside",
+            "relation": "in",
             "color": "coral",
             "size": "big"
           },
           {
             "subject": "cat",
-            "object": "cup",
-            "relation": "beside",
+            "object": "hat",
+            "relation": "on",
             "color": "coral",
             "size": "big"
           },
           {
             "subject": "dog",
             "object": "hat",
-            "relation": "beside",
+            "relation": "in",
             "color": "coral",
             "size": "big"
           }
         ],
         "difference": [
           "",
-          "cup",
+          "on",
           "dog"
-        ]
+        ],
+        "prompt": "Where is the cat?"
       }
     ]
   },
@@ -230,7 +232,8 @@ export const STORIES: Tale[] = [
           "",
           "on",
           "cat"
-        ]
+        ],
+        "prompt": "Where is the pig?"
       },
       {
         "text": "The hen is on the rug.",
@@ -261,7 +264,8 @@ export const STORIES: Tale[] = [
           "",
           "under",
           "cat"
-        ]
+        ],
+        "prompt": "Where is the hen?"
       }
     ]
   },
@@ -362,7 +366,8 @@ export const STORIES: Tale[] = [
           "",
           "hat",
           "cat"
-        ]
+        ],
+        "prompt": "What does the dog have?"
       },
       {
         "text": "The dog has a net.",
@@ -393,7 +398,8 @@ export const STORIES: Tale[] = [
           "",
           "hat",
           "cat"
-        ]
+        ],
+        "prompt": "What does the dog tug?"
       }
     ]
   },
@@ -494,7 +500,8 @@ export const STORIES: Tale[] = [
           "",
           "on",
           "cat"
-        ]
+        ],
+        "prompt": "Where is the bug?"
       },
       {
         "text": "The bug is on the rug.",
@@ -525,7 +532,8 @@ export const STORIES: Tale[] = [
           "",
           "under",
           "cat"
-        ]
+        ],
+        "prompt": "Where is the bug?"
       }
     ]
   },
@@ -626,7 +634,8 @@ export const STORIES: Tale[] = [
           "",
           "under",
           "cat"
-        ]
+        ],
+        "prompt": "Where is the crab?"
       },
       {
         "text": "The shell is in the sand.",
@@ -657,7 +666,8 @@ export const STORIES: Tale[] = [
           "",
           "on",
           "cat"
-        ]
+        ],
+        "prompt": "Where is the shell?"
       }
     ]
   },
@@ -758,7 +768,8 @@ export const STORIES: Tale[] = [
           "",
           "on",
           "cat"
-        ]
+        ],
+        "prompt": "Where is the duck?"
       },
       {
         "text": "The duck has a dish.",
@@ -789,7 +800,8 @@ export const STORIES: Tale[] = [
           "",
           "hat",
           "cat"
-        ]
+        ],
+        "prompt": "What does the duck have?"
       }
     ]
   },
@@ -890,7 +902,8 @@ export const STORIES: Tale[] = [
           "",
           "hat",
           "cat"
-        ]
+        ],
+        "prompt": "What does the hen have?"
       },
       {
         "text": "The crab has a ring.",
@@ -921,7 +934,8 @@ export const STORIES: Tale[] = [
           "",
           "hat",
           "cat"
-        ]
+        ],
+        "prompt": "What does the crab have?"
       }
     ]
   },
@@ -1022,7 +1036,8 @@ export const STORIES: Tale[] = [
           "",
           "hat",
           "cat"
-        ]
+        ],
+        "prompt": "What does the duck have?"
       },
       {
         "text": "The duck is in the pond.",
@@ -1053,7 +1068,8 @@ export const STORIES: Tale[] = [
           "",
           "on",
           "frog"
-        ]
+        ],
+        "prompt": "Where is the duck?"
       }
     ]
   },
@@ -1154,7 +1170,8 @@ export const STORIES: Tale[] = [
           "",
           "on",
           "cat"
-        ]
+        ],
+        "prompt": "Where is the goat?"
       },
       {
         "text": "The sheep has a cake.",
@@ -1185,7 +1202,8 @@ export const STORIES: Tale[] = [
           "",
           "hat",
           "cat"
-        ]
+        ],
+        "prompt": "What does the sheep have?"
       }
     ]
   },
@@ -1286,7 +1304,8 @@ export const STORIES: Tale[] = [
           "",
           "on",
           "cat"
-        ]
+        ],
+        "prompt": "Where is the toad?"
       },
       {
         "text": "The bee is on the coat.",
@@ -1317,7 +1336,8 @@ export const STORIES: Tale[] = [
           "",
           "under",
           "cat"
-        ]
+        ],
+        "prompt": "Where is the bee?"
       }
     ]
   },
@@ -1418,7 +1438,8 @@ export const STORIES: Tale[] = [
           "",
           "hat",
           "cat"
-        ]
+        ],
+        "prompt": "What does the crab have?"
       },
       {
         "text": "The crab has a rope.",
@@ -1449,7 +1470,8 @@ export const STORIES: Tale[] = [
           "",
           "hat",
           "cat"
-        ]
+        ],
+        "prompt": "What can the crab take?"
       }
     ]
   },
@@ -1550,28 +1572,29 @@ export const STORIES: Tale[] = [
           "",
           "on",
           "cat"
-        ]
+        ],
+        "prompt": "Where is the seal?"
       },
       {
-        "text": "The sheep has a boat.",
+        "text": "The sheep can see the seal.",
         "scenes": [
           {
             "subject": "sheep",
-            "object": "boat",
+            "object": "seal",
             "relation": "beside",
             "color": "coral",
             "size": "big"
           },
           {
             "subject": "sheep",
-            "object": "hat",
+            "object": "boat",
             "relation": "beside",
             "color": "coral",
             "size": "big"
           },
           {
-            "subject": "cat",
-            "object": "boat",
+            "subject": "toad",
+            "object": "seal",
             "relation": "beside",
             "color": "coral",
             "size": "big"
@@ -1579,9 +1602,10 @@ export const STORIES: Tale[] = [
         ],
         "difference": [
           "",
-          "hat",
-          "cat"
-        ]
+          "boat",
+          "toad"
+        ],
+        "prompt": "What can the sheep see?"
       }
     ]
   }

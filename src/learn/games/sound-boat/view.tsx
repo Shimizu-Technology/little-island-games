@@ -37,7 +37,8 @@ export function Board({ session, update, practice, sound, soundOn, width, height
     compact = height < 730,
     reduced = useReducedMotion();
   const [rock] = useState(() => new Animated.Value(0));
-  const last = useRef("");
+  // A restored round waits for a listening tap; later word/stage changes follow play.
+  const last = useRef(`${s.index}-${s.stage}`);
   useEffect(() => {
     const key = `${s.index}-${s.stage}`;
     if (active && key !== last.current && s.stage !== "done") {

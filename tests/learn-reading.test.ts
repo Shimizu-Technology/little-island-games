@@ -69,7 +69,7 @@ describe("curated reading content", () => {
   });
   for (const t of STORIES)
     it(`${t.id}: every title, page and question is decodable at ${t.pace}`, () => {
-      for (const text of [t.title, ...t.pages.map((p) => p.text), ...t.questions.map((q) => q.text)])
+      for (const text of [t.title, ...t.pages.map((p) => p.text), ...t.questions.flatMap((q) => [q.text, q.prompt])])
         expect(checkDecodability(text, t.pace), text).toEqual([]);
       for (const p of t.pages) expect(tokens(p.text).length).toBeLessThanOrEqual(18);
     });
@@ -112,7 +112,7 @@ describe("curated reading content", () => {
       });
       t.questions.forEach((q, i) => {
         keys.push(`turtle-tales-${t.id}-question-${i}`);
-        for (const w of tokens(q.text)) keys.push(wordAudio(w));
+        for (const w of tokens(q.text + " " + q.prompt)) keys.push(wordAudio(w));
       });
     }
     for (const key of keys) {

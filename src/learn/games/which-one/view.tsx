@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { View } from "react-native";
 import { Button, C, Copy, Heading, PressableScale } from "../../../components/ui";
 import type { BoardProps } from "../../types";
@@ -9,13 +9,6 @@ import { whichAnswer, whichItem, whichNext, whichPick, type WhichState } from ".
 
 export function Board({ session, update, practice, sound, soundOn, width, height, active }: BoardProps<WhichState>) {
   const s = session.state;
-  const prompted = useRef(false);
-  useEffect(() => {
-    if (active && !prompted.current && s.index === 0) {
-      prompted.current = true;
-      sound("which-one-read");
-    }
-  }, [active, s.index, sound]);
   if (s.index === 8)
     return (
       <View style={{ alignItems: "center", padding: 16, gap: 10 }}>

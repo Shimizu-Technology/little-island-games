@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Animated, View } from "react-native";
 import { Button, C, Copy, Heading, IconButton, PressableScale } from "../../../components/ui";
 import { nativeDriver, useReducedMotion } from "../../../components/motion";
@@ -24,13 +24,6 @@ export function Board({ session, update, practice, sound, soundOn, width, height
     t = tale(s),
     reduced = useReducedMotion();
   const [glow] = useState(() => new Animated.Value(1));
-  const prompted = useRef(false);
-  useEffect(() => {
-    if (active && !prompted.current && s.page === 0) {
-      prompted.current = true;
-      sound("turtle-tales-read");
-    }
-  }, [active, s.page, sound]);
   const complete = s.page < t.pages.length && pageComplete(s);
   useEffect(() => {
     glow.stopAnimation();
@@ -61,8 +54,8 @@ export function Board({ session, update, practice, sound, soundOn, width, height
       <View style={{ alignItems: "center", gap: 12 }}>
         <Copy>Picture {s.question + 1} of 2 · Look back in your mind.</Copy>
         <ReadingText
-          text={q.text}
-          highlight={key ? correct[key] : undefined}
+          text={q.prompt}
+          highlight={key === "relation" ? "where" : key === "object" ? "what" : key ? correct[key] : undefined}
           onWord={(_, w) => active && sound(wordAudio(w))}
         />
         <Button
