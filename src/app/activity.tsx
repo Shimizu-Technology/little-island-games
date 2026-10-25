@@ -119,7 +119,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
             onExit={() => (router.canGoBack() ? router.back() : router.replace("/"))}
             sound={store.save.settings.sound}
             onToggleSound={() => store.settings({ sound: !store.save.settings.sound })}
-            active={focused && !practice.pending}
+            active={focused}
             onFeedback={(event) => sound(event === "finish" ? "win" : event === "checkpoint" ? "match" : "tap")}
           />
         ) : id === "word-imposter" ? (

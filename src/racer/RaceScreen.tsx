@@ -41,6 +41,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
   const shortLandscape = viewport.width > viewport.height && viewport.height < 520;
   const landscape = viewport.width > viewport.height;
   const previousLayout = useRef(landscape);
+  const practicePending = !!roundPractice?.pending;
   const [initial] = useState(() => (session && validRaceSession(session) ? pauseRace(session) : createRaceSession()));
   const current = useRef(initial),
     saveCallback = useRef(onSave),
@@ -117,6 +118,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
     const keydown = (e: KeyboardEvent) => {
       if (
         !active ||
+        practicePending ||
         choosing ||
         help ||
         current.current.status !== "running" ||
@@ -146,13 +148,13 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
       window.removeEventListener("keydown", keydown);
       window.removeEventListener("keyup", keyup);
     };
-  }, [active, choosing, help, pause]);
+  }, [active, practicePending, choosing, help, pause]);
   const finishing =
     snapshot.status === "finished" &&
     snapshot.runners.some((r) => r.finishTick === null) &&
     snapshot.tick < RACE_LIMIT_TICKS;
   useEffect(() => {
-    if (!active || !foreground || choosing || help || (snapshot.status !== "running" && !finishing)) {
+    if (!active || practicePending || !foreground || choosing || help || (snapshot.status !== "running" && !finishing)) {
       scene.current?.draw(current.current);
       return;
     }
@@ -233,7 +235,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
     };
     frame = requestAnimationFrame(update);
     return () => cancelAnimationFrame(frame);
-  }, [active, foreground, choosing, help, snapshot.status, finishing, clear, pause, persist]);
+  }, [active, practicePending, foreground, choosing, help, snapshot.status, finishing, clear, pause, persist]);
   const begin = useCallback(
     (course: CourseId, selectedMode = mode) => {
       const run = () => {
@@ -473,7 +475,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
                         : "Every runner and the timer will continue from this moment. Held controls have been cleared."}
                     </Copy>
                   )}
-                  <Button disabled={!active || !foreground || help} onPress={resume}>
+                  <Button disabled={!active || practicePending || !foreground || help} onPress={resume}>
                     {snapshot.status === "ready"
                       ? controlStyle === "run"
                         ? "Run & go!"
