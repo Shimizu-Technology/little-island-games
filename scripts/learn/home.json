@@ -1,8 +1,8 @@
 {
-  "hafa-adai-help": "Explore: tap each picture to see its words. I spy: read the word card and find its picture. If you find a different picture, compare its word and try again. Take turns: pass the device after each word. A first try find earns a point. The words on this island are text only. You can hear the English directions.",
-  "hafa-adai-explore": "Welcome to our picnic. Tap a picture to discover its words.",
-  "hafa-adai-spy": "Find the picture that matches the word card. Take your time. You can show the English words for help.",
-  "hafa-adai-compare": "That picture has a different word. Compare it with the word card and try again.",
+  "hafa-adai-help": "Explore: tap each picture to see its word. I spy: read the word, then tap its picture. If you tap a different picture, you will see its word, so you can try again. Take turns: pass the device after each word. A first try find earns a point. The words on this island are text only. You can hear the English directions.",
+  "hafa-adai-explore": "Welcome to our picnic. Tap a picture to see its word.",
+  "hafa-adai-spy": "Read the word on the card. Then tap its picture!",
+  "hafa-adai-compare": "That one has a different word. Try again!",
   "hafa-adai-done": "Every word has a picture friend. You explored the whole picnic.",
   "hafa-adai-memory": "Match each picture with its word card. Small English words help you compare. A match stays open. Different cards can be turned over when you are ready. In take turns, a match earns another turn. The island words are text only.",
   "hafa-adai-word-colors-white": "White.",
@@ -106,5 +106,6 @@
   "hafa-adai-word-food-mango": "Mango.",
   "hafa-adai-find-food-mango": "Find the picture for mango.",
   "hafa-adai-word-food-egg": "Egg.",
-  "hafa-adai-find-food-egg": "Find the picture for egg."
+  "hafa-adai-find-food-egg": "Find the picture for egg.",
+  "hafa-adai-intro": "Welcome to our picnic! Tap the pictures to play."
 }

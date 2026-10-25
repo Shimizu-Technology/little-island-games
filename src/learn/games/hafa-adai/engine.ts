@@ -48,9 +48,10 @@ export const engine: LearnEngine<IslandState> = {
   id: "hafa-adai", name: "Håfa Adai Island", island: "reading",
   tagline: "Explore a picnic full of CHamoru words.",
   description: "Tap pictures to discover CHamoru words, or play I spy. Words are shown in CHamoru; instructions are spoken in English.",
-  help: "Explore: tap each picture to see its CHamoru and English words. I spy: read the word card and find its picture. A different picture shows its own word so you can compare and try again. Take turns: finish one word, then pass the device. A first-try find earns a point. CHamoru words are text only.",
-  helpAudio: "hafa-adai-help", color: "#A04F38", surface: "#FBEADF", modes: ["solo", "versus"],
-  paceHelp: { easy: "A small scene with English on every word card.", medium: "More pictures, with English available when you need it.", hard: "A fuller scene. Read the CHamoru card, then find its picture." },
+  help: "Explore: tap each picture at the picnic to see its CHamoru word and its English meaning. I spy: read the CHamoru word, then tap its picture. The pictures have no English names in I spy. Gentle shows a small English helper on the word card; Growing and Challenge keep it behind Peek. A different picture shows its own word so you can compare and try again. Take turns: finish one word, then pass the device. A first-try find earns a point. CHamoru words are text only.",
+  helpAudio: "hafa-adai-help",
+  introAudio: "hafa-adai-intro", color: "#A04F38", surface: "#FBEADF", modes: ["solo", "versus"],
+  paceHelp: { easy: "Six pictures. A small English helper on the word card.", medium: "Eight pictures. Peek at English when you need it.", hard: "Twelve pictures. Read the CHamoru word, then find it." },
   skills: { "ch.colors": "CHamoru colors", "ch.numbers": "CHamoru numbers", "ch.food": "CHamoru food", "ch.body": "CHamoru body words", "ch.family": "CHamoru family words", "ch.greetings": "CHamoru greetings" },
   create(o, ctx) {
     const pool = chamoruWords.filter((w) => o.pace !== "easy" || w.category !== "numbers" || ["One", "Two", "Three", "Four", "Five"].includes(w.english));

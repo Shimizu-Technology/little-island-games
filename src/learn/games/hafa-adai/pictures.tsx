@@ -15,7 +15,7 @@ function Person({ x, y = 20, small = false, elder = false, dress = false }: { x:
   </G>;
 }
 /** Original geometric pictures, shared by the island scene and the picture/word Memory pack. */
-export function WordPicture({ word, size = 80 }: { word: ChamoruWord; size?: number }) {
+export function WordPicture({ word, size = 80, caption = true }: { word: ChamoruWord; size?: number; caption?: boolean }) {
   const key = word.id.split(".")[1], number = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"].indexOf(key) + 1;
   const head = word.category === "body_parts", food = word.category === "food";
   return <Svg width={size} height={size} viewBox="0 0 100 100" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
@@ -27,7 +27,7 @@ export function WordPicture({ word, size = 80 }: { word: ChamoruWord; size?: num
       {key === "sibling" ? <><Person x={34} y={36} small dress /><Person x={67} y={36} small /></> : key === "family" || key === "children" ? <><Person x={25} y={key === "children" ? 36 : 16} small={key === "children"} dress /><Person x={72} y={key === "children" ? 36 : 16} small={key === "children"} /><Person x={48} y={43} small /></> : <Person x={50} y={key === "child" || key === "sibling" ? 36 : 16} small={key === "child" || key === "sibling"} elder={key.startsWith("grand")} dress={key === "mother" || key === "grandmother_guella"} />}
     </>}
     {head && <>
-      {["head", "eye", "ear", "nose", "mouth"].includes(key) && <><Ellipse cx={50} cy={47} rx={27} ry={32} fill={skin} /><Path d="M23 37q-4-32 27-29t27 29q-9-16-27-15T23 37" fill="#4D3E34" /><Ellipse cx={21} cy={47} rx={5} ry={9} fill={key === "ear" ? "#EFC050" : skin} /><Ellipse cx={79} cy={47} rx={5} ry={9} fill={key === "ear" ? "#EFC050" : skin} /><Circle cx={39} cy={43} r={key === "eye" ? 7 : 3} fill={key === "eye" ? "#EFC050" : ink} /><Circle cx={61} cy={43} r={3} fill={ink} /><Path d="M50 44l-4 11h8" stroke={key === "nose" ? "#EFC050" : ink} strokeWidth={key === "nose" ? 6 : 2} fill="none" /><Path d="M39 64q11 8 22 0" stroke={key === "mouth" ? "#EFC050" : ink} strokeWidth={key === "mouth" ? 7 : 2} fill="none" /><Path d="M31 83h38" stroke={key === "head" ? "#EFC050" : "#548F9E"} strokeWidth={7} strokeLinecap="round" /></>}
+      {["head", "eye", "ear", "nose", "mouth"].includes(key) && <><Ellipse cx={50} cy={47} rx={27} ry={32} fill={skin} stroke={key === "head" ? "#EFC050" : "none"} strokeWidth={6} /><Path d="M23 37q-4-32 27-29t27 29q-9-16-27-15T23 37" fill="#4D3E34" /><Ellipse cx={21} cy={47} rx={5} ry={9} fill={key === "ear" ? "#EFC050" : skin} /><Ellipse cx={79} cy={47} rx={5} ry={9} fill={key === "ear" ? "#EFC050" : skin} /><Circle cx={39} cy={43} r={key === "eye" ? 7 : 3} fill={key === "eye" ? "#EFC050" : ink} /><Circle cx={61} cy={43} r={3} fill={ink} /><Path d="M50 44l-4 11h8" stroke={key === "nose" ? "#EFC050" : ink} strokeWidth={key === "nose" ? 6 : 2} fill="none" /><Path d="M39 64q11 8 22 0" stroke={key === "mouth" ? "#EFC050" : ink} strokeWidth={key === "mouth" ? 7 : 2} fill="none" /><Path d="M31 83h38" stroke={key === "head" ? "#EFC050" : "#548F9E"} strokeWidth={7} strokeLinecap="round" /></>}
       {key === "hand" && <Path d="M36 84V60L23 42q-3-7 4-8l13 14V20q0-8 7-5v28-32q7-5 8 4v28-28q7-3 8 5v26-21q7-3 8 5v31q0 17-12 23" fill={skin} stroke={ink} strokeWidth={2} />}
       {key === "foot" && <><Path d="M43 15h21v43q22 2 22 16 0 10-19 10H29q-12-3-7-12l18-20z" fill={skin} stroke={ink} strokeWidth={2} /><Path d="M70 63v9m7-7v8" stroke={ink} strokeWidth={2} /></>}
       {key === "heart" && <Path d="M50 84L17 51C-4 23 29 5 50 30c21-25 54-7 33 21z" fill="#CE6A61" stroke="#A04F38" strokeWidth={2} />}
@@ -45,10 +45,13 @@ export function WordPicture({ word, size = 80 }: { word: ChamoruWord; size?: num
       {key === "mango" && <><Path d="M55 20q31-3 25 33T42 85Q8 77 26 44t29-24" fill="#ECC057" stroke="#B37E35" strokeWidth={2} /><Path d="M55 21q2-21 21-11-8 14-21 11" fill="#729658" /></>}
       {key === "egg" && <Ellipse cx={50} cy={54} rx={27} ry={36} fill="#F8E8CD" stroke="#BAA383" strokeWidth={2} />}
     </>}
-    {word.category === "greetings" && <><Person x={43} y={20} /><Path d="M51 49l22-23 3-15" stroke={skin} strokeWidth={6} fill="none" strokeLinecap="round" /><Path d="M78 24q12-10 5-20M86 29q12-11 7-21" stroke="#6D9997" strokeWidth={2} fill="none" />
+    {word.category === "greetings" && <>
+      {key === "hello" ? <><Person x={28} y={20} small={false} /><Path d="M36 49l16-21 2-13" stroke={skin} strokeWidth={6} fill="none" strokeLinecap="round" /><Person x={76} y={26} small dress /><Path d="M68 50l-10-16-1-10" stroke={skin} strokeWidth={5} fill="none" strokeLinecap="round" /><Path d="M47 8q5-6 10 0M52 4v-3" stroke="#6D9997" strokeWidth={2} fill="none" /></>
+        : <><Person x={43} y={20} /><Path d="M51 49l22-23 3-15" stroke={skin} strokeWidth={6} fill="none" strokeLinecap="round" /><Path d="M78 24q12-10 5-20M86 29q12-11 7-21" stroke="#6D9997" strokeWidth={2} fill="none" /></>}
       {key === "good_morning" && <><Circle cx={18} cy={18} r={10} fill="#EFC050" /><Path d="M5 31h27" stroke="#EFC050" strokeWidth={2} /></>}
       {key === "thank_you" && <Path d="M18 49q-10-12-15-3t15 18q23-12 15-18t-15 3" fill="#C56D50" />}
-      <SvgText x={50} y={98} textAnchor="middle" fontSize={10} fontWeight="700" fill={ink}>{word.english.split(" / ")[0]}</SvgText>
+      {key === "goodbye" && <><Rect x={8} y={62} width={20} height={16} rx={3} fill="#B88756" stroke={ink} strokeWidth={1.5} /><Path d="M14 62v-4h8v4" fill="none" stroke={ink} strokeWidth={1.5} /><Path d="M8 34h14M16 28l6 6-6 6" stroke="#6D9997" strokeWidth={2.5} fill="none" strokeLinecap="round" /></>}
+      {caption && <SvgText x={50} y={98} textAnchor="middle" fontSize={10} fontWeight="700" fill={ink}>{word.english.split(" / ")[0]}</SvgText>}
     </>}
   </Svg>;
 }

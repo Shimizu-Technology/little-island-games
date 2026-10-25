@@ -55,6 +55,7 @@ const sources: Record<string, number> = {
   'hafa-adai-find-numbers-three': require('../../../assets/audio/hafa-adai-find-numbers-three.m4a'),
   'hafa-adai-find-numbers-two': require('../../../assets/audio/hafa-adai-find-numbers-two.m4a'),
   'hafa-adai-help': require('../../../assets/audio/hafa-adai-help.m4a'),
+  'hafa-adai-intro': require('../../../assets/audio/hafa-adai-intro.m4a'),
   'hafa-adai-memory': require('../../../assets/audio/hafa-adai-memory.m4a'),
   'hafa-adai-spy': require('../../../assets/audio/hafa-adai-spy.m4a'),
   'hafa-adai-word-body-parts-ear': require('../../../assets/audio/hafa-adai-word-body-parts-ear.m4a'),

@@ -1,28 +1,114 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Platform, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { Button, C, Chip, Copy, Heading, PressableScale, styles } from "../../../components/ui";
 import type { BoardProps } from "../../types";
-import { chamoruWord } from "../../content/chamoru";
+import { CoachSpot } from "../../Coach";
+import { chamoruWord, type ChamoruWord } from "../../content/chamoru";
 import { chooseActivity, IslandState, islandProgress, tapItem } from "./engine";
 import { WordPicture } from "./pictures";
 export const wordAudioKey = (id: string) => `hafa-adai-word-${id.replaceAll(".", "-").replaceAll("_", "-")}`;
-export function Board({ session, update, practice, sound, soundOn, active, width }: BoardProps<IslandState>) {
-  const s = session.state, p = islandProgress(s), options = session.options;
-  const [selected, setSelected] = useState<string | null>(null), [english, setEnglish] = useState(false);
-  const target = chamoruWord(s.items[p.cursor]), shown = chamoruWord(selected ?? s.taps.at(-1) ?? "");
-  const spy = s.activity === "spy", gentle = options.pace === "easy";
-  const columns = width >= 600 ? 4 : 3, tileWidth = (width - 24 - (columns - 1) * 6) / columns;
-  const pictureSize = Math.max(38, Math.min(78, tileWidth - 12));
-  const promptKey = p.done ? "hafa-adai-done" : !spy ? "hafa-adai-explore" : gentle && target ? `hafa-adai-find-${target.id.replaceAll(".", "-").replaceAll("_", "-")}` : "hafa-adai-spy";
+const first = (english: string) => english.split(" / ")[0];
+/** Food sits on the table first; everything else gathers on the blanket. */
+const placeOrder: ChamoruWord["category"][] = ["food", "colors", "numbers", "greetings", "family", "body_parts"];
+/** The picnic behind the pictures: bunting, sea, a table along the back and a checked blanket. */
+function Picnic({ tableTop, rowHeight, rows }: { tableTop: number; rowHeight: number; rows: number }) {
+  const h = tableTop + rowHeight * rows + 12;
+  const blanketTop = tableTop + rowHeight + 6;
+  return (
+    <View style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0 }} pointerEvents="none">
+      <Svg width="100%" height="100%" viewBox={`0 0 300 ${h}`} preserveAspectRatio="none">
+        <Rect width={300} height={h} fill="#F5E5BB" />
+        <Rect width={300} height={tableTop + 10} fill="#D6E9E8" />
+        <Path d={`M0 ${tableTop - 6}q75-12 150 0t150 0v18H0z`} fill="#8DC5C7" />
+        <Path d="M0 4q150 26 300 0" fill="none" stroke="#8E9F83" strokeWidth={2} />
+        {[20, 62, 104, 146, 188, 230, 272].map((x, i) => (
+          <Path
+            key={x}
+            d={`M${x} ${8 + Math.abs(150 - x) * -0.03 + 6}l14 1-7 11z`}
+            fill={["#C56D50", "#72A5B6", "#E1B251"][i % 3]}
+          />
+        ))}
+        {/* Table */}
+        <Rect x={8} y={tableTop + rowHeight - 4} width={284} height={9} rx={3} fill="#AF794D" />
+        <Path
+          d={`M22 ${tableTop + rowHeight + 5}v10M278 ${tableTop + rowHeight + 5}v10`}
+          stroke="#8E5F3A"
+          strokeWidth={5}
+        />
+        {/* Blanket */}
+        {rows > 1 && (
+          <>
+            <Rect x={6} y={blanketTop} width={288} height={rowHeight * (rows - 1) + 2} rx={10} fill="#F3D6CC" />
+            {Array.from({ length: 12 }, (_, i) => (
+              <Rect
+                key={i}
+                x={6 + i * 24}
+                y={blanketTop}
+                width={12}
+                height={rowHeight * (rows - 1) + 2}
+                fill="#E7A99A"
+                opacity={0.45}
+              />
+            ))}
+          </>
+        )}
+      </Svg>
+    </View>
+  );
+}
+export function Board({
+  session,
+  update,
+  practice,
+  sound,
+  soundOn,
+  active,
+  width,
+  coach,
+  cheer,
+}: BoardProps<IslandState>) {
+  const s = session.state,
+    p = islandProgress(s),
+    options = session.options;
+  const [selected, setSelected] = useState<string | null>(null),
+    [peek, setPeek] = useState(false);
+  const target = chamoruWord(s.items[p.cursor]),
+    shown = chamoruWord(selected ?? s.taps.at(-1) ?? "");
+  const spy = s.activity === "spy",
+    gentle = options.pace === "easy";
+  const columns = s.items.length === 6 ? 3 : width >= 600 ? 6 : 4;
+  const rows = Math.ceil(s.items.length / columns);
+  const gap = 6,
+    pad = 8;
+  // The scene has a 1px border on each side.
+  const slot = Math.floor((width - 2 - pad * 2 - gap * (columns - 1)) / columns);
+  const pictureSize = Math.max(44, Math.min(84, slot - (spy ? 10 : 18)));
+  const rowHeight = pictureSize + (spy ? 14 : 28);
+  const tableTop = 30;
+  const promptKey = p.done
+    ? "hafa-adai-done"
+    : !spy
+      ? "hafa-adai-explore"
+      : gentle && target
+        ? `hafa-adai-find-${target.id.replaceAll(".", "-").replaceAll("_", "-")}`
+        : "hafa-adai-spy";
+  // The frame says the goal when a round opens; after that, speak each new direction.
+  const fresh = useRef(session.revision === 0);
   useEffect(() => {
     // Web reloads have no user activation yet. The visible directions button remains
     // available; only auto-play after a gesture, so browsers never reject initial speech.
-    const canAutoPlay = Platform.OS !== "web" || (typeof navigator !== "undefined" && navigator.userActivation?.hasBeenActive);
-    if (active && soundOn && canAutoPlay) sound(promptKey);
+    const canAutoPlay =
+      Platform.OS !== "web" || (typeof navigator !== "undefined" && navigator.userActivation?.hasBeenActive);
+    if (!active || !soundOn || !canAutoPlay) return;
+    const wait = fresh.current ? 3000 : 0;
+    fresh.current = false;
+    const timer = setTimeout(() => sound(promptKey), wait);
+    return () => clearTimeout(timer);
   }, [active, soundOn, sound, promptKey]);
   function select(id: string) {
     if (!active) return;
+    if (coach.active) coach.done();
     setSelected(id);
     const correct = !spy || id === target?.id;
     const next = tapItem(s, id);
@@ -31,45 +117,229 @@ export function Board({ session, update, practice, sound, soundOn, active, width
       if (spy) practice(chamoruWord(target!.id)!.skill, correct);
       update(next);
     }
-    sound(spy && !correct ? "hafa-adai-compare" : wordAudioKey(id));
-    if (correct && spy) { setEnglish(false); setSelected(null); }
+    if (spy && correct) {
+      cheer();
+      setPeek(false);
+      setSelected(null);
+    } else sound(spy ? "hafa-adai-compare" : wordAudioKey(id));
   }
-  return <View style={{ gap: 10 }}>
-    {options.mode === "solo" && <View style={[styles.row, { flexWrap: "wrap" }]}>
-      {(["explore", "spy"] as const).map(activity => <Chip key={activity} selected={s.activity === activity} onPress={() => { update(chooseActivity(s, activity, options)); setSelected(null); setEnglish(false); }}>{activity === "explore" ? "Explore" : "I spy"}</Chip>)}
-    </View>}
-    <View style={{ backgroundColor: C.paper, borderRadius: 16, padding: 12, gap: 4 }} accessibilityLiveRegion="polite">
-      {p.done ? <><Heading style={{ fontSize: 20 }}>{options.mode === "versus" ? (p.scores[0] === p.scores[1] ? "A good tie!" : `${session.names?.[p.scores[0] > p.scores[1] ? 0 : 1] ?? "Player"} wins!`) : "You explored the whole picnic!"}</Heading><Copy>Every word has a picture friend.</Copy></> : spy && target ? <>
-        <Copy style={{ fontSize: 13 }}>{options.mode === "versus" ? `${session.names?.[p.player] ?? ("Player " + (p.player + 1))}’s turn · ` : ""}Find this word in the scene</Copy>
-        <Heading style={{ fontSize: 25 }}>{target.term}</Heading>
-        {(gentle || english) && <Copy style={{ fontSize: 13 }}>{target.english}</Copy>}
-        {!gentle && <Button quiet compact onPress={() => { setEnglish(!english); if (!english) sound(wordAudioKey(target.id)); }}>{english ? "Hide English" : "Show English"}</Button>}
-      </> : <><Heading style={{ fontSize: 20 }}>Welcome to our picnic</Heading><Copy>Tap a picture to discover its words.</Copy></>}
-    </View>
-    {/* One calm island scene: flags over a market table, picnic blanket, shells and friends. */}
-    <View style={{ backgroundColor: "#F5E5BB", borderRadius: 20, padding: 10, gap: 6, borderWidth: 1, borderColor: "#DCC895", overflow: "hidden" }}>
-      <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} pointerEvents="none"><Svg width="100%" height="100%" viewBox="0 0 300 300" preserveAspectRatio="none"><Rect width={300} height={85} fill="#D6E9E8" /><Path d="M0 70q75-15 150 0t150 0v40H0z" fill="#8DC5C7" /><Path d="M0 100q150-25 300 0v200H0z" fill="#F5E5BB" /></Svg></View>
-      <View style={{ height: 22 }}><Svg width="100%" height={22} viewBox="0 0 300 22"><Path d="M0 4q150 25 300 0" fill="none" stroke="#8E9F83" strokeWidth={2} />{[35,80,125,170,215,260].map((x,i)=><Path key={x} d={`M${x} 10l18 2-9 10z`} fill={["#C56D50","#72A5B6","#E1B251"][i%3]} />)}</Svg></View>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-        {[...s.items].sort().map(id => {
-          const word = chamoruWord(id)!, visited = p.visited.has(id), found = spy && s.items.indexOf(id) < p.cursor;
-          return <PressableScale key={id} accessibilityRole="button" accessibilityLabel={`Find picture: ${word.english}${found ? ", found" : ""}`} onPress={() => select(id)} amount={0.98}
-            style={{ width: tileWidth, minHeight: 85, padding: 4, borderRadius: 12, backgroundColor: word.category === "family" ? "#EFD2BECC" : "#FFF9E7C9", borderWidth: 2, borderColor: found || (!spy && visited) ? "#67947B" : "transparent", alignItems: "center", justifyContent: "center" }}>
-            <WordPicture word={word} size={pictureSize} />
-            <Copy style={{ fontSize: 11, lineHeight: 14, textAlign: "center" }}>{word.english.split(" / ")[0]}</Copy>
-          </PressableScale>;
-        })}
+  const placed = [...s.items].sort((a, b) => {
+    const ca = placeOrder.indexOf(chamoruWord(a)!.category),
+      cb = placeOrder.indexOf(chamoruWord(b)!.category);
+    return ca - cb || a.localeCompare(b);
+  });
+  const coachId = spy ? target?.id : placed[0];
+  const missed = spy && !p.done && shown && ((selected && selected !== target?.id) || p.missed);
+  return (
+    <View style={{ gap: 10 }}>
+      {options.mode === "solo" && (
+        <View style={[styles.row, { flexWrap: "wrap" }]}>
+          {(["explore", "spy"] as const).map((activity) => (
+            <Chip
+              key={activity}
+              selected={s.activity === activity}
+              onPress={() => {
+                update(chooseActivity(s, activity, options));
+                setSelected(null);
+                setPeek(false);
+              }}
+            >
+              {activity === "explore" ? "Explore" : "I spy"}
+            </Chip>
+          ))}
+        </View>
+      )}
+      <View
+        style={{ backgroundColor: C.paper, borderRadius: 16, padding: 12, gap: 4 }}
+        accessibilityLiveRegion="polite"
+      >
+        {p.done ? (
+          <>
+            <Heading style={{ fontSize: 22 }}>
+              {options.mode === "versus"
+                ? p.scores[0] === p.scores[1]
+                  ? "A good tie!"
+                  : `${session.names?.[p.scores[0] > p.scores[1] ? 0 : 1] ?? "Player"} wins!`
+                : spy
+                  ? "You found every word!"
+                  : "You explored the whole picnic!"}
+            </Heading>
+            <Copy style={{ color: C.ink }}>Every word has a picture friend.</Copy>
+          </>
+        ) : spy && target ? (
+          <>
+            <Copy style={{ fontSize: 15, color: C.ink }}>
+              {options.mode === "versus" ? `${session.names?.[p.player] ?? "Player " + (p.player + 1)}: ` : ""}Find this
+              word’s picture
+            </Copy>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Heading style={{ fontSize: 32, flex: 1 }}>{target.term}</Heading>
+              {!gentle && (
+                <Button
+                  quiet
+                  compact
+                  icon={peek ? "eye-off" : "eye"}
+                  label={peek ? "Hide the English help" : "Peek at the English help"}
+                  onPress={() => {
+                    setPeek(!peek);
+                    if (!peek) sound(wordAudioKey(target.id));
+                  }}
+                >
+                  {peek ? "Hide" : "Peek"}
+                </Button>
+              )}
+            </View>
+            {(gentle || peek) && (
+              <Copy style={{ fontSize: 14, color: C.muted }}>English: {first(target.english).toLowerCase()}</Copy>
+            )}
+          </>
+        ) : (
+          <>
+            <Heading style={{ fontSize: 22 }}>Welcome to our picnic!</Heading>
+            <Copy style={{ color: C.ink }}>Tap a picture to see its word.</Copy>
+          </>
+        )}
       </View>
+      <View
+        style={{
+          borderRadius: 20,
+          overflow: "hidden",
+          borderWidth: 1,
+          borderColor: "#DCC895",
+          paddingHorizontal: pad,
+          paddingTop: tableTop,
+          paddingBottom: 12,
+        }}
+      >
+        <Picnic tableTop={tableTop} rowHeight={rowHeight} rows={rows} />
+        <View style={{ flexDirection: "row", flexWrap: "wrap", columnGap: gap }}>
+          {placed.map((id) => {
+            const word = chamoruWord(id)!,
+              found = spy && s.items.indexOf(id) < p.cursor,
+              visited = !spy && p.visited.has(id),
+              wrong = spy && missed && shown?.id === id;
+            const tile = (
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel={
+                  spy
+                    ? `Picture ${placed.indexOf(id) + 1}${found ? ", found" : ""}`
+                    : `${first(word.english)}${visited ? ", seen" : ""}`
+                }
+                accessibilityHint={spy ? undefined : "Shows its word"}
+                onPress={() => select(id)}
+                amount={0.94}
+                style={{
+                  width: slot,
+                  height: rowHeight,
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  paddingBottom: 4,
+                  borderRadius: 14,
+                  borderWidth: 3,
+                  borderColor: found ? "#4F8A66" : wrong ? C.gold : "transparent",
+                  backgroundColor: found ? "#E3EFE3AA" : "transparent",
+                }}
+              >
+                <WordPicture word={word} size={pictureSize} caption={false} />
+                {!spy && (
+                  <Copy style={{ fontSize: 12, lineHeight: 14, textAlign: "center", color: C.ink, fontWeight: "700" }}>
+                    {first(word.english)}
+                  </Copy>
+                )}
+                {(found || visited) && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 2,
+                      right: 2,
+                      width: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      backgroundColor: "#4F8A66",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Svg width={12} height={12} viewBox="0 0 12 12">
+                      <Path d="M2 6l3 3 5-6" stroke="#FFF" strokeWidth={2} fill="none" strokeLinecap="round" />
+                    </Svg>
+                  </View>
+                )}
+              </PressableScale>
+            );
+            return (
+              <View key={id}>
+                {id === coachId && !p.done ? (
+                  <CoachSpot active={coach.active} handAt="bottom-right">
+                    {tile}
+                  </CoachSpot>
+                ) : (
+                  tile
+                )}
+              </View>
+            );
+          })}
+        </View>
+      </View>
+      {shown && !p.done && (!spy || missed) && (
+        <View
+          style={{
+            backgroundColor: C.paper,
+            borderRadius: 14,
+            padding: 10,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+          }}
+          accessibilityLiveRegion="polite"
+        >
+          <WordPicture word={shown} size={54} caption={false} />
+          <View style={{ flex: 1 }}>
+            <Heading style={{ fontSize: 22 }}>{shown.term}</Heading>
+            {spy ? (
+              <Copy style={{ fontSize: 14, color: C.ink }}>That picture’s word. Try again!</Copy>
+            ) : (
+              <Copy style={{ fontSize: 14, color: C.ink }}>{shown.english}</Copy>
+            )}
+          </View>
+        </View>
+      )}
+      <View style={[styles.row, { flexWrap: "wrap" }]}>
+        <Button quiet compact icon="sound-on" disabled={!soundOn} onPress={() => sound(promptKey)}>
+          Hear the directions
+        </Button>
+      </View>
+      {options.mode === "versus" && (
+        <Copy style={{ fontSize: 13, color: C.ink }}>
+          {session.names?.[0]}: {p.scores[0]} · {session.names?.[1]}: {p.scores[1]} first-try finds. Pass after each
+          word.
+        </Copy>
+      )}
+      <Copy style={{ fontSize: 11, lineHeight: 15 }}>
+        CHamoru words are text only. English directions can be heard.
+      </Copy>
     </View>
-    {shown && (!spy || ((selected && selected !== target?.id) || p.missed)) && <View style={{ backgroundColor: C.paper, borderRadius: 14, padding: 10, flexDirection: "row", alignItems: "center", gap: 10 }} accessibilityLiveRegion="polite">
-      <WordPicture word={shown} size={54} /><View style={{ flex: 1 }}><Heading style={{ fontSize: 20 }}>{shown.term}</Heading><Copy style={{ fontSize: 13 }}>{shown.english}</Copy>{spy && !p.done && <Copy style={{ fontSize: 13 }}>That is {shown.english.split(" / ")[0].toLowerCase()}. Compare its word with the card above and try again.</Copy>}</View>
-    </View>}
-    <View style={[styles.row, { flexWrap: "wrap" }]}><Button quiet compact icon="sound-on" disabled={!soundOn} onPress={() => sound(promptKey)}>Hear the directions</Button></View>
-    <Copy style={{ fontSize: 11, lineHeight: 15 }}>CHamoru words are text only. English directions can be heard.</Copy>
-    {options.mode === "versus" && <Copy style={{ fontSize: 13 }}>{session.names?.[0]}: {p.scores[0]} finds · {session.names?.[1]}: {p.scores[1]} finds. Pass after each word.</Copy>}
-  </View>;
+  );
 }
 export function Art({ size }: { size: number }) {
-  return <Svg width={size} height={size} viewBox="0 0 100 100" accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Circle cx={50} cy={50} r={44} fill="#F6DBA7" /><Path d="M10 25q40 17 80 0" fill="none" stroke="#477D72" strokeWidth={2} /><Path d="M23 30h15l-7 14zM48 33h15l-7 14zM72 30h15l-7 14z" fill="#C56D50" /><Rect x={20} y={62} width={60} height={10} rx={3} fill="#AF794D" /><Path d="M26 72v15M74 72v15" stroke="#AF794D" strokeWidth={5} /><EllipseMango /><Path d="M57 50q12-22 23 0-11 18-23 0" fill="#72A5B6" /><Circle cx={62} cy={48} r={1.5} fill="#244F48" /></Svg>;
+  return (
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      <Circle cx={50} cy={50} r={44} fill="#F6DBA7" />
+      <Path d="M10 25q40 17 80 0" fill="none" stroke="#477D72" strokeWidth={2} />
+      <Path d="M23 30h15l-7 14zM48 33h15l-7 14zM72 30h15l-7 14z" fill="#C56D50" />
+      <Rect x={20} y={62} width={60} height={10} rx={3} fill="#AF794D" />
+      <Path d="M26 72v15M74 72v15" stroke="#AF794D" strokeWidth={5} />
+      <Path d="M39 43q16-5 11 10T34 62q-13-6 5-19" fill="#E1B251" />
+      <Path d="M42 43q1-10 12-8-2 9-12 8" fill="#67947B" />
+      <Path d="M57 50q12-22 23 0-11 18-23 0" fill="#72A5B6" />
+      <Circle cx={62} cy={48} r={1.5} fill="#244F48" />
+    </Svg>
+  );
 }
-function EllipseMango() { return <><Path d="M39 43q16-5 11 10T34 62q-13-6 5-19" fill="#E1B251" /><Path d="M42 43q1-10 12-8-2 9-12 8" fill="#67947B" /></>; }
