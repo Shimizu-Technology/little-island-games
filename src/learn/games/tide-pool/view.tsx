@@ -581,16 +581,18 @@ export function Board({ session, update, practice, sound, width, active, coach, 
   const right = m?.kind === "guess" && s.guesses.length > 0 && s.guesses.every((g) => g === m.right);
   // Speak the question when a mission opens. On a brand-new round, wait for the frame's spoken intro.
   const first = useRef(session.revision === 0);
+  const questionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => {
     // Web reloads have no user activation yet; the speaker button stays available.
     const canAutoPlay =
       Platform.OS !== "web" || (typeof navigator !== "undefined" && navigator.userActivation?.hasBeenActive);
-    if (!active || !m || !canAutoPlay) return;
+    if (!active || !m || !canAutoPlay || s.guesses.length > 0 || s.watched) return;
     const wait = first.current ? 3300 : 250;
     first.current = false;
     const timer = setTimeout(() => sound(`tide-pool-q-${m.id}`), wait);
+    questionTimer.current = timer;
     return () => clearTimeout(timer);
-  }, [active, m, sound]);
+  }, [active, m, sound, s.guesses.length, s.watched]);
   useEffect(() => {
     if (!s.watched) p.setValue(0);
     else if (!playing) p.setValue(1);
@@ -604,6 +606,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     );
   const pick = (choice: number) => {
     if (!active || s.guesses.length >= need) return;
+    clearTimeout(questionTimer.current);
     const ok = choice === m.right;
     practice("sci.predict", ok);
     practice(m.skill, ok);
@@ -613,6 +616,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
   };
   const doChange = () => {
     if (!active) return;
+    clearTimeout(questionTimer.current);
     practice("sci.cause-effect", right);
     update(makeChange(s, o));
     if (right) cheer("right", `tide-pool-right-${m.id}`);
@@ -626,6 +630,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
   };
   const flip = (control: Control) => {
     if (!active) return;
+    clearTimeout(questionTimer.current);
     const n = toggle(s, control);
     const score = (x: typeof s.pool) => Number(x.sun) + Number(x.cool) + Number(x.high);
     const better = score(n.pool) > score(s.pool);

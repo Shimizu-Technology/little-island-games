@@ -224,7 +224,7 @@ export function Board({
                 accessibilityRole="button"
                 accessibilityLabel={
                   spy
-                    ? `Picture ${placed.indexOf(id) + 1}${found ? ", found" : ""}`
+                    ? `Picture ${placed.indexOf(id) + 1}: ${first(word.english)}${found ? ", found" : ""}`
                     : `${first(word.english)}${visited ? ", seen" : ""}`
                 }
                 accessibilityHint={spy ? undefined : "Shows its word"}
