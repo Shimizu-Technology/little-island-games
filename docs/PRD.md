@@ -1,6 +1,6 @@
 # Little Island product brief
 
-Updated 2026-10-25. Learning games (reading, numbers, science, thinking, CHamoru words) with islands on Home are recorded in [LEARNING_WAVE1.md](LEARNING_WAVE1.md) for 1.4.0 (10). The shipped quality-release evidence is in [QUALITY_QA.md](QUALITY_QA.md). Family-ease improvements ([FAMILY_EASE.md](FAMILY_EASE.md)) shipped in TestFlight 1.2.0 (8). The 24 October design and family-play polish (family matches with names and scores, reachable controls, motion/haptics, Hangman word ranges) is recorded in [AUDIT_POLISH.md](AUDIT_POLISH.md) and shipped to internal TestFlight as 1.3.0 (9).
+Updated 2026-10-25. The learning games were reworked to be easy to pick up without reading instructions ([LEARNING_INTUITIVE.md](LEARNING_INTUITIVE.md), 1.5.0 (11)). Learning games (reading, numbers, science, thinking, CHamoru words) with islands on Home are recorded in [LEARNING_WAVE1.md](LEARNING_WAVE1.md) for 1.4.0 (10). The shipped quality-release evidence is in [QUALITY_QA.md](QUALITY_QA.md). Family-ease improvements ([FAMILY_EASE.md](FAMILY_EASE.md)) shipped in TestFlight 1.2.0 (8). The 24 October design and family-play polish (family matches with names and scores, reachable controls, motion/haptics, Hangman word ranges) is recorded in [AUDIT_POLISH.md](AUDIT_POLISH.md) and shipped to internal TestFlight as 1.3.0 (9).
 
 ## People and purpose
 
