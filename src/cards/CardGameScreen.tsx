@@ -1,3 +1,4 @@
+import type { RoundPractice } from "../practice/useRoundPractice";
 import { Text } from "../components/Text";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, Platform, ScrollView, StyleSheet, View } from "react-native";
@@ -94,6 +95,8 @@ function CardFace({
   );
 }
 export type CardGameScreenProps = {
+  roundPractice?: RoundPractice;
+  beforeNewRound?: (run: () => void) => void;
   state: CardSession;
   onChange: (next: CardSession, previous: CardSession) => void;
   width: number;
@@ -106,7 +109,7 @@ export type CardGameScreenProps = {
   onToggleSound?: () => void;
 };
 export function CardGameScreen(props: CardGameScreenProps) {
-  return <CardGameRound key={`${props.state.id}:${props.state.turn}:${props.active}`} {...props} />;
+  return <CardGameRound key={`${props.state.id}:${props.state.turn}:${props.active || props.roundPractice?.pending}`} {...props} />;
 }
 function CardGameRound({
   state,
@@ -117,9 +120,10 @@ function CardGameRound({
   onFeedback,
   onSpeakInstruction,
   onStopInstruction,
-  onBack, onToggleSound,
+  onBack, onToggleSound, beforeNewRound, roundPractice,
 }: CardGameScreenProps) {
   const store = useStore();
+  const newRound = beforeNewRound ?? ((run: () => void) => run());
   const match = cardMatch(state);
   const [names, setNames] = useState<[string, string]>(match.names);
   const [starter, setStarter] = useState<Seat>(cardStarter(state));
@@ -266,7 +270,7 @@ function CardGameRound({
         </Copy>
       </View>
       {result && <View style={{ gap: 10 }}>
-        <Button onPress={() => { const previous = latest.current; if (previous.id === state.id && previous.result) commit(rematchCards(previous), previous); }}>Play again</Button>
+        <Button onPress={() => { const previous = latest.current; if (previous.id === state.id && previous.result) newRound(() => commit(rematchCards(previous), previous)); }}>Play again</Button>
         {state.game === "crazy-eights" && <>
           <Button quiet onPress={() => setScoring(!scoring)}>{scoring ? "Hide scoring" : "Show scoring"}</Button>
           {scoring && <View style={s.notice}>
@@ -523,16 +527,17 @@ function CardGameRound({
           progress saves on this device.
         </Copy>
       </Sheet>
-      <Sheet visible={setup} title="Round options" onClose={() => setSetup(false)} footer={
-        <Button onPress={() => {
+      <Sheet visible={setup} title={roundPractice?.pending ? "A little practice, then play" : "Round options"} onClose={() => roundPractice?.pending ? roundPractice.cancel() : setSetup(false)} footer={roundPractice?.pending ? undefined :
+        <Button onPress={() => newRound(() => {
           const previous = latest.current;
           const freshMatch = newMatch(names.map((n, i) => n.trim() || (mode === "solo" ? ["You", "Computer"][i] : `Player ${i + 1}`)), alternate);
           store.rememberPlayers(freshMatch.names.filter((n) => n !== "Computer" && n !== "You"));
           commit(createCardSession(state.game, { ...state.options, mode, computerFirst: starter === 1 }, undefined, undefined,
             { round, pace, match: freshMatch, starter }), previous);
           setSetup(false);
-        }}>Deal {round === "quick" ? "five" : "seven"} cards each · new match</Button>
+        })}>Deal {round === "quick" ? "five" : "seven"} cards each · new match</Button>
       }>
+        {roundPractice?.pending ? roundPractice.content : <>
         <Heading style={{ fontSize: 21 }}>Who is playing?</Heading>
         <View style={s.wrap}>
           <Button quiet selected={mode === "solo"} onPress={() => { setMode("solo"); setNames([names[0] === "Player 1" ? "You" : names[0], names[1] === "Player 2" ? "Computer" : names[1]]); }}>
@@ -578,7 +583,9 @@ function CardGameRound({
         >
           Keep hand · apply pace
         </Button>
+        </>}
       </Sheet>
+      {!setup && roundPractice?.panel}
     </View>
   );
 }

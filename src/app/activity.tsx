@@ -11,9 +11,10 @@ import { RaceScreen } from "../racer/RaceScreen";
 import { MysteryScreen } from "../mystery/MysteryScreen";
 import { PartyScreen } from "../party/PartyScreen";
 import { defaultOptions } from "../games/types";
-import { Copy, GameHeader, styles } from "../components/ui";
+import { Button, Copy, GameHeader, styles } from "../components/ui";
 import { Recovery } from "../components/Recovery";
 import { useSoundControls } from "../components/Audio";
+import { useRoundPractice } from "../practice/useRoundPractice";
 export default function Activity() {
   const { game } = useLocalSearchParams<{ game?: string }>(),
     store = useStore();
@@ -43,11 +44,17 @@ function ActivityGame({ id }: { id: ActivityId }) {
   const [freshCard] = useState(() =>
     id === "go-fish" || id === "crazy-eights" ? createCardSession(id, defaultOptions, undefined, undefined, { round: "quick", pace: "step" }) : null
   );
-  const { play: sound, stop: stopSound } = useSoundControls(store.save.settings.sound && focused);
+  const practice = useRoundPractice(id, saved);
+  const requestPractice = practice.request;
+  const [initialAllowed, setInitialAllowed] = useState(() => !!saved || !store.save.settings.practice?.enabled);
+  useEffect(() => {
+    if (freshCard && !saved && !initialAllowed) requestPractice(() => setInitialAllowed(true), () => router.canGoBack() ? router.back() : router.replace("/"));
+  }, [freshCard, saved, initialAllowed, requestPractice, store.save.settings.practice?.enabled]);
+  const { play: sound, stop: stopSound } = useSoundControls(store.save.settings.sound && focused && !practice.pending);
   const activityUpdate = store.activityUpdate;
   useEffect(() => {
-    if (freshCard && !saved && activityUpdate(id, freshCard, { id: null, epoch })) expectedId.current = freshCard.id;
-  }, [activityUpdate, id, freshCard, saved, epoch]);
+    if (freshCard && initialAllowed && !saved && activityUpdate(id, freshCard, { id: null, epoch })) expectedId.current = freshCard.id;
+  }, [activityUpdate, id, freshCard, saved, epoch, initialAllowed]);
   const save = (
     next: Parameters<typeof store.activityUpdate>[1],
     previous?: { id: string; revision: number } | null
@@ -65,6 +72,13 @@ function ActivityGame({ id }: { id: ActivityId }) {
   const cardChange = (next: CardSession, previous: CardSession) =>
     save(next, expectedId.current === null ? undefined : previous);
   const mysterySound = { on: store.save.settings.sound, toggle: () => store.settings({ sound: !store.save.settings.sound }) };
+  if (freshCard && !saved && !initialAllowed) return <SafeAreaView style={styles.page}>
+    <ScrollView contentContainerStyle={styles.content}>
+      <GameHeader title={id === "go-fish" ? "Go Fish" : "Crazy Eights"} onBack={() => router.canGoBack() ? router.back() : router.replace("/")} />
+      <Copy>A little practice, then your new game. Your other games stay saved.</Copy>
+      <Button onPress={() => practice.request(() => setInitialAllowed(true), () => router.canGoBack() ? router.back() : router.replace("/"))}>Start practice</Button>
+    </ScrollView>{practice.panel}
+  </SafeAreaView>;
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView
@@ -75,6 +89,8 @@ function ActivityGame({ id }: { id: ActivityId }) {
         <SaveStatus />
         {id === "island-mystery" ? (
           <MysteryScreen
+            beforeNewRound={practice.request}
+            roundPractice={practice}
             menuHeader={
               <GameHeader
                 title="Picnic Mystery"
@@ -95,20 +111,24 @@ function ActivityGame({ id }: { id: ActivityId }) {
           />
         ) : id === "racer" ? (
           <RaceScreen
+            beforeNewRound={practice.request}
+            roundPractice={practice}
             session={saved?.game === "racer" ? saved : null}
             records={store.save.raceRecords}
             onSave={(next) => save(next)}
             onExit={() => (router.canGoBack() ? router.back() : router.replace("/"))}
             sound={store.save.settings.sound}
             onToggleSound={() => store.settings({ sound: !store.save.settings.sound })}
-            active={focused}
+            active={focused && !practice.pending}
             onFeedback={(event) => sound(event === "finish" ? "win" : event === "checkpoint" ? "match" : "tap")}
           />
         ) : id === "word-imposter" ? (
           <PartyScreen
+            beforeNewRound={practice.request}
+            roundPractice={practice}
             session={saved?.game === "word-imposter" ? saved : null}
             onChange={(next, previous) => save(next, previous)}
-            active={focused}
+            active={focused && !practice.pending}
             width={Math.min(width - 40, 1000)}
             sound={store.save.settings.sound}
             onSpeakInstructions={() => sound("instructions-word-imposter")}
@@ -118,10 +138,12 @@ function ActivityGame({ id }: { id: ActivityId }) {
         ) : cards ? (
           <>
             <CardGameScreen
+            beforeNewRound={practice.request}
+            roundPractice={practice}
               state={cards}
               onChange={cardChange}
               width={Math.min(width - 40, 1000)}
-              active={focused}
+              active={focused && !practice.pending}
               sound={store.save.settings.sound}
               onFeedback={() => sound("tap")}
               onSpeakInstruction={(key) => sound(key)}

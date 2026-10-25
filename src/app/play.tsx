@@ -32,6 +32,7 @@ import {
 import { useStore } from "../state/Store";
 import { Button, C, Chip, Copy, Heading, GameHeader, Sheet, styles, ToggleRow } from "../components/ui";
 import { useSounds } from "../components/Audio";
+import { useRoundPractice } from "../practice/useRoundPractice";
 import { Recovery } from "../components/Recovery";
 import {
   CheckersBoard,
@@ -77,7 +78,8 @@ function Game({ id }: { id: GameId }) {
     [secret, setSecret] = useState(""),
     [error, setError] = useState(""),
     [active, setActive] = useState(AppState.currentState === "active");
-  const sound = useSounds(store.save.settings.sound && focused),
+  const practice = useRoundPractice(id, s);
+  const sound = useSounds(store.save.settings.sound && focused && !practice.pending),
     finished = s ? isFinished(s) : false,
     wasFinished = useRef(finished);
   const lostWord = s?.game === "word-rescue" && wordStatus(s) === "lost";
@@ -93,6 +95,7 @@ function Game({ id }: { id: GameId }) {
   const commit = useCallback((next: GameState) => update(id, next, s), [id, s, update]);
   function start() {
     let next: GameState;
+    let remembered: string[] | null = null;
     if (id === "word-rescue") {
       if (options.mode === "together") {
         const custom = customWord(options, secret, clue);
@@ -107,7 +110,7 @@ function Game({ id }: { id: GameId }) {
     if (next.game === "tic-tac-toe" || next.game === "memory" || next.game === "checkers") {
       const family = options.mode === "together";
       const match = newMatch(family ? names : ["You", "Island friend"], alternate);
-      if (family) store.rememberPlayers(match.names);
+      if (family) remembered = match.names;
       next = { ...next, match, starter: family ? starter : 0 };
       if (next.game === "tic-tac-toe") {
         const assignedX = family ? xSeat : human === "X" ? 0 : 1;
@@ -122,12 +125,15 @@ function Game({ id }: { id: GameId }) {
       }
       if (next.game === "memory") next = { ...next, player: next.starter ?? 0 };
     }
-    store.update(id, next);
-    setSetup(false);
-    setSecret("");
-    setClue("");
-    setShowSecret(false);
-    setError("");
+    practice.request(() => {
+      if (remembered) store.rememberPlayers(remembered);
+      store.update(id, next, s);
+      setSetup(false);
+      setSecret("");
+      setClue("");
+      setShowSecret(false);
+      setError("");
+    });
   }
   function newRound() {
     if (s?.game === "memory") setMemoryPack(s.pack ?? "pictures");
@@ -159,7 +165,7 @@ function Game({ id }: { id: GameId }) {
             : s.game === "checkers"
               ? replayCheckers(s)
               : createGame(id, s.options);
-    store.update(id, next, s);
+    practice.request(() => store.update(id, next, s));
   }
   const boardProps = {
     // 32 page padding + 24 for the tinted board panel's inner padding.
@@ -169,7 +175,7 @@ function Game({ id }: { id: GameId }) {
     ),
     sound,
     help: store.save.settings.help,
-    active: active && focused && !setup && !help,
+    active: active && focused && !setup && !help && !practice.pending,
   };
   if (!store.ready)
     return (
@@ -290,10 +296,11 @@ function Game({ id }: { id: GameId }) {
       </ScrollView>
       <Sheet
         visible={setup || !s}
-        onClose={() => (s ? setSetup(false) : router.canGoBack() ? router.back() : router.replace("/"))}
-        title={s ? "A fresh little round" : `Let’s play ${g.name}`}
-        footer={<Button onPress={start}>{s ? "Start a new round" : "Start playing"}</Button>}
+        onClose={() => practice.pending ? practice.cancel() : (s ? setSetup(false) : router.canGoBack() ? router.back() : router.replace("/"))}
+        title={practice.pending ? "A little practice, then play" : s ? "A fresh little round" : `Let’s play ${g.name}`}
+        footer={practice.pending ? undefined : <Button onPress={start}>{s ? "Start a new round" : "Start playing"}</Button>}
       >
+        {practice.pending ? practice.content : <>
         <Copy>
           {s && !finished
             ? "Starting a new round replaces this game’s current round. Your other games stay saved."
@@ -533,6 +540,7 @@ function Game({ id }: { id: GameId }) {
           </Copy>
         )}
         {!!error && <Copy style={{ color: "#9C432D" }}>{error}</Copy>}
+        </>}
       </Sheet>
       <Sheet visible={help} onClose={() => setHelp(false)} title={`How to play ${g.name}`}>
         <Copy>{g.help}</Copy>
@@ -568,6 +576,7 @@ function Game({ id }: { id: GameId }) {
           </Copy>
         )}
       </Sheet>
+      {!setup && !!s && practice.panel}
     </SafeAreaView>
   );
 }

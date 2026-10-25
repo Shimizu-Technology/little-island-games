@@ -23,7 +23,7 @@ Executor: agent for pure-engine, browser and available native UI checks; Leon/op
 
 | ID | Required scenario and expected observable/saved outcome | State |
 | --- | --- | --- |
-| M01 | All arithmetic types/ranges, unique choices and hints share rules; forged/negative/oversized saves rejected; old saves load unchanged | Not run |
+| M01 | All arithmetic types/ranges, unique choices and hints share rules; forged/negative/oversized saves rejected; old saves load unchanged | Passed: pure engine/save tests and independent exhaustive checks below |
 | M02 | Each new activity: first action obvious, add/subtract within ten/twenty, wrong answer, Show me, finish, replay; exact saved round after reload | Not run |
 | M03 | Missing-number questions use valid arithmetic and appropriate visual help | Not run |
 | M04 | Grown-up settings default off; math/reading/mix/range/operation choices persist; children cannot casually bypass | Not run |
@@ -33,7 +33,17 @@ Executor: agent for pure-engine, browser and available native UI checks; Leon/op
 | M08 | Parent notes distinguish independent/helped responses without promoting assisted work as mastery; no repeated completion recording | Not run |
 | M09 | Phone375×667 and tablet portrait/landscape: reachable controls, no overflow, keyboard/focus, reduced motion and sound-off during feedback | Not run |
 | M10 | Full check/Doctor, advisory design scan, completed independent final-code review and no unresolved material findings | Not run |
-| M11 | Native Release first actions/help/new-round guard and saved recovery on available iPhone/iPad host; record blocked dimensions honestly | Not run |
+| M11 | Native Release first actions/help/new-round guard and saved recovery on available iPhone/iPad host; record blocked dimensions honestly | Blocked: simulator runner/host, before new math binary interaction |
 | M12 | Next unused private build: exact source/IPA/signing/audio, Apple processing and existing Leon group availability verified; owned resources cleaned | Not run |
 
 Public release remains separate. Prior simulator-host blockers remain recorded; recheck readiness instead of repeatedly retrying the same stalled host. TestFlight delivery is explicitly authorized for testing even if a host dimension remains blocked, with merge readiness evaluated separately.
+
+## Integration checks, 25 October
+
+Source under test: `82add98` plus the integration diff; final source SHA will be recorded after browser checks. Node22.22.3, lockfile install, typecheck and 518 tests passed. Doctor21/21 and both advisory design scans returned no findings. Final full gate remains pending the complete audio batch.
+
+Independent review round1 exercised 1,800 math rounds, 41,306 validated save transitions and 720 practice completions. It verified exactly-once delivery, invalidation after session/settings/epoch/navigation changes, all 800 arithmetic prompt meanings and all 832 map filenames. It found two launch blockers: the Race course-picker branch omitted the practice panel, and Mystery treated practice as a route exit and closed the nearby room. Both are fixed; round2 and actual browser retests are pending. Practice replaces content within existing setup sheets, retaining forms on cancel. The card round stays mounted during practice so setup choices survive.
+
+Native preflight: the owned iPhone18.5 simulator opened, but agent-device snapshot failed with `Daemon request timed out`, then debug retry failed with `Runner did not accept connection (xcodebuild exited early)` / failure to obtain the simulator daemon socket. No new math interaction passed. Closed the Device panel and shut down only UDID344FDF3D-291B-4861-8006-3F48AE7ED0C6. Android SDK command-line tools are unavailable. Native phone/tablet, hardware audio/VoiceOver and Stassie's independent usability remain unverified. This is a merge acceptance gap; Leon authorized private beta testing despite the host limitation.
+
+Speech generation stalled in four owned `say` workers. Terminated those exact children and their generator, without restarting shared speech services. A fresh synthesis probe passed. The generator now bounds/retries stalled attempts and publishes a clip only after encoding completes; generation resumed. Public speech distribution rights remain a separate gate.

@@ -12,6 +12,8 @@ import { practiceSummary } from "../learn/skills";
 import { engines, skillLabels } from "../learn/engines";
 import { islandNames } from "../learn/home";
 import type { Island } from "../learn/types";
+import { PracticeOptions } from "./PracticeOptions";
+import { defaultPracticeSettings } from "../practice/types";
 export function Settings({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const store = useStore(),
     [unlocked, setUnlocked] = useState(false),
@@ -113,6 +115,15 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
         </>
       ) : (
         <>
+          <PracticeOptions value={store.save.settings.practice ?? defaultPracticeSettings}
+            onChange={practice => store.settings({ practice })} disabled={busy} />
+          {!!Object.keys(store.save.practiceNotes ?? {}).length && <View style={{ gap: 6 }}>
+            <Heading style={{ fontSize: 19 }}>On her own and with help</Heading>
+            <Copy>These are local practice notes, not grades. A guided answer counts toward finishing practice.</Copy>
+            {Object.entries(store.save.practiceNotes ?? {}).map(([skill, notes]) => <Copy key={skill}>
+              {skillLabels()[skill] ?? (skill.startsWith("read.") ? "Reading pictures" : "Number practice")}: {notes.independent} on her own · {notes.helped} with help
+            </Copy>)}
+          </View>}
           <Heading style={{ fontSize: 19 }}>What she’s been practicing</Heading>
           {!practice.length && <Copy>No recent practice yet. As she explores the learning islands, the words and ideas she tries will appear here.</Copy>}
           {(["reading", "numbers", "science", "thinking"] as Island[]).map(island => {

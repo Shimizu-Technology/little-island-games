@@ -13,7 +13,8 @@ import type { LearnId, LearnSession, SkillProgress } from "../learn/types";
 import { learnIds } from "../learn/types";
 import { validLearn } from "../learn/session";
 import { validSkills } from "../learn/skills";
-export type Settings = { sound: boolean; help: boolean };
+import { PracticeNotes, PracticeSettings, validPracticeNotes, validPracticeSettings } from "../practice/types";
+export type Settings = { sound: boolean; help: boolean; practice?: PracticeSettings };
 export type Save = {
   version: 1;
   settings: Settings;
@@ -34,6 +35,8 @@ export type Save = {
   skills?: SkillProgress;
   /** Learning games whose first-move "show me" hand has been seen. */
   coached?: LearnId[];
+  /** Local helped/independent practice counts, visible only in grown-up settings. */
+  practiceNotes?: PracticeNotes;
 };
 export const emptySave = (): Save => ({
   version: 1,
@@ -339,6 +342,8 @@ export function parseSave(raw: string): Save {
     !obj(v.settings) ||
     typeof v.settings.sound !== "boolean" ||
     typeof v.settings.help !== "boolean" ||
+    (v.settings.practice !== undefined && !validPracticeSettings(v.settings.practice)) ||
+    (v.practiceNotes !== undefined && !validPracticeNotes(v.practiceNotes)) ||
     !obj(v.sessions) ||
     Object.keys(v.sessions).some((k) => !gameIds.includes(k as GameId)) ||
     !Object.entries(v.sessions).every(([k, s]) => validSession(s) && s.game === k) ||

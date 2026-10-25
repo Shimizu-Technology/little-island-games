@@ -7,6 +7,17 @@ export type PracticeResult = { skill: string; helped: boolean };
 export type PracticeSummary = { results: PracticeResult[]; bypassed: boolean };
 export type PracticeNotes = Record<string, { independent: number; helped: number }>;
 
+export function validPracticeSummary(v: unknown): v is PracticeSummary {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return false;
+  const s = v as Record<string, unknown>;
+  return Object.keys(s).length === 2 && typeof s.bypassed === "boolean" && Array.isArray(s.results) &&
+    s.results.length <= 3 && (s.bypassed || s.results.length === 3) && s.results.every(raw => {
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
+      const r = raw as Record<string, unknown>;
+      return Object.keys(r).length === 2 && typeof r.helped === "boolean" && typeof r.skill === "string" && /^(num|read)\.[a-z0-9-]{1,40}$/.test(r.skill);
+    });
+}
+
 export function validPracticeSettings(v: unknown): v is PracticeSettings {
   if (!v || typeof v !== "object" || Array.isArray(v)) return false;
   const s = v as Record<string, unknown>;

@@ -1,3 +1,4 @@
+import type { RoundPractice } from "../practice/useRoundPractice";
 import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
@@ -22,6 +23,8 @@ import {
 import { RaceScene, RaceSceneHandle } from "./RaceScene";
 export type RaceFeedback = "jump" | "land" | "recover" | "checkpoint" | "finish";
 export type RaceScreenProps = {
+  roundPractice?: RoundPractice;
+  beforeNewRound?: (run: () => void) => void;
   onFeedback?: (event: RaceFeedback) => void;
   session?: RaceSession | null;
   records?: RaceRecords;
@@ -33,7 +36,7 @@ export type RaceScreenProps = {
 };
 export { formatRaceTime as raceTime } from "./engine";
 /** Parent persists onSave transactionally. Remount after external backup replacement. */
-export function RaceScreen({ session, records = {}, onSave, onExit, active = true, onFeedback, sound, onToggleSound }: RaceScreenProps) {
+export function RaceScreen({ session, records = {}, onSave, onExit, active = true, onFeedback, sound, onToggleSound, beforeNewRound, roundPractice }: RaceScreenProps) {
   const viewport = useWindowDimensions();
   const shortLandscape = viewport.width > viewport.height && viewport.height < 520;
   const landscape = viewport.width > viewport.height;
@@ -233,6 +236,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
   }, [active, foreground, choosing, help, snapshot.status, finishing, clear, pause, persist]);
   const begin = useCallback(
     (course: CourseId, selectedMode = mode) => {
+      const run = () => {
       clear();
       const next = createRaceSession(
         course,
@@ -245,8 +249,10 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
       setChoosing(false);
       setHasRound(true);
       setMessage("");
+      };
+      if (beforeNewRound) beforeNewRound(run); else run();
     },
-    [clear, persist, mode]
+    [clear, persist, mode, beforeNewRound]
   );
   const resume = () => {
     clear();
@@ -272,6 +278,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
   if (choosing)
     return (
       <View style={s.root}>
+        {roundPractice?.panel}
         {onExit && <GameHeader title="Island Dash" onBack={onExit} sound={onToggleSound ? { on: !!sound, toggle: onToggleSound } : undefined} />}
         <Heading style={{ fontSize: 24 }}>Ready, set, island!</Heading>
         <Copy>Leap over coral, race rolling coconuts and find your next checkpoint. Everything plays offline.</Copy>
@@ -330,6 +337,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
     <View style={s.root}>
       {onExit && <GameHeader title="Island Dash" onBack={onExit} sound={onToggleSound ? { on: !!sound, toggle: onToggleSound } : undefined} onHelp={() => { pause(); setHelp(true); }} />}
       <View style={s.row}><Heading style={{ flex: 1, fontSize: 23 }}>{course.name}</Heading>{!onExit && <Button compact quiet onPress={() => { pause(); setHelp(true); }}>How to race</Button>}</View>
+      {roundPractice?.panel}
       <Sheet visible={help} title="How to race" onClose={() => setHelp(false)} footer={<Button onPress={() => setHelp(false)}>Back to race</Button>}>
           <Copy>{course.lesson}</Copy>
           <Copy>

@@ -194,6 +194,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
               session={saved}
               update={update}
               practice={practice}
+              notePractice={store.notePractice}
               skills={store.save.skills ?? {}}
               sound={boardSound}
               stopSound={stopSound}

@@ -24,7 +24,7 @@ describe("Home and island shelf", () => {
     let save = emptySave();
     for (const id of [...gameIds, ...activityIds, ...learnIds]) save = toggleShelfFavorite(save, id);
     save = parseSave(JSON.stringify(save));
-    expect(save.favoriteGames).toHaveLength(20);
+    expect(save.favoriteGames).toHaveLength(gameIds.length + activityIds.length + learnIds.length);
     expect(toggleShelfFavorite(save, "hafa-adai").favoriteGames).not.toContain("hafa-adai");
     expect(toggleShelfFavorite(save, "unknown" as never)).toBe(save);
     expect(() => parseSave(JSON.stringify({ ...save, favoriteGames: ["hafa-adai", "hafa-adai"] }))).toThrow();

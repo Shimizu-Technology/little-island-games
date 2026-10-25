@@ -14,6 +14,7 @@ import { rememberNames } from "../games/match";
 import type { LearnId, LearnSession } from "../learn/types";
 import { toggleShelfFavorite } from "../learn/home";
 import { LearnExpected, applyLearnSave, applyPractice } from "./learnAction";
+import { recordPracticeNote } from "../practice/notes";
 type Store = {
   epoch: number;
   activityUpdate: (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => boolean;
@@ -25,6 +26,7 @@ type Store = {
   learnUpdate: (game: LearnId, next: LearnSession, expected: LearnExpected) => boolean;
   /** Record one attempt at a learning skill. */
   practice: (skill: string, correct: boolean) => void;
+  notePractice: (skill: string, helped: boolean, expectedEpoch?: number) => void;
   /** Remember that a learning game's first-move hand was shown. */
   markCoached: (game: LearnId) => void;
   exploreUpdate: (next: ExploreProgress, expectedEpoch: number) => void;
@@ -189,6 +191,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     [commit]
   );
+  const notePractice = useCallback((skill: string, helped: boolean, expectedEpoch = epoch) => {
+    if (expectedEpoch !== generation.current) return;
+    const before = latest.current;
+    const practiceNotes = recordPracticeNote(before.practiceNotes, skill, helped);
+    if (practiceNotes !== before.practiceNotes) commit({ ...before, practiceNotes });
+  }, [commit, epoch]);
   const rememberPlayers = useCallback((names: string[]) => {
     const current = latest.current.players ?? [];
     const next = rememberNames(current, names);
@@ -236,6 +244,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         rememberPlayers,
         learnUpdate,
         practice,
+        notePractice,
         markCoached,
         exploreUpdate,
         ready,

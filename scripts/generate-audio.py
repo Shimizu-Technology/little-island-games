@@ -46,10 +46,19 @@ def speak(item):
     key,text=item
     target=OUT/f'{key}.m4a'
     if target.exists(): return
-    with tempfile.TemporaryDirectory() as temp:
-        aiff=Path(temp)/'speech.aiff'
-        subprocess.run(['say','-v','Samantha','-r','155','-o',str(aiff),text],check=True)
-        subprocess.run(['afconvert','-f','m4af','-d','aac','-b','48000',str(aiff),str(target)],check=True)
+    # A macOS speech worker can stall. Bound each attempt and publish only a
+    # completed clip so a retry never mistakes a partial file for usable audio.
+    for attempt in range(3):
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                aiff=Path(temp)/'speech.aiff'
+                encoded=Path(temp)/'speech.m4a'
+                subprocess.run(['say','-v','Samantha','-r','155','-o',str(aiff),text],check=True,timeout=30)
+                subprocess.run(['afconvert','-f','m4af','-d','aac','-b','48000',str(aiff),str(encoded)],check=True,timeout=30)
+                encoded.replace(target)
+            return
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError):
+            if attempt == 2: raise
 
 if args.only:
     if args.only not in speech: raise ValueError('Unknown speech clip')
