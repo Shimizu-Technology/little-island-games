@@ -92,9 +92,19 @@ export function LearnFrame({ id }: { id: LearnId }) {
     },
     [sound]
   );
+  // A newer sound, a new round, sound off, Help or leaving the screen drops a pending cheer line.
+  const boardSound = useCallback(
+    (key: string) => {
+      clearTimeout(cheerLine.current);
+      sound(key);
+    },
+    [sound]
+  );
+  const boardActive = appActive && focused && !setup && !help,
+    savedId = saved?.id;
+  useEffect(() => clearTimeout(cheerLine.current), [boardActive, soundOn, savedId]);
   // Say the game's goal once when a fresh round opens, so a non-reader knows what to do.
   const introduced = useRef<string | null>(null);
-  const boardActive = appActive && focused && !setup && !help;
   useEffect(() => {
     if (!saved || !engine.introAudio || !soundOn || !boardActive) return;
     if (saved.revision !== 0 || introduced.current === saved.id) return;
@@ -171,7 +181,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
               update={update}
               practice={practice}
               skills={store.save.skills ?? {}}
-              sound={sound}
+              sound={boardSound}
               stopSound={stopSound}
               soundOn={soundOn}
               width={boardWidth}
