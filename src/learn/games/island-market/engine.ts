@@ -11,8 +11,8 @@ import {
   validPieces,
   type Pieces,
 } from "../../kit/numbers";
-import { ORDERS, type MarketOrder } from "./orders";
-export { ORDERS } from "./orders";
+import { ORDERS, ROUND_PLAN, planStep, type MarketOrder } from "./orders";
+export { ORDERS, ROUND_PLAN } from "./orders";
 export type MarketState = {
   version: 1;
   starter: Seat;
@@ -24,9 +24,11 @@ export type MarketState = {
 };
 export const marketOrder = (s: MarketState): MarketOrder | undefined => ORDERS.find((o) => o.id === s.orders[s.index]);
 export const marketMax = (o: LearnOptions) => (o.pace === "easy" ? 20 : 100);
-export const shopkeeper = (s: MarketState): Seat => ((s.starter + s.index) % 2) as Seat;
-export const marketTurn = (s: MarketState): Seat | null =>
-  s.phase === "done" ? null : s.phase === "pack" ? ((1 - shopkeeper(s)) as Seat) : shopkeeper(s);
+/** Together: players take turns serving customers; whoever starts serves the first one. */
+export const server = (s: MarketState): Seat => ((s.starter + s.index) % 2) as Seat;
+export const marketTurn = (s: MarketState): Seat | null => (s.phase === "done" ? null : server(s));
+/** Rounds saved before the redesign may still wait at "order"; it now behaves exactly like "pack". */
+const packing = (s: MarketState) => s.phase === "pack" || s.phase === "order";
 export function chooseOrder(s: MarketState): MarketState {
   if (s.phase !== "order" || s.index + 1 >= s.orders.length) return s;
   const orders = [...s.orders];
@@ -41,14 +43,18 @@ export function packPiece(
   delta: 1 | -1
 ): MarketState {
   const order = marketOrder(s);
-  if (s.phase !== "pack" || !order || order.kind === "compare") return s;
-  const pieces = adjustPieces(s.pieces, part, delta, marketMax(o), order.kind === "change");
-  return pieces === s.pieces ? s : { ...s, pieces };
+  if (!packing(s) || !order || order.kind === "compare") return s;
+  let pieces = adjustPieces(s.pieces, part, delta, marketMax(o), order.kind === "change");
+  // Ten loose mangoes hop into a crate while she is still counting up to the order. Past the
+  // order they stay loose, so "too many" can always be fixed by taking one mango back.
+  if (pieces !== s.pieces && part === "ones" && delta > 0 && pieces.ones === 10 && pieceTotal(pieces) <= order.target)
+    pieces = { ...pieces, tens: pieces.tens + 1, ones: 0 };
+  return pieces === s.pieces ? s : { ...s, phase: "pack", pieces };
 }
 export function serve(s: MarketState, choice?: number): MarketState {
   const order = marketOrder(s);
   if (
-    s.phase !== "pack" ||
+    !packing(s) ||
     !order ||
     (order.kind === "compare"
       ? choice !== order.target
@@ -60,9 +66,11 @@ export function serve(s: MarketState, choice?: number): MarketState {
 export function nextCustomer(s: MarketState): MarketState {
   if (s.phase !== "served") return s;
   const index = s.index + 1;
-  return { ...s, index, phase: index === s.orders.length ? "done" : "order", pieces: emptyPieces() };
+  return { ...s, index, phase: index === s.orders.length ? "done" : "pack", pieces: emptyPieces() };
 }
 const labels = {
+  "num.count-out": "Counting out an amount",
+  "num.add-within-10": "Adding two small amounts",
   "num.tens-ones": "Packing tens and ones",
   "num.compare": "Comparing two amounts",
   "num.add-within-20": "Adding within twenty",
@@ -75,42 +83,43 @@ export const engine: LearnEngine<MarketState> = {
   id: "island-market",
   name: "Island Market",
   island: "numbers",
-  tagline: "Build orders with tens, ones and shell change.",
+  tagline: "Fill each customer's basket with mangoes.",
   description:
-    "Meet the island customers. Pack crates of ten and loose mangoes, combine orders, or find who wants more. Take your time and adjust your basket.",
-  help: "A crate holds ten mangoes. Tap plus to pack, or minus to take pieces out. Your basket shows the total. Serve when it matches the order; you can always adjust. Compare orders by choosing who wants more. Challenge includes taking away and making change with pretend shells worth 1, 5, 10 and 25. Together, one shopkeeper hears and chooses an order, then the other player packs. Swap roles for every customer.",
+    "Customers come to the mango stall. Tap mangoes and crates of ten into the basket until it matches the order, then give it to them.",
+  help: "Each customer shows how many mangoes they want. Tap the mango pile to add one mango. Tap the crate pile to add a crate of ten. Tap anything in the basket to take it back. When the basket matches, tap Give it! Two customers? Tap the one who wants more. In Challenge you also take away and give change with pretend shell coins worth 1, 5, 10 and 25. They are never earned or kept. With a grown-up, take turns serving customers. There is no clock. For grown-ups: Gentle goes from counting 3–9 to teens as one ten and some ones, then adding two small amounts.",
   helpAudio: "island-market-help",
+  introAudio: "island-market-intro",
   color: "#9A6A1F",
   surface: "#FBEFD3",
   modes: ["solo", "together"],
+  modeLabels: { together: "Take turns with a grown-up" },
   skills: labels,
   paceHelp: {
-    easy: "Six customers · tens and ones within 20",
-    medium: "Eight customers · amounts to 100 and adding tens",
-    hard: "Eight customers · two-digit addition, subtraction and change",
+    easy: "Six customers · 3 to 9, then teens, then two friends",
+    medium: "Eight customers · crates of ten to 100 and adding tens",
+    hard: "Eight customers · adding, taking away and giving change",
   },
   create(o, ctx) {
-    const pool = ORDERS.filter((q) => q.pace === o.pace),
-      count = o.pace === "easy" ? 6 : 8;
-    const selected = pickItems(pool, ctx.skills, count, ctx.rng, ctx.today);
-    // Keep every available kind in this round, while spacing chooses the remaining practice.
-    for (const kind of [...new Set(pool.map((q) => q.kind))]) {
-      if (selected.some((q) => q.kind === kind)) continue;
-      const replace = selected.findLastIndex((q) => selected.filter((a) => a.kind === q.kind).length > 1);
-      selected[replace] = pickItems(
-        pool.filter((q) => q.kind === kind),
+    // Follow the round's ramp (easiest first); spacing picks which orders fill each step.
+    const plan = ROUND_PLAN[o.pace],
+      fresh = ORDERS.filter((q) => q.pace === o.pace && !q.retired);
+    const chosen: Record<string, MarketOrder[]> = {};
+    for (const step of new Set(plan)) {
+      const need = plan.filter((k) => k === step).length;
+      chosen[step] = pickItems(
+        fresh.filter((q) => planStep(q) === step),
         ctx.skills,
-        1,
+        need,
         ctx.rng,
         ctx.today
-      )[0];
+      ).sort((a, b) => a.target - b.target);
     }
     return {
       version: 1,
       starter: ctx.starter,
-      orders: pickItems(selected, ctx.skills, count, ctx.rng, ctx.today).map((q) => q.id),
+      orders: plan.map((step) => chosen[step].shift()!.id),
       index: 0,
-      phase: "order",
+      phase: "pack",
       pieces: emptyPieces(),
       served: [],
     };
