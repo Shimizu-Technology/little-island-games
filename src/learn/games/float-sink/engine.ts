@@ -7,7 +7,7 @@ export const objects = [
     id: "leaf",
     name: "Leaf",
     floats: true,
-    why: "This dry leaf is light for its size and rests on the water.",
+    why: "A dry leaf is light for its size, so it floats.",
     skill: "sci.float-sink",
     pace: 0,
   },
@@ -15,7 +15,7 @@ export const objects = [
     id: "coconut",
     name: "Coconut",
     floats: true,
-    why: "The fibrous husk and air spaces help this coconut float.",
+    why: "Its hairy husk is full of air, so it floats.",
     skill: "sci.float-sink",
     pace: 0,
   },
@@ -23,7 +23,7 @@ export const objects = [
     id: "rock",
     name: "Rock",
     floats: false,
-    why: "This solid rock weighs more than the water it pushes aside.",
+    why: "A rock is heavy for its size, so it sinks.",
     skill: "sci.float-sink",
     pace: 0,
   },
@@ -31,15 +31,15 @@ export const objects = [
     id: "shell",
     name: "Shell",
     floats: false,
-    why: "This open shell fills with water and sinks.",
+    why: "Water fills the open shell, so it sinks.",
     skill: "sci.float-sink",
     pace: 0,
   },
   {
     id: "key",
-    name: "Metal key",
+    name: "Key",
     floats: false,
-    why: "The solid metal key is heavy for its small size.",
+    why: "Metal is heavy for its size. The key sinks.",
     skill: "sci.float-sink",
     pace: 0,
   },
@@ -47,7 +47,7 @@ export const objects = [
     id: "cork",
     name: "Cork",
     floats: true,
-    why: "Tiny air spaces make cork light for its size.",
+    why: "Cork is full of tiny air pockets. It floats!",
     skill: "sci.float-sink",
     pace: 0,
   },
@@ -55,7 +55,7 @@ export const objects = [
     id: "apple",
     name: "Apple",
     floats: true,
-    why: "Small air spaces inside an apple help it float.",
+    why: "An apple has air inside, so it floats!",
     skill: "sci.float-sink",
     pace: 1,
   },
@@ -63,15 +63,15 @@ export const objects = [
     id: "log",
     name: "Big log",
     floats: true,
-    why: "This wood is light for its size. Big things can float too.",
+    why: "Wood is light for its size. Even a big log floats!",
     skill: "sci.float-sink",
     pace: 1,
   },
   {
     id: "coin",
-    name: "Small coin",
+    name: "Coin",
     floats: false,
-    why: "A small metal coin can sink even when a big log floats.",
+    why: "A tiny coin sinks! Metal is heavy for its size.",
     skill: "sci.float-sink",
     pace: 1,
   },
@@ -79,7 +79,7 @@ export const objects = [
     id: "sponge",
     name: "Wet sponge",
     floats: false,
-    why: "This soaked sponge has no trapped air left and sinks in our tank.",
+    why: "This soaked sponge is full of water, not air, so it sinks.",
     skill: "sci.cause-effect",
     pace: 1,
   },
@@ -87,15 +87,15 @@ export const objects = [
     id: "toy-boat",
     name: "Toy boat",
     floats: true,
-    why: "The hollow hull keeps water out and pushes enough water aside.",
+    why: "Its hollow shape keeps water out, so it floats.",
     skill: "sci.shape-buoyancy",
     pace: 1,
   },
   {
     id: "spoon",
-    name: "Metal spoon",
+    name: "Spoon",
     floats: false,
-    why: "This spoon does not push enough water aside to hold its weight.",
+    why: "A metal spoon is heavy for its size, so it sinks.",
     skill: "sci.shape-buoyancy",
     pace: 1,
   },
@@ -103,31 +103,31 @@ export const objects = [
     id: "clay",
     name: "Clay ball",
     floats: false,
-    why: "A solid clay ball pushes aside too little water to hold its weight.",
+    why: "A squished clay ball has no room for air. It sinks.",
     skill: "sci.shape-buoyancy",
     pace: 2,
   },
   {
     id: "clay-boat",
-    name: "Clay bowl boat",
+    name: "Clay bowl",
     floats: true,
-    why: "The same clay in a hollow bowl pushes more water aside and keeps air inside.",
+    why: "Same clay, bowl shape! It holds air, so it floats.",
     skill: "sci.shape-buoyancy",
     pace: 2,
   },
   {
     id: "empty-bottle",
-    name: "Capped empty bottle",
+    name: "Empty bottle",
     floats: true,
-    why: "Air sealed inside makes this bottle light for its size.",
+    why: "Air sealed inside makes the bottle float.",
     skill: "sci.shape-buoyancy",
     pace: 2,
   },
   {
     id: "full-bottle",
-    name: "Capped full bottle",
+    name: "Full bottle",
     floats: false,
-    why: "This bottle is full of water, with no air pocket, and its heavy plastic sinks.",
+    why: "Full of water with no air inside, it sinks.",
     skill: "sci.shape-buoyancy",
     pace: 2,
   },
@@ -137,6 +137,7 @@ export type Shape = (typeof shapes)[number];
 export const capacity = (s: Shape, hard: boolean) => ({ ball: 0, bowl: 3, wide: hard ? 4 : 6, foil: hard ? 4 : 5 })[s];
 export type Event =
   | { kind: "predict"; value: Prediction }
+  /** Older saves (1.4.0) also stored a separate drop and sort; they replay as no-ops. */
   | { kind: "drop" }
   | { kind: "sort"; value: Prediction }
   | { kind: "shape"; value: Shape }
@@ -145,40 +146,31 @@ export type Event =
 export type FloatState = { items: string[]; starter: 0 | 1; events: Event[] };
 export type Dock = {
   index: number;
-  phase: "predict" | "drop" | "sort" | "shape" | "load" | "pass" | "done";
-  guess: Prediction | null;
+  phase: "predict" | "shape" | "load" | "pass" | "done";
   shape: Shape | null;
   pebbles: number;
   held: [number, number];
   boat: number;
+  /** Tested objects in order, each with the guess that was made. */
   shelf: string[];
+  guesses: Prediction[];
 };
+export const truth = (id: string): Prediction => (objects.find((x) => x.id === id)?.floats ? 0 : 1);
+/** Tapping Float or Sink is the guess and the test: the object drops and goes onto its shelf by itself. */
 export function dock(s: FloatState, o: LearnOptions): Dock | null {
-  const d: Dock = {
-    index: 0,
-    phase: "predict",
-    guess: null,
-    shape: null,
-    pebbles: 0,
-    held: [0, 0],
-    boat: 0,
-    shelf: [],
-  };
+  const d: Dock = { index: 0, phase: "predict", shape: null, pebbles: 0, held: [0, 0], boat: 0, shelf: [], guesses: [] };
+  let legacy: "predict" | "drop" | null = null;
   for (const e of s.events) {
-    if (d.phase === "predict" && exact(e, ["kind", "value"]) && e.kind === "predict" && prediction(e.value)) {
-      d.guess = e.value;
-      d.phase = "drop";
-    } else if (d.phase === "drop" && exact(e, ["kind"]) && e.kind === "drop") d.phase = "sort";
-    else if (
-      d.phase === "sort" &&
-      exact(e, ["kind", "value"]) &&
-      e.kind === "sort" &&
-      e.value === (objects.find((x) => x.id === s.items[d.index])?.floats ? 0 : 1)
-    ) {
+    const was = legacy;
+    legacy = null;
+    if (was === "predict" && exact(e, ["kind"]) && e.kind === "drop") legacy = "drop";
+    else if (was === "drop" && exact(e, ["kind", "value"]) && e.kind === "sort" && e.value === truth(d.shelf[d.shelf.length - 1])) continue;
+    else if (d.phase === "predict" && exact(e, ["kind", "value"]) && e.kind === "predict" && prediction(e.value)) {
       d.shelf.push(s.items[d.index]);
+      d.guesses.push(e.value);
       d.index++;
-      d.guess = null;
       d.phase = d.index === s.items.length ? "shape" : "predict";
+      legacy = "predict";
     } else if (d.phase === "shape" && exact(e, ["kind", "value"]) && e.kind === "shape" && shapes.includes(e.value)) {
       d.shape = e.value;
       d.phase = e.value === "ball" ? (o.mode === "versus" && d.boat === 0 ? "pass" : "done") : "load";
@@ -200,17 +192,25 @@ export function dock(s: FloatState, o: LearnOptions): Dock | null {
   return d;
 }
 export function act(s: FloatState, e: Event, o: LearnOptions): FloatState {
+  if (e.kind === "drop" || e.kind === "sort") return s;
   const n = { ...s, events: [...s.events, e] };
   return dock(n, o) ? n : s;
 }
+/** Objects per round; 1.4.0 rounds had 3, 4 and 5 and still load. */
+export const counts = { easy: 6, medium: 7, hard: 8 } as const;
+const legacyCounts = { easy: 3, medium: 4, hard: 5 } as const;
+const paceRank = { easy: 0, medium: 1, hard: 2 } as const;
+/** Boats offered at each pace. Gentle skips the solid ball so every first boat floats. */
+export const shapesFor = (p: LearnOptions["pace"]): Shape[] => (p === "easy" ? ["bowl", "wide", "foil"] : [...shapes]);
 export const engine: LearnEngine<FloatState> = {
   id: "float-sink",
   name: "Float or Sink Dock",
   island: "science",
-  tagline: "Predict, drop, sort, then build a boat.",
-  description: "Try objects in the tank. Shape a boat and count the pebbles it holds.",
-  help: "Predict float or sink, drop the object, then sort it onto the matching shelf. A surprise is a discovery. Build a clay or foil boat and add pebbles until it sinks. In take turns mode, compare how many each boat held. In real life, materials, sizes, trapped air and boat balance change the result. Our tank uses example objects and equal pebbles.",
+  tagline: "Will it float or sink? Guess, then watch!",
+  description: "Guess float or sink and watch each thing drop in the water. Then fill a boat with pebbles until it sinks.",
+  help: "Tap Float or Sink to guess. The object drops in the water right away and goes onto the Floats or Sinks shelf by itself. A surprise is a discovery! Then pick a boat and tap the pebbles to load it, one at a time, until it sinks. How many can it hold? Taking turns, each player loads a boat and the one that holds more wins. In real life, material, size, trapped air and balance all change the result. These are example objects and equal pebbles.",
   helpAudio: "float-sink-help",
+  introAudio: "float-sink-intro",
   modes: ["solo", "versus"],
   color: "#3A6FA0",
   surface: "#E1ECF7",
@@ -220,39 +220,40 @@ export const engine: LearnEngine<FloatState> = {
     "sci.shape-buoyancy": "How shape helps boats float",
   },
   paceHelp: {
-    easy: "Three familiar objects, then build.",
-    medium: "Four objects, including surprising sizes.",
-    hard: "Five objects. Compare shape and air; boat width is limited.",
+    easy: "Six everyday things, then load a boat.",
+    medium: "Seven things, with some surprises.",
+    hard: "Eight things, with a shape-and-air pair. Smaller boats.",
   },
   create: (o, c) => {
-    const pool = objects.filter((x) => x.pace <= { easy: 0, medium: 1, hard: 2 }[o.pace]);
+    const pool = objects.filter((x) => x.pace <= paceRank[o.pace]);
+    // Obvious first: a rock that sinks and a leaf that floats, in either order.
+    const obvious = c.rng() < 0.5 ? ["rock", "leaf"] : ["leaf", "rock"];
     const pair = c.rng() < 0.5 ? ["clay", "clay-boat"] : ["empty-bottle", "full-bottle"];
-    const focus =
-      o.pace === "hard"
-        ? pool.filter((x) => pair.includes(x.id))
-        : o.pace === "medium"
-          ? pickItems(
-              pool.filter((x) => ["apple", "log", "coin"].includes(x.id)),
-              c.skills,
-              1,
-              c.rng,
-              c.today
-            )
-          : [];
-    return {
-      items: [
-        ...focus,
-        ...pickItems(
-          pool.filter((x) => !focus.includes(x)),
-          c.skills,
-          { easy: 3, medium: 4, hard: 5 }[o.pace] - focus.length,
-          c.rng,
-          c.today
-        ),
-      ].map((x) => x.id),
-      starter: c.starter,
-      events: [],
-    };
+    const surprises =
+      o.pace === "easy"
+        ? []
+        : pickItems(
+            pool.filter((x) => ["apple", "log", "coin"].includes(x.id)),
+            c.skills,
+            o.pace === "medium" ? 2 : 1,
+            c.rng,
+            c.today
+          ).map((x) => x.id);
+    const fixed = [...obvious, ...surprises, ...(o.pace === "hard" ? pair : [])];
+    const rest = pickItems(
+      pool.filter((x) => !fixed.includes(x.id)),
+      c.skills,
+      counts[o.pace] - fixed.length,
+      c.rng,
+      c.today
+    ).map((x) => x.id);
+    // Keep the two obvious ones first; mix everything else.
+    const later = [...surprises, ...(o.pace === "hard" ? pair : []), ...rest];
+    for (let i = later.length - 1; i > 0; i--) {
+      const j = Math.floor(c.rng() * (i + 1));
+      [later[i], later[j]] = [later[j], later[i]];
+    }
+    return { items: [...obvious, ...later], starter: c.starter, events: [] };
   },
   validate: (x, o): x is FloatState => {
     if (!exact(x, ["items", "starter", "events"])) return false;
@@ -260,15 +261,15 @@ export const engine: LearnEngine<FloatState> = {
     return (
       prediction(s.starter) &&
       Array.isArray(s.items) &&
-      s.items.length === { easy: 3, medium: 4, hard: 5 }[o.pace] &&
+      (s.items.length === counts[o.pace] || s.items.length === legacyCounts[o.pace]) &&
       new Set(s.items).size === s.items.length &&
-      s.items.every((id) => objects.some((x) => x.id === id && x.pace <= { easy: 0, medium: 1, hard: 2 }[o.pace])) &&
+      s.items.every((id) => objects.some((x) => x.id === id && x.pace <= paceRank[o.pace])) &&
       (o.pace !== "medium" || s.items.some((id) => ["apple", "log", "coin"].includes(id))) &&
       (o.pace !== "hard" ||
         ["clay", "clay-boat"].every((id) => s.items.includes(id)) ||
         ["empty-bottle", "full-bottle"].every((id) => s.items.includes(id))) &&
       Array.isArray(s.events) &&
-      s.events.length <= 40 &&
+      s.events.length <= 60 &&
       s.events.every((e) => !!e && typeof e === "object") &&
       dock(s, o) !== null &&
       same(s, JSON.parse(JSON.stringify(s)))
