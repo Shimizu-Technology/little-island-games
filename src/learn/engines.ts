@@ -8,6 +8,9 @@ import { engine as tidePool } from "./games/tide-pool/engine";
 import { engine as floatSink } from "./games/float-sink/engine";
 import { engine as crabCommands } from "./games/crab-commands/engine";
 import { engine as hafaAdai } from "./games/hafa-adai/engine";
+import { engine as shellMath } from "./games/shell-math/engine";
+import { engine as numberHop } from "./games/number-hop/engine";
+import { engine as quickPractice } from "./games/quick-practice/engine";
 
 /** Pure engines (no React): safe to import from save validation and tests. */
 export const engines: Record<LearnId, LearnEngine<unknown>> = {
@@ -20,6 +23,9 @@ export const engines: Record<LearnId, LearnEngine<unknown>> = {
   "float-sink": floatSink as LearnEngine<unknown>,
   "crab-commands": crabCommands as LearnEngine<unknown>,
   "hafa-adai": hafaAdai as LearnEngine<unknown>,
+  "shell-math": shellMath as LearnEngine<unknown>,
+  "number-hop": numberHop as LearnEngine<unknown>,
+  "quick-practice": quickPractice as LearnEngine<unknown>,
 };
 
 /** Every skill label across games, for the grown-up practice view. */

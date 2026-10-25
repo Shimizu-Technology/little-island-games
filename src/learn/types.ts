@@ -1,4 +1,5 @@
 import type { Match, RoundResult, Seat } from "../games/match";
+import type { MathOperation } from "../math/questions";
 
 /** Wave 1 learning games. Each id has a pure engine (src/learn/games/<id>/engine.ts) and a Board. */
 export const learnIds = [
@@ -11,6 +12,9 @@ export const learnIds = [
   "float-sink",
   "crab-commands",
   "hafa-adai",
+  "shell-math",
+  "number-hop",
+  "quick-practice",
 ] as const;
 export type LearnId = (typeof learnIds)[number];
 export type Island = "reading" | "numbers" | "science" | "thinking";
@@ -18,7 +22,7 @@ export type Island = "reading" | "numbers" | "science" | "thinking";
 export type LearnMode = "solo" | "together" | "versus";
 export type Pace = "easy" | "medium" | "hard";
 export type Language = "en" | "ch";
-export type LearnOptions = { mode: LearnMode; pace: Pace; language?: Language };
+export type LearnOptions = { mode: LearnMode; pace: Pace; language?: Language; mathOperation?: MathOperation };
 
 export type LearnSession<S = unknown> = {
   game: LearnId;
@@ -76,6 +80,9 @@ export type LearnEngine<S> = {
   modes: LearnMode[];
   modeLabels?: Partial<Record<LearnMode, string>>;
   paceLabels?: Partial<Record<Pace, string>>;
+  paces?: Pace[];
+  /** Arithmetic setup is offered only by the three math activities. */
+  mathControls?: boolean;
   paceHelp?: Partial<Record<Pace, string>>;
   languages?: Language[];
   /** Skill id → kid-and-parent friendly label (shown in the grown-up practice view). Ids look like "read.short-a". */
@@ -98,6 +105,8 @@ export type BoardProps<S> = {
   update: (state: S) => void;
   /** Record one attempt at a skill (quiet spacing, never shown as a score). */
   practice: (skill: string, correct: boolean) => void;
+  /** One completed math question; helped work must not count as independent mastery. */
+  notePractice?: (skill: string, helped: boolean) => void;
   skills: SkillProgress;
   /** Feedback tones ("tap" | "match" | "win") and any registered speech key. */
   sound: (key: string) => void;

@@ -181,6 +181,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
             {(engine.modeLabels?.[saved.options.mode] ?? modeLabel[saved.options.mode]) +
               " · " +
               (engine.paceLabels?.[saved.options.pace] ?? paceLabel[saved.options.pace]) +
+              (engine.mathControls ? ` · ${saved.options.mathOperation === "mixed" ? "Add & subtract" : saved.options.mathOperation === "subtract" ? "Subtract" : "Add"}` : "") +
               (saved.options.language && engine.languages && engine.languages.length > 1 ? ` · ${languageLabel[saved.options.language]}` : "")}
           </Copy>
         )}
@@ -269,9 +270,21 @@ export function LearnFrame({ id }: { id: LearnId }) {
             )}
           </>
         )}
-        <Heading style={{ fontSize: 18 }}>Choose your pace</Heading>
+        {engine.mathControls && (
+          <>
+            <Heading style={{ fontSize: 18 }}>What shall we practise?</Heading>
+            <View style={[styles.row, { flexWrap: "wrap" }]}>
+              {(["add", "subtract", "mixed"] as const).map((operation) => (
+                <Chip key={operation} selected={(options.mathOperation ?? "add") === operation} onPress={() => setOptions({ ...options, mathOperation: operation })}>
+                  {operation === "add" ? "Add" : operation === "subtract" ? "Subtract" : "Add & subtract"}
+                </Chip>
+              ))}
+            </View>
+          </>
+        )}
+        <Heading style={{ fontSize: 18 }}>{engine.mathControls ? "How far shall we count?" : "Choose your pace"}</Heading>
         <View style={[styles.row, { flexWrap: "wrap" }]}>
-          {(["easy", "medium", "hard"] as const).map((pace) => (
+          {(engine.paces ?? (["easy", "medium", "hard"] as const)).map((pace) => (
             <Chip key={pace} selected={options.pace === pace} onPress={() => setOptions({ ...options, pace })}>
               {engine.paceLabels?.[pace] ?? paceLabel[pace]}
             </Chip>

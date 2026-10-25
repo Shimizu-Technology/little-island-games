@@ -3,6 +3,7 @@ import { random } from "../games/types";
 import { engines } from "./engines";
 import { dayNumber } from "./skills";
 import { LearnId, LearnOptions, LearnSession, Outcome, SkillProgress, learnIds } from "./types";
+import { isMathGame, validMathOptions } from "./games/shell-math/round";
 
 const MODES = ["solo", "together", "versus"] as const;
 const PACES = ["easy", "medium", "hard"] as const;
@@ -23,6 +24,9 @@ export type StartChoices = {
 export function startSession(game: LearnId, choices: StartChoices, skills: SkillProgress | undefined, seed = Date.now() >>> 0): LearnSession {
   const engine = engines[game];
   const options = { ...choices.options };
+  // New setup callers use the supported pace list; an older generic caller may still
+  // request "hard". Canonicalize a fresh round only, never rewrite a saved round.
+  if (engine.paces && !engine.paces.includes(options.pace)) options.pace = engine.paces[0];
   const starter: Seat = choices.starter ?? 0;
   const twoPlayer = options.mode !== "solo";
   const names: [string, string] | undefined = twoPlayer
@@ -82,10 +86,11 @@ export function validLearnSession(value: unknown, key?: string): value is LearnS
     !MODES.includes(o.mode as (typeof MODES)[number]) ||
     !PACES.includes(o.pace as (typeof PACES)[number]) ||
     (o.language !== undefined && o.language !== "en" && o.language !== "ch") ||
-    Object.keys(o).some((k) => !["mode", "pace", "language"].includes(k))
+    Object.keys(o).some((k) => !["mode", "pace", "language", ...(isMathGame(value.game as string) ? ["mathOperation"] : [])].includes(k))
   )
     return false;
   const engine = engines[value.game as LearnId];
+  if (isMathGame(value.game as string) && !validMathOptions(o as LearnOptions)) return false;
   if (!engine.modes.includes(o.mode as LearnOptions["mode"])) return false;
   if (o.language === "ch" && !engine.languages?.includes("ch")) return false;
   const twoPlayer = o.mode !== "solo";
