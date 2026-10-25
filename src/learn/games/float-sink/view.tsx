@@ -401,7 +401,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
         </View>
       )}
       {(d.phase === "predict" || (d.phase === "shape" && moving)) && (object || moving) && (
-        <CoachSpot active={coach.active && !moving} handAt="bottom-right">
+        <CoachSpot active={coach.active && !moving} handAt="none">
           <View style={{ flexDirection: "row", gap: 10 }}>
             {([0, 1] as const).map((p) => (
               <PressableScale

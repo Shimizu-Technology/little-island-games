@@ -414,17 +414,13 @@ export function Board({ session, update, practice, sound, active, width, coach, 
         <IconButton icon="sound-on" label="Hear the order again" onPress={() => sound(orderAudio)} />
       </View>
       {order.kind === "compare" ? (
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          {[order.a, order.b].map((n, i) =>
-            i === 0 ? (
-              <CoachSpot key={i} active={coach.active && packing} style={{ flex: 1 }}>
-                <CompareCard who={0} n={n} onPress={() => give(n)} disabled={!active || served} wrong={pickWrong.n === n ? pickWrong.key : 0} happy={served && n === order.target} />
-              </CoachSpot>
-            ) : (
-              <CompareCard key={i} who={1} n={n} onPress={() => give(n)} disabled={!active || served} wrong={pickWrong.n === n ? pickWrong.key : 0} happy={served && n === order.target} />
-            )
-          )}
-        </View>
+        <CoachSpot active={coach.active && packing} handAt="none">
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            {[order.a, order.b].map((n, i) => (
+              <CompareCard key={i} who={i as 0 | 1} n={n} onPress={() => give(n)} disabled={!active || served} wrong={pickWrong.n === n ? pickWrong.key : 0} happy={served && n === order.target} />
+            ))}
+          </View>
+        </CoachSpot>
       ) : (
         <View style={{ alignItems: "center" }}>
           <Order order={order} who={who} happy={served} compact={compact} />

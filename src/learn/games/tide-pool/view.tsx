@@ -691,7 +691,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
       )}
       <PoolScene mission={m.id} watched={s.watched} look={s.pool} p={p} width={width} />
       {m.kind === "fix" ? (
-        <CoachSpot active={coach.active && !s.watched} handAt="bottom-right">
+        <CoachSpot active={coach.active && !s.watched} handAt="none">
           <View style={{ flexDirection: "row", gap: 8 }}>
             {(["sun", "cool", "high"] as const).map((control) => (
               <View key={control} style={{ flex: 1, gap: 4 }}>
@@ -728,7 +728,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
           </View>
         </CoachSpot>
       ) : (
-        <CoachSpot active={coach.active && s.guesses.length === 0} handAt="bottom-right">
+        <CoachSpot active={coach.active && s.guesses.length === 0} handAt="none">
           {answers}
         </CoachSpot>
       )}
