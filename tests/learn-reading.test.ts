@@ -486,3 +486,54 @@ describe("Turtle Tales: read each page, then pick the picture that matches it", 
     expect(taleReader(now)).toBe(0);
   });
 });
+
+describe("rounds saved by app 1.4.0 keep the whole save loading", () => {
+  // Real states recorded by playing the 1.4.0 engines (commit 585cf55): every stage, mode and pace.
+  const fixtures = JSON.parse(
+    readFileSync(new URL("./fixtures/reading-1.4.0-rounds.json", import.meta.url), "utf8")
+  ) as { game: "sound-boat" | "turtle-tales" | "which-one"; options: LearnOptions; state: unknown }[];
+  const engines = { "sound-boat": boat, "turtle-tales": tales, "which-one": which } as const;
+  it("covers every reading game and the finished and unfinished stages", () => {
+    for (const g of Object.keys(engines)) expect(fixtures.filter((f) => f.game === g).length, g).toBeGreaterThan(20);
+    expect(fixtures.some((f) => f.game === "sound-boat" && (f.state as LegacyBoatState).stage === "letters")).toBe(
+      true
+    );
+    expect(fixtures.some((f) => f.game === "turtle-tales" && (f.state as LegacyTaleState).question === 1)).toBe(true);
+  });
+  it("every 1.4.0 round passes validLearnSession and parseSave, and opens sensibly in the new game", async () => {
+    const { startSession, validLearnSession } = await import("../src/learn/session");
+    const { emptySave, parseSave } = await import("../src/state/validation");
+    for (const f of fixtures) {
+      const where = `${f.game} ${f.options.mode}/${f.options.pace} ${JSON.stringify(f.state).slice(0, 80)}`;
+      const envelope = startSession(f.game, { options: f.options, names: ["Stassie", "Dad"], starter: 0 }, {}, 3);
+      const session = { ...envelope, revision: 4, state: f.state };
+      expect(validLearnSession(session, f.game), where).toBe(true);
+      const save = { ...emptySave(), learn: { [f.game]: session }, recentLearn: f.game };
+      expect(parseSave(JSON.stringify(save)).learn?.[f.game]?.state, where).toEqual(f.state);
+      const engine = engines[f.game] as unknown as {
+        outcome: (s: unknown, o: LearnOptions) => unknown;
+        validate: (s: unknown, o: LearnOptions) => boolean;
+      };
+      const outcome = engine.outcome(f.state, f.options);
+      if (f.game === "sound-boat") {
+        const old = f.state as LegacyBoatState;
+        expect(outcome !== null, where).toBe(old.stage === "done");
+        if (old.stage !== "done")
+          expect(boat.validate(boatFromLegacy(old, f.options, {}, 20000), f.options), where).toBe(true);
+      }
+      if (f.game === "turtle-tales") {
+        const old = f.state as LegacyTaleState;
+        expect(outcome !== null, where).toBe(old.done);
+        const now = taleFromLegacy(old);
+        expect(tales.validate(now, f.options), where).toBe(true);
+        expect(now.page, where).toBe(old.page);
+      }
+      if (f.game === "which-one") {
+        // Which One kept its shape: an old round simply plays on to the end.
+        let s = f.state as Parameters<typeof whichPick>[0];
+        while (s.index < 8) s = whichNext(whichPick(s, whichAnswer(s)));
+        expect(which.validate(s, f.options), where).toBe(true);
+      }
+    }
+  });
+});

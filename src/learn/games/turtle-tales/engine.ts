@@ -1,6 +1,7 @@
 import type { LearnEngine } from "../../types";
 import { pickItems } from "../../skills";
 import { STORIES } from "../../content/reading/stories";
+import { random } from "../../../games/types";
 import { bools, exact, integer, readingSkills, seat, tokens } from "../../kit/reading";
 
 /**
@@ -129,12 +130,13 @@ function validLegacy(v: unknown, pace: string): v is LegacyTaleState {
 /** The same tale, carried over to the new game: unfinished pages start fresh; old end questions count as finished. */
 export function taleFromLegacy(s: LegacyTaleState): TaleState {
   const n = talePageCount(s),
-    page = Math.min(s.page, n);
+    page = Math.min(s.page, n),
+    rng = random(s.orders.flat().reduce((h, v) => h * 3 + v, 7) + s.starter);
   return {
     id: s.id,
     starter: s.starter,
     page,
-    sides: Array.from({ length: n }, (_, i) => ((s.orders[i % 2][i % 3] + i) % 2) as 0 | 1),
+    sides: Array.from({ length: n }, () => (rng() < 0.5 ? 0 : 1)),
     wrong: false,
     heard: false,
     solved: false,
