@@ -98,3 +98,8 @@ This passes beta delivery to the invited account. It does not pass physical inst
 ## Family feedback integration, October 19, 2026
 
 Leon explicitly requested review, fixes and merge of PR1 after testing TestFlight build4 on his phone. His screenshots establish adult phone installation, home/Tic/checkers/word play and the reported defects. They do not establish Stassie/iPad/offline/audio/VoiceOver acceptance. TestFlight installation supersedes device-registration requirements for A15. Earlier blanket PR holds above describe the previous agent's release workflow; the current source-integration gates and execution ledger are in [POLISH_REVIEW.md](POLISH_REVIEW.md). Public release and the unfinished family acceptance matrix remain separate and unpassed.
+
+
+## Math practice and optional practice before play — 26 October 2026
+
+Application source `aba07b2`, private TestFlight 1.6.0 (12). The scoped scenario ledger, browser receipt, final code-review status and native host limits are in [MATH_PRACTICE.md](MATH_PRACTICE.md). Full check: 520 tests/40 files and Doctor 21/21 passed; browser practice, cancellation, saved-state and offline journeys passed. Native math interaction did not run because the simulator host/runner failed before interaction. This remains an acceptance gap; it is not superseded by archive/signature checks. Leon explicitly authorized the private beta for real-device testing. Delivery is verified in [testflight-build12.json](evidence/testflight-build12.json). No public release or merge. Owned runtime resources were cleaned.

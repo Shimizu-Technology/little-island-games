@@ -121,3 +121,18 @@ A fresh release check passed typecheck, lint, 477 tests across 35 files, web exp
 Open TestFlight and update **Little Island: Family Games** to **1.5.0 (11)**. Try the nine learning games without explaining the controls first, then check sound-off during Float or Sink, saved-round continuation after force close, and iPad portrait/landscape. Actual installation, physical audio/VoiceOver and child/family usability remain operator checks. No public distribution was created. See [delivery evidence](evidence/testflight-build11.json) and [acceptance](LEARNING_INTUITIVE.md).
 
 The verified archive/IPA and private receipts remain outside Git in the sibling artifact directory. Only this task's device DerivedData was removed after artifact verification. No task-owned runtime resources remain; held source and release worktrees are preserved.
+
+
+## Math practice beta — 1.6.0 (12), available 26 October 2026 Guam time
+
+Leon authorized the three math activities and optional practice before new rounds through private TestFlight. Source `aba07b25395ba6bac29990014b5fe48934e9d4b6` is clean application source from stacked PR14, based on open PR13. Neither PR was merged; native simulator interaction remains blocked by host/runner failures. The private beta is explicitly authorized despite that limitation.
+
+Full check passed: typecheck, lint, 520 tests across 40 files and production web export; Doctor 21/21. Browser acceptance covered 18 math configurations/78 answers, all six classic launch guards, card/party/race/Mystery solo launch paths, cancellation, saved Continue, parent settings/notes and offline mixed practice. Final independent code review is clean; CodeRabbit substantive review was skipped on the stacked base/Free plan. Details and remaining dimensions: [math acceptance](MATH_PRACTICE.md).
+
+The local Xcode Release archive and App Store export produced a 57,964,821-byte IPA, SHA256 `c3d98491b8c48ff0fa17f0a27d6ed2448049c72c0ad7dceac24639236bf98bf6`. Strict signing/profile/entitlements, iOS 16.4, both device families, archive/embedded JS and all 2,111 referenced audio files passed verification. Temporary signing credentials, keychain and owned profile were removed.
+
+EAS submission `68a95c10-a2ac-45ab-99f7-0981e50ea000` finished. Apple upload/build `f0a590c3-9919-4ff7-a9fd-7909e2ef7835` is VALID / IN_BETA_TESTING and attached to the existing Leon internal group with one adult tester and automatic all-build access off, verified at 2026-10-25T14:09:28.674Z. English testing notes were verified. Xcode export's separate empty upload reservation has no build; only one actual build 12 was submitted. Build 11 was not resubmitted. No external/public distribution was created. [Structured delivery evidence](evidence/testflight-build12.json).
+
+Update Little Island in TestFlight to **1.6.0 (12)**. Find Shell Math, Number Hop and Quick Practice on the Numbers island. Optional three-question practice starts off; enable it under Settings → For grown-ups → Practice, then play. Help counts; saved games continue normally. Physical installation, audible quality/mute, native keyboard/rotation/recovery, VoiceOver and child usability remain operator checks. PR14 stays held for that acceptance.
+
+Owned browser, preview server and simulator were cleaned; lifecycle session 01a17186-714f-7ee2-994a-bccc0bafba80 reports no active owned resources. The held implementation and immutable release worktrees are retained.
