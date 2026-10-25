@@ -250,7 +250,7 @@ function Read({
       <Copy style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>
         {s.solved ? "Yes! That’s the one." : s.wrong ? "Look at the glowing word." : "Read it. Which picture matches?"}
       </Copy>
-      {s.page === 0 && !s.solved && !s.wrong ? <CoachSpot active={coach.active}>{cards}</CoachSpot> : cards}
+      {s.page === 0 && !s.solved && !s.wrong ? <CoachSpot active={coach.active} handAt="none">{cards}</CoachSpot> : cards}
       {s.wrong && !s.solved && (
         <Button
           compact
