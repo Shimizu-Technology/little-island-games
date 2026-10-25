@@ -7,9 +7,9 @@ export const objectTop: Record<string, number> = {
   goat: 30, sheep: 26, seal: 28, crab: 30, duck: 30, frog: 18, fish: 34, turtle: 32,
 };
 /** Things "in" can sensibly describe, and how being inside them is drawn. */
-export const insideStyle: Record<string, "water" | "buried" | "canopy" | "container"> = {
+export const insideStyle: Record<string, "water" | "buried" | "canopy" | "container" | "blanket"> = {
   pond: "water", sea: "water", pool: "water", sand: "buried", tree: "canopy",
   box: "container", tub: "container", cup: "container", mug: "container", pot: "container", jar: "container",
-  nest: "container", boat: "container", ship: "container", bed: "container", shell: "container",
+  nest: "container", boat: "container", ship: "container", bed: "blanket", shell: "container",
   bus: "container", van: "container", car: "container", hut: "container",
 };

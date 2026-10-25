@@ -933,6 +933,12 @@ export function Scene({ scene, width = 180, height = 124 }: { scene: ReadingScen
         />
         {inside === "water" && <Path d="M40 92 Q90 82 140 92 L140 112 Q90 122 40 112 Z" fill={front} opacity={0.85} />}
         {inside === "buried" && <Path d="M40 118 Q90 78 140 118 Z" fill={front} stroke={ink} strokeWidth="2" />}
+        {inside === "blanket" && (
+          <>
+            <Rect x="52" y="86" width="78" height="26" rx="6" fill="#9CC3D9" stroke={ink} strokeWidth="2.5" />
+            <Path d="M52 95 L130 95 M70 86 L70 112 M90 86 L90 112 M110 86 L110 112" stroke="#F9EDC9" strokeWidth="2.5" />
+          </>
+        )}
         {inside === "container" && (
           <>
             <Path d="M52 87 L128 87 L123 119 L58 119 Z" fill={front} stroke={ink} strokeWidth="2.5" />
