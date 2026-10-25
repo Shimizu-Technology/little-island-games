@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AppState, ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useIsFocused } from "expo-router";
@@ -81,28 +81,41 @@ export function LearnFrame({ id }: { id: LearnId }) {
     markCoached(id);
   }, [markCoached, id]);
   const cheerLine = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => clearTimeout(cheerLine.current), []);
+  const boardActive = appActive && focused && !setup && !help,
+    savedId = saved?.id;
+  // A falling object can retain a callback after mute, Help or a round change. Invalidate
+  // that callback too, rather than only cancelling speech it had already scheduled.
+  const feedbackContext = useMemo(() => ({ boardActive, soundOn, savedId }), [boardActive, soundOn, savedId]);
+  const liveFeedback = useRef<object | null>(feedbackContext);
+  useLayoutEffect(() => {
+    liveFeedback.current = feedbackContext;
+    return () => {
+      liveFeedback.current = null;
+      clearTimeout(cheerLine.current);
+    };
+  }, [feedbackContext]);
   const cheer = useCallback(
     (kind: "right" | "big" = "right", say?: string) => {
+      if (!boardActive || liveFeedback.current !== feedbackContext) return;
       setBurst((b) => ({ n: b.n + 1, big: kind === "big" }));
       sound(kind === "big" ? "win" : "match");
       if (kind === "big") feel("success");
       clearTimeout(cheerLine.current);
-      if (say) cheerLine.current = setTimeout(() => sound(say), kind === "big" ? 900 : 550);
+      if (say) cheerLine.current = setTimeout(() => {
+        if (liveFeedback.current === feedbackContext) sound(say);
+      }, kind === "big" ? 900 : 550);
     },
-    [sound]
+    [sound, boardActive, feedbackContext]
   );
   // A newer sound, a new round, sound off, Help or leaving the screen drops a pending cheer line.
   const boardSound = useCallback(
     (key: string) => {
+      if (!boardActive || liveFeedback.current !== feedbackContext) return;
       clearTimeout(cheerLine.current);
       sound(key);
     },
-    [sound]
+    [sound, boardActive, feedbackContext]
   );
-  const boardActive = appActive && focused && !setup && !help,
-    savedId = saved?.id;
-  useEffect(() => clearTimeout(cheerLine.current), [boardActive, soundOn, savedId]);
   // Say the game's goal once when a fresh round opens, so a non-reader knows what to do.
   const introduced = useRef<string | null>(null);
   useEffect(() => {
