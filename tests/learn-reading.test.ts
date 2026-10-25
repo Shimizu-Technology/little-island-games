@@ -1,24 +1,47 @@
 import { describe, expect, it } from "vitest";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { random } from "../src/games/types";
-import { checkDecodability, phonemes, tokens, wordAudio, wordBank, type ReadingScene } from "../src/learn/kit/reading";
-import { pictureFor } from "../src/learn/content/reading/clues";
+import {
+  checkDecodability,
+  phonemes,
+  tokens,
+  wordAudio,
+  wordBank,
+  wordEntry,
+  type ReadingScene,
+} from "../src/learn/kit/reading";
+import { insideStyle } from "../src/learn/kit/scene";
+import { LEGACY_WARMUP_WORDS, PICTURE_WORDS, pictureFor } from "../src/learn/content/reading/clues";
 import { LADDERS } from "../src/learn/content/reading/ladders";
 import { SENTENCES } from "../src/learn/content/reading/sentences";
 import { STORIES } from "../src/learn/content/reading/stories";
-import { boatMove, boatSlots, boatWord, engine as boat, missingSlots } from "../src/learn/games/sound-boat/engine";
+import {
+  WORDS_PER_ROUND,
+  boatBlanks,
+  boatChoices,
+  boatComplete,
+  boatExpected,
+  boatFromLegacy,
+  boatMove,
+  boatPrevious,
+  boatWord,
+  engine as boat,
+  tileLabel,
+  type BoatState,
+  type LegacyBoatState,
+} from "../src/learn/games/sound-boat/engine";
 import { engine as which, whichAnswer, whichNext, whichPick } from "../src/learn/games/which-one/engine";
 import {
   engine as tales,
-  pageComplete,
   tale,
-  taleAnswer,
-  taleModel,
-  taleNext,
-  talePage,
+  taleDone,
+  taleFromLegacy,
+  taleHear,
   talePick,
-  taleTap,
-  taleTurn,
+  taleReader,
+  taleTurnPage,
+  type LegacyTaleState,
+  type TaleState,
 } from "../src/learn/games/turtle-tales/engine";
 import type { LearnOptions, Pace } from "../src/learn/types";
 const paces: Pace[] = ["easy", "medium", "hard"];
@@ -27,15 +50,16 @@ const speech = JSON.parse(readFileSync(new URL("../scripts/learn/reading.json", 
   string,
   string
 >;
-const sameScene = (a: ReadingScene, b: ReadingScene) =>
-  Object.keys(a).filter((k) => a[k as keyof ReadingScene] !== b[k as keyof ReadingScene]);
+const diff = (a: ReadingScene, b: ReadingScene) =>
+  (Object.keys(a) as (keyof ReadingScene)[]).filter((k) => a[k] !== b[k]);
+const objectSource = readFileSync(new URL("../src/learn/art/Objects.tsx", import.meta.url), "utf8");
+const drawn = new Set(
+  [...objectSource.slice(0, objectSource.indexOf("] as const")).matchAll(/"([a-z]+)",/g)].map((m) => m[1])
+);
 
 describe("curated reading content", () => {
   it("has at least 120 unique practice words, 20 four-word ladders, 60 sentences, and 12 six-page stories", () => {
     expect(wordBank.length).toBeGreaterThanOrEqual(120);
-    expect(
-      wordBank.filter((w) => pictureFor(w.word) && w.tiles.length >= 3 && w.tiles.length <= 5).length
-    ).toBeGreaterThanOrEqual(120);
     expect(new Set(wordBank.map((w) => w.word)).size).toBe(wordBank.length);
     expect(LADDERS.length).toBeGreaterThanOrEqual(20);
     expect(SENTENCES.length).toBeGreaterThanOrEqual(60);
@@ -47,8 +71,23 @@ describe("curated reading content", () => {
     for (const t of STORIES) {
       expect(t.pages.length).toBeGreaterThanOrEqual(4);
       expect(t.pages.length).toBeLessThanOrEqual(8);
-      expect(t.questions).toHaveLength(2);
     }
+  });
+  it("only pictures words whose drawing is the word itself, at the right pace", () => {
+    for (const p of paces) {
+      expect(PICTURE_WORDS[p].length, p).toBeGreaterThanOrEqual(8);
+      for (const w of PICTURE_WORDS[p]) {
+        const entry = wordEntry(w);
+        expect(entry?.pace, w).toBe(p);
+        expect(drawn.has(w), `${w} has a drawing`).toBe(true);
+        expect(pictureFor(w)).toBe(w);
+        expect(entry!.tiles.length).toBeGreaterThanOrEqual(2);
+        expect(entry!.tiles.length).toBeLessThanOrEqual(5);
+      }
+    }
+    // No stand-in pictures: a word without its own clear drawing gets no picture at all.
+    for (const w of ["man", "fig", "pen", "cot", "ten", "mat", "rug", "mug", "ship", "jet", "toad", "coat", "rain"])
+      expect(pictureFor(w), w).toBeUndefined();
   });
   it("rejects unknown words and patterns introduced at later paces", () => {
     expect(checkDecodability("The cat is on the mat.", "easy")).toEqual([]);
@@ -68,25 +107,60 @@ describe("curated reading content", () => {
     expect(phonemes("rose")).toEqual(["r", "long o", "z"]);
   });
   for (const t of STORIES)
-    it(`${t.id}: every title, page and question is decodable at ${t.pace}`, () => {
-      for (const text of [t.title, ...t.pages.map((p) => p.text), ...t.questions.flatMap((q) => [q.text, q.prompt])])
+    it(`${t.id}: every title and page is decodable at ${t.pace}`, () => {
+      for (const text of [t.title, ...t.pages.map((p) => p.text)])
         expect(checkDecodability(text, t.pace), text).toEqual([]);
       for (const p of t.pages) expect(tokens(p.text).length).toBeLessThanOrEqual(18);
     });
   it("checks every picture sentence and its near misses", () => {
     for (const item of SENTENCES) {
       expect(checkDecodability(item.text, item.pace), item.text).toEqual([]);
-      for (const scene of item.scenes.slice(1)) expect(sameScene(item.scenes[0], scene)).toHaveLength(1);
+      for (const scene of item.scenes.slice(1)) expect(diff(item.scenes[0], scene)).toHaveLength(1);
     }
-    for (const t of STORIES)
-      for (const q of t.questions)
-        for (const scene of q.scenes.slice(1)) expect(sameScene(q.scenes[0], scene)).toHaveLength(1);
   });
-  it("every ladder changes exactly one sound per rung", () => {
+  // Words that name each picture value. Anything not listed is named by its own word.
+  const names: Record<string, string[]> = {
+    dog: ["dog", "pup"],
+    pond: ["pond", "pool"],
+    sand: ["sand", "beach"],
+    beside: ["beside"],
+  };
+  const named = (value: string) => names[value] ?? [value];
+  // Pictures that a child could fairly call by the other name are never the only difference.
+  const lookAlikes = [
+    ["frog", "toad"],
+    ["cup", "mug"],
+    ["mat", "rug"],
+    ["boat", "ship"],
+    ["dish", "pot"],
+  ];
+  it("gives every story page a near-miss picture that one word on the page rules out", () => {
+    for (const t of STORIES)
+      t.pages.forEach((p, i) => {
+        const where = `${t.id} page ${i}: ${p.text}`;
+        const words = tokens(p.text);
+        const changed = diff(p.scene, p.miss);
+        expect(changed, where).toHaveLength(1);
+        const [field] = changed;
+        expect(words, where).toContain(p.cue);
+        expect(named(p.scene[field]), where).toContain(p.cue);
+        for (const w of named(p.miss[field])) expect(words, `${where} must not name ${w}`).not.toContain(w);
+        if (field === "color") expect([p.scene.color, p.miss.color].sort(), where).toEqual(["blue", "red"]);
+        if (field === "size")
+          expect(
+            words.some((w) => w === "big" || w === "little"),
+            where
+          ).toBe(true);
+        for (const pair of lookAlikes)
+          expect(pair.includes(p.scene[field]) && pair.includes(p.miss[field]), `${where} look-alikes`).toBe(false);
+        for (const sc of [p.scene, p.miss])
+          if (sc.relation === "in") expect(insideStyle[sc.object], `${where}: in ${sc.object}`).toBeTruthy();
+      });
+  });
+  it("every ladder changes exactly one letter tile and one sound per rung", () => {
     for (const ladder of LADDERS)
       for (let i = 0; i < ladder.words.length; i++) {
         const w = ladder.words[i];
-        expect(pictureFor(w), w).toBeTruthy();
         expect(checkDecodability(w, ladder.pace)).toEqual([]);
         if (i) {
           const a = phonemes(ladder.words[i - 1]),
@@ -96,94 +170,192 @@ describe("curated reading content", () => {
             a.filter((s, j) => s !== b[j]),
             `${ladder.words[i - 1]} → ${w}`
           ).toHaveLength(1);
+          const ta = wordEntry(ladder.words[i - 1])!.tiles,
+            tb = wordEntry(w)!.tiles;
+          expect(
+            tb.filter((t, j) => t !== ta[j]),
+            `${ladder.words[i - 1]} → ${w}`
+          ).toHaveLength(1);
         }
       }
   });
-  it("bundles every word, segment, sentence, page and question with no missing audio", () => {
-    const keys = ["sound-boat-help", "turtle-tales-help", "which-one-help"];
-    for (const w of wordBank) keys.push(wordAudio(w.word), `sound-boat-segment-${w.word}`);
+  it("bundles every word, sentence, page, intro and help line with no missing audio", () => {
+    const keys = [
+      "sound-boat-help",
+      "sound-boat-intro",
+      "sound-boat-ladder",
+      "turtle-tales-help",
+      "turtle-tales-intro",
+      "turtle-tales-look",
+      "which-one-help",
+      "which-one-intro",
+      "which-one-look",
+    ];
+    for (const w of wordBank) keys.push(wordAudio(w.word));
     for (const i of SENTENCES) {
       keys.push(`which-one-sentence-${i.id}`);
       for (const w of tokens(i.text)) keys.push(wordAudio(w));
     }
-    for (const t of STORIES) {
+    for (const t of STORIES)
       t.pages.forEach((p, i) => {
         keys.push(`turtle-tales-${t.id}-page-${i}`);
+        expect(speech[`turtle-tales-${t.id}-page-${i}`]).toBe(p.text);
         for (const w of tokens(p.text)) keys.push(wordAudio(w));
       });
-      t.questions.forEach((q, i) => {
-        keys.push(`turtle-tales-${t.id}-question-${i}`);
-        for (const w of tokens(q.text + " " + q.prompt)) keys.push(wordAudio(w));
-      });
-    }
     for (const key of keys) {
       expect(speech[key], key).toBeTruthy();
       expect(existsSync(new URL(`../assets/audio/${key}.m4a`, import.meta.url)), key).toBe(true);
     }
+    const map = readFileSync(new URL("../src/content/learnAudio/reading.ts", import.meta.url), "utf8");
+    for (const key of Object.keys(speech)) {
+      expect(statSync(new URL(`../assets/audio/${key}.m4a`, import.meta.url)).size, key).toBeGreaterThan(1000);
+      expect(map).toContain(`'${key}': require(`);
+    }
+    for (const e of [boat, tales, which])
+      expect(speech[e.introAudio!].split(/\s+/).length, e.id).toBeLessThanOrEqual(10);
   });
 });
 
-describe("Sound Boat: count → letters → one-sound ladder → island", () => {
+/** Builds the current word with the right tiles. */
+function buildWord(s: BoatState): BoatState {
+  while (!boatComplete(s)) s = boatMove(s, { type: "tile", tile: boatExpected(s) });
+  return s;
+}
+
+describe("Sound Boat: picture words, then one-letter ladders, to the island", () => {
   for (const mode of boat.modes)
     for (const pace of paces)
-      it(`${mode}/${pace}: completes ten words, persists each transition, and returns correct outcome`, () => {
+      it(`${mode}/${pace}: builds ten words, survives reload at every step, and returns the outcome`, () => {
         const o = { mode, pace };
-        let s = boat.create(o, ctx());
-        for (let i = 0; i < 10; i++) {
+        let s = boat.create(o, ctx()) as BoatState;
+        for (let i = 0; i < WORDS_PER_ROUND; i++) {
           expect(boat.validate(s, o)).toBe(true);
-          const target = boatWord(s);
-          const before = boatSlots(s);
-          const missing = missingSlots(s);
-          if (i > 2 && i !== 6) expect(missing).toHaveLength(1);
-          for (let k = 0; k < target.tiles.length; k++) s = boatMove(s, { type: "add" });
-          s = boatMove(s, { type: "count" });
-          expect(s.stage).toBe("letters");
-          expect(boat.validate(s, o)).toBe(true);
-          for (const index of missing) {
-            s = boatMove(s, { type: "letter", tile: target.tiles[index] });
+          expect(boat.turn!(s, o)).toBe((1 + i) % 2);
+          const blanks = boatBlanks(s);
+          if (i === 0) expect(blanks).toHaveLength(1);
+          if (i === 1) expect(blanks.length).toBeLessThanOrEqual(2);
+          if (i >= 4) {
+            expect(blanks, boatWord(s).word).toHaveLength(1);
+            expect(boatPrevious(s)).toBeTruthy();
+          } else expect(pictureFor(boatWord(s).word), boatWord(s).word).toBe(boatWord(s).word);
+          while (!boatComplete(s)) {
+            const choices = boatChoices(s);
+            expect(choices).toContain(boatExpected(s));
+            expect(new Set(choices.map(tileLabel)).size, choices.join()).toBe(choices.length);
+            s = boatMove(s, { type: "tile", tile: boatExpected(s) });
             expect(boat.validate(JSON.parse(JSON.stringify(s)), o)).toBe(true);
           }
-          expect(s.stage).toBe("sail");
-          expect(before.filter(Boolean).length + missing.length).toBe(target.tiles.length);
+          expect(boatMove(s, { type: "tile", tile: boatChoices(s)[0] })).toBe(s);
           s = boatMove(s, { type: "next" });
         }
         expect(boat.validate(s, o)).toBe(true);
+        expect(s.clean).toEqual(Array(WORDS_PER_ROUND).fill(true));
         expect(boat.outcome(s, o)).toBe(mode === "versus" ? "draw" : "done");
         expect(boatMove(s, { type: "next" })).toBe(s);
       });
-  it("wrong count, wrong letter and hint preserve the word and mark an assisted rung", () => {
+  it("opens each pace with an easy picture word with one letter to find", () => {
+    for (const pace of paces)
+      for (let seed = 1; seed < 30; seed++) {
+        const s = boat.create({ mode: "solo", pace }, ctx(seed)) as BoatState;
+        expect(PICTURE_WORDS[pace === "hard" ? "medium" : "easy"]).toContain(s.pictures[0]);
+        expect(boatChoices(s)).toHaveLength(3);
+        expect(new Set(s.pictures).size).toBe(4);
+      }
+  });
+  it("never offers two tiles that sound alike or look the same", () => {
+    const twins = [
+      ["c", "k", "ck"],
+      ["ee", "ea"],
+      ["ai", "a_e"],
+      ["oa", "o_e"],
+      ["s", "ss", "z"],
+      ["l", "ll"],
+    ];
+    for (const pace of paces)
+      for (let seed = 1; seed < 20; seed++) {
+        let s = boat.create({ mode: "solo", pace }, ctx(seed)) as BoatState;
+        while (s.index < WORDS_PER_ROUND) {
+          const choices = boatChoices(s);
+          const needed = boatBlanks(s).map((i) => boatWord(s).tiles[i]);
+          // A word like cake needs both c and k; otherwise sound-alikes never appear together.
+          for (const g of twins)
+            expect(
+              choices.filter((c) => g.includes(c) && !needed.includes(c)).length +
+                (needed.some((c) => g.includes(c)) ? 1 : 0),
+              choices.join()
+            ).toBeLessThanOrEqual(Math.max(1, needed.filter((c) => g.includes(c)).length));
+          s = boatMove(buildWord(s), { type: "next" });
+        }
+      }
+  });
+  it("a wrong tile waits on the side; help lights the right one; either marks the word as helped", () => {
     const o: LearnOptions = { mode: "versus", pace: "easy" };
-    let s = boat.create(o, ctx());
-    s = boatMove(s, { type: "count" });
-    expect(s).toMatchObject({ stage: "count", assisted: true, feedback: "count" });
-    for (let k = 0; k < boatWord(s).tiles.length; k++) s = boatMove(s, { type: "add" });
-    s = boatMove(s, { type: "count" });
-    s = boatMove(s, { type: "letter", tile: "not-the-letter" });
-    expect(s.loaded).toBe(0);
-    expect(s.feedback).toBe("letter");
-    s = boatMove(s, { type: "hint" });
-    for (const i of missingSlots(s)) s = boatMove(s, { type: "letter", tile: boatWord(s).tiles[i] });
-    s = boatMove(s, { type: "next" });
+    let s = boat.create(o, ctx()) as BoatState;
+    const wrong = boatChoices(s).find((t) => t !== boatExpected(s))!;
+    s = boatMove(s, { type: "tile", tile: wrong });
+    expect(s).toMatchObject({ filled: 0, out: [wrong], assisted: true });
+    expect(boat.validate(s, o)).toBe(true);
+    expect(boatMove(s, { type: "tile", tile: wrong })).toBe(s);
+    s = boatMove(s, { type: "help" });
+    expect(s.hint).toBe(true);
+    expect(boat.validate(s, o)).toBe(true);
+    s = boatMove(s, { type: "tile", tile: boatExpected(s) });
+    expect(s).toMatchObject({ out: [], hint: false, assisted: true });
+    s = boatMove(buildWord(s), { type: "next" });
     expect(s.clean).toEqual([false]);
     expect(boat.validate(s, o)).toBe(true);
+    expect(boatMove(s, { type: "tile", tile: "not-offered" })).toBe(s);
   });
   it("rejects forged, oversized, contradictory, extra-field and wrong-pace saves", () => {
     const o: LearnOptions = { mode: "solo", pace: "easy" };
-    const s = boat.create(o, ctx());
+    const s = boat.create(o, ctx()) as BoatState;
+    const right = boatExpected(s);
     const corrupt: unknown[] = [
       { ...s, extra: true },
       { ...s, index: 1 },
-      { ...s, count: 999 },
-      { ...s, loaded: 1 },
-      { ...s, stage: "done" },
-      { ...s, warmups: ["sheep", "boat"] },
+      { ...s, filled: 999 },
+      { ...s, filled: 2 },
+      { ...s, out: [right], assisted: true },
+      { ...s, out: ["q", "q"], assisted: true },
+      { ...s, out: ["zz"], assisted: true },
+      { ...s, hint: true },
+      { ...s, pictures: ["sheep", "boat", "moon", "star"] },
+      { ...s, pictures: ["cat", "cat", "dog", "sun"] },
       { ...s, ladders: ["easy-0", "easy-0"] },
-      { ...s, assisted: false, feedback: "hint" },
       { ...s, clean: Array(100).fill(true) },
       { ...s, starter: 2 },
-      { ...s, count: NaN },
+      { ...s, filled: NaN },
+      { ...s, index: WORDS_PER_ROUND, clean: Array(WORDS_PER_ROUND).fill(true), filled: 1 },
     ];
     for (const bad of corrupt) expect(boat.validate(bad, o)).toBe(false);
+  });
+  it("keeps rounds saved by the older Sound Boat loading, and turns unfinished ones into a fresh round", () => {
+    const o: LearnOptions = { mode: "versus", pace: "easy" };
+    const old: LegacyBoatState = {
+      warmups: ["man", "fig"],
+      ladders: ["easy-0", "easy-1"],
+      starter: 1,
+      index: 1,
+      clean: [true],
+      count: 2,
+      loaded: 0,
+      stage: "count",
+      assisted: false,
+      feedback: "none",
+    };
+    expect([...LEGACY_WARMUP_WORDS]).toContain("man");
+    expect(boat.validate(old, o)).toBe(true);
+    expect(boat.outcome(old, o)).toBeNull();
+    expect(boat.turn!(old, o)).toBe(0);
+    const fresh = boatFromLegacy(old, o, {}, 20000);
+    expect(boat.validate(fresh, o)).toBe(true);
+    expect(fresh.starter).toBe(1);
+    expect(boatFromLegacy(old, o, {}, 20000)).toEqual(fresh);
+    const finished = { ...old, index: 10, clean: Array(10).fill(true), count: 0, stage: "done" as const };
+    expect(boat.validate(finished, o)).toBe(true);
+    expect(boat.outcome(finished, o)).toBe("draw");
+    expect(boat.validate({ ...old, stage: "letters" }, o)).toBe(false);
+    expect(boat.validate({ ...old, warmups: ["man", "zzz"] }, o)).toBe(false);
   });
 });
 
@@ -226,59 +398,91 @@ describe("Which One: careful first tries and untimed family turns", () => {
   });
 });
 
-describe("Turtle Tales: ordered words, model once per page and sentence turns", () => {
+describe("Turtle Tales: read each page, then pick the picture that matches it", () => {
   for (const mode of tales.modes)
     for (const pace of paces)
-      it(`${mode}/${pace}: reads six pages and two picture questions`, () => {
+      it(`${mode}/${pace}: reads every page to the end and survives reload at every step`, () => {
         const o = { mode, pace };
-        let s = tales.create(o, ctx());
+        let s = tales.create(o, ctx()) as TaleState;
         const t = tale(s);
         for (let p = 0; p < t.pages.length; p++) {
-          // Together mode alternates readers by sentence, so count the sentences on earlier pages.
-          const sentencesBefore = t.pages.slice(0, p).reduce((n, page) => n + (page.text.match(/[.!?]/g)?.length ?? 1), 0);
-          expect(taleTurn(s)).toBe((s.starter + sentencesBefore) % 2);
-          const before = s.word;
-          s = taleTap(s, before + 1);
-          expect(s.word).toBe(before);
-          expect(s.pointed).toBe(true);
-          s = taleModel(s);
-          expect(taleModel(s)).toBe(s);
           expect(tales.validate(s, o)).toBe(true);
-          expect(talePage(s)).toBe(s);
-          for (let j = 0; j < tokens(t.pages[p].text).length; j++) {
-            s = taleTap(s, j);
+          expect(tales.turn!(s, o)).toBe((s.starter + p) % 2);
+          if (p === 1) {
+            s = talePick(s, 1 - s.sides[p]);
+            expect(s).toMatchObject({ wrong: true, solved: false });
+            expect(talePick(s, 1 - s.sides[p])).toBe(s);
+            s = taleHear(s);
+            expect(taleHear(s)).toBe(s);
             expect(tales.validate(JSON.parse(JSON.stringify(s)), o)).toBe(true);
           }
-          expect(pageComplete(s)).toBe(true);
-          expect(taleTap(s, 0)).toBe(s);
-          s = talePage(s);
-          expect(tales.validate(s, o)).toBe(true);
+          expect(taleTurnPage(s)).toBe(s);
+          s = talePick(s, s.sides[p]);
+          expect(s.solved).toBe(true);
+          expect(tales.validate(JSON.parse(JSON.stringify(s)), o)).toBe(true);
+          s = taleTurnPage(s);
         }
-        for (let q = 0; q < 2; q++) {
-          s = talePick(s, (taleAnswer(s) + 1) % 3);
-          expect(tales.validate(s, o)).toBe(true);
-          s = talePick(s, taleAnswer(s));
-          expect(tales.validate(s, o)).toBe(true);
-          s = taleNext(s);
-          expect(tales.validate(s, o)).toBe(true);
-        }
+        expect(taleDone(s)).toBe(true);
+        expect(tales.validate(s, o)).toBe(true);
+        expect(s.clean).toEqual(t.pages.map((_, i) => i !== 1));
         expect(tales.outcome(s, o)).toBe("done");
+        expect(talePick(s, 0)).toBe(s);
       });
-  it("rejects skipping pages/questions, impossible word positions and future models", () => {
+  it("puts the matching picture on both sides across a round", () => {
+    const s = tales.create({ mode: "solo", pace: "easy" }, ctx(5)) as TaleState;
+    const many = Array.from(
+      { length: 20 },
+      (_, i) => tales.create({ mode: "solo", pace: "easy" }, ctx(i + 1)) as TaleState
+    );
+    expect(new Set(many.flatMap((m) => m.sides))).toEqual(new Set([0, 1]));
+    expect(s.sides).toHaveLength(tale(s).pages.length);
+  });
+  it("rejects skipped pages, impossible flags, wrong lengths and extra fields", () => {
     const o: LearnOptions = { mode: "solo", pace: "easy" };
-    const s = tales.create(o, ctx());
+    const s = tales.create(o, ctx()) as TaleState;
     for (const bad of [
-      { ...s, word: 99 },
-      { ...s, done: true },
-      { ...s, question: 1 },
-      { ...s, modelPages: [3] },
-      { ...s, modelPages: [0, 0] },
-      { ...s, wrong: 1 },
-      { ...s, solved: true },
-      { ...s, page: 6, word: 1 },
+      { ...s, page: 99 },
+      { ...s, page: 2 },
+      { ...s, sides: [0, 1] },
+      { ...s, sides: s.sides.map(() => 2) },
+      { ...s, page: 6, clean: Array(6).fill(true), solved: true },
+      { ...s, clean: [true] },
       { ...s, extra: 1 },
       { ...s, starter: -1 },
+      { ...s, id: "tale-4" },
     ])
       expect(tales.validate(bad, o)).toBe(false);
+  });
+  it("keeps rounds saved by the older Turtle Tales loading and carries them to the same page", () => {
+    const o: LearnOptions = { mode: "together", pace: "easy" };
+    const old: LegacyTaleState = {
+      id: "tale-1",
+      starter: 0,
+      page: 2,
+      word: 1,
+      pointed: false,
+      modelPages: [0],
+      question: 0,
+      orders: [
+        [1, 0, 2],
+        [2, 1, 0],
+      ],
+      wrong: null,
+      solved: false,
+      done: false,
+    };
+    expect(tales.validate(old, o)).toBe(true);
+    expect(tales.outcome(old, o)).toBeNull();
+    const now = taleFromLegacy(old);
+    expect(tales.validate(now, o)).toBe(true);
+    expect(now.page).toBe(2);
+    const questions = { ...old, page: 6, word: 0, modelPages: [], question: 1 };
+    expect(tales.validate(questions, o)).toBe(true);
+    expect(tales.outcome(taleFromLegacy(questions), o)).toBe("done");
+    const finished = { ...questions, question: 2, done: true };
+    expect(tales.validate(finished, o)).toBe(true);
+    expect(tales.outcome(finished, o)).toBe("done");
+    expect(tales.validate({ ...old, word: 99 }, o)).toBe(false);
+    expect(taleReader(now)).toBe(0);
   });
 });
