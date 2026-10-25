@@ -81,11 +81,310 @@ export type ObjectName = (typeof objectNames)[number];
 const ink = "#183F39";
 const colors: Record<string, string> = {
   coral: "#D68A6B",
-  red: "#C56D50",
+  red: "#D64F43",
   blue: "#5B9ABA",
   green: "#79AB80",
   gold: "#E1B251",
 };
+/** When a sentence names no colour (coral), animals wear their everyday colours so they are easy to name. */
+const natural: Record<string, string> = {
+  fox: "#E07B39",
+  hen: "#F3DFC1",
+  bird: "#E1B251",
+  duck: "#F2C94C",
+  frog: "#72B26B",
+  toad: "#A99560",
+  fish: "#EE9F4A",
+  seal: "#9AA6A6",
+  goat: "#E9DCC6",
+  bee: "#F2C14E",
+  bug: "#72B26B",
+  moth: "#C9A57E",
+  cub: "#A0704A",
+  rat: "#A3A39C",
+};
+const cream = "#FCFAF4",
+  beakGold = "#E8A13A";
+/** Cat, dog and pig share one friendly body; their ears, faces and tails tell them apart. */
+const furry = ["cat", "dog", "pig"];
+function Eye({ x, y, r = 2.6 }: { x: number; y: number; r?: number }) {
+  return <Circle cx={x} cy={y} r={r} fill={ink} stroke="none" />;
+}
+function animal(name: string, fill: string): React.ReactNode {
+  if (furry.includes(name))
+    return (
+      <>
+        <Path d="M22 60 Q3 38 12 32" fill="none" />
+        <Ellipse cx="47" cy="61" rx="29" ry="24" fill={fill} />
+        <Ellipse cx="29" cy="84" rx="11" ry="5" fill={fill} />
+        <Ellipse cx="66" cy="84" rx="11" ry="5" fill={fill} />
+        {name === "cat" && (
+          <>
+            <Polygon points="49,33 49,8 64,25" fill={fill} />
+            <Polygon points="70,24 85,8 85,40" fill={fill} />
+          </>
+        )}
+        <Circle cx="66" cy="44" r="23" fill={fill} />
+        {name === "cat" && <Path d="M48 48 L37 45 M48 53 L36 54 M82 48 L94 45 M82 53 L94 56" fill="none" />}
+        {name === "dog" && (
+          <>
+            <Ellipse cx="47" cy="40" rx="8" ry="17" fill="#986C4E" />
+            <Ellipse cx="86" cy="40" rx="8" ry="17" fill="#986C4E" />
+            <Ellipse cx="72" cy="55" rx="13" ry="9" fill="#F9EDC9" />
+            <Ellipse cx="72" cy="50" rx="5" ry="3.5" fill={ink} />
+            <Path d="M70 60 Q72 66 75 60" fill="#E58C8C" />
+          </>
+        )}
+        {name === "pig" && (
+          <>
+            {/* Floppy ears, a round snout with nostrils and a curly tail: clearly not a cat. */}
+            <Path d="M50 30 Q46 12 60 22 Q58 30 50 30 Z" fill={fill} />
+            <Path d="M80 22 Q94 12 90 30 Q82 30 80 22 Z" fill={fill} />
+            <Ellipse cx="77" cy="52" rx="12" ry="9" fill="#F7C6B2" />
+            <Ellipse cx="73" cy="52" rx="2.2" ry="3" fill={ink} />
+            <Ellipse cx="81" cy="52" rx="2.2" ry="3" fill={ink} />
+            <Path d="M19 56 q-9 -3 -6 -10 q4 -5 7 0 q2 5 -5 6" fill="none" />
+          </>
+        )}
+        <Eye x={61} y={40} />
+        <Eye x={76} y={40} />
+        <Path d="M62 54 Q68 60 74 54" fill="none" />
+      </>
+    );
+  switch (name) {
+    case "fox":
+      // Long pointed snout, tall ears, white muzzle and chest, dark socks and a bushy white-tipped tail.
+      return (
+        <>
+          <Path d="M30 66 Q6 74 4 50 Q4 32 16 30 Q14 48 34 58 Z" fill={fill} />
+          <Path d="M4 50 Q4 32 16 30 Q11 40 12 48 Z" fill={cream} />
+          <Path d="M30 72 L28 90 L36 90 L38 72 Z M62 72 L60 90 L68 90 L70 72 Z" fill={ink} />
+          <Ellipse cx="48" cy="64" rx="27" ry="15" fill={fill} />
+          <Path d="M60 56 Q70 64 66 76 Q58 74 56 62 Z" fill={cream} />
+          <Polygon points="60,38 61,12 75,31" fill={fill} />
+          <Polygon points="73,31 85,11 88,38" fill={fill} />
+          <Polygon points="64,31 64,21 70,29" fill={ink} stroke="none" />
+          <Polygon points="78,29 83,20 85,33" fill={ink} stroke="none" />
+          <Path d="M58 46 Q58 30 72 30 Q84 30 88 38 L98 50 Q94 56 86 56 Q74 60 64 57 Q58 53 58 46 Z" fill={fill} />
+          <Path d="M68 51 Q80 47 97 50 Q94 56 86 56 Q74 60 64 57 Q64 53 68 51 Z" fill={cream} />
+          <Circle cx="97" cy="50" r="3.2" fill={ink} />
+          <Eye x={77} y={40} />
+        </>
+      );
+    case "hen":
+      // Plump round body, red comb and wattle, little beak, tail feathers and two thin legs.
+      return (
+        <>
+          <Path d="M40 86 L40 94 M34 95 L46 95 M58 86 L58 94 M52 95 L64 95" stroke={beakGold} strokeWidth={4} />
+          <Path d="M30 60 Q8 56 6 40 Q18 42 24 48 Q12 34 18 24 Q30 32 34 44 Q30 30 40 26 Q44 40 42 52 Z" fill={fill} />
+          <Ellipse cx="50" cy="64" rx="30" ry="23" fill={fill} />
+          <Path d="M36 62 Q50 50 64 62 Q52 78 36 62 Z" fill="none" />
+          <Path d="M64 26 Q63 14 70 19 Q72 10 77 18 Q83 12 83 26 Z" fill="#D64F43" />
+          <Circle cx="74" cy="36" r="14" fill={fill} />
+          <Polygon points="86,32 98,37 86,42" fill={beakGold} />
+          <Path d="M84 43 Q88 52 82 52 Q79 48 84 43 Z" fill="#D64F43" />
+          <Eye x={77} y={33} />
+        </>
+      );
+    case "bird":
+      return (
+        <>
+          <Path d="M42 82 L40 92 M56 82 L58 92" />
+          <Polygon points="30,56 8,46 12,66" fill={fill} />
+          <Ellipse cx="48" cy="62" rx="24" ry="20" fill={fill} />
+          <Path d="M34 60 Q46 50 58 62 Q46 72 34 60 Z" fill="none" />
+          <Circle cx="68" cy="42" r="13" fill={fill} />
+          <Polygon points="79,39 92,43 79,47" fill={beakGold} />
+          <Eye x={71} y={39} />
+        </>
+      );
+    case "duck":
+      // Boat-shaped body, round head, wide flat bill and orange webbed feet.
+      return (
+        <>
+          <Path d="M38 84 L32 93 L46 93 Z M60 84 L54 93 L68 93 Z" fill={beakGold} />
+          <Path d="M62 46 Q58 58 62 64 L82 62 Q84 50 80 40 Z" fill={fill} />
+          <Path d="M12 52 Q8 44 18 46 Q36 56 62 56 L86 56 Q92 82 62 86 L34 86 Q12 82 12 52 Z" fill={fill} />
+          <Path d="M32 66 Q50 56 66 68 Q50 78 32 66 Z" fill="none" />
+          <Circle cx="72" cy="36" r="15" fill={fill} />
+          <Path d="M84 36 Q99 33 99 41 Q98 47 84 45 Z" fill={beakGold} />
+          <Eye x={74} y={32} />
+        </>
+      );
+    case "frog":
+    case "toad": {
+      const toad = name === "toad";
+      // Front view: wide mouth and bulging eyes on top; the toad is lumpier with sleepy eyes.
+      return (
+        <>
+          <Ellipse cx="20" cy="80" rx="16" ry="10" fill={fill} />
+          <Ellipse cx="80" cy="80" rx="16" ry="10" fill={fill} />
+          <Ellipse cx="50" cy="66" rx={toad ? 34 : 29} ry={toad ? 22 : 23} fill={fill} />
+          {!toad && <Ellipse cx="50" cy="73" rx="16" ry="12" fill="#F4EBC8" />}
+          <Ellipse cx="50" cy="44" rx={toad ? 34 : 31} ry="18" fill={fill} />
+          <Circle cx="31" cy="28" r="10" fill={fill} />
+          <Circle cx="69" cy="28" r="10" fill={fill} />
+          <Circle cx="31" cy="28" r="5.5" fill={cream} />
+          <Circle cx="69" cy="28" r="5.5" fill={cream} />
+          <Eye x={31} y={29} r={3} />
+          <Eye x={69} y={29} r={3} />
+          {toad && <Path d="M22 25 Q31 18 40 25 M60 25 Q69 18 78 25" fill={fill} />}
+          <Path d="M32 48 Q50 60 68 48" fill="none" />
+          {toad && (
+            <>
+              <Circle cx="26" cy="62" r="3" fill="#7E6E45" stroke="none" />
+              <Circle cx="38" cy="78" r="3" fill="#7E6E45" stroke="none" />
+              <Circle cx="64" cy="76" r="3" fill="#7E6E45" stroke="none" />
+              <Circle cx="76" cy="60" r="3" fill="#7E6E45" stroke="none" />
+              <Circle cx="50" cy="66" r="2.5" fill="#7E6E45" stroke="none" />
+            </>
+          )}
+          <Ellipse cx="38" cy="89" rx="8" ry="4" fill={fill} />
+          <Ellipse cx="62" cy="89" rx="8" ry="4" fill={fill} />
+        </>
+      );
+    }
+    case "fish":
+      return (
+        <>
+          <Polygon points="24,52 4,34 4,70" fill={fill} />
+          <Path d="M46 40 Q54 22 66 36" fill={fill} />
+          <Path d="M20 52 Q44 24 76 38 Q92 46 92 52 Q92 58 76 66 Q44 80 20 52 Z" fill={fill} />
+          <Path d="M58 40 Q52 52 58 64" fill="none" />
+          <Circle cx="77" cy="47" r="5" fill={cream} />
+          <Eye x={78} y={47} r={2.4} />
+          <Path d="M84 58 Q88 60 91 56" fill="none" />
+        </>
+      );
+    case "seal":
+      // Long smooth body lying down, head up, whiskered snout and flippers.
+      return (
+        <>
+          <Path d="M14 80 L2 70 L4 90 Z" fill={fill} />
+          <Path d="M10 84 Q12 64 42 62 Q58 60 64 44 L88 44 Q92 64 82 76 Q72 90 44 90 L16 90 Q10 90 10 84 Z" fill={fill} />
+          <Path d="M54 80 Q62 96 74 86 Q66 82 62 74 Z" fill={fill} />
+          <Circle cx="78" cy="36" r="16" fill={fill} />
+          <Ellipse cx="90" cy="43" rx="9" ry="6.5" fill="#E3E8E6" />
+          <Ellipse cx="95" cy="40" rx="3" ry="2.2" fill={ink} />
+          <Path d="M88 46 L76 50 M90 47 L80 54 M94 47 L99 53" fill="none" strokeWidth={1.6} />
+          <Eye x={79} y={31} />
+        </>
+      );
+    case "sheep": {
+      // A fluffy white cloud of wool with a coloured face and legs.
+      const face = fill === natural.goat || fill === colors.coral ? "#5E5A55" : fill;
+      return (
+        <>
+          <Path d="M30 72 L30 90 M40 74 L40 90 M60 74 L60 90 M70 72 L70 90" stroke={face} strokeWidth={6} />
+          <Path
+            d="M18 64 Q6 56 16 46 Q16 32 32 34 Q38 22 52 28 Q66 22 70 36 Q84 38 80 52 Q88 66 74 72 Q68 84 54 78 Q40 86 32 76 Q14 78 18 64 Z"
+            fill={cream}
+          />
+          <Path d="M28 50 Q32 44 38 48 M46 40 Q50 34 56 38 M44 62 Q48 56 54 60 M60 54 Q64 48 70 52" fill="none" strokeWidth={1.8} />
+          <Ellipse cx="80" cy="46" rx="11" ry="14" fill={face} />
+          <Ellipse cx="70" cy="38" rx="7" ry="3.5" fill={face} />
+          <Path d="M72 34 Q78 26 86 32" fill={cream} />
+          <Circle cx="83" cy="43" r="2.6" fill={cream} stroke="none" />
+        </>
+      );
+    }
+    case "goat":
+      // Tan body on four legs, curved horns, floppy ears and a little beard.
+      return (
+        <>
+          <Path d="M26 70 L26 90 M37 70 L37 90 M60 70 L60 90 M71 70 L71 90" strokeWidth={6} />
+          <Path d="M20 48 L10 38" />
+          <Path d="M18 56 Q18 44 30 44 L64 44 Q74 44 74 56 L74 66 Q74 74 64 74 L28 74 Q18 74 18 66 Z" fill={fill} />
+          <Path d="M70 24 Q66 6 54 8 M78 22 Q80 6 70 2" fill="none" strokeWidth={4} />
+          <Path d="M62 48 L70 24 Q76 16 84 20 L94 36 Q96 42 88 44 L76 46 Z" fill={fill} />
+          <Path d="M70 28 Q58 30 56 36 Q64 36 72 32 Z" fill={fill} />
+          <Path d="M86 44 L84 58 L78 45 Z" fill={cream} />
+          <Ellipse cx="93" cy="37" rx="2" ry="1.6" fill={ink} />
+          <Eye x={80} y={29} />
+        </>
+      );
+    case "bee":
+      // Striped body, see-through wings, a stinger and antennae.
+      return (
+        <>
+          <Path d="M36 76 L32 86 M50 79 L50 89 M64 76 L68 86" />
+          <Ellipse cx="40" cy="32" rx="12" ry="20" fill="#E3F1F6" transform="rotate(-20 40 32)" />
+          <Ellipse cx="58" cy="30" rx="12" ry="20" fill="#E3F1F6" transform="rotate(18 58 30)" />
+          <Polygon points="20,58 4,60 20,66" fill={ink} />
+          <Ellipse cx="48" cy="60" rx="30" ry="19" fill={fill} />
+          <Path d="M36 43 Q30 60 36 77 M50 41 Q44 60 50 79 M64 44 Q58 60 64 76" fill="none" strokeWidth={6} />
+          <Circle cx="82" cy="54" r="12" fill={fill} />
+          <Path d="M84 43 Q86 32 94 30 M78 43 Q74 32 80 26" fill="none" />
+          <Eye x={86} y={51} />
+          <Path d="M84 59 Q88 62 91 58" fill="none" />
+        </>
+      );
+    case "bug":
+      // A round beetle seen from above: dark head, shell line, spots and six legs.
+      return (
+        <>
+          <Path d="M28 46 L12 38 M26 60 L8 60 M28 74 L12 84 M72 46 L88 38 M74 60 L92 60 M72 74 L88 84" />
+          <Path d="M44 20 Q40 8 32 8 M56 20 Q60 8 68 8" fill="none" />
+          <Circle cx="50" cy="26" r="11" fill={ink} />
+          <Ellipse cx="50" cy="60" rx="26" ry="30" fill={fill} />
+          <Path d="M50 32 L50 90" fill="none" />
+          <Circle cx="38" cy="50" r="4.5" fill={ink} stroke="none" />
+          <Circle cx="62" cy="50" r="4.5" fill={ink} stroke="none" />
+          <Circle cx="37" cy="70" r="4.5" fill={ink} stroke="none" />
+          <Circle cx="63" cy="70" r="4.5" fill={ink} stroke="none" />
+        </>
+      );
+    case "moth":
+      // Big soft wings with eye spots, a thin body and feathery antennae.
+      return (
+        <>
+          <Path d="M46 30 Q38 12 26 10 M54 30 Q62 12 74 10" fill="none" />
+          <Path d="M30 13 L34 18 M36 15 L38 21 M70 13 L66 18 M64 15 L62 21" fill="none" strokeWidth={1.8} />
+          <Path d="M48 38 Q24 14 6 30 Q2 52 46 54 Z" fill={fill} />
+          <Path d="M52 38 Q76 14 94 30 Q98 52 54 54 Z" fill={fill} />
+          <Path d="M46 54 Q18 58 20 80 Q36 88 48 64 Z" fill={fill} />
+          <Path d="M54 54 Q82 58 80 80 Q64 88 52 64 Z" fill={fill} />
+          <Circle cx="26" cy="38" r="6" fill={cream} />
+          <Circle cx="74" cy="38" r="6" fill={cream} />
+          <Ellipse cx="50" cy="56" rx="6" ry="26" fill="#8A6A4A" />
+        </>
+      );
+    case "cub":
+      // A bear cub: round ears, a light muzzle with a big nose, stubby tail.
+      return (
+        <>
+          <Ellipse cx="47" cy="64" rx="29" ry="22" fill={fill} />
+          <Ellipse cx="29" cy="85" rx="11" ry="5" fill={fill} />
+          <Ellipse cx="64" cy="85" rx="11" ry="5" fill={fill} />
+          <Circle cx="52" cy="22" r="9" fill={fill} />
+          <Circle cx="82" cy="22" r="9" fill={fill} />
+          <Circle cx="52" cy="22" r="4" fill="#E8C9A6" />
+          <Circle cx="82" cy="22" r="4" fill="#E8C9A6" />
+          <Circle cx="67" cy="42" r="22" fill={fill} />
+          <Ellipse cx="70" cy="53" rx="11" ry="8" fill="#E8C9A6" />
+          <Ellipse cx="70" cy="49" rx="4.5" ry="3.2" fill={ink} />
+          <Eye x={61} y={38} />
+          <Eye x={78} y={38} />
+        </>
+      );
+    case "rat":
+      // Long pointed snout with whiskers, round ears and a long thin tail.
+      return (
+        <>
+          <Path d="M20 72 Q4 76 6 92 Q10 98 24 94" fill="none" strokeWidth={3.4} stroke="#C48E86" />
+          <Path d="M18 76 Q18 52 44 50 Q62 48 70 56 L74 78 Q60 86 30 86 Q18 86 18 76 Z" fill={fill} />
+          <Path d="M34 86 L32 92 M56 84 L56 92" />
+          <Circle cx="64" cy="34" r="11" fill={fill} />
+          <Circle cx="64" cy="34" r="6" fill="#E9B3AC" />
+          <Path d="M56 56 Q56 38 72 40 Q86 44 98 58 Q90 64 76 64 Q60 64 56 56 Z" fill={fill} />
+          <Circle cx="97" cy="58" r="3" fill="#C48E86" />
+          <Path d="M92 60 L84 66 M93 61 L88 70" fill="none" strokeWidth={1.6} />
+          <Eye x={78} y={50} />
+        </>
+      );
+  }
+  return null;
+}
 const animals = [
   "cat",
   "dog",
@@ -122,120 +421,8 @@ export function ObjectGlyph({
 }) {
   const fill = colors[color] ?? color;
   let shape: React.ReactNode;
-  if (animals.includes(name)) {
-    const wings = ["hen", "bird", "duck", "bee", "bug", "moth"].includes(name);
-    const fish = name === "fish" || name === "seal";
-    shape = (
-      <>
-        {name === "fish" ? (
-          <Polygon points="17,50 3,30 3,74" fill={fill} />
-        ) : name === "seal" ? (
-          <Ellipse cx="18" cy="72" rx="15" ry="8" fill={fill} />
-        ) : (
-          <Path d="M22 60 Q3 38 12 32" fill="none" />
-        )}
-        {wings && (
-          <>
-            <Ellipse cx="38" cy="30" rx="15" ry="19" fill="#F9EDC9" />
-            <Ellipse cx="62" cy="30" rx="15" ry="19" fill="#F9EDC9" />
-          </>
-        )}
-        <Ellipse cx="47" cy="61" rx={name === "sheep" ? 34 : 29} ry="24" fill={name === "sheep" ? "#FCFAF4" : fill} />
-        {!fish && (
-          <>
-            <Ellipse cx="29" cy="84" rx="11" ry="5" fill={fill} />
-            <Ellipse cx="66" cy="84" rx="11" ry="5" fill={fill} />
-          </>
-        )}
-        {["cat", "fox"].includes(name) && (
-          <>
-            <Polygon points="49,33 49,8 64,25" fill={fill} />
-            <Polygon points="70,24 85,8 85,40" fill={fill} />
-          </>
-        )}
-        {(name === "rat" || name === "cub") && (
-          <>
-            <Circle cx="50" cy="20" r="12" fill={fill} />
-            <Circle cx="82" cy="20" r="12" fill={fill} />
-          </>
-        )}
-        <Circle cx="66" cy="44" r="23" fill={fill} />
-        {name === "fox" && (
-          <>
-            <Path d="M45 45 L65 53 L86 44 Q81 66 66 67 Q51 66 45 45 Z" fill="#FCFAF4" />
-            <Path d="M19 50 Q-1 47 4 70 L20 76 Z" fill={fill} />
-            <Path d="M4 62 L13 70 L8 73 L3 69 Z" fill="#FCFAF4" />
-          </>
-        )}
-        {name === "cat" && <Path d="M48 48 L37 45 M48 53 L36 54 M82 48 L94 45 M82 53 L94 56" fill="none" />}
-        {name === "seal" && (
-          <>
-            <Ellipse cx="35" cy="83" rx="15" ry="6" fill={fill} />
-            <Ellipse cx="71" cy="81" rx="13" ry="7" fill={fill} />
-            <Path d="M53 49 L42 45 M53 54 L41 55 M78 49 L91 45 M78 54 L92 55" fill="none" />
-            <Ellipse cx="67" cy="47" rx="4" ry="3" fill={ink} />
-          </>
-        )}
-        {name === "goat" && (
-          <>
-            <Path d="M54 22 Q40 2 52 5 M75 22 Q90 1 80 6" fill="none" />
-            <Path d="M65 65 L69 78 L74 64" fill="#F9EDC9" />
-          </>
-        )}
-        {name === "moth" && (
-          <>
-            <Circle cx="35" cy="30" r="6" fill="#E1B251" />
-            <Circle cx="65" cy="30" r="6" fill="#E1B251" />
-          </>
-        )}
-        {name === "toad" && (
-          <>
-            <Circle cx="32" cy="55" r="3" fill="#F9EDC9" />
-            <Circle cx="43" cy="67" r="3" fill="#F9EDC9" />
-            <Circle cx="26" cy="70" r="3" fill="#F9EDC9" />
-          </>
-        )}
-        {name === "dog" && (
-          <>
-            <Ellipse cx="47" cy="40" rx="8" ry="17" fill="#986C4E" />
-            <Ellipse cx="86" cy="40" rx="8" ry="17" fill="#986C4E" />
-            <Ellipse cx="72" cy="55" rx="13" ry="9" fill="#F9EDC9" />
-            <Ellipse cx="72" cy="50" rx="5" ry="3.5" fill={ink} />
-            <Path d="M70 60 Q72 66 75 60" fill="#E58C8C" />
-          </>
-        )}
-        {(name === "frog" || name === "toad") && (
-          <>
-            <Circle cx="54" cy="23" r="9" fill={fill} />
-            <Circle cx="77" cy="23" r="9" fill={fill} />
-          </>
-        )}
-        {name === "hen" && <Path d="M58 22 Q52 4 63 10 Q71 0 74 18" fill="#C56D50" />}
-        {["bird", "hen"].includes(name) && <Path d="M84 42 L99 48 L84 54 Z" fill="#E1B251" />}
-        {name === "duck" && <Path d="M83 43 Q99 40 99 48 Q98 56 83 53 Z" fill="#E1B251" />}
-        {name === "pig" && (
-          <>
-            {/* Floppy ears, a round snout with nostrils and a curly tail: clearly not a cat. */}
-            <Path d="M50 30 Q46 12 60 22 Q58 30 50 30 Z" fill={fill} />
-            <Path d="M80 22 Q94 12 90 30 Q82 30 80 22 Z" fill={fill} />
-            <Ellipse cx="77" cy="52" rx="12" ry="9" fill="#F7C6B2" />
-            <Ellipse cx="73" cy="52" rx="2.2" ry="3" fill={ink} />
-            <Ellipse cx="81" cy="52" rx="2.2" ry="3" fill={ink} />
-            <Path d="M19 56 q-9 -3 -6 -10 q4 -5 7 0 q2 5 -5 6" fill="none" />
-          </>
-        )}
-        {name === "bee" && (
-          <>
-            <Line x1="29" y1="43" x2="29" y2="79" />
-            <Line x1="43" y1="40" x2="43" y2="83" />
-          </>
-        )}
-        <Circle cx="61" cy="40" r="2.5" fill={ink} stroke="none" />
-        <Circle cx="76" cy="40" r="2.5" fill={ink} stroke="none" />
-        <Path d="M62 54 Q68 60 74 54" fill="none" />
-      </>
-    );
-  } else
+  if (animals.includes(name)) shape = animal(name, color === "coral" ? (natural[name] ?? fill) : fill);
+  else
     switch (name) {
       case "turtle":
         shape = (
@@ -468,22 +655,51 @@ export function ObjectGlyph({
         );
         break;
       case "mango":
-      case "leaf":
       case "seed":
         shape = (
           <>
-            <Path d="M55 16 Q99 38 72 78 Q37 108 19 69 Q6 29 55 16Z" fill={name === "leaf" ? "#79AB80" : "#E1B251"} />
+            <Path d="M55 16 Q99 38 72 78 Q37 108 19 69 Q6 29 55 16Z" fill="#E1B251" />
             <Path d="M50 18 Q54 3 74 5 Q73 23 50 18" fill="#79AB80" />
           </>
         );
         break;
-      case "shell":
-      case "dish":
-      case "nest":
+      case "leaf":
+        // A long leaf with a stem, middle vein and side veins.
         shape = (
           <>
-            <Path d="M10 60 Q8 8 50 16 Q94 7 90 60 L64 85 L36 85 Z" fill={name === "nest" ? "#D7B482" : "#F4B59A"} />
-            <Path d="M50 80 L28 32 M50 80 L50 24 M50 80 L74 32" fill="none" />
+            <Path d="M14 74 L4 82" strokeWidth={4} />
+            <Path d="M12 74 Q24 34 94 40 Q74 84 12 74 Z" fill="#79AB80" />
+            <Path d="M12 74 Q50 56 92 41 M36 64 L34 50 M50 58 L52 44 M64 52 L68 42 M38 66 L48 74 M54 60 L64 70 M68 54 L78 62" fill="none" strokeWidth={2} />
+          </>
+        );
+        break;
+      case "shell":
+        // A seashell: a ridged fan with a little hinge at the bottom.
+        shape = (
+          <>
+            <Path d="M38 80 L30 92 L70 92 L62 80 Z" fill="#F4B59A" />
+            <Path d="M50 84 L16 58 Q8 30 30 18 Q50 8 70 18 Q92 30 84 58 Z" fill="#F7C9AE" />
+            <Path d="M50 84 L20 50 M50 84 L30 26 M50 84 L50 16 M50 84 L70 26 M50 84 L80 50" fill="none" strokeWidth={2.4} />
+          </>
+        );
+        break;
+      case "dish":
+        // A shallow bowl seen from the side.
+        shape = (
+          <>
+            <Path d="M6 52 L94 52 Q88 82 50 84 Q12 82 6 52 Z" fill={fill} />
+            <Ellipse cx="50" cy="52" rx="44" ry="8" fill="#F9EDC9" />
+            <Path d="M34 84 L66 84" strokeWidth={5} />
+          </>
+        );
+        break;
+      case "nest":
+        // A round bowl of woven twigs.
+        shape = (
+          <>
+            <Path d="M8 52 Q10 88 50 88 Q90 88 92 52 Z" fill="#B8875C" />
+            <Ellipse cx="50" cy="52" rx="42" ry="10" fill="#8C6239" />
+            <Path d="M14 62 L44 78 M28 58 L66 84 M48 60 L84 70 M70 60 L40 86 M86 60 L58 84 M30 82 L16 64" fill="none" stroke="#5E4128" strokeWidth={2.2} />
           </>
         );
         break;
@@ -517,16 +733,41 @@ export function ObjectGlyph({
         );
         break;
       case "rock":
-      case "sand":
-      case "log":
-      case "pond":
         shape = (
           <>
-            <Path
-              d="M8 74 L20 42 L43 31 L73 38 L92 75 L77 89 L25 88 Z"
-              fill={name === "pond" ? "#91C6D3" : name === "sand" ? "#E6D3AC" : name === "log" ? "#B8875C" : "#B3BBAF"}
-            />
+            <Path d="M8 74 L20 42 L43 31 L73 38 L92 75 L77 89 L25 88 Z" fill="#B3BBAF" />
             <Path d="M24 64 L45 54 L69 66" fill="none" />
+          </>
+        );
+        break;
+      case "sand":
+        // A soft sand hill with grains.
+        shape = (
+          <>
+            <Path d="M2 88 Q24 52 50 52 Q76 52 98 88 Z" fill="#E6D3AC" />
+            <Path d="M30 72 L31 73 M46 64 L47 65 M60 74 L61 75 M70 66 L71 67 M40 80 L41 81 M56 84 L57 85" fill="none" strokeWidth={3} />
+          </>
+        );
+        break;
+      case "log":
+        // A cut log lying down, with rings on its end.
+        shape = (
+          <>
+            <Rect x="8" y="50" width="76" height="34" rx="6" fill="#B8875C" />
+            <Path d="M20 60 L44 60 M30 74 L62 74 M52 58 L70 58" fill="none" stroke="#7E5A3A" />
+            <Ellipse cx="84" cy="67" rx="11" ry="17" fill="#E6C49A" />
+            <Ellipse cx="84" cy="67" rx="5" ry="8" fill="none" stroke="#B8875C" />
+          </>
+        );
+        break;
+      case "pond":
+        // A flat oval of water with ripples and reeds.
+        shape = (
+          <>
+            <Path d="M12 70 L10 36 M18 68 L22 42" stroke="#5E8F55" strokeWidth={4} />
+            <Ellipse cx="11" cy="38" rx="3.5" ry="8" fill="#8C6239" />
+            <Ellipse cx="50" cy="70" rx="46" ry="20" fill="#91C6D3" />
+            <Path d="M30 66 Q38 62 46 66 M54 76 Q62 72 70 76 M60 62 Q66 59 72 62" fill="none" stroke="#5B9ABA" />
           </>
         );
         break;
@@ -676,7 +917,13 @@ export function Scene({ scene, width = 180, height = 124 }: { scene: ReadingScen
       <Svg width={width} height={height} viewBox="0 0 180 140">
         <Rect width="180" height="140" rx="16" fill="#FCFAF4" />
         <Ellipse cx="91" cy="124" rx="78" ry="9" fill="#E5EFE5" />
-        <ObjectGlyph name={scene.object} x={scene.relation === "beside" ? 98 : 49} y={objectY} size={objectSize} color="gold" />
+        <ObjectGlyph
+          name={scene.object}
+          x={scene.relation === "beside" ? 98 : 49}
+          y={objectY}
+          size={objectSize}
+          color={animals.includes(scene.object) ? "coral" : "gold"}
+        />
         <ObjectGlyph
           name={scene.subject}
           x={scene.relation === "beside" ? 13 : 89 - s / 2}
@@ -686,6 +933,12 @@ export function Scene({ scene, width = 180, height = 124 }: { scene: ReadingScen
         />
         {inside === "water" && <Path d="M40 92 Q90 82 140 92 L140 112 Q90 122 40 112 Z" fill={front} opacity={0.85} />}
         {inside === "buried" && <Path d="M40 118 Q90 78 140 118 Z" fill={front} stroke={ink} strokeWidth="2" />}
+        {inside === "blanket" && (
+          <>
+            <Rect x="52" y="86" width="78" height="26" rx="6" fill="#9CC3D9" stroke={ink} strokeWidth="2.5" />
+            <Path d="M52 95 L130 95 M70 86 L70 112 M90 86 L90 112 M110 86 L110 112" stroke="#F9EDC9" strokeWidth="2.5" />
+          </>
+        )}
         {inside === "container" && (
           <>
             <Path d="M52 87 L128 87 L123 119 L58 119 Z" fill={front} stroke={ink} strokeWidth="2.5" />
