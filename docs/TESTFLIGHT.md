@@ -107,3 +107,17 @@ PR #11 merged as `3ae09363432a3a3430293a252be16a05561c0af4` (tree equal to the r
 
 Open TestFlight and update **Little Island: Family Games** to **1.4.0 (10)**. Physical installation, audio, CHamoru native review and family acceptance remain operator checks. See [build 10 delivery evidence](evidence/testflight-build10.json).
 
+
+
+## Intuitive learning beta — 1.5.0 (11), available 25 October 2026
+
+Leon explicitly requested the next TestFlight build for testing after simulator-host failures blocked the remaining native acceptance. This beta was built from clean PR #13 source `34639ea2d174f75d9212977b15209e5b9bf46019`, not a main merge. Application source remains `d854d90`; subsequent source commits only recorded acceptance. PR #13 stays open while iPad rotation and cold-launch recovery need verification. This delivery does not mark those cases passed.
+
+A fresh release check passed typecheck, lint, 477 tests across 35 files, web export and Expo Doctor 21/21. The local Xcode archive and App Store distribution export used the existing credentials; temporary signing resources were removed and the original keychain search list restored.
+
+- Signed IPA: 44,016,671 bytes; SHA256 `38ff48d5e26e4ba3a30276872a75f1cfc4b99f6d77ab2e67571779c605d1b010`. Embedded JS matches the archive; strict signature, App Store profile, signed entitlements, bundle ID, 1.5.0 (11), minimum 16.4 and iPhone/iPad families verified. All 1,279 referenced audio files match source bytes.
+- EAS submission `d66d7df9-17a8-4856-9373-c4dd2dd161de` finished. Completed Apple upload/build `16ee1624-3040-4e0f-8ea3-14e554e824fd` is `VALID` / `IN_BETA_TESTING`, verified at `2026-10-25T10:52:50.371Z`. It is attached to the existing **Leon** internal group: one adult tester, automatic all-build access off. English testing notes were verified. An additional empty upload reservation has no build attached; no duplicate submission was made.
+
+Open TestFlight and update **Little Island: Family Games** to **1.5.0 (11)**. Try the nine learning games without explaining the controls first, then check sound-off during Float or Sink, saved-round continuation after force close, and iPad portrait/landscape. Actual installation, physical audio/VoiceOver and child/family usability remain operator checks. No public distribution was created. See [delivery evidence](evidence/testflight-build11.json) and [acceptance](LEARNING_INTUITIVE.md).
+
+The verified archive/IPA and private receipts remain outside Git in the sibling artifact directory. Only this task's device DerivedData was removed after artifact verification. No task-owned runtime resources remain; held source and release worktrees are preserved.
