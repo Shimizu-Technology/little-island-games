@@ -2,40 +2,80 @@ import type { LearnEngine, Pace } from "../../types";
 import { pickItems } from "../../skills";
 import { exact, integer, prediction } from "../../kit/science";
 export type Command = "up" | "right" | "down" | "left" | "forward" | "turn-left" | "turn-right" | "repeat";
-export type Level = { id: string; pace: Pace; skill: string; rows: string[]; facing: number };
-/** Hand-drawn beaches: C crab, S shell, H home rock, # sandcastle. */
-export const levels: Level[] = [
-  ["e1", ["C.S.H", ".##..", ".....", ".....", "....."]],
-  ["e2", ["C#...", ".#...", ".S.H.", ".....", "....."]],
-  ["e3", ["C.S..", "##.#.", "...H.", ".....", "....."]],
-  ["e4", ["C....", ".##..", ".S#..", "..H..", "....."]],
-  ["e5", ["C.#..", "..#..", "S.S.H", ".....", "....."]],
-  ["e6", ["C..#H", ".S.#.", "...S.", ".###.", "....."]],
-  ["e7", ["C#S.H", ".#.#.", "...S.", ".....", "....."]],
-  ["e8", ["C....", "###S.", "S....", ".###.", "....H"]],
-  ["m1", ["C.S.H", ".###.", ".....", ".....", "....."]],
-  ["m2", ["C#...", ".#S..", "...#H", ".....", "....."]],
-  ["m3", ["C..#H", "##.#.", "S..S.", ".###.", "....."]],
-  ["m4", ["C.S..", ".#.#.", "...S.", ".###.", "....H"]],
-  ["m5", ["C#...", ".#.#.", "S..#H", "##.#.", "..S.."]],
-  ["m6", ["C...H", ".###.", ".S.S.", ".....", "....."]],
-  ["m7", ["C.S#H", ".#.#.", "...S.", ".###.", "....."]],
-  ["m8", ["C#..H", ".#.#.", "S..S.", ".#.#.", "....."]],
-  ["h1", ["C...S", "####.", "H....", ".....", "....."]],
-  ["h2", ["C.S..", "####.", "S...H", ".....", "....."]],
-  ["h3", ["C...S", ".###.", ".S..H", ".....", "....."]],
-  ["h4", ["C....", ".###S", "S...H", ".....", "....."]],
-  ["h5", ["C.S..", ".###.", "S...H", ".....", "....."]],
-  ["h6", ["C...H", ".###.", "S...S", ".....", "....."]],
-  ["h7", ["C...S", "##.#.", "H..S.", ".....", "....."]],
-  ["h8", ["C.S..", ".#.#.", "S#..H", "...#.", "....."]],
-].map(([id, rows]) => ({
-  id: id as string,
-  rows: rows as string[],
-  pace: (id as string).startsWith("e") ? "easy" : (id as string).startsWith("m") ? "medium" : "hard",
-  skill: (id as string).startsWith("h")
+export type Level = {
+  id: string;
+  pace: Pace;
+  skill: string;
+  rows: string[];
+  facing: number;
+  /** 0: two or three cards · 1: four to six · 2: a longer beach. A round plays one of each, in order. */
+  tier: 0 | 1 | 2;
+  /** Kept so older saved rounds still load; never offered in a new round. */
+  retired?: boolean;
+};
+/** Hand-drawn beaches: C crab, S shell, H crab house, # sandcastle. */
+const beaches: [id: string, tier: 0 | 1 | 2, rows: string[], retired?: true][] = [
+  // Gentle: compass arrows. First beaches are one shell, then home.
+  ["ea1", 0, ["CSH..", ".....", ".....", ".....", "....."]],
+  ["ea2", 0, ["C....", "S....", "H....", ".....", "....."]],
+  ["ea3", 0, ["CS...", ".H...", ".....", ".....", "....."]],
+  ["ea4", 0, ["C#...", "S....", "H....", ".....", "....."]],
+  ["ea5", 0, ["C....", "S....", ".H...", ".....", "....."]],
+  ["ea6", 0, ["CS#..", "..H..", ".....", ".....", "....."]],
+  ["eb1", 1, ["C.S..", "...H.", ".....", ".....", "....."]],
+  ["eb2", 1, ["CS...", "##...", "..H..", ".....", "....."]],
+  ["eb3", 1, ["C.#..", "S.#..", "..H..", ".....", "....."]],
+  ["e1", 1, ["C.S.H", ".##..", ".....", ".....", "....."]],
+  ["e2", 1, ["C#...", ".#...", ".S.H.", ".....", "....."]],
+  ["e3", 1, ["C.S..", "##.#.", "...H.", ".....", "....."]],
+  ["e4", 1, ["C....", ".##..", ".S#..", "..H..", "....."]],
+  ["e5", 2, ["C.#..", "..#..", "S.S.H", ".....", "....."]],
+  ["e6", 2, ["C..#H", ".S.#.", "...S.", ".###.", "....."]],
+  ["e7", 2, ["C#S.H", ".#.#.", "...S.", ".....", "....."]],
+  ["e8", 2, ["C....", "###S.", "S....", ".###.", "....H"], true],
+  // Growing: walk forward and turn.
+  ["ma1", 0, ["CSH..", ".....", ".....", ".....", "....."]],
+  ["ma2", 0, ["CS...", ".H...", ".....", ".....", "....."]],
+  ["ma3", 0, ["C....", "S....", "H....", ".....", "....."]],
+  ["ma4", 0, ["CSH..", "###..", ".....", ".....", "....."]],
+  ["mb1", 1, ["C.S..", "..#H.", ".....", ".....", "....."]],
+  ["mb2", 1, ["C....", "S....", "..H..", ".....", "....."]],
+  ["mb3", 1, ["CS...", "##...", "..H..", ".....", "....."]],
+  ["m1", 1, ["C.S.H", ".###.", ".....", ".....", "....."]],
+  ["mc1", 2, ["C.#..", "..S..", "..H..", ".....", "....."]],
+  ["mc2", 2, ["C....", "..S..", "....H", ".....", "....."]],
+  ["m2", 2, ["C#...", ".#S..", "...#H", ".....", "....."]],
+  ["m3", 2, ["C..#H", "##.#.", "S..S.", ".###.", "....."], true],
+  ["m4", 2, ["C.S..", ".#.#.", "...S.", ".###.", "....H"]],
+  ["m5", 2, ["C#...", ".#.#.", "S..#H", "##.#.", "..S.."], true],
+  ["m6", 2, ["C...H", ".###.", ".S.S.", ".....", "....."]],
+  ["m7", 2, ["C.S#H", ".#.#.", "...S.", ".###.", "....."]],
+  ["m8", 2, ["C#..H", ".#.#.", "S..S.", ".#.#.", "....."]],
+  // Challenge: Again ×2 repeats the card before it two more times.
+  ["ha1", 0, ["CS.H.", ".....", ".....", ".....", "....."]],
+  ["ha2", 0, ["C....", "S....", "S....", "H....", "....."]],
+  ["ha3", 0, ["C.S.H", ".....", ".....", ".....", "....."]],
+  ["hb1", 1, ["C...S", "....H", ".....", ".....", "....."]],
+  ["hb2", 1, ["C....", "S....", "S....", "...H.", "....."]],
+  ["hb3", 1, ["CS.S.", "....H", ".....", ".....", "....."]],
+  ["h1", 2, ["C...S", "####.", "H....", ".....", "....."]],
+  ["h2", 2, ["C.S..", "####.", "S...H", ".....", "....."], true],
+  ["h3", 2, ["C...S", ".###.", ".S..H", ".....", "....."]],
+  ["h4", 2, ["C....", ".###S", "S...H", ".....", "....."]],
+  ["h5", 2, ["C.S..", ".###.", "S...H", ".....", "....."]],
+  ["h6", 2, ["C...H", ".###.", "S...S", ".....", "....."]],
+  ["h7", 2, ["C...S", "##.#.", "H..S.", ".....", "....."]],
+  ["h8", 2, ["C.S..", ".#.#.", "S#..H", "...#.", "....."], true],
+];
+export const levels: Level[] = beaches.map(([id, tier, rows, retired]) => ({
+  id,
+  rows,
+  tier,
+  ...(retired ? { retired } : {}),
+  pace: id.startsWith("e") ? "easy" : id.startsWith("m") ? "medium" : "hard",
+  skill: id.startsWith("h")
     ? "think.loops"
-    : ["e2", "e4", "m2", "m5"].includes(id as string)
+    : ["e2", "e4", "m2", "m5"].includes(id)
       ? "think.debug"
       : "think.sequence",
   facing: 1,
@@ -75,6 +115,29 @@ export function step(l: Level, w: Walker, c: Command): Walker {
   const pos = y * 5 + x,
     shell = shellCells(l).indexOf(pos);
   return { pos, facing: dir, shells: w.shells | (shell < 0 ? 0 : 1 << shell), previous: c, bump: false };
+}
+/** One footprint per square walked, with the card that moved the crab there. */
+export type Trail = { steps: { pos: number; facing: number; card: number }[]; bumpCard: number | null; bumpPos: number; bumpFacing: number };
+/**
+ * The planned path, one square at a time (Again ×2 expands to the card before it, exactly like step()).
+ * Ends at the first bump so the beach can show where the crab would stop.
+ */
+export function trail(l: Level, program: Command[]): Trail {
+  let w = start(l);
+  const steps: Trail["steps"] = [];
+  for (let card = 0; card < program.length; card++) {
+    const c = program[card];
+    const moves = c === "repeat" ? (w.previous && w.previous !== "repeat" ? [w.previous, w.previous] : null) : [c];
+    if (!moves) return { steps, bumpCard: card, bumpPos: w.pos, bumpFacing: w.facing };
+    for (const m of moves) {
+      const n = step(l, w, m);
+      if (n.bump) return { steps, bumpCard: card, bumpPos: w.pos, bumpFacing: m === "forward" ? w.facing : ["up", "right", "down", "left"].indexOf(m) };
+      if (n.pos !== w.pos) steps.push({ pos: n.pos, facing: n.facing, card });
+      w = n;
+    }
+    if (solved(l, w)) break;
+  }
+  return { steps, bumpCard: null, bumpPos: w.pos, bumpFacing: w.facing };
 }
 export const solved = (l: Level, w: Walker) =>
   !w.bump && cell(l, w.pos) === "H" && w.shells === (1 << shellCells(l).length) - 1;
@@ -126,10 +189,11 @@ export const engine: LearnEngine<CrabState> = {
   id: "crab-commands",
   name: "Crab Commands",
   island: "thinking",
-  tagline: "Build a plan. Walk, collect, debug.",
-  description: "Give a crab arrow cards to collect every shell and reach its home rock.",
-  help: "Tap cards to make a program, then press Go. Tap a card in the strip to remove it. If the crab bumps, change that card and try again. Gentle uses compass arrows. Growing uses forward and turns. Challenge adds Repeat: do the previous card two more times. Together, alternate placing cards. Hint shows a shortest program. No move limit and no timer.",
+  tagline: "Plan the crab's path, then Go!",
+  description: "Tap arrow cards to lead the crab to its shell and home. Footprints show the path before you press Go.",
+  help: "Tap arrow cards to plan the crab's walk. Footprints on the sand show where it will go, and a red mark shows where it would bump. Press Go to watch it walk. Tap a card in your plan to take it out. Gentle uses arrows that point the way. Growing uses Walk and Turn: the crab walks the way it faces. Challenge adds Again ×2, which does the card before it two more times. With a grown-up, take turns adding cards. The first beach is short and later ones grow. No timer and no move limit.",
   helpAudio: "crab-commands-help",
+  introAudio: "crab-commands-intro",
   modes: ["solo", "together"],
   color: "#B0563A",
   surface: "#FBE6DC",
@@ -139,18 +203,22 @@ export const engine: LearnEngine<CrabState> = {
     "think.loops": "Repeating steps",
   },
   paceHelp: {
-    easy: "Up, down, left and right.",
-    medium: "Forward, turn left and turn right.",
-    hard: "Repeat the previous card two more times.",
+    easy: "Arrow cards. Short beaches first.",
+    medium: "Walk and turn cards.",
+    hard: "Add Again ×2 to repeat a card.",
   },
   create: (o, c) => ({
-    levels: pickItems(
-      levels.filter((l) => l.pace === o.pace),
-      c.skills,
-      3,
-      c.rng,
-      c.today
-    ).map((l) => l.id),
+    // One beach from each tier, easiest first, so the first beach is two or three cards.
+    levels: ([0, 1, 2] as const).map(
+      (tier) =>
+        pickItems(
+          levels.filter((l) => l.pace === o.pace && l.tier === tier && !l.retired),
+          c.skills,
+          1,
+          c.rng,
+          c.today
+        )[0].id
+    ),
     completed: [],
     program: [],
     cursor: 0,
