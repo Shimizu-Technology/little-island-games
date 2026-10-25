@@ -615,8 +615,8 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     if (!active) return;
     practice("sci.cause-effect", right);
     update(makeChange(s, o));
-    sound(`tide-pool-${right ? "right" : "surprise"}-${m.id}`);
-    if (right) cheer();
+    if (right) cheer("right", `tide-pool-right-${m.id}`);
+    else sound(`tide-pool-surprise-${m.id}`);
     if (reduced) return;
     setPlaying(true);
     p.setValue(0);
@@ -633,8 +633,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     update(n);
     if (coach.active) coach.done();
     if (n.watched) {
-      sound("tide-pool-coral-happy");
-      cheer();
+      cheer("right", "tide-pool-coral-happy");
     } else sound(better ? "match" : "tap");
   };
   const promptKey = s.watched

@@ -101,7 +101,7 @@ export function Board({
     const canAutoPlay =
       Platform.OS !== "web" || (typeof navigator !== "undefined" && navigator.userActivation?.hasBeenActive);
     if (!active || !soundOn || !canAutoPlay) return;
-    const wait = fresh.current ? 3000 : 0;
+    const wait = fresh.current ? 3700 : 0;
     fresh.current = false;
     const timer = setTimeout(() => sound(promptKey), wait);
     return () => clearTimeout(timer);
@@ -128,7 +128,8 @@ export function Board({
       cb = placeOrder.indexOf(chamoruWord(b)!.category);
     return ca - cb || a.localeCompare(b);
   });
-  const coachId = spy ? target?.id : placed[0];
+  // Explore shows where to tap; I spy never points at the answer.
+  const coachId = spy ? undefined : placed[0];
   const missed = spy && !p.done && shown && ((selected && selected !== target?.id) || p.missed);
   return (
     <View style={{ gap: 10 }}>

@@ -300,7 +300,7 @@ export function Board({ session, update, practice, sound, active, width, coach, 
   // Each new customer says their order. The first waits for the game's spoken intro.
   useEffect(() => {
     if (!active || !packing) return;
-    const t = setTimeout(() => sound(orderAudio), session.revision === 0 ? 3000 : 450);
+    const t = setTimeout(() => sound(orderAudio), session.revision === 0 ? 3700 : 450);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, s.index, packing]);

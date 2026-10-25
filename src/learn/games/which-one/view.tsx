@@ -190,7 +190,9 @@ export function Board({
       <Copy style={{ fontSize: 18, fontWeight: "700", textAlign: "center", color: C.ink }}>
         {s.solved ? "Yes! That’s the one." : s.tried ? "Look at the glowing word." : "Read it. Which picture matches?"}
       </Copy>
-      {s.index === 0 && !s.tried && !s.solved ? <CoachSpot active={coach.active} handAt="none">{grid}</CoachSpot> : grid}
+      <CoachSpot active={coach.active && !s.tried && !s.solved} handAt="none">
+        {grid}
+      </CoachSpot>
       {s.tried && !s.solved ? (
         <Button
           compact

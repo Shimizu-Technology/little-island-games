@@ -287,8 +287,9 @@ export function Board({ session, update, practice, sound, active, width, height,
     setLock(true);
     later(() => setLock(false), 420);
     const after = announce(next, n);
-    // A finished move feels good; the frame celebrates the finish itself.
-    if (after.phase === "roll") later(() => cheer(), 650);
+    // A finished move feels good; the frame celebrates the finish itself. Wait for the spoken
+    // number (up to about a second for numbers like 77) so the tone doesn't cut it off.
+    if (after.phase === "roll") later(() => cheer(), 1000);
     update(next);
   }
   function pick(n: number) {
@@ -401,7 +402,7 @@ export function Board({ session, update, practice, sound, active, width, height,
           ))
         ) : (
           <>
-            {showCoach && humanRoll ? <CoachSpot active>{spinner}</CoachSpot> : spinner}
+            <CoachSpot active={showCoach && humanRoll}>{spinner}</CoachSpot>
             <View style={{ minWidth: 120, alignItems: "flex-start", gap: 4 }}>
               {humanRoll ? (
                 <Text style={{ fontSize: 30, fontWeight: "900", color: C.teal }}>{thing === "spinner" ? "Spin!" : "Roll!"}</Text>

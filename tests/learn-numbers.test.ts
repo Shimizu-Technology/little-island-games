@@ -7,6 +7,7 @@ import {
   nextStone,
   reefMove,
   reefRound,
+  reefNotWon,
   type ReefState,
 } from "../src/learn/games/reef-race/engine";
 import {
@@ -57,6 +58,28 @@ describe("Reef Race counting-on engine", () => {
         expect(reef.validate(JSON.parse(JSON.stringify(s)), o)).toBe(true);
         expect(reefRound(s, o).positions.every((n) => n >= 0 && n <= boardEnd(o))).toBe(true);
       });
+  it("names who got there first when the island friend or the tide wins, so the finish card doesn't cheer a loss", () => {
+    for (const mode of ["solo", "together", "versus"] as const) {
+      const o: LearnOptions = { mode, pace: "easy" };
+      const seen = new Set<string>();
+      for (let seed = 1; seed <= 40; seed++) {
+        let s = reef.create(o, ctx(seed));
+        for (let n = 0; reef.outcome(s, o) === null && n < 1200; n++) {
+          const r = reefRound(s, o);
+          s = reefMove(s, o, r.phase === "roll" ? "roll" : r.phase === "bonus" ? Math.max(...r.bonus!) : nextStone(r, o));
+        }
+        const winner = reefRound(s, o).winner;
+        const line = reefNotWon(s, o);
+        if (mode === "versus") expect(line).toBeNull();
+        else expect(line === null).toBe(winner === 0);
+        if (line) expect(line).toMatch(mode === "together" ? /^The tide won/ : /^Island friend won/);
+        seen.add(String(winner));
+      }
+      expect(seen).toEqual(new Set(["0", "1"]));
+    }
+    const o: LearnOptions = { mode: "solo", pace: "easy" };
+    expect(reefNotWon(reef.create(o, ctx()), o)).toBeNull();
+  });
   it("rejects skipped stones and preserves the round after a miss", () => {
     const o: LearnOptions = { mode: "versus", pace: "easy" };
     const s = reefMove(reef.create(o, ctx()), o, "roll");

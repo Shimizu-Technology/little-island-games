@@ -83,6 +83,11 @@ export type LearnEngine<S> = {
   create: (options: LearnOptions, ctx: CreateContext<S>) => S;
   validate: (state: unknown, options: LearnOptions) => state is S;
   outcome: (state: S, options: LearnOptions) => Outcome;
+  /**
+   * When a finished solo/together round wasn't a win for the players (the island friend or the
+   * tide got there first), a kind heading for the finish card. The card then skips the win fanfare.
+   */
+  notWon?: (state: S, options: LearnOptions) => string | null;
   /** Whose turn it is in together/versus play, for the scoreboard. */
   turn?: (state: S, options: LearnOptions) => Seat | null;
 };
@@ -107,6 +112,10 @@ export type BoardProps<S> = {
    * (src/learn/Coach.tsx) and call `coach.done()` once the child makes that move.
    */
   coach: { active: boolean; done: () => void };
-  /** Celebrate a right answer ("right": small burst + tone) or a big moment ("big"). Never delays play. */
-  cheer: (kind?: "right" | "big") => void;
+  /**
+   * Celebrate a right answer ("right": small burst + tone) or a big moment ("big"). Never delays play.
+   * Pass `say` (a speech key) instead of calling sound() alongside: there is one player, so the tone
+   * would cut the line off. The frame plays the tone, then the line just after it.
+   */
+  cheer: (kind?: "right" | "big", say?: string) => void;
 };

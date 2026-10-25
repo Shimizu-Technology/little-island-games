@@ -461,12 +461,10 @@ function Play({
               onPress={() => move({ type: "tile", tile })}
             />
           );
-          return s.index === 0 && tile === expected && s.filled === 0 ? (
-            <CoachSpot key={`${s.index}-${tile}`} active={coach.active}>
+          return (
+            <CoachSpot key={`${s.index}-${tile}`} active={coach.active && tile === expected && !complete}>
               {t}
             </CoachSpot>
-          ) : (
-            t
           );
         })}
       </View>

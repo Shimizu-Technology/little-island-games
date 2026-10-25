@@ -59,16 +59,18 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const { play: sound, stop: stopSound } = useSoundControls(soundOn && focused);
   const result = saved ? outcomeOf(saved) : null,
     finished = result !== null,
+    notWon = saved && result === "done" && engine.notWon ? engine.notWon(saved.state, saved.options) : null,
     wasFinished = useRef(finished);
-  // Celebrations: a small burst on right answers, a big one when the round is finished.
+  // Celebrations: a small burst on right answers, a big one when the round is won or completed.
+  // A round the island friend or tide won ends calmly; the board says who got there first.
   const [burst, setBurst] = useState({ n: 0, big: false });
   useEffect(() => {
-    if (finished && !wasFinished.current) {
+    if (finished && !wasFinished.current && !notWon) {
       sound("win");
       setBurst((b) => ({ n: b.n + 1, big: true }));
     }
     wasFinished.current = finished;
-  }, [finished, sound]);
+  }, [finished, notWon, sound]);
 
   // First-move coaching: shown the first time a child opens this game, and again from Help.
   const [replayCoach, setReplayCoach] = useState(false);
@@ -78,11 +80,15 @@ export function LearnFrame({ id }: { id: LearnId }) {
     setReplayCoach(false);
     markCoached(id);
   }, [markCoached, id]);
+  const cheerLine = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(cheerLine.current), []);
   const cheer = useCallback(
-    (kind: "right" | "big" = "right") => {
+    (kind: "right" | "big" = "right", say?: string) => {
       setBurst((b) => ({ n: b.n + 1, big: kind === "big" }));
       sound(kind === "big" ? "win" : "match");
       if (kind === "big") feel("success");
+      clearTimeout(cheerLine.current);
+      if (say) cheerLine.current = setTimeout(() => sound(say), kind === "big" ? 900 : 550);
     },
     [sound]
   );
@@ -190,7 +196,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
                     ? `${saved.match?.names[result] ?? saved.names?.[result] ?? "You"} won this round!`
                     : result === "draw"
                       ? "A tie! Great playing."
-                      : "You did it!"}
+                      : (notWon ?? "You did it!")}
                 </Heading>
                 <Button icon="refresh" onPress={replay} style={{ minWidth: 220 }}>
                   Play again

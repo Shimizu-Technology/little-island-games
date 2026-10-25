@@ -335,8 +335,7 @@ export function Board({
         } else if (solved(l, result)) {
           practice(l.skill, true);
           if (s.debugging) practice("think.debug", true);
-          sound("crab-commands-home");
-          cheer(s.completed.length === 2 ? "big" : "right");
+          cheer(s.completed.length === 2 ? "big" : "right", "crab-commands-home");
         } else if (result.shells !== before.shells) cheer();
         else sound("tap");
       },

@@ -119,6 +119,13 @@ export function reefOutcome(s: ReefState, o: LearnOptions): Outcome {
   const r = reefRound(s, o);
   return r.phase !== "done" ? null : o.mode === "versus" ? r.winner : "done";
 }
+/** Solo and together rounds end "done" either way; seat 1 (island friend or tide) reaching the island first isn't a win. */
+export function reefNotWon(s: ReefState, o: LearnOptions): string | null {
+  if (o.mode === "versus") return null;
+  const r = reefRound(s, o);
+  if (r.phase !== "done" || r.winner !== 1) return null;
+  return o.mode === "together" ? "The tide won this time. Race again?" : "Island friend won this time. Race again?";
+}
 export const engine: LearnEngine<ReefState> = {
   id: "reef-race",
   name: "Reef Race",
@@ -138,6 +145,7 @@ export const engine: LearnEngine<ReefState> = {
     hard: "Stones 1–100 · two dice",
   },
   skills: SKILLS,
+  notWon: reefNotWon,
   create(o, ctx) {
     return {
       version: 1,

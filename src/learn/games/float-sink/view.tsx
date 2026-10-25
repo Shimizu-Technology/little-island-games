@@ -215,10 +215,10 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     a.start();
     return () => a.stop();
   }, [d.shape, d.pebbles, sank, max, reduced, boatY]);
-  // Say the boat job once the last object's reason has had time to finish.
+  // Say the boat job once the last object's reason (drop 0.7 s, cheer tone, a line of up to 4.8 s) has finished.
   useEffect(() => {
     if (!active || d.phase !== "shape") return;
-    const timer = setTimeout(() => sound("float-sink-build"), d.boat === 0 ? 3200 : 300);
+    const timer = setTimeout(() => sound("float-sink-build"), d.boat === 0 ? 6300 : 300);
     return () => clearTimeout(timer);
   }, [active, d.phase, d.boat, sound]);
   const guess = (p: Prediction) => {
@@ -230,8 +230,8 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     if (coach.active) coach.done();
     const reveal = () => {
       setLanded(true);
-      sound(`float-sink-${right ? "right" : "surprise"}-${object.id}`);
-      if (right) cheer();
+      if (right) cheer("right", `float-sink-right-${object.id}`);
+      else sound(`float-sink-surprise-${object.id}`);
     };
     if (reduced) return reveal();
     setLanded(false);
@@ -251,8 +251,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     const n = d.pebbles + 1;
     update(act(s, { kind: "load" }, o));
     if (n > max) {
-      sound(`float-sink-held-${max}`);
-      cheer();
+      cheer("right", `float-sink-held-${max}`);
     } else sound(`float-sink-count-${n}`);
   };
   const prompt =
