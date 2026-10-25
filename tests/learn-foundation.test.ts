@@ -148,3 +148,12 @@ describe("reading pictures make sense", () => {
     for (const sc of scenes) if (sc.relation === "in") expect(insideStyle[sc.object], `${sc.subject} in ${sc.object}`).toBeTruthy();
   });
 });
+
+describe("first-move coaching memory", () => {
+  it("saves which games showed the hand and rejects bad lists", () => {
+    const save = { ...emptySave(), coached: ["sound-boat", "reef-race"] };
+    expect(parseSave(JSON.stringify(save)).coached).toEqual(["sound-boat", "reef-race"]);
+    expect(() => parseSave(JSON.stringify({ ...emptySave(), coached: ["nope"] }))).toThrow();
+    expect(() => parseSave(JSON.stringify({ ...emptySave(), coached: ["reef-race", "reef-race"] }))).toThrow();
+  });
+});

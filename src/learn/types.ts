@@ -69,6 +69,8 @@ export type LearnEngine<S> = {
   /** How to play, also spoken from helpAudio when provided. */
   help: string;
   helpAudio?: string;
+  /** One short spoken line that says the goal, played when a new round starts (e.g. "Tap the letters to spell the word!"). */
+  introAudio?: string;
   color: string;
   surface: string;
   modes: LearnMode[];
@@ -100,4 +102,11 @@ export type BoardProps<S> = {
   height: number;
   /** False while a sheet is open or the app is in the background: pause timers and computer turns. */
   active: boolean;
+  /**
+   * First-move coaching: while `coach.active`, wrap the thing to touch first in <CoachSpot active>
+   * (src/learn/Coach.tsx) and call `coach.done()` once the child makes that move.
+   */
+  coach: { active: boolean; done: () => void };
+  /** Celebrate a right answer ("right": small burst + tone) or a big moment ("big"). Never delays play. */
+  cheer: (kind?: "right" | "big") => void;
 };

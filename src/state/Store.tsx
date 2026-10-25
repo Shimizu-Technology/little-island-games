@@ -25,6 +25,8 @@ type Store = {
   learnUpdate: (game: LearnId, next: LearnSession, expected: LearnExpected) => boolean;
   /** Record one attempt at a learning skill. */
   practice: (skill: string, correct: boolean) => void;
+  /** Remember that a learning game's first-move hand was shown. */
+  markCoached: (game: LearnId) => void;
   exploreUpdate: (next: ExploreProgress, expectedEpoch: number) => void;
   save: Save;
   ready: boolean;
@@ -179,6 +181,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     [commit]
   );
+  const markCoached = useCallback(
+    (game: LearnId) => {
+      const coached = latest.current.coached ?? [];
+      if (coached.includes(game)) return;
+      commit({ ...latest.current, coached: [...coached, game] });
+    },
+    [commit]
+  );
   const rememberPlayers = useCallback((names: string[]) => {
     const current = latest.current.players ?? [];
     const next = rememberNames(current, names);
@@ -226,6 +236,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         rememberPlayers,
         learnUpdate,
         practice,
+        markCoached,
         exploreUpdate,
         ready,
         error,

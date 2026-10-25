@@ -10,6 +10,9 @@ import { PlayerNames, Scoreboard } from "../components/Match";
 import type { Seat } from "../games/match";
 import { engines } from "./engines";
 import { views } from "./views";
+import { Celebrate } from "./Celebrate";
+import { LearnArt } from "./LearnArt";
+import { feel } from "../components/feel";
 import { outcomeOf, replaySession, startSession } from "./session";
 import type { Language, LearnId, LearnMode, LearnOptions, LearnSession, Pace } from "./types";
 
@@ -57,10 +60,42 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const result = saved ? outcomeOf(saved) : null,
     finished = result !== null,
     wasFinished = useRef(finished);
+  // Celebrations: a small burst on right answers, a big one when the round is finished.
+  const [burst, setBurst] = useState({ n: 0, big: false });
   useEffect(() => {
-    if (finished && !wasFinished.current) sound("win");
+    if (finished && !wasFinished.current) {
+      sound("win");
+      setBurst((b) => ({ n: b.n + 1, big: true }));
+    }
     wasFinished.current = finished;
   }, [finished, sound]);
+
+  // First-move coaching: shown the first time a child opens this game, and again from Help.
+  const [replayCoach, setReplayCoach] = useState(false);
+  const coachActive = !!saved && !finished && (replayCoach || !(store.save.coached ?? []).includes(id));
+  const { markCoached } = store;
+  const coachDone = useCallback(() => {
+    setReplayCoach(false);
+    markCoached(id);
+  }, [markCoached, id]);
+  const cheer = useCallback(
+    (kind: "right" | "big" = "right") => {
+      setBurst((b) => ({ n: b.n + 1, big: kind === "big" }));
+      sound(kind === "big" ? "win" : "match");
+      if (kind === "big") feel("success");
+    },
+    [sound]
+  );
+  // Say the game's goal once when a fresh round opens, so a non-reader knows what to do.
+  const introduced = useRef<string | null>(null);
+  const boardActive = appActive && focused && !setup && !help;
+  useEffect(() => {
+    if (!saved || !engine.introAudio || !soundOn || !boardActive) return;
+    if (saved.revision !== 0 || introduced.current === saved.id) return;
+    introduced.current = saved.id;
+    const timer = setTimeout(() => sound(engine.introAudio!), 450);
+    return () => clearTimeout(timer);
+  }, [saved, engine.introAudio, soundOn, boardActive, sound]);
 
   const { learnUpdate, practice } = store;
   const save = useCallback(
@@ -135,17 +170,38 @@ export function LearnFrame({ id }: { id: LearnId }) {
               soundOn={soundOn}
               width={boardWidth}
               height={height - insets.top - insets.bottom}
-              active={appActive && focused && !setup && !help}
+              active={boardActive}
+              coach={{ active: coachActive && boardActive, done: coachDone }}
+              cheer={cheer}
             />
+            <Celebrate burst={burst.n} big={burst.big} />
           </View>
         )}
         {saved && (
           <View style={{ alignItems: "center", gap: 10, marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.line }}>
-            {finished && <Button onPress={replay}>Play again</Button>}
-            <Button quiet={finished} onPress={openSetup}>
+            {finished && (
+              <View
+                accessibilityLiveRegion="polite"
+                style={{ alignItems: "center", gap: 8, padding: 16, borderRadius: 22, backgroundColor: C.success, alignSelf: "stretch" }}
+              >
+                <LearnArt island={engine.island} size={64} />
+                <Heading style={{ fontSize: 26, textAlign: "center" }}>
+                  {result === 0 || result === 1
+                    ? `${saved.match?.names[result] ?? saved.names?.[result] ?? "You"} won this round!`
+                    : result === "draw"
+                      ? "A tie! Great playing."
+                      : "You did it!"}
+                </Heading>
+                <Button icon="refresh" onPress={replay} style={{ minWidth: 220 }}>
+                  Play again
+                </Button>
+              </View>
+            )}
+            {/* Options are for grown-ups and changing modes; kept small so it's never the obvious tap mid-game. */}
+            <Button compact quiet onPress={openSetup}>
               New round & options
             </Button>
-            <Copy style={{ fontSize: 12, marginTop: 12, textAlign: "center" }}>Your round saves on this device.</Copy>
+            <Copy style={{ fontSize: 12, marginTop: 4, textAlign: "center" }}>Your round saves on this device.</Copy>
           </View>
         )}
       </ScrollView>
@@ -215,6 +271,17 @@ export function LearnFrame({ id }: { id: LearnId }) {
             </Button>
             {!soundOn && <Copy>Turn sound on to hear the instructions.</Copy>}
           </>
+        )}
+        {saved && !finished && (
+          <Button
+            icon="help"
+            onPress={() => {
+              setHelp(false);
+              setReplayCoach(true);
+            }}
+          >
+            Show me how
+          </Button>
         )}
         <Button
           quiet

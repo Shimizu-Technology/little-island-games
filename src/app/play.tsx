@@ -278,7 +278,8 @@ function Game({ id }: { id: GameId }) {
                 {s.game === "word-rescue" && s.custom ? "Choose a new family word" : "Play again"}
               </Button>
             )}
-            <Button quiet={finished} onPress={newRound}>
+            {/* Kept small and quiet so it's never the obvious tap mid-game; Play again is the main action. */}
+            <Button compact quiet onPress={newRound}>
               New round & options
             </Button>
             <Copy style={{ fontSize: 12, marginTop: 12, textAlign: "center" }}>

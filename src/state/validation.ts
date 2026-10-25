@@ -32,6 +32,8 @@ export type Save = {
   recentLearn?: LearnId | null;
   /** Quiet spacing memory for learning games; never shown as a grade. */
   skills?: SkillProgress;
+  /** Learning games whose first-move "show me" hand has been seen. */
+  coached?: LearnId[];
 };
 export const emptySave = (): Save => ({
   version: 1,
@@ -354,6 +356,8 @@ export function parseSave(raw: string): Save {
     (v.learn !== undefined && !validLearn(v.learn)) ||
     (v.recentLearn !== undefined && v.recentLearn !== null && !learnIds.includes(v.recentLearn as LearnId)) ||
     (v.skills !== undefined && !validSkills(v.skills)) ||
+    (v.coached !== undefined &&
+      (!Array.isArray(v.coached) || v.coached.length > learnIds.length || !unique(v.coached) || !v.coached.every((id) => learnIds.includes(id as LearnId)))) ||
     (v.explore !== undefined &&
       (!obj(v.explore) ||
         !Array.isArray(v.explore.favorites) ||
