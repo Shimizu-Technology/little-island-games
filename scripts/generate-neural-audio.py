@@ -23,10 +23,25 @@ def initialize(model_dir, data_dir):
     session = rt.InferenceSession(str(Path(model_dir)/'kokoro-v1.0.onnx'), options, providers=['CPUExecutionProvider'])
     MODEL = Kokoro.from_session(session, str(Path(model_dir)/'voices-v1.0.bin'), espeak_config=EspeakConfig(data_path=data_dir))
 
-def spoken(text):
+def legacy_spoken(text):
+    # Only for verifying cache migration from the first build13 generation.
     for old,new in [(' × ', ' times '), (' + ', ' plus '), (' − ', ' minus '), (' = ', ' equals '), ('→', ' right '), ('←', ' left '), ('↓', ' down '), ('↑', ' up '), ('|', ' '), ('CHamoru', 'Chamorro')]:
         text = text.replace(old,new)
     return re.sub(r'(?<=[=+−×\d ])\?(?=[ =+−×\d])', 'blank', text)
+
+def spoken(text):
+    # Resolve equation blanks before replacing operators. Sentence question
+    # marks stay punctuation; a trailing equation blank must be spoken too.
+    text=re.sub(r'\?(?=\s*[=+−×-])|(?<=[=+−×-])\s*\?', ' blank ', text)
+    text=re.sub(r'[ \t]+', ' ', text)
+    for old,new in [(' × ', ' times '), (' + ', ' plus '), (' − ', ' minus '), (' - ', ' minus '), (' = ', ' equals '), ('→', ' right '), ('←', ' left '), ('↓', ' down '), ('↑', ' up '), ('|', ' '), ('CHamoru', 'Chamorro')]:
+        text=text.replace(old,new)
+    return text.strip()
+
+def input_digest(text,voice,model_hash,legacy=False):
+    parts=[text,VOICES[voice],0.95,model_hash,'loudnorm-20-3-7-v1']
+    if not legacy: parts.append(spoken(text))
+    return hashlib.sha256(json.dumps(parts,ensure_ascii=False).encode()).hexdigest()
 
 def generate(item):
     import soundfile as sf
@@ -62,10 +77,15 @@ def main():
     items=[]
     for voice in VOICES:
         for key,text in sorted(speech.items()):
-            digest=hashlib.sha256(json.dumps([text,VOICES[voice],0.95,model_hash,'loudnorm-20-3-7-v1'],ensure_ascii=False).encode()).hexdigest()
+            digest=input_digest(text,voice,model_hash)
             target=ROOT/'assets/audio'/('' if voice=='warm' else 'calm')/f'{key}.m4a'
             old=records.get(voice,{}).get(key,{})
-            if target.exists() and old.get('input')==digest and old.get('sha256')==hashlib.sha256(target.read_bytes()).hexdigest():continue
+            file_matches=target.exists() and old.get('sha256')==hashlib.sha256(target.read_bytes()).hexdigest()
+            if file_matches and old.get('input')==input_digest(text,voice,model_hash,legacy=True) and legacy_spoken(text)==spoken(text):
+                # Identical inference input: migrate the receipt, never assume
+                # changed mathematical speech can reuse an old clip.
+                old['input']=digest
+            if file_matches and old.get('input')==digest:continue
             items.append((voice,key,text,digest))
     if args.limit: items=items[:args.limit]
     print(f'PID {os.getpid()}: {len(items)} pending clips; {len(speech)} keys per voice',flush=True)
@@ -100,14 +120,17 @@ def main():
         raise
     else:
         pool.shutdown(wait=True)
+    tmp=receipt.with_suffix('.tmp');tmp.write_text(json.dumps(records,sort_keys=True));tmp.replace(receipt)
     if args.limit: return
     latest=json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30))
     if latest != speech: raise RuntimeError('Speech manifest changed during generation; rerun before publication')
+    if hashlib.sha256((Path(args.model_dir)/'kokoro-v1.0.onnx').read_bytes()).hexdigest()!=model_hash or hashlib.sha256((Path(args.model_dir)/'voices-v1.0.bin').read_bytes()).hexdigest()!=voice_hash:
+        raise RuntimeError('Inference files changed during generation; refusing publication')
     # A map is published only when every expected clip has the matching input hash.
     for voice in VOICES:
         for key,text in speech.items():
             target=ROOT/'assets/audio'/('' if voice=='warm' else 'calm')/f'{key}.m4a'
-            expected=hashlib.sha256(json.dumps([text,VOICES[voice],0.95,model_hash,'loudnorm-20-3-7-v1'],ensure_ascii=False).encode()).hexdigest()
+            expected=input_digest(text,voice,model_hash)
             record=records.get(voice,{}).get(key,{})
             if record.get('input')!=expected or not target.exists() or record.get('sha256')!=hashlib.sha256(target.read_bytes()).hexdigest():
                 raise RuntimeError(f'Incomplete or stale {voice}/{key}')
