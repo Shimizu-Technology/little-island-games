@@ -1,4 +1,6 @@
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { growthTracks } from "../src/learn/growth/content";
 import { describe, expect, it } from "vitest";
 
 function speech(lines: string[]) {
@@ -12,6 +14,17 @@ print(json.dumps([m.spoken(x) for x in json.load(sys.stdin)]))
 }
 
 describe("equations spoken without losing their meaning", () => {
+  it("keeps every growth prompt and explanation aligned with its playable question", () => {
+    const lines = JSON.parse(readFileSync(new URL("../scripts/learn/growth.json", import.meta.url), "utf8")) as Record<string, string>;
+    let count = 0;
+    for (const [game, stages] of Object.entries(growthTracks)) for (const [stage, track] of Object.entries(stages)) for (const q of track.questions) {
+      const key = `growth-${game}-${stage}-${q.id}`;
+      expect(lines[`${key}-prompt`], key).toBe([q.context, q.prompt].filter(Boolean).join(" "));
+      expect(lines[`${key}-explanation`], key).toBe(q.explanation);
+      count++;
+    }
+    expect(count).toBe(328);
+  });
   it("reads every unknown position and both subtraction symbols", () => {
     expect(speech([
       "What number fills the blank? ? + 7 = 23",
