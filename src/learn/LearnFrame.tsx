@@ -256,7 +256,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         title={saved ? "A fresh round" : `Let’s play ${engine.name}`}
         footer={<Button onPress={start}>{saved ? "Start a new round" : "Start playing"}</Button>}
       >
-        <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : engine.description}</Copy>
+        <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
         {engine.modes.length > 1 && (
           <>
             <Heading style={{ fontSize: 18 }}>How shall we play?</Heading>

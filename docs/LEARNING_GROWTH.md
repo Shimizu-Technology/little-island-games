@@ -18,20 +18,33 @@ Authorized 26 October 2026 after Leon/Stassie's TestFlight12 feedback. Base 992d
 
 ## QA ledger (agent executed unless noted)
 
-All cases initially not_run. Record exact commit/build, actual UI and persisted outcome, evidence, viewport/device and limitations. Automated tests do not replace runtime scenarios.
+Execution began on 26 October 2026. Record exact commit/build, actual UI and persisted outcome, evidence, viewport/device and limitations. Automated tests do not replace runtime scenarios.
 
 | ID | Required scenario | Status |
 | --- | --- | --- |
 | G01 | Original twelve activities and existing saves continue; new stages freely selectable per game | not_run |
-| G02 | Both new stages of all twelve: first action, wrong answer, help, correct answer, explicit next and finish | not_run |
+| G02 | Both new stages of all twelve: first action, wrong answer, help, correct answer, explicit next and finish | Browser passed at CSS390×844; native blocked |
 | G03 | Phone/tablet controls reachable; long text/tiles, landscape and larger text | not_run |
-| G04 | Resume after reload/background; replay; switch stage without silently replacing a round | not_run |
-| G05 | Learner ownership, independent/helped records, no family-to-child migration or shared-player mastery | not_run |
+| G04 | Resume after reload/background; replay; switch stage without silently replacing a round | Browser reload/replay/stage confirmation passed; native background blocked |
+| G05 | Learner ownership, independent/helped records, no family-to-child migration or shared-player mastery | Browser solo ownership/notes passed; shared-player rules verified in engines |
 | G06 | Restore/replace/switch learner invalidates pending callbacks and suggestions; malformed data preserves originals | not_run |
 | G07 | Narration/effects/autoplay/volume independence; explicit hear; mute/background/navigation cancellation | not_run |
 | G08 | Offline all original/new speech present; voice samples and device listening | not_run |
-| G09 | Optional math/reading/mixed practice, help, cancel, bypass; saved Continue and racer/nearby safety | not_run |
-| G10 | Full check, Doctor, advisory design scan, final independent code review and required CI | not_run |
+| G09 | Optional math/reading/mixed practice, help, cancel, bypass; saved Continue and racer/nearby safety | Browser advanced mixed/help/cancel/launch/saved Tic passed; remaining matrix pending |
+| G10 | Full check, Doctor, advisory design scan, final independent code review and required CI | 569 tests/43 files, typecheck/lint, Doctor21/21, export and advisory scan passed; final audio gate/CI pending |
 | G11 | Exact unused next private build, signed source/assets, Apple processing and existing tester availability | not_run |
 
 Physical child comfort, actual touch/VoiceOver and Stassie's independent play are operator acceptance, reported separately from agent checks. Sources for the progression direction: Common Core 2.NBT, RF.2 and RL.2; IES elementary math guide (2021). This is practice content, not a certified curriculum or proficiency assessment.
+
+
+## Source and runtime evidence, 26 October 2026
+
+Source f5dbe72758ec12865cb5d7d3180be6a73ad3c56d plus the reviewed setup-copy correction (LearnFrame blob a6143b4442b7cd22465447b6251bfc08f2ab5680). Round-two independent review reported no material findings; 69 focused tests and a deterministic hook harness exercised learner isolation, stale launches, practice deduplication, Audio lifecycle and Explore. The first review’s three learner findings were fixed: replay assigns the active learner, original activities update the session owner’s skills through guarded credit, and restore rejects dangling owner references.
+
+Chrome actual interaction: all24 stages completed at CSS390×844, including wrong choices/tile order, help, corrected answer, explicit Next/Finish and visible saved completion. The earlier batch ran at CSS487×1055 because the browser was already zoomed; dimensions were measured and all24 retested at390×844. The shared help highlight and displayed tile order were used as visible assistance, never hidden engine state. Sound Boat tile undo and distractors worked. Named QA Kai began with no inherited Family notes; replaying Family Sound Boat created Kai’s round. An independent spelling answer survived reload and appeared once in Kai’s notes alongside two helped answers. Advanced mixed warmup displayed two-step/missing-operand arithmetic and linked reading clues, cancelled back to unchanged setup, completed with help, and launched Tic exactly once. A played Tic square survived reload without another warmup. Long reading text wrapped; landscape setup retained pinned Start.
+
+T3 preview snapshots failed twice with “Preview automation snapshot timed out after 15000ms.” Chrome was the supported fallback. Native Device opened but its agent-device snapshot failed “Daemon request timed out”; the exact owned simulator was shut down/released. No native interaction, actual VoiceOver, physical audio listening, child comfort or hardware performance is claimed. These remain family/operator acceptance; private TestFlight testing is authorized, public release and held PR layers remain separate.
+
+## Offline narration provenance
+
+Build13 replaces prerecorded Mac speech with two locally generated Kokoro-82M v1.0 banks: Warm (`af_heart`) and Calm (`af_bella`). The model/voice data and Python runtime remain outside the app; only AAC clips are bundled. Sources: [official model card and Apache-2.0 declaration](https://huggingface.co/hexgrad/Kokoro-82M), [Kokoro ONNX model release](https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.1), and [MIT wrapper license](https://github.com/thewh1teagle/kokoro-onnx/blob/main/LICENSE). Original English scripts and feedback tones remain repository content. No live service, account, API charge, child voice recording or child-data transmission is introduced. CHamoru choices remain verbatim existing text; new spoken coaching is English. Three local voice probes were produced; comfort and pronunciation require listening on family hardware. Default Warm is a beta choice, not child listening acceptance. The generated receipt records model hash, voice IDs, durations and normalization. Generation is resumable, validates content/file hashes, bounds native inference/encoding, and publishes maps only for complete matching banks.
