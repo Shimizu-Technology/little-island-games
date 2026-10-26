@@ -121,7 +121,7 @@ export function Board({
       cheer();
       setPeek(false);
       setSelected(null);
-    } else sound(spy ? "hafa-adai-compare" : wordAudioKey(id));
+    } else sound(spy ? "hafa-adai-compare" : wordAudioKey(id), spy);
   }
   const placed = [...s.items].sort((a, b) => {
     const ca = placeOrder.indexOf(chamoruWord(a)!.category),

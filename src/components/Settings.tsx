@@ -47,6 +47,8 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
     onClose();
   }
   async function read() {
+    setPending(null);
+    setMessage("");
     try {
       const raw = await importBackup();
       if (raw) {

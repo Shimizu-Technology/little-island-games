@@ -225,12 +225,12 @@ export function Board({ session, update, practice, sound, active, width, height,
       }
       if (r.phase === "bonus") {
         const big = Math.max(...r.bonus!);
-        sound(`reef-race-number-${big}`);
+        sound(`reef-race-number-${big}`, true);
         update(reefMove(s, o, big));
         return;
       }
       const n = nextStone(r, o);
-      sound(`reef-race-number-${n}`);
+      sound(`reef-race-number-${n}`, true);
       const next = reefMove(s, o, n);
       announce(next, n);
       update(next);
@@ -241,7 +241,7 @@ export function Board({ session, update, practice, sound, active, width, height,
   const onLanded = useCallback(() => {
     setSpinning(false);
     const total = r.dice.reduce((a, b) => a + b, 0);
-    if (total > 0) sound(`reef-race-roll-${Math.min(12, total)}`);
+    if (total > 0) sound(`reef-race-roll-${Math.min(12, total)}`, true);
   }, [r.dice, sound]);
 
   function onSpin() {
@@ -263,11 +263,11 @@ export function Board({ session, update, practice, sound, active, width, height,
     if (!active || computer || spinning || lock || r.phase === "done") return;
     if (r.phase === "roll") {
       setNudge((k) => k + 1);
-      sound(spinKey);
+      sound(spinKey, true);
       return;
     }
     if (r.phase === "bonus") {
-      sound(`reef-race-bonus-${end}-${r.positions[mover]}`);
+      sound(`reef-race-bonus-${end}-${r.positions[mover]}`, true);
       return;
     }
     const next = reefMove(s, o, n);
@@ -277,13 +277,13 @@ export function Board({ session, update, practice, sound, active, width, height,
     if (next === s) {
       setWrong((w) => ({ n, key: w.key + 1 }));
       setHint(r.direction < 0 ? "Hop back to the stone behind." : "Hop to the very next stone.");
-      sound(r.direction < 0 ? "reef-race-try-back" : "reef-race-try");
+      sound(r.direction < 0 ? "reef-race-try-back" : "reef-race-try", true);
       return;
     }
     practice("num.number-line", true);
     if (coach.active) coach.done();
     setHint(null);
-    sound(`reef-race-number-${n}`);
+    sound(`reef-race-number-${n}`, true);
     setLock(true);
     later(() => setLock(false), 420);
     const after = announce(next, n);
@@ -298,11 +298,11 @@ export function Board({ session, update, practice, sound, active, width, height,
     practice("num.compare", next !== s);
     if (next === s) {
       setPickWrong((w) => ({ n, key: w.key + 1 }));
-      sound("reef-race-bonus-try");
+      sound("reef-race-bonus-try", true);
       return;
     }
     cheer();
-    later(() => sound(`reef-race-number-${n}`), 450);
+    later(() => sound(`reef-race-number-${n}`, true), 450);
     update(next);
   }
 

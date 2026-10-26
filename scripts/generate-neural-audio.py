@@ -9,6 +9,7 @@ import argparse, concurrent.futures, hashlib, json, os, re, subprocess, tempfile
 
 ROOT = Path(__file__).resolve().parent.parent
 VOICES = {'warm': 'af_heart', 'calm': 'af_bella'}
+VOICE_FILE_SHA256 = "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d"
 MODEL = None
 
 def initialize(model_dir, data_dir):
@@ -55,6 +56,8 @@ def main():
     speech = json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30))
     receipt = Path(args.model_dir)/'generated.json'
     records = json.loads(receipt.read_text()) if receipt.exists() else {}
+    voice_hash=hashlib.sha256((Path(args.model_dir)/'voices-v1.0.bin').read_bytes()).hexdigest()
+    if voice_hash != VOICE_FILE_SHA256: raise RuntimeError('Voice data differs from the pinned v1.0 bank')
     model_hash = hashlib.sha256((Path(args.model_dir)/'kokoro-v1.0.onnx').read_bytes()).hexdigest()
     items=[]
     for voice in VOICES:
@@ -117,7 +120,7 @@ def main():
         lines.append('  },')
     lines.append('};\n')
     (ROOT/'src/content/neuralAudio.ts').write_text('\n'.join(lines))
-    evidence={'engine':'Kokoro-82M v1.0','modelLicense':'Apache-2.0','runtime':'kokoro-onnx 0.6.1 / MIT','modelSHA256':model_hash,'voices':VOICES,'keysPerVoice':len(speech),'secondsByVoice':{v:round(sum(records[v][k]['seconds'] for k in speech),2) for v in VOICES},'networkPlayback':False,'normalization':'-20 LUFS, -3 dBTP, LRA7; 24kHz mono AAC48k','listeningAcceptance':'Operator assessment on family hardware remains separate.'}
+    evidence={'engine':'Kokoro-82M v1.0','modelLicense':'Apache-2.0','runtime':'kokoro-onnx 0.6.1 / MIT','modelSHA256':model_hash,'voiceDataSHA256':voice_hash,'scriptManifestSHA256':hashlib.sha256(json.dumps(speech,ensure_ascii=False,sort_keys=True).encode()).hexdigest(),'voices':VOICES,'keysPerVoice':len(speech),'secondsByVoice':{v:round(sum(records[v][k]['seconds'] for k in speech),2) for v in VOICES},'networkPlayback':False,'normalization':'-20 LUFS, -3 dBTP, LRA7; 24kHz mono AAC48k','listeningAcceptance':'Operator assessment on family hardware remains separate.'}
     (ROOT/'docs/evidence/neural-audio.json').write_text(json.dumps(evidence,indent=2)+'\n')
     print('Published both complete offline voice maps',flush=True)
 

@@ -478,7 +478,7 @@ export function Board({
                       accessibilityLabel={`Add ${cardLabel[c]} card`}
                       disabled={s.running || s.program.length >= 80}
                       onPress={() => {
-                        sound(`crab-commands-card-${c}`);
+                        sound(`crab-commands-card-${c}`, true);
                         edit([...s.program, c], true);
                         if (coach.active) coach.done();
                       }}

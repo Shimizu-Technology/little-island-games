@@ -50,8 +50,8 @@ function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }:
     }
   }, [active, soundOn, state.gateOpen, state.status, state.index, state.helped, state.solved, play, session]);
 
-  function speak(key: string) {
-    if (live.current.mounted && live.current.active && live.current.soundOn && foreground()) play(key);
+  function speak(key: string, automatic = false) {
+    if (live.current.mounted && live.current.active && live.current.soundOn && foreground()) play(key, automatic);
   }
 
   function send(action: PracticeAction) {
@@ -74,8 +74,8 @@ function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }:
   function choose(choice: number) {
     const next = send({ type: "choose", question: state.index, choice });
     if (!next) return;
-    if (!next.solved) speak("practice-try");
-    else if (next.results.length === 3) speak("practice-done");
+    if (!next.solved) speak("practice-try", true);
+    else if (next.results.length === 3) speak("practice-done", true);
   }
   function show() {
     const next = send({ type: "show", question: state.index });
