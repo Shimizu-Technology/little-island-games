@@ -96,6 +96,9 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const cheerLine = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const boardActive = appActive && focused && !setup && !help,
     savedId = saved?.id;
+  useEffect(() => {
+    if (!boardActive) stopSound();
+  }, [boardActive, stopSound]);
   // A falling object can retain a callback after mute, Help or a round change. Invalidate
   // that callback too, rather than only cancelling speech it had already scheduled.
   const audioSettings = store.save.settings;
@@ -166,12 +169,12 @@ export function LearnFrame({ id }: { id: LearnId }) {
     const next = startSession(id, { options, names, starter: options.mode === "solo" ? 0 : starter, alternate }, learningSkills);
     next.learner = learner.id;
     if (options.mode !== "solo") store.rememberPlayers(names);
-    if (save(next)) { setBurst({ n: 0, big: false }); setSetup(false); }
+    if (save(next)) { stopSound(); setBurst({ n: 0, big: false }); setSetup(false); }
   }
   function replay() {
     if (!saved || !finished) return;
     const next = replaySession(saved, learningSkills, undefined, learner.id);
-    if (save(next)) setBurst({ n: 0, big: false });
+    if (save(next)) { stopSound(); setBurst({ n: 0, big: false }); }
   }
   function openSetup() {
     if (saved) {
@@ -329,7 +332,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
           </>
         )}
       </Sheet>
-      <Sheet visible={help} onClose={() => setHelp(false)} title={`How to play ${engine.name}`}>
+      <Sheet visible={help} onClose={() => { stopSound(); setHelp(false); }} title={`How to play ${engine.name}`}>
         <Copy>{saved?.options.stage ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>
         {!saved?.options.stage && engine.helpAudio && (
           <>
@@ -343,6 +346,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
           <Button
             icon="help"
             onPress={() => {
+              stopSound();
               setHelp(false);
               setReplayCoach(true);
             }}
@@ -353,6 +357,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         <Button
           quiet
           onPress={() => {
+            stopSound();
             setHelp(false);
             openSetup();
           }}

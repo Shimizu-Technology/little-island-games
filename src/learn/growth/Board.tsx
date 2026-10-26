@@ -10,7 +10,7 @@ import { LiteracyVisual } from "./LiteracyVisual";
 import { DiscoveryVisual } from "./DiscoveryVisual";
 
 export const growthSpeechKey = (game: string, stage: string, id: string, part: "prompt" | "explanation") => `growth-${game}-${stage}-${id}-${part}`;
-export function GrowthBoard({ session, update, active, width, sound, soundOn, cheer, coach }: BoardProps<unknown>) {
+export function GrowthBoard({ session, update, active, width, sound, stopSound, soundOn, cheer, coach }: BoardProps<unknown>) {
   const state = session.state as GrowthState, questions = growthQuestions(session.game, session.options, state), progress = growthProgress(state, questions);
   const q = questions[progress.index];
   const [draft, setDraft] = useState<number[]>([]);
@@ -28,6 +28,7 @@ export function GrowthBoard({ session, update, active, width, sound, soundOn, ch
     if (next === state) return;
     if (coach.active) coach.done();
     const after = growthProgress(next, questions);
+    stopSound();
     update(next);
     if (!progress.solved && after.solved) cheer("right");
     if (action.type === "help") sound(growthSpeechKey(session.game, session.options.stage!, q.id, "explanation"));
