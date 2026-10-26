@@ -103,3 +103,10 @@ Leon explicitly requested review, fixes and merge of PR1 after testing TestFligh
 ## Math practice and optional practice before play — 26 October 2026
 
 Application source `aba07b2`, private TestFlight 1.6.0 (12). The scoped scenario ledger, browser receipt, final code-review status and native host limits are in [MATH_PRACTICE.md](MATH_PRACTICE.md). Full check: 520 tests/40 files and Doctor 21/21 passed; browser practice, cancellation, saved-state and offline journeys passed. Native math interaction did not run because the simulator host/runner failed before interaction. This remains an acceptance gap; it is not superseded by archive/signature checks. Leon explicitly authorized the private beta for real-device testing. Delivery is verified in [testflight-build12.json](evidence/testflight-build12.json). No public release or merge. Owned runtime resources were cleaned.
+
+
+## Learning growth and warmer voices — 26 October 2026
+
+Private TestFlight1.7.0(13), source `70ed873c8dc3d4b6ae648e7e39b4b020f54fe0e3`, was verified VALID/IN_BETA_TESTING in the existing Leon internal group. The full source gate and CI passed574 tests across45 files, typecheck, lint, web export and Doctor21/21. Both complete offline voice banks contain2766 scripts; all5535 referenced files decoded and match the signed IPA bytes. Both stages across all12 learning games passed actual browser interaction, with original activities/saves, learners, warmups, backups, layouts and final-bank offline checks recorded in [LEARNING_GROWTH.md](LEARNING_GROWTH.md).
+
+Native automation remained blocked by the device daemon timeout. Physical installation/update, audible comfort, native background/rotation/VoiceOver, Files and child usability remain operator acceptance. The held PR13/14/15 stack is not merged and public release is not authorized. [Build13 delivery evidence](evidence/testflight-build13.json) separates beta availability from these unpassed cases. Task-owned runtime resources were cleaned.

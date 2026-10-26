@@ -136,3 +136,18 @@ EAS submission `68a95c10-a2ac-45ab-99f7-0981e50ea000` finished. Apple upload/bui
 Update Little Island in TestFlight to **1.6.0 (12)**. Find Shell Math, Number Hop and Quick Practice on the Numbers island. Optional three-question practice starts off; enable it under Settings → For grown-ups → Practice, then play. Help counts; saved games continue normally. Physical installation, audible quality/mute, native keyboard/rotation/recovery, VoiceOver and child usability remain operator checks. PR14 stays held for that acceptance.
 
 Owned browser, preview server and simulator were cleaned; lifecycle session 01a17186-714f-7ee2-994a-bccc0bafba80 reports no active owned resources. The held implementation and immutable release worktrees are retained.
+
+
+## Learning growth beta —1.7.0(13), available26 October2026 Guam time
+
+Leon authorized harder concepts across all learning games and warmer offline narration through private TestFlight. Clean source `70ed873c8dc3d4b6ae648e7e39b4b020f54fe0e3` on stacked PR15 produced this beta; PR13/14/15 remain held for native/family acceptance. The source passed574 tests/45files, typecheck, lint, web export, Doctor21/21 and CI. Independent reviews resolved the material findings; CodeRabbit explicitly skipped the stacked base/Free plan. [Scenario ledger and limits](LEARNING_GROWTH.md).
+
+The EAS cloud build attempt was rejected by the exhausted free iOS quota; no cloud job or paid upgrade was created. A clean isolated release checkout, Node22.22.3 lockfile installation, Expo CNG and scoped CocoaPods produced the local Xcode26.6 Release archive/export. Existing signing credentials were reused; temporary keychain, private files and owned profile were removed.
+
+The signed IPA is167,588,435 bytes, SHA256 `cc4d34095e3c8adef86aa84655d38896c78cb3caafad533f7e27baf87dc4ffd1`. Embedded JS SHA256 `9b5d893004e8048f4b0f8ef62243332ad7c110041558ac590ea3bea24fae7174` matches the archive. Strict signature, App Store profile/entitlements, exact bundle/version, minimum iOS16.4 and both device families passed. All5535 referenced audio files match source bytes; all decoded successfully. This does not establish physical audibility or comfort.
+
+EAS submission `f84cfc32-1bb6-4f4c-b1cb-62d0f82f4d01` finished. Apple upload/build `69913fa6-43cd-4547-ae02-946b050bf1f9` is VALID/IN_BETA_TESTING, verified at `2026-10-26T02:44:31.012Z`, with English notes and attachment to the existing Leon internal group: one adult tester, automatic all-build access off. The Xcode export created a separate empty upload reservation; there was one actual IPA submission. Builds11/12 were not resubmitted. No new testers, public link or public release. [Structured evidence](evidence/testflight-build13.json).
+
+Update Little Island in TestFlight to **1.7.0(13)**. In each learning game, open **New round & options** and choose a harder skill. The original beginner activities remain available; Show me always counts as helped practice. Compare **Settings → Narration voice → Warm/Calm** and tap Hear this voice. Optional local learners and practice notes are under For grown-ups. Physical installation/update, audio comfort/mute, native interruption/rotation, VoiceOver and child usability remain family checks.
+
+Owned browser/server/simulator resources were cleaned, with no active owned resources in lifecycle session01a17186-714f-7ee2-994a-bccc0bafba80. The exact task device DerivedData was removed; archive/IPA/private receipts and held source/release worktrees are retained.
