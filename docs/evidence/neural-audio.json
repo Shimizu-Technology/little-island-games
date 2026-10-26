@@ -1,0 +1,20 @@
+{
+  "engine": "Kokoro-82M v1.0",
+  "modelLicense": "Apache-2.0",
+  "runtime": "kokoro-onnx 0.6.1 / MIT",
+  "modelSHA256": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
+  "voiceDataSHA256": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d",
+  "scriptManifestSHA256": "caf8725a47531e0c3b5dd3263647734d181818eaea554c4053bcf82362ca3690",
+  "voices": {
+    "warm": "af_heart",
+    "calm": "af_bella"
+  },
+  "keysPerVoice": 2766,
+  "secondsByVoice": {
+    "warm": 11341.37,
+    "calm": 11481.86
+  },
+  "networkPlayback": false,
+  "normalization": "-20 LUFS, -3 dBTP, LRA7; 24kHz mono AAC48k",
+  "listeningAcceptance": "Operator assessment on family hardware remains separate."
+}
