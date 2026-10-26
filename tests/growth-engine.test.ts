@@ -6,7 +6,7 @@ import { growthTrack } from "../src/learn/growth/content";
 import type { GrowthState } from "../src/learn/growth/types";
 import { applyLearnSave, applyOwnedPractice } from "../src/state/learnAction";
 import { emptySave, parseSave, type Save } from "../src/state/validation";
-import { addLearner, activeLearner, recordLearning, readyForNext, validLearners } from "../src/learn/learners";
+import { addLearner, activeLearner, recordLearning, readyForNext, validLearners, learnerPractice } from "../src/learn/learners";
 import { createPracticeSession, practiceAnswer, practiceConfigKey } from "../src/practice/engine";
 import { defaultPracticeSettings } from "../src/practice/types";
 import { runArrowProgram } from "../src/learn/growth/discovery";
@@ -133,4 +133,15 @@ describe("learner review regressions", () => {
     const shared = { ...save, learn: { "sound-boat": { ...round, options: { ...round.options, mode: "versus" as const } } } };
     expect(activeLearner(applyOwnedPractice(shared, "sound-boat", expected, 3, "read.short-a", true).learning).skills).toEqual({});
   });
+});
+
+it("keeps child warmups separate from legacy family settings and validates choices", () => {
+  const legacy = { ...defaultPracticeSettings, enabled: true, limit: 20 as const };
+  const learning = addLearner(undefined, "Kai", "kai");
+  expect(learnerPractice(learning, legacy).enabled).toBe(false);
+  expect(learnerPractice({ ...learning, active: "family" }, legacy)).toBe(legacy);
+  const chosen = { ...learning, people: learning.people.map(p => p.id === "kai" ? { ...p, warmup: { ...legacy, readingStage: "deep" as const } } : p) };
+  expect(learnerPractice(chosen, legacy).readingStage).toBe("deep");
+  expect(validLearners(chosen)).toBe(true);
+  expect(validLearners({ ...learning, people: learning.people.map(p => p.id === "kai" ? { ...p, choices: { "shell-math": { mode: "versus", pace: "hard" } } } : p) })).toBe(false);
 });

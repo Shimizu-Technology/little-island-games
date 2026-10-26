@@ -4,7 +4,8 @@ import { useStore } from "../state/Store";
 import { Button, Chip, Copy, Heading, styles } from "../components/ui";
 import { activeLearner, familyLearners } from "./learners";
 import { practiceSummary } from "./skills";
-import { skillLabels } from "./engines";
+import type { LearnId } from "./types";
+import { engines, skillLabels } from "./engines";
 
 export function LearnerSettings({ disabled }: { disabled: boolean }) {
   const store = useStore(), people = store.save.learning ?? familyLearners(), learner = activeLearner(people);
@@ -28,8 +29,8 @@ export function LearnerSettings({ disabled }: { disabled: boolean }) {
     <Heading style={{ fontSize: 17 }}>{learner.name}’s new learning stages</Heading>
     {!Object.keys(learner.notes).length && <Copy>Notes appear after solo answers in the new learning stages. Helped answers count as completed practice. Independent answers mean no answer hints were used; read-aloud stays available. These notes describe practice, not grades or mastery.</Copy>}
     {Object.entries(learner.notes).map(([key, n]) => {
-      const [, stage, skill] = key.split(":");
-      return <Copy key={key}>{labels[skill] ?? skill} · {stage === "stretch" ? "Stretch" : "Deeper"}: {n.independent} independently · {n.helped} with help</Copy>;
+      const [game, stage, skill] = key.split(":");
+      return <Copy key={key}>{engines[game as LearnId].name} · {labels[skill] ?? skill} · {stage === "stretch" ? "Stretch" : "Deeper"}: {n.independent} independently · {n.helped} with help</Copy>;
     })}
   </View>;
 }

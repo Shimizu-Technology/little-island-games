@@ -52,7 +52,7 @@ def main():
     parser.add_argument('--workers', type=int,default=2)
     parser.add_argument('--limit', type=int)
     args = parser.parse_args()
-    speech = json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True))
+    speech = json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30))
     receipt = Path(args.model_dir)/'generated.json'
     records = json.loads(receipt.read_text()) if receipt.exists() else {}
     model_hash = hashlib.sha256((Path(args.model_dir)/'kokoro-v1.0.onnx').read_bytes()).hexdigest()
@@ -67,16 +67,47 @@ def main():
     if args.limit: items=items[:args.limit]
     print(f'PID {os.getpid()}: {len(items)} pending clips; {len(speech)} keys per voice',flush=True)
     started=time.time()
-    with concurrent.futures.ProcessPoolExecutor(max_workers=max(1,min(args.workers,3)),initializer=initialize,initargs=(args.model_dir,args.data_dir)) as pool:
-        for index,(voice,key,entry) in enumerate(pool.map(generate,items),1):
+    pool = concurrent.futures.ProcessPoolExecutor(max_workers=max(1,min(args.workers,3)),initializer=initialize,initargs=(args.model_dir,args.data_dir))
+    try:
+        # Keep the queue bounded and fail rather than hang on native inference.
+        pending=[]; iterator=iter(items)
+        for item in iterator:
+            pending.append(pool.submit(generate,item))
+            if len(pending)>=max(1,min(args.workers,3))*2: break
+        index=0
+        while pending:
+            voice,key,entry=pending.pop(0).result(timeout=120)
+            index+=1
+            item=next(iterator,None)
+            if item is not None: pending.append(pool.submit(generate,item))
             records.setdefault(voice,{})[key]=entry
             if index%10==0 or index==len(items):
                 tmp=receipt.with_suffix('.tmp');tmp.write_text(json.dumps(records,sort_keys=True));tmp.replace(receipt)
             if index%50==0:print(f'{index}/{len(items)} clips · {round(time.time()-started)} seconds',flush=True)
+    except BaseException:
+        # Python 3.12 has no public terminate_workers; only this executor's
+        # children are retained and stopped, never a shared process-name kill.
+        owned=list((pool._processes or {}).values())
+        pool.shutdown(wait=False,cancel_futures=True)
+        for process in owned:
+            if process.is_alive(): process.terminate()
+        for process in owned:
+            process.join(timeout=5)
+            if process.is_alive(): process.kill(); process.join(timeout=5)
+        raise
+    else:
+        pool.shutdown(wait=True)
     if args.limit: return
+    latest=json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30))
+    if latest != speech: raise RuntimeError('Speech manifest changed during generation; rerun before publication')
     # A map is published only when every expected clip has the matching input hash.
     for voice in VOICES:
-        if len(set(speech)-set(records.get(voice,{}))):raise RuntimeError(f'Incomplete {voice} bank')
+        for key,text in speech.items():
+            target=ROOT/'assets/audio'/('' if voice=='warm' else 'calm')/f'{key}.m4a'
+            expected=hashlib.sha256(json.dumps([text,VOICES[voice],0.95,model_hash,'loudnorm-20-3-7-v1'],ensure_ascii=False).encode()).hexdigest()
+            record=records.get(voice,{}).get(key,{})
+            if record.get('input')!=expected or not target.exists() or record.get('sha256')!=hashlib.sha256(target.read_bytes()).hexdigest():
+                raise RuntimeError(f'Incomplete or stale {voice}/{key}')
     lines=['// Generated offline Kokoro voice banks; see docs/LEARNING_GROWTH.md.','export const voiceSources: Record<"warm" | "calm", Record<string, number>> = {']
     for voice in VOICES:
         lines.append(f'  {voice}: {{')

@@ -1,5 +1,5 @@
 import { ExploreProgress, validExploreProgress } from "../explore/progress";
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { GameId, GameState } from "../games";
 import { storage } from "./storage";
@@ -57,6 +57,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [recovery, setRecovery] = useState<string | null>(null),
     [raw, setRaw] = useState<string | null>(null);
   const [epoch, setEpoch] = useState(0);
+  const audioPreferences = useMemo(() => ({ ...save.settings, epoch }), [save.settings, epoch]);
   const generation = useRef(0);
   const latest = useRef(save),
     queue = useRef(Promise.resolve()),
@@ -315,7 +316,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         startFresh,
       }}
     >
-      <AudioPreferences.Provider value={{ ...save.settings, epoch }}>{children}</AudioPreferences.Provider>
+      <AudioPreferences.Provider value={audioPreferences}>{children}</AudioPreferences.Provider>
     </Context.Provider>
   );
 }

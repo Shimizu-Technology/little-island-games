@@ -63,7 +63,7 @@ export function useRoundPractice(target: string, snapshot: unknown) {
     p.run();
   };
   const visible = !!pending && focused && pending.epoch === store.epoch && pending.snapshot === snapshot && pending.config === config;
-  const content = visible && pending ? <PracticePanel key={`${target}:${pending.serial}`} settings={settings} soundOn={store.save.settings.sound}
+  const content = visible && pending ? <PracticePanel key={`${target}:${pending.serial}`} settings={settings} soundOn={store.save.settings.sound && (store.save.settings.narration ?? true)}
     active={focused && foreground} onComplete={complete} onCancel={cancel} /> : null;
   return {
     request,

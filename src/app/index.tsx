@@ -14,6 +14,7 @@ import { FeatureArt } from "../components/FeatureArt";
 import { ShelfArt, openShelfGame } from "../components/GameShelf";
 import { dailySuggestions, homeContinue, islandNames, shelfGames } from "../learn/home";
 import { LearnArt } from "../learn/LearnArt";
+import { activeLearner } from "../learn/learners";
 import type { Island } from "../learn/types";
 export default function Home() {
   const insets = useSafeAreaInsets(), { width, fontScale } = useWindowDimensions(), store = useStore();
@@ -31,6 +32,7 @@ export default function Home() {
         <Text style={{ fontFamily: font, fontSize: 22, fontWeight: "800", color: C.ink }}>little island</Text>
         <Button compact quiet onPress={() => setSettings(true)} label="Open sound settings, practice and grown-up backups">Settings</Button>
       </View>
+      <Copy style={{ fontSize: 14, color: C.teal }}>{activeLearner(store.save.learning).id === "family" ? "Family practice" : `Learning with ${activeLearner(store.save.learning).name}`}</Copy>
       <SaveStatus />
       <Heading style={{ fontSize: available >= 600 ? 34 : 28 }}>What shall we play?</Heading>
       {resume && <Button onPress={() => openShelfGame(resume)} label={`Continue ${shelfGames.find(g => g.id === resume)?.name}, your saved round`}>Continue {shelfGames.find(g => g.id === resume)?.name}</Button>}

@@ -50,22 +50,24 @@ export function useSoundControls(enabled: boolean) {
       // Feedback tones also give a light haptic, even with sound off.
       if (live.current === context && foreground.current && toneFeel[key]) feel(toneFeel[key]);
       const tone = !!toneFeel[key];
-      if (live.current !== context || !context.enabled || !foreground.current || (tone ? !context.effects : !context.narration || (automatic && !context.automatic))) return;
+      if (live.current !== context || !context.enabled || !foreground.current || (tone ? !context.effects : !context.narration || (automatic && !context.automatic))) return false;
       const source = tone ? sources[key] : (voiceSources[context.voice][key] ?? sources[key]);
-      if (!source) return;
+      if (!source) return false;
       try {
         // eslint-disable-next-line react-hooks/immutability -- Native AudioPlayer volume is set through this SDK property.
         player.volume = tone ? 1 : context.volume;
         player.replace(source);
         player.play();
+        return true;
       } catch {
         /* All spoken instructions remain visible as text. */
+        return false;
       }
     },
     [context, player]
   );
   const stop = useCallback(() => { try { player.pause(); } catch { /* Player may already be disposed on route teardown. */ } }, [player]);
-  return { play, stop };
+  return { play, stop, player };
 }
 
 export function useSounds(enabled: boolean) { return useSoundControls(enabled).play; }
