@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 function speech(lines: string[]) {
   return JSON.parse(execFileSync("python3", ["-c", `
 import importlib.util,json,sys
+sys.dont_write_bytecode=True
 spec=importlib.util.spec_from_file_location('speech','scripts/generate-neural-audio.py')
 m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 print(json.dumps([m.spoken(x) for x in json.load(sys.stdin)]))
