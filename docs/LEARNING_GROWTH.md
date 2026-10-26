@@ -22,12 +22,12 @@ Execution began on 26 October 2026. Record exact commit/build, actual UI and per
 
 | ID | Required scenario | Status |
 | --- | --- | --- |
-| G01 | Original twelve activities and existing saves continue; new stages freely selectable per game | not_run |
+| G01 | Original twelve activities and existing saves continue; new stages freely selectable per game | Browser all12 original starts/actions/reloads passed; native blocked |
 | G02 | Both new stages of all twelve: first action, wrong answer, help, correct answer, explicit next and finish | Browser passed at CSS390×844; native blocked |
 | G03 | Phone/tablet controls reachable; long text/tiles, landscape and larger text | not_run |
 | G04 | Resume after reload/background; replay; switch stage without silently replacing a round | Browser reload/replay/stage confirmation passed; native background blocked |
 | G05 | Learner ownership, independent/helped records, no family-to-child migration or shared-player mastery | Browser solo ownership/notes passed; shared-player rules verified in engines |
-| G06 | Restore/replace/switch learner invalidates pending callbacks and suggestions; malformed data preserves originals | not_run |
+| G06 | Restore/replace/switch learner invalidates pending callbacks and suggestions; malformed data preserves originals | Browser malformed-owner rejection, valid restore and preserved recovery copy passed; stale callbacks/suggestions tested in harness |
 | G07 | Narration/effects/autoplay/volume independence; explicit hear; mute/background/navigation cancellation | not_run |
 | G08 | Offline all original/new speech present; voice samples and device listening | not_run |
 | G09 | Optional math/reading/mixed practice, help, cancel, bypass; saved Continue and racer/nearby safety | Browser advanced mixed/help/cancel/launch/saved Tic passed; remaining matrix pending |
@@ -48,3 +48,8 @@ T3 preview snapshots failed twice with “Preview automation snapshot timed out 
 ## Offline narration provenance
 
 Build13 replaces prerecorded Mac speech with two locally generated Kokoro-82M v1.0 banks: Warm (`af_heart`) and Calm (`af_bella`). The model/voice data and Python runtime remain outside the app; only AAC clips are bundled. Sources: [official model card and Apache-2.0 declaration](https://huggingface.co/hexgrad/Kokoro-82M), [Kokoro ONNX model release](https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.1), and [MIT wrapper license](https://github.com/thewh1teagle/kokoro-onnx/blob/main/LICENSE). Original English scripts and feedback tones remain repository content. No live service, account, API charge, child voice recording or child-data transmission is introduced. CHamoru choices remain verbatim existing text; new spoken coaching is English. Three local voice probes were produced; comfort and pronunciation require listening on family hardware. Default Warm is a beta choice, not child listening acceptance. The generated receipt records model hash, voice IDs, durations and normalization. Generation is resumable, validates content/file hashes, bounds native inference/encoding, and publishes maps only for complete matching banks.
+
+
+Browser continuation: selected each of the12 original foundation activities, performed its first meaningful action and reloaded. Reef’s numbered hop, Market’s one-mango basket, Sound Boat’s completed word/next picture, Which One’s matching picture, Turtle Tales’ page transition, Tide Pool’s prediction, Float/Sink’s shelf, Crab’s Right command, Håfa Adai’s seen word, Shell Math’s joined shell, Number Hop’s unit hop and Quick Practice’s solved equation persisted. Original Sound Boat added “Short o words” to QA Kai’s skill signals. Family warmup remained off while Kai’s advanced mixed preference remained on. A UI-exported QA backup with all learner notes was downloaded; a modified dangling-owner file was rejected before confirmation, a valid file restored through confirmation, and Previous saves showed the preserved copy. Native Files operation is still unverified. The download-event automation timed out, but the actual uniquely timed QA file was found and validated locally.
+
+The audio preflight follow-up found no substantive issues in f692f48’s automatic feedback flags, Settings import clearing or pinned voice/manifest checks. A later parent audit caught the missing ASCII-minus/trailing-equation-blank speech normalization case; a51048d corrects it and binds cache entries to the normalized inference input. Only byte-matching legacy entries with identical spoken input may migrate. Changed speech must regenerate. The two focused spoken-equation checks pass; completion of the corresponding regenerated banks remains required before release.
