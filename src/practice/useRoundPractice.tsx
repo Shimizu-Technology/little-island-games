@@ -6,7 +6,7 @@ import { useStore } from "../state/Store";
 import { defaultPracticeSettings, PracticeSummary, validPracticeSummary } from "./types";
 import { PracticePanel } from "./PracticePanel";
 
-type Pending = { serial: number; epoch: number; snapshot: unknown; config: string; run: () => void; cancel?: () => void };
+type Pending = { round: string; serial: number; epoch: number; snapshot: unknown; config: string; run: () => void; cancel?: () => void };
 /** A single deferred new-round action, never a lock on an existing saved game. */
 export function useRoundPractice(target: string, snapshot: unknown) {
   const store = useStore(), focused = useIsFocused();
@@ -35,7 +35,7 @@ export function useRoundPractice(target: string, snapshot: unknown) {
     if (!mounted.current || !live.current.focused || pendingRef.current) return;
     const v = live.current;
     if (!v.settings.enabled) { run(); return; }
-    const p = { serial: ++serial.current, epoch: v.epoch, snapshot: v.snapshot, config: v.config, run, cancel };
+    const p = { round: `warmup-${Date.now().toString(36)}-${serial.current + 1}`, serial: ++serial.current, epoch: v.epoch, snapshot: v.snapshot, config: v.config, run, cancel };
     pendingRef.current = p; setPending(p);
   }, []);
   const cancel = useCallback(() => {
@@ -58,6 +58,7 @@ export function useRoundPractice(target: string, snapshot: unknown) {
       live.current.store.notePractice(result.skill, result.helped, p.epoch);
       live.current.store.practice(result.skill, !result.helped);
     }
+    live.current.store.recordWarmup(summary.results, live.current.settings, p.round, p.epoch);
     p.run();
   };
   const visible = !!pending && focused && pending.epoch === store.epoch && pending.snapshot === snapshot && pending.config === config;

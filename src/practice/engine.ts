@@ -1,3 +1,5 @@
+import { growthTrack } from "../learn/growth/content";
+import type { GrowthQuestion } from "../learn/growth/types";
 import { random, shuffle } from "../games/types";
 import { PICTURE_WORDS } from "../learn/content/reading/clues";
 import { SENTENCES } from "../learn/content/reading/sentences";
@@ -10,6 +12,7 @@ import { validPracticeSettings, type PracticeResult, type PracticeSettings, type
 
 export const PRACTICE_LENGTH = 3;
 export type PracticeQuestion =
+  | { kind: "growth"; id: string; skill: string; speech: string; text: string; task: GrowthQuestion; choices: string[]; answer: number }
   | { kind: "math"; id: string; skill: string; speech: string; question: MathQuestion }
   | { kind: "word"; id: string; skill: string; speech: string; text: string; choices: string[]; answer: number }
   | { kind: "sentence"; id: string; skill: string; speech: string; text: string; choices: ReadingScene[]; answer: number };
@@ -39,7 +42,7 @@ export type PracticeAction =
 /** Keep malformed configuration out of the bounded generators. No save/store dependency. */
 export function practiceConfigKey(settings: PracticeSettings): string {
   if (!validPracticeSettings(settings)) throw new Error("Invalid practice settings");
-  return `${settings.enabled}:${settings.subject}:${settings.limit}:${settings.operation}`;
+  return `${settings.enabled}:${settings.subject}:${settings.limit}:${settings.operation}:${settings.mathStage ?? "basic"}:${settings.readingStage ?? "basic"}`;
 }
 
 export function practiceAnswer(q: PracticeQuestion): number {
@@ -72,7 +75,19 @@ export function createPracticeRound(settings: PracticeSettings, seed: number): P
       text: target, speech: wordAudio(target), choices, answer: choices.indexOf(target),
     };
   };
+  const advanced = (subject: "math" | "reading", index: number): PracticeQuestion | null => {
+    const stage = subject === "math" ? settings.mathStage : settings.readingStage;
+    if (!stage) return null;
+    const game = subject === "math" ? "quick-practice" : "which-one";
+    const pool = growthTrack(game, stage)!.questions.filter(q => !q.tiles);
+    const task = shuffle(pool, random(seed ^ 0x34ad))[index % pool.length];
+    const choices = shuffle(task.choices.map(c => c.value), rng);
+    return { kind: "growth", text: [task.context, task.prompt].filter(Boolean).join(" "), id: `${game}-${stage}-${task.id}`, skill: task.skill, speech: `growth-${game}-${stage}-${task.id}-prompt`, task, choices, answer: choices.indexOf(task.answer) };
+  };
   const questions = math.map((q, index): PracticeQuestion => {
+    const subject = settings.subject === "reading" || (settings.subject === "mixed" && index === 1) ? "reading" : "math";
+    const growth = advanced(subject, index);
+    if (growth) return growth;
     if (settings.subject === "reading") return reading(index, index === 1);
     if (settings.subject === "mixed" && index === 1) return reading(index, seed % 2 === 0);
     // Keep the shared generator's add/subtract alternation when reading occupies the middle slot.

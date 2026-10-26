@@ -330,7 +330,7 @@ export function Board({
         update(n);
         if (result.bump) {
           practice("think.debug", false);
-          sound("crab-commands-bump");
+          sound("crab-commands-bump", true);
           setWobble((v) => v + 1);
         } else if (solved(l, result)) {
           practice(l.skill, true);

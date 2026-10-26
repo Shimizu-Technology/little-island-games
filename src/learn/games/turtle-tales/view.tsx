@@ -210,7 +210,7 @@ function Read({
       practice(t.skill, next.solved);
     }
     if (next.solved) cheer(s.page === t.pages.length - 1 ? "big" : "right");
-    else sound("turtle-tales-look");
+    else sound("turtle-tales-look", true);
     update(next);
   }
 

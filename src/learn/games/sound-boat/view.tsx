@@ -256,11 +256,11 @@ function Play({
     const fresh = session.revision === 0;
     const say = () => {
       spoken.current = key;
-      sound(wordAudio(word.word));
+      sound(wordAudio(word.word), true);
     };
     const timers: ReturnType<typeof setTimeout>[] = [];
     if (startsLadder(s) && !complete) {
-      timers.push(setTimeout(() => sound("sound-boat-ladder"), 250));
+      timers.push(setTimeout(() => sound("sound-boat-ladder", true), 250));
       timers.push(setTimeout(say, 2900));
     } else timers.push(setTimeout(say, fresh ? 2900 : 350));
     return () => timers.forEach(clearTimeout);
@@ -300,7 +300,7 @@ function Play({
         } else sound("tap");
       } else {
         setShakes((m) => ({ ...m, [a.tile]: (m[a.tile] ?? 0) + 1 }));
-        sound(wordAudio(word.word));
+        sound(wordAudio(word.word), true);
         if (!reduced) {
           rock.setValue(0);
           Animated.sequence([

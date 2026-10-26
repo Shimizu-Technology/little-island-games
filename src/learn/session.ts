@@ -3,6 +3,7 @@ import { random } from "../games/types";
 import { engines } from "./engines";
 import { dayNumber } from "./skills";
 import { LearnId, LearnOptions, LearnSession, Outcome, SkillProgress, learnIds } from "./types";
+import { isGrowth } from "./growth/engine";
 import { isMathGame, validMathOptions } from "./games/shell-math/round";
 
 const MODES = ["solo", "together", "versus"] as const;
@@ -46,13 +47,14 @@ export function startSession(game: LearnId, choices: StartChoices, skills: Skill
 }
 
 /** "Play again": same players and options, score carried, starter alternated when chosen. */
-export function replaySession(previous: LearnSession, skills: SkillProgress | undefined, seed = Date.now() >>> 0): LearnSession {
+export function replaySession(previous: LearnSession, skills: SkillProgress | undefined, seed = Date.now() >>> 0, learner = previous.learner): LearnSession {
   const engine = engines[previous.game];
   const result = outcomeOf(previous);
   const match = previous.match ? settle(previous.match, result === "done" ? null : result) : undefined;
   const starter: Seat = previous.match ? nextStarter(previous.match, previous.starter ?? 0) : previous.options.mode === "together" ? ((previous.starter ?? 0) === 0 ? 1 : 0) : 0;
   return {
     ...previous,
+    ...(learner ? { learner } : {}),
     id: `${previous.game}-${seed.toString(36)}-${Math.floor(random(seed)() * 1e9).toString(36)}`,
     revision: 0,
     ...(match ? { match } : {}),
@@ -86,10 +88,12 @@ export function validLearnSession(value: unknown, key?: string): value is LearnS
     !MODES.includes(o.mode as (typeof MODES)[number]) ||
     !PACES.includes(o.pace as (typeof PACES)[number]) ||
     (o.language !== undefined && o.language !== "en" && o.language !== "ch") ||
-    Object.keys(o).some((k) => !["mode", "pace", "language", ...(isMathGame(value.game as string) ? ["mathOperation"] : [])].includes(k))
+    Object.keys(o).some((k) => !["mode", "pace", "language", "stage", ...(isMathGame(value.game as string) ? ["mathOperation"] : [])].includes(k))
   )
     return false;
   const engine = engines[value.game as LearnId];
+  if (o.stage !== undefined && o.stage !== "stretch" && o.stage !== "deep") return false;
+  if (value.learner !== undefined && (typeof value.learner !== "string" || !/^[a-z0-9-]{1,40}$/.test(value.learner))) return false;
   if (isMathGame(value.game as string) && !validMathOptions(o as LearnOptions)) return false;
   if (!engine.modes.includes(o.mode as LearnOptions["mode"])) return false;
   if (o.language === "ch" && !engine.languages?.includes("ch")) return false;
@@ -98,6 +102,7 @@ export function validLearnSession(value: unknown, key?: string): value is LearnS
   if (value.starter !== undefined && !validSeat(value.starter)) return false;
   if (!twoPlayer && (value.match !== undefined || value.starter !== undefined || value.names !== undefined)) return false;
   if (o.mode === "versus" ? !validMatch(value.match) : value.match !== undefined) return false;
+  if (o.stage && isGrowth(value.state) && value.state.starter !== (twoPlayer ? value.starter ?? 0 : 0)) return false;
   return engine.validate(value.state, o as LearnOptions);
 }
 

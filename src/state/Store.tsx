@@ -13,10 +13,16 @@ import { topicById } from "../explore/content";
 import { rememberNames } from "../games/match";
 import type { LearnId, LearnSession } from "../learn/types";
 import { toggleShelfFavorite } from "../learn/home";
-import { LearnExpected, applyLearnSave, applyPractice } from "./learnAction";
+import { LearnExpected, applyLearnSave, applyPractice, applyOwnedPractice } from "./learnAction";
+import { addLearner as appendLearner, selectLearner as chooseLearner, recordLearning } from "../learn/learners";
+import type { PracticeResult, PracticeSettings } from "../practice/types";
+import { AudioPreferences } from "../components/Audio";
 import { recordPracticeNote } from "../practice/notes";
 type Store = {
   epoch: number;
+  addLearner: (name: string) => boolean;
+  selectLearner: (id: string) => void;
+  recordWarmup: (results: PracticeResult[], config: PracticeSettings, round: string, expectedEpoch: number) => void;
   activityUpdate: (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => boolean;
   toggleFavorite: (topic: string) => void;
   toggleGameFavorite: (game: GameId | ActivityId | LearnId) => void;
@@ -26,6 +32,7 @@ type Store = {
   learnUpdate: (game: LearnId, next: LearnSession, expected: LearnExpected) => boolean;
   /** Record one attempt at a learning skill. */
   practice: (skill: string, correct: boolean) => void;
+  practiceOwned: (game: LearnId, expected: LearnExpected, skill: string, correct: boolean) => void;
   notePractice: (skill: string, helped: boolean, expectedEpoch?: number) => void;
   /** Remember that a learning game's first-move hand was shown. */
   markCoached: (game: LearnId) => void;
@@ -176,6 +183,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     [commit, ready, recovery]
   );
+  const ownedCredits = useRef(new Set<string>());
+  const practiceOwned = useCallback((game: LearnId, expected: LearnExpected, skill: string, correct: boolean) => {
+    if (!ready || recovery || restoring.current) return;
+    const key = `${expected.epoch}:${game}:${expected.id}:${expected.revision}:${skill}`;
+    if (ownedCredits.current.has(key)) return;
+    const updated = applyOwnedPractice(latest.current, game, expected, generation.current, skill, correct);
+    if (updated === latest.current) return;
+    if (ownedCredits.current.size > 512) ownedCredits.current.clear();
+    ownedCredits.current.add(key);
+    commit(updated);
+  }, [commit, ready, recovery]);
   const practice = useCallback(
     (skill: string, correct: boolean) => {
       const updated = applyPractice(latest.current, skill, correct);
@@ -203,6 +221,33 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (next.length === current.length && next.every((n, i) => n === current[i])) return;
     commit({ ...latest.current, players: next });
   }, [commit]);
+  const addLearner = useCallback((name: string) => {
+    if (!ready || recovery || restoring.current) return false;
+    const before = latest.current;
+    const learning = appendLearner(before.learning, name, `learner-${Date.now().toString(36)}`);
+    if (learning === before.learning || learning.people.length === (before.learning?.people.length ?? 1)) return false;
+    generation.current++; setEpoch(generation.current);
+    commit({ ...before, learning });
+    return true;
+  }, [commit, ready, recovery]);
+  const selectLearner = useCallback((id: string) => {
+    if (!ready || recovery || restoring.current) return;
+    const before = latest.current, learning = chooseLearner(before.learning, id);
+    if (learning.active === (before.learning?.active ?? "family")) return;
+    generation.current++; setEpoch(generation.current);
+    commit({ ...before, learning });
+  }, [commit, ready, recovery]);
+  const recordWarmup = useCallback((results: PracticeResult[], config: PracticeSettings, round: string, expectedEpoch: number) => {
+    if (expectedEpoch !== generation.current || !ready || recovery || restoring.current) return;
+    const before = latest.current, owner = before.learning?.active ?? "family";
+    let learning = before.learning;
+    for (const [i, result] of results.entries()) {
+      const math = result.skill.startsWith("num.");
+      const stage = math ? config.mathStage ?? (config.limit === 10 ? "easy" : "medium") : config.readingStage ?? "easy";
+      learning = recordLearning(learning, owner, math ? "quick-practice" : "which-one", stage, result.skill, `warmup-${i}`, round, result.helped);
+    }
+    if (learning !== before.learning) commit({ ...before, learning });
+  }, [commit, ready, recovery]);
   const settings = useCallback(
     (next: Partial<Save["settings"]>) =>
       commit({ ...latest.current, settings: { ...latest.current.settings, ...next } }),
@@ -238,12 +283,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       value={{
         save,
         epoch,
+        addLearner,
+        selectLearner,
+        recordWarmup,
         activityUpdate,
         toggleFavorite,
         toggleGameFavorite,
         rememberPlayers,
         learnUpdate,
         practice,
+        practiceOwned,
         notePractice,
         markCoached,
         exploreUpdate,
@@ -259,7 +308,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         startFresh,
       }}
     >
-      {children}
+      <AudioPreferences.Provider value={save.settings}>{children}</AudioPreferences.Provider>
     </Context.Provider>
   );
 }

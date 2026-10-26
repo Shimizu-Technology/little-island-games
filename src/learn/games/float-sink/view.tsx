@@ -218,7 +218,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
   // Say the boat job once the last object's reason (drop 0.7 s, cheer tone, a line of up to 4.8 s) has finished.
   useEffect(() => {
     if (!active || d.phase !== "shape") return;
-    const timer = setTimeout(() => sound("float-sink-build"), d.boat === 0 ? 6300 : 300);
+    const timer = setTimeout(() => sound("float-sink-build", true), d.boat === 0 ? 6300 : 300);
     return () => clearTimeout(timer);
   }, [active, d.phase, d.boat, sound]);
   const guess = (p: Prediction) => {
@@ -231,7 +231,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     const reveal = () => {
       setLanded(true);
       if (right) cheer("right", `float-sink-right-${object.id}`);
-      else sound(`float-sink-surprise-${object.id}`);
+      else sound(`float-sink-surprise-${object.id}`, true);
     };
     if (reduced) return reveal();
     setLanded(false);
@@ -252,7 +252,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     update(act(s, { kind: "load" }, o));
     if (n > max) {
       cheer("right", `float-sink-held-${max}`);
-    } else sound(`float-sink-count-${n}`);
+    } else sound(`float-sink-count-${n}`, true);
   };
   const prompt =
     d.phase === "predict" && object
@@ -450,7 +450,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
               onPress={() => {
                 practice("sci.shape-buoyancy", shape !== "ball");
                 update(act(s, { kind: "shape", value: shape }, o));
-                sound(shape === "ball" ? "float-sink-ball-sank" : "float-sink-load");
+                sound(shape === "ball" ? "float-sink-ball-sank" : "float-sink-load", true);
               }}
             >
               <ObjectArt id={shape === "ball" ? "clay" : shape} size={54} />

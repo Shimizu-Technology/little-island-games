@@ -9,6 +9,9 @@ import { Button, C, Chip, Copy, GameHeader, Heading, Sheet, ToggleRow, styles } 
 import { PlayerNames, Scoreboard } from "../components/Match";
 import type { Seat } from "../games/match";
 import { engines } from "./engines";
+import { GrowthBoard } from "./growth/Board";
+import { foundationLabels, growthTrack } from "./growth/content";
+import { activeLearner, readyForNext } from "./learners";
 import { views } from "./views";
 import { Celebrate } from "./Celebrate";
 import { LearnArt } from "./LearnArt";
@@ -37,13 +40,15 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const engine = engines[id],
     view = views[id];
   const saved = store.save.learn?.[id];
+  const learner = activeLearner(store.save.learning);
+  const learningSkills = learner.id === "family" ? store.save.skills : learner.skills;
   const [epoch] = useState(store.epoch);
   const expected = useRef<{ id: string | null; revision?: number }>({ id: saved?.id ?? null, revision: saved?.revision });
   const remembered = store.save.players ?? [];
   const [setup, setSetup] = useState(false),
     [help, setHelp] = useState(false),
     [options, setOptions] = useState<LearnOptions>(
-      saved?.options ?? { mode: engine.modes[0], pace: "easy", ...(engine.languages ? { language: engine.languages[0] } : {}) }
+      (saved && (saved.learner ?? "family") === learner.id ? saved.options : learner.choices[id]) ?? { mode: engine.modes[0], pace: "easy", ...(engine.languages ? { language: engine.languages[0] } : {}) }
     ),
     [names, setNames] = useState<[string, string]>(
       saved?.names && !saved.names.every((n, i) => n === `Player ${i + 1}`) ? saved.names : ["", ""]
@@ -55,8 +60,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
     const sub = AppState.addEventListener("change", (state) => setAppActive(state === "active"));
     return () => sub.remove();
   }, []);
-  const soundOn = store.save.settings.sound;
-  const { play: sound, stop: stopSound } = useSoundControls(soundOn && focused);
+  const soundOn = store.save.settings.sound && (store.save.settings.narration ?? true);
+  const { play: sound, stop: stopSound } = useSoundControls(store.save.settings.sound && focused);
   const result = saved ? outcomeOf(saved) : null,
     finished = result !== null,
     notWon = saved && result === "done" && engine.notWon ? engine.notWon(saved.state, saved.options) : null,
@@ -79,13 +84,14 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const coachDone = useCallback(() => {
     setReplayCoach(false);
     markCoached(id);
-  }, [markCoached, id]);
+  }, [markCoached, id, setReplayCoach]);
   const cheerLine = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const boardActive = appActive && focused && !setup && !help,
     savedId = saved?.id;
   // A falling object can retain a callback after mute, Help or a round change. Invalidate
   // that callback too, rather than only cancelling speech it had already scheduled.
-  const feedbackContext = useMemo(() => ({ boardActive, soundOn, savedId }), [boardActive, soundOn, savedId]);
+  const audioSettings = store.save.settings;
+  const feedbackContext = useMemo(() => ({ boardActive, soundOn, savedId, audioSettings }), [boardActive, soundOn, savedId, audioSettings]);
   const liveFeedback = useRef<object | null>(feedbackContext);
   useLayoutEffect(() => {
     liveFeedback.current = feedbackContext;
@@ -102,31 +108,35 @@ export function LearnFrame({ id }: { id: LearnId }) {
       if (kind === "big") feel("success");
       clearTimeout(cheerLine.current);
       if (say) cheerLine.current = setTimeout(() => {
-        if (liveFeedback.current === feedbackContext) sound(say);
+        if (liveFeedback.current === feedbackContext) sound(say, true);
       }, kind === "big" ? 900 : 550);
     },
     [sound, boardActive, feedbackContext]
   );
   // A newer sound, a new round, sound off, Help or leaving the screen drops a pending cheer line.
   const boardSound = useCallback(
-    (key: string) => {
+    (key: string, automatic = false) => {
       if (!boardActive || liveFeedback.current !== feedbackContext) return;
       clearTimeout(cheerLine.current);
-      sound(key);
+      sound(key, automatic);
     },
     [sound, boardActive, feedbackContext]
   );
   // Say the game's goal once when a fresh round opens, so a non-reader knows what to do.
   const introduced = useRef<string | null>(null);
   useEffect(() => {
-    if (!saved || !engine.introAudio || !soundOn || !boardActive) return;
+    if (!saved || !engine.introAudio || !soundOn || !boardActive || saved.options.stage) return;
     if (saved.revision !== 0 || introduced.current === saved.id) return;
     introduced.current = saved.id;
-    const timer = setTimeout(() => sound(engine.introAudio!), 450);
+    const timer = setTimeout(() => sound(engine.introAudio!, true), 450);
     return () => clearTimeout(timer);
   }, [saved, engine.introAudio, soundOn, boardActive, sound]);
 
-  const { learnUpdate, practice } = store;
+  const { learnUpdate, practiceOwned } = store;
+  const practice = useCallback((skill: string, correct: boolean) => {
+    if (!saved || !boardActive) return;
+    practiceOwned(id, { id: saved.id, revision: saved.revision, epoch }, skill, correct);
+  }, [saved, boardActive, practiceOwned, id, epoch]);
   const save = useCallback(
     (next: LearnSession) => {
       const accepted = learnUpdate(id, next, { ...expected.current, epoch });
@@ -137,25 +147,27 @@ export function LearnFrame({ id }: { id: LearnId }) {
   );
   const update = useCallback(
     (state: unknown) => {
-      if (!saved) return;
+      if (!saved || !boardActive || store.epoch !== epoch) return;
       const revision = Math.max(saved.revision, expected.current.revision ?? 0) + 1;
       save({ ...saved, state, revision });
     },
-    [saved, save]
+    [saved, save, boardActive, store.epoch, epoch]
   );
 
   function start() {
-    const next = startSession(id, { options, names, starter: options.mode === "solo" ? 0 : starter, alternate }, store.save.skills);
+    const next = startSession(id, { options, names, starter: options.mode === "solo" ? 0 : starter, alternate }, learningSkills);
+    next.learner = learner.id;
     if (options.mode !== "solo") store.rememberPlayers(names);
     if (save(next)) setSetup(false);
   }
   function replay() {
     if (!saved || !finished) return;
-    save(replaySession(saved, store.save.skills));
+    const next = replaySession(saved, learningSkills, undefined, learner.id);
+    save(next);
   }
   function openSetup() {
     if (saved) {
-      setOptions(saved.options);
+      setOptions((saved.learner ?? "family") === learner.id ? saved.options : { ...saved.options, ...(learner.choices[id] ?? {}), stage: learner.choices[id]?.stage });
       setAlternate(saved.match?.alternate ?? true);
       setStarter(saved.starter ?? 0);
     }
@@ -165,7 +177,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const twoPlayer = options.mode !== "solo";
   const turn = saved && engine.turn && saved.options.mode !== "solo" && !finished ? engine.turn(saved.state, saved.options) : null;
   const boardWidth = Math.min(width - insets.left - insets.right - 56, 900);
-  const Board = view.Board;
+  const Board = saved?.options.stage ? GrowthBoard : view.Board;
 
   return (
     <SafeAreaView style={styles.page}>
@@ -195,7 +207,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
               update={update}
               practice={practice}
               notePractice={store.notePractice}
-              skills={store.save.skills ?? {}}
+              skills={learningSkills ?? {}}
               sound={boardSound}
               stopSound={stopSound}
               soundOn={soundOn}
@@ -228,6 +240,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
                 </Button>
               </View>
             )}
+            {(saved.learner ?? "family") !== learner.id && <Copy style={{ textAlign: "center" }}>This saved round belongs to {store.save.learning?.people.find(p => p.id === (saved.learner ?? "family"))?.name ?? "Family practice"}. New rounds use {learner.name}.</Copy>}
+            {saved.options.stage === "stretch" && learner.id !== "family" && (saved.learner ?? "family") === learner.id && readyForNext(learner, id, "stretch", [...new Set(growthTrack(id, "stretch")?.questions.map(q => q.skill) ?? [])]) && finished && <Button quiet onPress={() => { setOptions({ ...saved.options, stage: "deep" }); setSetup(true); }}>Ready to explore {growthTrack(id, "deep")?.label}?</Button>}
             {/* Options are for grown-ups and changing modes; kept small so it's never the obvious tap mid-game. */}
             <Button compact quiet onPress={openSetup}>
               New round & options
@@ -271,7 +285,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
             )}
           </>
         )}
-        {engine.mathControls && (
+        {!options.stage && engine.mathControls && (
           <>
             <Heading style={{ fontSize: 18 }}>What shall we practise?</Heading>
             <View style={[styles.row, { flexWrap: "wrap" }]}>
@@ -283,15 +297,17 @@ export function LearnFrame({ id }: { id: LearnId }) {
             </View>
           </>
         )}
-        <Heading style={{ fontSize: 18 }}>{engine.mathControls ? "How far shall we count?" : "Choose your pace"}</Heading>
+        <Heading style={{ fontSize: 18 }}>Choose what to explore</Heading>
         <View style={[styles.row, { flexWrap: "wrap" }]}>
           {(engine.paces ?? (["easy", "medium", "hard"] as const)).map((pace) => (
-            <Chip key={pace} selected={options.pace === pace} onPress={() => setOptions({ ...options, pace })}>
-              {engine.paceLabels?.[pace] ?? paceLabel[pace]}
+            <Chip key={pace} selected={!options.stage && options.pace === pace} onPress={() => setOptions({ ...options, pace, stage: undefined })}>
+              {foundationLabels[id][["easy", "medium", "hard"].indexOf(pace)] ?? engine.paceLabels?.[pace] ?? paceLabel[pace]}
             </Chip>
           ))}
+          {(["stretch", "deep"] as const).map(stage => growthTrack(id, stage) && <Chip key={stage} selected={options.stage === stage} onPress={() => setOptions({ ...options, stage })}>{growthTrack(id, stage)!.label}</Chip>)}
         </View>
-        {engine.paceHelp?.[options.pace] && <Copy style={{ fontSize: 14 }}>{engine.paceHelp[options.pace]}</Copy>}
+        {options.stage && <Copy>{growthTrack(id, options.stage)?.description} {options.mode === "versus" ? "Four ideas, two turns each." : "Three ideas, no clock."} Show me is always available.</Copy>}
+        {!options.stage && engine.paceHelp?.[options.pace] && <Copy style={{ fontSize: 14 }}>{engine.paceHelp[options.pace]}</Copy>}
         {engine.languages && engine.languages.length > 1 && (
           <>
             <Heading style={{ fontSize: 18 }}>Words in</Heading>
@@ -306,11 +322,11 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
       </Sheet>
       <Sheet visible={help} onClose={() => setHelp(false)} title={`How to play ${engine.name}`}>
-        <Copy>{engine.help}</Copy>
-        {engine.helpAudio && (
+        <Copy>{saved?.options.stage ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>
+        {!saved?.options.stage && engine.helpAudio && (
           <>
             <Button icon="sound-on" onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>
-              Listen to the instructions
+              Hear a quick guide
             </Button>
             {!soundOn && <Copy>Turn sound on to hear the instructions.</Copy>}
           </>

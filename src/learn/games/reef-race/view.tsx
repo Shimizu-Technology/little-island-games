@@ -179,14 +179,14 @@ export function Board({ session, update, practice, sound, active, width, height,
   const turnKey = `${r.phase}-${r.rollIndex}-${r.turn}`;
   useEffect(() => {
     if (!active || computer || r.phase !== "roll" || s.history.length === 0) return;
-    const t = setTimeout(() => sound(spinKey), 1300);
+    const t = setTimeout(() => sound(spinKey, true), 1300);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, turnKey]);
   // The finish: repeat the last number after the frame's chime, then say who reached the island.
   useEffect(() => {
     if (!active || !outcomeKey) return;
-    const t = setTimeout(() => sound(outcomeKey), 1900);
+    const t = setTimeout(() => sound(outcomeKey, true), 1900);
     return () => clearTimeout(t);
   }, [active, outcomeKey, sound]);
 
@@ -194,8 +194,8 @@ export function Board({ session, update, practice, sound, active, width, height,
   const announce = useCallback(
     (next: ReefState, landed: number) => {
       const after = reefRound(next, o);
-      if (after.phase === "current") later(() => sound(after.direction > 0 ? "reef-race-forward" : "reef-race-back"), 750);
-      else if (after.phase === "bonus") later(() => sound(`reef-race-bonus-${end}-${landed}`), 750);
+      if (after.phase === "current") later(() => sound(after.direction > 0 ? "reef-race-forward" : "reef-race-back", true), 750);
+      else if (after.phase === "bonus") later(() => sound(`reef-race-bonus-${end}-${landed}`, true), 750);
       return after;
     },
     [o, end, later, sound]

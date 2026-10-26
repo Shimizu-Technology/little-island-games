@@ -12,9 +12,10 @@ import { validMatch, validSeat, validPlayers } from "../games/match";
 import type { LearnId, LearnSession, SkillProgress } from "../learn/types";
 import { learnIds } from "../learn/types";
 import { validLearn } from "../learn/session";
+import { validLearners, type Learners } from "../learn/learners";
 import { validSkills } from "../learn/skills";
 import { PracticeNotes, PracticeSettings, validPracticeNotes, validPracticeSettings } from "../practice/types";
-export type Settings = { sound: boolean; help: boolean; practice?: PracticeSettings };
+export type Settings = { sound: boolean; help: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
 export type Save = {
   version: 1;
   settings: Settings;
@@ -37,6 +38,7 @@ export type Save = {
   coached?: LearnId[];
   /** Local helped/independent practice counts, visible only in grown-up settings. */
   practiceNotes?: PracticeNotes;
+  learning?: Learners;
 };
 export const emptySave = (): Save => ({
   version: 1,
@@ -342,6 +344,11 @@ export function parseSave(raw: string): Save {
     !obj(v.settings) ||
     typeof v.settings.sound !== "boolean" ||
     typeof v.settings.help !== "boolean" ||
+    ["narration", "effects", "automaticSpeech"].some(k => (v.settings as Record<string, unknown>)[k] !== undefined && typeof (v.settings as Record<string, unknown>)[k] !== "boolean") ||
+    (v.settings.narrationVolume !== undefined && (typeof v.settings.narrationVolume !== "number" || !Number.isFinite(v.settings.narrationVolume) || v.settings.narrationVolume < 0 || v.settings.narrationVolume > 1)) ||
+    (v.settings.voice !== undefined && !["warm", "calm"].includes(v.settings.voice as string)) ||
+    (v.learning !== undefined && !validLearners(v.learning)) ||
+    !validLearningOwners(v.learn, v.learning) ||
     (v.settings.practice !== undefined && !validPracticeSettings(v.settings.practice)) ||
     (v.practiceNotes !== undefined && !validPracticeNotes(v.practiceNotes)) ||
     !obj(v.sessions) ||
@@ -373,4 +380,11 @@ export function parseSave(raw: string): Save {
   )
     throw new Error("Some saved game data is invalid. Your original has been kept.");
   return v as unknown as Save;
+}
+
+function validLearningOwners(learn: unknown, learning: unknown): boolean {
+  if (learn === undefined) return true;
+  if (!obj(learn) || (learning !== undefined && !validLearners(learning))) return false;
+  const ids = new Set((learning === undefined ? [{ id: "family" }] : learning.people).map(p => p.id));
+  return Object.values(learn).every(s => obj(s) && (s.learner === undefined || ids.has(s.learner as string)));
 }

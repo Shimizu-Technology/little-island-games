@@ -589,7 +589,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     if (!active || !m || !canAutoPlay || s.guesses.length > 0 || s.watched) return;
     const wait = first.current ? 3300 : 250;
     first.current = false;
-    const timer = setTimeout(() => sound(`tide-pool-q-${m.id}`), wait);
+    const timer = setTimeout(() => sound(`tide-pool-q-${m.id}`, true), wait);
     questionTimer.current = timer;
     return () => clearTimeout(timer);
   }, [active, m, sound, s.guesses.length, s.watched]);
@@ -612,7 +612,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     practice(m.skill, ok);
     update(answer(s, choice, o));
     if (coach.active) coach.done();
-    if (s.guesses.length + 1 === need) sound(`tide-pool-do-${m.id}`);
+    if (s.guesses.length + 1 === need) sound(`tide-pool-do-${m.id}`, true);
   };
   const doChange = () => {
     if (!active) return;
@@ -620,7 +620,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     practice("sci.cause-effect", right);
     update(makeChange(s, o));
     if (right) cheer("right", `tide-pool-right-${m.id}`);
-    else sound(`tide-pool-surprise-${m.id}`);
+    else sound(`tide-pool-surprise-${m.id}`, true);
     if (reduced) return;
     setPlaying(true);
     p.setValue(0);

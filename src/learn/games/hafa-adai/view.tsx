@@ -103,7 +103,7 @@ export function Board({
     if (!active || !soundOn || !canAutoPlay) return;
     const wait = fresh.current ? 3700 : 0;
     fresh.current = false;
-    const timer = setTimeout(() => sound(promptKey), wait);
+    const timer = setTimeout(() => sound(promptKey, true), wait);
     return () => clearTimeout(timer);
   }, [active, soundOn, sound, promptKey]);
   function select(id: string) {

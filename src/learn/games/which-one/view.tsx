@@ -142,7 +142,7 @@ export function Board({
     }
     if (next.solved) cheer(s.index === 7 ? "big" : "right");
     else {
-      sound("which-one-look");
+      sound("which-one-look", true);
       setOut({ index: s.index, picks: [...tried, i] });
     }
     update(next);

@@ -1,4 +1,5 @@
 import type { LearnEngine, LearnId } from "./types";
+import { withGrowth } from "./growth/engine";
 import { engine as reefRace } from "./games/reef-race/engine";
 import { engine as islandMarket } from "./games/island-market/engine";
 import { engine as soundBoat } from "./games/sound-boat/engine";
@@ -13,7 +14,7 @@ import { engine as numberHop } from "./games/number-hop/engine";
 import { engine as quickPractice } from "./games/quick-practice/engine";
 
 /** Pure engines (no React): safe to import from save validation and tests. */
-export const engines: Record<LearnId, LearnEngine<unknown>> = {
+const originalEngines: Record<LearnId, LearnEngine<unknown>> = {
   "reef-race": reefRace as LearnEngine<unknown>,
   "island-market": islandMarket as LearnEngine<unknown>,
   "sound-boat": soundBoat as LearnEngine<unknown>,
@@ -27,6 +28,8 @@ export const engines: Record<LearnId, LearnEngine<unknown>> = {
   "number-hop": numberHop as LearnEngine<unknown>,
   "quick-practice": quickPractice as LearnEngine<unknown>,
 };
+
+export const engines = Object.fromEntries(Object.entries(originalEngines).map(([id, engine]) => [id, withGrowth(engine)])) as Record<LearnId, LearnEngine<unknown>>;
 
 /** Every skill label across games, for the grown-up practice view. */
 export const skillLabels = (): Record<string, string> =>

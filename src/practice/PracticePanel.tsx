@@ -46,7 +46,7 @@ function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }:
       !state.helped && !state.solved && foreground() && !introduced.current &&
       live.current.mounted && live.current.active && live.current.soundOn && session.canHear(0)) {
       introduced.current = true;
-      play("practice-intro");
+      play("practice-intro", true);
     }
   }, [active, soundOn, state.gateOpen, state.status, state.index, state.helped, state.solved, play, session]);
 
@@ -79,7 +79,7 @@ function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }:
   }
   function show() {
     const next = send({ type: "show", question: state.index });
-    if (next) speak(q.kind === "math" ? "practice-show" : q.speech);
+    if (next) speak(q.kind === "math" ? "practice-show" : q.kind === "growth" ? q.speech.replace(/-prompt$/, "-explanation") : q.speech);
   }
   function closeGate() {
     send({ type: "gate-close" });
@@ -111,8 +111,12 @@ function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }:
       <Button quiet onPress={closeGate}>Back to practice</Button>
     </> : <>
       <Copy style={{ color: C.ink, fontSize: 14, lineHeight: 20 }}>Three little questions, then your game. You can ask for help.</Copy>
-      <Heading style={{ fontSize: 22 }}>{q.kind === "math" ? "Tap the missing number" : "Read it. Tap the matching picture."}</Heading>
-      {q.kind === "math" ? <>
+      <Heading style={{ fontSize: 22 }}>{q.kind === "math" ? "Tap the missing number" : q.kind === "growth" ? q.task.prompt : "Read it. Tap the matching picture."}</Heading>
+      {q.kind === "growth" ? <>
+        {!!q.task.context && <Copy style={{ fontSize: 20, lineHeight: 29 }}>{q.task.context}</Copy>}
+        <View style={{ gap: 8 }}>{q.choices.map((value, i) => <Button key={value} quiet selected={(state.shown || state.solved) && i === right} disabled={disabled || state.solved} onPress={() => choose(i)}>{q.task.choices.find(c => c.value === value)!.label}</Button>)}</View>
+        {(state.shown || state.solved) && <Copy>{q.task.explanation}</Copy>}
+      </> : q.kind === "math" ? <>
         <Heading style={{ fontSize: 32, textAlign: "center" }}>{mathEquation(q.question, state.shown || state.solved)}</Heading>
         {state.helped && <PracticeMathPicture question={q.question} />}
         <View style={{ flexDirection: "row", gap: 8 }}>
@@ -148,7 +152,7 @@ function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }:
       <View accessibilityLiveRegion="polite">
         <Copy style={{ color: C.ink, textAlign: "center" }}>{state.solved
           ? state.results.length === 3 ? "Ready! Let’s play." : "That’s it! Ready for the next one?"
-          : state.shown ? q.kind === "math" ? "Tap the missing number to try it together." : "Tap the picture marked Matches to try it together."
+          : state.shown ? q.kind === "math" ? "Tap the missing number to try it together." : q.kind === "growth" ? "Tap the marked answer to try it together." : "Tap the picture marked Matches to try it together."
           : state.helped ? "Let’s try it together. Look again, or tap Show me." : "You can ask for help at any time."}</Copy>
       </View>
       {state.solved ? <Button disabled={disabled} onPress={() => send({ type: "next", question: state.index })}>
@@ -157,7 +161,7 @@ function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }:
         <Button quiet compact icon="sound-on" style={{ flex: 1 }} disabled={disabled || !soundOn}
           label={q.kind === "math" ? "Hear the math question" : "Hear the instruction"}
           onPress={() => {
-            if (session.canHear(state.index)) speak(q.kind === "math" ? q.speech : "which-one-intro");
+            if (session.canHear(state.index)) speak(q.kind === "math" || q.kind === "growth" ? q.speech : "which-one-intro");
           }}>Hear</Button>
         <Button quiet compact style={{ flex: 1 }} disabled={disabled} onPress={show}>Show me</Button>
       </View>}

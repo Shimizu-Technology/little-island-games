@@ -20,12 +20,20 @@ export function PracticeOptions({ value, onChange, disabled }: { value: Practice
       {value.subject !== "reading" && <>
         <Heading style={{ fontSize: 17 }}>Numbers</Heading>
         <View style={[styles.row, { flexWrap: "wrap" }]}>
-          {([10, 20] as const).map(limit => <Chip key={limit} selected={value.limit === limit} onPress={() => set({ limit })}>Within {limit}</Chip>)}
+          {([10, 20] as const).map(limit => <Chip key={limit} selected={!value.mathStage && value.limit === limit} onPress={() => set({ limit, mathStage: undefined })}>Within {limit}</Chip>)}
+          {(["stretch", "deep"] as const).map(mathStage => <Chip key={mathStage} selected={value.mathStage === mathStage} onPress={() => set({ mathStage })}>{mathStage === "stretch" ? "Tens & unknowns" : "Groups & two steps"}</Chip>)}
         </View>
-        <Heading style={{ fontSize: 17 }}>Math practice</Heading>
+        {!value.mathStage && <Heading style={{ fontSize: 17 }}>Math practice</Heading>}
         <View style={[styles.row, { flexWrap: "wrap" }]}>
-          {(["add", "subtract", "mixed"] as const).map(operation => <Chip key={operation} selected={value.operation === operation}
+          {!value.mathStage && (["add", "subtract", "mixed"] as const).map(operation => <Chip key={operation} selected={value.operation === operation}
             onPress={() => set({ operation })}>{operation === "add" ? "Adding" : operation === "subtract" ? "Taking away" : "Both"}</Chip>)}
+        </View>
+      </>}
+      {value.subject !== "math" && <>
+        <Heading style={{ fontSize: 17 }}>Reading practice</Heading>
+        <View style={[styles.row, { flexWrap: "wrap" }]}>
+          <Chip selected={!value.readingStage} onPress={() => set({ readingStage: undefined })}>First words & pictures</Chip>
+          {(["stretch", "deep"] as const).map(readingStage => <Chip key={readingStage} selected={value.readingStage === readingStage} onPress={() => set({ readingStage })}>{readingStage === "stretch" ? "Directions & references" : "Linked clues"}</Chip>)}
         </View>
       </>}
       <Copy>Learning islands stay open. A grown-up can skip practice when needed. Nothing is timed, and asking for help never resets progress.</Copy>

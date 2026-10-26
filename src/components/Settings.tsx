@@ -5,7 +5,7 @@ import { Text } from "./Text";
 import { useStore } from "../state/Store";
 import { exportBackup, importBackup } from "../state/backup";
 import { parseSave } from "../state/validation";
-import { Button, C, Copy, Heading, Sheet, ToggleRow, font, styles } from "./ui";
+import { Button, C, Chip, Copy, Heading, Sheet, ToggleRow, font, styles } from "./ui";
 import { Gate, gateAccepts, makeGate } from "../state/grownUpGate";
 import { PreviousSaves } from "./PreviousSaves";
 import { practiceSummary } from "../learn/skills";
@@ -13,6 +13,8 @@ import { engines, skillLabels } from "../learn/engines";
 import { islandNames } from "../learn/home";
 import type { Island } from "../learn/types";
 import { PracticeOptions } from "./PracticeOptions";
+import { LearnerSettings } from "../learn/LearnerSettings";
+import { useSoundControls } from "./Audio";
 import { defaultPracticeSettings } from "../practice/types";
 export function Settings({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const store = useStore(),
@@ -23,6 +25,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
     [busy, setBusy] = useState(false),
     [gate, setGate] = useState<Gate>(() => makeGate()),
     [answer, setAnswer] = useState("");
+  const { play: previewVoice } = useSoundControls(store.save.settings.sound && visible);
   const practice = practiceSummary(store.save.skills, skillLabels());
   function check() {
     if (gateAccepts(gate, answer)) {
@@ -73,11 +76,19 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
       <Heading style={{ fontSize: 19 }}>Make yourself comfortable</Heading>
       <ToggleRow
         label="Sound"
-        detail="Clues, narration and little feedback tones"
+        detail="Turn all audio on or off"
         value={store.save.settings.sound}
         disabled={busy}
         onChange={(sound) => store.settings({ sound })}
       />
+      <ToggleRow label="Game sounds" detail="Small feedback tones" value={store.save.settings.effects ?? true} disabled={busy} onChange={effects => store.settings({ effects })} />
+      <ToggleRow label="Spoken help" detail="Hear questions and instructions when you ask" value={store.save.settings.narration ?? true} disabled={busy} onChange={narration => store.settings({ narration })} />
+      <ToggleRow label="Read aloud automatically" detail="Off keeps speech on tap-to-hear" value={store.save.settings.automaticSpeech ?? false} disabled={busy} onChange={automaticSpeech => store.settings({ automaticSpeech })} />
+      <Heading style={{ fontSize: 17 }}>Narration voice</Heading>
+      <View style={[styles.row, { flexWrap: "wrap" }]}>{(["warm", "calm"] as const).map(voice => <Chip key={voice} selected={(store.save.settings.voice ?? "warm") === voice} onPress={() => { if (!busy) store.settings({ voice }); }}>{voice === "warm" ? "Warm" : "Calm"}</Chip>)}</View>
+      <Button quiet compact disabled={!store.save.settings.sound || store.save.settings.narration === false || busy} onPress={() => previewVoice("voice-preview")}>Hear this voice</Button>
+      <Heading style={{ fontSize: 17 }}>Narration volume</Heading>
+      <View style={[styles.row, { flexWrap: "wrap" }]}>{[0.25, 0.5, 0.75, 1].map(narrationVolume => <Chip key={narrationVolume} selected={(store.save.settings.narrationVolume ?? 0.75) === narrationVolume} onPress={() => { if (!busy) store.settings({ narrationVolume }); }}>{Math.round(narrationVolume * 100)}%</Chip>)}</View>
       <ToggleRow
         label="Checkers piece hints"
         detail="A small dot on pieces that can move"
@@ -115,16 +126,17 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
         </>
       ) : (
         <>
+          <LearnerSettings disabled={busy} />
           <PracticeOptions value={store.save.settings.practice ?? defaultPracticeSettings}
             onChange={practice => store.settings({ practice })} disabled={busy} />
           {!!Object.keys(store.save.practiceNotes ?? {}).length && <View style={{ gap: 6 }}>
-            <Heading style={{ fontSize: 19 }}>On her own and with help</Heading>
-            <Copy>These are local practice notes, not grades. A guided answer counts toward finishing practice.</Copy>
+            <Heading style={{ fontSize: 19 }}>Earlier family practice</Heading>
+            <Copy>Earlier shared-device counts are kept here. They are not assigned to a child or used to judge individual proficiency. A guided answer counts toward finishing practice.</Copy>
             {Object.entries(store.save.practiceNotes ?? {}).map(([skill, notes]) => <Copy key={skill}>
               {skillLabels()[skill] ?? (skill.startsWith("read.") ? "Reading pictures" : "Number practice")}: {notes.independent} on her own · {notes.helped} with help
             </Copy>)}
           </View>}
-          <Heading style={{ fontSize: 19 }}>What she’s been practicing</Heading>
+          <Heading style={{ fontSize: 19 }}>Shared family practice signals</Heading>
           {!practice.length && <Copy>No recent practice yet. As she explores the learning islands, the words and ideas she tries will appear here.</Copy>}
           {(["reading", "numbers", "science", "thinking"] as Island[]).map(island => {
             const labels = new Set(Object.values(engines).filter(e => e.island === island).flatMap(e => Object.keys(e.skills)));

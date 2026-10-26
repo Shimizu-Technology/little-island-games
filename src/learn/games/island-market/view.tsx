@@ -300,7 +300,7 @@ export function Board({ session, update, practice, sound, active, width, coach, 
   // Each new customer says their order. The first waits for the game's spoken intro.
   useEffect(() => {
     if (!active || !packing) return;
-    const t = setTimeout(() => sound(orderAudio), session.revision === 0 ? 3700 : 450);
+    const t = setTimeout(() => sound(orderAudio, true), session.revision === 0 ? 3700 : 450);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, s.index, packing]);
@@ -312,7 +312,7 @@ export function Board({ session, update, practice, sound, active, width, coach, 
   }, [active, s, update]);
   useEffect(() => {
     if (!active || s.phase !== "done") return;
-    const t = setTimeout(() => sound("island-market-finish"), 1800);
+    const t = setTimeout(() => sound("island-market-finish", true), 1800);
     return () => clearTimeout(t);
   }, [active, s.phase, sound]);
 
@@ -322,7 +322,7 @@ export function Board({ session, update, practice, sound, active, width, coach, 
     if (next === s) return;
     if (coach.active) coach.done();
     setFeedback(null);
-    sound(`reef-race-number-${pieceTotal(next.pieces, money)}`);
+    sound(`reef-race-number-${pieceTotal(next.pieces, money)}`, true);
     update(next);
   }
   function give(choice?: number) {
@@ -332,19 +332,19 @@ export function Board({ session, update, practice, sound, active, width, coach, 
     if (next === s) {
       if (order.kind === "compare") {
         setPickWrong((w) => ({ n: choice ?? 0, key: w.key + 1 }));
-        sound("island-market-compare-try");
+        sound("island-market-compare-try", true);
         return;
       }
       const kind = total < order.target ? "under" : "over";
       setFeedback(kind);
       setBump((k) => k + 1);
-      sound(`island-market-${kind}`);
+      sound(`island-market-${kind}`, true);
       return;
     }
     if (coach.active) coach.done();
     setFeedback(null);
     cheer();
-    later(() => sound("island-market-served"), 550);
+    later(() => sound("island-market-served", true), 550);
     update(next);
   }
 

@@ -1,5 +1,6 @@
 import type { Match, RoundResult, Seat } from "../games/match";
 import type { MathOperation } from "../math/questions";
+import type { GrowthStage } from "./growth/types";
 
 /** Wave 1 learning games. Each id has a pure engine (src/learn/games/<id>/engine.ts) and a Board. */
 export const learnIds = [
@@ -22,13 +23,15 @@ export type Island = "reading" | "numbers" | "science" | "thinking";
 export type LearnMode = "solo" | "together" | "versus";
 export type Pace = "easy" | "medium" | "hard";
 export type Language = "en" | "ch";
-export type LearnOptions = { mode: LearnMode; pace: Pace; language?: Language; mathOperation?: MathOperation };
+export type LearnOptions = { mode: LearnMode; pace: Pace; language?: Language; mathOperation?: MathOperation; stage?: GrowthStage };
 
 export type LearnSession<S = unknown> = {
   game: LearnId;
   version: 1;
   id: string;
   revision: number;
+  /** Local owner of a new round. Legacy unowned rounds belong to family practice. */
+  learner?: string;
   options: LearnOptions;
   /** Versus only: tally of earlier rounds (see src/games/match.ts). */
   match?: Match;
@@ -109,7 +112,7 @@ export type BoardProps<S> = {
   notePractice?: (skill: string, helped: boolean) => void;
   skills: SkillProgress;
   /** Feedback tones ("tap" | "match" | "win") and any registered speech key. */
-  sound: (key: string) => void;
+  sound: (key: string, automatic?: boolean) => void;
   stopSound: () => void;
   soundOn: boolean;
   width: number;
