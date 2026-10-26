@@ -10,6 +10,8 @@ import { PlayerNames, Scoreboard } from "../components/Match";
 import type { Seat } from "../games/match";
 import { engines } from "./engines";
 import { GrowthBoard } from "./growth/Board";
+import { growthProgress, growthQuestions } from "./growth/engine";
+import type { GrowthState } from "./growth/types";
 import { foundationLabels, growthTrack } from "./growth/content";
 import { activeLearner, readyForNext } from "./learners";
 import { views } from "./views";
@@ -40,6 +42,12 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const engine = engines[id],
     view = views[id];
   const saved = store.save.learn?.[id];
+  const scroll = useRef<ScrollView | null>(null);
+  const growthState = saved?.options.stage ? saved.state as GrowthState : undefined;
+  const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : undefined;
+  useLayoutEffect(() => {
+    if (growthStep !== undefined) scroll.current?.scrollTo({ y: 0, animated: false });
+  }, [growthStep, saved?.id]);
   const learner = activeLearner(store.save.learning);
   const learningSkills = learner.id === "family" ? store.save.skills : learner.skills;
   const [epoch] = useState(store.epoch);
@@ -158,12 +166,12 @@ export function LearnFrame({ id }: { id: LearnId }) {
     const next = startSession(id, { options, names, starter: options.mode === "solo" ? 0 : starter, alternate }, learningSkills);
     next.learner = learner.id;
     if (options.mode !== "solo") store.rememberPlayers(names);
-    if (save(next)) setSetup(false);
+    if (save(next)) { setBurst({ n: 0, big: false }); setSetup(false); }
   }
   function replay() {
     if (!saved || !finished) return;
     const next = replaySession(saved, learningSkills, undefined, learner.id);
-    save(next);
+    if (save(next)) setBurst({ n: 0, big: false });
   }
   function openSetup() {
     if (saved) {
@@ -181,7 +189,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
 
   return (
     <SafeAreaView style={styles.page}>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
+      <ScrollView key={saved?.id ?? "setup"} ref={scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
         <GameHeader
           title={engine.name}
           onBack={back}
