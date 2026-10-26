@@ -1,4 +1,5 @@
 import { SaveStatus } from "../components/SaveStatus";
+import { learnerPractice } from "../learn/learners";
 import React, { useEffect, useRef, useState } from "react";
 import { ScrollView, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -46,10 +47,11 @@ function ActivityGame({ id }: { id: ActivityId }) {
   );
   const practice = useRoundPractice(id, saved);
   const requestPractice = practice.request;
-  const [initialAllowed, setInitialAllowed] = useState(() => !!saved || !store.save.settings.practice?.enabled);
+  const practiceEnabled = learnerPractice(store.save.learning, store.save.settings.practice).enabled;
+  const [initialAllowed, setInitialAllowed] = useState(() => !!saved || !practiceEnabled);
   useEffect(() => {
     if (freshCard && !saved && !initialAllowed) requestPractice(() => setInitialAllowed(true), () => router.canGoBack() ? router.back() : router.replace("/"));
-  }, [freshCard, saved, initialAllowed, requestPractice, store.save.settings.practice?.enabled]);
+  }, [freshCard, saved, initialAllowed, requestPractice, practiceEnabled]);
   const { play: sound, stop: stopSound } = useSoundControls(store.save.settings.sound && focused && !practice.pending);
   const activityUpdate = store.activityUpdate;
   useEffect(() => {

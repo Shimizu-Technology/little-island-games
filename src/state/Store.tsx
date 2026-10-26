@@ -14,8 +14,8 @@ import { rememberNames } from "../games/match";
 import type { LearnId, LearnSession } from "../learn/types";
 import { toggleShelfFavorite } from "../learn/home";
 import { LearnExpected, applyLearnSave, applyPractice, applyOwnedPractice } from "./learnAction";
-import { addLearner as appendLearner, selectLearner as chooseLearner, recordLearning } from "../learn/learners";
-import type { PracticeResult, PracticeSettings } from "../practice/types";
+import { addLearner as appendLearner, selectLearner as chooseLearner, recordLearning, familyLearners } from "../learn/learners";
+import { defaultPracticeSettings, type PracticeResult, type PracticeSettings } from "../practice/types";
 import { AudioPreferences } from "../components/Audio";
 import { recordPracticeNote } from "../practice/notes";
 type Store = {
@@ -249,8 +249,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (learning !== before.learning) commit({ ...before, learning });
   }, [commit, ready, recovery]);
   const settings = useCallback(
-    (next: Partial<Save["settings"]>) =>
-      commit({ ...latest.current, settings: { ...latest.current.settings, ...next } }),
+    (next: Partial<Save["settings"]>) => {
+      const before = latest.current;
+      let learning = before.learning;
+      if (next.practice) {
+        const people = learning ?? familyLearners();
+        learning = { ...people, people: people.people.map(p => p.id === people.active ? { ...p, warmup: next.practice } : p.id === "family" && !p.warmup ? { ...p, warmup: before.settings.practice ?? defaultPracticeSettings } : p) };
+      }
+      commit({ ...before, ...(learning ? { learning } : {}), settings: { ...before.settings, ...next } });
+    },
     [commit]
   );
   const restore = useCallback(
@@ -308,7 +315,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         startFresh,
       }}
     >
-      <AudioPreferences.Provider value={save.settings}>{children}</AudioPreferences.Provider>
+      <AudioPreferences.Provider value={{ ...save.settings, epoch }}>{children}</AudioPreferences.Provider>
     </Context.Provider>
   );
 }

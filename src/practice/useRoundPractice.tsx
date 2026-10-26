@@ -3,14 +3,15 @@ import { AppState, Platform } from "react-native";
 import { useIsFocused } from "expo-router";
 import { Sheet } from "../components/ui";
 import { useStore } from "../state/Store";
-import { defaultPracticeSettings, PracticeSummary, validPracticeSummary } from "./types";
+import { learnerPractice } from "../learn/learners";
+import { PracticeSummary, validPracticeSummary } from "./types";
 import { PracticePanel } from "./PracticePanel";
 
 type Pending = { round: string; serial: number; epoch: number; snapshot: unknown; config: string; run: () => void; cancel?: () => void };
 /** A single deferred new-round action, never a lock on an existing saved game. */
 export function useRoundPractice(target: string, snapshot: unknown) {
   const store = useStore(), focused = useIsFocused();
-  const settings = store.save.settings.practice ?? defaultPracticeSettings;
+  const settings = learnerPractice(store.save.learning, store.save.settings.practice);
   const config = JSON.stringify(settings);
   const [pending, setPending] = useState<Pending | null>(null);
   const [foreground, setForeground] = useState(AppState.currentState === "active" || AppState.currentState === null || Platform.OS === "web");

@@ -15,7 +15,7 @@ import type { Island } from "../learn/types";
 import { PracticeOptions } from "./PracticeOptions";
 import { LearnerSettings } from "../learn/LearnerSettings";
 import { useSoundControls } from "./Audio";
-import { defaultPracticeSettings } from "../practice/types";
+import { learnerPractice } from "../learn/learners";
 export function Settings({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const store = useStore(),
     [unlocked, setUnlocked] = useState(false),
@@ -127,7 +127,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
       ) : (
         <>
           <LearnerSettings disabled={busy} />
-          <PracticeOptions value={store.save.settings.practice ?? defaultPracticeSettings}
+          <PracticeOptions value={learnerPractice(store.save.learning, store.save.settings.practice)}
             onChange={practice => store.settings({ practice })} disabled={busy} />
           {!!Object.keys(store.save.practiceNotes ?? {}).length && <View style={{ gap: 6 }}>
             <Heading style={{ fontSize: 19 }}>Earlier family practice</Heading>

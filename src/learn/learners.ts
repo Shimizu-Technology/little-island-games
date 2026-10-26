@@ -1,12 +1,18 @@
+import { validLearnOptions } from "./session";
+import { defaultPracticeSettings, validPracticeSettings, type PracticeSettings } from "../practice/types";
 import type { LearnId, LearnOptions, SkillProgress } from "./types";
 import { learnIds } from "./types";
 import { dayNumber, recordPractice, SKILL_ID, validSkills } from "./skills";
 
 export type LearningNote = { independent: number; helped: number; days: number[]; rounds: string[]; items: string[] };
-export type Learner = { id: string; name: string; skills: SkillProgress; notes: Record<string, LearningNote>; choices: Partial<Record<LearnId, LearnOptions>> };
+export type Learner = { warmup?: PracticeSettings; id: string; name: string; skills: SkillProgress; notes: Record<string, LearningNote>; choices: Partial<Record<LearnId, LearnOptions>> };
 export type Learners = { active: string; people: Learner[] };
 export const familyLearners = (): Learners => ({ active: "family", people: [{ id: "family", name: "Family practice", skills: {}, notes: {}, choices: {} }] });
 export const activeLearner = (v?: Learners) => (v ?? familyLearners()).people.find(p => p.id === (v?.active ?? "family"))!;
+export const learnerPractice = (v?: Learners, legacy?: PracticeSettings) => {
+  const p = activeLearner(v);
+  return p.warmup ?? (p.id === "family" ? legacy : undefined) ?? defaultPracticeSettings;
+};
 export function addLearner(v: Learners | undefined, name: string, id: string): Learners {
   const before = v ?? familyLearners(), clean = name.trim().replace(/\s+/g, " ");
   if (before.people.length >= 5 || !clean || [...clean].length > 24 || !/^[a-z0-9-]{1,40}$/.test(id) || before.people.some(p => p.id === id || p.name.toLocaleLowerCase() === clean.toLocaleLowerCase())) return before;
@@ -48,7 +54,7 @@ export function validLearners(v: unknown): v is Learners {
   if (!obj(v) || Object.keys(v).sort().join() !== "active,people" || typeof v.active !== "string" || !Array.isArray(v.people) || v.people.length < 1 || v.people.length > 5) return false;
   const ids = new Set<string>();
   for (const p of v.people) {
-    if (!obj(p) || Object.keys(p).sort().join() !== "choices,id,name,notes,skills" || typeof p.id !== "string" || !/^[a-z0-9-]{1,40}$/.test(p.id) || ids.has(p.id) || typeof p.name !== "string" || !p.name.trim() || [...p.name].length > 24 || !validSkills(p.skills) || !obj(p.notes) || Object.keys(p.notes).length > 200 || !obj(p.choices)) return false;
+    if (!obj(p) || Object.keys(p).length < 5 || Object.keys(p).length > 6 || Object.keys(p).some(k => !["choices", "id", "name", "notes", "skills", "warmup"].includes(k)) || (p.warmup !== undefined && !validPracticeSettings(p.warmup)) || typeof p.id !== "string" || !/^[a-z0-9-]{1,40}$/.test(p.id) || ids.has(p.id) || typeof p.name !== "string" || !p.name.trim() || [...p.name].length > 24 || !validSkills(p.skills) || !obj(p.notes) || Object.keys(p.notes).length > 200 || !obj(p.choices)) return false;
     ids.add(p.id);
     if (!Object.entries(p.notes).every(([k, n]) => {
       const [game, stage, skill] = k.split(":");
@@ -57,7 +63,7 @@ export function validLearners(v: unknown): v is Learners {
         Array.isArray(n.rounds) && n.rounds.length <= 14 && new Set(n.rounds).size === n.rounds.length && n.rounds.every(r => typeof r === "string" && r.length <= 120) &&
         Array.isArray(n.items) && n.items.length <= 40 && new Set(n.items).size === n.items.length && n.items.every(i => typeof i === "string" && i.length <= 281);
     })) return false;
-    if (!Object.entries(p.choices).every(([game, o]) => learnIds.includes(game as LearnId) && obj(o) && Object.keys(o).every(k => ["mode", "pace", "stage", "language", "mathOperation"].includes(k)) && ["solo", "together", "versus"].includes(o.mode as string) && ["easy", "medium", "hard"].includes(o.pace as string) && (o.stage === undefined || ["stretch", "deep"].includes(o.stage as string)) && (o.language === undefined || ["en", "ch"].includes(o.language as string)) && (o.mathOperation === undefined || ["add", "subtract", "mixed"].includes(o.mathOperation as string)))) return false;
+    if (!Object.entries(p.choices).every(([game, o]) => learnIds.includes(game as LearnId) && validLearnOptions(game as LearnId, o))) return false;
   }
   return ids.has("family") && ids.has(v.active);
 }

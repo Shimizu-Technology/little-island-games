@@ -109,3 +109,13 @@ export function validLearnSession(value: unknown, key?: string): value is LearnS
 export function validLearn(value: unknown): value is Partial<Record<LearnId, LearnSession>> {
   return obj(value) && Object.entries(value).every(([key, session]) => validLearnSession(session, key));
 }
+
+/** Preferences use the same supported options as a resumable session. */
+export function validLearnOptions(game: LearnId, value: unknown): value is LearnOptions {
+  if (!obj(value) || !MODES.includes(value.mode as LearnOptions["mode"]) || !PACES.includes(value.pace as LearnOptions["pace"]) || Object.keys(value).some(k => !["mode", "pace", "language", "stage", ...(isMathGame(game) ? ["mathOperation"] : [])].includes(k))) return false;
+  const engine = engines[game];
+  return engine.modes.includes(value.mode as LearnOptions["mode"]) &&
+    (value.stage === undefined || value.stage === "stretch" || value.stage === "deep") &&
+    (value.language === undefined || value.language === "en" || (value.language === "ch" && !!engine.languages?.includes("ch"))) &&
+    (!isMathGame(game) || validMathOptions(value as LearnOptions));
+}

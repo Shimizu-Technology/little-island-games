@@ -4,6 +4,7 @@ import { Button, C, Chip, Copy, Heading, styles } from "../../components/ui";
 import type { BoardProps } from "../types";
 import { growthMove, growthProgress, growthQuestions } from "./engine";
 import type { GrowthAction, GrowthState } from "./types";
+import { CoachSpot } from "../Coach";
 import { NumbersVisual } from "./NumbersVisual";
 import { LiteracyVisual } from "./LiteracyVisual";
 import { DiscoveryVisual } from "./DiscoveryVisual";
@@ -50,13 +51,13 @@ export function GrowthBoard({ session, update, active, width, sound, soundOn, ch
       </View>
     </View> : <View style={{ gap: 10 }}>{state.orders[progress.index].map(value => {
       const choice = q.choices.find(c => c.value === value)!;
-      return <Button key={value} quiet={!(progress.shown && q.answer === value)} disabled={!active || progress.solved || progress.wrong === value} onPress={() => move({ type: "answer", value })}>{choice.label}</Button>;
+      return <Button key={value} selected={progress.shown && q.answer === value} quiet={!(progress.shown && q.answer === value)} disabled={!active || progress.solved || progress.wrong === value} onPress={() => move({ type: "answer", value })}>{choice.label}</Button>;
     })}</View>}
     {!!progress.wrong && !progress.solved && <View accessibilityLiveRegion="polite"><Copy>Try another idea. Show me can help.</Copy></View>}
     {(progress.shown || progress.solved) && <View accessibilityLiveRegion="polite" style={{ padding: 16, backgroundColor: C.paper, borderRadius: 16, gap: 8 }}>
       <Copy style={{ fontWeight: "800" }}>{progress.solved ? "That works!" : "Let’s work it out"}</Copy><Copy>{q.explanation}</Copy>
       <Button quiet compact icon="sound-on" disabled={!soundOn || !active} onPress={() => sound(growthSpeechKey(session.game, session.options.stage!, q.id, "explanation"))}>Hear why</Button>
     </View>}
-    {progress.solved ? <Button disabled={!active} onPress={() => move({ type: "next" })}>{progress.index === questions.length - 1 ? "Finish round" : "Next idea"}</Button> : <Button quiet disabled={!active || progress.shown} onPress={() => move({ type: "help" })}>Show me</Button>}
+    {progress.solved ? <Button disabled={!active} onPress={() => move({ type: "next" })}>{progress.index === questions.length - 1 ? "Finish round" : "Next idea"}</Button> : <CoachSpot active={coach.active}><Button quiet disabled={!active || progress.shown} onPress={() => move({ type: "help" })}>Show me</Button></CoachSpot>}
   </View>;
 }

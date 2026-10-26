@@ -6,7 +6,7 @@ import { learnSources } from "../content/learnAudio";
 import { voiceSources } from "../content/neuralAudio";
 import type { Settings } from "../state/validation";
 import { feel, toneFeel } from "./feel";
-export const AudioPreferences = createContext<Partial<Settings>>({});
+export const AudioPreferences = createContext<Partial<Settings> & { epoch?: number }>({});
 const sources: Record<string, number> = { ...baseSources, ...learnSources };
 // expo-audio's web player calls HTMLMediaElement.play() without handling its promise. A quick
 // second tone interrupts the first and the browser rejects it with AbortError; that is expected.
@@ -17,11 +17,12 @@ if (Platform.OS === "web" && typeof window !== "undefined")
 export function useSoundControls(enabled: boolean) {
   const player = useAudioPlayer(null);
   const prefs = useContext(AudioPreferences);
-  const context = useMemo(() => ({ enabled, narration: prefs.narration ?? true, effects: prefs.effects ?? true, automatic: prefs.automaticSpeech ?? false, volume: prefs.narrationVolume ?? 0.75, voice: prefs.voice ?? "warm" }), [enabled, prefs.narration, prefs.effects, prefs.automaticSpeech, prefs.narrationVolume, prefs.voice]);
-  const live = useRef(context);
+  const context = useMemo(() => ({ enabled, narration: prefs.narration ?? true, effects: prefs.effects ?? true, automatic: prefs.automaticSpeech ?? false, volume: prefs.narrationVolume ?? 0.75, voice: prefs.voice ?? "warm", epoch: prefs.epoch ?? 0 }), [enabled, prefs.narration, prefs.effects, prefs.automaticSpeech, prefs.narrationVolume, prefs.voice, prefs.epoch]);
+  const live = useRef<typeof context | null>(context);
   useLayoutEffect(() => {
     live.current = context;
     try { player.pause(); } catch { /* A setting change also cancels any old spoken line. */ }
+    return () => { live.current = null; try { player.pause(); } catch { /* Disposed native player. */ } };
   }, [context, player]);
   const foreground = useRef(AppState.currentState === "active" || Platform.OS === "web");
   useEffect(() => {
@@ -47,7 +48,7 @@ export function useSoundControls(enabled: boolean) {
     // eslint-disable-next-line react-hooks/immutability -- Expo AudioPlayer is a native object with documented mutable properties.
     (key: string, automatic = false) => {
       // Feedback tones also give a light haptic, even with sound off.
-      if (foreground.current && toneFeel[key]) feel(toneFeel[key]);
+      if (live.current === context && foreground.current && toneFeel[key]) feel(toneFeel[key]);
       const tone = !!toneFeel[key];
       if (live.current !== context || !context.enabled || !foreground.current || (tone ? !context.effects : !context.narration || (automatic && !context.automatic))) return;
       const source = tone ? sources[key] : (voiceSources[context.voice][key] ?? sources[key]);

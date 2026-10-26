@@ -185,15 +185,15 @@ export function LearnFrame({ id }: { id: LearnId }) {
         <GameHeader
           title={engine.name}
           onBack={back}
-          sound={{ on: soundOn, toggle: () => store.settings({ sound: !soundOn }) }}
+          sound={{ on: store.save.settings.sound, toggle: () => store.settings({ sound: !store.save.settings.sound }) }}
           onHelp={() => setHelp(true)}
         />
         {saved && (
           <Copy style={{ fontSize: 12, marginBottom: 8 }}>
             {(engine.modeLabels?.[saved.options.mode] ?? modeLabel[saved.options.mode]) +
               " · " +
-              (engine.paceLabels?.[saved.options.pace] ?? paceLabel[saved.options.pace]) +
-              (engine.mathControls ? ` · ${saved.options.mathOperation === "mixed" ? "Add & subtract" : saved.options.mathOperation === "subtract" ? "Subtract" : "Add"}` : "") +
+              (saved.options.stage ? growthTrack(id, saved.options.stage)?.label : foundationLabels[id][["easy", "medium", "hard"].indexOf(saved.options.pace)] ?? engine.paceLabels?.[saved.options.pace] ?? paceLabel[saved.options.pace]) +
+              (!saved.options.stage && engine.mathControls ? ` · ${saved.options.mathOperation === "mixed" ? "Add & subtract" : saved.options.mathOperation === "subtract" ? "Subtract" : "Add"}` : "") +
               (saved.options.language && engine.languages && engine.languages.length > 1 ? ` · ${languageLabel[saved.options.language]}` : "")}
           </Copy>
         )}
@@ -304,11 +304,11 @@ export function LearnFrame({ id }: { id: LearnId }) {
               {foundationLabels[id][["easy", "medium", "hard"].indexOf(pace)] ?? engine.paceLabels?.[pace] ?? paceLabel[pace]}
             </Chip>
           ))}
-          {(["stretch", "deep"] as const).map(stage => growthTrack(id, stage) && <Chip key={stage} selected={options.stage === stage} onPress={() => setOptions({ ...options, stage })}>{growthTrack(id, stage)!.label}</Chip>)}
+          {(["stretch", "deep"] as const).map(stage => growthTrack(id, stage) && <Chip key={stage} selected={options.stage === stage} onPress={() => setOptions({ ...options, stage, language: undefined })}>{growthTrack(id, stage)!.label}</Chip>)}
         </View>
         {options.stage && <Copy>{growthTrack(id, options.stage)?.description} {options.mode === "versus" ? "Four ideas, two turns each." : "Three ideas, no clock."} Show me is always available.</Copy>}
         {!options.stage && engine.paceHelp?.[options.pace] && <Copy style={{ fontSize: 14 }}>{engine.paceHelp[options.pace]}</Copy>}
-        {engine.languages && engine.languages.length > 1 && (
+        {!options.stage && engine.languages && engine.languages.length > 1 && (
           <>
             <Heading style={{ fontSize: 18 }}>Words in</Heading>
             <View style={[styles.row, { flexWrap: "wrap" }]}>
