@@ -5,6 +5,7 @@ import { Copy, Button } from "../../../components/ui";
 import { Text } from "../../../components/Text";
 import { PictureObject } from "../../../learn/art/Objects";
 import { useReducedMotion } from "../../../components/motion";
+import { StarDisplay } from "../../Art";
 import { ArcadeSprite, type SpritePose } from "../../Sprite";
 import { useArcadeLoop } from "../../loop";
 import type { ArcadeResult } from "../../types";
@@ -131,11 +132,23 @@ export function RailBoard({
             alignItems: "center",
           }}
         >
-          <Copy style={{ color: "#FFF0BE", fontWeight: "800", fontSize: 16 }}>
-            {learning
-              ? `Next ${next ?? "✓"}`
-              : `Chicks ${s.collected}/${railTarget(s) === Infinity ? "∞" : railTarget(s)}`}
-          </Copy>
+          <View
+            accessibilityLabel="Chick goal"
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 4,
+              backgroundColor: "#102F39CC",
+              borderRadius: 16,
+              paddingHorizontal: 8,
+              minHeight: 36,
+            }}
+          >
+            <GridHero chick size={28} />
+            <Copy style={{ color: "#FFF0BE", fontWeight: "800", fontSize: 16 }}>
+              {learning ? `Next ${next ?? "✓"}` : `${s.collected}/${railTarget(s) === Infinity ? "∞" : railTarget(s)}`}
+            </Copy>
+          </View>
           {s.level !== "endless" && s.level.word && (
             <View
               style={{
@@ -152,7 +165,21 @@ export function RailBoard({
               </Text>
             </View>
           )}
-          <Copy style={{ color: "#FFF0BE", fontSize: 14 }}>★ {s.score}</Copy>
+          <View
+            accessibilityLabel={`Star goal ${s.bumps === 0 ? 3 : s.bumps <= 2 ? 2 : 1} of 3, score ${s.score}`}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 4,
+              backgroundColor: "#102F39CC",
+              borderRadius: 16,
+              paddingHorizontal: 8,
+              minHeight: 36,
+            }}
+          >
+            <StarDisplay stars={s.bumps === 0 ? 3 : s.bumps <= 2 ? 2 : 1} size={13} />
+            <Text style={{ color: "#FFF0BE", fontSize: 13, fontWeight: "800" }}>{s.score}</Text>
+          </View>
         </View>
         <Shake event={s.bumps}>
           <View

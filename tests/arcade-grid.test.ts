@@ -50,7 +50,8 @@ function railPath(s: RailState): Direction[] {
         s.body.slice(0, -1).some((b) => same(b, p)) ||
         (railLearning(s) && same(p, s.decoy)) ||
         (s.level !== "endless" && s.level.hedges.some((b) => same(b, p))) ||
-        railSnake(s).some((b) => same(b, p))
+        railSnake(s).some((b) => same(b, p)) ||
+        (!railLearning(s) && s.level !== "endless" && p.y === s.level.snakeRow && p.x > 0 && p.x < 9)
       )
         continue;
       seen.add(key);
@@ -286,5 +287,55 @@ describe("grid progress uses the strict existing kit save", () => {
       },
     };
     expect(validArcade(s)).toBe(false);
+  });
+});
+
+describe("Rail normal-world reachability", () => {
+  it.each(railLevels.filter((l) => l.world !== "learn"))("clears $id with Helper off and fixed ticks", (level) => {
+    let s = createRail(level, 120, false);
+    for (let turn = 0; turn < 260 && !railResult(s); turn++) {
+      const path = railPath(s);
+      expect(path.length).toBeGreaterThan(0);
+      s = railTransition(s, { type: "turn", direction: path[0] });
+      const before = s.moves;
+      for (let tick = 0; tick < 80 && s.moves === before && !railResult(s); tick++)
+        s = railStep(s, { type: "tick" }, 1 / 60);
+      expect(validRail(s)).toBe(true);
+    }
+    expect(railResult(s)).toMatchObject({ cleared: true, stars: 3 });
+  });
+});
+
+function crossingPath(s: import("../src/arcade/games/crab-crossing/engine").CrabState): (Direction | "wait")[] {
+  const q = [{ state: s, path: [] as (Direction | "wait")[] }],
+    seen = new Set<string>();
+  for (let i = 0; i < q.length && i < 16000; i++) {
+    const { state, path } = q[i];
+    for (const d of ["up", "left", "right", "down", "wait"] as const) {
+      let next = d === "wait" ? state : crabTransition(state, { type: "hop", direction: d });
+      for (let tick = 0; tick < 12 && next.phase === "play"; tick++) next = crabStep(next, { type: "tick" }, 1 / 60);
+      if (next.phase === "cleared" || next.crossed > s.crossed) return [...path, d];
+      if (next.bumps > s.bumps || next.phase !== "play" || path.length >= 55) continue;
+      const key = [Math.round(next.x * 4), next.y, Math.round(next.time * 10)].join();
+      if (!seen.has(key)) {
+        seen.add(key);
+        q.push({ state: next, path: [...path, d] });
+      }
+    }
+  }
+  throw new Error(`No route through ${s.level === "endless" ? "free play" : s.level.id}`);
+}
+describe("Crab normal-world reachability", () => {
+  it.each(crabLevels.filter((l) => l.world !== "learn"))("clears $id with Helper off and moving lanes", (level) => {
+    let s = createCrab(level, 120, false);
+    for (let crossing = 0; crossing < level.target; crossing++) {
+      const path = crossingPath(s);
+      for (const direction of path) {
+        if (direction !== "wait") s = crabTransition(s, { type: "hop", direction });
+        for (let tick = 0; tick < 12 && s.phase === "play"; tick++) s = crabStep(s, { type: "tick" }, 1 / 60);
+        expect(validCrab(s)).toBe(true);
+      }
+    }
+    expect(crabResult(s)).toMatchObject({ cleared: true, stars: 3 });
   });
 });
