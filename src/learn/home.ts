@@ -4,6 +4,8 @@ import { ActivityId, activityFinished, activityIds } from "../state/activities";
 import type { Save } from "../state/validation";
 import { engines } from "./engines";
 import { finished } from "./session";
+import { activeLearner } from "./learners";
+import { levelOf } from "./levels";
 import { dayNumber } from "./skills";
 import { Island, LearnId, learnIds } from "./types";
 export type ShelfId = GameId | ActivityId | LearnId;
@@ -89,4 +91,10 @@ export function dailySuggestions(save: Save, day = dayNumber(), shuffle = 0): Le
   return [(i: Island) => i === "reading", (i: Island) => i === "numbers", (i: Island) => i === "science" || i === "thinking"].map(accept => {
     const group = ranked.filter(g => accept(g.island)); return group[shuffle % group.length].id;
   });
+}
+
+/** Shelf and setup agree for the active learner; a different owner's saved round stays intact. */
+export function shelfLevel(save: Save, game: LearnId) {
+  const learner = activeLearner(save.learning), round = save.learn?.[game];
+  return levelOf(round && (round.learner ?? "family") === learner.id ? round.options : learner.choices[game]);
 }

@@ -300,6 +300,7 @@ export function Board({
   session,
   update,
   practice,
+  assistance,
   sound,
   width,
   height,
@@ -532,6 +533,7 @@ export function Board({
                   quiet
                   disabled={s.running}
                   onPress={() => {
+                    if (!hint) assistance?.();
                     setHint(!hint);
                     if (!hint) sound("crab-commands-hint");
                   }}

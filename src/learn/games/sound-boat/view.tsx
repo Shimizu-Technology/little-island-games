@@ -229,6 +229,7 @@ function Play({
   session,
   update,
   practice,
+  assistance,
   sound,
   soundOn,
   width,
@@ -311,6 +312,7 @@ function Play({
         }
       }
     }
+    if (next.assisted) assistance?.();
     if (a.type === "help") sound(wordAudio(word.word));
     update(next);
   }

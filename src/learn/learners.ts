@@ -43,10 +43,11 @@ export function recordLearning(v: Learners | undefined, owner: string, game: Lea
     ...person, skills: recordPractice(person.skills, skill, !helped, day), notes: { ...person.notes, [key]: next },
   } : person) };
 }
-/** An invitation only: independent practice across three days/rounds, never auto-advance. */
-export function readyForNext(p: Learner, game: LearnId, stage: string, requiredSkills: readonly string[]) {
-  const notes = Object.entries(p.notes).filter(([k]) => k.startsWith(`${game}:${stage}:`)).map(([, n]) => n);
-  return p.id !== "family" && requiredSkills.length > 0 && requiredSkills.every(skill => !!p.notes[`${game}:${stage}:${skill}`]) && notes.length > 0 && notes.every(n => n.independent >= 3 && n.days.length >= 3 && n.rounds.length >= 3);
+/** An invitation after two independently completed rounds on different days. No timing. */
+export const levelRoundSkill = "think.level-round";
+export function readyForNext(p: Learner, game: LearnId, stage: string, _requiredSkills: readonly string[] = []) {
+  const note = p.notes[`${game}:${stage}:${levelRoundSkill}`];
+  return p.id !== "family" && stage !== "deep" && !!note && note.independent >= 2 && note.days.length >= 2 && note.rounds.length >= 2;
 }
 const obj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const bounded = (v: unknown, max: number) => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= max;

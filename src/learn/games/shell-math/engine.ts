@@ -10,7 +10,7 @@ const skills = Object.fromEntries(([10, 20] as const).flatMap(limit => [
 export function mathEngine(game: MathGame, text: Pick<LearnEngine<MathRound>, "name" | "tagline" | "description" | "help">): LearnEngine<MathRound> {
   return {
     id: game, ...text, island: "numbers", color: "#246858", surface: "#E5EFE5",
-    modes: ["solo", "together"], paces: ["easy", "medium"], mathControls: true,
+    modes: ["solo", "together"], paces: ["easy", "medium", "hard"], mathControls: true,
     paceLabels: { easy: "Within 10", medium: "Within 20" },
     paceHelp: game === "quick-practice" ? { easy: "Three questions, including a missing number.", medium: "Three questions, including a missing number." } : undefined,
     introAudio: `${game}-intro`, helpAudio: `${game}-help`, skills,

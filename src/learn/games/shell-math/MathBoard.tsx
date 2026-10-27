@@ -32,6 +32,7 @@ export function MathBoard(props: BoardProps<MathRound> & { game: MathGame }) {
     live.current = next;
     stopSound();
     coach.done();
+    if (next.helped) props.assistance?.();
     update(next);
     if (next.solved && !s.solved) {
       const skill = mathSkill(q, config.limit);

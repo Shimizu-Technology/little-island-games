@@ -197,7 +197,7 @@ function createBoat(
     PICTURES - 1,
     c.rng,
     c.today
-  ).map((w) => w.word);
+  ).sort((a, b) => a.tiles.length - b.tiles.length).map((w) => w.word);
   const available = LADDERS.filter((l) => l.pace === o.pace);
   const preferred = available.filter((l) => !(Array.isArray(previous.ladders) && previous.ladders.includes(l.id)));
   const ladders = pickItems(preferred.length >= 2 ? preferred : available, c.skills, 2, c.rng, c.today).map(

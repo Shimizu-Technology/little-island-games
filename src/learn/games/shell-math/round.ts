@@ -21,11 +21,11 @@ export const mathConfig = (o: LearnOptions, game: MathGame): MathConfig => ({
   missing: game === "quick-practice",
 });
 export const validMathOptions = (o: LearnOptions) =>
-  (o.mode === "solo" || o.mode === "together") && (o.pace === "easy" || o.pace === "medium") &&
+  (o.mode === "solo" || o.mode === "together") && (o.pace === "easy" || o.pace === "medium" || o.pace === "hard") &&
   o.language === undefined && (o.mathOperation === undefined || ["add", "subtract", "mixed"].includes(o.mathOperation));
 export const questionOf = (s: MathRound) => s.questions[Math.min(s.index, s.questions.length - 1)];
 export function createRound(o: LearnOptions, game: MathGame, rng: () => number): MathRound {
-  return { version: 1, questions: createMathQuestions(mathConfig(o, game), game === "quick-practice" ? 3 : 5, rng),
+  return { version: 1, questions: createMathQuestions(mathConfig(o, game), (game === "quick-practice" ? 3 : 5) + (o.pace === "hard" ? 2 : 0), rng).slice(o.pace === "hard" ? 2 : 0),
     index: 0, completed: [], helped: false, shown: false, steps: 0, wrong: null, solved: false };
 }
 export type MathAction = { type: "step" } | { type: "show" } | { type: "answer"; answer: number } | { type: "next" };
@@ -53,8 +53,8 @@ export function validRound(v: unknown, o: LearnOptions, game: MathGame): v is Ma
   if (v.version !== 1 || !Array.isArray(v.questions) || v.questions.length !== count ||
     !v.questions.every((q, i) => validMathQuestion(q, config.limit) &&
       q.operation === (config.operation === "mixed" ? i % 2 ? "subtract" : "add" : config.operation) &&
-      (i >= 2 || Math.max(q.a, q.b, mathResult(q)) <= 6) &&
-      q.blank === (game === "quick-practice" && i % 3 === 2 ? "second" : "result")) ||
+      (o.pace === "hard" || i >= 2 || Math.max(q.a, q.b, mathResult(q)) <= 6) &&
+      q.blank === (game === "quick-practice" && (i + (o.pace === "hard" ? 2 : 0)) % 3 === 2 ? "second" : "result")) ||
     !int(v.index, count) || !Array.isArray(v.completed) || !v.completed.every(n => typeof n === "boolean") ||
     typeof v.helped !== "boolean" || typeof v.shown !== "boolean" || typeof v.solved !== "boolean" || !int(v.steps, config.limit)) return false;
   const s = v as MathRound;

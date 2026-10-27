@@ -38,6 +38,7 @@ export function startSession(game: LearnId, choices: StartChoices, skills: Skill
     version: 1,
     id: `${game}-${seed.toString(36)}-${Math.floor(random(seed)() * 1e9).toString(36)}`,
     revision: 0,
+    levelHelped: false,
     options,
     ...(names ? { names } : {}),
     ...(twoPlayer ? { starter } : {}),
@@ -57,6 +58,7 @@ export function replaySession(previous: LearnSession, skills: SkillProgress | un
     ...(learner ? { learner } : {}),
     id: `${previous.game}-${seed.toString(36)}-${Math.floor(random(seed)() * 1e9).toString(36)}`,
     revision: 0,
+    levelHelped: false,
     ...(match ? { match } : {}),
     ...(previous.options.mode !== "solo" ? { starter } : {}),
     state: engine.create(previous.options, {
@@ -93,6 +95,7 @@ export function validLearnSession(value: unknown, key?: string): value is LearnS
     return false;
   const engine = engines[value.game as LearnId];
   if (o.stage !== undefined && o.stage !== "stretch" && o.stage !== "deep") return false;
+  if (value.levelHelped !== undefined && typeof value.levelHelped !== "boolean") return false;
   if (value.learner !== undefined && (typeof value.learner !== "string" || !/^[a-z0-9-]{1,40}$/.test(value.learner))) return false;
   if (isMathGame(value.game as string) && !validMathOptions(o as LearnOptions)) return false;
   if (!engine.modes.includes(o.mode as LearnOptions["mode"])) return false;

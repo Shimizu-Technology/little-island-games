@@ -61,6 +61,7 @@ export function Board({
   session,
   update,
   practice,
+  assistance,
   sound,
   soundOn,
   active,
@@ -140,6 +141,7 @@ export function Board({
               key={activity}
               selected={s.activity === activity}
               onPress={() => {
+                if (s.activity === "explore" && s.taps.length > 0) assistance?.();
                 update(chooseActivity(s, activity, options));
                 setSelected(null);
                 setPeek(false);
@@ -183,7 +185,7 @@ export function Board({
                   label={peek ? "Hide the English help" : "Peek at the English help"}
                   onPress={() => {
                     setPeek(!peek);
-                    if (!peek) sound(wordAudioKey(target.id));
+                    if (!peek) { assistance?.(); sound(wordAudioKey(target.id)); }
                   }}
                 >
                   {peek ? "Hide" : "Peek"}

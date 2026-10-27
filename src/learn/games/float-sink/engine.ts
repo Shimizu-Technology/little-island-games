@@ -253,6 +253,7 @@ export const engine: LearnEngine<FloatState> = {
       const j = Math.floor(c.rng() * (i + 1));
       [later[i], later[j]] = [later[j], later[i]];
     }
+    later.sort((a, b) => objects.find(x => x.id === a)!.pace - objects.find(x => x.id === b)!.pace);
     return { items: [...obvious, ...later], starter: c.starter, events: [] };
   },
   validate: (x, o): x is FloatState => {
