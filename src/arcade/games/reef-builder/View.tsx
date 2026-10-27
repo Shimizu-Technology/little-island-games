@@ -54,7 +54,7 @@ export function ReefBoard({ initial, active, helper, onResult, onTone }: { initi
   const { snapshot: s, dispatch, state } = useArcadeReducer(initial, reefTransition, active);
   const [selected, setSelected] = useState<number | null>(0), [hover, setHover] = useState<{ row: number; col: number } | null>(null), board = useRef<View>(null), reported = useRef(false);
   const [burst, setBurst] = useState<{ id: number; text: string; fish: boolean; originY?: number } | null>(null), [bumped, setBumped] = useState(false);
-  const { width, height } = useWindowDimensions(), side = width > height && width >= 800, size = Math.floor(Math.min(736, side ? Math.max(352, Math.min(width - 300, height - 174)) : width - 16, side ? 736 : Math.max(360, height - 300))), cell = size / 8;
+  const { width, height } = useWindowDimensions(), side = width > height && width >= 800, size = Math.floor(Math.min(736, side ? Math.max(360, Math.min(width - 300, height - 174)) : width - 16, side ? 736 : Math.max(360, height - 300))), cell = size / 8;
   const reduced = useReducedMotion(), shake = useSharedValue(0), shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
   useEffect(() => { if (active && state.current.helper !== helper) dispatch({ type: "helper", value: helper }); }, [active, helper, dispatch, state]);
   useEffect(() => { if (!burst) return; const timer = setTimeout(() => setBurst(null), 1150); return () => clearTimeout(timer); }, [burst]);
