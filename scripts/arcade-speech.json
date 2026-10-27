@@ -18,5 +18,9 @@
   "arcade-phoneme-p": "The sound at the start of pig.",
   "arcade-phoneme-s": "The sound at the start of sun.",
   "arcade-phoneme-t": "The sound at the start of tap.",
-  "arcade-phoneme-u": "Short u, as in cup."
+  "arcade-phoneme-u": "Short u, as in cup.",
+  "arcade-rail-intro": "Lead the chicks home. Swipe or tap an arrow to turn. Watch for the edge, your parade, and the brown tree snake.",
+  "arcade-rail-learn": "One swipe, one step. Collect the numbers in order, or find the letters for your picture. There is no hurry.",
+  "arcade-crab-intro": "Look, hop, ride. Tap an arrow to hop. Look for a gap in the traffic, ride the logs, and reach your seaside burrow.",
+  "arcade-crab-learn": "Hop to the next number. Count on, count back, or skip count. The lagoon waits for you. There is no hurry."
 }

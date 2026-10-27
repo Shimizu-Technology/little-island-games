@@ -1,0 +1,25 @@
+# Arcade games
+
+## Rail Parade
+
+Orientation: 27 October 2026, branch `feat/arcade-grid`, base `7d7ac79` from `origin/feat/island-arcade`. Sources: `ISLAND_ARCADE.md`, `ARCADE_KIT.md`, `PRD.md`, `LEARNING_GROWTH.md`, and the W4 brief. The local Brain Dump search returned no additional Little Island project note. This is private offline play for Stassie and family; the lead owns integration, complete narration banks, native builds and release acceptance.
+
+Rilla the Guam rail leads a growing parade of chicks through a ten-by-ten island garden. Swipe, arrow buttons and web keys share the same reducer. A two-turn queue rejects reversals against the last buffered turn. The tail vacates its square on the same step; walls, hedges, the parade and a readable back-and-forth brown tree snake can cause a bump. Each chick gives 40 points. Completing the target earns one star, at most two bumps earns two, and no bumps earns three. Helper slows the tick by 50%; a bump costs one chick instead of ending the parade. The last chick is never taken away. Replaying is immediate; earned stars remain safe.
+
+Garden Parade, Fern Valley and Firefly Grove each contain eight levels. Ticks start at 620 ms before Helper and get gradually quicker; later gardens add hedge corners and longer snake patrols. Clever Chicks has eight untimed step levels: counting, counting by twos/fives, and four pictured short words using tiles from the existing curated reading bank. The parade moves only when the player acts. Wrong tiles give a visible hint and another try. Learning results record counting or the actual word skill through the existing learner/practice APIs. Free play opens after all eight first-world levels and supports voluntary finish and named local bests.
+
+Art: original outlined, highlighted rail and chick vectors; four kit outfits; green garden, fern valley, purple firefly grove and a pastel learning garden. The scene scales to available phone/tablet space, with side controls in landscape. The winding illustrated map uses numbered stepping stones, padlock art and a bouncing Next node. Tone/haptic feedback, score bursts, squash, bump wobble/shake, sequential star sounds and a visible-sticker treasure chest confirm actions. Decorative motion stops under Reduce Motion; the rules still move normally. Reading has no timer.
+
+Acceptance: agent-executed affected journeys on the offline web export at 390×844 and 1024×768, plus 768×1024 and 844×390 layout/play. Required scenarios: grown-up unlock → first level of every world to a result; Helper on/off; failure/retry; learning completion/chest/sticker/notes; pause, teaching sheet, simulated browser background, reload with saved stars; busiest-level kit budget overlay. Native, physical touch/VoiceOver, actual audio comfort and Stassie's choices remain separate family acceptance. No simulators are authorized for this worker.
+
+QA ledger: pending execution. Evidence root: `/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/island-arcade/arcade-grid/`. Final tested source and statuses will be appended after execution.
+
+## Crab Crossing
+
+Same orientation, scope and acceptance boundaries as Rail Parade. Kiko the land crab hops from the garden verge, across slow pickups, buses and bikes, then rides logs, turtles and canoes to a seaside burrow. Each input is one hop. Platforms carry the crab continuously; the pure rules use the same visible lane objects for support and traffic collisions. A crossing gives 100 points. Sunny Coast, Canoe Lagoon and Moonlit Tide each have eight levels, adding road/water lanes, speed and alternating patterns. Later levels ask for two crossings. Stars follow the same completion/two-bump/no-bump goals shown before play.
+
+Helper slows lanes to 60%, supplies an extra safe island in the later lagoons and returns a bumped crab to the nearest safe bank. Stars retain their normal thresholds. Number Lagoon has eight untimed levels covering count on, count back and skip counts by twos/fives. Hop toward the next numbered stone; sideways hops align the crab. Wrong forward hops keep the player safe and show the next number. River time advances only after a successful hop, with no reading deadline. Learning records use `num.number-line`. Free play opens after world one and has voluntary finish plus named local bests.
+
+Art: original glossy coral crab, four outfits, island traffic and wood/canoe/turtle vectors. Deep lagoon gradients, sandy safe banks, road markings and three world palettes put the playfield first. Shared map, chest, star reveal, haptics, sounds, reaction motion and reduced-motion behavior match Rail Parade. Only earned kit progress is saved per learner; real-time positions are deliberately restarted after reload/termination. Version-1 save format and recovery originals are unchanged.
+
+QA ledger: pending execution under the same evidence root. Web results do not establish native or physical A12 performance. The lead retains combined final-code review, complete speech generation, native QA and release gates.
