@@ -40,7 +40,7 @@ export function SongBoard({ initial, active, helper, outfit, onResult, onTone, o
   const [wrongShell, setWrongShell] = useState<number | null>(null);
   const reported = useRef(false), feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null), reduced = useReducedMotion();
   const window = useWindowDimensions(), width = arenaWidth ?? window.width, arenaHeight = availableHeight ?? window.height - 62, glow = glowingShell(s), learning = s.level !== "endless" && !!s.level.word, tiles = songTiles(s);
-  const noteKey = String(s.onset);
+  const noteKey = String(s.onset), showPicture = s.phase === "picture" && manualGlow === null;
   useEffect(() => { if (active && state.current.helper !== helper) dispatch({ type: "helper", value: helper }); }, [active, helper, dispatch, state]);
   useEffect(() => () => { if (feedbackTimer.current) clearTimeout(feedbackTimer.current); }, []);
   useEffect(() => { if (!status) return; const timer = setTimeout(() => { setStatus(null); setWrongShell(null); }, 450); return () => clearTimeout(timer); }, [status]);
@@ -68,7 +68,7 @@ export function SongBoard({ initial, active, helper, outfit, onResult, onTone, o
   return <View style={{ flex: 1, width: "100%", alignItems: "center", justifyContent: "space-evenly", gap: 4, paddingBottom: 8 }}>
     <View style={{ width: "100%", maxWidth: 1050, paddingHorizontal: 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 6, flexWrap: "wrap" }}><HudPill icon={<Icon name="flag" color="#986940"/>}>{learning ? "Sound a word" : s.level === "endless" ? `Pattern ${s.rounds + 1}` : `${Math.min(s.rounds + 1, s.level.rounds)}/${s.level.rounds} tunes`}</HudPill>{!learning && <HeartsHud lives={s.lives}/>}<HudPill><MiniStars stars={s.slips === 0 ? 3 : s.slips <= 1 ? 2 : 1}/></HudPill></View>
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}><HitReaction hit={s.lives.hit} onTone={onTone}><Hero game="shell-song" size={wide ? 48 : arenaHeight < 650 ? 72 : 88} outfit={outfit} cue={`${s.rounds}-${s.slips}-${s.cursor}`} mood={s.slips && s.cursor === 0 ? "dizzy" : s.cursor || s.rounds ? "happy" : "idle"} active={active}/></HitReaction><View accessibilityLiveRegion="polite" style={{ gap: 4 }}><View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}><Heading style={{ color: "#FFF3D4", fontSize: 29 }}>{phase}</Heading>{status && <Copy style={{ color: "#FFDB8C", fontSize: 16 }}>{status.text}</Copy>}</View><Copy style={{ color: "#F5E5D9", fontSize: 15 }}>{s.phase === "watch" ? "Follow the glow" : s.phase === "repeat" ? "Play it back · no hurry" : s.phase === "picture" ? "Blend the sounds" : s.phase === "cleared" ? "A beautiful song" : "A fresh song is waiting"}</Copy>{!!twistLabel && <Copy style={{ color: "#F5E5D9", fontSize: 12, maxWidth: width - 120 }}>{twistLabel}</Copy>}</View></View>
-    {s.phase !== "picture" ? <>
+    {!showPicture ? <>
       <View style={{ width: "100%", maxWidth: 1100, alignItems: "center", position: "relative", paddingVertical: 2 }}>
         <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", columnGap: 2, rowGap: 7, maxWidth: shellSize * columns + 24 }}>
           {tiles.map((tile, index) => {
