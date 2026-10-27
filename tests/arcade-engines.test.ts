@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { allLevelIds, nextRandom, worldIds } from "../src/arcade";
-import { clearLines, createReef, legalReefMoves, placementCells, reefEngine, reefLevel, reefLevels, reefResult, reefTransition, SHAPES } from "../src/arcade/games/reef-builder/engine";
+import { clearLines, createReef, legalReefMoves, placementCells, previewReefPlacement, reefEngine, reefLevel, reefLevels, reefResult, reefTransition, SHAPES } from "../src/arcade/games/reef-builder/engine";
 import { createSong, glowingShell, noteDuration, songEngine, songLevel, songLevels, songResult, songStep, songTiles, songTransition, songWords, type SongState } from "../src/arcade/games/shell-song/engine";
 import { advanceClock, FIXED_DT, snapDrop, swipeDirection } from "../src/arcade/clock";
 import { wordEntry } from "../src/learn/kit/reading";
@@ -40,6 +40,27 @@ describe("Reef Builder", () => {
     const next = reefTransition(s, { type: "place", slot: 0, row: 7, col: 6 });
     expect(next.lines).toBe(1); expect(next.rescued).toBe(1); expect(next.board.every(n => n === 0)).toBe(true); expect(reefResult(next)?.stars).toBe(3); expect(JSON.stringify(s)).toBe(original);
     expect(reefTransition(next, { type: "place", slot: 0, row: 0, col: 0 })).toBe(next);
+  });
+  it("previews the exact landing and clears without mutating state, including sums and crossing lines", () => {
+    for (const id of allLevelIds) {
+      const s = createReef(reefLevel(id), 123), original = JSON.stringify(s);
+      for (const move of legalReefMoves(s)) {
+        const preview = previewReefPlacement(s, s.pieces[move.slot]!, move.row, move.col)!;
+        const next = reefTransition(s, { type: "place", ...move });
+        expect(preview.cells).toEqual(placementCells(s, s.pieces[move.slot]!, move.row, move.col));
+        expect(preview.clear.cells).toEqual(next.lastClear);
+        expect(preview.clear.count).toBe(next.lines - s.lines);
+      }
+      expect(JSON.stringify(s)).toBe(original);
+      expect(previewReefPlacement(s, s.pieces[0]!, 8, 0)).toBeNull();
+      expect(previewReefPlacement(s, s.pieces[0]!, 7, 0)).toBeNull();
+    }
+    const s = createReef("endless", 1), board = Array(64).fill(0);
+    for (let n = 0; n < 8; n++) { board[3 * 8 + n] = 1; board[n * 8 + 4] = 1; } board[28] = 0;
+    const cross = previewReefPlacement({ ...s, board }, { cells: SHAPES[0], value: 1, color: 1 }, 3, 4)!;
+    expect(cross.clear.count).toBe(2); expect(cross.clear.cells).toHaveLength(15);
+    const number = createReef(reefLevel("learn-1"), 123);
+    expect(previewReefPlacement(number, { cells: SHAPES[0], value: 7, color: 1 }, 7, 1)).toBeNull();
   });
   it("counts simultaneous row/column clears and their shared cell once", () => {
     const board = Array(64).fill(0); for (let n = 0; n < 8; n++) { board[3 * 8 + n] = 1; board[n * 8 + 4] = 1; }

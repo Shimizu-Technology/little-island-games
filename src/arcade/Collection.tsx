@@ -17,12 +17,12 @@ export const stickerChapters: { name: string; stickers: readonly (typeof sticker
   { name: "Beach Ball", stickers: ["sea-star"] },
 ];
 export function StickerBook({ person }: { person: ArcadeLearner }) {
-  return <View style={{ gap: 18 }}><Heading>Our island sticker atlas</Heading><Copy>{person.stickers.length} of {stickerIds.length} friends found. Every chest shows its sticker. Collect them in any game.</Copy>
+  return <View style={{ gap: 14 }}><Heading>My island friends</Heading><Copy>{person.stickers.length} of {stickerIds.length} friends found. Every chest shows its sticker. Collect them in any game.</Copy>
     {stickerChapters.map(chapter => <View key={chapter.name} style={{ gap: 10 }}><Heading style={{ fontSize: 19 }}>{chapter.name}</Heading>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>{chapter.stickers.map(id => {
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>{chapter.stickers.map(id => {
         const found = person.stickers.includes(id);
-        return <View key={id} accessibilityLabel={`${stickerNames[id]}, ${found ? "collected" : "waiting in a chest"}`} style={{ flexGrow: 1, flexBasis: 125, maxWidth: 200, minHeight: 143, padding: 10, alignItems: "center", gap: 5, backgroundColor: found ? "#FFF8E4" : C.sand, borderRadius: 22, borderWidth: found ? 2 : 1, borderStyle: found ? "solid" : "dashed", borderColor: found ? "#C59A4D" : C.line }}>
-          <View style={{ opacity: found ? 1 : .4 }}><StickerArt id={id} size={82}/></View><Copy style={{ fontSize: 14, textAlign: "center", color: C.ink }}>{stickerNames[id]}</Copy><Copy style={{ fontSize: 12 }}>{found ? "Found ✓" : "In a sticker chest"}</Copy>
+        return <View key={id} accessibilityLabel={`${stickerNames[id]}, ${found ? "collected" : "waiting in a chest"}`} style={{ width: 136, minHeight: 156, padding: 12, alignItems: "center", gap: 6, backgroundColor: found ? "#FFF1CD" : "#E9E0CF", borderRadius: 26, borderWidth: 3, borderColor: found ? "#D4AA55" : "#D0C6B3", transform: [{ rotate: found ? "-3deg" : "2deg" }], boxShadow: "0 3px 0 #C9B993" }}>
+          <View style={{ opacity: found ? 1 : .2, backgroundColor: "#FFF9E9", borderRadius: 48, borderWidth: 3, borderColor: "#FFFDF5" }}><StickerArt id={id} size={86}/></View><Copy style={{ fontSize: 14, textAlign: "center", color: C.ink }}>{stickerNames[id]}</Copy>
         </View>;
       })}</View>
     </View>)}

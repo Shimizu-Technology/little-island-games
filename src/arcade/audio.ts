@@ -5,7 +5,7 @@ import { feel } from "../components/feel";
 import type { Settings } from "../state/validation";
 import type { ArcadeId } from "./types";
 const tones: Record<string, number> = {
-  coral: require("../../assets/arcade/coral.wav"), clear: require("../../assets/arcade/clear.wav"), sticker: require("../../assets/arcade/sticker.wav"),
+  bump: require("../../assets/arcade/shell-0.wav"), coral: require("../../assets/arcade/coral.wav"), clear: require("../../assets/arcade/clear.wav"), sticker: require("../../assets/arcade/sticker.wav"),
   "shell-0": require("../../assets/arcade/shell-0.wav"), "shell-1": require("../../assets/arcade/shell-1.wav"), "shell-2": require("../../assets/arcade/shell-2.wav"), "shell-3": require("../../assets/arcade/shell-3.wav"), "shell-4": require("../../assets/arcade/shell-4.wav"), "shell-5": require("../../assets/arcade/shell-5.wav"),
 };
 const musicSources = { reef: require("../../assets/arcade/reef-loop.wav"), song: require("../../assets/arcade/song-loop.wav") };
@@ -18,13 +18,13 @@ export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolea
     try { if (active && !sheetOpen && music && settings.sound) loop.play(); else loop.pause(); } catch { /* Browser playback may need the next touch. */ }
     return () => { try { loop.pause(); } catch { /* Unmounted player. */ } };
   }, [loop, music, settings.sound, active, sheetOpen]);
-  useEffect(() => { if (!active || !settings.sound || settings.effects === false) { try { effects.pause(); } catch { /* Disposed player. */ } } }, [effects, settings.sound, settings.effects, active]);
+  useEffect(() => { if (!active || sheetOpen || !settings.sound || settings.effects === false) { try { effects.pause(); } catch { /* Disposed player. */ } } }, [effects, settings.sound, settings.effects, active, sheetOpen]);
   const tone = useCallback((key: string, haptic = true) => {
-    if (!active) return;
+    if (!active || sheetOpen) return;
     if (haptic) feel(key === "clear" || key === "sticker" ? "success" : "select");
     if (!settings.sound || settings.effects === false || !tones[key]) return;
     try { effects.replace(tones[key]); effects.play(); } catch { /* Visible feedback always accompanies a sound. */ }
-  }, [effects, settings.sound, settings.effects, active]);
+  }, [effects, settings.sound, settings.effects, active, sheetOpen]);
   const say = useCallback((key: string, automatic = false) => { const played = speech.play(key, automatic); return played; }, [speech]);
   return { tone, say, stop: speech.stop };
 }

@@ -66,6 +66,13 @@ export function clearLines(board: number[], target?: number): { cells: number[];
   }
   return { cells: [...new Set(lines.flat())].filter(i => !!board[i]), count: lines.length };
 }
+/** The landing ghost and the reducer share placement and line rules, including make-ten reefs. */
+export function previewReefPlacement(s: ReefState, piece: CoralPiece, row: number, col: number): { cells: number[]; clear: { cells: number[]; count: number } } | null {
+  const cells = placementCells(s, piece, row, col);
+  if (!cells) return null;
+  const board = [...s.board]; cells.forEach(i => { board[i] = piece.value; });
+  return { cells, clear: clearLines(board, s.level !== "endless" ? s.level.targetSum : undefined) };
+}
 export function legalReefMoves(s: ReefState, slot?: number): { slot: number; row: number; col: number }[] {
   const moves: { slot: number; row: number; col: number }[] = [];
   s.pieces.forEach((piece, i) => {
@@ -102,11 +109,12 @@ export function reefTransition(s: ReefState, input: ReefInput): ReefState {
   if (input.type === "reroll") return s.helper && Number.isInteger(input.slot) ? rerollPiece(s, input.slot) : s;
   const piece = s.pieces[input.slot];
   if (!piece) return s;
-  const cells = placementCells(s, piece, input.row, input.col);
-  if (!cells) return { ...s, message: s.level !== "endless" && s.level.targetSum ? "Try an open spot where the row and column stay at 10 or less." : "That coral needs a little more room. Try another spot." };
+  const preview = previewReefPlacement(s, piece, input.row, input.col);
+  if (!preview) return { ...s, message: s.level !== "endless" && s.level.targetSum ? "Try an open spot where the row and column stay at 10 or less." : "That coral needs a little more room. Try another spot." };
+  const { cells, clear } = preview;
   const board = [...s.board]; cells.forEach(i => { board[i] = piece.value; });
   const fish = s.fish.length ? s.fish : [cells[0]], target = s.level !== "endless" ? s.level.targetSum : undefined;
-  const clear = clearLines(board, target), rescued = fish.filter(i => clear.cells.includes(i)).length;
+  const rescued = fish.filter(i => clear.cells.includes(i)).length;
   clear.cells.forEach(i => { board[i] = 0; });
   let next: ReefState = { ...s, board, fish: fish.filter(i => !clear.cells.includes(i)), pieces: s.pieces.map((p, i) => i === input.slot ? null : p), moves: s.moves + 1, lines: s.lines + clear.count, rescued: s.rescued + rescued, score: Math.min(99999999, s.score + cells.length * 10 + clear.count * 80 + rescued * 50), lastClear: clear.cells, lastFish: rescued, message: clear.count ? `${target ? `You made ${target}! ` : ""}${clear.count} line${clear.count === 1 ? "" : "s"} clear${clear.count === 1 ? "s" : ""}. ${rescued ? `${rescued} fish swimming free!` : "Room for new coral."}` : target ? "Look for a number partner. Each line needs 10." : "A lovely fit. Keep a little space for your next piece." };
   if (next.level !== "endless" && reefGoalValue(next) >= next.level.target) return { ...next, status: "cleared" };
