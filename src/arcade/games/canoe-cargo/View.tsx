@@ -42,7 +42,7 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
   const [shake] = useState(() => new Animated.Value(0));
   const heard = useRef(0), bump = useRef(0), helped = useRef(helper);
   useEffect(() => { if (active) { dispatch({ type: "helper", value: helper }); if (helper) helped.current = true; } }, [active, helper, dispatch]);
-  useEffect(() => { const result = cargoResult(s); if (result && !reported.current) { reported.current = true; onResult(result, helped.current); } }, [s, onResult]);
+  useEffect(() => { const result = cargoResult(s); if (result && !reported.current) { reported.current = true; onResult(result, helped.current || !!s.helped); } }, [s, onResult]);
   useEffect(() => {
     if (s.event !== heard.current) { heard.current = s.event; onTone(s.lastRows.length ? "clear" : "coral"); }
     if (s.bump !== bump.current) { bump.current = s.bump; onTone("shell-0"); }

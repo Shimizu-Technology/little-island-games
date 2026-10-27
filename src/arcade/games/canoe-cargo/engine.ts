@@ -32,6 +32,8 @@ export type CargoState = {
   piece: CargoPiece; next: [CargoPiece, CargoPiece]; held: CargoPiece | null; holdUsed: boolean;
   row: number; col: number; clock: number; loads: number; lines: number; canoes: number; freed: number; score: number; combo: number;
   status: "playing" | "cleared" | "over" | "finished"; event: number; lastRows: number[]; lastBonus: number; lastPoints: number; bump: number;
+  /** Set once a full learning row missed its target sum; the finish counts as helped practice. */
+  helped?: boolean;
 };
 export type CargoInput = { type: "left" | "right" | "rotate" | "down" | "drop" | "hold" | "finish" | "idle" } | { type: "helper"; value: boolean };
 function draw(seed: number, gentle: boolean): [number, CargoPiece] {
@@ -88,14 +90,17 @@ function spawn(s: CargoState): CargoState {
 function lock(s: CargoState): CargoState {
   const board = s.board.slice();
   pieceCells(s.piece).forEach(([r, c]) => { board[(s.row + r) * COLS + s.col + c] = { kind: s.piece.kind, value: s.piece.value, stuck: false }; });
-  const lastRows: number[] = []; let freed = 0, bonus = 0;
+  const lastRows: number[] = []; let freed = 0, bonus = 0, missed = false;
   for (let row = 0; row < ROWS; row++) {
     const line = board.slice(row * COLS, (row + 1) * COLS);
-    if (line.every(Boolean)) { lastRows.push(row); freed += line.filter(c => c?.stuck).length; if (s.level !== "endless" && s.level.targetSum && line.reduce((n, c) => n + c!.value, 0) === s.level.targetSum) bonus++; }
+    if (line.every(Boolean)) {
+      lastRows.push(row); freed += line.filter(c => c?.stuck).length;
+      if (s.level !== "endless" && s.level.targetSum) { if (line.reduce((n, c) => n + c!.value, 0) === s.level.targetSum) bonus++; else missed = true; }
+    }
   }
   const remaining = board.filter((_, i) => !lastRows.includes(Math.floor(i / COLS)));
   const combo = lastRows.length ? s.combo + 1 : 0, lastPoints = lastRows.length * 100 + bonus * 100 + Math.max(0, combo - 1) * 40 + (lastRows.length > 1 ? lastRows.length * 40 : 0) + 5;
-  let next: CargoState = { ...s, board: [...Array(lastRows.length * COLS).fill(null), ...remaining], loads: s.loads + 1, lines: s.lines + lastRows.length, canoes: s.canoes + lastRows.length + bonus, freed: s.freed + freed, score: Math.min(99999999, s.score + lastPoints), combo, event: s.event + 1, lastRows, lastBonus: bonus, lastPoints };
+  let next: CargoState = { ...s, board: [...Array(lastRows.length * COLS).fill(null), ...remaining], loads: s.loads + 1, lines: s.lines + lastRows.length, canoes: s.canoes + lastRows.length + bonus, freed: s.freed + freed, score: Math.min(99999999, s.score + lastPoints), combo, event: s.event + 1, lastRows, lastBonus: bonus, lastPoints, ...(missed || s.helped ? { helped: true } : {}) };
   if (s.level !== "endless" && cargoGoalValue(next) >= s.level.target) return { ...next, status: "cleared" };
   const every = s.level === "endless" ? Math.max(5, 12 - Math.floor(next.lines / 5)) : s.level.garbageEvery;
   if (every && next.loads % (every + (s.helper ? 3 : 0)) === 0) {
@@ -143,6 +148,10 @@ const exact = (v: unknown, keys: string[]): v is Record<string, unknown> => !!v 
 const uint = (v: unknown, max = 99999999): v is number => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= max;
 function validPiece(v: unknown): v is CargoPiece { return exact(v, ["shape", "turn", "kind", "value"]) && uint(v.shape, cargoShapes.length - 1) && uint(v.turn, 3) && cargoKinds.includes(v.kind as CargoKind) && uint(v.value, 3) && v.value >= 1; }
 export function validCargo(v: unknown): v is CargoState {
+  if (v && typeof v === "object" && !Array.isArray(v) && "helped" in v) {
+    const { helped, ...rest } = v as Record<string, unknown>;
+    return typeof helped === "boolean" && validCargo(rest);
+  }
   if (!exact(v, ["version", "level", "seed", "helper", "board", "piece", "next", "held", "holdUsed", "row", "col", "clock", "loads", "lines", "canoes", "freed", "score", "combo", "status", "event", "lastRows", "lastBonus", "lastPoints", "bump"]) || v.version !== 1 || typeof v.helper !== "boolean" || typeof v.holdUsed !== "boolean" || !uint(v.seed, 0xffffffff)) return false;
   if (v.level !== "endless" && !cargoLevels.some(l => JSON.stringify(l) === JSON.stringify(v.level))) return false;
   if (!Array.isArray(v.board) || v.board.length !== COLS * ROWS || !v.board.every(c => c === null || (exact(c, ["kind", "value", "stuck"]) && cargoKinds.includes(c.kind as CargoKind) && uint(c.value, 3) && c.value >= 1 && typeof c.stuck === "boolean"))) return false;

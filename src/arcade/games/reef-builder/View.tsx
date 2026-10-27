@@ -59,7 +59,7 @@ export function ReefBoard({ initial, active, helper, onResult, onTone }: { initi
   useEffect(() => { if (active && state.current.helper !== helper) dispatch({ type: "helper", value: helper }); }, [active, helper, dispatch, state]);
   useEffect(() => { if (!burst) return; const timer = setTimeout(() => setBurst(null), 1150); return () => clearTimeout(timer); }, [burst]);
   // Keep the final fish release visible before handing the already-terminal engine result to the frame.
-  useEffect(() => { const result = reefResult(s); if (!result || !active || reported.current) return; const timer = setTimeout(() => { if (!reported.current) { reported.current = true; onResult(result, helper); } }, reduced ? 150 : 800); return () => clearTimeout(timer); }, [s, active, onResult, helper, reduced]);
+  useEffect(() => { const result = reefResult(s); if (!result || !active || reported.current) return; const timer = setTimeout(() => { if (!reported.current) { reported.current = true; onResult(result, helper || !!s.helped); } }, reduced ? 150 : 800); return () => clearTimeout(timer); }, [s, active, onResult, helper, reduced]);
   function place(slot: number, row: number, col: number) {
     if (!active || s.status !== "playing") return;
     const before = state.current, next = dispatch({ type: "place", slot, row, col });

@@ -1,7 +1,7 @@
 import { allLevelIds, levelNumber, nextRandom, worldOf, type ArcadeEngine, type ArcadeLevel, type ArcadeResult, type LevelId } from "../../types";
 export type ReefLevel = ArcadeLevel & { goal: "lines" | "fish" | "score"; target: number; greatMoves: number; goodMoves: number; startingRows: number; complexity: number; targetSum?: number };
 export type CoralPiece = { cells: readonly (readonly [number, number])[]; value: number; color: number };
-export type ReefState = { level: ReefLevel | "endless"; board: number[]; fish: number[]; pieces: (CoralPiece | null)[]; seed: number; helper: boolean; moves: number; lines: number; rescued: number; score: number; status: "playing" | "cleared" | "full"; lastClear: number[]; lastFish: number; message: string };
+export type ReefState = { level: ReefLevel | "endless"; board: number[]; fish: number[]; pieces: (CoralPiece | null)[]; seed: number; helper: boolean; moves: number; lines: number; rescued: number; score: number; status: "playing" | "cleared" | "full"; lastClear: number[]; lastFish: number; message: string; /** Set once a learning-world sum was too big; the finish counts as helped practice. */ helped?: boolean };
 export type ReefInput = { type: "place"; slot: number; row: number; col: number } | { type: "reroll"; slot: number } | { type: "helper"; value: boolean } | { type: "finish" };
 export const SHAPES: readonly (readonly (readonly [number, number])[])[] = [
   [[0, 0]], [[0, 0], [0, 1]], [[0, 0], [1, 0]], [[0, 0], [0, 1], [0, 2]], [[0, 0], [1, 0], [2, 0]],
@@ -110,7 +110,11 @@ export function reefTransition(s: ReefState, input: ReefInput): ReefState {
   const piece = s.pieces[input.slot];
   if (!piece) return s;
   const preview = previewReefPlacement(s, piece, input.row, input.col);
-  if (!preview) return { ...s, message: s.level !== "endless" && s.level.targetSum ? "Try an open spot where the row and column stay at 10 or less." : "That coral needs a little more room. Try another spot." };
+  if (!preview) {
+    // An open, in-bounds spot rejected only by the target sum is a wrong learning answer.
+    const sumMiss = s.level !== "endless" && !!s.level.targetSum && !!placementCells({ ...s, level: "endless" }, piece, input.row, input.col);
+    return { ...s, ...(sumMiss ? { helped: true } : {}), message: s.level !== "endless" && s.level.targetSum ? "Try an open spot where the row and column stay at 10 or less." : "That coral needs a little more room. Try another spot." };
+  }
   const { cells, clear } = preview;
   const board = [...s.board]; cells.forEach(i => { board[i] = piece.value; });
   const fish = s.fish.length ? s.fish : [cells[0]], target = s.level !== "endless" ? s.level.targetSum : undefined;
@@ -134,6 +138,6 @@ const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v ===
 const integer = (v: unknown, max = 99999999) => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= max;
 export function validReef(v: unknown): v is ReefState {
   if (!object(v) || !(v.level === "endless" || object(v.level) && reefLevels.some(l => l.id === (v.level as Record<string, unknown>).id)) || !Array.isArray(v.board) || v.board.length !== 64 || !v.board.every(n => integer(n, 9)) || !Array.isArray(v.fish) || new Set(v.fish).size !== v.fish.length || !v.fish.every(n => integer(n, 63) && (v.board as number[])[n]) || !Array.isArray(v.pieces) || v.pieces.length !== 3) return false;
-  return v.pieces.every(p => p === null || object(p) && integer(p.value, 9) && (p.value as number) > 0 && integer(p.color, 3) && Array.isArray(p.cells) && SHAPES.some(shape => JSON.stringify(shape) === JSON.stringify(p.cells))) && integer(v.seed, 0xffffffff) && typeof v.helper === "boolean" && [v.moves, v.lines, v.rescued, v.score, v.lastFish].every(n => integer(n)) && ["playing", "cleared", "full"].includes(v.status as string) && Array.isArray(v.lastClear) && v.lastClear.every(n => integer(n, 63)) && typeof v.message === "string";
+  return v.pieces.every(p => p === null || object(p) && integer(p.value, 9) && (p.value as number) > 0 && integer(p.color, 3) && Array.isArray(p.cells) && SHAPES.some(shape => JSON.stringify(shape) === JSON.stringify(p.cells))) && integer(v.seed, 0xffffffff) && typeof v.helper === "boolean" && [v.moves, v.lines, v.rescued, v.score, v.lastFish].every(n => integer(n)) && ["playing", "cleared", "full"].includes(v.status as string) && Array.isArray(v.lastClear) && v.lastClear.every(n => integer(n, 63)) && typeof v.message === "string" && (v.helped === undefined || typeof v.helped === "boolean");
 }
 export const reefEngine: ArcadeEngine<ReefState, ReefInput, ReefLevel> = { create: createReef, reduce: reefTransition, result: reefResult, validate: validReef };
