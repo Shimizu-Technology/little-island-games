@@ -60,7 +60,10 @@ describe("Canoe Cargo deterministic rules", () => {
     for (let n = 0; n < 1000; n++) learning = cargoStep(learning, { type: "idle" }, 1 / 60);
     expect(learning).toEqual(copy);
     expect(cargoTransition(regular, { type: "hold" })).toBe(regular);
+    const reserved = learning.piece;
     learning = cargoTransition(learning, { type: "hold" }); expect(learning.holdUsed).toBe(true); expect(validCargo(learning)).toBe(true); expect(cargoTransition(learning, { type: "hold" })).toBe(learning);
+    const queue = structuredClone(learning.next);
+    learning = delivery(learning, 3); expect(learning.piece).toEqual(reserved); expect(learning.held).toBeNull(); expect(learning.next).toEqual(queue); expect(validCargo(learning)).toBe(true); expect(cargoTransition(learning, { type: "hold" })).toBe(learning);
     for (const helper of [true, false]) { let s = createCargo(cargoLevel("w1-1"), 1, helper); s = delivery(s, 3); s = delivery(s, 3); expect(cargoResult(s)?.stars).toBe(3); }
   });
   it("fixed dt guards malformed times, no-op input and invalid Helper", () => {

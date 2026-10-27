@@ -40,7 +40,7 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
   }, [cell, decor, poses, reduced]);
   const { snapshot: s, dispatch, state, budget } = useArcadeLoop({ initial, step: cargoStep, reduce: cargoTransition, input: idle, active, onFrame: publish });
   const [shake] = useState(() => new Animated.Value(0));
-  const [feedback, setFeedback] = useState(""), heard = useRef(0), bump = useRef(0), helped = useRef(helper);
+  const heard = useRef(0), bump = useRef(0), helped = useRef(helper);
   useEffect(() => { if (active) { dispatch({ type: "helper", value: helper }); if (helper) helped.current = true; } }, [active, helper, dispatch]);
   useEffect(() => { const result = cargoResult(s); if (result && !reported.current) { reported.current = true; onResult(result, helped.current); } }, [s, onResult]);
   useEffect(() => {
@@ -56,7 +56,6 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
     if (!active) return;
     const before = state.current, after = dispatch(input);
     if (after !== before && after.loads === before.loads) onTone(input.type === "rotate" ? "shell-2" : input.type === "hold" ? "shell-3" : "coral");
-    if (input.type === "hold" && after.holdUsed && !before.holdUsed) setFeedback("One cargo bundle safely set aside");
   }, [active, state, dispatch, onTone]);
   useEffect(() => {
     if (Platform.OS !== "web" || !active) return;
@@ -92,7 +91,7 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
   const sum = s.level !== "endless" ? s.level.targetSum : 0;
   const previews = <View style={{ alignItems: "center", gap: wide && !compact ? 16 : 5, flexDirection: wide ? "column" : "row" }}>
     <View style={{ alignItems: "center", gap: 5 }}><Text style={ui.label}>NEXT</Text><View style={{ flexDirection: "row", gap: 12, minHeight: wide && !compact ? 70 : 36, alignItems: "center" }}>{s.next.slice(0, helper ? 2 : 1).map((p, i) => <View key={i} accessibilityLabel={`Next ${i + 1}: ${p.kind}, ${pieceCells(p).length} parcels${learning ? ` of ${p.value}` : ""}`}><Bundle piece={p} cell={wide && !compact ? 24 : 18} learning={learning}/></View>)}</View></View>
-    {helper && <Pressable testID="cargo-hold" accessibilityRole="button" accessibilityLabel={s.holdUsed ? "Cargo set aside. Hold already used this level" : "Hold this cargo, once this level"} disabled={!active || s.holdUsed} onPress={() => act({ type: "hold" })} style={{ minHeight: 48, padding: 8, borderRadius: 13, borderWidth: 1, borderColor: "#B2C1A5", backgroundColor: "#234F5D", opacity: s.holdUsed ? .6 : 1, flexDirection: "row", gap: 8, alignItems: "center" }}>{s.held && <Bundle piece={s.held} cell={14} learning={learning}/>}<Text style={ui.label}>{s.holdUsed ? "SET ASIDE ✓" : "HOLD · 1"}</Text></Pressable>}
+    {helper && <Pressable testID="cargo-hold" accessibilityRole="button" accessibilityLabel={s.holdUsed ? "Cargo set aside. Hold already used this level" : "Hold this cargo, once this level"} disabled={!active || s.holdUsed} onPress={() => act({ type: "hold" })} style={{ minHeight: 48, padding: 8, borderRadius: 13, borderWidth: 1, borderColor: "#B2C1A5", backgroundColor: "#234F5D", opacity: s.holdUsed ? .6 : 1, flexDirection: "row", gap: 8, alignItems: "center" }}>{s.held && <Bundle piece={s.held} cell={14} learning={learning}/>}<Text style={ui.label}>{s.holdUsed ? s.held ? "BACK NEXT" : "HOLD USED" : "HOLD · 1"}</Text></Pressable>}
   </View>;
   const controls = <View style={{ flexDirection: "row", justifyContent: "center", gap: 7, alignItems: "center", flexWrap: compact ? "wrap" : "nowrap", width: compact ? 116 : undefined }}>
       <Control testID="cargo-left" label="Move cargo left" onPress={() => act({ type: "left" })} disabled={!active}>←</Control><Control testID="cargo-rotate" label="Rotate cargo" onPress={() => act({ type: "rotate" })} disabled={!active}>↻</Control><Control testID="cargo-right" label="Move cargo right" onPress={() => act({ type: "right" })} disabled={!active}>→</Control><Control testID="cargo-drop" label="Drop cargo" onPress={() => act({ type: "drop" })} disabled={!active}>↓</Control>
@@ -119,7 +118,7 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
       {wide && <View style={{ width: Math.min(220, width * .2), alignItems: "center", gap: compact ? 8 : 25 }}>{!compact && <View style={{ width: 160, height: 160 }}><ArcadeSprite poses={decor} index={0} width={160} height={160}><CargoCaptain size={160} outfit={outfit} happy={s.lastRows.length > 0} dizzy={s.bump > 0 && !s.lastRows.length}/></ArcadeSprite></View>}{previews}{compact && controls}{!!sum && !compact && <Text style={[ui.label, { fontSize: 18, textAlign: "center" }]}>{helper ? "Take your time.\nDrop when ready." : "Match the sum.\nSend two canoes!"}</Text>}</View>}
     </View>
     {!compact && controls}
-    {!compact && <Text accessibilityLiveRegion="polite" style={{ color: ink, textAlign: "center", fontSize: 12 }}>{feedback || (learning && helper ? "No falling clock · count, then ↓" : "Tap sides · tap cargo to turn · swipe ↓")}</Text>}
+    {!compact && <Text accessibilityLiveRegion="polite" style={{ color: ink, textAlign: "center", fontSize: 12 }}>{(s.held ? "Stored cargo returns after this load" : "") || (learning && helper ? "No falling clock · count, then ↓" : "Tap sides · tap cargo to turn · swipe ↓")}</Text>}
     {s.level === "endless" && <Pressable accessibilityRole="button" accessibilityLabel="Finish cargo free play" onPress={() => act({ type: "finish" })} disabled={!active} style={{ minHeight: 48, justifyContent: "center", alignItems: "center" }}><Text style={ui.label}>Dock my canoe · finish</Text></Pressable>}
     {debug && !compact && <Text testID="cargo-budget" style={{ color: ink, fontSize: 11, textAlign: "center" }}>{budget.fps.toFixed(1)} fps · p95 {budget.p95.toFixed(1)} ms · max {budget.max.toFixed(1)} ms · clamp {budget.dropped.toFixed(3)} s · {budget.ticks} ticks</Text>}
   </View>;

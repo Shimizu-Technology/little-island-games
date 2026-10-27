@@ -72,6 +72,12 @@ export function createCargo(level: CargoLevel | "endless", seed: number, helper:
   return { version: 1, level, seed: rng, helper, board, piece, next: [p1, p2], held: null, holdUsed: false, row: 0, col: 3, clock: 0, loads: 0, lines: 0, canoes: 0, freed: 0, score: 0, combo: 0, status: "playing", event: 0, lastRows: [], lastBonus: 0, lastPoints: 0, bump: 0 };
 }
 function spawn(s: CargoState): CargoState {
+  // One safe reserve: after the replacement load, the held bundle returns automatically.
+  // Nothing disappears, and the two-piece queue keeps its order.
+  if (s.held) {
+    const next = { ...s, piece: s.held, held: null, row: 0, col: 3, clock: 0 };
+    return fits(next, next.piece, 0, 3) ? next : { ...next, status: "over" };
+  }
   const [seed, drawn] = draw(s.seed, s.level !== "endless" && (s.level.world === "w1" || s.level.world === "learn"));
   const opening = s.level !== "endless" && s.loads + 2 < s.level.opening ? { shape: 0, turn: 0, kind: cargoKinds[s.loads % 4], value: s.level.targetSum ? Math.max(1, Math.floor(s.level.targetSum / 9)) : 1 } : drawn;
   const piece = s.next[0], next = { ...s, seed, piece, next: [s.next[1], opening] as [CargoPiece, CargoPiece], row: 0, col: 3, clock: 0 };
@@ -138,7 +144,7 @@ export function validCargo(v: unknown): v is CargoState {
   if (!exact(v, ["version", "level", "seed", "helper", "board", "piece", "next", "held", "holdUsed", "row", "col", "clock", "loads", "lines", "canoes", "freed", "score", "combo", "status", "event", "lastRows", "lastBonus", "lastPoints", "bump"]) || v.version !== 1 || typeof v.helper !== "boolean" || typeof v.holdUsed !== "boolean" || !uint(v.seed, 0xffffffff)) return false;
   if (v.level !== "endless" && !cargoLevels.some(l => JSON.stringify(l) === JSON.stringify(v.level))) return false;
   if (!Array.isArray(v.board) || v.board.length !== COLS * ROWS || !v.board.every(c => c === null || (exact(c, ["kind", "value", "stuck"]) && cargoKinds.includes(c.kind as CargoKind) && uint(c.value, 3) && c.value >= 1 && typeof c.stuck === "boolean"))) return false;
-  if (!validPiece(v.piece) || !Array.isArray(v.next) || v.next.length !== 2 || !v.next.every(validPiece) || !(v.held === null || validPiece(v.held)) || v.holdUsed !== (v.held !== null)) return false;
+  if (!validPiece(v.piece) || !Array.isArray(v.next) || v.next.length !== 2 || !v.next.every(validPiece) || !(v.held === null || validPiece(v.held)) || (v.held !== null && !v.holdUsed) || (v.holdUsed && v.held === null && !v.loads)) return false;
   if (!["loads", "lines", "canoes", "freed", "score", "combo", "event", "lastBonus", "lastPoints", "bump"].every(k => uint(v[k])) || !uint(v.row, ROWS - 1) || !uint(v.col, COLS - 1) || typeof v.clock !== "number" || !Number.isFinite(v.clock) || v.clock < 0 || v.clock > 10) return false;
   if (!["playing", "cleared", "over", "finished"].includes(v.status as string) || !Array.isArray(v.lastRows) || v.lastRows.length > 4 || new Set(v.lastRows).size !== v.lastRows.length || !v.lastRows.every(r => uint(r, ROWS - 1))) return false;
   const s = v as CargoState;
