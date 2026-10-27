@@ -89,6 +89,20 @@ describe("Rail movement, damage and interpolation", () => {
     expect(p[1]).toEqual({ x: 2.5, y: 7 });
     expect(s.body[0]).toEqual({ x: 2, y: 7 });
   });
+  it("finishes the last untimed learning step at the collected tile, with an independent 120 ms visual age", () => {
+    const s = createRail(railLevel("learn-1"), 120),
+      l = railLevel("learn-1");
+    const win = railMove(
+      { ...s, collected: l.target - 1, score: (l.target - 1) * 40, moves: l.par - 1, food: { x: 3, y: 7 } },
+      "right"
+    );
+    expect(win.phase).toBe("cleared");
+    expect(railBodyPose(win, 0)[0]).toEqual({ x: 2, y: 7 });
+    expect(railBodyPose(win, 0.06)[0]).toEqual({ x: 2.5, y: 7 });
+    expect(railBodyPose(win, 0.12)[0]).toEqual(win.body[0]);
+    expect(railBodyPose(win)[0]).toEqual(win.body[0]);
+    expect(railStep(win, tick, 1 / 60)).toBe(win);
+  });
   it("allows a vacated tail and spends hearts for walls/body/hedges/patrol in either mode", () => {
     for (const helper of [false, true]) {
       const s = createRail(railLevel("w2-1"), 2, helper),

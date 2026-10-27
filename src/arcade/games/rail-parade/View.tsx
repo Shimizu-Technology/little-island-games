@@ -65,11 +65,18 @@ export function RailBoard({
   const poses = useSharedValue<SpritePose[]>([]),
     reduced = useReducedMotion(),
     unit = (size - 6) / 10;
+  const clearVisual = useRef<{ state: RailState | null; started: number }>({ state: null, started: 0 });
   const onFrame = useCallback(
     (s: RailState) => {
+      let learningClearAge: number | undefined;
+      if (railLearning(s) && s.phase === "cleared") {
+        const now = performance.now();
+        if (clearVisual.current.state !== s) clearVisual.current = { state: s, started: now };
+        learningClearAge = (now - clearVisual.current.started) / 1000;
+      }
       const fraction = s.respawn > 0 || s.phase !== "play" ? 0 : s.elapsed / railTick(s),
         snake = railSnake(s, railLearning(s) ? 0 : fraction),
-        body = railBodyPose(s);
+        body = railBodyPose(s, learningClearAge);
       poses.set([
         ...Array.from({ length: 40 }, (_, i) => {
           const p = body[i],

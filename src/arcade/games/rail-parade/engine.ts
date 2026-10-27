@@ -204,9 +204,14 @@ export function railSnake(s: RailState, fraction = 0): Cell[] {
   return Array.from({ length: span }, (_, i) => ({ x: x + i, y: l.snakeRow }));
 }
 /** All moving art uses this one cell-space projection; rules stay discrete at arrival. */
-export function railBodyPose(s: RailState): Cell[] {
+export function railBodyPose(s: RailState, learningClearAge?: number): Cell[] {
   const learn = railLearning(s),
-    a = s.phase !== "play" || s.respawn > 0 ? 0 : Math.min(1, s.elapsed / (learn ? RAIL_LEARN_MOVE : railTick(s)));
+    a =
+      learn && s.phase === "cleared"
+        ? Math.min(1, Math.max(0, learningClearAge ?? RAIL_LEARN_MOVE) / RAIL_LEARN_MOVE)
+        : s.phase !== "play" || s.respawn > 0
+          ? 0
+          : Math.min(1, s.elapsed / (learn ? RAIL_LEARN_MOVE : railTick(s)));
   return s.body.map((p, i) => {
     const from = learn ? (s.previous[i] ?? p) : p,
       to = learn ? p : i === 0 ? { x: p.x + delta[s.direction].x, y: p.y + delta[s.direction].y } : s.body[i - 1];
