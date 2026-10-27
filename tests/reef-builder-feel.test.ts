@@ -56,7 +56,7 @@ describe("Reef feel and planning", () => {
   });
   it("rejects injected fields, changed level rules, duplicate origins and invalid coordinates", () => {
     const s = createReef(reefLevel("w1-1"), 42);
-    for (const value of [null, {}, { ...s, injected: true }, { ...s, board: [] }, { ...s, seed: NaN }, { ...s, level: { ...reefLevel("w1-1"), target: 0 } }, { ...s, lastClear: [1, 1] }, { ...s, lastFishCells: [1] }, { ...s, pieces: [{ ...s.pieces[0], value: 99 }, null, null] }, { ...s, status: "cleared" }, { ...s, status: "full" }]) expect(validReef(value)).toBe(false);
+    for (const value of [null, {}, { ...s, injected: true }, { ...s, board: [] }, { ...s, pieces: [null, null, null] }, { ...s, seed: NaN }, { ...s, level: { ...reefLevel("w1-1"), target: 0 } }, { ...s, lastClear: [1, 1] }, { ...s, lastFishCells: [1] }, { ...s, pieces: [{ ...s.pieces[0], value: 99 }, null, null] }, { ...s, status: "cleared" }, { ...s, status: "full" }]) expect(validReef(value)).toBe(false);
     for (const input of [null, { type: "wat" }, { type: "helper", value: 1 }, { type: "place", slot: NaN, row: 0, col: 0 }]) expect(reefTransition(s, input as never)).toBe(s);
     expect(reefTransition(s, { type: "place", slot: 0, row: NaN, col: 0 }).moves).toBe(0);
   });

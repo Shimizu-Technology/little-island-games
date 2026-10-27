@@ -127,6 +127,6 @@ export function validReef(v: unknown): v is ReefState {
   for (const cells of [v.lastClear, v.lastFishCells]) if (!Array.isArray(cells) || new Set(cells).size !== cells.length || !cells.every(n => integer(n, 63))) return false;
   const s = v as ReefState;
   if (s.event !== s.moves || s.lastFish !== s.lastFishCells.length || s.lastFishCells.some(n => !s.lastClear.includes(n)) || (s.level !== "endless" && s.level.rocks.some(i => s.board[i] !== 9 || s.fish.includes(i) || s.lastClear.includes(i)))) return false;
-  return (s.status !== "full" || !legalReefMoves(s).length) && (s.status !== "cleared" || s.level !== "endless" && reefGoalValue(s) >= s.level.target) && (s.status !== "stopped" || s.level === "endless");
+  return (s.status !== "playing" || hasReefMove(s)) && (s.status !== "full" || !hasReefMove(s)) && (s.status !== "cleared" || s.level !== "endless" && reefGoalValue(s) >= s.level.target) && (s.status !== "stopped" || s.level === "endless");
 }
 export const reefEngine: ArcadeEngine<ReefState, ReefInput, ReefLevel> = { create: createReef, reduce: reefTransition, result: reefResult, validate: validReef };
