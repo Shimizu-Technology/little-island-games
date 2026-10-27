@@ -1,5 +1,6 @@
 import React from "react";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import { CargoCaptain } from "./games/canoe-cargo/Art";
 import type { ArcadeId } from "./types";
 import type { OutfitId, StickerId } from "./progress";
 export const shellColors = ["#CB745B", "#568AB0", "#B48A36", "#7A6DAB", "#488A77", "#AD6492"];
@@ -34,7 +35,7 @@ export function Shell({ size = 120, index = 0, glowing = false, outfit = "island
     <Hat outfit={outfit}/>
   </Svg>;
 }
-export function ArcadeArt({ game, size = 120, outfit }: { game?: ArcadeId; size?: number; outfit?: OutfitId }) { return game === "shell-song" ? <Shell size={size} outfit={outfit}/> : <ReefFish size={size} outfit={outfit}/>; }
+export function ArcadeArt({ game, size = 120, outfit }: { game?: ArcadeId; size?: number; outfit?: OutfitId }) { return game === "canoe-cargo" ? <CargoCaptain size={size} outfit={outfit}/> : game === "shell-song" ? <Shell size={size} outfit={outfit}/> : <ReefFish size={size} outfit={outfit}/>; }
 export function ArcadeIsland({ size = 100 }: { size?: number }) {
   return <Svg width={size} height={size} viewBox="0 0 160 160" accessible={false}><Defs><LinearGradient id="sea" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#BADFD7"/><Stop offset="1" stopColor="#85B8C9"/></LinearGradient></Defs><Ellipse cx={80} cy={107} rx={72} ry={35} fill="url(#sea)"/><Path d="M22 100Q31 62 77 70Q111 57 137 101Q92 134 22 100" fill="#F0D8A4"/><Path d="M74 83Q65 58 72 36" stroke="#A46E42" strokeWidth={9} fill="none"/><Path d="M72 37Q45 18 31 42Q54 36 72 37M72 37Q92 12 116 36Q94 30 72 37M72 37Q48 40 43 62Q66 51 72 37M72 37Q94 36 104 59Q81 48 72 37" fill="#4D8C68"/><G transform="translate(25 82) scale(.32)"><Path d="M106 81L147 54V109Z" fill="#DA7C61"/><Ellipse cx={75} cy={85} rx={49} ry={32} fill="#F0C36A"/><Circle cx={47} cy={79} r={6} fill="#234846"/></G><Path d="M101 109Q82 80 99 78Q105 64 113 79Q133 80 118 109Z" fill="#987EA7" stroke="#625778" strokeWidth={2}/><Path d="M109 104V81M104 104L99 85M114 104L121 85" stroke="#E9C4BE" strokeWidth={2}/><Circle cx={21} cy={130} r={3} fill="#F0C36A"/><Path d={star} transform="translate(133 131) scale(.5)" fill="#F0C36A"/></Svg>;
 }

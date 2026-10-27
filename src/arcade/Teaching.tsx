@@ -3,6 +3,7 @@ import { Animated, View } from "react-native";
 import { Button, C, Copy, Heading } from "../components/ui";
 import { nativeDriver, useReducedMotion } from "../components/motion";
 import { ReefFish, Shell } from "./Art";
+import { CargoTeaching } from "./games/canoe-cargo/Teaching";
 import type { ArcadeGame } from "./types";
 export function Teaching({ game, learning, onPlay, onHear }: { game: ArcadeGame; learning: boolean; onPlay: () => void; onHear: () => void }) {
   const reduced = useReducedMotion(), [replay, setReplay] = useState(0), [phase, setPhase] = useState(0), [move] = useState(() => new Animated.Value(0));
@@ -14,6 +15,7 @@ export function Teaching({ game, learning, onPlay, onHear }: { game: ArcadeGame;
     [0, 1, 2, 3].forEach((n, i) => timers.push(setTimeout(() => setPhase(n), reduced ? 0 : i * 650)));
     return () => { animation.stop(); timers.forEach(clearTimeout); };
   }, [replay, reduced, move]);
+  if (game.id === "canoe-cargo") return <CargoTeaching learning={learning} onHear={onHear} onPlay={onPlay}/>;
   const reef = game.id === "reef-builder";
   return <View style={{ gap: 16, alignItems: "center" }}>
     <Heading>{reef ? learning ? "Two number friends make ten" : "A little coral. A happy fish." : learning ? "Sounds make a word" : "The shore sings. You echo."}</Heading>
