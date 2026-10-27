@@ -1,8 +1,9 @@
-import React, { memo } from "react";
+import React, { memo, useEffect } from "react";
 import { View } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
 import { ArcadeSprite, type SpritePose } from "../../Sprite";
-import type { SharedValue } from "react-native-reanimated";
+import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
+import { useReducedMotion } from "../../../components/motion";
 import type { OutfitId } from "../../progress";
 import { projectTrack, roadEdge } from "../lagoon-run/camera";
 import { palette } from "./Art";
@@ -21,3 +22,11 @@ export const BatRig = memo(function BatRig({ poses, outfit }: { poses: SharedVal
 const Limb = memo(function Limb({ arm = false }: { arm?: boolean }) { return <Svg width={22} height={42} viewBox="0 0 22 42"><Path d={arm ? "M9 5L13 21L6 31" : "M10 4L7 25L16 35"} stroke="#493946" strokeWidth={12} strokeLinecap="round" fill="none"/><Path d={arm ? "M9 5L13 21L6 31" : "M10 4L7 25L16 35"} stroke="#C98E67" strokeWidth={8} strokeLinecap="round" fill="none"/>{!arm && <Path d="M7 34H19" stroke="#F7D375" strokeWidth={7} strokeLinecap="round"/>}</Svg>; });
 const RunnerBody = memo(function RunnerBody({ outfit }: { outfit: OutfitId }) { return <Svg width={62} height={84} viewBox="0 0 62 84"><G stroke="#493946" strokeWidth={2}><Path d="M14 50L10 79H51L48 50" fill="#364D79"/><Path d="M16 34Q30 27 46 34L53 61Q31 74 8 61Z" fill={outfit === "starlight" ? "#7D6CB5" : "#F58062"}/><Path d="M13 51Q32 44 49 51" stroke="#FFE4A9" strokeWidth={6} fill="none"/><Circle cx={31} cy={22} r={19} fill="#463643"/><Path d="M13 19Q8-2 34 2Q56 0 51 25" fill="#403442"/>{outfit === "sunhat" ? <Path d="M5 12H57M15 10V2H46V10" stroke="#F5CB71" strokeWidth={8}/> : outfit === "explorer" ? <Path d="M12 19Q32 30 51 19" stroke="#8BE6D4" strokeWidth={5} fill="none"/> : null}</G></Svg>; });
 export const RunnerRig = memo(function RunnerRig({ poses, outfit }: { poses: SharedValue<SpritePose[]>; outfit: OutfitId }) { return <View pointerEvents="none">{[0, 1, 2, 3].map(i => <ArcadeSprite key={i} poses={poses} index={51 + i} width={22} height={42}><Limb arm={i > 1}/></ArcadeSprite>)}<ArcadeSprite poses={poses} index={0} width={62} height={84}><RunnerBody outfit={outfit}/></ArcadeSprite></View>; });
+
+/** A finite UI animation remains visible after the terminal engine has stopped. */
+export function LastHit({ dead, x, y, bat = false, children }: { dead: boolean; x: number; y: number; bat?: boolean; children: React.ReactNode }) {
+  const progress = useSharedValue(0), reduced = useReducedMotion();
+  useEffect(() => { progress.set(dead ? withTiming(1, { duration: 280 }) : 0); return () => cancelAnimation(progress); }, [dead, progress]);
+  const style = useAnimatedStyle(() => ({ transform: [{ translateY: reduced ? 0 : progress.value * (bat ? 38 : 8) }, { rotate: `${reduced ? 0 : progress.value * (bat ? 2 : -.3)}rad` }] }));
+  return <Animated.View pointerEvents="none" style={[{ position: "absolute", width: 390, height: 660, transformOrigin: [x, y, 0] }, style]}>{children}</Animated.View>;
+}
