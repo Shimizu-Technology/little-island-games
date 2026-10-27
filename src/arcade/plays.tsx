@@ -88,13 +88,14 @@ export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
     Board: p => <ReefBoard initial={createReef(p.level === "endless" ? p.level : reefLevel(p.level.id), p.seed, p.helper)} active={p.active} helper={p.helper} onResult={p.onResult} onTone={p.onTone} />,
   },
   "shell-song": {
+    fullBleed: true,
     levels: songLevels,
     level: songLevel,
     speech: learning => (learning ? "arcade-song-word" : "arcade-song-intro"),
     goal: level => level !== "endless" && level.world === "learn" ? "Hear the sounds. Find their picture." : "Watch the shells. Echo their song.",
     clearedTitle: "A song worth sharing",
     learningSkill: level => ({ skill: wordEntry(songLevel(level.id).word!)!.skill, config: practice("reading") }),
-    Board: p => <SongBoard initial={createSong(p.level === "endless" ? p.level : songLevel(p.level.id), p.seed, p.helper)} active={p.active} helper={p.helper} outfit={p.outfit} onResult={p.onResult} onTone={p.onTone} onSay={p.onSay} debug={p.debug} />,
+    Board: p => <SongBoard width={p.width} height={p.height} initial={createSong(p.level === "endless" ? p.level : songLevel(p.level.id), p.seed, p.helper)} active={p.active} helper={p.helper} outfit={p.outfit} onResult={p.onResult} onTone={p.onTone} onSay={p.onSay} debug={p.debug} />,
   },
   "canoe-cargo": {
     Scene: p => <CargoScene world={p.world}/>,
