@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, Rect } from "react-native-svg";
 import { Button, Copy, Heading, PressableScale } from "../../../components/ui";
 import { Text } from "../../../components/Text";
@@ -29,7 +30,8 @@ export function GridMap({
 }) {
   const [world, setWorld] = useState<WorldId>("w1"),
     { width } = useWindowDimensions(),
-    size = Math.min(950, width - 24),
+    insets = useSafeAreaInsets(),
+    size = Math.min(950, width - insets.left - insets.right - 24),
     p = gameProgress(person, game.id),
     crab = game.id === "crab-crossing",
     color = palettes[crab ? "crab" : "rail"][{ w1: 0, w2: 1, w3: 2, learn: 3 }[world]],

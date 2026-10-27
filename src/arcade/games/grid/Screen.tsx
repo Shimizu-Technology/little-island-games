@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Animated, ScrollView, TextInput, View, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Copy, Heading, Sheet, ToggleRow, styles } from "../../../components/ui";
 import { Text } from "../../../components/Text";
 import { Settings } from "../../../components/Settings";
@@ -49,7 +50,10 @@ export function GridGameScreen({ game, debug = false }: { game: ArcadeGame; debu
     startAfterTeach = useRef(false),
     scroll = useRef<ScrollView>(null),
     { width, height } = useWindowDimensions(),
-    wide = width > height,
+    insets = useSafeAreaInsets(),
+    availableWidth = width - insets.left - insets.right,
+    availableHeight = height - insets.top - insets.bottom,
+    wide = availableWidth > availableHeight,
     active = foreground && playing && !paused && !sheet,
     learning = !!level && level !== "endless" && level.world === "learn";
   const sound = useArcadeAudio(
@@ -168,8 +172,8 @@ export function GridGameScreen({ game, debug = false }: { game: ArcadeGame; debu
   }
   const next = level && level !== "endless" ? allLevelIds[allLevelIds.indexOf(level.id) + 1] : undefined,
     nextOpen = next && levelOpen(progress, next, store.save.arcade?.unlockAll),
-    maxBoardHeight = height - (wide ? 115 : 270),
-    size = Math.max(160, Math.min(width - (wide ? 275 : 20), maxBoardHeight * (crab ? 9 / 11 : 1), 830));
+    maxBoardHeight = availableHeight - (wide ? 115 : 270),
+    size = Math.max(160, Math.min(availableWidth - (wide ? 275 : 20), maxBoardHeight * (crab ? 9 / 11 : 1), 830));
   const goal = learning
     ? crab
       ? `${crabLevel((level as ArcadeLevel).id).name}. Hop to the next number.`
