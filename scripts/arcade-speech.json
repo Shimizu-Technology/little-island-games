@@ -22,5 +22,9 @@
   "arcade-cargo-intro": "Fill a row to send a canoe. Move the cargo, turn it, then drop it into a gap.",
   "arcade-cargo-sum": "Fill a row and count its numbers. Match the target to send two canoes. Helper lets you take your time.",
   "arcade-cargo-goal": "Pack the gaps. Send the canoes!",
-  "arcade-cargo-sum-goal": "Match the target sum. Send two canoes!"
+  "arcade-cargo-sum-goal": "Match the target sum. Send two canoes!",
+  "arcade-flight-intro": "Tap to flap. Follow the glowing fruit. Let your wings glide between the palm leaves.",
+  "arcade-flight-math": "Fly through the answer. Look at the sum, then flap into the gate with its number. A wrong answer comes around again.",
+  "arcade-run-intro": "Swipe to steer. Jump up. Duck down. Collect shells along the lagoon. You can tap the arrows too.",
+  "arcade-run-math": "Run into the answer lane. Look at the sum, then follow the lane with its number. A wrong answer comes around again."
 }
