@@ -17,7 +17,7 @@ import { recordPractice } from "../src/learn/skills";
 const create = (seed = 41, pace = "easy" as "easy" | "medium" | "hard", mode = "solo" as "solo" | "versus") => engine.create({ pace, mode }, { skills: {}, rng: random(seed), starter: 1, today: 20_000 });
 describe("Home and island shelf", () => {
   it("keeps eleven classic games and adds the learning engines to their declared islands", () => {
-    expect(shelfGames.filter(g => g.island === "classic")).toHaveLength(11);
+    expect(shelfGames.filter(g => g.island === "classic")).toHaveLength(16);
     for (const id of learnIds) expect(shelfGames.find(g => g.id === id)?.island).toBe(engines[id].island);
   });
   it("round-trips every classic and learning favorite and toggles without duplicates", () => {

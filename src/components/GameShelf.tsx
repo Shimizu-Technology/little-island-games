@@ -1,3 +1,5 @@
+import { isBoardId } from "../board";
+import { BoardArt } from "../board/Art";
 import React from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
@@ -12,9 +14,10 @@ import { views } from "../learn/views";
 import { ongoing, shelfLevel, ShelfGame, ShelfId } from "../learn/home";
 import { useStore } from "../state/Store";
 export function openShelfGame(id: ShelfId) {
-  router.push({ pathname: learnIds.includes(id as LearnId) ? "/learn" : gameIds.includes(id as GameId) ? "/play" : "/activity", params: { game: id } });
+  router.push({ pathname: isBoardId(id) ? "/board" : learnIds.includes(id as LearnId) ? "/learn" : gameIds.includes(id as GameId) ? "/play" : "/activity", params: { game: id } });
 }
 export function ShelfArt({ id, size }: { id: ShelfId; size: number }) {
+  if (isBoardId(id)) return <BoardArt game={id} size={size} />;
   if (learnIds.includes(id as LearnId)) { const Art = views[id as LearnId].Art; return <Art size={size} />; }
   return gameIds.includes(id as GameId) ? <GameArt game={id as GameId} size={size} /> : <FeatureArt kind={id as ActivityId} size={size} />;
 }
