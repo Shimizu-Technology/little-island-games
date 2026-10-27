@@ -19,7 +19,7 @@ export const cargoLevels: CargoLevel[] = (["w1", "w2", "w3", "learn"] as WorldId
   const goal = world === "learn" || world === "w1" ? "canoes" : i % 3 === 1 ? "score" : i % 3 === 2 ? "crates" : "canoes";
   const targetSum = world === "learn" ? [9, 12, 15, 18, 12, 15, 18, 21][i] : 0;
   const target = goal === "crates" ? opening * 6 : goal === "score" ? (opening * 130) : world === "learn" ? opening * 2 : opening;
-  const par = opening + (goal === "score" ? 8 : 0);
+  const par = world === "learn" || i === 0 ? opening : opening * 3 + i + (world === "w3" ? 3 : 0);
   return { id: `${world}-${i + 1}`, world, index: i + 1, name: worldNames[world][i], goal, target, opening, targetSum, par,
     fall: world === "w1" ? 2.4 - i * .12 : world === "w2" ? 1.25 - i * .065 : world === "w3" ? .82 - i * .045 : 3.4,
     garbageEvery: world === "w3" ? Math.max(3, 6 - Math.floor(i / 2)) : 0,
@@ -64,10 +64,12 @@ export function createCargo(level: CargoLevel | "endless", seed: number, helper:
       const filled = Array.from({ length: COLS }, (_, c) => c).filter(c => c < gap || c >= gap + 3);
       filled.forEach((c, n) => { const amount = level.targetSum ? Math.min(3, remaining - (5 - n)) : 1; remaining -= amount; board[(ROWS - 1 - j) * COLS + c] = { kind: "crate", value: amount, stuck: true }; });
     }
+    if (level.world === "learn" || level.index === 1) {
     const openingValue = level.targetSum ? Math.max(1, Math.floor(level.targetSum / 9)) : 1;
     piece = { shape: 0, turn: 0, kind: "coconut", value: openingValue };
     p1 = { shape: 0, turn: 0, kind: "fish", value: openingValue };
     if (level.opening > 2) p2 = { shape: 0, turn: 0, kind: "taro", value: openingValue };
+    }
   }
   return { version: 1, level, seed: rng, helper, board, piece, next: [p1, p2], held: null, holdUsed: false, row: 0, col: 3, clock: 0, loads: 0, lines: 0, canoes: 0, freed: 0, score: 0, combo: 0, status: "playing", event: 0, lastRows: [], lastBonus: 0, lastPoints: 0, bump: 0 };
 }
@@ -79,7 +81,7 @@ function spawn(s: CargoState): CargoState {
     return fits(next, next.piece, 0, 3) ? next : { ...next, status: "over" };
   }
   const [seed, drawn] = draw(s.seed, s.level !== "endless" && (s.level.world === "w1" || s.level.world === "learn"));
-  const opening = s.level !== "endless" && s.loads + 2 < s.level.opening ? { shape: 0, turn: 0, kind: cargoKinds[s.loads % 4], value: s.level.targetSum ? Math.max(1, Math.floor(s.level.targetSum / 9)) : 1 } : drawn;
+  const opening = s.level !== "endless" && (s.level.world === "learn" || s.level.index === 1) && s.loads + 2 < s.level.opening ? { shape: 0, turn: 0, kind: cargoKinds[s.loads % 4], value: s.level.targetSum ? Math.max(1, Math.floor(s.level.targetSum / 9)) : 1 } : drawn;
   const piece = s.next[0], next = { ...s, seed, piece, next: [s.next[1], opening] as [CargoPiece, CargoPiece], row: 0, col: 3, clock: 0 };
   return fits(next, piece, 0, 3) ? next : { ...next, status: "over" };
 }

@@ -14,6 +14,12 @@ describe("Canoe Cargo deterministic rules", () => {
     for (const level of cargoLevels) { expect(level.goals).toHaveLength(3); expect(new Set(level.goals).size).toBe(3); expect(level.fall).toBeGreaterThan(.4); expect(validCargo(createCargo(level, 45, true))).toBe(true); }
     expect(cargoLevels[0].fall).toBeGreaterThan(cargoLevel("w3-8").fall * 3);
   });
+  it("uses mixed seeded bundles after the introductory delivery instead of scripting every normal level", () => {
+    const shapes = new Set(Array.from({ length: 40 }, (_, seed) => createCargo(cargoLevel("w2-2"), seed * 987123, false).piece.shape));
+    expect(shapes.size).toBe(7);
+    expect(cargoLevel("w2-2").par).toBeGreaterThan(cargoLevel("w2-2").opening * 2);
+    expect(createCargo(cargoLevel("w2-1"), 9, false).piece.shape).toBe(0);
+  });
   it("replays seeds and serializable actions exactly without mutation", () => {
     let a = createCargo("endless", 198, false), b = createCargo("endless", 198, false);
     for (const type of ["left", "rotate", "drop", "right", "drop", "hold", "drop"] as const) { const copy = structuredClone(a); a = cargoTransition(a, { type }); expect(copy).toEqual(b); b = cargoEngine.reduce(b, { type }); expect(a).toEqual(b); expect(validCargo(a)).toBe(true); }
