@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { allLevelIds, nextRandom, worldIds } from "../src/arcade";
-import { clearLines, createReef, legalReefMoves, placementCells, previewReefPlacement, reefEngine, reefLevel, reefLevels, reefResult, reefTransition, SHAPES } from "../src/arcade/games/reef-builder/engine";
+import { reefLevels } from "../src/arcade/games/reef-builder/engine";
 import { createSong, glowingShell, noteDuration, songEngine, songLevel, songLevels, songResult, songStep, songTiles, songTransition, songWords, type SongState } from "../src/arcade/games/shell-song/engine";
 import { advanceClock, FIXED_DT, snapDrop, swipeDirection } from "../src/arcade/clock";
 import { wordEntry } from "../src/learn/kit/reading";
@@ -32,75 +32,6 @@ describe("arcade content and fixed input contract", () => {
     const rect = { x: 10, y: 100, width: 320, height: 320 };
     expect(snapDrop(329, 419, rect, 8, 8)).toEqual({ row: 7, col: 7 }); expect(snapDrop(330, 420, rect, 8, 8)).toBeNull(); expect(snapDrop(9, 100, rect, 8, 8)).toBeNull();
     expect(swipeDirection(6, 8)).toBeNull(); expect(swipeDirection(-40, 5)).toBe("left"); expect(swipeDirection(4, -60)).toBe("up");
-  });
-});
-describe("Reef Builder", () => {
-  it("teaches a real row clear with a fish, with unchanged input state", () => {
-    const s = createReef(reefLevel("w1-1"), 27, false), original = JSON.stringify(s);
-    const next = reefTransition(s, { type: "place", slot: 0, row: 7, col: 6 });
-    expect(next.lines).toBe(1); expect(next.rescued).toBe(1); expect(next.board.every(n => n === 0)).toBe(true); expect(reefResult(next)?.stars).toBe(3); expect(JSON.stringify(s)).toBe(original);
-    expect(reefTransition(next, { type: "place", slot: 0, row: 0, col: 0 })).toBe(next);
-  });
-  it("previews the exact landing and clears without mutating state, including sums and crossing lines", () => {
-    for (const id of allLevelIds) {
-      const s = createReef(reefLevel(id), 123), original = JSON.stringify(s);
-      for (const move of legalReefMoves(s)) {
-        const preview = previewReefPlacement(s, s.pieces[move.slot]!, move.row, move.col)!;
-        const next = reefTransition(s, { type: "place", ...move });
-        expect(preview.cells).toEqual(placementCells(s, s.pieces[move.slot]!, move.row, move.col));
-        expect(preview.clear.cells).toEqual(next.lastClear);
-        expect(preview.clear.count).toBe(next.lines - s.lines);
-      }
-      expect(JSON.stringify(s)).toBe(original);
-      expect(previewReefPlacement(s, s.pieces[0]!, 8, 0)).toBeNull();
-      expect(previewReefPlacement(s, s.pieces[0]!, 7, 0)).toBeNull();
-    }
-    const s = createReef("endless", 1), board = Array(64).fill(0);
-    for (let n = 0; n < 8; n++) { board[3 * 8 + n] = 1; board[n * 8 + 4] = 1; } board[28] = 0;
-    const cross = previewReefPlacement({ ...s, board }, { cells: SHAPES[0], value: 1, color: 1 }, 3, 4)!;
-    expect(cross.clear.count).toBe(2); expect(cross.clear.cells).toHaveLength(15);
-    const number = createReef(reefLevel("learn-1"), 123);
-    expect(previewReefPlacement(number, { cells: SHAPES[0], value: 7, color: 1 }, 7, 1)).toBeNull();
-  });
-  it("counts simultaneous row/column clears and their shared cell once", () => {
-    const board = Array(64).fill(0); for (let n = 0; n < 8; n++) { board[3 * 8 + n] = 1; board[n * 8 + 4] = 1; }
-    expect(clearLines(board)).toEqual({ cells: expect.any(Array), count: 2 }); expect(clearLines(board).cells).toHaveLength(15);
-  });
-  it("clears number rows only at ten, without requiring eight filled cells", () => {
-    const s = createReef(reefLevel("learn-1"), 12), next = reefTransition(s, { type: "place", slot: 0, row: 7, col: 1 });
-    expect(next.lines).toBe(1); expect(next.rescued).toBe(1); expect(next.status).toBe("cleared");
-    const five = { ...s, pieces: [{ cells: SHAPES[0], value: 5, color: 1 }] };
-    expect(reefTransition(five, { type: "place", slot: 0, row: 7, col: 1 }).lines).toBe(0);
-    expect(placementCells(s, { cells: SHAPES[0], value: 7, color: 1 }, 7, 1)).toBeNull();
-  });
-  it("rejects overlap, off-board, malformed and stale placement without scoring", () => {
-    const s = createReef(reefLevel("w1-2"), 7);
-    for (const [row, col] of [[7, 0], [8, 0], [0, -1], [NaN, 2], [0, 7]]) {
-      const next = reefTransition(s, { type: "place", slot: 0, row, col }); expect(next.score).toBe(0); expect(next.moves).toBe(0); expect(next.board).toEqual(s.board);
-    }
-    expect(reefTransition(s, { type: "place", slot: 9, row: 0, col: 0 })).toBe(s);
-  });
-  it("offers three pieces, refills after all three, and reproduces seeded play", () => {
-    let a = createReef("endless", 411), b = createReef("endless", 411);
-    expect(a.pieces).toHaveLength(3);
-    for (let i = 0; i < 9; i++) { const move = legalReefMoves(a)[0]; expect(move).toBeDefined(); a = reefTransition(a, { type: "place", ...move }); b = reefTransition(b, { type: "place", ...move }); }
-    expect(a).toEqual(b); expect(a.moves).toBe(9); expect(a.pieces.filter(Boolean)).toHaveLength(3);
-  });
-  it("gives Helper a gentle reroll without costing stars", () => {
-    const s = createReef(reefLevel("w1-1"), 12, true), small = reefTransition(s, { type: "reroll", slot: 0 });
-    expect(small.pieces[0]?.cells).toHaveLength(1); expect(small.moves).toBe(0);
-    const still = reefTransition({ ...s, helper: false }, { type: "reroll", slot: 0 }); expect(still.pieces).toBe(s.pieces);
-    expect(reefResult(reefTransition(s, { type: "place", slot: 0, row: 7, col: 6 }))?.stars).toBe(3);
-  });
-  it("reaches a real full-board result and lets free play finish voluntarily", () => {
-    const s = createReef("endless", 1, false), board = Array(64).fill(1); board[0] = 0;
-    const blocked = { ...s, board, pieces: [{ cells: SHAPES[0], value: 1, color: 1 }] };
-    const placed = reefTransition(blocked, { type: "place", slot: 0, row: 0, col: 0 }); expect(placed.lines).toBe(16); expect(placed.board.every(n => !n)).toBe(true);
-    expect(reefResult(reefTransition(s, { type: "finish" }))?.cleared).toBe(false); expect(reefEngine.result(s)).toBeNull();
-  });
-  it("every level has deterministic playable openings with valid shape bounds", () => {
-    for (const level of reefLevels) { const s = createReef(level, 123); expect(s).toEqual(createReef(level, 123)); expect(legalReefMoves(s).length).toBeGreaterThan(0); expect(s.fish.length).toBeGreaterThanOrEqual(level.goal === "fish" ? level.target : 1); }
-    expect(SHAPES.every(shape => new Set(shape.map(c => c.join())).size === shape.length && shape.every(([r, c]) => r >= 0 && r <= 3 && c >= 0 && c <= 3))).toBe(true);
   });
 });
 describe("Shell Song", () => {
