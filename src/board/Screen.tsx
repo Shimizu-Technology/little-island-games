@@ -347,7 +347,11 @@ function Round({
           : "An urchin lives here."
         : p.outcome === "draw"
           ? "A good draw!"
-          : `${s.match.names[p.outcome]} wins!`;
+          : s.mode === "solo"
+            ? p.outcome === 0
+              ? "You win!"
+              : "The computer wins this time."
+            : `${s.match.names[p.outcome]} wins!`;
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView contentContainerStyle={[styles.content, { maxWidth: 680, paddingHorizontal: 20, gap: 12 }]}>
@@ -404,7 +408,15 @@ function Round({
             <BoardArt game={s.game} size={80} />
             <Celebrate burst={s.game === "reef-sweep" && p.outcome === 1 ? 0 : 1} />
             <Heading style={{ fontSize: 23 }}>
-              {s.game === "reef-sweep" && p.outcome === 1 ? "Let’s explore again" : "Well played together"}
+              {s.game === "reef-sweep"
+                ? p.outcome === 1
+                  ? "Let’s explore again"
+                  : "Great pearl hunt!"
+                : s.mode !== "solo"
+                  ? "Well played together"
+                  : p.outcome === 0
+                    ? "Great game!"
+                    : "Good try. Play again?"}
             </Heading>
           </View>
         )}
