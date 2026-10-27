@@ -279,7 +279,7 @@ export function RailBoard({
                 <GridHero size={unit} chick />
               )}
             </View>
-            {learning && (
+            {learning && s.phase === "play" && (
               <View
                 style={{
                   position: "absolute",
