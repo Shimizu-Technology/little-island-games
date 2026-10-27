@@ -159,7 +159,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
     [learnUpdate, id, epoch]
   );
   const assistance = useCallback(() => {
-    if (!saved || !appActive || !focused || roundHelped.current) return;
+    if (!saved || expected.current.id !== saved.id || !appActive || !focused || roundHelped.current) return;
     roundHelped.current = true;
     const current = acceptedRound.current ?? saved;
     save({ ...current, levelHelped: true, revision: Math.max(current.revision, expected.current.revision ?? 0) + 1 });
@@ -171,7 +171,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   }, [saved, boardActive, practiceOwned, id, epoch, assistance]);
   const update = useCallback(
     (state: unknown) => {
-      if (!saved || !boardActive || store.epoch !== epoch) return;
+      if (!saved || expected.current.id !== saved.id || !boardActive || store.epoch !== epoch) return;
       const revision = Math.max(saved.revision, expected.current.revision ?? 0) + 1;
       save({ ...saved, state, revision });
     },
