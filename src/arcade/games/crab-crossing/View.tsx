@@ -39,6 +39,7 @@ export function CrabBoard({
   onResult,
   onTone,
   size: allottedSize,
+  height: availableHeight,
   wide,
   debug,
 }: {
@@ -49,11 +50,18 @@ export function CrabBoard({
   onResult: (r: ArcadeResult) => void;
   onTone: (s: string, haptic?: boolean) => void;
   size: number;
+  height: number;
   wide: boolean;
   debug: boolean;
 }) {
   const touch = useGridTouch();
-  const size = Math.max(120, allottedSize - (wide ? 40 : 12));
+  const size = Math.max(
+    120,
+    Math.min(
+      allottedSize - (wide ? 40 : 12),
+      wide ? Infinity : (availableHeight - 284 - (initial.level === "endless" ? 54 : 0) - (debug ? 37 : 0)) * (9 / 11)
+    )
+  );
   const unit = (size - 6) / 9,
     poses = useSharedValue<SpritePose[]>([]),
     reduced = useReducedMotion();
