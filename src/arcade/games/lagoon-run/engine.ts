@@ -38,7 +38,7 @@ export function runTransition(s: RunState, input: RunInput): RunState {
   return s;
 }
 /** Moving crabs remain in their blocked lane, crossing its width; shell trails stay safe/readable. */
-export function obstacleLane(row: TrailRow, time: number) { "worklet"; return row.moving && row.crossing ? row.lane + (row.second - row.lane) * (.5 + Math.sin(time * 3 + row.phase) * .5) : row.lane + (row.moving ? Math.sin(time * 3 + row.phase) * .34 : 0); }
+export function obstacleLane(row: TrailRow, time: number) { "worklet"; return row.moving && row.crossing ? row.lane + (row.second - row.lane) * (.5 + Math.sin(time * 3 + row.phase) * .5) : row.lane + (row.moving ? Math.sin(time * 3 + row.phase) * (row.lane === 1 ? .34 : .18) : 0); }
 export function rowSafe(s: RunState, row: TrailRow): boolean {
   "worklet";
   if (runLearning(s)) return row.fact.choices[Math.round(s.poseLane)] === row.fact.answer;

@@ -28,5 +28,5 @@ export function LastHit({ dead, x, y, bat = false, children }: { dead: boolean; 
   const progress = useSharedValue(0), reduced = useReducedMotion();
   useEffect(() => { progress.set(dead ? withTiming(1, { duration: 280 }) : 0); return () => cancelAnimation(progress); }, [dead, progress]);
   const style = useAnimatedStyle(() => ({ transform: [{ translateY: reduced ? 0 : progress.value * (bat ? 38 : 8) }, { rotate: `${reduced ? 0 : progress.value * (bat ? 2 : -.3)}rad` }] }));
-  return <Animated.View pointerEvents="none" style={[{ position: "absolute", width: 390, height: 660, transformOrigin: [x, y, 0] }, style]}>{children}</Animated.View>;
+  return <Animated.View pointerEvents="none" style={[{ position: "absolute", width: 390, height: 660, transformOrigin: `${x}px ${y}px` }, style]}>{children}</Animated.View>;
 }

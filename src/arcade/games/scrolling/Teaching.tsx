@@ -22,7 +22,7 @@ export function Rehearsal({ game, onTone }: { game: ScrollGame; onTone: (key: st
     return { y, t };
   }, [bat]);
   useEffect(() => () => motion.stopAnimation(), [motion]);
-  function tryMove(down = false) { setDuck(down); motion.stopAnimation(); motion.setValue(0); onTone(down ? "shell-1" : "shell-4"); Animated.timing(motion, { toValue: 1, duration: bat ? 1100 : down ? 600 : 550, easing: Easing.linear, useNativeDriver: nativeDriver }).start(); }
+  function tryMove(down = false) { setDuck(down); motion.stopAnimation(); motion.setValue(0); onTone(down ? "shell-1" : "shell-4"); Animated.timing(motion, { toValue: 1, duration: down ? 600 : 1100, easing: Easing.linear, useNativeDriver: nativeDriver }).start(); }
   return <View style={{ width: "100%", gap: 10 }}><View style={{ height: 150, borderRadius: 25, overflow: "hidden", backgroundColor: bat ? "#263C5C" : "#A6DED9" }}>
     <Animated.View style={{ position: "absolute", left: "28%", top: 55, transform: [{ translateY: reduced ? 0 : duck ? 25 : motion.interpolate({ inputRange: trajectory.t, outputRange: trajectory.y }) }, { scale: duck ? .65 : 1 }] }}><ScrollHero game={game} size={80}/></Animated.View>
     <View style={{ position: "absolute", left: "66%", top: 56 }}>{bat ? <Fruit size={65}/> : <Hazard kind={duck ? "frond" : "coconut"} size={75}/>}</View>
