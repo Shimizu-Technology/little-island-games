@@ -80,6 +80,18 @@ Shared hearts and failure rules match Flight levels: 3/5 hearts, 1.2 s protectio
 
 Current feel-v2 verification is recorded in the worker report and `island-arcade/feel-scroll/` evidence folder. Native/simulator, physical A12 performance, VoiceOver, audio/haptic comfort and child acceptance are separate lead/operator gates.
 
+### Feel-v2 verification receipt (both games)
+
+Agent-executed touch Chromium on runtime code `24203f3`: **16/16 required game/scenario/viewport entries passed** at 390×844 and 1024×768. Both games cleared W1-1, W4-1 and learning level 1, saved stars and returned to the map after reload; deliberate game overs retained earlier stars and Try again restored full hearts. **10/10 supplemental entries passed**: touch-down flap and mid-move swipe while the finger remained down, jump/duck poses, pause freezing, persisted five-heart Helper, mid-round reload, full-size controls at 768×1024 and 844×390, Reduce Motion, and one-hit Helper Free Flight with a positive saved best/family score and one-heart retry. The two offline clears passed after explicit service-worker readiness/reload, with the exact owned server stopped and browser networking disabled (5,850 cached entries).
+
+Frame inspection found a fatal Flight hit respawning before its tumble. Final runtime `e9271a1` keeps the impact position; **4/4 focused final-code phone/tablet level/free-play death retests passed**, including a measured zero jump at the terminal pose and correct retry hearts/bests. Use `videos-impact/` for the final fatal reactions; the earlier loss videos retain the superseded reaction. Clears, camera, inputs and offline paths are unchanged by that fix. Deterministic legal inputs earn three stars on **all 112 authored levels** (`fixtures.json` and the regression suite).
+
+Final runtime full gate: `npm run check` passed typecheck, lint, **918 tests / 60 files**, and production export. Doctor **21/21**; advisory Impeccable 4.6.0 `[]`. The required matrix measured Mac web rAF scheduling p95 **9.0–9.3 ms**, maximum **108.4 ms**, with **one >25 ms interval** while recording/screenshooting. This is scheduling evidence, not GPU presentation or native performance proof. Both production engines use the shared UI-thread option; the dev overlay samples UI frame scheduling.
+
+Evidence: `/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/island-arcade/feel-scroll/` contains the ledgers, scripts, 22 videos, frame sequences, pacing metrics, deterministic fixtures, gate logs and final report. Initial export-overlap/harness failures and the first offline-readiness failure remain under `attempts/`; corrected retests passed. Native Release, physical A12/family feel, VoiceOver, audible/haptic comfort and independent final-code review remain with the lead. No simulator, dependency, voice-bank, global Store/validation or app-version changes; no new speech keys. Owned browsers and previews are stopped; no runtime resource is handed off. The branch/worktree is retained for integration; no PR or merge.
+
+Lead integration notes outside this slice: old Flight bests keep their original numeric units while new runs score one point per gap. Shared `registry.ts` still calls W6 Flight “paired palms”, and `plays.tsx` learning copy says flight/run waits while choosing, although these math worlds move slowly with unlimited retries. Align that shared copy and choose any historical-best migration centrally; this worker preserves the original saved data and edits only its owned paths.
+
 ### Historical pre-feel-v2 receipt (superseded rules)
 
 ### W6 web QA receipt (both games)
