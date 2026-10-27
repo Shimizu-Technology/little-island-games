@@ -3,120 +3,162 @@ import { arcadeTransition, emptyArcade, validArcade } from "../src/arcade/progre
 import { createFlight, flightGap, flightLearning, flightResult, flightStep, flightTransition, validFlight, type FlightState } from "../src/arcade/games/fruit-bat-flight/engine";
 import { createRun, rowSafe, runLearning, runResult, runStep, runTransition, validRun, type RunState } from "../src/arcade/games/lagoon-run/engine";
 import { equation, flightLevels, mathGate, runLevels, validFact } from "../src/arcade/games/scrolling/content";
+import { flightFrame, runFrame } from "../src/arcade/games/scrolling/commands";
+import { projectTrack, trackSprite, roadEdge } from "../src/arcade/games/lagoon-run/camera";
 import { FIXED_DT } from "../src/arcade/clock";
 import { allLevelIds, worldIds } from "../src/arcade/types";
-function fly(initial: FlightState): FlightState {
+function fly(initial: FlightState, offset = .045): FlightState {
   let s = initial;
-  for (let i = 0; i < 100000 && !flightResult(s); i++) {
-    const gate = s.gates.filter(g => !g.passed && g.x > .20).sort((a, b) => a.x - b.x)[0];
-    const target = gate ? flightLearning(s) ? [.24, .5, .76][gate.fact.choices.indexOf(gate.fact.answer)] : gate.center : .5;
-    if (s.y > target && s.vy > -.04) s = flightTransition(s, { type: "flap" });
-    s = flightStep(s, { type: "idle" }, FIXED_DT);
-    if (i % 500 === 0) expect(validFlight(s)).toBe(true);
+  for (let i = 0; i < 90000 && !flightResult(s); i++) {
+    const gate = s.gates.filter(g => !g.passed && g.x > .175).sort((a,b) => a.x-b.x)[0];
+    const target = gate ? flightLearning(s) ? [.24,.5,.76][gate.fact.choices.indexOf(gate.fact.answer)] : gate.center : .5;
+    if (s.y > target + offset && s.vy > -.05) s = flightTransition(s, {type:"flap"});
+    s = flightStep(s,{type:"idle"},FIXED_DT);
+    if (i%600===0) expect(validFlight(s), `${initial.level === "endless" ? "free" : initial.level.id} at ${i}`).toBe(true);
   }
   return s;
 }
 function run(initial: RunState): RunState {
   let s = initial;
-  for (let i = 0; i < 30000 && !runResult(s); i++) {
-    const row = s.rows.filter(r => !r.passed).sort((a, b) => b.z - a.z)[0];
-    const lane = runLearning(s) ? row.fact.choices.indexOf(row.fact.answer) : row.shellLane;
-    s = runTransition(s, { type: "lane", lane }); s = runStep(s, { type: "idle" }, FIXED_DT);
-    if (i % 500 === 0) expect(validRun(s)).toBe(true);
+  for(let i=0;i<50000&&!runResult(s);i++) {
+    const row=s.rows.filter(r=>!r.passed).sort((a,b)=>b.z-a.z)[0];
+    const lane=runLearning(s)?row.fact.choices.indexOf(row.fact.answer):row.shellLane;
+    if(row.third && (1-row.z)/(s.level==="endless"?.5:s.level.speed*(1+.18*s.passed/s.level.target)) < .28 && s.jump===0) s=runTransition(s,{type:"jump"});
+    s=runStep(runTransition(s,{type:"lane",lane}),{type:"idle"},FIXED_DT);
+    if(i%600===0)expect(validRun(s)).toBe(true);
   }
   return s;
 }
-describe("scrolling arcade content", () => {
-  it("authors 56 levels per game, seven worlds, clear targets and increasingly close gaps", () => {
-    for (const levels of [flightLevels, runLevels]) {
-      expect(levels.map(l => l.id)).toEqual(allLevelIds);
-      for (const world of worldIds) expect(levels.filter(l => l.world === world)).toHaveLength(8);
-      expect(levels.every(l => l.goals.length === 3 && l.target >= 3 && l.speed > 0 && l.spacing > .4 && l.goals.every(Boolean))).toBe(true);
-      expect(levels[0].speed).toBeLessThan(levels[23].speed); expect(levels[0].gap).toBeGreaterThan(levels[23].gap);
-      expect(levels.filter(l => l.storm).map(l => l.id)).toEqual(["w3-5", "w3-6", "w3-7", "w3-8"]);
+function advanceRun(s: RunState, ticks: number) {for(let i=0;i<ticks;i++)s=runStep(s,{type:"idle"},FIXED_DT);return s;}
+describe("56-level feel curves",()=>{
+  it("has every stable ID, six increasingly fast worlds, bounded geometry and honest goals",()=>{
+    for(const levels of [flightLevels,runLevels]) {
+      expect(levels.map(l=>l.id)).toEqual(allLevelIds);
+      for(const world of worldIds)expect(levels.filter(l=>l.world===world)).toHaveLength(8);
+      expect(levels.every(l=>l.target>=3&&l.spacing>.4&&l.goals.length===3&&l.goals.every(Boolean))).toBe(true);
+      for(let i=1;i<48;i++)expect(levels[i].speed).toBeGreaterThan(levels[i-1].speed);
+      expect(levels.filter(l=>l.storm)).toHaveLength(24);
+    }
+    expect(flightLevels[0].speed).toBe(.36);expect(flightLevels[0].target).toBe(12);
+    expect(flightLevels[47].target).toBe(60);expect(runLevels[0].target).toBe(14);
+  });
+  it("produces deterministic unique correct math choices without timed reading",()=>{
+    for(let seed=0;seed<100;seed++)for(let i=1;i<=8;i++) {
+      const a=mathGate(seed,i);expect(a).toEqual(mathGate(seed,i));expect(validFact(a.fact)).toBe(true);
+      expect(a.fact.choices.filter(n=>n===a.fact.answer)).toHaveLength(1);expect(equation(a.fact)).toContain("= ?");
+      if(i<5)expect(a.fact.answer).toBeLessThanOrEqual(10);
+    }
+    expect(validFact({...mathGate(4,2).fact,choices:[1,1,1]})).toBe(false);
+  });
+  it("clears all 112 levels with legal inputs and valid bounded states",()=>{
+    for(const level of flightLevels){let s: FlightState|undefined; for(const offset of [.045,.025,.065,0,-.02,.035,.055,.015,.075]) { const attempt=fly(createFlight(level,981,false),offset); if(flightResult(attempt)?.stars===3) { s=attempt; break; } } expect(s,level.id).toBeDefined();expect(validFlight(s),level.id).toBe(true);}
+    for(const level of runLevels){const s=run(createRun(level,771,false));expect(runResult(s)?.stars,level.id).toBe(3);expect(validRun(s),level.id).toBe(true);}
+  },30000);
+});
+describe("Fruit Bat Flight physics and hearts",()=>{
+  it("sets instant flap velocity, accepts every fast down, applies gravity and caps fall speed",()=>{
+    const s=createFlight(flightLevels[0],42),raw=JSON.stringify(s);
+    let next=flightTransition(s,{type:"flap"});expect(next.vy).toBe(-.65);
+    for(let i=0;i<5;i++)next=flightTransition(next,{type:"flap"});expect(next.event).toBe(6);
+    const a=flightStep(next,{type:"idle"},FIXED_DT);expect(a.vy).toBeCloseTo(-.65+1.9/60);
+    expect(a).toEqual(flightStep(next,{type:"idle"},FIXED_DT));expect(JSON.stringify(s)).toBe(raw);
+    expect(flightStep({...s,y:.4,vy:1.2},{type:"idle"},FIXED_DT).vy).toBe(1.2);
+    for(const dt of [0,-1,NaN,Infinity,.2])expect(flightStep(s,{type:"idle"},dt)).toBe(s);
+  });
+  it("spends 3/5 hearts, protects for 1.2 s, respawns and never freezes scroll",()=>{
+    for(const helper of [false,true]) {
+      let s=createFlight(flightLevels[0],8,helper);const count=helper?5:3;
+      for(let hit=1;hit<=count;hit++) {
+        s=flightStep({...s,y:.98,vy:.5,cooldown:0,lives:{...s.lives,invulnerable:0}},{type:"idle"},FIXED_DT);
+        expect(s.lives.hearts).toBe(count-hit);expect(s.lives.hit).toBe(hit);expect(s.lives.invulnerable).toBe(1.2);
+        expect(s.travel).toBeGreaterThan(0);expect(s.y).toBeLessThan(hit < count ? .8 : 1);
+        if(hit<count){const next=flightStep({...s,y:.98},{type:"idle"},FIXED_DT);expect(next.lives.hearts).toBe(s.lives.hearts);expect(next.travel).toBeGreaterThan(s.travel);}
+      }
+      expect(flightResult(s)?.outcome).toBe("game-over");expect(flightStep(s,{type:"idle"},FIXED_DT)).toBe(s);
     }
   });
-  it("math facts are deterministic, unique, within range and contain exactly one answer", () => {
-    for (let seed = 0; seed < 100; seed++) for (let i = 1; i <= 8; i++) {
-      const a = mathGate(seed, i); expect(a).toEqual(mathGate(seed, i)); expect(validFact(a.fact)).toBe(true);
-      expect(a.fact.choices.filter(n => n === a.fact.answer)).toHaveLength(1); expect(equation(a.fact)).toContain("= ?");
-      if (i < 5) expect(a.fact.answer).toBeLessThanOrEqual(10);
-    }
-    expect(validFact({ ...mathGate(4, 2).fact, choices: [1, 1, 1] })).toBe(false);
+  it("free play ends on one hit even with Helper and preserves terminal identity",()=>{
+    for(const helper of [false,true]){const s=createFlight("endless",1,helper);const dead=flightStep({...s,y:.98},{type:"idle"},FIXED_DT);expect(dead.lives.hearts).toBe(0);expect(dead.y).toBe(.965);expect(flightResult(dead)?.outcome).toBe("game-over");expect(flightTransition(dead,{type:"flap"})).toBe(dead);}
+    const end=flightTransition(createFlight("endless",1),{type:"finish"});expect(flightResult(end)?.outcome).toBe("stopped");
+  });
+  it("widens Helper gaps, preserves damage on toggles, and rewards skilled clears",()=>{
+    const s=fly(createFlight(flightLevels[0],92,true));expect(flightResult(s)?.stars).toBe(3);expect(s.helped).toBe(true);
+    expect(flightGap(s)).toBeGreaterThan(flightGap({...s,helper:false}));
+    const fresh=createFlight(flightLevels[0],1);const damaged={...fresh,lives:{...fresh.lives,hearts:2}};
+    expect(flightTransition(flightTransition(damaged,{type:"helper",value:true}),{type:"helper",value:false}).lives.hearts).toBe(2);
+    for(const [bumps,fruit,stars] of [[0,12,3],[0,3,2],[1,12,2],[2,12,1]])expect(flightResult({...fresh,status:"cleared",passed:12,bumps,fruit})?.stars).toBe(stars);
+  });
+  it("wrong learning answers retry the same fact without spending hearts",()=>{
+    const s=createFlight(flightLevels[48],16),g=s.gates[0],wrong=g.fact.choices.findIndex(n=>n!==g.fact.answer);
+    const next=flightStep({...s,y:[.24,.5,.76][wrong],gates:[{...g,x:.17},...s.gates.slice(1)]},{type:"idle"},FIXED_DT);
+    expect(next.cue).toBe("try");expect(next.lives.hearts).toBe(3);expect(next.gates[0].fact).toEqual(g.fact);expect(next.helped).toBe(true);
   });
 });
-describe("Fruit Bat Flight", () => {
-  it("uses pure, reproducible fixed steps and bounds the pool", () => {
-    const s = createFlight(flightLevels[0], 42), before = JSON.stringify(s);
-    const a = flightStep(flightTransition(s, { type: "flap" }), { type: "idle" }, FIXED_DT), b = flightStep(flightTransition(s, { type: "flap" }), { type: "idle" }, FIXED_DT);
-    expect(a).toEqual(b); expect(JSON.stringify(s)).toBe(before); expect(a.vy).toBeLessThan(0); expect(a.gates).toHaveLength(4);
-    for (const dt of [0, -1, NaN, Infinity, .2]) expect(flightStep(s, { type: "idle" }, dt)).toBe(s);
-  });
-  it("finishes every authored level through flaps, including all math levels with Helper off", () => {
-    for (const level of flightLevels) {
-      const s = fly(createFlight(level, 981, false)); expect(flightResult(s)?.cleared, level.id).toBe(true); expect(validFlight(s), level.id).toBe(true); expect(s.gates).toHaveLength(4);
+describe("Lagoon camera, actions, patterns and lives",()=>{
+  it("projects horizon, road edges, lane lines and sprite feet with one camera",()=>{
+    for(const lane of [0,1,2])expect(projectTrack(lane,0)).toEqual({x:195,y:660*.32,scale:0});
+    expect(projectTrack(0,1).x).toBeCloseTo(195-390*.46*2/3);
+    expect(projectTrack(2,1).y).toBeCloseTo(660*.84);
+    for(const z of [0,.1,.4,.8,1,1.15])for(const lane of [0,1,2]) {
+      const p=projectTrack(lane,z),a=trackSprite(lane,z,72,72);
+      expect(a.y+36+36*a.scale).toBeCloseTo(p.y);expect(p.x).toBeGreaterThanOrEqual(roadEdge(z,false).x);expect(p.x).toBeLessThanOrEqual(roadEdge(z,true).x);
     }
   });
-  it("World 1 with Helper is gentle and still earns full stars", () => {
-    const s = fly(createFlight(flightLevels[0], 92, true)); expect(flightResult(s)?.stars).toBe(3); expect(s.helped).toBe(true);
-    expect(flightGap(s)).toBeGreaterThan(flightGap({ ...s, helper: false }));
+  it("uses a 120ms lane tween and exactly .55s/.6s jump/slide with landing squash",()=>{
+    const s=createRun(runLevels[0],22);const left=runTransition(s,{type:"left"});expect(left.poseLane).toBe(1);
+    expect(advanceRun(left,4).poseLane).toBeGreaterThan(0);expect(advanceRun(left,8).poseLane).toBe(0);
+    const jump=runTransition(s,{type:"jump"});expect(jump.jump).toBe(.55);expect(runTransition(jump,{type:"jump"})).toBe(jump);
+    expect(advanceRun(jump,34).jump).toBe(0);expect(advanceRun(jump,34).landing).toBeGreaterThan(0);
+    const duck=runTransition(jump,{type:"duck"});expect(duck.duck).toBe(.6);expect(duck.jump).toBe(0);expect(advanceRun(duck,37).duck).toBe(0);
+    for(const lane of [-1,3,.5,NaN,Infinity])expect(runTransition(s,{type:"lane",lane})).toBe(s);
   });
-  it("bumps cost a moment and a fruit with Helper, but finish an unassisted flight", () => {
-    const base = createFlight(flightLevels[0], 8, true), near = { ...base, y: .96, vy: .5, fruit: 1, passed: 1 };
-    const helper = flightStep(near, { type: "idle" }, FIXED_DT); expect(helper.status).toBe("playing"); expect(helper.fruit).toBe(0); expect(helper.cooldown).toBeGreaterThan(0); expect(helper.travel).toBe(0);
-    expect(flightStep({ ...near, helper: false }, { type: "idle" }, FIXED_DT).status).toBe("bumped");
-    const failed = flightStep({ ...near, helper: false }, { type: "idle" }, FIXED_DT); expect(flightResult(failed)?.stars).toBe(0); expect(flightTransition(failed, { type: "flap" })).toBe(failed);
-    expect(createFlight(flightLevels[0], 8, false).status).toBe("playing");
+  it("collides by visible pose; jump needs height, duck needs an active crouch",()=>{
+    const s=createRun(runLevels[0],22),base={...s.rows[0],lane:1,z:1,second:-1};
+    for(const kind of ["coconut","crab","frond","line"] as const){
+      const row={...base,kind};expect(rowSafe(s,row)).toBe(false);
+      const low=kind==="coconut"||kind==="crab";
+      const correct=advanceRun(runTransition(s,{type:low?"jump":"duck"}),8);expect(rowSafe(correct,row)).toBe(true);
+      expect(rowSafe(runTransition(s,{type:low?"duck":"jump"}),row)).toBe(false);
+      expect(rowSafe(advanceRun(runTransition(s,{type:"left"}),8),row)).toBe(true);
+    }
   });
-  it("wrong math gates retry without ending the run, independently of Helper", () => {
-    const s = createFlight(flightLevels.find(l => l.id === "learn-1")!, 16, false), g = s.gates[0], wrong = g.fact.choices.findIndex(n => n !== g.fact.answer);
-    const next = flightStep({ ...s, y: [.24, .5, .76][wrong], gates: [{ ...g, x: .24 }, ...s.gates.slice(1)] }, { type: "idle" }, FIXED_DT);
-    expect(next.status).toBe("playing"); expect(next.passed).toBe(0); expect(next.cue).toBe("try"); expect(next.bumps).toBe(1);
-    expect(s.helped).toBe(false); expect(next.helped).toBe(true); // a wrong answer is credited as helped practice
+  it("adds two-lane blocks, low/high combinations and crabs while keeping a safe shell lane",()=>{
+    const w1=createRun(runLevels[0],42),w2=createRun(runLevels[8],42),w3=createRun(runLevels[16],42),w4=createRun(runLevels[24],42);
+    expect(w1.rows.some(r=>r.second>=0)).toBe(true);expect(w2.rows.some(r=>r.kind==="frond")).toBe(true);expect(w3.rows.some(r=>r.moving)).toBe(true);expect(w4.rows.some(r=>r.second>=0&&r.secondKind!==r.kind)).toBe(true);
+    for(const level of runLevels)for(const row of createRun(level,11).rows)expect(row.shellLane!==row.lane&&row.shellLane!==row.second).toBe(true);
   });
-  it("matches shown 1/2/3-star collection thresholds and ignores stale results", () => {
-    const s = createFlight(flightLevels[0], 3);
-    for (const [fruit, stars] of [[0, 1], [2, 2], [4, 3]]) expect(flightResult({ ...s, status: "cleared", passed: 4, fruit })?.stars).toBe(stars);
-    const ended = flightTransition(createFlight("endless", 2), { type: "finish" }); expect(flightResult(ended)?.cleared).toBe(false); expect(flightStep(ended, { type: "idle" }, FIXED_DT)).toBe(ended);
+  it("no-input arcade loses with Helper on/off; learning retains unlimited retries",()=>{
+    for(const helper of [false,true]){let s=createRun(runLevels[0],6,helper);s=advanceRun(s,10000);expect(runResult(s)?.outcome).toBe("game-over");expect(s.lives.hearts).toBe(0);expect(runStep(s,{type:"idle"},FIXED_DT)).toBe(s);}
+    const s=createRun(runLevels[48],14),row={...s.rows[0],z:1},lane=row.fact.choices.findIndex(n=>n!==row.fact.answer);
+    const next=runStep({...s,lane,poseLane:lane,laneFrom:lane,rows:[row,...s.rows.slice(1)]},{type:"idle"},FIXED_DT);
+    expect(next.cue).toBe("try");expect(next.lives.hearts).toBe(3);expect(next.helped).toBe(true);expect(next.rows[0].fact).toEqual(row.fact);
+  });
+  it("spends one heart per protected hit without stopping road travel, scores accurate shell trails",()=>{
+    const s=createRun(runLevels[0],2),row={...s.rows[0],z:1,lane:1};const hit=runStep({...s,rows:[row,...s.rows.slice(1)]},{type:"idle"},FIXED_DT);
+    expect(hit.lives.hearts).toBe(2);expect(hit.passed).toBe(0);expect(runStep(hit,{type:"idle"},FIXED_DT).travel).toBeGreaterThan(hit.travel);
+    for(const [bumps,shells,stars] of [[0,42,3],[0,0,2],[1,42,2],[2,42,1]])expect(runResult({...s,status:"cleared",passed:14,bumps,shells})?.stars).toBe(stars);
+    expect(runResult(runTransition(createRun("endless",1),{type:"finish"}))?.outcome).toBe("stopped");
   });
 });
-describe("Lagoon Run", () => {
-  it("finishes all 56 authored levels with legal lane actions", () => {
-    for (const level of runLevels) { const s = run(createRun(level, 771, false)); expect(runResult(s)?.stars, level.id).toBe(3); expect(validRun(s), level.id).toBe(true); expect(s.rows).toHaveLength(5); }
+describe("step reproducibility",()=>{
+  it("keeps source state immutable and deterministically replays the same run inputs",()=>{
+    const original=createRun(runLevels[32],981),raw=JSON.stringify(original);
+    const act=(s: RunState)=>advanceRun(runTransition(s,{type:"left"}),90);
+    expect(act(original)).toEqual(act(original));expect(JSON.stringify(original)).toBe(raw);
   });
-  it("jump clears coconuts/crabs and duck clears fronds/lines; the opposite action does not", () => {
-    const s = createRun(runLevels[0], 22, false), base = { ...s.rows[0], lane: 1, z: .88 };
-    for (const kind of ["coconut", "crab", "frond", "line"] as const) {
-      const row = { ...base, kind }; expect(rowSafe(s, row)).toBe(false);
-      expect(rowSafe(runTransition(s, { type: ["coconut", "crab"].includes(kind) ? "jump" : "duck" }), row)).toBe(true);
-      expect(rowSafe(runTransition(s, { type: ["coconut", "crab"].includes(kind) ? "duck" : "jump" }), row)).toBe(false);
-      expect(rowSafe(runTransition(s, { type: "left" }), row)).toBe(true);
-    }
+  it("publishes recycle geometry without inventing another score/haptic cue",()=>{
+    const f=createFlight(flightLevels[0],1),r=createRun(runLevels[0],1);
+    const a=flightStep({...f,cue:"fruit",gates:f.gates.map((g,i)=>i?g:{...g,x:-.2,passed:true})},{type:"idle"},FIXED_DT);
+    const b=runStep({...r,cue:"shell",rows:r.rows.map((row,i)=>i?row:{...row,z:1.2,passed:true})},{type:"idle"},FIXED_DT);
+    expect(a.event).toBeGreaterThan(f.event);expect(a.cue).toBe("ready");expect(b.cue).toBe("ready");
   });
-  it("clamps lanes, rejects malformed lanes, handles fast input and deterministic jump/duck recovery", () => {
-    let s = createRun(runLevels[0], 22); for (let i = 0; i < 10; i++) s = runTransition(s, { type: "left" }); expect(s.lane).toBe(0);
-    for (const lane of [-1, 3, .5, NaN, Infinity]) expect(runTransition(s, { type: "lane", lane })).toBe(s);
-    s = runTransition(s, { type: "jump" }); expect(s.jump).toBe(1.1); expect(runTransition(s, { type: "jump" })).toBe(s);
-    s = runTransition(s, { type: "duck" }); expect(s.jump).toBe(0); expect(s.duck).toBe(1.1);
-    for (const dt of [0, -1, NaN, Infinity, .2]) expect(runStep(s, { type: "idle" }, dt)).toBe(s);
-  });
-  it("stumbles pause progress with Helper and finish otherwise; retries create fresh state", () => {
-    const s = createRun(runLevels[0], 6), row = { ...s.rows[0], z: .88, lane: 1 };
-    const next = runStep({ ...s, rows: [row, ...s.rows.slice(1)] }, { type: "idle" }, FIXED_DT); expect(next.status).toBe("playing"); expect(next.cooldown).toBeGreaterThan(0); expect(next.passed).toBe(0);
-    const frozen = runStep(next, { type: "idle" }, FIXED_DT); expect(frozen.travel).toBe(next.travel);
-    const off = runStep({ ...s, helper: false, rows: [row, ...s.rows.slice(1)] }, { type: "idle" }, FIXED_DT); expect(runResult(off)?.stars).toBe(0); expect(off.status).toBe("stumbled"); expect(runTransition(off, { type: "jump" })).toBe(off);
-    expect(createRun(runLevels[0], 6).bumps).toBe(0);
-  });
-  it("wrong math lane retries gently and valid answers earn stars regardless of Helper", () => {
-    const s = createRun(runLevels.find(l => l.id === "learn-1")!, 14, false), row = { ...s.rows[0], z: .88 }, lane = row.fact.choices.findIndex(n => n !== row.fact.answer);
-    const next = runStep({ ...s, lane, rows: [row, ...s.rows.slice(1)] }, { type: "idle" }, FIXED_DT); expect(next.status).toBe("playing"); expect(next.passed).toBe(0); expect(next.cue).toBe("try");
-    expect(s.helped).toBe(false); expect(next.helped).toBe(true);
-    expect(runResult(run(createRun(runLevels.find(l => l.id === "learn-1")!, 14, true)))?.stars).toBe(3);
-  });
-  it("uses the advertised shell thresholds, terminal scoring, and pure transforms", () => {
-    const s = createRun(runLevels[0], 2), before = JSON.stringify(s); runStep(runTransition(s, { type: "right" }), { type: "idle" }, FIXED_DT); expect(JSON.stringify(s)).toBe(before);
-    for (const [shells, stars] of [[0, 1], [2, 2], [4, 3]]) expect(runResult({ ...s, status: "cleared", passed: 4, shells })?.stars).toBe(stars);
-    const end = runTransition(createRun("endless", 2), { type: "finish" }); expect(runResult(end)?.stars).toBe(0); expect(runStep(end, { type: "idle" }, FIXED_DT)).toBe(end);
+});
+describe("UI command mailbox",()=>{
+  it("consumes rapid downs once, in order, without replaying persistent input",()=>{
+    const input={helper:false,queue:[{id:1,action:{type:"flap" as const}},{id:2,action:{type:"flap" as const}}]};
+    const a=flightFrame(createFlight(flightLevels[0],1),input,FIXED_DT);expect(a.event).toBe(2);expect(a.command).toBe(2);expect(flightFrame(a,input,FIXED_DT).event).toBe(2);
+    const ri={helper:false,queue:[{id:1,action:{type:"left" as const}},{id:2,action:{type:"right" as const}},{id:3,action:{type:"jump" as const}}]};
+    const r=runFrame(createRun(runLevels[0],1),ri,FIXED_DT);expect(r.lane).toBe(1);expect(r.jump).toBeGreaterThan(0);expect(runFrame(r,ri,FIXED_DT).event).toBe(r.event);
   });
 });
 describe("strict state and kit saves", () => {

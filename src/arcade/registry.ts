@@ -30,9 +30,9 @@ export const flightWorlds: readonly ArcadeWorld[] = [
   { id: "w1", name: "Sunset Forest", detail: "First flutter", stars: 0 },
   { id: "w2", name: "Moonlit Palms", detail: "Follow the moon", stars: 12 },
   { id: "w3", name: "Firefly Grove", detail: "Glow into the breeze", stars: 30 },
-  { id: "w4", name: "Trade Wind Ridge", detail: "Wind bends the path between the palms.", stars: 50, palette: ["#264E65", "#6DADB0", "#F2D99B"] },
-  { id: "w5", name: "Rainforest Falls", detail: "Moving gaps follow the falling water.", stars: 75, palette: ["#4B426E", "#AA8FB6", "#F4C7A4"] },
-  { id: "w6", name: "Dawn Canopy", detail: "Weave through paired palms at sunrise.", stars: 100, palette: ["#704C45", "#D89D7C", "#FFE5A0"] },
+  { id: "w4", name: "Trade Wind Ridge", detail: "Gusts push you up and down between the palms.", stars: 50, palette: ["#264E65", "#6DADB0", "#F2D99B"] },
+  { id: "w5", name: "Rainforest Falls", detail: "Openings breathe and slide with the falling water.", stars: 75, palette: ["#4B426E", "#AA8FB6", "#F4C7A4"] },
+  { id: "w6", name: "Dawn Canopy", detail: "The tightest openings, with a pulsing tailwind.", stars: 100, palette: ["#704C45", "#D89D7C", "#FFE5A0"] },
   { id: "learn", name: "Number Canopy", detail: "Fly through the answer", stars: 0, learning: true },
 ];
 export const runWorlds: readonly ArcadeWorld[] = [

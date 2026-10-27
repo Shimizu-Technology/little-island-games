@@ -3,10 +3,10 @@ import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 
 import type { OutfitId } from "../../progress";
 import type { ScrollGame } from "./content";
 export const palettes = {
-  flight: [["#42215F", "#E28A83", "#203D51", "#FEE1A0"], ["#0C173A", "#384E7E", "#152C46", "#AFEBE3"], ["#142D44", "#487C82", "#103A43", "#EAFFA6"], ["#252753", "#8C80BD", "#203C60", "#FFE9A0"]],
-  run: [["#72CDE0", "#D1F1E8", "#148D9C", "#FFE0A3"], ["#7064B5", "#F9C49C", "#297785", "#FAD49B"], ["#BD668E", "#FAC693", "#496D91", "#F4D49A"], ["#5A7CA2", "#C7E4D9", "#278798", "#FFE9B4"]],
+  flight: [["#42215F", "#E28A83", "#203D51", "#FEE1A0"], ["#0C173A", "#384E7E", "#152C46", "#AFEBE3"], ["#142D44", "#487C82", "#103A43", "#EAFFA6"], ["#264E65", "#6DADB0", "#1B4B5C", "#F2D99B"], ["#4B426E", "#AA8FB6", "#263A54", "#F4C7A4"], ["#704C45", "#D89D7C", "#3C646B", "#FFE5A0"], ["#252753", "#8C80BD", "#203C60", "#FFE9A0"]],
+  run: [["#72CDE0", "#D1F1E8", "#148D9C", "#FFE0A3"], ["#7064B5", "#F9C49C", "#297785", "#FAD49B"], ["#BD668E", "#FAC693", "#496D91", "#F4D49A"], ["#83BFC0", "#D3E6CF", "#347F85", "#DCBD88"], ["#827AAB", "#DBCEE1", "#3E8992", "#DDB99A"], ["#D89689", "#F9D6A8", "#508B9B", "#FFE5A0"], ["#5A7CA2", "#C7E4D9", "#278798", "#FFE9B4"]],
 };
-export function palette(game: ScrollGame, world: string) { return palettes[game === "fruit-bat-flight" ? "flight" : "run"][world === "w2" ? 1 : world === "w3" ? 2 : world === "learn" ? 3 : 0]; }
+export function palette(game: ScrollGame, world: string) { return palettes[game === "fruit-bat-flight" ? "flight" : "run"][world === "w2" ? 1 : world === "w3" ? 2 : world === "w4" ? 3 : world === "w5" ? 4 : world === "w6" ? 5 : world === "learn" ? 6 : 0]; }
 const star = "M0-13L4-4L14-3L7 4L9 14L0 9L-9 14L-7 4L-14-3L-4-4Z";
 function Outfit({ outfit, bat }: { outfit: OutfitId; bat: boolean }) {
   return outfit === "sunhat" ? <G><Ellipse cx={80} cy={bat ? 49 : 31} rx={29} ry={7} fill="#FFDA77" stroke="#794B3C" strokeWidth={3}/><Path d={bat ? "M60 46Q60 19 80 24Q101 20 101 46Z" : "M59 28Q60 4 80 8Q100 4 101 28Z"} fill="#F5BC5E" stroke="#794B3C" strokeWidth={3}/></G> : outfit === "explorer" ? <G><Rect x={56} y={bat ? 57 : 35} width={48} height={18} rx={7} fill="#92F3E4" stroke="#234458" strokeWidth={4}/><Path d={bat ? "M105 68H115V45" : "M105 46H115V23"} stroke="#FF976B" strokeWidth={6} fill="none"/></G> : outfit === "starlight" ? <G fill="#FFF19E" stroke="#9F6D56" strokeWidth={1}><Path d={star} transform={`translate(80 ${bat ? 31 : 16}) scale(.7)`}/><Path d={star} transform="translate(124 76) scale(.45)"/><Path d={star} transform="translate(33 106) scale(.35)"/></G> : null;
