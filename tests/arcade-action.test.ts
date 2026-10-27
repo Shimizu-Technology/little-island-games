@@ -51,7 +51,7 @@ function beachPilot(initial: BeachState) {
   return s;
 }
 describe("Palm Patrol", () => {
-  it("provides 32 canonical levels, visible goals, world bosses and a gentle speed curve", () => {
+  it("provides 56 canonical levels, visible goals, world bosses and a gentle speed curve", () => {
     expect(palmLevels.map((l) => l.id)).toEqual(allLevelIds);
     expect(palmLevel("w1-1").speed).toBeLessThan(palmLevel("w3-1").speed);
     for (const l of palmLevels) {
@@ -153,7 +153,7 @@ describe("Palm Patrol", () => {
   });
 });
 describe("Beach Ball", () => {
-  it("has 32 canonical levels, wind, turtle, two balls, and skip-count learning", () => {
+  it("has 56 canonical levels, wind, turtle, two balls, and skip-count learning", () => {
     expect(beachLevels.map((l) => l.id)).toEqual(allLevelIds);
     for (const level of beachLevels) {
       expect(validBeach(createBeach(level, 15))).toBe(true);

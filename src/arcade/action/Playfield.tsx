@@ -1,3 +1,4 @@
+import { PressControl } from "../Input";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Platform, View, type GestureResponderEvent, type ViewStyle } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
@@ -346,14 +347,14 @@ export function PalmBoard({
         </Text>
       )}
       <View style={{ position: "absolute", bottom: debug ? 24 : 12, right: 14 }}>
-        <Button
-          label="Toss coconut husk"
+        <PressControl
+          accessibilityLabel="Toss coconut husk"
           disabled={!active}
-          onPress={() => dispatch({ type: "toss" })}
+          repeat={{ das: 180, arr: 120 }} onPress={() => dispatch({ type: "toss" })}
           style={{ backgroundColor: "#FFE49D", minWidth: 88, borderWidth: 3, borderColor: "#764E2D" }}
         >
           <Heading style={{ color: "#62412C", fontSize: 18 }}>Toss ↑</Heading>
-        </Button>
+        </PressControl>
       </View>
       {s.level === "endless" && (
         <View style={{ position: "absolute", bottom: 24, left: 12 }}>

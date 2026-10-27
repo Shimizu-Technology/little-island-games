@@ -1,5 +1,7 @@
 # Island Arcade kit
 
+Current contract: [Arcade feel v2](ARCADE_FEEL.md). The feel v2 API section below supersedes the historical three-world, default-Helper and 10 Hz-only notes.
+
 ## Scope and acceptance
 
 27 October 2026; branch `feat/arcade-kit`, base `0fbd8af` on `origin/feat/island-arcade`. Sources: `ISLAND_ARCADE.md`, `PRD.md`, `LEARNING_GROWTH.md`, the W1 brief, current Store/validation/practice/learner engines. Private offline family play, primarily a seven-year-old and her family. No accounts, network gameplay, currency, pressure to return, or store publication. Preserve version-1 saves and recovery originals. Real-time rounds restart after termination; only validated earned progress is saved per active learner. Reading is untimed.
@@ -17,7 +19,7 @@ SDK 57 setup checked before implementation: [Expo Reanimated](https://docs.expo.
 
 ### Measured decision
 
-Choose **Reanimated-driven views with static SVG sprites**. Use JS pure fixed-step rules and publish the small pose array to shared values; `ArcadeSprite` owns only transform/opacity. HUD snapshots are limited to 10 Hz. Turn-based boards render only on actions. Do not copy the stress harness's React-state baseline into a real-time game.
+Choose **Reanimated-driven views with static SVG sprites**. Use JS pure fixed-step rules and publish the small pose array to shared values; `ArcadeSprite` owns only transform/opacity. Ordinary HUD snapshots are limited to 10 Hz; event, score and terminal edges publish immediately. Turn-based boards render only on actions. Do not copy the stress harness's React-state baseline into a real-time game.
 
 The desktop comparison showed no meaningful scheduling advantage; both candidates met the scheduling target. The chosen pipeline lets later games animate without reconciling their art tree every frame and adds no wasm loader/cache lifecycle. Skia was evaluated from its SDK/web setup, not installed or benchmarked. Reconsider it if real hardware profiling identifies a drawing bottleneck.
 
@@ -36,13 +38,13 @@ Receipts outside Git: `little-island-games-artifacts/island-arcade/arcade-kit/sp
 
 `src/arcade/index.ts` exports only pure types, registry and progress functions. Save validation can import it without loading React Native. UI, audio, loop and renderer modules have direct paths.
 
-- `types.ts`: reserved IDs for all nine arcade games; `ArcadeEngine<State, Input, Level>` has `create`, action `reduce`, optional fixed-step `step`, `result`, and development-state `validate`. Level IDs are `w1-1`…`w3-8`, `learn-1`…`learn-8`. Every level has three visible goals. Add further levels by updating the bounded ID validator and corresponding tests together.
-- `registry.ts`: finished game descriptors, color/surface, hero, learning subject, two-player capability and four worlds. Unbuilt games have reserved IDs but no visible cards.
+- `types.ts`: reserved IDs for all nine arcade games; `ArcadeEngine<State, Input, Level>` has `create`, action `reduce`, optional fixed-step `step`, `result`, and development-state `validate`. Level IDs are `w1-1`…`w6-8`, `learn-1`…`learn-8` (56 per game). Every level has three visible goals. Add further levels by updating the bounded ID validator and corresponding tests together.
+- `registry.ts`: finished game descriptors, color/surface, hero, learning subject, two-player capability and seven worlds (six arcade worlds plus learning).
 - `clock.ts`: `advanceClock` takes elapsed seconds and returns an integer step count with `FIXED_DT = 1/60`; clamps a frame to 100 ms (at most six steps). Invalid elapsed time does nothing. `snapDrop` converts a first-cell-center pointer into a cell; `swipeDirection` returns four directions after a distance threshold. Use the same reducer for taps and snapped drops.
-- `loop.tsx`: `useArcadeForeground` combines Router focus, AppState and browser visibility. `useArcadeLoop` keeps deterministic simulation in a ref, calls an optional `onFrame(state)` to publish shared poses, emits 10 Hz HUD snapshots, and reports fps/p95/max/clamped time. Passing `active=false` for pause/sheets cancels its frame and discards the clock remainder. `useArcadeReducer` gives turn-based games synchronous ownership of queued taps. Never save a real-time state. Navigation/termination restarts its round.
+- `loop.tsx`: `useArcadeForeground` combines Router focus, AppState and browser visibility. `useArcadeLoop` keeps deterministic simulation in a ref, calls an optional `onFrame(state)` to publish shared poses, emits immediate event snapshots plus 10 Hz ordinary HUD snapshots, and reports fps/p95/max/clamped time. Passing `active=false` for pause/sheets cancels its frame and discards the clock remainder. `useArcadeReducer` gives turn-based games synchronous ownership of queued taps. Never save a real-time state. Navigation/termination restarts its round.
 - `Sprite.tsx`: `ArcadeSprite` consumes one `SharedValue<SpritePose[]>` and an index. Keep children static SVG; set only x/y/angle/scale/opacity. Gameplay movement remains with Reduce Motion; decorative demonstrations/celebrations honor the existing preference.
 - `ArcadeScreen.tsx`: shared lobby/frame, level start/goals, pause, Helper, teaching sheet, results, next/replay/map, collections, settings and a reminder between results. The game view receives `active`, Helper and a result callback. Own the round by epoch/learner/round, and call the result callback once.
-- `progress.ts`: `arcadeTransition`, `validArcade`, learner/game selectors and derived gates. World 2 opens at 12 game stars; World 3 at 30; learning starts open. Later levels require the preceding star, unless grown-up unlock-all is set. Clear all eight World 1 levels for free play. Outfits open at 0/12/30/60 stars; Helper never changes thresholds. Best scores are local, five remembered names per game. No currency or time-based unlocking.
+- `progress.ts`: `arcadeTransition`, `validArcade`, learner/game selectors and derived gates. World 2 opens at 12 game stars; World 3 at 30, World 4 at 50, World 5 at 75, World 6 at 100; learning starts open. Later levels require the preceding star, unless grown-up unlock-all is set. Clear all eight World 1 levels for free play. Outfits open at 0/12/30/60 stars; Helper never changes thresholds. Best scores are local, five remembered names per game. No currency or time-based unlocking.
 - `saveAction.ts` / Store: `store.arcade(action, {epoch, learner})` returns whether the action was accepted. It checks current learner and restore epoch, uses the existing recovery/persistence queue, and atomically consumes a chest with its sticker and existing practice/learner notes. Round tokens prevent duplicate result/reward credit. New `save.arcade` is optional, versioned and bounded; the outer save version stays 1. Unknown fields/IDs, inconsistent world/outfit totals, invalid scores and orphan owners reject at the existing parse/recovery boundary. Original corrupt data is preserved by the unchanged recovery path.
 - `Chest.tsx`: one question from `createPracticeRound`, answered through `practiceTransition`. `PracticePanel` has a fixed three-question contract, so this adapter reuses its engine and math/reading pictures rather than silently changing it. Wrong answers offer a hint and retry, Help marks assisted, Skip costs nothing. The offered sticker is visible before solving; collection and practice notes are one accepted write. The active learner's enabled practice settings win; otherwise the game's natural subject is used.
 - `Collection.tsx`: 16 original island stickers and four hero outfits. `Art.tsx` contains original vector art; color always has shape/text companions.
@@ -158,3 +160,59 @@ The `arcadePlays` table is exhaustive over `ArcadeId`. Each Board adapts the exi
 `LevelMap` is the sole map. Each world keeps the winding path, stable touch targets, NEXT marker, stars, padlocked stones, waiting sticker chest and free-play gate. Worlds use two columns on landscape tablets and one on phones. All nine lobby cards use the same hero size, card and stable shelf order.
 
 When adding a game, register its descriptor and play entry, reuse this frame, and extend `tests/arcade-plays.test.ts` if its learning rules need a specific invariant. Never copy the map/start/results/chest/pause lifecycle into a new screen.
+
+## Feel v2 shared foundation · 28 October 2026
+
+Source orientation: integration base `0570628`, `ARCADE_FEEL.md`, `ISLAND_ARCADE.md`, `PRD.md`, `LEARNING_GROWTH.md`, the active Store/validation boundary and all nine pure engines. Leon's 1.8.0 (14) iPhone feedback is the product evidence; no matching additional Brain Dump project note was found. This slice supplies shared infrastructure and Shell Song reference wiring. Individual game workers own final physics, star curves, new-world twists and native performance evidence. Private offline family use and untimed reading remain the scope. No account, service, audio generation, version bump or public release is added.
+
+Acceptance: retain valid old progress; enumerate 56 valid levels in all nine games; migrate Helper once after validation; show finite lives and a working loss/retry flow in Shell Song; activate game controls on touch-down and swipes during movement; supply both fixed-step loop paths and a reproducible benchmark. Execute the shared map and reference game journeys with isolated touch Chromium fixtures at 390×844 and 1024×768. Native Release and physical-family acceptance are separate; the optional simulator run is recorded explicitly in the slice receipt.
+
+### Levels and validated migration
+
+`worldIds` orders `w1`…`w6`, then `learn`. Every world has eight IDs. Star gates are 0/12/30/50/75/100; learning stays open. IDs from earlier saves do not change. The new registry descriptions name the twists for each game; their three-color palettes tint the map illustrations. The map keeps a scrolling single column on phones and two columns on wide tablets. All nine level generators include W4–W6. Those curves are **provisional**, bounded by the existing board and sprite capacities; the per-game workers must implement their described twists and tune them before release.
+
+`ArcadeLearner.helperDefaultV2?: true` is strict: absent is legacy; only literal `true` marks migration complete. `parseSave` validates the original save and ownership first, then calls pure `migrateArcade`. Legacy world-gate lists are accepted only as the exact original-world derivation; migration recomputes the extended gates from the unchanged stars. It copies the learner/gates, turns Helper off, adds the marker, and retains stars, bests, rounds, chest, stickers and outfits. It never mutates the parsed original or recovery bytes. Both fresh and migrated learners default off. Once marked, an explicit Helper-on choice survives reload/restore. Absent markers cannot distinguish a historically deliberate on choice from the old default; both migrate off once, as required by feel v2.
+
+### Lives, reactions and results
+
+`lives.ts` is native-free and worklet-safe. `createLives(helper, oneHit?)` starts at 3 hearts, 5 with Helper, or 1 for one-hit modes. `hitLives` spends one heart, increments `hit`, and starts 1.2 seconds of invulnerability; it ignores protected/terminal hits. `stepLives(lives, dt)` counts protection down only during active simulation. `configureLives` preserves damage when Helper changes; toggling cannot refill a depleted run. `validLives` rejects invented fields, non-finite timers and invalid counts. Hit calls must also perform the game's own respawn/knockback without advancing its progress.
+
+`HeartsHud({lives})` draws hearts and announces one labelled remaining count. Wrap the hero in `HitReaction({hit, onTone})` for a finite flash plus the existing bump tone/haptic. Reduce Motion substitutes a short opacity response for repeated blinking. The engine's invulnerability remains 1.2 seconds regardless of decoration. Invoke sound/haptics once on a hit edge, not on HUD ticks; do not duplicate the reaction sound in a board's tap handler.
+
+`ArcadeResult.outcome` can be `cleared`, `game-over`, or `stopped`. It is optional for source compatibility with older adapters; a false `cleared` without an outcome is treated as game over. The current engines explicitly identify voluntary free-play stopping. Only a clear may award stars/chests/learning credit. The shared frame shows **Game over**, score, best, **Try again** and **Map** on a loss. Try again directly mounts the same level with a fresh round token and seed, without reopening setup or teaching. Earned stars remain monotone; stickers/outfits stay intact. Bests now retain the highest score from any round, including a loss; the named family board still records only free-play results.
+
+Shell Song is the reference: wrong arcade notes spend hearts even with Helper, repeated taps during the protection window cannot spend another heart, zero hearts is terminal, and retry restores the round's full heart budget. Reading-world retries remain unlimited and untimed. A terminal engine must return the same state from subsequent ticks: continuously replacing it can keep cancelling delayed result effects. Losses report immediately; clears may keep their short celebration.
+
+### Touch-down and gesture helpers
+
+Import from `Input.tsx`:
+
+- `PressControl` has a familiar `onPress` callback but invokes it from `onPressIn`. Haptics fire on the initial down. `repeat` enables DAS 170 ms / ARR 50 ms; pass `{das, arr}` to override. Repeat stops on release, blur, disabling/pause or unmount. `onAccessibilityTap` handles native assistive activation; web keyboard activation uses the Pressable down path. Use `haptic={false}` when the action already produces a haptic.
+- `PlayButton` supplies the same timing for labelled gameplay actions. Menus, navigation, pause and free-play Finish remain release actions. Cargo left/right repeat; Palm toss can be held. Engine cooldowns remain authoritative.
+- `useSwipe(active, callback, threshold?, onTapDown?)` returns PanResponder handlers. It fires once as the move crosses the distance threshold, resets on the next touch and ignores inactive moves. Grid games and Lagoon Run use it. `PlayfieldTarget` provides a whole-board touch-down/optional hold target; Flight uses it.
+- `uiThreadDrag(point)` returns a native pan gesture writing `{x,y,down}` to a shared value. `multiTouchDrag(points)` tracks pointer IDs independently and clears them on release/cancellation; use it for a two-paddle court. Coordinates are local to the GestureDetector's view. Memoize gesture construction on its shared handles, set `.enabled(active)`, and use the engine's coordinate conversion/clamping. Pair it with `GestureDetector` and a non-collapsed native/Animated View.
+
+Installed `react-native-gesture-handler ~2.32.0` through `npx expo install` against Expo `~57.0.31`. The Router root in `src/app/_layout.tsx` wraps the providers/Stack in `GestureHandlerRootView` with `flex:1`. No manual iOS/Android edits. Sources checked: [SDK 57 installation](https://docs.expo.dev/versions/v57.0.0/sdk/gesture-handler/), [RNGH 2 root setup](https://docs.swmansion.com/react-native-gesture-handler/docs/2.x/fundamentals/installation/), [touch IDs](https://docs.swmansion.com/react-native-gesture-handler/docs/2.x/gestures/touch-events/).
+
+### Loop ownership and rendering
+
+`useArcadeLoop` remains the JS fixed-step option. In each rAF it compares `arcadeEvent` before/after stepping: `event`, `score`, `phase` and `status` edges trigger an immediate snapshot on that rAF, in addition to the 10 Hz ordinary HUD tick. Dispatch is synchronous and publishes poses/snapshot immediately. Increment an engine event for locks, clears, hits, pickups and note/glow changes. This removes the intentional 100 ms delay; React scheduling still governs actual presentation, so it is not a guarantee of physical same-frame paint.
+
+`uiLoop.ts` exports `useArcadeUiLoop({initial, input, step, result?, onFrame, onResult?, active})`. It uses Reanimated `useFrameCallback`, fixed 1/60 steps, the same 100 ms catch-up clamp and shared-value state/input. `step`, `result`, `onFrame`, and every function they call must be worklets with serializable data; `nextRandom`, `advanceClock` and the lives helpers are ready for that runtime. Do not pass JS refs, Store calls, native audio, React setters or imported non-worklet engines into the step. Gesture worklets write input/shared poses. A counter or buffered command input should be consumed once by the engine, rather than interpreting a persistent button flag as a new action every frame.
+
+Event/HUD snapshots and a terminal result cross through `runOnJS`; `onResult` runs once on JS. A result already queued when pause begins is retained and delivered on resume. Unmount discards queued delivery. Pause/background disables the frame callback and drops its clock remainder. Key the board by the shared frame's round token; resetting a round means remounting, not mutating an old hook's `initial` argument. The foreground/sheet rules still come from `ArcadeGameScreen`.
+
+For either path, keep a memoized sprite layer on stable shared handles plus primitive art props:
+
+```tsx
+const Sprites = memo(function Sprites({ poses, outfit }: Props) {
+  return <ArcadeSprite poses={poses} index={0} width={80} height={80}>
+    <MemoizedHero size={80} outfit={outfit}/>
+  </ArcadeSprite>;
+});
+// HUD receives snapshot; Sprites receives stable poses/outfit, never the snapshot.
+```
+
+Do not assume `memo(ArcadeSprite)` alone is enough when its parent creates a new `children` element every HUD tick. The existing main hero/object SVG components are memoized on primitive props; this slice also memoizes CargoCaptain/CargoCanoe and AmbientFriend. `LoopSpike` demonstrates a whole static sprite layer that stays unchanged while its sibling HUD receives event edges. Per-game rewrites should follow that layer pattern.
+
+`/arcade?spike=1` retains the earlier renderer experiment and adds **Run JS loop / Run UI loop**. Both use the production hooks, one worklet-safe engine, 60 static dots, four event edges per second, 2-second warmup and 20-second sampling. Wait for the renderer experiment to finish before collecting loop comparisons, run the paths sequentially, then press **Capture loop report**. Reports contain frame count/fps/p95/max/>25 ms intervals. They measure scheduling, not compositor/presented frames. The web UI path still runs on the browser thread; native worklet isolation and physical A12 performance require native evidence from the game workers. Slice gate results, QA receipts, benchmark numbers and limits are recorded outside Git in `island-arcade/feel-kit/` and summarized in the final implementation report.

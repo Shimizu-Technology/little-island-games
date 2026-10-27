@@ -8,7 +8,7 @@ const PLAYER_X = .24;
 export const flightLearning = (s: FlightState) => s.level !== "endless" && s.level.world === "learn";
 function newGate(s: FlightState, x: number): { seed: number; gate: PalmGate } {
   let [seed, n] = nextRandom(s.seed); const rank = s.level === "endless" ? 2 : s.level.rank;
-  const center = .5 + (n - .5) * (.12 + rank * .1);
+  const center = .5 + (n - .5) * (.12 + Math.min(2, rank) * .1);
   const fact = mathGate(seed, s.level === "endless" ? 8 : s.level.index); seed = fact.seed;
   return { seed, gate: { x, center, fruit: true, passed: false, fact: fact.fact } };
 }
@@ -84,7 +84,7 @@ export function flightStep(before: FlightState, _input: FlightInput, dt: number)
 export function flightResult(s: FlightState): ArcadeResult | null {
   if (s.status === "playing") return null;
   const cleared = s.status === "cleared", target = s.level === "endless" ? Infinity : s.level.target;
-  return { cleared, stars: cleared ? s.fruit >= target ? 3 : s.fruit >= Math.ceil(target * .5) ? 2 : 1 : 0, score: s.score, detail: `${s.passed} ${flightLearning(s) ? "answers" : "palms passed"} · ${s.fruit} glowing fruit` };
+  return { cleared, outcome: cleared ? "cleared" : s.status === "rest" ? "stopped" : "game-over", stars: cleared ? s.fruit >= target ? 3 : s.fruit >= Math.ceil(target * .5) ? 2 : 1 : 0, score: s.score, detail: `${s.passed} ${flightLearning(s) ? "answers" : "palms passed"} · ${s.fruit} glowing fruit` };
 }
 export function validFlight(v: unknown): v is FlightState {
   if (!record(v) || !canonicalLevel(v.level, flightLevels) || !uint(v.seed, 0xffffffff) || typeof v.helper !== "boolean" || typeof v.helped !== "boolean" || !finite(v.y, 0, 1) || !finite(v.vy, -1, 1) || !Array.isArray(v.gates) || v.gates.length !== 4) return false;

@@ -61,7 +61,7 @@ function railPath(s: RailState): Direction[] {
   return [];
 }
 describe("grid arcade content", () => {
-  it("has 32 tuned levels per game, three goals each, and no mutable shared state", () => {
+  it("has 56 provisional levels per game, three goals each, and no mutable shared state", () => {
     for (const levels of [railLevels, crabLevels]) {
       expect(levels.map((l) => l.id)).toEqual(allLevelIds);
       expect(levels.every((l) => l.goals.length === 3 && l.goals.every(Boolean))).toBe(true);

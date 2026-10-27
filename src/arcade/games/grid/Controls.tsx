@@ -1,9 +1,9 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { Animated, PanResponder, Platform, View, type ViewStyle } from "react-native";
-import { Copy, PressableScale } from "../../../components/ui";
+import { PressControl, useSwipe } from "../../Input";
+import React, { useEffect, useLayoutEffect, useRef } from "react";
+import { Animated, Platform, View, type ViewStyle } from "react-native";
+import { Copy } from "../../../components/ui";
 import { Text } from "../../../components/Text";
 import { nativeDriver, useReducedMotion } from "../../../components/motion";
-import { swipeDirection } from "../../clock";
 import { directions, type Direction } from "./rules";
 export function useGridInput(active: boolean, move: (d: Direction) => void) {
   const latest = useRef({ active, move });
@@ -31,20 +31,7 @@ export function useGridInput(active: boolean, move: (d: Direction) => void) {
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
   }, []);
-  const pan = useMemo(
-    () =>
-      // eslint-disable-next-line react-hooks/refs -- PanResponder stores callbacks and does not call them during render.
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => latest.current.active,
-        onMoveShouldSetPanResponder: (_, g) => latest.current.active && Math.hypot(g.dx, g.dy) > 12,
-        onPanResponderRelease: (_, g) => {
-          const d = swipeDirection(g.dx, g.dy, 16);
-          if (d && latest.current.active) latest.current.move(d);
-        },
-      }),
-    []
-  );
-  return pan.panHandlers;
+  return useSwipe(active, move, 16);
 }
 export function DirectionPad({
   active,
@@ -60,7 +47,7 @@ export function DirectionPad({
     <View style={{ alignItems: "center", gap: 5 }}>
       <View style={{ width: horizontal ? 218 : 178, height: horizontal ? 118 : 108, position: "relative" }}>
         {directions.map((d) => (
-          <PressableScale
+          <PressControl
             key={d}
             disabled={!active}
             accessibilityRole="button"
@@ -82,7 +69,7 @@ export function DirectionPad({
             }}
           >
             <Text style={{ fontSize: 31, fontWeight: "800", color: "#384F52", lineHeight: 36 }}>{icons[d]}</Text>
-          </PressableScale>
+          </PressControl>
         ))}
       </View>
       <Copy style={{ color: "#E6F1DF", fontSize: 12 }}>Swipe or tap · arrows on keyboard</Copy>

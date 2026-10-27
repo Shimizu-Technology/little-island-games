@@ -27,7 +27,7 @@ function run(initial: RunState): RunState {
   return s;
 }
 describe("scrolling arcade content", () => {
-  it("authors 32 levels per game, four worlds, clear targets and increasingly close gaps", () => {
+  it("authors 56 levels per game, seven worlds, clear targets and increasingly close gaps", () => {
     for (const levels of [flightLevels, runLevels]) {
       expect(levels.map(l => l.id)).toEqual(allLevelIds);
       for (const world of worldIds) expect(levels.filter(l => l.world === world)).toHaveLength(8);
@@ -69,7 +69,7 @@ describe("Fruit Bat Flight", () => {
     expect(createFlight(flightLevels[0], 8, false).status).toBe("playing");
   });
   it("wrong math gates retry without ending the run, independently of Helper", () => {
-    const s = createFlight(flightLevels[24], 16, false), g = s.gates[0], wrong = g.fact.choices.findIndex(n => n !== g.fact.answer);
+    const s = createFlight(flightLevels.find(l => l.id === "learn-1")!, 16, false), g = s.gates[0], wrong = g.fact.choices.findIndex(n => n !== g.fact.answer);
     const next = flightStep({ ...s, y: [.24, .5, .76][wrong], gates: [{ ...g, x: .24 }, ...s.gates.slice(1)] }, { type: "idle" }, FIXED_DT);
     expect(next.status).toBe("playing"); expect(next.passed).toBe(0); expect(next.cue).toBe("try"); expect(next.bumps).toBe(1);
     expect(s.helped).toBe(false); expect(next.helped).toBe(true); // a wrong answer is credited as helped practice
@@ -81,7 +81,7 @@ describe("Fruit Bat Flight", () => {
   });
 });
 describe("Lagoon Run", () => {
-  it("finishes all 32 authored levels with legal lane actions", () => {
+  it("finishes all 56 authored levels with legal lane actions", () => {
     for (const level of runLevels) { const s = run(createRun(level, 771, false)); expect(runResult(s)?.stars, level.id).toBe(3); expect(validRun(s), level.id).toBe(true); expect(s.rows).toHaveLength(5); }
   });
   it("jump clears coconuts/crabs and duck clears fronds/lines; the opposite action does not", () => {
@@ -108,10 +108,10 @@ describe("Lagoon Run", () => {
     expect(createRun(runLevels[0], 6).bumps).toBe(0);
   });
   it("wrong math lane retries gently and valid answers earn stars regardless of Helper", () => {
-    const s = createRun(runLevels[24], 14, false), row = { ...s.rows[0], z: .88 }, lane = row.fact.choices.findIndex(n => n !== row.fact.answer);
+    const s = createRun(runLevels.find(l => l.id === "learn-1")!, 14, false), row = { ...s.rows[0], z: .88 }, lane = row.fact.choices.findIndex(n => n !== row.fact.answer);
     const next = runStep({ ...s, lane, rows: [row, ...s.rows.slice(1)] }, { type: "idle" }, FIXED_DT); expect(next.status).toBe("playing"); expect(next.passed).toBe(0); expect(next.cue).toBe("try");
     expect(s.helped).toBe(false); expect(next.helped).toBe(true);
-    expect(runResult(run(createRun(runLevels[24], 14, true)))?.stars).toBe(3);
+    expect(runResult(run(createRun(runLevels.find(l => l.id === "learn-1")!, 14, true)))?.stars).toBe(3);
   });
   it("uses the advertised shell thresholds, terminal scoring, and pure transforms", () => {
     const s = createRun(runLevels[0], 2), before = JSON.stringify(s); runStep(runTransition(s, { type: "right" }), { type: "idle" }, FIXED_DT); expect(JSON.stringify(s)).toBe(before);
@@ -143,6 +143,6 @@ describe("strict state and kit saves", () => {
       expect(arcadeTransition(save, "family", { type: "finish", game, level: "w1-1", score: 999, stars: 3, round: game, name: "Family" })).toBe(save);
     }
     expect(save.people.kai).toBeUndefined(); const raw = JSON.parse(JSON.stringify(save)); raw.people.family.games["fruit-bat-flight"].running = true; expect(validArcade(raw)).toBe(false);
-    const bad = JSON.parse(JSON.stringify(save)); bad.people.family.games["lagoon-run"].stars["w4-1"] = 3; expect(validArcade(bad)).toBe(false);
+    const bad = JSON.parse(JSON.stringify(save)); bad.people.family.games["lagoon-run"].stars["w7-1"] = 3; expect(validArcade(bad)).toBe(false);
   });
 });

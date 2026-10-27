@@ -8,10 +8,10 @@ function delivery(s: CargoState, col: number) {
   return cargoTransition(s, { type: "drop" });
 }
 describe("Canoe Cargo deterministic rules", () => {
-  it("has 32 canonical levels, three visible goals, gentle opening, distinct board and reachable world targets", () => {
+  it("has 56 canonical levels, three visible goals, gentle opening, distinct board and reachable world targets", () => {
     expect([COLS, ROWS]).toEqual([9, 14]);
-    for (const world of ["w1", "w2", "w3", "learn"]) expect(cargoLevels.filter(l => l.world === world)).toHaveLength(8);
-    for (const level of cargoLevels) { expect(level.goals).toHaveLength(3); expect(new Set(level.goals).size).toBe(3); expect(level.fall).toBeGreaterThan(.4); expect(validCargo(createCargo(level, 45, true))).toBe(true); }
+    for (const world of ["w1", "w2", "w3", "w4", "w5", "w6", "learn"]) expect(cargoLevels.filter(l => l.world === world)).toHaveLength(8);
+    for (const level of cargoLevels) { expect(level.goals).toHaveLength(3); expect(new Set(level.goals).size).toBe(3); expect(level.fall).toBeGreaterThanOrEqual(.1); expect(validCargo(createCargo(level, 45, true))).toBe(true); }
     expect(cargoLevels[0].fall).toBeGreaterThan(cargoLevel("w3-8").fall * 3);
   });
   it("uses mixed seeded bundles after the introductory delivery instead of scripting every normal level", () => {

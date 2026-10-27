@@ -22,7 +22,7 @@ vi.mock("../src/arcade/action/Teaching", () => ({ Demo: () => null, actionInstru
 vi.mock("../src/arcade/action/Playfield", () => ({ BeachBoard: () => null, PalmBoard: () => null }));
 
 describe("one play table for the arcade", () => {
-  it("covers every registered game with all 32 level identities and registered speech", () => {
+  it("covers every registered game with all 56 level identities and registered speech", () => {
     expect(Object.keys(arcadePlays).sort()).toEqual([...arcadeIds].sort());
     for (const game of arcadeGames) {
       const play = arcadePlays[game.id];

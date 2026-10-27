@@ -13,11 +13,11 @@ export function mathGate(seed: number, index: number): { seed: number; fact: Mat
 export const equation = (f: MathGate) => `${f.a} ${f.subtract ? "−" : "+"} ${f.b} = ?`;
 export function levelsFor(game: ScrollGame): readonly ScrollLevel[] {
   return allLevelIds.map(id => {
-    const index = levelNumber(id), world = worldOf(id), rank = world === "w2" ? 1 : world === "w3" ? 2 : 0, learn = world === "learn";
+    const index = levelNumber(id), world = worldOf(id), rank = ({ w1: 0, w2: 1, w3: 2, w4: 3, w5: 4, w6: 5, learn: 0 })[world], learn = world === "learn";
     const target = learn ? 3 + Math.floor((index - 1) / 3) : 4 + rank * 2 + Math.floor((index - 1) / 2);
     const collectible = game === "fruit-bat-flight" ? "fruit" : "shells";
-    return { id, world, index, rank, target, speed: learn ? .105 : .155 + rank * .035 + (index - 1) * .004,
-      spacing: learn ? .6 : .61 - rank * .025, gap: Math.max(.33, .55 - rank * .065 - (index - 1) * .009), storm: world === "w3" && index >= 5,
+    return { id, world, index, rank, target, speed: learn ? .105 : .155 + Math.min(2, rank) * .035 + Math.max(0, rank - 2) * .008 + (index - 1) * .004,
+      spacing: learn ? .6 : .61 - Math.min(2, rank) * .025, gap: Math.max(.33, .55 - Math.min(2, rank) * .065 - Math.max(0, rank - 2) * .008 - (index - 1) * .009), storm: world === "w3" && index >= 5,
       name: learn ? ["Little sums", "Number trail", "Add together", "Bright answers", "Sums to twenty", "Take some away", "Number explorer", "Math adventurer"][index - 1] : game === "fruit-bat-flight" ? ["First flutter", "Fruit in the trees", "Follow the glow", "Palm pathways", "A little breeze", "Forest explorer", "Golden wings", "Home before sunrise"][index - 1] : ["To the water", "Crab dance", "Under the palms", "Fishing village", "Shell trail", "Around the bend", "Sea breeze", "Lagoon adventurer"][index - 1],
       goals: [learn ? `Find ${target} answers` : `Pass ${target} ${game === "fruit-bat-flight" ? "palms" : "trail markers"}`, `Collect ${Math.ceil(target * .5)} ${collectible}`, `Collect ${target} ${collectible}`] };
   });

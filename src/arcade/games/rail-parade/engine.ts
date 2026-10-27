@@ -24,6 +24,7 @@ import {
   type Cell,
   type Direction,
 } from "../grid/rules";
+/** W4–W6 use provisional extended curves; feel workers own final tuning. */
 export const RAIL_COLS = 10,
   RAIL_ROWS = 10;
 export type RailLevel = ArcadeLevel & {
@@ -38,7 +39,7 @@ export type RailLevel = ArcadeLevel & {
 export const railLevels: readonly RailLevel[] = allLevelIds.map((id) => {
   const index = levelNumber(id),
     world = worldOf(id),
-    rank = { w1: 0, w2: 1, w3: 2, learn: 0 }[world],
+    rank = { w1: 0, w2: 1, w3: 2, w4: 3, w5: 4, w6: 5, learn: 0 }[world],
     learn = world === "learn",
     word = learn && index > 4 ? songWords[index - 5] : undefined;
   const sequence = word
@@ -71,7 +72,7 @@ export const railLevels: readonly RailLevel[] = allLevelIds.map((id) => {
           "Home together",
         ][index - 1],
     target: learn ? sequence.length : 3 + rank + Math.floor(index / 3),
-    tick: 0.62 - rank * 0.13 - (index - 1) * 0.018,
+    tick: Math.max(0.14, 0.62 - Math.min(2, rank) * 0.13 - Math.max(0, rank - 2) * 0.035 - (index - 1) * 0.018),
     hedges: rank
       ? [
           { x: 4, y: 4 },
@@ -116,7 +117,7 @@ export type RailState = {
   score: number;
   elapsed: number;
   patrol: number;
-  phase: "play" | "cleared" | "rest";
+  phase: "play" | "cleared" | "rest" | "stopped";
   message: string;
 };
 export type RailInput =
@@ -227,7 +228,7 @@ export function railMove(s: RailState, direction: Direction): RailState {
 export function railTransition(s: RailState, input: RailInput): RailState {
   if (input.type === "helper") return typeof input.value === "boolean" ? { ...s, helper: input.value } : s;
   if (s.phase !== "play") return s;
-  if (input.type === "finish") return s.level === "endless" ? { ...s, phase: "rest" } : s;
+  if (input.type === "finish") return s.level === "endless" ? { ...s, phase: "stopped" } : s;
   if (input.type !== "turn" || !directions.includes(input.direction)) return s;
   const previous = s.queue.at(-1) ?? s.direction;
   if (opposite(previous, input.direction) && s.body.length > 1) return s;
@@ -252,6 +253,7 @@ export function railResult(s: RailState): ArcadeResult | null {
     ? null
     : {
         cleared: s.phase === "cleared",
+        outcome: s.phase === "cleared" ? "cleared" : s.phase === "stopped" ? "stopped" : "game-over",
         stars: s.phase === "cleared" ? (s.bumps === 0 ? 3 : s.bumps <= 2 ? 2 : 1) : 0,
         score: s.score,
         detail: `${s.collected} chicks · ${s.bumps} bumps`,
@@ -312,7 +314,7 @@ export function validRail(v: unknown): v is RailState {
     [v.collected, v.bumps, v.moves, v.score].every((n) => integer(n)) &&
     integer(v.patrol, 9999) &&
     finite(v.elapsed, 2) &&
-    ["play", "cleared", "rest"].includes(v.phase as string) &&
+    ["play", "cleared", "rest", "stopped"].includes(v.phase as string) &&
     typeof v.message === "string" &&
     v.message.length < 150
   );

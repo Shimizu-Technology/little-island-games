@@ -1,14 +1,15 @@
 import { allLevelIds, levelNumber, nextRandom, worldOf, type ArcadeEngine, type ArcadeLevel, type ArcadeResult, type LevelId } from "../../types";
 export type ReefLevel = ArcadeLevel & { goal: "lines" | "fish" | "score"; target: number; greatMoves: number; goodMoves: number; startingRows: number; complexity: number; targetSum?: number };
 export type CoralPiece = { cells: readonly (readonly [number, number])[]; value: number; color: number };
-export type ReefState = { level: ReefLevel | "endless"; board: number[]; fish: number[]; pieces: (CoralPiece | null)[]; seed: number; helper: boolean; moves: number; lines: number; rescued: number; score: number; status: "playing" | "cleared" | "full"; lastClear: number[]; lastFish: number; message: string; /** Set once a learning-world sum was too big; the finish counts as helped practice. */ helped?: boolean };
+export type ReefState = { level: ReefLevel | "endless"; board: number[]; fish: number[]; pieces: (CoralPiece | null)[]; seed: number; helper: boolean; moves: number; lines: number; rescued: number; score: number; status: "playing" | "cleared" | "full" | "stopped"; lastClear: number[]; lastFish: number; message: string; /** Set once a learning-world sum was too big; the finish counts as helped practice. */ helped?: boolean };
 export type ReefInput = { type: "place"; slot: number; row: number; col: number } | { type: "reroll"; slot: number } | { type: "helper"; value: boolean } | { type: "finish" };
+/** W4–W6 use provisional extended curves; feel workers own final tuning. */
 export const SHAPES: readonly (readonly (readonly [number, number])[])[] = [
   [[0, 0]], [[0, 0], [0, 1]], [[0, 0], [1, 0]], [[0, 0], [0, 1], [0, 2]], [[0, 0], [1, 0], [2, 0]],
   [[0, 0], [1, 0], [1, 1]], [[0, 0], [0, 1], [1, 0], [1, 1]], [[0, 0], [0, 1], [0, 2], [0, 3]],
   [[0, 1], [1, 0], [1, 1], [1, 2]], [[0, 0], [1, 0], [2, 0], [2, 1]], [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2]],
 ];
-const worldRank = (id: LevelId) => ({ w1: 0, w2: 1, w3: 2, learn: 0 })[worldOf(id)];
+const worldRank = (id: LevelId) => ({ w1: 0, w2: 1, w3: 2, w4: 3, w5: 4, w6: 5, learn: 0 })[worldOf(id)];
 export const reefLevels: readonly ReefLevel[] = allLevelIds.map(id => {
   const index = levelNumber(id), world = worldOf(id), rank = worldRank(id), learning = world === "learn";
   const goal = learning ? "lines" : (["lines", "fish", "score"] as const)[(index - 1) % 3];
@@ -105,7 +106,7 @@ export function reefTransition(s: ReefState, input: ReefInput): ReefState {
     return next;
   }
   if (s.status !== "playing") return s;
-  if (input.type === "finish") return s.level === "endless" ? { ...s, status: "full", message: "Your reef is ready to rest." } : s;
+  if (input.type === "finish") return s.level === "endless" ? { ...s, status: "stopped", message: "Your reef is ready to rest." } : s;
   if (input.type === "reroll") return s.helper && Number.isInteger(input.slot) ? rerollPiece(s, input.slot) : s;
   const piece = s.pieces[input.slot];
   if (!piece) return s;
@@ -132,12 +133,12 @@ export function reefTransition(s: ReefState, input: ReefInput): ReefState {
 export function reefResult(s: ReefState): ArcadeResult | null {
   if (s.status === "playing") return null;
   const stars = s.status === "cleared" && s.level !== "endless" ? s.moves <= s.level.greatMoves ? 3 : s.moves <= s.level.goodMoves ? 2 : 1 : 0;
-  return { cleared: s.status === "cleared", stars, score: s.score, detail: `${s.lines} line${s.lines === 1 ? "" : "s"} · ${s.rescued} fish · ${s.moves} move${s.moves === 1 ? "" : "s"}` };
+  return { cleared: s.status === "cleared", outcome: s.status === "cleared" ? "cleared" : s.status === "stopped" ? "stopped" : "game-over", stars, score: s.score, detail: `${s.lines} line${s.lines === 1 ? "" : "s"} · ${s.rescued} fish · ${s.moves} move${s.moves === 1 ? "" : "s"}` };
 }
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const integer = (v: unknown, max = 99999999) => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= max;
 export function validReef(v: unknown): v is ReefState {
   if (!object(v) || !(v.level === "endless" || object(v.level) && reefLevels.some(l => l.id === (v.level as Record<string, unknown>).id)) || !Array.isArray(v.board) || v.board.length !== 64 || !v.board.every(n => integer(n, 9)) || !Array.isArray(v.fish) || new Set(v.fish).size !== v.fish.length || !v.fish.every(n => integer(n, 63) && (v.board as number[])[n]) || !Array.isArray(v.pieces) || v.pieces.length !== 3) return false;
-  return v.pieces.every(p => p === null || object(p) && integer(p.value, 9) && (p.value as number) > 0 && integer(p.color, 3) && Array.isArray(p.cells) && SHAPES.some(shape => JSON.stringify(shape) === JSON.stringify(p.cells))) && integer(v.seed, 0xffffffff) && typeof v.helper === "boolean" && [v.moves, v.lines, v.rescued, v.score, v.lastFish].every(n => integer(n)) && ["playing", "cleared", "full"].includes(v.status as string) && Array.isArray(v.lastClear) && v.lastClear.every(n => integer(n, 63)) && typeof v.message === "string" && (v.helped === undefined || typeof v.helped === "boolean");
+  return v.pieces.every(p => p === null || object(p) && integer(p.value, 9) && (p.value as number) > 0 && integer(p.color, 3) && Array.isArray(p.cells) && SHAPES.some(shape => JSON.stringify(shape) === JSON.stringify(p.cells))) && integer(v.seed, 0xffffffff) && typeof v.helper === "boolean" && [v.moves, v.lines, v.rescued, v.score, v.lastFish].every(n => integer(n)) && ["playing", "cleared", "full", "stopped"].includes(v.status as string) && Array.isArray(v.lastClear) && v.lastClear.every(n => integer(n, 63)) && typeof v.message === "string" && (v.helped === undefined || typeof v.helped === "boolean");
 }
 export const reefEngine: ArcadeEngine<ReefState, ReefInput, ReefLevel> = { create: createReef, reduce: reefTransition, result: reefResult, validate: validReef };

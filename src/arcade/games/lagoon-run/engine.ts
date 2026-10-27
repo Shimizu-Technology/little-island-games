@@ -67,7 +67,7 @@ export function runStep(before: RunState, _input: RunInput, dt: number): RunStat
 export function runResult(s: RunState): ArcadeResult | null {
   if (s.status === "playing") return null;
   const cleared = s.status === "cleared", target = s.level === "endless" ? Infinity : s.level.target;
-  return { cleared, stars: cleared ? s.shells >= target ? 3 : s.shells >= Math.ceil(target * .5) ? 2 : 1 : 0, score: s.score, detail: `${s.passed} ${runLearning(s) ? "answers" : "trail markers"} · ${s.shells} shells` };
+  return { cleared, outcome: cleared ? "cleared" : s.status === "rest" ? "stopped" : "game-over", stars: cleared ? s.shells >= target ? 3 : s.shells >= Math.ceil(target * .5) ? 2 : 1 : 0, score: s.score, detail: `${s.passed} ${runLearning(s) ? "answers" : "trail markers"} · ${s.shells} shells` };
 }
 export function validRun(v: unknown): v is RunState {
   if (!record(v) || !canonicalLevel(v.level, runLevels) || !uint(v.seed, 0xffffffff) || typeof v.helper !== "boolean" || typeof v.helped !== "boolean" || !uint(v.lane, 2) || !finite(v.poseLane, 0, 2) || !Array.isArray(v.rows) || v.rows.length !== 5) return false;

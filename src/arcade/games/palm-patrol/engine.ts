@@ -17,10 +17,11 @@ export type PalmLevel = ArcadeLevel & {
   boss: boolean;
   facts: number;
 };
+/** W4–W6 use provisional extended curves; feel workers own final tuning. */
 export const palmLevels: readonly PalmLevel[] = allLevelIds.map((id) => {
   const index = levelNumber(id),
     world = worldOf(id),
-    rank = { w1: 0, w2: 1, w3: 2, learn: 0 }[world];
+    rank = { w1: 0, w2: 1, w3: 2, w4: 3, w5: 4, w6: 5, learn: 0 }[world];
   return {
     id,
     index,
@@ -40,7 +41,7 @@ export const palmLevels: readonly PalmLevel[] = allLevelIds.map((id) => {
             "Palm party",
             "The big visitor",
           ][index - 1],
-    count: world === "learn" ? 3 : 3 + Math.floor(index / 3) + rank * 2,
+    count: world === "learn" ? 3 : Math.min(12, 3 + Math.floor(index / 3) + rank * 2),
     waves: world === "learn" ? 1 : 1 + Number(index >= 5) + Number(rank === 2),
     speed: world === "learn" ? 3 : 7 + rank * 5 + index * 0.8,
     divers: rank > 0 || index >= 6,
@@ -280,6 +281,7 @@ export function palmResult(s: PalmState): ArcadeResult | null {
     ? null
     : {
         cleared: s.phase === "cleared",
+        outcome: s.phase === "cleared" ? "cleared" : s.palms === 0 ? "game-over" : "stopped",
         stars: s.phase !== "cleared" ? 0 : s.palms === 4 ? 3 : s.palms >= 2 ? 2 : 1,
         score: s.score,
         detail:

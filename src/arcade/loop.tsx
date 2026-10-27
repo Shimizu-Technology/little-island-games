@@ -1,6 +1,7 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AppState, Platform } from "react-native";
+import { arcadeEvent } from "./events";
 import { advanceClock, FIXED_DT, type FixedClock } from "./clock";
 export type FrameBudget = { fps: number; p95: number; max: number; dropped: number; ticks: number };
 /** Focus, native background, and browser visibility share one source of truth. */
@@ -17,7 +18,8 @@ export function useArcadeForeground() {
 }
 /**
  * JS rules stay pure and testable; publish sprite poses to shared values in onFrame.
- * React gets a bounded HUD snapshot (10 Hz), never a whole sprite tree per frame.
+ * React gets event/score/terminal edges on the same rAF and ordinary HUD updates at 10 Hz.
+ * Memoize sprite art on primitive props; HUD snapshots must not redraw it.
  * An active=false sheet/focus/background cancels the frame and discards the remainder.
  */
 export function useArcadeLoop<S, I>({ initial, step, reduce, input, active, onFrame }: { initial: S; step: (s: S, input: I, dt: number) => S; reduce: (s: S, input: I) => S; input: I; active: boolean; onFrame?: (s: S) => void }) {
@@ -29,6 +31,7 @@ export function useArcadeLoop<S, I>({ initial, step, reduce, input, active, onFr
     let id = 0, previous = 0, lastHud = 0, lastBudget = 0, samples: number[] = [], clock: FixedClock = { remainder: 0, ticks: 0, dropped: 0 };
     const frame = (now: number) => {
       if (!live.current.active) return;
+      const beforeEvent = arcadeEvent(state.current);
       if (previous) {
         const elapsed = (now - previous) / 1000, advanced = advanceClock(clock, elapsed); clock = advanced.clock;
         for (let i = 0; i < advanced.steps; i++) state.current = live.current.step(state.current, live.current.input, FIXED_DT);
@@ -36,7 +39,7 @@ export function useArcadeLoop<S, I>({ initial, step, reduce, input, active, onFr
       }
       previous = now;
       live.current.onFrame?.(state.current);
-      if (now - lastHud >= 100) { setSnapshot(state.current); lastHud = now; }
+      if (beforeEvent !== arcadeEvent(state.current) || now - lastHud >= 100) { setSnapshot(state.current); lastHud = now; }
       if (now - lastBudget >= 1000 && samples.length) {
         const ordered = [...samples].sort((a, b) => a - b);
         setBudget({ fps: 1000 / (samples.reduce((a, b) => a + b) / samples.length), p95: ordered[Math.floor(ordered.length * .95)], max: ordered[ordered.length - 1], dropped: clock.dropped, ticks: clock.ticks }); samples = []; lastBudget = now;

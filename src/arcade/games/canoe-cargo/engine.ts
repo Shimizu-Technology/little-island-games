@@ -1,4 +1,4 @@
-import { nextRandom, type ArcadeEngine, type ArcadeLevel, type ArcadeResult, type LevelId, type WorldId } from "../../types";
+import { nextRandom, worldIds, worldRank, type ArcadeEngine, type ArcadeLevel, type ArcadeResult, type LevelId } from "../../types";
 
 export const COLS = 9, ROWS = 14;
 export const cargoKinds = ["crate", "coconut", "fish", "taro"] as const;
@@ -14,15 +14,17 @@ export const cargoShapes: readonly (readonly Point[])[] = [
 export type CargoPiece = { shape: number; turn: number; kind: CargoKind; value: number };
 export type CargoLevel = ArcadeLevel & { goal: "canoes" | "crates" | "score"; target: number; fall: number; opening: number; garbageEvery: number; targetSum: number; par: number };
 const worldNames = { w1: ["First delivery", "Coconut morning", "Room for a friend", "Taro time", "Two little canoes", "Harbor helper", "Full sails", "Captain's picnic"], w2: ["Trade wind", "Fish for supper", "Clear the crates", "Across the bay", "Quick packing", "A busy harbor", "Island supplies", "Sunset delivery"], w3: ["Rising tide", "Floating cargo", "Make some room", "Night crossing", "Wave rider", "Cargo captain", "Moonlit harbor", "The big voyage"], learn: ["Nine for the canoe", "Make twelve", "Fifteen afloat", "Eighteen aboard", "Count the coconuts", "Number harbor", "Double delivery", "Sum captain"] };
-export const cargoLevels: CargoLevel[] = (["w1", "w2", "w3", "learn"] as WorldId[]).flatMap(world => Array.from({ length: 8 }, (_, i): CargoLevel => {
-  const opening = world === "w1" ? 2 + Math.floor(i / 3) : world === "learn" ? 2 + Math.floor(i / 3) : 3 + Math.floor(i / 3);
+export const cargoLevels: CargoLevel[] = worldIds.flatMap(world => Array.from({ length: 8 }, (_, i): CargoLevel => {
+  // W4–W6 provisional curves; the Cargo feel worker owns the final rules.
+  const rank = worldRank(world);
+  const opening = world === "w1" ? 2 + Math.floor(i / 3) : world === "learn" ? 2 + Math.floor(i / 3) : 3 + Math.max(0, rank - 2) + Math.floor(i / 3);
   const goal = world === "learn" || world === "w1" ? "canoes" : i % 3 === 1 ? "score" : i % 3 === 2 ? "crates" : "canoes";
   const targetSum = world === "learn" ? [9, 12, 15, 18, 12, 15, 18, 21][i] : 0;
   const target = goal === "crates" ? opening * 6 : goal === "score" ? (opening * 130) : world === "learn" ? opening * 2 : opening;
   const par = world === "learn" || i === 0 ? opening : opening * 3 + i + (world === "w3" ? 3 : 0);
-  return { id: `${world}-${i + 1}`, world, index: i + 1, name: worldNames[world][i], goal, target, opening, targetSum, par,
-    fall: world === "w1" ? 2.4 - i * .12 : world === "w2" ? 1.25 - i * .065 : world === "w3" ? .82 - i * .045 : 3.4,
-    garbageEvery: world === "w3" ? Math.max(3, 6 - Math.floor(i / 2)) : 0,
+  return { id: `${world}-${i + 1}`, world, index: i + 1, name: world in worldNames ? worldNames[world as keyof typeof worldNames][i] : `Outer island delivery ${i + 1}`, goal, target, opening, targetSum, par,
+    fall: world === "w1" ? 2.4 - i * .12 : world === "w2" ? 1.25 - i * .065 : world === "learn" ? 3.4 : Math.max(.12, .82 - (rank - 2) * .16 - i * .045),
+    garbageEvery: rank >= 2 ? Math.max(3, 6 - Math.floor(i / 2)) : 0,
     goals: [`${goal === "canoes" ? `Send ${target} canoes` : goal === "crates" ? `Free ${target} stuck crates` : `Reach ${target} points`}${targetSum ? ` · rows of ${targetSum} sail twice` : ""}`, `Finish in ${par + 8} loads or fewer`, `Finish in ${par + 3} loads or fewer`],
   };
 }));
@@ -142,7 +144,7 @@ export function cargoStep(s: CargoState, _input: CargoInput, dt: number): CargoS
 export function cargoResult(s: CargoState): ArcadeResult | null {
   if (s.status === "playing") return null;
   const cleared = s.status === "cleared", stars = cleared && s.level !== "endless" ? s.loads <= s.level.par + 3 ? 3 : s.loads <= s.level.par + 8 ? 2 : 1 : 0;
-  return { cleared, stars, score: s.score, detail: `${s.canoes} canoes sailed · ${s.freed} crates freed · ${s.loads} loads packed.${s.lastBonus ? " A target-sum delivery sailed twice!" : ""}` };
+  return { cleared, outcome: cleared ? "cleared" : s.status === "finished" ? "stopped" : "game-over", stars, score: s.score, detail: `${s.canoes} canoes sailed · ${s.freed} crates freed · ${s.loads} loads packed.${s.lastBonus ? " A target-sum delivery sailed twice!" : ""}` };
 }
 const exact = (v: unknown, keys: string[]): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).sort().join() === keys.sort().join();
 const uint = (v: unknown, max = 99999999): v is number => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= max;

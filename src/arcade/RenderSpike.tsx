@@ -1,11 +1,12 @@
 /** Reproducible 60-sprite renderer comparison. /arcade?spike=1; no saved game changes. */
 import React, { memo, useEffect, useRef, useState } from "react";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import Animated, { type SharedValue, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import Svg, { Circle, Ellipse, G, Path } from "react-native-svg";
 import { Text } from "../components/Text";
 import { Button, Copy, Heading } from "../components/ui";
 
+import { LoopSpike } from "./LoopSpike";
 const COUNT = 60, DURATION = 20000, WARMUP = 2000;
 type Point = { x: number; y: number };
 export type FrameReport = { renderer: string; sprites: number; frames: number; seconds: number; fps: number; p95: number; over25: number; max: number; stepP95: number };
@@ -45,11 +46,12 @@ export function RenderSpike() {
     id = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(id);
   }, [renderer, run, positions]);
-  return <View style={{ padding: 20, gap: 10 }}><Heading>60 fish · renderer spike</Heading><Copy>2 second warmup + 20 second sample. JavaScript frame intervals, not physical GPU timing.</Copy>
+  return <ScrollView contentContainerStyle={{ padding: 20, gap: 10 }}><Heading>60 fish · renderer spike</Heading><Copy>2 second warmup + 20 second sample. JavaScript frame intervals, not physical GPU timing.</Copy>
     <View style={{ flexDirection: "row", gap: 8 }}><Button onPress={() => { setReport(null); setRenderer("shared"); setRun(r => r + 1); }}>Shared transforms</Button><Button quiet onPress={() => { setReport(null); setRenderer("react"); setRun(r => r + 1); }}>React SVG</Button></View>
     <View style={{ width: "100%", maxWidth: 640, height: 370, backgroundColor: "#D8EEF0", overflow: "hidden", borderRadius: 20 }}>
       {renderer === "shared" ? Array.from({ length: COUNT }, (_, index) => <Sprite key={index} index={index} positions={positions} />) : <Svg width="100%" height={370} viewBox="0 0 640 370">{reactPoints.map((p, i) => <G key={i} transform={`translate(${p.x},${p.y})`}><Path d="M20 12L29 4V20Z" fill="#EC806B"/><Ellipse cx={12} cy={12} rx={11} ry={8} fill="#F0C764"/><Circle cx={7} cy={10} r={2} fill="#163E49"/></G>)}</Svg>}
     </View>
+    <LoopSpike/>
     <Text selectable testID="spike-report">{report ? JSON.stringify(report) : `Measuring ${renderer}…`}</Text>
-  </View>;
+  </ScrollView>;
 }

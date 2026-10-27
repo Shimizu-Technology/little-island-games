@@ -2,7 +2,7 @@ import React, { memo, useId } from "react";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import type { OutfitId } from "../progress";
 import type { WorldId } from "../types";
-export function AmbientFriend({ night = false }: { night?: boolean }) {
+export const AmbientFriend = memo(function AmbientFriend({ night = false }: { night?: boolean }) {
   return (
     <Svg width={44} height={32} viewBox="0 0 44 32" accessible={false}>
       {night ? (
@@ -22,7 +22,7 @@ export function AmbientFriend({ night = false }: { night?: boolean }) {
       )}
     </Svg>
   );
-}
+});
 export const palettes = {
   w1: ["#086D86", "#4FC7BF", "#FFE1A0"],
   w2: ["#3762A1", "#9BCFDF", "#F6C585"],
@@ -205,7 +205,7 @@ export const Scene = memo(function Scene({
   width: number;
   height: number;
 }) {
-  const p = palettes[world],
+  const p = palettes[world === "w4" ? "w2" : world === "w5" || world === "w6" ? "w3" : world],
     id = useId().replace(/:/g, "");
   return (
     <Svg

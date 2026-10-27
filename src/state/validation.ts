@@ -16,7 +16,7 @@ import { validLearn } from "../learn/session";
 import { validLearners, type Learners } from "../learn/learners";
 import { validSkills } from "../learn/skills";
 import { PracticeNotes, PracticeSettings, validPracticeNotes, validPracticeSettings } from "../practice/types";
-import { arcadeIds, validArcade, type ArcadeId, type ArcadeSave } from "../arcade";
+import { arcadeIds, validArcade, migrateArcade, type ArcadeId, type ArcadeSave } from "../arcade";
 export type Settings = { sound: boolean; help: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
 export type Save = {
   version: 1;
@@ -389,7 +389,9 @@ export function parseSave(raw: string): Save {
         (v.explore.progress !== undefined && !validExploreProgress(v.explore.progress))))
   )
     throw new Error("Some saved game data is invalid. Your original has been kept.");
-  return v as unknown as Save;
+  const save = v as unknown as Save;
+  // Feel v2: validate the original first; recovery/restore retain its original bytes.
+  return save.arcade ? { ...save, arcade: migrateArcade(save.arcade) } : save;
 }
 
 function validLearningOwners(learn: unknown, learning: unknown): boolean {

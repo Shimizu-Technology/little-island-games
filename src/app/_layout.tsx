@@ -1,4 +1,5 @@
 import React from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -9,7 +10,7 @@ export default function Layout() {
   // The platform push shows where a screen came from; Reduce Motion swaps it for a short fade.
   const reduced = useReducedMotion();
   return (
-    <SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}><SafeAreaProvider>
       <TextLayoutProvider>
         <StoreProvider>
           <StatusBar style="dark" />
@@ -22,6 +23,6 @@ export default function Layout() {
           />
         </StoreProvider>
       </TextLayoutProvider>
-    </SafeAreaProvider>
+    </SafeAreaProvider></GestureHandlerRootView>
   );
 }

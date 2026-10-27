@@ -3,6 +3,7 @@ export const MAX_FRAME = .1;
 export type FixedClock = { remainder: number; ticks: number; dropped: number };
 /** Clamp background stalls. Never catch up seconds of unplayed simulation on resume. */
 export function advanceClock(clock: FixedClock, elapsed: number): { clock: FixedClock; steps: number } {
+  "worklet";
   if (!Number.isFinite(elapsed) || elapsed <= 0) return { clock, steps: 0 };
   const safe = Math.min(MAX_FRAME, elapsed), accumulated = clock.remainder + safe;
   const steps = Math.min(6, Math.floor((accumulated + 1e-10) / FIXED_DT));

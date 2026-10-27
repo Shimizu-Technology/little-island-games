@@ -16,7 +16,7 @@ function solveSong(initial: SongState): SongState {
   throw new Error("Song did not end");
 }
 describe("arcade content and fixed input contract", () => {
-  it("has three eight-level worlds and a complete learning world in both games", () => {
+  it("has six eight-level worlds and a complete learning world in both games", () => {
     for (const levels of [reefLevels, songLevels]) { expect(levels.map(l => l.id)).toEqual(allLevelIds); for (const world of worldIds) expect(levels.filter(l => l.world === world)).toHaveLength(8); expect(levels.every(l => l.goals.length === 3 && l.goals.every(Boolean))).toBe(true); }
     expect(songWords).toHaveLength(8); expect(songWords.every(w => wordEntry(w)?.tiles.length === 3)).toBe(true);
   });
@@ -113,10 +113,10 @@ describe("Shell Song", () => {
     expect(songTransition(ready, { type: "replay" }).pattern).toEqual(s.pattern); expect(noteDuration({ ...s, helper: true })).toBeGreaterThan(noteDuration(s));
     expect(glowingShell({ ...s, elapsed: 460 })).toBe(s.pattern[0]);
   });
-  it("retries wrong patterns, ends gently after three slips without Helper, and keeps Helper stars", () => {
+  it("retries wrong patterns, ends after three slips without Helper, and keeps Helper stars", () => {
     let s = createSong(songLevel("w1-1"), 31, false);
     for (let n = 0; n < 3; n++) { s = hear(s); s = songTransition(s, { type: "shell", index: (s.pattern[0] + 1) % s.shells }); }
-    expect(s.phase).toBe("rest"); expect(songResult(s)?.stars).toBe(0);
+    expect(s.phase).toBe("over"); expect(songResult(s)?.stars).toBe(0);
     let helped = createSong(songLevel("w1-1"), 31, true);
     for (let n = 0; n < 4; n++) { helped = hear(helped); helped = songTransition(helped, { type: "shell", index: (helped.pattern[0] + 1) % helped.shells }); }
     expect(helped.phase).toBe("watch"); expect(songResult(solveSong(helped))?.stars).toBe(1);

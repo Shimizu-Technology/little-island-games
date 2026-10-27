@@ -18,10 +18,11 @@ export type BeachLevel = ArcadeLevel & {
   balls: number;
   countBy: 1 | 2 | 5;
 };
+/** W4–W6 use provisional extended curves; feel workers own final tuning. */
 export const beachLevels: readonly BeachLevel[] = allLevelIds.map((id) => {
   const index = levelNumber(id),
     world = worldOf(id),
-    rank = { w1: 0, w2: 1, w3: 2, learn: 0 }[world];
+    rank = { w1: 0, w2: 1, w3: 2, w4: 3, w5: 4, w6: 5, learn: 0 }[world];
   return {
     id,
     index,
@@ -261,6 +262,7 @@ export function beachResult(s: BeachState): ArcadeResult | null {
     count = beachConfig(s).countBy;
   return {
     cleared,
+    outcome: cleared ? "cleared" : s.winner === null ? "stopped" : "game-over",
     stars: !cleared ? 0 : losing === 0 ? 3 : losing <= 1 ? 2 : 1,
     score: s.score,
     detail: `${s.points[0] * count} : ${s.points[1] * count} · best rally ${s.bestRally}`,

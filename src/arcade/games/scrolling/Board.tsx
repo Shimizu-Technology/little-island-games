@@ -1,9 +1,10 @@
+import { PressControl, PlayfieldTarget, useSwipe } from "../../Input";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Platform, View } from "react-native";
 import Svg, { Circle, Path, Rect, Text as SvgText } from "react-native-svg";
 import { useSharedValue } from "react-native-reanimated";
 import { useReducedMotion } from "../../../components/motion";
-import { Copy, PressableScale } from "../../../components/ui";
+import { Copy } from "../../../components/ui";
 import { Text } from "../../../components/Text";
 import { useArcadeLoop, type FrameBudget } from "../../loop";
 import { ArcadeSprite, type SpritePose } from "../../Sprite";
@@ -20,7 +21,7 @@ const Portal = memo(function Portal({ value, index, wide = false }: { value: num
 function useKeyboard(active: boolean, action: (key: string) => void) {
   useEffect(() => { if (Platform.OS !== "web" || !active) return; const handler = (e: KeyboardEvent) => { if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyA", "KeyD", "KeyW", "KeyS"].includes(e.code)) { e.preventDefault(); if (!e.repeat) action(e.code); } }; window.addEventListener("keydown", handler); return () => window.removeEventListener("keydown", handler); }, [active, action]);
 }
-function Control({ label, glyph, onPress, disabled = false }: { label: string; glyph: string; onPress: () => void; disabled?: boolean }) { return <PressableScale disabled={disabled} accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={{ minWidth: 56, minHeight: 52, paddingHorizontal: 15, alignItems: "center", justifyContent: "center", borderRadius: 20, backgroundColor: "#FFF2CC", borderWidth: 2, borderBottomWidth: 5, borderColor: "#725B66" }}><Text style={{ fontSize: 25, fontWeight: "900", color: "#34354D" }}>{glyph}</Text></PressableScale>; }
+function Control({ label, glyph, onPress, disabled = false }: { label: string; glyph: string; onPress: () => void; disabled?: boolean }) { return <PressControl disabled={disabled} accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={{ minWidth: 56, minHeight: 52, paddingHorizontal: 15, alignItems: "center", justifyContent: "center", borderRadius: 20, backgroundColor: "#FFF2CC", borderWidth: 2, borderBottomWidth: 5, borderColor: "#725B66" }}><Text style={{ fontSize: 25, fontWeight: "900", color: "#34354D" }}>{glyph}</Text></PressControl>; }
 function HUD({ progress, target, collected, learning, onPause }: { progress: number; target: number | string; collected: number; learning: boolean; onPause?: () => void }) {
   return <View style={{ position: "absolute", top: 12, left: 12, right: 12, flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "space-between" }}><View style={{ borderRadius: 22, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: "#192B49", borderWidth: 2, borderColor: "#A8D5DB" }}><Text accessibilityLabel={`${progress} of ${target} ${learning ? "answers" : "markers"}`} style={{ color: "#FFF4D3", fontWeight: "800", fontSize: 18 }}>{learning ? "＝" : "⚑"} {progress}/{target}　★ {collected}</Text></View>{onPause && <Control label="Pause game" glyph="Ⅱ" onPress={onPause}/>}</View>;
 }
@@ -59,7 +60,8 @@ export function FlightBoard(props: BoardProps) {
     {learn && s.gates.flatMap((g, i) => g.fact.choices.map((n, c) => <ArcadeSprite key={`a${i}-${c}`} poses={poses} index={9 + i * 3 + c} width={64} height={64}><Portal value={n} index={c}/></ArcadeSprite>))}
     <ArcadeSprite poses={poses} index={0} width={heroSize} height={heroSize}><ScrollHero game="fruit-bat-flight" size={heroSize} outfit={outfit}/></ArcadeSprite>
     {Array.from({ length: 6 }, (_, i) => <ArcadeSprite key={`e${i}`} poses={poses} index={21 + i} width={20} height={20}><Particle/></ArcadeSprite>)}
-    <View accessible accessibilityRole="button" accessibilityLabel="Flight sky. Tap to flap" onStartShouldSetResponder={() => active} onResponderGrant={flap} style={{ position: "absolute", top: 70, bottom: 80, left: 0, right: 0, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}/>
+    <PlayfieldTarget accessibilityLabel="Flight sky. Tap to flap" active={active} onPress={flap} style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}/>
+
     <HUD progress={s.passed} target={level === "endless" ? "∞" : level.target} collected={s.fruit} learning={learn} onPause={onPause}/>
     {learn && next && <View pointerEvents="none" style={{ position: "absolute", top: 82, alignSelf: "center", padding: 8, borderRadius: 18, backgroundColor: "#192B49" }}><Text testID="math-fact" style={{ color: "#FFF4D3", fontSize: 29, fontWeight: "900" }}>{equation(next.fact)}</Text></View>}
     {s.feedback > 0 && <View pointerEvents="none" style={{ position: "absolute", top: "45%", alignSelf: "center", backgroundColor: "#192B49", padding: 8, borderRadius: 14 }}><Text style={{ color: "#FFF0B1", fontSize: 23, fontWeight: "900" }}>{feedback(s.cue, s.fruit)}</Text></View>}
@@ -70,7 +72,7 @@ export function FlightBoard(props: BoardProps) {
 export function RunBoard(props: BoardProps) {
   const { level, seed, active, helper, outfit, onResult, onTone, onPause, debug } = props;
   const [size, setSize] = useState({ w: 390, h: 700 }), reduced = useReducedMotion(), poses = useSharedValue<SpritePose[]>(Array.from({ length: 39 }, () => still));
-  const [initial] = useState(() => createRun(level, seed, helper)), done = useRef(false), lastEvent = useRef(0), pointer = useRef({ x: 0, y: 0 });
+  const [initial] = useState(() => createRun(level, seed, helper)), done = useRef(false), lastEvent = useRef(0);
   const heroSize = Math.min(155, size.h * .24, size.w * .26);
   const publish = useCallback((s: RunState) => {
     const learn = runLearning(s), p: SpritePose[] = [], jump = s.jump > 0 ? Math.sin((1.1 - s.jump) / 1.1 * Math.PI) : 0, ground = size.h * .82;
@@ -92,6 +94,7 @@ export function RunBoard(props: BoardProps) {
   useEffect(() => { const r = runResult(s); if (r && !done.current) { done.current = true; onResult(r, s.helped); } if (s.event !== lastEvent.current) { lastEvent.current = s.event; if (["shell", "answer"].includes(s.cue)) onTone("clear"); else if (["bump", "try"].includes(s.cue)) onTone("shell-0"); } }, [s, onResult, onTone]);
   const action = useCallback((input: RunInput) => { if (!active) return; dispatch(input); onTone(input.type === "jump" ? "shell-4" : input.type === "duck" ? "shell-1" : "coral", false); }, [active, dispatch, onTone]);
   useKeyboard(active, useCallback(key => action({ type: ["ArrowLeft", "KeyA"].includes(key) ? "left" : ["ArrowRight", "KeyD"].includes(key) ? "right" : ["ArrowDown", "KeyS"].includes(key) ? "duck" : "jump" }), [action]));
+  const swipe = useSwipe(active, direction => action({ type: direction === "up" ? "jump" : direction === "down" ? "duck" : direction }), 22, x => action({ type: "lane", lane: Math.min(2, Math.floor(x / size.w * 3)) }));
   const learn = runLearning(s), next = s.rows.filter(r => !r.passed && r.z < .9).sort((a, b) => b.z - a.z)[0];
   return <View testID="run-field" style={{ flex: 1, overflow: "hidden", backgroundColor: "#297C95" }} onLayout={e => { const { width: w, height: h } = e.nativeEvent.layout; if (w > 0 && h > 0) setSize({ w, h }); }}>
     <ArcadeSprite poses={poses} index={38} width={size.w} height={size.h}><Scenery game="lagoon-run" world={level === "endless" ? "w3" : level.world} storm={level !== "endless" && level.storm}/></ArcadeSprite>
@@ -101,7 +104,8 @@ export function RunBoard(props: BoardProps) {
     {learn && s.rows.flatMap((row, i) => row.fact.choices.map((n, c) => <ArcadeSprite key={`a${i}-${c}`} poses={poses} index={11 + i * 3 + c} width={80} height={80}><Portal value={n} index={c}/></ArcadeSprite>))}
     <ArcadeSprite poses={poses} index={0} width={heroSize} height={heroSize}><ScrollHero game="lagoon-run" size={heroSize} outfit={outfit} back/></ArcadeSprite>
     {Array.from({ length: 6 }, (_, i) => <ArcadeSprite key={`e${i}`} poses={poses} index={26 + i} width={20} height={20}><Particle/></ArcadeSprite>)}
-    <View accessible accessibilityRole="button" accessibilityLabel="Lagoon track. Swipe to steer, up to jump, down to duck. Or tap a lane." onStartShouldSetResponder={() => active} onResponderGrant={e => { pointer.current = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY }; }} onResponderRelease={e => { if (!active) return; const dx = e.nativeEvent.pageX - pointer.current.x, dy = e.nativeEvent.pageY - pointer.current.y; if (Math.max(Math.abs(dx), Math.abs(dy)) < 22) action({ type: "lane", lane: Math.min(2, Math.floor(e.nativeEvent.locationX / size.w * 3)) }); else action({ type: Math.abs(dx) > Math.abs(dy) ? dx > 0 ? "right" : "left" : dy > 0 ? "duck" : "jump" }); }} style={{ position: "absolute", top: 72, bottom: 77, left: 0, right: 0, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}/>
+    <View accessible accessibilityRole="button" accessibilityLabel="Lagoon track. Swipe to steer, up to jump, down to duck. Or tap a lane." {...swipe} style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}/>
+
     <HUD progress={s.passed} target={level === "endless" ? "∞" : level.target} collected={s.shells} learning={learn} onPause={onPause}/>
     {learn && next && <View pointerEvents="none" style={{ position: "absolute", top: 82, alignSelf: "center", padding: 8, borderRadius: 18, backgroundColor: "#192B49" }}><Text testID="math-fact" style={{ color: "#FFF4D3", fontSize: 29, fontWeight: "900" }}>{equation(next.fact)}</Text></View>}
     {s.feedback > 0 && <View pointerEvents="none" style={{ position: "absolute", top: "44%", alignSelf: "center", backgroundColor: "#192B49", padding: 8, borderRadius: 14 }}><Text style={{ color: "#FFF0B1", fontSize: 23, fontWeight: "900" }}>{feedback(s.cue, s.shells)}</Text></View>}

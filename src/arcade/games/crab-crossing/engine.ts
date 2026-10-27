@@ -8,6 +8,7 @@ import {
   type LevelId,
 } from "../../types";
 import { delta, directions, exact, finite, integer, matches, type Direction } from "../grid/rules";
+/** W4–W6 use provisional extended curves; feel workers own final tuning. */
 export const CRAB_COLS = 9,
   CRAB_ROWS = 11;
 export type CrabLevel = ArcadeLevel & {
@@ -20,7 +21,7 @@ export type CrabLevel = ArcadeLevel & {
 export const crabLevels: readonly CrabLevel[] = allLevelIds.map((id) => {
   const index = levelNumber(id),
     world = worldOf(id),
-    rank = { w1: 0, w2: 1, w3: 2, learn: 0 }[world],
+    rank = { w1: 0, w2: 1, w3: 2, w4: 3, w5: 4, w6: 5, learn: 0 }[world],
     learn = world === "learn",
     backwards = learn && [2, 5, 8].includes(index),
     skip = index >= 6 ? 5 : index >= 3 ? 2 : 1,
@@ -78,7 +79,7 @@ export type CrabState = {
   bumps: number;
   score: number;
   shield: number;
-  phase: "play" | "cleared" | "rest";
+  phase: "play" | "cleared" | "rest" | "stopped";
   message: string;
 };
 export type CrabInput =
@@ -158,7 +159,7 @@ function collision(s: CrabState): CrabState {
 export function crabTransition(s: CrabState, input: CrabInput): CrabState {
   if (input.type === "helper") return typeof input.value === "boolean" ? { ...s, helper: input.value } : s;
   if (s.phase !== "play") return s;
-  if (input.type === "finish") return s.level === "endless" ? { ...s, phase: "rest" } : s;
+  if (input.type === "finish") return s.level === "endless" ? { ...s, phase: "stopped" } : s;
   if (input.type !== "hop" || !directions.includes(input.direction)) return s;
   const d = delta[input.direction],
     x = Math.round(s.x) + d.x,
@@ -208,6 +209,7 @@ export function crabResult(s: CrabState): ArcadeResult | null {
     ? null
     : {
         cleared: s.phase === "cleared",
+        outcome: s.phase === "cleared" ? "cleared" : s.phase === "stopped" ? "stopped" : "game-over",
         stars: s.phase === "cleared" ? (s.bumps === 0 ? 3 : s.bumps <= 2 ? 2 : 1) : 0,
         score: s.score,
         detail: `${s.crossed} burrows · ${s.bumps} bumps`,
@@ -260,7 +262,7 @@ export function validCrab(v: unknown): v is CrabState {
     [v.hops, v.crossed, v.bumps, v.score].every((n) => integer(n)) &&
     integer(v.cursor, 9) &&
     finite(v.shield, 1.2) &&
-    ["play", "cleared", "rest"].includes(v.phase as string) &&
+    ["play", "cleared", "rest", "stopped"].includes(v.phase as string) &&
     typeof v.message === "string" &&
     v.message.length < 150
   );
