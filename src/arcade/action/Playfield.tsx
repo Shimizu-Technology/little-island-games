@@ -409,7 +409,11 @@ export function PalmBoard({
           <Pill label={`Wave ${s.wave}, ${s.caught} beetles netted`}>
             ♧ {s.wave}/{s.level === "endless" ? "∞" : s.level.waves} · {s.caught}
           </Pill>
-          {!learning && <HeartsHud lives={s.lives} />}
+          {!learning && (
+            <View style={camera.x >= 150 ? { position: "absolute", left: 0, top: 44 } : undefined}>
+              <HeartsHud lives={s.lives} />
+            </View>
+          )}
           <Pill label={`${s.score} points`}>★ {s.score}</Pill>
         </View>
         {learning && (
@@ -430,8 +434,12 @@ export function PalmBoard({
             </Text>
           </View>
         )}
-        {s.time < 4 && (
-          <View pointerEvents="none" style={{ position: "absolute", bottom: 12, alignSelf: "center" }}>
+        {s.time < 4 && (camera.x >= 150 || camera.y >= 30) && (
+          <View
+            testID="palm-aim-tip"
+            pointerEvents="none"
+            style={{ position: "absolute", bottom: 12, ...(camera.x >= 150 ? { left: 8 } : { alignSelf: "center" }) }}
+          >
             <Pill>← Slide · hold to toss ↑</Pill>
           </View>
         )}

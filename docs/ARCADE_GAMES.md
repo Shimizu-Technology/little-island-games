@@ -187,7 +187,7 @@ Stars: one for clearing all waves; two for at most one heart lost; three for no 
 | Edge descent units | 16 | 18 | 21 |
 | Dive interval / speed | none | 3 s / 171 | 1.8 s / 231 |
 | Top-star accuracy / par | 55% / 45 s | 60% / 90 s | 67.5% / 144 s |
-| Seed-42 lead-aim clear | 33.53 s | 58.87 s | 78.18 s |
+| Seed-42 lead-aim clear | 33.53 s | 53.88 s | 74.83 s |
 
 Number Grove retains eight untimed math levels, three to five facts each. Three stationary choices carry a correct answer and distinct distractors; wrong answers bounce back, mark assistance and never cost hearts or expire. One star finishes, two allow one wrong answer, three require every answer right first time. Shared practice/learner credit remains unchanged.
 
