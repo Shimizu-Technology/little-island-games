@@ -3,23 +3,28 @@ import { arcadeTransition, emptyArcade, validArcade } from "../src/arcade/progre
 import { allLevelIds } from "../src/arcade/types";
 import {
   createRail,
+  railBodyPose,
+  railHedges,
   railLevel,
   railLevels,
-  railLearning,
   railMove,
   railResult,
+  railSafeStart,
   railSnake,
   railStep,
   railTick,
   railTransition,
   validRail,
-  type RailState,
 } from "../src/arcade/games/rail-parade/engine";
 import {
+  CRAB_HOP,
+  CRAB_RX,
   crabConfig,
   crabLanes,
   crabLevel,
   crabLevels,
+  crabPace,
+  crabPosition,
   crabResult,
   crabStep,
   crabTransition,
@@ -28,314 +33,306 @@ import {
   supported,
   validCrab,
 } from "../src/arcade/games/crab-crossing/engine";
-import { delta, directions, opposite, same, type Direction } from "../src/arcade/games/grid/rules";
-function railPath(s: RailState): Direction[] {
-  const q: { x: number; y: number; path: Direction[]; direction: Direction }[] = [
-      { ...s.body[0], path: [], direction: s.direction },
-    ],
-    seen = new Set<string>();
-  while (q.length) {
-    const c = q.shift()!;
-    if (same(c, s.food)) return c.path;
-    for (const d of directions) {
-      if (!c.path.length && s.body.length > 1 && opposite(s.direction, d)) continue;
-      const p = { x: c.x + delta[d].x, y: c.y + delta[d].y },
-        key = `${p.x},${p.y}`;
-      if (
-        p.x < 0 ||
-        p.x > 9 ||
-        p.y < 0 ||
-        p.y > 9 ||
-        seen.has(key) ||
-        s.body.slice(0, -1).some((b) => same(b, p)) ||
-        (railLearning(s) && same(p, s.decoy)) ||
-        (s.level !== "endless" && s.level.hedges.some((b) => same(b, p))) ||
-        railSnake(s).some((b) => same(b, p)) ||
-        (!railLearning(s) && s.level !== "endless" && p.y === s.level.snakeRow && p.x > 0 && p.x < 9)
-      )
-        continue;
-      seen.add(key);
-      q.push({ ...p, direction: d, path: [...c.path, d] });
-    }
-  }
-  return [];
-}
-describe("grid arcade content", () => {
-  it("has 56 provisional levels per game, three goals each, and no mutable shared state", () => {
+import { type Direction, same } from "../src/arcade/games/grid/rules";
+import { crabAdvance, crossingPath, railPath, railUpcoming } from "./grid-fixtures";
+const tick = { type: "tick" } as const;
+describe("feel grid content", () => {
+  it("validates all 112 levels, ramps, clear respawn zones and distinct world twists", () => {
     for (const levels of [railLevels, crabLevels]) {
       expect(levels.map((l) => l.id)).toEqual(allLevelIds);
       expect(levels.every((l) => l.goals.length === 3 && l.goals.every(Boolean))).toBe(true);
     }
-    expect(railLevel("w1-1").tick).toBeGreaterThan(railLevel("w3-8").tick);
-    expect(crabLevel("w3-8").speed).toBeGreaterThan(crabLevel("w1-1").speed);
     for (const id of allLevelIds) {
-      expect(validRail(createRail(railLevel(id), 42))).toBe(true);
-      expect(validCrab(createCrab(crabLevel(id), 42))).toBe(true);
+      const r = createRail(railLevel(id), 120),
+        c = createCrab(crabLevel(id), 120);
+      expect(validRail(r), id).toBe(true);
+      expect(validCrab(c), id).toBe(true);
+      const safe = railSafeStart(r);
+      expect(
+        safe.body.every((p) => !railHedges(r).some((h) => same(p, h)) && !railSnake(r).some((h) => same(p, h)))
+      ).toBe(true);
+      expect(railTick({ ...r, collected: r.level !== "endless" ? r.level.target : 10 })).toBeLessThan(railTick(r));
+      expect(crabPace({ ...c, furthest: 0, crossed: 1 })).toBeGreaterThan(crabPace(c));
     }
+    expect(railLevel("w1-1").target).toBe(6);
+    expect(railTick(createRail(railLevel("w1-1"), 1))).toBe(0.24);
+    expect(railLevel("w3-8").tick).toBeCloseTo(0.124);
+    expect(crabLevel("w1-1").speed).toBe(1);
+    expect(
+      new Set(
+        railLevels
+          .filter((l) => l.index === 1 && l.world !== "learn")
+          .map((l) => JSON.stringify([l.hedges, l.snakeSpan]))
+      ).size
+    ).toBe(6);
+    const laneTwists = crabLevels
+      .filter((l) => l.index === 1 && l.world !== "learn")
+      .map((l) => JSON.stringify(crabLanes(createCrab(l, 1)).map((x) => [x.row, x.kind, Math.sign(x.speed)])));
+    expect(new Set(laneTwists).size).toBe(6);
   });
 });
-describe("Rail Parade", () => {
-  it("buffers two fair turns and rejects a reverse against the queued turn", () => {
-    const s = createRail(railLevel("w1-1"), 10, false),
+describe("Rail movement, damage and interpolation", () => {
+  it("buffers exactly two non-reversing turns and consumes them at cell boundaries", () => {
+    const s = createRail(railLevel("w1-1"), 1),
       a = railTransition(s, { type: "turn", direction: "up" }),
       b = railTransition(a, { type: "turn", direction: "left" });
     expect(b.queue).toEqual(["up", "left"]);
     expect(railTransition(a, { type: "turn", direction: "down" })).toBe(a);
     expect(railTransition(b, { type: "turn", direction: "down" })).toBe(b);
-    expect(railTransition(s, { type: "turn", direction: "left" })).toBe(s);
-    let next = b;
-    for (let i = 0; i < 80; i++) next = railStep(next, { type: "tick" }, 1 / 60);
-    expect(next.body[0]).toEqual({ x: 1, y: 6 });
+    let n = b;
+    for (let i = 0; i < 15; i++) n = railStep(n, tick, 1 / 60);
+    expect(n.body[0]).toEqual({ x: 3, y: 7 });
+    expect(n.direction).toBe("up");
+    expect(n.queue).toEqual(["left"]);
+    const p = railBodyPose({ ...n, elapsed: railTick(n) / 2 });
+    expect(p[0]).toEqual({ x: 3, y: 6.5 });
+    expect(p[1]).toEqual({ x: 2.5, y: 7 });
     expect(s.body[0]).toEqual({ x: 2, y: 7 });
   });
-  it("allows the vacated tail but catches body, edge, hedge and snake collisions", () => {
-    const s = createRail(railLevel("w2-1"), 2, false),
-      square: RailState = {
-        ...s,
-        body: [
-          { x: 3, y: 3 },
-          { x: 3, y: 4 },
-          { x: 2, y: 4 },
-          { x: 2, y: 3 },
-        ],
-        food: { x: 8, y: 8 },
-      };
-    expect(railMove(square, "left").phase).toBe("play");
-    expect(railMove(square, "down").phase).toBe("rest");
-    expect(railMove({ ...s, body: [{ x: 9, y: 7 }] }, "right").phase).toBe("rest");
-    expect(railMove({ ...s, body: [{ x: 3, y: 4 }] }, "right").phase).toBe("rest");
-    const snake = railSnake(s);
-    expect(railMove({ ...s, body: [{ x: snake[0].x, y: snake[0].y + 1 }] }, "up").phase).toBe("rest");
-  });
-  it("Helper slows steps, loses one chick on a bump and can still earn three stars", () => {
-    const s = createRail(railLevel("w1-1"), 2, true),
-      atEdge = {
-        ...s,
-        body: [
-          { x: 9, y: 7 },
-          { x: 8, y: 7 },
-          { x: 7, y: 7 },
-        ],
-      },
-      b = railMove(atEdge, "right");
-    expect(b.phase).toBe("play");
-    expect(b.body).toHaveLength(2);
-    expect(b.bumps).toBe(1);
-    expect(railTick(s)).toBeGreaterThan(railTick({ ...s, helper: false }));
-    const final = railMove({ ...s, collected: 2, food: { x: 3, y: 7 } }, "right");
-    expect(railResult(final)).toMatchObject({ cleared: true, stars: 3, score: 40 });
-    expect(railResult({ ...final, bumps: 2 })?.stars).toBe(2);
-    expect(railResult({ ...final, bumps: 3 })?.stars).toBe(1);
-  });
-  it.each(railLevels.filter((l) => l.world === "learn"))("finishes $id by actual untimed moves", (level) => {
-    let s = createRail(level, 120, false);
-    expect(railStep(s, { type: "tick" }, 100)).toBe(s);
-    for (let i = 0; i < 100 && !railResult(s); i++) {
-      const path = railPath(s);
-      expect(path.length).toBeGreaterThan(0);
-      s = railTransition(s, { type: "turn", direction: path[0] });
-      expect(validRail(s)).toBe(true);
+  it("allows a vacated tail and spends hearts for walls/body/hedges/patrol in either mode", () => {
+    for (const helper of [false, true]) {
+      const s = createRail(railLevel("w2-1"), 2, helper),
+        square = {
+          ...s,
+          body: [
+            { x: 3, y: 3 },
+            { x: 3, y: 4 },
+            { x: 2, y: 4 },
+            { x: 2, y: 3 },
+          ],
+          food: { x: 8, y: 8 },
+        };
+      expect(railMove(square, "left").bumps).toBe(0);
+      for (const hit of [
+        railMove(square, "down"),
+        railMove({ ...s, body: [{ x: 9, y: 7 }] }, "right"),
+        railMove({ ...s, body: [{ x: 3, y: 4 }] }, "right"),
+        railMove({ ...s, body: [{ x: railSnake(s)[0].x, y: 2 }] }, "up"),
+      ]) {
+        expect(hit.lives.hearts).toBe(s.lives.hearts - 1);
+        expect(hit.phase).toBe("play");
+        expect(hit.queue).toEqual([]);
+        expect(hit.respawn).toBe(0.3);
+        expect(hit.lives.invulnerable).toBe(1.2);
+        expect(hit.body).toHaveLength(3);
+      }
     }
-    expect(railResult(s)?.cleared).toBe(true);
-    expect(s.collected).toBe(level.sequence.length);
-    expect(s.bumps).toBe(0);
-    expect(s.score).toBe(s.collected * 40);
   });
-  it("keeps wrong tiles untimed and recoverable; terminal inputs do not rescore", () => {
-    let s = createRail(railLevel("learn-1"), 2, false);
-    s = { ...s, decoy: { x: 3, y: 7 }, food: { x: 6, y: 6 } };
-    const next = railTransition(s, { type: "turn", direction: "right" });
-    expect(next.body).toBe(s.body);
-    expect(next.collected).toBe(0);
-    expect(next.bumps).toBe(1);
-    const end = railTransition(createRail("endless", 2), { type: "finish" });
-    expect(railResult(end)?.stars).toBe(0);
-    expect(railTransition(end, { type: "turn", direction: "up" })).toBe(end);
+  it("reaches finite game over, protects respawn, preserves terminal identity and cannot refill by toggling", () => {
+    let s = createRail(railLevel("w1-1"), 2);
+    for (let hit = 0; hit < 3; hit++) {
+      s = railMove({ ...s, body: [{ x: 9, y: 7 }], respawn: 0, lives: { ...s.lives, invulnerable: 0 } }, "right");
+      expect(s.lives.hearts).toBe(2 - hit);
+      if (hit === 0) {
+        expect(railMove(s, "up")).toBe(s);
+        const on = railTransition(s, { type: "helper", value: true });
+        expect(on.lives.hearts).toBe(4);
+        expect(railTransition(on, { type: "helper", value: false }).lives.hearts).toBe(2);
+      }
+    }
+    expect(railResult(s)).toMatchObject({ outcome: "game-over", stars: 0 });
+    expect(railStep(s, tick, 1 / 60)).toBe(s);
+    expect(railTransition(s, { type: "helper", value: true })).toBe(s);
   });
-  it("reproduces RNG, ignores invalid input and rejects malformed states", () => {
-    const a = createRail(railLevel("w1-2"), 12);
-    expect(a).toEqual(createRail(railLevel("w1-2"), 12));
-    expect(a.food).not.toEqual(createRail(railLevel("w1-2"), 14).food);
-    for (const dt of [NaN, Infinity, -1, 0]) expect(railStep(a, { type: "tick" }, dt)).toBe(a);
-    expect(railTransition(a, { type: "turn", direction: "diagonal" as Direction })).toBe(a);
+  it("has real move pars, not automatic three stars for every no-hit finish", () => {
+    const s = createRail(railLevel("w1-1"), 1),
+      l = railLevel("w1-1"),
+      win = { ...s, phase: "cleared" as const, collected: l.target, score: l.target * 40, moves: l.par };
+    expect(railResult(win)?.stars).toBe(3);
+    expect(railResult({ ...win, moves: l.par + 1 })?.stars).toBe(2);
+    expect(railResult({ ...win, bumps: 2 })?.stars).toBe(1);
+  });
+  it("is deterministic, native-free, strict and rejects malformed motion/lives", () => {
+    const s = createRail(railLevel("w3-8"), 12);
+    expect(s).toEqual(createRail(railLevel("w3-8"), 12));
+    for (const dt of [NaN, Infinity, -1, 0]) expect(railStep(s, tick, dt)).toBe(s);
     for (const bad of [
       null,
       {},
-      { ...a, seed: NaN },
-      { ...a, phase: "cleared" },
-      { ...a, score: 999 },
-      { ...a, level: { cycle: a } },
-      { ...a, body: [a.body[0], a.body[0]] },
-      { ...a, level: { ...(a.level as object), tick: -3 } },
-      { ...a, extra: true },
-      { ...a, queue: ["up", "left", "down"] },
-      { ...a, food: { x: 10, y: 0 } },
+      { ...s, body: null },
+      { ...s, previous: [null] },
+      { ...s, body: [s.body[0], s.body[0]] },
+      { ...s, queue: ["up", "left", "down"] },
+      { ...s, lives: { ...s.lives, hearts: Infinity } },
+      { ...s, phase: "rest" },
+      { ...s, food: { x: 10, y: 1 } },
+      { ...s, score: 99 },
+      { ...s, level: { ...railLevel("w3-8"), tick: -1 } },
+      { ...s, extra: true },
     ])
       expect(validRail(bad)).toBe(false);
+    expect(railTransition(s, { type: "turn", direction: "diagonal" as Direction })).toBe(s);
   });
 });
-describe("Crab Crossing", () => {
-  it.each(crabLevels.filter((l) => l.world === "learn"))(
-    "finishes $id by real hops with no clock pressure",
-    (level) => {
-      let s = createCrab(level, 7, false);
-      expect(crabStep(s, { type: "tick" }, 900)).toBe(s);
-      for (const target of level.stones) {
-        while (s.x !== target) s = crabTransition(s, { type: "hop", direction: s.x < target ? "right" : "left" });
-        s = crabTransition(s, { type: "hop", direction: "up" });
-        expect(validCrab(s)).toBe(true);
-      }
-      s = crabTransition(s, { type: "hop", direction: "up" });
-      expect(crabResult(s)).toMatchObject({ cleared: true, stars: 3, score: 100 });
-      expect(s.cursor).toBe(9);
-      expect(s.time).toBeGreaterThan(0);
-    }
-  );
-  it("shows count on, back and skip counting with a recoverable wrong step", () => {
-    expect(crabLevel("learn-1").numbers).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    expect(crabLevel("learn-2").numbers).toEqual([9, 8, 7, 6, 5, 4, 3, 2, 1]);
-    expect(crabLevel("learn-6").numbers).toEqual([5, 10, 15, 20, 25, 30, 35, 40, 45]);
-    const s = { ...createCrab(crabLevel("learn-1"), 2, false), x: 3 },
-      next = crabTransition(s, { type: "hop", direction: "up" });
-    expect(next.y).toBe(10);
-    expect(next.cursor).toBe(0);
-    expect(next.phase).toBe("play");
-    expect(next.bumps).toBe(1);
-  });
-  it("carries riders continuously, detects water and traffic, and handles wrapped platforms", () => {
-    const s = createCrab(crabLevel("w3-1"), 7, false),
-      lanes = crabLanes(s),
-      log = lanes.find((l) => l.row === 4)!,
-      bus = lanes.find((l) => l.kind === "bus")!,
-      x = laneObjects(log, 0).find((x) => x >= 1 && x <= 7)!;
-    expect(supported(log, x, 0)).toBe(true);
-    const rider = crabStep({ ...s, x, y: 4 }, { type: "tick" }, 1 / 60);
-    expect(rider.phase).toBe("play");
-    expect(rider.x).toBeCloseTo(x + log.speed / 60);
-    const hit = crabStep(
-      { ...s, x: laneObjects(bus, 0).find((x) => x >= 0 && x <= 8)!, y: 7 },
-      { type: "tick" },
-      1 / 60
-    );
-    expect(hit.phase).toBe("rest");
-    const gap = Array.from({ length: 9 }, (_, x) => x).find((x) => !supported(log, x, 0))!;
-    expect(crabStep({ ...s, x: gap, y: 4 }, { type: "tick" }, 1 / 60).phase).toBe("rest");
-    for (const t of [0, 1, 10, 1000]) expect(laneObjects(log, t).every(Number.isFinite)).toBe(true);
-  });
-  it("Helper adds a safe island and checkpoint without lowering stars", () => {
-    const s = createCrab(crabLevel("w3-1"), 2),
-      off = { ...s, helper: false };
-    expect(crabLanes(s).some((l) => l.row === 2)).toBe(false);
-    expect(crabLanes(off).some((l) => l.row === 2)).toBe(true);
-    expect(crabLanes(s)[0].speed).toBeLessThan(crabLanes(off)[0].speed);
-    const bumped = crabStep({ ...s, x: -0.1, y: 3 }, { type: "tick" }, 1 / 60);
-    expect(bumped.phase).toBe("play");
-    expect(bumped.y).toBe(5);
-    expect(bumped.bumps).toBe(1);
-    expect(crabResult(crabTransition({ ...s, y: 1 }, { type: "hop", direction: "up" }))?.stars).toBe(3);
-  });
-  it("supports multi-crossing goals, voluntary endless finish and rejects malformed saves", () => {
-    const s = createCrab(crabLevel("w1-8"), 12, false),
-      once = crabTransition({ ...s, y: 1 }, { type: "hop", direction: "up" });
-    expect(once.y).toBe(10);
-    expect(once.crossed).toBe(1);
-    expect(crabResult(once)).toBeNull();
-    const end = crabTransition({ ...once, y: 1 }, { type: "hop", direction: "up" });
-    expect(crabResult(end)?.score).toBe(200);
-    expect(crabTransition(end, { type: "hop", direction: "up" })).toBe(end);
-    expect(crabResult(crabTransition(createCrab("endless", 12), { type: "finish" }))?.stars).toBe(0);
-    expect(createCrab(s.level, 12)).toEqual({ ...s, helper: true });
-    for (const bad of [
-      null,
-      {},
-      { ...s, x: Infinity },
-      { ...s, phase: "cleared" },
-      { ...s, score: 99 },
-      { ...s, cursor: 1 },
-      { ...s, y: 11 },
-      { ...s, cursor: 10 },
-      { ...s, level: { ...crabConfig(s), speed: -1 } },
-      { ...s, unknown: 1 },
-      { ...s, time: NaN },
-    ])
-      expect(validCrab(bad)).toBe(false);
-    for (const dt of [NaN, Infinity, -1, 0]) expect(crabStep(s, { type: "tick" }, dt)).toBe(s);
-  });
-});
-describe("grid progress uses the strict existing kit save", () => {
-  it.each(["rail-parade", "crab-crossing"] as const)("round-trips %s progress and rejects malformed stars", (game) => {
-    let s = arcadeTransition(emptyArcade(), "family", {
-      type: "finish",
-      game,
-      level: "learn-1",
-      score: 100,
-      stars: 3,
-      round: "grid-test",
-      name: "Family",
-    });
-    expect(validArcade(s)).toBe(true);
-    expect(validArcade(JSON.parse(JSON.stringify(s)))).toBe(true);
-    expect(s.people.family.games[game]?.stars["learn-1"]).toBe(3);
-    s = {
-      ...s,
-      people: {
-        ...s.people,
-        family: {
-          ...s.people.family,
-          games: { [game]: { ...s.people.family.games[game]!, stars: { "learn-1": 7 as 3 } } },
-        },
-      },
-    };
-    expect(validArcade(s)).toBe(false);
-  });
-});
-
-describe("Rail normal-world reachability", () => {
-  it.each(railLevels.filter((l) => l.world !== "learn"))("clears $id with Helper off and fixed ticks", (level) => {
-    let s = createRail(level, 120, false);
-    for (let turn = 0; turn < 260 && !railResult(s); turn++) {
+describe("Rail deterministic completion fixtures", () => {
+  it.each(railLevels)("clears $id with a bounded route and a skill par", (level) => {
+    let s = createRail(level, 120);
+    for (let move = 0; move < 700 && s.phase === "play"; move++) {
       const path = railPath(s);
-      expect(path.length).toBeGreaterThan(0);
-      s = railTransition(s, { type: "turn", direction: path[0] });
-      const before = s.moves;
-      for (let tick = 0; tick < 80 && s.moves === before && !railResult(s); tick++)
-        s = railStep(s, { type: "tick" }, 1 / 60);
-      expect(validRail(s)).toBe(true);
+      expect(path.length, `${level.id} ${s.moves}`).toBeGreaterThan(0);
+      // Real input queue and fixed ticks, with one-cell lookahead for an in-flight turn.
+      if (level.world === "learn") s = railMove(s, path[0]);
+      else {
+        const turn = railUpcoming(s);
+        if (turn) s = railTransition(s, { type: "turn", direction: turn });
+        const before = s.moves;
+        for (let frame = 0; frame < 30 && s.moves === before && s.phase === "play" && s.respawn === 0; frame++)
+          s = railStep(s, tick, 1 / 60);
+      }
+      expect(validRail(s), `${level.id} ${s.moves}`).toBe(true);
     }
     expect(railResult(s)).toMatchObject({ cleared: true, stars: 3 });
   });
 });
-
-function crossingPath(s: import("../src/arcade/games/crab-crossing/engine").CrabState): (Direction | "wait")[] {
-  const q = [{ state: s, path: [] as (Direction | "wait")[] }],
-    seen = new Set<string>();
-  for (let i = 0; i < q.length && i < 16000; i++) {
-    const { state, path } = q[i];
-    for (const d of ["up", "left", "right", "down", "wait"] as const) {
-      let next = d === "wait" ? state : crabTransition(state, { type: "hop", direction: d });
-      for (let tick = 0; tick < 12 && next.phase === "play"; tick++) next = crabStep(next, { type: "tick" }, 1 / 60);
-      if (next.phase === "cleared" || next.crossed > s.crossed) return [...path, d];
-      if (next.bumps > s.bumps || next.phase !== "play" || path.length >= 55) continue;
-      const key = [Math.round(next.x * 4), next.y, Math.round(next.time * 10)].join();
-      if (!seen.has(key)) {
-        seen.add(key);
-        q.push({ state: next, path: [...path, d] });
-      }
-    }
-  }
-  throw new Error(`No route through ${s.level === "endless" ? "free play" : s.level.id}`);
-}
-describe("Crab normal-world reachability", () => {
-  it.each(crabLevels.filter((l) => l.world !== "learn"))("clears $id with Helper off and moving lanes", (level) => {
-    let s = createCrab(level, 120, false);
-    for (let crossing = 0; crossing < level.target; crossing++) {
-      const path = crossingPath(s);
-      for (const direction of path) {
-        if (direction !== "wait") s = crabTransition(s, { type: "hop", direction });
-        for (let tick = 0; tick < 12 && s.phase === "play"; tick++) s = crabStep(s, { type: "tick" }, 1 / 60);
-        expect(validCrab(s)).toBe(true);
-      }
-    }
-    expect(crabResult(s)).toMatchObject({ cleared: true, stars: 3 });
+describe("Crab hops, visible geometry and lives", () => {
+  it("starts on down, moves between cells for 120ms, buffers two hops and preserves fractional x", () => {
+    const s = { ...createCrab(crabLevel("w1-1"), 42), x: 4.49, y: 5 },
+      a = crabTransition(s, { type: "hop", direction: "up" });
+    expect(a.x).toBe(4.49);
+    expect(a.hop?.toX).toBe(4.49);
+    const half = crabStep(a, tick, CRAB_HOP / 2);
+    expect(crabPosition(half)).toMatchObject({ x: 4.49, y: 4.5 });
+    expect(crabPosition(half).arc).toBeCloseTo(0.18);
+    const b = crabTransition(crabTransition(a, { type: "hop", direction: "left" }), { type: "hop", direction: "up" });
+    expect(b.queue).toEqual(["left", "up"]);
+    expect(crabTransition(b, { type: "hop", direction: "right" })).toBe(b);
+    expect(crabTransition(s, { type: "hop", direction: "right" }).hop?.toX).toBe(5.49);
   });
+  it("integrates ramps without teleporting objects, carries riders, and uses exact deck margins", () => {
+    const s = createCrab(crabLevel("w3-1"), 7),
+      log = crabLanes(s).find((l) => l.row === 4)!,
+      x = laneObjects(log, 0).find((x) => x >= 1 && x <= 7)!;
+    const rider = crabStep({ ...s, x, y: 4 }, tick, 1 / 60);
+    expect(rider.x).toBeCloseTo(x + (log.speed * crabPace(s)) / 60);
+    expect(rider.bumps).toBe(0);
+    expect(supported(log, x + log.span / 2 - CRAB_RX - 0.001, 0)).toBe(true);
+    expect(supported(log, x + log.span / 2 - CRAB_RX + 0.001, 0)).toBe(false);
+    expect(laneObjects(log, s.travel)).toEqual(laneObjects(crabLanes({ ...s, furthest: 0, crossed: 2 })[3], s.travel));
+    const helper = crabTransition(s, { type: "helper", value: true });
+    expect(laneObjects(crabLanes(helper)[0], helper.travel)).toEqual(laneObjects(crabLanes(s)[0], s.travel));
+    expect(crabPace(helper)).toBeLessThan(crabPace(s));
+  });
+  it("splat/splash originate at impact, cost a heart and return to the current zone", () => {
+    for (const helper of [false, true]) {
+      const s = createCrab(crabLevel("w3-1"), 7, helper),
+        bus = crabLanes(s).find((l) => l.kind === "bus")!,
+        x = laneObjects(bus, 0).find((x) => x > 1 && x < 7)!;
+      const hit = crabStep({ ...s, x, y: 7 }, tick, 1 / 60);
+      expect(hit.lives.hearts).toBe(s.lives.hearts - 1);
+      expect(hit.impact.kind).toBe("splat");
+      expect(hit.impact.x).toBeCloseTo(x);
+      expect(hit.y).toBe(10);
+      const log = crabLanes(s).find((l) => l.row === 4)!,
+        gap = Array.from({ length: 81 }, (_, i) => i / 10).find((x) => !supported(log, x, 0))!;
+      const splash = crabStep({ ...s, x: gap, y: 4 }, tick, 1 / 60);
+      expect(splash.impact.kind).toBe("splash");
+      expect(splash.y).toBe(5);
+      expect(splash.shield).toBe(1.2);
+      expect(splash.respawn).toBe(0.3);
+    }
+  });
+  it("reaches game over in 3/5 hits and keeps the terminal state stable", () => {
+    for (const helper of [false, true]) {
+      let s = createCrab(crabLevel("w1-1"), 7, helper);
+      for (let i = 0; i < (helper ? 5 : 3); i++) {
+        const l = crabLanes(s)[0],
+          x = laneObjects(l, s.travel).find((x) => x > 1 && x < 7)!;
+        s = crabStep({ ...s, x, y: 8, respawn: 0, shield: 0, lives: { ...s.lives, invulnerable: 0 } }, tick, 1 / 60);
+      }
+      expect(crabResult(s)).toMatchObject({ outcome: "game-over", stars: 0 });
+      expect(crabStep(s, tick, 1 / 60)).toBe(s);
+    }
+  });
+  it("animates learning while traffic stays still; wrong stones never spend lives", () => {
+    const s = createCrab(crabLevel("learn-1"), 2),
+      a = crabTransition(s, { type: "hop", direction: "up" }),
+      b = crabStep(a, tick, 0.06);
+    expect(crabPosition(b).y).toBe(9.5);
+    expect(b.travel).toBe(0);
+    const wrong = crabTransition({ ...s, x: 3 }, { type: "hop", direction: "up" });
+    expect(wrong.bumps).toBe(1);
+    expect(wrong.lives).toBe(s.lives);
+    expect(wrong.hop).toBeNull();
+    expect(crabLevel("learn-6").numbers).toEqual([5, 10, 15, 20, 25, 30, 35, 40, 45]);
+  });
+  it("rejects malformed states and has finite skill-based hop pars", () => {
+    const s = createCrab(crabLevel("w1-1"), 1),
+      l = crabConfig(s),
+      win = { ...s, phase: "cleared" as const, crossed: l.target, y: 0, score: l.target * 100, hops: l.par };
+    expect(crabResult(win)?.stars).toBe(3);
+    expect(crabResult({ ...win, hops: l.par + 1 })?.stars).toBe(2);
+    expect(crabResult({ ...win, bumps: 2 })?.stars).toBe(1);
+    for (const bad of [
+      null,
+      {},
+      { ...s, x: Infinity },
+      { ...s, hop: { fromX: 1 } },
+      { ...s, lives: { ...s.lives, hearts: -1 } },
+      { ...s, shield: 0.5 },
+      { ...s, phase: "rest" },
+      { ...s, impact: null },
+      { ...s, score: 99 },
+      { ...s, cursor: 1 },
+      { ...s, level: { ...l, speed: -1 } },
+      { ...s, extra: true },
+    ])
+      expect(validCrab(bad)).toBe(false);
+    for (const dt of [NaN, Infinity, -1, 0]) expect(crabStep(s, tick, dt)).toBe(s);
+    expect(s).toEqual(createCrab(l, 1));
+  });
+});
+describe("Crab deterministic completion fixtures", () => {
+  it.each(crabLevels)(
+    "clears $id through actual hops and moving lanes",
+    (level) => {
+      let s = createCrab(level, 120);
+      if (level.world === "learn") {
+        for (const target of level.stones) {
+          while (Math.abs(s.x - target) > 0.01)
+            s = crabAdvance(crabTransition(s, { type: "hop", direction: s.x < target ? "right" : "left" }));
+          s = crabAdvance(crabTransition(s, { type: "hop", direction: "up" }));
+          expect(validCrab(s)).toBe(true);
+        }
+        s = crabAdvance(crabTransition(s, { type: "hop", direction: "up" }));
+      } else
+        for (let crossing = 0; crossing < level.target; crossing++) {
+          const path = crossingPath(s);
+          for (const d of path) {
+            s = crabAdvance(d === "wait" ? s : crabTransition(s, { type: "hop", direction: d }));
+            expect(validCrab(s), `${level.id} ${JSON.stringify(s)}`).toBe(true);
+          }
+          if (s.phase === "play") s = crabAdvance(s, 12);
+        }
+      expect(crabResult(s)).toMatchObject({ cleared: true, stars: 3 });
+    },
+    30000
+  );
+});
+describe("grid progress remains validated and monotone", () => {
+  it.each(["rail-parade", "crab-crossing"] as const)(
+    "keeps %s stars after a loss and round-trips extended IDs",
+    (game) => {
+      let s = arcadeTransition({ ...emptyArcade(), unlockAll: true }, "family", {
+        type: "finish",
+        game,
+        level: "w6-8",
+        score: 200,
+        stars: 3,
+        round: "grid-feel-win",
+        name: "Family",
+      });
+      expect(validArcade(s)).toBe(true);
+      expect(validArcade(JSON.parse(JSON.stringify(s)))).toBe(true);
+      s = arcadeTransition(s, "family", {
+        type: "finish",
+        game,
+        level: "w6-8",
+        score: 0,
+        stars: 0,
+        round: "grid-feel-loss",
+        name: "Family",
+      });
+      expect(s.people.family.games[game]?.stars["w6-8"]).toBe(3);
+    }
+  );
 });

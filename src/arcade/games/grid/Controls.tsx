@@ -5,11 +5,11 @@ import { Copy } from "../../../components/ui";
 import { Text } from "../../../components/Text";
 import { nativeDriver, useReducedMotion } from "../../../components/motion";
 import { directions, type Direction } from "./rules";
-export function useGridInput(active: boolean, move: (d: Direction) => void) {
-  const latest = useRef({ active, move });
+export function useGridInput(active: boolean, move: (d: Direction) => void, repeat = false) {
+  const latest = useRef({ active, move, repeat });
   useLayoutEffect(() => {
-    latest.current = { active, move };
-  }, [active, move]);
+    latest.current = { active, move, repeat };
+  }, [active, move, repeat]);
   useEffect(() => {
     if (Platform.OS !== "web") return;
     const keys: Record<string, Direction> = {
@@ -23,7 +23,12 @@ export function useGridInput(active: boolean, move: (d: Direction) => void) {
       a: "left",
     };
     const key = (e: KeyboardEvent) => {
-      if (latest.current.active && keys[e.key] && !e.repeat && !(e.target instanceof HTMLInputElement)) {
+      if (
+        latest.current.active &&
+        keys[e.key] &&
+        (!e.repeat || latest.current.repeat) &&
+        !(e.target instanceof HTMLInputElement)
+      ) {
         e.preventDefault();
         latest.current.move(keys[e.key]);
       }
@@ -37,10 +42,12 @@ export function DirectionPad({
   active,
   onMove,
   horizontal = false,
+  repeat = false,
 }: {
   active: boolean;
   onMove: (d: Direction) => void;
   horizontal?: boolean;
+  repeat?: boolean;
 }) {
   const icons = { up: "↑", right: "→", down: "↓", left: "←" };
   return (
@@ -50,6 +57,7 @@ export function DirectionPad({
           <PressControl
             key={d}
             disabled={!active}
+            repeat={repeat ? { das: 170, arr: 120 } : undefined}
             accessibilityRole="button"
             accessibilityLabel={`Move ${d}`}
             onPress={() => onMove(d)}
@@ -179,5 +187,10 @@ export function Shake({ event, children }: { event: number; children: React.Reac
 }
 
 export function GridBudget({ budget }: { budget: import("../../loop").FrameBudget }) {
-  return <Copy style={{ color: "#CFDFD5", fontSize: 11, textAlign: "center" }}>{budget.fps.toFixed(1)} fps · p95 {budget.p95.toFixed(1)} ms / 16.7 ms · max {budget.max.toFixed(1)} ms · {budget.dropped.toFixed(2)} s clamped</Copy>;
+  return (
+    <Copy style={{ color: "#CFDFD5", fontSize: 11, textAlign: "center" }}>
+      {budget.fps.toFixed(1)} fps · p95 {budget.p95.toFixed(1)} ms / 16.7 ms · max {budget.max.toFixed(1)} ms ·{" "}
+      {budget.dropped.toFixed(2)} s clamped
+    </Copy>
+  );
 }

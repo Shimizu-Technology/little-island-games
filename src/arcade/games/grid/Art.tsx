@@ -193,7 +193,7 @@ export const GridObject = memo(function GridObject({ kind, size = 60 }: { kind: 
     </Svg>
   );
 });
-export function GridBackdrop({
+export const GridBackdrop = memo(function GridBackdrop({
   crab,
   world = "w1",
   width,
@@ -205,7 +205,7 @@ export function GridBackdrop({
   height: number;
 }) {
   const gradient = useId();
-  const p = palettes[crab ? "crab" : "rail"][{ w1: 0, w2: 1, w3: 2, learn: 3 }[world] ?? 0];
+  const p = palettes[crab ? "crab" : "rail"][{ w1: 0, w2: 1, w3: 2, w4: 1, w5: 2, w6: 0, learn: 3 }[world] ?? 0];
   return (
     <Svg
       width={width}
@@ -246,7 +246,8 @@ export function GridBackdrop({
       ))}
     </Svg>
   );
-}
+});
+
 export function ChestArt({ size = 140, open = false }: { size?: number; open?: boolean }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 140 140" accessible={false}>
@@ -273,3 +274,78 @@ export function ChestArt({ size = 140, open = false }: { size?: number; open?: b
     </Svg>
   );
 }
+
+/** Exact lane-space deck/hull bounds. No nested scale or square art inside a wider collision box. */
+export const CoastalObject = memo(function CoastalObject({
+  kind,
+  width,
+  height,
+}: {
+  kind: string;
+  width: number;
+  height: number;
+}) {
+  const water = ["log", "turtle", "canoe", "island"].includes(kind);
+  return (
+    <Svg width={width} height={height} viewBox="0 0 100 100" preserveAspectRatio="none" accessible={false}>
+      {water ? (
+        <>
+          <Rect
+            x={0.5}
+            y={32}
+            width={99}
+            height={43}
+            rx={kind === "island" ? 13 : 8}
+            fill={
+              kind === "turtle" ? "#75AE75" : kind === "island" ? "#EACB89" : kind === "canoe" ? "#E7B769" : "#BA8A59"
+            }
+            stroke={kind === "island" ? "#A9D3A2" : "#614638"}
+            strokeWidth={1}
+          />
+          {kind === "turtle" ? (
+            [16, 50, 84].map((x) => (
+              <G key={x}>
+                <Ellipse cx={x} cy={52} rx={12} ry={25} fill="#B6D17C" stroke="#4C886C" strokeWidth={1.3} />
+                <Path
+                  d={`M${x} 30V74M${x - 10} 45L${x + 10} 62M${x + 10} 45L${x - 10} 62`}
+                  stroke="#75AE75"
+                  strokeWidth={1.5}
+                />
+                <Ellipse cx={x} cy={23} rx={5} ry={10} fill="#A8D5A1" />
+              </G>
+            ))
+          ) : (
+            <>
+              <Path
+                d="M5 42Q50 32 95 42M5 63Q50 72 95 63"
+                fill="none"
+                stroke={kind === "island" ? "#FFF0BC" : "#F1C98A"}
+                strokeWidth={2}
+              />
+              <Path d="M19 52H38M61 55H83" stroke={kind === "island" ? "#8CA975" : "#936740"} strokeWidth={2} />
+            </>
+          )}
+        </>
+      ) : (
+        <G stroke="#263D51" strokeWidth={1.8} strokeLinejoin="round">
+          <Ellipse cx={23} cy={74} rx={9} ry={11} fill="#31465A" />
+          <Ellipse cx={77} cy={74} rx={9} ry={11} fill="#31465A" />
+          {kind === "bike" ? (
+            <>
+              <Path d="M9 71L34 38L82 71H9L51 51M58 28H80" stroke="#FFD479" strokeWidth={6} fill="none" />
+              <Ellipse cx={51} cy={27} rx={10} ry={12} fill="#FFD5A7" />
+              <Path d="M47 40L58 54L76 53" stroke="#F19C85" strokeWidth={8} />
+            </>
+          ) : (
+            <>
+              <Rect x={4} y={26} width={92} height={49} rx={8} fill={kind === "bus" ? "#FFD16E" : "#F39777"} />
+              <Rect x={12} y={32} width={kind === "bus" ? 70 : 40} height={23} rx={4} fill="#B5E7ED" />
+              <Path d="M32 32V55M52 32V55M8 63H90" stroke="#FFF1B8" strokeWidth={2} />
+              <Rect x={89} y={58} width={6} height={9} fill="#FFF3BC" />
+            </>
+          )}
+        </G>
+      )}
+    </Svg>
+  );
+});
