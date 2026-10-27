@@ -1,3 +1,4 @@
+import { BoardId, boardIds, catalog, isBoardId } from "../board";
 import { GameId, gameIds, games, isFinished } from "../games";
 import { random } from "../games/types";
 import { ActivityId, activityFinished, activityIds } from "../state/activities";
@@ -6,7 +7,7 @@ import { engines } from "./engines";
 import { finished } from "./session";
 import { dayNumber } from "./skills";
 import { Island, LearnId, learnIds } from "./types";
-export type ShelfId = GameId | ActivityId | LearnId;
+export type ShelfId = GameId | ActivityId | LearnId | BoardId;
 export type ShelfGame = { id: ShelfId; name: string; description: string; surface: string; players: string; filters: string[]; island: Island | "classic" };
 export const islandNames = { reading: "Reading", numbers: "Numbers", science: "Science", thinking: "Thinking", classic: "Classic games", explore: "Explore" };
 const extraGames: { id: ActivityId; name: string; description: string; surface: string; players: string; filters: string[] }[] = [
@@ -53,6 +54,7 @@ const extraGames: { id: ActivityId; name: string; description: string; surface: 
 ];
 
 export const shelfGames: ShelfGame[] = [
+  ...boardIds.map(id => ({ id, name: catalog[id].name, description: catalog[id].description, surface: catalog[id].surface, island: "classic" as const, players: id === "reef-sweep" ? "Play alone" : "1 or 2 players", filters: ["Play alone", "Think & explore", ...(id === "reef-sweep" ? [] : ["Play together"])] })),
   ...gameIds.map((id) => ({ id, ...games[id], island: "classic" as const,
     players: id === "maze" || id === "numbers" ? "Alone or together" : id === "word-rescue" ? "Word packs or family word" : "1 or 2 players",
     filters: ["Play alone", "Play together", ...(["word-rescue", "numbers"].includes(id) ? ["Words & numbers"] : ["Think & explore"])],
@@ -63,17 +65,18 @@ export const shelfGames: ShelfGame[] = [
     filters: [...(e.modes.includes("solo") ? ["Play alone"] : []), ...(e.modes.some(m => m !== "solo") ? ["Play together"] : [])] }; }),
 ];
 export function ongoing(save: Save, id: ShelfId) {
+  if (isBoardId(id)) { const s = save.board?.[id]; return !!s && s.position.outcome === null; }
   if (learnIds.includes(id as LearnId)) { const s = save.learn?.[id as LearnId]; return !!s && !finished(s); }
   if (gameIds.includes(id as GameId)) { const s = save.sessions[id as GameId]; return !!s && !isFinished(s); }
   const a = save.activities?.[id as ActivityId]; return !!a && !activityFinished(a);
 }
 /** The active marker wins even when its round just finished; never revive an older marker. */
 export function homeContinue(save: Save): ShelfId | null {
-  const id = save.recentLearn ?? save.recentActivity ?? save.recent;
+  const id = save.recentBoard ?? save.recentLearn ?? save.recentActivity ?? save.recent;
   return id && ongoing(save, id) ? id : null;
 }
 export function toggleShelfFavorite(save: Save, id: ShelfId): Save {
-  if (![...gameIds, ...activityIds, ...learnIds].includes(id)) return save;
+  if (![...gameIds, ...activityIds, ...learnIds, ...boardIds].includes(id)) return save;
   const before = save.favoriteGames ?? [];
   return { ...save, favoriteGames: before.includes(id) ? before.filter(g => g !== id) : [...before, id] };
 }

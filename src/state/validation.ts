@@ -1,3 +1,4 @@
+import { BoardId, BoardSessions, boardIds, isBoardId, validBoardSessions } from "../board";
 import { ExploreProgress, validExploreProgress } from "../explore/progress";
 import { GameId, GameState, gameIds } from "../games";
 import { checkersResult } from "../games/checkers";
@@ -21,7 +22,10 @@ export type Save = {
   settings: Settings;
   sessions: Partial<Record<GameId, GameState>>;
   recent: GameId | null;
-  favoriteGames?: (GameId | ActivityId | LearnId)[];
+  favoriteGames?: (GameId | ActivityId | LearnId | BoardId)[];
+  /** Board classics: one strictly replay-validated session per game. */
+  board?: BoardSessions;
+  recentBoard?: BoardId | null;
   wordRecords?: WordRecords;
   activities?: Activities;
   recentActivity?: ActivityId | null;
@@ -351,13 +355,15 @@ export function parseSave(raw: string): Save {
     !validLearningOwners(v.learn, v.learning) ||
     (v.settings.practice !== undefined && !validPracticeSettings(v.settings.practice)) ||
     (v.practiceNotes !== undefined && !validPracticeNotes(v.practiceNotes)) ||
+    (v.board !== undefined && !validBoardSessions(v.board)) ||
+    (v.recentBoard !== undefined && v.recentBoard !== null && !isBoardId(v.recentBoard)) ||
     !obj(v.sessions) ||
     Object.keys(v.sessions).some((k) => !gameIds.includes(k as GameId)) ||
     !Object.entries(v.sessions).every(([k, s]) => validSession(s) && s.game === k) ||
     (v.recent !== null && !gameIds.includes(v.recent as GameId)) ||
     (v.favoriteGames !== undefined &&
-      (!Array.isArray(v.favoriteGames) || v.favoriteGames.length > gameIds.length + activityIds.length + learnIds.length ||
-        !unique(v.favoriteGames) || !v.favoriteGames.every((id) => [...gameIds, ...activityIds, ...learnIds].includes(id)))) ||
+      (!Array.isArray(v.favoriteGames) || v.favoriteGames.length > gameIds.length + activityIds.length + learnIds.length + boardIds.length ||
+        !unique(v.favoriteGames) || !v.favoriteGames.every((id) => [...gameIds, ...activityIds, ...learnIds, ...boardIds].includes(id)))) ||
     (v.wordRecords !== undefined && !validWordRecords(v.wordRecords)) ||
     (v.activities !== undefined && !validActivities(v.activities)) ||
     (v.recentActivity !== undefined &&

@@ -1,3 +1,4 @@
+import { BoardId, BoardSession, applyBoardSave } from "../board";
 import { ExploreProgress, validExploreProgress } from "../explore/progress";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
@@ -20,12 +21,13 @@ import { AudioPreferences } from "../components/Audio";
 import { recordPracticeNote } from "../practice/notes";
 type Store = {
   epoch: number;
+  boardUpdate: (game: BoardId, next: BoardSession, expected: BoardSession | undefined, expectedEpoch: number) => boolean;
   addLearner: (name: string) => boolean;
   selectLearner: (id: string) => void;
   recordWarmup: (results: PracticeResult[], config: PracticeSettings, round: string, expectedEpoch: number) => void;
   activityUpdate: (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => boolean;
   toggleFavorite: (topic: string) => void;
-  toggleGameFavorite: (game: GameId | ActivityId | LearnId) => void;
+  toggleGameFavorite: (game: GameId | ActivityId | LearnId | BoardId) => void;
   /** Remember family names used in a two-player setup (no-op when unchanged). */
   rememberPlayers: (names: string[]) => void;
   /** Save a learning-game round; false when the round was replaced or a backup was restored meanwhile. */
@@ -129,14 +131,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     (game: GameId, next: GameState, expected?: GameState) => {
       const current = latest.current;
       if (expected && current.sessions[game] !== expected) return;
-      commit({ ...current, sessions: { ...current.sessions, [game]: next }, recent: game, recentActivity: null, recentLearn: null });
+      commit({ ...current, sessions: { ...current.sessions, [game]: next }, recent: game, recentActivity: null, recentLearn: null, recentBoard: null });
     },
     [commit]
   );
   const act = useCallback(
     (game: GameId, roundId: string, transition: (current: GameState) => GameState) => {
       const next = applySessionAction(latest.current, game, roundId, transition);
-      if (next !== latest.current) commit(next);
+      if (next !== latest.current) commit({ ...next, recentBoard: null });
     },
     [commit]
   );
@@ -145,11 +147,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (!ready || recovery || restoring.current) return false;
       const updated = applyActivitySave(latest.current, game, next, expected, generation.current);
       if (updated === latest.current) return false;
-      commit(updated);
+      commit({ ...updated, recentBoard: null });
       return true;
     },
     [commit, ready, recovery]
   );
+  const boardUpdate = useCallback((game: BoardId, next: BoardSession, expected: BoardSession | undefined, expectedEpoch: number) => {
+    if (!ready || recovery || restoring.current) return false;
+    const updated = applyBoardSave(latest.current, game, next, expected, expectedEpoch, generation.current);
+    if (updated === latest.current) return false;
+    commit(updated);
+    return true;
+  }, [commit, ready, recovery]);
   const toggleFavorite = useCallback(
     (topic: string) => {
       if (!topicById(topic)) return;
@@ -170,7 +179,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (JSON.stringify(current.explore?.progress) === JSON.stringify(progress)) return;
     commit({ ...current, explore: { favorites: [], ...current.explore, progress } });
   }, [commit]);
-  const toggleGameFavorite = useCallback((game: GameId | ActivityId | LearnId) => {
+  const toggleGameFavorite = useCallback((game: GameId | ActivityId | LearnId | BoardId) => {
     const next = toggleShelfFavorite(latest.current, game);
     if (next !== latest.current) commit(next);
   }, [commit]);
@@ -179,7 +188,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (!ready || recovery || restoring.current) return false;
       const updated = applyLearnSave(latest.current, game, next, expected, generation.current);
       if (updated === latest.current) return false;
-      commit(updated);
+      commit({ ...updated, recentBoard: null });
       return true;
     },
     [commit, ready, recovery]
@@ -291,6 +300,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       value={{
         save,
         epoch,
+        boardUpdate,
         addLearner,
         selectLearner,
         recordWarmup,
