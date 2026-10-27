@@ -16,7 +16,7 @@ export const BEACH_CAP = 450,
 export const computer = {
   gentle: { reach: 80, error: 50, reaction: 0.16, predict: 0.1 },
   steady: { reach: 150, error: 35, reaction: 0.11, predict: 0.65 },
-  zippy: { reach: 230, error: 18, reaction: 0.07, predict: 0.95 },
+  zippy: { reach: 230, error: 32, reaction: 0.07, predict: 0.95 },
 } as const;
 export type BeachLevel = ArcadeLevel & {
   target: number;
@@ -183,6 +183,14 @@ export function createBeach(
   }
   return s;
 }
+function capBall(b: Ball) {
+  "worklet";
+  const speed = Math.hypot(b.vx, b.vy);
+  if (speed > BEACH_CAP) {
+    b.vx *= BEACH_CAP / speed;
+    b.vy *= BEACH_CAP / speed;
+  }
+}
 export function beachTransition(s: BeachState, input: BeachInput): BeachState {
   "worklet";
   if (s.phase !== "play") return s;
@@ -229,14 +237,6 @@ function cue(s: BeachState, kind: BeachState["cue"], x: number, y: number, text:
   s.feedback = text;
   s.pulse = duration;
   s.effects = [...s.effects, { id: s.event, x, y, remaining: duration, duration, point: kind === "point" }].slice(-6);
-}
-function capBall(b: Ball) {
-  "worklet";
-  const speed = Math.hypot(b.vx, b.vy);
-  if (speed > BEACH_CAP) {
-    b.vx *= BEACH_CAP / speed;
-    b.vy *= BEACH_CAP / speed;
-  }
 }
 export function beachStep(before: BeachState, input: BeachInput, dt: number): BeachState {
   "worklet";
