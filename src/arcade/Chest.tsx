@@ -11,7 +11,9 @@ import { PracticeMathPicture } from "../practice/PracticePictures";
 import { useStore } from "../state/Store";
 import { type ArcadeExpected, type ArcadeGame } from "./types";
 import { type ChestOffer } from "./progress";
-import { StickerArt, stickerNames } from "./Art";
+import { stickerNames } from "./Art";
+import { ChestArt } from "./TreasureArt";
+import { ActionBurst } from "./Juice";
 /** PracticePanel fixes its round length at three. This single-question adapter uses its exact engine and pictures. */
 export function TreasureChest({ offer, game, expected, active, onClose }: { offer: ChestOffer; game: ArcadeGame; expected: ArcadeExpected; active: boolean; onClose: () => void }) {
   const store = useStore();
@@ -35,9 +37,9 @@ export function TreasureChest({ offer, game, expected, active, onClose }: { offe
     if (store.arcade({ type: "claim-chest", round: offer.round, result: current.current.results[0], config }, expected)) { setClaimed(true); sound.play("win"); }
     else onClose();
   }
-  if (claimed) return <View style={{ alignItems: "center", gap: 14 }}><StickerArt id={offer.sticker} size={150}/><Heading>A new island friend</Heading><Copy>{stickerNames[offer.sticker]} is in your sticker book.</Copy><Button onPress={onClose}>Lovely! Back to my game</Button></View>;
+  if (claimed) return <View style={{ alignItems: "center", gap: 14 }}><View><ChestArt sticker={offer.sticker} open size={240}/><ActionBurst text="A new friend!"/></View><Heading>A new island friend</Heading><Copy>{stickerNames[offer.sticker]} is in your sticker book.</Copy><Button onPress={onClose}>Lovely! Back to my game</Button></View>;
   return <View style={{ gap: 14, maxWidth: 520, width: "100%", alignSelf: "center" }}>
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}><StickerArt id={offer.sticker} size={88}/><View style={{ flex: 1 }}><Heading style={{ fontSize: 22 }}>{stickerNames[offer.sticker]}</Heading><Copy>One little question for this sticker. Your stars are already saved.</Copy></View></View>
+    <View style={{ alignItems: "center", gap: 8 }}><ChestArt sticker={offer.sticker} open={state.solved} active={active} size={176}/><Heading style={{ fontSize: 23, textAlign: "center" }}>{stickerNames[offer.sticker]}</Heading><Copy style={{ textAlign: "center", fontSize: 15 }}>One question for this sticker. Stars already saved!</Copy></View>
     <Button quiet onPress={skip}>Skip chest · costs nothing</Button>
     <Heading style={{ fontSize: 23 }}>{q.kind === "math" ? "Find the missing number" : q.kind === "growth" ? q.task.prompt : "Read it. Tap its picture."}</Heading>
     <Button quiet compact onPress={() => sound.play(q.speech)}>Hear the question</Button>

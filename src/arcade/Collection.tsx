@@ -5,11 +5,11 @@ import { ArcadeArt, StickerArt, stickerNames } from "./Art";
 import { type ArcadeLearner, gameProgress, outfitIds, outfitNames, outfitStars, stickerIds, type OutfitId } from "./progress";
 import type { ArcadeGame } from "./types";
 export function StickerBook({ person }: { person: ArcadeLearner }) {
-  return <View style={{ gap: 14 }}><Heading>Our little island collection</Heading><Copy>{person.stickers.length} of {stickerIds.length} friends found. Each chest shows its sticker first. It is always fine to skip.</Copy>
+  return <View style={{ gap: 14 }}><Heading>My island friends</Heading><Copy>{person.stickers.length} of {stickerIds.length} friends found. Keep discovering. Your friends stay here.</Copy>
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>{stickerIds.map(id => {
       const found = person.stickers.includes(id);
-      return <View key={id} accessibilityLabel={`${stickerNames[id]}, ${found ? "collected" : "not collected yet"}`} style={{ width: 136, minHeight: 156, padding: 12, alignItems: "center", gap: 6, backgroundColor: found ? "#FFF8E4" : C.sand, borderRadius: 22, borderWidth: 1, borderColor: found ? "#E1C689" : C.line }}>
-        <View style={{ opacity: found ? 1 : .25 }}><StickerArt id={id} size={86}/></View><Copy style={{ fontSize: 14, textAlign: "center", color: C.ink }}>{found ? stickerNames[id] : "Waiting in a chest"}</Copy>
+      return <View key={id} accessibilityLabel={`${stickerNames[id]}, ${found ? "collected" : "not collected yet"}`} style={{ width: 136, minHeight: 156, padding: 12, alignItems: "center", gap: 6, backgroundColor: found ? "#FFF1CD" : "#E9E0CF", borderRadius: 26, borderWidth: 3, borderColor: found ? "#D4AA55" : "#D0C6B3", transform: [{ rotate: found ? "-3deg" : "2deg" }], boxShadow: "0 3px 0 #C9B993" }}>
+        <View style={{ opacity: found ? 1 : .2, backgroundColor: "#FFF9E9", borderRadius: 48, borderWidth: 3, borderColor: "#FFFDF5" }}><StickerArt id={id} size={86}/></View><Copy style={{ fontSize: 14, textAlign: "center", color: C.ink }}>{found ? stickerNames[id] : stickerNames[id]}</Copy>
       </View>;
     })}</View>
   </View>;

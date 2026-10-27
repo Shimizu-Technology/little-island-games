@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useId } from "react";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import type { ArcadeId } from "./types";
 import type { OutfitId, StickerId } from "./progress";
-export const shellColors = ["#CB745B", "#568AB0", "#B48A36", "#7A6DAB", "#488A77", "#AD6492"];
+export const shellColors = ["#F08E97", "#6DBEE7", "#F4C365", "#B19CE4", "#6BCEB0", "#E995C1"];
 const star = "M0-12L3.5-4L12-3L6 3L7 12L0 8L-7 12L-6 3L-12-3L-3.5-4Z";
 function Hat({ outfit }: { outfit: OutfitId }) {
   if (outfit === "sunhat") return <G><Ellipse cx={72} cy={49} rx={39} ry={7} fill="#D4A046"/><Path d="M47 48Q47 20 71 24Q94 24 97 49Z" fill="#F1CF76"/><Path d="M47 43L96 43" stroke="#CF785D" strokeWidth={6}/></G>;
@@ -13,9 +13,9 @@ function Hat({ outfit }: { outfit: OutfitId }) {
 export function ReefFish({ size = 120, outfit = "island" }: { size?: number; outfit?: OutfitId }) {
   return <Svg width={size} height={size} viewBox="0 0 160 160" accessible={false}>
     <Ellipse cx={78} cy={135} rx={50} ry={7} fill="#B5D8CE"/>
-    <Path d="M106 81L147 54Q153 80 147 109Z" fill="#DA7C61" stroke="#AA5948" strokeWidth={3}/>
+    <Path d="M106 81L147 54Q153 80 147 109Z" fill="#DA7C61" stroke="#8D6547" strokeWidth={3}/>
     <Path d="M66 64Q67 42 91 48L103 71M68 101Q75 124 96 112L99 96" fill="#D89843"/>
-    <Ellipse cx={75} cy={85} rx={49} ry={32} fill="#F0C36A" stroke="#CA9542" strokeWidth={3}/>
+    <Ellipse cx={75} cy={85} rx={49} ry={32} fill="#F0C36A" stroke="#8D6547" strokeWidth={3}/>
     <Path d="M94 63Q77 84 94 108M109 69Q94 86 108 102" fill="none" stroke="#FFE2A0" strokeWidth={7}/>
     <Circle cx={48} cy={78} r={8} fill="#FFF9E8"/><Circle cx={47} cy={79} r={4} fill="#234846"/><Circle cx={46} cy={77} r={1.5} fill="white"/>
     <Path d="M29 93Q36 98 41 92" stroke="#8D5D37" fill="none" strokeWidth={2.5} strokeLinecap="round"/><Ellipse cx={49} cy={95} rx={7} ry={4} fill="#E6986B"/>
@@ -23,12 +23,16 @@ export function ReefFish({ size = 120, outfit = "island" }: { size?: number; out
   </Svg>;
 }
 export function Shell({ size = 120, index = 0, glowing = false, outfit = "island" }: { size?: number; index?: number; glowing?: boolean; outfit?: OutfitId }) {
+  const gradient = useId().replace(/:/g, "");
   return <Svg width={size} height={size} viewBox="0 0 160 160" accessible={false}>
+    <Defs><LinearGradient id={gradient} x1="0" y1="0" x2=".2" y2="1"><Stop stopColor={glowing ? "#FFF4BA" : "#FFE9D1"}/><Stop offset=".35" stopColor={glowing ? "#FFE29B" : shellColors[index % shellColors.length]}/><Stop offset="1" stopColor={glowing ? "#F7B45B" : shellColors[index % shellColors.length]}/></LinearGradient></Defs>
     {glowing && <Circle cx={80} cy={83} r={73} fill="#FFF2BE"/>}
     <Ellipse cx={80} cy={140} rx={49} ry={7} fill="#C7BBD6"/>
-    <Path d="M61 128L24 77Q13 47 38 39Q45 19 67 29Q80 12 95 29Q117 20 124 40Q150 48 137 78L99 128Z" fill={glowing ? "#FFE39A" : shellColors[index % shellColors.length]} stroke="#5C4E72" strokeWidth={3}/>
+    <Path d="M61 128L24 77Q13 47 38 39Q45 19 67 29Q80 12 95 29Q117 20 124 40Q150 48 137 78L99 128Z" fill={`url(#${gradient})`} stroke="#4C456E" strokeWidth={4}/>
     <Path d="M66 119L41 52M75 120L65 40M85 120L94 40M94 119L119 52" stroke={glowing ? "#D6A960" : "#F5D6C6"} strokeWidth={4} fill="none" strokeLinecap="round"/>
+    <Path d="M32 62Q24 47 43 43M52 37L58 36" fill="none" stroke="#FFF8E5" strokeWidth={5} strokeLinecap="round" opacity={.7}/>
     <Rect x={57} y={119} width={46} height={13} rx={6} fill="#F6DDBE" stroke="#5C4E72" strokeWidth={2}/>
+    <Ellipse cx={55} cy={104} rx={8} ry={4} fill="#E17F91" opacity={.65}/><Ellipse cx={103} cy={104} rx={8} ry={4} fill="#E17F91" opacity={.65}/>
     <Circle cx={65} cy={96} r={4} fill="#303B4B"/><Circle cx={94} cy={96} r={4} fill="#303B4B"/><Path d="M72 106Q80 114 88 106" fill="none" stroke="#303B4B" strokeWidth={3} strokeLinecap="round"/>
     {index % 3 === 0 ? <Circle cx={80} cy={65} r={7} fill="#FFF7E4"/> : index % 3 === 1 ? <Path d="M80 53L89 69H71Z" fill="#FFF7E4"/> : <Rect x={73} y={58} width={14} height={14} rx={2} fill="#FFF7E4" transform="rotate(45 80 65)"/>}
     <Hat outfit={outfit}/>
