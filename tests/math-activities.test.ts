@@ -102,7 +102,7 @@ describe("math activity rounds", () => {
         expect(() => validRound(state, options, game)).not.toThrow();
         expect(validRound(state, options, game), JSON.stringify(state)).toBe(false);
       }
-      for (const extra of [{ mathOperation: "multiply" }, { mathOperation: null }, { pace: "hard" }, { pace: "within100" }, { mathLimit: 100 }, { language: "en" }, { mode: "versus" }]) {
+      for (const extra of [{ mathOperation: "multiply" }, { mathOperation: null }, { pace: "within100" }, { mathLimit: 100 }, { language: "en" }, { mode: "versus" }]) {
         expect(validLearnSession({ ...session, options: { ...options, ...extra } })).toBe(false);
       }
       expect(mathMove(s, game, { type: "answer", answer: 999 })).toBe(s);

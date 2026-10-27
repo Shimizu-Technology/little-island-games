@@ -163,6 +163,7 @@ function Read({
   session,
   update,
   practice,
+  assistance,
   sound,
   soundOn,
   width,
@@ -245,7 +246,7 @@ function Read({
         text={page.text}
         compact={small}
         highlight={s.wrong && !s.solved ? page.cue : undefined}
-        onWord={(_, w) => active && sound(wordAudio(w))}
+        onWord={(_, w) => { if (active) { assistance?.(); sound(wordAudio(w)); } }}
       />
       <Copy style={{ color: C.ink, fontSize: 18, fontWeight: "700", textAlign: "center" }}>
         {s.solved ? "Yes! That’s the one." : s.wrong ? "Look at the glowing word." : "Read it. Which picture matches?"}
@@ -262,6 +263,7 @@ function Read({
           onPress={() => {
             if (!active) return;
             if (!s.heard) update(taleHear(s));
+            assistance?.();
             sound(`turtle-tales-${t.id}-page-${s.page}`);
           }}
         >

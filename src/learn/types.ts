@@ -33,6 +33,8 @@ export type LearnSession<S = unknown> = {
   /** Local owner of a new round. Legacy unowned rounds belong to family practice. */
   learner?: string;
   options: LearnOptions;
+  /** Optional round evidence. Absent on legacy rounds; true after any miss or assistance. */
+  levelHelped?: boolean;
   /** Versus only: tally of earlier rounds (see src/games/match.ts). */
   match?: Match;
   /** Who started this round (versus/together). */
@@ -110,6 +112,8 @@ export type BoardProps<S> = {
   practice: (skill: string, correct: boolean) => void;
   /** One completed math question; helped work must not count as independent mastery. */
   notePractice?: (skill: string, helped: boolean) => void;
+  /** Mark explicit assistance even when it does not change the board state. */
+  assistance?: () => void;
   skills: SkillProgress;
   /** Feedback tones ("tap" | "match" | "win") and any registered speech key. */
   sound: (key: string, automatic?: boolean) => void;

@@ -12,6 +12,7 @@ import { ActivityExpected, applyActivitySave } from "./activityAction";
 import { topicById } from "../explore/content";
 import { rememberNames } from "../games/match";
 import type { LearnId, LearnSession } from "../learn/types";
+import { recordLevelRound } from "../learn/levelEvidence";
 import { toggleShelfFavorite } from "../learn/home";
 import { LearnExpected, applyLearnSave, applyPractice, applyOwnedPractice } from "./learnAction";
 import { addLearner as appendLearner, selectLearner as chooseLearner, recordLearning, familyLearners } from "../learn/learners";
@@ -179,7 +180,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (!ready || recovery || restoring.current) return false;
       const updated = applyLearnSave(latest.current, game, next, expected, generation.current);
       if (updated === latest.current) return false;
-      commit(updated);
+      commit(recordLevelRound(latest.current, updated, game));
       return true;
     },
     [commit, ready, recovery]

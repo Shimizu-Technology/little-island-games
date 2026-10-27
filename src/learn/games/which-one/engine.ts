@@ -41,7 +41,7 @@ export const engine: LearnEngine<WhichState> = {
     const pool = SENTENCES.filter((i) => i.pace === o.pace);
     const fresh = pool.filter((i) => !c.previous?.ids.includes(i.id));
     return {
-      ids: pickItems(fresh.length >= 8 ? fresh : pool, c.skills, 8, c.rng, c.today).map((i) => i.id),
+      ids: pickItems(fresh.length >= 8 ? fresh : pool, c.skills, 8, c.rng, c.today).sort((a, b) => a.text.split(/\s+/).length - b.text.split(/\s+/).length).map((i) => i.id),
       orders: Array.from({ length: 8 }, () => shuffle([0, 1, 2], c.rng)),
       starter: c.starter,
       index: 0,
