@@ -151,3 +151,23 @@ EAS submission `f84cfc32-1bb6-4f4c-b1cb-62d0f82f4d01` finished. Apple upload/bui
 Update Little Island in TestFlight to **1.7.0(13)**. In each learning game, open **New round & options** and choose a harder skill. The original beginner activities remain available; Show me always counts as helped practice. Compare **Settings → Narration voice → Warm/Calm** and tap Hear this voice. Optional local learners and practice notes are under For grown-ups. Physical installation/update, audio comfort/mute, native interruption/rotation, VoiceOver and child usability remain family checks.
 
 Owned browser/server/simulator resources were cleaned, with no active owned resources in lifecycle session01a17186-714f-7ee2-994a-bccc0bafba80. The exact task device DerivedData was removed; archive/IPA/private receipts and held source/release worktrees are retained.
+
+## Island Arcade beta — 1.8.0 (14), available 28 October 2026 Guam time
+
+Leon asked for island-twist arcade games, older classics, learning inside the games and a clear Level 1–5 path in the learning games, delivered through private TestFlight. Clean source `91685c1b3ebc72bbdb1bb8b421ef227bd4636204` on stacked PR #16 produced this beta. PRs #13–#16 stay held for native and family acceptance.
+
+The source passed the full gate (826 tests across 56 files, typecheck, lint, offline web export), Doctor 21/21 and GitHub CI. Three independent review rounds found three material learning-credit issues, all fixed and re-reviewed with no remaining findings. Before the archive, native Release simulator runs on iOS 18.5 covered every arcade game: map → start → play → pause or result. Those runs used a task-owned iPad mini (5th generation) and iPhone 16 Pro. The simulator build predates the learning-credit fix in 5de5861, which changes only what gets recorded, not what appears on screen; tests cover it.
+
+The archive and export were made locally, as for build 13: a clean release checkout, Node 22.22.3 with the lockfile, Expo CNG, CocoaPods and an Xcode 26.6 Release archive. Existing signing credentials were reused, and the temporary keychain, private files and owned profile were removed afterwards.
+
+The signed IPA is 173,874,018 bytes, SHA256 `cfc6bb09963ce542ab9dfbfd5b84fff25ba02d0a597007fc2020545d546a83aa`. Embedded JS SHA256 `3dba78d1f5b11d247ec060c53afe3a202f4a61c56f73eb7f7fa576e6149ba1c9` matches the archive. The strict signature, App Store profile and entitlements, bundle and version, minimum iOS 16.4 and both device families all passed. All 5,815 referenced audio files in the IPA match the source bytes; 2,906 speech keys per voice.
+
+EAS submission `32108ad8-24f0-4cd4-9d23-a5967de1a2d5` finished after about 24 minutes in Expo's queue. Apple build `165fbf73-3a09-48ea-ae4b-a29c88ab0238` is VALID / IN_BETA_TESTING. It is attached to the existing Leon internal group (one adult tester, automatic all-build access off), with English "What to Test" notes. During attachment, App Store Connect briefly returned 404 for the group; the build attached on retry and the receipt was verified afterwards. As with earlier builds, the empty upload reservation is normal. Receipt: [evidence/testflight-build14.json](evidence/testflight-build14.json).
+
+Update Little Island in TestFlight to **1.8.0 (14)**:
+- On Home, open the new **Arcade** island and try any of the nine games. World 1 is gentle, and **Helper** is on the level-start card.
+- Treasure chests after a level are optional.
+- Classic games now include Coconut Drop, Fishing Nets, Hidden Canoes, Shell Pits and Reef Sweep.
+- Learning games show **Level 1 of 5**; tap any stone to choose.
+
+Physical install, touch and multi-touch comfort, A12 smoothness, audio, VoiceOver and Stassie's own choices remain family acceptance.

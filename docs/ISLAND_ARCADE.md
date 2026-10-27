@@ -101,6 +101,6 @@ The shipped build already has five difficulty steps per learning game: three fou
 | A08 | Saves: new fields validated; malformed data preserved via recovery; backup/restore round-trip includes arcade progress | Pass: strict validation, malformed-save preservation, backup round-trip incl. arcade progress (kit/unify QA); 324 legacy rounds load (review round 1) |
 | A09 | Full gate (`npm run check`, `npm run doctor`), advisory design scan, independent final-code review | Pass: npm run check (826 tests), Doctor 21/21, advisory design scan clean; independent reviews: round 1 (one material, fixed), round 2 (two material, fixed), round 3 on the fixes |
 | A10 | Both voice banks regenerated and decoded; offline web reload with server stopped | Pass: 280 new clips (140 lines × warm/calm) generated with the pinned Kokoro banks, all decode; offline reload with server stopped passed in worker QA |
-| A11 | 1.8.0 (14) signed, uploaded, VALID and available to the existing Leon internal group | Pending: 1.8.0 (14) build and delivery |
+| A11 | 1.8.0 (14) signed, uploaded, VALID and available to the existing Leon internal group | Pass: 1.8.0 (14) from 91685c1, Apple build 165fbf73-3a09-48ea-ae4b-a29c88ab0238 VALID / IN_BETA_TESTING in the Leon internal group (TESTFLIGHT.md) |
 
 Physical iPad play, audio comfort, VoiceOver and whether Stassie chooses these games remain family acceptance on real hardware.
