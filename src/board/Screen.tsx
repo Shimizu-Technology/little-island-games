@@ -9,6 +9,7 @@ import { Recovery } from "../components/Recovery";
 import { SaveStatus } from "../components/SaveStatus";
 import { useSounds } from "../components/Audio";
 import { useStore } from "../state/Store";
+import { useRoundPractice } from "../practice/useRoundPractice";
 import { Seat } from "../games/match";
 import { BoardId, BoardSession, catalog, createSession, engines, playAgain, strengths, Strength, undo } from "./index";
 import { Text } from "../components/Text";
@@ -23,6 +24,7 @@ export function BoardScreen({ game }: { game: BoardId }) {
   const store = useStore(),
     [setup, setSetup] = useState(false),
     s = store.save.board?.[game];
+  const practice = useRoundPractice(game, s);
   if (!store.ready)
     return (
       <SafeAreaView style={styles.page}>
@@ -37,20 +39,35 @@ export function BoardScreen({ game }: { game: BoardId }) {
     );
   if (!s || setup)
     return (
-      <Setup
-        key={`${game}:${store.epoch}`}
-        game={game}
-        previous={s}
-        onClose={() => setSetup(false)}
-        onStart={(next) => {
-          if (store.boardUpdate(game, next, s, store.epoch)) {
-            if (next.mode === "together") store.rememberPlayers(next.match.names);
-            setSetup(false);
+      <>
+        <Setup
+          key={`${game}:${store.epoch}`}
+          game={game}
+          previous={s}
+          onClose={() => setSetup(false)}
+          onStart={(next) =>
+            practice.request(() => {
+              if (store.boardUpdate(game, next, s, store.epoch)) {
+                if (next.mode === "together") store.rememberPlayers(next.match.names);
+                setSetup(false);
+              }
+            })
           }
-        }}
-      />
+        />
+        {practice.panel}
+      </>
     );
-  return <Round key={`${s.id}:${store.epoch}`} session={s} onSetup={() => setSetup(true)} />;
+  return (
+    <>
+      <Round
+        key={`${s.id}:${store.epoch}`}
+        session={s}
+        onSetup={() => setSetup(true)}
+        onReplay={() => practice.request(() => store.boardUpdate(game, playAgain(s, Date.now() >>> 0), s, store.epoch))}
+      />
+      {practice.panel}
+    </>
+  );
 }
 function Setup({
   game,
@@ -177,7 +194,15 @@ function Setup({
     </SafeAreaView>
   );
 }
-function Round({ session: s, onSetup }: { session: BoardSession; onSetup: () => void }) {
+function Round({
+  session: s,
+  onSetup,
+  onReplay,
+}: {
+  session: BoardSession;
+  onSetup: () => void;
+  onReplay: () => void;
+}) {
   const store = useStore(),
     info = catalog[s.game],
     engine = engines[s.game],
@@ -391,6 +416,14 @@ function Round({ session: s, onSetup }: { session: BoardSession; onSetup: () => 
               Only {s.match.names[p.turn]} should look. Pass the device, then open your turn. Your chart stays hidden
               after leaving or reloading.
             </Copy>
+            {p.moves.length > 0 && (
+              <Copy style={{ textAlign: "center", color: C.ink }}>
+                Last search: {coordinate(p.moves[p.moves.length - 1])} ·{" "}
+                {p.marks[(p.turn === 0 ? 1 : 0) * 36 + p.moves[p.moves.length - 1]] === 2
+                  ? "Canoe found!"
+                  : "Open water."}
+              </Copy>
+            )}
             <Button
               onPress={() => {
                 setVisible(token);
@@ -461,7 +494,7 @@ function Round({ session: s, onSetup }: { session: BoardSession; onSetup: () => 
               Cover my turn
             </Button>
           )}
-          {p.outcome !== null && <Button onPress={() => commit(playAgain(s, Date.now() >>> 0))}>Play again</Button>}
+          {p.outcome !== null && <Button onPress={onReplay}>Play again</Button>}
           <Button
             quiet
             compact
