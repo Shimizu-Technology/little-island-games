@@ -91,16 +91,16 @@ The shipped build already has five difficulty steps per learning game: three fou
 
 | ID | Scenario | Status |
 |---|---|---|
-| A01 | Arcade island: Home → Arcade → game → level map → play → stars → chest → sticker → back, phone and iPad, native and web | Not run |
-| A02 | Every arcade game: every world reachable (grown-up unlock), first level of each world played to a result, learning world played, Helper on/off | Not run |
-| A03 | Chest: skip, wrong then help, correct; sticker saved per learner; practice notes record helped/independent | Not run |
-| A04 | Pause/resume on background, sheet and navigation; restart after kill; Reduce Motion; sound off shows text | Not run |
-| A05 | Real-time frame budget on owned iPad mini Release simulator and web export; no dropped-input regressions | Not run |
-| A06 | Board classics: every game vs. computer at 3 strengths and two-player to a finished game with family match, save/reload mid-game | Not run |
-| A07 | Learning levels: Level path visible for all twelve games; level mapping round-trips; suggestion only after independent multi-day success; legacy saves load | Not run |
-| A08 | Saves: new fields validated; malformed data preserved via recovery; backup/restore round-trip includes arcade progress | Not run |
-| A09 | Full gate (`npm run check`, `npm run doctor`), advisory design scan, independent final-code review | Not run |
-| A10 | Both voice banks regenerated and decoded; offline web reload with server stopped | Not run |
-| A11 | 1.8.0 (14) signed, uploaded, VALID and available to the existing Leon internal group | Not run |
+| A01 | Arcade island: Home → Arcade → game → level map → play → stars → chest → sticker → back, phone and iPad, native and web | Pass (web, all nine games, 390×844 and 1024×768; unify QA 72/72). Native Release: Home → Arcade → each of the nine games → map → start → play on iPad mini (5th gen) iOS 18.5 simulator; iPhone 16 Pro run recorded below |
+| A02 | Every arcade game: every world reachable (grown-up unlock), first level of each world played to a result, learning world played, Helper on/off | Pass (web): first level of every world, each learning world and Helper on/off for all nine games across the worker QA ledgers in ARCADE_GAMES.md and the unify report |
+| A03 | Chest: skip, wrong then help, correct; sticker saved per learner; practice notes record helped/independent | Pass (web): skip, wrong then help, correct; sticker saved per learner. Learning-world credit: wrong answers now mark the round helped in all nine games (review rounds 1–2 fixes 9b025f8, 5de5861) |
+| A04 | Pause/resume on background, sheet and navigation; restart after kill; Reduce Motion; sound off shows text | Pass (web): pause on background/sheet/navigation, restart at map after reload, Reduce Motion, sound off. Native background pause covered by the kit run; physical device not run |
+| A05 | Real-time frame budget on owned iPad mini Release simulator and web export; no dropped-input regressions | Partial: web export p95 ≈ 9 ms (120 Hz host) for every real-time game; iPad mini 5 Release simulator plays all nine smoothly by observation. Physical A12 hardware not measured |
+| A06 | Board classics: every game vs. computer at 3 strengths and two-player to a finished game with family match, save/reload mid-game | Pass (web): every board classic vs. computer at three strengths and two-player with family match, mid-game reload exact (BOARD_CLASSICS.md). Native: Coconut Drop opens on iPad simulator |
+| A07 | Learning levels: Level path visible for all twelve games; level mapping round-trips; suggestion only after independent multi-day success; legacy saves load | Pass (web): Level 1–5 path for all twelve games, readiness rule, legacy saves (LEARNING_LEVELS.md). Native: "Level 1 of 5 · Cat, hen and sun" on iPad simulator |
+| A08 | Saves: new fields validated; malformed data preserved via recovery; backup/restore round-trip includes arcade progress | Pass: strict validation, malformed-save preservation, backup round-trip incl. arcade progress (kit/unify QA); 324 legacy rounds load (review round 1) |
+| A09 | Full gate (`npm run check`, `npm run doctor`), advisory design scan, independent final-code review | Pass: npm run check (826 tests), Doctor 21/21, advisory design scan clean; independent reviews: round 1 (one material, fixed), round 2 (two material, fixed), round 3 on the fixes |
+| A10 | Both voice banks regenerated and decoded; offline web reload with server stopped | Pass: 280 new clips (140 lines × warm/calm) generated with the pinned Kokoro banks, all decode; offline reload with server stopped passed in worker QA |
+| A11 | 1.8.0 (14) signed, uploaded, VALID and available to the existing Leon internal group | Pending: 1.8.0 (14) build and delivery |
 
 Physical iPad play, audio comfort, VoiceOver and whether Stassie chooses these games remain family acceptance on real hardware.
