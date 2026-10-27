@@ -26,5 +26,9 @@
   "arcade-flight-intro": "Tap to flap. Follow the glowing fruit. Let your wings glide between the palm leaves.",
   "arcade-flight-math": "Fly through the answer. Look at the sum, then flap into the gate with its number. A wrong answer comes around again.",
   "arcade-run-intro": "Swipe to steer. Jump up. Duck down. Collect shells along the lagoon. You can tap the arrows too.",
-  "arcade-run-math": "Run into the answer lane. Look at the sum, then follow the lane with its number. A wrong answer comes around again."
+  "arcade-run-math": "Run into the answer lane. Look at the sum, then follow the lane with its number. A wrong answer comes around again.",
+  "arcade-rail-intro": "Lead the chicks home. Swipe or tap an arrow to turn. Watch for the edge, your parade, and the brown tree snake.",
+  "arcade-rail-learn": "One swipe, one step. Collect the numbers in order, or find the letters for your picture. There is no hurry.",
+  "arcade-crab-intro": "Look, hop, ride. Tap an arrow to hop. Look for a gap in the traffic, ride the logs, and reach your seaside burrow.",
+  "arcade-crab-learn": "Hop to the next number. Count on, count back, or skip count. The lagoon waits for you. There is no hurry."
 }
