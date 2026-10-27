@@ -18,5 +18,9 @@
   "arcade-phoneme-p": "The sound at the start of pig.",
   "arcade-phoneme-s": "The sound at the start of sun.",
   "arcade-phoneme-t": "The sound at the start of tap.",
-  "arcade-phoneme-u": "Short u, as in cup."
+  "arcade-phoneme-u": "Short u, as in cup.",
+  "arcade-flight-intro": "Tap to flap. Follow the glowing fruit. Let your wings glide between the palm leaves.",
+  "arcade-flight-math": "Fly through the answer. Look at the sum, then flap into the gate with its number. A wrong answer comes around again.",
+  "arcade-run-intro": "Swipe to steer. Jump up. Duck down. Collect shells along the lagoon. You can tap the arrows too.",
+  "arcade-run-math": "Run into the answer lane. Look at the sum, then follow the lane with its number. A wrong answer comes around again."
 }
