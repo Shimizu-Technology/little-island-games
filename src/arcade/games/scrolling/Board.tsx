@@ -25,10 +25,10 @@ function HUD({ progress, target, collected, learning, onPause }: { progress: num
   return <View style={{ position: "absolute", top: 12, left: 12, right: 12, flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "space-between" }}><View style={{ borderRadius: 22, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: "#192B49", borderWidth: 2, borderColor: "#A8D5DB" }}><Text accessibilityLabel={`${progress} of ${target} ${learning ? "answers" : "markers"}`} style={{ color: "#FFF4D3", fontWeight: "800", fontSize: 18 }}>{learning ? "＝" : "⚑"} {progress}/{target}　★ {collected}</Text></View><Control label="Pause game" glyph="Ⅱ" onPress={onPause}/></View>;
 }
 const Particle = memo(function Particle() { return <Svg width={20} height={20} viewBox="0 0 20 20"><Path d="M10 1L13 7L19 10L13 13L10 19L7 13L1 10L7 7Z" fill="#FFE294" stroke="#FFF9D4" strokeWidth={1}/></Svg>; });
-function feedback(cue: string) { return cue === "answer" ? "Great! +60" : cue === "try" ? "Try the answer again" : cue === "bump" ? "Whoops! Keep going" : cue === "fruit" || cue === "shell" ? "+40 · Nice!" : ""; }
+function feedback(cue: string, collected = 0) { if (["fruit", "shell"].includes(cue) && collected > 0 && collected % 3 === 0) return "Combo! +40"; return cue === "answer" ? "Great! +60" : cue === "try" ? "Try the answer again" : cue === "bump" ? "Whoops! Keep going" : cue === "fruit" || cue === "shell" ? "+40 · Nice!" : ""; }
 export function FlightBoard(props: BoardProps) {
   const { level, seed, active, helper, outfit, onResult, onTone, onPause, debug } = props;
-  const [size, setSize] = useState({ w: 390, h: 700 }), reduced = useReducedMotion(), poses = useSharedValue<SpritePose[]>(Array.from({ length: 33 }, () => still));
+  const [size, setSize] = useState({ w: 390, h: 700 }), reduced = useReducedMotion(), poses = useSharedValue<SpritePose[]>(Array.from({ length: 34 }, () => still));
   const [initial] = useState(() => createFlight(level, seed, helper)), done = useRef(false), lastEvent = useRef(0);
   const heroSize = Math.min(126, size.w * .23, size.h * .19), gateWidth = Math.min(100, size.w * .14);
   const publish = useCallback((s: FlightState) => {
@@ -41,6 +41,7 @@ export function FlightBoard(props: BoardProps) {
     });
     for (let i = 0; i < 6; i++) { const phase = 1 - s.feedback / .85, a = i * Math.PI / 3; p[21 + i] = { x: size.w * .24 + Math.cos(a) * phase * 75, y: s.y * size.h + Math.sin(a) * phase * 70, opacity: !reduced && s.feedback > 0 && ["fruit", "answer"].includes(s.cue) ? s.feedback : 0, scale: .5 + s.feedback * .7 }; }
     for (let i = 0; i < 6; i++) p[27 + i] = { x: size.w * ((i * .173 + .1) % 1) + (reduced ? 0 : Math.sin(s.time * .5 + i) * 12), y: size.h * (.18 + (i % 3) * .25) + (reduced ? 0 : Math.sin(s.time + i * 3) * 14), opacity: .65, scale: .6 + (i % 3) * .2 };
+    p[33] = { x: !reduced && s.cooldown ? Math.sin(s.time * 43) * 2 : 0, y: 0 };
     // eslint-disable-next-line react-hooks/immutability -- Reanimated shared handles intentionally publish poses outside React.
     poses.value = p;
   }, [poses, size, heroSize, gateWidth, reduced]);
@@ -51,7 +52,7 @@ export function FlightBoard(props: BoardProps) {
   useKeyboard(active, useCallback(() => flap(), [flap]));
   const learn = flightLearning(s), next = s.gates.filter(g => !g.passed && g.x >= .2).sort((a, b) => a.x - b.x)[0];
   return <View testID="flight-field" style={{ flex: 1, overflow: "hidden", backgroundColor: "#172B42" }} onLayout={e => { const { width: w, height: h } = e.nativeEvent.layout; if (w > 0 && h > 0) setSize({ w, h }); }}>
-    <Scenery game="fruit-bat-flight" world={level === "endless" ? "w3" : level.world} storm={level !== "endless" && level.storm}/>
+    <ArcadeSprite poses={poses} index={33} width={size.w} height={size.h}><Scenery game="fruit-bat-flight" world={level === "endless" ? "w3" : level.world} storm={level !== "endless" && level.storm}/></ArcadeSprite>
     {Array.from({ length: 6 }, (_, i) => <ArcadeSprite key={`ambient${i}`} poses={poses} index={27 + i} width={24} height={24}><Svg width={24} height={24}><Circle cx={12} cy={12} r={10} fill="#EFFFA5" opacity={.15}/><Circle cx={12} cy={12} r={3} fill="#F3FFBB"/></Svg></ArcadeSprite>)}
     {s.gates.map((g, i) => <ArcadeSprite key={`p${i}`} poses={poses} index={1 + i} width={gateWidth} height={size.h}><PalmColumn width={gateWidth} height={size.h} center={g.center} gap={flightGap(s)}/></ArcadeSprite>)}
     {s.gates.map((_, i) => <ArcadeSprite key={`f${i}`} poses={poses} index={5 + i} width={50} height={50}><Fruit/></ArcadeSprite>)}
@@ -61,14 +62,14 @@ export function FlightBoard(props: BoardProps) {
     <View accessible accessibilityRole="button" accessibilityLabel="Flight sky. Tap to flap" onStartShouldSetResponder={() => active} onResponderGrant={flap} style={{ position: "absolute", top: 70, bottom: 80, left: 0, right: 0, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}/>
     <HUD progress={s.passed} target={level === "endless" ? "∞" : level.target} collected={s.fruit} learning={learn} onPause={onPause}/>
     {learn && next && <View pointerEvents="none" style={{ position: "absolute", top: 82, alignSelf: "center", padding: 8, borderRadius: 18, backgroundColor: "#192B49" }}><Text testID="math-fact" style={{ color: "#FFF4D3", fontSize: 29, fontWeight: "900" }}>{equation(next.fact)}</Text></View>}
-    {s.feedback > 0 && <View pointerEvents="none" style={{ position: "absolute", top: "45%", alignSelf: "center", backgroundColor: "#192B49", padding: 8, borderRadius: 14 }}><Text style={{ color: "#FFF0B1", fontSize: 23, fontWeight: "900" }}>{feedback(s.cue)}</Text></View>}
+    {s.feedback > 0 && <View pointerEvents="none" style={{ position: "absolute", top: "45%", alignSelf: "center", backgroundColor: "#192B49", padding: 8, borderRadius: 14 }}><Text style={{ color: "#FFF0B1", fontSize: 23, fontWeight: "900" }}>{feedback(s.cue, s.fruit)}</Text></View>}
     <View style={{ position: "absolute", left: 14, right: 14, bottom: 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 }}><Copy style={{ color: "#FFF8DD", backgroundColor: "#192B49", padding: 8, borderRadius: 12, fontSize: 15 }}>{learn ? "Fly through the answer" : "Tap to flutter"}</Copy><Control disabled={!active} label="Flap wings" glyph="↑ Flap" onPress={flap}/>{level === "endless" && <Control label="Finish free flight" glyph="✓" onPress={() => dispatch({ type: "finish" })}/>}</View>
     {debug && <View pointerEvents="none" style={{ position: "absolute", left: 0, bottom: 75 }}><Budget budget={budget}/></View>}
   </View>;
 }
 export function RunBoard(props: BoardProps) {
   const { level, seed, active, helper, outfit, onResult, onTone, onPause, debug } = props;
-  const [size, setSize] = useState({ w: 390, h: 700 }), reduced = useReducedMotion(), poses = useSharedValue<SpritePose[]>(Array.from({ length: 38 }, () => still));
+  const [size, setSize] = useState({ w: 390, h: 700 }), reduced = useReducedMotion(), poses = useSharedValue<SpritePose[]>(Array.from({ length: 39 }, () => still));
   const [initial] = useState(() => createRun(level, seed, helper)), done = useRef(false), lastEvent = useRef(0), pointer = useRef({ x: 0, y: 0 });
   const heroSize = Math.min(155, size.h * .24, size.w * .26);
   const publish = useCallback((s: RunState) => {
@@ -82,6 +83,7 @@ export function RunBoard(props: BoardProps) {
     });
     for (let i = 0; i < 6; i++) { const phase = 1 - s.feedback / .9, a = i * Math.PI / 3; p[26 + i] = { x: size.w / 2 + (s.lane - 1) * size.w * .309 + Math.cos(a) * phase * 75, y: ground - heroSize * .6 + Math.sin(a) * phase * 70, opacity: !reduced && s.feedback > 0 && ["shell", "answer"].includes(s.cue) ? s.feedback : 0, scale: .5 + s.feedback }; }
     for (let i = 0; i < 6; i++) p[32 + i] = { x: size.w * (i < 3 ? .035 : .91), y: size.h * (.52 + (i % 3) * .16) + (reduced ? 0 : Math.sin(s.time * .7 + i) * 9), opacity: .65, scale: 1.3 };
+    p[38] = { x: !reduced && s.cooldown ? Math.sin(s.time * 43) * 2 : 0, y: 0 };
     // eslint-disable-next-line react-hooks/immutability -- Reanimated shared handles intentionally publish poses outside React.
     poses.value = p;
   }, [poses, size, heroSize, reduced]);
@@ -92,7 +94,7 @@ export function RunBoard(props: BoardProps) {
   useKeyboard(active, useCallback(key => action({ type: ["ArrowLeft", "KeyA"].includes(key) ? "left" : ["ArrowRight", "KeyD"].includes(key) ? "right" : ["ArrowDown", "KeyS"].includes(key) ? "duck" : "jump" }), [action]));
   const learn = runLearning(s), next = s.rows.filter(r => !r.passed && r.z < .9).sort((a, b) => b.z - a.z)[0];
   return <View testID="run-field" style={{ flex: 1, overflow: "hidden", backgroundColor: "#297C95" }} onLayout={e => { const { width: w, height: h } = e.nativeEvent.layout; if (w > 0 && h > 0) setSize({ w, h }); }}>
-    <Scenery game="lagoon-run" world={level === "endless" ? "w3" : level.world} storm={level !== "endless" && level.storm}/>
+    <ArcadeSprite poses={poses} index={38} width={size.w} height={size.h}><Scenery game="lagoon-run" world={level === "endless" ? "w3" : level.world} storm={level !== "endless" && level.storm}/></ArcadeSprite>
     {Array.from({ length: 6 }, (_, i) => <ArcadeSprite key={`ambient${i}`} poses={poses} index={32 + i} width={24} height={24}><Svg width={24} height={24}><Path d="M2 8Q8 3 13 8T24 8M2 16Q8 11 13 16T24 16" stroke="#D2F5E5" strokeWidth={3} fill="none"/></Svg></ArcadeSprite>)}
     {s.rows.map((row, i) => <ArcadeSprite key={`o${i}`} poses={poses} index={1 + i} width={100} height={100}><Hazard kind={row.kind}/></ArcadeSprite>)}
     {s.rows.map((_, i) => <ArcadeSprite key={`s${i}`} poses={poses} index={6 + i} width={50} height={50}><Fruit shell/></ArcadeSprite>)}
@@ -102,7 +104,7 @@ export function RunBoard(props: BoardProps) {
     <View accessible accessibilityRole="button" accessibilityLabel="Lagoon track. Swipe to steer, up to jump, down to duck. Or tap a lane." onStartShouldSetResponder={() => active} onResponderGrant={e => { pointer.current = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY }; }} onResponderRelease={e => { if (!active) return; const dx = e.nativeEvent.pageX - pointer.current.x, dy = e.nativeEvent.pageY - pointer.current.y; if (Math.max(Math.abs(dx), Math.abs(dy)) < 22) action({ type: "lane", lane: Math.min(2, Math.floor(e.nativeEvent.locationX / size.w * 3)) }); else action({ type: Math.abs(dx) > Math.abs(dy) ? dx > 0 ? "right" : "left" : dy > 0 ? "duck" : "jump" }); }} style={{ position: "absolute", top: 72, bottom: 77, left: 0, right: 0, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}/>
     <HUD progress={s.passed} target={level === "endless" ? "∞" : level.target} collected={s.shells} learning={learn} onPause={onPause}/>
     {learn && next && <View pointerEvents="none" style={{ position: "absolute", top: 82, alignSelf: "center", padding: 8, borderRadius: 18, backgroundColor: "#192B49" }}><Text testID="math-fact" style={{ color: "#FFF4D3", fontSize: 29, fontWeight: "900" }}>{equation(next.fact)}</Text></View>}
-    {s.feedback > 0 && <View pointerEvents="none" style={{ position: "absolute", top: "44%", alignSelf: "center", backgroundColor: "#192B49", padding: 8, borderRadius: 14 }}><Text style={{ color: "#FFF0B1", fontSize: 23, fontWeight: "900" }}>{feedback(s.cue)}</Text></View>}
+    {s.feedback > 0 && <View pointerEvents="none" style={{ position: "absolute", top: "44%", alignSelf: "center", backgroundColor: "#192B49", padding: 8, borderRadius: 14 }}><Text style={{ color: "#FFF0B1", fontSize: 23, fontWeight: "900" }}>{feedback(s.cue, s.shells)}</Text></View>}
     {!learn && next && next.z > .35 && !next.passed && next.lane === s.lane && <View pointerEvents="none" style={{ position: "absolute", top: 83, alignSelf: "center", backgroundColor: "#192B49", padding: 8, borderRadius: 14 }}><Text style={{ color: "#FFF3CF", fontWeight: "800", fontSize: 18 }}>{["coconut", "crab"].includes(next.kind) ? "↑ Jump or switch lanes" : "↓ Duck or switch lanes"}</Text></View>}
     <View style={{ position: "absolute", left: 12, right: 12, bottom: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 6 }}><Control disabled={!active} label="Move left" glyph="←" onPress={() => action({ type: "left" })}/><Control disabled={!active} label="Jump" glyph="↑" onPress={() => action({ type: "jump" })}/><Control disabled={!active} label="Duck" glyph="↓" onPress={() => action({ type: "duck" })}/><Control disabled={!active} label="Move right" glyph="→" onPress={() => action({ type: "right" })}/>{level === "endless" && <Control label="Finish free run" glyph="✓" onPress={() => dispatch({ type: "finish" })}/>}</View>
     {debug && <View pointerEvents="none" style={{ position: "absolute", left: 0, bottom: 75 }}><Budget budget={budget}/></View>}
