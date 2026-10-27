@@ -11,7 +11,7 @@ import { StarDisplay } from "../../Art";
 import { ArcadeSprite, type SpritePose } from "../../Sprite";
 import { useArcadeLoop } from "../../loop";
 import { GridBackdrop, GridHero, GridObject, CoastalObject } from "../grid/Art";
-import { DirectionPad, GridBudget, Shake, useGridInput } from "../grid/Controls";
+import { DirectionPad, GridBudget, Shake, useGridInput, useGridTouch } from "../grid/Controls";
 import type { Direction } from "../grid/rules";
 import type { ArcadeResult } from "../../types";
 import type { OutfitId } from "../../progress";
@@ -52,6 +52,7 @@ export function CrabBoard({
   wide: boolean;
   debug: boolean;
 }) {
+  const touch = useGridTouch();
   const size = Math.max(120, allottedSize - (wide ? 40 : 12));
   const unit = (size - 6) / 9,
     poses = useSharedValue<SpritePose[]>([]),
@@ -101,15 +102,21 @@ export function CrabBoard({
     if (crabLearning(s) && s.bumps > last.current.bumps) onTone("shell-0");
     last.current = { crossed: s.crossed, bumps: s.bumps, cursor: s.cursor };
     const r = crabResult(s);
-    if (r && active && !reported.current) {
+    if (r && active && (!r.cleared || !touch.touching) && !reported.current) {
       // Keep the winning control mounted through finger-up, then show the shared result.
       // This also gives the local clear pose/particles a brief, unobstructed beat.
-      const timer = setTimeout(() => {
-        if (!reported.current) { reported.current = true; onResult(r); }
-      }, r.cleared ? 300 : 0);
+      const timer = setTimeout(
+        () => {
+          if (!reported.current) {
+            reported.current = true;
+            onResult(r);
+          }
+        },
+        r.cleared ? 300 : 0
+      );
       return () => clearTimeout(timer);
     }
-  }, [s, active, onResult, onTone]);
+  }, [s, active, touch.touching, onResult, onTone]);
   const move = useCallback(
     (direction: Direction) => {
       if (active) {
@@ -126,6 +133,7 @@ export function CrabBoard({
     [lanes] = useState(() => crabLanes(initial));
   return (
     <View
+      {...touch.handlers}
       style={{
         flexDirection: wide ? "row" : "column",
         alignItems: "center",

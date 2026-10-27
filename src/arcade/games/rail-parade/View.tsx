@@ -14,7 +14,7 @@ import { useArcadeLoop } from "../../loop";
 import type { ArcadeResult } from "../../types";
 import type { OutfitId } from "../../progress";
 import { GridBackdrop, GridHero, GridObject } from "../grid/Art";
-import { DirectionPad, GridBudget, Shake, useGridInput } from "../grid/Controls";
+import { DirectionPad, GridBudget, Shake, useGridInput, useGridTouch } from "../grid/Controls";
 import type { Direction } from "../grid/rules";
 import {
   railHedges,
@@ -52,6 +52,7 @@ export function RailBoard({
   wide: boolean;
   debug: boolean;
 }) {
+  const touch = useGridTouch();
   const size = Math.max(120, allottedSize - (wide ? 46 : 12));
   const poses = useSharedValue<SpritePose[]>([]),
     reduced = useReducedMotion(),
@@ -105,15 +106,21 @@ export function RailBoard({
     if (railLearning(s) && s.bumps > last.current.bumps) onTone("shell-0");
     last.current = { collected: s.collected, bumps: s.bumps };
     const r = railResult(s);
-    if (r && active && !reported.current) {
+    if (r && active && (!r.cleared || !touch.touching) && !reported.current) {
       // Keep the winning control mounted through finger-up, then show the shared result.
       // This also gives the local clear pose/particles a brief, unobstructed beat.
-      const timer = setTimeout(() => {
-        if (!reported.current) { reported.current = true; onResult(r); }
-      }, r.cleared ? 300 : 0);
+      const timer = setTimeout(
+        () => {
+          if (!reported.current) {
+            reported.current = true;
+            onResult(r);
+          }
+        },
+        r.cleared ? 300 : 0
+      );
       return () => clearTimeout(timer);
     }
-  }, [s, active, onResult, onTone]);
+  }, [s, active, touch.touching, onResult, onTone]);
   const move = useCallback(
     (direction: Direction) => {
       if (active) {
@@ -130,6 +137,7 @@ export function RailBoard({
     world = s.level === "endless" ? "w3" : s.level.world;
   return (
     <View
+      {...touch.handlers}
       style={{
         alignItems: "center",
         gap: 8,

@@ -1,5 +1,5 @@
 import { PressControl, useSwipe } from "../../Input";
-import React, { useEffect, useLayoutEffect, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Animated, Platform, View, type ViewStyle } from "react-native";
 import { Copy } from "../../../components/ui";
 import { Text } from "../../../components/Text";
@@ -37,6 +37,24 @@ export function useGridInput(active: boolean, move: (d: Direction) => void, repe
     return () => window.removeEventListener("keydown", key);
   }, []);
   return useSwipe(active, move, 16);
+}
+/** Retain a winning touch target until its finger is up, including a held repeat. */
+export function useGridTouch() {
+  const [touching, setTouching] = useState(false);
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const release = () => setTouching(false);
+    window.addEventListener("blur", release);
+    return () => window.removeEventListener("blur", release);
+  }, []);
+  return {
+    touching,
+    handlers: {
+      onTouchStart: () => setTouching(true),
+      onTouchEnd: () => setTouching(false),
+      onTouchCancel: () => setTouching(false),
+    },
+  };
 }
 export function DirectionPad({
   active,
