@@ -15,13 +15,16 @@ import { validLearn } from "../learn/session";
 import { validLearners, type Learners } from "../learn/learners";
 import { validSkills } from "../learn/skills";
 import { PracticeNotes, PracticeSettings, validPracticeNotes, validPracticeSettings } from "../practice/types";
+import { arcadeIds, validArcade, type ArcadeId, type ArcadeSave } from "../arcade";
 export type Settings = { sound: boolean; help: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
 export type Save = {
   version: 1;
+  /** Island Arcade earned progress only; real-time rounds are never persisted. */
+  arcade?: ArcadeSave;
   settings: Settings;
   sessions: Partial<Record<GameId, GameState>>;
   recent: GameId | null;
-  favoriteGames?: (GameId | ActivityId | LearnId)[];
+  favoriteGames?: (GameId | ActivityId | LearnId | ArcadeId)[];
   wordRecords?: WordRecords;
   activities?: Activities;
   recentActivity?: ActivityId | null;
@@ -341,6 +344,7 @@ export function parseSave(raw: string): Save {
   if (!obj(v) || v.version !== 1)
     throw new Error("This save uses an unsupported version. Your original has been kept.");
   if (
+    (v.arcade !== undefined && (!validArcade(v.arcade) || Object.keys(v.arcade.people).some(id => !(v.learning === undefined ? ["family"] : validLearners(v.learning) ? v.learning.people.map(p => p.id) : []).includes(id)))) ||
     !obj(v.settings) ||
     typeof v.settings.sound !== "boolean" ||
     typeof v.settings.help !== "boolean" ||
@@ -356,8 +360,8 @@ export function parseSave(raw: string): Save {
     !Object.entries(v.sessions).every(([k, s]) => validSession(s) && s.game === k) ||
     (v.recent !== null && !gameIds.includes(v.recent as GameId)) ||
     (v.favoriteGames !== undefined &&
-      (!Array.isArray(v.favoriteGames) || v.favoriteGames.length > gameIds.length + activityIds.length + learnIds.length ||
-        !unique(v.favoriteGames) || !v.favoriteGames.every((id) => [...gameIds, ...activityIds, ...learnIds].includes(id)))) ||
+      (!Array.isArray(v.favoriteGames) || v.favoriteGames.length > gameIds.length + activityIds.length + learnIds.length + arcadeIds.length ||
+        !unique(v.favoriteGames) || !v.favoriteGames.every((id) => [...gameIds, ...activityIds, ...learnIds, ...arcadeIds].includes(id)))) ||
     (v.wordRecords !== undefined && !validWordRecords(v.wordRecords)) ||
     (v.activities !== undefined && !validActivities(v.activities)) ||
     (v.recentActivity !== undefined &&

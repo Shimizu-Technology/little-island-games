@@ -15,6 +15,7 @@ import type { Island } from "../learn/types";
 import { PracticeOptions } from "./PracticeOptions";
 import { LearnerSettings } from "../learn/LearnerSettings";
 import { useSoundControls } from "./Audio";
+import { emptyArcade } from "../arcade";
 import { learnerPractice } from "../learn/learners";
 export function Settings({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const store = useStore(),
@@ -128,6 +129,12 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
         </>
       ) : (
         <>
+          {/* Additive Arcade grown-up controls; neither reminder nor music is forced on. */}
+          <Heading style={{ fontSize: 19 }}>Arcade comfort</Heading>
+          <ToggleRow label="Arcade music" detail="Quiet original loops during play" value={store.save.arcade?.music ?? false} disabled={busy} onChange={music => store.arcade({ type: "preferences", music }, { epoch: store.epoch, learner: store.save.learning?.active ?? "family" })} />
+          <ToggleRow label="Unlock every arcade level" detail="Open all worlds and free play for every learner" value={store.save.arcade?.unlockAll ?? false} disabled={busy} onChange={unlockAll => store.arcade({ type: "preferences", unlockAll }, { epoch: store.epoch, learner: store.save.learning?.active ?? "family" })} />
+          <Copy>Arcade break reminder · appears only between levels</Copy>
+          <View style={[styles.row, { flexWrap: "wrap" }]}>{([0, 15, 20, 30, 45] as const).map(breakMinutes => <Chip key={breakMinutes} selected={(store.save.arcade ?? emptyArcade()).breakMinutes === breakMinutes} onPress={() => { if (!busy) store.arcade({ type: "preferences", breakMinutes }, { epoch: store.epoch, learner: store.save.learning?.active ?? "family" }); }}>{breakMinutes ? `${breakMinutes} min` : "Off"}</Chip>)}</View>
           <LearnerSettings disabled={busy} />
           <PracticeOptions value={learnerPractice(store.save.learning, store.save.settings.practice)}
             onChange={practice => store.settings({ practice })} disabled={busy} />
