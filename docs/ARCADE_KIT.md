@@ -8,13 +8,12 @@ Acceptance for this slice: shared kit plus Reef Builder and Shell Song, each wit
 
 Experience: cream/teal island surroundings; coral reef garden and a moonlit shell stage. Large labelled controls, shape plus color, short visible directions and a demonstrated first move. A coral placement settles immediately, then a short fish release confirms a clear. A shell glows only for its note; decorative celebrations become still with Reduce Motion. No reading deadline. The map and results always offer a clear way back.
 
-## Rendering experiment (in progress)
+## Rendering experiment
 
 The retained `/arcade?spike=1` harness compares 60 static vector fish moved with shared Reanimated transforms against React-state/SVG transforms. Two-second warmup, then twenty seconds of JS requestAnimationFrame intervals and publication cost. These measure scheduling/publishing, not compositor or physical GPU frame time. Re-run the harness on target hardware before physical acceptance.
 
 SDK 57 setup checked before implementation: [Expo Reanimated](https://docs.expo.dev/versions/v57.0.0/sdk/reanimated/), [Expo Skia](https://docs.expo.dev/versions/v57.0.0/sdk/skia/), [Expo Audio](https://docs.expo.dev/versions/v57.0.0/sdk/audio/), [Expo Haptics](https://docs.expo.dev/versions/v57.0.0/sdk/haptics/). Installed Reanimated + Worklets only through `npx expo install`; babel-preset-expo configures its plugin. Skia's web CanvasKit loader would need a same-origin wasm asset copied into dist before the existing recursive offline cache runs; a CDN default cannot satisfy offline use. No Skia dependency or wasm is currently added.
 
-Numbers, final decision, API and QA receipts follow after the experiment and implementation.
 
 ### Measured decision
 
@@ -71,3 +70,41 @@ Checklist: engine + validator; three normal worlds + learning world; star goals 
 ### Break clock and stale actions
 
 `breakClock.ts` adds active play segments across games in memory. Pause, background, navigation and sheets stop the segment. A reminder is checked only in the terminal-result callback and is never rendered over gameplay; acknowledging it clears the accumulated time. It defaults off and no clock is persisted. Returning to a previously visited arcade game still clears the normal-game Continue marker. Store actions bind to the current learner and restore epoch; direct dictionary reads use own properties so imported learner IDs cannot inherit a prototype member.
+
+## W1 verification receipt
+
+Implementation source `366cf4d122ed6811db8c16c2466f4b5236b9ecfe`; the subsequent receipt commit changes documentation only. Agent-executed, isolated local fixtures on 27 October 2026. Web uses the brief's Chromium executable with touch-enabled 390×844 and 1024×768 contexts; primary QA fixes `Math.random` to a reproducible seed. All moves, questions, settings, backups and confirmations are performed through UI. Seeded engines choose legal test moves; they do not set outcomes. Portrait 768×1024 and landscape 844×390 also exercise actual Reef placement/results.
+
+| Scope | Web 390×844 | Web 1024×768 | Native iPad mini 5 / iOS 18.5 Release |
+| --- | --- | --- | --- |
+| A01, both games: Home/island → map → teaching → play → stars → chest → saved sticker → book/back | Passed | Passed | Passed, first normal level of each game, both chest paths and shared book |
+| A02, first level in each of 3 normal worlds + learning world | Passed for both games | Passed for both games | Not run beyond World 1 |
+| A03, wrong/helped, independent, free skip; persisted notes/stickers | Passed | Passed | Reef wrong/help/sticker and Shell independent/sticker passed; skip not run native |
+| A03, separate learner ownership | Passed, grown-up-created learner; learning result isolated | Covered by pure save tests, not separately repeated | Not run |
+| A04, pause/sheet/reload, earned progress retained; sound-off text | Passed, Reduce Motion enabled | Passed, normal motion | Background via Safari/return latched Pause; resume; termination/cold launch restarted at map with stars retained |
+| A04, actual Helper-off failure/retry | Passed for both games | Not separately repeated | Not run |
+| A05, 60-sprite renderer scheduling | 1024×768 stress receipt above | Passed scheduling sample above | Passed Release scheduling sample above; physical GPU/A12 acceptance remains not run |
+| A08, backup export, picker import and confirmation, exact arcade round trip | Passed | Passed | Not run native |
+| A08, malformed optional field at cold startup, byte-exact preserved original, restore after fresh start | Passed | Not separately repeated | Strict validation unit tests only |
+| Free play/name/high score | Actual note, named 10-point record and voluntary finish passed | Not separately repeated | Not run |
+| Offline cold reload and actual play/results with preview stopped | Final receipt below | Final receipt below | Embedded Release plays without Metro; physical airplane mode not run |
+
+Engineering on the implementation source: `npm run check` passed typecheck, lint, **630 tests / 47 files** and web export; `npm run doctor` passed **21/21**. Advisory Impeccable 4.6.0 scan of changed UI returned `[]`; it is not family usability acceptance. New tests cover both engines, all 32 Shell Song levels, all level openings, simultaneous Reef clears, make-ten rules, deterministic RNG, fixed clocks/input, Helper/failure/retry, progress gates, round ownership, hostile/malformed saves, old-save compatibility, independent/helped notes, and duplicate credit.
+
+Final native Release was built from `366cf4d` with zero errors and one host toolchain warning. `build-manifest.json` records the embedded JS digest; app version/build configuration was not changed. No Metro server was started. Native screenshots and SQLite receipts verify earned stars/stickers and practice notes. The fresh task-only simulator `3C603F34-F066-4801-91FC-1E4F88E20C6E` was shut down and deleted after QA; no other simulator was claimed or changed.
+
+Evidence root (outside Git): `/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/island-arcade/arcade-kit/`. `qa.cjs`, `qa-ledger.json`, `qa-final-run.log` and the phone/tablet screenshots record the primary matrix. `extra-ledger.json` / `extra.cjs` cover failure/retry, simulated web visibility, learner isolation and free play. `recovery.cjs`, `recovery-ledger.json`, `corrupt-recovery.png` and the 768×1024 / 844×390 images record cold recovery/orientation. `native-qa.py`, `native-interrupt.py`, `native-collection.py`, `native-qa-receipt.json`, native screenshots and `native-final-*-save.json` record final installed behavior. Native driver `press home` was unsupported; the successful background check used its documented app-opening operation to switch to Safari and back.
+
+Retest history: an initial web reload raced a concurrent export and received a transient static 404; the export was allowed to finish and the complete matrix reran without overlapping exports. The first native build exposed a chest that saved the reward but unmounted its confirmation; the offer is now retained locally through atomic consumption, and both web sizes plus the final native build passed the correction. Earlier native evidence and failed harness attempts remain in the artifacts; the final-head receipts supersede them. A malformed-save injection into a live page was replaced by a controlled cold-start fixture so queued valid writes could not overwrite the intended test data.
+
+Remaining integration/family gates: the lead's independent final-code review, combined voice-bank export/generation/decoding and phoneme audition, seven later arcade games, Android, native Files/VoiceOver/large-text/rotation coverage beyond this slice, physical A12/iPhone/iPad performance and audio comfort, and Stassie's acceptance. No PR, merge, store publication or version/build increment is part of this branch.
+
+Additional final-source checks: the grown-up gate enabled music and the 15-minute reminder; a controlled clock advance during Reef play did not show a reminder until the cleared-level result. Acknowledgement dismissed it. The outfit closet/base selection and Home → favorite Reef Builder routing passed. See `comfort.cjs`, `comfort-receipt.json` and `between-level-break.png`. All eleven new WAV files decoded at 22,050 Hz with bounded peaks (`audio-receipt.json`); audible comfort still needs real hardware.
+
+### Final offline and cleanup result
+
+Final web cache `little-island-0e8cb6f518ab` contains the complete export and all eleven new Arcade WAV assets. The owned preview listener was stopped with SIGTERM before testing cold navigation. Reef Builder at 390×844 and Shell Song at 1024×768 each cold-reloaded, reached an actual three-star result, retained earned progress, and opened the shared sticker book from service-worker cache, with no page errors. Receipts: `offline.cjs`, `offline-cache.json`, `offline-receipt.json`, `offline-reef-builder.png`, `offline-shell-song.png`, and both `offline-book-*.png` images.
+
+The complete primary phone/tablet matrix was rerun against implementation commit `366cf4d` after the last export finished; all 22 dimension-specific ledger entries passed. This is scoped two-game coverage, not acceptance of the seven later arcade games or the complete product ledger. The final native receipt also includes independent Shell chest completion and the shared sticker book.
+
+Lifecycle session `01a17ca4-9439-7793-8a31-22053fed0d9d`: preview stopped, owned T3 tab closed, all Playwright browsers closed, fresh simulator shut down and **deleted**, no Metro started, no owned running resources or intentional resource handoffs. Borrowed resources were not claimed or stopped. See `lifecycle-final.txt`. The branch/worktree and ignored generated iOS build files remain available for lead integration; no PR or merge was created.
