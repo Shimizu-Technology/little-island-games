@@ -32,9 +32,9 @@ import {
 } from "./controls";
 const hidden: SpritePose = { x: -200, y: -200, opacity: 0 };
 const gestureStyle: ViewStyle = Platform.OS === "web" ? ({ touchAction: "none", userSelect: "none" } as ViewStyle) : {};
-function useArena() {
-  const [size, setSize] = useState({ width: 360, height: 600 });
-  const arena = useSharedValue(arenaTransform(360, 600));
+function useArena(width: number, height: number) {
+  const [size, setSize] = useState({ width, height });
+  const arena = useSharedValue(arenaTransform(width, height));
   const camera = useMemo(() => arenaTransform(size.width, size.height), [size.width, size.height]);
   return {
     size,
@@ -177,6 +177,8 @@ const PalmHero = memo(function PalmHero({
 });
 export function PalmBoard({
   initial,
+  width = 360,
+  height = 600,
   active,
   helper,
   outfit,
@@ -185,6 +187,8 @@ export function PalmBoard({
   debug,
 }: {
   initial: PalmState;
+  width?: number;
+  height?: number;
   active: boolean;
   helper: boolean;
   outfit: OutfitId;
@@ -192,7 +196,7 @@ export function PalmBoard({
   onTone: (key: string, haptic?: boolean) => void;
   debug: boolean;
 }) {
-  const { size, camera, arena, layout } = useArena(),
+  const { size, camera, arena, layout } = useArena(width, height),
     reduced = useReducedMotion(),
     point = useSharedValue<DragPoint>({ x: 180, y: 552, down: false }),
     flags = useSharedValue({ helper, taps: 0, finish: false }),
@@ -538,6 +542,8 @@ const BeachSprites = memo(function BeachSprites({
 });
 export function BeachBoard({
   initial,
+  width = 360,
+  height = 600,
   active,
   helper,
   onResult,
@@ -546,6 +552,8 @@ export function BeachBoard({
   names,
 }: {
   initial: BeachState;
+  width?: number;
+  height?: number;
   active: boolean;
   helper: boolean;
   onResult: (r: ArcadeResult, winner?: 0 | 1 | null) => void;
@@ -553,7 +561,7 @@ export function BeachBoard({
   debug: boolean;
   names: [string, string];
 }) {
-  const { camera, arena, layout } = useArena(),
+  const { camera, arena, layout } = useArena(width, height),
     reduced = useReducedMotion(),
     poses = useSharedValue<SpritePose[]>(Array.from({ length: 66 }, () => hidden)),
     points = useSharedValue<TouchPoints>({}),
