@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useId } from "react";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import type { OutfitId } from "../progress";
 import type { WorldId } from "../types";
@@ -63,10 +63,11 @@ export const ActionHero = memo(function ActionHero({
   outfit?: OutfitId;
   happy?: boolean;
 }) {
+  const id = useId().replace(/:/g, "");
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100" accessible={false}>
       <Defs>
-        <LinearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+        <LinearGradient id={`action-hero-${id}`} x1="0" y1="0" x2="1" y2="1">
           <Stop offset="0" stopColor={palm ? "#E8AF69" : "#FFFFFF"} />
           <Stop offset="1" stopColor={palm ? "#A85D38" : "#FFAE77"} />
         </LinearGradient>
@@ -78,7 +79,14 @@ export const ActionHero = memo(function ActionHero({
         strokeWidth={7}
         strokeLinecap="round"
       />
-      <Circle cx={50} cy={56} r={34} fill="url(#hero)" stroke={palm ? "#75432D" : "#23596E"} strokeWidth={4} />
+      <Circle
+        cx={50}
+        cy={56}
+        r={34}
+        fill={`url(#action-hero-${id})`}
+        stroke={palm ? "#75432D" : "#23596E"}
+        strokeWidth={4}
+      />
       {palm ? (
         <Path
           d="M24 42Q17 60 29 73M70 35Q82 55 75 73"
@@ -112,17 +120,18 @@ export const ActionHero = memo(function ActionHero({
   );
 });
 export const BeetleArt = memo(function BeetleArt({ size, boss = false }: { size: number; boss?: boolean }) {
+  const id = useId().replace(/:/g, "");
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100" accessible={false}>
       <Defs>
-        <LinearGradient id="bug" x1="0" y1="0" x2="1" y2="1">
+        <LinearGradient id={`action-bug-${id}`} x1="0" y1="0" x2="1" y2="1">
           <Stop offset="0" stopColor={boss ? "#CE95ED" : "#D39561"} />
           <Stop offset="1" stopColor={boss ? "#764893" : "#7E4C38"} />
         </LinearGradient>
       </Defs>
       <G stroke="#3E3640" strokeWidth={5} strokeLinecap="round">
         <Path d="M27 36L13 26M25 51L10 52M27 65L13 77M73 36L87 26M75 51L90 52M73 65L87 77" />
-        <Ellipse cx={50} cy={52} rx={29} ry={34} fill="url(#bug)" />
+        <Ellipse cx={50} cy={52} rx={29} ry={34} fill={`url(#action-bug-${id})`} />
         <Path d="M50 29V82" stroke="#6B4339" strokeWidth={3} />
         <Path d="M35 29Q29 48 34 59" stroke="#F5CD9C" strokeWidth={5} />
         <Path d="M39 25Q30 3 45 8L51 20Q63 9 65 17L62 31" fill={boss ? "#A56DB9" : "#BC855C"} />
@@ -196,7 +205,8 @@ export const Scene = memo(function Scene({
   width: number;
   height: number;
 }) {
-  const p = palettes[world];
+  const p = palettes[world],
+    id = useId().replace(/:/g, "");
   return (
     <Svg
       width={width}
@@ -207,17 +217,17 @@ export const Scene = memo(function Scene({
       accessible={false}
     >
       <Defs>
-        <LinearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+        <LinearGradient id={`action-sky-${id}`} x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={p[0]} />
           <Stop offset=".65" stopColor={p[1]} />
           <Stop offset="1" stopColor={p[2]} />
         </LinearGradient>
-        <LinearGradient id="sand" x1="0" y1="0" x2="0" y2="1">
+        <LinearGradient id={`action-sand-${id}`} x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor="#FBE2A4" />
           <Stop offset="1" stopColor="#DDA664" />
         </LinearGradient>
       </Defs>
-      <Rect width={360} height={600} fill="url(#sky)" />
+      <Rect width={360} height={600} fill={`url(#action-sky-${id})`} />
       <Circle cx={292} cy={90} r={37} fill={world === "w3" ? "#FFF1BE" : "#FFF3B2"} opacity={0.9} />
       <Circle cx={292} cy={90} r={49} fill="#FFF4CE" opacity={0.13} />
       {world === "w3" &&
@@ -228,7 +238,7 @@ export const Scene = memo(function Scene({
       <Path d="M0 206Q80 188 162 208T360 202" fill="none" stroke="#C5F4E2" strokeWidth={3} opacity={0.5} />
       <Path
         d={palm ? "M0 457Q95 437 180 452T360 445V600H0Z" : "M0 245Q95 221 180 244T360 231V600H0Z"}
-        fill="url(#sand)"
+        fill={`url(#action-sand-${id})`}
       />
       <Path
         d={palm ? "M0 458Q100 438 190 455T360 447" : "M0 244Q100 224 190 246T360 234"}
@@ -281,10 +291,11 @@ export const Scene = memo(function Scene({
   );
 });
 export function ChestArt({ size = 150, open = false }: { size?: number; open?: boolean }) {
+  const id = useId().replace(/:/g, "");
   return (
     <Svg width={size} height={size} viewBox="0 0 140 140" accessible={false}>
       <Defs>
-        <LinearGradient id="chest" x1="0" y1="0" x2="0" y2="1">
+        <LinearGradient id={`action-chest-${id}`} x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor="#DA9A4D" />
           <Stop offset="1" stopColor="#9C5638" />
         </LinearGradient>
@@ -297,7 +308,16 @@ export function ChestArt({ size = 150, open = false }: { size?: number; open?: b
           ))}
         </G>
       )}
-      <Rect x={20} y={65} width={100} height={54} rx={10} fill="url(#chest)" stroke="#613D2C" strokeWidth={4} />
+      <Rect
+        x={20}
+        y={65}
+        width={100}
+        height={54}
+        rx={10}
+        fill={`url(#action-chest-${id})`}
+        stroke="#613D2C"
+        strokeWidth={4}
+      />
       <Path
         d={open ? "M20 62L28 25Q72 4 112 25L120 62Z" : "M20 68V53Q20 25 70 25Q120 25 120 53V68Z"}
         fill="#CC8542"
