@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { PanResponder, StyleSheet, type ViewProps } from "react-native";
+import { PanResponder, Platform, StyleSheet, type ViewProps } from "react-native";
 import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { Button, Copy, PressableScale } from "../components/ui";
@@ -29,11 +29,12 @@ export function PressControl({ onPress, repeat = false, haptic = true, disabled,
     };
     timer.current = setTimeout(again, Math.max(0, Number.isFinite(das) ? das : 170));
   }
-  return <PressableScale accessibilityRole="button" {...props} disabled={disabled} onPressIn={begin} onPressOut={stop} onBlur={event => { stop(); props.onBlur?.(event); }} onAccessibilityTap={() => { if (!latest.current.disabled) { if (latest.current.haptic) feel("select"); latest.current.onPress(); } }}/>;
+  const timing = Platform.OS === "web" ? { delayPressIn: 0 } : { unstable_pressDelay: 0 };
+  return <PressableScale accessibilityRole="button" {...props} {...timing} disabled={disabled} onPressIn={begin} onPressOut={stop} onBlur={event => { stop(); props.onBlur?.(event); }} onAccessibilityTap={() => { if (!latest.current.disabled) { if (latest.current.haptic) feel("select"); latest.current.onPress(); } }}/>;
 }
 /** Labelled gameplay action with the same touch-down timing as a directional control. */
 export function PlayButton({ children, onPress, disabled, compact, quiet, label, style, icon }: React.ComponentProps<typeof Button>) {
-  return <PressControl onPress={onPress} disabled={disabled} accessibilityLabel={label} style={[{ minHeight: compact ? 44 : 52, paddingHorizontal: 16, paddingVertical: 10, alignItems: "center", justifyContent: "center", borderRadius: 20, backgroundColor: quiet ? "#FFF4DA" : "#24536A", borderWidth: 2, borderColor: "#DCC28F", opacity: disabled ? .5 : 1 }, style]}><Copy style={{ fontWeight: "800", color: quiet ? "#24536A" : "#FFF4DA" }}>{icon === "refresh" ? "↻ " : ""}{children}</Copy></PressControl>;
+  return <PressControl onPress={onPress} disabled={disabled} accessibilityLabel={label ?? (typeof children === "string" ? children : undefined)} style={[{ minHeight: compact ? 44 : 52, paddingHorizontal: 16, paddingVertical: 10, alignItems: "center", justifyContent: "center", borderRadius: 20, backgroundColor: quiet ? "#FFF4DA" : "#24536A", borderWidth: 2, borderColor: "#DCC28F", opacity: disabled ? .5 : 1 }, style]}><Copy style={{ fontWeight: "800", color: quiet ? "#24536A" : "#FFF4DA" }}>{icon === "refresh" ? "↻ " : ""}{children}</Copy></PressControl>;
 }
 /** Fire once during the move, never wait for finger-up. Resets on the next touch. */
 export function useSwipe(active: boolean, onSwipe: (direction: Swipe) => void, threshold = 24, onTapDown?: (x: number, y: number) => void) {

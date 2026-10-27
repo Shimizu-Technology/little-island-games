@@ -22,6 +22,7 @@ describe("touch-down control timing", () => {
   it("acts on down, repeats at DAS/ARR, and stops on out, blur and unmount", () => {
     const action = vi.fn();
     const control = PressControl({ onPress: action, repeat: { das: 170, arr: 50 } }) as React.ReactElement<{ onPressIn: () => void; onPressOut: () => void; onBlur: (event: unknown) => void }>;
+    expect((control.props as { delayPressIn?: number }).delayPressIn).toBe(0);
     mount(); control.props.onPressIn(); expect(action).toHaveBeenCalledTimes(1); expect(runtime.haptic).toHaveBeenCalledTimes(1);
     vi.advanceTimersByTime(169); expect(action).toHaveBeenCalledTimes(1);
     vi.advanceTimersByTime(1); expect(action).toHaveBeenCalledTimes(2); vi.advanceTimersByTime(100); expect(action).toHaveBeenCalledTimes(4);

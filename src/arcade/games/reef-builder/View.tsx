@@ -1,6 +1,6 @@
-import { PlayButton } from "../../Input";
+import { PlayButton, PressControl } from "../../Input";
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Animated as DragView, PanResponder, Pressable, View, useWindowDimensions } from "react-native";
+import { Animated as DragView, PanResponder, View, useWindowDimensions } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import { Text } from "../../../components/Text";
@@ -46,9 +46,9 @@ function DraggablePiece({ piece, slot, selected, active, board, numbers, compact
   }), [board, slot, position]);
   const description = numbers ? `number ${piece.value}` : `${piece.cells.length} coral${piece.cells.length === 1 ? "" : "s"}`;
   return <DragView.View style={{ transform: position.getTranslateTransform(), zIndex: selected ? 10 : 1 }} {...responder.panHandlers}>
-    <Pressable testID={`coral-piece-${slot}`} accessibilityRole="button" accessibilityLabel={`Piece ${slot + 1}, ${description}${selected ? ", selected" : ""}. Drag to the reef or tap then tap a cell.`} accessibilityState={{ selected, disabled: !active }} disabled={!active} onPressIn={() => latest.current.onSelect(slot)} style={{ minHeight: compact ? 92 : 100, minWidth: 104, padding: 9, alignItems: "center", justifyContent: "center", gap: 4, backgroundColor: selected ? "#FFF0C5" : "#D8E9D5", borderColor: selected ? "#F2BD55" : "#7BAAA6", borderWidth: 3, borderRadius: 24, boxShadow: "0 4px 0 #346C78" }}>
+    <PressControl testID={`coral-piece-${slot}`} accessibilityRole="button" accessibilityLabel={`Piece ${slot + 1}, ${description}${selected ? ", selected" : ""}. Drag to the reef or tap then tap a cell.`} accessibilityState={{ selected, disabled: !active }} disabled={!active} onPress={() => latest.current.onSelect(slot)} style={{ minHeight: compact ? 92 : 100, minWidth: 104, padding: 9, alignItems: "center", justifyContent: "center", gap: 4, backgroundColor: selected ? "#FFF0C5" : "#D8E9D5", borderColor: selected ? "#F2BD55" : "#7BAAA6", borderWidth: 3, borderRadius: 24, boxShadow: "0 4px 0 #346C78" }}>
       <PieceArt piece={piece} numbers={numbers} cell={compact ? 25 : 29}/><Text style={{ color: "#345C67", fontSize: 11, fontWeight: "800" }}>{selected ? "READY" : slot + 1}</Text>
-    </Pressable>
+    </PressControl>
   </DragView.View>;
 }
 export function ReefBoard({ initial, active, helper, onResult, onTone }: { initial: ReefState; active: boolean; helper: boolean; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string) => void }) {
@@ -80,9 +80,9 @@ export function ReefBoard({ initial, active, helper, onResult, onTone }: { initi
         {s.board.map((value, i) => {
           const fish = s.fish.includes(i), highlighted = preview?.cells.includes(i), clears = preview?.clear.cells.includes(i), row = Math.floor(i / 8), col = i % 8;
           const invalid = !preview && hover && piece?.cells.some(([r, c]) => row === hover.row + r && col === hover.col + c);
-          return <Pressable key={i} accessibilityRole="button" accessibilityLabel={`Reef row ${row + 1}, column ${col + 1}, ${value ? target ? `number ${value}` : "coral" : "open"}${fish ? ", trapped fish" : ""}`} accessibilityState={{ disabled: !active || !!value || s.status !== "playing" }} disabled={!active || !!value || s.status !== "playing"} onPressIn={() => { if (selected !== null) place(selected, row, col); }} style={{ width: (size - 6) / 8, height: (size - 6) / 8, borderWidth: clears || highlighted || invalid ? 2 : .5, borderColor: invalid ? "#A4454F" : clears ? "#FFF5AB" : highlighted ? "#C88530" : "#428F8740", backgroundColor: invalid ? "#EDB7A6" : clears ? "#F2D77F" : highlighted ? "#FFF0BA" : (row + col) % 2 ? "#E7E4B11A" : "#4B9D9D0D", alignItems: "center", justifyContent: "center" }}>
+          return <PressControl key={i} accessibilityRole="button" accessibilityLabel={`Reef row ${row + 1}, column ${col + 1}, ${value ? target ? `number ${value}` : "coral" : "open"}${fish ? ", trapped fish" : ""}`} accessibilityState={{ disabled: !active || !!value || s.status !== "playing" }} disabled={!active || !!value || s.status !== "playing"} onPress={() => { if (selected !== null) place(selected, row, col); }} style={{ width: (size - 6) / 8, height: (size - 6) / 8, borderWidth: clears || highlighted || invalid ? 2 : .5, borderColor: invalid ? "#A4454F" : clears ? "#FFF5AB" : highlighted ? "#C88530" : "#428F8740", backgroundColor: invalid ? "#EDB7A6" : clears ? "#F2D77F" : highlighted ? "#FFF0BA" : (row + col) % 2 ? "#E7E4B11A" : "#4B9D9D0D", alignItems: "center", justifyContent: "center" }}>
             {value > 0 || highlighted ? <><View style={{ opacity: highlighted ? .7 : 1 }}><Coral color={coralColors[highlighted && piece ? piece.color % 4 : (i + value) % 4]} variant={highlighted && piece ? piece.color : (i + value) % 4} fish={fish} size={cell * .9}/></View>{target && <View style={{ position: "absolute", backgroundColor: "#FFF4D9", borderRadius: 8, paddingHorizontal: 5 }}><Text style={{ color: "#244D60", fontSize: cell * .45, fontWeight: "900" }}>{highlighted ? piece?.value : value}</Text></View>}</> : i % 7 === 0 ? <View style={{ width: 5, height: 3, borderRadius: 2, backgroundColor: "#7AA99B", opacity: .4 }}/> : null}
-          </Pressable>;
+          </PressControl>;
         })}
       </View>{burst && <ActionBurst key={burst.id} text={burst.text} fish={burst.fish} originY={burst.originY}/>}</Animated.View>
       <View style={{ alignItems: "center", gap: 12, maxWidth: side ? 240 : undefined }}>

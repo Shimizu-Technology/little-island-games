@@ -4,7 +4,11 @@ const runtime = vi.hoisted(() => ({ slots: [] as unknown[], index: 0, effects: [
 vi.mock("react", () => {
   const useRef = (value: unknown) => { const index = runtime.index++; return runtime.slots[index] ?? (runtime.slots[index] = { current: value }); };
   return { useRef, useState: (value: unknown) => { const index = runtime.index++; if (!(index in runtime.slots)) runtime.slots[index] = value; return [runtime.slots[index], (next: unknown) => { runtime.slots[index] = next; }]; },
-    useCallback: (fn: unknown) => fn,
+    useCallback: (fn: unknown, deps: unknown[]) => {
+      const index = runtime.index++, old = runtime.slots[index] as { fn: unknown; deps: unknown[] } | undefined;
+      if (old && deps.length === old.deps.length && deps.every((v, i) => Object.is(v, old.deps[i]))) return old.fn;
+      runtime.slots[index] = { fn, deps }; return fn;
+    },
     useLayoutEffect: (fn: () => void) => { fn(); },
     useEffect: (fn: () => void | (() => void), deps: unknown[]) => {
       const index = runtime.index++, old = runtime.slots[index] as { deps: unknown[]; cleanup?: () => void } | undefined;
@@ -24,14 +28,20 @@ const input = { value: 0 } as import("react-native-reanimated").SharedValue<numb
 const step = (s: typeof initial, n: number) => ({ ticks: s.ticks + 1, event: s.event + n, score: s.score + n });
 const end = (s: typeof initial) => s.ticks >= 2 ? { cleared: false, outcome: "game-over" as const, stars: 0 as const, score: s.score, detail: "Done" } : null;
 function flush() { for (const fn of runtime.effects.splice(0)) fn(); }
+const onFrame = () => {};
 function RenderHarness(active: boolean, onResult: (result: import("../src/arcade/types").ArcadeResult) => void) {
   runtime.index = 0;
-  const loop = useArcadeUiLoop({ initial, input, step, result: end, onFrame: () => {}, onResult, active }); flush(); return loop;
+  const loop = useArcadeUiLoop({ initial, input, step, result: end, onFrame, onResult, active }); flush(); return loop;
 }
 function frame(timestamp: number, dt: number | null) { if (runtime.active) runtime.frame!({ timestamp, timeSincePreviousFrame: dt, timeSinceFirstFrame: 0 }); }
 function delivery() { for (const fn of runtime.queued.splice(0)) fn(); }
 beforeEach(() => { runtime.slots = []; runtime.index = 0; runtime.effects = []; runtime.cleanups = []; runtime.queued = []; runtime.active = false; input.value = 0; });
 describe("UI loop boundary", () => {
+  it("keeps the native frame subscription stable across HUD renders and active changes", () => {
+    const result = vi.fn(); RenderHarness(true, result); const callback = runtime.frame;
+    RenderHarness(true, result); expect(runtime.frame).toBe(callback);
+    RenderHarness(false, result); expect(runtime.frame).toBe(callback);
+  });
   it("steps from shared input and queues discrete snapshots/results once", () => {
     const result = vi.fn(); const loop = RenderHarness(true, result); input.value = 1;
     frame(1000, null); delivery(); frame(1017, 17); expect(loop.state.value.ticks).toBe(1); expect(runtime.queued.length).toBe(1); delivery();

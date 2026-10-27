@@ -25,23 +25,24 @@ export function useArcadeUiLoop<S, I>({ initial, input, step, result, onFrame, o
     setSnapshot(next);
     if (end) { if (live.current.active) live.current.onResult?.(end); else pending.current = end; }
   }, []);
-  const frame = useFrameCallback(info => {
+  const callback = useCallback<Parameters<typeof useFrameCallback>[0]>(info => {
     "worklet";
     if (!enabled.value || reported.value) return;
     const before = arcadeEvent(state.value), advanced = advanceClock(clock.value, (info.timeSincePreviousFrame ?? 0) / 1000);
-    clock.value = advanced.clock;
+    clock.set(advanced.clock);
     let next = state.value, end: ArcadeResult | null = null;
     for (let i = 0; i < advanced.steps; i++) {
       next = step(next, input.value, FIXED_DT);
       end = result?.(next) ?? null;
       if (end) break;
     }
-    state.value = next; onFrame(next);
+    state.set(next); onFrame(next);
     if (end || before !== arcadeEvent(next) || info.timestamp - lastHud.value >= 100) {
-      lastHud.value = info.timestamp; runOnJS(publish)(next, end);
+      lastHud.set(info.timestamp); runOnJS(publish)(next, end);
     }
-    if (end) reported.value = true;
-  }, false);
+    if (end) reported.set(true);
+  }, [enabled, reported, state, clock, step, input, result, onFrame, lastHud, publish]);
+  const frame = useFrameCallback(callback, false);
   useEffect(() => {
     enabled.set(active);
     clock.set({ ...clock.value, remainder: 0 }); lastHud.set(0);
