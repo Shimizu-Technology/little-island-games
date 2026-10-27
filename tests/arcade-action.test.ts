@@ -210,6 +210,8 @@ describe("Beach Ball", () => {
     const solo = { ...base, mode: "solo" as const };
     expect(beachTransition(solo, { type: "paddle", seat: 1, x: 80 })).toBe(solo);
     expect(paddleWidth({ ...base, helper: true })).toBeGreaterThan(paddleWidth(base));
+    expect(paddleWidth({ ...solo, helper: true }, 1)).toBe(paddleWidth(solo, 1));
+    expect(paddleWidth({ ...base, helper: true }, 1)).toBe(116);
     expect(Math.abs(createBeach(base.level, 12, true).balls[0].vy)).toBeLessThan(
       Math.abs(createBeach(base.level, 12, false).balls[0].vy)
     );

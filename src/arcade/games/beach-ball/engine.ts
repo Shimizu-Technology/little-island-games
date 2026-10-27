@@ -81,7 +81,8 @@ export type BeachInput =
   | { type: "paddle"; seat: 0 | 1; x: number }
   | { type: "helper"; value: boolean }
   | { type: "finish" };
-export const paddleWidth = (s: BeachState) => (s.helper ? 116 : 86);
+export const paddleWidth = (s: BeachState, seat: 0 | 1 = 0) =>
+  s.helper && (seat === 0 || s.mode === "together") ? 116 : 86;
 export const beachConfig = (s: BeachState): BeachLevel =>
   s.level === "endless" ? { ...beachLevel("w3-8"), target: 99999999 } : s.level;
 function serve(s: BeachState, i: number, toward: number, wait = 1.1): [Ball, number] {
@@ -147,7 +148,7 @@ export function beachTransition(s: BeachState, input: BeachInput): BeachState {
     (s.mode === "together" || input.seat === 0)
   ) {
     const paddles: [number, number] = [...s.paddles];
-    paddles[input.seat] = clamp(input.x, paddleWidth(s) / 2, 360 - paddleWidth(s) / 2);
+    paddles[input.seat] = clamp(input.x, paddleWidth(s, input.seat) / 2, 360 - paddleWidth(s, input.seat) / 2);
     return { ...s, paddles };
   }
   if (input.type === "finish" && s.level === "endless") return { ...s, phase: "rest" };
@@ -165,17 +166,17 @@ export function beachStep(before: BeachState, input: BeachInput, dt: number): Be
       points: [...before.points] as [number, number],
       balls: before.balls.map((b) => ({ ...b })),
     },
-    width = paddleWidth(s);
+    aiWidth = paddleWidth(s, 1);
   if (s.mode === "solo") {
     const incoming = s.balls.filter((b) => b.vy < 0).sort((a, b) => a.y - b.y)[0],
       ball = incoming ?? s.balls[0];
-    const reach = { gentle: 65, steady: 135, zippy: 235 }[s.strength],
-      error = { gentle: 42, steady: 21, zippy: 5 }[s.strength];
+    const reach = { gentle: 65, steady: 135, zippy: 235 }[s.strength] * (s.helper ? 0.72 : 1),
+      error = { gentle: 70, steady: 28, zippy: 5 }[s.strength] * (s.helper ? 1.12 : 1);
     const target = (ball?.x ?? 180) + Math.sin(s.time * 2.1) * error;
     s.paddles[1] = clamp(
       s.paddles[1] + clamp(target - s.paddles[1], -reach * dt, reach * dt),
-      width / 2,
-      360 - width / 2
+      aiWidth / 2,
+      360 - aiWidth / 2
     );
   }
   for (let i = 0; i < s.balls.length; i++) {
@@ -193,7 +194,8 @@ export function beachStep(before: BeachState, input: BeachInput, dt: number): Be
       b.vx *= -1;
     }
     const seat = b.vy > 0 ? 0 : 1,
-      line = seat === 0 ? 523 : 77;
+      line = seat === 0 ? 523 : 77,
+      width = paddleWidth(s, seat);
     if (
       (seat === 0 ? oldY <= line && b.y >= line : oldY >= line && b.y <= line) &&
       Math.abs(b.x - s.paddles[seat]) <= width / 2 + 10

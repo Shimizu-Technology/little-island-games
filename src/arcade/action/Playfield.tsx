@@ -421,7 +421,7 @@ export function BeachBoard({
             : hidden;
         }),
         ...s.paddles.map((x, i) => ({
-          ...point(x, i ? 65 : 535, (paddleWidth(s) / 360) * width, Math.max(20, 20 * scale)),
+          ...point(x, i ? 65 : 535, (paddleWidth(s, i as 0 | 1) / 360) * width, Math.max(20, 20 * scale)),
           scale: 1,
         })),
         ...Array.from({ length: 8 }, (_, i) =>
@@ -499,8 +499,7 @@ export function BeachBoard({
       });
     }
   }
-  const config = beachConfig(s),
-    pw = (paddleWidth(s) / 360) * width;
+  const config = beachConfig(s);
   return (
     <View
       ref={arenaRef}
@@ -545,10 +544,16 @@ export function BeachBoard({
         </ArcadeSprite>
       ))}
       {[0, 1].map((i) => (
-        <ArcadeSprite key={`paddle${i}`} poses={poses} index={i + 2} width={pw} height={Math.max(20, 20 * scale)}>
+        <ArcadeSprite
+          key={`paddle${i}`}
+          poses={poses}
+          index={i + 2}
+          width={(paddleWidth(s, i as 0 | 1) / 360) * width}
+          height={Math.max(20, 20 * scale)}
+        >
           <View
             style={{
-              width: pw,
+              width: (paddleWidth(s, i as 0 | 1) / 360) * width,
               height: Math.max(20, 20 * scale),
               borderRadius: 15,
               backgroundColor: i ? "#EC8177" : "#3AC9C0",
