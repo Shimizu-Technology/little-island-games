@@ -4,14 +4,28 @@ import { Button, C, Copy, Heading } from "../components/ui";
 import { ArcadeArt, StickerArt, stickerNames } from "./Art";
 import { type ArcadeLearner, gameProgress, outfitIds, outfitNames, outfitStars, stickerIds, type OutfitId } from "./progress";
 import type { ArcadeGame } from "./types";
+/** All sixteen kit stickers, arranged as nine game chapters. Rewards remain shared. */
+export const stickerChapters: { name: string; stickers: readonly (typeof stickerIds[number])[] }[] = [
+  { name: "Canoe Cargo", stickers: ["moon-canoe"] },
+  { name: "Fruit Bat Flight", stickers: ["flying-fox", "jelly-light"] },
+  { name: "Lagoon Run", stickers: ["sea-turtle", "lagoon-ray"] },
+  { name: "Reef Builder", stickers: ["reef-fish", "rainbow-fish"] },
+  { name: "Shell Song", stickers: ["singing-shell", "star-shell"] },
+  { name: "Rail Parade", stickers: ["tiny-rail", "island-flower"] },
+  { name: "Crab Crossing", stickers: ["little-crab", "hermit-home"] },
+  { name: "Palm Patrol", stickers: ["coconut", "sun-coral"] },
+  { name: "Beach Ball", stickers: ["sea-star"] },
+];
 export function StickerBook({ person }: { person: ArcadeLearner }) {
-  return <View style={{ gap: 14 }}><Heading>Our little island collection</Heading><Copy>{person.stickers.length} of {stickerIds.length} friends found. Each chest shows its sticker first. It is always fine to skip.</Copy>
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>{stickerIds.map(id => {
-      const found = person.stickers.includes(id);
-      return <View key={id} accessibilityLabel={`${stickerNames[id]}, ${found ? "collected" : "not collected yet"}`} style={{ width: 136, minHeight: 156, padding: 12, alignItems: "center", gap: 6, backgroundColor: found ? "#FFF8E4" : C.sand, borderRadius: 22, borderWidth: 1, borderColor: found ? "#E1C689" : C.line }}>
-        <View style={{ opacity: found ? 1 : .25 }}><StickerArt id={id} size={86}/></View><Copy style={{ fontSize: 14, textAlign: "center", color: C.ink }}>{found ? stickerNames[id] : "Waiting in a chest"}</Copy>
-      </View>;
-    })}</View>
+  return <View style={{ gap: 18 }}><Heading>Our island sticker atlas</Heading><Copy>{person.stickers.length} of {stickerIds.length} friends found. Every chest shows its sticker. Collect them in any game.</Copy>
+    {stickerChapters.map(chapter => <View key={chapter.name} style={{ gap: 10 }}><Heading style={{ fontSize: 19 }}>{chapter.name}</Heading>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>{chapter.stickers.map(id => {
+        const found = person.stickers.includes(id);
+        return <View key={id} accessibilityLabel={`${stickerNames[id]}, ${found ? "collected" : "waiting in a chest"}`} style={{ flexGrow: 1, flexBasis: 125, maxWidth: 200, minHeight: 143, padding: 10, alignItems: "center", gap: 5, backgroundColor: found ? "#FFF8E4" : C.sand, borderRadius: 22, borderWidth: found ? 2 : 1, borderStyle: found ? "solid" : "dashed", borderColor: found ? "#C59A4D" : C.line }}>
+          <View style={{ opacity: found ? 1 : .4 }}><StickerArt id={id} size={82}/></View><Copy style={{ fontSize: 14, textAlign: "center", color: C.ink }}>{stickerNames[id]}</Copy><Copy style={{ fontSize: 12 }}>{found ? "Found ✓" : "In a sticker chest"}</Copy>
+        </View>;
+      })}</View>
+    </View>)}
   </View>;
 }
 export function OutfitCloset({ game, person, onSelect }: { game: ArcadeGame; person: ArcadeLearner; onSelect: (outfit: OutfitId) => void }) {

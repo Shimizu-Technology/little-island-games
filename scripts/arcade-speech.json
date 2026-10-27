@@ -18,5 +18,9 @@
   "arcade-phoneme-p": "The sound at the start of pig.",
   "arcade-phoneme-s": "The sound at the start of sun.",
   "arcade-phoneme-t": "The sound at the start of tap.",
-  "arcade-phoneme-u": "Short u, as in cup."
+  "arcade-phoneme-u": "Short u, as in cup.",
+  "arcade-cargo-intro": "Fill a row to send a canoe. Move the cargo, turn it, then drop it into a gap.",
+  "arcade-cargo-sum": "Fill a row and count its numbers. Match the target to send two canoes. Helper lets you take your time.",
+  "arcade-cargo-goal": "Pack the gaps. Send the canoes!",
+  "arcade-cargo-sum-goal": "Match the target sum. Send two canoes!"
 }
