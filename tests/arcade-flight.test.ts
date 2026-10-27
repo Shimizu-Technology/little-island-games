@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { arcadeTransition, emptyArcade, validArcade } from "../src/arcade/progress";
-import { createFlight, flightGap, flightLearning, flightResult, flightStep, flightTransition, validFlight, type FlightState } from "../src/arcade/games/fruit-bat-flight/engine";
+import { createFlight as createWaitingFlight, flightGap, flightLearning, flightResult, flightStep, flightTransition, validFlight, type FlightState } from "../src/arcade/games/fruit-bat-flight/engine";
 import { createRun, rowSafe, runLearning, runResult, runStep, runTransition, validRun, type RunState } from "../src/arcade/games/lagoon-run/engine";
 import { equation, flightLevels, mathGate, runLevels, validFact } from "../src/arcade/games/scrolling/content";
 import { flightFrame, runFrame } from "../src/arcade/games/scrolling/commands";
 import { projectTrack, trackSprite, roadEdge } from "../src/arcade/games/lagoon-run/camera";
 import { FIXED_DT } from "../src/arcade/clock";
 import { allLevelIds, worldIds } from "../src/arcade/types";
+/** Most physics tests start mid-flight; the waiting/ready state has its own test below. */
+const createFlight = (...args: Parameters<typeof createWaitingFlight>): FlightState => ({ ...createWaitingFlight(...args), waiting: false });
 function fly(initial: FlightState, offset = .045): FlightState {
   let s = initial;
   for (let i = 0; i < 90000 && !flightResult(s); i++) {
@@ -65,14 +67,22 @@ describe("Fruit Bat Flight physics and hearts",()=>{
     expect(flightStep({...s,y:.4,vy:1.2},{type:"idle"},FIXED_DT).vy).toBe(1.2);
     for(const dt of [0,-1,NaN,Infinity,.2])expect(flightStep(s,{type:"idle"},dt)).toBe(s);
   });
-  it("spends 3/5 hearts, protects for 1.2 s, respawns and never freezes scroll",()=>{
+  it("waits in a hover at the start until the first tap, then flies", () => {
+    const s = createWaitingFlight(flightLevels[0], 3); expect(s.waiting).toBe(true); expect(validFlight(s)).toBe(true);
+    let held = s; for (let i = 0; i < 120; i++) held = flightStep(held, { type: "idle" }, FIXED_DT);
+    expect(held.travel).toBe(0); expect(held.y).toBe(s.y); expect(held.gates).toEqual(s.gates); expect(held.lives).toEqual(s.lives);
+    const flying = flightStep(flightTransition(held, { type: "flap" }), { type: "idle" }, FIXED_DT);
+    expect(flying.waiting).toBe(false); expect(flying.travel).toBeGreaterThan(0); expect(flying.y).toBeLessThan(s.y);
+    expect(validFlight({ ...s, waiting: "yes" })).toBe(false);
+  });
+  it("spends 3/5 hearts, protects for 1.2 s after the respawn tap, and holds the world while waiting",()=>{
     for(const helper of [false,true]) {
       let s=createFlight(flightLevels[0],8,helper);const count=helper?5:3;
       for(let hit=1;hit<=count;hit++) {
-        s=flightStep({...s,y:.98,vy:.5,cooldown:0,lives:{...s.lives,invulnerable:0}},{type:"idle"},FIXED_DT);
+        s=flightStep({...s,waiting:false,y:.98,vy:.5,cooldown:0,lives:{...s.lives,invulnerable:0}},{type:"idle"},FIXED_DT);
         expect(s.lives.hearts).toBe(count-hit);expect(s.lives.hit).toBe(hit);expect(s.lives.invulnerable).toBe(1.2);
         expect(s.travel).toBeGreaterThan(0);expect(s.y).toBeLessThan(hit < count ? .8 : 1);
-        if(hit<count){const next=flightStep({...s,y:.98},{type:"idle"},FIXED_DT);expect(next.lives.hearts).toBe(s.lives.hearts);expect(next.travel).toBeGreaterThan(s.travel);}
+        if(hit<count){expect(s.waiting).toBe(true);const held=flightStep(s,{type:"idle"},FIXED_DT);expect(held.travel).toBe(s.travel);expect(held.lives.invulnerable).toBe(1.2);const next=flightStep(flightTransition({...held,y:.98},{type:"flap"}),{type:"idle"},FIXED_DT);expect(next.waiting).toBe(false);expect(next.lives.hearts).toBe(s.lives.hearts);expect(next.travel).toBeGreaterThan(s.travel);}
       }
       expect(flightResult(s)?.outcome).toBe("game-over");expect(flightStep(s,{type:"idle"},FIXED_DT)).toBe(s);
     }

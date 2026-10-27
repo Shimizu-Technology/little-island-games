@@ -4,7 +4,7 @@ import { canonicalLevel, finite, flightLevels, mathGate, record, uint, validFact
 export { flightLevels, flightLevel } from "../scrolling/content";
 export type FlightInput = { type: "flap" | "idle" | "finish" } | { type: "helper"; value: boolean };
 export type PalmGate = { x: number; center: number; base: number; phase: number; fruit: boolean; passed: boolean; fact: MathGate };
-export type FlightState = { level: ScrollLevel | "endless"; seed: number; helper: boolean; y: number; vy: number; time: number; travel: number; cooldown: number; flap: number; gates: PalmGate[]; passed: number; fruit: number; score: number; lastGain: number; bumps: number; status: "playing" | "cleared" | "bumped" | "rest"; event: number; cue: "ready" | "flap" | "fruit" | "bump" | "answer" | "try"; feedback: number; helped: boolean; lives: Lives; command: number };
+export type FlightState = { level: ScrollLevel | "endless"; seed: number; helper: boolean; y: number; vy: number; time: number; travel: number; cooldown: number; flap: number; gates: PalmGate[]; passed: number; fruit: number; score: number; lastGain: number; bumps: number; status: "playing" | "cleared" | "bumped" | "rest"; event: number; cue: "ready" | "flap" | "fruit" | "bump" | "answer" | "try"; feedback: number; helped: boolean; lives: Lives; command: number; /** Hovering until the next tap: at the start and after a lost heart. */ waiting: boolean };
 export const PLAYER_X = .24, FLIGHT_GRAVITY = 1.9, FLAP_VELOCITY = -.65, TERMINAL_VELOCITY = 1.2;
 export function flightLearning(s: FlightState) { "worklet"; return s.level !== "endless" && s.level.world === "learn"; }
 function newGate(s: FlightState, x: number): { seed: number; gate: PalmGate } {
@@ -17,7 +17,7 @@ function newGate(s: FlightState, x: number): { seed: number; gate: PalmGate } {
   return { seed: fact.seed, gate: { x, center, base: center, phase: n * Math.PI * 2, fruit: true, passed: false, fact: fact.fact } };
 }
 export function createFlight(level: FlightState["level"], seed: number, helper = false): FlightState {
-  let s: FlightState = { level, seed: seed >>> 0, helper, y: .5, vy: 0, time: 0, travel: 0, cooldown: 0, flap: 0, gates: [], passed: 0, fruit: 0, score: 0, lastGain: 0, bumps: 0, status: "playing", event: 0, cue: "ready", feedback: 0, helped: helper, lives: createLives(helper, level === "endless"), command: 0 };
+  let s: FlightState = { level, seed: seed >>> 0, helper, y: .5, vy: 0, time: 0, travel: 0, cooldown: 0, flap: 0, gates: [], passed: 0, fruit: 0, score: 0, lastGain: 0, bumps: 0, status: "playing", event: 0, cue: "ready", feedback: 0, helped: helper, lives: createLives(helper, level === "endless"), command: 0, waiting: true };
   const spacing = level === "endless" ? .48 : level.spacing;
   for (let i = 0; i < 4; i++) { const next = newGate(s, .82 + i * spacing); s = { ...s, seed: next.seed, gates: [...s.gates, next.gate] }; }
   return s;
@@ -35,18 +35,21 @@ export function flightTransition(s: FlightState, input: FlightInput): FlightStat
   if (input.type === "finish" && s.level === "endless") return { ...s, status: "rest" };
   if (input.type !== "flap") return s;
   // One callback per down event. No debounce: even taps faster than a physics tick survive.
-  return { ...s, vy: FLAP_VELOCITY * (s.helper ? .96 : 1), flap: .12, event: s.event + 1, cue: "flap" };
+  return { ...s, waiting: false, vy: FLAP_VELOCITY * (s.helper ? .96 : 1), flap: .12, event: s.event + 1, cue: "flap" };
 }
 function bump(s: FlightState, center: number, wrong = false): FlightState {
   "worklet";
   if (flightLearning(s)) return { ...s, y: center, vy: 0, bumps: s.bumps + 1, helped: true, cooldown: .3, event: s.event + 1, cue: wrong ? "try" : "bump", feedback: .45 };
   const lives = hitLives(s.lives);
   if (lives === s.lives) return s;
-  return { ...s, y: lives.hearts ? Math.max(.12, Math.min(.88, center)) : Math.max(.035, Math.min(.965, s.y)), vy: lives.hearts ? -.25 : s.vy, cooldown: .3, lastGain: 0, lives, bumps: s.bumps + 1, status: lives.hearts ? "playing" : "bumped", event: s.event + 1, cue: "bump", feedback: .45 };
+  // A lost heart (not the last) hovers the bat in the next opening until the player taps again.
+  return { ...s, waiting: lives.hearts > 0 && s.level !== "endless", y: lives.hearts ? Math.max(.12, Math.min(.88, center)) : Math.max(.035, Math.min(.965, s.y)), vy: lives.hearts ? 0 : s.vy, cooldown: .3, lastGain: 0, lives, bumps: s.bumps + 1, status: lives.hearts ? "playing" : "bumped", event: s.event + 1, cue: "bump", feedback: .45 };
 }
 export function flightStep(before: FlightState, _input: FlightInput, dt: number): FlightState {
   "worklet";
   if (before.status !== "playing" || !finite(dt, .000001, .1)) return before;
+  // Waiting: the world is frozen and protection does not tick down; only animation clocks move.
+  if (before.waiting) return { ...before, time: before.time + dt, cooldown: Math.max(0, before.cooldown - dt), flap: Math.max(0, before.flap - dt), feedback: Math.max(0, before.feedback - dt) };
   let s: FlightState = { ...before, lives: stepLives(before.lives, dt), time: before.time + dt, cooldown: Math.max(0, before.cooldown - dt), flap: Math.max(0, before.flap - dt), feedback: Math.max(0, before.feedback - dt) };
   const learn = flightLearning(s), rank = s.level === "endless" ? 3 : s.level.rank;
   const gust = !learn && rank >= 3 ? Math.sin(s.time * 2.1) * (.12 + (rank - 3) * .035) : 0;
@@ -94,7 +97,7 @@ export function flightResult(s: FlightState): ArcadeResult | null {
 }
 export function validFlight(v: unknown): v is FlightState {
   if (!record(v) || !canonicalLevel(v.level, flightLevels) || !uint(v.seed, 0xffffffff) || typeof v.helper !== "boolean" || typeof v.helped !== "boolean" || !validLives(v.lives) || !uint(v.command) || !finite(v.y, 0, 1) || !finite(v.vy, -.7, 1.2) || !Array.isArray(v.gates) || v.gates.length !== 4) return false;
-  const keys = "level,seed,helper,y,vy,time,travel,cooldown,flap,gates,passed,fruit,score,lastGain,bumps,status,event,cue,feedback,helped,lives,command".split(",");
-  return Object.keys(v).length === keys.length && Object.keys(v).every(k => keys.includes(k)) && [v.time, v.travel].every(n => finite(n, 0, 1e10)) && [v.cooldown, v.flap, v.feedback].every(n => finite(n, 0, 1.2)) && [v.passed, v.fruit, v.score, v.lastGain, v.bumps, v.event].every(n => uint(n)) && (v.fruit as number) <= (v.passed as number) && (flightLearning(v as FlightState) || v.bumps === v.lives.hit) && (v.status === "bumped" ? v.lives.hearts === 0 : v.lives.hearts > 0) && ["playing", "cleared", "bumped", "rest"].includes(v.status as string) && ["ready", "flap", "fruit", "bump", "answer", "try"].includes(v.cue as string) && v.gates.every(g => record(g) && Object.keys(g).length === 7 && finite(g.x, -.3, 4) && finite(g.center, .2, .8) && finite(g.base, .28, .72) && finite(g.phase, 0, Math.PI * 2) && typeof g.fruit === "boolean" && typeof g.passed === "boolean" && validFact(g.fact));
+  const keys = "level,seed,helper,y,vy,time,travel,cooldown,flap,gates,passed,fruit,score,lastGain,bumps,status,event,cue,feedback,helped,lives,command,waiting".split(",");
+  return typeof v.waiting === "boolean" && Object.keys(v).length === keys.length && Object.keys(v).every(k => keys.includes(k)) && [v.time, v.travel].every(n => finite(n, 0, 1e10)) && [v.cooldown, v.flap, v.feedback].every(n => finite(n, 0, 1.2)) && [v.passed, v.fruit, v.score, v.lastGain, v.bumps, v.event].every(n => uint(n)) && (v.fruit as number) <= (v.passed as number) && (flightLearning(v as FlightState) || v.bumps === v.lives.hit) && (v.status === "bumped" ? v.lives.hearts === 0 : v.lives.hearts > 0) && ["playing", "cleared", "bumped", "rest"].includes(v.status as string) && ["ready", "flap", "fruit", "bump", "answer", "try"].includes(v.cue as string) && v.gates.every(g => record(g) && Object.keys(g).length === 7 && finite(g.x, -.3, 4) && finite(g.center, .2, .8) && finite(g.base, .28, .72) && finite(g.phase, 0, Math.PI * 2) && typeof g.fruit === "boolean" && typeof g.passed === "boolean" && validFact(g.fact));
 }
 export const flightEngine: ArcadeEngine<FlightState, FlightInput, ScrollLevel> = { create: createFlight, reduce: flightTransition, step: flightStep, result: flightResult, validate: validFlight };
