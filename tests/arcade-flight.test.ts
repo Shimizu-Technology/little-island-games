@@ -51,7 +51,7 @@ describe("56-level feel curves",()=>{
     expect(validFact({...mathGate(4,2).fact,choices:[1,1,1]})).toBe(false);
   });
   it("clears all 112 levels with legal inputs and valid bounded states",()=>{
-    for(const level of flightLevels){const s=[.045,.025,.065,0,-.02].map(offset=>fly(createFlight(level,981,false),offset)).find(s=>flightResult(s)?.cleared);expect(s,level.id).toBeDefined();expect(validFlight(s),level.id).toBe(true);}
+    for(const level of flightLevels){let s: FlightState|undefined; for(const offset of [.045,.025,.065,0,-.02,.035,.055,.015,.075]) { const attempt=fly(createFlight(level,981,false),offset); if(flightResult(attempt)?.stars===3) { s=attempt; break; } } expect(s,level.id).toBeDefined();expect(validFlight(s),level.id).toBe(true);}
     for(const level of runLevels){const s=run(createRun(level,771,false));expect(runResult(s)?.stars,level.id).toBe(3);expect(validRun(s),level.id).toBe(true);}
   },30000);
 });
@@ -138,6 +138,19 @@ describe("Lagoon camera, actions, patterns and lives",()=>{
     expect(hit.lives.hearts).toBe(2);expect(hit.passed).toBe(0);expect(runStep(hit,{type:"idle"},FIXED_DT).travel).toBeGreaterThan(hit.travel);
     for(const [bumps,shells,stars] of [[0,42,3],[0,0,2],[1,42,2],[2,42,1]])expect(runResult({...s,status:"cleared",passed:14,bumps,shells})?.stars).toBe(stars);
     expect(runResult(runTransition(createRun("endless",1),{type:"finish"}))?.outcome).toBe("stopped");
+  });
+});
+describe("step reproducibility",()=>{
+  it("keeps source state immutable and deterministically replays the same run inputs",()=>{
+    const original=createRun(runLevels[32],981),raw=JSON.stringify(original);
+    const act=(s: RunState)=>advanceRun(runTransition(s,{type:"left"}),90);
+    expect(act(original)).toEqual(act(original));expect(JSON.stringify(original)).toBe(raw);
+  });
+  it("publishes recycle geometry without inventing another score/haptic cue",()=>{
+    const f=createFlight(flightLevels[0],1),r=createRun(runLevels[0],1);
+    const a=flightStep({...f,cue:"fruit",gates:f.gates.map((g,i)=>i?g:{...g,x:-.2,passed:true})},{type:"idle"},FIXED_DT);
+    const b=runStep({...r,cue:"shell",rows:r.rows.map((row,i)=>i?row:{...row,z:1.2,passed:true})},{type:"idle"},FIXED_DT);
+    expect(a.event).toBeGreaterThan(f.event);expect(a.cue).toBe("ready");expect(b.cue).toBe("ready");
   });
 });
 describe("UI command mailbox",()=>{

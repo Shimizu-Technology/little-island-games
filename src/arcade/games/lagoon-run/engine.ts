@@ -77,7 +77,7 @@ export function runStep(before: RunState, _input: RunInput, dt: number): RunStat
   const spacing = s.level === "endless" ? .53 : s.level.spacing;
   for (let i = 0; i < s.rows.length; i++) if (s.rows[i].z > 1.18) {
     const next = newRow(s, Math.min(...s.rows.map(r => r.z)) - spacing, Math.round(s.travel / spacing) + 5 + i);
-    s.seed = next.seed; s.rows[i] = next.row; s.event++;
+    s.seed = next.seed; s.rows[i] = next.row; s.event++; s.cue = "ready";
   }
   if (s.level !== "endless" && s.passed >= s.level.target) s.status = "cleared";
   return s;

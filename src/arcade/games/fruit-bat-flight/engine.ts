@@ -81,7 +81,7 @@ export function flightStep(before: FlightState, _input: FlightInput, dt: number)
   const spacing = s.level === "endless" ? .48 : s.level.spacing;
   for (let i = 0; i < s.gates.length; i++) if (s.gates[i].x < -.15) {
     const next = newGate(s, Math.max(...s.gates.map(g => g.x)) + spacing);
-    s.seed = next.seed; s.gates[i] = next.gate; s.event++;
+    s.seed = next.seed; s.gates[i] = next.gate; s.event++; s.cue = "ready";
   }
   if (s.level !== "endless" && s.passed >= s.level.target) s.status = "cleared";
   return s;
