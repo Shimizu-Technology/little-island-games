@@ -71,14 +71,14 @@ describe("Fruit Bat Flight physics and hearts",()=>{
       for(let hit=1;hit<=count;hit++) {
         s=flightStep({...s,y:.98,vy:.5,cooldown:0,lives:{...s.lives,invulnerable:0}},{type:"idle"},FIXED_DT);
         expect(s.lives.hearts).toBe(count-hit);expect(s.lives.hit).toBe(hit);expect(s.lives.invulnerable).toBe(1.2);
-        expect(s.travel).toBeGreaterThan(0);expect(s.y).toBeLessThan(.8);
+        expect(s.travel).toBeGreaterThan(0);expect(s.y).toBeLessThan(hit < count ? .8 : 1);
         if(hit<count){const next=flightStep({...s,y:.98},{type:"idle"},FIXED_DT);expect(next.lives.hearts).toBe(s.lives.hearts);expect(next.travel).toBeGreaterThan(s.travel);}
       }
       expect(flightResult(s)?.outcome).toBe("game-over");expect(flightStep(s,{type:"idle"},FIXED_DT)).toBe(s);
     }
   });
   it("free play ends on one hit even with Helper and preserves terminal identity",()=>{
-    for(const helper of [false,true]){const s=createFlight("endless",1,helper);const dead=flightStep({...s,y:.98},{type:"idle"},FIXED_DT);expect(dead.lives.hearts).toBe(0);expect(flightResult(dead)?.outcome).toBe("game-over");expect(flightTransition(dead,{type:"flap"})).toBe(dead);}
+    for(const helper of [false,true]){const s=createFlight("endless",1,helper);const dead=flightStep({...s,y:.98},{type:"idle"},FIXED_DT);expect(dead.lives.hearts).toBe(0);expect(dead.y).toBe(.965);expect(flightResult(dead)?.outcome).toBe("game-over");expect(flightTransition(dead,{type:"flap"})).toBe(dead);}
     const end=flightTransition(createFlight("endless",1),{type:"finish"});expect(flightResult(end)?.outcome).toBe("stopped");
   });
   it("widens Helper gaps, preserves damage on toggles, and rewards skilled clears",()=>{

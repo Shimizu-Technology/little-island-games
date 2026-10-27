@@ -42,7 +42,7 @@ function bump(s: FlightState, center: number, wrong = false): FlightState {
   if (flightLearning(s)) return { ...s, y: center, vy: 0, bumps: s.bumps + 1, helped: true, cooldown: .3, event: s.event + 1, cue: wrong ? "try" : "bump", feedback: .45 };
   const lives = hitLives(s.lives);
   if (lives === s.lives) return s;
-  return { ...s, y: Math.max(.12, Math.min(.88, center)), vy: -.25, cooldown: .3, lastGain: 0, lives, bumps: s.bumps + 1, status: lives.hearts ? "playing" : "bumped", event: s.event + 1, cue: "bump", feedback: .45 };
+  return { ...s, y: lives.hearts ? Math.max(.12, Math.min(.88, center)) : Math.max(.035, Math.min(.965, s.y)), vy: lives.hearts ? -.25 : s.vy, cooldown: .3, lastGain: 0, lives, bumps: s.bumps + 1, status: lives.hearts ? "playing" : "bumped", event: s.event + 1, cue: "bump", feedback: .45 };
 }
 export function flightStep(before: FlightState, _input: FlightInput, dt: number): FlightState {
   "worklet";
