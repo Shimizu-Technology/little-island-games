@@ -369,7 +369,7 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
   s.husks = s.husks.filter((h) => h.y >= -20 && h.y <= 620);
   if (learning && s.fact > before.fact) return s.fact >= config.facts ? { ...s, phase: "cleared" } : fact(s);
   for (const b of s.beetles) {
-    if (learning || b.caught || b.y < 466) continue;
+    if (learning || b.caught || b.y + BUG_RADIUS_Y < 475) continue;
     const shield = [72, 180, 288].findIndex((x) => Math.abs(x - b.x) <= 38 + BUG_RADIUS_X);
     if (shield >= 0 && s.shields[shield] > 0) {
       s.shields[shield]--;

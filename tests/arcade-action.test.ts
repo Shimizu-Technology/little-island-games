@@ -176,7 +176,7 @@ describe("Palm Patrol feel rules", () => {
   });
   it("separates shield, armoured bonk and net events at the contact location", () => {
     const base = createPalm(palmLevel("w3-1"), 1);
-    const shield = palmStep({ ...base, beetles: [{ ...base.beetles[0], x: 72, y: 478 }] }, tick, 1 / 60);
+    const shield = palmStep({ ...base, beetles: [{ ...base.beetles[0], x: 72, y: 454 }] }, tick, 1 / 60);
     expect(shield.cue).toBe("shield");
     expect(shield.lives.hit).toBe(0);
     expect(shield.shields[0]).toBe(2);
@@ -260,6 +260,8 @@ describe("Beach Ball feel rules", () => {
     expect(beachLevel("w6-1").tide).toBe(true);
     expect(beachLevel("learn-1").countBy).toBe(2);
     expect(beachLevel("learn-5").countBy).toBe(5);
+    for (const l of beachLevels.filter((l) => l.turtle))
+      for (const b of createBeach(l, 42).balls) expect(Math.abs(b.y - 300)).toBeGreaterThan(42);
   });
   it("plays every level to a valid result via paddle inputs, deterministically", () => {
     for (const l of beachLevels) {

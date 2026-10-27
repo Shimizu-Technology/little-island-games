@@ -130,11 +130,13 @@ function serve(s: BeachState, i: number, toward: number): [Ball, number] {
   const [seed, r] = nextRandom(s.seed),
     speed = beachStartSpeed(s),
     vx = (r - 0.5) * speed * 1.05;
+  const config = beachConfig(s),
+    slot = (s.points[0] + s.points[1] + i) % 2;
   // A marked centre serve; two-ball courts alternate lanes and stagger the second ball.
   return [
     {
-      x: beachConfig(s).balls === 1 ? 180 : i ? 228 : 132,
-      y: 300,
+      x: config.turtle || config.balls === 2 ? (slot ? 228 : 132) : 180,
+      y: config.turtle ? (slot ? 350 : 250) : 300,
       vx,
       vy: toward * Math.sqrt(speed * speed - vx * vx),
       wait: SERVE_SECONDS + (i ? 0.45 : 0),

@@ -197,7 +197,7 @@ export function PalmBoard({
     point = useSharedValue<DragPoint>({ x: 180, y: 552, down: false }),
     flags = useSharedValue({ helper, taps: 0, finish: false }),
     keyboard = useSharedValue({ x: 180, firing: false, used: false }),
-    poses = useSharedValue<SpritePose[]>([]),
+    poses = useSharedValue<SpritePose[]>(Array.from({ length: 88 }, () => hidden)),
     reported = useRef(false);
   const gesture = useMemo(
     () =>
@@ -547,7 +547,7 @@ export function BeachBoard({
 }) {
   const { camera, arena, layout } = useArena(),
     reduced = useReducedMotion(),
-    poses = useSharedValue<SpritePose[]>([]),
+    poses = useSharedValue<SpritePose[]>(Array.from({ length: 66 }, () => hidden)),
     points = useSharedValue<TouchPoints>({}),
     mapping = useSharedValue<SeatPointers>({ owners: [null, null], seats: {} }),
     input = useSharedValue<BeachFrame>({ x: [null, null], helper, finish: false }),
@@ -645,19 +645,28 @@ export function BeachBoard({
         style={[{ flex: 1, overflow: "hidden", minHeight: 210, backgroundColor: "#173E50" }, gestureStyle]}
       >
         <ArenaScene palm={false} world={config.world} camera={camera} />
-        <View
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            left: camera.x + 172 * scale,
-            top: camera.y + 292 * scale,
-            width: 16 * scale,
-            height: 16 * scale,
-            borderRadius: 8 * scale,
-            borderWidth: 2 * scale,
-            borderColor: "#FFFAE199",
-          }}
-        />
+        {(config.turtle || config.balls === 2
+          ? [
+              { x: 132, y: config.turtle ? 250 : 300 },
+              { x: 228, y: config.turtle ? 350 : 300 },
+            ]
+          : [{ x: 180, y: 300 }]
+        ).map((p, i) => (
+          <View
+            key={i}
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: camera.x + (p.x - 8) * scale,
+              top: camera.y + (p.y - 8) * scale,
+              width: 16 * scale,
+              height: 16 * scale,
+              borderRadius: 8 * scale,
+              borderWidth: 2 * scale,
+              borderColor: "#FFFAE199",
+            }}
+          />
+        ))}
         <BeachSprites poses={poses} scale={scale} helper={s.helper} together={s.mode === "together"} />
         {[0, 1].map((i) => (
           <ArcadeSprite key={`pop${i}`} poses={poses} index={62 + i} width={65 * scale} height={26 * scale}>

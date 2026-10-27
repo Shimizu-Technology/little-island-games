@@ -170,7 +170,7 @@ export const TurtleArt = memo(function TurtleArt({ size }: { size: number }) {
       <G fill="#A4D8A1" stroke="#285E53" strokeWidth={3}>
         <Ellipse cx={50} cy={18} rx={13} ry={15} />
         <Path d="M29 40Q2 23 10 53L27 58M71 40Q98 23 90 53L73 58M30 69L18 90L40 80M70 69L82 90L60 80" />
-        <Ellipse cx={50} cy={55} rx={31} ry={35} fill="#53A88F" />
+        <Circle cx={50} cy={50} r={35} fill="#53A88F" />
         <Path d="M50 30L69 46L61 71H39L31 46Z" fill="#BDE09D" />
       </G>
       <Path d="M41 15L47 17M54 17L60 15" stroke="#285E53" strokeWidth={3} strokeLinecap="round" />
