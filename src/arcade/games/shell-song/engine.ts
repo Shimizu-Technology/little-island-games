@@ -48,11 +48,13 @@ export function songStep(s: SongState, input: SongInput, dt: number): SongState 
   return elapsed >= 450 + s.pattern.length * noteDuration(s) ? { ...s, phase: "repeat", event: s.event + 1, elapsed: 0, cursor: 0, message: s.level !== "endless" && s.level.word ? "Tap the sounds in word order. There is no hurry." : "Your turn. Take your time." } : { ...s, elapsed, event: s.event + Number(glowingShell(s) !== glowingShell({ ...s, elapsed })), onset: s.onset + Number(watchNoteIndex(s) !== watchNoteIndex({ ...s, elapsed }) && glowingShell({ ...s, elapsed }) !== null) };
 }
 export function songTransition(s: SongState, input: SongInput): SongState {
-  if (input.type === "helper") {
-    const lives = configureLives(s.lives, input.value), learning = s.level !== "endless" && !!s.level.word;
-    return { ...s, helper: input.value, lives, ...(lives.hearts === 0 && !learning && !["cleared", "rest", "over"].includes(s.phase) ? { phase: "over" as const, event: s.event + 1 } : {}) };
-  }
   if (s.phase === "cleared" || s.phase === "rest" || s.phase === "over") return s;
+  if (input.type === "helper") {
+    if (input.value === s.helper) return s;
+    const restart = s.phase === "watch" || s.phase === "repeat";
+    const lives = configureLives(s.lives, input.value), learning = s.level !== "endless" && !!s.level.word;
+    return { ...s, helper: input.value, lives, ...(restart ? { phase: "watch" as const, elapsed: 0, cursor: 0, lastTap: null, event: s.event + 1 } : {}), ...(lives.hearts === 0 && !learning && !["cleared", "rest", "over"].includes(s.phase) ? { phase: "over" as const, event: s.event + 1 } : {}) };
+  }
   if (input.type === "finish") return s.level === "endless" ? { ...s, phase: "rest", message: "A lovely song. Time for a rest." } : s;
   if (input.type === "show" && (s.level === "endless" || !s.level.word)) return s;
   if (input.type === "show") return { ...s, helped: true, message: s.phase === "picture" && s.level !== "endless" ? `Blend the sounds: ${s.level.word}. Find its picture.` : `Next is shell ${s.pattern[s.cursor] + 1}.` };

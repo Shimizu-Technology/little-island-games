@@ -46,6 +46,13 @@ describe("Shell Song feel curve", () => {
     let s = createSong(songLevel("w1-1"), 42); for (let i = 0; i < slips; i++) s = slip(s);
     expect(songResult(clear(s))?.stars).toBe(stars);
   });
+  it("restarts the same phrase on a tempo toggle without refilling damage or skipping notes", () => {
+    let s = createSong(songLevel("w3-8"), 42);
+    for (let i = 0; i < 60; i++) s = songStep(s, { type: "tick" }, 1 / 60);
+    const changed = songTransition(s, { type: "helper", value: true });
+    expect(changed).toMatchObject({ phase: "watch", elapsed: 0, cursor: 0 }); expect(changed.pattern).toEqual(s.pattern); expect(validSong(changed)).toBe(true);
+    const done = clear(s); expect(songTransition(done, { type: "helper", value: true })).toBe(done);
+  });
   it("keeps learning unlimited, with an unchanged slow cadence", () => {
     let s = createSong(songLevel("learn-1"), 42); for (let i = 0; i < 8; i++) s = slip(s);
     expect(s.lives.hearts).toBe(3); expect(noteDuration(s)).toBe(3200); expect(songResult(clear(s))?.cleared).toBe(true);
