@@ -75,13 +75,14 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
     onPanResponderGrant: event => { const now = state.current; origin.current = { x: event.nativeEvent.locationX, y: event.nativeEvent.locationY, col: now.col, row: now.row, shape: pieceCells(now.piece), moved: 0, dropped: false }; },
     onPanResponderMove: (_, g) => {
       if (!live.current.active || origin.current.dropped) return;
+      origin.current.moved = Math.max(origin.current.moved, Math.abs(g.dx), Math.abs(g.dy));
       const offset = Math.round(g.dx / live.current.cell), maxCol = COLS - 1 - Math.max(...pieceCells(state.current.piece).map(c => c[1]));
       const target = Math.max(0, Math.min(maxCol, origin.current.col + offset)), delta = target - state.current.col;
       for (let i = 0; i < Math.min(9, Math.abs(delta)); i++) live.current.act({ type: delta > 0 ? "right" : "left" });
       if (g.dy > Math.max(36, live.current.cell * 1.2) && g.dy > Math.abs(g.dx) * 1.25) { origin.current.dropped = true; live.current.act({ type: "drop" }); }
     },
     onPanResponderRelease: (_, g) => {
-      if (!live.current.active || origin.current.dropped || Math.abs(g.dx) > 10 || Math.abs(g.dy) > 10) return;
+      if (!live.current.active || origin.current.dropped || origin.current.moved > 10 || Math.abs(g.dx) > 10 || Math.abs(g.dy) > 10) return;
       const o = origin.current, c = Math.floor(o.x / live.current.cell), r = Math.floor(o.y / live.current.cell);
       live.current.act({ type: o.shape.some(([pr, pc]) => r === o.row + pr && c === o.col + pc) ? "rotate" : c < o.col ? "left" : "right" });
     },
