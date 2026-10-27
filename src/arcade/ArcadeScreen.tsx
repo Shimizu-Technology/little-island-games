@@ -1,5 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, TextInput, View, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { newMatch, settle } from "../games/match";
+import { FamilySetup, type ArcadeFamily } from "./FamilySetup";
+import { PlayScene } from "./PlayScene";
+import { PlayTeaching } from "./PlayTeaching";
 import { router } from "expo-router";
 import { Button, Chip, Copy, Heading, IconButton, PressableScale, Sheet, ToggleRow, styles } from "../components/ui";
 import { Settings } from "../components/Settings";
@@ -40,14 +45,21 @@ export function ArcadeLobby() {
   </ScrollView><Sheet visible={sheet === "book"} title="Sticker book" onClose={() => setSheet(null)}><StickerBook person={person}/></Sheet><Settings visible={sheet === "settings"} onClose={() => setSheet(null)}/></View>;
 }
 export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; debug?: boolean }) {
-  const { height } = useWindowDimensions(), play = arcadePlays[game.id]!;
+  const { width, height } = useWindowDimensions(), insets = useSafeAreaInsets(), play = arcadePlays[game.id];
+  const [arena, setArena] = useState({ width: width - insets.left - insets.right, height: height - insets.top - insets.bottom - 62 });
   const store = useStore(), owner = activeLearner(store.save.learning), expected = useMemo(() => ({ epoch: store.epoch, learner: owner.id }), [store.epoch, owner.id]);
   const person = arcadeLearner(store.save.arcade, owner.id), p = gameProgress(person, game.id), foreground = useArcadeForeground();
   const [level, setLevel] = useState<ArcadeLevel | "endless" | null>(null), [playing, setPlaying] = useState(false), [paused, setPaused] = useState(false);
   const [sheet, setSheet] = useState<"book" | "outfits" | "settings" | "teach" | "chest" | "leave" | null>(null), [result, setResult] = useState<ArcadeResult | null>(null);
   const [round, setRound] = useState(""), [seed, setSeed] = useState(1), [name, setName] = useState(owner.id === "family" ? store.save.players?.[0] ?? "Family" : owner.name);
+  const [mode, setMode] = useState<ArcadeFamily["mode"]>("solo"), [strength, setStrength] = useState<ArcadeFamily["strength"]>("gentle");
+  const [match, setMatch] = useState(() => newMatch(store.save.players));
+  const together = !!play.familyMatch && mode === "together";
+  const family: ArcadeFamily = { mode, strength, names: together ? match.names : [name, { gentle: "Bibi", steady: "Bibi ••", zippy: "Bibi •••" }[strength]] };
+  const helperUsed = useRef(person.helper);
+  useEffect(() => { if (playing && person.helper) helperUsed.current = true; }, [playing, person.helper]);
   const [chestOffer, setChestOffer] = useState<ChestOffer | null>(null);
-  function openChest() { setChestOffer(person.chest); setSheet("chest"); }
+  function openChest() { if (person.chest?.game !== game.id) return; setChestOffer(person.chest); setSheet("chest"); }
   function closeChest() { setSheet(null); setChestOffer(null); }
   const startAfterTeach = useRef(false), credited = useRef(""), [reminder, setReminder] = useState(false), scroll = useRef<ScrollView>(null);
   const active = foreground && playing && !paused && !sheet, sound = useArcadeAudio(game.id, store.save.settings, store.save.arcade?.music ?? false, foreground && !paused, !!sheet);
@@ -66,42 +78,57 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
     const round = `arcade-${Date.now().toString(36)}-${Math.floor(Math.random() * 0x1000000).toString(36)}`;
     // eslint-disable-next-line react-hooks/purity -- User-invoked Start handler, not a render calculation.
     setRound(round); setSeed(Math.floor(Math.random() * 0x100000000)); setResult(null); setPaused(false); setPlaying(true); setSheet(null);
-    if (level === "endless") store.rememberPlayers([name]); toTop();
+    helperUsed.current = person.helper;
+    if (together) setMatch(previous => ({ ...previous, names: newMatch(previous.names).names }));
+    if (level === "endless" || play.familyMatch) store.rememberPlayers(together ? newMatch(match.names).names : [name]);
+    sound.say((play.startSpeech ?? play.speech)(level !== "endless" && level?.world === "learn", together)); toTop();
   }
-  function teach(andStart: boolean) { startAfterTeach.current = andStart; setSheet("teach"); sound.say(play.speech(level !== "endless" && level?.world === "learn")); }
-  const onResult = useCallback((next: ArcadeResult, helped = false) => {
-    if (!level || credited.current === round) return;
+  function teach(andStart: boolean) { startAfterTeach.current = andStart; setSheet("teach"); sound.say(play.speech(level !== "endless" && level?.world === "learn", together)); }
+  const onResult = useCallback((next: ArcadeResult, helped = false, winner?: 0 | 1 | null) => {
+    if (!level || !round || credited.current === round) return;
     credited.current = round;
-    arcade({ type: "finish", game: game.id, level: level === "endless" ? level : level.id, stars: next.stars, score: next.score, round, name }, expected);
+    if (!arcade({ type: "finish", game: game.id, level: level === "endless" ? level : level.id, stars: next.stars, score: next.score, round, name: together ? match.names.join(" & ").slice(0, 24) : name }, expected)) return;
+    if (together && winner != null) setMatch(previous => settle(previous, winner));
     if (level !== "endless" && level.world === "learn" && next.cleared) {
-      const { skill, subject } = play.learningSkill(level);
-      const config = { enabled: true, subject, limit: 10 as const, operation: "mixed" as const };
-      store.recordWarmup([{ skill, helped: helped || person.helper }], config, round, expected.epoch); store.notePractice(skill, helped || person.helper, expected.epoch);
+      const credit = play.learningSkill(level);
+      if (credit) {
+        const { skill, config } = credit, assisted = helped || helperUsed.current;
+        store.recordWarmup([{ skill, helped: assisted }], config, round, expected.epoch); store.notePractice(skill, assisted, expected.epoch);
+      }
     }
+    sound.tone(next.cleared ? "clear" : "shell-0");
     setReminder(arcadeBreakDue(store.save.arcade?.breakMinutes ?? 0)); setResult(next); setPlaying(false); setPaused(false); toTop();
     // Store entry points are stable; these snapshots deliberately bind a result to this exact owned round.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [arcade, game.id, level, round, name, expected, person.helper]);
+  }, [arcade, game.id, level, round, name, expected, together, match.names, play]);
   const isLearning = !!level && level !== "endless" && level.world === "learn", levels = play.levels;
   const nextId = level && level !== "endless" ? allLevelIds[allLevelIds.indexOf(level.id) + 1] : undefined;
   const nextOpen = nextId && levelOpen(p, nextId, store.save.arcade?.unlockAll);
+  const goal = level ? play.goal?.(level, together) ?? (level === "endless" ? "Make it your own." : level.goals[0]) : "";
+  const onTeachPlay = () => { arcade({ type: "coached", game: game.id }, expected); if (startAfterTeach.current) start(); else setSheet(null); };
+  const onHear = () => sound.say(play.speech(isLearning, together));
+  const board = level && playing ? <play.Board key={round} level={level} seed={seed} helper={person.helper} active={active} outfit={p.outfit} onResult={onResult} onTone={sound.tone} onSay={sound.say} debug={debug || __DEV__} {...arena} family={family}/> : null;
   return <View style={{ flex: 1, backgroundColor: game.color }}>
-    <ArcadeScene game={game.id} world={level && level !== "endless" ? level.world : "w1"} active={foreground && !paused && !sheet}/>
-    <View style={{ paddingHorizontal: 12, paddingVertical: 7, gap: 8 }}>
+    <PlayScene Scene={play.Scene} game={game.id} world={level && level !== "endless" ? level.world : "w1"} active={foreground && !paused && !sheet}/>
+    <View style={{ paddingHorizontal: 12, paddingVertical: 7, gap: 8, backgroundColor: "#24536A" }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 7, alignItems: "center" }}>
         <PressableScale accessibilityRole="button" accessibilityLabel={level ? "Map" : "Arcade"} onPress={() => { if (playing) setSheet("leave"); else if (level) { setLevel(null); setResult(null); toTop(); } else router.replace("/arcade"); }} style={{ minWidth: 48, minHeight: 48, borderRadius: 24, backgroundColor: "#FFF3D7", alignItems: "center", justifyContent: "center" }}><Icon name="back" color="#2E596B"/></PressableScale>
         <View style={{ flex: 1, alignItems: "center" }}><Heading style={{ fontSize: playing ? 16 : 19, color: "#FFF6DE" }}>{game.name}</Heading>{playing && <Copy style={{ color: "#FFF1CE", fontSize: 12 }}>{level === "endless" ? "Free play" : `Level ${level?.index}`}</Copy>}</View>
         {playing ? <PressableScale accessibilityRole="button" accessibilityLabel="Pause" onPress={() => setPaused(true)} style={{ minWidth: 48, minHeight: 48, borderRadius: 24, backgroundColor: "#FFF3D7", alignItems: "center", justifyContent: "center" }}><Svg width={24} height={24} viewBox="0 0 24 24" accessible={false}><Rect x={5} y={4} width={5} height={16} rx={2} fill="#2E596B"/><Rect x={14} y={4} width={5} height={16} rx={2} fill="#2E596B"/></Svg></PressableScale> : <Button quiet compact onPress={() => setSheet("settings")}>Settings</Button>}
       </View>
     </View>
-    <ScrollView ref={scroll} contentContainerStyle={{ flexGrow: 1, width: "100%", paddingBottom: playing ? 0 : 24, gap: 12 }}>
+    {playing && play.fullBleed ? <View style={{ flex: 1 }} onLayout={event => {
+      const { width, height } = event.nativeEvent.layout;
+      setArena(previous => previous.width === width && previous.height === height ? previous : { width, height });
+    }}><SaveStatus/>{board}</View> : <ScrollView ref={scroll} contentContainerStyle={{ flexGrow: 1, width: "100%", paddingBottom: playing ? 0 : 24, gap: 12 }}>
       <SaveStatus/>
-      {!level ? <><LevelMap game={game} person={person} levels={levels} unlockAll={store.save.arcade?.unlockAll ?? false} onLevel={choose} onOutfits={() => setSheet("outfits")} onChest={openChest} active={foreground && !sheet}/>
+      {!level ? <><LevelMap game={game} person={person} levels={levels} unlockAll={store.save.arcade?.unlockAll ?? false} onLevel={choose} onOutfits={() => setSheet("outfits")} onChest={openChest} active={foreground && !sheet} Scene={play.Scene} worldNote={play.worldNote}/>
         <View style={{ paddingHorizontal: 16, gap: 12 }}><Button quiet onPress={() => setSheet("book")}>My sticker book</Button>
         {!!store.save.arcade?.scores.some(s => s.game === game.id) && <View style={{ padding: 16, gap: 8, borderRadius: 24, backgroundColor: "#FFF3D7" }}><Heading style={{ fontSize: 21 }}>Family free-play board</Heading>{store.save.arcade.scores.filter(s => s.game === game.id).sort((a, b) => b.score - a.score).map(s => <Copy key={s.name}>{s.name} · {s.score} points</Copy>)}</View>}</View>
       </> : result ? <View style={{ flex: 1, minHeight: height - 100, justifyContent: "center", gap: 14, alignItems: "center", paddingHorizontal: 18, maxWidth: 600, width: "100%", alignSelf: "center" }}>
         <View><Hero game={game.id} size={150} outfit={p.outfit} mood={result.cleared ? "happy" : "dizzy"} active={foreground && !sheet}/>{result.cleared && <Celebrate burst={1} big/>}</View><Heading style={{ textAlign: "center", fontSize: 30, color: "#FFF5D8", backgroundColor: "#24536A", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 24 }}>{result.cleared ? play.clearedTitle : level === "endless" ? "A lovely place to stop" : "Let’s try a fresh start"}</Heading>
         {result.cleared && <StarReveal stars={result.stars} onTone={sound.tone} active={foreground && !sheet}/>}<Copy style={{ textAlign: "center", color: "#FFF3D5", fontSize: 16, backgroundColor: "#24536A", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14 }}>{result.detail} · {result.score} points</Copy>
+        {together && <Heading style={{ fontSize: 21, textAlign: "center", color: "#FFF4DA", backgroundColor: "#24536A", padding: 10, borderRadius: 16 }}>{match.names[0]} {match.wins[0]} : {match.wins[1]} {match.names[1]}</Heading>}
         {reminder && <View style={{ padding: 18, gap: 10, backgroundColor: "#FFF0CA", borderRadius: 24 }}><Heading style={{ fontSize: 23 }}>A little island break?</Heading><Copy>Your stars are saved. Stretch, have a drink, or keep playing together.</Copy><Button quiet onPress={() => { acknowledgeArcadeBreak(); setReminder(false); }}>Thanks · I’m comfortable</Button></View>}
         {result.cleared && person.chest?.round === round && <PressableScale accessibilityRole="button" accessibilityLabel="A sticker chest · see what’s inside" onPress={() => { sound.say("arcade-chest"); openChest(); }} style={{ width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 16, padding: 10, borderRadius: 28, backgroundColor: "#FFF1CF", borderWidth: 3, borderColor: "#DFB363" }}><ChestArt sticker={person.chest.sticker} size={112} active={foreground && !sheet}/><View style={{ flexShrink: 1 }}><Heading style={{ fontSize: 21 }}>A sticker chest!</Heading><Copy style={{ fontSize: 14 }}>See what’s inside →</Copy></View></PressableScale>}
         <View style={{ width: "100%", gap: 9 }}>{nextOpen && result.cleared && <Button onPress={() => choose(nextId!)}>Next level</Button>}<View style={{ flexDirection: "row", gap: 8, justifyContent: "center", flexWrap: "wrap" }}><Button quiet compact onPress={start}>Play again</Button><Button quiet compact onPress={() => { setLevel(null); setResult(null); toTop(); }}>Back to level map</Button></View></View>
@@ -109,16 +136,18 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
         <Hero game={game.id} size={132} outfit={p.outfit} active={foreground && !sheet}/>
         <View style={{ width: "100%", maxWidth: 480, backgroundColor: "#FFF4DA", borderRadius: 32, borderWidth: 3, borderColor: "#DCC28F", padding: 22, gap: 16, alignItems: "center", boxShadow: "0 8px 0 #285B70" }}>
           <Copy style={{ color: game.color, fontSize: 14, textAlign: "center" }}>{level === "endless" ? "Free play" : `${game.worlds.find(w => w.id === level.world)?.name} · Level ${level.index}`}</Copy><Heading style={{ textAlign: "center", fontSize: 29 }}>{level === "endless" ? "Make it your own" : level.name}</Heading>
+          <Heading style={{ textAlign: "center", fontSize: 20 }}>{goal}</Heading>
           <View style={{ width: "100%", gap: 9 }}>{level === "endless" ? <Copy style={{ textAlign: "center" }}>Your own pace. Finish whenever you like.</Copy> : level.goals.map((goal, i) => <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}><StarDisplay stars={i + 1} size={17}/><Copy style={{ flex: 1, color: "#345A61", fontSize: i === 0 ? 19 : 14, fontWeight: i === 0 ? "800" : "500" }}>{goal}</Copy></View>)}</View>
           <View style={{ width: "100%" }}><ToggleRow label="Helper" detail="Gentle help. Same stars." value={person.helper} onChange={value => arcade({ type: "helper", value }, expected)}/></View>
-          {level === "endless" && <View style={{ width: "100%", gap: 10 }}><Copy>Name for the local family board</Copy><TextInput accessibilityLabel="Free-play player name" value={name} maxLength={24} onChangeText={setName} style={styles.input}/><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>{store.save.players?.map(n => <Chip key={n} selected={name === n} onPress={() => setName(n)}>{n}</Chip>)}</View></View>}
-          <View style={{ width: "100%", gap: 8 }}><Button onPress={() => { sound.say((play.startSpeech ?? play.speech)(isLearning)); if (p.coached) start(); else teach(true); }}>{p.coached ? "Let’s play" : "Show me & play"}</Button><Button quiet compact onPress={() => teach(false)}>How to play · show me</Button></View>
+          {play.familyMatch && <FamilySetup mode={mode} strength={strength} match={match} onMode={setMode} onStrength={setStrength} onMatch={setMatch}/>}
+          {level === "endless" && !together && <View style={{ width: "100%", gap: 10 }}><Copy>Name for the local family board</Copy><TextInput accessibilityLabel="Free-play player name" value={name} maxLength={24} onChangeText={setName} style={styles.input}/><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>{store.save.players?.map(n => <Chip key={n} selected={name === n} onPress={() => setName(n)}>{n}</Chip>)}</View></View>}
+          <View style={{ width: "100%", gap: 8 }}><Button onPress={() => { if (p.coached) start(); else teach(true); }}>{p.coached ? "Let’s play" : "Show me & play"}</Button><Button quiet compact onPress={() => teach(false)}>How to play · show me</Button></View>
         </View>
-      </View> : <play.Board key={round} level={level} seed={seed} helper={person.helper} active={active} outfit={p.outfit} onResult={onResult} onTone={sound.tone} onSay={sound.say} debug={debug || __DEV__}/>}
-    </ScrollView>
+      </View> : board}
+    </ScrollView>}
     <Sheet visible={paused && !sheet} title="Your game is paused" onClose={() => setPaused(false)}><View style={{ alignItems: "center" }}><Hero game={game.id} size={100} outfit={p.outfit} active={false}/></View><Button onPress={() => setPaused(false)}>Resume play</Button><ToggleRow label="Helper" detail="Gentle help. Same stars." value={person.helper} onChange={value => arcade({ type: "helper", value }, expected)}/><Button quiet onPress={() => teach(false)}>How to play</Button><Button quiet onPress={() => { setPaused(false); setLevel(null); setResult(null); setPlaying(false); }}>Back to level map</Button></Sheet>
     <Sheet visible={sheet === "leave"} title="Back to the map?" onClose={() => setSheet(null)}><Copy>This round will start fresh next time. Your earned stars and stickers are saved.</Copy><Button onPress={() => { setSheet(null); setPlaying(false); setLevel(null); setResult(null); }}>Leave round · back to map</Button><Button quiet onPress={() => setSheet(null)}>Keep playing</Button></Sheet>
-    <Sheet visible={sheet === "teach"} title="Show me" onClose={() => { startAfterTeach.current = false; setSheet(null); }}><Teaching game={game} learning={isLearning} onHear={() => sound.say(play.speech(isLearning))} onPlay={() => { arcade({ type: "coached", game: game.id }, expected); if (startAfterTeach.current) start(); else setSheet(null); }}/></Sheet>
+    <Sheet visible={sheet === "teach"} title="Show me" onClose={() => { startAfterTeach.current = false; setSheet(null); }}>{play.Teach ? <PlayTeaching goal={goal} detail={play.teachingDetail?.(isLearning, together) ?? ""} onHear={onHear} onPlay={onTeachPlay}><play.Teach learning={isLearning} together={together} goal={goal} onTone={sound.tone}/></PlayTeaching> : <Teaching game={game} learning={isLearning} onHear={onHear} onPlay={onTeachPlay}/>}</Sheet>
     <Sheet visible={sheet === "book"} title="Sticker book" onClose={() => setSheet(null)}><StickerBook person={person}/></Sheet>
     <Sheet visible={sheet === "outfits"} title={game.hero} onClose={() => setSheet(null)}><OutfitCloset game={game} person={person} onSelect={outfit => arcade({ type: "outfit", game: game.id, outfit }, expected)}/></Sheet>
     <Sheet visible={sheet === "chest"} title="A little treasure" onClose={closeChest}>{chestOffer?.game === game.id && <TreasureChest key={chestOffer.round} offer={chestOffer} game={game} expected={expected} active={foreground && sheet === "chest"} onClose={closeChest}/>}</Sheet>
