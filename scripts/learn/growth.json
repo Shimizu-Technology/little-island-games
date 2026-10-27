@@ -1,4 +1,13 @@
 {
+  "learning-level-1": "Level one.",
+  "learning-level-2": "Level two.",
+  "learning-level-3": "Level three.",
+  "learning-level-4": "Level four.",
+  "learning-level-5": "Level five.",
+  "learning-try-level-2": "Try level two? You can stay here, too.",
+  "learning-try-level-3": "Try level three? You can stay here, too.",
+  "learning-try-level-4": "Try level four? You can stay here, too.",
+  "learning-try-level-5": "Try level five? You can stay here, too.",
   "voice-preview": "Let’s try this together. You can take your time. Tap Show me whenever you would like a little help.",
   "growth-help": "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea. When you are ready, tap Next idea.",
   "growth-reef-race-stretch-reef-race-stretch-reef-landing-1-prompt": "Turtle starts on stone 19 and makes 4 forward jumps of 2. Which stone is next after all the jumps?",
