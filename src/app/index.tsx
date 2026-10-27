@@ -11,11 +11,18 @@ import { Recovery } from "../components/Recovery";
 import { SaveStatus } from "../components/SaveStatus";
 import { useStore } from "../state/Store";
 import { FeatureArt } from "../components/FeatureArt";
-import { ShelfArt, openShelfGame } from "../components/GameShelf";
+import { ShelfArt, openShelfGame as openOriginalShelfGame } from "../components/GameShelf";
 import { dailySuggestions, homeContinue, islandNames, shelfGames } from "../learn/home";
 import { LearnArt } from "../learn/LearnArt";
 import { activeLearner } from "../learn/learners";
+import { ArcadeIsland } from "../arcade/Art";
+import { arcadeIds, type ArcadeId } from "../arcade";
+import type { ShelfId } from "../learn/home";
 import type { Island } from "../learn/types";
+function openShelfGame(id: ShelfId) {
+  if (arcadeIds.includes(id as ArcadeId)) router.push({ pathname: "/arcade", params: { game: id } });
+  else openOriginalShelfGame(id);
+}
 export default function Home() {
   const insets = useSafeAreaInsets(), { width, fontScale } = useWindowDimensions(), store = useStore();
   const [settings, setSettings] = useState(false), [shuffle, setShuffle] = useState(0);
@@ -48,9 +55,9 @@ export default function Home() {
       </View>
       <Heading style={{ fontSize: 23 }}>Islands</Heading>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-        {(Object.keys(islandNames) as (keyof typeof islandNames)[]).map(island => <PressableScale key={island} accessibilityRole="button" accessibilityLabel={`Open ${islandNames[island]} island`} amount={0.98} onPress={() => island === "explore" ? router.push("/explore") : router.push({ pathname: "/shelf", params: { island } })}
-          style={{ width: cardWidth, backgroundColor: ({ reading: "#E8EFF9", numbers: "#F7EBD0", science: "#DDEFF5", thinking: "#FBE6DC", classic: "#E3EDDC", explore: "#DFEAF0" })[island], borderRadius: 20, padding: 16, minHeight: 158, alignItems: "center", gap: 8 }}>
-          {island === "classic" ? <GameArt game="memory" size={76} /> : island === "explore" ? <FeatureArt kind="explore" size={76} /> : <LearnArt island={island as Island} size={76} />}
+        {(Object.keys(islandNames) as (keyof typeof islandNames)[]).map(island => <PressableScale key={island} accessibilityRole="button" accessibilityLabel={`Open ${islandNames[island]} island`} amount={0.98} onPress={() => island === "arcade" ? router.push("/arcade") : island === "explore" ? router.push("/explore") : router.push({ pathname: "/shelf", params: { island } })}
+          style={{ width: cardWidth, backgroundColor: ({ reading: "#E8EFF9", numbers: "#F7EBD0", science: "#DDEFF5", thinking: "#FBE6DC", classic: "#E3EDDC", arcade: "#DAEEE7", explore: "#DFEAF0" })[island], borderRadius: 20, padding: 16, minHeight: 158, alignItems: "center", gap: 8 }}>
+          {island === "arcade" ? <ArcadeIsland size={76} /> : island === "classic" ? <GameArt game="memory" size={76} /> : island === "explore" ? <FeatureArt kind="explore" size={76} /> : <LearnArt island={island as Island} size={76} />}
           <Heading style={{ fontSize: 22, textAlign: "center" }}>{islandNames[island]}</Heading><Icon name="right" size={20} color={C.teal} />
         </PressableScale>)}
       </View>

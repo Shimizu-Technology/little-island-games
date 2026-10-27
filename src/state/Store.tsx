@@ -20,7 +20,10 @@ import { addLearner as appendLearner, selectLearner as chooseLearner, recordLear
 import { defaultPracticeSettings, type PracticeResult, type PracticeSettings } from "../practice/types";
 import { AudioPreferences } from "../components/Audio";
 import { recordPracticeNote } from "../practice/notes";
+import { type ArcadeAction, type ArcadeExpected, type ArcadeId } from "../arcade";
+import { applyArcadeAction } from "../arcade/saveAction";
 type Store = {
+  arcade: (action: ArcadeAction, expected: ArcadeExpected) => boolean;
   epoch: number;
   boardUpdate: (game: BoardId, next: BoardSession, expected: BoardSession | undefined, expectedEpoch: number) => boolean;
   addLearner: (name: string) => boolean;
@@ -28,7 +31,7 @@ type Store = {
   recordWarmup: (results: PracticeResult[], config: PracticeSettings, round: string, expectedEpoch: number) => void;
   activityUpdate: (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => boolean;
   toggleFavorite: (topic: string) => void;
-  toggleGameFavorite: (game: GameId | ActivityId | LearnId | BoardId) => void;
+  toggleGameFavorite: (game: GameId | ActivityId | LearnId | BoardId | ArcadeId) => void;
   /** Remember family names used in a two-player setup (no-op when unchanged). */
   rememberPlayers: (names: string[]) => void;
   /** Save a learning-game round; false when the round was replaced or a backup was restored meanwhile. */
@@ -180,7 +183,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (JSON.stringify(current.explore?.progress) === JSON.stringify(progress)) return;
     commit({ ...current, explore: { favorites: [], ...current.explore, progress } });
   }, [commit]);
-  const toggleGameFavorite = useCallback((game: GameId | ActivityId | LearnId | BoardId) => {
+  // Arcade uses the same commit/recovery queue, with explicit learner/restore ownership.
+  const arcade = useCallback((action: ArcadeAction, expected: ArcadeExpected) => {
+    if (!ready || recovery || restoring.current) return false;
+    const before = latest.current, next = applyArcadeAction(before, action, expected, generation.current);
+    if (next === before) return false;
+    commit(next); return true;
+  }, [commit, ready, recovery]);
+  const toggleGameFavorite = useCallback((game: GameId | ActivityId | LearnId | BoardId | ArcadeId) => {
     const next = toggleShelfFavorite(latest.current, game);
     if (next !== latest.current) commit(next);
   }, [commit]);
@@ -300,6 +310,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     <Context.Provider
       value={{
         save,
+        arcade,
         epoch,
         boardUpdate,
         addLearner,
