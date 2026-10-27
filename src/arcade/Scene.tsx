@@ -55,5 +55,5 @@ function SeaGrass({ active, right = false }: { active: boolean; right?: boolean 
   return <Animated.View style={[{ position: "absolute", bottom: 7, left: right ? undefined : -16, right: right ? -16 : undefined, width: 90, height: 170 }, style]}><Svg width={90} height={170} viewBox="0 0 90 170" accessible={false}><Path d="M20 170Q58 76 26 4Q87 84 43 170M38 170Q65 100 83 54Q88 130 56 170M18 170Q-4 105 3 69Q39 132 30 170Z" fill={right ? "#27877F" : "#3A9D87"} stroke="#63B39B" strokeWidth={1.5}/></Svg></Animated.View>;
 }
 export function ArcadeScene({ game, world = "w1", active = true }: { game?: ArcadeId; world?: WorldId; active?: boolean }) {
-  return <View pointerEvents="none" style={StyleSheet.absoluteFill} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><WorldArt game={game} world={world}/><Ambient night={game === "shell-song"} active={active}/>{game !== "shell-song" && <><SeaGrass active={active}/><SeaGrass active={active} right/></>}</View>;
+  return <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: "hidden" }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><WorldArt game={game} world={world}/><Ambient night={game === "shell-song"} active={active}/>{game !== "shell-song" && <><SeaGrass active={active}/><SeaGrass active={active} right/></>}</View>;
 }
