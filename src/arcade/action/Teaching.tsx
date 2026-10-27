@@ -7,7 +7,7 @@ export const actionInstruction = (palm: boolean, learning: boolean, together = f
   palm
     ? learning
       ? "Toss at the answer that matches."
-      : "Slide to aim. Tap to toss beetles into nets!"
+      : "Slide to aim. Hold to toss beetles into nets!"
     : together
       ? "Drag your paddle. Play from opposite ends!"
       : learning
@@ -41,7 +41,7 @@ export function Demo({ palm, learning }: { palm: boolean; learning: boolean }) {
           <Bob>
             <HuskArt size={38} />
           </Bob>
-          <Heading style={{ color: "#FFF5CF", fontSize: 20 }}>{learning ? "2 + 3 = 5" : "↑ Slide & toss ↑"}</Heading>
+          <Heading style={{ color: "#FFF5CF", fontSize: 20 }}>{learning ? "2 + 3 = 5" : "↑ Slide & hold ↑"}</Heading>
         </>
       ) : (
         <>
