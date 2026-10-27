@@ -16,13 +16,13 @@ export function Rehearsal({ game, onTone }: { game: ScrollGame; onTone: (key: st
     let run = runTransition(createRun(runLevels[0], 1), { type: "jump" });
     const y: number[] = [], t: number[] = [];
     for (let i = 0; i <= 66; i++) {
-      t.push(i / 66); y.push(bat ? (flight.y - .5) * 170 : -Math.sin((1.1 - run.jump) / 1.1 * Math.PI) * 54);
+      t.push(i / 66); y.push(bat ? (flight.y - .5) * 170 : -(run.jump > 0 ? Math.sin((.55 - run.jump) / .55 * Math.PI) : 0) * 54);
       flight = flightStep(flight, { type: "idle" }, 1 / 60); run = runStep(run, { type: "idle" }, 1 / 60);
     }
     return { y, t };
   }, [bat]);
   useEffect(() => () => motion.stopAnimation(), [motion]);
-  function tryMove(down = false) { setDuck(down); motion.stopAnimation(); motion.setValue(0); onTone(down ? "shell-1" : "shell-4"); Animated.timing(motion, { toValue: 1, duration: 1100, easing: Easing.linear, useNativeDriver: nativeDriver }).start(); }
+  function tryMove(down = false) { setDuck(down); motion.stopAnimation(); motion.setValue(0); onTone(down ? "shell-1" : "shell-4"); Animated.timing(motion, { toValue: 1, duration: bat ? 1100 : down ? 600 : 550, easing: Easing.linear, useNativeDriver: nativeDriver }).start(); }
   return <View style={{ width: "100%", gap: 10 }}><View style={{ height: 150, borderRadius: 25, overflow: "hidden", backgroundColor: bat ? "#263C5C" : "#A6DED9" }}>
     <Animated.View style={{ position: "absolute", left: "28%", top: 55, transform: [{ translateY: reduced ? 0 : duck ? 25 : motion.interpolate({ inputRange: trajectory.t, outputRange: trajectory.y }) }, { scale: duck ? .65 : 1 }] }}><ScrollHero game={game} size={80}/></Animated.View>
     <View style={{ position: "absolute", left: "66%", top: 56 }}>{bat ? <Fruit size={65}/> : <Hazard kind={duck ? "frond" : "coconut"} size={75}/>}</View>
