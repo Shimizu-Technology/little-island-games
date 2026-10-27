@@ -228,8 +228,9 @@ export const Scene = memo(function Scene({
         </LinearGradient>
       </Defs>
       <Rect width={360} height={600} fill={`url(#action-sky-${id})`} />
-      <Circle cx={292} cy={90} r={37} fill={world === "w3" ? "#FFF1BE" : "#FFF3B2"} opacity={0.9} />
-      <Circle cx={292} cy={90} r={49} fill="#FFF4CE" opacity={0.13} />
+      {/* Sky fills the arena; celestial discs keep a uniform scale on wide tablets. */}
+      <Ellipse cx={292} cy={90} rx={37 * Math.min(1, height * 360 / (width * 600))} ry={37 * Math.min(1, width * 600 / (height * 360))} fill={world === "w3" ? "#FFF1BE" : "#FFF3B2"} opacity={0.9} />
+      <Ellipse cx={292} cy={90} rx={49 * Math.min(1, height * 360 / (width * 600))} ry={49 * Math.min(1, width * 600 / (height * 360))} fill="#FFF4CE" opacity={0.13} />
       {world === "w3" &&
         [22, 75, 135, 202, 330].map((x, i) => (
           <Path key={x} d={star} fill="#FFE6B1" transform={`translate(${x} ${42 + (i % 3) * 35}) scale(.35)`} />
