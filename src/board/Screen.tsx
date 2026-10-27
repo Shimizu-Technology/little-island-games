@@ -11,6 +11,7 @@ import { useSounds } from "../components/Audio";
 import { useStore } from "../state/Store";
 import { Seat } from "../games/match";
 import { BoardId, BoardSession, catalog, createSession, engines, playAgain, strengths, Strength, undo } from "./index";
+import { Text } from "../components/Text";
 import { BoardArt, Piece } from "./Art";
 import { Boards, demoPosition } from "./Boards";
 import { coordinate } from "./hidden-canoes/engine";
@@ -76,11 +77,7 @@ function Setup({
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[styles.content, { maxWidth: 640, gap: 16 }]}
       >
-        <GameHeader
-          title={info.name}
-          onBack={previous ? onClose : back}
-          backLabel={previous ? "Back" : "Classic games"}
-        />
+        <GameHeader title={info.name} onBack={previous ? onClose : back} backLabel={previous ? "Back" : "Games"} />
         <View style={{ alignItems: "center", gap: 8 }}>
           <BoardArt game={game} size={116} />
           <Heading style={{ textAlign: "center" }}>{info.name}</Heading>
@@ -256,7 +253,13 @@ function Round({ session: s, onSetup }: { session: BoardSession; onSetup: () => 
       setHint(null);
       setNotice("");
       if (secret) conceal();
-      play(position.outcome !== null ? "win" : position.scores[p.turn] > p.scores[p.turn] ? "match" : "tap");
+      play(
+        position.outcome !== null && !(s.game === "reef-sweep" && position.outcome === 1)
+          ? "win"
+          : position.scores[p.turn] > p.scores[p.turn]
+            ? "match"
+            : "tap"
+      );
       if (s.game === "hidden-canoes") {
         const text = `${coordinate(action)} · ${position.scores[p.turn] > p.scores[p.turn] ? "Canoe found!" : "Open water."}`;
         setNotice(text);
@@ -325,7 +328,7 @@ function Round({ session: s, onSetup }: { session: BoardSession; onSetup: () => 
       <ScrollView contentContainerStyle={[styles.content, { maxWidth: 680, paddingHorizontal: 20, gap: 12 }]}>
         <GameHeader
           title={info.name}
-          backLabel="Classic games"
+          backLabel="Games"
           onBack={() => {
             conceal();
             back();
@@ -342,7 +345,18 @@ function Round({ session: s, onSetup }: { session: BoardSession; onSetup: () => 
             match={s.match}
             result={p.outcome}
             active={p.outcome === null ? p.turn : null}
-            marks={[<Piece key="0" kind="coconut" size={28} />, <Piece key="1" kind="coconut" seat={1} size={28} />]}
+            marks={
+              s.game === "coconut-drop"
+                ? [<Piece key="0" kind="coconut" size={28} />, <Piece key="1" kind="coconut" seat={1} size={28} />]
+                : [
+                    <Text key="0" style={{ fontSize: 26, color: "#805538" }}>
+                      ●
+                    </Text>,
+                    <Text key="1" style={{ fontSize: 26, color: C.teal }}>
+                      ■
+                    </Text>,
+                  ]
+            }
           />
         )}
         <Status

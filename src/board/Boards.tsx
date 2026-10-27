@@ -7,6 +7,7 @@ import { other } from "../games/match";
 import { Piece } from "./Art";
 import { BoardId, engines, Position } from "./index";
 import { edgeDots, edgeFromDots } from "./fishing-nets/engine";
+import { lines } from "./coconut-drop/engine";
 import { coordinate } from "./hidden-canoes/engine";
 import { sowPath } from "./shell-pits/engine";
 import { urchins } from "./reef-sweep/engine";
@@ -50,6 +51,8 @@ export function Boards(props: Props) {
 function Coconuts({ state: s, width, onMove, locked, hint }: Props) {
   const cell = Math.min(width, 490) / 7,
     available = engines["coconut-drop"].legal(s);
+  const winning =
+    typeof s.outcome === "number" ? lines.filter((line) => line.every((i) => s.board[i] === s.outcome)).flat() : [];
   return (
     <View
       style={{ alignSelf: "center", width: cell * 7, borderRadius: 20, backgroundColor: "#D4E2CC", paddingVertical: 8 }}
@@ -86,9 +89,9 @@ function Coconuts({ state: s, width, onMove, locked, hint }: Props) {
                     borderRadius: cell,
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor: C.cream,
-                    borderWidth: 1,
-                    borderColor: "#B5CBB2",
+                    backgroundColor: winning.includes(r * 7 + c) ? "#F4D58F" : C.cream,
+                    borderWidth: winning.includes(r * 7 + c) ? 3 : 1,
+                    borderColor: winning.includes(r * 7 + c) ? "#96601E" : "#B5CBB2",
                   }}
                 >
                   {owner !== -1 && <Piece kind="coconut" seat={owner} size={cell - 8} />}
@@ -138,7 +141,12 @@ function Nets({ state: s, width, onMove, locked, hint }: Props) {
   return (
     <View style={{ alignItems: "center", gap: 8 }}>
       <Copy style={{ textAlign: "center", fontSize: 14 }}>
-        {notice || (dot === null ? "Tap a dot, then its neighbor to tie a rope." : "Now tap a neighboring dot.")}
+        {notice ||
+          (s.outcome !== null
+            ? "Every net is tied. Count your reef shapes!"
+            : dot === null
+              ? "Tap a dot, then its neighbor to tie a rope."
+              : "Now tap a neighboring dot.")}
       </Copy>
       <View style={{ width: total, height: total, backgroundColor: "#E0EFEB", borderRadius: 20 }}>
         <Svg pointerEvents="none" width={total} height={total} accessible={false}>
@@ -342,7 +350,11 @@ function Pits({ state: s, width, onMove, locked, hint, speak }: Props) {
           </Button>
         </View>
       ) : (
-        <Copy style={{ textAlign: "center", fontSize: 14 }}>Choose a pit on your side to preview its shells.</Copy>
+        <Copy style={{ textAlign: "center", fontSize: 14 }}>
+          {s.outcome !== null
+            ? "All shells are resting in the stores."
+            : "Choose a pit on your side to preview its shells."}
+        </Copy>
       )}
     </View>
   );
