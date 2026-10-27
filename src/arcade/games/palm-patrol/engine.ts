@@ -22,6 +22,7 @@ export type PalmLevel = ArcadeLevel & {
   diveEvery: number;
   diveSpeed: number;
   armored: boolean;
+  aimed: boolean;
   shieldGap: number;
   divers: boolean;
   boss: boolean;
@@ -62,6 +63,7 @@ export const palmLevels: readonly PalmLevel[] = allLevelIds.map((id) => {
     diveEvery: rank === 0 ? 0 : Math.max(1.2, 4.2 - rank * 0.4 - index * 0.05),
     diveSpeed: 115 + rank * 20 + index * 2,
     armored: rank >= 2,
+    aimed: rank >= 3,
     shieldGap: rank >= 4 ? (index - 1) % 3 : -1,
     divers: rank > 0,
     boss: index === 8 && !learning,
@@ -92,6 +94,7 @@ export type Beetle = {
   boss: boolean;
   caught: number;
   diving: boolean;
+  diveX: number;
 };
 export type Husk = { x: number; y: number; bounced: boolean };
 export type PalmState = {
@@ -173,6 +176,7 @@ function fact(s: PalmState): PalmState {
       boss: false,
       caught: 0,
       diving: false,
+      diveX: 0,
     })),
   };
 }
@@ -182,7 +186,7 @@ function formation(s: PalmState): PalmState {
   const config = palmConfig(s),
     boss = config.boss && s.wave === config.waves && s.relay === config.relays;
   // The final world crown marches with escorts; earlier crowns are a separate final wave.
-  const count = config.count;
+  const count = boss && config.world !== "w6" ? 1 : config.count;
   return {
     ...s,
     waveTime: s.relay === 1 ? 0 : s.waveTime,
@@ -203,6 +207,7 @@ function formation(s: PalmState): PalmState {
       boss: boss && i === 0,
       caught: 0,
       diving: false,
+      diveX: 0,
     })),
   };
 }
@@ -320,7 +325,11 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
       if (divers.length) {
         const [seed, r] = nextRandom(s.seed);
         s.seed = seed;
-        divers[Math.floor(r * divers.length)].diving = true;
+        const diver = divers[Math.floor(r * divers.length)];
+        diver.diving = true;
+        diver.diveX = config.aimed
+          ? clamp((s.launcher - diver.x) / Math.max(0.7, (520 - diver.y) / config.diveSpeed), -90, 90)
+          : 0;
       }
     }
   }
@@ -330,7 +339,7 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
       b.y -= 170 * dt;
     } else if (b.diving) {
       b.y += config.diveSpeed * (s.helper ? 0.82 : 1) * dt;
-      b.x = clamp(b.x + Math.sin(s.waveTime * 5 + b.id) * 60 * dt, 25, 335);
+      b.x = clamp(b.x + (config.aimed ? b.diveX : Math.sin(s.waveTime * 5 + b.id) * 60) * dt, 25, 335);
     }
   }
   for (const h of s.husks) {
@@ -472,7 +481,7 @@ export function validPalm(v: unknown): v is PalmState {
     new Set(v.beetles.map((b) => b.id)).size === v.beetles.length &&
     v.beetles.every(
       (b) =>
-        exact(b, "id x y base hp value diver boss caught diving") &&
+        exact(b, "id x y base hp value diver boss caught diving diveX") &&
         integer(b.id, 14) &&
         finite(b.x, 0, 360) &&
         finite(b.y, -70, 540) &&
@@ -483,6 +492,7 @@ export function validPalm(v: unknown): v is PalmState {
         Number.isInteger(b.value) &&
         typeof b.diver === "boolean" &&
         typeof b.diving === "boolean" &&
+        finite(b.diveX, -90, 90) &&
         typeof b.boss === "boolean" &&
         finite(b.caught, 0, 0.45)
     ) &&

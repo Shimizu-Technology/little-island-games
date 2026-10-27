@@ -110,6 +110,8 @@ describe("Palm Patrol feel rules", () => {
     expect(palmLevel("w3-1").armored).toBe(true);
     expect(palmLevel("w4-8").diveEvery).toBeLessThan(palmLevel("w2-1").diveEvery);
     expect(palmLevel("w5-1").shieldGap).toBe(0);
+    expect(palmLevel("w4-1").aimed).toBe(true);
+    expect(palmLevel("w3-8").aimed).toBe(false);
     for (let w = 1; w <= 6; w++) expect(palmLevel(`w${w}-8` as never).boss).toBe(true);
   });
   it("clears all 56 levels through aim/fire and fixed steps, with and without Helper", () => {
@@ -259,6 +261,7 @@ describe("Beach Ball feel rules", () => {
     expect(beachLevel("w5-1").gust).toBe(true);
     expect(beachLevel("w6-1").tide).toBe(true);
     expect(beachLevel("learn-1").countBy).toBe(2);
+    expect(beachLevel("learn-1").goals[0]).toContain("10 points");
     expect(beachLevel("learn-5").countBy).toBe(5);
     for (const l of beachLevels.filter((l) => l.turtle))
       for (const b of createBeach(l, 42).balls) expect(Math.abs(b.y - 300)).toBeGreaterThan(42);

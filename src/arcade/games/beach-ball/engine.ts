@@ -65,7 +65,7 @@ export const beachLevels: readonly BeachLevel[] = allLevelIds.map((id) => {
     ramp: 0.1 + rank * 0.015,
     countBy: learning ? (index <= 4 ? 2 : 5) : 1,
     goals: [
-      `First to ${target} points${learning ? (index <= 4 ? " · count by 2s" : " · count by 5s") : ""}`,
+      `First to ${target * (learning ? (index <= 4 ? 2 : 5) : 1)} points${learning ? (index <= 4 ? " · count by 2s" : " · count by 5s") : ""}`,
       "Concede at most 1 point",
       "Win without conceding a point",
     ],

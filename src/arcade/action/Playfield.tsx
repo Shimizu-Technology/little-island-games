@@ -235,7 +235,7 @@ export function PalmBoard({
           : b.caught
             ? Math.sin(s.time * 20) * 0.25
             : b.diving
-              ? Math.sin(s.time * 6 + b.id) * 0.2
+              ? Math.atan2(b.diveX, palmConfig(s).diveSpeed) + Math.sin(s.time * 6 + b.id) * 0.07
               : s.direction * 0.035;
         p.scale = b.caught ? 0.85 : 1;
         next[(b.boss ? 15 : 0) + b.id] = p;
