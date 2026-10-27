@@ -1,5 +1,28 @@
 # Arcade games
 
+## Shell Song
+
+Feel v2 worker, 28 October 2026, branch `feat/feel-song`, based on `c872d1b`. Sources: `ARCADE_FEEL.md`, `ARCADE_KIT.md`, the feel audit and `full-feel-g5.md`. Shell Song is offline musical memory for Stassie and family. The repeat turn is untimed. The shared kit owns learner progress, earned stars, Helper migration, pause, game over and retry; active songs are not saved.
+
+Normal play has three hearts; Helper adds two hearts and 120 ms to each note without showing answers. Each wrong note costs a heart and replays the same phrase, with a short shell shake/dim and the shared hit reaction. Zero hearts shows Game over, score/best and instant Try again. Earned progress survives a loss. Stars: one for completion, two for at most one slip, three for zero slips. Optional replay is free. Learning retains its slow 3,200 ms cadence, unlimited mistakes, phoneme narration, explicit help and untimed picture choice.
+
+There are 56 authored levels. W1 grows a three-shell tune; W2 adds a fourth voice; W3 expands to five/six voices; W4 replaces each completed call with a fresh, longer response phrase; W5 plays twin-note echoes that must each be tapped twice; W6 starts with longer songs and adds two notes per round. The final levels of each world have four rounds. Cadence accelerates after each successful round; mistakes/replays keep that round's cadence and melody. Changing Helper restarts the same phrase at its new tempo without adding slips or refilling damage. W5 uses paired echoes rather than simultaneous harmony because the shared effect player is monophonic.
+
+| Constant, Helper off | W1-1 | W3-8 | W6-8 |
+| --- | --- | --- | --- |
+| Shells | 3 | 6 | 6 |
+| Phrase lengths | 2 → 3 → 4 | 6 → 7 → 8 → 9 | 9 → 11 → 13 → 15 |
+| Note onset intervals, ms | 650 → 600 → 550 | 418 → 398 → 378 → 358 | 318 → 298 → 278 → 258 |
+| First glow / first repeat turn, s | .45 / 1.75 | .45 / 2.958 | .45 / 3.312 |
+| Perfect score | 90 | 300 | 480 |
+
+Automatic onset IDs advance in the pure 60 Hz engine. The loop's event frame calls audio and publishes the glow snapshot together; the note counter retriggers identical consecutive shells. Recall input uses shared `PressControl` on touch-down with a 220 ms manual glow, synchronous rule dispatch and a fresh animation cue on every tap. JS is appropriate here: the shortest finite cadence is 258 ms, the loop carries at most six fixed steps per frame, and there are only six stationary targets. This is event timing, not sample-accurate audio or native latency acceptance. Static shell art is memoized; decorative bounce and note particles use shared animations and honor Reduce Motion.
+
+Feedback lasts 450 ms beside the phase label. The shared measured full-height arena replaces the scrolling Song board. Shell size uses available height, with a 148 px two-row tablet cap and a single row in short landscape layouts. No audio-bank, save-schema, native-directory or release-version changes. No new spoken keys; existing introduction/phoneme/word clips and tones remain the speech path. New twist labels are visible text. Learning pictures appear after the last 220 ms note envelope so the releasing shell touch cannot select a picture beneath it. The untimed picture phase hides its progress row on short landscape screens to keep replay and help fully visible.
+
+Engineering and runtime receipts are in `/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/island-arcade/feel-song/`. Final QA results and source SHA are recorded there in `REPORT.md`. Native simulators, physical audio/haptics, VoiceOver, A12 performance and family acceptance are not run under the worker brief; the lead owns those checks and integration review.
+
+
 ## Canoe Cargo
 
 27 October 2026. Worker branch `feat/arcade-cargo`, based on integration commit `7d7ac79`. Sources: `ISLAND_ARCADE.md`, `ARCADE_KIT.md`, `PRD.md`, `LEARNING_GROWTH.md` and the W7 brief. Private, offline family play for a seven-year-old and her family. The shared kit supplies per-learner progress, outfits, chests and pause/background ownership. No real-time round is persisted. Public release, audio generation and native family acceptance belong to the lead.

@@ -9,35 +9,41 @@ import { useReducedMotion } from "../../../components/motion";
 import { PictureObject } from "../../../learn/art/Objects";
 import { wordAudio } from "../../../learn/kit/reading";
 import { Shell } from "../../Art";
-import { ActionBurst, Hero, HudPill, MiniStars } from "../../Juice";
+import { Hero, HudPill, MiniStars } from "../../Juice";
 import { useArcadeLoop, type FrameBudget } from "../../loop";
-import { glowingShell, noteDuration, songResult, songStep, songTiles, songTransition, type SongInput, type SongState } from "./engine";
+import { glowingShell, songResult, songStep, songTiles, songTransition, type SongInput, type SongState } from "./engine";
 import type { ArcadeResult } from "../../types";
 import type { OutfitId } from "../../progress";
 import { HeartsHud, HitReaction } from "../../LivesHud";
+const ShellArt = memo(Shell);
 const tick: SongInput = { type: "tick" };
-const SingingShell = memo(function SingingShell({ index, lit, cue, size, outfit }: { index: number; lit: boolean; cue: string; size: number; outfit: OutfitId }) {
-  const reduced = useReducedMotion(), bounce = useSharedValue(0), notes = useSharedValue(0);
+const SingingShell = memo(function SingingShell({ index, lit, cue, size, outfit, wrong }: { index: number; lit: boolean; cue: string; size: number; outfit: OutfitId; wrong: boolean }) {
+  const reduced = useReducedMotion(), bounce = useSharedValue(0), notes = useSharedValue(0), shake = useSharedValue(0);
+  useEffect(() => { if (wrong && !reduced) shake.value = withSequence(withTiming(-7, { duration: 40 }), withTiming(7, { duration: 50 }), withTiming(-4, { duration: 50 }), withTiming(0, { duration: 60 })); }, [wrong, cue, reduced, shake]);
   useEffect(() => { bounce.value = 0; notes.value = 0; if (lit && !reduced) { bounce.value = withSequence(withTiming(1, { duration: 95 }), withSpring(0, { damping: 8, stiffness: 180 })); notes.value = withTiming(1, { duration: 650, easing: Easing.out(Easing.quad) }); } return () => { cancelAnimation(bounce); cancelAnimation(notes); }; }, [lit, cue, reduced, bounce, notes]);
-  const style = useAnimatedStyle(() => ({ transform: [{ translateY: -bounce.value * 14 }, { scaleX: 1 + bounce.value * .07 }, { scaleY: 1 - bounce.value * .06 }] }));
+  const style = useAnimatedStyle(() => ({ opacity: wrong ? .65 : 1, transform: [{ translateX: shake.value }, { translateY: -bounce.value * 14 }, { scaleX: 1 + bounce.value * .07 }, { scaleY: 1 - bounce.value * .06 }] }));
   const noteStyle = useAnimatedStyle(() => ({ opacity: reduced ? 1 : 1 - notes.value * .7, transform: [{ translateY: reduced ? 0 : -notes.value * 28 }, { translateX: reduced ? 0 : notes.value * 8 }] }));
-  return <View><Animated.View style={style}><Shell size={size} index={index} glowing={lit} outfit={outfit}/></Animated.View>{lit && <Animated.View pointerEvents="none" style={[{ position: "absolute", right: 0, top: 0 }, noteStyle]}><Svg width={44} height={58} viewBox="0 0 44 58" accessible={false}><Path d="M14 47V19L32 13V38M14 24L32 18" stroke="#FFE3A3" strokeWidth={4} fill="none"/><Ellipse cx={9} cy={47} rx={7} ry={5} fill="#FFE3A3"/><Ellipse cx={27} cy={38} rx={7} ry={5} fill="#FFE3A3"/><Circle cx={36} cy={5} r={3} fill="#F9BF9F"/></Svg></Animated.View>}</View>;
+  return <View><Animated.View style={style}><ShellArt size={size} index={index} glowing={lit} outfit={outfit}/></Animated.View>{lit && <Animated.View pointerEvents="none" style={[{ position: "absolute", right: 0, top: 0 }, noteStyle]}><Svg width={44} height={58} viewBox="0 0 44 58" accessible={false}><Path d="M14 47V19L32 13V38M14 24L32 18" stroke="#FFE3A3" strokeWidth={4} fill="none"/><Ellipse cx={9} cy={47} rx={7} ry={5} fill="#FFE3A3"/><Ellipse cx={27} cy={38} rx={7} ry={5} fill="#FFE3A3"/><Circle cx={36} cy={5} r={3} fill="#F9BF9F"/></Svg></Animated.View>}</View>;
 });
-export function SongBoard({ initial, active, helper, outfit, onResult, onTone, onSay, debug }: { initial: SongState; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string, haptic?: boolean) => void; onSay: (key: string, automatic?: boolean) => boolean; debug?: boolean }) {
-  const { snapshot: s, dispatch, state, budget } = useArcadeLoop({ initial, reduce: songTransition, step: songStep, input: tick, active });
-  const [manualGlow, setManualGlow] = useState<number | null>(null), [tapCue, setTapCue] = useState(0), [burst, setBurst] = useState<{ id: number; text: string } | null>(null);
+export function SongBoard({ initial, active, helper, outfit, onResult, onTone, onSay, debug, width: arenaWidth, height: availableHeight }: { initial: SongState; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string, haptic?: boolean) => void; onSay: (key: string, automatic?: boolean) => boolean; debug?: boolean; width?: number; height?: number }) {
+  const heard = useRef(initial.onset);
+  const { snapshot: s, dispatch, state, budget } = useArcadeLoop({ initial, reduce: songTransition, step: songStep, input: tick, active, onFrame: current => {
+    // The event clock publishes sound and the glow snapshot in the same animation frame.
+    if (current.onset === heard.current) return;
+    heard.current = current.onset;
+    const note = glowingShell(current);
+    if (note === null) return;
+    const word = current.level !== "endless" && !!current.level.word;
+    if (!(word && onSay(`arcade-phoneme-${songTiles(current)[note]}`, true))) onTone(`shell-${note}`, false);
+  } });
+  const [manualGlow, setManualGlow] = useState<number | null>(null), [tapCue, setTapCue] = useState(0), [status, setStatus] = useState<{ id: number; text: string } | null>(null);
+  const [wrongShell, setWrongShell] = useState<number | null>(null);
   const reported = useRef(false), feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null), reduced = useReducedMotion();
-  const { width, height } = useWindowDimensions(), glow = glowingShell(s), learning = s.level !== "endless" && !!s.level.word, tiles = songTiles(s);
-  const noteIndex = s.phase === "watch" && s.elapsed >= 450 ? Math.floor((s.elapsed - 450) / noteDuration(s)) : -1;
-  const noteKey = `${s.rounds}-${s.slips}-${noteIndex}`;
-  useEffect(() => {
-    if (glow !== null && active) { if (!(learning && onSay(`arcade-phoneme-${tiles[glow]}`, true))) onTone(`shell-${glow}`, false); }
-    // Sound once per note, including repeated notes on one shell; callbacks are not timing dependencies.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [noteKey, active]);
+  const window = useWindowDimensions(), width = arenaWidth ?? window.width, arenaHeight = availableHeight ?? window.height - 62, glow = glowingShell(s), learning = s.level !== "endless" && !!s.level.word, tiles = songTiles(s);
+  const noteKey = String(s.onset), showPicture = s.phase === "picture" && manualGlow === null;
   useEffect(() => { if (active && state.current.helper !== helper) dispatch({ type: "helper", value: helper }); }, [active, helper, dispatch, state]);
   useEffect(() => () => { if (feedbackTimer.current) clearTimeout(feedbackTimer.current); }, []);
-  useEffect(() => { if (!burst) return; const timer = setTimeout(() => setBurst(null), 1100); return () => clearTimeout(timer); }, [burst]);
+  useEffect(() => { if (!status) return; const timer = setTimeout(() => { setStatus(null); setWrongShell(null); }, 450); return () => clearTimeout(timer); }, [status]);
   useEffect(() => {
     const result = songResult(s);
     if (!result || !active || reported.current) return;
@@ -51,31 +57,34 @@ export function SongBoard({ initial, active, helper, outfit, onResult, onTone, o
     setManualGlow(index); setTapCue(n => n + 1);
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
     feedbackTimer.current = setTimeout(() => setManualGlow(null), 220);
-    if (next.slips > before.slips) { if (learning) onTone("bump"); setBurst({ id: before.score + next.slips, text: "Once more!" }); }
-    else if (next.rounds > before.rounds) { onTone("clear"); setBurst({ id: next.score, text: "Great!" }); }
+    if (next.slips > before.slips) { if (learning) onTone("bump"); setWrongShell(index); setStatus({ id: before.score + next.slips, text: "Once more" }); }
+    else if (next.rounds > before.rounds) { onTone("clear"); setStatus({ id: next.score, text: "+ phrase!" }); }
   }
-  const shellSize = Math.floor(Math.min(width >= 600 ? 252 : 126, (Math.min(1100, width) - 24) / 3, height < 500 ? 115 : height * (s.shells > 3 ? .23 : .34)));
+  // The parent arena is the space below the app chrome, not the entire display.
+  const wide = width >= 700 && arenaHeight < 440, columns = wide ? s.shells : 3, rows = Math.ceil(s.shells / columns);
+  const shellSize = Math.floor(Math.max(54, Math.min(width >= 600 ? rows === 2 ? 148 : 180 : 116, (Math.min(1100, width) - 30) / columns, (arenaHeight - (learning ? 265 : 245)) / rows - 30)));
+  const twistLabel = s.level === "endless" ? "Growing song" : s.level.twist === "response" ? "New call each round" : s.level.twist === "twins" ? "Twin echoes · play each note twice" : s.level.twist === "finale" ? "Two new notes each round" : "";
   const phase = s.phase === "watch" ? "Watch" : s.phase === "picture" ? "Find the picture" : s.phase === "cleared" ? "Bravo!" : s.phase === "over" ? "Game over" : s.phase === "rest" ? "Again?" : "Your turn";
-  return <View style={{ flex: 1, width: "100%", alignItems: "center", justifyContent: "space-evenly", gap: 8, paddingBottom: 16, minHeight: height - 90 }}>
-    <View style={{ width: "100%", maxWidth: 1050, paddingHorizontal: 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 6, flexWrap: "wrap" }}><HudPill icon={<Icon name="flag" color="#986940"/>}>{learning ? "Sound a word" : s.level === "endless" ? `Pattern ${s.rounds + 1}` : `${Math.min(s.rounds + 1, s.level.rounds)}/${s.level.rounds} patterns`}</HudPill>{!learning && <HeartsHud lives={s.lives}/>}<HudPill><MiniStars stars={s.slips === 0 ? 3 : s.slips <= 2 ? 2 : 1}/></HudPill></View>
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}><HitReaction hit={s.lives.hit} onTone={onTone}><Hero game="shell-song" size={width >= 600 ? 124 : 88} outfit={outfit} cue={`${s.rounds}-${s.slips}-${s.cursor}`} mood={s.slips && s.cursor === 0 ? "dizzy" : s.cursor || s.rounds ? "happy" : "idle"} active={active}/></HitReaction><View accessibilityLiveRegion="polite" style={{ gap: 4 }}><Heading style={{ color: "#FFF3D4", fontSize: width >= 600 ? 36 : 29 }}>{phase}</Heading><Copy style={{ color: "#F5E5D9", fontSize: 15 }}>{s.phase === "watch" ? "Follow the glow" : s.phase === "repeat" ? "Play it back · no hurry" : s.phase === "picture" ? "Blend the sounds" : s.phase === "cleared" ? "A beautiful song" : "A fresh song is waiting"}</Copy></View></View>
-    {s.phase !== "picture" ? <>
-      <View style={{ width: "100%", maxWidth: 1100, alignItems: "center", position: "relative", paddingVertical: width >= 600 ? 18 : 10 }}>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", columnGap: 2, rowGap: 7, maxWidth: shellSize * 3 + 24 }}>
+  return <View style={{ flex: 1, width: "100%", alignItems: "center", justifyContent: "space-evenly", gap: 4, paddingBottom: 8 }}>
+    {!(wide && showPicture) && <View style={{ width: "100%", maxWidth: 1050, paddingHorizontal: 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 6, flexWrap: "wrap" }}><HudPill icon={<Icon name="flag" color="#986940"/>}>{learning ? "Sound a word" : s.level === "endless" ? `Pattern ${s.rounds + 1}` : `${Math.min(s.rounds + 1, s.level.rounds)}/${s.level.rounds} tunes`}</HudPill>{!learning && <HeartsHud lives={s.lives}/>}<HudPill><MiniStars stars={s.slips === 0 ? 3 : s.slips <= 1 ? 2 : 1}/></HudPill></View>}
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}><HitReaction hit={s.lives.hit} onTone={onTone}><Hero game="shell-song" size={wide ? 48 : arenaHeight < 650 ? 72 : 88} outfit={outfit} cue={`${s.rounds}-${s.slips}-${s.cursor}`} mood={s.slips && s.cursor === 0 ? "dizzy" : s.cursor || s.rounds ? "happy" : "idle"} active={active}/></HitReaction><View accessibilityLiveRegion="polite" style={{ gap: 4 }}><View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}><Heading style={{ color: "#FFF3D4", fontSize: 29 }}>{phase}</Heading>{status && <Copy style={{ color: "#FFDB8C", fontSize: 16 }}>{status.text}</Copy>}</View><Copy style={{ color: "#F5E5D9", fontSize: 15 }}>{s.phase === "watch" ? "Follow the glow" : s.phase === "repeat" ? "Play it back · no hurry" : s.phase === "picture" ? "Blend the sounds" : s.phase === "cleared" ? "A beautiful song" : "A fresh song is waiting"}</Copy>{!!twistLabel && <Copy style={{ color: "#F5E5D9", fontSize: 12, maxWidth: width - 120 }}>{twistLabel}</Copy>}</View></View>
+    {!showPicture ? <>
+      <View style={{ width: "100%", maxWidth: 1100, alignItems: "center", position: "relative", paddingVertical: 2 }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", columnGap: 2, rowGap: 7, maxWidth: shellSize * columns + 24 }}>
           {tiles.map((tile, index) => {
-            const lit = glow === index || manualGlow === index, next = helper && s.phase === "repeat" && s.pattern[s.cursor] === index;
-            return <PressControl key={index} disabled={!active || s.phase !== "repeat"} accessibilityRole="button" accessibilityLabel={`Shell ${index + 1}${learning ? `, sound ${tile}` : ""}${next ? ", Helper suggests this shell" : ""}`} accessibilityState={{ disabled: !active || s.phase !== "repeat", selected: lit }} onPress={() => tap(index)} style={{ width: shellSize, minHeight: shellSize + 40, borderRadius: 34, alignItems: "center", justifyContent: "center", borderWidth: 3, borderColor: next ? "#FFE5A1" : "transparent", backgroundColor: lit ? "#827096" : next ? "#5E658C" : "transparent" }}>
-              <SingingShell index={index} size={shellSize - 6} lit={lit} cue={manualGlow === index ? String(tapCue) : noteKey} outfit={index === 0 ? outfit : "island"}/><Heading style={{ fontSize: learning ? 32 : 23, color: "#403F65", backgroundColor: "#FFF1D5", minWidth: 37, paddingHorizontal: 9, borderRadius: 14, textAlign: "center" }}>{learning ? tile : index + 1}</Heading>
+            const lit = glow === index || manualGlow === index, next = learning && helper && s.phase === "repeat" && s.pattern[s.cursor] === index;
+            return <PressControl key={index} disabled={!active || s.phase !== "repeat"} accessibilityRole="button" accessibilityLabel={`Shell ${index + 1}${learning ? `, sound ${tile}` : ""}${next ? ", Helper suggests this shell" : ""}`} accessibilityState={{ disabled: !active || s.phase !== "repeat", selected: lit }} onPress={() => tap(index)} style={{ width: shellSize, minHeight: shellSize + 30, borderRadius: 34, alignItems: "center", justifyContent: "center", borderWidth: 3, borderColor: next ? "#FFE5A1" : "transparent", backgroundColor: lit ? "#827096" : next ? "#5E658C" : "transparent" }}>
+              <SingingShell index={index} size={shellSize - 6} lit={lit} wrong={wrongShell === index} cue={manualGlow === index ? `tap-${tapCue}` : noteKey} outfit={index === 0 ? outfit : "island"}/><Heading style={{ fontSize: learning ? 32 : 23, color: "#403F65", backgroundColor: "#FFF1D5", minWidth: 37, paddingHorizontal: 9, borderRadius: 14, textAlign: "center" }}>{learning ? tile : index + 1}</Heading>
             </PressControl>;
           })}
-        </View>{burst && <ActionBurst key={burst.id} text={burst.text}/>}
+        </View>
       </View>
       <View accessibilityLabel={`Pattern progress, ${s.cursor} of ${s.pattern.length}`} style={{ flexDirection: "row", gap: 7, justifyContent: "center", flexWrap: "wrap", paddingHorizontal: 16 }}>{s.pattern.map((_, i) => <View key={i} style={{ width: 13, height: 13, borderRadius: i < s.cursor ? 4 : 7, backgroundColor: s.phase === "repeat" && i < s.cursor ? "#FFDB8C" : "#7983AA", borderWidth: 2, borderColor: "#D4D0E0" }}/>)}</View>
-    </> : <View style={{ gap: 14, alignItems: "center", width: "100%" }}>
-      <Heading style={{ fontSize: 38, letterSpacing: 5, color: "#FFF0CC" }}>{tiles.join(" · ")}</Heading><PlayButton quiet compact onPress={() => { if (s.level !== "endless" && s.level.word) onSay(wordAudio(s.level.word)); }}>Hear the blended word</PlayButton>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>{s.choices.map(word => <PressControl key={word} accessibilityRole="button" accessibilityLabel={`Word picture: ${word}`} disabled={!active} onPress={() => { const next = dispatch({ type: "picture", word }); if (next.phase === "cleared") onTone("clear"); else onTone("bump"); }} style={{ width: Math.min(196, (width - 48) / 3), minHeight: width >= 600 ? 190 : 118, padding: 8, backgroundColor: "#FFF4D8", borderRadius: 26, borderWidth: 3, borderColor: s.helped && s.level !== "endless" && s.level.word === word ? "#F8BD54" : "#B9AED1", justifyContent: "center", alignItems: "center" }}><PictureObject name={word} size={width >= 600 ? 130 : 78}/></PressControl>)}</View>
+    </> : <View style={{ gap: wide ? 5 : 14, alignItems: "center", width: "100%" }}>
+      <View style={{ flexDirection: width >= 600 ? "row" : "column", alignItems: "center", gap: width >= 600 ? 6 : 14 }}><Heading style={{ fontSize: wide ? 24 : 38, letterSpacing: wide ? 2 : 5, color: "#FFF0CC" }}>{tiles.join(" · ")}</Heading><PlayButton quiet compact onPress={() => { if (s.level !== "endless" && s.level.word) onSay(wordAudio(s.level.word)); }}>{wide ? "Hear word" : "Hear the blended word"}</PlayButton>{wide && <PlayButton quiet compact onPress={() => dispatch({ type: "show" })}>Help · show the picture</PlayButton>}</View>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>{s.choices.map(word => <PressControl key={word} accessibilityRole="button" accessibilityLabel={`Word picture: ${word}`} disabled={!active} onPress={() => { const next = dispatch({ type: "picture", word }); if (next.phase === "cleared") onTone("clear"); else onTone("bump"); }} style={{ width: Math.min(196, (width - 48) / 3), minHeight: wide ? 84 : width >= 600 ? 190 : 118, padding: 8, backgroundColor: "#FFF4D8", borderRadius: 26, borderWidth: 3, borderColor: s.helped && s.level !== "endless" && s.level.word === word ? "#F8BD54" : "#B9AED1", justifyContent: "center", alignItems: "center" }}><PictureObject name={word} size={wide ? 62 : width >= 600 ? 130 : 78}/></PressControl>)}</View>
       <View accessibilityLiveRegion="polite"><Copy style={{ color: "#FFF3D4", textAlign: "center" }}>{s.helped && s.level !== "endless" ? `Blend it: ${s.level.word}.` : s.slips ? "Try blending the sounds again." : "Which picture?"}</Copy></View>
-      <PlayButton quiet compact onPress={() => dispatch({ type: "show" })}>Help · show the picture</PlayButton>
+      {!wide && <PlayButton quiet compact onPress={() => dispatch({ type: "show" })}>Help · show the picture</PlayButton>}
     </View>}
     <PlayButton quiet compact icon="refresh" disabled={!active || s.phase === "cleared" || s.phase === "rest" || s.phase === "over"} onPress={() => { dispatch({ type: "replay" }); onTone("coral"); }}>Listen & watch again</PlayButton>
     {s.level === "endless" && <Button quiet compact disabled={!active} onPress={() => dispatch({ type: "finish" })}>Finish my free-play song</Button>}
