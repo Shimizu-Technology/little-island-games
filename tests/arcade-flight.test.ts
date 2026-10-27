@@ -72,6 +72,7 @@ describe("Fruit Bat Flight", () => {
     const s = createFlight(flightLevels[24], 16, false), g = s.gates[0], wrong = g.fact.choices.findIndex(n => n !== g.fact.answer);
     const next = flightStep({ ...s, y: [.24, .5, .76][wrong], gates: [{ ...g, x: .24 }, ...s.gates.slice(1)] }, { type: "idle" }, FIXED_DT);
     expect(next.status).toBe("playing"); expect(next.passed).toBe(0); expect(next.cue).toBe("try"); expect(next.bumps).toBe(1);
+    expect(s.helped).toBe(false); expect(next.helped).toBe(true); // a wrong answer is credited as helped practice
   });
   it("matches shown 1/2/3-star collection thresholds and ignores stale results", () => {
     const s = createFlight(flightLevels[0], 3);
@@ -109,6 +110,7 @@ describe("Lagoon Run", () => {
   it("wrong math lane retries gently and valid answers earn stars regardless of Helper", () => {
     const s = createRun(runLevels[24], 14, false), row = { ...s.rows[0], z: .88 }, lane = row.fact.choices.findIndex(n => n !== row.fact.answer);
     const next = runStep({ ...s, lane, rows: [row, ...s.rows.slice(1)] }, { type: "idle" }, FIXED_DT); expect(next.status).toBe("playing"); expect(next.passed).toBe(0); expect(next.cue).toBe("try");
+    expect(s.helped).toBe(false); expect(next.helped).toBe(true);
     expect(runResult(run(createRun(runLevels[24], 14, true)))?.stars).toBe(3);
   });
   it("uses the advertised shell thresholds, terminal scoring, and pure transforms", () => {

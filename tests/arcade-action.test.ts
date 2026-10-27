@@ -86,6 +86,20 @@ describe("Palm Patrol", () => {
       expect(palmPilot(s).fact).toBe(level.facts);
     }
   });
+  it("a wrong learning answer still clears but is credited as helped, not independent", () => {
+    let s = createPalm(palmLevel("learn-1"), 12, false);
+    expect(s.helped).toBe(false);
+    for (let i = 0; i < 6000 && s.misses === 0 && s.phase === "play"; i++) {
+      const wrong = s.beetles.find((b) => !b.caught && b.value !== s.answer);
+      if (wrong) s = palmTransition(palmTransition(s, { type: "move", x: wrong.x }), { type: "toss" });
+      s = palmStep(s, tick, 1 / 60);
+    }
+    expect(s.misses).toBeGreaterThan(0);
+    const done = palmPilot(s);
+    expect(done.phase).toBe("cleared");
+    expect(done.helped).toBe(true);
+    expect(palmPilot(createPalm(palmLevel("learn-1"), 12, false)).helped).toBe(false);
+  });
   it("consumes fronds, fails after grove bumps, retries fresh, and scores stars by palms", () => {
     let s = createPalm(palmLevel("w3-7"), 4, false);
     for (let i = 0; i < 40000 && s.phase === "play"; i++) s = palmStep(s, tick, 1 / 60);

@@ -45,7 +45,7 @@ export function runStep(before: RunState, _input: RunInput, dt: number): RunStat
     const row = s.rows[i]; if (row.passed || row.z < .88) continue;
     const learn = runLearning(s), safe = rowSafe(s, row);
     if (!safe) {
-      s = { ...s, bumps: s.bumps + 1, cooldown: 1.1, status: s.helper || learn ? "playing" : "stumbled", event: s.event + 1, cue: learn ? "try" : "bump", feedback: .9 };
+      s = { ...s, bumps: s.bumps + 1, helped: s.helped || learn, cooldown: 1.1, status: s.helper || learn ? "playing" : "stumbled", event: s.event + 1, cue: learn ? "try" : "bump", feedback: .9 };
     } else {
       const shell = learn || s.lane === row.shellLane;
       s = { ...s, passed: s.passed + 1, shells: s.shells + (shell ? 1 : 0), score: Math.min(99999999, s.score + 40 + (shell ? 20 : 0)), event: s.event + 1, cue: learn ? "answer" : "shell", feedback: .7 };

@@ -30,7 +30,7 @@ export function flightTransition(s: FlightState, input: FlightInput): FlightStat
 }
 function bump(s: FlightState, center: number, wrong = false): FlightState {
   const gentle = s.helper || flightLearning(s);
-  return { ...s, y: gentle ? Math.max(.08, Math.min(.92, center)) : s.y, vy: gentle ? -.1 : s.vy, cooldown: gentle ? 1.1 : 0, bumps: s.bumps + 1, fruit: Math.max(0, s.fruit - (wrong ? 0 : 1)), status: gentle ? "playing" : "bumped", event: s.event + 1, cue: wrong ? "try" : "bump", feedback: .85 };
+  return { ...s, y: gentle ? Math.max(.08, Math.min(.92, center)) : s.y, vy: gentle ? -.1 : s.vy, cooldown: gentle ? 1.1 : 0, bumps: s.bumps + 1, helped: s.helped || wrong, fruit: Math.max(0, s.fruit - (wrong ? 0 : 1)), status: gentle ? "playing" : "bumped", event: s.event + 1, cue: wrong ? "try" : "bump", feedback: .85 };
 }
 export function flightStep(before: FlightState, _input: FlightInput, dt: number): FlightState {
   if (before.status !== "playing" || !finite(dt, .000001, .1)) return before;

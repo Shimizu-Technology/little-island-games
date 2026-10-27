@@ -230,6 +230,8 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
     if (learning && b.value !== s.answer) {
       h.bounced = true;
       s.misses++;
+      // A wrong learning answer means the eventual finish was practice with a retry, not independent.
+      s.helped = true;
       s = feedback(s, "↩ Try another", b.x, b.y);
       continue;
     }
