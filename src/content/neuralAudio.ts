@@ -2,6 +2,9 @@
 export const voiceSources: Record<"warm" | "calm", Record<string, number>> = {
   warm: {
     "apple": require("../../assets/audio/apple.m4a"),
+    "arcade-beach-count": require("../../assets/audio/arcade-beach-count.m4a"),
+    "arcade-beach-intro": require("../../assets/audio/arcade-beach-intro.m4a"),
+    "arcade-beach-together": require("../../assets/audio/arcade-beach-together.m4a"),
     "arcade-cargo-goal": require("../../assets/audio/arcade-cargo-goal.m4a"),
     "arcade-cargo-intro": require("../../assets/audio/arcade-cargo-intro.m4a"),
     "arcade-cargo-sum": require("../../assets/audio/arcade-cargo-sum.m4a"),
@@ -11,6 +14,8 @@ export const voiceSources: Record<"warm" | "calm", Record<string, number>> = {
     "arcade-crab-learn": require("../../assets/audio/arcade-crab-learn.m4a"),
     "arcade-flight-intro": require("../../assets/audio/arcade-flight-intro.m4a"),
     "arcade-flight-math": require("../../assets/audio/arcade-flight-math.m4a"),
+    "arcade-palm-intro": require("../../assets/audio/arcade-palm-intro.m4a"),
+    "arcade-palm-math": require("../../assets/audio/arcade-palm-math.m4a"),
     "arcade-phoneme-a": require("../../assets/audio/arcade-phoneme-a.m4a"),
     "arcade-phoneme-b": require("../../assets/audio/arcade-phoneme-b.m4a"),
     "arcade-phoneme-c": require("../../assets/audio/arcade-phoneme-c.m4a"),
@@ -2905,6 +2910,9 @@ export const voiceSources: Record<"warm" | "calm", Record<string, number>> = {
   },
   calm: {
     "apple": require("../../assets/audio/calm/apple.m4a"),
+    "arcade-beach-count": require("../../assets/audio/calm/arcade-beach-count.m4a"),
+    "arcade-beach-intro": require("../../assets/audio/calm/arcade-beach-intro.m4a"),
+    "arcade-beach-together": require("../../assets/audio/calm/arcade-beach-together.m4a"),
     "arcade-cargo-goal": require("../../assets/audio/calm/arcade-cargo-goal.m4a"),
     "arcade-cargo-intro": require("../../assets/audio/calm/arcade-cargo-intro.m4a"),
     "arcade-cargo-sum": require("../../assets/audio/calm/arcade-cargo-sum.m4a"),
@@ -2914,6 +2922,8 @@ export const voiceSources: Record<"warm" | "calm", Record<string, number>> = {
     "arcade-crab-learn": require("../../assets/audio/calm/arcade-crab-learn.m4a"),
     "arcade-flight-intro": require("../../assets/audio/calm/arcade-flight-intro.m4a"),
     "arcade-flight-math": require("../../assets/audio/calm/arcade-flight-math.m4a"),
+    "arcade-palm-intro": require("../../assets/audio/calm/arcade-palm-intro.m4a"),
+    "arcade-palm-math": require("../../assets/audio/calm/arcade-palm-math.m4a"),
     "arcade-phoneme-a": require("../../assets/audio/calm/arcade-phoneme-a.m4a"),
     "arcade-phoneme-b": require("../../assets/audio/calm/arcade-phoneme-b.m4a"),
     "arcade-phoneme-c": require("../../assets/audio/calm/arcade-phoneme-c.m4a"),
