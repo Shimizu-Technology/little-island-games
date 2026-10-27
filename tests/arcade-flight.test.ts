@@ -118,6 +118,12 @@ describe("Lagoon Run", () => {
   });
 });
 describe("strict state and kit saves", () => {
+  it("ignores malformed serialized actions without changing the engine", () => {
+    const f = createFlight(flightLevels[0], 1), r = createRun(runLevels[0], 1);
+    for (const input of [null, [], 3, {}, { type: "unknown" }, { type: "helper", value: "yes" }]) {
+      expect(flightTransition(f, input as never)).toBe(f); expect(runTransition(r, input as never)).toBe(r);
+    }
+  });
   it("rejects malformed engine states and level content, while active rounds are never persisted", () => {
     for (const [create, valid, levels] of [[createFlight, validFlight, flightLevels], [createRun, validRun, runLevels]] as const) {
       const s = create(levels[0], 1); expect(valid(s)).toBe(true);

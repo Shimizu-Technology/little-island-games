@@ -21,7 +21,7 @@ export function createRun(level: RunState["level"], seed: number, helper = true)
   return s;
 }
 export function runTransition(s: RunState, input: RunInput): RunState {
-  if (s.status !== "playing") return s;
+  if (s.status !== "playing" || !record(input) || typeof input.type !== "string") return s;
   if (input.type === "helper" && typeof input.value === "boolean") return { ...s, helper: input.value, helped: s.helped || input.value };
   if (input.type === "finish" && s.level === "endless") return { ...s, status: "rest" };
   if (input.type === "lane" && (!Number.isInteger(input.lane) || input.lane < 0 || input.lane > 2)) return s;

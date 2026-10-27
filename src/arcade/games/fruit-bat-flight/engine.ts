@@ -20,7 +20,7 @@ export function createFlight(level: FlightState["level"], seed: number, helper =
 }
 export const flightGap = (s: FlightState) => Math.min(.76, (s.level === "endless" ? .38 : s.level.gap) + (s.helper ? .14 : 0));
 export function flightTransition(s: FlightState, input: FlightInput): FlightState {
-  if (s.status !== "playing") return s;
+  if (s.status !== "playing" || !record(input) || typeof input.type !== "string") return s;
   if (input.type === "helper" && typeof input.value === "boolean") return { ...s, helper: input.value, helped: s.helped || input.value };
   if (input.type === "finish" && s.level === "endless") return { ...s, status: "rest" };
   if (input.type !== "flap") return s;
