@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Animated, Easing, View } from "react-native";
 import { Text } from "../../../components/Text";
-import { Button } from "../../../components/ui";
+import { PlayButton } from "../../Input";
 import { nativeDriver, useReducedMotion } from "../../../components/motion";
 import { Fruit, Hazard, ScrollHero } from "./Art";
 import { createFlight, flightStep, flightTransition } from "../fruit-bat-flight/engine";
@@ -27,5 +27,5 @@ export function Rehearsal({ game, onTone }: { game: ScrollGame; onTone: (key: st
     <Animated.View style={{ position: "absolute", left: "28%", top: 55, transform: [{ translateY: reduced ? 0 : duck ? 25 : motion.interpolate({ inputRange: trajectory.t, outputRange: trajectory.y }) }, { scale: duck ? .65 : 1 }] }}><ScrollHero game={game} size={80}/></Animated.View>
     <View style={{ position: "absolute", left: "66%", top: 56 }}>{bat ? <Fruit size={65}/> : <Hazard kind={duck ? "frond" : "coconut"} size={75}/>}</View>
     <Text style={{ position: "absolute", left: 14, top: 12, color: bat ? "#FFF2CD" : ink, fontWeight: "800" }}>{bat ? "Tap ↑ then glide" : duck ? "↓ Duck under" : "↑ Jump over"}</Text>
-  </View><View style={{ flexDirection: "row", justifyContent: "center", gap: 8 }}><Button quiet compact onPress={() => tryMove()}>{bat ? "Try a flap ↑" : "Try a jump ↑"}</Button>{!bat && <Button quiet compact onPress={() => tryMove(true)}>Try a duck ↓</Button>}</View></View>;
+  </View><View style={{ flexDirection: "row", justifyContent: "center", gap: 8 }}><PlayButton quiet compact onPress={() => tryMove()}>{bat ? "Try a flap ↑" : "Try a jump ↑"}</PlayButton>{!bat && <PlayButton quiet compact onPress={() => tryMove(true)}>Try a duck ↓</PlayButton>}</View></View>;
 }
