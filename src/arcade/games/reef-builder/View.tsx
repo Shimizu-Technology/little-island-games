@@ -1,7 +1,7 @@
 import { PlayButton, PressControl, uiThreadDrag } from "../../Input";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, StyleSheet, View, useWindowDimensions } from "react-native";
-import Animated, { measure, runOnJS, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withSequence, withTiming, type AnimatedRef } from "react-native-reanimated";
+import Animated, { Easing, measure, runOnJS, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withSequence, withTiming, type AnimatedRef } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import { Text } from "../../../components/Text";
@@ -65,7 +65,7 @@ function DraggablePiece({ piece, slot, selected, active, board, cell, numbers, c
 }
 function ClearEffects({ state, cell, reduced }: { state: ReefState; cell: number; reduced: boolean }) {
   const age = useSharedValue(0);
-  useEffect(() => { age.set(withTiming(1, { duration: 450 })); }, [age]);
+  useEffect(() => { age.set(withTiming(1, { duration: 450, easing: Easing.linear })); }, [age]);
   const flash = useAnimatedStyle(() => ({ opacity: Math.max(0, 1 - age.value * 450 / 160) }));
   const fish = useAnimatedStyle(() => ({ opacity: 1 - age.value, transform: [{ translateY: reduced ? 0 : -age.value * cell * 1.5 }, { translateX: reduced ? 0 : age.value * cell }] }));
   const pop = useAnimatedStyle(() => ({ opacity: 1 - age.value, transform: [{ translateY: reduced ? 0 : -age.value * 20 }] }));

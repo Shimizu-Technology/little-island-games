@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, type SharedValue } from "react-native-reanimated";
+import Animated, { Easing, runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, type SharedValue } from "react-native-reanimated";
 import { Text } from "../../../components/Text";
 import { useReducedMotion } from "../../../components/motion";
 import { PressControl, uiThreadDrag, useSwipe } from "../../Input";
@@ -32,7 +32,7 @@ const Captain = memo(function Captain({ size, outfit, cue, bump, clear, active, 
 });
 function LockEffects({ s, cell, reduced }: { s: CargoState; cell: number; reduced: boolean }) {
   const age = useSharedValue(0);
-  useEffect(() => { age.set(0); age.set(withTiming(1, { duration: 450 })); }, [s.event, age]);
+  useEffect(() => { age.set(0); age.set(withTiming(1, { duration: 450, easing: Easing.linear })); }, [s.event, age]);
   const flash = useAnimatedStyle(() => ({ opacity: Math.max(0, 1 - age.value * 450 / 160) }));
   const trail = useAnimatedStyle(() => ({ opacity: reduced ? 0 : Math.max(0, 1 - age.value * 450 / 140) * .42 }));
   const pop = useAnimatedStyle(() => ({ opacity: 1 - age.value, transform: [{ translateY: reduced ? 0 : -age.value * 25 }] }));
@@ -107,7 +107,7 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
   </View></View>;
   return <View testID="cargo-scene" style={{ width: "100%", backgroundColor: "#2B6677", borderRadius: 24, overflow: "hidden", padding: 9, gap: 8 }}>
     <View pointerEvents="none" style={StyleSheet.absoluteFill}><CargoScene world={s.level === "endless" ? "w3" : s.level.world}/></View>
-    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 5 }}><View style={ui.pill}><Text accessibilityLabel={`Goal progress ${goal}`} style={ui.stat}>{goal} canoes</Text></View>{learning && <View style={ui.pill}><Text style={ui.stat}>Σ {s.level !== "endless" && s.level.targetSum}</Text></View>}<View style={ui.pill}><Text style={ui.stat}>★ {s.score}</Text></View></View>
+    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 5 }}><View style={ui.pill}><Text accessibilityLabel={`Goal progress ${goal}`} style={ui.stat}>{goal} {s.level === "endless" || s.level.goal === "score" ? "points" : s.level.goal === "crates" ? "crates" : "canoes"}</Text></View>{learning && <View style={ui.pill}><Text style={ui.stat}>Σ {s.level !== "endless" && s.level.targetSum}</Text></View>}<View style={ui.pill}><Text style={ui.stat}>★ {s.score}</Text></View></View>
     <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: wide ? 24 : 0 }}>
       <View style={{ alignItems: "center", gap: 7 }}>{!wide && preview}<View testID="cargo-board" accessibilityLabel="Cargo hold. Swipe left or right to move, up to turn, down to hard drop." style={{ width: boardW + 10, height: boardH + 10, borderWidth: 5, borderColor: "#A8794B", borderRadius: 11, backgroundColor: "#193E4C", overflow: "hidden", ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }} {...swipe}>
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>{Array.from({ length: ROWS }, (_, r) => <View key={r} style={{ position: "absolute", top: r * cell, width: boardW, height: cell, borderBottomWidth: 1, borderColor: "#315460", backgroundColor: r % 2 ? "#204653" : "#1B3E4C" }}/>)}</View>
