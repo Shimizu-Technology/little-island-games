@@ -1,5 +1,5 @@
 {
-  "arcade-reef-intro": "Let\u2019s build a reef. Drag a coral piece into an open space. You can also tap a piece, then tap its spot. Full rows or columns release little fish. There is no hurry.",
+  "arcade-reef-intro": "Let’s build a reef. Drag a coral piece into an open space. You can also tap a piece, then tap its spot. Full rows or columns release little fish. There is no hurry.",
   "arcade-reef-ten": "These corals have numbers. Put six beside four. Together they make ten, and the fish can swim free.",
   "arcade-song-intro": "Listen to the shells and watch them glow. When it is your turn, tap the same shells in the same order. You can listen again whenever you like.",
   "arcade-song-word": "These shells hold sounds. Tap the sounds in order, then blend them together. Which picture matches your word? Take your time.",
@@ -18,5 +18,10 @@
   "arcade-phoneme-p": "The sound at the start of pig.",
   "arcade-phoneme-s": "The sound at the start of sun.",
   "arcade-phoneme-t": "The sound at the start of tap.",
-  "arcade-phoneme-u": "Short u, as in cup."
+  "arcade-phoneme-u": "Short u, as in cup.",
+  "arcade-palm-intro": "Slide to aim. Tap to toss beetles into nets!",
+  "arcade-palm-math": "Toss at the answer that matches. Take your time.",
+  "arcade-beach-intro": "Drag your paddle. Bounce the ball past your buddy!",
+  "arcade-beach-together": "Drag your paddle. Play from opposite ends!",
+  "arcade-beach-count": "Return the ball. Count each splash together!"
 }

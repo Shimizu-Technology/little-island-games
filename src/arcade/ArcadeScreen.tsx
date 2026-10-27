@@ -23,6 +23,10 @@ import { createReef, reefLevel, reefLevels } from "./games/reef-builder/engine";
 import { ReefBoard } from "./games/reef-builder/View";
 import { createSong, songLevel, songLevels } from "./games/shell-song/engine";
 import { SongBoard } from "./games/shell-song/View";
+import { ActionGameScreen } from "./action/Screen";
+export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; debug?: boolean }) {
+  return game.id === "palm-patrol" || game.id === "beach-ball" ? <ActionGameScreen game={game} debug={debug}/> : <KitGameScreen game={game} debug={debug}/>;
+}
 export function ArcadeLobby() {
   const store = useStore(), person = arcadeLearner(store.save.arcade, activeLearner(store.save.learning).id);
   const [sheet, setSheet] = useState<"book" | "settings" | null>(null);
@@ -38,7 +42,7 @@ export function ArcadeLobby() {
     <Button quiet onPress={() => setSheet("book")}>Open my sticker book</Button><Copy style={{ textAlign: "center", fontSize: 13 }}>No timers to wait for. No purchases. Your own little island.</Copy>
   </ScrollView><Sheet visible={sheet === "book"} title="Sticker book" onClose={() => setSheet(null)}><StickerBook person={person}/></Sheet><Settings visible={sheet === "settings"} onClose={() => setSheet(null)}/></>;
 }
-export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; debug?: boolean }) {
+function KitGameScreen({ game, debug = false }: { game: ArcadeGame; debug?: boolean }) {
   const store = useStore(), owner = activeLearner(store.save.learning), expected = useMemo(() => ({ epoch: store.epoch, learner: owner.id }), [store.epoch, owner.id]);
   const person = arcadeLearner(store.save.arcade, owner.id), p = gameProgress(person, game.id), foreground = useArcadeForeground();
   const [level, setLevel] = useState<ArcadeLevel | "endless" | null>(null), [playing, setPlaying] = useState(false), [paused, setPaused] = useState(false);
