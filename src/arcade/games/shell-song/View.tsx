@@ -63,7 +63,7 @@ export function SongBoard({ initial, active, helper, outfit, onResult, onTone, o
           {tiles.map((tile, index) => {
             const lit = glow === index || manualGlow === index, next = helper && s.phase === "repeat" && s.pattern[s.cursor] === index;
             return <PressableScale key={index} disabled={!active || s.phase !== "repeat"} accessibilityRole="button" accessibilityLabel={`Shell ${index + 1}${learning ? `, sound ${tile}` : ""}${next ? ", Helper suggests this shell" : ""}`} accessibilityState={{ disabled: !active || s.phase !== "repeat", selected: lit }} onPress={() => tap(index)} style={{ width: shellSize, minHeight: shellSize + 40, borderRadius: 34, alignItems: "center", justifyContent: "center", borderWidth: 3, borderColor: next ? "#FFE5A1" : "transparent", backgroundColor: lit ? "#827096" : next ? "#5E658C" : "transparent" }}>
-              <SingingShell index={index} size={shellSize - 6} lit={lit} cue={manualGlow === index ? String(tapCue) : noteKey} outfit={index === 0 ? outfit : "island"}/><Heading style={{ fontSize: learning ? 32 : 23, color: "#FFF0CC" }}>{learning ? tile : index + 1}</Heading>
+              <SingingShell index={index} size={shellSize - 6} lit={lit} cue={manualGlow === index ? String(tapCue) : noteKey} outfit={index === 0 ? outfit : "island"}/><Heading style={{ fontSize: learning ? 32 : 23, color: "#403F65", backgroundColor: "#FFF1D5", minWidth: 37, paddingHorizontal: 9, borderRadius: 14, textAlign: "center" }}>{learning ? tile : index + 1}</Heading>
             </PressableScale>;
           })}
         </View>{burst && <ActionBurst key={burst.id} text={burst.text}/>}
