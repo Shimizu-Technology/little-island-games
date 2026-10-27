@@ -173,6 +173,7 @@ export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
     Board: p => <PalmBoard initial={createPalm(p.level === "endless" ? p.level : palmLevel(p.level.id), p.seed, p.helper)} {...p}/>,
   },
   "beach-ball": {
+    helperDetail: "A bigger paddle and a slower ball. Same stars.",
     levels: beachLevels, level: beachLevel,
     speech: (learning, together) => together ? "arcade-beach-together" : learning ? "arcade-beach-count" : "arcade-beach-intro",
     clearedTitle: "What a splash!", fullBleed: true, familyMatch: true,
