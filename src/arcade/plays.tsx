@@ -61,6 +61,8 @@ export type ArcadePlay = {
   fullBleed?: boolean;
   familyMatch?: boolean;
   worldNote?: (world: ArcadeLevel["world"]) => string | undefined;
+  /** What Helper does in this game, shown on the level-start card and in pause. */
+  helperDetail?: string;
   /** Skill credited when a learning-world level is cleared. */
   learningSkill: (level: ArcadeLevel) => { skill: string; config: PracticeSettings } | null;
   Board: (props: ArcadeBoardProps) => React.ReactElement;
@@ -79,6 +81,7 @@ const stormNote = (world: ArcadeLevel["world"]) => world === "w3" ? "Storm trail
  */
 export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
   "reef-builder": {
+    helperDetail: "Show a fit points to a place that works. Same stars.",
     levels: reefLevels,
     level: reefLevel,
     speech: learning => (learning ? "arcade-reef-ten" : "arcade-reef-intro"),
@@ -98,6 +101,7 @@ export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
     Board: p => <SongBoard width={p.width} height={p.height} initial={createSong(p.level === "endless" ? p.level : songLevel(p.level.id), p.seed, p.helper)} active={p.active} helper={p.helper} outfit={p.outfit} onResult={p.onResult} onTone={p.onTone} onSay={p.onSay} debug={p.debug} />,
   },
   "canoe-cargo": {
+    helperDetail: "Slower falling, one hold and fewer tide rows. Same stars.",
     Scene: p => <CargoScene world={p.world}/>,
     levels: cargoLevels,
     level: cargoLevel,
