@@ -203,3 +203,38 @@ describe("all board engines", () => {
           expect(engine.validate({ ...s, secret: "extra" })).toBe(false);
         });
 });
+
+describe("bounded saves and pure transitions", () => {
+  it("keeps Reef Sweep completable after the flag-change budget is exhausted", () => {
+    let s = reef.create(1);
+    for (let i = 0; i < 400; i++) s = reef.move(s, 25);
+    expect(s.moves).toHaveLength(400);
+    expect(reef.legal(s)).not.toContain(25);
+    expect(reef.legal(s)).toContain(0);
+    s = reef.move(s, 0);
+    for (let i = 0; i < 25; i++) if (s.board[i] >= 0 && s.marks[i] !== 1) s = reef.move(s, i);
+    expect(s.outcome).toBe(0);
+    expect(reef.validate(s)).toBe(true);
+  });
+  it("never mutates an input position while applying a legal move", () => {
+    for (const game of boardIds) {
+      const e = engines[game],
+        before = e.create(19),
+        encoded = JSON.stringify(before);
+      const next = e.move(before, e.legal(before)[0]);
+      expect(next).not.toBe(before);
+      expect(JSON.stringify(before)).toBe(encoded);
+    }
+  });
+});
+
+describe("Reef first-opening hints", () => {
+  it("never suggests opening a flagged tile, including a completely flagged reef", () => {
+    let s = reef.move(reef.create(1), 25 + 12);
+    const hint = reef.choose(s, "challenge");
+    expect(hint).not.toBe(12);
+    expect(reef.legal(s)).toContain(hint);
+    for (let i = 0; i < 25; i++) if (s.marks[i] !== 2) s = reef.move(s, 25 + i);
+    expect(reef.choose(s, "challenge")).toBe(null);
+  });
+});

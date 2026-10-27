@@ -319,7 +319,7 @@ function Round({
       setFlag(action >= p.board.length);
       setNotice(
         !p.marks.includes(1)
-          ? "The middle is a safe first opening."
+          ? "Your first opening and all touching spaces are safe."
           : action >= p.board.length
             ? "A visible number needs every remaining touching space to be an urchin. Flag the ringed tile if your other flags are correct."
             : "A visible number already has all its urchins flagged. The ringed tile is safe if those flags are correct."

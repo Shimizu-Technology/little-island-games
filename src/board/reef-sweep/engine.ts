@@ -72,7 +72,11 @@ export function deductions(s: Position): { safe: number[]; flags: number[] } {
 }
 export function choose(s: Position, _strength: Strength): number | null {
   if (s.outcome !== null) return null;
-  if (!s.marks.includes(1)) return Math.floor(s.size / 2) * s.size + Math.floor(s.size / 2);
+  if (!s.marks.includes(1)) {
+    const center = Math.floor(s.size / 2) * s.size + Math.floor(s.size / 2);
+    const openings = legal(s).filter((i) => i < s.board.length);
+    return openings.includes(center) ? center : (openings[0] ?? null);
+  }
   const d = deductions(s);
   return d.safe[0] ?? (d.flags.length && s.moves.length < 400 ? d.flags[0] + s.board.length : null);
 }
