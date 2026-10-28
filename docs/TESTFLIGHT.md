@@ -171,3 +171,15 @@ Update Little Island in TestFlight to **1.8.0 (14)**:
 - Learning games show **Level 1 of 5**; tap any stone to choose.
 
 Physical install, touch and multi-touch comfort, A12 smoothness, audio, VoiceOver and Stassie's own choices remain family acceptance.
+
+## Arcade feel beta — 1.9.0 (15), available 28 October 2026 Guam time
+
+Leon played 1.8.0 (14) on his iPhone and found many arcade games sluggish, delayed, unlosable and badly animated. This beta is the feel v2 rebuild from [ARCADE_FEEL.md](ARCADE_FEEL.md): hearts and Game over, Helper off by default, touch-down controls with hold-to-repeat, UI-thread simulation for the fast games, one camera for Lagoon Run, real falling-block mechanics in Canoe Cargo, a "Tap to fly" ready state in Fruit Bat Flight, and 56 levels per arcade game.
+
+The source was clean commit `da6272e2b8018b2a2afaac49659e365debef5ac3` on held PR #16. It passed the full gate (1,108 tests, typecheck, lint, offline export) and Doctor 21/21. Two independent review rounds found two material and three minor issues, all fixed with tests. Native Release simulator recordings of seven real-time games are in `little-island-games-artifacts/island-arcade/native-1.9.0/`.
+
+The archive and export were made locally, the same way as build 14. The signed IPA is 173839993 bytes, SHA256 `be4121f9a0156e272b840336ac4f660b19a878c81fb718fd7c68034b1a0d4d57`. The signature, profile, entitlements, bundle, version and minimum iOS 16.4 all passed. All 5,815 referenced audio files match the source. EAS submission `918caabd-19d5-49a1-9b6c-1a98e13584a4` finished. Apple build `bba3787d-1d2f-4a2f-bf85-549a63db26f4` is VALID / IN_BETA_TESTING and attached to the existing Leon internal group, with English notes. Receipt: [evidence/testflight-build15.json](evidence/testflight-build15.json).
+
+Update Little Island in TestFlight to **1.9.0 (15)** and replay the arcade games. Helper now starts off. Your earlier stars are kept.
+
+Not verified: physical feel and performance, multi-touch on glass, audio and haptics, and VoiceOver.
