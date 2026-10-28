@@ -1,5 +1,7 @@
 import React, { memo, useId } from "react";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import { PosePath, type ArtPose } from "../../ArtPose";
+import type { SharedValue } from "react-native-reanimated";
 import type { OutfitId } from "../../progress";
 export const palettes = {
   rail: [
@@ -41,12 +43,16 @@ export const GridHero = memo(function GridHero({
   size = 100,
   outfit = "island",
   happy = false,
+  poses,
+  poseIndex = 0,
 }: {
   crab?: boolean;
   chick?: boolean;
   size?: number;
   outfit?: OutfitId;
   happy?: boolean;
+  poses?: SharedValue<ArtPose[]>;
+  poseIndex?: number;
 }) {
   const gradient = useId();
   return (
@@ -60,8 +66,20 @@ export const GridHero = memo(function GridHero({
       <Ellipse cx={50} cy={88} rx={32} ry={6} fill="#132B3C" opacity={0.18} />
       {crab ? (
         <G stroke="#603D3E" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-          <Path d="M28 59L10 67L15 76M29 68L17 82M72 59L90 67L85 76M71 68L83 82" fill="none" />
-          <Path d="M28 53L14 43L10 26L22 33L25 23L31 43M72 53L86 43L90 26L78 33L75 23L69 43" fill="#F59B76" />
+          <PosePath poses={poses} index={poseIndex} paths={[
+            "M28 59L10 67L15 76M29 68L17 82M72 59L90 67L85 76M71 68L83 82",
+            "M28 60L16 68L23 75M29 68L25 78M72 60L84 68L77 75M71 68L75 78",
+            "M28 57L8 66L6 81M29 68L12 89M72 57L92 66L94 81M71 68L88 89",
+            "M28 57L24 64L33 70M29 66L34 75M72 57L76 64L67 70M71 66L66 75",
+            "M28 57L5 59L10 72M29 67L10 78M72 57L95 59L90 72M71 67L90 78",
+          ]} fill="none" />
+          <PosePath poses={poses} index={poseIndex} paths={[
+            "M28 53L14 43L10 26L22 33L25 23L31 43M72 53L86 43L90 26L78 33L75 23L69 43",
+            "M28 55L18 50L12 35L24 41L28 31L33 49M72 55L82 50L88 35L76 41L72 31L67 49",
+            "M28 53L13 36L11 15L23 25L26 13L32 35M72 53L87 36L89 15L77 25L74 13L68 35",
+            "M28 53L24 38L28 20L34 32L42 24L37 44M72 53L76 38L72 20L66 32L58 24L63 44",
+            "M28 53L10 46L4 29L17 35L19 23L29 41M72 53L90 46L96 29L83 35L81 23L71 41",
+          ]} fill="#F59B76" />
           <Ellipse cx={50} cy={59} rx={30} ry={22} fill={`url(#${gradient})`} />
           <Path d="M37 42L35 29M63 42L65 29" />
           <Circle cx={35} cy={28} r={8} fill="#FFFAE8" />
@@ -223,7 +241,7 @@ export const GridBackdrop = memo(function GridBackdrop({
       </Defs>
       <Rect width={400} height={480} fill={`url(#${gradient})`} />
       {Array.from({ length: 32 }, (_, i) => (
-        <G key={i} opacity={0.35}>
+        <G key={i} opacity={crab ? 0.35 : 0.16}>
           <Path
             d={`M${(i * 73) % 390} ${(i * 97) % 480}q8 -8 16 0t16 0`}
             fill="none"
@@ -240,7 +258,7 @@ export const GridBackdrop = memo(function GridBackdrop({
             fill={p.light}
             stroke={p.sky}
             strokeWidth={3}
-            opacity={0.6}
+            opacity={crab ? 0.6 : 0.28}
           />
         </G>
       ))}
@@ -280,32 +298,29 @@ export const CoastalObject = memo(function CoastalObject({
   kind,
   width,
   height,
+  left = false,
 }: {
   kind: string;
   width: number;
   height: number;
+  left?: boolean;
 }) {
   const water = ["log", "turtle", "canoe", "island"].includes(kind);
   return (
     <Svg width={width} height={height} viewBox="0 0 100 100" preserveAspectRatio="none" accessible={false}>
       {water ? (
         <>
-          <Rect
-            x={0.5}
-            y={32}
-            width={99}
-            height={43}
-            rx={kind === "island" ? 13 : 8}
-            fill={
-              kind === "turtle" ? "#75AE75" : kind === "island" ? "#EACB89" : kind === "canoe" ? "#E7B769" : "#BA8A59"
-            }
-            stroke={kind === "island" ? "#A9D3A2" : "#614638"}
-            strokeWidth={1}
+          <Path
+            d={kind === "canoe" ? "M.5 53L10 32H88L99.5 53L88 75H10Z" : kind === "log" ? "M8 32H92Q99.5 32 99.5 53.5Q99.5 75 92 75H8Q.5 75 .5 53.5Q.5 32 8 32Z" : "M.5 45Q.5 32 14 32H86Q99.5 32 99.5 45V62Q99.5 75 86 75H14Q.5 75 .5 62Z"}
+            fill={kind === "turtle" ? "#568B69" : kind === "island" ? "#EACB89" : kind === "canoe" ? "#E7B769" : "#BA8A59"}
+            stroke={kind === "island" ? "#A9D3A2" : "#614638"} strokeWidth={1}
           />
+          {kind === "log" && <><Ellipse cx={7} cy={53.5} rx={5} ry={19} fill="#E4BE83" stroke="#936740"/><Ellipse cx={7} cy={53.5} rx={2.5} ry={12} fill="none" stroke="#936740"/></>}
+          {kind === "canoe" && <><Path d="M12 53L20 40H80L88 53L80 67H20Z" fill="#936740"/><Path d="M29 38V69M70 38V69" stroke="#FFE3A8" strokeWidth={4}/></>}
           {kind === "turtle" ? (
             [16, 50, 84].map((x) => (
               <G key={x}>
-                <Ellipse cx={x} cy={52} rx={12} ry={25} fill="#B6D17C" stroke="#4C886C" strokeWidth={1.3} />
+                <Ellipse cx={x} cy={52} rx={17} ry={25} fill="#B6D17C" stroke="#4C886C" strokeWidth={1.3} />
                 <Path
                   d={`M${x} 30V74M${x - 10} 45L${x + 10} 62M${x + 10} 45L${x - 10} 62`}
                   stroke="#75AE75"
@@ -327,7 +342,7 @@ export const CoastalObject = memo(function CoastalObject({
           )}
         </>
       ) : (
-        <G stroke="#263D51" strokeWidth={1.8} strokeLinejoin="round">
+        <G transform={left ? "translate(100 0) scale(-1 1)" : undefined} stroke="#263D51" strokeWidth={1.8} strokeLinejoin="round">
           <Ellipse cx={23} cy={74} rx={9} ry={11} fill="#31465A" />
           <Ellipse cx={77} cy={74} rx={9} ry={11} fill="#31465A" />
           {kind === "bike" ? (

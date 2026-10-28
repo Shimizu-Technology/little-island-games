@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useRef, memo, useState } from "react";
 import { View, Platform, type ViewStyle } from "react-native";
+import { crabHopFrame } from "../../feelArt";
+import type { ArtPose } from "../../ArtPose";
 import { useSharedValue } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 import { HeartsHud, HitReaction } from "../../LivesHud";
@@ -63,18 +65,19 @@ export function CrabBoard({
     )
   );
   const unit = (size - 6) / 9,
-    poses = useSharedValue<SpritePose[]>([]),
+    poses = useSharedValue<ArtPose[]>([]),
     reduced = useReducedMotion();
   const onFrame = useCallback(
     (s: CrabState) => {
       const hero = crabPosition(s),
         bounce = s.hop ? Math.sin((s.hop.age / CRAB_HOP) * Math.PI) : 0,
         lanes = crabLanes(s),
-        p: SpritePose[] = [
+        p: ArtPose[] = [
           {
             x: hero.x * unit,
             y: (hero.y - hero.arc) * unit,
             scale: 1 + bounce * 0.08,
+            frame: reduced ? 0 : crabHopFrame(s.hop?.age, CRAB_HOP),
             angle: reduced ? 0 : s.respawn > 0 ? 0.18 : Math.sin(s.time * 3) * 0.025,
           },
         ];
@@ -101,6 +104,7 @@ export function CrabBoard({
       budget,
     } = useArcadeLoop({ initial, step: crabStep, reduce: crabTransition, input: tick, active, onFrame }),
     reported = useRef(false),
+    [homes, setHomes] = useState<{ crossed: number; slots: number[] }>({ crossed: initial.crossed, slots: [] }),
     last = useRef({ crossed: 0, bumps: 0, cursor: 0 });
   useEffect(() => {
     if (active && state.current.helper !== helper) dispatch({ type: "helper", value: helper });
@@ -125,6 +129,10 @@ export function CrabBoard({
       return () => clearTimeout(timer);
     }
   }, [s, active, touch.touching, onResult, onTone]);
+  if (s.crossed > homes.crossed) {
+    const slot = [1, 4, 7].reduce((best, x) => Math.abs(s.impact.x - x) < Math.abs(s.impact.x - best) ? x : best, 1);
+    setHomes({ crossed: s.crossed, slots: [...(homes.crossed % 3 === 0 ? [] : homes.slots), slot] });
+  }
   const move = useCallback(
     (direction: Direction) => {
       if (active) {
@@ -244,6 +252,7 @@ export function CrabBoard({
             {[1, 4, 7].map((x) => (
               <View key={`burrow-${x}`} style={{ position: "absolute", left: x * unit - unit * 0.1, top: -unit * 0.1 }}>
                 <GridObject kind="burrow" size={unit * 1.2} />
+                {homes.slots.includes(x) && <View accessibilityLabel="Crab resting in a reached burrow" style={{ position: "absolute", left: unit * 0.3, top: unit * 0.38 }}><GridHero crab happy size={unit * 0.65} /></View>}
               </View>
             ))}
             {[0, 1, 2].map((i) => (
@@ -331,7 +340,7 @@ const CrabActor = memo(function CrabActor({
 }) {
   return (
     <ArcadeSprite poses={poses} index={0} width={unit} height={unit}>
-      <GridHero crab size={unit} outfit={outfit} happy={happy} />
+      <GridHero crab size={unit} outfit={outfit} happy={happy} poses={poses} />
       {debug && (
         <View
           style={{
@@ -371,7 +380,7 @@ const CrabTraffic = memo(function CrabTraffic({
             width={unit * l.span}
             height={unit}
           >
-            <CoastalObject kind={l.kind} width={unit * l.span} height={unit} />
+            <CoastalObject kind={l.kind} width={unit * l.span} height={unit} left={l.speed < 0} />
             {debug && (
               <View
                 style={{

@@ -1,5 +1,7 @@
 import React, { memo, useId } from "react";
-import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import { PosePath, type ArtPose } from "../ArtPose";
+import type { SharedValue } from "react-native-reanimated";
 import type { OutfitId } from "../progress";
 import type { WorldId } from "../types";
 export const AmbientFriend = memo(function AmbientFriend({ night = false }: { night?: boolean }) {
@@ -57,11 +59,13 @@ export const ActionHero = memo(function ActionHero({
   size = 110,
   outfit = "island",
   happy = false,
+  poses,
 }: {
   palm: boolean;
   size?: number;
   outfit?: OutfitId;
   happy?: boolean;
+  poses?: SharedValue<ArtPose[]>;
 }) {
   const id = useId().replace(/:/g, "");
   return (
@@ -73,12 +77,8 @@ export const ActionHero = memo(function ActionHero({
         </LinearGradient>
       </Defs>
       <Ellipse cx={50} cy={91} rx={33} ry={5} fill="#194C5A" opacity={0.2} />
-      <Path
-        d="M23 60L9 52M77 60L91 48M35 83L24 91M65 83L76 91"
-        stroke={palm ? "#75432D" : "#23596E"}
-        strokeWidth={7}
-        strokeLinecap="round"
-      />
+      {/* Coco's feet stay planted; the throwing hand releases at arena (launcher, 532). */}
+      <Path d="M35 83L29 91H19M65 83L71 91H81" stroke={palm ? "#75432D" : "#23596E"} strokeWidth={7} strokeLinecap="round"/>
       <Circle
         cx={50}
         cy={56}
@@ -102,6 +102,11 @@ export const ActionHero = memo(function ActionHero({
           <Path d="M50 23Q27 30 18 54Q34 44 50 23" fill="#F7CE5D" />
         </G>
       )}
+      <PosePath poses={poses} index={57} paths={[
+        "M23 60L11 54M77 60L87 43L76 34",
+        "M23 60L12 54M77 60L72 39L50 24.36",
+        "M23 60L10 54M77 60L89 48L87 30",
+      ]} stroke={palm ? "#75432D" : "#23596E"} strokeWidth={7} strokeLinecap="round" fill="none"/>
       <Circle cx={38} cy={54} r={5} fill="#FFFDF0" />
       <Circle cx={64} cy={54} r={5} fill="#FFFDF0" />
       <Circle cx={39} cy={55} r={2.8} fill="#253E46" />
@@ -119,7 +124,7 @@ export const ActionHero = memo(function ActionHero({
     </Svg>
   );
 });
-export const BeetleArt = memo(function BeetleArt({ size, boss = false }: { size: number; boss?: boolean }) {
+export const BeetleArt = memo(function BeetleArt({ size, boss = false, poses, poseIndex = 0 }: { size: number; boss?: boolean; poses?: SharedValue<ArtPose[]>; poseIndex?: number }) {
   const id = useId().replace(/:/g, "");
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100" accessible={false}>
@@ -130,7 +135,10 @@ export const BeetleArt = memo(function BeetleArt({ size, boss = false }: { size:
         </LinearGradient>
       </Defs>
       <G stroke="#3E3640" strokeWidth={5} strokeLinecap="round">
-        <Path d="M27 36L13 26M25 51L10 52M27 65L13 77M73 36L87 26M75 51L90 52M73 65L87 77" />
+        <PosePath poses={poses} index={poseIndex} paths={[
+          "M27 36L13 26M25 51L10 52M27 65L13 77M73 36L87 26M75 51L90 52M73 65L87 77",
+          "M27 36L10 40M25 51L14 65M27 65L18 84M73 36L82 18M75 51L89 39M73 65L91 63",
+        ]}/>
         <Ellipse cx={50} cy={52} rx={29} ry={34} fill={`url(#action-bug-${id})`} />
         <Path d="M50 29V82" stroke="#6B4339" strokeWidth={3} />
         <Path d="M35 29Q29 48 34 59" stroke="#F5CD9C" strokeWidth={5} />
@@ -153,14 +161,20 @@ export const HuskArt = memo(function HuskArt({ size }: { size: number }) {
     </Svg>
   );
 });
-export const BallArt = memo(function BallArt({ size }: { size: number }) {
+export const BallArt = memo(function BallArt({ size, outline = 2 }: { size: number; outline?: number }) {
+  const clip = useId();
   return (
     <Svg width={size} height={size} viewBox="0 0 60 60" accessible={false}>
-      <Circle cx={30} cy={30} r={27} fill="#FFF9DC" stroke="#29536B" strokeWidth={3} />
+      <Defs><ClipPath id={clip}><Circle cx={30} cy={30} r={28.5 - outline * 30 / size}/></ClipPath></Defs>
+      <G clipPath={`url(#${clip})`}>
+      <Circle cx={30} cy={30} r={30} fill="#FFF9DC" />
       <Path d="M30 3Q9 31 30 57Q41 34 30 3" fill="#F27F72" />
       <Path d="M30 3Q55 12 57 34L34 30Z" fill="#59CBBF" />
       <Path d="M30 3Q10 4 4 26L24 20Z" fill="#F6C94E" />
+
       <Ellipse cx={18} cy={15} rx={6} ry={3} fill="white" transform="rotate(-35 18 15)" />
+      </G>
+      <Circle cx={30} cy={30} r={28.5 - outline * 30 / size} fill="none" stroke="#234958" strokeWidth={outline * 60 / size} />
     </Svg>
   );
 });
@@ -228,6 +242,7 @@ export const Scene = memo(function Scene({
         </LinearGradient>
       </Defs>
       <Rect width={360} height={600} fill={`url(#action-sky-${id})`} />
+      <G opacity={palm ? 1 : 0.18}>
       {/* Sky fills the arena; celestial discs keep a uniform scale on wide tablets. */}
       <Ellipse cx={292} cy={90} rx={37 * Math.min(1, height * 360 / (width * 600))} ry={37 * Math.min(1, width * 600 / (height * 360))} fill={world === "w3" ? "#FFF1BE" : "#FFF3B2"} opacity={0.9} />
       <Ellipse cx={292} cy={90} rx={49 * Math.min(1, height * 360 / (width * 600))} ry={49 * Math.min(1, width * 600 / (height * 360))} fill="#FFF4CE" opacity={0.13} />
@@ -248,6 +263,7 @@ export const Scene = memo(function Scene({
         strokeWidth={8}
         opacity={0.8}
       />
+      </G>
       {palm ? (
         <>
           <Palm x={-5} y={431} scale={0.85} />
@@ -258,19 +274,13 @@ export const Scene = memo(function Scene({
         </>
       ) : (
         <>
-          <Rect
-            x={18}
-            y={48}
-            width={324}
-            height={504}
-            rx={48}
-            fill="#FFF0CB"
-            opacity={0.22}
-            stroke="#FFF8DA"
-            strokeWidth={4}
-          />
-          <Path d="M22 300H338" stroke="#FFF9DA" strokeWidth={3} strokeDasharray="8 10" />
-          <Circle cx={180} cy={300} r={58} fill="none" stroke="#FFF9DA" strokeWidth={3} opacity={0.7} />
+          <Rect x={18} y={48} width={324} height={504} rx={48} fill="#FFF0CB" opacity={0.09}/>
+          <Path d="M22 300H338" stroke="#FFF9DA" strokeWidth={2} strokeDasharray="8 10" opacity={0.35}/>
+          <Circle cx={180} cy={300} r={58} fill="none" stroke="#FFF9DA" strokeWidth={2} opacity={0.35}/>
+          {/* Rails mark the engine’s ball-centre reflection planes. End lines stay open. */}
+          <Path d="M12 0V600M348 0V600" stroke="#F8EFCE" opacity={0.8} strokeWidth={2}/>
+          <Path d="M12 0H348M12 600H348" stroke="#B5F1DF" opacity={0.5} strokeWidth={3} strokeDasharray="2 10"/>
+          <Path d="M172 16L180 8L188 16M172 584L180 592L188 584" stroke="#FFF4CF" strokeWidth={3} fill="none"/>
           <Palm x={-8} y={377} scale={0.55} />
           <Palm x={368} y={110} scale={0.55} />
         </>

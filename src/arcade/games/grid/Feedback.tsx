@@ -70,6 +70,13 @@ export function GridFeedback({
                 strokeLinecap="round"
               />
             </>
+          ) : kind === "splat" ? (
+            <>
+              <Ellipse cx={50} cy={63} rx={39} ry={10} fill="#D8AC79" opacity={0.7}/>
+              <Path d="M14 58Q4 36 23 39Q21 20 42 33Q55 10 69 33Q94 27 87 51Q104 66 78 69H27Z" fill="#F7D5A3" stroke="#AC7855" strokeWidth={2}/>
+              <Path d="M30 43L22 30M70 44L80 25M48 31V17" stroke="#FFF0CF" strokeWidth={4} strokeLinecap="round"/>
+              <Circle cx={12} cy={26} r={4} fill="#E8BD87"/><Circle cx={91} cy={22} r={3} fill="#E8BD87"/>
+            </>
           ) : (
             <>
               <Path
