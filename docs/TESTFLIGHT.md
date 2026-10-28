@@ -183,3 +183,32 @@ The archive and export were made locally, the same way as build 14. The signed I
 Update Little Island in TestFlight to **1.9.0 (15)** and replay the arcade games. Helper now starts off. Your earlier stars are kept.
 
 Not verified: physical feel and performance, multi-touch on glass, audio and haptics, and VoiceOver.
+
+## Arcade feel v3 beta — 1.9.1 (16), available 29 October 2026 Guam time
+
+On 1.9.0 Leon found Flight laggy, the runner's limbs nonsensical, and Canoe Cargo scrolling on pull-down without tap-to-rotate. Release profiling, a Skia prototype and a genre audit led to the v3 plan in [ARCADE_FEEL_V3.md](ARCADE_FEEL_V3.md). This build includes:
+- the 120 Hz opt-in (`CADisableMinimumFrameDurationOnPhone`);
+- pose interpolation;
+- UI-thread gesture input;
+- compact HUD publication;
+- non-scrolling arenas;
+- mobile-Tetris touch controls with Hold;
+- Reef colour retention;
+- a rebuilt Lagoon Run runner with streaming scenery and per-shell pickups;
+- a new Flight bat rig;
+- art and feedback polish for five games.
+
+Source: clean commit `fcf405197aeb034c73eee25e3a4fb2efa13518b0` on held PR #16.
+- Full gate: 1,148 tests; Doctor 21/21.
+- Independent review: one material finding (a motionless iOS tap couldn't rotate Cargo), fixed and verified natively.
+- Native Release simulator recordings are in `island-arcade/native-1.9.1/`.
+
+Delivery:
+- The IPA is 173,878,916 bytes, SHA256 `3eab7c818a84447b81c2ebe53ed53b233be5e562347bc9a3e5dec023c985c625`.
+- The signature, profile, entitlements and version all passed, and all 5,815 referenced audio files match the source.
+- EAS submission finished after about 30 minutes in Expo's queue.
+- Apple build `e27f631e-f3ed-4e5e-8a4d-2cb776c05cb6` is VALID / IN_BETA_TESTING in the Leon internal group, with notes.
+
+Receipt: [evidence/testflight-build16.json](evidence/testflight-build16.json).
+
+Not verified: physical 120 Hz smoothness, real-glass gestures, iPad A12 performance, audio and haptics, VoiceOver.
