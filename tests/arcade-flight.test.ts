@@ -198,3 +198,20 @@ describe("strict state and kit saves", () => {
     const bad = JSON.parse(JSON.stringify(save)); bad.people.family.games["lagoon-run"].stars["w7-1"] = 3; expect(validArcade(bad)).toBe(false);
   });
 });
+
+describe("Helper toggles never leave a run with zero hearts", () => {
+  it("Flight: turning Helper off after three Helper hits ends the level as a game over", () => {
+    let s = createFlight(flightLevels[0], 5, true);
+    for (let hit = 0; hit < 3; hit++) s = flightStep({ ...s, waiting: false, y: .98, vy: .5, cooldown: 0, lives: { ...s.lives, invulnerable: 0 } }, { type: "idle" }, FIXED_DT);
+    expect(s.lives.hearts).toBe(2);
+    const off = flightTransition(s, { type: "helper", value: false });
+    expect(off.lives.hearts).toBe(0); expect(off.status).toBe("bumped"); expect(flightResult(off)?.outcome).toBe("game-over"); expect(validFlight(off)).toBe(true);
+    const fewer = flightTransition(flightStep({ ...createFlight(flightLevels[0], 5, true), y: .98, vy: .5 }, { type: "idle" }, FIXED_DT), { type: "helper", value: false });
+    expect(fewer.lives.hearts).toBe(2); expect(fewer.status).toBe("playing");
+  });
+  it("Run: turning Helper off after three Helper hits ends the level as a game over", () => {
+    const s = createRun(runLevels[0], 5, true), hurt = { ...s, lives: { ...s.lives, hearts: 2, hit: 3 }, bumps: 3 };
+    const off = runTransition(hurt, { type: "helper", value: false });
+    expect(off.lives.hearts).toBe(0); expect(off.status).toBe("stumbled"); expect(runResult(off)?.outcome).toBe("game-over");
+  });
+});

@@ -31,7 +31,11 @@ export function flightSpeed(s: FlightState) {
 export function flightTransition(s: FlightState, input: FlightInput): FlightState {
   "worklet";
   if (s.status !== "playing" || !record(input)) return s;
-  if (input.type === "helper" && typeof input.value === "boolean") return { ...s, helper: input.value, helped: s.helped || input.value, lives: configureLives(s.lives, input.value, s.level === "endless") };
+  if (input.type === "helper" && typeof input.value === "boolean") {
+    const lives = configureLives(s.lives, input.value, s.level === "endless");
+    // Turning Helper off after enough hits can leave no hearts: that is a game over, never a free run.
+    return { ...s, helper: input.value, helped: s.helped || input.value, lives, ...(lives.hearts === 0 && !flightLearning(s) ? { status: "bumped" as const, waiting: false } : {}) };
+  }
   if (input.type === "finish" && s.level === "endless") return { ...s, status: "rest" };
   if (input.type !== "flap") return s;
   // One callback per down event. No debounce: even taps faster than a physics tick survive.

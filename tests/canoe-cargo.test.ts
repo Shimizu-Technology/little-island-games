@@ -87,3 +87,19 @@ describe("Canoe Cargo feel rules", () => {
     expect(validArcade(lost)).toBe(true); expect(lost.people.family.games["canoe-cargo"]?.stars["w1-1"]).toBe(3); expect(lost.people.family.games["canoe-cargo"]?.best).toBe(600); expect(arcadeTransition(saved, "family", action)).toBe(saved);
   });
 });
+
+describe("soft drop timing", () => {
+  it("pressing soft drop mid-interval never spends banked normal-gravity time at soft-drop speed", () => {
+    let s = cargoTransition(createCargo(cargoLevel("w1-1"), 7, false), { type: "idle" } as never);
+    s = { ...s, status: "playing" };
+    for (let i = 0; i < 42; i++) s = cargoStep(s, { type: "idle" } as never, 1 / 60); // ~700 ms at normal gravity
+    const before = s.row;
+    const soft = cargoTransition(s, { type: "soft", value: true });
+    expect(soft.clock).toBe(0);
+    const after = cargoStep(soft, { type: "idle" } as never, 1 / 60);
+    expect(after.row - before).toBeLessThanOrEqual(1);
+    const released = cargoTransition(after, { type: "soft", value: false });
+    expect(released.clock).toBe(0);
+    expect(cargoTransition(released, { type: "soft", value: false })).toBe(released);
+  });
+});

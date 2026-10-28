@@ -28,7 +28,11 @@ export function createRun(level: RunState["level"], seed: number, helper = false
 export function runTransition(s: RunState, input: RunInput): RunState {
   "worklet";
   if (s.status !== "playing" || !record(input)) return s;
-  if (input.type === "helper" && typeof input.value === "boolean") return { ...s, helper: input.value, helped: s.helped || input.value, lives: configureLives(s.lives, input.value) };
+  if (input.type === "helper" && typeof input.value === "boolean") {
+    const lives = configureLives(s.lives, input.value);
+    // Turning Helper off after enough hits can leave no hearts: that is a game over, never a free run.
+    return { ...s, helper: input.value, helped: s.helped || input.value, lives, ...(lives.hearts === 0 && !runLearning(s) ? { status: "stumbled" as const } : {}) };
+  }
   if (input.type === "finish" && s.level === "endless") return { ...s, status: "rest" };
   if (input.type === "lane" && (!Number.isInteger(input.lane) || input.lane < 0 || input.lane > 2)) return s;
   const lane = input.type === "lane" ? input.lane : Math.max(0, Math.min(2, s.lane + (input.type === "left" ? -1 : input.type === "right" ? 1 : 0)));

@@ -68,7 +68,7 @@ export type TouchPoints = Record<number, DragPoint>;
 export function multiTouchDrag(points: SharedValue<TouchPoints>) {
   return Gesture.Manual().onTouchesDown((e, manager) => { "worklet"; const next = { ...points.value }; for (const t of e.changedTouches) next[t.id] = { x: t.x, y: t.y, down: true }; points.value = next; if (e.allTouches.length === e.changedTouches.length) { manager.begin(); manager.activate(); } })
     .onTouchesMove(e => { "worklet"; const next = { ...points.value }; for (const t of e.changedTouches) next[t.id] = { x: t.x, y: t.y, down: true }; points.value = next; })
-    .onTouchesUp((e, manager) => { "worklet"; const next = { ...points.value }; for (const t of e.changedTouches) delete next[t.id]; points.value = next; if (!e.allTouches.length) manager.end(); })
+    .onTouchesUp((e, manager) => { "worklet"; const next = { ...points.value }; for (const t of e.changedTouches) delete next[t.id]; points.value = next; if (Object.keys(next).length === 0) manager.end(); })
     .onTouchesCancelled((_, manager) => { "worklet"; points.value = {}; manager.end(); })
     .onFinalize(() => { "worklet"; points.value = {}; });
 }

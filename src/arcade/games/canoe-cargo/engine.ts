@@ -110,7 +110,9 @@ function moved(s: CargoState, next: CargoState): CargoState {
 }
 export function cargoTransition(s: CargoState, input: CargoInput): CargoState {
   if (s.status !== "playing" || !input || typeof input !== "object") return s;
-  if (input.type === "helper" || input.type === "soft") return typeof input.value === "boolean" ? { ...s, [input.type]: input.value } : s;
+  if (input.type === "helper") return typeof input.value === "boolean" ? { ...s, helper: input.value } : s;
+  // Changing fall speed restarts the row timer, so time banked at normal gravity is never spent at soft-drop speed.
+  if (input.type === "soft") return typeof input.value === "boolean" ? input.value === s.soft ? s : { ...s, soft: input.value, clock: 0 } : s;
   if (input.type === "finish") return s.level === "endless" ? { ...s, status: "finished" } : s;
   if (input.type === "hold") {
     if (!s.helper || s.holdUsed) return s;
