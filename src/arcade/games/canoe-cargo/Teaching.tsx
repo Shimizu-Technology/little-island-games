@@ -20,7 +20,7 @@ export function CargoTeaching({ learning, onHear, onPlay }: { learning: boolean;
       {(reduced || phase === 3) && <Animated.View style={{ position: "absolute", top: 70, transform: [{ translateX: reduced ? 96 : demo.interpolate({ inputRange: [0, .6, 1], outputRange: [96, 96, 290] }) }] }}><CargoCanoe size={100}/></Animated.View>}
     </View>
     <Copy style={{ textAlign: "center" }}>{learning ? "Nine parcels of 1 make 9. A full row always sails; matching the target sends a bonus canoe." : ["Slide the bundle over the open spaces.", "The rope outline shows where it will land.", "Hard drop lands now. A full row sails away.", "Now pack a real hold. Send four canoes!"][reduced ? 3 : phase]}</Copy>
-    <Copy style={{ textAlign: "center" }}>Hold ← or → to slide. Hold ↓ to fall faster. Tap ↻ to turn, or ⇓ to land. Swipe the board too.</Copy>
+    <Copy style={{ textAlign: "center" }}>Tap the board to turn. Drag sideways to slide. Pull down slowly and hold to fall faster; flick down to land. Tap Hold to save a bundle. The buttons work too.</Copy>
     {learning && <Copy style={{ textAlign: "center" }}>No falling clock. Count, then drop when ready.</Copy>}
     <Button quiet onPress={() => { setReplay(n => n + 1); onHear(); }}>Show & tell me again</Button><Button onPress={onPlay}>I’m ready · let’s play</Button>
   </View>;

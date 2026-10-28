@@ -1,17 +1,29 @@
 import React, { memo, useId } from "react";
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop, Text as SvgText } from "react-native-svg";
 import type { OutfitId } from "../../progress";
-import type { CargoKind } from "./engine";
+import { pieceCells, type CargoPiece, type CargoKind } from "./engine";
 export const cargoPalette = { crate: ["#C88B4D", "#F7CD83"], coconut: ["#708F46", "#CFDA83"], fish: ["#618FAD", "#C7E4E3"], taro: ["#A17591", "#E3B4CB"] };
 export const CargoTile = memo(function CargoTile({ kind, value = 0, stuck = false, size = 32 }: { kind: CargoKind; value?: number; stuck?: boolean; size?: number }) {
   const [base, light] = cargoPalette[kind];
   return <Svg width={size} height={size} viewBox="0 0 40 40" accessible={false}>
-    <Rect x={2} y={4} width={36} height={34} rx={kind === "coconut" ? 15 : kind === "taro" ? 11 : 7} fill="#172C39" opacity={.4}/>
-    <Rect x={2} y={2} width={36} height={33} rx={kind === "coconut" ? 15 : kind === "taro" ? 11 : 7} fill={base} stroke="#253C3F" strokeWidth={2}/>
+    <Rect x={1} y={3} width={38} height={36} rx={4} fill="#172C39" opacity={.4}/>
+    <Rect x={1} y={1} width={38} height={37} rx={4} fill={base} stroke="#253C3F" strokeWidth={2}/>
     <Path d="M8 7Q20 3 31 7" stroke={light} strokeWidth={3} strokeLinecap="round" fill="none"/>
-    {kind === "crate" ? <G stroke="#69482E" strokeWidth={2}><Path d="M6 12H34M6 27H34M11 12L29 27M29 12L11 27"/>{stuck && <Rect x={16} y={15} width={8} height={9} rx={2} fill="#FFE5A1"/>}</G> : kind === "coconut" ? <G fill="#3F512C"><Circle cx={15} cy={19} r={2}/><Circle cx={23} cy={16} r={2}/><Circle cx={22} cy={23} r={2}/><Path d="M10 29Q15 25 18 30" stroke={light} strokeWidth={2}/></G> : kind === "fish" ? <G><Path d="M26 19L33 13V26Z" fill={light}/><Ellipse cx={18} cy={20} rx={10} ry={6} fill={light}/><Circle cx={13} cy={19} r={1.8} fill="#253C3F"/><Path d="M8 29H32" stroke="#335D75" strokeWidth={2}/></G> : <G><Path d="M12 29Q7 16 19 13Q31 15 28 29Z" fill={light}/><Path d="M20 14Q15 7 11 11M20 14Q23 5 29 11" stroke="#486343" strokeWidth={3} fill="none"/><Path d="M18 20L20 27M24 19L25 25" stroke={base} strokeWidth={2}/></G>}
+    <G transform="translate(7 7) scale(.65)" opacity={.8}>{kind === "crate" ? <G stroke="#69482E" strokeWidth={2}><Path d="M6 12H34M6 27H34M11 12L29 27M29 12L11 27"/>{stuck && <Rect x={16} y={15} width={8} height={9} rx={2} fill="#FFE5A1"/>}</G> : kind === "coconut" ? <G fill="#3F512C"><Circle cx={15} cy={19} r={2}/><Circle cx={23} cy={16} r={2}/><Circle cx={22} cy={23} r={2}/><Path d="M10 29Q15 25 18 30" stroke={light} strokeWidth={2}/></G> : kind === "fish" ? <G><Path d="M26 19L33 13V26Z" fill={light}/><Ellipse cx={18} cy={20} rx={10} ry={6} fill={light}/><Circle cx={13} cy={19} r={1.8} fill="#253C3F"/><Path d="M8 29H32" stroke="#335D75" strokeWidth={2}/></G> : <G><Path d="M12 29Q7 16 19 13Q31 15 28 29Z" fill={light}/><Path d="M20 14Q15 7 11 11M20 14Q23 5 29 11" stroke="#486343" strokeWidth={3} fill="none"/><Path d="M18 20L20 27M24 19L25 25" stroke={base} strokeWidth={2}/></G>}
+    </G>
     {!!value && <><Circle cx={20} cy={22} r={11} fill="#FFF7DC" stroke="#253C3F" strokeWidth={1.5}/><SvgText x={20} y={28} textAnchor="middle" fill="#203541" fontSize={18} fontWeight="900">{value}</SvgText></>}
   </Svg>;
+});
+/** One exterior boundary for the whole bundle; no internal cell borders in this layer. */
+export const CargoOutline = memo(function CargoOutline({ piece, cell, ghost = false }: { piece: CargoPiece; cell: number; ghost?: boolean }) {
+  const cells = pieceCells(piece), has = (r: number, c: number) => cells.some(p => p[0] === r && p[1] === c);
+  const d = cells.flatMap(([r, c]) => [
+    !has(r - 1, c) ? `M${c * cell} ${r * cell}h${cell}` : "",
+    !has(r, c + 1) ? `M${(c + 1) * cell} ${r * cell}v${cell}` : "",
+    !has(r + 1, c) ? `M${c * cell} ${(r + 1) * cell}h${cell}` : "",
+    !has(r, c - 1) ? `M${c * cell} ${r * cell}v${cell}` : "",
+  ]).join(" ");
+  return <Svg width={cell * 4} height={cell * 4} viewBox={`-2 -2 ${cell * 4 + 4} ${cell * 4 + 4}`} accessible={false}><Path d={d} fill="none" stroke={ghost ? "#B3CBBE" : "#FFF3C6"} strokeWidth={ghost ? 1.2 : 2} strokeLinejoin="round" opacity={ghost ? .5 : .95} strokeDasharray={ghost ? "4 4" : undefined}/></Svg>;
 });
 export const CargoCaptain = memo(function CargoCaptain({ size = 120, outfit = "island", happy = false, dizzy = false }: { size?: number; outfit?: OutfitId; happy?: boolean; dizzy?: boolean }) {
   return <Svg width={size} height={size} viewBox="0 0 160 160" accessible={false}>

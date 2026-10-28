@@ -32,7 +32,7 @@ describe("Reef feel and planning", () => {
   it.each([false, true])("no-fit is terminal with Helper=%s even if empty cells remain", helper => {
     // A checkerboard leaves 32 isolated spaces. The remaining horizontal domino cannot fit.
     const s = createReef("endless", 42, helper), board = Array.from({ length: 64 }, (_, i) => (Math.floor(i / 8) + i % 8) % 2 ? 1 : 0);
-    const ready = { ...s, board, fish: [], pieces: [{ cells: SHAPES[0], value: 1, color: 1 }, { cells: SHAPES[1], value: 1, color: 2 }, null] };
+    const ready = { ...s, board, appearance: board.map(n => n ? 1 : -1), fish: [], pieces: [{ cells: SHAPES[0], value: 1, color: 1 }, { cells: SHAPES[1], value: 1, color: 2 }, null] };
     const t = reefTransition(ready, { type: "place", slot: 0, row: 0, col: 0 });
     expect(t.status).toBe("full"); expect(t.board.some(n => !n)).toBe(true); expect(validReef(t)).toBe(true); expect(reefResult(t)).toMatchObject({ outcome: "game-over", stars: 0 });
     expect(reefTransition(t, { type: "helper", value: true })).toBe(t); expect(reefTransition(t, { type: "reroll", slot: 1 })).toBe(t); expect(createReef("endless", 42, helper).moves).toBe(0);
