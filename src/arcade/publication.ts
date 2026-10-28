@@ -1,6 +1,6 @@
 import type { Lives } from "./lives";
 import { flightLearning, type FlightState } from "./games/fruit-bat-flight/engine";
-import { runLearning, type RunState } from "./games/lagoon-run/engine";
+import { runLearning, runSpeed, type RunState } from "./games/lagoon-run/engine";
 import { palmConfig, type PalmState } from "./games/palm-patrol/engine";
 import { beachConfig, type BeachState } from "./games/beach-ball/engine";
 function hearts(lives: Lives): Lives { "worklet"; return { ...lives, invulnerable: 0 }; }
@@ -13,9 +13,11 @@ export function flightHud(s: FlightState) {
 export function runHud(s: RunState) {
   "worklet";
   const learn = runLearning(s);
-  const next = learn ? s.rows.filter(r => !r.passed).sort((a, b) => b.z - a.z)[0]?.fact : undefined;
+  const approaching = s.rows.filter(r => !r.passed).sort((a, b) => b.z-a.z)[0];
+  const next = learn ? approaching?.fact : undefined;
   return { level: s.level === "endless" ? "endless" as const : { target: s.level.target }, passed: s.passed, score: s.score, lives: hearts(s.lives), helped: s.helped, status: s.status, event: s.event, cue: s.cue, poseLane: s.lives.hearts ? 0 : s.poseLane, next,
-    spec: s.rows.map(r => ({ kind: r.kind, secondKind: r.secondKind, third: r.third, choices: learn ? r.fact.choices : [] })) };
+    learned:s.learned, teaching:approaching?.action??"idle", powers:{magnet:Math.ceil(s.magnet*10)/10,kite:Math.ceil(s.kite*10)/10,sandals:Math.ceil(s.sandals*10)/10,shield:s.shield?1:0}, powerEvent:s.powerEvent,lastPower:s.lastPower, warning:!learn&&approaching&&(1-approaching.z)/runSpeed(s)<1.1?approaching.kind:"none",
+    spec: s.rows.map(r => ({ kind: r.kind, secondKind: r.secondKind, third: r.third, surface:r.surface, power:r.power, choices: learn ? r.fact.choices : [] })) };
 }
 export function palmHud(s: PalmState) {
   "worklet";
