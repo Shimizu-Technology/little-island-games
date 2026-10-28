@@ -68,3 +68,14 @@ Palm's worklet-only pose builder retains march and throw frames, with a wave/rel
 The combined source passes `npm run check` (typecheck, lint,1,141 tests/68 files, web export) and Doctor21/21. Advisory Impeccable returned `[]`. Recorded agent-executed Chromium touch QA passes Cargo/Reef controls, appearance, clears, recovery, rotation and layout cases; Palm/Beach motion, two-finger input and saved clears; and smoke interaction/pause-resume for Flight, Run, Rail, Crab and Song at390×844 (CSS safe areas47/34) and1024×768. Selected decoded recording sequences were inspected. Scripts, ledgers, build hashes, recordings, frame inspections and the final report are outside Git in `little-island-games-artifacts/island-arcade/feel3-merge/`.
 
 No further delegation, PR, integration-branch push, simulator or release build belongs to this worker. Self-review is recorded; independent lead review, physical ProMotion/A12 timing, native gestures, listening comfort, accessibility and family acceptance remain separate.
+
+## Acceptance record (1.9.1 (16))
+
+| Check | Result |
+|---|---|
+| Kit v3, puzzle v3, art v3, scroll v3 and the integration merge | Done; worker evidence in `little-island-games-artifacts/island-arcade/feel3-*` |
+| 120 Hz opt-in | `CADisableMinimumFrameDurationOnPhone` = true in the prebuilt Info.plist |
+| Native Release (iOS 18.5 iPhone 16 Pro simulator) | Canoe Cargo: still taps rotate (verified after the Tap/Pan race fix), drags slide, flicks drop, no scrolling. Lagoon Run: streaming side scenery, jointed rear-view runner, hint fades after the first seconds. Fruit Bat Flight: new bat, Tap to fly, Game over. Evidence: `island-arcade/native-1.9.1/` |
+| Independent review | One material finding (iOS Pan never activates for a motionless tap, so Cargo rotation could miss), fixed in 4a952db and verified natively. One minor finding (Run's teaching glyph repeats for about 4 s every round), accepted for this beta |
+| Full gate | `npm run check` 1,148 tests, typecheck, lint, offline export; Doctor 21/21 |
+| Not verified | Physical 120 Hz smoothness, real-glass gestures, A12 iPad performance, audio/haptic comfort, VoiceOver, family acceptance |
