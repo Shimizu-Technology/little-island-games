@@ -2,6 +2,7 @@ import { HAZARDS, POWER_SECONDS, RUN_CHUNKS, courseBeat, type HazardKind, type P
 import { nextRandom, type ArcadeEngine, type ArcadeResult } from "../../types";
 import { configureLives, createLives, hitLives, stepLives, validLives, type Lives } from "../../lives";
 import { canonicalLevel, finite, mathGate, record, runLevels, uint, validFact, type MathGate, type ScrollLevel } from "../scrolling/content";
+import { RAMP_DEPTH, surfaceProfile } from "./surface";
 export { runLevels, runLevel } from "../scrolling/content";
 export type RunInput = { type: "left" | "right" | "jump" | "duck" | "idle" | "finish" } | { type: "lane"; lane: number } | { type: "helper"; value: boolean };
 export type { HazardKind } from "./course";
@@ -13,12 +14,9 @@ export function jumpHeight(s: RunState) { "worklet"; return s.kite > 0 ? 2.7 : s
 export function runnerHeight(s: RunState) { "worklet"; return s.elevation + jumpHeight(s); }
 export function surfaceHeight(row: TrailRow, z = row.z) {
   "worklet";
-  if (row.surface === "sand" || z < .82 || z > 1 + row.length + .015) return 0;
-  if (row.surface === "ramp") return .85 * Math.min(1, Math.max(0, (z - .82) / .18));
-  if (row.surface === "gap" && z < 1.18) return 0;
-  return z >= 1 ? .85 : 0;
+  return surfaceProfile(row, z - 1);
 }
-function runSupport(s: RunState) {
+export function runSupport(s: RunState) {
   "worklet";
   return runLearning(s) ? 0 : Math.max(0,...s.rows.filter(r=>Math.abs(s.poseLane-r.shellLane)<.4).map(r=>surfaceHeight(r)));
 }
@@ -66,15 +64,15 @@ export function rowSafe(s: RunState, row: TrailRow): boolean {
   "worklet";
   if (runLearning(s)) return row.fact.choices[Math.round(s.poseLane)] === row.fact.answer;
   if (s.kite > 0 || s.protection > 0) return true;
-  const base = row.surface === "sand" || row.surface === "ramp" ? 0 : .85;
   const avoids = (lane: number, kind: HazardKind) => {
     "worklet";
+    const base = surfaceProfile(row, row.surface === "gap" ? RAMP_DEPTH : 0, lane);
     if (lane < 0 || Math.abs(s.poseLane - lane) > .46 || runnerHeight(s) > base + 1.65 || (base > 0 && runnerHeight(s) < base - .3)) return true;
     return HAZARDS[kind] === "jump" ? runnerHeight(s) > base + .42 : HAZARDS[kind] === "duck" ? s.duck > .08 && runnerHeight(s) < base + .3 : false;
   };
   return avoids(obstacleLane(row,s.time), row.kind) && avoids(row.second,row.secondKind) && (!row.third || avoids(row.shellLane,row.kind));
 }
-export function shellHeight(row: TrailRow, c: number) { "worklet"; return row.sky ? 2.7 : (row.surface === "sand" || row.surface === "ramp" ? 0 : .85) + (row.action === "jump" ? (row.surface === "gap" ? [.3,.65,.35] : [.65,.9,.55])[c] : 0); }
+export function shellHeight(row: TrailRow, c: number) { "worklet"; return row.sky ? 2.7 : surfaceProfile(row, row.surface === "ramp" ? -c * .07 : row.surface === "gap" ? RAMP_DEPTH : 0) + (row.action === "jump" ? (row.surface === "gap" ? [.3,.65,.35] : [.65,.9,.55])[c] : 0); }
 export function collectPower(s: RunState, kind: PowerKind): RunState {
   "worklet";
   if (kind === "none") return s;

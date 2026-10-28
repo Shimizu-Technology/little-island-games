@@ -35,19 +35,20 @@ export function PowerRing({kind,remaining}:{kind:Exclude<PowerKind,'none'>;remai
   return <View accessible accessibilityLabel={`${POWER_LABELS[kind]}${kind==='shield'?' ready':` ${Math.ceil(remaining)} seconds`}`} testID={`run-power-${kind}`} style={{alignItems:'center',width:52}}><View style={{width:48,height:48}}><PowerIcon kind={kind} size={48}/><Svg width={48} height={48} style={{position:'absolute'}} viewBox="0 0 48 48"><Circle cx={24} cy={24} r={22} fill="none" stroke="#2F806F" strokeWidth={4} strokeDasharray={`${138.23*fraction} 138.23`} rotation={-90} origin="24,24"/>{kind!=="shield"&&<><Circle cx={39} cy={38} r={9} fill="#293B49"/><SvgText x={39} y={42} fontSize={11} fontWeight="900" textAnchor="middle" fill="#FFF4CD">{Math.ceil(remaining)}</SvgText></>}</Svg></View></View>;
 }
 /** The deck corners are projected in runPoses on UI using the same camera as the runner. */
-export const Deck = memo(function Deck({poses,index,surface}:{poses:SharedValue<SpritePose[]>;index:number;surface:Surface}) {
+export const Deck = memo(function Deck({poses,index,surface,incline=false}:{poses:SharedValue<SpritePose[]>;index:number;surface:Surface;incline?:boolean}) {
   const top=useAnimatedProps(()=>{
     const a=poses.value[index],b=poses.value[index+1],c=poses.value[index+2],d=poses.value[index+3];
     if(!a||!b||!c||!d||a.opacity===0)return {d:'M0 0',opacity:0};
     const middleX=(a.x+b.x)/2,backX=(c.x+d.x)/2;
     const hull=surface==='canoe-roof'?`M${a.x} ${a.y}Q${middleX} ${a.y+18} ${b.x} ${b.y}L${c.x} ${c.y}Q${backX} ${c.y-8} ${d.x} ${d.y}Z`:`M${a.x} ${a.y}L${b.x} ${b.y}L${c.x} ${c.y}L${d.x} ${d.y}Z`;
-    let slats='';for(let i=1;i<6;i++){const t=i/6;slats+=` M${a.x+(d.x-a.x)*t} ${a.y+(d.y-a.y)*t}L${b.x+(c.x-b.x)*t} ${b.y+(c.y-b.y)*t}`;}
+    let slats='';for(let i=1;i<(incline?2:6);i++){const t=i/(incline?2:6);slats+=` M${a.x+(d.x-a.x)*t} ${a.y+(d.y-a.y)*t}L${b.x+(c.x-b.x)*t} ${b.y+(c.y-b.y)*t}`;}
     return {d:hull+slats,opacity:1};
   });
   const side=useAnimatedProps(()=>{
     const a=poses.value[index],b=poses.value[index+1],c=poses.value[index+2],d=poses.value[index+3];
     if(!a||!b||!c||!d||a.opacity===0)return {d:'M0 0',opacity:0};
     const lift=a.scale??0,back=d.scale??0;
+    if(incline)return {d:`M${b.x} ${b.y}L${b.x} ${b.y+lift}L${c.x} ${c.y+back}L${c.x} ${c.y}Z`,opacity:1};
     return {d:`M${a.x} ${a.y}L${a.x} ${a.y+lift}L${b.x} ${b.y+lift}L${c.x} ${c.y+back}L${c.x} ${c.y}L${b.x} ${b.y}Z`,opacity:1};
   });
   return <><AnimatedPath animatedProps={side} fill="#8F6655" stroke="#4E5254" strokeWidth={2}/><AnimatedPath animatedProps={top} fill={surface==='canoe-roof'?'#D99768':'#D5B783'} stroke="#725B4F" strokeWidth={3} strokeLinejoin="round"/></>;
