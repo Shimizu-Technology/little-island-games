@@ -22,7 +22,7 @@ export function GameCards({ games, width }: { games: ShelfGame[]; width: number 
       const level = learnIds.includes(g.id as LearnId) ? shelfLevel(store.save, g.id as LearnId) : undefined;
       return <View key={g.id} style={{ width, borderRadius: 20, overflow: "hidden", backgroundColor: C.paper, borderWidth: 1, borderColor: C.line }}>
         <PressableScale accessibilityRole="button" accessibilityLabel={`Play ${g.name}${level ? `, Level ${level} of 5` : ""}${live ? ", saved round available" : ""}`} onPress={() => openShelfGame(g.id)} amount={0.98} style={{ flex: 1 }}>
-          <View style={{ height: 88, backgroundColor: g.surface, alignItems: "center", justifyContent: "center" }}><ShelfArt id={g.id} size={74} /></View>
+          <View style={{ height: 88, paddingRight: width < 200 ? 24 : 0, backgroundColor: g.surface, alignItems: "center", justifyContent: "center" }}><ShelfArt id={g.id} size={74} /></View>
           <View style={{ padding: 12, gap: 5, flex: 1 }}>
             <Heading style={{ fontSize: 20 }}>{g.name}</Heading>
             {level && <Copy style={{ fontSize: 14, fontWeight: "800", color: C.teal }}>Level {level} of 5</Copy>}
