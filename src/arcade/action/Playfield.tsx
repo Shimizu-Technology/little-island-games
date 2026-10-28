@@ -603,7 +603,7 @@ export function BeachBoard({
       if (dt > 0) {
         for (let i = 0; i < s.balls.length; i++) {
           const contact = previous.balls[i] && beachWallContact(previous.balls[i], s.balls[i], dt);
-          if (contact) { sparks.push({ ...contact, at: s.time }); runOnJS(onTone)("shell-0", false); }
+          if (contact) { sparks.push({ ...contact, at: s.time }); runOnJS(onTone)("wall", false); }
         }
         walls.set({ time: s.time, balls: s.balls, sparks: sparks.slice(-2) });
       }

@@ -5,6 +5,8 @@ import { feel } from "../components/feel";
 import type { Settings } from "../state/validation";
 import type { ArcadeId } from "./types";
 const tones: Record<string, number> = {
+  // Reuse the bundled dry tap for rail contact; wall callbacks always disable haptics.
+  wall: require("../../assets/audio/tap.wav"),
   bump: require("../../assets/arcade/shell-0.wav"), coral: require("../../assets/arcade/coral.wav"), clear: require("../../assets/arcade/clear.wav"), sticker: require("../../assets/arcade/sticker.wav"),
   "shell-0": require("../../assets/arcade/shell-0.wav"), "shell-1": require("../../assets/arcade/shell-1.wav"), "shell-2": require("../../assets/arcade/shell-2.wav"), "shell-3": require("../../assets/arcade/shell-3.wav"), "shell-4": require("../../assets/arcade/shell-4.wav"), "shell-5": require("../../assets/arcade/shell-5.wav"),
 };
