@@ -5,6 +5,14 @@ import { feel } from "../components/feel";
 import type { Settings } from "../state/validation";
 import type { ArcadeId } from "./types";
 const tones: Record<string, number> = {
+  "run-jump": require("../../assets/arcade/shell-3.wav"),
+  "run-roll": require("../../assets/arcade/shell-1.wav"),
+  "run-lane": require("../../assets/audio/tap.wav"),
+  "run-hazard": require("../../assets/arcade/shell-0.wav"),
+  "run-magnet": require("../../assets/arcade/shell-5.wav"),
+  "run-kite": require("../../assets/arcade/sticker.wav"),
+  "run-sandals": require("../../assets/arcade/shell-4.wav"),
+  "run-shield": require("../../assets/arcade/coral.wav"),
   // Reuse the bundled dry tap for rail contact; wall callbacks always disable haptics.
   wall: require("../../assets/audio/tap.wav"),
   bump: require("../../assets/arcade/shell-0.wav"), coral: require("../../assets/arcade/coral.wav"), clear: require("../../assets/arcade/clear.wav"), sticker: require("../../assets/arcade/sticker.wav"),

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { arcadeTransition, emptyArcade, validArcade } from "../src/arcade/progress";
 import { createFlight as createWaitingFlight, flightGap, flightLearning, flightResult, flightStep, flightTransition, validFlight, type FlightState } from "../src/arcade/games/fruit-bat-flight/engine";
-import { createRun, rowSafe, runLearning, runResult, runStep, runTransition, validRun, type RunState } from "../src/arcade/games/lagoon-run/engine";
+import { fixtureInput } from "../src/arcade/games/lagoon-run/fixtures";
+import { createRun, rowSafe, runResult, runStep, runTransition, validRun, type RunState } from "../src/arcade/games/lagoon-run/engine";
 import { equation, flightLevels, mathGate, runLevels, validFact } from "../src/arcade/games/scrolling/content";
 import { flightFrame, runFrame } from "../src/arcade/games/scrolling/commands";
 import { projectTrack, trackSprite, roadEdge } from "../src/arcade/games/lagoon-run/camera";
@@ -24,10 +25,7 @@ function fly(initial: FlightState, offset = .045, look = .175, trigger = -.05): 
 function run(initial: RunState): RunState {
   let s = initial;
   for(let i=0;i<50000&&!runResult(s);i++) {
-    const row=s.rows.filter(r=>!r.passed).sort((a,b)=>b.z-a.z)[0];
-    const lane=runLearning(s)?row.fact.choices.indexOf(row.fact.answer):row.shellLane;
-    if(row.third && (1-row.z)/(s.level==="endless"?.5:s.level.speed*(1+.18*s.passed/s.level.target)) < .28 && s.jump===0) s=runTransition(s,{type:"jump"});
-    s=runStep(runTransition(s,{type:"lane",lane}),{type:"idle"},FIXED_DT);
+    s=runStep(runTransition(s,fixtureInput(s)),{type:"idle"},FIXED_DT);
     if(i%600===0)expect(validRun(s)).toBe(true);
   }
   return s;
@@ -138,7 +136,7 @@ describe("Lagoon camera, actions, patterns and lives",()=>{
     for(const lane of [-1,3,.5,NaN,Infinity])expect(runTransition(s,{type:"lane",lane})).toBe(s);
   });
   it("collides by visible pose; jump needs height, duck needs an active crouch",()=>{
-    const s=createRun(runLevels[0],22),base={...s.rows[0],lane:1,z:1,second:-1};
+    const s=createRun(runLevels[0],22),base={...s.rows[0],lane:1,z:1,second:-1,third:false,moving:false,crossing:false};
     for(const kind of ["coconut","crab","frond","line"] as const){
       const row={...base,kind};expect(rowSafe(s,row)).toBe(false);
       const low=kind==="coconut"||kind==="crab";
@@ -147,10 +145,12 @@ describe("Lagoon camera, actions, patterns and lives",()=>{
       expect(rowSafe(advanceRun(runTransition(s,{type:"left"}),8),row)).toBe(true);
     }
   });
-  it("adds two-lane blocks, low/high combinations and crabs while keeping a safe shell lane",()=>{
-    const w1=createRun(runLevels[0],42),w2=createRun(runLevels[8],42),w3=createRun(runLevels[16],42),w4=createRun(runLevels[24],42);
-    expect(w1.rows.some(r=>r.second>=0)).toBe(true);expect(w2.rows.some(r=>r.kind==="frond")).toBe(true);expect(w3.rows.some(r=>r.moving)).toBe(true);expect(w4.rows.some(r=>r.second>=0&&r.secondKind!==r.kind)).toBe(true);
-    for(const level of runLevels)for(const row of createRun(level,11).rows)expect(row.shellLane!==row.lane&&row.shellLane!==row.second).toBe(true);
+  it("authors forced jump/roll/lane beats rather than routing every shell around hazards",()=>{
+    const s=createRun(runLevels[0],42);
+    expect(s.rows.slice(0,3).map(r=>r.action)).toEqual(["jump","duck","idle"]);
+    expect(s.rows[0].third).toBe(true);expect(s.rows[1].kind).toBe("net");
+    expect(s.rows[2].shellLane).not.toBe(s.rows[2].lane);
+    expect(createRun(runLevels[6],42).rows.some(r=>r.kind==="moving-canoe")).toBe(true);
   });
   it("no-input arcade loses with Helper on/off; learning retains unlimited retries",()=>{
     for(const helper of [false,true]){let s=createRun(runLevels[0],6,helper);s=advanceRun(s,10000);expect(runResult(s)?.outcome).toBe("game-over");expect(s.lives.hearts).toBe(0);expect(runStep(s,{type:"idle"},FIXED_DT)).toBe(s);}
@@ -174,7 +174,7 @@ describe("step reproducibility",()=>{
   it("publishes recycle geometry without inventing another score/haptic cue",()=>{
     const f=createFlight(flightLevels[0],1),r=createRun(runLevels[0],1);
     const a=flightStep({...f,cue:"fruit",gates:f.gates.map((g,i)=>i?g:{...g,x:-.2,passed:true})},{type:"idle"},FIXED_DT);
-    const b=runStep({...r,cue:"shell",rows:r.rows.map((row,i)=>i?row:{...row,z:1.2,passed:true})},{type:"idle"},FIXED_DT);
+    const b=runStep({...r,cue:"shell",rows:r.rows.map((row,i)=>i?row:{...row,z:1.9,passed:true,shellDone:7})},{type:"idle"},FIXED_DT);
     expect(a.event).toBeGreaterThan(f.event);expect(a.cue).toBe("ready");expect(b.cue).toBe("ready");
   });
 });

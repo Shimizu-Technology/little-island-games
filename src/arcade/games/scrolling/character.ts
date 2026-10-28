@@ -1,14 +1,15 @@
 import type { RunState } from "../lagoon-run/engine";
-import { JUMP_SECONDS, SLIDE_SECONDS } from "../lagoon-run/engine";
+import { SLIDE_SECONDS } from "../lagoon-run/engine";
 /** Eight authored poses at 16 fps = two full strides/s, not eight strides/s. */
 export const RUN_POSES = 16;
 export function runnerFrame(s: RunState, reduced = false) {
   "worklet";
   if (s.status === "cleared") return 15;
   if (s.cooldown > 0 || s.status === "stumbled") return 14;
+  if (s.kite > 0) return 9;
   if (s.duck > 0) { const t = 1 - s.duck / SLIDE_SECONDS; return t < .18 ? 11 : t < .82 ? 12 : 13; }
   if (s.landing > 0) return 10;
-  if (s.jump > 0) { const t = 1 - s.jump / JUMP_SECONDS; return t < .2 ? 8 : t < .78 ? 9 : 10; }
+  if (s.jump > 0) { const t = 1 - s.jump / s.jumpDuration; return t < .2 ? 8 : t < .78 ? 9 : 10; }
   return reduced ? 0 : Math.floor(s.time * 16) % 8;
 }
 export type Point = readonly [number, number];

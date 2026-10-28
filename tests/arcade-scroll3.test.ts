@@ -9,7 +9,7 @@ import { runPoses } from "../src/arcade/games/scrolling/render";
 import { projectTrack } from "../src/arcade/games/lagoon-run/camera";
 const idle={type:"idle" as const},dt=1/60;
 describe("individual runner shell contacts",()=>{
-  function at(z:number,lane:number) { const s=createRun(runLevels[0],4);return {...s,lane,poseLane:lane,laneFrom:lane,rows:s.rows.map((r,i)=>i?r:{...r,z,shellLane:0,lane:1})}; }
+  function at(z:number,lane:number) { const s=createRun(runLevels[0],4);return {...s,lane,poseLane:lane,laneFrom:lane,rows:s.rows.map((r,i)=>i?r:{...r,z,shellLane:0,lane:1,second:-1,third:false,action:"idle" as const})}; }
   it("resolves each contact separately, preserves missed shells, and never awards one twice",()=>{
     let s=at(.855,0),original=JSON.stringify(s);const a=runStep(s,idle,dt);expect(JSON.stringify(s)).toBe(original);expect(a.shells).toBe(1);expect(a.rows[0].shellTaken).toBe(4);expect(a.rows[0].bursts[2]).toBe(.26);expect(a.passed).toBe(0);expect(validRun(a)).toBe(true);
     s=runStep({...a,rows:a.rows.map((r,i)=>i?r:{...r,z:.925})},idle,dt);expect(s.shells).toBe(2);expect(s.rows[0].shellTaken).toBe(6);
