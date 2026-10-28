@@ -13,6 +13,8 @@ import { Button, Heading } from "../../components/ui";
 import { useReducedMotion } from "../../components/motion";
 import { ArcadeSprite, type SpritePose } from "../Sprite";
 import { uiThreadDrag, multiTouchDrag, type DragPoint, type TouchPoints } from "../Input";
+import { HIDDEN_POSE } from "../poses";
+import { palmHud, beachHud } from "../publication";
 import { useArcadeUiLoop } from "../uiLoop";
 import { HeartsHud, HitReaction } from "../LivesHud";
 import type { ArcadeResult } from "../types";
@@ -30,7 +32,6 @@ import {
   type PalmFrame,
   type BeachFrame,
 } from "./controls";
-const hidden: SpritePose = { x: -200, y: -200, opacity: 0 };
 const gestureStyle: ViewStyle = Platform.OS === "web" ? ({ touchAction: "none", userSelect: "none" } as ViewStyle) : {};
 function useArena(width: number, height: number) {
   const [size, setSize] = useState({ width, height });
@@ -201,7 +202,7 @@ export function PalmBoard({
     point = useSharedValue<DragPoint>({ x: 180, y: 552, down: false }),
     flags = useSharedValue({ helper, taps: 0, finish: false }),
     keyboard = useSharedValue({ x: 180, firing: false, used: false }),
-    poses = useSharedValue<SpritePose[]>(Array.from({ length: 88 }, () => hidden)),
+    poses = useSharedValue<SpritePose[]>(Array(88).fill(HIDDEN_POSE)),
     reported = useRef(false);
   const gesture = useMemo(
     () =>
@@ -226,14 +227,15 @@ export function PalmBoard({
     helper: flags.value.helper,
     finish: flags.value.finish,
   }));
-  const onFrame = useCallback(
+  const build = useCallback(
     (s: PalmState) => {
       "worklet";
       const a = arena.value,
-        next: SpritePose[] = Array.from({ length: 88 }, () => hidden);
+        next: SpritePose[] = Array(88).fill(HIDDEN_POSE);
       for (const b of s.beetles) {
         const size = b.boss ? 87 : 58,
           p = position(a, b.x, b.y, size);
+        p.identity = `${s.wave}:${s.fact}:${b.id}:${b.caught}`;
         p.angle = reduced
           ? 0
           : b.caught
@@ -247,20 +249,11 @@ export function PalmBoard({
         if (b.hp > 1 && !b.boss) next[73 + b.id] = position(a, b.x, b.y - 12, 14, 7);
       }
       for (let i = 0; i < s.husks.length; i++)
-        next[45 + i] = { ...position(a, s.husks[i].x, s.husks[i].y, 20), angle: reduced ? 0 : s.time * 8 };
+        next[45 + i] = { snap: true, ...position(a, s.husks[i].x, s.husks[i].y, 20), angle: reduced ? 0 : s.time * 8 };
       next[57] = {
         ...position(a, s.launcher, 552 + (!reduced && s.lives.invulnerable > 1 ? 7 : 0), 78),
         scale: !reduced && s.cooldown > 0.16 ? 0.94 : 1,
-        angle: reduced
-          ? 0
-          : Math.max(
-              -0.18,
-              Math.min(
-                0.18,
-                (position(a, s.launcher, 552, 78).x - (poses.value[57]?.x ?? position(a, s.launcher, 552, 78).x)) /
-                  (30 * a.scale)
-              )
-            ),
+        angle: 0,
       };
       if (s.pulse > 0 && s.cue !== "fire") {
         const age = 1 - s.pulse / 0.45;
@@ -279,11 +272,12 @@ export function PalmBoard({
           opacity: s.pulse / 0.45,
         };
       }
-      poses.set(next);
+      return next;
     },
-    [arena, poses, reduced]
+    [arena, reduced]
   );
-  const { snapshot: s, state, clock } = useArcadeUiLoop({ initial, input, active, step: palmFrameStep, onFrame });
+  const pose = useMemo(() => ({ build, target: poses }), [build, poses]);
+  const { snapshot: s, outcome, state, clock } = useArcadeUiLoop({ initial, input, active, step: palmFrameStep, result: palmResult, select: palmHud, pose });
   const sounds = useRef({ event: 0, shots: 0 });
   useEffect(() => {
     flags.set({ ...flags.value, helper });
@@ -293,12 +287,12 @@ export function PalmBoard({
     }
   }, [active, helper, flags, point, keyboard]);
   useEffect(() => {
-    const r = palmResult(s);
-    if (r && !reported.current) {
+    const r = outcome;
+    if (r && active && !reported.current) {
       reported.current = true;
       onResult(r, s.helped);
     }
-  }, [s, onResult]);
+  }, [s, outcome, active, onResult]);
   useEffect(() => {
     const shots = s.shots - sounds.current.shots;
     if (shots > 0) onTone("coral", false);
@@ -332,7 +326,7 @@ export function PalmBoard({
       window.removeEventListener("blur", blur);
     };
   }, [active, keyboard, flags, state]);
-  const learning = palmConfig(s).world === "learn",
+  const learning = s.world === "learn",
     scale = camera.scale;
   return (
     <GestureDetector gesture={gesture} touchAction="none">
@@ -343,7 +337,7 @@ export function PalmBoard({
         onLayout={layout}
         style={[{ flex: 1, overflow: "hidden", minHeight: 210, backgroundColor: "#143E3D" }, gestureStyle]}
       >
-        <ArenaScene palm world={palmConfig(s).world} camera={camera} />
+        <ArenaScene palm world={s.world} camera={camera} />
         <PalmSprites poses={poses} scale={scale} />
         {[72, 180, 288].map((x, i) => (
           <View
@@ -366,15 +360,15 @@ export function PalmBoard({
         ))}
         <PalmHero poses={poses} scale={scale} outfit={outfit} hit={s.lives.hit} onTone={onTone} />
         {learning &&
-          s.beetles.map((b) => (
-            <View
+          s.answers.map((b) => (
+            <ArcadeSprite poses={poses} index={b.id} width={58 * scale} height={58 * scale} key={b.id}><View
               key={b.id}
               testID={`palm-answer-${b.id}`}
               pointerEvents="none"
               style={{
                 position: "absolute",
-                left: camera.x + (b.x - 25) * scale,
-                top: camera.y + (b.y + 19) * scale,
+                left: 4 * scale,
+                top: 48 * scale,
                 width: 50 * scale,
                 alignItems: "center",
                 backgroundColor: "#173F38",
@@ -382,7 +376,7 @@ export function PalmBoard({
               }}
             >
               <Heading style={{ color: "#FFF4CD", fontSize: 22 * scale }}>{b.value}</Heading>
-            </View>
+            </View></ArcadeSprite>
           ))}
         <ArcadeSprite poses={poses} index={66} width={110 * scale} height={24 * scale}>
           <Text
@@ -438,7 +432,7 @@ export function PalmBoard({
             </Text>
           </View>
         )}
-        {s.time < 4 && (camera.x >= 150 || camera.y >= 30) && (
+        {s.tip && (camera.x >= 150 || camera.y >= 30) && (
           <View
             testID="palm-aim-tip"
             pointerEvents="none"
@@ -563,7 +557,7 @@ export function BeachBoard({
 }) {
   const { camera, arena, layout } = useArena(width, height),
     reduced = useReducedMotion(),
-    poses = useSharedValue<SpritePose[]>(Array.from({ length: 66 }, () => hidden)),
+    poses = useSharedValue<SpritePose[]>(Array(66).fill(HIDDEN_POSE)),
     points = useSharedValue<TouchPoints>({}),
     mapping = useSharedValue<SeatPointers>({ owners: [null, null], seats: {} }),
     input = useSharedValue<BeachFrame>({ x: [null, null], helper, finish: false }),
@@ -581,16 +575,17 @@ export function BeachBoard({
       input.value = { ...input.value, x };
     }
   );
-  const onFrame = useCallback(
+  const build = useCallback(
     (s: BeachState) => {
       "worklet";
       const a = arena.value,
         config = beachConfig(s),
-        next: SpritePose[] = Array.from({ length: 66 }, () => hidden),
+        next: SpritePose[] = Array(66).fill(HIDDEN_POSE),
         ballSize = (BALL_RADIUS * 2) / 0.95;
       for (let i = 0; i < s.balls.length; i++) {
         const b = s.balls[i];
         next[i] = {
+          identity: `${s.points[0]}:${s.points[1]}`,
           ...position(a, b.x, b.y, ballSize),
           angle: reduced ? 0 : s.time * (b.vy < 0 ? -3 : 3),
           scale: !reduced && b.squash ? 1 - b.squash * 0.8 : 1,
@@ -604,6 +599,7 @@ export function BeachBoard({
           age = 1 - e.remaining / e.duration;
         for (let i = 0; i < 8; i++)
           next[14 + j * 8 + i] = {
+            identity: e.id,
             ...position(
               a,
               e.x + Math.cos((i * Math.PI) / 4) * age * 28,
@@ -614,11 +610,12 @@ export function BeachBoard({
           };
         if (e.point && pop < 2) next[62 + pop++] = { ...position(a, e.x, e.y - age * 18, 65, 26), opacity: 1 - age };
       }
-      poses.set(next);
+      return next;
     },
-    [arena, poses, reduced]
+    [arena, reduced]
   );
-  const { snapshot: s, state, clock } = useArcadeUiLoop({ initial, input, active, step: beachFrameStep, onFrame });
+  const pose = useMemo(() => ({ build, target: poses }), [build, poses]);
+  const { snapshot: s, outcome, state, clock } = useArcadeUiLoop({ initial, input, active, step: beachFrameStep, result: beachResult, select: beachHud, pose });
   useEffect(() => {
     input.set({ ...input.value, helper });
     if (!active) {
@@ -627,12 +624,12 @@ export function BeachBoard({
     }
   }, [active, helper, input, points, mapping]);
   useEffect(() => {
-    const r = beachResult(s);
-    if (r && !reported.current) {
+    const r = outcome;
+    if (r && active && !reported.current) {
       reported.current = true;
       onResult(r, s.winner);
     }
-  }, [s, onResult]);
+  }, [s, outcome, active, onResult]);
   useEffect(() => {
     if (s.event) onTone(s.cue === "point" ? "clear" : "shell-0", s.cue === "point");
   }, [s.event, s.cue, onTone]);
@@ -649,7 +646,7 @@ export function BeachBoard({
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
   }, [active, input, state]);
-  const config = beachConfig(s),
+  const config = s.config,
     scale = camera.scale;
   return (
     <GestureDetector gesture={gesture} touchAction="none">
@@ -721,7 +718,7 @@ export function BeachBoard({
             <Pill>Count +{config.countBy}</Pill>
           </View>
         )}
-        {s.time < 4 && (
+        {s.tip && (
           <View
             pointerEvents="none"
             style={{ position: "absolute", left: camera.x + 12 * scale, top: camera.y + 455 * scale }}

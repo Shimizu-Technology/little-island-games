@@ -5,16 +5,19 @@ import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 
 import { useReducedMotion } from "../components/motion";
 import type { ArcadeId, WorldId } from "./types";
 
-export const scenePalette = (game?: ArcadeId, world: WorldId = "w1") => game === "shell-song"
-  ? { top: ["#222958", "#253F65", "#161C48", "#433560"][["w1", "w2", "w3", "learn"].indexOf(world)], water: "#466C98", sand: "#BEB6D6", ink: "#FFF8E4", accent: "#FFE197" }
-  : { top: ["#077C91", "#136D77", "#163F70", "#157F85"][["w1", "w2", "w3", "learn"].indexOf(world)], water: "#52C4C2", sand: "#E7D5A1", ink: "#FFF8E4", accent: "#FFE197" };
+import { worldPalettes, nightPalettes, worldMotifs } from "./worlds";
+export const scenePalette = (game?: ArcadeId, world: WorldId = "w1") => (game === "shell-song" ? nightPalettes : worldPalettes)[world];
 
 /** Original vector scenery. Static art is memoized; only the small ambient layer moves. */
 export const WorldArt = memo(function WorldArt({ game, world = "w1" }: { game?: ArcadeId; world?: WorldId }) {
-  const id = useId().replace(/:/g, ""), night = game === "shell-song", p = scenePalette(game, world);
+  const id = useId().replace(/:/g, ""), night = game === "shell-song", p = scenePalette(game, world), motif = worldMotifs[world];
   return <><Svg width="100%" height="100%" viewBox="0 0 600 900" preserveAspectRatio="xMidYMid slice" accessible={false}>
     <Defs><LinearGradient id={`${id}-sea`} x1="0" y1="0" x2="0" y2="1"><Stop stopColor={p.top}/><Stop offset=".58" stopColor={p.water}/><Stop offset="1" stopColor={p.sand}/></LinearGradient><LinearGradient id={`${id}-sand`} x1="0" y1="0" x2="0" y2="1"><Stop stopColor={night ? "#CCC0D8" : "#E8D8AA"}/><Stop offset="1" stopColor={night ? "#8E8AAE" : "#B4CFB5"}/></LinearGradient></Defs>
     <Rect width={600} height={900} fill={`url(#${id}-sea)`}/>
+    <G fill={p.accent} stroke={p.accent} opacity={.18}>{Array.from({ length: motif.count }, (_, i) => {
+      const x = 35 + i * 530 / motif.count, y = 110 + i % 3 * 56;
+      return motif.kind === "leaves" ? <Path key={i} d={`M${x} ${y}q-22-32 10-48q18 28-10 48Z`}/> : motif.kind === "pearls" ? <Circle key={i} cx={x} cy={y} r={10 + i % 3 * 3} fill="none" strokeWidth={3}/> : motif.kind === "ripples" ? <Path key={i} d={`M${x-20} ${y}q20-12 40 0`} fill="none" strokeWidth={3}/> : <Path key={i} d={`M${x} ${y-10}l3 7l8 3l-8 3l-3 7l-3-7l-8-3l8-3Z`}/>;
+    })}</G>
     {night ? <>
       {Array.from({ length: 26 }, (_, i) => <Circle key={i} cx={(i * 103 + 18) % 600} cy={(i * 71 + 22) % 340} r={i % 4 === 0 ? 2.8 : 1.3} fill="#FFF1CE" opacity={.4 + i % 3 * .2}/>)}
       <Path d="M0 350Q90 319 166 353T330 352T600 345V600H0Z" fill="#3A678E"/>

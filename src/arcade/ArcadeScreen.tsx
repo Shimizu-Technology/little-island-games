@@ -118,7 +118,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
         {playing ? <PressableScale accessibilityRole="button" accessibilityLabel="Pause" onPress={() => setPaused(true)} style={{ minWidth: 48, minHeight: 48, borderRadius: 24, backgroundColor: "#FFF3D7", alignItems: "center", justifyContent: "center" }}><Svg width={24} height={24} viewBox="0 0 24 24" accessible={false}><Rect x={5} y={4} width={5} height={16} rx={2} fill="#2E596B"/><Rect x={14} y={4} width={5} height={16} rx={2} fill="#2E596B"/></Svg></PressableScale> : <Button quiet compact onPress={() => setSheet("settings")}>Settings</Button>}
       </View>
     </View>
-    {playing && play.fullBleed ? <View style={{ flex: 1 }} onLayout={event => {
+    {playing ? <View testID="arcade-arena" style={{ flex: 1, minHeight: 0, overflow: "hidden" }} onLayout={event => {
       const { width, height } = event.nativeEvent.layout;
       setArena(previous => previous.width === width && previous.height === height ? previous : { width, height });
     }}><SaveStatus/>{board}</View> : <ScrollView ref={scroll} contentContainerStyle={{ flexGrow: 1, width: "100%", paddingBottom: playing ? 0 : 24, gap: 12 }}>

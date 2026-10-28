@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
-import { Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { Easing, runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, type SharedValue } from "react-native-reanimated";
 import { Text } from "../../../components/Text";
@@ -54,16 +54,18 @@ function SoftDrop({ active, onChange, onTap }: { active: boolean; onChange: (hel
   const style = useAnimatedStyle(() => ({ opacity: point.value.down ? .72 : 1 }));
   return <GestureDetector gesture={gesture}><Animated.View collapsable={false} testID="cargo-soft" accessible accessibilityRole="button" accessibilityLabel="Soft drop, hold to fall twenty times faster" accessibilityState={{ disabled: !active }} onAccessibilityTap={onTap} style={[{ ...ui.control, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }, style]}><Text style={ui.symbol}>↓</Text></Animated.View></GestureDetector>;
 }
-export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, debug = false }: { initial: CargoState; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string) => void; debug?: boolean }) {
-  const { width, height } = useWindowDimensions(), reduced = useReducedMotion(), wide = width > height || width >= 700, compact = height < 500;
+export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, debug = false, width, height }: { width: number; height: number; initial: CargoState; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string) => void; debug?: boolean }) {
+  // Kit v3: size from the safe-area-measured arena supplied by the shared frame.
+  const reduced = useReducedMotion(), wide = width > height || width >= 700, compact = height < 500;
   const cell = Math.max(10, Math.min(43, (width - (wide ? 250 : 48)) / COLS, (height - (wide ? 175 : 285)) / ROWS));
   const boardW = cell * COLS, boardH = cell * ROWS, learning = initial.level !== "endless" && !!initial.level.targetSum;
   const poses = useSharedValue<SpritePose[]>([]), reported = useRef(false), helped = useRef(helper);
-  const publish = useCallback((s: CargoState) => {
+  const build = useCallback((s: CargoState) => {
     const ghost = landingRow(s), visible = s.status === "playing" ? 1 : 0;
-    poses.set([...pieceCells(s.piece).map(([r, c]) => ({ x: (s.col + c) * cell, y: (s.row + r) * cell, opacity: visible })), ...pieceCells(s.piece).map(([r, c]) => ({ x: (s.col + c) * cell, y: (ghost + r) * cell, opacity: visible }))]);
-  }, [cell, poses]);
-  const { snapshot: s, dispatch, state, budget } = useArcadeLoop({ initial, step: cargoStep, reduce: cargoTransition, input: idle, active, onFrame: publish });
+    return [...pieceCells(s.piece).map(([r, c]) => ({ x: (s.col + c) * cell, y: (s.row + r) * cell, opacity: visible, identity: `${s.loads}:${s.piece.kind}:${s.piece.turn}` })), ...pieceCells(s.piece).map(([r, c]) => ({ x: (s.col + c) * cell, y: (ghost + r) * cell, opacity: visible, snap: true }))];
+  }, [cell]);
+  const pose = useMemo(() => ({ build, target: poses, snapDistance: cell * 2 }), [build, poses, cell]);
+  const { snapshot: s, dispatch, state, budget } = useArcadeLoop({ initial, step: cargoStep, reduce: cargoTransition, input: idle, active, pose });
   const heard = useRef(0), bumped = useRef(0);
   useEffect(() => { if (active) { dispatch({ type: "helper", value: helper }); dispatch({ type: "soft", value: false }); if (helper) helped.current = true; } }, [active, helper, dispatch]);
   useEffect(() => {

@@ -81,6 +81,7 @@ const stormNote = (world: ArcadeLevel["world"]) => world === "w3" ? "Storm trail
  */
 export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
   "reef-builder": {
+    fullBleed: true,
     helperDetail: "Show a fit points to a place that works. Same stars.",
     levels: reefLevels,
     level: reefLevel,
@@ -88,7 +89,7 @@ export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
     goal: level => level !== "endless" && level.world === "learn" ? "Make ten. Let the fish swim free." : "Fill a line. Let the fish swim free.",
     clearedTitle: "A happier little reef",
     learningSkill: () => ({ skill: "num.make-ten", config: practice("math") }),
-    Board: p => <ReefBoard initial={createReef(p.level === "endless" ? p.level : reefLevel(p.level.id), p.seed, p.helper)} active={p.active} helper={p.helper} onResult={p.onResult} onTone={p.onTone} />,
+    Board: p => <ReefBoard width={p.width} height={p.height} initial={createReef(p.level === "endless" ? p.level : reefLevel(p.level.id), p.seed, p.helper)} active={p.active} helper={p.helper} onResult={p.onResult} onTone={p.onTone} />,
   },
   "shell-song": {
     fullBleed: true,
@@ -101,6 +102,7 @@ export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
     Board: p => <SongBoard width={p.width} height={p.height} initial={createSong(p.level === "endless" ? p.level : songLevel(p.level.id), p.seed, p.helper)} active={p.active} helper={p.helper} outfit={p.outfit} onResult={p.onResult} onTone={p.onTone} onSay={p.onSay} debug={p.debug} />,
   },
   "canoe-cargo": {
+    fullBleed: true,
     helperDetail: "Slower falling, one hold and fewer tide rows. Same stars.",
     Scene: p => <CargoScene world={p.world}/>,
     levels: cargoLevels,
@@ -113,7 +115,7 @@ export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
       const sum = cargoLevel(level.id).targetSum ?? 10;
       return { skill: `num.add-within-${sum <= 10 ? 10 : sum <= 20 ? 20 : 100}`, config: practice("math") };
     },
-    Board: p => <CargoBoard initial={createCargo(p.level === "endless" ? p.level : cargoLevel(p.level.id), p.seed, p.helper)} active={p.active} helper={p.helper} outfit={p.outfit} onResult={p.onResult} onTone={p.onTone} debug={p.debug} />,
+    Board: p => <CargoBoard width={p.width} height={p.height} initial={createCargo(p.level === "endless" ? p.level : cargoLevel(p.level.id), p.seed, p.helper)} active={p.active} helper={p.helper} outfit={p.outfit} onResult={p.onResult} onTone={p.onTone} debug={p.debug} />,
   },
   "fruit-bat-flight": {
     levels: flightLevels,

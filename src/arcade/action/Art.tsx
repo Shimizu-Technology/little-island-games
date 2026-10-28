@@ -27,8 +27,11 @@ export const palettes = {
   w1: ["#086D86", "#4FC7BF", "#FFE1A0"],
   w2: ["#3762A1", "#9BCFDF", "#F6C585"],
   w3: ["#192D68", "#8A7FC8", "#F0B98C"],
+  w4: ["#37665D", "#91BC9D", "#DDCA8B"],
+  w5: ["#564770", "#BA9AC3", "#E7B6AA"],
+  w6: ["#A16153", "#E6AC85", "#FFE1A0"],
   learn: ["#247A67", "#A8D9AB", "#FFE7A0"],
-};
+} satisfies Record<WorldId, [string, string, string]>;
 const star = "M0-9L3-3L10-2L5 3L6 10L0 7L-6 10L-5 3L-10-2L-3-3Z";
 function Outfit({ outfit }: { outfit: OutfitId }) {
   return outfit === "sunhat" ? (
@@ -205,7 +208,7 @@ export const Scene = memo(function Scene({
   width: number;
   height: number;
 }) {
-  const p = palettes[world === "w4" ? "w2" : world === "w5" || world === "w6" ? "w3" : world],
+  const p = palettes[world],
     id = useId().replace(/:/g, "");
   return (
     <Svg

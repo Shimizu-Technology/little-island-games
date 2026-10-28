@@ -50,10 +50,11 @@ function JsProbe() {
   const { snapshot } = useArcadeLoop({ initial, step, reduce: (s: State) => s, input: 0, active, onFrame: frame });
   return <View><Dots poses={poses}/><Report pipeline="JS fixed-step" samples={samples} score={snapshot.score} done={!active}/></View>;
 }
+function selectScore(s: State) { "worklet"; return { score: s.score }; }
 function UiProbe() {
   const { poses, samples, publish } = useProbe(), input = useSharedValue(0);
   const [done, setDone] = useState(false);
-  const { snapshot } = useArcadeUiLoop({ initial, step, result, input, active: !done, onFrame: publish, onResult: () => setDone(true) });
+  const { snapshot } = useArcadeUiLoop({ initial, step, result, select: selectScore, input, active: !done, onFrame: publish, onResult: () => setDone(true) });
   return <View><Dots poses={poses}/><Report pipeline="UI worklet fixed-step" samples={samples} score={snapshot.score} done={done}/></View>;
 }
 export function LoopSpike() {

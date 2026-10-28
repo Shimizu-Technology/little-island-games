@@ -1,6 +1,6 @@
 import { PlayButton, PressControl, uiThreadDrag } from "../../Input";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import Animated, { Easing, measure, runOnJS, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withSequence, withTiming, type AnimatedRef } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Rect, Stop } from "react-native-svg";
@@ -76,12 +76,13 @@ function ClearEffects({ state, cell, reduced }: { state: ReefState; cell: number
     {!!state.lastClear.length && <Animated.View style={[{ position: "absolute", left: Math.min(6 * cell, at % 8 * cell), top: Math.max(0, (Math.floor(at / 8) - 1) * cell) }, pop]}><Text style={{ color: "#244D60", backgroundColor: "#FFF4D9", borderRadius: 8, paddingHorizontal: 6, fontWeight: "900", fontSize: 18 }}>+{state.lastPoints}</Text></Animated.View>}
   </View>;
 }
-export function ReefBoard({ initial, active, helper, onResult, onTone }: { initial: ReefState; active: boolean; helper: boolean; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string) => void }) {
+export function ReefBoard({ initial, active, helper, onResult, onTone, width, height }: { width: number; height: number; initial: ReefState; active: boolean; helper: boolean; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string) => void }) {
   const { snapshot: s, dispatch, state } = useArcadeReducer(initial, reefTransition, active);
   const selection = useRef<number | null>(0);
   const [selected, setSelected] = useState<number | null>(0), [hover, setHover] = useState<{ row: number; col: number } | null>(null), board = useAnimatedRef<Animated.View>(), reported = useRef(false);
   const [bumped, setBumped] = useState(false);
-  const { width, height } = useWindowDimensions(), side = width > height && width >= 700;
+  // Kit v3: board dimensions come from the measured non-scrolling play arena.
+  const side = width > height && width >= 700;
   const size = Math.floor(Math.max(144, Math.min(640, width - (side ? 275 : 32), height - (side ? height < 500 ? 200 : 180 : helper ? 365 : 315)))), cell = size / 8;
   const reduced = useReducedMotion(), shake = useSharedValue(0), shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
   useEffect(() => { if (active && state.current.helper !== helper) dispatch({ type: "helper", value: helper }); }, [active, helper, dispatch, state]);

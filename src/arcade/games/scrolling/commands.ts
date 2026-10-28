@@ -1,6 +1,7 @@
 import { flightStep, flightTransition, type FlightInput, type FlightState } from "../fruit-bat-flight/engine";
 import { runStep, runTransition, type RunInput, type RunState } from "../lagoon-run/engine";
-export type Commands<I> = { helper: boolean; queue: { id: number; action: I }[] };
+import type { Commands } from "../../mailbox";
+export type { Commands } from "../../mailbox";
 /** A bounded command mailbox retains fast downs between frames, consumed exactly once on UI. */
 export function flightFrame(s: FlightState, input: Commands<FlightInput>, dt: number) {
   "worklet";

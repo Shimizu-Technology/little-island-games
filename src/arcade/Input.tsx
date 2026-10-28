@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { PanResponder, Platform, StyleSheet, type ViewProps } from "react-native";
-import { Gesture } from "react-native-gesture-handler";
-import type { SharedValue } from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { runOnJS, type SharedValue } from "react-native-reanimated";
+import { enqueueCommand, type Commands } from "./mailbox";
 import { Button, Copy, PressableScale } from "../components/ui";
 import { feel } from "../components/feel";
 import { swipeDirection, type Swipe } from "./clock";
@@ -71,4 +72,42 @@ export function multiTouchDrag(points: SharedValue<TouchPoints>) {
     .onTouchesUp((e, manager) => { "worklet"; const next = { ...points.value }; for (const t of e.changedTouches) delete next[t.id]; points.value = next; if (Object.keys(next).length === 0) manager.end(); })
     .onTouchesCancelled((_, manager) => { "worklet"; points.value = {}; manager.end(); })
     .onFinalize(() => { "worklet"; points.value = {}; });
+}
+
+/** Touch begins on UI; optional feedback is scheduled only after the mailbox write. */
+export function uiThreadTap<I>(mailbox: SharedValue<Commands<I>>, action: I, feedback?: () => void) {
+  return Gesture.Manual().onTouchesDown((_, manager) => {
+    "worklet";
+    manager.begin(); manager.activate();
+    mailbox.set(enqueueCommand(mailbox.value, action));
+    if (feedback) runOnJS(feedback)();
+  }).onTouchesUp((e, manager) => { "worklet"; if (e.allTouches.length === e.changedTouches.length) manager.end(); })
+    .onTouchesCancelled((_, manager) => { "worklet"; manager.fail(); });
+}
+/** One command at threshold crossing while the finger is still down. */
+export function uiThreadSwipe<I>(mailbox: SharedValue<Commands<I>>, actions: Record<Swipe, I>, fired: SharedValue<boolean>, threshold = 24, feedback?: (action: I) => void) {
+  return Gesture.Pan().minDistance(0).maxPointers(1).onBegin(e => {
+    "worklet"; fired.set(false);
+  }).onUpdate(e => {
+    "worklet";
+    if (fired.value) return;
+    const direction = swipeDirection(e.translationX, e.translationY, threshold);
+    if (direction) { fired.set(true); const action = actions[direction]; mailbox.set(enqueueCommand(mailbox.value, action)); if (feedback) runOnJS(feedback)(action); }
+  });
+}
+/** Hold state is UI-owned; release and cancellation use the same authoritative mailbox. */
+export function uiThreadHold<I>(mailbox: SharedValue<Commands<I>>, begin: I, release: I, feedback?: () => void) {
+  return uiThreadTap(mailbox, begin, feedback).onFinalize(() => {
+    "worklet"; mailbox.set(enqueueCommand(mailbox.value, release));
+  });
+}
+/** Native gesture touch path plus explicit keyboard/assistive activation on JS. */
+export function UiPlayTarget<I>({ mailbox, action, active, onFeedback, onAccessiblePress, children, ...props }: ViewProps & {
+  mailbox: SharedValue<Commands<I>>; action: I; active: boolean; onFeedback?: () => void; onAccessiblePress: () => void; children?: React.ReactNode;
+}) {
+  // The command's serializable value is stable even when callers construct an action literal.
+  const key = JSON.stringify(action);
+  const gesture = useMemo(() => uiThreadTap(mailbox, JSON.parse(key) as I, onFeedback).enabled(active), [mailbox, key, onFeedback, active]);
+  return <GestureDetector gesture={gesture} touchAction="none"><Animated.View {...props} collapsable={false} accessible accessibilityRole="button" accessibilityState={{ disabled: !active }} onAccessibilityTap={() => { if (active) onAccessiblePress(); }}
+    {...(Platform.OS === "web" ? { tabIndex: active ? 0 : -1, onKeyDown: (e: { key: string; repeat: boolean; preventDefault: () => void; stopPropagation: () => void }) => { if (active && !e.repeat && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); e.stopPropagation(); onAccessiblePress(); } } } : {})}>{children}</Animated.View></GestureDetector>;
 }

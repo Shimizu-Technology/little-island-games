@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, memo } from "react";
+import React, { useCallback, useEffect, useRef, memo, useMemo } from "react";
 import { View, Platform, type ViewStyle } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
@@ -66,7 +66,8 @@ export function RailBoard({
     reduced = useReducedMotion(),
     unit = (size - 6) / 10;
   const clearVisual = useRef<{ state: RailState | null; started: number }>({ state: null, started: 0 });
-  const onFrame = useCallback(
+  // Kit v3: render interpolation only; engine and authored art remain unchanged.
+  const build = useCallback(
     (s: RailState) => {
       let learningClearAge: number | undefined;
       if (railLearning(s) && s.phase === "cleared") {
@@ -77,13 +78,14 @@ export function RailBoard({
       const fraction = s.respawn > 0 || s.phase !== "play" ? 0 : s.elapsed / railTick(s),
         snake = railSnake(s, railLearning(s) ? 0 : fraction),
         body = railBodyPose(s, learningClearAge);
-      poses.set([
+      return [
         ...Array.from({ length: 40 }, (_, i) => {
           const p = body[i],
             prev = body[Math.max(0, i - 1)],
             next = body[i + 1] ?? p;
           const lean = p && prev && next ? (prev.x - next.x) * (prev.y - next.y) * 0.09 : 0;
           return {
+            identity: s.lives.hit,
             x: (p?.x ?? 0) * unit,
             y: (p?.y ?? 0) * unit,
             opacity: p ? 1 : 0,
@@ -101,16 +103,17 @@ export function RailBoard({
           y: (2 + i * 2) * unit + (reduced ? 0 : Math.cos((s.moves + s.elapsed) * 0.5 + i) * 6),
           opacity: 0.65,
         })),
-      ]);
+      ];
     },
-    [poses, reduced, unit]
+    [reduced, unit]
   );
+  const pose = useMemo(() => ({ build, target: poses, snapDistance: unit * 2 }), [build, poses, unit]);
   const {
       snapshot: s,
       dispatch,
       state,
       budget,
-    } = useArcadeLoop({ initial, step: railStep, reduce: railTransition, input: tick, active, onFrame }),
+    } = useArcadeLoop({ initial, step: railStep, reduce: railTransition, input: tick, active, pose }),
     reported = useRef(false),
     last = useRef({ collected: 0, bumps: 0 });
   useEffect(() => {
