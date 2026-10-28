@@ -1,5 +1,5 @@
-import { useAudioPlayer } from "expo-audio";
-import { useCallback, useEffect } from "react";
+import { createAudioPlayer, useAudioPlayer, type AudioPlayer } from "expo-audio";
+import { useCallback, useEffect, useState } from "react";
 import { useSoundControls } from "../components/Audio";
 import { feel } from "../components/feel";
 import type { Settings } from "../state/validation";
@@ -12,7 +12,11 @@ const tones: Record<string, number> = {
 };
 const musicSources = { reef: require("../../assets/arcade/reef-loop.wav"), song: require("../../assets/arcade/song-loop.wav") };
 export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolean, active: boolean, sheetOpen = false) {
-  const effects = useAudioPlayer(null), loop = useAudioPlayer(game === "shell-song" ? musicSources.song : musicSources.reef);
+  // One preloaded player per effect. Swapping sources with replace() reloads the asset on the
+  // main thread and stalled the frame on every flap/hop; rewinding a loaded player does not.
+  const [effects] = useState<Record<string, AudioPlayer>>(() => Object.fromEntries(Object.entries(tones).map(([key, source]) => [key, createAudioPlayer(source)])));
+  useEffect(() => () => { for (const player of Object.values(effects)) { try { player.remove(); } catch { /* Already released. */ } } }, [effects]);
+  const loop = useAudioPlayer(game === "shell-song" ? musicSources.song : musicSources.reef);
   const speech = useSoundControls(settings.sound && active);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/immutability -- SDK AudioPlayer properties intentionally mutate its native handle.
@@ -20,12 +24,13 @@ export function useArcadeAudio(game: ArcadeId, settings: Settings, music: boolea
     try { if (active && !sheetOpen && music && settings.sound) loop.play(); else loop.pause(); } catch { /* Browser playback may need the next touch. */ }
     return () => { try { loop.pause(); } catch { /* Unmounted player. */ } };
   }, [loop, music, settings.sound, active, sheetOpen]);
-  useEffect(() => { if (!active || sheetOpen || !settings.sound || settings.effects === false) { try { effects.pause(); } catch { /* Disposed player. */ } } }, [effects, settings.sound, settings.effects, active, sheetOpen]);
+  useEffect(() => { if (!active || sheetOpen || !settings.sound || settings.effects === false) { for (const player of Object.values(effects)) { try { player.pause(); } catch { /* Disposed player. */ } } } }, [effects, settings.sound, settings.effects, active, sheetOpen]);
   const tone = useCallback((key: string, haptic = true) => {
     if (!active || sheetOpen) return;
     if (haptic) feel(key === "clear" || key === "sticker" ? "success" : "select");
     if (!settings.sound || settings.effects === false || !tones[key]) return;
-    try { effects.replace(tones[key]); effects.play(); } catch { /* Visible feedback always accompanies a sound. */ }
+    const player = effects[key];
+    try { void player.seekTo(0); player.play(); } catch { /* Visible feedback always accompanies a sound. */ }
   }, [effects, settings.sound, settings.effects, active, sheetOpen]);
   const say = useCallback((key: string, automatic = false) => { const played = speech.play(key, automatic); return played; }, [speech]);
   return { tone, say, stop: speech.stop };

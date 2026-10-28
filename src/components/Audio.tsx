@@ -1,5 +1,5 @@
-import { useAudioPlayer, setAudioModeAsync } from "expo-audio";
-import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { createAudioPlayer, useAudioPlayer, setAudioModeAsync, type AudioPlayer } from "expo-audio";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AppState, Platform } from "react-native";
 import { sources as baseSources } from "../content/audioSources";
 import { learnSources } from "../content/learnAudio";
@@ -16,6 +16,10 @@ if (Platform.OS === "web" && typeof window !== "undefined")
   });
 export function useSoundControls(enabled: boolean) {
   const player = useAudioPlayer(null);
+  // Short feedback tones get their own preloaded players: replace() reloads an asset on the main
+  // thread and caused a visible stall on every tap. Spoken lines still share the narration player.
+  const [tonePlayers] = useState<Record<string, AudioPlayer>>(() => Object.fromEntries(Object.keys(toneFeel).filter(key => sources[key]).map(key => [key, createAudioPlayer(sources[key])])));
+  useEffect(() => () => { for (const p of Object.values(tonePlayers)) { try { p.remove(); } catch { /* Already released. */ } } }, [tonePlayers]);
   const prefs = useContext(AudioPreferences);
   const context = useMemo(() => ({ enabled, narration: prefs.narration ?? true, effects: prefs.effects ?? true, automatic: prefs.automaticSpeech ?? false, volume: prefs.narrationVolume ?? 0.75, voice: prefs.voice ?? "warm", epoch: prefs.epoch ?? 0 }), [enabled, prefs.narration, prefs.effects, prefs.automaticSpeech, prefs.narrationVolume, prefs.voice, prefs.epoch]);
   const live = useRef<typeof context | null>(context);
@@ -54,6 +58,12 @@ export function useSoundControls(enabled: boolean) {
       const source = tone ? sources[key] : (voiceSources[context.voice][key] ?? sources[key]);
       if (!source) return false;
       try {
+        if (tone && tonePlayers[key]) {
+          const effect = tonePlayers[key];
+          void effect.seekTo(0);
+          effect.play();
+          return true;
+        }
         // eslint-disable-next-line react-hooks/immutability -- Native AudioPlayer volume is set through this SDK property.
         player.volume = tone ? 1 : context.volume;
         player.replace(source);
@@ -64,7 +74,7 @@ export function useSoundControls(enabled: boolean) {
         return false;
       }
     },
-    [context, player]
+    [context, player, tonePlayers]
   );
   const stop = useCallback(() => { try { player.pause(); } catch { /* Player may already be disposed on route teardown. */ } }, [player]);
   return { play, stop, player };
