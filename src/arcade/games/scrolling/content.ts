@@ -19,7 +19,7 @@ export function levelsFor(game: ScrollGame): readonly ScrollLevel[] {
     const target = learn ? 3 + Math.floor((index - 1) / 3) : flight ? 12 + rank * 6 + Math.round((index - 1) * (rank === 5 ? 18 : 8) / 7) : 14 + rank * 5 + index - 1;
     const speed = learn ? .12 : flight ? .36 + rank * .034 + (index - 1) * .002 : .42 + rank * .038 + (index - 1) * .003;
     return { id, world, index, rank, target, speed,
-      spacing: learn ? .6 : flight ? .50 - rank * .01 : .64 - rank * .022,
+      spacing: learn ? .6 : flight ? .50 - rank * .01 : .72 - rank * .024,
       gap: learn ? .46 : .36 - rank * .023 - (index - 1) * .0015,
       storm: !learn && rank >= 3,
       name: learn ? ["Little sums", "Number trail", "Add together", "Bright answers", "Sums to twenty", "Take some away", "Number explorer", "Math adventurer"][index - 1] : game === "fruit-bat-flight" ? ["First flutter", "Fruit in the trees", "Follow the glow", "Palm pathways", "A little breeze", "Forest explorer", "Golden wings", "Home before sunrise"][index - 1] : ["To the water", "Crab dance", "Under the palms", "Fishing village", "Shell trail", "Around the bend", "Sea breeze", "Lagoon adventurer"][index - 1],
