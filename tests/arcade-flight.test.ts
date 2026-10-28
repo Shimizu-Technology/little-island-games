@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { arcadeTransition, emptyArcade, validArcade } from "../src/arcade/progress";
 import { createFlight as createWaitingFlight, flightGap, flightLearning, flightResult, flightStep, flightTransition, validFlight, type FlightState } from "../src/arcade/games/fruit-bat-flight/engine";
 import { fixtureInput } from "../src/arcade/games/lagoon-run/fixtures";
-import { createRun, rowSafe, runLearning, runResult, runStep, runTransition, validRun, type RunState } from "../src/arcade/games/lagoon-run/engine";
+import { createRun, rowSafe, runResult, runStep, runTransition, validRun, type RunState } from "../src/arcade/games/lagoon-run/engine";
 import { equation, flightLevels, mathGate, runLevels, validFact } from "../src/arcade/games/scrolling/content";
 import { flightFrame, runFrame } from "../src/arcade/games/scrolling/commands";
 import { projectTrack, trackSprite, roadEdge } from "../src/arcade/games/lagoon-run/camera";

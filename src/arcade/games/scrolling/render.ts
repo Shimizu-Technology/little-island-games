@@ -47,7 +47,7 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   for(let i=0;i<TEXTURE_COUNT;i++)p[TEXTURE_START+i]=groundTexturePose(s.travel,i);
   const next=s.rows.filter(r=>!r.passed).sort((a,b)=>b.z-a.z)[0];
   const move=next?.action==="idle"?4:next?.action==="jump"?1:2;
-  p[57]={x:140+(reduced?0:Math.sin(s.time*4)*5),y:558,opacity:!learn&&next&&next.z>.35&&!(s.learned&move)?1:0};
+  p[57]={x:140+(reduced?0:Math.sin(s.time*4)*5),y:558,opacity:!learn&&next&&next.z>.35&&(next.action!=="idle"||s.lane!==next.shellLane)&&!(s.learned&move)?1:0};
   const f=s.feedback/.45,scored=s.lastGain>0;
   p[56]={x:contact.x+42,y:396-(1-f)*25,opacity:scored&&s.cue!=="shell"?f:0};
   if(s.cue==="bump"&&!reduced)for(let i=0;i<6;i++){const a=i*Math.PI/3;p[26+i]={x:contact.x+Math.cos(a)*(1-f)*50,y:contact.y-60+Math.sin(a)*(1-f)*50,opacity:f};}

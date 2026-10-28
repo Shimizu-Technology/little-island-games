@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { HAZARDS, RUN_CHUNKS, validateChunkSequence } from '../src/arcade/games/lagoon-run/course';
 import { collectPower, createRun, jumpHeight, rowSafe, runResult, runStep, runTransition, surfaceHeight, validRun, type RunState } from '../src/arcade/games/lagoon-run/engine';
 import { runFixture } from '../src/arcade/games/lagoon-run/fixtures';
+import { runPoses } from '../src/arcade/games/scrolling/render';
 import { runLevels } from '../src/arcade/games/scrolling/content';
 const idle = {type:'idle'} as const, dt=1/60;
 function ticks(s:RunState,n:number){for(let i=0;i<n;i++)s=runStep(s,idle,dt);return s;}
@@ -25,6 +26,15 @@ describe('Lagoon Run v4 course contract',()=>{
   it('survives seeded endless courses and keeps bounded validated state',()=>{
     for(let seed=1;seed<=24;seed++){const f=runFixture('endless',seed,false,18000);expect(f.state.bumps,`seed ${seed}`).toBe(0);expect(f.state.passed).toBeGreaterThan(200);expect(validRun(f.state)).toBe(true);}
   },20000);
+  it('keeps authored contact spacing when moving canoes and coconuts approach faster',()=>{
+    let s=createRun(runLevels[6],771);const contacts:number[]=[];
+    for(let i=0;i<5000&&contacts.length<12;i++){
+      const before=s.rows.filter(r=>!r.passed).sort((a,b)=>b.z-a.z)[0];
+      s=runStep({...s,protection:1.2},{type:'idle'},dt);
+      if(before&&!before.passed&&s.rows.some(r=>r.serial===before.serial&&r.passed))contacts.push(s.time);
+    }
+    for(let i=1;i<contacts.length;i++)expect(contacts[i]-contacts[i-1]).toBeGreaterThanOrEqual(.67);
+  });
   it('uses the catalogue for every collision silhouette',()=>{
     const base=createRun(runLevels[0],1),row={...base.rows[0],lane:1,second:-1,third:false,surface:'sand' as const};
     for(const [kind,action] of Object.entries(HAZARDS)) {
@@ -69,9 +79,16 @@ describe('Lagoon Run v4 course contract',()=>{
     let powers=collectPower(collectPower(createRun(runLevels[0],1),'magnet'),'sandals');
     powers=ticks({...powers,magnet:.05,sandals:.05},4);expect(powers.magnet).toBe(0);expect(powers.sandals).toBe(0);
   });
+  it('only teaches steering when the current lane needs to change, then retires the hint',()=>{
+    const base=createRun(runLevels[1],1),s={...base,rows:base.rows.map((r,i)=>({...r,z:i===0?.6:r.z}))};
+    expect(runPoses(s)[57].opacity).toBe(0);
+    const blocked={...s,lane:0,poseLane:0,laneFrom:0};expect(runPoses(blocked)[57].opacity).toBe(1);
+    expect(runPoses(runTransition(blocked,{type:'right'}))[57].opacity).toBe(0);
+  });
   it('rejects malformed powers and layers; keeps input immutable and does not persist runtime',()=>{
     const s=createRun(runLevels[0],1),raw=JSON.stringify(s);expect(validRun(s)).toBe(true);runStep(s,idle,dt);expect(JSON.stringify(s)).toBe(raw);
     for(const patch of [{magnet:NaN},{kite:7},{shield:1},{elevation:Infinity},{learned:8},{serial:-1},{jumpDuration:0},{extra:1}])expect(validRun({...s,...patch})).toBe(false);
+    expect(validRun({...s,rows:s.rows.map((r,i)=>i?r:{...r,chunk:'invented'})})).toBe(false);
     expect(runResult(s)).toBeNull();
   });
 });
