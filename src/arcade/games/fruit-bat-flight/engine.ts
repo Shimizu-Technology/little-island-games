@@ -1,6 +1,7 @@
 import { nextRandom, type ArcadeEngine, type ArcadeResult } from "../../types";
 import { configureLives, createLives, hitLives, stepLives, validLives, type Lives } from "../../lives";
 import { canonicalLevel, finite, flightLevels, mathGate, record, uint, validFact, type MathGate, type ScrollLevel } from "../scrolling/content";
+import { batAngle, batExtentX, batExtentY, batTouchesGate, CEILING, GROUND, FLIGHT_H, FLIGHT_W, TRUNK_HALF } from "./hull";
 export { flightLevels, flightLevel } from "../scrolling/content";
 export type FlightInput = { type: "flap" | "idle" | "finish" } | { type: "helper"; value: boolean };
 export type PalmGate = { x: number; center: number; base: number; phase: number; fruit: boolean; passed: boolean; fact: MathGate };
@@ -62,19 +63,20 @@ export function flightStep(before: FlightState, _input: FlightInput, dt: number)
   const distance = flightSpeed(s) * dt; s.travel += distance;
   s.gates = s.gates.map(g => ({ ...g, x: g.x - distance, center: g.base + (!learn && rank >= 2 ? Math.sin(s.time * (rank >= 4 ? 1.8 : 1.2) + g.phase) * (rank >= 4 ? .035 : .025) : 0) }));
   const next = s.gates.filter(g => !g.passed && g.x >= PLAYER_X - .06).sort((a, b) => a.x - b.x)[0];
-  if (s.y < .035 || s.y > .965) {
+  const extent = batExtentY(batAngle(s.vy));
+  if (s.y * FLIGHT_H - extent <= CEILING || s.y * FLIGHT_H + extent >= GROUND) {
     if (!s.lives.invulnerable && !s.cooldown) s = bump(s, next?.center ?? .5);
-    else { s.y = Math.max(.04, Math.min(.96, s.y)); s.vy = -.18; }
+    else { s.y = Math.max((CEILING + extent) / FLIGHT_H, Math.min((GROUND - extent) / FLIGHT_H, s.y)); s.vy = -.18; }
     if (s.status !== "playing") return s;
   }
   for (let i = 0; i < s.gates.length; i++) {
     let g = s.gates[i]; if (g.passed) continue;
-    // Palm art is .11W wide; solid trunk/fronds use the inner .075W hull plus bat body.
-    if (!learn && Math.abs(g.x - PLAYER_X) < .062 && Math.abs(s.y - g.center) > flightGap(s) / 2 - .025 && !s.lives.invulnerable) {
+    // One torso ellipse for palms, gap edges and both arena boundaries.
+    if (!learn && batTouchesGate(s.y, s.vy, g.x, g.center, flightGap(s)) && !s.lives.invulnerable) {
       s = bump(s, g.center); g = { ...g, passed: true, fruit: false }; s.gates[i] = g;
       if (s.status !== "playing") return s;
     }
-    if (g.x <= PLAYER_X - .065 && !g.passed) {
+    if (g.x <= PLAYER_X - (learn ? .065 : (TRUNK_HALF + batExtentX(batAngle(s.vy))) / FLIGHT_W) && !g.passed) {
       const choice = Math.min(2, Math.max(0, Math.round((s.y - .24) / .26)));
       if (learn && g.fact.choices[choice] !== g.fact.answer) {
         s = bump(s, .5, true); const spacing = s.level === "endless" ? .6 : s.level.spacing;

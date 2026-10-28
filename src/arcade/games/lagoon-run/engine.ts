@@ -4,7 +4,7 @@ import { canonicalLevel, finite, mathGate, record, runLevels, uint, validFact, t
 export { runLevels, runLevel } from "../scrolling/content";
 export type RunInput = { type: "left" | "right" | "jump" | "duck" | "idle" | "finish" } | { type: "lane"; lane: number } | { type: "helper"; value: boolean };
 export type HazardKind = "coconut" | "crab" | "frond" | "line";
-export type TrailRow = { z: number; lane: number; second: number; shellLane: number; kind: HazardKind; secondKind: HazardKind; moving: boolean; crossing: boolean; third: boolean; phase: number; passed: boolean; fact: MathGate };
+export type TrailRow = { z: number; lane: number; second: number; shellLane: number; kind: HazardKind; secondKind: HazardKind; moving: boolean; crossing: boolean; third: boolean; phase: number; passed: boolean; shellDone: number; shellTaken: number; bursts: number[]; fact: MathGate };
 export type RunState = { level: ScrollLevel | "endless"; seed: number; helper: boolean; lane: number; poseLane: number; laneFrom: number; laneTime: number; jump: number; duck: number; landing: number; time: number; travel: number; cooldown: number; rows: TrailRow[]; passed: number; shells: number; score: number; lastGain: number; bumps: number; status: "playing" | "cleared" | "stumbled" | "rest"; event: number; cue: "ready" | "step" | "jump" | "duck" | "shell" | "bump" | "answer" | "try"; feedback: number; helped: boolean; lives: Lives; command: number };
 export const JUMP_SECONDS = .55, SLIDE_SECONDS = .6, LANE_SECONDS = .12;
 export function runLearning(s: RunState) { "worklet"; return s.level !== "endless" && s.level.world === "learn"; }
@@ -17,7 +17,7 @@ function newRow(s: RunState, z: number, serial: number): { seed: number; row: Tr
   const kinds: HazardKind[] = rank === 0 ? ["coconut"] : rank === 1 ? ["coconut", "frond"] : ["coconut", "frond", "crab", "line"];
   const kind = kinds[serial % kinds.length], fact = mathGate(seed, s.level === "endless" ? 8 : s.level.index);
   const two = !learn && serial >= 3 && (rank >= 3 || serial % 3 === 0);
-  return { seed: fact.seed, row: { z, lane, second: two ? 3 - lane - shellLane : -1, shellLane, kind, secondKind: rank >= 3 ? kind === "frond" || kind === "line" ? "coconut" : "frond" : kind, moving: !learn && rank >= 2 && kind === "crab", crossing: rank >= 4 && two && Math.abs((3 - lane - shellLane) - lane) === 1, third: !learn && rank >= 5 && serial % 4 === 3, phase: n * Math.PI * 2, passed: false, fact: fact.fact } };
+  return { seed: fact.seed, row: { z, lane, second: two ? 3 - lane - shellLane : -1, shellLane, kind, secondKind: rank >= 3 ? kind === "frond" || kind === "line" ? "coconut" : "frond" : kind, moving: !learn && rank >= 2 && kind === "crab", crossing: rank >= 4 && two && Math.abs((3 - lane - shellLane) - lane) === 1, third: !learn && rank >= 5 && serial % 4 === 3, phase: n * Math.PI * 2, passed: false, shellDone: 0, shellTaken: 0, bursts: [0, 0, 0], fact: fact.fact } };
 }
 export function createRun(level: RunState["level"], seed: number, helper = false): RunState {
   let s: RunState = { level, seed: seed >>> 0, helper, lane: 1, poseLane: 1, laneFrom: 1, laneTime: 0, jump: 0, duck: 0, landing: 0, time: 0, travel: 0, cooldown: 0, rows: [], passed: 0, shells: 0, score: 0, lastGain: 0, bumps: 0, status: "playing", event: 0, cue: "ready", feedback: 0, helped: helper, lives: createLives(helper), command: 0 };
@@ -59,9 +59,19 @@ export function runStep(before: RunState, _input: RunInput, dt: number): RunStat
   const laneTime = Math.max(0, before.laneTime - dt), t = 1 - laneTime / LANE_SECONDS;
   let s: RunState = { ...before, lives: stepLives(before.lives, dt), time: before.time + dt, laneTime, poseLane: before.laneFrom + (before.lane - before.laneFrom) * (1 - (1 - t) ** 3), jump: Math.max(0, before.jump - dt), duck: Math.max(0, before.duck - dt), landing: before.jump > 0 && before.jump <= dt ? .13 : Math.max(0, before.landing - dt), cooldown: Math.max(0, before.cooldown - dt), feedback: Math.max(0, before.feedback - dt) };
   const distance = runSpeed(s) * dt; s.travel += distance;
-  s.rows = s.rows.map(row => ({ ...row, z: row.z + distance }));
+  s.rows = s.rows.map(row => ({ ...row, z: row.z + distance, bursts: row.bursts.map(t => Math.max(0, t - dt)) }));
   for (let i = 0; i < s.rows.length; i++) {
-    const row = s.rows[i]; if (row.passed || row.z < 1) continue;
+    let row = s.rows[i];
+    if (!runLearning(s)) for (let c = 0; c < 3; c++) {
+      const bit = 1 << c;
+      if (!(row.shellDone & bit) && row.z + c * .07 >= 1) {
+        const collected = Math.abs(s.poseLane - row.shellLane) < .35;
+        row = { ...row, shellDone: row.shellDone | bit, shellTaken: row.shellTaken | (collected ? bit : 0), bursts: row.bursts.map((t, j) => j === c && collected ? .26 : t) };
+        if (collected) s = { ...s, shells: s.shells + 1, score: Math.min(99999999, s.score + 10), lastGain: 10, event: s.event + 1, cue: "shell", feedback: .45 };
+      }
+    }
+    s.rows[i] = row;
+    if (row.passed || row.z < 1) continue;
     const learn = runLearning(s), safe = rowSafe(s, row);
     if (!safe && learn) {
       s = { ...s, bumps: s.bumps + 1, helped: true, event: s.event + 1, cue: "try", feedback: .45 };
@@ -72,8 +82,8 @@ export function runStep(before: RunState, _input: RunInput, dt: number): RunStat
       const lives = hitLives(s.lives);
       s = { ...s, lives, lastGain: 0, bumps: s.bumps + 1, cooldown: .3, jump: 0, duck: 0, status: lives.hearts ? "playing" : "stumbled", event: s.event + 1, cue: "bump", feedback: .45 };
     } else if (safe) {
-      const shell = learn || Math.abs(s.poseLane - row.shellLane) < .35;
-      s = { ...s, passed: s.passed + 1, shells: s.shells + (shell ? 3 : 0), score: Math.min(99999999, s.score + 10 + (shell ? 30 : 0)), lastGain: shell ? 40 : 10, event: s.event + 1, cue: learn ? "answer" : "shell", feedback: .45 };
+      const shell = learn;
+      s = { ...s, passed: s.passed + 1, shells: s.shells + (shell ? 3 : 0), score: Math.min(99999999, s.score + 10 + (shell ? 30 : 0)), lastGain: shell ? 40 : 10, event: s.event + 1, cue: learn ? "answer" : "step", feedback: .45 };
     }
     s.rows[i] = { ...row, passed: true };
     if (s.status !== "playing") return s;
@@ -95,6 +105,6 @@ export function runResult(s: RunState): ArcadeResult | null {
 export function validRun(v: unknown): v is RunState {
   if (!record(v) || !canonicalLevel(v.level, runLevels) || !uint(v.seed, 0xffffffff) || typeof v.helper !== "boolean" || typeof v.helped !== "boolean" || !validLives(v.lives) || !uint(v.command) || !uint(v.lane, 2) || !finite(v.poseLane, 0, 2) || !finite(v.laneFrom, 0, 2) || !finite(v.laneTime, 0, LANE_SECONDS) || !finite(v.landing, 0, .13) || !Array.isArray(v.rows) || v.rows.length !== 5) return false;
   const keys = "level,seed,helper,lane,poseLane,laneFrom,laneTime,jump,duck,landing,time,travel,cooldown,rows,passed,shells,score,lastGain,bumps,status,event,cue,feedback,helped,lives,command".split(",");
-  return Object.keys(v).length === keys.length && Object.keys(v).every(k => keys.includes(k)) && [v.time, v.travel].every(n => finite(n, 0, 1e10)) && finite(v.jump, 0, JUMP_SECONDS) && finite(v.duck, 0, SLIDE_SECONDS) && [v.cooldown, v.feedback].every(n => finite(n, 0, 1.2)) && [v.passed, v.shells, v.score, v.lastGain, v.bumps, v.event].every(n => uint(n)) && (v.shells as number) <= (v.passed as number) * 3 && (runLearning(v as RunState) || v.bumps === v.lives.hit) && (v.status === "stumbled" ? v.lives.hearts === 0 : v.lives.hearts > 0) && ["playing", "cleared", "stumbled", "rest"].includes(v.status as string) && ["ready", "step", "jump", "duck", "shell", "bump", "answer", "try"].includes(v.cue as string) && v.rows.every(row => record(row) && Object.keys(row).length === 12 && finite(row.z, -4, 1.3) && uint(row.lane, 2) && uint(row.shellLane, 2) && Number.isInteger(row.second) && finite(row.second, -1, 2) && row.lane !== row.shellLane && row.second !== row.shellLane && row.second !== row.lane && typeof row.passed === "boolean" && typeof row.moving === "boolean" && typeof row.crossing === "boolean" && typeof row.third === "boolean" && finite(row.phase, 0, Math.PI * 2) && ["coconut", "crab", "frond", "line"].includes(row.kind as string) && ["coconut", "crab", "frond", "line"].includes(row.secondKind as string) && validFact(row.fact));
+  return Object.keys(v).length === keys.length && Object.keys(v).every(k => keys.includes(k)) && [v.time, v.travel].every(n => finite(n, 0, 1e10)) && finite(v.jump, 0, JUMP_SECONDS) && finite(v.duck, 0, SLIDE_SECONDS) && [v.cooldown, v.feedback].every(n => finite(n, 0, 1.2)) && [v.passed, v.shells, v.score, v.lastGain, v.bumps, v.event].every(n => uint(n)) && (v.shells as number) <= ((v.passed as number) + 5) * 3 && (runLearning(v as RunState) || v.bumps === v.lives.hit) && (v.status === "stumbled" ? v.lives.hearts === 0 : v.lives.hearts > 0) && ["playing", "cleared", "stumbled", "rest"].includes(v.status as string) && ["ready", "step", "jump", "duck", "shell", "bump", "answer", "try"].includes(v.cue as string) && v.rows.every(row => record(row) && Object.keys(row).length === 15 && uint(row.shellDone, 7) && uint(row.shellTaken, 7) && ((row.shellTaken as number) & ~(row.shellDone as number)) === 0 && Array.isArray(row.bursts) && row.bursts.length === 3 && row.bursts.every(t => finite(t, 0, .26)) && finite(row.z, -4, 1.3) && uint(row.lane, 2) && uint(row.shellLane, 2) && Number.isInteger(row.second) && finite(row.second, -1, 2) && row.lane !== row.shellLane && row.second !== row.shellLane && row.second !== row.lane && typeof row.passed === "boolean" && typeof row.moving === "boolean" && typeof row.crossing === "boolean" && typeof row.third === "boolean" && finite(row.phase, 0, Math.PI * 2) && ["coconut", "crab", "frond", "line"].includes(row.kind as string) && ["coconut", "crab", "frond", "line"].includes(row.secondKind as string) && validFact(row.fact));
 }
 export const runEngine: ArcadeEngine<RunState, RunInput, ScrollLevel> = { create: createRun, reduce: runTransition, step: runStep, result: runResult, validate: validRun };
