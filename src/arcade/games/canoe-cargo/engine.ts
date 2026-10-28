@@ -6,7 +6,7 @@ export const cargoKinds = ["crate", "coconut", "fish", "taro"] as const;
 export type CargoKind = typeof cargoKinds[number];
 export type CargoCell = { kind: CargoKind; value: number; stuck: boolean };
 export type Point = readonly [number, number];
-/** Seven four-parcel bundles. Coordinates are row, column; rotations stay normalized. */
+/** Seven four-parcel bundles. Coordinates are row, column; public cell coordinates stay normalized; rotation retains the fixed pivot below. */
 export const cargoShapes: readonly (readonly Point[])[] = [
   [[0, 0], [0, 1], [0, 2], [0, 3]], [[0, 0], [0, 1], [1, 0], [1, 1]],
   [[0, 1], [1, 0], [1, 1], [1, 2]], [[0, 0], [1, 0], [1, 1], [1, 2]],
@@ -51,13 +51,39 @@ export function drawCargo(seed: number, bag: number[], targetSum = 0): { seed: n
   [seed, n] = nextRandom(seed);
   return { seed, bag: remaining, piece: { shape, turn: 0, kind, value: targetSum ? 1 + Math.floor(n * 3) : 1 } };
 }
-export function pieceCells(piece: CargoPiece): Point[] {
-  let cells = cargoShapes[piece.shape].map(([r, c]) => [r, c] as Point);
-  for (let turn = 0; turn < piece.turn; turn++) { const h = Math.max(...cells.map(p => p[0])); cells = cells.map(([r, c]) => [c, h - r]); }
+/** SRS-sized rotation boxes: I pivots at (1.5, 1.5), others at (1, 1); O is fixed.
+ * Normalize only at the API boundary so the existing authored packing coordinates stay valid.
+ */
+function rotationCells(piece: CargoPiece): Point[] {
+  let cells = cargoShapes[piece.shape].map(([r, c]) => [r + (piece.shape === 0 ? 1 : 0), c] as Point);
+  if (piece.shape === 1) return cells;
+  const edge = piece.shape === 0 ? 3 : 2;
+  for (let turn = 0; turn < piece.turn; turn++) cells = cells.map(([r, c]) => [c, edge - r]);
   return cells;
 }
+function rotationOrigin(piece: CargoPiece): Point {
+  const cells = rotationCells(piece);
+  return [Math.min(...cells.map(p => p[0])), Math.min(...cells.map(p => p[1]))];
+}
+export function pieceCells(piece: CargoPiece): Point[] {
+  const [row, col] = rotationOrigin(piece);
+  return rotationCells(piece).map(([r, c]) => [r - row, c - col]);
+}
+// Clockwise wall/floor kicks, in row-down / column-right coordinates. Test in order.
+export const CARGO_KICKS: readonly (readonly Point[])[] = [
+  [[0, 0], [0, -1], [-1, -1], [2, 0], [2, -1]],
+  [[0, 0], [0, 1], [1, 1], [-2, 0], [-2, 1]],
+  [[0, 0], [0, 1], [-1, 1], [2, 0], [2, 1]],
+  [[0, 0], [0, -1], [1, -1], [-2, 0], [-2, -1]],
+];
+export const CARGO_I_KICKS: readonly (readonly Point[])[] = [
+  [[0, 0], [0, -2], [0, 1], [1, -2], [-2, 1]],
+  [[0, 0], [0, -1], [0, 2], [-2, -1], [1, 2]],
+  [[0, 0], [0, 2], [0, -1], [-1, 2], [2, -1]],
+  [[0, 0], [0, 1], [0, -2], [2, 1], [-1, -2]],
+];
 export function fits(s: Pick<CargoState, "board">, piece: CargoPiece, row: number, col: number): boolean {
-  return pieceCells(piece).every(([r, c]) => row + r >= 0 && row + r < ROWS && col + c >= 0 && col + c < COLS && !s.board[(row + r) * COLS + col + c]);
+  return pieceCells(piece).every(([r, c]) => row + r >= -3 && row + r < ROWS && col + c >= 0 && col + c < COLS && (row + r < 0 || !s.board[(row + r) * COLS + col + c]));
 }
 export function landingRow(s: CargoState): number { let row = s.row; while (fits(s, s.piece, row + 1, s.col)) row++; return row; }
 export const cargoGoalValue = (s: CargoState) => s.level === "endless" || s.level.goal === "score" ? s.score : s.level.goal === "crates" ? s.freed : s.canoes;
@@ -73,12 +99,13 @@ export function createCargo(level: CargoLevel | "endless", seed: number, helper:
 }
 function spawn(s: CargoState): CargoState {
   const reset = { row: 0, col: 3, clock: 0, grounded: 0, resets: 0 };
-  if (s.held) { const next = { ...s, ...reset, piece: s.held, held: null }; return fits(next, next.piece, 0, 3) ? next : { ...next, status: "over" }; }
   const drawn = drawCargo(s.seed, s.bag, s.level === "endless" ? 0 : s.level.targetSum);
   const next: CargoState = { ...s, ...reset, seed: drawn.seed, bag: drawn.bag, piece: s.next[0], next: [s.next[1], drawn.piece] };
   return fits(next, next.piece, 0, 3) ? next : { ...next, status: "over" };
 }
 function lock(s: CargoState): CargoState {
+  // Rotation may use the three hidden ceiling rows; locking above the hold is top-out.
+  if (pieceCells(s.piece).some(([r]) => s.row + r < 0)) return { ...s, status: "over", soft: false };
   const board = s.board.slice();
   pieceCells(s.piece).forEach(([r, c]) => { board[(s.row + r) * COLS + s.col + c] = { kind: s.piece.kind, value: s.piece.value, stuck: false }; });
   const lastRows: number[] = []; let freed = 0, bonus = 0, missed = false;
@@ -102,7 +129,7 @@ function lock(s: CargoState): CargoState {
     const gap = tide === "shift" ? (Math.floor(next.loads / cadence) * 2) % (COLS - width + 1) : Math.floor(r * (COLS - width + 1));
     next = { ...next, seed, board: [...next.board.slice(COLS), ...Array.from({ length: COLS }, (_, c) => c >= gap && c < gap + width ? null : { kind: "crate" as const, value: 1, stuck: true })] };
   }
-  return spawn(next);
+  return spawn({ ...next, holdUsed: false });
 }
 function moved(s: CargoState, next: CargoState): CargoState {
   // Reset only a successful grounded action, including a kick off a ledge. Failed moves cannot stall a lock.
@@ -115,9 +142,9 @@ export function cargoTransition(s: CargoState, input: CargoInput): CargoState {
   if (input.type === "soft") return typeof input.value === "boolean" ? input.value === s.soft ? s : { ...s, soft: input.value, clock: 0 } : s;
   if (input.type === "finish") return s.level === "endless" ? { ...s, status: "finished" } : s;
   if (input.type === "hold") {
-    if (!s.helper || s.holdUsed) return s;
-    const next = spawn(s);
-    return { ...next, held: s.piece, holdUsed: true };
+    if (s.holdUsed) return s;
+    const next: CargoState = s.held ? { ...s, piece: { ...s.held, turn: 0 }, row: 0, col: 3, clock: 0, grounded: 0, resets: 0 } : spawn(s);
+    return { ...next, held: { ...s.piece, turn: 0 }, holdUsed: true, status: fits(next, next.piece, 0, 3) ? "playing" : "over" };
   }
   if (input.type === "drop") {
     const row = landingRow(s), cells = pieceCells(s.piece).map(([r, c]) => (s.row + r) * COLS + s.col + c);
@@ -130,7 +157,12 @@ export function cargoTransition(s: CargoState, input: CargoInput): CargoState {
   }
   if (input.type === "rotate") {
     const piece = { ...s.piece, turn: (s.piece.turn + 1) % 4 };
-    for (const kick of [0, -1, 1, -2, 2]) if (fits(s, piece, s.row, s.col + kick)) return moved(s, { ...s, piece, col: s.col + kick });
+    const [oldR, oldC] = rotationOrigin(s.piece), [newR, newC] = rotationOrigin(piece);
+    const kicks = s.piece.shape === 1 ? [[0, 0] as Point] : (s.piece.shape === 0 ? CARGO_I_KICKS : CARGO_KICKS)[s.piece.turn];
+    for (const [dr, dc] of kicks) {
+      const row = s.row + newR - oldR + dr, col = s.col + newC - oldC + dc;
+      if (fits(s, piece, row, col)) return moved(s, { ...s, piece, row, col });
+    }
     return { ...s, bump: s.bump + 1 };
   }
   return s;
@@ -167,9 +199,9 @@ export function validCargo(v: unknown): v is CargoState {
   if (!exact(v, ["version", "level", "seed", "helper", "board", "piece", "next", "bag", "held", "holdUsed", "row", "col", "clock", "grounded", "resets", "soft", "elapsed", "loads", "lines", "canoes", "freed", "score", "combo", "status", "event", "lastRows", "lastBonus", "lastPoints", "bump", "lastDrop"]) || v.version !== 2 || typeof v.helper !== "boolean" || typeof v.soft !== "boolean" || typeof v.holdUsed !== "boolean" || !uint(v.seed, 0xffffffff)) return false;
   if (v.level !== "endless" && !cargoLevels.some(l => JSON.stringify(l) === JSON.stringify(v.level))) return false;
   if (!Array.isArray(v.board) || v.board.length !== COLS * ROWS || !v.board.every(c => c === null || (exact(c, ["kind", "value", "stuck"]) && cargoKinds.includes(c.kind as CargoKind) && uint(c.value, 3) && c.value >= 1 && typeof c.stuck === "boolean"))) return false;
-  if (!validPiece(v.piece) || !Array.isArray(v.next) || v.next.length !== 2 || !v.next.every(validPiece) || !(v.held === null || validPiece(v.held)) || (v.held !== null && !v.holdUsed) || !Array.isArray(v.bag) || v.bag.length > 6 || new Set(v.bag).size !== v.bag.length || !v.bag.every(n => uint(n, 6))) return false;
-  if (!["loads", "lines", "canoes", "freed", "score", "combo", "event", "lastBonus", "lastPoints", "bump"].every(k => uint(v[k])) || !uint(v.row, ROWS - 1) || !uint(v.col, COLS - 1) || !finite(v.clock, 1) || !finite(v.grounded, LOCK_DELAY + .1) || !uint(v.resets, MAX_LOCK_RESETS) || !finite(v.elapsed, 99999999)) return false;
-  if (v.lastDrop !== null && (!exact(v.lastDrop, ["cells", "distance"]) || !uint(v.lastDrop.distance, ROWS - 1) || !Array.isArray(v.lastDrop.cells) || v.lastDrop.cells.length !== 4 || new Set(v.lastDrop.cells).size !== 4 || !v.lastDrop.cells.every(n => uint(n, COLS * ROWS - 1)))) return false;
+  if (!validPiece(v.piece) || !Array.isArray(v.next) || v.next.length !== 2 || !v.next.every(validPiece) || !(v.held === null || validPiece(v.held)) || !Array.isArray(v.bag) || v.bag.length > 6 || new Set(v.bag).size !== v.bag.length || !v.bag.every(n => uint(n, 6))) return false;
+  if (!["loads", "lines", "canoes", "freed", "score", "combo", "event", "lastBonus", "lastPoints", "bump"].every(k => uint(v[k])) || !(typeof v.row === "number" && Number.isInteger(v.row) && v.row >= -3 && v.row < ROWS) || !uint(v.col, COLS - 1) || !finite(v.clock, 1) || !finite(v.grounded, LOCK_DELAY + .1) || !uint(v.resets, MAX_LOCK_RESETS) || !finite(v.elapsed, 99999999)) return false;
+  if (v.lastDrop !== null && (!exact(v.lastDrop, ["cells", "distance"]) || !uint(v.lastDrop.distance, ROWS + 2) || !Array.isArray(v.lastDrop.cells) || v.lastDrop.cells.length !== 4 || new Set(v.lastDrop.cells).size !== 4 || !v.lastDrop.cells.every(n => typeof n === "number" && Number.isInteger(n) && n >= -3 * COLS && n < COLS * ROWS))) return false;
   if (!["playing", "cleared", "over", "finished"].includes(v.status as string) || !Array.isArray(v.lastRows) || v.lastRows.length > 4 || new Set(v.lastRows).size !== v.lastRows.length || !v.lastRows.every(r => uint(r, ROWS - 1))) return false;
   const s = v as CargoState;
   return s.event === s.loads && s.lines <= s.loads * 4 && s.canoes >= s.lines && s.canoes <= s.lines * 2 && s.lastBonus <= s.lastRows.length && s.combo <= s.loads && (s.status !== "playing" || fits(s, s.piece, s.row, s.col)) && (s.status !== "cleared" || (s.level !== "endless" && cargoGoalValue(s) >= s.level.target)) && (s.status !== "finished" || s.level === "endless");

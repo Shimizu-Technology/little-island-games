@@ -52,3 +52,9 @@ Evidence:
   - a 120 Hz check: confirm the Info.plist key is in the built app, and that the frame callback reports a refresh rate above 60 on supported hardware;
   - review, then 1.9.1 (16).
 - **Ask Leon** for an iPhone screen recording of Flight and Run after the update. That's the only real-device evidence we have.
+
+## Puzzle v3 implementation receipt
+
+`feat/feel3-puzzle`, based on `7e696e0`: Cargo has tap-to-turn, continuous grabbed-offset horizontal drag, held slow-pull soft drop, velocity/displacement-qualified one-shot flick drop, visible per-piece Hold and stable pivots with ordered I/other-piece wall/floor kicks. Cell art is square and consistent, with an active bundle boundary and quieter landing ghost. Reef retains each tray piece's appearance per cell in a validated version-2 runtime state, with a non-mutating strict legacy migration. Both play entries use `fullBleed: true` and pass measured arena dimensions into layouts; the shared loops/input files and other game slices are untouched.
+
+The existing 112 fixture actions, scores, lines and three-star pars are unchanged. Engine/unit and recorded browser acceptance, build hashes, inspected frame sequences, gate logs, limits and resource cleanup are recorded in `little-island-games-artifacts/island-arcade/feel3-puzzle/REPORT.md`. Native/physical touch and family acceptance remain with the lead; this worker does not publish or create a PR.

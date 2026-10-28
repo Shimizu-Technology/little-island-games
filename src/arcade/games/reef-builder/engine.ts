@@ -1,7 +1,7 @@
 import { allLevelIds, levelNumber, nextRandom, worldOf, type ArcadeEngine, type ArcadeLevel, type ArcadeResult, type LevelId } from "../../types";
 export type ReefLevel = ArcadeLevel & { goal: "lines" | "fish" | "score"; target: number; greatMoves: number; goodMoves: number; startingRows: number; complexity: number; rocks: number[]; targetSum?: number };
 export type CoralPiece = { cells: readonly (readonly [number, number])[]; value: number; color: number };
-export type ReefState = { level: ReefLevel | "endless"; board: number[]; fish: number[]; pieces: (CoralPiece | null)[]; seed: number; helper: boolean; moves: number; lines: number; rescued: number; score: number; status: "playing" | "cleared" | "full" | "stopped"; event: number; lastClear: number[]; lastFish: number; lastFishCells: number[]; lastPoints: number; message: string; /** Set once a learning-world sum was too big; the finish counts as helped practice. */ helped?: boolean };
+export type ReefState = { version: 2; appearance: number[]; level: ReefLevel | "endless"; board: number[]; fish: number[]; pieces: (CoralPiece | null)[]; seed: number; helper: boolean; moves: number; lines: number; rescued: number; score: number; status: "playing" | "cleared" | "full" | "stopped"; event: number; lastClear: number[]; lastFish: number; lastFishCells: number[]; lastPoints: number; message: string; /** Set once a learning-world sum was too big; the finish counts as helped practice. */ helped?: boolean };
 export type ReefInput = { type: "place"; slot: number; row: number; col: number } | { type: "reroll"; slot: number } | { type: "helper"; value: boolean } | { type: "finish" };
 /** Original coral silhouettes; complexity grows after each tray is used. */
 export const SHAPES: readonly (readonly (readonly [number, number])[])[] = [
@@ -45,7 +45,7 @@ export function createReef(level: ReefState["level"], seed: number, helper = fal
   if (learning) dealt.pieces[0] = { cells: SHAPES[0], value: 6, color: 1 };
   // Three usable, varied pieces; none solves the opening in one action.
   else if (level !== "endless" && level.world === "w1") dealt.pieces = [3, 6, 5].map((shape, i) => ({ cells: SHAPES[shape], value: 1, color: i + 1 }));
-  return { level, board, fish, ...dealt, helper, moves: 0, lines: 0, rescued: 0, score: 0, event: 0, status: "playing", lastClear: [], lastFish: 0, lastFishCells: [], lastPoints: 0, message: learning ? "Put 6 beside 4. Together they make 10." : "Leave room for all three coral pieces. Rows and columns both clear." };
+  return { version: 2, appearance: board.map((value, i) => value ? (i + value) % 4 : -1), level, board, fish, ...dealt, helper, moves: 0, lines: 0, rescued: 0, score: 0, event: 0, status: "playing", lastClear: [], lastFish: 0, lastFishCells: [], lastPoints: 0, message: learning ? "Put 6 beside 4. Together they make 10." : "Leave room for all three coral pieces. Rows and columns both clear." };
 }
 export function placementCells(s: ReefState, piece: CoralPiece, row: number, col: number): number[] | null {
   if (!Number.isInteger(row) || !Number.isInteger(col)) return null;
@@ -102,11 +102,11 @@ export function reefTransition(s: ReefState, input: ReefInput): ReefState {
     return { ...s, ...(sumMiss ? { helped: true } : {}), message: s.level !== "endless" && s.level.targetSum ? "Try an open spot where the row and column stay at 10 or less." : "That coral needs a little more room. Try another spot." };
   }
   const { cells, clear } = preview;
-  const board = [...s.board]; cells.forEach(i => { board[i] = piece.value; });
+  const board = [...s.board], appearance = [...s.appearance]; cells.forEach(i => { board[i] = piece.value; appearance[i] = piece.color; });
   const fish = s.fish.length && s.moves % 3 !== 2 ? s.fish : [...s.fish, cells[0]], target = s.level !== "endless" ? s.level.targetSum : undefined;
   const rescued = fish.filter(i => clear.cells.includes(i)).length;
-  clear.cells.forEach(i => { board[i] = 0; });
-  let next: ReefState = { ...s, board, fish: fish.filter(i => !clear.cells.includes(i)), pieces: s.pieces.map((p, i) => i === input.slot ? null : p), moves: s.moves + 1, lines: s.lines + clear.count, rescued: s.rescued + rescued, score: Math.min(99999999, s.score + cells.length * 10 + clear.count * 80 + rescued * 50), event: s.event + 1, lastClear: clear.cells, lastFish: rescued, lastFishCells: fish.filter(i => clear.cells.includes(i)), lastPoints: cells.length * 10 + clear.count * 80 + rescued * 50, message: clear.count ? `${target ? `You made ${target}! ` : ""}${clear.count} line${clear.count === 1 ? "" : "s"} clear${clear.count === 1 ? "s" : ""}. ${rescued ? `${rescued} fish swimming free!` : "Room for new coral."}` : target ? "Look for a number partner. Each line needs 10." : "A lovely fit. Keep a little space for your next piece." };
+  clear.cells.forEach(i => { board[i] = 0; appearance[i] = -1; });
+  let next: ReefState = { ...s, board, appearance, fish: fish.filter(i => !clear.cells.includes(i)), pieces: s.pieces.map((p, i) => i === input.slot ? null : p), moves: s.moves + 1, lines: s.lines + clear.count, rescued: s.rescued + rescued, score: Math.min(99999999, s.score + cells.length * 10 + clear.count * 80 + rescued * 50), event: s.event + 1, lastClear: clear.cells, lastFish: rescued, lastFishCells: fish.filter(i => clear.cells.includes(i)), lastPoints: cells.length * 10 + clear.count * 80 + rescued * 50, message: clear.count ? `${target ? `You made ${target}! ` : ""}${clear.count} line${clear.count === 1 ? "" : "s"} clear${clear.count === 1 ? "s" : ""}. ${rescued ? `${rescued} fish swimming free!` : "Room for new coral."}` : target ? "Look for a number partner. Each line needs 10." : "A lovely fit. Keep a little space for your next piece." };
   if (next.level !== "endless" && reefGoalValue(next) >= next.level.target) return { ...next, status: "cleared" };
   if (next.pieces.every(p => p === null)) next = { ...next, ...deal(next.seed, next.level, next.moves) };
   if (!hasReefMove(next)) next = { ...next, status: "full", message: "No offered piece fits. Try again and leave a little channel." };
@@ -120,11 +120,19 @@ export function reefResult(s: ReefState): ArcadeResult | null {
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const exact = (v: unknown, keys: string[]): v is Record<string, unknown> => object(v) && Object.keys(v).sort().join() === [...keys].sort().join();
 const integer = (v: unknown, max = 99999999) => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= max;
+/** Upgrade only a strictly valid old state, without mutating or discarding its original. */
+export function migrateReef(v: unknown): ReefState | null {
+  if (validReef(v)) return v;
+  if (!object(v) || "version" in v || "appearance" in v || !Array.isArray(v.board)) return null;
+  const next = { ...v, version: 2, appearance: v.board.map((value, i) => typeof value === "number" && value ? (i + value) % 4 : -1) };
+  return validReef(next) ? next : null;
+}
 export function validReef(v: unknown): v is ReefState {
   if (object(v) && "helped" in v) { const { helped, ...rest } = v; return typeof helped === "boolean" && validReef(rest); }
-  if (!exact(v, ["level", "board", "fish", "pieces", "seed", "helper", "moves", "lines", "rescued", "score", "status", "event", "lastClear", "lastFish", "lastFishCells", "lastPoints", "message"]) || !(v.level === "endless" || reefLevels.some(l => JSON.stringify(l) === JSON.stringify(v.level))) || !Array.isArray(v.board) || v.board.length !== 64 || !v.board.every(n => integer(n, 9)) || !Array.isArray(v.fish) || new Set(v.fish).size !== v.fish.length || !v.fish.every(n => integer(n, 63) && (v.board as number[])[n]) || !Array.isArray(v.pieces) || v.pieces.length !== 3) return false;
+  if (!exact(v, ["version", "appearance", "level", "board", "fish", "pieces", "seed", "helper", "moves", "lines", "rescued", "score", "status", "event", "lastClear", "lastFish", "lastFishCells", "lastPoints", "message"]) || !(v.level === "endless" || reefLevels.some(l => JSON.stringify(l) === JSON.stringify(v.level))) || !Array.isArray(v.board) || v.board.length !== 64 || !v.board.every(n => integer(n, 9)) || !Array.isArray(v.fish) || new Set(v.fish).size !== v.fish.length || !v.fish.every(n => integer(n, 63) && (v.board as number[])[n]) || !Array.isArray(v.pieces) || v.pieces.length !== 3) return false;
   if (!v.pieces.every(p => p === null || exact(p, ["cells", "value", "color"]) && integer(p.value, 9) && (p.value as number) > 0 && integer(p.color, 3) && Array.isArray(p.cells) && SHAPES.some(shape => JSON.stringify(shape) === JSON.stringify(p.cells))) || !integer(v.seed, 0xffffffff) || typeof v.helper !== "boolean" || ![v.moves, v.lines, v.rescued, v.score, v.lastFish, v.lastPoints, v.event].every(n => integer(n)) || !["playing", "cleared", "full", "stopped"].includes(v.status as string) || typeof v.message !== "string" || v.message.length > 400) return false;
   for (const cells of [v.lastClear, v.lastFishCells]) if (!Array.isArray(cells) || new Set(cells).size !== cells.length || !cells.every(n => integer(n, 63))) return false;
+  if (v.version !== 2 || !Array.isArray(v.appearance) || v.appearance.length !== 64 || !v.appearance.every((id, i) => (v.board as number[])[i] ? integer(id, 3) : id === -1)) return false;
   const s = v as ReefState;
   if (s.event !== s.moves || s.lastFish !== s.lastFishCells.length || s.lastFishCells.some(n => !s.lastClear.includes(n)) || (s.level !== "endless" && s.level.rocks.some(i => s.board[i] !== 9 || s.fish.includes(i) || s.lastClear.includes(i)))) return false;
   return (s.status !== "playing" || hasReefMove(s)) && (s.status !== "full" || !hasReefMove(s)) && (s.status !== "cleared" || s.level !== "endless" && reefGoalValue(s) >= s.level.target) && (s.status !== "stopped" || s.level === "endless");

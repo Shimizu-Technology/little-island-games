@@ -58,11 +58,13 @@ describe("Canoe Cargo feel rules", () => {
       const missed = cargoTransition({ ...s, piece: { ...s.piece, value: 2 } }, { type: "drop" }); expect(missed.lastBonus).toBe(0); expect(missed.helped).toBe(true);
     }
   });
-  it("preserves seven-bag queue through one-use Helper hold and resumes the reserved bundle", () => {
-    const start = createCargo("endless", 42, true), s = cargoTransition(start, { type: "hold" });
+  it.each([false, true])("allows one Hold swap per piece with Helper=%s, preserving the bag and reserved orientation", helper => {
+    const start = createCargo("endless", 42, helper), s = cargoTransition(start, { type: "hold" });
     expect(s.held).toEqual(start.piece); expect(s.piece).toEqual(start.next[0]); expect(cargoTransition(s, { type: "hold" })).toBe(s);
-    const next = cargoTransition(s, { type: "drop" }); expect(next.piece).toEqual(start.piece); expect(next.next).toEqual(s.next); expect(next.held).toBeNull(); expect(validCargo(next)).toBe(true);
-    const off = createCargo("endless", 42, false); expect(cargoTransition(off, { type: "hold" })).toBe(off);
+    const next = cargoTransition(s, { type: "drop" }); expect(next.piece).toEqual(s.next[0]); expect(next.held).toEqual(start.piece); expect(next.holdUsed).toBe(false); expect(validCargo(next)).toBe(true);
+    const swapped = cargoTransition({ ...next, piece: { ...next.piece, turn: 1 } }, { type: "hold" });
+    expect(swapped.piece).toEqual(start.piece); expect(swapped.held?.turn).toBe(0); expect(swapped.next).toEqual(next.next); expect(swapped.bag).toEqual(next.bag); expect(swapped.seed).toBe(next.seed); expect(validCargo(swapped)).toBe(true);
+    expect(cargoTransition(swapped, { type: "hold" })).toBe(swapped);
   });
   it.each([false, true])("tops out with Helper=%s, freezes terminal state, and retries freshly", helper => {
     let s = createCargo("endless", 42, helper);

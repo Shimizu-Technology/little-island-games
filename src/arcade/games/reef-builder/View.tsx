@@ -1,9 +1,9 @@
 import { PlayButton, PressControl, uiThreadDrag } from "../../Input";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import Animated, { Easing, measure, runOnJS, useAnimatedReaction, useAnimatedRef, useAnimatedStyle, useSharedValue, withSequence, withTiming, type AnimatedRef } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
-import Svg, { Circle, Defs, Ellipse, LinearGradient, Path, Rect, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import { Text } from "../../../components/Text";
 import { Button, Copy } from "../../../components/ui";
 import { useReducedMotion } from "../../../components/motion";
@@ -12,12 +12,12 @@ import { useArcadeReducer } from "../../loop";
 import { Hero, HudPill, MiniStars } from "../../Juice";
 import { ReefFish } from "../../Art";
 import { reefDrag, reefGrab } from "./geometry";
-import { legalReefMoves, previewReefPlacement, reefGoalValue, reefResult, reefTransition, type CoralPiece, type ReefState } from "./engine";
+import { legalReefMoves, previewReefPlacement, reefGoalValue, reefResult, reefTransition, migrateReef, type CoralPiece, type ReefState } from "./engine";
 import type { ArcadeResult } from "../../types";
 const coralColors = ["#F58D8D", "#FFC45D", "#57CDB0", "#AB87DC"];
 export const Coral = memo(function Coral({ color, variant = 0, fish = false, size }: { color: string; variant?: number; fish?: boolean; size: number }) {
   const shapes = ["M17 35V18L8 15V7Q8 3 13 5V11L18 12V5Q18 1 23 3V17L28 14V8Q33 4 34 9V18L23 24V35Z", "M9 35Q0 25 7 15Q8 6 15 9Q22-1 29 8Q40 11 35 22Q41 32 30 35Z", "M7 34Q-1 27 7 23L15 21L6 17Q2 10 10 10L20 17L17 6Q21-2 26 5L25 17L32 10Q40 9 37 17L27 25L34 29Q38 37 29 35Z", "M7 34L4 19Q3 11 9 13L13 20L12 8Q14 1 19 6L22 19L27 8Q33 3 34 10L32 24Q42 34 30 35Z"];
-  return <Svg width={size} height={size} viewBox="0 0 40 40" accessible={false}><Ellipse cx={21} cy={35} rx={16} ry={3} fill="#365D72" opacity={.24}/><Path d={shapes[variant % 4]} fill={color} stroke="#47697B" strokeWidth={1.7} strokeLinejoin="round"/><Path d={variant % 2 ? "M11 17Q14 10 18 12M26 12L29 15M12 29L15 30" : "M19 29V23M11 9V12M29 12V15"} fill="none" stroke="#FFF2C6" strokeWidth={2.6} strokeLinecap="round"/>{fish && <><Path d="M23 26L33 20V32Z" fill="#EF8D91" stroke="#546079" strokeWidth={1}/><Ellipse cx={18} cy={26} rx={9} ry={6} fill="#FFF1AE" stroke="#536F83" strokeWidth={1}/><Circle cx={15} cy={24} r={1.8} fill="#294D50"/></>}</Svg>;
+  return <Svg width={size} height={size} viewBox="0 0 40 40" accessible={false}><Rect x={1} y={1} width={38} height={38} rx={4} fill={color} fillOpacity={.55} stroke="#416A6B" strokeWidth={1.3}/><G transform="translate(7 7) scale(.65)"><Ellipse cx={21} cy={35} rx={16} ry={3} fill="#365D72" opacity={.24}/><Path d={shapes[variant % 4]} fill={color} stroke="#47697B" strokeWidth={1.7} strokeLinejoin="round"/><Path d={variant % 2 ? "M11 17Q14 10 18 12M26 12L29 15M12 29L15 30" : "M19 29V23M11 9V12M29 12V15"} fill="none" stroke="#FFF2C6" strokeWidth={2.6} strokeLinecap="round"/>{fish && <><Path d="M23 26L33 20V32Z" fill="#EF8D91" stroke="#546079" strokeWidth={1}/><Ellipse cx={18} cy={26} rx={9} ry={6} fill="#FFF1AE" stroke="#536F83" strokeWidth={1}/><Circle cx={15} cy={24} r={1.8} fill="#294D50"/></>}</G></Svg>;
 });
 function PieceArt({ piece, cell = 26, numbers = false }: { piece: CoralPiece; cell?: number; numbers?: boolean }) {
   const w = Math.max(...piece.cells.map(c => c[1])) + 1, h = Math.max(...piece.cells.map(c => c[0])) + 1;
@@ -37,9 +37,9 @@ function DraggablePiece({ piece, slot, selected, active, board, cell, numbers, c
       grab.set(reefGrab(piece.cells, tray.pageX + e.x - pieceRect.pageX, tray.pageY + e.y - pieceRect.pageY, trayCell));
     }
     runOnJS(onSelect)(slot);
-  }).onEnd(e => {
+  }).onEnd((e, success) => {
     "worklet";
-    if (Math.hypot(e.x - origin.value.startX, e.y - origin.value.startY) > 8) {
+    if (success && Math.hypot(e.x - origin.value.startX, e.y - origin.value.startY) > 8) {
       const spot = reefDrag(origin.value.x + e.x, origin.value.y + e.y, rect.value, grab.value);
       runOnJS(onDrop)(slot, spot.row, spot.col);
     }
@@ -76,13 +76,13 @@ function ClearEffects({ state, cell, reduced }: { state: ReefState; cell: number
     {!!state.lastClear.length && <Animated.View style={[{ position: "absolute", left: Math.min(6 * cell, at % 8 * cell), top: Math.max(0, (Math.floor(at / 8) - 1) * cell) }, pop]}><Text style={{ color: "#244D60", backgroundColor: "#FFF4D9", borderRadius: 8, paddingHorizontal: 6, fontWeight: "900", fontSize: 18 }}>+{state.lastPoints}</Text></Animated.View>}
   </View>;
 }
-export function ReefBoard({ initial, active, helper, onResult, onTone }: { initial: ReefState; active: boolean; helper: boolean; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string) => void }) {
-  const { snapshot: s, dispatch, state } = useArcadeReducer(initial, reefTransition, active);
+export function ReefBoard({ initial, active, helper, onResult, onTone, width, height }: { width: number; height: number; initial: ReefState; active: boolean; helper: boolean; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string) => void }) {
+  const { snapshot: s, dispatch, state } = useArcadeReducer(migrateReef(initial) ?? initial, reefTransition, active);
   const selection = useRef<number | null>(0);
   const [selected, setSelected] = useState<number | null>(0), [hover, setHover] = useState<{ row: number; col: number } | null>(null), board = useAnimatedRef<Animated.View>(), reported = useRef(false);
   const [bumped, setBumped] = useState(false);
-  const { width, height } = useWindowDimensions(), side = width > height && width >= 700;
-  const size = Math.floor(Math.max(144, Math.min(640, width - (side ? 275 : 32), height - (side ? height < 500 ? 200 : 180 : helper ? 365 : 315)))), cell = size / 8;
+  const side = width > height, short = height < 500;
+  const size = Math.floor(Math.max(8, Math.min(640, width - (side ? short ? 370 : 180 : 24), height - (side ? 130 : helper ? 300 : 245) - (initial.level === "endless" ? 48 : 0)))), cell = size / 8;
   const reduced = useReducedMotion(), shake = useSharedValue(0), shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
   useEffect(() => { if (active && state.current.helper !== helper) dispatch({ type: "helper", value: helper }); }, [active, helper, dispatch, state]);
   // Keep the final fish release visible before handing the already-terminal engine result to the frame.
@@ -101,25 +101,25 @@ export function ReefBoard({ initial, active, helper, onResult, onTone }: { initi
   const stars = s.level === "endless" ? 0 : s.moves <= s.level.greatMoves ? 3 : s.moves <= s.level.goodMoves ? 2 : 1;
   return <View style={{ flex: 1, width: "100%", alignItems: "center", justifyContent: "center", gap: 10, paddingBottom: 16 }}>
     <View style={{ width: "100%", maxWidth: 1000, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 6, flexWrap: "wrap" }}><HudPill label={`${value} of ${s.level === "endless" ? "free play" : s.level.target} ${goal}`} icon={goal === "fish" ? <View style={{ width: 28, height: 28 }}><Hero size={28} active={false}/></View> : <Icon name={goal === "score" || goal === "points" ? "star-filled" : "flag"} color="#B67A35"/>}>{progress} {goal}</HudPill><HudPill><MiniStars stars={stars}/></HudPill><Copy style={{ color: "#FFF4D5", fontSize: 13, backgroundColor: "#24536A", paddingHorizontal: 10, paddingVertical: 7, borderRadius: 14 }}>{s.moves} moves</Copy></View>
-    <View style={{ flexDirection: side ? "row" : "column", alignItems: "center", justifyContent: "center", gap: side ? 28 : 12, width: "100%" }}>
+    <View style={{ flexDirection: side ? "row" : "column", alignItems: "center", justifyContent: "center", gap: side ? 16 : 12, width: "100%" }}>
       <Animated.View style={shakeStyle}><Animated.View ref={board} collapsable={false} testID="reef-board" style={{ width: size, height: size, backgroundColor: "#DBDDB4", borderRadius: 22, borderWidth: 0, overflow: "hidden", flexDirection: "row", flexWrap: "wrap", boxShadow: "0 7px 0 #286777" }}>
         <View pointerEvents="none" style={{ position: "absolute", inset: 0 }}><Svg width="100%" height="100%" viewBox="0 0 600 600" accessible={false}><Defs><LinearGradient id="reef-bed" x1="0" y1="0" x2=".8" y2="1"><Stop stopColor="#8FCABC"/><Stop offset=".6" stopColor="#C9D8A9"/><Stop offset="1" stopColor="#E9D8AA"/></LinearGradient></Defs><Rect width={600} height={600} fill="url(#reef-bed)"/><Path d="M0 0H105L400 600H275ZM260 0H320L600 510V600Z" fill="#FFFAD5" opacity={.19}/>{[0, 1, 2, 3].map(i => <Path key={i} d={`M-50 ${90 + i * 150}Q75 ${30 + i * 150} 185 ${100 + i * 150}T410 ${95 + i * 150}T650 ${100 + i * 150}`} fill="none" stroke="#FFF7CB" strokeWidth={4} opacity={.2}/>)}<Path d="M0 600Q30 540 12 510Q57 555 25 600M600 600Q559 549 580 511Q548 541 564 600" fill="#418D7D" opacity={.2}/></Svg></View>
         {s.board.map((value, i) => {
           const rock = s.level !== "endless" && s.level.rocks.includes(i), fish = s.fish.includes(i), highlighted = preview?.cells.includes(i), clears = preview?.clear.cells.includes(i), row = Math.floor(i / 8), col = i % 8;
           const invalid = !preview && hover && piece?.cells.some(([r, c]) => row === hover.row + r && col === hover.col + c);
           return <PressControl key={i} accessibilityRole="button" accessibilityLabel={`Reef row ${row + 1}, column ${col + 1}, ${rock ? "rock" : value ? target ? `number ${value}` : "coral" : "open"}${fish ? ", trapped fish" : ""}`} accessibilityState={{ disabled: !active || s.status !== "playing" }} disabled={!active || s.status !== "playing"} onPress={() => { if (selection.current !== null) place(selection.current, row, col); }} style={{ width: cell, height: cell, borderWidth: clears || highlighted || invalid ? 2 : .5, borderColor: invalid ? "#A4454F" : clears ? "#FFF5AB" : highlighted ? "#C88530" : "#428F8740", backgroundColor: invalid ? "#EDB7A6" : clears ? "#F2D77F" : highlighted ? "#FFF0BA" : (row + col) % 2 ? "#E7E4B11A" : "#4B9D9D0D", alignItems: "center", justifyContent: "center" }}>
-            {rock ? <View style={{ width: cell * .72, height: cell * .65, borderRadius: cell * .22, backgroundColor: "#567C7F", borderWidth: 3, borderColor: "#B4C4B4" }}/> : value > 0 || highlighted ? <><View style={{ opacity: highlighted ? .7 : 1 }}><Coral color={coralColors[highlighted && piece ? piece.color % 4 : (i + value) % 4]} variant={highlighted && piece ? piece.color : (i + value) % 4} fish={fish} size={cell * .9}/></View>{target && <View style={{ position: "absolute", backgroundColor: "#FFF4D9", borderRadius: 8, paddingHorizontal: 5 }}><Text style={{ color: "#244D60", fontSize: cell * .45, fontWeight: "900" }}>{highlighted ? piece?.value : value}</Text></View>}</> : i % 7 === 0 ? <View style={{ width: 5, height: 3, borderRadius: 2, backgroundColor: "#7AA99B", opacity: .4 }}/> : null}
+            {rock ? <View style={{ width: cell * .72, height: cell * .65, borderRadius: cell * .22, backgroundColor: "#567C7F", borderWidth: 3, borderColor: "#B4C4B4" }}/> : value > 0 || highlighted ? <><View style={{ opacity: highlighted ? .7 : 1 }}><Coral color={coralColors[highlighted && piece ? piece.color : s.appearance[i]]} variant={highlighted && piece ? piece.color : s.appearance[i]} fish={fish} size={cell}/></View>{target && <View style={{ position: "absolute", backgroundColor: "#FFF4D9", borderRadius: 8, paddingHorizontal: 5 }}><Text style={{ color: "#244D60", fontSize: cell * .45, fontWeight: "900" }}>{highlighted ? piece?.value : value}</Text></View>}</> : i % 7 === 0 ? <View style={{ width: 5, height: 3, borderRadius: 2, backgroundColor: "#7AA99B", opacity: .4 }}/> : null}
           </PressControl>;
         })}
       </Animated.View>{!!s.lastClear.length && <ClearEffects key={s.moves} state={s} cell={cell} reduced={reduced}/>}</Animated.View>
       <View style={{ alignItems: "center", gap: 12, maxWidth: side ? height < 500 ? 360 : 240 : undefined }}>
-        {side && height >= 500 && <Hero game="reef-builder" size={100} cue={s.moves} mood={bumped ? "dizzy" : s.lastClear.length ? "happy" : "idle"} active={active}/>}
+        {side && height >= 650 && <Hero game="reef-builder" size={100} cue={s.moves} mood={bumped ? "dizzy" : s.lastClear.length ? "happy" : "idle"} active={active}/>}
         <View style={{ flexDirection: side && height >= 500 ? "column" : "row", gap: 8, zIndex: 2 }}>{s.pieces.map((p, slot) => p ? <DraggablePiece key={slot} piece={p} slot={slot} numbers={!!target} compact={!side || height < 500} selected={selected === slot} active={active && s.status === "playing"} board={board} cell={cell} onSelect={select} onHover={hoverAt} onDrop={place}/> : <View key={slot} style={{ minWidth: 104, minHeight: side ? 100 : 92, borderRadius: 24, borderWidth: 2, borderStyle: "dashed", borderColor: "#C6E2CF", justifyContent: "center", alignItems: "center" }}><Icon name="flag" color="#C6E2CF"/></View>)}</View>
         {helper && <PlayButton quiet compact disabled={!active || selected === null || !piece || s.status !== "playing"} onPress={() => { const move = legalReefMoves(state.current)[0]; if (move) { select(move.slot); hoverAt({ row: move.row, col: move.col }); onTone("coral"); } }}>Show a fit</PlayButton>}
       </View>
     </View>
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, paddingHorizontal: 12 }}>
-      {!side && <Hero game="reef-builder" size={58} cue={`${s.moves}-${bumped}`} mood={bumped ? "dizzy" : s.lastClear.length ? "happy" : "idle"} active={active}/>}
+      {!side && height >= 600 && <Hero game="reef-builder" size={58} cue={`${s.moves}-${bumped}`} mood={bumped ? "dizzy" : s.lastClear.length ? "happy" : "idle"} active={active}/>}
       <View accessibilityLiveRegion="polite" style={{ flexShrink: 1, maxWidth: 520 }}><Copy style={{ color: "#244C55", textAlign: "center", fontSize: 15, backgroundColor: "#FFF1D5", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 16 }}>{bumped ? "Try another spot." : s.status === "cleared" ? "Fish swimming free!" : preview?.clear.count ? `${preview.clear.count} line${preview.clear.count === 1 ? "" : "s"} will clear!` : target ? `${target} makes a line · find a partner` : s.moves === 0 ? "Plan room for all three pieces." : "Drag any coral · fill rows or columns"}</Copy></View>
     </View>
     {s.level === "endless" && <Button quiet compact disabled={!active} onPress={() => dispatch({ type: "finish" })}>Finish my free-play reef</Button>}
