@@ -9,12 +9,13 @@ import { FIXED_DT } from "../src/arcade/clock";
 import { allLevelIds, worldIds } from "../src/arcade/types";
 /** Most physics tests start mid-flight; the waiting/ready state has its own test below. */
 const createFlight = (...args: Parameters<typeof createWaitingFlight>): FlightState => ({ ...createWaitingFlight(...args), waiting: false });
-function fly(initial: FlightState, offset = .045): FlightState {
+function fly(initial: FlightState, offset = .045, look = .175): FlightState {
   let s = initial;
   for (let i = 0; i < 90000 && !flightResult(s); i++) {
-    const gate = s.gates.filter(g => !g.passed && g.x > .175).sort((a,b) => a.x-b.x)[0];
+    const gate = s.gates.filter(g => !g.passed && g.x > look).sort((a,b) => a.x-b.x)[0];
     const target = gate ? flightLearning(s) ? [.24,.5,.76][gate.fact.choices.indexOf(gate.fact.answer)] : gate.center : .5;
-    if (s.y > target + offset && s.vy > -.05) s = flightTransition(s, {type:"flap"});
+    // A real player taps out of the hover (level start, or after a lost heart) the same way as any flap.
+    if (s.waiting || (s.y > target + offset && s.vy > -.05)) s = flightTransition(s, {type:"flap"});
     s = flightStep(s,{type:"idle"},FIXED_DT);
     if (i%600===0) expect(validFlight(s), `${initial.level === "endless" ? "free" : initial.level.id} at ${i}`).toBe(true);
   }
@@ -53,7 +54,7 @@ describe("56-level feel curves",()=>{
     expect(validFact({...mathGate(4,2).fact,choices:[1,1,1]})).toBe(false);
   });
   it("clears all 112 levels with legal inputs and valid bounded states",()=>{
-    for(const level of flightLevels){let s: FlightState|undefined; for(const offset of [.045,.025,.065,0,-.02,.035,.055,.015,.075]) { const attempt=fly(createFlight(level,981,false),offset); if(flightResult(attempt)?.stars===3) { s=attempt; break; } } expect(s,level.id).toBeDefined();expect(validFlight(s),level.id).toBe(true);}
+    for(const level of flightLevels){let s: FlightState|undefined; for(const look of [.175,.19,.2]) { for(const offset of [.045,.025,.065,0,-.02,.035,.055,.015,.075,.06,.07,.05,.04]) { const attempt=fly(createWaitingFlight(level,981,false),offset,look); if(flightResult(attempt)?.stars===3) { s=attempt; break; } } if(s) break; } expect(s,level.id).toBeDefined();expect(validFlight(s),level.id).toBe(true);}
     for(const level of runLevels){const s=run(createRun(level,771,false));expect(runResult(s)?.stars,level.id).toBe(3);expect(validRun(s),level.id).toBe(true);}
   },30000);
 });
@@ -213,5 +214,19 @@ describe("Helper toggles never leave a run with zero hearts", () => {
     const s = createRun(runLevels[0], 5, true), hurt = { ...s, lives: { ...s.lives, hearts: 2, hit: 3 }, bumps: 3 };
     const off = runTransition(hurt, { type: "helper", value: false });
     expect(off.lives.hearts).toBe(0); expect(off.status).toBe("stumbled"); expect(runResult(off)?.outcome).toBe("game-over");
+  });
+});
+
+describe("waiting holds the world still", () => {
+  it("gap width and centres are continuous across a wait after a lost heart (moving-gap world)", () => {
+    const level = flightLevels.find(l => l.id === "w6-1")!;
+    let s = flightStep(flightTransition(createWaitingFlight(level, 12, false), { type: "flap" }), { type: "idle" }, FIXED_DT);
+    s = flightStep({ ...s, y: .98, vy: .5, cooldown: 0, lives: { ...s.lives, invulnerable: 0 } }, { type: "idle" }, FIXED_DT);
+    expect(s.waiting).toBe(true);
+    const gap = flightGap(s), centres = s.gates.map(g => g.center), time = s.time;
+    let held = s; for (let i = 0; i < 180; i++) held = flightStep(held, { type: "idle" }, FIXED_DT);
+    expect(held.time).toBe(time); expect(flightGap(held)).toBe(gap); expect(held.gates.map(g => g.center)).toEqual(centres); expect(held.hover).toBeGreaterThan(s.hover);
+    const resumed = flightStep(flightTransition(held, { type: "flap" }), { type: "idle" }, FIXED_DT);
+    resumed.gates.forEach((g, i) => expect(Math.abs(g.center - centres[i])).toBeLessThan(.01));
   });
 });

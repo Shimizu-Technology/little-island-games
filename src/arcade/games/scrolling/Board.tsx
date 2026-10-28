@@ -77,7 +77,7 @@ export function FlightBoard(props: BoardProps) {
   const { input, send } = useMailbox<FlightInput>(helper, active);
   const publish = useCallback((s: FlightState) => {
     "worklet";
-    const p: SpritePose[] = [], learn = flightLearning(s), gap = flightGap(s), x = W * .24, y = s.y * H + (s.waiting && !reduced ? Math.sin(s.time * 4) * 7 : 0);
+    const p: SpritePose[] = [], learn = flightLearning(s), gap = flightGap(s), x = W * .24, y = s.y * H + (s.waiting && !reduced ? Math.sin(s.hover * 4) * 7 : 0);
     const tumble = !reduced && s.cooldown > 0 && s.cue === "bump" ? (1 - s.cooldown / .3) * Math.PI * 2 : 0;
     const angle = reduced ? 0 : s.status === "cleared" ? -.2 : tumble || Math.max(-.436, Math.min(1.134, s.vy * 1.4));
     p[0] = { x: x - 17, y: y - 30, angle };
