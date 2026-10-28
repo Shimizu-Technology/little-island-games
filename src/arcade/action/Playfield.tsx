@@ -2,15 +2,19 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "
 import { Platform, View, type ViewStyle } from "react-native";
 import Animated, {
   useAnimatedStyle,
+  runOnJS,
   useAnimatedReaction,
   useDerivedValue,
   useSharedValue,
   type SharedValue,
 } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
+import Svg, { Path } from "react-native-svg";
 import { Text } from "../../components/Text";
 import { Button, Heading } from "../../components/ui";
 import { useReducedMotion } from "../../components/motion";
+import { beachWallContact } from "../feelArt";
+import type { ArtPose } from "../ArtPose";
 import { ArcadeSprite, type SpritePose } from "../Sprite";
 import { uiThreadDrag, multiTouchDrag, type DragPoint, type TouchPoints } from "../Input";
 import { useArcadeUiLoop } from "../uiLoop";
@@ -105,13 +109,13 @@ const PalmSprites = memo(function PalmSprites({ poses, scale }: { poses: SharedV
         <React.Fragment key={i}>
           <ArcadeSprite poses={poses} index={i} width={58 * scale} height={58 * scale}>
             <View testID={`palm-beetle-${i}`}>
-              <BeetleArt size={58 * scale} />
+              <BeetleArt size={58 * scale} poses={poses} poseIndex={i} />
             </View>
           </ArcadeSprite>
           {i === 0 && (
             <ArcadeSprite poses={poses} index={15} width={87 * scale} height={87 * scale}>
               <View testID="palm-boss-0">
-                <BeetleArt size={87 * scale} boss />
+                <BeetleArt size={87 * scale} boss poses={poses} poseIndex={15} />
               </View>
             </ArcadeSprite>
           )}
@@ -169,7 +173,7 @@ const PalmHero = memo(function PalmHero({
     <HitReaction hit={hit} onTone={onTone}>
       <ArcadeSprite poses={poses} index={57} width={78 * scale} height={78 * scale}>
         <View testID="palm-launcher">
-          <ActionHero palm size={78 * scale} outfit={outfit} />
+          <ActionHero palm size={78 * scale} outfit={outfit} poses={poses} />
         </View>
       </ArcadeSprite>
     </HitReaction>
@@ -201,7 +205,8 @@ export function PalmBoard({
     point = useSharedValue<DragPoint>({ x: 180, y: 552, down: false }),
     flags = useSharedValue({ helper, taps: 0, finish: false }),
     keyboard = useSharedValue({ x: 180, firing: false, used: false }),
-    poses = useSharedValue<SpritePose[]>(Array.from({ length: 88 }, () => hidden)),
+    poses = useSharedValue<ArtPose[]>(Array.from({ length: 88 }, () => hidden)),
+    entrance = useSharedValue({ group: "", started: 0 }),
     reported = useRef(false);
   const gesture = useMemo(
     () =>
@@ -230,10 +235,20 @@ export function PalmBoard({
     (s: PalmState) => {
       "worklet";
       const a = arena.value,
-        next: SpritePose[] = Array.from({ length: 88 }, () => hidden);
+        next: ArtPose[] = Array.from({ length: 88 }, () => hidden),
+        group = `${s.wave}-${s.relay}-${s.fact}`;
+      if (entrance.value.group !== group) entrance.set({ group, started: s.time });
+      const entry = Math.max(0, 1 - (s.time - entrance.value.started) / 0.2);
       for (const b of s.beetles) {
         const size = b.boss ? 87 : 58,
-          p = position(a, b.x, b.y, size);
+          p: ArtPose = position(a, b.x, b.y, size);
+        p.frame = !reduced && !b.caught && !b.diving ? Math.floor(s.time * 7 + b.id % 2) % 2 : 0;
+        // Small, nonblocking entry gesture; never hide a collidable beetle off-screen.
+        if (!reduced && palmConfig(s).world !== "learn") {
+          p.x += entry * (s.relay % 3 === 0 ? 0 : s.relay % 2 ? -10 : 10) * a.scale;
+          p.y -= entry * (s.relay % 3 === 0 ? 12 : 6) * a.scale;
+          p.opacity = 1 - entry * 0.35;
+        }
         p.angle = reduced
           ? 0
           : b.caught
@@ -249,18 +264,8 @@ export function PalmBoard({
       for (let i = 0; i < s.husks.length; i++)
         next[45 + i] = { ...position(a, s.husks[i].x, s.husks[i].y, 20), angle: reduced ? 0 : s.time * 8 };
       next[57] = {
-        ...position(a, s.launcher, 552 + (!reduced && s.lives.invulnerable > 1 ? 7 : 0), 78),
-        scale: !reduced && s.cooldown > 0.16 ? 0.94 : 1,
-        angle: reduced
-          ? 0
-          : Math.max(
-              -0.18,
-              Math.min(
-                0.18,
-                (position(a, s.launcher, 552, 78).x - (poses.value[57]?.x ?? position(a, s.launcher, 552, 78).x)) /
-                  (30 * a.scale)
-              )
-            ),
+        ...position(a, s.launcher, 552, 78),
+        frame: reduced ? 0 : s.cooldown > 0.16 ? 1 : s.cooldown > 0.08 ? 2 : 0,
       };
       if (s.pulse > 0 && s.cue !== "fire") {
         const age = 1 - s.pulse / 0.45;
@@ -281,7 +286,7 @@ export function PalmBoard({
       }
       poses.set(next);
     },
-    [arena, poses, reduced]
+    [arena, poses, reduced, entrance]
   );
   const { snapshot: s, state, clock } = useArcadeUiLoop({ initial, input, active, step: palmFrameStep, onFrame });
   const sounds = useRef({ event: 0, shots: 0 });
@@ -410,9 +415,13 @@ export function PalmBoard({
             alignItems: "center",
           }}
         >
-          <Pill label={`Wave ${s.wave}, ${s.caught} beetles netted`}>
-            ♧ {s.wave}/{s.level === "endless" ? "∞" : s.level.waves} · {s.caught}
-          </Pill>
+          <View accessible accessibilityLabel={`Wave ${s.wave} of ${s.level === "endless" ? "endless" : s.level.waves}, group ${s.relay} of ${palmConfig(s).relays}, ${s.caught} beetles netted`} style={{ padding: 7, gap: 4, backgroundColor: "#123F51EE", borderRadius: 14 }}>
+            <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}><Text style={{ color: "#FFF3C7", fontWeight: "800", fontSize: 13 }}>Wave {s.wave}/{s.level === "endless" ? "∞" : s.level.waves}</Text>{Array.from({ length: palmConfig(s).waves }, (_, i) => <View key={i} style={{ width: 6, height: 6, borderRadius: 3, borderWidth: 1, borderColor: "#FFF0BE", backgroundColor: i + 1 <= s.wave ? "#B6EFCC" : "transparent" }}/>)}</View>
+            <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}>
+              <Text style={{ color: "#D3EEE0", fontSize: 11 }}>Group</Text>
+              {Array.from({ length: palmConfig(s).relays }, (_, i) => <View key={i} style={{ width: 9, height: 9, borderRadius: i + 1 < s.relay ? 2 : 5, borderWidth: 1.5, borderColor: "#FFF0BE", backgroundColor: i + 1 <= s.relay ? "#FFCE74" : "transparent" }}/>) }
+            </View>
+          </View>
           {!learning && (
             <View style={camera.x >= 150 ? { position: "absolute", left: 0, top: 44 } : undefined}>
               <HeartsHud lives={s.lives} />
@@ -563,7 +572,8 @@ export function BeachBoard({
 }) {
   const { camera, arena, layout } = useArena(width, height),
     reduced = useReducedMotion(),
-    poses = useSharedValue<SpritePose[]>(Array.from({ length: 66 }, () => hidden)),
+    poses = useSharedValue<SpritePose[]>(Array.from({ length: 72 }, () => hidden)),
+    walls = useSharedValue<{ time: number; balls: BeachState["balls"]; sparks: { x: number; y: number; at: number }[] }>({ time: initial.time, balls: initial.balls, sparks: [] }),
     points = useSharedValue<TouchPoints>({}),
     mapping = useSharedValue<SeatPointers>({ owners: [null, null], seats: {} }),
     input = useSharedValue<BeachFrame>({ x: [null, null], helper, finish: false }),
@@ -586,10 +596,29 @@ export function BeachBoard({
       "worklet";
       const a = arena.value,
         config = beachConfig(s),
-        next: SpritePose[] = Array.from({ length: 66 }, () => hidden),
+        next: SpritePose[] = Array.from({ length: 72 }, () => hidden),
         ballSize = (BALL_RADIUS * 2) / 0.95;
+      const previous = walls.value, dt = s.time - previous.time;
+      const sparks = previous.sparks.filter(e => s.time - e.at < 0.1);
+      if (dt > 0) {
+        for (let i = 0; i < s.balls.length; i++) {
+          const contact = previous.balls[i] && beachWallContact(previous.balls[i], s.balls[i], dt);
+          if (contact) { sparks.push({ ...contact, at: s.time }); runOnJS(onTone)("wall", false); }
+        }
+        walls.set({ time: s.time, balls: s.balls, sparks: sparks.slice(-2) });
+      }
+      for (let i = 0; i < Math.min(2, sparks.length); i++) {
+        const e = sparks[i], age = (s.time - e.at) / 0.1;
+        next[66 + i] = { ...position(a, e.x, e.y, 18), opacity: 1 - age, scale: reduced ? 1 : 0.9 + age * 0.2 };
+      }
       for (let i = 0; i < s.balls.length; i++) {
         const b = s.balls[i];
+        if (!reduced && !b.wait && Math.hypot(b.vx, b.vy) >= 330) {
+          for (let j = 0; j < 2; j++) {
+            const tail = (j + 1) * 0.014;
+            next[68 + i * 2 + j] = { ...position(a, Math.max(12, Math.min(348, b.x - b.vx * tail)), b.y - b.vy * tail, 7), opacity: 0.23 - j * 0.08 };
+          }
+        }
         next[i] = {
           ...position(a, b.x, b.y, ballSize),
           angle: reduced ? 0 : s.time * (b.vy < 0 ? -3 : 3),
@@ -616,7 +645,7 @@ export function BeachBoard({
       }
       poses.set(next);
     },
-    [arena, poses, reduced]
+    [arena, poses, reduced, walls, onTone]
   );
   const { snapshot: s, state, clock } = useArcadeUiLoop({ initial, input, active, step: beachFrameStep, onFrame });
   useEffect(() => {
@@ -683,7 +712,9 @@ export function BeachBoard({
             }}
           />
         ))}
+        {[68, 69, 70, 71].map(i => <ArcadeSprite key={`trail${i}`} poses={poses} index={i} width={7 * scale} height={7 * scale}><View style={{ width: 7 * scale, height: 7 * scale, borderRadius: 4 * scale, backgroundColor: "#FFF5CB" }}/></ArcadeSprite>)}
         <BeachSprites poses={poses} scale={scale} helper={s.helper} together={s.mode === "together"} />
+        {[0, 1].map(i => <ArcadeSprite key={`wall${i}`} poses={poses} index={66 + i} width={18 * scale} height={18 * scale}><Svg width={18 * scale} height={18 * scale} viewBox="0 0 18 18" accessible={false}><Path d="M9 1V5M9 13V17M1 9H5M13 9H17M4 4L6 6M12 12L14 14M4 14L6 12M12 6L14 4" stroke="#FFF0B1" strokeWidth={2} strokeLinecap="round"/></Svg></ArcadeSprite>)}
         {[0, 1].map((i) => (
           <ArcadeSprite key={`pop${i}`} poses={poses} index={62 + i} width={65 * scale} height={26 * scale}>
             <Text

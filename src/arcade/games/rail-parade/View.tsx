@@ -15,6 +15,8 @@ import type { ArcadeResult } from "../../types";
 import type { OutfitId } from "../../progress";
 import { GridBackdrop, GridHero, GridObject } from "../grid/Art";
 import { DirectionPad, GridBudget, Shake, useGridInput, useGridTouch } from "../grid/Controls";
+import { RailArt } from "../grid/RailArt";
+import { railHeading } from "../../feelArt";
 import type { Direction } from "../grid/rules";
 import {
   railHedges,
@@ -79,15 +81,12 @@ export function RailBoard({
         body = railBodyPose(s, learningClearAge);
       poses.set([
         ...Array.from({ length: 40 }, (_, i) => {
-          const p = body[i],
-            prev = body[Math.max(0, i - 1)],
-            next = body[i + 1] ?? p;
-          const lean = p && prev && next ? (prev.x - next.x) * (prev.y - next.y) * 0.09 : 0;
+          const p = body[i];
           return {
             x: (p?.x ?? 0) * unit,
             y: (p?.y ?? 0) * unit,
             opacity: p ? 1 : 0,
-            angle: reduced ? 0 : lean + (s.respawn > 0 ? 0.12 : Math.sin(fraction * Math.PI * 2 + i) * 0.035),
+            angle: railHeading(railLearning(s) ? s.previous : s.body, i, s.direction),
             scale: i === 0 ? 1 : 0.85,
           };
         }),
@@ -241,17 +240,10 @@ export function RailBoard({
           >
             <GridBackdrop crab={false} world={world} width={size} height={size} />
             {Array.from({ length: 10 }, (_, i) => (
-              <View
-                key={i}
-                style={{
-                  position: "absolute",
-                  top: i * unit,
-                  width: size,
-                  height: 1,
-                  backgroundColor: "#FFFFFF",
-                  opacity: 0.05,
-                }}
-              />
+              <React.Fragment key={i}>
+                <View pointerEvents="none" style={{ position: "absolute", top: i * unit, width: size, height: 1, backgroundColor: "#FFFFFF", opacity: 0.07 }} />
+                <View pointerEvents="none" style={{ position: "absolute", left: i * unit, height: size, width: 1, backgroundColor: "#FFFFFF", opacity: 0.07 }} />
+              </React.Fragment>
             ))}
             {railHedges(s).map((p) => (
               <View key={`${p.x}-${p.y}`} style={{ position: "absolute", left: p.x * unit, top: p.y * unit }}>
@@ -267,10 +259,10 @@ export function RailBoard({
                 height: unit,
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor: learning ? "#FFE5A0" : "#FFF8D333",
-                borderRadius: unit / 3,
-                borderWidth: 2,
-                borderColor: "#FFE5A0",
+                backgroundColor: learning ? "#FFE5A0" : "#FFF8D355",
+                borderRadius: unit / 2,
+                borderWidth: 1.5,
+                borderColor: "#FFF5C6",
               }}
             >
               {learning ? (
@@ -301,9 +293,10 @@ export function RailBoard({
               </View>
             )}
             <HitReaction hit={s.lives.hit} onTone={onTone}>
-              <RailTrain poses={poses} unit={unit} outfit={outfit} happy={s.phase === "cleared"} />
+              <RailTrain poses={poses} unit={unit} outfit={outfit} />
             </HitReaction>
             <RailScenery poses={poses} unit={unit} />
+            {s.respawn > 0 && <View pointerEvents="none" accessibilityLiveRegion="polite" accessibilityLabel="Gathering the parade. Collected chicks stay counted." style={{ position: "absolute", left: Math.max(0, (s.body[0].x - 1) * unit), top: Math.max(0, (s.body[0].y - 1) * unit), width: unit * 3, height: unit * 3, borderRadius: unit * 1.5, borderWidth: 2, borderStyle: "dashed", borderColor: "#FFF0B6", backgroundColor: "#FFF0B61A" }} /> }
             <GridFeedback
               event={s.collected + s.lives.hit}
               x={s.impact.x}
@@ -341,18 +334,16 @@ const RailTrain = memo(function RailTrain({
   poses,
   unit,
   outfit,
-  happy,
 }: {
   poses: SharedValue<SpritePose[]>;
   unit: number;
   outfit: OutfitId;
-  happy: boolean;
 }) {
   return (
     <>
       {Array.from({ length: 40 }, (_, i) => (
         <ArcadeSprite key={i} poses={poses} index={i} width={unit} height={unit}>
-          <GridHero size={unit} chick={i > 0} outfit={outfit} happy={happy} />
+          <RailArt size={unit} chick={i > 0} outfit={outfit} />
         </ArcadeSprite>
       ))}
     </>
