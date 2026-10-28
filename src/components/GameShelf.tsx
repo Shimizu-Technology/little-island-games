@@ -1,26 +1,19 @@
+import { GameIcon as ShelfArt } from "./GameIcon";
 import { isBoardId } from "../board";
-import { BoardArt } from "../board/Art";
 import React from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
 import { Text } from "./Text";
 import { C, Copy, Heading, IconButton, PressableScale, font } from "./ui";
-import { GameArt } from "./Art";
-import { FeatureArt } from "./FeatureArt";
 import { GameId, gameIds } from "../games";
-import { ActivityId } from "../state/activities";
 import { LearnId, learnIds } from "../learn/types";
-import { views } from "../learn/views";
 import { ongoing, shelfLevel, ShelfGame, ShelfId } from "../learn/home";
 import { useStore } from "../state/Store";
 export function openShelfGame(id: ShelfId) {
   router.push({ pathname: isBoardId(id) ? "/board" : learnIds.includes(id as LearnId) ? "/learn" : gameIds.includes(id as GameId) ? "/play" : "/activity", params: { game: id } });
 }
-export function ShelfArt({ id, size }: { id: ShelfId; size: number }) {
-  if (isBoardId(id)) return <BoardArt game={id} size={size} />;
-  if (learnIds.includes(id as LearnId)) { const Art = views[id as LearnId].Art; return <Art size={size} />; }
-  return gameIds.includes(id as GameId) ? <GameArt game={id as GameId} size={size} /> : <FeatureArt kind={id as ActivityId} size={size} />;
-}
+// Compatibility name for existing shelves; all listings share the same tile.
+export { GameIcon as ShelfArt } from "./GameIcon";
 export function GameCards({ games, width }: { games: ShelfGame[]; width: number }) {
   const store = useStore();
   return <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>

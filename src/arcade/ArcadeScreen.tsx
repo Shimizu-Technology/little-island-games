@@ -17,6 +17,7 @@ import { Hero, StarReveal } from "./Juice";
 import { ChestArt } from "./TreasureArt";
 import { activeLearner } from "../learn/learners";
 import { useStore } from "../state/Store";
+import { GameIcon } from "../components/GameIcon";
 import { ArcadeIsland, StarDisplay } from "./Art";
 import { TreasureChest } from "./Chest";
 import { OutfitCloset, StickerBook } from "./Collection";
@@ -38,7 +39,7 @@ export function ArcadeLobby() {
     <SaveStatus/>
     {arcadeShelfGames().map(game => <View key={game.id} style={{ borderRadius: 28, overflow: "hidden", backgroundColor: game.surface, borderWidth: 3, borderColor: "#D9EACD" }}>
       <PressableScale accessibilityRole="button" accessibilityLabel={`Play ${game.name}, open level map`} onPress={() => router.push({ pathname: "/arcade", params: { game: game.id } })} style={{ padding: 20, gap: 14, flexDirection: "row", alignItems: "center" }}>
-        <Hero game={game.id} size={110} outfit={gameProgress(person, game.id).outfit} active={!sheet}/><View style={{ flex: 1, gap: 7 }}><Heading style={{ fontSize: 25 }}>{game.name}</Heading><Copy>{game.tagline}</Copy><Copy style={{ fontSize: 14, color: game.color }}>{starCount(gameProgress(person, game.id).stars)} stars · 7 worlds</Copy><Heading style={{ fontSize: 18, color: game.color }}>Let’s play →</Heading></View>
+        <GameIcon id={game.id} size={110}/><View style={{ flex: 1, gap: 7 }}><Heading style={{ fontSize: 25, paddingRight: 32 }}>{game.name}</Heading><Copy>{game.tagline}</Copy><Copy style={{ fontSize: 14, color: game.color }}>{starCount(gameProgress(person, game.id).stars)} stars · 7 worlds</Copy><Heading style={{ fontSize: 18, color: game.color }}>Let’s play →</Heading></View>
       </PressableScale><View style={{ position: "absolute", right: 8, top: 8 }}><IconButton label={`${(store.save.favoriteGames ?? []).includes(game.id) ? "Remove favorite" : "Favorite"} ${game.name}`} icon={(store.save.favoriteGames ?? []).includes(game.id) ? "star-filled" : "star"} onPress={() => store.toggleGameFavorite(game.id)}/></View>
     </View>)}
     <Button quiet onPress={() => setSheet("book")}>Open my sticker book</Button><Copy style={{ textAlign: "center", fontSize: 13, color: "#FFF4D6" }}>No timers to wait for. No purchases. Your own little island.</Copy>
