@@ -1,22 +1,22 @@
 import { HAZARDS } from "../lagoon-run/course";
 import { HIDDEN_POSE, type SpritePose } from "../../poses";
-import { jumpHeight, runnerHeight, shellHeight, obstacleLane, runLearning, type RunState } from "../lagoon-run/engine";
+import { jumpHeight, runnerHeight, runSupport, shellHeight, obstacleLane, runLearning, type RunState } from "../lagoon-run/engine";
+import { RAMP_DEPTH, RAMP_SECTIONS, surfaceProfile, surfaceSpan } from "../lagoon-run/surface";
 import { projectTrack, trackSprite } from "../lagoon-run/camera";
 import { runnerFrame, RUN_POSES } from "./character";
 import { sceneryPose, groundTexturePose, SCENE_COUNT, SCENE_START, TEXTURE_START, TEXTURE_COUNT } from "./environmentPoses";
-export const RUN_SLOTS = 179;
+export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, RUN_SLOTS = INCLINE_START + 5 * INCLINE_STRIDE;
 export function runPoses(s: RunState, reduced = false): SpritePose[] {
   "worklet";
   const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=runnerHeight(s)*85;
   // Root is bottom-centre; poses have their own authored contact/compression, never free limbs.
   p[0]={identity:s.lives.hit,x:contact.x-40,y:contact.y-130-lift,angle:reduced?0:(s.lane-s.poseLane)*.14};
   for(let i=0;i<RUN_POSES;i++)p[80+i]=i===frame?{x:0,y:0,snap:true}:HIDDEN_POSE;
-  p[50]={x:contact.x-35,y:contact.y-7-Math.min(.85,s.elevation)*85,scale:1-jumpHeight(s)*.3};
+  p[50]={x:contact.x-35,y:contact.y-7-runSupport(s)*85,scale:1-jumpHeight(s)*.3};
   s.rows.forEach((row,i)=>{
     const visible=!learn&&row.z>0&&row.z<1.18;
-    const height = row.surface === "sand" || row.surface === "ramp" ? 0 : .85;
     // Each obstacle uses its own kind for size, contact height and spin (a row can mix kinds).
-    const hazardPose = (lane: number, kind: typeof row.kind) => { "worklet"; const a=trackSprite(lane,row.z,72,HAZARDS[kind]==="jump"?72:129.6); return {identity:row.serial,...a,y:a.y-height*85*a.scale,angle:kind === "coconut" ? s.time*3 : 0}; };
+    const hazardPose = (lane: number, kind: typeof row.kind) => { "worklet"; const a=trackSprite(lane,row.z,72,HAZARDS[kind]==="jump"?72:129.6),height=surfaceProfile(row,row.surface==="gap"?RAMP_DEPTH:0,lane); return {identity:row.serial,...a,y:a.y-height*85*a.scale,angle:kind === "coconut" ? s.time*3 : 0}; };
     p[1+i*2]=visible?hazardPose(obstacleLane(row,s.time),row.kind):HIDDEN_POSE;
     p[2+i*2]=visible&&row.second>=0?hazardPose(row.second,row.secondKind):HIDDEN_POSE;
     p[75+i]=visible&&row.third?hazardPose(row.shellLane,row.kind):HIDDEN_POSE;
@@ -30,14 +30,15 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
       if(!learn&&t>0){const a=projectTrack(row.shellLane,1);p[132+i*3+c]={identity:`${row.phase}-${c}`,x:a.x-24,y:a.y-45-(1-t)*28,scale:reduced?1:1+(1-t)*.55,opacity:t};}
     }
     const power=trackSprite(row.shellLane,row.z+.23,44,44);
-    p[167+i]=!learn&&row.power!=="none"&&!row.powerDone?{identity:row.serial,...power,y:power.y-30*power.scale}:HIDDEN_POSE;
+    p[167+i]=!learn&&row.power!=="none"&&!row.powerDone?{identity:row.serial,...power,y:power.y-(30+surfaceProfile(row,-.23)*85)*power.scale}:HIDDEN_POSE;
     if(!learn&&row.surface!=="sand"&&row.z>0&&row.z-row.length<1.18){
-      const front=row.z+(row.surface==="ramp"?.18:0),back=row.z-row.length;
-      const zf=row.surface==="gap"?front-.18:front;
-      for(let j=0;j<4;j++){
-        const z=j<2?zf:back, lane=row.shellLane+(j===0||j===3?-.43:.43), a=projectTrack(lane,z);
-        const height=row.surface==="ramp"&&j<2?0:.85*85*a.scale;
-        p[147+i*4+j]={identity:row.serial,x:a.x,y:a.y-height,scale:height,opacity:1};
+      for(let segment=-1;segment<(row.surface==="ramp"?RAMP_SECTIONS:0);segment++){
+        const span=surfaceSpan(row,segment),start=segment>=0?INCLINE_START+i*INCLINE_STRIDE+segment*4:147+i*4;
+        for(let j=0;j<4;j++){
+          const behind=span[j<2?0:1],lane=row.shellLane+(j===0||j===3?-.43:.43),a=projectTrack(lane,row.z-behind);
+          const height=surfaceProfile(row,behind)*85*a.scale;
+          p[start+j]={identity:row.serial,x:a.x,y:a.y-height,scale:height,opacity:1};
+        }
       }
     }
   });
