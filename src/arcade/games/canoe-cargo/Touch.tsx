@@ -9,7 +9,7 @@ export function CargoTouch({ active, cell, onGrab, onColumns, onSoft, onDrop, on
   onGrab: () => void; onColumns: (columns: number) => void; onSoft: (soft: boolean) => void; onDrop: () => void; onTap: () => void;
 }) {
   const touch = useSharedValue({ start: 0, time: 0, y: 0, columns: 0, soft: false, dropped: false, distance: 0 });
-  const gesture = useMemo(() => Gesture.Pan().enabled(active).minDistance(0).maxPointers(1)
+  const pan = useMemo(() => Gesture.Pan().enabled(active).minDistance(0).maxPointers(1)
     .onStart(() => {
       // eslint-disable-next-line react-hooks/purity -- This runs only on UI-thread gesture start, never during render.
       const now = performance.now();
@@ -32,5 +32,11 @@ export function CargoTouch({ active, cell, onGrab, onColumns, onSoft, onDrop, on
       runOnJS(onSoft)(false);
       touch.set({ ...touch.value, soft: false });
     }), [active, cell, touch, onGrab, onColumns, onSoft, onDrop, onTap]);
+  // iOS never activates a Pan for a motionless touch, so a still tap needs its own recognizer.
+  // Race: whichever activates first wins; any drag or flick activates the pan and cancels the tap.
+  const tap = useMemo(() => Gesture.Tap().enabled(active).maxDistance(10).maxDuration(300).onEnd((_, success) => {
+    if (success) runOnJS(onTap)();
+  }), [active, onTap]);
+  const gesture = useMemo(() => Gesture.Race(pan, tap), [pan, tap]);
   return <GestureDetector gesture={gesture}><Animated.View collapsable={false} testID="cargo-touch" accessible accessibilityRole="button" accessibilityLabel="Cargo board. Tap to rotate. Drag sideways to move. Pull down slowly and hold to fall faster. Flick down to land." onAccessibilityTap={onTap} style={{ width, height, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}>{children}</Animated.View></GestureDetector>;
 }
