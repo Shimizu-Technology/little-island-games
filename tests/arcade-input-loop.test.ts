@@ -1,6 +1,6 @@
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PressControl, useSwipe } from "../src/arcade/Input";
+import { PressControl, useSwipe, uiThreadTap, uiThreadSwipe, uiThreadHold } from "../src/arcade/Input";
 import { useArcadeLoop } from "../src/arcade/loop";
 const runtime = vi.hoisted(() => ({ effects: [] as (() => void | (() => void))[], cleanups: [] as (() => void)[], setters: [] as ReturnType<typeof vi.fn>[], frames: new Map<number, FrameRequestCallback>(), id: 0, haptic: vi.fn() }));
 vi.mock("react", async importOriginal => {
@@ -11,7 +11,15 @@ vi.mock("react", async importOriginal => {
 });
 vi.mock("expo-router", () => ({ useFocusEffect: () => {} }));
 vi.mock("react-native", () => ({ Platform: { OS: "web" }, AppState: {}, StyleSheet: { flatten: (s: unknown) => s }, PanResponder: { create: (handlers: unknown) => ({ panHandlers: handlers }) } }));
-vi.mock("react-native-gesture-handler", () => ({ Gesture: {} }));
+vi.mock("react-native-reanimated", () => ({ default: { View: "view" }, runOnJS: (fn: (...args: unknown[]) => void) => fn }));
+vi.mock("react-native-gesture-handler", () => {
+  const make = () => {
+    const handlers: Record<string, unknown> = {};
+    const g = new Proxy({ handlers }, { get: (target, key) => key === "handlers" ? handlers : (...args: unknown[]) => { handlers[String(key)] = args[0]; return g; } });
+    return g;
+  };
+  return { Gesture: { Manual: make, Pan: make }, GestureDetector: "detector" };
+});
 vi.mock("../src/components/ui", () => ({ PressableScale: "button" }));
 vi.mock("../src/components/feel", () => ({ feel: runtime.haptic }));
 function mount() { for (const fn of runtime.effects.splice(0)) { const cleanup = fn(); if (cleanup) runtime.cleanups.push(cleanup); } }
@@ -57,5 +65,38 @@ describe("production JS loop snapshot edges", () => {
     frame(1051); expect(snapshot).toHaveBeenLastCalledWith({ ticks: 3, event: 1, status: "over" });
     expect(loop.state.current.ticks).toBe(3); expect(publish).toHaveBeenCalledTimes(4);
     for (const fn of runtime.cleanups) fn(); expect(runtime.frames.size).toBe(0);
+  });
+});
+
+describe("UI gesture mailbox timing", () => {
+  type Box = import("../src/arcade/mailbox").Commands<string>;
+  const shared = <T,>(value: T) => ({ value, set(next: T) { this.value = next; } }) as import("react-native-reanimated").SharedValue<T>;
+  const handlers = (gesture: unknown) => (gesture as { handlers: Record<string, (...args: unknown[]) => void> }).handlers;
+  it("tap writes before JS feedback and hold releases on cancellation", () => {
+    const box = shared<Box>({ helper: false, queue: [] });
+    const feedback = vi.fn(() => expect(box.value.queue[0].action).toBe("flap"));
+    const manager = { begin: vi.fn(), activate: vi.fn(), end: vi.fn(), fail: vi.fn() };
+    const tap = handlers(uiThreadTap(box, "flap", feedback));
+    tap.onTouchesDown({}, manager); expect(feedback).toHaveBeenCalledOnce();
+    expect(box.value.queue.map(c => c.action)).toEqual(["flap"]);
+    tap.onTouchesUp({ allTouches: [1], changedTouches: [1] }, manager); expect(manager.end).toHaveBeenCalledOnce();
+    const hold = handlers(uiThreadHold(box, "down", "up"));
+    hold.onTouchesDown({}, manager); hold.onTouchesCancelled({}, manager); hold.onFinalize();
+    expect(box.value.queue.map(c => c.action)).toEqual(["flap", "down", "up"]);
+  });
+  it("swipe writes mid-move once and resets on the next gesture", () => {
+    const box = shared<Box>({ helper: false, queue: [] }), fired = shared(false), feedback = vi.fn();
+    const swipe = handlers(uiThreadSwipe(box, { left: "left", right: "right", up: "jump", down: "duck" }, fired, 20, feedback));
+    swipe.onBegin({}); swipe.onUpdate({ translationX: 19, translationY: 0 }); expect(box.value.queue).toEqual([]);
+    swipe.onUpdate({ translationX: 21, translationY: 0 }); swipe.onUpdate({ translationX: 90, translationY: 0 }); expect(box.value.queue.map(c => c.action)).toEqual(["right"]);
+    swipe.onBegin({}); swipe.onUpdate({ translationX: 0, translationY: -22 }); expect(box.value.queue.map(c => c.action)).toEqual(["right", "jump"]);
+    expect(feedback).toHaveBeenCalledTimes(2);
+  });
+  it("the JS production loop renders a halfway pose on a display frame with no simulation step", () => {
+    const target = shared<import("../src/arcade/poses").SpritePose[]>([]);
+    const loop = useArcadeLoop({ initial: { x: 0 }, input: 0, active: true, step: s => ({ x: s.x + 10 }), reduce: s => s,
+      pose: { target, build: s => [{ x: s.x, y: 0 }] } });
+    mount(); frame(1000); frame(1017); frame(1025);
+    expect(loop.state.current.x).toBe(10); expect(target.value[0].x).toBeCloseTo(5);
   });
 });

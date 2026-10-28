@@ -16,7 +16,8 @@
         "NSLocalNetworkUsageDescription": "Join a grown-up-created Little Island family room on nearby devices. No internet account is needed.",
         "NSBonjourServices": [
           "_li-mystery._tcp"
-        ]
+        ],
+        "CADisableMinimumFrameDurationOnPhone": true
       },
       "privacyManifests": {
         "NSPrivacyTracking": false,

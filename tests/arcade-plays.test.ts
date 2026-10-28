@@ -27,6 +27,7 @@ describe("one play table for the arcade", () => {
     for (const game of arcadeGames) {
       const play = arcadePlays[game.id];
       expect(play.clearedTitle.length).toBeGreaterThan(0);
+      expect(play.fullBleed).toBe(true);
       expect(play.levels.map(l => l.id)).toEqual(allLevelIds);
       for (const level of play.levels) {
         expect(play.level(level.id)).toEqual(level);

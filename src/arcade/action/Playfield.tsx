@@ -17,13 +17,16 @@ import { beachWallContact } from "../feelArt";
 import type { ArtPose } from "../ArtPose";
 import { ArcadeSprite, type SpritePose } from "../Sprite";
 import { uiThreadDrag, multiTouchDrag, type DragPoint, type TouchPoints } from "../Input";
+import { palmPoses, beachPoses } from "./poses";
+import { HIDDEN_POSE } from "../poses";
+import { palmHud, beachHud } from "../publication";
 import { useArcadeUiLoop } from "../uiLoop";
 import { HeartsHud, HitReaction } from "../LivesHud";
 import type { ArcadeResult } from "../types";
 import type { OutfitId } from "../progress";
 import { ActionHero, BallArt, BeetleArt, HuskArt, NetArt, Scene, TurtleArt } from "./Art";
-import { palmConfig, palmResult, type PalmState } from "../games/palm-patrol/engine";
-import { beachConfig, beachResult, paddleWidth, turtleX, type BeachState } from "../games/beach-ball/engine";
+import { palmResult, type PalmState } from "../games/palm-patrol/engine";
+import { beachResult, type BeachState } from "../games/beach-ball/engine";
 import { arenaTransform, arenaTouch, type Arena, BALL_RADIUS } from "./arena";
 import {
   aimPoint,
@@ -34,7 +37,6 @@ import {
   type PalmFrame,
   type BeachFrame,
 } from "./controls";
-const hidden: SpritePose = { x: -200, y: -200, opacity: 0 };
 const gestureStyle: ViewStyle = Platform.OS === "web" ? ({ touchAction: "none", userSelect: "none" } as ViewStyle) : {};
 function useArena(width: number, height: number) {
   const [size, setSize] = useState({ width, height });
@@ -50,10 +52,6 @@ function useArena(width: number, height: number) {
       setSize({ width, height });
     },
   };
-}
-function position(a: Arena, x: number, y: number, w: number, h = w): SpritePose {
-  "worklet";
-  return { x: a.x + (x - w / 2) * a.scale, y: a.y + (y - h / 2) * a.scale, opacity: 1 };
 }
 function Pill({ children, label }: { children: React.ReactNode; label?: string }) {
   return (
@@ -205,7 +203,7 @@ export function PalmBoard({
     point = useSharedValue<DragPoint>({ x: 180, y: 552, down: false }),
     flags = useSharedValue({ helper, taps: 0, finish: false }),
     keyboard = useSharedValue({ x: 180, firing: false, used: false }),
-    poses = useSharedValue<ArtPose[]>(Array.from({ length: 88 }, () => hidden)),
+    poses = useSharedValue<ArtPose[]>(Array(88).fill(HIDDEN_POSE)),
     entrance = useSharedValue({ group: "", started: 0 }),
     reported = useRef(false);
   const gesture = useMemo(
@@ -231,64 +229,18 @@ export function PalmBoard({
     helper: flags.value.helper,
     finish: flags.value.finish,
   }));
-  const onFrame = useCallback(
+  const build = useCallback(
     (s: PalmState) => {
       "worklet";
-      const a = arena.value,
-        next: ArtPose[] = Array.from({ length: 88 }, () => hidden),
-        group = `${s.wave}-${s.relay}-${s.fact}`;
+      const group = `${s.wave}-${s.relay}-${s.fact}`;
       if (entrance.value.group !== group) entrance.set({ group, started: s.time });
       const entry = Math.max(0, 1 - (s.time - entrance.value.started) / 0.2);
-      for (const b of s.beetles) {
-        const size = b.boss ? 87 : 58,
-          p: ArtPose = position(a, b.x, b.y, size);
-        p.frame = !reduced && !b.caught && !b.diving ? Math.floor(s.time * 7 + b.id % 2) % 2 : 0;
-        // Small, nonblocking entry gesture; never hide a collidable beetle off-screen.
-        if (!reduced && palmConfig(s).world !== "learn") {
-          p.x += entry * (s.relay % 3 === 0 ? 0 : s.relay % 2 ? -10 : 10) * a.scale;
-          p.y -= entry * (s.relay % 3 === 0 ? 12 : 6) * a.scale;
-          p.opacity = 1 - entry * 0.35;
-        }
-        p.angle = reduced
-          ? 0
-          : b.caught
-            ? Math.sin(s.time * 20) * 0.25
-            : b.diving
-              ? Math.atan2(b.diveX, palmConfig(s).diveSpeed) + Math.sin(s.time * 6 + b.id) * 0.07
-              : s.direction * 0.035;
-        p.scale = b.caught ? 0.85 : 1;
-        next[(b.boss ? 15 : 0) + b.id] = p;
-        if (b.caught) next[30 + b.id] = { ...position(a, b.x, b.y, 58), angle: p.angle };
-        if (b.hp > 1 && !b.boss) next[73 + b.id] = position(a, b.x, b.y - 12, 14, 7);
-      }
-      for (let i = 0; i < s.husks.length; i++)
-        next[45 + i] = { ...position(a, s.husks[i].x, s.husks[i].y, 20), angle: reduced ? 0 : s.time * 8 };
-      next[57] = {
-        ...position(a, s.launcher, 552, 78),
-        frame: reduced ? 0 : s.cooldown > 0.16 ? 1 : s.cooldown > 0.08 ? 2 : 0,
-      };
-      if (s.pulse > 0 && s.cue !== "fire") {
-        const age = 1 - s.pulse / 0.45;
-        for (let i = 0; i < 8; i++)
-          next[58 + i] = {
-            ...position(
-              a,
-              s.feedbackX + Math.cos((i * Math.PI) / 4) * age * 42,
-              s.feedbackY + Math.sin((i * Math.PI) / 4) * age * 42,
-              6
-            ),
-            opacity: reduced ? 0 : 1 - age,
-          };
-        next[66] = {
-          ...position(a, Math.max(55, Math.min(300, s.feedbackX)), Math.max(76, s.feedbackY - 38 - age * 16), 110, 24),
-          opacity: s.pulse / 0.45,
-        };
-      }
-      poses.set(next);
+      return palmPoses(s, arena.value, reduced, entry);
     },
-    [arena, poses, reduced, entrance]
+    [arena, reduced, entrance]
   );
-  const { snapshot: s, state, clock } = useArcadeUiLoop({ initial, input, active, step: palmFrameStep, onFrame });
+  const pose = useMemo(() => ({ build, target: poses }), [build, poses]);
+  const { snapshot: s, outcome, state, clock } = useArcadeUiLoop({ initial, input, active, step: palmFrameStep, result: palmResult, select: palmHud, pose });
   const sounds = useRef({ event: 0, shots: 0 });
   useEffect(() => {
     flags.set({ ...flags.value, helper });
@@ -298,12 +250,12 @@ export function PalmBoard({
     }
   }, [active, helper, flags, point, keyboard]);
   useEffect(() => {
-    const r = palmResult(s);
-    if (r && !reported.current) {
+    const r = outcome;
+    if (r && active && !reported.current) {
       reported.current = true;
       onResult(r, s.helped);
     }
-  }, [s, onResult]);
+  }, [s, outcome, active, onResult]);
   useEffect(() => {
     const shots = s.shots - sounds.current.shots;
     if (shots > 0) onTone("coral", false);
@@ -337,7 +289,7 @@ export function PalmBoard({
       window.removeEventListener("blur", blur);
     };
   }, [active, keyboard, flags, state]);
-  const learning = palmConfig(s).world === "learn",
+  const learning = s.world === "learn",
     scale = camera.scale;
   return (
     <GestureDetector gesture={gesture} touchAction="none">
@@ -348,7 +300,7 @@ export function PalmBoard({
         onLayout={layout}
         style={[{ flex: 1, overflow: "hidden", minHeight: 210, backgroundColor: "#143E3D" }, gestureStyle]}
       >
-        <ArenaScene palm world={palmConfig(s).world} camera={camera} />
+        <ArenaScene palm world={s.world} camera={camera} />
         <PalmSprites poses={poses} scale={scale} />
         {[72, 180, 288].map((x, i) => (
           <View
@@ -371,15 +323,15 @@ export function PalmBoard({
         ))}
         <PalmHero poses={poses} scale={scale} outfit={outfit} hit={s.lives.hit} onTone={onTone} />
         {learning &&
-          s.beetles.map((b) => (
-            <View
+          s.answers.map((b) => (
+            <ArcadeSprite poses={poses} index={b.id} width={58 * scale} height={58 * scale} key={b.id}><View
               key={b.id}
               testID={`palm-answer-${b.id}`}
               pointerEvents="none"
               style={{
                 position: "absolute",
-                left: camera.x + (b.x - 25) * scale,
-                top: camera.y + (b.y + 19) * scale,
+                left: 4 * scale,
+                top: 48 * scale,
                 width: 50 * scale,
                 alignItems: "center",
                 backgroundColor: "#173F38",
@@ -387,7 +339,7 @@ export function PalmBoard({
               }}
             >
               <Heading style={{ color: "#FFF4CD", fontSize: 22 * scale }}>{b.value}</Heading>
-            </View>
+            </View></ArcadeSprite>
           ))}
         <ArcadeSprite poses={poses} index={66} width={110 * scale} height={24 * scale}>
           <Text
@@ -415,11 +367,11 @@ export function PalmBoard({
             alignItems: "center",
           }}
         >
-          <View accessible accessibilityLabel={`Wave ${s.wave} of ${s.level === "endless" ? "endless" : s.level.waves}, group ${s.relay} of ${palmConfig(s).relays}, ${s.caught} beetles netted`} style={{ padding: 7, gap: 4, backgroundColor: "#123F51EE", borderRadius: 14 }}>
-            <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}><Text style={{ color: "#FFF3C7", fontWeight: "800", fontSize: 13 }}>Wave {s.wave}/{s.level === "endless" ? "∞" : s.level.waves}</Text>{Array.from({ length: palmConfig(s).waves }, (_, i) => <View key={i} style={{ width: 6, height: 6, borderRadius: 3, borderWidth: 1, borderColor: "#FFF0BE", backgroundColor: i + 1 <= s.wave ? "#B6EFCC" : "transparent" }}/>)}</View>
+          <View accessible accessibilityLabel={`Wave ${s.wave} of ${s.level === "endless" ? "endless" : s.level.waves}, group ${s.relay} of ${s.relays}, ${s.caught} beetles netted`} style={{ padding: 7, gap: 4, backgroundColor: "#123F51EE", borderRadius: 14 }}>
+            <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}><Text style={{ color: "#FFF3C7", fontWeight: "800", fontSize: 13 }}>Wave {s.wave}/{s.level === "endless" ? "∞" : s.level.waves}</Text>{Array.from({ length: s.waves }, (_, i) => <View key={i} style={{ width: 6, height: 6, borderRadius: 3, borderWidth: 1, borderColor: "#FFF0BE", backgroundColor: i + 1 <= s.wave ? "#B6EFCC" : "transparent" }}/>)}</View>
             <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}>
               <Text style={{ color: "#D3EEE0", fontSize: 11 }}>Group</Text>
-              {Array.from({ length: palmConfig(s).relays }, (_, i) => <View key={i} style={{ width: 9, height: 9, borderRadius: i + 1 < s.relay ? 2 : 5, borderWidth: 1.5, borderColor: "#FFF0BE", backgroundColor: i + 1 <= s.relay ? "#FFCE74" : "transparent" }}/>) }
+              {Array.from({ length: s.relays }, (_, i) => <View key={i} style={{ width: 9, height: 9, borderRadius: i + 1 < s.relay ? 2 : 5, borderWidth: 1.5, borderColor: "#FFF0BE", backgroundColor: i + 1 <= s.relay ? "#FFCE74" : "transparent" }}/>) }
             </View>
           </View>
           {!learning && (
@@ -447,7 +399,7 @@ export function PalmBoard({
             </Text>
           </View>
         )}
-        {s.time < 4 && (camera.x >= 150 || camera.y >= 30) && (
+        {s.tip && (camera.x >= 150 || camera.y >= 30) && (
           <View
             testID="palm-aim-tip"
             pointerEvents="none"
@@ -572,13 +524,17 @@ export function BeachBoard({
 }) {
   const { camera, arena, layout } = useArena(width, height),
     reduced = useReducedMotion(),
-    poses = useSharedValue<SpritePose[]>(Array.from({ length: 72 }, () => hidden)),
-    walls = useSharedValue<{ time: number; balls: BeachState["balls"]; sparks: { x: number; y: number; at: number }[] }>({ time: initial.time, balls: initial.balls, sparks: [] }),
+    poses = useSharedValue<SpritePose[]>(Array(72).fill(HIDDEN_POSE)),
+    walls = useSharedValue<{ time: number; balls: BeachState["balls"]; serial: number; sparks: { x: number; y: number; at: number }[] }>({ time: initial.time, balls: initial.balls, serial: 0, sparks: [] }),
     points = useSharedValue<TouchPoints>({}),
     mapping = useSharedValue<SeatPointers>({ owners: [null, null], seats: {} }),
     input = useSharedValue<BeachFrame>({ x: [null, null], helper, finish: false }),
     reported = useRef(false);
   const gesture = useMemo(() => multiTouchDrag(points).enabled(active), [points, active]);
+  // Audio is an observer of the UI-owned wall serial; builders capture only worklet-safe values.
+  useAnimatedReaction(() => walls.value.serial, (serial, before) => {
+    if (before !== null && serial > before) runOnJS(onTone)("wall", false);
+  }, [walls, onTone]);
   useAnimatedReaction(
     () => points.value,
     (next) => {
@@ -591,63 +547,25 @@ export function BeachBoard({
       input.value = { ...input.value, x };
     }
   );
-  const onFrame = useCallback(
+  const build = useCallback(
     (s: BeachState) => {
       "worklet";
-      const a = arena.value,
-        config = beachConfig(s),
-        next: SpritePose[] = Array.from({ length: 72 }, () => hidden),
-        ballSize = (BALL_RADIUS * 2) / 0.95;
       const previous = walls.value, dt = s.time - previous.time;
       const sparks = previous.sparks.filter(e => s.time - e.at < 0.1);
+      let serial = previous.serial;
       if (dt > 0) {
         for (let i = 0; i < s.balls.length; i++) {
           const contact = previous.balls[i] && beachWallContact(previous.balls[i], s.balls[i], dt);
-          if (contact) { sparks.push({ ...contact, at: s.time }); runOnJS(onTone)("wall", false); }
+          if (contact) { sparks.push({ ...contact, at: s.time }); serial++; }
         }
-        walls.set({ time: s.time, balls: s.balls, sparks: sparks.slice(-2) });
+        walls.set({ time: s.time, balls: s.balls, serial, sparks: sparks.slice(-2) });
       }
-      for (let i = 0; i < Math.min(2, sparks.length); i++) {
-        const e = sparks[i], age = (s.time - e.at) / 0.1;
-        next[66 + i] = { ...position(a, e.x, e.y, 18), opacity: 1 - age, scale: reduced ? 1 : 0.9 + age * 0.2 };
-      }
-      for (let i = 0; i < s.balls.length; i++) {
-        const b = s.balls[i];
-        if (!reduced && !b.wait && Math.hypot(b.vx, b.vy) >= 330) {
-          for (let j = 0; j < 2; j++) {
-            const tail = (j + 1) * 0.014;
-            next[68 + i * 2 + j] = { ...position(a, Math.max(12, Math.min(348, b.x - b.vx * tail)), b.y - b.vy * tail, 7), opacity: 0.23 - j * 0.08 };
-          }
-        }
-        next[i] = {
-          ...position(a, b.x, b.y, ballSize),
-          angle: reduced ? 0 : s.time * (b.vy < 0 ? -3 : 3),
-          scale: !reduced && b.squash ? 1 - b.squash * 0.8 : 1,
-        };
-      }
-      for (let i = 0; i < 2; i++) next[2 + i] = position(a, s.paddles[i], i ? 65 : 535, paddleWidth(s, i as 0 | 1), 20);
-      if (config.turtle) next[12] = position(a, turtleX(s), 300, 86);
-      let pop = 0;
-      for (let j = 0; j < s.effects.length; j++) {
-        const e = s.effects[j],
-          age = 1 - e.remaining / e.duration;
-        for (let i = 0; i < 8; i++)
-          next[14 + j * 8 + i] = {
-            ...position(
-              a,
-              e.x + Math.cos((i * Math.PI) / 4) * age * 28,
-              e.y + Math.sin((i * Math.PI) / 4) * age * 28,
-              5
-            ),
-            opacity: reduced ? 0 : 1 - age,
-          };
-        if (e.point && pop < 2) next[62 + pop++] = { ...position(a, e.x, e.y - age * 18, 65, 26), opacity: 1 - age };
-      }
-      poses.set(next);
+      return beachPoses(s, arena.value, reduced, sparks.slice(-2));
     },
-    [arena, poses, reduced, walls, onTone]
+    [arena, reduced, walls]
   );
-  const { snapshot: s, state, clock } = useArcadeUiLoop({ initial, input, active, step: beachFrameStep, onFrame });
+  const pose = useMemo(() => ({ build, target: poses }), [build, poses]);
+  const { snapshot: s, outcome, state, clock } = useArcadeUiLoop({ initial, input, active, step: beachFrameStep, result: beachResult, select: beachHud, pose });
   useEffect(() => {
     input.set({ ...input.value, helper });
     if (!active) {
@@ -656,12 +574,12 @@ export function BeachBoard({
     }
   }, [active, helper, input, points, mapping]);
   useEffect(() => {
-    const r = beachResult(s);
-    if (r && !reported.current) {
+    const r = outcome;
+    if (r && active && !reported.current) {
       reported.current = true;
       onResult(r, s.winner);
     }
-  }, [s, onResult]);
+  }, [s, outcome, active, onResult]);
   useEffect(() => {
     if (s.event) onTone(s.cue === "point" ? "clear" : "shell-0", s.cue === "point");
   }, [s.event, s.cue, onTone]);
@@ -678,7 +596,7 @@ export function BeachBoard({
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
   }, [active, input, state]);
-  const config = beachConfig(s),
+  const config = s.config,
     scale = camera.scale;
   return (
     <GestureDetector gesture={gesture} touchAction="none">
@@ -752,7 +670,7 @@ export function BeachBoard({
             <Pill>Count +{config.countBy}</Pill>
           </View>
         )}
-        {s.time < 4 && (
+        {s.tip && (
           <View
             pointerEvents="none"
             style={{ position: "absolute", left: camera.x + 12 * scale, top: camera.y + 455 * scale }}

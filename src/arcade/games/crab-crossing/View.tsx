@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, memo, useState } from "react";
+import React, { useCallback, useEffect, useRef, memo, useMemo, useState } from "react";
 import { View, Platform, type ViewStyle } from "react-native";
 import { crabHopFrame } from "../../feelArt";
 import type { ArtPose } from "../../ArtPose";
@@ -67,13 +67,15 @@ export function CrabBoard({
   const unit = (size - 6) / 9,
     poses = useSharedValue<ArtPose[]>([]),
     reduced = useReducedMotion();
-  const onFrame = useCallback(
+  // Kit v3: pose-only interpolation, including a respawn identity guard.
+  const build = useCallback(
     (s: CrabState) => {
       const hero = crabPosition(s),
         bounce = s.hop ? Math.sin((s.hop.age / CRAB_HOP) * Math.PI) : 0,
         lanes = crabLanes(s),
         p: ArtPose[] = [
           {
+            identity: s.lives.hit,
             x: hero.x * unit,
             y: (hero.y - hero.arc) * unit,
             scale: 1 + bounce * 0.08,
@@ -93,16 +95,17 @@ export function CrabBoard({
       }
       for (let i = 0; i < 3; i++)
         p.push({ x: ((i * 3 + (reduced ? 0 : s.time * 0.4)) % 9) * unit, y: (2.4 + i * 0.6) * unit, opacity: 0.3 });
-      poses.set(p);
+      return p;
     },
-    [poses, reduced, unit]
+    [reduced, unit]
   );
+  const pose = useMemo(() => ({ build, target: poses, snapDistance: unit * 2 }), [build, poses, unit]);
   const {
       snapshot: s,
       dispatch,
       state,
       budget,
-    } = useArcadeLoop({ initial, step: crabStep, reduce: crabTransition, input: tick, active, onFrame }),
+    } = useArcadeLoop({ initial, step: crabStep, reduce: crabTransition, input: tick, active, pose }),
     reported = useRef(false),
     [homes, setHomes] = useState<{ crossed: number; slots: number[] }>({ crossed: initial.crossed, slots: [] }),
     last = useRef({ crossed: 0, bumps: 0, cursor: 0 });

@@ -3,20 +3,27 @@ import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 
 import { PosePath, type ArtPose } from "../../ArtPose";
 import type { SharedValue } from "react-native-reanimated";
 import type { OutfitId } from "../../progress";
+import type { WorldId } from "../../types";
 export const palettes = {
-  rail: [
-    { sky: "#173F3D", ground: "#357955", light: "#A3CF71", accent: "#FFCE69" },
-    { sky: "#153D56", ground: "#285A65", light: "#6EBE9A", accent: "#FFA56E" },
-    { sky: "#282D55", ground: "#414965", light: "#9EBA87", accent: "#FFE49B" },
-    { sky: "#59476C", ground: "#776C8B", light: "#BAD58E", accent: "#FFE49B" },
-  ],
-  crab: [
-    { sky: "#0B5466", ground: "#0C8C9C", light: "#A9E4D7", accent: "#FFD481" },
-    { sky: "#365180", ground: "#277D9C", light: "#AFDCD8", accent: "#FFC99B" },
-    { sky: "#242D5C", ground: "#3B5F8E", light: "#B6DDDD", accent: "#FFE8A6" },
-    { sky: "#375E69", ground: "#4397A0", light: "#D3E9BC", accent: "#FFE49B" },
-  ],
-};
+  rail: {
+    w1: { sky: "#173F3D", ground: "#357955", light: "#A3CF71", accent: "#FFCE69" },
+    w2: { sky: "#153D56", ground: "#285A65", light: "#6EBE9A", accent: "#FFA56E" },
+    w3: { sky: "#282D55", ground: "#414965", light: "#9EBA87", accent: "#FFE49B" },
+    w4: { sky: "#36564A", ground: "#70865B", light: "#C2D596", accent: "#FFE2A0" },
+    w5: { sky: "#51415E", ground: "#7C6684", light: "#D5BAD3", accent: "#F6C4D6" },
+    w6: { sky: "#82544A", ground: "#A37C59", light: "#E6CD91", accent: "#FFE9A1" },
+    learn: { sky: "#59476C", ground: "#776C8B", light: "#BAD58E", accent: "#FFE49B" },
+  },
+  crab: {
+    w1: { sky: "#0B5466", ground: "#0C8C9C", light: "#A9E4D7", accent: "#FFD481" },
+    w2: { sky: "#365180", ground: "#277D9C", light: "#AFDCD8", accent: "#FFC99B" },
+    w3: { sky: "#242D5C", ground: "#3B5F8E", light: "#B6DDDD", accent: "#FFE8A6" },
+    w4: { sky: "#316159", ground: "#599B86", light: "#C1E4B8", accent: "#F5DF96" },
+    w5: { sky: "#564C75", ground: "#80739D", light: "#D6C9E6", accent: "#F4C3D6" },
+    w6: { sky: "#9B6253", ground: "#BA8C74", light: "#F3D6AF", accent: "#FFE697" },
+    learn: { sky: "#375E69", ground: "#4397A0", light: "#D3E9BC", accent: "#FFE49B" },
+  },
+} satisfies Record<"rail" | "crab", Record<WorldId, { sky: string; ground: string; light: string; accent: string }>>;
 function Outfit({ outfit }: { outfit: OutfitId }) {
   return outfit === "sunhat" ? (
     <G stroke="#493528" strokeWidth={2}>
@@ -218,12 +225,12 @@ export const GridBackdrop = memo(function GridBackdrop({
   height,
 }: {
   crab: boolean;
-  world?: string;
+  world?: WorldId;
   width: number;
   height: number;
 }) {
   const gradient = useId();
-  const p = palettes[crab ? "crab" : "rail"][{ w1: 0, w2: 1, w3: 2, w4: 1, w5: 2, w6: 0, learn: 3 }[world] ?? 0];
+  const p = palettes[crab ? "crab" : "rail"][world];
   return (
     <Svg
       width={width}

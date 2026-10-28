@@ -11,6 +11,7 @@ export function advanceClock(clock: FixedClock, elapsed: number): { clock: Fixed
 }
 export type Swipe = "up" | "down" | "left" | "right";
 export function swipeDirection(dx: number, dy: number, threshold = 24): Swipe | null {
+  "worklet";
   if (![dx, dy].every(Number.isFinite) || Math.max(Math.abs(dx), Math.abs(dy)) < threshold) return null;
   return Math.abs(dx) > Math.abs(dy) ? dx > 0 ? "right" : "left" : dy > 0 ? "down" : "up";
 }

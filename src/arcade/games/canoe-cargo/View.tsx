@@ -10,7 +10,8 @@ import { useArcadeLoop } from "../../loop";
 import type { OutfitId } from "../../progress";
 import type { ArcadeResult } from "../../types";
 import { CargoCaptain, CargoCanoe, CargoScene, CargoTile, CargoOutline } from "./Art";
-import { COLS, ROWS, cargoGoalValue, cargoResult, cargoStep, cargoTransition, landingRow, pieceCells, type CargoInput, type CargoPiece, type CargoState } from "./engine";
+import { COLS, ROWS, cargoGoalValue, cargoResult, cargoStep, cargoTransition, pieceCells, type CargoInput, type CargoPiece, type CargoState } from "./engine";
+import { cargoPoses } from "./poses";
 import { CargoTouch } from "./Touch";
 const idle: CargoInput = { type: "idle" }, ink = "#FFF5D7";
 const SettledCargo = memo(function SettledCargo({ board, cell, learning }: { board: CargoState["board"]; cell: number; learning: boolean }) {
@@ -61,11 +62,11 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
   const cell = Math.max(1, Math.min(43, (width - (wide ? 226 : 30)) / COLS, (height - (wide ? 110 : 230) - (initial.level === "endless" ? 48 : 0) - (debug ? 14 : 0)) / ROWS));
   const boardW = cell * COLS, boardH = cell * ROWS, learning = initial.level !== "endless" && !!initial.level.targetSum;
   const poses = useSharedValue<SpritePose[]>([]), reported = useRef(false), helped = useRef(helper);
-  const publish = useCallback((s: CargoState) => {
-    const ghost = landingRow(s), visible = s.status === "playing" ? 1 : 0;
-    poses.set([...pieceCells(s.piece).map(([r, c]) => ({ x: (s.col + c) * cell, y: (s.row + r) * cell, opacity: visible })), { x: s.col * cell, y: s.row * cell, opacity: visible }, { x: s.col * cell, y: ghost * cell, opacity: visible }]);
-  }, [cell, poses]);
-  const { snapshot: s, dispatch, state: stateRef, budget } = useArcadeLoop({ initial, step: cargoStep, reduce: cargoTransition, input: idle, active, onFrame: publish });
+  const build = useCallback((s: CargoState) => {
+    return cargoPoses(s, cell);
+  }, [cell]);
+  const pose = useMemo(() => ({ build, target: poses, snapDistance: cell * 2 }), [build, poses, cell]);
+  const { snapshot: s, dispatch, state: stateRef, budget } = useArcadeLoop({ initial, step: cargoStep, reduce: cargoTransition, input: idle, active, pose });
   const heard = useRef(0), bumped = useRef(0);
   useEffect(() => { if (active) { dispatch({ type: "helper", value: helper }); dispatch({ type: "soft", value: false }); if (helper) helped.current = true; } }, [active, helper, dispatch]);
   useEffect(() => {

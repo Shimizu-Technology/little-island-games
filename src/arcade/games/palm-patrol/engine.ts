@@ -261,7 +261,10 @@ export function palmTransition(s: PalmState, input: PalmInput): PalmState {
     return input.value === s.helper
       ? s
       : { ...s, helper: input.value, helped: s.helped || input.value, lives: configureLives(s.lives, input.value) };
-  if (input.type === "move" && finite(input.x, -10000, 10000)) return { ...s, launcher: clamp(input.x, 24, 336) };
+  if (input.type === "move" && finite(input.x, -10000, 10000)) {
+    const launcher = clamp(input.x, 24, 336);
+    return launcher === s.launcher ? s : { ...s, launcher };
+  }
   if (input.type === "finish") return s.level === "endless" ? { ...s, phase: "rest" } : s;
   if (input.type === "toss" && s.cooldown <= 0.000001 && s.waveWait <= 0 && s.husks.length < 12)
     return {
@@ -295,7 +298,7 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
     cooldown: Math.max(0, before.cooldown - dt),
     pulse: Math.max(0, before.pulse - dt),
     lives: stepLives(before.lives, dt),
-    shields: [...before.shields],
+    shields: before.shields,
     beetles: before.beetles.map((b) => ({ ...b })),
     husks: before.husks.map((h) => ({ ...h })),
   };
@@ -381,6 +384,7 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
     if (learning || b.caught || b.y + BUG_RADIUS_Y < 475) continue;
     const shield = [72, 180, 288].findIndex((x) => Math.abs(x - b.x) <= 38 + BUG_RADIUS_X);
     if (shield >= 0 && s.shields[shield] > 0) {
+      s.shields = [...s.shields];
       s.shields[shield]--;
       b.y = 300;
       b.diving = false;

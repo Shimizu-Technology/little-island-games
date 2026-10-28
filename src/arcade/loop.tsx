@@ -3,6 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { AppState, Platform } from "react-native";
 import { arcadeEvent } from "./events";
 import { advanceClock, FIXED_DT, type FixedClock } from "./clock";
+import { interpolatePoses, type PoseBuilder, type SpritePose } from "./poses";
 export type FrameBudget = { fps: number; p95: number; max: number; dropped: number; ticks: number };
 /** Focus, native background, and browser visibility share one source of truth. */
 export function useArcadeForeground() {
@@ -22,22 +23,28 @@ export function useArcadeForeground() {
  * Memoize sprite art on primitive props; HUD snapshots must not redraw it.
  * An active=false sheet/focus/background cancels the frame and discards the remainder.
  */
-export function useArcadeLoop<S, I>({ initial, step, reduce, input, active, onFrame }: { initial: S; step: (s: S, input: I, dt: number) => S; reduce: (s: S, input: I) => S; input: I; active: boolean; onFrame?: (s: S) => void }) {
-  const state = useRef(initial), live = useRef({ active, step, reduce, input, onFrame });
+export function useArcadeLoop<S, I>({ initial, step, reduce, input, active, onFrame, pose }: { initial: S; step: (s: S, input: I, dt: number) => S; reduce: (s: S, input: I) => S; input: I; active: boolean; onFrame?: (s: S) => void; pose?: PoseBuilder<S> }) {
+  const state = useRef(initial), previousPose = useRef<SpritePose[]>([]), currentPose = useRef<SpritePose[]>([]), live = useRef({ active, step, reduce, input, onFrame, pose });
   const [snapshot, setSnapshot] = useState(initial), [budget, setBudget] = useState<FrameBudget>({ fps: 0, p95: 0, max: 0, dropped: 0, ticks: 0 });
-  useLayoutEffect(() => { live.current = { active, step, reduce, input, onFrame }; }, [active, step, reduce, input, onFrame]);
+  useLayoutEffect(() => { live.current = { active, step, reduce, input, onFrame, pose }; }, [active, step, reduce, input, onFrame, pose]);
   useEffect(() => {
     if (!active) return;
     let id = 0, previous = 0, lastHud = 0, lastBudget = 0, samples: number[] = [], clock: FixedClock = { remainder: 0, ticks: 0, dropped: 0 };
     const frame = (now: number) => {
       if (!live.current.active) return;
+      const builder = live.current.pose;
+      if (builder && !currentPose.current.length) currentPose.current = previousPose.current = builder.build(state.current);
       const beforeEvent = arcadeEvent(state.current);
       if (previous) {
         const elapsed = (now - previous) / 1000, advanced = advanceClock(clock, elapsed); clock = advanced.clock;
-        for (let i = 0; i < advanced.steps; i++) state.current = live.current.step(state.current, live.current.input, FIXED_DT);
+        for (let i = 0; i < advanced.steps; i++) {
+          state.current = live.current.step(state.current, live.current.input, FIXED_DT);
+          if (builder) { previousPose.current = currentPose.current; currentPose.current = builder.build(state.current); }
+        }
         samples.push(now - previous);
       }
       previous = now;
+      if (builder) builder.target.set(interpolatePoses(previousPose.current, currentPose.current, clock.remainder / FIXED_DT, builder.snapDistance));
       live.current.onFrame?.(state.current);
       if (beforeEvent !== arcadeEvent(state.current) || now - lastHud >= 100) { setSnapshot(state.current); lastHud = now; }
       if (now - lastBudget >= 1000 && samples.length) {
@@ -47,11 +54,15 @@ export function useArcadeLoop<S, I>({ initial, step, reduce, input, active, onFr
       id = requestAnimationFrame(frame);
     };
     id = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(id);
+    return () => { cancelAnimationFrame(id); previousPose.current = currentPose.current; };
   }, [active]);
   const dispatch = useCallback((action: I) => {
     if (!live.current.active) return state.current;
-    state.current = live.current.reduce(state.current, action); setSnapshot(state.current); live.current.onFrame?.(state.current);
+    state.current = live.current.reduce(state.current, action);
+    // Discrete controls (turn/rotate/drop) are immediate; reset history to avoid rewinding them.
+    const builder = live.current.pose;
+    if (builder) { currentPose.current = previousPose.current = builder.build(state.current); builder.target.set(currentPose.current); }
+    setSnapshot(state.current); live.current.onFrame?.(state.current);
     return state.current;
   }, []);
   return { snapshot, state, dispatch, budget };
