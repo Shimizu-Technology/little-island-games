@@ -70,3 +70,15 @@ Learning worlds keep their current rules (untimed reading, math choices at a slo
 - Unit tests for each engine's new rules: lives, game over, lock delay, DAS, bag randomizer, projection math, level data for all 56 levels, and save migration of old stars and the Helper flag.
 - **Simulator video evidence** per real-time game (`xcrun simctl io <udid> recordVideo`) on a Release build: frame-step through the recording and confirm steady motion, objects emerging on the road at the horizon (Lagoon Run), immediate response to touch-down, and a game over reached.
 - Full gate, Doctor, an independent review, then build **1.9.0 (15)** to TestFlight.
+
+## Acceptance record (1.9.0 (15))
+
+| Check | Result |
+|---|---|
+| Shared kit: 56 levels, Helper default off + one-time migration, hearts and Game over, touch-down / auto-repeat / mid-move swipe input, gesture-handler, same-frame events, UI-thread loop | Done (feat/feel-kit), web QA 42/42 |
+| Per-game rebuilds | Done for all nine games with web recordings, inspected frames and pacing metrics in `little-island-games-artifacts/island-arcade/feel-*` |
+| Fruit Bat Flight ready state | Added after native footage showed a hearts-drain on respawn: "Tap to fly" hover at level start and after each lost heart; gameplay time frozen while hovering; free play still one hit |
+| Native Release (iOS 18.5, iPhone 16 Pro simulator, 1.9.0 (15)) | Recorded Fruit Bat Flight, Lagoon Run, Canoe Cargo, Palm Patrol, Beach Ball, Rail Parade, Crab Crossing: each ran on the UI-thread/gesture path without crashes and reached Game over with score/best and Try again. Lagoon objects emerge on the road at the horizon; Cargo falls at W1 pacing with a landing outline; Palm formation marches; Beach rallies score. Evidence: `island-arcade/native-1.9.0/` |
+| Independent review | Round 1: two material (zero-heart run after a Helper toggle; soft-drop teleport) + one minor (multi-touch end), fixed in 8a75473 with regression tests. Round 2: two minor (hover advanced gameplay time; fixtures bypassed the ready state), fixed in 5ded892 |
+| Full gate | `npm run check` 1,108 tests, typecheck, lint, offline export; Doctor 21/21 |
+| Not verified | Physical iPhone/iPad feel and A12 performance, real multi-touch on glass, audio/haptic comfort, VoiceOver, and whether the games now feel right to Leon and Stassie |
