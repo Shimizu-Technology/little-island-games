@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cargoTouch, cargoTap } from "../src/arcade/games/canoe-cargo/gestures";
+import { cargoTouch, cargoTap, cargoSpeed } from "../src/arcade/games/canoe-cargo/gestures";
 import { createCargo, cargoTransition, fits, validCargo, pieceCells, landingRow, type CargoState } from "../src/arcade/games/canoe-cargo/engine";
 import { createReef, reefTransition, validReef, migrateReef, reefLevel, SHAPES } from "../src/arcade/games/reef-builder/engine";
 
@@ -13,6 +13,11 @@ describe("Cargo mobile manipulation", () => {
       expect(cargoTouch(col * cell, 0, 500, cell, 0).columns).toBe(col);
       expect(cargoTouch(col * cell + cell * .2, 0, 500, cell, 0).columns).toBe(col);
     }
+  });
+  it("recognizes a short fast flick even before the fitted gesture velocity has enough samples", () => {
+    const speed = cargoSpeed(60, 24, 20, 0); expect(speed).toBe(1800);
+    expect(cargoTouch(0, 60, 40, 30, speed).flick).toBe(true);
+    expect(cargoTouch(0, 60, 600, 30, cargoSpeed(60, 54, 60, 0)).flick).toBe(false);
   });
   it("distinguishes held slow pulls from deliberate flicks, requiring distance and two velocity measures", () => {
     expect(cargoTouch(0, 30, 360, 30, 85)).toMatchObject({ soft: true, flick: false });

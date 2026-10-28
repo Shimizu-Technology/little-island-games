@@ -14,3 +14,9 @@ export function cargoTap(distance: number, dropped: boolean, success: boolean) {
   "worklet";
   return success && !dropped && distance <= CARGO_TAP_SLOP;
 }
+
+/** Short flicks can have too few samples for RNGH's fitted velocity (notably on web). */
+export function cargoSpeed(dy: number, previousY: number, elapsedMs: number, reported: number) {
+  "worklet";
+  return Math.max(reported, (dy - previousY) * 1000 / Math.max(1, elapsedMs));
+}
