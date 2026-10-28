@@ -9,13 +9,13 @@ import { FIXED_DT } from "../src/arcade/clock";
 import { allLevelIds, worldIds } from "../src/arcade/types";
 /** Most physics tests start mid-flight; the waiting/ready state has its own test below. */
 const createFlight = (...args: Parameters<typeof createWaitingFlight>): FlightState => ({ ...createWaitingFlight(...args), waiting: false });
-function fly(initial: FlightState, offset = .045, look = .175): FlightState {
+function fly(initial: FlightState, offset = .045, look = .175, trigger = -.05): FlightState {
   let s = initial;
   for (let i = 0; i < 90000 && !flightResult(s); i++) {
     const gate = s.gates.filter(g => !g.passed && g.x > look).sort((a,b) => a.x-b.x)[0];
     const target = gate ? flightLearning(s) ? [.24,.5,.76][gate.fact.choices.indexOf(gate.fact.answer)] : gate.center : .5;
     // A real player taps out of the hover (level start, or after a lost heart) the same way as any flap.
-    if (s.waiting || (s.y > target + offset && s.vy > -.05)) s = flightTransition(s, {type:"flap"});
+    if (s.waiting || (s.y > target + offset && s.vy > trigger)) s = flightTransition(s, {type:"flap"});
     s = flightStep(s,{type:"idle"},FIXED_DT);
     if (i%600===0) expect(validFlight(s), `${initial.level === "endless" ? "free" : initial.level.id} at ${i}`).toBe(true);
   }
@@ -54,7 +54,21 @@ describe("56-level feel curves",()=>{
     expect(validFact({...mathGate(4,2).fact,choices:[1,1,1]})).toBe(false);
   });
   it("clears all 112 levels with legal inputs and valid bounded states",()=>{
-    for(const level of flightLevels){let s: FlightState|undefined; for(const look of [.175,.19,.2]) { for(const offset of [.045,.025,.065,0,-.02,.035,.055,.015,.075,.06,.07,.05,.04]) { const attempt=fly(createWaitingFlight(level,981,false),offset,look); if(flightResult(attempt)?.stars===3) { s=attempt; break; } } if(s) break; } expect(s,level.id).toBeDefined();expect(validFlight(s),level.id).toBe(true);}
+    for(const level of flightLevels) {
+      let s: FlightState | undefined;
+      // Same legal flap policy, with timing search for the now-visible torso hull.
+      for(const trigger of [-.05,-.35,.1]) {
+        for(const look of [.175,.19,.2,.22,.14]) {
+          for(const offset of [.045,.025,.065,0,-.02,.035,.055,.015,.075,.06,.07,.05,.04]) {
+            const attempt=fly(createWaitingFlight(level,981,false),offset,look,trigger);
+            if(flightResult(attempt)?.stars===3) { s=attempt; break; }
+          }
+          if(s) break;
+        }
+        if(s) break;
+      }
+      expect(s,level.id).toBeDefined(); expect(validFlight(s),level.id).toBe(true);
+    }
     for(const level of runLevels){const s=run(createRun(level,771,false));expect(runResult(s)?.stars,level.id).toBe(3);expect(validRun(s),level.id).toBe(true);}
   },30000);
 });
