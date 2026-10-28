@@ -34,9 +34,10 @@ export function CargoTouch({ active, cell, onGrab, onColumns, onSoft, onDrop, on
     }), [active, cell, touch, onGrab, onColumns, onSoft, onDrop, onTap]);
   // iOS never activates a Pan for a motionless touch, so a still tap needs its own recognizer.
   // Race: whichever activates first wins; any drag or flick activates the pan and cancels the tap.
-  const tap = useMemo(() => Gesture.Tap().enabled(active).maxDistance(10).maxDuration(300).onEnd((_, success) => {
+  // Record the piece at touch-down so a lock during the tap can never rotate its replacement.
+  const tap = useMemo(() => Gesture.Tap().enabled(active).maxDistance(10).maxDuration(300).onBegin(() => { runOnJS(onGrab)(); }).onEnd((_, success) => {
     if (success) runOnJS(onTap)();
-  }), [active, onTap]);
+  }), [active, onTap, onGrab]);
   const gesture = useMemo(() => Gesture.Race(pan, tap), [pan, tap]);
   return <GestureDetector gesture={gesture}><Animated.View collapsable={false} testID="cargo-touch" accessible accessibilityRole="button" accessibilityLabel="Cargo board. Tap to rotate. Drag sideways to move. Pull down slowly and hold to fall faster. Flick down to land." onAccessibilityTap={onTap} style={{ width, height, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}>{children}</Animated.View></GestureDetector>;
 }

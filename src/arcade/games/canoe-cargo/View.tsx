@@ -109,8 +109,9 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
   }, [stateRef, act]);
   const touchSoft = useCallback((value: boolean) => { if (!value || stateRef.current.loads === grab.current.loads) soft(value); }, [stateRef, soft]);
   const touchDrop = useCallback(() => { if (stateRef.current.loads === grab.current.loads) act({ type: "drop" }); }, [stateRef, act]);
-  // A still tap never starts the pan, so grab.current can belong to an earlier piece: always rotate the current one.
-  const touchTap = useCallback(() => act({ type: "rotate" }), [act]);
+  // The tap recognizer records the piece at touch-down (still taps never start the pan), so a
+  // piece that locks mid-tap is not rotated, and every new piece still rotates on its first tap.
+  const touchTap = useCallback(() => { if (stateRef.current.loads === grab.current.loads) act({ type: "rotate" }); }, [stateRef, act]);
   const goal = s.level === "endless" ? `${s.score}` : `${cargoGoalValue(s)}/${s.level.target}`;
   const controls = <View style={{ flexDirection: "row", justifyContent: "center", flexWrap: wide ? "wrap" : "nowrap", gap: 6, maxWidth: wide ? 180 : undefined }}>
     <Control testID="cargo-left" label="Move cargo left" text="←" repeat onPress={() => act({ type: "left" })} disabled={!active}/>

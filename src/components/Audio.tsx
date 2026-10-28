@@ -20,17 +20,22 @@ export function useSoundControls(enabled: boolean) {
   // thread and caused a visible stall on every tap. Spoken lines still share the narration player.
   const [tonePlayers] = useState<Record<string, AudioPlayer>>(() => Object.fromEntries(Object.keys(toneFeel).filter(key => sources[key]).map(key => [key, createAudioPlayer(sources[key])])));
   useEffect(() => () => { for (const p of Object.values(tonePlayers)) { try { p.remove(); } catch { /* Already released. */ } } }, [tonePlayers]);
+  // Cancellation (stop, settings change, background, disable) must silence tones as well as speech.
+  const silence = useCallback(() => {
+    try { player.pause(); } catch { /* Native player may already be disposed. */ }
+    for (const p of Object.values(tonePlayers)) { try { p.pause(); } catch { /* Already released. */ } }
+  }, [player, tonePlayers]);
   const prefs = useContext(AudioPreferences);
   const context = useMemo(() => ({ enabled, narration: prefs.narration ?? true, effects: prefs.effects ?? true, automatic: prefs.automaticSpeech ?? false, volume: prefs.narrationVolume ?? 0.75, voice: prefs.voice ?? "warm", epoch: prefs.epoch ?? 0 }), [enabled, prefs.narration, prefs.effects, prefs.automaticSpeech, prefs.narrationVolume, prefs.voice, prefs.epoch]);
   const live = useRef<typeof context | null>(context);
   useLayoutEffect(() => {
     live.current = context;
-    try { player.pause(); } catch { /* A setting change also cancels any old spoken line. */ }
-    return () => { live.current = null; try { player.pause(); } catch { /* Disposed native player. */ } };
-  }, [context, player]);
+    silence();
+    return () => { live.current = null; silence(); };
+  }, [context, silence]);
   const foreground = useRef(AppState.currentState === "active" || Platform.OS === "web");
   useEffect(() => {
-    const pause = () => { try { player.pause(); } catch { /* Native player may already be disposed. */ } };
+    const pause = silence;
     const sub = AppState.addEventListener("change", state => {
       foreground.current = state === "active";
       if (!foreground.current) pause();
@@ -41,13 +46,13 @@ export function useSoundControls(enabled: boolean) {
       sub.remove();
       if (Platform.OS === "web" && typeof document !== "undefined") document.removeEventListener("visibilitychange", visibility);
     };
-  }, [player]);
+  }, [silence]);
   useEffect(() => {
     void setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: false }).catch(() => {});
   }, []);
   useEffect(() => {
-    if (!enabled) { try { player.pause(); } catch { /* Transcript remains available. */ } }
-  }, [enabled, player]);
+    if (!enabled) silence();
+  }, [enabled, silence]);
   const play = useCallback(
     // eslint-disable-next-line react-hooks/immutability -- Expo AudioPlayer is a native object with documented mutable properties.
     (key: string, automatic = false) => {
@@ -76,7 +81,7 @@ export function useSoundControls(enabled: boolean) {
     },
     [context, player, tonePlayers]
   );
-  const stop = useCallback(() => { try { player.pause(); } catch { /* Player may already be disposed on route teardown. */ } }, [player]);
+  const stop = silence;
   return { play, stop, player };
 }
 

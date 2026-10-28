@@ -15,10 +15,11 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   s.rows.forEach((row,i)=>{
     const visible=!learn&&row.z>0&&row.z<1.18;
     const height = row.surface === "sand" || row.surface === "ramp" ? 0 : .85;
-    const hazardPose = (lane: number) => { "worklet"; const a=trackSprite(lane,row.z,72,HAZARDS[row.kind]==="jump"?72:129.6); return {identity:row.serial,...a,y:a.y-height*85*a.scale,angle:row.kind === "coconut" ? s.time*3 : 0}; };
-    p[1+i*2]=visible?hazardPose(obstacleLane(row,s.time)):HIDDEN_POSE;
-    p[2+i*2]=visible&&row.second>=0?hazardPose(row.second):HIDDEN_POSE;
-    p[75+i]=visible&&row.third?hazardPose(row.shellLane):HIDDEN_POSE;
+    // Each obstacle uses its own kind for size, contact height and spin (a row can mix kinds).
+    const hazardPose = (lane: number, kind: typeof row.kind) => { "worklet"; const a=trackSprite(lane,row.z,72,HAZARDS[kind]==="jump"?72:129.6); return {identity:row.serial,...a,y:a.y-height*85*a.scale,angle:kind === "coconut" ? s.time*3 : 0}; };
+    p[1+i*2]=visible?hazardPose(obstacleLane(row,s.time),row.kind):HIDDEN_POSE;
+    p[2+i*2]=visible&&row.second>=0?hazardPose(row.second,row.secondKind):HIDDEN_POSE;
+    p[75+i]=visible&&row.third?hazardPose(row.shellLane,row.kind):HIDDEN_POSE;
     for(let c=0;c<3;c++){
       const z=row.z+c*.07,t=row.bursts[c]/.26;
       const a=trackSprite(row.shellLane,z,30,30),h=s.kite>0?2.7:shellHeight(row,c);
