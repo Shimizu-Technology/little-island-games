@@ -2,19 +2,21 @@ import React, { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Islander, IslanderDesk, backPoses, defaultLook, frontPoses, hairStyles, hats, outfits, skinTones, hairColors, type IslanderLook, type Pose } from '../islander';
+import { wardrobeRewards } from '../islander/rewards';
 const proofLooks: readonly IslanderLook[] = [defaultLook, { ...defaultLook, skinTone: 'cocoa', hairStyle: 'curls', outfit: 'hoodie', hat: 'cap', accessory: 'glasses' }, { ...defaultLook, skinTone: 'shell', hairStyle: 'braids', hairColor: 'auburn', outfit: 'sundress', hat: 'flower-crown' }, { ...defaultLook, skinTone: 'earth', hairStyle: 'crop', hairColor: 'silver', outfit: 'explorer', hat: 'sunhat', accessory: 'backpack' }];
-const sections = ['Poses', 'Hats & hair', 'Outfits', 'Colors'] as const;
+const sections = ['Poses', 'Hats & hair', 'Outfits', 'Colors', 'Rewards'] as const;
 export default function IslanderGallery() {
   const [size, setSize] = useState(120), [section, setSection] = useState<typeof sections[number]>('Poses'), [page, setPage] = useState(0);
   const cells: { label: string; look: IslanderLook; pose: Pose }[] = [];
   if (section === 'Poses') for (const pose of [...frontPoses, ...backPoses]) for (const [i, look] of proofLooks.entries()) cells.push({ label: `${pose.id} · ${i + 1}`, pose, look });
   if (section === 'Hats & hair') for (const pose of [frontPoses[0], frontPoses[2], backPoses[0], backPoses[12]]) for (const hairStyle of hairStyles) for (const hat of hats) cells.push({ label: `${pose.id} · ${hairStyle} · ${hat}`, pose, look: { ...defaultLook, hairStyle, hat } });
   if (section === 'Outfits') for (const pose of [...frontPoses, ...backPoses]) for (const outfit of outfits) cells.push({ label: `${pose.id} · ${outfit}`, pose, look: { ...defaultLook, outfit } });
+  if (section === 'Rewards') for (const reward of wardrobeRewards) for (const hairStyle of hairStyles) for (const pose of [frontPoses[0], frontPoses[2], frontPoses[3], frontPoses[7], frontPoses[8], backPoses[0], backPoses[4], backPoses[8], backPoses[9], backPoses[12]]) cells.push({ label: `${reward.name} · ${hairStyle} · ${pose.id}`, pose, look: { ...defaultLook, hairStyle, [reward.slot]: reward.id } });
   if (section === 'Colors') {
     for (const skinTone of Object.keys(skinTones) as (keyof typeof skinTones)[]) cells.push({ label: skinTone, pose: frontPoses[0], look: { ...defaultLook, skinTone } });
     for (const hairStyle of hairStyles) for (const hairColor of Object.keys(hairColors) as (keyof typeof hairColors)[]) cells.push({ label: `${hairStyle} · ${hairColor}`, pose: frontPoses[0], look: { ...defaultLook, hairStyle, hairColor } });
   }
-  const paged = Platform.OS !== 'web', pageCount = Math.ceil(cells.length / 12);
+  const paged = Platform.OS !== 'web' || section === 'Rewards', pageCount = Math.ceil(cells.length / 12);
   const visible = paged ? cells.slice(page * 12, page * 12 + 12) : cells;
   return <SafeAreaView style={styles.safe}><Text style={styles.title}>Islander · Art proof</Text><Text style={styles.note}>Static frames · front / back · no saved changes</Text>
     <View style={styles.controls}>{[64, 120, 240].map(value => <Pressable accessibilityRole="button" accessibilityState={{ selected: size === value }} key={value} onPress={() => { setSize(value); setPage(0); }} style={[styles.button, size === value && styles.selected]}><Text style={styles.label}>{value} px</Text></Pressable>)}</View>

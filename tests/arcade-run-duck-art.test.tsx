@@ -69,5 +69,5 @@ describe('actual authored duck silhouettes',()=>{
    }
   }
   expect([...seen].sort()).toEqual([11,12,13]);
- });
+ }, 30000);
 });

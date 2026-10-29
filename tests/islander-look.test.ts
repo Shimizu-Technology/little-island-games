@@ -20,7 +20,7 @@ describe('Islander look boundary', () => {
 });
 describe('Islander skeleton and wardrobe contracts', () => {
   it('every claimed view has every declared attachment and a known layer', () => {
-    expect(new Set(wardrobe.map(i => `${i.slot}:${i.id}`)).size).toBe(13);
+    expect(new Set(wardrobe.map(i => `${i.slot}:${i.id}`)).size).toBe(25);
     for (const item of wardrobe) for (const view of item.views) for (const pose of view === 'front' ? frontPoses : backPoses) for (const anchor of item.anchors) expect(anchorsFor(pose)[anchor].every(Number.isFinite)).toBe(true);
   });
   it('keeps every joint in bounds and each limb bone constant (back-view running legs may only foreshorten)', () => {
