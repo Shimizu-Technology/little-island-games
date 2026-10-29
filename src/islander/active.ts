@@ -1,5 +1,7 @@
-import { defaultLook, type IslanderLook } from './look';
-/** Single integration point for the active learner; persistence is wired at merge. */
+import { useStore } from '../state/Store';
+import { personFor } from '../personalization/model';
+import type { IslanderLook } from './look';
+/** The active learner's saved Islander look; the single source for in-game appearances. */
 export function useActiveIslanderLook(): IslanderLook {
-  return defaultLook;
+  return personFor(useStore().save).look;
 }

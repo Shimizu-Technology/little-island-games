@@ -10,6 +10,7 @@ import { KITE_HANDS, KITE_STRINGS } from '../src/arcade/games/scrolling/runnerAn
 import { runPoses } from '../src/arcade/games/scrolling/render';
 import { createRun, runLevels } from '../src/arcade/games/lagoon-run/engine';
 import { RUN_EXTRA } from '../src/arcade/games/scrolling/character';
+vi.mock('../src/islander/active',async()=>{const {defaultLook}=await import('../src/islander/look');return {useActiveIslanderLook:()=>defaultLook};});
 vi.mock('../src/arcade/Sprite',()=>({ArcadeSprite:({children,index}: {children:React.ReactNode;index:number})=><div data-sprite={index}>{children}</div>}));
 vi.mock('react-native',()=>({View:()=>null}));
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useAnimatedProps:()=>({})}));

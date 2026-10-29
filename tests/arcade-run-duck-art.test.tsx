@@ -8,6 +8,7 @@ import { createRun, rowSafe, SLIDE_SECONDS } from '../src/arcade/games/lagoon-ru
 import { DUCK_MAX_ELEVATION } from '../src/arcade/games/lagoon-run/geometry';
 import { runnerFrame } from '../src/arcade/games/scrolling/character';
 import { runLevels } from '../src/arcade/games/scrolling/content';
+vi.mock('../src/islander/active',async()=>{const {defaultLook}=await import('../src/islander/look');return {useActiveIslanderLook:()=>defaultLook};});
 vi.mock('../src/arcade/Sprite',()=>({ArcadeSprite:()=>null}));
 vi.mock('react-native',()=>({View:()=>null}));
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useAnimatedProps:()=>({})}));
