@@ -110,14 +110,14 @@ export const GridHero = memo(function GridHero({
         </G>
       )}
       <Path
-        d={happy ? "M43 61Q50 75 59 61Z" : "M44 63Q50 69 57 62"}
+        d={crab ? happy ? "M43 61Q50 75 59 61Z" : "M44 63Q50 69 57 62" : happy ? "M73 50Q78 57 82 49Z" : "M73 50Q78 54 82 49"}
         stroke="#603D3E"
         strokeWidth={2.5}
         fill={happy ? "#6D3D43" : "none"}
         strokeLinecap="round"
       />
       <Ellipse cx={crab ? 32 : 58} cy={crab ? 61 : 50} rx={5} ry={3} fill="#F48C77" opacity={0.7} />
-      {!chick && <Outfit outfit={outfit} />}
+      {!chick && <G transform={crab ? outfit === "sunhat" || outfit === "explorer" ? "translate(0 -10)" : undefined : outfit === "sunhat" ? "translate(12 -6)" : "translate(12 0)"}><Outfit outfit={outfit} /></G>}
     </Svg>
   );
 });

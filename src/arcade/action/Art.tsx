@@ -113,7 +113,7 @@ export const ActionHero = memo(function ActionHero({
       <Circle cx={38} cy={54} r={5} fill="#FFFDF0" />
       <Circle cx={64} cy={54} r={5} fill="#FFFDF0" />
       <Circle cx={39} cy={55} r={2.8} fill="#253E46" />
-      <Circle cx={63} cy={55} r={2.8} fill="#253E46" />
+      <Circle cx={63} cy={55} r={2.8} fill="#253E46" /><Circle cx={39.8} cy={54} r={.9} fill="white"/><Circle cx={63.8} cy={54} r={.9} fill="white"/>
       <Path
         d={happy ? "M38 65Q51 86 65 65Z" : "M42 66Q51 75 60 66"}
         fill={happy ? "#713C3A" : "none"}
@@ -123,7 +123,7 @@ export const ActionHero = memo(function ActionHero({
       />
       <Ellipse cx={30} cy={64} rx={6} ry={3} fill="#F59F7F" />
       <Ellipse cx={72} cy={64} rx={6} ry={3} fill="#F59F7F" />
-      <Outfit outfit={outfit} />
+      {!palm && outfit === "island" ? <G stroke="#23596E" strokeWidth={2.5}><Path d="M24 30Q48 18 75 30L76 37Q50 29 24 37Z" fill="#F58070"/><Path d="M48 33Q68 26 83 36Q67 43 48 39Z" fill="#FFE4A2"/></G> : <Outfit outfit={outfit} />}
     </Svg>
   );
 });
