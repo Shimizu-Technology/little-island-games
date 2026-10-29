@@ -1,3 +1,4 @@
+import { FlightPalm, FlightForest } from "../fruit-bat-flight/Art";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, View } from "react-native";
 import Svg, { Path, Rect, Text as SvgText } from "react-native-svg";
@@ -25,10 +26,10 @@ import { HAZARDS, type HazardKind, type PowerKind, type Surface } from "../lagoo
 import { projectTrack } from "../lagoon-run/camera";
 import { equation, type ScrollGame, type ScrollLevel } from "./content";
 import { Fruit, Scenery, palette } from "./Art";
-import { BatRig, PalmPiece, RunnerRig, TrackBackdrop, LastHit } from "./FeelArt";
+import { BatRig, RunnerRig, TrackBackdrop, LastHit } from "./FeelArt";
 import { batAngle } from "../fruit-bat-flight/hull";
 import { runPoses, RUN_SLOTS, INCLINE_START, INCLINE_STRIDE, POWER_AURA } from "./render";
-import { RunEnvironment, FlightEnvironment, Landmark } from "./Environment";
+import { RunEnvironment, Landmark } from "./Environment";
 import { flightFrame, runFrame, type Commands } from "./commands";
 export type BoardProps = { level: ScrollLevel | "endless"; seed: number; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped: boolean) => void; onTone: (key: string, haptic?: boolean) => void; onPause?: () => void; debug: boolean };
 const W = 390, H = 660, still = HIDDEN_POSE;
@@ -86,7 +87,7 @@ function Hud({ s, learning }: { s: ScrollHud; learning: boolean }) {
   return <View pointerEvents="none" style={{ position: "absolute", left: 10, right: 10, top: 8, gap: 5, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}><View style={{ borderRadius: 16, padding: 9, backgroundColor: "#192B49" }}><Text testID="scroll-progress" style={{ color: "#FFF4D3", fontWeight: "800", fontSize: 18 }}>{s.passed}/{s.level === "endless" ? "∞" : s.level.target} · {s.score} pts</Text></View>{!learning && <HeartsHud lives={s.lives}/>}</View>;
 }
 const FlightLayer = memo(function FlightLayer({ poses, facts, learn, world, storm, debug }: { poses: SharedValue<SpritePose[]>; facts: number[][]; learn: boolean; world: WorldId; storm: boolean; debug: boolean }) {
-  return <View testID="flight-art" pointerEvents="none" style={{ position: "absolute", width: W, height: H }}><Scenery game="fruit-bat-flight" world={world} storm={storm}/><FlightEnvironment poses={poses} debug={debug}/>{Array.from({ length: 4 }, (_, i) => <React.Fragment key={i}><ArcadeSprite poses={poses} index={1 + i * 2} width={46} height={660}><PalmPiece/></ArcadeSprite><ArcadeSprite poses={poses} index={2 + i * 2} width={46} height={660}><PalmPiece bottom/></ArcadeSprite><ArcadeSprite poses={poses} index={9 + i} width={32} height={32}><Fruit size={32}/></ArcadeSprite>{learn && facts[i].map((n, c) => <ArcadeSprite key={c} poses={poses} index={13 + i * 3 + c} width={64} height={64}><Portal value={n} index={c}/></ArcadeSprite>)}</React.Fragment>)}{Array.from({ length: 6 }, (_, i) => <ArcadeSprite key={`p${i}`} poses={poses} index={25 + i} width={12} height={12}><Particle/></ArcadeSprite>)}<ArcadeSprite poses={poses} index={33} width={70} height={30}><Text style={{ color: "#FFF2BD", fontSize: 23, fontWeight: "900" }}>+1</Text></ArcadeSprite></View>;
+  return <View testID="flight-art" pointerEvents="none" style={{ position: "absolute", width: W, height: H }}><Scenery game="fruit-bat-flight" world={world} storm={storm}/><FlightForest poses={poses} debug={debug}/>{Array.from({ length: 4 }, (_, i) => <React.Fragment key={i}><ArcadeSprite poses={poses} index={1 + i * 2} width={46} height={660}><FlightPalm/></ArcadeSprite><ArcadeSprite poses={poses} index={2 + i * 2} width={46} height={660}><FlightPalm bottom/></ArcadeSprite><ArcadeSprite poses={poses} index={9 + i} width={32} height={32}><Fruit size={32}/></ArcadeSprite>{learn && facts[i].map((n, c) => <ArcadeSprite key={c} poses={poses} index={13 + i * 3 + c} width={64} height={64}><Portal value={n} index={c}/></ArcadeSprite>)}</React.Fragment>)}{Array.from({ length: 6 }, (_, i) => <ArcadeSprite key={`p${i}`} poses={poses} index={25 + i} width={12} height={12}><Particle/></ArcadeSprite>)}<ArcadeSprite poses={poses} index={33} width={70} height={30}><Text style={{ color: "#FFF2BD", fontSize: 23, fontWeight: "900" }}>+1</Text></ArcadeSprite></View>;
 });
 export function FlightBoard(props: BoardProps) {
   const { level, seed, active, helper, outfit, onTone, debug } = props, reduced = useReducedMotion();
@@ -95,11 +96,13 @@ export function FlightBoard(props: BoardProps) {
   const build = useCallback((s: FlightState) => {
     "worklet";
     const p: SpritePose[] = Array(36).fill(still), learn = flightLearning(s), gap = flightGap(s), x = W * .24, y = s.y * H + (s.waiting && !reduced ? Math.sin(s.hover * 4) * 7 : 0);
-    const tumble = !reduced && s.cooldown > 0 && s.cue === "bump" ? (1 - s.cooldown / .3) * Math.PI * 2 : 0;
+    const tumble = !reduced && s.cooldown > 0 && s.cue === "bump" ? Math.sin((1 - s.cooldown / .3) * Math.PI) * .85 : 0;
     const angle = s.status === "cleared" && !reduced ? -.2 : tumble || batAngle(s.vy);
     p[0] = { identity: s.lives.hit, x: x - 48, y: y - 38, angle };
-    const wing = reduced ? 0 : s.flap > 0 ? Math.sin((1-s.flap/.12)*Math.PI*2)*.7 : s.vy > .4 ? -.25 : Math.sin(s.hover*4+s.time*9)*.08;
-    p[31] = { x: 47, y: 34, angle: -.55-wing*.65 }; p[32] = { x: 52, y: 36, angle: -.1+wing };
+    const wing = reduced ? .12 : s.wing;
+    // Real centred frames: top-left + (48,48) stays on the shoulder through every rotation.
+    p[31] = { x: 45 - 48, y: 32 - 48, angle: -.35 + wing * .65 };
+    p[32] = { x: 43 - 48, y: 38 - 48, angle: wing };
     p[34]={x:-((s.travel*W*.11)%390),y:0};p[35]={x:-((s.travel*W*.28)%390),y:0};
     s.gates.forEach((g, i) => {
       p[1 + i * 2] = learn ? still : { identity: g.phase, x: g.x * W - 23, y: (g.center - gap / 2) * H - H, opacity: learn ? 0 : 1 };
