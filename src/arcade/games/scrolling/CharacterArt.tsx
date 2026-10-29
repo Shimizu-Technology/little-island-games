@@ -17,15 +17,15 @@ function RunnerShape({ frame = 0, outfit = "island", front = false }: { frame?: 
   const step = frame>=16?frame-16:frame%8, left=runnerDrawings[step],right=runnerDrawings[(step+1)%8];
   const mix=(a: Point[],b: Point[])=>a.map(([x,y],i)=>[(x+b[i][0])/2,(y+b[i][1])/2] as Point);
   const base: RunnerDrawing=frame>=16?{bob:(left.bob+right.bob)/2,knee:mix(left.knee,right.knee),foot:mix(left.foot,right.foot),elbow:mix(left.elbow,right.elbow),hand:mix(left.hand,right.hand)}:left;
-  const bob = crouch ? tucked ? 51 : 30 : land ? 9 : takeoff ? 12 : stumble ? 9 : apex ? 3 : celebrate ? -2 : base.bob;
-  const shoulderY = crouch ? tucked ? 103 : 83 : 51 + bob, hipY = crouch ? tucked ? 116 : 108 : 86 + bob;
+  const bob = crouch ? tucked ? 51 : 59 : land ? 9 : takeoff ? 12 : stumble ? 9 : apex ? 3 : celebrate ? -2 : base.bob;
+  const shoulderY = crouch ? tucked ? 103 : 110 : 51 + bob, hipY = crouch ? 116 : 86 + bob;
   const pose: RunnerDrawing = crouch ? { bob, knee: [[23,116],[57,116]], foot: [[29,128],[51,128]], elbow: [[22,103],[58,103]], hand: [[32,105],[48,105]] }
     : apex ? { bob, knee: [[22,98],[58,98]], foot: [[32,109],[48,109]], elbow: [[18,66],[62,66]], hand: [[24,52],[56,52]] }
     : land ? { bob, knee: [[23,112],[57,112]], foot: [[27,128],[53,128]], elbow: [[18,78],[62,78]], hand: [[24,88],[56,88]] }
     : takeoff ? { bob, knee: [[30,103],[50,103]], foot: [[27,128],[53,128]], elbow: [[20,61],[60,61]], hand: [[26,45],[54,45]] }
     : stumble ? { bob, knee: [[24,107],[55,110]], foot: [[19,128],[57,124]], elbow: [[13,69],[67,71]], hand: [[9,53],[72,59]] }
     : celebrate ? { bob, knee: [[30,105],[50,105]], foot: [[27,128],[53,128]], elbow: [[17,40],[63,40]], hand: [[20,22],[60,22]] } : base;
-  const headY = crouch ? tucked ? 87 : 65 : 27 + bob, headR = crouch ? 16 : 18;
+  const headY = crouch ? frame === 11 ? 113 : 111 : 27 + bob, headR = crouch ? 16 : 18;
   const shirt = outfit === "starlight" ? "#7D6CB5" : "#F58062";
   if(tucked)return <G stroke={ink} strokeWidth={2} strokeLinejoin="round"><Path d="M20 128Q9 120 19 105Q30 86 50 97Q67 99 66 117L58 128Z" fill={shirt}/><Path d="M20 128Q13 119 21 112L36 108L48 126Z" fill="#364D79"/><Path d="M24 123Q31 113 40 119L46 128H25Z" fill={skin}/><Path d="M17 126Q25 119 34 125V130H17Z" fill="#F4CC76"/><Circle cx={57} cy={112} r={15} fill="#403442"/><Path d="M47 104Q54 98 62 103" stroke="#72505B" strokeWidth={3} fill="none"/><Path d="M44 113Q37 109 33 116L37 124L47 123" fill={skin}/></G>;
   return <G stroke={ink} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round">
@@ -39,7 +39,7 @@ function RunnerShape({ frame = 0, outfit = "island", front = false }: { frame?: 
     <Path d={`M${40-headR} ${headY-1}Q${19} ${headY-25} 43 ${headY-headR}Q63 ${headY-21} 58 ${headY+1}L52 ${headY-8}Q40 ${headY-2} 28 ${headY-10}Z`} fill="#403442"/>
     {!front && <Path d={`M29 ${headY-12}Q38 ${headY-18} 48 ${headY-13}`} stroke="#72505B" fill="none" strokeWidth={3}/>}
     {front && <G strokeWidth={0}><Circle cx={34} cy={headY+2} r={2.3} fill={ink}/><Circle cx={47} cy={headY+2} r={2.3} fill={ink}/><Path d={`M34 ${headY+10}Q40 ${headY+15} 47 ${headY+9}`} stroke={ink} strokeWidth={2} fill="none"/></G>}
-    {outfit === "sunhat" ? <G fill="#F4C96C"><Path d={`M25 ${headY-10}V${headY-20}Q40 ${headY-27} 55 ${headY-20}V${headY-10}Z`}/><Path d={`M18 ${headY-9}H62`} stroke="#F4C96C" strokeWidth={6}/></G> : outfit === "explorer" ? <Path d={`M24 ${headY}Q40 ${headY+8} 56 ${headY}`} fill="none" stroke="#8CE7D6" strokeWidth={4}/> : outfit === "starlight" ? <Path d={`M40 ${headY-21}l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z`} fill="#FFE79B" strokeWidth={1}/> : null}
+    {!crouch && outfit === "sunhat" ? <G fill="#F4C96C"><Path d={`M25 ${headY-10}V${headY-20}Q40 ${headY-27} 55 ${headY-20}V${headY-10}Z`}/><Path d={`M18 ${headY-9}H62`} stroke="#F4C96C" strokeWidth={6}/></G> : outfit === "explorer" ? <Path d={`M24 ${headY}Q40 ${headY+8} 56 ${headY}`} fill="none" stroke="#8CE7D6" strokeWidth={4}/> : !crouch && outfit === "starlight" ? <Path d={`M40 ${headY-21}l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z`} fill="#FFE79B" strokeWidth={1}/> : null}
   </G>;
 }
 export const RunnerFrameArt = memo(function RunnerFrameArt({ frame, outfit, size = 132, front = false }: { frame: number; outfit: OutfitId; size?: number; front?: boolean }) {

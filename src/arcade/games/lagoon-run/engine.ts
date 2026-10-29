@@ -1,4 +1,4 @@
-import { CANOE_DEPTH, isCanoe } from "./geometry";
+import { CANOE_DEPTH, DUCK_MAX_ELEVATION, isCanoe } from "./geometry";
 import { HAZARDS, POWER_SECONDS, RUN_CHUNKS, courseBeat, type HazardKind, type PowerKind, type Surface } from "./course";
 import { nextRandom, type ArcadeEngine, type ArcadeResult } from "../../types";
 import { configureLives, createLives, hitLives, stepLives, validLives, type Lives } from "../../lives";
@@ -72,7 +72,7 @@ export function rowSafe(s: RunState, row: TrailRow, contactOnly = false): boolea
     if (contactOnly && (isCanoe(kind) ? row.z < 1 || row.z > 1 + CANOE_DEPTH : row.passed || row.z < 1)) return true;
     const base = surfaceProfile(row, row.surface === "gap" ? RAMP_DEPTH : 0, lane);
     if (lane < 0 || Math.abs(s.poseLane - lane) > .46 || runnerHeight(s) > base + 1.65 || (base > 0 && runnerHeight(s) < base - .3)) return true;
-    return HAZARDS[kind] === "jump" ? runnerHeight(s) > base + .42 : HAZARDS[kind] === "duck" ? s.duck > .08 && runnerHeight(s) < base + .3 : false;
+    return HAZARDS[kind] === "jump" ? runnerHeight(s) > base + .42 : HAZARDS[kind] === "duck" ? s.duck > .08 && runnerHeight(s) < base + DUCK_MAX_ELEVATION : false;
   };
   return avoids(obstacleLane(row,s.time), row.kind) && avoids(row.second,row.secondKind) && (!row.third || avoids(row.shellLane,row.kind));
 }

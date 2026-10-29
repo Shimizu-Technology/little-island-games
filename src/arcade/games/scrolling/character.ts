@@ -5,9 +5,10 @@ export const RUN_POSES = 24, RUN_EXTRA = 243;
 export function runnerFrame(s: RunState, reduced = false) {
   "worklet";
   if (s.status === "cleared") return 15;
-  if (s.cooldown > 0 || s.status === "stumbled") return 14;
+  if (s.status === "stumbled") return 14;
   if (s.kite > 0) return 9;
   if (s.duck > 0) { const t = 1 - s.duck / SLIDE_SECONDS; return t < .18 ? 11 : t < .82 ? 12 : 13; }
+  if (s.cooldown > 0) return 14;
   if (s.landing > 0) return 10;
   if (s.jump > 0) { const t = 1 - s.jump / s.jumpDuration; return t < .2 ? 8 : t < .78 ? 9 : 10; }
   const tick=Math.floor(s.time*16)%16;

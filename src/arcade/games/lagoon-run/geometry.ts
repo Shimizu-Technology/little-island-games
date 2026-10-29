@@ -12,3 +12,6 @@ export function deckDepthFraction(nearWidth: number, farWidth: number, u: number
   const width = 390 * (2 / 3) * .46 * .86;
   return u * (width + nearWidth) / Math.max(.001, (1-u) * (width+farWidth) + u * (width+nearWidth));
 }
+
+/** A duck remains below the beam even at the highest safe airborne contact. */
+export const DUCK_MAX_ELEVATION = .08;

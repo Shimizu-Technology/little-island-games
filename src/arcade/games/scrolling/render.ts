@@ -1,6 +1,6 @@
 import { CANOE_DEPTH, isCanoe, visualRunHeight } from "../lagoon-run/geometry";
 import { HAZARDS } from "../lagoon-run/course";
-import { HIDDEN_POSE, type SpritePose } from "../../poses";
+import { HIDDEN_POSE, rankPainterPoses, type SpritePose } from "../../poses";
 import { runnerHeight, shellHeight, obstacleLane, runLearning, type RunState } from "../lagoon-run/engine";
 import { RAMP_DEPTH, RAMP_SECTIONS, surfaceProfile, surfaceSpan } from "../lagoon-run/surface";
 import { projectTrack, trackSprite } from "../lagoon-run/camera";
@@ -10,11 +10,8 @@ export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA
 export function runPoses(s: RunState, reduced = false): SpritePose[] {
   "worklet";
   const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=visualRunHeight(runnerHeight(s))*85;
-  // Rank only changes at a row crossing/recycle or the contact plane; native painter
-  // order stays constant during ordinary movement instead of sorting every frame.
-  const depthOrder=(z:number)=>{ "worklet"; let rank=0;for(const row of s.rows)if(row.z<z)rank++;return (z>1?10001:0)+rank; };
   // Root is bottom-centre; poses have their own authored contact/compression, never free limbs.
-  p[0]={identity:s.lives.hit,x:contact.x-40,y:contact.y-130-lift,angle:reduced?0:(s.lane-s.poseLane)*.14};
+  p[0]={identity:s.lives.hit,x:contact.x-40,y:contact.y-130-lift,angle:reduced||s.duck>0?0:(s.lane-s.poseLane)*.14};
   for(let i=0;i<RUN_POSES;i++)p[i<16?80+i:RUN_EXTRA+i-16]=i===frame?{x:0,y:0,snap:true}:HIDDEN_POSE;
   p[50]={x:contact.x-35,y:contact.y-7,scale:1-Math.min(2.7,runnerHeight(s))*.18,opacity:.8};
   s.rows.forEach((row,i)=>{
@@ -27,9 +24,9 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
           const a=projectTrack(lane+(j===0||j===3?-.30:.30),row.z-(j<2?0:CANOE_DEPTH));
           p[CANOE_START+actor*4+j]={identity:row.serial,x:a.x,y:a.y,scale:a.scale};
         }
-        return {identity:row.serial,x:0,y:0,frame:depthOrder(row.z),opacity:1};
+        return {identity:row.serial,x:0,y:0,painterDepth:projectTrack(1,row.z).scale,painterKey:row.serial*7+actor%3,opacity:1};
       }
-      const a=trackSprite(lane,row.z,HAZARDS[kind]==="duck"?112:72,HAZARDS[kind]==="jump"?72:129.6),height=surfaceProfile(row,row.surface==="gap"?RAMP_DEPTH:0,lane); return {identity:row.serial,...a,frame:depthOrder(row.z),opacity:a.opacity===0?0:.45+.55*Math.min(1,row.z),y:a.y-height*85*a.scale,angle:kind === "coconut" && !reduced ? s.time*3 : 0}; };
+      const a=trackSprite(lane,row.z,HAZARDS[kind]==="duck"?112:72,HAZARDS[kind]==="jump"?72:129.6),height=surfaceProfile(row,row.surface==="gap"?RAMP_DEPTH:0,lane); return {identity:row.serial,...a,painterDepth:a.scale,painterKey:row.serial*7+actor%3,opacity:a.opacity===0?0:.45+.55*Math.min(1,row.z),y:a.y-height*85*a.scale,angle:kind === "coconut" && !reduced ? s.time*3 : 0}; };
     p[1+i*2]=visible?hazardPose(obstacleLane(row,s.time),row.kind,i*3):HIDDEN_POSE;
     p[2+i*2]=visible&&row.second>=0?hazardPose(row.second,row.secondKind,i*3+1):HIDDEN_POSE;
     p[75+i]=visible&&row.third?hazardPose(row.shellLane,row.kind,i*3+2):HIDDEN_POSE;
@@ -38,12 +35,12 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
       const a=trackSprite(row.shellLane,z,30,30),h=s.kite>0?2.7:shellHeight(row,c);
       const pull=s.magnet>0?Math.max(0,Math.min(1,(z-.65)/.35)):0;
       if(pull>0){a.x+=(contact.x-15-a.x)*pull;a.y+=(contact.y-70-a.y)*pull;}
-      p[11+i*3+c]=!learn&&!(row.shellTaken&(1<<c))&&z>0&&z<1.18?{identity:row.serial,...a,frame:depthOrder(z),y:a.y-visualRunHeight(h)*85*a.scale}:HIDDEN_POSE;
+      p[11+i*3+c]=!learn&&!(row.shellTaken&(1<<c))&&z>0&&z<1.18?{identity:row.serial,...a,painterDepth:a.scale,painterKey:row.serial*7+3+c,y:a.y-visualRunHeight(h)*85*a.scale}:HIDDEN_POSE;
       if(learn&&!row.passed&&row.z>0&&row.z<1.08)p[60+i*3+c]={identity:row.phase,...trackSprite(c,row.z,64,64)};
       if(!learn&&t>0){const a=projectTrack(row.shellLane,1);p[132+i*3+c]={identity:`${row.phase}-${c}`,x:a.x-24,y:a.y-45-(1-t)*28,scale:reduced?1:1+(1-t)*.55,opacity:t};}
     }
     const power=trackSprite(row.shellLane,row.z+.23,44,44);
-    p[167+i]=!learn&&row.power!=="none"&&!row.powerDone?{identity:row.serial,...power,frame:depthOrder(row.z+.23),y:power.y-(30+surfaceProfile(row,-.23)*85)*power.scale}:HIDDEN_POSE;
+    p[167+i]=!learn&&row.power!=="none"&&!row.powerDone?{identity:row.serial,...power,painterDepth:power.scale,painterKey:row.serial*7+6,y:power.y-(30+surfaceProfile(row,-.23)*85)*power.scale}:HIDDEN_POSE;
     if(!learn&&row.surface!=="sand"&&row.z>0&&row.z-row.length<1.18){
       for(let segment=-1;segment<(row.surface==="ramp"?RAMP_SECTIONS:0);segment++){
         const span=surfaceSpan(row,segment),start=segment>=0?INCLINE_START+i*INCLINE_STRIDE+segment*4:147+i*4;
@@ -70,5 +67,5 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   if(s.cue==="bump"&&!reduced)for(let i=0;i<6;i++){const a=i*Math.PI/3;p[26+i]={x:contact.x+Math.cos(a)*(1-f)*50,y:contact.y-60+Math.sin(a)*(1-f)*50,opacity:f};}
   // Inactive slots retain one canonical object and never send hidden native transforms.
   for(let i=0;i<p.length;i++)if(p[i].opacity===0)p[i]=HIDDEN_POSE;
-  return p;
+  return rankPainterPoses(p);
 }

@@ -10,7 +10,8 @@ describe('Run v5 visual contact contract',()=>{
   const s=createRun(runLevels[0],42);s.rows[0]={...s.rows[0],z:.999,kind:'net',lane:1,second:-1,third:false};
   const back=runPoses(s)[1];s.rows[0].z=1.001;const front=runPoses(s)[1];
   expect(back.frame).toBeLessThan(10000);expect(front.frame).toBeGreaterThan(10000);
-  expect(interpolatePose(back,front,.01).frame).toBe(front.frame);
+  expect(interpolatePose(back,front,.01).frame).toBeLessThan(10000);
+  expect(interpolatePose(back,front,.99).frame).toBeGreaterThan(10000);
   expect(front.identity).toBe(back.identity);
  });
  it('keeps painter ranks stable between crossings and sorts recycled rows by depth',()=>{
