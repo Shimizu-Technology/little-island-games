@@ -28,8 +28,10 @@ function DraggablePiece({ piece, slot, selected, active, board, cell, numbers, c
   const grab = useSharedValue({ row: 0, col: 0, x: .5, y: .5 }), origin = useSharedValue({ x: 0, y: 0, startX: 0, startY: 0 });
   const rect = useSharedValue({ x: 0, y: 0, cell }), trayCell = Math.min(compact ? 23 : 27, 70 / Math.max(...piece.cells.map(p => p[0] + 1), ...piece.cells.map(p => p[1] + 1)));
   // eslint-disable-next-line react-hooks/refs -- Gesture callbacks measure animated refs only on UI-thread touch events.
-  const gesture = useMemo(() => uiThreadDrag(point).enabled(active).onStart(e => {
+  const gesture = useMemo(() => uiThreadDrag(point).enabled(active).onBegin(e => {
     "worklet";
+    // Capture the occupied cell at touch-down, before a quick native drag can move.
+    point.set({ x: e.x, y: e.y, down: true });
     const tray = measure(card), pieceRect = measure(art), reef = measure(board);
     if (tray && pieceRect && reef) {
       rect.set({ x: reef.pageX, y: reef.pageY, cell });
@@ -108,7 +110,7 @@ export function ReefBoard({ initial, active, helper, onResult, onTone, width, he
           const rock = s.level !== "endless" && s.level.rocks.includes(i), fish = s.fish.includes(i), highlighted = preview?.cells.includes(i), clears = preview?.clear.cells.includes(i), row = Math.floor(i / 8), col = i % 8;
           const invalid = !preview && hover && piece?.cells.some(([r, c]) => row === hover.row + r && col === hover.col + c);
           return <PressControl key={i} accessibilityRole="button" accessibilityLabel={`Reef row ${row + 1}, column ${col + 1}, ${rock ? "rock" : value ? target ? `number ${value}` : "coral" : "open"}${fish ? ", trapped fish" : ""}`} accessibilityState={{ disabled: !active || s.status !== "playing" }} disabled={!active || s.status !== "playing"} onPress={() => { if (selection.current !== null) place(selection.current, row, col); }} style={{ width: cell, height: cell, borderWidth: clears || highlighted || invalid ? 2 : .5, borderColor: invalid ? "#A4454F" : clears ? "#FFF5AB" : highlighted ? "#C88530" : "#428F8740", backgroundColor: invalid ? "#EDB7A6" : clears ? "#F2D77F" : highlighted ? "#FFF0BA" : (row + col) % 2 ? "#E7E4B11A" : "#4B9D9D0D", alignItems: "center", justifyContent: "center" }}>
-            {rock ? <View style={{ width: cell * .72, height: cell * .65, borderRadius: cell * .22, backgroundColor: "#567C7F", borderWidth: 3, borderColor: "#B4C4B4" }}/> : value > 0 || highlighted ? <><View style={{ opacity: highlighted ? .7 : 1 }}><Coral color={coralColors[highlighted && piece ? piece.color : s.appearance[i]]} variant={highlighted && piece ? piece.color : s.appearance[i]} fish={fish} size={cell}/></View>{target && <View style={{ position: "absolute", backgroundColor: "#FFF4D9", borderRadius: 8, paddingHorizontal: 5 }}><Text style={{ color: "#244D60", fontSize: cell * .45, fontWeight: "900" }}>{highlighted ? piece?.value : value}</Text></View>}</> : i % 7 === 0 ? <View style={{ width: 5, height: 3, borderRadius: 2, backgroundColor: "#7AA99B", opacity: .4 }}/> : null}
+            {rock ? <View style={{ width: cell * .72, height: cell * .65, borderRadius: cell * .22, backgroundColor: "#567C7F", borderWidth: 3, borderColor: "#B4C4B4" }}/> : value > 0 ? <><View style={{ opacity: highlighted ? .7 : 1 }}><Coral color={coralColors[highlighted && piece ? piece.color : s.appearance[i]]} variant={highlighted && piece ? piece.color : s.appearance[i]} fish={fish} size={cell}/></View>{target && <View style={{ position: "absolute", backgroundColor: "#FFF4D9", borderRadius: 8, paddingHorizontal: 5 }}><Text style={{ color: "#244D60", fontSize: cell * .45, fontWeight: "900" }}>{highlighted ? piece?.value : value}</Text></View>}</> : i % 7 === 0 ? <View style={{ width: 5, height: 3, borderRadius: 2, backgroundColor: "#7AA99B", opacity: .4 }}/> : null}
           </PressControl>;
         })}
       </Animated.View>{!!s.lastClear.length && <ClearEffects key={s.moves} state={s} cell={cell} reduced={reduced}/>}</Animated.View>

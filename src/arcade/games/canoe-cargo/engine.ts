@@ -188,7 +188,8 @@ export function cargoStep(s: CargoState, _input: CargoInput, dt: number): CargoS
 export function cargoResult(s: CargoState): ArcadeResult | null {
   if (s.status === "playing") return null;
   const cleared = s.status === "cleared", stars = cleared && s.level !== "endless" ? s.loads <= s.level.par ? 3 : s.loads <= s.level.par + 4 ? 2 : 1 : 0;
-  return { cleared, outcome: cleared ? "cleared" : s.status === "finished" ? "stopped" : "game-over", stars, score: s.score, detail: `${s.canoes} canoes sailed · ${s.freed} crates freed · ${s.loads} loads packed.${s.lastBonus ? " A target-sum delivery sailed twice!" : ""}` };
+  const hasCrates = s.freed > 0 || s.level !== "endless" && (s.level.opening > 0 || s.level.garbageEvery > 0);
+  return { cleared, outcome: cleared ? "cleared" : s.status === "finished" ? "stopped" : "game-over", stars, score: s.score, detail: `${s.canoes} canoes sailed${hasCrates ? ` · ${s.freed} crates freed` : ""} · ${s.loads} loads packed.${s.lastBonus ? " A target-sum delivery sailed twice!" : ""}` };
 }
 const exact = (v: unknown, keys: string[]): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).sort().join() === [...keys].sort().join();
 const uint = (v: unknown, max = 99999999): v is number => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= max;
