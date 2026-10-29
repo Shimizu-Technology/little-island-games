@@ -111,7 +111,9 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
   const touchDrop = useCallback(() => { if (stateRef.current.loads === grab.current.loads) act({ type: "drop" }); }, [stateRef, act]);
   // The tap recognizer records the piece at touch-down (still taps never start the pan), so a
   // piece that locks mid-tap is not rotated, and every new piece still rotates on its first tap.
-  const touchTap = useCallback(() => { if (stateRef.current.loads === grab.current.loads) act({ type: "rotate" }); }, [stateRef, act]);
+  const landed = useRef(0);
+  const onTouchDown = useCallback(() => { landed.current = stateRef.current.loads; }, [stateRef]);
+  const touchTap = useCallback(() => { if (stateRef.current.loads === landed.current) act({ type: "rotate" }); }, [stateRef, act]);
   const goal = s.level === "endless" ? `${s.score}` : `${cargoGoalValue(s)}/${s.level.target}`;
   const controls = <View style={{ flexDirection: "row", justifyContent: "center", flexWrap: wide ? "wrap" : "nowrap", gap: 6, maxWidth: wide ? 180 : undefined }}>
     <Control testID="cargo-left" label="Move cargo left" text="←" repeat onPress={() => act({ type: "left" })} disabled={!active}/>
@@ -128,7 +130,7 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
     <View pointerEvents="none" style={StyleSheet.absoluteFill}><CargoScene world={s.level === "endless" ? "w3" : s.level.world}/></View>
     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 5 }}><View style={ui.pill}><Text accessibilityLabel={`Goal progress ${goal}`} style={ui.stat}>{goal} {s.level === "endless" || s.level.goal === "score" ? "points" : s.level.goal === "crates" ? "crates" : "canoes"}</Text></View>{learning && <View style={ui.pill}><Text style={ui.stat}>Σ {s.level !== "endless" && s.level.targetSum}</Text></View>}<View style={ui.pill}><Text style={ui.stat}>★ {s.score}</Text></View></View>
     <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: wide ? 14 : 0 }}>
-      <View style={{ alignItems: "center", gap: 7 }}>{!wide && preview}<View testID="cargo-board" style={{ width: boardW + 10, height: boardH + 10, borderWidth: 5, borderColor: "#A8794B", borderRadius: 8, backgroundColor: "#193E4C", overflow: "hidden" }}><CargoTouch active={active && s.status === "playing"} cell={cell} width={boardW} height={boardH} onGrab={onGrab} onColumns={onColumns} onSoft={touchSoft} onDrop={touchDrop} onTap={touchTap}>
+      <View style={{ alignItems: "center", gap: 7 }}>{!wide && preview}<View testID="cargo-board" style={{ width: boardW + 10, height: boardH + 10, borderWidth: 5, borderColor: "#A8794B", borderRadius: 8, backgroundColor: "#193E4C", overflow: "hidden" }}><CargoTouch active={active && s.status === "playing"} cell={cell} width={boardW} height={boardH} onGrab={onGrab} onTouchDown={onTouchDown} onColumns={onColumns} onSoft={touchSoft} onDrop={touchDrop} onTap={touchTap}>
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>{Array.from({ length: COLS * ROWS }, (_, i) => <View key={i} style={{ position: "absolute", left: i % COLS * cell, top: Math.floor(i / COLS) * cell, width: cell, height: cell, borderRightWidth: .5, borderBottomWidth: .5, borderColor: "#31546080" }}/>)}</View>
         <SettledCargo board={s.board} cell={cell} learning={learning}/><MovingCargo poses={poses} piece={s.piece} value={learning ? s.piece.value : 0} cell={cell}/>
         {!!s.event && <LockEffects key={s.event} s={s} cell={cell} reduced={reduced}/>}
