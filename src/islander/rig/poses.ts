@@ -44,20 +44,22 @@ export function backPose(frame: number): Pose {
   for (const [i, side] of (['left', 'right'] as const).entries()) {
     const flip = (p: Point): Point => i ? [80 - p[0], p[1]] : p;
     const foot: Point = compact ? flip([45, 128]) : frame === 9 ? flip([32, 109]) : frame === 14 ? (i ? [57, 124] : [19, 128]) : [8, 10, 15].includes(frame) ? flip([32, 128]) : mix(base.foot[i], next.foot[i]);
-    const knee: Point = compact ? flip([54, 107]) : frame === 9 ? flip([22, 98]) : frame === 8 ? flip([40, 103]) : frame === 10 ? flip([40, 112]) : frame === 15 ? flip([40, 105]) : frame === 14 ? (i ? [55, 110] : [24, 107]) : mix(base.knee[i], next.knee[i]);
+    const knee: Point = compact ? flip([54, 107]) : frame === 9 ? flip([22, 98]) : frame === 8 ? flip([22, 103]) : frame === 10 ? flip([24, 112]) : frame === 15 ? flip([40, 105]) : frame === 14 ? (i ? [55, 110] : [24, 107]) : mix(base.knee[i], next.knee[i]);
     [j[`${side}Knee`], j[`${side}Foot`]] = solve(j[`${side}Hip`], foot, knee, 18);
-    const hand: Point = compact ? flip([32, 118]) : frame === 15 ? flip([20, 22]) : frame === 8 ? flip([26, 45]) : frame === 9 ? flip([24, 52]) : frame === 10 ? flip([24, 88]) : frame === 14 ? (i ? [72, 59] : [9, 53]) : mix(base.hand[i], next.hand[i]);
-    const elbow: Point = compact ? flip([14, 108]) : mix(base.elbow[i], next.elbow[i]);
+    const hand: Point = compact ? flip([32, 118]) : frame === 15 ? flip([20, 22]) : frame === 8 ? flip([16, sy - 23]) : frame === 9 ? flip([12, sy - 22]) : frame === 10 ? flip([24, 88]) : frame === 14 ? (i ? [72, 59] : [9, 53]) : mix(base.hand[i], next.hand[i]);
+    const elbow: Point = compact ? flip([45, 108]) : frame === 8 || frame === 9 ? flip([8, sy - 5]) : mix(base.elbow[i], next.elbow[i]);
     [j[`${side}Elbow`], j[`${side}Hand`]] = solve(j[`${side}Shoulder`], hand, elbow, 16);
   }
   if (frame < 8 || frame >= 16) {
     const phase = (frame >= 16 ? frame - 16 + .5 : frame) * Math.PI / 4;
     for (const [i, side] of (['left', 'right'] as const).entries()) {
       const swing = Math.cos(phase + i * Math.PI), x = i ? 48 : 32;
-      const foot: Point = [x + Math.sin(phase) * 1.5, 128 - Math.max(0, -swing) * 15 - (frame % 4 === 2 ? 2 : 0)];
-      [j[`${side}Knee`], j[`${side}Foot`]] = solve(j[`${side}Hip`], foot, [swing >= 0 ? (i ? 53 : 27) : 40, 108], 18);
+      // Fold the lifted shoe outward on its own side; an under-hip target
+      // forces a fixed-length 2D shin across the midline at full lift.
+      const foot: Point = [x + (i ? 1 : -1) * Math.sqrt(Math.max(0, -swing)) * 18, 128 - Math.max(0, -swing) * 15 - (frame % 4 === 2 ? 2 : 0)];
+      [j[`${side}Knee`], j[`${side}Foot`]] = solve(j[`${side}Hip`], foot, [i ? 50 : 30, 108], 18);
       const hand: Point = [i ? 60 - swing * 4 : 20 + swing * 4, sy + 21 - swing * 10];
-      [j[`${side}Elbow`], j[`${side}Hand`]] = solve(j[`${side}Shoulder`], hand, [swing > 0 ? 40 : i ? 65 : 15, sy + 15], 16);
+      [j[`${side}Elbow`], j[`${side}Hand`]] = solve(j[`${side}Shoulder`], hand, [i ? 65 : 15, sy + 12], 16);
     }
   }
   return { id: `run-${frame}`, view: 'back', joints: j, expression: 'happy', compact, frame };

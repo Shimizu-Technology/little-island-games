@@ -40,11 +40,13 @@ describe('Islander skeleton and wardrobe contracts', () => {
     expect(writing[1]).toBeGreaterThan(84); expect(writing[1]).toBeLessThan(90);
     expect(new Set(frontPoses.filter(p => p.id.startsWith('dance-')).map(p => JSON.stringify(p.joints))).size).toBe(4);
   });
-  it('keeps running feet under the hips and alternates the arm/leg swing', () => {
+  it('keeps running legs on their own side and alternates the arm/leg swing', () => {
     for (const frame of runCycleFrames) {
       const j = backPose(frame).joints;
       for (const side of ['left', 'right'] as const) {
-        expect(Math.abs(j[`${side}Foot`][0] - j[`${side}Hip`][0])).toBeLessThanOrEqual(1.51);
+        const foot=j[`${side}Foot`], knee=j[`${side}Knee`];
+        expect(side === 'left' ? Math.max(foot[0],knee[0]) : 80-Math.min(foot[0],knee[0])).toBeLessThan(40);
+        if (foot[1] === 128) expect(foot[0]).toBe(j[`${side}Hip`][0]);
         expect(j[`${side}Knee`][0]).toBeGreaterThan(23);
         expect(j[`${side}Knee`][0]).toBeLessThan(57);
         expect(Math.hypot(j[`${side}Hand`][0]-j[`${side}Hip`][0],j[`${side}Hand`][1]-j[`${side}Hip`][1])).toBeGreaterThan(12);

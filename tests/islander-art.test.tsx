@@ -91,6 +91,16 @@ describe('Islander authored art',()=>{
    }
   }
  });
+ it('distinguishes rear hairstyles and exposes lifted soles with the forward hand behind clothing',()=>{
+  const silhouettes=hairStyles.map(hairStyle=>renderToStaticMarkup(<Islander view="back" pose={0} look={{...defaultLook,hairStyle}}/>).replace(/ data-back-hair="[^"]*"/g,''));
+  expect(new Set(silhouettes).size).toBe(4);
+  for(const frame of [0,4]) {
+   const markup=renderToStaticMarkup(<Islander view="back" pose={frame}/>);
+   expect(markup).toContain('data-sole="lifted"');
+   expect(markup.indexOf('data-mitten=')).toBeLessThan(markup.indexOf('data-layer="clothing"'));
+   expect(markup.lastIndexOf('data-mitten=')).toBeGreaterThan(markup.indexOf('data-layer="clothing"'));
+  }
+ });
  it('defaults each view to its own idle frame', () => {
   expect(renderToStaticMarkup(<Islander/>)).toBe(renderToStaticMarkup(<Islander view="front" pose="idle"/>));
   expect(renderToStaticMarkup(<Islander view="back"/>)).toBe(renderToStaticMarkup(<Islander view="back" pose={0}/>));

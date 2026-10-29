@@ -27,29 +27,29 @@ export function IslanderShape({ pose, look: input = defaultLook }: { pose: Pose;
   const frontArm: Side = rearArm === 'left' ? 'right' : 'left';
   const limb = (side: Side, arm: boolean) => {
     const start = j[`${side}${arm ? 'Shoulder' : 'Hip'}`], middle = j[`${side}${arm ? 'Elbow' : 'Knee'}`], end = j[`${side}${arm ? 'Hand' : 'Foot'}`];
-    const hoodie = look.outfit === 'hoodie', dress = look.outfit === 'sundress', radius = arm ? 4.3 : 4.8;
+    const hoodie = look.outfit === 'hoodie', dress = look.outfit === 'sundress', radius = arm ? 5.5 : 6.2;
     const sleeveEnd = between(start, middle, arm ? .55 : .5);
     return <G key={`${side}${arm}`}>
-      <Path data-limb={`${side}-${arm ? 'arm' : 'leg'}`} d={limbShape(start, middle, end, radius, arm ? 3 : 3.3)} fill={hoodie ? (arm ? colors.primary : colors.secondary) : skin}/>
+      <Path data-limb={`${side}-${arm ? 'arm' : 'leg'}`} d={limbShape(start, middle, end, radius, arm ? 3.9 : 4.5)} fill={hoodie ? (arm ? colors.primary : colors.secondary) : skin}/>
       {!hoodie && (!arm || !dress) && <Path d={boneShape(start, sleeveEnd, radius + .5, radius)} fill={arm ? colors.primary : colors.secondary} strokeWidth={0}/>}
-      {!arm && <Path d={`M${end[0] - 4.5} ${end[1] - 2}Q${end[0]} ${end[1] - 5} ${end[0] + 4.5} ${end[1] - 2}L${end[0] + 5} ${end[1] + 1}Q${end[0]} ${end[1] + 3} ${end[0] - 5} ${end[1] + 1}Z`} fill={!front && end[1] < 123 ? colors.secondary : colors.trim} strokeWidth={1.3}/>}
+      {!arm && <Path data-sole={!front && end[1] < 123 ? "lifted" : "ground"} d={!front && !compact && end[1] < 123 ? `M${end[0]-4.5} ${end[1]-5}Q${end[0]} ${end[1]-8} ${end[0]+4.5} ${end[1]-5}L${end[0]+5} ${end[1]+2}Q${end[0]} ${end[1]+6} ${end[0]-5} ${end[1]+2}Z` : `M${end[0] - 4.5} ${end[1] - 2}Q${end[0]} ${end[1] - 5} ${end[0] + 4.5} ${end[1] - 2}L${end[0] + 5} ${end[1] + 1}Q${end[0]} ${end[1] + 3} ${end[0] - 5} ${end[1] + 1}Z`} fill={!front && end[1] < 123 ? '#F8DFA0' : colors.trim} strokeWidth={1.3}/>}
     </G>;
   };
   const hand = (side: Side) => { const [x, y] = j[`${side}Hand`], s = side === 'left' ? 1 : -1; return <Path key={side} data-mitten={side} d={`M${x - s * 2.5} ${y - 2}Q${x - s * 4} ${y + 3.5} ${x} ${y + 4}Q${x + s * 4} ${y + 4} ${x + s * 3} ${y}Q${x + s * 6} ${y - 1} ${x + s * 4} ${y - 3}Q${x + s * 2.5} ${y - 4} ${x + s * 1.5} ${y - 2}Z`} fill={skin} strokeWidth={1.2}/>; };
   const long = look.hairStyle === 'ponytail' || look.hairStyle === 'braids';
   const rearHair = <G fill={hair}>
-    {long && !compact && (look.hairStyle === 'ponytail' ? <Path d={`M${hx + 10} ${hy - 6}Q${hx + 31} ${hy - 11} ${hx + 24} ${hy + 18}Q${hx + 22} ${hy + 33} ${hx + 11} ${hy + 31}Q${hx + 19} ${hy + 17} ${hx + 9} ${hy + 7}Z`}/> : ([-1, 1] as const).map(s => <G key={s}><Path d={`M${hx + s * 13} ${hy + 3}Q${hx + s * 25} ${hy + 13} ${hx + s * 19} ${hy + 31}L${hx + s * 12} ${hy + 31}Q${hx + s * 15} ${hy + 17} ${hx + s * 10} ${hy + 8}Z`}/>{[14, 21, 28].map(y => <Path key={y} d={`M${hx + s * 13} ${hy + y}l${s * 6} -3`} strokeWidth={1}/>) }<Circle cx={hx + s * 15} cy={hy + 31} r={2.8} fill={colors.trim}/></G>))}
+    {front && long && !compact && (look.hairStyle === 'ponytail' ? <Path d={`M${hx + 10} ${hy - 6}Q${hx + 31} ${hy - 11} ${hx + 24} ${hy + 18}Q${hx + 22} ${hy + 33} ${hx + 11} ${hy + 31}Q${hx + 19} ${hy + 17} ${hx + 9} ${hy + 7}Z`}/> : ([-1, 1] as const).map(s => <G key={s}><Path d={`M${hx + s * 13} ${hy + 3}Q${hx + s * 25} ${hy + 13} ${hx + s * 19} ${hy + 31}L${hx + s * 12} ${hy + 31}Q${hx + s * 15} ${hy + 17} ${hx + s * 10} ${hy + 8}Z`}/>{[14, 21, 28].map(y => <Path key={y} d={`M${hx + s * 13} ${hy + y}l${s * 6} -3`} strokeWidth={1}/>) }<Circle cx={hx + s * 15} cy={hy + 31} r={2.8} fill={colors.trim}/></G>))}
     {front && <Ellipse cx={hx} cy={hy} rx={r + .7} ry={r + (hasHat ? 0 : 2)}/>}
   </G>;
   const backpack = <G transform={`translate(${a.torso[0] - (compact ? 10 : 0)} ${a.torso[1]})`}><Rect x={compact ? -9 : -12} y={compact ? -3 : -8} width={compact ? 18 : 24} height={compact ? 13 : 28} rx={7} fill="#D2A45E"/><Rect x={compact ? -6 : -8} y={compact ? 1 : 5} width={compact ? 12 : 16} height={compact ? 7 : 11} rx={3} fill="#F4CC76"/><Path d={compact ? "M-3 -3Q0 -7 3 -3" : "M-4 -8Q0 -16 4 -8"} fill="none" strokeWidth={2}/></G>;
   return <G stroke={ink} strokeWidth={1.35} strokeLinejoin="round" strokeLinecap="round">
     <G data-layer="rear-accessory">{look.accessory === 'backpack' && front && backpack}</G>
     <G data-layer="rear-hair">{rearHair}</G>
-    <G data-layer="rear-limbs">{limb('left', false)}{look.outfit === 'sundress' && limb('right', false)}{limb(rearArm, true)}</G>
+    <G data-layer="rear-limbs">{limb('left', false)}{look.outfit === 'sundress' && limb('right', false)}{limb(rearArm, true)}{!front && !compact && hand(rearArm)}</G>
     <G data-layer="body"><Path d={`M${hx - 5} ${hy + r - 3}L35 ${sy + 3}H45L${hx + 5} ${hy + r - 3}Z`} fill={skin}/><Path d={`M26 ${sy}Q40 ${sy - (compact ? 2 : 7)} 54 ${sy}L54 ${hip + 2}H26Z`} fill={skin}/><Ellipse cx={hx - r} cy={hy + 3} rx={3} ry={4} fill={skin}/><Ellipse cx={hx + r} cy={hy + 3} rx={3} ry={4} fill={skin}/>
-      {!compact && (front ? <Circle cx={hx} cy={hy} r={r} fill={skin}/> : <Path d={`M${hx-r} ${hy}Q${hx-r-1} ${hy-r} ${hx} ${hy-r}Q${hx+r+1} ${hy-r} ${hx+r} ${hy}Q${hx+r} ${hy+r-4} ${hx+12} ${hy+r}L${hx+7} ${hy+r-2}Q${hx} ${hy+r+3} ${hx-7} ${hy+r-2}L${hx-12} ${hy+r}Q${hx-r} ${hy+r-4} ${hx-r} ${hy}Z`} fill={hair}/>)}</G>
+      {!compact && <Circle cx={hx} cy={hy} r={r} fill={skin}/>}</G>
     <G data-layer="clothing"><Path d={`M27 ${hip - 8}H53L55 ${hip + 6}H43L40 ${hip + 1}L37 ${hip + 6}H25Z`} fill={colors.secondary}/>
-      <Path d={`M26 ${sy - 1}Q40 ${sy - (compact ? 2 : 7)} 54 ${sy - 1}L${look.outfit === 'sundress' ? 60 : 55} ${hip + (look.outfit === 'sundress' ? 12 : -5)}Q40 ${hip + (look.outfit === 'sundress' ? 17 : 0)} ${look.outfit === 'sundress' ? 20 : 25} ${hip + (look.outfit === 'sundress' ? 12 : -5)}Z`} fill={!front && look.outfit === 'explorer' ? '#E8C58A' : colors.primary}/>
+      <Path d={compact ? `M26 ${sy}Q40 ${sy-8} 54 ${sy}Q63 122 48 127Q28 133 24 120Z` : `M26 ${sy - 1}Q40 ${sy - (compact ? 2 : 7)} 54 ${sy - 1}L${look.outfit === 'sundress' ? 60 : 55} ${hip + (look.outfit === 'sundress' ? 12 : -5)}Q40 ${hip + (look.outfit === 'sundress' ? 17 : 0)} ${look.outfit === 'sundress' ? 20 : 25} ${hip + (look.outfit === 'sundress' ? 12 : -5)}Z`} fill={!front && look.outfit === 'explorer' ? '#E8C58A' : colors.primary}/>
       {!compact && <>{!front && look.outfit === 'hoodie' && <Path d={`M30 ${sy}Q40 ${sy + 22} 50 ${sy}Q40 ${sy - 5} 30 ${sy}Z`} fill={colors.secondary} strokeWidth={1.2}/>}<Path d={`M34 ${sy - 3}Q40 ${sy + 5} 46 ${sy - 3}`} fill="none" stroke={colors.trim} strokeWidth={2.5}/>
         {front && look.outfit === 'island' && <G strokeWidth={0} fill={colors.trim}><Path d={`M39 ${sy + 11}q-10 -7 -9 3q1 7 10 9q9-5 9-11q-1-7-10-1Z`}/><Path d={`M40 ${sy + 13}v8`} stroke={colors.primary} strokeWidth={1}/></G>}
         {front && look.outfit === 'explorer' && <G fill="#E8C58A"><Path d={`M27 ${sy}L35 ${sy + 3}L35 ${hip - 5}H25Z`}/><Path d={`M53 ${sy}L45 ${sy + 3}L45 ${hip - 5}H55Z`}/><Path d={`M28 ${sy + 17}H33V${sy + 23}H28ZM47 ${sy + 17}H52V${sy + 23}H47Z`} fill={colors.secondary} strokeWidth={1}/></G>}
@@ -59,14 +59,19 @@ export function IslanderShape({ pose, look: input = defaultLook }: { pose: Pose;
       {compact && look.accessory === 'backpack' && backpack}
     </G>
     <G data-layer="front-limbs">{look.outfit !== 'sundress' && limb('right', false)}{limb(frontArm, true)}</G>
-    <G data-layer="hands">{hand('left')}{hand('right')}</G>
+    <G data-layer="hands">{front || compact ? <>{hand('left')}{hand('right')}</> : hand(frontArm)}</G>
     <G data-layer="front-hair">{compact && <Circle cx={hx} cy={hy} r={r} fill={hair}/>}
 
-      {front ? <Path d={`M${hx - r} ${hy}Q${hx - r - 2} ${hy - r - (hasHat ? 0 : 4)} ${hx + 1} ${hy - r}Q${hx + r + 4} ${hy - r - 1} ${hx + r} ${hy + 1}L${hx + 10} ${hy - 7}Q${hx - 2} ${hy - 3} ${hx - 9} ${hy - 10}L${hx - 13} ${hy + 2}Z`} fill={hair}/> : !compact && <G fill={hair}>
-        <Path strokeWidth={0} d={`M${hx-r} ${hy-2}Q${hx-r-2} ${hy+r-3} ${hx-12} ${hy+r-1}L${hx-8} ${hy+r-4}Q${hx} ${hy+r+3} ${hx+8} ${hy+r-3}L${hx+13} ${hy+r-1}Q${hx+r+2} ${hy+r-4} ${hx+r} ${hy-2}Q${hx+9} ${hy+7} ${hx} ${hy+3}Q${hx-10} ${hy+8} ${hx-r} ${hy-2}Z`}/>
-        <Path d={`M${hx-14} ${hy+7}Q${hx-14} ${hy+16} ${hx-9} ${hy+19}M${hx+13} ${hy+8}Q${hx+12} ${hy+16} ${hx+8} ${hy+19}`} fill="none" stroke="#FFFFFF" opacity={.18} strokeWidth={1.2}/>
+      {front ? <Path d={`M${hx - r} ${hy}Q${hx - r - 2} ${hy - r - (hasHat ? 0 : 4)} ${hx + 1} ${hy - r}Q${hx + r + 4} ${hy - r - 1} ${hx + r} ${hy + 1}L${hx + 10} ${hy - 7}Q${hx - 2} ${hy - 3} ${hx - 9} ${hy - 10}L${hx - 13} ${hy + 2}Z`} fill={hair}/> : !compact && <G fill={hair} data-back-hair={look.hairStyle}>
+        <Path d={`M${hx-21} ${hy+1}Q${hx-24} ${hy-23} ${hx} ${hy-23}Q${hx+24} ${hy-23} ${hx+21} ${hy+1}L${hx+17} ${hy+12}Q${hx+10} ${hy+18} ${hx} ${hy+17}Q${hx-10} ${hy+18} ${hx-17} ${hy+12}Z`}/>
+        <Path d={`M${hx-12} ${hy+8}Q${hx-7} ${hy+13} ${hx} ${hy+13}M${hx+12} ${hy+8}Q${hx+7} ${hy+13} ${hx+3} ${hy+13}`} fill="none" stroke="#FFFFFF" opacity={.18} strokeWidth={1.2}/>
+        {look.hairStyle === 'curls' && [-17,-8,2,12,18].map((x,i)=><Circle key={x} cx={hx+x} cy={hy+9+(i%2?5:0)} r={5} fill={hair} strokeWidth={0}/>)}
       </G>}
+
       {look.hairStyle === 'curls' && !compact && [-18, -9, 0, 9, 18].map((x, i) => <Circle key={x} cx={hx + x} cy={hy - (hasHat ? 14 : 18) + (i % 2 ? -1 : 1)} r={hasHat ? 4 : 6.5} fill={hair} strokeWidth={1}/>)}
+    {!front && !compact && long && <G fill={hair}>
+      {look.hairStyle === 'ponytail' ? (() => { const swing = pose.frame !== undefined && (pose.frame < 8 || pose.frame >= 16) ? Math.sin((pose.frame >= 16 ? pose.frame-16+.5 : pose.frame)*Math.PI/4)*7 : 0; return <G><Path d={`M${hx-4} ${hy-10}Q${hx+17+swing} ${hy-8} ${hx+11+swing} ${hy+15}Q${hx+7+swing} ${hy+32} ${hx-4+swing} ${hy+28}Q${hx+3+swing} ${hy+14} ${hx-6} ${hy+1}Z`}/><Ellipse cx={hx} cy={hy-7} rx={5} ry={3} fill={colors.trim}/></G>; })() : [-1,1].map(side=><G key={side}><Path d={`M${hx+side*14} ${hy+8}Q${hx+side*22} ${hy+24} ${hx+side*17} ${hy+37}L${hx+side*10} ${hy+36}Q${hx+side*14} ${hy+22} ${hx+side*9} ${hy+11}Z`}/>{[18,24,30].map(y=><Path key={y} d={`M${hx+side*12} ${hy+y}l${side*7} 3`} strokeWidth={1}/>)}<Circle cx={hx+side*14} cy={hy+36} r={3} fill={colors.trim}/></G>)}
+    </G>}
     </G>
     <G data-layer="face">{front && <G><Ellipse cx={hx - 10} cy={hy + 7} rx={3.5} ry={1.7} fill="#E88D7D" opacity={.5} strokeWidth={0}/><Ellipse cx={hx + 10} cy={hy + 7} rx={3.5} ry={1.7} fill="#E88D7D" opacity={.5} strokeWidth={0}/>
       {pose.expression === 'proud' ? <Path d={`M${hx - 9} ${hy + 2}q3-4 6 0M${hx + 3} ${hy + 2}q3-4 6 0`} fill="none"/> : <G fill={ink} strokeWidth={0}><Ellipse cx={hx - 7} cy={hy + 2} rx={2.7} ry={3.5}/><Ellipse cx={hx + 7} cy={hy + 2} rx={2.7} ry={3.5}/><Circle cx={hx - 6.2} cy={hy + 1} r={1} fill="white"/><Circle cx={hx + 7.8} cy={hy + 1} r={1} fill="white"/></G>}
