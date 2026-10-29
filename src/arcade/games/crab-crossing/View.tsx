@@ -244,9 +244,9 @@ export function CrabBoard({
                     </View>
                   ) : (
                     !water && (
-                      <Text style={{ color: "#6C815C", textAlign: "center", fontSize: unit * 0.28 }}>
-                        {row === 0 ? "⌂       ⌂       ⌂" : row === 5 ? "❧       ❧       ❧" : "·      ·      ·      ·"}
-                      </Text>
+                      <View pointerEvents="none" style={{ flexDirection: "row", justifyContent: "space-around", paddingHorizontal: unit }}>
+                        {[0, 1, 2, 3].map(i => <View key={i} style={{ width: unit * .09, height: unit * .045, borderRadius: unit * .03, backgroundColor: row === 5 ? "#79976C" : "#B69C65", opacity: row === 0 ? 0 : .4 }}/>) }
+                      </View>
                     )
                   )}
                 </View>

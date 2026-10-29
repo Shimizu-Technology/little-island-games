@@ -23,7 +23,7 @@ export const CargoOutline = memo(function CargoOutline({ piece, cell, ghost = fa
     !has(r + 1, c) ? `M${c * cell} ${(r + 1) * cell}h${cell}` : "",
     !has(r, c - 1) ? `M${c * cell} ${r * cell}v${cell}` : "",
   ]).join(" ");
-  return <Svg width={cell * 4} height={cell * 4} viewBox={`-2 -2 ${cell * 4 + 4} ${cell * 4 + 4}`} accessible={false}><Path d={d} fill="none" stroke={ghost ? "#B3CBBE" : "#FFF3C6"} strokeWidth={ghost ? 1.2 : 2} strokeLinejoin="round" opacity={ghost ? .5 : .95} strokeDasharray={ghost ? "4 4" : undefined}/></Svg>;
+  return <Svg width={cell * 4} height={cell * 4} viewBox={`0 0 ${cell * 4} ${cell * 4}`} style={{ overflow: "visible" }} accessible={false}>{ghost && cells.map(([r, c]) => <Rect key={`${r}-${c}`} x={c * cell + 2} y={r * cell + 2} width={Math.max(0, cell - 4)} height={Math.max(0, cell - 4)} rx={3} fill="#E7E6B1" opacity={.18}/>)}<Path d={d} fill="none" stroke={ghost ? "#DCE9C7" : "#FFF3C6"} strokeWidth={ghost ? 1.8 : 2} strokeLinejoin="round" opacity={ghost ? .85 : .95} strokeDasharray={ghost ? "4 4" : undefined}/></Svg>;
 });
 export const CargoCaptain = memo(function CargoCaptain({ size = 120, outfit = "island", happy = false, dizzy = false }: { size?: number; outfit?: OutfitId; happy?: boolean; dizzy?: boolean }) {
   return <Svg width={size} height={size} viewBox="0 0 160 160" accessible={false}>

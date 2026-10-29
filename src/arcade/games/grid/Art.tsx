@@ -315,6 +315,7 @@ export const CoastalObject = memo(function CoastalObject({
   const water = ["log", "turtle", "canoe", "island"].includes(kind);
   return (
     <Svg width={width} height={height} viewBox="0 0 100 100" preserveAspectRatio="none" accessible={false}>
+      {water ? <Path d="M3 80Q24 85 47 80T97 80" fill="none" stroke="#BDECE1" strokeWidth={2} opacity={.45}/> : <Ellipse cx={50} cy={85} rx={46} ry={4} fill="#172F3B" opacity={.3}/>}
       {water ? (
         <>
           <Path

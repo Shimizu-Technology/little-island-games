@@ -105,3 +105,15 @@ describe("soft drop timing", () => {
     expect(cargoTransition(released, { type: "soft", value: false })).toBe(released);
   });
 });
+
+describe("Cargo result stats match the voyage", () => {
+  it("omits crate stats when the level has no trapped crates or tide", () => {
+    const s = createCargo(cargoLevel("w1-1"), 42, false);
+    expect(cargoResult({ ...s, status: "cleared" })?.detail).not.toContain("crates freed");
+  });
+  it("keeps crate stats for crate voyages and whenever a crate was freed", () => {
+    const s = createCargo(cargoLevel("w2-1"), 42, false);
+    expect(cargoResult({ ...s, status: "over" })?.detail).toContain("0 crates freed");
+    expect(cargoResult({ ...createCargo("endless", 42, false), status: "finished", freed: 2 })?.detail).toContain("2 crates freed");
+  });
+});

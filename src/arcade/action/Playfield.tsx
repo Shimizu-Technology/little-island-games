@@ -311,15 +311,20 @@ export function PalmBoard({
               left: camera.x + (x - 38) * scale,
               top: camera.y + 475 * scale,
               width: 76 * scale,
-              height: 17 * scale,
-              borderTopLeftRadius: 55,
-              borderTopRightRadius: 55,
-              backgroundColor: s.shields[i] ? "#6FC666" : "#966A4233",
-              borderWidth: scale * 2,
-              borderColor: "#2D6745",
-              opacity: s.shields[i] ? 0.45 + s.shields[i] * 0.18 : 0.25,
+              height: 20 * scale,
             }}
-          />
+          >
+            <Svg width={76 * scale} height={20 * scale} viewBox="0 0 76 20" accessible={false}>
+              <Path d="M2 19Q38 10 74 19" fill="none" stroke="#4B5036" strokeWidth={3} opacity={.25}/>
+              {s.shields[i] ? <>
+                <Path d="M1 17Q5 1 38 1Q71 1 75 17Z" fill={s.shields[i] === 1 ? "#A7BE63" : "#68BC70"} stroke="#285D43" strokeWidth={2}/>
+                <Path d="M5 15Q38 5 71 15" fill="none" stroke="#CBE89A" strokeWidth={2}/>
+                <Path d="M38 16V3M22 16L29 7M54 16L47 7M10 15L17 9M66 15L59 9" fill="none" stroke="#347A4D" strokeWidth={1.5}/>
+                {s.shields[i] < 3 && <Path d="M23 3L29 10L25 17" fill="none" stroke="#285D43" strokeWidth={2}/>}
+                {s.shields[i] < 2 && <Path d="M53 3L47 10L51 17" fill="none" stroke="#285D43" strokeWidth={2}/>}
+              </> : <Path d="M6 17Q38 11 70 17" fill="none" stroke="#936D43" strokeWidth={2} strokeDasharray="4 5"/>}
+            </Svg>
+          </View>
         ))}
         <PalmHero poses={poses} scale={scale} outfit={outfit} hit={s.lives.hit} onTone={onTone} />
         {learning &&

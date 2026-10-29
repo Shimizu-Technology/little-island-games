@@ -93,8 +93,9 @@ export function RailBoard({
           };
         }),
         ...Array.from({ length: 6 }, (_, i) => ({
-          x: (snake[i]?.x ?? 0) * unit,
-          y: (snake[i]?.y ?? 0) * unit,
+          // The head drawing points right: keep it at the right end of the connected body.
+          x: (snake[snake.length - 1 - i]?.x ?? 0) * unit,
+          y: (snake[snake.length - 1 - i]?.y ?? 0) * unit,
           opacity: snake[i] ? 1 : 0,
         })),
         ...[0, 1, 2].map((i) => ({
@@ -271,7 +272,7 @@ export function RailBoard({
               {learning ? (
                 <Text style={{ fontSize: unit * 0.65, fontWeight: "900", color: "#3A4D4F" }}>{next}</Text>
               ) : (
-                <GridHero size={unit} chick />
+                <RailArt size={unit} chick outfit="island" />
               )}
             </View>
             {learning && s.phase === "play" && (
