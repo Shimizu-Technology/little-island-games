@@ -1,3 +1,4 @@
+import { returnLabel } from "../arcade/presentation";
 import { Text } from "../components/Text";
 import React, { useState } from "react";
 import { ScrollView, View, useWindowDimensions } from "react-native";
@@ -38,8 +39,8 @@ export default function Home() {
       <Copy style={{ fontSize: 14, color: C.teal }}>{activeLearner(store.save.learning).id === "family" ? "Family practice" : `Learning with ${activeLearner(store.save.learning).name}`}</Copy>
       <SaveStatus />
       <Heading style={{ fontSize: available >= 600 ? 34 : 28 }}>What shall we play?</Heading>
-      {resume && <PressableScale accessibilityRole="button" accessibilityLabel={`Continue ${shelfGames.find(g => g.id === resume)?.name}, your saved round`} onPress={() => openShelfGame(resume)} style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: C.soft, borderRadius: 18, padding: 12 }}>
-        <GameIcon id={resume} size={48}/><View style={{ flex: 1 }}><Label>Continue</Label><Heading style={{ fontSize: 20 }}>{shelfGames.find(g => g.id === resume)?.name}</Heading></View><Icon name="right" color={C.teal}/>
+      {resume && <PressableScale accessibilityRole="button" accessibilityLabel={`${returnLabel(resume)} ${shelfGames.find(g => g.id === resume)?.name}`} onPress={() => openShelfGame(resume)} style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: C.soft, borderRadius: 18, padding: 12 }}>
+        <GameIcon id={resume} size={48}/><View style={{ flex: 1 }}><Label>{returnLabel(resume)}</Label><Heading style={{ fontSize: 20 }}>{shelfGames.find(g => g.id === resume)?.name}</Heading></View><Icon name="right" color={C.teal}/>
       </PressableScale>}
       {!!favorites.length && <View style={{ gap: 8 }}><Label>Your favorites</Label><View style={[styles.row, { flexWrap: "wrap", gap: 8 }]}>
         {favorites.map(id => <PressableScale key={id} accessibilityRole="button" accessibilityLabel={`Open favorite ${shelfGames.find(g => g.id === id)?.name}`} onPress={() => openShelfGame(id)} style={{ flexDirection: "row", alignItems: "center", gap: 10, padding: 10, borderRadius: 16, backgroundColor: C.paper, borderWidth: 1, borderColor: C.line, maxWidth: "100%" }}><GameIcon id={id} size={48}/><Heading style={{ fontSize: 17, flexShrink: 1 }}>{shelfGames.find(g => g.id === id)?.name}</Heading></PressableScale>)}

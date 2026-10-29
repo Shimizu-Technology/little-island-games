@@ -1,3 +1,4 @@
+import { stickerSections } from "./presentation";
 import React from "react";
 import { View } from "react-native";
 import { Button, C, Copy, Heading } from "../components/ui";
@@ -18,7 +19,7 @@ export const stickerChapters: { name: string; stickers: readonly (typeof sticker
 ];
 export function StickerBook({ person }: { person: ArcadeLearner }) {
   return <View style={{ gap: 14 }}><Heading>My island friends</Heading><Copy>{person.stickers.length} of {stickerIds.length} friends found. Every chest shows its sticker. Collect them in any game.</Copy>
-    {stickerChapters.map(chapter => <View key={chapter.name} style={{ gap: 10 }}><Heading style={{ fontSize: 19 }}>{chapter.name}</Heading>
+    {stickerSections(person).map(chapter => <View key={chapter.name} style={{ gap: 10 }}><Heading style={{ fontSize: 19 }}>{chapter.name}</Heading>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>{chapter.stickers.map(id => {
         const found = person.stickers.includes(id);
         return <View key={id} accessibilityLabel={`${stickerNames[id]}, ${found ? "collected" : "waiting in a chest"}`} style={{ width: 136, minHeight: 156, padding: 12, alignItems: "center", gap: 6, backgroundColor: found ? "#FFF1CD" : "#E9E0CF", borderRadius: 26, borderWidth: 3, borderColor: found ? "#D4AA55" : "#D0C6B3", transform: [{ rotate: found ? "-3deg" : "2deg" }], boxShadow: "0 3px 0 #C9B993" }}>

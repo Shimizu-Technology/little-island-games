@@ -296,7 +296,7 @@ export function PalmBoard({
       <Animated.View
         collapsable={false}
         testID="palm-playfield"
-        accessibilityLabel="Palm Patrol playfield. Slide to aim. Hold to toss."
+        accessibilityLabel={learning ? "Palm Patrol playfield. Slide to aim. Press once for each math fact." : "Palm Patrol playfield. Slide to aim. Hold to toss."}
         onLayout={layout}
         style={[{ flex: 1, overflow: "hidden", minHeight: 210, backgroundColor: "#143E3D" }, gestureStyle]}
       >
@@ -410,7 +410,7 @@ export function PalmBoard({
             pointerEvents="none"
             style={{ position: "absolute", bottom: 12, ...(camera.x >= 150 ? { left: 8 } : { alignSelf: "center" }) }}
           >
-            <Pill>← Slide · hold to toss ↑</Pill>
+            <Pill>{learning ? "Slide · press for each fact ↑" : "← Slide · hold to toss ↑"}</Pill>
           </View>
         )}
         {s.level === "endless" && (

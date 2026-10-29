@@ -38,6 +38,7 @@ Other rules:
 - **Saves.**
   - Progress is stored per learner, using the active learner from `src/learn/learners.ts` with "family" as the default. It covers stars, open worlds, stickers, outfits, bests and settings, kept in new optional, strictly validated fields; the save version stays 1.
   - Old saves load unchanged. Corrupt data is preserved through the existing recovery path.
+  - Unfinished Reef Builder rounds are saved per learner in an optional version-1 session envelope (engine state version 2), through the existing Store commit/recovery path. Map Continue restores the exact reef and tray. Starting another Reef round replaces it; finishing clears it. Shell Song playback and other real-time rounds are not persisted.
   - A level in progress in a real-time game is not saved. It pauses on background, sheets and navigation, and restarts if the app is closed.
 - **Platforms.** Native iPhone/iPad and the offline web export (first load online, then offline), in phone and tablet sizes, portrait and landscape where the game allows. Touch first; keyboard on web is a bonus.
 - **Performance.** Smooth play on the 2019 iPad mini (5th gen, A12) class of device. Real-time games show their frame budget in the kit's dev overlay. Simulator numbers are evidence, not physical acceptance.

@@ -10,10 +10,14 @@ export function palmFrameStep(s: PalmState, input: PalmFrame, dt: number): PalmS
   s = palmTransition(s, { type: "helper", value: input.helper });
   s = palmTransition(s, { type: "move", x: input.x });
   if (input.finish) return palmTransition(s, { type: "finish" });
+  const previousFact = s.fact, freshPress = input.down && !s.fireHeld;
   s = palmStep(s, { type: "tick" }, dt);
+  s = { ...s, fireHeld: input.down };
   const tap = input.taps > s.inputTap;
   if (tap) s = { ...s, inputTap: input.taps };
-  return input.down || tap ? palmTransition(s, { type: "toss" }) : s;
+  const learning = s.level !== "endless" && s.level.world === "learn";
+  const fire = learning ? s.fact === previousFact && (freshPress || tap) : input.down || tap;
+  return fire ? palmTransition(s, { type: "toss" }) : s;
 }
 export function beachFrameStep(s: BeachState, input: BeachFrame, dt: number): BeachState {
   "worklet";

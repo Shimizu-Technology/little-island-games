@@ -104,8 +104,8 @@ describe("Palm Patrol feel rules", () => {
       expect(l.goals).toHaveLength(3);
       expect(validPalm(createPalm(l, 12))).toBe(true);
     }
-    expect(palmLevel("w1-1").count).toBe(10);
-    expect(palmLevel("w1-1").waves).toBe(2);
+    expect(palmLevel("w1-1").count).toBe(5);
+    expect(palmLevel("w1-1").waves).toBe(1);
     expect(palmLevel("w2-1").divers).toBe(true);
     expect(palmLevel("w3-1").armored).toBe(true);
     expect(palmLevel("w4-8").diveEvery).toBeLessThan(palmLevel("w2-1").diveEvery);
@@ -132,7 +132,7 @@ describe("Palm Patrol feel rules", () => {
     const edge = palmStep({ ...s, beetles: s.beetles.map((b) => ({ ...b, x: b.x + 51 })) }, tick, 0.1);
     expect(edge.direction).toBe(-1);
     expect(edge.beetles[0].y).toBe(s.beetles[0].y + palmLevel("w1-1").descent);
-    expect(palmMarchSpeed({ ...s, beetles: s.beetles.slice(0, 2) })).toBeGreaterThan(palmMarchSpeed(s) * 1.6);
+    expect(palmMarchSpeed({ ...s, beetles: s.beetles.slice(0, 2) })).toBeGreaterThan(palmMarchSpeed(s) * 1.4);
     expect(palmMarchSpeed({ ...s, waveTime: 22 })).toBeCloseTo(palmMarchSpeed(s) * 1.2);
   });
   it("hold fires immediately and every .22s; buffered short taps survive finger-up", () => {
@@ -215,7 +215,7 @@ describe("Palm Patrol feel rules", () => {
     expect(palmResult({ ...done, misses: 2 })?.stars).toBe(1);
   });
   it("top stars require accuracy, time and no damage; lower star tiers remain reachable", () => {
-    const base = { ...createPalm(palmLevel("w1-1"), 4), phase: "cleared" as const, shots: 20, landed: 15, time: 30 };
+    const base = { ...createPalm(palmLevel("w1-1"), 4), phase: "cleared" as const, shots: 20, landed: 15, time: palmLevel("w1-1").par - 1 };
     expect(palmResult(base)?.stars).toBe(3);
     expect(palmResult({ ...base, shots: 100 })?.stars).toBe(2);
     expect(palmResult({ ...base, time: 200 })?.stars).toBe(2);

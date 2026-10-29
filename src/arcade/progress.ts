@@ -1,3 +1,4 @@
+import { validReef, type ReefState } from "./games/reef-builder/engine";
 import { type PracticeResult, type PracticeSettings, validPracticeSettings } from "../practice/types";
 import { arcadeIds, allLevelIds, type ArcadeId, type LevelId, type Stars, type WorldId, validLevelId, worldIds, worldStars, worldOf, levelNumber, starCount } from "./types";
 export const stickerIds = ["reef-fish", "singing-shell", "little-crab", "sea-turtle", "moon-canoe", "sun-coral", "rainbow-fish", "star-shell", "coconut", "flying-fox", "lagoon-ray", "island-flower", "tiny-rail", "hermit-home", "sea-star", "jelly-light"] as const;
@@ -8,9 +9,14 @@ export const outfitNames: Record<OutfitId, string> = { island: "Island friend", 
 export const outfitStars: Record<OutfitId, number> = { island: 0, sunhat: 12, explorer: 30, starlight: 60 };
 export type GameProgress = { stars: Partial<Record<LevelId, Stars>>; openWorlds: WorldId[]; best: number; outfit: OutfitId; unlockedOutfits: OutfitId[]; coached: boolean };
 export type ChestOffer = { game: ArcadeId; level: LevelId; round: string; sticker: StickerId };
-export type ArcadeLearner = { helper: boolean; helperDefaultV2?: true; games: Partial<Record<ArcadeId, GameProgress>>; stickers: StickerId[]; rounds: string[]; chest: ChestOffer | null };
+export type ReefSession = { version: 1; game: "reef-builder"; round: string; state: ReefState };
+export function validReefSession(v: unknown): v is ReefSession {
+  return exact(v, ["version", "game", "round", "state"]) && v.version === 1 && v.game === "reef-builder" && roundId(v.round) && validReef(v.state) && v.state.status === "playing";
+}
+export type ArcadeLearner = { session?: ReefSession; helper: boolean; helperDefaultV2?: true; games: Partial<Record<ArcadeId, GameProgress>>; stickers: StickerId[]; rounds: string[]; chest: ChestOffer | null };
 export type ArcadeSave = { version: 1; music: boolean; breakMinutes: 0 | 15 | 20 | 30 | 45; unlockAll: boolean; people: Record<string, ArcadeLearner>; recent: ArcadeId | null; scores: { game: ArcadeId; name: string; score: number }[] };
 export type ArcadeAction =
+  | { type: "save-round"; session: ReefSession }
   | { type: "visit"; game: ArcadeId }
   | { type: "helper"; value: boolean }
   | { type: "coached"; game: ArcadeId }
@@ -48,7 +54,8 @@ export function validArcade(v: unknown): v is ArcadeSave {
   if (!v.scores.every(s => exact(s, ["game", "name", "score"]) && gameId(s.game) && typeof s.name === "string" && !!s.name.trim() && s.name === s.name.trim() && [...s.name].length <= 24 && !/[\u0000-\u001f]/.test(s.name) && int(s.score))) return false;
   if (new Set(v.scores.map(s => `${s.game}:${s.name}`)).size !== v.scores.length) return false;
   return Object.entries(v.people).every(([id, p]) => {
-    if (!/^[a-z0-9-]{1,40}$/.test(id) || !obj(p) || !exact(p, ["helper", "games", "stickers", "rounds", "chest", ...(Object.hasOwn(p, "helperDefaultV2") ? ["helperDefaultV2"] : [])]) || (Object.hasOwn(p, "helperDefaultV2") && p.helperDefaultV2 !== true) || typeof p.helper !== "boolean" || !obj(p.games) || !Object.entries(p.games).every(([g, progress]) => gameId(g) && validGame(progress, p.helperDefaultV2 === undefined)) || !uniqueList(p.stickers, stickerIds) || !Array.isArray(p.rounds) || p.rounds.length > 40 || new Set(p.rounds).size !== p.rounds.length || !p.rounds.every(roundId)) return false;
+    if (!/^[a-z0-9-]{1,40}$/.test(id) || !obj(p) || !exact(p, ["helper", "games", "stickers", "rounds", "chest", ...(Object.hasOwn(p, "helperDefaultV2") ? ["helperDefaultV2"] : []), ...(Object.hasOwn(p, "session") ? ["session"] : [])]) || (Object.hasOwn(p, "helperDefaultV2") && p.helperDefaultV2 !== true) || (Object.hasOwn(p, "session") && !validReefSession(p.session)) || typeof p.helper !== "boolean" || !obj(p.games) || !Object.entries(p.games).every(([g, progress]) => gameId(g) && validGame(progress, p.helperDefaultV2 === undefined)) || !uniqueList(p.stickers, stickerIds) || !Array.isArray(p.rounds) || p.rounds.length > 40 || new Set(p.rounds).size !== p.rounds.length || !p.rounds.every(roundId)) return false;
+    if (p.session && p.rounds.includes((p.session as ReefSession).round)) return false;
     if (p.chest === null) return true;
     const c = p.chest;
     return exact(c, ["game", "level", "round", "sticker"]) && gameId(c.game) && validLevelId(c.level) && roundId(c.round) && p.rounds.includes(c.round) && stickerIds.includes(c.sticker as StickerId) && validGame(p.games[c.game], p.helperDefaultV2 === undefined) && !!(p.games[c.game] as GameProgress).stars[c.level];
@@ -61,6 +68,10 @@ export function arcadeTransition(before: ArcadeSave | undefined, owner: string, 
   let next = a, p = person;
   if (action.type === "preferences") next = { ...a, music: action.music ?? a.music, breakMinutes: action.breakMinutes ?? a.breakMinutes, unlockAll: action.unlockAll ?? a.unlockAll };
   else if (action.type === "visit") { if (!gameId(action.game) || a.recent === action.game) return a; next = { ...a, recent: action.game }; }
+  else if (action.type === "save-round") {
+    if (!validReefSession(action.session) || person.rounds.includes(action.session.round) || person.session === action.session) return a;
+    p = { ...person, session: action.session };
+  }
   else if (action.type === "helper") p = { ...person, helper: action.value };
   else if (action.type === "skip-chest" || action.type === "claim-chest") {
     if (!person.chest || person.chest.round !== action.round) return a;
@@ -77,7 +88,12 @@ export function arcadeTransition(before: ArcadeSave | undefined, owner: string, 
       const stars = { ...progress.stars };
       if (action.level !== "endless" && action.stars) stars[action.level] = Math.max(stars[action.level] ?? 0, action.stars) as Stars;
       g = { ...progress, stars, openWorlds: openedWorlds(stars), unlockedOutfits: openedOutfits(stars), best: Math.max(progress.best, action.score) };
-      p = { ...p, rounds: [...p.rounds, action.round].slice(-40), chest: action.level !== "endless" && action.stars ? { game: action.game, level: action.level, round: action.round, sticker: offeredSticker(person, action.game, action.level) } : null };
+      // Oldest offer wins until explicit claim/skip, including its validation reference.
+      const chest = person.chest ?? (action.level !== "endless" && action.stars ? { game: action.game, level: action.level, round: action.round, sticker: offeredSticker(person, action.game, action.level) } : null);
+      const rounds = [...p.rounds, action.round].filter(id => id !== chest?.round).slice(chest ? -39 : -40);
+      if (chest) rounds.unshift(chest.round);
+      p = { ...p, rounds, chest };
+      if (p.session?.round === action.round) { const { session: _session, ...rest } = p; p = rest; }
       if (action.level === "endless" && action.score > 0) {
         const name = [...action.name.replace(/[\u0000-\u001f]/g, " ").trim().replace(/\s+/g, " ")].slice(0, 24).join("") || "Family";
         const scores = [...a.scores.filter(s => s.game !== action.game || s.name !== name), { game: action.game, name, score: Math.max(action.score, ...a.scores.filter(s => s.game === action.game && s.name === name).map(s => s.score)) }].sort((x, y) => y.score - x.score);

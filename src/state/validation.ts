@@ -20,7 +20,7 @@ import { arcadeIds, validArcade, migrateArcade, type ArcadeId, type ArcadeSave }
 export type Settings = { sound: boolean; help: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
 export type Save = {
   version: 1;
-  /** Island Arcade earned progress only; real-time rounds are never persisted. */
+  /** Island Arcade progress and validated untimed Reef rounds; real-time rounds are never persisted. */
   arcade?: ArcadeSave;
   settings: Settings;
   sessions: Partial<Record<GameId, GameState>>;
