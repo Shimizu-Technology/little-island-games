@@ -53,7 +53,7 @@ export function backPose(frame: number): Pose {
   if (frame < 8 || frame >= 16) {
     const phase = (frame >= 16 ? frame - 16 + .5 : frame) * Math.PI / 4;
     for (const [i, side] of (['left', 'right'] as const).entries()) {
-      const swing = Math.cos(phase + i * Math.PI), x = i ? 48 : 32;
+      const swing = Math.cos(phase + i * Math.PI);
       // Seen from behind, a lifted leg folds in depth: the knee drives forward
       // (shorter thigh) and the shin folds back towards the camera (much shorter
       // shin), so the sole rises under the knee instead of kicking sideways.
@@ -61,7 +61,12 @@ export function backPose(frame: number): Pose {
       const knee: Point = [hip[0] + out * 1.5 * lift, hip[1] + BONES.thigh * (1 - .3 * lift)];
       j[`${side}Knee`] = knee;
       j[`${side}Foot`] = [knee[0] + out * lift, Math.min(128, knee[1] + BONES.shin * (1 - .72 * lift)) - (frame % 4 === 2 ? 2 * lift : 0)];
-      const hand: Point = [i ? 60 - swing * 4 : 20 + swing * 4, sy + 21 - swing * 10];
+      // Offset the arm crossover from sampled keys and keep a readable depth
+      // difference at every static sample. Forward hands sit inside the shirt;
+      // the opposite hand reaches down behind, clear of the waist.
+      const armPhase = Math.cos(phase + .2), forward = (i ? -armPhase : armPhase) > 0;
+      const reach = Math.max(.45, Math.abs(armPhase));
+      const hand: Point = forward ? [i ? 50 : 30, sy + 14 - reach * 2] : [i ? 62 : 18, sy + 25 + reach * 3];
       [j[`${side}Elbow`], j[`${side}Hand`]] = solve(j[`${side}Shoulder`], hand, [i ? 65 : 15, sy + 12], 16);
     }
   }

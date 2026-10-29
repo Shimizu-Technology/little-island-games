@@ -112,3 +112,20 @@ describe('Islander authored art',()=>{
   expect(back).not.toContain('#E88D7D');
  });
 });
+
+describe('native rig regressions',()=>{
+ it('uses flat mid-thigh hems on both legs in every short outfit and pose',()=>{
+  for(const outfit of outfits.filter(o=>o!=='hoodie')) for(const pose of [...frontPoses,...backPoses]) {
+   const markup=renderToStaticMarkup(<Islander view={pose.view} pose={pose} look={{...defaultLook,outfit}}/>);
+   const shorts=[...markup.matchAll(/<path[^>]*data-garment="shorts"[^>]*>/g)].map(m=>m[0]);
+   expect(shorts).toHaveLength(2);
+   for(const tag of shorts) {
+    const d=attr(tag,'d')!;
+    expect(d.match(/L/g)).toHaveLength(3);
+    expect(d).not.toMatch(/[QC]/);
+   }
+   // Both legs paint below the shared waist, so neither cap covers its outline.
+   expect(markup.lastIndexOf('data-limb="right-leg"')).toBeLessThan(markup.indexOf('data-layer="clothing"'));
+  }
+ });
+});
