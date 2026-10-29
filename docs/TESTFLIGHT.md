@@ -234,3 +234,34 @@ Delivery:
 Receipt: [evidence/testflight-build17.json](evidence/testflight-build17.json).
 
 Not verified: that the flap freeze is gone on a physical iPhone (the simulator never showed it), real-glass gestures, iPad A12 performance, audio and haptics, VoiceOver.
+
+## Arcade art and depth beta — 1.9.3 (18), available 29 October 2026 Guam time
+
+On 1.9.2 Leon reported four problems:
+- Lagoon Run ramps were unreadable, rolling under a fence looked like passing through it, and the animation wasn't clean.
+- Poko the Canoe Cargo captain looked wrong.
+- A purple shape flashed across Flight on each flap.
+- He asked for an audit of everything.
+
+Root causes and fixes are in [ARCADE_FEEL_V3.md](ARCADE_FEEL_V3.md#193-18-leons-192-feedback). This build includes:
+- depth-ordered Lagoon Run, so obstacles nearer than the runner draw over him;
+- solid wooden ramps;
+- canoes lying along the lane, with full-length collision;
+- a cleaner runner;
+- a rebuilt bat wing rig;
+- a redrawn Poko and mascot pass;
+- an art audit of the other seven games and the shared arcade screens.
+
+Source: clean commit `9925677644b774876efee47d270a381d625ef9c2` on held PR #16.
+- Full gate: 1,198 tests; Doctor 21/21.
+- Independent review: three minor findings, all fixed.
+
+Delivery:
+- The IPA is 173,940,609 bytes, SHA256 `c539291f2796a47c9fbeeb366d1c09abe384123e47006b9f6e390824a5139054`.
+- The signature, profile, entitlements and version all passed, and all 5,815 referenced audio files match the source.
+- EAS submission finished in about 5 minutes.
+- Apple build `8e1c3d92-990a-45df-b4d9-2d26a6c7dda0` is VALID / IN_BETA_TESTING in the Leon internal group, with notes.
+
+Receipt: [evidence/testflight-build18.json](evidence/testflight-build18.json).
+
+Not verified: physical 120 Hz smoothness (simulator frame readings were taken under heavy host load), real-glass gestures, iPad A12 performance, audio and haptics, VoiceOver.
