@@ -1,3 +1,4 @@
+import { LearnerChip } from "../personalization/LearnerChip";
 import { bestLabel, freePlayBest } from "./presentation";
 import type { ReefState } from "./games/reef-builder/engine";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -63,6 +64,16 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   const helperUsed = useRef(person.helper);
   useEffect(() => { if (playing && person.helper) helperUsed.current = true; }, [playing, person.helper]);
   const [chestOffer, setChestOffer] = useState<ChestOffer | null>(null);
+  const identity = `${owner.id}:${store.epoch}`;
+  const lastIdentity = useRef(identity);
+  useEffect(() => {
+    if (lastIdentity.current === identity) return;
+    lastIdentity.current = identity;
+    // Invalidate the old round without closing Settings or moving the map.
+    setPlaying(false); setPaused(false); setResult(null); setRound("");
+    setSavedReef(undefined); setChestOffer(null);
+    setName(owner.id === "family" ? "Family" : owner.name);
+  }, [identity, owner.id, owner.name]);
   function openChest() { if (person.chest?.game !== game.id) return; setChestOffer(person.chest); setSheet("chest"); }
   function closeChest() { setSheet(null); setChestOffer(null); }
   const startAfterTeach = useRef(false), credited = useRef(""), [reminder, setReminder] = useState(false), scroll = useRef<ScrollView>(null);
@@ -137,7 +148,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
       setArena(previous => previous.width === width && previous.height === height ? previous : { width, height });
     }}><SaveStatus/>{board}</View> : <ScrollView ref={scroll} contentContainerStyle={{ flexGrow: 1, width: "100%", paddingBottom: playing ? 0 : 24, gap: 12 }}>
       <SaveStatus/>
-      {!level ? <>{person.session?.game === game.id && <View style={{ paddingHorizontal: 16 }}><Button onPress={resumeReef}>Continue saved Reef Builder round</Button><Copy style={{ color: "#FFF4DA", textAlign: "center" }}>Your reef, pieces and moves are saved.</Copy></View>}<LevelMap game={game} person={person} levels={levels} unlockAll={store.save.arcade?.unlockAll ?? false} onLevel={choose} onOutfits={() => setSheet("outfits")} onChest={openChest} freeBest={freePlayBest(store.save.arcade, game.id)} active={foreground && !sheet} Scene={play.Scene} worldNote={play.worldNote}/>
+      {!level ? <>{person.session?.game === game.id && <View style={{ paddingHorizontal: 16 }}><Button onPress={resumeReef}>Continue saved Reef Builder round</Button><Copy style={{ color: "#FFF4DA", textAlign: "center" }}>Your reef, pieces and moves are saved.</Copy></View>}<LevelMap learnerChip={<LearnerChip/>} game={game} person={person} levels={levels} unlockAll={store.save.arcade?.unlockAll ?? false} onLevel={choose} onOutfits={() => setSheet("outfits")} onChest={openChest} freeBest={freePlayBest(store.save.arcade, game.id)} active={foreground && !sheet} Scene={play.Scene} worldNote={play.worldNote}/>
         <View style={{ paddingHorizontal: 16, gap: 12 }}><Button quiet onPress={() => setSheet("book")}>My sticker book</Button>
         {!!store.save.arcade?.scores.some(s => s.game === game.id) && <View style={{ padding: 16, gap: 8, borderRadius: 24, backgroundColor: "#FFF3D7" }}><Heading style={{ fontSize: 21 }}>Family free-play board</Heading>{store.save.arcade.scores.filter(s => s.game === game.id).sort((a, b) => b.score - a.score).map(s => <Copy key={s.name}>{s.name} · {s.score} points</Copy>)}</View>}</View>
       </> : result ? <View style={{ flex: 1, minHeight: Math.max(0, height - insets.top - insets.bottom - 86), justifyContent: "center", gap: 14, alignItems: "center", paddingHorizontal: 18, maxWidth: 600, width: "100%", alignSelf: "center" }}>

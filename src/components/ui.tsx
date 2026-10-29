@@ -299,12 +299,14 @@ export function Sheet({
   title,
   children,
   footer,
+  scrollKey,
 }: {
   visible: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  scrollKey?: string | number;
 }) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -390,7 +392,7 @@ export function Sheet({
               </Button>
             </View>
           </View>
-          <ScrollView
+          <ScrollView key={scrollKey}
             style={{ flexShrink: 1 }}
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingTop: 16, paddingBottom: footer ? 8 : 16 + (wide ? 0 : insets.bottom), paddingHorizontal: 22, gap: 16 }}

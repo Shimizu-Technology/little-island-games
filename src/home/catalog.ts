@@ -58,3 +58,6 @@ export const wallThemes = ["cream", "lagoon", "night", "peach"] as const;
 export const floorThemes = ["sand", "honey", "seafoam", "rose"] as const;
 export const badgeIds = ["math", "reading", "science", "chamoru", "arcade", "classic"] as const;
 export type BadgeId = (typeof badgeIds)[number];
+
+/** Reuse the existing arcade sticker ownership; no grants or copies. */
+export const homeStickerItems = (stickers: readonly StickerId[]): ItemId[] => stickers.map(id => `sticker:${id}` as ItemId);

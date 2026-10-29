@@ -23,5 +23,5 @@ export default function Learn() {
         <Recovery />
       </SafeAreaView>
     );
-  return <LearnFrame key={`${game}:${store.epoch}:${store.save.learning?.active ?? "family"}`} id={game as LearnId} />;
+  return <LearnFrame key={game} id={game as LearnId} />;
 }

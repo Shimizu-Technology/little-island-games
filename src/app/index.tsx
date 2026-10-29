@@ -1,3 +1,4 @@
+import { Me } from "../personalization/Me";
 import { returnLabel } from "../arcade/presentation";
 import { Text } from "../components/Text";
 import React, { useState } from "react";
@@ -37,6 +38,7 @@ export default function Home() {
         <Button compact quiet onPress={() => setSettings(true)} label="Open sound settings, practice and grown-up backups">Settings</Button>
       </View>
       <Copy style={{ fontSize: 14, color: C.teal }}>{activeLearner(store.save.learning).id === "family" ? "Family practice" : `Learning with ${activeLearner(store.save.learning).name}`}</Copy>
+      <Me creatorAllowed={!settings} />
       <SaveStatus />
       <Heading style={{ fontSize: available >= 600 ? 34 : 28 }}>What shall we play?</Heading>
       {resume && <PressableScale accessibilityRole="button" accessibilityLabel={`${returnLabel(resume)} ${shelfGames.find(g => g.id === resume)?.name}`} onPress={() => openShelfGame(resume)} style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: C.soft, borderRadius: 18, padding: 12 }}>
