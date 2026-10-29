@@ -32,11 +32,15 @@ export function itemSize(i: Instance) {
           : 112;
 }
 export function characterPoint(state: import("./model").HomeState, c: import("./model").Character) {
+  if (c.anchor.startsWith("beach-")) return { x: c.anchor === "beach-left" ? 210 : c.anchor === "beach-middle" ? 400 : 590, y: 650 };
   if (c.anchor === "floor") return floorPoint(c.x!, c.y!);
   const seat = state.instances.find((i) => (c.seatId ? i.id === c.seatId : i.item === c.anchor));
   if (seat) {
     const p = itemPoint(seat);
-    return { x: p.x, y: p.y - (c.anchor === "shelf" ? 92 : c.anchor === "bed" ? 48 : 12) };
+    // The enlarged seated Islander's hip is ~47 scene units above its box foot.
+    // Match the illustrated seat surface; sidekicks retain their bottom contact.
+    const seatedFoot = c.slot === 0 ? ({ bed: -15, chair: 23, rug: 10, beanbag: 6 } as Partial<Record<import("./model").Anchor, number>>)[c.anchor] : undefined;
+    return { x: p.x, y: p.y + (seatedFoot ?? -(c.anchor === "shelf" ? 92 : c.anchor === "bed" ? 48 : 12)) };
   }
   return c.anchor === "window" ? floorPoint(0, 2) : floorPoint(6, 2);
 }
@@ -47,6 +51,7 @@ export function characterDrop(
   x: number,
   y: number
 ): import("./model").HomeAction {
+  if (y >= 555) return { type: "character", slot, anchor: x < 305 ? "beach-left" : x < 495 ? "beach-middle" : "beach-right" };
   const seats = state.instances
     .filter((i) => ["bed", "chair", "rug", "beanbag"].includes(i.item))
     .map((i) => ({

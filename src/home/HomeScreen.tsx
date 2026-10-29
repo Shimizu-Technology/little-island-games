@@ -20,7 +20,7 @@ import { useReducedMotion } from "../components/motion";
 import { useSounds } from "../components/Audio";
 import { useStore } from "../state/Store";
 import { ItemArt } from "./art/Items";
-import { RoomArt, floorColors, wallColors } from "./art/Room";
+import { RoomArt, SkyArt, ShoreArt, floorColors, wallColors } from "./art/Room";
 import { badgeIds, floorThemes, furnitureIds, itemSpec, wallThemes, type BadgeId, type ItemId } from "./catalog";
 import {
   anchors,
@@ -152,8 +152,10 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
   const drawerHeight = decorating ? (collapsed ? 48 : 146) : 0;
   const availableHeight = height - inset.top - inset.bottom - drawerHeight;
   // Scene keeps the full width. Landscape uses almost all available height; no control column.
-  const sceneWidth = Math.min(width, availableHeight / 0.7);
-  const sceneHeight = sceneWidth * 0.7;
+  const beach = availableHeight >= width * .925 || store.state.characters.some(c => c.anchor.startsWith("beach-"));
+  const sceneUnits = beach ? 740 : 560;
+  const sceneWidth = Math.min(width, availableHeight * 800 / sceneUnits);
+  const sceneHeight = sceneWidth * sceneUnits / 800;
   const scale = sceneWidth / 800;
   const target = store.state.instances.find((i) => i.id === selected);
   const blockers = store.state.instances.map((i) => {
@@ -249,7 +251,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
     .filter((a) => a !== "floor" && anchorAvailable(store.state.instances, a))
     .map((a) => ({
       name: `seat-${a}`,
-      label: ["hello", "window"].includes(a) ? `Move to ${a === "window" ? "window" : "floor"}` : `Sit on ${a}`,
+      label: ["hello", "window"].includes(a) ? `Move to ${a === "window" ? "window" : "floor"}` : a.startsWith("beach-") ? `Stand on ${a.replace("-", " ")}` : `Sit on ${a}`,
     }));
   const placementCommand = (name: string) => {
     if (!placing) return;
@@ -376,7 +378,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
     }),
     ...store.state.characters.map((c) => {
       const p = characterPoint(store.state, c),
-        size = (c.slot === 0 ? 96 : 76) * scale;
+        size = (c.slot === 0 ? 163 : 129) * scale;
       return {
         key: `character-${c.slot}`,
         depth: characterDepth(store.state, c),
@@ -386,7 +388,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
             pointerEvents={placing ? "none" : "auto"}
             accessibilityRole="button"
             accessibilityLabel={["Islander", "Pip", "Poko"][c.slot] + `, ${c.pose}`}
-            accessibilityHint="Drag to a seat or the floor. Arrow keys move; S cycles seats."
+            accessibilityHint="Drag to a seat, the floor or the beach. Arrow keys move; S cycles seats."
             accessibilityActions={[
               ...seatActions,
               ...["left", "right", "back", "forward"].map((name) => ({ name, label: `Move ${name}` })),
@@ -569,6 +571,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
   };
   return (
     <View style={styles.page}>
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}><SkyArt /></View>
       <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
         {store.message}
       </Text>
@@ -620,7 +623,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
             }}
             style={StyleSheet.absoluteFill}
           >
-            <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+            <View pointerEvents="none" style={{ position: "absolute", width: sceneWidth, height: scale * 560 }}>
               <RoomArt
                 theme={store.state.theme}
                 badges={badges.filter((b) => badgeIds.includes(b))}
@@ -628,6 +631,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
               />
             </View>
           </Pressable>
+          {beach && <View pointerEvents="none" style={{ position: "absolute", top: 525 * scale, width: sceneWidth, height: Math.max(215 * scale, height - origin.y - 525 * scale) }}><ShoreArt depth={Math.max(215, (height - origin.y) / scale - 525)} /></View>}
           {decorating && <FloorGrid scale={scale} width={sceneWidth} height={sceneHeight} />}
           {entries.map((entry) => (
             <React.Fragment key={entry.key}>{entry.node}</React.Fragment>
