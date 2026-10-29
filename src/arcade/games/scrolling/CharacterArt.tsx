@@ -5,49 +5,18 @@ import type { OutfitId } from "../../progress";
 import { ArcadeSprite, type SpritePose } from "../../Sprite";
 import { BAT_RX, BAT_RY } from "../fruit-bat-flight/hull";
 import { RUN_EXTRA } from "./character";
-import { runnerDrawings, type Point, type RunnerDrawing } from "./character";
-const ink = "#493946", skin = "#CB956D";
-/** Closed tapered limb, with a rounded joint and a solid silhouette. */
-function limb(a: Point, b: Point, c: Point, r: number) {
-  const dx=c[0]-a[0],dy=c[1]-a[1],len=Math.max(1,Math.hypot(dx,dy)),x=dy/len*r,y=-dx/len*r;
-  return `M${a[0]+x} ${a[1]+y}Q${b[0]+x} ${b[1]+y} ${c[0]+x*.7} ${c[1]+y*.7}Q${c[0]+dx/len*r} ${c[1]+dy/len*r} ${c[0]-x*.7} ${c[1]-y*.7}Q${b[0]-x} ${b[1]-y} ${a[0]-x} ${a[1]-y}Q${a[0]-dx/len*r} ${a[1]-dy/len*r} ${a[0]+x} ${a[1]+y}Z`;
-}
-function RunnerShape({ frame = 0, outfit = "island", front = false }: { frame?: number; outfit?: OutfitId; front?: boolean }) {
-  const crouch = frame >= 11 && frame <= 13, tucked = frame === 12, takeoff = frame === 8, apex = frame === 9, land = frame === 10, stumble = frame === 14, celebrate = frame === 15;
-  const step = frame>=16?frame-16:frame%8, left=runnerDrawings[step],right=runnerDrawings[(step+1)%8];
-  const mix=(a: Point[],b: Point[])=>a.map(([x,y],i)=>[(x+b[i][0])/2,(y+b[i][1])/2] as Point);
-  const base: RunnerDrawing=frame>=16?{bob:(left.bob+right.bob)/2,knee:mix(left.knee,right.knee),foot:mix(left.foot,right.foot),elbow:mix(left.elbow,right.elbow),hand:mix(left.hand,right.hand)}:left;
-  const bob = crouch ? tucked ? 51 : 59 : land ? 9 : takeoff ? 12 : stumble ? 9 : apex ? 3 : celebrate ? -2 : base.bob;
-  const shoulderY = crouch ? tucked ? 103 : 110 : 51 + bob, hipY = crouch ? 116 : 86 + bob;
-  const pose: RunnerDrawing = crouch ? { bob, knee: [[23,116],[57,116]], foot: [[29,128],[51,128]], elbow: [[22,103],[58,103]], hand: [[32,105],[48,105]] }
-    : apex ? { bob, knee: [[22,98],[58,98]], foot: [[32,109],[48,109]], elbow: [[18,66],[62,66]], hand: [[24,52],[56,52]] }
-    : land ? { bob, knee: [[23,112],[57,112]], foot: [[27,128],[53,128]], elbow: [[18,78],[62,78]], hand: [[24,88],[56,88]] }
-    : takeoff ? { bob, knee: [[30,103],[50,103]], foot: [[27,128],[53,128]], elbow: [[20,61],[60,61]], hand: [[26,45],[54,45]] }
-    : stumble ? { bob, knee: [[24,107],[55,110]], foot: [[19,128],[57,124]], elbow: [[13,69],[67,71]], hand: [[9,53],[72,59]] }
-    : celebrate ? { bob, knee: [[30,105],[50,105]], foot: [[27,128],[53,128]], elbow: [[17,40],[63,40]], hand: [[20,22],[60,22]] } : base;
-  const headY = crouch ? frame === 11 ? 113 : 111 : 27 + bob, headR = crouch ? 16 : 18;
-  const shirt = outfit === "starlight" ? "#7D6CB5" : "#F58062";
-  if(tucked)return <G stroke={ink} strokeWidth={2} strokeLinejoin="round"><Path d="M20 128Q9 120 19 105Q30 86 50 97Q67 99 66 117L58 128Z" fill={shirt}/><Path d="M20 128Q13 119 21 112L36 108L48 126Z" fill="#364D79"/><Path d="M24 123Q31 113 40 119L46 128H25Z" fill={skin}/><Path d="M17 126Q25 119 34 125V130H17Z" fill="#F4CC76"/><Circle cx={57} cy={112} r={15} fill="#403442"/><Path d="M47 104Q54 98 62 103" stroke="#72505B" strokeWidth={3} fill="none"/><Path d="M44 113Q37 109 33 116L37 124L47 123" fill={skin}/></G>;
-  return <G stroke={ink} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round">
-    {pose.knee.map((k,i) => <G key={`leg${i}`}><Path d={limb([i?48:32,hipY],k,pose.foot[i],5.2)} fill={i?skin:'#B68061'}/><Path d={`M${pose.foot[i][0]-8} ${pose.foot[i][1]-4}q8-6 16 0v5q-8 3-16 0Z`} fill={i?'#F4CC76':'#D7AC60'}/><Path d={`M${pose.foot[i][0]-6} ${pose.foot[i][1]+1}h12`} stroke="#FFF0BC" strokeWidth={2}/></G>)}
-    {pose.elbow.map((e,i) => <G key={`arm${i}`}><Path d={limb([i?54:26,shoulderY],e,pose.hand[i],4.7)} fill={i?skin:'#B68061'}/><Ellipse cx={pose.hand[i][0]} cy={pose.hand[i][1]} rx={4.5} ry={5} fill={skin}/></G>)}
-    <Path d={`M25 ${hipY-13}H55L57 ${hipY+7}L43 ${hipY+8}L40 ${hipY}L37 ${hipY+8}L23 ${hipY+7}Z`} fill="#364D79"/>
-    <Path d={`M25 ${shoulderY-3}Q40 ${shoulderY-10} 55 ${shoulderY-3}L56 ${hipY-7}Q40 ${hipY+2} 24 ${hipY-7}Z`} fill={shirt}/>
-    <Path d={`M25 ${shoulderY+16}Q40 ${shoulderY+11} 55 ${shoulderY+16}`} fill="none" stroke="#FFE4A9" strokeWidth={5}/>
-    <Path d={`M34 ${shoulderY-5}V${shoulderY-12}H46V${shoulderY-5}`} fill={skin}/>
-    <Ellipse cx={23} cy={headY+4} rx={4} ry={6} fill={skin}/><Ellipse cx={57} cy={headY+4} rx={4} ry={6} fill={skin}/><Circle cx={40} cy={headY} r={headR} fill={front ? skin : "#463643"}/>
-    <Path d={`M${40-headR} ${headY-1}Q${19} ${headY-25} 43 ${headY-headR}Q63 ${headY-21} 58 ${headY+1}L52 ${headY-8}Q40 ${headY-2} 28 ${headY-10}Z`} fill="#403442"/>
-    {!front && <Path d={`M29 ${headY-12}Q38 ${headY-18} 48 ${headY-13}`} stroke="#72505B" fill="none" strokeWidth={3}/>}
-    {front && <G strokeWidth={0}><Circle cx={34} cy={headY+2} r={2.3} fill={ink}/><Circle cx={47} cy={headY+2} r={2.3} fill={ink}/><Path d={`M34 ${headY+10}Q40 ${headY+15} 47 ${headY+9}`} stroke={ink} strokeWidth={2} fill="none"/></G>}
-    {!crouch && outfit === "sunhat" ? <G fill="#F4C96C"><Path d={`M25 ${headY-10}V${headY-20}Q40 ${headY-27} 55 ${headY-20}V${headY-10}Z`}/><Path d={`M18 ${headY-9}H62`} stroke="#F4C96C" strokeWidth={6}/></G> : outfit === "explorer" ? <Path d={`M24 ${headY}Q40 ${headY+8} 56 ${headY}`} fill="none" stroke="#8CE7D6" strokeWidth={4}/> : !crouch && outfit === "starlight" ? <Path d={`M40 ${headY-21}l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z`} fill="#FFE79B" strokeWidth={1}/> : null}
-  </G>;
-}
-export const RunnerFrameArt = memo(function RunnerFrameArt({ frame, outfit, size = 132, front = false }: { frame: number; outfit: OutfitId; size?: number; front?: boolean }) {
-  return <Svg width={size*80/132} height={size} viewBox="0 0 80 132" accessible={false}><RunnerShape frame={frame} outfit={outfit} front={front}/></Svg>;
+import { IslanderShape } from "../../../islander/rig/Islander";
+import { backPoses, resolvePose } from "../../../islander/rig/poses";
+import { useActiveIslanderLook } from "../../../islander/active";
+import type { IslanderLook } from "../../../islander/look";
+/** Static art per (frame, look); only the enclosing sprite opacity changes at 16 Hz. */
+export const RunnerFrameArt = memo(function RunnerFrameArt({ frame, look, size = 132, front = false }: { frame: number; look: IslanderLook; size?: number; front?: boolean }) {
+  return <Svg width={size*80/132} height={size} viewBox="0 0 80 132" accessible={false}><IslanderShape pose={front ? resolvePose('front', frame === 15 ? 'cheer' : frame === 14 ? 'try-again' : 'idle') : backPoses[frame]} look={look}/></Svg>;
 });
-/** Whole authored poses share one root. No independent limb can drift from a shoulder/hip. */
-export const RunnerRig = memo(function RunnerRig({ poses, outfit }: { poses: SharedValue<SpritePose[]>; outfit: OutfitId }) {
-  return <ArcadeSprite poses={poses} index={0} width={80} height={132}>{Array.from({length:24},(_,i) => <ArcadeSprite key={i} poses={poses} index={i<16?80+i:RUN_EXTRA+i-16} width={80} height={132}><RunnerFrameArt frame={i} outfit={outfit}/></ArcadeSprite>)}</ArcadeSprite>;
+/** One depth root and the same 24 opacity-switched frames; no limb worklets. */
+export const RunnerRig = memo(function RunnerRig({ poses }: { poses: SharedValue<SpritePose[]> }) {
+  const look = useActiveIslanderLook();
+  return <ArcadeSprite poses={poses} index={0} width={80} height={132}>{backPoses.map((_,i) => <ArcadeSprite key={i} poses={poses} index={i<16?80+i:RUN_EXTRA+i-16} width={80} height={132}><RunnerFrameArt frame={i} look={look}/></ArcadeSprite>)}</ArcadeSprite>;
 });
 function BatBody({ outfit, happy = false }: { outfit: OutfitId; happy?: boolean }) {
   return <G stroke="#392D45" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round">
@@ -82,6 +51,7 @@ export const BatRig = memo(function BatRig({ poses, outfit, debug = false }: { p
     {debug && <Svg width={96} height={76} style={{position:"absolute"}}><Ellipse cx={48} cy={38} rx={BAT_RX} ry={BAT_RY} stroke="#72FFB7" strokeWidth={1.5} fill="#72FFB722"/><Circle cx={45} cy={32} r={2} fill="#FFDC72"/><Circle cx={43} cy={38} r={2} fill="#FFDC72"/></Svg>}
   </ArcadeSprite>;
 });
-export function CharacterPortrait({ bat, size, outfit, happy = false, back = false, frame }: { bat: boolean; size: number; outfit: OutfitId; happy?: boolean; back?: boolean; frame?: number }) {
-  return bat ? <Svg width={size} height={size} viewBox="-10 -14 100 100" accessible={false}><Ellipse cx={43} cy={77} rx={31} ry={4} fill="#374B5B" opacity={.18}/><G transform="translate(45 32) rotate(-35) translate(-48 -48)"><BatWing far/></G><BatBody outfit={outfit} happy={happy}/><G transform="translate(43 38) rotate(-14) translate(-48 -48)"><BatWing/></G></Svg> : <Svg width={size} height={size} viewBox="-26 -2 132 136" accessible={false}><Ellipse cx={40} cy={131} rx={29} ry={4} fill="#4C6171" opacity={.2}/><RunnerShape frame={frame ?? (happy ? 15 : 0)} outfit={outfit} front={!back}/></Svg>;
+export function CharacterPortrait({ bat, size, outfit, happy = false, dizzy = false, back = false, frame }: { bat: boolean; size: number; outfit: OutfitId; happy?: boolean; dizzy?: boolean; back?: boolean; frame?: number }) {
+  const look = useActiveIslanderLook();
+  return bat ? <Svg width={size} height={size} viewBox="-10 -14 100 100" accessible={false}><Ellipse cx={43} cy={77} rx={31} ry={4} fill="#374B5B" opacity={.18}/><G transform="translate(45 32) rotate(-35) translate(-48 -48)"><BatWing far/></G><BatBody outfit={outfit} happy={happy}/><G transform="translate(43 38) rotate(-14) translate(-48 -48)"><BatWing/></G></Svg> : <Svg width={size} height={size} viewBox="-26 -2 132 136" accessible={false}><Ellipse cx={40} cy={131} rx={29} ry={4} fill="#4C6171" opacity={.2}/><IslanderShape pose={back ? backPoses[frame ?? 0] : resolvePose("front", happy ? "cheer" : dizzy ? "try-again" : "idle")} look={look}/></Svg>;
 }

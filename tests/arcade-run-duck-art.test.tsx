@@ -1,6 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import { defaultLook, hats } from '../src/islander/look';
 import { RunnerFrameArt } from '../src/arcade/games/scrolling/CharacterArt';
 import { RunHazard } from '../src/arcade/games/lagoon-run/Art';
 import { createRun, rowSafe, SLIDE_SECONDS } from '../src/arcade/games/lagoon-run/engine';
@@ -34,11 +35,16 @@ function pathYs(d:string){
 }
 function attr(tag:string,name:string){return tag.match(new RegExp(` ${name}="([^"]+)"`))?.[1];}
 function artTop(markup:string){
- let top=Infinity;
- for(const match of markup.matchAll(/<(path|circle|ellipse)\b[^>]*>/g)){
-  const tag=match[0],padding=Math.max(3,Number(attr(tag,'stroke-width')??2))/2;
-  const y=match[1]==='path'?Math.min(...pathYs(attr(tag,'d')!)):Number(attr(tag,'cy'))-Number(attr(tag,match[1]==='circle'?'r':'ry'));
-  top=Math.min(top,y-padding);
+ let top=Infinity; const offsets=[0];
+ for(const match of markup.matchAll(/<\/?(?:g|path|circle|ellipse|rect)\b[^>]*>/g)){
+  const tag=match[0];
+  if(tag.startsWith('</g')){offsets.pop();continue;}
+  if(tag.startsWith('</'))continue;
+  const y=offsets[offsets.length-1];
+  if(tag.startsWith('<g')){const t=attr(tag,'transform')?.match(/translate\(([-\d.]+) ([-\d.]+)\)/);offsets.push(y+(t?Number(t[2]):0));continue;}
+  const op=tag.match(/^<(\w+)/)![1],padding=Math.max(3,Number(attr(tag,'stroke-width')??2))/2;
+  const local=op==='path'?Math.min(...pathYs(attr(tag,'d')!)):op==='rect'?Number(attr(tag,'y')):Number(attr(tag,'cy')??0)-Number(attr(tag,op==='circle'?'r':'ry'));
+  top=Math.min(top,y+local-padding);
  }
  return top;
 }
@@ -56,8 +62,8 @@ describe('actual authored duck silhouettes',()=>{
    const state={...s,duck:SLIDE_SECONDS-sample/120,elevation:DUCK_MAX_ELEVATION-1e-6};
    if(!rowSafe(state,row))continue;
    const frame=runnerFrame(state);seen.add(frame);
-   for(const outfit of ['island','sunhat','explorer','starlight'] as const){
-    const top=artTop(renderToStaticMarkup(<RunnerFrameArt frame={frame} outfit={outfit}/>));
+   for(const hat of hats){
+    const top=artTop(renderToStaticMarkup(<RunnerFrameArt frame={frame} look={{...defaultLook,hat}}/>));
     expect(130-top+state.elevation*85).toBeLessThan(clearance);
    }
   }

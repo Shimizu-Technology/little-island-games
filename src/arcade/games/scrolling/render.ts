@@ -11,7 +11,7 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   "worklet";
   const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=visualRunHeight(runnerHeight(s))*85;
   // Root is bottom-centre; poses have their own authored contact/compression, never free limbs.
-  p[0]={identity:s.lives.hit,x:contact.x-40,y:contact.y-130-lift,angle:reduced||s.duck>0?0:(s.lane-s.poseLane)*.14};
+  p[0]={identity:s.lives.hit,x:contact.x-40,y:contact.y-130-lift,angle:reduced||s.duck>0||s.kite>0?0:(s.lane-s.poseLane)*.14};
   for(let i=0;i<RUN_POSES;i++)p[i<16?80+i:RUN_EXTRA+i-16]=i===frame?{x:0,y:0,snap:true}:HIDDEN_POSE;
   p[50]={x:contact.x-35,y:contact.y-7,scale:1-Math.min(2.7,runnerHeight(s))*.18,opacity:.8};
   s.rows.forEach((row,i)=>{
