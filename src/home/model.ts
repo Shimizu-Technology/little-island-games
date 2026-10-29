@@ -1,3 +1,4 @@
+import { clearFootprint } from "./placement";
 import { badgeIds, floorThemes, itemIds, itemSpec, starterItems, wallThemes, type ItemId } from "./catalog";
 export type Rotation = 0 | 90 | 180 | 270;
 export type Instance = {
@@ -10,10 +11,10 @@ export type Instance = {
   layer: "ground" | "furniture" | "wall";
   state: "rest" | "active";
 };
-export const anchors = ["hello", "window", "bed", "chair", "rug"] as const;
+export const anchors = ["hello", "window", "bed", "chair", "rug", "beanbag", "shelf", "floor"] as const;
 export type Anchor = (typeof anchors)[number];
 export type Pose = "stand" | "sit";
-export type Character = { slot: 0 | 1 | 2; anchor: Anchor; pose: Pose };
+export type Character = { slot: 0 | 1 | 2; anchor: Anchor; pose: Pose; x?: number; y?: number; seatId?: string };
 export type HomeState = {
   version: 1;
   scene: "room-1";
@@ -40,22 +41,11 @@ export function dimensions(i: Instance): readonly [number, number] {
   return i.rotation % 180 ? [h, w] : [w, h];
 }
 export function validPlacement(instances: readonly Instance[], candidate: Instance): boolean {
-  const [w, h] = dimensions(candidate);
-  if (!integer(candidate.x) || !integer(candidate.y) || candidate.x < 0 || candidate.y < 0) return false;
-  const wall = candidate.layer === "wall";
-  if (candidate.x + w > (wall ? 8 : 10) || candidate.y + h > (wall ? 2 : 6)) return false;
-  // Two columns beneath the open door always remain a clear path.
-  if (!wall && candidate.x + w > 8) return false;
-  return instances.every((other) => {
-    if (other.id === candidate.id || other.layer !== candidate.layer) return true;
-    const [ow, oh] = dimensions(other);
-    return (
-      candidate.x + w <= other.x ||
-      other.x + ow <= candidate.x ||
-      candidate.y + h <= other.y ||
-      other.y + oh <= candidate.y
-    );
-  });
+  const footprint = (i: Instance) => {
+    const [w, h] = dimensions(i);
+    return { id: i.id, x: i.x, y: i.y, w, h, layer: i.layer };
+  };
+  return clearFootprint(instances.map(footprint), footprint(candidate));
 }
 function validInstance(v: unknown): v is Instance {
   if (
@@ -103,19 +93,31 @@ export function validHome(v: unknown): v is HomeState {
     Array.isArray(v.characters) &&
     v.characters.length <= 3 &&
     new Set(v.characters.map((c) => c?.slot)).size === v.characters.length &&
-    v.characters.every(
-      (c) =>
-        exact(c, ["slot", "anchor", "pose"]) &&
-        member([0, 1, 2], c.slot) &&
-        member(anchors, c.anchor) &&
-        c.pose === poseFor(c.anchor) &&
-        anchorAvailable(instances, c.anchor)
-    )
+    v.characters.every((c) => validCharacter(c, instances))
   );
 }
-export const poseFor = (anchor: Anchor): Pose => (["bed", "chair", "rug"].includes(anchor) ? "sit" : "stand");
+/** Old three-key anchored characters stay valid, unchanged. Free-floor coordinates and
+ * specific seats are optional, strictly checked extensions of this namespace. */
+export function validCharacter(c: unknown, items: readonly Instance[]): c is Character {
+  if (!c || typeof c !== "object") return false;
+  const v = c as Character;
+  const keys =
+    v.anchor === "floor"
+      ? ["slot", "anchor", "pose", "x", "y"]
+      : v.seatId !== undefined
+        ? ["slot", "anchor", "pose", "seatId"]
+        : ["slot", "anchor", "pose"];
+  if (!exact(c, keys) || !member([0, 1, 2], v.slot) || !member(anchors, v.anchor) || v.pose !== poseFor(v.anchor))
+    return false;
+  if (v.anchor === "floor") return integer(v.x) && integer(v.y) && v.x >= 0 && v.x <= 9 && v.y >= 0 && v.y <= 5;
+  return v.seatId !== undefined
+    ? items.some((i) => i.id === v.seatId && i.item === v.anchor)
+    : anchorAvailable(items, v.anchor);
+}
+export const poseFor = (anchor: Anchor): Pose =>
+  ["bed", "chair", "rug", "beanbag", "shelf"].includes(anchor) ? "sit" : "stand";
 export const anchorAvailable = (items: readonly Instance[], anchor: Anchor) =>
-  !["bed", "chair", "rug"].includes(anchor) || items.some((i) => i.item === anchor);
+  !["bed", "chair", "rug", "beanbag", "shelf"].includes(anchor) || items.some((i) => i.item === anchor);
 export function instance(id: string, item: ItemId, x: number, y: number): Instance {
   return { id, item, x, y, rotation: 0, mirrored: false, layer: itemSpec(item).layer, state: "rest" };
 }
@@ -128,15 +130,15 @@ export function starterHome(): HomeState {
       instance("bed", "bed", 0, 0),
       instance("shelf", "shelf", 3, 0),
       instance("plant", "plant", 6, 0),
-      instance("lamp", "lamp", 2, 2),
+      instance("lamp", "lamp", 7, 2),
       instance("rug", "rug", 2, 3),
       instance("table", "table", 5, 3),
       instance("chair", "chair", 5, 4),
       instance("toys", "toy-box", 0, 4),
     ],
     characters: [
-      { slot: 0, anchor: "hello", pose: "stand" },
-      { slot: 1, anchor: "window", pose: "stand" },
+      { slot: 0, anchor: "window", pose: "stand" },
+      { slot: 1, anchor: "shelf", pose: "sit" },
       { slot: 2, anchor: "rug", pose: "sit" },
     ],
   };
@@ -145,7 +147,7 @@ export type HomeAction =
   | { type: "place"; instance: Instance }
   | { type: "move"; id: string; x: number; y: number }
   | { type: "rotate" | "mirror" | "put-away" | "toggle"; id: string }
-  | { type: "character"; slot: Character["slot"]; anchor: Anchor }
+  | { type: "character"; slot: Character["slot"]; anchor: Anchor; x?: number; y?: number; seatId?: string }
   | { type: "theme"; wallpaper?: HomeState["theme"]["wallpaper"]; floor?: HomeState["theme"]["floor"] }
   | { type: "reset" };
 export type HomeResult = { state: HomeState; message?: string; snapshot?: HomeState };
@@ -180,7 +182,18 @@ export function homeReducer(state: HomeState, action: HomeAction, ownership: Own
     next = {
       ...state,
       characters: state.characters.map((c) =>
-        c.slot === action.slot ? { ...c, anchor: action.anchor, pose: poseFor(action.anchor) } : c
+        c.slot === action.slot
+          ? {
+              slot: c.slot,
+              anchor: action.anchor,
+              pose: poseFor(action.anchor),
+              ...(action.anchor === "floor"
+                ? { x: action.x, y: action.y }
+                : action.seatId !== undefined
+                  ? { seatId: action.seatId }
+                  : {}),
+            }
+          : c
       ),
     };
   } else {
@@ -193,7 +206,9 @@ export function homeReducer(state: HomeState, action: HomeAction, ownership: Own
         ...state,
         instances,
         characters: state.characters.map((c) =>
-          anchorAvailable(instances, c.anchor) ? c : { ...c, anchor: "hello", pose: "stand" }
+          anchorAvailable(instances, c.anchor) && (!c.seatId || instances.some((i) => i.id === c.seatId))
+            ? c
+            : { slot: c.slot, anchor: "hello", pose: "stand" }
         ),
       };
     } else {

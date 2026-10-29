@@ -1,17 +1,37 @@
-import React from "react";
+import React, { useEffect } from "react";
+import Animated, {
+  useSharedValue,
+  useAnimatedProps,
+  withRepeat,
+  withTiming,
+  cancelAnimation,
+  Easing,
+} from "react-native-reanimated";
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from "react-native-svg";
 import type { BadgeId } from "../catalog";
 import type { HomeState } from "../model";
 export const wallColors = { cream: "#F5E6C8", lagoon: "#C5DED3", night: "#A5ADC9", peach: "#F1CEC0" };
 export const floorColors = { sand: "#EBD7B2", honey: "#DDAE7D", seafoam: "#AACDC1", rose: "#DCB9AA" };
-function Beach({ x, y, scale = 1 }: { x: number; y: number; scale?: number }) {
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+function Beach({ x, y, scale = 1, reduced }: { x: number; y: number; scale?: number; reduced: boolean }) {
+  const shimmer = useSharedValue(0.35);
+  useEffect(() => {
+    if (!reduced)
+      shimmer.value = withRepeat(withTiming(0.85, { duration: 2600, easing: Easing.inOut(Easing.sin) }), -1, true);
+    else {
+      cancelAnimation(shimmer);
+      shimmer.value = 0.6;
+    }
+    return () => cancelAnimation(shimmer);
+  }, [reduced, shimmer]);
+  const animated = useAnimatedProps(() => ({ opacity: shimmer.value }));
   return (
     <G transform={`translate(${x} ${y}) scale(${scale})`}>
       <Rect width={140} height={180} fill="#BCE2DC" />
       <Circle cx={103} cy={32} r={18} fill="#FFF0B4" />
       <Path d="M0 73Q80 65 140 75V136H0Z" fill="#71BDBB" />
       <Path d="M0 104Q80 91 140 110V180H0Z" fill="#F1DBA6" />
-      <Path d="M0 109Q65 95 140 112" stroke="#FFF5D8" strokeWidth={5} fill="none" />
+      <AnimatedPath animatedProps={animated} d="M0 109Q65 95 140 112" stroke="#FFF5D8" strokeWidth={5} fill="none" />
       <Path d="M108 160Q88 111 106 64" stroke="#BA855B" strokeWidth={8} fill="none" />
       <Path
         d="M105 65Q74 38 58 68Q85 57 105 65M105 65Q116 37 137 51L105 65Q72 68 74 94Q94 86 105 65M105 65Q128 64 137 87Q111 81 105 65"
@@ -21,7 +41,15 @@ function Beach({ x, y, scale = 1 }: { x: number; y: number; scale?: number }) {
     </G>
   );
 }
-export function RoomArt({ theme, badges = [] }: { theme: HomeState["theme"]; badges?: readonly BadgeId[] }) {
+export function RoomArt({
+  theme,
+  badges = [],
+  reduced = false,
+}: {
+  theme: HomeState["theme"];
+  badges?: readonly BadgeId[];
+  reduced?: boolean;
+}) {
   return (
     <Svg width="100%" height="100%" viewBox="0 0 800 560" accessible={false}>
       <Ellipse cx={402} cy={528} rx={368} ry={22} fill="#D6D7BB" opacity={0.5} />
@@ -51,7 +79,7 @@ export function RoomArt({ theme, badges = [] }: { theme: HomeState["theme"]; bad
       <G transform="translate(192 85)">
         <Rect x={-10} y={-10} width={222} height={161} rx={28} fill="#E1B47E" stroke="#55716A" strokeWidth={3} />
         <G transform="scale(1.46 .78)">
-          <Beach x={0} y={0} />
+          <Beach x={0} y={0} reduced={reduced} />
         </G>
         <Rect width={204} height={140} rx={17} fill="none" stroke="#FFF2D4" strokeWidth={12} />
         <Path d="M102 0V140M0 76H204" stroke="#FFF2D4" strokeWidth={8} />
@@ -60,7 +88,7 @@ export function RoomArt({ theme, badges = [] }: { theme: HomeState["theme"]; bad
       </G>
       <G transform="translate(611 122)">
         <Path d="M-9-14H138V219H-9Z" fill="#AD815E" stroke="#456356" strokeWidth={3} />
-        <Beach x={0} y={0} scale={0.92} />
+        <Beach x={0} y={0} scale={0.92} reduced={reduced} />
         <Path d="M0 0H130V208H0Z" fill="none" stroke="#FFF0CE" strokeWidth={10} />
         <Path d="M0 1L-39 18V221L0 208Z" fill="#E5B782" stroke="#6C7055" strokeWidth={3} />
         <Path d="M-29 34L-10 26V183L-29 194Z" fill="#EFC89B" />

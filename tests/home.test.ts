@@ -1,4 +1,4 @@
-import { floorPoint, spotFromPoint } from "../src/home/geometry";
+import { characterDepth, characterDrop, characterPoint, floorPoint, spotFromPoint } from "../src/home/geometry";
 import { describe, expect, it } from "vitest";
 import { badgeIds, catalog, furnitureIds, itemSpec, starterItems, type ItemId } from "../src/home/catalog";
 import {
@@ -131,7 +131,7 @@ describe("deterministic room reducer", () => {
         (i) => i.id === "bed2"
       )
     ).toBe(true);
-    for (const anchor of anchors)
+    for (const anchor of anchors.filter((a) => a !== "floor" && a !== "beanbag"))
       expect(validHome(homeReducer(starterHome(), { type: "character", slot: 0, anchor }).state)).toBe(true);
   });
   it("reuses owned stickers, checks wall anchors, allows rugs beneath furniture", () => {
@@ -220,5 +220,82 @@ describe("room tap projection", () => {
     }
     expect(spotFromPoint(NaN, 1, 1, false)).toBeUndefined();
     expect(spotFromPoint(1, 1, 0, false)).toBeUndefined();
+  });
+});
+
+describe("direct manipulation character settlement", () => {
+  it("loads legacy anchor-only characters without changing them", () => {
+    const state = starterHome();
+    state.characters = [
+      { slot: 0, anchor: "hello", pose: "stand" },
+      { slot: 1, anchor: "window", pose: "stand" },
+      { slot: 2, anchor: "rug", pose: "sit" },
+    ];
+    const before = clone(state);
+    expect(validHome(state)).toBe(true);
+    expect(state).toEqual(before);
+  });
+  it("validates floor extensions exactly and rejects malformed or out-of-floor positions", () => {
+    const state = starterHome();
+    const moved = homeReducer(state, { type: "character", slot: 0, anchor: "floor", x: 9, y: 5 }).state;
+    expect(moved.characters[0]).toEqual({ slot: 0, anchor: "floor", pose: "stand", x: 9, y: 5 });
+    expect(validHome(moved)).toBe(true);
+    for (const patch of [
+      { x: NaN },
+      { x: Infinity },
+      { x: -1 },
+      { x: 10 },
+      { y: 6 },
+      { x: 0.5 },
+      { seatId: "bed" },
+      { pose: "sit" },
+    ]) {
+      expect(validHome({ ...moved, characters: [{ ...moved.characters[0], ...patch }] })).toBe(false);
+    }
+    expect(homeReducer(state, { type: "character", slot: 0, anchor: "floor", x: 10, y: 0 }).state).toBe(state);
+    expect(homeReducer(state, { type: "character", slot: 0, anchor: "floor" }).state).toBe(state);
+  });
+  it("snaps to bed, chair, rug and beanbag and follows the specific seat until put away", () => {
+    let state = {
+      ...starterHome(),
+      instances: [instance("seat-a", "beanbag", 0, 0), instance("seat-b", "beanbag", 4, 3)],
+      characters: [],
+    } as HomeState;
+    state.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 8, y: 5 }];
+    const p = characterPoint(state, { slot: 0, anchor: "beanbag", pose: "sit", seatId: "seat-b" });
+    const action = characterDrop(state, 0, p.x + 5, p.y - 5);
+    expect(action).toEqual({ type: "character", slot: 0, anchor: "beanbag", seatId: "seat-b" });
+    state = homeReducer(state, action).state;
+    expect(validHome(state)).toBe(true);
+    state = homeReducer(state, { type: "move", id: "seat-b", x: 5, y: 4 }).state;
+    expect(characterPoint(state, state.characters[0])).not.toEqual(p);
+    const removed = homeReducer(state, { type: "put-away", id: "seat-b" }).state;
+    expect(removed.characters[0]).toEqual({ slot: 0, anchor: "hello", pose: "stand" });
+    for (const anchor of ["bed", "chair", "rug"] as const) {
+      const s = starterHome();
+      const p = characterPoint(s, { slot: 0, anchor, pose: "sit" });
+      expect(homeReducer(s, characterDrop(s, 0, p.x, p.y)).state.characters[0].anchor).toBe(anchor);
+    }
+  });
+  it("clamps a distant character drop to the walkable floor and preserves one undo step", () => {
+    const state = starterHome();
+    const action = characterDrop(state, 0, 9999, 9999);
+    expect(action).toEqual({ type: "character", slot: 0, anchor: "floor", x: 9, y: 5 });
+    const history = editHistory({ present: state, past: [], future: [] }, action);
+    expect(history.past).toHaveLength(1);
+    expect(editHistory(history, { type: "undo" }).present).toBe(state);
+    expect(validHome(history.present)).toBe(true);
+  });
+  it("starts all three friends at distinct, non-overlapping positions", () => {
+    const s = starterHome(),
+      points = s.characters.map((c) => characterPoint(s, c));
+    const bed = s.instances.find((i) => i.id === "bed")!;
+    expect(characterDepth(s, { slot: 0, anchor: "bed", pose: "sit" })).toBeGreaterThan(floorPoint(bed.x, bed.y).y);
+    expect(s.characters[0].anchor).toBe("window");
+    expect(s.characters[1].anchor).toBe("shelf");
+    expect(s.characters[2].anchor).toBe("rug");
+    for (let a = 0; a < points.length; a++)
+      for (let b = a + 1; b < points.length; b++)
+        expect(Math.hypot(points[a].x - points[b].x, points[a].y - points[b].y)).toBeGreaterThan(90);
   });
 });

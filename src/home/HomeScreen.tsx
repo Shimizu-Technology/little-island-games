@@ -1,54 +1,84 @@
-import React, { useRef, useState, type ReactNode } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import {
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+  type ViewProps,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import Svg, { Path, Circle } from "react-native-svg";
+import { useSharedValue } from "react-native-reanimated";
 import { ArcadeArt, ReefFish, stickerNames } from "../arcade/Art";
-import { stickerIds, type StickerId } from "../arcade/progress";
+import { stickerIds } from "../arcade/progress";
+import { useReducedMotion } from "../components/motion";
+import { useSounds } from "../components/Audio";
+import { useStore } from "../state/Store";
 import { ItemArt } from "./art/Items";
 import { RoomArt, floorColors, wallColors } from "./art/Room";
+import { badgeIds, floorThemes, furnitureIds, itemSpec, wallThemes, type BadgeId, type ItemId } from "./catalog";
 import {
-  badgeIds,
-  catalog,
-  floorThemes,
-  furnitureIds,
-  itemSpec,
-  wallThemes,
-  type BadgeId,
-  type ItemId,
-} from "./catalog";
-import {
-  anchorAvailable,
   anchors,
+  anchorAvailable,
+  dimensions,
+  homeReducer,
   instance,
   owns,
   validPlacement,
-  type Anchor,
   type Character,
-  type HomeState,
+  type HomeAction,
   type Instance,
   type Ownership,
   type Pose,
 } from "./model";
-import { floorPoint, itemPoint, spotFromPoint } from "./geometry";
+import { characterDepth, characterDrop, characterPoint, itemPoint, itemSize, spotFromPoint } from "./geometry";
 import { useHomeStore } from "./useHomeStore";
+import { Drag, FloorGrid, Footprint, emptyPreview, TrayGhost, type DragConfig } from "./Drag";
 export type HomeScreenProps = Ownership & {
   badges?: BadgeId[];
   renderCharacter?: (slot: Character["slot"], pose: Pose) => ReactNode;
   initialState?: unknown;
 };
 const ink = "#284F4B";
+type IconName = "back" | "undo" | "redo" | "rotate" | "mirror" | "away" | "more" | "down" | "lock";
+function Icon({ name }: { name: IconName }) {
+  const paths: Record<IconName, string> = {
+    back: "M15 5L8 12L15 19",
+    undo: "M8 5L3 10L8 15M3 10H14Q21 10 20 18",
+    redo: "M16 5L21 10L16 15M21 10H10Q3 10 4 18",
+    rotate: "M5 8A8 8 0 1 1 4 15M5 3V8H10",
+    mirror: "M12 3V21M3 6H8V18H3ZM16 6H21V18H16Z",
+    away: "M4 9H20V21H4ZM3 4H21V9H3M9 13H15",
+    more: "M5 12H5M12 12H12M19 12H19",
+    down: "M5 9L12 16L19 9",
+    lock: "M7 10V7A5 5 0 0 1 17 7V10M5 10H19V21H5Z",
+  };
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" accessible={false}>
+      <Path d={paths[name]} stroke={ink} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      {name === "more" && [5, 12, 19].map((x) => <Circle key={x} cx={x} cy={12} r={1.4} fill={ink} />)}
+    </Svg>
+  );
+}
 function Button({
   label,
+  icon,
   onPress,
-  selected = false,
-  disabled = false,
-  small = false,
+  selected,
+  disabled,
+  iconOnly = false,
 }: {
   label: string;
+  icon?: IconName;
   onPress: () => void;
   selected?: boolean;
   disabled?: boolean;
-  small?: boolean;
+  iconOnly?: boolean;
 }) {
   return (
     <Pressable
@@ -57,626 +87,825 @@ function Button({
       accessibilityState={{ selected, disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={[
+      style={({ pressed }) => [
         styles.button,
-        small && { paddingHorizontal: 12 },
         selected && styles.chosen,
-        disabled && { opacity: 0.4 },
+        { opacity: disabled ? 0.35 : pressed ? 0.7 : 1 },
       ]}
     >
-      <Text style={[styles.buttonText, selected && { color: "#FFF9E9" }]}>{label}</Text>
+      {icon && <Icon name={icon} />} {!iconOnly && <Text style={styles.label}>{label}</Text>}
     </Pressable>
   );
 }
-function characterPoint(state: HomeState, anchor: Anchor) {
-  const seat = state.instances.find((i) => i.item === anchor);
-  return seat
-    ? { ...itemPoint(seat), y: itemPoint(seat).y - (anchor === "rug" ? 0 : 27) }
-    : anchor === "window"
-      ? floorPoint(7, 1)
-      : floorPoint(4, 1);
-}
 function Placeholder({ pose }: { pose: Pose }) {
   return (
-    <View style={{ alignItems: "center" }}>
-      <View
-        style={{
-          width: 25,
-          height: 25,
-          borderRadius: 16,
-          backgroundColor: "#D9B495",
-          borderWidth: 2,
-          borderColor: ink,
-        }}
+    <Svg width={60} height={92} viewBox="0 0 60 92" accessible={false}>
+      <Path d="M14 47Q30 38 46 47L48 69H12Z" fill="#8BBAB1" stroke={ink} strokeWidth={2} />
+      <Circle cx={30} cy={24} r={18} fill="#D9B495" stroke={ink} strokeWidth={2} />
+      <Circle cx={24} cy={24} r={1.5} fill={ink} />
+      <Circle cx={36} cy={24} r={1.5} fill={ink} />
+      <Path
+        d="M26 32Q30 35 34 32M15 49L9 63M45 49L51 63"
+        stroke={ink}
+        strokeWidth={3}
+        strokeLinecap="round"
+        fill="none"
       />
-      <View
-        style={{
-          width: 30,
-          height: pose === "sit" ? 21 : 33,
-          borderRadius: 12,
-          backgroundColor: "#8BBAB1",
-          borderWidth: 2,
-          borderColor: ink,
-        }}
+      <Path
+        d={pose === "sit" ? "M20 68L12 76H23M40 68L48 76H37" : "M22 69V85H15M38 69V85H45"}
+        stroke="#4A6866"
+        strokeWidth={7}
+        strokeLinecap="round"
+        fill="none"
       />
-      <View style={{ width: 24, height: 8, borderRadius: 4, backgroundColor: "#4A6866" }} />
-    </View>
+    </Svg>
   );
 }
+type KeyEvent = { nativeEvent: { key: string }; preventDefault: () => void };
+/** RN native uses accessibilityActions; web additionally exposes the same operations to a keyboard. */
+const keyboard = (handler: (e: KeyEvent) => void): ViewProps =>
+  Platform.OS === "web" ? ({ onKeyDown: handler } as ViewProps) : {};
 export function HomeScreen({ renderCharacter, badges = [], initialState, ...ownership }: HomeScreenProps) {
   const { width, height } = useWindowDimensions();
-  const wide = width >= 850 || width > height;
+  const inset = useSafeAreaInsets();
+  const app = useStore();
+  const sound = useSounds(app.save.settings.sound);
+  const reduced = useReducedMotion();
   const store = useHomeStore(ownership, initialState);
   const [mode, setMode] = useState<"play" | "decorate">("play");
   const [tab, setTab] = useState<"Furniture" | "Stickers" | "Room">("Furniture");
   const [selected, setSelected] = useState<string>();
   const [placing, setPlacing] = useState<ItemId>();
-  const [moving, setMoving] = useState(false);
-  const [spot, setSpot] = useState({ x: 3, y: 2 });
-  const [slot, setSlot] = useState<Character["slot"]>(0);
-  const [confirmReset, setConfirmReset] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<ItemId>();
+  const [collapsed, setCollapsed] = useState(height < 500);
+  const [menu, setMenu] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+  const [hint, setHint] = useState(true);
+  const [notice, setNotice] = useState("");
+  const [origin, setOrigin] = useState({ x: 0, y: 0 });
+  const canvas = useRef<View>(null);
   const sequence = useRef(0);
-  const canvasRef = useRef<View>(null);
-  const target = store.state.instances.find((i) => i.id === selected);
-  const candidate = placing
-    ? instance("", placing, spot.x, spot.y)
-    : moving && target
-      ? { ...target, ...spot }
-      : undefined;
-  const valid = candidate && validPlacement(store.state.instances, candidate);
-  const sceneWidth = Math.min(
-    wide ? width - 346 : width - 24,
-    (height - (wide && mode === "play" ? 190 : 230)) / 0.7,
-    850
-  );
+  const preview = useSharedValue(emptyPreview);
+  const decorating = mode === "decorate";
+  const drawerHeight = decorating ? (collapsed ? 48 : 146) : 0;
+  const availableHeight = height - inset.top - inset.bottom - drawerHeight;
+  // Scene keeps the full width. Landscape uses almost all available height; no control column.
+  const sceneWidth = Math.min(width, availableHeight / 0.7);
   const sceneHeight = sceneWidth * 0.7;
   const scale = sceneWidth / 800;
-  const choose = (item: ItemId) => {
-    if (!owns(item, ownership)) {
-      store.setMessage(
-        `Earn it in ${item.startsWith("sticker:") ? "Arcade" : itemSpec(item).track}. The badge system will supply your earned items.`
-      );
+  const target = store.state.instances.find((i) => i.id === selected);
+  const blockers = store.state.instances.map((i) => {
+    const [w, h] = dimensions(i);
+    return { ...i, w, h, wall: i.layer === "wall" };
+  });
+  const config: DragConfig = { preview, origin, scale, blockers };
+  const feedback = (message: string) => {
+    setHint(false);
+    setNotice(message);
+    store.setMessage(message);
+  };
+  const dispatch = (action: HomeAction | { type: "undo" | "redo" }, audible = false) => {
+    if (action.type !== "undo" && action.type !== "redo") {
+      const result = homeReducer(store.state, action as HomeAction, ownership);
+      if (result.message) {
+        feedback(result.message);
+        return;
+      }
+      if (audible && result.state !== store.state) sound("tap");
+    }
+    store.dispatch(action);
+    setNotice("");
+    setHint(false);
+  };
+  const choose = (id: ItemId) => {
+    setDraggedItem(undefined);
+    if (!owns(id, ownership)) {
+      feedback(`Earn it in ${itemSpec(id).track ?? "Arcade"}. Play that track to unlock it.`);
       return;
     }
-    setPlacing(item);
-    setMoving(false);
+    setPlacing(id);
     setSelected(undefined);
-    setSpot({ x: 3, y: itemSpec(item).layer === "wall" ? 0 : 2 });
-    store.setMessage("Tap a clear spot in the room, or use the arrows. Then Place.");
+    setHint(false);
+    setNotice("Tap a clear floor spot.");
   };
-  const place = () => {
-    if (!candidate) return;
-    if (placing) {
-      let id: string;
-      do {
-        id = `home-${++sequence.current}-${store.state.instances.length}`;
-      } while (store.state.instances.some((i) => i.id === id));
-      store.dispatch({ type: "place", instance: { ...candidate, id } });
-    } else if (target) store.dispatch({ type: "move", id: target.id, ...spot });
-    if (valid && (!placing || store.state.instances.length < 32)) {
-      setPlacing(undefined);
-      setMoving(false);
+  const place = (id: ItemId, px: number, py: number) => {
+    if (store.state.instances.length >= 32) {
+      feedback("Put something away to make room.");
+      return;
+    }
+
+    const spot = spotFromPoint(px, py, scale, itemSpec(id).layer === "wall");
+    if (!spot || px < 0 || py < 0 || px > sceneWidth || py > sceneHeight) {
+      feedback("Drop inside the room.");
+      return;
+    }
+    let key: string;
+    do {
+      key = `home-${++sequence.current}`;
+    } while (store.state.instances.some((i) => i.id === key));
+    const candidate = instance(key, id, spot.x, spot.y);
+    if (!validPlacement(store.state.instances, candidate)) {
+      feedback("Try a clear spot. Keep the door free.");
+      return;
+    }
+    dispatch({ type: "place", instance: candidate }, true);
+    setPlacing(undefined);
+    setSelected(key);
+  };
+  const itemAction = (i: Instance, action: string) => {
+    if (action === "activate") {
+      if (decorating) {
+        setSelected(i.id);
+        setPlacing(undefined);
+        setHint(false);
+      } else {
+        dispatch({ type: "toggle", id: i.id }, true);
+      }
+    } else if (["rotate", "mirror", "put-away"].includes(action))
+      dispatch({ type: action as "rotate" | "mirror" | "put-away", id: i.id }, true);
+    else {
+      const delta: Record<string, [number, number]> = { left: [-1, 0], right: [1, 0], back: [0, -1], forward: [0, 1] };
+      if (delta[action])
+        dispatch({ type: "move", id: i.id, x: i.x + delta[action][0], y: i.y + delta[action][1] }, true);
     }
   };
-  const tapItem = (i: Instance) => {
-    if (mode === "decorate") {
-      setSelected(i.id);
-      setPlacing(undefined);
-      setMoving(false);
-    } else {
-      store.dispatch({ type: "toggle", id: i.id });
-      if (itemSpec(i.item).interactive)
-        store.setMessage(
-          i.state === "rest" ? `${itemSpec(i.item).interactive}!` : `${itemSpec(i.item).name} settles down.`
-        );
-    }
+  const switchMode = (next: "play" | "decorate") => {
+    setMode(next);
+    setSelected(undefined);
+    setPlacing(undefined);
+    setNotice("");
+    preview.value = emptyPreview;
   };
-  const inventory = (
-    <View style={[styles.inventory, wide && { width: 302, flexBasis: 302, flexGrow: 0, flexShrink: 0 }]}>
-      <View style={styles.row}>
-        {(["Furniture", "Stickers", "Room"] as const).map((t) => (
-          <Button key={t} label={t} selected={tab === t} onPress={() => setTab(t)} small />
-        ))}
-      </View>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.tiles}>
-        {tab === "Furniture" &&
-          furnitureIds.map((id) => (
-            <Pressable
-              key={id}
-              accessibilityRole="button"
-              accessibilityLabel={`${catalog[id].name}${owns(id, ownership) ? "" : `, Earn it in ${catalog[id].track}`}`}
-              onPress={() => choose(id)}
-              style={[styles.tile, placing === id && styles.tileSelected]}
+  const measure = useCallback(() => canvas.current?.measureInWindow((x, y) => setOrigin({ x, y })), []);
+  // A centered canvas can move without changing its own dimensions. Measure after
+  // drawer/mode layout settles, not only on the canvas's size-change event.
+  useLayoutEffect(() => {
+    const frame = requestAnimationFrame(measure);
+    return () => cancelAnimationFrame(frame);
+  }, [measure, sceneWidth, sceneHeight, drawerHeight, inset.top, inset.bottom]);
+  const seatActions = anchors
+    .filter((a) => a !== "floor" && anchorAvailable(store.state.instances, a))
+    .map((a) => ({
+      name: `seat-${a}`,
+      label: ["hello", "window"].includes(a) ? `Move to ${a === "window" ? "window" : "floor"}` : `Sit on ${a}`,
+    }));
+  const placementCommand = (name: string) => {
+    if (!placing) return;
+    const v = preview.value;
+    if (name === "place") {
+      const p = itemPoint(instance("", placing, v.x, v.y));
+      place(placing, p.x * scale, p.y * scale);
+      return;
+    }
+    const d: Record<string, [number, number]> = { left: [-1, 0], right: [1, 0], back: [0, -1], forward: [0, 1] };
+    if (!d[name]) return;
+    const wall = itemSpec(placing).layer === "wall";
+    const x = Math.max(0, Math.min(wall ? 7 : 9, v.x + d[name][0])),
+      y = Math.max(0, Math.min(wall ? 1 : 5, v.y + d[name][1]));
+    const i = instance("", placing, x, y),
+      [w, h] = dimensions(i),
+      valid = store.state.instances.length < 32 && validPlacement(store.state.instances, i);
+    preview.value = { active: true, x, y, w, h, wall, valid };
+    store.setMessage(`Column ${x + 1}, row ${y + 1}. ${valid ? "Clear spot." : "Try a clear spot."}`);
+  };
+  const entries = [
+    ...store.state.instances.map((i) => {
+      const p = itemPoint(i),
+        size = itemSize(i) * scale;
+      const hitWidth = Math.max(48, size * 0.82);
+      const hitHeight = Math.max(48, size * (i.item === "toy-box" ? 0.58 : i.layer === "ground" ? 0.4 : 0.82));
+      const [w, h] = dimensions(i);
+      return {
+        key: i.id,
+        depth: i.layer === "wall" ? -100 : i.layer === "ground" ? -50 : p.y,
+        node: (
+          <Drag
+            testID={`object-${i.id}`}
+            pointerEvents={placing ? "none" : "auto"}
+            accessibilityRole="button"
+            accessibilityLabel={`${itemSpec(i.item).name}, ${i.state === "active" ? "active" : "resting"}`}
+            accessibilityHint={
+              decorating ? "Drag to move. Arrow keys move; R rotates, M mirrors, Delete puts away." : "Tap to play."
+            }
+            accessibilityActions={
+              decorating
+                ? [
+                    { name: "activate", label: "Select" },
+                    ...["left", "right", "back", "forward", "rotate", "mirror", "put-away"].map((name) => ({
+                      name,
+                      label: name.replace("-", " "),
+                    })),
+                  ]
+                : [{ name: "activate", label: "Play" }]
+            }
+            onAccessibilityAction={(e) => itemAction(i, e.nativeEvent.actionName)}
+            {...keyboard((e) => {
+              const names: Record<string, string> = {
+                ArrowLeft: "left",
+                ArrowRight: "right",
+                ArrowUp: "back",
+                ArrowDown: "forward",
+                r: "rotate",
+                m: "mirror",
+                Delete: "put-away",
+                Backspace: "put-away",
+                Enter: "activate",
+                " ": "activate",
+              };
+              const name = names[e.nativeEvent.key];
+              if (name && (decorating || name === "activate")) {
+                e.preventDefault();
+                itemAction(i, name);
+              }
+            })}
+            enabled={decorating}
+            reduced={reduced}
+            config={{ ...config, foot: p, layer: i.layer, footprint: { w, h, wall: i.layer === "wall", id: i.id } }}
+            onStart={() => {
+              setDraggedItem(undefined);
+              setSelected(undefined);
+              setPlacing(undefined);
+              setHint(false);
+              setNotice("");
+            }}
+            onTap={() => {
+              if (placing) {
+                return;
+              }
+              itemAction(i, "activate");
+            }}
+            onDrop={(_x, _y, dx, dy) => {
+              const px = p.x * scale + dx,
+                py = p.y * scale + dy;
+              const spot = spotFromPoint(px, py, scale, i.layer === "wall");
+              if (px < 0 || py < 0 || px > sceneWidth || py > sceneHeight) {
+                feedback("Drop inside the room.");
+                return;
+              }
+              if (spot) dispatch({ type: "move", id: i.id, ...spot }, true);
+              setSelected(i.id);
+            }}
+            style={{
+              position: "absolute",
+              left: p.x * scale - hitWidth / 2,
+              top: p.y * scale - size * 0.85 + size - hitHeight,
+              width: hitWidth,
+              height: hitHeight,
+              borderWidth: selected === i.id ? 2 : 0,
+              borderColor: "#397C6C",
+              borderRadius: 18,
+            }}
+          >
+            <View
+              pointerEvents="none"
+              style={{ position: "absolute", left: (hitWidth - size) / 2, top: hitHeight - size }}
             >
-              <View style={{ opacity: owns(id, ownership) ? 1 : 0.42 }}>
-                <ItemArt item={id} size={76} />
-              </View>
-              <Text style={styles.tileName}>{catalog[id].name}</Text>
-              <Text style={styles.meta}>
-                {owns(id, ownership) ? "Yours to use" : `Earn it in ${catalog[id].track}`}
-              </Text>
-            </Pressable>
-          ))}
-        {tab === "Stickers" &&
-          stickerIds.map((id) => (
-            <Pressable
-              key={id}
-              accessibilityRole="button"
-              accessibilityLabel={`${stickerNames[id]} sticker`}
-              onPress={() => choose(`sticker:${id}`)}
-              style={[styles.tile, placing === `sticker:${id}` && styles.tileSelected]}
+              <ItemArt
+                item={i.item}
+                size={size}
+                active={i.state === "active"}
+                mirrored={i.mirrored}
+                rotation={i.rotation}
+              />
+            </View>
+          </Drag>
+        ),
+      };
+    }),
+    ...store.state.characters.map((c) => {
+      const p = characterPoint(store.state, c),
+        size = (c.slot === 0 ? 96 : 76) * scale;
+      return {
+        key: `character-${c.slot}`,
+        depth: characterDepth(store.state, c),
+        node: (
+          <Drag
+            testID={`character-${c.slot}`}
+            pointerEvents={placing ? "none" : "auto"}
+            accessibilityRole="button"
+            accessibilityLabel={["Islander", "Pip", "Poko"][c.slot] + `, ${c.pose}`}
+            accessibilityHint="Drag to a seat or the floor. Arrow keys move; S cycles seats."
+            accessibilityActions={[
+              ...seatActions,
+              ...["left", "right", "back", "forward"].map((name) => ({ name, label: `Move ${name}` })),
+            ]}
+            onAccessibilityAction={(e) => {
+              const a = anchors.find((a) => `seat-${a}` === e.nativeEvent.actionName);
+              if (a) dispatch({ type: "character", slot: c.slot, anchor: a }, true);
+              const deltas: Record<string, [number, number]> = {
+                left: [-51, -3],
+                right: [51, 3],
+                back: [-14, -31],
+                forward: [14, 31],
+              };
+              const d = deltas[e.nativeEvent.actionName];
+              if (d)
+                dispatch(
+                  {
+                    type: "character",
+                    slot: c.slot,
+                    anchor: "floor",
+                    ...spotFromPoint(p.x + d[0], p.y + d[1], 1, false)!,
+                  },
+                  true
+                );
+            }}
+            {...keyboard((e) => {
+              const k = e.nativeEvent.key;
+              const deltas: Record<string, [number, number]> = {
+                ArrowLeft: [-51, -3],
+                ArrowRight: [51, 3],
+                ArrowUp: [-14, -31],
+                ArrowDown: [14, 31],
+              };
+              if (deltas[k]) {
+                e.preventDefault();
+                dispatch(
+                  {
+                    type: "character",
+                    slot: c.slot,
+                    anchor: "floor",
+                    ...spotFromPoint(p.x + deltas[k][0], p.y + deltas[k][1], 1, false)!,
+                  },
+                  true
+                );
+              }
+              if (k === "s" || k === "Enter") {
+                e.preventDefault();
+                const seats = seatActions.map((s) => s.name.slice(5));
+                const next = seats[(seats.indexOf(c.anchor) + 1) % seats.length];
+                dispatch({ type: "character", slot: c.slot, anchor: next as Character["anchor"] }, true);
+              }
+            })}
+            enabled
+            reduced={reduced}
+            config={{ ...config, foot: p }}
+            onTap={() => {
+              setHint(false);
+            }}
+            onStart={() => {
+              setHint(false);
+              setSelected(undefined);
+              setNotice("");
+            }}
+            onDrop={(_x, _y, dx, dy) =>
+              dispatch(characterDrop(store.state, c.slot, p.x + dx / scale, p.y + dy / scale), true)
+            }
+            style={{
+              position: "absolute",
+              left: p.x * scale - size / 2,
+              top: p.y * scale - size,
+              width: Math.max(48, size),
+              height: Math.max(48, size),
+            }}
+          >
+            <View
+              pointerEvents="none"
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: size * 0.15,
+                width: size * 0.7,
+                height: size * 0.13,
+                borderRadius: 100,
+                backgroundColor: "#3D60552A",
+              }}
+            />
+            <View
+              pointerEvents="none"
+              style={{
+                width: 60,
+                height: 92,
+                position: "absolute",
+                left: (size - 60) / 2,
+                top: (size - 92) / 2,
+                alignItems: "center",
+                justifyContent: "flex-end",
+                transform: [{ scale: size / 92 }],
+              }}
             >
-              <View style={{ opacity: owns(`sticker:${id}`, ownership) ? 1 : 0.4 }}>
-                <ItemArt item={`sticker:${id}`} size={64} />
-              </View>
-              <Text style={styles.tileName}>{stickerNames[id]}</Text>
-              <Text style={styles.meta}>
-                {owns(`sticker:${id}`, ownership) ? "Reuse on any wall spot" : "Earn stickers in Arcade"}
-              </Text>
-            </Pressable>
-          ))}
-        {tab === "Room" && (
-          <View style={{ width: "100%", gap: 8 }}>
-            <Text style={styles.subtitle}>Walls</Text>
-            <View style={styles.wrap}>
-              {wallThemes.map((wallpaper, n) => (
-                <Pressable
-                  key={wallpaper}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${wallpaper} walls`}
-                  onPress={() => store.dispatch({ type: "theme", wallpaper })}
-                  style={[
-                    styles.swatch,
-                    { backgroundColor: wallColors[wallpaper] },
-                    store.state.theme.wallpaper === wallpaper && styles.tileSelected,
-                  ]}
+              {renderCharacter ? (
+                renderCharacter(c.slot, c.pose)
+              ) : c.slot === 0 ? (
+                <Placeholder pose={c.pose} />
+              ) : c.slot === 1 ? (
+                <View
+                  style={{
+                    borderWidth: 2,
+                    borderBottomWidth: 5,
+                    borderColor: "#87BBAF",
+                    borderRadius: 28,
+                    backgroundColor: "#C6E5DCBB",
+                  }}
                 >
-                  <Text style={styles.tileName}>
-                    {wallpaper}
-                    {store.state.theme.wallpaper === wallpaper ? " ✓" : ""}
-                  </Text>
-                  <Text style={styles.meta}>
-                    {n < 2 || ownership.ownedWallpapers?.includes(wallpaper)
-                      ? "Yours"
-                      : n === 2
-                        ? "Night Sky badge set"
-                        : "Reading badge set"}
-                  </Text>
-                </Pressable>
-              ))}
+                  <ReefFish size={55} />
+                </View>
+              ) : (
+                <ArcadeArt game="crab-crossing" size={65} />
+              )}
             </View>
-            <Text style={styles.subtitle}>Floors</Text>
-            <View style={styles.wrap}>
-              {floorThemes.map((floor, n) => (
-                <Pressable
-                  key={floor}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${floor} floor`}
-                  onPress={() => store.dispatch({ type: "theme", floor })}
-                  style={[
-                    styles.swatch,
-                    { backgroundColor: floorColors[floor] },
-                    store.state.theme.floor === floor && styles.tileSelected,
-                  ]}
-                >
-                  <Text style={styles.tileName}>
-                    {floor}
-                    {store.state.theme.floor === floor ? " ✓" : ""}
-                  </Text>
-                  <Text style={styles.meta}>
-                    {n < 2 || ownership.ownedFloors?.includes(floor)
-                      ? "Yours"
-                      : n === 2
-                        ? "Science badge set"
-                        : "Reading badge set"}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+          </Drag>
+        ),
+      };
+    }),
+  ].sort((a, b) => a.depth - b.depth);
+  const toolbarPoint = target ? itemPoint(target) : undefined;
+  const toolbarTop = target && toolbarPoint ? toolbarPoint.y * scale - itemSize(target) * scale * 0.85 - 65 : 0;
+  const thumbnail = (id: ItemId, label: string) => {
+    const owned = owns(id, ownership),
+      spec = itemSpec(id),
+      [w, h] = dimensions(instance("", id, 0, 0));
+    return (
+      <Drag
+        key={id}
+        testID={`inventory-${id}`}
+        accessibilityRole="button"
+        accessibilityLabel={`${label}${owned ? "" : `, locked, Earn it in ${spec.track ?? "Arcade"}`}`}
+        accessibilityHint="Drag upward into the room, or select then tap the floor."
+        accessibilityActions={[{ name: "activate", label: "Choose" }]}
+        onAccessibilityAction={() => choose(id)}
+        {...keyboard((e) => {
+          if (e.nativeEvent.key === "Enter" || e.nativeEvent.key === " ") {
+            e.preventDefault();
+            choose(id);
+          }
+        })}
+        tray
+        enabled={owned}
+        reduced={reduced}
+        config={{ ...config, layer: spec.layer, footprint: { w, h, wall: spec.layer === "wall", id: "" } }}
+        onStart={() => {
+          setDraggedItem(id);
+          setPlacing(undefined);
+          setSelected(undefined);
+          setHint(false);
+          setNotice("");
+        }}
+        onTap={() => choose(id)}
+        onDrop={(x, y) => place(id, x - origin.x, y - origin.y)}
+        style={{
+          width: 84,
+          height: 88,
+          alignItems: "center",
+          borderWidth: placing === id ? 2 : 0,
+          borderColor: ink,
+          borderRadius: 14,
+          backgroundColor: "#FFF8E9",
+        }}
+      >
+        <View pointerEvents="none" style={{ opacity: owned ? 1 : 0.42 }}>
+          <ItemArt item={id} size={64} />
+        </View>
+        <Text numberOfLines={1} style={styles.thumbLabel}>
+          {owned ? label : (spec.track ?? "Arcade")}
+        </Text>
+        {!owned && (
+          <View pointerEvents="none" style={{ position: "absolute", top: 0, right: 0, transform: [{ scale: 0.6 }] }}>
+            <Icon name="lock" />
           </View>
         )}
-      </ScrollView>
-    </View>
-  );
-  const playControls = (
-    <>
-      <View style={styles.wrap}>
-        {(["Islander", "Pip", "Poko"] as const).map((name, n) => (
-          <Button key={name} label={name} selected={slot === n} onPress={() => setSlot(n as Character["slot"])} />
-        ))}
-      </View>
-      <Text style={styles.meta}>Choose a friend, then a place. Tap objects to play.</Text>
-      <View style={styles.wrap}>
-        {anchors
-          .filter((a) => anchorAvailable(store.state.instances, a))
-          .map((a) => (
-            <Button
-              key={a}
-              label={a === "hello" ? "Stand here" : a === "window" ? "Beach view" : `Sit: ${a}`}
-              onPress={() => store.dispatch({ type: "character", slot, anchor: a })}
-            />
-          ))}
-      </View>
-    </>
-  );
+      </Drag>
+    );
+  };
   return (
-    <SafeAreaView style={styles.page}>
-      <View style={styles.header}>
-        <Button label="‹ Back" onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))} small />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.eyebrow}>A PLACE TO JUST BE</Text>
-          <Text style={styles.title}>Island Home</Text>
+    <View style={styles.page}>
+      <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
+        {store.message}
+      </Text>
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          paddingTop: inset.top,
+          paddingBottom: inset.bottom + drawerHeight,
+        }}
+      >
+        <View ref={canvas} onLayout={measure} testID="home-scene" style={{ width: sceneWidth, height: sceneHeight }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Room floor"
+            accessibilityHint={
+              placing
+                ? "Tap to place the selected item. Arrow keys change spot and Enter places."
+                : "Choose an item from Decorate to place."
+            }
+            accessibilityActions={[
+              ...["left", "right", "back", "forward"].map((name) => ({ name, label: `Move placement ${name}` })),
+              { name: "place", label: "Place selected item" },
+            ]}
+            onAccessibilityAction={(e) => placementCommand(e.nativeEvent.actionName)}
+            // eslint-disable-next-line react-hooks/refs -- keyboard stores this callback; placement refs are read only on input.
+            {...keyboard((e) => {
+              const names: Record<string, string> = {
+                ArrowLeft: "left",
+                ArrowRight: "right",
+                ArrowUp: "back",
+                ArrowDown: "forward",
+                Enter: "place",
+              };
+              const name = names[e.nativeEvent.key];
+              if (placing && name) {
+                e.preventDefault();
+                placementCommand(name);
+              }
+            })}
+            onPress={(e) => {
+              if (!placing) {
+                setSelected(undefined);
+                return;
+              }
+              const { pageX, pageY } = e.nativeEvent;
+              canvas.current?.measureInWindow((x, y) => place(placing, pageX - x, pageY - y));
+            }}
+            style={StyleSheet.absoluteFill}
+          >
+            <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+              <RoomArt
+                theme={store.state.theme}
+                badges={badges.filter((b) => badgeIds.includes(b))}
+                reduced={reduced}
+              />
+            </View>
+          </Pressable>
+          {decorating && <FloorGrid scale={scale} width={sceneWidth} height={sceneHeight} />}
+          {entries.map((entry) => (
+            <React.Fragment key={entry.key}>{entry.node}</React.Fragment>
+          ))}
+          <Footprint preview={preview} scale={scale} width={sceneWidth} height={sceneHeight} />
+          {draggedItem && (
+            <TrayGhost preview={preview} scale={scale} size={itemSize(instance("", draggedItem, 0, 0)) * scale}>
+              <ItemArt item={draggedItem} size={itemSize(instance("", draggedItem, 0, 0)) * scale} />
+            </TrayGhost>
+          )}
+          {decorating && target && toolbarPoint && (
+            <View
+              testID="object-toolbar"
+              style={[
+                styles.toolbar,
+                {
+                  left: Math.max(0, Math.min(sceneWidth - 234, toolbarPoint.x * scale - 117)),
+                  top: Math.max(
+                    0,
+                    origin.y + toolbarTop >= inset.top + 70
+                      ? toolbarTop
+                      : toolbarPoint.y * scale + itemSize(target) * scale * 0.15 + 8
+                  ),
+                },
+              ]}
+            >
+              <Button
+                label="Rotate"
+                icon="rotate"
+                disabled={itemSpec(target.item).rotations.length < 2}
+                onPress={() => dispatch({ type: "rotate", id: target.id }, true)}
+              />
+              <Button
+                label="Mirror"
+                icon="mirror"
+                disabled={!itemSpec(target.item).mirror}
+                onPress={() => dispatch({ type: "mirror", id: target.id }, true)}
+              />
+              <Button
+                label="Put away"
+                icon="away"
+                onPress={() => {
+                  dispatch({ type: "put-away", id: target.id }, true);
+                  setSelected(undefined);
+                }}
+              />
+            </View>
+          )}
         </View>
       </View>
-      <View style={[styles.row, { justifyContent: "center" }]}>
+      <View
+        pointerEvents="box-none"
+        style={[styles.chrome, { top: inset.top + 8, left: inset.left + 8, right: inset.right + 8 }]}
+      >
         <Button
-          label="Play"
-          selected={mode === "play"}
-          onPress={() => {
-            setMode("play");
-            setPlacing(undefined);
-            setMoving(false);
-            setSelected(undefined);
-          }}
+          label="Back"
+          icon="back"
+          iconOnly
+          onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
         />
-        <Button label="Decorate" selected={mode === "decorate"} onPress={() => setMode("decorate")} />
-        {mode === "decorate" && (
+        <View style={styles.segment}>
+          <Button label="Play" selected={!decorating} onPress={() => switchMode("play")} />
+          <Button label="Decorate" selected={decorating} onPress={() => switchMode("decorate")} />
+        </View>
+        <Button label="More" icon="more" iconOnly onPress={() => setMenu(!menu)} />
+      </View>
+      {decorating && (
+        <View style={[styles.history, { top: inset.top + 62, right: inset.right + 8 }]}>
           <Button
-            label="Done"
+            label="Undo"
+            icon="undo"
+            iconOnly
+            disabled={!store.canUndo}
             onPress={() => {
-              setMode("play");
-              setPlacing(undefined);
-              setMoving(false);
+              dispatch({ type: "undo" });
               setSelected(undefined);
             }}
           />
-        )}
-      </View>
-      <View style={[styles.body, wide && { flexDirection: "row" }]}>
-        <View style={{ alignItems: "center", flex: wide ? 1 : undefined, minWidth: 0 }}>
-          <View ref={canvasRef} style={{ width: sceneWidth, height: sceneHeight }}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Room placement canvas"
-              onPress={(e) => {
-                if (!candidate) return;
-                const { pageX, pageY } = e.nativeEvent;
-                canvasRef.current?.measureInWindow((x, y) => {
-                  const nextSpot = spotFromPoint(pageX - x, pageY - y, scale, candidate.layer === "wall");
-                  if (nextSpot) setSpot(nextSpot);
-                });
-              }}
-              style={{ position: "absolute", width: sceneWidth, height: sceneHeight }}
-            >
-              <View pointerEvents="none" style={{ width: "100%", height: "100%" }}>
-                <RoomArt theme={store.state.theme} badges={badges.filter((b) => badgeIds.includes(b))} />
-              </View>
-            </Pressable>
-            {[
-              ...store.state.instances.map((i) => {
-                const p = itemPoint(i);
-                const size =
-                  (i.item === "bed" || i.item === "rug" || i.item === "mat"
-                    ? 160
-                    : i.layer === "wall"
-                      ? 58
-                      : ["table", "books", "shelf", "trophies", "toy-box", "aquarium", "checkers"].includes(i.item)
-                        ? 120
-                        : 98) * scale;
-                return {
-                  key: i.id,
-                  depth: i.layer === "wall" ? -100 : i.layer === "ground" ? -50 : p.y,
-                  node: (
-                    <Pressable
-                      pointerEvents={candidate ? "none" : "auto"}
-                      accessibilityRole="button"
-                      accessibilityLabel={`${itemSpec(i.item).name}, ${i.state === "active" ? "active" : "resting"}`}
-                      onPress={() => tapItem(i)}
-                      style={{
-                        position: "absolute",
-                        left: p.x * scale - size / 2,
-                        top: p.y * scale - size * 0.85,
-                        minWidth: 48,
-                        minHeight: 48,
-                        borderWidth: selected === i.id ? 2 : 0,
-                        borderColor: "#387568",
-                        borderRadius: 15,
-                      }}
-                    >
-                      <ItemArt
-                        item={i.item}
-                        size={size}
-                        active={i.state === "active"}
-                        mirrored={i.mirrored}
-                        rotation={i.rotation}
-                      />
-                    </Pressable>
-                  ),
-                };
-              }),
-              ...store.state.characters.map((c) => {
-                const p = characterPoint(store.state, c.anchor);
-                const characterSize = Math.max(28, 65 * scale);
-                return {
-                  key: `character-${c.slot}`,
-                  depth: p.y,
-                  node: (
-                    <View
-                      pointerEvents="none"
-                      style={{
-                        position: "absolute",
-                        left: (p.x + c.slot * 17) * scale - characterSize / 2,
-                        top: p.y * scale - characterSize,
-                        width: characterSize,
-                        height: characterSize,
-                      }}
-                    >
-                      <View
-                        style={{
-                          position: "absolute",
-                          width: 60,
-                          height: 65,
-                          left: (characterSize - 60) / 2,
-                          top: (characterSize - 65) / 2,
-                          alignItems: "center",
-                          transform: [{ scale: characterSize / 65 }],
-                        }}
-                      >
-                        {renderCharacter ? (
-                          renderCharacter(c.slot, c.pose)
-                        ) : c.slot === 0 ? (
-                          <Placeholder pose={c.pose} />
-                        ) : c.slot === 1 ? (
-                          <View
-                            style={{
-                              borderBottomWidth: 4,
-                              borderColor: "#D7E9DF",
-                              borderRadius: 30,
-                              backgroundColor: "#C6E5DC99",
-                            }}
-                          >
-                            <ReefFish size={55} />
-                          </View>
-                        ) : (
-                          <ArcadeArt game="crab-crossing" size={55} />
-                        )}
-                      </View>
-                    </View>
-                  ),
-                };
-              }),
-            ]
-              .sort((a, b) => a.depth - b.depth)
-              .map((entry) => (
-                <React.Fragment key={entry.key}>{entry.node}</React.Fragment>
-              ))}
-            {candidate && (
-              <View
-                pointerEvents="none"
-                style={{
-                  position: "absolute",
-                  left: itemPoint(candidate).x * scale - 29,
-                  top: itemPoint(candidate).y * scale - 50,
-                  borderWidth: 3,
-                  borderColor: valid ? "#287C67" : "#AC504A",
-                  borderRadius: 16,
-                  backgroundColor: valid ? "#E2F7DECC" : "#FBD5CDCC",
+          <Button
+            label="Redo"
+            icon="redo"
+            iconOnly
+            disabled={!store.canRedo}
+            onPress={() => {
+              dispatch({ type: "redo" });
+              setSelected(undefined);
+            }}
+          />
+        </View>
+      )}
+      {(hint || notice) && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss hint"
+          pointerEvents="none"
+          onPress={() => {
+            setHint(false);
+            setNotice("");
+          }}
+          style={[
+            styles.hint,
+            width > height
+              ? { left: 8, top: inset.top + 72, maxWidth: Math.max(120, (width - sceneWidth) / 2 - 20) }
+              : { bottom: drawerHeight + inset.bottom + 12 },
+          ]}
+        >
+          <Text style={styles.hintText}>{notice || "Drag a friend. Tap a little home surprise."}</Text>
+        </Pressable>
+      )}
+      {menu && (
+        <View style={[styles.menu, { top: inset.top + 60, right: inset.right + 8 }]}>
+          <Text style={styles.meta}>Home stays for this visit.</Text>
+          <Button
+            label="Reset room"
+            onPress={() => {
+              setMenu(false);
+              setConfirm(true);
+            }}
+          />
+        </View>
+      )}
+      {decorating && (
+        <View style={[styles.drawer, { height: drawerHeight + inset.bottom, paddingBottom: inset.bottom }]}>
+          <View style={styles.tabs}>
+            {(["Furniture", "Stickers", "Room"] as const).map((t) => (
+              <Button
+                key={t}
+                label={t}
+                selected={t === tab}
+                onPress={() => {
+                  setTab(t);
+                  setCollapsed(false);
                 }}
-              >
-                <ItemArt item={candidate.item} size={58} />
-                <Text style={{ color: ink, textAlign: "center", fontWeight: "bold" }}>
-                  {valid ? "✓ Clear" : "× Try here?"}
-                </Text>
-              </View>
-            )}
+              />
+            ))}
+            <Button
+              label={collapsed ? "Open drawer" : "Collapse drawer"}
+              icon="down"
+              iconOnly
+              onPress={() => setCollapsed(!collapsed)}
+            />
           </View>
-          <ScrollView
-            style={{ maxHeight: wide ? Math.max(60, height - sceneHeight - 145) : undefined, width: "100%" }}
-            contentContainerStyle={{ alignItems: "center", gap: 4 }}
-          >
-            <Text accessibilityLiveRegion="polite" style={styles.message}>
-              {store.state.instances.length >= 32 ? "Put something away to make room." : store.message}
-            </Text>
-            {mode === "play" ? (
-              !wide && playControls
-            ) : (
-              <>
-                {candidate ? (
-                  <View style={styles.wrap}>
-                    <Button label="Left" onPress={() => setSpot((s) => ({ ...s, x: Math.max(0, s.x - 1) }))} />
-                    <Button
-                      label="Right"
-                      onPress={() =>
-                        setSpot((s) => ({ ...s, x: Math.min(candidate.layer === "wall" ? 7 : 9, s.x + 1) }))
-                      }
-                    />
-                    <Button label="Back" onPress={() => setSpot((s) => ({ ...s, y: Math.max(0, s.y - 1) }))} />
-                    <Button
-                      label="Forward"
-                      onPress={() =>
-                        setSpot((s) => ({ ...s, y: Math.min(candidate.layer === "wall" ? 1 : 5, s.y + 1) }))
-                      }
-                    />
-                    <Button
-                      label={moving ? "Set down" : "Place"}
-                      disabled={!valid || (placing !== undefined && store.state.instances.length >= 32)}
-                      onPress={place}
-                    />
-                    <Button
-                      label="Cancel"
-                      onPress={() => {
-                        setMoving(false);
-                        setPlacing(undefined);
-                      }}
-                    />
-                  </View>
-                ) : target ? (
-                  <>
-                    <Text style={styles.meta}>{itemSpec(target.item).name}</Text>
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      style={{ maxWidth: sceneWidth }}
-                      contentContainerStyle={styles.row}
-                    >
-                      <Button
-                        label="Move"
-                        onPress={() => {
-                          setMoving(true);
-                          setSpot({ x: target.x, y: target.y });
-                        }}
-                      />
-                      <Button
-                        label="Rotate"
-                        disabled={itemSpec(target.item).rotations.length < 2}
-                        onPress={() => store.dispatch({ type: "rotate", id: target.id })}
-                      />
-                      <Button
-                        label="Mirror"
-                        disabled={!itemSpec(target.item).mirror}
-                        onPress={() => store.dispatch({ type: "mirror", id: target.id })}
-                      />
-                      <Button
-                        label="Put away"
-                        onPress={() => {
-                          store.dispatch({ type: "put-away", id: target.id });
-                          setSelected(undefined);
-                        }}
-                      />
-                    </ScrollView>
-                  </>
-                ) : (
-                  <Text style={styles.meta}>Choose something below, or tap an object to change it.</Text>
-                )}
-                <View style={styles.wrap}>
-                  <Button label="Undo" disabled={!store.canUndo} onPress={() => store.dispatch({ type: "undo" })} />
-                  <Button label="Redo" disabled={!store.canRedo} onPress={() => store.dispatch({ type: "redo" })} />
-                  <Button label="Reset room" onPress={() => setConfirmReset(true)} />
-                </View>
-              </>
-            )}
+          {!collapsed && (
             <ScrollView
               horizontal
-              style={{ maxWidth: sceneWidth }}
-              contentContainerStyle={styles.row}
-              accessibilityLabel="Objects in this room"
+              testID="inventory-strip"
+              showsHorizontalScrollIndicator
+              contentContainerStyle={styles.strip}
             >
-              {store.state.instances.map((i, index) => (
-                <Button
-                  key={i.id}
-                  label={`${mode === "play" ? "Play" : "Edit"}: ${itemSpec(i.item).name} ${index + 1}`}
-                  onPress={() => tapItem(i)}
-                  small
-                />
-              ))}
+              {tab === "Furniture" && furnitureIds.map((id) => thumbnail(id, itemSpec(id).name))}
+              {tab === "Stickers" && stickerIds.map((id) => thumbnail(`sticker:${id}`, stickerNames[id]))}
+              {tab === "Room" && (
+                <>
+                  {wallThemes.map((wallpaper) => (
+                    <Pressable
+                      key={wallpaper}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${wallpaper} walls`}
+                      onPress={() => dispatch({ type: "theme", wallpaper })}
+                      style={[styles.swatch, { backgroundColor: wallColors[wallpaper] }]}
+                    >
+                      <Text style={styles.label}>{wallpaper}</Text>
+                      <Text style={styles.meta}>Walls</Text>
+                    </Pressable>
+                  ))}
+                  {floorThemes.map((floor) => (
+                    <Pressable
+                      key={floor}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${floor} floor`}
+                      onPress={() => dispatch({ type: "theme", floor })}
+                      style={[styles.swatch, { backgroundColor: floorColors[floor] }]}
+                    >
+                      <Text style={styles.label}>{floor}</Text>
+                      <Text style={styles.meta}>Floor</Text>
+                    </Pressable>
+                  ))}
+                </>
+              )}
             </ScrollView>
-            <Text style={styles.session}>Room kept for this visit · saving arrives with your Islander</Text>
-          </ScrollView>
+          )}
         </View>
-        {wide && mode === "play" && (
-          <ScrollView
-            style={[styles.inventory, { width: 302, flexBasis: 302, flexGrow: 0, flexShrink: 0 }]}
-            contentContainerStyle={{ gap: 12, padding: 12 }}
-          >
-            <Text style={styles.subtitle}>Make a little story</Text>
-            {playControls}
-            <Text style={styles.meta}>Nothing to finish. Just make yourself at home.</Text>
-          </ScrollView>
-        )}
-        {mode === "decorate" && inventory}
-      </View>
-      {confirmReset && (
-        <View style={styles.scrim}>
-          <View accessibilityViewIsModal style={styles.dialog}>
-            <Text style={styles.title}>A fresh little room?</Text>
-            <Text style={styles.message}>
-              Bring back the starter furniture. Your earned items stay yours. You can undo this.
-            </Text>
-            <Button label="Keep my room" onPress={() => setConfirmReset(false)} />
+      )}
+      <Modal transparent visible={confirm} animationType="none" onRequestClose={() => setConfirm(false)}>
+        <View accessibilityViewIsModal style={styles.scrim}>
+          <View style={styles.dialog}>
+            <Text style={styles.dialogTitle}>Start fresh?</Text>
+            <Text style={styles.hintText}>Your room will return to its starter layout. You can Undo.</Text>
+            <Button label="Keep my room" onPress={() => setConfirm(false)} />
             <Button
-              label="Reset to starter room"
+              label="Reset room"
               onPress={() => {
-                store.dispatch({ type: "reset" });
-                setConfirmReset(false);
+                dispatch({ type: "reset" });
+                setConfirm(false);
                 setSelected(undefined);
                 setPlacing(undefined);
-                setMoving(false);
+                setDraggedItem(undefined);
+                // eslint-disable-next-line react-hooks/immutability -- Reanimated shared value reset after confirmed reset.
+                preview.value = emptyPreview;
               }}
             />
           </View>
         </View>
-      )}
-    </SafeAreaView>
+      </Modal>
+    </View>
   );
 }
-export const homeStickerItems = (stickers: readonly StickerId[]): ItemId[] =>
-  stickers.map((id) => `sticker:${id}` as const);
 const styles = StyleSheet.create({
-  page: { flex: 1, backgroundColor: "#F9F4E5", paddingHorizontal: 12, gap: 8 },
-  header: { flexDirection: "row", alignItems: "center", gap: 14, paddingTop: 8 },
-  eyebrow: { fontSize: 10, letterSpacing: 2, fontWeight: "800", color: "#627C6D" },
-  title: { fontSize: 28, fontWeight: "800", color: ink },
-  subtitle: { fontSize: 18, fontWeight: "800", color: ink },
-  row: { flexDirection: "row", gap: 6, alignItems: "center" },
-  wrap: { flexDirection: "row", gap: 6, flexWrap: "wrap", justifyContent: "center" },
-  body: { flex: 1, gap: 10, minHeight: 0 },
+  page: { flex: 1, backgroundColor: "#C8DDD2", overflow: "hidden" },
+  chrome: { position: "absolute", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   button: {
-    minHeight: 48,
     minWidth: 48,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 17,
-    backgroundColor: "#E7E9D9",
-    borderWidth: 1,
-    borderColor: "#CCD7C3",
+    minHeight: 48,
+    paddingHorizontal: 10,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#FFF8E9EE",
+    gap: 2,
   },
-  chosen: { backgroundColor: "#376D62", borderColor: "#376D62" },
-  buttonText: { color: ink, fontSize: 14, fontWeight: "800" },
-  message: { fontSize: 14, color: ink, textAlign: "center", paddingVertical: 5, maxWidth: 550, minHeight: 30 },
-  meta: { fontSize: 11, color: "#5F7569", textAlign: "center", lineHeight: 16 },
-  session: { fontSize: 10, color: "#6A7C6F", textAlign: "center", paddingVertical: 4 },
-  inventory: {
-    flex: 1,
-    minHeight: 120,
-    backgroundColor: "#FFFBEF",
-    borderWidth: 1,
-    borderColor: "#D9DECC",
-    padding: 8,
-    borderRadius: 22,
-    gap: 8,
-    marginBottom: 8,
+  label: { fontSize: 12, fontWeight: "800", color: ink },
+  chosen: { backgroundColor: "#B4DCC7", borderWidth: 1, borderColor: "#4B8271" },
+  segment: { flexDirection: "row", gap: 3, padding: 3, borderRadius: 21, backgroundColor: "#FFF8E9CC" },
+  history: { position: "absolute", flexDirection: "row", gap: 6 },
+  toolbar: {
+    position: "absolute",
+    flexDirection: "row",
+    padding: 4,
+    gap: 4,
+    borderRadius: 20,
+    backgroundColor: "#FFFAEE",
+    boxShadow: "0 3px 12px #254C4425",
+    zIndex: 600,
   },
-  tiles: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8, paddingBottom: 12 },
-  tile: {
-    width: 126,
-    minHeight: 135,
-    padding: 6,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: "#E8E3D1",
-    backgroundColor: "#FAF5E6",
-    alignItems: "center",
+  hint: {
+    position: "absolute",
+    alignSelf: "center",
+    maxWidth: "85%",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: "#FFF8E9F0",
   },
-  tileSelected: { borderWidth: 2, borderColor: "#347566" },
-  tileName: { fontSize: 12, fontWeight: "800", color: ink, textAlign: "center" },
+  hintText: { fontSize: 13, color: ink, textAlign: "center" },
+  drawer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#F9EFD9F5",
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+  },
+  tabs: { height: 48, flexDirection: "row", justifyContent: "center", gap: 4 },
+  strip: { gap: 10, paddingHorizontal: 14, paddingTop: 3, paddingBottom: 5 },
+  thumbLabel: { fontSize: 10, color: ink, fontWeight: "700", maxWidth: 80, paddingHorizontal: 3 },
   swatch: {
-    width: 126,
-    minHeight: 70,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: "#D3C9AA",
+    width: 84,
+    height: 86,
+    borderRadius: 15,
+    alignItems: "center",
     justifyContent: "center",
-    padding: 8,
+    borderWidth: 1,
+    borderColor: "#7B947D",
   },
+  meta: { fontSize: 11, color: ink },
+  menu: { position: "absolute", padding: 12, gap: 8, borderRadius: 16, backgroundColor: "#FFF8E9", zIndex: 700 },
   scrim: {
     position: "absolute",
-    inset: 0,
-    backgroundColor: "#1C403E88",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#234B4670",
     alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    zIndex: 1000,
   },
-  dialog: { maxWidth: 420, backgroundColor: "#FFFAE9", padding: 24, borderRadius: 28, gap: 12 },
+  dialog: { maxWidth: 310, padding: 24, borderRadius: 24, backgroundColor: "#FFF8E9", gap: 12 },
+  dialogTitle: { fontSize: 22, fontWeight: "800", color: ink, textAlign: "center" },
 });
