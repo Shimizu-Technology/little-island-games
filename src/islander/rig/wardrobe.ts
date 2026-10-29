@@ -12,5 +12,5 @@ export const wardrobe: readonly WardrobeItem[] = [
 ];
 export function anchorsFor(pose: Pose): Readonly<Record<Anchor, Point>> {
   const j = pose.joints;
-  return { ...j, headTop: [j.head[0], j.head[1] - (pose.compact ? 12 : 17)], face: j.head, neck: j.neck, torso: [(j.leftShoulder[0] + j.rightShoulder[0]) / 2, (j.leftShoulder[1] + j.leftHip[1]) / 2], hips: [(j.leftHip[0] + j.rightHip[0]) / 2, j.leftHip[1]], feet: [(j.leftFoot[0] + j.rightFoot[0]) / 2, Math.max(j.leftFoot[1], j.rightFoot[1])], hand: j.rightHand };
+  return { ...j, headTop: [j.head[0], j.head[1] - (pose.compact ? 12 : 23)], face: j.head, neck: j.neck, torso: [(j.leftShoulder[0] + j.rightShoulder[0]) / 2, (j.leftShoulder[1] + j.leftHip[1]) / 2], hips: [(j.leftHip[0] + j.rightHip[0]) / 2, j.leftHip[1]], feet: [(j.leftFoot[0] + j.rightFoot[0]) / 2, Math.max(j.leftFoot[1], j.rightFoot[1])], hand: j.rightHand };
 }

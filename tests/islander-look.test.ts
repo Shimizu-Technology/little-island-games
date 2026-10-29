@@ -26,7 +26,7 @@ describe('Islander skeleton and wardrobe contracts', () => {
   it('keeps every joint in bounds and each limb bone exactly constant in all poses', () => {
     for (const pose of [...frontPoses, ...backPoses]) {
       for (const p of Object.values(pose.joints)) { expect(p[0], pose.id).toBeGreaterThanOrEqual(0); expect(p[0], pose.id).toBeLessThanOrEqual(80); expect(p[1], pose.id).toBeGreaterThanOrEqual(0); expect(p[1], pose.id).toBeLessThanOrEqual(132); }
-      for (const side of ['left', 'right'] as const) for (const [a,b,length] of [['Shoulder','Elbow',18],['Elbow','Hand',18],['Hip','Knee',22],['Knee','Foot',22]] as const) { const p=pose.joints[`${side}${a}`], q=pose.joints[`${side}${b}`]; expect(Math.hypot(p[0]-q[0],p[1]-q[1]), `${pose.id} ${side}${a}`).toBeCloseTo(length,7); }
+      for (const side of ['left', 'right'] as const) for (const [a,b,length] of [['Shoulder','Elbow',16],['Elbow','Hand',16],['Hip','Knee',18],['Knee','Foot',18]] as const) { const p=pose.joints[`${side}${a}`], q=pose.joints[`${side}${b}`]; expect(Math.hypot(p[0]-q[0],p[1]-q[1]), `${pose.id} ${side}${a}`).toBeCloseTo(length,7); }
     }
   });
   it('keeps gestures inside the frame and places the writing hand on the paper', () => {
@@ -39,6 +39,22 @@ describe('Islander skeleton and wardrobe contracts', () => {
     expect(writing[0]).toBeGreaterThan(44); expect(writing[0]).toBeLessThan(52);
     expect(writing[1]).toBeGreaterThan(84); expect(writing[1]).toBeLessThan(90);
     expect(new Set(frontPoses.filter(p => p.id.startsWith('dance-')).map(p => JSON.stringify(p.joints))).size).toBe(4);
+  });
+  it('keeps running feet under the hips and alternates the arm/leg swing', () => {
+    for (const frame of runCycleFrames) {
+      const j = backPose(frame).joints;
+      for (const side of ['left', 'right'] as const) {
+        expect(Math.abs(j[`${side}Foot`][0] - j[`${side}Hip`][0])).toBeLessThanOrEqual(1.51);
+        expect(j[`${side}Knee`][0]).toBeGreaterThan(23);
+        expect(j[`${side}Knee`][0]).toBeLessThan(57);
+        expect(Math.hypot(j[`${side}Hand`][0]-j[`${side}Hip`][0],j[`${side}Hand`][1]-j[`${side}Hip`][1])).toBeGreaterThan(12);
+      }
+    }
+    const a=backPose(0).joints, b=backPose(4).joints;
+    expect(a.leftFoot[1]).toBeGreaterThan(a.rightFoot[1]);
+    expect(a.leftHand[1]).toBeLessThan(a.rightHand[1]);
+    expect(b.leftFoot[1]).toBeLessThan(b.rightFoot[1]);
+    expect(b.leftHand[1]).toBeGreaterThan(b.rightHand[1]);
   });
   it('preserves the Run frame index contract and ground contact', () => {
     expect(runCycleFrames).toEqual([0,16,1,17,2,18,3,19,4,20,5,21,6,22,7,23]);

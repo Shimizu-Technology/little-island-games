@@ -79,6 +79,18 @@ describe('Islander authored art',()=>{
   expect(metrics.maxPaths).toBeLessThanOrEqual(48);
   expect(metrics.maxPrimitives).toBeLessThanOrEqual(85);
  }, 30000);
+ it('uses four continuous limb contours and two unlined mitten silhouettes',()=>{
+  for(const pose of [...frontPoses,...backPoses]) {
+   const markup=renderToStaticMarkup(<Islander view={pose.view} pose={pose}/>);
+   expect([...markup.matchAll(/data-limb=/g)]).toHaveLength(4);
+   expect([...markup.matchAll(/data-mitten=/g)]).toHaveLength(2);
+   for(const tag of [...markup.matchAll(/<path[^>]*data-mitten=[^>]*>/g)].map(m=>m[0])) {
+    const d=attr(tag,'d')!;
+    expect(d.match(/M/g)).toHaveLength(1);
+    expect(d.endsWith('Z')).toBe(true);
+   }
+  }
+ });
  it('defaults each view to its own idle frame', () => {
   expect(renderToStaticMarkup(<Islander/>)).toBe(renderToStaticMarkup(<Islander view="front" pose="idle"/>));
   expect(renderToStaticMarkup(<Islander view="back"/>)).toBe(renderToStaticMarkup(<Islander view="back" pose={0}/>));

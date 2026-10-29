@@ -10,7 +10,7 @@ import { Islander, IslanderDesk, defaultLook } from '../islander';
 
 Omitting `pose` chooses front idle or rear frame 0.
 
-`size` is the SVG height in logical pixels; width is `size * 80 / 132`. Every frame shares the `0 0 80 132` viewBox. The standing character is about 3.4 heads tall. Limbs use closed rounded bone shapes, 18-unit upper/lower arms and 22-unit thighs/shins. Front poses use forward kinematics; rear poses solve the same bone lengths against authored Run contact targets. Compact roll poses project the torso forward and retain fixed limb lengths. Shoes contact y=128; SVG silhouette is not a collision hull.
+`size` is the SVG height in logical pixels; width is `size * 80 / 132`. Every frame shares the `0 0 80 132` viewBox. The standing character is about 2.8 heads tall (46-unit head diameter). Each limb uses one continuous tapered contour through its joints, with no elbow/knee discs; upper/lower arms are 16 units and thighs/shins are 18 units. Front poses use forward kinematics; rear poses solve the same bone lengths against authored Run contact targets. Compact roll poses project the torso forward and retain fixed limb lengths. The rear head overlaps the shoulders to suggest a forward lean. Running feet remain under the hips, with alternating sole lift, opposite arm swing and pose-dependent arm occlusion. Shoes contact y=128; SVG silhouette is not a collision hull.
 
 The `IslanderLook` module is platform-independent. It exports stable enumerated choices, strict `isValidLook` and field-wise `normalizeLook`. Normalization creates a fresh safe look; storage/recovery code must preserve the original before normalizing imported data. There is no persistence/versioned save namespace in this phase.
 
