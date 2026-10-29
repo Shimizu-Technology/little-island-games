@@ -7,11 +7,11 @@ import Animated, {
   cancelAnimation,
   Easing,
 } from "react-native-reanimated";
-import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, Ellipse, G, Path, Rect, Defs, Pattern, Text as SvgText } from "react-native-svg";
 import type { BadgeId } from "../catalog";
 import type { HomeState } from "../model";
-export const wallColors = { cream: "#F5E6C8", lagoon: "#C5DED3", night: "#A5ADC9", peach: "#F1CEC0" };
-export const floorColors = { sand: "#EBD7B2", honey: "#DDAE7D", seafoam: "#AACDC1", rose: "#DCB9AA" };
+export const wallColors = { cream: "#F5E6C8", lagoon: "#C5DED3", night: "#A5ADC9", peach: "#F1CEC0", "math-lab": "#B6CABE", library: "#E7CFAD", "night-sky": "#B5BDD3", "arcade-neon": "#C9C5DA" };
+export const floorColors = { sand: "#EBD7B2", honey: "#DDAE7D", seafoam: "#AACDC1", rose: "#DCB9AA", "island-breeze": "#D9C79B", "game-room": "#BCCBC0" };
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 function Beach({ x, y, scale = 1, reduced }: { x: number; y: number; scale?: number; reduced: boolean }) {
   const shimmer = useSharedValue(0.35);
@@ -52,17 +52,25 @@ export function RoomArt({
 }) {
   return (
     <Svg width="100%" height="100%" viewBox="0 0 800 560" accessible={false}>
+      <Defs>
+        <Pattern id="math-lab" patternUnits="userSpaceOnUse" width={48} height={48}><Rect width={48} height={48} fill="#47655B"/><Path d="M0 0H48M0 0V48M24 0V48M0 24H48" stroke="#86A696" strokeWidth={.7}/><SvgText x={7} y={17} fontSize={9} fill="#CEDBC4">2</SvgText><SvgText x={31} y={40} fontSize={9} fill="#CEDBC4">5</SvgText></Pattern>
+        <Pattern id="library" patternUnits="userSpaceOnUse" width={64} height={48}><Rect width={64} height={48} fill="#E7CFAD"/><Path d="M0 43H64" stroke="#A68164" strokeWidth={5}/>{[0,1,2,3,4].map(i=><G key={i}><Rect x={4+i*12} y={9+i%2*6} width={9} height={32-i%2*6} rx={1} fill={['#79516F','#6B9692','#DCA578'][i%3]}/><Path d={`M${6+i*12} 33h5`} stroke="#F5E6C8"/></G>)}</Pattern>
+        <Pattern id="night-sky" patternUnits="userSpaceOnUse" width={128} height={96}><Rect width={128} height={96} fill="#414C70"/><Path d="M20 15v8m-4-4h8M90 63v8m-4-4h8M55 47v5m-2-2h4" stroke="#F5D99A" strokeWidth={1.5}/><Path d="M99 13Q80 30 104 36Q81 42 80 25Q80 12 99 13Z" fill="#FFF0BC"/></Pattern>
+        <Pattern id="arcade-neon" patternUnits="userSpaceOnUse" width={104} height={88}><Rect width={104} height={88} fill="#565679"/><Path d="M12 18h24v17H12ZM68 51l13 20H55Z" fill="none" stroke="#A0CEC6" strokeWidth={3}/><Circle cx={72} cy={19} r={9} fill="none" stroke="#E3AFB8" strokeWidth={3}/><Path d="M15 64h18m-9-9v18" stroke="#E8C990" strokeWidth={3}/></Pattern>
+        <Pattern id="island-breeze" patternUnits="userSpaceOnUse" width={16} height={16}><Rect width={16} height={16} fill="#D9C79B"/><Path d="M0 2h16M0 6h16M2 8v8M6 8v8M10 0v8M14 0v8M8 10h8M8 14h8" stroke="#AC956D" strokeWidth={1.5}/></Pattern>
+        <Pattern id="game-room" patternUnits="userSpaceOnUse" width={96} height={96}><Rect width={96} height={96} fill="#E9DAB8"/><Path d="M0 0H48V48H0ZM48 48H96V96H48Z" fill="#81968B"/></Pattern>
+      </Defs>
       <Ellipse cx={402} cy={528} rx={368} ry={22} fill="#D6D7BB" opacity={0.5} />
       <Path
         d="M34 82L145 28L758 71V330L145 291L34 374Z"
-        fill={wallColors[theme.wallpaper]}
+        fill={["math-lab", "library", "night-sky", "arcade-neon"].includes(theme.wallpaper) ? `url(#${theme.wallpaper})` : wallColors[theme.wallpaper]}
         stroke="#47655B"
         strokeWidth={3}
       />
       <Path d="M34 82L145 28V291L34 374Z" fill="#D0C9AB" opacity={0.55} />
       <Path
         d="M34 374L145 291L758 330L779 508L162 535Z"
-        fill={floorColors[theme.floor]}
+        fill={["island-breeze", "game-room"].includes(theme.floor) ? `url(#${theme.floor})` : floorColors[theme.floor]}
         stroke="#47655B"
         strokeWidth={3}
       />

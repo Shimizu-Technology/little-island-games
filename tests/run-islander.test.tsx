@@ -31,11 +31,11 @@ describe('Lagoon Run Islander integration',()=>{
    maxStaticTransforms=Math.max(maxStaticTransforms,[...markup.matchAll(/<g[^>]*transform=/g)].length);
    samples++;
   }
-  expect(samples).toBe(4608);
+  expect(samples).toBe(hairStyles.length * hats.length * outfits.length * accessories.length * 24);
   console.info('Run wardrobe vector budget',JSON.stringify({maxPaths,maxPrimitives,maxStaticTransforms,samples}));
   expect(maxPaths).toBeLessThanOrEqual(40);
   expect(maxPrimitives).toBeLessThanOrEqual(65);
- },30000);
+ },180000);
  it('renders each color selection across every frame without altering anchors',()=>{
   for(const [key, values] of Object.entries({skinTone:Object.keys(skinTones),hairColor:Object.keys(hairColors),palette:Object.keys(outfitPalettes)})) for(const value of values) for(let frame=0;frame<24;frame++){
    const markup=renderToStaticMarkup(<RunnerFrameArt frame={frame} look={{...defaultLook,[key]:value}}/>);

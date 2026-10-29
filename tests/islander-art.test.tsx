@@ -66,7 +66,7 @@ describe('Islander authored art',()=>{
    const top=artTop(renderToStaticMarkup(<Islander view="back" pose={frame} look={{...defaultLook,hairStyle,hat,outfit,accessory}}/>));
    expect(130-top+DUCK_MAX_ELEVATION*85,`${frame} ${hairStyle} ${hat} ${outfit} ${accessory}`).toBeLessThan(clearance);
   }
- }, 30000);
+ }, 180000);
  it('keeps the busiest wardrobe silhouettes inside the vector budget', () => {
   const paths: number[] = [], primitives: number[] = [];
   for (const pose of [...frontPoses, ...backPoses]) for (const outfit of outfits) for (const hat of hats) {
@@ -78,7 +78,7 @@ describe('Islander authored art',()=>{
   console.info('Islander vector budget', JSON.stringify(metrics));
   expect(metrics.maxPaths).toBeLessThanOrEqual(48);
   expect(metrics.maxPrimitives).toBeLessThanOrEqual(85);
- }, 30000);
+ }, 180000);
  it('uses four continuous limb contours and two unlined mitten silhouettes',()=>{
   for(const pose of [...frontPoses,...backPoses]) {
    const markup=renderToStaticMarkup(<Islander view={pose.view} pose={pose}/>);

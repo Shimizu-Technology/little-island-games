@@ -54,7 +54,16 @@ export function itemSpec(id: ItemId): ItemSpec {
     return { name: id.slice(8).replaceAll("-", " "), footprint: [1, 1], layer: "wall", rotations: [0], mirror: false };
   return catalog[id as FurnitureId];
 }
-export const wallThemes = ["cream", "lagoon", "night", "peach"] as const;
-export const floorThemes = ["sand", "honey", "seafoam", "rose"] as const;
+export const wallThemes = ["cream", "lagoon", "night", "peach", "math-lab", "library", "night-sky", "arcade-neon"] as const;
+export const floorThemes = ["sand", "honey", "seafoam", "rose", "island-breeze", "game-room"] as const;
 export const badgeIds = ["math", "reading", "science", "chamoru", "arcade", "classic"] as const;
 export type BadgeId = (typeof badgeIds)[number];
+
+export const themeRewards = [
+  { id: 'math-lab', slot: 'wallpaper', name: 'Math Lab', earned: true, track: 'math', badge: 'math-4' },
+  { id: 'library', slot: 'wallpaper', name: 'Library', earned: true, track: 'reading', badge: 'reading-4' },
+  { id: 'night-sky', slot: 'wallpaper', name: 'Night Sky', earned: true, track: 'science', badge: 'science-4' },
+  { id: 'arcade-neon', slot: 'wallpaper', name: 'Arcade Neon', earned: true, track: 'arcade', badge: 'arcade-4' },
+  { id: 'island-breeze', slot: 'floor', name: 'Island Breeze', earned: true, track: 'chamoru', badge: 'chamoru-4' },
+  { id: 'game-room', slot: 'floor', name: 'Game Room', earned: true, track: 'classic', badge: 'classic-4' },
+] as const;
