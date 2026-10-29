@@ -90,3 +90,28 @@ No further delegation, PR, integration-branch push, simulator or release build b
 | Icons | One GameIcon system across Home, all shelves and the Arcade lobby, plus the app mark. Each icon shows its game |
 | Review | Round 1: three material, one minor. Round 2: one material, one minor (Cargo tap token, accessibility). All fixed |
 | Gate | 1,165 tests, typecheck, lint, export; Doctor 21/21. Native Release simulator: Cargo taps, Run v4 to Game over, Home and Arcade icons |
+
+## 1.9.3 (18): Leon's 1.9.2 feedback
+
+Leon found 1.9.2 much better. Remaining problems:
+- In Lagoon Run you couldn't tell whether the ramp goes up or down.
+- Rolling under a fence looked like going through it.
+- The art and animation weren't clean.
+- Poko the Canoe Cargo captain looked wrong.
+- A purple shape flashed across Flight on each flap.
+
+He asked for an audit of everything. Three Codex workers took separate slices, followed by two Lagoon Run rounds after lead native QA. Worker evidence is in `little-island-games-artifacts/island-arcade/{run-v5,flight-mascots,art-audit}/`.
+
+| Item | Root cause and fix |
+|---|---|
+| Rolling "through" the fence | The runner was mounted above every obstacle, so nothing could ever cover it. Runner, hazards and collectibles now share one parent, painter-ordered by interpolated contact depth. Duck entry and recovery poses stay under the beam clearance through the whole safe window, and every duck hazard is tested frame by frame |
+| Ramp read as a ladder | Separate translucent incline quads and no side faces. Now one opaque top contour with world-depth plank spacing, dark side faces forming a wedge, a teal up arrow, and a matching fascia and posts on boardwalks. Feet follow the shared ramp profile |
+| Canoes like tombstones | They were bow-on upright sprites. Hulls now lie along the lane with side, gunwale, cargo and outrigger. Collision covers the drawn length (`CANOE_DEPTH`) |
+| Kite lifted the runner off screen | A compressed visual height mapping, shared by runner, effects and airborne shells |
+| Runner animation | Rounded limbs, 16-pose run cycle, crouched takeoff, a low tucked roll, power-up states on the runner, teaching cue moved into the sky |
+| Flight purple flash | The near wing swept across the face in a 120 ms double-reversing cycle, using fragile zero-size wrappers. Now 96×96 shoulder-centred wing frames, a single 240 ms downstroke and recovery, and a shorter membrane. On native Release frames the wing stays attached with no stray shape |
+| Poko and mascots | Poko redrawn with a short hooked beak and a navy anchor cap. All nine mascots reviewed, with outfits refitted |
+| Other seven games (audit) | Reef drag anchors at touch-down, a start footer that is always visible, Cargo ghost and result stats (no "0 crates freed"), the result layout, Palm fronds, Rail snake head, and Crab burrows, shadows and wakes |
+| Review | Independent review: three minor findings (painter order at contact, offset-collectible ordering, duck transition through the beam), fixed in round 3 with tests |
+| Gate | 1,198 tests, typecheck, lint, export; Doctor 21/21. Per-frame Run pose and interpolation cost measured in Node: 0.033 ms (1.9.2), 0.050 ms (1.9.3) |
+| Not verified | Physical 120 Hz smoothness; simulator Budget readings were taken under heavy host load and are not comparable. Real-glass gestures, iPad A12, audio and haptics, VoiceOver, family acceptance |
