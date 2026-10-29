@@ -1,7 +1,7 @@
 import type { RunState } from "../lagoon-run/engine";
 import { SLIDE_SECONDS } from "../lagoon-run/engine";
-/** Eight authored poses at 16 fps = two full strides/s, not eight strides/s. */
-export const RUN_POSES = 16;
+/** Sixteen running poses at 16 poses/s (eight keys plus in-betweens), and eight action poses. */
+export const RUN_POSES = 24, RUN_EXTRA = 243;
 export function runnerFrame(s: RunState, reduced = false) {
   "worklet";
   if (s.status === "cleared") return 15;
@@ -10,7 +10,8 @@ export function runnerFrame(s: RunState, reduced = false) {
   if (s.duck > 0) { const t = 1 - s.duck / SLIDE_SECONDS; return t < .18 ? 11 : t < .82 ? 12 : 13; }
   if (s.landing > 0) return 10;
   if (s.jump > 0) { const t = 1 - s.jump / s.jumpDuration; return t < .2 ? 8 : t < .78 ? 9 : 10; }
-  return reduced ? 0 : Math.floor(s.time * 16) % 8;
+  const tick=Math.floor(s.time*16)%16;
+  return reduced?0:tick%2?16+Math.floor(tick/2):Math.floor(tick/2);
 }
 export type Point = readonly [number, number];
 export type RunnerDrawing = { bob: number; knee: Point[]; foot: Point[]; elbow: Point[]; hand: Point[] };

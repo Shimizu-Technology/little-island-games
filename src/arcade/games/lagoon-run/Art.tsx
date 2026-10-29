@@ -3,22 +3,39 @@ import { View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import Animated, { useAnimatedProps, type SharedValue } from 'react-native-reanimated';
 import type { SpritePose } from '../../poses';
-import { Hazard } from '../scrolling/Art';
 import { HAZARDS, POWER_LABELS, POWER_SECONDS, type HazardKind, type PowerKind, type Surface } from './course';
 const AnimatedPath = Animated.createAnimatedComponent(Path);
+const AnimatedGroup=Animated.createAnimatedComponent(G);
+function Coconut({poses,index=0}:{poses?:SharedValue<SpritePose[]>;index?:number}) {
+  const rotation=useAnimatedProps(()=>{const a=poses?.value[index]?.angle??0,c=Math.cos(a),s=Math.sin(a);return {opacity:1,matrix:[c,s,-s,c,49-49*c+72*s,72-49*s-72*c]};});
+  return <AnimatedGroup animatedProps={rotation}><Circle cx={49} cy={72} r={23} fill="#AE7950"/><Path d="M34 59Q49 44 63 61" stroke="#E4BA7D" strokeWidth={5} fill="none"/><Path d="M38 85Q35 69 48 55" stroke="#815743" fill="none"/>{[43,51,47].map((x,i)=><Circle key={i} cx={x} cy={66+i*6} r={2} fill="#493C37" strokeWidth={0}/>)}</AnimatedGroup>;
+}
 const ink='#3E424F';
-export const RunHazard = memo(function RunHazard({kind,size=72}:{kind:string;size?:number}) {
-  if (['coconut','crab','frond','line'].includes(kind)) return <Hazard kind={kind} size={size} height={size*(HAZARDS[kind as HazardKind]==='jump'?1:1.8)}/>;
-  const canoe=kind==='canoe'||kind==='moving-canoe', high=kind==='net'||kind==='banner';
-  return <Svg width={size} height={size*(HAZARDS[kind as HazardKind]==='jump'?1:1.8)} viewBox="0 0 100 100" preserveAspectRatio="none" accessible={false}>
-    <Ellipse cx={50} cy={90} rx={43} ry={6} fill={ink} opacity={.18}/>
-    <G stroke={ink} strokeWidth={3.5} strokeLinejoin="round">
-      {kind==='log' ? <><Path d="M14 52L79 41L88 79L23 88Z" fill="#AE7850"/><Ellipse cx={22} cy={70} rx={15} ry={19} fill="#E9BE85"/><Ellipse cx={22} cy={70} rx={7} ry={11} fill="none" stroke="#A46B49"/><Path d="M38 54L74 48M41 77L80 70" fill="none" stroke="#E3AC70"/></> :
-      kind==='crate' ? <><Path d="M16 42L71 30L87 44V85L31 94L16 79Z" fill="#BD8258"/><Path d="M31 52L87 44M31 52V94M16 42L31 52M38 57L79 82M79 52L39 88" fill="none" stroke="#FFE0A0" strokeWidth={5}/><Circle cx={63} cy={40} r={12} fill="#A6B66B"/></> :
-      kind==='cooler' ? <><Path d="M13 48L76 39L89 52V84L27 94L13 81Z" fill="#73C4CB"/><Path d="M13 48L76 39L89 52L27 64Z" fill="#FFF3CD"/><Path d="M27 64V94M45 65V76H65V62" fill="none"/><Rect x={46} y={76} width={17} height={9} rx={3} fill="#FFC878"/></> :
-      high ? <><Path d="M7 91V10M93 91V10" stroke="#966B4D" strokeWidth={7}/><Path d="M7 13Q50 20 93 13V51Q51 58 7 51Z" fill={kind==='net'?'#A6D4C2':'#EF9E85'}/>{kind==='net'?<G stroke="#477668" strokeWidth={2}>{[20,37,54,71,88].map(x=><Path key={x} d={`M${x} 17l-15 36M${x-12} 17l20 37`}/>)}</G>:<Path d="M17 21L30 43L43 22L56 43L70 22L84 42" stroke="#FFE4A0" strokeWidth={6} fill="none"/>}<Path d="M25 77H75M29 77L38 69M29 77L38 85" stroke="#FFF0C3" strokeWidth={4}/></> :
-      canoe ? <><Path d="M20 83L25 25Q48-2 70 25L78 83Q50 99 20 83Z" fill={kind==='moving-canoe'?'#F3B05D':'#D88D67'}/><Path d="M34 74V27Q49 12 60 27V75Z" fill="#6B6C68"/><Path d="M22 43H78M24 69H77M77 40L94 46V86L77 80" fill="none" stroke="#FFE4A3" strokeWidth={5}/>{kind==='moving-canoe'&&<Path d="M7 92L17 87M86 96L94 91M6 76L14 72" stroke="#D9FFF1" strokeWidth={4}/>}</> :
-      kind==='rock' ? <><Path d="M5 82L15 41L39 20L72 27L94 59L88 87L46 95Z" fill="#7D98A0"/><Path d="M15 41L48 50L39 20M48 50L72 27M48 50L46 95M48 50L88 87" fill="none" stroke="#B4CAC6"/></> : <><Path d="M10 88V26L50 6L91 26V88Z" fill="#CA9B70"/><Path d="M5 29L50 5L95 29" stroke="#718F67" strokeWidth={12}/><Path d="M14 46H87M14 64H87M14 81H87" stroke="#A16E58"/><Path d="M31 25V89M72 24V89" stroke="#FFE0A2" strokeWidth={7}/></>}
+/** Solids share a top-left light, ground contact and a 3-unit outline. */
+export const RunHazard = memo(function RunHazard({kind,size=72,poses,index}:{kind:string;size?:number;poses?:SharedValue<SpritePose[]>;index?:number}) {
+  const mode=HAZARDS[kind as HazardKind],duck=mode==='duck',low=mode==='jump',canoe=kind==='canoe'||kind==='moving-canoe';
+  return <Svg width={duck?112:size} height={size*(low?1:1.8)} preserveAspectRatio="none" viewBox={`0 0 100 ${low?100:180}`} accessible={false}>
+    <Ellipse cx={50} cy={low?94:175} rx={46} ry={low?5:5} fill="#344B50" opacity={.22}/>
+    <G stroke={ink} strokeWidth={3} strokeLinejoin="round" strokeLinecap="round">
+      {duck ? <>
+        <Path d="M5 177V26L13 21V172M87 172V21L95 26V177" fill="#B48358"/>
+        <Path d="M4 27L12 20H88L96 27V92L88 101H12L4 92Z" fill={kind==='frond'?'#568B66':kind==='banner'?'#DC8872':'#80B5A2'}/>
+        <Path d="M4 27H96M12 101H88" stroke="#FFE2AA" strokeWidth={5}/>
+        {kind==='net'?<G stroke="#437767" strokeWidth={1.8}>{[14,32,50,68,86].map(x=><Path key={x} d={`M${x} 34l-10 58M${x} 34l10 58`}/>)}<Path d="M8 53H92M8 75H92"/></G>:kind==='frond'?<G fill="#92BE78">{[12,30,48,66,84].map(x=><Path key={x} d={`M${x} 32q15 17 7 58q-16-20-7-58Z`}/>)}</G>:<Path d="M15 37L29 79L43 37L57 79L71 37L85 79" stroke="#FFE8AC" strokeWidth={6} fill="none"/>}
+        <Path d="M8 120V151M92 120V151" stroke="#F0C78B" strokeWidth={2}/>
+      </> : canoe ? <>
+        <Path d="M11 154L34 80Q49 61 63 78L90 151Q78 177 50 177Q23 174 11 154Z" fill={kind==='moving-canoe'?'#E8AE63':'#CE8768'}/>
+        <Path d="M17 147L36 86Q49 74 60 86L82 147Q53 166 17 147Z" fill="#654E4B"/>
+        <Path d="M26 126L37 104H64L76 130L51 142Z" fill="#E1BC7E"/>
+        <Path d="M34 112V55L55 43L72 57V118L51 131Z" fill="#A58C62"/>
+        <Path d="M34 55L51 66L72 57M51 66V131M36 77L69 102M68 74L37 105" stroke="#FFE4A4" fill="none" strokeWidth={4}/>
+        <Path d="M11 154Q50 183 90 151M17 147L36 86M82 147L60 86" stroke="#F8D696" strokeWidth={4} fill="none"/>
+        <Path d="M82 121L96 127V168L84 164M20 127H81" fill="none" stroke="#F8D696" strokeWidth={4}/>
+      </> : kind==='log' ? <><Path d="M13 58L78 43L90 77L23 92Z" fill="#A77250"/><Path d="M15 58L78 43L85 52L22 70Z" fill="#DDA56D"/><Ellipse cx={22} cy={75} rx={15} ry={17} fill="#E9C38B"/><Ellipse cx={22} cy={75} rx={7} ry={10} fill="none" stroke="#AF7D55"/><Path d="M41 70L80 61M45 82L84 73" stroke="#7E5945" fill="none" strokeWidth={2}/></> :
+      kind==='crate'||kind==='cooler' ? <><Path d="M8 58L70 44L92 58V83L29 96L8 80Z" fill={kind==='crate'?'#B88054':'#58A4B7'}/><Path d="M8 58L70 44L92 58L29 72Z" fill={kind==='crate'?'#E7BE7C':'#EAF2CC'}/><Path d="M29 72V96" fill="none"/>{kind==='crate'?<Path d="M36 74L83 86M83 64L36 91" stroke="#F6D699" strokeWidth={4}/>:<Path d="M48 72V82H68V68" stroke="#E7EDCF" strokeWidth={4} fill="none"/>}</> :
+      kind==='coconut' ? <Coconut poses={poses} index={index}/> :
+      kind==='crab' ? <><Path d="M28 77L12 67L5 75M26 84L9 85L4 93M73 77L88 67L95 75M75 84L92 85L97 93" fill="none" stroke="#B96450" strokeWidth={5}/><Ellipse cx={50} cy={78} rx={27} ry={17} fill="#E28E6F"/><Path d="M30 72L19 59L9 64L7 49L18 44L28 55M70 72L81 59L91 64L93 49L82 44L72 55" fill="#F3AC84"/><Path d="M39 64V54M61 64V54" strokeWidth={4}/><Circle cx={39} cy={52} r={4} fill="#FFF0C6"/><Circle cx={61} cy={52} r={4} fill="#FFF0C6"/><Path d="M39 52h1M61 52h1" strokeWidth={3}/><Path d="M41 82Q50 87 59 82" fill="none" strokeWidth={2}/></> :
+      kind==='rock' ? <><Path d="M7 163L14 79L39 47L70 58L92 117L86 172L44 177Z" fill="#78979D"/><Path d="M14 79L45 99L39 47L70 58L45 99Z" fill="#B8CFC6"/><Path d="M45 99L44 177L86 172L92 117Z" fill="#5F7E89"/><Path d="M14 79L45 99L70 58M45 99L44 177" fill="none"/></> : <><Path d="M6 175V47L75 35L94 52V173Z" fill="#A67459"/><Path d="M6 47L75 35L94 52L23 65Z" fill="#D6B37E"/><Path d="M23 65V175M28 90L89 79M28 120L89 109M28 150L89 139" stroke="#DBAE7E" fill="none" strokeWidth={4}/><Path d="M7 45L75 33L95 50" stroke="#759069" strokeWidth={7}/></>}
     </G>
   </Svg>;
 });
@@ -41,17 +58,29 @@ export const Deck = memo(function Deck({poses,index,surface,incline=false}:{pose
     if(!a||!b||!c||!d||a.opacity===0)return {d:'M0 0',opacity:0};
     const middleX=(a.x+b.x)/2,backX=(c.x+d.x)/2;
     const hull=surface==='canoe-roof'?`M${a.x} ${a.y}Q${middleX} ${a.y+18} ${b.x} ${b.y}L${c.x} ${c.y}Q${backX} ${c.y-8} ${d.x} ${d.y}Z`:`M${a.x} ${a.y}L${b.x} ${b.y}L${c.x} ${c.y}L${d.x} ${d.y}Z`;
-    let slats='';for(let i=1;i<(incline?2:6);i++){const t=i/(incline?2:6);slats+=` M${a.x+(d.x-a.x)*t} ${a.y+(d.y-a.y)*t}L${b.x+(c.x-b.x)*t} ${b.y+(c.y-b.y)*t}`;}
-    return {d:hull+slats,opacity:1};
+    return {d:hull,opacity:1};
+  });
+  const planks=useAnimatedProps(()=>{
+    const a=poses.value[index],b=poses.value[index+1],c=poses.value[index+2],d=poses.value[index+3];
+    if(!a||!b||!c||!d||a.opacity===0)return {d:'M0 0',opacity:0};
+    let path='';for(let i=1;i<(incline?3:9);i++){const t=i/(incline?3:9);path+=` M${a.x+(d.x-a.x)*t} ${a.y+(d.y-a.y)*t}L${b.x+(c.x-b.x)*t} ${b.y+(c.y-b.y)*t}`;}
+    if(incline){const x=(a.x+b.x+c.x+d.x)/4,y=(a.y+b.y+c.y+d.y)/4,w=(b.x-a.x)*.18;path+=` M${x-w} ${y+7}L${x} ${y}L${x+w} ${y+7}`;}
+    return {d:path,opacity:1};
+  });
+  const shadow=useAnimatedProps(()=>{
+    const a=poses.value[index],b=poses.value[index+1],c=poses.value[index+2],d=poses.value[index+3];
+    if(!a||!b||!c||!d||a.opacity===0)return {d:'M0 0',opacity:0};
+    return {d:`M${a.x+5} ${a.y+(a.scale??0)+4}L${b.x+10} ${b.y+(b.scale??0)+4}L${c.x+10} ${c.y+(c.scale??0)+4}L${d.x+5} ${d.y+(d.scale??0)+4}Z`,opacity:.18};
   });
   const side=useAnimatedProps(()=>{
     const a=poses.value[index],b=poses.value[index+1],c=poses.value[index+2],d=poses.value[index+3];
     if(!a||!b||!c||!d||a.opacity===0)return {d:'M0 0',opacity:0};
     const lift=a.scale??0,back=d.scale??0;
-    if(incline)return {d:`M${b.x} ${b.y}L${b.x} ${b.y+lift}L${c.x} ${c.y+back}L${c.x} ${c.y}Z`,opacity:1};
-    return {d:`M${a.x} ${a.y}L${a.x} ${a.y+lift}L${b.x} ${b.y+lift}L${c.x} ${c.y+back}L${c.x} ${c.y}L${b.x} ${b.y}Z`,opacity:1};
+    const thickness=5;
+    if(incline)return {d:`M${a.x} ${a.y}L${b.x} ${b.y}L${b.x} ${b.y+Math.max(thickness,lift)}L${c.x} ${c.y+Math.max(thickness,back)}L${c.x} ${c.y}L${b.x} ${b.y}L${a.x} ${a.y+thickness}Z`,opacity:1};
+    return {d:`M${a.x} ${a.y}L${b.x} ${b.y}L${c.x} ${c.y}L${c.x} ${c.y+thickness}L${b.x} ${b.y+thickness}L${a.x} ${a.y+thickness}Z M${a.x+3} ${a.y+thickness}v${Math.max(0,lift-thickness)}h5V${a.y+thickness}Z M${b.x-8} ${b.y+thickness}v${Math.max(0,lift-thickness)}h5V${b.y+thickness}Z M${c.x-5} ${c.y+thickness}v${Math.max(0,back-thickness)}h4V${c.y+thickness}Z`,opacity:1};
   });
-  return <><AnimatedPath animatedProps={side} fill="#8F6655" stroke="#4E5254" strokeWidth={2}/><AnimatedPath animatedProps={top} fill={surface==='canoe-roof'?'#D99768':'#D5B783'} stroke="#725B4F" strokeWidth={3} strokeLinejoin="round"/></>;
+  return <><AnimatedPath animatedProps={shadow} fill="#344B50"/><AnimatedPath animatedProps={side} fill="#86614B" stroke="#4E5254" strokeWidth={1.5}/><AnimatedPath animatedProps={top} fill={surface==='canoe-roof'?'#DEA16D':incline?'#ECCA8A':'#DAB77D'} stroke="#725B4F" strokeWidth={2} strokeLinejoin="round"/><AnimatedPath animatedProps={planks} fill="none" stroke={incline?'#FFF3BE':'#AD8358'} strokeWidth={incline?3:1.5}/></>;
 });
 export function GhostMove({move}:{move:string}) {
   return <Svg width={110} height={60} viewBox="0 0 110 60" accessible={false}><Rect x={1} y={1} width={108} height={58} rx={18} fill="#FFF3D3" stroke={ink} strokeWidth={2}/><Path d="M28 49V27Q28 22 32 22Q36 22 36 27V34L41 33Q46 33 46 38L43 50H31Z" stroke={ink} strokeWidth={2} fill="#E3AE82"/><SvgText x={70} y={30} textAnchor="middle" fontSize={27} fontWeight="900" fill={ink}>{move==='jump'?'↑':move==='duck'?'↓':move==='right'?'→':'←'}</SvgText><SvgText x={70} y={48} textAnchor="middle" fontSize={12} fontWeight="800" fill={ink}>{move==='jump'?'Jump':move==='duck'?'Roll':'Move'}</SvgText></Svg>;

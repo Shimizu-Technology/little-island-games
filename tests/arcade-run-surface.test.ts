@@ -23,14 +23,14 @@ function drawnContact(s: RunState) {
 }
 
 describe('Lagoon Run shared ramp surface', () => {
-  it('keeps support, planted feet and shadow on the drawn incline and flat deck', () => {
+  it('keeps support and planted feet on the incline while the shadow stays on sand', () => {
     for (const length of [.25, .64, .8]) for (const z of [.82, .835, .86, .9, .94, .98, 1, 1.08, 1.2, 1+length, 1+length+.01]) {
       const s = rampState(z, length), height = surfaceHeight(s.rows[0]);
       s.elevation = height;
       const p = runPoses(s), y = drawnContact(s);
       expect(Math.abs(projectTrack(1,1).y-height*85-y), `support z=${z}`).toBeLessThan(2);
       expect(Math.abs(p[0].y+130-y), `feet z=${z}`).toBeLessThan(2);
-      expect(Math.abs(p[50].y+7-y), `shadow z=${z}`).toBeLessThan(2);
+      expect(p[50].y+7, `ground shadow z=${z}`).toBeCloseTo(projectTrack(1,1).y);
     }
   });
   it('follows the drawn ramp through real 60 Hz physics steps and drops after the drawn tail', () => {
@@ -54,7 +54,7 @@ describe('Lagoon Run shared ramp surface', () => {
     }
     expect(shellHeight(rampState(1).rows[0],0)).toBe(.85);
   });
-  it('uses top height for ramp hazards, the approach height for powers, and surface support for airborne shadows', () => {
+  it('uses top height for ramp hazards, the approach height for powers, and ground contact for airborne shadows', () => {
     const s=rampState(1), row=s.rows[0];
     const ground=runPoses(s)[1],groundPoint=projectTrack(0,1);
     expect(ground.y+64.8+64.8*(ground.scale??1)).toBeCloseTo(groundPoint.y);
@@ -64,8 +64,11 @@ describe('Lagoon Run shared ramp surface', () => {
     expect(p[1].y+36+36*(p[1].scale??1)).toBeCloseTo(hazard.y-.85*85);
     expect(rowSafe(s,row)).toBe(false);
     expect(rowSafe({...s,elevation:1.4},row)).toBe(true);
-    const power=projectTrack(1,1.23);
-    expect(p[167].y+22+22*(p[167].scale??1)).toBeCloseTo(power.y-30*power.scale);
+    // The pickup has already passed the camera; hidden slots are canonical.
+    expect(p[167].opacity).toBe(0);
+    const approaching={...s,rows:s.rows.map((r,i)=>i?r:{...r,z:.7})};
+    const pickup=runPoses(approaching)[167],power=projectTrack(1,.93);
+    expect(pickup.y+22+22*(pickup.scale??1)).toBeCloseTo(power.y-30*power.scale);
     const falling={...s,rows:s.rows.map(r=>({...r,surface:'sand' as const})),elevation:.85};
     expect(runPoses(falling)[50].y+7).toBeCloseTo(projectTrack(1,1).y);
   });

@@ -1,22 +1,25 @@
 import { HAZARDS } from "../lagoon-run/course";
 import { HIDDEN_POSE, type SpritePose } from "../../poses";
-import { jumpHeight, runnerHeight, runSupport, shellHeight, obstacleLane, runLearning, type RunState } from "../lagoon-run/engine";
+import { runnerHeight, shellHeight, obstacleLane, runLearning, type RunState } from "../lagoon-run/engine";
 import { RAMP_DEPTH, RAMP_SECTIONS, surfaceProfile, surfaceSpan } from "../lagoon-run/surface";
 import { projectTrack, trackSprite } from "../lagoon-run/camera";
-import { runnerFrame, RUN_POSES } from "./character";
+import { runnerFrame, RUN_POSES, RUN_EXTRA } from "./character";
 import { sceneryPose, groundTexturePose, SCENE_COUNT, SCENE_START, TEXTURE_START, TEXTURE_COUNT } from "./environmentPoses";
-export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, RUN_SLOTS = INCLINE_START + 5 * INCLINE_STRIDE;
+export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA = INCLINE_START + 5 * INCLINE_STRIDE, RUN_SLOTS = RUN_EXTRA + 8;
 export function runPoses(s: RunState, reduced = false): SpritePose[] {
   "worklet";
   const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=runnerHeight(s)*85;
+  // Rank only changes at a row crossing/recycle or the contact plane; native painter
+  // order stays constant during ordinary movement instead of sorting every frame.
+  const depthOrder=(z:number)=>{ "worklet"; let rank=0;for(const row of s.rows)if(row.z<z)rank++;return (z>1?10001:0)+rank; };
   // Root is bottom-centre; poses have their own authored contact/compression, never free limbs.
   p[0]={identity:s.lives.hit,x:contact.x-40,y:contact.y-130-lift,angle:reduced?0:(s.lane-s.poseLane)*.14};
-  for(let i=0;i<RUN_POSES;i++)p[80+i]=i===frame?{x:0,y:0,snap:true}:HIDDEN_POSE;
-  p[50]={x:contact.x-35,y:contact.y-7-runSupport(s)*85,scale:1-jumpHeight(s)*.3};
+  for(let i=0;i<RUN_POSES;i++)p[i<16?80+i:RUN_EXTRA+i-16]=i===frame?{x:0,y:0,snap:true}:HIDDEN_POSE;
+  p[50]={x:contact.x-35,y:contact.y-7,scale:1-Math.min(2.7,runnerHeight(s))*.18,opacity:.8};
   s.rows.forEach((row,i)=>{
     const visible=!learn&&row.z>0&&row.z<1.18;
     // Each obstacle uses its own kind for size, contact height and spin (a row can mix kinds).
-    const hazardPose = (lane: number, kind: typeof row.kind) => { "worklet"; const a=trackSprite(lane,row.z,72,HAZARDS[kind]==="jump"?72:129.6),height=surfaceProfile(row,row.surface==="gap"?RAMP_DEPTH:0,lane); return {identity:row.serial,...a,y:a.y-height*85*a.scale,angle:kind === "coconut" ? s.time*3 : 0}; };
+    const hazardPose = (lane: number, kind: typeof row.kind) => { "worklet"; const a=trackSprite(lane,row.z,HAZARDS[kind]==="duck"?112:72,HAZARDS[kind]==="jump"?72:129.6),height=surfaceProfile(row,row.surface==="gap"?RAMP_DEPTH:0,lane); return {identity:row.serial,...a,frame:depthOrder(row.z),opacity:a.opacity===0?0:.45+.55*Math.min(1,row.z),y:a.y-height*85*a.scale,angle:kind === "coconut" && !reduced ? s.time*3 : 0}; };
     p[1+i*2]=visible?hazardPose(obstacleLane(row,s.time),row.kind):HIDDEN_POSE;
     p[2+i*2]=visible&&row.second>=0?hazardPose(row.second,row.secondKind):HIDDEN_POSE;
     p[75+i]=visible&&row.third?hazardPose(row.shellLane,row.kind):HIDDEN_POSE;
@@ -25,12 +28,12 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
       const a=trackSprite(row.shellLane,z,30,30),h=s.kite>0?2.7:shellHeight(row,c);
       const pull=s.magnet>0?Math.max(0,Math.min(1,(z-.65)/.35)):0;
       if(pull>0){a.x+=(contact.x-15-a.x)*pull;a.y+=(contact.y-70-a.y)*pull;}
-      p[11+i*3+c]=!learn&&!(row.shellTaken&(1<<c))&&z>0&&z<1.18?{identity:row.serial,...a,y:a.y-h*85*a.scale}:HIDDEN_POSE;
+      p[11+i*3+c]=!learn&&!(row.shellTaken&(1<<c))&&z>0&&z<1.18?{identity:row.serial,...a,frame:depthOrder(z),y:a.y-h*85*a.scale}:HIDDEN_POSE;
       if(learn&&!row.passed&&row.z>0&&row.z<1.08)p[60+i*3+c]={identity:row.phase,...trackSprite(c,row.z,64,64)};
       if(!learn&&t>0){const a=projectTrack(row.shellLane,1);p[132+i*3+c]={identity:`${row.phase}-${c}`,x:a.x-24,y:a.y-45-(1-t)*28,scale:reduced?1:1+(1-t)*.55,opacity:t};}
     }
     const power=trackSprite(row.shellLane,row.z+.23,44,44);
-    p[167+i]=!learn&&row.power!=="none"&&!row.powerDone?{identity:row.serial,...power,y:power.y-(30+surfaceProfile(row,-.23)*85)*power.scale}:HIDDEN_POSE;
+    p[167+i]=!learn&&row.power!=="none"&&!row.powerDone?{identity:row.serial,...power,frame:depthOrder(row.z+.23),y:power.y-(30+surfaceProfile(row,-.23)*85)*power.scale}:HIDDEN_POSE;
     if(!learn&&row.surface!=="sand"&&row.z>0&&row.z-row.length<1.18){
       for(let segment=-1;segment<(row.surface==="ramp"?RAMP_SECTIONS:0);segment++){
         const span=surfaceSpan(row,segment),start=segment>=0?INCLINE_START+i*INCLINE_STRIDE+segment*4:147+i*4;
@@ -42,6 +45,8 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
       }
     }
   });
+  p[POWER_AURA]={x:contact.x-56,y:contact.y-144-lift,opacity:s.magnet>0?.65:0,scale:reduced?1:1+Math.sin(s.time*5)*.025};
+  p[POWER_AURA+1]={x:contact.x-43,y:contact.y-20-lift,opacity:s.sandals>0?1:0};
   p[172]={x:contact.x-36,y:contact.y-200-lift,opacity:s.kite>0?1:0};
   p[173]={x:contact.x-48,y:contact.y-134-lift,opacity:s.shield||s.protection>0?.7:0};
   for(let i=0;i<14;i++){const distance=s.travel+Math.floor(i/2)*.17,z=distance%1.18;p[35+i]={identity:Math.floor(distance/1.18),...trackSprite(i%2?1.5:.5,z,4,36)};}
@@ -49,9 +54,11 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   for(let i=0;i<TEXTURE_COUNT;i++)p[TEXTURE_START+i]=groundTexturePose(s.travel,i);
   const next=s.rows.filter(r=>!r.passed).sort((a,b)=>b.z-a.z)[0];
   const move=next?.action==="idle"?4:next?.action==="jump"?1:2;
-  p[57]={x:140+(reduced?0:Math.sin(s.time*4)*5),y:558,opacity:!learn&&next&&next.z>.35&&(next.action!=="idle"||s.lane!==next.shellLane)&&!(s.learned&move)?1:0};
+  p[57]={x:260,y:78,opacity:!learn&&next&&next.z>.35&&(next.action!=="idle"||s.lane!==next.shellLane)&&!(s.learned&move)?1:0};
   const f=s.feedback/.45,scored=s.lastGain>0;
   p[56]={x:contact.x+42,y:396-(1-f)*25,opacity:scored&&s.cue!=="shell"?f:0};
   if(s.cue==="bump"&&!reduced)for(let i=0;i<6;i++){const a=i*Math.PI/3;p[26+i]={x:contact.x+Math.cos(a)*(1-f)*50,y:contact.y-60+Math.sin(a)*(1-f)*50,opacity:f};}
+  // Inactive slots retain one canonical object and never send hidden native transforms.
+  for(let i=0;i<p.length;i++)if(p[i].opacity===0)p[i]=HIDDEN_POSE;
   return p;
 }
