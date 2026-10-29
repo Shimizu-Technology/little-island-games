@@ -58,6 +58,7 @@ export type MysteryPlayer = Point & {
 /** Absent on build-6 saves: those rounds retain their original rules until a fresh round. */
 export type Adventure = {
   edition: 2;
+  balance?: "gentle" | "challenge";
   round: number;
   pranks: number;
   taskData: { garden: number; stars: number; picnic: number; dock: number; rope: number };
@@ -67,8 +68,9 @@ export type Adventure = {
 export const TRICK_GOAL = 3;
 export const STAR_TARGETS = [2, 5, 1];
 export const countBits = (mask: number) => [1, 2, 4].filter((bit) => mask & bit).length;
-export const prankDelay = (solo: boolean) => (solo ? 10 : 25);
-export const openingDelay = (solo: boolean) => (solo ? 8 : 20);
+export const prankDelay = (solo: boolean, gentle = false) => gentle ? 45 : (solo ? 10 : 25);
+export const openingDelay = (solo: boolean, gentle = false) => gentle ? 45 : (solo ? 8 : 20);
+const gentleCrew = (s: MysterySession) => s.solo && s.adventure?.balance === "gentle" && s.players[0].role === "crew";
 export function playerColor(id: string) {
   const known: Record<string, number> = { host: 0, you: 0, mango: 1, pearl: 2, coco: 3 };
   const index =
@@ -147,7 +149,8 @@ export function createMysterySession(
   seed = Date.now() >>> 0,
   soloRole?: Role,
   id = `mystery-${Date.now().toString(36)}-${seed}`,
-  round = 1
+  round = 1,
+  balance?: "gentle" | "challenge"
 ): MysterySession {
   if (seats.length < 3 || seats.length > 8 || new Set(seats.map((p) => p.id)).size !== seats.length)
     throw new Error("Mystery needs 3–8 unique players.");
@@ -175,6 +178,7 @@ export function createMysterySession(
     version: 1,
     adventure: {
       edition: 2,
+      ...(balance ? { balance } : {}),
       round,
       pranks: 0,
       taskData: { garden: 0, stars: 0, picnic: 0, dock: 0, rope: -1 },
@@ -195,7 +199,7 @@ export function createMysterySession(
       out: false,
       role: p.id === mischiefId ? "mischief" : "crew",
       meetings: 2,
-      prankReady: openingDelay(seats.some((p) => p.bot)),
+      prankReady: openingDelay(seats.some((p) => p.bot), balance === "gentle" && seats.some(p => p.bot) && seats[0].id !== mischiefId),
       clues: [],
       ...starts[i],
     })),
@@ -382,7 +386,7 @@ export function applyMysteryIntent(
             : "Pretend task checked. Only crew actions fill the shared jobs."
         );
     } else if (intent.type === "sabotage") {
-      if (p.role !== "mischief" || !close(p, PUMP) || s.sabotage || s.tick < s.sabotageReady) return state;
+      if ((gentleCrew(s) && p.bot) || p.role !== "mischief" || !close(p, PUMP) || s.sabotage || s.tick < s.sabotageReady) return state;
       s.sabotage = { left: 60, progress: 0 };
       if (s.adventure) witnesses(s, p, `${p.name} turned off the water at the pump.`);
       s.sabotageReady = s.tick + 35;
@@ -410,7 +414,7 @@ export function applyMysteryIntent(
         if ((s.adventure.ribbons[target.id] ?? 0) > s.tick) return state;
         s.adventure.ribbons[target.id] = s.tick + (s.solo ? 12 : 40);
         s.adventure.pranks++;
-        p.prankReady = s.tick + prankDelay(s.solo);
+        p.prankReady = s.tick + prankDelay(s.solo, gentleCrew(s));
         witnesses(s, p, `${p.name} tied a ribbon near ${target.name}.`);
         note(
           s,
@@ -853,15 +857,15 @@ export function validMysterySession(v: unknown): v is MysterySession {
   if (s.adventure) {
     const troublemaker = s.players.find((p) => p.role === "mischief")!;
     const { pranks, taskData, ribbons } = s.adventure;
-    const delay = prankDelay(s.solo);
+    const delay = prankDelay(s.solo, gentleCrew(s));
     // A backup cannot manufacture early points, erase the trickster's cooldown,
     // or claim a rope is both connected and still selected for connecting.
     if (
       Object.keys(ribbons).length > pranks ||
       (taskData.rope >= 0 && !!(taskData.dock & (1 << taskData.rope))) ||
-      troublemaker.prankReady < openingDelay(s.solo) + pranks * delay ||
+      troublemaker.prankReady < openingDelay(s.solo, gentleCrew(s)) + pranks * delay ||
       troublemaker.prankReady > s.tick + delay ||
-      (pranks > 0 && s.tick < openingDelay(s.solo) + (pranks - 1) * delay)
+      (pranks > 0 && s.tick < openingDelay(s.solo, gentleCrew(s)) + (pranks - 1) * delay)
     )
       return false;
   }
@@ -1012,7 +1016,8 @@ export function playSoloIntent(state: MysterySession, intent: MysteryIntent): My
 function validAdventure(v: unknown, ids: string[], tick: number): v is Adventure {
   if (
     !object(v) ||
-    Object.keys(v).sort().join(",") !== "edition,moves,pranks,ribbons,round,taskData" ||
+    Object.keys(v).filter(k => k !== "balance").sort().join(",") !== "edition,moves,pranks,ribbons,round,taskData" ||
+    (v.balance !== undefined && !["gentle", "challenge"].includes(v.balance as string)) ||
     v.edition !== 2 ||
     !integer(v.round, 1, 1000) ||
     !integer(v.pranks, 0, TRICK_GOAL) ||

@@ -361,8 +361,9 @@ function Pits({ state: s, width, onMove, locked, hint, speak }: Props) {
 }
 function Canoes({ state: s, width, onMove, locked, hint }: Props) {
   const [own, setOwn] = useState(false),
+    seat = typeof s.outcome === "number" ? s.outcome : s.turn,
     cell = Math.min((width - 26) / 6, 60),
-    marks = s.marks.slice(s.turn * 36, (s.turn + 1) * 36);
+    marks = s.marks.slice(seat * 36, (seat + 1) * 36);
   return (
     <View style={{ alignItems: "center", gap: 10 }}>
       <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
@@ -388,8 +389,8 @@ function Canoes({ state: s, width, onMove, locked, hint }: Props) {
             </View>
             {Array.from({ length: 6 }, (_, c) => {
               const i = r * 6 + c,
-                found = own ? s.board[s.turn * 36 + i] > 0 : marks[i] === 2,
-                visited = own ? s.marks[other(s.turn) * 36 + i] > 0 : marks[i] > 0;
+                found = own ? s.board[seat * 36 + i] > 0 : marks[i] === 2,
+                visited = own ? s.marks[other(seat) * 36 + i] > 0 : marks[i] > 0;
               return (
                 <PressableScale
                   key={c}
@@ -422,7 +423,7 @@ function Canoes({ state: s, width, onMove, locked, hint }: Props) {
           </View>
         ))}
       </View>
-      <Copy style={{ fontSize: 14 }}>{s.scores[s.turn]} of 7 canoe spaces found</Copy>
+      <Copy style={{ fontSize: 14 }}>{s.scores[seat]} of 7 canoe spaces found</Copy>
     </View>
   );
 }

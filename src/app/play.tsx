@@ -81,16 +81,16 @@ function Game({ id }: { id: GameId }) {
   const practice = useRoundPractice(id, s);
   const sound = useSounds(store.save.settings.sound && focused && !practice.pending),
     finished = s ? isFinished(s) : false,
-    wasFinished = useRef(finished);
+    previousRound = useRef({ id: s?.id, epoch: store.epoch, finished });
   const lostWord = s?.game === "word-rescue" && wordStatus(s) === "lost";
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => setActive(state === "active"));
     return () => sub.remove();
   }, []);
   useEffect(() => {
-    if (finished && !wasFinished.current) sound(lostWord ? "tap" : "win");
-    wasFinished.current = finished;
-  }, [finished, sound, lostWord]);
+    if (s?.id === previousRound.current.id && store.epoch === previousRound.current.epoch && finished && !previousRound.current.finished) sound(lostWord ? "tap" : "win");
+    previousRound.current = { id: s?.id, epoch: store.epoch, finished };
+  }, [s?.id, store.epoch, finished, sound, lostWord]);
   const update = store.update;
   const commit = useCallback((next: GameState) => update(id, next, s), [id, s, update]);
   function start() {
@@ -107,6 +107,7 @@ function Game({ id }: { id: GameId }) {
       } else next = createWord(options, category, s?.game === "word-rescue" ? s.seen : []);
     } else if (id === "memory") next = createMemory(options, starter, memoryPack);
     else next = createGame(id, options);
+    if (next.game === "numbers" && s?.game === "numbers" && s.options.difficulty === options.difficulty && s.bestRemaining !== undefined) next = { ...next, bestRemaining: s.bestRemaining };
     if (next.game === "tic-tac-toe" || next.game === "memory" || next.game === "checkers") {
       const family = options.mode === "together";
       const match = newMatch(family ? names : ["You", "Island friend"], alternate);
@@ -155,7 +156,7 @@ function Game({ id }: { id: GameId }) {
       newRound();
       return;
     }
-    const next =
+    let next =
       s.game === "word-rescue"
         ? replayWord(s)!
         : s.game === "tic-tac-toe"
@@ -165,6 +166,7 @@ function Game({ id }: { id: GameId }) {
             : s.game === "checkers"
               ? replayCheckers(s)
               : createGame(id, s.options);
+    if (next.game === "numbers" && s.game === "numbers" && s.bestRemaining !== undefined) next = { ...next, bestRemaining: s.bestRemaining };
     practice.request(() => store.update(id, next, s));
   }
   const boardProps = {
@@ -532,7 +534,7 @@ function Game({ id }: { id: GameId }) {
         {id === "numbers" && (
           <Copy>
             {options.difficulty === "easy"
-              ? "Gentle: one die and numbers 1–6."
+              ? "Gentle: one die and numbers 1–6. Roll again whenever no combination fits."
               : options.difficulty === "medium"
                 ? "Growing: two dice and numbers 1–9."
                 : "Challenge: two dice and numbers 1–12. Plan which totals to save."}{" "}

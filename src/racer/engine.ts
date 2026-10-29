@@ -14,6 +14,7 @@ const HEIGHT = 0.8,
   GRAVITY = 22,
   JUMP = 8.7,
   SPEED = 4.8;
+export type RivalStrength = "easy" | "steady" | "fast";
 export type RaceMode = "practice" | "race";
 export type RaceInput = { direction: -1 | 0 | 1; jump?: boolean; directionTicks?: number };
 export type Runner = {
@@ -36,6 +37,8 @@ export type Runner = {
 };
 export type RaceSession = {
   schema: 1;
+  helper?: boolean;
+  rivalStrength?: RivalStrength;
   /** Absent means frozen original courses. New geometry never reinterprets an old save. */
   edition?: 2;
   game: "racer";
@@ -62,12 +65,14 @@ export function createRaceSession(
   course: CourseId = "training",
   mode: RaceMode = "practice",
   seed = 1,
-  id = `race-${Date.now()}-${Math.floor(Math.random() * 1e7)}`
+  id = `race-${Date.now()}-${Math.floor(Math.random() * 1e7)}`,
+  settings?: { helper: boolean; rivalStrength: RivalStrength }
 ): RaceSession {
   const normalizedSeed = seed >>> 0;
   const names = mode === "race" && course !== "training" ? ["You", "Mango", "Pebble", "Coco"] : ["You"];
   return {
     schema: 1,
+    ...(settings ?? {}),
     edition: 2,
     game: "racer",
     id,
@@ -90,7 +95,7 @@ export function createRaceSession(
       finishTick: null,
       // Every edition-2 opponent is beatable by a clean human run. Variation is
       // physical speed, not a scripted finish or hidden catch-up advantage.
-      speed: i === 0 ? SPEED : 4.05 + ((normalizedSeed + i * 17) % 9) * 0.07,
+      speed: i === 0 ? SPEED : (settings?.rivalStrength === "easy" ? 2.8 : settings?.rivalStrength === "fast" ? 4.4 : 4.05) + ((normalizedSeed + i * 17) % 9) * (settings?.rivalStrength === "fast" ? 0.04 : 0.07),
     })),
   };
 }
@@ -186,7 +191,7 @@ export function raceBotInput(r: Runner, course: Course, tick: number): RaceInput
   });
   return { direction: 1, jump: r.grounded && !!(gapAhead || obstacleAhead) };
 }
-function moveRunner(r: Runner, input: RaceInput, course: Course, tick: number): Runner {
+function moveRunner(r: Runner, input: RaceInput, course: Course, tick: number, helper = false): Runner {
   if (r.finishTick !== null) return r;
   if (r.recovery > 0)
     return {
@@ -242,11 +247,15 @@ function moveRunner(r: Runner, input: RaceInput, course: Course, tick: number): 
     coyote: jumping ? 0 : coyote,
     ...(landed && !r.grounded ? { landedAt: tick } : {}),
   };
-  if (y < -3) return resetRunner(next, course);
+  const recover = () => {
+    const reset = resetRunner(next, course);
+    return helper ? { ...reset, recovery: 12 } : reset;
+  };
+  if (y < -3) return recover();
   for (const o of course.obstacles) {
     const p = obstaclePosition(o, tick);
-    if (Math.abs(x - p.x) < RACER_RADIUS + o.width / 2 && y < o.y + p.height && y + HEIGHT > o.y)
-      return resetRunner(next, course);
+    if (Math.abs(x - p.x) < (RACER_RADIUS + o.width / 2) * (helper ? 0.6 : 1) && y < o.y + p.height * (helper ? 0.55 : 1) && y + HEIGHT > o.y)
+      return recover();
   }
   if (landed) {
     const checkpoint = course.checkpoints.findLastIndex((cx) => x >= cx);
@@ -261,7 +270,7 @@ export function stepRace(session: RaceSession, input: RaceInput): RaceSession {
   const tick = session.tick + 1,
     course = raceCourse(session.course, session.edition ?? 1);
   const runners = session.runners.map((r, i) =>
-    moveRunner(r, i === 0 ? input : raceBotInput(r, course, tick), course, tick)
+    moveRunner(r, i === 0 ? input : raceBotInput(r, course, tick), course, tick, i === 0 && !!session.helper)
   );
   const status = runners[0].finishTick !== null ? "finished" : tick >= RACE_LIMIT_TICKS ? "timedout" : "running";
   return { ...session, tick, runners, status };
@@ -311,6 +320,9 @@ export function validRaceSession(value: unknown): value is RaceSession {
   const s = value as RaceSession;
   if (
     s.schema !== 1 ||
+    (s.helper !== undefined && typeof s.helper !== "boolean") ||
+    (s.rivalStrength !== undefined && !["easy", "steady", "fast"].includes(s.rivalStrength)) ||
+    ((s.helper !== undefined || s.rivalStrength !== undefined) && (s.edition !== 2 || s.helper === undefined || s.rivalStrength === undefined)) ||
     (s.edition !== undefined && s.edition !== 2) ||
     s.game !== "racer" ||
     typeof s.id !== "string" ||
@@ -327,7 +339,7 @@ export function validRaceSession(value: unknown): value is RaceSession {
     !["ready", "running", "paused", "finished", "timedout"].includes(s.status)
   )
     return false;
-  const expected = createRaceSession(s.course, s.mode, s.seed, s.id),
+  const expected = createRaceSession(s.course, s.mode, s.seed, s.id, s.rivalStrength ? { helper: s.helper!, rivalStrength: s.rivalStrength } : undefined),
     course = raceCourse(s.course, s.edition ?? 1);
   if (s.edition === undefined)
     expected.runners.forEach((r, i) => {

@@ -36,6 +36,8 @@ import {
 import { MazeState, directions, mazeDone, mazeMove, mazeRoute } from "../games/maze";
 import {
   NumbersState,
+  remainingTotal,
+  needsPracticeRoll,
   closeNumbers,
   numberChoices,
   numberLimit,
@@ -1181,7 +1183,9 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
             ? "Your island is clear!"
             : status === "stuck"
               ? "That’s this round!"
-              : s.dice.length
+              : needsPracticeRoll(s)
+                ? "Try a new roll"
+                : s.dice.length
                 ? `Can you make ${target}?`
                 : "Ready to roll?"
         }
@@ -1242,13 +1246,16 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
           })}
         </View>
       </BoardArea>
-      {s.dice.length > 0 && status === "playing" && (
+      <Copy style={{ textAlign: "center" }}>Remaining total: {remainingTotal(s)} · Personal best: {Math.min(s.bestRemaining ?? remainingTotal(s), remainingTotal(s))} (lower is better)</Copy>
+      {s.gentlePractice && <Copy>Keep small numbers for flexible combinations. If no combination fits, roll again and keep practicing.</Copy>}
+      {needsPracticeRoll(s) && <Copy>No open numbers make {target}. Try a new roll; your closed numbers stay closed.</Copy>}
+      {s.dice.length > 0 && status === "playing" && !needsPracticeRoll(s) && (
         <Copy style={{ textAlign: "center", marginTop: 18, color: C.ink }}>
           {s.selected.length ? `${s.selected.join(" + ")} = ${sum}` : "Tap numbers to build your total."}
         </Copy>
       )}
       <Controls>
-        {!s.dice.length && status === "playing" ? (
+        {(!s.dice.length || needsPracticeRoll(s)) && status === "playing" ? (
           <Button
             onPress={() => {
               commit(rollNumbers(s));
@@ -1270,7 +1277,7 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
         ) : null}
         <Button
           quiet
-          disabled={!s.dice.length || status !== "playing"}
+          disabled={!s.dice.length || status !== "playing" || needsPracticeRoll(s)}
           onPress={() => {
             const choice = numberChoices(s.available, target)[0];
             if (choice) commit({ ...s, selected: choice });

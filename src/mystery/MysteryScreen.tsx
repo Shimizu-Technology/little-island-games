@@ -54,6 +54,7 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
     [parent, setParent] = useState(false),
     [exit, setExit] = useState(false);
   const [roomDetails, setRoomDetails] = useState(false);
+  const [balance, setBalance] = useState<"gentle" | "challenge">("gentle");
   const [role, setRole] = useState<Role>("crew"),
     [showRole, setShowRole] = useState(false);
   const [name, setName] = useState("Player"),
@@ -139,15 +140,20 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
     <View style={{ width: "100%", maxWidth: 850, alignSelf: "center", gap: 16 }}>
       {mode === "menu" && menuHeader}
       {mode !== "menu" && (
-        <GameHeader title="Mystery" backLabel="Leave" onBack={() => { setShowRole(false); setExit(true); }}
+        <GameHeader title="Picnic" backLabel="Leave" onBack={() => { setShowRole(false); setExit(true); }}
           sound={soundControl}
           onHelp={() => { setShowRole(false); setHelp(true); }}>
           {mode === "nearby" && remote.mode === "host" && remote.pin && (
             <Button compact quiet onPress={() => { setShowRole(false); setRoomDetails(true); }}>Room details</Button>
           )}
-          {mode === "solo" && <Button compact quiet label="Fresh practice" onPress={() => { setShowRole(false); setSetup(true); }}>New</Button>}
+
         </GameHeader>
       )}
+      {mode === "solo" && !view?.result && <Button compact quiet onPress={() => { setShowRole(false); setSetup(true); }}>Role and options</Button>}
+      {mode === "solo" && view?.result && <View style={s.row}>
+        <Button onPress={() => newRound(() => { const previous = latest.current!; const next = createMysterySession(undefined, undefined, previous.players[0].role, undefined, 1, previous.adventure?.balance); latest.current = next; saveCallback.current(next, previous); closeOverlays(); })}>Play again</Button>
+        <Button quiet onPress={() => setSetup(true)}>Role and options</Button>
+      </View>}
       {mode === "menu" && (
         <>
           <Status
@@ -371,10 +377,15 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
             Mischief practice
           </Button>
         </View>
+        <View style={s.row}>
+          <Button quiet selected={balance === "gentle"} onPress={() => setBalance("gentle")}>Gentle crew</Button>
+          <Button quiet selected={balance === "challenge"} onPress={() => setBalance("challenge")}>Challenge</Button>
+        </View>
+        <Copy>Gentle crew gives jobs more time between ribbon tricks and keeps the water pump safe. Challenge keeps the original pace.</Copy>
         <Button
           onPress={() => newRound(() => {
             const previous = latest.current;
-            const next = createMysterySession(undefined, undefined, role);
+            const next = createMysterySession(undefined, undefined, role, undefined, 1, balance);
             latest.current = next;
             saveCallback.current(next, previous);
             closeOverlays();

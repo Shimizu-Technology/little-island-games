@@ -28,7 +28,7 @@ export type GrowthQuestion = {
 export type GrowthTrack = { label: string; description: string; questions: readonly GrowthQuestion[] };
 export type GrowthTracks = Partial<Record<LearnId, Record<GrowthStage, GrowthTrack>>>;
 export type GrowthAction = { type: "answer"; value: string } | { type: "help" } | { type: "next" };
-export type GrowthState = { type: "growth"; version: 1; starter: 0 | 1; ids: string[]; orders: string[][]; history: GrowthAction[] };
+export type GrowthState = { type: "growth"; version: 1; starter: 0 | 1; ids: string[]; orders: string[][]; history: GrowthAction[]; draft?: number[] };
 export type GrowthVisualProps = {
   question: GrowthQuestion;
   showHelp: boolean;

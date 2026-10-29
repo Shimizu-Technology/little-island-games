@@ -152,7 +152,9 @@ describe("Number Island", () => {
   it("recognizes both cleared and stuck rounds", () => {
     const s = createNumbers(opts);
     expect(numbersStatus({ ...s, available: [] })).toBe("won");
-    expect(numbersStatus({ ...s, available: [6], dice: [2] })).toBe("stuck");
+    expect(numbersStatus({ ...s, available: [6], dice: [2] })).toBe("playing");
+    const { gentlePractice: _practice, ...legacy } = s;
+    expect(numbersStatus({ ...legacy, available: [6], dice: [2] })).toBe("stuck");
   });
   it("seed RNG stays bounded and repeatable", () => {
     const a = random(91),

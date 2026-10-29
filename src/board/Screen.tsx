@@ -208,9 +208,11 @@ function Round({
     engine = engines[s.game],
     p = s.position,
     insets = useSafeAreaInsets(),
-    { width } = useWindowDimensions(),
+    { width, height } = useWindowDimensions(),
     play = useSounds(store.save.settings.sound);
-  const available = Math.max(280, Math.min(width - insets.left - insets.right - 40, 560));
+  const wide = width >= 900 && width > height;
+  const available = Math.max(280, Math.min(wide ? width * 0.52 - 60 : width - insets.left - insets.right - 40, wide ? 440 : 560));
+  const success = p.outcome !== null && p.outcome !== "draw" && (s.mode !== "solo" || p.outcome === 0);
   const [help, setHelp] = useState(false),
     [demo, setDemo] = useState(0),
     [visible, setVisible] = useState<string | null>(null),
@@ -256,7 +258,7 @@ function Round({
       const action = engine.choose(p, s.strength);
       if (action !== null) {
         const position = engine.move(p, action);
-        if (commit({ ...s, position })) play(position.outcome !== null ? "win" : "tap");
+        if (commit({ ...s, position })) play(position.outcome !== null && position.outcome === 0 ? "win" : "tap");
       }
     }, 380);
     return () => clearTimeout(timer);
@@ -279,7 +281,7 @@ function Round({
       setNotice("");
       if (secret) conceal();
       play(
-        position.outcome !== null && !(s.game === "reef-sweep" && position.outcome === 1)
+        position.outcome !== null && position.outcome !== "draw" && (s.mode !== "solo" || position.outcome === 0) && !(s.game === "reef-sweep" && position.outcome === 1)
           ? "win"
           : position.scores[p.turn] > p.scores[p.turn]
             ? "match"
@@ -354,7 +356,7 @@ function Round({
             : `${s.match.names[p.outcome]} wins!`;
   return (
     <SafeAreaView style={styles.page}>
-      <ScrollView contentContainerStyle={[styles.content, { maxWidth: 680, paddingHorizontal: 20, gap: 12 }]}>
+      <ScrollView contentContainerStyle={[styles.content, { maxWidth: wide ? 1120 : 680, paddingHorizontal: 20, gap: 12 }]}>
         <GameHeader
           title={info.name}
           backLabel="Games"
@@ -369,6 +371,8 @@ function Round({
           }}
         />
         <SaveStatus />
+        <View style={{ flexDirection: wide ? "row" : "column", gap: 16 }}>
+        <View style={{ flex: 1, gap: 12 }}>
         {s.game !== "reef-sweep" && (
           <Scoreboard
             match={s.match}
@@ -390,7 +394,7 @@ function Round({
         )}
         <Status
           title={title}
-          success={p.outcome !== null && (s.game !== "reef-sweep" || p.outcome === 0)}
+          success={success}
           detail={
             p.outcome !== null
               ? s.game === "reef-sweep"
@@ -405,9 +409,11 @@ function Round({
         />
         {p.outcome !== null && (
           <View style={{ alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <BoardArt game={s.game} size={80} />
-            <Celebrate burst={s.game === "reef-sweep" && p.outcome === 1 ? 0 : 1} />
-            <Heading style={{ fontSize: 23 }}>
+            <View style={{ width: 80, height: 80, overflow: "hidden" }}>
+              <BoardArt game={s.game} size={80} />
+              <Celebrate burst={success ? 1 : 0} />
+            </View>
+            <Heading style={{ fontSize: 23, flexShrink: 1 }}>
               {s.game === "reef-sweep"
                 ? p.outcome === 1
                   ? "Let’s explore again"
@@ -420,6 +426,49 @@ function Round({
             </Heading>
           </View>
         )}
+        <View style={[styles.row, { flexWrap: "wrap", justifyContent: "center" }]}>
+          {p.outcome === null && !concealed && (
+            <Button quiet compact disabled={locked} onPress={showHint}>
+              Hint
+            </Button>
+          )}
+          {(s.mode === "solo" || s.game === "reef-sweep") && s.game !== "hidden-canoes" && (
+            <Button
+              quiet
+              compact
+              disabled={teaching || undo(s) === s}
+              onPress={() => {
+                const next = undo(s);
+                if (commit(next)) {
+                  setHint(null);
+                  setNotice("");
+                  play("tap");
+                }
+              }}
+            >
+              Undo
+            </Button>
+          )}
+          {secret && !concealed && !ai && (
+            <Button quiet compact onPress={conceal}>
+              Cover my turn
+            </Button>
+          )}
+          {p.outcome !== null && <Button onPress={onReplay}>Play again</Button>}
+          <Button
+            quiet
+            compact
+            onPress={() => {
+              conceal();
+              onSetup();
+            }}
+          >
+            New game
+          </Button>
+        </View>
+        <Copy style={{ fontSize: 12, textAlign: "center" }}>Saved on this device · No rush, take your time.</Copy>
+        </View>
+        <View style={{ flex: wide ? 1.15 : undefined, gap: 12, justifyContent: "center" }}>
         {concealed ? (
           <View style={{ padding: 24, gap: 16, alignItems: "center", backgroundColor: "#DEEDEF", borderRadius: 24 }}>
             <BoardArt game="hidden-canoes" size={110} />
@@ -478,47 +527,8 @@ function Round({
         {!!notice && !concealed && (
           <Copy style={{ padding: 12, backgroundColor: C.sand, borderRadius: 12, color: C.ink }}>{notice}</Copy>
         )}
-        <View style={[styles.row, { flexWrap: "wrap", justifyContent: "center" }]}>
-          {p.outcome === null && !concealed && (
-            <Button quiet compact disabled={locked} onPress={showHint}>
-              Hint
-            </Button>
-          )}
-          {(s.mode === "solo" || s.game === "reef-sweep") && s.game !== "hidden-canoes" && (
-            <Button
-              quiet
-              compact
-              disabled={teaching || undo(s) === s}
-              onPress={() => {
-                const next = undo(s);
-                if (commit(next)) {
-                  setHint(null);
-                  setNotice("");
-                  play("tap");
-                }
-              }}
-            >
-              Undo
-            </Button>
-          )}
-          {secret && !concealed && !ai && (
-            <Button quiet compact onPress={conceal}>
-              Cover my turn
-            </Button>
-          )}
-          {p.outcome !== null && <Button onPress={onReplay}>Play again</Button>}
-          <Button
-            quiet
-            compact
-            onPress={() => {
-              conceal();
-              onSetup();
-            }}
-          >
-            New game
-          </Button>
         </View>
-        <Copy style={{ fontSize: 12, textAlign: "center" }}>Saved on this device · No rush, take your time.</Copy>
+        </View>
       </ScrollView>
       <Sheet
         visible={teaching}

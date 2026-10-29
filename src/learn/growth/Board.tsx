@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { View } from "react-native";
 import { Button, C, Chip, Copy, Heading, styles } from "../../components/ui";
 import type { BoardProps } from "../types";
-import { growthMove, growthProgress, growthQuestions } from "./engine";
+import { growthDraft, growthMove, growthProgress, growthQuestions } from "./engine";
 import type { GrowthAction, GrowthState } from "./types";
 import { CoachSpot } from "../Coach";
 import { NumbersVisual } from "./NumbersVisual";
@@ -13,7 +13,8 @@ export const growthSpeechKey = (game: string, stage: string, id: string, part: "
 export function GrowthBoard({ session, update, active, width, sound, stopSound, soundOn, cheer, coach }: BoardProps<unknown>) {
   const state = session.state as GrowthState, questions = growthQuestions(session.game, session.options, state), progress = growthProgress(state, questions);
   const q = questions[progress.index];
-  const [draft, setDraft] = useState<number[]>([]);
+  const draft = state.draft ?? [];
+  const setDraft = (next: number[]) => { if (active) update(growthDraft(state, next, questions)); };
   const spoken = useRef<string | null>(null);
   useEffect(() => {
     if (!q || !active || !soundOn || spoken.current === q.id) return;
@@ -32,7 +33,7 @@ export function GrowthBoard({ session, update, active, width, sound, stopSound, 
     update(next);
     if (!progress.solved && after.solved) cheer("right");
     if (action.type === "help") sound(growthSpeechKey(session.game, session.options.stage!, q.id, "explanation"));
-    if (action.type === "next") setDraft([]);
+
   }
   const Visual = ["reef-race", "island-market", "shell-math", "number-hop", "quick-practice"].includes(session.game) ? NumbersVisual : ["sound-boat", "which-one", "turtle-tales", "hafa-adai"].includes(session.game) ? LiteracyVisual : DiscoveryVisual;
   const value = draft.map(i => q.tiles![i]).join("|");
@@ -45,9 +46,9 @@ export function GrowthBoard({ session, update, active, width, sound, stopSound, 
     <Visual key={`${session.id}-${q.id}`} question={q} showHelp={progress.shown || progress.solved} width={width} disabled={!active || progress.solved} onHelp={() => move({ type: "help" })} />
     {q.tiles ? <View style={{ gap: 10 }}>
       <Copy style={{ fontSize: 23, textAlign: "center", minHeight: 38 }}>{draft.length ? draft.map(i => q.tiles![i]).join(" · ") : "Tap the pieces in order"}</Copy>
-      <View style={[styles.row, { flexWrap: "wrap", justifyContent: "center" }]}>{q.tiles.map((tile, i) => <Chip key={i} selected={draft.includes(i)} onPress={() => { if (active && !progress.solved && !draft.includes(i) && draft.length < q.answer.split("|").length) setDraft(d => [...d, i]); }}>{tile}</Chip>)}</View>
+      <View style={[styles.row, { flexWrap: "wrap", justifyContent: "center" }]}>{q.tiles.map((tile, i) => <Chip key={i} selected={draft.includes(i)} onPress={() => { if (active && !progress.solved && !draft.includes(i) && draft.length < q.answer.split("|").length) setDraft([...draft, i]); }}>{tile}</Chip>)}</View>
       <View style={[styles.row, { flexWrap: "wrap", justifyContent: "center" }]}>
-        <Button quiet compact disabled={!active || progress.solved || !draft.length} onPress={() => setDraft(d => d.slice(0, -1))}>Undo piece</Button>
+        <Button quiet compact disabled={!active || progress.solved || !draft.length} onPress={() => setDraft(draft.slice(0, -1))}>Undo piece</Button>
         <Button compact disabled={!active || progress.solved || draft.length !== q.answer.split("|").length} onPress={() => move({ type: "answer", value })}>Check it</Button>
       </View>
     </View> : <View style={{ gap: 10 }}>{state.orders[progress.index].map(value => {

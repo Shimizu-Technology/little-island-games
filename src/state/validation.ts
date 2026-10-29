@@ -312,6 +312,8 @@ export function validSession(v: unknown): v is GameState {
     case "numbers": {
       const expectedMax = v.options.difficulty === "easy" ? 6 : v.options.difficulty === "medium" ? 9 : 12;
       if (v.maxNumber !== undefined && v.maxNumber !== expectedMax) return false;
+      if (v.gentlePractice !== undefined && (v.gentlePractice !== true || v.options.difficulty !== "easy")) return false;
+      if (v.bestRemaining !== undefined && !int(v.bestRemaining, 0, 78)) return false;
       const max = (v.maxNumber ?? (v.options.difficulty === "easy" ? 6 : 9)) as number,
         count = v.options.difficulty === "easy" ? 1 : 2;
       const valid = (x: unknown) =>

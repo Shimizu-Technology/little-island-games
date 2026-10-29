@@ -41,12 +41,18 @@ export function growthProgress(s: GrowthState, qs: readonly GrowthQuestion[]) {
   for (const a of s.history) step(p, a, qs);
   return p;
 }
+export function growthDraft(s: GrowthState, draft: number[], qs: readonly GrowthQuestion[]): GrowthState {
+  const p = growthProgress(s, qs), q = qs[p.index];
+  if (p.solved || !q?.tiles || !Array.isArray(draft) || draft.length > q.answer.split("|").length || new Set(draft).size !== draft.length || draft.some(i => !Number.isInteger(i) || i < 0 || i >= q.tiles!.length)) return s;
+  return { ...s, draft: [...draft] };
+}
 export function growthMove(s: GrowthState, a: GrowthAction, qs: readonly GrowthQuestion[]): GrowthState {
   const p = growthProgress(s, qs);
   if (!step(p, a, qs)) return s;
   if (a.type === "answer" && !p.solved && s.history.at(-1)?.type === "answer") return { ...s, history: [...s.history.slice(0, -1), a] };
   if (s.history.length >= 128) return s;
-  return { ...s, history: [...s.history, a] };
+  const { draft: _draft, ...rest } = s;
+  return { ...rest, history: [...s.history, a], ...((a.type === "help" || (a.type === "answer" && !p.solved)) && s.draft ? { draft: s.draft } : {}) };
 }
 export function createGrowth(game: LearnId, o: LearnOptions, c: CreateContext<unknown>): GrowthState {
   const track = growthTrack(game, o.stage!);
@@ -67,7 +73,7 @@ export function createGrowth(game: LearnId, o: LearnOptions, c: CreateContext<un
   }) };
 }
 export function validGrowth(s: unknown, game: LearnId, o: LearnOptions): s is GrowthState {
-  if (!isGrowth(s) || Object.keys(s).sort().join() !== "history,ids,orders,starter,type,version" || s.version !== 1 || ![0, 1].includes(s.starter) ||
+  if (!isGrowth(s) || Object.keys(s).filter(k => k !== "draft").sort().join() !== "history,ids,orders,starter,type,version" || s.version !== 1 || ![0, 1].includes(s.starter) ||
     !Array.isArray(s.ids) || s.ids.length !== (o.mode === "versus" ? 4 : 3) || new Set(s.ids).size !== s.ids.length ||
     !Array.isArray(s.orders) || s.orders.length !== s.ids.length || !Array.isArray(s.history) || s.history.length > 128) return false;
   const track = growthTrack(game, o.stage!);
@@ -75,11 +81,12 @@ export function validGrowth(s: unknown, game: LearnId, o: LearnOptions): s is Gr
   const qs = growthQuestions(game, o, s);
   if (!s.orders.every((order, i) => Array.isArray(order) && order.length === qs[i].choices.length && new Set(order).size === order.length && order.every(v => qs[i].choices.some(c => c.value === v)))) return false;
   const p = initial();
-  return s.history.every(a => {
+  const historyValid = s.history.every(a => {
     if (!a || typeof a !== "object" || Array.isArray(a) || !["answer", "help", "next"].includes(a.type)) return false;
     if (a.type === "answer" ? Object.keys(a).sort().join() !== "type,value" || typeof a.value !== "string" || a.value.length > 160 : Object.keys(a).join() !== "type") return false;
     return step(p, a, qs);
   });
+  return historyValid && (s.draft === undefined || growthDraft(s, s.draft, qs) !== s);
 }
 /** Preserve every original engine contract when an additive stage is absent. */
 export function withGrowth(base: LearnEngine<unknown>): LearnEngine<unknown> {

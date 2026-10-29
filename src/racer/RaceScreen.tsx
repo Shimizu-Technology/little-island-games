@@ -55,6 +55,8 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
     [choosing, setChoosing] = useState(!session),
     [hasRound, setHasRound] = useState(!!session),
     [mode, setMode] = useState<RaceMode>("race");
+  const [helper, setHelper] = useState(session?.helper ?? true);
+  const [rivalStrength, setRivalStrength] = useState<"easy" | "steady" | "fast">(session?.rivalStrength ?? "easy");
   const [autoRunning, setAutoRunning] = useState(false);
   const [foreground, setForeground] = useState(AppState.currentState === "active" || AppState.currentState === null);
   const [controlStyle, setControlStyle] = useState<"run" | "hold" | "step">("run");
@@ -243,7 +245,9 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
       const next = createRaceSession(
         course,
         course === "training" ? "practice" : selectedMode,
-        Math.floor(Math.random() * 0xffffffff)
+        Math.floor(Math.random() * 0xffffffff),
+        undefined,
+        { helper, rivalStrength }
       );
       current.current = next;
       persist(next);
@@ -254,7 +258,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
       };
       if (beforeNewRound) beforeNewRound(run); else run();
     },
-    [clear, persist, mode, beforeNewRound]
+    [clear, persist, mode, beforeNewRound, helper, rivalStrength]
   );
   const resume = () => {
     clear();
@@ -297,6 +301,12 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
             Practice · just you
           </Button>
         </View>
+        <View style={s.row}>
+          <Button compact quiet selected={helper} onPress={() => setHelper(!helper)}>Helper {helper ? "on" : "off"}</Button>
+        </View>
+        <Copy>Helper makes obstacles gentler and returns you to your flag sooner after a fall. Every finish counts.</Copy>
+        <Copy>Rival strength</Copy>
+        <View style={s.row}>{(["easy", "steady", "fast"] as const).map(level => <Button key={level} compact quiet selected={rivalStrength === level} onPress={() => setRivalStrength(level)}>{level === "easy" ? "Easy" : level === "steady" ? "Steady" : "Fast"}</Button>)}</View>
         {COURSES.map((course, i) => (
           <PressableScale
             key={course.id}

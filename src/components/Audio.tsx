@@ -9,10 +9,11 @@ import { feel, toneFeel } from "./feel";
 export const AudioPreferences = createContext<Partial<Settings> & { epoch?: number }>({});
 const sources: Record<string, number> = { ...baseSources, ...learnSources };
 // expo-audio's web player calls HTMLMediaElement.play() without handling its promise. A quick
-// second tone interrupts the first and the browser rejects it with AbortError; that is expected.
+// second tone can reject with AbortError; autoplay policy can reject with NotAllowedError.
+// Both are expected media failures: visible instructions and feedback remain available.
 if (Platform.OS === "web" && typeof window !== "undefined")
   window.addEventListener("unhandledrejection", (event) => {
-    if ((event.reason as { name?: string } | undefined)?.name === "AbortError") event.preventDefault();
+    if ((event.reason as { name?: string } | undefined)?.name && ["AbortError", "NotAllowedError"].includes(event.reason.name)) event.preventDefault();
   });
 export function useSoundControls(enabled: boolean) {
   const player = useAudioPlayer(null);
