@@ -79,3 +79,14 @@ No further delegation, PR, integration-branch push, simulator or release build b
 | Independent review | One material finding (iOS Pan never activates for a motionless tap, so Cargo rotation could miss), fixed in 4a952db and verified natively. One minor finding (Run's teaching glyph repeats for about 4 s every round), accepted for this beta |
 | Full gate | `npm run check` 1,148 tests, typecheck, lint, offline export; Doctor 21/21 |
 | Not verified | Physical 120 Hz smoothness, real-glass gestures, A12 iPad performance, audio/haptic comfort, VoiceOver, family acceptance |
+
+## 1.9.2 (17): Leon's 1.9.1 feedback
+
+| Item | Result |
+|---|---|
+| Flight "freezes when I hit jump" | Root cause: every sound used expo-audio `replace()` + `play()`, which reloaded the asset on the iOS main thread on each flap, hop or tap (the perf audit had muted audio). Arcade effects and the shared tap/match/win tones now use preloaded players rewound with `seekTo(0)`, and cancellation silences them too. Physical confirmation is pending on Leon's iPhone |
+| Cargo tap didn't rotate until the piece was moved | Root cause: the tap guard used a grab recorded only when a drag began. Taps now key off a touch-down token. Natively verified: the first tap rotates each new piece. A lock mid-touch never rotates the replacement |
+| Lagoon Run Subway-style variety | Run v4: jump/roll/lane obstacles, ramps and boardwalks, moving canoes, crabs, rolling coconuts, fast drop, Shell Magnet, Kite Glide, Spring Sandals, Turtle Shield, chunk generator with a solvability validator, W1-1 teaches jump/roll/lane, progression to W6. A shared ramp profile keeps physics and art in agreement (within 2 px). Mixed obstacles use their own heights |
+| Icons | One GameIcon system across Home, all shelves and the Arcade lobby, plus the app mark. Each icon shows its game |
+| Review | Round 1: three material, one minor. Round 2: one material, one minor (Cargo tap token, accessibility). All fixed |
+| Gate | 1,165 tests, typecheck, lint, export; Doctor 21/21. Native Release simulator: Cargo taps, Run v4 to Game over, Home and Arcade icons |
