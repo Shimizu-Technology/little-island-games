@@ -52,6 +52,8 @@ export function RoomArt({
 }) {
   return (
     <Svg width="100%" height="100%" viewBox="0 0 800 560" accessible={false}>
+      <Path d="M22 80L143 6L775 56L758 76L145 40L34 98Z" fill="#C68061" stroke="#47655B" strokeWidth={3} />
+      <Path d="M145 6L145 40M154 20L752 61" fill="none" stroke="#F4C99A" strokeWidth={5} />
       <Ellipse cx={402} cy={528} rx={368} ry={22} fill="#D6D7BB" opacity={0.5} />
       <Path
         d="M34 82L145 28L758 71V330L145 291L34 374Z"
@@ -121,4 +123,29 @@ export function RoomArt({
       <Path d="M94 156V184M82 169H107" stroke="#FFF2D2" strokeWidth={2} />
     </Svg>
   );
+}
+
+/** Quiet outdoor layers fill portrait space without changing the room projection. */
+export function SkyArt() {
+  return <Svg width="100%" height="100%" viewBox="0 0 800 1200" preserveAspectRatio="xMidYMid slice" accessible={false}>
+    <Rect width={800} height={1200} fill="#C5E5E1"/>
+    <Circle cx={650} cy={190} r={56} fill="#FFF0BA"/>
+    <G fill="#F7F6E9" opacity={0.85}>
+      <Path d="M50 185Q38 158 70 151Q75 116 111 131Q142 115 157 151Q189 151 187 177Q135 194 50 185Z"/>
+      <Path d="M490 320Q470 295 502 286Q510 252 541 271Q575 255 585 287Q618 289 611 312Z"/>
+    </G>
+    <Path d="M0 1050Q300 1010 800 1040V1200H0Z" fill="#78BCBA"/>
+  </Svg>;
+}
+export function ShoreArt({ depth = 215 }: { depth?: number }) {
+  return <Svg width="100%" height="100%" viewBox={`0 0 800 ${depth}`} accessible={false}>
+    <Rect width={800} height={depth} fill="#F0D9AB"/>
+    <Path d="M130 0L780 0L760 35L158 50L85 20Z" fill="#C79A70" stroke="#577162" strokeWidth={3}/>
+    <Path d="M153 18L765 8M159 34L759 22" stroke="#E8BD89" strokeWidth={3}/>
+    <Path d={`M0 ${depth - 45}Q180 ${depth - 83} 400 ${depth - 46}T800 ${depth - 52}V${depth}H0Z`} fill="#76BDBB"/>
+    <Path d={`M0 ${depth - 46}Q180 ${depth - 84} 400 ${depth - 47}T800 ${depth - 53}`} fill="none" stroke="#FFF4D6" strokeWidth={9}/>
+    <Path d="M723 134Q681 72 713 15" fill="none" stroke="#AE7D59" strokeWidth={13}/>
+    <Path d="M712 23Q669-3 646 30Q681 17 712 23Q748-10 780 20Q746 16 712 23Q668 31 667 65Q689 44 712 23Q751 22 776 61Q740 41 712 23" fill="#649B77" stroke="#4C7861" strokeWidth={2}/>
+    <G fill="none" stroke="#D7B889" strokeWidth={3}><Path d="M95 102l20-4M310 144l15 3M528 82l20-3M620 126l12 4"/></G>
+  </Svg>;
 }

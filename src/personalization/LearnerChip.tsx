@@ -4,12 +4,13 @@ import { Islander } from '../islander';
 import { activeLearner, familyLearners } from '../learn/learners';
 import { useStore } from '../state/Store';
 import { C, Copy, Heading, PressableScale, Sheet } from '../components/ui';
+import { Portrait } from './Portrait';
 import { personFor } from './model';
 export function LearnerChip({ compact = false }: { compact?: boolean }) {
   const store = useStore(), learner = activeLearner(store.save.learning), [open, setOpen] = useState(false);
   return <>
     <PressableScale accessibilityRole="button" accessibilityLabel={`Who is playing: ${learner.name}. Switch learner`} onPress={() => setOpen(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 3, backgroundColor: C.soft, borderRadius: 24, maxWidth: '100%' }}>
-      <View style={{ height: compact ? 36 : 44, width: 36, overflow: 'hidden' }}><View style={{ transform: [{ translateY: -2 }, { translateX: -8 }] }}><Islander view="front" pose="idle" look={personFor(store.save).look} size={100}/></View></View>
+      <Portrait look={personFor(store.save).look} size={compact ? 36 : 44}/>
       <Copy style={{ fontSize: compact ? 13 : 16, flexShrink: 1 }}>{learner.name} ▾</Copy>
     </PressableScale>
     <Sheet visible={open} title="Who is playing?" onClose={() => setOpen(false)}>

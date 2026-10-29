@@ -11,7 +11,7 @@ export type Instance = {
   layer: "ground" | "furniture" | "wall";
   state: "rest" | "active";
 };
-export const anchors = ["hello", "window", "bed", "chair", "rug", "beanbag", "shelf", "floor"] as const;
+export const anchors = ["hello", "window", "bed", "chair", "rug", "beanbag", "shelf", "floor", "beach-left", "beach-middle", "beach-right"] as const;
 export type Anchor = (typeof anchors)[number];
 export type Pose = "stand" | "sit";
 export type Character = { slot: 0 | 1 | 2; anchor: Anchor; pose: Pose; x?: number; y?: number; seatId?: string };

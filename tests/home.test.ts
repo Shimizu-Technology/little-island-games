@@ -277,10 +277,10 @@ describe("direct manipulation character settlement", () => {
       expect(homeReducer(s, characterDrop(s, 0, p.x, p.y)).state.characters[0].anchor).toBe(anchor);
     }
   });
-  it("clamps a distant character drop to the walkable floor and preserves one undo step", () => {
+  it("clamps a distant character drop to a walkable beach anchor and preserves one undo step", () => {
     const state = starterHome();
     const action = characterDrop(state, 0, 9999, 9999);
-    expect(action).toEqual({ type: "character", slot: 0, anchor: "floor", x: 9, y: 5 });
+    expect(action).toEqual({ type: "character", slot: 0, anchor: "beach-right" });
     const history = editHistory({ present: state, past: [], future: [] }, action);
     expect(history.past).toHaveLength(1);
     expect(editHistory(history, { type: "undo" }).present).toBe(state);
@@ -297,5 +297,36 @@ describe("direct manipulation character settlement", () => {
     for (let a = 0; a < points.length; a++)
       for (let b = a + 1; b < points.length; b++)
         expect(Math.hypot(points[a].x - points[b].x, points[a].y - points[b].y)).toBeGreaterThan(90);
+  });
+});
+
+describe("portrait beach standing anchors", () => {
+  it("keeps old saves unchanged and accepts only strict standing beach records", () => {
+    const old = starterHome(), before = clone(old);
+    expect(validHome(old)).toBe(true);
+    expect(old).toEqual(before);
+    for (const anchor of ["beach-left", "beach-middle", "beach-right"] as const) {
+      const next = homeReducer(old, { type: "character", slot: 0, anchor }).state;
+      expect(validHome(clone(next))).toBe(true);
+      expect(next.characters[0]).toEqual({ slot: 0, anchor, pose: "stand" });
+      expect(characterPoint(next, next.characters[0]).y).toBe(650);
+      for (const extra of [{ pose: "sit" }, { x: 1 }, { seatId: "chair" }]) {
+        expect(validHome({ ...next, characters: [{ ...next.characters[0], ...extra }] })).toBe(false);
+      }
+    }
+  });
+  it("snaps beach drops to bounded anchors and keeps seats ahead of the beach threshold", () => {
+    const home = starterHome();
+    for (const [x, anchor] of [[-50, "beach-left"], [400, "beach-middle"], [900, "beach-right"]] as const) {
+      const action = characterDrop(home, 0, x, 630);
+      expect(action).toEqual({ type: "character", slot: 0, anchor });
+      const next = homeReducer(home, action).state;
+      expect(characterDepth(next, next.characters[0])).toBe(651);
+    }
+    const chair = home.instances.find(i => i.item === "chair")!;
+    const point = characterPoint(home, { slot: 0, anchor: "chair", pose: "sit", seatId: chair.id });
+    expect(characterDrop(home, 0, point.x, point.y)).toEqual({ type: "character", slot: 0, anchor: "chair", seatId: chair.id });
+    expect(characterDepth(home, { slot: 0, anchor: "chair", pose: "sit", seatId: chair.id })).toBeGreaterThan(floorPoint(chair.x, chair.y).y);
+    expect(point.y - floorPoint(chair.x, chair.y).y).toBe(23);
   });
 });

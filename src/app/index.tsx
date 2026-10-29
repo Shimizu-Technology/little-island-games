@@ -14,7 +14,6 @@ import { SaveStatus } from "../components/SaveStatus";
 import { useStore } from "../state/Store";
 import { ShelfArt, openShelfGame as openOriginalShelfGame } from "../components/GameShelf";
 import { dailySuggestions, homeContinue, islandNames, shelfGames } from "../learn/home";
-import { activeLearner } from "../learn/learners";
 import { arcadeIds, type ArcadeId } from "../arcade";
 import type { ShelfId } from "../learn/home";
 function openShelfGame(id: ShelfId) {
@@ -37,7 +36,6 @@ export default function Home() {
         <Text style={{ fontFamily: font, fontSize: 22, fontWeight: "800", color: C.ink }}>little island</Text>
         <Button compact quiet onPress={() => setSettings(true)} label="Open sound settings, practice and grown-up backups">Settings</Button>
       </View>
-      <Copy style={{ fontSize: 14, color: C.teal }}>{activeLearner(store.save.learning).id === "family" ? "Family practice" : `Learning with ${activeLearner(store.save.learning).name}`}</Copy>
       <Me creatorAllowed={!settings} />
       <SaveStatus />
       <Heading style={{ fontSize: available >= 600 ? 34 : 28 }}>What shall we play?</Heading>
