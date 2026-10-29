@@ -1,3 +1,4 @@
+import { Companion } from "../islander/Companion";
 import type { RoundPractice } from "../practice/useRoundPractice";
 import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -432,6 +433,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
         <View style={shortLandscape ? { width: 260, gap: 8 } : { gap: 12 }}>
           {terminal ? (
             <View style={s.panel} accessibilityLiveRegion="polite">
+              <Companion event={snapshot.status === "finished" && racePlacement(snapshot) === 1 ? "win" : "loss"}/>
               <Heading style={{ fontSize: 25 }}>
                 {snapshot.status === "finished"
                   ? snapshot.runners.length > 1

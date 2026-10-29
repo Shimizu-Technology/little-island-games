@@ -1,3 +1,4 @@
+import { Companion } from "../islander/Companion";
 import { mysteryInstructions } from "./instructions";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { View, useWindowDimensions } from "react-native";
@@ -90,6 +91,7 @@ export function AdventurePlay({
   ) : null;
   return (
     <View onLayout={(event) => setMeasured(event.nativeEvent.layout.width)} style={{ gap: 12 }}>
+      {view.result && <View style={{ alignItems: "center" }}><Companion event={view.result.winner === view.ownRole ? "win" : "loss"} active={enabled}/></View>}
       <View style={{ padding: 13, backgroundColor: view.result ? "#E2EDD9" : "#EDF0E3", borderRadius: 18, gap: 4 }}>
         <Heading style={{ fontSize: 23 }}>
           {view.result

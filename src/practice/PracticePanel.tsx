@@ -1,3 +1,4 @@
+import { LearningCompanion, useCompanionReaction } from "../islander/Companion";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AppState, Keyboard, Platform, TextInput, View } from "react-native";
 import { useSoundControls } from "../components/Audio";
@@ -29,6 +30,7 @@ export function PracticePanel(props: PracticePanelProps) {
 function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }: PracticePanelProps) {
   const [session] = useState(() => createPracticeSession(settings, Math.floor(Math.random() * 0x100000000)));
   const [state, setState] = useState(session.initial);
+  const companion = useCompanionReaction("practice", active);
   const [answer, setAnswer] = useState("");
   const live = useRef({ mounted: false, active, soundOn, onComplete, onCancel });
   const introduced = useRef(false);
@@ -87,7 +89,7 @@ function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }:
     Keyboard.dismiss();
   }
 
-  return <View style={{ width: "100%", maxWidth: 500, alignSelf: "center", gap: 12 }}>
+  return <LearningCompanion event={state.solved ? (state.results.length === 3 ? "complete" : "correct") : state.wrong !== null ? "incorrect" : companion.event} desk active={active}><View style={{ width: "100%", maxWidth: 500, alignSelf: "center", gap: 12 }}>
     {/* Keep exit before the keyboard field as well as the caller's pinned Sheet close control. */}
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
       <Copy style={{ color: C.ink, flexShrink: 1 }}>{state.results.length} of 3 complete</Copy>
@@ -170,5 +172,5 @@ function PracticeRoundPanel({ settings, soundOn, active, onComplete, onCancel }:
         send({ type: "gate-open" });
       }}>Grown-up skip</Button>
     </>}
-  </View>;
+  </View></LearningCompanion>;
 }
