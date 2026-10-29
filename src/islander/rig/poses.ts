@@ -54,10 +54,13 @@ export function backPose(frame: number): Pose {
     const phase = (frame >= 16 ? frame - 16 + .5 : frame) * Math.PI / 4;
     for (const [i, side] of (['left', 'right'] as const).entries()) {
       const swing = Math.cos(phase + i * Math.PI), x = i ? 48 : 32;
-      // Fold the lifted shoe outward on its own side; an under-hip target
-      // forces a fixed-length 2D shin across the midline at full lift.
-      const foot: Point = [x + (i ? 1 : -1) * Math.sqrt(Math.max(0, -swing)) * 18, 128 - Math.max(0, -swing) * 15 - (frame % 4 === 2 ? 2 : 0)];
-      [j[`${side}Knee`], j[`${side}Foot`]] = solve(j[`${side}Hip`], foot, [i ? 50 : 30, 108], 18);
+      // Seen from behind, a lifted leg folds in depth: the knee drives forward
+      // (shorter thigh) and the shin folds back towards the camera (much shorter
+      // shin), so the sole rises under the knee instead of kicking sideways.
+      const lift = Math.max(0, -swing), out = i ? 1 : -1, hip = j[`${side}Hip`];
+      const knee: Point = [hip[0] + out * 1.5 * lift, hip[1] + BONES.thigh * (1 - .3 * lift)];
+      j[`${side}Knee`] = knee;
+      j[`${side}Foot`] = [knee[0] + out * lift, Math.min(128, knee[1] + BONES.shin * (1 - .72 * lift)) - (frame % 4 === 2 ? 2 * lift : 0)];
       const hand: Point = [i ? 60 - swing * 4 : 20 + swing * 4, sy + 21 - swing * 10];
       [j[`${side}Elbow`], j[`${side}Hand`]] = solve(j[`${side}Shoulder`], hand, [i ? 65 : 15, sy + 12], 16);
     }

@@ -23,10 +23,14 @@ describe('Islander skeleton and wardrobe contracts', () => {
     expect(new Set(wardrobe.map(i => `${i.slot}:${i.id}`)).size).toBe(13);
     for (const item of wardrobe) for (const view of item.views) for (const pose of view === 'front' ? frontPoses : backPoses) for (const anchor of item.anchors) expect(anchorsFor(pose)[anchor].every(Number.isFinite)).toBe(true);
   });
-  it('keeps every joint in bounds and each limb bone exactly constant in all poses', () => {
+  it('keeps every joint in bounds and each limb bone constant (back-view running legs may only foreshorten)', () => {
     for (const pose of [...frontPoses, ...backPoses]) {
       for (const p of Object.values(pose.joints)) { expect(p[0], pose.id).toBeGreaterThanOrEqual(0); expect(p[0], pose.id).toBeLessThanOrEqual(80); expect(p[1], pose.id).toBeGreaterThanOrEqual(0); expect(p[1], pose.id).toBeLessThanOrEqual(132); }
-      for (const side of ['left', 'right'] as const) for (const [a,b,length] of [['Shoulder','Elbow',16],['Elbow','Hand',16],['Hip','Knee',18],['Knee','Foot',18]] as const) { const p=pose.joints[`${side}${a}`], q=pose.joints[`${side}${b}`]; expect(Math.hypot(p[0]-q[0],p[1]-q[1]), `${pose.id} ${side}${a}`).toBeCloseTo(length,7); }
+      // Back-view running legs fold in depth, so their projected bones may only shorten (never stretch).
+      const folding = pose.view === 'back' && (pose.frame! < 8 || pose.frame! >= 16);
+      for (const side of ['left', 'right'] as const) for (const [a,b,length] of [['Shoulder','Elbow',16],['Elbow','Hand',16],['Hip','Knee',18],['Knee','Foot',18]] as const) { const p=pose.joints[`${side}${a}`], q=pose.joints[`${side}${b}`], d=Math.hypot(p[0]-q[0],p[1]-q[1]);
+        if (folding && (a === 'Hip' || a === 'Knee')) { expect(d, `${pose.id} ${side}${a}`).toBeLessThanOrEqual(length + 1e-7); expect(d, `${pose.id} ${side}${a}`).toBeGreaterThanOrEqual(length * .25); }
+        else expect(d, `${pose.id} ${side}${a}`).toBeCloseTo(length,7); }
     }
   });
   it('keeps gestures inside the frame and places the writing hand on the paper', () => {
