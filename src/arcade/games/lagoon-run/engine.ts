@@ -1,3 +1,4 @@
+import { CANOE_DEPTH, isCanoe } from "./geometry";
 import { HAZARDS, POWER_SECONDS, RUN_CHUNKS, courseBeat, type HazardKind, type PowerKind, type Surface } from "./course";
 import { nextRandom, type ArcadeEngine, type ArcadeResult } from "../../types";
 import { configureLives, createLives, hitLives, stepLives, validLives, type Lives } from "../../lives";
@@ -60,12 +61,15 @@ export function runTransition(s: RunState, input: RunInput): RunState {
 }
 /** Crabs scuttle across lanes; every crab contact uses the same jump-height rule. */
 export function obstacleLane(row: TrailRow, time: number) { "worklet"; return row.moving && row.crossing ? row.lane + (row.second-row.lane) * (.5 + Math.sin(time*2.3+row.phase)*.5) : row.lane; }
-export function rowSafe(s: RunState, row: TrailRow): boolean {
+export function rowSafe(s: RunState, row: TrailRow, contactOnly = false): boolean {
   "worklet";
   if (runLearning(s)) return row.fact.choices[Math.round(s.poseLane)] === row.fact.answer;
   if (s.kite > 0 || s.protection > 0) return true;
   const avoids = (lane: number, kind: HazardKind) => {
     "worklet";
+    // Long hulls remain solid until the stern clears. Point hazards keep their
+    // original once-per-row contact. Filter each kind independently in mixed rows.
+    if (contactOnly && (isCanoe(kind) ? row.z < 1 || row.z > 1 + CANOE_DEPTH : row.passed || row.z < 1)) return true;
     const base = surfaceProfile(row, row.surface === "gap" ? RAMP_DEPTH : 0, lane);
     if (lane < 0 || Math.abs(s.poseLane - lane) > .46 || runnerHeight(s) > base + 1.65 || (base > 0 && runnerHeight(s) < base - .3)) return true;
     return HAZARDS[kind] === "jump" ? runnerHeight(s) > base + .42 : HAZARDS[kind] === "duck" ? s.duck > .08 && runnerHeight(s) < base + .3 : false;
@@ -112,8 +116,9 @@ export function runStep(before: RunState, _input: RunInput, dt: number): RunStat
       }
     }
     s.rows[i] = row;
-    if (row.passed || row.z < 1) continue;
-    const learn = runLearning(s), safe = rowSafe(s, row);
+    const hullContact = !runLearning(s) && row.z >= 1 && row.z <= 1 + CANOE_DEPTH && (isCanoe(row.kind) || row.second >= 0 && isCanoe(row.secondKind));
+    if (row.z < 1 || row.passed && !hullContact) continue;
+    const learn = runLearning(s), safe = rowSafe(s, row, !learn);
     if (!safe && learn) {
       s = { ...s, bumps: s.bumps + 1, helped: true, event: s.event + 1, cue: "try", feedback: .45 };
       const spacing = s.level === "endless" ? .6 : s.level.spacing;
@@ -124,7 +129,7 @@ export function runStep(before: RunState, _input: RunInput, dt: number): RunStat
     } else if (!safe && !s.lives.invulnerable) {
       const lives = hitLives(s.lives);
       s = { ...s, lives, lastGain: 0, bumps: s.bumps + 1, cooldown: .3, jump: 0, duck: 0, status: lives.hearts ? "playing" : "stumbled", event: s.event + 1, cue: "bump", feedback: .45 };
-    } else if (safe) {
+    } else if (safe && !row.passed) {
       const shell = learn;
       s = { ...s, passed: s.passed + 1, shells: s.shells + (shell ? 3 : 0), score: Math.min(99999999, s.score + 10 + (shell ? 30 : 0)), lastGain: shell ? 40 : 10, event: s.event + 1, cue: learn ? "answer" : "step", feedback: .45 };
     }
@@ -132,7 +137,7 @@ export function runStep(before: RunState, _input: RunInput, dt: number): RunStat
     if (s.status !== "playing") return s;
   }
   const spacing = s.level === "endless" ? .64 : s.level.spacing;
-  for (let i = 0; i < s.rows.length; i++) if (s.rows[i].z > (s.rows[i].surface === "sand" ? 1.25 : 1 + s.rows[i].length + .04)) {
+  for (let i = 0; i < s.rows.length; i++) if (s.rows[i].z > (s.rows[i].surface === "sand" ? 1.25 + (isCanoe(s.rows[i].kind) || isCanoe(s.rows[i].secondKind) ? CANOE_DEPTH : 0) : 1 + s.rows[i].length + .04)) {
     const next = newRow(s, Math.min(...s.rows.map(r => courseDepth(r))) - spacing, s.serial++);
     s.seed = next.seed; s.rows[i] = next.row; s.event++; s.cue = "ready";
   }

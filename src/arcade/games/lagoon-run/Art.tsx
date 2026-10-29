@@ -2,6 +2,8 @@ import React, { memo } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import Animated, { useAnimatedProps, type SharedValue } from 'react-native-reanimated';
+import { deckDepthFraction } from './geometry';
+import { RAMP_SECTIONS } from './surface';
 import type { SpritePose } from '../../poses';
 import { HAZARDS, POWER_LABELS, POWER_SECONDS, type HazardKind, type PowerKind, type Surface } from './course';
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -35,7 +37,7 @@ export const RunHazard = memo(function RunHazard({kind,size=72,poses,index}:{kin
       kind==='crate'||kind==='cooler' ? <><Path d="M8 58L70 44L92 58V83L29 96L8 80Z" fill={kind==='crate'?'#B88054':'#58A4B7'}/><Path d="M8 58L70 44L92 58L29 72Z" fill={kind==='crate'?'#E7BE7C':'#EAF2CC'}/><Path d="M29 72V96" fill="none"/>{kind==='crate'?<Path d="M36 74L83 86M83 64L36 91" stroke="#F6D699" strokeWidth={4}/>:<Path d="M48 72V82H68V68" stroke="#E7EDCF" strokeWidth={4} fill="none"/>}</> :
       kind==='coconut' ? <Coconut poses={poses} index={index}/> :
       kind==='crab' ? <><Path d="M28 77L12 67L5 75M26 84L9 85L4 93M73 77L88 67L95 75M75 84L92 85L97 93" fill="none" stroke="#B96450" strokeWidth={5}/><Ellipse cx={50} cy={78} rx={27} ry={17} fill="#E28E6F"/><Path d="M30 72L19 59L9 64L7 49L18 44L28 55M70 72L81 59L91 64L93 49L82 44L72 55" fill="#F3AC84"/><Path d="M39 64V54M61 64V54" strokeWidth={4}/><Circle cx={39} cy={52} r={4} fill="#FFF0C6"/><Circle cx={61} cy={52} r={4} fill="#FFF0C6"/><Path d="M39 52h1M61 52h1" strokeWidth={3}/><Path d="M41 82Q50 87 59 82" fill="none" strokeWidth={2}/></> :
-      kind==='rock' ? <><Path d="M7 163L14 79L39 47L70 58L92 117L86 172L44 177Z" fill="#78979D"/><Path d="M14 79L45 99L39 47L70 58L45 99Z" fill="#B8CFC6"/><Path d="M45 99L44 177L86 172L92 117Z" fill="#5F7E89"/><Path d="M14 79L45 99L70 58M45 99L44 177" fill="none"/></> : <><Path d="M6 175V47L75 35L94 52V173Z" fill="#A67459"/><Path d="M6 47L75 35L94 52L23 65Z" fill="#D6B37E"/><Path d="M23 65V175M28 90L89 79M28 120L89 109M28 150L89 139" stroke="#DBAE7E" fill="none" strokeWidth={4}/><Path d="M7 45L75 33L95 50" stroke="#759069" strokeWidth={7}/></>}
+      kind==='rock' ? <><Path d="M7 163L14 79L39 47L70 58L92 117L86 172L44 177Z" fill="#78979D"/><Path d="M14 79L45 99L39 47L70 58L45 99Z" fill="#B8CFC6"/><Path d="M45 99L44 177L86 172L92 117Z" fill="#5F7E89"/><Path d="M14 79L45 99L70 58M45 99L44 177" fill="none"/></> : <>{[[8,112,42,60],[51,112,40,60],[26,51,49,60]].map(([x,y,w,h],i)=><G key={i}><Path d={`M${x} ${y}l8-9h${w}v${h}l-8 9Z`} fill="#936047"/><Path d={`M${x} ${y}h${w}v${h}H${x}Z`} fill={i===2?'#C18B54':'#B37D50'}/><Path d={`M${x} ${y}l8-9h${w}l-8 9Z`} fill="#E3B77A"/><Path d={`M${x+5} ${y+6}l${w-10} ${h-12}M${x+w-5} ${y+6}l${10-w} ${h-12}`} fill="none" stroke="#F0CC8B" strokeWidth={5}/><Path d={`M${x+5} ${y+4}h${w-10}M${x+5} ${y+h-4}h${w-10}`} stroke="#75523E" strokeWidth={3}/></G>)}</>}
     </G>
   </Svg>;
 });
@@ -51,36 +53,78 @@ export function PowerRing({kind,remaining}:{kind:Exclude<PowerKind,'none'>;remai
   const fraction=kind==='shield'?1:remaining/POWER_SECONDS[kind];
   return <View accessible accessibilityLabel={`${POWER_LABELS[kind]}${kind==='shield'?' ready':` ${Math.ceil(remaining)} seconds`}`} testID={`run-power-${kind}`} style={{alignItems:'center',width:52}}><View style={{width:48,height:48}}><PowerIcon kind={kind} size={48}/><Svg width={48} height={48} style={{position:'absolute'}} viewBox="0 0 48 48"><Circle cx={24} cy={24} r={22} fill="none" stroke="#2F806F" strokeWidth={4} strokeDasharray={`${138.23*fraction} 138.23`} rotation={-90} origin="24,24"/>{kind!=="shield"&&<><Circle cx={39} cy={38} r={9} fill="#293B49"/><SvgText x={39} y={42} fontSize={11} fontWeight="900" textAnchor="middle" fill="#FFF4CD">{Math.ceil(remaining)}</SvgText></>}</Svg></View></View>;
 }
-/** The deck corners are projected in runPoses on UI using the same camera as the runner. */
+/** One opaque contour across every incline sample: internal joins have no filled edges. */
+function deckPath(p: SpritePose[], index: number, incline: boolean, part: string) {
+  'worklet';
+  const a=p[index],b=p[index+1],end=index+(incline?(RAMP_SECTIONS-1)*4:0),c=p[end+2],d=p[end+3];
+  if(!a||!b||!c||!d||a.opacity===0)return 'M0 0';
+  if(part==='shadow')return `M${a.x+5} ${a.y+(a.scale??0)+5}L${b.x+10} ${b.y+(b.scale??0)+5}L${c.x+10} ${c.y+(c.scale??0)+5}L${d.x+5} ${d.y+(d.scale??0)+5}Z`;
+  let left=`M${a.x} ${a.y}`,right=`L${b.x} ${b.y}`;
+  for(let j=0;j<(incline?RAMP_SECTIONS:1);j++) {
+    const l=p[index+j*4+3],r=p[index+j*4+2];
+    left+=`L${l.x} ${l.y}`;right=`L${r.x} ${r.y}`+right;
+  }
+  if(part==='top')return left+right+'Z';
+  if(part==='left')return left+`L${d.x-(incline?(d.scale??0)*.5:0)} ${d.y+(incline?Math.max(5,d.scale??0):5)}L${a.x-(incline?(a.scale??0)*.5:0)} ${a.y+(incline?Math.max(5,a.scale??0):5)}Z`;
+  if(part==='right') {
+    let edge=`M${b.x} ${b.y}`;
+    for(let j=0;j<(incline?RAMP_SECTIONS:1);j++){const r=p[index+j*4+2];edge+=`L${r.x} ${r.y}`;}
+    return edge+`L${c.x+(incline?(c.scale??0)*.5:0)} ${c.y+(incline?Math.max(5,c.scale??0):5)}L${b.x+(incline?(b.scale??0)*.5:0)} ${b.y+(incline?Math.max(5,b.scale??0):5)}Z`;
+  }
+  if(part==='posts')return `M${a.x} ${a.y}L${b.x} ${b.y}v5L${a.x} ${a.y+5}Z M${d.x} ${d.y}L${c.x} ${c.y}v6L${d.x} ${d.y+6}Z`+(incline?'':` M${a.x+2} ${a.y+5}v${Math.max(0,(a.scale??0)-5)}h5V${a.y+5}Z M${b.x-7} ${b.y+5}v${Math.max(0,(b.scale??0)-5)}h5V${b.y+5}Z M${c.x-5} ${c.y+5}v${Math.max(0,(c.scale??0)-5)}h4V${c.y+5}Z`);
+  if(part==='arrow') {
+    if(!incline)return 'M0 0';
+    // Painted on the low approach, with a dark lagoon fill against honey wood.
+    const l=p[index+3],r=p[index+2],x=(a.x+b.x)/2,y=a.y,w=(b.x-a.x),dy=l.y-a.y;
+    return `M${x-w*.10} ${y+dy*.12}L${x+w*.10} ${y+dy*.12}L${x+w*.10} ${y+dy*.49}L${x+w*.27} ${y+dy*.49}L${(l.x+r.x)/2} ${y+dy*.90}L${x-w*.27} ${y+dy*.49}L${x-w*.10} ${y+dy*.49}Z`;
+  }
+  let path='';
+  for(let j=0;j<(incline?RAMP_SECTIONS:1);j++) {
+    const l=p[index+j*4],r=p[index+j*4+1],farL=p[index+j*4+3],farR=p[index+j*4+2];
+    for(let i=1;i<=(incline?2:12);i++) {
+      // Equal world-depth spacing foreshortens, rather than equal screen-space stripes.
+      const u=i/(incline?2:13),nearWidth=r.x-l.x,farWidth=farR.x-farL.x,t=deckDepthFraction(nearWidth,farWidth,u);
+      path+=`M${l.x+(farL.x-l.x)*t} ${l.y+(farL.y-l.y)*t}L${r.x+(farR.x-r.x)*t} ${r.y+(farR.y-r.y)*t}`;
+    }
+  }
+  return path;
+}
 export const Deck = memo(function Deck({poses,index,surface,incline=false}:{poses:SharedValue<SpritePose[]>;index:number;surface:Surface;incline?:boolean}) {
-  const top=useAnimatedProps(()=>{
-    const a=poses.value[index],b=poses.value[index+1],c=poses.value[index+2],d=poses.value[index+3];
-    if(!a||!b||!c||!d||a.opacity===0)return {d:'M0 0',opacity:0};
-    const middleX=(a.x+b.x)/2,backX=(c.x+d.x)/2;
-    const hull=surface==='canoe-roof'?`M${a.x} ${a.y}Q${middleX} ${a.y+18} ${b.x} ${b.y}L${c.x} ${c.y}Q${backX} ${c.y-8} ${d.x} ${d.y}Z`:`M${a.x} ${a.y}L${b.x} ${b.y}L${c.x} ${c.y}L${d.x} ${d.y}Z`;
-    return {d:hull,opacity:1};
-  });
-  const planks=useAnimatedProps(()=>{
-    const a=poses.value[index],b=poses.value[index+1],c=poses.value[index+2],d=poses.value[index+3];
-    if(!a||!b||!c||!d||a.opacity===0)return {d:'M0 0',opacity:0};
-    let path='';for(let i=1;i<(incline?3:9);i++){const t=i/(incline?3:9);path+=` M${a.x+(d.x-a.x)*t} ${a.y+(d.y-a.y)*t}L${b.x+(c.x-b.x)*t} ${b.y+(c.y-b.y)*t}`;}
-    if(incline){const x=(a.x+b.x+c.x+d.x)/4,y=(a.y+b.y+c.y+d.y)/4,w=(b.x-a.x)*.18;path+=` M${x-w} ${y+7}L${x} ${y}L${x+w} ${y+7}`;}
-    return {d:path,opacity:1};
-  });
-  const shadow=useAnimatedProps(()=>{
-    const a=poses.value[index],b=poses.value[index+1],c=poses.value[index+2],d=poses.value[index+3];
-    if(!a||!b||!c||!d||a.opacity===0)return {d:'M0 0',opacity:0};
-    return {d:`M${a.x+5} ${a.y+(a.scale??0)+4}L${b.x+10} ${b.y+(b.scale??0)+4}L${c.x+10} ${c.y+(c.scale??0)+4}L${d.x+5} ${d.y+(d.scale??0)+4}Z`,opacity:.18};
-  });
-  const side=useAnimatedProps(()=>{
-    const a=poses.value[index],b=poses.value[index+1],c=poses.value[index+2],d=poses.value[index+3];
-    if(!a||!b||!c||!d||a.opacity===0)return {d:'M0 0',opacity:0};
-    const lift=a.scale??0,back=d.scale??0;
-    const thickness=5;
-    if(incline)return {d:`M${a.x} ${a.y}L${b.x} ${b.y}L${b.x} ${b.y+Math.max(thickness,lift)}L${c.x} ${c.y+Math.max(thickness,back)}L${c.x} ${c.y}L${b.x} ${b.y}L${a.x} ${a.y+thickness}Z`,opacity:1};
-    return {d:`M${a.x} ${a.y}L${b.x} ${b.y}L${c.x} ${c.y}L${c.x} ${c.y+thickness}L${b.x} ${b.y+thickness}L${a.x} ${a.y+thickness}Z M${a.x+3} ${a.y+thickness}v${Math.max(0,lift-thickness)}h5V${a.y+thickness}Z M${b.x-8} ${b.y+thickness}v${Math.max(0,lift-thickness)}h5V${b.y+thickness}Z M${c.x-5} ${c.y+thickness}v${Math.max(0,back-thickness)}h4V${c.y+thickness}Z`,opacity:1};
-  });
-  return <><AnimatedPath animatedProps={shadow} fill="#344B50"/><AnimatedPath animatedProps={side} fill="#86614B" stroke="#4E5254" strokeWidth={1.5}/><AnimatedPath animatedProps={top} fill={surface==='canoe-roof'?'#DEA16D':incline?'#ECCA8A':'#DAB77D'} stroke="#725B4F" strokeWidth={2} strokeLinejoin="round"/><AnimatedPath animatedProps={planks} fill="none" stroke={incline?'#FFF3BE':'#AD8358'} strokeWidth={incline?3:1.5}/></>;
+  const top=useAnimatedProps(()=>({d:deckPath(poses.value,index,incline,'top')}));
+  const left=useAnimatedProps(()=>({d:deckPath(poses.value,index,incline,'left')}));
+  const right=useAnimatedProps(()=>({d:deckPath(poses.value,index,incline,'right')}));
+  const posts=useAnimatedProps(()=>({d:deckPath(poses.value,index,incline,'posts')}));
+  const shadow=useAnimatedProps(()=>({d:deckPath(poses.value,index,incline,'shadow')}));
+  const planks=useAnimatedProps(()=>({d:deckPath(poses.value,index,incline,'planks')}));
+  const arrow=useAnimatedProps(()=>({d:deckPath(poses.value,index,incline,'arrow')}));
+  return <><AnimatedPath animatedProps={shadow} fill="#344B50" opacity={.22}/><AnimatedPath animatedProps={left} fill="#A0643E" stroke="#674B3E" strokeWidth={1.5}/><AnimatedPath animatedProps={right} fill="#704A36" stroke="#674B3E" strokeWidth={1.5}/><AnimatedPath animatedProps={posts} fill="#78513A" stroke="#674B3E" strokeWidth={1.5}/><AnimatedPath animatedProps={top} fill={surface==='canoe-roof'?'#DEA16D':'#DDA35E'} stroke="#674B3E" strokeWidth={2} strokeLinejoin="round"/><AnimatedPath animatedProps={planks} fill="none" stroke="#A56B3F" strokeWidth={1.2}/><AnimatedPath animatedProps={arrow} fill="#176B70" stroke="#FFF0BE" strokeWidth={1.5} strokeLinejoin="round"/></>;
+});
+/** A hull projected along the lane, not a tall bow-on icon. Geometry stays on UI. */
+function canoePath(p: SpritePose[],index:number,part:string) {
+  'worklet';
+  const a=p[index],b=p[index+1],c=p[index+2],d=p[index+3];
+  if(!a||a.opacity===0||!b||!c||!d)return 'M0 0';
+  const near=(a.x+b.x)/2,far=(c.x+d.x)/2,ns=a.scale??1,fs=d.scale??1,ny=a.y-34*ns,fy=d.y-23*fs;
+  if(part==='shadow')return `M${a.x-3*ns} ${a.y+4*ns}Q${near} ${a.y+15*ns} ${b.x+16*ns} ${b.y+4*ns}L${c.x+15*fs} ${c.y+3*fs}L${d.x} ${d.y}Z`;
+  if(part==='hull')return `M${a.x} ${ny}Q${near} ${ny+21*ns} ${b.x} ${ny}L${c.x} ${fy}L${far} ${fy-16*fs}L${d.x} ${fy}Z M${a.x} ${ny}Q${near} ${a.y+12*ns} ${b.x} ${ny}L${b.x-6*ns} ${b.y-3*ns}Q${near} ${a.y+10*ns} ${a.x+6*ns} ${a.y-3*ns}Z`;
+  if(part==='inside')return `M${a.x+5*ns} ${ny}Q${near} ${ny+12*ns} ${b.x-5*ns} ${ny}L${c.x-3*fs} ${fy+3*fs}L${far} ${fy-8*fs}L${d.x+3*fs} ${fy+3*fs}Z`;
+  if(part==='rail')return `M${a.x} ${ny}Q${near} ${ny+21*ns} ${b.x} ${ny}L${c.x} ${fy}L${far} ${fy-16*fs}L${d.x} ${fy}Z M${a.x+7*ns} ${ny+12*ns}L${d.x+4*fs} ${fy+7*fs} M${b.x-6*ns} ${ny+14*ns}L${c.x-4*fs} ${fy+7*fs}`;
+  if(part==='cargo') {
+    const x=near+(far-near)*.4,y=ny+(fy-ny)*.4,w=19*ns,h=24*ns;
+    return `M${x-w} ${y}v${-h}l${w*1.5} ${-6*ns}l${w*.5} ${7*ns}v${h}l${-w*1.5} ${6*ns}Z M${x-w} ${y-h}l${w*.5} ${7*ns}l${w*1.5} ${-6*ns} M${x-w*.5} ${y-h+7*ns}v${h} M${x-w*.8} ${y-h+8*ns}l${w*1.1} ${h*.6} M${x+w*.3} ${y-h+7*ns}l${-w*1.1} ${h*.7}`;
+  }
+  if(part==='float')return `M${b.x-2*ns} ${ny+4*ns}L${b.x+17*ns} ${ny+8*ns} M${c.x-2*fs} ${fy+8*fs}L${c.x+14*fs} ${fy+13*fs} M${b.x+16*ns} ${a.y-8*ns}Q${b.x+30*ns} ${a.y-4*ns} ${b.x+25*ns} ${a.y-19*ns}L${c.x+18*fs} ${fy+12*fs}Q${c.x+12*fs} ${fy+4*fs} ${c.x+11*fs} ${fy+17*fs}Z`;
+  return `M${a.x-8*ns} ${a.y-5*ns}Q${a.x-18*ns} ${a.y+2*ns} ${a.x-10*ns} ${a.y+13*ns} M${b.x+30*ns} ${b.y-9*ns}q${18*ns} ${8*ns} ${7*ns} ${22*ns} M${a.x-10*ns} ${a.y-48*ns}l${-4*ns} ${25*ns} M${b.x+37*ns} ${b.y-50*ns}l${5*ns} ${26*ns}`;
+}
+export const Canoe=memo(function Canoe({poses,index,moving}:{poses:SharedValue<SpritePose[]>;index:number;moving:boolean}) {
+  const shadow=useAnimatedProps(()=>({d:canoePath(poses.value,index,'shadow')}));
+  const hull=useAnimatedProps(()=>({d:canoePath(poses.value,index,'hull')}));
+  const inside=useAnimatedProps(()=>({d:canoePath(poses.value,index,'inside')}));
+  const rail=useAnimatedProps(()=>({d:canoePath(poses.value,index,'rail')}));
+  const cargo=useAnimatedProps(()=>({d:canoePath(poses.value,index,'cargo')}));
+  const float=useAnimatedProps(()=>({d:canoePath(poses.value,index,'float')}));
+  const wake=useAnimatedProps(()=>({d:canoePath(poses.value,index,'wake')}));
+  return <Svg width={390} height={660} accessible={false}><AnimatedPath animatedProps={shadow} fill="#344B50" opacity={.22}/>{moving&&<AnimatedPath animatedProps={wake} fill="none" stroke="#E6FFF0" strokeWidth={3} strokeLinecap="round"/>}<AnimatedPath animatedProps={hull} fill={moving?'#E6A157':'#C87550'} stroke={ink} strokeWidth={2}/><AnimatedPath animatedProps={inside} fill="#665148"/><AnimatedPath animatedProps={cargo} fill="#D5AE6F" stroke="#674B3E" strokeWidth={2} strokeLinejoin="round"/><AnimatedPath animatedProps={rail} fill="none" stroke="#FFE0A2" strokeWidth={3} strokeLinejoin="round"/><AnimatedPath animatedProps={float} fill="#D59A5F" stroke={ink} strokeWidth={2} strokeLinejoin="round"/></Svg>;
 });
 export function GhostMove({move}:{move:string}) {
   return <Svg width={110} height={60} viewBox="0 0 110 60" accessible={false}><Rect x={1} y={1} width={108} height={58} rx={18} fill="#FFF3D3" stroke={ink} strokeWidth={2}/><Path d="M28 49V27Q28 22 32 22Q36 22 36 27V34L41 33Q46 33 46 38L43 50H31Z" stroke={ink} strokeWidth={2} fill="#E3AE82"/><SvgText x={70} y={30} textAnchor="middle" fontSize={27} fontWeight="900" fill={ink}>{move==='jump'?'↑':move==='duck'?'↓':move==='right'?'→':'←'}</SvgText><SvgText x={70} y={48} textAnchor="middle" fontSize={12} fontWeight="800" fill={ink}>{move==='jump'?'Jump':move==='duck'?'Roll':'Move'}</SvgText></Svg>;

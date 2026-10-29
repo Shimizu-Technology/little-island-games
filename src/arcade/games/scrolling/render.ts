@@ -1,3 +1,4 @@
+import { CANOE_DEPTH, isCanoe, visualRunHeight } from "../lagoon-run/geometry";
 import { HAZARDS } from "../lagoon-run/course";
 import { HIDDEN_POSE, type SpritePose } from "../../poses";
 import { runnerHeight, shellHeight, obstacleLane, runLearning, type RunState } from "../lagoon-run/engine";
@@ -5,10 +6,10 @@ import { RAMP_DEPTH, RAMP_SECTIONS, surfaceProfile, surfaceSpan } from "../lagoo
 import { projectTrack, trackSprite } from "../lagoon-run/camera";
 import { runnerFrame, RUN_POSES, RUN_EXTRA } from "./character";
 import { sceneryPose, groundTexturePose, SCENE_COUNT, SCENE_START, TEXTURE_START, TEXTURE_COUNT } from "./environmentPoses";
-export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA = INCLINE_START + 5 * INCLINE_STRIDE, RUN_SLOTS = RUN_EXTRA + 8;
+export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA = INCLINE_START + 5 * INCLINE_STRIDE, CANOE_START = RUN_EXTRA + 8, RUN_SLOTS = CANOE_START + 15 * 4;
 export function runPoses(s: RunState, reduced = false): SpritePose[] {
   "worklet";
-  const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=runnerHeight(s)*85;
+  const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=visualRunHeight(runnerHeight(s))*85;
   // Rank only changes at a row crossing/recycle or the contact plane; native painter
   // order stays constant during ordinary movement instead of sorting every frame.
   const depthOrder=(z:number)=>{ "worklet"; let rank=0;for(const row of s.rows)if(row.z<z)rank++;return (z>1?10001:0)+rank; };
@@ -17,18 +18,27 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   for(let i=0;i<RUN_POSES;i++)p[i<16?80+i:RUN_EXTRA+i-16]=i===frame?{x:0,y:0,snap:true}:HIDDEN_POSE;
   p[50]={x:contact.x-35,y:contact.y-7,scale:1-Math.min(2.7,runnerHeight(s))*.18,opacity:.8};
   s.rows.forEach((row,i)=>{
-    const visible=!learn&&row.z>0&&row.z<1.18;
+    const visible=!learn&&row.z>0;
     // Each obstacle uses its own kind for size, contact height and spin (a row can mix kinds).
-    const hazardPose = (lane: number, kind: typeof row.kind) => { "worklet"; const a=trackSprite(lane,row.z,HAZARDS[kind]==="duck"?112:72,HAZARDS[kind]==="jump"?72:129.6),height=surfaceProfile(row,row.surface==="gap"?RAMP_DEPTH:0,lane); return {identity:row.serial,...a,frame:depthOrder(row.z),opacity:a.opacity===0?0:.45+.55*Math.min(1,row.z),y:a.y-height*85*a.scale,angle:kind === "coconut" && !reduced ? s.time*3 : 0}; };
-    p[1+i*2]=visible?hazardPose(obstacleLane(row,s.time),row.kind):HIDDEN_POSE;
-    p[2+i*2]=visible&&row.second>=0?hazardPose(row.second,row.secondKind):HIDDEN_POSE;
-    p[75+i]=visible&&row.third?hazardPose(row.shellLane,row.kind):HIDDEN_POSE;
+    const hazardPose = (lane: number, kind: typeof row.kind, actor: number) => { "worklet";
+      if(lane<0 || row.z >= (isCanoe(kind)?1.18+CANOE_DEPTH:1.18))return HIDDEN_POSE;
+      if(isCanoe(kind)) {
+        for(let j=0;j<4;j++) {
+          const a=projectTrack(lane+(j===0||j===3?-.30:.30),row.z-(j<2?0:CANOE_DEPTH));
+          p[CANOE_START+actor*4+j]={identity:row.serial,x:a.x,y:a.y,scale:a.scale};
+        }
+        return {identity:row.serial,x:0,y:0,frame:depthOrder(row.z),opacity:1};
+      }
+      const a=trackSprite(lane,row.z,HAZARDS[kind]==="duck"?112:72,HAZARDS[kind]==="jump"?72:129.6),height=surfaceProfile(row,row.surface==="gap"?RAMP_DEPTH:0,lane); return {identity:row.serial,...a,frame:depthOrder(row.z),opacity:a.opacity===0?0:.45+.55*Math.min(1,row.z),y:a.y-height*85*a.scale,angle:kind === "coconut" && !reduced ? s.time*3 : 0}; };
+    p[1+i*2]=visible?hazardPose(obstacleLane(row,s.time),row.kind,i*3):HIDDEN_POSE;
+    p[2+i*2]=visible&&row.second>=0?hazardPose(row.second,row.secondKind,i*3+1):HIDDEN_POSE;
+    p[75+i]=visible&&row.third?hazardPose(row.shellLane,row.kind,i*3+2):HIDDEN_POSE;
     for(let c=0;c<3;c++){
       const z=row.z+c*.07,t=row.bursts[c]/.26;
       const a=trackSprite(row.shellLane,z,30,30),h=s.kite>0?2.7:shellHeight(row,c);
       const pull=s.magnet>0?Math.max(0,Math.min(1,(z-.65)/.35)):0;
       if(pull>0){a.x+=(contact.x-15-a.x)*pull;a.y+=(contact.y-70-a.y)*pull;}
-      p[11+i*3+c]=!learn&&!(row.shellTaken&(1<<c))&&z>0&&z<1.18?{identity:row.serial,...a,frame:depthOrder(z),y:a.y-h*85*a.scale}:HIDDEN_POSE;
+      p[11+i*3+c]=!learn&&!(row.shellTaken&(1<<c))&&z>0&&z<1.18?{identity:row.serial,...a,frame:depthOrder(z),y:a.y-visualRunHeight(h)*85*a.scale}:HIDDEN_POSE;
       if(learn&&!row.passed&&row.z>0&&row.z<1.08)p[60+i*3+c]={identity:row.phase,...trackSprite(c,row.z,64,64)};
       if(!learn&&t>0){const a=projectTrack(row.shellLane,1);p[132+i*3+c]={identity:`${row.phase}-${c}`,x:a.x-24,y:a.y-45-(1-t)*28,scale:reduced?1:1+(1-t)*.55,opacity:t};}
     }
