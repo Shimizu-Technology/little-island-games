@@ -1,3 +1,4 @@
+import { applyPersonalization, withoutLearner, type Person, type IdentityExpected } from "../personalization/model";
 import { BoardId, BoardSession, applyBoardSave } from "../board";
 import { ExploreProgress, validExploreProgress } from "../explore/progress";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -23,6 +24,10 @@ import { recordPracticeNote } from "../practice/notes";
 import { type ArcadeAction, type ArcadeExpected, type ArcadeId } from "../arcade";
 import { applyArcadeAction } from "../arcade/saveAction";
 type Store = {
+  personalize: (patch: Partial<Pick<Person, "look" | "made" | "home" | "unseen">>, expected: IdentityExpected) => boolean;
+  renameLearner: (id: string, name: string) => boolean;
+  removeLearner: (id: string) => Promise<boolean>;
+  saving: boolean;
   arcade: (action: ArcadeAction, expected: ArcadeExpected) => boolean;
   epoch: number;
   boardUpdate: (game: BoardId, next: BoardSession, expected: BoardSession | undefined, expectedEpoch: number) => boolean;
@@ -62,6 +67,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [error, setError] = useState<string | null>(null),
     [recovery, setRecovery] = useState<string | null>(null),
     [raw, setRaw] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const pendingWrites = useRef(0);
   const [epoch, setEpoch] = useState(0);
   const audioPreferences = useMemo(() => ({ ...save.settings, epoch }), [save.settings, epoch]);
   const generation = useRef(0);
@@ -72,6 +79,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const persist = useCallback((next: Save) => {
     if (restoring.current) return queue.current;
     const encoded = JSON.stringify(next);
+    pendingWrites.current++; setSaving(true);
     queue.current = queue.current
       .catch(() => {})
       .then(() => storage.set(encoded))
@@ -80,7 +88,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       })
       .catch(() => {
         if (mounted.current) setError("Your latest changes could not be saved. Keep the app open and try again.");
-      });
+      }).finally(() => { pendingWrites.current--; if (mounted.current && pendingWrites.current === 0) setSaving(false); });
     return queue.current;
   }, []);
   const load = useCallback(async () => {
@@ -258,6 +266,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     generation.current++; setEpoch(generation.current);
     commit({ ...before, learning });
   }, [commit, ready, recovery]);
+  const personalize = useCallback((patch: Partial<Pick<Person, "look" | "made" | "home" | "unseen">>, expected: IdentityExpected) => {
+    if (!ready || recovery || restoring.current) return false;
+    const before = latest.current, next = applyPersonalization(before, patch, expected, generation.current);
+    if (next === before) return false;
+    commit(next); return true;
+  }, [commit, ready, recovery]);
+  const renameLearner = useCallback((id: string, name: string) => {
+    if (!ready || recovery || restoring.current) return false;
+    const before = latest.current, learning = before.learning ?? familyLearners(), clean = name.trim().replace(/\s+/g, " ");
+    if (id === "family" || !learning.people.some(p => p.id === id) || !clean || [...clean].length > 24 || learning.people.some(p => p.id !== id && p.name.toLocaleLowerCase() === clean.toLocaleLowerCase())) return false;
+    commit({ ...before, learning: { ...learning, people: learning.people.map(p => p.id === id ? { ...p, name: clean } : p) } }); return true;
+  }, [commit, ready, recovery]);
+  const removeLearner = useCallback(async (id: string) => {
+    if (!ready || recovery || restoring.current) return false;
+    const before = latest.current, next = withoutLearner(before, id);
+    if (next === before) return false;
+    restoring.current = true;
+    try {
+      await queue.current;
+      await preserveAndReplace(storage, JSON.stringify(next), JSON.stringify(before));
+      generation.current++; setEpoch(generation.current);
+      latest.current = next; setSave(next); setError(null); return true;
+    } finally { restoring.current = false; }
+  }, [ready, recovery]);
   const recordWarmup = useCallback((results: PracticeResult[], config: PracticeSettings, round: string, expectedEpoch: number) => {
     if (expectedEpoch !== generation.current || !ready || recovery || restoring.current) return;
     const before = latest.current, owner = before.learning?.active ?? "family";
@@ -310,6 +342,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     <Context.Provider
       value={{
         save,
+        personalize, renameLearner, removeLearner, saving,
         arcade,
         epoch,
         boardUpdate,

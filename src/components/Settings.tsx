@@ -181,7 +181,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
           {pending && (
             <>
               <Copy>
-                Restoring replaces the games on this device. A copy of the current save is preserved in recovery
+                Restoring replaces the games, learners, islanders and rooms on this device. An older backup restores its older state. A copy of the current save is preserved in recovery
                 storage.
               </Copy>
               <Button disabled={busy} onPress={() => void restore()}>

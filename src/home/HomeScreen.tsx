@@ -43,6 +43,8 @@ export type HomeScreenProps = Ownership & {
   badges?: BadgeId[];
   renderCharacter?: (slot: Character["slot"], pose: Pose) => ReactNode;
   initialState?: unknown;
+  persist?: (state: import("./model").HomeState) => boolean;
+  saveStatus?: ReactNode;
 };
 const ink = "#284F4B";
 type IconName = "back" | "undo" | "redo" | "rotate" | "mirror" | "away" | "more" | "down" | "lock";
@@ -125,13 +127,13 @@ type KeyEvent = { nativeEvent: { key: string }; preventDefault: () => void };
 /** RN native uses accessibilityActions; web additionally exposes the same operations to a keyboard. */
 const keyboard = (handler: (e: KeyEvent) => void): ViewProps =>
   Platform.OS === "web" ? ({ onKeyDown: handler } as ViewProps) : {};
-export function HomeScreen({ renderCharacter, badges = [], initialState, ...ownership }: HomeScreenProps) {
+export function HomeScreen({ renderCharacter, badges = [], initialState, persist, saveStatus, ...ownership }: HomeScreenProps) {
   const { width, height } = useWindowDimensions();
   const inset = useSafeAreaInsets();
   const app = useStore();
   const sound = useSounds(app.save.settings.sound);
   const reduced = useReducedMotion();
-  const store = useHomeStore(ownership, initialState);
+  const store = useHomeStore(ownership, initialState, persist);
   const [mode, setMode] = useState<"play" | "decorate">("play");
   const [tab, setTab] = useState<"Furniture" | "Stickers" | "Room">("Furniture");
   const [selected, setSelected] = useState<string>();
@@ -484,9 +486,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, ...owne
                 transform: [{ scale: size / 92 }],
               }}
             >
-              {renderCharacter ? (
-                renderCharacter(c.slot, c.pose)
-              ) : c.slot === 0 ? (
+              {renderCharacter?.(c.slot, c.pose) ?? (c.slot === 0 ? (
                 <Placeholder pose={c.pose} />
               ) : c.slot === 1 ? (
                 <View
@@ -502,7 +502,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, ...owne
                 </View>
               ) : (
                 <ArcadeArt game="crab-crossing" size={65} />
-              )}
+              ))}
             </View>
           </Drag>
         ),
@@ -694,6 +694,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, ...owne
         </View>
         <Button label="More" icon="more" iconOnly onPress={() => setMenu(!menu)} />
       </View>
+      {!!saveStatus && <View pointerEvents="box-none" style={{ position: "absolute", top: inset.top + 64, left: inset.left + 8, right: inset.right + 8, zIndex: 12 }}>{saveStatus}</View>}
       {decorating && (
         <View style={[styles.history, { top: inset.top + 62, right: inset.right + 8 }]}>
           <Button
@@ -730,7 +731,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, ...owne
           style={[
             styles.hint,
             width > height
-              ? { left: 8, top: inset.top + 72, maxWidth: Math.max(120, (width - sceneWidth) / 2 - 20) }
+              ? { left: 8, top: inset.top + (saveStatus ? 94 : 72), maxWidth: Math.max(120, (width - sceneWidth) / 2 - 20) }
               : { bottom: drawerHeight + inset.bottom + 12 },
           ]}
         >
@@ -739,7 +740,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, ...owne
       )}
       {menu && (
         <View style={[styles.menu, { top: inset.top + 60, right: inset.right + 8 }]}>
-          <Text style={styles.meta}>Home stays for this visit.</Text>
+          <Text style={styles.meta}>{persist ? "Your room saves on this device." : "Home stays for this visit."}</Text>
           <Button
             label="Reset room"
             onPress={() => {

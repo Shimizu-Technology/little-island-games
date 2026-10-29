@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { homeReducer, starterHome, validHome, type HomeAction, type HomeState, type Ownership } from "./model";
 export type History = { present: HomeState; past: HomeState[]; future: HomeState[] };
 export function editHistory(
@@ -27,34 +27,27 @@ export function editHistory(
     ? history
     : { present: result.state, past: [...history.past, history.present].slice(-40), future: [] };
 }
-/** Session-only adapter. Replace at integration; never write around Store.commit.
+/** Settled-action adapter. The route supplies a learner-scoped Store transaction; never write around Store.commit.
  * Invalid initial input is exposed verbatim as recoveryOriginal and never overwritten.
  * Persist only HomeState through learner-scoped personalization, not session history. */
-export function useHomeStore(ownership: Ownership = {}, initial?: unknown) {
+export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persist?: (state: HomeState) => boolean) {
   const [session, setSession] = useState(() => ({
     history: { present: validHome(initial) ? initial : starterHome(), past: [], future: [] } as History,
     message: "Your own little place by the sea.",
   }));
-  const dispatch = (action: HomeAction | { type: "undo" | "redo" }) =>
-    setSession((current) => {
-      const result =
-        action.type !== "undo" && action.type !== "redo"
-          ? homeReducer(current.history.present, action as HomeAction, ownership)
-          : undefined;
-      return {
-        history: editHistory(current.history, action, ownership),
-        message:
-          result?.message ??
-          (action.type === "undo"
-            ? "Undone."
-            : action.type === "redo"
-              ? "Redone."
-              : action.type === "toggle"
-                ? "A little home magic."
-                : "Room updated for this visit."),
-      };
-    });
-  const setMessage = (message: string) => setSession((current) => ({ ...current, message }));
+  const live = useRef(session);
+  const dispatch = (action: HomeAction | { type: "undo" | "redo" }) => {
+    const current = live.current;
+    const result = action.type !== "undo" && action.type !== "redo" ? homeReducer(current.history.present, action as HomeAction, ownership) : undefined;
+    const history = editHistory(current.history, action, ownership);
+    if (history !== current.history && persist && !persist(history.present)) {
+      const next = { ...current, message: "Your room could not be updated. Please try again." };
+      live.current = next; setSession(next); return;
+    }
+    const next = { history, message: result?.message ?? (action.type === "undo" ? "Undone." : action.type === "redo" ? "Redone." : "Room updated.") };
+    live.current = next; setSession(next);
+  };
+  const setMessage = (message: string) => { const next = { ...live.current, message }; live.current = next; setSession(next); };
   return {
     state: session.history.present,
     dispatch,
@@ -63,6 +56,6 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown) {
     canUndo: session.history.past.length > 0,
     canRedo: session.history.future.length > 0,
     recoveryOriginal: initial !== undefined && !validHome(initial) ? initial : undefined,
-    persistence: "session" as const,
+    persistence: persist ? "store" as const : "session" as const,
   };
 }

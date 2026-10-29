@@ -1,3 +1,4 @@
+import { LearnerChip } from "../personalization/LearnerChip";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AppState, ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -51,12 +52,13 @@ export function LearnFrame({ id }: { id: LearnId }) {
   }, [growthStep, saved?.id]);
   const learner = activeLearner(store.save.learning);
   const learningSkills = learner.id === "family" ? store.save.skills : learner.skills;
-  const [epoch] = useState(store.epoch);
+  const epoch = store.epoch;
   const acceptedRound = useRef(saved);
   useLayoutEffect(() => { acceptedRound.current = saved; }, [saved]);
   const roundHelped = useRef(false);
   useLayoutEffect(() => { roundHelped.current = saved?.levelHelped ?? false; }, [saved?.id, saved?.levelHelped]);
   const expected = useRef<{ id: string | null; revision?: number }>({ id: saved?.id ?? null, revision: saved?.revision });
+  useLayoutEffect(() => { expected.current = { id: saved?.id ?? null, revision: saved?.revision }; }, [epoch, saved?.id, saved?.revision]);
   const remembered = store.save.players ?? [];
   const [setup, setSetup] = useState(false),
     [help, setHelp] = useState(false),
@@ -69,6 +71,14 @@ export function LearnFrame({ id }: { id: LearnId }) {
     [starter, setStarter] = useState<Seat>(0),
     [alternate, setAlternate] = useState(saved?.match?.alternate ?? true),
     [appActive, setAppActive] = useState(AppState.currentState === "active" || AppState.currentState == null);
+  const identity = `${learner.id}:${epoch}`;
+  const previousIdentity = useRef(identity);
+  useLayoutEffect(() => {
+    if (previousIdentity.current === identity) return;
+    previousIdentity.current = identity;
+    // Keep the options/help sheet open, but use this learner's own learning choices.
+    setOptions((saved && (saved.learner ?? "family") === learner.id ? saved.options : learner.choices[id]) ?? { mode: engine.modes[0], pace: "easy", ...(engine.languages ? { language: engine.languages[0] } : {}) });
+  }, [identity, saved, learner, id, engine]);
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => setAppActive(state === "active"));
     return () => sub.remove();
@@ -217,6 +227,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView key={saved?.id ?? "setup"} ref={scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
+        <LearnerChip compact/>
         <GameHeader
           title={engine.name}
           onBack={back}
@@ -298,6 +309,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         title={saved ? "A fresh round" : `Let’s play ${engine.name}`}
         footer={<Button onPress={start}>{saved ? "Start a new round" : "Start playing"}</Button>}
       >
+        <LearnerChip compact/>
         <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
         {engine.modes.length > 1 && (
           <>

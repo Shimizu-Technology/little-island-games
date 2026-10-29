@@ -11,15 +11,29 @@ export function LearnerSettings({ disabled }: { disabled: boolean }) {
   const store = useStore(), people = store.save.learning ?? familyLearners(), learner = activeLearner(people);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
+  const [rename, setRename] = useState("");
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const labels = skillLabels();
   return <View style={{ gap: 10 }}>
     <Heading style={{ fontSize: 19 }}>Who is practicing?</Heading>
     <Copy>Each learner keeps separate notes and learning choices on this device. Shared family history stays with Family practice. Saved rounds keep their original owner.</Copy>
-    <View style={[styles.row, { flexWrap: "wrap" }]}>{people.people.map(p => <Chip key={p.id} selected={learner.id === p.id} onPress={() => { if (!disabled) store.selectLearner(p.id); }}>{p.name}</Chip>)}</View>
+    <View style={[styles.row, { flexWrap: "wrap" }]}>{people.people.map(p => <Chip key={p.id} selected={learner.id === p.id} onPress={() => { if (!disabled && !busy) { setConfirm(null); setRename(""); store.selectLearner(p.id); } }}>{p.name}</Chip>)}</View>
     {people.people.length < 5 && <>
-      <TextInput accessibilityLabel="New learner name" placeholder="Learner’s name" value={name} onChangeText={setName} maxLength={24} autoComplete="off" textContentType="none" editable={!disabled} style={styles.input} returnKeyType="done" />
-      <Button quiet compact disabled={disabled || !name.trim()} onPress={() => { if (store.addLearner(name)) { setName(""); setMessage(""); } else setMessage("Use a different name, up to 24 characters."); }}>Add learner</Button>
+      <TextInput accessibilityLabel="New learner name" placeholder="Learner’s name" value={name} onChangeText={setName} maxLength={24} autoComplete="off" textContentType="none" editable={!disabled && !busy} style={styles.input} returnKeyType="done" />
+      <Button quiet compact disabled={disabled || busy || !name.trim()} onPress={() => { if (store.addLearner(name)) { setName(""); setMessage(""); } else setMessage("Use a different name, up to 24 characters."); }}>Add learner</Button>
     </>}
+    {learner.id !== "family" && <>
+      <TextInput accessibilityLabel="Rename learner" placeholder={`New name for ${learner.name}`} value={rename} onChangeText={setRename} maxLength={24} editable={!disabled && !busy} style={styles.input}/>
+      <Button quiet compact disabled={disabled || busy || !rename.trim()} onPress={() => { if (store.renameLearner(learner.id, rename)) { setRename(""); setMessage("Name changed."); } else setMessage("Use a different name, up to 24 characters."); }}>Rename learner</Button>
+      <Button quiet compact disabled={disabled || busy} onPress={() => setConfirm(learner.id)}>Remove {learner.name}</Button>
+    </>}
+    {confirm && <View style={{ gap: 10 }}>
+      <Heading style={{ fontSize: 18 }}>Remove {people.people.find(p => p.id === confirm)?.name ?? "this learner"}?</Heading>
+      <Copy>This removes their learning notes, saved learning rounds, arcade progress, islander and room from this device. Shared family games stay. A full copy is kept in Previous saves; restore that copy to undo the removal (it replaces your current save).</Copy>
+      <Button disabled={busy || disabled} onPress={() => { setBusy(true); void store.removeLearner(confirm).then(ok => { if (ok) { setConfirm(null); setMessage("Learner removed. The previous save is kept in backups."); } else setMessage("No learner was removed."); }).catch(() => setMessage("Could not keep a recovery copy. The learner has not been removed.")).finally(() => setBusy(false)); }}>{busy ? "Keeping a recovery copy…" : "Confirm removal"}</Button>
+      <Button quiet disabled={busy} onPress={() => setConfirm(null)}>Keep learner</Button>
+    </View>}
     {!!message && <Copy>{message}</Copy>}
     {!!Object.keys(learner.skills).length && <>
       <Heading style={{ fontSize: 17 }}>{learner.name}’s practice across activities</Heading>

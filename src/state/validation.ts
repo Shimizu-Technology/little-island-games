@@ -17,9 +17,11 @@ import { validLearners, type Learners } from "../learn/learners";
 import { validSkills } from "../learn/skills";
 import { PracticeNotes, PracticeSettings, validPracticeNotes, validPracticeSettings } from "../practice/types";
 import { arcadeIds, validArcade, migrateArcade, type ArcadeId, type ArcadeSave } from "../arcade";
+import { validPersonalization, type Personalization } from "../personalization/model";
 export type Settings = { sound: boolean; help: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
 export type Save = {
   version: 1;
+  personalization?: Personalization;
   /** Island Arcade progress and validated untimed Reef rounds; real-time rounds are never persisted. */
   arcade?: ArcadeSave;
   settings: Settings;
@@ -358,6 +360,7 @@ export function parseSave(raw: string): Save {
     (v.settings.narrationVolume !== undefined && (typeof v.settings.narrationVolume !== "number" || !Number.isFinite(v.settings.narrationVolume) || v.settings.narrationVolume < 0 || v.settings.narrationVolume > 1)) ||
     (v.settings.voice !== undefined && !["warm", "calm"].includes(v.settings.voice as string)) ||
     (v.learning !== undefined && !validLearners(v.learning)) ||
+    (v.personalization !== undefined && !validPersonalization(v.personalization, validLearners(v.learning) ? v.learning : undefined)) ||
     !validLearningOwners(v.learn, v.learning) ||
     (v.settings.practice !== undefined && !validPracticeSettings(v.settings.practice)) ||
     (v.practiceNotes !== undefined && !validPracticeNotes(v.practiceNotes)) ||
