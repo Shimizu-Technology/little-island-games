@@ -22,7 +22,7 @@ import { BeachBoard, PalmBoard } from "./action/Playfield";
 import { wordEntry } from "../learn/kit/reading";
 import type { ArcadeId, ArcadeLevel, ArcadeResult, LevelId } from "./types";
 import type { OutfitId } from "./progress";
-import { createReef, reefLevel, reefLevels } from "./games/reef-builder/engine";
+import { createReef, reefLevel, reefLevels, type ReefState } from "./games/reef-builder/engine";
 import { ReefBoard } from "./games/reef-builder/View";
 import { createSong, songLevel, songLevels } from "./games/shell-song/engine";
 import { SongBoard } from "./games/shell-song/View";
@@ -34,6 +34,8 @@ import { CargoBoard } from "./games/canoe-cargo/View";
 export type ArcadeBoardProps = {
   level: ArcadeLevel | "endless";
   seed: number;
+  savedReef?: ReefState;
+  onSaveReef?: (state: ReefState) => void;
   helper: boolean;
   active: boolean;
   outfit: OutfitId;
@@ -89,7 +91,7 @@ export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
     goal: level => level !== "endless" && level.world === "learn" ? "Make ten. Let the fish swim free." : "Fill a line. Let the fish swim free.",
     clearedTitle: "A happier little reef",
     learningSkill: () => ({ skill: "num.make-ten", config: practice("math") }),
-    Board: p => <ReefBoard width={p.width} height={p.height} initial={createReef(p.level === "endless" ? p.level : reefLevel(p.level.id), p.seed, p.helper)} active={p.active} helper={p.helper} onResult={p.onResult} onTone={p.onTone} />,
+    Board: p => <ReefBoard width={p.width} height={p.height} initial={p.savedReef ?? createReef(p.level === "endless" ? p.level : reefLevel(p.level.id), p.seed, p.helper)} onSave={p.onSaveReef} active={p.active} helper={p.helper} onResult={p.onResult} onTone={p.onTone} />,
   },
   "shell-song": {
     fullBleed: true,
@@ -170,7 +172,7 @@ export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
     goal: level => actionInstruction(true, level !== "endless" && level.world === "learn"),
     Scene: p => <ActionScene palm {...p}/>,
     Teach: p => <Demo palm learning={p.learning}/>,
-    teachingDetail: learning => learning ? "The matching number catches a husk. Other numbers bounce it back. Take as long as you like." : "Slide anywhere to move Coco. Tap to toss. Fronds bounce beetles back; each frond can take 3 bumps. Beetles fly away dizzy into nets.",
+    teachingDetail: learning => learning ? "The matching number catches a husk. Other numbers bounce it back. Release, then press again for each new fact. Take as long as you like." : "Slide anywhere to move Coco. Tap to toss. Fronds bounce beetles back; each frond can take 3 bumps. Beetles fly away dizzy into nets.",
     learningSkill: level => ({ skill: level.index === 4 || level.index >= 7 ? "num.subtract-within-20" : "num.add-within-20", config: practice("math") }),
     Board: p => <PalmBoard initial={createPalm(p.level === "endless" ? p.level : palmLevel(p.level.id), p.seed, p.helper)} {...p}/>,
   },

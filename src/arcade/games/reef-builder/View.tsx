@@ -78,8 +78,15 @@ function ClearEffects({ state, cell, reduced }: { state: ReefState; cell: number
     {!!state.lastClear.length && <Animated.View style={[{ position: "absolute", left: Math.min(6 * cell, at % 8 * cell), top: Math.max(0, (Math.floor(at / 8) - 1) * cell) }, pop]}><Text style={{ color: "#244D60", backgroundColor: "#FFF4D9", borderRadius: 8, paddingHorizontal: 6, fontWeight: "900", fontSize: 18 }}>+{state.lastPoints}</Text></Animated.View>}
   </View>;
 }
-export function ReefBoard({ initial, active, helper, onResult, onTone, width, height }: { width: number; height: number; initial: ReefState; active: boolean; helper: boolean; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string) => void }) {
-  const { snapshot: s, dispatch, state } = useArcadeReducer(migrateReef(initial) ?? initial, reefTransition, active);
+export function ReefBoard({ initial, active, helper, onResult, onTone, width, height, onSave }: { width: number; height: number; initial: ReefState; onSave?: (state: ReefState) => void; active: boolean; helper: boolean; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string) => void }) {
+  const reduce = useCallback((before: ReefState, input: Parameters<typeof reefTransition>[1]) => {
+    const next = reefTransition(before, input);
+    if (next !== before && next.status === "playing") onSave?.(next);
+    return next;
+  }, [onSave]);
+  const { snapshot: s, dispatch, state } = useArcadeReducer(migrateReef(initial) ?? initial, reduce, active);
+  const firstState = useRef(initial);
+  useEffect(() => { if (firstState.current.status === "playing") onSave?.(firstState.current); }, [onSave]);
   const selection = useRef<number | null>(0);
   const [selected, setSelected] = useState<number | null>(0), [hover, setHover] = useState<{ row: number; col: number } | null>(null), board = useAnimatedRef<Animated.View>(), reported = useRef(false);
   const [bumped, setBumped] = useState(false);

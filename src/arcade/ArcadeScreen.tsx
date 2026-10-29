@@ -1,3 +1,5 @@
+import { bestLabel, freePlayBest } from "./presentation";
+import type { ReefState } from "./games/reef-builder/engine";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, TextInput, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -52,6 +54,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   const person = arcadeLearner(store.save.arcade, owner.id), p = gameProgress(person, game.id), foreground = useArcadeForeground();
   const [level, setLevel] = useState<ArcadeLevel | "endless" | null>(null), [playing, setPlaying] = useState(false), [paused, setPaused] = useState(false);
   const [sheet, setSheet] = useState<"book" | "outfits" | "settings" | "teach" | "chest" | "leave" | null>(null), [result, setResult] = useState<ArcadeResult | null>(null);
+  const [savedReef, setSavedReef] = useState<ReefState | undefined>(undefined);
   const [round, setRound] = useState(""), [seed, setSeed] = useState(1), [name, setName] = useState(owner.id === "family" ? store.save.players?.[0] ?? "Family" : owner.name);
   const [mode, setMode] = useState<ArcadeFamily["mode"]>("solo"), [strength, setStrength] = useState<ArcadeFamily["strength"]>("gentle");
   const [match, setMatch] = useState(() => newMatch(store.save.players));
@@ -79,11 +82,21 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
     const round = `arcade-${Date.now().toString(36)}-${Math.floor(Math.random() * 0x1000000).toString(36)}`;
     // eslint-disable-next-line react-hooks/purity -- User-invoked Start handler, not a render calculation.
     const nextSeed = Math.floor(Math.random() * 0x100000000);
-    setRound(round); setSeed(nextSeed === seed ? (seed + 1) >>> 0 : nextSeed); setResult(null); setPaused(false); setPlaying(true); setSheet(null);
+    setSavedReef(undefined); setRound(round); setSeed(nextSeed === seed ? (seed + 1) >>> 0 : nextSeed); setResult(null); setPaused(false); setPlaying(true); setSheet(null);
     helperUsed.current = person.helper;
     if (together) setMatch(previous => ({ ...previous, names: newMatch(previous.names).names }));
     if (level === "endless" || play.familyMatch) store.rememberPlayers(together ? newMatch(match.names).names : [name]);
     sound.say((play.startSpeech ?? play.speech)(level !== "endless" && level?.world === "learn", together)); toTop();
+  }
+  const onSaveReef = useCallback((state: ReefState) => {
+    if (round) arcade({ type: "save-round", session: { version: 1, game: "reef-builder", round, state } }, expected);
+  }, [arcade, round, expected]);
+  function resumeReef() {
+    const session = person.session;
+    if (!session || session.game !== game.id) return;
+    setSavedReef(session.state); setRound(session.round); setLevel(session.state.level);
+    helperUsed.current = session.state.helper || !!session.state.helped;
+    setResult(null); setPaused(false); setPlaying(true); setSheet(null); toTop();
   }
   function teach(andStart: boolean) { startAfterTeach.current = andStart; setSheet("teach"); sound.say(play.speech(level !== "endless" && level?.world === "learn", together)); }
   const onResult = useCallback((next: ArcadeResult, helped = false, winner?: 0 | 1 | null) => {
@@ -109,7 +122,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   const goal = level ? play.goal?.(level, together) ?? (level === "endless" ? "Make it your own." : level.goals[0]) : "";
   const onTeachPlay = () => { arcade({ type: "coached", game: game.id }, expected); if (startAfterTeach.current) start(); else setSheet(null); };
   const onHear = () => sound.say(play.speech(isLearning, together));
-  const board = level && playing ? <play.Board key={round} level={level} seed={seed} helper={person.helper} active={active} outfit={p.outfit} onResult={onResult} onTone={sound.tone} onSay={sound.say} debug={debug || __DEV__} {...arena} family={family}/> : null;
+  const board = level && playing ? <play.Board key={round} savedReef={savedReef} onSaveReef={onSaveReef} level={level} seed={seed} helper={person.helper} active={active} outfit={p.outfit} onResult={onResult} onTone={sound.tone} onSay={sound.say} debug={debug || __DEV__} {...arena} family={family}/> : null;
   return <View style={{ flex: 1, backgroundColor: game.color }}>
     <PlayScene Scene={play.Scene} game={game.id} world={level && level !== "endless" ? level.world : "w1"} active={foreground && !paused && !sheet}/>
     <View style={{ paddingHorizontal: 12, paddingVertical: 7, gap: 8, backgroundColor: "#24536A" }}>
@@ -124,12 +137,12 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
       setArena(previous => previous.width === width && previous.height === height ? previous : { width, height });
     }}><SaveStatus/>{board}</View> : <ScrollView ref={scroll} contentContainerStyle={{ flexGrow: 1, width: "100%", paddingBottom: playing ? 0 : 24, gap: 12 }}>
       <SaveStatus/>
-      {!level ? <><LevelMap game={game} person={person} levels={levels} unlockAll={store.save.arcade?.unlockAll ?? false} onLevel={choose} onOutfits={() => setSheet("outfits")} onChest={openChest} active={foreground && !sheet} Scene={play.Scene} worldNote={play.worldNote}/>
+      {!level ? <>{person.session?.game === game.id && <View style={{ paddingHorizontal: 16 }}><Button onPress={resumeReef}>Continue saved Reef Builder round</Button><Copy style={{ color: "#FFF4DA", textAlign: "center" }}>Your reef, pieces and moves are saved.</Copy></View>}<LevelMap game={game} person={person} levels={levels} unlockAll={store.save.arcade?.unlockAll ?? false} onLevel={choose} onOutfits={() => setSheet("outfits")} onChest={openChest} freeBest={freePlayBest(store.save.arcade, game.id)} active={foreground && !sheet} Scene={play.Scene} worldNote={play.worldNote}/>
         <View style={{ paddingHorizontal: 16, gap: 12 }}><Button quiet onPress={() => setSheet("book")}>My sticker book</Button>
         {!!store.save.arcade?.scores.some(s => s.game === game.id) && <View style={{ padding: 16, gap: 8, borderRadius: 24, backgroundColor: "#FFF3D7" }}><Heading style={{ fontSize: 21 }}>Family free-play board</Heading>{store.save.arcade.scores.filter(s => s.game === game.id).sort((a, b) => b.score - a.score).map(s => <Copy key={s.name}>{s.name} · {s.score} points</Copy>)}</View>}</View>
       </> : result ? <View style={{ flex: 1, minHeight: Math.max(0, height - insets.top - insets.bottom - 86), justifyContent: "center", gap: 14, alignItems: "center", paddingHorizontal: 18, maxWidth: 600, width: "100%", alignSelf: "center" }}>
         <View><Hero game={game.id} size={150} outfit={p.outfit} mood={result.cleared ? "happy" : result.outcome === "stopped" ? "idle" : "dizzy"} active={foreground && !sheet}/>{result.cleared && <Celebrate burst={1} big/>}</View><Heading style={{ textAlign: "center", fontSize: 30, color: "#FFF5D8", backgroundColor: "#24536A", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 24 }}>{result.cleared ? play.clearedTitle : result.outcome === "stopped" ? "A lovely place to stop" : "Game over"}</Heading>
-        {result.cleared && <StarReveal stars={result.stars} onTone={sound.tone} active={foreground && !sheet}/>}<View style={{ width: "100%", gap: 10, backgroundColor: "#24536A", padding: 14, borderRadius: 20 }}><Copy style={{ textAlign: "center", color: "#FFF3D5", fontSize: 16 }}>{result.detail}</Copy><View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 20 }}><Copy style={{ color: "#FFF3D5", fontWeight: "800" }}>Score {result.score}</Copy><Copy style={{ color: "#FFF3D5", fontWeight: "800" }}>Best {Math.max(p.best, result.score)}</Copy></View></View>
+        {result.cleared && <StarReveal stars={result.stars} onTone={sound.tone} active={foreground && !sheet}/>}<View style={{ width: "100%", gap: 10, backgroundColor: "#24536A", padding: 14, borderRadius: 20 }}><Copy style={{ textAlign: "center", color: "#FFF3D5", fontSize: 16 }}>{result.detail}</Copy><View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 20 }}><Copy style={{ color: "#FFF3D5", fontWeight: "800" }}>Score {result.score}</Copy><Copy style={{ color: "#FFF3D5", fontWeight: "800" }}>{bestLabel} {Math.max(p.best, result.score)}</Copy></View></View>
         {together && <Heading style={{ fontSize: 21, textAlign: "center", color: "#FFF4DA", backgroundColor: "#24536A", padding: 10, borderRadius: 16 }}>{match.names[0]} {match.wins[0]} : {match.wins[1]} {match.names[1]}</Heading>}
         {reminder && <View style={{ padding: 18, gap: 10, backgroundColor: "#FFF0CA", borderRadius: 24 }}><Heading style={{ fontSize: 23 }}>A little island break?</Heading><Copy>Your stars are saved. Stretch, have a drink, or keep playing together.</Copy><Button quiet onPress={() => { acknowledgeArcadeBreak(); setReminder(false); }}>Thanks · I’m comfortable</Button></View>}
         {result.cleared && person.chest?.round === round && <PressableScale accessibilityRole="button" accessibilityLabel="A sticker chest · see what’s inside" onPress={() => { sound.say("arcade-chest"); openChest(); }} style={{ width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 16, padding: 10, borderRadius: 28, backgroundColor: "#FFF1CF", borderWidth: 3, borderColor: "#DFB363" }}><ChestArt sticker={person.chest.sticker} size={112} active={foreground && !sheet}/><View style={{ flexShrink: 1 }}><Heading style={{ fontSize: 21 }}>A sticker chest!</Heading><Copy style={{ fontSize: 14 }}>See what’s inside →</Copy></View></PressableScale>}
@@ -138,7 +151,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
         <Hero game={game.id} size={132} outfit={p.outfit} active={foreground && !sheet}/>
         <View style={{ width: "100%", maxWidth: 480, backgroundColor: "#FFF4DA", borderRadius: 32, borderWidth: 3, borderColor: "#DCC28F", padding: 22, gap: 16, alignItems: "center", boxShadow: "0 8px 0 #285B70" }}>
           <Copy style={{ color: game.color, fontSize: 14, textAlign: "center" }}>{level === "endless" ? "Free play" : `${game.worlds.find(w => w.id === level.world)?.name} · Level ${level.index}`}</Copy><Heading style={{ textAlign: "center", fontSize: 29 }}>{level === "endless" ? "Make it your own" : level.name}</Heading>
-          <Heading style={{ textAlign: "center", fontSize: 20 }}>{goal}</Heading>
+          <Heading style={{ textAlign: "center", fontSize: 20 }}>{goal}</Heading>{person.session?.game === game.id && <Copy style={{ textAlign: "center", fontSize: 14 }}>Starting a new round replaces your saved reef. Use Map to continue it instead.</Copy>}
           <View style={{ width: "100%", gap: 9 }}>{level === "endless" ? <Copy style={{ textAlign: "center" }}>Your own pace. Finish whenever you like.</Copy> : level.goals.map((goal, i) => <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}><StarDisplay stars={i + 1} size={17}/><Copy style={{ flex: 1, color: "#345A61", fontSize: i === 0 ? 19 : 14, fontWeight: i === 0 ? "800" : "500" }}>{goal}</Copy></View>)}</View>
           <View style={{ width: "100%" }}><ToggleRow label="Helper" detail={play.helperDetail ?? "Slower play. Five hearts. Same stars."} value={person.helper} onChange={value => arcade({ type: "helper", value }, expected)}/></View>
           {play.familyMatch && <FamilySetup mode={mode} strength={strength} match={match} onMode={setMode} onStrength={setStrength} onMatch={setMatch}/>}
@@ -149,7 +162,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
     </ScrollView>}
     {!playing && level && !result && <View testID="arcade-start-dock" style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: "#FFF4DA", borderTopWidth: 2, borderColor: "#DCC28F" }}><View style={{ width: "100%", maxWidth: 480, alignSelf: "center" }}><Button onPress={() => { if (p.coached) start(); else teach(true); }}>{p.coached ? "Let’s play" : "Show me & play"}</Button></View></View>}
     <Sheet visible={paused && !sheet} title="Your game is paused" onClose={() => setPaused(false)}><View style={{ alignItems: "center" }}><Hero game={game.id} size={100} outfit={p.outfit} active={false}/></View><Button onPress={() => setPaused(false)}>Resume play</Button><ToggleRow label="Helper" detail={play.helperDetail ?? "Slower play. Five hearts. Same stars."} value={person.helper} onChange={value => arcade({ type: "helper", value }, expected)}/><Button quiet onPress={() => teach(false)}>How to play</Button><Button quiet onPress={() => { setPaused(false); setLevel(null); setResult(null); setPlaying(false); }}>Back to level map</Button></Sheet>
-    <Sheet visible={sheet === "leave"} title="Back to the map?" onClose={() => setSheet(null)}><Copy>This round will start fresh next time. Your earned stars and stickers are saved.</Copy><Button onPress={() => { setSheet(null); setPlaying(false); setLevel(null); setResult(null); }}>Leave round · back to map</Button><Button quiet onPress={() => setSheet(null)}>Keep playing</Button></Sheet>
+    <Sheet visible={sheet === "leave"} title="Back to the map?" onClose={() => setSheet(null)}><Copy>{person.session?.round === round ? "Your reef is saved. Continue this round from the map next time." : "This round will start fresh next time. Your earned stars and stickers are saved."}</Copy><Button onPress={() => { setSheet(null); setPlaying(false); setLevel(null); setResult(null); }}>Leave round · back to map</Button><Button quiet onPress={() => setSheet(null)}>Keep playing</Button></Sheet>
     <Sheet visible={sheet === "teach"} title="Show me" onClose={() => { startAfterTeach.current = false; setSheet(null); }}>{play.Teach ? <PlayTeaching goal={goal} detail={play.teachingDetail?.(isLearning, together) ?? ""} onHear={onHear} onPlay={onTeachPlay}><play.Teach learning={isLearning} together={together} goal={goal} onTone={sound.tone}/></PlayTeaching> : <Teaching game={game} learning={isLearning} onHear={onHear} onPlay={onTeachPlay}/>}</Sheet>
     <Sheet visible={sheet === "book"} title="Sticker book" onClose={() => setSheet(null)}><StickerBook person={person}/></Sheet>
     <Sheet visible={sheet === "outfits"} title={game.hero} onClose={() => setSheet(null)}><OutfitCloset game={game} person={person} onSelect={outfit => arcade({ type: "outfit", game: game.id, outfit }, expected)}/></Sheet>

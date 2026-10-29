@@ -35,8 +35,8 @@ export const palmLevels: readonly PalmLevel[] = allLevelIds.map((id) => {
     world = worldOf(id),
     rank = world === "learn" ? 0 : Number(world[1]) - 1,
     learning = world === "learn";
-  const waves = learning ? 1 : 2 + Number(rank >= 2) + Number(rank >= 5);
-  const par = waves * (22 + rank * 2 + index * 0.5);
+  const waves = learning || rank === 0 ? 1 : 2 + Number(rank >= 2) + Number(rank >= 5);
+  const par = rank === 0 && !learning ? 15 + index * 3 : waves * (22 + rank * 2 + index * 0.5);
   return {
     id,
     index,
@@ -55,9 +55,9 @@ export const palmLevels: readonly PalmLevel[] = allLevelIds.map((id) => {
           "Palm party",
           "The crowned visitor",
         ][index - 1],
-    count: learning ? 3 : 10 + 5 * Number(rank >= 2),
+    count: learning ? 3 : rank === 0 ? (index <= 3 ? 5 : 10) : 10 + 5 * Number(rank >= 2),
     waves,
-    relays: learning ? 1 : rank < 2 ? 4 : 3,
+    relays: learning || rank === 0 && index <= 3 ? 1 : rank === 0 ? 2 : rank < 2 ? 4 : 3,
     speed: learning ? 0 : 40 + rank * 6 + (index - 1) * 1.1,
     descent: 16 + rank,
     diveEvery: rank === 0 ? 0 : Math.max(1.2, 4.2 - rank * 0.4 - index * 0.05),
@@ -73,7 +73,7 @@ export const palmLevels: readonly PalmLevel[] = allLevelIds.map((id) => {
     goals: learning
       ? [`Match ${3 + Math.floor(index / 3)} math facts`, "At most 1 wrong answer", "Every answer right first time"]
       : [
-          `Net every wave · ${waves} waves`,
+          `Net every wave · ${waves} ${waves === 1 ? "wave" : "waves"}`,
           "Lose at most 1 heart",
           `No hearts lost · ${Math.round((0.55 + rank * 0.025) * 100)}% aim · under ${Math.ceil(par)}s`,
         ],
@@ -126,6 +126,7 @@ export type PalmState = {
   pulse: number;
   shots: number;
   inputTap: number;
+  fireHeld: boolean;
   landed: number;
   misses: number;
   direction: number;
@@ -241,6 +242,7 @@ export function createPalm(level: PalmState["level"], seed: number, helper = fal
     pulse: 0,
     shots: 0,
     inputTap: 0,
+    fireHeld: false,
     landed: 0,
     misses: 0,
     direction: 1,
@@ -442,10 +444,11 @@ export function validPalm(v: unknown): v is PalmState {
   if (
     !exact(
       v,
-      "level seed helper helped phase time waveTime launcher beetles husks shields lives wave relay caught score cooldown fact prompt answer event cue feedback feedbackX feedbackY pulse shots inputTap landed misses direction marchX marchY diveClock waveWait"
+      "level seed helper helped phase time waveTime launcher beetles husks shields lives wave relay caught score cooldown fact prompt answer event cue feedback feedbackX feedbackY pulse shots inputTap fireHeld landed misses direction marchX marchY diveClock waveWait"
     ) ||
     !(v.level === "endless" || canonicalLevel(v.level, palmLevels)) ||
     !integer(v.seed, 0xffffffff) ||
+    typeof v.fireHeld !== "boolean" ||
     typeof v.helper !== "boolean" ||
     typeof v.helped !== "boolean" ||
     !["play", "cleared", "rest"].includes(v.phase as string) ||
