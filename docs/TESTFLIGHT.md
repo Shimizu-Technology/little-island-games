@@ -212,3 +212,25 @@ Delivery:
 Receipt: [evidence/testflight-build16.json](evidence/testflight-build16.json).
 
 Not verified: physical 120 Hz smoothness, real-glass gestures, iPad A12 performance, audio and haptics, VoiceOver.
+
+## Arcade feel fixes beta — 1.9.2 (17), available 29 October 2026 Guam time
+
+On 1.9.1 Leon reported three problems: Flight froze on each jump, Canoe Cargo wouldn't rotate a piece until it had been moved, and Lagoon Run needed Subway-style variety. He also asked for clearer icons. Root causes and fixes are in [ARCADE_FEEL_V3.md](ARCADE_FEEL_V3.md#192-17-leons-191-feedback). This build includes:
+- preloaded sound players (no more expo-audio `replace()` on every tap, which was the jump freeze);
+- Cargo taps keyed to a touch-down token, so the first tap rotates each new piece;
+- Lagoon Run v4: obstacles to jump, roll under and dodge, ramps and boardwalks, moving canoes, crabs and rolling coconuts, four power-ups (Shell Magnet, Kite Glide, Spring Sandals, Turtle Shield), and difficulty that rises through W6;
+- one GameIcon system across Home, the shelves and the Arcade lobby, plus a new app mark.
+
+Source: clean commit `2cb8d99a4f2a0c775d7fe66516188d16bba1e23b` on held PR #16.
+- Full gate: 1,165 tests; Doctor 21/21.
+- Independent review: two rounds; all material findings fixed.
+
+Delivery:
+- The IPA is 173,921,794 bytes, SHA256 `ebc3f083e1cf7b9c1b5e3a3fc4e39303677885d9461bcdbe4c3a921e057238ea`.
+- The signature, profile, entitlements and version all passed, and all 5,815 referenced audio files match the source.
+- EAS submission finished in about 5 minutes.
+- Apple build `bee35993-9a4f-4072-984b-9b8f297353a8` is VALID / IN_BETA_TESTING in the Leon internal group, with notes.
+
+Receipt: [evidence/testflight-build17.json](evidence/testflight-build17.json).
+
+Not verified: that the flap freeze is gone on a physical iPhone (the simulator never showed it), real-glass gestures, iPad A12 performance, audio and haptics, VoiceOver.
