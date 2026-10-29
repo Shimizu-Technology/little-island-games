@@ -62,6 +62,19 @@ describe('Islander skeleton and wardrobe contracts', () => {
     expect(b.leftFoot[1]).toBeLessThan(b.rightFoot[1]);
     expect(b.leftHand[1]).toBeGreaterThan(b.rightHand[1]);
   });
+  it('keeps every sampled running arm pair asymmetric with a hidden forward hand and a low rear hand', () => {
+    for (const frame of runCycleFrames) {
+      const j = backPose(frame).joints;
+      const forward = j.leftHand[1] < j.rightHand[1] ? 'left' : 'right';
+      const rear = forward === 'left' ? 'right' : 'left';
+      expect(Math.abs(j.leftHand[1]-j.rightHand[1]), `frame ${frame}`).toBeGreaterThan(12);
+      expect(j[`${forward}Hand`][0]).toBeGreaterThan(27);
+      expect(j[`${forward}Hand`][0]).toBeLessThan(53);
+      expect(j[`${forward}Hand`][1]-j[`${forward}Shoulder`][1]).toBeLessThan(14);
+      expect(j[`${rear}Hand`][1]-j[`${rear}Shoulder`][1]).toBeGreaterThan(26);
+      expect(rear === 'left' ? j.leftHand[0] : 80-j.rightHand[0]).toBeLessThan(20);
+    }
+  });
   it('preserves the Run frame index contract and ground contact', () => {
     expect(runCycleFrames).toEqual([0,16,1,17,2,18,3,19,4,20,5,21,6,22,7,23]);
     for (const frame of [0,1,3,4,5,7,8,10,11,12,13,15]) expect(Math.max(backPose(frame).joints.leftFoot[1],backPose(frame).joints.rightFoot[1])).toBeCloseTo(128,5);

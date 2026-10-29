@@ -10,6 +10,12 @@ export function boneShape(a: Point, b: Point, r: number, end = r): string {
   const dx = b[0] - a[0], dy = b[1] - a[1], length = Math.max(.001, Math.hypot(dx, dy)), nx = -dy / length, ny = dx / length, ux = dx / length, uy = dy / length;
   return `M${a[0] + nx * r} ${a[1] + ny * r}L${b[0] + nx * end} ${b[1] + ny * end}Q${b[0] + ux * end * 1.8} ${b[1] + uy * end * 1.8} ${b[0] - nx * end} ${b[1] - ny * end}L${a[0] - nx * r} ${a[1] - ny * r}Q${a[0] - ux * r * 1.8} ${a[1] - uy * r * 1.8} ${a[0] + nx * r} ${a[1] + ny * r}Z`;
 }
+/** Flat mid-thigh hem, perpendicular to the thigh; no rounded knee cap. */
+export function shortsShape(a: Point, knee: Point): string {
+  const b = between(a, knee, .5), length = Math.max(.001, Math.hypot(knee[0]-a[0], knee[1]-a[1]));
+  const nx = -(knee[1]-a[1])/length, ny = (knee[0]-a[0])/length;
+  return `M${a[0]+nx*6.7} ${a[1]+ny*6.7}L${b[0]+nx*6.2} ${b[1]+ny*6.2}L${b[0]-nx*6.2} ${b[1]-ny*6.2}L${a[0]-nx*6.7} ${a[1]-ny*6.7}Z`;
+}
 /** One closed contour per limb; the quadratic tangent passes smoothly around the bend. */
 export function limbShape(a: Point, b: Point, c: Point, r: number, tip: number): string {
   const normal = (p: Point, q: Point): Point => { const d = Math.max(.001, Math.hypot(q[0]-p[0], q[1]-p[1])); return [-(q[1]-p[1])/d, (q[0]-p[0])/d]; };
@@ -32,7 +38,7 @@ export function IslanderShape({ pose, look: input = defaultLook }: { pose: Pose;
     const sleeveEnd = between(start, middle, arm ? (look.outfit === 'lab-coat' ? .9 : .55) : .5);
     return <G key={`${side}${arm}`}>
       <Path data-limb={`${side}-${arm ? 'arm' : 'leg'}`} d={limbShape(start, middle, end, radius, arm ? 3.9 : 4.5)} fill={hoodie ? (arm ? colors.primary : colors.secondary) : skin}/>
-      {!hoodie && (!arm || !dress) && <Path d={boneShape(start, sleeveEnd, radius + .5, radius)} fill={arm ? (look.outfit === 'lab-coat' ? '#FFF2DC' : colors.primary) : colors.secondary} strokeWidth={0}/>}
+      {!hoodie && (!arm || !dress) && <Path data-garment={arm ? "sleeve" : "shorts"} d={arm ? boneShape(start, sleeveEnd, radius + .5, radius) : shortsShape(start, middle)} fill={arm ? (look.outfit === 'lab-coat' ? '#FFF2DC' : colors.primary) : colors.secondary} strokeWidth={0}/>}
       {!arm && <Path data-sole={!front && end[1] < 123 ? "lifted" : "ground"} d={!front && !compact && end[1] < 123 ? `M${end[0]-4.5} ${end[1]-5}Q${end[0]} ${end[1]-8} ${end[0]+4.5} ${end[1]-5}L${end[0]+5} ${end[1]+2}Q${end[0]} ${end[1]+6} ${end[0]-5} ${end[1]+2}Z` : `M${end[0] - 4.5} ${end[1] - 2}Q${end[0]} ${end[1] - 5} ${end[0] + 4.5} ${end[1] - 2}L${end[0] + 5} ${end[1] + 1}Q${end[0]} ${end[1] + 3} ${end[0] - 5} ${end[1] + 1}Z`} fill={!front && end[1] < 123 ? '#F8DFA0' : colors.trim} strokeWidth={1.3}/>}
       {arm && side === 'right' && <RewardArt look={look} pose={pose} layer="wrist"/>}
     </G>;
@@ -48,7 +54,7 @@ export function IslanderShape({ pose, look: input = defaultLook }: { pose: Pose;
   return <G stroke={ink} strokeWidth={1.35} strokeLinejoin="round" strokeLinecap="round">
     <G data-layer="rear-accessory">{look.accessory === 'backpack' && front && backpack}</G>
     <G data-layer="rear-hair">{rearHair}</G>
-    <G data-layer="rear-limbs">{limb('left', false)}{look.outfit === 'sundress' && limb('right', false)}{limb(rearArm, true)}{!front && !compact && hand(rearArm)}</G>
+    <G data-layer="rear-limbs">{limb('left', false)}{limb('right', false)}{limb(rearArm, true)}{!front && !compact && hand(rearArm)}</G>
     <G data-layer="body"><Path d={`M${hx - 5} ${hy + r - 3}L35 ${sy + 3}H45L${hx + 5} ${hy + r - 3}Z`} fill={skin}/><Path d={`M26 ${sy}Q40 ${sy - (compact ? 2 : 7)} 54 ${sy}L54 ${hip + 2}H26Z`} fill={skin}/><Ellipse cx={hx - r} cy={hy + 3} rx={3} ry={4} fill={skin}/><Ellipse cx={hx + r} cy={hy + 3} rx={3} ry={4} fill={skin}/>
       {!compact && <Circle cx={hx} cy={hy} r={r} fill={skin}/>}</G>
     <G data-layer="clothing"><Path d={`M27 ${hip - 8}H53L55 ${hip + 6}H43L40 ${hip + 1}L37 ${hip + 6}H25Z`} fill={colors.secondary}/>
@@ -61,7 +67,7 @@ export function IslanderShape({ pose, look: input = defaultLook }: { pose: Pose;
       </>}
       <RewardArt look={look} pose={pose} layer="clothing"/>{compact && look.accessory === 'backpack' && backpack}
     </G>
-    <G data-layer="front-limbs">{look.outfit !== 'sundress' && limb('right', false)}{limb(frontArm, true)}</G>
+    <G data-layer="front-limbs">{limb(frontArm, true)}</G>
     <G data-layer="hands">{front || compact ? <>{hand('left')}{hand('right')}</> : hand(frontArm)}</G>
     <RewardArt look={look} pose={pose} layer="neckwear"/><G data-layer="front-hair">{compact && <Circle cx={hx} cy={hy} r={r} fill={hair}/>}
 
