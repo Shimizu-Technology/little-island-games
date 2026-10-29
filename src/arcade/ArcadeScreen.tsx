@@ -1,3 +1,4 @@
+import { Companion } from "../islander/Companion";
 import { LearnerChip } from "../personalization/LearnerChip";
 import { bestLabel, freePlayBest } from "./presentation";
 import type { ReefState } from "./games/reef-builder/engine";
@@ -12,7 +13,6 @@ import { router } from "expo-router";
 import { Button, Chip, Copy, Heading, IconButton, PressableScale, Sheet, ToggleRow, styles } from "../components/ui";
 import { Settings } from "../components/Settings";
 import { SaveStatus } from "../components/SaveStatus";
-import { Celebrate } from "../learn/Celebrate";
 import { Icon } from "../components/Icon";
 import Svg, { Rect } from "react-native-svg";
 import { ArcadeScene } from "./Scene";
@@ -152,7 +152,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
         <View style={{ paddingHorizontal: 16, gap: 12 }}><Button quiet onPress={() => setSheet("book")}>My sticker book</Button>
         {!!store.save.arcade?.scores.some(s => s.game === game.id) && <View style={{ padding: 16, gap: 8, borderRadius: 24, backgroundColor: "#FFF3D7" }}><Heading style={{ fontSize: 21 }}>Family free-play board</Heading>{store.save.arcade.scores.filter(s => s.game === game.id).sort((a, b) => b.score - a.score).map(s => <Copy key={s.name}>{s.name} · {s.score} points</Copy>)}</View>}</View>
       </> : result ? <View style={{ flex: 1, minHeight: Math.max(0, height - insets.top - insets.bottom - 86), justifyContent: "center", gap: 14, alignItems: "center", paddingHorizontal: 18, maxWidth: 600, width: "100%", alignSelf: "center" }}>
-        <View><Hero game={game.id} size={150} outfit={p.outfit} mood={result.cleared ? "happy" : result.outcome === "stopped" ? "idle" : "dizzy"} active={foreground && !sheet}/>{result.cleared && <Celebrate burst={1} big/>}</View><Heading style={{ textAlign: "center", fontSize: 30, color: "#FFF5D8", backgroundColor: "#24536A", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 24 }}>{result.cleared ? play.clearedTitle : result.outcome === "stopped" ? "A lovely place to stop" : "Game over"}</Heading>
+        <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 16 }}><Companion event={result.cleared ? "complete" : result.outcome === "stopped" ? "draw" : "loss"} size={132} active={foreground && !sheet}/><Hero game={game.id} size={116} outfit={p.outfit} mood={result.cleared ? "happy" : result.outcome === "stopped" ? "idle" : "dizzy"} active={foreground && !sheet}/></View><Heading style={{ textAlign: "center", fontSize: 30, color: "#FFF5D8", backgroundColor: "#24536A", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 24 }}>{result.cleared ? play.clearedTitle : result.outcome === "stopped" ? "A lovely place to stop" : "Game over"}</Heading>
         {result.cleared && <StarReveal stars={result.stars} onTone={sound.tone} active={foreground && !sheet}/>}<View style={{ width: "100%", gap: 10, backgroundColor: "#24536A", padding: 14, borderRadius: 20 }}><Copy style={{ textAlign: "center", color: "#FFF3D5", fontSize: 16 }}>{result.detail}</Copy><View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 20 }}><Copy style={{ color: "#FFF3D5", fontWeight: "800" }}>Score {result.score}</Copy><Copy style={{ color: "#FFF3D5", fontWeight: "800" }}>{bestLabel} {Math.max(p.best, result.score)}</Copy></View></View>
         {together && <Heading style={{ fontSize: 21, textAlign: "center", color: "#FFF4DA", backgroundColor: "#24536A", padding: 10, borderRadius: 16 }}>{match.names[0]} {match.wins[0]} : {match.wins[1]} {match.names[1]}</Heading>}
         {reminder && <View style={{ padding: 18, gap: 10, backgroundColor: "#FFF0CA", borderRadius: 24 }}><Heading style={{ fontSize: 23 }}>A little island break?</Heading><Copy>Your stars are saved. Stretch, have a drink, or keep playing together.</Copy><Button quiet onPress={() => { acknowledgeArcadeBreak(); setReminder(false); }}>Thanks · I’m comfortable</Button></View>}

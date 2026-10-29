@@ -1,7 +1,8 @@
+import { Companion } from "../../../islander/Companion";
 import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, { Easing, runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming, type SharedValue } from "react-native-reanimated";
+import Animated, { Easing, runOnJS, useAnimatedReaction, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import { Text } from "../../../components/Text";
 import { useReducedMotion } from "../../../components/motion";
 import { PressControl, uiThreadDrag } from "../../Input";
@@ -23,14 +24,6 @@ const Bundle = memo(function Bundle({ piece, cell, learning }: { piece: CargoPie
 });
 const MovingCargo = memo(function MovingCargo({ poses, piece, value, cell }: { poses: SharedValue<SpritePose[]>; piece: CargoPiece; value: number; cell: number }) {
   return <><ArcadeSprite poses={poses} index={5} width={cell * 4} height={cell * 4}><CargoOutline piece={piece} cell={cell} ghost/></ArcadeSprite>{[0, 1, 2, 3].map(i => <ArcadeSprite key={i} poses={poses} index={i} width={cell} height={cell}><CargoTile kind={piece.kind} value={value} size={cell}/></ArcadeSprite>)}<ArcadeSprite poses={poses} index={4} width={cell * 4} height={cell * 4}><CargoOutline piece={piece} cell={cell}/></ArcadeSprite></>;
-});
-const Captain = memo(function Captain({ size, outfit, cue, bump, clear, active, reduced }: { size: number; outfit: OutfitId; cue: string; bump: number; clear: boolean; active: boolean; reduced: boolean }) {
-  const bob = useSharedValue(0), turn = useSharedValue(0), squash = useSharedValue(1);
-  useEffect(() => { bob.set(active && !reduced ? withRepeat(withSequence(withTiming(-2, { duration: 1300 }), withTiming(0, { duration: 1300 })), -1) : 0); }, [bob, active, reduced]);
-  useEffect(() => { if (reduced) return; squash.set(withSequence(withTiming(clear ? 1.06 : .96, { duration: 65 }), withTiming(1, { duration: 110 }))); }, [cue, clear, reduced, squash]);
-  useEffect(() => { if (bump && !reduced) turn.set(withSequence(withTiming(-.1, { duration: 45 }), withTiming(.08, { duration: 55 }), withTiming(0, { duration: 70 }))); }, [bump, reduced, turn]);
-  const motion = useAnimatedStyle(() => ({ transform: [{ translateY: bob.value }, { rotate: `${turn.value}rad` }, { scale: squash.value }] }));
-  return <Animated.View style={motion}><CargoCaptain size={size} outfit={outfit} happy={clear}/></Animated.View>;
 });
 function LockEffects({ s, cell, reduced }: { s: CargoState; cell: number; reduced: boolean }) {
   const age = useSharedValue(0);
@@ -59,7 +52,7 @@ function SoftDrop({ active, onChange, onTap }: { active: boolean; onChange: (hel
 export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, debug = false, width, height }: { width: number; height: number; initial: CargoState; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string) => void; debug?: boolean }) {
   const reduced = useReducedMotion(), wide = width > height, compact = height < 500;
   // The parent measures below its header and safe areas. Reserve all controls before sizing the grid.
-  const cell = Math.max(1, Math.min(43, (width - (wide ? 226 : 30)) / COLS, (height - (wide ? 110 : 230) - (initial.level === "endless" ? 48 : 0) - (debug ? 14 : 0)) / ROWS));
+  const cell = Math.max(1, Math.min(43, (width - (wide ? 226 : 30)) / COLS, (height - (wide ? compact ? 142 : 110 : 262) - (initial.level === "endless" ? 48 : 0) - (debug ? 14 : 0)) / ROWS));
   const boardW = cell * COLS, boardH = cell * ROWS, learning = initial.level !== "endless" && !!initial.level.targetSum;
   const poses = useSharedValue<SpritePose[]>([]), reported = useRef(false), helped = useRef(helper);
   const build = useCallback((s: CargoState) => {
@@ -128,14 +121,15 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
   </View>;
   return <View testID="cargo-scene" style={{ flex: 1, width: "100%", justifyContent: "center", backgroundColor: "#2B6677", borderRadius: 24, overflow: "hidden", padding: 9, gap: 8 }}>
     <View pointerEvents="none" style={StyleSheet.absoluteFill}><CargoScene world={s.level === "endless" ? "w3" : s.level.world}/></View>
-    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 5 }}><View style={ui.pill}><Text accessibilityLabel={`Goal progress ${goal}`} style={ui.stat}>{goal} {s.level === "endless" || s.level.goal === "score" ? "points" : s.level.goal === "crates" ? "crates" : "canoes"}</Text></View>{learning && <View style={ui.pill}><Text style={ui.stat}>Σ {s.level !== "endless" && s.level.targetSum}</Text></View>}<View style={ui.pill}><Text style={ui.stat}>★ {s.score}</Text></View></View>
+    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 5 }}>
+      {(!wide || compact) && <View testID="cargo-crew" pointerEvents="none" style={{ flexDirection: "row", alignItems: "flex-end", borderBottomWidth: 4, borderBottomColor: "#C58D55" }}><Companion event={s.lastRows.length ? "correct" : "idle"} size={compact ? 48 : 64} active={active}/><CargoCaptain size={compact ? 32 : 40} outfit={outfit} happy={!!s.lastRows.length}/></View>}<View style={ui.pill}><Text accessibilityLabel={`Goal progress ${goal}`} style={ui.stat}>{goal} {s.level === "endless" || s.level.goal === "score" ? "points" : s.level.goal === "crates" ? "crates" : "canoes"}</Text></View>{learning && <View style={ui.pill}><Text style={ui.stat}>Σ {s.level !== "endless" && s.level.targetSum}</Text></View>}<View style={ui.pill}><Text style={ui.stat}>★ {s.score}</Text></View></View>
     <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: wide ? 14 : 0 }}>
       <View style={{ alignItems: "center", gap: 7 }}>{!wide && preview}<View testID="cargo-board" style={{ width: boardW + 10, height: boardH + 10, borderWidth: 5, borderColor: "#A8794B", borderRadius: 8, backgroundColor: "#193E4C", overflow: "hidden" }}><CargoTouch active={active && s.status === "playing"} cell={cell} width={boardW} height={boardH} onGrab={onGrab} onTouchDown={onTouchDown} onColumns={onColumns} onSoft={touchSoft} onDrop={touchDrop} onTap={touchTap}>
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>{Array.from({ length: COLS * ROWS }, (_, i) => <View key={i} style={{ position: "absolute", left: i % COLS * cell, top: Math.floor(i / COLS) * cell, width: cell, height: cell, borderRightWidth: .5, borderBottomWidth: .5, borderColor: "#31546080" }}/>)}</View>
         <SettledCargo board={s.board} cell={cell} learning={learning}/><MovingCargo poses={poses} piece={s.piece} value={learning ? s.piece.value : 0} cell={cell}/>
         {!!s.event && <LockEffects key={s.event} s={s} cell={cell} reduced={reduced}/>}
       </CargoTouch></View></View>
-      {wide && <View style={{ width: 200, alignItems: "center", gap: compact ? 8 : 20 }}>{!compact && <Captain size={100} outfit={outfit} cue={`${s.event}-${s.col}-${s.piece.turn}`} bump={s.bump} clear={!!s.lastRows.length} active={active} reduced={reduced}/>}{preview}{controls}</View>}
+      {wide && <View style={{ width: 200, alignItems: "center", gap: compact ? 8 : 20 }}>{!compact && <View testID="cargo-crew" pointerEvents="none" style={{ flexDirection: "row", alignItems: "flex-end", borderBottomWidth: 5, borderBottomColor: "#C58D55" }}><Companion event={s.lastRows.length ? "correct" : "idle"} size={100} active={active}/><CargoCaptain size={64} outfit={outfit} happy={!!s.lastRows.length}/></View>}{preview}{controls}</View>}
     </View>
     {!wide && controls}
     <Text style={{ color: ink, textAlign: "center", fontSize: 12 }}>{learning ? "No falling clock · matching sums sail twice" : "Tap to turn · drag to slide · pull & hold ↓ · flick to land"}</Text>

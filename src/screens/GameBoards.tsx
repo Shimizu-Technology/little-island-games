@@ -341,7 +341,7 @@ export function TicBoard({ state: s, commit, width, sound, active }: Props<TicSt
         success={!!outcome}
       />
       <BoardArea>
-        <Scoreboard
+        <Scoreboard solo={s.options.mode === "solo"}
           match={s.match ?? newMatch(s.options.mode === "solo" ? ["You", "Island friend"] : undefined)}
           result={ticResult(s)}
           active={outcome ? null : turn === "X" ? ticXSeat(s) : ticXSeat(s) === 0 ? 1 : 0}

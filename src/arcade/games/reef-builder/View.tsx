@@ -1,3 +1,4 @@
+import { Companion } from "../../../islander/Companion";
 import { PlayButton, PressControl, uiThreadDrag } from "../../Input";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
@@ -129,6 +130,7 @@ export function ReefBoard({ initial, active, helper, onResult, onTone, width, he
     </View>
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, paddingHorizontal: 12 }}>
       {!side && height >= 600 && <Hero game="reef-builder" size={58} cue={`${s.moves}-${bumped}`} mood={bumped ? "dizzy" : s.lastClear.length ? "happy" : "idle"} active={active}/>}
+      {height >= 600 && <Companion event={s.lastClear.length ? "correct" : "idle"} size={48} active={active}/>}
       <View accessibilityLiveRegion="polite" style={{ flexShrink: 1, maxWidth: 520 }}><Copy style={{ color: "#244C55", textAlign: "center", fontSize: 15, backgroundColor: "#FFF1D5", paddingHorizontal: 12, paddingVertical: 7, borderRadius: 16 }}>{bumped ? "Try another spot." : s.status === "cleared" ? "Fish swimming free!" : preview?.clear.count ? `${preview.clear.count} line${preview.clear.count === 1 ? "" : "s"} will clear!` : target ? `${target} makes a line · find a partner` : s.moves === 0 ? "Plan room for all three pieces." : "Drag any coral · fill rows or columns"}</Copy></View>
     </View>
     {s.level === "endless" && <Button quiet compact disabled={!active} onPress={() => dispatch({ type: "finish" })}>Finish my free-play reef</Button>}

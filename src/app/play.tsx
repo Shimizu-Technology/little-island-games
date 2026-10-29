@@ -1,3 +1,6 @@
+import { useActiveIslanderLook } from "../islander/active";
+import { Companion, IslanderPortrait } from "../islander/Companion";
+import { classicEvent } from "../islander/reactions";
 import { PlayerNames } from "../components/Match";
 import { newMatch, Seat } from "../games/match";
 import { Mark, replayTic } from "../games/tic";
@@ -49,6 +52,7 @@ export default function Play() {
   return <Game key={id} id={id} />;
 }
 function Game({ id }: { id: GameId }) {
+  const look = useActiveIslanderLook();
   const insets = useSafeAreaInsets(),
     focused = useIsFocused();
   const { width, height } = useWindowDimensions(),
@@ -227,6 +231,7 @@ function Game({ id }: { id: GameId }) {
           </Copy>
         )}
         <SaveStatus />
+        {s && s.options.mode === "solo" && (s.game === "memory" || s.game === "checkers") && <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}><IslanderPortrait look={look}/><Copy>You</Copy></View>}
         <View style={{ backgroundColor: g.surface, borderRadius: 22, paddingVertical: 12, paddingHorizontal: 12 }}>
           {s?.game === "tic-tac-toe" ? (
             <TicBoard key={s.id} {...boardProps} state={s} commit={commit} />
@@ -281,6 +286,7 @@ function Game({ id }: { id: GameId }) {
               borderTopColor: C.line,
             }}
           >
+            {finished && <Companion event={classicEvent(s)} active={focused && active && !setup && !help}/> }
             {finished && (
               <Button onPress={replay}>
                 {s.game === "word-rescue" && s.custom ? "Choose a new family word" : "Play again"}

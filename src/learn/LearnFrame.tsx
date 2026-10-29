@@ -1,3 +1,5 @@
+import { isMathGame, type MathRound } from "./games/shell-math/round";
+import { Companion, LearningCompanion, useCompanionReaction } from "../islander/Companion";
 import { LearnerChip } from "../personalization/LearnerChip";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AppState, ScrollView, View, useWindowDimensions } from "react-native";
@@ -126,9 +128,11 @@ export function LearnFrame({ id }: { id: LearnId }) {
       clearTimeout(cheerLine.current);
     };
   }, [feedbackContext]);
+  const { event: companionEvent, react: reactCompanion } = useCompanionReaction(`${learner.id}:${saved?.id ?? "setup"}`, boardActive);
   const cheer = useCallback(
     (kind: "right" | "big" = "right", say?: string) => {
       if (!boardActive || liveFeedback.current !== feedbackContext) return;
+      reactCompanion("correct");
       setBurst((b) => ({ n: b.n + 1, big: kind === "big" }));
       sound(kind === "big" ? "win" : "match");
       if (kind === "big") feel("success");
@@ -137,7 +141,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         if (liveFeedback.current === feedbackContext) sound(say, true);
       }, kind === "big" ? 900 : 550);
     },
-    [sound, boardActive, feedbackContext]
+    [sound, boardActive, feedbackContext, reactCompanion]
   );
   // A newer sound, a new round, sound off, Help or leaving the screen drops a pending cheer line.
   const boardSound = useCallback(
@@ -176,16 +180,25 @@ export function LearnFrame({ id }: { id: LearnId }) {
   }, [saved, appActive, focused, save]);
   const practice = useCallback((skill: string, correct: boolean) => {
     if (!saved || !boardActive) return;
+    reactCompanion(correct ? "correct" : "incorrect");
     practiceOwned(id, { id: saved.id, revision: saved.revision, epoch }, skill, correct);
     if (!correct) assistance();
-  }, [saved, boardActive, practiceOwned, id, epoch, assistance]);
+  }, [saved, boardActive, practiceOwned, id, epoch, assistance, reactCompanion]);
   const update = useCallback(
     (state: unknown) => {
       if (!saved || expected.current.id !== saved.id || !boardActive || store.epoch !== epoch) return;
       const revision = Math.max(saved.revision, expected.current.revision ?? 0) + 1;
-      save({ ...saved, state, revision });
+      if (save({ ...saved, state, revision })) {
+        if (saved.options.stage) {
+          const next = state as GrowthState;
+          if (next.history.at(-1)?.type === "answer" && next.history !== (saved.state as GrowthState).history) {
+            const progress = growthProgress(next, growthQuestions(id, saved.options, next));
+            reactCompanion(progress.solved ? "correct" : "incorrect");
+          }
+        } else if (isMathGame(id) && (state as MathRound).wrong !== null && !(state as MathRound).solved) reactCompanion("incorrect");
+      }
     },
-    [saved, save, boardActive, store.epoch, epoch]
+    [saved, save, boardActive, store.epoch, epoch, id, reactCompanion]
   );
 
   function start() {
@@ -245,6 +258,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         <SaveStatus />
         {saved?.match && <Scoreboard match={saved.match} result={result === "done" ? null : result} active={turn} />}
         {saved && (
+          <LearningCompanion visible={!finished} event={finished ? (notWon ? "loss" : result === "draw" ? "draw" : "complete") : companionEvent} desk={engine.island === "reading" || engine.island === "numbers"} active={boardActive}>
           <View style={{ backgroundColor: engine.surface, borderRadius: 22, padding: 12 }}>
             <Board
               key={saved.id}
@@ -257,7 +271,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
               sound={boardSound}
               stopSound={stopSound}
               soundOn={soundOn}
-              width={boardWidth}
+              width={boardWidth - (width >= 768 && height >= 600 && store.save.settings.learningIslander !== false ? 88 : 0)}
               height={height - insets.top - insets.bottom}
               active={boardActive}
               coach={{ active: coachActive && boardActive, done: coachDone }}
@@ -265,6 +279,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
             />
             <Celebrate burst={burst.n} big={burst.big} />
           </View>
+          </LearningCompanion>
         )}
         {saved && (
           <View style={{ alignItems: "center", gap: 10, marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.line }}>
@@ -273,7 +288,10 @@ export function LearnFrame({ id }: { id: LearnId }) {
                 accessibilityLiveRegion="polite"
                 style={{ alignItems: "center", gap: 8, padding: 16, borderRadius: 22, backgroundColor: C.success, alignSelf: "stretch" }}
               >
-                <LearnArt island={engine.island} size={64} />
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  {store.save.settings.learningIslander !== false && <Companion event={notWon ? "loss" : result === "draw" ? "draw" : "complete"} active={boardActive} size={104}/>}
+                  <LearnArt island={engine.island} size={64} />
+                </View>
                 <Heading style={{ fontSize: 26, textAlign: "center" }}>
                   {result === 0 || result === 1
                     ? `${saved.match?.names[result] ?? saved.names?.[result] ?? "You"} won this round!`

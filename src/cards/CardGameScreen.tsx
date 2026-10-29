@@ -1,3 +1,5 @@
+import { Companion } from "../islander/Companion";
+import { resultEvent } from "../islander/reactions";
 import type { RoundPractice } from "../practice/useRoundPractice";
 import { Text } from "../components/Text";
 import React, { useEffect, useRef, useState } from "react";
@@ -255,7 +257,7 @@ function CardGameRound({
     <View style={s.root}>
       {onBack && <GameHeader title={state.game === "go-fish" ? "Go Fish" : "Crazy Eights"} onBack={onBack}
         sound={onToggleSound ? { on: sound, toggle: onToggleSound } : undefined} onHelp={openHelp} />}
-      <Scoreboard match={match} result={cardMatchResult(state)} active={result ? null : state.turn} />
+      <Scoreboard solo={state.options.mode === "solo"} match={match} result={cardMatchResult(state)} active={result ? null : state.turn} />
       {state.game === "crazy-eights" && <Copy style={s.small}>Match points · {name(0)} {cardMatchPoints(state)[0]} · {name(1)} {cardMatchPoints(state)[1]}</Copy>}
       <View accessibilityLiveRegion="polite" style={s.notice}>
         <Heading style={{ fontSize: 22 }}>{title}</Heading>
@@ -270,6 +272,7 @@ function CardGameRound({
         </Copy>
       </View>
       {result && <View style={{ gap: 10 }}>
+        <View style={{ alignItems: "center" }}><Companion event={resultEvent(cardMatchResult(state), state.options.mode === "solo")}/></View>
         <Button onPress={() => { const previous = latest.current; if (previous.id === state.id && previous.result) newRound(() => commit(rematchCards(previous), previous)); }}>Play again</Button>
         {state.game === "crazy-eights" && <>
           <Button quiet onPress={() => setScoring(!scoring)}>{scoring ? "Hide scoring" : "Show scoring"}</Button>

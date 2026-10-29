@@ -135,6 +135,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
           <ToggleRow label="Unlock every arcade level" detail="Open all worlds and free play for every learner" value={store.save.arcade?.unlockAll ?? false} disabled={busy} onChange={unlockAll => store.arcade({ type: "preferences", unlockAll }, { epoch: store.epoch, learner: store.save.learning?.active ?? "family" })} />
           <Copy>Arcade break reminder · appears only between levels</Copy>
           <View style={[styles.row, { flexWrap: "wrap" }]}>{([0, 15, 20, 30, 45] as const).map(breakMinutes => <Chip key={breakMinutes} selected={(store.save.arcade ?? emptyArcade()).breakMinutes === breakMinutes} onPress={() => { if (!busy) store.arcade({ type: "preferences", breakMinutes }, { epoch: store.epoch, learner: store.save.learning?.active ?? "family" }); }}>{breakMinutes ? `${breakMinutes} min` : "Off"}</Chip>)}</View>
+          <ToggleRow label="Show my islander in learning games" detail="A friend beside questions and practice" value={store.save.settings.learningIslander ?? true} disabled={busy} onChange={learningIslander => store.settings({ learningIslander })} />
           <LearnerSettings disabled={busy} />
           <PracticeOptions value={learnerPractice(store.save.learning, store.save.settings.practice)}
             onChange={practice => store.settings({ practice })} disabled={busy} />

@@ -1,3 +1,5 @@
+import { Companion } from "../islander/Companion";
+import { resultEvent } from "../islander/reactions";
 import React, { useCallback, useEffect, useState } from "react";
 import { AppState, Platform, ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -374,7 +376,7 @@ function Round({
         <View style={{ flexDirection: wide ? "row" : "column", gap: 16 }}>
         <View style={{ flex: 1, gap: 12 }}>
         {s.game !== "reef-sweep" && (
-          <Scoreboard
+          <Scoreboard solo={s.mode === "solo"}
             match={s.match}
             result={p.outcome}
             active={p.outcome === null ? p.turn : null}
@@ -409,6 +411,7 @@ function Round({
         />
         {p.outcome !== null && (
           <View style={{ alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <Companion event={resultEvent(p.outcome, s.mode === "solo" || s.game === "reef-sweep")} size={80}/>
             <View style={{ width: 80, height: 80, overflow: "hidden" }}>
               <BoardArt game={s.game} size={80} />
               <Celebrate burst={success ? 1 : 0} />
