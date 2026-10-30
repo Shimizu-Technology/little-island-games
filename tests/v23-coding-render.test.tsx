@@ -8,7 +8,7 @@ import { roundProgress } from "../src/learn/LearnChrome";
 import { optionsAtLevel, type LearningLevel } from "../src/learn/levelOptions";
 import type { BoardProps, LearnId } from "../src/learn/types";
 const { renderToStaticMarkup } = createRequire(import.meta.url)("react-dom/server");
-vi.mock("react-native", () => ({ View: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
+vi.mock("react-native", () => ({ View: ({ children }: { children: React.ReactNode }) => <div>{children}</div>, Platform: { select: (o: Record<string, unknown>) => o.ios } }));
 vi.mock("../src/components/ui", () => ({
   C: { ink: "#123", paper: "#fff" },
   Copy: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
