@@ -93,6 +93,9 @@ export function LearnFrame({ id }: { id: LearnId }) {
     finished = result !== null,
     notWon = saved && result === "done" && engine.notWon ? engine.notWon(saved.state, saved.options) : null,
     wasFinished = useRef(finished);
+  useLayoutEffect(() => {
+    if (finished) scroll.current?.scrollTo({ y: 0, animated: false });
+  }, [finished, saved?.id]);
   // Celebrations: a small burst on right answers, a big one when the round is won or completed.
   // A round the island friend or tide won ends calmly; the board says who got there first.
   const [burst, setBurst] = useState({ n: 0, big: false });
@@ -349,7 +352,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: theme.sky, padding: 12, borderRadius: 22 }}><LearnArt island={island} size={72}/><View style={{ flex: 1 }}><Heading style={{ fontSize: 21, color: theme.ink }}>{engine.name}</Heading><Copy style={{ color: theme.ink, fontSize: 14 }}>Pick a stepping stone, then play.</Copy></View></View>
         <LearnerChip compact/>
-        <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
+        <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage && !engine.ownLevels ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
         <LevelPath game={id} level={levelOf(options)} onChoose={chooseLevel} />
         {engine.modes.length > 1 && (
           <>
