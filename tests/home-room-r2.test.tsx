@@ -5,14 +5,14 @@ import { writeFileSync } from 'node:fs';
 import { RoomShellArt, MoreItemArt } from '../src/home/art/More';
 import { roomDefaultTheme } from '../src/home/art/roomDefaults';
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useSharedValue:(value:number)=>({value}),useAnimatedProps:()=>({}),cancelAnimation:()=>{},withRepeat:()=>0,withSequence:()=>0,withTiming:()=>0,Easing:{inOut:()=>0,sin:0}}));
-vi.mock('react-native-svg',()=>Object.fromEntries(Object.entries({default:'svg',G:'g',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Path:'path',Defs:'defs',ClipPath:'clipPath',Pattern:'pattern',Text:'text',Filter:'filter',FeColorMatrix:'feColorMatrix'}).map(([name,tag])=>[name,({children,accessible:_a,...props}:Record<string,unknown>)=>React.createElement(tag,props,children as React.ReactNode)])));
+vi.mock('react-native-svg',()=>Object.fromEntries(Object.entries({default:'svg',G:'g',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Path:'path',Defs:'defs',ClipPath:'clipPath',Pattern:'pattern',Text:'text',LinearGradient:'linearGradient',Stop:'stop',Filter:'filter',FeColorMatrix:'feColorMatrix'}).map(([name,tag])=>[name,({children,accessible:_a,...props}:Record<string,unknown>)=>React.createElement(tag,props,children as React.ReactNode)])));
 vi.mock('../src/home/art/Room',()=>({wallColors:{cream:'#F5E6C8',lagoon:'#C5DED3',night:'#A5ADC9',peach:'#F1CEC0'},floorColors:{sand:'#EBD7B2',honey:'#DDAE7D',seafoam:'#AACDC1',rose:'#DCB9AA'}}));
 const rooms=['kitchen','treehouse','beach'] as const;
 it('keeps child-selected palette and earned patterns on every distinct shell',()=>{
   for(const room of rooms){
     const svg=render(<RoomShellArt room={room} theme={{wallpaper:'peach',floor:'rose'}}/>);
     expect(svg).toContain('#F1CEC0');expect(svg).toContain('#DCB9AA');
-    expect(svg).toContain('clip-path="url(#shell-floor)"');
+    expect(svg).toContain('M0 352H800V560H0Z');
     expect(render(<RoomShellArt room={room} theme={{wallpaper:'night-sky',floor:'island-breeze'}}/>)).toContain('url(#island-breeze)');
     expect(roomDefaultTheme[room]).toBeDefined();
   }

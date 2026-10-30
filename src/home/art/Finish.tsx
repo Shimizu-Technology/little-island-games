@@ -57,8 +57,10 @@ function AnimatedItemLife({ id, color, active }: { id: string; color: string; ac
     return () => cancelAnimation(phase);
   }, [active, phase]);
   const pulse = useAnimatedProps(() => ({ opacity: .28 + phase.value * .4 }));
-  const fish = useAnimatedProps(() => ({ transform: `translate(${phase.value * 18} 0)` }));
-  const tick = useAnimatedProps(() => ({ transform: `rotate(${phase.value * 28} 75 65)` }));
+  // SVG accepts React Native transform arrays. Reanimated cannot process an
+  // animated SVG transform string on its UI runtime in the Release build.
+  const fish = useAnimatedProps(() => ({ transform: [{ translateX: phase.value * 18 }] }));
+  const tick = useAnimatedProps(() => ({ transform: [{ translateX: 75 }, { translateY: 65 }, { rotate: `${phase.value * 28}deg` }, { translateX: -75 }, { translateY: -65 }] }));
   if (id === 'aquarium') return <AnimatedGroup animatedProps={fish}><Path d="M83 78l7-6v12Z" fill="#E89982" stroke="#4E6A60" strokeWidth={1.5}/><Ellipse cx={76} cy={78} rx={9} ry={5} fill="#F3C76E" stroke="#4E6A60" strokeWidth={1.5}/><Circle cx={72} cy={77} r={1.3} fill="#4E6A60" stroke="none"/></AnimatedGroup>;
   if (['plant','potted-fern','banana-plant','flower-vase','cactus'].includes(id)) return <AnimatedEllipse animatedProps={pulse} cx={85} cy={33} rx={13} ry={4} fill={shade(color,.48)} stroke="none"/>;
   if (id === 'clock') return <AnimatedPath animatedProps={tick} d="M75 65V43" stroke="#50685D" strokeWidth={2.5} strokeLinecap="round" fill="none"/>;
@@ -79,6 +81,6 @@ function AnimatedItemMotion({ children, active }: { children: React.ReactNode; a
     lift.value = active ? withSequence(withTiming(-5,{duration:110}),withTiming(0,{duration:260})) : 0;
     return () => cancelAnimation(lift);
   }, [active, lift]);
-  const props = useAnimatedProps(() => ({ transform: `translate(0 ${lift.value})` }));
+  const props = useAnimatedProps(() => ({ transform: [{ translateY: lift.value }] }));
   return <AnimatedGroup animatedProps={props}>{children}</AnimatedGroup>;
 }

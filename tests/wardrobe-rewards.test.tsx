@@ -10,7 +10,7 @@ import { Islander } from '../src/islander/rig/Islander';
 import { RoomArt } from '../src/home/art/Room';
 import { starterHome, validHome } from '../src/home/model';
 import { floorThemes, wallThemes, themeRewards } from '../src/home/catalog';
-vi.mock('react-native-svg',()=>({default:'svg', G:'g', Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Defs:'defs',Pattern:'pattern',Text:'text'}));
+vi.mock('react-native-svg',()=>({default:'svg', G:'g', Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Defs:'defs',Pattern:'pattern',LinearGradient:'linearGradient',Stop:'stop',Text:'text'}));
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useSharedValue:()=>({value:0}),useAnimatedProps:()=>({}),cancelAnimation:()=>{},withRepeat:()=>0,withTiming:()=>0,Easing:{inOut:()=>0,sin:0}}));
 const poses = [...frontPoses, ...backPoses];
 describe('badge reward art contract',()=>{

@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { MoreItemArt, RoomShellArt } from '../src/home/art/More';
 import { ItemArt } from '../src/home/art/Items';
 import { moreCatalog, tintIds, type TintId } from '../src/home/catalogMore';
@@ -14,7 +14,7 @@ import { instance, type RoomState } from '../src/home/model';
 import { SeatFront } from '../src/home/SeatFront';
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useSharedValue:(value:number)=>({value}),useAnimatedProps:()=>({}),cancelAnimation:()=>{},withRepeat:()=>0,withSequence:()=>0,withTiming:()=>0,Easing:{inOut:()=>0,sin:0}}));
 vi.mock('react-native-svg', () => {
-  const tags = { default: 'svg', Circle: 'circle', Ellipse: 'ellipse', G: 'g', Path: 'path', Rect: 'rect', Defs: 'defs', Filter: 'filter', FeColorMatrix: 'feColorMatrix', ClipPath: 'clipPath', Pattern: 'pattern', Text: 'text' };
+  const tags = { default: 'svg', Circle: 'circle', Ellipse: 'ellipse', G: 'g', Path: 'path', Rect: 'rect', Defs: 'defs', Filter: 'filter', FeColorMatrix: 'feColorMatrix', ClipPath: 'clipPath', Pattern: 'pattern', Text: 'text', LinearGradient: 'linearGradient', Stop: 'stop' };
   return Object.fromEntries(Object.entries(tags).map(([name, tag]) => [name, ({ children, accessible: _accessible, ...props }: Record<string, unknown>) => React.createElement(tag, props, children as React.ReactNode)]));
 });
 vi.mock('../src/home/art/Room', () => ({wallColors: {cream:'#F5E6C8', lagoon:'#C5DED3'}, floorColors: {sand:'#EBD7B2', honey:'#DDAE7D'}}));
@@ -47,12 +47,11 @@ describe('free home art contract', () => {
     expect(shade('#FFFFFF', -.2)).toBe('#cccccc');
   });
   it('preserves the room wall, floor polygon and grid exactly and honours earned patterns', () => {
-    const original = readFileSync('src/home/art/Room.tsx','utf8');
     for (const room of ['kitchen','treehouse','beach'] as const) {
       const svg = render(<RoomShellArt room={room} theme={{wallpaper:'cream',floor:'sand'}}/>);
       expect(svg).toContain('viewBox="0 0 800 560"');
-      for (const path of ['M34 82L145 28L758 71V330L145 291L34 374Z','M34 374L145 291L758 330L779 508L162 535Z']) {expect(original).toContain(path);expect(svg).toContain(path);}
-      expect(svg).toContain('M53 359L762 351'); expect(svg).toContain('M151 294L170 535');
+      expect(svg).toContain('M0 352H800V560H0Z');
+      expect(svg).toContain('stage-floor-lines');
       expect(render(<RoomShellArt room={room} theme={{wallpaper:'night-sky',floor:'game-room'}}/>)).toContain('url(#night-sky)');
     }
   });

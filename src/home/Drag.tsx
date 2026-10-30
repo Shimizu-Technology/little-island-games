@@ -66,16 +66,16 @@ function updatePreview(config: DragConfig, absX: number, absY: number, dx: numbe
     const y = parent.y;
     for (let x = parent.x; x < parent.x + parent.w; x++) {
       if (!clearAt(config, f.id, x, y, 1, 1, config.layer ?? "furniture", parent.id)) continue;
-      const sx = parent.sx! + (x - parent.x - (parent.w - 1) / 2) * 31 + (y - parent.y) * 7;
-      const sy = parent.sy! + (y - parent.y) * 15.5 + (x - parent.x) * 1.5;
+      const sx = parent.sx! + (x - parent.x - (parent.w - 1) / 2) * 38 + (y - parent.y) * 1.5;
+      const sy = parent.sy! + (y - parent.y) * 14.4;
       const d = (sx - px) ** 2 + (sy - py) ** 2;
       if (d < distance) { distance = d; best = n; cellX = x; cellY = y; }
     }
   }
   if (best >= 0) {
     const parent = config.blockers[best];
-    const sx = parent.sx! + (cellX - parent.x - (parent.w - 1) / 2) * 31 + (cellY - parent.y) * 7;
-    const sy = parent.sy! + (cellY - parent.y) * 15.5 + (cellX - parent.x) * 1.5;
+    const sx = parent.sx! + (cellX - parent.x - (parent.w - 1) / 2) * 38 + (cellY - parent.y) * 1.5;
+    const sy = parent.sy! + (cellY - parent.y) * 14.4;
     config.preview.value = { active:true, x:cellX, y:cellY, w:1, h:1, wall:false, valid:f.id !== "" || config.blockers.length < 48, on:parent.id, surfaceX:sx, surfaceY:sy, px:sx, py:sy };
     return;
   }
@@ -176,8 +176,8 @@ export function Footprint({
     "worklet";
     const point = (x: number, y: number) =>
       p.wall
-        ? `${(205 + x * 23 - 22) * scale},${(224 + y * 19.5 - 22) * scale}`
-        : `${(174 + x * 25.5 + y * 7 - 23) * scale},${(327 + y * 15.5 + x * 1.5 - 12) * scale}`;
+        ? `${(54 + x * 46 - 23) * scale},${(124 + y * 56 - 28) * scale}`
+        : `${(43 + x * 37.5 + y * 1.5 - 18.75) * scale},${(386 + y * 14.4 - 7.2) * scale}`;
     return {
       points: p.on ? [[-48,-12],[48,-12],[48,12],[-48,12]].map(([x,y]) => `${(p.surfaceX!+x)*scale},${(p.surfaceY!+y)*scale}`).join(" ") : [point(p.x, p.y), point(p.x + p.w, p.y), point(p.x + p.w, p.y + p.h), point(p.x, p.y + p.h)].join(" "),
       opacity: p.active && p.valid === valid ? 1 : 0,
@@ -215,10 +215,10 @@ export function FloorGrid({ scale, width, height }: { scale: number; width: numb
         {Array.from({ length: 13 }, (_, y) => (
           <Line
             key={`y${y}`}
-            x1={(151 + y * 7) * scale}
-            y1={(315 + y * 15.5) * scale}
-            x2={(661 + y * 7) * scale}
-            y2={(345 + y * 15.5) * scale}
+            x1={(24 + y * 1.5) * scale}
+            y1={(379 + y * 14.4) * scale}
+            x2={(780 + y * 1.5) * scale}
+            y2={(379 + y * 14.4) * scale}
             stroke="#427468"
             strokeDasharray="3 5"
           />
@@ -226,10 +226,10 @@ export function FloorGrid({ scale, width, height }: { scale: number; width: numb
         {Array.from({ length: 21 }, (_, x) => (
           <Line
             key={`x${x}`}
-            x1={(151 + x * 25.5) * scale}
-            y1={(315 + x * 1.5) * scale}
-            x2={(235 + x * 25.5) * scale}
-            y2={(501 + x * 1.5) * scale}
+            x1={(24 + x * 37.5) * scale}
+            y1={350 * scale}
+            x2={(45 + x * 37.5) * scale}
+            y2={560 * scale}
             stroke="#427468"
             strokeDasharray="3 5"
           />

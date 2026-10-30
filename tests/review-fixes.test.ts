@@ -99,5 +99,5 @@ it('new Explore attempts after reset belong to the learner who starts them',()=>
  expect(personFor(next,'family').milestones).toContain('explore:lab-space');
 });
 it('rejects points beyond the illustrated floor edge before snapping to the last row',()=>{
- expect(spotFromPoint(735,525,1,false)).toBeUndefined();
+ expect(spotFromPoint(810,525,1,false)).toBeUndefined();
 });
