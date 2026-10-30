@@ -17,10 +17,10 @@ import { createTic, ticMove } from '../src/games/tic';
 import { createSession, engines } from '../src/board';
 import { canWear, styleCatalog, lockedReason } from '../src/personalization/catalog';
 import { preserveAndReplace } from '../src/state/replacement';
-const learnGames = {math:['shell-math','number-hop'],reading:['sound-boat','turtle-tales'],science:['tide-pool','float-sink'],chamoru:['hafa-adai','chamoru-memory']} as const;
+const learnGames = {math:['shell-math','number-hop'],reading:['sound-boat','turtle-tales'],science:['tide-pool','float-sink'],coding:['beep-bot','turtle-draw'],chamoru:['hafa-adai','chamoru-memory']} as const;
 function finishMath(s: MathRound) { while(s.index<s.questions.length) { while(s.steps<questionOf(s).b) s=mathMove(s,'shell-math',{type:'step'}); s=mathMove(s,'shell-math',{type:'answer',answer:mathAnswer(questionOf(s))});s=mathMove(s,'shell-math',{type:'next'}); } return s; }
 describe('permanent distinct accomplishment badges',()=>{
-  for(const track of ['math','reading','science','chamoru'] as const) {
+  for(const track of ['math','reading','science','coding','chamoru'] as const) {
     const [game,other] = learnGames[track];
     it(`${track}: counts assistance and all four count thresholds`,()=>{
       let p=starterPerson();
@@ -39,7 +39,7 @@ describe('permanent distinct accomplishment badges',()=>{
       expect(badgesFor([`learn:${game}:5`])).toContain(`${track}-4`);
       const prefix=track==='science'?'explore:':'learn:'+game+':';
       // Count routes remain available without a high-level requirement.
-      const ids=track==='science'?Array.from({length:10},(_,i)=>prefix+'topic-'+i):[game,other,...(track==='math'?['reef-race','island-market','quick-practice']:track==='reading'?['which-one']:[])].flatMap(g=>[1,2].map(l=>`learn:${g}:${l}`));
+      const ids=track==='science'?Array.from({length:10},(_,i)=>prefix+'topic-'+i):[game,other,...(track==='math'?['reef-race','island-market','quick-practice']:track==='reading'?['which-one']:track==='coding'?['crab-commands','tide-logic','code-lab']:[])].flatMap(g=>[1,2].map(l=>`learn:${g}:${l}`));
       if(ids.length>=6) {expect(badgesFor(ids.slice(0,5))).not.toContain(`${track}-3`);expect(badgesFor(ids.slice(0,6))).toContain(`${track}-3`);}
       if(ids.length>=10) {expect(badgesFor(ids.slice(0,9))).not.toContain(`${track}-4`);expect(badgesFor(ids)).toContain(`${track}-4`);}
     });
@@ -72,7 +72,7 @@ describe('permanent distinct accomplishment badges',()=>{
     for(const strength of ['growing','challenge','medium','hard'])expect(badgesFor(applyCompletion(starterPerson(),{kind:'classic',game:'checkers',won:true,opponentStrength:strength}).milestones)).toContain('classic-4');
     expect(badgesFor(applyCompletion(starterPerson(),{kind:'classic',game:'checkers',won:true,opponentStrength:'gentle'}).milestones)).not.toContain('classic-4');
   });
-  it('all 24 badges grant catalog items and object rows',()=>{
+  it('all 28 badges grant catalog items and object rows',()=>{
     for(const track of tracks)for(const tier of [1,2,3,4] as const)expect(grantsFor([`${track}-${tier}`]).length).toBeGreaterThan(0);
     expect(grantsFor(['science-3'])).toEqual(expect.arrayContaining(['aquarium','telescope']));
     expect(grantsFor(['math-2'])).toEqual(expect.arrayContaining(['blocks','outfit:number-tee']));

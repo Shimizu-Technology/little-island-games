@@ -1,4 +1,6 @@
 import { badgeRule, type BadgeId } from '../badges/engine';
+import { HouseCamera, type HouseCameraHandle } from "./HouseCamera";
+import { zoomLimits, roomAt } from "./camera";
 import { stageWidth } from "./stage";
 import { useSheetPresence } from "../components/sheetPresence";
 import { themeRewards } from './catalog';
@@ -45,10 +47,11 @@ import {
   type Instance,
   type Ownership,
   type Pose,
+  type RoomState,
 } from "./model";
 import { LockBadge, LockRule } from '../personalization/LockBadge';
 import { trackLabels, badgeInfo } from '../badges/engine';
-import { characterDepth, characterDrop, characterPoint, itemPoint, itemSize, spotFromPoint, stackSpot, stackActionLabel, stackedHitWidth, toolbarY, surfacePoint, characterSize, seatAnchor } from "./geometry";
+import { sceneItemDepth, furnitureDepth, seatClipTop, characterDepth, characterDrop, characterPoint, itemPoint, itemSize, spotFromPoint, stackSpot, stackActionLabel, stackedHitWidth, toolbarY, surfacePoint, characterSize, seatAnchor } from "./geometry";
 import { useHomeStore } from "./useHomeStore";
 import { Drag, FloorGrid, Footprint, emptyPreview, TrayGhost, type DragConfig } from "./Drag";
 
@@ -176,6 +179,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   }, [initialItem, person.unseen, acknowledge, owner, identityEpoch]);
   const [origin, setOrigin] = useState({ x: 0, y: 0 });
   const canvas = useRef<View>(null);
+  const roomCanvases = useRef<Partial<Record<typeof roomIds[number],View|null>>>({});
   const inventory = useRef<ScrollView>(null), focusedInitialItem = useRef(false);
   const revealInitialItem = (id: string, x: number) => {
     if (id === initialItem && !focusedInitialItem.current) {
@@ -184,6 +188,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     }
   };
   const sequence = useRef(0);
+  const lastRoomTap = useRef({room:"",at:0});
   const preview = useSharedValue(emptyPreview);
   const decorating = mode === "decorate";
   const sideDrawer = decorating && !collapsed && width > height && height < 500;
@@ -195,7 +200,12 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   // A portrait viewport shows a life-sized stage and scrolls to its side walls.
   const beach = !decorating && (availableHeight >= width * .925 || room.characters.some(c => c.anchor.startsWith("beach-")));
   const sceneUnits = beach ? 740 : 560;
-  const sceneWidth = stageWidth({ width, height }, drawerWidth, availableHeight, sceneUnits);
+  const closeWidth = stageWidth({ width, height }, drawerWidth, availableHeight, sceneUnits);
+  const limits = zoomLimits(width-drawerWidth, closeWidth);
+  const [zoom, setZoom] = useState(1);
+  const houseCamera = useRef<HouseCameraHandle>(null);
+  const effectiveZoom = Math.max(limits.min, Math.min(limits.max, zoom));
+  const sceneWidth = closeWidth * effectiveZoom;
   const sceneHeight = sceneWidth * sceneUnits / 800;
   const scale = sceneWidth / 800;
   const target = room.instances.find((i) => i.id === selected);
@@ -223,11 +233,12 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     setNotice("");
     setHint(false);
   };
-  const putOn = (i: Instance, parentId: string) => {
+  const putOn = (i: Instance, parentId: string, roomId = store.state.current) => {
+    const room = store.state.rooms[roomId];
     const parent = room.instances.find(p => p.id === parentId);
     if (parent) {
       const p = surfacePoint(parent), spot = stackSpot(room.instances.filter(other => other.id === parentId || other.on === parentId || other.id === i.id), i, p.x, p.y);
-      if (spot) dispatch({ type: "move", id: i.id, ...spot }, true);
+      if (spot) dispatch({ type: "move", id: i.id, ...spot, roomId }, true);
       else feedback("That surface is full.");
     }
   };
@@ -243,7 +254,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     setHint(false);
     setNotice("Tap a clear floor spot.");
   };
-  const place = (id: ItemId, px: number, py: number) => {
+  const place = (id: ItemId, px: number, py: number, roomId = store.state.current) => {
+    const room = store.state.rooms[roomId];
     if (room.instances.length >= MAX_INSTANCES) {
       feedback("Put something away to make room.");
       return;
@@ -263,11 +275,12 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
       feedback("Try a clear spot. Keep the door free.");
       return;
     }
-    dispatch({ type: "place", instance: candidate }, true);
+    dispatch({ type: "place", instance: candidate, roomId }, true);
     setPlacing(undefined);
     setSelected(key);
   };
-  const itemAction = (i: Instance, action: string) => {
+  const itemAction = (i: Instance, action: string, roomId = store.state.current) => {
+    if (roomId !== store.state.current) dispatch({type:"room",room:roomId});
     if (action === "activate") {
       if (decorating) {
         setSelected(i.id);
@@ -275,14 +288,14 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         setPlacing(undefined);
         setHint(false);
       } else {
-        dispatch({ type: "toggle", id: i.id }, true);
+        dispatch({ type: "toggle", id: i.id, roomId }, true);
       }
     } else if (["rotate", "mirror", "put-away"].includes(action))
-      dispatch({ type: action as "rotate" | "mirror" | "put-away", id: i.id }, true);
+      dispatch({ type: action as "rotate" | "mirror" | "put-away", id: i.id, roomId }, true);
     else {
       const delta: Record<string, [number, number]> = { left: [-1, 0], right: [1, 0], back: [0, -1], forward: [0, 1] };
       if (delta[action])
-        dispatch({ type: "move", id: i.id, x: i.x + delta[action][0], y: i.y + delta[action][1] }, true);
+        dispatch({ type: "move", id: i.id, x: i.x + delta[action][0], y: i.y + delta[action][1], roomId }, true);
     }
   };
   const switchMode = (next: "play" | "decorate") => {
@@ -291,6 +304,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     setSelected(undefined);
     setPlacing(undefined);
     setNotice("");
+    store.setMessage("");
     preview.value = emptyPreview;
   };
   const measure = useCallback(() => canvas.current?.measureInWindow((x, y) => setOrigin({ x, y })), []);
@@ -300,16 +314,13 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     const frame = requestAnimationFrame(measure);
     return () => cancelAnimationFrame(frame);
   }, [measure, sceneWidth, sceneHeight, drawerHeight, inset.top, inset.bottom]);
-  const seatActions = [
-    ...anchors.filter(a => ["hello", "window", "beach-left", "beach-middle", "beach-right"].includes(a)).map(anchor => ({ name: `seat-${anchor}`, label: anchor.startsWith("beach-") ? `Stand on ${anchor.replace("-", " ")}` : `Move to ${anchor === "window" ? "window" : "floor"}`, anchor, seatId: undefined as string | undefined })),
-    ...room.instances.filter(i => isSeat(i.item)).map(i => ({ name: `seat-id-${i.id}`, label: `Sit on ${itemSpec(i.item).name}`, anchor: seatAnchor(i), seatId: i.id })),
-  ];
-  const placementCommand = (name: string) => {
+  const placementCommand = (name: string, roomId = store.state.current) => {
+    const room = store.state.rooms[roomId];
     if (!placing) return;
     const v = preview.value;
     if (name === "place") {
       const p = itemPoint(instance("", placing, v.x, v.y));
-      place(placing, p.x * scale, p.y * scale);
+      place(placing, p.x * scale, p.y * scale, roomId);
       return;
     }
     const d: Record<string, [number, number]> = { left: [-1, 0], right: [1, 0], back: [0, -1], forward: [0, 1] };
@@ -323,7 +334,14 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     preview.value = { active: true, x, y, w, h, wall, valid };
     store.setMessage(`Column ${x + 1}, row ${y + 1}. ${valid ? "Clear spot." : "Try a clear spot."}`);
   };
-  const entries = [
+  const renderEntries = (room: RoomState, roomId: typeof roomIds[number]) => {
+  const send = (action: HomeAction, audible = false) => dispatch({...action,roomId},audible);
+  const localConfig = {...config, blockers: room.instances.map(i => { const [w,h]=dimensions(i), p=surfacePoint(i);return {...i,w,h,wall:i.layer==='wall',surface:!!decorSpec(i.item).surface,sx:p.x,sy:p.y,radius:itemSize(i)*.42}; })};
+  const seatActions = [
+    ...anchors.filter(a => ['hello','window','beach-left','beach-middle','beach-right'].includes(a)).map(anchor=>({name:`seat-${anchor}`,label:`Move to ${anchor}`,anchor,seatId:undefined as string|undefined})),
+    ...room.instances.filter(i=>isSeat(i.item)).map(i=>({name:`seat-id-${i.id}`,label:`Sit on ${itemSpec(i.item).name}`,anchor:seatAnchor(i),seatId:i.id}))
+  ];
+  return [
     ...room.instances.map((i) => {
       const p = itemPoint(i, room.instances),
         size = itemSize(i) * scale;
@@ -332,11 +350,11 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
       const [w, h] = dimensions(i);
       return {
         key: i.id,
-        depth: i.layer === "wall" ? -100 : i.layer === "ground" ? -50 : i.on ? itemPoint(room.instances.find(parent => parent.id === i.on)!).y + .5 : p.y,
+        depth: sceneItemDepth(room,i),
         node: (
           <Drag
             testID={`object-${i.id}`}
-            pointerEvents={placing ? "none" : "auto"}
+            pointerEvents={placing || (!decorating && effectiveZoom <= limits.min*1.15) ? "none" : "auto"}
             accessibilityRole="button"
             accessibilityLabel={`${itemSpec(i.item).name}, ${i.state === "active" ? "active" : "resting"}`}
             accessibilityHint={
@@ -354,7 +372,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                   ]
                 : [{ name: "activate", label: "Play" }]
             }
-            onAccessibilityAction={(e) => e.nativeEvent.actionName.startsWith("stack:") ? putOn(i, e.nativeEvent.actionName.slice(6)) : itemAction(i, e.nativeEvent.actionName)}
+            onAccessibilityAction={(e) => e.nativeEvent.actionName.startsWith("stack:") ? putOn(i, e.nativeEvent.actionName.slice(6), roomId) : itemAction(i, e.nativeEvent.actionName, roomId)}
             {...keyboard((e) => {
               const names: Record<string, string> = {
                 ArrowLeft: "left",
@@ -371,13 +389,14 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               const name = names[e.nativeEvent.key];
               if (name && (decorating || name === "activate")) {
                 e.preventDefault();
-                itemAction(i, name);
+                itemAction(i, name, roomId);
               }
             })}
             enabled={decorating}
             reduced={reduced}
-            config={{ ...config, foot: p, layer: i.layer, footprint: { w, h, wall: i.layer === "wall", id: i.id, small: !!decorSpec(i.item).small } }}
+            config={{ ...localConfig, foot: p, layer: i.layer, footprint: { w, h, wall: i.layer === "wall", id: i.id, small: !!decorSpec(i.item).small } }}
             onStart={() => {
+              dispatch({type:"room",room:roomId});
               setDraggedItem(undefined);
               setSelected(undefined);
               setPlacing(undefined);
@@ -388,8 +407,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               if (placing) {
                 return;
               }
-              if (room.instances.some(child => child.on === i.id)) setSurfaceMenu(i.id);
-              else itemAction(i, "activate");
+              if (room.instances.some(child => child.on === i.id)) {dispatch({type:"room",room:roomId});setSurfaceMenu(i.id);}
+              else itemAction(i, "activate", roomId);
             }}
             onDrop={(_x, _y, dx, dy) => {
               const px = p.x * scale + dx,
@@ -399,7 +418,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                 feedback("Drop inside the room.");
                 return;
               }
-              if (spot) dispatch({ type: "move", id: i.id, ...spot }, true);
+              if (spot) send({ type: "move", id: i.id, ...spot }, true);
               setSelected(i.id);
             }}
             style={{
@@ -408,7 +427,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               top: p.y * scale - size * 0.85 + size - hitHeight,
               width: hitWidth,
               height: hitHeight,
-              borderWidth: selected === i.id ? 2 : 0,
+              borderWidth: roomId === store.state.current && selected === i.id ? 2 : 0,
               borderColor: "#397C6C",
               borderRadius: 18,
             }}
@@ -434,7 +453,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     }),
     ...room.instances.filter(i => isSeat(i.item) && i.item !== "rug" && i.item !== "shelf" && room.characters.some(c => c.pose === "sit" && (c.seatId ? c.seatId === i.id : c.anchor === i.item || c.anchor === "seat"))).map(i => {
       const p = itemPoint(i, room.instances), size = itemSize(i) * scale;
-      return { key: `seat-front-${i.id}`, depth: p.y + 2, node: <View pointerEvents="none" style={{ position: 'absolute', left: p.x * scale - size / 2, top: p.y * scale - size * .85 }}>{i.item === "chair" ? <DecorArt item={i.item} tint={i.tint} size={size} mirrored={i.mirrored} rotation={i.rotation} foreground/> : <SeatFront item={i} size={size}/>}</View> };
+      return { key: `seat-front-${i.id}`, depth: furnitureDepth(i) + 2, node: <View pointerEvents="none" style={{ position: 'absolute', left: p.x * scale - size / 2, top: seatClipTop(room, i) * scale, height: Math.max(0, p.y * scale + size * .15 - seatClipTop(room, i) * scale), overflow: 'hidden' }}><View style={{ marginTop: (p.y - itemSize(i)*.85 - seatClipTop(room,i))*scale }}>{i.item === "chair" ? <DecorArt item={i.item} tint={i.tint} size={size} mirrored={i.mirrored} rotation={i.rotation} foreground/> : <SeatFront item={i} size={size}/>}</View></View> };
     }),
     ...room.characters.map((c) => {
       const p = characterPoint(room, c),
@@ -455,7 +474,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             ]}
             onAccessibilityAction={(e) => {
               const a = seatActions.find(a => a.name === e.nativeEvent.actionName);
-              if (a) dispatch({ type: "character", slot: c.slot, anchor: a.anchor, ...(a.seatId ? { seatId: a.seatId } : {}) }, true);
+              if (a) send({ type: "character", slot: c.slot, anchor: a.anchor, ...(a.seatId ? { seatId: a.seatId } : {}) }, true);
               const deltas: Record<string, [number, number]> = {
                 left: [-37.5, 0],
                 right: [37.5, 0],
@@ -464,7 +483,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               };
               const d = deltas[e.nativeEvent.actionName];
               if (d)
-                dispatch(
+                send(
                   {
                     type: "character",
                     slot: c.slot,
@@ -484,7 +503,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               };
               if (deltas[k]) {
                 e.preventDefault();
-                dispatch(
+                send(
                   {
                     type: "character",
                     slot: c.slot,
@@ -498,22 +517,30 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                 e.preventDefault();
                 const index = seatActions.findIndex(a => c.seatId ? a.seatId === c.seatId : a.anchor === c.anchor);
                 const next = seatActions[(index + 1) % seatActions.length];
-                dispatch({ type: "character", slot: c.slot, anchor: next.anchor, ...(next.seatId ? { seatId: next.seatId } : {}) }, true);
+                send({ type: "character", slot: c.slot, anchor: next.anchor, ...(next.seatId ? { seatId: next.seatId } : {}) }, true);
               }
             })}
             enabled
             reduced={reduced}
-            config={{ ...config, foot: p }}
+            config={{ ...localConfig, foot: p }}
             onTap={() => {
               setHint(false);
             }}
             onStart={() => {
+              dispatch({type:"room",room:roomId});
               setHint(false);
               setSelected(undefined);
               setNotice("");
             }}
             onDrop={(_x, _y, dx, dy) =>
-              dispatch(characterDrop(room, c.slot, p.x + dx / scale, p.y + dy / scale), true)
+              (() => {
+                const worldX=roomIds.indexOf(roomId)*800+p.x+dx/scale;
+                const destination=roomIds[roomAt(worldX,800)];
+                const localX=Math.max(0,Math.min(799,worldX-roomIds.indexOf(destination)*800));
+                const row=(p.y+dy/scale-386)/14.4;
+                if(destination!==roomId) send({type:'transfer',slot:c.slot,room:destination,x:(localX-43-row*1.5)/37.5,y:row},true);
+                else send(characterDrop(room,c.slot,localX,p.y+dy/scale),true);
+              })()
             }
             style={{
               position: "absolute",
@@ -571,8 +598,9 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
       };
     }),
   ].sort((a, b) => a.depth - b.depth);
+  };
   const toolbarPoint = target ? itemPoint(target, room.instances) : undefined;
-  const roomTop = inset.top + headerHeight + (availableHeight - sceneHeight) / 2;
+  const roomTop = origin.y;
   const targetSize = target ? itemSize(target) * scale : 0;
   const targetHitHeight = target ? Math.max(target.on ? 44 : 48, targetSize * (target.item === "toy-box" ? .58 : target.layer === "ground" ? .4 : .82)) : 0;
   const toolbarTop = sideDrawer ? inset.top + headerHeight + 52 : toolbarPoint
@@ -613,7 +641,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           setNotice("");
         }}
         onTap={() => choose(id)}
-        onDrop={(x, y) => place(id, x - origin.x, y - origin.y)}
+        onDrop={(x, y) => canvas.current?.measureInWindow((ox,oy)=>place(id,x-ox,y-oy))}
         style={{
           width: 88,
           height: 94,
@@ -642,7 +670,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     <View style={styles.page}>
       <View pointerEvents="none" style={StyleSheet.absoluteFill}><SkyArt /></View>
       <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
-        {store.message}
+        {decorating ? store.message : ""}
       </Text>
       <View
         style={{
@@ -654,11 +682,14 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           paddingRight: drawerWidth,
         }}
       >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} onScrollEndDrag={measure} onMomentumScrollEnd={measure} contentContainerStyle={{ alignItems: "center", justifyContent: "center", minWidth: width - drawerWidth }} style={{ width: width - drawerWidth, flexGrow: 0 }}>
-        <View ref={canvas} onLayout={measure} testID="home-scene" style={{ width: sceneWidth, height: sceneHeight }}>
+        <HouseCamera cameraRef={houseCamera} initialIndex={roomIds.indexOf(store.state.current)} width={width-drawerWidth} height={Math.max(0,Math.min(availableHeight,sceneHeight))} roomWidth={sceneWidth} sceneHeight={sceneHeight} zoom={effectiveZoom} minZoom={limits.min} maxZoom={limits.max} reduced={reduced} onZoom={setZoom} onRoom={index=>{dispatch({type:'room',room:roomIds[index]});if(roomIds[index]!==store.state.current){setSelected(undefined);setPlacing(undefined);}requestAnimationFrame(measure);setTimeout(measure,reduced?0:280);}}>
+        {/* Event callbacks below read placement refs only on input, never while building scenes. */}
+        {/* eslint-disable-next-line react-hooks/refs */}
+        {roomIds.map((roomId,index)=>{const room=store.state.rooms[roomId];return (
+        <View key={roomId} ref={node=>{roomCanvases.current[roomId]=node;if(roomId===store.state.current)canvas.current=node;}} onLayout={measure} testID={`home-scene-${roomId}`} style={{ position:"absolute", left:index*sceneWidth, width: sceneWidth, height: sceneHeight }}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Room floor"
+            accessibilityLabel={`${roomNames[roomId]} floor`}
             accessibilityHint={
               placing
                 ? "Tap to place the selected item. Arrow keys change spot and Enter places."
@@ -668,8 +699,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               ...["left", "right", "back", "forward"].map((name) => ({ name, label: `Move placement ${name}` })),
               { name: "place", label: "Place selected item" },
             ]}
-            onAccessibilityAction={(e) => placementCommand(e.nativeEvent.actionName)}
-            // eslint-disable-next-line react-hooks/refs -- keyboard stores this callback; placement refs are read only on input.
+            onAccessibilityAction={(e) => placementCommand(e.nativeEvent.actionName,roomId)}
             {...keyboard((e) => {
               const names: Record<string, string> = {
                 ArrowLeft: "left",
@@ -681,31 +711,40 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               const name = names[e.nativeEvent.key];
               if (placing && name) {
                 e.preventDefault();
-                placementCommand(name);
+                placementCommand(name,roomId);
               }
             })}
             onPress={(e) => {
               if (!placing) {
+                const now=e.timeStamp;
+                const detail=Platform.OS === "web" ? (e.nativeEvent as unknown as {detail?:number}).detail : 0;
+                if(lastRoomTap.current.room===roomId && (now-lastRoomTap.current.at<350 || detail===2)) {
+                  houseCamera.current?.zoomRoom(index);lastRoomTap.current={room:'',at:0};
+                } else {lastRoomTap.current={room:roomId,at:now};dispatch({type:"room",room:roomId});}
                 setSelected(undefined);
                 return;
               }
               const { pageX, pageY } = e.nativeEvent;
-              canvas.current?.measureInWindow((x, y) => place(placing, pageX - x, pageY - y));
+              roomCanvases.current[roomId]?.measureInWindow((x, y) => place(placing, pageX - x, pageY - y, roomId));
             }}
             style={StyleSheet.absoluteFill}
           >
             <View pointerEvents="box-none" style={{ position: "absolute", width: sceneWidth, height: scale * 560 }}>
-              {store.state.current === "home" ? <RoomArt
+              {roomId === "home" ? <RoomArt
                 theme={room.theme}
                 badges={badges}
-                onBadgePress={badge => router.push({ pathname:"/badges", params:{badge} })}
+                onBadgePress={badge => {if(houseCamera.current?.canActivate())router.push({ pathname:"/badges", params:{badge} });}}
                 reduced={reduced}
-              /> : <RoomShellArt room={store.state.current} theme={room.theme} />}
+              /> : <RoomShellArt room={roomId} theme={room.theme} />}
             </View>
           </Pressable>
           {beach && <View pointerEvents="none" style={{ position: "absolute", top: 525 * scale, width: sceneWidth, height: Math.max(215 * scale, height - origin.y - 525 * scale) }}><ShoreArt depth={Math.max(215, (height - origin.y) / scale - 525)} /></View>}
-          {decorating && <FloorGrid scale={scale} width={sceneWidth} height={sceneHeight} />}
-          {entries.map((entry) => (
+          {decorating && roomId===store.state.current && <FloorGrid scale={scale} width={sceneWidth} height={sceneHeight} />}
+          <View pointerEvents="none" style={{position:'absolute',left:0,top:0,width:sceneWidth,height:sceneHeight}}>
+            <Text style={{position:'absolute',top:12*scale,left:24*scale,fontSize:24*scale,color:'#385451',fontWeight:'700'}}>{roomNames[roomId]}</Text>
+            {index < 3 && <><View style={{position:'absolute',right:0,top:0,width:8*scale,height:360*scale,backgroundColor:'#C29369'}}/><View style={{position:'absolute',right:0,top:360*scale,width:70*scale,height:170*scale,borderWidth:5*scale,borderBottomWidth:0,borderColor:'#C29369',borderRadius:20*scale,backgroundColor:'#C5DED344'}}/></>}
+          </View>
+          {renderEntries(room,roomId).map((entry) => (
             <React.Fragment key={entry.key}>{entry.node}</React.Fragment>
           ))}
           {room.instances.filter(parent => room.instances.some(child => child.on === parent.id)).map(parent => {
@@ -722,15 +761,16 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               <Text style={styles.label}>Items</Text>
             </Pressable>;
           })}
-          <Footprint preview={preview} scale={scale} width={sceneWidth} height={sceneHeight} />
-          {draggedItem && (
+          {roomId===store.state.current && <Footprint preview={preview} scale={scale} width={sceneWidth} height={sceneHeight} />}
+          {roomId===store.state.current && draggedItem && (
             <TrayGhost preview={preview} scale={scale} size={itemSize(instance("", draggedItem, 0, 0)) * scale}>
               <DecorArt item={draggedItem} size={itemSize(instance("", draggedItem, 0, 0)) * scale} />
             </TrayGhost>
           )}
 
         </View>
-        </ScrollView>
+        );})}
+        </HouseCamera>
       </View>
           {decorating && target && toolbarPoint && (
             <View
@@ -741,7 +781,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                 { flexDirection: "column", alignItems: "center", maxWidth: sideDrawer ? drawerWidth - 16 : width - 16 },
                 {
                   position: "absolute",
-                  left: sideDrawer ? width - drawerWidth + 8 : Math.max(8, Math.min(width - 320, toolbarPoint.x * scale - 160)),
+                  left: sideDrawer ? width - drawerWidth + 8 : Math.max(8, Math.min(width - 320, origin.x + toolbarPoint.x * scale - 160)),
                   top: toolbarTop,
                   zIndex: 20,
                 },
@@ -779,8 +819,9 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           )}
       <View style={{ position: "absolute", top: inset.top + 62, left: 8, right: 8, zIndex: 10, flexDirection: "row", gap: 6 }}>
         <ScrollView horizontal style={{ flex: 1, backgroundColor: "#FFF8E9", borderRadius: 18 }} contentContainerStyle={{ gap: 2 }} showsHorizontalScrollIndicator={false}>
-          {roomIds.map(id => <Button key={id} label={roomNames[id]} selected={id === store.state.current} onPress={() => { dispatch({ type: "room", room: id }); setSelected(undefined); setPlacing(undefined); setDraggedItem(undefined); preview.value = emptyPreview; }} />)}
+          {roomIds.map(id => <Button key={id} label={roomNames[id]} selected={id === store.state.current} onPress={() => { houseCamera.current?.jump(roomIds.indexOf(id)); setSelected(undefined); setPlacing(undefined); setDraggedItem(undefined); preview.value = emptyPreview; }} />)}
         </ScrollView>
+        <Button label={effectiveZoom > limits.min*1.15 ? "Whole house" : "Close up"} onPress={()=>setZoom(effectiveZoom > limits.min*1.15 ? limits.min : 1)} />
         {decorating && <View style={{ flexDirection: "row", gap: 4 }}>
           <Button label="Undo" icon="undo" iconOnly disabled={!store.canUndo} onPress={() => { dispatch({ type: "undo" }); setSelected(undefined); }} />
           <Button label="Redo" icon="redo" iconOnly disabled={!store.canRedo} onPress={() => { dispatch({ type: "redo" }); setSelected(undefined); }} />
@@ -803,7 +844,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         <Button label="More" icon="more" iconOnly onPress={() => setMenu(!menu)} />
       </View>
       {!!saveStatus && <View pointerEvents="box-none" style={{ position: "absolute", top: inset.top + 112, left: 8, zIndex: 12, maxWidth: width - 16, transform: [{ scale: .75 }], transformOrigin: "left top" }}>{saveStatus}</View>}
-      {((!decorating && hint) || (notice && !notice.startsWith("Earn"))) && (
+      {((!decorating && hint) || (decorating && notice && !notice.startsWith("Earn"))) && (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Dismiss hint"
@@ -819,7 +860,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               : { top: inset.top + headerHeight + 4 },
           ]}
         >
-          <Text style={styles.hintText}>{notice || "Drag a friend. Tap a little home surprise."}</Text>
+          <Text style={styles.hintText}>{(decorating ? notice : "") || "Drag a friend. Swipe to explore. Pinch or double-tap a room to zoom."}</Text>
         </Pressable>
       )}
       {menu && (

@@ -1,4 +1,5 @@
 import { decorSpec, isSeat, itemSpec } from "./catalog";
+import { freeFloor } from "./freeFloor";
 import { moreCatalog } from "./catalogMore";
 import type { Instance } from "./model";
 export function floorPoint(x: number, y: number) {
@@ -101,7 +102,7 @@ export function itemSize(i: Instance) {
 
 export function characterPoint(state: import("./model").RoomState, c: import("./model").Character) {
   if (c.anchor.startsWith("beach-")) return { x: c.anchor === "beach-left" ? 210 : c.anchor === "beach-middle" ? 400 : 590, y: 650 };
-  if (c.anchor === "floor") return floorPoint(c.x!, c.y!);
+  if (c.anchor === "floor") { const p=freeFloor(state.instances,c.x!,c.y!);return floorPoint(p.x,p.y); }
   const seat = state.instances.find((i) => (c.seatId ? i.id === c.seatId : c.anchor === "seat" ? isSeat(i.item) : i.item === c.anchor));
   if (seat) {
     const p = itemPoint(seat);
@@ -111,7 +112,8 @@ export function characterPoint(state: import("./model").RoomState, c: import("./
     const seatedFoot = c.slot === 0 ? ({ bed: 4, chair: 43, rug: 32, beanbag: 36, seat: genericSurface + 70, shelf: -83 } as Partial<Record<import("./model").Anchor, number>>)[c.anchor] : undefined;
     return { x: p.x, y: p.y + (seatedFoot ?? -(c.anchor === "shelf" ? 92 : c.anchor === "bed" ? 48 : c.anchor === "seat" ? -genericSurface : 12)) };
   }
-  return c.anchor === "window" ? floorPoint(0, 2) : floorPoint(6, 2);
+  const p=freeFloor(state.instances,c.anchor === "window" ? 0 : 6,2);
+  return floorPoint(p.x,p.y);
 }
 /** Snap to the nearest actual seat. Otherwise keep a bounded, validated floor cell. */
 export function characterDrop(
@@ -131,13 +133,46 @@ export function characterDrop(
   if (nearest && Math.hypot(nearest.p.x - x, nearest.p.y - y) < 65)
     return { type: "character", slot, anchor: seatAnchor(nearest.i), seatId: nearest.i.id };
   if (y >= 560) return { type: "character", slot, anchor: x < 305 ? "beach-left" : x < 495 ? "beach-middle" : "beach-right" };
-  return { type: "character", slot, anchor: "floor", ...spotFromPoint(x, y, 1, false)! };
+  return { type: "character", slot, anchor: "floor", ...freeFloor(state.instances, (x - 43 - ((y - 386) / 14.4) * 1.5) / 37.5, (y - 386) / 14.4) };
 }
 
 /** A seated character paints after its seat even though the raised contact point is higher. */
 export function characterDepth(state: import("./model").RoomState, c: import("./model").Character) {
   const seat = state.instances.find((i) => (c.seatId ? i.id === c.seatId : c.anchor === "seat" ? isSeat(i.item) : i.item === c.anchor));
-  return seat ? itemPoint(seat).y + 1 : characterPoint(state, c).y + 1;
+  return seat ? furnitureDepth(seat) + 1 : characterPoint(state, c).y + 1;
 }
 
 export const seatAnchor = (i: Instance): import("./model").Anchor => ["bed", "chair", "rug", "beanbag", "shelf"].includes(i.item) ? i.item as import("./model").Anchor : "seat";
+
+/** Contact row at the front of the saved footprint, shared with seated depth. */
+export function furnitureDepth(i: Instance) {
+  const [, h] = importDimensions(i);
+  return floorPoint(i.x, i.y + h - 1).y;
+}
+/** The near rim may cover lap/legs, never the torso of any seated friend. */
+export function seatClipTop(state: import("./model").RoomState, i: Instance) {
+  const occupants = state.characters.filter(c => c.pose === 'sit' && (c.seatId ? c.seatId === i.id : c.anchor === i.item || c.anchor === 'seat'));
+  return Math.max(itemPoint(i).y - itemSize(i)*.85, ...occupants.map(c => characterPoint(state,c).y - characterSize(c.slot)*.23));
+}
+
+/** A seated torso in front of a nearby table must remain a continuous silhouette. */
+export function furniturePaintDepth(state: import("./model").RoomState, i: Instance) {
+  let depth = furnitureDepth(i);
+  if (['table','kitchen-table','coffee-table','side-table'].includes(i.item)) {
+    const p = itemPoint(i);
+    for (const c of state.characters) {
+      const foot = characterPoint(state,c);
+      if (c.pose === 'sit' && Math.abs(foot.x-p.x)<itemSize(i)*.6 && foot.y>=p.y-20 && foot.y<=p.y+120)
+        depth=Math.min(depth,characterDepth(state,c)-.5);
+    }
+  }
+  return depth;
+}
+
+/** Raised children must sort above the same front-edge depth used by their surface. */
+export function sceneItemDepth(state: import("./model").RoomState, i: Instance) {
+  if (i.layer === 'wall') return -100;
+  if (i.layer === 'ground') return -50;
+  const parent=i.on && state.instances.find(p=>p.id===i.on);
+  return parent ? furniturePaintDepth(state,parent)+.5 : furniturePaintDepth(state,i);
+}

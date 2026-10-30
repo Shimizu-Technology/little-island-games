@@ -4,15 +4,15 @@
   "runtime": "kokoro-onnx 0.6.1 / MIT",
   "modelSHA256": "beb0d1848dee9a49da392cc3df26958d46cfa35d321edf434f52949153f0df3a",
   "voiceDataSHA256": "bca610b8308e8d99f32e6fe4197e7ec01679264efed0cac9140fe9c29f1fbf7d",
-  "scriptManifestSHA256": "700804c54d68bf7aa5a6c2e63aa57d296ef936168ab4303aafe2afba2e0984d9",
+  "scriptManifestSHA256": "df2f4c9a6a8473def4512b794a1e523652767f90d50b34d5237d63921beaeb7d",
   "voices": {
     "warm": "af_heart",
     "calm": "af_bella"
   },
-  "keysPerVoice": 2935,
+  "keysPerVoice": 2944,
   "secondsByVoice": {
-    "warm": 11788.17,
-    "calm": 11926.94
+    "warm": 11833.75,
+    "calm": 11974.11
   },
   "networkPlayback": false,
   "normalization": "-20 LUFS, -3 dBTP, LRA7; 24kHz mono AAC48k",

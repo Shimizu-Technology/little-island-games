@@ -23,6 +23,7 @@ export function Clothes({look,pose,colors}:{look:IslanderLook;pose:Pose;colors:C
    {top==='explorer'&&<Path d={front?`M29 ${sy}L35 ${sy+2}L36 ${hip-3}H28ZM51 ${sy}L45 ${sy+2}L44 ${hip-3}H52ZM29 ${hip-12}h5v6h-5ZM46 ${hip-12}h5v6h-5Z`:`M29 ${sy}Q40 ${sy-4} 51 ${sy}L52 ${hip-3}H28ZM35 ${sy+10}h10`} fill={colors.trim} strokeWidth={1}/>}
    {top==='sundress'&&<Path d={`M31 ${sy+9}h18M33 ${sy+7}l-1-7m16 7l1-7M26 ${hem-5}Q40 ${hem-2} 54 ${hem-5}L56 ${hem}Q40 ${hem+4} 24 ${hem}Z`} fill={colors.trim} strokeWidth={.8}/>}
    {['jersey-top','jersey-dress','lagoon-jersey'].includes(top!)&&<Path d={`M35 ${sy+10}h10l-5 9M30 ${hip-5}h20`} fill="none" stroke={colors.trim} strokeWidth={1.7}/>}
+   {top==='robot-tee'&&front&&<G><Path d={`M34 ${sy+11}h12v10H34Z`} fill={colors.trim} strokeWidth={1}/><Path d={`M40 ${sy+11}v-3m-4 7h2m4 0h2m-7 4q3 3 6 0`} fill="none" stroke={colors.primary} strokeWidth={1.2}/></G>}
    {top==='number-tee'&&<Path d={`M33 ${sy+11}h2v8m6-8h5l-5 8h5`} fill="none" stroke={colors.trim} strokeWidth={1.5}/>}
    {top==='board-shorts-set'&&<Path d={`M32 ${sy+12}q4-5 8 0q4 5 8 0M30 ${hip+2}h20`} fill="none" stroke={colors.trim} strokeWidth={1.8}/>}
    {top==='tank'&&<Path d={`M32 ${sy}v5q8 7 16 0v-5`} fill="none" stroke={colors.trim} strokeWidth={1.8}/>}

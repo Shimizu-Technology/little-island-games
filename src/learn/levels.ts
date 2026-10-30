@@ -5,6 +5,7 @@ import { engines } from "./engines";
 
 export { levelNumbers, levelOf, optionsAtLevel, levelStage } from "./levelOptions";
 export type { LearningLevel } from "./levelOptions";
+
 type LevelName = { name: string; description: string };
 const foundation: Record<LearnId, readonly [LevelName, LevelName, LevelName]> = {
   "reef-race": [
@@ -67,16 +68,16 @@ const foundation: Record<LearnId, readonly [LevelName, LevelName, LevelName]> = 
     { name: "Find numbers to 20", description: "Solve three equations within 20 after two small warm-up questions." },
     { name: "Missing number first", description: "Start with a missing number and use the full range within 20 throughout." },
   ],
-  "beep-bot": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
-  "turtle-draw": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "beep-bot": [{ name: "One little path", description: "Put arrows in order." }, { name: "Around the corner", description: "Turn toward a shell." }, { name: "Find a way", description: "Go around sandcastles." }],
+  "turtle-draw": [{ name: "Lines in sand", description: "Draw lines and corners." }, { name: "Four sides", description: "Trace squares and rectangles." }, { name: "Loop a shape", description: "Repeat to draw polygons." }],
   "tide-logic": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
   "code-lab": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
   "pattern-path": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
   "shape-shift": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
   "logic-lagoon": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
-  "weather-watch": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
-  "food-web": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
-  "space-station": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "weather-watch": [{"name": "Weather wardrobe", "description": "Dress for weather and choose safe activities."}, {"name": "Season garden", "description": "Turn the season dial and observe a garden."}, {"name": "Water cycle", "description": "Build evaporation, clouds, rain and runoff."}],
+  "food-web": [{"name": "Reef feeding", "description": "Feed reef animals and give algae sunlight."}, {"name": "Food chains", "description": "Build energy paths from producers to consumers."}, {"name": "Branching webs", "description": "Connect branching relationships in a reef web."}],
+  "space-station": [{"name": "Day & night", "description": "Rotate Earth to make day and night."}, {"name": "Moon phases", "description": "Orbit the Moon and observe its sunlit shape."}, {"name": "Planet builder", "description": "Place eight planets and compare their sizes."}],
   "times-tide": [{ name: "Fish in equal pools", description: "Make equal groups of 2, 5 or 10 fish." }, { name: "Shell arrays", description: "Build rows and repeated addition." }, { name: "Skip-count reef", description: "Count by groups across a reef array." }],
   "fraction-feast": [{ name: "Fair pie shares", description: "Cut halves and quarters." }, { name: "Fraction footsteps", description: "Find fractions on a number line." }, { name: "Fold the same amount", description: "Build equivalent fractions." }],
   "treasure-algebra": [{ name: "Sunny steps", description: "Add and subtract positive steps on a line." }, { name: "Below sea level", description: "Cross zero into negative depths." }, { name: "Missing treasure", description: "Find the number hiding in a box." }],
