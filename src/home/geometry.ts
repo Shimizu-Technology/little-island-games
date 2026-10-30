@@ -52,9 +52,9 @@ export function characterPoint(state: import("./model").HomeState, c: import("./
   const seat = state.instances.find((i) => (c.seatId ? i.id === c.seatId : i.item === c.anchor));
   if (seat) {
     const p = itemPoint(seat);
-    // The enlarged seated Islander's hip is ~47 scene units above its box foot.
-    // Match the illustrated seat surface; sidekicks retain their bottom contact.
-    const seatedFoot = c.slot === 0 ? ({ bed: -15, chair: 23, rug: 10, beanbag: 6 } as Partial<Record<import("./model").Anchor, number>>)[c.anchor] : undefined;
+    // The 112-unit seated rig has its hip about 35 units above the box foot.
+    // Match each illustrated surface; sidekicks retain their bottom contact.
+    const seatedFoot = c.slot === 0 ? ({ bed: -27, chair: 14, rug: 4, beanbag: 5 } as Partial<Record<import("./model").Anchor, number>>)[c.anchor] : undefined;
     return { x: p.x, y: p.y + (seatedFoot ?? -(c.anchor === "shelf" ? 92 : c.anchor === "bed" ? 48 : 12)) };
   }
   return c.anchor === "window" ? floorPoint(0, 2) : floorPoint(6, 2);

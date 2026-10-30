@@ -40,6 +40,8 @@ import {
   type Ownership,
   type Pose,
 } from "./model";
+import { LockBadge, LockRule } from '../personalization/LockBadge';
+import { trackLabels, badgeInfo } from '../badges/engine';
 import { characterDepth, characterDrop, characterPoint, itemPoint, itemSize, spotFromPoint } from "./geometry";
 import { useHomeStore } from "./useHomeStore";
 import { Drag, FloorGrid, Footprint, emptyPreview, TrayGhost, type DragConfig } from "./Drag";
@@ -395,9 +397,13 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         ),
       };
     }),
+    ...store.state.instances.filter(i => i.item === "chair" && store.state.characters.some(c => c.pose === "sit" && (c.seatId ? c.seatId === i.id : c.anchor === "chair"))).map(i => {
+      const p = itemPoint(i), size = itemSize(i) * scale;
+      return { key: `seat-front-${i.id}`, depth: p.y + 2, node: <View pointerEvents="none" style={{ position: 'absolute', left: p.x * scale - size / 2, top: p.y * scale - size * .85 }}><ItemArt item={i.item} size={size} mirrored={i.mirrored} rotation={i.rotation} foreground/></View> };
+    }),
     ...store.state.characters.map((c) => {
       const p = characterPoint(store.state, c),
-        size = (c.slot === 0 ? 163 : 129) * scale;
+        size = (c.slot === 0 ? (c.pose === "sit" ? 112 : 163) : 129) * scale;
       return {
         key: `character-${c.slot}`,
         depth: characterDepth(store.state, c),
@@ -566,7 +572,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         onTap={() => choose(id)}
         onDrop={(x, y) => place(id, x - origin.x, y - origin.y)}
         style={{
-          width: owned ? 100 : 180,
+          width: 120,
           minHeight: 100,
           alignItems: "center",
           borderWidth: placing === id ? 2 : 0,
@@ -575,19 +581,15 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           backgroundColor: "#FFF8E9",
         }}
       >
-        <View pointerEvents="none" style={{ opacity: owned ? 1 : 0.42 }}>
-          <ItemArt item={id} size={64} />
+        <View pointerEvents="none" style={{ opacity: owned ? 1 : 0.3 }}>
+          <ItemArt item={id} size={64} muted={!owned} />
         </View>
         <Text numberOfLines={1} style={styles.thumbLabel}>
           {label}
         </Text>
-        {!owned && <Text style={{fontSize:11, paddingHorizontal:6, color:ink}}>{spec.badge ? badgeRule(spec.badge as BadgeId) : `Earn in ${spec.track ?? "Arcade"}`}</Text>}
+        {!owned && <Text numberOfLines={1} style={{fontSize:11, paddingHorizontal:6, color:ink}}>{spec.badge ? trackLabels[badgeInfo(spec.badge as BadgeId).track] : spec.track ?? "Arcade"}</Text>}
         {owned && personFor(app.save).unseen.includes(id) && <Text style={styles.meta}>New</Text>}
-        {!owned && (
-          <View pointerEvents="none" style={{ position: "absolute", top: 0, right: 0, transform: [{ scale: 0.6 }] }}>
-            <Icon name="lock" />
-          </View>
-        )}
+        {!owned && <LockBadge/>}
       </Drag>
     );
   };
@@ -746,7 +748,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           />
         </View>
       )}
-      {(hint || notice) && (
+      {(hint || (notice && !notice.startsWith("Earn"))) && (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Dismiss hint"
@@ -800,6 +802,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               onPress={() => setCollapsed(!collapsed)}
             />
           </View>
+          {!collapsed && notice.startsWith("Earn") && <LockRule>{notice}</LockRule>}
           {!collapsed && (
             <ScrollView
               horizontal

@@ -1,5 +1,5 @@
 import React from "react";
-import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, Ellipse, G, Path, Rect, Defs, Filter, FeColorMatrix, Text as SvgText } from "react-native-svg";
 import { StickerArt } from "../../arcade/Art";
 import type { StickerId } from "../../arcade/progress";
 import type { ItemId } from "../catalog";
@@ -15,14 +15,19 @@ export function ItemArt({
   size = 120,
   mirrored = false,
   rotation = 0,
+  foreground = false,
+  muted = false,
 }: {
   item: ItemId;
   active?: boolean;
   size?: number;
   mirrored?: boolean;
   rotation?: number;
+  foreground?: boolean;
+  muted?: boolean;
 }) {
   if (item.startsWith("sticker:")) return <StickerArt id={item.slice(8) as StickerId} size={size} />;
+  if (foreground) return <Svg width={size} height={size} viewBox="0 0 150 130" accessible={false}><G transform={`translate(${mirrored !== (rotation === 180 || rotation === 270) ? 150 : 0} 0) scale(${mirrored !== (rotation === 180 || rotation === 270) ? -1 : 1} 1)`} stroke={ink} strokeWidth={2.5} strokeLinejoin="round"><Path d="M44 95L125 87V94L44 102Z" fill={coral}/></G></Svg>;
   const legs = (
     <G stroke={ink} strokeWidth={3} strokeLinecap="round">
       <Path d="M33 92L29 116M112 92L117 116" />
@@ -41,6 +46,8 @@ export function ItemArt({
   );
   return (
     <Svg width={size} height={size} viewBox="0 0 150 130" accessible={false}>
+      <Defs><Filter id={`muted-${item}`}><FeColorMatrix type="saturate" values="0"/></Filter></Defs>
+      <G filter={muted ? `url(#muted-${item})` : undefined}>
       <Ellipse cx={75} cy={119} rx={57} ry={7} fill="#44645A" opacity={0.12} />
       <G
         transform={`translate(${mirrored ? 150 : 0} 0) scale(${mirrored ? -1 : 1} 1)`}
@@ -324,6 +331,7 @@ export function ItemArt({
             </>
           )}
         </G>
+      </G>
       </G>
     </Svg>
   );

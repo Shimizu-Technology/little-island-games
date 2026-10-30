@@ -22,6 +22,37 @@ Companion to [ISLANDER_2.md](ISLANDER_2.md). Every track has four named badges. 
 | **Arcade** | All nine arcade games | *Player One*: any cleared level | *Level Hopper*: 8 distinct cleared levels | *World Opener*: open World 3 in any game **or** clear every level of one world | *Legend*: clear any World 6 level **or** 40 distinct cleared levels |
 | **Classic & Board** | Classic games, the five board games, cards, Mystery, Dash, Maze | *Game Night*: finish any game | *Good Sport*: finish 3 different games | *Strategist*: finish 6 different games | *Champion*: win a board game at the middle or strong opponent **or** finish 10 different games |
 
+## Exact UI earning copy
+
+Every rule names its track, including level shortcuts. Locker previews, My badges, the wall and Home inventory share `badgeInfo` / `badgeRule`.
+
+| Badge ID | Rule |
+|---|---|
+| math-1 | Earn Counter: Finish any math round. |
+| math-2 | Earn Builder: Finish 3 different math games or levels. |
+| math-3 | Earn Problem Solver: Finish a Math round at Level 3 or higher, or finish 6 different math games or levels. |
+| math-4 | Earn Math Star: Finish a Math round at Level 5, or finish 10 different math games or levels. |
+| reading-1 | Earn First Words: Finish any reading round. |
+| reading-2 | Earn Page Turner: Finish 3 different reading games or levels. |
+| reading-3 | Earn Storyteller: Finish a Reading round at Level 3 or higher, or finish 6 different reading games or levels. |
+| reading-4 | Earn Bookworm: Finish a Reading round at Level 5, or finish 10 different reading games or levels. |
+| science-1 | Earn Curious: Finish any science & thinking round or Explore topic. |
+| science-2 | Earn Explorer: Finish 3 different science games, levels or Explore topics. |
+| science-3 | Earn Scientist: Finish a Science & Thinking round at Level 3 or higher, or finish 6 different science games, levels or Explore topics. |
+| science-4 | Earn Inventor: Finish a Science & Thinking round at Level 5, or finish 10 different science games, levels or Explore topics. |
+| chamoru-1 | Earn Håfa Adai: Finish any CHamoru words round. |
+| chamoru-2 | Earn Neighbor: Finish 3 different CHamoru games or levels. |
+| chamoru-3 | Earn Storykeeper: Finish a CHamoru words round at Level 3 or higher, or finish 4 different CHamoru games or levels. |
+| chamoru-4 | Earn Island Voice: Finish a CHamoru words round at Level 5, or finish 7 different CHamoru games or levels. |
+| arcade-1 | Earn Player One: Clear any arcade level. |
+| arcade-2 | Earn Level Hopper: Clear 8 different arcade levels. |
+| arcade-3 | Earn World Opener: Open World 3 in any arcade game or clear every level of one world. |
+| arcade-4 | Earn Legend: Clear a World 6 arcade level or 40 different arcade levels. |
+| classic-1 | Earn Game Night: Finish any classic or board game. |
+| classic-2 | Earn Good Sport: Finish 3 different classic or board games. |
+| classic-3 | Earn Strategist: Finish 6 different classic or board games. |
+| classic-4 | Earn Champion: Win a classic board game against a middle or strong opponent, or finish 10 different classic or board games. |
+
 ## Reward catalog
 
 There are starter items (always owned), plus 24 badge rewards: one per badge. The art keeps the house style and is suitable for every age (cool, not babyish).

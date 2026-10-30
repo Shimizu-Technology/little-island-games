@@ -25,7 +25,7 @@ export function Creator({ onClose }: { onClose: () => void }) {
     <Heading style={{ fontSize: 22 }}>{category === 'name' ? `Hello, ${learner.name}!` : `Choose your ${categories.find(c => c.key === category)!.label.toLowerCase()}`}</Heading>
     {category === 'name' ? <Copy>Is this you? A grown-up can change your name in Settings.</Copy> : <StyleGrid catalog={styleCatalog.filter(item => !lockedReason(item, person.earned))} category={category} look={look} equipped={person.look} earned={person.earned} unseen={[]} onChoose={item => setLook({ ...look, [item.category]: item.value })}/>}
   </>;
-  return <Sheet visible presence={false} title="Make your islander" onClose={onClose} footer={controls} scrollKey={`${step}:${done}`}>
+  return <Sheet visible presence={false} title={person.made ? 'Change my look' : 'Make your islander'} onClose={onClose} footer={controls} scrollKey={`${step}:${done}`}>
     {short ? <View style={{ flexDirection: 'row', gap: 16, height: Math.max(130, height - 240) }}><View style={{ width: 100 }}>{preview}</View><ScrollView key={`${step}:${done}`} style={{ flex: 1 }} contentContainerStyle={{ gap: 12, paddingBottom: 8 }} nestedScrollEnabled>{choices}</ScrollView></View> : <>{preview}{choices}</>}
   </Sheet>;
 }

@@ -3,6 +3,7 @@ import type { Person } from '../personalization/model';
 import { wardrobeRewards } from '../islander/rewards';
 import { catalog, themeRewards } from '../home/catalog';
 import { allLevelIds, arcadeIds, validLevelId, type LevelId } from '../arcade/types';
+export const trackLabels = { math: 'Math', reading: 'Reading', science: 'Science & Thinking', chamoru: 'CHamoru words', arcade: 'Arcade', classic: 'Classic & Board' };
 export const tracks = ['math', 'reading', 'science', 'chamoru', 'arcade', 'classic'] as const;
 export type Track = typeof tracks[number];
 export const countThresholds: Record<Track, readonly [number,number,number,number]> = { math:[1,3,6,10], reading:[1,3,6,10], science:[1,3,6,10], chamoru:[1,3,4,7], arcade:[1,8,0,40], classic:[1,3,6,10] };
@@ -33,12 +34,12 @@ export function badgeInfo(id: BadgeId) {
   const rule = track === 'arcade'
     ? ['Clear any arcade level.', 'Clear 8 different arcade levels.', 'Open World 3 in any arcade game or clear every level of one world.', 'Clear a World 6 arcade level or 40 different arcade levels.'][tier - 1]
     : track === 'classic'
-      ? ['Finish any game.', 'Finish 3 different games.', 'Finish 6 different games.', 'Win a board game against a middle or strong opponent, or finish 10 different games.'][tier - 1]
+      ? ['Finish any classic or board game.', 'Finish 3 different classic or board games.', 'Finish 6 different classic or board games.', 'Win a classic board game against a middle or strong opponent, or finish 10 different classic or board games.'][tier - 1]
       : [
-        'Finish any round' + (track === 'science' ? ' or Explore topic.' : '.'),
+        `Finish any ${track === 'chamoru' ? 'CHamoru words' : track === 'science' ? 'science & thinking' : track} round${track === 'science' ? ' or Explore topic' : ''}.`,
         `Finish ${counts[1]} different ${subject}.`,
-        `Finish a round at Level 3 or higher, or finish ${counts[2]} different ${subject}.`,
-        `Finish a round at Level 5, or finish ${counts[3]} different ${subject}.`,
+        `Finish a ${trackLabels[track]} round at Level 3 or higher, or finish ${counts[2]} different ${subject}.`,
+        `Finish a ${trackLabels[track]} round at Level 5, or finish ${counts[3]} different ${subject}.`,
       ][tier - 1];
   return { name:names[track][tier-1], rule, track, color:colors[track] };
 }

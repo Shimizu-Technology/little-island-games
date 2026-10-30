@@ -174,7 +174,7 @@ describe('accepted transitions, backfill, recovery',()=>{
 it('explains distinct progress without game-level jargon or losing alternative routes', () => {
   expect(badgeInfo('math-2').rule).toBe('Finish 3 different math games or levels.');
   expect(badgeInfo('arcade-2').rule).toBe('Clear 8 different arcade levels.');
-  expect(badgeInfo('math-4').rule).toBe('Finish a round at Level 5, or finish 10 different math games or levels.');
+  expect(badgeInfo('math-4').rule).toBe('Finish a Math round at Level 5, or finish 10 different math games or levels.');
   for (const track of tracks) for (const tier of [1, 2, 3, 4] as const) expect(badgeInfo(`${track}-${tier}`).rule).not.toMatch(/pairs|3\+/);
   expect(progressForBadge('math-2', ['learn:shell-math:1'])).toBe('1 of 3 done');
   expect(progressForBadge('arcade-2', ['arcade:reef-builder:w1-1'])).toBe('1 of 8 done');

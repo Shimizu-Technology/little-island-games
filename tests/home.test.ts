@@ -327,6 +327,6 @@ describe("portrait beach standing anchors", () => {
     const point = characterPoint(home, { slot: 0, anchor: "chair", pose: "sit", seatId: chair.id });
     expect(characterDrop(home, 0, point.x, point.y)).toEqual({ type: "character", slot: 0, anchor: "chair", seatId: chair.id });
     expect(characterDepth(home, { slot: 0, anchor: "chair", pose: "sit", seatId: chair.id })).toBeGreaterThan(floorPoint(chair.x, chair.y).y);
-    expect(point.y - floorPoint(chair.x, chair.y).y).toBe(23);
+    expect(point.y - floorPoint(chair.x, chair.y).y).toBe(14);
   });
 });
