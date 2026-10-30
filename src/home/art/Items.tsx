@@ -1,3 +1,5 @@
+import { SeatArt, hasSeatArt } from './SeatArt';
+import type { ArtLayer, ItemVisualState } from '../world';
 import React from "react";
 import Svg, { Circle, Ellipse, G, Path, Rect, Defs, Filter, FeColorMatrix, LinearGradient, Stop, Text as SvgText } from "react-native-svg";
 import { StickerArt } from "../../arcade/Art";
@@ -23,7 +25,11 @@ export function ItemArt({
   tint = "original",
   animated = false,
   reduced = false,
+  layer = "all",
+  state,
 }: {
+  layer?: ArtLayer;
+  state?: ItemVisualState;
   item: ItemId;
   active?: boolean;
   size?: number;
@@ -35,6 +41,8 @@ export function ItemArt({
   animated?: boolean;
   reduced?: boolean;
 }) {
+  if (hasSeatArt(item)) return <SeatArt id={item} size={size} layer={foreground ? "front" : layer} mirrored={mirrored} rotation={rotation} tint={tint} state={state ?? {on: active}} motion={art => <ItemMotion active={active} animated={animated} reduced={reduced}>{art}</ItemMotion>}/>;
+  if (layer === 'front') return null;
   const coral = item === "aquarium" ? defaultCoral : material(tint, defaultCoral);
   const teal = ["plant", "aquarium"].includes(item) ? defaultTeal : item === "surfboard" && tint !== "original" ? shade(material(tint, defaultTeal), .35) : material(tint, defaultTeal);
   const paint = (original: string) => material(tint, original);

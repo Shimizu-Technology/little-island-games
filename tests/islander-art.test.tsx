@@ -12,7 +12,7 @@ import { runLevels } from '../src/arcade/games/scrolling/content';
 vi.mock('../src/arcade/Sprite',()=>({ArcadeSprite:()=>null}));
 vi.mock('react-native',()=>({View:()=>null}));
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useAnimatedProps:()=>({})}));
-vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect'}));
+vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
 function pathYs(d:string){
  const tokens=d.match(/[a-zA-Z]|[-+]?(?:\d*\.\d+|\d+)(?:e[-+]?\d+)?/g)!;
  let i=0,cmd='',x=0,y=0,sx=0,sy=0;const ys:number[]=[];

@@ -6,7 +6,7 @@ import { backPoses, frontPoses } from '../src/islander/rig/poses';
 import { buildFor, builds, defaultLook, hairStyles, hats, isValidLook, normalizeLook, presentationPresets, shoeColors, shoes, type IslanderLook } from '../src/islander/look';
 import { canWear, selectedValue, styleCatalog } from '../src/personalization/catalog';
 import { wardrobe } from '../src/islander/rig/wardrobe';
-vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect'}));
+vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
 const art=(look:IslanderLook,pose=frontPoses[0])=>renderToStaticMarkup(<Islander look={look} pose={pose} view={pose.view}/>);
 describe('Islander 2.2 compatibility and art',()=>{
  it('leaves legacy saves unchanged while strictly validating the three new optional fields',()=>{
@@ -59,7 +59,7 @@ describe('Islander 2.2 compatibility and art',()=>{
  },30000);
  it('authors wink and star eyes for dance while keeping the five base expressions',()=>{
   const expressions=frontPoses.map(p=>art(defaultLook,p).match(/data-expression="([^"]+)"/)![1]);
-  expect(new Set(expressions)).toEqual(new Set(['happy','proud','thinking','focused','surprised','wink','star-eyes']));
+  expect(new Set(expressions)).toEqual(new Set(['happy','proud','thinking','focused','surprised','wink','star-eyes','sleepy','yum']));
   const boy=art({...defaultLook,...presentationPresets.boy}), girl=art({...defaultLook,...presentationPresets.girl});
   expect(boy).not.toContain('M-12 7l-3-2M12 7l3-2');expect(girl).toContain('M-12 7l-3-2M12 7l3-2');
  });

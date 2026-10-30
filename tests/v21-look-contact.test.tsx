@@ -4,7 +4,7 @@ import { expect, it, vi } from 'vitest';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { Islander } from '../src/islander/rig/Islander';
 import { defaultLook, hairStyles, outfits, tops, bottoms, brows, lashes, freckles, cheeks, type IslanderLook } from '../src/islander/look';
-vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect'}));
+vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
 const newHair = hairStyles.slice(4);
 const newOutfits = outfits.slice(7,15);
 const poses = [{view:'front' as const,pose:'idle'},{view:'front' as const,pose:'sit-relaxed'},{view:'front' as const,pose:'desk-write'},{view:'front' as const,pose:'dance-1'},...([0,4,8,12] as const).map(pose=>({view:'back' as const,pose}))];

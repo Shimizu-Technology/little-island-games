@@ -109,7 +109,7 @@ describe('room editing, stacking and colours',()=>{
   writeFileSync(`${process.env.POLISH_EVIDENCE}/fixture-surfaces.json`,JSON.stringify(save));
  });
  it('gives every new item an explicit scene size relative to the Islander',()=>{
-  expect(Object.keys(moreCatalog)).toHaveLength(41);
+  expect(Object.keys(moreCatalog)).toHaveLength(44);
   for(const [id,spec] of Object.entries(moreCatalog)) expect(itemSize(instance(id,id,0,0))).toBe(Math.round(spec.itemSize*1.18));
   expect(itemSize(instance('f','fridge',0,0))).toBeGreaterThan(characterSize(0));
   expect(itemSize(instance('l','table-lamp',0,0))).toBeLessThan(characterSize(0)/2);

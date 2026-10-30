@@ -1,3 +1,5 @@
+import { SeatArt, hasSeatArt } from './SeatArt';
+import type { ArtLayer, ItemVisualState } from '../world';
 import React from "react";
 import Svg, { Circle, Ellipse, G, Path, Rect, Defs, Filter, FeColorMatrix, LinearGradient, Stop } from "react-native-svg";
 import type { HomeState } from "../model";
@@ -7,9 +9,11 @@ import { StageRoom } from "./Stage";
 import { ItemFinish, ItemLife, ItemMotion } from "./Finish";
 const ink = "#385451", wood = "#D99E6C", pale = "#FFF1D3", leaf = "#79B090";
 const star = "M75 30L87 55L115 59L94 79L99 106L75 93L51 106L56 79L35 59L63 55Z";
-export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, active = false, muted = false, tint = "original", animated = false, reduced = false }: {
-  id: string; size?: number; mirrored?: boolean; rotation?: 0 | 90 | 180 | 270; active?: boolean; muted?: boolean; tint?: TintId; animated?: boolean; reduced?: boolean;
+export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, active = false, muted = false, tint = "original", animated = false, reduced = false, layer = "all", state }: {
+  layer?: ArtLayer; state?: ItemVisualState; id: string; size?: number; mirrored?: boolean; rotation?: 0 | 90 | 180 | 270; active?: boolean; muted?: boolean; tint?: TintId; animated?: boolean; reduced?: boolean;
 }) {
+  if (hasSeatArt(id)) return <SeatArt id={id} size={size} layer={layer} mirrored={mirrored} rotation={rotation} tint={tint} state={state ?? {on: active}} motion={art => <ItemMotion active={active} animated={animated} reduced={reduced}>{art}</ItemMotion>}/>;
+  if (layer === 'front') return null;
   const color = material(tint, ['#79BDB1', '#EC9989', '#E9C475'][id.length % 3]);
   const light = shade(color, .32), dark = shade(color, -.18);
   const volume = `url(#more-volume-${id})`;

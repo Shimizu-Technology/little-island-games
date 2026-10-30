@@ -1,7 +1,7 @@
 import { runnerDrawings, type Point } from '../../arcade/games/scrolling/character';
 export type { Point };
 export type View = 'front' | 'back';
-export type Expression = 'happy' | 'focused' | 'thinking' | 'surprised' | 'proud';
+export type Expression = 'happy' | 'focused' | 'thinking' | 'surprised' | 'proud' | 'sleepy' | 'yum';
 export type Side = 'left' | 'right';
 export type Joint = 'head' | 'neck' | 'leftShoulder' | 'rightShoulder' | 'leftElbow' | 'rightElbow' | 'leftHand' | 'rightHand' | 'leftHip' | 'rightHip' | 'leftKnee' | 'rightKnee' | 'leftFoot' | 'rightFoot';
 export type Pose = Readonly<{ id: string; view: View; joints: Readonly<Record<Joint, Point>>; expression: Expression; compact?: boolean; seated?: boolean; desk?: boolean; frame?: number }>;
@@ -22,10 +22,20 @@ function front(id: string, arms: number[] = [104, 96, 76, 84], legs: number[] = 
     j[`${side}Knee`] = point(j[`${side}Hip`], BONES.thigh, legs[i * 2]); j[`${side}Foot`] = point(j[`${side}Knee`], BONES.thigh, legs[i * 2 + 1]);
   }
   if (desk) [j.rightElbow, j.rightHand] = solve(j.rightShoulder, [48, 87], [43, 72], 16);
+  if (id === 'bathe') { j.leftKnee = [32, 86]; j.rightKnee = [48, 86]; j.leftFoot = [32, 100]; j.rightFoot = [48, 100]; }
+  if (id === 'eat' || id === 'drink') [j.rightElbow, j.rightHand] = solve(j.rightShoulder, [43, 57], [68, 63], 16);
   return { id, view: 'front', joints: j, expression, seated, desk };
 }
 export const frontPoses: readonly Pose[] = [
   front('idle'), front('idle-breathe', undefined, [96, 92, 84, 88], 'happy', -.7),
+  front('sit-front', [95, 20, 85, 160], [15, 90, 40, 90], 'happy', 0, true),
+  front('sit-side', [95, 20, 85, 160], [15, 90, 40, 90], 'happy', 0, true),
+  front('lie', [88, 88, 92, 92], [90, 90, 90, 90]),
+  front('lie-asleep', [88, 88, 92, 92], [90, 90, 90, 90], 'sleepy'),
+  front('bathe', [160, 0, 20, 180], [15, 90, 40, 90], 'happy', 0, true),
+  front('hold', [104, 96, 45, -115]),
+  front('eat', [104, 96, -15, -130], undefined, 'yum'),
+  front('drink', [104, 96, -15, -130], undefined, 'yum'),
   front('wave', [132, 75, -35, -80]), front('cheer', [-140, -100, -40, -80], undefined, 'proud'),
   front('clap', [48, -60, 132, -120], undefined, 'proud'), front('think', [105, 75, -60, -180], undefined, 'thinking'),
   front('try-again', [145, -110, 35, -70], undefined, 'surprised'),
@@ -79,4 +89,12 @@ export function resolvePose(view: View, pose: string | number | Pose): Pose {
   if (typeof pose === 'object') { if (pose.view !== view) throw new Error('Pose/view mismatch'); return pose; }
   if (view === 'back') return backPose(typeof pose === 'number' ? pose : Number(pose.replace('run-', '')));
   const found = frontPoses.find(p => p.id === pose); if (!found) throw new Error(`Unknown front pose: ${pose}`); return found;
+}
+
+/** Lying rotates the complete wardrobe together. Anchor is the pillow/head centre. */
+export const isLying = (pose: Pose) => pose.id === 'lie' || pose.id === 'lie-asleep';
+export function poseBox(pose: Pose) {
+  return isLying(pose)
+    ? { width: 144, height: 92, anchor: [44, 46] as Point }
+    : { width: 80, height: 132, anchor: (pose.id === 'bathe' ? [40, 74] : pose.seated ? [40, 100] : [40, 132]) as Point };
 }

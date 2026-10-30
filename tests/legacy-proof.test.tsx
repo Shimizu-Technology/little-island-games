@@ -4,7 +4,7 @@ import { it, expect, vi } from 'vitest';
 import { Islander } from '../src/islander/rig/Islander';
 import { frontPoses,backPoses } from '../src/islander/rig/poses';
 import { defaultLook,outfits,hairStyles,hats,isValidLook,normalizeLook,type IslanderLook } from '../src/islander/look';
-vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect'}));
+vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
 // 2.2 intentionally redraws old styles. Compatibility preserves saved selections,
 // with implicit neutral build / cream sneakers, rather than freezing old pixels.
 it('preserves old look data and renders its explicit compatibility defaults in every pose',()=>{

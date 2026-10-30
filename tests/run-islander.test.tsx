@@ -14,7 +14,7 @@ vi.mock('../src/islander/active',async()=>{const {defaultLook}=await import('../
 vi.mock('../src/arcade/Sprite',()=>({ArcadeSprite:({children,index}: {children:React.ReactNode;index:number})=><div data-sprite={index}>{children}</div>}));
 vi.mock('react-native',()=>({View:()=>null}));
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useAnimatedProps:()=>({})}));
-vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect'}));
+vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
 describe('Lagoon Run Islander integration',()=>{
  it('renders all 24 static frames for every wardrobe geometry combination',()=>{
   let samples=0,maxPaths=0,maxPrimitives=0,maxStaticTransforms=0;

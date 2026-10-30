@@ -1,3 +1,4 @@
+import { seatSockets } from './art/sockets';
 import type { ItemId } from "./catalog";
 
 /**
@@ -53,7 +54,7 @@ export type Capability = Readonly<{
 }>;
 
 /** Art fills this per item (src/home/art). The engine reads it only through `capabilityOf`. */
-export const capabilities: Partial<Record<ItemId, Capability>> = {};
+export const capabilities: Partial<Record<ItemId, Capability>> = Object.fromEntries(Object.entries(seatSockets).map(([id, sockets]) => [id, { moveInPlay: true, sockets }]));
 
 /** The default for items the art slice hasn't described yet: movable in Play, no special behaviour. */
 export function capabilityOf(item: ItemId): Capability {
@@ -72,3 +73,5 @@ export type ItemVisualState = Readonly<{ on?: boolean }>;
  * visual box relative to its footprint anchor (see `visualBox`), so the clamp uses what's drawn.
  */
 export type VisualBox = Readonly<{ left: number; top: number; width: number; height: number }>;
+
+export { visualBox } from './art/visualBox';

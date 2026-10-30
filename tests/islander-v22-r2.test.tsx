@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { Islander } from '../src/islander/rig/Islander';
 import { frontPoses, backPoses } from '../src/islander/rig/poses';
 import { defaultLook, outfitDefaults, outfits, hairStyles } from '../src/islander/look';
-vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect'}));
+vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
 describe('round 2 art contracts',()=>{
  it('keeps idle hands down beside the torso rather than folded onto the hips',()=>{
   for(const pose of frontPoses.slice(0,2)) for(const side of ['left','right'] as const) {
