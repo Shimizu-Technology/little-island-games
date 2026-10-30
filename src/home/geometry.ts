@@ -17,6 +17,20 @@ export function stackActionLabel(parent: Instance, items: readonly Instance[]) {
   const same = items.filter(i => !i.on && i.item === parent.item);
   return `Put on ${itemSpec(parent.item).name}${same.length > 1 ? ` ${same.findIndex(i => i.id === parent.id) + 1}` : ""}`;
 }
+/** Keep sibling targets inside their own projected surface cell. Height can remain generous. */
+export function stackedHitWidth(i: Instance, scale: number, normalWidth: number) {
+  return i.on ? Math.min(normalWidth, 30 * scale) : normalWidth;
+}
+
+/** Position a measured toolbar in the space reserved between chrome and inventory. */
+export function toolbarY(objectTop: number, objectBottom: number, toolbarHeight: number, headerBottom: number, trayTop: number) {
+  const gap = 8;
+  const top = headerBottom + 4;
+  const bottom = trayTop - 4 - toolbarHeight;
+  if (objectBottom + gap <= bottom) return Math.max(top, objectBottom + gap);
+  if (objectTop - gap - toolbarHeight >= top) return Math.min(bottom, objectTop - gap - toolbarHeight);
+  return top;
+}
 /** Shared settled-drop targeting; the worklet receives equivalent serialized surface metadata. */
 export function stackSpot(items: readonly Instance[], item: Instance, x: number, y: number) {
   if (!decorSpec(item.item).small) return undefined;

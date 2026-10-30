@@ -47,7 +47,7 @@ import {
 } from "./model";
 import { LockBadge, LockRule } from '../personalization/LockBadge';
 import { trackLabels, badgeInfo } from '../badges/engine';
-import { characterDepth, characterDrop, characterPoint, itemPoint, itemSize, spotFromPoint, stackSpot, stackActionLabel, surfacePoint, characterSize, seatAnchor } from "./geometry";
+import { characterDepth, characterDrop, characterPoint, itemPoint, itemSize, spotFromPoint, stackSpot, stackActionLabel, stackedHitWidth, toolbarY, surfacePoint, characterSize, seatAnchor } from "./geometry";
 import { useHomeStore } from "./useHomeStore";
 import { Drag, FloorGrid, Footprint, emptyPreview, TrayGhost, type DragConfig } from "./Drag";
 
@@ -162,8 +162,10 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   const [collapsed, setCollapsed] = useState(initialItem ? false : height < 500);
   const [menu, setMenu] = useState(false);
   const [stackMenu, setStackMenu] = useState(false);
+  const [surfaceMenu, setSurfaceMenu] = useState<string>();
+  const [toolbarHeight, setToolbarHeight] = useState(64);
   const [confirm, setConfirm] = useState(false);
-  useSheetPresence(confirm || stackMenu);
+  useSheetPresence(confirm || stackMenu || !!surfaceMenu);
   const [hint, setHint] = useState(true);
   const [notice, setNotice] = useState(initialItem ? `Ready: ${initialItem.replaceAll("-", " ")}. Choose a clear spot or room style.` : "");
   const owner = app.save.learning?.active ?? "family", person = personFor(app.save);
@@ -324,8 +326,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     ...room.instances.map((i) => {
       const p = itemPoint(i, room.instances),
         size = itemSize(i) * scale;
-      const hitWidth = Math.max(48, size * 0.82);
-      const hitHeight = Math.max(48, size * (i.item === "toy-box" ? 0.58 : i.layer === "ground" ? 0.4 : 0.82));
+      const hitWidth = stackedHitWidth(i, scale, Math.max(48, size * 0.82));
+      const hitHeight = Math.max(i.on ? 44 : 48, size * (i.item === "toy-box" ? 0.58 : i.layer === "ground" ? 0.4 : 0.82));
       const [w, h] = dimensions(i);
       return {
         key: i.id,
@@ -385,7 +387,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               if (placing) {
                 return;
               }
-              itemAction(i, "activate");
+              if (room.instances.some(child => child.on === i.id)) setSurfaceMenu(i.id);
+              else itemAction(i, "activate");
             }}
             onDrop={(_x, _y, dx, dy) => {
               const px = p.x * scale + dx,
@@ -567,8 +570,12 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   ].sort((a, b) => a.depth - b.depth);
   const toolbarPoint = target ? itemPoint(target, room.instances) : undefined;
   const roomTop = inset.top + headerHeight + (availableHeight - sceneHeight) / 2;
-  const toolbarTop = sideDrawer ? inset.top + headerHeight + 52 : toolbarPoint && height >= width
-    ? (roomTop + toolbarPoint.y * scale > roomTop + sceneHeight / 2 ? inset.top + headerHeight + 24 : roomTop + sceneHeight + 4)
+  const targetSize = target ? itemSize(target) * scale : 0;
+  const targetHitHeight = target ? Math.max(target.on ? 44 : 48, targetSize * (target.item === "toy-box" ? .58 : target.layer === "ground" ? .4 : .82)) : 0;
+  const toolbarTop = sideDrawer ? inset.top + headerHeight + 52 : toolbarPoint
+    ? toolbarY(roomTop + toolbarPoint.y * scale + Math.min(-targetSize * .85, targetSize * .15 - targetHitHeight),
+        roomTop + toolbarPoint.y * scale + targetSize * .15,
+        toolbarHeight, inset.top + headerHeight, height - inset.bottom - drawerHeight)
     : inset.top + headerHeight + 4;
 
   const thumbnail = (id: ItemId, label: string) => {
@@ -697,6 +704,20 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           {entries.map((entry) => (
             <React.Fragment key={entry.key}>{entry.node}</React.Fragment>
           ))}
+          {room.instances.filter(parent => room.instances.some(child => child.on === parent.id)).map(parent => {
+            const children = room.instances.filter(child => child.on === parent.id);
+            const p = itemPoint(parent, room.instances);
+            const childTop = Math.min(...children.map(child => {
+              const foot = itemPoint(child, room.instances), size = itemSize(child) * scale;
+              return foot.y * scale + size * .15 - Math.max(44, size * .82);
+            }));
+            return <Pressable key={`choose-${parent.id}`} testID={`surface-chooser-${parent.id}`}
+              accessibilityRole="button" accessibilityLabel={`Choose items on ${itemSpec(parent.item).name}`}
+              onPress={() => setSurfaceMenu(parent.id)}
+              style={{ position: "absolute", left: Math.min(sceneWidth - 44, p.x * scale + itemSize(parent) * scale * .5 + 4), top: Math.max(0, childTop), minWidth: 44, minHeight: 44, borderRadius: 16, backgroundColor: "#FFF8E9", alignItems: "center", justifyContent: "center", zIndex: 2 }}>
+              <Text style={styles.label}>Items</Text>
+            </Pressable>;
+          })}
           <Footprint preview={preview} scale={scale} width={sceneWidth} height={sceneHeight} />
           {draggedItem && (
             <TrayGhost preview={preview} scale={scale} size={itemSize(instance("", draggedItem, 0, 0)) * scale}>
@@ -709,18 +730,19 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           {decorating && target && toolbarPoint && (
             <View
               testID="object-toolbar"
+              onLayout={e => setToolbarHeight(e.nativeEvent.layout.height)}
               style={[
                 styles.toolbar,
-                { flexDirection: "column", alignItems: "center" },
+                { flexDirection: "column", alignItems: "center", maxWidth: sideDrawer ? drawerWidth - 16 : width - 16 },
                 {
                   position: "absolute",
-                  left: sideDrawer ? width - drawerWidth + 8 : Math.max(8, Math.min(width - 266, toolbarPoint.x * scale - 125)),
+                  left: sideDrawer ? width - drawerWidth + 8 : Math.max(8, Math.min(width - 320, toolbarPoint.x * scale - 160)),
                   top: toolbarTop,
                   zIndex: 20,
                 },
               ]}
             >
-              <View style={{ flexDirection: "row", flexWrap: "wrap", maxWidth: 250 }}>
+              <View style={{ flexDirection: "row" }}>
               <Button
                 label="Rotate"
                 icon="rotate"
@@ -742,10 +764,12 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                 }}
               />
               </View>
-              {decorSpec(target.item).tintable && <ScrollView horizontal style={{ width: 250, maxHeight: 48 }} showsHorizontalScrollIndicator={false}>
+              {(decorSpec(target.item).tintable || decorSpec(target.item).small) && <View style={{ flexDirection: "row", alignItems: "center" }}>
+              {decorSpec(target.item).tintable && <ScrollView horizontal style={{ width: decorSpec(target.item).small ? 170 : 250, maxHeight: 48 }} showsHorizontalScrollIndicator={false}>
                 {tintIds.map(tint => <Pressable key={tint} accessibilityRole="button" accessibilityLabel={`${tint} colour`} accessibilityState={{ selected: (target.tint ?? "original") === tint }} onPress={() => dispatch({ type: "tint", id: target.id, tint })} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: tintPalette[tint] ?? "#E9D7B8", borderColor: ink, borderWidth: (target.tint ?? "original") === tint ? 3 : 1 }}>{tint === "original" && <Text style={{textAlign:"center",color:ink}}>↺</Text>}</View></Pressable>)}
               </ScrollView>}
               {decorSpec(target.item).small && <Button label="Put on…" onPress={() => setStackMenu(!stackMenu)} />}
+              </View>}
             </View>
           )}
       <View style={{ position: "absolute", top: inset.top + 62, left: 8, right: 8, zIndex: 10, flexDirection: "row", gap: 6 }}>
@@ -905,6 +929,20 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               {target && room.instances.filter(i => !i.on && decorSpec(i.item).surface).map(parent => <Button key={parent.id} label={stackActionLabel(parent, room.instances)} onPress={() => { putOn(target, parent.id); setStackMenu(false); }} />)}
             </ScrollView>
             <Button label="Cancel" onPress={() => setStackMenu(false)} />
+          </View>
+        </View>
+      </Modal>
+      <Modal transparent visible={!!surfaceMenu} animationType="none" onRequestClose={() => setSurfaceMenu(undefined)}>
+        <View accessibilityViewIsModal style={styles.scrim}>
+          <View style={styles.dialog}>
+            <Text style={styles.dialogTitle}>Choose an item</Text>
+            {room.instances.filter(i => i.on === surfaceMenu || i.id === surfaceMenu).sort((a, b) => Number(!!b.on) - Number(!!a.on)).map(i => (
+              <Button key={i.id} label={itemSpec(i.item).name} onPress={() => {
+                setSurfaceMenu(undefined);
+                itemAction(i, "activate");
+              }} />
+            ))}
+            <Button label="Cancel" onPress={() => setSurfaceMenu(undefined)} />
           </View>
         </View>
       </Modal>

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { catalog, furnitureIds, itemSpec, starterItems } from '../src/home/catalog';
 import { moreCatalog, roomIds, tintIds } from '../src/home/catalogMore';
 import { currentRoom, homeReducer, instance, legacyStarterHome, MAX_INSTANCES, migrateHome, starterHome, validHome, validPlacement, type HomeStateV2, type RoomState } from '../src/home/model';
-import { characterDepth, characterDrop, characterPoint, characterSize, floorPoint, itemPoint, itemSize, spotFromPoint, stackSpot, stackActionLabel, surfacePoint } from '../src/home/geometry';
+import { characterDepth, characterDrop, characterPoint, characterSize, floorPoint, itemPoint, itemSize, spotFromPoint, stackSpot, stackActionLabel, stackedHitWidth, surfacePoint, toolbarY } from '../src/home/geometry';
 import { editHistory, type History } from '../src/home/useHomeStore';
 import { emptySave, parseSave } from '../src/state/validation';
 import { entitledHome, initializePersonalization } from '../src/personalization/model';
@@ -60,6 +60,45 @@ describe('versioned home saves and recovery', () => {
 });
 
 describe('room editing, stacking and colours',()=>{
+ it('writes a validated three-child touch fixture for browser QA',()=>{
+  if(!process.env.TOUCH_EVIDENCE) return;
+  const save=initializePersonalization(emptySave());
+  const home=starterHome();
+  home.current='kitchen';
+  home.rooms.kitchen.characters=home.rooms.home.characters.map(c=>({...c,anchor:'hello' as const,pose:'stand' as const}));
+  home.rooms.home.characters=[];
+  home.rooms.kitchen.instances=[
+   instance('table-touch','table',4,4),
+   {...instance('fruit-touch','fruit-bowl',4,4),on:'table-touch'},
+   {...instance('tea-touch','teapot',5,4),on:'table-touch'},
+   {...instance('vase-touch','flower-vase',6,4),on:'table-touch'},
+   instance('art-touch','sea-picture',8,0),
+   instance('top-touch','clock',2,0),
+   instance('bottom-touch','plant',10,8),
+  ];
+  for(const item of home.rooms.kitchen.instances) expect([item.id, validPlacement(home.rooms.kitchen.instances,item)]).toEqual([item.id,true]);
+  expect(validHome(home)).toBe(true);
+  save.personalization!.people.family.home=home;
+  expect(parseSave(JSON.stringify(save))).toEqual(save);
+  writeFileSync(`${process.env.TOUCH_EVIDENCE}/fixture-touch.json`,JSON.stringify(save));
+ });
+ it('keeps three stacked touch targets in separate projected cells at phone scales',()=>{
+  const parent=instance('t','table',4,4);
+  const children=[4,5,6].map((x,n)=>({...instance(`c${n}`,'lamp',x,4),on:'t'}));
+  for(const scale of [0.36,0.48,1]) {
+   const widths=children.map(i=>stackedHitWidth(i,scale,48));
+   const centers=children.map(i=>itemPoint(i,[parent,...children]).x*scale);
+   expect(widths.every(w=>w<=30*scale)).toBe(true);
+   expect(centers[0]+widths[0]/2).toBeLessThan(centers[1]-widths[1]/2);
+   expect(centers[1]+widths[1]/2).toBeLessThan(centers[2]-widths[2]/2);
+  }
+  expect(stackedHitWidth(parent,.36,48)).toBe(48);
+ });
+ it('places a measured toolbar inside the header and tray without covering the object when space exists',()=>{
+  expect(toolbarY(220,250,64,120,410)).toBe(258);
+  expect(toolbarY(320,360,64,120,410)).toBe(248);
+  expect(toolbarY(170,230,100,120,300)).toBe(124);
+ });
  it('writes a valid browser fixture for duplicate surface action QA',()=>{
   if(!process.env.POLISH_EVIDENCE) return;
   const save=initializePersonalization(emptySave());
