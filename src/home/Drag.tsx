@@ -21,6 +21,9 @@ export type Preview = {
   h: number;
   wall: boolean;
   valid: boolean;
+  on?: string;
+  surfaceX?: number;
+  surfaceY?: number;
   px?: number;
   py?: number;
 };
@@ -29,8 +32,8 @@ export type DragConfig = {
   preview: SharedValue<Preview>;
   origin: { x: number; y: number };
   scale: number;
-  footprint?: { w: number; h: number; wall: boolean; id: string };
-  blockers: { id: string; x: number; y: number; w: number; h: number; wall: boolean; layer: string }[];
+  footprint?: { w: number; h: number; wall: boolean; id: string; small?: boolean };
+  blockers: { id: string; x: number; y: number; w: number; h: number; wall: boolean; layer: string; on?: string; surface?: boolean; sx?: number; sy?: number; radius?: number }[];
   layer?: string;
   /** Scene-local foot point; tray items use the pointer's absolute position. */
   foot?: { x: number; y: number };
@@ -42,14 +45,20 @@ function updatePreview(config: DragConfig, absX: number, absY: number, dx: numbe
   if (!f) return;
   const px = config.foot ? config.foot.x + dx / config.scale : (absX - config.origin.x) / config.scale;
   const py = config.foot ? config.foot.y + dy / config.scale : (absY - config.origin.y) / config.scale;
+  const parent = f.small ? config.blockers.filter(i => i.id !== f.id && !i.on && i.surface && Math.abs(i.sx! - px) <= i.radius! && Math.abs(i.sy! - py) < 32).sort((a,b) => Math.hypot(a.sx! - px, a.sy! - py) - Math.hypot(b.sx! - px, b.sy! - py))[0] : undefined;
+  if (parent) {
+    const valid = (f.id !== "" || config.blockers.length < 48) && f.w <= parent.w && f.h <= parent.h && clearFootprint(config.blockers.filter(i => i.on === parent.id), { id:f.id, x:parent.x, y:parent.y, w:f.w, h:f.h, layer:config.layer ?? "furniture" });
+    config.preview.value = { active:true, x:parent.x, y:parent.y, w:f.w, h:f.h, wall:false, valid, on:parent.id, surfaceX:parent.sx, surfaceY:parent.sy, px:parent.sx, py:parent.sy };
+    return;
+  }
   const spot = spotFromPoint(px, py, 1, f.wall);
   if (!spot) { config.preview.value = { ...config.preview.value, active: true, valid: false, px, py }; return; }
   const { x, y } = spot;
   const inside = px >= 0 && px <= 800 && py >= 0 && py <= 560;
   const valid =
     inside &&
-    (f.id !== "" || config.blockers.length < 32) &&
-    clearFootprint(config.blockers, { id: f.id, x, y, w: f.w, h: f.h, layer: config.layer ?? "furniture" });
+    (f.id !== "" || config.blockers.length < 48) &&
+    clearFootprint(config.blockers.filter(i => !i.on), { id: f.id, x, y, w: f.w, h: f.h, layer: config.layer ?? "furniture" });
   config.preview.value = { active: true, x, y, w: f.w, h: f.h, wall: f.wall, valid, px, py };
 }
 export function Drag({
@@ -142,10 +151,10 @@ export function Footprint({
     "worklet";
     const point = (x: number, y: number) =>
       p.wall
-        ? `${(205 + x * 46 - 22) * scale},${(224 + y * 39 - 22) * scale}`
-        : `${(174 + x * 51 + y * 14 - 23) * scale},${(327 + y * 31 + x * 3 - 12) * scale}`;
+        ? `${(205 + x * 23 - 22) * scale},${(224 + y * 19.5 - 22) * scale}`
+        : `${(174 + x * 25.5 + y * 7 - 23) * scale},${(327 + y * 15.5 + x * 1.5 - 12) * scale}`;
     return {
-      points: [point(p.x, p.y), point(p.x + p.w, p.y), point(p.x + p.w, p.y + p.h), point(p.x, p.y + p.h)].join(" "),
+      points: p.on ? [[-48,-12],[48,-12],[48,12],[-48,12]].map(([x,y]) => `${(p.surfaceX!+x)*scale},${(p.surfaceY!+y)*scale}`).join(" ") : [point(p.x, p.y), point(p.x + p.w, p.y), point(p.x + p.w, p.y + p.h), point(p.x, p.y + p.h)].join(" "),
       opacity: p.active && p.valid === valid ? 1 : 0,
     };
   };
@@ -178,24 +187,24 @@ export function FloorGrid({ scale, width, height }: { scale: number; width: numb
   return (
     <View pointerEvents="none" style={{ position: "absolute", width, height }}>
       <Svg width={width} height={height} opacity={0.24}>
-        {Array.from({ length: 7 }, (_, y) => (
+        {Array.from({ length: 13 }, (_, y) => (
           <Line
             key={`y${y}`}
-            x1={(151 + y * 14) * scale}
-            y1={(315 + y * 31) * scale}
-            x2={(661 + y * 14) * scale}
-            y2={(345 + y * 31) * scale}
+            x1={(151 + y * 7) * scale}
+            y1={(315 + y * 15.5) * scale}
+            x2={(661 + y * 7) * scale}
+            y2={(345 + y * 15.5) * scale}
             stroke="#427468"
             strokeDasharray="3 5"
           />
         ))}
-        {Array.from({ length: 11 }, (_, x) => (
+        {Array.from({ length: 21 }, (_, x) => (
           <Line
             key={`x${x}`}
-            x1={(151 + x * 51) * scale}
-            y1={(315 + x * 3) * scale}
-            x2={(235 + x * 51) * scale}
-            y2={(501 + x * 3) * scale}
+            x1={(151 + x * 25.5) * scale}
+            y1={(315 + x * 1.5) * scale}
+            x2={(235 + x * 25.5) * scale}
+            y2={(501 + x * 1.5) * scale}
             stroke="#427468"
             strokeDasharray="3 5"
           />

@@ -33,3 +33,42 @@ Every scene object and friend is a focusable accessible element. Native accessib
 Accepted placement and reactions use the existing quiet tap tone, respecting global sound and effects preferences. There is no automatic audio. Object reactions change their illustration immediately. Pick-up lifts 7 points with a small scale change and settles with a subtle spring; Reduce Motion removes both. The beach's wave line gently shimmers in opacity, and stays still with Reduce Motion. Keyboard operations settle instantly. The remaining rig fit, native gestures, VoiceOver/TalkBack, haptic/audio comfort, and physical-device acceptance belong to the lead's native/family gate.
 
 Portrait and tall tablet layouts add sky, a cutaway roof, a porch and a beach strip. Three strict, coordinate-free standing anchors (`beach-left`, `beach-middle`, `beach-right`) extend the version-1 character namespace; original saves remain valid unchanged. Beach drops settle to these anchors. Landscape keeps the original room-first size when a full-width room plus beach will not fit. A saved beach character forces the strip to stay visible after rotation. Furniture remains on the original floor grid.
+
+## 2.1 save and interaction contract
+
+`HomeStateV2` is the persisted four-room namespace: `{version: 2, current, rooms}`.
+Each `RoomState` has instances, characters and its own theme. `HomeState` retains the
+v1 room shape solely for the art contract's `HomeState["theme"]` lookup and legacy
+validation; use `HomeSave` at restore boundaries and `migrateHome` before editing.
+The migration is pure and idempotent. It doubles original floor/wall coordinates,
+including free-floor character positions; projection and scaled footprints preserve
+the decorated layout. Malformed data is rejected, never repaired in place. The
+personalization initializer migrates only validated envelopes. Restore/recovery
+continues through the existing Store; the standalone adapter blocks edits on invalid
+initial data.
+
+Rooms are `home`, `kitchen`, `treehouse`, and `beach`. Friends follow the player,
+standing at distinct floor positions on entry; their old seats stay in that room.
+Play/Decorate is screen state and survives room switches. Undo/redo spans room edits
+and switches. Reset affects only the current room.
+
+Floor coordinates now use a 20×12 subgrid, with columns 16–19 reserved for the door;
+wall decorations use 16×4. Footprints are twice the original cell dimensions. Each
+room allows 48 instances. `tint` is optional, palette-validated, and only allowed on
+tintable items. Original objects use a shaded SVG colour filter without modifying
+the art-owned files; expanded objects receive their contract's `tint` prop.
+
+Only metadata-marked small items can have `on: parentId`, and the parent must be an
+unstacked surface in the same room. Children must fit its footprint and cannot
+intersect other children. Floor collisions ignore raised children. Moving a surface
+moves its children by the same grid delta; putting it away also puts its children
+away. Undo restores the complete group. Drag feedback highlights a surface before
+release; named Put on buttons and accessibility actions offer the same operation.
+Dragging away clears the parent and revalidates floor placement.
+
+Islander size is always 163 scene units; Pip and Poko each keep their own 129-unit
+box. Seat offsets place the constant-size rig's hips on the illustrated surface.
+Seat backs render first, characters next and chair/bed/beanbag/sofa front pieces
+last. New seat art must be checked after the independent art slice is integrated;
+the current sofa and extra room shells are placeholders from the immutable contract.
+The categorized inventory uses a horizontal FlatList with bounded render batches.

@@ -1,332 +1,133 @@
-import { characterDepth, characterDrop, characterPoint, floorPoint, spotFromPoint } from "../src/home/geometry";
-import { describe, expect, it } from "vitest";
-import { badgeIds, catalog, furnitureIds, itemSpec, starterItems, type ItemId } from "../src/home/catalog";
-import {
-  anchors,
-  homeReducer,
-  instance,
-  MAX_INSTANCES,
-  starterHome,
-  validBadges,
-  validHome,
-  validPlacement,
-  type HomeState,
-} from "../src/home/model";
-import { editHistory, type History } from "../src/home/useHomeStore";
-const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v));
-const ownedItems = [...furnitureIds, "sticker:reef-fish"] as ItemId[];
-const empty = (): HomeState => ({ ...starterHome(), instances: [], characters: [] });
-describe("Island Home strict versioned save contract", () => {
-  it("begins furnished with all eight free items, three friends and a clear door", () => {
-    const state = starterHome();
-    expect(validHome(state)).toBe(true);
-    expect(state.instances.map((i) => i.item).sort()).toEqual([...starterItems].sort());
-    expect(state.characters).toHaveLength(3);
-    expect(validHome(clone(state))).toBe(true);
-  });
-  it.each([
-    null,
-    [],
-    {},
-    { ...starterHome(), version: 2 },
-    { ...starterHome(), scene: "room-2" },
-    { ...starterHome(), extra: true },
-    { ...starterHome(), theme: { wallpaper: "oops", floor: "honey" } },
-  ])("rejects invalid root %j without mutation", (v) => {
-    const before = clone(v);
-    expect(validHome(v)).toBe(false);
-    expect(v).toEqual(before);
-  });
-  it.each([
-    { x: NaN },
-    { x: Infinity },
-    { y: 1.2 },
-    { x: -1 },
-    { x: 9 },
-    { item: "unknown" },
-    { layer: "wall" },
-    { state: "broken" },
-    { state: "active" },
-    { rotation: 45 },
-    { rotation: 90 },
-    { mirrored: 1 },
-    { id: "__bad id" },
-    { extra: 1 },
-  ])("rejects malformed instance %j", (patch) => {
-    const state = empty();
-    state.instances = [{ ...instance("a", "plant", 0, 0), ...patch } as never];
-    expect(validHome(state)).toBe(false);
-  });
-  it("rejects duplicate instance IDs, overlapping footprints and unsupported sticker transforms", () => {
-    const state = empty();
-    state.instances = [instance("a", "bed", 0, 0), instance("b", "plant", 1, 1)];
-    expect(validHome(state)).toBe(false);
-    state.instances = [instance("a", "plant", 0, 0), instance("a", "plant", 2, 0)];
-    expect(validHome(state)).toBe(false);
-    state.instances = [{ ...instance("a", "sticker:reef-fish", 0, 0), mirrored: true }];
-    expect(validHome(state)).toBe(false);
-  });
-  it("validates character caps, unique slots, supported anchors and matching poses", () => {
-    for (const characters of [
-      [{ slot: 0, anchor: "bed", pose: "sit" }],
-      [{ slot: 4, anchor: "hello", pose: "stand" }],
-      [{ slot: 0, anchor: "oops", pose: "stand" }],
-      [{ slot: 0, anchor: "hello", pose: "sit" }],
-      [null],
-      [...starterHome().characters, starterHome().characters[0]],
-    ])
-      expect(validHome({ ...empty(), characters })).toBe(false);
-    expect(validBadges(badgeIds)).toBe(true);
-    expect(validBadges(["math", "math"])).toBe(false);
-    expect(validBadges(["unknown"])).toBe(false);
-  });
-});
-describe("deterministic room reducer", () => {
-  it("places owned items only; free starter kit is always owned", () => {
-    const state = empty();
-    const a = homeReducer(state, { type: "place", instance: instance("a", "plant", 0, 0) });
-    expect(a.state.instances).toHaveLength(1);
-    expect(homeReducer(state, { type: "place", instance: instance("a", "globe", 0, 0) }).state).toBe(state);
-    const action = { type: "place" as const, instance: instance("a", "globe", 0, 0) };
-    expect(homeReducer(state, action, { ownedItems })).toEqual(homeReducer(clone(state), action, { ownedItems }));
-    expect(state).toEqual(empty());
-    expect(homeReducer(state, action, { ownedItems }).state.instances).toHaveLength(1);
-  });
-  it("rejects moves into footprints or doorway, preserving the original layout", () => {
-    const state = starterHome();
-    for (const [x, y] of [
-      [0, 0],
-      [8, 3],
-      [NaN, 2],
-    ])
-      expect(homeReducer(state, { type: "move", id: "plant", x, y }).state).toBe(state);
-    expect(
-      homeReducer(state, { type: "move", id: "plant", x: 7, y: 5 }).state.instances.find((i) => i.id === "plant")?.x
-    ).toBe(7);
-    expect(homeReducer(state, { type: "move", id: "missing", x: 0, y: 0 }).state).toBe(state);
-  });
-  it("cycles supported rotation steps, mirrors only supported art, toggles interactive states", () => {
-    let state = starterHome();
-    state = homeReducer(state, { type: "rotate", id: "bed" }).state;
-    expect(state.instances[0].rotation).toBe(180);
-    state = homeReducer(state, { type: "rotate", id: "bed" }).state;
-    expect(state.instances[0].rotation).toBe(0);
-    state = homeReducer(state, { type: "mirror", id: "bed" }).state;
-    expect(state.instances[0].mirrored).toBe(true);
-    for (const id of furnitureIds.filter((id) => itemSpec(id).interactive)) {
-      const s = { ...empty(), instances: [instance("a", id, 0, 0)] };
-      const active = homeReducer(s, { type: "toggle", id: "a" }).state;
-      expect(active.instances[0].state).toBe("active");
-      expect(homeReducer(active, { type: "toggle", id: "a" }).state).toEqual(s);
-    }
-    const s = { ...empty(), instances: [instance("a", "chime", 0, 0)] };
-    expect(homeReducer(s, { type: "mirror", id: "a" }).state).toBe(s);
-  });
-  it("keeps ownership on put away, and safely stands characters when their final seat is removed", () => {
-    let state = homeReducer(starterHome(), { type: "character", slot: 0, anchor: "bed" }).state;
-    state = homeReducer(state, { type: "put-away", id: "bed" }).state;
-    expect(state.characters[0]).toEqual({ slot: 0, anchor: "hello", pose: "stand" });
-    expect(
-      homeReducer(state, { type: "place", instance: instance("bed2", "bed", 0, 0) }).state.instances.some(
-        (i) => i.id === "bed2"
-      )
-    ).toBe(true);
-    for (const anchor of anchors.filter((a) => a !== "floor" && a !== "beanbag"))
-      expect(validHome(homeReducer(starterHome(), { type: "character", slot: 0, anchor }).state)).toBe(true);
-  });
-  it("reuses owned stickers, checks wall anchors, allows rugs beneath furniture", () => {
-    let state = empty();
-    for (let n = 0; n < 16; n++)
-      state = homeReducer(
-        state,
-        { type: "place", instance: instance(`s${n}`, "sticker:reef-fish", n % 8, Math.floor(n / 8)) },
-        { ownedItems }
-      ).state;
-    expect(state.instances).toHaveLength(16);
-    expect(
-      homeReducer(state, { type: "place", instance: instance("extra", "sticker:reef-fish", 0, 0) }, { ownedItems })
-        .state
-    ).toBe(state);
-    expect(validPlacement([instance("rug", "rug", 0, 0)], instance("table", "table", 0, 0))).toBe(true);
-  });
-  it("caps 32 instances with a helpful message and never silently deletes items", () => {
-    let state = empty();
-    for (let n = 0; n < 32; n++)
-      state = homeReducer(state, {
-        type: "place",
-        instance: instance(`p${n}`, "plant", n % 8, Math.floor(n / 8)),
-      }).state;
-    expect(state.instances).toHaveLength(MAX_INSTANCES);
-    const movedAtCap = homeReducer(state, { type: "move", id: "p31", x: 7, y: 5 }).state;
-    expect(movedAtCap.instances).toHaveLength(MAX_INSTANCES);
-    expect(movedAtCap.instances.find((i) => i.id === "p31")?.y).toBe(5);
-    expect(validHome(state)).toBe(true);
-    const result = homeReducer(state, { type: "place", instance: instance("extra", "plant", 0, 5) });
-    expect(result.state).toBe(state);
-    expect(result.message).toBe("Put something away to make room.");
-    expect(validHome({ ...state, instances: [...state.instances, instance("extra", "plant", 0, 5)] })).toBe(false);
-  });
-  it("sets only free or earned themes, and reset returns an exact pre-reset snapshot", () => {
-    const state = starterHome();
-    expect(homeReducer(state, { type: "theme", wallpaper: "night" }).state).toBe(state);
-    const next = homeReducer(
-      state,
-      { type: "theme", wallpaper: "night", floor: "rose" },
-      { ownedWallpapers: ["night"], ownedFloors: ["rose"] }
-    ).state;
-    expect(next.theme).toEqual({ wallpaper: "night", floor: "rose" });
-    const reset = homeReducer(next, { type: "reset" });
-    expect(reset.snapshot).toBe(next);
-    expect(reset.state).toEqual(starterHome());
-  });
-  it("has original art catalog metadata for 8 starter and 14 earnable objects", () => {
-    expect(furnitureIds).toHaveLength(22);
-    expect(starterItems).toHaveLength(8);
-    for (const id of furnitureIds) expect(catalog[id].name.length).toBeGreaterThan(3);
-  });
-});
-describe("session history stays outside persisted state", () => {
-  it("undoes/redoes, snapshots resets, clears redo on a new edit and bounds history", () => {
-    const initial: History = { present: starterHome(), past: [], future: [] };
-    let h = editHistory(initial, { type: "toggle", id: "lamp" });
-    h = editHistory(h, { type: "reset" });
-    h = editHistory(h, { type: "undo" });
-    expect(h.present.instances.find((i) => i.id === "lamp")?.state).toBe("active");
-    h = editHistory(h, { type: "redo" });
-    expect(h.present).toEqual(initial.present);
-    h = editHistory(h, { type: "undo" });
-    h = editHistory(h, { type: "mirror", id: "bed" });
-    expect(h.future).toHaveLength(0);
-    for (let n = 0; n < 60; n++) h = editHistory(h, { type: "toggle", id: "lamp" });
-    expect(h.past).toHaveLength(40);
-    expect(validHome(h.present)).toBe(true);
-    expect("past" in h.present).toBe(false);
-    expect(editHistory(initial, { type: "move", id: "bed", x: 9, y: 0 })).toBe(initial);
-    expect(editHistory(initial, { type: "undo" })).toBe(initial);
-  });
+import { describe, expect, it } from 'vitest';
+import { catalog, furnitureIds, itemSpec, starterItems } from '../src/home/catalog';
+import { moreCatalog, roomIds, tintIds } from '../src/home/catalogMore';
+import { currentRoom, homeReducer, instance, legacyStarterHome, MAX_INSTANCES, migrateHome, starterHome, validHome, validPlacement, type HomeStateV2, type RoomState } from '../src/home/model';
+import { characterDepth, characterDrop, characterPoint, characterSize, floorPoint, itemPoint, spotFromPoint, stackSpot, surfacePoint } from '../src/home/geometry';
+import { editHistory, type History } from '../src/home/useHomeStore';
+import { emptySave, parseSave } from '../src/state/validation';
+import { entitledHome, initializePersonalization } from '../src/personalization/model';
+const clone = <T>(v:T):T => JSON.parse(JSON.stringify(v));
+const room = currentRoom;
+const patch = (state:HomeStateV2, patch:Partial<RoomState>):HomeStateV2 => ({ ...state, rooms:{...state.rooms,[state.current]:{...room(state),...patch}} });
+const empty = () => patch(starterHome(), {instances:[], characters:[]});
+const owned = { ownedItems:[...furnitureIds,'sticker:reef-fish'] };
+
+describe('versioned home saves and recovery', () => {
+ it('starts with four independent valid rooms, free furniture and visiting characters', () => {
+  const s=starterHome(); expect(validHome(s)).toBe(true); expect(validHome(clone(s))).toBe(true);
+  expect(Object.keys(s.rooms)).toEqual([...roomIds]); expect(room(s).instances.map(i=>i.item).sort()).toEqual([...starterItems].sort());
+  expect(room(s).characters).toHaveLength(3); expect(s.rooms.kitchen.characters).toEqual([]);
+  expect(s.rooms.kitchen).not.toBe(s.rooms.beach);
+ });
+ it('migrates v1 exactly once without changing original geometry, state or character records', () => {
+  const old=legacyStarterHome(); old.instances[0].mirrored=true; old.instances[3].state='active'; old.theme.wallpaper='peach';
+  old.characters[0]={slot:0,anchor:'floor',pose:'stand',x:9,y:5};
+  const before=clone(old), s=migrateHome(old)!; expect(validHome(old)).toBe(true); expect(old).toEqual(before);
+  expect(migrateHome(s)).toBe(s); expect(room(s).theme).toEqual(old.theme);
+  expect(room(s).instances).toEqual(old.instances.map(i=>({...i,x:i.x*2,y:i.y*2})));
+  expect(room(s).characters[0]).toEqual({...old.characters[0],x:18,y:10});
+  for(let n=0;n<old.instances.length;n++) {
+   const i=old.instances[n], expected=i.layer==='wall'?{x:205+i.x*46,y:224+i.y*39}:{x:174+i.x*51+i.y*14,y:327+i.y*31+i.x*3};
+   expect(itemPoint(room(s).instances[n])).toEqual(expected);
+  }
+ });
+ it('migrates the validated personalization envelope and round-trips backup/restore', () => {
+  const save=initializePersonalization(emptySave()); save.personalization!.people.family.home=legacyStarterHome();
+  const migrated=initializePersonalization(save); expect(migrated.personalization!.people.family.home.version).toBe(2);
+  expect(save.personalization!.people.family.home.version).toBe(1); expect(initializePersonalization(migrated)).toBe(migrated);
+  expect(parseSave(JSON.stringify(migrated))).toEqual(migrated);
+ });
+ it.each([null,[],{}, { ...starterHome(),version:3 },{...starterHome(),extra:true}, {...starterHome(),current:'attic'}, {...starterHome(),rooms:{home:starterHome().rooms.home}}])('rejects malformed roots without mutation: %j', v=>{
+  const before=clone(v); expect(validHome(v)).toBe(false); expect(migrateHome(v)).toBeUndefined(); expect(v).toEqual(before);
+ });
+ it.each([{x:NaN},{x:Infinity},{x:-1},{x:16},{y:12},{y:1.5},{item:'unknown'},{layer:'wall'},{state:'broken'},{state:'active'},{rotation:45},{rotation:90},{mirrored:1},{id:'bad id'},{extra:1},{tint:'invalid'},{tint:undefined},{on:undefined},{on:'missing'}])('rejects malformed instance %j', changes=>{
+  const s=patch(empty(),{instances:[{...instance('a','plant',0,0),...changes} as never]}); expect(validHome(s)).toBe(false);
+ });
+ it('rejects duplicate IDs, collisions, unsupported sticker transforms and mixed character shapes',()=>{
+  for(const items of [[instance('a','bed',0,0),instance('b','plant',1,1)],[instance('a','plant',0,0),instance('a','plant',4,0)],[{...instance('s','sticker:reef-fish',0,0),mirrored:true}],[{...instance('s','sticker:reef-fish',0,0),tint:'coral' as const}]]) expect(validHome(patch(empty(),{instances:items}))).toBe(false);
+  for(const c of [null,{slot:4,anchor:'hello',pose:'stand'},{slot:0,anchor:'hello',pose:'sit'},{slot:0,anchor:'floor',pose:'stand',x:20,y:0},{slot:0,anchor:'floor',pose:'stand',x:0,y:0,seatId:'bed'}]) expect(validHome(patch(starterHome(),{characters:[c as never]}))).toBe(false);
+  const s=starterHome(); s.rooms.beach.characters=[...room(s).characters]; expect(validHome(s)).toBe(false);
+ });
+ it('preserves malformed legacy data for recovery instead of normalizing it',()=>{const old=legacyStarterHome();old.instances[0].x=-1;const before=clone(old);expect(migrateHome(old)).toBeUndefined();expect(old).toEqual(before);expect(validHome({...legacyStarterHome(),instances:[instance('s','sofa',0,0)],characters:[]})).toBe(false);});
+ it('keeps earned-item and room-theme entitlement checks across every room',()=>{
+  const s=starterHome(); s.rooms.beach.instances.push(instance('unowned','abacus',12,8)); expect(validHome(s)).toBe(true); expect(entitledHome(s,[])).toBe(false); expect(entitledHome(s,['abacus'])).toBe(true);
+  s.rooms.kitchen.theme.wallpaper='math-lab'; expect(entitledHome(s,['abacus'])).toBe(false); expect(entitledHome(s,['abacus','math-lab'])).toBe(true);
+  expect(entitledHome(starterHome(),[])).toBe(true);
+ });
 });
 
-describe("room tap projection", () => {
-  it("round-trips every floor and wall spot at phone, tablet and landscape scales", () => {
-    for (const scale of [366 / 800, 678 / 800, 228 / 800]) {
-      for (let y = 0; y < 6; y++)
-        for (let x = 0; x < 10; x++) {
-          const p = floorPoint(x, y);
-          expect(spotFromPoint(p.x * scale, p.y * scale, scale, false)).toEqual({ x, y });
-        }
-      for (let y = 0; y < 2; y++)
-        for (let x = 0; x < 8; x++)
-          expect(spotFromPoint((205 + x * 46) * scale, (224 + y * 39) * scale, scale, true)).toEqual({ x, y });
-    }
-    expect(spotFromPoint(NaN, 1, 1, false)).toBeUndefined();
-    expect(spotFromPoint(1, 1, 0, false)).toBeUndefined();
-  });
+describe('room editing, stacking and colours',()=>{
+ it('allows free expanded catalogue and refuses unearned rewards',()=>{
+  const s=empty(); expect(homeReducer(s,{type:'place',instance:instance('a','abacus',0,0)}).state).toBe(s);
+  for(const id of Object.keys(moreCatalog)) expect(homeReducer(s,{type:'place',instance:instance('a',id,0,0)}).state).not.toBe(s);
+  expect(homeReducer(s,{type:'place',instance:instance('a','abacus',0,0)},owned).state).not.toBe(s);
+ });
+ it('uses half-cells, scaled footprints and a clear door with exact projection round-trips',()=>{
+  for(const [x,y] of [[0,0],[1,1],[13,9],[18,10]]) { const p=floorPoint(x,y); expect(spotFromPoint(p.x,p.y,1,false)).toEqual({x,y}); }
+  for(const [x,y] of [[0,0],[1,1],[14,2]]) { const p=itemPoint(instance('s','sticker:reef-fish',x,y)); expect(spotFromPoint(p.x,p.y,1,true)).toEqual({x,y}); }
+  const s=empty(), moved=homeReducer(s,{type:'place',instance:instance('p','plant',1,1)}).state; expect(room(moved).instances[0].x).toBe(1);
+  expect(validPlacement([],instance('p','plant',16,0))).toBe(false); expect(validPlacement([instance('r','rug',0,0)],instance('t','table',0,0))).toBe(true);
+ });
+ it('carries characters when switching rooms and keeps each layout and theme',()=>{
+  let s=starterHome(); const before=clone(room(s).instances);
+  s=homeReducer(s,{type:'room',room:'kitchen'}).state; expect(room(s).characters).toHaveLength(3); expect(s.rooms.home.characters).toEqual([]);
+  s=homeReducer(s,{type:'tint',id:'starter-seat',tint:'coral'}).state; s=homeReducer(s,{type:'room',room:'home'}).state;
+  expect(room(s).instances).toEqual(before); expect(s.rooms.kitchen.instances[0].tint).toBe('coral'); expect(validHome(s)).toBe(true);
+ });
+ it('validates all tints, commits them and restores original through history',()=>{
+  const s=starterHome(); for(const tint of tintIds) {const next=homeReducer(s,{type:'tint',id:'bed',tint}).state; expect(room(next).instances[0].tint).toBe(tint); expect(validHome(next)).toBe(true);}
+  let h:History={present:s,past:[],future:[]};h=editHistory(h,{type:'tint',id:'bed',tint:'lagoon'});expect(editHistory(h,{type:'undo'}).present).toBe(s);
+ });
+ it('stacks a lamp on a table, moves the group, rejects overlap and puts the whole group away',()=>{
+  let s=patch(empty(),{instances:[instance('t','table',4,4),instance('l','lamp',0,0),instance('p','plant',0,4)]});
+  const surface=surfacePoint(room(s).instances[0]); expect(stackSpot(room(s).instances,room(s).instances[1],surface.x,surface.y)).toEqual({x:4,y:4,on:'t'});
+  s=homeReducer(s,{type:'move',id:'l',x:4,y:4,on:'t'}).state;expect(room(s).instances[1].on).toBe('t');
+  expect(homeReducer(s,{type:'move',id:'p',x:4,y:4,on:'t'}).state).toBe(s);
+  s=homeReducer(s,{type:'move',id:'t',x:8,y:6}).state; expect(room(s).instances[1]).toMatchObject({x:8,y:6,on:'t'});
+  expect(itemPoint(room(s).instances[1],room(s).instances)).toEqual(surfacePoint(room(s).instances[0]));
+  const before=s, removed=homeReducer(s,{type:'put-away',id:'t'}).state; expect(room(removed).instances.map(i=>i.id)).toEqual(['p']);expect(validHome(removed)).toBe(true);
+  const h=editHistory({present:before,past:[],future:[]},{type:'put-away',id:'t'});expect(editHistory(h,{type:'undo'}).present).toBe(before);
+ });
+ it('drops a stacked item to the floor and rejects cycles, non-small children and nested stacks',()=>{
+  const s=patch(empty(),{instances:[instance('t','table',4,4),{...instance('l','lamp',4,4),on:'t'}]}); expect(validHome(s)).toBe(true);
+  const next=homeReducer(s,{type:'move',id:'l',x:0,y:0}).state; expect(room(next).instances[1].on).toBeUndefined();expect(validHome(next)).toBe(true);
+  for(const items of [[{...instance('t','table',4,4),on:'t'}],[instance('t','table',4,4),{...instance('b','bed',4,4),on:'t'}],[instance('t','table',4,4),{...instance('l','lamp',4,4),on:'t'},{...instance('p','plant',4,4),on:'l'}]]) expect(validHome(patch(empty(),{instances:items}))).toBe(false);
+ });
+ it('caps each room at 48, permits edits at cap and preserves rejected 49th item',()=>{
+  let s=empty(); for(let n=0;n<48;n++) s=homeReducer(s,{type:'place',instance:instance(`p${n}`,'plant',(n%8)*2,Math.floor(n/8)*2)}).state;
+  expect(room(s).instances).toHaveLength(MAX_INSTANCES);expect(validHome(s)).toBe(true);
+  const result=homeReducer(s,{type:'place',instance:instance('extra','lamp',0,0)});expect(result.state).toBe(s);expect(result.message).toContain('Put something away');
+  expect(homeReducer(s,{type:'tint',id:'p0',tint:'coral'}).state).not.toBe(s);
+  s=homeReducer(s,{type:'room',room:'kitchen'}).state;expect(room(s).instances.length).toBeLessThan(48);
+ });
+ it('rotates, mirrors, toggles, gates themes and resets only the selected room with an undo snapshot',()=>{
+  let s=starterHome();s=homeReducer(s,{type:'rotate',id:'bed'}).state;expect(room(s).instances[0].rotation).toBe(180);
+  s=homeReducer(s,{type:'mirror',id:'bed'}).state;expect(room(s).instances[0].mirrored).toBe(true);
+  s=homeReducer(s,{type:'toggle',id:'lamp'}).state;expect(room(s).instances.find(i=>i.id==='lamp')!.state).toBe('active');
+  expect(homeReducer(s,{type:'theme',wallpaper:'math-lab'}).state).toBe(s);s=homeReducer(s,{type:'theme',wallpaper:'math-lab'},{ownedWallpapers:['math-lab']}).state;
+  const reset=homeReducer(s,{type:'reset'});expect(reset.snapshot).toBe(s);expect(reset.state.rooms.kitchen).toBe(s.rooms.kitchen);expect(reset.state).toEqual(starterHome());
+ });
+ it('bounds undo/redo at 40 outside the persisted schema and clears redo on edit',()=>{
+  let h:History={present:starterHome(),past:[],future:[]};for(let n=0;n<50;n++)h=editHistory(h,{type:'mirror',id:'bed'});expect(h.past).toHaveLength(40);
+  h=editHistory(h,{type:'undo'});expect(h.future).toHaveLength(1);h=editHistory(h,{type:'tint',id:'bed',tint:'coral'});expect(h.future).toEqual([]);expect(validHome(h.present)).toBe(true);
+ });
 });
 
-describe("direct manipulation character settlement", () => {
-  it("loads legacy anchor-only characters without changing them", () => {
-    const state = starterHome();
-    state.characters = [
-      { slot: 0, anchor: "hello", pose: "stand" },
-      { slot: 1, anchor: "window", pose: "stand" },
-      { slot: 2, anchor: "rug", pose: "sit" },
-    ];
-    const before = clone(state);
-    expect(validHome(state)).toBe(true);
-    expect(state).toEqual(before);
-  });
-  it("validates floor extensions exactly and rejects malformed or out-of-floor positions", () => {
-    const state = starterHome();
-    const moved = homeReducer(state, { type: "character", slot: 0, anchor: "floor", x: 9, y: 5 }).state;
-    expect(moved.characters[0]).toEqual({ slot: 0, anchor: "floor", pose: "stand", x: 9, y: 5 });
-    expect(validHome(moved)).toBe(true);
-    for (const patch of [
-      { x: NaN },
-      { x: Infinity },
-      { x: -1 },
-      { x: 10 },
-      { y: 6 },
-      { x: 0.5 },
-      { seatId: "bed" },
-      { pose: "sit" },
-    ]) {
-      expect(validHome({ ...moved, characters: [{ ...moved.characters[0], ...patch }] })).toBe(false);
-    }
-    expect(homeReducer(state, { type: "character", slot: 0, anchor: "floor", x: 10, y: 0 }).state).toBe(state);
-    expect(homeReducer(state, { type: "character", slot: 0, anchor: "floor" }).state).toBe(state);
-  });
-  it("snaps to bed, chair, rug and beanbag and follows the specific seat until put away", () => {
-    let state = {
-      ...starterHome(),
-      instances: [instance("seat-a", "beanbag", 0, 0), instance("seat-b", "beanbag", 4, 3)],
-      characters: [],
-    } as HomeState;
-    state.characters = [{ slot: 0, anchor: "floor", pose: "stand", x: 8, y: 5 }];
-    const p = characterPoint(state, { slot: 0, anchor: "beanbag", pose: "sit", seatId: "seat-b" });
-    const action = characterDrop(state, 0, p.x + 5, p.y - 5);
-    expect(action).toEqual({ type: "character", slot: 0, anchor: "beanbag", seatId: "seat-b" });
-    state = homeReducer(state, action).state;
-    expect(validHome(state)).toBe(true);
-    state = homeReducer(state, { type: "move", id: "seat-b", x: 5, y: 4 }).state;
-    expect(characterPoint(state, state.characters[0])).not.toEqual(p);
-    const removed = homeReducer(state, { type: "put-away", id: "seat-b" }).state;
-    expect(removed.characters[0]).toEqual({ slot: 0, anchor: "hello", pose: "stand" });
-    for (const anchor of ["bed", "chair", "rug"] as const) {
-      const s = starterHome();
-      const p = characterPoint(s, { slot: 0, anchor, pose: "sit" });
-      expect(homeReducer(s, characterDrop(s, 0, p.x, p.y)).state.characters[0].anchor).toBe(anchor);
-    }
-  });
-  it("clamps a distant character drop to a walkable beach anchor and preserves one undo step", () => {
-    const state = starterHome();
-    const action = characterDrop(state, 0, 9999, 9999);
-    expect(action).toEqual({ type: "character", slot: 0, anchor: "beach-right" });
-    const history = editHistory({ present: state, past: [], future: [] }, action);
-    expect(history.past).toHaveLength(1);
-    expect(editHistory(history, { type: "undo" }).present).toBe(state);
-    expect(validHome(history.present)).toBe(true);
-  });
-  it("starts all three friends at distinct, non-overlapping positions", () => {
-    const s = starterHome(),
-      points = s.characters.map((c) => characterPoint(s, c));
-    const bed = s.instances.find((i) => i.id === "bed")!;
-    expect(characterDepth(s, { slot: 0, anchor: "bed", pose: "sit" })).toBeGreaterThan(floorPoint(bed.x, bed.y).y);
-    expect(s.characters[0].anchor).toBe("window");
-    expect(s.characters[1].anchor).toBe("shelf");
-    expect(s.characters[2].anchor).toBe("rug");
-    for (let a = 0; a < points.length; a++)
-      for (let b = a + 1; b < points.length; b++)
-        expect(Math.hypot(points[a].x - points[b].x, points[a].y - points[b].y)).toBeGreaterThan(90);
-  });
-});
-
-describe("portrait beach standing anchors", () => {
-  it("keeps old saves unchanged and accepts only strict standing beach records", () => {
-    const old = starterHome(), before = clone(old);
-    expect(validHome(old)).toBe(true);
-    expect(old).toEqual(before);
-    for (const anchor of ["beach-left", "beach-middle", "beach-right"] as const) {
-      const next = homeReducer(old, { type: "character", slot: 0, anchor }).state;
-      expect(validHome(clone(next))).toBe(true);
-      expect(next.characters[0]).toEqual({ slot: 0, anchor, pose: "stand" });
-      expect(characterPoint(next, next.characters[0]).y).toBe(650);
-      for (const extra of [{ pose: "sit" }, { x: 1 }, { seatId: "chair" }]) {
-        expect(validHome({ ...next, characters: [{ ...next.characters[0], ...extra }] })).toBe(false);
-      }
-    }
-  });
-  it("snaps beach drops to bounded anchors and keeps seats ahead of the beach threshold", () => {
-    const home = starterHome();
-    for (const [x, anchor] of [[-50, "beach-left"], [400, "beach-middle"], [900, "beach-right"]] as const) {
-      const action = characterDrop(home, 0, x, 630);
-      expect(action).toEqual({ type: "character", slot: 0, anchor });
-      const next = homeReducer(home, action).state;
-      expect(characterDepth(next, next.characters[0])).toBe(651);
-    }
-    const chair = home.instances.find(i => i.item === "chair")!;
-    const point = characterPoint(home, { slot: 0, anchor: "chair", pose: "sit", seatId: chair.id });
-    expect(characterDrop(home, 0, point.x, point.y)).toEqual({ type: "character", slot: 0, anchor: "chair", seatId: chair.id });
-    expect(characterDepth(home, { slot: 0, anchor: "chair", pose: "sit", seatId: chair.id })).toBeGreaterThan(floorPoint(chair.x, chair.y).y);
-    expect(point.y - floorPoint(chair.x, chair.y).y).toBe(14);
-  });
+describe('constant-size seating and depth',()=>{
+ it.each(['bed','chair','rug','beanbag','shelf','sofa'])('seats each character on %s, follows its seat and stands safely after removal',id=>{
+  let s=patch(starterHome(),{instances:[instance('seat',id,4,4)],characters:[0,1,2].map(slot=>({slot:slot as 0|1|2,anchor:'hello',pose:'stand'}))});
+  for(const slot of [0,1,2] as const){ const anchor=['bed','chair','rug','beanbag','shelf'].includes(id)?id as 'bed':'seat';
+   const p=characterPoint(room(s),{slot,anchor,pose:'sit',seatId:'seat'});
+   expect(characterDrop(room(s),slot,p.x,p.y)).toMatchObject({seatId:'seat'});
+   s=homeReducer(s,{type:'character',slot,anchor,seatId:'seat'}).state;expect(room(s).characters[slot].pose).toBe('sit');expect(characterSize(slot)).toBe(slot===0?163:129);
+   expect(characterDepth(room(s),room(s).characters[slot])).toBeGreaterThan(itemPoint(room(s).instances[0]).y);
+  }
+  const before=characterPoint(room(s),room(s).characters[0]);s=homeReducer(s,{type:'move',id:'seat',x:6,y:6}).state;expect(characterPoint(room(s),room(s).characters[0])).not.toEqual(before);
+  s=homeReducer(s,{type:'put-away',id:'seat'}).state;expect(room(s).characters.every(c=>c.pose==='stand')).toBe(true);expect(validHome(s)).toBe(true);
+ });
+ it('retains beach anchors and rejects malformed poses or coordinates',()=>{
+  const s=starterHome();expect(characterDrop(room(s),0,400,650)).toEqual({type:'character',slot:0,anchor:'beach-middle'});
+  for(const anchor of ['beach-left','beach-middle','beach-right'] as const){const next=homeReducer(s,{type:'character',slot:0,anchor}).state;expect(validHome(next)).toBe(true);expect(characterPoint(room(next),room(next).characters[0]).y).toBe(650);}
+ });
+ it('retains original catalog earning metadata',()=>{expect(furnitureIds).toHaveLength(22);for(const id of furnitureIds)expect(itemSpec(id)).toEqual(catalog[id]);});
 });

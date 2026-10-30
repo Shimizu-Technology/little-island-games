@@ -3,10 +3,10 @@ import { themeRewards } from '../home/catalog';
 import { owns } from '../home/model';
 import { canWear } from './catalog';
 import { defaultLook, isValidLook, type IslanderLook } from '../islander/look';
-import { starterHome, validHome, type HomeState } from '../home/model';
+import { starterHome, validHome, migrateHome, type HomeSave } from '../home/model';
 import { familyLearners, type Learners } from '../learn/learners';
 import type { Save } from '../state/validation';
-export type Person = { look: IslanderLook; made: boolean; earned: string[]; milestones: string[]; unseen: string[]; home: HomeState };
+export type Person = { look: IslanderLook; made: boolean; earned: string[]; milestones: string[]; unseen: string[]; home: HomeSave };
 export type Personalization = { version: 1; catalogVersion: 1; people: Record<string, Person> };
 export type IdentityExpected = { learner: string; epoch: number };
 export const starterPerson = (family = false): Person => ({ look: { ...defaultLook }, made: family, earned: [], milestones: [], unseen: [], home: starterHome() });
@@ -18,9 +18,11 @@ export function validPerson(v: unknown, stickers: readonly string[] = []): v is 
     && v.earned.every(id => grantCatalog().includes(id)) && v.milestones.every(validMilestone)
     && canWear(v.look, v.earned) && entitledHome(v.home, v.earned, stickers);
 }
-export function entitledHome(home: HomeState, earned: readonly string[], stickers: readonly string[] = []): boolean {
-  return home.instances.every(i => owns(i.item, { ownedItems: [...earned, ...stickers.map(id => `sticker:${id}`)] as import('../home/catalog').ItemId[] }))
-    && Object.values(home.theme).every(id => !themeRewards.some(r => r.id === id) || earned.includes(id));
+export function entitledHome(home: HomeSave, earned: readonly string[], stickers: readonly string[] = []): boolean {
+  const migrated = migrateHome(home);
+  if (!migrated) return false;
+  return Object.values(migrated.rooms).every(room => room.instances.every(i => owns(i.item, { ownedItems: [...earned, ...stickers.map(id => `sticker:${id}`)] as import('../home/catalog').ItemId[] }))
+    && Object.values(room.theme).every(id => !themeRewards.some(r => r.id === id) || earned.includes(id)));
 }
 export function validPersonalization(v: unknown, learners?: Learners, arcade?: Save["arcade"]): v is Personalization {
   const owners = (learners ?? familyLearners()).people.map(p => p.id);
@@ -31,6 +33,10 @@ export function initializePersonalization(save: Save): Save {
   const people = { ...save.personalization?.people };
   let changed = !save.personalization;
   for (const { id } of (save.learning ?? familyLearners()).people) if (!Object.hasOwn(people, id)) { people[id] = starterPerson(id === 'family'); changed = true; }
+  for (const [id, person] of Object.entries(people)) {
+    const home = migrateHome(person.home);
+    if (home && home !== person.home) { people[id] = { ...person, home }; changed = true; }
+  }
   return changed ? { ...save, personalization: { version: 1, catalogVersion: 1, people } } : save;
 }
 export function personFor(save: Save, owner = save.learning?.active ?? 'family'): Person {
