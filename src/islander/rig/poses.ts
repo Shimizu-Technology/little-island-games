@@ -15,7 +15,7 @@ function solve(a: Point, target: Point, guide: Point, length: number): [Point, P
   const distance = (p: Point) => Math.hypot(p[0] - guide[0], p[1] - guide[1]);
   return [distance(candidates[0]) < distance(candidates[1]) ? candidates[0] : candidates[1], [a[0] + ux * d, a[1] + uy * d]];
 }
-function front(id: string, arms: number[] = [132, 75, 48, 105], legs: number[] = [94, 94, 86, 86], expression: Expression = 'happy', bob = 0, seated = false, desk = false): Pose {
+function front(id: string, arms: number[] = [104, 96, 76, 84], legs: number[] = [94, 94, 86, 86], expression: Expression = 'happy', bob = 0, seated = false, desk = false): Pose {
   const j = { head: [40, 38 + bob], neck: [40, 66 + bob], leftShoulder: [28, 71 + bob], rightShoulder: [52, 71 + bob], leftHip: [32, 100 + bob], rightHip: [48, 100 + bob] } as unknown as Record<Joint, Point>;
   for (const [i, side] of (['left', 'right'] as const).entries()) {
     j[`${side}Elbow`] = point(j[`${side}Shoulder`], 16, arms[i * 2]); j[`${side}Hand`] = point(j[`${side}Elbow`], 16, arms[i * 2 + 1]);

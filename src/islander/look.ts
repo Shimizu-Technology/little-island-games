@@ -42,3 +42,15 @@ export const presentationPresets = {
   me: { presentation: 'me', build: 'neutral', hairStyle: 'crop', outfit: 'mix', top: 'tee', bottom: 'shorts', brows: 'soft', lashes: 'none', shoes: 'sneakers', shoeColor: 'cream' },
 } as const satisfies Record<typeof presentations[number], Partial<IslanderLook>>;
 export const buildFor = (look: IslanderLook) => look.build ?? (look.presentation === 'boy' || look.presentation === 'girl' ? look.presentation : 'neutral');
+
+/** Render-only defaults: explicit saved palette choices always win. */
+export const outfitDefaults: Record<typeof outfits[number], { primary: string; secondary: string; trim: string }> = {
+ island: outfitPalettes.lagoon, sundress: {primary:'#DF9CAC',secondary:'#9B6E8B',trim:'#FFF0D1'},
+ explorer:{primary:'#CBB184',secondary:'#718878',trim:'#EFE4BB'}, hoodie:outfitPalettes.twilight,
+ 'number-tee':{primary:'#DCA95F',secondary:'#5F7389',trim:'#FFF5DA'}, 'lab-coat':{primary:'#9CC6CB',secondary:'#687E99',trim:'#FFF5E4'},
+ 'lagoon-jersey':{primary:'#79B5C8',secondary:'#476C94',trim:'#FFF4DF'}, 'board-shorts-set':{primary:'#E5B87C',secondary:'#73A6A2',trim:'#FFF3D7'},
+ 'polo-shorts':outfitPalettes.coral, 'aloha-shorts':{primary:'#E8CB82',secondary:'#738E85',trim:'#527F70'},
+ overalls:{primary:'#F1DEBF',secondary:'#6A8FA8',trim:'#B16D61'}, 'skirt-tee':{primary:'#E7BC99',secondary:'#8F94BA',trim:'#FFEFDB'},
+ 'jersey-dress':{primary:'#B6B1D2',secondary:'#7D789F',trim:'#FFF0C9'}, pirate:{primary:'#CE9690',secondary:'#57596C',trim:'#F5DAB1'},
+ 'space-suit':{primary:'#BCCDD2',secondary:'#8A9EB6',trim:'#E6B879'}, mix:outfitPalettes.coral,
+};

@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
-import { buildFor, defaultLook, normalizeLook, outfitPalettes, skinTones, type IslanderLook } from '../look';
+import { buildFor, defaultLook, normalizeLook, outfitPalettes, outfitDefaults, skinTones, type IslanderLook } from '../look';
 import { resolvePose, type Point, type Pose, type Side, type View } from './poses';
 import { anchorsFor } from './wardrobe';
 import { RewardArt } from './Rewards';
@@ -26,13 +26,15 @@ export function limbShape(a: Point, b: Point, c: Point, r: number, tip: number):
   const n = normal(a,b), m = normal(b,c), mid = (r + tip) / 2;
   const edge = (p: Point, v: Point, w: number): string => `${p[0]+v[0]*w} ${p[1]+v[1]*w}`;
   const before = between(a,b,.78), after = between(b,c,.22);
+  const calf = between(b,c,.55), shin = (sign: number) => r > 3.2 ? `Q${edge(calf,m,sign*mid*1.15)} ${edge(c,m,sign*tip)}` : `L${edge(c,m,sign*tip)}`;
+  const reverseShin = r > 3.2 ? `Q${edge(calf,m,-mid*1.15)} ${edge(after,m,-mid)}` : `L${edge(after,m,-mid)}`;
   const turn: Point = [(n[0]+m[0])/2,(n[1]+m[1])/2];
-  return `M${edge(a,n,r)}L${edge(before,n,mid)}Q${edge(b,turn,mid*1.3)} ${edge(after,m,mid)}L${edge(c,m,tip)}Q${c[0]+m[1]*tip*1.5} ${c[1]-m[0]*tip*1.5} ${edge(c,m,-tip)}L${edge(after,m,-mid)}Q${edge(b,turn,-mid*1.3)} ${edge(before,n,-mid)}L${edge(a,n,-r)}Q${a[0]-n[1]*r} ${a[1]+n[0]*r} ${edge(a,n,r)}Z`;
+  return `M${edge(a,n,r)}L${edge(before,n,mid)}Q${edge(b,turn,mid*.82)} ${edge(after,m,mid)}${shin(1)}Q${c[0]+m[1]*tip*1.5} ${c[1]-m[0]*tip*1.5} ${edge(c,m,-tip)}${reverseShin}Q${edge(b,turn,-mid*.82)} ${edge(before,n,-mid)}L${edge(a,n,-r)}Q${a[0]-n[1]*r} ${a[1]+n[0]*r} ${edge(a,n,r)}Z`;
 }
 const between = (a: Point, b: Point, t: number): Point => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 export function IslanderShape({ pose, look: input = defaultLook }: { pose: Pose; look?: IslanderLook }) {
   const look = normalizeLook(input), j = pose.joints, a = anchorsFor(pose), compact = !!pose.compact, front = pose.view === 'front';
-  const skin = skinTones[look.skinTone], colors = outfitPalettes[look.palette ?? (look.outfit === 'hoodie' ? 'twilight' : look.outfit === 'explorer' ? 'lagoon' : 'coral')];
+  const skin = skinTones[look.skinTone], colors = look.palette ? outfitPalettes[look.palette] : outfitDefaults[look.outfit];
   const [hx, hy] = j.head, r = compact ? 12 : 28, sy = j.leftShoulder[1], hip = j.leftHip[1];
   const top = look.outfit === 'mix' ? look.top ?? 'tee' : look.outfit;
   const bottom = look.outfit === 'mix' ? look.bottom ?? 'shorts' : look.outfit;
@@ -45,9 +47,12 @@ export function IslanderShape({ pose, look: input = defaultLook }: { pose: Pose;
     const start = j[`${side}${arm ? 'Shoulder' : 'Hip'}`], middle = j[`${side}${arm ? 'Elbow' : 'Knee'}`], end = j[`${side}${arm ? 'Hand' : 'Foot'}`];
     const hoodie = longSleeves, radius = arm ? 3 : 3.4;
     const sleeveEnd = between(start, middle, arm ? (look.outfit === 'lab-coat' ? .9 : sleeveless ? .17 : .55) : .5);
+    const cuff = between(middle,end,.83), cuffLength = Math.max(.001,Math.hypot(end[0]-middle[0],end[1]-middle[1]));
+    const cuffX = -(end[1]-middle[1])/cuffLength*2.6, cuffY = (end[0]-middle[0])/cuffLength*2.6;
+    const cuffLine = arm && hoodie ? `M${cuff[0]+cuffX} ${cuff[1]+cuffY}L${cuff[0]-cuffX} ${cuff[1]-cuffY}` : '';
     const stance = !arm && front ? (buildFor(look) === 'boy' ? 1 : buildFor(look) === 'girl' ? -.6 : 0) * (side === 'left' ? -1 : 1) : 0;
     return <G key={`${side}${arm}`} data-stance={stance} transform={stance ? `translate(${stance} 0)` : undefined}>
-      <Path data-limb={`${side}-${arm ? 'arm' : 'leg'}`} d={limbShape(start, middle, end, radius, arm ? 2.5 : 2.8)} fill={arm ? (hoodie ? colors.primary : skin) : longLegs || look.outfit === 'hoodie' ? colors.secondary : skin}/>
+      <Path data-limb={`${side}-${arm ? 'arm' : 'leg'}`} d={limbShape(start, middle, end, radius, arm ? 2.5 : 2.8)+cuffLine} fill={arm ? (hoodie ? colors.primary : skin) : longLegs || look.outfit === 'hoodie' ? colors.secondary : skin}/>
       {!arm && longLegs && <Path d={limbShape(start, middle, between(middle, end, .82), radius + .2, 2.9)} fill={colors.secondary} strokeWidth={0}/>}
       {(arm ? !hoodie && !sleeveless : !longLegs && look.outfit !== 'hoodie') && <Path data-garment={arm ? "sleeve" : "shorts"} d={arm ? boneShape(start, sleeveEnd, radius + .5, radius) : shortsShape(start, middle)} fill={arm ? (look.outfit === 'lab-coat' ? '#FFF2DC' : colors.primary) : colors.secondary} strokeWidth={0}/>}
       {!arm && <Shoes look={look} foot={end} back={!front} lifted={end[1]<123} compact={compact}/>}
@@ -60,7 +65,7 @@ export function IslanderShape({ pose, look: input = defaultLook }: { pose: Pose;
     <G data-layer="rear-accessory">{look.accessory === 'backpack' && front && backpack}</G>
     <G data-layer="rear-hair"><Hair look={look} pose={pose} rear/></G>
     <G data-layer="rear-limbs">{limb('left', false)}{limb('right', false)}{limb(rearArm, true)}{!front && !compact && hand(rearArm)}</G>
-    <G data-layer="body"><Path d={`M${hx-4} ${hy+r-4}L36 ${sy+3}H44L${hx+4} ${hy+r-4}Z M29 ${sy}Q40 ${sy-5} 51 ${sy}L50 ${hip+2}H30Z M${hx-r} ${hy+3}q-7-4-6 3q0 7 6 6M${hx+r} ${hy+3}q7-4 6 3q0 7-6 6`} fill={skin}/>
+    <G data-layer="body"><Path d={`M${hx-4} ${hy+r-4}L36 ${sy+3}H44L${hx+4} ${hy+r-4}Z M29 ${sy}Q40 ${sy-5} 51 ${sy}L50 ${hip+2}H30Z ${['long-straight','long-wavy','bob','braids'].includes(look.hairStyle) ? '' : `M${hx-r+1} ${hy+7}q-5-2-4 2q0 4 4 4M${hx+r-1} ${hy+7}q5-2 4 2q0 4-4 4`}`} fill={skin}/>
       {!compact && <><Path data-head="soft-square" d={`M${hx-r} ${hy-9}Q${hx-r} ${hy-28} ${hx} ${hy-28}Q${hx+r} ${hy-28} ${hx+r} ${hy-9}L${hx+r} ${hy+11}Q${hx+r} ${hy+28} ${hx} ${hy+28}Q${hx-r} ${hy+28} ${hx-r} ${hy+11}Z`} fill={skin}/><Path d={`M${hx+24} ${hy-7}V${hy+10}Q${hx+24} ${hy+24} ${hx+4} ${hy+26}Q${hx+28} ${hy+29} ${hx+28} ${hy+11}V${hy-7}Z`} fill="#7E5142" fillOpacity={.10} strokeWidth={0}/></>}</G>
     <G data-layer="clothing"><Clothes look={look} pose={pose} colors={colors}/>{compact && look.accessory === 'backpack' && backpack}</G>
     <G data-layer="front-limbs">{limb(frontArm, true)}</G>
