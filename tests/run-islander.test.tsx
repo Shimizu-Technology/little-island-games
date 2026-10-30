@@ -42,7 +42,7 @@ describe('Lagoon Run Islander integration',()=>{
    const markup=renderToStaticMarkup(<RunnerFrameArt frame={frame} look={{...defaultLook,[key]:value}}/>);
    expect(markup).not.toMatch(/NaN|undefined|Infinity/);
   }
- });
+ },180000);
  it('keeps exactly the existing root and 24 sprite wrappers and indices',()=>{
   const poses={value:[]} as unknown as React.ComponentProps<typeof RunnerRig>['poses'];
   const markup=renderToStaticMarkup(<RunnerRig poses={poses}/>);

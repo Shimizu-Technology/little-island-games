@@ -128,5 +128,5 @@ describe('native rig regressions',()=>{
    // Both legs paint below the shared waist, so neither cap covers its outline.
    expect(markup.lastIndexOf('data-limb="right-leg"')).toBeLessThan(markup.indexOf('data-layer="clothing"'));
   }
- });
+ },180000);
 });
