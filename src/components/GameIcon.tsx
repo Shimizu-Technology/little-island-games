@@ -13,7 +13,7 @@ const surfaces: Record<IconId, string> = {
   "coconut-drop": "#E9E9C6", "fishing-nets": "#D5E9E9", "hidden-canoes": "#D7EAF4", "shell-pits": "#F3E0C4", "reef-sweep": "#E6DFF0",
   "reef-race": "#CFE9E4", "island-market": "#F4E2B7", "sound-boat": "#E0E9F4", "turtle-tales": "#DFEBCD", "which-one": "#F5DFD2", "tide-pool": "#D2E9EE", "float-sink": "#DBEAF4", "crab-commands": "#F3DECE", "hafa-adai": "#E5E8CC", "shell-math": "#F4E4CB", "number-hop": "#E6E6C8", "quick-practice": "#E8DFF0",
   "reef-builder": "#CDE8E2", "shell-song": "#E9DFF4", "rail-parade": "#DFE8C9", "crab-crossing": "#D4E8EA", "palm-patrol": "#E2EAC5", "beach-ball": "#CEE7ED", "fruit-bat-flight": "#DDDDF1", "lagoon-run": "#D6E9E1", "canoe-cargo": "#F3E0C1",
-  "beep-bot": "#E6F0EC", "turtle-draw": "#E6F0EC", "tide-logic": "#DDF1EE", "code-lab": "#E9E5F7", "pattern-path": "#E6F0EC", "shape-shift": "#E6F0EC", "logic-lagoon": "#E6F0EC", "weather-watch": "#E6F0EC", "food-web": "#E6F0EC", "space-station": "#E6F0EC", "times-tide": "#E6F0EC", "fraction-feast": "#E6F0EC", "treasure-algebra": "#E6F0EC", "letter-lagoon": "#E6F0EC", "word-workshop": "#E6F0EC", "story-studio": "#E6F0EC",
+  "beep-bot": "#E2EAF8", "turtle-draw": "#E3F0E8", "tide-logic": "#DDF1EE", "code-lab": "#E9E5F7", "pattern-path": "#E6F0EC", "shape-shift": "#E6F0EC", "logic-lagoon": "#E6F0EC", "weather-watch": "#E6F0EC", "food-web": "#E6F0EC", "space-station": "#E6F0EC", "times-tide": "#E6F0EC", "fraction-feast": "#E6F0EC", "treasure-algebra": "#E6F0EC", "letter-lagoon": "#E6F0EC", "word-workshop": "#E6F0EC", "story-studio": "#E6F0EC",
 };
 function Line({ d, color = ink, width = 3 }: { d: string; color?: string; width?: number }) { return <Path d={d} fill="none" stroke={color} strokeWidth={width} strokeLinecap="round" strokeLinejoin="round"/>; }
 function Letter({ x, y, children, color = ink, size = 20 }: { x: number; y: number; children: React.ReactNode; color?: string; size?: number }) { return <SvgText x={x} y={y} fill={color} fontSize={size} fontWeight="800" fontFamily="Arial" textAnchor="middle" stroke="none">{children}</SvgText>; }
@@ -53,12 +53,36 @@ function Scene({ id }: { id: IconId }): React.ReactElement {
     case "sound-boat": return <><Path d="M16 62Q50 77 84 62L72 81H28Z" fill={coral}/>{['C','A','T'].map((l,i)=><G key={l}><Rect x={19+i*22} y={35} width={20} height={24} rx={4} fill={cream}/><Letter x={29+i*22} y={53} size={17}>{l}</Letter></G>)}<Line d="M17 87Q29 80 42 87T68 87T85 87" color={blue}/><Arrow d="M47 16V28M41 22L47 28L53 22"/></>;
     case "turtle-tales": return <><Book/><G transform="translate(3 5)"><Turtle x={66} y={51} scale={.6}/></G><Line d="M24 53H40M24 61H38" color={blue} width={2}/></>;
     case "which-one": return <><Rect x={18} y={17} width={64} height={23} rx={5} fill={cream}/><Line d="M27 26H73M31 33H64" color={blue} width={3}/><Rect x={17} y={49} width={29} height={32} rx={5} fill={cream}/><Rect x={54} y={49} width={29} height={32} rx={5} fill={cream}/><Circle cx={31} cy={64} r={8} fill={coral}/><Path d="M59 73L69 55L79 73Z" fill={gold}/><Path d="M63 83L69 89L82 76" stroke={green} strokeWidth={5} fill="none"/></>;
+    case "letter-lagoon": return <>
+      <Ellipse cx={50} cy={76} rx={36} ry={12} fill={blue}/>
+      <Path d="M14 79Q26 73 38 79T62 79T86 79" fill="none" stroke={cream} strokeWidth={2}/>
+      <Path d="M26 62Q14 40 29 25Q45 10 62 26Q77 40 66 60L77 68L59 65Q42 78 26 62Z" fill={green}/>
+      <Circle cx={35} cy={32} r={2.5} fill={ink} stroke="none"/><Circle cx={55} cy={32} r={2.5} fill={ink} stroke="none"/>
+      <Line d="M41 38Q45 42 49 38" width={2}/><Letter x={45} y={61} color={cream} size={25}>A</Letter>
+      <Path d="M77 58V35M77 43L69 36M77 40L85 32" fill="none" stroke={green} strokeWidth={3}/>
+    </>;
+    case "word-workshop": return <>
+      <Path d="M15 64H85V73H15Z" fill="#B58A5D"/><Line d="M24 74V86M76 74V86" width={5}/>
+      <Path d="M18 34H43V43H50V51H43V60H18Z" fill={gold}/>
+      <Path d="M82 34H57V43H50V51H57V60H82Z" fill={coral}/>
+      <Letter x={30} y={53} size={12}>sun</Letter><Letter x={69} y={53} size={12}>fish</Letter>
+      <Line d="M42 22L48 26M58 22L52 26M50 13V21" color={blue} width={2}/>
+    </>;
+    case "story-studio": return <>
+      <G transform="translate(19 20) rotate(-12)"><Rect x={0} y={0} width={27} height={31} rx={4} fill={coral}/><Circle cx={18} cy={9} r={4} fill={gold} stroke="none"/><Path d="M4 25L11 14L17 21L22 16" fill="none" stroke={cream} strokeWidth={2}/></G>
+      <G transform="translate(59 14) rotate(12)"><Rect x={0} y={0} width={27} height={31} rx={4} fill={blue}/><Path d="M5 22Q13 11 21 22M13 10V25" fill="none" stroke={cream} strokeWidth={2}/></G>
+      <Path d="M14 49Q32 41 50 51Q68 41 86 49V83Q68 75 50 85Q32 75 14 83Z" fill={cream}/>
+      <Line d="M50 51V84M22 59H40M22 67H38M60 59H78M60 67H76" width={2}/>
+      <Path d="M66 45V58L71 54L76 58V44" fill={coral} strokeWidth={2}/>
+    </>;
     case "weather-watch": return <><Circle cx={31} cy={31} r={14} fill={gold}/><Line d="M31 10V6M10 31H6M16 16L12 12M46 16L50 12" color={gold}/><Path d="M41 53a12 12 0 0 1 2-24 15 15 0 0 1 27 5 10 10 0 0 1 2 19Z" fill={cream}/><Line d="M48 64L44 73M62 64L58 73" color={blue}/><Rect x={75} y={53} width={11} height={31} rx={3} fill={cream}/><Path d="M76 70H85V82H76Z" fill={blue} stroke="none"/><Line d="M75 63H79M75 69H79M75 75H79" width={1.5}/></>;
     case "food-web": return <><Path d="M24 82V52M24 69Q10 66 13 54M24 62Q38 56 34 45" fill="none" stroke={green} strokeWidth={6}/><Fish x={67} y={38} scale={.65}/><Fish x={66} y={75} scale={.5}/><Arrow d="M37 59L48 44M39 45L48 44L48 53"/><Arrow d="M37 69L49 75M43 68L49 75L41 79"/></>;
     case "space-station": return <><Circle cx={51} cy={51} r={18} fill={blue}/><Path d="M42 39L51 35L58 46L49 53L39 48M56 58L66 53L65 64L57 69Z" fill={green} stroke="none"/><Ellipse cx={51} cy={51} rx={38} ry={25} rotation={-30} origin="51,51" fill="none" stroke={cream} strokeWidth={4}/><Circle cx={78} cy={25} r={10} fill={gold}/><Circle cx={22} cy={76} r={8} fill={cream}/><Circle cx={20} cy={74} r={2} fill="#9AAFB9" stroke="none"/></>;
     case "tide-pool": return <><Ellipse cx={50} cy={62} rx={34} ry={22} fill={blue}/><Path d="M27 72V44M27 58L18 51M27 53L35 44" stroke={coral} strokeWidth={7} fill="none" strokeLinecap="round"/><Fish x={60} y={61} scale={.66}/><Circle cx={68} cy={35} r={4} fill={cream}/><Letter x={44} y={35} size={26}>?</Letter></>;
     case "float-sink": return <><Rect x={16} y={24} width={68} height={58} rx={8} fill={cream}/><Path d="M17 47Q28 41 40 47T62 47T83 47V74Q83 81 75 81H24Q17 81 17 74Z" fill={blue} stroke="none"/><Line d="M17 47Q28 41 40 47T62 47T83 47" color={ink}/><Path d="M25 42Q16 23 43 27Q45 41 25 42Z" fill={green}/><Path d="M59 69L65 59L76 62L78 74H59Z" fill="#948D9A"/><Arrow d="M58 28V46M52 40L58 46L64 40"/></>;
     case "crab-commands": return <><Grid/><Line d="M29 71H51V30H70" color={gold} width={7}/><Arrow d="M64 24L71 30L64 36"/><Crab x={29} y={66} scale={.52}/><Path d="M68 58L82 68L68 78Z" fill={green}/></>;
+    case "beep-bot": return <><Grid count={4}/><Line d="M33 68H51V49H69" color={gold} width={6}/><ShellGlyph x={69} y={33} scale={.56}/><Rect x={20} y={56} width={27} height={25} rx={7} fill="#8EADE4"/><Line d="M33.5 56V49" width={2}/><Circle cx={33.5} cy={46} r={3} fill={coral}/><Circle cx={28} cy={66} r={2} fill={ink}/><Circle cx={39} cy={66} r={2} fill={ink}/><Path d="M28 73Q33.5 78 39 73" fill="none" stroke={ink} strokeWidth={2}/></>;
+    case "turtle-draw": return <><Rect x={15} y={15} width={70} height={70} rx={8} fill={cream}/><Line d="M29 66V35H64V66H29" color={blue} width={4}/><Arrow d="M70 27Q78 33 74 42M69 38L74 42L79 39"/><Turtle x={68} y={68} scale={.53}/></>;
     case "hafa-adai": return <><Path d="M15 66Q50 54 85 66V83H15Z" fill={green}/><Path d="M20 19H79V51H46L32 62V51H20Z" fill={cream}/><Letter x={49} y={42} color={coral} size={22}>Aa</Letter><Mango x={61} y={71}/><ShellGlyph x={32} y={75} scale={.5}/></>;
     case "shell-math": return <><ShellGlyph x={28} y={36} scale={.65}/><ShellGlyph x={72} y={36} scale={.65} color={blue}/><Line d="M45 35H55M50 30V40" width={4}/><Arrow d="M30 58L45 71M70 58L55 71"/><ShellGlyph x={40} y={76} scale={.48}/><ShellGlyph x={60} y={76} scale={.48} color={blue}/></>;
     case "number-hop": return <><Line d="M15 76H85" width={4}/>{[2,3,4].map((n,i)=><G key={n}><Line d={`M${24+i*26} 70V81`}/><Letter x={24+i*26} y={65} size={19}>{n}</Letter></G>)}<Arrow d="M23 46Q50 6 77 45M65 42L77 45L78 33"/><Circle cx={24} cy={76} r={6} fill={coral}/><Circle cx={76} cy={76} r={6} fill={gold}/></>;

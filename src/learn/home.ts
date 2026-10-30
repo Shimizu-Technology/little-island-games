@@ -11,7 +11,7 @@ import { dayNumber } from "./skills";
 import { Island, LearnId, learnIds } from "./types";
 import { arcadeIds, arcadeGames, type ArcadeId } from "../arcade";
 export type ShelfId = GameId | ActivityId | LearnId | BoardId | ArcadeId;
-export type ShelfGame = { id: ShelfId; name: string; description: string; surface: string; players: string; filters: string[]; island: Island | "classic" | "arcade" };
+export type ShelfGame = { id: ShelfId; name: string; description: string; surface: string; players: string; filters: string[]; island: Island | "classic" | "arcade"; ages?: string };
 export const islandNames = { reading: "Reading", numbers: "Numbers", science: "Science", thinking: "Thinking", coding: "Coding", classic: "Classic games", arcade: "Arcade", explore: "Explore" };
 const extraGames: { id: ActivityId; name: string; description: string; surface: string; players: string; filters: string[] }[] = [
   {
@@ -64,7 +64,9 @@ export const shelfGames: ShelfGame[] = [
     filters: ["Play alone", "Play together", ...(["word-rescue", "numbers"].includes(id) ? ["Words & numbers"] : ["Think & explore"])],
   })),
   ...extraGames.map(g => ({ ...g, island: "classic" as const, filters: [...g.filters, ...(g.id === "word-imposter" ? [] : ["Play alone"])] })),
-  ...learnIds.map(id => { const e = engines[id]; return { id, name: e.name, description: e.tagline, surface: e.surface, island: e.island,
+  // Learning shelves read as a ladder: youngest starting age first, then the narrower span.
+  ...[...learnIds].sort((a, b) => (engines[a].ages?.[0] ?? 0) - (engines[b].ages?.[0] ?? 0) || (engines[a].ages?.[1] ?? 0) - (engines[b].ages?.[1] ?? 0)).map(id => { const e = engines[id]; return { id, name: e.name, description: e.tagline, surface: e.surface, island: e.island,
+    ...(e.ages ? { ages: `Ages ${e.ages[0]}–${e.ages[1]}` } : {}),
     players: e.modes.includes("solo") ? e.modes.length > 1 ? "Alone or together" : "Play alone" : "Play together",
     filters: [...(e.modes.includes("solo") ? ["Play alone"] : []), ...(e.modes.some(m => m !== "solo") ? ["Play together"] : [])] }; }),
 ];
