@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { C, Copy, Heading, PressableScale } from '../components/ui';
 import { BadgeArt } from './BadgeArt';
 import { tracks, progressFor, progressForBadge, badgeInfo, type BadgeId } from './engine';
-export const trackLabels = { math: 'Math', reading: 'Reading', science: 'Science & Thinking', chamoru: 'CHamoru words', arcade: 'Arcade', classic: 'Classic & Board' };
+export const trackLabels = { math: 'Math', reading: 'Reading', science: 'Science & Thinking', coding: 'Coding', chamoru: 'CHamoru words', arcade: 'Arcade', classic: 'Classic & Board' };
 /** All frames stay present, so earning adds colour without moving a child's collection. */
 export function BadgeWall({ badges, milestones, selected, onSelect }: { badges: readonly BadgeId[]; milestones: string[]; selected?: BadgeId; onSelect: (id: BadgeId) => void }) {
   return <View testID="badge-wall" style={{ gap: 16 }}>{tracks.map(track => <View key={track} style={{ gap: 10, padding: 16, borderRadius: 22, borderWidth: 1, borderColor: C.line, backgroundColor: C.paper }}>

@@ -25,6 +25,12 @@ export function BadgeGlyph({ id, earned = true }: { id: BadgeId; earned?: boolea
     <G key="flask"><Path d="M30 17h20M34 18v20L19 60q-2 5 5 5h32q7 0 5-5L46 38V18" fill={paper} stroke={ink} strokeWidth={3}/><Path d="m29 47-8 14h38l-8-14Z" fill={accent}/><Circle cx={38} cy={53} r={3} fill={paper}/><Circle cx={45} cy={32} r={2} fill={accent}/></G>,
     <G key="inventor"><Path d="M29 49q-19-24 3-32 26-8 26 14 0 10-9 18v10H29Z" fill={paper}/><Path d="M31 64h16M34 52V37l6 6 6-6v15M40 7V2M12 24l-6-3M66 24l7-3" stroke={ink} strokeWidth={3} fill="none"/></G>,
   ][tier-1];
+  else if (track === 'coding') picture = [
+    <G key="steps"><Rect x={21} y={20} width={38} height={42} rx={8} fill={paper}/><Circle cx={31} cy={35} r={3} fill={ink}/><Circle cx={49} cy={35} r={3} fill={ink}/><Path d="M29 47q11 10 22 0" fill="none" stroke={ink} strokeWidth={3}/></G>,
+    <G key="loop"><Path d="M26 24a21 21 0 1 1-8 21M15 33l3 12 12-3" fill="none" stroke={paper} strokeWidth={6}/></G>,
+    <G key="debug"><Rect x={18} y={18} width={44} height={44} rx={6} fill={paper}/><Path d="M27 31h27M27 40h18M27 50h12m14-2 5 5-5 5" fill="none" stroke={ink} strokeWidth={3}/></G>,
+    <G key="coder"><Rect x={15} y={20} width={50} height={35} rx={5} fill={paper}/><Path d="m30 32-7 6 7 6m20-12 7 6-7 6M32 62h16M40 55v7" fill="none" stroke={ink} strokeWidth={3}/></G>,
+  ][tier-1];
   else if (track === 'chamoru') picture = [
     <G key="flower">{[0,60,120,180,240,300].map(a=><Ellipse key={a} cx={40} cy={27} rx={8} ry={14} rotation={a} origin="40,40" fill={paper}/>)}<Circle cx={40} cy={40} r={8} fill={accent}/></G>,
     <G key="neighbor"><Path d="M14 36 29 21l15 15v25H14Zm26 0 15-15 15 15v25H40Z" fill={paper}/><Path d="M24 61V47h9v14m17 0V47h9v14M16 36h25m1 0h26" stroke={ink} strokeWidth={2.5} fill="none"/></G>,

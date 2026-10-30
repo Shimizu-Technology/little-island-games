@@ -79,3 +79,27 @@ The categorized inventory uses a horizontal FlatList with bounded render batches
 Island Home now paints an 800×560 near-frontal stage. The back wall fills the top 352 units and the floor fills the lower band. The same version-2 20×12 floor and 16×4 wall coordinates remain in saved rooms; only their projection changes. `floorPoint`, `itemPoint`, `spotFromPoint`, the drag worklet preview and the visible floor grid use that projection. Placement validation, collision footprints, depth ordering and versioned save parsing retain their existing rules.
 
 Portrait screens show the stage at the available height and allow horizontal scrolling to its side walls. Item drag and drop measure the stage origin after scrolling. The Islander box is 224 scene units, sidekick boxes are 170, and furniture illustration sizes are enlarged without changing footprints. Seat offsets match the larger rig. Each room has permanent wall details and low built-ins behind child-placed furniture; saved themes still colour the room. Interactive art uses optional worklet animation and respects Reduce Motion.
+
+## 2.3 dollhouse and character contact
+
+All four rooms render together in a horizontal cutaway. `HouseCamera` owns bounded
+empty-space pan and two-finger pinch; double-tap toggles whole-house/close-up. Room
+chips glide to a room (instant with Reduce Motion), and the named zoom button is an
+accessible alternative. Scene sizing commits only when a pinch settles; shared
+values carry movement while fingers move. Object drags block camera pan and ignore
+multi-touch. Saved coordinates, furniture footprints and stacked-parent coordinates
+stay room-local at every camera scale.
+
+Room selection now changes only camera/edit context. Friends remain in their room;
+a cross-room character drop transfers exactly one unique slot. Version 2 retains
+its shape, and validation now allows unique slots in multiple rooms. Original v1
+and v2 saves still load. Reset uses only the current room's resident slots. Undo
+covers transfers and room edits through the existing history seam.
+
+Character floor edits settle to the nearest unoccupied furniture cell. Rendering
+also resolves an old overlapping floor/window anchor safely without rewriting the
+saved source. Furniture edits relocate affected free-floor characters. Rugs and
+raised items do not block floor contact. Furniture depth uses its footprint's
+front row against character feet. Occupied-seat fronts clip below the lap, and a
+nearby table paints behind the seated silhouette. Play excludes furniture notices
+from both its hint and live region.

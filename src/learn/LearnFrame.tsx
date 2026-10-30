@@ -160,12 +160,12 @@ export function LearnFrame({ id }: { id: LearnId }) {
   // Say the game's goal once when a fresh round opens, so a non-reader knows what to do.
   const introduced = useRef<string | null>(null);
   useEffect(() => {
-    if (!saved || !engine.introAudio || !soundOn || !boardActive || saved.options.stage) return;
+    if (!saved || !engine.introAudio || !soundOn || !boardActive || (saved.options.stage && !engine.ownLevels)) return;
     if (saved.revision !== 0 || introduced.current === saved.id) return;
     introduced.current = saved.id;
     const timer = setTimeout(() => sound(engine.introAudio!, true), 450);
     return () => clearTimeout(timer);
-  }, [saved, engine.introAudio, soundOn, boardActive, sound]);
+  }, [saved, engine.introAudio, engine.ownLevels, soundOn, boardActive, sound]);
 
   const { learnUpdate, practiceOwned } = store;
   const save = useCallback(
@@ -409,7 +409,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       </Sheet>
       <Sheet visible={help} onClose={() => { stopSound(); setHelp(false); }} title={`How to play ${engine.name}`}>
         <Copy>{saved?.options.stage && !engine.ownLevels ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>
-        {!saved?.options.stage && engine.helpAudio && (
+        {!(saved?.options.stage && !engine.ownLevels) && engine.helpAudio && (
           <>
             <Button icon="sound-on" onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>
               Hear a quick guide
