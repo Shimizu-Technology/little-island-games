@@ -1,6 +1,6 @@
 import "../../src/learn/engines";
 import { describe, expect, it } from "vitest";
-import { complete, correct, engine, rendered, taskAt } from "../../src/learn/games/code-lab/engine";
+import { complete, correct, engine, executionPlan, rendered, taskAt } from "../../src/learn/games/code-lab/engine";
 import type { LearnOptions } from "../../src/learn/types";
 const options = (level: number): LearnOptions => ({ mode: "solo", pace: level === 1 ? "easy" : level === 2 ? "medium" : "hard", ...(level === 4 ? { stage: "stretch" } : level === 5 ? { stage: "deep" } : {}) });
 describe("Code Lab", () => {
@@ -30,5 +30,7 @@ describe("Code Lab", () => {
     expect(taskAt(3, 0, 0).lines.join(" ")).toContain("def ");
     expect(taskAt(4, 0, 0).lines.join(" ")).toContain("if ");
     expect(taskAt(5, 0, 0).lines.join(" ")).toContain("% 3");
+    expect(executionPlan(taskAt(2, 0, 2), "")).toEqual([0, 1, 1, 1, 2]);
+    expect(executionPlan(taskAt(3, 0, 0), "")).toEqual([0, 2, 1, 1]);
   });
 });

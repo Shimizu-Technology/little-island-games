@@ -1,7 +1,7 @@
 import type { LearnEngine } from "../../types";
 import { levelOf } from "../../levelOptions";
 export type LabTask = { goal: string; lines: string[]; bank: string[]; slot: string[]; answer: string; output: string; robot: number };
-export type LabState = { version: 1; level: number; seed: number; index: number; order: number[]; token: string; ran: boolean; helped: boolean };
+export type LabState = { version: 1; level: number; seed: number; index: number; total: 4; order: number[]; token: string; ran: boolean; helped: boolean };
 const templates: Record<number, Omit<LabTask, "bank">[]> = {
   1: [
     { goal: "Make the robot say Aloha, then step.", lines: ['print("Aloha")', "robot.step()"], slot: [], answer: "", output: "Aloha · 1 step", robot: 1 },
@@ -10,8 +10,8 @@ const templates: Record<number, Omit<LabTask, "bank">[]> = {
     { goal: "Say Go, step twice, then say Home.", lines: ['print("Go")', "robot.step()", "robot.step()", 'print("Home")'], slot: [], answer: "", output: "Go · 2 steps · Home", robot: 2 },
   ],
   2: [
-    { goal: "Set score to zero, then add one.", lines: ["score = 0", "score = score + 1", "print(score)"], slot: [], answer: "", output: "1", robot: 1 },
-    { goal: "Start with two points, then add one.", lines: ["score = 2", "score = score + 1", "print(score)"], slot: [], answer: "", output: "3", robot: 3 },
+    { goal: "Set score to zero, then add one.", lines: ["score = 0", "score = score + 1", "print(score)"], slot: [], answer: "", output: "1", robot: 0 },
+    { goal: "Start with two points, then add one.", lines: ["score = 2", "score = score + 1", "print(score)"], slot: [], answer: "", output: "3", robot: 0 },
     { goal: "Repeat a step three times.", lines: ["for step in range(3):", "    robot.step()", "print(step_count)"], slot: [], answer: "", output: "3 steps", robot: 3 },
     { goal: "Fill the loop count to make four steps.", lines: ["for step in range(□):", "    robot.step()", "print(step_count)"], slot: ["2", "3", "4"], answer: "4", output: "4 steps", robot: 4 },
   ],
@@ -40,6 +40,20 @@ export function taskAt(level: number, seed: number, index: number): LabTask {
   const shift = ((seed >>> (index * 3)) % (source.lines.length - 1)) + 1;
   return { ...source, bank: mix(source.lines.map((_, i) => i), shift).map((i) => source.lines[i]) };
 }
+/** Source line indexes in execution order. A loop repeats its body; a function runs when called. */
+export function executionPlan(t: LabTask, token: string): number[] {
+  const loop = t.lines.findIndex((line) => line.startsWith("for "));
+  if (loop >= 0) {
+    const count = Number(t.lines[loop].match(/range\(([^)]+)\)/)?.[1].replace("□", token));
+    return [...t.lines.slice(0, loop).map((_, i) => i), loop, ...Array.from({ length: Math.min(count || 0, 8) }, () => loop + 1), ...t.lines.slice(loop + 2).map((_, i) => loop + 2 + i)];
+  }
+  if (t.lines[0]?.startsWith("def ") && t.lines.length === 3) {
+    const call = t.lines[2].replace("□", token);
+    const times = Number(call.match(/\((\d+)\)/)?.[1]) || 1;
+    return [0, 2, ...Array.from({ length: Math.min(times, 8) }, () => 1)];
+  }
+  return t.lines.map((_, i) => i);
+}
 export const complete = (s: LabState) => s.index === 4;
 export const ready = (s: LabState) => { const t = taskAt(s.level, s.seed, s.index); return s.order.length === t.lines.length && (!t.slot.length || !!s.token); };
 export const correct = (s: LabState) => { const t = taskAt(s.level, s.seed, s.index); return ready(s) && s.order.every((i, j) => t.bank[i] === t.lines[j]) && s.token === t.answer; };
@@ -57,11 +71,11 @@ export const engine: LearnEngine<LabState> = {
     { name: "Find the bug", description: "Fix comparisons and true or false." },
     { name: "Tiny programs", description: "Build short programs and fill a value." },
   ],
-  create: (o, c) => ({ version: 1, level: levelOf(o), seed: Math.floor(c.rng() * 65536), index: 0, order: [], token: "", ran: false, helped: false }),
+  create: (o, c) => ({ version: 1, level: levelOf(o), seed: Math.floor(c.rng() * 65536), index: 0, total: 4, order: [], token: "", ran: false, helped: false }),
   validate: (x, o): x is LabState => {
     if (!x || typeof x !== "object" || Array.isArray(x)) return false;
     const s = x as LabState;
-    if (Object.keys(s).sort().join() !== "helped,index,level,order,ran,seed,token,version" || s.version !== 1 || s.level !== levelOf(o) || !Number.isInteger(s.seed) || s.seed < 0 || s.seed >= 65536 || !Number.isInteger(s.index) || s.index < 0 || s.index > 4 || typeof s.ran !== "boolean" || typeof s.helped !== "boolean" || !Array.isArray(s.order) || typeof s.token !== "string") return false;
+    if (Object.keys(s).sort().join() !== "helped,index,level,order,ran,seed,token,total,version" || s.version !== 1 || s.level !== levelOf(o) || !Number.isInteger(s.seed) || s.seed < 0 || s.seed >= 65536 || !Number.isInteger(s.index) || s.index < 0 || s.index > 4 || s.total !== 4 || typeof s.ran !== "boolean" || typeof s.helped !== "boolean" || !Array.isArray(s.order) || typeof s.token !== "string") return false;
     if (s.index === 4) return !s.order.length && s.token === "" && !s.ran;
     const t = taskAt(s.level, s.seed, s.index);
     return s.order.length <= t.lines.length && s.order.every((i) => Number.isInteger(i) && i >= 0 && i < t.lines.length) && new Set(s.order).size === s.order.length && (s.token === "" || t.slot.includes(s.token)) && (!s.ran || correct(s));

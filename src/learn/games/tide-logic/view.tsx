@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import Svg, { Circle, Path, Rect, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, Path, Text as SvgText } from "react-native-svg";
 import { Button, C, Copy, Heading } from "../../../components/ui";
+import { GameIcon } from "../../../components/GameIcon";
 import type { BoardProps } from "../../types";
 import { advance, choices, complete, correct, ready, route, taskAt, type Item, type TideState } from "./engine";
 
@@ -18,18 +19,26 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
   const [message, setMessage] = useState("");
   const [showHelp, setShowHelp] = useState(false);
   const [guess, setGuess] = useState<"left" | "right" | null>(null);
+  const [failure, setFailure] = useState<number | null>(null);
   const current = t && s.running >= 0 ? Math.min(s.running, t.items.length - 1) : 0;
   const traceIndex = s.index % 2 ? 1 : 0;
   const traceAnswer = t ? route(t.items[traceIndex], t.target) : null;
-  const change = (slot: keyof TideState["rule"], value: string) => { update({ ...s, rule: { ...s.rule, [slot]: value } }); setEditing(null); setMessage(""); coach.done(); };
+  const change = (slot: keyof TideState["rule"], value: string) => { update({ ...s, rule: { ...s.rule, [slot]: value } }); setEditing(null); setMessage(""); setFailure(null); coach.done(); };
   const run = () => {
     if (!t || !ready(s) || (s.level === 5 && guess !== traceAnswer)) return;
-    if (!correct(s)) { practice(s.level >= 3 ? "think.code-logic" : "think.code-condition", false); setMessage("The belt would send one catch to the wrong bucket. Try a different block."); return; }
+    if (!correct(s)) {
+      const wrong = t.items.findIndex((item) => route(item, s.rule) !== route(item, t.target));
+      setFailure(wrong >= 0 ? wrong : 0);
+      practice(s.level >= 3 ? "think.code-logic" : "think.code-condition", false);
+      setMessage(wrong >= 0 ? `Catch ${wrong + 1} would go ${route(t.items[wrong], s.rule).toUpperCase()}, but it belongs ${route(t.items[wrong], t.target).toUpperCase()}. Change a block and try again.` : "The counter action is missing. Change the last block and try again.");
+      return;
+    }
+    setFailure(null);
     update({ ...s, running: 0 }); setMessage("Watch each catch reach its bucket."); cheer("right");
   };
   const step = () => {
     if (!t) return;
-    if (s.running >= t.items.length) { const next = advance(s); update(next); setMessage(""); setGuess(null); if (complete(next)) cheer("big"); return; }
+    if (s.running >= t.items.length) { const next = advance(s); update(next); setMessage(""); setGuess(null); setFailure(null); if (complete(next)) cheer("big"); return; }
     const next = advance(s); update(next);
     if (next.running === t.items.length) { practice(s.level === 4 ? "think.code-events" : s.level >= 3 ? "think.code-logic" : "think.code-condition", true); cheer("right"); }
   };
@@ -39,11 +48,12 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
       <Copy>{t.prompt}</Copy>
       <View style={{ backgroundColor: "#E2F3F2", borderRadius: 18, padding: 12, gap: 8 }}>
         <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 5 }}>
-          {t.items.map((item, i) => <View key={i} style={{ opacity: s.running >= 0 && i > current ? .35 : 1, alignItems: "center", minWidth: 56 }}><Cargo item={item} size={item.size === "big" ? 58 : 43}/><Copy style={{ fontSize: 11 }}>{item.size}</Copy></View>)}
+          {t.items.map((item, i) => <View key={i} style={{ opacity: s.running >= 0 && i > current ? .35 : 1, alignItems: "center", minWidth: 62, borderWidth: i === failure || s.running === i ? 3 : 0, borderColor: i === failure ? "#B74431" : "#287A82", borderRadius: 12, backgroundColor: i === failure ? "#FFE0D8" : s.running === i ? "#FFF2BA" : "transparent", padding: 3 }}><Cargo item={item} size={item.size === "big" ? 64 : 49}/><Copy style={{ fontSize: 13, fontWeight: "700" }}>{item.size}</Copy></View>)}
         </View>
         <View style={{ height: 9, borderRadius: 5, backgroundColor: "#B49C77" }}/>
         <View style={{ flexDirection: "row", justifyContent: "space-around" }}><Copy>← LEFT BUCKET</Copy><Copy>RIGHT BUCKET →</Copy></View>
         {s.running >= 0 && <Copy style={{ textAlign: "center", fontWeight: "700" }}>{s.running < t.items.length ? `Catch ${s.running + 1}: ${route(t.items[s.running], s.rule).toUpperCase()} ${s.rule.action === "count left" && route(t.items[s.running], s.rule) === "left" ? " · counter +1" : ""}` : `All sorted! ${t.items.filter((item) => route(item, s.rule) === "left").length} left · ${t.items.filter((item) => route(item, s.rule) === "right").length} right`}</Copy>}
+        {failure !== null && <Copy style={{ textAlign: "center", color: "#8D3528", fontWeight: "800" }}>Look at the outlined catch: the sorter found a bug.</Copy>}
       </View>
       <View style={{ borderWidth: 2, borderColor: "#287A82", backgroundColor: "#FFF9EA", borderRadius: 16, padding: 12, gap: 7 }}>
         <Copy style={{ fontWeight: "700" }}>BUILD THE RULE</Copy>
@@ -54,10 +64,10 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
       {!!message && <Copy>{message}</Copy>}
       <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
         {s.running < 0 ? <Button onPress={run} disabled={!active || !ready(s) || (s.level === 5 && guess !== traceAnswer)}>▶ Run the belt</Button> : <Button onPress={step} disabled={!active}>{s.running < t.items.length ? "Next catch →" : "Next belt →"}</Button>}
-        <Button quiet onPress={() => { assistance?.(); update({ ...s, rule: t.target, helped: true }); setEditing(null); setShowHelp(true); }} disabled={!active || s.running >= 0}>Show rule</Button>
+        <Button quiet onPress={() => { assistance?.(); update({ ...s, rule: t.target, helped: true }); setEditing(null); setFailure(null); setShowHelp(true); }} disabled={!active || s.running >= 0}>Show rule</Button>
       </View>
       {showHelp && <Copy>Help filled the rule. Press Run to see why each catch goes there.</Copy>}
     </>}
   </View>;
 }
-export function Art({ size }: { size: number }) { return <Svg width={size} height={size} viewBox="0 0 100 100"><Rect x="6" y="55" width="88" height="11" rx="5" fill="#B49C77"/><Path d="M50 56V28M50 40L23 78M50 40L77 78" stroke="#287A82" strokeWidth="7" fill="none"/><Circle cx="34" cy="42" r="12" fill="#4E9BB9"/><Circle cx="65" cy="43" r="9" fill="#E9826B"/></Svg>; }
+export function Art({ size }: { size: number }) { return <GameIcon id="tide-logic" size={size}/>; }

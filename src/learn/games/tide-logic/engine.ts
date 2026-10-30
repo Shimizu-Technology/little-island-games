@@ -7,7 +7,7 @@ type Kind = "fish" | "shell";
 export type Item = { color: Color; size: Size; kind: Kind; bell: boolean };
 export type Rule = { first: string; join: string; second: string; action: string };
 export type Task = { items: Item[]; target: Rule; prompt: string; slots: (keyof Rule)[] };
-export type TideState = { version: 1; level: number; seed: number; index: number; rule: Rule; running: number; helped: boolean };
+export type TideState = { version: 1; level: number; seed: number; index: number; total: 4; rule: Rule; running: number; helped: boolean };
 const terms = ["blue", "coral", "big", "small", "fish", "shell", "bell"];
 export const choices: Record<keyof Rule, string[]> = {
   first: terms, join: ["and", "or", "then"], second: terms, action: ["left", "right", "count left"],
@@ -70,11 +70,11 @@ export const engine: LearnEngine<TideState> = {
     { name: "Bell and counter", description: "Respond when the bell rings and count." },
     { name: "Trace the rule", description: "Combine two clues and follow every item." },
   ],
-  create: (o, c) => ({ version: 1, level: levelOf(o), seed: Math.floor(c.rng() * 100000), index: 0, rule: empty, running: -1, helped: false }),
+  create: (o, c) => ({ version: 1, level: levelOf(o), seed: Math.floor(c.rng() * 100000), index: 0, total: 4, rule: empty, running: -1, helped: false }),
   validate: (x, o): x is TideState => {
     if (!x || typeof x !== "object" || Array.isArray(x)) return false;
     const s = x as TideState;
-    if (Object.keys(s).sort().join() !== "helped,index,level,rule,running,seed,version" || s.version !== 1 || s.level !== levelOf(o) || !Number.isInteger(s.seed) || s.seed < 0 || s.seed >= 100000 || !Number.isInteger(s.index) || s.index < 0 || s.index > 4 || typeof s.helped !== "boolean") return false;
+    if (Object.keys(s).sort().join() !== "helped,index,level,rule,running,seed,total,version" || s.version !== 1 || s.level !== levelOf(o) || !Number.isInteger(s.seed) || s.seed < 0 || s.seed >= 100000 || !Number.isInteger(s.index) || s.index < 0 || s.index > 4 || s.total !== 4 || typeof s.helped !== "boolean") return false;
     if (!s.rule || typeof s.rule !== "object" || Object.keys(s.rule).sort().join() !== "action,first,join,second") return false;
     if (!(["first", "join", "second", "action"] as const).every((k) => s.rule[k] === "" || choices[k].includes(s.rule[k]))) return false;
     if (!Number.isInteger(s.running) || s.running < -1 || s.running > (s.index < 4 ? taskAt(s.level, s.seed, s.index).items.length : -1)) return false;

@@ -21,7 +21,6 @@ import { levelOf, levelTitle, optionsAtLevel, levelStage, type LearningLevel } f
 import { activeLearner, readyForNext } from "./learners";
 import { views } from "./views";
 import { Celebrate } from "./Celebrate";
-import { LearnArt } from "./LearnArt";
 import { IslandBackdrop, RoundProgress, subjectTheme } from "./LearnChrome";
 import { feel } from "../components/feel";
 import { outcomeOf, replaySession, startSession } from "./session";
@@ -251,6 +250,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
           onHelp={() => setHelp(true)}
         />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <view.Art size={width < 600 ? 36 : 48} />
           <Heading style={{ fontSize: width < 600 ? 19 : 25, flex: 1, color: theme.ink }}>{levelTitle(id, levelOf(saved?.options ?? options))}</Heading>
           {width < 600 && saved && !finished && <PhoneLearningCompanion event={companionEvent} active={boardActive}/>}
         </View>
@@ -309,7 +309,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
                 {!notWon && <Heading style={{ color: theme.accent, fontSize: 38, textAlign: "center" }}>★  ★  ★</Heading>}
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                   {store.save.settings.learningIslander !== false && <Companion event={notWon ? "loss" : result === "draw" ? "draw" : "complete"} active={boardActive} size={166}/>}
-                  <LearnArt island={engine.island} size={86} />
+                  <view.Art size={86} />
                 </View>
                 <Heading style={{ fontSize: 26, textAlign: "center" }}>
                   {result === 0 || result === 1
@@ -347,7 +347,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         title={saved ? "A fresh round" : `Let’s play ${engine.name}`}
         footer={<Button onPress={start} style={{ minHeight: 62, borderRadius: 20, backgroundColor: theme.accent, borderColor: theme.accent }}>Play this level</Button>}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: theme.sky, padding: 12, borderRadius: 22 }}><LearnArt island={island} size={72}/><View style={{ flex: 1 }}><Heading style={{ fontSize: 21, color: theme.ink }}>{engine.name}</Heading><Copy style={{ color: theme.ink, fontSize: 14 }}>Pick a stepping stone, then play.</Copy></View></View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: theme.sky, padding: 12, borderRadius: 22 }}><view.Art size={72}/><View style={{ flex: 1 }}><Heading style={{ fontSize: 21, color: theme.ink }}>{engine.name}</Heading><Copy style={{ color: theme.ink, fontSize: 14 }}>Pick a stepping stone, then play.</Copy></View></View>
         <LearnerChip compact/>
         <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage && !engine.ownLevels ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
         <LevelPath game={id} level={levelOf(options)} onChoose={chooseLevel} />

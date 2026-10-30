@@ -42,6 +42,10 @@ export function roundProgress(session: LearnSession): { current: number; total: 
     const questions = growthQuestions(session.game, session.options, session.state as never);
     return { current: growthProgress(session.state as never, questions).index, total: questions.length };
   }
+  // Own-level engines can expose their round size without a game-specific branch.
+  if (Number.isInteger(s.total) && (s.total as number) > 0 && typeof s.index === "number") {
+    return { current: Math.min(s.index, s.total as number), total: s.total as number };
+  }
   if (session.game === "hafa-adai") {
     const p = islandProgress(session.state as never);
     return { current: s.activity === "explore" ? p.visited.size : p.cursor, total: (s.items as unknown[]).length };
