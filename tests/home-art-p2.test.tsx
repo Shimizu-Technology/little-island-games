@@ -2,7 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup as render } from 'react-dom/server';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { describe,it,expect,vi } from 'vitest';
-import { LivingArt, livingIds } from '../src/home/art/LivingArt';
+import { LivingArt, LivingShape, livingIds } from '../src/home/art/LivingArt';
 import { HandProp } from '../src/home/art/PropShape';
 import { DispenserFanArt } from '../src/home/art/DispenserFanArt';
 import { holdableIds, foodIds, drinkIds, toyIds, dispenserChoices, dispenserFan } from '../src/home/art/living';
@@ -11,7 +11,7 @@ import { capabilityOf, type ItemVisualState } from '../src/home/world';
 import { moreCatalog } from '../src/home/catalogMore';
 import { defaultLook } from '../src/islander/look';
 import { starterHome } from '../src/home/model';
-import { itemSize } from '../src/home/geometry';
+import { itemSize, itemPoint } from '../src/home/geometry';
 vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
 describe('Phase 2 living art contract',()=>{
  it('declares free reusable holdables and all tap reactions',()=>{
@@ -63,6 +63,9 @@ describe('Phase 2 living art contract',()=>{
   // A room-scale kitchen fixture uses the production catalog sizes; no screenshot-only scaling.
   const kitchen=starterHome().rooms.kitchen.instances.map(i=>({id:i.item,size:itemSize(i)}));
   add('kitchen','fresh room fixtures',`<div class="kitchen">${kitchen.filter(i=>livingIds.includes(i.id as typeof livingIds[number])).map(i=>render(<LivingArt id={i.id} size={i.size} state={{on:true}}/>)).join('')}</div>`);
+  const roomItems=starterHome().rooms.kitchen.instances, table=roomItems.find(i=>i.item==='kitchen-table')!, bowl=roomItems.find(i=>i.item==='fruit-bowl')!;
+  const tablePoint=itemPoint(table,roomItems), origin={x:tablePoint.x-150,y:tablePoint.y-220};
+  add('table-bowl-contact','engine surface and item anchors',render(<svg width={320} height={280} viewBox="0 0 320 280">{[table,bowl].map(item=>{const p=itemPoint(item,roomItems),size=itemSize(item);return <g key={item.id} transform={`translate(${p.x-origin.x-size/2} ${p.y-origin.y-size*.85}) scale(${size/150})`}><LivingShape id={item.item}/></g>;})}</svg>));
   expect(cards).not.toMatch(/NaN|Infinity/);
   if(process.env.V24_ART_P2) {mkdirSync(process.env.V24_ART_P2,{recursive:true});writeFileSync(`${process.env.V24_ART_P2}/living-gallery.html`,`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Island Home · living props</title><style>*{box-sizing:border-box}body{margin:0;background:#CDE6DF;color:#385451;font:14px system-ui}header{padding:20px}h1{font-size:22px}main{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;padding:12px}article{background:#FFF8E9;border-radius:16px;padding:16px;min-height:300px}article[data-item="kitchen"]{grid-column:1/-1}.scale{display:flex;align-items:end;justify-content:center}.kitchen{display:flex;align-items:end;justify-content:center;flex-wrap:wrap}h2{font-size:16px;margin:0 0 12px}svg{display:block;margin:auto;overflow:visible}</style><header><h1>Living props · all states and held nodes</h1><p>Original art; full/empty, toggles, hand attachments, unlimited dispensers.</p></header><main>${cards}</main>`);}
  });

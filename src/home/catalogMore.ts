@@ -79,7 +79,7 @@ export const moreCatalog: Record<string, MoreItemSpec> = {
   "sink-counter": entry("Sink counter", "kitchen", [2, 1], {itemSize: 190, surface: true, rooms: ["kitchen"], interactive: "The water is running"}),
   "kitchen-table": entry("Kitchen table", "kitchen", [2, 1], {itemSize: 145, surface: true, rooms: ["kitchen"]}),
   "cake-stand": entry("Cake stand", "kitchen", [1, 1], {itemSize: 68, small: true, rooms: ["kitchen"]}),
-  "fruit-bowl": entry("Fruit bowl", "kitchen", [1, 1], {itemSize: 55, small: true, rooms: ["kitchen"]}),
+  "fruit-bowl": entry("Fruit bowl", "kitchen", [1, 1], {itemSize: 90, small: true, rooms: ["kitchen"]}),
   "teapot": entry("Teapot", "kitchen", [1, 1], {itemSize: 58, small: true, rooms: ["kitchen"], interactive: "Tea is ready"}),
   "potted-fern": entry("Potted fern", "plants-nature", [1, 1], {itemSize: 72, small: true}),
   "cactus": entry("Cactus", "plants-nature", [1, 1], {itemSize: 62, small: true}),
