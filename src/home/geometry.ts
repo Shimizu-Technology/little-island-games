@@ -5,12 +5,27 @@ export function floorPoint(x: number, y: number) {
 export function itemPoint(i: Instance) {
   return i.layer === "wall" ? { x: 205 + i.x * 46, y: 224 + i.y * 39 } : floorPoint(i.x, i.y);
 }
+/** Match the convex floor drawn by RoomArt, before rounding to a grid cell. */
+function insideFloor(x: number, y: number) {
+  "worklet";
+  const points = [[34,374],[145,291],[758,330],[779,508],[162,535]];
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i], b = points[(i + 1) % points.length];
+    if ((b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0]) < 0) return false;
+  }
+  return true;
+}
 /** Invert the room projection. Coordinates are local to the measured canvas, not the SVG hit target. */
 export function spotFromPoint(localX: number, localY: number, scale: number, wall: boolean) {
   "worklet";
   if (![localX, localY, scale].every(Number.isFinite) || scale <= 0) return undefined;
   const px = localX / scale,
     py = localY / scale;
+  if (!wall && !insideFloor(px, py)) return undefined;
+  if (wall && (px < 182 || px > 550 || py < 204 || py > 283)) return undefined;
+  const rawY = (py - 327 - ((px - 174) * 3) / 51) / (31 - (14 * 3) / 51);
+  const rawX = (px - 174 - rawY * 14) / 51;
+  if (!wall && (rawX < -0.5 || rawX > 9.5 || rawY < -0.5 || rawY > 5.5)) return undefined;
   if (wall)
     return {
       x: Math.max(0, Math.min(7, Math.round((px - 205) / 46))),

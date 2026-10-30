@@ -1,8 +1,9 @@
+import { bindRoundOwners, roundOwner } from './owners';
 import { ticOutcome } from '../games/tic';
 import { FOOD_CHAIN, HABITATS, PLACES } from '../explore/activities';
 import type { Save } from '../state/validation';
 import { initializePersonalization, personFor, type Person } from '../personalization/model';
-import { applyCompletion, badgesFor, grantsFor, type Completion } from './engine';
+import { applyCompletion, badgesFor, grantsFor, type Completion, MAX_MILESTONES, grantCatalog } from './engine';
 import { finished } from '../learn/session';
 import { levelOf } from '../learn/levels';
 import { learnIds } from '../learn/types';
@@ -21,36 +22,39 @@ export function rewardCompletion(save: Save, fact: Completion, owner = save.lear
 }
 function openWorld(save: Save, owner: string): Save {
   if (!Object.values(save.arcade?.people[owner]?.games ?? {}).some(g=>g.openWorlds.includes('w3'))) return save;
-  const p = personFor(save,owner); if (p.milestones.length >= 256 || p.milestones.includes('world:open-3')) return save;
+  const p = personFor(save,owner); if (p.milestones.length >= MAX_MILESTONES || p.milestones.includes('world:open-3')) return save;
   const milestones = [...p.milestones,'world:open-3'], grants = grantsFor(badgesFor(milestones)).filter(id=>!p.earned.includes(id));
-  if (p.earned.length + grants.length > 256) return save;
+  if (p.earned.length + grants.length > grantCatalog().length) return save;
   return put(save,owner,{...p,milestones,earned:[...p.earned,...grants],unseen:[...p.unseen,...grants]});
 }
 /** Only accepted Store transitions enter here. No screen lifecycle or result effect awards anything. */
 export function rewardTransitions(before: Save, after: Save): Save {
   const owner = before.learning?.active ?? 'family';
-  if (owner !== (after.learning?.active ?? 'family')) return after;
-  let next = after;
+  let next = bindRoundOwners(before, after);
+  const owned = next;
   for (const game of learnIds) {
     const old=before.learn?.[game], round=after.learn?.[game];
-    if(old && round && old.id===round.id && !finished(old) && finished(round) && (round.learner ?? 'family')===owner)
-      next=rewardCompletion(next,{kind:'learning',game,level:levelOf(round.options),helped:!!round.levelHelped},owner);
+    if(old && round && old.id===round.id && !finished(old) && finished(round))
+      next=rewardCompletion(next,{kind:'learning',game,level:levelOf(round.options),helped:!!round.levelHelped},round.learner ?? 'family');
   }
   for(const game of gameIds) {
     const old=before.sessions[game], round=after.sessions[game];
     if(old && round && old.id===round.id && !isFinished(old) && isFinished(round)) {
+      const owner = roundOwner(owned,`classic:${game}`,round.id);
       next=rewardCompletion(next,{kind:'classic',game,won:round.options.mode==='solo' && (round.game==='checkers' && round.position.outcome==='red' || round.game==='tic-tac-toe' && ticOutcome(round.board)===round.human),opponentStrength:round.options.mode==='solo'?round.options.difficulty:undefined},owner);
       if(round.game==='memory' && round.pack==='chamoru') next=rewardCompletion(next,{kind:'learning',game:'chamoru-memory',level:round.options.difficulty==='hard'?3:round.options.difficulty==='medium'?2:1,helped:false},owner);
     }
   }
   for(const game of boardIds) {
     const old=before.board?.[game], round=after.board?.[game];
-    if(old && round && old.id===round.id && old.position.outcome===null && round.position.outcome!==null)
+    if(old && round && old.id===round.id && old.position.outcome===null && round.position.outcome!==null) {
+      const owner = roundOwner(owned,`board:${game}`,round.id);
       next=rewardCompletion(next,{kind:'classic',game,won:game!=='reef-sweep' && round.mode==='solo' && round.position.outcome===0,opponentStrength:round.mode==='solo'?round.strength:undefined},owner);
+    }
   }
   for(const game of activityIds) {
     const old=before.activities?.[game],round=after.activities?.[game];
-    if(old && round && old.id===round.id && !activityFinished(old) && activityFinished(round)) next=rewardCompletion(next,{kind:'classic',game},owner);
+    if(old && round && old.id===round.id && !activityFinished(old) && activityFinished(round)) next=rewardCompletion(next,{kind:'classic',game},roundOwner(owned,`activity:${game}`,round.id));
   }
   for(const game of arcadeIds) {
     const old=before.arcade?.people[owner]?.games[game]?.stars ?? {}, stars=after.arcade?.people[owner]?.games[game]?.stars ?? {};
@@ -59,15 +63,15 @@ export function rewardTransitions(before: Save, after: Save): Save {
   const oldLabs=before.explore?.progress?.labs, labs=after.explore?.progress?.labs;
   if(labs) {
     const checks = { oceans: (s: typeof labs.oceans)=>s.chain.length===FOOD_CHAIN.length, animals:(s:typeof labs.animals)=>s.habitat===HABITATS.length, world:(s:typeof labs.world)=>s.expedition===PLACES.length, weather:(s:typeof labs.weather)=>s.journey.length>3 && s.water==='ocean', space:(s:typeof labs.space)=>s.turn===7 };
-    for(const world of Object.keys(checks) as (keyof typeof checks)[]) if(checks[world](labs[world]) && (!oldLabs || !checks[world](oldLabs[world]))) next=rewardCompletion(next,{kind:'explore',topic:`lab-${world}`},owner);
+    for(const world of Object.keys(checks) as (keyof typeof checks)[]) if(checks[world](labs[world]) && (!oldLabs || !checks[world](oldLabs[world]))) next=rewardCompletion(next,{kind:'explore',topic:`lab-${world}`},roundOwner(owned,`explore:lab-${world}`,`explore:lab-${world}`));
   }
   return openWorld(next,owner);
 }
 /** Once per owner; old histories with completed-round evidence only. Never invent activity history. */
 export function backfillRewards(save: Save): Save {
-  let next=initializePersonalization(save);
+  let next=bindRoundOwners(save,initializePersonalization(save));
   for(const learner of next.learning?.people ?? [{id:'family',notes:{}}]) {
-    const original=personFor(next,learner.id); if(original.milestones.length >= 256 || original.milestones.includes('migration:badges-v1')) continue;
+    const original=personFor(next,learner.id); if(original.milestones.length >= MAX_MILESTONES || original.milestones.includes('migration:badges-v1')) continue;
     for(const game of arcadeIds) for(const [level,stars] of Object.entries(next.arcade?.people[learner.id]?.games[game]?.stars ?? {})) if(stars) next=rewardCompletion(next,{kind:'arcade',game,level},learner.id);
     for(const [key,note] of Object.entries(learner.notes)) {
       const [game,stage,skill]=key.split(':');
@@ -76,7 +80,7 @@ export function backfillRewards(save: Save): Save {
     }
     next=openWorld(next,learner.id);
     const p=personFor(next,learner.id);
-    next=put(next,learner.id,{...p,milestones:p.milestones.length < 256 ? [...p.milestones,'migration:badges-v1'] : p.milestones,unseen:original.unseen});
+    next=put(next,learner.id,{...p,milestones:p.milestones.length < MAX_MILESTONES ? [...p.milestones,'migration:badges-v1'] : p.milestones,unseen:original.unseen});
   }
   return next;
 }

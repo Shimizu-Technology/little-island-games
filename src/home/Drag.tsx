@@ -43,7 +43,7 @@ function updatePreview(config: DragConfig, absX: number, absY: number, dx: numbe
   const px = config.foot ? config.foot.x + dx / config.scale : (absX - config.origin.x) / config.scale;
   const py = config.foot ? config.foot.y + dy / config.scale : (absY - config.origin.y) / config.scale;
   const spot = spotFromPoint(px, py, 1, f.wall);
-  if (!spot) return;
+  if (!spot) { config.preview.value = { ...config.preview.value, active: true, valid: false, px, py }; return; }
   const { x, y } = spot;
   const inside = px >= 0 && px <= 800 && py >= 0 && py <= 560;
   const valid =

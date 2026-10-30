@@ -1,3 +1,5 @@
+import { TOPICS } from '../src/explore/content';
+import { milestoneCatalog, grantCatalog, MAX_MILESTONES } from '../src/badges/engine';
 import { describe, expect, it } from 'vitest';
 import { badgeInfo, applyCompletion, badgesFor, grantsFor, progressFor, progressForBadge, tracks, type Completion } from '../src/badges/engine';
 import { backfillRewards, rewardTransitions } from '../src/badges/transitions';
@@ -23,7 +25,7 @@ describe('permanent distinct accomplishment badges',()=>{
     it(`${track}: counts assistance and all four count thresholds`,()=>{
       let p=starterPerson();
       for(let i=0;i<10;i++) {
-        p=applyCompletion(p,{kind:'learning',game:i<5?game:other,level:i%5+1,helped:true});
+        p=applyCompletion(p,{kind:'learning',game:i<5?game:other,level:other==='chamoru-memory' && i>=5?i%3+1:i%5+1,helped:true});
         if(i===0) expect(badgesFor(p.milestones)).toContain(`${track}-1`);
         if(i===2) expect(badgesFor(p.milestones)).toContain(`${track}-2`);
       }
@@ -43,9 +45,9 @@ describe('permanent distinct accomplishment badges',()=>{
     });
   }
   it('science topics are distinct and never grant from duplicate topics',()=>{
-    let p=starterPerson(); for(let i=0;i<10;i++)p=applyCompletion(p,{kind:'explore',topic:`topic-${i}`});
+    let p=starterPerson(); for(let i=0;i<10;i++)p=applyCompletion(p,{kind:'explore',topic:TOPICS[i % TOPICS.length].id});
     expect(badgesFor(p.milestones)).toEqual(['science-1','science-2','science-3','science-4']);
-    expect(applyCompletion(p,{kind:'explore',topic:'topic-9'})).toBe(p);
+    expect(applyCompletion(p,{kind:'explore',topic:TOPICS[9].id})).toBe(p);
   });
   it('arcade 1/8/40, a complete world, World 3 opened, and World 6',()=>{
     const ids=Array.from({length:40},(_,i)=>`arcade:reef-builder:w${Math.floor(i/8)+1}-${i%8+1}`);
@@ -85,8 +87,8 @@ describe('permanent distinct accomplishment badges',()=>{
   it('duplicates/retries/reloads are identity no-ops, capped without evicting earlier evidence',()=>{
     const fact:Completion={kind:'learning',game:'shell-math',level:1,helped:true},p=applyCompletion(starterPerson(),fact);
     expect(applyCompletion(p,fact)).toBe(p);expect(applyCompletion(JSON.parse(JSON.stringify(p)),fact)).toEqual(p);
-    let all=starterPerson();for(let i=0;i<1000;i++)all=applyCompletion(all,{kind:'explore',topic:`topic-${i}`});
-    expect(all.milestones).toHaveLength(10);expect(all.milestones[0]).toBe('explore:topic-0');expect(validPerson(all)).toBe(true);
+    let all=starterPerson();for(let i=0;i<1000;i++)all=applyCompletion(all,{kind:'explore',topic:TOPICS[i % TOPICS.length].id});
+    expect(all.milestones).toHaveLength(10);expect(all.milestones[0]).toBe(`explore:${TOPICS[0].id}`);expect(validPerson(all)).toBe(true);
     expect(progressFor('science',all.milestones)).toBe('All four badges earned');
     expect(progressFor('math',p.milestones)).toContain('1 of 3');
     expect(progressForBadge('classic-4',['classic:maze'])).toContain('1 of 10');
@@ -135,13 +137,14 @@ describe('accepted transitions, backfill, recovery',()=>{
     let save=emptySave();save.arcade=arcadeTransition(emptyArcade(),'family',{type:'finish',game:'reef-builder',level:'w1-1',stars:2,score:1,round:'old',name:'Family'});
     const raw=JSON.stringify(save),next=backfillRewards(parseSave(raw));expect(JSON.stringify(save)).toBe(raw);expect(personFor(next).unseen).toEqual([]);expect(personFor(next).milestones).toContain('arcade:reef-builder:w1-1');expect(backfillRewards(next)).toBe(next);expect(parseSave(JSON.stringify(next))).toEqual(next);
   });
-  it('never invalidates a validated full milestone list during migration or completion',()=>{
-    const save=backfillRewards(emptySave());save.personalization!.people.family.milestones=Array.from({length:256},(_,i)=>`legacy:${i}`);
-    expect(parseSave(JSON.stringify(save))).toEqual(save);expect(backfillRewards(save)).toBe(save);
-    expect(applyCompletion(personFor(save),{kind:'learning',game:'shell-math',level:1,helped:true})).toBe(personFor(save));
-    const full=starterPerson();full.earned=Array.from({length:256},(_,i)=>`legacy:${i}`);full.unseen=[...full.earned];
-    expect(validPerson(full)).toBe(true);expect(applyCompletion(full,{kind:'learning',game:'shell-math',level:1,helped:true})).toBe(full);
-    save.personalization!.people.family=full;expect(parseSave(JSON.stringify(backfillRewards(save)))).toEqual(backfillRewards(save));
+  it('accepts every real milestone with headroom and rejects capacity-exhausting garbage',()=>{
+    const save=backfillRewards(emptySave()),p=save.personalization!.people.family;
+    p.milestones=[...milestoneCatalog];p.earned=grantCatalog();p.unseen=[...p.earned];
+    expect(MAX_MILESTONES).toBeGreaterThan(milestoneCatalog.length);
+    expect(parseSave(JSON.stringify(save))).toEqual(save);
+    expect(backfillRewards(save)).toBe(save);
+    p.milestones=Array.from({length:256},(_,i)=>`legacy:${i}`);
+    expect(()=>parseSave(JSON.stringify(save))).toThrow(/original has been kept/);
   });
   it('backfills only reliable completed-round notes for each learner and marks grants seen',()=>{
     let learning=addLearner(undefined,'Mina','mina');

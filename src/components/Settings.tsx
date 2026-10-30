@@ -4,7 +4,6 @@ import { TextInput, View } from "react-native";
 import { Text } from "./Text";
 import { useStore } from "../state/Store";
 import { exportBackup, importBackup } from "../state/backup";
-import { parseSave } from "../state/validation";
 import { Button, C, Chip, Copy, Heading, Sheet, ToggleRow, font, styles } from "./ui";
 import { Gate, gateAccepts, makeGate } from "../state/grownUpGate";
 import { PreviousSaves } from "./PreviousSaves";
@@ -53,7 +52,6 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
     try {
       const raw = await importBackup();
       if (raw) {
-        parseSave(raw);
         setPending(raw);
       }
     } catch (e) {
@@ -68,8 +66,9 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
       setPending(null);
       setHistory(false);
       setMessage("Your games and settings have been restored.");
-    } catch {
-      setMessage("The backup could not be restored. Your current games are still kept.");
+    } catch (error) {
+      if (error instanceof Error && /original has been kept/.test(error.message)) close();
+      else setMessage("The backup could not be restored. Your current games are still kept.");
     } finally {
       setBusy(false);
     }
