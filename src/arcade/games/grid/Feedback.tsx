@@ -14,6 +14,7 @@ export function GridFeedback({
   rows,
   kind,
   text = "",
+  textWidth = 64,
 }: {
   event: number;
   x: number;
@@ -23,6 +24,7 @@ export function GridFeedback({
   rows: number;
   kind: "splash" | "splat" | "score";
   text?: string;
+  textWidth?: number;
 }) {
   const age = useSharedValue(1),
     reduced = useReducedMotion();
@@ -95,9 +97,9 @@ export function GridFeedback({
           style={[
             {
               position: "absolute",
-              left: Math.max(0, Math.min(cols * unit - 64, (x + 0.8) * unit)),
+              left: Math.max(0, Math.min(cols * unit - textWidth, (x + 0.8) * unit)),
               top: Math.max(4, Math.min((rows - 1) * unit, (y - 0.65) * unit)),
-              width: 64,
+              width: textWidth,
             },
             motion,
           ]}

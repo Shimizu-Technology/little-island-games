@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, memo, useMemo, useState } from "
 import { View, Platform, type ViewStyle } from "react-native";
 import { crabHopFrame } from "../../feelArt";
 import type { ArtPose } from "../../ArtPose";
-import { useSharedValue } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 import { HeartsHud, HitReaction } from "../../LivesHud";
 import { GridFeedback } from "../grid/Feedback";
@@ -12,7 +12,8 @@ import { useReducedMotion } from "../../../components/motion";
 import { StarDisplay } from "../../Art";
 import { ArcadeSprite, type SpritePose } from "../../Sprite";
 import { useArcadeLoop } from "../../loop";
-import { GridBackdrop, GridHero, GridObject, CoastalObject } from "../grid/Art";
+import { GridHero, GridObject } from "../grid/Art";
+import { CrabLane, CrabVehicle } from "./CrabArt";
 import { DirectionPad, GridBudget, Shake, useGridInput, useGridTouch } from "../grid/Controls";
 import type { Direction } from "../grid/rules";
 import type { ArcadeResult } from "../../types";
@@ -67,6 +68,10 @@ export function CrabBoard({
   const unit = (size - 6) / 9,
     poses = useSharedValue<ArtPose[]>([]),
     reduced = useReducedMotion();
+  const cameraStyle = useAnimatedStyle(() => {
+    const y = poses.value[0]?.y ?? unit * 10;
+    return { transform: [{ skewY: "6deg" }, { translateY: Math.max(0, Math.min(unit * 2.1, (unit * 6 - y) * 0.42)) }] };
+  }, [unit]);
   // Kit v3: pose-only interpolation, including a respawn identity guard.
   const build = useCallback(
     (s: CrabState) => {
@@ -95,6 +100,7 @@ export function CrabBoard({
       }
       for (let i = 0; i < 3; i++)
         p.push({ x: ((i * 3 + (reduced ? 0 : s.time * 0.4)) % 9) * unit, y: (2.4 + i * 0.6) * unit, opacity: 0.3 });
+      p.push({ x: hero.x * unit, y: hero.y * unit, scale: 1 - bounce * 0.24, opacity: 0.28 - bounce * 0.14 });
       return p;
     },
     [reduced, unit]
@@ -148,7 +154,6 @@ export function CrabBoard({
   const pan = useGridInput(active, move, true),
     learning = crabLearning(s),
     l = crabConfig(s),
-    world = s.level === "endless" ? "w3" : s.level.world,
     [lanes] = useState(() => crabLanes(initial));
   return (
     <View
@@ -176,7 +181,7 @@ export function CrabBoard({
             }}
           >
             <GridObject kind="burrow" size={28} />
-            <Copy style={{ color: "#FFF0BE", fontSize: 16, fontWeight: "800" }}>
+            <Copy style={{ color: "#FFF0BE", fontSize: 25, fontWeight: "900" }}>
               {learning
                 ? `Next ${l.numbers[s.cursor] ?? "Home!"}`
                 : `${s.crossed}/${s.level === "endless" ? "∞" : l.target}`}
@@ -210,18 +215,17 @@ export function CrabBoard({
             style={{
               width: size,
               height: unit * 11 + 6,
-              borderRadius: 23,
+              borderRadius: 12,
               overflow: "hidden",
               borderWidth: 3,
               borderColor: "#AADFD5",
+              backgroundColor: "#77B769",
               ...(Platform.OS === "web" ? ({ touchAction: "none" } as ViewStyle) : {}),
             }}
           >
-            <GridBackdrop crab world={world} width={size} height={unit * 11} />
+            <Animated.View pointerEvents="none" style={[{ position: "absolute", width: size, height: unit * 11 }, cameraStyle]}>
             {Array.from({ length: 11 }, (_, row) => {
-              const lane = lanes.find((lane) => lane.row === row),
-                road = lane && !waterLane(lane),
-                water = learning ? row > 0 && row < 10 : lane && waterLane(lane);
+              const lane = lanes.find((item) => item.row === row);
               return (
                 <View
                   key={row}
@@ -230,25 +234,9 @@ export function CrabBoard({
                     top: row * unit,
                     width: size,
                     height: unit,
-                    backgroundColor: road ? "#3D5362" : water ? "#1B799633" : "#E7D79C",
-                    borderBottomWidth: road ? 1 : 0,
-                    borderColor: "#FBE5A855",
-                    justifyContent: "center",
                   }}
                 >
-                  {road ? (
-                    <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
-                      {[0, 1, 2, 3, 4].map((i) => (
-                        <View key={i} style={{ width: unit * 0.5, height: 2, backgroundColor: "#E7E2BE66" }} />
-                      ))}
-                    </View>
-                  ) : (
-                    !water && (
-                      <View pointerEvents="none" style={{ flexDirection: "row", justifyContent: "space-around", paddingHorizontal: unit }}>
-                        {[0, 1, 2, 3].map(i => <View key={i} style={{ width: unit * .09, height: unit * .045, borderRadius: unit * .03, backgroundColor: row === 5 ? "#79976C" : "#B69C65", opacity: row === 0 ? 0 : .4 }}/>) }
-                      </View>
-                    )
-                  )}
+                  <CrabLane row={row} lane={lane} learning={learning} width={size} height={unit} />
                 </View>
               );
             })}
@@ -303,8 +291,10 @@ export function CrabBoard({
               unit={unit}
               cols={9}
               rows={11}
-              text={s.impact.kind === "score" ? "+100" : ""}
+              text={s.impact.kind === "score" ? "+100" : s.impact.kind === "splash" ? "SPLASH!" : "BONK!"}
+              textWidth={96}
             />
+            </Animated.View>
           </View>
         </Shake>
       </View>
@@ -341,9 +331,20 @@ const CrabActor = memo(function CrabActor({
   debug: boolean;
   happy: boolean;
 }) {
+  const hopShape = useAnimatedStyle(() => {
+    const frame = poses.value[0]?.frame ?? 0;
+    const shape = frame === 1 || frame === 4 ? { x: 1.14, y: 0.84 } : frame === 2 ? { x: 0.86, y: 1.2 } : { x: 1, y: 1 };
+    return { transform: [{ scaleX: shape.x }, { scaleY: shape.y }] };
+  });
   return (
+    <>
+    <ArcadeSprite poses={poses} index={58} width={unit} height={unit}>
+      <View style={{ position: "absolute", left: unit * 0.19, top: unit * 0.7, width: unit * 0.62, height: unit * 0.17, borderRadius: unit, backgroundColor: "#163E4B" }} />
+    </ArcadeSprite>
     <ArcadeSprite poses={poses} index={0} width={unit} height={unit}>
+      <Animated.View style={hopShape}>
       <GridHero crab size={unit} outfit={outfit} happy={happy} poses={poses} />
+      </Animated.View>
       {debug && (
         <View
           style={{
@@ -359,6 +360,7 @@ const CrabActor = memo(function CrabActor({
         />
       )}
     </ArcadeSprite>
+    </>
   );
 });
 const CrabTraffic = memo(function CrabTraffic({
@@ -381,9 +383,9 @@ const CrabTraffic = memo(function CrabTraffic({
             poses={poses}
             index={1 + l.row * 6 + i}
             width={unit * l.span}
-            height={unit}
+            height={unit * 1.18}
           >
-            <CoastalObject kind={l.kind} width={unit * l.span} height={unit} left={l.speed < 0} />
+            <CrabVehicle kind={l.kind} width={unit * l.span} height={unit * 1.18} variant={i + l.row} left={l.speed < 0} />
             {debug && (
               <View
                 style={{
