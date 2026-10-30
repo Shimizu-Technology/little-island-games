@@ -72,6 +72,22 @@ const foundation: Record<LearnId, readonly [LevelName, LevelName, LevelName]> = 
     { name: "Find numbers to 20", description: "Solve three equations within 20 after two small warm-up questions." },
     { name: "Missing number first", description: "Start with a missing number and use the full range within 20 throughout." },
   ],
+  "beep-bot": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "turtle-draw": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "tide-logic": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "code-lab": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "pattern-path": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "shape-shift": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "logic-lagoon": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "weather-watch": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "food-web": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "space-station": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "times-tide": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "fraction-feast": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "treasure-algebra": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "letter-lagoon": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "word-workshop": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "story-studio": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
 };
 export function levelInfo(game: LearnId, level: LearningLevel): LevelName {
   if (level <= 3) return foundation[game][level - 1];

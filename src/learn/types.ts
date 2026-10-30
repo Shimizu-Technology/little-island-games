@@ -16,9 +16,25 @@ export const learnIds = [
   "shell-math",
   "number-hop",
   "quick-practice",
+  "beep-bot",
+  "turtle-draw",
+  "tide-logic",
+  "code-lab",
+  "pattern-path",
+  "shape-shift",
+  "logic-lagoon",
+  "weather-watch",
+  "food-web",
+  "space-station",
+  "times-tide",
+  "fraction-feast",
+  "treasure-algebra",
+  "letter-lagoon",
+  "word-workshop",
+  "story-studio",
 ] as const;
 export type LearnId = (typeof learnIds)[number];
-export type Island = "reading" | "numbers" | "science" | "thinking";
+export type Island = "reading" | "numbers" | "science" | "thinking" | "coding";
 /** solo: on my own · together: with a grown-up (cooperative turns) · versus: take turns with a family score. */
 export type LearnMode = "solo" | "together" | "versus";
 export type Pace = "easy" | "medium" | "hard";
@@ -90,6 +106,10 @@ export type LearnEngine<S> = {
   mathControls?: boolean;
   paceHelp?: Partial<Record<Pace, string>>;
   languages?: Language[];
+  /** Typical age range the game's Level 1–5 spans, shown on shelf cards. */
+  ages?: readonly [number, number];
+  /** The game implements all five levels itself (levelOf(options)); skip the shared Level 4–5 quiz board. */
+  ownLevels?: boolean;
   /** Skill id → kid-and-parent friendly label (shown in the grown-up practice view). Ids look like "read.short-a". */
   skills: Record<string, string>;
   create: (options: LearnOptions, ctx: CreateContext<S>) => S;

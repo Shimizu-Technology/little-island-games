@@ -55,7 +55,7 @@ export default function Home() {
       <Heading style={{ fontSize: 23 }}>Islands</Heading>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
         {(Object.keys(islandNames) as (keyof typeof islandNames)[]).map(island => <PressableScale key={island} accessibilityRole="button" accessibilityLabel={`Open ${islandNames[island]} island`} amount={0.98} onPress={() => island === "arcade" ? router.push("/arcade") : island === "explore" ? router.push("/explore") : router.push({ pathname: "/shelf", params: { island } })}
-          style={{ width: cardWidth, backgroundColor: ({ reading: "#E8EFF9", numbers: "#F7EBD0", science: "#DDEFF5", thinking: "#FBE6DC", classic: "#E3EDDC", arcade: "#DAEEE7", explore: "#DFEAF0" })[island], borderRadius: 20, padding: 16, minHeight: 158, alignItems: "center", gap: 8 }}>
+          style={{ width: cardWidth, backgroundColor: ({ reading: "#E8EFF9", numbers: "#F7EBD0", science: "#DDEFF5", thinking: "#FBE6DC", coding: "#E3E9F7", classic: "#E3EDDC", arcade: "#DAEEE7", explore: "#DFEAF0" })[island], borderRadius: 20, padding: 16, minHeight: 158, alignItems: "center", gap: 8 }}>
           <IslandIcon island={island} size={76} />
           <Heading style={{ fontSize: 22, textAlign: "center" }}>{islandNames[island]}</Heading><Icon name="right" size={20} color={C.teal} />
         </PressableScale>)}

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { learnIds, type LearnOptions } from "../src/learn/types";
+import { engines as sharedLevelEngines } from "../src/learn/engines";
+/** Games that use the shared Level 4–5 growth board (new 2.3 games own all five levels). */
+const sharedLevelGames = learnIds.filter(id => !sharedLevelEngines[id].ownLevels);
 import { engines } from "../src/learn/engines";
 import { levelInfo, levelNumbers, levelOf, optionsAtLevel } from "../src/learn/levels";
 import { startSession, validLearnOptions, validLearnSession, replaySession } from "../src/learn/session";
@@ -25,7 +28,7 @@ function mathFinish(state: MathRound) {
   return state;
 }
 describe("five learning levels", () => {
-  for (const game of learnIds) it(`${game}: all five choices validate and legacy saves retain their level`, () => {
+  for (const game of sharedLevelGames) it(`${game}: all five choices validate and legacy saves retain their level`, () => {
     for (const level of levelNumbers) {
       const options = optionsAtLevel(base, level);
       expect(levelOf(options)).toBe(level);
@@ -98,7 +101,7 @@ describe("five learning levels", () => {
   });
   it("uses the growth engine's independent history even if a UI flag was absent or false", () => {
     const learning = addLearner(undefined, "A", "a");
-    for (const game of learnIds) {
+    for (const game of sharedLevelGames) {
       const round = { ...startSession(game, { options: optionsAtLevel(base, 4) }, {}, 42), learner: "a" };
       const qs = growthQuestions(game, round.options, round.state as GrowthState);
       let state = growthMove(round.state as GrowthState, { type: "help" }, qs);

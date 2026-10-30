@@ -12,6 +12,7 @@ import * as hafaAdai from "./games/hafa-adai/view";
 import * as shellMath from "./games/shell-math/view";
 import * as numberHop from "./games/number-hop/view";
 import * as quickPractice from "./games/quick-practice/view";
+import { stubView } from "./stubView";
 
 export type LearnView = { Board: ComponentType<BoardProps<unknown>>; Art: ComponentType<{ size: number }> };
 /** Screens for each learning game (React). Engines live in engines.ts. */
@@ -28,4 +29,20 @@ export const views: Record<LearnId, LearnView> = {
   "shell-math": shellMath as LearnView,
   "number-hop": numberHop as LearnView,
   "quick-practice": quickPractice as LearnView,
+  "beep-bot": stubView,
+  "turtle-draw": stubView,
+  "tide-logic": stubView,
+  "code-lab": stubView,
+  "pattern-path": stubView,
+  "shape-shift": stubView,
+  "logic-lagoon": stubView,
+  "weather-watch": stubView,
+  "food-web": stubView,
+  "space-station": stubView,
+  "times-tide": stubView,
+  "fraction-feast": stubView,
+  "treasure-algebra": stubView,
+  "letter-lagoon": stubView,
+  "word-workshop": stubView,
+  "story-studio": stubView,
 };

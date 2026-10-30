@@ -13,6 +13,7 @@ export const subjectTheme: Record<Island, { sky: string; land: string; accent: s
   reading: { sky: "#DDF4EF", land: "#91D3CC", accent: "#227B80", ink: "#174A51" },
   science: { sky: "#E9F3CE", land: "#A9D385", accent: "#4F793B", ink: "#31512F" },
   thinking: { sky: "#F0F3D8", land: "#B8D494", accent: "#57793D", ink: "#365034" },
+  coding: { sky: "#E3E9F7", land: "#9FB4E0", accent: "#3D5A9A", ink: "#2A3B63" },
 };
 
 /** Decorative island scenery keeps the question and touch targets on an opaque card. */

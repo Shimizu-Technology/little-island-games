@@ -110,7 +110,7 @@ describe("math activity rounds", () => {
     }
   });
   it("leaves all nine old learning saves and their option contract unchanged", () => {
-    const oldIds = learnIds.filter(id => !games.includes(id as MathGame));
+    const oldIds = learnIds.slice(0, 12).filter(id => !games.includes(id as MathGame));
     expect(oldIds).toHaveLength(9);
     for (const game of oldIds) for (const pace of ["easy", "medium", "hard"] as const) {
       const options: LearnOptions = { mode: engines[game].modes[0], pace };

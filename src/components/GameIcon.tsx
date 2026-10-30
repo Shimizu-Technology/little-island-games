@@ -5,7 +5,7 @@ import type { ShelfId } from "../learn/home";
 // Original activity silhouettes. Keep one 100-unit canvas and a 3-unit outline:
 // tiny shelf tiles and large lobby tiles must tell the same story.
 const ink = "#254D49", cream = "#FFF9E9", coral = "#DC8062", gold = "#E8B958", blue = "#599CB4", green = "#6B9D70", purple = "#9679B7";
-export type IslandIconId = "reading" | "numbers" | "science" | "thinking" | "classic" | "arcade" | "explore";
+export type IslandIconId = "reading" | "numbers" | "science" | "thinking" | "coding" | "classic" | "arcade" | "explore";
 type IconId = ShelfId | "explore";
 const surfaces: Record<IconId, string> = {
   "tic-tac-toe": "#DFECF7", "word-rescue": "#F8DFD0", memory: "#EDE2F5", checkers: "#DCECD7", maze: "#F6E8BF", numbers: "#D5EDEE",
@@ -13,6 +13,7 @@ const surfaces: Record<IconId, string> = {
   "coconut-drop": "#E9E9C6", "fishing-nets": "#D5E9E9", "hidden-canoes": "#D7EAF4", "shell-pits": "#F3E0C4", "reef-sweep": "#E6DFF0",
   "reef-race": "#CFE9E4", "island-market": "#F4E2B7", "sound-boat": "#E0E9F4", "turtle-tales": "#DFEBCD", "which-one": "#F5DFD2", "tide-pool": "#D2E9EE", "float-sink": "#DBEAF4", "crab-commands": "#F3DECE", "hafa-adai": "#E5E8CC", "shell-math": "#F4E4CB", "number-hop": "#E6E6C8", "quick-practice": "#E8DFF0",
   "reef-builder": "#CDE8E2", "shell-song": "#E9DFF4", "rail-parade": "#DFE8C9", "crab-crossing": "#D4E8EA", "palm-patrol": "#E2EAC5", "beach-ball": "#CEE7ED", "fruit-bat-flight": "#DDDDF1", "lagoon-run": "#D6E9E1", "canoe-cargo": "#F3E0C1",
+  "beep-bot": "#E6F0EC", "turtle-draw": "#E6F0EC", "tide-logic": "#E6F0EC", "code-lab": "#E6F0EC", "pattern-path": "#E6F0EC", "shape-shift": "#E6F0EC", "logic-lagoon": "#E6F0EC", "weather-watch": "#E6F0EC", "food-web": "#E6F0EC", "space-station": "#E6F0EC", "times-tide": "#E6F0EC", "fraction-feast": "#E6F0EC", "treasure-algebra": "#E6F0EC", "letter-lagoon": "#E6F0EC", "word-workshop": "#E6F0EC", "story-studio": "#E6F0EC",
 };
 function Line({ d, color = ink, width = 3 }: { d: string; color?: string; width?: number }) { return <Path d={d} fill="none" stroke={color} strokeWidth={width} strokeLinecap="round" strokeLinejoin="round"/>; }
 function Letter({ x, y, children, color = ink, size = 20 }: { x: number; y: number; children: React.ReactNode; color?: string; size?: number }) { return <SvgText x={x} y={y} fill={color} fontSize={size} fontWeight="800" fontFamily="Arial" textAnchor="middle" stroke="none">{children}</SvgText>; }
@@ -69,13 +70,14 @@ function Scene({ id }: { id: IconId }): React.ReactElement {
     case "lagoon-run": return <><Path d="M32 16H68L87 87H13Z" fill="#78ACAA"/><Line d="M43 20L35 87M57 20L65 87" color={cream} width={2}/><Runner/><Coconut x={66} y={34} r={9}/><Arrow d="M23 54L17 44L29 42"/></>;
     case "canoe-cargo": return <><Blocks falling/><Path d="M15 85Q28 91 43 85L37 93H22Z" fill="#A77D52" strokeWidth={2}/><Line d="M31 82L25 93" color={coral} width={2}/></>;
     case "explore": return <><Circle cx={50} cy={50} r={31} fill={blue}/><Path d="M25 31L43 24L50 38L39 51L21 44M54 52L72 40L80 58L64 78L58 66Z" fill={green}/><Ellipse cx={50} cy={50} rx={15} ry={31} fill="none" stroke={cream} strokeWidth={2}/><Line d="M20 50H80" color={cream} width={2}/></>;
+    default: return <><Rect x={22} y={22} width={56} height={56} rx={12} fill={cream}/><Letter x={50} y={60} size={26}>?</Letter></>;
   }
 }
 function Tile({ size, surface, children }: { size: number; surface: string; children: React.ReactNode }) { return <Svg width={size} height={size} viewBox="0 0 100 100" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Rect x={3} y={3} width={94} height={94} rx={23} fill={surface} stroke={ink} strokeWidth={3}/><G stroke={ink} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">{children}</G></Svg>; }
 /** Decorative inside a labelled game control; never adds a second screen-reader stop. */
 export function GameIcon({ id, size = 74 }: { id: IconId; size?: number }) { return <Tile size={size} surface={surfaces[id]}><Scene id={id}/></Tile>; }
 export function IslandIcon({ island, size = 74 }: { island: IslandIconId; size?: number }) {
-  const representative: Record<IslandIconId, IconId> = { reading: "turtle-tales", numbers: "number-hop", science: "float-sink", thinking: "crab-commands", classic: "tic-tac-toe", arcade: "reef-builder", explore: "explore" };
+  const representative: Record<IslandIconId, IconId> = { reading: "turtle-tales", numbers: "number-hop", science: "float-sink", thinking: "crab-commands", coding: "crab-commands", classic: "tic-tac-toe", arcade: "reef-builder", explore: "explore" };
   if (island === "reading") return <Tile size={size} surface="#DFE8F4"><Book/></Tile>;
   if (island === "arcade") return <Tile size={size} surface="#CDE8E2"><G transform="translate(-4 -5) scale(.8)"><Blocks falling/></G><Circle cx={73} cy={72} r={17} fill={purple}/><Line d="M64 72H82M73 63V81" color={cream} width={5}/></Tile>;
   return <GameIcon id={representative[island]} size={size}/>;

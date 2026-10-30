@@ -90,6 +90,7 @@ export function validGrowth(s: unknown, game: LearnId, o: LearnOptions): s is Gr
 }
 /** Preserve every original engine contract when an additive stage is absent. */
 export function withGrowth(base: LearnEngine<unknown>): LearnEngine<unknown> {
+  if (base.ownLevels) return base;
   return { ...base,
     get skills() {
       const extra = Object.values(growthTracksFor(base.id)).flatMap(t => t?.questions ?? []);

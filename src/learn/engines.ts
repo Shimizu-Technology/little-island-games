@@ -1,4 +1,4 @@
-import type { LearnEngine, LearnId } from "./types";
+import type { LearnEngine, LearnId , Island } from "./types";
 import { withGrowth } from "./growth/engine";
 import { engine as reefRace } from "./games/reef-race/engine";
 import { engine as islandMarket } from "./games/island-market/engine";
@@ -12,6 +12,7 @@ import { engine as hafaAdai } from "./games/hafa-adai/engine";
 import { engine as shellMath } from "./games/shell-math/engine";
 import { engine as numberHop } from "./games/number-hop/engine";
 import { engine as quickPractice } from "./games/quick-practice/engine";
+import { stubEngine } from "./stub";
 
 /** Pure engines (no React): safe to import from save validation and tests. */
 const originalEngines: Record<LearnId, LearnEngine<unknown>> = {
@@ -27,9 +28,30 @@ const originalEngines: Record<LearnId, LearnEngine<unknown>> = {
   "shell-math": shellMath as LearnEngine<unknown>,
   "number-hop": numberHop as LearnEngine<unknown>,
   "quick-practice": quickPractice as LearnEngine<unknown>,
+  "beep-bot": stubEngine({ id: "beep-bot", name: "Beep Bot", island: "coding" as Island, tagline: "Tap arrows. Help Beep get the shell.", description: "Tap arrows. Help Beep get the shell.", help: "Tap arrows. Help Beep get the shell.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [4, 6], ownLevels: true }) as LearnEngine<unknown>,
+  "turtle-draw": stubEngine({ id: "turtle-draw", name: "Turtle Draw", island: "coding" as Island, tagline: "Code a turtle to draw shapes.", description: "Code a turtle to draw shapes.", help: "Code a turtle to draw shapes.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [6, 11], ownLevels: true }) as LearnEngine<unknown>,
+  "tide-logic": stubEngine({ id: "tide-logic", name: "Tide Logic", island: "coding" as Island, tagline: "If this, then that: sort the tide.", description: "If this, then that: sort the tide.", help: "If this, then that: sort the tide.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [7, 12], ownLevels: true }) as LearnEngine<unknown>,
+  "code-lab": stubEngine({ id: "code-lab", name: "Code Lab", island: "coding" as Island, tagline: "Variables, loops and functions.", description: "Variables, loops and functions.", help: "Variables, loops and functions.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [9, 14], ownLevels: true }) as LearnEngine<unknown>,
+  "pattern-path": stubEngine({ id: "pattern-path", name: "Pattern Path", island: "thinking" as Island, tagline: "Spot what comes next.", description: "Spot what comes next.", help: "Spot what comes next.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [4, 11], ownLevels: true }) as LearnEngine<unknown>,
+  "shape-shift": stubEngine({ id: "shape-shift", name: "Shape Shift", island: "thinking" as Island, tagline: "Fit the shapes. Flip and turn.", description: "Fit the shapes. Flip and turn.", help: "Fit the shapes. Flip and turn.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [4, 13], ownLevels: true }) as LearnEngine<unknown>,
+  "logic-lagoon": stubEngine({ id: "logic-lagoon", name: "Logic Lagoon", island: "thinking" as Island, tagline: "Clues, grids and number puzzles.", description: "Clues, grids and number puzzles.", help: "Clues, grids and number puzzles.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [6, 14], ownLevels: true }) as LearnEngine<unknown>,
+  "weather-watch": stubEngine({ id: "weather-watch", name: "Weather Watch", island: "science" as Island, tagline: "Seasons, clouds and the water cycle.", description: "Seasons, clouds and the water cycle.", help: "Seasons, clouds and the water cycle.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [4, 10], ownLevels: true }) as LearnEngine<unknown>,
+  "food-web": stubEngine({ id: "food-web", name: "Food Web Reef", island: "science" as Island, tagline: "Who eats what? Build the reef.", description: "Who eats what? Build the reef.", help: "Who eats what? Build the reef.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [6, 13], ownLevels: true }) as LearnEngine<unknown>,
+  "space-station": stubEngine({ id: "space-station", name: "Star Station", island: "science" as Island, tagline: "Moon, planets and gravity.", description: "Moon, planets and gravity.", help: "Moon, planets and gravity.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [7, 14], ownLevels: true }) as LearnEngine<unknown>,
+  "times-tide": stubEngine({ id: "times-tide", name: "Times Tide", island: "numbers" as Island, tagline: "Groups, arrays and times tables.", description: "Groups, arrays and times tables.", help: "Groups, arrays and times tables.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [6, 11], ownLevels: true }) as LearnEngine<unknown>,
+  "fraction-feast": stubEngine({ id: "fraction-feast", name: "Fraction Feast", island: "numbers" as Island, tagline: "Share pies. Fractions and decimals.", description: "Share pies. Fractions and decimals.", help: "Share pies. Fractions and decimals.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [7, 13], ownLevels: true }) as LearnEngine<unknown>,
+  "treasure-algebra": stubEngine({ id: "treasure-algebra", name: "Treasure Algebra", island: "numbers" as Island, tagline: "Negatives, patterns and equations.", description: "Negatives, patterns and equations.", help: "Negatives, patterns and equations.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [9, 14], ownLevels: true }) as LearnEngine<unknown>,
+  "letter-lagoon": stubEngine({ id: "letter-lagoon", name: "Letter Lagoon", island: "reading" as Island, tagline: "Letters and first sounds.", description: "Letters and first sounds.", help: "Letters and first sounds.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [3, 6], ownLevels: true }) as LearnEngine<unknown>,
+  "word-workshop": stubEngine({ id: "word-workshop", name: "Word Workshop", island: "reading" as Island, tagline: "Build words with parts.", description: "Build words with parts.", help: "Build words with parts.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [7, 14], ownLevels: true }) as LearnEngine<unknown>,
+  "story-studio": stubEngine({ id: "story-studio", name: "Story Studio", island: "reading" as Island, tagline: "Build sentences and stories.", description: "Build sentences and stories.", help: "Build sentences and stories.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [6, 14], ownLevels: true }) as LearnEngine<unknown>,
 };
 
-export const engines = Object.fromEntries(Object.entries(originalEngines).map(([id, engine]) => [id, withGrowth(engine)])) as Record<LearnId, LearnEngine<unknown>>;
+/** Typical age span of Levels 1–5 for the original twelve games (new games declare their own). */
+const originalAges: Partial<Record<LearnId, readonly [number, number]>> = {
+  "reef-race": [4, 9], "island-market": [4, 9], "sound-boat": [5, 9], "turtle-tales": [5, 10], "which-one": [5, 9], "tide-pool": [4, 9],
+  "float-sink": [4, 9], "crab-commands": [5, 10], "hafa-adai": [4, 12], "shell-math": [4, 9], "number-hop": [4, 9], "quick-practice": [5, 9],
+};
+export const engines = Object.fromEntries(Object.entries(originalEngines).map(([id, engine]) => [id, withGrowth({ ...engine, ages: engine.ages ?? originalAges[id as LearnId] })])) as Record<LearnId, LearnEngine<unknown>>;
 
 /** Every skill label across games, for the grown-up practice view. */
 export const skillLabels = (): Record<string, string> =>

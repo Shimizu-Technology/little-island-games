@@ -12,7 +12,7 @@ import { Island, LearnId, learnIds } from "./types";
 import { arcadeIds, arcadeGames, type ArcadeId } from "../arcade";
 export type ShelfId = GameId | ActivityId | LearnId | BoardId | ArcadeId;
 export type ShelfGame = { id: ShelfId; name: string; description: string; surface: string; players: string; filters: string[]; island: Island | "classic" | "arcade" };
-export const islandNames = { reading: "Reading", numbers: "Numbers", science: "Science", thinking: "Thinking", classic: "Classic games", arcade: "Arcade", explore: "Explore" };
+export const islandNames = { reading: "Reading", numbers: "Numbers", science: "Science", thinking: "Thinking", coding: "Coding", classic: "Classic games", arcade: "Arcade", explore: "Explore" };
 const extraGames: { id: ActivityId; name: string; description: string; surface: string; players: string; filters: string[] }[] = [
   {
     id: "go-fish",

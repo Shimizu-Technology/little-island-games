@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { learnIds, type LearnOptions } from "../src/learn/types";
+import { engines as sharedLevelEngines } from "../src/learn/engines";
+/** Games that use the shared Level 4–5 growth board (new 2.3 games own all five levels). */
+const sharedLevelGames = learnIds.filter(id => !sharedLevelEngines[id].ownLevels);
 import { startSession, validLearnSession, outcomeOf, replaySession } from "../src/learn/session";
 import { growthMove, growthProgress, growthQuestions } from "../src/learn/growth/engine";
 import { growthTrack } from "../src/learn/growth/content";
@@ -12,7 +15,7 @@ import { defaultPracticeSettings } from "../src/practice/types";
 import { runArrowProgram } from "../src/learn/growth/discovery";
 
 describe("growth progression and preserved saves", () => {
-  for (const game of learnIds) for (const stage of ["stretch", "deep"] as const) it(`${game} ${stage}: wrong, help, solve, next, resume and replay`, () => {
+  for (const game of sharedLevelGames) for (const stage of ["stretch", "deep"] as const) it(`${game} ${stage}: wrong, help, solve, next, resume and replay`, () => {
     expect(growthTrack(game, stage)!.questions.length).toBeGreaterThanOrEqual(12);
     const options: LearnOptions = { mode: "solo", pace: "easy", stage };
     let s = startSession(game, { options }, {}, 300);
