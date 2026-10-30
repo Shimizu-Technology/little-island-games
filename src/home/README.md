@@ -82,13 +82,19 @@ Portrait screens show the stage at the available height and allow horizontal scr
 
 ## 2.3 dollhouse and character contact
 
-All four rooms render together in a horizontal cutaway. `HouseCamera` owns bounded
-empty-space pan and two-finger pinch; double-tap toggles whole-house/close-up. Room
+Room order fills two rooms per floor from the ground upwards. Wide phone landscape
+uses four per floor. One roof, structural beams, an upstairs terrace and a ground
+shoreline form a single cutaway. Overview fits 90% of the limiting viewport axis.
+`HouseCamera` owns two-axis empty-floor pan with resisted edges and momentum, plus
+focal-point pinch. A room tap enters close-up; double-tap toggles the overview. Room
 chips glide to a room (instant with Reduce Motion), and the named zoom button is an
 accessible alternative. Scene sizing commits only when a pinch settles; shared
 values carry movement while fingers move. Object drags block camera pan and ignore
 multi-touch. Saved coordinates, furniture footprints and stacked-parent coordinates
-stay room-local at every camera scale.
+stay room-local at every camera scale. Transfers resolve the same two-axis building
+origins used for rendering. The optional validated `settings.homeNavigationSeen`
+flag dismisses the navigation hint after a successful pan or zoom; old saves need
+no migration. Current room persists as before; camera offsets/zoom remain visit-local.
 
 Room selection now changes only camera/edit context. Friends remain in their room;
 a cross-room character drop transfers exactly one unique slot. Version 2 retains

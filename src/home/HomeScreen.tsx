@@ -1,11 +1,12 @@
 import { badgeRule, type BadgeId } from '../badges/engine';
 import { HouseCamera, type HouseCameraHandle } from "./HouseCamera";
-import { zoomLimits, roomAt } from "./camera";
+import { zoomLimits, buildingLayout, buildingRoomAt, roomOrigin } from "./camera";
+import { BuildingArt, BuildingTrim, TerraceArt } from "./BuildingArt";
 import { stageWidth } from "./stage";
 import { useSheetPresence } from "../components/sheetPresence";
 import { themeRewards } from './catalog';
 import { personFor } from '../personalization/model';
-import React, { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   Modal,
   FlatList,
@@ -170,7 +171,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   const [toolbarHeight, setToolbarHeight] = useState(64);
   const [confirm, setConfirm] = useState(false);
   useSheetPresence(confirm || stackMenu || !!surfaceMenu);
-  const [hint, setHint] = useState(true);
+  const [hint, setHint] = useState(!app.save.settings.homeNavigationSeen);
+  const acknowledgeNavigation = () => { setHint(false); if (!app.save.settings.homeNavigationSeen) app.settings({homeNavigationSeen:true}); };
   const [notice, setNotice] = useState(initialItem ? `Ready: ${initialItem.replaceAll("-", " ")}. Choose a clear spot or room style.` : "");
   const owner = app.save.learning?.active ?? "family", person = personFor(app.save);
   const acknowledge = app.personalize, identityEpoch = app.epoch;
@@ -188,20 +190,20 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     }
   };
   const sequence = useRef(0);
-  const lastRoomTap = useRef({room:"",at:0});
   const preview = useSharedValue(emptyPreview);
   const decorating = mode === "decorate";
   const sideDrawer = decorating && !collapsed && width > height && height < 500;
   const doubleTray = width < 500 || sideDrawer;
   const drawerHeight = decorating ? (sideDrawer ? 0 : collapsed ? 48 : doubleTray ? 254 : 154) : 0;
   const drawerWidth = sideDrawer ? Math.min(330, width * .42) : 0;
-  const headerHeight = 120;
+  const headerHeight = 146;
   const availableHeight = height - inset.top - inset.bottom - drawerHeight - headerHeight;
   // A portrait viewport shows a life-sized stage and scrolls to its side walls.
-  const beach = !decorating && (availableHeight >= width * .925 || room.characters.some(c => c.anchor.startsWith("beach-")));
-  const sceneUnits = beach ? 740 : 560;
+  const beach = true;
+  const sceneUnits = 740;
+  const building = useMemo(()=>buildingLayout(roomIds.length,width/height>1.8),[width,height]);
   const closeWidth = stageWidth({ width, height }, drawerWidth, availableHeight, sceneUnits);
-  const limits = zoomLimits(width-drawerWidth, closeWidth);
+  const limits = zoomLimits(width-drawerWidth, closeWidth, availableHeight, building);
   const [zoom, setZoom] = useState(1);
   const houseCamera = useRef<HouseCameraHandle>(null);
   const effectiveZoom = Math.max(limits.min, Math.min(limits.max, zoom));
@@ -534,12 +536,14 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             }}
             onDrop={(_x, _y, dx, dy) =>
               (() => {
-                const worldX=roomIds.indexOf(roomId)*800+p.x+dx/scale;
-                const destination=roomIds[roomAt(worldX,800)];
-                const localX=Math.max(0,Math.min(799,worldX-roomIds.indexOf(destination)*800));
-                const row=(p.y+dy/scale-386)/14.4;
+                const source=roomOrigin(roomIds.indexOf(roomId),building);
+                const worldX=source.x+p.x+dx/scale, worldY=source.y+p.y+dy/scale;
+                const destination=roomIds[buildingRoomAt(worldX,worldY,building)];
+                const destinationOrigin=roomOrigin(roomIds.indexOf(destination),building);
+                const localX=Math.max(0,Math.min(799,worldX-destinationOrigin.x)), localY=worldY-destinationOrigin.y;
+                const row=(localY-386)/14.4;
                 if(destination!==roomId) send({type:'transfer',slot:c.slot,room:destination,x:(localX-43-row*1.5)/37.5,y:row},true);
-                else send(characterDrop(room,c.slot,localX,p.y+dy/scale),true);
+                else send(characterDrop(room,c.slot,localX,localY),true);
               })()
             }
             style={{
@@ -682,18 +686,19 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           paddingRight: drawerWidth,
         }}
       >
-        <HouseCamera cameraRef={houseCamera} initialIndex={roomIds.indexOf(store.state.current)} width={width-drawerWidth} height={Math.max(0,Math.min(availableHeight,sceneHeight))} roomWidth={sceneWidth} sceneHeight={sceneHeight} zoom={effectiveZoom} minZoom={limits.min} maxZoom={limits.max} reduced={reduced} onZoom={setZoom} onRoom={index=>{dispatch({type:'room',room:roomIds[index]});if(roomIds[index]!==store.state.current){setSelected(undefined);setPlacing(undefined);}requestAnimationFrame(measure);setTimeout(measure,reduced?0:280);}}>
+        <HouseCamera cameraRef={houseCamera} initialIndex={roomIds.indexOf(store.state.current)} width={width-drawerWidth} height={Math.max(0,availableHeight)} building={building} scale={scale} zoom={effectiveZoom} minZoom={limits.min} maxZoom={limits.max} reduced={reduced} onNavigate={acknowledgeNavigation} onZoom={setZoom} onRoom={index=>{dispatch({type:'room',room:roomIds[index]});if(roomIds[index]!==store.state.current){setSelected(undefined);setPlacing(undefined);}requestAnimationFrame(measure);setTimeout(measure,reduced?0:280);}}>
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}><BuildingArt building={building}/></View>
         {/* Event callbacks below read placement refs only on input, never while building scenes. */}
         {/* eslint-disable-next-line react-hooks/refs */}
         {roomIds.map((roomId,index)=>{const room=store.state.rooms[roomId];return (
-        <View key={roomId} ref={node=>{roomCanvases.current[roomId]=node;if(roomId===store.state.current)canvas.current=node;}} onLayout={measure} testID={`home-scene-${roomId}`} style={{ position:"absolute", left:index*sceneWidth, width: sceneWidth, height: sceneHeight }}>
+        <View key={roomId} ref={node=>{roomCanvases.current[roomId]=node;if(roomId===store.state.current)canvas.current=node;}} onLayout={measure} testID={`home-scene-${roomId}`} style={{ position:"absolute", left:roomOrigin(index,building).x*scale, top:roomOrigin(index,building).y*scale, width: sceneWidth, height: sceneHeight }}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`${roomNames[roomId]} floor`}
             accessibilityHint={
               placing
                 ? "Tap to place the selected item. Arrow keys change spot and Enter places."
-                : "Choose an item from Decorate to place."
+                : "Tap to enter this room. Double-tap to switch between the room and whole house."
             }
             accessibilityActions={[
               ...["left", "right", "back", "forward"].map((name) => ({ name, label: `Move placement ${name}` })),
@@ -716,11 +721,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             })}
             onPress={(e) => {
               if (!placing) {
-                const now=e.timeStamp;
-                const detail=Platform.OS === "web" ? (e.nativeEvent as unknown as {detail?:number}).detail : 0;
-                if(lastRoomTap.current.room===roomId && (now-lastRoomTap.current.at<350 || detail===2)) {
-                  houseCamera.current?.zoomRoom(index);lastRoomTap.current={room:'',at:0};
-                } else {lastRoomTap.current={room:roomId,at:now};dispatch({type:"room",room:roomId});}
+                houseCamera.current?.tap(index);
                 setSelected(undefined);
                 return;
               }
@@ -738,11 +739,11 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               /> : <RoomShellArt room={roomId} theme={room.theme} />}
             </View>
           </Pressable>
-          {beach && <View pointerEvents="none" style={{ position: "absolute", top: 525 * scale, width: sceneWidth, height: Math.max(215 * scale, height - origin.y - 525 * scale) }}><ShoreArt depth={Math.max(215, (height - origin.y) / scale - 525)} /></View>}
+          {beach && <View pointerEvents="none" style={{ position: "absolute", top: 525 * scale, width: sceneWidth, height: 215 * scale }}>{Math.floor(index/building.columns)===0 ? <ShoreArt depth={215} /> : <TerraceArt/>}</View>}
           {decorating && roomId===store.state.current && <FloorGrid scale={scale} width={sceneWidth} height={sceneHeight} />}
           <View pointerEvents="none" style={{position:'absolute',left:0,top:0,width:sceneWidth,height:sceneHeight}}>
-            <Text style={{position:'absolute',top:12*scale,left:24*scale,fontSize:24*scale,color:'#385451',fontWeight:'700'}}>{roomNames[roomId]}</Text>
-            {index < 3 && <><View style={{position:'absolute',right:0,top:0,width:8*scale,height:360*scale,backgroundColor:'#C29369'}}/><View style={{position:'absolute',right:0,top:360*scale,width:70*scale,height:170*scale,borderWidth:5*scale,borderBottomWidth:0,borderColor:'#C29369',borderRadius:20*scale,backgroundColor:'#C5DED344'}}/></>}
+            <Text style={{position:'absolute',top:12*scale,left:24*scale,fontSize:Math.max(11,24*scale),color:'#385451',fontWeight:'700'}}>{roomNames[roomId]}</Text>
+            {index % building.columns < building.columns-1 && <><View style={{position:'absolute',right:0,top:0,width:8*scale,height:360*scale,backgroundColor:'#C29369'}}/><View style={{position:'absolute',right:0,top:360*scale,width:70*scale,height:170*scale,borderWidth:5*scale,borderBottomWidth:0,borderColor:'#C29369',borderRadius:20*scale,backgroundColor:'#C5DED344'}}/></>}
           </View>
           {renderEntries(room,roomId).map((entry) => (
             <React.Fragment key={entry.key}>{entry.node}</React.Fragment>
@@ -770,6 +771,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
 
         </View>
         );})}
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}><BuildingTrim building={building}/></View>
         </HouseCamera>
       </View>
           {decorating && target && toolbarPoint && (
@@ -821,7 +823,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         <ScrollView horizontal style={{ flex: 1, backgroundColor: "#FFF8E9", borderRadius: 18 }} contentContainerStyle={{ gap: 2 }} showsHorizontalScrollIndicator={false}>
           {roomIds.map(id => <Button key={id} label={roomNames[id]} selected={id === store.state.current} onPress={() => { houseCamera.current?.jump(roomIds.indexOf(id)); setSelected(undefined); setPlacing(undefined); setDraggedItem(undefined); preview.value = emptyPreview; }} />)}
         </ScrollView>
-        <Button label={effectiveZoom > limits.min*1.15 ? "Whole house" : "Close up"} onPress={()=>setZoom(effectiveZoom > limits.min*1.15 ? limits.min : 1)} />
+        <Button label={effectiveZoom > limits.min*1.15 ? "Whole house" : "Close up"} onPress={()=>houseCamera.current?.zoomRoom(roomIds.indexOf(store.state.current))} />
         {decorating && <View style={{ flexDirection: "row", gap: 4 }}>
           <Button label="Undo" icon="undo" iconOnly disabled={!store.canUndo} onPress={() => { dispatch({ type: "undo" }); setSelected(undefined); }} />
           <Button label="Redo" icon="redo" iconOnly disabled={!store.canRedo} onPress={() => { dispatch({ type: "redo" }); setSelected(undefined); }} />
@@ -848,16 +850,13 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Dismiss hint"
-          pointerEvents="none"
           onPress={() => {
-            setHint(false);
+            acknowledgeNavigation();
             setNotice("");
           }}
           style={[
             styles.hint,
-            width > height
-              ? { left: 8, top: inset.top + headerHeight + 4, maxWidth: Math.max(120, (width - sceneWidth) / 2 - 20) }
-              : { top: inset.top + headerHeight + 4 },
+            { left: 12, right: 12, bottom: inset.bottom + drawerHeight + 12, maxWidth: undefined },
           ]}
         >
           <Text style={styles.hintText}>{(decorating ? notice : "") || "Drag a friend. Swipe to explore. Pinch or double-tap a room to zoom."}</Text>

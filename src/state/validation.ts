@@ -19,7 +19,7 @@ import { validSkills } from "../learn/skills";
 import { PracticeNotes, PracticeSettings, validPracticeNotes, validPracticeSettings } from "../practice/types";
 import { arcadeIds, validArcade, migrateArcade, type ArcadeId, type ArcadeSave } from "../arcade";
 import { validPersonalization, type Personalization } from "../personalization/model";
-export type Settings = { sound: boolean; help: boolean; learningIslander?: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
+export type Settings = { sound: boolean; help: boolean; homeNavigationSeen?: boolean; learningIslander?: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
 export type Save = {
   version: 1;
   roundOwners?: RoundOwners;
@@ -358,7 +358,7 @@ export function parseSave(raw: string): Save {
     !obj(v.settings) ||
     typeof v.settings.sound !== "boolean" ||
     typeof v.settings.help !== "boolean" ||
-    ["narration", "effects", "automaticSpeech", "learningIslander"].some(k => (v.settings as Record<string, unknown>)[k] !== undefined && typeof (v.settings as Record<string, unknown>)[k] !== "boolean") ||
+    ["narration", "effects", "automaticSpeech", "learningIslander", "homeNavigationSeen"].some(k => (v.settings as Record<string, unknown>)[k] !== undefined && typeof (v.settings as Record<string, unknown>)[k] !== "boolean") ||
     (v.settings.narrationVolume !== undefined && (typeof v.settings.narrationVolume !== "number" || !Number.isFinite(v.settings.narrationVolume) || v.settings.narrationVolume < 0 || v.settings.narrationVolume > 1)) ||
     (v.settings.voice !== undefined && !["warm", "calm"].includes(v.settings.voice as string)) ||
     (v.learning !== undefined && !validLearners(v.learning)) ||
