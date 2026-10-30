@@ -1,3 +1,6 @@
+import * as spaceStation from "./games/space-station/view";
+import * as foodWeb from "./games/food-web/view";
+import * as weatherWatch from "./games/weather-watch/view";
 import type { ComponentType } from "react";
 import type { BoardProps, LearnId } from "./types";
 import * as reefRace from "./games/reef-race/view";
@@ -12,6 +15,8 @@ import * as hafaAdai from "./games/hafa-adai/view";
 import * as shellMath from "./games/shell-math/view";
 import * as numberHop from "./games/number-hop/view";
 import * as quickPractice from "./games/quick-practice/view";
+import * as beepBot from "./games/beep-bot/view";
+import * as turtleDraw from "./games/turtle-draw/view";
 import { stubView } from "./stubView";
 import * as tideLogic from "./games/tide-logic/view";
 import * as codeLab from "./games/code-lab/view";
@@ -34,16 +39,16 @@ export const views: Record<LearnId, LearnView> = {
   "shell-math": shellMath as LearnView,
   "number-hop": numberHop as LearnView,
   "quick-practice": quickPractice as LearnView,
-  "beep-bot": stubView,
-  "turtle-draw": stubView,
+  "beep-bot": beepBot as LearnView,
+  "turtle-draw": turtleDraw as LearnView,
   "tide-logic": tideLogic as LearnView,
   "code-lab": codeLab as LearnView,
   "pattern-path": stubView,
   "shape-shift": stubView,
   "logic-lagoon": stubView,
-  "weather-watch": stubView,
-  "food-web": stubView,
-  "space-station": stubView,
+  "weather-watch": weatherWatch as LearnView,
+  "food-web": foodWeb as LearnView,
+  "space-station": spaceStation as LearnView,
   "times-tide": stubView,
   "fraction-feast": stubView,
   "treasure-algebra": stubView,

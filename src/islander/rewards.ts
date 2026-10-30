@@ -1,5 +1,5 @@
 import type { IslanderLook } from './look';
-export const rewardTracks = ['math', 'reading', 'science', 'chamoru', 'arcade', 'classic'] as const;
+export const rewardTracks = ['math', 'reading', 'science', 'coding', 'chamoru', 'arcade', 'classic'] as const;
 export type RewardTrack = typeof rewardTracks[number];
 export type RewardSpec = { id: string; slot: keyof IslanderLook; name: string; earned: true; track: RewardTrack; badge: `${RewardTrack}-${1|2|3|4}` };
 function reward(id: string, slot: keyof IslanderLook, name: string, track: RewardTrack, tier: 1|2|3|4): RewardSpec { return {id, slot, name, earned: true, track, badge: `${track}-${tier}`}; }
@@ -14,6 +14,8 @@ export const wardrobeRewards: readonly RewardSpec[] = [
   reward('safety-goggles','accessory','Safety goggles','science',1),
   reward('lab-coat','outfit','Lab coat','science',2),
   reward('galaxy','hairColor','Galaxy','science',4),
+  reward('robot-tee','outfit','Robot tee','coding',1),
+  reward('coder-headset','accessory','Coder headset','coding',3),
   reward('flower-lei','accessory','Flower lei','chamoru',1),
   reward('woven-sunhat','hat','Woven sun hat','chamoru',2),
   reward('sunset','palette','Sunset','chamoru',4),

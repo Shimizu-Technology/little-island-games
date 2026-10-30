@@ -147,9 +147,9 @@ describe('room editing, stacking and colours',()=>{
   const s=empty(), moved=homeReducer(s,{type:'place',instance:instance('p','plant',1,1)}).state; expect(room(moved).instances[0].x).toBe(1);
   expect(validPlacement([],instance('p','plant',16,0))).toBe(false); expect(validPlacement([instance('r','rug',0,0)],instance('t','table',0,0))).toBe(true);
  });
- it('carries characters when switching rooms and keeps each layout and theme',()=>{
+ it('jumps the camera without teleporting characters and keeps each layout and theme',()=>{
   let s=starterHome(); const before=clone(room(s).instances);
-  s=homeReducer(s,{type:'room',room:'kitchen'}).state; expect(room(s).characters).toHaveLength(3); expect(s.rooms.home.characters).toEqual([]);
+  s=homeReducer(s,{type:'room',room:'kitchen'}).state; expect(room(s).characters).toHaveLength(0); expect(s.rooms.home.characters).toHaveLength(3);
   s=homeReducer(s,{type:'tint',id:'starter-fridge',tint:'coral'}).state; s=homeReducer(s,{type:'room',room:'home'}).state;
   expect(room(s).instances).toEqual(before); expect(s.rooms.kitchen.instances[0].tint).toBe('coral'); expect(validHome(s)).toBe(true);
  });
@@ -214,5 +214,5 @@ describe('constant-size seating and depth',()=>{
   const s=starterHome();expect(characterDrop(room(s),0,400,650)).toEqual({type:'character',slot:0,anchor:'beach-middle'});
   for(const anchor of ['beach-left','beach-middle','beach-right'] as const){const next=homeReducer(s,{type:'character',slot:0,anchor}).state;expect(validHome(next)).toBe(true);expect(characterPoint(room(next),room(next).characters[0]).y).toBe(650);}
  });
- it('retains original catalog earning metadata',()=>{expect(furnitureIds).toHaveLength(22);for(const id of furnitureIds)expect(itemSpec(id)).toEqual(catalog[id]);});
+ it('retains original catalog earning metadata',()=>{expect(furnitureIds).toHaveLength(24);for(const id of furnitureIds)expect(itemSpec(id)).toEqual(catalog[id]);});
 });
