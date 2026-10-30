@@ -1,12 +1,13 @@
+import { harborSceneryPose } from '../lagoon-run/scenery';
 import { CANOE_DEPTH, isCanoe, visualRunHeight } from "../lagoon-run/geometry";
 import { HAZARDS } from "../lagoon-run/course";
 import { HIDDEN_POSE, rankPainterPoses, type SpritePose } from "../../poses";
-import { runnerHeight, shellHeight, obstacleLane, runLearning, type RunState } from "../lagoon-run/engine";
+import { runSpeed, runnerHeight, shellHeight, obstacleLane, runLearning, type RunState } from "../lagoon-run/engine";
 import { RAMP_DEPTH, RAMP_SECTIONS, surfaceProfile, surfaceSpan } from "../lagoon-run/surface";
-import { projectTrack, trackSprite } from "../lagoon-run/camera";
+import { CAMERA_SLOT, TRACK_WIDTH, projectTrack, trackSprite } from "../lagoon-run/camera";
 import { runnerFrame, RUN_POSES, RUN_EXTRA } from "./character";
-import { sceneryPose, groundTexturePose, SCENE_COUNT, SCENE_START, TEXTURE_START, TEXTURE_COUNT } from "./environmentPoses";
-export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA = INCLINE_START + 5 * INCLINE_STRIDE, CANOE_START = RUN_EXTRA + 8, RUN_SLOTS = CANOE_START + 15 * 4;
+import { groundTexturePose, SCENE_COUNT, SCENE_START, TEXTURE_START, TEXTURE_COUNT } from "./environmentPoses";
+export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA = INCLINE_START + 5 * INCLINE_STRIDE, CANOE_START = RUN_EXTRA + 8, RUN_SLOTS = CANOE_START + 15 * 4 + 1;
 export function runPoses(s: RunState, reduced = false): SpritePose[] {
   "worklet";
   const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=visualRunHeight(runnerHeight(s))*85;
@@ -57,13 +58,17 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   p[172]={x:contact.x-36,y:contact.y-200-lift,opacity:s.kite>0?1:0};
   p[173]={x:contact.x-48,y:contact.y-134-lift,opacity:s.shield||s.protection>0?.7:0};
   for(let i=0;i<14;i++){const distance=s.travel+Math.floor(i/2)*.17,z=distance%1.18;p[35+i]={identity:Math.floor(distance/1.18),...trackSprite(i%2?1.5:.5,z,4,36)};}
-  for(let i=0;i<SCENE_COUNT;i++)p[SCENE_START+i]=sceneryPose(s.travel,i);
+  for(let i=0;i<SCENE_COUNT;i++)p[SCENE_START+i]=harborSceneryPose(s.travel,i);
   for(let i=0;i<TEXTURE_COUNT;i++)p[TEXTURE_START+i]=groundTexturePose(s.travel,i);
+  const lean = reduced ? 0 : s.lane-s.poseLane;
+  const shake = reduced ? 0 : Math.max(0,s.cooldown/.3);
+  // Camera is always visible. Its scale field carries speed-line intensity, not zoom.
+  p[CAMERA_SLOT]={x:-lean*5+Math.sin(s.time*95)*shake*5,y:reduced?0:Math.sin(s.travel*32)*.65+Math.cos(s.time*83)*shake*3,angle:lean*.018,opacity:1,scale:reduced?0:Math.max(0,Math.min(.65,(runSpeed(s)-.42)*2.5))};
   const next=s.rows.filter(r=>!r.passed).sort((a,b)=>b.z-a.z)[0];
   const move=next?.action==="idle"?4:next?.action==="jump"?1:2;
   p[57]={x:260,y:78,opacity:!learn&&next&&next.z>.35&&(next.action!=="idle"||s.lane!==next.shellLane)&&!(s.learned&move)?1:0};
   const f=s.feedback/.45,scored=s.lastGain>0;
-  p[56]={x:contact.x+42,y:396-(1-f)*25,opacity:scored&&s.cue!=="shell"?f:0};
+  p[56]={x:Math.min(TRACK_WIDTH-88,contact.x+42),y:396-(1-f)*25,opacity:scored&&s.cue!=="shell"?f:0};
   if(s.cue==="bump"&&!reduced)for(let i=0;i<6;i++){const a=i*Math.PI/3;p[26+i]={x:contact.x+Math.cos(a)*(1-f)*50,y:contact.y-60+Math.sin(a)*(1-f)*50,opacity:f};}
   // Inactive slots retain one canonical object and never send hidden native transforms.
   for(let i=0;i<p.length;i++)if(p[i].opacity===0)p[i]=HIDDEN_POSE;

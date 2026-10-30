@@ -13,3 +13,6 @@ export function trackSprite(lane: number, z: number, width: number, height: numb
   const p = projectTrack(lane, z);
   return { x: p.x - width / 2, y: p.y - height / 2 - height * p.scale / 2, scale: p.scale, opacity: z > 0 && z < 1.16 ? 1 : 0 };
 }
+
+/** Presentation-only slot, after the existing 311 actor/geometry slots. */
+export const CAMERA_SLOT = 311;
