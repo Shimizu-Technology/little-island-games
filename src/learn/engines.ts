@@ -1,3 +1,6 @@
+import { engine as logicLagoon } from "./games/logic-lagoon/engine";
+import { engine as shapeShift } from "./games/shape-shift/engine";
+import { engine as patternPath } from "./games/pattern-path/engine";
 import { engine as spaceStation } from "./games/space-station/engine";
 import { engine as foodWeb } from "./games/food-web/engine";
 import { engine as weatherWatch } from "./games/weather-watch/engine";
@@ -42,9 +45,9 @@ const originalEngines: Record<LearnId, LearnEngine<unknown>> = {
   "turtle-draw": turtleDraw as LearnEngine<unknown>,
   "tide-logic": tideLogic as LearnEngine<unknown>,
   "code-lab": codeLab as LearnEngine<unknown>,
-  "pattern-path": stubEngine({ id: "pattern-path", name: "Pattern Path", island: "thinking" as Island, tagline: "Spot what comes next.", description: "Spot what comes next.", help: "Spot what comes next.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [4, 11], ownLevels: true }) as LearnEngine<unknown>,
-  "shape-shift": stubEngine({ id: "shape-shift", name: "Shape Shift", island: "thinking" as Island, tagline: "Fit the shapes. Flip and turn.", description: "Fit the shapes. Flip and turn.", help: "Fit the shapes. Flip and turn.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [4, 13], ownLevels: true }) as LearnEngine<unknown>,
-  "logic-lagoon": stubEngine({ id: "logic-lagoon", name: "Logic Lagoon", island: "thinking" as Island, tagline: "Clues, grids and number puzzles.", description: "Clues, grids and number puzzles.", help: "Clues, grids and number puzzles.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [6, 14], ownLevels: true }) as LearnEngine<unknown>,
+  "pattern-path": patternPath as LearnEngine<unknown>,
+  "shape-shift": shapeShift as LearnEngine<unknown>,
+  "logic-lagoon": logicLagoon as LearnEngine<unknown>,
   "weather-watch": weatherWatch as LearnEngine<unknown>,
   "food-web": foodWeb as LearnEngine<unknown>,
   "space-station": spaceStation as LearnEngine<unknown>,

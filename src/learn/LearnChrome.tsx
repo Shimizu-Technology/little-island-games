@@ -59,7 +59,7 @@ export function roundProgress(session: LearnSession): { current: number; total: 
   if (session.game === "reef-race") return { current: Math.max(...reefRound(session.state as never, session.options).positions), total: boardEnd(session.options) };
   const total = Array.isArray(s.questions) ? s.questions.length : Array.isArray(s.missions) ? s.missions.length :
     Array.isArray(s.orders) ? s.orders.length : Array.isArray(s.ids) ? s.ids.length :
-    Array.isArray(s.items) ? s.items.length : session.game === "sound-boat" ? 10 : 0;
+    Array.isArray(s.items) ? s.items.length : typeof s.total === "number" ? s.total : session.game === "sound-boat" ? 10 : 0;
   return total && typeof s.index === "number" ? { current: Math.min(s.index, total), total } : null;
 }
 

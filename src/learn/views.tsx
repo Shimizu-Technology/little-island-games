@@ -1,3 +1,6 @@
+import * as logicLagoon from "./games/logic-lagoon/view";
+import * as shapeShift from "./games/shape-shift/view";
+import * as patternPath from "./games/pattern-path/view";
 import * as spaceStation from "./games/space-station/view";
 import * as foodWeb from "./games/food-web/view";
 import * as weatherWatch from "./games/weather-watch/view";
@@ -43,9 +46,9 @@ export const views: Record<LearnId, LearnView> = {
   "turtle-draw": turtleDraw as LearnView,
   "tide-logic": tideLogic as LearnView,
   "code-lab": codeLab as LearnView,
-  "pattern-path": stubView,
-  "shape-shift": stubView,
-  "logic-lagoon": stubView,
+  "pattern-path": patternPath as LearnView,
+  "shape-shift": shapeShift as LearnView,
+  "logic-lagoon": logicLagoon as LearnView,
   "weather-watch": weatherWatch as LearnView,
   "food-web": foodWeb as LearnView,
   "space-station": spaceStation as LearnView,

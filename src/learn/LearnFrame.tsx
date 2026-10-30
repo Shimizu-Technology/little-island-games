@@ -92,6 +92,9 @@ export function LearnFrame({ id }: { id: LearnId }) {
     finished = result !== null,
     notWon = saved && result === "done" && engine.notWon ? engine.notWon(saved.state, saved.options) : null,
     wasFinished = useRef(finished);
+  useLayoutEffect(() => {
+    if (finished) scroll.current?.scrollTo({ y: 0, animated: false });
+  }, [finished, saved?.id]);
   // Celebrations: a small burst on right answers, a big one when the round is won or completed.
   // A round the island friend or tide won ends calmly; the board says who got there first.
   const [burst, setBurst] = useState({ n: 0, big: false });
