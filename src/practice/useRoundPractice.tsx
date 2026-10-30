@@ -59,7 +59,7 @@ export function useRoundPractice(target: string, snapshot: unknown) {
       live.current.store.notePractice(result.skill, result.helped, p.epoch);
       live.current.store.practice(result.skill, !result.helped);
     }
-    live.current.store.recordWarmup(summary.results, live.current.settings, p.round, p.epoch);
+    if (!summary.bypassed) live.current.store.recordWarmup(summary.results, live.current.settings, p.round, p.epoch);
     p.run();
   };
   const visible = !!pending && focused && pending.epoch === store.epoch && pending.snapshot === snapshot && pending.config === config;

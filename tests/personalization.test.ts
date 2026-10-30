@@ -1,3 +1,4 @@
+import { milestoneCatalog, grantCatalog } from '../src/badges/engine';
 import { describe, expect, it } from 'vitest';
 import { emptySave, parseSave, type Save } from '../src/state/validation';
 import { addLearner } from '../src/learn/learners';
@@ -36,7 +37,7 @@ describe('personalization save boundary', () => {
     const save = initializePersonalization(withLearner());
     const p = save.personalization!.people.mina;
     p.look = { ...p.look, hairStyle: 'braids', hat: 'cap' };
-    p.earned = ['hat:cap']; p.unseen = ['hat:cap']; p.milestones = ['reading:first'];
+    p.earned = ['hat:bookworm-beanie']; p.unseen = ['hat:bookworm-beanie']; p.milestones = ['learn:sound-boat:1'];
     p.home.characters[0] = { slot: 0, anchor: 'floor', pose: 'stand', x: 1, y: 2 };
     expect(parseSave(encode(save))).toEqual(save);
     expect(personFor(save, 'family').look.hat).toBe('none');
@@ -59,10 +60,10 @@ describe('personalization save boundary', () => {
     const raw = encode({ ...emptySave(), personalization: p });
     expect(() => parseSave(raw)).toThrow(); expect(encode({ ...emptySave(), personalization: p })).toBe(raw);
   });
-  it('enforces owner and 256-ID caps, including duplicate milestones', () => {
+  it('enforces owner and catalog caps, including duplicate milestones', () => {
     const save = initializePersonalization(withLearner()), p = save.personalization!;
-    p.people.mina.earned = Array.from({ length: 256 }, (_, i) => `item:${i}`);
-    p.people.mina.milestones = Array.from({ length: 256 }, (_, i) => `milestone:${i}`);
+    p.people.mina.earned = grantCatalog();
+    p.people.mina.milestones = [...milestoneCatalog];
     expect(validPersonalization(p, save.learning)).toBe(true);
     p.people.mina.earned.push('too-many'); expect(validPersonalization(p, save.learning)).toBe(false);
     p.people.mina.earned.pop(); p.people.mina.milestones.push('too-many'); expect(validPersonalization(p, save.learning)).toBe(false);

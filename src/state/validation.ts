@@ -1,3 +1,4 @@
+import { validRoundOwners, type RoundOwners } from '../badges/owners';
 import { BoardId, BoardSessions, boardIds, isBoardId, validBoardSessions } from "../board";
 import { ExploreProgress, validExploreProgress } from "../explore/progress";
 import { GameId, GameState, gameIds } from "../games";
@@ -21,6 +22,7 @@ import { validPersonalization, type Personalization } from "../personalization/m
 export type Settings = { sound: boolean; help: boolean; learningIslander?: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
 export type Save = {
   version: 1;
+  roundOwners?: RoundOwners;
   personalization?: Personalization;
   /** Island Arcade progress and validated untimed Reef rounds; real-time rounds are never persisted. */
   arcade?: ArcadeSave;
@@ -360,7 +362,8 @@ export function parseSave(raw: string): Save {
     (v.settings.narrationVolume !== undefined && (typeof v.settings.narrationVolume !== "number" || !Number.isFinite(v.settings.narrationVolume) || v.settings.narrationVolume < 0 || v.settings.narrationVolume > 1)) ||
     (v.settings.voice !== undefined && !["warm", "calm"].includes(v.settings.voice as string)) ||
     (v.learning !== undefined && !validLearners(v.learning)) ||
-    (v.personalization !== undefined && !validPersonalization(v.personalization, validLearners(v.learning) ? v.learning : undefined)) ||
+    (v.personalization !== undefined && !validPersonalization(v.personalization, validLearners(v.learning) ? v.learning : undefined, validArcade(v.arcade) ? v.arcade : undefined)) ||
+    (v.roundOwners !== undefined && !validRoundOwners(v.roundOwners, validLearners(v.learning) ? v.learning.people.map(p=>p.id) : ['family'])) ||
     !validLearningOwners(v.learn, v.learning) ||
     (v.settings.practice !== undefined && !validPracticeSettings(v.settings.practice)) ||
     (v.practiceNotes !== undefined && !validPracticeNotes(v.practiceNotes)) ||

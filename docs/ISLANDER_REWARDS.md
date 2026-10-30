@@ -43,3 +43,11 @@ Rows with "—" in a column still give the other column's reward. Every badge gi
 - **"New" is a small text badge,** cleared when the item is opened, plus "Mark all seen". No counters or reminders.
 - **The badge wall** in Island Home holds six track rows of four frames each. Earned badges are coloured illustrations; unearned ones are soft outlines with the rule on tap.
 - **A "My badges" page,** reachable from the Locker and the badge wall, shows progress toward the next badge in each track as plain text ("2 of 3 different games").
+
+### Review fixes: ownership, validation and warm-ups (30 October 2026)
+
+A saved learning round credits its original `learner`, including Family, even if someone else is now active. Classic, board, activity and Explore ownership lives in the optional version-1 `roundOwners` namespace, bound when the round starts and preserved across switches/reloads. Existing sessions without ownership bind once to the active learner on upgrade; older saves cannot reveal a different historical owner. Arcade retains its existing per-owner/epoch acceptance boundary.
+
+An accepted three-question warm-up counts as `learn:quick-practice:<level>` for Math and `learn:which-one:<level>` for Reading. Mixed practice counts each subject present. Levels follow the existing stage/limit mapping; assistance counts. Cancellation, partial practice and grown-up bypass never award. The completion fact and explicit `think.level-round` note commit together; duplicate callbacks do not add evidence or grants. Existing warm-up answer notes cannot distinguish a complete sheet from a later bypass, so they are not backfilled. New explicit completion notes can be backfilled by the existing migration.
+
+Catalog version 1 validates grants and accomplishments against actual game, level and Explore catalogs. CHamoru Memory has three levels. The milestone limit is the complete catalog inventory plus 64 entries of headroom, rather than 256 arbitrary strings. Unknown IDs are invalid; every real accomplishment fits without evicting earlier evidence. Restore and personalization writes both require starter-or-earned wardrobe, furniture and themes; stickers use the owner's arcade collection. Rejected imports enter recovery with their exact original bytes preserved, while current games remain stored.

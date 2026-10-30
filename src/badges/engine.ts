@@ -1,3 +1,4 @@
+import { TOPICS, WORLDS } from '../explore/content';
 import type { Person } from '../personalization/model';
 import { wardrobeRewards } from '../islander/rewards';
 import { catalog, themeRewards } from '../home/catalog';
@@ -10,8 +11,21 @@ export type Completion = { kind: 'learning'; game: string; level: number; helped
 const names = { math: ['Counter','Builder','Problem Solver','Math Star'], reading: ['First Words','Page Turner','Storyteller','Bookworm'], science: ['Curious','Explorer','Scientist','Inventor'], chamoru: ['Håfa Adai','Neighbor','Storykeeper','Island Voice'], arcade: ['Player One','Level Hopper','World Opener','Legend'], classic: ['Game Night','Good Sport','Strategist','Champion'] };
 const colors = { math:'#BD7041', reading:'#6674A9', science:'#348579', chamoru:'#AC627B', arcade:'#357EAA', classic:'#8B7445' };
 export const learningTrack: Record<string, Track> = { 'shell-math':'math','number-hop':'math','reef-race':'math','island-market':'math','quick-practice':'math','sound-boat':'reading','turtle-tales':'reading','which-one':'reading','tide-pool':'science','float-sink':'science','crab-commands':'science','hafa-adai':'chamoru','chamoru-memory':'chamoru' };
-const classicGames = ['tic-tac-toe','word-rescue','memory','checkers','maze','numbers','coconut-drop','fishing-nets','hidden-canoes','shell-pits','reef-sweep','go-fish','crazy-eights','racer','word-imposter','island-mystery'];
+export const classicGames = ['tic-tac-toe','word-rescue','memory','checkers','maze','numbers','coconut-drop','fishing-nets','hidden-canoes','shell-pits','reef-sweep','go-fish','crazy-eights','racer','word-imposter','island-mystery'];
 export const arcadeTrack = (game: string): Track => ['shell-song','rail-parade'].includes(game) ? 'reading' : 'math';
+/** Catalog v1 is retained for old saves. Bound every durable accomplishment by real content. */
+export const milestoneCatalog = [
+  ...Object.keys(learningTrack).flatMap(game => (game === 'chamoru-memory' ? [1,2,3] : [1,2,3,4,5]).map(level => `learn:${game}:${level}`)),
+  ...arcadeIds.flatMap(game => allLevelIds.map(level => `arcade:${game}:${level}`)),
+  ...classicGames.map(game => `classic:${game}`),
+  ...['tic-tac-toe','checkers','coconut-drop','fishing-nets','hidden-canoes','shell-pits'].map(game => `classic:${game}:win`),
+  ...TOPICS.map(topic => `explore:${topic.id}`), ...WORLDS.map(world => `explore:lab-${world.id}`),
+  'world:open-3', 'migration:badges-v1',
+];
+// Includes all catalog pairs, all shortcuts and migration markers, plus future headroom.
+export const MAX_MILESTONES = milestoneCatalog.length + 64;
+export const validMilestone = (id: string) => milestoneCatalog.includes(id);
+export const grantCatalog = () => grantsFor(tracks.flatMap(track => [1,2,3,4].map(tier => `${track}-${tier}` as BadgeId)));
 export function badgeInfo(id: BadgeId) {
   const [track, tierText] = id.split('-') as [Track,string], tier = Number(tierText);
   const counts = countThresholds[track];
@@ -69,10 +83,10 @@ export function grantsFor(badges: readonly BadgeId[]): string[] {
   ])];
 }
 export function milestoneFor(fact: Completion): string | undefined {
-  if(fact.kind==='learning') return learningTrack[fact.game] && Number.isInteger(fact.level) && fact.level>=1 && fact.level<=5 ? `learn:${fact.game}:${fact.level}` : undefined;
+  if(fact.kind==='learning') return validMilestone(`learn:${fact.game}:${fact.level}`) ? `learn:${fact.game}:${fact.level}` : undefined;
   if(fact.kind==='arcade') return arcadeIds.includes(fact.game as typeof arcadeIds[number]) && validLevelId(fact.level) ? `arcade:${fact.game}:${fact.level}` : undefined;
   if(fact.kind==='classic') return classicGames.includes(fact.game) ? `classic:${fact.game}` : undefined;
-  return /^[a-z0-9-]{1,60}$/.test(fact.topic) ? `explore:${fact.topic}` : undefined;
+  return (TOPICS.some(t => t.id === fact.topic) || WORLDS.some(w => `lab-${w.id}` === fact.topic)) ? `explore:${fact.topic}` : undefined;
 }
 /** Keep the earliest evidence forever. Saturated tracks need no more pairs, leaving room for every other track. */
 export function applyCompletion(person: Person, fact: Completion): Person {
@@ -80,8 +94,8 @@ export function applyCompletion(person: Person, fact: Completion): Person {
   const before = badgesFor(person.milestones), affected: Track[] = fact.kind==='arcade' ? (fact.level.startsWith('learn-') ? ['arcade',arcadeTrack(fact.game)] : ['arcade']) : [fact.kind==='classic'?'classic':fact.kind==='explore'?'science':learningTrack[fact.game]];
   const win = fact.kind==='classic' && fact.won && ['tic-tac-toe','checkers','coconut-drop','fishing-nets','hidden-canoes','shell-pits'].includes(fact.game) && ['middle','strong','medium','hard','growing','challenge'].includes(fact.opponentStrength ?? '') ? `classic:${fact.game}:win` : undefined;
   const additions = [...(affected.every(t=>([1,2,3,4] as const).every(tier=>before.includes(`${t}-${tier}`))) ? [] : [id]), ...(win?[win]:[])].filter(m=>!person.milestones.includes(m));
-  if (!additions.length || person.milestones.length + additions.length > 256) return person;
-  const milestones = [...person.milestones,...additions].slice(0,256), newBadges = badgesFor(milestones).filter(b=>!before.includes(b)), grants = grantsFor(newBadges).filter(g=>!person.earned.includes(g));
-  if (person.earned.length + grants.length > 256) return person;
+  if (!additions.length || person.milestones.length + additions.length > MAX_MILESTONES) return person;
+  const milestones = [...person.milestones,...additions], newBadges = badgesFor(milestones).filter(b=>!before.includes(b)), grants = grantsFor(newBadges).filter(g=>!person.earned.includes(g));
+  if (person.earned.length + grants.length > grantCatalog().length) return person;
   return { ...person, milestones, earned:[...person.earned,...grants], unseen:[...person.unseen,...grants] };
 }

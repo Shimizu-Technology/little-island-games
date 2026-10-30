@@ -1,3 +1,5 @@
+import { applyWarmup } from './warmupAction';
+import { roundOwner } from '../badges/owners';
 import { badgesFor, type BadgeId } from '../badges/engine';
 import { personFor } from '../personalization/model';
 import { backfillRewards, rewardTransitions, rewardCompletion, completionSource } from '../badges/transitions';
@@ -20,7 +22,7 @@ import type { LearnId, LearnSession } from "../learn/types";
 import { recordLevelRound } from "../learn/levelEvidence";
 import { toggleShelfFavorite } from "../learn/home";
 import { LearnExpected, applyLearnSave, applyPractice, applyOwnedPractice } from "./learnAction";
-import { addLearner as appendLearner, selectLearner as chooseLearner, recordLearning, familyLearners } from "../learn/learners";
+import { addLearner as appendLearner, selectLearner as chooseLearner, familyLearners } from "../learn/learners";
 import { defaultPracticeSettings, type PracticeResult, type PracticeSettings } from "../practice/types";
 import { AudioPreferences } from "../components/Audio";
 import { recordPracticeNote } from "../practice/notes";
@@ -202,7 +204,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const current = latest.current;
     if (!completedTopic && JSON.stringify(current.explore?.progress) === JSON.stringify(progress)) return;
     const next = { ...current, explore: { favorites: [], ...current.explore, progress } };
-    commit(completedTopic && topicById(completedTopic) && progress.location.kind === "topic" && progress.location.id === completedTopic ? rewardCompletion(next, { kind: "explore", topic: completedTopic }) : next);
+    commit(completedTopic && topicById(completedTopic) && progress.location.kind === "topic" && progress.location.id === completedTopic ? rewardCompletion(next, { kind: "explore", topic: completedTopic }, roundOwner(current, `explore:${completedTopic}`, `explore:${completedTopic}`)) : next);
   }, [commit]);
   // Arcade uses the same commit/recovery queue, with explicit learner/restore ownership.
   const arcade = useCallback((action: ArcadeAction, expected: ArcadeExpected) => {
@@ -305,14 +307,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [ready, recovery]);
   const recordWarmup = useCallback((results: PracticeResult[], config: PracticeSettings, round: string, expectedEpoch: number) => {
     if (expectedEpoch !== generation.current || !ready || recovery || restoring.current) return;
-    const before = latest.current, owner = before.learning?.active ?? "family";
-    let learning = before.learning;
-    for (const [i, result] of results.entries()) {
-      const math = result.skill.startsWith("num.");
-      const stage = math ? config.mathStage ?? (config.limit === 10 ? "easy" : "medium") : config.readingStage ?? "easy";
-      learning = recordLearning(learning, owner, math ? "quick-practice" : "which-one", stage, result.skill, `warmup-${i}`, round, result.helped);
-    }
-    if (learning !== before.learning) commit({ ...before, learning });
+    const before = latest.current, next = applyWarmup(before, results, config, round);
+    if (next !== before) commit(next);
   }, [commit, ready, recovery]);
   const settings = useCallback(
     (next: Partial<Save["settings"]>) => {
@@ -328,10 +324,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
   const restore = useCallback(
     async (encoded: string) => {
-      const next = backfillRewards(parseSave(encoded));
       if (restoring.current) throw new Error("A restore is already running.");
       restoring.current = true;
       try {
+        let next: Save;
+        try { next = backfillRewards(parseSave(encoded)); }
+        catch (error) {
+          // Keep both the rejected import and the current live save. Never repair imported bytes.
+          await storage.preserve(encoded);
+          generation.current++; setEpoch(generation.current);
+          setRaw(encoded); setRecovery(error instanceof Error ? error.message : 'This backup is invalid. Your original has been kept.');
+          throw error;
+        }
         await queue.current;
         await preserveAndReplace(storage, JSON.stringify(next), recovery ? null : JSON.stringify(latest.current));
         generation.current += 1;

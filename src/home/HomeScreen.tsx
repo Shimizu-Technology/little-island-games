@@ -359,7 +359,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               const px = p.x * scale + dx,
                 py = p.y * scale + dy;
               const spot = spotFromPoint(px, py, scale, i.layer === "wall");
-              if (px < 0 || py < 0 || px > sceneWidth || py > sceneHeight) {
+              if (!spot || px < 0 || py < 0 || px > sceneWidth || py > sceneHeight) {
                 feedback("Drop inside the room.");
                 return;
               }
