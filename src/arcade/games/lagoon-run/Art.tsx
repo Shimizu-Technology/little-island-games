@@ -2,7 +2,7 @@ import { KITE_STRINGS } from '../scrolling/runnerAnchors';
 import React, { memo } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from 'react-native-svg';
-import Animated, { useAnimatedProps, type SharedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedProps, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import { deckDepthFraction } from './geometry';
 import { RAMP_SECTIONS } from './surface';
 import type { SpritePose } from '../../poses';
@@ -23,7 +23,7 @@ export const RunHazard = memo(function RunHazard({kind,size=72,poses,index}:{kin
       {duck ? <>
         <Path d="M5 177V26L13 21V172M87 172V21L95 26V177" fill="#B48358"/>
         <Path d="M4 27L12 20H88L96 27V92L88 101H12L4 92Z" fill={kind==='frond'?'#568B66':kind==='banner'?'#DC8872':'#80B5A2'}/>
-        <Path d="M4 27H96M12 101H88" stroke="#FFE2AA" strokeWidth={5}/>
+        <Path d="M4 27L12 20H88L96 27Z" fill="#D2D998" strokeWidth={0}/><Path d="M88 29L96 27V92L88 101Z" fill="#214E52" opacity={.3} strokeWidth={0}/><Path d="M4 27H96M12 101H88" stroke="#FFE2AA" strokeWidth={5}/>
         {kind==='net'?<G stroke="#437767" strokeWidth={1.8}>{[14,32,50,68,86].map(x=><Path key={x} d={`M${x} 34l-10 58M${x} 34l10 58`}/>)}<Path d="M8 53H92M8 75H92"/></G>:kind==='frond'?<G fill="#92BE78">{[12,30,48,66,84].map(x=><Path key={x} d={`M${x} 32q15 17 7 58q-16-20-7-58Z`}/>)}</G>:<Path d="M15 37L29 79L43 37L57 79L71 37L85 79" stroke="#FFE8AC" strokeWidth={6} fill="none"/>}
         <Path d="M8 120V151M92 120V151" stroke="#F0C78B" strokeWidth={2}/>
       </> : canoe ? <>
@@ -132,3 +132,9 @@ export function GhostMove({move}:{move:string}) {
 }
 
 export const KiteRig = memo(function KiteRig(){return <Svg width={72} height={110} viewBox="0 0 72 110" accessible={false}><G stroke="#3E424F" strokeWidth={2.5} strokeLinejoin="round"><Path d="M36 3L68 36L36 72L4 36Z" fill="#79CFD1"/><Path d="M36 3V72L4 36Z" fill="#F3B178"/><Path d="M36 3V72M4 36H68" stroke="#FFF1CB"/><Path d={KITE_STRINGS} fill="none" stroke="#FFF0C9"/><Path d="M36 72Q24 80 39 88Q47 96 34 101" fill="none" stroke="#EF9B83"/></G></Svg>});
+
+/** Teaching never travels: opacity-only avoids a hidden-sprite transform flash on web. */
+export function RunTeachingCue({poses,move}:{poses:SharedValue<SpritePose[]>;move:string}) {
+  const style=useAnimatedStyle(()=>({opacity:poses.value[57]?.opacity??0}));
+  return <Animated.View pointerEvents="none" style={[{position:'absolute',left:260,top:78,width:110,height:60},style]}><GhostMove move={move}/></Animated.View>;
+}

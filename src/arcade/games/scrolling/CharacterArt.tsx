@@ -11,7 +11,8 @@ import { useActiveIslanderLook } from "../../../islander/active";
 import type { IslanderLook } from "../../../islander/look";
 /** Static art per (frame, look); only the enclosing sprite opacity changes at 16 Hz. */
 export const RunnerFrameArt = memo(function RunnerFrameArt({ frame, look, size = 132, front = false }: { frame: number; look: IslanderLook; size?: number; front?: boolean }) {
-  return <Svg width={size*80/132} height={size} viewBox="0 0 80 132" accessible={false}><IslanderShape pose={front ? resolvePose('front', frame === 15 ? 'cheer' : frame === 14 ? 'try-again' : 'idle') : backPoses[frame]} look={look}/></Svg>;
+  const joints=backPoses[frame].joints, shoulder=joints.rightShoulder,elbow=joints.rightElbow,head=joints.head;
+  return <Svg width={size*80/132} height={size} viewBox="0 0 80 132" accessible={false}><IslanderShape pose={front ? resolvePose('front', frame === 15 ? 'cheer' : frame === 14 ? 'try-again' : 'idle') : backPoses[frame]} look={look}/>{!front&&<Path d={`M${head[0]+15} ${head[1]-14}q5 6 4 14 M${shoulder[0]+3} ${shoulder[1]-2}L${elbow[0]+3} ${elbow[1]-2}`} fill="none" stroke="#FFE8A3" strokeWidth={1.3} strokeLinecap="round" opacity={.7}/>}</Svg>;
 });
 /** One depth root and the same 24 opacity-switched frames; no limb worklets. */
 export const RunnerRig = memo(function RunnerRig({ poses }: { poses: SharedValue<SpritePose[]> }) {
