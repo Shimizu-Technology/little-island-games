@@ -12,6 +12,9 @@ import { engine as hafaAdai } from "./games/hafa-adai/engine";
 import { engine as shellMath } from "./games/shell-math/engine";
 import { engine as numberHop } from "./games/number-hop/engine";
 import { engine as quickPractice } from "./games/quick-practice/engine";
+import { engine as timesTide } from "./games/times-tide/engine";
+import { engine as fractionFeast } from "./games/fraction-feast/engine";
+import { engine as treasureAlgebra } from "./games/treasure-algebra/engine";
 import { stubEngine } from "./stub";
 
 /** Pure engines (no React): safe to import from save validation and tests. */
@@ -41,9 +44,9 @@ const originalEngines: Record<LearnId, LearnEngine<unknown>> = {
   "weather-watch": stubEngine({ id: "weather-watch", name: "Weather Watch", island: "science" as Island, tagline: "Seasons, clouds and the water cycle.", description: "Seasons, clouds and the water cycle.", help: "Seasons, clouds and the water cycle.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [4, 10], ownLevels: true }) as LearnEngine<unknown>,
   "food-web": stubEngine({ id: "food-web", name: "Food Web Reef", island: "science" as Island, tagline: "Who eats what? Build the reef.", description: "Who eats what? Build the reef.", help: "Who eats what? Build the reef.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [6, 13], ownLevels: true }) as LearnEngine<unknown>,
   "space-station": stubEngine({ id: "space-station", name: "Star Station", island: "science" as Island, tagline: "Moon, planets and gravity.", description: "Moon, planets and gravity.", help: "Moon, planets and gravity.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [7, 14], ownLevels: true }) as LearnEngine<unknown>,
-  "times-tide": stubEngine({ id: "times-tide", name: "Times Tide", island: "numbers" as Island, tagline: "Groups, arrays and times tables.", description: "Groups, arrays and times tables.", help: "Groups, arrays and times tables.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [6, 11], ownLevels: true }) as LearnEngine<unknown>,
-  "fraction-feast": stubEngine({ id: "fraction-feast", name: "Fraction Feast", island: "numbers" as Island, tagline: "Share pies. Fractions and decimals.", description: "Share pies. Fractions and decimals.", help: "Share pies. Fractions and decimals.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [7, 13], ownLevels: true }) as LearnEngine<unknown>,
-  "treasure-algebra": stubEngine({ id: "treasure-algebra", name: "Treasure Algebra", island: "numbers" as Island, tagline: "Negatives, patterns and equations.", description: "Negatives, patterns and equations.", help: "Negatives, patterns and equations.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [9, 14], ownLevels: true }) as LearnEngine<unknown>,
+  "times-tide": timesTide as LearnEngine<unknown>,
+  "fraction-feast": fractionFeast as LearnEngine<unknown>,
+  "treasure-algebra": treasureAlgebra as LearnEngine<unknown>,
   "letter-lagoon": letterLagoon as LearnEngine<unknown>,
   "word-workshop": wordWorkshop as LearnEngine<unknown>,
   "story-studio": storyStudio as LearnEngine<unknown>,

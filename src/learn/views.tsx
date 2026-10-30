@@ -12,6 +12,9 @@ import * as hafaAdai from "./games/hafa-adai/view";
 import * as shellMath from "./games/shell-math/view";
 import * as numberHop from "./games/number-hop/view";
 import * as quickPractice from "./games/quick-practice/view";
+import * as timesTide from "./games/times-tide/view";
+import * as fractionFeast from "./games/fraction-feast/view";
+import * as treasureAlgebra from "./games/treasure-algebra/view";
 import { stubView } from "./stubView";
 
 import * as letterLagoon from "./games/letter-lagoon/view";
@@ -42,9 +45,9 @@ export const views: Record<LearnId, LearnView> = {
   "weather-watch": stubView,
   "food-web": stubView,
   "space-station": stubView,
-  "times-tide": stubView,
-  "fraction-feast": stubView,
-  "treasure-algebra": stubView,
+  "times-tide": timesTide as LearnView,
+  "fraction-feast": fractionFeast as LearnView,
+  "treasure-algebra": treasureAlgebra as LearnView,
   "letter-lagoon": letterLagoon as LearnView,
   "word-workshop": wordWorkshop as LearnView,
   "story-studio": storyStudio as LearnView,
