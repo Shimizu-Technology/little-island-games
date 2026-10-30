@@ -325,3 +325,25 @@ Delivery:
 Receipt: [evidence/testflight-build20.json](evidence/testflight-build20.json).
 
 Not verified: physical iPhone and iPad feel, VoiceOver end to end, and Stassie's acceptance.
+
+## Little Island 2.2 — 2.2.0 (21), available 31 October 2026 Guam time
+
+Leon's 2.1 feedback: numbered creator steps weren't intuitive; avatars weren't clearly boy or girl; he wanted Toca Boca-quality avatars, Locker and home, and Subway Surfers / Flappy Bird / Crossy Road / premium-learning-app quality, iterating against real references. Record: [ISLANDER_2.md](ISLANDER_2.md#220-21).
+
+This build includes:
+- Islander v3 (Toca-like proportions, 14 hairstyles, shoes, a boy/girl build);
+- an icon-tab Locker and creator;
+- Island Home as a full-screen stage;
+- remade Lagoon Run, Fruit Bat Flight and Crab Crossing;
+- premium learning chrome.
+
+Source: clean commit `80000a8c15e78a3d7d9a3d080f46b508900fb759` on PR #16 (held). Full gate 1,504 tests; Doctor 21/21. Independent review: one material finding (landscape Island Home) and one minor, both fixed with tests. Lead native walkthrough.
+
+Delivery:
+- The IPA is 174,157,767 bytes, SHA256 `0ad656b248832d352c5dc1fb4746e86a981ee0578b95b3905596901d92eb7778`.
+- The signature passed, and 5,815 audio files match the source.
+- Apple build `004f78ce-6dc7-47ea-8b24-3236117a852a` is VALID / IN_BETA_TESTING in the Leon group, with notes.
+
+Receipt: [evidence/testflight-build21.json](evidence/testflight-build21.json).
+
+Not verified: physical iPhone and iPad feel, VoiceOver end to end, and Stassie's acceptance.
