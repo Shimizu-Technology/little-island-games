@@ -25,7 +25,7 @@ export function Creator({ onClose }: { onClose: () => void }) {
     <View style={{ flexDirection: 'row', gap: 10 }}>{step > 0 && <Button quiet onPress={() => setStep(step === steps.indexOf('palette') && look.outfit !== 'mix' ? steps.indexOf('outfit') : step - 1)}>Back</Button>}<View style={{ flex: 1 }}><Button disabled={category === 'presentation' && !look.presentation || category === 'name' && !canWear(look, person.earned)} onPress={() => { if (step < steps.length - 1) advance(); else if (canWear(look, person.earned) && store.personalize({ look, made: true }, expected)) setDone(true); }}>{category === 'name' ? 'That’s me!' : 'Next →'}</Button></View></View>
     {step > 0 && step < steps.length - 1 && <Button quiet compact onPress={() => setStep(steps.length - 1)}>Skip to the end</Button>}
     {!canWear(look, person.earned) && <Copy>Choose an unlocked style to keep this look.</Copy>}
-    <Button quiet compact onPress={onClose}>Make it later</Button>
+    <Button quiet compact onPress={onClose}>{person.made ? 'Keep my look' : 'Make it later'}</Button>
   </>;
   const preview = <View testID="creator-preview" style={{ alignItems: 'center', backgroundColor: C.soft, borderRadius: 24, padding: 8 }}><Islander view="front" pose={done ? 'cheer' : category === 'name' ? 'wave' : 'idle'} look={look} size={short ? 110 : 180}/></View>;
   const choices = done ? <><Heading>That’s {learner.name}!</Heading><Copy>Your islander is ready for island adventures.</Copy></> : <>
