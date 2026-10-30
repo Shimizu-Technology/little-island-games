@@ -1,15 +1,49 @@
 import React, { memo } from "react";
 import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
 import type { Lane } from "./engine";
+import { safeLaneScenery, type CoastPropKind } from "./scenery";
+
+/** Scenery is painted into the lane only. The engine owns every walkable cell. */
+function CoastProp({ kind, x, y, scale = 1 }: { kind: CoastPropKind; x: number; y: number; scale?: number }) {
+  return <G transform={`translate(${x} ${y}) scale(${scale})`}>
+    <Ellipse cx={0} cy={0} rx={35} ry={9} fill="#244E50" opacity={0.28}/>
+    {kind === "palm" ? <G>
+      <Path d="M-7-3L-3-52L6-58L8-3Z" fill="#865A3F"/><Path d="M-3-52L6-58L8-3H1Z" fill="#C2915A"/>
+      <Path d="M3-66L-38-74L-46-61L-9-54Z M3-68L-24-91L-8-94L10-72Z M4-69L24-93L42-84L14-57Z M7-67L47-69L43-54L5-57Z M-1-64L-37-51L-23-43L11-62Z" fill="#205F52"/>
+      <Path d="M3-66L-38-74L-17-68L-9-54Z M4-69L24-93L29-78L14-57Z M7-67L47-69L28-62L5-57Z" fill="#65B56E"/>
+      <Circle cx={1} cy={-60} r={5} fill="#B98555"/><Circle cx={9} cy={-57} r={4} fill="#D6A46A"/>
+    </G> : kind === "rock" ? <G>
+      <Path d="M-32-4L-25-24L-8-33L19-27L31-11L24 1H-24Z" fill="#667A84"/>
+      <Path d="M-32-4L-25-24L-8-33L19-27L7-12L-4-6Z" fill="#A8B7AB"/>
+      <Path d="M19-27L31-11L24 1H-4L7-12Z" fill="#536C77"/>
+    </G> : kind === "flowers" ? <G>
+      <Path d="M-33-3L-26-25L-10-18L0-31L13-19L27-27L35-4Z" fill="#398A61"/>
+      <Path d="M-33-3L-26-25L-10-18L0-31L13-19L27-27L35-4Z" fill="#62AF70" opacity={0.55}/>
+      {[-23,-11,3,17,29].map((dx, i) => <G key={dx}><Circle cx={dx} cy={-17 - i % 2 * 7} r={6} fill={i % 2 ? "#F6B6A0" : "#FFE19A"}/><Circle cx={dx} cy={-17 - i % 2 * 7} r={2} fill="#E5796B"/></G>)}
+    </G> : kind === "umbrella" ? <G>
+      <Path d="M0-3V-62" stroke="#845B48" strokeWidth={6}/>
+      <Path d="M-39-53L-24-76L0-85L26-76L42-53L22-57L0-52L-21-58Z" fill="#E67F70"/>
+      <Path d="M0-85L26-76L42-53L22-57L0-52Z" fill="#F4C476"/>
+      <Path d="M-39-53L-24-76L0-85L0-52L-21-58Z" fill="#F2A995"/>
+    </G> : <G>
+      <Path d="M-28-4V-42L0-60L29-43V-4Z" fill="#C69062"/>
+      <Path d="M0-60L29-43V-4H0Z" fill="#A96F4F"/>
+      <Path d="M-38-38L-8-69H17L39-38L30-32L0-53L-28-31Z" fill="#408967"/>
+      <Path d="M-8-69H17L39-38H9Z" fill="#7BB774"/>
+      <Rect x={-7} y={-28} width={14} height={24} rx={3} fill="#6B4C42"/>
+    </G>}
+  </G>;
+}
 
 /** Faceted coast tiles share the same nine-column grid as the collision engine. */
 export const CrabLane = memo(function CrabLane({ row, lane, learning, width, height }: {
   row: number; lane?: Lane; learning: boolean; width: number; height: number;
 }) {
+  const terrainRow = Math.min(row, 10);
   const water = learning ? row > 0 && row < 10 : !!lane && ["log", "turtle", "canoe", "island"].includes(lane.kind);
   const road = !!lane && !water;
-  const grass = row === 0 || row === 5 || row === 10;
-  const boardwalk = row === 5;
+  const grass = terrainRow === 0 || terrainRow === 5 || terrainRow === 10;
+  const boardwalk = terrainRow === 5;
   const top = road ? "#536175" : water ? "#2CAAC4" : boardwalk ? "#CF9B63" : grass ? "#7EBA70" : "#EAC98D";
   const front = road ? "#354358" : water ? "#147C9F" : boardwalk ? "#926745" : grass ? "#4C8A61" : "#B7835E";
   return <Svg width={width} height={height} viewBox="0 0 900 100" preserveAspectRatio="none" accessible={false}>
@@ -31,15 +65,8 @@ export const CrabLane = memo(function CrabLane({ row, lane, learning, width, hei
       </G>)}
     </G> : <G>
       {Array.from({ length: 13 }, (_, i) => <Rect key={i} x={(i * 143 + row * 47) % 900} y={19 + i % 4 * 14} width={i % 3 === 0 ? 17 : 9} height={i % 3 === 0 ? 7 : 4} fill={grass ? "#5B9E68" : "#CBAB74"} opacity={0.58} />)}
-      {grass && !boardwalk && [1, 3, 7].map((x, i) => row === 0 && [1, 4, 7].includes(x) ? null : <G key={i} transform={`translate(${x * 100 + (row * 19) % 49} 12)`}>
-        <Ellipse cx={30} cy={52} rx={25} ry={8} fill="#315A58" opacity={0.24} />
-        {i === 1 ? <G><Path d="M9 43L19 21H43L54 38L42 53H18Z" fill="#7C8794" /><Path d="M19 21H43L54 38H9Z" fill="#BBC2B4" /><Path d="M54 38L42 53V38Z" fill="#5B6B78" /></G> : <G>
-          <Path d="M27 51L30 21H38L35 51Z" fill="#8F694B" /><Path d="M30 21L38 21L35 51H30Z" fill="#BA8754" />
-          <Path d="M34 20L6 8L18 5L35 12L51 2L61 7L43 17L66 22L55 28L37 23L19 36L8 32Z" fill="#287E62" />
-          <Path d="M34 16L6 8L18 5L35 12L51 2L61 7L43 17L66 22L55 25L37 19L19 32L8 29Z" fill="#70C87B" />
-        </G>}
-      </G>)}
     </G>}
+    {safeLaneScenery(row, lane).map(([kind, x, y, scale], i) => <CoastProp key={i} kind={kind} x={x} y={y} scale={scale}/>)}
   </Svg>;
 });
 

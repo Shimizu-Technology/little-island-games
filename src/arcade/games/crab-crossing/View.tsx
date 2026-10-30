@@ -167,7 +167,7 @@ export function CrabBoard({
             {Array.from({ length: 16 }, (_, row) => {
               const lane = lanes.find(item => item.row === row);
               return <View key={row} style={{ position: "absolute", top: row * unit, left: -unit * 4, width: unit * 17, height: unit }}>
-                <CrabLane row={row > 10 ? 10 : row} lane={lane} learning={learning} width={unit * 17} height={unit}/>
+                <CrabLane row={row} lane={lane} learning={learning} width={unit * 17} height={unit}/>
               </View>;
             })}
             {[1, 4, 7].map(x => <View key={`burrow-${x}`} style={{ position: "absolute", left: x * unit - unit * 0.1, top: -unit * 0.1 }}>
