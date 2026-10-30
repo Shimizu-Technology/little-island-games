@@ -1,3 +1,4 @@
+import { livingCapabilities } from './art/living';
 import { seatSockets } from './art/sockets';
 import type { ItemId } from "./catalog";
 
@@ -54,7 +55,7 @@ export type Capability = Readonly<{
 }>;
 
 /** Art fills this per item (src/home/art). The engine reads it only through `capabilityOf`. */
-export const capabilities: Partial<Record<ItemId, Capability>> = Object.fromEntries(Object.entries(seatSockets).map(([id, sockets]) => [id, { moveInPlay: true, sockets }]));
+export const capabilities: Partial<Record<ItemId, Capability>> = { ...Object.fromEntries(Object.entries(seatSockets).map(([id, sockets]) => [id, { moveInPlay: true, sockets }])), ...livingCapabilities };
 
 /** The default for items the art slice hasn't described yet: movable in Play, no special behaviour. */
 export function capabilityOf(item: ItemId): Capability {
@@ -65,7 +66,7 @@ export function capabilityOf(item: ItemId): Capability {
 export type ArtLayer = "all" | "back" | "front";
 
 /** Visible interactive state passed to item art. */
-export type ItemVisualState = Readonly<{ on?: boolean }>;
+export type ItemVisualState = Readonly<{ on?: boolean; empty?: boolean }>;
 
 /**
  * The containment rule: every instance's drawn bounds stay inside its room's interior.

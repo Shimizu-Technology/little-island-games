@@ -1,3 +1,4 @@
+import { LivingArt, hasLivingArt } from './LivingArt';
 import { SeatArt, hasSeatArt } from './SeatArt';
 import type { ArtLayer, ItemVisualState } from '../world';
 import React from "react";
@@ -12,6 +13,7 @@ const star = "M75 30L87 55L115 59L94 79L99 106L75 93L51 106L56 79L35 59L63 55Z";
 export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, active = false, muted = false, tint = "original", animated = false, reduced = false, layer = "all", state }: {
   layer?: ArtLayer; state?: ItemVisualState; id: string; size?: number; mirrored?: boolean; rotation?: 0 | 90 | 180 | 270; active?: boolean; muted?: boolean; tint?: TintId; animated?: boolean; reduced?: boolean;
 }) {
+  if (hasLivingArt(id)) return layer === 'front' ? null : <LivingArt id={id} size={size} state={state ?? {on: active}} mirrored={mirrored} rotation={rotation} tint={tint} reduced={reduced}/>;
   if (hasSeatArt(id)) return <SeatArt id={id} size={size} layer={layer} mirrored={mirrored} rotation={rotation} tint={tint} state={state ?? {on: active}} motion={art => <ItemMotion active={active} animated={animated} reduced={reduced}>{art}</ItemMotion>}/>;
   if (layer === 'front') return null;
   const color = material(tint, ['#79BDB1', '#EC9989', '#E9C475'][id.length % 3]);

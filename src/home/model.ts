@@ -208,11 +208,11 @@ export function starterHome(): HomeStateV2 {
   const home: RoomState = { theme: { ...roomDefaultTheme.home }, instances: old.instances.map(i => ({ ...i, x: i.x * 2, y: i.y * 2 })), characters: old.characters };
   const extra = (room: Exclude<RoomId, "home">): RoomState => {
     const starters: Record<Exclude<RoomId, "home">, readonly [string, number, number][]> = {
-      kitchen: [["fridge", 0, 0], ["stove", 4, 0], ["kitchen-table", 6, 6], ["stool", 10, 8]],
+      kitchen: [["fridge", 0, 0], ["sink-counter", 4, 0], ["stove", 10, 0], ["fruit-bowl", 8, 6], ["kitchen-table", 6, 6], ["stool", 12, 8]],
       treehouse: [["hammock", 0, 0], ["floor-cushion", 8, 6], ["string-lights", 4, 0], ["lantern", 12, 2]],
       beach: [["rocking-chair", 2, 0], ["shell-pile", 12, 4], ["round-rug", 6, 6], ["kite", 10, 0]],
     };
-    return { theme: { ...roomDefaultTheme[room] }, characters: [], instances: starters[room].map(([item, x, y]) => instance(`starter-${item}`, item, x, y)) };
+    return { theme: { ...roomDefaultTheme[room] }, characters: [], instances: starters[room].map(([item, x, y]) => ({...instance(`starter-${item}`, item, x, y), ...(item === "fruit-bowl" ? {on: "starter-kitchen-table"} : {})})) };
   };
   return upgradeHome({ version: 3, current: "home", rooms: { home, kitchen: extra("kitchen"), treehouse: extra("treehouse"), beach: extra("beach") } });
 }
