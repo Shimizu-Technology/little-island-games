@@ -232,3 +232,27 @@ Leon on 2.1: the numbered creator steps weren't intuitive; avatars weren't clear
 - **Learning:** subject colours, a journey progress bar, illustrated backdrops, a companion cheer, tactile answers, a celebration screen and shelf cards.
 
 **Quality:** independent review found one material issue (landscape Island Home was unreachable) and one minor (the locked-item rule was missing on a deep link), both fixed with tests. The lead native walkthrough covered the Locker (boy preset), Island Home, Flight, Run and Crab.
+
+## 2.3.0 (22)
+
+Leon on 2.2: Crab Crossing's angle and zoom made it unplayable. He asked for Island Home navigation "however Toca Boca does it" (zooming in and out), coding fundamentals because Stassie wants to learn coding, and several solid games per category with proper levels from kindergarten or younger to middle school. Thinking had only one game.
+
+**Method:** a lead-written contract (`learnIds`, the `coding` island, `ownLevels`, `levelNames`, `ages`) and seven parallel Codex slices: Crab, Home, Coding A, Coding B, Thinking, Numbers and Science. Reading was an eighth slice, and each slice had its own worktree and brief in artifacts `islander/v23/`. The lead reviewed every slice's screenshots against the references and the shared `LEARN_COMMON.md` bar, and sent second rounds where needed:
+- Home: 2 rounds; the overview became a dollhouse.
+- Coding B: 3 rounds, for missing art, then invalid Python order and centred code.
+- Thinking: 2 rounds, for emoji pieces, a wrapped path and missing cages.
+- Numbers: 2 rounds, for sheet bleed-through and a vertical sea-level line.
+- Science: 2 rounds, for its blob explorer and identical fish.
+- Coding A and Reading: 1 polish round each, for shelf icons and journey progress.
+
+**What changed:**
+- **Crab Crossing:** Crossy-style framing (58° elevation, about 12 rows visible, crab about 8% of the width) with a frame-rate-independent follow camera.
+- **Island Home:** a two-floor dollhouse with a roof and ladder. Whole-house overview, pinch and double-tap zoom, two-axis pan with momentum, drag friends between rooms, and room chips as camera jumps. Also fixes for character depth and seating.
+- **Coding island:** Beep Bot (4–6), Turtle Draw (6–11), Tide Logic (7–12) and Code Lab (9–14, valid Python-like code stepped line by line), plus Crab Commands. Adds a Coding badge track with four rewards.
+- **Learning:** twelve more own-level games, three each for Reading, Numbers, Science and Thinking, with five levels each. Shelves show age spans youngest first, and every learning island has at least three games. See [LEARNING_LEVELS.md](LEARNING_LEVELS.md).
+- **Speech:** warm and calm Kokoro clips for the new registered lines (letters, intros, Beep Bot, Science).
+
+**Quality:**
+- Round 1 of independent review found two material issues and four minor ones: a Turtle Draw redraw could stall a round, Treasure Algebra divided only one pan, plus a decimal label, a repeated Pattern Path level, Reduce Motion and 44pt cells. All six were fixed with regression tests.
+- Round 2 approved the fixes and the Home delta. Its one minor finding (a cancelled pinch) was fixed.
+- The lead's native Release walkthrough covered Crab Crossing (framing and follow), the Island Home dollhouse, the Coding shelf (ages and icons), Code Lab Level 3 (Menlo code, faithful def → call → body ×3 execution) and Weather Watch (the Islander in a raincoat).
