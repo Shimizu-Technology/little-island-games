@@ -62,7 +62,7 @@ describe('placement render smoke', () => {
     const html = renderToStaticMarkup(<LearningCompanion event="waiting" desk><button>Answer</button></LearningCompanion>);
     expect(html).toContain('Answer');
     if (width < 600) expect(html).not.toContain('data-size');
-    else { expect(html).toContain('data-desk="true"'); expect(html).toContain(`data-size="${width >= 768 ? 132 : 80}"`); }
+    else { expect(html).toContain('data-desk="true"'); expect(html).toContain(`data-size="${width >= 768 ? 168 : 112}"`); }
     fixture.settings = { learningIslander: false };
     expect(renderToStaticMarkup(<LearningCompanion event="waiting"><button>Answer</button></LearningCompanion>)).toBe('<button>Answer</button>');
     fixture.settings = {};

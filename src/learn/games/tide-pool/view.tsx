@@ -5,6 +5,7 @@ import { Button, C, Copy, IconButton, PressableScale } from "../../../components
 import { easeInOut, nativeDriver, useReducedMotion } from "../../../components/motion";
 import type { BoardProps } from "../../types";
 import { CoachSpot } from "../../Coach";
+import { AnswerTile } from "../../AnswerTile";
 import {
   answer,
   current,
@@ -654,11 +655,12 @@ export function Board({ session, update, practice, sound, width, active, coach, 
         const chosen = s.guesses.includes(i);
         const reveal = s.watched && !playing;
         return (
-          <PressableScale
+          <AnswerTile
             key={a.picture}
-            accessibilityRole="button"
-            accessibilityLabel={`${a.label}${chosen ? ", your answer" : ""}${reveal && i === m.right ? ", the answer" : ""}`}
-            accessibilityState={{ selected: chosen, disabled: s.guesses.length >= need }}
+            label={`${a.label}${chosen ? ", your answer" : ""}${reveal && i === m.right ? ", the answer" : ""}`}
+            selected={chosen}
+            correct={reveal && i === m.right}
+            wrong={reveal && chosen && i !== m.right}
             disabled={!active || s.guesses.length >= need}
             onPress={() => pick(i)}
             style={{
@@ -668,15 +670,12 @@ export function Board({ session, update, practice, sound, width, active, coach, 
               padding: 6,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: reveal && i === m.right ? C.success : chosen ? C.soft : C.paper,
-              borderWidth: 3,
-              borderColor: reveal && i === m.right ? "#67947B" : chosen ? C.teal : C.line,
               opacity: s.guesses.length >= need && !chosen && !(reveal && i === m.right) ? 0.55 : 1,
             }}
           >
             <AnswerArt picture={a.picture} size={58} />
             <Copy style={{ fontSize: 14, fontWeight: "700", color: C.ink, textAlign: "center" }}>{a.label}</Copy>
-          </PressableScale>
+          </AnswerTile>
         );
       })}
     </View>
