@@ -3,11 +3,13 @@ import Svg, { Circle, Ellipse, G, Path, Rect, Defs, Filter, FeColorMatrix, Text 
 import { StickerArt } from "../../arcade/Art";
 import type { StickerId } from "../../arcade/progress";
 import type { ItemId } from "../catalog";
+import { material, shade } from "./Tint";
+import type { TintId } from "../catalogMore";
 const ink = "#385451",
   wood = "#D99E6C",
   pale = "#FFF1D3",
-  coral = "#EC9989",
-  teal = "#79BDB1";
+  defaultCoral = "#EC9989",
+  defaultTeal = "#79BDB1";
 const star = "M0-10L3-3L10-3L5 2L7 10L0 6L-7 10L-5 2L-10-3L-3-3Z";
 export function ItemArt({
   item,
@@ -17,6 +19,7 @@ export function ItemArt({
   rotation = 0,
   foreground = false,
   muted = false,
+  tint = "original",
 }: {
   item: ItemId;
   active?: boolean;
@@ -25,7 +28,12 @@ export function ItemArt({
   rotation?: number;
   foreground?: boolean;
   muted?: boolean;
+  tint?: TintId;
 }) {
+  const coral = item === "aquarium" ? defaultCoral : material(tint, defaultCoral);
+  const teal = ["plant", "aquarium"].includes(item) ? defaultTeal : item === "surfboard" && tint !== "original" ? shade(material(tint, defaultTeal), .35) : material(tint, defaultTeal);
+  const paint = (original: string) => material(tint, original);
+  const highlight = (original: string) => tint === "original" ? original : shade(material(tint, original), .35);
   if (item.startsWith("sticker:")) return <StickerArt id={item.slice(8) as StickerId} size={size} />;
   if (foreground) return <Svg width={size} height={size} viewBox="0 0 150 130" accessible={false}><G transform={`translate(${mirrored !== (rotation === 180 || rotation === 270) ? 150 : 0} 0) scale(${mirrored !== (rotation === 180 || rotation === 270) ? -1 : 1} 1)`} stroke={ink} strokeWidth={2.5} strokeLinejoin="round"><Path d="M44 95L125 87V94L44 102Z" fill={coral}/></G></Svg>;
   const legs = (
@@ -64,21 +72,21 @@ export function ItemArt({
               <Path d="M19 44Q15 20 27 19L108 14Q121 13 122 35L124 50" fill="#E9BF91" />
               <Path d="M23 49L115 42L131 84L37 96Z" fill={pale} />
               <Path d="M30 64L120 56L130 84L38 96Z" fill={teal} />
-              <Path d="M39 66L47 94M55 64L64 92M72 63L80 89M88 61L96 87" stroke="#A7D7C7" />
+              <Path d="M39 66L47 94M55 64L64 92M72 63L80 89M88 61L96 87" stroke={highlight("#A7D7C7")} />
               <Path d="M30 48Q32 38 40 39L72 36Q83 38 83 50L39 55Z" fill="#FFF9E9" />
               <Path d="M37 104V117M128 92V107" strokeWidth={7} />
               <Circle cx={31} cy={29} r={3} fill={pale} />
             </>
           ) : item === "rug" || item === "mat" ? (
             <>
-              <Ellipse cx={75} cy={91} rx={67} ry={26} fill={item === "rug" ? teal : "#D9B87F"} />
+              <Ellipse cx={75} cy={91} rx={67} ry={26} fill={item === "rug" ? teal : paint("#D9B87F")} />
               <Ellipse
                 cx={75}
                 cy={91}
                 rx={58}
                 ry={20}
                 fill="none"
-                stroke={item === "rug" ? "#D6EBDD" : "#F6DFAB"}
+                stroke={item === "rug" ? "#D6EBDD" : highlight("#F6DFAB")}
                 strokeWidth={4}
               />
               {[0, 1, 2, 3, 4, 5].map((n) => (
@@ -123,8 +131,8 @@ export function ItemArt({
           ) : item === "chair" ? (
             <>
               <Path d="M40 74V30Q41 17 54 17H97Q107 17 107 30V76" fill={coral} />
-              <Path d="M51 32V58M75 31V57M96 32V57" stroke="#F9C9AC" strokeWidth={5} />
-              <Path d="M32 83L112 78L125 91L44 99Z" fill="#F7BD9C" />
+              <Path d="M51 32V58M75 31V57M96 32V57" stroke={highlight("#F9C9AC")} strokeWidth={5} />
+              <Path d="M32 83L112 78L125 91L44 99Z" fill={paint("#F7BD9C")} />
               <Path d="M44 100V119M118 93V113M36 84V103" stroke={wood} strokeWidth={7} />
             </>
           ) : item === "shelf" || item === "books" || item === "trophies" ? (
@@ -161,14 +169,14 @@ export function ItemArt({
                 fill={teal}
               />
               <Path d="M47 84H100L93 113Q75 124 55 113Z" fill={coral} />
-              <Path d="M51 94H96" stroke="#F9C9AC" strokeWidth={5} />
+              <Path d="M51 94H96" stroke={highlight("#F9C9AC")} strokeWidth={5} />
             </>
           ) : item === "lamp" || item === "island-lamp" ? (
             <>
               {active && <Circle cx={75} cy={57} r={56} fill="#FFE7A0" stroke="none" opacity={0.55} />}
               <Ellipse cx={75} cy={114} rx={25} ry={7} fill={wood} />
               <Path d="M75 107V55" stroke={wood} strokeWidth={8} />
-              <Path d="M50 18H99L118 64Q75 81 32 64Z" fill={active ? "#FFEAA6" : "#E9C475"} />
+              <Path d="M50 18H99L118 64Q75 81 32 64Z" fill={active ? "#FFEAA6" : paint("#E9C475")} />
               {item === "island-lamp" ? (
                 [0, 1, 2, 3, 4].map((n) => (
                   <Path
@@ -199,7 +207,7 @@ export function ItemArt({
                 </>
               )}
               <Path d={star} transform="translate(74 92)" fill={pale} />
-              <Path d="M33 106Q73 119 111 107" stroke="#C67D69" />
+              <Path d="M33 106Q73 119 111 107" stroke={tint === "original" ? "#C67D69" : shade(material(tint, defaultCoral), -.18)} />
             </>
           ) : item === "blocks" ? (
             <>
@@ -248,11 +256,11 @@ export function ItemArt({
             </>
           ) : item === "beanbag" ? (
             <>
-              <Path d="M21 101Q9 76 37 64Q47 21 87 35Q116 40 126 80Q146 111 114 118H48Q27 118 21 101Z" fill="#B9A8CE" />
+              <Path d="M21 101Q9 76 37 64Q47 21 87 35Q116 40 126 80Q146 111 114 118H48Q27 118 21 101Z" fill={paint("#B9A8CE")} />
               <Path
                 d="M35 80Q54 64 83 72Q109 79 114 100M43 104Q69 116 98 105"
                 fill="none"
-                stroke="#D7CBE5"
+                stroke={highlight("#D7CBE5")}
                 strokeWidth={5}
               />
               <Path d="M47 81L74 75L98 86L72 94Z" fill={pale} />
