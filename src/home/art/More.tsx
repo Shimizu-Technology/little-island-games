@@ -5,10 +5,12 @@ import { type TintId, type RoomId } from "../catalogMore";
 import { material, shade } from "./Tint";
 import { wallColors, floorColors } from "./Room";
 import { ShellWallDetails, ShellFloorDetails } from "./ShellDetails";
+import { ItemFinish, ItemLife, ItemMotion } from "./Finish";
+import { RoomWallFinish, RoomFloorFinish } from "./RoomFinish";
 const ink = "#385451", wood = "#D99E6C", pale = "#FFF1D3", leaf = "#79B090";
 const star = "M75 30L87 55L115 59L94 79L99 106L75 93L51 106L56 79L35 59L63 55Z";
-export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, active = false, muted = false, tint = "original" }: {
-  id: string; size?: number; mirrored?: boolean; rotation?: 0 | 90 | 180 | 270; active?: boolean; muted?: boolean; tint?: TintId;
+export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, active = false, muted = false, tint = "original", animated = false, reduced = false }: {
+  id: string; size?: number; mirrored?: boolean; rotation?: 0 | 90 | 180 | 270; active?: boolean; muted?: boolean; tint?: TintId; animated?: boolean; reduced?: boolean;
 }) {
   const color = material(tint, ['#79BDB1', '#EC9989', '#E9C475'][id.length % 3]);
   const light = shade(color, .32), dark = shade(color, -.18);
@@ -32,8 +34,22 @@ export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, ac
       art = <><Path d="M55 78L48 113M94 78L101 111M51 106L99 103" stroke={wood} strokeWidth={7} fill="none"/><Ellipse cx={75} cy={75} rx={33} ry={13} fill={color}/><Path d="M42 75Q75 91 108 75V84Q75 100 42 84Z" fill={dark}/><Ellipse cx={75} cy={73} rx={30} ry={9} fill={light}/></>; break;
     case 'desk': case 'side-table': case 'coffee-table': case 'kitchen-table':
       art = <G transform={id==='side-table'?'translate(20 -5) scale(.73 1)':id==='coffee-table'?'translate(0 32) scale(1 .73)':undefined}>{legs}{id==='kitchen-table' && <Path d="M49 86L48 120M106 66L108 103" stroke={wood} strokeWidth={7}/>}<Path d="M19 64L111 53L136 73L43 89L19 77Z" fill={wood}/><Path d="M19 64L111 53L136 73L43 82Z" fill={color}/><Path d="M29 65L106 57" stroke={light} strokeWidth={3}/>{id === 'desk' && <><Path d="M86 84V104L125 98V77Z" fill={wood}/><Path d="M97 92L111 90" stroke={ink}/></>}</G>; break;
-    case 'dresser': case 'bookcase': case 'fridge':
-      art = <>{legs}<Path d="M26 24L111 16L129 28V102L43 115L26 104Z" fill={dark}/><Path d="M26 24L111 16L129 28L43 38Z" fill={light}/><Path d="M43 38L129 28V102L43 115Z" fill={id === 'bookcase' ? wood : color}/>{(id==='fridge'?[0,1]:[0,1,2]).map(n=><G key={n}><Path d={`M50 ${46+n*22}L121 ${36+n*22}V${id==='fridge'&&n===1?101:53+n*22}L50 ${id==='fridge'&&n===1?112:64+n*22}Z`} fill={id==='bookcase' ? '#BA805D' : light}/>{id==='bookcase' ? [0,1,2,3].map(i=><Path key={i} d={`M${55+i*16} ${60+n*22-i*2}v-14h9v13`} fill={[color,pale,'#B7A6CF',leaf][i]}/>) : <Path d={id==='fridge'?`M59 ${49+n*22}v10`:`M76 ${51+n*22}l18-2`} stroke={ink}/>}</G>)}</>; break;
+    case 'fridge':
+      art = <>
+        <Path d="M32 24L111 17L127 28V108L48 118L32 106Z" fill="#A8B4AE"/>
+        <Path d="M32 24L111 17L127 28L48 37Z" fill={light}/>
+        <Path d="M48 37L127 28V107L48 118Z" fill={color}/>
+        <Path d="M53 43L121 35V71L53 80Z" fill={light}/>
+        <Path d="M53 83L121 74V104L53 113Z" fill={color}/>
+        <Path d="M53 80L121 71" stroke={ink} strokeWidth={2}/>
+        <Path d="M60 49v20m0 18v17" stroke="#F7F3E6" strokeWidth={5}/>
+        <Path d="M53 43l68-8M53 83l68-9" stroke="#FFFFFF" strokeWidth={1.5} opacity={.65}/>
+        <Circle cx={106} cy={88} r={4} fill="#E5B67D"/>
+        <Path d="M48 115v5m73-14v9" stroke="#8E8070" strokeWidth={5}/>
+      </>;
+      break;
+    case 'dresser': case 'bookcase':
+      art = <>{legs}<Path d="M26 24L111 16L129 28V102L43 115L26 104Z" fill={dark}/><Path d="M26 24L111 16L129 28L43 38Z" fill={light}/><Path d="M43 38L129 28V102L43 115Z" fill={id === 'bookcase' ? wood : color}/>{[0,1,2].map(n=><G key={n}><Path d={`M50 ${46+n*22}L121 ${36+n*22}V${53+n*22}L50 ${64+n*22}Z`} fill={id==='bookcase' ? '#BA805D' : light}/>{id==='bookcase' ? [0,1,2,3].map(i=><Path key={i} d={`M${55+i*16} ${60+n*22-i*2}v-14h9v13`} fill={[color,pale,'#B7A6CF',leaf][i]}/>) : <Path d={`M76 ${51+n*22}l18-2`} stroke={ink}/>}</G>)}</>; break;
     case 'stove': case 'sink-counter':
       art = <><Path d="M23 52L112 44L133 61V109L43 120L23 105Z" fill={color}/><Path d="M23 52L112 44L133 61L43 72Z" fill={pale}/>{id==='stove' ? <><Ellipse cx={75} cy={57} rx={22} ry={7} fill={ink}/><Path d="M55 42V57Q76 68 96 55V39" fill={wood}/><Ellipse cx={75} cy={40} rx={21} ry={7} fill={light}/><Path d="M48 44H39M98 40H107" strokeWidth={4}/><Path d="M53 86L121 78V104L53 113Z" fill={dark}/>{[57,82,107].map(x=><Circle key={x} cx={x} cy={76-(x-57)/8} r={3} fill={pale}/>)}{active && <Path d="M63 29Q54 22 64 13M80 27Q90 18 81 9M95 28Q106 21 99 15" fill="none" stroke={pale} strokeWidth={4}/>}</> : <><Ellipse cx={77} cy={58} rx={25} ry={9} fill="#A8C7C6"/><Path d="M87 54V32Q87 20 77 25V34" fill="none" stroke={ink} strokeWidth={5}/><Path d="M49 78V111M88 75V106M65 88v10M103 84v10" stroke={dark}/></>}</>; break;
     case 'cake-stand': art = <><Ellipse cx={75} cy={112} rx={30} ry={7} fill={color}/><Path d="M75 110V83" stroke={color} strokeWidth={9}/><Ellipse cx={75} cy={81} rx={49} ry={12} fill={light}/><Path d="M41 77V54Q75 41 109 54V77Q75 91 41 77Z" fill="#EAC09A"/><Ellipse cx={75} cy={53} rx={34} ry={10} fill={pale}/><Path d="M43 56Q49 78 57 60Q66 76 74 61Q86 77 94 60Q102 71 108 56" fill={pale}/><Circle cx={76} cy={43} r={6} fill="#EC9989"/></>; break;
@@ -59,7 +75,7 @@ export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, ac
     default: return null;
   }
   const flip = mirrored !== (rotation === 180 || rotation === 270);
-  return <Svg width={size} height={size} viewBox="0 0 150 130" accessible={false}><Defs><Filter id={`more-muted-${id}`}><FeColorMatrix type="saturate" values="0"/></Filter></Defs><G filter={muted?`url(#more-muted-${id})`:undefined}><Ellipse cx={75} cy={120} rx={54} ry={6} fill={ink} opacity={.12}/><G transform={flip?'translate(150 0) scale(-1 1)':undefined} stroke={ink} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">{art}</G></G></Svg>;
+  return <Svg width={size} height={size} viewBox="0 0 150 130" accessible={false}><Defs><Filter id={`more-muted-${id}`}><FeColorMatrix type="saturate" values="0"/></Filter></Defs><G filter={muted?`url(#more-muted-${id})`:undefined}><Ellipse cx={75} cy={120} rx={54} ry={6} fill={ink} opacity={.12}/><G transform={flip?'translate(150 0) scale(-1 1)':undefined} stroke={ink} strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round"><ItemMotion active={active} animated={animated} reduced={reduced}>{art}<ItemFinish id={id} color={color}/></ItemMotion><ItemLife id={id} color={color} active={active} animated={animated} reduced={reduced}/></G></G></Svg>;
 }
 
 /** Shell overlays use the original projection; furnishings never change coordinate systems. */
@@ -78,10 +94,12 @@ export function RoomShellArt({ room, theme }: { room: Exclude<RoomId, "home">; t
     <Path d="M34 82L145 28V291L34 374Z" fill="#D0C9AB" opacity={.55}/>
     {room==='treehouse' && !['math-lab','library','night-sky','arcade-neon'].includes(theme.wallpaper) && <Path d="M34 82L145 28L758 71V330L145 291L34 374Z" fill="#B78959" opacity={.48}/>}
     {room==='beach' && <G stroke="#B59C70" opacity={.45}>{Array.from({length:23},(_,n)=><G key={n}><Path d={`M${154+n*26} ${31+n*1.8}V${289+n*1.7}`} strokeWidth={5}/><Path d={`M${155+n*26} 92v6m0 55v6m0 55v6m0 55v6`} stroke="#806F50" strokeWidth={5}/></G>)}{[0,1,2,3,4].map(n=><Path key={n} d={`M148 ${78+n*48}L753 ${117+n*48}`} strokeWidth={2}/>)}</G>}
+    <RoomWallFinish room={room}/>
     <Path d="M34 374L145 291L758 330L779 508L162 535Z" fill={["island-breeze", "game-room"].includes(theme.floor) ? `url(#${theme.floor})` : floorColors[theme.floor]} stroke={ink} strokeWidth={3}/>
     <Defs><ClipPath id="shell-floor"><Path d="M34 374L145 291L758 330L779 508L162 535Z"/></ClipPath></Defs>
     <G clipPath="url(#shell-floor)"><ShellFloorDetails room={room} patterned={["island-breeze","game-room"].includes(theme.floor)}/></G>
     <G stroke="#AE885F" strokeWidth={1.5} opacity={room==='treehouse'? .12 : .4}>{[0,1,2,3,4,5].map(n=><Path key={n} d={`M${53+n*20} ${359+n*29}L${762+n*3} ${351+n*31}`}/>)}{[0,1,2,3,4,5,6,7,8].map(n=><Path key={n} d={`M${151+n*68} ${294+n*4}L${170+n*67} ${535-n*3}`}/>)}</G>
+    <G clipPath="url(#shell-floor)"><RoomFloorFinish room={room}/></G>
     <Path d="M146 279L755 318M42 363L144 283" fill="none" stroke={pale} strokeWidth={13}/><Path d="M145 290L759 330" stroke="#9E9275" strokeWidth={3}/>
     <ShellWallDetails room={room}/>
     <Path d="M22 80L143 6L775 56L758 76L145 40L34 98Z" fill={room==='beach'?'#C8AB71':'#C68061'} stroke={ink} strokeWidth={3}/><Path d="M145 6V40M154 20L752 61" stroke="#F4C99A" strokeWidth={5}/>

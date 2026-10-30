@@ -5,6 +5,7 @@ import type { StickerId } from "../../arcade/progress";
 import type { ItemId } from "../catalog";
 import { material, shade } from "./Tint";
 import type { TintId } from "../catalogMore";
+import { ItemFinish, ItemLife, ItemMotion } from "./Finish";
 const ink = "#385451",
   wood = "#D99E6C",
   pale = "#FFF1D3",
@@ -20,6 +21,8 @@ export function ItemArt({
   foreground = false,
   muted = false,
   tint = "original",
+  animated = false,
+  reduced = false,
 }: {
   item: ItemId;
   active?: boolean;
@@ -29,6 +32,8 @@ export function ItemArt({
   foreground?: boolean;
   muted?: boolean;
   tint?: TintId;
+  animated?: boolean;
+  reduced?: boolean;
 }) {
   const coral = item === "aquarium" ? defaultCoral : material(tint, defaultCoral);
   const teal = ["plant", "aquarium"].includes(item) ? defaultTeal : item === "surfboard" && tint !== "original" ? shade(material(tint, defaultTeal), .35) : material(tint, defaultTeal);
@@ -60,11 +65,12 @@ export function ItemArt({
       <G
         transform={`translate(${mirrored ? 150 : 0} 0) scale(${mirrored ? -1 : 1} 1)`}
         stroke={ink}
-        strokeWidth={2.5}
+        strokeWidth={2.1}
         strokeLinejoin="round"
         strokeLinecap="round"
       >
         <G transform={rotation === 180 || rotation === 270 ? "translate(150 0) scale(-1 1)" : undefined}>
+          <ItemMotion active={active} animated={animated} reduced={reduced}>
           {item === "bed" ? (
             <>
               <Path d="M18 41L116 34L135 92L36 105Z" fill={wood} />
@@ -338,6 +344,9 @@ export function ItemArt({
               <Path d="M84 94L95 106L86 116Z" fill={teal} />
             </>
           )}
+          <ItemFinish id={item} color={paint(defaultCoral)}/>
+          </ItemMotion>
+          <ItemLife id={item} color={paint(defaultCoral)} active={active} animated={animated} reduced={reduced}/>
         </G>
       </G>
       </G>

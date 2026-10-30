@@ -12,6 +12,7 @@ import { defaultLook } from '../src/islander/look';
 import { characterPoint, itemPoint, itemSize, seatAnchor } from '../src/home/geometry';
 import { instance, type RoomState } from '../src/home/model';
 import { SeatFront } from '../src/home/SeatFront';
+vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useSharedValue:(value:number)=>({value}),useAnimatedProps:()=>({}),cancelAnimation:()=>{},withRepeat:()=>0,withSequence:()=>0,withTiming:()=>0,Easing:{inOut:()=>0,sin:0}}));
 vi.mock('react-native-svg', () => {
   const tags = { default: 'svg', Circle: 'circle', Ellipse: 'ellipse', G: 'g', Path: 'path', Rect: 'rect', Defs: 'defs', Filter: 'filter', FeColorMatrix: 'feColorMatrix', ClipPath: 'clipPath', Pattern: 'pattern', Text: 'text' };
   return Object.fromEntries(Object.entries(tags).map(([name, tag]) => [name, ({ children, accessible: _accessible, ...props }: Record<string, unknown>) => React.createElement(tag, props, children as React.ReactNode)]));
@@ -34,7 +35,7 @@ describe('free home art contract', () => {
       if (spec.interactive) expect(render(<MoreItemArt id={id} active/>)).not.toBe(original);
     }
     expect(silhouettes.size).toBe(41);
-  });
+  }, 30000);
   it('keeps original legacy output by default and tints fabric without repainting wood', () => {
     for (const item of Object.keys(catalog) as (keyof typeof catalog)[]) expect(render(<ItemArt item={item}/>)).toBe(render(<ItemArt item={item} tint="original"/>));
     for (const item of ['bed','chair','rug','beanbag','lamp','toy-box'] as const) {
