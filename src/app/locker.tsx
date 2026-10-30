@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Islander, type IslanderLook } from '../islander';
-import { Button, C, Chip, Copy, Heading, styles, PressableScale } from '../components/ui';
+import { type IslanderLook } from '../islander';
+import { Button, C, Copy, Heading, styles } from '../components/ui';
 import { Recovery } from '../components/Recovery';
 import { SaveStatus } from '../components/SaveStatus';
 import { useStore } from '../state/Store';
@@ -11,9 +11,9 @@ import { LearnerChip } from '../personalization/LearnerChip';
 import { Creator } from '../personalization/Creator';
 import { useSheetsClear } from '../components/sheetPresence';
 import { personFor } from '../personalization/model';
-import { lookWithStyle, canWear, categories, lockedReason, type Category, type StyleItem, styleCatalog } from '../personalization/catalog';
-import { LockRule } from '../personalization/LockBadge';
-import { StyleGrid } from '../personalization/StyleGrid';
+import { lookWithStyle, canWear, type Category, styleCatalog } from '../personalization/catalog';
+import { StyleEditor } from '../personalization/StyleEditor';
+
 export default function LockerRoute() {
   const store = useStore();
   if (!store.ready) return <SafeAreaView style={styles.page}><Heading>Opening your Locker…</Heading></SafeAreaView>;
@@ -21,43 +21,25 @@ export default function LockerRoute() {
   return <Locker key={`${store.save.learning?.active ?? 'family'}:${store.epoch}`}/>;
 }
 function Locker() {
-  const params = useLocalSearchParams<{item?: string}>(), initialItem = styleCatalog.find(i => i.id === params.item);
-  const store = useStore(), person = personFor(store.save), { width, height } = useWindowDimensions(), inset = useSafeAreaInsets();
+  const params = useLocalSearchParams<{ item?: string }>(), initialItem = styleCatalog.find(i => i.id === params.item);
+  const store = useStore(), person = personFor(store.save), { height } = useWindowDimensions();
   const sheetsClear = useSheetsClear();
-  const [look, setLook] = useState<IslanderLook>(initialItem ? lookWithStyle(person.look, initialItem) : person.look), [category, setCategory] = useState<Category | 'face'>(initialItem && ['brows','lashes','freckles','cheeks'].includes(initialItem.category) ? 'face' : initialItem?.category ?? 'outfit'), [faceCategory, setFaceCategory] = useState<Category>(initialItem && ['brows','lashes','freckles','cheeks'].includes(initialItem.category) ? initialItem.category : 'brows'), [back, setBack] = useState(false), [creator, setCreator] = useState(!person.made), [detail, setDetail] = useState<StyleItem | undefined>(initialItem), [message, setMessage] = useState('');
+  const [look, setLook] = useState<IslanderLook>(initialItem ? lookWithStyle(person.look, initialItem) : person.look);
+  const [creator, setCreator] = useState(!person.made), [message, setMessage] = useState('');
   const [expected] = useState({ learner: store.save.learning?.active ?? 'family', epoch: store.epoch });
   const acknowledge = store.personalize;
   useEffect(() => {
-    if (initialItem && person.unseen.includes(initialItem.id)) acknowledge({unseen:person.unseen.filter(id=>id!==initialItem.id)}, expected);
+    if (initialItem && person.unseen.includes(initialItem.id)) acknowledge({ unseen: person.unseen.filter(id => id !== initialItem.id) }, expected);
   }, [initialItem, person.unseen, acknowledge, expected]);
-  const wide = width >= 700, short = height < 500, changed = JSON.stringify(look) !== JSON.stringify(person.look), reason = detail && lockedReason(detail, person.earned);
-  function choose(item: StyleItem) {
-    setLook(lookWithStyle(look, item)); setDetail(item); setMessage('');
-    if (person.unseen.includes(item.id)) store.personalize({ unseen: person.unseen.filter(id => id !== item.id) }, expected);
-  }
-  const preview = <View testID="locker-preview" style={{ alignItems: 'center', height: short ? 160 : wide ? undefined : (height - inset.top - inset.bottom) * .38, justifyContent: 'center', padding: short ? 4 : 10, borderRadius: 28, backgroundColor: '#E7EDE4', gap: 8 }}>
-    <Islander view={back ? 'back' : 'front'} pose={back ? 0 : 'idle'} look={look} size={short ? 138 : wide ? 280 : Math.min(278, height * .34)}/>
-    <PressableScale accessibilityRole="button" accessibilityLabel={back ? 'See the front' : 'See the back'} onPress={() => setBack(!back)} style={{ position: 'absolute', right: 8, top: 8, width: 44, height: 44, borderRadius: 22, backgroundColor: C.paper, alignItems: 'center', justifyContent: 'center' }}><Copy style={{ fontSize: 24 }}>↻</Copy></PressableScale>
-    {wide && !short && <Copy style={{ fontSize: 14 }}>{back ? 'Your Lagoon Run view' : 'Your dressing room'}</Copy>}
-    <View style={{ position: 'absolute', bottom: 0, right: 8 }}><Button quiet compact onPress={() => router.push('/badges')}>My badges</Button></View>
-  </View>;
-  const dressingPreview = <View style={wide ? { width: '40%', gap: 12 } : { gap: 0 }}>{preview}{!short && <PressableScale accessibilityRole="button" onPress={() => setCreator(true)} style={{ position: wide ? 'relative' : 'absolute', bottom: 0, left: 8, minHeight: 44, justifyContent: 'center', alignItems: 'center' }}><Copy style={{ fontSize: 14, color: C.teal, textDecorationLine: 'underline' }}>{person.made ? 'Change my look' : 'Make your islander'}</Copy></PressableScale>}</View>;
-  const choices = <>
-<ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={{ gap: 8, paddingBottom: 6, paddingRight: 20 }}><Chip selected={category === 'face'} onPress={() => { setCategory('face'); setDetail(undefined); }}>Face</Chip>{categories.filter(c => !['brows','lashes','freckles','cheeks'].includes(c.key)).map(c => <Chip key={c.key} selected={category === c.key} onPress={() => { setCategory(c.key); setDetail(undefined); }}>{c.label}</Chip>)}</ScrollView>
-        {category === 'face' && <ScrollView horizontal contentContainerStyle={{ gap: 6, paddingRight: 12 }}>{(['brows','lashes','freckles','cheeks'] as const).map(key => <Chip key={key} selected={faceCategory === key} onPress={() => setFaceCategory(key)}>{categories.find(c => c.key === key)!.label}</Chip>)}</ScrollView>}
-        {wide && <Heading style={{ fontSize: 18 }}>{detail?.label ?? (category === 'face' ? 'Face' : categories.find(c => c.key === category)!.label)}</Heading>}
-        {!!reason && <LockRule>{reason}</LockRule>}
-        <StyleGrid compact={width < 600} category={category === 'face' ? faceCategory : category} look={look} equipped={person.look} earned={person.earned} unseen={person.unseen} onChoose={choose}/>
-        {!!person.unseen.length && <Button quiet compact onPress={() => store.personalize({ unseen: [] }, expected)}>Mark all seen</Button>}
-  </>;
+  const changed = JSON.stringify(look) !== JSON.stringify(person.look);
+  const initialTab = initialItem?.category ?? 'outfit';
   return <SafeAreaView style={styles.page}>
-    <View style={{ padding: 8, gap: 4 }}><View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}><Button quiet compact onPress={() => router.canGoBack() ? router.back() : router.replace('/')}>Back</Button><Heading style={{ fontSize: 21 }}>My Locker</Heading><View style={{ maxWidth: '48%' }}><LearnerChip compact/></View>{short && <Button quiet compact onPress={() => setCreator(true)}>{person.made ? 'Change my look' : 'Make your islander'}</Button>}</View></View>
-    {wide ? <View style={{ flex: 1, flexDirection: 'row', gap: 16, padding: short ? 8 : 16, maxWidth: 1100, width: '100%', alignSelf: 'center' }}>
-      {dressingPreview}<ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 12, paddingBottom: 16 }}>{choices}</ScrollView>
-    </View> : <ScrollView contentContainerStyle={{ padding: 12, gap: 8 }}>
-      {dressingPreview}<View style={{ gap: 6 }}>{choices}</View>
-    </ScrollView>}
-    <View testID="locker-save-bar" style={{ padding: 8, borderTopWidth: 1, borderColor: C.line, backgroundColor: C.cream, gap: 4 }}><Copy style={{ textAlign: 'center', fontSize: 14 }}>{message || (changed ? 'Trying it on · Wear this to keep it' : 'You’re wearing this')}</Copy><Button compact disabled={!changed || !canWear(look, person.earned)} onPress={() => { if (store.personalize({ look }, expected)) setMessage('Wearing your new look.'); }}>Wear this</Button><SaveStatus/></View>
+    <View style={{ paddingHorizontal: 12, paddingVertical: 7, flexDirection: 'row', alignItems: 'center', gap: 10 }}><Button quiet compact onPress={() => router.canGoBack() ? router.back() : router.replace('/')}>Back</Button><Heading style={{ fontSize: 21, flex: 1 }}>My Locker</Heading><LearnerChip compact/></View>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 20, gap: 12 }}>
+      <StyleEditor initialTab={initialTab as Category} look={look} equipped={person.look} earned={person.earned} unseen={person.unseen} onChange={next => { setLook(next); setMessage(''); }} onSeen={id => { if (person.unseen.includes(id)) store.personalize({ unseen: person.unseen.filter(item => item !== id) }, expected); }} onBadges={() => router.push('/badges')}/>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}><Button quiet compact onPress={() => setCreator(true)}>{person.made ? 'Change my look' : 'Make your islander'}</Button>{!!person.unseen.length && <Button quiet compact onPress={() => store.personalize({ unseen: [] }, expected)}>Mark all seen</Button>}</View>
+    </ScrollView>
+    <View testID="locker-save-bar" style={{ padding: height < 500 ? 5 : 8, borderTopWidth: 1, borderColor: C.line, backgroundColor: C.cream, gap: 3 }}><Copy style={{ textAlign: 'center', fontSize: 13 }}>{message || (changed ? 'Trying it on · Wear this to keep it' : 'You’re wearing this')}</Copy><Button compact disabled={!changed || !canWear(look, person.earned)} onPress={() => { if (store.personalize({ look }, expected)) setMessage('Wearing your new look.'); }}>Wear this</Button><SaveStatus/></View>
     {creator && sheetsClear && <Creator onClose={() => { setCreator(false); setLook(personFor(store.save).look); }}/>}
   </SafeAreaView>;
 }
