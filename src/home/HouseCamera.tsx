@@ -1,35 +1,63 @@
-import React, { createContext, useImperativeHandle, useLayoutEffect, type ReactNode } from 'react';
+import React, { createContext, useEffect, useImperativeHandle, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { View } from 'react-native';
 import { Gesture, GestureDetector, type PanGesture } from 'react-native-gesture-handler';
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { boundedPan, roomAt, roomPan } from './camera';
+import Animated, { cancelAnimation, runOnJS, useAnimatedStyle, useSharedValue, withDecay, withTiming } from 'react-native-reanimated';
+import { boundedPan, buildingRoomAt, panRange, roomCamera, softPan, type Building } from './camera';
 export const CameraPan = createContext<PanGesture | undefined>(undefined);
-export type HouseCameraHandle = { jump: (index:number) => void; zoomRoom:(index:number)=>void; canActivate:()=>boolean };
-/** Pan the empty scene; child object drags block this pan. Pinch works across children. */
-export function HouseCamera({ children, initialIndex, width, height, sceneHeight, roomWidth, zoom, minZoom, maxZoom, reduced, onZoom, onRoom, cameraRef }: {
- children:ReactNode; initialIndex:number; width:number; height:number; sceneHeight:number; roomWidth:number; zoom:number; minZoom:number; maxZoom:number; reduced:boolean;
- onZoom:(zoom:number)=>void; onRoom:(index:number)=>void; cameraRef:React.Ref<HouseCameraHandle>;
+export type HouseCameraHandle = { jump:(index:number)=>void; zoomRoom:(index:number)=>void; tap:(index:number)=>void; canActivate:()=>boolean };
+/** Child object drags block the empty-floor pan; pinch runs across the scene. */
+export function HouseCamera({children,initialIndex,width,height,building,scale,zoom,minZoom,maxZoom,reduced,onZoom,onRoom,onNavigate,cameraRef}:{
+ children:ReactNode;initialIndex:number;width:number;height:number;building:Building;scale:number;zoom:number;minZoom:number;maxZoom:number;reduced:boolean;
+ onZoom:(zoom:number)=>void;onRoom:(index:number)=>void;onNavigate:()=>void;cameraRef:React.Ref<HouseCameraHandle>;
 }) {
- const x=useSharedValue(0), startX=useSharedValue(0), transient=useSharedValue(1), pinchX=useSharedValue(0);
- const focus=useSharedValue(initialIndex);
- const y=useSharedValue(0), startY=useSharedValue(0);
- const moving=useSharedValue(false), lastPan=useSharedValue(0);
- const jump=(index:number) => { focus.set(index);x.set(reduced?roomPan(index,roomWidth,width):withTiming(roomPan(index,roomWidth,width),{duration:260}));onRoom(index); };
- useImperativeHandle(cameraRef,()=>({jump,canActivate:()=>!moving.get() && Date.now()-lastPan.get()>300,zoomRoom:index=>{focus.set(index);onRoom(index);onZoom(zoom>minZoom*1.15?minZoom:1);}}));
+ const x=useSharedValue(0),y=useSharedValue(0),startX=useSharedValue(0),startY=useSharedValue(0),transient=useSharedValue(1);
+ const pinchX=useSharedValue(0),pinchY=useSharedValue(0),focus=useSharedValue(initialIndex),moving=useSharedValue(false),lastPan=useSharedValue(0), pendingAxes=useSharedValue(0);
+ const previous=useRef({zoom,scale,width,height}),pinchCommit=useRef(false),tapTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined),lastTap=useRef(-1);
+ useEffect(()=>()=>clearTimeout(tapTimer.current),[]);
+ const animate=(value:number)=>reduced?value:withTiming(value,{duration:260});
+ const jump=(index:number)=>{
+  focus.set(index);onRoom(index);onNavigate();
+  if(zoom!==1)onZoom(1);
+  else {const p=roomCamera(index,building,scale,width,height);x.set(animate(p.x));y.set(animate(p.y));}
+ };
+ const toggle=(index:number)=>{focus.set(index);onRoom(index);onNavigate();onZoom(zoom>minZoom*1.15?minZoom:1);};
+ useImperativeHandle(cameraRef,()=>({jump,zoomRoom:toggle,canActivate:()=>!moving.get()&&Date.now()-lastPan.get()>300,tap:index=>{
+  if(moving.get()||Date.now()-lastPan.get()<300)return;
+  if(tapTimer.current&&lastTap.current===index){clearTimeout(tapTimer.current);tapTimer.current=undefined;toggle(index);}
+  else {clearTimeout(tapTimer.current);lastTap.current=index;tapTimer.current=setTimeout(()=>{tapTimer.current=undefined;if(zoom<=minZoom*1.15)jump(index);else onRoom(index);},280);}
+ }}));
  useLayoutEffect(()=>{
-   x.set(roomPan(focus.get(),roomWidth,width));y.set(Math.min(0,(height-sceneHeight)/2));transient.set(1);
- },[roomWidth,width,height,sceneHeight,x,y,transient,focus]);
- const settle=(index:number)=>{focus.set(index);onRoom(index);};
- const commitZoom=(next:number,index:number)=>{focus.set(index);onRoom(index);onZoom(next);};
+  const old=previous.current;previous.current={zoom,scale,width,height};
+  if(pinchCommit.current){pinchCommit.current=false;x.set(boundedPan(x.get(),width,building.width*scale));y.set(boundedPan(y.get(),height,building.height*scale));transient.set(1);return;}
+  const p=roomCamera(focus.get(),building,scale,width,height);
+  if(old.scale!==scale&&old.width===width&&old.height===height&&!reduced){transient.set(old.scale/scale);transient.set(withTiming(1,{duration:260}));x.set(withTiming(p.x,{duration:260}));y.set(withTiming(p.y,{duration:260}));}
+  else{x.set(p.x);y.set(p.y);transient.set(1);}
+ },[scale,zoom,width,height,building,reduced,focus,x,y,transient]);
+ const settle=(index:number)=>{focus.set(index);onRoom(index);onNavigate();};
+ const commitZoom=(next:number,index:number)=>{pinchCommit.current=true;focus.set(index);onRoom(index);onNavigate();if(next===zoom){x.set(boundedPan(x.get(),width,building.width*scale));y.set(boundedPan(y.get(),height,building.height*scale));transient.set(1);pinchCommit.current=false;}else onZoom(next);};
+ const finishPan=(finished?:boolean)=>{
+  'worklet';
+  if(!finished)return;pendingAxes.set(pendingAxes.value-1);
+  if(pendingAxes.value===0)runOnJS(settle)(buildingRoomAt((width/2-x.value)/scale,(height/2-y.value)/scale,building));
+ };
  const pan=Gesture.Pan().maxPointers(1).minDistance(8)
- .onStart(()=>{moving.set(true);startX.set(x.value);startY.set(y.value);})
- .onUpdate(e=>{if(e.numberOfPointers>1)return;x.set(boundedPan(startX.value+e.translationX,width,roomWidth*4));y.set(boundedPan(startY.value+e.translationY,height,sceneHeight));})
- .onEnd(()=>{runOnJS(settle)(roomAt(width/2-x.value,roomWidth));})
- // eslint-disable-next-line react-hooks/purity -- Gesture Handler invokes this callback after input; it is never evaluated during render.
+ .onStart(()=>{pendingAxes.set(0);cancelAnimation(x);cancelAnimation(y);moving.set(true);startX.set(x.value);startY.set(y.value);})
+ .onUpdate(e=>{if(e.numberOfPointers>1)return;x.set(softPan(startX.value+e.translationX,width,building.width*scale));y.set(softPan(startY.value+e.translationY,height,building.height*scale));})
+ .onEnd(e=>{
+  const [xmin,xmax]=panRange(width,building.width*scale),[ymin,ymax]=panRange(height,building.height*scale);
+  runOnJS(onNavigate)();pendingAxes.set(2);
+  x.set(reduced?boundedPan(x.value,width,building.width*scale):withDecay({velocity:e.velocityX,clamp:[xmin,xmax],rubberBandEffect:true},finishPan));
+  y.set(reduced?boundedPan(y.value,height,building.height*scale):withDecay({velocity:e.velocityY,clamp:[ymin,ymax],rubberBandEffect:true},finishPan));
+  if(reduced)runOnJS(settle)(buildingRoomAt((width/2-x.value)/scale,(height/2-y.value)/scale,building));
+ })
+ // eslint-disable-next-line react-hooks/purity -- Input callback, never evaluated while rendering.
  .onFinalize(()=>{if(moving.value){lastPan.set(Date.now());moving.set(false);}});
- const pinch=Gesture.Pinch().onStart(e=>{pinchX.set(e.focalX);})
- .onUpdate(e=>{transient.set(Math.max(minZoom,Math.min(maxZoom,zoom*e.scale))/zoom);})
- .onEnd(e=>{runOnJS(commitZoom)(Math.max(minZoom,Math.min(maxZoom,zoom*e.scale)),roomAt(pinchX.value-x.value,roomWidth));});
- const style=useAnimatedStyle(()=>({transform:[{translateX:x.value},{translateY:y.value},{scale:transient.value}],transformOrigin:'left center'}));
- return <CameraPan.Provider value={pan}><GestureDetector gesture={Gesture.Simultaneous(pinch,pan)} touchAction="none"><View testID="house-viewport" style={{width,height,overflow:'hidden',justifyContent:'center'}}><Animated.View testID="house-camera" style={[{width:roomWidth*4,height:sceneHeight},style]}>{children}</Animated.View></View></GestureDetector></CameraPan.Provider>;
+ const pinch=Gesture.Pinch().onStart(e=>{cancelAnimation(x);cancelAnimation(y);moving.set(true);pinchX.set(e.focalX);pinchY.set(e.focalY);startX.set(x.value);startY.set(y.value);})
+ .onUpdate(e=>{const ratio=Math.max(minZoom,Math.min(maxZoom,zoom*e.scale))/zoom;transient.set(ratio);x.set(e.focalX-(pinchX.value-startX.value)*ratio);y.set(e.focalY-(pinchY.value-startY.value)*ratio);})
+ // eslint-disable-next-line react-hooks/refs -- Gesture Handler invokes commitZoom only after input, outside render.
+ .onEnd(e=>{const next=Math.max(minZoom,Math.min(maxZoom,zoom*e.scale));runOnJS(commitZoom)(next,buildingRoomAt((e.focalX-x.value)/(scale*transient.value),(e.focalY-y.value)/(scale*transient.value),building));})
+ // eslint-disable-next-line react-hooks/purity -- Input callback records the end of an actual pinch.
+ .onFinalize(()=>{lastPan.set(Date.now());moving.set(false);});
+ const style=useAnimatedStyle(()=>({transform:[{translateX:x.value},{translateY:y.value},{scale:transient.value}],transformOrigin:'left top'}));
+ return <CameraPan.Provider value={pan}><GestureDetector gesture={Gesture.Simultaneous(pinch,pan)} touchAction="none"><View testID="house-viewport" style={{width,height,overflow:'hidden'}}><Animated.View testID="house-camera" style={[{width:building.width*scale,height:building.height*scale},style]}>{children}</Animated.View></View></GestureDetector></CameraPan.Provider>;
 }

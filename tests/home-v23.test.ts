@@ -1,4 +1,4 @@
-import { zoomLimits, boundedPan, roomAt, roomPan } from '../src/home/camera';
+import { zoomLimits, boundedPan, buildingLayout, roomOrigin, buildingRoomAt, roomCamera, softPan } from '../src/home/camera';
 import { describe, it, expect } from 'vitest';
 import { sceneItemDepth, furniturePaintDepth, characterDepth, characterDrop, characterPoint, furnitureDepth, seatClipTop, characterSize, itemPoint } from '../src/home/geometry';
 import { homeReducer, starterHome, instance, validHome } from '../src/home/model';
@@ -58,13 +58,35 @@ describe('dollhouse room membership',()=>{
   });
 });
 
-describe('camera coordinate boundaries',()=>{
-  it.each([[390,844],[844,390],[1024,768]])('fits the complete house and bounds room navigation at %s×%s',(width,height)=>{
-    const close=height*800/740, limits=zoomLimits(width,close);
-    expect(close*limits.min*4).toBeLessThanOrEqual(width+.001);
-    expect(boundedPan(500,width,close*4)).toBe(0);
-    expect(roomPan(3,close,width)).toBeGreaterThanOrEqual(Math.min(0,width-close*4));
-    expect(roomAt(-100,close)).toBe(0);expect(roomAt(100000,close)).toBe(3);
+describe('building camera geometry',()=>{
+  it('fills floors in room order with Tree house upstairs and grows upwards',()=>{
+    const b=buildingLayout(4);
+    expect(b.columns).toBe(2);expect(b.floors).toBe(2);
+    expect(roomOrigin(0,b).y).toBe(roomOrigin(1,b).y);
+    expect(roomOrigin(2,b).y).toBeLessThan(roomOrigin(0,b).y);
+    expect(roomOrigin(3,b).x).toBeGreaterThan(roomOrigin(2,b).x);
+    const extended=buildingLayout(7);
+    expect(extended.floors).toBe(4);expect(roomOrigin(6,extended).y).toBe(extended.roof);
+    for(let n=0;n<7;n++){const p=roomOrigin(n,extended);expect(buildingRoomAt(p.x+400,p.y+400,extended)).toBe(n);}
+  });
+  it.each([[390,844],[844,390],[1024,768]])('fits 90%% of the limiting viewport at %s×%s',(width,height)=>{
+    const viewportHeight=height-146,b=buildingLayout(4,width/height>1.8),close=viewportHeight*800/740;
+    const limits=zoomLimits(width,close,viewportHeight,b),scale=close*limits.min/800;
+    expect(Math.max(b.width*scale/width,b.height*scale/viewportHeight)).toBeCloseTo(.9);
+    expect(b.width*scale).toBeLessThanOrEqual(width);expect(b.height*scale).toBeLessThanOrEqual(viewportHeight);
+    for(let n=0;n<4;n++){const p=roomCamera(n,b,scale,width,viewportHeight);expect(p.x).toBeCloseTo((width-b.width*scale)/2);expect(p.y).toBeCloseTo((viewportHeight-b.height*scale)/2);}
+  });
+  it('uses both axes for transfers and clamps overscroll with a soft edge',()=>{
+    const b=buildingLayout(4),from=roomOrigin(0,b),to=roomOrigin(2,b);
+    expect(buildingRoomAt(from.x+400,to.y+400,b)).toBe(2);
+    expect(buildingRoomAt(-500,-500,b)).toBe(2);expect(buildingRoomAt(99999,99999,b)).toBe(1);
+    expect(boundedPan(500,390,1640)).toBe(0);expect(boundedPan(-9999,390,1640)).toBe(-1250);
+    expect(softPan(100,390,1640)).toBe(22);expect(softPan(-1350,390,1640)).toBe(-1272);
+  });
+  it('validates and roundtrips the optional navigation hint preference',()=>{
+    const s=emptySave();s.settings.homeNavigationSeen=true;expect(parseSave(JSON.stringify(s))).toEqual(s);
+    expect(()=>parseSave(JSON.stringify({...s,settings:{...s.settings,homeNavigationSeen:'yes'}}))).toThrow();
+    expect(parseSave(JSON.stringify(emptySave())).settings.homeNavigationSeen).toBeUndefined();
   });
 });
 
