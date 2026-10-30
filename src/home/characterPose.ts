@@ -1,3 +1,7 @@
 import type { Pose } from './model';
-/** Adapt the room's two semantic poses to the shared rig's stable pose IDs. */
-export const homeCharacterPose = (pose: Pose) => pose === 'sit' ? 'sit-relaxed' : 'idle';
+import { frontPoses } from '../islander/rig/poses';
+/** Resolve only authored rig IDs; missing phase-two art keeps its seated/idle fallback. */
+export function homeCharacterPose(pose:Pose, reaction?:string){
+ const requested=reaction??(pose==='stand'?'idle':pose==='sit'?'sit-relaxed':pose);
+ return frontPoses.some(p=>p.id===requested)?requested:pose==='stand'?'idle':'sit-relaxed';
+}

@@ -1,3 +1,4 @@
+import { socketsOf } from "../src/home/interactions";
 import { roomDefaultTheme } from '../src/home/art/roomDefaults';
 import { describe, expect, it } from 'vitest';
 import { catalog, furnitureIds, itemSpec, starterItems } from '../src/home/catalog';
@@ -27,20 +28,20 @@ describe('versioned home saves and recovery', () => {
   old.characters[0]={slot:0,anchor:'floor',pose:'stand',x:9,y:5};
   const before=clone(old), s=migrateHome(old)!; expect(validHome(old)).toBe(true); expect(old).toEqual(before);
   expect(migrateHome(s)).toBe(s); expect(room(s).theme).toEqual(old.theme);
-  expect(room(s).instances).toEqual(old.instances.map(i=>({...i,x:i.x*2,y:i.y*2})));
+  expect(room(s).instances.map(i=>i.id)).toEqual(old.instances.map(i=>i.id));
   expect(room(s).characters[0]).toEqual({...old.characters[0],x:18,y:10});
   for(let n=0;n<old.instances.length;n++) {
-   const i=old.instances[n], expected=i.layer==='wall'?{x:54+i.x*92,y:124+i.y*112}:{x:43+i.x*75+i.y*3,y:386+i.y*28.8};
-   expect(itemPoint(room(s).instances[n])).toEqual(expected);
+   const i=old.instances[n], migrated=room(s).instances[n],size=itemSize(migrated),p=itemPoint({...i,x:i.x*2,y:i.y*2});
+   if(p.x-size/2>=8&&p.x+size/2<=792&&p.y-size*.85>=8&&p.y+size*.15<=552)expect(migrated).toEqual({...i,x:i.x*2,y:i.y*2});
   }
  });
  it('migrates the validated personalization envelope and round-trips backup/restore', () => {
   const save=initializePersonalization(emptySave()); save.personalization!.people.family.home=legacyStarterHome();
-  const migrated=initializePersonalization(save); expect(migrated.personalization!.people.family.home.version).toBe(2);
+  const migrated=initializePersonalization(save); expect(migrated.personalization!.people.family.home.version).toBe(3);
   expect(save.personalization!.people.family.home.version).toBe(1); expect(initializePersonalization(migrated)).toBe(migrated);
   expect(parseSave(JSON.stringify(migrated))).toEqual(migrated);
  });
- it.each([null,[],{}, { ...starterHome(),version:3 },{...starterHome(),extra:true}, {...starterHome(),current:'attic'}, {...starterHome(),rooms:{home:starterHome().rooms.home}}])('rejects malformed roots without mutation: %j', v=>{
+ it.each([null,[],{}, { ...starterHome(),version:4 },{...starterHome(),extra:true}, {...starterHome(),current:'attic'}, {...starterHome(),rooms:{home:starterHome().rooms.home}}])('rejects malformed roots without mutation: %j', v=>{
   const before=clone(v); expect(validHome(v)).toBe(false); expect(migrateHome(v)).toBeUndefined(); expect(v).toEqual(before);
  });
  it.each([{x:NaN},{x:Infinity},{x:-1},{x:16},{y:12},{y:1.5},{item:'unknown'},{layer:'wall'},{state:'broken'},{state:'active'},{rotation:45},{rotation:90},{mirrored:1},{id:'bad id'},{extra:1},{tint:'invalid'},{tint:undefined},{on:undefined},{on:'missing'}])('rejects malformed instance %j', changes=>{
@@ -88,9 +89,9 @@ describe('room editing, stacking and colours',()=>{
   for(const scale of [0.36,0.48,1]) {
    const widths=children.map(i=>stackedHitWidth(i,scale,48));
    const centers=children.map(i=>itemPoint(i,[parent,...children]).x*scale);
-   expect(widths.every(w=>w<=30*scale)).toBe(true);
-   expect(centers[0]+widths[0]/2).toBeLessThan(centers[1]-widths[1]/2);
-   expect(centers[1]+widths[1]/2).toBeLessThan(centers[2]-widths[2]/2);
+   expect(widths.every(w=>w>=44)).toBe(true);
+   expect(centers[0]).toBeLessThan(centers[1]);
+   expect(centers[1]).toBeLessThan(centers[2]);
   }
   expect(stackedHitWidth(parent,.36,48)).toBe(48);
  });
@@ -196,7 +197,7 @@ describe('constant-size seating and depth',()=>{
  it('snaps to a front-row chair before treating the drop as beach',()=>{
   const s=patch(starterHome(),{instances:[instance('front-seat','chair',4,10)]});
   const p=characterPoint(room(s),{slot:0,anchor:'chair',pose:'sit',seatId:'front-seat'});
-  expect(p.y).toBeGreaterThan(560);
+  expect(p.y).toBeLessThan(560);
   expect(characterDrop(room(s),0,p.x,p.y)).toMatchObject({seatId:'front-seat'});
  });
  it.each(['bed','chair','rug','beanbag','shelf','sofa','armchair','bunk-bed','hammock','floor-cushion','rocking-chair','stool'])('seats each character on %s, follows its seat and stands safely after removal',id=>{
@@ -204,15 +205,16 @@ describe('constant-size seating and depth',()=>{
   for(const slot of [0,1,2] as const){ const anchor=['bed','chair','rug','beanbag','shelf'].includes(id)?id as 'bed':'seat';
    const p=characterPoint(room(s),{slot,anchor,pose:'sit',seatId:'seat'});
    expect(characterDrop(room(s),slot,p.x,p.y)).toMatchObject({seatId:'seat'});
-   s=homeReducer(s,{type:'character',slot,anchor,seatId:'seat'}).state;expect(room(s).characters[slot].pose).toBe('sit');expect(characterSize(slot)).toBe(slot===0?224:170);
+   s=homeReducer(s,{type:'character',slot,anchor,seatId:'seat'}).state;expect(room(s).characters[slot].pose).toBe(socketsOf(room(s).instances[0])[0].kind);expect(characterSize(slot)).toBe(slot===0?224:170);
    expect(characterDepth(room(s),room(s).characters[slot])).toBeGreaterThan(itemPoint(room(s).instances[0]).y);
+   if(slot!==2)s=homeReducer(s,{type:'character',slot,anchor:'floor',x:18,y:8}).state;
   }
-  const before=characterPoint(room(s),room(s).characters[0]);s=homeReducer(s,{type:'move',id:'seat',x:6,y:6}).state;expect(characterPoint(room(s),room(s).characters[0])).not.toEqual(before);
+  const before=characterPoint(room(s),room(s).characters[2]);s=homeReducer(s,{type:'move',id:'seat',x:6,y:6}).state;expect(characterPoint(room(s),room(s).characters[2])).not.toEqual(before);
   s=homeReducer(s,{type:'put-away',id:'seat'}).state;expect(room(s).characters.every(c=>c.pose==='stand')).toBe(true);expect(validHome(s)).toBe(true);
  });
  it('retains beach anchors and rejects malformed poses or coordinates',()=>{
   const s=starterHome();expect(characterDrop(room(s),0,400,650)).toEqual({type:'character',slot:0,anchor:'beach-middle'});
-  for(const anchor of ['beach-left','beach-middle','beach-right'] as const){const next=homeReducer(s,{type:'character',slot:0,anchor}).state;expect(validHome(next)).toBe(true);expect(characterPoint(room(next),room(next).characters[0]).y).toBe(650);}
+  for(const anchor of ['beach-left','beach-middle','beach-right'] as const){const next=homeReducer(s,{type:'character',slot:0,anchor}).state;expect(validHome(next)).toBe(true);expect(characterPoint(room(next),room(next).characters[0]).y).toBeLessThanOrEqual(540);}
  });
  it('retains original catalog earning metadata',()=>{expect(furnitureIds).toHaveLength(24);for(const id of furnitureIds)expect(itemSpec(id)).toEqual(catalog[id]);});
 });

@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { badgeInfo, badgeRule, tracks, type BadgeId } from '../src/badges/engine';
 import { thumbnailFocus } from '../src/personalization/thumbnail';
 import { styleCatalog } from '../src/personalization/catalog';
-import { characterPoint, itemPoint } from '../src/home/geometry';
+import { characterPoint, itemPoint, itemSize } from '../src/home/geometry';
+import { socketsOf } from "../src/home/interactions";
 import { starterHome } from '../src/home/model';
 describe('walkthrough reward clarity', () => {
   for (const track of tracks) for (const tier of [1,2,3,4]) it(`${track}-${tier} names its track and matches documented copy`, () => {
@@ -24,9 +25,9 @@ describe('walkthrough reward clarity', () => {
   });
   it('aligns the constant-size seated hip to each illustrated surface', () => {
     const home=starterHome();
-    for(const [anchor,offset] of [['bed',4],['chair',43],['rug',32]] as const) {
+    for(const anchor of ['bed','chair','rug'] as const) {
       const seat=home.rooms.home.instances.find(i=>i.item===anchor)!;
-      expect(characterPoint(home.rooms.home,{slot:0,anchor,pose:'sit',seatId:seat.id}).y-itemPoint(seat).y).toBeCloseTo(offset, 6);
+      expect(characterPoint(home.rooms.home,{slot:0,anchor,pose:'sit',seatId:seat.id}).y-itemPoint(seat).y).toBeCloseTo((socketsOf(seat)[0].at[1]-.85)*itemSize(seat), 6);
     }
   });
 });

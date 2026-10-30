@@ -1,3 +1,6 @@
+import { poseBox, resolvePose } from "../islander/rig/poses";
+import { homeCharacterPose } from "./characterPose";
+import { socketsOf, socketPoint } from "./interactions";
 import { decorSpec, isSeat, itemSpec } from "./catalog";
 import { freeFloor } from "./freeFloor";
 import { moreCatalog } from "./catalogMore";
@@ -20,7 +23,7 @@ export function stackActionLabel(parent: Instance, items: readonly Instance[]) {
 }
 /** Keep sibling targets inside their own projected surface cell. Height can remain generous. */
 export function stackedHitWidth(i: Instance, scale: number, normalWidth: number) {
-  return i.on ? Math.min(normalWidth, 30 * scale) : normalWidth;
+  return Math.max(44, i.on ? Math.min(normalWidth, 30 * scale) : normalWidth);
 }
 
 /** Position a measured toolbar in the space reserved between chrome and inventory. */
@@ -101,19 +104,17 @@ export function itemSize(i: Instance) {
 }
 
 export function characterPoint(state: import("./model").RoomState, c: import("./model").Character) {
-  if (c.anchor.startsWith("beach-")) return { x: c.anchor === "beach-left" ? 210 : c.anchor === "beach-middle" ? 400 : 590, y: 650 };
-  if (c.anchor === "floor") { const p=freeFloor(state.instances,c.x!,c.y!);return floorPoint(p.x,p.y); }
+  if (c.anchor.startsWith("beach-")) return floorPoint(c.anchor === "beach-left" ? 5 : c.anchor === "beach-middle" ? 10 : 15,10);
+  if (c.anchor === "floor") { const p=freeFloor(state.instances.filter(i=>!state.characters.some(c=>c.holding===i.id)),c.x!,c.y!);const point=floorPoint(p.x,p.y);return {...point,x:Math.max(76,Math.min(724,point.x)),y:Math.min(540,point.y)}; }
   const seat = state.instances.find((i) => (c.seatId ? i.id === c.seatId : c.anchor === "seat" ? isSeat(i.item) : i.item === c.anchor));
   if (seat) {
     const p = itemPoint(seat);
-    // The constant 163-unit rig keeps its hip about 51 units above the box foot.
-    // Match each illustrated surface; sidekicks retain their bottom contact.
-    const genericSurface = ({ sofa: -52, armchair: -45, "bunk-bed": -56, hammock: -44, "floor-cushion": -24, "rocking-chair": -45, stool: -48 } as Record<string, number>)[seat.item] ?? -12;
-    const seatedFoot = c.slot === 0 ? ({ bed: 4, chair: 43, rug: 32, beanbag: 36, seat: genericSurface + 70, shelf: -83 } as Partial<Record<import("./model").Anchor, number>>)[c.anchor] : undefined;
-    return { x: p.x, y: p.y + (seatedFoot ?? -(c.anchor === "shelf" ? 92 : c.anchor === "bed" ? 48 : c.anchor === "seat" ? -genericSurface : 12)) };
+    const socket=socketsOf(seat).find(s=>s.id===c.socket?.socketId)??socketsOf(seat)[0];
+    if(socket){const contact=socketPoint(seat,socket);return contact;}
+    return p;
   }
-  const p=freeFloor(state.instances,c.anchor === "window" ? 0 : 6,2);
-  return floorPoint(p.x,p.y);
+  const p=freeFloor(state.instances,c.anchor === "window" ? 8 : 6,5);
+  const point=floorPoint(p.x,p.y);return {...point,x:Math.max(76,Math.min(724,point.x)),y:Math.min(540,point.y)};
 }
 /** Snap to the nearest actual seat. Otherwise keep a bounded, validated floor cell. */
 export function characterDrop(
@@ -175,4 +176,13 @@ export function sceneItemDepth(state: import("./model").RoomState, i: Instance) 
   if (i.layer === 'ground') return -50;
   const parent=i.on && state.instances.find(p=>p.id===i.on);
   return parent ? furniturePaintDepth(state,parent)+.5 : furniturePaintDepth(state,i);
+}
+
+/** Place a complete rig box at its semantic contact, reflected about the seat centre. */
+export function characterFrame(room:import('./model').RoomState,c:import('./model').Character,reaction?:string){
+ const contact=characterPoint(room,c),seat=room.instances.find(i=>i.id===(c.socket?.itemId??c.seatId));
+ const mirrored=!!seat&&(seat.mirrored !== (seat.rotation===180||seat.rotation===270));
+ const pose=resolvePose('front',homeCharacterPose(c.pose,reaction)),box=poseBox(pose),unit=characterSize(c.slot)/132;
+ if(c.slot===0)return {left:contact.x-(mirrored?box.width-box.anchor[0]:box.anchor[0])*unit,top:contact.y-box.anchor[1]*unit,width:box.width*unit,height:box.height*unit,mirrored};
+ const size=characterSize(c.slot);return {left:contact.x-size/2,top:contact.y-size*(c.slot===2?96/120:1),width:size,height:c.slot===2?size*110/120:size,mirrored};
 }

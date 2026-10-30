@@ -1,6 +1,9 @@
+import { capabilityOf, visualBox } from "./world";
+import { dropBody, dropWorld, socketsOf } from "./interactions";
+import { resolveDrop } from "./drop";
 import { badgeRule, type BadgeId } from '../badges/engine';
 import { HouseCamera, type HouseCameraHandle } from "./HouseCamera";
-import { zoomLimits, buildingLayout, buildingRoomAt, roomOrigin } from "./camera";
+import { zoomLimits, buildingLayout, roomOrigin } from "./camera";
 import { BuildingArt, BuildingTrim, TerraceArt } from "./BuildingArt";
 import { stageWidth } from "./stage";
 import { useSheetPresence } from "../components/sheetPresence";
@@ -23,17 +26,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import Svg, { Path, Circle } from "react-native-svg";
 import { useSharedValue } from "react-native-reanimated";
-import { ArcadeArt, ReefFish, stickerNames } from "../arcade/Art";
+import { ReefFish, stickerNames } from "../arcade/Art";
 import { stickerIds } from "../arcade/progress";
 import { useReducedMotion } from "../components/motion";
 import { useSounds } from "../components/Audio";
 import { useStore } from "../state/Store";
-import { SeatFront } from "./SeatFront";
+import { CrabFriend } from "./art/CrabFriend";
 import { MoreItemArt, RoomShellArt } from "./art/More";
 import { moreCatalog, roomIds, roomNames, tintIds, tintPalette } from "./catalogMore";
 import { ItemArt } from "./art/Items";
 import { RoomArt, SkyArt, ShoreArt, floorColors, wallColors } from "./art/Room";
-import { floorThemes, furnitureIds, decorSpec, itemSpec, isSeat, wallThemes, type ItemId } from "./catalog";
+import { floorThemes, furnitureIds, decorSpec, itemSpec, wallThemes, type ItemId } from "./catalog";
 import {
   anchors,
   currentRoom,
@@ -52,28 +55,30 @@ import {
 } from "./model";
 import { LockBadge, LockRule } from '../personalization/LockBadge';
 import { trackLabels, badgeInfo } from '../badges/engine';
-import { sceneItemDepth, furnitureDepth, seatClipTop, characterDepth, characterDrop, characterPoint, itemPoint, itemSize, spotFromPoint, stackSpot, stackActionLabel, stackedHitWidth, toolbarY, surfacePoint, characterSize, seatAnchor } from "./geometry";
+import { sceneItemDepth, furnitureDepth, characterFrame, characterDepth, characterPoint, itemPoint, itemSize, spotFromPoint, stackSpot, stackActionLabel, stackedHitWidth, surfacePoint, characterSize, seatAnchor } from "./geometry";
 import { useHomeStore } from "./useHomeStore";
-import { Drag, FloorGrid, Footprint, emptyPreview, TrayGhost, type DragConfig } from "./Drag";
+import { Drag, MotionLink, Footprint, emptyPreview, TrayGhost, type DragConfig } from "./Drag";
 
 const categoryNames: Record<string, string> = { "beds-seats": "Beds & seats", "tables-storage": "Tables & storage", kitchen: "Kitchen", "plants-nature": "Plants", lights: "Lights", "toys-fun": "Toys", "rugs-floor": "Rugs", "wall-art": "Wall art" };
-function DecorArt({ item, tint, ...props }: React.ComponentProps<typeof ItemArt> & { tint?: import("./catalogMore").TintId }) {
+const DecorArt=React.memo(function DecorArt({ item, tint, ...props }: React.ComponentProps<typeof ItemArt> & { tint?: import("./catalogMore").TintId }) {
   if (moreCatalog[item]) return <MoreItemArt id={item} tint={tint} {...props} rotation={props.rotation as import("./model").Rotation | undefined} />;
   return <ItemArt item={item} tint={tint} {...props} />;
-}
+});
 
 export type HomeScreenProps = Ownership & {
   badges?: BadgeId[];
   initialItem?: string;
-  renderCharacter?: (slot: Character["slot"], pose: Pose) => ReactNode;
+  renderCharacter?: (slot: Character["slot"], pose: Pose, reaction?:string, size?:number, held?:ReactNode, reduced?:boolean) => ReactNode;
   initialState?: unknown;
   persist?: (state: import("./model").HomeStateV2) => boolean;
   saveStatus?: ReactNode;
 };
 const ink = "#284F4B";
-type IconName = "back" | "undo" | "redo" | "rotate" | "mirror" | "away" | "more" | "down" | "lock";
+type IconName = "back" | "undo" | "redo" | "rotate" | "mirror" | "away" | "more" | "down" | "lock" | "design" | "done";
 function Icon({ name }: { name: IconName }) {
   const paths: Record<IconName, string> = {
+    design:"M4 20L7 13L17 3L21 7L11 17ZM7 13L11 17",
+    done:"M4 12L10 18L21 5",
     back: "M15 5L8 12L15 19",
     undo: "M8 5L3 10L8 15M3 10H14Q21 10 20 18",
     redo: "M16 5L21 10L16 15M21 10H10Q3 10 4 18",
@@ -115,6 +120,7 @@ function Button({
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
+        iconOnly && {width:48,height:48,borderRadius:24,paddingHorizontal:0,justifyContent:"center"},
         selected && styles.chosen,
         { opacity: disabled ? 0.35 : pressed ? 0.7 : 1 },
       ]}
@@ -162,13 +168,22 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   const [mode, setMode] = useState<"play" | "decorate">(initialItem ? "decorate" : "play");
   const [tab, setTab] = useState<string>(themeRewards.some(t=>t.id===initialItem) ? "Room" : "Furniture");
   const [selected, setSelected] = useState<string>();
+  const [selectedFriend,setSelectedFriend]=useState<{slot:Character["slot"];roomId:typeof roomIds[number]}>();
   const [placing, setPlacing] = useState<ItemId | undefined>(initialItem && (furnitureIds.includes(initialItem as typeof furnitureIds[number]) || Object.hasOwn(moreCatalog, initialItem)) ? initialItem as ItemId : undefined);
   const [draggedItem, setDraggedItem] = useState<ItemId>();
-  const [collapsed, setCollapsed] = useState(initialItem ? false : height < 500);
+  const [collapsed, setCollapsed] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [roomMenu,setRoomMenu]=useState(false);
+  const [savedTick,setSavedTick]=useState(false);
+  React.useEffect(()=>{const show=setTimeout(()=>setSavedTick(true),0),hide=setTimeout(()=>setSavedTick(false),1100);return()=>{clearTimeout(show);clearTimeout(hide);};},[store.state]);
   const [stackMenu, setStackMenu] = useState(false);
   const [surfaceMenu, setSurfaceMenu] = useState<string>();
-  const [toolbarHeight, setToolbarHeight] = useState(64);
+  const [reaction, setReaction] = useState<{slot:number;text:string}>();
+  const [asleep,setAsleep]=useState<number[]>([]);
+  React.useEffect(()=>{const reset=setTimeout(()=>setAsleep([]),0),calm=setTimeout(()=>setAsleep(room.characters.filter(c=>c.pose==='lie').map(c=>c.slot)),8000);return()=>{clearTimeout(reset);clearTimeout(calm);};},[room.characters]);
+  const reactionTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
+  React.useEffect(()=>()=>clearTimeout(reactionTimer.current),[]);
+  const reactTo=(slot:number,text="♪")=>{setReaction({slot,text});clearTimeout(reactionTimer.current);reactionTimer.current=setTimeout(()=>setReaction(undefined),1200);};
   const [confirm, setConfirm] = useState(false);
   useSheetPresence(confirm || stackMenu || !!surfaceMenu);
   const [hint, setHint] = useState(!app.save.settings.homeNavigationSeen);
@@ -191,18 +206,19 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   };
   const sequence = useRef(0);
   const preview = useSharedValue(emptyPreview);
+  const motion=useSharedValue({id:"",dx:0,dy:0});
   const decorating = mode === "decorate";
-  const sideDrawer = decorating && !collapsed && width > height && height < 500;
-  const doubleTray = width < 500 || sideDrawer;
-  const drawerHeight = decorating ? (sideDrawer ? 0 : collapsed ? 48 : doubleTray ? 254 : 154) : 0;
+  const sideDrawer = decorating && width > height;
+  const doubleTray = false;
+  const drawerHeight = decorating ? (sideDrawer ? 0 : collapsed ? 48 : 154) : 0;
   const drawerWidth = sideDrawer ? Math.min(330, width * .42) : 0;
-  const headerHeight = 146;
+  const headerHeight = 64;
   const availableHeight = height - inset.top - inset.bottom - drawerHeight - headerHeight;
   // A portrait viewport shows a life-sized stage and scrolls to its side walls.
   const beach = true;
   const sceneUnits = 740;
   const building = useMemo(()=>buildingLayout(roomIds.length,width/height>1.8),[width,height]);
-  const closeWidth = stageWidth({ width, height }, drawerWidth, availableHeight, sceneUnits);
+  const closeWidth = stageWidth({ width, height }, drawerWidth, availableHeight, width>height?560:sceneUnits);
   const limits = zoomLimits(width-drawerWidth, closeWidth, availableHeight, building);
   const [zoom, setZoom] = useState(1);
   const houseCamera = useRef<HouseCameraHandle>(null);
@@ -216,7 +232,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     const p = surfacePoint(i);
     return { ...i, w, h, wall: i.layer === "wall", surface: !!decorSpec(i.item).surface, sx: p.x, sy: p.y, radius: itemSize(i) * .42 };
   });
-  const config: DragConfig = { preview, origin, scale, blockers };
+  const config: DragConfig = { motion,preview, origin, scale, blockers, world:dropWorld(room) };
   const feedback = (message: string) => {
     setHint(false);
     setNotice(message);
@@ -226,7 +242,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     if (action.type !== "undo" && action.type !== "redo") {
       const result = homeReducer(store.state, action as HomeAction, ownership);
       if (result.message) {
-        feedback(result.message);
+        if(decorating)feedback(result.message);
         return;
       }
       if (audible && result.state !== store.state) sound("tap");
@@ -263,21 +279,20 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
       return;
     }
 
-    const spot = stackSpot(room.instances, instance("", id, 0, 0), px / scale, py / scale) ?? spotFromPoint(px, py, scale, itemSpec(id).layer === "wall");
-    if (!spot || px < 0 || py < 0 || px > sceneWidth || py > sceneHeight) {
-      feedback("Drop inside the room.");
-      return;
-    }
+    const drop=resolveDrop(dropWorld(room),dropBody(instance("",id,0,0)),px/scale,py/scale);
+    if(!drop)return;
+    const floor=drop.kind==='hand'||drop.kind==='mouth'?resolveDrop({...dropWorld(room),people:[],surfaces:[]},dropBody(instance("",id,0,0)),px/scale,py/scale):drop;
+    const spot={x:floor?.x??0,y:floor?.y??0,...(floor?.on?{on:floor.on}:{})};
     let key: string;
     do {
       key = `home-${++sequence.current}`;
     } while (room.instances.some((i) => i.id === key));
     const candidate = { ...instance(key, id, spot.x, spot.y), ...("on" in spot && typeof spot.on === "string" ? { on: spot.on } : {}) };
-    if (!validPlacement(room.instances, candidate)) {
-      feedback("Try a clear spot. Keep the door free.");
+    if (drop.kind!=='hand' && drop.kind!=='mouth' && !validPlacement(room.instances, candidate)) {
+
       return;
     }
-    dispatch({ type: "place", instance: candidate, roomId }, true);
+    dispatch({ type: "place", instance: candidate, roomId,...(drop.kind==='hand'||drop.kind==='mouth'?{target:{slot:drop.slot as Character['slot'],eat:drop.kind==='mouth'}}:{}) }, true);
     setPlacing(undefined);
     setSelected(key);
   };
@@ -290,7 +305,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         setPlacing(undefined);
         setHint(false);
       } else {
-        dispatch({ type: "toggle", id: i.id, roomId }, true);
+        if(capabilityOf(i.item).toggle||itemSpec(i.item).interactive)dispatch({ type: "toggle", id: i.id, roomId }, true);
+        setSelected(i.id);
       }
     } else if (["rotate", "mirror", "put-away"].includes(action))
       dispatch({ type: action as "rotate" | "mirror" | "put-away", id: i.id, roomId }, true);
@@ -302,7 +318,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   };
   const switchMode = (next: "play" | "decorate") => {
     setMode(next);
-    if (next === "decorate") setCollapsed(height < 500);
+    setSelectedFriend(undefined);
+    if (next === "decorate") setCollapsed(false);
     setSelected(undefined);
     setPlacing(undefined);
     setNotice("");
@@ -336,15 +353,21 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     preview.value = { active: true, x, y, w, h, wall, valid };
     store.setMessage(`Column ${x + 1}, row ${y + 1}. ${valid ? "Clear spot." : "Try a clear spot."}`);
   };
+  const revealSeat=(roomId:typeof roomIds[number],slot:Character['slot'],itemId?:string,socketId?:string)=>{
+    const room=store.state.rooms[roomId],item=room.instances.find(i=>i.id===itemId),socket=item&&socketsOf(item).find(s=>s.id===socketId);
+    if(!item||!socket)return;
+    const frame=characterFrame(room,{slot,anchor:'seat',pose:socket.kind,seatId:item.id,socket:{itemId:item.id,socketId:socket.id}}),p=itemPoint(item),box=visualBox(item.item,item.rotation,item.mirrored);
+    requestAnimationFrame(()=>houseCamera.current?.reveal(roomIds.indexOf(roomId),{left:Math.min(frame.left,p.x+box.left),top:Math.min(frame.top,p.y+box.top),right:Math.max(frame.left+frame.width,p.x+box.left+box.width),bottom:Math.max(frame.top+frame.height,p.y+box.top+box.height)}));
+  };
   const renderEntries = (room: RoomState, roomId: typeof roomIds[number]) => {
   const send = (action: HomeAction, audible = false) => dispatch({...action,roomId},audible);
-  const localConfig = {...config, blockers: room.instances.map(i => { const [w,h]=dimensions(i), p=surfacePoint(i);return {...i,w,h,wall:i.layer==='wall',surface:!!decorSpec(i.item).surface,sx:p.x,sy:p.y,radius:itemSize(i)*.42}; })};
+  const localConfig = {...config, world:dropWorld(room), blockers: room.instances.map(i => { const [w,h]=dimensions(i), p=surfacePoint(i);return {...i,w,h,wall:i.layer==='wall',surface:!!decorSpec(i.item).surface,sx:p.x,sy:p.y,radius:itemSize(i)*.42}; })};
   const seatActions = [
-    ...anchors.filter(a => ['hello','window','beach-left','beach-middle','beach-right'].includes(a)).map(anchor=>({name:`seat-${anchor}`,label:`Move to ${anchor}`,anchor,seatId:undefined as string|undefined})),
-    ...room.instances.filter(i=>isSeat(i.item)).map(i=>({name:`seat-id-${i.id}`,label:`Sit on ${itemSpec(i.item).name}`,anchor:seatAnchor(i),seatId:i.id}))
+    ...anchors.filter(a => ['hello','window'].includes(a)).map(anchor=>({name:`seat-${anchor}`,label:`Move to ${anchor}`,anchor,socketId:undefined as string|undefined,seatId:undefined as string|undefined})),
+    ...room.instances.flatMap(i=>socketsOf(i).map(s=>({name:`socket-${i.id}-${s.id}`,label:`${s.kind} on ${itemSpec(i.item).name}, ${s.id}`,anchor:seatAnchor(i),seatId:i.id,socketId:s.id})))
   ];
   return [
-    ...room.instances.map((i) => {
+    ...room.instances.filter(i=>!room.characters.some(c=>c.holding===i.id)).map((i) => {
       const p = itemPoint(i, room.instances),
         size = itemSize(i) * scale;
       const hitWidth = stackedHitWidth(i, scale, Math.max(48, size * 0.82));
@@ -356,7 +379,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         node: (
           <Drag
             testID={`object-${i.id}`}
-            pointerEvents={placing || (!decorating && effectiveZoom <= limits.min*1.15) ? "none" : "auto"}
+            pointerEvents={placing || effectiveZoom <= limits.min*1.15 ? "none" : "auto"}
             accessibilityRole="button"
             accessibilityLabel={`${itemSpec(i.item).name}, ${i.state === "active" ? "active" : "resting"}`}
             accessibilityHint={
@@ -372,7 +395,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                     })),
                     ...(decorSpec(i.item).small ? room.instances.filter(parent => !parent.on && decorSpec(parent.item).surface).map(parent => ({ name: `stack:${parent.id}`, label: stackActionLabel(parent, room.instances) })) : []),
                   ]
-                : [{ name: "activate", label: "Play" }]
+                : [{name:"activate",label:"Select or use"},...["left","right","back","forward"].map(name=>({name,label:`Move ${name}`}))]
             }
             onAccessibilityAction={(e) => e.nativeEvent.actionName.startsWith("stack:") ? putOn(i, e.nativeEvent.actionName.slice(6), roomId) : itemAction(i, e.nativeEvent.actionName, roomId)}
             {...keyboard((e) => {
@@ -389,14 +412,14 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                 " ": "activate",
               };
               const name = names[e.nativeEvent.key];
-              if (name && (decorating || name === "activate")) {
+              if (name && (decorating || ["activate","left","right","back","forward"].includes(name))) {
                 e.preventDefault();
                 itemAction(i, name, roomId);
               }
             })}
-            enabled={decorating}
+            enabled={decorating || capabilityOf(i.item).moveInPlay}
             reduced={reduced}
-            config={{ ...localConfig, foot: p, layer: i.layer, footprint: { w, h, wall: i.layer === "wall", id: i.id, small: !!decorSpec(i.item).small } }}
+            config={{ ...localConfig, grouped:room.characters.some(c=>c.socket?.itemId===i.id||c.seatId===i.id),subject:dropBody(i), foot: p, layer: i.layer, footprint: { w, h, wall: i.layer === "wall", id: i.id, small: !!decorSpec(i.item).small } }}
             onStart={() => {
               dispatch({type:"room",room:roomId});
               setDraggedItem(undefined);
@@ -406,21 +429,23 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               setNotice("");
             }}
             onTap={() => {
-              if (placing) {
-                return;
+              if (placing) return;
+              if(selectedFriend){
+                const world=dropWorld(room),socket=world.sockets.find(s=>s.itemId===i.id&&(s.occupied===undefined||s.occupied===selectedFriend.slot));
+                const d=resolveDrop(world,{slot:selectedFriend.slot},socket?.x??p.x,socket?.y??p.y);
+                if(d){if(selectedFriend.roomId===roomId)send(d.kind==='socket'?{type:'character',slot:selectedFriend.slot,anchor:'seat',seatId:d.itemId,socketId:d.socketId}:{type:'character',slot:selectedFriend.slot,anchor:'floor',x:d.x,y:d.y},true);else dispatch({type:'transfer',roomId:selectedFriend.roomId,room:roomId,slot:selectedFriend.slot,x:d.x,y:d.y,seatId:d.itemId,socketId:d.socketId},true);}
+                setSelectedFriend(undefined);return;
               }
               if (room.instances.some(child => child.on === i.id)) {dispatch({type:"room",room:roomId});setSurfaceMenu(i.id);}
               else itemAction(i, "activate", roomId);
             }}
             onDrop={(_x, _y, dx, dy) => {
-              const px = p.x * scale + dx,
-                py = p.y * scale + dy;
-              const spot = stackSpot(room.instances, i, px / scale, py / scale) ?? spotFromPoint(px, py, scale, i.layer === "wall");
-              if (!spot || px < 0 || py < 0 || px > sceneWidth || py > sceneHeight) {
-                feedback("Drop inside the room.");
-                return;
-              }
-              if (spot) send({ type: "move", id: i.id, ...spot }, true);
+              const drop=resolveDrop(dropWorld(room),dropBody(i),p.x+dx/scale,p.y+dy/scale);
+              if(!drop)return;
+              if(drop.kind==='hand'||drop.kind==='mouth'){
+                send({type:'use-item',id:i.id,slot:drop.slot as Character['slot'],eat:drop.kind==='mouth'},true);
+                if(drop.kind==='mouth')reactTo(drop.slot!,"Yum ♡");
+              } else send({type:'move',id:i.id,x:drop.x,y:drop.y,...(drop.on?{on:drop.on}:{})},true);
               setSelected(i.id);
             }}
             style={{
@@ -441,8 +466,10 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               <DecorArt
                 item={i.item}
                 size={size}
-                active={i.state === "active"}
-                animated
+                layer={capabilityOf(i.item).sockets?.length && room.characters.some(c=>c.socket?.itemId===i.id || c.seatId===i.id)?"back":"all"}
+                state={{on:i.powered ?? i.state === "active"}}
+                active={i.powered ?? i.state === "active"}
+                animated={roomId===store.state.current && i.state=== "active" && !room.characters.some(c=>c.socket?.itemId===i.id || c.seatId===i.id)}
                 reduced={reduced}
                 mirrored={i.mirrored}
                 tint={i.tint}
@@ -453,30 +480,31 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         ),
       };
     }),
-    ...room.instances.filter(i => isSeat(i.item) && i.item !== "rug" && i.item !== "shelf" && room.characters.some(c => c.pose === "sit" && (c.seatId ? c.seatId === i.id : c.anchor === i.item || c.anchor === "seat"))).map(i => {
-      const p = itemPoint(i, room.instances), size = itemSize(i) * scale;
-      return { key: `seat-front-${i.id}`, depth: furnitureDepth(i) + 2, node: <View pointerEvents="none" style={{ position: 'absolute', left: p.x * scale - size / 2, top: seatClipTop(room, i) * scale, height: Math.max(0, p.y * scale + size * .15 - seatClipTop(room, i) * scale), overflow: 'hidden' }}><View style={{ marginTop: (p.y - itemSize(i)*.85 - seatClipTop(room,i))*scale }}>{i.item === "chair" ? <DecorArt item={i.item} tint={i.tint} size={size} mirrored={i.mirrored} rotation={i.rotation} foreground/> : <SeatFront item={i} size={size}/>}</View></View> };
+    ...room.instances.filter(i=>capabilityOf(i.item).sockets?.length && room.characters.some(c=>c.socket?.itemId===i.id||c.seatId===i.id)).map(i=>{
+      const p=itemPoint(i),size=itemSize(i)*scale;
+      return {key:`seat-front-${i.id}`,depth:furnitureDepth(i)+2,node:<MotionLink motion={motion} owner={i.id}><View pointerEvents="none" style={{position:'absolute',left:p.x*scale-size/2,top:p.y*scale-size*.85}}><DecorArt item={i.item} size={size} tint={i.tint} mirrored={i.mirrored} rotation={i.rotation} layer="front"/></View></MotionLink>};
     }),
     ...room.characters.map((c) => {
-      const p = characterPoint(room, c),
-        size = (characterSize(c.slot)) * scale;
+      const p=characterPoint(room,c),size=characterSize(c.slot)*scale;
+      const action=reaction?.slot===c.slot?(reaction.text.startsWith('Yum')?'eat':c.pose==='stand'?'wave':undefined):asleep.includes(c.slot)?'lie-asleep':c.holding&&c.pose==='stand'?'hold':undefined;
+      const frame=characterFrame(room,c,action);
       return {
         key: `character-${c.slot}`,
         depth: characterDepth(room, c),
         node: (
-          <Drag
+          <MotionLink motion={motion} owner={c.socket?.itemId??c.seatId}><Drag
             testID={`character-${c.slot}`}
-            pointerEvents={placing ? "none" : "auto"}
+            pointerEvents={placing || effectiveZoom<=limits.min*1.15 ? "none" : "auto"}
             accessibilityRole="button"
             accessibilityLabel={["Islander", "Pip", "Poko"][c.slot] + `, ${c.pose}`}
-            accessibilityHint="Drag to a seat, the floor or the beach. Arrow keys move; S cycles seats."
+            accessibilityHint="Drag to furniture or the floor. Tap then choose a destination. Arrow keys move; S cycles seats."
             accessibilityActions={[
               ...seatActions,
               ...["left", "right", "back", "forward"].map((name) => ({ name, label: `Move ${name}` })),
             ]}
             onAccessibilityAction={(e) => {
               const a = seatActions.find(a => a.name === e.nativeEvent.actionName);
-              if (a) send({ type: "character", slot: c.slot, anchor: a.anchor, ...(a.seatId ? { seatId: a.seatId } : {}) }, true);
+              if (a) send({ type: "character", slot: c.slot, anchor: a.anchor, ...(a.seatId ? { seatId: a.seatId,socketId:a.socketId } : {}) }, true);
               const deltas: Record<string, [number, number]> = {
                 left: [-37.5, 0],
                 right: [37.5, 0],
@@ -519,14 +547,19 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                 e.preventDefault();
                 const index = seatActions.findIndex(a => c.seatId ? a.seatId === c.seatId : a.anchor === c.anchor);
                 const next = seatActions[(index + 1) % seatActions.length];
-                send({ type: "character", slot: c.slot, anchor: next.anchor, ...(next.seatId ? { seatId: next.seatId } : {}) }, true);
+                send({ type: "character", slot: c.slot, anchor: next.anchor, ...(next.seatId ? { seatId: next.seatId,socketId:next.socketId } : {}) }, true);
               }
             })}
-            enabled
+            enabled={effectiveZoom>limits.min*1.15}
             reduced={reduced}
-            config={{ ...localConfig, foot: p }}
+            config={{ ...localConfig, subject:{slot:c.slot},rooms:roomIds.map((id,index)=>({id,origin:roomOrigin(index,building),world:dropWorld(store.state.rooms[id])})),sourceOrigin:roomOrigin(roomIds.indexOf(roomId),building),foot: p }}
             onTap={() => {
               setHint(false);
+              if(selected && room.instances.some(i=>i.id===selected)){
+                const held=room.instances.find(i=>i.id===selected)!;
+                send({type:'use-item',id:held.id,slot:c.slot,eat:!!capabilityOf(held.item).edible},true);setSelected(undefined);
+              } else reactTo(c.slot,"♡");
+              setSelectedFriend({slot:c.slot,roomId});
             }}
             onStart={() => {
               dispatch({type:"room",room:roomId});
@@ -538,80 +571,37 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               (() => {
                 const source=roomOrigin(roomIds.indexOf(roomId),building);
                 const worldX=source.x+p.x+dx/scale, worldY=source.y+p.y+dy/scale;
-                const destination=roomIds[buildingRoomAt(worldX,worldY,building)];
+                const destination=roomIds.find((id,index)=>{const o=roomOrigin(index,building);return worldX>=o.x&&worldX<=o.x+800&&worldY>=o.y&&worldY<=o.y+560;});
+                if(!destination)return;
                 const destinationOrigin=roomOrigin(roomIds.indexOf(destination),building);
                 const localX=Math.max(0,Math.min(799,worldX-destinationOrigin.x)), localY=worldY-destinationOrigin.y;
                 const row=(localY-386)/14.4;
                 if(destination!==roomId) send({type:'transfer',slot:c.slot,room:destination,x:(localX-43-row*1.5)/37.5,y:row},true);
-                else send(characterDrop(room,c.slot,localX,localY),true);
+                else {
+                  const drop=resolveDrop(dropWorld(room),{slot:c.slot},localX,localY);
+                  if(drop){send(drop.kind==='socket'?{type:'character',slot:c.slot,anchor:'seat',seatId:drop.itemId,socketId:drop.socketId}:{type:'character',slot:c.slot,anchor:'floor',x:drop.x,y:drop.y},true);if(drop.kind==='socket')revealSeat(roomId,c.slot,drop.itemId,drop.socketId);}
+                }
               })()
             }
             style={{
               position: "absolute",
-              left: p.x * scale - size / 2,
-              top: p.y * scale - size,
-              width: Math.max(48, size),
-              height: Math.max(48, size),
+              left:frame.left*scale,top:frame.top*scale,width:Math.max(44,frame.width*scale),height:Math.max(44,frame.height*scale),
+              borderRadius:30,borderWidth:selectedFriend?.slot===c.slot&&selectedFriend.roomId===roomId?2:0,borderColor:'#397C6C',
             }}
           >
-            <View
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: size * 0.15,
-                width: size * 0.7,
-                height: size * 0.13,
-                borderRadius: 100,
-                backgroundColor: "#3D60552A",
-              }}
-            />
-            <View
-              pointerEvents="none"
-              style={{
-                width: 60,
-                height: 92,
-                position: "absolute",
-                left: (size - 60) / 2,
-                top: (size - 92) / 2,
-                alignItems: "center",
-                justifyContent: "flex-end",
-                transform: [{ scale: size / 92 }],
-              }}
-            >
-              {renderCharacter?.(c.slot, c.pose) ?? (c.slot === 0 ? (
-                <Placeholder pose={c.pose} />
-              ) : c.slot === 1 ? (
-                <View
-                  style={{
-                    borderWidth: 2,
-                    borderBottomWidth: 5,
-                    borderColor: "#87BBAF",
-                    borderRadius: 28,
-                    backgroundColor: "#C6E5DCBB",
-                  }}
-                >
-                  <ReefFish size={55} />
-                </View>
-              ) : (
-                <ArcadeArt game="crab-crossing" size={65} />
-              ))}
+            <View pointerEvents="none" style={{width:frame.width*scale,height:frame.height*scale,transform:[{scaleX:frame.mirrored?-1:1}]}}>
+              {renderCharacter?.(c.slot,c.pose,action,characterSize(c.slot)*scale,c.holding?(()=>{const held=room.instances.find(i=>i.id===c.holding);return held?<DecorArt item={held.item} size={24}/>:undefined;})():undefined,reduced) ?? (c.slot===0?<View style={{transform:[{scale:size/92}]}}><Placeholder pose={c.pose}/></View>:c.slot===1?<ReefFish size={size}/>:<CrabFriend pose={c.pose==='lie'?'lie':c.pose==='stand'?'stand':'sit'} size={size} reduced={reduced}/>)}
             </View>
-          </Drag>
+            {reaction?.slot===c.slot && <Text pointerEvents="none" style={{position:'absolute',top:-25,left:0,right:0,textAlign:'center',fontSize:24,color:ink}}>{reaction.text}</Text>}
+            {c.holding && (()=>{const held=room.instances.find(i=>i.id===c.holding);if(!held)return null;return <Drag testID={`held-${c.slot}`} accessibilityRole="button" accessibilityLabel={`Put down ${itemSpec(held.item).name}`} enabled reduced={reduced} config={{...localConfig,foot:{x:p.x+42,y:p.y-84},subject:dropBody(held)}} onTap={()=>send({type:'release-held',slot:c.slot,x:c.x??10,y:c.y??8},true)} onDrop={(_x,_y,dx,dy)=>{const row=(p.y-84+dy/scale-386)/14.4;send({type:'release-held',slot:c.slot,x:(p.x+42+dx/scale-43-row*1.5)/37.5,y:row},true);}} style={{position:'absolute',left:size*.62,top:size*.52,width:44,height:44}}>{c.slot!==0&&<DecorArt item={held.item} size={44}/>}</Drag>;})()}
+          </Drag></MotionLink>
         ),
       };
     }),
   ].sort((a, b) => a.depth - b.depth);
   };
   const toolbarPoint = target ? itemPoint(target, room.instances) : undefined;
-  const roomTop = origin.y;
-  const targetSize = target ? itemSize(target) * scale : 0;
-  const targetHitHeight = target ? Math.max(target.on ? 44 : 48, targetSize * (target.item === "toy-box" ? .58 : target.layer === "ground" ? .4 : .82)) : 0;
-  const toolbarTop = sideDrawer ? inset.top + headerHeight + 52 : toolbarPoint
-    ? toolbarY(roomTop + toolbarPoint.y * scale + Math.min(-targetSize * .85, targetSize * .15 - targetHitHeight),
-        roomTop + toolbarPoint.y * scale + targetSize * .15,
-        toolbarHeight, inset.top + headerHeight, height - inset.bottom - drawerHeight)
-    : inset.top + headerHeight + 4;
+  const toolbarTop = sideDrawer ? inset.top + headerHeight + 52 : height-inset.bottom-drawerHeight-120;
 
   const thumbnail = (id: ItemId, label: string) => {
     const owned = owns(id, ownership),
@@ -636,7 +626,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         tray
         enabled={owned}
         reduced={reduced}
-        config={{ ...config, layer: spec.layer, footprint: { w, h, wall: spec.layer === "wall", id: "", small: !!decorSpec(id).small } }}
+        config={{ ...config, subject:dropBody(instance("",id,0,0)),layer: spec.layer, footprint: { w, h, wall: spec.layer === "wall", id: "", small: !!decorSpec(id).small } }}
         onStart={() => {
           setDraggedItem(id);
           setPlacing(undefined);
@@ -669,7 +659,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     );
   };
   const trayItems = [...furnitureIds, ...Object.keys(moreCatalog)].filter(id => tab === "Furniture" || decorSpec(id).category === tab);
-  const trayColumns = Array.from({ length: Math.ceil(trayItems.length / (doubleTray ? 2 : 1)) }, (_, index) => trayItems.slice(index * (doubleTray ? 2 : 1), (index + 1) * (doubleTray ? 2 : 1)));
+  const trayColumns = Array.from({ length: Math.ceil(trayItems.length / (sideDrawer ? 2 : 1)) }, (_, index) => trayItems.slice(index * (sideDrawer ? 2 : 1), (index + 1) * (sideDrawer ? 2 : 1)));
   return (
     <View style={styles.page}>
       <View pointerEvents="none" style={StyleSheet.absoluteFill}><SkyArt /></View>
@@ -721,6 +711,15 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             })}
             onPress={(e) => {
               if (!placing) {
+                if(selectedFriend){
+                  const {pageX,pageY}=e.nativeEvent;
+                  roomCanvases.current[roomId]?.measureInWindow((x,y)=>{const d=resolveDrop(dropWorld(room),{slot:selectedFriend.slot},(pageX-x)/scale,(pageY-y)/scale);if(!d)return;if(selectedFriend.roomId!==roomId)dispatch({type:'transfer',slot:selectedFriend.slot,roomId:selectedFriend.roomId,room:roomId,x:d.x,y:d.y},true);else dispatch(d.kind==='socket'?{type:'character',slot:selectedFriend.slot,roomId,anchor:'seat',seatId:d.itemId,socketId:d.socketId}:{type:'character',slot:selectedFriend.slot,roomId,anchor:'floor',x:d.x,y:d.y},true);});setSelectedFriend(undefined);return;
+                }
+                if(selected && room.instances.some(i=>i.id===selected)){
+                  const target=room.instances.find(i=>i.id===selected)!;
+                  const {pageX,pageY}=e.nativeEvent;
+                  roomCanvases.current[roomId]?.measureInWindow((x,y)=>{const d=resolveDrop(dropWorld(room),dropBody(target),(pageX-x)/scale,(pageY-y)/scale);if(d)dispatch({type:'move',id:target.id,x:d.x,y:d.y,roomId},true);});setSelected(undefined);return;
+                }
                 houseCamera.current?.tap(index);
                 setSelected(undefined);
                 return;
@@ -740,14 +739,15 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             </View>
           </Pressable>
           {beach && <View pointerEvents="none" style={{ position: "absolute", top: 525 * scale, width: sceneWidth, height: 215 * scale }}>{Math.floor(index/building.columns)===0 ? <ShoreArt depth={215} /> : <TerraceArt/>}</View>}
-          {decorating && roomId===store.state.current && <FloorGrid scale={scale} width={sceneWidth} height={sceneHeight} />}
+
           <View pointerEvents="none" style={{position:'absolute',left:0,top:0,width:sceneWidth,height:sceneHeight}}>
-            <Text style={{position:'absolute',top:12*scale,left:24*scale,fontSize:Math.max(11,24*scale),color:'#385451',fontWeight:'700'}}>{roomNames[roomId]}</Text>
+            {effectiveZoom<=limits.min*1.15 && <Text style={{position:'absolute',top:12*scale,left:24*scale,fontSize:Math.max(11,24*scale),color:'#385451',fontWeight:'700'}}>{roomNames[roomId]}</Text>}
             {index % building.columns < building.columns-1 && <><View style={{position:'absolute',right:0,top:0,width:8*scale,height:360*scale,backgroundColor:'#C29369'}}/><View style={{position:'absolute',right:0,top:360*scale,width:70*scale,height:170*scale,borderWidth:5*scale,borderBottomWidth:0,borderColor:'#C29369',borderRadius:20*scale,backgroundColor:'#C5DED344'}}/></>}
           </View>
-          {renderEntries(room,roomId).map((entry) => (
+          <View pointerEvents="box-none" style={{position:"absolute",left:8*scale,top:8*scale,width:784*scale,height:544*scale,overflow:"hidden"}}><View pointerEvents="box-none" style={{position:"absolute",left:-8*scale,top:-8*scale,width:sceneWidth,height:560*scale}}>{renderEntries(room,roomId).map((entry) => (
             <React.Fragment key={entry.key}>{entry.node}</React.Fragment>
-          ))}
+          ))}</View></View>
+          {room.instances.filter(source=>capabilityOf(source.item).dispenses?.length && (source.powered || capabilityOf(source.item).toggle!=='open')).map(source=>{const p=itemPoint(source);return <View key={`fan-${source.id}`} style={{position:'absolute',left:Math.max(8,p.x*scale-60),top:Math.max(8,p.y*scale-itemSize(source)*scale*.9-52),flexDirection:'row',gap:4}}>{capabilityOf(source.item).dispenses!.map((id,index)=><Drag key={id} testID={`dispense-${id}`} accessibilityRole="button" accessibilityLabel={`Take ${itemSpec(id).name}`} enabled reduced={reduced} tray config={{...config,world:dropWorld(room),subject:dropBody(instance('',id,0,0))}} onTap={()=>dispatch({type:'dispense',source:source.id,item:id,id:`food-${++sequence.current}`,x:p.x+index*40,y:p.y,roomId})} onDrop={(x,y)=>roomCanvases.current[roomId]?.measureInWindow((ox,oy)=>dispatch({type:'dispense',source:source.id,item:id,id:`food-${++sequence.current}`,x:(x-ox)/scale,y:(y-oy)/scale,roomId}))} style={{width:48,height:48,borderRadius:24,backgroundColor:'#FFF8E9'}}><DecorArt item={id} size={44}/></Drag>)}</View>;})}
           {room.instances.filter(parent => room.instances.some(child => child.on === parent.id)).map(parent => {
             const children = room.instances.filter(child => child.on === parent.id);
             const p = itemPoint(parent, room.instances);
@@ -762,7 +762,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               <Text style={styles.label}>Items</Text>
             </Pressable>;
           })}
-          {roomId===store.state.current && <Footprint preview={preview} scale={scale} width={sceneWidth} height={sceneHeight} />}
+
           {roomId===store.state.current && draggedItem && (
             <TrayGhost preview={preview} scale={scale} size={itemSize(instance("", draggedItem, 0, 0)) * scale}>
               <DecorArt item={draggedItem} size={itemSize(instance("", draggedItem, 0, 0)) * scale} />
@@ -771,19 +771,20 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
 
         </View>
         );})}
+        <Footprint preview={preview} scale={scale} width={building.width*scale} height={building.height*scale} offset={roomOrigin(roomIds.indexOf(store.state.current),building)}/>
         <View pointerEvents="none" style={StyleSheet.absoluteFill}><BuildingTrim building={building}/></View>
         </HouseCamera>
       </View>
           {decorating && target && toolbarPoint && (
             <View
               testID="object-toolbar"
-              onLayout={e => setToolbarHeight(e.nativeEvent.layout.height)}
+
               style={[
                 styles.toolbar,
                 { flexDirection: "column", alignItems: "center", maxWidth: sideDrawer ? drawerWidth - 16 : width - 16 },
                 {
                   position: "absolute",
-                  left: sideDrawer ? width - drawerWidth + 8 : Math.max(8, Math.min(width - 320, origin.x + toolbarPoint.x * scale - 160)),
+                  left: sideDrawer ? width - drawerWidth + 8 : 8,
                   top: toolbarTop,
                   zIndex: 20,
                 },
@@ -819,16 +820,10 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               </View>}
             </View>
           )}
-      <View style={{ position: "absolute", top: inset.top + 62, left: 8, right: 8, zIndex: 10, flexDirection: "row", gap: 6 }}>
-        <ScrollView horizontal style={{ flex: 1, backgroundColor: "#FFF8E9", borderRadius: 18 }} contentContainerStyle={{ gap: 2 }} showsHorizontalScrollIndicator={false}>
-          {roomIds.map(id => <Button key={id} label={roomNames[id]} selected={id === store.state.current} onPress={() => { houseCamera.current?.jump(roomIds.indexOf(id)); setSelected(undefined); setPlacing(undefined); setDraggedItem(undefined); preview.value = emptyPreview; }} />)}
-        </ScrollView>
-        <Button label={effectiveZoom > limits.min*1.15 ? "Whole house" : "Close up"} onPress={()=>houseCamera.current?.zoomRoom(roomIds.indexOf(store.state.current))} />
-        {decorating && <View style={{ flexDirection: "row", gap: 4 }}>
-          <Button label="Undo" icon="undo" iconOnly disabled={!store.canUndo} onPress={() => { dispatch({ type: "undo" }); setSelected(undefined); }} />
-          <Button label="Redo" icon="redo" iconOnly disabled={!store.canRedo} onPress={() => { dispatch({ type: "redo" }); setSelected(undefined); }} />
-        </View>}
-      </View>
+      {roomMenu && <View style={{position:'absolute',top:inset.top+62,left:64,zIndex:30,padding:8,borderRadius:20,backgroundColor:'#FFF8E9',gap:4}}>
+        {roomIds.map(id=><Button key={id} label={selectedFriend?`Move friend to ${roomNames[id]}`:roomNames[id]} selected={id===store.state.current} onPress={()=>{if(selectedFriend && selectedFriend.roomId!==id)dispatch({type:'transfer',slot:selectedFriend.slot,roomId:selectedFriend.roomId,room:id,x:8,y:8},true);houseCamera.current?.jump(roomIds.indexOf(id));setRoomMenu(false);setSelected(undefined);setSelectedFriend(undefined);}}/>)}
+        <Button label={effectiveZoom>limits.min*1.15?'Whole house':'Close up'} onPress={()=>{houseCamera.current?.zoomRoom(roomIds.indexOf(store.state.current));setRoomMenu(false);}}/>
+      </View>}
       <View
         pointerEvents="box-none"
         style={[styles.chrome, { top: inset.top + 8, left: inset.left + 8, right: inset.right + 8 }]}
@@ -839,13 +834,13 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           iconOnly
           onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
         />
-        <View style={styles.segment}>
-          <Button label="Play" selected={!decorating} onPress={() => switchMode("play")} />
-          <Button label="Decorate" selected={decorating} onPress={() => switchMode("decorate")} />
-        </View>
+        <Button label={roomNames[store.state.current]} icon="down" onPress={()=>setRoomMenu(!roomMenu)}/>
+        <Button label={decorating?"Finish Design":"Design"} icon={decorating?"done":"design"} iconOnly selected={decorating} onPress={()=>switchMode(decorating?"play":"decorate")}/>
+        <Button label="Undo" icon="undo" iconOnly disabled={!store.canUndo} onPress={()=>{dispatch({type:'undo'});setSelected(undefined);}}/>
         <Button label="More" icon="more" iconOnly onPress={() => setMenu(!menu)} />
       </View>
-      {!!saveStatus && <View pointerEvents="box-none" style={{ position: "absolute", top: inset.top + 112, left: 8, zIndex: 12, maxWidth: width - 16, transform: [{ scale: .75 }], transformOrigin: "left top" }}>{saveStatus}</View>}
+      {(menu || app.error) && !!saveStatus && <View pointerEvents="box-none" style={{ position: "absolute", top: inset.top + 112, left: 8, zIndex: 12, maxWidth: width - 16 }}>{saveStatus}</View>}
+      {savedTick && !app.saving && !app.error && <Text pointerEvents="none" accessibilityLabel="Saved" style={{position:'absolute',right:12,top:inset.top+60,color:ink,fontSize:16}}>✓</Text>}
       {((!decorating && hint) || (decorating && notice && !notice.startsWith("Earn"))) && (
         <Pressable
           accessibilityRole="button"
@@ -859,7 +854,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             { left: 12, right: 12, bottom: inset.bottom + drawerHeight + 12, maxWidth: undefined },
           ]}
         >
-          <Text style={styles.hintText}>{(decorating ? notice : "") || "Drag a friend. Swipe to explore. Pinch or double-tap a room to zoom."}</Text>
+          <Text style={styles.hintText}>{(decorating ? notice : "") || "Move anything. Swipe to explore. Pinch or double-tap a room to zoom."}</Text>
         </Pressable>
       )}
       {menu && (
@@ -900,7 +895,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             />
           </View>
           {!collapsed && notice.startsWith("Earn") && <LockRule>{notice}</LockRule>}
-          {!collapsed && tab !== "Room" && tab !== "Stickers" && <FlatList key={`${tab}-${doubleTray}`} horizontal style={{ height: doubleTray ? 202 : 100, flexGrow: 0 }} data={trayColumns} initialScrollIndex={Math.max(0, Math.floor(trayItems.indexOf(initialItem ?? "") / (doubleTray ? 2 : 1)))} keyExtractor={ids => ids.join(':')} renderItem={({item:ids}) => <View style={{ gap: 4 }}>{ids.map(id => thumbnail(id, itemSpec(id).name))}</View>} initialNumToRender={6} maxToRenderPerBatch={6} windowSize={3} contentContainerStyle={styles.strip} getItemLayout={(_,index)=>({length:98,offset:98*index,index})} />}
+          {!collapsed && tab !== "Room" && tab !== "Stickers" && <FlatList key={`${tab}-${sideDrawer}`} horizontal={!sideDrawer} style={{ height: sideDrawer?Math.max(100,height-headerHeight-60):100, flexGrow: 0 }} data={trayColumns} initialScrollIndex={Math.max(0, Math.floor(trayItems.indexOf(initialItem ?? "") / (doubleTray ? 2 : 1)))} keyExtractor={ids => ids.join(':')} renderItem={({item:ids}) => <View style={{ gap: 8,flexDirection:sideDrawer?"row":"column",width:sideDrawer?drawerWidth-24:undefined,justifyContent:"space-around" }}>{ids.map(id => thumbnail(id, itemSpec(id).name))}</View>} initialNumToRender={6} maxToRenderPerBatch={6} windowSize={3} contentContainerStyle={styles.strip} getItemLayout={(_,index)=>({length:98,offset:98*index,index})} />}
           {!collapsed && (tab === "Room" || tab === "Stickers") && (
             <ScrollView
               horizontal

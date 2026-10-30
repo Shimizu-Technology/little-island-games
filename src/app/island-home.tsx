@@ -26,6 +26,6 @@ export default function IslandHomeRoute() {
     ownedFloors={floorThemes.filter(id => !["island-breeze","game-room"].includes(id) || person.earned.includes(id))}
     ownedItems={[...homeStickerItems(arcadeLearner(store.save.arcade, owner).stickers), ...person.earned.filter(id => furnitureIds.includes(id as typeof furnitureIds[number])) as ItemId[]]}
     persist={home => store.personalize({ home }, expected)}
-    saveStatus={<><Copy style={{ fontSize: 12, alignSelf: "flex-start", backgroundColor: "#FCFAF4", borderRadius: 12, paddingHorizontal: 8, paddingVertical: 3 }}>{store.error ? 'Room not saved' : store.saving ? 'Saving room…' : 'Room saved on this device'}</Copy><SaveStatus/></>}
-    renderCharacter={(slot, pose) => slot === 0 ? <Islander view="front" pose={homeCharacterPose(pose)} look={person.look} size={86}/> : undefined}/>;
+    saveStatus={<SaveStatus/>}
+    renderCharacter={(slot, pose, reaction, size, held, reduced) => slot === 0 ? <Islander view="front" pose={homeCharacterPose(pose,reaction)} look={person.look} size={size??86} held={held} reduced={reduced}/> : undefined}/>;
 }

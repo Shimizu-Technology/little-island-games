@@ -1,10 +1,10 @@
 import React, { createContext, useEffect, useImperativeHandle, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { View } from 'react-native';
-import { Gesture, GestureDetector, type PanGesture } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, type PinchGesture, type PanGesture } from 'react-native-gesture-handler';
 import Animated, { cancelAnimation, runOnJS, useAnimatedStyle, useSharedValue, withDecay, withTiming } from 'react-native-reanimated';
-import { boundedPan, buildingRoomAt, panRange, roomCamera, softPan, type Building } from './camera';
-export const CameraPan = createContext<PanGesture | undefined>(undefined);
-export type HouseCameraHandle = { jump:(index:number)=>void; zoomRoom:(index:number)=>void; tap:(index:number)=>void; canActivate:()=>boolean };
+import { boundedPan, buildingRoomAt, roomOrigin, panRange, roomCamera, softPan, type Building } from './camera';
+export const CameraPan = createContext<{pan:PanGesture;pinch:PinchGesture} | undefined>(undefined);
+export type HouseCameraHandle = { reveal:(index:number,box:{left:number;top:number;right:number;bottom:number})=>void; jump:(index:number)=>void; zoomRoom:(index:number)=>void; tap:(index:number)=>void; canActivate:()=>boolean };
 /** Child object drags block the empty-floor pan; pinch runs across the scene. */
 export function HouseCamera({children,initialIndex,width,height,building,scale,zoom,minZoom,maxZoom,reduced,onZoom,onRoom,onNavigate,cameraRef}:{
  children:ReactNode;initialIndex:number;width:number;height:number;building:Building;scale:number;zoom:number;minZoom:number;maxZoom:number;reduced:boolean;
@@ -21,7 +21,13 @@ export function HouseCamera({children,initialIndex,width,height,building,scale,z
   else {const p=roomCamera(index,building,scale,width,height);x.set(animate(p.x));y.set(animate(p.y));}
  };
  const toggle=(index:number)=>{focus.set(index);onRoom(index);onNavigate();onZoom(zoom>minZoom*1.15?minZoom:1);};
- useImperativeHandle(cameraRef,()=>({jump,zoomRoom:toggle,canActivate:()=>!moving.get()&&Date.now()-lastPan.get()>300,tap:index=>{
+ useImperativeHandle(cameraRef,()=>({jump,zoomRoom:toggle,reveal:(index,box)=>{
+  const origin=roomOrigin(index,building),left=(origin.x+box.left)*scale,right=(origin.x+box.right)*scale,top=(origin.y+box.top)*scale,bottom=(origin.y+box.bottom)*scale;
+  let nx=x.get(),ny=y.get();
+  if(right-left<=width-32){if(left+nx<16)nx=16-left;else if(right+nx>width-16)nx=width-16-right;}
+  if(bottom-top<=height-24){if(top+ny<12)ny=12-top;else if(bottom+ny>height-12)ny=height-12-bottom;}
+  x.set(animate(boundedPan(nx,width,building.width*scale)));y.set(animate(boundedPan(ny,height,building.height*scale)));
+ },canActivate:()=>!moving.get()&&Date.now()-lastPan.get()>300,tap:index=>{
   if(moving.get()||Date.now()-lastPan.get()<300)return;
   if(tapTimer.current&&lastTap.current===index){clearTimeout(tapTimer.current);tapTimer.current=undefined;toggle(index);}
   else {clearTimeout(tapTimer.current);lastTap.current=index;tapTimer.current=setTimeout(()=>{tapTimer.current=undefined;if(zoom<=minZoom*1.15)jump(index);else onRoom(index);},280);}
@@ -60,5 +66,5 @@ export function HouseCamera({children,initialIndex,width,height,building,scale,z
  // eslint-disable-next-line react-hooks/purity -- Input callback records the end of an actual pinch.
  .onFinalize((_e,success)=>{if(!success&&transient.value!==1){transient.set(1);x.set(startX.value);y.set(startY.value);}lastPan.set(Date.now());moving.set(false);});
  const style=useAnimatedStyle(()=>({transform:[{translateX:x.value},{translateY:y.value},{scale:transient.value}],transformOrigin:'left top'}));
- return <CameraPan.Provider value={pan}><GestureDetector gesture={Gesture.Simultaneous(pinch,pan)} touchAction="none"><View testID="house-viewport" style={{width,height,overflow:'hidden'}}><Animated.View testID="house-camera" style={[{width:building.width*scale,height:building.height*scale},style]}>{children}</Animated.View></View></GestureDetector></CameraPan.Provider>;
+ return <CameraPan.Provider value={{pan,pinch}}><GestureDetector gesture={Gesture.Simultaneous(pinch,pan)} touchAction="none"><View testID="house-viewport" style={{width,height,overflow:'hidden'}}><Animated.View testID="house-camera" style={[{width:building.width*scale,height:building.height*scale},style]}>{children}</Animated.View></View></GestureDetector></CameraPan.Provider>;
 }

@@ -1,15 +1,16 @@
 import { useRef, useState } from "react";
-import { homeReducer, starterHome, migrateHome, type HomeAction, type HomeStateV2, type Ownership } from "./model";
+import { homeReducer, starterHome, migrateHome, type HomeResult, type HomeAction, type HomeStateV2, type Ownership } from "./model";
 export type History = { present: HomeStateV2; past: HomeStateV2[]; future: HomeStateV2[] };
 export function editHistory(
   history: History,
   action: HomeAction | { type: "undo" | "redo" },
-  ownership: Ownership = {}
+  ownership: Ownership = {},
+  computed?:HomeResult
 ): History {
   if (action.type === "undo")
     return history.past.length
       ? {
-          present: history.past.at(-1)!,
+          present: history.past.at(-1)!.current===history.present.current?history.past.at(-1)!:{...history.past.at(-1)!,current:history.present.current},
           past: history.past.slice(0, -1),
           future: [history.present, ...history.future].slice(0, 40),
         }
@@ -17,15 +18,15 @@ export function editHistory(
   if (action.type === "redo")
     return history.future.length
       ? {
-          present: history.future[0],
+          present: history.future[0].current===history.present.current?history.future[0]:{...history.future[0],current:history.present.current},
           past: [...history.past, history.present].slice(-40),
           future: history.future.slice(1),
         }
       : history;
-  const result = homeReducer(history.present, action as HomeAction, ownership);
+  const result = computed ?? homeReducer(history.present, action as HomeAction, ownership);
   return result.state === history.present
     ? history
-    : { present: result.state, past: [...history.past, history.present].slice(-40), future: [] };
+    : action.type === "room" ? {...history,present:result.state} : { present: result.state, past: [...history.past, history.present].slice(-40), future: [] };
 }
 /** Settled-action adapter. The route supplies a learner-scoped Store transaction; never write around Store.commit.
  * Invalid initial input is exposed verbatim as recoveryOriginal and never overwritten.
@@ -40,7 +41,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
     const current = live.current;
     if (initial !== undefined && !migrateHome(initial)) { setSession({ ...current, message: "This room needs recovery before it can be changed." }); return; }
     const result = action.type !== "undo" && action.type !== "redo" ? homeReducer(current.history.present, action as HomeAction, ownership) : undefined;
-    const history = editHistory(current.history, action, ownership);
+    const history = editHistory(current.history, action, ownership,result);
     if (history !== current.history && persist && !persist(history.present)) {
       const next = { ...current, message: "Your room could not be updated. Please try again." };
       live.current = next; setSession(next); return;

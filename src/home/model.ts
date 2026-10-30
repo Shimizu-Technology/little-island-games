@@ -1,8 +1,12 @@
+import { capabilityOf, type WorldPose } from "./world";
+import { canHold, socketsOf, characterForSocket, dropBody, dropWorld } from "./interactions";
+import { resolveDrop } from "./drop";
+import { itemPoint, floorPoint, characterPoint } from "./geometry";
 import { freeFloor } from "./freeFloor";
 import { roomDefaultTheme } from "./art/roomDefaults";
 import { moreCatalog, roomIds, tintIds, type RoomId, type TintId } from "./catalogMore";
 import { clearFootprint } from "./placement";
-import { badgeIds, floorThemes, itemIds, itemSpec, starterItems, wallThemes, decorSpec, isSeat, type ItemId } from "./catalog";
+import { badgeIds, floorThemes, itemIds, itemSpec, starterItems, wallThemes, decorSpec, type ItemId } from "./catalog";
 export type Rotation = 0 | 90 | 180 | 270;
 export type Instance = {
   id: string;
@@ -15,11 +19,13 @@ export type Instance = {
   state: "rest" | "active";
   tint?: TintId;
   on?: string;
+  powered?: boolean;
+  empty?: boolean;
 };
 export const anchors = ["hello", "window", "bed", "chair", "rug", "beanbag", "shelf", "floor", "beach-left", "beach-middle", "beach-right", "seat"] as const;
 export type Anchor = (typeof anchors)[number];
-export type Pose = "stand" | "sit";
-export type Character = { slot: 0 | 1 | 2; anchor: Anchor; pose: Pose; x?: number; y?: number; seatId?: string };
+export type Pose = WorldPose;
+export type Character = { slot: 0 | 1 | 2; anchor: Anchor; pose: Pose; x?: number; y?: number; seatId?: string; socket?: {itemId:string;socketId:string}; holding?:string };
 /** Room view retained for the immutable art contract’s HomeState["theme"] lookup. */
 export type HomeState = {
   version: 1;
@@ -29,7 +35,7 @@ export type HomeState = {
   theme: { wallpaper: (typeof wallThemes)[number]; floor: (typeof floorThemes)[number] };
 };
 export type RoomState = Pick<HomeState, "instances" | "characters" | "theme">;
-export type HomeStateV2 = { version: 2; current: RoomId; rooms: Record<RoomId, RoomState> };
+export type HomeStateV2 = { version: 2 | 3; current: RoomId; rooms: Record<RoomId, RoomState> };
 export type HomeSave = HomeState | HomeStateV2;
 export const currentRoom = (state: HomeStateV2): RoomState => state.rooms[state.current];
 export type Ownership = {
@@ -67,7 +73,7 @@ function footprint(i: Instance) {
 }
 function validInstance(v: unknown, legacy = false): v is Instance {
   if (
-    !exact(v, ["id", "item", "x", "y", "rotation", "mirrored", "layer", "state", ...(!legacy && v && typeof v === "object" && Object.hasOwn(v, "tint") ? ["tint"] : []), ...(!legacy && v && typeof v === "object" && Object.hasOwn(v, "on") ? ["on"] : [])]) ||
+    !exact(v, ["id", "item", "x", "y", "rotation", "mirrored", "layer", "state", ...(!legacy && v && typeof v === "object" && Object.hasOwn(v, "tint") ? ["tint"] : []), ...(!legacy && v && typeof v === "object" && Object.hasOwn(v, "on") ? ["on"] : []), ...(["powered","empty"].filter(k=>!legacy && v && typeof v === "object" && Object.hasOwn(v,k)))]) ||
     typeof v.id !== "string" ||
     !/^[a-zA-Z0-9_-]{1,48}$/.test(v.id) ||
     !member(itemIds, v.item) || (legacy && typeof v.item === "string" && Object.hasOwn(moreCatalog, v.item))
@@ -77,6 +83,8 @@ function validInstance(v: unknown, legacy = false): v is Instance {
   return (
     (!Object.hasOwn(v, "tint") || (decorSpec(v.item as ItemId).tintable === true && member(tintIds, v.tint))) &&
     (!Object.hasOwn(v, "on") || typeof v.on === "string") &&
+    (!Object.hasOwn(v,"powered") || typeof v.powered === "boolean") &&
+    (!Object.hasOwn(v,"empty") || (typeof v.empty === "boolean" && capabilityOf(v.item as ItemId).edible === "drink")) &&
     integer(v.x) &&
     integer(v.y) &&
     member(spec.rotations, v.rotation) &&
@@ -92,7 +100,7 @@ function validRoom(v: unknown, legacy = false): v is RoomState {
   const items = v.instances as Instance[];
   if (new Set(items.map(i => i.id)).size !== items.length) return false;
   const placed = legacy ? items.map(i => ({ ...i, x: i.x * 2, y: i.y * 2 })) : items;
-  if (!placed.every(i => validPlacement(placed, i))) return false;
+  if (!placed.filter(i=>!Array.isArray(v.characters)||!v.characters.some((c:Character)=>c?.holding===i.id)).every(i => validPlacement(placed.filter(i=>!Array.isArray(v.characters)||!v.characters.some((c:Character)=>c?.holding===i.id)), i))) return false;
   if (!exact(v.theme, ["wallpaper", "floor"]) || !member(wallThemes, v.theme.wallpaper) || !member(floorThemes, v.theme.floor)) return false;
   return Array.isArray(v.characters) && v.characters.length <= 3 && new Set(v.characters.map(c => c?.slot)).size === v.characters.length && v.characters.every(c => validCharacter(c, items, legacy));
 }
@@ -103,43 +111,73 @@ export function validHome(v: unknown): v is HomeSave {
     if (!exact(v, ["version", "scene", "instances", "characters", "theme"]) || s.scene !== "room-1") return false;
     return validRoom({ instances: s.instances, characters: s.characters, theme: s.theme }, true);
   }
-  if (!exact(v, ["version", "current", "rooms"]) || s.version !== 2 || !member(roomIds, s.current) || !exact(s.rooms, [...roomIds]) || !roomIds.every(id => validRoom(s.rooms[id]))) return false;
+  if (!exact(v, ["version", "current", "rooms"]) || ![2,3].includes(s.version) || !member(roomIds, s.current) || !exact(s.rooms, [...roomIds]) || !roomIds.every(id => validRoom(s.rooms[id]))) return false;
   // Friends may live in different rooms; duplicate slots across rooms are corrupt data.
   const slots = roomIds.flatMap(id => s.rooms[id].characters.map(c => c.slot));
-  return new Set(slots).size === slots.length;
+  if(new Set(slots).size !== slots.length)return false;
+  return roomIds.every(id=>{
+    const room=s.rooms[id],occupied=room.characters.filter(c=>c.socket).map(c=>`${c.socket!.itemId}:${c.socket!.socketId}`),held=room.characters.flatMap(c=>c.holding?[c.holding]:[]);
+    return new Set(occupied).size===occupied.length&&new Set(held).size===held.length;
+  });
 }
 /** Pure, strict and idempotent. Never changes the source; invalid input belongs in recovery. */
 export function migrateHome(v: unknown): HomeStateV2 | undefined {
   if (!validHome(v)) return undefined;
-  if (v.version === 2) return v;
+  if(v.version===3)return v;
+  if(v.version!==1)return upgradeHome(v);
   const base = starterHome();
-  return { ...base, rooms: { ...base.rooms, home: {
+  return upgradeHome({ ...base, rooms: { ...base.rooms, home: {
     theme: { ...v.theme }, instances: v.instances.map(i => ({ ...i, x: i.x * 2, y: i.y * 2 })),
     characters: v.characters.map(c => c.anchor === "floor" ? { ...c, x: c.x! * 2, y: c.y! * 2 } : { ...c })
-  } } };
+  } } });
+}
+/** Only visually invalid positions change on migration; source records are never mutated. */
+export function normalizeRoom(room:RoomState):RoomState {
+ let instances=room.instances.map(i=>({...i}));
+ for(const i of instances){
+  if(i.on||room.characters.some(c=>c.holding===i.id))continue;
+  const p=itemPoint(i),body=dropBody(i);
+  if(p.x+body.left>=8&&p.x+body.right<=792&&p.y+body.top>=8&&p.y+body.bottom<=552)continue;
+  const spot=resolveDrop(dropWorld({...room,instances}),body,p.x,p.y);
+  if(!spot)continue;
+  const dx=spot.x-i.x,dy=spot.y-i.y;
+  instances=instances.map(other=>other.id===i.id?{...other,x:spot.x,y:spot.y}:other.on===i.id?{...other,x:other.x+dx,y:other.y+dy}:other);
+ }
+ return {...room,instances};
+}
+function upgradeHome(v:HomeStateV2):HomeStateV2 {
+ const rooms={...v.rooms};
+ for(const id of roomIds){const room=v.rooms[id];rooms[id]={...normalizeRoom(room),characters:room.characters.map(c=>{const seat=room.instances.find(i=>c.seatId?c.seatId===i.id:c.anchor===i.item);const socket=seat&&socketsOf(seat)[0];return seat&&socket?characterForSocket(c,seat,socket):{...c};})};}
+ for(const id of roomIds){const used=new Set<string>();rooms[id]={...rooms[id],characters:rooms[id].characters.map(c=>{if(!c.socket)return c;const key=`${c.socket.itemId}:${c.socket.socketId}`;if(!used.has(key)){used.add(key);return c;}return {slot:c.slot,anchor:'floor',pose:'stand',...freeFloor(rooms[id].instances,8,8)};})};}
+ return {...v,version:3,rooms};
 }
 /** Old three-key anchored characters stay valid, unchanged. Free-floor coordinates and
  * specific seats are optional, strictly checked extensions of this namespace. */
 export function validCharacter(c: unknown, items: readonly Instance[], legacy = false): c is Character {
   if (!c || typeof c !== "object" || (legacy && (c as Character).anchor === "seat")) return false;
   const v = c as Character;
+  if(v.socket !== undefined){
+   const seat=items.find(i=>i.id===v.socket?.itemId),socket=seat&&socketsOf(seat).find(s=>s.id===v.socket?.socketId);
+   if(!exact(v.socket,["itemId","socketId"])||!socket||v.pose!==socket.kind||v.anchor!=="seat"||v.seatId!==seat?.id)return false;
+  }
+  if(v.holding!==undefined && (!items.some(i=>i.id===v.holding&&canHold(i)&&!i.on)||typeof v.holding!=="string"))return false;
   const keys =
     v.anchor === "floor"
       ? ["slot", "anchor", "pose", "x", "y"]
       : v.seatId !== undefined
         ? ["slot", "anchor", "pose", "seatId"]
         : ["slot", "anchor", "pose"];
-  if (!exact(c, keys) || !member([0, 1, 2], v.slot) || !member(anchors, v.anchor) || v.pose !== poseFor(v.anchor))
+  if (!exact(c, [...keys,...(v.socket?["socket"]:[]),...(v.holding!==undefined?["holding"]:[])]) || !member([0, 1, 2], v.slot) || !member(anchors, v.anchor) || (!v.socket && v.pose !== poseFor(v.anchor)))
     return false;
   if (v.anchor === "floor") return integer(v.x) && integer(v.y) && v.x >= 0 && v.x <= (legacy ? 9 : 19) && v.y >= 0 && v.y <= (legacy ? 5 : 11);
   return v.seatId !== undefined
-    ? items.some((i) => i.id === v.seatId && (v.anchor === "seat" ? isSeat(i.item) : i.item === v.anchor))
+    ? items.some((i) => i.id === v.seatId && (v.anchor === "seat" ? socketsOf(i).length>0 : i.item === v.anchor))
     : anchorAvailable(items, v.anchor);
 }
 export const poseFor = (anchor: Anchor): Pose =>
   ["bed", "chair", "rug", "beanbag", "shelf", "seat"].includes(anchor) ? "sit" : "stand";
 export const anchorAvailable = (items: readonly Instance[], anchor: Anchor) =>
-  !["bed", "chair", "rug", "beanbag", "shelf", "seat"].includes(anchor) || items.some((i) => anchor === "seat" ? isSeat(i.item) : i.item === anchor);
+  !["bed", "chair", "rug", "beanbag", "shelf", "seat"].includes(anchor) || items.some((i) => anchor === "seat" ? socketsOf(i).length>0 : i.item === anchor);
 export function instance(id: string, item: ItemId, x: number, y: number): Instance {
   return { id, item, x, y, rotation: 0, mirrored: false, layer: itemSpec(item).layer, state: "rest" };
 }
@@ -176,16 +214,19 @@ export function starterHome(): HomeStateV2 {
     };
     return { theme: { ...roomDefaultTheme[room] }, characters: [], instances: starters[room].map(([item, x, y]) => instance(`starter-${item}`, item, x, y)) };
   };
-  return { version: 2, current: "home", rooms: { home, kitchen: extra("kitchen"), treehouse: extra("treehouse"), beach: extra("beach") } };
+  return upgradeHome({ version: 3, current: "home", rooms: { home, kitchen: extra("kitchen"), treehouse: extra("treehouse"), beach: extra("beach") } });
 }
 export type HomeAction = (
-  | { type: "transfer"; slot: Character["slot"]; room: RoomId; x: number; y: number }
-  | { type: "place"; instance: Instance }
+  | {type:"dispense";source:string;item:ItemId;id:string;x:number;y:number}
+  | {type:"use-item";id:string;slot:Character["slot"];eat?:boolean}
+  | {type:"release-held";slot:Character["slot"];x:number;y:number}
+  | { type: "transfer"; slot: Character["slot"]; room: RoomId; x: number; y: number;seatId?:string;socketId?:string }
+  | { type: "place"; instance: Instance; target?:{slot:Character["slot"];eat:boolean} }
   | { type: "move"; id: string; x: number; y: number; on?: string }
   | { type: "tint"; id: string; tint: TintId }
   | { type: "room"; room: RoomId }
   | { type: "rotate" | "mirror" | "put-away" | "toggle"; id: string }
-  | { type: "character"; slot: Character["slot"]; anchor: Anchor; x?: number; y?: number; seatId?: string }
+  | { type: "character"; slot: Character["slot"]; anchor: Anchor; x?: number; y?: number; seatId?: string; socketId?:string }
   | { type: "theme"; wallpaper?: HomeState["theme"]["wallpaper"]; floor?: HomeState["theme"]["floor"] }
   | { type: "reset" }) & { roomId?: RoomId };
 export type HomeResult = { state: HomeStateV2; message?: string; snapshot?: HomeStateV2 };
@@ -207,17 +248,58 @@ export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ow
     const character = state.characters.find(c => c.slot === action.slot);
     if (!character) return fail("Choose a friend in this room.");
     const destination = save.rooms[action.room];
-    const moved: Character = { slot: action.slot, anchor: "floor", pose: "stand", ...freeFloor(destination.instances, action.x, action.y) };
-    const rooms = { ...save.rooms, [roomId]: { ...state, characters: state.characters.filter(c => c.slot !== action.slot) } };
-    rooms[action.room] = { ...rooms[action.room], characters: [...rooms[action.room].characters, moved] };
-    return { state: { ...save, current: action.room, rooms } };
+    const destinationWorld=dropWorld(destination),requested=destinationWorld.sockets.find(s=>s.itemId===action.seatId&&s.socketId===action.socketId&&(s.occupied===undefined||s.occupied===action.slot));
+    const destinationDrop=resolveDrop(destinationWorld,{slot:action.slot},requested?.x??floorPoint(action.x,action.y).x,requested?.y??floorPoint(action.x,action.y).y);
+    const base:Character={...(character.holding?{holding:character.holding}:{}),slot:action.slot,anchor:'floor',pose:'stand',...freeFloor(destination.instances,action.x,action.y)};
+    const seat=destinationDrop?.itemId&&destination.instances.find(i=>i.id===destinationDrop.itemId),socket=seat&&socketsOf(seat).find(s=>s.id===destinationDrop?.socketId);
+    const moved:Character=seat&&socket?characterForSocket(base,seat,socket):base;
+    let held=state.instances.find(i=>i.id===character.holding);
+    if(held && destination.instances.some(i=>i.id===held!.id)){
+      let suffix=1;while(destination.instances.some(i=>i.id===`carry-${suffix}-${held!.id}`.slice(0,48)))suffix++;
+      held={...held,id:`carry-${suffix}-${held.id}`.slice(0,48)};moved.holding=held.id;
+    }
+    const rooms = { ...save.rooms, [roomId]: { ...state, instances:state.instances.filter(i=>i.id!==character.holding),characters: state.characters.filter(c => c.slot !== action.slot) } };
+    rooms[action.room] = { ...rooms[action.room], instances:[...rooms[action.room].instances,...(held?[held]:[])],characters: [...rooms[action.room].characters, moved] };
+    const transferred={...save,current:action.room,rooms};return validHome(transferred)?{state:transferred}:{state:save};
   }
   if (action.type === "reset") {
     const fresh = starterHome().rooms[roomId];
     const characters = state.characters.map(c => fresh.characters.find(initial => initial.slot === c.slot) ?? {slot:c.slot,anchor:'floor' as const,pose:'stand' as const,...freeFloor(fresh.instances,c.slot*6,8)});
     return { state: {...save,rooms:{...save.rooms,[roomId]:{...fresh,characters}}},snapshot:save };
   }
-  if (action.type === "place") {
+  if(action.type==='dispense'){
+    const source=state.instances.find(i=>i.id===action.source),cap=source&&capabilityOf(source.item);
+    if(!source||!cap?.dispenses?.includes(action.item)||(cap.toggle==='open'&&!source.powered)||state.instances.some(i=>i.id===action.id)||state.instances.length>=MAX_INSTANCES)return {state:save};
+    const created=instance(action.id,action.item,0,0),spot=resolveDrop(dropWorld(state),dropBody(created),action.x,action.y);
+    if(!spot)return {state:save};
+    const floor=spot.kind==='hand'||spot.kind==='mouth'?resolveDrop({...dropWorld(state),people:[],surfaces:[]},dropBody(created),action.x,action.y):spot;
+    const inserted={...save,rooms:{...save.rooms,[roomId]:{...state,instances:[...state.instances,{...created,x:floor?.x??0,y:floor?.y??0,...(floor?.on?{on:floor.on}:{})}]}}};
+    if(spot.kind==='hand'||spot.kind==='mouth'){
+      const used=homeReducer(inserted,{type:'use-item',id:created.id,slot:spot.slot as Character['slot'],eat:spot.kind==='mouth',roomId},ownership);
+      return validHome(used.state)?used:{state:save};
+    }
+    next=inserted.rooms[roomId];
+  } else if(action.type==="use-item"){
+    const item=state.instances.find(i=>i.id===action.id),c=state.characters.find(c=>c.slot===action.slot);
+    if(!item||!c)return {state:save};
+    const cap=capabilityOf(item.item);
+    if(action.eat?(!cap.edible||item.empty):(!canHold(item)||c.holding&&c.holding!==item.id))return {state:save};
+    const consume=action.eat&&cap.edible==='food';
+    const previous=action.eat&&cap.edible==='drink'?state.instances.find(i=>i.id===c.holding&&i.id!==item.id):undefined;
+    const point=characterPoint(state,c),release=previous&&resolveDrop({...dropWorld(state),people:[],surfaces:[],bodies:dropWorld(state).bodies.filter(i=>i.id!==item.id)},dropBody(previous),point.x+60,point.y);
+    if(previous&&!release)return {state:save};
+    next={...state,instances:state.instances.filter(i=>!consume||i.id!==item.id).map(i=>{if(previous&&release&&i.id===previous.id)return {...i,x:release.x,y:release.y};if(i.id!==item.id)return i;const {on:_,...rest}=i;void _;return {...rest,...(action.eat?{empty:true}:{})};}),characters:state.characters.map(person=>{
+      const {holding,...rest}=person;
+      if(person.slot===c.slot)return {...rest,...(!consume?{holding:item.id}:holding&&holding!==item.id?{holding}:{})};
+      return holding===item.id?rest:person;
+    })};
+  } else if(action.type==='release-held'){
+    const c=state.characters.find(c=>c.slot===action.slot),held=state.instances.find(i=>i.id===c?.holding);
+    if(!c||!held)return {state:save};
+    const p=itemPoint({...held,x:action.x,y:action.y}),spot=resolveDrop({...dropWorld(state),people:[]},dropBody(held),p.x,p.y);
+    if(!spot)return {state:save};
+    next={...state,instances:state.instances.map(i=>i.id===held.id?{...i,x:spot.x,y:spot.y,...(spot.on?{on:spot.on}:{})}:i),characters:state.characters.map(person=>{if(person.slot!==c.slot)return person;const {holding,...rest}=person;void holding;return rest;})};
+  } else if (action.type === "place") {
     if (state.instances.length >= MAX_INSTANCES) return fail("Put something away to make room.");
     if (
       !validInstance(action.instance) ||
@@ -239,11 +321,15 @@ export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ow
     if (!state.characters.some((c) => c.slot === action.slot) || !anchorAvailable(state.instances, action.anchor))
       return fail("Put that seat in the room first.");
     if (action.anchor === "floor" && (!Number.isFinite(action.x) || !Number.isFinite(action.y))) return fail("Choose a floor spot.");
+    const seat=state.instances.find(i=>action.seatId?i.id===action.seatId:i.item===action.anchor);
+    const socket=seat&&socketsOf(seat).find(s=>!action.socketId||s.id===action.socketId);
+    if(socket&&state.characters.some(c=>c.slot!==action.slot&&(c.socket?.itemId===seat!.id&&c.socket.socketId===socket!.id||!c.socket&&(c.seatId===seat!.id||!c.seatId&&c.anchor===seat!.item))))return homeReducer(save,{type:'character',slot:action.slot,anchor:'floor',x:seat!.x,y:seat!.y,roomId},ownership);
     next = {
       ...state,
       characters: state.characters.map((c) =>
         c.slot === action.slot
-          ? {
+          ? seat&&socket?characterForSocket(c,seat,socket):{
+              ...(c.holding?{holding:c.holding}:{}),
               slot: c.slot,
               anchor: action.anchor,
               pose: poseFor(action.anchor),
@@ -267,13 +353,13 @@ export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ow
         instances,
         characters: state.characters.map((c) =>
           anchorAvailable(instances, c.anchor) && (!c.seatId || instances.some((i) => i.id === c.seatId))
-            ? c
-            : { slot: c.slot, anchor: "floor", pose: "stand", ...freeFloor(instances,c.slot*6,8) }
+            ? (()=>{if(!c.holding||instances.some(i=>i.id===c.holding))return c;const {holding,...rest}=c;void holding;return rest;})()
+            : { ...(c.holding&&instances.some(i=>i.id===c.holding)?{holding:c.holding}:{}),slot: c.slot, anchor: "floor", pose: "stand", ...freeFloor(instances,c.slot*6,8) }
         ),
       };
     } else {
       if (action.type === "mirror" && !spec.mirror) return fail("This object stays this way round.");
-      if (action.type === "toggle" && !spec.interactive) return fail(`${spec.name} is ready for your story.`);
+      if (action.type === "toggle" && !spec.interactive && !capabilityOf(target.item).toggle) return fail(`${spec.name} is ready for your story.`);
       if (action.type === "tint" && (!decorSpec(target.item).tintable || !member(tintIds, action.tint))) return fail("Choose a paintable item.");
       const { on: _on, ...floorTarget } = target;
       void _on;
@@ -288,13 +374,22 @@ export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ow
               }
             : action.type === "mirror"
               ? { ...target, mirrored: !target.mirrored }
-              : { ...target, state: target.state === "rest" ? ("active" as const) : ("rest" as const) };
-      next = { ...state, instances: state.instances.map((i) => i.id === action.id ? replacement : action.type === "move" && i.on === target.id ? { ...i, x: i.x + action.x - target.x, y: i.y + action.y - target.y } : i) };
+              : { ...target, ...(capabilityOf(target.item).toggle?{powered:!target.powered}:{}),state:spec.interactive?(target.state === "rest" ? ("active" as const) : ("rest" as const)):target.state };
+      if(action.type==='move' && action.on===undefined){
+        const p=itemPoint(replacement),spot=resolveDrop({...dropWorld(state),people:[],surfaces:[]},dropBody(replacement),p.x,p.y);
+        if(!spot)return {state:save};
+        Object.assign(replacement,{x:spot.x,y:spot.y});
+      }
+      next = { ...state, instances: state.instances.map((i) => i.id === action.id ? replacement : action.type === "move" && i.on === target.id ? { ...i, x: i.x + replacement.x - target.x, y: i.y + replacement.y - target.y } : i) };
     }
   }
-  if (action.type !== 'character') next = { ...next, characters: next.characters.map(c => c.anchor === 'floor' ? {...c,...freeFloor(next.instances,c.x!,c.y!)} : c) };
+  if (action.type !== 'character') next = { ...next, characters: next.characters.map(c => c.anchor === 'floor' ? {...c,...freeFloor(next.instances.filter(i=>!next.characters.some(c=>c.holding===i.id)),c.x!,c.y!)} : c) };
   const result: HomeStateV2 = { ...save, rooms: { ...save.rooms, [roomId]: next } };
-  if (!validHome(result)) return fail("Try a clear spot. The door needs a little space too.");
+  if(action.type==='place'&&action.target){
+    const used=homeReducer(result,{type:'use-item',id:action.instance.id,slot:action.target.slot,eat:action.target.eat,roomId},ownership);
+    return validHome(used.state)?used:{state:save};
+  }
+  if (!validHome(result)) return {state:save};
   return { state: result };
 }
 // Badge art is deliberately provisional; these IDs are the integration boundary.

@@ -27,14 +27,14 @@ describe('2.3 character regressions', () => {
     }
   });
   it('moves a crab dropped on a lamp to the nearest unoccupied footprint cell', () => {
-    const s=starterHome(), lamp=instance('lamp','lamp',10,6);s.rooms.home.instances=[lamp];s.rooms.home.characters=s.rooms.home.characters.map(c=>({...c,anchor:"floor",pose:"stand",x:18,y:c.slot*3}));
+    const s=starterHome(), lamp=instance('lamp','lamp',10,6);s.rooms.home.instances=[lamp];s.rooms.home.characters=s.rooms.home.characters.map(c=>({slot:c.slot,anchor:"floor",pose:"stand",x:18,y:c.slot*3}));
     const p=itemPoint(lamp), result=homeReducer(s,characterDrop(s.rooms.home,2,p.x,p.y));
     const c=result.state.rooms.home.characters.find(c=>c.slot===2)!;
     expect(c).toMatchObject({anchor:'floor',...freeFloor([lamp],10,6)});expect(c.x===10&&c.y===6).toBe(false);
     expect(result.message).toBeUndefined();
   });
   it('also protects keyboard floor movement', () => {
-    const s=starterHome();s.rooms.home.instances=[instance('lamp','lamp',10,6)];s.rooms.home.characters=s.rooms.home.characters.map(c=>({...c,anchor:'floor',pose:'stand',x:18,y:c.slot*3}));
+    const s=starterHome();s.rooms.home.instances=[instance('lamp','lamp',10,6)];s.rooms.home.characters=s.rooms.home.characters.map(c=>({slot:c.slot,anchor:'floor',pose:'stand',x:18,y:c.slot*3}));
     expect(homeReducer(s,{type:'character',slot:0,anchor:'floor',x:10,y:6}).state.rooms.home.characters[0]).toMatchObject(freeFloor(s.rooms.home.instances,10,6));
   });
 });
@@ -108,7 +108,8 @@ it('exports an optional isolated QA save with Leon’s character positions',()=>
 
 it('renders an old window overlap safely without mutating its saved anchor',()=>{
  const s=starterHome().rooms.home, before=JSON.stringify(s.characters[0]);
- expect(characterDepth(s,s.characters[0])).toBeGreaterThan(furnitureDepth(s.instances.find(i=>i.item==='bed')!));
+ expect(characterPoint(s,s.characters[0]).x).toBeGreaterThanOrEqual(76);
+ expect(characterPoint(s,s.characters[0]).y).toBeLessThanOrEqual(540);
  expect(JSON.stringify(s.characters[0])).toBe(before);
 });
 

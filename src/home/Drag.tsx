@@ -1,5 +1,5 @@
+import { resolveDrop, type DropBody, type DropWorld } from "./drop";
 import { CameraPan } from "./HouseCamera";
-import { spotFromPoint } from "./geometry";
 import React, { useContext, type ReactNode } from "react";
 import { View, type ViewProps, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -29,6 +29,12 @@ export type Preview = {
 };
 export const emptyPreview: Preview = { active: false, x: 0, y: 0, w: 1, h: 1, wall: false, valid: false };
 export type DragConfig = {
+  grouped?:boolean;
+  motion?: SharedValue<{id:string;dx:number;dy:number}>;
+  rooms?:{id:string;origin:{x:number;y:number};world:DropWorld}[];
+  sourceOrigin?:{x:number;y:number};
+  world?: DropWorld;
+  subject?: DropBody | {slot:number};
   preview: SharedValue<Preview>;
   origin: { x: number; y: number };
   scale: number;
@@ -39,53 +45,17 @@ export type DragConfig = {
   foot?: { x: number; y: number };
 };
 /** Worklet-only drag feedback. No React state or reducer writes during pointer movement. */
-function clearAt(config: DragConfig, id: string, x: number, y: number, w: number, h: number, layer: string, parent?: string) {
-  "worklet";
-  if (x < 0 || y < 0 || x + w > 16 || y + h > (layer === "wall" ? 4 : 12)) return false;
-  for (let n = 0; n < config.blockers.length; n++) {
-    const other = config.blockers[n];
-    if (other.id === id || other.on !== parent || other.layer !== layer) continue;
-    const ow = parent ? 1 : other.w, oh = parent ? 1 : other.h;
-    if (x < other.x + ow && other.x < x + w && y < other.y + oh && other.y < y + h) return false;
-  }
-  return true;
-}
-/** Worklet-only drag feedback. The blocker scan creates no arrays on pointer frames. */
-function updatePreview(config: DragConfig, absX: number, absY: number, dx: number, dy: number) {
-  "worklet";
-  const f = config.footprint;
-  if (!f) return;
-  const px = config.foot ? config.foot.x + dx / config.scale : (absX - config.origin.x) / config.scale;
-  const py = config.foot ? config.foot.y + dy / config.scale : (absY - config.origin.y) / config.scale;
-  let best = -1, cellX = 0, cellY = 0, distance = Infinity;
-  if (f.small) for (let n = 0; n < config.blockers.length; n++) {
-    const parent = config.blockers[n];
-    if (parent.id === f.id || parent.on || !parent.surface || Math.abs(parent.sx! - px) > parent.radius! || Math.abs(parent.sy! - py) >= 38) continue;
-    let occupied = 0;
-    for (let b = 0; b < config.blockers.length; b++) if (config.blockers[b].on === parent.id && config.blockers[b].id !== f.id) occupied++;
-    if (occupied >= Math.min(3,parent.w)) continue;
-    const y = parent.y;
-    for (let x = parent.x; x < parent.x + parent.w; x++) {
-      if (!clearAt(config, f.id, x, y, 1, 1, config.layer ?? "furniture", parent.id)) continue;
-      const sx = parent.sx! + (x - parent.x - (parent.w - 1) / 2) * 38 + (y - parent.y) * 1.5;
-      const sy = parent.sy! + (y - parent.y) * 14.4;
-      const d = (sx - px) ** 2 + (sy - py) ** 2;
-      if (d < distance) { distance = d; best = n; cellX = x; cellY = y; }
-    }
-  }
-  if (best >= 0) {
-    const parent = config.blockers[best];
-    const sx = parent.sx! + (cellX - parent.x - (parent.w - 1) / 2) * 38 + (cellY - parent.y) * 1.5;
-    const sy = parent.sy! + (cellY - parent.y) * 14.4;
-    config.preview.value = { active:true, x:cellX, y:cellY, w:1, h:1, wall:false, valid:f.id !== "" || config.blockers.length < 48, on:parent.id, surfaceX:sx, surfaceY:sy, px:sx, py:sy };
-    return;
-  }
-  const spot = spotFromPoint(px, py, 1, f.wall);
-  if (!spot) { config.preview.value = { ...config.preview.value, active: true, valid: false, px, py }; return; }
-  const { x, y } = spot;
-  const valid = px >= 0 && px <= 800 && py >= 0 && py <= 560 &&
-    (f.id !== "" || config.blockers.length < 48) && clearAt(config, f.id, x, y, f.w, f.h, config.layer ?? "furniture");
-  config.preview.value = { active: true, x, y, w: f.w, h: f.h, wall: f.wall, valid, px, py };
+function updatePreview(config:DragConfig,absX:number,absY:number,dx:number,dy:number){
+ "worklet";
+ if(!config.world||!config.subject)return;
+ const px=config.foot?config.foot.x+dx/config.scale:(absX-config.origin.x)/config.scale;
+ const py=config.foot?config.foot.y+dy/config.scale:(absY-config.origin.y)/config.scale;
+ let world=config.world,targetX=px,targetY=py,offsetX=0,offsetY=0;
+ if(config.rooms&&config.sourceOrigin){const wx=px+config.sourceOrigin.x,wy=py+config.sourceOrigin.y;const target=config.rooms.find(r=>wx>=r.origin.x&&wx<=r.origin.x+800&&wy>=r.origin.y&&wy<=r.origin.y+560);if(!target){config.preview.value={...emptyPreview,active:true};return;}world=target.world;targetX=wx-target.origin.x;targetY=wy-target.origin.y;offsetX=target.origin.x-config.sourceOrigin.x;offsetY=target.origin.y-config.sourceOrigin.y;}
+ const result=resolveDrop(world,config.subject,targetX,targetY);
+ if(result&&config.rooms){result.px+=offsetX;result.py+=offsetY;}
+ const f=config.footprint;
+ config.preview.value={active:true,valid:!!result,x:result?.x??0,y:result?.y??0,w:f?.w??1,h:f?.h??1,wall:f?.wall??false,px:result?.px??px,py:result?.py??py,...(result&&(result.kind!=='floor'||config.rooms)?{on:result.on??result.itemId??'person',surfaceX:result.px,surfaceY:result.py}:{})};
 }
 export function Drag({
   children,
@@ -113,67 +83,83 @@ export function Drag({
     dy = useSharedValue(0),
     lift = useSharedValue(0),
     dragging = useSharedValue(false),
-    pinching = useSharedValue(false);
+    pinching = useSharedValue(false),
+    returning=useSharedValue(false);
   const preview = config.preview;
+  const motion=config.motion;
   const cameraPan = useContext(CameraPan);
-  const panBase = Gesture.Pan().enabled(enabled).maxPointers(1).minDistance(5);
-  if (cameraPan) panBase.blocksExternalGesture(cameraPan);
+  const panBase = Gesture.Pan().enabled(enabled).maxPointers(1).minDistance(8);
+  if (cameraPan) panBase.blocksExternalGesture(cameraPan.pan,cameraPan.pinch);
   // Vertical exit preserves the inventory's native horizontal scrolling.
   if (tray) panBase.activeOffsetY([-8, 8]).failOffsetX([-14, 14]);
   const pan = panBase
-    .onTouchesDown(e => { if(e.allTouches.length > 1) pinching.value = true; })
+    // eslint-disable-next-line react-hooks/immutability -- UI-thread shared preview handle.
+    .onTouchesDown(e => { if(e.allTouches.length > 1) {pinching.value = true;dx.value=0;dy.value=0;lift.value=0;if(motion)motion.set({id:"",dx:0,dy:0});preview.value=emptyPreview;} })
     .onStart(() => {
       "worklet";
+      returning.value=false;
+      dx.value=0;dy.value=0;
       dragging.value = true;
-      lift.value = reduced ? 0 : withTiming(1, { duration: 100 });
+      lift.value = reduced || config.grouped ? 0 : withTiming(1, { duration: 100 });
       if (onStart) runOnJS(onStart)();
     })
     .onUpdate((e) => {
       "worklet";
       if (e.numberOfPointers > 1 || pinching.value) return;
+      if(motion && config.subject && "id" in config.subject)motion.set({id:config.subject.id,dx:e.translationX,dy:e.translationY});
       dx.value = e.translationX;
       dy.value = e.translationY;
       updatePreview(config, e.absoluteX, e.absoluteY, e.translationX, e.translationY);
     })
     .onEnd((e) => {
       "worklet";
-      if (!pinching.value) runOnJS(onDrop)(e.absoluteX, e.absoluteY, e.translationX, e.translationY);
+      if(!pinching.value){
+        updatePreview(config,e.absoluteX,e.absoluteY,e.translationX,e.translationY);
+        returning.value=!!config.world&&!!config.subject&&!preview.value.valid;
+        if(returning.value){dx.value=reduced||config.grouped?0:withSpring(0,{damping:22,stiffness:260});dy.value=reduced||config.grouped?0:withSpring(0,{damping:22,stiffness:260});}
+        else runOnJS(onDrop)(e.absoluteX,e.absoluteY,e.translationX,e.translationY);
+      }
     })
     .onFinalize(() => {
       "worklet";
       // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are mutable UI-thread handles, not React props.
       preview.value = emptyPreview;
+      if(motion)motion.set({id:"",dx:0,dy:0});
       dragging.value = false;
       pinching.value = false;
-      dx.value = 0;
-      dy.value = 0;
+      if(!returning.value){dx.value=0;dy.value=0;}
       lift.value = reduced ? 0 : withSpring(0, { damping: 12, stiffness: 260, mass: 0.45 });
     });
   const tap = Gesture.Tap()
-    .maxDistance(5)
+    .maxDistance(8)
     .onEnd((_e, success) => {
       "worklet";
       if (success) runOnJS(onTap)();
     });
   const animated = useAnimatedStyle(() => ({
-    transform: [{ translateX: dx.value }, { translateY: dy.value - lift.value * 7 }, { scale: 1 + lift.value * 0.035 }],
+    transform: [{ translateX: dx.value }, { translateY: dy.value - lift.value * 7 }, { scale: 1 + lift.value * 0.06 }],
     zIndex: dragging.value ? 500 : 0,
   }));
   return (
+    <View pointerEvents="box-none" style={style}>
+    <View pointerEvents="none" style={{position:'absolute',left:'25%',right:'25%',bottom:0,height:8,borderRadius:50,backgroundColor:'#38545120'}}/>
     <GestureDetector gesture={Gesture.Race(pan, tap)} touchAction={tray ? "pan-x" : "none"}>
-      <Animated.View {...a11y} accessible focusable tabIndex={0} style={[style, animated]}>
+      <Animated.View {...a11y} accessible focusable tabIndex={0} style={[{width:style.width,height:style.height}, animated]}>
         {children}
       </Animated.View>
     </GestureDetector>
+    </View>
   );
 }
 const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
 export function Footprint({
+  offset={x:0,y:0},
   preview,
   scale,
   width,
   height,
 }: {
+  offset?:{x:number;y:number};
   preview: SharedValue<Preview>;
   scale: number;
   width: number;
@@ -183,10 +169,10 @@ export function Footprint({
     "worklet";
     const point = (x: number, y: number) =>
       p.wall
-        ? `${(54 + x * 46 - 23) * scale},${(124 + y * 56 - 28) * scale}`
-        : `${(43 + x * 37.5 + y * 1.5 - 18.75) * scale},${(386 + y * 14.4 - 7.2) * scale}`;
+        ? `${(offset.x + 54 + x * 46 - 23) * scale},${(offset.y + 124 + y * 56 - 28) * scale}`
+        : `${(offset.x + 43 + x * 37.5 + y * 1.5 - 18.75) * scale},${(offset.y + 386 + y * 14.4 - 7.2) * scale}`;
     return {
-      points: p.on ? [[-48,-12],[48,-12],[48,12],[-48,12]].map(([x,y]) => `${(p.surfaceX!+x)*scale},${(p.surfaceY!+y)*scale}`).join(" ") : [point(p.x, p.y), point(p.x + p.w, p.y), point(p.x + p.w, p.y + p.h), point(p.x, p.y + p.h)].join(" "),
+      points: p.on ? [[-48,-12],[48,-12],[48,12],[-48,12]].map(([x,y]) => `${(offset.x+p.surfaceX!+x)*scale},${(offset.y+p.surfaceY!+y)*scale}`).join(" ") : [point(p.x, p.y), point(p.x + p.w, p.y), point(p.x + p.w, p.y + p.h), point(p.x, p.y + p.h)].join(" "),
       opacity: p.active && p.valid === valid ? 1 : 0,
     };
   };
@@ -272,4 +258,10 @@ export function TrayGhost({
       {children}
     </Animated.View>
   );
+}
+
+/** Shared item translation keeps socket occupants and furniture fronts under the same finger. */
+export function MotionLink({motion,owner,children}:{motion:SharedValue<{id:string;dx:number;dy:number}>;owner?:string;children:ReactNode}){
+ const style=useAnimatedStyle(()=>({transform:[{translateX:owner&&motion.value.id===owner?motion.value.dx:0},{translateY:owner&&motion.value.id===owner?motion.value.dy:0}]}));
+ return <Animated.View pointerEvents="box-none" style={[{position:'absolute',left:0,top:0,width:'100%',height:'100%'},style]}>{children}</Animated.View>;
 }

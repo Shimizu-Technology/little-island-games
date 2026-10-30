@@ -82,7 +82,7 @@ describe('personalization save boundary', () => {
     const save = withLearner(), expected = { learner: 'mina', epoch: 3 };
     expect(applyPersonalization(save, { made: true }, expected, 4)).toBe(save);
     expect(applyPersonalization(save, { made: true }, { ...expected, learner: 'family' }, 3)).toBe(save);
-    expect(applyPersonalization(save, { home: { ...starterHome(), version: 3 } as any }, expected, 3)).toBe(save);
+    expect(applyPersonalization(save, { home: { ...starterHome(), version: 4 } as any }, expected, 3)).toBe(save);
     const next = applyPersonalization(save, { made: true }, expected, 3);
     expect(personFor(next).made).toBe(true); expect(personFor(save).made).toBe(false);
   });
