@@ -157,12 +157,12 @@ export function LearnFrame({ id }: { id: LearnId }) {
   // Say the game's goal once when a fresh round opens, so a non-reader knows what to do.
   const introduced = useRef<string | null>(null);
   useEffect(() => {
-    if (!saved || !engine.introAudio || !soundOn || !boardActive || saved.options.stage) return;
+    if (!saved || !engine.introAudio || !soundOn || !boardActive || (saved.options.stage && !engine.ownLevels)) return;
     if (saved.revision !== 0 || introduced.current === saved.id) return;
     introduced.current = saved.id;
     const timer = setTimeout(() => sound(engine.introAudio!, true), 450);
     return () => clearTimeout(timer);
-  }, [saved, engine.introAudio, soundOn, boardActive, sound]);
+  }, [saved, engine.introAudio, engine.ownLevels, soundOn, boardActive, sound]);
 
   const { learnUpdate, practiceOwned } = store;
   const save = useCallback(
@@ -349,7 +349,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: theme.sky, padding: 12, borderRadius: 22 }}><LearnArt island={island} size={72}/><View style={{ flex: 1 }}><Heading style={{ fontSize: 21, color: theme.ink }}>{engine.name}</Heading><Copy style={{ color: theme.ink, fontSize: 14 }}>Pick a stepping stone, then play.</Copy></View></View>
         <LearnerChip compact/>
-        <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
+        <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage && !engine.ownLevels ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
         <LevelPath game={id} level={levelOf(options)} onChoose={chooseLevel} />
         {engine.modes.length > 1 && (
           <>
@@ -406,7 +406,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       </Sheet>
       <Sheet visible={help} onClose={() => { stopSound(); setHelp(false); }} title={`How to play ${engine.name}`}>
         <Copy>{saved?.options.stage && !engine.ownLevels ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>
-        {!saved?.options.stage && engine.helpAudio && (
+        {!(saved?.options.stage && !engine.ownLevels) && engine.helpAudio && (
           <>
             <Button icon="sound-on" onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>
               Hear a quick guide
