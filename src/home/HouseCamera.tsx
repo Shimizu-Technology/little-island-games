@@ -56,8 +56,9 @@ export function HouseCamera({children,initialIndex,width,height,building,scale,z
  .onUpdate(e=>{const ratio=Math.max(minZoom,Math.min(maxZoom,zoom*e.scale))/zoom;transient.set(ratio);x.set(e.focalX-(pinchX.value-startX.value)*ratio);y.set(e.focalY-(pinchY.value-startY.value)*ratio);})
  // eslint-disable-next-line react-hooks/refs -- Gesture Handler invokes commitZoom only after input, outside render.
  .onEnd(e=>{const next=Math.max(minZoom,Math.min(maxZoom,zoom*e.scale));runOnJS(commitZoom)(next,buildingRoomAt((e.focalX-x.value)/(scale*transient.value),(e.focalY-y.value)/(scale*transient.value),building));})
+ // A cancelled pinch never commits, so restore the pre-pinch transform rather than leaving the house at a temporary scale.
  // eslint-disable-next-line react-hooks/purity -- Input callback records the end of an actual pinch.
- .onFinalize(()=>{lastPan.set(Date.now());moving.set(false);});
+ .onFinalize((_e,success)=>{if(!success&&transient.value!==1){transient.set(1);x.set(startX.value);y.set(startY.value);}lastPan.set(Date.now());moving.set(false);});
  const style=useAnimatedStyle(()=>({transform:[{translateX:x.value},{translateY:y.value},{scale:transient.value}],transformOrigin:'left top'}));
  return <CameraPan.Provider value={pan}><GestureDetector gesture={Gesture.Simultaneous(pinch,pan)} touchAction="none"><View testID="house-viewport" style={{width,height,overflow:'hidden'}}><Animated.View testID="house-camera" style={[{width:building.width*scale,height:building.height*scale},style]}>{children}</Animated.View></View></GestureDetector></CameraPan.Provider>;
 }
