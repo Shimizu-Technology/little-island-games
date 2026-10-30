@@ -22,7 +22,7 @@ function openShelfGame(id: ShelfId) {
 }
 export default function Home() {
   const insets = useSafeAreaInsets(), { width, fontScale } = useWindowDimensions(), store = useStore();
-  const [settings, setSettings] = useState(false), [shuffle, setShuffle] = useState(0);
+  const [settings, setSettings] = useState(false), [settingsClosing, setSettingsClosing] = useState(false), [shuffle, setShuffle] = useState(0);
   const available = width - insets.left - insets.right, content = Math.min(available, 1080) - 40;
   const columns = fontScale > 1.3 || available < 350 ? 1 : available >= 900 ? 3 : 2;
   const cardWidth = (content - 12 * (columns - 1)) / columns;
@@ -36,7 +36,7 @@ export default function Home() {
         <Text style={{ fontFamily: font, fontSize: 22, fontWeight: "800", color: C.ink }}>little island</Text>
         <Button compact quiet onPress={() => setSettings(true)} label="Open sound settings, practice and grown-up backups">Settings</Button>
       </View>
-      <Me creatorAllowed={!settings} />
+      <Me creatorAllowed={!settings && !settingsClosing} />
       <SaveStatus />
       <Heading style={{ fontSize: available >= 600 ? 34 : 28 }}>What shall we play?</Heading>
       {resume && <PressableScale accessibilityRole="button" accessibilityLabel={`${returnLabel(resume)} ${shelfGames.find(g => g.id === resume)?.name}`} onPress={() => openShelfGame(resume)} style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: C.soft, borderRadius: 18, padding: 12 }}>
@@ -61,6 +61,6 @@ export default function Home() {
         </PressableScale>)}
       </View>
       <Copy style={{ fontSize: 12, textAlign: "center", paddingVertical: 10 }}>Offline · No ads · Made for little moments together.</Copy>
-    </ScrollView><Settings visible={settings} onClose={() => setSettings(false)} />
+    </ScrollView><Settings visible={settings} onClose={() => { setSettings(false); setSettingsClosing(true); setTimeout(() => setSettingsClosing(false), 400); }} />
   </SafeAreaView>;
 }

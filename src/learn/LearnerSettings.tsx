@@ -20,7 +20,7 @@ export function LearnerSettings({ disabled }: { disabled: boolean }) {
     <Copy>Each learner keeps separate notes and learning choices on this device. Shared family history stays with Family practice. Saved rounds keep their original owner.</Copy>
     <View style={[styles.row, { flexWrap: "wrap" }]}>{people.people.map(p => <Chip key={p.id} selected={learner.id === p.id} onPress={() => { if (!disabled && !busy) { setConfirm(null); setRename(""); store.selectLearner(p.id); } }}>{p.name}</Chip>)}</View>
     {people.people.length < 5 && <>
-      <TextInput accessibilityLabel="New learner name" placeholder="Learner’s name" value={name} onChangeText={setName} maxLength={24} autoComplete="off" textContentType="none" editable={!disabled && !busy} style={styles.input} returnKeyType="done" />
+      <TextInput accessibilityLabel="New learner name" placeholder="Learner’s name" value={name} onChangeText={setName} maxLength={24} autoComplete="off" textContentType="none" editable={!disabled && !busy} style={styles.input} returnKeyType="done" onSubmitEditing={() => { if (!disabled && !busy && name.trim()) { if (store.addLearner(name)) { setName(""); setMessage(""); } else setMessage("Use a different name, up to 24 characters."); } }} />
       <Button quiet compact disabled={disabled || busy || !name.trim()} onPress={() => { if (store.addLearner(name)) { setName(""); setMessage(""); } else setMessage("Use a different name, up to 24 characters."); }}>Add learner</Button>
     </>}
     {learner.id !== "family" && <>
