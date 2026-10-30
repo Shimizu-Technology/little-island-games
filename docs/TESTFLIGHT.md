@@ -265,3 +265,32 @@ Delivery:
 Receipt: [evidence/testflight-build18.json](evidence/testflight-build18.json).
 
 Not verified: physical 120 Hz smoothness (simulator frame readings were taken under heavy host load), real-glass gestures, iPad A12 performance, audio and haptics, VoiceOver.
+
+## Little Island 2.0 — 2.0.0 (19), available 30 October 2026 Guam time
+
+Stassie asked for unlockable skins ("like a Fortnite locker") and something like Toca Boca. Leon asked for one cohesive character used across every game, badges by subject, an audit of every game, all-ages fun and a premium feel. Plan and record: [ISLANDER_2.md](ISLANDER_2.md); reward spec: [ISLANDER_REWARDS.md](ISLANDER_REWARDS.md).
+
+This build includes:
+- **Every child's own Islander**, made with "Make your islander" and styled in **My Locker** (front and back preview, locked items show how to earn them).
+- **The Islander in the games:** the Lagoon Run runner, a reacting companion in learning games, captain on Canoe Cargo, results-screen reactions, and "You" in board games.
+- **Island Home:** a decoratable room and beach, drag friends to sit, and a badge wall.
+- **24 badges** across Math, Reading, Science & Thinking, CHamoru, Arcade and Classic. Each unlocks wardrobe items or room things; help counts, and nothing rewards speed.
+- **Audit fixes:**
+  - arcade chests persist;
+  - Palm held-fire fixed;
+  - Reef rounds saved;
+  - Picnic Mystery has a gentle mode;
+  - Number Island and Island Dash have options;
+  - board result fixes;
+  - learner rename and remove.
+
+Source: clean commit `535276250837dc8069e04f6812d8fc770c9dcb5e` on PR #16 (held). Full gate 1,440 tests; Doctor 21/21. Two independent review rounds; all material findings fixed. Lead native walkthroughs on the simulator.
+
+Delivery:
+- The IPA is 174,073,925 bytes, SHA256 `ee88e2925c842ce73af52323b3d697fb7d33d5c7d50dafa7c9d0dac7a0b8222a`.
+- The signature, profile and entitlements all passed, and 5,815 audio files match the source.
+- Apple build `98e90544-6d77-4900-99ea-d9428da09624` is VALID / IN_BETA_TESTING in the Leon group, with notes.
+
+Receipt: [evidence/testflight-build19.json](evidence/testflight-build19.json).
+
+Not verified: physical iPhone and iPad feel, VoiceOver end to end, and Stassie's own acceptance.
