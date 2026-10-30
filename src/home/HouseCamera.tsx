@@ -4,7 +4,7 @@ import { Gesture, GestureDetector, type PinchGesture, type PanGesture } from 're
 import Animated, { cancelAnimation, runOnJS, useAnimatedStyle, useSharedValue, withDecay, withTiming } from 'react-native-reanimated';
 import { boundedPan, buildingRoomAt, roomOrigin, panRange, roomCamera, softPan, type Building } from './camera';
 export const CameraPan = createContext<{pan:PanGesture;pinch:PinchGesture} | undefined>(undefined);
-export type HouseCameraHandle = { reveal:(index:number,box:{left:number;top:number;right:number;bottom:number})=>void; jump:(index:number)=>void; zoomRoom:(index:number)=>void; tap:(index:number)=>void; canActivate:()=>boolean };
+export type HouseCameraHandle = { reveal:(index:number,box:{left:number;top:number;right:number;bottom:number},explicit?:boolean)=>void; jump:(index:number)=>void; zoomRoom:(index:number)=>void; tap:(index:number)=>void; canActivate:()=>boolean };
 /** Child object drags block the empty-floor pan; pinch runs across the scene. */
 export function HouseCamera({children,initialIndex,width,height,building,focusXs,scale,zoom,minZoom,maxZoom,reduced,onZoom,onRoom,onNavigate,cameraRef}:{
  children:ReactNode;focusXs?:number[];initialIndex:number;width:number;height:number;building:Building;scale:number;zoom:number;minZoom:number;maxZoom:number;reduced:boolean;
@@ -22,9 +22,9 @@ export function HouseCamera({children,initialIndex,width,height,building,focusXs
   else {const p=cameraAt(index);x.set(animate(p.x));y.set(animate(p.y));}
  };
  const toggle=(index:number)=>{focus.set(index);onRoom(index);onNavigate();onZoom(zoom>minZoom*1.15?minZoom:1);};
- useImperativeHandle(cameraRef,()=>({jump,zoomRoom:toggle,reveal:(index,box)=>{
+ useImperativeHandle(cameraRef,()=>({jump,zoomRoom:toggle,reveal:(index,box,explicit=false)=>{
   const origin=roomOrigin(index,building),left=(origin.x+box.left)*scale,right=(origin.x+box.right)*scale,top=(origin.y+box.top)*scale,bottom=(origin.y+box.bottom)*scale;
-  if(reduced)return;
+  if(reduced&&!explicit)return;
   let nx=width/2-(left+right)/2,ny=height/2-(top+bottom)/2;
   if(right-left<=width-32){if(left+nx<16)nx=16-left;else if(right+nx>width-16)nx=width-16-right;}
   if(bottom-top<=height-24){if(top+ny<12)ny=12-top;else if(bottom+ny>height-12)ny=height-12-bottom;}

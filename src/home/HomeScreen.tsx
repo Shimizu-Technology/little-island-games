@@ -392,15 +392,21 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               decorating
                 ? [
                     { name: "activate", label: "Select" },
+                    ...(room.instances.some(child=>child.on===i.id)?[{name:"choose-items",label:`Choose items on ${itemSpec(i.item).name}`}]:[]),
                     ...["left", "right", "back", "forward", "rotate", "mirror", "put-away"].map((name) => ({
                       name,
                       label: name.replace("-", " "),
                     })),
                     ...(decorSpec(i.item).small ? room.instances.filter(parent => !parent.on && decorSpec(parent.item).surface).map(parent => ({ name: `stack:${parent.id}`, label: stackActionLabel(parent, room.instances) })) : []),
                   ]
-                : [{name:"activate",label:"Select or use"},...["left","right","back","forward"].map(name=>({name,label:`Move ${name}`}))]
+                : [{name:"activate",label:"Select or use"},...(room.instances.some(child=>child.on===i.id)?[{name:"choose-items",label:`Choose items on ${itemSpec(i.item).name}`}]:[]),...["left","right","back","forward"].map(name=>({name,label:`Move ${name}`}))]
             }
-            onAccessibilityAction={(e) => e.nativeEvent.actionName.startsWith("stack:") ? putOn(i, e.nativeEvent.actionName.slice(6), roomId) : itemAction(i, e.nativeEvent.actionName, roomId)}
+            onAccessibilityAction={(e) => {
+              const name=e.nativeEvent.actionName;
+              if(name==='choose-items'){dispatch({type:'room',room:roomId});setSurfaceMenu(i.id);}
+              else if(name.startsWith('stack:'))putOn(i,name.slice(6),roomId);
+              else itemAction(i,name,roomId);
+            }}
             {...keyboard((e) => {
               const names: Record<string, string> = {
                 ArrowLeft: "left",
@@ -749,20 +755,6 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           <View pointerEvents="box-none" style={{position:"absolute",left:8*scale,top:8*scale,width:784*scale,height:544*scale,overflow:"hidden"}}><View pointerEvents="box-none" style={{position:"absolute",left:-8*scale,top:-8*scale,width:sceneWidth,height:560*scale}}>{renderEntries(room,roomId).map((entry) => (
             <React.Fragment key={entry.key}>{entry.node}</React.Fragment>
           ))}</View></View>
-          {effectiveZoom>limits.min*1.15 && room.instances.filter(parent => room.instances.some(child => child.on === parent.id)).map(parent => {
-            const children = room.instances.filter(child => child.on === parent.id);
-            const p = itemPoint(parent, room.instances);
-            const childTop = Math.min(...children.map(child => {
-              const foot = itemPoint(child, room.instances), size = itemSize(child) * scale;
-              return foot.y * scale + size * .15 - Math.max(44, size * .82);
-            }));
-            return <Pressable key={`choose-${parent.id}`} testID={`surface-chooser-${parent.id}`}
-              accessibilityRole="button" accessibilityLabel={`Choose items on ${itemSpec(parent.item).name}`}
-              onPress={() => setSurfaceMenu(parent.id)}
-              style={{ position: "absolute", left: Math.min(sceneWidth - 44, p.x * scale + itemSize(parent) * scale * .5 + 4), top: Math.max(0, childTop), minWidth: 44, minHeight: 44, borderRadius: 16, backgroundColor: "#FFF8E9", alignItems: "center", justifyContent: "center", zIndex: 2 }}>
-              <Text style={styles.label}>Items</Text>
-            </Pressable>;
-          })}
 
           {roomId===store.state.current && draggedItem && (
             <TrayGhost preview={preview} scale={scale} size={itemSize(instance("", draggedItem, 0, 0)) * scale}>
@@ -877,6 +869,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         <View style={[styles.menu, { top: inset.top + 60, right: inset.right + 8 }]}>
           <Text style={styles.meta}>{persist ? "Your room saves on this device." : "Home stays for this visit."}</Text>
           {!!person.unseen.length && <Button label="Mark all seen" onPress={() => app.personalize({unseen:[]}, {learner:owner,epoch:app.epoch})} />}
+          <Button label="Find my friends" onPress={() => {dispatch({type:'find-friends'});setMenu(false);requestAnimationFrame(()=>houseCamera.current?.reveal(roomIds.indexOf(store.state.current),{left:330,top:275,right:560,bottom:540},true));}} />
           <Button label="My badges" onPress={() => router.push("/badges")} />
           <Button
             label="Reset room"

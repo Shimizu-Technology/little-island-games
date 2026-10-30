@@ -1,4 +1,4 @@
-import { preserveHomeMigration } from './homeMigration';
+import { preserveHomeMigration, preserveImportedHome } from './homeMigration';
 import { applyWarmup } from './warmupAction';
 import { roundOwner } from '../badges/owners';
 import { badgesFor, type BadgeId } from '../badges/engine';
@@ -330,8 +330,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (restoring.current) throw new Error("A restore is already running.");
       restoring.current = true;
       try {
-        let next: Save;
-        try { next = backfillRewards(parseSave(encoded)); }
+        let next: Save, incoming: Save;
+        try { incoming=parseSave(encoded); next = backfillRewards(incoming); }
         catch (error) {
           // Keep both the rejected import and the current live save. Never repair imported bytes.
           await storage.preserve(encoded);
@@ -340,7 +340,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           throw error;
         }
         await queue.current;
-        await preserveAndReplace(storage, JSON.stringify(next), recovery ? null : JSON.stringify(latest.current));
+        await preserveImportedHome(storage, encoded, incoming, next, recovery ? null : JSON.stringify(latest.current));
         generation.current += 1;
         setEpoch(generation.current);
         latest.current = next;
