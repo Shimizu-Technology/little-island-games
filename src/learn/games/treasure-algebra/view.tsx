@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Animated, Platform, View } from "react-native";
 import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from "react-native-svg";
+import { useReducedMotion } from "../../../components/motion";
 import { Button, C, Copy, Heading, PressableScale } from "../../../components/ui";
 import type { BoardProps } from "../../types";
 import { initialValue, solved, type AlgebraState, type AlgebraTask } from "./engine";
@@ -24,8 +25,15 @@ function Diver({ size = 62 }: { size?: number }) {
 }
 
 function SeaLine({ value, start }: { value: number; start?: number }) {
+  const reduced = useReducedMotion();
   const [motion] = useState(() => new Animated.Value(-value * 9.5));
-  useEffect(() => { Animated.timing(motion, { toValue: -Math.max(-15, Math.min(15, value)) * 9.5, duration: 220, useNativeDriver: true }).start(); }, [motion, value]);
+  useEffect(() => {
+    const toValue = -Math.max(-15, Math.min(15, value)) * 9.5;
+    if (reduced) { motion.stopAnimation(); motion.setValue(toValue); return; }
+    const move = Animated.timing(motion, { toValue, duration: 220, useNativeDriver: true });
+    move.start();
+    return () => move.stop();
+  }, [motion, value, reduced]);
   return <View style={{ alignItems: "center", gap: 7 }}>
     <View accessibilityLabel={`Vertical sea-level number line. Diver at ${value}${start === undefined ? "" : `, start ${start}`}`} style={{ width: 286, height: 330, borderRadius: 24, overflow: "hidden", borderWidth: 3, borderColor: navy, backgroundColor: "#E3F6F2" }}>
       <Svg width="286" height="330" viewBox="0 0 286 330" accessible={false}>
@@ -55,11 +63,11 @@ function BalanceBoard({ task, state, remove, divide }: { task: AlgebraTask; stat
   return <View style={{ backgroundColor: "#E6F1E4", borderRadius: 22, padding: 14, gap: 10, borderWidth: 2, borderColor: navy }}>
     <Copy style={{ color: navy, fontWeight: "900", textAlign: "center", fontSize: 18 }}>BALANCE BOTH PANS</Copy>
     <View style={{ flexDirection: "row", gap: 8 }}>
-      <View style={{ flex: 1, backgroundColor: C.paper, borderRadius: 16, borderWidth: 2, borderColor: navy, minHeight: 105, alignItems: "center", justifyContent: "center", gap: 3 }}><Copy style={{ fontSize: 23, fontWeight: "900", color: navy }}>{task.extra}x {left > 0 ? `+ ${left}` : ""}</Copy>{left > 0 && <Weight value={left}/>}</View>
+      <View style={{ flex: 1, backgroundColor: C.paper, borderRadius: 16, borderWidth: 2, borderColor: navy, minHeight: 105, alignItems: "center", justifyContent: "center", gap: 3 }}><Copy style={{ fontSize: 23, fontWeight: "900", color: navy }}>{state.divided || task.extra === 1 ? "x" : `${task.extra}x`} {left > 0 ? `+ ${left}` : ""}</Copy>{left > 0 && <Weight value={left}/>}</View>
       <View style={{ flex: 1, backgroundColor: C.paper, borderRadius: 16, borderWidth: 2, borderColor: navy, minHeight: 105, alignItems: "center", justifyContent: "center", gap: 3 }}><Copy style={{ fontSize: 23, fontWeight: "900", color: navy }}>{state.divided ? right / task.extra : right}</Copy>{!state.divided && <Weight value={right}/>}</View>
     </View>
     <Svg height="50" width="100%" viewBox="0 0 300 50"><Path d="M20 3H280M150 3V34M127 47L150 30L173 47Z" fill="#F7C25E" stroke={navy} strokeWidth="4" strokeLinejoin="round"/></Svg>
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 8 }}>{left > 0 && dragWeight}{left > 0 && dropBasket}{left <= 0 && task.extra > 1 && <Button compact quiet onPress={divide}>÷{task.extra} both</Button>}</View>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 8 }}>{left > 0 && dragWeight}{left > 0 && dropBasket}{left <= 0 && task.extra > 1 && !state.divided && <Button compact quiet onPress={divide}>÷{task.extra} both</Button>}</View>
     {left <= 0 && <Copy style={{ color: navy, textAlign: "center", fontWeight: "800" }}>{task.extra > 1 && !state.divided ? `Now split both sides into ${task.extra} equal groups.` : "Both sides still match. Find x below."}</Copy>}
   </View>;
 }

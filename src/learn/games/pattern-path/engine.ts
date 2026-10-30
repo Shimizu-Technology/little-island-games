@@ -20,9 +20,12 @@ export function taskAt(s: PatternState): PatternTask {
     tiles = Array.from({ length: 7 }, (_, i) => cycle[i % cycle.length]); pool = colors.map(c => stone(c));
     hint = "The colored stones repeat. Their marks help you follow the order, too.";
   } else if (s.level === 2) {
-    tiles = Array.from({ length: 7 }, (_, i) => shells(i + 1)); missing = 4;
+    // Alternate growing and shrinking trails; the gap moves each task and each round.
+    const down = s.index % 2 === 1;
+    tiles = Array.from({ length: 7 }, (_, i) => shells(down ? 7 - i : i + 1));
+    missing = 1 + (next(s.seed) % 6 + s.index * 2) % 6;
     pool = Array.from({ length: 7 }, (_, i) => shells(i + 1));
-    hint = "Each step has one more shell than the last.";
+    hint = down ? "Each step has one fewer shell than the last." : "Each step has one more shell than the last.";
   } else if (s.level === 3) {
     if (s.index % 2) {
       const step = 2 + pick(seed >>> 6, 4), start = 1 + pick(seed >>> 10, 5);
@@ -63,7 +66,7 @@ export const engine: LearnEngine<PatternState> = {
   id: "pattern-path", name: "Pattern Path", island: "thinking", ages: [4, 11], ownLevels: true,
   levelNames: [
     { name: "Color trail", description: "Fill AB and ABB color paths." },
-    { name: "Growing shells", description: "Find the step with one more shape." },
+    { name: "Growing shells", description: "Find the step with one more, or one fewer, shell." },
     { name: "Skip and turn", description: "Count by steps and turn arrows." },
     { name: "Two clues", description: "Follow color and size together." },
     { name: "Number reef", description: "Solve doubling, squares, adding pairs and a number matrix." },
