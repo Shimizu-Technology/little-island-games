@@ -1,4 +1,5 @@
 import { badgeRule, type BadgeId } from '../badges/engine';
+import { stageWidth } from "./stage";
 import { useSheetPresence } from "../components/sheetPresence";
 import { themeRewards } from './catalog';
 import { personFor } from '../personalization/model';
@@ -194,7 +195,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   // A portrait viewport shows a life-sized stage and scrolls to its side walls.
   const beach = !decorating && (availableHeight >= width * .925 || room.characters.some(c => c.anchor.startsWith("beach-")));
   const sceneUnits = beach ? 740 : 560;
-  const sceneWidth = Math.max(0, width - drawerWidth, availableHeight * 800 / sceneUnits);
+  const sceneWidth = stageWidth({ width, height }, drawerWidth, availableHeight, sceneUnits);
   const sceneHeight = sceneWidth * sceneUnits / 800;
   const scale = sceneWidth / 800;
   const target = room.instances.find((i) => i.id === selected);
@@ -653,7 +654,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           paddingRight: drawerWidth,
         }}
       >
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} onScrollEndDrag={measure} onMomentumScrollEnd={measure} contentContainerStyle={{ alignItems: "center" }} style={{ width: width - drawerWidth, flexGrow: 0 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} onScrollEndDrag={measure} onMomentumScrollEnd={measure} contentContainerStyle={{ alignItems: "center", justifyContent: "center", minWidth: width - drawerWidth }} style={{ width: width - drawerWidth, flexGrow: 0 }}>
         <View ref={canvas} onLayout={measure} testID="home-scene" style={{ width: sceneWidth, height: sceneHeight }}>
           <Pressable
             accessibilityRole="button"

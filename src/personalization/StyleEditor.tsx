@@ -32,10 +32,10 @@ function TabPicture({ tab, color }: { tab: Tab; color: string }) {
   </Svg>;
 }
 
-export function StyleEditor({ look, equipped, earned, unseen, onChange, onSeen, initialTab = 'presentation', creator = false, onBadges }: {
+export function StyleEditor({ look, equipped, earned, unseen, onChange, onSeen, initialTab = 'presentation', initialItem, creator = false, onBadges }: {
   look: IslanderLook; equipped: IslanderLook; earned: string[]; unseen: string[];
   onChange: (look: IslanderLook, item?: StyleItem) => void; onSeen?: (id: string) => void;
-  initialTab?: Tab; creator?: boolean; onBadges?: () => void;
+  initialTab?: Tab; initialItem?: StyleItem; creator?: boolean; onBadges?: () => void;
 }) {
   const { width, height } = useWindowDimensions();
   const landscape = width > height && height < 550;
@@ -43,7 +43,7 @@ export function StyleEditor({ look, equipped, earned, unseen, onChange, onSeen, 
   const [tab, setTab] = useState<Tab>(initialTab);
   const tabScroll = useRef<ScrollView>(null);
   const [back, setBack] = useState(false);
-  const [detail, setDetail] = useState<StyleItem>();
+  const [detail, setDetail] = useState<StyleItem | undefined>(initialItem);
   const reason = detail && lockedReason(detail, earned);
   const visibleGroups = useMemo(() => groups.map(g => ({ ...g, tabs: g.tabs.filter(t => t === 'presentation' || styleCatalog.some(i => i.category === t)) })).filter(g => g.tabs.length), []);
   useEffect(() => {
