@@ -13,6 +13,8 @@ import * as shellMath from "./games/shell-math/view";
 import * as numberHop from "./games/number-hop/view";
 import * as quickPractice from "./games/quick-practice/view";
 import { stubView } from "./stubView";
+import * as tideLogic from "./games/tide-logic/view";
+import * as codeLab from "./games/code-lab/view";
 
 export type LearnView = { Board: ComponentType<BoardProps<unknown>>; Art: ComponentType<{ size: number }> };
 /** Screens for each learning game (React). Engines live in engines.ts. */
@@ -31,8 +33,8 @@ export const views: Record<LearnId, LearnView> = {
   "quick-practice": quickPractice as LearnView,
   "beep-bot": stubView,
   "turtle-draw": stubView,
-  "tide-logic": stubView,
-  "code-lab": stubView,
+  "tide-logic": tideLogic as LearnView,
+  "code-lab": codeLab as LearnView,
   "pattern-path": stubView,
   "shape-shift": stubView,
   "logic-lagoon": stubView,

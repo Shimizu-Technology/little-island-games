@@ -13,6 +13,8 @@ import { engine as shellMath } from "./games/shell-math/engine";
 import { engine as numberHop } from "./games/number-hop/engine";
 import { engine as quickPractice } from "./games/quick-practice/engine";
 import { stubEngine } from "./stub";
+import { engine as tideLogic } from "./games/tide-logic/engine";
+import { engine as codeLab } from "./games/code-lab/engine";
 
 /** Pure engines (no React): safe to import from save validation and tests. */
 const originalEngines: Record<LearnId, LearnEngine<unknown>> = {
@@ -30,8 +32,8 @@ const originalEngines: Record<LearnId, LearnEngine<unknown>> = {
   "quick-practice": quickPractice as LearnEngine<unknown>,
   "beep-bot": stubEngine({ id: "beep-bot", name: "Beep Bot", island: "coding" as Island, tagline: "Tap arrows. Help Beep get the shell.", description: "Tap arrows. Help Beep get the shell.", help: "Tap arrows. Help Beep get the shell.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [4, 6], ownLevels: true }) as LearnEngine<unknown>,
   "turtle-draw": stubEngine({ id: "turtle-draw", name: "Turtle Draw", island: "coding" as Island, tagline: "Code a turtle to draw shapes.", description: "Code a turtle to draw shapes.", help: "Code a turtle to draw shapes.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [6, 11], ownLevels: true }) as LearnEngine<unknown>,
-  "tide-logic": stubEngine({ id: "tide-logic", name: "Tide Logic", island: "coding" as Island, tagline: "If this, then that: sort the tide.", description: "If this, then that: sort the tide.", help: "If this, then that: sort the tide.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [7, 12], ownLevels: true }) as LearnEngine<unknown>,
-  "code-lab": stubEngine({ id: "code-lab", name: "Code Lab", island: "coding" as Island, tagline: "Variables, loops and functions.", description: "Variables, loops and functions.", help: "Variables, loops and functions.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [9, 14], ownLevels: true }) as LearnEngine<unknown>,
+  "tide-logic": tideLogic as LearnEngine<unknown>,
+  "code-lab": codeLab as LearnEngine<unknown>,
   "pattern-path": stubEngine({ id: "pattern-path", name: "Pattern Path", island: "thinking" as Island, tagline: "Spot what comes next.", description: "Spot what comes next.", help: "Spot what comes next.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [4, 11], ownLevels: true }) as LearnEngine<unknown>,
   "shape-shift": stubEngine({ id: "shape-shift", name: "Shape Shift", island: "thinking" as Island, tagline: "Fit the shapes. Flip and turn.", description: "Fit the shapes. Flip and turn.", help: "Fit the shapes. Flip and turn.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [4, 13], ownLevels: true }) as LearnEngine<unknown>,
   "logic-lagoon": stubEngine({ id: "logic-lagoon", name: "Logic Lagoon", island: "thinking" as Island, tagline: "Clues, grids and number puzzles.", description: "Clues, grids and number puzzles.", help: "Clues, grids and number puzzles.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [6, 14], ownLevels: true }) as LearnEngine<unknown>,
