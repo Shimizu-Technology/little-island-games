@@ -155,3 +155,31 @@ These are sized L. They follow the Islander release so Stassie gets what she ask
   - 2 accessories at first;
   - growing with each track.
 - One room in Island Home first; the beach and more rooms later if she uses it.
+
+## Delivered as 2.0.0 (19)
+
+All phases merged on `feat/islander`.
+- Phase 0 fixes; the Islander rig (three art rounds, plus lead fixes to the back-view leg folding and hair tie).
+- Island Home (two rounds, plus a portrait scene and beach).
+- Identity: the `personalization` namespace, creator, switcher, Locker.
+- The Run Islander, companion, results, Cargo captain and board portraits.
+- The reward wardrobe and room themes.
+- Badges: engine, wiring, backfill, wall, My badges, result card.
+- A final polish pass.
+
+**Independent review.**
+- Round 1: four material issues (owner credit after a learner switch, entitlement bypass on restore, unknown IDs exhausting caps, warm-ups not earning) plus one minor (beach furniture drops). All fixed in 665b256.
+- Round 2: the five fixes confirmed. One material issue remained (the creator racing the learner switcher's dismissal), fixed by a shared sheet-presence coordinator (1f73f70).
+
+**Lead native walkthroughs** (iPhone 16 Pro simulator, Release).
+- Walkthrough 1 found:
+  - the creator modal freezing Home after Settings closed (fixed in 1acaa3b, verified natively);
+  - a duplicate Islander on the Lagoon Run result (fixed in 96d2909).
+- Walkthrough 2 verified natively:
+  - add learner → Make your islander → Island Market → the Counter badge card → Try it on with the watch preselected;
+  - Island Home: the badge wall, dragging the Islander to the chair to sit, autosave;
+  - the Islander as the Lagoon Run runner.
+
+  It also found five polish items (lock visibility, track-named rules, "Change my look", item-focused thumbnails, seat depth), fixed in f3a7fc9.
+
+**Not verified:** physical-device feel, VoiceOver end to end, iPad hardware, and Stassie's own acceptance.
