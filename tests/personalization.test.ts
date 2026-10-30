@@ -38,7 +38,7 @@ describe('personalization save boundary', () => {
     const p = save.personalization!.people.mina;
     p.look = { ...p.look, hairStyle: 'braids', hat: 'cap' };
     p.earned = ['hat:bookworm-beanie']; p.unseen = ['hat:bookworm-beanie']; p.milestones = ['learn:sound-boat:1'];
-    p.home.characters[0] = { slot: 0, anchor: 'floor', pose: 'stand', x: 1, y: 2 };
+    (p.home as import("../src/home/model").HomeStateV2).rooms.home.characters[0] = { slot: 0, anchor: 'floor', pose: 'stand', x: 1, y: 2 };
     expect(parseSave(encode(save))).toEqual(save);
     expect(personFor(save, 'family').look.hat).toBe('none');
   });
@@ -49,7 +49,7 @@ describe('personalization save boundary', () => {
     (p: any) => { p.people.stranger = starterPerson(); },
     (p: any) => { p.people.family.made = 1; },
     (p: any) => { p.people.family.look.hat = 'unknown'; },
-    (p: any) => { p.people.family.home.characters[0].x = NaN; },
+    (p: any) => { p.people.family.home.rooms.home.characters[0].x = NaN; },
     (p: any) => { p.people.family.unseen = ['hat:cap']; },
     (p: any) => { p.people.family.earned = ['hat:cap', 'hat:cap']; },
     (p: any) => { p.people.family.milestones = ['bad id']; },
@@ -82,7 +82,7 @@ describe('personalization save boundary', () => {
     const save = withLearner(), expected = { learner: 'mina', epoch: 3 };
     expect(applyPersonalization(save, { made: true }, expected, 4)).toBe(save);
     expect(applyPersonalization(save, { made: true }, { ...expected, learner: 'family' }, 3)).toBe(save);
-    expect(applyPersonalization(save, { home: { ...starterHome(), version: 2 } as any }, expected, 3)).toBe(save);
+    expect(applyPersonalization(save, { home: { ...starterHome(), version: 3 } as any }, expected, 3)).toBe(save);
     const next = applyPersonalization(save, { made: true }, expected, 3);
     expect(personFor(next).made).toBe(true); expect(personFor(save).made).toBe(false);
   });

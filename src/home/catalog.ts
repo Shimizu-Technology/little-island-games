@@ -1,3 +1,4 @@
+import { moreCatalog, type MoreItemSpec } from "./catalogMore";
 import { stickerIds, type StickerId } from "../arcade/progress";
 export type Track = "Math" | "Reading" | "Science & Thinking" | "CHamoru words" | "Arcade" | "Classic" | "Island";
 export type ItemSpec = {
@@ -47,14 +48,14 @@ export const catalog = {
   surfboard: { ...furniture("Lagoon surfboard", [1, 1], "Classic"), badge: "classic-2" as const },
 } satisfies Record<string, ItemSpec>;
 export type FurnitureId = keyof typeof catalog;
-export type ItemId = FurnitureId | `sticker:${StickerId}`;
+export type ItemId = FurnitureId | `sticker:${StickerId}` | (string & {});
 export const furnitureIds = Object.keys(catalog) as FurnitureId[];
 export const starterItems = furnitureIds.filter((id) => !catalog[id].track);
-export const itemIds: readonly string[] = [...furnitureIds, ...stickerIds.map((id) => `sticker:${id}`)];
+export const itemIds: readonly string[] = [...furnitureIds, ...Object.keys(moreCatalog), ...stickerIds.map((id) => `sticker:${id}`)];
 export function itemSpec(id: ItemId): ItemSpec {
   if (id.startsWith("sticker:"))
     return { name: id.slice(8).replaceAll("-", " "), footprint: [1, 1], layer: "wall", rotations: [0], mirror: false };
-  return catalog[id as FurnitureId];
+  return moreCatalog[id] ?? catalog[id as FurnitureId];
 }
 export const wallThemes = ["cream", "lagoon", "night", "peach", "math-lab", "library", "night-sky", "arcade-neon"] as const;
 export const floorThemes = ["sand", "honey", "seafoam", "rose", "island-breeze", "game-room"] as const;
@@ -72,3 +73,14 @@ export const themeRewards = [
   { id: 'island-breeze', slot: 'floor', name: 'Island Breeze', earned: true, track: 'chamoru', badge: 'chamoru-4' },
   { id: 'game-room', slot: 'floor', name: 'Game Room', earned: true, track: 'classic', badge: 'classic-4' },
 ] as const;
+
+/** Metadata for the original collection, extended without changing its art contract. */
+export function decorSpec(id: ItemId): ItemSpec & Partial<MoreItemSpec> {
+  if (moreCatalog[id]) return moreCatalog[id];
+  const spec = itemSpec(id);
+  return { ...spec, tintable: !id.startsWith("sticker:"),
+    surface: ["table", "shelf", "toy-box", "books", "trophies"].includes(id),
+    small: ["lamp", "plant", "blocks", "globe", "island-lamp"].includes(id),
+    category: id.startsWith("sticker:") || spec.layer === "wall" ? "wall-art" : spec.layer === "ground" ? "rugs-floor" : ["bed", "chair", "beanbag"].includes(id) ? "beds-seats" : ["plant", "globe"].includes(id) ? "plants-nature" : ["lamp", "island-lamp"].includes(id) ? "lights" : ["table", "shelf", "books", "trophies"].includes(id) ? "tables-storage" : "toys-fun" };
+}
+export const isSeat = (id: ItemId) => ["bed", "chair", "rug", "beanbag", "shelf"].includes(id) || decorSpec(id).category === "beds-seats";

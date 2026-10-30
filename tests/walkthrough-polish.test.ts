@@ -22,11 +22,11 @@ describe('walkthrough reward clarity', () => {
     expect(focus('backpack').view).toBe('back');
     expect(focus('reading-glasses').box).toBe('5 0 70 70');
   });
-  it('aligns the resized seated hip to each illustrated surface', () => {
+  it('aligns the constant-size seated hip to each illustrated surface', () => {
     const home=starterHome();
-    for(const [anchor,offset] of [['bed',-27],['chair',14],['rug',4]] as const) {
-      const seat=home.instances.find(i=>i.item===anchor)!;
-      expect(characterPoint(home,{slot:0,anchor,pose:'sit',seatId:seat.id}).y-itemPoint(seat).y).toBe(offset);
+    for(const [anchor,offset] of [['bed',-11],['chair',30],['rug',20]] as const) {
+      const seat=home.rooms.home.instances.find(i=>i.item===anchor)!;
+      expect(characterPoint(home.rooms.home,{slot:0,anchor,pose:'sit',seatId:seat.id}).y-itemPoint(seat).y).toBe(offset);
     }
   });
 });

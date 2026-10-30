@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
-import { homeReducer, starterHome, validHome, type HomeAction, type HomeState, type Ownership } from "./model";
-export type History = { present: HomeState; past: HomeState[]; future: HomeState[] };
+import { homeReducer, starterHome, migrateHome, type HomeAction, type HomeStateV2, type Ownership } from "./model";
+export type History = { present: HomeStateV2; past: HomeStateV2[]; future: HomeStateV2[] };
 export function editHistory(
   history: History,
   action: HomeAction | { type: "undo" | "redo" },
@@ -29,15 +29,16 @@ export function editHistory(
 }
 /** Settled-action adapter. The route supplies a learner-scoped Store transaction; never write around Store.commit.
  * Invalid initial input is exposed verbatim as recoveryOriginal and never overwritten.
- * Persist only HomeState through learner-scoped personalization, not session history. */
-export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persist?: (state: HomeState) => boolean) {
+ * Persist only HomeStateV2 through learner-scoped personalization, not session history. */
+export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persist?: (state: HomeStateV2) => boolean) {
   const [session, setSession] = useState(() => ({
-    history: { present: validHome(initial) ? initial : starterHome(), past: [], future: [] } as History,
+    history: { present: migrateHome(initial) ?? starterHome(), past: [], future: [] } as History,
     message: "Your own little place by the sea.",
   }));
   const live = useRef(session);
   const dispatch = (action: HomeAction | { type: "undo" | "redo" }) => {
     const current = live.current;
+    if (initial !== undefined && !migrateHome(initial)) { setSession({ ...current, message: "This room needs recovery before it can be changed." }); return; }
     const result = action.type !== "undo" && action.type !== "redo" ? homeReducer(current.history.present, action as HomeAction, ownership) : undefined;
     const history = editHistory(current.history, action, ownership);
     if (history !== current.history && persist && !persist(history.present)) {
@@ -55,7 +56,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
     setMessage,
     canUndo: session.history.past.length > 0,
     canRedo: session.history.future.length > 0,
-    recoveryOriginal: initial !== undefined && !validHome(initial) ? initial : undefined,
+    recoveryOriginal: initial !== undefined && !migrateHome(initial) ? initial : undefined,
     persistence: persist ? "store" as const : "session" as const,
   };
 }

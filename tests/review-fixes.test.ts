@@ -30,9 +30,9 @@ for(const [owner,active] of [['mina','family'],['family','mina'],['mina','leo'],
 for(const change of ['look','furniture','sticker','theme','grant','milestone'])it(`rejects tampered ${change} at restore and write boundaries`,()=>{
  const save=initializePersonalization(emptySave()), p=structuredClone(personFor(save));
  if(change==='look')p.look={...p.look,outfit:'number-tee'};
- if(change==='furniture')p.home={...p.home,instances:[instance('unowned','abacus',0,0)],characters:[]};
- if(change==='sticker')p.home.instances.push(instance('unowned','sticker:reef-fish' as never,0,0));
- if(change==='theme')p.home.theme.wallpaper='math-lab';
+ if(change==='furniture'){p.home=starterHome();p.home.rooms.home.instances=[instance('unowned','abacus',0,0)];p.home.rooms.home.characters=[];}
+ if(change==='sticker')(p.home as import("../src/home/model").HomeStateV2).rooms.home.instances.push(instance('unowned','sticker:reef-fish' as never,0,0));
+ if(change==='theme')(p.home as import("../src/home/model").HomeStateV2).rooms.home.theme.wallpaper='math-lab';
  if(change==='grant')p.earned=['garbage'];
  if(change==='milestone')p.milestones=['explore:made-up'];
  expect(validHome(p.home)).toBe(true);
@@ -42,7 +42,7 @@ for(const change of ['look','furniture','sticker','theme','grant','milestone'])i
 });
 it('rejects beach and outside-wall drops before snapping; characters retain the beach',()=>{
  expect(spotFromPoint(400,650,1,false)).toBeUndefined();expect(spotFromPoint(400,650,1,true)).toBeUndefined();
- expect(characterDrop(starterHome(),0,400,650)).toMatchObject({anchor:'beach-middle'});
+ expect(characterDrop(starterHome().rooms.home,0,400,650)).toMatchObject({anchor:'beach-middle'});
 });
 
 it('completed assisted Family warmup earns Counter once with completion notes in the same save',()=>{
@@ -76,7 +76,7 @@ it('all catalog milestones fit and any missing last milestone can still earn',()
 it('allows earned home, theme and arcade-owned sticker writes and strict restore',()=>{
  const save=initializePersonalization(emptySave());save.personalization!.people.family.earned=['abacus','math-lab'];
  save.arcade={...emptyArcade(),people:{family:{...arcadeLearner(undefined,'family'),stickers:['reef-fish']}}};
- const home={...starterHome(),instances:[instance('a','abacus',0,0),instance('s','sticker:reef-fish',0,0)],characters:[],theme:{wallpaper:'math-lab' as const,floor:'honey' as const}};
+ const home=starterHome();home.rooms.home={instances:[instance('a','abacus',0,0),instance('s','sticker:reef-fish',0,0)],characters:[],theme:{wallpaper:'math-lab',floor:'honey'}};
  const next=applyPersonalization(save,{home},{learner:'family',epoch:1},1);expect(next).not.toBe(save);expect(parseSave(JSON.stringify(next))).toEqual(next);
 });
 it('completed mixed warmup earns both subjects and backfills explicit completion markers',()=>{

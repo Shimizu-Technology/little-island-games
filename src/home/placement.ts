@@ -4,7 +4,7 @@ export function clearFootprint(others: readonly Footprint[], candidate: Footprin
   "worklet";
   const { x, y, w, h, layer, id } = candidate;
   const wall = layer === "wall";
-  if (!Number.isSafeInteger(x) || !Number.isSafeInteger(y) || x < 0 || y < 0 || x + w > 8 || y + h > (wall ? 2 : 6))
+  if (!Number.isSafeInteger(x) || !Number.isSafeInteger(y) || x < 0 || y < 0 || x + w > 16 || y + h > (wall ? 4 : 12))
     return false;
   // The last two floor columns are the doorway; never fill them with furniture.
   return others.every(

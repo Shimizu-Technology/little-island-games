@@ -26,7 +26,7 @@ describe('badge reward art contract',()=>{
    if(['hat','outfit','accessory'].includes(reward.slot)) expect(spec).toBeDefined();
    if(spec) for(const pose of poses){ expect(spec.views).toContain(pose.view); for(const anchor of spec.anchors) expect(anchorsFor(pose)[anchor].every(Number.isFinite)).toBe(true); }
   }
-  for(const theme of themeRewards) { expect(theme.slot==='floor'?floorThemes:wallThemes).toContain(theme.id); const home=starterHome(); home.theme={...home.theme,[theme.slot]:theme.id}; expect(validHome(home)).toBe(true); }
+  for(const theme of themeRewards) { expect(theme.slot==='floor'?floorThemes:wallThemes).toContain(theme.id); const home=starterHome(); home.rooms.home.theme={...home.rooms.home.theme,[theme.slot]:theme.id}; expect(validHome(home)).toBe(true); }
   for(const item of wardrobe) expect(item.earned === true).toBe(wardrobeRewards.some(r=>r.slot===item.slot && r.id===item.id));
  });
  it('retains original saved look and optional palette semantics',()=>{
