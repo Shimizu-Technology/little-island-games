@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { arcadeTransition, emptyArcade, validArcade } from "../src/arcade/progress";
-import { createFlight as createWaitingFlight, flightGap, flightLearning, flightResult, flightStep, flightTransition, validFlight, type FlightState } from "../src/arcade/games/fruit-bat-flight/engine";
+import { createFlight as createWaitingFlight, flightGap, flightLearning, flightResult, flightSpeed, flightStep, flightTransition, validFlight, FLAP_VELOCITY, FLIGHT_GRAVITY, type FlightState } from "../src/arcade/games/fruit-bat-flight/engine";
 import { fixtureInput } from "../src/arcade/games/lagoon-run/fixtures";
 import { createRun, rowSafe, runResult, runStep, runTransition, validRun, type RunState } from "../src/arcade/games/lagoon-run/engine";
 import { equation, flightLevels, mathGate, runLevels, validFact } from "../src/arcade/games/scrolling/content";
@@ -71,6 +71,14 @@ describe("56-level feel curves",()=>{
   },30000);
 });
 describe("Fruit Bat Flight physics and hearts",()=>{
+  it("keeps a readable first-world flap arc and regular trunk cadence",()=>{
+    const s=createWaitingFlight(flightLevels[0],42);
+    const rise=FLAP_VELOCITY*FLAP_VELOCITY/(2*FLIGHT_GRAVITY)*660;
+    expect(rise).toBeGreaterThan(65);
+    expect(rise).toBeLessThan(flightGap(s)*660);
+    expect(s.level !== "endless" && s.level.spacing/flightSpeed(s)).toBeGreaterThan(1.25);
+    expect(s.level !== "endless" && s.level.spacing/flightSpeed(s)).toBeLessThan(1.5);
+  });
   it("sets instant flap velocity, accepts every fast down, applies gravity and caps fall speed",()=>{
     const s=createFlight(flightLevels[0],42),raw=JSON.stringify(s);
     let next=flightTransition(s,{type:"flap"});expect(next.vy).toBe(-.65);
