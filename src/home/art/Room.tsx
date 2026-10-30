@@ -8,7 +8,8 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import Svg, { Circle, Ellipse, G, Path, Rect, Defs, Pattern, Text as SvgText } from "react-native-svg";
-import type { BadgeId } from "../catalog";
+import { BadgeGlyph } from "../../badges/BadgeArt";
+import { tracks, badgeInfo, type BadgeId } from "../../badges/engine";
 import type { HomeState } from "../model";
 export const wallColors = { cream: "#F5E6C8", lagoon: "#C5DED3", night: "#A5ADC9", peach: "#F1CEC0", "math-lab": "#B6CABE", library: "#E7CFAD", "night-sky": "#B5BDD3", "arcade-neon": "#C9C5DA" };
 export const floorColors = { sand: "#EBD7B2", honey: "#DDAE7D", seafoam: "#AACDC1", rose: "#DCB9AA", "island-breeze": "#D9C79B", "game-room": "#BCCBC0" };
@@ -44,10 +45,12 @@ function Beach({ x, y, scale = 1, reduced }: { x: number; y: number; scale?: num
 export function RoomArt({
   theme,
   badges = [],
+  onBadgePress,
   reduced = false,
 }: {
   theme: HomeState["theme"];
   badges?: readonly BadgeId[];
+  onBadgePress?: (id: BadgeId) => void;
   reduced?: boolean;
 }) {
   return (
@@ -104,28 +107,18 @@ export function RoomArt({
         <Path d="M-29 34L-10 26V183L-29 194Z" fill="#EFC89B" />
         <Circle cx={-12} cy={119} r={4} fill="#6C7055" />
       </G>
-      <G transform="translate(448 98)">
-        <Rect width={127} height={104} rx={12} fill="#D1A774" stroke="#6D6C50" strokeWidth={3} />
-        <Rect x={7} y={7} width={113} height={90} rx={8} fill="#B98F60" />
-        <Path d="M24 11L29 17M98 11L103 17" stroke="#F8D59D" strokeWidth={3} />
-        <SvgText x={64} y={29} textAnchor="middle" fontSize={11} fontWeight="bold" fill="#FFF4DA">
-          LITTLE BIG MOMENTS
-        </SvgText>
-        {badges.slice(0, 6).map((badge, n) => (
-          <G key={badge} transform={`translate(${26 + (n % 3) * 37} ${51 + Math.floor(n / 3) * 29})`}>
-            <Path d="M-6 5L-9 18L0 14L8 18L5 5" fill="#E9A08A" />
-            <Circle r={11} fill={["#E7C66D", "#A8D3C3", "#B3BDD8"][n % 3]} stroke="#FFF0C9" strokeWidth={2} />
-            <SvgText y={4} textAnchor="middle" fontSize={10} fontWeight="bold" fill="#395853">
-              {badge.slice(0, 1).toUpperCase()}
-            </SvgText>
-          </G>
-        ))}
-        {badges.length === 0 && (
-          <>
-            <Path d="M33 56H94M44 71H83" stroke="#E9CC9C" strokeWidth={3} strokeLinecap="round" />
-            <Circle cx={16} cy={15} r={3} fill="#EF9C83" />
-          </>
-        )}
+      <G transform="translate(448 86)">
+        <Rect width={136} height={186} rx={12} fill="#D1A774" stroke="#6D6C50" strokeWidth={3}/>
+        <Rect x={6} y={6} width={124} height={174} rx={8} fill="#B98F60"/>
+        <Circle cx={13} cy={13} r={3} fill="#ECA28B"/><Circle cx={123} cy={13} r={3} fill="#A7C7B3"/>
+        <SvgText x={68} y={25} textAnchor="middle" fontSize={9} fontWeight="bold" fill="#FFF4DA">LITTLE BIG MOMENTS</SvgText>
+        {tracks.flatMap((track, row) => ([1, 2, 3, 4] as const).map((tier, col) => {
+          const id: BadgeId = `${track}-${tier}`, earned = badges.includes(id), info = badgeInfo(id);
+          return <G key={id} transform={`translate(${11 + col * 29} ${35 + row * 24})`} onPress={() => onBadgePress?.(id)} accessible accessibilityLabel={`${info.name}. ${earned ? 'Earned' : info.rule}. Open My badges`}>
+            <Rect width={26} height={22} rx={3} fill={earned ? '#F8E9C7' : '#CCAB7D'} stroke="#E7CFA8" strokeWidth={.7}/>
+            <G transform="translate(3 1) scale(.25)"><BadgeGlyph id={id} earned={earned}/></G>
+          </G>;
+        }))}
       </G>
       <Path d="M78 162Q109 147 110 174Q102 194 82 185Z" fill="#E9BA84" stroke="#65755C" strokeWidth={2} />
       <Path d="M94 156V184M82 169H107" stroke="#FFF2D2" strokeWidth={2} />

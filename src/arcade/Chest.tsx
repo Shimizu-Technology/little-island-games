@@ -1,3 +1,4 @@
+import { BadgeResultCard } from '../badges/ResultCard';
 import { LearningCompanion, Companion, useCompanionReaction } from "../islander/Companion";
 import React, { useRef, useState } from "react";
 import { View } from "react-native";
@@ -39,7 +40,7 @@ export function TreasureChest({ offer, game, expected, active, onClose }: { offe
     if (store.arcade({ type: "claim-chest", round: offer.round, result: current.current.results[0], config }, expected)) { setClaimed(true); sound.play("win"); }
     else onClose();
   }
-  if (claimed) return <View style={{ alignItems: "center", gap: 14 }}>{store.save.settings.learningIslander !== false && <Companion event="complete" active={active}/>}<View><ChestArt sticker={offer.sticker} open size={240}/><ActionBurst text="A new friend!"/></View><Heading>A new island friend</Heading><Copy>{stickerNames[offer.sticker]} is in your sticker book.</Copy><Button onPress={onClose}>Lovely! Back to my game</Button></View>;
+  if (claimed) return <View style={{ alignItems: "center", gap: 14 }}><BadgeResultCard round={offer.round}/>{store.save.settings.learningIslander !== false && <Companion event="complete" active={active}/>}<View><ChestArt sticker={offer.sticker} open size={240}/><ActionBurst text="A new friend!"/></View><Heading>A new island friend</Heading><Copy>{stickerNames[offer.sticker]} is in your sticker book.</Copy><Button onPress={onClose}>Lovely! Back to my game</Button></View>;
   return <LearningCompanion event={state.solved ? "correct" : state.wrong !== null ? "incorrect" : companion.event} desk={q.kind === "math" || q.kind === "word"} active={active}><View style={{ gap: 14, maxWidth: 520, width: "100%", alignSelf: "center" }}>
     <View style={{ alignItems: "center", gap: 8 }}><ChestArt sticker={offer.sticker} open={state.solved} active={active} size={176}/><Heading style={{ fontSize: 23, textAlign: "center" }}>{stickerNames[offer.sticker]}</Heading><Copy style={{ textAlign: "center", fontSize: 15 }}>One question for this sticker. Stars already saved!</Copy></View>
     <Button quiet onPress={skip}>Skip chest · costs nothing</Button>

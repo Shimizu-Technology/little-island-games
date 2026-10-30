@@ -69,6 +69,7 @@ function ExploreReady() {
       onStop={stop}
       narrationEnabled={store.save.settings.sound && (store.save.settings.narration ?? true)}
       speakingTopicId={speaking?.startsWith("explore-") ? speaking.slice(8) : undefined}
+      onCompleteTopic={(topic, progress) => store.exploreUpdate(progress, store.epoch, topic)}
       progress={store.save.explore?.progress}
       onProgressChange={(next) => store.exploreUpdate(next, store.epoch)}
       onToggleSound={() => store.settings({ sound: !store.save.settings.sound })}

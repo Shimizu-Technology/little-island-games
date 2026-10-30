@@ -10,7 +10,7 @@ This is an offline, no-fail room for the family's Islanders. The implementation 
 - `validHome(unknown)` is the version-1 namespace validator. Unsupported or malformed input is rejected without mutation; the adapter exposes the original as `recoveryOriginal`. The integration must preserve it using the existing recovery store before any replacement, and must prevent ordinary writes during restore or owner changes. This slice does not invent a second recovery/storage system.
 - `homeReducer` returns the original state and a human message for rejected edits. Reset returns `snapshot` referencing the exact pre-reset state; history makes that reset undoable. History is bounded to 40 steps outside `HomeState`.
 - Starter items are always owned. Pass earned furniture IDs and `sticker:<existing arcade StickerId>` through `ownedItems`. `homeStickerItems` adapts the existing sticker array. Putting an instance away changes placement only. Duplicate sticker and furniture instances are supported; ownership is reusable.
-- Badge IDs currently identify six track placeholders, not finalized milestone artwork. Map earned track/milestone records onto `BadgeId[]` at integration; replace the corkboard placeholders when badge art lands. Room's earn labels are track/set descriptions, pending final milestone IDs from the reward phase.
+- `HomeScreen.badges` uses the 24 milestone `BadgeId` values from `src/badges/engine.ts` (`math-1` through `classic-4`). The route derives these from the owner's milestones. Furniture and theme badge metadata provide the same exact earning rules as the Locker. `initialItem` opens the matching drawer and reveals its selected reward; the legacy six-track catalog validator is retained only for older adapters.
 
 ## Placement and art
 

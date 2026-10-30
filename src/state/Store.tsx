@@ -1,3 +1,6 @@
+import { badgesFor, type BadgeId } from '../badges/engine';
+import { personFor } from '../personalization/model';
+import { backfillRewards, rewardTransitions, rewardCompletion, completionSource } from '../badges/transitions';
 import { applyPersonalization, withoutLearner, type Person, type IdentityExpected } from "../personalization/model";
 import { BoardId, BoardSession, applyBoardSave } from "../board";
 import { ExploreProgress, validExploreProgress } from "../explore/progress";
@@ -24,6 +27,8 @@ import { recordPracticeNote } from "../practice/notes";
 import { type ArcadeAction, type ArcadeExpected, type ArcadeId } from "../arcade";
 import { applyArcadeAction } from "../arcade/saveAction";
 type Store = {
+  badgeResult: { owner: string; epoch: number; badges: BadgeId[]; source: string } | null;
+  dismissBadge: () => void;
   personalize: (patch: Partial<Pick<Person, "look" | "made" | "home" | "unseen">>, expected: IdentityExpected) => boolean;
   renameLearner: (id: string, name: string) => boolean;
   removeLearner: (id: string) => Promise<boolean>;
@@ -47,7 +52,7 @@ type Store = {
   notePractice: (skill: string, helped: boolean, expectedEpoch?: number) => void;
   /** Remember that a learning game's first-move hand was shown. */
   markCoached: (game: LearnId) => void;
-  exploreUpdate: (next: ExploreProgress, expectedEpoch: number) => void;
+  exploreUpdate: (next: ExploreProgress, expectedEpoch: number, completedTopic?: string) => void;
   save: Save;
   ready: boolean;
   error: string | null;
@@ -67,6 +72,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [error, setError] = useState<string | null>(null),
     [recovery, setRecovery] = useState<string | null>(null),
     [raw, setRaw] = useState<string | null>(null);
+  const [badgeResult, setBadgeResult] = useState<Store["badgeResult"]>(null);
   const [saving, setSaving] = useState(false);
   const pendingWrites = useRef(0);
   const [epoch, setEpoch] = useState(0);
@@ -95,7 +101,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       const encoded = await storage.get();
       setRaw(encoded);
-      const next = encoded ? parseSave(encoded) : emptySave();
+      const next = encoded ? backfillRewards(parseSave(encoded)) : backfillRewards(emptySave());
       generation.current += 1;
       setEpoch(generation.current);
       latest.current = next;
@@ -133,6 +139,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         next.wordRecords
       );
       if (records !== next.wordRecords) next = { ...next, wordRecords: records };
+      const before = latest.current;
+      next = rewardTransitions(before, next);
+      const owner = next.learning?.active ?? "family", previousBadges = badgesFor(personFor(before, owner).milestones);
+      const newBadges = badgesFor(personFor(next, owner).milestones).filter(id => !previousBadges.includes(id));
+      const source = completionSource(before, next);
+      if (newBadges.length && source) setBadgeResult({ owner, epoch: generation.current, badges: newBadges, source });
       latest.current = next;
       setSave(next);
       void persist(next);
@@ -185,11 +197,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     [commit]
   );
-  const exploreUpdate = useCallback((progress: ExploreProgress, expectedEpoch: number) => {
+  const exploreUpdate = useCallback((progress: ExploreProgress, expectedEpoch: number, completedTopic?: string) => {
     if (expectedEpoch !== generation.current || !validExploreProgress(progress)) return;
     const current = latest.current;
-    if (JSON.stringify(current.explore?.progress) === JSON.stringify(progress)) return;
-    commit({ ...current, explore: { favorites: [], ...current.explore, progress } });
+    if (!completedTopic && JSON.stringify(current.explore?.progress) === JSON.stringify(progress)) return;
+    const next = { ...current, explore: { favorites: [], ...current.explore, progress } };
+    commit(completedTopic && topicById(completedTopic) && progress.location.kind === "topic" && progress.location.id === completedTopic ? rewardCompletion(next, { kind: "explore", topic: completedTopic }) : next);
   }, [commit]);
   // Arcade uses the same commit/recovery queue, with explicit learner/restore ownership.
   const arcade = useCallback((action: ArcadeAction, expected: ArcadeExpected) => {
@@ -315,7 +328,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
   const restore = useCallback(
     async (encoded: string) => {
-      const next = parseSave(encoded);
+      const next = backfillRewards(parseSave(encoded));
       if (restoring.current) throw new Error("A restore is already running.");
       restoring.current = true;
       try {
@@ -342,6 +355,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     <Context.Provider
       value={{
         save,
+        badgeResult, dismissBadge: () => setBadgeResult(null),
         personalize, renameLearner, removeLearner, saving,
         arcade,
         epoch,

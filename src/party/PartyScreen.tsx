@@ -1,3 +1,4 @@
+import { BadgeResultCard } from '../badges/ResultCard';
 import { Companion } from "../islander/Companion";
 import type { RoundPractice } from "../practice/useRoundPractice";
 import { Text } from "../components/Text";
@@ -234,7 +235,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
           </>}
         </Sheet>
       ) : session.phase === "result" ? (
-        <View style={s.result}>
+        <View style={s.result}><BadgeResultCard round={session.id}/>
           <Companion event="draw"/>
           <Label>Everyone can look now</Label>
           <Heading>{session.result!.winner === "family" ? "You found the Imposter!" : "The Imposter escaped!"}</Heading>

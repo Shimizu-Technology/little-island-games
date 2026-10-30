@@ -106,9 +106,10 @@ describe('personalization save boundary', () => {
   });
 });
 describe('Locker entitlement seam', () => {
-  it('offers every current item freely, but previews a locked fixture without wearing it', () => {
+  it('keeps starters free and previews a locked fixture without wearing it', () => {
     const p = starterPerson(); expect(canWear(p.look, [])).toBe(true);
-    expect(styleCatalog.every(i => i.starter)).toBe(true);
+    expect(styleCatalog.filter(i => !i.starter)).toHaveLength(19);
+    expect(styleCatalog.filter(i => !i.starter).every(i => !!lockedReason(i, []))).toBe(true);
     const fixture = styleCatalog.map(i => i.id === 'hat:cap' ? { ...i, starter: false, lockedReason: 'Finish a reading round.' } : i);
     const cap = fixture.find(i => i.id === 'hat:cap')!;
     expect(lockedReason(cap, [])).toBe('Finish a reading round.');

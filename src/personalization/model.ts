@@ -1,3 +1,4 @@
+import { canWear } from './catalog';
 import { defaultLook, isValidLook, type IslanderLook } from '../islander/look';
 import { starterHome, validHome, type HomeState } from '../home/model';
 import { familyLearners, type Learners } from '../learn/learners';
@@ -30,7 +31,7 @@ export function personFor(save: Save, owner = save.learning?.active ?? 'family')
 export function applyPersonalization(save: Save, patch: Partial<Pick<Person, 'look' | 'made' | 'home' | 'unseen'>>, expected: IdentityExpected, epoch: number): Save {
   if (expected.epoch !== epoch || expected.learner !== (save.learning?.active ?? 'family')) return save;
   const initialized = initializePersonalization(save), p = personFor(initialized, expected.learner), next = { ...p, ...patch };
-  if (!validPerson(next)) return save;
+  if (!validPerson(next) || patch.look && !canWear(patch.look, p.earned)) return save;
   // A valid explicit save is acknowledged even when the look is unchanged (creator finish).
   return { ...initialized, personalization: { ...initialized.personalization!, people: { ...initialized.personalization!.people, [expected.learner]: next } } };
 }
