@@ -31,7 +31,7 @@ export const foundationLabels: Record<LearnId, readonly string[]> = {
   "times-tide": ["Level 1", "Level 2", "Level 3"],
   "fraction-feast": ["Level 1", "Level 2", "Level 3"],
   "treasure-algebra": ["Level 1", "Level 2", "Level 3"],
-  "letter-lagoon": ["Level 1", "Level 2", "Level 3"],
-  "word-workshop": ["Level 1", "Level 2", "Level 3"],
-  "story-studio": ["Level 1", "Level 2", "Level 3"],
+  "letter-lagoon": ["Hello, letters", "Letter twins", "First sounds"],
+  "word-workshop": ["Word joinery", "Word endings", "Meaning makers"],
+  "story-studio": ["Picture sentences", "Sentence repairs", "Sentence artists"],
 };

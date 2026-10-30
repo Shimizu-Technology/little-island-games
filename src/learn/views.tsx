@@ -16,6 +16,9 @@ import { stubView } from "./stubView";
 import * as tideLogic from "./games/tide-logic/view";
 import * as codeLab from "./games/code-lab/view";
 
+import * as letterLagoon from "./games/letter-lagoon/view";
+import * as wordWorkshop from "./games/word-workshop/view";
+import * as storyStudio from "./games/story-studio/view";
 export type LearnView = { Board: ComponentType<BoardProps<unknown>>; Art: ComponentType<{ size: number }> };
 /** Screens for each learning game (React). Engines live in engines.ts. */
 export const views: Record<LearnId, LearnView> = {
@@ -44,7 +47,7 @@ export const views: Record<LearnId, LearnView> = {
   "times-tide": stubView,
   "fraction-feast": stubView,
   "treasure-algebra": stubView,
-  "letter-lagoon": stubView,
-  "word-workshop": stubView,
-  "story-studio": stubView,
+  "letter-lagoon": letterLagoon as LearnView,
+  "word-workshop": wordWorkshop as LearnView,
+  "story-studio": storyStudio as LearnView,
 };
