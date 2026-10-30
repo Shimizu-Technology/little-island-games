@@ -1,5 +1,6 @@
 import type { LearnId, LearnOptions } from "./types";
 import { growthTrack } from "./growth/content";
+import { engines } from "./engines";
 
 export const levelNumbers = [1, 2, 3, 4, 5] as const;
 export type LearningLevel = typeof levelNumbers[number];
@@ -90,8 +91,10 @@ const foundation: Record<LearnId, readonly [LevelName, LevelName, LevelName]> = 
   "story-studio": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
 };
 export function levelInfo(game: LearnId, level: LearningLevel): LevelName {
+  const own = engines[game].levelNames?.[level - 1];
+  if (own) return own;
   if (level <= 3) return foundation[game][level - 1];
-  const track = growthTrack(game, level === 4 ? "stretch" : "deep")!;
-  return { name: track.label, description: track.description };
+  const track = growthTrack(game, level === 4 ? "stretch" : "deep");
+  return track ? { name: track.label, description: track.description } : { name: `Level ${level}`, description: "" };
 }
 export const levelTitle = (game: LearnId, level: LearningLevel) => `Level ${level} of 5 · ${levelInfo(game, level).name}`;

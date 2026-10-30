@@ -110,6 +110,8 @@ export type LearnEngine<S> = {
   ages?: readonly [number, number];
   /** The game implements all five levels itself (levelOf(options)); skip the shared Level 4–5 quiz board. */
   ownLevels?: boolean;
+  /** Names for all five levels when ownLevels is set (Level 1 easiest … Level 5 hardest). */
+  levelNames?: readonly { name: string; description: string }[];
   /** Skill id → kid-and-parent friendly label (shown in the grown-up practice view). Ids look like "read.short-a". */
   skills: Record<string, string>;
   create: (options: LearnOptions, ctx: CreateContext<S>) => S;
