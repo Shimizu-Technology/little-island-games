@@ -38,9 +38,9 @@ export function PlayButton({ children, onPress, disabled, compact, quiet, label,
   return <PressControl onPress={onPress} disabled={disabled} accessibilityLabel={label ?? (typeof children === "string" ? children : undefined)} style={[{ minHeight: compact ? 44 : 52, paddingHorizontal: 16, paddingVertical: 10, alignItems: "center", justifyContent: "center", borderRadius: 20, backgroundColor: quiet ? "#FFF4DA" : "#24536A", borderWidth: 2, borderColor: "#DCC28F", opacity: disabled ? .5 : 1 }, style]}><Copy style={{ fontWeight: "800", color: quiet ? "#24536A" : "#FFF4DA" }}>{icon === "refresh" ? "↻ " : ""}{children}</Copy></PressControl>;
 }
 /** Fire once during the move, never wait for finger-up. Resets on the next touch. */
-export function useSwipe(active: boolean, onSwipe: (direction: Swipe) => void, threshold = 24, onTapDown?: (x: number, y: number) => void) {
-  const latest = useRef({ active, onSwipe, threshold, onTapDown }), fired = useRef(false);
-  useLayoutEffect(() => { latest.current = { active, onSwipe, threshold, onTapDown }; }, [active, onSwipe, threshold, onTapDown]);
+export function useSwipe(active: boolean, onSwipe: (direction: Swipe) => void, threshold = 24, onTapDown?: (x: number, y: number) => void, onTap?: () => void) {
+  const latest = useRef({ active, onSwipe, threshold, onTapDown, onTap }), fired = useRef(false);
+  useLayoutEffect(() => { latest.current = { active, onSwipe, threshold, onTapDown, onTap }; }, [active, onSwipe, threshold, onTapDown, onTap]);
   return useMemo(() =>
     // eslint-disable-next-line react-hooks/refs -- PanResponder stores callbacks; refs are read only when a gesture occurs.
     PanResponder.create({
@@ -51,6 +51,12 @@ export function useSwipe(active: boolean, onSwipe: (direction: Swipe) => void, t
       if (!latest.current.active || fired.current) return;
       const direction = swipeDirection(gesture.dx, gesture.dy, latest.current.threshold);
       if (direction) { fired.current = true; latest.current.onSwipe(direction); }
+    },
+    onPanResponderRelease: (_, gesture) => {
+      if (!latest.current.active || fired.current) return;
+      const direction = swipeDirection(gesture.dx, gesture.dy, latest.current.threshold);
+      if (direction) latest.current.onSwipe(direction);
+      else latest.current.onTap?.();
     },
     onPanResponderTerminationRequest: () => false,
   }).panHandlers, []);

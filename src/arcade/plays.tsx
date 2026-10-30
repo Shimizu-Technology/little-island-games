@@ -161,9 +161,9 @@ export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
     goal: level => level !== "endless" && level.world === "learn" ? `${crabLevel(level.id).name}. Hop to the next number.` : "Look, hop, ride. Reach the seaside burrow!",
     Scene: p => <GridBackdrop crab {...p}/>,
     Teach: p => <GridTeaching crab learning={p.learning}/>,
-    teachingDetail: learning => learning ? "The world waits for your next swipe. Take all the time you need." : "Tap an arrow to hop. Wait on the sand, look for traffic gaps, and ride the wide logs.",
+    teachingDetail: learning => learning ? "The world waits for your next hop. Tap forward or swipe to move. Take all the time you need." : "Tap anywhere to hop forward. Swipe sideways or back. Wait on the sand, look for traffic gaps, and ride the wide logs. The small arrows work too.",
     learningSkill: () => ({ skill: "num.number-line", config: practice("math") }),
-    Board: p => <View style={{ flex: 1, paddingHorizontal: 7, paddingBottom: 8 }}><CrabBoard initial={createCrab(p.level === "endless" ? p.level : crabLevel(p.level.id), p.seed, p.helper)} {...p} {...gridSize(p, true)} onResult={result => p.onResult(result, result.stars < 3)}/></View>,
+    Board: p => <CrabBoard initial={createCrab(p.level === "endless" ? p.level : crabLevel(p.level.id), p.seed, p.helper)} {...p} size={p.width} wide={p.width > p.height} onResult={result => p.onResult(result, result.stars < 3)}/>,
   },
   "palm-patrol": {
     levels: palmLevels, level: palmLevel,
