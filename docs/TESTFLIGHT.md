@@ -347,3 +347,28 @@ Delivery:
 Receipt: [evidence/testflight-build21.json](evidence/testflight-build21.json).
 
 Not verified: physical iPhone and iPad feel, VoiceOver end to end, and Stassie's acceptance.
+
+## Little Island 2.3 — 2.3.0 (22), available 31 October 2026 Guam time
+
+Leon's 2.2 feedback: Crab Crossing's angle and zoom made it unplayable; Island Home should zoom and navigate like Toca Boca; Stassie wants to learn coding; and every category needs several games with proper levels from kindergarten to middle school. Record: [ISLANDER_2.md](ISLANDER_2.md#230-22) and [LEARNING_LEVELS.md](LEARNING_LEVELS.md).
+
+This build includes:
+- Crossy-style Crab Crossing framing;
+- an Island Home dollhouse with pinch, double-tap and two-axis pan;
+- a new Coding island (Beep Bot, Turtle Draw, Tide Logic, Code Lab, plus Crab Commands) with a Coding badge track;
+- twelve more five-level learning games (three each for Reading, Numbers, Science and Thinking);
+- age spans on shelf cards.
+
+Source: clean commit `64ed568e20227a9af630551e6301bc47b8bb4242` on PR #16 (held). Full gate 1,732 tests; Doctor 21/21.
+- Independent review round 1 found two material and four minor findings, all fixed with tests.
+- Round 2 approved, and its one minor finding was fixed.
+- Lead native Release walkthrough.
+
+Delivery:
+- The IPA is 175,554,526 bytes, SHA256 `702a4412b9e455c11fb6a163a5005c23ad8ae0c99047bb055848b462b5ac1271`.
+- The signature passed, and 5,891 audio files match the source.
+- Apple build `5f9afdab-2c8f-4e7f-ad02-7ac0d924345e` is VALID / IN_BETA_TESTING in the Leon group, with notes.
+
+Receipt: [evidence/testflight-build22.json](evidence/testflight-build22.json).
+
+Not verified: physical iPhone and iPad feel, VoiceOver end to end, and Stassie's acceptance.
