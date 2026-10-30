@@ -2,18 +2,19 @@ import React, { useCallback, useEffect, useRef, memo, useMemo, useState } from "
 import { View, Platform, type ViewStyle } from "react-native";
 import { crabHopFrame } from "../../feelArt";
 import type { ArtPose } from "../../ArtPose";
-import { useSharedValue } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 import { HeartsHud, HitReaction } from "../../LivesHud";
 import { GridFeedback } from "../grid/Feedback";
-import { Button, Copy } from "../../../components/ui";
+import { Button, Copy, PressableScale } from "../../../components/ui";
 import { Text } from "../../../components/Text";
 import { useReducedMotion } from "../../../components/motion";
-import { StarDisplay } from "../../Art";
+
 import { ArcadeSprite, type SpritePose } from "../../Sprite";
 import { useArcadeLoop } from "../../loop";
-import { GridBackdrop, GridHero, GridObject, CoastalObject } from "../grid/Art";
-import { DirectionPad, GridBudget, Shake, useGridInput, useGridTouch } from "../grid/Controls";
+import { GridHero, GridObject } from "../grid/Art";
+import { CrabLane, CrabVehicle } from "./CrabArt";
+import { GridBudget, Shake, useGridInput, useGridTouch } from "../grid/Controls";
 import type { Direction } from "../grid/rules";
 import type { ArcadeResult } from "../../types";
 import type { OutfitId } from "../../progress";
@@ -24,7 +25,6 @@ import {
   crabLanes,
   crabLearning,
   crabResult,
-  crabStars,
   crabStep,
   crabTransition,
   laneObjects,
@@ -57,16 +57,20 @@ export function CrabBoard({
   debug: boolean;
 }) {
   const touch = useGridTouch();
-  const size = Math.max(
-    120,
-    Math.min(
-      allottedSize - (wide ? 40 : 12),
-      wide ? Infinity : (availableHeight - 284 - (initial.level === "endless" ? 54 : 0) - (debug ? 37 : 0)) * (9 / 11)
-    )
-  );
-  const unit = (size - 6) / 9,
-    poses = useSharedValue<ArtPose[]>([]),
-    reduced = useReducedMotion();
+  const viewportWidth = Math.max(1, allottedSize);
+  const viewportHeight = Math.max(1, availableHeight);
+  // Five to six generous lanes fit a phone. The nine engine columns remain untouched.
+  const unit = Math.max(48, Math.min(viewportWidth / (wide ? 7 : 4.5), viewportHeight / 5.8));
+  const worldWidth = unit * 9;
+  const poses = useSharedValue<ArtPose[]>([]), reduced = useReducedMotion();
+  const cameraStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: poses.value[59]?.x ?? viewportWidth / 2 - unit * 4.5 },
+      { translateY: poses.value[59]?.y ?? viewportHeight * 0.65 - unit * 10.5 },
+      { skewY: "-7deg" },
+      { scaleY: 0.88 },
+    ],
+  }), [viewportWidth, viewportHeight, unit]);
   // Kit v3: pose-only interpolation, including a respawn identity guard.
   const build = useCallback(
     (s: CrabState) => {
@@ -76,8 +80,8 @@ export function CrabBoard({
         p: ArtPose[] = [
           {
             identity: s.lives.hit,
-            x: hero.x * unit,
-            y: (hero.y - hero.arc) * unit,
+            x: hero.x * unit - unit * 0.45,
+            y: (hero.y - hero.arc) * unit - unit * 0.5,
             scale: 1 + bounce * 0.08,
             frame: reduced ? 0 : crabHopFrame(s.hop?.age, CRAB_HOP),
             angle: reduced ? 0 : s.respawn > 0 ? 0.18 : Math.sin(s.time * 3) * 0.025,
@@ -95,9 +99,12 @@ export function CrabBoard({
       }
       for (let i = 0; i < 3; i++)
         p.push({ x: ((i * 3 + (reduced ? 0 : s.time * 0.4)) % 9) * unit, y: (2.4 + i * 0.6) * unit, opacity: 0.3 });
+      p.push({ x: hero.x * unit, y: hero.y * unit, scale: 1 - bounce * 0.24, opacity: 0.28 - bounce * 0.14 });
+      p.push({ x: viewportWidth / 2 - (hero.x + 0.5) * unit, y: viewportHeight * 0.65 - (hero.y + 0.5) * unit });
+      p.push({ x: hero.x * unit - unit * 0.5, y: hero.y * unit + unit * 0.46, opacity: reduced ? 0 : s.hop ? Math.max(0, 0.7 - s.hop.age / CRAB_HOP) : 0 });
       return p;
     },
-    [reduced, unit]
+    [reduced, unit, viewportWidth, viewportHeight]
   );
   const pose = useMemo(() => ({ build, target: poses, snapDistance: unit * 2 }), [build, poses, unit]);
   const {
@@ -145,187 +152,69 @@ export function CrabBoard({
     },
     [active, dispatch, onTone]
   );
-  const pan = useGridInput(active, move, true),
+  const pan = useGridInput(active, move, true, () => move("up")),
     learning = crabLearning(s),
     l = crabConfig(s),
-    world = s.level === "endless" ? "w3" : s.level.world,
     [lanes] = useState(() => crabLanes(initial));
+  const compactChip = { backgroundColor: "#102F39DC", borderRadius: 16, paddingHorizontal: 9, minHeight: 38, justifyContent: "center" as const };
   return (
-    <View
-      {...touch.handlers}
-      style={{
-        flexDirection: wide ? "row" : "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        flex: 1,
-      }}
-    >
-      <View>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 7, alignItems: "center" }}>
-          <View
-            accessibilityLabel="Burrow goal"
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 4,
-              backgroundColor: "#102F39CC",
-              borderRadius: 16,
-              paddingHorizontal: 8,
-              minHeight: 36,
-            }}
-          >
-            <GridObject kind="burrow" size={28} />
-            <Copy style={{ color: "#FFF0BE", fontSize: 16, fontWeight: "800" }}>
-              {learning
-                ? `Next ${l.numbers[s.cursor] ?? "Home!"}`
-                : `${s.crossed}/${s.level === "endless" ? "∞" : l.target}`}
-            </Copy>
-          </View>
-          <View
-            accessibilityLabel={`Star goal ${crabStars({ ...s, phase: "cleared" })} of 3, score ${s.score}`}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 4,
-              backgroundColor: "#102F39CC",
-              borderRadius: 16,
-              paddingHorizontal: 8,
-              minHeight: 36,
-            }}
-          >
-            <StarDisplay stars={crabStars({ ...s, phase: "cleared" })} size={13} />
-            <Text style={{ color: "#FFF0BE", fontSize: 13, fontWeight: "800" }}>{s.score}</Text>
-          </View>
-        </View>
-        {!learning && (
-          <View style={{ alignItems: "center", marginBottom: 6 }}>
-            <HeartsHud lives={s.lives} />
-          </View>
-        )}
-        <Shake event={s.bumps}>
-          <View
-            {...pan}
-            accessibilityLabel={`Coastal playfield. Crab at column ${(crabPosition(s).x + 1).toFixed(2)}, row ${(crabPosition(s).y + 1).toFixed(2)}. ${s.hops} hops, ${s.bumps} bumps. ${learning ? `Next number ${l.numbers[s.cursor] ?? "home"}` : "Reach the sea"}. ${s.message}`}
-            style={{
-              width: size,
-              height: unit * 11 + 6,
-              borderRadius: 23,
-              overflow: "hidden",
-              borderWidth: 3,
-              borderColor: "#AADFD5",
-              ...(Platform.OS === "web" ? ({ touchAction: "none" } as ViewStyle) : {}),
-            }}
-          >
-            <GridBackdrop crab world={world} width={size} height={unit * 11} />
-            {Array.from({ length: 11 }, (_, row) => {
-              const lane = lanes.find((lane) => lane.row === row),
-                road = lane && !waterLane(lane),
-                water = learning ? row > 0 && row < 10 : lane && waterLane(lane);
-              return (
-                <View
-                  key={row}
-                  style={{
-                    position: "absolute",
-                    top: row * unit,
-                    width: size,
-                    height: unit,
-                    backgroundColor: road ? "#3D5362" : water ? "#1B799633" : "#E7D79C",
-                    borderBottomWidth: road ? 1 : 0,
-                    borderColor: "#FBE5A855",
-                    justifyContent: "center",
-                  }}
-                >
-                  {road ? (
-                    <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
-                      {[0, 1, 2, 3, 4].map((i) => (
-                        <View key={i} style={{ width: unit * 0.5, height: 2, backgroundColor: "#E7E2BE66" }} />
-                      ))}
-                    </View>
-                  ) : (
-                    !water && (
-                      <View pointerEvents="none" style={{ flexDirection: "row", justifyContent: "space-around", paddingHorizontal: unit }}>
-                        {[0, 1, 2, 3].map(i => <View key={i} style={{ width: unit * .09, height: unit * .045, borderRadius: unit * .03, backgroundColor: row === 5 ? "#79976C" : "#B69C65", opacity: row === 0 ? 0 : .4 }}/>) }
-                      </View>
-                    )
-                  )}
-                </View>
-              );
+    <View {...touch.handlers} testID="crab-world" style={{ flex: 1, overflow: "hidden", backgroundColor: "#488A70" }}>
+      <Shake event={s.bumps}>
+        <View {...pan} accessible accessibilityRole="button" accessibilityLabel={`Crab Crossing world. Tap to hop forward, swipe left, right, or back. ${s.hops} hops, ${s.bumps} bumps.`}
+          onAccessibilityTap={() => move("up")}
+          style={{ width: viewportWidth, height: viewportHeight, overflow: "hidden", ...(Platform.OS === "web" ? ({ touchAction: "none" } as ViewStyle) : {}) }}>
+          <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0, width: worldWidth, height: unit * 11 }, cameraStyle]}>
+            {Array.from({ length: 16 }, (_, row) => {
+              const lane = lanes.find(item => item.row === row);
+              return <View key={row} style={{ position: "absolute", top: row * unit, left: -unit * 4, width: unit * 17, height: unit }}>
+                <CrabLane row={row > 10 ? 10 : row} lane={lane} learning={learning} width={unit * 17} height={unit}/>
+              </View>;
             })}
-            {[1, 4, 7].map((x) => (
-              <View key={`burrow-${x}`} style={{ position: "absolute", left: x * unit - unit * 0.1, top: -unit * 0.1 }}>
-                <GridObject kind="burrow" size={unit * 1.2} />
-                {homes.slots.includes(x) && <View accessibilityLabel="Crab resting in a reached burrow" style={{ position: "absolute", left: unit * 0.3, top: unit * 0.38 }}><GridHero crab happy size={unit * 0.65} /></View>}
-              </View>
-            ))}
-            {[0, 1, 2].map((i) => (
-              <ArcadeSprite key={`wave-${i}`} poses={poses} index={55 + i} width={unit} height={unit / 3}>
-                <Text style={{ color: "#D0F2E2", fontSize: unit * 0.4 }}>〰</Text>
-              </ArcadeSprite>
-            ))}
-            {learning &&
-              l.numbers.map((n, i) => (
-                <React.Fragment key={i}>
-                  {[l.stones[i], (l.stones[i] + 3) % 9].map((x, j) => (
-                    <View
-                      key={j}
-                      style={{
-                        position: "absolute",
-                        top: (9 - i) * unit + 2,
-                        left: x * unit + 1,
-                        width: unit - 2,
-                        height: unit - 4,
-                        borderRadius: unit / 3,
-                        backgroundColor: i < s.cursor ? "#AEDCBA" : "#FFF0C7",
-                        borderWidth: 2,
-                        borderBottomWidth: 4,
-                        borderColor: i === s.cursor && j === 0 && helper ? "#E6A149" : "#7A9A91",
-                        justifyContent: "center",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Text style={{ color: "#2E5558", fontSize: unit * 0.48, fontWeight: "900" }}>
-                        {j ? n + (n === 1 ? 2 : 1) : n}
-                      </Text>
-                    </View>
-                  ))}
-                </React.Fragment>
-              ))}
-            <CrabTraffic poses={poses} unit={unit} lanes={lanes} debug={debug} />
-            <HitReaction hit={s.lives.hit} onTone={onTone}>
-              <CrabActor poses={poses} unit={unit} outfit={outfit} debug={debug} happy={s.phase === "cleared"} />
-            </HitReaction>
-            <GridFeedback
-              event={s.crossed + s.lives.hit}
-              x={s.impact.x}
-              y={s.impact.y}
-              kind={s.impact.kind}
-              unit={unit}
-              cols={9}
-              rows={11}
-              text={s.impact.kind === "score" ? "+100" : ""}
-            />
-          </View>
-        </Shake>
+            {[1, 4, 7].map(x => <View key={`burrow-${x}`} style={{ position: "absolute", left: x * unit - unit * 0.1, top: -unit * 0.1 }}>
+              <GridObject kind="burrow" size={unit * 1.2}/>
+              {homes.slots.includes(x) && <View style={{ position: "absolute", left: unit * 0.3, top: unit * 0.38 }}><GridHero crab happy size={unit * 0.65}/></View>}
+            </View>)}
+            {learning && l.numbers.map((n, i) => <React.Fragment key={i}>
+              {[l.stones[i], (l.stones[i] + 3) % 9].map((x, j) => <View key={j} style={{ position: "absolute", top: (9 - i) * unit + 2, left: x * unit + 1, width: unit - 2, height: unit - 4, borderRadius: unit / 3, backgroundColor: i < s.cursor ? "#AEDCBA" : "#FFF0C7", borderWidth: 2, borderBottomWidth: 6, borderColor: i === s.cursor && j === 0 && helper ? "#E6A149" : "#7A9A91", justifyContent: "center", alignItems: "center" }}>
+                <Text style={{ color: "#2E5558", fontSize: unit * 0.42, fontWeight: "900" }}>{j ? n + (n === 1 ? 2 : 1) : n}</Text>
+              </View>)}
+            </React.Fragment>)}
+            <CrabTraffic poses={poses} unit={unit} lanes={lanes} debug={debug}/>
+            <ArcadeSprite poses={poses} index={60} width={unit} height={unit * 0.4}>
+              <View style={{ width: unit, height: unit * 0.24, borderRadius: unit, borderWidth: 4, borderColor: lanes.some(item => item.row === Math.round(crabPosition(s).y) && waterLane(item)) ? "#D7FFFF" : "#F8E4B1", backgroundColor: "transparent" }}/>
+            </ArcadeSprite>
+            <HitReaction hit={s.lives.hit} onTone={onTone}><CrabActor poses={poses} unit={unit} outfit={outfit} debug={debug} happy={s.phase === "cleared"}/></HitReaction>
+            <GridFeedback event={s.crossed + s.lives.hit} x={s.impact.x} y={s.impact.y} kind={s.impact.kind} unit={unit} cols={9} rows={11} text={s.impact.kind === "score" ? "+100" : s.impact.kind === "splash" ? "SPLASH!" : "BONK!"} textWidth={110}/>
+          </Animated.View>
+        </View>
+      </Shake>
+      <View pointerEvents="box-none" style={{ position: "absolute", top: 72, left: 10, right: 10, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <View style={compactChip} accessibilityLabel={`Score ${s.score}. ${s.crossed} of ${s.level === "endless" ? "endless" : l.target} burrows`}>
+          <Text style={{ fontSize: 36, lineHeight: 42, fontWeight: "900", color: "#FFF4C7", textShadowColor: "#183B44", textShadowRadius: 2, textShadowOffset: { width: 2, height: 3 } }}>{learning ? l.numbers[s.cursor] ?? "HOME" : s.score}</Text>
+          <Text style={{ fontSize: 12, fontWeight: "900", color: "#FFF4C7" }}>{learning ? "NEXT STONE" : `BURROWS ${s.crossed}/${s.level === "endless" ? "∞" : l.target}`}</Text>
+        </View>
+        <View style={{ gap: 5, alignItems: "flex-end" }}>
+          {!learning && <View style={compactChip}><HeartsHud lives={s.lives}/></View>}
+          <View style={compactChip}><Text style={{ color: "#FFF4C7", fontWeight: "900", fontSize: 15 }}>⌂ {s.crossed}/{s.level === "endless" ? "∞" : l.target}</Text></View>
+        </View>
       </View>
-      <View style={{ gap: 10, alignItems: "center", maxWidth: wide ? 235 : undefined }}>
-        <Copy style={{ color: "#FFF0C7", fontSize: 15, textAlign: "center", minHeight: 21 }}>
-          {learning
-            ? `${l.name} · one hop at a time`
-            : s.hops < 3
-              ? "Look for a gap, then hop!"
-              : "Ride the logs. Find your burrow!"}
-        </Copy>
-        <DirectionPad repeat active={active} onMove={move} horizontal={wide} />
-        {s.level === "endless" && (
-          <Button quiet compact disabled={!active} onPress={() => dispatch({ type: "finish" })}>
-            Finish crossing
-          </Button>
-        )}
-        {debug && <GridBudget budget={budget} />}
+      <View pointerEvents="box-none" style={{ position: "absolute", right: 10, bottom: 12, gap: 4, alignItems: "center" }}>
+        <OverlayArrow label="Move forward" glyph="↑" onPress={() => move("up")} active={active}/>
+        <View style={{ flexDirection: "row", gap: 4 }}>
+          <OverlayArrow label="Move left" glyph="←" onPress={() => move("left")} active={active}/>
+          <OverlayArrow label="Move back" glyph="↓" onPress={() => move("down")} active={active}/>
+          <OverlayArrow label="Move right" glyph="→" onPress={() => move("right")} active={active}/>
+        </View>
       </View>
+      {s.hops < 3 && <View pointerEvents="none" style={{ position: "absolute", bottom: 12, left: 10, backgroundColor: "#102F39CC", padding: 8, borderRadius: 12 }}><Copy style={{ color: "#FFF4C7", fontSize: 13 }}>Tap to hop · swipe to steer</Copy></View>}
+      {s.level === "endless" && <View style={{ position: "absolute", left: 10, bottom: 48 }}><Button quiet compact disabled={!active} onPress={() => dispatch({ type: "finish" })}>Finish crossing</Button></View>}
+      {debug && <View pointerEvents="none" style={{ position: "absolute", left: 10, bottom: 4 }}><GridBudget budget={budget}/></View>}
     </View>
   );
+}
+
+function OverlayArrow({ label, glyph, onPress, active }: { label: string; glyph: string; onPress: () => void; active: boolean }) {
+  return <PressableScale accessibilityRole="button" accessibilityLabel={label} disabled={!active} onPress={onPress} style={{ width: 44, height: 44, borderRadius: 13, justifyContent: "center", alignItems: "center", backgroundColor: "#102F39B8", borderWidth: 1, borderColor: "#DDF3D2A8" }}><Text style={{ color: "#FFF7D9", fontSize: 27, fontWeight: "900" }}>{glyph}</Text></PressableScale>;
 }
 
 const CrabActor = memo(function CrabActor({
@@ -341,9 +230,20 @@ const CrabActor = memo(function CrabActor({
   debug: boolean;
   happy: boolean;
 }) {
+  const hopShape = useAnimatedStyle(() => {
+    const frame = poses.value[0]?.frame ?? 0;
+    const shape = frame === 1 || frame === 4 ? { x: 1.14, y: 0.84 } : frame === 2 ? { x: 0.86, y: 1.2 } : { x: 1, y: 1 };
+    return { transform: [{ scaleX: shape.x }, { scaleY: shape.y }] };
+  });
   return (
-    <ArcadeSprite poses={poses} index={0} width={unit} height={unit}>
-      <GridHero crab size={unit} outfit={outfit} happy={happy} poses={poses} />
+    <>
+    <ArcadeSprite poses={poses} index={58} width={unit} height={unit}>
+      <View style={{ position: "absolute", left: unit * 0.19, top: unit * 0.7, width: unit * 0.62, height: unit * 0.17, borderRadius: unit, backgroundColor: "#163E4B" }} />
+    </ArcadeSprite>
+    <ArcadeSprite poses={poses} index={0} width={unit * 1.9} height={unit * 1.9}>
+      <Animated.View style={hopShape}>
+      <GridHero crab size={unit * 1.9} outfit={outfit} happy={happy} poses={poses} />
+      </Animated.View>
       {debug && (
         <View
           style={{
@@ -359,6 +259,7 @@ const CrabActor = memo(function CrabActor({
         />
       )}
     </ArcadeSprite>
+    </>
   );
 });
 const CrabTraffic = memo(function CrabTraffic({
@@ -381,9 +282,9 @@ const CrabTraffic = memo(function CrabTraffic({
             poses={poses}
             index={1 + l.row * 6 + i}
             width={unit * l.span}
-            height={unit}
+            height={unit * 1.18}
           >
-            <CoastalObject kind={l.kind} width={unit * l.span} height={unit} left={l.speed < 0} />
+            <CrabVehicle kind={l.kind} width={unit * l.span} height={unit * 1.18} variant={i + l.row} left={l.speed < 0} />
             {debug && (
               <View
                 style={{

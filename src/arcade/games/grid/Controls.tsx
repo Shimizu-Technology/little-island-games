@@ -5,7 +5,7 @@ import { Copy } from "../../../components/ui";
 import { Text } from "../../../components/Text";
 import { nativeDriver, useReducedMotion } from "../../../components/motion";
 import { directions, type Direction } from "./rules";
-export function useGridInput(active: boolean, move: (d: Direction) => void, repeat = false) {
+export function useGridInput(active: boolean, move: (d: Direction) => void, repeat = false, onTap?: () => void) {
   const latest = useRef({ active, move, repeat });
   useLayoutEffect(() => {
     latest.current = { active, move, repeat };
@@ -36,7 +36,7 @@ export function useGridInput(active: boolean, move: (d: Direction) => void, repe
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
   }, []);
-  return useSwipe(active, move, 16);
+  return useSwipe(active, move, 16, undefined, onTap);
 }
 /** Retain a winning touch target until its finger is up, including a held repeat. */
 export function useGridTouch() {
