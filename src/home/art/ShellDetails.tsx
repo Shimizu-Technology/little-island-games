@@ -5,6 +5,14 @@ const ink='#47655B', cream='#FFF1D3';
 /** Permanent scenery stays above the floor's back edge, outside furniture depth. */
 export function ShellWallDetails({room}:{room:Exclude<RoomId,'home'>}) {
   if(room==='kitchen') return <G stroke={ink} strokeWidth={2.5} strokeLinejoin="round">
+    <Path d="M234 82L415 91V193L234 184Z" fill="#D5A87E" stroke="#536E62" strokeWidth={4}/>
+    <Path d="M245 91L405 98V180L245 172Z" fill="#C9E8DB" stroke="none"/>
+    <Path d="M245 145q42-31 81-7t79-3v45l-160-8Z" fill="#91C3AB" stroke="none"/>
+    <Path d="M245 158q51-21 85-2t75-10v34l-160-8Z" fill="#6CA79B" stroke="none"/>
+    <Path d="M325 94v84M245 132l160 8" stroke="#FFF2D7" strokeWidth={7}/>
+    <Path d="M238 81q14 51 0 102l22 2q-8-51 4-101ZM406 90q-14 48 0 103l-23-3q8-50-3-102Z" fill="#EEB0A1" stroke="#705E5D" strokeWidth={2}/>
+    <Path d="M246 89q8 38 0 83m12-80q-7 42 0 85m137-85q-7 42 0 89" fill="none" stroke="#FFE6D1" strokeWidth={2}/>
+    <Path d="M231 184l188 10" stroke="#FFF2D7" strokeWidth={9}/>
     <Path d="M151 201L750 239V314L151 276Z" fill="#D8E8D6"/>
     {[0,1,2].map(n=><Path key={n} d={`M152 ${218+n*23}L750 ${256+n*23}`} stroke="#94B8A5"/>)}
     {Array.from({length:20},(_,n)=><Path key={n} d={`M${157+n*30} ${202+n*1.9}v73`} stroke="#94B8A5"/>)}
@@ -54,7 +62,7 @@ export function ShellFloorDetails({room, patterned=false}:{room:Exclude<RoomId,'
   if(patterned) return null;
   // Checker tiles use the exact perspective cells of the unchanged floor grid.
   const point=(u:number,v:number)=>[151+u*68+v*(19-u/6),294+u*4+v*(241-u*7)/6];
-  return <G fill="#709F91" opacity={.44}>{Array.from({length:12},(_,col)=>Array.from({length:9},(_,row)=>{
+  return <G fill="#709F91" opacity={.27}>{Array.from({length:12},(_,col)=>Array.from({length:9},(_,row)=>{
     const u=col-2,v=row-1;
     if((u+v)%2) return null;
     const p=[point(u,v),point(u+1,v),point(u+1,v+1),point(u,v+1)];

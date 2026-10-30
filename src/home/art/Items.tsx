@@ -1,10 +1,11 @@
 import React from "react";
-import Svg, { Circle, Ellipse, G, Path, Rect, Defs, Filter, FeColorMatrix, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, Ellipse, G, Path, Rect, Defs, Filter, FeColorMatrix, LinearGradient, Stop, Text as SvgText } from "react-native-svg";
 import { StickerArt } from "../../arcade/Art";
 import type { StickerId } from "../../arcade/progress";
 import type { ItemId } from "../catalog";
 import { material, shade } from "./Tint";
 import type { TintId } from "../catalogMore";
+import { ItemFinish, ItemLife, ItemMotion } from "./Finish";
 const ink = "#385451",
   wood = "#D99E6C",
   pale = "#FFF1D3",
@@ -20,6 +21,8 @@ export function ItemArt({
   foreground = false,
   muted = false,
   tint = "original",
+  animated = false,
+  reduced = false,
 }: {
   item: ItemId;
   active?: boolean;
@@ -29,6 +32,8 @@ export function ItemArt({
   foreground?: boolean;
   muted?: boolean;
   tint?: TintId;
+  animated?: boolean;
+  reduced?: boolean;
 }) {
   const coral = item === "aquarium" ? defaultCoral : material(tint, defaultCoral);
   const teal = ["plant", "aquarium"].includes(item) ? defaultTeal : item === "surfboard" && tint !== "original" ? shade(material(tint, defaultTeal), .35) : material(tint, defaultTeal);
@@ -54,24 +59,25 @@ export function ItemArt({
   );
   return (
     <Svg width={size} height={size} viewBox="0 0 150 130" accessible={false}>
-      <Defs><Filter id={`muted-${item}`}><FeColorMatrix type="saturate" values="0"/></Filter></Defs>
+      <Defs><LinearGradient id={`item-coral-${item}`} x1="0%" y1="0%" x2="15%" y2="100%"><Stop offset="0%" stopColor={shade(coral,.3)}/><Stop offset="45%" stopColor={coral}/><Stop offset="100%" stopColor={shade(coral,-.18)}/></LinearGradient><LinearGradient id={`item-teal-${item}`} x1="0%" y1="0%" x2="15%" y2="100%"><Stop offset="0%" stopColor={shade(teal,.3)}/><Stop offset="45%" stopColor={teal}/><Stop offset="100%" stopColor={shade(teal,-.18)}/></LinearGradient><Filter id={`muted-${item}`}><FeColorMatrix type="saturate" values="0"/></Filter></Defs>
       <G filter={muted ? `url(#muted-${item})` : undefined}>
       <Ellipse cx={75} cy={119} rx={57} ry={7} fill="#44645A" opacity={0.12} />
       <G
         transform={`translate(${mirrored ? 150 : 0} 0) scale(${mirrored ? -1 : 1} 1)`}
         stroke={ink}
-        strokeWidth={2.5}
+        strokeWidth={2.1}
         strokeLinejoin="round"
         strokeLinecap="round"
       >
         <G transform={rotation === 180 || rotation === 270 ? "translate(150 0) scale(-1 1)" : undefined}>
+          <ItemMotion active={active} animated={animated} reduced={reduced}>
           {item === "bed" ? (
             <>
               <Path d="M18 41L116 34L135 92L36 105Z" fill={wood} />
               <Path d="M18 42V88L36 105V61Z" fill="#BA805D" />
               <Path d="M19 44Q15 20 27 19L108 14Q121 13 122 35L124 50" fill="#E9BF91" />
               <Path d="M23 49L115 42L131 84L37 96Z" fill={pale} />
-              <Path d="M30 64L120 56L130 84L38 96Z" fill={teal} />
+              <Path d="M30 64L120 56L130 84L38 96Z" fill={`url(#item-teal-${item})`} />
               <Path d="M39 66L47 94M55 64L64 92M72 63L80 89M88 61L96 87" stroke={highlight("#A7D7C7")} />
               <Path d="M30 48Q32 38 40 39L72 36Q83 38 83 50L39 55Z" fill="#FFF9E9" />
               <Path d="M37 104V117M128 92V107" strokeWidth={7} />
@@ -118,19 +124,19 @@ export function ItemArt({
                     />
                   ))}
                   {[0, 2, 4].map((n) => (
-                    <Ellipse key={n} cx={n * 12 + 6} cy={5} rx={4} ry={2} fill={coral} />
+                    <Ellipse key={n} cx={n * 12 + 6} cy={5} rx={4} ry={2} fill={`url(#item-coral-${item})`} />
                   ))}
                 </G>
               ) : (
                 <>
-                  <Ellipse cx={76} cy={71} rx={20} ry={8} fill={coral} />
-                  <Path d="M73 68Q79 56 86 63" fill={teal} />
+                  <Ellipse cx={76} cy={71} rx={20} ry={8} fill={`url(#item-coral-${item})`} />
+                  <Path d="M73 68Q79 56 86 63" fill={`url(#item-teal-${item})`} />
                 </>
               )}
             </>
           ) : item === "chair" ? (
             <>
-              <Path d="M40 74V30Q41 17 54 17H97Q107 17 107 30V76" fill={coral} />
+              <Path d="M40 74V30Q41 17 54 17H97Q107 17 107 30V76" fill={`url(#item-coral-${item})`} />
               <Path d="M51 32V58M75 31V57M96 32V57" stroke={highlight("#F9C9AC")} strokeWidth={5} />
               <Path d="M32 83L112 78L125 91L44 99Z" fill={paint("#F7BD9C")} />
               <Path d="M44 100V119M118 93V113M36 84V103" stroke={wood} strokeWidth={7} />
@@ -153,22 +159,22 @@ export function ItemArt({
                 </G>
               ) : (
                 <>
-                  <Circle cx={47} cy={49} r={11} fill={teal} />
+                  <Circle cx={47} cy={49} r={11} fill={`url(#item-teal-${item})`} />
                   <Path d={star} transform="translate(94 48)" fill="#EBC76B" />
                 </>
               )}
-              <Rect x={38} y={78} width={29} height={20} rx={4} fill={teal} />
+              <Rect x={38} y={78} width={29} height={20} rx={4} fill={`url(#item-teal-${item})`} />
               <Path d="M47 84H58" stroke={pale} />
-              <Path d="M85 98V78H96V98M102 98V74H112V98" fill={coral} />
+              <Path d="M85 98V78H96V98M102 98V74H112V98" fill={`url(#item-coral-${item})`} />
             </>
           ) : item === "plant" ? (
             <>
               <Path d="M58 87Q70 66 74 28M76 86Q83 60 107 48" fill="none" strokeWidth={5} />
               <Path
                 d="M73 50Q38 51 34 26Q65 18 73 50M76 37Q72 8 100 12Q109 30 76 37M83 66Q88 35 121 41Q122 65 83 66M67 71Q35 75 29 53Q54 43 67 71"
-                fill={teal}
+                fill={`url(#item-teal-${item})`}
               />
-              <Path d="M47 84H100L93 113Q75 124 55 113Z" fill={coral} />
+              <Path d="M47 84H100L93 113Q75 124 55 113Z" fill={`url(#item-coral-${item})`} />
               <Path d="M51 94H96" stroke={highlight("#F9C9AC")} strokeWidth={5} />
             </>
           ) : item === "lamp" || item === "island-lamp" ? (
@@ -190,11 +196,11 @@ export function ItemArt({
                 <Path d="M47 56Q76 67 104 56" stroke={pale} strokeWidth={5} />
               )}
               <Path d="M100 70V84" strokeWidth={2} />
-              <Circle cx={100} cy={87} r={3} fill={coral} />
+              <Circle cx={100} cy={87} r={3} fill={`url(#item-coral-${item})`} />
             </>
           ) : item === "toy-box" ? (
             <>
-              <Path d="M24 66L121 61V109Q72 127 24 110Z" fill={coral} />
+              <Path d="M24 66L121 61V109Q72 127 24 110Z" fill={`url(#item-coral-${item})`} />
               <Path d={active ? "M24 64L36 28L128 26L121 61Z" : "M24 66L33 52L128 49L121 61Z"} fill="#E9BA76" />
               {active && (
                 <>
@@ -203,7 +209,7 @@ export function ItemArt({
                   <Circle cx={65} cy={52} r={6} fill="#DFC282" />
                   <Circle cx={50} cy={61} r={1.5} />
                   <Circle cx={59} cy={61} r={1.5} />
-                  <Path d={star} transform="translate(96 60)" fill={teal} />
+                  <Path d={star} transform="translate(96 60)" fill={`url(#item-teal-${item})`} />
                 </>
               )}
               <Path d={star} transform="translate(74 92)" fill={pale} />
@@ -272,9 +278,9 @@ export function ItemArt({
               <Rect x={20} y={27} width={112} height={79} rx={13} fill="#B6E2DD" />
               <Path d="M25 45Q50 39 76 45Q103 51 127 45" fill="none" stroke="#F0FCED" strokeWidth={4} />
               <Path d="M25 96Q75 85 127 96V101H25Z" fill="#E7D4A1" />
-              <Path d="M39 94Q28 75 40 64Q52 76 42 89M111 92Q120 76 108 67" fill={teal} />
+              <Path d="M39 94Q28 75 40 64Q52 76 42 89M111 92Q120 76 108 67" fill={`url(#item-teal-${item})`} />
               <G transform={active ? "translate(25 -6)" : undefined}>
-                <Path d="M76 67L92 60V79Z" fill={coral} />
+                <Path d="M76 67L92 60V79Z" fill={`url(#item-coral-${item})`} />
                 <Ellipse cx={67} cy={70} rx={17} ry={11} fill="#EDBE65" />
                 <Circle cx={60} cy={68} r={2} />
               </G>
@@ -286,7 +292,7 @@ export function ItemArt({
             <>
               <Path d="M73 67V86L43 118M73 86L105 118M73 86L72 121" stroke={wood} strokeWidth={5} />
               <G transform="rotate(-28 75 50)">
-                <Rect x={27} y={34} width={95} height={28} rx={6} fill={teal} />
+                <Rect x={27} y={34} width={95} height={28} rx={6} fill={`url(#item-teal-${item})`} />
                 <Rect x={19} y={30} width={19} height={36} rx={5} fill={pale} />
                 <Rect x={119} y={39} width={15} height={18} rx={3} fill={wood} />
                 <Path d="M48 40H91" stroke="#BCE2D2" strokeWidth={5} />
@@ -307,11 +313,11 @@ export function ItemArt({
             </>
           ) : item === "arcade" ? (
             <>
-              <Path d="M40 15H107L115 75L125 110L35 119L28 80Z" fill={teal} />
+              <Path d="M40 15H107L115 75L125 110L35 119L28 80Z" fill={`url(#item-teal-${item})`} />
               <Path d="M42 32H101L105 72H36Z" fill="#38545E" />
               <Path d="M49 40H93L96 64H44Z" fill="#ABD8D1" />
               <Path d={star} transform={`translate(70 51) scale(${active ? 1.3 : 0.8})`} fill="#F6D574" />
-              <Path d="M33 77H114L121 91L32 99Z" fill={coral} />
+              <Path d="M33 77H114L121 91L32 99Z" fill={`url(#item-coral-${item})`} />
               <Path d="M53 85V77" strokeWidth={4} />
               <Circle cx={53} cy={75} r={5} fill={pale} />
               <Ellipse cx={92} cy={84} rx={7} ry={3} fill="#E8C068" />
@@ -332,12 +338,15 @@ export function ItemArt({
             </>
           ) : (
             <>
-              <Path d="M73 117Q41 92 48 53Q51 18 74 7Q99 22 102 56Q109 94 83 118Z" fill={coral} />
+              <Path d="M73 117Q41 92 48 53Q51 18 74 7Q99 22 102 56Q109 94 83 118Z" fill={`url(#item-coral-${item})`} />
               <Path d="M74 9L82 118" stroke={pale} strokeWidth={7} />
               <Path d="M51 58L99 49M49 72L101 63" stroke={teal} strokeWidth={8} />
-              <Path d="M84 94L95 106L86 116Z" fill={teal} />
+              <Path d="M84 94L95 106L86 116Z" fill={`url(#item-teal-${item})`} />
             </>
           )}
+          <ItemFinish id={item} color={paint(defaultCoral)}/>
+          </ItemMotion>
+          <ItemLife id={item} color={paint(defaultCoral)} active={active} animated={animated} reduced={reduced}/>
         </G>
       </G>
       </G>

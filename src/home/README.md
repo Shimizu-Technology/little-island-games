@@ -73,3 +73,9 @@ Explicit saved themes are never replaced by defaults. New kitchen, tree house an
 beach rooms start with the agreed four-item furniture sets. Native fit and depth
 still require the lead's device checks.
 The categorized inventory uses a horizontal FlatList with bounded render batches.
+
+## 2.2 stage projection
+
+Island Home now paints an 800×560 near-frontal stage. The back wall fills the top 352 units and the floor fills the lower band. The same version-2 20×12 floor and 16×4 wall coordinates remain in saved rooms; only their projection changes. `floorPoint`, `itemPoint`, `spotFromPoint`, the drag worklet preview and the visible floor grid use that projection. Placement validation, collision footprints, depth ordering and versioned save parsing retain their existing rules.
+
+Portrait screens show the stage at the available height and allow horizontal scrolling to its side walls. Item drag and drop measure the stage origin after scrolling. The Islander box is 224 scene units, sidekick boxes are 170, and furniture illustration sizes are enlarged without changing footprints. Seat offsets match the larger rig. Each room has permanent wall details and low built-ins behind child-placed furniture; saved themes still colour the room. Interactive art uses optional worklet animation and respects Reduce Motion.

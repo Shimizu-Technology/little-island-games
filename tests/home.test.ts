@@ -30,7 +30,7 @@ describe('versioned home saves and recovery', () => {
   expect(room(s).instances).toEqual(old.instances.map(i=>({...i,x:i.x*2,y:i.y*2})));
   expect(room(s).characters[0]).toEqual({...old.characters[0],x:18,y:10});
   for(let n=0;n<old.instances.length;n++) {
-   const i=old.instances[n], expected=i.layer==='wall'?{x:205+i.x*46,y:224+i.y*39}:{x:174+i.x*51+i.y*14,y:327+i.y*31+i.x*3};
+   const i=old.instances[n], expected=i.layer==='wall'?{x:54+i.x*92,y:124+i.y*112}:{x:43+i.x*75+i.y*3,y:386+i.y*28.8};
    expect(itemPoint(room(s).instances[n])).toEqual(expected);
   }
  });
@@ -110,7 +110,7 @@ describe('room editing, stacking and colours',()=>{
  });
  it('gives every new item an explicit scene size relative to the Islander',()=>{
   expect(Object.keys(moreCatalog)).toHaveLength(41);
-  for(const [id,spec] of Object.entries(moreCatalog)) expect(itemSize(instance(id,id,0,0))).toBe(spec.itemSize);
+  for(const [id,spec] of Object.entries(moreCatalog)) expect(itemSize(instance(id,id,0,0))).toBe(Math.round(spec.itemSize*1.18));
   expect(itemSize(instance('f','fridge',0,0))).toBeGreaterThan(characterSize(0));
   expect(itemSize(instance('l','table-lamp',0,0))).toBeLessThan(characterSize(0)/2);
  });
@@ -193,12 +193,18 @@ describe('room editing, stacking and colours',()=>{
 });
 
 describe('constant-size seating and depth',()=>{
+ it('snaps to a front-row chair before treating the drop as beach',()=>{
+  const s=patch(starterHome(),{instances:[instance('front-seat','chair',4,10)]});
+  const p=characterPoint(room(s),{slot:0,anchor:'chair',pose:'sit',seatId:'front-seat'});
+  expect(p.y).toBeGreaterThan(560);
+  expect(characterDrop(room(s),0,p.x,p.y)).toMatchObject({seatId:'front-seat'});
+ });
  it.each(['bed','chair','rug','beanbag','shelf','sofa','armchair','bunk-bed','hammock','floor-cushion','rocking-chair','stool'])('seats each character on %s, follows its seat and stands safely after removal',id=>{
   let s=patch(starterHome(),{instances:[instance('seat',id,4,4)],characters:[0,1,2].map(slot=>({slot:slot as 0|1|2,anchor:'hello',pose:'stand'}))});
   for(const slot of [0,1,2] as const){ const anchor=['bed','chair','rug','beanbag','shelf'].includes(id)?id as 'bed':'seat';
    const p=characterPoint(room(s),{slot,anchor,pose:'sit',seatId:'seat'});
    expect(characterDrop(room(s),slot,p.x,p.y)).toMatchObject({seatId:'seat'});
-   s=homeReducer(s,{type:'character',slot,anchor,seatId:'seat'}).state;expect(room(s).characters[slot].pose).toBe('sit');expect(characterSize(slot)).toBe(slot===0?163:129);
+   s=homeReducer(s,{type:'character',slot,anchor,seatId:'seat'}).state;expect(room(s).characters[slot].pose).toBe('sit');expect(characterSize(slot)).toBe(slot===0?224:170);
    expect(characterDepth(room(s),room(s).characters[slot])).toBeGreaterThan(itemPoint(room(s).instances[0]).y);
   }
   const before=characterPoint(room(s),room(s).characters[0]);s=homeReducer(s,{type:'move',id:'seat',x:6,y:6}).state;expect(characterPoint(room(s),room(s).characters[0])).not.toEqual(before);

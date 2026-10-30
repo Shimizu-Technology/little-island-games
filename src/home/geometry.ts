@@ -2,16 +2,16 @@ import { decorSpec, isSeat, itemSpec } from "./catalog";
 import { moreCatalog } from "./catalogMore";
 import type { Instance } from "./model";
 export function floorPoint(x: number, y: number) {
-  return { x: 174 + x * 25.5 + y * 7, y: 327 + y * 15.5 + x * 1.5 };
+  return { x: 43 + x * 37.5 + y * 1.5, y: 386 + y * 14.4 };
 }
 export function surfacePoint(i: Instance) {
   const p = floorPoint(i.x, i.y);
-  return { x: p.x, y: p.y - (["shelf", "bookcase"].includes(i.item) ? 92 : i.item === "dresser" ? 75 : i.item === "toy-box" || i.item === "coffee-table" ? 42 : 55) };
+  return { x: p.x, y: p.y - (["shelf", "bookcase"].includes(i.item) ? 130 : i.item === "dresser" ? 105 : i.item === "toy-box" || i.item === "coffee-table" ? 60 : 78) };
 }
 export function itemPoint(i: Instance, items: readonly Instance[] = []) {
   const parent = i.on && items.find(p => p.id === i.on);
-  if (parent) { const p = surfacePoint(parent), [w] = importDimensions(parent), dx = i.x - parent.x, dy = i.y - parent.y; return { x:p.x + (dx - (w - 1) / 2) * 31 + dy * 7, y:p.y + dy * 15.5 + dx * 1.5 }; }
-  return i.layer === "wall" ? { x: 205 + i.x * 23, y: 224 + i.y * 19.5 } : floorPoint(i.x, i.y);
+  if (parent) { const p = surfacePoint(parent), [w] = importDimensions(parent), dx = i.x - parent.x, dy = i.y - parent.y; return { x:p.x + (dx - (w - 1) / 2) * 38 + dy * 1.5, y:p.y + dy * 14.4 }; }
+  return i.layer === "wall" ? { x: 54 + i.x * 46, y: 124 + i.y * 56 } : floorPoint(i.x, i.y);
 }
 export function stackActionLabel(parent: Instance, items: readonly Instance[]) {
   const same = items.filter(i => !i.on && i.item === parent.item);
@@ -46,7 +46,7 @@ export function stackSpot(items: readonly Instance[], item: Instance, x: number,
     for (let cx = parent.x; cx < parent.x + w; cx++) {
       if (items.some(other => other.id !== item.id && other.on === parent.id && other.x === cx && other.y === cy)) continue;
       const dx = cx - parent.x, dy = cy - parent.y;
-      const sx = p.x + (dx - (w - 1) / 2) * 31 + dy * 7, sy = p.y + dy * 15.5 + dx * 1.5;
+      const sx = p.x + (dx - (w - 1) / 2) * 38 + dy * 1.5, sy = p.y + dy * 14.4;
       const d = (sx - x) ** 2 + (sy - y) ** 2;
       if (d < distance) { distance = d; best = { x: cx, y: cy, on: parent.id }; }
     }
@@ -57,14 +57,14 @@ function importDimensions(i: Instance) {
   const [w, h] = itemSpec(i.item).footprint;
   return i.rotation % 180 ? [h * 2, w * 2] : [w * 2, h * 2];
 }
-export const characterSize = (slot: import("./model").Character["slot"]) => slot === 0 ? 163 : 129;
+export const characterSize = (slot: import("./model").Character["slot"]) => slot === 0 ? 224 : 170;
 
 /** Match the convex floor drawn by RoomArt, before rounding to a grid cell. */
-const floorPolygon = [34,374,145,291,758,330,779,508,162,535] as const;
+const floorPolygon = [0,350,800,350,800,560,0,560] as const;
 function insideFloor(x: number, y: number) {
   "worklet";
-  for (let i = 0; i < 5; i++) {
-    const j = (i + 1) % 5, ax = floorPolygon[i*2], ay = floorPolygon[i*2+1], bx = floorPolygon[j*2], by = floorPolygon[j*2+1];
+  for (let i = 0; i < 4; i++) {
+    const j = (i + 1) % 4, ax = floorPolygon[i*2], ay = floorPolygon[i*2+1], bx = floorPolygon[j*2], by = floorPolygon[j*2+1];
     if ((bx - ax) * (y - ay) - (by - ay) * (x - ax) < 0) return false;
   }
   return true;
@@ -76,26 +76,27 @@ export function spotFromPoint(localX: number, localY: number, scale: number, wal
   const px = localX / scale,
     py = localY / scale;
   if (!wall && !insideFloor(px, py)) return undefined;
-  if (wall && (px < 182 || px > 550 || py < 204 || py > 283)) return undefined;
-  const rawY = (py - 327 - ((px - 174) * 3) / 51) / (31 - (14 * 3) / 51);
-  const rawX = (px - 174 - rawY * 14) / 51;
-  if (!wall && (rawX < -0.5 || rawX > 9.5 || rawY < -0.5 || rawY > 5.5)) return undefined;
+  if (wall && (px < 30 || px > 770 || py < 90 || py > 330)) return undefined;
+  const rawY = (py - 386) / 14.4;
+  const rawX = (px - 43 - rawY * 1.5) / 37.5;
+  if (!wall && (rawX < -0.5 || rawX > 19.5 || rawY < -2.5 || rawY > 11.5)) return undefined;
   if (wall)
     return {
-      x: Math.max(0, Math.min(15, Math.round((px - 205) / 23))),
-      y: Math.max(0, Math.min(3, Math.round((py - 224) / 19.5))),
+      x: Math.max(0, Math.min(15, Math.round((px - 54) / 46))),
+      y: Math.max(0, Math.min(3, Math.round((py - 124) / 56))),
     };
-  const y = Math.max(0, Math.min(11, Math.round(2 * ((py - 327 - ((px - 174) * 3) / 51) / (31 - (14 * 3) / 51)))));
-  return { x: Math.max(0, Math.min(19, Math.round((px - 174 - y * 7) / 25.5))), y };
+  const y = Math.max(0, Math.min(11, Math.round(rawY)));
+  return { x: Math.max(0, Math.min(19, Math.round((px - 43 - y * 1.5) / 37.5))), y };
 }
 
 export function itemSize(i: Instance) {
-  if (moreCatalog[i.item]) return moreCatalog[i.item].itemSize;
-  if (["bed", "bunk-bed"].includes(i.item)) return 215;
-  if (i.layer === "ground") return 210;
-  if (i.layer === "wall") return 64;
-  if (decorSpec(i.item).category === "beds-seats" && !["chair", "beanbag"].includes(i.item)) return Math.max(...itemSpec(i.item).footprint) >= 2 ? 180 : 112;
-  return ["table", "shelf", "books", "trophies", "aquarium", "checkers", "toy-box", "beanbag"].includes(i.item) || Math.max(...itemSpec(i.item).footprint) >= 2 ? 145 : 112;
+  if (moreCatalog[i.item]) return Math.round(moreCatalog[i.item].itemSize * 1.18);
+  if (["bed", "bunk-bed"].includes(i.item)) return 260;
+  if (i.layer === "ground") return 250;
+  if (i.layer === "wall") return 90;
+  if (decorSpec(i.item).category === "beds-seats") return Math.max(...itemSpec(i.item).footprint) >= 2 ? 218 : 165;
+  if (decorSpec(i.item).small) return 105;
+  return ["table", "shelf", "books", "trophies", "aquarium", "checkers", "toy-box", "beanbag"].includes(i.item) || Math.max(...itemSpec(i.item).footprint) >= 2 ? 182 : 148;
 }
 
 export function characterPoint(state: import("./model").RoomState, c: import("./model").Character) {
@@ -107,7 +108,7 @@ export function characterPoint(state: import("./model").RoomState, c: import("./
     // The constant 163-unit rig keeps its hip about 51 units above the box foot.
     // Match each illustrated surface; sidekicks retain their bottom contact.
     const genericSurface = ({ sofa: -52, armchair: -45, "bunk-bed": -56, hammock: -44, "floor-cushion": -24, "rocking-chair": -45, stool: -48 } as Record<string, number>)[seat.item] ?? -12;
-    const seatedFoot = c.slot === 0 ? ({ bed: -11, chair: 30, rug: 20, beanbag: 21, seat: genericSurface + 51, shelf: -65 } as Partial<Record<import("./model").Anchor, number>>)[c.anchor] : undefined;
+    const seatedFoot = c.slot === 0 ? ({ bed: 4, chair: 43, rug: 32, beanbag: 36, seat: genericSurface + 70, shelf: -83 } as Partial<Record<import("./model").Anchor, number>>)[c.anchor] : undefined;
     return { x: p.x, y: p.y + (seatedFoot ?? -(c.anchor === "shelf" ? 92 : c.anchor === "bed" ? 48 : c.anchor === "seat" ? -genericSurface : 12)) };
   }
   return c.anchor === "window" ? floorPoint(0, 2) : floorPoint(6, 2);
@@ -119,7 +120,6 @@ export function characterDrop(
   x: number,
   y: number
 ): import("./model").HomeAction {
-  if (y >= 555) return { type: "character", slot, anchor: x < 305 ? "beach-left" : x < 495 ? "beach-middle" : "beach-right" };
   const seats = state.instances
     .filter((i) => isSeat(i.item))
     .map((i) => ({
@@ -130,6 +130,7 @@ export function characterDrop(
   const nearest = seats[0];
   if (nearest && Math.hypot(nearest.p.x - x, nearest.p.y - y) < 65)
     return { type: "character", slot, anchor: seatAnchor(nearest.i), seatId: nearest.i.id };
+  if (y >= 560) return { type: "character", slot, anchor: x < 305 ? "beach-left" : x < 495 ? "beach-middle" : "beach-right" };
   return { type: "character", slot, anchor: "floor", ...spotFromPoint(x, y, 1, false)! };
 }
 

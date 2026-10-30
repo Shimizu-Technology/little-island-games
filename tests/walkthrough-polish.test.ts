@@ -24,9 +24,9 @@ describe('walkthrough reward clarity', () => {
   });
   it('aligns the constant-size seated hip to each illustrated surface', () => {
     const home=starterHome();
-    for(const [anchor,offset] of [['bed',-11],['chair',30],['rug',20]] as const) {
+    for(const [anchor,offset] of [['bed',4],['chair',43],['rug',32]] as const) {
       const seat=home.rooms.home.instances.find(i=>i.item===anchor)!;
-      expect(characterPoint(home.rooms.home,{slot:0,anchor,pose:'sit',seatId:seat.id}).y-itemPoint(seat).y).toBe(offset);
+      expect(characterPoint(home.rooms.home,{slot:0,anchor,pose:'sit',seatId:seat.id}).y-itemPoint(seat).y).toBeCloseTo(offset, 6);
     }
   });
 });

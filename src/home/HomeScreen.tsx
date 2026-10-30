@@ -191,10 +191,10 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   const drawerWidth = sideDrawer ? Math.min(330, width * .42) : 0;
   const headerHeight = 120;
   const availableHeight = height - inset.top - inset.bottom - drawerHeight - headerHeight;
-  // Scene keeps the full width. Landscape uses almost all available height; no control column.
+  // A portrait viewport shows a life-sized stage and scrolls to its side walls.
   const beach = !decorating && (availableHeight >= width * .925 || room.characters.some(c => c.anchor.startsWith("beach-")));
   const sceneUnits = beach ? 740 : 560;
-  const sceneWidth = Math.max(0, Math.min(width - drawerWidth, availableHeight * 800 / sceneUnits));
+  const sceneWidth = Math.max(0, width - drawerWidth, availableHeight * 800 / sceneUnits);
   const sceneHeight = sceneWidth * sceneUnits / 800;
   const scale = sceneWidth / 800;
   const target = room.instances.find((i) => i.id === selected);
@@ -420,6 +420,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                 item={i.item}
                 size={size}
                 active={i.state === "active"}
+                animated
+                reduced={reduced}
                 mirrored={i.mirrored}
                 tint={i.tint}
                 rotation={i.rotation}
@@ -454,10 +456,10 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               const a = seatActions.find(a => a.name === e.nativeEvent.actionName);
               if (a) dispatch({ type: "character", slot: c.slot, anchor: a.anchor, ...(a.seatId ? { seatId: a.seatId } : {}) }, true);
               const deltas: Record<string, [number, number]> = {
-                left: [-25.5, -1.5],
-                right: [25.5, 1.5],
-                back: [-7, -15.5],
-                forward: [7, 15.5],
+                left: [-37.5, 0],
+                right: [37.5, 0],
+                back: [-1.5, -14.4],
+                forward: [1.5, 14.4],
               };
               const d = deltas[e.nativeEvent.actionName];
               if (d)
@@ -474,10 +476,10 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             {...keyboard((e) => {
               const k = e.nativeEvent.key;
               const deltas: Record<string, [number, number]> = {
-                ArrowLeft: [-25.5, -1.5],
-                ArrowRight: [25.5, 1.5],
-                ArrowUp: [-7, -15.5],
-                ArrowDown: [7, 15.5],
+                ArrowLeft: [-37.5, 0],
+                ArrowRight: [37.5, 0],
+                ArrowUp: [-1.5, -14.4],
+                ArrowDown: [1.5, 14.4],
               };
               if (deltas[k]) {
                 e.preventDefault();
@@ -651,6 +653,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           paddingRight: drawerWidth,
         }}
       >
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} onScrollEndDrag={measure} onMomentumScrollEnd={measure} contentContainerStyle={{ alignItems: "center" }} style={{ width: width - drawerWidth, flexGrow: 0 }}>
         <View ref={canvas} onLayout={measure} testID="home-scene" style={{ width: sceneWidth, height: sceneHeight }}>
           <Pressable
             accessibilityRole="button"
@@ -726,6 +729,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           )}
 
         </View>
+        </ScrollView>
       </View>
           {decorating && target && toolbarPoint && (
             <View
