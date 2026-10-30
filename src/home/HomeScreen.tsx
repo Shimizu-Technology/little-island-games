@@ -1,4 +1,5 @@
 import { badgeRule, type BadgeId } from '../badges/engine';
+import { useSheetPresence } from "../components/sheetPresence";
 import { themeRewards } from './catalog';
 import { personFor } from '../personalization/model';
 import React, { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
@@ -146,6 +147,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   const [collapsed, setCollapsed] = useState(initialItem ? false : height < 500);
   const [menu, setMenu] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  useSheetPresence(confirm);
   const [hint, setHint] = useState(true);
   const [notice, setNotice] = useState(initialItem ? `Ready: ${initialItem.replaceAll("-", " ")}. Choose a clear spot or room style.` : "");
   const owner = app.save.learning?.active ?? "family", person = personFor(app.save);

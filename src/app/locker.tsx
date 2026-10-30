@@ -9,6 +9,7 @@ import { SaveStatus } from '../components/SaveStatus';
 import { useStore } from '../state/Store';
 import { LearnerChip } from '../personalization/LearnerChip';
 import { Creator } from '../personalization/Creator';
+import { useSheetsClear } from '../components/sheetPresence';
 import { personFor } from '../personalization/model';
 import { canWear, categories, lockedReason, type Category, type StyleItem, styleCatalog } from '../personalization/catalog';
 import { StyleGrid } from '../personalization/StyleGrid';
@@ -21,6 +22,7 @@ export default function LockerRoute() {
 function Locker() {
   const params = useLocalSearchParams<{item?: string}>(), initialItem = styleCatalog.find(i => i.id === params.item);
   const store = useStore(), person = personFor(store.save), { width, height } = useWindowDimensions(), inset = useSafeAreaInsets();
+  const sheetsClear = useSheetsClear();
   const [look, setLook] = useState<IslanderLook>(initialItem ? { ...person.look, [initialItem.category]: initialItem.value } : person.look), [category, setCategory] = useState<Category>(initialItem?.category ?? 'outfit'), [back, setBack] = useState(false), [creator, setCreator] = useState(!person.made), [detail, setDetail] = useState<StyleItem | undefined>(initialItem), [message, setMessage] = useState('');
   const [expected] = useState({ learner: store.save.learning?.active ?? 'family', epoch: store.epoch });
   const acknowledge = store.personalize;
@@ -54,6 +56,6 @@ function Locker() {
       {dressingPreview}<View style={{ gap: 6 }}>{choices}</View>
     </ScrollView>}
     <View testID="locker-save-bar" style={{ padding: 8, borderTopWidth: 1, borderColor: C.line, backgroundColor: C.cream, gap: 4 }}><Copy style={{ textAlign: 'center', fontSize: 14 }}>{message || (changed ? 'Trying it on · Wear this to keep it' : 'You’re wearing this')}</Copy><Button compact disabled={!changed || !canWear(look, person.earned)} onPress={() => { if (store.personalize({ look }, expected)) setMessage('Wearing your new look.'); }}>Wear this</Button><SaveStatus/></View>
-    {creator && <Creator onClose={() => { setCreator(false); setLook(personFor(store.save).look); }}/>}
+    {creator && sheetsClear && <Creator onClose={() => { setCreator(false); setLook(personFor(store.save).look); }}/>}
   </SafeAreaView>;
 }

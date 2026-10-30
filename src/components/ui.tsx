@@ -18,6 +18,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, IconName } from "./Icon";
 import { easeOut, nativeDriver, useReducedMotion } from "./motion";
+import { useSheetPresence } from "./sheetPresence";
 export const C = {
   ink: "#183F39",
   muted: "#64716C",
@@ -300,6 +301,7 @@ export function Sheet({
   children,
   footer,
   scrollKey,
+  presence = true,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -307,12 +309,15 @@ export function Sheet({
   children: React.ReactNode;
   footer?: React.ReactNode;
   scrollKey?: string | number;
+  /** Auto-presented sheets that wait for others (the islander creator) opt out. */
+  presence?: boolean;
 }) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
   const wide = width >= 600;
   const [shown, setShown] = useState(visible);
+  useSheetPresence(shown, presence);
   const [progress] = useState(() => new Animated.Value(visible ? 1 : 0));
   const [drag] = useState(() => new Animated.Value(0));
   useEffect(() => {
