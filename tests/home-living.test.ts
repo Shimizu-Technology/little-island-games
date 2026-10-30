@@ -34,7 +34,7 @@ describe('living world durable relationships',()=>{
   const bed=s.rooms.home.instances[0],human=socketsOf(bed).find(i=>!i.id.startsWith('pet-'))!,pet=socketsOf(bed).find(i=>i.id.startsWith('pet-'))!;
   s=act(s,{type:'character',slot:0,anchor:'seat',seatId:'bed',socketId:human.id});s=act(s,{type:'character',slot:2,anchor:'seat',seatId:'bed',socketId:pet.id});
   expect(s.rooms.home.characters.map(c=>c.pose)).toEqual(['lie','lie']);expect(validHome(s)).toBe(true);
-  const p=socketPoint(bed,pet);expect(resolveDrop(dropWorld(s.rooms.home),{slot:0},p.x,p.y)?.kind).not.toBe('socket');
+  const p=socketPoint(bed,pet);expect(resolveDrop(dropWorld(s.rooms.home),{slot:0},p.x,p.y)?.socketId).toBe(human.id);
   expect(characterSize(2)*110/120/characterSize(0)).toBeCloseTo(.4,1);
  });
  it('keeps existing in-bounds layouts rather than applying fresh starter composition',()=>{

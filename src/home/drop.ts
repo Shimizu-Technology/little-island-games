@@ -1,9 +1,11 @@
+export type DropBox={left:number;top:number;right:number;bottom:number};
+export type DropPoint={x:number;y:number};
 /** Serializable, worklet-safe destination rules. Prepared once per settled room edit. */
 export type DropBody = { id:string; x:number; y:number; w:number; h:number; layer:string; on?:string; small?:boolean; holdable?:boolean; edible?:'food'|'drink'; left:number; right:number; top:number; bottom:number };
-export type DropSocket = { itemId:string; socketId:string; x:number; y:number; pose:'sit'|'lie'|'bathe'; occupied?:number; pet?:boolean };
+export type DropSocket = { itemId:string; socketId:string; x:number; y:number; pose:'sit'|'lie'|'bathe'; occupied?:number; pet?:boolean; priority?:number; box?:DropBox };
 export type DropWorld = { bodies:DropBody[]; sockets:DropSocket[]; surfaces:{id:string;x:number;y:number;w:number;sx:number;sy:number;radius:number}[]; people:{slot:number;x:number;y:number;holding?:string;handX?:number;handY?:number;mouthX?:number;mouthY?:number}[] };
-export type DropResult = { kind:'floor'|'surface'|'socket'|'hand'|'mouth'; x:number;y:number;px:number;py:number;on?:string;itemId?:string;socketId?:string;slot?:number;pose?:'sit'|'lie'|'bathe' };
-export function resolveDrop(world:DropWorld, subject:DropBody | {slot:number}, px:number, py:number):DropResult|undefined {
+export type DropResult = { kind:'floor'|'surface'|'socket'|'hand'|'mouth'; x:number;y:number;px:number;py:number;on?:string;itemId?:string;socketId?:string;slot?:number;pose?:'sit'|'lie'|'bathe';box?:DropBox };
+export function resolveDrop(world:DropWorld, subject:DropBody | {slot:number}, px:number, py:number, contacts:readonly DropPoint[]=[]):DropResult|undefined {
  'worklet';
  if(!Number.isFinite(px)||!Number.isFinite(py))return;
  const item='id' in subject?subject:undefined;
@@ -16,8 +18,17 @@ export function resolveDrop(world:DropWorld, subject:DropBody | {slot:number}, p
    if(item.edible && mouthDistance<58)return {kind:'mouth',slot:person.slot,x:0,y:0,px:mx,py:my};
   }
  } else {
-  let best:DropSocket|undefined, distance=85;
-  for(const socket of world.sockets){const d=Math.hypot(px-socket.x,py-socket.y);if((!!socket.pet===('slot' in subject&&subject.slot===2))&&(socket.occupied===undefined||socket.occupied===('slot' in subject?subject.slot:-1))&&d<distance){best=socket;distance=d;}}
+  const points=[{x:px,y:py},...contacts];
+  let best:DropSocket|undefined,distance=Infinity,priority=-Infinity;
+  const free=world.sockets.filter(s=>!!s.pet===('slot' in subject&&subject.slot===2)&&(s.occupied===undefined||s.occupied===('slot' in subject?subject.slot:-1)));
+  // A child can aim anywhere on the furniture, not just its small authored contact.
+  for(const socket of free){
+   const box=socket.box;if(!box)continue;
+   for(const p of points){if(p.x<box.left||p.x>box.right||p.y<box.top||p.y>box.bottom)continue;
+    const d=Math.hypot(p.x-socket.x,p.y-socket.y),rank=socket.priority??1;if(rank>priority||rank===priority&&d<distance){best=socket;distance=d;priority=rank;}
+   }
+  }
+  if(!best){distance=85;for(const socket of free){const d=Math.hypot(px-socket.x,py-socket.y);if(d<distance){best=socket;distance=d;}}}
   if(best)return {kind:'socket',...best,px:best.x,py:best.y};
  }
  if(item?.small){
@@ -47,4 +58,11 @@ export function resolveDrop(world:DropWorld, subject:DropBody | {slot:number}, p
   if(d<distance){distance=d;best={kind:'floor',x,y,px:sx,py:sy};}
  }
  return best;
+}
+
+/** Preview and release choose the same room even when the feet straddle a doorway. */
+export function characterDropRoom<T extends {id:string;origin:DropPoint;world:DropWorld}>(rooms:readonly T[],slot:number,points:readonly DropPoint[]):T|undefined {
+ 'worklet';
+ for(const p of points)for(const room of rooms)for(const s of room.world.sockets){const b=s.box;if(b&&!!s.pet===(slot===2)&&(s.occupied===undefined||s.occupied===slot)&&p.x>=room.origin.x+b.left&&p.x<=room.origin.x+b.right&&p.y>=room.origin.y+b.top&&p.y<=room.origin.y+b.bottom)return room;}
+ for(const p of [points[points.length-1],...points]){if(!p)continue;for(const room of rooms)if(p.x>=room.origin.x&&p.x<=room.origin.x+800&&p.y>=room.origin.y&&p.y<=room.origin.y+560)return room;}
 }

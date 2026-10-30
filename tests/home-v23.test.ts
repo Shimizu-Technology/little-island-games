@@ -114,7 +114,7 @@ it('renders an old window overlap safely without mutating its saved anchor',()=>
 });
 
 it('keeps a nearby tabletop behind a seated torso',()=>{
- const s=starterHome().rooms.home;
+ const s=starterHome().rooms.home;s.instances.push(instance('table','table',12,6),instance('chair','chair',12,9));
  s.characters[0]={slot:0,anchor:'chair',pose:'sit',seatId:'chair'};
  expect(furniturePaintDepth(s,s.instances.find(i=>i.item==='table')!)).toBeLessThan(characterDepth(s,s.characters[0]));
 });

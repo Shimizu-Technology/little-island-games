@@ -1,4 +1,4 @@
-import { capabilityOf, type WorldPose } from "./world";
+import { visualBox, capabilityOf, type WorldPose } from "./world";
 import { canHold, socketsOf, characterForSocket, dropBody, dropWorld } from "./interactions";
 import { resolveDrop } from "./drop";
 import { itemPoint, floorPoint, characterPoint } from "./geometry";
@@ -123,7 +123,7 @@ export function validHome(v: unknown): v is HomeSave {
 /** Pure, strict and idempotent. Never changes the source; invalid input belongs in recovery. */
 export function migrateHome(v: unknown): HomeStateV2 | undefined {
   if (!validHome(v)) return undefined;
-  if(v.version===3){const rooms=Object.fromEntries(roomIds.map(id=>[id,normalizeRoom(v.rooms[id])])) as HomeStateV2['rooms'];return roomIds.every(id=>rooms[id].instances.every((i,n)=>i.x===v.rooms[id].instances[n].x&&i.y===v.rooms[id].instances[n].y))?v:{...v,rooms};}
+  if(v.version===3){const rooms=Object.fromEntries(roomIds.map(id=>[id,normalizeRoom(v.rooms[id])])) as HomeStateV2['rooms'];return roomIds.every(id=>rooms[id].instances.every((i,n)=>i.x===v.rooms[id].instances[n].x&&i.y===v.rooms[id].instances[n].y&&i.on===v.rooms[id].instances[n].on))?v:{...v,rooms};}
   if(v.version!==1)return upgradeHome(v);
   const base = starterHome();
   return upgradeHome({ ...base, rooms: { ...base.rooms, home: {
@@ -134,14 +134,17 @@ export function migrateHome(v: unknown): HomeStateV2 | undefined {
 /** Only visually invalid positions change on migration; source records are never mutated. */
 export function normalizeRoom(room:RoomState):RoomState {
  let instances=room.instances.map(i=>({...i}));
- for(const i of instances){
-  if(i.on||room.characters.some(c=>c.holding===i.id))continue;
-  const p=itemPoint(i),body=dropBody(i);
-  if(p.x+body.left>=8&&p.x+body.right<=792&&p.y+body.top>=8&&p.y+body.bottom<=552)continue;
-  const spot=resolveDrop(dropWorld({...room,instances}),body,p.x,p.y);
-  if(!spot)continue;
+ // Move furniture before its surface children, then check every drawn child too.
+ const ids=[...instances.filter(i=>!i.on),...instances.filter(i=>i.on)].map(i=>i.id);
+ for(const id of ids){
+  const i=instances.find(i=>i.id===id)!;if(room.characters.some(c=>c.holding===id))continue;
+  const p=itemPoint(i,instances),b=visualBox(i.item,i.rotation,i.mirrored);
+  if(p.x+b.left>=8&&p.x+b.left+b.width<=792&&p.y+b.top>=8&&p.y+b.top+b.height<=552)continue;
+  const world=dropWorld({...room,instances}),body={...dropBody(i),left:b.left,right:b.left+b.width,top:b.top,bottom:b.top+b.height};
+  const spot=resolveDrop({...world,people:[],sockets:[],surfaces:i.on?world.surfaces:[]},body,p.x,p.y);
+  if(!spot)throw new Error('This room needs a clear space before its layout can be repaired. Your original has been kept.');
   const dx=spot.x-i.x,dy=spot.y-i.y;
-  instances=instances.map(other=>other.id===i.id?{...other,x:spot.x,y:spot.y}:other.on===i.id?{...other,x:other.x+dx,y:other.y+dy}:other);
+  instances=instances.map(other=>{if(other.id===id){const {on,...rest}=other;void on;return {...rest,x:spot.x,y:spot.y,...(spot.on?{on:spot.on}:{})};}return other.on===id?{...other,x:other.x+dx,y:other.y+dy}:other;});
  }
  return {...room,instances};
 }
@@ -204,15 +207,15 @@ export function legacyStarterHome(): HomeState {
   };
 }
 export function starterHome(): HomeStateV2 {
-  const old = legacyStarterHome();
-  const home: RoomState = { theme: { ...roomDefaultTheme.home }, instances: old.instances.map(i => {const positions:Record<string,[number,number]>={bed:[8,0],shelf:[12,0],plant:[1,2],lamp:[6,1],rug:[8,8],table:[12,6],chair:[14,9],toys:[1,8]};return {...i,x:positions[i.id][0],y:positions[i.id][1]};}), characters: [{slot:0,anchor:"floor",pose:"stand",x:11,y:7},{slot:1,anchor:"shelf",pose:"sit"},{slot:2,anchor:"floor",pose:"stand",x:9,y:8}] };
+  const positions:readonly [string,string,number,number][]=[['bed','bed',4,0],['shelf','shelf',12,0],['plant','plant',14,4],['lamp','lamp',13,0],['rug','rug',8,8],['toys','toy-box',7,6]];
+  const home:RoomState={theme:{...roomDefaultTheme.home},instances:positions.map(([id,item,x,y])=>({...instance(id,item,x,y),...(id==='lamp'?{on:'shelf'}:{})})),characters:[{slot:0,anchor:'floor',pose:'stand',x:8,y:8},{slot:1,anchor:'floor',pose:'stand',x:17,y:2},{slot:2,anchor:'floor',pose:'stand',x:6,y:10}]};
   const extra = (room: Exclude<RoomId, "home">): RoomState => {
     const starters: Record<Exclude<RoomId, "home">, readonly [string, number, number][]> = {
-      kitchen: [["fridge", 6, 0], ["sink-counter", 11, 0], ["stove", 2, 0], ["fruit-bowl", 12, 6], ["kitchen-table", 11, 6], ["stool", 14, 9]],
-      treehouse: [["hammock", 3, 0], ["floor-cushion", 11, 8], ["string-lights", 6, 0], ["lantern", 13, 2]],
-      beach: [["rocking-chair", 4, 1], ["shell-pile", 13, 8], ["round-rug", 8, 8], ["kite", 11, 0]],
+      kitchen: [["fridge", 6, 0], ["sink-counter", 11, 0], ["stove", 2, 0], ["fruit-bowl", 9, 6], ["kitchen-table", 8, 6], ["stool", 6, 9], ["stool", 12, 9]],
+      treehouse: [["hammock", 4, 0], ["floor-cushion", 8, 7], ["floor-cushion", 11, 9], ["string-lights", 6, 0], ["lantern", 10, 2], ["teddy", 6, 8], ["book", 9, 5]],
+      beach: [["bubble-bath", 4, 0], ["lounger", 10, 1], ["beach-towel", 6, 7], ["beach-towel", 11, 8], ["ball", 6, 4], ["shell", 12, 6], ["banana-plant", 14, 5]],
     };
-    return { theme: { ...roomDefaultTheme[room] }, characters: [], instances: starters[room].map(([item, x, y]) => ({...instance(`starter-${item}`, item, x, y), ...(item === "fruit-bowl" ? {on: "starter-kitchen-table"} : {})})) };
+    return { theme: { ...roomDefaultTheme[room] }, characters: [], instances: starters[room].map(([item, x, y],index) => ({...instance(`starter-${item}${starters[room].findIndex(row=>row[0]===item)===index?'':`-${index}`}`, item, x, y), ...(item === "fruit-bowl" ? {on: "starter-kitchen-table"} : {})})) };
   };
   return upgradeHome({ version: 3, current: "home", rooms: { home, kitchen: extra("kitchen"), treehouse: extra("treehouse"), beach: extra("beach") } });
 }

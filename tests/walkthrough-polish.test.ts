@@ -5,7 +5,7 @@ import { thumbnailFocus } from '../src/personalization/thumbnail';
 import { styleCatalog } from '../src/personalization/catalog';
 import { characterPoint, itemPoint, itemSize } from '../src/home/geometry';
 import { socketsOf } from "../src/home/interactions";
-import { starterHome } from '../src/home/model';
+import { instance, starterHome } from '../src/home/model';
 describe('walkthrough reward clarity', () => {
   for (const track of tracks) for (const tier of [1,2,3,4]) it(`${track}-${tier} names its track and matches documented copy`, () => {
     const id = `${track}-${tier}` as BadgeId, rule = badgeInfo(id).rule;
@@ -24,7 +24,7 @@ describe('walkthrough reward clarity', () => {
     expect(focus('reading-glasses').box).toBe('5 0 70 70');
   });
   it('aligns the constant-size seated hip to each illustrated surface', () => {
-    const home=starterHome();
+    const home=starterHome();home.rooms.home.instances.push(instance('chair','chair',12,8));
     for(const anchor of ['bed','chair','rug'] as const) {
       const seat=home.rooms.home.instances.find(i=>i.item===anchor)!;
       expect(characterPoint(home.rooms.home,{slot:0,anchor,pose:'sit',seatId:seat.id}).y-itemPoint(seat).y).toBeCloseTo((socketsOf(seat)[0].at[1]-.85)*itemSize(seat), 6);

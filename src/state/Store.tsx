@@ -1,3 +1,4 @@
+import { preserveHomeMigration } from './homeMigration';
 import { applyWarmup } from './warmupAction';
 import { roundOwner } from '../badges/owners';
 import { badgesFor, type BadgeId } from '../badges/engine';
@@ -103,7 +104,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       const encoded = await storage.get();
       setRaw(encoded);
-      const next = encoded ? backfillRewards(parseSave(encoded)) : backfillRewards(emptySave());
+      const before=encoded?parseSave(encoded):emptySave();
+      const next=backfillRewards(before);
+      if(encoded)await preserveHomeMigration(storage,encoded,before,next);
       generation.current += 1;
       setEpoch(generation.current);
       latest.current = next;

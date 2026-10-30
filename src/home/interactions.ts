@@ -7,7 +7,7 @@ import type { DropBody, DropWorld } from './drop';
 /** Phase-one compatibility only. ART owns authored sockets/capabilities. */
 export const canHold=(i:Instance)=>capabilityOf(i.item).holdable ?? !!decorSpec(i.item).small;
 export function socketsOf(i:Instance):readonly Socket[] {
- const authored:readonly Socket[]=capabilityOf(i.item).sockets ?? (isSeat(i.item)?[{id:'legacy-seat',kind:'sit',at:[.5,.66],facing:'front',covered:true}]:[]);
+ const authored:readonly Socket[]=capabilityOf(i.item).sockets ?? (i.item==='lounger'?[{id:'recline',kind:'lie',at:[.3,.61],facing:'left',covered:false}]:isSeat(i.item)?[{id:'legacy-seat',kind:'sit',at:[.5,.66],facing:'front',covered:true}]:[]);
  return [...authored,...authored.filter(s=>s.kind!=='bathe').map(s=>({...s,id:`pet-${s.id}`,at:[s.kind==='lie'?.78:s.at[0],s.kind==='lie'?s.at[1]+.05:s.at[1]-.07] as const,covered:false}))];
 }
 export function socketPoint(i:Instance,s:Socket){
@@ -29,7 +29,7 @@ export function dropBody(i:Instance):DropBody {
 }
 export function dropWorld(room:RoomState):DropWorld {
  return {bodies:room.instances.filter(i=>!room.characters.some(c=>c.holding===i.id)).map(dropBody),
- sockets:room.instances.flatMap(i=>socketsOf(i).map(s=>({itemId:i.id,socketId:s.id,pet:s.id.startsWith('pet-'),...socketPoint(i,s),pose:s.kind,occupied:room.characters.find(c=>c.socket?.itemId===i.id&&c.socket.socketId===s.id||!c.socket&&(c.seatId===i.id||!c.seatId&&c.anchor===i.item))?.slot}))),
+ sockets:room.instances.flatMap(i=>socketsOf(i).map(s=>({itemId:i.id,socketId:s.id,priority:i.layer==='ground'?0:1,pet:s.id.startsWith('pet-'),...socketPoint(i,s),box:(()=>{const p=itemPoint(i,room.instances),b=visualBox(i.item,i.rotation,i.mirrored);return {left:p.x+b.left,top:p.y+b.top,right:p.x+b.left+b.width,bottom:p.y+b.top+b.height};})(),pose:s.kind,occupied:room.characters.find(c=>c.socket?.itemId===i.id&&c.socket.socketId===s.id||!c.socket&&(c.seatId===i.id||!c.seatId&&c.anchor===i.item))?.slot}))),
  surfaces:room.instances.filter(i=>!i.on&&decorSpec(i.item).surface).map(i=>({id:i.id,x:i.x,y:i.y,w:dropBody(i).w,sx:surfacePoint(i).x,sy:surfacePoint(i).y,radius:itemSize(i)*.42})),
  people:room.characters.map(c=>{
    const contact=characterPoint(room,c),frame=characterFrame(room,c),pose=resolvePose('front',c.pose==='stand'?(c.holding?'hold':'idle'):c.pose==='sit'?'sit-front':c.pose),box=poseBox(pose),unit=224/132;

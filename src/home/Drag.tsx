@@ -1,4 +1,4 @@
-import { resolveDrop, type DropBody, type DropWorld } from "./drop";
+import { characterDropRoom, resolveDrop, type DropBody, type DropWorld, type DropBox } from "./drop";
 import { CameraPan } from "./HouseCamera";
 import React, { useContext, type ReactNode } from "react";
 import { View, type ViewProps, type ViewStyle } from "react-native";
@@ -21,6 +21,7 @@ export type Preview = {
   h: number;
   wall: boolean;
   valid: boolean;
+  box?:DropBox;
   on?: string;
   surfaceX?: number;
   surfaceY?: number;
@@ -29,6 +30,7 @@ export type Preview = {
 };
 export const emptyPreview: Preview = { active: false, x: 0, y: 0, w: 1, h: 1, wall: false, valid: false };
 export type DragConfig = {
+  center?:{x:number;y:number};
   grouped?:boolean;
   motion?: SharedValue<{id:string;dx:number;dy:number}>;
   rooms?:{id:string;origin:{x:number;y:number};world:DropWorld}[];
@@ -50,12 +52,13 @@ function updatePreview(config:DragConfig,absX:number,absY:number,dx:number,dy:nu
  if(!config.world||!config.subject)return;
  const px=config.foot?config.foot.x+dx/config.scale:(absX-config.origin.x)/config.scale;
  const py=config.foot?config.foot.y+dy/config.scale:(absY-config.origin.y)/config.scale;
+ const contacts='slot' in config.subject?[{x:(absX-config.origin.x)/config.scale,y:(absY-config.origin.y)/config.scale},...(config.center?[{x:config.center.x+dx/config.scale,y:config.center.y+dy/config.scale}]:[])]:[];
  let world=config.world,targetX=px,targetY=py,offsetX=0,offsetY=0;
- if(config.rooms&&config.sourceOrigin){const wx=px+config.sourceOrigin.x,wy=py+config.sourceOrigin.y;const target=config.rooms.find(r=>wx>=r.origin.x&&wx<=r.origin.x+800&&wy>=r.origin.y&&wy<=r.origin.y+560);if(!target){config.preview.value={...emptyPreview,active:true};return;}world=target.world;targetX=wx-target.origin.x;targetY=wy-target.origin.y;offsetX=target.origin.x-config.sourceOrigin.x;offsetY=target.origin.y-config.sourceOrigin.y;}
- const result=resolveDrop(world,config.subject,targetX,targetY);
- if(result&&config.rooms){result.px+=offsetX;result.py+=offsetY;}
+ if(config.rooms&&config.sourceOrigin){const wx=px+config.sourceOrigin.x,wy=py+config.sourceOrigin.y;const target=characterDropRoom(config.rooms,'slot' in config.subject?config.subject.slot:-1,[...contacts.map(p=>({x:p.x+config.sourceOrigin!.x,y:p.y+config.sourceOrigin!.y})),{x:wx,y:wy}]);if(!target){config.preview.value={...emptyPreview,active:true};return;}world=target.world;targetX=wx-target.origin.x;targetY=wy-target.origin.y;offsetX=target.origin.x-config.sourceOrigin.x;offsetY=target.origin.y-config.sourceOrigin.y;}
+ const result=resolveDrop(world,config.subject,targetX,targetY,contacts.map(p=>({x:p.x-offsetX,y:p.y-offsetY})));
+ if(result&&config.rooms){result.px+=offsetX;result.py+=offsetY;if(result.box)result.box={left:result.box.left+offsetX,right:result.box.right+offsetX,top:result.box.top+offsetY,bottom:result.box.bottom+offsetY};}
  const f=config.footprint;
- config.preview.value={active:true,valid:!!result,x:result?.x??0,y:result?.y??0,w:f?.w??1,h:f?.h??1,wall:f?.wall??false,px:result?.px??px,py:result?.py??py,...(result&&(result.kind!=='floor'||config.rooms)?{on:result.on??result.itemId??'person',surfaceX:result.px,surfaceY:result.py}:{})};
+ config.preview.value={active:true,valid:!!result,x:result?.x??0,y:result?.y??0,w:f?.w??1,h:f?.h??1,wall:f?.wall??false,box:result?.box,px:result?.px??px,py:result?.py??py,...(result&&(result.kind!=='floor'||config.rooms)?{on:result.on??result.itemId??'person',surfaceX:result.px,surfaceY:result.py}:{})};
 }
 export function Drag({
   children,
@@ -172,7 +175,7 @@ export function Footprint({
         ? `${(offset.x + 54 + x * 46 - 23) * scale},${(offset.y + 124 + y * 56 - 28) * scale}`
         : `${(offset.x + 43 + x * 37.5 + y * 1.5 - 18.75) * scale},${(offset.y + 386 + y * 14.4 - 7.2) * scale}`;
     return {
-      points: p.on ? [[-48,-12],[48,-12],[48,12],[-48,12]].map(([x,y]) => `${(offset.x+p.surfaceX!+x)*scale},${(offset.y+p.surfaceY!+y)*scale}`).join(" ") : [point(p.x, p.y), point(p.x + p.w, p.y), point(p.x + p.w, p.y + p.h), point(p.x, p.y + p.h)].join(" "),
+      points: p.box ? [[p.box.left,p.box.top],[p.box.right,p.box.top],[p.box.right,p.box.bottom],[p.box.left,p.box.bottom]].map(([x,y])=>`${(offset.x+x)*scale},${(offset.y+y)*scale}`).join(" ") : p.on ? [[-48,-12],[48,-12],[48,12],[-48,12]].map(([x,y]) => `${(offset.x+p.surfaceX!+x)*scale},${(offset.y+p.surfaceY!+y)*scale}`).join(" ") : [point(p.x, p.y), point(p.x + p.w, p.y), point(p.x + p.w, p.y + p.h), point(p.x, p.y + p.h)].join(" "),
       opacity: p.active && p.valid === valid ? 1 : 0,
     };
   };

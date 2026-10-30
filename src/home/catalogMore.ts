@@ -49,6 +49,8 @@ const entry = (name: string, category: MoreItemSpec["category"], footprint: read
   free: true, tintable: true, rooms: ["home", "treehouse", "beach"], ...options,
 });
 export const moreCatalog: Record<string, MoreItemSpec> = {
+  "beach-towel": entry("Beach towel", "rugs-floor", [2, 1], {itemSize:145,layer:"ground",rooms:["beach"]}),
+  "lounger": entry("Beach lounger", "beds-seats", [2, 1], {itemSize:200,rooms:["beach"]}),
   "tv": entry("Calm television", "toys-fun", [2, 1], {itemSize: 160, interactive: "The screen is on"}),
   "radio": entry("Island radio", "toys-fun", [1, 1], {itemSize: 85, small: true, interactive: "Music is on"}),
   "mango": entry("Mango", "kitchen", [1, 1], {itemSize: 55, small: true, tintable: false}),

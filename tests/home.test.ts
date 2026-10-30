@@ -1,7 +1,7 @@
 import { socketsOf } from "../src/home/interactions";
 import { roomDefaultTheme } from '../src/home/art/roomDefaults';
 import { describe, expect, it } from 'vitest';
-import { catalog, furnitureIds, itemSpec, starterItems } from '../src/home/catalog';
+import { catalog, furnitureIds, itemSpec } from '../src/home/catalog';
 import { moreCatalog, roomIds, tintIds } from '../src/home/catalogMore';
 import { currentRoom, homeReducer, instance, legacyStarterHome, MAX_INSTANCES, migrateHome, starterHome, validHome, validPlacement, type HomeStateV2, type RoomState } from '../src/home/model';
 import { characterDepth, characterDrop, characterPoint, characterSize, floorPoint, itemPoint, itemSize, spotFromPoint, stackSpot, stackActionLabel, stackedHitWidth, surfacePoint, toolbarY } from '../src/home/geometry';
@@ -18,11 +18,11 @@ const owned = { ownedItems:[...furnitureIds,'sticker:reef-fish'] };
 describe('versioned home saves and recovery', () => {
  it('starts with four independent valid rooms, free furniture and visiting characters', () => {
   const s=starterHome(); expect(validHome(s)).toBe(true); expect(validHome(clone(s))).toBe(true);
-  expect(Object.keys(s.rooms)).toEqual([...roomIds]); expect(room(s).instances.map(i=>i.item).sort()).toEqual([...starterItems].sort());
+  expect(Object.keys(s.rooms)).toEqual([...roomIds]); expect(room(s).instances.map(i=>i.item).sort()).toEqual(['bed','shelf','plant','lamp','rug','toy-box'].sort());
   expect(room(s).characters).toHaveLength(3); expect(s.rooms.kitchen.characters).toEqual([]);
   expect(s.rooms.kitchen).not.toBe(s.rooms.beach);
  });
- it('uses room defaults only for new rooms and keeps explicit saved choices',()=>{const s=starterHome();for(const id of roomIds)expect(s.rooms[id].theme).toEqual(roomDefaultTheme[id]);s.rooms.kitchen.theme={wallpaper:'peach',floor:'rose'};expect(migrateHome(s)!.rooms.kitchen.theme).toEqual({wallpaper:'peach',floor:'rose'});expect(s.rooms.kitchen.instances.map(i=>i.item)).toEqual(['fridge','sink-counter','stove','fruit-bowl','kitchen-table','stool']);expect(s.rooms.treehouse.instances.map(i=>i.item)).toEqual(['hammock','floor-cushion','string-lights','lantern']);expect(s.rooms.beach.instances.map(i=>i.item)).toEqual(['rocking-chair','shell-pile','round-rug','kite']);});
+ it('uses room defaults only for new rooms and keeps explicit saved choices',()=>{const s=starterHome();for(const id of roomIds)expect(s.rooms[id].theme).toEqual(roomDefaultTheme[id]);s.rooms.kitchen.theme={wallpaper:'peach',floor:'rose'};expect(migrateHome(s)!.rooms.kitchen.theme).toEqual({wallpaper:'peach',floor:'rose'});expect(s.rooms.kitchen.instances.map(i=>i.item)).toEqual(['fridge','sink-counter','stove','fruit-bowl','kitchen-table','stool','stool']);expect(s.rooms.treehouse.instances.map(i=>i.item)).toEqual(['hammock','floor-cushion','floor-cushion','string-lights','lantern','teddy','book']);expect(s.rooms.beach.instances.map(i=>i.item)).toEqual(['bubble-bath','lounger','beach-towel','beach-towel','ball','shell','banana-plant']);});
  it('migrates v1 exactly once without changing original geometry, state or character records', () => {
   const old=legacyStarterHome(); old.instances[0].mirrored=true; old.instances[3].state='active'; old.theme.wallpaper='peach';
   old.characters[0]={slot:0,anchor:'floor',pose:'stand',x:9,y:5};
@@ -110,7 +110,7 @@ describe('room editing, stacking and colours',()=>{
   writeFileSync(`${process.env.POLISH_EVIDENCE}/fixture-surfaces.json`,JSON.stringify(save));
  });
  it('gives every new item an explicit scene size relative to the Islander',()=>{
-  expect(Object.keys(moreCatalog)).toHaveLength(54);
+  expect(Object.keys(moreCatalog)).toHaveLength(56);
   for(const [id,spec] of Object.entries(moreCatalog)) expect(itemSize(instance(id,id,0,0))).toBe(Math.round(spec.itemSize*1.18));
   expect(itemSize(instance('f','fridge',0,0))).toBeGreaterThan(characterSize(0));
   expect(itemSize(instance('l','table-lamp',0,0))).toBeLessThan(characterSize(0)/2);

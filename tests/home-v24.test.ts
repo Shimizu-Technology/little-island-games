@@ -39,7 +39,7 @@ describe('version 3 world invariants',()=>{
  it('migrates v1/v2 once, preserving original bytes, themes, identities and valid coordinates',()=>{
   const old=legacyStarterHome(),bytes=JSON.stringify(old),migrated=migrateHome(old)!;
   expect(migrated.version).toBe(3);expect(validHome(migrated)).toBe(true);expect(JSON.stringify(old)).toBe(bytes);expect(migrateHome(migrated)).toBe(migrated);
-  const v2={...starterHome(),version:2 as const};v2.rooms.home.characters=[{slot:0,anchor:'chair',pose:'sit',seatId:'chair'}];
+  const v2={...starterHome(),version:2 as const};v2.rooms.home.instances.push(instance('chair','chair',12,8));v2.rooms.home.characters=[{slot:0,anchor:'chair',pose:'sit',seatId:'chair'}];
   const before=JSON.stringify(v2),v3=migrateHome(v2)!;expect(v3.rooms.home.characters[0].socket?.itemId).toBe('chair');expect(JSON.stringify(v2)).toBe(before);
  });
  it('normalizes starters with their conservative visual silhouettes',()=>{
