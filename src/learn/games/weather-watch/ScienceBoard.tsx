@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { TextInput, View } from "react-native";
 import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SText } from "react-native-svg";
-import { Button, Copy, PressableScale } from "../../../components/ui";
+import { Button, Copy, PressableScale, font } from "../../../components/ui";
 import type { BoardProps } from "../../types";
+import { SkySun, PuffyCloud, EarthGlobe, MoonDisc, Creature, Seaweed, ReefHabitat, WeatherExplorer, NodePicture } from "./Illustrations";
 import { CoachSpot } from "../../Coach";
 import {
   planets,
@@ -23,46 +24,12 @@ const ink = "#254B4B",
   blue = "#4D85A1",
   gold = "#E9B84D";
 const multi = (q: Task) => ["cycle", "chain", "web", "planets", "kit"].includes(q.kind);
-function Sun({ x = 45, y = 45, r = 23 }: { x?: number; y?: number; r?: number }) {
-  return (
-    <G>
-      <Circle cx={x} cy={y} r={r} fill={gold} />
-      {Array.from({ length: 8 }, (_, i) => {
-        const a = (i * Math.PI) / 4;
-        return (
-          <Line
-            key={i}
-            x1={x + Math.cos(a) * (r + 4)}
-            y1={y + Math.sin(a) * (r + 4)}
-            x2={x + Math.cos(a) * (r + 11)}
-            y2={y + Math.sin(a) * (r + 11)}
-            stroke={gold}
-            strokeWidth={3}
-          />
-        );
-      })}
-    </G>
-  );
-}
-function Fish({ x, y, color = gold }: { x: number; y: number; color?: string }) {
-  return (
-    <G>
-      <Path d={`M${x + 15} ${y}l18 -12v24Z`} fill={color} />
-      <Ellipse cx={x} cy={y} rx={20} ry={12} fill={color} />
-      <Circle cx={x - 10} cy={y - 3} r={2.5} fill={ink} />
-    </G>
-  );
-}
-function Algae({ x, y }: { x: number; y: number }) {
-  return (
-    <G stroke={green} strokeWidth={6} strokeLinecap="round">
-      <Path d={`M${x} ${y}q-15 -18 -4 -36m4 36q18 -24 8 -47m-8 47q-1 -20 -20 -24`} fill="none" />
-    </G>
-  );
-}
+const Sun = SkySun;
+function Fish({x,y,color=gold}:{x:number;y:number;color?:string}) { return <Creature name={color===blue?"reef shark":"small fish"} x={x} y={y} scale={.62}/>; }
+function Algae({x,y}:{x:number;y:number}) { return <Seaweed x={x} y={y} scale={.75}/>; }
 function label(text: string, x: number, y: number, size = 13, color = ink) {
   return (
-    <SText x={x} y={y} textAnchor="middle" fontSize={size} fontWeight="700" fill={color}>
+    <SText x={x} y={y} textAnchor="middle" fontFamily={font ?? "Arial"} fontSize={size} fontWeight="700" fill={color}>
       {text}
     </SText>
   );
@@ -172,8 +139,8 @@ export function TokenArt({ text, size = 44 }: { text: string; size?: number }) {
         <Sun x={40} y={40} r={20} />
       ) : s.includes("algae") || s.includes("spring") || s.includes("summer") || s.includes("nutrient") ? (
         <Algae x={42} y={68} />
-      ) : s.includes("fish") || s.includes("shark") ? (
-        <Fish x={34} y={40} color={s.includes("shark") ? blue : gold} />
+      ) : s.includes("fish") || s.includes("shark") || s.includes("turtle") || s.includes("octopus") || s.includes("urchin") || s.includes("crab") ? (
+        <Creature name={text} x={40} y={40} scale={.72} />
       ) : s.includes("rain") || s.includes("water") || s.includes("vapor") ? (
         <G>
           <Ellipse cx={40} cy={25} rx={29} ry={15} fill={blue} />
@@ -235,9 +202,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         {!day && [75, 113, 300, 325].map((x, i) => <Circle key={x} cx={x} cy={25 + (i % 2) * 25} r={2} fill={ink} />)}
         <Sun />
         <Line x1={85} y1={70} x2={198} y2={70} stroke={gold} strokeWidth={4} />
-        <Circle cx={240} cy={95} r={59} fill="#75B4BA" />
-        <Path d="M240 36A59 59 0 0 1 240 154Z" fill="#33485D" />
-        <Path d="M208 66l24 -10 10 18 -22 18 -12 -8Z" fill="#88B76D" />
+        <EarthGlobe x={240} y={95} r={59} night />
         <Circle cx={day ? 192 : 288} cy={95} r={7} fill="#F3B181" stroke={ink} strokeWidth={2} />
         {label(day ? "Island: day" : "Island: night", 240, 183)}
         {label("Sunlight →", 113, 124)}
@@ -250,26 +215,11 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
     scene = (
       <>
         <Sun x={35} y={90} r={17} />
-        <Ellipse cx={173} cy={90} rx={76} ry={59} stroke={blue} fill="none" strokeDasharray="4 5" />
-        <Circle cx={173} cy={90} r={21} fill={blue} />
+        <Ellipse cx={173} cy={90} rx={76} ry={59} stroke={blue} fill="none" strokeDasharray="1 6" strokeLinecap="round" />
+        <EarthGlobe x={173} y={90} r={21} />
         <Circle cx={173 - Math.cos(angle) * 76} cy={90 + Math.sin(angle) * 59} r={9} fill="#DAE4D9" />
         {label("Orbit view", 173, 182)}
-        <Circle cx={295} cy={90} r={r} fill="#2D3E52" />
-        {Array.from({ length: 38 }, (_, i) => {
-          const y = -r + i * 2 + 1,
-            half = Math.sqrt(r * r - y * y),
-            term = Math.cos(angle) * half;
-          return (
-            <Rect
-              key={i}
-              x={a <= 4 ? 295 + term : 295 - half}
-              y={90 + y}
-              width={half - term}
-              height={2}
-              fill="#F9F4D7"
-            />
-          );
-        })}
+        <MoonDisc x={295} y={90} r={r} phase={a} />
         {label("View from Earth", 289, 155, 11)}
       </>
     );
@@ -318,13 +268,13 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
     ][a];
     scene = (
       <>
-        <Circle cx={180} cy={100} r={32} fill={blue} />
+        <EarthGlobe x={180} y={100} r={32} />
         <Path
           d={a === 0 ? "M180 32L180 63" : a === 1 ? "M180 26A85 74 0 1 1 179 26" : "M180 26Q230 10 345 18"}
           fill="none"
           stroke={gold}
           strokeWidth={4}
-          strokeDasharray="8 4"
+          strokeDasharray="1 7" strokeLinecap="round"
         />
         <Circle cx={180} cy={26} r={8} fill={gold} />
         {label("Gravity pulls inward", 180, 192)}
@@ -336,7 +286,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
       <>
         <Sun x={45} y={100} />
         <Path d="M90 73h90m-90 27h90m-90 27h90" stroke={gold} strokeWidth={3} />
-        <Circle cx={250} cy={100} r={53} fill={blue} />
+        <EarthGlobe x={250} y={100} r={53} />
         <G rotation={b === 0 ? -a : a} origin="250,100">
           <Line x1={250} y1={25} x2={250} y2={176} stroke={ink} strokeWidth={4} />
           {label("N", 250, 19, 15)}
@@ -362,8 +312,8 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
           fill={b ? "#DCE5D9" : "#A4B4AD"}
           opacity={0.6}
         />
-        <Circle cx={a === 0 ? 275 : 180} cy={90} r={29} fill={blue} />
-        <Circle cx={a === 0 ? 115 : 285} cy={b ? 40 : a === 2 ? 158 : 90} r={12} fill="#C9D0C2" />
+        <EarthGlobe x={a === 0 ? 275 : 180} y={90} r={29} />
+        <MoonDisc x={a === 0 ? 115 : 285} y={b ? 40 : a === 2 ? 158 : 90} r={12} />
         {label("Alignment diagram • not to scale", 180, 194, 12)}
       </>
     );
@@ -373,7 +323,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
       <>
         <Sun x={30} y={90} />
         <Line x1={60} y1={90} x2={80 + a * 44} y2={90} stroke={gold} strokeWidth={5} strokeDasharray="8 5" />
-        <Circle cx={80 + a * 44} cy={90} r={17} fill={blue} />
+        <EarthGlobe x={80 + a * 44} y={90} r={17} />
         {label(`${a} AU`, 180, 151, 20)}
         {label("Distance line • not to scale", 180, 185, 12)}
       </>
@@ -409,12 +359,14 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
     description = `Model: ${q.kind === "population" ? "grazers" : "pollution"} ${a}. Algae ${algae}. Coral health index ${health}. Baseline algae 60.`;
     scene = (
       <>
-        <Rect x={0} y={0} width={360} height={210} fill="#D8EDE7" />
+        <ReefHabitat health={health}/>
+        <Creature name="turtle" x={289} y={103} scale={.42}/>
+        <Creature name="octopus" x={83} y={163} scale={.38}/>
         {Array.from({ length: Math.ceil(algae / 10) }, (_, i) => (
           <Algae key={i} x={20 + i * 32} y={184} />
         ))}
         {Array.from({ length: q.kind === "population" ? a : 5 }, (_, i) => (
-          <Fish key={i} x={30 + (i % 5) * 65} y={45 + Math.floor(i / 5) * 35} />
+          <Creature key={i} name="parrotfish" x={30 + (i % 5) * 65} y={45 + Math.floor(i / 5) * 35} scale={.44}/>
         ))}
         <Rect x={20} y={193} width={320} height={9} rx={4} fill="#C0CEC0" />
         <Rect x={20} y={193} width={health * 3.2} height={9} rx={4} fill={green} />
@@ -445,7 +397,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
           <Path d="M83 139v-53m-10 10 10 -10 10 10" stroke={gold} strokeWidth={5} fill="none" />
         )}
         {selected.some((x) => x.includes("Cool")) && (
-          <Ellipse cx={180} cy={47} rx={57} ry={22} fill="#F8FBF2" stroke={blue} />
+          <PuffyCloud x={180} y={47} scale={.8}/>
         )}{" "}
         {selected.includes("Rain") &&
           [155, 185, 215].map((x) => (
@@ -460,7 +412,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
     const nodes = Array.from(new Set(q.labels.flatMap((x) => x.split(" → "))));
     const positions: Record<string, [number, number]> = {};
     nodes.forEach((n, i) => {
-      positions[n] = [i === 0 ? 70 : 230, 30 + (i === 0 ? 80 : (i - 1) * 47)];
+      positions[n] = [i === 0 ? 70 : 230, 30 + (i === 0 ? 80 : (i - 1) * 61)];
     });
     // Separate the two grazer branches: a long edge must not pass through another organism.
     if (nodes.length > 4)
@@ -485,7 +437,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
             len = Math.hypot(dx, dy),
             ux = dx / len,
             uy = dy / len,
-            edge = Math.min(43 / Math.abs(ux), 17 / Math.abs(uy)) + 3,
+            edge = Math.min(43 / Math.abs(ux), 25 / Math.abs(uy)) + 3,
             ex = tx - ux * edge,
             ey = ty - uy * edge;
           return (
@@ -499,8 +451,10 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
           const [x, y] = positions[n];
           return (
             <G key={n}>
-              <Rect x={x - 43} y={y - 17} width={86} height={34} rx={14} fill="#FDF8E8" stroke={green} />
-              {label(n, x, y + 4, 10)}
+              <Rect x={x - 42} y={y - 23} width={86} height={50} rx={14} fill="#365653" opacity={.08}/>
+              <Rect x={x - 43} y={y - 25} width={86} height={50} rx={14} fill="#FFFAEB" stroke="#7C9D7D" strokeWidth={1.5}/>
+              <NodePicture name={n} x={x} y={y-8} scale={.46}/>
+              {label(n, x, y + 18, 9.5)}
             </G>
           );
         })}
@@ -510,7 +464,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
     description = `${q.labels[a]} is offered. ${correct(q, values) ? "The animal or producer receives usable energy." : "This does not meet its food or energy need."}`;
     scene = (
       <>
-        <Rect width={360} height={220} rx={20} fill="#D8EDE7" />
+        <ReefHabitat/>
         {a === 0 && q.labels[0] === "Sunlight" ? (
           <Sun x={65} y={60} />
         ) : a === 0 ? (
@@ -526,31 +480,12 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
           strokeWidth={4}
           fill="none"
         />
-        {q.title.includes("algae") ? (
-          <Algae x={268} y={150} />
-        ) : q.title.includes("urchin") ? (
-          <G>
-            <Circle cx={268} cy={105} r={25} fill="#716075" />
-            {Array.from({ length: 12 }, (_, i) => {
-              const a = (i * Math.PI) / 6;
-              return (
-                <Line
-                  key={i}
-                  x1={268 + Math.cos(a) * 22}
-                  y1={105 + Math.sin(a) * 22}
-                  x2={268 + Math.cos(a) * 36}
-                  y2={105 + Math.sin(a) * 36}
-                  stroke="#716075"
-                  strokeWidth={3}
-                />
-              );
-            })}
-          </G>
-        ) : (
-          <Fish x={260} y={105} color={q.title.includes("shark") ? blue : gold} />
-        )}
-        {label(q.labels[a], 65, 176, 13)}
-        {label(q.title.replace("Feed a ", "").replace("Feed an ", ""), 264, 176, 13)}
+        {q.title.includes("algae") ? <Algae x={268} y={150}/> : <Creature name={q.title.replace("Feed a ", "").replace("Feed an ", "")} x={267} y={104} scale={.85}/>}
+        {label("energy", 151, 132, 12)}
+        <Rect x={8} y={154} width={116} height={30} rx={12} fill="#FFF9E9" opacity={.96}/>
+        <Rect x={200} y={154} width={151} height={30} rx={12} fill="#FFF9E9" opacity={.96}/>
+        {label(q.labels[a], 65, 174, 12)}
+        {label(q.title.replace("Feed a ", "").replace("Feed an ", ""), 275, 174, 12)}
       </>
     );
   } else if (["chain", "kit"].includes(q.kind)) {
@@ -576,8 +511,9 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
               fill="#FFF9E9"
               stroke={green}
             />
-            {label(q.labels[v], 94 + (i % 2) * 172, 59 + Math.floor(i / 2) * 82, q.kind === "web" ? 10 : 13)}
-            {i > 0 && label("→", i % 2 ? 181 : 180, i % 2 ? 60 : 103, 18)}
+            {game === "food-web" && <NodePicture name={q.labels[v]} x={46 + (i % 2) * 172} y={54 + Math.floor(i/2)*82} scale={.65}/>}
+            {label(q.labels[v], (game === "food-web" ? 112 : 94) + (i % 2) * 172, 59 + Math.floor(i / 2) * 82, game === "food-web" ? 10.5 : 13)}
+            {i > 0 && (i % 2 ? <Path d={`M173 ${54+Math.floor(i/2)*82}h13m-5-5 5 5-5 5`} stroke={green} strokeWidth={2} fill="none"/> : <Path d="M266 88v7H94v8m-4-4 4 4 4-4" stroke={green} strokeWidth={2} fill="none"/>)}
           </G>
         ))}
       </>
@@ -626,8 +562,12 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
     scene = (
       <>
         <Rect width={360} height={220} fill={q.title.includes("Rain") ? "#D4E3DF" : "#EAF0D2"} />
-        {q.title.includes("Sunny") ? <Sun x={65} y={45} /> : <Ellipse cx={65} cy={40} rx={40} ry={18} fill={blue} />}
-        <Path d="M0 185Q170 145 360 180v40H0Z" fill="#A7C387" />
+        {q.title.includes("Sunny") || q.title.includes("Settled") ? <Sun x={65} y={45}/> : <PuffyCloud x={67} y={44} scale={.7} storm={q.title.includes("Storm") || q.title.includes("Rain")}/>}
+        {(q.title.includes("Rain") || q.title.includes("Storm") || q.title.includes("pressure")) && [21,48,76,101].map((x,i)=><Path key={x} d={`M${x} ${77+i%2*9}l-7 18m2 15-5 13`} stroke="#7CA9B7" strokeWidth={2.5} strokeLinecap="round" fill="none"/>)}
+        <Path d="M264 49q20-10 45-3m-33 13q26-7 44 0" fill="none" stroke="#9FBBB0" strokeWidth={2} strokeLinecap="round"/>
+        <G transform="translate(317 125)"><Rect x={0} y={0} width={12} height={43} rx={6} fill="#FFFAE9" stroke={ink}/><Path d="M6 35V12" stroke="#D68B76" strokeWidth={4}/><Circle cx={6} cy={36} r={7} fill="#D68B76"/></G>
+        {q.title.includes("Cold") && <G><Path d="M0 175L65 66 132 174 174 111 236 187Z" fill="#AFBFC0"/><Path d="M44 101L65 66 88 104 70 97 60 108Z" fill="#F5F5E8"/></G>}
+        <Path d="M0 185Q170 145 360 180v40H0Z" fill={q.title.includes("Cold") ? "#C6D4C5" : "#A7C387"} />
         {indoors && (
           <G>
             <Path d="M70 35L188 2L308 35" fill="#B78C62" />
@@ -644,15 +584,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
             <Circle cx={285} cy={48} r={43} fill="#78A762" />
           </G>
         )}
-        <Circle cx={183} cy={92} r={26} fill="#E2B38B" />
-        <Path d="M156 120h54l14 64h-82Z" fill={q.kind === "dress" ? ["#D6D5B5", gold, "#C27D58"][a] : blue} />
-        <Path d="M165 184v25m35-25v25" stroke={ink} strokeWidth={10} />
-        {q.kind === "dress" && a === 0 && (
-          <>
-            <Path d="M156 75l8 -24h38l9 24Z" fill={gold} />
-            <Ellipse cx={183} cy={76} rx={40} ry={7} fill={gold} />
-          </>
-        )}
+        <WeatherExplorer gear={q.kind === "dress" ? q.labels[a] : ""}/>
         {label(q.labels[a] ?? "", 279, 112, 11)}
       </>
     );

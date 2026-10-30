@@ -8,6 +8,10 @@ import { engine as space } from "../src/learn/games/space-station/engine";
 import { optionsAtLevel, levelNumbers } from "../src/learn/levels";
 import { random } from "../src/games/types";
 import type { Game } from "../src/learn/games/weather-watch/model";
+vi.mock("../src/islander/active", async () => {
+  const { defaultLook } = await import("../src/islander/look");
+  return { useActiveIslanderLook: () => defaultLook };
+});
 vi.mock("react-native", () => ({
   TextInput: "input",
   View: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -21,11 +25,15 @@ vi.mock("react-native-svg", () => ({
   Rect: "rect",
   Line: "line",
   Text: "text",
+  Defs: "defs",
+  RadialGradient: "radialGradient",
+  Stop: "stop",
 }));
 vi.mock("../src/learn/Coach", () => ({
   CoachSpot: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 vi.mock("../src/components/ui", () => ({
+  font: "Arial",
   Copy: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
   Button: ({ children }: { children: React.ReactNode }) => <button>{children}</button>,
   PressableScale: ({ children }: { children: React.ReactNode }) => <button>{children}</button>,
