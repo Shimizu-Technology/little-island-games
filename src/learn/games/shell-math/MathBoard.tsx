@@ -1,10 +1,11 @@
 import React, { useLayoutEffect, useRef } from "react";
 import { View } from "react-native";
 import { Text } from "../../../components/Text";
-import { Button, C, Copy, PressableScale } from "../../../components/ui";
+import { Button, C, Copy } from "../../../components/ui";
 import { HopVisual, ShellVisual } from "../../../math/MathVisual";
-import { mathEquation, mathSkill, mathSpeechKey } from "../../../math/questions";
+import { mathAnswer, mathEquation, mathSkill, mathSpeechKey } from "../../../math/questions";
 import { CoachSpot } from "../../Coach";
+import { AnswerTile } from "../../AnswerTile";
 import type { BoardProps } from "../../types";
 import { mathConfig, mathMove, questionOf, type MathAction, type MathGame, type MathRound } from "./round";
 
@@ -68,11 +69,9 @@ export function MathBoard(props: BoardProps<MathRound> & { game: MathGame }) {
     </CoachSpot>}
     {ready && !s.solved && <CoachSpot active={coach.active && active} handAt="none">
       <View style={{ flexDirection: "row", gap: 10 }}>
-        {q.choices.map(answer => <PressableScale key={answer} accessibilityRole="button" accessibilityLabel={`Choose ${answer}`} accessibilityState={{ disabled: !active }}
-          disabled={!active} onPress={() => move({ type: "answer", answer })}
-          style={{ flex: 1, minHeight: 64, justifyContent: "center", alignItems: "center", backgroundColor: C.paper, borderColor: C.teal, borderWidth: 2, borderRadius: 18 }}>
+        {q.choices.map(answer => <AnswerTile key={answer} label={`Choose ${answer}`} disabled={!active} wrong={s.wrong === answer} correct={s.solved && answer === mathAnswer(q)} onPress={() => move({ type: "answer", answer })} style={{ flex: 1, minHeight: 64 }}>
           <Text style={{ fontSize: 32, fontWeight: "900", color: C.ink }}>{answer}</Text>
-        </PressableScale>)}
+        </AnswerTile>)}
       </View>
     </CoachSpot>}
     <View accessibilityLiveRegion="polite">

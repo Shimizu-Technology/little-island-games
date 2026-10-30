@@ -38,15 +38,18 @@ export function PhoneLearningCompanion({ event, active }: { event: CompanionEven
   </View>;
 }
 /** Fixed layout space beside the activity on tablets; phones use the header. */
-export function LearningCompanion({ children, event, desk, active = true, visible = true }: {
-  children: React.ReactNode; event: CompanionEvent; desk?: boolean; active?: boolean; visible?: boolean;
+export function LearningCompanion({ children, event, desk, active = true, visible = true, cheer }: {
+  children: React.ReactNode; event: CompanionEvent; desk?: boolean; active?: boolean; visible?: boolean; cheer?: React.ReactNode;
 }) {
   const { width, height } = useWindowDimensions(), store = useStore();
   if (width < 600 || !visible || !showLearningCompanion(store.save.settings)) return <>{children}</>;
   const wide = width >= 768 && height >= 600;
   return <View style={{ flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'flex-start' : 'stretch', gap: 8 }}>
     <View style={{ flex: wide ? 1 : undefined, minWidth: 0 }}>{children}</View>
-    <View style={{ alignSelf: wide ? 'center' : 'flex-end' }}><Companion event={event} desk={desk} size={wide ? 132 : 80} active={active}/></View>
+    <View style={{ alignSelf: wide ? 'center' : 'flex-end', alignItems: 'center' }}>
+      {cheer}
+      <Companion event={event} desk={desk} size={wide ? 168 : 112} active={active}/>
+    </View>
   </View>;
 }
 /** Entry and feedback are temporary. New rounds/learners retire every pending reaction. */

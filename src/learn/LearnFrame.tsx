@@ -22,6 +22,7 @@ import { activeLearner, readyForNext } from "./learners";
 import { views } from "./views";
 import { Celebrate } from "./Celebrate";
 import { LearnArt } from "./LearnArt";
+import { IslandBackdrop, RoundProgress, subjectTheme } from "./LearnChrome";
 import { feel } from "../components/feel";
 import { outcomeOf, replaySession, startSession } from "./session";
 import type { Language, LearnId, LearnMode, LearnOptions, LearnSession, Pace } from "./types";
@@ -237,24 +238,29 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const turn = saved && engine.turn && saved.options.mode !== "solo" && !finished ? engine.turn(saved.state, saved.options) : null;
   const boardWidth = Math.min(width - insets.left - insets.right - 56, 900);
   const Board = saved?.options.stage ? GrowthBoard : view.Board;
+  const island = id === "hafa-adai" ? "reading" : engine.island;
+  const theme = id === "hafa-adai" ? { sky: "#FFE4D9", land: "#F5BCA6", accent: "#A44E3A", ink: "#65382D" } : subjectTheme[island];
+  const cheerText = companionEvent === "correct" ? "You got it!" : companionEvent === "incorrect" ? "Try again!" : companionEvent === "entry" ? "Let's play!" : null;
 
   const header = <View style={{ gap: 4 }}>
         <LearnerChip compact/>
         <GameHeader
-          title={engine.name}
+          title={id === "hafa-adai" && width < 600 ? "Håfa Adai" : engine.name}
           onBack={back}
           sound={{ on: store.save.settings.sound, toggle: () => store.settings({ sound: !store.save.settings.sound }) }}
           onHelp={() => setHelp(true)}
         />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Heading style={{ fontSize: 25, flex: 1 }}>{levelTitle(id, levelOf(saved?.options ?? options))}</Heading>
+          <Heading style={{ fontSize: width < 600 ? 19 : 25, flex: 1, color: theme.ink }}>{levelTitle(id, levelOf(saved?.options ?? options))}</Heading>
           {width < 600 && saved && !finished && <PhoneLearningCompanion event={companionEvent} active={boardActive}/>}
         </View>
+        {width < 600 && cheerText && saved && !finished && <View accessibilityLiveRegion="polite" style={{ alignSelf: "flex-end", backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5 }}><Copy style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>}
 
   </View>;
 
   return (
-    <SafeAreaView style={styles.page}>
+    <SafeAreaView style={[styles.page, { backgroundColor: theme.sky }]}>
+      <IslandBackdrop island={island} colors={theme}/>
       {width < 600 && <View style={{ paddingHorizontal: 16 }}>{header}</View>}
       <ScrollView key={saved?.id ?? "setup"} ref={scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
         {width >= 600 && header}
@@ -265,11 +271,12 @@ export function LearnFrame({ id }: { id: LearnId }) {
               (saved.options.language && engine.languages && engine.languages.length > 1 ? ` · ${languageLabel[saved.options.language]}` : "")}
           </Copy>
         )}
+        {saved && <RoundProgress session={saved} island={island} colors={theme} finished={finished}/>}
         <SaveStatus />
         {saved?.match && <Scoreboard match={saved.match} result={result === "done" ? null : result} active={turn} />}
-        {saved && (
-          <LearningCompanion visible={!finished} event={finished ? (notWon ? "loss" : result === "draw" ? "draw" : "complete") : companionEvent} desk={engine.island === "reading" || engine.island === "numbers"} active={boardActive}>
-          <View style={{ backgroundColor: engine.surface, borderRadius: 22, padding: 12 }}>
+        {saved && !finished && (
+          <LearningCompanion visible={!finished} event={finished ? (notWon ? "loss" : result === "draw" ? "draw" : "complete") : companionEvent} desk={engine.island === "reading" || engine.island === "numbers"} active={boardActive} cheer={cheerText ? <View accessibilityLiveRegion="polite" style={{ backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 2, borderColor: theme.accent }}><Copy style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View> : undefined}>
+          <View style={{ backgroundColor: "#FFFEFA", borderRadius: 28, borderWidth: 2, borderColor: theme.accent, padding: width < 600 ? 12 : 22, shadowColor: theme.ink, shadowOpacity: 0.12, shadowOffset: { width: 0, height: 7 }, shadowRadius: 0, elevation: 5 }}>
             <Celebrate burst={burst.n} big={burst.big} />
             <Board
               key={saved.id}
@@ -296,11 +303,13 @@ export function LearnFrame({ id }: { id: LearnId }) {
             {finished && (
               <View
                 accessibilityLiveRegion="polite"
-                style={{ alignItems: "center", gap: 8, padding: 16, borderRadius: 22, backgroundColor: C.success, alignSelf: "stretch" }}
+                style={{ alignItems: "center", justifyContent: "center", gap: 14, padding: 20, borderRadius: 28, backgroundColor: theme.sky, alignSelf: "stretch", minHeight: Math.max(430, height - insets.top - insets.bottom - 190), borderWidth: 3, borderColor: theme.accent }}
               >
+                <View pointerEvents="none" style={{ position: "absolute", top: 10, left: 0, right: 0, alignItems: "center" }}><Celebrate burst={burst.n} big /></View>
+                {!notWon && <Heading style={{ color: theme.accent, fontSize: 38, textAlign: "center" }}>★  ★  ★</Heading>}
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  {store.save.settings.learningIslander !== false && <Companion event={notWon ? "loss" : result === "draw" ? "draw" : "complete"} active={boardActive} size={104}/>}
-                  <LearnArt island={engine.island} size={64} />
+                  {store.save.settings.learningIslander !== false && <Companion event={notWon ? "loss" : result === "draw" ? "draw" : "complete"} active={boardActive} size={166}/>}
+                  <LearnArt island={engine.island} size={86} />
                 </View>
                 <Heading style={{ fontSize: 26, textAlign: "center" }}>
                   {result === 0 || result === 1
@@ -309,7 +318,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
                       ? "A tie! Great playing."
                       : (notWon ?? "You did it!")}
                 </Heading>
-                <LevelPath game={id} level={levelOf(saved.options)} onChoose={level => { chooseLevel(level, (saved.learner ?? "family") === learner.id ? saved.options : learner.choices[id] ?? { mode: engine.modes[0], pace: "easy" }); setSetup(true); }} />
+                <Copy style={{ color: theme.ink, fontSize: 17, fontWeight: "800", textAlign: "center" }}>{notWon ? "Ready to try the island again?" : "Your stars are shining. Ready for another adventure?"}</Copy>
                 {canSuggest && <View style={{ alignSelf: "stretch", gap: 10 }}>
                   <Heading style={{ fontSize: 22, textAlign: "center" }}>Try Level {levelOf(saved.options) + 1}?</Heading>
                   <Copy style={{ textAlign: "center" }}>You worked this level out on your own in rounds on two different days. You can stay and play here, too.</Copy>
@@ -317,8 +326,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
                   <Button quiet onPress={() => { stopSound(); setStay(saved.id); }}>Stay here</Button>
                   <Button quiet compact icon="sound-on" disabled={!soundOn} onPress={() => sound(`learning-try-level-${levelOf(saved.options) + 1}`)}>Hear the invitation</Button>
                 </View>}
-                <Button icon="refresh" onPress={replay} style={{ minWidth: 220 }}>
-                  Play again
+                <Button icon="right" onPress={replay} style={{ minWidth: 220, minHeight: 62, backgroundColor: theme.accent, borderColor: theme.accent }}>
+                  Keep going
                 </Button>
               </View>
             )}
@@ -336,10 +345,12 @@ export function LearnFrame({ id }: { id: LearnId }) {
         visible={setup || !saved}
         onClose={() => (saved ? setSetup(false) : back())}
         title={saved ? "A fresh round" : `Let’s play ${engine.name}`}
-        footer={<Button onPress={start}>{saved ? "Start a new round" : "Start playing"}</Button>}
+        footer={<Button onPress={start} style={{ minHeight: 62, borderRadius: 20, backgroundColor: theme.accent, borderColor: theme.accent }}>Play this level</Button>}
       >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: theme.sky, padding: 12, borderRadius: 22 }}><LearnArt island={island} size={72}/><View style={{ flex: 1 }}><Heading style={{ fontSize: 21, color: theme.ink }}>{engine.name}</Heading><Copy style={{ color: theme.ink, fontSize: 14 }}>Pick a stepping stone, then play.</Copy></View></View>
         <LearnerChip compact/>
         <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
+        <LevelPath game={id} level={levelOf(options)} onChoose={chooseLevel} />
         {engine.modes.length > 1 && (
           <>
             <Heading style={{ fontSize: 18 }}>How shall we play?</Heading>
@@ -380,7 +391,6 @@ export function LearnFrame({ id }: { id: LearnId }) {
             </View>
           </>
         )}
-        <LevelPath game={id} level={levelOf(options)} onChoose={chooseLevel} />
         {!options.stage && engine.languages && engine.languages.length > 1 && (
           <>
             <Heading style={{ fontSize: 18 }}>Words in</Heading>

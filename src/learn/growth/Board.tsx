@@ -5,6 +5,7 @@ import type { BoardProps } from "../types";
 import { growthDraft, growthMove, growthProgress, growthQuestions } from "./engine";
 import type { GrowthAction, GrowthState } from "./types";
 import { CoachSpot } from "../Coach";
+import { AnswerTile } from "../AnswerTile";
 import { NumbersVisual } from "./NumbersVisual";
 import { LiteracyVisual } from "./LiteracyVisual";
 import { DiscoveryVisual } from "./DiscoveryVisual";
@@ -53,7 +54,7 @@ export function GrowthBoard({ session, update, active, width, sound, stopSound, 
       </View>
     </View> : <View style={{ gap: 10 }}>{state.orders[progress.index].map(value => {
       const choice = q.choices.find(c => c.value === value)!;
-      return <Button key={value} selected={progress.shown && q.answer === value} quiet={!(progress.shown && q.answer === value)} disabled={!active || progress.solved || progress.wrong === value} onPress={() => move({ type: "answer", value })}>{choice.label}</Button>;
+      return <AnswerTile key={value} label={choice.label} selected={progress.shown && q.answer === value} wrong={progress.wrong === value} correct={progress.solved && q.answer === value} disabled={!active || progress.solved || progress.wrong === value} onPress={() => move({ type: "answer", value })}><Copy style={{ color: C.ink, fontWeight: "900", fontSize: 19, textAlign: "center" }}>{choice.label}</Copy></AnswerTile>;
     })}</View>}
     {!!progress.wrong && !progress.solved && <View accessibilityLiveRegion="polite"><Copy>Try another idea. Show me can help.</Copy></View>}
     {(progress.shown || progress.solved) && <View accessibilityLiveRegion="polite" style={{ padding: 16, backgroundColor: C.paper, borderRadius: 16, gap: 8 }}>
