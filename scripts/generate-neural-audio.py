@@ -61,6 +61,12 @@ def generate(item):
         encoded.replace(target)
     return voice,key,{'input':digest,'sha256':hashlib.sha256(target.read_bytes()).hexdigest(),'seconds':round(len(samples)/rate,3)}
 
+# Little Island 2.3 Reading: registration only; the integration lead generates clips.
+def reading_speech(speech):
+    speech.update({f'letter-{letter.lower()}': f'Find the letter {letter}.' for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'})
+    speech.update({'letter-lagoon-intro': 'Find the letter friend. Take your time.', 'word-workshop-intro': 'Snap the word parts together on your workbench.', 'story-studio-intro': 'Build a sentence or story, one card at a time.'})
+    return speech
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model-dir', required=True)
@@ -68,7 +74,7 @@ def main():
     parser.add_argument('--workers', type=int,default=2)
     parser.add_argument('--limit', type=int)
     args = parser.parse_args()
-    speech = json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30))
+    speech = reading_speech(json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30)))
     receipt = Path(args.model_dir)/'generated.json'
     records = json.loads(receipt.read_text()) if receipt.exists() else {}
     voice_hash=hashlib.sha256((Path(args.model_dir)/'voices-v1.0.bin').read_bytes()).hexdigest()
@@ -122,7 +128,7 @@ def main():
         pool.shutdown(wait=True)
     tmp=receipt.with_suffix('.tmp');tmp.write_text(json.dumps(records,sort_keys=True));tmp.replace(receipt)
     if args.limit: return
-    latest=json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30))
+    latest=reading_speech(json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30)))
     if latest != speech: raise RuntimeError('Speech manifest changed during generation; rerun before publication')
     if hashlib.sha256((Path(args.model_dir)/'kokoro-v1.0.onnx').read_bytes()).hexdigest()!=model_hash or hashlib.sha256((Path(args.model_dir)/'voices-v1.0.bin').read_bytes()).hexdigest()!=voice_hash:
         raise RuntimeError('Inference files changed during generation; refusing publication')

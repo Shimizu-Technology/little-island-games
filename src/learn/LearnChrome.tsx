@@ -36,7 +36,7 @@ export function IslandBackdrop({ island, colors }: { island: Island; colors?: ty
 
 export function roundProgress(session: LearnSession): { current: number; total: number } | null {
   const s = session.state as Record<string, unknown>;
-  if (session.options.stage) {
+  if (session.options.stage && s.type === "growth") {
     const questions = growthQuestions(session.game, session.options, session.state as never);
     return { current: growthProgress(session.state as never, questions).index, total: questions.length };
   }

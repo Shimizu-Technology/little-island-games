@@ -49,8 +49,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
     view = views[id];
   const saved = store.save.learn?.[id];
   const scroll = useRef<ScrollView | null>(null);
-  const growthState = saved?.options.stage ? saved.state as GrowthState : undefined;
-  const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : undefined;
+  const growthState = saved?.options.stage && !engine.ownLevels ? saved.state as GrowthState : undefined;
+  const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : engine.ownLevels && saved ? (saved.state as { index?: number }).index : undefined;
   useLayoutEffect(() => {
     if (growthStep !== undefined) scroll.current?.scrollTo({ y: 0, animated: false });
   }, [growthStep, saved?.id]);
@@ -191,7 +191,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       if (!saved || expected.current.id !== saved.id || !boardActive || store.epoch !== epoch) return;
       const revision = Math.max(saved.revision, expected.current.revision ?? 0) + 1;
       if (save({ ...saved, state, revision })) {
-        if (saved.options.stage) {
+        if (saved.options.stage && !engine.ownLevels) {
           const next = state as GrowthState;
           if (next.history.at(-1)?.type === "answer" && next.history !== (saved.state as GrowthState).history) {
             const progress = growthProgress(next, growthQuestions(id, saved.options, next));
@@ -200,7 +200,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         } else if (isMathGame(id) && (state as MathRound).wrong !== null && !(state as MathRound).solved) reactCompanion("incorrect");
       }
     },
-    [saved, save, boardActive, store.epoch, epoch, id, reactCompanion]
+    [saved, save, boardActive, store.epoch, epoch, id, reactCompanion, engine.ownLevels]
   );
 
   function start() {
@@ -237,7 +237,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const twoPlayer = options.mode !== "solo";
   const turn = saved && engine.turn && saved.options.mode !== "solo" && !finished ? engine.turn(saved.state, saved.options) : null;
   const boardWidth = Math.min(width - insets.left - insets.right - 56, 900);
-  const Board = saved?.options.stage ? GrowthBoard : view.Board;
+  const Board = saved?.options.stage && !engine.ownLevels ? GrowthBoard : view.Board;
   const island = id === "hafa-adai" ? "reading" : engine.island;
   const theme = id === "hafa-adai" ? { sky: "#FFE4D9", land: "#F5BCA6", accent: "#A44E3A", ink: "#65382D" } : subjectTheme[island];
   const cheerText = companionEvent === "correct" ? "You got it!" : companionEvent === "incorrect" ? "Try again!" : companionEvent === "entry" ? "Let's play!" : null;
@@ -405,7 +405,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
       </Sheet>
       <Sheet visible={help} onClose={() => { stopSound(); setHelp(false); }} title={`How to play ${engine.name}`}>
-        <Copy>{saved?.options.stage ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>
+        <Copy>{saved?.options.stage && !engine.ownLevels ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>
         {!saved?.options.stage && engine.helpAudio && (
           <>
             <Button icon="sound-on" onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>

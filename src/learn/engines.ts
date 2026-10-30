@@ -15,6 +15,9 @@ import { engine as quickPractice } from "./games/quick-practice/engine";
 import { stubEngine } from "./stub";
 
 /** Pure engines (no React): safe to import from save validation and tests. */
+import { engine as letterLagoon } from "./games/letter-lagoon/engine";
+import { engine as wordWorkshop } from "./games/word-workshop/engine";
+import { engine as storyStudio } from "./games/story-studio/engine";
 const originalEngines: Record<LearnId, LearnEngine<unknown>> = {
   "reef-race": reefRace as LearnEngine<unknown>,
   "island-market": islandMarket as LearnEngine<unknown>,
@@ -41,9 +44,9 @@ const originalEngines: Record<LearnId, LearnEngine<unknown>> = {
   "times-tide": stubEngine({ id: "times-tide", name: "Times Tide", island: "numbers" as Island, tagline: "Groups, arrays and times tables.", description: "Groups, arrays and times tables.", help: "Groups, arrays and times tables.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [6, 11], ownLevels: true }) as LearnEngine<unknown>,
   "fraction-feast": stubEngine({ id: "fraction-feast", name: "Fraction Feast", island: "numbers" as Island, tagline: "Share pies. Fractions and decimals.", description: "Share pies. Fractions and decimals.", help: "Share pies. Fractions and decimals.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [7, 13], ownLevels: true }) as LearnEngine<unknown>,
   "treasure-algebra": stubEngine({ id: "treasure-algebra", name: "Treasure Algebra", island: "numbers" as Island, tagline: "Negatives, patterns and equations.", description: "Negatives, patterns and equations.", help: "Negatives, patterns and equations.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [9, 14], ownLevels: true }) as LearnEngine<unknown>,
-  "letter-lagoon": stubEngine({ id: "letter-lagoon", name: "Letter Lagoon", island: "reading" as Island, tagline: "Letters and first sounds.", description: "Letters and first sounds.", help: "Letters and first sounds.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [3, 6], ownLevels: true }) as LearnEngine<unknown>,
-  "word-workshop": stubEngine({ id: "word-workshop", name: "Word Workshop", island: "reading" as Island, tagline: "Build words with parts.", description: "Build words with parts.", help: "Build words with parts.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [7, 14], ownLevels: true }) as LearnEngine<unknown>,
-  "story-studio": stubEngine({ id: "story-studio", name: "Story Studio", island: "reading" as Island, tagline: "Build sentences and stories.", description: "Build sentences and stories.", help: "Build sentences and stories.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [6, 14], ownLevels: true }) as LearnEngine<unknown>,
+  "letter-lagoon": letterLagoon as LearnEngine<unknown>,
+  "word-workshop": wordWorkshop as LearnEngine<unknown>,
+  "story-studio": storyStudio as LearnEngine<unknown>,
 };
 
 /** Typical age span of Levels 1–5 for the original twelve games (new games declare their own). */
