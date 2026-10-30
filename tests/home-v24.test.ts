@@ -26,7 +26,7 @@ describe('one drop rule for preview and commit',()=>{
   const body={...dropBody(instance('food','fruit-bowl',0,0)),holdable:true,edible:'food' as const};
   const w={...world,people:[{slot:0,x:400,y:500}]};
   expect(resolveDrop(w,body,442,416)?.kind).toBe('hand');expect(resolveDrop(w,body,400,340)?.kind).toBe('mouth');
-  expect(resolveDrop({...w,people:[{...w.people[0],holding:'other'}]},body,442,416)?.kind).toBe('floor');
+  expect(resolveDrop({...w,people:[{...w.people[0],holding:'other'}]},body,442,416)?.kind).toBe('hand');
  });
  it('uses free sockets, nearest surface cells, then floor',()=>{
   const w={...world,sockets:[{itemId:'seat',socketId:'a',x:400,y:450,pose:'sit' as const,occupied:1}]};

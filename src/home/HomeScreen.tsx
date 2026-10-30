@@ -1,5 +1,8 @@
+import { HandProp } from './art/PropShape';
+import { holdableIds, dispenserFan, type HoldableId } from './art/living';
+import { DispenserFanArt } from './art/DispenserFanArt';
 import { capabilityOf, visualBox } from "./world";
-import { dropBody, dropWorld, socketsOf } from "./interactions";
+import { canHold, dropBody, dropWorld, socketsOf } from "./interactions";
 import { resolveDrop } from "./drop";
 import { badgeRule, type BadgeId } from '../badges/engine';
 import { HouseCamera, type HouseCameraHandle } from "./HouseCamera";
@@ -31,7 +34,7 @@ import { stickerIds } from "../arcade/progress";
 import { useReducedMotion } from "../components/motion";
 import { useSounds } from "../components/Audio";
 import { useStore } from "../state/Store";
-import { CrabFriend } from "./art/CrabFriend";
+import { CrabCompanion } from "./CrabCompanion";
 import { MoreItemArt, RoomShellArt } from "./art/More";
 import { moreCatalog, roomIds, roomNames, tintIds, tintPalette } from "./catalogMore";
 import { ItemArt } from "./art/Items";
@@ -55,7 +58,7 @@ import {
 } from "./model";
 import { LockBadge, LockRule } from '../personalization/LockBadge';
 import { trackLabels, badgeInfo } from '../badges/engine';
-import { sceneItemDepth, furnitureDepth, characterFrame, characterDepth, characterPoint, itemPoint, itemSize, spotFromPoint, stackSpot, stackActionLabel, stackedHitWidth, surfacePoint, characterSize, seatAnchor } from "./geometry";
+import { sceneItemDepth, characterHand, furnitureDepth, characterFrame, characterDepth, characterPoint, itemPoint, itemSize, spotFromPoint, stackSpot, stackActionLabel, stackedHitWidth, surfacePoint, characterSize, seatAnchor } from "./geometry";
 import { useHomeStore } from "./useHomeStore";
 import { Drag, MotionLink, Footprint, emptyPreview, TrayGhost, type DragConfig } from "./Drag";
 
@@ -178,12 +181,12 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   React.useEffect(()=>{const show=setTimeout(()=>setSavedTick(true),0),hide=setTimeout(()=>setSavedTick(false),1100);return()=>{clearTimeout(show);clearTimeout(hide);};},[store.state]);
   const [stackMenu, setStackMenu] = useState(false);
   const [surfaceMenu, setSurfaceMenu] = useState<string>();
-  const [reaction, setReaction] = useState<{slot:number;text:string}>();
+  const [reaction, setReaction] = useState<{slot:number;text:string;item?:Instance}>();
   const [asleep,setAsleep]=useState<number[]>([]);
-  React.useEffect(()=>{const reset=setTimeout(()=>setAsleep([]),0),calm=setTimeout(()=>setAsleep(room.characters.filter(c=>c.pose==='lie').map(c=>c.slot)),8000);return()=>{clearTimeout(reset);clearTimeout(calm);};},[room.characters]);
+  React.useEffect(()=>{const reset=setTimeout(()=>setAsleep([]),0),calm=setTimeout(()=>setAsleep(room.characters.filter(c=>c.pose==='lie').map(c=>c.slot)),3000);return()=>{clearTimeout(reset);clearTimeout(calm);};},[room.characters]);
   const reactionTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
   React.useEffect(()=>()=>clearTimeout(reactionTimer.current),[]);
-  const reactTo=(slot:number,text="♪")=>{setReaction({slot,text});clearTimeout(reactionTimer.current);reactionTimer.current=setTimeout(()=>setReaction(undefined),1200);};
+  const reactTo=(slot:number,text="♪",item?:Instance)=>{setReaction({slot,text,item});clearTimeout(reactionTimer.current);reactionTimer.current=setTimeout(()=>setReaction(undefined),1200);};
   const [confirm, setConfirm] = useState(false);
   useSheetPresence(confirm || stackMenu || !!surfaceMenu);
   const [hint, setHint] = useState(!app.save.settings.homeNavigationSeen);
@@ -305,7 +308,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         setPlacing(undefined);
         setHint(false);
       } else {
-        if(capabilityOf(i.item).toggle||itemSpec(i.item).interactive)dispatch({ type: "toggle", id: i.id, roomId }, true);
+        if(capabilityOf(i.item).toggle||itemSpec(i.item).interactive&&!capabilityOf(i.item).holdable)dispatch({ type: "toggle", id: i.id, roomId }, true);
         setSelected(i.id);
       }
     } else if (["rotate", "mirror", "put-away"].includes(action))
@@ -355,7 +358,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   };
   const revealSeat=(roomId:typeof roomIds[number],slot:Character['slot'],itemId?:string,socketId?:string)=>{
     const room=store.state.rooms[roomId],item=room.instances.find(i=>i.id===itemId),socket=item&&socketsOf(item).find(s=>s.id===socketId);
-    if(!item||!socket)return;
+    if(reduced||!item||!socket)return;
     const frame=characterFrame(room,{slot,anchor:'seat',pose:socket.kind,seatId:item.id,socket:{itemId:item.id,socketId:socket.id}}),p=itemPoint(item),box=visualBox(item.item,item.rotation,item.mirrored);
     requestAnimationFrame(()=>houseCamera.current?.reveal(roomIds.indexOf(roomId),{left:Math.min(frame.left,p.x+box.left),top:Math.min(frame.top,p.y+box.top),right:Math.max(frame.left+frame.width,p.x+box.left+box.width),bottom:Math.max(frame.top+frame.height,p.y+box.top+box.height)}));
   };
@@ -419,7 +422,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             })}
             enabled={decorating || capabilityOf(i.item).moveInPlay}
             reduced={reduced}
-            config={{ ...localConfig, grouped:room.characters.some(c=>c.socket?.itemId===i.id||c.seatId===i.id),subject:dropBody(i), foot: p, layer: i.layer, footprint: { w, h, wall: i.layer === "wall", id: i.id, small: !!decorSpec(i.item).small } }}
+            config={{ ...localConfig, grouped:room.characters.some(c=>c.socket?.itemId===i.id||c.seatId===i.id),subject:{...dropBody(i),edible:i.empty?undefined:dropBody(i).edible}, foot: p, layer: i.layer, footprint: { w, h, wall: i.layer === "wall", id: i.id, small: !!decorSpec(i.item).small } }}
             onStart={() => {
               dispatch({type:"room",room:roomId});
               setDraggedItem(undefined);
@@ -431,20 +434,22 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             onTap={() => {
               if (placing) return;
               if(selectedFriend){
-                const world=dropWorld(room),socket=world.sockets.find(s=>s.itemId===i.id&&(s.occupied===undefined||s.occupied===selectedFriend.slot));
+                const world=dropWorld(room),socket=world.sockets.find(s=>!!s.pet===(selectedFriend.slot===2)&&s.itemId===i.id&&(s.occupied===undefined||s.occupied===selectedFriend.slot));
                 const d=resolveDrop(world,{slot:selectedFriend.slot},socket?.x??p.x,socket?.y??p.y);
                 if(d){if(selectedFriend.roomId===roomId)send(d.kind==='socket'?{type:'character',slot:selectedFriend.slot,anchor:'seat',seatId:d.itemId,socketId:d.socketId}:{type:'character',slot:selectedFriend.slot,anchor:'floor',x:d.x,y:d.y},true);else dispatch({type:'transfer',roomId:selectedFriend.roomId,room:roomId,slot:selectedFriend.slot,x:d.x,y:d.y,seatId:d.itemId,socketId:d.socketId},true);}
+                if(d?.kind==='socket')revealSeat(roomId,selectedFriend.slot,d.itemId,d.socketId);
                 setSelectedFriend(undefined);return;
               }
-              if (room.instances.some(child => child.on === i.id)) {dispatch({type:"room",room:roomId});setSurfaceMenu(i.id);}
+              if (capabilityOf(i.item).dispenses?.length) itemAction(i,'activate',roomId);
+              else if (room.instances.some(child => child.on === i.id)) {dispatch({type:"room",room:roomId});setSurfaceMenu(i.id);}
               else itemAction(i, "activate", roomId);
             }}
             onDrop={(_x, _y, dx, dy) => {
-              const drop=resolveDrop(dropWorld(room),dropBody(i),p.x+dx/scale,p.y+dy/scale);
+              const drop=resolveDrop(dropWorld(room),{...dropBody(i),edible:i.empty?undefined:dropBody(i).edible},p.x+dx/scale,p.y+dy/scale);
               if(!drop)return;
               if(drop.kind==='hand'||drop.kind==='mouth'){
                 send({type:'use-item',id:i.id,slot:drop.slot as Character['slot'],eat:drop.kind==='mouth'},true);
-                if(drop.kind==='mouth')reactTo(drop.slot!,"Yum ♡");
+                if(drop.kind==='mouth')reactTo(drop.slot!,capabilityOf(i.item).edible==='drink'?"Sip ♡":"Yum ♡",i);
               } else send({type:'move',id:i.id,x:drop.x,y:drop.y,...(drop.on?{on:drop.on}:{})},true);
               setSelected(i.id);
             }}
@@ -467,7 +472,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                 item={i.item}
                 size={size}
                 layer={capabilityOf(i.item).sockets?.length && room.characters.some(c=>c.socket?.itemId===i.id || c.seatId===i.id)?"back":"all"}
-                state={{on:i.powered ?? i.state === "active"}}
+                state={{on:i.powered ?? i.state === "active",empty:i.empty}}
                 active={i.powered ?? i.state === "active"}
                 animated={roomId===store.state.current && i.state=== "active" && !room.characters.some(c=>c.socket?.itemId===i.id || c.seatId===i.id)}
                 reduced={reduced}
@@ -486,11 +491,11 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     }),
     ...room.characters.map((c) => {
       const p=characterPoint(room,c),size=characterSize(c.slot)*scale;
-      const action=reaction?.slot===c.slot?(reaction.text.startsWith('Yum')?'eat':c.pose==='stand'?'wave':undefined):asleep.includes(c.slot)?'lie-asleep':c.holding&&c.pose==='stand'?'hold':undefined;
+      const action=reaction?.slot===c.slot?(reaction.text.startsWith('Yum')?'eat':reaction.text.startsWith('Sip')?'drink':c.pose==='stand'?'wave':undefined):asleep.includes(c.slot)?'lie-asleep':c.holding&&c.pose==='stand'?'hold':undefined;
       const frame=characterFrame(room,c,action);
       return {
         key: `character-${c.slot}`,
-        depth: characterDepth(room, c),
+        depth: characterDepth(room, c)+(c.slot===2&&c.socket?.socketId.startsWith('pet-')?2:0),
         node: (
           <MotionLink motion={motion} owner={c.socket?.itemId??c.seatId}><Drag
             testID={`character-${c.slot}`}
@@ -555,10 +560,10 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             config={{ ...localConfig, subject:{slot:c.slot},rooms:roomIds.map((id,index)=>({id,origin:roomOrigin(index,building),world:dropWorld(store.state.rooms[id])})),sourceOrigin:roomOrigin(roomIds.indexOf(roomId),building),foot: p }}
             onTap={() => {
               setHint(false);
-              if(selected && room.instances.some(i=>i.id===selected)){
+              if(selected && room.instances.some(i=>i.id===selected&&canHold(i))){
                 const held=room.instances.find(i=>i.id===selected)!;
-                send({type:'use-item',id:held.id,slot:c.slot,eat:!!capabilityOf(held.item).edible},true);setSelected(undefined);
-              } else reactTo(c.slot,"♡");
+                send({type:'use-item',id:held.id,slot:c.slot,eat:!!capabilityOf(held.item).edible&&!held.empty},true);if(capabilityOf(held.item).edible&&!held.empty)reactTo(c.slot,capabilityOf(held.item).edible==='drink'?'Sip ♡':'Yum ♡',held);setSelected(undefined);
+              } else reactTo(c.slot,c.slot===2?"Clack clack ♡":"♡");
               setSelectedFriend({slot:c.slot,roomId});
             }}
             onStart={() => {
@@ -590,10 +595,11 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             }}
           >
             <View pointerEvents="none" style={{width:frame.width*scale,height:frame.height*scale,transform:[{scaleX:frame.mirrored?-1:1}]}}>
-              {renderCharacter?.(c.slot,c.pose,action,characterSize(c.slot)*scale,c.holding?(()=>{const held=room.instances.find(i=>i.id===c.holding);return held?<DecorArt item={held.item} size={24}/>:undefined;})():undefined,reduced) ?? (c.slot===0?<View style={{transform:[{scale:size/92}]}}><Placeholder pose={c.pose}/></View>:c.slot===1?<ReefFish size={size}/>:<CrabFriend pose={c.pose==='lie'?'lie':c.pose==='stand'?'stand':'sit'} size={size} reduced={reduced}/>)}
+              {renderCharacter?.(c.slot,c.pose,action,characterSize(c.slot)*scale,(()=>{const held=reaction?.slot===c.slot&&reaction.item?reaction.item:room.instances.find(i=>i.id===c.holding);return held?(holdableIds.includes(held.item as HoldableId)?<HandProp id={held.item as HoldableId} state={{empty:held.empty,on:held.powered}} tint={held.tint}/>:<DecorArt item={held.item} size={24}/>):undefined;})(),reduced) ?? (c.slot===0?<View style={{transform:[{scale:size/92}]}}><Placeholder pose={c.pose}/></View>:c.slot===1?<ReefFish size={size}/>:<CrabCompanion pose={c.pose==='lie'?'lie':c.pose==='stand'?'stand':'sit'} size={size} reduced={reduced} clacking={reaction?.slot===2}/>)}
             </View>
+            {asleep.includes(c.slot)&&c.pose==='lie'&&<Text pointerEvents="none" style={{position:'absolute',top:0,right:5,color:ink,fontSize:22}}>z</Text>}
             {reaction?.slot===c.slot && <Text pointerEvents="none" style={{position:'absolute',top:-25,left:0,right:0,textAlign:'center',fontSize:24,color:ink}}>{reaction.text}</Text>}
-            {c.holding && (()=>{const held=room.instances.find(i=>i.id===c.holding);if(!held)return null;return <Drag testID={`held-${c.slot}`} accessibilityRole="button" accessibilityLabel={`Put down ${itemSpec(held.item).name}`} enabled reduced={reduced} config={{...localConfig,foot:{x:p.x+42,y:p.y-84},subject:dropBody(held)}} onTap={()=>send({type:'release-held',slot:c.slot,x:c.x??10,y:c.y??8},true)} onDrop={(_x,_y,dx,dy)=>{const row=(p.y-84+dy/scale-386)/14.4;send({type:'release-held',slot:c.slot,x:(p.x+42+dx/scale-43-row*1.5)/37.5,y:row},true);}} style={{position:'absolute',left:size*.62,top:size*.52,width:44,height:44}}>{c.slot!==0&&<DecorArt item={held.item} size={44}/>}</Drag>;})()}
+            {c.holding && (()=>{const held=room.instances.find(i=>i.id===c.holding);if(!held)return null;const hand=c.slot===0?characterHand(room,c,action):{x:p.x+30,y:p.y-40};return <Drag testID={`held-${c.slot}`} accessibilityRole="button" accessibilityLabel={`Put down ${itemSpec(held.item).name}`} enabled reduced={reduced} config={{...localConfig,foot:hand,subject:dropBody(held)}} onTap={()=>send({type:'release-held',slot:c.slot,x:c.x??10,y:c.y??8},true)} onDrop={(_x,_y,dx,dy)=>{const row=(hand.y+dy/scale-386)/14.4;send({type:'release-held',slot:c.slot,x:(hand.x+dx/scale-43-row*1.5)/37.5,y:row},true);}} style={{position:'absolute',left:(hand.x-frame.left)*scale-22,top:(hand.y-frame.top)*scale-22,width:44,height:44}}>{c.slot!==0&&<DecorArt item={held.item} size={44}/>}</Drag>;})()}
           </Drag></MotionLink>
         ),
       };
@@ -676,7 +682,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           paddingRight: drawerWidth,
         }}
       >
-        <HouseCamera cameraRef={houseCamera} initialIndex={roomIds.indexOf(store.state.current)} width={width-drawerWidth} height={Math.max(0,availableHeight)} building={building} scale={scale} zoom={effectiveZoom} minZoom={limits.min} maxZoom={limits.max} reduced={reduced} onNavigate={acknowledgeNavigation} onZoom={setZoom} onRoom={index=>{dispatch({type:'room',room:roomIds[index]});if(roomIds[index]!==store.state.current){setSelected(undefined);setPlacing(undefined);}requestAnimationFrame(measure);setTimeout(measure,reduced?0:280);}}>
+        <HouseCamera focusXs={roomIds.map(id=>{const hero=store.state.rooms[id].instances.find(i=>i.item===({home:'bed',kitchen:'fridge',treehouse:'hammock',beach:'rocking-chair'}[id]));return hero?itemPoint(hero).x+(id==='treehouse'?90:id==='beach'?60:40):400;})} cameraRef={houseCamera} initialIndex={roomIds.indexOf(store.state.current)} width={width-drawerWidth} height={Math.max(0,availableHeight)} building={building} scale={scale} zoom={effectiveZoom} minZoom={limits.min} maxZoom={limits.max} reduced={reduced} onNavigate={acknowledgeNavigation} onZoom={setZoom} onRoom={index=>{dispatch({type:'room',room:roomIds[index]});if(roomIds[index]!==store.state.current){setSelected(undefined);setPlacing(undefined);}requestAnimationFrame(measure);setTimeout(measure,reduced?0:280);}}>
         <View pointerEvents="none" style={StyleSheet.absoluteFill}><BuildingArt building={building}/></View>
         {/* Event callbacks below read placement refs only on input, never while building scenes. */}
         {/* eslint-disable-next-line react-hooks/refs */}
@@ -715,7 +721,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                   const {pageX,pageY}=e.nativeEvent;
                   roomCanvases.current[roomId]?.measureInWindow((x,y)=>{const d=resolveDrop(dropWorld(room),{slot:selectedFriend.slot},(pageX-x)/scale,(pageY-y)/scale);if(!d)return;if(selectedFriend.roomId!==roomId)dispatch({type:'transfer',slot:selectedFriend.slot,roomId:selectedFriend.roomId,room:roomId,x:d.x,y:d.y},true);else dispatch(d.kind==='socket'?{type:'character',slot:selectedFriend.slot,roomId,anchor:'seat',seatId:d.itemId,socketId:d.socketId}:{type:'character',slot:selectedFriend.slot,roomId,anchor:'floor',x:d.x,y:d.y},true);});setSelectedFriend(undefined);return;
                 }
-                if(selected && room.instances.some(i=>i.id===selected)){
+                if(selected && room.instances.some(i=>i.id===selected&&canHold(i))){
                   const target=room.instances.find(i=>i.id===selected)!;
                   const {pageX,pageY}=e.nativeEvent;
                   roomCanvases.current[roomId]?.measureInWindow((x,y)=>{const d=resolveDrop(dropWorld(room),dropBody(target),(pageX-x)/scale,(pageY-y)/scale);if(d)dispatch({type:'move',id:target.id,x:d.x,y:d.y,roomId},true);});setSelected(undefined);return;
@@ -747,7 +753,6 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           <View pointerEvents="box-none" style={{position:"absolute",left:8*scale,top:8*scale,width:784*scale,height:544*scale,overflow:"hidden"}}><View pointerEvents="box-none" style={{position:"absolute",left:-8*scale,top:-8*scale,width:sceneWidth,height:560*scale}}>{renderEntries(room,roomId).map((entry) => (
             <React.Fragment key={entry.key}>{entry.node}</React.Fragment>
           ))}</View></View>
-          {room.instances.filter(source=>capabilityOf(source.item).dispenses?.length && (source.powered || capabilityOf(source.item).toggle!=='open')).map(source=>{const p=itemPoint(source);return <View key={`fan-${source.id}`} style={{position:'absolute',left:Math.max(8,p.x*scale-60),top:Math.max(8,p.y*scale-itemSize(source)*scale*.9-52),flexDirection:'row',gap:4}}>{capabilityOf(source.item).dispenses!.map((id,index)=><Drag key={id} testID={`dispense-${id}`} accessibilityRole="button" accessibilityLabel={`Take ${itemSpec(id).name}`} enabled reduced={reduced} tray config={{...config,world:dropWorld(room),subject:dropBody(instance('',id,0,0))}} onTap={()=>dispatch({type:'dispense',source:source.id,item:id,id:`food-${++sequence.current}`,x:p.x+index*40,y:p.y,roomId})} onDrop={(x,y)=>roomCanvases.current[roomId]?.measureInWindow((ox,oy)=>dispatch({type:'dispense',source:source.id,item:id,id:`food-${++sequence.current}`,x:(x-ox)/scale,y:(y-oy)/scale,roomId}))} style={{width:48,height:48,borderRadius:24,backgroundColor:'#FFF8E9'}}><DecorArt item={id} size={44}/></Drag>)}</View>;})}
           {room.instances.filter(parent => room.instances.some(child => child.on === parent.id)).map(parent => {
             const children = room.instances.filter(child => child.on === parent.id);
             const p = itemPoint(parent, room.instances);
@@ -775,6 +780,21 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         <View pointerEvents="none" style={StyleSheet.absoluteFill}><BuildingTrim building={building}/></View>
         </HouseCamera>
       </View>
+          {room.instances.filter(source=>source.id===selected).map(source=>{const roomId=store.state.current;
+            const state={on:source.powered??source.state==='active'},fan=dispenserFan(source.item,state);if(!fan.length)return null;
+            const p=itemPoint(source),fanScale=1,fanWidth=224*fanScale,height=120*fanScale;
+            const left=(width-fanWidth)/2,top=inset.top+headerHeight+8;
+            const take=(id:ItemId,x:number,y:number)=>{
+              const created=instance(`food-${Date.now().toString(36)}-${++sequence.current}`,id,0,0),drop=resolveDrop(dropWorld(room),dropBody(created),x,y);
+              dispatch({type:'dispense',source:source.id,item:id,id:created.id,x,y,roomId});
+              if(drop?.kind==='mouth')reactTo(drop.slot!,capabilityOf(id).edible==='drink'?'Sip ♡':'Yum ♡',created);
+            };
+            return <View key={`fan-${source.id}`} pointerEvents="box-none" style={{position:'absolute',left,top,width:fanWidth,height}}>
+              <View pointerEvents="none"><DispenserFanArt item={source.item} state={state}/></View>
+              {fan.map(entry=><Drag key={entry.item} testID={`dispense-${entry.item}`} accessibilityRole="button" accessibilityLabel={`Take ${itemSpec(entry.item).name}`} enabled reduced={reduced} tray config={{...config,world:dropWorld(room),subject:dropBody(instance('',entry.item,0,0))}} onTap={()=>{const person=selectedFriend&&room.characters.find(c=>c.slot===selectedFriend.slot),target=person&&dropWorld(room).people.find(c=>c.slot===person.slot);take(entry.item,target?.handX??p.x,target?.handY??p.y);}} onDrop={(x,y)=>roomCanvases.current[roomId]?.measureInWindow((ox,oy)=>take(entry.item,(x-ox)/scale,(y-oy)/scale))} style={{position:'absolute',left:(112+entry.x-24)*fanScale,top:(120+entry.y-24)*fanScale,width:48*fanScale,height:48*fanScale}}><View/></Drag>)}
+            </View>;
+          })}
+
           {decorating && target && toolbarPoint && (
             <View
               testID="object-toolbar"

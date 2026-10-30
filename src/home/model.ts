@@ -123,7 +123,7 @@ export function validHome(v: unknown): v is HomeSave {
 /** Pure, strict and idempotent. Never changes the source; invalid input belongs in recovery. */
 export function migrateHome(v: unknown): HomeStateV2 | undefined {
   if (!validHome(v)) return undefined;
-  if(v.version===3)return v;
+  if(v.version===3){const rooms=Object.fromEntries(roomIds.map(id=>[id,normalizeRoom(v.rooms[id])])) as HomeStateV2['rooms'];return roomIds.every(id=>rooms[id].instances.every((i,n)=>i.x===v.rooms[id].instances[n].x&&i.y===v.rooms[id].instances[n].y))?v:{...v,rooms};}
   if(v.version!==1)return upgradeHome(v);
   const base = starterHome();
   return upgradeHome({ ...base, rooms: { ...base.rooms, home: {
@@ -147,7 +147,7 @@ export function normalizeRoom(room:RoomState):RoomState {
 }
 function upgradeHome(v:HomeStateV2):HomeStateV2 {
  const rooms={...v.rooms};
- for(const id of roomIds){const room=v.rooms[id];rooms[id]={...normalizeRoom(room),characters:room.characters.map(c=>{const seat=room.instances.find(i=>c.seatId?c.seatId===i.id:c.anchor===i.item);const socket=seat&&socketsOf(seat)[0];return seat&&socket?characterForSocket(c,seat,socket):{...c};})};}
+ for(const id of roomIds){const room=v.rooms[id];rooms[id]={...normalizeRoom(room),characters:room.characters.map(c=>{const seat=room.instances.find(i=>c.seatId?c.seatId===i.id:c.anchor===i.item);const socket=seat&&socketsOf(seat).find(s=>s.id.startsWith('pet-')===(c.slot===2));return seat&&socket?characterForSocket(c,seat,socket):{...c};})};}
  for(const id of roomIds){const used=new Set<string>();rooms[id]={...rooms[id],characters:rooms[id].characters.map(c=>{if(!c.socket)return c;const key=`${c.socket.itemId}:${c.socket.socketId}`;if(!used.has(key)){used.add(key);return c;}return {slot:c.slot,anchor:'floor',pose:'stand',...freeFloor(rooms[id].instances,8,8)};})};}
  return {...v,version:3,rooms};
 }
@@ -158,7 +158,7 @@ export function validCharacter(c: unknown, items: readonly Instance[], legacy = 
   const v = c as Character;
   if(v.socket !== undefined){
    const seat=items.find(i=>i.id===v.socket?.itemId),socket=seat&&socketsOf(seat).find(s=>s.id===v.socket?.socketId);
-   if(!exact(v.socket,["itemId","socketId"])||!socket||v.pose!==socket.kind||v.anchor!=="seat"||v.seatId!==seat?.id)return false;
+   if(!exact(v.socket,["itemId","socketId"])||!socket||(socket.id.startsWith('pet-')&&v.slot!==2)||v.pose!==socket.kind||v.anchor!=="seat"||v.seatId!==seat?.id)return false;
   }
   if(v.holding!==undefined && (!items.some(i=>i.id===v.holding&&canHold(i)&&!i.on)||typeof v.holding!=="string"))return false;
   const keys =
@@ -205,12 +205,12 @@ export function legacyStarterHome(): HomeState {
 }
 export function starterHome(): HomeStateV2 {
   const old = legacyStarterHome();
-  const home: RoomState = { theme: { ...roomDefaultTheme.home }, instances: old.instances.map(i => ({ ...i, x: i.x * 2, y: i.y * 2 })), characters: old.characters };
+  const home: RoomState = { theme: { ...roomDefaultTheme.home }, instances: old.instances.map(i => {const positions:Record<string,[number,number]>={bed:[8,0],shelf:[12,0],plant:[1,2],lamp:[6,1],rug:[8,8],table:[12,6],chair:[14,9],toys:[1,8]};return {...i,x:positions[i.id][0],y:positions[i.id][1]};}), characters: [{slot:0,anchor:"floor",pose:"stand",x:11,y:7},{slot:1,anchor:"shelf",pose:"sit"},{slot:2,anchor:"floor",pose:"stand",x:9,y:8}] };
   const extra = (room: Exclude<RoomId, "home">): RoomState => {
     const starters: Record<Exclude<RoomId, "home">, readonly [string, number, number][]> = {
-      kitchen: [["fridge", 0, 0], ["sink-counter", 4, 0], ["stove", 10, 0], ["fruit-bowl", 8, 6], ["kitchen-table", 6, 6], ["stool", 12, 8]],
-      treehouse: [["hammock", 0, 0], ["floor-cushion", 8, 6], ["string-lights", 4, 0], ["lantern", 12, 2]],
-      beach: [["rocking-chair", 2, 0], ["shell-pile", 12, 4], ["round-rug", 6, 6], ["kite", 10, 0]],
+      kitchen: [["fridge", 6, 0], ["sink-counter", 11, 0], ["stove", 2, 0], ["fruit-bowl", 12, 6], ["kitchen-table", 11, 6], ["stool", 14, 9]],
+      treehouse: [["hammock", 3, 0], ["floor-cushion", 11, 8], ["string-lights", 6, 0], ["lantern", 13, 2]],
+      beach: [["rocking-chair", 4, 1], ["shell-pile", 13, 8], ["round-rug", 8, 8], ["kite", 11, 0]],
     };
     return { theme: { ...roomDefaultTheme[room] }, characters: [], instances: starters[room].map(([item, x, y]) => ({...instance(`starter-${item}`, item, x, y), ...(item === "fruit-bowl" ? {on: "starter-kitchen-table"} : {})})) };
   };
@@ -269,7 +269,7 @@ export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ow
   }
   if(action.type==='dispense'){
     const source=state.instances.find(i=>i.id===action.source),cap=source&&capabilityOf(source.item);
-    if(!source||!cap?.dispenses?.includes(action.item)||(cap.toggle==='open'&&!source.powered)||state.instances.some(i=>i.id===action.id)||state.instances.length>=MAX_INSTANCES)return {state:save};
+    if(!source||!cap?.dispenses?.includes(action.item)||(cap.toggle==='open'&&!(source.powered??source.state==='active'))||state.instances.some(i=>i.id===action.id)||state.instances.length>=MAX_INSTANCES)return {state:save};
     const created=instance(action.id,action.item,0,0),spot=resolveDrop(dropWorld(state),dropBody(created),action.x,action.y);
     if(!spot)return {state:save};
     const floor=spot.kind==='hand'||spot.kind==='mouth'?resolveDrop({...dropWorld(state),people:[],surfaces:[]},dropBody(created),action.x,action.y):spot;
@@ -283,9 +283,9 @@ export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ow
     const item=state.instances.find(i=>i.id===action.id),c=state.characters.find(c=>c.slot===action.slot);
     if(!item||!c)return {state:save};
     const cap=capabilityOf(item.item);
-    if(action.eat?(!cap.edible||item.empty):(!canHold(item)||c.holding&&c.holding!==item.id))return {state:save};
+    if(action.eat?(!cap.edible||item.empty):(!canHold(item)))return {state:save};
     const consume=action.eat&&cap.edible==='food';
-    const previous=action.eat&&cap.edible==='drink'?state.instances.find(i=>i.id===c.holding&&i.id!==item.id):undefined;
+    const previous=!consume?state.instances.find(i=>i.id===c.holding&&i.id!==item.id):undefined;
     const point=characterPoint(state,c),release=previous&&resolveDrop({...dropWorld(state),people:[],surfaces:[],bodies:dropWorld(state).bodies.filter(i=>i.id!==item.id)},dropBody(previous),point.x+60,point.y);
     if(previous&&!release)return {state:save};
     next={...state,instances:state.instances.filter(i=>!consume||i.id!==item.id).map(i=>{if(previous&&release&&i.id===previous.id)return {...i,x:release.x,y:release.y};if(i.id!==item.id)return i;const {on:_,...rest}=i;void _;return {...rest,...(action.eat?{empty:true}:{})};}),characters:state.characters.map(person=>{
@@ -322,7 +322,7 @@ export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ow
       return fail("Put that seat in the room first.");
     if (action.anchor === "floor" && (!Number.isFinite(action.x) || !Number.isFinite(action.y))) return fail("Choose a floor spot.");
     const seat=state.instances.find(i=>action.seatId?i.id===action.seatId:i.item===action.anchor);
-    const socket=seat&&socketsOf(seat).find(s=>!action.socketId||s.id===action.socketId);
+    const socket=seat&&socketsOf(seat).find(s=>s.id.startsWith('pet-')===(action.slot===2)&&(!action.socketId||s.id===action.socketId));
     if(socket&&state.characters.some(c=>c.slot!==action.slot&&(c.socket?.itemId===seat!.id&&c.socket.socketId===socket!.id||!c.socket&&(c.seatId===seat!.id||!c.seatId&&c.anchor===seat!.item))))return homeReducer(save,{type:'character',slot:action.slot,anchor:'floor',x:seat!.x,y:seat!.y,roomId},ownership);
     next = {
       ...state,
@@ -359,7 +359,7 @@ export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ow
       };
     } else {
       if (action.type === "mirror" && !spec.mirror) return fail("This object stays this way round.");
-      if (action.type === "toggle" && !spec.interactive && !capabilityOf(target.item).toggle) return fail(`${spec.name} is ready for your story.`);
+      if (action.type === "toggle" && ((!spec.interactive && !capabilityOf(target.item).toggle) || (capabilityOf(target.item).holdable && !capabilityOf(target.item).toggle))) return fail(`${spec.name} is ready for your story.`);
       if (action.type === "tint" && (!decorSpec(target.item).tintable || !member(tintIds, action.tint))) return fail("Choose a paintable item.");
       const { on: _on, ...floorTarget } = target;
       void _on;
@@ -374,7 +374,7 @@ export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ow
               }
             : action.type === "mirror"
               ? { ...target, mirrored: !target.mirrored }
-              : { ...target, ...(capabilityOf(target.item).toggle?{powered:!target.powered}:{}),state:spec.interactive?(target.state === "rest" ? ("active" as const) : ("rest" as const)):target.state };
+              : { ...target, ...(capabilityOf(target.item).toggle?{powered:!(target.powered??target.state==='active')}:{}),state:spec.interactive?(target.state === "rest" ? ("active" as const) : ("rest" as const)):target.state };
       if(action.type==='move' && action.on===undefined){
         const p=itemPoint(replacement),spot=resolveDrop({...dropWorld(state),people:[],surfaces:[]},dropBody(replacement),p.x,p.y);
         if(!spot)return {state:save};

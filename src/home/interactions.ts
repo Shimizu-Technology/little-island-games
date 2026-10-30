@@ -7,7 +7,8 @@ import type { DropBody, DropWorld } from './drop';
 /** Phase-one compatibility only. ART owns authored sockets/capabilities. */
 export const canHold=(i:Instance)=>capabilityOf(i.item).holdable ?? !!decorSpec(i.item).small;
 export function socketsOf(i:Instance):readonly Socket[] {
- return capabilityOf(i.item).sockets ?? (isSeat(i.item)?[{id:'legacy-seat',kind:'sit',at:[.5,.66],facing:'front',covered:true}]:[]);
+ const authored:readonly Socket[]=capabilityOf(i.item).sockets ?? (isSeat(i.item)?[{id:'legacy-seat',kind:'sit',at:[.5,.66],facing:'front',covered:true}]:[]);
+ return [...authored,...authored.filter(s=>s.kind!=='bathe').map(s=>({...s,id:`pet-${s.id}`,at:[s.kind==='lie'?.78:s.at[0],s.kind==='lie'?s.at[1]+.05:s.at[1]-.07] as const,covered:false}))];
 }
 export function socketPoint(i:Instance,s:Socket){
  const p=itemPoint(i),size=itemSize(i),flip=i.mirrored !== (i.rotation===180||i.rotation===270);
@@ -18,20 +19,20 @@ export function dropBody(i:Instance):DropBody {
  const cap=capabilityOf(i.item),box=visualBox(i.item,i.rotation,i.mirrored);
  let left=box.left,right=box.left+box.width,top=box.top,bottom=box.top+box.height;
  const size=itemSize(i),unit=224/132;
- for(const socket of socketsOf(i)){
+ for(const socket of socketsOf(i).filter(s=>!s.id.startsWith('pet-'))){
    const rig=poseBox(resolvePose('front',socket.kind==='sit'?'sit-front':socket.kind));
    const x=(socket.at[0]-.5)*size-rig.anchor[0]*unit,y=(socket.at[1]-.85)*size-rig.anchor[1]*unit;
    left=Math.min(left,x);right=Math.max(right,x+rig.width*unit);top=Math.min(top,y);bottom=Math.max(bottom,y+rig.height*unit);
  }
  const radius=Math.max(-left,right);left=-radius;right=radius;
- return {...i,w,h,small:!!decorSpec(i.item).small,holdable:canHold(i),edible:cap.edible,left,right,top,bottom};
+ return {...i,w,h,small:!!decorSpec(i.item).small,holdable:canHold(i),edible:i.empty?undefined:cap.edible,left,right,top,bottom};
 }
 export function dropWorld(room:RoomState):DropWorld {
  return {bodies:room.instances.filter(i=>!room.characters.some(c=>c.holding===i.id)).map(dropBody),
- sockets:room.instances.flatMap(i=>socketsOf(i).map(s=>({itemId:i.id,socketId:s.id,...socketPoint(i,s),pose:s.kind,occupied:room.characters.find(c=>c.socket?.itemId===i.id&&c.socket.socketId===s.id||!c.socket&&(c.seatId===i.id||!c.seatId&&c.anchor===i.item))?.slot}))),
+ sockets:room.instances.flatMap(i=>socketsOf(i).map(s=>({itemId:i.id,socketId:s.id,pet:s.id.startsWith('pet-'),...socketPoint(i,s),pose:s.kind,occupied:room.characters.find(c=>c.socket?.itemId===i.id&&c.socket.socketId===s.id||!c.socket&&(c.seatId===i.id||!c.seatId&&c.anchor===i.item))?.slot}))),
  surfaces:room.instances.filter(i=>!i.on&&decorSpec(i.item).surface).map(i=>({id:i.id,x:i.x,y:i.y,w:dropBody(i).w,sx:surfacePoint(i).x,sy:surfacePoint(i).y,radius:itemSize(i)*.42})),
  people:room.characters.map(c=>{
-   const contact=characterPoint(room,c),frame=characterFrame(room,c),pose=resolvePose('front',c.pose==='stand'?'idle':c.pose==='sit'?'sit-front':c.pose),box=poseBox(pose),unit=224/132;
+   const contact=characterPoint(room,c),frame=characterFrame(room,c),pose=resolvePose('front',c.pose==='stand'?(c.holding?'hold':'idle'):c.pose==='sit'?'sit-front':c.pose),box=poseBox(pose),unit=224/132;
    const point=(x:number,y:number)=>{if(isLying(pose)){const old=x;x=6+y;y=86-old;}return {x:frame.left+(frame.mirrored?box.width-x:x)*unit,y:frame.top+y*unit};};
    const hand=point(...pose.joints.rightHand),mouth=point(pose.joints.head[0],pose.joints.head[1]+13);
    return {slot:c.slot,...contact,holding:c.holding,...(c.slot===0?{handX:hand.x,handY:hand.y,mouthX:mouth.x,mouthY:mouth.y}:{})};

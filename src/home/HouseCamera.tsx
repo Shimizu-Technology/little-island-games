@@ -6,24 +6,26 @@ import { boundedPan, buildingRoomAt, roomOrigin, panRange, roomCamera, softPan, 
 export const CameraPan = createContext<{pan:PanGesture;pinch:PinchGesture} | undefined>(undefined);
 export type HouseCameraHandle = { reveal:(index:number,box:{left:number;top:number;right:number;bottom:number})=>void; jump:(index:number)=>void; zoomRoom:(index:number)=>void; tap:(index:number)=>void; canActivate:()=>boolean };
 /** Child object drags block the empty-floor pan; pinch runs across the scene. */
-export function HouseCamera({children,initialIndex,width,height,building,scale,zoom,minZoom,maxZoom,reduced,onZoom,onRoom,onNavigate,cameraRef}:{
- children:ReactNode;initialIndex:number;width:number;height:number;building:Building;scale:number;zoom:number;minZoom:number;maxZoom:number;reduced:boolean;
+export function HouseCamera({children,initialIndex,width,height,building,focusXs,scale,zoom,minZoom,maxZoom,reduced,onZoom,onRoom,onNavigate,cameraRef}:{
+ children:ReactNode;focusXs?:number[];initialIndex:number;width:number;height:number;building:Building;scale:number;zoom:number;minZoom:number;maxZoom:number;reduced:boolean;
  onZoom:(zoom:number)=>void;onRoom:(index:number)=>void;onNavigate:()=>void;cameraRef:React.Ref<HouseCameraHandle>;
 }) {
  const x=useSharedValue(0),y=useSharedValue(0),startX=useSharedValue(0),startY=useSharedValue(0),transient=useSharedValue(1);
  const pinchX=useSharedValue(0),pinchY=useSharedValue(0),focus=useSharedValue(initialIndex),moving=useSharedValue(false),lastPan=useSharedValue(0), pendingAxes=useSharedValue(0);
  const previous=useRef({zoom,scale,width,height}),pinchCommit=useRef(false),tapTimer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined),lastTap=useRef(-1);
  useEffect(()=>()=>clearTimeout(tapTimer.current),[]);
+ const cameraAt=(index:number)=>{const p=roomCamera(index,building,scale,width,height);return {...p,x:boundedPan(p.x+(400-(focusXs?.[index]??400))*scale,width,building.width*scale)};};
  const animate=(value:number)=>reduced?value:withTiming(value,{duration:260});
  const jump=(index:number)=>{
   focus.set(index);onRoom(index);onNavigate();
   if(zoom!==1)onZoom(1);
-  else {const p=roomCamera(index,building,scale,width,height);x.set(animate(p.x));y.set(animate(p.y));}
+  else {const p=cameraAt(index);x.set(animate(p.x));y.set(animate(p.y));}
  };
  const toggle=(index:number)=>{focus.set(index);onRoom(index);onNavigate();onZoom(zoom>minZoom*1.15?minZoom:1);};
  useImperativeHandle(cameraRef,()=>({jump,zoomRoom:toggle,reveal:(index,box)=>{
   const origin=roomOrigin(index,building),left=(origin.x+box.left)*scale,right=(origin.x+box.right)*scale,top=(origin.y+box.top)*scale,bottom=(origin.y+box.bottom)*scale;
-  let nx=x.get(),ny=y.get();
+  if(reduced)return;
+  let nx=width/2-(left+right)/2,ny=height/2-(top+bottom)/2;
   if(right-left<=width-32){if(left+nx<16)nx=16-left;else if(right+nx>width-16)nx=width-16-right;}
   if(bottom-top<=height-24){if(top+ny<12)ny=12-top;else if(bottom+ny>height-12)ny=height-12-bottom;}
   x.set(animate(boundedPan(nx,width,building.width*scale)));y.set(animate(boundedPan(ny,height,building.height*scale)));
@@ -35,9 +37,11 @@ export function HouseCamera({children,initialIndex,width,height,building,scale,z
  useLayoutEffect(()=>{
   const old=previous.current;previous.current={zoom,scale,width,height};
   if(pinchCommit.current){pinchCommit.current=false;x.set(boundedPan(x.get(),width,building.width*scale));y.set(boundedPan(y.get(),height,building.height*scale));transient.set(1);return;}
-  const p=roomCamera(focus.get(),building,scale,width,height);
+  const p=cameraAt(focus.get());
   if(old.scale!==scale&&old.width===width&&old.height===height&&!reduced){transient.set(old.scale/scale);transient.set(withTiming(1,{duration:260}));x.set(withTiming(p.x,{duration:260}));y.set(withTiming(p.y,{duration:260}));}
   else{x.set(p.x);y.set(p.y);transient.set(1);}
+ // Furniture edits keep the child's camera; a fresh focus applies on room entry or viewport change.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
  },[scale,zoom,width,height,building,reduced,focus,x,y,transient]);
  const settle=(index:number)=>{focus.set(index);onRoom(index);onNavigate();};
  const commitZoom=(next:number,index:number)=>{pinchCommit.current=true;focus.set(index);onRoom(index);onNavigate();if(next===zoom){x.set(boundedPan(x.get(),width,building.width*scale));y.set(boundedPan(y.get(),height,building.height*scale));transient.set(1);pinchCommit.current=false;}else onZoom(next);};

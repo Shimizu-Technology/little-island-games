@@ -54,7 +54,7 @@ describe('versioned home saves and recovery', () => {
  });
  it('preserves malformed legacy data for recovery instead of normalizing it',()=>{const old=legacyStarterHome();old.instances[0].x=-1;const before=clone(old);expect(migrateHome(old)).toBeUndefined();expect(old).toEqual(before);expect(validHome({...legacyStarterHome(),instances:[instance('s','sofa',0,0)],characters:[]})).toBe(false);});
  it('keeps earned-item and room-theme entitlement checks across every room',()=>{
-  const s=starterHome(); s.rooms.beach.instances.push(instance('unowned','abacus',12,8)); expect(validHome(s)).toBe(true); expect(entitledHome(s,[])).toBe(false); expect(entitledHome(s,['abacus'])).toBe(true);
+  const s=starterHome(); s.rooms.beach.instances.push(instance('unowned','abacus',0,9)); expect(validHome(s)).toBe(true); expect(entitledHome(s,[])).toBe(false); expect(entitledHome(s,['abacus'])).toBe(true);
   s.rooms.kitchen.theme.wallpaper='math-lab'; expect(entitledHome(s,['abacus'])).toBe(false); expect(entitledHome(s,['abacus','math-lab'])).toBe(true);
   expect(entitledHome(starterHome(),[])).toBe(true);
  });
@@ -205,7 +205,7 @@ describe('constant-size seating and depth',()=>{
   for(const slot of [0,1,2] as const){ const anchor=['bed','chair','rug','beanbag','shelf'].includes(id)?id as 'bed':'seat';
    const p=characterPoint(room(s),{slot,anchor,pose:'sit',seatId:'seat'});
    expect(characterDrop(room(s),slot,p.x,p.y)).toMatchObject({seatId:'seat'});
-   s=homeReducer(s,{type:'character',slot,anchor,seatId:'seat'}).state;expect(room(s).characters[slot].pose).toBe(socketsOf(room(s).instances[0])[0].kind);expect(characterSize(slot)).toBe(slot===0?224:170);
+   s=homeReducer(s,{type:'character',slot,anchor,seatId:'seat'}).state;expect(room(s).characters[slot].pose).toBe(socketsOf(room(s).instances[0])[0].kind);expect(characterSize(slot)).toBe(slot===0?224:slot===2?98:170);
    expect(characterDepth(room(s),room(s).characters[slot])).toBeGreaterThan(itemPoint(room(s).instances[0]).y);
    if(slot!==2)s=homeReducer(s,{type:'character',slot,anchor:'floor',x:18,y:8}).state;
   }

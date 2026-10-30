@@ -1,6 +1,6 @@
 /** Serializable, worklet-safe destination rules. Prepared once per settled room edit. */
 export type DropBody = { id:string; x:number; y:number; w:number; h:number; layer:string; on?:string; small?:boolean; holdable?:boolean; edible?:'food'|'drink'; left:number; right:number; top:number; bottom:number };
-export type DropSocket = { itemId:string; socketId:string; x:number; y:number; pose:'sit'|'lie'|'bathe'; occupied?:number };
+export type DropSocket = { itemId:string; socketId:string; x:number; y:number; pose:'sit'|'lie'|'bathe'; occupied?:number; pet?:boolean };
 export type DropWorld = { bodies:DropBody[]; sockets:DropSocket[]; surfaces:{id:string;x:number;y:number;w:number;sx:number;sy:number;radius:number}[]; people:{slot:number;x:number;y:number;holding?:string;handX?:number;handY?:number;mouthX?:number;mouthY?:number}[] };
 export type DropResult = { kind:'floor'|'surface'|'socket'|'hand'|'mouth'; x:number;y:number;px:number;py:number;on?:string;itemId?:string;socketId?:string;slot?:number;pose?:'sit'|'lie'|'bathe' };
 export function resolveDrop(world:DropWorld, subject:DropBody | {slot:number}, px:number, py:number):DropResult|undefined {
@@ -10,12 +10,14 @@ export function resolveDrop(world:DropWorld, subject:DropBody | {slot:number}, p
  if(item) {
   for(const person of world.people){
    const hx=person.handX??person.x+42,hy=person.handY??person.y-84,mx=person.mouthX??person.x,my=person.mouthY??person.y-160;
-   if(item.holdable && (!person.holding||person.holding===item.id) && Math.hypot(px-hx,py-hy)<65)return {kind:'hand',slot:person.slot,x:0,y:0,px:hx,py:hy};
-   if(item.edible && Math.hypot(px-mx,py-my)<58)return {kind:'mouth',slot:person.slot,x:0,y:0,px:mx,py:my};
+   const handDistance=Math.hypot(px-hx,py-hy),mouthDistance=Math.hypot(px-mx,py-my);
+   if(item.edible&&mouthDistance<58&&mouthDistance<=handDistance)return {kind:'mouth',slot:person.slot,x:0,y:0,px:mx,py:my};
+   if(item.holdable && handDistance<65)return {kind:'hand',slot:person.slot,x:0,y:0,px:hx,py:hy};
+   if(item.edible && mouthDistance<58)return {kind:'mouth',slot:person.slot,x:0,y:0,px:mx,py:my};
   }
  } else {
   let best:DropSocket|undefined, distance=85;
-  for(const socket of world.sockets){const d=Math.hypot(px-socket.x,py-socket.y);if((socket.occupied===undefined||socket.occupied===('slot' in subject?subject.slot:-1))&&d<distance){best=socket;distance=d;}}
+  for(const socket of world.sockets){const d=Math.hypot(px-socket.x,py-socket.y);if((!!socket.pet===('slot' in subject&&subject.slot===2))&&(socket.occupied===undefined||socket.occupied===('slot' in subject?subject.slot:-1))&&d<distance){best=socket;distance=d;}}
   if(best)return {kind:'socket',...best,px:best.x,py:best.y};
  }
  if(item?.small){
