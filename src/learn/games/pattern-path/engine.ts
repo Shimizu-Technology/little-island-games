@@ -3,8 +3,9 @@ import type { LearnEngine } from "../../types";
 
 export type PatternState = { version: 1; level: number; seed: number; index: number; total: 4; helped: boolean };
 export type PatternTask = { title: string; tiles: string[]; missing: number; choices: string[]; answer: string; hint: string };
-const colors = ["🔴", "🔵", "🟡", "🟢", "🟣"];
-const shapes = ["◆", "●", "▲", "■", "★"];
+const colors = ["coral", "blue", "gold", "jade", "plum"];
+const shells = (n: number) => `shells:${n}`;
+const stone = (color: string, size = 0) => `stone:${color}${size ? `:${size}` : ""}`;
 const next = (seed: number) => (Math.imul(seed, 1664525) + 1013904223) >>> 0;
 const pick = (seed: number, n: number) => seed % n;
 const shuffle = (items: string[], seed: number) => [...items].sort((a, b) => ((next(seed + a.charCodeAt(0)) % 1000) - (next(seed + b.charCodeAt(0)) % 1000)));
@@ -15,33 +16,32 @@ export function taskAt(s: PatternState): PatternTask {
   let tiles: string[] = [], missing = 5, title = "Fill the missing stepping stone", hint = "Look at what repeats.";
   let pool: string[] = [];
   if (s.level === 1) {
-    const cycle = s.index % 2 ? [colors[a], colors[b], colors[b]] : [colors[a], colors[b]];
-    tiles = Array.from({ length: 7 }, (_, i) => cycle[i % cycle.length]); pool = colors;
-    hint = `The colors go ${cycle.join(" ")}, then start again.`;
+    const cycle = s.index % 2 ? [stone(colors[a]), stone(colors[b]), stone(colors[b])] : [stone(colors[a]), stone(colors[b])];
+    tiles = Array.from({ length: 7 }, (_, i) => cycle[i % cycle.length]); pool = colors.map(c => stone(c));
+    hint = "The colored stones repeat. Their marks help you follow the order, too.";
   } else if (s.level === 2) {
-    const icon = shapes[a];
-    tiles = Array.from({ length: 6 }, (_, i) => icon.repeat(i + 1)); missing = 4;
-    pool = Array.from({ length: 6 }, (_, i) => icon.repeat(i + 1));
-    hint = "Each step has one more shape than the last.";
+    tiles = Array.from({ length: 7 }, (_, i) => shells(i + 1)); missing = 4;
+    pool = Array.from({ length: 7 }, (_, i) => shells(i + 1));
+    hint = "Each step has one more shell than the last.";
   } else if (s.level === 3) {
     if (s.index % 2) {
       const step = 2 + pick(seed >>> 6, 4), start = 1 + pick(seed >>> 10, 5);
       tiles = Array.from({ length: 7 }, (_, i) => String(start + i * step));
       pool = Array.from({ length: 9 }, (_, i) => String(start + i * step)); hint = `Count forward by ${step}.`;
     } else {
-      tiles = Array.from({ length: 7 }, (_, i) => ["▲", "▶", "▼", "◀"][(i + a) % 4]);
-      pool = ["▲", "▶", "▼", "◀"]; hint = "Each arrow turns one quarter turn.";
+      tiles = Array.from({ length: 7 }, (_, i) => ["arrow:up", "arrow:right", "arrow:down", "arrow:left"][(i + a) % 4]);
+      pool = ["arrow:up", "arrow:right", "arrow:down", "arrow:left"]; hint = "Each arrow turns one quarter turn.";
     }
   } else if (s.level === 4) {
-    const small = ["●", "●●"], one = colors[a], two = colors[b];
-    tiles = Array.from({ length: 7 }, (_, i) => `${i % 2 ? two : one}${small[Math.floor(i / 2) % 2]}`);
-    pool = [one, two].flatMap(c => small.map(n => c + n));
+    const one = colors[a], two = colors[b];
+    tiles = Array.from({ length: 7 }, (_, i) => stone(i % 2 ? two : one, Math.floor(i / 2) % 2 + 1));
+    pool = [one, two].flatMap(c => [1,2].map(n => stone(c,n)));
     hint = "Watch two things: the color changes every step; the size changes every two steps.";
     if (s.index === 3) {
       const row = [one, two, colors[(b + 1) % 5]];
-      tiles = Array.from({ length: 9 }, (_, i) => `${row[Math.floor(i / 3)]}${"●".repeat(i % 3 + 1)}`);
+      tiles = Array.from({ length: 9 }, (_, i) => stone(row[Math.floor(i / 3)], i % 3 + 1));
       missing = 7; title = "Complete the color and size reef";
-      pool = row.flatMap(c => [1,2,3].map(n => c + "●".repeat(n)));
+      pool = row.flatMap(c => [1,2,3].map(n => stone(c,n)));
       hint = "Each row keeps one color. Each column adds one dot.";
     }
   } else {

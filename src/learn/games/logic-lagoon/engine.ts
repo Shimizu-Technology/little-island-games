@@ -31,14 +31,14 @@ export function taskAt(s: LogicState): LogicTask {
   const br=size===4?2:size===6?2:1, bc=size===4?2:size===6?3:1;
   const solution=base(size,br,bc,seed);
   const cages:Cage[]=[];
-  if (s.level===5 && s.index%2===1) for(let r=0;r<size;r++)for(let c=0;c<size;c+=2) {const cells=[r*size+c,r*size+c+1];cages.push({cells,sum:solution[cells[0]]+solution[cells[1]]});}
+  if (s.level===5) for(let r=0;r<size;r++)for(let c=0;c<size;c+=2) {const cells=[r*size+c,r*size+c+1];cages.push({cells,sum:solution[cells[0]]+solution[cells[1]]});}
   const givens=[...solution], target = size===2?2:size===3?5:size===4?(cages.length?3:7):22;
   const order=Array.from({length:givens.length},(_,i)=>i).sort((a,b)=>(random(seed+a*37)%10000)-(random(seed+b*37)%10000));
   for (const i of order) { if (givens.filter(Boolean).length<=target) break; const was=givens[i];givens[i]=0; if (solutionCount([...givens],size,br,bc,cages)!==1) givens[i]=was; }
   let writtenClue: GridTask["writtenClue"];
-  if (s.level===5 && !cages.length) { const cell=givens.findIndex(Boolean); const value=givens[cell]; givens[cell]=0; writtenClue={cell,value,text:`Clue: row ${Math.floor(cell/size)+1}, column ${cell%size+1} is ${value}.`}; }
-  const symbols=s.level===1?["🐚","🐠"]:s.level===2?["🐚","🐠","⭐"]:s.level===3 && s.index<2?["🐚","🐠","⭐","🦀"]:Array.from({length:size},(_,i)=>String(i+1));
-  return {kind:"grid",size,boxRows:br,boxCols:bc,solution,givens,cages,title:s.level===1?"Who rides each boat?":s.level===2?"Fill the picture lagoon":s.level===5&&cages.length?"Solve the sum cages":s.level===5?"Read the hidden clue":"Fill each row, column and little box",symbols,writtenClue};
+  if (s.level===5 && s.index===0) { const cell=givens.findIndex(Boolean); const value=givens[cell]; givens[cell]=0; writtenClue={cell,value,text:`Clue: row ${Math.floor(cell/size)+1}, column ${cell%size+1} is ${value}.`}; }
+  const symbols=s.level===1?["shell","fish"]:s.level===2?["shell","fish","star"]:s.level===3 && s.index<2?["shell","fish","star","crab"]:Array.from({length:size},(_,i)=>String(i+1));
+  return {kind:"grid",size,boxRows:br,boxCols:bc,solution,givens,cages,title:s.level===1?"Who rides each boat?":s.level===2?"Fill the picture lagoon":s.level===5?"Solve the sum cages":"Fill each row, column and little box",symbols,writtenClue};
 }
 export function valueAt(s: LogicState, i: number) { const task=taskAt(s); return task.kind==="grid" ? task.givens[i] || s.entries[i] || 0 : s.entries[0] || 0; }
 export function enter(s: LogicState, cell: number, value: number): LogicState {
@@ -61,7 +61,7 @@ export const engine: LearnEngine<LogicState> = {
     {name:"Picture grid",description:"Fill three rows and columns with three different pictures."},
     {name:"Little sudoku",description:"Solve 4 × 4 picture and number sudoku."},
     {name:"Bigger lagoon",description:"Solve 6 × 6 sudoku and balance a shell scale."},
-    {name:"Sum cages",description:"Use 4 × 4 logic grids and arithmetic cage clues."},
+    {name:"Cages and clues",description:"Use 4 × 4 arithmetic cages and written clues."},
   ],
   tagline:"Solve the island clues.",description:"Place one of each picture or number in every row and column. Follow the little boxes and sum clues, too.",
   help:"Tap an empty square, then choose a picture or number. Each row and column needs one of each. Help points to one useful step. There is no clock and you can change your answers.",

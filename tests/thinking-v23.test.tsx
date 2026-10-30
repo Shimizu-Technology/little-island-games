@@ -10,8 +10,8 @@ import { engine as logic, taskAt as logicTask, enter, solutionCount } from '../s
 import { Board as LogicBoard } from '../src/learn/games/logic-lagoon/view';
 import type { BoardProps, LearnOptions } from '../src/learn/types';
 const { Pass } = vi.hoisted(() => ({ Pass: ({ children }: { children?: unknown }) => children as never }));
-vi.mock('react-native', () => ({ View: Pass }));
-vi.mock('react-native-svg', () => ({ default: Pass, Circle: Pass, Path: Pass }));
+vi.mock('react-native', () => ({ View: Pass, Platform: { OS: 'web' } }));
+vi.mock('react-native-svg', () => ({ default: Pass, Circle: Pass, Ellipse: Pass, Path: Pass, Rect: Pass }));
 vi.mock('../src/components/ui', () => ({ C: { ink: '#123' }, Copy: Pass, PressableScale: Pass }));
 const base: LearnOptions={mode:'solo',pace:'easy'};
 const context=(seed:number)=>({rng:()=>seed/0xffffffff,skills:{},starter:0 as const,today:0});
@@ -36,9 +36,25 @@ describe('2.3 Thinking engines',()=>{
   it(`level ${level} boards render`,()=>{
    expect(renderToStaticMarkup(<PatternBoard {...props('pattern-path',pattern.create(o,context(3)),o)}/>)).toContain('stone');
    expect(renderToStaticMarkup(<ShapeBoard {...props('shape-shift',shape.create(o,context(3)),o)}/>)).toContain('piece');
-   const logicHtml=renderToStaticMarkup(<LogicBoard {...props('logic-lagoon',logic.create(o,context(3)),o)}/>);expect(logicHtml).toContain('PUZZLE');if(level===5)expect(logicHtml).toContain('Clue:');
+   const logicHtml=renderToStaticMarkup(<LogicBoard {...props('logic-lagoon',logic.create(o,context(3)),o)}/>);expect(logicHtml).toContain('PUZZLE');if(level===5){expect(logicHtml).toContain('Purple dashed pairs');const cageTask=logicTask(logic.create(o,context(3)));expect(cageTask.kind==='grid' ? cageTask.cages.length : 0).toBeGreaterThan(0);}
   });
  }
  it('rejects malformed and mismatched saves',()=>{const o=optionsAtLevel(base,3),other=optionsAtLevel(base,4);for(const e of [pattern,shape,logic]){const s=e.create(o,context(7));expect(e.validate({...s,extra:true},o)).toBe(false);expect(e.validate({...s,version:2},o)).toBe(false);expect(e.validate(s,other)).toBe(false);}});
  it('levels change puzzle size or rules',()=>{const options=[1,2,3,4,5].map(n=>optionsAtLevel(base,n as 1|2|3|4|5));expect(options.map(o=>patternTask(pattern.create(o,context(5))).hint).filter((x,i,a)=>a.indexOf(x)===i).length).toBe(5);expect(options.map(o=>shapeTask(shape.create(o,context(5))).pieces.length)).toEqual([2,2,3,4,4]);expect(options.map(o=>{const t=logicTask(logic.create(o,context(5)));return t.kind==='grid'?t.size:0;})).toEqual([2,3,4,6,4]);});
+ it('uses marked stones, recognisable silhouettes, and real cages',()=>{
+  const easy=optionsAtLevel(base,1),hard=optionsAtLevel(base,5);
+  for(const seed of [1,17,92345]){
+   const first=patternTask(pattern.create(easy,context(seed)));
+   expect(first.tiles.every(tile=>/^stone:(coral|jade|blue|gold|plum)$/.test(tile))).toBe(true);
+   const pictures=[1,2,3,4,5].map(n=>shapeTask(shape.create(optionsAtLevel(base,n as 1|2|3|4|5),context(seed))).picture);
+   expect(pictures).toEqual(['Boat','House','Fish','Rocket','Cube net']);
+   for(let index=0;index<4;index++){
+    const state={...logic.create(hard,context(seed)),index};const task=logicTask(state);
+    expect(task.kind).toBe('grid');if(task.kind!=='grid')continue;
+    expect(task.cages.length).toBe(8);
+    expect(task.cages.flatMap(c=>c.cells).sort((a,b)=>a-b)).toEqual(Array.from({length:16},(_,i)=>i));
+    expect(task.cages.every(c=>c.cells.reduce((sum,i)=>sum+task.solution[i],0)===c.sum)).toBe(true);
+   }
+  }
+ });
 });
