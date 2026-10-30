@@ -406,7 +406,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       </Sheet>
       <Sheet visible={help} onClose={() => { stopSound(); setHelp(false); }} title={`How to play ${engine.name}`}>
         <Copy>{saved?.options.stage && !engine.ownLevels ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>
-        {!saved?.options.stage && engine.helpAudio && (
+        {(!saved?.options.stage || engine.ownLevels) && engine.helpAudio && (
           <>
             <Button icon="sound-on" onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>
               Hear a quick guide

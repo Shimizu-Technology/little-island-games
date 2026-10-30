@@ -1,3 +1,6 @@
+import * as spaceStation from "./games/space-station/view";
+import * as foodWeb from "./games/food-web/view";
+import * as weatherWatch from "./games/weather-watch/view";
 import type { ComponentType } from "react";
 import type { BoardProps, LearnId } from "./types";
 import * as reefRace from "./games/reef-race/view";
@@ -39,9 +42,9 @@ export const views: Record<LearnId, LearnView> = {
   "pattern-path": stubView,
   "shape-shift": stubView,
   "logic-lagoon": stubView,
-  "weather-watch": stubView,
-  "food-web": stubView,
-  "space-station": stubView,
+  "weather-watch": weatherWatch as LearnView,
+  "food-web": foodWeb as LearnView,
+  "space-station": spaceStation as LearnView,
   "times-tide": stubView,
   "fraction-feast": stubView,
   "treasure-algebra": stubView,

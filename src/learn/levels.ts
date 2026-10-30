@@ -5,6 +5,7 @@ import { engines } from "./engines";
 
 export { levelNumbers, levelOf, optionsAtLevel, levelStage } from "./levelOptions";
 export type { LearningLevel } from "./levelOptions";
+
 type LevelName = { name: string; description: string };
 const foundation: Record<LearnId, readonly [LevelName, LevelName, LevelName]> = {
   "reef-race": [
@@ -74,9 +75,9 @@ const foundation: Record<LearnId, readonly [LevelName, LevelName, LevelName]> = 
   "pattern-path": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
   "shape-shift": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
   "logic-lagoon": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
-  "weather-watch": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
-  "food-web": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
-  "space-station": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
+  "weather-watch": [{"name": "Weather wardrobe", "description": "Dress for weather and choose safe activities."}, {"name": "Season garden", "description": "Turn the season dial and observe a garden."}, {"name": "Water cycle", "description": "Build evaporation, clouds, rain and runoff."}],
+  "food-web": [{"name": "Reef feeding", "description": "Feed reef animals and give algae sunlight."}, {"name": "Food chains", "description": "Build energy paths from producers to consumers."}, {"name": "Branching webs", "description": "Connect branching relationships in a reef web."}],
+  "space-station": [{"name": "Day & night", "description": "Rotate Earth to make day and night."}, {"name": "Moon phases", "description": "Orbit the Moon and observe its sunlit shape."}, {"name": "Planet builder", "description": "Place eight planets and compare their sizes."}],
   "times-tide": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
   "fraction-feast": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
   "treasure-algebra": [{ name: "Level 1", description: "" }, { name: "Level 2", description: "" }, { name: "Level 3", description: "" }],
