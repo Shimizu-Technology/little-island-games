@@ -22,6 +22,7 @@ import { activeLearner, readyForNext } from "./learners";
 import { views } from "./views";
 import { Celebrate } from "./Celebrate";
 import { IslandBackdrop, RoundProgress, subjectTheme } from "./LearnChrome";
+import { LearnArt } from "./LearnArt";
 import { feel } from "../components/feel";
 import { outcomeOf, replaySession, startSession } from "./session";
 import type { Language, LearnId, LearnMode, LearnOptions, LearnSession, Pace } from "./types";
@@ -316,7 +317,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
                 {!notWon && <Heading style={{ color: theme.accent, fontSize: 38, textAlign: "center" }}>★  ★  ★</Heading>}
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                   {store.save.settings.learningIslander !== false && <Companion event={notWon ? "loss" : result === "draw" ? "draw" : "complete"} active={boardActive} size={166}/>}
-                  <view.Art size={86} />
+                  {engine.ownLevels ? <view.Art size={86} /> : <LearnArt island={engine.island} size={86} />}
                 </View>
                 <Heading style={{ fontSize: 26, textAlign: "center" }}>
                   {result === 0 || result === 1

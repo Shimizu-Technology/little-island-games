@@ -18,6 +18,9 @@ import { engine as hafaAdai } from "./games/hafa-adai/engine";
 import { engine as shellMath } from "./games/shell-math/engine";
 import { engine as numberHop } from "./games/number-hop/engine";
 import { engine as quickPractice } from "./games/quick-practice/engine";
+import { engine as timesTide } from "./games/times-tide/engine";
+import { engine as fractionFeast } from "./games/fraction-feast/engine";
+import { engine as treasureAlgebra } from "./games/treasure-algebra/engine";
 import { engine as beepBot } from "./games/beep-bot/engine";
 import { engine as turtleDraw } from "./games/turtle-draw/engine";
 import { stubEngine } from "./stub";
@@ -51,9 +54,9 @@ const originalEngines: Record<LearnId, LearnEngine<unknown>> = {
   "weather-watch": weatherWatch as LearnEngine<unknown>,
   "food-web": foodWeb as LearnEngine<unknown>,
   "space-station": spaceStation as LearnEngine<unknown>,
-  "times-tide": stubEngine({ id: "times-tide", name: "Times Tide", island: "numbers" as Island, tagline: "Groups, arrays and times tables.", description: "Groups, arrays and times tables.", help: "Groups, arrays and times tables.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [6, 11], ownLevels: true }) as LearnEngine<unknown>,
-  "fraction-feast": stubEngine({ id: "fraction-feast", name: "Fraction Feast", island: "numbers" as Island, tagline: "Share pies. Fractions and decimals.", description: "Share pies. Fractions and decimals.", help: "Share pies. Fractions and decimals.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [7, 13], ownLevels: true }) as LearnEngine<unknown>,
-  "treasure-algebra": stubEngine({ id: "treasure-algebra", name: "Treasure Algebra", island: "numbers" as Island, tagline: "Negatives, patterns and equations.", description: "Negatives, patterns and equations.", help: "Negatives, patterns and equations.", color: "#2F6F6A", surface: "#E6F0EC", modes: ["solo"], ages: [9, 14], ownLevels: true }) as LearnEngine<unknown>,
+  "times-tide": timesTide as LearnEngine<unknown>,
+  "fraction-feast": fractionFeast as LearnEngine<unknown>,
+  "treasure-algebra": treasureAlgebra as LearnEngine<unknown>,
   "letter-lagoon": letterLagoon as LearnEngine<unknown>,
   "word-workshop": wordWorkshop as LearnEngine<unknown>,
   "story-studio": storyStudio as LearnEngine<unknown>,
