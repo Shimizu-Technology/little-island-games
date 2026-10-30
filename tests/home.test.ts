@@ -1,3 +1,4 @@
+import { roomDefaultTheme } from '../src/home/art/roomDefaults';
 import { describe, expect, it } from 'vitest';
 import { catalog, furnitureIds, itemSpec, starterItems } from '../src/home/catalog';
 import { moreCatalog, roomIds, tintIds } from '../src/home/catalogMore';
@@ -19,6 +20,7 @@ describe('versioned home saves and recovery', () => {
   expect(room(s).characters).toHaveLength(3); expect(s.rooms.kitchen.characters).toEqual([]);
   expect(s.rooms.kitchen).not.toBe(s.rooms.beach);
  });
+ it('uses room defaults only for new rooms and keeps explicit saved choices',()=>{const s=starterHome();for(const id of roomIds)expect(s.rooms[id].theme).toEqual(roomDefaultTheme[id]);s.rooms.kitchen.theme={wallpaper:'peach',floor:'rose'};expect(migrateHome(s)!.rooms.kitchen.theme).toEqual({wallpaper:'peach',floor:'rose'});expect(s.rooms.kitchen.instances.map(i=>i.item)).toEqual(['fridge','stove','kitchen-table','stool']);expect(s.rooms.treehouse.instances.map(i=>i.item)).toEqual(['hammock','floor-cushion','string-lights','lantern']);expect(s.rooms.beach.instances.map(i=>i.item)).toEqual(['rocking-chair','shell-pile','round-rug','kite']);});
  it('migrates v1 exactly once without changing original geometry, state or character records', () => {
   const old=legacyStarterHome(); old.instances[0].mirrored=true; old.instances[3].state='active'; old.theme.wallpaper='peach';
   old.characters[0]={slot:0,anchor:'floor',pose:'stand',x:9,y:5};
@@ -71,7 +73,7 @@ describe('room editing, stacking and colours',()=>{
  it('carries characters when switching rooms and keeps each layout and theme',()=>{
   let s=starterHome(); const before=clone(room(s).instances);
   s=homeReducer(s,{type:'room',room:'kitchen'}).state; expect(room(s).characters).toHaveLength(3); expect(s.rooms.home.characters).toEqual([]);
-  s=homeReducer(s,{type:'tint',id:'starter-seat',tint:'coral'}).state; s=homeReducer(s,{type:'room',room:'home'}).state;
+  s=homeReducer(s,{type:'tint',id:'starter-fridge',tint:'coral'}).state; s=homeReducer(s,{type:'room',room:'home'}).state;
   expect(room(s).instances).toEqual(before); expect(s.rooms.kitchen.instances[0].tint).toBe('coral'); expect(validHome(s)).toBe(true);
  });
  it('validates all tints, commits them and restores original through history',()=>{
@@ -114,7 +116,7 @@ describe('room editing, stacking and colours',()=>{
 });
 
 describe('constant-size seating and depth',()=>{
- it.each(['bed','chair','rug','beanbag','shelf','sofa'])('seats each character on %s, follows its seat and stands safely after removal',id=>{
+ it.each(['bed','chair','rug','beanbag','shelf','sofa','armchair','bunk-bed','hammock','floor-cushion','rocking-chair','stool'])('seats each character on %s, follows its seat and stands safely after removal',id=>{
   let s=patch(starterHome(),{instances:[instance('seat',id,4,4)],characters:[0,1,2].map(slot=>({slot:slot as 0|1|2,anchor:'hello',pose:'stand'}))});
   for(const slot of [0,1,2] as const){ const anchor=['bed','chair','rug','beanbag','shelf'].includes(id)?id as 'bed':'seat';
    const p=characterPoint(room(s),{slot,anchor,pose:'sit',seatId:'seat'});

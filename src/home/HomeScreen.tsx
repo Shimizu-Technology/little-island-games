@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import Svg, { Path, Circle, Defs, Filter, FeColorMatrix, G } from "react-native-svg";
+import Svg, { Path, Circle } from "react-native-svg";
 import { useSharedValue } from "react-native-reanimated";
 import { ArcadeArt, ReefFish, stickerNames } from "../arcade/Art";
 import { stickerIds } from "../arcade/progress";
@@ -53,13 +53,8 @@ import { Drag, FloorGrid, Footprint, emptyPreview, TrayGhost, type DragConfig } 
 
 const categoryNames: Record<string, string> = { "beds-seats": "Beds & seats", "tables-storage": "Tables & storage", kitchen: "Kitchen", "plants-nature": "Plants", lights: "Lights", "toys-fun": "Toys", "rugs-floor": "Rugs", "wall-art": "Wall art" };
 function DecorArt({ item, tint, ...props }: React.ComponentProps<typeof ItemArt> & { tint?: import("./catalogMore").TintId }) {
-  const filterId = React.useId().replaceAll(":", "");
   if (moreCatalog[item]) return <MoreItemArt id={item} tint={tint} {...props} rotation={props.rotation as import("./model").Rotation | undefined} />;
-  const size = props.size ?? 120, colour = tint && tintPalette[tint];
-  if (!colour) return <ItemArt item={item} {...props} />;
-  const rgb = [1,3,5].map(offset => parseInt(colour.slice(offset, offset+2), 16) / 255);
-  const matrix = rgb.map((v,row) => [.2126*v*.65 + (row === 0 ? .35 : 0), .7152*v*.65 + (row === 1 ? .35 : 0), .0722*v*.65 + (row === 2 ? .35 : 0), 0, 0].join(" ")).join(" ") + " 0 0 0 1 0";
-  return <Svg width={size} height={size}><Defs><Filter id={filterId}><FeColorMatrix type="matrix" values={matrix}/></Filter></Defs><G filter={`url(#${filterId})`}><ItemArt item={item} {...props} /></G></Svg>;
+  return <ItemArt item={item} tint={tint} {...props} />;
 }
 
 export type HomeScreenProps = Ownership & {
@@ -423,7 +418,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         ),
       };
     }),
-    ...room.instances.filter(i => ["bed", "chair", "beanbag", "sofa"].includes(i.item) && room.characters.some(c => c.pose === "sit" && (c.seatId ? c.seatId === i.id : c.anchor === i.item || c.anchor === "seat"))).map(i => {
+    ...room.instances.filter(i => isSeat(i.item) && i.item !== "rug" && i.item !== "shelf" && room.characters.some(c => c.pose === "sit" && (c.seatId ? c.seatId === i.id : c.anchor === i.item || c.anchor === "seat"))).map(i => {
       const p = itemPoint(i, room.instances), size = itemSize(i) * scale;
       return { key: `seat-front-${i.id}`, depth: p.y + 2, node: <View pointerEvents="none" style={{ position: 'absolute', left: p.x * scale - size / 2, top: p.y * scale - size * .85 }}>{i.item === "chair" ? <DecorArt item={i.item} tint={i.tint} size={size} mirrored={i.mirrored} rotation={i.rotation} foreground/> : <SeatFront item={i} size={size}/>}</View> };
     }),
@@ -676,13 +671,12 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             style={StyleSheet.absoluteFill}
           >
             <View pointerEvents="box-none" style={{ position: "absolute", width: sceneWidth, height: scale * 560 }}>
-              <RoomArt
+              {store.state.current === "home" ? <RoomArt
                 theme={room.theme}
                 badges={badges}
                 onBadgePress={badge => router.push({ pathname:"/badges", params:{badge} })}
                 reduced={reduced}
-              />
-              {store.state.current !== "home" && <View pointerEvents="none" style={StyleSheet.absoluteFill}><RoomShellArt room={store.state.current} theme={room.theme} /></View>}
+              /> : <RoomShellArt room={store.state.current} theme={room.theme} />}
             </View>
           </Pressable>
           {beach && <View pointerEvents="none" style={{ position: "absolute", top: 525 * scale, width: sceneWidth, height: Math.max(215 * scale, height - origin.y - 525 * scale) }}><ShoreArt depth={Math.max(215, (height - origin.y) / scale - 525)} /></View>}

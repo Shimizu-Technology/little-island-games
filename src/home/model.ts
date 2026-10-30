@@ -1,3 +1,4 @@
+import { roomDefaultTheme } from "./art/roomDefaults";
 import { moreCatalog, roomIds, tintIds, type RoomId, type TintId } from "./catalogMore";
 import { clearFootprint } from "./placement";
 import { badgeIds, floorThemes, itemIds, itemSpec, starterItems, wallThemes, decorSpec, isSeat, type ItemId } from "./catalog";
@@ -164,11 +165,14 @@ export function legacyStarterHome(): HomeState {
 }
 export function starterHome(): HomeStateV2 {
   const old = legacyStarterHome();
-  const home: RoomState = { theme: old.theme, instances: old.instances.map(i => ({ ...i, x: i.x * 2, y: i.y * 2 })), characters: old.characters };
-  const extra = (room: RoomId): RoomState => {
-    const ids = Object.keys(moreCatalog).filter(id => moreCatalog[id].rooms?.includes(room));
-    const seat = ids.find(id => isSeat(id)) ?? "sofa";
-    return { theme: { wallpaper: room === "kitchen" ? "cream" : "lagoon", floor: room === "beach" ? "sand" : "honey" }, characters: [], instances: [instance("starter-seat", seat, 0, 0), instance("starter-table", "table", 8, 4), instance("starter-lamp", "lamp", 12, 0)] };
+  const home: RoomState = { theme: { ...roomDefaultTheme.home }, instances: old.instances.map(i => ({ ...i, x: i.x * 2, y: i.y * 2 })), characters: old.characters };
+  const extra = (room: Exclude<RoomId, "home">): RoomState => {
+    const starters: Record<Exclude<RoomId, "home">, readonly [string, number, number][]> = {
+      kitchen: [["fridge", 0, 0], ["stove", 4, 0], ["kitchen-table", 6, 6], ["stool", 10, 8]],
+      treehouse: [["hammock", 0, 0], ["floor-cushion", 8, 6], ["string-lights", 4, 0], ["lantern", 12, 2]],
+      beach: [["rocking-chair", 2, 0], ["shell-pile", 12, 4], ["round-rug", 6, 6], ["kite", 10, 0]],
+    };
+    return { theme: { ...roomDefaultTheme[room] }, characters: [], instances: starters[room].map(([item, x, y]) => instance(`starter-${item}`, item, x, y)) };
   };
   return { version: 2, current: "home", rooms: { home, kitchen: extra("kitchen"), treehouse: extra("treehouse"), beach: extra("beach") } };
 }

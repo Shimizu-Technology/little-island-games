@@ -1,11 +1,11 @@
-import { decorSpec, isSeat } from "./catalog";
+import { decorSpec, isSeat, itemSpec } from "./catalog";
 import type { Instance } from "./model";
 export function floorPoint(x: number, y: number) {
   return { x: 174 + x * 25.5 + y * 7, y: 327 + y * 15.5 + x * 1.5 };
 }
 export function surfacePoint(i: Instance) {
   const p = floorPoint(i.x, i.y);
-  return { x: p.x, y: p.y - (i.item === "shelf" ? 92 : i.item === "toy-box" ? 42 : 55) };
+  return { x: p.x, y: p.y - (["shelf", "bookcase"].includes(i.item) ? 92 : i.item === "dresser" ? 75 : i.item === "toy-box" || i.item === "coffee-table" ? 42 : 55) };
 }
 export function itemPoint(i: Instance, items: readonly Instance[] = []) {
   const parent = i.on && items.find(p => p.id === i.on);
@@ -54,16 +54,13 @@ export function spotFromPoint(localX: number, localY: number, scale: number, wal
 }
 
 export function itemSize(i: Instance) {
-  return i.item === "bed"
-    ? 215
-    : ["rug", "mat"].includes(i.item)
-      ? 210
-      : i.layer === "wall"
-        ? 64
-        : ["table", "shelf", "books", "trophies", "aquarium", "checkers", "toy-box", "beanbag"].includes(i.item)
-          ? 145
-          : decorSpec(i.item).category === "beds-seats" ? 180 : Math.max(...decorSpec(i.item).footprint) >= 2 ? 145 : 112;
+  if (["bed", "bunk-bed"].includes(i.item)) return 215;
+  if (i.layer === "ground") return 210;
+  if (i.layer === "wall") return 64;
+  if (decorSpec(i.item).category === "beds-seats" && !["chair", "beanbag"].includes(i.item)) return Math.max(...itemSpec(i.item).footprint) >= 2 ? 180 : 112;
+  return ["table", "shelf", "books", "trophies", "aquarium", "checkers", "toy-box", "beanbag"].includes(i.item) || Math.max(...itemSpec(i.item).footprint) >= 2 ? 145 : 112;
 }
+
 export function characterPoint(state: import("./model").RoomState, c: import("./model").Character) {
   if (c.anchor.startsWith("beach-")) return { x: c.anchor === "beach-left" ? 210 : c.anchor === "beach-middle" ? 400 : 590, y: 650 };
   if (c.anchor === "floor") return floorPoint(c.x!, c.y!);
@@ -72,8 +69,9 @@ export function characterPoint(state: import("./model").RoomState, c: import("./
     const p = itemPoint(seat);
     // The constant 163-unit rig keeps its hip about 51 units above the box foot.
     // Match each illustrated surface; sidekicks retain their bottom contact.
-    const seatedFoot = c.slot === 0 ? ({ bed: -11, chair: 30, rug: 20, beanbag: 21, seat: 15, shelf: -65 } as Partial<Record<import("./model").Anchor, number>>)[c.anchor] : undefined;
-    return { x: p.x, y: p.y + (seatedFoot ?? -(c.anchor === "shelf" ? 92 : c.anchor === "bed" ? 48 : 12)) };
+    const genericSurface = ({ sofa: -26, armchair: -16, "bunk-bed": -23, hammock: -35, "floor-cushion": -17, "rocking-chair": -18, stool: -18 } as Record<string, number>)[seat.item] ?? -12;
+    const seatedFoot = c.slot === 0 ? ({ bed: -11, chair: 30, rug: 20, beanbag: 21, seat: genericSurface + 51, shelf: -65 } as Partial<Record<import("./model").Anchor, number>>)[c.anchor] : undefined;
+    return { x: p.x, y: p.y + (seatedFoot ?? -(c.anchor === "shelf" ? 92 : c.anchor === "bed" ? 48 : c.anchor === "seat" ? -genericSurface : 12)) };
   }
   return c.anchor === "window" ? floorPoint(0, 2) : floorPoint(6, 2);
 }

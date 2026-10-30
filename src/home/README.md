@@ -55,8 +55,7 @@ and switches. Reset affects only the current room.
 Floor coordinates now use a 20×12 subgrid, with columns 16–19 reserved for the door;
 wall decorations use 16×4. Footprints are twice the original cell dimensions. Each
 room allows 48 instances. `tint` is optional, palette-validated, and only allowed on
-tintable items. Original objects use a shaded SVG colour filter without modifying
-the art-owned files; expanded objects receive their contract's `tint` prop.
+tintable items. Both original and expanded objects receive their art contract's `tint` prop.
 
 Only metadata-marked small items can have `on: parentId`, and the parent must be an
 unstacked surface in the same room. Children must fit its footprint and cannot
@@ -69,6 +68,8 @@ Dragging away clears the parent and revalidates floor placement.
 Islander size is always 163 scene units; Pip and Poko each keep their own 129-unit
 box. Seat offsets place the constant-size rig's hips on the illustrated surface.
 Seat backs render first, characters next and chair/bed/beanbag/sofa front pieces
-last. New seat art must be checked after the independent art slice is integrated;
-the current sofa and extra room shells are placeholders from the immutable contract.
+last. The independent art slice is integrated; room defaults come from `roomDefaultTheme`.
+Explicit saved themes are never replaced by defaults. New kitchen, tree house and
+beach rooms start with the agreed four-item furniture sets. Native fit and depth
+still require the lead's device checks.
 The categorized inventory uses a horizontal FlatList with bounded render batches.
