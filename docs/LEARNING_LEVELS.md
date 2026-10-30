@@ -149,3 +149,28 @@ Final application source: `c33d4b91cebbc891153d7d8ecff93babcc649ae6`; offline ex
 No required browser acceptance case remains failed, blocked or not run. The native/physical and lead integration responsibilities listed above remain separate. No further agents were delegated.
 
 Runtime disposition: all task-owned preview/Chromium/runner processes were stopped, with no active owned resources remaining in lifecycle session `01a17ca4-a4f6-78f2-b79e-465ef6579086`. Assigned port 43841 was used; Metro 43840 was not needed. Borrowed simulators, shared services and other worktrees were left untouched. The clean implementation branch/worktree is retained for the lead to integrate; no PR, merge or public release was performed.
+
+## 2.3: games with their own five levels (31 October 2026)
+
+Sixteen games define their own Level 1–5 mechanics (`ownLevels: true`). The shared growth board does not apply to them. Each round has four or five tasks with help that counts as assisted, no timers, and validated, versioned saves. Shelves list every learning game with its age span, youngest first. Each learning island has at least three games, and Coding is a new island.
+
+| Island | Game | Ages | Levels 1 → 5 |
+|---|---|---|---|
+| Reading | Letter Lagoon | 3–6 | Hello, letters → Letter twins → First sounds → Letter trails → Sound builders |
+| Reading | Story Studio | 6–14 | Picture sentences → Sentence repairs → Sentence artists → Comic editors → Paragraph studio |
+| Reading | Word Workshop | 7–14 | Word joinery → Word endings → Meaning makers → Root detectives → Context craft |
+| Numbers | Times Tide | 6–11 | Fish in equal pools → Shell arrays → Skip-count reef → Area-model treasure → Fair fish shares |
+| Numbers | Fraction Feast | 7–13 | Fair pie shares → Fraction footsteps → Fold the same amount → Combine the feast → Hundred-square market |
+| Numbers | Treasure Algebra | 9–14 | Sunny steps → Below sea level → Missing treasure → Balance the chest → Two-step treasure |
+| Science | Weather Watch | 4–10 | Weather wardrobe → Season garden → Water cycle → Weather chart → Forecast & prepare |
+| Science | Food Web Reef | 6–13 | Reef feeding → Food chains → Branching webs → Population lab → Energy & care |
+| Science | Star Station | 7–14 | Day & night → Moon phases → Planet builder → Gravity & orbits → Light, tilt & eclipses |
+| Thinking | Pattern Path | 4–11 | Color trail → Growing shells → Skip and turn → Two clues → Number reef |
+| Thinking | Shape Shift | 4–13 | Big pieces → Turn it → Flip the fish → Mirror island → Fold the net |
+| Thinking | Logic Lagoon | 6–14 | Two friends → Picture grid → Little sudoku → Bigger lagoon → Cages and clues |
+| Coding | Beep Bot | 4–6 | One little path → Around the corner → Find a way → Fix the arrow → Again and again |
+| Coding | Turtle Draw | 6–11 | Lines in sand → Four sides → Loop a shape → Angles and flowers → Tiny clever programs |
+| Coding | Tide Logic | 7–12 | Colour gates → Big or small → Two clues → Bell and counter → Trace the rule |
+| Coding | Code Lab | 9–14 | Say and step → Scores and loops → Make a function → Find the bug → Tiny programs |
+
+Crab Commands moves from Science & Thinking to Coding. The original twelve games keep the shared growth Levels 4–5 and their earlier age spans.
