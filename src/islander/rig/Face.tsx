@@ -17,7 +17,7 @@ export function Face({look,pose}: {look: IslanderLook; pose: Pose}) {
       </G>}
       {lash&&<Path d="M-12 7l-3-2M12 7l3-2" fill="none" strokeWidth={1.5}/>}
     </G>}
-    <Path d={`M-.9 11Q-2 14 1 14Q3 13 1 11${e==='surprised'||stars?'':e==='thinking'?'M-2 20q3-2 5 0':e==='sleepy'?'M-2 20h4':e==='yum'?'M-4 19q4 5 8 0M2 19q3-2 4 0':e==='focused'?'M-3 20h6':'M-3 19q3 4 6 0'}`} fill="none" strokeWidth={1.15}/>
+    <Path d={`M-.9 11Q-2 14 1 14Q3 13 1 11${e==='surprised'||stars?'':e==='thinking'?'M-2 20q3-2 5 0':e==='sleepy'?'M-2 20h4':e==='yum'?(pose.id==='drink'?'M-2 20q2-3 4 0q-2 3-4 0':'M-4 19q4 5 8 0M2 19q3-2 4 0'):e==='focused'?'M-3 20h6':'M-3 19q3 4 6 0'}`} fill="none" strokeWidth={1.15}/>
     {e==='surprised'?<Ellipse cx={0} cy={20} rx={2.6} ry={3.1} fill="#865555" strokeWidth={1.1}/>:stars?<><Path d="M-4 18H4Q4 26 0 25Q-4 25-4 18Z" fill="#865555" strokeWidth={1}/></>:null}
     {look.freckles==='freckles'&&<Path d="M-18 11h.1m4 0h.1m2 3h.1M18 11h.1m-4 0h.1m-2 3h.1" stroke="#95634B" strokeWidth={1.3}/>}
   </G>;

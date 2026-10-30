@@ -14,25 +14,25 @@ export function SeatShape({ id, layer = 'all', tint = 'original', state }: { id:
   const back = layer !== 'front', front = layer !== 'back';
   const bed = id === 'bed' || id === 'cloud-bed' || id === 'bunk-bed';
   const bedding = (y: number) => <G transform={`translate(0 ${y})`}>
-    {back && <>{id !== 'bunk-bed' && <Path d="M10 94V40Q11 32 23 32H131V94" fill={wood}/>}<Rect x={12} y={56} width={126} height={39} rx={9} fill={cream}/><Rect x={15} y={53} width={38} height={38} rx={10} fill="#FFF9E9"/><Path d="M20 60Q32 55 46 61" stroke="#E9DFCA" fill="none"/></>}
-    {front && <><Path d="M57 55Q95 52 138 58V97H57Z" fill={color}/><Path d="M59 57H136V65H59Z" fill={light}/>{[74,94,114].map(x=><Path key={x} d={`M${x} 68v22`} stroke={light} strokeWidth={2}/ >)}<Path d="M12 97H139V105H12Z" fill={wood}/><Path d="M16 105v12m119-12v12" stroke={wood} strokeWidth={6}/></>}
+    {back && <>{id !== 'bunk-bed' && <Path d="M10 94V40Q11 32 23 32H131V94" fill={wood}/>}<Rect x={12} y={56} width={126} height={39} rx={9} fill={cream}/><Path data-pillow="white" d="M4 44Q30 35 65 44L66 99Q35 110 4 100Q-1 73 4 44Z" fill="#FFFEF6"/><Path d="M8 48Q32 41 60 48M8 96Q31 104 60 96" stroke="#E9DFCA" fill="none"/></>}
+    {front && <><Path d="M60 61Q65 40 85 48Q96 64 105 56Q111 42 124 54Q129 61 134 56Q138 51 142 56Q147 54 147 67V96Q105 106 60 98Z" fill={color}/><Path d="M62 61Q72 53 82 57L82 64Q71 60 62 68Z" fill={light}/><Path d="M77 61q-7 10-4 24m42-22q-8 9-5 22m26-17q-4 7-3 13" stroke={light} strokeWidth={2} fill="none"/><Path d="M5 103H147V110H5Z" fill={wood}/><Path d="M10 110v7m132-7v7" stroke={wood} strokeWidth={6}/></>}
   </G>;
-  return <G stroke={ink} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round">
+  return <G fill="none" stroke={ink} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round">
     {bed ? id === 'bunk-bed' ? <>{back && <Path d="M8 12V144M141 12V144" stroke={wood} strokeWidth={7}/ >}{bedding(29)}{bedding(-31)}{front && <Path d="M121 65v78m17-78v78m-17-57h17m-17 20h17m-17 20h17" stroke={wood} strokeWidth={4}/>}</> : bedding(0)
     : id === 'hammock' ? <>
       {back && <>{state?.on && <Path d="M55 23q12-7 25 0m-18 7q12-7 25 0" fill="none" stroke={light}/>}<Path d="M9 27L15 130M141 27L135 130M5 130h24m92 0h24" stroke={wood} strokeWidth={6}/><Path d="M11 48Q75 101 139 48L125 100Q75 129 25 100Z" fill={light}/><Ellipse cx={35} cy={76} rx={23} ry={24} fill={cream}/></>}
-      {front && <><Path d="M57 46Q103 63 148 45L148 101Q100 132 27 107L22 91Q43 102 57 101Z" fill={color}/><Path d="M32 103Q77 121 124 88M64 78v32m19-23v26m20-23v16" fill="none" stroke={light} strokeWidth={2}/></>}
+      {front && <><Path d="M57 59Q67 44 85 50Q98 63 108 55Q118 47 129 54Q139 53 148 45L148 101Q100 132 27 107L22 91Q43 102 57 101Z" fill={color}/><Path d="M32 103Q77 121 124 88M64 78v32m19-23v26m20-23v16" fill="none" stroke={light} strokeWidth={2}/></>}
     </> : id === 'sofa' ? <>
-      {back && <><Rect x={8} y={40} width={134} height={69} rx={18} fill={color}/><Rect x={14} y={49} width={122} height={45} rx={12} fill={light}/><Rect x={12} y={65} width={39} height={37} rx={12} fill={cream}/><Path d="M16 112v12m117-12v12" stroke={wood} strokeWidth={6}/></>}
-      {front && <><Path d="M57 59Q94 62 132 67V111H57Z" fill={color}/><Path d="M59 63Q94 66 129 72" stroke={light} strokeWidth={5}/><Rect x={7} y={99} width={136} height={14} rx={6} fill={color}/><Rect x={129} y={67} width={15} height={44} rx={7} fill={light}/></>}
+      {back && <><Rect x={8} y={40} width={134} height={69} rx={18} fill={color}/><Rect x={14} y={49} width={122} height={45} rx={12} fill={light}/><Rect x={5} y={49} width={58} height={62} rx={12} fill={cream}/><Path d="M16 112v12m117-12v12" stroke={wood} strokeWidth={6}/></>}
+      {front && <><Path d="M58 64Q70 49 86 56Q99 71 109 62Q122 52 132 66V111H58Z" fill={color}/><Path d="M60 66Q70 57 81 62m25 9q10-10 21-1" stroke={light} strokeWidth={5}/><Rect x={7} y={99} width={136} height={14} rx={6} fill={color}/><Rect x={129} y={67} width={15} height={44} rx={7} fill={light}/></>}
     </> : id === 'bathtub' || id === 'bubble-bath' ? <>
       {back && <><Path d="M13 72Q75 47 137 72V108H13Z" fill={cream}/><Ellipse cx={75} cy={76} rx={61} ry={19} fill="#A7D7D3"/><Path d="M119 62V38Q119 29 108 33v9" stroke={wood} strokeWidth={6} fill="none"/></>}
-      {front && <><Path d="M12 79Q75 100 138 79L130 121Q75 140 20 121Z" fill={material(tint, cream)}/><Path d="M13 79Q75 99 137 79" stroke="#F9FAF0" strokeWidth={7}/><Path d="M30 127v9m90-9v9" stroke={wood} strokeWidth={6}/>{(id === 'bubble-bath' || state?.on) && [27,47,98,120].map((x,i)=><G key={x}><Circle cx={x} cy={81-i%2*3} r={10} fill="#F4FAEF"/><Circle cx={x+8} cy={75} r={6} fill="#F4FAEF"/></G>)}</>}
+      {front && <><Path d="M12 76Q75 85 138 76L130 121Q75 140 20 121Z" fill={material(tint, cream)}/><Path d="M15 70H135V84H15Z" fill="#A7D7D3" stroke="none"/><Path d="M13 76Q75 85 137 76" stroke="#F9FAF0" strokeWidth={7}/><Path d="M30 127v9m90-9v9" stroke={wood} strokeWidth={6}/>{[27,47,98,120].map((x,i)=><G key={x} stroke="#B1D6CE" strokeWidth={1}><Circle cx={x} cy={77-i%2*3} r={id === 'bubble-bath' ? 10 : 5} fill="#F4FAEF"/><Circle cx={x+8} cy={75} r={id === 'bubble-bath' ? 6 : 3} fill="#F4FAEF"/></G>)}</>}
     </> : <>
       {back && <>
-        {['armchair','chair','rocking-chair','beanbag'].includes(id) && <Rect x={30} y={44} width={90} height={66} rx={id === 'beanbag' ? 36 : 15} fill={color}/>}
+        {['armchair','chair','rocking-chair','beanbag'].includes(id) && <Rect x={16} y={40} width={118} height={70} rx={id === 'beanbag' ? 36 : 15} fill={color}/>}
         {id === 'rocking-chair' ? <Path d="M39 103v29m73-29v29M19 130Q75 148 131 130" stroke={wood} strokeWidth={6} fill="none"/> : !['floor-cushion','beanbag'].includes(id) && <Path d="M35 102v29m80-29v29" stroke={wood} strokeWidth={6}/>}
-        <Ellipse cx={75} cy={id === 'stool' ? 89 : id === 'floor-cushion' ? 117 : 100} rx={id === 'bench' ? 67 : 49} ry={12} fill={light}/>
+        <Ellipse cx={75} cy={id === 'stool' ? 94 : id === 'floor-cushion' ? 117 : 100} rx={id === 'bench' ? 69 : id === 'stool' ? 46 : 59} ry={12} fill={light}/>
       </>}
       {back && id === 'stool' && <Path d="M35 119h80" stroke={wood} strokeWidth={4}/>}
       {back && id === 'bench' && <><Path d="M9 99H141V107H9Z" fill={wood}/><Path d="M15 94H135" stroke={cream} strokeWidth={2}/></>}

@@ -23,7 +23,8 @@ function front(id: string, arms: number[] = [104, 96, 76, 84], legs: number[] = 
   }
   if (desk) [j.rightElbow, j.rightHand] = solve(j.rightShoulder, [48, 87], [43, 72], 16);
   if (id === 'bathe') { j.leftKnee = [32, 86]; j.rightKnee = [48, 86]; j.leftFoot = [32, 100]; j.rightFoot = [48, 100]; }
-  if (id === 'eat' || id === 'drink') [j.rightElbow, j.rightHand] = solve(j.rightShoulder, [43, 57], [68, 63], 16);
+  if (id === 'drink') [j.rightElbow, j.rightHand] = solve(j.rightShoulder, [42, 68], [64, 84], 16);
+  if (id === 'eat') [j.rightElbow, j.rightHand] = solve(j.rightShoulder, [43, 57], [68, 63], 16);
   return { id, view: 'front', joints: j, expression, seated, desk };
 }
 export const frontPoses: readonly Pose[] = [
@@ -96,5 +97,5 @@ export const isLying = (pose: Pose) => pose.id === 'lie' || pose.id === 'lie-asl
 export function poseBox(pose: Pose) {
   return isLying(pose)
     ? { width: 144, height: 92, anchor: [44, 46] as Point }
-    : { width: 80, height: 132, anchor: (pose.id === 'bathe' ? [40, 74] : pose.seated ? [40, 100] : [40, 132]) as Point };
+    : { width: 80, height: 132, anchor: (pose.id === 'bathe' ? [40, 74] : pose.seated ? [44, 107] : [40, 132]) as Point };
 }

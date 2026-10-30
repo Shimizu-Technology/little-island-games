@@ -1,3 +1,4 @@
+import { LivingArt, hasLivingArt } from './LivingArt';
 import { SeatArt, hasSeatArt } from './SeatArt';
 import type { ArtLayer, ItemVisualState } from '../world';
 import React from "react";
@@ -41,6 +42,7 @@ export function ItemArt({
   animated?: boolean;
   reduced?: boolean;
 }) {
+  if (hasLivingArt(item)) return layer === 'front' ? null : <LivingArt id={item} size={size} state={state ?? {on: active}} mirrored={mirrored} rotation={rotation} tint={tint} reduced={reduced}/>;
   if (hasSeatArt(item)) return <SeatArt id={item} size={size} layer={foreground ? "front" : layer} mirrored={mirrored} rotation={rotation} tint={tint} state={state ?? {on: active}} motion={art => <ItemMotion active={active} animated={animated} reduced={reduced}>{art}</ItemMotion>}/>;
   if (layer === 'front') return null;
   const coral = item === "aquarium" ? defaultCoral : material(tint, defaultCoral);

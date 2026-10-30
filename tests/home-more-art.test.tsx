@@ -22,7 +22,7 @@ vi.mock('../src/arcade/Art', () => ({StickerArt: () => null}));
 const render = renderToStaticMarkup;
 describe('free home art contract', () => {
   it('supplies distinct, tintable art for every free item and each active reaction', () => {
-    expect(Object.keys(moreCatalog)).toHaveLength(44);
+    expect(Object.keys(moreCatalog)).toHaveLength(54);
     const silhouettes = new Set<string>();
     for (const [id, spec] of Object.entries(moreCatalog)) {
       expect(spec.free).toBe(true);
@@ -31,10 +31,10 @@ describe('free home art contract', () => {
       const original = render(<MoreItemArt id={id}/>);
       expect(original).toMatch(/<(path|ellipse|rect)/);
       silhouettes.add(original);
-      for (const tint of tintIds.slice(1)) expect(render(<MoreItemArt id={id} tint={tint}/>)).not.toBe(original);
+      for (const tint of spec.tintable ? tintIds.slice(1) : []) expect(render(<MoreItemArt id={id} tint={tint}/>)).not.toBe(original);
       if (spec.interactive) expect(render(<MoreItemArt id={id} active/>)).not.toBe(original);
     }
-    expect(silhouettes.size).toBe(44);
+    expect(silhouettes.size).toBe(54);
   }, 30000);
   it('keeps original legacy output by default and tints fabric without repainting wood', () => {
     for (const item of Object.keys(catalog) as (keyof typeof catalog)[]) expect(render(<ItemArt item={item}/>)).toBe(render(<ItemArt item={item} tint="original"/>));

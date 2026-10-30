@@ -21,7 +21,7 @@ const furniture: Record<'home'|'kitchen'|'treehouse'|'beach',readonly (readonly 
 };
 it('keeps every item art and the four furnished rooms renderable',()=>{
   const ids=[...Object.keys(catalog),...Object.keys(moreCatalog)];
-  expect(ids).toHaveLength(68);
+  expect(ids).toHaveLength(78);
   for(const id of ids) expect(render(id in moreCatalog?<MoreItemArt id={id}/>:<ItemArt item={id as keyof typeof catalog}/>)).toContain('<svg');
   expect(render(<MoreItemArt id="sofa" active animated/>)).not.toBe(render(<MoreItemArt id="sofa" active animated reduced/>));
   expect(render(<ItemArt item="aquarium" active animated/>)).not.toBe(render(<ItemArt item="aquarium" active animated reduced/>));

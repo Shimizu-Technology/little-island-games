@@ -21,7 +21,7 @@ describe('versioned home saves and recovery', () => {
   expect(room(s).characters).toHaveLength(3); expect(s.rooms.kitchen.characters).toEqual([]);
   expect(s.rooms.kitchen).not.toBe(s.rooms.beach);
  });
- it('uses room defaults only for new rooms and keeps explicit saved choices',()=>{const s=starterHome();for(const id of roomIds)expect(s.rooms[id].theme).toEqual(roomDefaultTheme[id]);s.rooms.kitchen.theme={wallpaper:'peach',floor:'rose'};expect(migrateHome(s)!.rooms.kitchen.theme).toEqual({wallpaper:'peach',floor:'rose'});expect(s.rooms.kitchen.instances.map(i=>i.item)).toEqual(['fridge','stove','kitchen-table','stool']);expect(s.rooms.treehouse.instances.map(i=>i.item)).toEqual(['hammock','floor-cushion','string-lights','lantern']);expect(s.rooms.beach.instances.map(i=>i.item)).toEqual(['rocking-chair','shell-pile','round-rug','kite']);});
+ it('uses room defaults only for new rooms and keeps explicit saved choices',()=>{const s=starterHome();for(const id of roomIds)expect(s.rooms[id].theme).toEqual(roomDefaultTheme[id]);s.rooms.kitchen.theme={wallpaper:'peach',floor:'rose'};expect(migrateHome(s)!.rooms.kitchen.theme).toEqual({wallpaper:'peach',floor:'rose'});expect(s.rooms.kitchen.instances.map(i=>i.item)).toEqual(['fridge','sink-counter','stove','fruit-bowl','kitchen-table','stool']);expect(s.rooms.treehouse.instances.map(i=>i.item)).toEqual(['hammock','floor-cushion','string-lights','lantern']);expect(s.rooms.beach.instances.map(i=>i.item)).toEqual(['rocking-chair','shell-pile','round-rug','kite']);});
  it('migrates v1 exactly once without changing original geometry, state or character records', () => {
   const old=legacyStarterHome(); old.instances[0].mirrored=true; old.instances[3].state='active'; old.theme.wallpaper='peach';
   old.characters[0]={slot:0,anchor:'floor',pose:'stand',x:9,y:5};
@@ -109,7 +109,7 @@ describe('room editing, stacking and colours',()=>{
   writeFileSync(`${process.env.POLISH_EVIDENCE}/fixture-surfaces.json`,JSON.stringify(save));
  });
  it('gives every new item an explicit scene size relative to the Islander',()=>{
-  expect(Object.keys(moreCatalog)).toHaveLength(44);
+  expect(Object.keys(moreCatalog)).toHaveLength(54);
   for(const [id,spec] of Object.entries(moreCatalog)) expect(itemSize(instance(id,id,0,0))).toBe(Math.round(spec.itemSize*1.18));
   expect(itemSize(instance('f','fridge',0,0))).toBeGreaterThan(characterSize(0));
   expect(itemSize(instance('l','table-lamp',0,0))).toBeLessThan(characterSize(0)/2);

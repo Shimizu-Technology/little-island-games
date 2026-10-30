@@ -4,6 +4,8 @@ import { moreCatalog } from '../catalogMore';
 import type { VisualBox } from '../world';
 /** Matches geometry.itemSize without importing the engine. Engine places its square at
  * (itemPoint.x - size/2, itemPoint.y - size*.85). SVGs are clipped to this square.
+ * Phase 2 reads the revised seat sizes directly from moreCatalog; the same square
+ * contains both fridge door states, radio notes and lamp floor pools.
  * Intentionally conservative: includes stroke, shadows, hats are a character concern.
  * Current art supports horizontal facing swaps, never a screen-space 90° rotation.
  */
