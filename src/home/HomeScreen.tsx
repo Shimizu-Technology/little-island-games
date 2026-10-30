@@ -1,3 +1,6 @@
+import { badgeRule, type BadgeId } from '../badges/engine';
+import { themeRewards } from './catalog';
+import { personFor } from '../personalization/model';
 import React, { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import {
   Modal,
@@ -21,7 +24,7 @@ import { useSounds } from "../components/Audio";
 import { useStore } from "../state/Store";
 import { ItemArt } from "./art/Items";
 import { RoomArt, floorColors, wallColors } from "./art/Room";
-import { badgeIds, floorThemes, furnitureIds, itemSpec, wallThemes, type BadgeId, type ItemId } from "./catalog";
+import { floorThemes, furnitureIds, itemSpec, wallThemes, type ItemId } from "./catalog";
 import {
   anchors,
   anchorAvailable,
@@ -41,6 +44,7 @@ import { useHomeStore } from "./useHomeStore";
 import { Drag, FloorGrid, Footprint, emptyPreview, TrayGhost, type DragConfig } from "./Drag";
 export type HomeScreenProps = Ownership & {
   badges?: BadgeId[];
+  initialItem?: string;
   renderCharacter?: (slot: Character["slot"], pose: Pose) => ReactNode;
   initialState?: unknown;
   persist?: (state: import("./model").HomeState) => boolean;
@@ -127,29 +131,41 @@ type KeyEvent = { nativeEvent: { key: string }; preventDefault: () => void };
 /** RN native uses accessibilityActions; web additionally exposes the same operations to a keyboard. */
 const keyboard = (handler: (e: KeyEvent) => void): ViewProps =>
   Platform.OS === "web" ? ({ onKeyDown: handler } as ViewProps) : {};
-export function HomeScreen({ renderCharacter, badges = [], initialState, persist, saveStatus, ...ownership }: HomeScreenProps) {
+export function HomeScreen({ renderCharacter, badges = [], initialItem, initialState, persist, saveStatus, ...ownership }: HomeScreenProps) {
   const { width, height } = useWindowDimensions();
   const inset = useSafeAreaInsets();
   const app = useStore();
   const sound = useSounds(app.save.settings.sound);
   const reduced = useReducedMotion();
   const store = useHomeStore(ownership, initialState, persist);
-  const [mode, setMode] = useState<"play" | "decorate">("play");
-  const [tab, setTab] = useState<"Furniture" | "Stickers" | "Room">("Furniture");
+  const [mode, setMode] = useState<"play" | "decorate">(initialItem ? "decorate" : "play");
+  const [tab, setTab] = useState<"Furniture" | "Stickers" | "Room">(themeRewards.some(t=>t.id===initialItem) ? "Room" : "Furniture");
   const [selected, setSelected] = useState<string>();
-  const [placing, setPlacing] = useState<ItemId>();
+  const [placing, setPlacing] = useState<ItemId | undefined>(furnitureIds.includes(initialItem as typeof furnitureIds[number]) ? initialItem as ItemId : undefined);
   const [draggedItem, setDraggedItem] = useState<ItemId>();
-  const [collapsed, setCollapsed] = useState(height < 500);
+  const [collapsed, setCollapsed] = useState(initialItem ? false : height < 500);
   const [menu, setMenu] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [hint, setHint] = useState(true);
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState(initialItem ? `Ready: ${initialItem.replaceAll("-", " ")}. Choose a clear spot or room style.` : "");
+  const owner = app.save.learning?.active ?? "family", person = personFor(app.save);
+  const acknowledge = app.personalize, identityEpoch = app.epoch;
+  React.useEffect(() => {
+    if (initialItem && person.unseen.includes(initialItem)) acknowledge({unseen:person.unseen.filter(id=>id!==initialItem)}, {learner:owner,epoch:identityEpoch});
+  }, [initialItem, person.unseen, acknowledge, owner, identityEpoch]);
   const [origin, setOrigin] = useState({ x: 0, y: 0 });
   const canvas = useRef<View>(null);
+  const inventory = useRef<ScrollView>(null), focusedInitialItem = useRef(false);
+  const revealInitialItem = (id: string, x: number) => {
+    if (id === initialItem && !focusedInitialItem.current) {
+      focusedInitialItem.current = true;
+      inventory.current?.scrollTo({x:Math.max(0,x-20),animated:false});
+    }
+  };
   const sequence = useRef(0);
   const preview = useSharedValue(emptyPreview);
   const decorating = mode === "decorate";
-  const drawerHeight = decorating ? (collapsed ? 48 : 146) : 0;
+  const drawerHeight = decorating ? (collapsed ? 48 : 190) : 0;
   const availableHeight = height - inset.top - inset.bottom - drawerHeight;
   // Scene keeps the full width. Landscape uses almost all available height; no control column.
   const sceneWidth = Math.min(width, availableHeight / 0.7);
@@ -182,9 +198,10 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
   const choose = (id: ItemId) => {
     setDraggedItem(undefined);
     if (!owns(id, ownership)) {
-      feedback(`Earn it in ${itemSpec(id).track ?? "Arcade"}. Play that track to unlock it.`);
+      const spec = itemSpec(id); feedback(spec.badge ? badgeRule(spec.badge as BadgeId) : `Earn it in ${spec.track ?? "Arcade"}.`);
       return;
     }
+    if (personFor(app.save).unseen.includes(id)) app.personalize({ unseen: personFor(app.save).unseen.filter(i=>i!==id) }, { learner: app.save.learning?.active ?? "family", epoch: app.epoch });
     setPlacing(id);
     setSelected(undefined);
     setHint(false);
@@ -519,8 +536,9 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
       <Drag
         key={id}
         testID={`inventory-${id}`}
+        onLayout={e => revealInitialItem(id, e.nativeEvent.layout.x)}
         accessibilityRole="button"
-        accessibilityLabel={`${label}${owned ? "" : `, locked, Earn it in ${spec.track ?? "Arcade"}`}`}
+        accessibilityLabel={`${label}${owned ? "" : `, locked, ${spec.badge ? badgeRule(spec.badge as BadgeId) : "Earn it in Arcade"}`}`}
         accessibilityHint="Drag upward into the room, or select then tap the floor."
         accessibilityActions={[{ name: "activate", label: "Choose" }]}
         onAccessibilityAction={() => choose(id)}
@@ -544,8 +562,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
         onTap={() => choose(id)}
         onDrop={(x, y) => place(id, x - origin.x, y - origin.y)}
         style={{
-          width: 84,
-          height: 88,
+          width: owned ? 100 : 180,
+          minHeight: 100,
           alignItems: "center",
           borderWidth: placing === id ? 2 : 0,
           borderColor: ink,
@@ -557,8 +575,10 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
           <ItemArt item={id} size={64} />
         </View>
         <Text numberOfLines={1} style={styles.thumbLabel}>
-          {owned ? label : (spec.track ?? "Arcade")}
+          {label}
         </Text>
+        {!owned && <Text style={{fontSize:11, paddingHorizontal:6, color:ink}}>{spec.badge ? badgeRule(spec.badge as BadgeId) : `Earn in ${spec.track ?? "Arcade"}`}</Text>}
+        {owned && personFor(app.save).unseen.includes(id) && <Text style={styles.meta}>New</Text>}
         {!owned && (
           <View pointerEvents="none" style={{ position: "absolute", top: 0, right: 0, transform: [{ scale: 0.6 }] }}>
             <Icon name="lock" />
@@ -620,10 +640,11 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
             }}
             style={StyleSheet.absoluteFill}
           >
-            <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+            <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
               <RoomArt
                 theme={store.state.theme}
-                badges={badges.filter((b) => badgeIds.includes(b))}
+                badges={badges}
+                onBadgePress={badge => router.push({ pathname:"/badges", params:{badge} })}
                 reduced={reduced}
               />
             </View>
@@ -741,6 +762,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
       {menu && (
         <View style={[styles.menu, { top: inset.top + 60, right: inset.right + 8 }]}>
           <Text style={styles.meta}>{persist ? "Your room saves on this device." : "Home stays for this visit."}</Text>
+          {!!person.unseen.length && <Button label="Mark all seen" onPress={() => app.personalize({unseen:[]}, {learner:owner,epoch:app.epoch})} />}
+          <Button label="My badges" onPress={() => router.push("/badges")} />
           <Button
             label="Reset room"
             onPress={() => {
@@ -774,6 +797,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
           {!collapsed && (
             <ScrollView
               horizontal
+              ref={inventory}
               testID="inventory-strip"
               showsHorizontalScrollIndicator
               contentContainerStyle={styles.strip}
@@ -787,11 +811,12 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
                       key={wallpaper}
                       accessibilityRole="button"
                       accessibilityLabel={`${wallpaper} walls`}
-                      onPress={() => dispatch({ type: "theme", wallpaper })}
-                      style={[styles.swatch, { backgroundColor: wallColors[wallpaper] }]}
+                      onLayout={e => revealInitialItem(wallpaper, e.nativeEvent.layout.x)}
+                      onPress={() => { const reward = themeRewards.find(r=>r.id===wallpaper); if (reward && !ownership.ownedWallpapers?.includes(wallpaper)) feedback(badgeRule(reward.badge)); else { dispatch({ type: "theme", wallpaper }); if (personFor(app.save).unseen.includes(wallpaper)) app.personalize({ unseen: personFor(app.save).unseen.filter(id=>id!==wallpaper) }, {learner:app.save.learning?.active ?? "family", epoch:app.epoch}); } }}
+                      style={[styles.swatch, { minWidth:180, height:140, backgroundColor: wallColors[wallpaper] }]}
                     >
                       <Text style={styles.label}>{wallpaper}</Text>
-                      <Text style={styles.meta}>Walls</Text>
+                      <Text style={styles.meta}>{themeRewards.find(r=>r.id===wallpaper) && !ownership.ownedWallpapers?.includes(wallpaper) ? badgeRule(themeRewards.find(r=>r.id===wallpaper)!.badge) : "Walls"}</Text>{person.unseen.includes(wallpaper) && <Text style={styles.meta}>New</Text>}
                     </Pressable>
                   ))}
                   {floorThemes.map((floor) => (
@@ -799,11 +824,12 @@ export function HomeScreen({ renderCharacter, badges = [], initialState, persist
                       key={floor}
                       accessibilityRole="button"
                       accessibilityLabel={`${floor} floor`}
-                      onPress={() => dispatch({ type: "theme", floor })}
-                      style={[styles.swatch, { backgroundColor: floorColors[floor] }]}
+                      onLayout={e => revealInitialItem(floor, e.nativeEvent.layout.x)}
+                      onPress={() => { const reward = themeRewards.find(r=>r.id===floor); if (reward && !ownership.ownedFloors?.includes(floor)) feedback(badgeRule(reward.badge)); else { dispatch({ type: "theme", floor }); if (personFor(app.save).unseen.includes(floor)) app.personalize({ unseen: personFor(app.save).unseen.filter(id=>id!==floor) }, {learner:app.save.learning?.active ?? "family", epoch:app.epoch}); } }}
+                      style={[styles.swatch, { minWidth:180, height:140, backgroundColor: floorColors[floor] }]}
                     >
                       <Text style={styles.label}>{floor}</Text>
-                      <Text style={styles.meta}>Floor</Text>
+                      <Text style={styles.meta}>{themeRewards.find(r=>r.id===floor) && !ownership.ownedFloors?.includes(floor) ? badgeRule(themeRewards.find(r=>r.id===floor)!.badge) : "Floor"}</Text>{person.unseen.includes(floor) && <Text style={styles.meta}>New</Text>}
                     </Pressable>
                   ))}
                 </>

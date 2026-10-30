@@ -8,6 +8,7 @@ export type ItemSpec = {
   mirror: boolean;
   interactive?: string;
   track?: Track;
+  badge?: `${string}-${1|2|3|4}`;
 };
 const furniture = (
   name: string,
@@ -24,25 +25,26 @@ export const catalog = {
   plant: furniture("Happy palm"),
   lamp: furniture("Sunshine lamp", [1, 1], undefined, "The light is on"),
   "toy-box": furniture("Toy chest", [2, 1], undefined, "The toys are out"),
-  blocks: furniture("Number blocks", [1, 1], "Math"),
-  abacus: furniture("Rainbow abacus", [2, 1], "Math"),
-  books: furniture("Storybook library", [2, 1], "Reading"),
-  beanbag: furniture("Reading cloud", [2, 1], "Reading"),
-  aquarium: furniture("Pip’s reef", [2, 1], "Science & Thinking", "Pip swims hello"),
-  telescope: furniture("Stargazer telescope", [1, 1], "Science & Thinking"),
-  globe: furniture("Little blue planet", [1, 1], "Science & Thinking"),
-  mat: { ...furniture("Woven island mat", [2, 2], "CHamoru words"), layer: "ground" as const },
-  "island-lamp": furniture("Woven glow lamp", [1, 1], "CHamoru words", "A warm island glow"),
-  trophies: furniture("Good times shelf", [2, 1], "Arcade"),
-  arcade: furniture("Pocket arcade", [1, 1], "Arcade", "Ready for pretend play"),
-  checkers: furniture("Checkers for two", [2, 1], "Classic"),
+  blocks: { ...furniture("Number blocks", [1, 1], "Math"), badge: 'math-2' as const },
+  abacus: { ...furniture("Rainbow abacus", [2, 1], "Math"), badge: 'math-3' as const },
+  books: { ...furniture("Storybook library", [2, 1], "Reading"), badge: 'reading-3' as const },
+  beanbag: { ...furniture("Reading cloud", [2, 1], "Reading"), badge: 'reading-2' as const },
+  aquarium: { ...furniture("Pip’s reef", [2, 1], "Science & Thinking", "Pip swims hello"), badge: 'science-3' as const },
+  telescope: { ...furniture("Stargazer telescope", [1, 1], "Science & Thinking"), badge: 'science-3' as const },
+  globe: { ...furniture("Little blue planet", [1, 1], "Science & Thinking"), badge: 'science-2' as const },
+  mat: { ...furniture("Woven island mat", [2, 2], "CHamoru words"), layer: "ground" as const, badge: "chamoru-2" as const },
+  "island-lamp": { ...furniture("Woven glow lamp", [1, 1], "CHamoru words", "A warm island glow"), badge: 'chamoru-3' as const },
+  trophies: { ...furniture("Good times shelf", [2, 1], "Arcade"), badge: 'arcade-3' as const },
+  arcade: { ...furniture("Pocket arcade", [1, 1], "Arcade", "Ready for pretend play"), badge: 'arcade-2' as const },
+  checkers: { ...furniture("Checkers for two", [2, 1], "Classic"), badge: 'classic-1' as const },
   chime: {
-    ...furniture("Shell wind chime", [1, 1], "Island", "Ting! A sea-breeze song"),
+    ...furniture("Shell wind chime", [1, 1], "Classic", "Ting! A sea-breeze song"),
+    badge: "classic-3" as const,
     layer: "wall" as const,
     rotations: [0] as const,
     mirror: false,
   },
-  surfboard: furniture("Lagoon surfboard", [1, 1], "Island"),
+  surfboard: { ...furniture("Lagoon surfboard", [1, 1], "Classic"), badge: "classic-2" as const },
 } satisfies Record<string, ItemSpec>;
 export type FurnitureId = keyof typeof catalog;
 export type ItemId = FurnitureId | `sticker:${StickerId}`;

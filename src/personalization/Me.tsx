@@ -19,7 +19,7 @@ function MeForLearner({ made, creatorAllowed }: { made: boolean; creatorAllowed:
   useEffect(() => { const timer = setTimeout(() => setWave(false), 1400); return () => clearTimeout(timer); }, []);
   return <View style={{ backgroundColor: '#F1E8D4', borderRadius: 24, padding: 16, gap: 12 }}>
     <LearnerChip/>
-    <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}><Islander view="front" pose={wave ? 'wave' : 'idle'} look={p.look} size={120}/><View style={{ flex: 1, gap: 10 }}><Heading style={{ fontSize: 24 }}>{learner.id === 'family' ? 'Our island' : `${learner.name}’s island`}</Heading><Button compact onPress={() => router.push('/locker')}>My Locker</Button><Button compact quiet onPress={() => router.push('/island-home')}>Island Home</Button></View></View>
+    <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}><Islander view="front" pose={wave ? 'wave' : 'idle'} look={p.look} size={120}/><View style={{ flex: 1, gap: 10 }}><Heading style={{ fontSize: 24 }}>{learner.id === 'family' ? 'Our island' : `${learner.name}’s island`}</Heading><Button compact onPress={() => router.push('/locker')}>My Locker</Button><Button compact quiet onPress={() => router.push('/island-home')}>Island Home</Button><Button compact quiet onPress={() => router.push('/badges')}>Badges</Button></View></View>
     {!p.made && <Button quiet compact onPress={() => setCreator(true)}>Make your islander</Button>}
     {creator && creatorAllowed && <Creator onClose={() => setCreator(false)}/>}
   </View>;

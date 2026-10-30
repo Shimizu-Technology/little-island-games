@@ -18,7 +18,7 @@ Companion to [ISLANDER_2.md](ISLANDER_2.md). Every track has four named badges. 
 | **Math** | Shell Math, Number Hop, Reef Race, Island Market, Quick Practice, arcade math worlds and chest math | *Counter*: any completed round | *Builder*: 3 distinct pairs | *Problem Solver*: a round at Level 3+ **or** 6 distinct pairs | *Math Star*: a round at Level 5 **or** 10 distinct pairs |
 | **Reading** | Sound Boat, Turtle Tales, Which One?, arcade word worlds | *First Words* | *Page Turner*: 3 distinct pairs | *Storyteller*: Level 3+ **or** 6 distinct pairs | *Bookworm*: Level 5 **or** 10 distinct pairs |
 | **Science & Thinking** | Tide Pool Lab, Float or Sink Dock, Crab Commands, Explore topics and labs | *Curious*: any round, or any Explore topic | *Explorer*: 3 distinct pairs or topics | *Scientist*: Level 3+ **or** 6 distinct | *Inventor*: Level 5 **or** 10 distinct |
-| **CHamoru words** | Håfa Adai Island, CHamoru Memory Pairs | *Håfa Adai*: any round | *Neighbor*: 3 distinct | *Storykeeper*: Level 3+ **or** 6 distinct | *Island Voice*: Level 5 **or** 10 distinct |
+| **CHamoru words** | Håfa Adai Island, CHamoru Memory Pairs | *Håfa Adai*: any round | *Neighbor*: 3 distinct | *Storykeeper*: Level 3+ **or** 4 distinct pairs | *Island Voice*: Level 5 **or** 7 distinct pairs |
 | **Arcade** | All nine arcade games | *Player One*: any cleared level | *Level Hopper*: 8 distinct cleared levels | *World Opener*: open World 3 in any game **or** clear every level of one world | *Legend*: clear any World 6 level **or** 40 distinct cleared levels |
 | **Classic & Board** | Classic games, the five board games, cards, Mystery, Dash, Maze | *Game Night*: finish any game | *Good Sport*: finish 3 different games | *Strategist*: finish 6 different games | *Champion*: win a board game at the middle or strong opponent **or** finish 10 different games |
 
@@ -33,7 +33,7 @@ There are starter items (always owned), plus 24 badge rewards: one per badge. Th
 | Science 1 / 2 / 3 / 4 | Safety goggles (accessory) / Lab coat (outfit) / — / Galaxy hair colour | — / Little blue planet / Stargazer telescope and Pip's reef / **Night Sky** wallpaper |
 | CHamoru 1 / 2 / 3 / 4 | Flower lei (accessory) / Woven sun hat (hat) / — / Sunset outfit colour | — / Woven island mat / Woven glow lamp / **Island Breeze** floor |
 | Arcade 1 / 2 / 3 / 4 | Runner's headband (hat) / Lagoon jersey (outfit) / Star sneakers outfit colour / Lightning streak hair colour | — / Pocket arcade / Good times shelf / **Arcade Neon** wallpaper |
-| Classic 1 / 2 / 3 / 4 | Captain's cap (hat) / — / Checker scarf (accessory) / Royal outfit colour | Checkers for two / — / Shell wind chime / **Game Room** floor |
+| Classic 1 / 2 / 3 / 4 | Captain's cap (hat) / — / Checker scarf (accessory) / Royal outfit colour | Checkers for two / Lagoon surfboard / Shell wind chime / **Game Room** floor |
 
 Rows with "—" in a column still give the other column's reward. Every badge gives at least one reward.
 

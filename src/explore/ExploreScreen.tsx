@@ -1,3 +1,4 @@
+import { BadgeResultCard } from '../badges/ResultCard';
 import { router } from "expo-router";
 import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -16,6 +17,7 @@ export interface ExploreScreenProps {
   favorites: readonly string[];
   onToggleFavorite: (topicId: string) => void;
   onBack: () => void;
+  onCompleteTopic?: (topic: string, progress: ExploreProgress) => void;
   onSpeak: (topicId: string, transcript: string) => void;
   onStop: () => void;
   narrationEnabled?: boolean;
@@ -40,6 +42,7 @@ export function ExploreScreen({
   favorites,
   onToggleFavorite,
   onBack,
+  onCompleteTopic,
   onSpeak,
   onStop,
   narrationEnabled = true,
@@ -286,6 +289,7 @@ export function ExploreScreen({
           <TopicView
             key={topic.id}
             topic={topic}
+            onComplete={() => onCompleteTopic?.(topic.id, latestProgress.current)}
             favorite={favorites.includes(topic.id)}
             onFavorite={() => onToggleFavorite(topic.id)}
             onRelated={(id) => go({ kind: "topic", id })}
@@ -426,6 +430,7 @@ function TopicCard({
 }
 function TopicView({
   topic,
+  onComplete,
   favorite,
   onFavorite,
   onRelated,
@@ -436,6 +441,7 @@ function TopicView({
   speaking,
 }: {
   topic: ExploreTopic;
+  onComplete: () => void;
   favorite: boolean;
   onFavorite: () => void;
   onRelated: (id: string) => void;
@@ -479,6 +485,7 @@ function TopicView({
       </View>
       <View style={[s.deeper, { backgroundColor: world.tint }]}>
         <Label>Something to try</Label>
+        <Button quiet onPress={onComplete}>I finished this topic</Button><BadgeResultCard round={`explore:${topic.id}`}/>
         <Heading style={{ fontSize: 21 }}>{topic.question}</Heading>
       </View>
       <Heading style={{ fontSize: 24 }}>Keep wondering</Heading>

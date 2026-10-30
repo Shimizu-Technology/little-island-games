@@ -1,3 +1,4 @@
+import { BadgeResultCard } from '../badges/ResultCard';
 import type { RoundPractice } from "../practice/useRoundPractice";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, Platform, StyleSheet, TextInput, View } from "react-native";
@@ -150,6 +151,7 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
         </GameHeader>
       )}
       {mode === "solo" && !view?.result && <Button compact quiet onPress={() => { setShowRole(false); setSetup(true); }}>Role and options</Button>}
+      {mode === "solo" && view?.result && state && <BadgeResultCard round={state.id}/>}
       {mode === "solo" && view?.result && <View style={s.row}>
         <Button onPress={() => newRound(() => { const previous = latest.current!; const next = createMysterySession(undefined, undefined, previous.players[0].role, undefined, 1, previous.adventure?.balance); latest.current = next; saveCallback.current(next, previous); closeOverlays(); })}>Play again</Button>
         <Button quiet onPress={() => setSetup(true)}>Role and options</Button>

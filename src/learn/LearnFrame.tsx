@@ -1,3 +1,4 @@
+import { BadgeResultCard } from '../badges/ResultCard';
 import { isMathGame, type MathRound } from "./games/shell-math/round";
 import { Companion, LearningCompanion, useCompanionReaction } from "../islander/Companion";
 import { LearnerChip } from "../personalization/LearnerChip";
@@ -283,6 +284,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
         {saved && (
           <View style={{ alignItems: "center", gap: 10, marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.line }}>
+            {finished && <BadgeResultCard round={saved.id}/>}
             {finished && (
               <View
                 accessibilityLiveRegion="polite"

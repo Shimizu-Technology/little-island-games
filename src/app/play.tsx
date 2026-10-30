@@ -1,3 +1,4 @@
+import { BadgeResultCard } from '../badges/ResultCard';
 import { useActiveIslanderLook } from "../islander/active";
 import { Companion, IslanderPortrait } from "../islander/Companion";
 import { classicEvent } from "../islander/reactions";
@@ -286,6 +287,7 @@ function Game({ id }: { id: GameId }) {
               borderTopColor: C.line,
             }}
           >
+            {finished && <BadgeResultCard round={s.id}/>}
             {finished && <Companion event={classicEvent(s)} active={focused && active && !setup && !help}/> }
             {finished && (
               <Button onPress={replay}>

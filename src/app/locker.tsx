@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Islander, type IslanderLook } from '../islander';
 import { Button, C, Chip, Copy, Heading, styles } from '../components/ui';
 import { Recovery } from '../components/Recovery';
@@ -10,7 +10,7 @@ import { useStore } from '../state/Store';
 import { LearnerChip } from '../personalization/LearnerChip';
 import { Creator } from '../personalization/Creator';
 import { personFor } from '../personalization/model';
-import { canWear, categories, lockedReason, type Category, type StyleItem } from '../personalization/catalog';
+import { canWear, categories, lockedReason, type Category, type StyleItem, styleCatalog } from '../personalization/catalog';
 import { StyleGrid } from '../personalization/StyleGrid';
 export default function LockerRoute() {
   const store = useStore();
@@ -19,9 +19,14 @@ export default function LockerRoute() {
   return <Locker key={`${store.save.learning?.active ?? 'family'}:${store.epoch}`}/>;
 }
 function Locker() {
+  const params = useLocalSearchParams<{item?: string}>(), initialItem = styleCatalog.find(i => i.id === params.item);
   const store = useStore(), person = personFor(store.save), { width, height } = useWindowDimensions();
-  const [look, setLook] = useState<IslanderLook>(person.look), [category, setCategory] = useState<Category>('outfit'), [back, setBack] = useState(false), [creator, setCreator] = useState(!person.made), [detail, setDetail] = useState<StyleItem>(), [message, setMessage] = useState('');
+  const [look, setLook] = useState<IslanderLook>(initialItem ? { ...person.look, [initialItem.category]: initialItem.value } : person.look), [category, setCategory] = useState<Category>(initialItem?.category ?? 'outfit'), [back, setBack] = useState(false), [creator, setCreator] = useState(!person.made), [detail, setDetail] = useState<StyleItem | undefined>(initialItem), [message, setMessage] = useState('');
   const [expected] = useState({ learner: store.save.learning?.active ?? 'family', epoch: store.epoch });
+  const acknowledge = store.personalize;
+  useEffect(() => {
+    if (initialItem && person.unseen.includes(initialItem.id)) acknowledge({unseen:person.unseen.filter(id=>id!==initialItem.id)}, expected);
+  }, [initialItem, person.unseen, acknowledge, expected]);
   const wide = width >= 700, short = height < 500, changed = JSON.stringify(look) !== JSON.stringify(person.look), reason = detail && lockedReason(detail, person.earned);
   function choose(item: StyleItem) {
     setLook({ ...look, [item.category]: item.value }); setDetail(item); setMessage('');
@@ -41,7 +46,7 @@ function Locker() {
         {!!person.unseen.length && <Button quiet compact onPress={() => store.personalize({ unseen: [] }, expected)}>Mark all seen</Button>}
   </>;
   return <SafeAreaView style={styles.page}>
-    <View style={{ padding: 12, gap: 8 }}><View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}><Button quiet compact onPress={() => router.canGoBack() ? router.back() : router.replace('/')}>Back</Button><Heading style={{ fontSize: 25 }}>My Locker</Heading>{short && <Button quiet compact onPress={() => setCreator(true)}>Make your islander</Button>}</View><LearnerChip compact/></View>
+    <View style={{ padding: 12, gap: 8 }}><View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}><Button quiet compact onPress={() => router.canGoBack() ? router.back() : router.replace('/')}>Back</Button><Heading style={{ fontSize: 25 }}>My Locker</Heading>{short && <Button quiet compact onPress={() => setCreator(true)}>Make your islander</Button>}</View><LearnerChip compact/><Button quiet compact onPress={() => router.push('/badges')}>My badges</Button></View>
     {wide ? <View style={{ flex: 1, flexDirection: 'row', gap: 16, padding: short ? 8 : 16, maxWidth: 1100, width: '100%', alignSelf: 'center' }}>
       {dressingPreview}<ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 12, paddingBottom: 16 }}>{choices}</ScrollView>
     </View> : <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>

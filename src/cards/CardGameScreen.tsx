@@ -1,3 +1,4 @@
+import { BadgeResultCard } from '../badges/ResultCard';
 import { Companion } from "../islander/Companion";
 import { resultEvent } from "../islander/reactions";
 import type { RoundPractice } from "../practice/useRoundPractice";
@@ -271,6 +272,7 @@ function CardGameRound({
               : legacyMessage}
         </Copy>
       </View>
+      {result && <BadgeResultCard round={state.id}/>}
       {result && <View style={{ gap: 10 }}>
         <View style={{ alignItems: "center" }}><Companion event={resultEvent(cardMatchResult(state), state.options.mode === "solo")}/></View>
         <Button onPress={() => { const previous = latest.current; if (previous.id === state.id && previous.result) newRound(() => commit(rematchCards(previous), previous)); }}>Play again</Button>

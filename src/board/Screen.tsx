@@ -1,3 +1,4 @@
+import { BadgeResultCard } from '../badges/ResultCard';
 import { Companion } from "../islander/Companion";
 import { resultEvent } from "../islander/reactions";
 import React, { useCallback, useEffect, useState } from "react";
@@ -409,6 +410,7 @@ function Round({
                 : `${s.mode === "solo" ? strengthNames[s.strength] + " computer" : "Family match"} · ${s.game === "shell-pits" ? (p.turn === 0 ? "Circle side below" : "Square side above") : s.game === "fishing-nets" ? "Closing a box gives another turn." : s.game === "hidden-canoes" ? "Find all seven canoe spaces." : "Four in a line wins."}`
           }
         />
+        {p.outcome !== null && <BadgeResultCard round={s.id}/>}
         {p.outcome !== null && (
           <View style={{ alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 10 }}>
             <Companion event={resultEvent(p.outcome, s.mode === "solo" || s.game === "reef-sweep")} size={80}/>
