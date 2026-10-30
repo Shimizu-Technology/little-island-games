@@ -19,7 +19,7 @@ describe("2.3 Numbers generated rounds", () => {
     expect((first as {tasks: unknown[]}).tasks).toHaveLength(5);
     expect(new Set((first as {tasks: unknown[]}).tasks.map(x => JSON.stringify(x))).size).toBe(5);
     expect(engine.validate(first, option(level === 5 ? 4 : level+1 as 1|2|3|4|5))).toBe(false);
-    expect(engine.validate({ ...(first as object), version: 2 }, o)).toBe(false);
+    expect(engine.validate({ ...(first as object), version: 3 }, o)).toBe(false);
     expect(engine.validate({ ...(first as object), extra: true }, o)).toBe(false);
     expect(engine.validate({ ...(first as object), tasks: [{ kind: "bad" }] }, o)).toBe(false);
     const tasks = (first as { tasks: object[] }).tasks;
@@ -36,6 +36,8 @@ describe("2.3 Numbers generated rounds", () => {
     expect(feast.validate({ ...oldLine, tasks: [{ kind: "line", n: 5, d: 8, extra: 0, answer: 5 }, ...oldLine.tasks.slice(1)] }, option(2))).toBe(true);
     const oldFold = feast.create(option(3), ctx(1));
     expect(feast.validate({ ...oldFold, tasks: [{ kind: "equivalent", n: 4, d: 5, extra: 3, answer: 12 }, ...oldFold.tasks.slice(1)] }, option(3))).toBe(true);
+    const oldAlgebra = algebra.create(option(5), ctx(1));
+    expect(algebra.validate({ ...oldAlgebra, version: 1, tasks: [2,3,4,5,6].map(answer => ({ kind: "inequality", a: 3, b: answer * 2 + 3, extra: 2, answer })) }, option(5))).toBe(true);
   });
   it("level mechanics increase in scope", () => {
     const seed = 21;
@@ -45,14 +47,14 @@ describe("2.3 Numbers generated rounds", () => {
     expect(new Set(tideKinds).size).toBe(5);
     expect(new Set(feastKinds).size).toBe(5);
     expect(new Set(algebraKinds).size).toBe(5);
-    const t1 = tide.create(option(1),ctx(seed)).tasks[0], t5 = tide.create(option(5),ctx(seed)).tasks[0];
-    expect(t1.a).toBeLessThanOrEqual(4); expect(t5.a).toBeGreaterThanOrEqual(11);
+    const t1 = tide.create(option(1),ctx(seed)).tasks[0], t4 = tide.create(option(4),ctx(seed)).tasks[0], t5 = tide.create(option(5),ctx(seed)).tasks[0];
+    expect(t1.a).toBeLessThanOrEqual(4); expect(t4.a).toBeGreaterThanOrEqual(11); expect(t5.kind).toBe("share");
     const f1 = feast.create(option(1),ctx(seed)).tasks[0], f5 = feast.create(option(5),ctx(seed)).tasks[0];
     expect(f1.d).toBeLessThanOrEqual(4); expect(f5.d).toBe(100);
     const a4 = algebra.create(option(4),ctx(seed)).tasks[0], a5 = algebra.create(option(5),ctx(seed)).tasks[0];
     expect(a4.extra).toBe(1); expect(a5.extra).toBeGreaterThan(1);
     expect(feast.create(option(4),ctx(seed)).tasks.map(t => t.kind)).toContain("subtract");
-    expect(algebra.create(option(5),ctx(seed)).tasks.map(t => t.kind)).toContain("inequality");
+    expect(algebra.create(option(5),ctx(seed)).tasks.map(t => t.kind)).toContain("substitution");
     expect(new Set(feast.create(option(5),ctx(seed)).tasks.map(t => t.extra))).toEqual(new Set([0,1,2]));
   });
   it("each generator produces solvable arithmetic over many seeds", () => {

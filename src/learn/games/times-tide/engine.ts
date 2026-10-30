@@ -11,14 +11,18 @@ export const taskValid = (t: TideTask, level: number) => {
   if (level === 1) return t.kind === "groups" && [2, 5, 10].includes(t.b) && t.a <= 4 && t.total === t.a * t.b && t.remainder === 0;
   if (level === 2) return t.kind === "array" && t.a <= 5 && t.b <= 6 && t.total === t.a * t.b && t.remainder === 0;
   if (level === 3) return t.kind === "table" && t.a <= 10 && t.b <= 10 && t.total === t.a * t.b && t.remainder === 0;
-  if (level === 4) return t.kind === "share" && t.a <= 8 && t.b <= 8 && t.total === t.a * t.b + t.remainder && t.remainder < t.b;
-  return t.kind === "area" && t.a >= 11 && t.a <= 29 && t.b >= 2 && t.b <= 5 && t.total === t.a * t.b && t.remainder === 0;
+  // Levels 4 and 5 exchanged places in 2.3. Keep both task shapes valid so an
+  // in-progress family round from the earlier build resumes without data loss.
+  if (level === 4 || level === 5) return t.kind === "share"
+    ? t.a <= 8 && t.b <= 8 && t.total === t.a * t.b + t.remainder && t.remainder < t.b
+    : t.kind === "area" && t.a >= 11 && t.a <= 29 && t.b >= 2 && t.b <= 5 && t.total === t.a * t.b && t.remainder === 0;
+  return false;
 };
 export const makeTask = (level: number, rng: () => number): TideTask => {
   if (level === 1) { const a = pick(rng, 2, 4), b = [2, 5, 10][pick(rng, 0, 2)]; return { kind: "groups", a, b, total: a * b, remainder: 0 }; }
   if (level === 2) { const a = pick(rng, 2, 5), b = pick(rng, 2, 6); return { kind: "array", a, b, total: a * b, remainder: 0 }; }
   if (level === 3) { const a = pick(rng, 3, 10), b = pick(rng, 3, 10); return { kind: "table", a, b, total: a * b, remainder: 0 }; }
-  if (level === 4) { const a = pick(rng, 2, 8), b = pick(rng, 2, 8), remainder = pick(rng, 0, b - 1); return { kind: "share", a, b, total: a * b + remainder, remainder }; }
+  if (level === 5) { const a = pick(rng, 2, 8), b = pick(rng, 2, 8), remainder = pick(rng, 0, b - 1); return { kind: "share", a, b, total: a * b + remainder, remainder }; }
   const a = [11,12,13,14,15,16,17,18,19,21,22,23,24,25,26,27,28,29][pick(rng, 0, 17)], b = pick(rng, 2, 5); return { kind: "area", a, b, total: a * b, remainder: 0 };
 };
 export const solved = (s: TideState) => { const t = s.tasks[s.index]; if (!t) return false; if (t.kind === "share") return s.marks.length === t.b + 1 && s.marks.slice(0, t.b).every(v => v === t.a) && s.marks[t.b] === t.remainder; if (t.kind === "area") return s.marks.length === 2 && s.marks[0] === Math.floor(t.a / 10) * 10 * t.b && s.marks[1] === (t.a % 10) * t.b && Number(s.answer) === t.total && s.answer.length > 0; return s.marks.length === t.a && s.marks.every(v => v === t.b) && Number(s.answer) === t.total; };
@@ -30,9 +34,9 @@ export const engine: LearnEngine<TideState> = {
   levelNames: [
     { name: "Fish in equal pools", description: "Make equal groups of 2, 5 or 10 fish." },
     { name: "Shell arrays", description: "Build rows and connect them to repeated addition." },
-    { name: "Times-table reefs", description: "Build arrays up to 10 by 10 and find their products." },
-    { name: "Fair fish shares", description: "Divide fish equally and place the remainder." },
+    { name: "Skip-count reef", description: "Count by groups across a reef array." },
     { name: "Area-model treasure", description: "Split a two-digit multiplication into tens and ones." },
+    { name: "Fair fish shares", description: "Solve division and factor puzzles with leftovers." },
   ],
   skills: { "num.equal-groups": "Equal groups", "num.arrays": "Arrays and repeated addition", "num.tables": "Times tables", "num.division": "Division with remainders", "num.area": "Area model multiplication" },
   create: (o, c) => { const level = levelOf(o); const tasks: TideTask[] = []; const seen = new Set<string>(); let tries = 0; while (tasks.length < 5 && tries++ < 100) { const t = makeTask(level, c.rng); const key = `${t.a}:${t.b}:${t.remainder}`; if (!seen.has(key)) { tasks.push(t); seen.add(key); } } return { version: 1, level, tasks, index: 0, marks: [], answer: "", helped: false }; },

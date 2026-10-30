@@ -1,31 +1,91 @@
 import type { LearnEngine } from "../../types";
 import { levelOf } from "../../levelOptions";
-export type AlgebraTask = { kind: "pattern" | "depth" | "expression" | "balance" | "two-step" | "inequality"; a: number; b: number; extra: number; answer: number };
-export type AlgebraState = { version: 1; level: number; tasks: AlgebraTask[]; index: number; value: number; offset: number; divided: boolean; helped: boolean };
+
+export type AlgebraKind = "steps" | "depth" | "missing" | "balance" | "two-step" | "substitution" | "pattern" | "expression" | "inequality";
+export type AlgebraTask = { kind: AlgebraKind; a: number; b: number; extra: number; answer: number };
+export type AlgebraState = { version: 1 | 2; level: number; tasks: AlgebraTask[]; index: number; value: number; offset: number; divided: boolean; helped: boolean };
 const pick = (r: () => number, lo: number, hi: number) => lo + Math.floor(r() * (hi - lo + 1));
-export const makeTask = (l: number, r: () => number, index = 0): AlgebraTask => {
-  if (l === 1) { const a = pick(r, 1, 12), b = pick(r, 2, 5); return { kind: "pattern", a, b, extra: 3, answer: a + b * 3 }; }
-  if (l === 2) { const a = pick(r, -9, 4), b = pick(r, -6, 6) || 2; return { kind: "depth", a, b, extra: 0, answer: a + b }; }
-  if (l === 3) { const a = pick(r, 1, 8), b = pick(r, 2, 6), extra = pick(r, 2, 4); return { kind: "expression", a, b, extra, answer: a + b * extra }; }
-  if (l === 4) { const a = pick(r, 2, 9), answer = pick(r, 2, 15); return { kind: "balance", a, b: answer + a, extra: 1, answer }; }
-  const a = pick(r, 2, 9), answer = pick(r, 2, 14), extra = pick(r, 2, 3); return { kind: index % 2 ? "inequality" : "two-step", a, b: answer * extra + a, extra, answer };
-};
-export const taskValid = (t: AlgebraTask, l: number) => !!t && typeof t === "object" && Object.keys(t).sort().join() === "a,answer,b,extra,kind" && [t.a, t.b, t.extra, t.answer].every(Number.isInteger) && (l === 1 ? t.kind === "pattern" && t.a >= 1 && t.a <= 12 && t.b >= 2 && t.b <= 5 && t.extra === 3 && t.answer === t.a + 3 * t.b : l === 2 ? t.kind === "depth" && t.a >= -9 && t.a <= 4 && t.b >= -6 && t.b <= 6 && t.b !== 0 && t.extra === 0 && t.answer === t.a + t.b : l === 3 ? t.kind === "expression" && t.a >= 1 && t.a <= 8 && t.b >= 2 && t.b <= 6 && t.extra >= 2 && t.extra <= 4 && t.answer === t.a + t.b * t.extra : l === 4 ? t.kind === "balance" && t.a >= 2 && t.a <= 9 && t.extra === 1 && t.answer >= 2 && t.answer <= 15 && t.b === t.answer + t.a : ["two-step", "inequality"].includes(t.kind) && t.a >= 2 && t.a <= 9 && t.extra >= 2 && t.extra <= 3 && t.answer >= 2 && t.answer <= 14 && t.b === t.answer * t.extra + t.a);
-export const solved = (s: AlgebraState) => { const t = s.tasks[s.index]; if (!t) return false; if (t.kind === "balance" || t.kind === "two-step" || t.kind === "inequality") return s.offset === -t.a && (t.kind === "balance" || s.divided) && s.value === t.answer; return s.value === t.answer; };
+
+/** Each row is an equation with an integer answer; no round depends on random retries for solvability. */
+export function makeTask(level: number, rng: () => number, index = 0): AlgebraTask {
+  if (level === 1) {
+    const a = pick(rng, 3, 11), b = index % 2 ? -pick(rng, 1, Math.min(5, a)) : pick(rng, 1, Math.min(5, 15 - a));
+    return { kind: "steps", a, b, extra: 0, answer: a + b };
+  }
+  if (level === 2) {
+    const a = pick(rng, -8, 5), b = index % 2 ? -pick(rng, 1, 5) : pick(rng, 1, 5);
+    return { kind: "depth", a, b, extra: 0, answer: a + b };
+  }
+  if (level === 3) {
+    const answer = pick(rng, -10, 8), b = pick(rng, 2, 6);
+    return { kind: "missing", a: answer + b, b, extra: 0, answer };
+  }
+  if (level === 4) {
+    const a = pick(rng, 2, 8), answer = pick(rng, 2, 13);
+    return { kind: "balance", a, b: answer + a, extra: 1, answer };
+  }
+  if (index % 2) {
+    const a = pick(rng, 1, 3), b = pick(rng, 2, 3), extra = pick(rng, 2, 4);
+    return { kind: "substitution", a, b, extra, answer: a + b * extra };
+  }
+  const a = pick(rng, 2, 7), extra = pick(rng, 2, 3), answer = pick(rng, 2, 12);
+  return { kind: "two-step", a, b: answer * extra + a, extra, answer };
+}
+
+const shape = (task: AlgebraTask) => task && typeof task === "object" && Object.keys(task).sort().join() === "a,answer,b,extra,kind" && [task.a, task.b, task.extra, task.answer].every(Number.isInteger);
+export function taskValid(task: AlgebraTask, level: number, version: 1 | 2 = 2): boolean {
+  if (!shape(task)) return false;
+  const t = task;
+  if (version === 1) {
+    if (level === 1) return t.kind === "pattern" && t.a >= 1 && t.a <= 12 && t.b >= 2 && t.b <= 5 && t.extra === 3 && t.answer === t.a + 3 * t.b;
+    if (level === 2) return t.kind === "depth" && t.a >= -9 && t.a <= 4 && t.b >= -6 && t.b <= 6 && t.b !== 0 && t.extra === 0 && t.answer === t.a + t.b;
+    if (level === 3) return t.kind === "expression" && t.a >= 1 && t.a <= 8 && t.b >= 2 && t.b <= 6 && t.extra >= 2 && t.extra <= 4 && t.answer === t.a + t.b * t.extra;
+    if (level === 4) return t.kind === "balance" && t.a >= 2 && t.a <= 9 && t.extra === 1 && t.answer >= 2 && t.answer <= 15 && t.b === t.answer + t.a;
+    return ["two-step", "inequality"].includes(t.kind) && t.a >= 2 && t.a <= 9 && t.extra >= 2 && t.extra <= 3 && t.answer >= 2 && t.answer <= 14 && t.b === t.answer * t.extra + t.a;
+  }
+  if (level === 1) return t.kind === "steps" && t.a >= 3 && t.a <= 11 && t.b !== 0 && Math.abs(t.b) <= 5 && t.extra === 0 && t.answer === t.a + t.b && t.answer >= 0 && t.answer <= 15;
+  if (level === 2) return t.kind === "depth" && t.a >= -8 && t.a <= 5 && t.b !== 0 && Math.abs(t.b) <= 5 && t.extra === 0 && t.answer === t.a + t.b && t.answer >= -13 && t.answer <= 10;
+  if (level === 3) return t.kind === "missing" && t.b >= 2 && t.b <= 6 && t.extra === 0 && t.answer === t.a - t.b && t.answer >= -10 && t.answer <= 8;
+  if (level === 4) return t.kind === "balance" && t.a >= 2 && t.a <= 8 && t.b === t.a + t.answer && t.answer >= 2 && t.answer <= 13 && t.extra === 1;
+  return t.kind === "substitution" ? t.a >= 1 && t.a <= 3 && t.b >= 2 && t.b <= 3 && t.extra >= 2 && t.extra <= 4 && t.answer === t.a + t.b * t.extra : t.kind === "two-step" && t.a >= 2 && t.a <= 7 && t.extra >= 2 && t.extra <= 3 && t.answer >= 2 && t.answer <= 12 && t.b === t.answer * t.extra + t.a;
+}
+export const initialValue = (task?: AlgebraTask) => task && (task.kind === "steps" || task.kind === "depth") ? task.a : 0;
+export function solved(state: AlgebraState): boolean {
+  const task = state.tasks[state.index];
+  if (!task) return false;
+  if (task.kind === "balance") return state.offset === -task.a && state.value === task.answer;
+  if (task.kind === "two-step" || task.kind === "inequality") return state.offset === -task.a && state.divided && state.value === task.answer;
+  return state.value === task.answer;
+}
+
 export const engine: LearnEngine<AlgebraState> = {
   id: "treasure-algebra", name: "Treasure Algebra", island: "numbers", ages: [9, 14], ownLevels: true,
-  tagline: "Balance the map to unlock treasure.", description: "Move on a sea-level line, discover patterns, and balance equations to open a chest.",
-  help: "Use the big step controls to move on the number line. For equations, remove the same amount from both scale pans, then divide both sides when needed. Keep both sides balanced to find the hidden number. Hint is always available.",
+  tagline: "Dive, balance, and open the chest.", description: "Travel above and below sea level, then balance treasure equations.",
+  help: "Move the diver with the step buttons. For a balance, remove the same weight from both pans, then divide both sides if needed. Hint explains one move without ending the round.",
   color: "#AC5C26", surface: "#FFF0CF", modes: ["solo", "together"],
   levelNames: [
-    { name: "Map patterns", description: "Follow repeated steps to find the missing map marker." },
-    { name: "Below sea level", description: "Walk positive and negative steps on a sea-level line." },
-    { name: "Expression caves", description: "Read a variable box and multiply before adding." },
-    { name: "Balance the chest", description: "Do the same operation to both scale pans." },
-    { name: "Two-step treasure", description: "Undo two-step equations and simple inequality boundaries." },
+    { name: "Sunny steps", description: "Add and subtract positive steps on a line." },
+    { name: "Below sea level", description: "Cross zero into negative depths." },
+    { name: "Missing treasure", description: "Find the number hiding in a box." },
+    { name: "Balance the chest", description: "Remove the same weight from both pans." },
+    { name: "Two-step treasure", description: "Undo two-step equations and substitute a value." },
   ],
-  skills: { "num.patterns": "Number patterns", "num.integers": "Positive and negative numbers", "num.expressions": "Order of operations", "num.balance": "Balancing equations", "num.two-step": "Two-step equations and inequalities" },
-  create: (o, c) => { const level = levelOf(o), tasks: AlgebraTask[] = [], seen = new Set<string>(); let tries = 0; while (tasks.length < 5 && tries++ < 100) { const t = makeTask(level, c.rng, tasks.length), key = `${t.kind}:${t.a}:${t.b}:${t.extra}`; if (!seen.has(key)) { seen.add(key); tasks.push(t); } } return { version: 1, level, tasks, index: 0, value: 0, offset: 0, divided: false, helped: false }; },
-  validate: (x, o): x is AlgebraState => { if (!x || typeof x !== "object" || Object.keys(x).sort().join() !== "divided,helped,index,level,offset,tasks,value,version") return false; const s = x as AlgebraState; const t = s.tasks?.[s.index]; return s.version === 1 && s.level === levelOf(o) && Array.isArray(s.tasks) && s.tasks.length === 5 && s.tasks.every(v => taskValid(v, s.level)) && Number.isInteger(s.index) && s.index >= 0 && s.index <= 5 && Number.isInteger(s.value) && s.value >= -20 && s.value <= 100 && Number.isInteger(s.offset) && s.offset >= -20 && s.offset <= 20 && typeof s.divided === "boolean" && typeof s.helped === "boolean" && (s.index < 5 || (s.value === 0 && s.offset === 0 && !s.divided)) && (!t || t.kind === "balance" || t.kind === "two-step" || t.kind === "inequality" || (s.offset === 0 && !s.divided)); },
-  outcome: s => s.index === 5 ? "done" : null,
+  skills: { "num.patterns": "Number steps", "num.integers": "Positive and negative numbers", "num.expressions": "Missing numbers", "num.balance": "Balancing equations", "num.two-step": "Two-step equations and substitution" },
+  create: (options, context) => {
+    const level = levelOf(options), tasks: AlgebraTask[] = [], seen = new Set<string>();
+    let attempts = 0;
+    while (tasks.length < 5 && attempts++ < 200) {
+      const task = makeTask(level, context.rng, tasks.length), key = JSON.stringify(task);
+      if (!seen.has(key)) { seen.add(key); tasks.push(task); }
+    }
+    return { version: 2, level, tasks, index: 0, value: initialValue(tasks[0]), offset: 0, divided: false, helped: false };
+  },
+  validate: (value, options): value is AlgebraState => {
+    if (!value || typeof value !== "object" || Object.keys(value).sort().join() !== "divided,helped,index,level,offset,tasks,value,version") return false;
+    const s = value as AlgebraState;
+    if ((s.version !== 1 && s.version !== 2) || s.level !== levelOf(options) || !Array.isArray(s.tasks) || s.tasks.length !== 5 || !s.tasks.every(t => taskValid(t, s.level, s.version)) || !Number.isInteger(s.index) || s.index < 0 || s.index > 5) return false;
+    const t = s.tasks[s.index];
+    return Number.isInteger(s.value) && s.value >= -20 && s.value <= 100 && Number.isInteger(s.offset) && s.offset >= -20 && s.offset <= 20 && typeof s.divided === "boolean" && typeof s.helped === "boolean" && (s.index < 5 || (s.value === 0 && s.offset === 0 && !s.divided)) && (!t || ["balance", "two-step", "inequality"].includes(t.kind) || (s.offset === 0 && !s.divided));
+  },
+  outcome: state => state.index === 5 ? "done" : null,
 };
