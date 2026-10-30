@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import { Button, Copy, Heading } from "../../../components/ui";
 import { GameIcon } from "../../../components/GameIcon";
 import type { BoardProps } from "../../types";
 import { complete, executionPlan, ready, rendered, taskAt, type LabState } from "./engine";
+
+/** Code reads left-aligned in a real monospace face; "monospace" is not an iOS family. */
+const code = { fontFamily: Platform.select({ ios: "Menlo", default: "monospace" }), fontSize: 14, fontWeight: "600" as const, textAlign: "left" as const, alignSelf: "stretch" as const };
 const skill = (level: number) => level === 1 ? "think.code-sequence" : level === 2 ? "think.code-variables" : level === 3 ? "think.code-functions" : "think.code-debug";
 export function Board({ session, update, practice, assistance, cheer, coach, active, width }: BoardProps<LabState>) {
   const s = session.state, done = complete(s), t = done ? null : taskAt(s.level, s.seed, s.index);
@@ -43,12 +46,12 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
       <View style={{ flexDirection: width >= 650 ? "row" : "column", gap: 7 }}>
         <View style={{ flex: width >= 650 ? 1 : undefined, minWidth: 0, backgroundColor: "#F0EFFF", padding: 9, borderRadius: 16, gap: 7 }}>
           <Copy style={{ fontWeight: "700" }}>BLOCKS · tap in order</Copy>
-          {t.bank.map((line, i) => !s.order.includes(i) && <Button key={i} quiet onPress={() => add(i)} disabled={!active || s.ran} label={`Add block ${line}`} numberOfLines={1} textStyle={{ fontFamily: "monospace", fontSize: 14, fontWeight: "600" }}>{line.startsWith("    ") ? `  │ ${line.trimStart().replace("□", s.token || "□")}` : line.replace("□", s.token || "□")}</Button>)}
+          {t.bank.map((line, i) => !s.order.includes(i) && <Button key={i} quiet onPress={() => add(i)} disabled={!active || s.ran} label={`Add block ${line}`} numberOfLines={1} textStyle={code} style={{ alignItems: "stretch" }}>{line.startsWith("    ") ? `  │ ${line.trimStart().replace("□", s.token || "□")}` : line.replace("□", s.token || "□")}</Button>)}
           {s.order.length === t.lines.length && <Copy>All blocks placed. Check the code → Tap a line to change it.</Copy>}
         </View>
         <View style={{ flex: width >= 650 ? 1 : undefined, minWidth: 0, backgroundColor: "#23334D", padding: 9, borderRadius: 16, gap: 7 }}>
           <Copy style={{ color: "#F5D886", fontWeight: "700" }}>{s.ran ? "PYTHON-LIKE CODE · verified" : "PYTHON-LIKE CODE · draft"}</Copy>
-          {rendered(s).map((line, i) => <Button key={i} compact quiet onPress={() => remove(i)} disabled={!active || s.ran} label={`Remove line ${i + 1}, ${line}${traceLine === i ? trace?.failure === i ? ", bug here" : ", running now" : ""}`} numberOfLines={1} textStyle={{ fontFamily: "monospace", fontSize: 14, fontWeight: "600" }} style={{ alignSelf: "stretch", backgroundColor: traceLine === i ? trace?.failure === i ? "#F9C4B7" : "#F5D886" : "#E8EEF5", minHeight: 48, justifyContent: "flex-start" }}>{`${i + 1}  ${line.startsWith("    ") ? `  │ ${line.trimStart()}` : line}`}</Button>)}
+          {rendered(s).map((line, i) => <Button key={i} compact quiet onPress={() => remove(i)} disabled={!active || s.ran} label={`Remove line ${i + 1}, ${line}${traceLine === i ? trace?.failure === i ? ", bug here" : ", running now" : ""}`} numberOfLines={1} textStyle={code} style={{ alignSelf: "stretch", alignItems: "stretch", backgroundColor: traceLine === i ? trace?.failure === i ? "#F9C4B7" : "#F5D886" : "#E8EEF5", minHeight: 48, justifyContent: "flex-start" }}>{`${i + 1}  ${line.startsWith("    ") ? `  │ ${line.trimStart()}` : line}`}</Button>)}
           {!s.order.length && <Copy style={{ color: "#FFF" }}>Your code appears here as you add blocks.</Copy>}
         </View>
       </View>
