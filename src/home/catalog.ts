@@ -1,6 +1,6 @@
 import { moreCatalog, type MoreItemSpec } from "./catalogMore";
 import { stickerIds, type StickerId } from "../arcade/progress";
-export type Track = "Math" | "Reading" | "Science & Thinking" | "CHamoru words" | "Arcade" | "Classic" | "Island";
+export type Track = "Math" | "Reading" | "Science & Thinking" | "Coding" | "CHamoru words" | "Arcade" | "Classic" | "Island";
 export type ItemSpec = {
   name: string;
   footprint: readonly [number, number];
@@ -45,6 +45,8 @@ export const catalog = {
     rotations: [0] as const,
     mirror: false,
   },
+  "robot-buddy": { ...furniture("Robot buddy", [1,1], "Coding", "Beep says hello"), badge: "coding-2" as const },
+  "computer-desk": { ...furniture("Computer desk", [2,1], "Coding", "A little code lights up"), badge: "coding-4" as const },
   surfboard: { ...furniture("Lagoon surfboard", [1, 1], "Classic"), badge: "classic-2" as const },
 } satisfies Record<string, ItemSpec>;
 export type FurnitureId = keyof typeof catalog;
@@ -59,7 +61,7 @@ export function itemSpec(id: ItemId): ItemSpec {
 }
 export const wallThemes = ["cream", "lagoon", "night", "peach", "math-lab", "library", "night-sky", "arcade-neon"] as const;
 export const floorThemes = ["sand", "honey", "seafoam", "rose", "island-breeze", "game-room"] as const;
-export const badgeIds = ["math", "reading", "science", "chamoru", "arcade", "classic"] as const;
+export const badgeIds = ["math", "reading", "science", "coding", "chamoru", "arcade", "classic"] as const;
 export type BadgeId = (typeof badgeIds)[number];
 
 /** Reuse the existing arcade sticker ownership; no grants or copies. */

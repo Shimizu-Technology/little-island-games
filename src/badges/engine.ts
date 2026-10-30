@@ -3,15 +3,15 @@ import type { Person } from '../personalization/model';
 import { wardrobeRewards } from '../islander/rewards';
 import { catalog, themeRewards } from '../home/catalog';
 import { allLevelIds, arcadeIds, validLevelId, type LevelId } from '../arcade/types';
-export const trackLabels = { math: 'Math', reading: 'Reading', science: 'Science & Thinking', chamoru: 'CHamoru words', arcade: 'Arcade', classic: 'Classic & Board' };
-export const tracks = ['math', 'reading', 'science', 'chamoru', 'arcade', 'classic'] as const;
+export const trackLabels = { math: 'Math', reading: 'Reading', science: 'Science & Thinking', coding: 'Coding', chamoru: 'CHamoru words', arcade: 'Arcade', classic: 'Classic & Board' };
+export const tracks = ['math', 'reading', 'science', 'coding', 'chamoru', 'arcade', 'classic'] as const;
 export type Track = typeof tracks[number];
-export const countThresholds: Record<Track, readonly [number,number,number,number]> = { math:[1,3,6,10], reading:[1,3,6,10], science:[1,3,6,10], chamoru:[1,3,4,7], arcade:[1,8,0,40], classic:[1,3,6,10] };
+export const countThresholds: Record<Track, readonly [number,number,number,number]> = { math:[1,3,6,10], reading:[1,3,6,10], science:[1,3,6,10], coding:[1,3,6,10], chamoru:[1,3,4,7], arcade:[1,8,0,40], classic:[1,3,6,10] };
 export type BadgeId = `${Track}-${1|2|3|4}`;
 export type Completion = { kind: 'learning'; game: string; level: number; helped: boolean } | { kind: 'arcade'; game: string; level: string } | { kind: 'classic'; game: string; won?: boolean; opponentStrength?: string } | { kind: 'explore'; topic: string };
-const names = { math: ['Counter','Builder','Problem Solver','Math Star'], reading: ['First Words','Page Turner','Storyteller','Bookworm'], science: ['Curious','Explorer','Scientist','Inventor'], chamoru: ['Håfa Adai','Neighbor','Storykeeper','Island Voice'], arcade: ['Player One','Level Hopper','World Opener','Legend'], classic: ['Game Night','Good Sport','Strategist','Champion'] };
-const colors = { math:'#BD7041', reading:'#6674A9', science:'#348579', chamoru:'#AC627B', arcade:'#357EAA', classic:'#8B7445' };
-export const learningTrack: Record<string, Track> = { 'shell-math':'math','number-hop':'math','reef-race':'math','island-market':'math','quick-practice':'math','sound-boat':'reading','turtle-tales':'reading','which-one':'reading','tide-pool':'science','float-sink':'science','crab-commands':'science','hafa-adai':'chamoru','chamoru-memory':'chamoru','beep-bot':'science','turtle-draw':'science','tide-logic':'science','code-lab':'science','pattern-path':'science','shape-shift':'science','logic-lagoon':'science','weather-watch':'science','food-web':'science','space-station':'science','times-tide':'math','fraction-feast':'math','treasure-algebra':'math','letter-lagoon':'reading','word-workshop':'reading','story-studio':'reading' };
+const names = { math: ['Counter','Builder','Problem Solver','Math Star'], reading: ['First Words','Page Turner','Storyteller','Bookworm'], science: ['Curious','Explorer','Scientist','Inventor'], coding: ['First Steps','Looper','Debugger','Coder'], chamoru: ['Håfa Adai','Neighbor','Storykeeper','Island Voice'], arcade: ['Player One','Level Hopper','World Opener','Legend'], classic: ['Game Night','Good Sport','Strategist','Champion'] };
+const colors = { math:'#BD7041', reading:'#6674A9', science:'#348579', coding:'#526EAF', chamoru:'#AC627B', arcade:'#357EAA', classic:'#8B7445' };
+export const learningTrack: Record<string, Track> = { 'shell-math':'math','number-hop':'math','reef-race':'math','island-market':'math','quick-practice':'math','sound-boat':'reading','turtle-tales':'reading','which-one':'reading','tide-pool':'science','float-sink':'science','crab-commands':'coding','hafa-adai':'chamoru','chamoru-memory':'chamoru','beep-bot':'coding','turtle-draw':'coding','tide-logic':'coding','code-lab':'coding','pattern-path':'science','shape-shift':'science','logic-lagoon':'science','weather-watch':'science','food-web':'science','space-station':'science','times-tide':'math','fraction-feast':'math','treasure-algebra':'math','letter-lagoon':'reading','word-workshop':'reading','story-studio':'reading' };
 export const classicGames = ['tic-tac-toe','word-rescue','memory','checkers','maze','numbers','coconut-drop','fishing-nets','hidden-canoes','shell-pits','reef-sweep','go-fish','crazy-eights','racer','word-imposter','island-mystery'];
 export const arcadeTrack = (game: string): Track => ['shell-song','rail-parade'].includes(game) ? 'reading' : 'math';
 /** Catalog v1 is retained for old saves. Bound every durable accomplishment by real content. */
@@ -30,7 +30,7 @@ export const grantCatalog = () => grantsFor(tracks.flatMap(track => [1,2,3,4].ma
 export function badgeInfo(id: BadgeId) {
   const [track, tierText] = id.split('-') as [Track,string], tier = Number(tierText);
   const counts = countThresholds[track];
-  const subject = { math: 'math games or levels', reading: 'reading games or levels', science: 'science games, levels or Explore topics', chamoru: 'CHamoru games or levels', arcade: '', classic: '' }[track];
+  const subject = { math: 'math games or levels', reading: 'reading games or levels', science: 'science games, levels or Explore topics', coding: 'coding games or levels', chamoru: 'CHamoru games or levels', arcade: '', classic: '' }[track];
   const rule = track === 'arcade'
     ? ['Clear any arcade level.', 'Clear 8 different arcade levels.', 'Open World 3 in any arcade game or clear every level of one world.', 'Clear a World 6 arcade level or 40 different arcade levels.'][tier - 1]
     : track === 'classic'

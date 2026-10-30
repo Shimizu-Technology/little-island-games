@@ -12,6 +12,8 @@ import * as hafaAdai from "./games/hafa-adai/view";
 import * as shellMath from "./games/shell-math/view";
 import * as numberHop from "./games/number-hop/view";
 import * as quickPractice from "./games/quick-practice/view";
+import * as beepBot from "./games/beep-bot/view";
+import * as turtleDraw from "./games/turtle-draw/view";
 import { stubView } from "./stubView";
 
 import * as letterLagoon from "./games/letter-lagoon/view";
@@ -32,8 +34,8 @@ export const views: Record<LearnId, LearnView> = {
   "shell-math": shellMath as LearnView,
   "number-hop": numberHop as LearnView,
   "quick-practice": quickPractice as LearnView,
-  "beep-bot": stubView,
-  "turtle-draw": stubView,
+  "beep-bot": beepBot as LearnView,
+  "turtle-draw": turtleDraw as LearnView,
   "tide-logic": stubView,
   "code-lab": stubView,
   "pattern-path": stubView,

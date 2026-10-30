@@ -214,5 +214,5 @@ describe('constant-size seating and depth',()=>{
   const s=starterHome();expect(characterDrop(room(s),0,400,650)).toEqual({type:'character',slot:0,anchor:'beach-middle'});
   for(const anchor of ['beach-left','beach-middle','beach-right'] as const){const next=homeReducer(s,{type:'character',slot:0,anchor}).state;expect(validHome(next)).toBe(true);expect(characterPoint(room(next),room(next).characters[0]).y).toBe(650);}
  });
- it('retains original catalog earning metadata',()=>{expect(furnitureIds).toHaveLength(22);for(const id of furnitureIds)expect(itemSpec(id)).toEqual(catalog[id]);});
+ it('retains original catalog earning metadata',()=>{expect(furnitureIds).toHaveLength(24);for(const id of furnitureIds)expect(itemSpec(id)).toEqual(catalog[id]);});
 });
