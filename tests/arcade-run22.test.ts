@@ -29,3 +29,28 @@ describe('Lagoon harbor presentation',()=>{
   const modified=JSON.stringify(s);runPoses(s);expect(JSON.stringify(s)).toBe(modified);expect(validRun(JSON.parse(before))).toBe(true);
  });
 });
+
+it('reveals real upcoming trails and hazards before the old zero-depth cutoff without changing rules',()=>{
+ const s=createRun(runLevels[0],42),before=JSON.stringify(s);
+ const p=runPoses(s);
+ expect(s.rows[1].z).toBeLessThan(0);
+ expect(p[13+1]).not.toMatchObject({opacity:0});
+ expect(p[3].opacity).toBeGreaterThan(0);
+ expect(p[3].painterDepth).toBeLessThan(p[1].painterDepth!);
+ expect(JSON.stringify(s)).toBe(before);
+});
+it('uses the existing landing lifetime for dust and removes it for Reduce Motion',()=>{
+ const s={...createRun(runLevels[0],42),landing:.13};
+ expect(runPoses(s)[55].opacity).toBe(1);
+ expect(runPoses({...s,landing:0})[55].opacity).toBe(0);
+ expect(runPoses(s,true)[55].opacity).toBe(0);
+});
+
+it('keeps the enlarged hero inside both outer lanes with optical camera follow',()=>{
+ for(const lane of [0,1,2]){
+  const s={...createRun(runLevels[0],42),lane,poseLane:lane},p=runPoses(s);
+  const centre=195+(p[0].x+40-195)*1.7+p[CAMERA_SLOT].x;
+  expect(centre-40*1.7).toBeGreaterThan(0);
+  expect(centre+40*1.7).toBeLessThan(390);
+ }
+});

@@ -119,10 +119,10 @@ describe("Fruit Bat Flight physics and hearts",()=>{
 });
 describe("Lagoon camera, actions, patterns and lives",()=>{
   it("projects horizon, road edges, lane lines and sprite feet with one camera",()=>{
-    for(const lane of [0,1,2])expect(projectTrack(lane,0)).toEqual({x:195,y:660*.32,scale:0});
+    for(const lane of [0,1,2])expect(projectTrack(lane,-1.2)).toEqual({x:195,y:660*.44,scale:0});
     expect(projectTrack(0,1).x).toBeCloseTo(195-390*.46*2/3);
     expect(projectTrack(2,1).y).toBeCloseTo(660*.84);
-    for(const z of [0,.1,.4,.8,1,1.15])for(const lane of [0,1,2]) {
+    for(const z of [-1.2,-.8,-.4,0,.1,.4,.8,1,1.15])for(const lane of [0,1,2]) {
       const p=projectTrack(lane,z),a=trackSprite(lane,z,72,72);
       expect(a.y+36+36*a.scale).toBeCloseTo(p.y);expect(p.x).toBeGreaterThanOrEqual(roadEdge(z,false).x);expect(p.x).toBeLessThanOrEqual(roadEdge(z,true).x);
     }
