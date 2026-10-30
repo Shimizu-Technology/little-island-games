@@ -4,6 +4,41 @@ import { complete, correct, engine, executionPlan, rendered, taskAt } from "../.
 import type { LearnOptions } from "../../src/learn/types";
 const options = (level: number): LearnOptions => ({ mode: "solo", pace: level === 1 ? "easy" : level === 2 ? "medium" : "hard", ...(level === 4 ? { stage: "stretch" } : level === 5 ? { stage: "deep" } : {}) });
 describe("Code Lab", () => {
+  it("keeps every solved program syntactically structured", () => {
+    for (let level = 1; level <= 5; level++) for (let index = 0; index < 4; index++) {
+      const t = taskAt(level, 0, index);
+      const lines = t.lines.map((line) => line.replace("□", t.answer));
+      const defs = new Map<string, number>();
+      lines.forEach((line, i) => {
+        expect(line).not.toContain("□");
+        expect(line).not.toContain("'");
+        const stack: string[] = [];
+        let quoted = false;
+        for (const char of line) {
+          if (char === '"') quoted = !quoted;
+          else if (!quoted && "([".includes(char)) stack.push(char);
+          else if (!quoted && ")]".includes(char)) expect(stack.pop()).toBe(char === ")" ? "(" : "[");
+        }
+        expect(quoted).toBe(false);
+        expect(stack).toEqual([]);
+        const indent = line.match(/^ */)?.[0].length ?? 0;
+        expect(indent === 0 || indent === 4).toBe(true);
+        if (i > 0) expect(indent === 4).toBe(lines[i - 1].endsWith(":"));
+        if (line.trimStart().startsWith("def ")) {
+          expect(indent).toBe(0);
+          expect(line).toMatch(/^def \w+\(\w+\):$/);
+          defs.set(line.match(/^def (\w+)/)![1], i);
+        }
+        if (/^(for |if |else:)/.test(line)) expect(line).toMatch(/:$/);
+      });
+      for (const [name, definition] of defs) {
+        const calls = lines.flatMap((line, i) => line.startsWith(`${name}(`) ? [i] : []);
+        expect(calls.length).toBeGreaterThan(0);
+        expect(calls.every((i) => i > definition + 1)).toBe(true);
+      }
+      if (lines.some((line) => line.startsWith("for "))) expect(lines.find((line) => line.startsWith("for "))).toMatch(/^for i in range\(\d+\):$/);
+    }
+  });
   for (let level = 1; level <= 5; level++) it(`plays and validates level ${level}`, () => {
     const o = options(level), s = engine.create(o, { skills: {}, rng: () => .3, starter: 0, today: 0 });
     expect(engine.validate(JSON.parse(JSON.stringify(s)), o)).toBe(true);

@@ -12,6 +12,7 @@ import {
   Switch,
   View,
   ViewStyle,
+  TextStyle,
   Platform,
   useWindowDimensions,
 } from "react-native";
@@ -118,6 +119,8 @@ export function Button({
   label,
   icon,
   style,
+  textStyle,
+  numberOfLines,
 }: {
   children: React.ReactNode;
   onPress: () => void;
@@ -128,6 +131,8 @@ export function Button({
   label?: string;
   icon?: IconName;
   style?: ViewStyle;
+  textStyle?: TextStyle;
+  numberOfLines?: number;
 }) {
   const [pressed, setPressed] = useState(false);
   const textColor = selected ? C.paper : quiet ? C.ink : "#FFF";
@@ -152,7 +157,7 @@ export function Button({
       ]}
     >
       {icon && <Icon name={icon} size={compact ? 18 : 20} color={textColor} />}
-      <Text style={[styles.buttonText, { color: textColor }]}>{children}</Text>
+      <Text numberOfLines={numberOfLines} style={[styles.buttonText, { color: textColor }, textStyle]}>{children}</Text>
     </PressableScale>
   );
 }

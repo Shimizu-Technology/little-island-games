@@ -40,15 +40,15 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
     {t && <>
       <Copy>{t.goal}</Copy>
       <View style={{ backgroundColor: "#E9E6DC", borderRadius: 18, padding: width > 650 ? 12 : 7, alignItems: "center", flexDirection: width > 650 ? "column" : "row", justifyContent: "center", gap: 8 }}><Robot steps={s.ran ? t.robot : robotSteps} size={width > 650 ? 140 : 82}/><View style={{ flex: width > 650 ? undefined : 1, gap: 4 }}><Copy style={{ fontWeight: "700" }}>{s.ran ? t.output : trace ? `Running step ${trace.step + 1} of ${trace.plan.length}` : "Robot is waiting for Run"}</Copy>{s.level === 1 && <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>{t.lines.map((line, i) => <Copy key={i} style={{ fontSize: 13, color: "#355C58", backgroundColor: "#FFF9E9", paddingHorizontal: 5, paddingVertical: 2, borderRadius: 6 }}>{line.startsWith("print") ? `💬 ${line.match(/"([^"]+)"/)?.[1] ?? "say"}` : "👣 step"}</Copy>)}</View>}</View></View>
-      <View style={{ flexDirection: "row", gap: 7 }}>
-        <View style={{ flex: 1, minWidth: 0, backgroundColor: "#F0EFFF", padding: 9, borderRadius: 16, gap: 7 }}>
+      <View style={{ flexDirection: width >= 650 ? "row" : "column", gap: 7 }}>
+        <View style={{ flex: width >= 650 ? 1 : undefined, minWidth: 0, backgroundColor: "#F0EFFF", padding: 9, borderRadius: 16, gap: 7 }}>
           <Copy style={{ fontWeight: "700" }}>BLOCKS · tap in order</Copy>
-          {t.bank.map((line, i) => !s.order.includes(i) && <Button key={i} quiet onPress={() => add(i)} disabled={!active || s.ran} label={`Add block ${line}`}>{line.replace("□", s.token || "□")}</Button>)}
+          {t.bank.map((line, i) => !s.order.includes(i) && <Button key={i} quiet onPress={() => add(i)} disabled={!active || s.ran} label={`Add block ${line}`} numberOfLines={1} textStyle={{ fontFamily: "monospace", fontSize: 14, fontWeight: "600" }}>{line.startsWith("    ") ? `  │ ${line.trimStart().replace("□", s.token || "□")}` : line.replace("□", s.token || "□")}</Button>)}
           {s.order.length === t.lines.length && <Copy>All blocks placed. Check the code → Tap a line to change it.</Copy>}
         </View>
-        <View style={{ flex: 1, minWidth: 0, backgroundColor: "#23334D", padding: 9, borderRadius: 16, gap: 7 }}>
-          <Copy style={{ color: "#F5D886", fontWeight: "700" }}>PYTHON-LIKE CODE</Copy>
-          {rendered(s).map((line, i) => <Button key={i} compact quiet onPress={() => remove(i)} disabled={!active || s.ran} label={`Remove line ${i + 1}, ${line}${traceLine === i ? trace?.failure === i ? ", bug here" : ", running now" : ""}`} style={{ alignSelf: "stretch", backgroundColor: traceLine === i ? trace?.failure === i ? "#F9C4B7" : "#F5D886" : "#E8EEF5", minHeight: 48 }}>{`${i + 1}  ${line}`}</Button>)}
+        <View style={{ flex: width >= 650 ? 1 : undefined, minWidth: 0, backgroundColor: "#23334D", padding: 9, borderRadius: 16, gap: 7 }}>
+          <Copy style={{ color: "#F5D886", fontWeight: "700" }}>{s.ran ? "PYTHON-LIKE CODE · verified" : "PYTHON-LIKE CODE · draft"}</Copy>
+          {rendered(s).map((line, i) => <Button key={i} compact quiet onPress={() => remove(i)} disabled={!active || s.ran} label={`Remove line ${i + 1}, ${line}${traceLine === i ? trace?.failure === i ? ", bug here" : ", running now" : ""}`} numberOfLines={1} textStyle={{ fontFamily: "monospace", fontSize: 14, fontWeight: "600" }} style={{ alignSelf: "stretch", backgroundColor: traceLine === i ? trace?.failure === i ? "#F9C4B7" : "#F5D886" : "#E8EEF5", minHeight: 48, justifyContent: "flex-start" }}>{`${i + 1}  ${line.startsWith("    ") ? `  │ ${line.trimStart()}` : line}`}</Button>)}
           {!s.order.length && <Copy style={{ color: "#FFF" }}>Your code appears here as you add blocks.</Copy>}
         </View>
       </View>

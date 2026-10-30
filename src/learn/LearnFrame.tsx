@@ -240,6 +240,9 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const island = id === "hafa-adai" ? "reading" : engine.island;
   const theme = id === "hafa-adai" ? { sky: "#FFE4D9", land: "#F5BCA6", accent: "#A44E3A", ink: "#65382D" } : subjectTheme[island];
   const cheerText = companionEvent === "correct" ? "You got it!" : companionEvent === "incorrect" ? "Try again!" : companionEvent === "entry" ? "Let's play!" : null;
+  const modeText = saved ? (engine.modeLabels?.[saved.options.mode] ?? modeLabel[saved.options.mode]) +
+    (!saved.options.stage && engine.mathControls ? ` · ${saved.options.mathOperation === "mixed" ? "Add & subtract" : saved.options.mathOperation === "subtract" ? "Subtract" : "Add"}` : "") +
+    (saved.options.language && engine.languages && engine.languages.length > 1 ? ` · ${languageLabel[saved.options.language]}` : "") : "";
 
   const header = <View style={{ gap: 4 }}>
         <LearnerChip compact/>
@@ -251,9 +254,10 @@ export function LearnFrame({ id }: { id: LearnId }) {
         />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <view.Art size={width < 600 ? 36 : 48} />
-          <Heading style={{ fontSize: width < 600 ? 19 : 25, flex: 1, color: theme.ink }}>{levelTitle(id, levelOf(saved?.options ?? options))}</Heading>
+          <Heading style={{ fontSize: width < 600 ? 19 : 25, flex: 1, minWidth: 0, color: theme.ink }}>{levelTitle(id, levelOf(saved?.options ?? options))}</Heading>
           {width < 600 && saved && !finished && <PhoneLearningCompanion event={companionEvent} active={boardActive}/>}
         </View>
+        {width < 600 && saved && <Copy style={{ fontSize: 12, color: theme.ink, backgroundColor: theme.sky, alignSelf: "flex-start", paddingHorizontal: 4 }}>{modeText}</Copy>}
         {width < 600 && cheerText && saved && !finished && <View accessibilityLiveRegion="polite" style={{ alignSelf: "flex-end", backgroundColor: C.paper, borderRadius: 16, paddingHorizontal: 12, paddingVertical: 5 }}><Copy style={{ color: theme.ink, fontWeight: "900" }}>{cheerText}</Copy></View>}
 
   </View>;
@@ -264,7 +268,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       {width < 600 && <View style={{ paddingHorizontal: 16 }}>{header}</View>}
       <ScrollView key={saved?.id ?? "setup"} ref={scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
         {width >= 600 && header}
-        {saved && (
+        {width >= 600 && saved && (
           <Copy style={{ fontSize: 12, marginBottom: 8 }}>
             {(engine.modeLabels?.[saved.options.mode] ?? modeLabel[saved.options.mode]) +
               (!saved.options.stage && engine.mathControls ? ` · ${saved.options.mathOperation === "mixed" ? "Add & subtract" : saved.options.mathOperation === "subtract" ? "Subtract" : "Add"}` : "") +

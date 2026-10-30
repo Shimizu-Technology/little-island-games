@@ -12,8 +12,8 @@ const templates: Record<number, Omit<LabTask, "bank">[]> = {
   2: [
     { goal: "Set score to zero, then add one.", lines: ["score = 0", "score = score + 1", "print(score)"], slot: [], answer: "", output: "1", robot: 0 },
     { goal: "Start with two points, then add one.", lines: ["score = 2", "score = score + 1", "print(score)"], slot: [], answer: "", output: "3", robot: 0 },
-    { goal: "Repeat a step three times.", lines: ["for step in range(3):", "    robot.step()", "print(step_count)"], slot: [], answer: "", output: "3 steps", robot: 3 },
-    { goal: "Fill the loop count to make four steps.", lines: ["for step in range(□):", "    robot.step()", "print(step_count)"], slot: ["2", "3", "4"], answer: "4", output: "4 steps", robot: 4 },
+    { goal: "Repeat a step three times. Read the counter.", lines: ["for i in range(3):", "    robot.step()", "print(i + 1)"], slot: [], answer: "", output: "3", robot: 3 },
+    { goal: "Fill the loop count to make four steps.", lines: ["for i in range(□):", "    robot.step()", "print(i + 1)"], slot: ["2", "3", "4"], answer: "4", output: "4", robot: 4 },
   ],
   3: [
     { goal: "Define a jump, then call it.", lines: ["def jump(times):", "    robot.jump(times)", "jump(2)"], slot: [], answer: "", output: "2 jumps", robot: 2 },
@@ -30,7 +30,7 @@ const templates: Record<number, Omit<LabTask, "bank">[]> = {
   5: [
     { goal: "Print Fizz when the number is divisible by three.", lines: ["number = 6", "if number % 3 == □:", '    print("Fizz")'], slot: ["0", "1", "2"], answer: "0", output: "Fizz", robot: 0 },
     { goal: "Add the three treasure numbers.", lines: ["treasure = [1, 2, 3]", "total = sum(treasure)", "print(total)"], slot: [], answer: "", output: "6", robot: 0 },
-    { goal: "Draw a pattern of four steps.", lines: ["for mark in range(□):", "    robot.step()", 'print("Pattern")'], slot: ["2", "3", "4"], answer: "4", output: "4 steps · Pattern", robot: 4 },
+    { goal: "Draw a pattern of four steps.", lines: ["for i in range(□):", "    robot.step()", 'print("Pattern")'], slot: ["2", "3", "4"], answer: "4", output: "4 steps · Pattern", robot: 4 },
     { goal: "Use a function to cross three stones.", lines: ["def cross(steps):", "    robot.step(steps)", "cross(□)"], slot: ["2", "3", "4"], answer: "3", output: "3 steps", robot: 3 },
   ],
 };
@@ -61,7 +61,7 @@ export function rendered(s: LabState): string[] { const t = taskAt(s.level, s.se
 export const engine: LearnEngine<LabState> = {
   id: "code-lab", name: "Code Lab", island: "coding", ages: [9, 14], ownLevels: true,
   tagline: "Build blocks. Read real code.", description: "Arrange code blocks, fill tiny blanks and run a robot program.",
-  help: "Tap blocks in the order the robot should use them. The panel beside them shows the same program as Python-like text. Tap a token to fill a square blank. Run to see the output. Tap a placed line to return it to the bank. Help shows the next line; there is no timer.",
+  help: "Tap blocks in the order the robot should use them. The code panel shows the same program as Python-like text. Tap a token to fill a square blank. Run to see the output. Tap a placed line to return it to the bank. Help shows the next line; there is no timer.",
   color: "#5C5BA0", surface: "#EFEEFA", modes: ["solo", "together"],
   skills: { "think.code-sequence": "Putting code in order", "think.code-variables": "Changing variables and loops", "think.code-functions": "Calling functions", "think.code-debug": "Finding and fixing bugs" },
   levelNames: [
