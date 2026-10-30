@@ -1,9 +1,10 @@
 import React from "react";
-import Svg, { Circle, Ellipse, G, Path, Rect, Defs, Filter, FeColorMatrix, Pattern, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, Ellipse, G, Path, Rect, Defs, Filter, FeColorMatrix, Pattern, ClipPath, Text as SvgText } from "react-native-svg";
 import type { HomeState } from "../model";
 import { type TintId, type RoomId } from "../catalogMore";
 import { material, shade } from "./Tint";
 import { wallColors, floorColors } from "./Room";
+import { ShellWallDetails, ShellFloorDetails } from "./ShellDetails";
 const ink = "#385451", wood = "#D99E6C", pale = "#FFF1D3", leaf = "#79B090";
 const star = "M75 30L87 55L115 59L94 79L99 106L75 93L51 106L56 79L35 59L63 55Z";
 export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, active = false, muted = false, tint = "original" }: {
@@ -73,12 +74,14 @@ export function RoomShellArt({ room, theme }: { room: Exclude<RoomId, "home">; t
     <Ellipse cx={402} cy={528} rx={368} ry={22} fill="#D6D7BB" opacity={.5}/>
     <Path d="M34 82L145 28L758 71V330L145 291L34 374Z" fill={["math-lab", "library", "night-sky", "arcade-neon"].includes(theme.wallpaper) ? `url(#${theme.wallpaper})` : wallColors[theme.wallpaper]} stroke={ink} strokeWidth={3}/>
     <Path d="M34 82L145 28V291L34 374Z" fill="#D0C9AB" opacity={.55}/>
-    {room==='kitchen' ? <G stroke="#9EBEB1" strokeWidth={2} opacity={.5}>{[0,1,2,3].map(n=><Path key={n} d={`M146 ${195+n*28}L755 ${235+n*28}`}/>)}{[0,1,2,3,4,5,6,7,8,9].map(n=><Path key={n} d={`M${152+n*60} ${195+n*4}v90`}/>)}</G> : <G stroke={room==='beach'?'#A18C5E':'#B98A60'} strokeWidth={room==='beach'?6:2} opacity={.5}>{Array.from({length:18},(_,n)=><Path key={n} d={`M${154+n*34} ${31+n*2.4}V${290+n*2.2}`}/>)}</G>}
+    {room==='treehouse' && !['math-lab','library','night-sky','arcade-neon'].includes(theme.wallpaper) && <Path d="M34 82L145 28L758 71V330L145 291L34 374Z" fill="#B78959" opacity={.48}/>}
+    {room==='beach' && <G stroke="#B59C70" opacity={.45}>{Array.from({length:23},(_,n)=><G key={n}><Path d={`M${154+n*26} ${31+n*1.8}V${289+n*1.7}`} strokeWidth={5}/><Path d={`M${155+n*26} 92v6m0 55v6m0 55v6m0 55v6`} stroke="#806F50" strokeWidth={5}/></G>)}{[0,1,2,3,4].map(n=><Path key={n} d={`M148 ${78+n*48}L753 ${117+n*48}`} strokeWidth={2}/>)}</G>}
     <Path d="M34 374L145 291L758 330L779 508L162 535Z" fill={["island-breeze", "game-room"].includes(theme.floor) ? `url(#${theme.floor})` : floorColors[theme.floor]} stroke={ink} strokeWidth={3}/>
-    <G stroke="#AE885F" strokeWidth={1.5} opacity={.4}>{[0,1,2,3,4,5].map(n=><Path key={n} d={`M${53+n*20} ${359+n*29}L${762+n*3} ${351+n*31}`}/>)}{[0,1,2,3,4,5,6,7,8].map(n=><Path key={n} d={`M${151+n*68} ${294+n*4}L${170+n*67} ${535-n*3}`}/>)}</G>
+    <Defs><ClipPath id="shell-floor"><Path d="M34 374L145 291L758 330L779 508L162 535Z"/></ClipPath></Defs>
+    <G clipPath="url(#shell-floor)"><ShellFloorDetails room={room} patterned={["island-breeze","game-room"].includes(theme.floor)}/></G>
+    <G stroke="#AE885F" strokeWidth={1.5} opacity={room==='treehouse'? .12 : .4}>{[0,1,2,3,4,5].map(n=><Path key={n} d={`M${53+n*20} ${359+n*29}L${762+n*3} ${351+n*31}`}/>)}{[0,1,2,3,4,5,6,7,8].map(n=><Path key={n} d={`M${151+n*68} ${294+n*4}L${170+n*67} ${535-n*3}`}/>)}</G>
     <Path d="M146 279L755 318M42 363L144 283" fill="none" stroke={pale} strokeWidth={13}/><Path d="M145 290L759 330" stroke="#9E9275" strokeWidth={3}/>
-    <G stroke={ink} strokeWidth={3}><Rect x={196} y={88} width={248} height={162} rx={room==='treehouse'?34:10} fill={wood}/><Rect x={207} y={99} width={226} height={140} rx={room==='treehouse'?27:4} fill="#BCE2DC"/><Circle cx={385} cy={127} r={20} fill="#FFF0B4"/><Path d="M209 171Q320 151 431 181V237H209Z" fill="#71BDBB"/><Path d="M209 217Q313 199 431 217V237H209Z" fill="#F1DBA6"/>{room==='treehouse' ? <><Path d="M212 185Q284 114 429 121" fill="none" stroke="#A77C56" strokeWidth={13}/>{[236,285,340,398].map(x=><Path key={x} d={`M${x} 139q-32-49-51-13q10 32 51 13q6-42 33-33q18 29-33 33`} fill={leaf}/>)}</> : <Path d="M320 99V238" stroke={pale} strokeWidth={8}/>}</G>
-    {room==='beach' ? <><Path d="M567 94L736 106V324L567 313Z" fill="#BCE2DC" stroke={wood} strokeWidth={12}/><Path d="M574 203Q652 187 730 211V316L574 308Z" fill="#71BDBB"/><Path d="M574 289Q654 271 730 296V318L574 310Z" fill="#F1DBA6"/>{[0,1,2,3,4,5].map(n=><Ellipse key={n} cx={220+n*87} cy={479+n%2*24} rx={21} ry={4} fill="#F8E9C7" opacity={.6}/>)}</> : room==='treehouse' ? <><Path d="M658 72Q641 158 662 245" stroke="#B8905F" strokeWidth={9} fill="none"/><Path d="M647 211L677 208M650 228L678 225M651 245L678 243" stroke={pale} strokeWidth={3}/><Path d="M38 103Q88 124 145 65" fill="none" stroke={wood} strokeWidth={20}/></> : <><Path d="M525 118H684V218H525Z" fill={pale} stroke={wood} strokeWidth={6}/><Path d="M540 143H668M540 174H668M566 120V215M621 120V215" stroke="#A8C9BF" strokeWidth={3}/><Path d="M524 224H687" stroke={wood} strokeWidth={9}/></>}
+    <ShellWallDetails room={room}/>
     <Path d="M22 80L143 6L775 56L758 76L145 40L34 98Z" fill={room==='beach'?'#C8AB71':'#C68061'} stroke={ink} strokeWidth={3}/><Path d="M145 6V40M154 20L752 61" stroke="#F4C99A" strokeWidth={5}/>
   </Svg>;
 }
