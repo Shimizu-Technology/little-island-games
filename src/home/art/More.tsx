@@ -26,8 +26,10 @@ export function MoreItemArt({ id, size = 120, mirrored = false, rotation = 0, ac
       art = <><Path d="M17 23L26 113M134 17L125 113M15 114H39M114 114H139" stroke={wood} strokeWidth={7}/><G transform={active ? 'translate(0 -6)' : undefined}><Path d="M20 37Q73 108 131 31Q100 127 40 89Z" fill={color}/><Path d="M30 52Q76 107 121 47M43 69L50 93M62 81L68 100M85 80L86 99M105 66L105 85" fill="none" stroke={light} strokeWidth={4}/></G></>;
       break;
     case 'floor-cushion': art = <>{cushion}<Path d="M40 79Q75 88 111 73" fill="none" stroke={dark}/><Circle cx={77} cy={79} r={3} fill={dark}/></>; break;
-    case 'rocking-chair': case 'stool':
-      art = <>{legs}{id === 'rocking-chair' && <><Path d="M39 76L34 23L94 18L105 71Z" fill={color}/><Path d="M48 30L53 65M67 28L72 63M86 26L91 61" stroke={light} strokeWidth={5}/><Path d="M15 107Q72 133 137 102" fill="none" stroke={wood} strokeWidth={7}/></>}<Path d="M25 77L105 67L130 84L48 99Z" fill={color}/><Path d="M28 84L49 104L130 91V84L48 97Z" fill={dark}/></>; break;
+    case 'rocking-chair':
+      art = <>{legs}<Path d="M39 76L34 23L94 18L105 71Z" fill={color}/><Path d="M48 30L53 65M67 28L72 63M86 26L91 61" stroke={light} strokeWidth={5}/><Path d="M15 107Q72 133 137 102" fill="none" stroke={wood} strokeWidth={7}/><Path d="M25 77L105 67L130 84L48 99Z" fill={color}/><Path d="M28 84L49 104L130 91V84L48 97Z" fill={dark}/></>; break;
+    case 'stool':
+      art = <><Path d="M55 78L48 113M94 78L101 111M51 106L99 103" stroke={wood} strokeWidth={7} fill="none"/><Ellipse cx={75} cy={75} rx={33} ry={13} fill={color}/><Path d="M42 75Q75 91 108 75V84Q75 100 42 84Z" fill={dark}/><Ellipse cx={75} cy={73} rx={30} ry={9} fill={light}/></>; break;
     case 'desk': case 'side-table': case 'coffee-table': case 'kitchen-table':
       art = <G transform={id==='side-table'?'translate(20 -5) scale(.73 1)':id==='coffee-table'?'translate(0 32) scale(1 .73)':undefined}>{legs}{id==='kitchen-table' && <Path d="M49 86L48 120M106 66L108 103" stroke={wood} strokeWidth={7}/>}<Path d="M19 64L111 53L136 73L43 89L19 77Z" fill={wood}/><Path d="M19 64L111 53L136 73L43 82Z" fill={color}/><Path d="M29 65L106 57" stroke={light} strokeWidth={3}/>{id === 'desk' && <><Path d="M86 84V104L125 98V77Z" fill={wood}/><Path d="M97 92L111 90" stroke={ink}/></>}</G>; break;
     case 'dresser': case 'bookcase': case 'fridge':

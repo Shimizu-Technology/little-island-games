@@ -5,6 +5,14 @@ import { resolvePose, type Point, type Pose, type Side, type View } from './pose
 import { anchorsFor } from './wardrobe';
 import { RewardArt } from './Rewards';
 const ink = '#493946';
+function AlohaPrint({ sy, trim, compact = false }: { sy: number; trim: string; compact?: boolean }) {
+  const flowers = compact ? [[34, sy + 14], [45, sy + 17], [39, sy + 27]] : [[33, sy + 12], [46, sy + 14], [39, sy + 23]];
+  const s = compact ? .8 : 1;
+  return <G data-aloha-print="hibiscus" strokeWidth={0}>
+    <Path fill={trim} d={flowers.map(([x,y]) => `M${x} ${y-4*s}Q${x+3*s} ${y-5*s} ${x+3*s} ${y-2*s}Q${x+6*s} ${y-s} ${x+4*s} ${y+2*s}Q${x+3*s} ${y+4*s} ${x} ${y+3*s}Q${x-3*s} ${y+5*s} ${x-4*s} ${y+2*s}Q${x-6*s} ${y-s} ${x-3*s} ${y-2*s}Q${x-2*s} ${y-5*s} ${x} ${y-4*s}Z`).join(' ')} />
+    <Path fill="#5A9D79" d={flowers.map(([x,y]) => `M${x-5*s} ${y+4*s}Q${x-2*s} ${y+3*s} ${x-s} ${y+6*s}Q${x-4*s} ${y+7*s} ${x-5*s} ${y+4*s}ZM${x+3*s} ${y+4*s}Q${x+6*s} ${y+3*s} ${x+6*s} ${y+6*s}Q${x+3*s} ${y+7*s} ${x+3*s} ${y+4*s}Z`).join(' ')} />
+  </G>;
+}
 /** A closed, unoutlined fabric cap covers the top of a continuous limb. */
 export function boneShape(a: Point, b: Point, r: number, end = r): string {
   const dx = b[0] - a[0], dy = b[1] - a[1], length = Math.max(.001, Math.hypot(dx, dy)), nx = -dy / length, ny = dx / length, ux = dx / length, uy = dy / length;
@@ -78,7 +86,7 @@ export function IslanderShape({ pose, look: input = defaultLook }: { pose: Pose;
         {front && look.outfit === 'hoodie' && <><Path d={`M34 ${hip - 15}Q40 ${hip - 19} 46 ${hip - 15}L48 ${hip - 8}H32Z`} fill={colors.secondary} strokeWidth={1}/><Path d={`M36 ${sy + 3}v8M44 ${sy + 3}v8`} stroke={colors.trim} strokeWidth={1.2}/></>}
         {look.outfit === 'sundress' && <G fill={colors.trim} strokeWidth={0}>{[31, 43, 51].map((x, i) => <Circle key={x} cx={x} cy={sy + 15 + i * 8} r={2.3}/>)}</G>}
         {['polo', 'polo-shorts'].includes(top) && front && <G><Path d={`M32 ${sy}l8 8 8-8`} fill="none" stroke={colors.trim} strokeWidth={2}/><Path d={`M40 ${sy+8}v9`} stroke={colors.trim} strokeWidth={1}/><Circle cx={40} cy={sy+13} r={1} fill={colors.trim} strokeWidth={0}/></G>}
-        {['aloha', 'aloha-shorts'].includes(top) && <G fill={colors.trim} strokeWidth={0}><Path d={`M32 ${sy}l8 8 8-8 -8 4Z`}/>{[-1,1].map(s=><Path key={s} d={`M${40+s*10} ${sy+12}q${s*5} -4 ${s*5} 2q-2 4-5 4Z`}/>)}</G>}
+        {['aloha', 'aloha-shorts'].includes(top) && <AlohaPrint sy={sy} trim={colors.trim} />}
         {['jersey-top','jersey-dress'].includes(top) && <Path d={`M35 ${sy+11}h10l-5 14M28 ${hip-8}h24`} fill="none" stroke={colors.trim} strokeWidth={2.2}/>}
         {['board-shorts-set','board-shorts'].includes(bottom) && <Path d={`M28 ${hip+3}h24`} fill="none" stroke={colors.trim} strokeWidth={2.2}/>}
         {top === 'board-shorts-set' && <Path d={`M31 ${sy+13}q5-5 9 0q5 5 9 0`} fill="none" stroke={colors.trim} strokeWidth={2}/>}
@@ -90,6 +98,7 @@ export function IslanderShape({ pose, look: input = defaultLook }: { pose: Pose;
         {look.outfit === 'space-suit' && <G><Path d={`M31 ${sy+9}h18v15H31Z`} fill={colors.secondary}/><Circle cx={40} cy={sy+16} r={4} fill={colors.trim}/><Path d={`M27 ${hip-4}h26`} stroke={colors.trim} strokeWidth={2}/></G>}
         {bottom === 'cargo-shorts' && <G fill={colors.primary}><Path d={`M26 ${hip+2}h8v5h-8ZM46 ${hip+2}h8v5h-8Z`}/></G>}
       </>}
+      {compact && ['aloha', 'aloha-shorts'].includes(top) && <AlohaPrint sy={sy} trim={colors.trim} compact />}
       <RewardArt look={look} pose={pose} layer="clothing"/>{compact && look.accessory === 'backpack' && backpack}
     </G>
     <G data-layer="front-limbs">{limb(frontArm, true)}</G>

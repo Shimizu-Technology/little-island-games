@@ -47,7 +47,7 @@ import {
 } from "./model";
 import { LockBadge, LockRule } from '../personalization/LockBadge';
 import { trackLabels, badgeInfo } from '../badges/engine';
-import { characterDepth, characterDrop, characterPoint, itemPoint, itemSize, spotFromPoint, stackSpot, surfacePoint, characterSize, seatAnchor } from "./geometry";
+import { characterDepth, characterDrop, characterPoint, itemPoint, itemSize, spotFromPoint, stackSpot, stackActionLabel, surfacePoint, characterSize, seatAnchor } from "./geometry";
 import { useHomeStore } from "./useHomeStore";
 import { Drag, FloorGrid, Footprint, emptyPreview, TrayGhost, type DragConfig } from "./Drag";
 
@@ -161,8 +161,9 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   const [draggedItem, setDraggedItem] = useState<ItemId>();
   const [collapsed, setCollapsed] = useState(initialItem ? false : height < 500);
   const [menu, setMenu] = useState(false);
+  const [stackMenu, setStackMenu] = useState(false);
   const [confirm, setConfirm] = useState(false);
-  useSheetPresence(confirm);
+  useSheetPresence(confirm || stackMenu);
   const [hint, setHint] = useState(true);
   const [notice, setNotice] = useState(initialItem ? `Ready: ${initialItem.replaceAll("-", " ")}. Choose a clear spot or room style.` : "");
   const owner = app.save.learning?.active ?? "family", person = personFor(app.save);
@@ -182,14 +183,16 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   const sequence = useRef(0);
   const preview = useSharedValue(emptyPreview);
   const decorating = mode === "decorate";
-  const drawerHeight = decorating ? (collapsed ? 48 : 190) : 0;
-  const editingItem = decorating && !!selected;
-  const toolbarHeight = editingItem && height >= width ? 162 : 0;
-  const availableHeight = height - inset.top - inset.bottom - drawerHeight - toolbarHeight;
+  const sideDrawer = decorating && !collapsed && width > height && height < 500;
+  const doubleTray = width < 500 || sideDrawer;
+  const drawerHeight = decorating ? (sideDrawer ? 0 : collapsed ? 48 : doubleTray ? 254 : 154) : 0;
+  const drawerWidth = sideDrawer ? Math.min(330, width * .42) : 0;
+  const headerHeight = 120;
+  const availableHeight = height - inset.top - inset.bottom - drawerHeight - headerHeight;
   // Scene keeps the full width. Landscape uses almost all available height; no control column.
-  const beach = availableHeight >= width * .925 || room.characters.some(c => c.anchor.startsWith("beach-"));
+  const beach = !decorating && (availableHeight >= width * .925 || room.characters.some(c => c.anchor.startsWith("beach-")));
   const sceneUnits = beach ? 740 : 560;
-  const sceneWidth = Math.min(width - (editingItem && width > height ? 278 : 0), availableHeight * 800 / sceneUnits);
+  const sceneWidth = Math.max(0, Math.min(width - drawerWidth, availableHeight * 800 / sceneUnits));
   const sceneHeight = sceneWidth * sceneUnits / 800;
   const scale = sceneWidth / 800;
   const target = room.instances.find((i) => i.id === selected);
@@ -219,7 +222,11 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   };
   const putOn = (i: Instance, parentId: string) => {
     const parent = room.instances.find(p => p.id === parentId);
-    if (parent) dispatch({ type: "move", id: i.id, x: parent.x, y: parent.y, on: parent.id }, true);
+    if (parent) {
+      const p = surfacePoint(parent), spot = stackSpot(room.instances.filter(other => other.id === parentId || other.on === parentId || other.id === i.id), i, p.x, p.y);
+      if (spot) dispatch({ type: "move", id: i.id, ...spot }, true);
+      else feedback("That surface is full.");
+    }
   };
   const choose = (id: ItemId) => {
     setDraggedItem(undefined);
@@ -277,6 +284,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
   };
   const switchMode = (next: "play" | "decorate") => {
     setMode(next);
+    if (next === "decorate") setCollapsed(height < 500);
     setSelected(undefined);
     setPlacing(undefined);
     setNotice("");
@@ -339,7 +347,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                       name,
                       label: name.replace("-", " "),
                     })),
-                    ...(decorSpec(i.item).small ? room.instances.filter(parent => !parent.on && decorSpec(parent.item).surface).map(parent => ({ name: `stack:${parent.id}`, label: `Put on ${itemSpec(parent.item).name}` })) : []),
+                    ...(decorSpec(i.item).small ? room.instances.filter(parent => !parent.on && decorSpec(parent.item).surface).map(parent => ({ name: `stack:${parent.id}`, label: stackActionLabel(parent, room.instances) })) : []),
                   ]
                 : [{ name: "activate", label: "Play" }]
             }
@@ -558,6 +566,10 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     }),
   ].sort((a, b) => a.depth - b.depth);
   const toolbarPoint = target ? itemPoint(target, room.instances) : undefined;
+  const roomTop = inset.top + headerHeight + (availableHeight - sceneHeight) / 2;
+  const toolbarTop = sideDrawer ? inset.top + headerHeight + 52 : toolbarPoint && height >= width
+    ? (roomTop + toolbarPoint.y * scale > roomTop + sceneHeight / 2 ? inset.top + headerHeight + 24 : roomTop + sceneHeight + 4)
+    : inset.top + headerHeight + 4;
 
   const thumbnail = (id: ItemId, label: string) => {
     const owned = owns(id, ownership),
@@ -593,8 +605,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         onTap={() => choose(id)}
         onDrop={(x, y) => place(id, x - origin.x, y - origin.y)}
         style={{
-          width: 120,
-          minHeight: 100,
+          width: 88,
+          height: 94,
           alignItems: "center",
           borderWidth: placing === id ? 2 : 0,
           borderColor: ink,
@@ -603,7 +615,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         }}
       >
         <View pointerEvents="none" style={{ opacity: owned ? 1 : 0.3 }}>
-          <DecorArt item={id} size={64} muted={!owned} />
+          <DecorArt item={id} size={62} muted={!owned} />
         </View>
         <Text numberOfLines={1} style={styles.thumbLabel}>
           {label}
@@ -615,6 +627,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     );
   };
   const trayItems = [...furnitureIds, ...Object.keys(moreCatalog)].filter(id => tab === "Furniture" || decorSpec(id).category === tab);
+  const trayColumns = Array.from({ length: Math.ceil(trayItems.length / (doubleTray ? 2 : 1)) }, (_, index) => trayItems.slice(index * (doubleTray ? 2 : 1), (index + 1) * (doubleTray ? 2 : 1)));
   return (
     <View style={styles.page}>
       <View pointerEvents="none" style={StyleSheet.absoluteFill}><SkyArt /></View>
@@ -626,9 +639,9 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           flex: 1,
           alignItems: "center",
           justifyContent: "center",
-          paddingTop: inset.top,
-          paddingBottom: inset.bottom + drawerHeight + toolbarHeight,
-          paddingRight: editingItem && width > height ? 278 : 0,
+          paddingTop: inset.top + headerHeight,
+          paddingBottom: inset.bottom + drawerHeight,
+          paddingRight: drawerWidth,
         }}
       >
         <View ref={canvas} onLayout={measure} testID="home-scene" style={{ width: sceneWidth, height: sceneHeight }}>
@@ -701,9 +714,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                 { flexDirection: "column", alignItems: "center" },
                 {
                   position: "absolute",
-                  left: width > height ? undefined : Math.max(8, (width - 266) / 2),
-                  right: width > height ? 8 : undefined,
-                  bottom: drawerHeight + inset.bottom + 8,
+                  left: sideDrawer ? width - drawerWidth + 8 : Math.max(8, Math.min(width - 266, toolbarPoint.x * scale - 125)),
+                  top: toolbarTop,
                   zIndex: 20,
                 },
               ]}
@@ -733,13 +745,17 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               {decorSpec(target.item).tintable && <ScrollView horizontal style={{ width: 250, maxHeight: 48 }} showsHorizontalScrollIndicator={false}>
                 {tintIds.map(tint => <Pressable key={tint} accessibilityRole="button" accessibilityLabel={`${tint} colour`} accessibilityState={{ selected: (target.tint ?? "original") === tint }} onPress={() => dispatch({ type: "tint", id: target.id, tint })} style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}><View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: tintPalette[tint] ?? "#E9D7B8", borderColor: ink, borderWidth: (target.tint ?? "original") === tint ? 3 : 1 }}>{tint === "original" && <Text style={{textAlign:"center",color:ink}}>↺</Text>}</View></Pressable>)}
               </ScrollView>}
-              {decorSpec(target.item).small && <ScrollView horizontal style={{ width: 250, maxHeight: 48 }}>{room.instances.filter(i => !i.on && decorSpec(i.item).surface).map(parent => <Button key={parent.id} label={`Put on ${itemSpec(parent.item).name}`} onPress={() => putOn(target, parent.id)} />)}</ScrollView>}
+              {decorSpec(target.item).small && <Button label="Put on…" onPress={() => setStackMenu(!stackMenu)} />}
             </View>
           )}
-      <View style={{ position: "absolute", top: inset.top + 94, alignSelf: "center", maxWidth: width - 16, zIndex: 10, backgroundColor: "#FFF8E9", borderRadius: 18 }}>
-        <ScrollView horizontal contentContainerStyle={{ gap: 2 }} showsHorizontalScrollIndicator={false}>
+      <View style={{ position: "absolute", top: inset.top + 62, left: 8, right: 8, zIndex: 10, flexDirection: "row", gap: 6 }}>
+        <ScrollView horizontal style={{ flex: 1, backgroundColor: "#FFF8E9", borderRadius: 18 }} contentContainerStyle={{ gap: 2 }} showsHorizontalScrollIndicator={false}>
           {roomIds.map(id => <Button key={id} label={roomNames[id]} selected={id === store.state.current} onPress={() => { dispatch({ type: "room", room: id }); setSelected(undefined); setPlacing(undefined); setDraggedItem(undefined); preview.value = emptyPreview; }} />)}
         </ScrollView>
+        {decorating && <View style={{ flexDirection: "row", gap: 4 }}>
+          <Button label="Undo" icon="undo" iconOnly disabled={!store.canUndo} onPress={() => { dispatch({ type: "undo" }); setSelected(undefined); }} />
+          <Button label="Redo" icon="redo" iconOnly disabled={!store.canRedo} onPress={() => { dispatch({ type: "redo" }); setSelected(undefined); }} />
+        </View>}
       </View>
       <View
         pointerEvents="box-none"
@@ -757,32 +773,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         </View>
         <Button label="More" icon="more" iconOnly onPress={() => setMenu(!menu)} />
       </View>
-      {!!saveStatus && <View pointerEvents="box-none" style={{ position: "absolute", top: inset.top + 64, left: inset.left + 8, right: inset.right + 8, zIndex: 12 }}>{saveStatus}</View>}
-      {decorating && (
-        <View style={[styles.history, { top: inset.top + 62, right: inset.right + 8 }]}>
-          <Button
-            label="Undo"
-            icon="undo"
-            iconOnly
-            disabled={!store.canUndo}
-            onPress={() => {
-              dispatch({ type: "undo" });
-              setSelected(undefined);
-            }}
-          />
-          <Button
-            label="Redo"
-            icon="redo"
-            iconOnly
-            disabled={!store.canRedo}
-            onPress={() => {
-              dispatch({ type: "redo" });
-              setSelected(undefined);
-            }}
-          />
-        </View>
-      )}
-      {(hint || (notice && !notice.startsWith("Earn"))) && (
+      {!!saveStatus && <View pointerEvents="box-none" style={{ position: "absolute", top: inset.top + 112, left: 8, zIndex: 12, maxWidth: width - 16, transform: [{ scale: .75 }], transformOrigin: "left top" }}>{saveStatus}</View>}
+      {((!decorating && hint) || (notice && !notice.startsWith("Earn"))) && (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Dismiss hint"
@@ -794,8 +786,8 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
           style={[
             styles.hint,
             width > height
-              ? { left: 8, top: inset.top + (saveStatus ? 94 : 72), maxWidth: Math.max(120, (width - sceneWidth) / 2 - 20) }
-              : { bottom: drawerHeight + inset.bottom + 12 },
+              ? { left: 8, top: inset.top + headerHeight + 4, maxWidth: Math.max(120, (width - sceneWidth) / 2 - 20) }
+              : { top: inset.top + headerHeight + 4 },
           ]}
         >
           <Text style={styles.hintText}>{notice || "Drag a friend. Tap a little home surprise."}</Text>
@@ -816,7 +808,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
         </View>
       )}
       {decorating && (
-        <View style={[styles.drawer, { height: drawerHeight + inset.bottom, paddingBottom: inset.bottom }]}>
+        <View style={[styles.drawer, sideDrawer ? { top: inset.top + headerHeight, left: width - drawerWidth, right: 0, bottom: 0, height: height - inset.top - headerHeight, paddingBottom: inset.bottom } : { height: drawerHeight + inset.bottom, paddingBottom: inset.bottom }]}>
           <View style={styles.tabs}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {["Furniture", ...Object.keys(categoryNames), "Stickers", "Room"].map((t) => (
@@ -839,7 +831,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             />
           </View>
           {!collapsed && notice.startsWith("Earn") && <LockRule>{notice}</LockRule>}
-          {!collapsed && tab !== "Room" && tab !== "Stickers" && <FlatList key={tab} horizontal data={trayItems} initialScrollIndex={Math.max(0, trayItems.indexOf(initialItem ?? ""))} keyExtractor={id => id} renderItem={({item:id}) => thumbnail(id, itemSpec(id).name)} initialNumToRender={6} maxToRenderPerBatch={6} windowSize={3} contentContainerStyle={styles.strip} getItemLayout={(_,index)=>({length:128,offset:128*index,index})} />}
+          {!collapsed && tab !== "Room" && tab !== "Stickers" && <FlatList key={`${tab}-${doubleTray}`} horizontal style={{ height: doubleTray ? 202 : 100, flexGrow: 0 }} data={trayColumns} initialScrollIndex={Math.max(0, Math.floor(trayItems.indexOf(initialItem ?? "") / (doubleTray ? 2 : 1)))} keyExtractor={ids => ids.join(':')} renderItem={({item:ids}) => <View style={{ gap: 4 }}>{ids.map(id => thumbnail(id, itemSpec(id).name))}</View>} initialNumToRender={6} maxToRenderPerBatch={6} windowSize={3} contentContainerStyle={styles.strip} getItemLayout={(_,index)=>({length:98,offset:98*index,index})} />}
           {!collapsed && (tab === "Room" || tab === "Stickers") && (
             <ScrollView
               horizontal
@@ -902,6 +894,17 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
                 preview.value = emptyPreview;
               }}
             />
+          </View>
+        </View>
+      </Modal>
+      <Modal transparent visible={stackMenu} animationType="none" onRequestClose={() => setStackMenu(false)}>
+        <View accessibilityViewIsModal style={styles.scrim}>
+          <View style={styles.dialog}>
+            <Text style={styles.dialogTitle}>Put on…</Text>
+            <ScrollView style={{ maxHeight: 240 }}>
+              {target && room.instances.filter(i => !i.on && decorSpec(i.item).surface).map(parent => <Button key={parent.id} label={stackActionLabel(parent, room.instances)} onPress={() => { putOn(target, parent.id); setStackMenu(false); }} />)}
+            </ScrollView>
+            <Button label="Cancel" onPress={() => setStackMenu(false)} />
           </View>
         </View>
       </Modal>

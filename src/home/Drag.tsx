@@ -1,5 +1,4 @@
 import { spotFromPoint } from "./geometry";
-import { clearFootprint } from "./placement";
 import React, { type ReactNode } from "react";
 import { View, type ViewProps, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -39,26 +38,52 @@ export type DragConfig = {
   foot?: { x: number; y: number };
 };
 /** Worklet-only drag feedback. No React state or reducer writes during pointer movement. */
+function clearAt(config: DragConfig, id: string, x: number, y: number, w: number, h: number, layer: string, parent?: string) {
+  "worklet";
+  if (x < 0 || y < 0 || x + w > 16 || y + h > (layer === "wall" ? 4 : 12)) return false;
+  for (let n = 0; n < config.blockers.length; n++) {
+    const other = config.blockers[n];
+    if (other.id === id || other.on !== parent || other.layer !== layer) continue;
+    const ow = parent ? 1 : other.w, oh = parent ? 1 : other.h;
+    if (x < other.x + ow && other.x < x + w && y < other.y + oh && other.y < y + h) return false;
+  }
+  return true;
+}
+/** Worklet-only drag feedback. The blocker scan creates no arrays on pointer frames. */
 function updatePreview(config: DragConfig, absX: number, absY: number, dx: number, dy: number) {
   "worklet";
   const f = config.footprint;
   if (!f) return;
   const px = config.foot ? config.foot.x + dx / config.scale : (absX - config.origin.x) / config.scale;
   const py = config.foot ? config.foot.y + dy / config.scale : (absY - config.origin.y) / config.scale;
-  const parent = f.small ? config.blockers.filter(i => i.id !== f.id && !i.on && i.surface && Math.abs(i.sx! - px) <= i.radius! && Math.abs(i.sy! - py) < 32).sort((a,b) => Math.hypot(a.sx! - px, a.sy! - py) - Math.hypot(b.sx! - px, b.sy! - py))[0] : undefined;
-  if (parent) {
-    const valid = (f.id !== "" || config.blockers.length < 48) && f.w <= parent.w && f.h <= parent.h && clearFootprint(config.blockers.filter(i => i.on === parent.id), { id:f.id, x:parent.x, y:parent.y, w:f.w, h:f.h, layer:config.layer ?? "furniture" });
-    config.preview.value = { active:true, x:parent.x, y:parent.y, w:f.w, h:f.h, wall:false, valid, on:parent.id, surfaceX:parent.sx, surfaceY:parent.sy, px:parent.sx, py:parent.sy };
+  let best = -1, cellX = 0, cellY = 0, distance = Infinity;
+  if (f.small) for (let n = 0; n < config.blockers.length; n++) {
+    const parent = config.blockers[n];
+    if (parent.id === f.id || parent.on || !parent.surface || Math.abs(parent.sx! - px) > parent.radius! || Math.abs(parent.sy! - py) >= 38) continue;
+    let occupied = 0;
+    for (let b = 0; b < config.blockers.length; b++) if (config.blockers[b].on === parent.id && config.blockers[b].id !== f.id) occupied++;
+    if (occupied >= Math.min(3,parent.w)) continue;
+    const y = parent.y;
+    for (let x = parent.x; x < parent.x + parent.w; x++) {
+      if (!clearAt(config, f.id, x, y, 1, 1, config.layer ?? "furniture", parent.id)) continue;
+      const sx = parent.sx! + (x - parent.x - (parent.w - 1) / 2) * 31 + (y - parent.y) * 7;
+      const sy = parent.sy! + (y - parent.y) * 15.5 + (x - parent.x) * 1.5;
+      const d = (sx - px) ** 2 + (sy - py) ** 2;
+      if (d < distance) { distance = d; best = n; cellX = x; cellY = y; }
+    }
+  }
+  if (best >= 0) {
+    const parent = config.blockers[best];
+    const sx = parent.sx! + (cellX - parent.x - (parent.w - 1) / 2) * 31 + (cellY - parent.y) * 7;
+    const sy = parent.sy! + (cellY - parent.y) * 15.5 + (cellX - parent.x) * 1.5;
+    config.preview.value = { active:true, x:cellX, y:cellY, w:1, h:1, wall:false, valid:f.id !== "" || config.blockers.length < 48, on:parent.id, surfaceX:sx, surfaceY:sy, px:sx, py:sy };
     return;
   }
   const spot = spotFromPoint(px, py, 1, f.wall);
   if (!spot) { config.preview.value = { ...config.preview.value, active: true, valid: false, px, py }; return; }
   const { x, y } = spot;
-  const inside = px >= 0 && px <= 800 && py >= 0 && py <= 560;
-  const valid =
-    inside &&
-    (f.id !== "" || config.blockers.length < 48) &&
-    clearFootprint(config.blockers.filter(i => !i.on), { id: f.id, x, y, w: f.w, h: f.h, layer: config.layer ?? "furniture" });
+  const valid = px >= 0 && px <= 800 && py >= 0 && py <= 560 &&
+    (f.id !== "" || config.blockers.length < 48) && clearAt(config, f.id, x, y, f.w, f.h, config.layer ?? "furniture");
   config.preview.value = { active: true, x, y, w: f.w, h: f.h, wall: f.wall, valid, px, py };
 }
 export function Drag({

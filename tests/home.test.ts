@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { catalog, furnitureIds, itemSpec, starterItems } from '../src/home/catalog';
 import { moreCatalog, roomIds, tintIds } from '../src/home/catalogMore';
 import { currentRoom, homeReducer, instance, legacyStarterHome, MAX_INSTANCES, migrateHome, starterHome, validHome, validPlacement, type HomeStateV2, type RoomState } from '../src/home/model';
-import { characterDepth, characterDrop, characterPoint, characterSize, floorPoint, itemPoint, spotFromPoint, stackSpot, surfacePoint } from '../src/home/geometry';
+import { characterDepth, characterDrop, characterPoint, characterSize, floorPoint, itemPoint, itemSize, spotFromPoint, stackSpot, stackActionLabel, surfacePoint } from '../src/home/geometry';
 import { editHistory, type History } from '../src/home/useHomeStore';
 import { emptySave, parseSave } from '../src/state/validation';
 import { entitledHome, initializePersonalization } from '../src/personalization/model';
+import { writeFileSync } from 'node:fs';
 const clone = <T>(v:T):T => JSON.parse(JSON.stringify(v));
 const room = currentRoom;
 const patch = (state:HomeStateV2, patch:Partial<RoomState>):HomeStateV2 => ({ ...state, rooms:{...state.rooms,[state.current]:{...room(state),...patch}} });
@@ -59,6 +60,43 @@ describe('versioned home saves and recovery', () => {
 });
 
 describe('room editing, stacking and colours',()=>{
+ it('writes a valid browser fixture for duplicate surface action QA',()=>{
+  if(!process.env.POLISH_EVIDENCE) return;
+  const save=initializePersonalization(emptySave());
+  const home=patch(starterHome(),{instances:[instance('table-a','table',3,4),instance('table-b','table',10,4),instance('lamp-a','lamp',1,1)],characters:[{slot:0,anchor:'hello',pose:'stand'},{slot:1,anchor:'hello',pose:'stand'},{slot:2,anchor:'hello',pose:'stand'}]});
+  expect(validHome(home)).toBe(true);
+  save.personalization!.people.family.home=home;
+  expect(parseSave(JSON.stringify(save))).toEqual(save);
+  writeFileSync(`${process.env.POLISH_EVIDENCE}/fixture-surfaces.json`,JSON.stringify(save));
+ });
+ it('gives every new item an explicit scene size relative to the Islander',()=>{
+  expect(Object.keys(moreCatalog)).toHaveLength(41);
+  for(const [id,spec] of Object.entries(moreCatalog)) expect(itemSize(instance(id,id,0,0))).toBe(spec.itemSize);
+  expect(itemSize(instance('f','fridge',0,0))).toBeGreaterThan(characterSize(0));
+  expect(itemSize(instance('l','table-lamp',0,0))).toBeLessThan(characterSize(0)/2);
+ });
+ it('fits three small items in separate cells on one table and preserves them on move',()=>{
+  let s=patch(empty(),{instances:[instance('t','table',4,4),instance('a','lamp',0,0),instance('b','plant',0,4),instance('c','teddy',8,4)]});
+  for(const id of ['a','b','c']) {
+    const child=room(s).instances.find(i=>i.id===id)!;
+    const surface=surfacePoint(room(s).instances[0]);
+    const spot=stackSpot(room(s).instances,child,surface.x,surface.y)!;
+    expect(spot.on).toBe('t');
+    s=homeReducer(s,{type:'move',id,...spot}).state;
+  }
+  const children=room(s).instances.filter(i=>i.on==='t');
+  expect(new Set(children.map(i=>`${i.x},${i.y}`)).size).toBe(3);
+  expect(validHome(s)).toBe(true);
+  expect(stackSpot(room(s).instances,instance('d','lamp',0,0),surfacePoint(room(s).instances[0]).x,surfacePoint(room(s).instances[0]).y)).toBeUndefined();
+  expect(validPlacement(room(s).instances,{...instance('d','lamp',9,4),on:'t'})).toBe(false);
+  s=homeReducer(s,{type:'move',id:'t',x:8,y:6}).state;
+  expect(room(s).instances.filter(i=>i.on==='t')).toHaveLength(3);
+  expect(validHome(s)).toBe(true);
+ });
+ it('distinguishes duplicate surface action labels',()=>{
+  const items=[instance('left','table',2,2),instance('right','table',8,2)];
+  expect(items.map(i=>stackActionLabel(i,items))).toEqual(['Put on Pebble table 1','Put on Pebble table 2']);
+ });
  it('allows free expanded catalogue and refuses unearned rewards',()=>{
   const s=empty(); expect(homeReducer(s,{type:'place',instance:instance('a','abacus',0,0)}).state).toBe(s);
   for(const id of Object.keys(moreCatalog)) expect(homeReducer(s,{type:'place',instance:instance('a',id,0,0)}).state).not.toBe(s);
@@ -82,11 +120,11 @@ describe('room editing, stacking and colours',()=>{
  });
  it('stacks a lamp on a table, moves the group, rejects overlap and puts the whole group away',()=>{
   let s=patch(empty(),{instances:[instance('t','table',4,4),instance('l','lamp',0,0),instance('p','plant',0,4)]});
-  const surface=surfacePoint(room(s).instances[0]); expect(stackSpot(room(s).instances,room(s).instances[1],surface.x,surface.y)).toEqual({x:4,y:4,on:'t'});
+  const surface=surfacePoint(room(s).instances[0]); expect(stackSpot(room(s).instances,room(s).instances[1],surface.x,surface.y)).toMatchObject({on:'t'});
   s=homeReducer(s,{type:'move',id:'l',x:4,y:4,on:'t'}).state;expect(room(s).instances[1].on).toBe('t');
   expect(homeReducer(s,{type:'move',id:'p',x:4,y:4,on:'t'}).state).toBe(s);
   s=homeReducer(s,{type:'move',id:'t',x:8,y:6}).state; expect(room(s).instances[1]).toMatchObject({x:8,y:6,on:'t'});
-  expect(itemPoint(room(s).instances[1],room(s).instances)).toEqual(surfacePoint(room(s).instances[0]));
+  expect(itemPoint(room(s).instances[1],room(s).instances).x).toBeLessThan(surfacePoint(room(s).instances[0]).x);
   const before=s, removed=homeReducer(s,{type:'put-away',id:'t'}).state; expect(room(removed).instances.map(i=>i.id)).toEqual(['p']);expect(validHome(removed)).toBe(true);
   const h=editHistory({present:before,past:[],future:[]},{type:'put-away',id:'t'});expect(editHistory(h,{type:'undo'}).present).toBe(before);
  });

@@ -1,4 +1,5 @@
 import { decorSpec, isSeat, itemSpec } from "./catalog";
+import { moreCatalog } from "./catalogMore";
 import type { Instance } from "./model";
 export function floorPoint(x: number, y: number) {
   return { x: 174 + x * 25.5 + y * 7, y: 327 + y * 15.5 + x * 1.5 };
@@ -9,34 +10,55 @@ export function surfacePoint(i: Instance) {
 }
 export function itemPoint(i: Instance, items: readonly Instance[] = []) {
   const parent = i.on && items.find(p => p.id === i.on);
-  if (parent) { const p = surfacePoint(parent), offset = floorPoint(i.x - parent.x, i.y - parent.y); return { x:p.x + offset.x - 174, y:p.y + offset.y - 327 }; }
+  if (parent) { const p = surfacePoint(parent), [w] = importDimensions(parent), dx = i.x - parent.x, dy = i.y - parent.y; return { x:p.x + (dx - (w - 1) / 2) * 31 + dy * 7, y:p.y + dy * 15.5 + dx * 1.5 }; }
   return i.layer === "wall" ? { x: 205 + i.x * 23, y: 224 + i.y * 19.5 } : floorPoint(i.x, i.y);
+}
+export function stackActionLabel(parent: Instance, items: readonly Instance[]) {
+  const same = items.filter(i => !i.on && i.item === parent.item);
+  return `Put on ${itemSpec(parent.item).name}${same.length > 1 ? ` ${same.findIndex(i => i.id === parent.id) + 1}` : ""}`;
 }
 /** Shared settled-drop targeting; the worklet receives equivalent serialized surface metadata. */
 export function stackSpot(items: readonly Instance[], item: Instance, x: number, y: number) {
   if (!decorSpec(item.item).small) return undefined;
-  const parent = items.filter(i => i.id !== item.id && !i.on && decorSpec(i.item).surface)
-    .map(i => ({ i, p: surfacePoint(i) }))
-    .filter(({ i, p }) => Math.abs(p.x - x) <= itemSize(i) * .42 && Math.abs(p.y - y) < 32)
-    .sort((a, b) => Math.hypot(a.p.x - x, a.p.y - y) - Math.hypot(b.p.x - x, b.p.y - y))[0];
-  return parent ? { x: parent.i.x, y: parent.i.y, on: parent.i.id } : undefined;
+  let best: { x: number; y: number; on: string } | undefined;
+  let distance = Infinity;
+  for (const parent of items) {
+    if (parent.id === item.id || parent.on || !decorSpec(parent.item).surface) continue;
+    const p = surfacePoint(parent);
+    if (Math.abs(p.x - x) > itemSize(parent) * .42 || Math.abs(p.y - y) >= 38) continue;
+    const [w] = importDimensions(parent);
+    if (items.filter(other => other.id !== item.id && other.on === parent.id).length >= Math.min(3,w)) continue;
+    const cy = parent.y;
+    for (let cx = parent.x; cx < parent.x + w; cx++) {
+      if (items.some(other => other.id !== item.id && other.on === parent.id && other.x === cx && other.y === cy)) continue;
+      const dx = cx - parent.x, dy = cy - parent.y;
+      const sx = p.x + (dx - (w - 1) / 2) * 31 + dy * 7, sy = p.y + dy * 15.5 + dx * 1.5;
+      const d = (sx - x) ** 2 + (sy - y) ** 2;
+      if (d < distance) { distance = d; best = { x: cx, y: cy, on: parent.id }; }
+    }
+  }
+  return best;
+}
+function importDimensions(i: Instance) {
+  const [w, h] = itemSpec(i.item).footprint;
+  return i.rotation % 180 ? [h * 2, w * 2] : [w * 2, h * 2];
 }
 export const characterSize = (slot: import("./model").Character["slot"]) => slot === 0 ? 163 : 129;
 
 /** Match the convex floor drawn by RoomArt, before rounding to a grid cell. */
+const floorPolygon = [34,374,145,291,758,330,779,508,162,535] as const;
 function insideFloor(x: number, y: number) {
   "worklet";
-  const points = [[34,374],[145,291],[758,330],[779,508],[162,535]];
-  for (let i = 0; i < points.length; i++) {
-    const a = points[i], b = points[(i + 1) % points.length];
-    if ((b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0]) < 0) return false;
+  for (let i = 0; i < 5; i++) {
+    const j = (i + 1) % 5, ax = floorPolygon[i*2], ay = floorPolygon[i*2+1], bx = floorPolygon[j*2], by = floorPolygon[j*2+1];
+    if ((bx - ax) * (y - ay) - (by - ay) * (x - ax) < 0) return false;
   }
   return true;
 }
 /** Invert the room projection. Coordinates are local to the measured canvas, not the SVG hit target. */
 export function spotFromPoint(localX: number, localY: number, scale: number, wall: boolean) {
   "worklet";
-  if (![localX, localY, scale].every(Number.isFinite) || scale <= 0) return undefined;
+  if (!Number.isFinite(localX) || !Number.isFinite(localY) || !Number.isFinite(scale) || scale <= 0) return undefined;
   const px = localX / scale,
     py = localY / scale;
   if (!wall && !insideFloor(px, py)) return undefined;
@@ -54,6 +76,7 @@ export function spotFromPoint(localX: number, localY: number, scale: number, wal
 }
 
 export function itemSize(i: Instance) {
+  if (moreCatalog[i.item]) return moreCatalog[i.item].itemSize;
   if (["bed", "bunk-bed"].includes(i.item)) return 215;
   if (i.layer === "ground") return 210;
   if (i.layer === "wall") return 64;
@@ -69,7 +92,7 @@ export function characterPoint(state: import("./model").RoomState, c: import("./
     const p = itemPoint(seat);
     // The constant 163-unit rig keeps its hip about 51 units above the box foot.
     // Match each illustrated surface; sidekicks retain their bottom contact.
-    const genericSurface = ({ sofa: -26, armchair: -16, "bunk-bed": -23, hammock: -35, "floor-cushion": -17, "rocking-chair": -18, stool: -18 } as Record<string, number>)[seat.item] ?? -12;
+    const genericSurface = ({ sofa: -52, armchair: -45, "bunk-bed": -56, hammock: -44, "floor-cushion": -24, "rocking-chair": -45, stool: -48 } as Record<string, number>)[seat.item] ?? -12;
     const seatedFoot = c.slot === 0 ? ({ bed: -11, chair: 30, rug: 20, beanbag: 21, seat: genericSurface + 51, shelf: -65 } as Partial<Record<import("./model").Anchor, number>>)[c.anchor] : undefined;
     return { x: p.x, y: p.y + (seatedFoot ?? -(c.anchor === "shelf" ? 92 : c.anchor === "bed" ? 48 : c.anchor === "seat" ? -genericSurface : 12)) };
   }

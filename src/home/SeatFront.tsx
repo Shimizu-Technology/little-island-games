@@ -11,7 +11,8 @@ export function SeatFront({ item, size }: { item: Instance; size:number }) {
   {item.item === 'bed' && <Path d="M37 96L131 84V92L36 105Z" fill="#D99E6C"/>}
   {item.item === 'beanbag' && <Path d="M24 103Q75 118 128 98L124 112Q75 130 28 115Z" fill={material(item.tint ?? 'original','#79BDB1')}/>}
   {['sofa','armchair','floor-cushion'].includes(item.item) && <Path d="M39 98L124 89L125 95L38 104L24 94V87Z" fill={color}/>}
-  {['stool','rocking-chair'].includes(item.item) && <Path d="M28 84L49 104L130 91V84L48 97Z" fill={dark}/>}
+  {item.item === 'rocking-chair' && <Path d="M28 84L49 104L130 91V84L48 97Z" fill={dark}/>}
+  {item.item === 'stool' && <Path d="M42 75Q75 91 108 75V84Q75 100 42 84Z" fill={dark}/>}
   {item.item === 'hammock' && <Path d="M40 89Q82 112 116 65Q105 116 65 101Z" fill={color}/>}
   {item.item === 'bunk-bed' && <Path d="M20 98L39 115L134 105V97L39 107L20 90Z" fill="#D99E6C"/>}
  </G></Svg>;

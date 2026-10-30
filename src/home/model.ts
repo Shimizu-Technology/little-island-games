@@ -53,9 +53,10 @@ export function validPlacement(instances: readonly Instance[], candidate: Instan
   if (candidate.on !== undefined) {
     const parent = instances.find(i => i.id === candidate.on);
     if (!parent || parent.id === candidate.id || parent.on !== undefined || !decorSpec(parent.item).surface || !decorSpec(candidate.item).small) return false;
-    const [w, h] = dimensions(parent), [cw, ch] = dimensions(candidate);
+    const [w, h] = dimensions(parent), cw = 1, ch = 1;
     if (candidate.x < parent.x || candidate.y < parent.y || candidate.x + cw > parent.x + w || candidate.y + ch > parent.y + h) return false;
-    return clearFootprint(instances.filter(i => i.on === parent.id).map(footprint), footprint(candidate));
+    if (candidate.y !== parent.y || instances.filter(i => i.on === parent.id && i.id !== candidate.id).length >= Math.min(3, w)) return false;
+    return clearFootprint(instances.filter(i => i.on === parent.id).map(i => ({ ...footprint(i), w: 1, h: 1 })), { ...footprint(candidate), w: 1, h: 1 });
   }
   return clearFootprint(instances.filter(i => i.on === undefined).map(footprint), footprint(candidate));
 }

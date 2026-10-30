@@ -7,6 +7,11 @@ import { ItemArt } from '../src/home/art/Items';
 import { moreCatalog, tintIds, type TintId } from '../src/home/catalogMore';
 import { catalog } from '../src/home/catalog';
 import { shade } from '../src/home/art/Tint';
+import { Islander } from '../src/islander/rig/Islander';
+import { defaultLook } from '../src/islander/look';
+import { characterPoint, itemPoint, itemSize, seatAnchor } from '../src/home/geometry';
+import { instance, type RoomState } from '../src/home/model';
+import { SeatFront } from '../src/home/SeatFront';
 vi.mock('react-native-svg', () => {
   const tags = { default: 'svg', Circle: 'circle', Ellipse: 'ellipse', G: 'g', Path: 'path', Rect: 'rect', Defs: 'defs', Filter: 'filter', FeColorMatrix: 'feColorMatrix', ClipPath: 'clipPath', Pattern: 'pattern', Text: 'text' };
   return Object.fromEntries(Object.entries(tags).map(([name, tag]) => [name, ({ children, accessible: _accessible, ...props }: Record<string, unknown>) => React.createElement(tag, props, children as React.ReactNode)]));
@@ -70,5 +75,34 @@ describe('free home art contract', () => {
       }
       writeFileSync(`${process.env.HOME_ART_EVIDENCE}/sheet-${size}.html`, html);
     }
+  });
+  it('renders all 41 at display size beside a standing Islander for visual review', () => {
+    if (!process.env.POLISH_EVIDENCE) return;
+    let html = '<!doctype html><meta charset="utf-8"><style>body{background:#d7e7dc;color:#284f4b;font:13px system-ui}main{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}figure{background:#fff9ee;border-radius:12px;margin:0;padding:8px;min-height:260px}figcaption{font-weight:bold}section{display:flex;align-items:end;justify-content:center;height:240px;gap:8px}svg{flex:none}@media(max-width:600px){main{grid-template-columns:repeat(2,1fr)}}</style><h1>Furniture beside the Islander (163 scene units)</h1><main>';
+    const kid = render(<Islander size={163} />);
+    for (const [id,spec] of Object.entries(moreCatalog)) html += `<figure><figcaption>${spec.name} · ${spec.itemSize}</figcaption><section>${kid}${render(<MoreItemArt id={id} size={spec.itemSize}/>)}</section></figure>`;
+    html += '</main><h1>Aloha print</h1>';
+    for (const outfit of ['aloha-shorts','mix'] as const) for (const view of ['front','back'] as const) html += `<figure>${outfit} ${view}<section>${render(<Islander size={163} view={view} pose={view==='front'?'idle':0} look={{...defaultLook,outfit,...(outfit==='mix'?{top:'aloha',bottom:'shorts'}:{})}}/>)}</section></figure>`;
+    for (const frame of [0,3,8,11,16,23]) html += `<figure>Run ${frame}<section>${render(<Islander size={163} view="back" pose={frame} look={{...defaultLook,outfit:'aloha-shorts'}}/>)}</section></figure>`;
+    writeFileSync(`${process.env.POLISH_EVIDENCE}/scale-and-aloha.html`,html);
+  });
+  it('renders every seat at its current size and character offset for visual review', () => {
+    if (!process.env.POLISH_EVIDENCE) return;
+    let html='<!doctype html><meta charset="utf-8"><style>body{background:#d7e7dc;color:#284f4b;font:13px system-ui}main{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}figure{background:#fff9ee;border-radius:12px;margin:0;padding:8px}section{position:relative;height:280px;overflow:hidden}svg{position:absolute}@media(max-width:700px){main{grid-template-columns:repeat(2,1fr)}}</style><h1>Seated Islander, 163 scene units</h1><main>';
+    for(const id of ['bed','chair','rug','beanbag','shelf','sofa','armchair','bunk-bed','hammock','floor-cushion','rocking-chair','stool']) {
+      const seat=instance('seat',id,4,4), room:RoomState={instances:[seat],characters:[],theme:{wallpaper:'cream',floor:'sand'}};
+      const p=itemPoint(seat), cp=characterPoint(room,{slot:0,anchor:seatAnchor(seat),pose:'sit',seatId:'seat'}), size=itemSize(seat);
+      const art=id in moreCatalog ? render(<MoreItemArt id={id} size={size}/>) : render(<ItemArt item={id} size={size}/>);
+      html+=`<figure><figcaption>${id} · ${size}</figcaption><section><div style="position:absolute;left:${170-size/2}px;top:${205-size*.85}px">${art}</div><div style="position:absolute;left:${170-81}px;top:${205+cp.y-p.y-163}px">${render(<Islander size={163} pose="sit-relaxed"/>)}</div><div style="position:absolute;left:${170-size/2}px;top:${205-size*.85}px">${render(<SeatFront item={seat} size={size}/>)}</div></section></figure>`;
+    }
+    html+='</main>';writeFileSync(`${process.env.POLISH_EVIDENCE}/seats.html`,html);
+  });
+  it('shows three small items beside each other on a kitchen table',()=>{
+    if(!process.env.POLISH_EVIDENCE) return;
+    const table=instance('table','kitchen-table',6,6);
+    const children=[{...instance('fruit','fruit-bowl',6,6),on:'table'},{...instance('tea','teapot',7,6),on:'table'},{...instance('flower','flower-vase',8,6),on:'table'}];
+    const items=[table,...children];
+    const html=`<!doctype html><meta charset="utf-8"><style>body{background:#d7e7dc;font:16px system-ui;color:#284f4b}.room{position:relative;width:800px;height:560px;overflow:hidden}svg{position:absolute}</style><h1>Three small items on one kitchen table</h1><div class="room">${render(<RoomShellArt room="kitchen" theme={{wallpaper:'lagoon',floor:'sand'}}/>)}${items.map(i=>{const p=itemPoint(i,items),size=itemSize(i);return `<div style="position:absolute;left:${p.x-size/2}px;top:${p.y-size*.85}px">${render(<MoreItemArt id={i.item} size={size}/>)}</div>`}).join('')}${`<div style="position:absolute;left:85px;top:260px">${render(<Islander size={163}/>)}</div>`}</div>`;
+    writeFileSync(`${process.env.POLISH_EVIDENCE}/stack-three.html`,html);
   });
 });
