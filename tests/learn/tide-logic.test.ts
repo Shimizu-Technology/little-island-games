@@ -27,6 +27,8 @@ describe("Tide Logic", () => {
     expect(taskAt(1, 2, 0).slots.length).toBe(2);
     expect(taskAt(3, 2, 0).slots.length).toBe(4);
     expect(taskAt(4, 2, 0).target.first).toBe("bell");
+    expect(taskAt(4, 2, 0).target.join).toBe("then");
+    expect(taskAt(4, 2, 0).slots.length).toBe(4);
     expect(taskAt(5, 2, 0).slots.length).toBe(4);
   });
 });

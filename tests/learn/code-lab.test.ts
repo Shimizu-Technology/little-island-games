@@ -19,10 +19,10 @@ describe("Code Lab", () => {
       expect(rendered(state).join("\n")).toContain(t.lines[0].replace("□", t.answer));
       state = { ...state, ran: true };
       expect(engine.validate(state, o)).toBe(true);
-      state = { ...state, task: task + 1, order: [], token: "", ran: false };
+      state = { ...state, index: task + 1, order: [], token: "", ran: false };
     }
     expect(complete(state)).toBe(true); expect(engine.outcome(state, o)).toBe("done");
-    expect(engine.validate({ ...state, task: 5 }, o)).toBe(false);
+    expect(engine.validate({ ...state, index: 5 }, o)).toBe(false);
     expect(engine.validate({ ...state, order: [0, 0] }, o)).toBe(false);
   });
   it("introduces loops, functions, debugging and short programs", () => {

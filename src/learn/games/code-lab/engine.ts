@@ -1,7 +1,7 @@
 import type { LearnEngine } from "../../types";
-import { levelOf } from "../../levels";
+import { levelOf } from "../../levelOptions";
 export type LabTask = { goal: string; lines: string[]; bank: string[]; slot: string[]; answer: string; output: string; robot: number };
-export type LabState = { version: 1; level: number; seed: number; task: number; order: number[]; token: string; ran: boolean; helped: boolean };
+export type LabState = { version: 1; level: number; seed: number; index: number; order: number[]; token: string; ran: boolean; helped: boolean };
 const templates: Record<number, Omit<LabTask, "bank">[]> = {
   1: [
     { goal: "Make the robot say Aloha, then step.", lines: ['print("Aloha")', "robot.step()"], slot: [], answer: "", output: "Aloha · 1 step", robot: 1 },
@@ -40,10 +40,10 @@ export function taskAt(level: number, seed: number, index: number): LabTask {
   const shift = ((seed >>> (index * 3)) % (source.lines.length - 1)) + 1;
   return { ...source, bank: mix(source.lines.map((_, i) => i), shift).map((i) => source.lines[i]) };
 }
-export const complete = (s: LabState) => s.task === 4;
-export const ready = (s: LabState) => { const t = taskAt(s.level, s.seed, s.task); return s.order.length === t.lines.length && (!t.slot.length || !!s.token); };
-export const correct = (s: LabState) => { const t = taskAt(s.level, s.seed, s.task); return ready(s) && s.order.every((i, j) => t.bank[i] === t.lines[j]) && s.token === t.answer; };
-export function rendered(s: LabState): string[] { const t = taskAt(s.level, s.seed, s.task); return s.order.map((i) => t.bank[i].replace("□", s.token || "□")); }
+export const complete = (s: LabState) => s.index === 4;
+export const ready = (s: LabState) => { const t = taskAt(s.level, s.seed, s.index); return s.order.length === t.lines.length && (!t.slot.length || !!s.token); };
+export const correct = (s: LabState) => { const t = taskAt(s.level, s.seed, s.index); return ready(s) && s.order.every((i, j) => t.bank[i] === t.lines[j]) && s.token === t.answer; };
+export function rendered(s: LabState): string[] { const t = taskAt(s.level, s.seed, s.index); return s.order.map((i) => t.bank[i].replace("□", s.token || "□")); }
 export const engine: LearnEngine<LabState> = {
   id: "code-lab", name: "Code Lab", island: "coding", ages: [9, 14], ownLevels: true,
   tagline: "Build blocks. Read real code.", description: "Arrange code blocks, fill tiny blanks and run a robot program.",
@@ -57,13 +57,13 @@ export const engine: LearnEngine<LabState> = {
     { name: "Find the bug", description: "Fix comparisons and true or false." },
     { name: "Tiny programs", description: "Build short programs and fill a value." },
   ],
-  create: (o, c) => ({ version: 1, level: levelOf(o), seed: Math.floor(c.rng() * 65536), task: 0, order: [], token: "", ran: false, helped: false }),
+  create: (o, c) => ({ version: 1, level: levelOf(o), seed: Math.floor(c.rng() * 65536), index: 0, order: [], token: "", ran: false, helped: false }),
   validate: (x, o): x is LabState => {
     if (!x || typeof x !== "object" || Array.isArray(x)) return false;
     const s = x as LabState;
-    if (Object.keys(s).sort().join() !== "helped,level,order,ran,seed,task,token,version" || s.version !== 1 || s.level !== levelOf(o) || !Number.isInteger(s.seed) || s.seed < 0 || s.seed >= 65536 || !Number.isInteger(s.task) || s.task < 0 || s.task > 4 || typeof s.ran !== "boolean" || typeof s.helped !== "boolean" || !Array.isArray(s.order) || typeof s.token !== "string") return false;
-    if (s.task === 4) return !s.order.length && s.token === "" && !s.ran;
-    const t = taskAt(s.level, s.seed, s.task);
+    if (Object.keys(s).sort().join() !== "helped,index,level,order,ran,seed,token,version" || s.version !== 1 || s.level !== levelOf(o) || !Number.isInteger(s.seed) || s.seed < 0 || s.seed >= 65536 || !Number.isInteger(s.index) || s.index < 0 || s.index > 4 || typeof s.ran !== "boolean" || typeof s.helped !== "boolean" || !Array.isArray(s.order) || typeof s.token !== "string") return false;
+    if (s.index === 4) return !s.order.length && s.token === "" && !s.ran;
+    const t = taskAt(s.level, s.seed, s.index);
     return s.order.length <= t.lines.length && s.order.every((i) => Number.isInteger(i) && i >= 0 && i < t.lines.length) && new Set(s.order).size === s.order.length && (s.token === "" || t.slot.includes(s.token)) && (!s.ran || correct(s));
   },
   outcome: (s) => complete(s) ? "done" : null,
