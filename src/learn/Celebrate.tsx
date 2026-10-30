@@ -7,7 +7,7 @@ const COLORS = ["#E1B251", "#C56D50", "#246858", "#386C9A", "#79AB80", "#E58C8C"
 
 /**
  * A short burst of stars and a big check that plays once per `burst` change (a counter).
- * It sits over the board without catching touches, never delays play, and under Reduce Motion
+ * It owns a clipped layout cell so no frame can paint over text or characters. Under Reduce Motion
  * shows a brief still check instead.
  */
 export function Celebrate({ burst, big = false }: { burst: number; big?: boolean }) {
@@ -23,14 +23,14 @@ export function Celebrate({ burst, big = false }: { burst: number; big?: boolean
     anim.start(({ finished }) => finished && setVisible(false));
     return () => anim.stop();
   }, [burst, big, reduced, t]);
-  if (!visible) return null;
+  if (!burst) return null;
   const pieces = big ? 14 : 8;
   return (
-    <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
+    <View testID="celebration-cell" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ width: big ? 88 : 64, height: big ? 88 : 64, alignSelf: "center", overflow: "hidden", opacity: visible ? 1 : 0, alignItems: "center", justifyContent: "center" }}>
       {!reduced &&
         Array.from({ length: pieces }, (_, i) => {
           const angle = (i / pieces) * Math.PI * 2;
-          const dist = big ? 150 : 95;
+          const dist = big ? 30 : 20;
           return (
             <Animated.View
               key={i}
@@ -56,7 +56,7 @@ export function Celebrate({ burst, big = false }: { burst: number; big?: boolean
           transform: [{ scale: reduced ? 1 : t.interpolate({ inputRange: [0, 0.25, 1], outputRange: [0.6, 1.08, 1] }) }],
         }}
       >
-        <Svg width={big ? 110 : 76} height={big ? 110 : 76} viewBox="0 0 64 64">
+        <Svg width={big ? 56 : 40} height={big ? 56 : 40} viewBox="0 0 64 64">
           <Circle cx={32} cy={32} r={29} fill="#246858" />
           <Path d="M19 33l9 9 18-20" stroke="#FFFFFF" strokeWidth={6} fill="none" strokeLinecap="round" strokeLinejoin="round" />
         </Svg>

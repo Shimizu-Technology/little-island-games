@@ -43,7 +43,7 @@ describe("classic audit regressions", () => {
     expect(source("board/Boards.tsx")).toContain('seat = typeof s.outcome === "number" ? s.outcome : s.turn');
     const ui = source("board/Screen.tsx");
     expect(ui).toContain('overflow: "hidden"');
-    expect(ui).toContain('burst={success ? 1 : 0}');
+    expect(ui).toContain('p.outcome !== null && success && <Celebrate burst={1}');
     expect(ui).toContain('s.mode !== "solo" || p.outcome === 0');
     expect(ui).toContain('flexDirection: wide ? "row" : "column"');
   });

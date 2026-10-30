@@ -29,12 +29,20 @@ export function Companion({ event = 'waiting', desk = false, size = 88, active =
     {pose === 'desk-write' && <View style={{ position: 'absolute', top: 0, left: 0 }}><IslanderDesk size={size}/></View>}
   </View>;
 }
-/** Fixed layout space, beside the activity on tablets, below it on phones. */
+/** Phone header crop keeps the head, hands and torso visible while feedback changes. */
+export function PhoneLearningCompanion({ event, active }: { event: CompanionEvent; active: boolean }) {
+  const store = useStore();
+  if (!showLearningCompanion(store.save.settings)) return null;
+  return <View testID="phone-learning-companion" pointerEvents="none" style={{ width: 64, height: 64, overflow: 'hidden', flexShrink: 0 }}>
+    <View style={{ position: 'absolute', top: -4, left: 0 }}><Companion event={event} active={active} size={106}/></View>
+  </View>;
+}
+/** Fixed layout space beside the activity on tablets; phones use the header. */
 export function LearningCompanion({ children, event, desk, active = true, visible = true }: {
   children: React.ReactNode; event: CompanionEvent; desk?: boolean; active?: boolean; visible?: boolean;
 }) {
   const { width, height } = useWindowDimensions(), store = useStore();
-  if (!visible || !showLearningCompanion(store.save.settings)) return <>{children}</>;
+  if (width < 600 || !visible || !showLearningCompanion(store.save.settings)) return <>{children}</>;
   const wide = width >= 768 && height >= 600;
   return <View style={{ flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'flex-start' : 'stretch', gap: 8 }}>
     <View style={{ flex: wide ? 1 : undefined, minWidth: 0 }}>{children}</View>

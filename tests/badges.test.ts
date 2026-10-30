@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyCompletion, badgesFor, grantsFor, progressFor, progressForBadge, tracks, type Completion } from '../src/badges/engine';
+import { badgeInfo, applyCompletion, badgesFor, grantsFor, progressFor, progressForBadge, tracks, type Completion } from '../src/badges/engine';
 import { backfillRewards, rewardTransitions } from '../src/badges/transitions';
 import { starterPerson, personFor, validPerson, applyPersonalization } from '../src/personalization/model';
 import { emptySave, parseSave } from '../src/state/validation';
@@ -165,4 +165,14 @@ describe('accepted transitions, backfill, recovery',()=>{
     const save=backfillRewards(emptySave()),bad=JSON.parse(JSON.stringify(save));bad.personalization.people.family.unseen=['not-earned'];expect(()=>parseSave(JSON.stringify(bad))).toThrow(/original has been kept/);
     const preserved:string[]=[];let stored='';await preserveAndReplace({get:async()=>null,listRecovery:async()=>[],readRecovery:async()=>null,preserve:async raw=>{preserved.push(raw)},set:async raw=>{stored=raw}},JSON.stringify(save),'{bad original');expect(preserved).toEqual(['{bad original']);expect(parseSave(stored)).toEqual(save);
   });
+});
+
+// These labels are shared by My badges, wall details and all locked reward reasons.
+it('explains distinct progress without game-level jargon or losing alternative routes', () => {
+  expect(badgeInfo('math-2').rule).toBe('Finish 3 different math games or levels.');
+  expect(badgeInfo('arcade-2').rule).toBe('Clear 8 different arcade levels.');
+  expect(badgeInfo('math-4').rule).toBe('Finish a round at Level 5, or finish 10 different math games or levels.');
+  for (const track of tracks) for (const tier of [1, 2, 3, 4] as const) expect(badgeInfo(`${track}-${tier}`).rule).not.toMatch(/pairs|3\+/);
+  expect(progressForBadge('math-2', ['learn:shell-math:1'])).toBe('1 of 3 done');
+  expect(progressForBadge('arcade-2', ['arcade:reef-builder:w1-1'])).toBe('1 of 8 done');
 });

@@ -411,12 +411,12 @@ function Round({
           }
         />
         {p.outcome !== null && <BadgeResultCard round={s.id}/>}
+        {p.outcome !== null && success && <Celebrate burst={1} />}
         {p.outcome !== null && (
           <View style={{ alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 10 }}>
             <Companion event={resultEvent(p.outcome, s.mode === "solo" || s.game === "reef-sweep")} size={80}/>
             <View style={{ width: 80, height: 80, overflow: "hidden" }}>
               <BoardArt game={s.game} size={80} />
-              <Celebrate burst={success ? 1 : 0} />
             </View>
             <Heading style={{ fontSize: 23, flexShrink: 1 }}>
               {s.game === "reef-sweep"

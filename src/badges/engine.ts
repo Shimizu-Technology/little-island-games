@@ -15,7 +15,17 @@ export const arcadeTrack = (game: string): Track => ['shell-song','rail-parade']
 export function badgeInfo(id: BadgeId) {
   const [track, tierText] = id.split('-') as [Track,string], tier = Number(tierText);
   const counts = countThresholds[track];
-  const rule = track === 'arcade' ? ['Clear any level.','Clear 8 different levels.','Open World 3 in any game or clear every level of one world.','Clear a World 6 level or 40 different levels.'][tier-1] : track === 'classic' ? ['Finish any game.','Finish 3 different games.','Finish 6 different games.','Win a board game against a middle or strong opponent, or finish 10 different games.'][tier-1] : ['Finish any round' + (track === 'science' ? ' or Explore topic.' : '.'),`Finish ${counts[1]} different game–level pairs` + (track === 'science' ? ' or topics.' : '.'),`Finish a Level 3+ round or ${counts[2]} different game–level pairs` + (track === 'science' ? ' or topics.' : '.'),`Finish a Level 5 round or ${counts[3]} different game–level pairs` + (track === 'science' ? ' or topics.' : '.')][tier-1];
+  const subject = { math: 'math games or levels', reading: 'reading games or levels', science: 'science games, levels or Explore topics', chamoru: 'CHamoru games or levels', arcade: '', classic: '' }[track];
+  const rule = track === 'arcade'
+    ? ['Clear any arcade level.', 'Clear 8 different arcade levels.', 'Open World 3 in any arcade game or clear every level of one world.', 'Clear a World 6 arcade level or 40 different arcade levels.'][tier - 1]
+    : track === 'classic'
+      ? ['Finish any game.', 'Finish 3 different games.', 'Finish 6 different games.', 'Win a board game against a middle or strong opponent, or finish 10 different games.'][tier - 1]
+      : [
+        'Finish any round' + (track === 'science' ? ' or Explore topic.' : '.'),
+        `Finish ${counts[1]} different ${subject}.`,
+        `Finish a round at Level 3 or higher, or finish ${counts[2]} different ${subject}.`,
+        `Finish a round at Level 5, or finish ${counts[3]} different ${subject}.`,
+      ][tier - 1];
   return { name:names[track][tier-1], rule, track, color:colors[track] };
 }
 export const badgeRule = (id: BadgeId) => { const b = badgeInfo(id); return `Earn ${b.name}: ${b.rule}`; };
@@ -45,7 +55,7 @@ export function progressFor(track: Track, milestones: readonly string[] = [], ta
   const earned = tiers(track,milestones), next = targetTier ? targetTier - 1 : earned.findIndex(v=>!v);
   if (next < 0) return 'All four badges earned';
   const count = entries(milestones,track).filter(id=>!id.endsWith(':win')).length, target = countThresholds[track][next];
-  return target ? `${Math.min(count,target)} of ${target} different ${track==='classic' ? 'games' : track==='arcade' ? 'cleared levels' : 'game–level pairs' + (track==='science' ? ' or topics' : '')}` : badgeInfo('arcade-3').rule;
+  return target ? `${Math.min(count,target)} of ${target} done` : badgeInfo('arcade-3').rule;
 }
 export function progressForBadge(id: BadgeId, milestones: readonly string[]) {
   const info = badgeInfo(id);

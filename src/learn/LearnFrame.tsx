@@ -1,6 +1,6 @@
 import { BadgeResultCard } from '../badges/ResultCard';
 import { isMathGame, type MathRound } from "./games/shell-math/round";
-import { Companion, LearningCompanion, useCompanionReaction } from "../islander/Companion";
+import { Companion, LearningCompanion, PhoneLearningCompanion, useCompanionReaction } from "../islander/Companion";
 import { LearnerChip } from "../personalization/LearnerChip";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AppState, ScrollView, View, useWindowDimensions } from "react-native";
@@ -238,9 +238,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const boardWidth = Math.min(width - insets.left - insets.right - 56, 900);
   const Board = saved?.options.stage ? GrowthBoard : view.Board;
 
-  return (
-    <SafeAreaView style={styles.page}>
-      <ScrollView key={saved?.id ?? "setup"} ref={scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
+  const header = <View style={{ gap: 4 }}>
         <LearnerChip compact/>
         <GameHeader
           title={engine.name}
@@ -248,7 +246,18 @@ export function LearnFrame({ id }: { id: LearnId }) {
           sound={{ on: store.save.settings.sound, toggle: () => store.settings({ sound: !store.save.settings.sound }) }}
           onHelp={() => setHelp(true)}
         />
-        <Heading style={{ fontSize: 25, marginBottom: 10 }}>{levelTitle(id, levelOf(saved?.options ?? options))}</Heading>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Heading style={{ fontSize: 25, flex: 1 }}>{levelTitle(id, levelOf(saved?.options ?? options))}</Heading>
+          {width < 600 && saved && !finished && <PhoneLearningCompanion event={companionEvent} active={boardActive}/>}
+        </View>
+
+  </View>;
+
+  return (
+    <SafeAreaView style={styles.page}>
+      {width < 600 && <View style={{ paddingHorizontal: 16 }}>{header}</View>}
+      <ScrollView key={saved?.id ?? "setup"} ref={scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
+        {width >= 600 && header}
         {saved && (
           <Copy style={{ fontSize: 12, marginBottom: 8 }}>
             {(engine.modeLabels?.[saved.options.mode] ?? modeLabel[saved.options.mode]) +
@@ -261,6 +270,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {saved && (
           <LearningCompanion visible={!finished} event={finished ? (notWon ? "loss" : result === "draw" ? "draw" : "complete") : companionEvent} desk={engine.island === "reading" || engine.island === "numbers"} active={boardActive}>
           <View style={{ backgroundColor: engine.surface, borderRadius: 22, padding: 12 }}>
+            <Celebrate burst={burst.n} big={burst.big} />
             <Board
               key={saved.id}
               session={saved}
@@ -278,13 +288,11 @@ export function LearnFrame({ id }: { id: LearnId }) {
               coach={{ active: coachActive && boardActive, done: coachDone }}
               cheer={cheer}
             />
-            <Celebrate burst={burst.n} big={burst.big} />
           </View>
           </LearningCompanion>
         )}
         {saved && (
           <View style={{ alignItems: "center", gap: 10, marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.line }}>
-            {finished && <BadgeResultCard round={saved.id}/>}
             {finished && (
               <View
                 accessibilityLiveRegion="polite"
@@ -314,6 +322,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
                 </Button>
               </View>
             )}
+            {finished && <BadgeResultCard round={saved.id}/>}
             {(saved.learner ?? "family") !== learner.id && <Copy style={{ textAlign: "center" }}>This saved round belongs to {store.save.learning?.people.find(p => p.id === (saved.learner ?? "family"))?.name ?? "Family practice"}. New rounds use {learner.name}.</Copy>}
             {/* Options are for grown-ups and changing modes; kept small so it's never the obvious tap mid-game. */}
             <Button compact quiet onPress={openSetup}>

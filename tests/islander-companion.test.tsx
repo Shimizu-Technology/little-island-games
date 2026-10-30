@@ -6,7 +6,7 @@ import { emptySave, parseSave } from '../src/state/validation';
 import { createGame } from '../src/games';
 import { defaultOptions } from '../src/games/types';
 import { defaultLook } from '../src/islander/look';
-import { Companion, IslanderPortrait, LearningCompanion } from '../src/islander/Companion';
+import { Companion, IslanderPortrait, LearningCompanion, PhoneLearningCompanion } from '../src/islander/Companion';
 const fixture = vi.hoisted(() => ({ settings: {} as { learningIslander?: boolean }, width: 390, reduced: false }));
 vi.mock('../src/state/Store', () => ({ useStore: () => ({ save: { settings: fixture.settings } }) }));
 vi.mock('../src/islander/active', () => ({ useActiveIslanderLook: () => ({ skin: 'sand', hairStyle: 'curls', hairColor: 'black', outfit: 'island', hat: 'none', accessory: 'none' }) }));
@@ -60,10 +60,21 @@ describe('placement render smoke', () => {
   it.each([390, 844, 1024, 768])('keeps the activity when hidden and scales beside it at width %i', width => {
     fixture.width = width; fixture.settings = {};
     const html = renderToStaticMarkup(<LearningCompanion event="waiting" desk><button>Answer</button></LearningCompanion>);
-    expect(html).toContain('Answer'); expect(html).toContain('data-desk="true"');
-    expect(html).toContain(`data-size="${width >= 768 ? 132 : 80}"`);
+    expect(html).toContain('Answer');
+    if (width < 600) expect(html).not.toContain('data-size');
+    else { expect(html).toContain('data-desk="true"'); expect(html).toContain(`data-size="${width >= 768 ? 132 : 80}"`); }
     fixture.settings = { learningIslander: false };
     expect(renderToStaticMarkup(<LearningCompanion event="waiting"><button>Answer</button></LearningCompanion>)).toBe('<button>Answer</button>');
+    fixture.settings = {};
+  });
+  it.each(['waiting', 'correct', 'incorrect'] as const)('keeps the phone header crop reacting to %s', event => {
+    fixture.settings = {};
+    const html = renderToStaticMarkup(<PhoneLearningCompanion event={event} active/>);
+    expect(html).toContain('phone-learning-companion');
+    expect(html).toContain(`data-pose="${companionPose(event)}"`);
+    expect(html).toContain('data-size="106"');
+    fixture.settings = { learningIslander: false };
+    expect(renderToStaticMarkup(<PhoneLearningCompanion event={event} active/>)).toBe('');
     fixture.settings = {};
   });
   it('uses the supplied learner look for family portraits', () => {
