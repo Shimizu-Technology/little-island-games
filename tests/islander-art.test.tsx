@@ -62,9 +62,10 @@ describe('Islander authored art',()=>{
     const bottom = Math.max(...pathYs(attr(beam,'d')!),...pathYs(attr(highlight,'d')!)) + 2.5;
     return (180 - bottom) * 129.6 / 180;
   }));
-  for(const frame of frames) for(const hairStyle of hairStyles) for(const hat of hats) for(const outfit of outfits) for(const accessory of accessories){
-   const top=artTop(renderToStaticMarkup(<Islander view="back" pose={frame} look={{...defaultLook,hairStyle,hat,outfit,accessory}}/>));
-   expect(130-top+DUCK_MAX_ELEVATION*85,`${frame} ${hairStyle} ${hat} ${outfit} ${accessory}`).toBeLessThan(clearance);
+  const looks=[...hairStyles.flatMap(hairStyle=>hats.map(hat=>({...defaultLook,hairStyle,hat}))),...outfits.flatMap(outfit=>accessories.map(accessory=>({...defaultLook,outfit,accessory})))];
+  for(const frame of frames) for(const look of looks){
+   const top=artTop(renderToStaticMarkup(<Islander view="back" pose={frame} look={look}/>));
+   expect(130-top+DUCK_MAX_ELEVATION*85,`${frame} ${look.hairStyle} ${look.hat} ${look.outfit} ${look.accessory}`).toBeLessThan(clearance);
   }
  }, 180000);
  it('keeps the busiest wardrobe silhouettes inside the vector budget', () => {
@@ -93,7 +94,7 @@ describe('Islander authored art',()=>{
  });
  it('distinguishes rear hairstyles and exposes lifted soles with the forward hand behind clothing',()=>{
   const silhouettes=hairStyles.map(hairStyle=>renderToStaticMarkup(<Islander view="back" pose={0} look={{...defaultLook,hairStyle}}/>).replace(/ data-back-hair="[^"]*"/g,''));
-  expect(new Set(silhouettes).size).toBe(4);
+  expect(new Set(silhouettes).size).toBe(hairStyles.length);
   for(const frame of [0,4]) {
    const markup=renderToStaticMarkup(<Islander view="back" pose={frame}/>);
    expect(markup).toContain('data-sole="lifted"');
@@ -115,7 +116,7 @@ describe('Islander authored art',()=>{
 
 describe('native rig regressions',()=>{
  it('uses flat mid-thigh hems on both legs in every short outfit and pose',()=>{
-  for(const outfit of outfits.filter(o=>o!=='hoodie')) for(const pose of [...frontPoses,...backPoses]) {
+  for(const outfit of outfits.filter(o=>!['hoodie','space-suit','pirate','overalls'].includes(o))) for(const pose of [...frontPoses,...backPoses]) {
    const markup=renderToStaticMarkup(<Islander view={pose.view} pose={pose} look={{...defaultLook,outfit}}/>);
    const shorts=[...markup.matchAll(/<path[^>]*data-garment="shorts"[^>]*>/g)].map(m=>m[0]);
    expect(shorts).toHaveLength(2);

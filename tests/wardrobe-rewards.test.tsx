@@ -41,7 +41,7 @@ describe('badge reward art contract',()=>{
    expect(markup).not.toMatch(/NaN|undefined/);
    paths=Math.max(paths,(markup.match(/<path\b/g)||[]).length); primitives=Math.max(primitives,(markup.match(/<(?:path|rect|circle|ellipse)\b/g)||[]).length);
   }
-  for(const outfit of outfits) for(const palette of Object.keys(outfitPalettes) as (keyof typeof outfitPalettes)[]) { const look={...defaultLook,outfit,palette}; expect(isValidLook(look)).toBe(true); for(const pose of poses) { const art=renderToStaticMarkup(<Islander view={pose.view} pose={pose} look={look}/>); expect(art).toContain(outfitPalettes[palette].primary); expect(art).not.toMatch(/NaN|undefined/); } }
+  for(const outfit of outfits) for(const palette of Object.keys(outfitPalettes) as (keyof typeof outfitPalettes)[]) { const look={...defaultLook,outfit,palette,...(outfit==='mix'?{top:'tee' as const,bottom:'shorts' as const}:{})}; expect(isValidLook(look)).toBe(true); for(const pose of poses) { const art=renderToStaticMarkup(<Islander view={pose.view} pose={pose} look={look}/>); expect(art).toContain(outfitPalettes[palette].primary); expect(art).not.toMatch(/NaN|undefined/); } }
   // Braids + lei maximize rear path detail; include both fun colour overlays and every hat/outfit.
   for(const pose of backPoses) for(const hat of hats) for(const outfit of outfits) for(const hairColor of ['galaxy','lightning-streak'] as const) {
    const art=renderToStaticMarkup(<Islander view="back" pose={pose} look={{...defaultLook,hairStyle:'braids',hat,outfit,hairColor,accessory:'flower-lei'}}/>);

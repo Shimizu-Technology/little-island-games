@@ -11,7 +11,7 @@ import { LearnerChip } from '../personalization/LearnerChip';
 import { Creator } from '../personalization/Creator';
 import { useSheetsClear } from '../components/sheetPresence';
 import { personFor } from '../personalization/model';
-import { canWear, categories, lockedReason, type Category, type StyleItem, styleCatalog } from '../personalization/catalog';
+import { lookWithStyle, canWear, categories, lockedReason, type Category, type StyleItem, styleCatalog } from '../personalization/catalog';
 import { LockRule } from '../personalization/LockBadge';
 import { StyleGrid } from '../personalization/StyleGrid';
 export default function LockerRoute() {
@@ -24,7 +24,7 @@ function Locker() {
   const params = useLocalSearchParams<{item?: string}>(), initialItem = styleCatalog.find(i => i.id === params.item);
   const store = useStore(), person = personFor(store.save), { width, height } = useWindowDimensions(), inset = useSafeAreaInsets();
   const sheetsClear = useSheetsClear();
-  const [look, setLook] = useState<IslanderLook>(initialItem ? { ...person.look, [initialItem.category]: initialItem.value } : person.look), [category, setCategory] = useState<Category>(initialItem?.category ?? 'outfit'), [back, setBack] = useState(false), [creator, setCreator] = useState(!person.made), [detail, setDetail] = useState<StyleItem | undefined>(initialItem), [message, setMessage] = useState('');
+  const [look, setLook] = useState<IslanderLook>(initialItem ? lookWithStyle(person.look, initialItem) : person.look), [category, setCategory] = useState<Category | 'face'>(initialItem && ['brows','lashes','freckles','cheeks'].includes(initialItem.category) ? 'face' : initialItem?.category ?? 'outfit'), [faceCategory, setFaceCategory] = useState<Category>(initialItem && ['brows','lashes','freckles','cheeks'].includes(initialItem.category) ? initialItem.category : 'brows'), [back, setBack] = useState(false), [creator, setCreator] = useState(!person.made), [detail, setDetail] = useState<StyleItem | undefined>(initialItem), [message, setMessage] = useState('');
   const [expected] = useState({ learner: store.save.learning?.active ?? 'family', epoch: store.epoch });
   const acknowledge = store.personalize;
   useEffect(() => {
@@ -32,7 +32,7 @@ function Locker() {
   }, [initialItem, person.unseen, acknowledge, expected]);
   const wide = width >= 700, short = height < 500, changed = JSON.stringify(look) !== JSON.stringify(person.look), reason = detail && lockedReason(detail, person.earned);
   function choose(item: StyleItem) {
-    setLook({ ...look, [item.category]: item.value }); setDetail(item); setMessage('');
+    setLook(lookWithStyle(look, item)); setDetail(item); setMessage('');
     if (person.unseen.includes(item.id)) store.personalize({ unseen: person.unseen.filter(id => id !== item.id) }, expected);
   }
   const preview = <View testID="locker-preview" style={{ alignItems: 'center', height: short ? 160 : wide ? undefined : (height - inset.top - inset.bottom) * .38, justifyContent: 'center', padding: short ? 4 : 10, borderRadius: 28, backgroundColor: '#E7EDE4', gap: 8 }}>
@@ -43,10 +43,11 @@ function Locker() {
   </View>;
   const dressingPreview = <View style={wide ? { width: '40%', gap: 12 } : { gap: 0 }}>{preview}{!short && <PressableScale accessibilityRole="button" onPress={() => setCreator(true)} style={{ position: wide ? 'relative' : 'absolute', bottom: 0, left: 8, minHeight: 44, justifyContent: 'center', alignItems: 'center' }}><Copy style={{ fontSize: 14, color: C.teal, textDecorationLine: 'underline' }}>{person.made ? 'Change my look' : 'Make your islander'}</Copy></PressableScale>}</View>;
   const choices = <>
-<ScrollView horizontal contentContainerStyle={{ gap: 8, paddingBottom: 6 }}>{categories.map(c => <Chip key={c.key} selected={category === c.key} onPress={() => { setCategory(c.key); setDetail(undefined); }}>{c.label}</Chip>)}</ScrollView>
-        {wide && <Heading style={{ fontSize: 18 }}>{detail?.label ?? categories.find(c => c.key === category)!.label}</Heading>}
+<ScrollView horizontal showsHorizontalScrollIndicator contentContainerStyle={{ gap: 8, paddingBottom: 6, paddingRight: 20 }}><Chip selected={category === 'face'} onPress={() => { setCategory('face'); setDetail(undefined); }}>Face</Chip>{categories.filter(c => !['brows','lashes','freckles','cheeks'].includes(c.key)).map(c => <Chip key={c.key} selected={category === c.key} onPress={() => { setCategory(c.key); setDetail(undefined); }}>{c.label}</Chip>)}</ScrollView>
+        {category === 'face' && <ScrollView horizontal contentContainerStyle={{ gap: 6, paddingRight: 12 }}>{(['brows','lashes','freckles','cheeks'] as const).map(key => <Chip key={key} selected={faceCategory === key} onPress={() => setFaceCategory(key)}>{categories.find(c => c.key === key)!.label}</Chip>)}</ScrollView>}
+        {wide && <Heading style={{ fontSize: 18 }}>{detail?.label ?? (category === 'face' ? 'Face' : categories.find(c => c.key === category)!.label)}</Heading>}
         {!!reason && <LockRule>{reason}</LockRule>}
-        <StyleGrid compact={width < 600} category={category} look={look} equipped={person.look} earned={person.earned} unseen={person.unseen} onChoose={choose}/>
+        <StyleGrid compact={width < 600} category={category === 'face' ? faceCategory : category} look={look} equipped={person.look} earned={person.earned} unseen={person.unseen} onChoose={choose}/>
         {!!person.unseen.length && <Button quiet compact onPress={() => store.personalize({ unseen: [] }, expected)}>Mark all seen</Button>}
   </>;
   return <SafeAreaView style={styles.page}>

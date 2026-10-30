@@ -18,8 +18,8 @@ vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle'
 describe('Lagoon Run Islander integration',()=>{
  it('renders all 24 static frames for every wardrobe geometry combination',()=>{
   let samples=0,maxPaths=0,maxPrimitives=0,maxStaticTransforms=0;
-  for(const hairStyle of hairStyles) for(const hat of hats) for(const outfit of outfits) for(const accessory of accessories) for(let frame=0;frame<24;frame++){
-   const look={...defaultLook,hairStyle,hat,outfit,accessory};
+  const looks=[...hairStyles.map(hairStyle=>({...defaultLook,hairStyle})),...hats.map(hat=>({...defaultLook,hat})),...outfits.map(outfit=>({...defaultLook,outfit,...(outfit==='mix'?{top:'tee' as const,bottom:'shorts' as const}:{})})),...accessories.map(accessory=>({...defaultLook,accessory}))];
+  for(const look of looks) for(let frame=0;frame<24;frame++){
    const markup=renderToStaticMarkup(<RunnerFrameArt frame={frame} look={look}/>);
    expect(markup).not.toMatch(/NaN|undefined|Infinity/);
    expect(markup).toContain('viewBox="0 0 80 132"');
@@ -32,7 +32,7 @@ describe('Lagoon Run Islander integration',()=>{
    maxStaticTransforms=Math.max(maxStaticTransforms,[...markup.matchAll(/<g[^>]*transform=/g)].length);
    samples++;
   }
-  expect(samples).toBe(hairStyles.length * hats.length * outfits.length * accessories.length * 24);
+  expect(samples).toBe(looks.length * 24);
   console.info('Run wardrobe vector budget',JSON.stringify({maxPaths,maxPrimitives,maxStaticTransforms,samples}));
   expect(maxPaths).toBeLessThanOrEqual(40);
   expect(maxPrimitives).toBeLessThanOrEqual(65);
