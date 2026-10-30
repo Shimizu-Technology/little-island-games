@@ -294,3 +294,34 @@ Delivery:
 Receipt: [evidence/testflight-build19.json](evidence/testflight-build19.json).
 
 Not verified: physical iPhone and iPad feel, VoiceOver end to end, and Stassie's own acceptance.
+
+## Little Island 2.1 — 2.1.0 (20), available 30 October 2026 Guam time
+
+Leon on 2.0: "why can't people choose their gender and like styling", "when the avatar is put on the bed or chair, they get smaller … why does the crab not get smaller?", and he wanted Island Home customizable like Toca Boca.
+
+**Islander:**
+- a "Who's your islander? Boy / Girl / Just me" first step: a preset only, anyone can wear anything;
+- brows, lashes, freckles and cheeks;
+- 6 more hairstyles and more colours;
+- 8 more outfits, plus mix-and-match tops and bottoms.
+
+**Island Home:**
+- four rooms (My room, Kitchen, Tree house, Beach hut);
+- 41 free furniture items at real-world sizes;
+- a colour picker;
+- several small items per table or shelf, with a chooser;
+- a 2× finer grid and 48 items per room;
+- characters keep their size when seated.
+
+Badges still unlock the themed showpieces; decorating and styling are free.
+
+Source: clean commit `93febd3fbadfb8cc55aa81a324b334054c38421e` on PR #16 (held). Full gate 1,478 tests; Doctor 21/21. Two independent review rounds; all material findings fixed (single-item surfaces, overlapping stacked touch targets, toolbar over the tray). Lead native walkthrough.
+
+Delivery:
+- The IPA is 174,118,715 bytes, SHA256 `99e1be53fb13d5b8da6e53e46cfb78a0b0723dfa1d5e69a6c279f5e85d313399`.
+- The signature passed, and 5,815 audio files match the source.
+- Apple build `6d60b63d-71ad-46b3-a93a-db3ee69e6613` is VALID / IN_BETA_TESTING in the Leon group, with notes.
+
+Receipt: [evidence/testflight-build20.json](evidence/testflight-build20.json).
+
+Not verified: physical iPhone and iPad feel, VoiceOver end to end, and Stassie's acceptance.
