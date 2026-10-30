@@ -30,3 +30,17 @@ describe('walkthrough reward clarity', () => {
     }
   });
 });
+
+it('frames v3 feet and garments below the large head', () => {
+  const box = (category: 'shoes' | 'shoeColor' | 'top' | 'bottom' | 'hairColor' | 'build') => thumbnailFocus({ category, value: '' }).box.split(' ').map(Number);
+  for (const category of ['shoes', 'shoeColor'] as const) {
+    const [x, y, w, h] = box(category);
+    // Both feet (around x=30/50, y=128) and boot cuffs fit, with no head.
+    expect(x).toBeLessThan(23); expect(x + w).toBeGreaterThan(57);
+    expect(y).toBeGreaterThan(90); expect(y).toBeLessThan(116); expect(y + h).toBeGreaterThan(132);
+  }
+  expect(box('top')[1]).toBeGreaterThan(60);
+  expect(box('bottom')[1]).toBeGreaterThan(80);
+  expect(box('hairColor')).toEqual([5, 0, 70, 70]);
+  expect(box('build')[3]).toBeGreaterThanOrEqual(132);
+});
