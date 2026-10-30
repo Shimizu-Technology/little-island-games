@@ -183,3 +183,35 @@ All phases merged on `feat/islander`.
   It also found five polish items (lock visibility, track-named rules, "Change my look", item-focused thumbnails, seat depth), fixed in f3a7fc9.
 
 **Not verified:** physical-device feel, VoiceOver end to end, iPad hardware, and Stassie's own acceptance.
+
+## 2.1.0 (20)
+
+Leon on 2.0: why no gender or styling choice; the seated Islander shrinks but the crab doesn't; and he wants Toca-like customization. He approved the agreed scope (artifacts `islander/v21/LEON.md`).
+
+**What 2.1 adds:**
+- **Islander:**
+  - a first step, "Who's your islander? Boy / Girl / Just me", which presets a look and locks nothing;
+  - face options: brows, lashes, freckles, cheeks;
+  - 6 more hairstyles and more colours;
+  - 8 more outfits;
+  - mix-and-match tops and bottoms.
+- **Island Home v2:**
+  - four rooms (my room, kitchen, tree house, beach hut);
+  - 41 free furniture items with real-world sizes;
+  - a colour picker;
+  - stacking (several small items per surface);
+  - a 2× finer grid;
+  - 48 items per room.
+- **Characters keep a constant size when seated.**
+
+Creativity is free; badges still unlock the themed showpieces.
+
+**Quality:**
+- Independent review: one material finding (a surface held only one item), fixed.
+- Lead native walkthrough found:
+  - Decorate layout overlaps;
+  - tiny new furniture;
+  - an oversized tray;
+  - a smeared aloha print.
+
+  All fixed in 24cd52c.
