@@ -77,7 +77,7 @@ export function StageRoom({ room, theme, badges = [], onBadgePress }: { room: Ro
       <Rect x={531} y={33} width={164} height={158} rx={7} fill="#E9CC9E"/>
       {tracks.flatMap((track,row)=>([1,2,3,4] as const).map((tier,col)=>{
         const id: BadgeId = `${track}-${tier}`, earned = badges.includes(id), info = badgeInfo(id);
-        return <G key={id} transform={`translate(${536+col*39} ${37+row*25})`} onPress={()=>onBadgePress?.(id)} accessible accessibilityLabel={`${info.name}. ${earned?'Earned':info.rule}. Open My badges`}>
+        return <G key={id} transform={`translate(${536+col*39} ${37+row*22})`} onPress={()=>onBadgePress?.(id)} accessible accessibilityLabel={`${info.name}. ${earned?'Earned':info.rule}. Open My badges`}>
           <Rect width={34} height={22} rx={4} fill={earned?"#FFF3D4":"#CFAE88"} stroke="#B28D66" strokeWidth={1}/>
           <G transform="translate(4 0) scale(.25)"><BadgeGlyph id={id} earned={earned}/></G>
         </G>;

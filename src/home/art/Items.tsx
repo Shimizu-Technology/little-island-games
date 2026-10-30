@@ -71,7 +71,11 @@ export function ItemArt({
       >
         <G transform={rotation === 180 || rotation === 270 ? "translate(150 0) scale(-1 1)" : undefined}>
           <ItemMotion active={active} animated={animated} reduced={reduced}>
-          {item === "bed" ? (
+          {item === "robot-buddy" ? (
+            <><Rect x={41} y={39} width={68} height={68} rx={15} fill={`url(#item-teal-${item})`}/><Path d="M75 39V26"/><Circle cx={75} cy={23} r={5} fill="#E7BD68"/><Circle cx={59} cy={68} r={5} fill={pale}/><Circle cx={91} cy={68} r={5} fill={pale}/><Path d="M59 83Q75 99 91 83" fill="none" stroke={pale} strokeWidth={4}/><Path d="M51 107V118M99 107V118" strokeWidth={7}/></>
+          ) : item === "computer-desk" ? (
+            <><Path d="M20 81H130V97H20Z" fill={wood}/><Path d="M31 96V119M119 96V119" stroke={wood} strokeWidth={8}/><Rect x={42} y={23} width={66} height={53} rx={5} fill="#3A526B"/><Rect x={47} y={28} width={56} height={39} rx={2} fill="#A8D1CB"/><Path d="m62 42-8 6 8 6m27-12 8 6-8 6M73 54l6-15" fill="none" stroke="#3A526B" strokeWidth={3}/><Path d="M75 76v9M59 86h32" stroke="#3A526B" strokeWidth={5}/></>
+          ) : item === "bed" ? (
             <>
               <Path d="M18 41L116 34L135 92L36 105Z" fill={wood} />
               <Path d="M18 42V88L36 105V61Z" fill="#BA805D" />

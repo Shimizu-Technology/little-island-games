@@ -30,6 +30,15 @@ export function LearnArt({ island, size = 64 }: { island: Island; size?: number 
           <Path d="M32 40v-8M32 34c-4-1-6-4-6-7 4 0 6 3 6 7zM32 32c3-1 5-3 5-6-3 0-5 2-5 6z" fill="#5E9B5A" stroke="#3E7A3A" strokeWidth={1.5} />
         </>
       )}
+      {island === "coding" && (
+        <>
+          <Rect x={11} y={15} width={42} height={37} rx={9} fill="#B6C8EB" stroke="#3D5A9A" strokeWidth={2.5}/>
+          <Path d="M32 15V9" stroke="#3D5A9A" strokeWidth={2.5}/><Circle cx={32} cy={8} r={3} fill="#E1B251"/>
+          <Circle cx={24} cy={29} r={3} fill="#294470"/><Circle cx={40} cy={29} r={3} fill="#294470"/>
+          <Path d="M23 39q9 9 18 0" fill="none" stroke="#294470" strokeWidth={2.5} strokeLinecap="round"/>
+          <Path d="M18 53v4m28-4v4" stroke="#3D5A9A" strokeWidth={3} strokeLinecap="round"/>
+        </>
+      )}
       {island === "thinking" && (
         <>
           <Path
