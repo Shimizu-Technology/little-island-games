@@ -215,3 +215,20 @@ Creativity is free; badges still unlock the themed showpieces.
   - a smeared aloha print.
 
   All fixed in 24cd52c.
+
+## 2.2.0 (21)
+
+Leon on 2.1: the numbered creator steps weren't intuitive; avatars weren't clearly boy or girl; he wanted Toca Boca-quality avatars, clothes, Locker and home, plus Subway Surfers, Flappy Bird and Crossy Road quality for the games and premium learning apps for learning, iterating against real references.
+
+**Method:** the lead pulled official App Store screenshots (Toca Boca World, Subway Surfers, Crossy Road, Khan Academy Kids, Duolingo ABC) into artifacts `islander/v22/refs/` and wrote a style analysis (`v22/LEON.md`). Each worker iterated side by side against the references, and the lead rejected first passes until each reached the bar: avatar 2 rounds, Island Home 2, Crab 2, Run 2.
+
+**What changed:**
+- **Islander v3:** Toca-like proportions, a dot-eye face with expressions, 14 lock-built hairstyles, fashion-detailed outfits with their own colours, a shoes slot, and a boy/girl/neutral build. Boy versus girl reads at a glance; nothing is locked by gender.
+- **Locker and creator:** a colour-grouped icon tab editor (Me, Head, Clothes, Extras) with big zoomed option circles; no numbered steps.
+- **Island Home:** a frontal full-screen stage, lived-in room shells, richer furniture, light animations.
+- **Lagoon Run:** a harbor world with a big runner, a busy boardwalk, shell trails, juice and a HUD.
+- **Fruit Bat Flight:** night parallax, a big score, Get Ready, a shell medal and instant retry.
+- **Crab Crossing:** a full-bleed angled block world with a follow camera, tap or swipe input, props and juice.
+- **Learning:** subject colours, a journey progress bar, illustrated backdrops, a companion cheer, tactile answers, a celebration screen and shelf cards.
+
+**Quality:** independent review found one material issue (landscape Island Home was unreachable) and one minor (the locked-item rule was missing on a deep link), both fixed with tests. The lead native walkthrough covered the Locker (boy preset), Island Home, Flight, Run and Crab.
