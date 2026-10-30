@@ -1,5 +1,6 @@
+import { CameraPan } from "./HouseCamera";
 import { spotFromPoint } from "./geometry";
-import React, { type ReactNode } from "react";
+import React, { useContext, type ReactNode } from "react";
 import { View, type ViewProps, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -111,12 +112,16 @@ export function Drag({
   const dx = useSharedValue(0),
     dy = useSharedValue(0),
     lift = useSharedValue(0),
-    dragging = useSharedValue(false);
+    dragging = useSharedValue(false),
+    pinching = useSharedValue(false);
   const preview = config.preview;
-  const panBase = Gesture.Pan().enabled(enabled).minDistance(5);
+  const cameraPan = useContext(CameraPan);
+  const panBase = Gesture.Pan().enabled(enabled).maxPointers(1).minDistance(5);
+  if (cameraPan) panBase.blocksExternalGesture(cameraPan);
   // Vertical exit preserves the inventory's native horizontal scrolling.
   if (tray) panBase.activeOffsetY([-8, 8]).failOffsetX([-14, 14]);
   const pan = panBase
+    .onTouchesDown(e => { if(e.allTouches.length > 1) pinching.value = true; })
     .onStart(() => {
       "worklet";
       dragging.value = true;
@@ -125,19 +130,21 @@ export function Drag({
     })
     .onUpdate((e) => {
       "worklet";
+      if (e.numberOfPointers > 1 || pinching.value) return;
       dx.value = e.translationX;
       dy.value = e.translationY;
       updatePreview(config, e.absoluteX, e.absoluteY, e.translationX, e.translationY);
     })
     .onEnd((e) => {
       "worklet";
-      runOnJS(onDrop)(e.absoluteX, e.absoluteY, e.translationX, e.translationY);
+      if (!pinching.value) runOnJS(onDrop)(e.absoluteX, e.absoluteY, e.translationX, e.translationY);
     })
     .onFinalize(() => {
       "worklet";
       // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are mutable UI-thread handles, not React props.
       preview.value = emptyPreview;
       dragging.value = false;
+      pinching.value = false;
       dx.value = 0;
       dy.value = 0;
       lift.value = reduced ? 0 : withSpring(0, { damping: 12, stiffness: 260, mass: 0.45 });
