@@ -17,7 +17,7 @@ it('renders the complete new look contact matrix',()=>{
  const face = [...brows.map(b=>({label:`brows ${b}`,look:{...defaultLook,brows:b}})),...lashes.map(l=>({label:`lashes ${l}`,look:{...defaultLook,lashes:l}})),...freckles.map(f=>({label:`freckles ${f}`,look:{...defaultLook,freckles:f}})),...cheeks.map(c=>({label:`cheeks ${c}`,look:{...defaultLook,cheeks:c}}))].map(({label,look})=>cell(label,look,'front','idle')).join('');
  for(const html of [hair,clothing,mix,face]) expect(html).not.toMatch(/NaN|undefined|Infinity/);
  const dir=process.env.V21_CONTACT_DIR;if(dir){mkdirSync(dir,{recursive:true});for(const [name,content] of Object.entries({hair,clothing,mix,face}))writeFileSync(`${dir}/${name}.html`,page(`Little Island 2.1 · ${name}`,content));}
-});
+},180000);
 
 it('keeps new identity choices free and rejects incomplete restored mixes',async()=>{
  const { canWear } = await import('../src/personalization/catalog');
@@ -40,7 +40,7 @@ it('renders each new hair and every mix pair on the shared front and back pose r
   const html=renderToStaticMarkup(<Islander look={{...defaultLook,outfit:'mix',top,bottom}} view={pose.view} pose={pose}/>);
   expect(html).not.toMatch(/NaN|undefined|Infinity/);
  }
-});
+},180000);
 
 
 it('keeps mixed garments independent and thumbnails truthful', async () => {

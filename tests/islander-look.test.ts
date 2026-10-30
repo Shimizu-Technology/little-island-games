@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { defaultLook, normalizeLook, isValidLook, hairStyles, hairColors, outfits, hats, accessories, skinTones, outfitPalettes, brows, lashes, freckles, cheeks, tops, bottoms, presentations } from '../src/islander/look';
+import { defaultLook, normalizeLook, isValidLook, hairStyles, hairColors, outfits, hats, accessories, skinTones, outfitPalettes, brows, lashes, freckles, cheeks, tops, bottoms, presentations, shoes, builds, shoeColors } from '../src/islander/look';
 import { anchorsFor, wardrobe } from '../src/islander/rig/wardrobe';
 import { backPose, backPoses, frontPoses, runCycleFrames } from '../src/islander/rig/poses';
 describe('Islander look boundary', () => {
   it('validates every catalog field and optional palette', () => {
     expect(isValidLook(defaultLook)).toBe(true);
-    for (const [key, ids] of Object.entries({ hairStyle: hairStyles, hairColor: Object.keys(hairColors), outfit: outfits, hat: hats, accessory: accessories, skinTone: Object.keys(skinTones), palette: Object.keys(outfitPalettes), brows, lashes, freckles, cheeks, top: tops, bottom: bottoms, presentation: presentations })) {
-      for (const id of ids) expect(isValidLook({ ...defaultLook, [key]: id, ...(key === 'outfit' && id === 'mix' ? {top:'tee',bottom:'shorts'} : {}) })).toBe(true);
+    for (const [key, ids] of Object.entries({ hairStyle: hairStyles, hairColor: Object.keys(hairColors), outfit: outfits, hat: hats, accessory: accessories, skinTone: Object.keys(skinTones), palette: Object.keys(outfitPalettes), brows, lashes, freckles, cheeks, top: tops, bottom: bottoms, presentation: presentations, shoes, build: builds, shoeColor: Object.keys(shoeColors) })) {
+      for (const id of ids) expect(isValidLook({ ...defaultLook, [key]: id, ...(key === 'outfit' && id === 'mix' ? {top:'tee',bottom:'shorts'} : {}) }), `${key}:${id}`).toBe(true);
       for (const invalid of ['unknown', null, 3, [], {}]) expect(isValidLook({ ...defaultLook, [key]: invalid })).toBe(false);
     }
   });
@@ -26,7 +26,7 @@ describe('Islander look boundary', () => {
 });
 describe('Islander skeleton and wardrobe contracts', () => {
   it('every claimed view has every declared attachment and a known layer', () => {
-    expect(new Set(wardrobe.map(i => `${i.slot}:${i.id}`)).size).toBe(hairStyles.length + outfits.length + hats.length - 1 + accessories.length - 1);
+    expect(new Set(wardrobe.map(i => `${i.slot}:${i.id}`)).size).toBe(hairStyles.length + outfits.length + hats.length - 1 + accessories.length - 1 + shoes.length);
     for (const item of wardrobe) for (const view of item.views) for (const pose of view === 'front' ? frontPoses : backPoses) for (const anchor of item.anchors) expect(anchorsFor(pose)[anchor].every(Number.isFinite)).toBe(true);
   });
   it('keeps every joint in bounds and each limb bone constant (back-view running legs may only foreshorten)', () => {
@@ -34,7 +34,7 @@ describe('Islander skeleton and wardrobe contracts', () => {
       for (const p of Object.values(pose.joints)) { expect(p[0], pose.id).toBeGreaterThanOrEqual(0); expect(p[0], pose.id).toBeLessThanOrEqual(80); expect(p[1], pose.id).toBeGreaterThanOrEqual(0); expect(p[1], pose.id).toBeLessThanOrEqual(132); }
       // Back-view running legs fold in depth, so their projected bones may only shorten (never stretch).
       const folding = pose.view === 'back' && (pose.frame! < 8 || pose.frame! >= 16);
-      for (const side of ['left', 'right'] as const) for (const [a,b,length] of [['Shoulder','Elbow',16],['Elbow','Hand',16],['Hip','Knee',18],['Knee','Foot',18]] as const) { const p=pose.joints[`${side}${a}`], q=pose.joints[`${side}${b}`], d=Math.hypot(p[0]-q[0],p[1]-q[1]);
+      for (const side of ['left', 'right'] as const) for (const [a,b,length] of [['Shoulder','Elbow',16],['Elbow','Hand',16],['Hip','Knee',14],['Knee','Foot',14]] as const) { const p=pose.joints[`${side}${a}`], q=pose.joints[`${side}${b}`], d=Math.hypot(p[0]-q[0],p[1]-q[1]);
         if (folding && (a === 'Hip' || a === 'Knee')) { expect(d, `${pose.id} ${side}${a}`).toBeLessThanOrEqual(length + 1e-7); expect(d, `${pose.id} ${side}${a}`).toBeGreaterThanOrEqual(length * .25); }
         else expect(d, `${pose.id} ${side}${a}`).toBeCloseTo(length,7); }
     }
