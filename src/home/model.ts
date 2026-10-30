@@ -1,3 +1,4 @@
+import { freeFloor } from "./freeFloor";
 import { roomDefaultTheme } from "./art/roomDefaults";
 import { moreCatalog, roomIds, tintIds, type RoomId, type TintId } from "./catalogMore";
 import { clearFootprint } from "./placement";
@@ -103,9 +104,9 @@ export function validHome(v: unknown): v is HomeSave {
     return validRoom({ instances: s.instances, characters: s.characters, theme: s.theme }, true);
   }
   if (!exact(v, ["version", "current", "rooms"]) || s.version !== 2 || !member(roomIds, s.current) || !exact(s.rooms, [...roomIds]) || !roomIds.every(id => validRoom(s.rooms[id]))) return false;
-  // Friends visit one room together; duplicate slots across rooms are corrupt data.
+  // Friends may live in different rooms; duplicate slots across rooms are corrupt data.
   const slots = roomIds.flatMap(id => s.rooms[id].characters.map(c => c.slot));
-  return new Set(slots).size === slots.length && roomIds.every(id => id === s.current || s.rooms[id].characters.length === 0);
+  return new Set(slots).size === slots.length;
 }
 /** Pure, strict and idempotent. Never changes the source; invalid input belongs in recovery. */
 export function migrateHome(v: unknown): HomeStateV2 | undefined {
@@ -177,7 +178,8 @@ export function starterHome(): HomeStateV2 {
   };
   return { version: 2, current: "home", rooms: { home, kitchen: extra("kitchen"), treehouse: extra("treehouse"), beach: extra("beach") } };
 }
-export type HomeAction =
+export type HomeAction = (
+  | { type: "transfer"; slot: Character["slot"]; room: RoomId; x: number; y: number }
   | { type: "place"; instance: Instance }
   | { type: "move"; id: string; x: number; y: number; on?: string }
   | { type: "tint"; id: string; tint: TintId }
@@ -185,21 +187,36 @@ export type HomeAction =
   | { type: "rotate" | "mirror" | "put-away" | "toggle"; id: string }
   | { type: "character"; slot: Character["slot"]; anchor: Anchor; x?: number; y?: number; seatId?: string }
   | { type: "theme"; wallpaper?: HomeState["theme"]["wallpaper"]; floor?: HomeState["theme"]["floor"] }
-  | { type: "reset" };
+  | { type: "reset" }) & { roomId?: RoomId };
 export type HomeResult = { state: HomeStateV2; message?: string; snapshot?: HomeStateV2 };
 export function owns(item: ItemId, ownership: Ownership): boolean {
   return !!moreCatalog[item]?.free || (starterItems as readonly string[]).includes(item) || !!ownership.ownedItems?.includes(item);
 }
 export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ownership = {}): HomeResult {
-  const state = currentRoom(save);
+  const roomId = action.roomId ?? save.current;
+  if (!member(roomIds, roomId)) return { state: save };
+  const state = save.rooms[roomId];
   let next: RoomState = state;
   const fail = (message: string): HomeResult => ({ state: save, message });
   if (action.type === "room") {
     if (!member(roomIds, action.room) || action.room === save.current) return { state: save };
-    const characters = state.characters.map(c => ({ slot: c.slot, anchor: "floor" as const, pose: "stand" as const, x: c.slot * 6, y: c.slot === 2 ? 8 : 4 }));
-    return { state: { ...save, current: action.room, rooms: { ...save.rooms, [save.current]: { ...state, characters: [] }, [action.room]: { ...save.rooms[action.room], characters } } } };
+    return { state: { ...save, current: action.room } };
   }
-  if (action.type === "reset") return { state: { ...save, rooms: { ...save.rooms, [save.current]: { ...starterHome().rooms[save.current], characters: starterHome().rooms[save.current].characters.length ? starterHome().rooms[save.current].characters : state.characters.map(c => ({ slot: c.slot, anchor: "hello", pose: "stand" })) } } }, snapshot: save };
+  if (action.type === "transfer") {
+    if (!member(roomIds, action.room) || !Number.isFinite(action.x) || !Number.isFinite(action.y)) return fail("Choose a room floor.");
+    const character = state.characters.find(c => c.slot === action.slot);
+    if (!character) return fail("Choose a friend in this room.");
+    const destination = save.rooms[action.room];
+    const moved: Character = { slot: action.slot, anchor: "floor", pose: "stand", ...freeFloor(destination.instances, action.x, action.y) };
+    const rooms = { ...save.rooms, [roomId]: { ...state, characters: state.characters.filter(c => c.slot !== action.slot) } };
+    rooms[action.room] = { ...rooms[action.room], characters: [...rooms[action.room].characters, moved] };
+    return { state: { ...save, current: action.room, rooms } };
+  }
+  if (action.type === "reset") {
+    const fresh = starterHome().rooms[roomId];
+    const characters = state.characters.map(c => fresh.characters.find(initial => initial.slot === c.slot) ?? {slot:c.slot,anchor:'floor' as const,pose:'stand' as const,...freeFloor(fresh.instances,c.slot*6,8)});
+    return { state: {...save,rooms:{...save.rooms,[roomId]:{...fresh,characters}}},snapshot:save };
+  }
   if (action.type === "place") {
     if (state.instances.length >= MAX_INSTANCES) return fail("Put something away to make room.");
     if (
@@ -221,6 +238,7 @@ export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ow
   } else if (action.type === "character") {
     if (!state.characters.some((c) => c.slot === action.slot) || !anchorAvailable(state.instances, action.anchor))
       return fail("Put that seat in the room first.");
+    if (action.anchor === "floor" && (!Number.isFinite(action.x) || !Number.isFinite(action.y))) return fail("Choose a floor spot.");
     next = {
       ...state,
       characters: state.characters.map((c) =>
@@ -230,7 +248,7 @@ export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ow
               anchor: action.anchor,
               pose: poseFor(action.anchor),
               ...(action.anchor === "floor"
-                ? { x: action.x, y: action.y }
+                ? freeFloor(state.instances, action.x ?? 8, action.y ?? 8)
                 : action.seatId !== undefined
                   ? { seatId: action.seatId }
                   : {}),
@@ -250,7 +268,7 @@ export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ow
         characters: state.characters.map((c) =>
           anchorAvailable(instances, c.anchor) && (!c.seatId || instances.some((i) => i.id === c.seatId))
             ? c
-            : { slot: c.slot, anchor: "hello", pose: "stand" }
+            : { slot: c.slot, anchor: "floor", pose: "stand", ...freeFloor(instances,c.slot*6,8) }
         ),
       };
     } else {
@@ -274,7 +292,8 @@ export function homeReducer(save: HomeStateV2, action: HomeAction, ownership: Ow
       next = { ...state, instances: state.instances.map((i) => i.id === action.id ? replacement : action.type === "move" && i.on === target.id ? { ...i, x: i.x + action.x - target.x, y: i.y + action.y - target.y } : i) };
     }
   }
-  const result: HomeStateV2 = { ...save, rooms: { ...save.rooms, [save.current]: next } };
+  if (action.type !== 'character') next = { ...next, characters: next.characters.map(c => c.anchor === 'floor' ? {...c,...freeFloor(next.instances,c.x!,c.y!)} : c) };
+  const result: HomeStateV2 = { ...save, rooms: { ...save.rooms, [roomId]: next } };
   if (!validHome(result)) return fail("Try a clear spot. The door needs a little space too.");
   return { state: result };
 }
