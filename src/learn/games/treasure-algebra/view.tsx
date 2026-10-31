@@ -4,10 +4,10 @@ import Svg, { Circle, Ellipse, G, Line, Path, Rect, Text as SvgText } from "reac
 import { useReducedMotion } from "../../../components/motion";
 import { Button, C, Copy, Heading, PressableScale } from "../../../components/ui";
 import type { BoardProps } from "../../types";
-import { initialValue, solved, type AlgebraState, type AlgebraTask } from "./engine";
+import { initialValue, solved, workedHint, seaLineRange, type AlgebraState, type AlgebraTask } from "./engine";
 
 const navy = "#315D88", teal = "#217B8A", coral = "#D66E57", sand = "#FFF1C8";
-const lineY = (value: number) => 165 - Math.max(-15, Math.min(15, value)) * 9.5;
+
 
 function Diver({ size = 62 }: { size?: number }) {
   return <Svg width={size} height={size} viewBox="0 0 70 70" accessible={false}>
@@ -26,24 +26,28 @@ function Diver({ size = 62 }: { size?: number }) {
 
 function SeaLine({ value, start }: { value: number; start?: number }) {
   const reduced = useReducedMotion();
-  const [motion] = useState(() => new Animated.Value(-value * 9.5));
+  const { min, max } = seaLineRange(value, start);
+  const lineY = (n: number) => 290 - (n - min) / (max - min) * 250;
+  const ticks = Array.from({ length: 6 }, (_, i) => Math.round(min + (max - min) * i / 5));
+  const targetY = lineY(value) - 165;
+  const [motion] = useState(() => new Animated.Value(targetY));
   useEffect(() => {
-    const toValue = -Math.max(-15, Math.min(15, value)) * 9.5;
+    const toValue = targetY;
     if (reduced) { motion.stopAnimation(); motion.setValue(toValue); return; }
     const move = Animated.timing(motion, { toValue, duration: 220, useNativeDriver: true });
     move.start();
     return () => move.stop();
-  }, [motion, value, reduced]);
+  }, [motion, targetY, reduced]);
   return <View style={{ alignItems: "center", gap: 7 }}>
     <View accessibilityLabel={`Vertical sea-level number line. Diver at ${value}${start === undefined ? "" : `, start ${start}`}`} style={{ width: 286, height: 330, borderRadius: 24, overflow: "hidden", borderWidth: 3, borderColor: navy, backgroundColor: "#E3F6F2" }}>
       <Svg width="286" height="330" viewBox="0 0 286 330" accessible={false}>
-        <Rect width="286" height="165" fill="#E9F6DC"/><Rect y="165" width="286" height="165" fill="#C4E9EE"/>
+        <Rect width="286" height={lineY(0)} fill="#E9F6DC"/><Rect y={lineY(0)} width="286" height={330-lineY(0)} fill="#C4E9EE"/>
         <Circle cx="47" cy="43" r="20" fill="#F8CC67"/><Path d="M47 10v10M47 66v10M14 43h10M70 43h10M23 19l7 7M64 61l7 7M71 19l-7 7M30 61l-7 7" stroke="#E6A63F" strokeWidth="3" strokeLinecap="round"/>
-        <Path d="M0 164Q20 158 40 164T80 164T120 164T160 164T200 164T240 164T286 164" fill="none" stroke={teal} strokeWidth="5"/>
+        <Path d={`M0 ${lineY(0)}H286`} fill="none" stroke={teal} strokeWidth="5"/>
         <Path d="M10 238Q55 223 102 240M26 275Q79 262 120 279M16 306Q54 295 85 307" fill="none" stroke="#8FCBD0" strokeWidth="4" strokeLinecap="round"/>
         <Path d="M15 316q9-24 18 0m16 0q8-19 16 0" fill="none" stroke={teal} strokeWidth="3"/>
         <Line x1="192" y1="14" x2="192" y2="316" stroke={navy} strokeWidth="4"/>
-        {[-15,-10,-5,0,5,10,15].map(n => <G key={n}><Line x1="181" y1={lineY(n)} x2="204" y2={lineY(n)} stroke={n === 0 ? coral : navy} strokeWidth={n === 0 ? "4" : "2"}/><SvgText x="218" y={lineY(n)+5} fill={n === 0 ? "#A94D36" : navy} fontWeight="800" fontSize="16">{n > 0 ? `+${n}` : n}</SvgText></G>)}
+        {ticks.map(n => <G key={n}><Line x1="181" y1={lineY(n)} x2="204" y2={lineY(n)} stroke={n === 0 ? coral : navy} strokeWidth={n === 0 ? "4" : "2"}/><SvgText x="218" y={lineY(n)+5} fill={n === 0 ? "#A94D36" : navy} fontWeight="800" fontSize="16">{n > 0 ? `+${n}` : n}</SvgText></G>)}
         {start !== undefined && <G><Circle cx="192" cy={lineY(start)} r="8" fill="#F7C25E" stroke={navy} strokeWidth="2"/><SvgText x="105" y={lineY(start)-10} fill={navy} fontSize="12" fontWeight="800">START</SvgText></G>}
       </Svg>
       <Animated.View pointerEvents="none" style={{ position: "absolute", left: 104, top: 133, transform: [{ translateY: motion }] }}><Diver size={62}/></Animated.View>
@@ -61,14 +65,15 @@ function BalanceBoard({ task, state, remove, divide }: { task: AlgebraTask; stat
   const dragWeight = Platform.OS === "web" ? React.createElement("div", { draggable: left > 0, onDragStart: e => e.dataTransfer.setData("text/plain", "balance-weight"), style: { cursor: "grab" } }, removal) : removal;
   const dropBasket = Platform.OS === "web" ? React.createElement("div", { role: "button", "aria-label": "Drop weight to remove it from both pans", onDragOver: e => e.preventDefault(), onDrop: e => { e.preventDefault(); if (e.dataTransfer.getData("text/plain") === "balance-weight") remove(); }, style: { border: `2px dashed ${navy}`, borderRadius: 14, padding: 10, textAlign: "center", color: navy, fontWeight: 800, minWidth: 110 } }, "Drop weight here") : <Copy style={{ color: navy, fontWeight: "800" }}>Take the weight off both pans.</Copy>;
   return <View style={{ backgroundColor: "#E6F1E4", borderRadius: 22, padding: 14, gap: 10, borderWidth: 2, borderColor: navy }}>
-    <Copy style={{ color: navy, fontWeight: "900", textAlign: "center", fontSize: 18 }}>BALANCE BOTH PANS</Copy>
+    <Copy style={{ color: navy, fontWeight: "900", textAlign: "center", fontSize: 18 }}>{task.kind === "inequality" ? "KEEP THE ≤ RELATION" : "BALANCE BOTH PANS"}</Copy>
     <View style={{ flexDirection: "row", gap: 8 }}>
       <View style={{ flex: 1, backgroundColor: C.paper, borderRadius: 16, borderWidth: 2, borderColor: navy, minHeight: 105, alignItems: "center", justifyContent: "center", gap: 3 }}><Copy style={{ fontSize: 23, fontWeight: "900", color: navy }}>{state.divided || task.extra === 1 ? "x" : `${task.extra}x`} {left > 0 ? `+ ${left}` : ""}</Copy>{left > 0 && <Weight value={left}/>}</View>
+      {task.kind === "inequality" && <Copy style={{ alignSelf: "center", fontSize: 26, fontWeight: "900" }}>≤</Copy>}
       <View style={{ flex: 1, backgroundColor: C.paper, borderRadius: 16, borderWidth: 2, borderColor: navy, minHeight: 105, alignItems: "center", justifyContent: "center", gap: 3 }}><Copy style={{ fontSize: 23, fontWeight: "900", color: navy }}>{state.divided ? right / task.extra : right}</Copy>{!state.divided && <Weight value={right}/>}</View>
     </View>
     <Svg height="50" width="100%" viewBox="0 0 300 50"><Path d="M20 3H280M150 3V34M127 47L150 30L173 47Z" fill="#F7C25E" stroke={navy} strokeWidth="4" strokeLinejoin="round"/></Svg>
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 8 }}>{left > 0 && dragWeight}{left > 0 && dropBasket}{left <= 0 && task.extra > 1 && !state.divided && <Button compact quiet onPress={divide}>÷{task.extra} both</Button>}</View>
-    {left <= 0 && <Copy style={{ color: navy, textAlign: "center", fontWeight: "800" }}>{task.extra > 1 && !state.divided ? `Now split both sides into ${task.extra} equal groups.` : "Both sides still match. Find x below."}</Copy>}
+    {left <= 0 && <Copy style={{ color: navy, textAlign: "center", fontWeight: "800" }}>{task.extra > 1 && !state.divided ? `Now split both sides into ${task.extra} equal groups.` : task.kind === "inequality" ? `x ≤ ${task.answer}. Choose any integer at or below ${task.answer}.` : "Both sides still match. Find x below."}</Copy>}
   </View>;
 }
 
@@ -97,14 +102,14 @@ export function Board({ session, update, practice, assistance, cheer, coach }: B
     : task.kind === "pattern" ? `Continue ${task.a}, ${task.a+task.b}, ${task.a+2*task.b}, ...`
     : task.kind === "expression" ? `Find ${task.a} + ${task.b} × ${task.extra}`
     : `${task.extra}x + ${task.a} ≤ ${task.b}`;
-  const instruction = balance ? "Remove the same treasure from both pans. Split both sides if x has a group, then set x." : task.kind === "missing" ? "What number is hiding in the box? Move the diver to show x." : task.kind === "substitution" ? "Put the given x into the expression. Multiply before adding." : "The diver begins at START. Use the steps to move up or down.";
+  const instruction = task.kind === "inequality" ? "Keep ≤ as you remove and divide both sides. Choose an integer that makes the inequality true." : task.kind === "pattern" ? "Find the repeated step. Move the diver to the next number after the last shown." : task.kind === "expression" ? "Multiply before adding. Move the diver to the result." : balance ? "Remove the same treasure from both pans. Split both sides if x has a group, then set x." : task.kind === "missing" ? "What number is hiding in the box? Move the diver to show x." : task.kind === "substitution" ? "Put the given x into the expression. Multiply before adding." : "The diver begins at START. Use the steps to move up or down.";
   return <View style={{ gap: 14, paddingBottom: 20 }}>
     <View style={{ backgroundColor: sand, borderRadius: 19, padding: 16, gap: 7 }}><Copy style={{ color: navy, fontWeight: "900" }}>CHEST {state.index + 1} OF 5</Copy><Heading>{title}</Heading><Copy>{instruction}</Copy></View>
     {balance && <BalanceBoard task={task} state={state} remove={() => change({ offset: -task.a, divided: false })} divide={() => change({ divided: true })}/>}
     {!balance && task.kind === "substitution" && <View style={{ backgroundColor: "#E6F1E4", borderRadius: 20, padding: 15, alignItems: "center" }}><Copy style={{ color: navy, fontSize: 26, fontWeight: "900" }}>{task.a} + {task.b} × {task.extra} = ?</Copy></View>}
     <SeaLine value={state.value} start={task.kind === "steps" || task.kind === "depth" ? task.a : undefined}/>
     <StepControls value={state.value} balance={balance} change={value => change({ value })}/>
-    {hint && <View style={{ backgroundColor: "#FFF8DC", borderRadius: 13, padding: 12 }}><Copy style={{ fontWeight: "700" }}>{balance ? `Take ${task.a} from both pans.${task.extra > 1 ? ` Then split both sides into ${task.extra} equal groups.` : ""}` : task.kind === "missing" ? `Undo plus ${task.b}: move ${task.b} down from ${task.a}.` : task.kind === "substitution" ? `Multiply ${task.b} × ${task.extra}, then add ${task.a}.` : `Start at ${task.a}. Move ${Math.abs(task.b)} ${task.b < 0 ? "down" : "up"} to reach the answer.`}</Copy></View>}
+    {hint && <View style={{ backgroundColor: "#FFF8DC", borderRadius: 13, padding: 12 }}><Copy style={{ fontWeight: "700" }}>{workedHint(task)}</Copy></View>}
     {!!feedback && <Copy style={{ color: C.error, fontWeight: "800" }}>{feedback}</Copy>}
     <View style={{ flexDirection: "row", gap: 8 }}><Button style={{ flex: 1 }} onPress={check}>Open chest</Button><Button quiet compact onPress={() => { if (!hint) assistance?.(); setHint(!hint); update({ ...state, helped: true }); }}>Hint</Button></View>
   </View>;

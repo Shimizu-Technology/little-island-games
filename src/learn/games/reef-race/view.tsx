@@ -380,21 +380,6 @@ export function Board({ session, update, practice, sound, active, width, height,
         </Text>
         <IconButton icon="sound-on" label="Hear it again" onPress={() => sound(phaseAudio)} />
       </View>
-      <ReefBoard
-        width={width}
-        height={pathH}
-        first={first}
-        last={last}
-        end={end}
-        section={section}
-        tokens={tokens}
-        specials={specials}
-        next={!spinning && !computer ? nextN : null}
-        wrong={wrong}
-        disabled={!active || computer || spinning}
-        onStone={onStone}
-        coach={showCoach && moving}
-      />
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 14, minHeight: spinnerSize + 4 }}>
         {r.phase === "bonus" && !computer ? (
           r.bonus!.map((n) => (
@@ -421,6 +406,21 @@ export function Board({ session, update, practice, sound, active, width, height,
           </>
         )}
       </View>
+      <ReefBoard
+        width={width}
+        height={pathH}
+        first={first}
+        last={last}
+        end={end}
+        section={section}
+        tokens={tokens}
+        specials={specials}
+        next={!spinning && !computer ? nextN : null}
+        wrong={wrong}
+        disabled={!active || computer || spinning}
+        onStone={onStone}
+        coach={showCoach && moving}
+      />
     </View>
   );
 }
