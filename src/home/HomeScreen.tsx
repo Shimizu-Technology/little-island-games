@@ -1,3 +1,4 @@
+import {OccupantPoseGroup} from './OccupantPoseGroup';
 import { HandProp } from './art/PropShape';
 import { holdableIds, dispenserFan, type HoldableId } from './art/living';
 import { DispenserFanArt } from './art/DispenserFanArt';
@@ -497,10 +498,10 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
     }),
     ...room.characters.map((c) => {
       const p=characterPoint(room,c),size=characterSize(c.slot)*scale;
-      const action=reaction?.slot===c.slot?(reaction.text.startsWith('Yum')?'eat':reaction.text.startsWith('Sip')?'drink':c.pose==='stand'?'wave':undefined):asleep.includes(c.slot)?'lie-asleep':c.holding&&c.pose==='stand'?'hold':undefined;
+      const action=reaction?.slot===c.slot?(reaction.text.startsWith('Yum')?'eat':reaction.text.startsWith('Sip')?'drink':c.pose==='stand'?'wave':undefined):c.pose==='lie'&&asleep.includes(c.slot)?'lie-asleep':c.holding&&c.pose==='stand'?'hold':undefined;
       const frame=characterFrame(room,c,action);
       return {
-        key: `character-${c.slot}`,
+        key: `character-${c.slot}-${c.pose}`,
         depth: characterDepth(room, c)+(c.slot===2&&c.socket?.socketId.startsWith('pet-')?2:0),
         node: (
           <MotionLink motion={motion} owner={c.socket?.itemId??c.seatId}><Drag
@@ -596,9 +597,9 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               borderRadius:30,borderWidth:selectedFriend?.slot===c.slot&&selectedFriend.roomId===roomId?2:0,borderColor:'#397C6C',
             }}
           >
-            <View pointerEvents="none" style={{width:frame.width*scale,height:frame.height*scale,transform:[{scaleX:frame.mirrored?-1:1}]}}>
+            <OccupantPoseGroup key={c.pose} width={frame.width*scale} height={frame.height*scale} mirrored={frame.mirrored} reduced={reduced}>
               {renderCharacter?.(c.slot,c.pose,action,characterSize(c.slot)*scale,(()=>{const held=reaction?.slot===c.slot&&reaction.item?reaction.item:room.instances.find(i=>i.id===c.holding);return held?(holdableIds.includes(held.item as HoldableId)?<HandProp id={held.item as HoldableId} state={{empty:held.empty,on:held.powered}} tint={held.tint}/>:<DecorArt item={held.item} size={24}/>):undefined;})(),reduced) ?? (c.slot===0?<View style={{transform:[{scale:size/92}]}}><Placeholder pose={c.pose}/></View>:c.slot===1?<ReefFish size={size}/>:<CrabCompanion pose={c.pose==='lie'?'lie':c.pose==='stand'?'stand':'sit'} size={size} reduced={reduced} clacking={reaction?.slot===2}/>)}
-            </View>
+            </OccupantPoseGroup>
             {asleep.includes(c.slot)&&c.pose==='lie'&&<Text pointerEvents="none" style={{position:'absolute',top:0,right:5,color:ink,fontSize:22}}>z</Text>}
             {reaction?.slot===c.slot && <Text pointerEvents="none" style={{position:'absolute',top:-25,left:0,right:0,textAlign:'center',fontSize:24,color:ink}}>{reaction.text}</Text>}
             {c.holding && (()=>{const held=room.instances.find(i=>i.id===c.holding);if(!held)return null;const hand=c.slot===0?characterHand(room,c,action):{x:p.x+30,y:p.y-40};return <Drag testID={`held-${c.slot}`} accessibilityRole="button" accessibilityLabel={`Put down ${itemSpec(held.item).name}`} enabled reduced={reduced} config={{...localConfig,foot:hand,subject:dropBody(held)}} onTap={()=>send({type:'release-held',slot:c.slot,x:c.x??10,y:c.y??8},true)} onDrop={(_x,_y,dx,dy)=>{const row=(hand.y+dy/scale-386)/14.4;send({type:'release-held',slot:c.slot,x:(hand.x+dx/scale-43-row*1.5)/37.5,y:row},true);}} style={{position:'absolute',left:(hand.x-frame.left)*scale-22,top:(hand.y-frame.top)*scale-22,width:44,height:44}}>{c.slot!==0&&<DecorArt item={held.item} size={44}/>}</Drag>;})()}

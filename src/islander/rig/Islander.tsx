@@ -51,7 +51,7 @@ export function IslanderShape({ pose, look: input = defaultLook, held, reduced =
     const cuffX = -(end[1]-middle[1])/cuffLength*2.6, cuffY = (end[0]-middle[0])/cuffLength*2.6;
     const cuffLine = arm && hoodie ? `M${cuff[0]+cuffX} ${cuff[1]+cuffY}L${cuff[0]-cuffX} ${cuff[1]-cuffY}` : '';
     const stance = !arm && front ? (buildFor(look) === 'boy' ? 1 : buildFor(look) === 'girl' ? -.6 : 0) * (side === 'left' ? -1 : 1) : 0;
-    return <G key={`${side}${arm}`} data-stance={stance} transform={stance ? `translate(${stance} 0)` : undefined}>
+    return <G key={`${side}${arm}`} data-stance={stance} transform={`translate(${stance} 0) rotate(0) scale(1 1)`}>
       <Path data-limb={`${side}-${arm ? 'arm' : 'leg'}`} d={limbShape(start, middle, end, radius, arm ? 2.5 : 2.8)+cuffLine} fill={arm ? (hoodie ? colors.primary : skin) : longLegs || look.outfit === 'hoodie' ? colors.secondary : skin}/>
       {!arm && longLegs && <Path d={limbShape(start, middle, between(middle, end, .82), radius + .2, 2.9)} fill={colors.secondary} strokeWidth={0}/>}
       {(arm ? !hoodie && !sleeveless : !longLegs && look.outfit !== 'hoodie') && <Path data-garment={arm ? "sleeve" : "shorts"} d={arm ? boneShape(start, sleeveEnd, radius + .5, radius) : shortsShape(start, middle)} fill={arm ? (look.outfit === 'lab-coat' ? '#FFF2DC' : colors.primary) : colors.secondary} strokeWidth={0}/>}
@@ -61,7 +61,7 @@ export function IslanderShape({ pose, look: input = defaultLook, held, reduced =
   };
   const hand = (side: Side) => { const [x, y] = j[`${side}Hand`], s = side === 'left' ? 1 : -1; return <Path key={side} data-mitten={side} d={`M${x - s * 1.9} ${y - 2}Q${x - s * 2.6} ${y + 2.5} ${x} ${y + 3}Q${x + s * 2.6} ${y + 3} ${x + s * 2.3} ${y}Q${x + s * 3.8} ${y - 1} ${x + s * 2.6} ${y - 3}Q${x + s * 1.9} ${y - 3} ${x + s * 1.5} ${y - 2}Z`} fill={skin} strokeWidth={1.2}/>; };
   const backpack = <G transform={`translate(${a.torso[0] - (compact ? 10 : 0)} ${a.torso[1]})`}><Rect x={compact ? -9 : -12} y={compact ? -3 : -8} width={compact ? 18 : 24} height={compact ? 13 : 28} rx={7} fill="#D2A45E"/><Rect x={compact ? -6 : -8} y={compact ? 1 : 5} width={compact ? 12 : 16} height={compact ? 7 : 11} rx={3} fill="#F4CC76"/><Path d={compact ? "M-3 -3Q0 -7 3 -3" : "M-4 -8Q0 -16 4 -8"} fill="none" strokeWidth={2}/></G>;
-  return <G transform={isLying(pose) ? 'translate(6 86) rotate(-90)' : undefined}>
+  return <G transform={isLying(pose) ? 'translate(6 86) rotate(-90) scale(1 1)' : 'translate(0 0) rotate(0) scale(1 1)'}>
 
     <G stroke={ink} strokeWidth={1.35} strokeLinejoin="round" strokeLinecap="round">
     <G data-layer="rear-accessory">{look.accessory === 'backpack' && front && backpack}</G>
@@ -89,7 +89,7 @@ export function IslanderShape({ pose, look: input = defaultLook, held, reduced =
 /** Static SVG; callers pre-render frames and swap opacity. Never runs a timer or worklet. */
 export const Islander = memo(function Islander({ view = 'front', pose = view === 'back' ? 0 : 'idle', look = defaultLook, size = 120, held, reduced = false }: { view?: View; pose?: string | number | Pose; look?: IslanderLook; size?: number; held?: React.ReactNode; reduced?: boolean }) {
   const resolved = resolvePose(view, pose), box = poseBox(resolved), scale = size / 132;
-  return <Svg width={box.width * scale} height={box.height * scale} viewBox={`0 0 ${box.width} ${box.height}`} accessible={false}><IslanderShape pose={resolved} look={look} held={held} reduced={reduced}/></Svg>;
+  return <Svg key={`${view}:${resolved.id}`} width={box.width * scale} height={box.height * scale} viewBox={`0 0 ${box.width} ${box.height}`} accessible={false}><IslanderShape pose={resolved} look={look} held={held} reduced={reduced}/></Svg>;
 });
 /** Separate foreground prop: does not distort or hide the character's skeleton. */
 export const IslanderDesk = memo(function IslanderDesk({ size = 120 }: { size?: number }) {

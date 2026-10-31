@@ -71,7 +71,7 @@ export function Hair({ look, pose, rear = false }: { look: IslanderLook; pose: P
       {long && front && <Path d={long ? flow[style] : strands} fill="none" stroke="#201D26" strokeOpacity={.45} strokeWidth={1.1}/>}
       {tail && !(covered && style === 'top-knot') && <><Path d={tail}/><Path d={long ? flow[style] : strands} fill="none" stroke="#201D26" strokeOpacity={.45} strokeWidth={1.1}/></>}
     </G>}
-    {(!rear || front) && <G transform={covered ? 'translate(0 2) scale(1 .88)' : undefined}>
+    {(!rear || front) && <G transform={covered ? 'translate(0 2) rotate(0) scale(1 .88)' : 'translate(0 0) rotate(0) scale(1 1)'}>
       <Path d={rear ? backCap : front ? fringe[style] : backCap}/>
       <Path d={front && !rear ? 'M-26-1Q-21-7-18-10L-21 0L-23 7Z' : long ? 'M17-18Q29-3 23 16L26 32L19 41L17 36L12 43Q20 14 16 0Z' : 'M-24 6L-18 9L-12 8L-6 12L1 10L8 13L16 9L24 6L23 12L15 15L8 16L0 19L-8 16L-16 17L-23 12Z'} fill="#201D26" fillOpacity={.25} strokeWidth={0}/>
       <Path d={crownStrands} fill="none" stroke="#201D26" strokeOpacity={.5} strokeWidth={1.05}/>

@@ -4,6 +4,7 @@ import React, { useContext, type ReactNode } from "react";
 import { View, type ViewProps, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
+  cancelAnimation,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
@@ -140,9 +141,11 @@ export function Drag({
       if (success) runOnJS(onTap)();
     });
   const animated = useAnimatedStyle(() => ({
-    transform: [{ translateX: dx.value }, { translateY: dy.value - lift.value * 7 }, { scale: 1 + lift.value * 0.06 }],
+    transform: [{ rotate: "0deg" }, { translateX: dx.value }, { translateY: dy.value - lift.value * 7 }, { scale: 1 + lift.value * 0.06 }],
     zIndex: dragging.value ? 500 : 0,
   }));
+  // A pose-key remount owns fresh handles; cancel any pending lift/return on unmount.
+  React.useEffect(()=>()=>{cancelAnimation(dx);cancelAnimation(dy);cancelAnimation(lift);dx.set(0);dy.set(0);lift.set(0);dragging.set(false);pinching.set(false);returning.set(false);},[dx,dy,lift,dragging,pinching,returning]);
   return (
     <View pointerEvents="box-none" style={style}>
     <View pointerEvents="none" style={{position:'absolute',left:'25%',right:'25%',bottom:0,height:8,borderRadius:50,backgroundColor:'#38545120'}}/>

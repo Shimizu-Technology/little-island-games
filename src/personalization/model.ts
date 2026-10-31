@@ -35,7 +35,8 @@ export function initializePersonalization(save: Save): Save {
   for (const { id } of (save.learning ?? familyLearners()).people) if (!Object.hasOwn(people, id)) { people[id] = starterPerson(id === 'family'); changed = true; }
   for (const [id, person] of Object.entries(people)) {
     const home = migrateHome(person.home);
-    if (home && home !== person.home) { people[id] = { ...person, home }; changed = true; }
+    if(!home)throw new Error('This home could not be migrated. Your original has been kept.');
+    if (home !== person.home) { people[id] = { ...person, home }; changed = true; }
   }
   return changed ? { ...save, personalization: { version: 1, catalogVersion: 1, people } } : save;
 }

@@ -6,7 +6,7 @@ import { freeFloor } from "./freeFloor";
 import { roomDefaultTheme } from "./art/roomDefaults";
 import { moreCatalog, roomIds, tintIds, type RoomId, type TintId } from "./catalogMore";
 import { clearFootprint } from "./placement";
-import { badgeIds, floorThemes, itemIds, itemSpec, starterItems, wallThemes, decorSpec, type ItemId } from "./catalog";
+import { badgeIds, floorThemes, itemIds, itemSpec, isSeat, starterItems, wallThemes, decorSpec, type ItemId } from "./catalog";
 export type Rotation = 0 | 90 | 180 | 270;
 export type Instance = {
   id: string;
@@ -122,6 +122,10 @@ export function validHome(v: unknown): v is HomeSave {
 }
 /** Pure, strict and idempotent. Never changes the source; invalid input belongs in recovery. */
 export function migrateHome(v: unknown): HomeStateV2 | undefined {
+ const migrated=migrateValidatedHome(v);
+ return migrated&&migrated.version===3&&validHome(migrated)?migrated:undefined;
+}
+function migrateValidatedHome(v:unknown):HomeStateV2|undefined {
   if (!validHome(v)) return undefined;
   if(v.version===3){const rooms=Object.fromEntries(roomIds.map(id=>[id,normalizeRoom(v.rooms[id])])) as HomeStateV2['rooms'];return roomIds.every(id=>rooms[id].instances.every((i,n)=>i.x===v.rooms[id].instances[n].x&&i.y===v.rooms[id].instances[n].y&&i.on===v.rooms[id].instances[n].on))?v:{...v,rooms};}
   if(v.version!==1)return upgradeHome(v);
@@ -150,8 +154,20 @@ export function normalizeRoom(room:RoomState):RoomState {
 }
 function upgradeHome(v:HomeStateV2):HomeStateV2 {
  const rooms={...v.rooms};
- for(const id of roomIds){const room=v.rooms[id];rooms[id]={...normalizeRoom(room),characters:room.characters.map(c=>{const seat=room.instances.find(i=>c.seatId?c.seatId===i.id:c.anchor===i.item);const socket=seat&&socketsOf(seat).find(s=>s.id.startsWith('pet-')===(c.slot===2));return seat&&socket?characterForSocket(c,seat,socket):{...c};})};}
- for(const id of roomIds){const used=new Set<string>();rooms[id]={...rooms[id],characters:rooms[id].characters.map(c=>{if(!c.socket)return c;const key=`${c.socket.itemId}:${c.socket.socketId}`;if(!used.has(key)){used.add(key);return c;}return {...(c.holding?{holding:c.holding}:{}),slot:c.slot,anchor:'floor',pose:'stand',...freeFloor(rooms[id].instances,8,8)};})};}
+ for(const id of roomIds){
+  const room=normalizeRoom(v.rooms[id]),used=new Set<string>();
+  const characters=room.characters.map(c=>{
+   // Match historical characterPoint: an implicit "seat" means the first seat.
+   const seat=room.instances.find(i=>c.seatId?i.id===c.seatId:c.anchor==='seat'?isSeat(i.item):i.item===c.anchor);
+   const compatible=seat&&socketsOf(seat).filter(s=>s.id.startsWith('pet-')===(c.slot===2));
+   const free=compatible?.filter(s=>!used.has(`${seat!.id}:${s.id}`));
+   const socket=free?.find(s=>s.id===c.socket?.socketId)??free?.[0];
+   if(seat&&socket){used.add(`${seat.id}:${socket.id}`);return characterForSocket(c,seat,socket);}
+   if(c.anchor==='seat'||seat&&c.pose!=='stand')return {slot:c.slot,anchor:'floor' as const,pose:'stand' as const,...freeFloor(room.instances.filter(i=>!room.characters.some(c=>c.holding===i.id)),8,8),...(c.holding?{holding:c.holding}:{})};
+   return {...c};
+  });
+  rooms[id]={...room,characters};
+ }
  return {...v,version:3,rooms};
 }
 /** Historical furniture anchors are input-only; v3 occupants name a compatible socket.

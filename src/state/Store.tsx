@@ -1,4 +1,4 @@
-import { preserveHomeMigration, preserveImportedHome } from './homeMigration';
+import { preserveHomeMigration, preserveImportedHome, assertMigratedHomes } from './homeMigration';
 import { applyWarmup } from './warmupAction';
 import { roundOwner } from '../badges/owners';
 import { badgesFor, type BadgeId } from '../badges/engine';
@@ -101,11 +101,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return queue.current;
   }, []);
   const load = useCallback(async () => {
+    let encoded:string|null=null;
     try {
-      const encoded = await storage.get();
+      encoded = await storage.get();
       setRaw(encoded);
       const before=encoded?parseSave(encoded):emptySave();
       const next=backfillRewards(before);
+      assertMigratedHomes(next);
       if(encoded)await preserveHomeMigration(storage,encoded,before,next);
       generation.current += 1;
       setEpoch(generation.current);
@@ -115,6 +117,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       setReady(true);
     } catch (e) {
+      if(encoded)try{await storage.preserve(encoded);}catch{/* Original remains in active storage; do not publish or replace it. */}
       setRecovery(e instanceof Error ? e.message : "Saved games could not be opened. Please retry.");
       setReady(true);
     }
@@ -331,7 +334,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       restoring.current = true;
       try {
         let next: Save, incoming: Save;
-        try { incoming=parseSave(encoded); next = backfillRewards(incoming); }
+        try { incoming=parseSave(encoded); next = backfillRewards(incoming); assertMigratedHomes(next); }
         catch (error) {
           // Keep both the rejected import and the current live save. Never repair imported bytes.
           await storage.preserve(encoded);
