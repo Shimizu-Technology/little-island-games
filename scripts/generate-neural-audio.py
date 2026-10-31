@@ -145,6 +145,16 @@ def main():
     (ROOT/'src/content/neuralAudio.ts').write_text('\n'.join(lines))
     evidence={'engine':'Kokoro-82M v1.0','modelLicense':'Apache-2.0','runtime':'kokoro-onnx 0.6.1 / MIT','modelSHA256':model_hash,'voiceDataSHA256':voice_hash,'scriptManifestSHA256':hashlib.sha256(json.dumps(speech,ensure_ascii=False,sort_keys=True).encode()).hexdigest(),'voices':VOICES,'keysPerVoice':len(speech),'secondsByVoice':{v:round(sum(records[v][k]['seconds'] for k in speech),2) for v in VOICES},'networkPlayback':False,'normalization':'-20 LUFS, -3 dBTP, LRA7; 24kHz mono AAC48k','listeningAcceptance':'Operator assessment on family hardware remains separate.'}
     (ROOT/'docs/evidence/neural-audio.json').write_text(json.dumps(evidence,indent=2)+'\n')
+    # docs/ is not exported publicly, so the test fixture and the public export receipt carry the same facts.
+    (ROOT/'tests/fixtures/neural-audio.json').write_text(json.dumps(evidence,indent=2)+'\n')
+    public=ROOT/'scripts/public-audio-receipt.json'
+    previous=json.loads(public.read_text()) if public.exists() else {'sha256':{}}
+    hashes={k:v for k,v in previous.get('sha256',{}).items() if k.endswith('.wav')}
+    for voice in VOICES:
+        for key in speech:
+            rel=f'audio/{"" if voice=="warm" else "calm/"}{key}.m4a'
+            hashes[rel]=hashlib.sha256((ROOT/'assets'/rel).read_bytes()).hexdigest()
+    public.write_text(json.dumps({'provenance':'Kokoro-82M v1.0; neural hashes verified against local generation receipt. WAV files are original synthesized tones/loops.','sha256':dict(sorted(hashes.items())),'speechReceipt':evidence},indent=2)+'\n')
     print('Published both complete offline voice maps',flush=True)
 
 if __name__=='__main__':main()
