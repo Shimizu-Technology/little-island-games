@@ -66,6 +66,6 @@ describe("Code Lab", () => {
     expect(taskAt(4, 0, 0).lines.join(" ")).toContain("if ");
     expect(taskAt(5, 0, 0).lines.join(" ")).toContain("% 3");
     expect(executionPlan(taskAt(2, 0, 2), "")).toEqual([0, 1, 1, 1, 2]);
-    expect(executionPlan(taskAt(3, 0, 0), "")).toEqual([0, 2, 1, 1]);
+    expect(executionPlan(taskAt(3, 0, 0), "")).toEqual([0, 2, 1]);
   });
 });

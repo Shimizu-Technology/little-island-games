@@ -7,14 +7,14 @@ type Kind = "fish" | "shell";
 export type Item = { color: Color; size: Size; kind: Kind; bell: boolean };
 export type Rule = { first: string; join: string; second: string; action: string };
 export type Task = { items: Item[]; target: Rule; prompt: string; slots: (keyof Rule)[] };
-export type TideState = { version: 1; level: number; seed: number; index: number; total: 4; rule: Rule; running: number; helped: boolean };
+export type TideState = { version: 1 | 2; level: number; seed: number; index: number; total: 4; rule: Rule; running: number; helped: boolean };
 const terms = ["blue", "coral", "big", "small", "fish", "shell", "bell"];
 export const choices: Record<keyof Rule, string[]> = {
   first: terms, join: ["and", "or", "then"], second: terms, action: ["left", "right", "count left"],
 };
 const empty: Rule = { first: "", join: "", second: "", action: "" };
 const hash = (seed: number, index: number, salt: number) => (Math.imul(seed + index * 7919 + salt * 104729, 1664525) >>> 0) % 100000;
-export function taskAt(level: number, seed: number, index: number): Task {
+export function taskAt(level: number, seed: number, index: number, version: 1 | 2 = 2): Task {
   const n = hash(seed, index, level), flip = n % 2, color = flip ? "coral" : "blue", size = n % 3 ? "big" : "small";
   const first = level === 1 ? color : level === 2 ? size : level === 3 ? color : level === 4 ? "bell" : size;
   const second = level === 3 ? size : level >= 4 ? color : "";
@@ -30,7 +30,14 @@ export function taskAt(level: number, seed: number, index: number): Task {
   }));
   // Every belt contains both routes, including an event and a nested condition.
   if (level === 4) { items[0].bell = true; items[0].color = color as Color; items[1].bell = false; items[2].bell = true; items[2].color = color === "blue" ? "coral" : "blue"; }
-  if (level === 3) { items[0].color = color as Color; items[0].size = size as Size; items[1].color = color === "blue" ? "coral" : "blue"; items[1].size = size === "big" ? "small" : "big"; }
+  if (level === 3 && version === 1) { items[0].color = color as Color; items[0].size = size as Size; items[1].color = color === "blue" ? "coral" : "blue"; items[1].size = size === "big" ? "small" : "big"; }
+  if (level === 3 && version === 2) {
+    // Both, neither, first only, second only: AND and OR always differ.
+    for (let i = 0; i < 4; i++) {
+      items[i].color = (i === 0 || i === 2 ? color : color === "blue" ? "coral" : "blue") as Color;
+      items[i].size = (i === 0 || i === 3 ? size : size === "big" ? "small" : "big") as Size;
+    }
+  }
   if (level === 5) { items[0].size = size as Size; items[0].color = color as Color; items[1].size = size as Size; items[1].color = color === "blue" ? "coral" : "blue"; }
   return { items, target, slots, prompt: level === 4 ? `First, when the bell rings, open the gate. Then check for ${color}. Send matching catches left${action === "count left" ? " and count them" : ""}; others go right.` : level === 5 ? `If ${first}, check if ${second}. Only then send left. Otherwise send right.` : `Send ${first}${second ? ` ${join} ${second}` : ""} left. Everything else goes right.` };
 }
@@ -42,19 +49,24 @@ export function route(item: Item, rule: Rule): "left" | "right" {
   const yes = rule.join === "and" || rule.join === "then" ? a && b : rule.join === "or" ? a || b : a;
   return yes ? (rule.action === "right" ? "right" : "left") : (rule.action === "right" ? "left" : "right");
 }
+/** running is the next catch to process; count only catches already processed. */
+export function counterAt(s: TideState): number {
+  if (s.index >= 4 || s.rule.action !== "count left") return 0;
+  return taskAt(s.level,s.seed,s.index,s.version).items.slice(0,Math.max(0,s.running)).filter(item => route(item,s.rule) === "left").length;
+}
 export function advance(s: TideState): TideState {
-  const t = taskAt(s.level, s.seed, s.index);
+  const t = taskAt(s.level, s.seed, s.index, s.version);
   if (s.running < 0) return s;
   if (s.running < t.items.length) return { ...s, running: s.running + 1 };
-  return { ...s, index: s.index + 1, rule: empty, running: -1, helped: false };
+  return { ...s, version: 2, index: s.index + 1, rule: empty, running: -1, helped: false };
 }
 export const complete = (s: TideState) => s.index >= 4;
 export function ready(s: TideState): boolean {
-  const t = taskAt(s.level, s.seed, s.index);
+  const t = taskAt(s.level, s.seed, s.index, s.version);
   return t.slots.every((slot) => s.rule[slot] !== "");
 }
 export function correct(s: TideState): boolean {
-  const t = taskAt(s.level, s.seed, s.index);
+  const t = taskAt(s.level, s.seed, s.index, s.version);
   return t.items.every((item) => route(item, s.rule) === route(item, t.target)) && (s.level !== 4 || s.rule.action === t.target.action);
 }
 export const engine: LearnEngine<TideState> = {
@@ -70,16 +82,16 @@ export const engine: LearnEngine<TideState> = {
     { name: "Bell and counter", description: "Respond when the bell rings and count." },
     { name: "Trace the rule", description: "Combine two clues and follow every item." },
   ],
-  create: (o, c) => ({ version: 1, level: levelOf(o), seed: Math.floor(c.rng() * 100000), index: 0, total: 4, rule: empty, running: -1, helped: false }),
+  create: (o, c) => ({ version: 2, level: levelOf(o), seed: Math.floor(c.rng() * 100000), index: 0, total: 4, rule: empty, running: -1, helped: false }),
   validate: (x, o): x is TideState => {
     if (!x || typeof x !== "object" || Array.isArray(x)) return false;
     const s = x as TideState;
-    if (Object.keys(s).sort().join() !== "helped,index,level,rule,running,seed,total,version" || s.version !== 1 || s.level !== levelOf(o) || !Number.isInteger(s.seed) || s.seed < 0 || s.seed >= 100000 || !Number.isInteger(s.index) || s.index < 0 || s.index > 4 || s.total !== 4 || typeof s.helped !== "boolean") return false;
+    if (Object.keys(s).sort().join() !== "helped,index,level,rule,running,seed,total,version" || (s.version !== 1 && s.version !== 2) || s.level !== levelOf(o) || !Number.isInteger(s.seed) || s.seed < 0 || s.seed >= 100000 || !Number.isInteger(s.index) || s.index < 0 || s.index > 4 || s.total !== 4 || typeof s.helped !== "boolean") return false;
     if (!s.rule || typeof s.rule !== "object" || Object.keys(s.rule).sort().join() !== "action,first,join,second") return false;
     if (!(["first", "join", "second", "action"] as const).every((k) => s.rule[k] === "" || choices[k].includes(s.rule[k]))) return false;
-    if (!Number.isInteger(s.running) || s.running < -1 || s.running > (s.index < 4 ? taskAt(s.level, s.seed, s.index).items.length : -1)) return false;
+    if (!Number.isInteger(s.running) || s.running < -1 || s.running > (s.index < 4 ? taskAt(s.level, s.seed, s.index, s.version).items.length : -1)) return false;
     if (s.index === 4) return s.running === -1 && Object.values(s.rule).every((v) => v === "");
-    const slots = taskAt(s.level, s.seed, s.index).slots;
+    const slots = taskAt(s.level, s.seed, s.index, s.version).slots;
     if ((["first", "join", "second", "action"] as const).some((k) => !slots.includes(k) && s.rule[k] !== "")) return false;
     return s.running === -1 || (ready(s) && correct(s));
   },

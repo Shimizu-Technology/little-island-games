@@ -471,6 +471,7 @@ export function Board({
             </Button>
           ) : (
             <>
+              {commands(l.pace).includes("repeat") && <Copy>Again ×2: → + [→ →] = one move + two more, three total.</Copy>}
               <View style={{ flexDirection: "row", gap: 6 }}>
                 {commands(l.pace).map((c) => {
                   const card = (
