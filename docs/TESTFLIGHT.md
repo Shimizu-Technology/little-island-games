@@ -372,3 +372,36 @@ Delivery:
 Receipt: [evidence/testflight-build22.json](evidence/testflight-build22.json).
 
 Not verified: physical iPhone and iPad feel, VoiceOver end to end, and Stassie's acceptance.
+
+## Little Island 2.4: 2.4.0 (23), available 31 October 2026 Guam time
+
+Leon's feedback on 2.3 Island Home: legs went through the bed, furniture stuck outside the house, moving things was clunky and only possible in Decorate, and the home should be "good like Toca Boca". Record: [ISLANDER_2.md](ISLANDER_2.md#240-23).
+
+This build includes:
+- a Toca-style living world with one Play mode where anything moves, plus Design;
+- friends lie in beds and hammocks under blankets and sleep, sit on chairs and take baths;
+- a small crab pet;
+- tap-to-use lamps, sink, TV, radio and fridge;
+- endless food from the fridge and fruit bowl; dropping food on a friend makes them eat or drink;
+- held toys travel between rooms;
+- drops always land somewhere sensible, and nothing sits outside the walls;
+- Find my friends;
+- save v3 with lossless migration.
+
+Source: clean commit `eaa336d81ea9da2dcb612b009bcbcff6ede9393c` on PR #16 (held). The full gate passed with 1,813 tests, and Doctor passed 21/21.
+
+Independent review:
+- Round 1 found two material findings.
+- Round 2 found one remaining migration gap.
+- Round 3 approved.
+
+Three lead native Release walkthroughs found native-only issues, and all were fixed and re-verified.
+
+Delivery:
+- The IPA is 175,603,979 bytes, SHA256 `4d081ca87b58ba0dbc3fca718cd679617f67227b624a3aefc844a01a64d7dbf0`.
+- The signature passed, and 5,891 audio files match the source.
+- Apple build `cad31641-b7b6-40d3-9bba-483cef03be02` is VALID / IN_BETA_TESTING in the Leon group, with notes.
+
+Receipt: [evidence/testflight-build23.json](evidence/testflight-build23.json).
+
+Not verified: physical iPhone and iPad feel, VoiceOver end to end, and Stassie's acceptance.
