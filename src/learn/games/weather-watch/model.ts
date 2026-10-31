@@ -683,3 +683,39 @@ export const reefModel = (kind: "population" | "pollution", value: number) => {
   const algae = kind === "population" ? 100 - 8 * value : 35 + 5 * value;
   return { algae, health: kind === "population" ? 100 - algae : 100 - 8 * value };
 };
+
+/** Feedback uses the very same target and fact as testing and hints. */
+export function wrongFeedback(q: Task, values: number[]): string {
+  const chosen = q.labels[values[0]];
+  switch (q.kind) {
+    case "dress": return `${chosen === "Warm coat" ? "That coat keeps warmth in." : chosen === "Raincoat" ? "A raincoat keeps rain off clothes." : "A sunhat makes shade."} ${q.fact} Which item fits this weather?`;
+    case "feed": return `${chosen === "Plastic" ? "Plastic is not food and does not give this reef life energy. " : "That is not the energy source for this reef life in our model. "}${q.fact}`;
+    case "rotation": return `${values[0] === 1 ? "The island faces away from the Sun, so it has night." : "The island faces the Sun, so it has day."} ${q.goal}`;
+    case "cycle": return `${q.fact} Reset the journey and follow where the water goes next.`;
+    case "chain": return `${q.fact} Reset and build from the energy source toward each eater, or follow the matter-recycling path in the goal.`;
+    case "planets": return `${q.fact} Reset and place the planets from nearest to farthest from the Sun.`;
+    case "web": return `${q.fact} Check each food-to-eater arrow. Reset to change your connections.`;
+    case "kit": return `${q.fact} Think about drinking water, light and hearing official information. Reset to repack.`;
+    case "gauge": return "Read where each colored column ends. The red scale uses degrees Celsius; the blue scale uses millimeters. Count the small marks between the labeled numbers, then check both chart entries.";
+    case "season": return `${q.fact} Compare the season dial with the garden named in the goal.`;
+    case "tropical": return `${q.fact} Which setting brings more rain?`;
+    case "safety": return `${q.fact} Choose a safe indoor activity or shelter with an adult.`;
+    case "forecast": return `${q.fact} Compare all the weather clues; a forecast says what is likely, not certain.`;
+    case "population": case "pollution": return `${q.fact} Compare your ${q.kind === "population" ? "grazer" : "pollution"} setting with the goal, then test one change.`;
+    case "energy": return `${q.fact} In this model divide by ten at each step of the pyramid.`;
+    case "moon": return `${q.fact} Compare the phase named above with the sunlit part we see.`;
+    case "gravity": return `${q.fact} Check both the mass and the selected world.`;
+    case "orbit": return `${q.fact} Too little forward motion falls inward; too much escapes. Try the middle setting.`;
+    case "distance": return `${q.fact} Check both AU and rounded travel minutes.`;
+    case "tilt": return `${q.fact} Check the tilt angle and which hemisphere faces the Sun.`;
+    case "eclipse": return `${q.fact} Check which object is between the others and whether the orbit is aligned.`;
+    default: return `${q.fact} ${q.goal}`;
+  }
+}
+export const scienceSpeechKey = (text: string) => {
+  let hash=2166136261;
+  for(const char of text) hash=Math.imul(hash ^ char.charCodeAt(0),16777619) >>> 0;
+  return `science-v25-${hash.toString(16)}`;
+};
+export const goalTranscript = (q: Task) => `${q.title}. ${q.goal}`;
+export const scalePractice = (recordCount: number) => recordCount > 0;

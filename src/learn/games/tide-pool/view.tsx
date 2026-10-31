@@ -321,7 +321,7 @@ export function PoolScene({
           ? "The hermit crab moved into the empty shell."
           : "An empty shell, a sea star and seaweed."
         : mission === "coral"
-          ? `The coral looks ${happy(look) ? "happy" : "sad"}. ${look.sun ? "Sunny" : "Cloudy"}, ${look.cool ? "cool" : "warm"} water, tide ${look.high ? "in" : "out"}.`
+          ? `The coral looks ${happy(look) ? "happy" : "sad"}. ${look.sun ? "Sunny" : "Cloudy"}, ${look.cool ? "usual reef temperature" : "too hot"} water, tide ${look.high ? "in" : "out"}.`
           : mission === "seaweed"
             ? watched
               ? "The sun is out and the seaweed grew tall."
@@ -336,7 +336,7 @@ export function PoolScene({
                   : "A pool of water with no fish yet."
                 : watched
                   ? "The water got hot and the coral turned white."
-                  : "Bright coral in cool water.";
+                  : "Bright coral at its usual reef temperature.";
   return (
     <View
       accessible
@@ -561,7 +561,7 @@ const controlArt: Record<Control, [React.ReactNode, React.ReactNode, string, str
     "Sunny",
     "Cloudy",
   ],
-  cool: [<Thermometer key="c" warm={false} size={36} />, <Thermometer key="w" warm size={36} />, "Cool", "Warm"],
+  cool: [<Thermometer key="c" warm={false} size={36} />, <Thermometer key="w" warm size={36} />, "Usual reef temperature", "Too hot"],
   high: [
     <AnswerArt key="d" picture="deep" size={36} />,
     <AnswerArt key="l" picture="low" size={36} />,
@@ -639,13 +639,13 @@ export function Board({ session, update, practice, sound, width, active, coach, 
     update(n);
     if (coach.active) coach.done();
     if (n.watched) {
-      cheer("right", "tide-pool-coral-happy");
+      cheer("right", "science-v25-tide-coral");
     } else sound(better ? "match" : "tap");
   };
   const promptKey = s.watched
     ? m.kind === "fix"
-      ? "tide-pool-coral-happy"
-      : `tide-pool-${right ? "right" : "surprise"}-${m.id}`
+      ? "science-v25-tide-coral"
+      : m.id === "heat" ? "science-v25-tide-heat" : `tide-pool-${right ? "right" : "surprise"}-${m.id}`
     : m.kind === "guess" && s.guesses.length === need
       ? `tide-pool-do-${m.id}`
       : `tide-pool-q-${m.id}`;
@@ -710,9 +710,9 @@ export function Board({ session, update, practice, sound, width, active, coach, 
                       disabled={!active || selected || s.watched}
                       onPress={() => flip(control)}
                       style={{
-                        minHeight: 56,
+                        minHeight: control === "cool" ? 90 : 56,
                         borderRadius: 14,
-                        flexDirection: "row",
+                        flexDirection: control === "cool" ? "column" : "row",
                         alignItems: "center",
                         justifyContent: "center",
                         gap: 4,
@@ -722,7 +722,7 @@ export function Board({ session, update, practice, sound, width, active, coach, 
                       }}
                     >
                       {on ? good : bad}
-                      <Copy style={{ fontSize: 13, fontWeight: "700", color: C.ink }}>{on ? goodLabel : badLabel}</Copy>
+                      <Copy style={{ fontSize: 13, fontWeight: "700", color: C.ink, textAlign: "center", flexShrink: 1 }}>{on ? goodLabel : badLabel}</Copy>
                     </PressableScale>
                   );
                 })}

@@ -13,7 +13,9 @@ function Symbol({ value, size = 36 }: { value: string; size?: number }) {
 export function Board({ session, update, practice, assistance, cheer, coach, active, width }: BoardProps<LogicState>) {
   const s = session.state, task = taskAt(s);
   const [selected, setSelected] = useState<number | null>(null), [message, setMessage] = useState("");
+  const [reveal, setReveal] = useState<string | null>(null);
   const choose = (value: number) => {
+    setReveal(null);
     if (selected === null) return;
     const answer = task.kind === "grid" ? task.solution[selected] : task.answer;
     const next = enter(s, selected, value), right = value === answer;
@@ -22,7 +24,7 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
     if (right) { cheer(next.index > s.index ? "big" : "right"); coach.done(); setMessage(""); if (next.index > s.index) setSelected(null); }
     else setMessage("Not quite. Look at the clues and try another value.");
   };
-  const showHelp = () => { assistance?.(); const h = hint(s); setSelected(h.cell); setMessage(`Try ${task.kind === "grid" ? task.symbols[h.value - 1] : h.value} in the glowing spot.`); update(h.state); };
+  const showHelp = () => { assistance?.(); const h = hint(s); setSelected(h.cell); setMessage(h.reason); setReveal(`Try ${task.kind === "grid" ? task.symbols[h.value - 1] : h.value} in the glowing spot.`); update(h.state); };
   const size = task.kind === "grid" ? Math.max(44, Math.min(56, Math.floor((width - 34) / task.size) - 2)) : 0;
   const step = size + 2;
   // Cells never shrink below a 44pt target; a board wider than the card scrolls sideways.
@@ -43,9 +45,10 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
     </> : <>
       <Copy style={{ color: C.ink, fontSize: 17 }}>The left scale holds {task.left} shells. The right holds {task.right} shells plus a mystery bag. How many shells are in the bag?</Copy>
       <View style={{ alignItems: "center", padding: 16, backgroundColor: "#E5F0E0", borderRadius: 20 }}><ScaleGlyph /><View style={{ flexDirection: "row", justifyContent: "space-around", alignSelf: "stretch" }}><Copy style={{ fontSize: 20, fontWeight: "900", color: C.ink }}>{task.left} shells</Copy><Copy style={{ fontSize: 20, fontWeight: "900", color: C.ink }}>{task.right} + bag</Copy></View></View>
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>{Array.from({ length: 10 }, (_, i) => <PressableScale key={i} accessibilityRole="button" accessibilityLabel={`Put ${i + 1} shells in the mystery bag`} disabled={!active} onPress={() => { const next = enter(s, 0, i + 1); practice("think.balance", i + 1 === task.answer); update(next); if (i + 1 === task.answer) cheer("big"); else setMessage("The scales are still uneven. Try another number."); }} style={{ width: 53, minHeight: 53, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: "#FFF8DE" }}><Copy style={{ fontSize: 24, color: C.ink }}>{i + 1}</Copy></PressableScale>)}</View>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>{Array.from({ length: 10 }, (_, i) => <PressableScale key={i} accessibilityRole="button" accessibilityLabel={`Put ${i + 1} shells in the mystery bag`} disabled={!active} onPress={() => { setReveal(null); const next = enter(s, 0, i + 1); practice("think.balance", i + 1 === task.answer); update(next); if (i + 1 === task.answer) { setMessage(""); cheer("big"); } else setMessage("The scales are still uneven. Try another number."); }} style={{ width: 53, minHeight: 53, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: "#FFF8DE" }}><Copy style={{ fontSize: 24, color: C.ink }}>{i + 1}</Copy></PressableScale>)}</View>
     </>}
-    {!!message && <Copy style={{ color: "#79512D", fontWeight: "800" }}>{message}</Copy>}
+    {!!message && <View accessibilityLiveRegion="polite"><Copy style={{ color: "#79512D", fontWeight: "800" }}>{message}</Copy></View>}
+    {reveal && <PressableScale accessibilityRole="button" accessibilityLabel="Show this value" onPress={() => { setMessage(`${message} ${reveal}`); setReveal(null); }} style={{ padding: 14, borderRadius: 14, backgroundColor: "#FFF4D6" }}><Copy>Show this value</Copy></PressableScale>}
     <PressableScale accessibilityRole="button" accessibilityLabel="Help with this puzzle" onPress={showHelp} style={{ alignSelf: "flex-start", padding: 14, borderRadius: 14, backgroundColor: "#E4EFDD" }}><Copy style={{ fontWeight: "800", color: C.ink }}>Help me find a step</Copy></PressableScale>
   </View>;
 }

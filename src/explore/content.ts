@@ -517,7 +517,7 @@ export const TOPICS: ExploreTopic[] = [
     "Why does thunder rumble?",
     "Lightning is a powerful electrical discharge. It heats the air very quickly, and the expanding air makes a sound wave called thunder. We see the flash before we hear the sound because light travels faster.",
     "Lightning can happen inside a cloud, between clouds, or between a cloud and the ground. If you hear thunder, tell a grown-up and go inside a substantial building. Watching from shelter is safer.",
-    "Draw a storm from an indoor window. Where would you stay safe?",
+    "From memory or a picture, draw a storm. Show the family safely indoors, away from windows.",
     "lightning",
     [
       source(
@@ -738,3 +738,6 @@ export function searchTopics(query: string, world?: WorldId, favorites?: readonl
       )
   );
 }
+
+/** Keep the corrected lightning transcript from playing an older unsafe activity clip. */
+export const topicSpeechKey = (id: string) => id === "lightning" ? "science-v25-explore-lightning" : `explore-${id}`;

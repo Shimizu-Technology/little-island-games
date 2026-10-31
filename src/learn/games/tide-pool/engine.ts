@@ -77,7 +77,7 @@ export const missions: Mission[] = [
     answers: [],
     right: 0,
     change: "",
-    why: "Coral needs sunshine, cool water, and to stay underwater.",
+    why: "This shallow-water coral needs suitable light, seawater, and water that is not too hot or too cold. Tropical reef corals are used to warm water.",
   },
   {
     id: "seaweed",
@@ -135,7 +135,7 @@ export const missions: Mission[] = [
     ],
     right: 1,
     change: "Make the water hot",
-    why: "Too much heat makes coral lose its tiny helpers and turn white. Cool water helps it get better.",
+    why: "Too much heat makes coral lose its tiny helpers and turn white. Returning to its usual reef temperature can help it recover. Water that is too cold can stress coral too.",
   },
 ];
 export const missionById = (id: string) => missions.find((m) => m.id === id);

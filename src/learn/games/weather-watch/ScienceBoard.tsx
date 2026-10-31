@@ -6,6 +6,7 @@ import type { BoardProps } from "../../types";
 import { SkySun, PuffyCloud, EarthGlobe, MoonDisc, Creature, Seaweed, ReefHabitat, WeatherExplorer, NodePicture } from "./Illustrations";
 import { CoachSpot } from "../../Coach";
 import {
+  wrongFeedback, scienceSpeechKey, goalTranscript, scalePractice,
   planets,
   gravity,
   lightMinutes,
@@ -329,20 +330,22 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
       </>
     );
   } else if (q.kind === "gauge") {
-    description = `Thermometer ${q.target[0]} °C, rain gauge ${q.target[1]} mm. Your chart ${a} °C, ${b} mm.`;
+    description = scalePractice(records.length) ? `Read the thermometer and rain gauge scales. Your chart ${a} °C, ${b} mm.` : `Thermometer ${q.target[0]} °C, rain gauge ${q.target[1]} mm. Your chart ${a} °C, ${b} mm.`;
     scene = (
       <>
         <Rect x={35} y={21} width={24} height={143} rx={10} fill="#F8F5E6" stroke={ink} />
         <Rect x={41} y={164 - q.target[0] * 3} width={12} height={q.target[0] * 3} fill="#D47A63" />
         <Circle cx={47} cy={166} r={15} fill="#D47A63" />
-        {label(`${q.target[0]} °C`, 47, 202, 15)}
+        {label(scalePractice(records.length) ? "°C" : `${q.target[0]} °C`, 47, 202, 15)}
         <Rect x={100} y={44} width={38} height={120} fill="#F1F9F6" stroke={ink} />
         <Rect x={102} y={164 - q.target[1] * 3} width={34} height={q.target[1] * 3} fill="#6BA9C4" />
-        {label(`${q.target[1]} mm`, 119, 202, 15)}
-        {[0, 10, 20, 30, 40].map((n) => (
+        {label(scalePractice(records.length) ? "mm" : `${q.target[1]} mm`, 119, 202, 15)}
+        {Array.from({length:41}, (_, n) => n).map((n) => (
           <G key={n}>
             <Line x1={59} y1={164 - n * 3} x2={65} y2={164 - n * 3} stroke={ink} />
-            {label(String(n), 76, 168 - n * 3, 10)}
+            {n % 10 === 0 && label(String(n), 76, 168 - n * 3, 10)}
+            <Line x1={138} y1={164 - n * 3} x2={n % 5 === 0 ? 145 : 141} y2={164 - n * 3} stroke={ink} />
+            {n % 10 === 0 && label(String(n), 153, 168 - n * 3, 10)}
           </G>
         ))}
         {[...records, [a, b]].map((r, i) => (
@@ -600,7 +603,7 @@ function Scene({ game, q, values, records }: { game: Game; q: Task; values: numb
         borderColor: "#C7D8AD",
       }}
     >
-      <Svg width="100%" height={220} viewBox="0 0 360 235" accessible accessibilityLabel={description}>
+      <Svg width="100%" height={220} viewBox="0 0 360 235" accessible accessibilityLabel={q.kind === "gauge" ? `Thermometer ${q.target[0]} degrees Celsius. Rain gauge ${q.target[1]} millimeters. ${description}` : description}>
         {scene}
       </Svg>
       <Copy style={{ fontSize: 14, textAlign: "center", color: ink, fontWeight: "700" }}>{description}</Copy>
@@ -674,13 +677,14 @@ function Dial({
   );
 }
 export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
-  const { session, game, update, active, cheer, practice, assistance, coach } = props,
+  const { session, game, update, active, cheer, practice, assistance, coach, sound, soundOn, stopSound } = props,
     s = session.state,
     q = currentTask(game, s);
   const [hint, setHint] = useState(false);
   if (!q) return <Copy style={{ textAlign: "center", fontWeight: "800" }}>Your discovery journal is complete!</Copy>;
   const send = (a: Parameters<typeof move>[2]) => {
     if (active) {
+      stopSound();
       update(move(game, s, a));
       coach.done();
     }
@@ -717,6 +721,8 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
       </View>
       <Copy style={{ fontSize: 23, fontWeight: "900", color: ink }}>{q.title}</Copy>
       <Copy style={{ fontSize: 16, lineHeight: 23 }}>{q.goal}</Copy>
+      <Button quiet compact icon="sound-on" disabled={!active || !soundOn} onPress={() => sound(scienceSpeechKey(goalTranscript(q)))}>Hear the goal</Button>
+      {q.kind === "gauge" && <Copy>{scalePractice(s.records.length) ? "Your turn: read the scales without printed answers. Each small mark is 1 unit. Hint can help whenever you need it." : "First, learn the scales: each small mark is 1 °C on red and 1 mm on blue. Read the top of each colored column. Tomorrow, try without the printed answers."}</Copy>}
       <Scene game={game} q={q} values={s.values} records={s.records} />
       {!ready && (
         <CoachSpot active={coach.active}>
@@ -820,8 +826,9 @@ export function ScienceBoard(props: BoardProps<ScienceState> & { game: Game }) {
           <Copy style={{ fontSize: 15, lineHeight: 22 }}>
             {ready
               ? q.fact
-              : "Look at the goal and compare it with your model. Reset clears a chain so you can try a different order."}
+              : wrongFeedback(q, s.values)}
           </Copy>
+          <Button quiet compact icon="sound-on" disabled={!active || !soundOn} onPress={() => sound(scienceSpeechKey(ready ? q.fact : wrongFeedback(q, s.values)))}>Hear why</Button>
           {ready && (
             <>
               <Copy style={{ fontWeight: "800" }}>What did you notice?</Copy>

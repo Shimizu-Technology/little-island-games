@@ -8,7 +8,15 @@ const shells = (n: number) => `shells:${n}`;
 const stone = (color: string, size = 0) => `stone:${color}${size ? `:${size}` : ""}`;
 const next = (seed: number) => (Math.imul(seed, 1664525) + 1013904223) >>> 0;
 const pick = (seed: number, n: number) => seed % n;
-const shuffle = (items: string[], seed: number) => [...items].sort((a, b) => ((next(seed + a.charCodeAt(0)) % 1000) - (next(seed + b.charCodeAt(0)) % 1000)));
+const shuffle = (items: string[], seed: number) => {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    seed = next(seed);
+    const j = Math.floor(seed / 0x100000000 * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+};
 
 export function taskAt(s: PatternState): PatternTask {
   const seed = next(s.seed + s.index * 9871);
@@ -45,7 +53,7 @@ export function taskAt(s: PatternState): PatternTask {
       tiles = Array.from({ length: 9 }, (_, i) => stone(row[Math.floor(i / 3)], i % 3 + 1));
       missing = 7; title = "Complete the color and size reef";
       pool = row.flatMap(c => [1,2,3].map(n => stone(c,n)));
-      hint = "Each row keeps one color. Each column adds one dot.";
+      hint = "Each row keeps one color. Stones grow larger from left to right. Each column keeps one size.";
     }
   } else {
     const kind = s.index % 3;
@@ -56,8 +64,8 @@ export function taskAt(s: PatternState): PatternTask {
     if (s.index === 3) { const start = 1 + pick(seed, 4); tiles = Array.from({length: 9}, (_, i) => String(start + Math.floor(i / 3) * 2 + i % 3)); missing = 7; pool = [...tiles, String(start + 8)]; title = "Complete the 3 × 3 number reef"; hint = "Across each row add one. Down each column add two."; }
   }
   const answer = tiles[missing];
-  const choices = shuffle([...new Set([answer, ...pool])], seed).slice(0, 7);
-  if (!choices.includes(answer)) choices[0] = answer;
+  const distractors = shuffle([...new Set(pool)].filter(v => v !== answer), next(seed)).slice(0, 6);
+  const choices = shuffle([answer, ...distractors], seed);
   return { title, tiles, missing, choices, answer, hint };
 }
 export function place(s: PatternState, tile: string): PatternState { return tile === taskAt(s).answer ? { ...s, index: s.index + 1 } : s; }

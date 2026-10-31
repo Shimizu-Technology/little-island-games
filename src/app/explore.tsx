@@ -6,6 +6,7 @@ import { AppState, View } from "react-native";
 import { SaveStatus } from "../components/SaveStatus";
 import { router, useIsFocused } from "expo-router";
 import { useAudioPlayerStatus } from "expo-audio";
+import { topicSpeechKey } from "../explore/content";
 import { ExploreScreen } from "../explore/ExploreScreen";
 import { useStore } from "../state/Store";
 import { useSoundControls } from "../components/Audio";
@@ -81,7 +82,7 @@ function ExploreReady() {
       }}
       onSpeak={(id) => {
         if (ownedPlayer.current !== player) return;
-        if (play(`explore-${id}`)) setSpeaking(`explore-${id}`); else setSpeaking(undefined);
+        if (play(topicSpeechKey(id))) setSpeaking(`explore-${id}`); else setSpeaking(undefined);
       }}
     />
     </View>

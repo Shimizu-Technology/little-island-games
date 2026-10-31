@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import Svg, { Circle, Path } from "react-native-svg";
+import { useReducedMotion } from "../../../components/motion";
 import { C, Copy, PressableScale } from "../../../components/ui";
 import type { BoardProps } from "../../types";
 import { PatternGlyph, patternLabel, SeaGlyph } from "../thinkingArt";
@@ -8,18 +9,24 @@ import { help, place, taskAt, type PatternState } from "./engine";
 
 export function Board({ session, update, practice, assistance, cheer, coach, active, width }: BoardProps<PatternState>) {
   const s = session.state, task = taskAt(s);
+  const reduced = useReducedMotion();
   const [hint, setHint] = useState(false), [wrong, setWrong] = useState(false), [hopAt, setHopAt] = useState<number | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   useEffect(() => () => { if (timer.current) clearInterval(timer.current); }, []);
   const trailWidth = Math.min(Math.max(width - 36, 278), 430), trailHeight = 292;
   const left = 35, middle = trailWidth / 2, right = trailWidth - 35;
-  const points: [number, number][] = [[left,46],[middle,46],[right,46],[right,143],[middle,143],[left,143],[left,240],[middle,240],[right,240]];
+  const matrix = task.tiles.length === 9;
+  const points: [number, number][] = matrix ? Array.from({ length: 9 }, (_, i) => [[left, middle, right][i % 3], [46, 143, 240][Math.floor(i / 3)]]) : [[left,46],[middle,46],[right,46],[right,143],[middle,143],[left,143],[left,240],[middle,240],[right,240]];
   const choose = (tile: string) => {
     if (hopAt !== null) return;
     const rightAnswer = tile === task.answer;
     practice("think.pattern", rightAnswer);
     if (!rightAnswer) { setWrong(true); return; }
-    setWrong(false); setHint(false); setHopAt(0);
+    setWrong(false); setHint(false);
+    if (reduced || matrix) {
+      update(place(s, tile)); cheer(s.index === 3 ? "big" : "right"); coach.done(); return;
+    }
+    setHopAt(0);
     let step = 0;
     timer.current = setInterval(() => {
       step += 1;
@@ -38,10 +45,10 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
     <View style={{ backgroundColor: "#E4EED9", borderRadius: 25, paddingVertical: 13, alignItems: "center", overflow: "hidden" }}>
       <Copy style={{ color: "#365034", fontWeight: "900", alignSelf: "flex-start", marginLeft: 17 }}>TRAIL {s.index + 1} OF 4</Copy>
       <View style={{ width: trailWidth, height: trailHeight, marginTop: 7 }}>
-        <Svg width={trailWidth} height={trailHeight} style={{ position: "absolute" }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        {!matrix && <Svg width={trailWidth} height={trailHeight} style={{ position: "absolute" }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           <Path d={`M${left} 46 Q${middle} 25 ${right} 46 C${trailWidth+3} 78 ${trailWidth+3} 111 ${right} 143 Q${middle} 165 ${left} 143 C-3 177 -3 211 ${left} 240 Q${middle} 219 ${right} 240`} fill="none" stroke="#A4C69B" strokeWidth="18" strokeLinecap="round" />
           <Path d={`M${left} 46 Q${middle} 25 ${right} 46 C${trailWidth+3} 78 ${trailWidth+3} 111 ${right} 143 Q${middle} 165 ${left} 143 C-3 177 -3 211 ${left} 240 Q${middle} 219 ${right} 240`} fill="none" stroke="#F8F2D9" strokeWidth="5" strokeDasharray="4 12" strokeLinecap="round" />
-        </Svg>
+        </Svg>}
         {task.tiles.map((tile, i) => {
           const [x,y] = points[i], missing = i === task.missing;
           return <View key={i} accessible accessibilityLabel={missing ? "Missing stone" : `Stone ${i + 1}: ${patternLabel(tile)}`} style={{ position: "absolute", left: x - 29, top: y - 29, width: 58, height: 58, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: missing ? "#FFF5CC" : "#FFFDF3", borderWidth: missing ? 3 : 2, borderColor: missing ? "#D6A53C" : "#789C75", shadowColor: missing ? "#E7B248" : "transparent", shadowOpacity: missing ? .55 : 0, shadowRadius: 11, elevation: missing ? 5 : 0 }}>

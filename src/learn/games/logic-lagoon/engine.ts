@@ -49,10 +49,24 @@ export function enter(s: LogicState, cell: number, value: number): LogicState {
   const complete=task.solution.every((n,i)=>task.givens[i]===n || entries[i]===n);
   return complete?{...s,index:s.index+1,entries:[]}:{...s,entries};
 }
-export function hint(s: LogicState): {state:LogicState;cell:number;value:number} {
-  const task=taskAt(s);if(task.kind==="balance") return {state:{...s,helped:true},cell:0,value:task.answer};
-  const cell=task.solution.findIndex((n,i)=>!task.givens[i] && s.entries[i]!==n);
-  return {state:{...s,helped:true},cell,value:task.solution[cell]};
+export function hint(s: LogicState): {state:LogicState;cell:number;value:number;reason:string} {
+  const task=taskAt(s), state={...s,helped:true};
+  if(task.kind==="balance") return {state,cell:0,value:task.answer,reason:`Both sides must hold the same number of shells. Take the ${task.right} loose shells away from ${task.left} to work out the bag.`};
+  // Ignore mistaken entries when finding a sound deduction; never build a hint on a contradiction.
+  const grid=task.givens.map((n,i)=>n || (s.entries[i]===task.solution[i] ? s.entries[i] : 0));
+  if(task.writtenClue) grid[task.writtenClue.cell]=task.writtenClue.value;
+  if(task.writtenClue && s.entries[task.writtenClue.cell]!==task.writtenClue.value) return {state,cell:task.writtenClue.cell,value:task.writtenClue.value,reason:task.writtenClue.text};
+  let cell=task.solution.findIndex((n,i)=>!task.givens[i] && s.entries[i]!==n);
+  let direct=false;
+  for(let i=0;i<grid.length;i++) if(!grid[i]) {
+    const candidates=Array.from({length:task.size},(_,n)=>n+1).filter(n=>{grid[i]=n;const ok=valid(grid,task.size,task.boxRows,task.boxCols,task.cages);grid[i]=0;return ok;});
+    if(candidates.length===1){cell=i;direct=true;break;}
+  }
+  const row=Math.floor(cell/task.size), col=cell%task.size;
+  const peers=grid.filter((n,i)=>n && (Math.floor(i/task.size)===row || i%task.size===col || (task.boxRows>1 && Math.floor(Math.floor(i/task.size)/task.boxRows)===Math.floor(row/task.boxRows) && Math.floor((i%task.size)/task.boxCols)===Math.floor(col/task.boxCols))));
+  const used=[...new Set(peers)].map(n=>task.symbols[n-1]).join(", ");
+  const reason=direct ? `Look at row ${row+1}, column ${col+1}. ${used ? `Its row, column${task.boxRows>1 ? " and box" : ""} already contain ${used}. ` : ""}Each needs one of each.${task.cages.length ? " The pair must also add to its marked sum." : ""} Only one choice fits all these clues.` : `Look at row ${row+1}, column ${col+1}. Try each choice against its row, column${task.boxRows>1 ? ", box" : ""}${task.cages.length ? " and sum cage" : ""}, then follow the remaining empty spots. Only one choice lets the whole grid follow every clue.`;
+  return {state,cell,value:task.solution[cell],reason};
 }
 export const engine: LearnEngine<LogicState> = {
   id:"logic-lagoon",name:"Logic Lagoon",island:"thinking",ages:[6,14],ownLevels:true,

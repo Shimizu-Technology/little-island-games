@@ -103,7 +103,8 @@ export function withGrowth(base: LearnEngine<unknown>): LearnEngine<unknown> {
       const p = growthProgress(s as GrowthState, growthQuestions(base.id, o, s as GrowthState));
       if (p.index < (s as GrowthState).ids.length) return null;
       if (o.mode !== "versus") return "done";
-      const a = p.clean.filter((clean, i) => clean && (i + (s as GrowthState).starter) % 2 === 0).length, b = p.clean.filter((clean, i) => clean && (i + (s as GrowthState).starter) % 2 === 1).length;
+      // Every entry is a completed correct answer. Clean flags remain readiness metadata, never match penalties.
+      const a = p.clean.filter((_, i) => (i + (s as GrowthState).starter) % 2 === 0).length, b = p.clean.filter((_, i) => (i + (s as GrowthState).starter) % 2 === 1).length;
       return a === b ? "draw" : a > b ? 0 : 1;
     },
     turn: (s, o) => o.stage ? (growthProgress(s as GrowthState, growthQuestions(base.id, o, s as GrowthState)).index + (s as GrowthState).starter) % 2 as 0 | 1 : base.turn?.(s, o) ?? null,

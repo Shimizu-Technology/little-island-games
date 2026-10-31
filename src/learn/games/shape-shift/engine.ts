@@ -57,7 +57,7 @@ export function taskAt(s: ShapeState): ShapeTask {
     return {name:group.length>1 ? group.map(j=>parts[j].name).join(" + ") : parts[group[0]].name,cells:normalize(cells),target,color:parts[group[0]].color};
   });
   const faces = ["A","B","C","D","E","F"].map((_,i) => ["A","B","C","D","E","F"][(i+seed%6)%6]);
-  return { pieces, picture, width: 6, height: 6, title: `Build the ${picture.toLowerCase()}`, hint: `Start with ${pieces[s.placed.length]?.name ?? "a piece"}. Turn or flip it until its outline fits.`, ...(s.level===5 && s.index===3 ? {cube:{faces,answer:faces[5]}} : {}) };
+  return { pieces, picture, width: 6, height: 6, title: `Build the ${picture.toLowerCase()}`, hint: `Start with ${pieces[s.placed.length]?.name ?? "a piece"}. ${s.level === 1 ? "Move it to the gold corner until its outline fits." : s.level === 2 ? "Turn it, then move it until its outline fits." : "Turn or flip it, then move it until its outline fits."}`, ...(s.level===5 && s.index===3 ? {cube:{faces,answer:faces[5]}} : {}) };
 }
 export function fits(piece: Piece, cells: Cell[], x: number, y: number) { return sameCells(normalize(cells).map(([a,b]) => [a+x,b+y]), piece.target); }
 export function place(s: ShapeState, pieceIndex: number, cells: Cell[], x: number, y: number): ShapeState {
