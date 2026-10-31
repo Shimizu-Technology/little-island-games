@@ -256,3 +256,54 @@ Leon on 2.2: Crab Crossing's angle and zoom made it unplayable. He asked for Isl
 - Round 1 of independent review found two material issues and four minor ones: a Turtle Draw redraw could stall a round, Treasure Algebra divided only one pan, plus a decimal label, a repeated Pattern Path level, Reduce Motion and 44pt cells. All six were fixed with regression tests.
 - Round 2 approved the fixes and the Home delta. Its one minor finding (a cancelled pinch) was fixed.
 - The lead's native Release walkthrough covered Crab Crossing (framing and follow), the Island Home dollhouse, the Coding shelf (ages and icons), Code Lab Level 3 (Menlo code, faithful def → call → body ×3 execution) and Weather Watch (the Islander in a raincoat).
+
+## 2.4.0 (23)
+
+Leon's feedback on 2.3 Island Home:
+- On the bed, the avatar stood through it with its legs showing.
+- Furniture stuck outside the house.
+- Moving the avatar and crab felt clunky.
+- Nothing could move outside Decorate.
+- "Download Toca Boca … keep iterating … till our world is good like Toca Boca."
+
+**Research.** The lead installed Toca Boca World 1.141.1 on the Mac and played the first-run flow: the globe, the creator, "Let's build a home" and the district map. macOS cannot inject touch-drags into Unity, so drag behaviour came from two other sources:
+- Toca's official parent guide ("Move characters around…", "dragging objects to their hands", "edible items to their mouths", "tap some objects, like a water faucet or doors");
+- frame-stepped gameplay video.
+
+A parallel code audit traced every defect to file:line. The research artifacts are in `islander/v24/`: TOCA.md, AUDIT-HOME.md and refs/.
+
+**Contract.** `src/home/world.ts` defines:
+- poses decided by furniture (stand, sit, lie, bathe);
+- sockets on furniture;
+- capabilities: move in Play, holdable, edible, toggle, dispenses;
+- back and front art layers;
+- visualBox, the drawn bounds used for containment.
+
+**Slices.** The lead reviewed every round's screenshots against the Toca refs, then checked natively on iOS.
+- **ART** (3 phases):
+  - rig poses lie, lie-asleep, bathe, sit-side, hold, eat and drink, with the `held` hand node;
+  - furniture split into back and front layers, with sockets, so blankets cover legs and tubs hide bodies;
+  - CrabFriend as a small pet;
+  - living props: lamps, sink water, TV, radio, an opening fridge, a fruit bowl, six foods and drinks with empty states, and four toys;
+  - a flat front-on kitchen.
+- **ENGINE** (4 rounds):
+  - one Play mode where anything moves, plus a Design mode (✓ to finish);
+  - `resolveDrop`, which never rejects a drop: hand, mouth, socket, surface, then floor, with live preview, a headboard band and a never-hidden rule;
+  - hold, eat, drink and toggle, plus dispensers that never run out;
+  - containment clipping and out-of-bounds repair that keeps the original bytes;
+  - save v3 with strict socket validation and lossless v1/v2 migration;
+  - recomposed starter rooms;
+  - minimal round chrome, Find my friends, and a native pose-host reset.
+
+**Quality.**
+- **Independent review round 1:** two material findings. Socket validation could be bypassed, and a successful restore didn't keep the incoming bytes.
+- **Round 2:** one migration gap remained (implicit legacy seats).
+- **Round 3:** approved, with a sweep of all 60 historical slot × anchor combinations.
+- **Lead native Release walkthroughs** (iPhone 16 Pro simulator, iOS 18.5, three builds) found and verified fixes for:
+  - a starter bed clipped by the wall;
+  - over-strict bed drops;
+  - a friend hidden behind the bed after a headboard release;
+  - a crowded kitchen and a floating "Items" pill;
+  - a native-only stale lying transform after leaving the bed.
+
+  The final build passed bed lie and sleep for the Islander and the crab, the headboard release, lift-out, Find my friends, fridge and food fan, sink water, and moving the lamp in Play. Nothing renders outside the walls.
