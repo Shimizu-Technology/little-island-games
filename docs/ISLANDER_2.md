@@ -307,3 +307,44 @@ A parallel code audit traced every defect to file:line. The research artifacts a
   - a native-only stale lying transform after leaving the bed.
 
   The final build passed bed lie and sleep for the Islander and the crab, the headboard release, lift-out, Find my friends, fridge and food fan, sink water, and moving the lamp in Play. Nothing renders outside the walls.
+
+## 2.5.0 (24)
+
+Leon asked for a level-by-level audit of every game, then said: "fix it all properly – might as well do it all right." He also asked for a subtle Shimizu Technology credit and for the app to be open-sourced.
+
+**Audit.** Six read-only auditors played every learning game at all five levels, in each mode, at phone and tablet sizes. They also played Explore, the classic games, the cards and party games, and the board games. Arcade was sampled: 105 of 504 levels, covering the first level of every world plus one of the hardest. They checked generated content by machine as well, with over 3.5 million maths, logic, puzzle and coding assertions. Reports are in artifacts `islander/audit-2.4/`.
+
+**Fixes.** Six slices (coding, reading, numbers, science, play, oss), each fixing every finding in its area plus the agreed ideas. The reports are in `islander/v25/`.
+
+Wrong content and fairness:
+- **Code Lab:** function calls ran their body once per argument value. One interpreter now drives the trace, the robot effect and a variable watch.
+- **Pattern Path:** the number grids are true row-major 3×3 grids, and the correct answer moves between positions.
+- **Reading:** "fox" is taught with four sounds. The little-shell story page shrinks the shell, not the crab.
+- **Fair help:** Show me no longer turns a tie into a loss in any scored growth game.
+- **Tide Logic:** the AND/OR belts include items that tell the two apart.
+- **Fractions:** equal-size wholes, with exactly d pieces per whole.
+- **Treasure Algebra:** rounds started in older versions keep ≤ and get correct hints.
+- **Explore:** storm safety says away from windows.
+- **Coral:** temperature teaching is accurate.
+
+Usability:
+- Beep Bot has a first-move coach, keeps Go on screen, and keeps the robot visible when it bumps.
+- Turtle Draw has a grid, a ruler and too-long/too-short feedback; Repeat explains when it can't wrap; commands inside loops can be edited.
+- More narration for young readers: Which One? reads before a guess, plus Story Studio and Weather Watch.
+- The CHamoru Memory peek stays until the child dismisses it.
+- Clearer feedback in Palm Patrol, Reef Builder and the science games, and worked hints in the board games.
+- Times Tide fills whole groups at once, and Reef Race's Roll button is on screen.
+
+**Timers.** Following Leon's earlier preference:
+- Island Dash Practice is untimed, and the timed race is optional.
+- Nearby Mystery is ready-driven.
+
+**Credit and open source.**
+- "Made with aloha by Shimizu Technology" appears at the bottom of Home.
+- Settings → For grown-ups → About links to the source.
+- MIT license, Copyright Shimizu Technology, with third-party notices.
+- `npm run export:public` builds the public repo `Shimizu-Technology/little-island` as a fresh tree: no docs, no history, no child or family names, independent app IDs, and Kokoro audio only. The private repo keeps the full history.
+
+**Quality.**
+- The independent review approved all gameplay and save fixes. Its two export findings were fixed: independent IDs, and the generator now works without docs/.
+- The lead's native Release walkthrough covered the home icons and credit, Code Lab's correct trace, Settings About behind the gate, and the Beep Bot coach.
