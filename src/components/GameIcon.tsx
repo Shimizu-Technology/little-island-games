@@ -112,7 +112,7 @@ function Tile({ size, surface, children }: { size: number; surface: string; chil
 /** Decorative inside a labelled game control; never adds a second screen-reader stop. */
 export function GameIcon({ id, size = 74 }: { id: IconId; size?: number }) { return <Tile size={size} surface={surfaces[id]}><Scene id={id}/></Tile>; }
 export function IslandIcon({ island, size = 74 }: { island: IslandIconId; size?: number }) {
-  const representative: Record<IslandIconId, IconId> = { reading: "turtle-tales", numbers: "number-hop", science: "float-sink", thinking: "crab-commands", coding: "crab-commands", classic: "tic-tac-toe", arcade: "reef-builder", explore: "explore" };
+  const representative: Record<IslandIconId, IconId> = { reading: "turtle-tales", numbers: "number-hop", science: "float-sink", thinking: "pattern-path", coding: "beep-bot", classic: "tic-tac-toe", arcade: "reef-builder", explore: "explore" };
   if (island === "reading") return <Tile size={size} surface="#DFE8F4"><Book/></Tile>;
   if (island === "arcade") return <Tile size={size} surface="#CDE8E2"><G transform="translate(-4 -5) scale(.8)"><Blocks falling/></G><Circle cx={73} cy={72} r={17} fill={purple}/><Line d="M64 72H82M73 63V81" color={cream} width={5}/></Tile>;
   return <GameIcon id={representative[island]} size={size}/>;
