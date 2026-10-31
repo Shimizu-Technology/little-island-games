@@ -1,3 +1,4 @@
+import * as Linking from "expo-linking";
 import appConfig from "../../app.json";
 import React, { useState } from "react";
 import { TextInput, View } from "react-native";
@@ -20,6 +21,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
   const store = useStore(),
     [unlocked, setUnlocked] = useState(false),
     [message, setMessage] = useState(""),
+    [sourceError, setSourceError] = useState(""),
     [pending, setPending] = useState<string | null>(null),
     [history, setHistory] = useState(false),
     [busy, setBusy] = useState(false),
@@ -42,6 +44,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
     setGate(makeGate());
     setAnswer("");
     setPending(null);
+    setSourceError("");
     setHistory(false);
     setMessage("");
     onClose();
@@ -105,7 +108,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
       <Heading style={{ fontSize: 19 }}>For grown-ups</Heading>
       {!unlocked ? (
         <>
-          <Copy>Practice notes and backups are for grown-ups. Type the answer to unlock.</Copy>
+          <Copy>Practice notes, backups and About are for grown-ups. Type the answer to unlock.</Copy>
           <View style={[styles.row, { gap: 10 }]}>
             <Text style={{ fontFamily: font, fontSize: 20, fontWeight: "700", color: C.ink }}>
               {gate.a} × {gate.b} =
@@ -128,6 +131,21 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
         </>
       ) : (
         <>
+          <View style={{ gap: 8 }}>
+            <Heading style={{ fontSize: 19 }}>About</Heading>
+            <Copy>{appConfig.expo.name} · Version {appConfig.expo.version}</Copy>
+            <Copy>Made by Shimizu Technology</Copy>
+            <Copy>Little Island is open source (MIT)</Copy>
+            <Copy>No ads, accounts or tracking.</Copy>
+            <Button quiet disabled={busy} onPress={() => {
+              if (!unlocked) return;
+              setSourceError("");
+              void Linking.openURL("https://github.com/Shimizu-Technology/little-island")
+                .catch(() => setSourceError("The source code could not be opened. Please try again when you’re online."));
+            }}>View the source code</Button>
+            {!!sourceError && <View accessibilityLiveRegion="polite"><Copy>{sourceError}</Copy></View>}
+          </View>
+          <View style={{ height: 1, backgroundColor: C.line }} />
           {/* Additive Arcade grown-up controls; neither reminder nor music is forced on. */}
           <Heading style={{ fontSize: 19 }}>Arcade comfort</Heading>
           <ToggleRow label="Arcade music" detail="Quiet original loops during play" value={store.save.arcade?.music ?? false} disabled={busy} onChange={music => store.arcade({ type: "preferences", music }, { epoch: store.epoch, learner: store.save.learning?.active ?? "family" })} />

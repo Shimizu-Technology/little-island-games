@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 const manifest = execFileSync("python3", ["scripts/generate-audio.py", "--manifest"], { encoding: "utf8", timeout: 30000 }).trim();
 const speech = JSON.parse(manifest) as Record<string, string>;
 const map = readFileSync(new URL("../src/content/neuralAudio.ts", import.meta.url), "utf8");
-const receipt = JSON.parse(readFileSync(new URL("../docs/evidence/neural-audio.json", import.meta.url), "utf8"));
+const receipt = JSON.parse(readFileSync(new URL("./fixtures/neural-audio.json", import.meta.url), "utf8"));
 
 describe("complete offline voice banks", () => {
   it("binds both voices to the current full speech manifest", () => {

@@ -11,7 +11,7 @@ import {
   validPartyNames,
   validPartySession,
 } from "../src/party/engine";
-const names = ["Stassie", "Mum", "Dad", "Coco"];
+const names = ["Mia", "Mum", "Dad", "Sam"];
 function action(s: PartySession, type: PartyIntent["type"], target?: number) {
   return partyAction(s, { sessionId: s.id, revision: s.revision, player: partyActor(s)!, type, target });
 }
@@ -54,7 +54,7 @@ describe("Secret-word Imposter complete private party rules", () => {
       Array.from({ length: 9 }, (_, i) => String(i)),
     ])
       expect(validPartyNames(players)).toBe(false);
-    expect(validPartyNames(["Stassie", "Mamá", "お父さん"])).toBe(true);
+    expect(validPartyNames(["Mia", "Mamá", "お父さん"])).toBe(true);
     expect(() => createPartySession({ players: ["A", "a", "B"] })).toThrow();
   });
   it("trims setup names and deals all 3–8 players before one or two complete clue circles", () => {

@@ -10,7 +10,7 @@ describe('walkthrough reward clarity', () => {
   for (const track of tracks) for (const tier of [1,2,3,4]) it(`${track}-${tier} names its track and matches documented copy`, () => {
     const id = `${track}-${tier}` as BadgeId, rule = badgeInfo(id).rule;
     expect(rule.toLowerCase()).toContain(track === 'chamoru' ? 'chamoru' : track);
-    expect(readFileSync('docs/ISLANDER_REWARDS.md', 'utf8')).toContain(badgeRule(id));
+    expect(readFileSync('tests/fixtures/badge-rules.md', 'utf8')).toContain(badgeRule(id));
   });
   it('gives every locked wardrobe item a visible track', () => {
     for (const item of styleCatalog.filter(i => !i.starter)) expect(item.track?.length).toBeGreaterThan(0);

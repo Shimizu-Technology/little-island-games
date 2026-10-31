@@ -21,7 +21,7 @@ describe("board sessions and integration", () => {
         seed: 91,
         size: catalog[game].sizes[0],
         mode: "together",
-        names: ["Stassie", "Leon"],
+        names: ["Mia", "Kai"],
       });
       s = { ...s, position: engines[game].move(s.position, engines[game].legal(s.position)[0]) };
       save = applyBoardSave(save, game, s, undefined, 0, 0);
@@ -59,7 +59,7 @@ describe("board sessions and integration", () => {
     const engine = engines[s.game];
     s = { ...s, position: engine.move(engine.move(s.position, 0), 1) };
     expect(undo(s).position.moves).toEqual([]);
-    let win = createSession("coconut-drop", { seed: 8, mode: "together", alternate: true, names: ["Stassie", "Leon"] });
+    let win = createSession("coconut-drop", { seed: 8, mode: "together", alternate: true, names: ["Mia", "Kai"] });
     for (const m of [0, 6, 1, 6, 2, 5, 3]) win = { ...win, position: engine.move(win.position, m) };
     expect(win.position.outcome).toBe(0);
     const next = playAgain(win, 42);

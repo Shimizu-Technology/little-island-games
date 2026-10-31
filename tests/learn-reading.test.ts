@@ -505,7 +505,7 @@ describe("rounds saved by app 1.4.0 keep the whole save loading", () => {
     const { emptySave, parseSave } = await import("../src/state/validation");
     for (const f of fixtures) {
       const where = `${f.game} ${f.options.mode}/${f.options.pace} ${JSON.stringify(f.state).slice(0, 80)}`;
-      const envelope = startSession(f.game, { options: f.options, names: ["Stassie", "Dad"], starter: 0 }, {}, 3);
+      const envelope = startSession(f.game, { options: f.options, names: ["Mia", "Dad"], starter: 0 }, {}, 3);
       const session = { ...envelope, revision: 4, state: f.state };
       expect(validLearnSession(session, f.game), where).toBe(true);
       const save = { ...emptySave(), learn: { [f.game]: session }, recentLearn: f.game };

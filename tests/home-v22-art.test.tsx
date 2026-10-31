@@ -34,7 +34,7 @@ it('keeps every item art and the four furnished rooms renderable',()=>{
     const items=furniture[room].map(([id,x,y,size])=>`<div class="item" style="left:${(x-size/2)/8}%;top:${(y-size*.85)/5.6}%;width:${size/8}%;height:${size/5.6}%">${render(id in moreCatalog?<MoreItemArt id={id} size={size}/>:<ItemArt item={id as keyof typeof catalog} size={size}/>)}</div>`).join('');
     const islander=`<div class="item" style="left:58%;top:45%;width:28%;height:40%">${render(<Islander size={224}/>)}</div>`;
     const refs:{[key:string]:string}={home:'toca-6.jpg',kitchen:'toca-5.jpg',treehouse:'toca-7.jpg',beach:'toca-1.jpg'};
-    const ref=`/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/islander/v22/refs/${refs[room]}`;
+    const ref=`${process.env.HOME_V22_REFS ?? "./references"}/${refs[room]}`;
     writeFileSync(`${dir}/${room}-${width}.html`,`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${style}<main style="width:${width}px"><div class="label">Little Island · ${room} · ${width}px</div><div class="viewport" style="--height:${width===390?600:717}px"><div class="scene" style="--scale:${width===390?1.07:1.28};margin-left:${width===390?-235:0}px">${shell}${items}${islander}</div></div><div class="label">Reference (internal study only)</div><img class="reference" src="file://${ref}"></main>`);
   }
   let sheet=`<!doctype html><meta charset="utf-8">${style}<style>.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}.tile{background:#fffaf1;padding:5px;border-radius:7px}.tile svg{display:block;margin:auto}.tile small{display:block;white-space:nowrap;overflow:hidden}</style><h1>All 63 items · original, coral and lagoon · 120 px</h1>`;

@@ -50,4 +50,4 @@ Before Stassie uses it, verify her device's Settings → General → About model
 
 Rules live in `src/games/`; screens consume those same rules for moves, opponents and hints. Versioned save validation and recovery live in `src/state/`. Regression tests cover rule edge cases, imported-state validation, interrupted saves and recovery races.
 
-`scripts/generate-icons.py` makes original geometric app artwork. `scripts/generate-audio.py` generates local preview speech and tones; checked-in audio works offline. The speech distribution-rights gate is documented in the privacy notes. This repository started from the Expo blank TypeScript template; its original license is retained in LICENSE.
+`scripts/generate-icons.py` makes original geometric app artwork. `scripts/generate-audio.py` generates local preview speech and tones; checked-in audio works offline. The speech distribution-rights gate is documented in the privacy notes. This repository started from the Expo blank TypeScript template; the original Expo MIT notice is retained in THIRD_PARTY_NOTICES.md. Little Island is licensed under MIT, Copyright (c) 2026 Shimizu Technology (see LICENSE).
