@@ -61,6 +61,7 @@ export default function Home() {
         </PressableScale>)}
       </View>
       <Copy style={{ fontSize: 12, textAlign: "center", paddingVertical: 10 }}>Offline · No ads · Made for little moments together.</Copy>
+      <Copy style={{ fontSize: 12, lineHeight: 18, color: C.muted, textAlign: "center", paddingBottom: 12 }}>Made with aloha by Shimizu Technology</Copy>
     </ScrollView><Settings visible={settings} onClose={() => setSettings(false)} />
   </SafeAreaView>;
 }

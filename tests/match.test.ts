@@ -4,7 +4,7 @@ import { emptySave, parseSave } from "../src/state/validation";
 
 describe("family match", () => {
   it("counts a finished round once and leaves unfinished rounds alone", () => {
-    const m = newMatch(["Stassie", "Dad"]);
+    const m = newMatch(["Mia", "Dad"]);
     expect(settle(m, null)).toBe(m);
     const won = settle(m, 0);
     expect(won.wins).toEqual([1, 0]);
@@ -18,7 +18,7 @@ describe("family match", () => {
   });
 
   it("cleans names and falls back to defaults", () => {
-    expect(cleanName("  Stassie   Rose ", "x")).toBe("Stassie Rose");
+    expect(cleanName("  Mia   Sage ", "x")).toBe("Mia Sage");
     expect(cleanName("   ", "Player 2")).toBe("Player 2");
     expect([...cleanName("🌺".repeat(30), "x")].length).toBe(16);
     expect(newMatch(["", "Mom"]).names).toEqual(["Player 1", "Mom"]);
@@ -33,14 +33,14 @@ describe("family match", () => {
   });
 
   it("remembers recent family names without defaults or duplicates", () => {
-    expect(rememberNames(["Dad", "Mom"], ["Stassie", "dad"])).toEqual(["Stassie", "dad", "Mom"]);
+    expect(rememberNames(["Dad", "Mom"], ["Mia", "dad"])).toEqual(["Mia", "dad", "Mom"]);
     expect(rememberNames(undefined, ["Player 1", "Player 2"])).toEqual([]);
     expect(rememberNames([], ["a", "b", "c", "d", "e", "f", "g", "h", "i"]).length).toBe(8);
   });
 
   it("accepts remembered players in saves and rejects bad ones", () => {
-    const save = { ...emptySave(), players: ["Stassie", "Dad"] };
-    expect(parseSave(JSON.stringify(save)).players).toEqual(["Stassie", "Dad"]);
+    const save = { ...emptySave(), players: ["Mia", "Dad"] };
+    expect(parseSave(JSON.stringify(save)).players).toEqual(["Mia", "Dad"]);
     expect(validPlayers(["A", "a"])).toBe(false);
     expect(() => parseSave(JSON.stringify({ ...emptySave(), players: [""] }))).toThrow();
   });

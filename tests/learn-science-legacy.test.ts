@@ -245,8 +245,8 @@ function envelope(game: LearnId, o: LearnOptions, state: unknown) {
     id: `${game}-legacy-1`,
     revision: 7,
     options: o,
-    ...(two ? { names: ["Stassie", "Dad"] as [string, string], starter: 0 as const } : {}),
-    ...(o.mode === "versus" ? { match: newMatch(["Stassie", "Dad"], true) } : {}),
+    ...(two ? { names: ["Mia", "Dad"] as [string, string], starter: 0 as const } : {}),
+    ...(o.mode === "versus" ? { match: newMatch(["Mia", "Dad"], true) } : {}),
     state,
   };
 }

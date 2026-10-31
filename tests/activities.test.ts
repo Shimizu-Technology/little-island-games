@@ -13,7 +13,7 @@ describe("shared activity persistence", () => {
     expect(parseSave(JSON.stringify(legacy))).toEqual(legacy);
     const card = createCardSession("go-fish", { difficulty: "easy", mode: "solo", computerFirst: false });
     const race = createRaceSession();
-    const party = createPartySession({ players: ["Stassie", "Mom", "Dad"] });
+    const party = createPartySession({ players: ["Mia", "Mom", "Dad"] });
     const save = {
       ...legacy,
       activities: { "go-fish": card, racer: race, "word-imposter": party, "island-mystery": createMysterySession() },

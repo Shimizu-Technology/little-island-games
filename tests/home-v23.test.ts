@@ -97,7 +97,7 @@ it('reset cannot duplicate friends living in another room',()=>{
  expect(reset.rooms.home.characters.map(c=>c.slot)).toEqual([1,2]);expect(reset.rooms.kitchen.characters[0].slot).toBe(0);expect(validHome(reset)).toBe(true);
 });
 
-it('exports an optional isolated QA save with Leon’s character positions',()=>{
+it('exports an optional isolated QA save with the sample character positions',()=>{
  if(!process.env.HOME_V23_FIXTURE)return;
  const save=initializePersonalization(emptySave());
  const home=save.personalization!.people.family.home;
