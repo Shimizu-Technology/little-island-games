@@ -84,6 +84,12 @@ export function exportPublic(target) {
         delete config.expo.ios.appleTeamId;
         delete config.expo.extra?.eas;
         delete config.expo.owner;
+        // Contributors build their own app; never point at the family app's store identity.
+        if (config.expo.ios) config.expo.ios.bundleIdentifier = 'com.example.littleisland';
+        if (config.expo.android) config.expo.android.package = 'com.example.littleisland';
+        config.expo.version = '1.0.0';
+        if (config.expo.ios?.buildNumber) config.expo.ios.buildNumber = '1';
+        if (config.expo.android?.versionCode) config.expo.android.versionCode = 1;
         bytes = Buffer.from(JSON.stringify(config, null, 2) + '\n');
       } else if (path === 'eas.json') {
         const config = JSON.parse(bytes);

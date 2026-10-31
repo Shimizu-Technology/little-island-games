@@ -144,7 +144,11 @@ def main():
     lines.append('};\n')
     (ROOT/'src/content/neuralAudio.ts').write_text('\n'.join(lines))
     evidence={'engine':'Kokoro-82M v1.0','modelLicense':'Apache-2.0','runtime':'kokoro-onnx 0.6.1 / MIT','modelSHA256':model_hash,'voiceDataSHA256':voice_hash,'scriptManifestSHA256':hashlib.sha256(json.dumps(speech,ensure_ascii=False,sort_keys=True).encode()).hexdigest(),'voices':VOICES,'keysPerVoice':len(speech),'secondsByVoice':{v:round(sum(records[v][k]['seconds'] for k in speech),2) for v in VOICES},'networkPlayback':False,'normalization':'-20 LUFS, -3 dBTP, LRA7; 24kHz mono AAC48k','listeningAcceptance':'Operator assessment on family hardware remains separate.'}
-    (ROOT/'docs/evidence/neural-audio.json').write_text(json.dumps(evidence,indent=2)+'\n')
+    # The private repo keeps a dated evidence copy; public exports have no docs/ and skip it.
+    if (ROOT/'docs').is_dir():
+        (ROOT/'docs/evidence').mkdir(exist_ok=True)
+        (ROOT/'docs/evidence/neural-audio.json').write_text(json.dumps(evidence,indent=2)+'\n')
+    (ROOT/'tests/fixtures').mkdir(parents=True,exist_ok=True)
     # docs/ is not exported publicly, so the test fixture and the public export receipt carry the same facts.
     (ROOT/'tests/fixtures/neural-audio.json').write_text(json.dumps(evidence,indent=2)+'\n')
     public=ROOT/'scripts/public-audio-receipt.json'
