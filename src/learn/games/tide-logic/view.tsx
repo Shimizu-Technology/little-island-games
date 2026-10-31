@@ -4,7 +4,7 @@ import Svg, { Circle, Path, Text as SvgText } from "react-native-svg";
 import { Button, C, Copy, Heading } from "../../../components/ui";
 import { GameIcon } from "../../../components/GameIcon";
 import type { BoardProps } from "../../types";
-import { advance, choices, complete, correct, ready, route, taskAt, type Item, type TideState } from "./engine";
+import { advance, counterAt, choices, complete, correct, ready, route, taskAt, type Item, type TideState } from "./engine";
 
 function Cargo({ item, size = 56 }: { item: Item; size?: number }) {
   const fill = item.color === "blue" ? "#4E9BB9" : "#E9826B";
@@ -16,7 +16,7 @@ function Cargo({ item, size = 56 }: { item: Item; size?: number }) {
 const bucketLabel = (value: string) => value === "left" ? "← left bucket" : value === "right" ? "right bucket →" : value === "count left" ? "← left bucket + count" : "choose bucket";
 function BucketPicture({ side }: { side: "left" | "right" }) { return <Svg width={30} height={30} viewBox="0 0 32 32" accessible accessibilityLabel={`${side} bucket picture`}><Path d="M5 8H27L24 27H8Z" fill={side === "left" ? "#5AAAB5" : "#EB9A79"} stroke={C.ink} strokeWidth="2"/><Path d="M4 8Q16 -2 28 8" fill="none" stroke={C.ink} strokeWidth="2"/></Svg>; }
 export function Board({ session, update, practice, assistance, cheer, coach, active, width }: BoardProps<TideState>) {
-  const s = session.state, done = complete(s), t = done ? null : taskAt(s.level, s.seed, s.index);
+  const s = session.state, done = complete(s), t = done ? null : taskAt(s.level, s.seed, s.index, s.version);
   const [editing, setEditing] = useState<keyof TideState["rule"] | null>(null);
   const [message, setMessage] = useState("");
   const [showHelp, setShowHelp] = useState(false);
@@ -54,6 +54,7 @@ export function Board({ session, update, practice, assistance, cheer, coach, act
         </View>
         <View style={{ height: 9, borderRadius: 5, backgroundColor: "#B49C77" }}/>
         <View style={{ flexDirection: "row", justifyContent: "space-around" }}><Copy>← LEFT BUCKET</Copy><Copy>RIGHT BUCKET →</Copy></View>
+        {s.level === 4 && <View accessibilityLiveRegion="polite" style={{padding:10,borderRadius:12,backgroundColor:"#FFF2BA"}}><Copy style={{fontSize:22,fontWeight:"800"}}>Counter: {counterAt(s)}</Copy><Copy>{s.running >= 0 && s.running < t.items.length ? route(t.items[s.running],s.rule)==="left" && s.rule.action==="count left" ? "Next catch: +1 when you tap Next catch" : "Next catch: counter stays the same" : s.running < 0 ? "Starts at 0. Count matching bell catches." : "Final count · every matching bell catch counted once"}</Copy></View>}
         {s.running >= 0 && <Copy style={{ textAlign: "center", fontWeight: "700" }}>{s.running < t.items.length ? `Catch ${s.running + 1}: ${route(t.items[s.running], s.rule).toUpperCase()} ${s.rule.action === "count left" && route(t.items[s.running], s.rule) === "left" ? " · counter +1" : ""}` : `All sorted! ${t.items.filter((item) => route(item, s.rule) === "left").length} left · ${t.items.filter((item) => route(item, s.rule) === "right").length} right`}</Copy>}
         {failure !== null && <Copy style={{ textAlign: "center", color: "#8D3528", fontWeight: "800" }}>Look at the outlined catch: the sorter found a bug.</Copy>}
       </View>

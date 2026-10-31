@@ -40,20 +40,73 @@ export function taskAt(level: number, seed: number, index: number): LabTask {
   const shift = ((seed >>> (index * 3)) % (source.lines.length - 1)) + 1;
   return { ...source, bank: mix(source.lines.map((_, i) => i), shift).map((i) => source.lines[i]) };
 }
-/** Source line indexes in execution order. A loop repeats its body; a function runs when called. */
-export function executionPlan(t: LabTask, token: string): number[] {
-  const loop = t.lines.findIndex((line) => line.startsWith("for "));
-  if (loop >= 0) {
-    const count = Number(t.lines[loop].match(/range\(([^)]+)\)/)?.[1].replace("□", token));
-    return [...t.lines.slice(0, loop).map((_, i) => i), loop, ...Array.from({ length: Math.min(count || 0, 8) }, () => loop + 1), ...t.lines.slice(loop + 2).map((_, i) => loop + 2 + i)];
+export type WatchValue = string | number | boolean | number[];
+export type ExecutionStep = { line: number; watch: Record<string, WatchValue>; robot: number; output: string[] };
+/** Interpreter for the authored, single-body teaching language (never evals user text).
+ * Each frame is one source visit. Robot amounts are effects, not implicit loops.
+ */
+export function execute(t: LabTask, token: string): ExecutionStep[] {
+  const lines = t.lines.map(line => line.replace("□", token));
+  const watch: Record<string, WatchValue> = {}, output: string[] = [], frames: ExecutionStep[] = [];
+  const functions = new Map<string, { parameter: string; body: number }>();
+  let robot = 0;
+  const value = (expression: string): WatchValue => {
+    const text = expression.trim();
+    if (/^".*"$/.test(text)) return text.slice(1, -1);
+    if (text === "True" || text === "False") return text === "True";
+    if (/^\[/.test(text)) return JSON.parse(text) as number[];
+    if (/^-?\d+$/.test(text)) return Number(text);
+    const sum = text.match(/^sum\((\w+)\)$/);
+    if (sum) return (watch[sum[1]] as number[]).reduce((a,b) => a+b,0);
+    const binary = text.match(/^(.+?)\s*(==|>|<)\s*(.+)$/) ?? text.match(/^(.+?)\s*(%|\+)\s*(.+)$/);
+    if (binary) {
+      const a = value(binary[1]), b = value(binary[3]);
+      switch(binary[2]) {
+        case "==": return a === b;
+        case ">": return Number(a) > Number(b);
+        case "<": return Number(a) < Number(b);
+        case "%": return Number(a) % Number(b);
+        default: return Number(a) + Number(b);
+      }
+    }
+    return watch[text] ?? "—";
+  };
+  const snapshot = (line: number) => frames.push({line, watch:{...watch}, robot, output:[...output]});
+  const action = (i: number) => {
+    const line = lines[i].trim();
+    const move = line.match(/^robot\.(step|jump)\((.*?)\)$/);
+    const print = line.match(/^print\((.*)\)$/);
+    const assign = line.match(/^(\w+) = (.*)$/);
+    if (move) {
+      const amount = move[2] ? Number(value(move[2])) : 1;
+      robot += amount;
+      output.push(`${amount} ${move[1]}${amount === 1 ? "" : "s"}`);
+    } else if (print) output.push(String(value(print[1])));
+    else if (assign) watch[assign[1]] = value(assign[2]);
+    snapshot(i);
+  };
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const def = line.match(/^def (\w+)\((\w+)\):$/);
+    const loop = line.match(/^for (\w+) in range\((\d+)\):$/);
+    const condition = line.match(/^if (.*):$/);
+    const call = line.match(/^(\w+)\((.*)\)$/);
+    if (def) { functions.set(def[1],{parameter:def[2],body:i+1}); snapshot(i); i++; }
+    else if (loop) {
+      snapshot(i);
+      for (let n=0;n<Math.min(Number(loop[2]),8);n++) { watch[loop[1]]=n; action(i+1); }
+      i++;
+    } else if (condition) { snapshot(i); if (value(condition[1])) action(i+1); i++; }
+    else if (call && functions.has(call[1])) {
+      const fn = functions.get(call[1])!;
+      watch[fn.parameter] = value(call[2]); snapshot(i); action(fn.body);
+      // Keep the last parameter value in the watch as a record of this call.
+    } else action(i);
   }
-  if (t.lines[0]?.startsWith("def ") && t.lines.length === 3) {
-    const call = t.lines[2].replace("□", token);
-    const times = Number(call.match(/\((\d+)\)/)?.[1]) || 1;
-    return [0, 2, ...Array.from({ length: Math.min(times, 8) }, () => 1)];
-  }
-  return t.lines.map((_, i) => i);
+  return frames;
 }
+export const executionPlan = (t: LabTask, token: string): number[] => execute(t,token).map(frame => frame.line);
+export const executionOutput = (frames: ExecutionStep[]): string => frames.at(-1)?.output.join(" · ") ?? "";
 export const complete = (s: LabState) => s.index === 4;
 export const ready = (s: LabState) => { const t = taskAt(s.level, s.seed, s.index); return s.order.length === t.lines.length && (!t.slot.length || !!s.token); };
 export const correct = (s: LabState) => { const t = taskAt(s.level, s.seed, s.index); return ready(s) && s.order.every((i, j) => t.bank[i] === t.lines[j]) && s.token === t.answer; };
