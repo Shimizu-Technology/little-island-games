@@ -518,3 +518,11 @@ export function rematchCards(s: CardSession, seed?: number, id?: string): CardSe
     starter: nextStarter(match, cardStarter(s)), matchPoints: cardMatchPoints(s),
   });
 }
+
+/** Strategy can see only the same hand and public request history as the player. */
+export function goFishAdvice(v: CardPublicView): string {
+  if (v.game !== "go-fish" || !v.hand.length) return "Draw a new hand before asking.";
+  const ranks = [...new Set(v.hand.map(rank))].sort((a,b) => v.hand.filter(c => rank(c)===b).length-v.hand.filter(c => rank(c)===a).length);
+  const r = ranks[0], count = v.hand.filter(c => rank(c)===r).length;
+  return `Ask for ${rankName(r)}: you already hold ${count} of that rank, so you need ${4-count} more for a book. Listen to the other player's requests too; they tell you a rank they held when they asked. This is a suggestion, not a peek at their cards.`;
+}

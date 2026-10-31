@@ -11,7 +11,7 @@ import { useArcadeLoop } from "../../loop";
 import type { OutfitId } from "../../progress";
 import type { ArcadeResult } from "../../types";
 import { CargoCaptain, CargoCanoe, CargoScene, CargoTile, CargoOutline } from "./Art";
-import { COLS, ROWS, cargoGoalValue, cargoResult, cargoStep, cargoTransition, pieceCells, type CargoInput, type CargoPiece, type CargoState } from "./engine";
+import { COLS, ROWS, cargoRowPreview, cargoGoalValue, cargoResult, cargoStep, cargoTransition, pieceCells, type CargoInput, type CargoPiece, type CargoState } from "./engine";
 import { cargoPoses } from "./poses";
 import { CargoTouch } from "./Touch";
 const idle: CargoInput = { type: "idle" }, ink = "#FFF5D7";
@@ -50,10 +50,10 @@ function SoftDrop({ active, onChange, onTap }: { active: boolean; onChange: (hel
   return <GestureDetector gesture={gesture}><Animated.View collapsable={false} testID="cargo-soft" accessible accessibilityRole="button" accessibilityLabel="Soft drop, hold to fall twenty times faster" accessibilityState={{ disabled: !active }} onAccessibilityTap={onTap} style={[{ ...ui.control, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }, style]}><Text style={ui.symbol}>↓</Text></Animated.View></GestureDetector>;
 }
 export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, debug = false, width, height }: { width: number; height: number; initial: CargoState; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped?: boolean) => void; onTone: (tone: string) => void; debug?: boolean }) {
-  const reduced = useReducedMotion(), wide = width > height, compact = height < 500;
+  const reduced = useReducedMotion(), wide = width > height, compact = height < 500, learning = initial.level !== "endless" && !!initial.level.targetSum;
   // The parent measures below its header and safe areas. Reserve all controls before sizing the grid.
-  const cell = Math.max(1, Math.min(43, (width - (wide ? 226 : 30)) / COLS, (height - (wide ? compact ? 142 : 110 : 262) - (initial.level === "endless" ? 48 : 0) - (debug ? 14 : 0)) / ROWS));
-  const boardW = cell * COLS, boardH = cell * ROWS, learning = initial.level !== "endless" && !!initial.level.targetSum;
+  const cell = Math.max(1, Math.min(43, (width - (wide ? 226 : 30)) / COLS, (height - (wide ? compact ? 142 : 110 : 262) - (learning ? 80 : 0) - (initial.level === "endless" ? 48 : 0) - (debug ? 14 : 0)) / ROWS));
+  const boardW = cell * COLS, boardH = cell * ROWS;
   const poses = useSharedValue<SpritePose[]>([]), reported = useRef(false), helped = useRef(helper);
   const build = useCallback((s: CargoState) => {
     return cargoPoses(s, cell);
@@ -131,8 +131,9 @@ export function CargoBoard({ initial, active, helper, outfit, onResult, onTone, 
       </CargoTouch></View></View>
       {wide && <View style={{ width: 200, alignItems: "center", gap: compact ? 8 : 20 }}>{!compact && <View testID="cargo-crew" pointerEvents="none" style={{ flexDirection: "row", alignItems: "flex-end", borderBottomWidth: 5, borderBottomColor: "#C58D55" }}><Companion event={s.lastRows.length ? "correct" : "idle"} size={100} active={active}/><CargoCaptain size={64} outfit={outfit} happy={!!s.lastRows.length}/></View>}{preview}{controls}</View>}
     </View>
+    {learning && <View accessibilityLiveRegion="polite" style={{ gap: 2 }}>{cargoRowPreview(s).map(p => <Text key={p.row} style={{ color: ink, textAlign: "center", fontSize: 13 }}>Row {p.row + 1}: {p.values.join(" + ")} = {p.sum}{p.missing ? ` · ${p.missing} spaces left` : ` · ${p.canoes} canoes`}</Text>)}</View>}
     {!wide && controls}
-    <Text style={{ color: ink, textAlign: "center", fontSize: 12 }}>{learning ? "No falling clock · matching sums sail twice" : "Tap to turn · drag to slide · pull & hold ↓ · flick to land"}</Text>
+    <Text style={{ color: ink, textAlign: "center", fontSize: 12 }}>{learning ? "Full row = 1 canoe. Exact target sum = 1 bonus canoe (2 total)." : "Tap to turn · drag to slide · pull & hold ↓ · flick to land"}</Text>
     {s.level === "endless" && <Pressable accessibilityRole="button" onPress={() => act({ type: "finish" })} style={{ minHeight: 44, justifyContent: "center", alignItems: "center" }}><CargoCanoe size={24}/><Text style={ui.label}>Dock my canoe · finish</Text></Pressable>}
     {debug && <Text testID="cargo-budget" style={{ color: ink, fontSize: 10, textAlign: "center" }}>{budget.fps.toFixed(1)} fps · p95 {budget.p95.toFixed(1)} ms · max {budget.max.toFixed(1)} ms · clamp {budget.dropped.toFixed(3)} s · {budget.ticks} ticks</Text>}
   </View>;

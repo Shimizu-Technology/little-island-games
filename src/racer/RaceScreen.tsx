@@ -56,7 +56,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
   const [snapshot, setSnapshot] = useState(initial),
     [choosing, setChoosing] = useState(!session),
     [hasRound, setHasRound] = useState(!!session),
-    [mode, setMode] = useState<RaceMode>("race");
+    [mode, setMode] = useState<RaceMode>("practice");
   const [helper, setHelper] = useState(session?.helper ?? true);
   const [rivalStrength, setRivalStrength] = useState<"easy" | "steady" | "fast">(session?.rivalStrength ?? "easy");
   const [autoRunning, setAutoRunning] = useState(false);
@@ -280,7 +280,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
     setMessage(
       held.current.toggle
         ? "Running forward. Jump before the next obstacle."
-        : "Standing still. The clock and the other runners keep going."
+        : current.current.mode === "practice" ? "Standing still. Take your time; Practice has no time limit." : "Standing still. The clock and the other runners keep going."
     );
   };
   if (choosing)
@@ -297,10 +297,10 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
         )}
         <View style={s.row}>
           <Button compact quiet selected={mode === "race"} onPress={() => setMode("race")}>
-            Race · 4 runners
+            Race · 3-minute challenge
           </Button>
           <Button compact quiet selected={mode === "practice"} onPress={() => setMode("practice")}>
-            Practice · just you
+            Practice · untimed
           </Button>
         </View>
         <View style={s.row}>
@@ -386,8 +386,8 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
             activation; every action also works with accessibility activation.
           </Copy>
           <Copy>
-            Touching an obstacle or falling sends you to your last flag. The timer continues through that recovery. A
-            race has a three-minute limit. Pausing stops every runner and the clock. The app also pauses after an
+            Touching an obstacle or falling sends you to your last flag. Practice is untimed. The optional
+            race challenge has a three-minute limit. Pausing stops every runner and the clock. The app also pauses after an
             interruption longer than half a second. Short slow frames keep all elapsed gameplay time.
           </Copy>
           <Copy>
@@ -401,7 +401,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
         </Copy>
       )}
       <View style={s.scoreRow} accessibilityLiveRegion="none">
-        <Text style={s.metric}>Time {raceTime(player.finishTick ?? snapshot.tick)}</Text>
+        <Text style={s.metric}>{snapshot.mode === "practice" ? "Untimed practice" : `Time ${raceTime(player.finishTick ?? snapshot.tick)}`}</Text>
         <Text style={s.metric}>
           {snapshot.runners.length > 1 ? `${racePlacement(snapshot)} / ${snapshot.runners.length}` : "Practice"}
         </Text>
@@ -445,7 +445,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
               <Copy>
                 {snapshot.status === "finished"
                   ? `${raceTime(player.finishTick!)} · ${player.falls} ${player.falls === 1 ? "recovery" : "recoveries"}. ${best && best.edition === snapshot.edition ? `Your best: ${raceTime(best.ticks)}.` : "Your time is saved on this device."}`
-                  : "The three-minute race ended. Try Practice to learn the jumps, or race again."}
+                  : "The three-minute challenge ended. Take your time in untimed Practice."}
               </Copy>
               {snapshot.status === "finished" && (
                 <Text style={s.courseTitle}>
@@ -468,8 +468,8 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
                   </Text>
                 ))}
               <View style={s.row}>
-                <Button onPress={() => begin(snapshot.course, snapshot.mode)}>Race again</Button>
-                <Button quiet onPress={() => setChoosing(true)}>
+                <Button onPress={() => begin(snapshot.course, "practice")}>Play again · untimed Practice</Button>
+                <Button quiet onPress={() => { setMode("practice"); setChoosing(true); }}>
                   Choose a course
                 </Button>
               </View>
@@ -485,7 +485,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
                     <Copy>
                       {snapshot.status === "ready"
                         ? course.lesson
-                        : "Every runner and the timer will continue from this moment. Held controls have been cleared."}
+                        : snapshot.mode === "practice" ? "Your place is saved. Continue at your own pace. Held controls have been cleared." : "Every runner and the timer will continue from this moment. Held controls have been cleared."}
                     </Copy>
                   )}
                   <Button disabled={!active || practicePending || !foreground || help} onPress={resume}>

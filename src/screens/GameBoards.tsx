@@ -36,6 +36,7 @@ import {
 import { MazeState, directions, mazeDone, mazeMove, mazeRoute } from "../games/maze";
 import {
   NumbersState,
+  numberAdvice,
   remainingTotal,
   needsPracticeRoll,
   closeNumbers,
@@ -1035,13 +1036,17 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
 }
 export function MazeBoard({ state: s, commit, width, sound }: Props<MazeState>) {
   const [hint, setHint] = useState<number | null>(null);
+  const [blocked, setBlocked] = useState(false);
   const done = mazeDone(s),
     current = s.path[s.path.length - 1],
     cellSize = Math.floor(Math.min(width, 470) / s.size),
     size = cellSize * s.size;
-  function move(i: number) {
+  function move(i: number, directional = false) {
     const next = mazeMove(s, i);
+    const adjacent = Math.abs(Math.floor(i / s.size) - Math.floor(current / s.size)) + Math.abs(i % s.size - current % s.size) === 1;
+    setBlocked(next === s && !done && (directional || adjacent));
     if (next !== s) {
+      setHint(null);
       commit(next);
       sound("tap");
     }
@@ -1051,7 +1056,7 @@ export function MazeBoard({ state: s, commit, width, sound }: Props<MazeState>) 
       <Status
         title={done ? "You found your island!" : "Where will your path go?"}
         detail={
-          done ? "A whole little adventure, one step at a time." : "Find your way from the boat to the flag."
+          done ? "A whole little adventure, one step at a time." : blocked ? "A wall is here. Try another opening; your path is safe." : "Find your way from the boat to the flag."
         }
         success={done}
       />
@@ -1100,7 +1105,7 @@ export function MazeBoard({ state: s, commit, width, sound }: Props<MazeState>) 
           size={48}
           disabled={done}
           label="Move up"
-          onPress={() => move(current - s.size)}
+          onPress={() => move(current - s.size, true)}
         />
         <View style={{ flexDirection: "row", gap: 9 }}>
           {[3, 2, 1].map((d) => (
@@ -1110,7 +1115,7 @@ export function MazeBoard({ state: s, commit, width, sound }: Props<MazeState>) 
               size={48}
               disabled={done}
               label={`Move ${directions[d].name.toLowerCase()}`}
-              onPress={() => move(current + directions[d].dr * s.size + directions[d].dc)}
+              onPress={() => move(current + directions[d].dr * s.size + directions[d].dc, true)}
             />
           ))}
         </View>
@@ -1170,6 +1175,7 @@ function Die({ value, size = 72 }: { value: number; size?: number }) {
   );
 }
 export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersState>) {
+  const [compare, setCompare] = useState(false);
   const { fontScale } = useWindowDimensions();
   const status = numbersStatus(s),
     target = numberTarget(s),
@@ -1247,6 +1253,7 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
         </View>
       </BoardArea>
       <Copy style={{ textAlign: "center" }}>Remaining total: {remainingTotal(s)} · Personal best: {Math.min(s.bestRemaining ?? remainingTotal(s), remainingTotal(s))} (lower is better)</Copy>
+      {compare && !!s.dice.length && <View accessibilityLiveRegion="polite" style={{ gap: 8 }}><Copy>{numberAdvice(s).text}</Copy>{numberAdvice(s).choices.map(choice => <Button quiet key={choice.join()} onPress={() => commit({ ...s, selected: choice })}>Choose {choice.join(" + ")}</Button>)}</View>}
       {s.gentlePractice && <Copy>Keep small numbers for flexible combinations. If no combination fits, roll again and keep practicing.</Copy>}
       {needsPracticeRoll(s) && <Copy>No open numbers make {target}. Try a new roll; your closed numbers stay closed.</Copy>}
       {s.dice.length > 0 && status === "playing" && !needsPracticeRoll(s) && (
@@ -1285,6 +1292,7 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
         >
           Show a combination
         </Button>
+        <Button quiet disabled={!s.dice.length || status !== "playing" || needsPracticeRoll(s)} onPress={() => setCompare(v => !v)}>{compare ? "Hide choices" : "Compare combinations"}</Button>
         <Button quiet disabled={!s.history.length} onPress={() => commit(undoNumbers(s))}>
           Undo my turn
         </Button>

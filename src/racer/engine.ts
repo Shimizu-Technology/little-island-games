@@ -272,7 +272,7 @@ export function stepRace(session: RaceSession, input: RaceInput): RaceSession {
   const runners = session.runners.map((r, i) =>
     moveRunner(r, i === 0 ? input : raceBotInput(r, course, tick), course, tick, i === 0 && !!session.helper)
   );
-  const status = runners[0].finishTick !== null ? "finished" : tick >= RACE_LIMIT_TICKS ? "timedout" : "running";
+  const status = runners[0].finishTick !== null ? "finished" : session.mode === "race" && tick >= RACE_LIMIT_TICKS ? "timedout" : "running";
   return { ...session, tick, runners, status };
 }
 /** Finishers still traverse the course physically after the human's recorded finish.
@@ -335,7 +335,7 @@ export function validRaceSession(value: unknown): value is RaceSession {
     s.seed > 0xffffffff ||
     !Number.isInteger(s.tick) ||
     s.tick < 0 ||
-    s.tick > RACE_LIMIT_TICKS ||
+    s.tick > (s.mode === "practice" ? Number.MAX_SAFE_INTEGER : RACE_LIMIT_TICKS) ||
     !["ready", "running", "paused", "finished", "timedout"].includes(s.status)
   )
     return false;
@@ -392,7 +392,8 @@ export function validRaceSession(value: unknown): value is RaceSession {
   )
     return false;
   if ((s.status === "finished") !== (s.runners[0].finishTick !== null)) return false;
-  if ((s.status === "timedout") !== (s.tick === RACE_LIMIT_TICKS && s.runners[0].finishTick === null)) return false;
+  if (s.status === "timedout" && (s.tick !== RACE_LIMIT_TICKS || s.runners[0].finishTick !== null)) return false;
+  if (s.mode === "race" && s.tick === RACE_LIMIT_TICKS && s.runners[0].finishTick === null && s.status !== "timedout") return false;
   return true;
 }
 export function validRaceRecord(value: unknown): value is RaceRecord {
@@ -407,7 +408,7 @@ export function validRaceRecord(value: unknown): value is RaceRecord {
     ["race", "practice"].includes(r.mode) &&
     Number.isInteger(r.ticks) &&
     r.ticks > 0 &&
-    r.ticks <= RACE_LIMIT_TICKS &&
+    r.ticks <= (r.mode === "practice" ? Number.MAX_SAFE_INTEGER : RACE_LIMIT_TICKS) &&
     Number.isInteger(r.falls) &&
     r.falls >= 0 &&
     r.falls <= r.ticks &&

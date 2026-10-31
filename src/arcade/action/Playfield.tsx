@@ -25,7 +25,7 @@ import { HeartsHud, HitReaction } from "../LivesHud";
 import type { ArcadeResult } from "../types";
 import type { OutfitId } from "../progress";
 import { ActionHero, BallArt, BeetleArt, HuskArt, NetArt, Scene, TurtleArt } from "./Art";
-import { palmResult, type PalmState } from "../games/palm-patrol/engine";
+import { palmWorkedHint, palmResult, type PalmState } from "../games/palm-patrol/engine";
 import { beachResult, type BeachState } from "../games/beach-ball/engine";
 import { arenaTransform, arenaTouch, type Arena, BALL_RADIUS } from "./arena";
 import {
@@ -201,7 +201,7 @@ export function PalmBoard({
   const { size, camera, arena, layout } = useArena(width, height),
     reduced = useReducedMotion(),
     point = useSharedValue<DragPoint>({ x: 180, y: 552, down: false }),
-    flags = useSharedValue({ helper, taps: 0, finish: false }),
+    flags = useSharedValue({ helper, taps: 0, finish: false, help: false }),
     keyboard = useSharedValue({ x: 180, firing: false, used: false }),
     poses = useSharedValue<ArtPose[]>(Array(88).fill(HIDDEN_POSE)),
     entrance = useSharedValue({ group: "", started: 0 }),
@@ -228,6 +228,7 @@ export function PalmBoard({
     taps: flags.value.taps,
     helper: flags.value.helper,
     finish: flags.value.finish,
+    help: flags.value.help,
   }));
   const build = useCallback(
     (s: PalmState) => {
@@ -292,6 +293,7 @@ export function PalmBoard({
   const learning = s.world === "learn",
     scale = camera.scale;
   return (
+    <View style={{ flex: 1 }}>
     <GestureDetector gesture={gesture} touchAction="none">
       <Animated.View
         collapsable={false}
@@ -427,6 +429,14 @@ export function PalmBoard({
         )}
       </Animated.View>
     </GestureDetector>
+        {learning && <View style={{ position: "absolute", top: camera.y + 260 * scale, left: 14, right: 14, alignItems: "center", gap: 6 }}>
+          <Button quiet compact disabled={!active} onPress={() => flags.set({ ...flags.value, help: true })}>Help · count it together</Button>
+          {s.helped && <View pointerEvents="none" accessibilityLiveRegion="polite" style={{ backgroundColor: "#FFF5D8", padding: 10, borderRadius: 18, maxWidth: 430, gap: 5 }}>
+            <Text style={{ color: "#294D43", fontSize: 16, textAlign: "center" }}>{palmWorkedHint(s).text}</Text>
+            {palmWorkedHint(s).groups.map((g,i) => <View key={i} accessible accessibilityLabel={`${g.filter(Boolean).length} objects${g.some(v => !v) ? `, ${g.filter(v => !v).length} crossed out` : ""}`} style={{ flexDirection: "row", flexWrap: "wrap", gap: 5, justifyContent: "center" }}>{g.map((v,j) => <Text key={j} style={{ color: v ? i ? "#99452F" : "#246858" : "#89796E", fontSize: 22 }}>{v ? "●" : "×"}</Text>)}</View>)}
+          </View>}
+        </View>}
+    </View>
   );
 }
 const BallStretch = memo(function BallStretch({

@@ -76,3 +76,10 @@ export function undoNumbers(s: NumbersState): NumbersState {
     last = history.pop()!;
   return { ...s, ...last, selected: [], history };
 }
+
+export function numberAdvice(s: NumbersState): { choices: number[][]; text: string } {
+  const choices = numberChoices(s.available, numberTarget(s)).sort((a,b) => a.length-b.length || Math.max(...b)-Math.max(...a)).slice(0,2);
+  if (!choices.length) return { choices, text: "No open combination fits this roll." };
+  const target = numberTarget(s), first = choices[0].join(" + "), second = choices[1]?.join(" + ");
+  return { choices, text: second ? `${first} = ${target}, or ${second} = ${target}. Closing fewer, larger numbers often keeps small numbers for flexible future sums. Closing a group removes more numbers now. Either is legal; neither guarantees the next roll.` : `${first} = ${target}. This is the only open combination for this roll.` };
+}

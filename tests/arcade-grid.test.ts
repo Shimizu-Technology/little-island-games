@@ -81,12 +81,12 @@ describe("Rail movement, damage and interpolation", () => {
     expect(railTransition(b, { type: "turn", direction: "down" })).toBe(b);
     let n = b;
     for (let i = 0; i < 15; i++) n = railStep(n, tick, 1 / 60);
-    expect(n.body[0]).toEqual({ x: 3, y: 7 });
+    expect(n.body[0]).toEqual({ x: 2, y: 6 });
     expect(n.direction).toBe("up");
     expect(n.queue).toEqual(["left"]);
     const p = railBodyPose({ ...n, elapsed: railTick(n) / 2 });
-    expect(p[0]).toEqual({ x: 3, y: 6.5 });
-    expect(p[1]).toEqual({ x: 2.5, y: 7 });
+    expect(p[0]).toEqual({ x: 2, y: 5.5 });
+    expect(p[1]).toEqual({ x: 2, y: 6.5 });
     expect(s.body[0]).toEqual({ x: 2, y: 7 });
   });
   it("finishes the last untimed learning step at the collected tile, with an independent 120 ms visual age", () => {

@@ -20,6 +20,7 @@ import { railHeading } from "../../feelArt";
 import type { Direction } from "../grid/rules";
 import {
   railHedges,
+  railWaiting,
   railBodyPose,
   railTick,
   railLearning,
@@ -188,7 +189,7 @@ export function RailBoard({
           >
             <GridHero chick size={28} />
             <Copy style={{ color: "#FFF0BE", fontWeight: "800", fontSize: 16 }}>
-              {learning ? `Next ${next ?? "✓"}` : `${s.collected}/${railTarget(s) === Infinity ? "∞" : railTarget(s)}`}
+              {railWaiting(s) ? "Ready · tap a direction" : learning ? `Next ${next ?? "✓"}` : `${s.collected}/${railTarget(s) === Infinity ? "∞" : railTarget(s)}`}
             </Copy>
           </View>
           {s.level !== "endless" && s.level.word && (

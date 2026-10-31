@@ -37,11 +37,13 @@ describe("discovery polish durable results", () => {
     for (const voteSummary of [null, {}, { accusedId: null, role: "crew", tally: { skip: 4 } }, { accusedId: null, role: null, tally: { unknown: 1 } }, { accusedId: null, role: null, tally: { skip: 9 } }])
       expect(validMysterySession({ ...s, voteSummary })).toBe(false);
   });
-  it("records ties and timed-out skip ballots without inventing an accused role", () => {
+  it("records ties and explicit skip ballots without inventing an accused role", () => {
     let s = voting();
     s = applyMysteryIntent(s, "p0", { type: "vote", target: "p1" });
     s = applyMysteryIntent(s, "p1", { type: "vote", target: "p0" });
     for (let i = 0; i < 25; i++) s = tickMystery(s);
+    expect(s.phase).toBe("voting");
+    for (const id of ["p2", "p3"]) s = applyMysteryIntent(s, id, { type: "vote", target: "skip" });
     expect(s.voteSummary).toEqual({ accusedId: null, role: null, tally: { p1: 1, p0: 1, skip: 2 } });
     expect(validMysterySession(s)).toBe(true);
   });

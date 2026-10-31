@@ -94,3 +94,13 @@ export function edgeFromDots(n: number, a: number, b: number): number | null {
   }
   return null;
 }
+
+export function hintReason(s: Position, edge: number): string {
+  const boxes = s.marks.flatMap((v,b) => v === -1 && boxEdges(s.size,b).includes(edge) ? [b] : []);
+  const label = (b: number) => `${String.fromCharCode(65+b%s.size)}${Math.floor(b/s.size)+1}`;
+  const closes = boxes.filter(b => sides(s,b) === 3);
+  if (closes.length) return `Close ${closes.map(label).join(" and ")} with its fourth side. You keep the turn.`;
+  const thirds = boxes.filter(b => sides(s,b) === 2);
+  if (thirds.length) return `This adds a third side to ${thirds.map(label).join(" and ")}. The next player can close it. This move offers a chain of ${giveaway(s,edge)} box${giveaway(s,edge) === 1 ? "" : "es"}; look for a shorter chain if you can.`;
+  return "This edge leaves every touching box with fewer than three sides. It gives away no box on the next move.";
+}

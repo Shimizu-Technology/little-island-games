@@ -139,6 +139,7 @@ export type PalmInput =
   | { type: "tick" }
   | { type: "move"; x: number }
   | { type: "toss" }
+  | { type: "help" }
   | { type: "helper"; value: boolean }
   | { type: "finish" };
 export function palmConfig(s: PalmState): PalmLevel {
@@ -263,6 +264,7 @@ export function palmTransition(s: PalmState, input: PalmInput): PalmState {
     return input.value === s.helper
       ? s
       : { ...s, helper: input.value, helped: s.helped || input.value, lives: configureLives(s.lives, input.value) };
+  if (input.type === "help" && palmConfig(s).world === "learn") return { ...s, helped: true };
   if (input.type === "move" && finite(input.x, -10000, 10000)) {
     const launcher = clamp(input.x, 24, 336);
     return launcher === s.launcher ? s : { ...s, launcher };
@@ -519,3 +521,10 @@ export const palmEngine: ArcadeEngine<PalmState, PalmInput, PalmLevel> = {
   result: palmResult,
   validate: validPalm,
 };
+
+/** Countable groups use the exact operands that generated the answer targets. */
+export function palmWorkedHint(s: Pick<PalmState, "prompt" | "answer">) {
+  "worklet";
+  const [a, b] = s.prompt.match(/\d+/g)!.map(Number), subtract = s.prompt.includes("−");
+  return { answer: s.answer, text: subtract ? `${a} take away ${b} leaves ${s.answer}. Aim for ${s.answer}.` : `${a} and ${b} together make ${s.answer}. Aim for ${s.answer}.`, groups: subtract ? [Array.from({ length: a }, (_, i) => i >= b)] : [Array(a).fill(true) as boolean[], Array(b).fill(true) as boolean[]] };
+}

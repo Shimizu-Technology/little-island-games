@@ -362,13 +362,14 @@ export function railTransition(s: RailState, input: RailInput): RailState {
   if (input.type === "finish") return s.level === "endless" ? { ...s, phase: "stopped" } : s;
   if (input.type !== "turn" || !directions.includes(input.direction)) return s;
   const previous = s.queue.at(-1) ?? s.direction;
+  if (railWaiting(s) && !opposite(previous, input.direction) && !railLearning(s)) return { ...s, queue: [input.direction], direction: input.direction };
   if (opposite(previous, input.direction) && s.body.length > 1) return s;
   if (railLearning(s)) return railMove(s, input.direction);
   return s.queue.length < 2 && previous !== input.direction ? { ...s, queue: [...s.queue, input.direction] } : s;
 }
 export function railStep(s: RailState, input: RailInput, dt: number): RailState {
   if (input.type !== "tick") return railTransition(s, input);
-  if (s.phase !== "play" || !Number.isFinite(dt) || dt <= 0) return s;
+  if (s.phase !== "play" || railWaiting(s) || !Number.isFinite(dt) || dt <= 0) return s;
   const step = Math.min(dt, 0.1),
     lives = stepLives(s.lives, step);
   if (s.respawn > 0) return { ...s, lives, respawn: Math.max(0, s.respawn - step) };
@@ -494,3 +495,6 @@ export const railEngine: ArcadeEngine<RailState, RailInput, RailLevel> = {
   result: railResult,
   validate: validRail,
 };
+
+/** Initial state is already serializable; no new save field is needed. */
+export const railWaiting = (s: RailState) => s.phase === "play" && s.moves === 0 && s.bumps === 0 && s.elapsed === 0 && s.queue.length === 0;
