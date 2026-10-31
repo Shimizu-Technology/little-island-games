@@ -26,6 +26,18 @@ export const makeTask = (level: number, rng: () => number): TideTask => {
   const a = [11,12,13,14,15,16,17,18,19,21,22,23,24,25,26,27,28,29][pick(rng, 0, 17)], b = pick(rng, 2, 5); return { kind: "area", a, b, total: a * b, remainder: 0 };
 };
 export const solved = (s: TideState) => { const t = s.tasks[s.index]; if (!t) return false; if (t.kind === "share") return s.marks.length === t.b + 1 && s.marks.slice(0, t.b).every(v => v === t.a) && s.marks[t.b] === t.remainder; if (t.kind === "area") return s.marks.length === 2 && s.marks[0] === Math.floor(t.a / 10) * 10 * t.b && s.marks[1] === (t.a % 10) * t.b && Number(s.answer) === t.total && s.answer.length > 0; return s.marks.length === t.a && s.marks.every(v => v === t.b) && Number(s.answer) === t.total; };
+/** All visible pool controls share the same bounded transition. */
+export function changePool(s: TideState, index: number, action: "add" | "remove" | "fill"): TideState {
+  const t = s.tasks[s.index];
+  if (!t || t.kind === "area") return s;
+  const length = t.kind === "share" ? t.b + 1 : t.a;
+  if (index < 0 || index >= length) return s;
+  const marks = Array.from({ length }, (_, i) => s.marks[i] ?? 0);
+  const max = t.kind === "share" ? t.total : t.b;
+  marks[index] = action === "fill" && t.kind === "table" ? t.b : Math.max(0, Math.min(max, marks[index] + (action === "remove" ? -1 : 1)));
+  return { ...s, marks };
+}
+
 export const engine: LearnEngine<TideState> = {
   id: "times-tide", name: "Times Tide", island: "numbers", ages: [6, 11], ownLevels: true,
   tagline: "Fill pools, build arrays, share fish.", description: "Move fish and shells to see how groups become multiplication and division.",

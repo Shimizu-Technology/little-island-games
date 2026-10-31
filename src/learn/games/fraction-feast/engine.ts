@@ -11,10 +11,25 @@ export const makeTask = (level: number, r: () => number, index = 0): FeastTask =
   const d = 100, n = pick(r, 1, 9) * 10 + pick(r, 0, 9); return { kind: "decimal", n, d, extra: index % 3, answer: n };
 };
 export const taskValid = (t: FeastTask, l: number) => !!t && typeof t === "object" && Object.keys(t).sort().join() === "answer,d,extra,kind,n" && (l === 4 ? ["combine", "subtract"].includes(t.kind) : ["share", "line", "equivalent", "combine", "decimal"][l - 1] === t.kind) && [t.n, t.d, t.extra, t.answer].every(Number.isInteger) && t.n > 0 && t.n < t.d && (l === 1 ? [2, 4].includes(t.d) && t.extra >= 0 && t.extra <= 2 && t.answer === t.n : l === 2 ? t.d >= 3 && t.d <= 8 && t.extra === 0 && t.answer === t.n : l === 3 ? t.d >= 2 && t.d <= 5 && t.extra >= 2 && t.extra <= 3 && t.answer === t.n * t.extra : l === 4 ? t.d >= 4 && t.d <= 8 && t.extra >= 1 && (t.kind === "combine" ? t.n >= 2 && t.n < t.d && t.extra < t.d && t.n + t.extra > t.d && t.answer === t.n + t.extra : t.n >= 2 && t.n < t.d && t.extra < t.n && t.answer === t.n - t.extra) : t.d === 100 && t.extra >= 0 && t.extra <= 2 && t.answer === t.n);
+/** Each outlined whole always contains one denominator of equal pieces. */
+export function fractionModel(t: FeastTask) {
+  const denominator = t.kind === "equivalent" ? t.d * t.extra : t.d;
+  const wholes = t.kind === "combine" ? 2 : 1;
+  return { denominator, wholes, total: denominator * wholes };
+}
+export function mixedNumber(n: number, d: number): string {
+  const whole = Math.floor(n / d), rest = n % d;
+  return rest ? `${whole} ${rest}/${d}` : `${whole}`;
+}
+export function fractionClue(t: FeastTask, pieces: number): string {
+  const { denominator } = fractionModel(t);
+  return `You have ${pieces}/${denominator} shaded. The target is ${t.answer}/${denominator}. ${pieces < t.answer ? "Shade more pieces." : "Take back some pieces."}`;
+}
+
 export const engine: LearnEngine<FeastState> = {
   id: "fraction-feast", name: "Fraction Feast", island: "numbers", ages: [7, 13], ownLevels: true, tagline: "Share, fold and fill fractions.",
   description: "Share island food fairly, walk a fraction line and build decimals on a hundred grid.",
-  help: "Tap pie slices or number-line steps to show the requested fraction. On the hundred grid, add ten squares or one square at a time. Count the shaded pieces and press Check. Tap Hint to see a worked clue.",
+  help: "Choose a piece count or tap number-line steps to show the requested fraction. On the hundred grid, add ten squares or one square at a time. Count the shaded pieces and press Check. Tap Hint to see a worked clue.",
   color: "#AC5C26", surface: "#FFF0CF", modes: ["solo", "together"],
   levelNames: [
     { name: "Fair pie shares", description: "Cut halves and quarters, then serve equal slices." },

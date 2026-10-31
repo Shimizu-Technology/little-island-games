@@ -54,8 +54,25 @@ export function solved(state: AlgebraState): boolean {
   const task = state.tasks[state.index];
   if (!task) return false;
   if (task.kind === "balance") return state.offset === -task.a && state.value === task.answer;
-  if (task.kind === "two-step" || task.kind === "inequality") return state.offset === -task.a && state.divided && state.value === task.answer;
+  if (task.kind === "inequality") return state.offset === -task.a && state.divided && task.extra * state.value + task.a <= task.b;
+  if (task.kind === "two-step") return state.offset === -task.a && state.divided && state.value === task.answer;
   return state.value === task.answer;
+}
+
+/** Shared worked maths for new and supported legacy tasks. */
+export function workedHint(t: AlgebraTask): string {
+  if (t.kind === "pattern") return `Add ${t.b} each time. The last number is ${t.a + 2 * t.b}; ${t.a + 2 * t.b} + ${t.b} = ${t.answer}.`;
+  if (t.kind === "expression" || t.kind === "substitution") return `Multiply first: ${t.b} × ${t.extra} = ${t.b * t.extra}. Then ${t.a} + ${t.b * t.extra} = ${t.answer}.`;
+  if (t.kind === "inequality") return `Take ${t.a} from both sides, then divide both sides by ${t.extra}. Keep ≤: x ≤ ${t.answer}. Any integer at or below ${t.answer} works.`;
+  if (t.kind === "balance" || t.kind === "two-step") return `Take ${t.a} from both pans.${t.extra > 1 ? ` Then split both sides into ${t.extra} equal groups.` : ""}`;
+  if (t.kind === "missing") return `Undo plus ${t.b}: move ${t.b} down from ${t.a}.`;
+  return `Start at ${t.a}. Move ${Math.abs(t.b)} ${t.b < 0 ? "down" : "up"} to reach ${t.answer}.`;
+}
+/** Extend the line instead of pinning an out-of-range diver to an endpoint. */
+export function seaLineRange(value: number, start?: number) {
+  const min = Math.floor(Math.min(value - 10, start ?? value, 0) / 5) * 5;
+  const max = Math.ceil(Math.max(value + 10, start ?? value, 0) / 5) * 5;
+  return { min, max };
 }
 
 export const engine: LearnEngine<AlgebraState> = {
