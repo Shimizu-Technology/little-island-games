@@ -19,7 +19,8 @@ import { Text } from "../components/Text";
 import { BoardArt, Piece } from "./Art";
 import { Boards, demoPosition } from "./Boards";
 import { coordinate } from "./hidden-canoes/engine";
-import { edgeDots } from "./fishing-nets/engine";
+import { hintReason as coconutHintReason } from "./coconut-drop/engine";
+import { hintReason as netsHintReason, edgeDots } from "./fishing-nets/engine";
 const strengthNames = { gentle: "Gentle", growing: "Growing", challenge: "Challenge" };
 const back = () =>
   router.canGoBack() ? router.back() : router.replace({ pathname: "/shelf", params: { island: "classic" } });
@@ -309,7 +310,7 @@ function Round({
       return;
     }
     if (s.game === "coconut-drop")
-      setNotice(`Try column ${action + 1}. Look for four in a line and block the other shape.`);
+      setNotice(coconutHintReason(p, action));
     else if (s.game === "shell-pits")
       setNotice(
         `Try ${p.turn === 0 ? "circle" : "square"} pit ${action < 6 ? action + 1 : action - 6}. Preview its last shell before sowing.`
@@ -317,7 +318,7 @@ function Round({
     else if (s.game === "fishing-nets") {
       const [a, b] = edgeDots(p.size, action);
       const dot = (i: number) => `${String.fromCharCode(65 + (i % (p.size + 1)))}${Math.floor(i / (p.size + 1)) + 1}`;
-      setNotice(`Try tying ${dot(a)} to ${dot(b)}. Close a box, avoid its third side, or offer the smallest chain.`);
+      setNotice(`Try tying ${dot(a)} to ${dot(b)}. ${netsHintReason(p, action)}`);
     } else if (s.game === "hidden-canoes")
       setNotice(`Try ${coordinate(action)}. Search beside a find, then explore new water.`);
     else {
@@ -345,7 +346,7 @@ function Round({
           ? `Pass to ${s.match.names[p.turn]}`
           : s.game === "reef-sweep"
             ? "A little pearl hunt"
-            : `${s.match.names[p.turn]}’s turn`
+            : s.mode === "solo" && p.turn === 0 && s.match.names[0] === "You" ? "Your turn" : `${s.match.names[p.turn]}’s turn`
       : s.game === "reef-sweep"
         ? p.outcome === 0
           ? "Every pearl found!"

@@ -99,7 +99,7 @@ export function reefTransition(s: ReefState, input: ReefInput): ReefState {
   if (!preview) {
     // An open, in-bounds spot rejected only by the target sum is a wrong learning answer.
     const sumMiss = s.level !== "endless" && !!s.level.targetSum && !!placementCells({ ...s, level: "endless" }, piece, input.row, input.col);
-    return { ...s, ...(sumMiss ? { helped: true } : {}), message: s.level !== "endless" && s.level.targetSum ? "Try an open spot where the row and column stay at 10 or less." : "That coral needs a little more room. Try another spot." };
+    return { ...s, ...(sumMiss ? { helped: true } : {}), message: sumMiss ? reefSumRejection(s, piece, input.row, input.col) : "That coral needs a little more room. Try an open spot." };
   }
   const { cells, clear } = preview;
   const board = [...s.board], appearance = [...s.appearance]; cells.forEach(i => { board[i] = piece.value; appearance[i] = piece.color; });
@@ -138,3 +138,14 @@ export function validReef(v: unknown): v is ReefState {
   return (s.status !== "playing" || hasReefMove(s)) && (s.status !== "full" || !hasReefMove(s)) && (s.status !== "cleared" || s.level !== "endless" && reefGoalValue(s) >= s.level.target) && (s.status !== "stopped" || s.level === "endless");
 }
 export const reefEngine: ArcadeEngine<ReefState, ReefInput, ReefLevel> = { create: createReef, reduce: reefTransition, result: reefResult, validate: validReef };
+
+function reefSumRejection(s: ReefState, piece: CoralPiece, row: number, col: number): string {
+  const cells = placementCells({ ...s, level: "endless" }, piece, row, col)!;
+  const board = [...s.board]; cells.forEach(i => { board[i] = piece.value; });
+  const target = s.level === "endless" ? 10 : s.level.targetSum!;
+  for (const i of cells) for (const line of [Array.from({ length: 8 }, (_, c) => Math.floor(i / 8) * 8 + c), Array.from({ length: 8 }, (_, r) => r * 8 + i % 8)]) {
+    const values = line.map(j => board[j]).filter(Boolean), sum = values.reduce((a,b) => a+b, 0);
+    if (sum > target) return `${values.join(" + ")} = ${sum}. Each row and column must stay at ${target} or less. Try another spot.`;
+  }
+  return `Keep each row and column at ${target} or less.`;
+}

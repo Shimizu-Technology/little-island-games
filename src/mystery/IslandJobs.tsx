@@ -331,7 +331,7 @@ export function PumpJob({
   const progress = view.sabotage?.progress ?? 0;
   return (
     <View style={{ padding: 14, borderRadius: 20, backgroundColor: "#E5EFF0", gap: 10 }}>
-      <Heading style={{ fontSize: 20 }}>Restore the water · {view.sabotage?.left} {view.solo ? "beats" : "seconds"}</Heading>
+      <Heading style={{ fontSize: 20 }}>Restore the water · {view.solo ? `${view.sabotage?.left} beats` : "no time limit"}</Heading>
       <Copy style={{ fontSize: 13 }}>Open supply → close valve → connect pipe.</Copy>
       <Svg width="100%" height="54" viewBox="0 0 280 54" accessibilityElementsHidden>
         {[0, 1, 2].map((i) => (

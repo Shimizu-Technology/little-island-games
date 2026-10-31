@@ -138,7 +138,7 @@ export function AdventurePlay({
                   ? "Practice waits while you read. Each move, job action or Watch advances one beat."
                   : view.phase === "explore"
                     ? "Touch a place to walk there. Watch your friends, help with jobs, and gather clues."
-                    : `${view.phaseLeft} seconds · ${view.phase === "discussion" ? `${view.readyCount} ready` : `${view.votesCast} votes cast`}`}
+                    : `${view.phase === "discussion" ? `${view.readyCount} ready · everyone taps Ready` : `${view.votesCast} votes cast · waiting for everyone`}`}
           </Copy>
         )}
         {guide && (
@@ -303,7 +303,7 @@ export function AdventurePlay({
       {view.sabotage && !atPump && (
         <View style={{ borderRadius: 15, padding: 12, backgroundColor: "#F5DFC8", gap: 5 }}>
           <Heading style={{ fontSize: 19 }}>
-            Water is off · {view.sabotage.left} {view.solo ? "beats" : "seconds"}
+            Water is off · {view.solo ? `${view.sabotage.left} beats` : "repair together · no time limit"}
           </Heading>
           <Copy style={{ fontSize: 13 }}>Jobs wait. Repair at the blue pump.</Copy>
           {!atPump && (
@@ -319,7 +319,7 @@ export function AdventurePlay({
         <View style={{ gap: 10, width: short ? 250 : "100%", maxWidth: 520 }}>
           {onSpeakInstruction && enabled && (
             <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-              <Button compact quiet onPress={() => onSpeakInstruction(view.phase !== "explore" || atBell ? "mystery-meeting" : atPump ? "mystery-pump" : task ? `mystery-${task.id}` : "mystery-welcome")}>Listen to this place</Button>
+              <Button compact quiet onPress={() => onSpeakInstruction(view.phase !== "explore" || atBell ? "mystery-meeting" : atPump ? "mystery-pump-v25" : task ? `mystery-${task.id}` : "mystery-welcome")}>Listen to this place</Button>
               <Button compact quiet onPress={() => onStopInstruction?.()}>Stop reading</Button>
             </View>
           )}

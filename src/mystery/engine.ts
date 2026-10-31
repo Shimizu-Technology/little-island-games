@@ -461,11 +461,11 @@ export function tickMystery(state: MysterySession): MysterySession {
   const s = copy(state);
   s.tick++;
   s.revision++;
-  if (s.phase === "explore" && s.sabotage) {
+  if (s.solo && s.phase === "explore" && s.sabotage) {
     s.sabotage.left--;
     if (s.sabotage.left <= 0) end(s, "mischief", "sabotage");
   }
-  if (s.phase === "discussion" || s.phase === "voting") {
+  if (s.solo && (s.phase === "discussion" || s.phase === "voting")) {
     s.phaseLeft--;
     if (s.phaseLeft <= 0) {
       if (s.phase === "discussion") {

@@ -208,3 +208,14 @@ export function validCargo(v: unknown): v is CargoState {
   return s.event === s.loads && s.lines <= s.loads * 4 && s.canoes >= s.lines && s.canoes <= s.lines * 2 && s.lastBonus <= s.lastRows.length && s.combo <= s.loads && (s.status !== "playing" || fits(s, s.piece, s.row, s.col)) && (s.status !== "cleared" || (s.level !== "endless" && cargoGoalValue(s) >= s.level.target)) && (s.status !== "finished" || s.level === "endless");
 }
 export const cargoEngine: ArcadeEngine<CargoState, CargoInput, CargoLevel> = { create: createCargo, reduce: cargoTransition, step: cargoStep, result: cargoResult, validate: validCargo };
+
+/** Project the same landing and row totals used by lock(), without changing the board. */
+export function cargoRowPreview(s: CargoState) {
+  const board = [...s.board], row = landingRow(s), touched = new Set<number>();
+  for (const [r,c] of pieceCells(s.piece)) if (row+r >= 0) { board[(row+r)*COLS+s.col+c] = { kind: s.piece.kind, value: s.piece.value, stuck: false }; touched.add(row+r); }
+  const target = s.level === "endless" ? 0 : s.level.targetSum;
+  return [...touched].sort((a,b) => a-b).map(row => {
+    const line = board.slice(row*COLS,(row+1)*COLS), values = line.flatMap(c => c ? [c.value] : []), sum = values.reduce((a,b) => a+b,0), full = values.length === COLS;
+    return { row, values, sum, missing: COLS-values.length, canoes: full ? 1 + Number(!!target && sum === target) : 0 };
+  });
+}

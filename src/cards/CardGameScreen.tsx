@@ -13,6 +13,7 @@ import Svg, { Circle, Path, Polygon } from "react-native-svg";
 import { Button, C, Copy, GameHeader, Heading, Label, PressableScale, Sheet, font, ToggleRow } from "../components/ui";
 import {
   Card,
+  cardPublicView, goFishAdvice,
   CardAction,
   CardSession,
   SUITS,
@@ -144,6 +145,7 @@ function CardGameRound({
   const [mode, setMode] = useState(state.options.mode),
     [round, setRound] = useState<CardRound>(cardRound(state)),
     [pace, setPace] = useState<CardPace>(cardPace(state));
+  const [advice, setAdvice] = useState(false);
   const [wild, setWild] = useState<Card | null>(null);
   const playing = active && foreground && !help && !setup;
   const cpu = state.options.mode === "solo" && state.turn === 1 && !state.result;
@@ -357,6 +359,7 @@ function CardGameRound({
                 ? "Tap a card to ask for that rank."
                 : "Tap an outlined matching card. Tap an eight to choose a suit."}
           </Copy>
+          {state.game === "go-fish" && !cpu && <><Button quiet compact onPress={() => setAdvice(v => !v)}>{advice ? "Hide strategy advice" : "Strategy advice"}</Button>{advice && <View accessibilityLiveRegion="polite"><Copy>{goFishAdvice(cardPublicView(state))}</Copy></View>}</>}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator

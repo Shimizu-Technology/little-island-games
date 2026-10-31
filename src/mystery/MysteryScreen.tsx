@@ -356,7 +356,7 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
         {Object.entries(mysteryInstructions).map(([key, text]) => (
           <View key={key} style={{ gap: 8 }}>
             <Copy>{text}</Copy>
-            <Button quiet compact disabled={!sound || !onSpeakInstruction} onPress={() => onSpeakInstruction?.(key as keyof typeof mysteryInstructions)}>Listen: {key.slice(8)}</Button>
+            <Button quiet compact disabled={!sound || !onSpeakInstruction} onPress={() => onSpeakInstruction?.(key as keyof typeof mysteryInstructions)}>Listen: {key.slice(8).replace(/-v25$/, "")}</Button>
           </View>
         ))}
         <Copy>

@@ -42,3 +42,15 @@ export function choose(s: Position, strength: Strength): number | null {
   return minimax(s, strength === "gentle" ? 1 : strength === "growing" ? 3 : 5, legal, move, evaluate);
 }
 export const validate = replayValidator(create, move, [7], 42);
+
+export function hintReason(s: Position, column: number): string {
+  if (!legal(s).includes(column)) return "Choose an open column.";
+  if (move(s, column).outcome === s.turn) return `Column ${column+1} completes your four in a line!`;
+  const rival = { ...s, turn: other(s.turn) };
+  if (move(rival, column).outcome === rival.turn) return `Block column ${column+1}: the other shape could complete four there next turn.`;
+  const next = move(s, column), threats = legal({ ...next, turn: s.turn }).filter(c => move({ ...next, turn: s.turn }, c).outcome === s.turn);
+  if (threats.length > 1) return `Column ${column+1} builds two ways to finish four. The other shape can block only one.`;
+  const cell = next.board.findIndex((v,i) => v !== s.board[i]);
+  const open = lines.filter(l => l.includes(cell) && l.every(i => next.board[i] !== other(s.turn))).length;
+  return `Column ${column+1} keeps ${open} possible line${open === 1 ? "" : "s"} of four open. Central columns can join lines in more directions; watch for a new threat after every turn.`;
+}

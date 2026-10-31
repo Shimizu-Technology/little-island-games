@@ -3,11 +3,12 @@ import { arenaTouch, type Arena } from "./arena";
 import { clamp } from "./validation";
 import { palmStep, palmTransition, type PalmState } from "../games/palm-patrol/engine";
 import { beachStep, beachTransition, type BeachState } from "../games/beach-ball/engine";
-export type PalmFrame = { x: number; down: boolean; taps: number; helper: boolean; finish: boolean };
+export type PalmFrame = { x: number; down: boolean; taps: number; helper: boolean; finish: boolean; help?: boolean };
 export type BeachFrame = { x: [number | null, number | null]; helper: boolean; finish: boolean };
 export function palmFrameStep(s: PalmState, input: PalmFrame, dt: number): PalmState {
   "worklet";
   s = palmTransition(s, { type: "helper", value: input.helper });
+  if (input.help) s = palmTransition(s, { type: "help" });
   s = palmTransition(s, { type: "move", x: input.x });
   if (input.finish) return palmTransition(s, { type: "finish" });
   const previousFact = s.fact, freshPress = input.down && !s.fireHeld;
