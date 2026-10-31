@@ -405,3 +405,35 @@ Delivery:
 Receipt: [evidence/testflight-build23.json](evidence/testflight-build23.json).
 
 Not verified: physical iPhone and iPad feel, VoiceOver end to end, and Stassie's acceptance.
+
+## Little Island 2.5: 2.5.0 (24), available 31 October 2026 Guam time
+
+After a level-by-level audit of every game, Leon asked to fix it all, add a subtle Shimizu Technology credit, and open-source the app. Record: [ISLANDER_2.md](ISLANDER_2.md#250-24).
+
+This build includes:
+- every audit finding fixed:
+  - Code Lab functions now trace correctly;
+  - Pattern Path uses true 3×3 grids;
+  - "fox" is taught with four sounds;
+  - the little-shell picture is right;
+  - help never costs a scored match;
+  - AND/OR examples now tell the two apart;
+  - fraction wholes are equal;
+  - older algebra rounds keep ≤ and get correct hints;
+  - storm safety and coral temperature are accurate;
+- easier starts, more narration and clearer feedback across coding, reading, maths, science, arcade and board games;
+- untimed Island Dash Practice and ready-driven nearby Mystery;
+- the credit at the bottom of Home, and About behind the grown-up gate.
+
+Source: clean commit `eb2c103e2fd0944c4a02981f5a3100270e4d1160` on PR #16 (held). Full gate 1,865 tests; Doctor 21/21. The independent review approved the gameplay and save fixes; its two public-export findings are fixed. Lead native walkthrough.
+
+Public source: https://github.com/Shimizu-Technology/little-island (MIT). It is a fresh export from `61fc8db` (the same app code, plus a test-only fix) with no history, docs or family data. All 1,865 tests pass in the public tree.
+
+Delivery:
+- The IPA is 195,242,018 bytes, SHA256 `d0803eb88e63118d7dbad06c2a68d8a44ac1313f8d1b3bb40d8d9a0f7682c0f1`.
+- The signature passed, and 6,447 audio files match the source.
+- Apple build `74f9f702-aa81-4f1f-8090-1798544c8b01` is VALID / IN_BETA_TESTING in the Leon group, with notes.
+
+Receipt: [evidence/testflight-build24.json](evidence/testflight-build24.json).
+
+Not verified: physical iPhone and iPad, VoiceOver end to end, nearby multi-device Mystery, and Stassie's acceptance.
