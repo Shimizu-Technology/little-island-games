@@ -897,8 +897,8 @@ export function PictureObject({ name, size = 100, color = "coral" }: { name: str
 }
 export function Scene({ scene, width = 180, height = 124 }: { scene: ReadingScene; width?: number; height?: number }) {
   const small = scene.size === "little",
-    s = small ? 39 : 61;
-  const objectSize = scene.relation === "under" ? 62 : 82;
+    s = scene.subjectSize ?? (small ? 39 : 61);
+  const objectSize = scene.objectSize ?? (scene.relation === "under" ? 62 : 82);
   const objectY = scene.relation === "under" ? 0 : scene.relation === "on" ? 50 : 43;
   const inside = scene.relation === "in" ? insideStyle[scene.object] ?? "container" : null;
   // Feet sit on the object's top edge for "on"; inside a canopy they sit among the leaves.

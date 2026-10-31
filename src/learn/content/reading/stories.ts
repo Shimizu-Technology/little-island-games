@@ -527,14 +527,18 @@ const TALES: Omit<Tale, "questions">[] = [
           "object": "shell",
           "relation": "beside",
           "color": "coral",
-          "size": "big"
+          "size": "big",
+          "subjectSize": 61,
+          "objectSize": 82
         },
         "miss": {
           "subject": "crab",
           "object": "rock",
           "relation": "beside",
           "color": "coral",
-          "size": "big"
+          "size": "big",
+          "subjectSize": 61,
+          "objectSize": 82
         },
         "cue": "shell"
       },
@@ -545,14 +549,18 @@ const TALES: Omit<Tale, "questions">[] = [
           "object": "shell",
           "relation": "beside",
           "color": "coral",
-          "size": "little"
+          "size": "little",
+          "subjectSize": 61,
+          "objectSize": 38
         },
         "miss": {
           "subject": "crab",
           "object": "rock",
           "relation": "beside",
           "color": "coral",
-          "size": "little"
+          "size": "little",
+          "subjectSize": 61,
+          "objectSize": 38
         },
         "cue": "shell"
       },

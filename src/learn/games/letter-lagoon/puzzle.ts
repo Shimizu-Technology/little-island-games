@@ -10,6 +10,9 @@ export type Task = {
   picture?: string;
   panels?: string[];
   audio?: string;
+  cardAudio?: Record<string, string>;
+  completedWord?: string;
+  completedAudio?: string;
   trace?: [number, number][];
 };
 export type State = {
@@ -27,6 +30,7 @@ export type State = {
 export type Action =
   | { type: "tile"; value: string }
   | { type: "help" }
+  | { type: "listen" }
   | { type: "undo" }
   | { type: "next" }
   | { type: "trace"; points: [number, number][] };
@@ -88,6 +92,7 @@ export function move(s: State, a: Action, bank: readonly Task[][]): State {
   if (a.type === "undo")
     return done || !s.placed.length ? s : { ...s, placed: s.placed.slice(0, -1), miss: false, hint: false };
   if (done) return s;
+  if (a.type === "listen") return { ...s, helped: true };
   if (a.type === "help") return { ...s, helped: true, hint: true, miss: false };
   const right =
     a.type === "trace"

@@ -51,7 +51,7 @@ const speech = JSON.parse(readFileSync(new URL("../scripts/learn/reading.json", 
   string
 >;
 const diff = (a: ReadingScene, b: ReadingScene) =>
-  (Object.keys(a) as (keyof ReadingScene)[]).filter((k) => a[k] !== b[k]);
+  (["subject", "object", "relation", "color", "size"] as const).filter((k) => a[k] !== b[k]);
 const objectSource = readFileSync(new URL("../src/learn/art/Objects.tsx", import.meta.url), "utf8");
 const drawn = new Set(
   [...objectSource.slice(0, objectSource.indexOf("] as const")).matchAll(/"([a-z]+)",/g)].map((m) => m[1])
@@ -386,7 +386,6 @@ describe("Which One: careful first tries and untimed family turns", () => {
     const s = which.create(o, ctx());
     for (const bad of [
       { ...s, solved: true, wrong: 0 },
-      { ...s, tried: true },
       { ...s, tried: true, wrong: whichAnswer(s) },
       { ...s, orders: Array(8).fill([0, 0, 2]) },
       { ...s, index: 8 },

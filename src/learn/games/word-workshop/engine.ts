@@ -1,3 +1,4 @@
+import { readingSpeech } from "../../kit/readingSpeech";
 import { makeEngine, type Task } from "../letter-lagoon/puzzle";
 export { move, current, choices, complete, type State, type Action } from "../letter-lagoon/puzzle";
 export const levelNames = [
@@ -158,6 +159,8 @@ export const bank: Task[][] = [
   compounds.map(([a, b, meaning]) => ({
     prompt: `Make ${a + b}`,
     clue: `Build a compound meaning ${meaning}. Two whole words make one.`,
+    completedWord: a + b,
+    completedAudio: readingSpeech(a + b),
     answer: [a, b],
     extras: ["boat", "light"].filter((x) => x !== a && x !== b),
     slots: ["First word", "Second word"],
@@ -165,6 +168,8 @@ export const bank: Task[][] = [
   endings.map(([a, b, meaning]) => ({
     prompt: `Build: ${meaning}`,
     clue: `Start with ${a}. Add s or es for more than one, ed for the past, or ing for happening now.`,
+    completedWord: a + b,
+    completedAudio: readingSpeech(a + b),
     answer: [a, b],
     extras: ["s", "es", "ed", "ing"].filter((x) => x !== b),
     slots: ["Base", "Ending"],
@@ -172,6 +177,8 @@ export const bank: Task[][] = [
   affixes.map(([a, b, meaning]) => ({
     prompt: `Make a word meaning “${meaning}”`,
     clue: "un = not or reverse · re = again · pre = before · ful = full of · less = without · er = person who",
+    completedWord: a + b,
+    completedAudio: readingSpeech(a + b),
     answer: [a, b],
     extras: ["un", "re", "pre", "ful", "less", "er"].filter((x) => x !== a && x !== b).slice(0, 3),
     slots: ["First part", "Second part"],
@@ -179,6 +186,8 @@ export const bank: Task[][] = [
   roots.map(([a, b, meaning, opposite, definition]) => ({
     prompt: `Build ${a + b} and unpack the root ${focusRoots[meaning]}`,
     clue: `${definition}. Root clues: tele = far; graph = write or draw; port = carry; aqua = water; bio = life; geo = earth; micro = small; photo = light.`,
+    completedWord: a + b,
+    completedAudio: readingSpeech(a + b),
     answer: [a, b, meaning, opposite],
     extras: ["sound", "close"].filter((x) => x !== opposite),
     slots: ["First part", "Second part", "Root meaning", "Opposite or contrast"],

@@ -1,3 +1,4 @@
+import { phonemes } from "../../kit/reading";
 import { makeEngine, type Task } from "./puzzle";
 export { move, current, choices, complete, type State, type Action } from "./puzzle";
 export const levelNames = [
@@ -5,7 +6,7 @@ export const levelNames = [
   { name: "Letter twins", description: "Match big letters to little letters." },
   { name: "First sounds", description: "Find pictures with the same first sound." },
   { name: "Letter trails", description: "Trace a letter from start to finish." },
-  { name: "Sound builders", description: "Build short words, one sound at a time." },
+  { name: "Sound builders", description: "Build short words from letters and sounds." },
 ];
 const words = [
   "cat",
@@ -33,6 +34,11 @@ const words = [
   "jet",
   "lip",
 ];
+// Keep answer IDs/tiles stable for old in-progress rounds; change only the comparison word.
+const firstSoundPartners: Record<string, string> = {
+  cat: "cup", dog: "duck", sun: "seed", pig: "pot", hen: "hat",
+  hat: "hen", cup: "cat", bed: "bus", bus: "bed", bug: "bat",
+};
 const paths: Record<string, [number, number][]> = {
   L: [
     [35, 18],
@@ -162,12 +168,12 @@ export const bank: Task[][] = [
         !["fox", "web", "lip", "net", "log", "mop", "rat", "jet", "van", "fan", "pen", "pot", "bat", "map"].includes(w)
     )
     .map((w) => ({
-      prompt: `${w[0]}… ${w}!`,
-      clue: `Find the picture that starts like ${w}. Say its first sound together.`,
+      prompt: `What starts like ${firstSoundPartners[w]}?`,
+      clue: "Say the pictured word. Find a different word with the same first sound.",
       answer: [w],
       extras: words.filter((x) => x[0] !== w[0]).slice(0, 2),
-      picture: w,
-      audio: `sound-boat-word-${w}`,
+      picture: firstSoundPartners[w],
+      audio: `sound-boat-word-${firstSoundPartners[w]}`,
     })),
   Object.entries(paths).map(([l, trace]) => ({
     prompt: `Trace ${l}`,
@@ -175,10 +181,11 @@ export const bank: Task[][] = [
     answer: [l],
     extras: [],
     trace,
+    audio: `letter-${l.toLowerCase()}`,
   })),
   words.map((w) => ({
     prompt: `Build ${w}`,
-    clue: `Say ${w} slowly: ${[...w].join(" · ")}. Tap one letter for each sound.`,
+    clue: `Say ${w} slowly: ${phonemes(w).join(" · ")}. ${w === "fox" ? "The letter x writes two sounds: k and s. Use three letters for four sounds." : "Tap one letter for each sound."}`,
     answer: [...w],
     extras: ["a", "e", "i", "o", "u", "b", "s"].filter((l) => !w.includes(l)).slice(0, 2),
     picture: w,
