@@ -15,9 +15,9 @@ describe('public source export boundary', () => {
       for (const name of ['docs', '.git', 'node_modules', 'ios', 'android', 'dist', 'artifacts']) expect(existsSync(join(snapshot, name)), name).toBe(false);
       const app = JSON.parse(readFileSync(join(snapshot, 'app.json'), 'utf8'));
       expect(app.expo.ios.appleTeamId).toBeUndefined();
-      const source = JSON.parse(readFileSync(join(process.cwd(), 'app.json'), 'utf8'));
-      expect(app.expo.ios.bundleIdentifier).not.toBe(source.expo.ios.bundleIdentifier);
-      if (source.expo.android?.package) expect(app.expo.android.package).not.toBe(source.expo.android.package);
+      // Also holds when the test runs inside an exported tree.
+      expect(app.expo.ios.bundleIdentifier).toBe('com.example.littleisland');
+      if (app.expo.android) expect(app.expo.android.package).toBe('com.example.littleisland');
       expect(app.expo.version).toBe('1.0.0');
       expect(app.expo.extra?.eas).toBeUndefined();
       expect(JSON.parse(readFileSync(join(snapshot, 'eas.json'), 'utf8')).submit).toBeUndefined();
