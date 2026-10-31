@@ -1,3 +1,4 @@
+import { readingSpeech } from "../../kit/readingSpeech";
 import { makeEngine, type Task } from "../letter-lagoon/puzzle";
 export { move, current, choices, complete, type State, type Action } from "../letter-lagoon/puzzle";
 export const levelNames = [
@@ -231,8 +232,10 @@ const comicPictures = [
   ["book", "person", "book"],
   ["person", "tree", "person"],
 ];
+const narrated = (task: Task): Task => ({ ...task, audio: readingSpeech(task.clue),
+  cardAudio: Object.fromEntries([...task.answer, ...task.extras].map(card => [card, readingSpeech(card)])) });
 export const bank: Task[][] = [
-  scenes.map(([a, b, c]) => ({
+  scenes.map(([a, b, c]) => narrated({
     prompt: `${b} · ${c}`,
     clue: `Build the picture sentence: ${a} ${b} ${c}.`,
     answer: [a, b, c],
@@ -240,9 +243,9 @@ export const bank: Task[][] = [
     slots: ["Start", "Who?", "Does what?"],
     picture: b,
   })),
-  repairs.map(([raw, a, b, c]) => ({
+  repairs.map(([raw, a, b, c]) => narrated({
     prompt: `Repair: ${raw}`,
-    clue: "A sentence starts with a capital. A question asks something and ends with ?. A telling sentence ends with a full stop.",
+    clue: `Repair this sentence: ${a} ${b}${c} A sentence starts with a capital. A question ends with a question mark. A telling sentence ends with a full stop.`,
     answer: [a, b, c],
     extras: [a.toLowerCase(), c === "." ? "?" : "."],
     slots: ["Capital start", "Keep the words", "End mark"],
@@ -277,8 +280,8 @@ export const bank: Task[][] = [
       slots: ["Topic sentence", "Detail 1", "Detail 2", "Conclusion"],
     },
     {
-      prompt: `Edit: ${bad} Then read: ${passage}`,
-      clue: "Match the verb to its subject. Use the passage as evidence for your inference.",
+      prompt: `Edit in the present tense: ${bad} Then read: ${passage}`,
+      clue: "Use the present tense. Match the verb to its subject. Use the passage as evidence for your inference.",
       answer: [...good.split(" "), inference],
       extras: [...bad.split(" "), "There is no clue in the passage."],
       slots: [...good.split(" ").map((_, i) => `Edit word ${i + 1}`), "Inference from evidence"],

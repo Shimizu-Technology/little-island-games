@@ -7,7 +7,7 @@ import { CoachSpot } from "../../Coach";
 import { Scene, PictureObject } from "../../art/Objects";
 import { ReadingText } from "../../kit/ReadingText";
 import { sceneLabel, wordAudio } from "../../kit/reading";
-import { whichAnswer, whichItem, whichNext, whichPick, type WhichState } from "./engine";
+import { whichAnswer, whichHelp, whichItem, whichNext, whichPick, type WhichState } from "./engine";
 
 /** A big picture card: wiggles and steps back when wrong, wears a check when right. */
 function Card({
@@ -94,6 +94,7 @@ export function Board({
   active,
   coach,
   cheer,
+  assistance,
 }: BoardProps<WhichState>) {
   const s = session.state;
   // Pictures already tried on this sentence step back (the save keeps only the latest).
@@ -180,34 +181,28 @@ export function Board({
       )}
       <Copy style={{ fontSize: 13, color: C.muted }}>{s.index + 1} of 8</Copy>
       <ReadingText
-        disabled={!s.tried && !s.solved}
         text={item.text}
         highlight={highlight}
         onWord={(_, word) => {
-          if (active && (s.tried || s.solved)) sound(wordAudio(word));
+          if (active && soundOn) {
+            if (!s.solved) { update(whichHelp(s)); assistance?.(); }
+            sound(wordAudio(word));
+          }
         }}
       />
       <Copy style={{ fontSize: 18, fontWeight: "700", textAlign: "center", color: C.ink }}>
-        {s.solved ? "Yes! That’s the one." : s.tried ? "Look at the glowing word." : "Read it. Which picture matches?"}
+        {s.solved ? "Yes! That’s the one." : s.wrong !== null ? "Look at the glowing word." : "Read it. Which picture matches?"}
       </Copy>
+      {!s.solved && (
+        <Button compact quiet icon="sound-on" disabled={!soundOn || !active}
+          onPress={() => { update(whichHelp(s)); assistance?.(); sound(`which-one-sentence-${item.id}`); }}>
+          Hear it
+        </Button>
+      )}
+      {!s.solved && <Copy style={{ fontSize: 14, textAlign: "center" }}>Read it yourself, or ask to hear it. Help counts.</Copy>}
       <CoachSpot active={coach.active && !s.tried && !s.solved} handAt="none">
         {grid}
       </CoachSpot>
-      {s.tried && !s.solved ? (
-        <Button
-          compact
-          quiet
-          icon="sound-on"
-          disabled={!soundOn}
-          onPress={() => sound(`which-one-sentence-${item.id}`)}
-        >
-          Hear it
-        </Button>
-      ) : (
-        !s.solved && (
-          <Copy style={{ fontSize: 14, color: C.ink, textAlign: "center" }}>Read first. Then you can hear it.</Copy>
-        )
-      )}
     </View>
   );
 }

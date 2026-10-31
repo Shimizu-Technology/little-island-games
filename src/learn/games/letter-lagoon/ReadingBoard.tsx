@@ -165,17 +165,17 @@ export function ReadingBoard(p: BoardProps<State> & { bank: Task[][]; kind: stri
     t = current(s, bank),
     done = complete(s, bank);
   useEffect(() => {
-    if (active && soundOn && t.audio && s.index < s.ids.length) {
+    if (kind !== "studio" && active && soundOn && t.audio && s.index < s.ids.length) {
       if (t.audio.startsWith("letter-")) sound("tap");
       sound(t.audio, true);
     }
-  }, [t.audio, s.index, s.ids.length, active, soundOn, sound]);
+  }, [t.audio, s.index, s.ids.length, active, soundOn, sound, kind]);
   if (s.index === s.ids.length) return <Copy>Your creations are ready!</Copy>;
   const expected = t.answer[s.placed.length];
   function act(a: Action) {
     if (!p.active) return;
     const next = move(s, a, bank);
-    if (a.type === "help" || next.miss) p.assistance?.();
+    if (a.type === "help" || a.type === "listen" || next.miss) p.assistance?.();
     if (a.type === "tile" || a.type === "trace") {
       const right = next.placed.length > s.placed.length;
       p.practice(`read.${session.game}-level-${s.level}`, right);
@@ -214,7 +214,9 @@ export function ReadingBoard(p: BoardProps<State> & { bank: Task[][]; kind: stri
           quiet
           compact
           label="Listen again"
+          disabled={!soundOn || !active}
           onPress={() => {
+            if (kind === "studio") act({ type: "listen" });
             p.sound(t.audio!.startsWith("letter-") ? "tap" : t.audio!);
             if (t.audio!.startsWith("letter-")) p.sound(t.audio!);
           }}
@@ -277,6 +279,7 @@ export function ReadingBoard(p: BoardProps<State> & { bank: Task[][]; kind: stri
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, justifyContent: "center" }}>
               {choices(s, bank).map((value) => (
                 <CoachSpot key={value} active={p.coach.active && value === expected}>
+                  <View style={{ alignItems: "center", gap: 6 }}>
                   <PressableScale
                     accessibilityRole="button"
                     accessibilityLabel={`Place ${value}${s.hint && value === expected ? ", try this one" : ""}`}
@@ -313,12 +316,21 @@ export function ReadingBoard(p: BoardProps<State> & { bank: Task[][]; kind: stri
                       </View>
                     )}
                   </PressableScale>
+                  {t.cardAudio?.[value] && <Button quiet compact label={`Hear card: ${value}`} disabled={!soundOn || !active}
+                    onPress={() => { act({ type: "listen" }); p.sound(t.cardAudio![value]); }}>Hear card</Button>}
+                  </View>
                 </CoachSpot>
               ))}
             </View>
           )}
         </>
       )}
+      {done && t.completedWord && <View style={{ alignItems: "center", gap: 8 }}>
+        <Copy style={{ textAlign: "center" }}>{t.answer.slice(0, 2).join(" + ")} →</Copy>
+        <Heading style={{ textAlign: "center" }}>{t.completedWord}</Heading>
+        <Button quiet compact disabled={!soundOn || !active} label={`Hear completed word: ${t.completedWord}`}
+          onPress={() => p.sound(t.completedAudio!)}>Hear the word</Button>
+      </View>}
       <View accessibilityLiveRegion="polite">
         <Copy style={{ textAlign: "center", fontWeight: "700", color: "#174A51" }}>
           {done
