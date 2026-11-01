@@ -11,7 +11,7 @@ describe("card family matches", () => {
   for (const game of ["go-fish", "crazy-eights"] as const)
     for (const mode of ["solo", "together"] as const)
       it(`${game} ${mode}: names, chosen starter, result and rematch survive JSON`, () => {
-        const match = newMatch(["Stassie", "Dad"]);
+        const match = newMatch(["Mia", "Dad"]);
         let s = createCardSession(game, { ...defaultOptions, mode }, 42, "first", { match, starter: 1, round: "quick" });
         expect(s.turn).toBe(1);
         const previous = JSON.stringify(s);
@@ -21,7 +21,7 @@ describe("card family matches", () => {
         const next = rematchCards(s, 43, "second");
         expect(cardStarter(next)).toBe(0);
         expect(next.turn).toBe(0);
-        expect(next.match?.names).toEqual(["Stassie", "Dad"]);
+        expect(next.match?.names).toEqual(["Mia", "Dad"]);
         expect(next.match!.wins.reduce((a, b) => a + b, 0) + next.match!.draws).toBe(1);
         expect(next.matchPoints).toEqual(game === "crazy-eights" ? s.result!.scores : [0, 0]);
         expect(validCardSession(next)).toBe(true);
@@ -59,7 +59,7 @@ describe("card family matches", () => {
   });
   it("names public event actors and books without revealing private draws", () => {
     const event = { revision: 1, actor: 1 as const, action: "ask" as const, rank: 2, received: 0, continues: false, newCards: [39], books: [[], [2]] as [number[], number[]] };
-    const text = cardEventText(event, null, "together", ["Stassie", "Dad"]);
+    const text = cardEventText(event, null, "together", ["Mia", "Dad"]);
     expect(text).toContain("Dad asked");
     expect(text).toContain("Dad made a book");
     expect(text).not.toContain("Ace of");

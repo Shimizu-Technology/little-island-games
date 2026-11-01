@@ -1,3 +1,5 @@
+import { validRoundOwners, type RoundOwners } from '../badges/owners';
+import { BoardId, BoardSessions, boardIds, isBoardId, validBoardSessions } from "../board";
 import { ExploreProgress, validExploreProgress } from "../explore/progress";
 import { GameId, GameState, gameIds } from "../games";
 import { checkersResult } from "../games/checkers";
@@ -12,14 +14,25 @@ import { validMatch, validSeat, validPlayers } from "../games/match";
 import type { LearnId, LearnSession, SkillProgress } from "../learn/types";
 import { learnIds } from "../learn/types";
 import { validLearn } from "../learn/session";
+import { validLearners, type Learners } from "../learn/learners";
 import { validSkills } from "../learn/skills";
-export type Settings = { sound: boolean; help: boolean };
+import { PracticeNotes, PracticeSettings, validPracticeNotes, validPracticeSettings } from "../practice/types";
+import { arcadeIds, validArcade, migrateArcade, type ArcadeId, type ArcadeSave } from "../arcade";
+import { validPersonalization, type Personalization } from "../personalization/model";
+export type Settings = { sound: boolean; help: boolean; homeNavigationSeen?: boolean; learningIslander?: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
 export type Save = {
   version: 1;
+  roundOwners?: RoundOwners;
+  personalization?: Personalization;
+  /** Island Arcade progress and validated untimed Reef rounds; real-time rounds are never persisted. */
+  arcade?: ArcadeSave;
   settings: Settings;
   sessions: Partial<Record<GameId, GameState>>;
   recent: GameId | null;
-  favoriteGames?: (GameId | ActivityId | LearnId)[];
+  favoriteGames?: (GameId | ActivityId | LearnId | BoardId | ArcadeId)[];
+  /** Board classics: one strictly replay-validated session per game. */
+  board?: BoardSessions;
+  recentBoard?: BoardId | null;
   wordRecords?: WordRecords;
   activities?: Activities;
   recentActivity?: ActivityId | null;
@@ -32,6 +45,11 @@ export type Save = {
   recentLearn?: LearnId | null;
   /** Quiet spacing memory for learning games; never shown as a grade. */
   skills?: SkillProgress;
+  /** Learning games whose first-move "show me" hand has been seen. */
+  coached?: LearnId[];
+  /** Local helped/independent practice counts, visible only in grown-up settings. */
+  practiceNotes?: PracticeNotes;
+  learning?: Learners;
 };
 export const emptySave = (): Save => ({
   version: 1,
@@ -298,6 +316,8 @@ export function validSession(v: unknown): v is GameState {
     case "numbers": {
       const expectedMax = v.options.difficulty === "easy" ? 6 : v.options.difficulty === "medium" ? 9 : 12;
       if (v.maxNumber !== undefined && v.maxNumber !== expectedMax) return false;
+      if (v.gentlePractice !== undefined && (v.gentlePractice !== true || v.options.difficulty !== "easy")) return false;
+      if (v.bestRemaining !== undefined && !int(v.bestRemaining, 0, 78)) return false;
       const max = (v.maxNumber ?? (v.options.difficulty === "easy" ? 6 : 9)) as number,
         count = v.options.difficulty === "easy" ? 1 : 2;
       const valid = (x: unknown) =>
@@ -334,16 +354,28 @@ export function parseSave(raw: string): Save {
   if (!obj(v) || v.version !== 1)
     throw new Error("This save uses an unsupported version. Your original has been kept.");
   if (
+    (v.arcade !== undefined && (!validArcade(v.arcade) || Object.keys(v.arcade.people).some(id => !(v.learning === undefined ? ["family"] : validLearners(v.learning) ? v.learning.people.map(p => p.id) : []).includes(id)))) ||
     !obj(v.settings) ||
     typeof v.settings.sound !== "boolean" ||
     typeof v.settings.help !== "boolean" ||
+    ["narration", "effects", "automaticSpeech", "learningIslander", "homeNavigationSeen"].some(k => (v.settings as Record<string, unknown>)[k] !== undefined && typeof (v.settings as Record<string, unknown>)[k] !== "boolean") ||
+    (v.settings.narrationVolume !== undefined && (typeof v.settings.narrationVolume !== "number" || !Number.isFinite(v.settings.narrationVolume) || v.settings.narrationVolume < 0 || v.settings.narrationVolume > 1)) ||
+    (v.settings.voice !== undefined && !["warm", "calm"].includes(v.settings.voice as string)) ||
+    (v.learning !== undefined && !validLearners(v.learning)) ||
+    (v.personalization !== undefined && !validPersonalization(v.personalization, validLearners(v.learning) ? v.learning : undefined, validArcade(v.arcade) ? v.arcade : undefined)) ||
+    (v.roundOwners !== undefined && !validRoundOwners(v.roundOwners, validLearners(v.learning) ? v.learning.people.map(p=>p.id) : ['family'])) ||
+    !validLearningOwners(v.learn, v.learning) ||
+    (v.settings.practice !== undefined && !validPracticeSettings(v.settings.practice)) ||
+    (v.practiceNotes !== undefined && !validPracticeNotes(v.practiceNotes)) ||
+    (v.board !== undefined && !validBoardSessions(v.board)) ||
+    (v.recentBoard !== undefined && v.recentBoard !== null && !isBoardId(v.recentBoard)) ||
     !obj(v.sessions) ||
     Object.keys(v.sessions).some((k) => !gameIds.includes(k as GameId)) ||
     !Object.entries(v.sessions).every(([k, s]) => validSession(s) && s.game === k) ||
     (v.recent !== null && !gameIds.includes(v.recent as GameId)) ||
     (v.favoriteGames !== undefined &&
-      (!Array.isArray(v.favoriteGames) || v.favoriteGames.length > gameIds.length + activityIds.length + learnIds.length ||
-        !unique(v.favoriteGames) || !v.favoriteGames.every((id) => [...gameIds, ...activityIds, ...learnIds].includes(id)))) ||
+      (!Array.isArray(v.favoriteGames) || v.favoriteGames.length > gameIds.length + activityIds.length + learnIds.length + boardIds.length + arcadeIds.length ||
+        !unique(v.favoriteGames) || !v.favoriteGames.every((id) => [...gameIds, ...activityIds, ...learnIds, ...boardIds, ...arcadeIds].includes(id)))) ||
     (v.wordRecords !== undefined && !validWordRecords(v.wordRecords)) ||
     (v.activities !== undefined && !validActivities(v.activities)) ||
     (v.recentActivity !== undefined &&
@@ -354,6 +386,8 @@ export function parseSave(raw: string): Save {
     (v.learn !== undefined && !validLearn(v.learn)) ||
     (v.recentLearn !== undefined && v.recentLearn !== null && !learnIds.includes(v.recentLearn as LearnId)) ||
     (v.skills !== undefined && !validSkills(v.skills)) ||
+    (v.coached !== undefined &&
+      (!Array.isArray(v.coached) || v.coached.length > learnIds.length || !unique(v.coached) || !v.coached.every((id) => learnIds.includes(id as LearnId)))) ||
     (v.explore !== undefined &&
       (!obj(v.explore) ||
         !Array.isArray(v.explore.favorites) ||
@@ -363,5 +397,14 @@ export function parseSave(raw: string): Save {
         (v.explore.progress !== undefined && !validExploreProgress(v.explore.progress))))
   )
     throw new Error("Some saved game data is invalid. Your original has been kept.");
-  return v as unknown as Save;
+  const save = v as unknown as Save;
+  // Feel v2: validate the original first; recovery/restore retain its original bytes.
+  return save.arcade ? { ...save, arcade: migrateArcade(save.arcade) } : save;
+}
+
+function validLearningOwners(learn: unknown, learning: unknown): boolean {
+  if (learn === undefined) return true;
+  if (!obj(learn) || (learning !== undefined && !validLearners(learning))) return false;
+  const ids = new Set((learning === undefined ? [{ id: "family" }] : learning.people).map(p => p.id));
+  return Object.values(learn).every(s => obj(s) && (s.learner === undefined || ids.has(s.learner as string)));
 }

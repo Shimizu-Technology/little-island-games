@@ -1,3 +1,6 @@
+import { BadgeResultCard } from '../badges/ResultCard';
+import { Companion } from "../islander/Companion";
+import type { RoundPractice } from "../practice/useRoundPractice";
 import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Platform, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
@@ -22,6 +25,8 @@ import {
 import { RaceScene, RaceSceneHandle } from "./RaceScene";
 export type RaceFeedback = "jump" | "land" | "recover" | "checkpoint" | "finish";
 export type RaceScreenProps = {
+  roundPractice?: RoundPractice;
+  beforeNewRound?: (run: () => void) => void;
   onFeedback?: (event: RaceFeedback) => void;
   session?: RaceSession | null;
   records?: RaceRecords;
@@ -33,11 +38,12 @@ export type RaceScreenProps = {
 };
 export { formatRaceTime as raceTime } from "./engine";
 /** Parent persists onSave transactionally. Remount after external backup replacement. */
-export function RaceScreen({ session, records = {}, onSave, onExit, active = true, onFeedback, sound, onToggleSound }: RaceScreenProps) {
+export function RaceScreen({ session, records = {}, onSave, onExit, active = true, onFeedback, sound, onToggleSound, beforeNewRound, roundPractice }: RaceScreenProps) {
   const viewport = useWindowDimensions();
   const shortLandscape = viewport.width > viewport.height && viewport.height < 520;
   const landscape = viewport.width > viewport.height;
   const previousLayout = useRef(landscape);
+  const practicePending = !!roundPractice?.pending;
   const [initial] = useState(() => (session && validRaceSession(session) ? pauseRace(session) : createRaceSession()));
   const current = useRef(initial),
     saveCallback = useRef(onSave),
@@ -50,7 +56,9 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
   const [snapshot, setSnapshot] = useState(initial),
     [choosing, setChoosing] = useState(!session),
     [hasRound, setHasRound] = useState(!!session),
-    [mode, setMode] = useState<RaceMode>("race");
+    [mode, setMode] = useState<RaceMode>("practice");
+  const [helper, setHelper] = useState(session?.helper ?? true);
+  const [rivalStrength, setRivalStrength] = useState<"easy" | "steady" | "fast">(session?.rivalStrength ?? "easy");
   const [autoRunning, setAutoRunning] = useState(false);
   const [foreground, setForeground] = useState(AppState.currentState === "active" || AppState.currentState === null);
   const [controlStyle, setControlStyle] = useState<"run" | "hold" | "step">("run");
@@ -114,6 +122,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
     const keydown = (e: KeyboardEvent) => {
       if (
         !active ||
+        practicePending ||
         choosing ||
         help ||
         current.current.status !== "running" ||
@@ -143,13 +152,13 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
       window.removeEventListener("keydown", keydown);
       window.removeEventListener("keyup", keyup);
     };
-  }, [active, choosing, help, pause]);
+  }, [active, practicePending, choosing, help, pause]);
   const finishing =
     snapshot.status === "finished" &&
     snapshot.runners.some((r) => r.finishTick === null) &&
     snapshot.tick < RACE_LIMIT_TICKS;
   useEffect(() => {
-    if (!active || !foreground || choosing || help || (snapshot.status !== "running" && !finishing)) {
+    if (!active || practicePending || !foreground || choosing || help || (snapshot.status !== "running" && !finishing)) {
       scene.current?.draw(current.current);
       return;
     }
@@ -230,14 +239,17 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
     };
     frame = requestAnimationFrame(update);
     return () => cancelAnimationFrame(frame);
-  }, [active, foreground, choosing, help, snapshot.status, finishing, clear, pause, persist]);
+  }, [active, practicePending, foreground, choosing, help, snapshot.status, finishing, clear, pause, persist]);
   const begin = useCallback(
     (course: CourseId, selectedMode = mode) => {
+      const run = () => {
       clear();
       const next = createRaceSession(
         course,
         course === "training" ? "practice" : selectedMode,
-        Math.floor(Math.random() * 0xffffffff)
+        Math.floor(Math.random() * 0xffffffff),
+        undefined,
+        { helper, rivalStrength }
       );
       current.current = next;
       persist(next);
@@ -245,8 +257,10 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
       setChoosing(false);
       setHasRound(true);
       setMessage("");
+      };
+      if (beforeNewRound) beforeNewRound(run); else run();
     },
-    [clear, persist, mode]
+    [clear, persist, mode, beforeNewRound, helper, rivalStrength]
   );
   const resume = () => {
     clear();
@@ -266,12 +280,13 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
     setMessage(
       held.current.toggle
         ? "Running forward. Jump before the next obstacle."
-        : "Standing still. The clock and the other runners keep going."
+        : current.current.mode === "practice" ? "Standing still. Take your time; Practice has no time limit." : "Standing still. The clock and the other runners keep going."
     );
   };
   if (choosing)
     return (
       <View style={s.root}>
+        {roundPractice?.panel}
         {onExit && <GameHeader title="Island Dash" onBack={onExit} sound={onToggleSound ? { on: !!sound, toggle: onToggleSound } : undefined} />}
         <Heading style={{ fontSize: 24 }}>Ready, set, island!</Heading>
         <Copy>Leap over coral, race rolling coconuts and find your next checkpoint. Everything plays offline.</Copy>
@@ -282,12 +297,18 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
         )}
         <View style={s.row}>
           <Button compact quiet selected={mode === "race"} onPress={() => setMode("race")}>
-            Race · 4 runners
+            Race · 3-minute challenge
           </Button>
           <Button compact quiet selected={mode === "practice"} onPress={() => setMode("practice")}>
-            Practice · just you
+            Practice · untimed
           </Button>
         </View>
+        <View style={s.row}>
+          <Button compact quiet selected={helper} onPress={() => setHelper(!helper)}>Helper {helper ? "on" : "off"}</Button>
+        </View>
+        <Copy>Helper makes obstacles gentler and returns you to your flag sooner after a fall. Every finish counts.</Copy>
+        <Copy>Rival strength</Copy>
+        <View style={s.row}>{(["easy", "steady", "fast"] as const).map(level => <Button key={level} compact quiet selected={rivalStrength === level} onPress={() => setRivalStrength(level)}>{level === "easy" ? "Easy" : level === "steady" ? "Steady" : "Fast"}</Button>)}</View>
         {COURSES.map((course, i) => (
           <PressableScale
             key={course.id}
@@ -330,6 +351,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
     <View style={s.root}>
       {onExit && <GameHeader title="Island Dash" onBack={onExit} sound={onToggleSound ? { on: !!sound, toggle: onToggleSound } : undefined} onHelp={() => { pause(); setHelp(true); }} />}
       <View style={s.row}><Heading style={{ flex: 1, fontSize: 23 }}>{course.name}</Heading>{!onExit && <Button compact quiet onPress={() => { pause(); setHelp(true); }}>How to race</Button>}</View>
+      {roundPractice?.panel}
       <Sheet visible={help} title="How to race" onClose={() => setHelp(false)} footer={<Button onPress={() => setHelp(false)}>Back to race</Button>}>
           <Copy>{course.lesson}</Copy>
           <Copy>
@@ -364,8 +386,8 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
             activation; every action also works with accessibility activation.
           </Copy>
           <Copy>
-            Touching an obstacle or falling sends you to your last flag. The timer continues through that recovery. A
-            race has a three-minute limit. Pausing stops every runner and the clock. The app also pauses after an
+            Touching an obstacle or falling sends you to your last flag. Practice is untimed. The optional
+            race challenge has a three-minute limit. Pausing stops every runner and the clock. The app also pauses after an
             interruption longer than half a second. Short slow frames keep all elapsed gameplay time.
           </Copy>
           <Copy>
@@ -379,7 +401,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
         </Copy>
       )}
       <View style={s.scoreRow} accessibilityLiveRegion="none">
-        <Text style={s.metric}>Time {raceTime(player.finishTick ?? snapshot.tick)}</Text>
+        <Text style={s.metric}>{snapshot.mode === "practice" ? "Untimed practice" : `Time ${raceTime(player.finishTick ?? snapshot.tick)}`}</Text>
         <Text style={s.metric}>
           {snapshot.runners.length > 1 ? `${racePlacement(snapshot)} / ${snapshot.runners.length}` : "Practice"}
         </Text>
@@ -412,6 +434,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
         <View style={shortLandscape ? { width: 260, gap: 8 } : { gap: 12 }}>
           {terminal ? (
             <View style={s.panel} accessibilityLiveRegion="polite">
+              <BadgeResultCard round={snapshot.id}/><Companion event={snapshot.status === "finished" && racePlacement(snapshot) === 1 ? "win" : "loss"}/>
               <Heading style={{ fontSize: 25 }}>
                 {snapshot.status === "finished"
                   ? snapshot.runners.length > 1
@@ -422,7 +445,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
               <Copy>
                 {snapshot.status === "finished"
                   ? `${raceTime(player.finishTick!)} · ${player.falls} ${player.falls === 1 ? "recovery" : "recoveries"}. ${best && best.edition === snapshot.edition ? `Your best: ${raceTime(best.ticks)}.` : "Your time is saved on this device."}`
-                  : "The three-minute race ended. Try Practice to learn the jumps, or race again."}
+                  : "The three-minute challenge ended. Take your time in untimed Practice."}
               </Copy>
               {snapshot.status === "finished" && (
                 <Text style={s.courseTitle}>
@@ -445,8 +468,8 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
                   </Text>
                 ))}
               <View style={s.row}>
-                <Button onPress={() => begin(snapshot.course, snapshot.mode)}>Race again</Button>
-                <Button quiet onPress={() => setChoosing(true)}>
+                <Button onPress={() => begin(snapshot.course, "practice")}>Play again · untimed Practice</Button>
+                <Button quiet onPress={() => { setMode("practice"); setChoosing(true); }}>
                   Choose a course
                 </Button>
               </View>
@@ -462,10 +485,10 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
                     <Copy>
                       {snapshot.status === "ready"
                         ? course.lesson
-                        : "Every runner and the timer will continue from this moment. Held controls have been cleared."}
+                        : snapshot.mode === "practice" ? "Your place is saved. Continue at your own pace. Held controls have been cleared." : "Every runner and the timer will continue from this moment. Held controls have been cleared."}
                     </Copy>
                   )}
-                  <Button disabled={!active || !foreground || help} onPress={resume}>
+                  <Button disabled={!active || practicePending || !foreground || help} onPress={resume}>
                     {snapshot.status === "ready"
                       ? controlStyle === "run"
                         ? "Run & go!"

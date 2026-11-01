@@ -1,3 +1,5 @@
+import { BadgeResultCard } from '../badges/ResultCard';
+import type { RoundPractice } from "../practice/useRoundPractice";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, Platform, StyleSheet, TextInput, View } from "react-native";
 import { AdventurePlay } from "./AdventurePlay";
@@ -20,6 +22,8 @@ const initialNearby: NearbyState = {
   canRejoin: false,
 };
 export type MysteryScreenProps = {
+  roundPractice?: RoundPractice;
+  beforeNewRound?: (run: () => void) => void;
   onActionFocus?: () => void;
   state: MysterySession | null;
   onSave: (next: MysterySession, previous: MysterySession | null) => void;
@@ -34,7 +38,12 @@ export type MysteryScreenProps = {
   menuHeader?: React.ReactNode;
   soundControl?: { on: boolean; toggle: () => void };
 };
-export function MysteryScreen({ onActionFocus, state, onSave, width, active, sound, onFeedback, onSpeakInstruction, onStopInstruction, menuHeader, soundControl }: MysteryScreenProps) {
+export function MysteryScreen({ onActionFocus, state, onSave, width, active, sound, onFeedback, onSpeakInstruction, onStopInstruction, menuHeader, soundControl, beforeNewRound, roundPractice }: MysteryScreenProps) {
+  const newRound = (run: () => void) => {
+    setShowRole(false);
+    stopSpeech.current?.();
+    if (beforeNewRound) beforeNewRound(run); else run();
+  };
   const stopSpeech = useRef(onStopInstruction);
   React.useLayoutEffect(() => { stopSpeech.current = onStopInstruction; }, [onStopInstruction]);
   useEffect(() => () => stopSpeech.current?.(), []);
@@ -46,6 +55,7 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
     [parent, setParent] = useState(false),
     [exit, setExit] = useState(false);
   const [roomDetails, setRoomDetails] = useState(false);
+  const [balance, setBalance] = useState<"gentle" | "challenge">("gentle");
   const [role, setRole] = useState<Role>("crew"),
     [showRole, setShowRole] = useState(false);
   const [name, setName] = useState("Player"),
@@ -88,12 +98,11 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
   useEffect(() => {
     if (!active) {
       // External route/overlay changes must clear private role visibility.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowRole(false);
       void controller.current?.pause();
     }
   }, [active]);
-  const playing = active && foreground && !help && !setup && !parent && !exit;
+  const playing = active && foreground && !help && !setup && !parent && !exit && !roundPractice?.pending;
   const view =
     mode === "solo" && state ? mysteryView(state, state.players[0].id) : mode === "nearby" ? remote.view : null;
   const self = view?.players.find((p) => p.id === view.selfId);
@@ -132,15 +141,21 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
     <View style={{ width: "100%", maxWidth: 850, alignSelf: "center", gap: 16 }}>
       {mode === "menu" && menuHeader}
       {mode !== "menu" && (
-        <GameHeader title="Mystery" backLabel="Leave" onBack={() => { setShowRole(false); setExit(true); }}
+        <GameHeader title="Picnic" backLabel="Leave" onBack={() => { setShowRole(false); setExit(true); }}
           sound={soundControl}
           onHelp={() => { setShowRole(false); setHelp(true); }}>
           {mode === "nearby" && remote.mode === "host" && remote.pin && (
             <Button compact quiet onPress={() => { setShowRole(false); setRoomDetails(true); }}>Room details</Button>
           )}
-          {mode === "solo" && <Button compact quiet label="Fresh practice" onPress={() => { setShowRole(false); setSetup(true); }}>New</Button>}
+
         </GameHeader>
       )}
+      {mode === "solo" && !view?.result && <Button compact quiet onPress={() => { setShowRole(false); setSetup(true); }}>Role and options</Button>}
+      {mode === "solo" && view?.result && state && <BadgeResultCard round={state.id}/>}
+      {mode === "solo" && view?.result && <View style={s.row}>
+        <Button onPress={() => newRound(() => { const previous = latest.current!; const next = createMysterySession(undefined, undefined, previous.players[0].role, undefined, 1, previous.adventure?.balance); latest.current = next; saveCallback.current(next, previous); closeOverlays(); })}>Play again</Button>
+        <Button quiet onPress={() => setSetup(true)}>Role and options</Button>
+      </View>}
       {mode === "menu" && (
         <>
           <Status
@@ -276,7 +291,7 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
               {remote.mode === "host" ? (
                 <Button
                   disabled={remote.lobby.players.length < 3 || remote.lobby.players.some((p) => !p.connected)}
-                  onPress={() => void controller.current?.start()}
+                  onPress={() => { const host = controller.current; newRound(() => void host?.start()); }}
                 >
                   Start the mystery
                 </Button>
@@ -325,7 +340,7 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
             disabled={!playing || (remote.lobby?.players.filter((p) => p.connected).length ?? 0) < 3}
             onPress={() => {
               setShowRole(false);
-              if (playing) void controller.current?.rematch(remote.view?.adventure?.round ?? 0);
+              if (playing) { const host = controller.current, round = remote.view?.adventure?.round ?? 0; newRound(() => void host?.rematch(round)); }
             }}
           >
             Play again in this room
@@ -341,7 +356,7 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
         {Object.entries(mysteryInstructions).map(([key, text]) => (
           <View key={key} style={{ gap: 8 }}>
             <Copy>{text}</Copy>
-            <Button quiet compact disabled={!sound || !onSpeakInstruction} onPress={() => onSpeakInstruction?.(key as keyof typeof mysteryInstructions)}>Listen: {key.slice(8)}</Button>
+            <Button quiet compact disabled={!sound || !onSpeakInstruction} onPress={() => onSpeakInstruction?.(key as keyof typeof mysteryInstructions)}>Listen: {key.slice(8).replace(/-v25$/, "")}</Button>
           </View>
         ))}
         <Copy>
@@ -349,7 +364,8 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
           rematch here after a result. Practice uses beats, so reading never loses the round.
         </Copy>
       </Sheet>
-      <Sheet visible={setup} title="Fresh solo mystery" onClose={() => setSetup(false)}>
+      <Sheet visible={setup} title={roundPractice?.pending ? "A little practice, then play" : "Fresh solo mystery"} onClose={() => roundPractice?.pending ? roundPractice.cancel() : setSetup(false)}>
+        {roundPractice?.pending ? roundPractice.content : <>
         <Copy>
           {state
             ? "This replaces your saved practice. Cancel to keep it."
@@ -363,19 +379,26 @@ export function MysteryScreen({ onActionFocus, state, onSave, width, active, sou
             Mischief practice
           </Button>
         </View>
+        <View style={s.row}>
+          <Button quiet selected={balance === "gentle"} onPress={() => setBalance("gentle")}>Gentle crew</Button>
+          <Button quiet selected={balance === "challenge"} onPress={() => setBalance("challenge")}>Challenge</Button>
+        </View>
+        <Copy>Gentle crew gives jobs more time between ribbon tricks and keeps the water pump safe. Challenge keeps the original pace.</Copy>
         <Button
-          onPress={() => {
+          onPress={() => newRound(() => {
             const previous = latest.current;
-            const next = createMysterySession(undefined, undefined, role);
+            const next = createMysterySession(undefined, undefined, role, undefined, 1, balance);
             latest.current = next;
             saveCallback.current(next, previous);
             closeOverlays();
             setMode("solo");
-          }}
+          })}
         >
           Start practice
         </Button>
+        </>}
       </Sheet>
+      {!setup && roundPractice?.panel}
       <Sheet visible={parent} title="Parent room setup" onClose={() => setParent(false)}>
         <Copy>A grown-up creates the room and approves each joining device. What is 8 + 13?</Copy>
         <TextInput

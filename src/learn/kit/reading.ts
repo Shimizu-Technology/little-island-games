@@ -7,6 +7,9 @@ export type ReadingScene = {
   relation: "on" | "in" | "under" | "beside";
   color: string;
   size: "big" | "little";
+  /** Explicit story dimensions; ordinary sentence scenes keep their defaults. */
+  subjectSize?: number;
+  objectSize?: number;
 };
 export type ReadingWord = { word: string; skill: string; pace: Pace; tiles: readonly string[] };
 export const wordBank: readonly ReadingWord[] = WORDS.map((w) =>
@@ -106,7 +109,9 @@ export function phonemes(word: string): string[] {
 }
 export const wordAudio = (word: string) => `sound-boat-word-${word.toLowerCase().replace(/[^a-z]/g, "")}`;
 export const sceneLabel = (s: ReadingScene) =>
-  `${s.size} ${s.color} ${s.subject} ${s.relation === "beside" ? "with" : s.relation} ${s.object}`;
+  s.objectSize !== undefined
+    ? `${s.color} ${s.subject} beside a ${s.size} ${s.object}`
+    : `${s.size} ${s.color} ${s.subject} ${s.relation === "beside" ? "with" : s.relation} ${s.object}`;
 export const exact = (v: unknown, keys: string[]): v is Record<string, unknown> =>
   !!v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).sort().join() === [...keys].sort().join();
 export const integer = (v: unknown, max: number): v is number =>

@@ -19,6 +19,7 @@ speech={word.lower():word.lower() for word,_,_ in word_rows}
 for word,_,clue in word_rows:
     speech[f'clue-{word.lower()}']=clue
 parser=argparse.ArgumentParser()
+parser.add_argument('--manifest', action='store_true', help='Print speech text without generating or changing any assets')
 parser.add_argument('--only', help='Regenerate exactly one existing speech clip without changing the source map')
 args=parser.parse_args()
 speech.update({
@@ -42,14 +43,27 @@ for learn_file in sorted((ROOT/"scripts/learn").glob("*.json")):
     speech.update(learn_map)
 speech.update(json.loads((ROOT/"scripts/quality-audio.json").read_text()))
 
+if args.manifest:
+    print(json.dumps(speech,ensure_ascii=False,sort_keys=True))
+    raise SystemExit(0)
+
 def speak(item):
     key,text=item
     target=OUT/f'{key}.m4a'
     if target.exists(): return
-    with tempfile.TemporaryDirectory() as temp:
-        aiff=Path(temp)/'speech.aiff'
-        subprocess.run(['say','-v','Samantha','-r','155','-o',str(aiff),text],check=True)
-        subprocess.run(['afconvert','-f','m4af','-d','aac','-b','48000',str(aiff),str(target)],check=True)
+    # A macOS speech worker can stall. Bound each attempt and publish only a
+    # completed clip so a retry never mistakes a partial file for usable audio.
+    for attempt in range(3):
+        try:
+            with tempfile.TemporaryDirectory() as temp:
+                aiff=Path(temp)/'speech.aiff'
+                encoded=Path(temp)/'speech.m4a'
+                subprocess.run(['say','-v','Samantha','-r','155','-o',str(aiff),text],check=True,timeout=30)
+                subprocess.run(['afconvert','-f','m4af','-d','aac','-b','48000',str(aiff),str(encoded)],check=True,timeout=30)
+                encoded.replace(target)
+            return
+        except (subprocess.TimeoutExpired, subprocess.CalledProcessError):
+            if attempt == 2: raise
 
 if args.only:
     if args.only not in speech: raise ValueError('Unknown speech clip')

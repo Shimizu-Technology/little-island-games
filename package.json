@@ -19,16 +19,21 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
-    "react-native-web": "~0.21.0"
+    "react-native-web": "~0.21.0",
+    "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
     "@types/react": "~19.2.10",
+    "@types/react-test-renderer": "^19.3.0",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.0",
     "expo-doctor": "^1.21.5",
+    "react-test-renderer": "19.2.3",
     "typescript": "~6.0.3",
     "vitest": "^5.0.5"
   },
@@ -43,7 +48,8 @@
     "export:web": "expo export --platform web && node scripts/offline-web.mjs",
     "check": "npm run typecheck && npm run lint && npm test && npm run export:web",
     "preview": "node scripts/serve.mjs",
-    "doctor": "expo-doctor"
+    "doctor": "expo-doctor",
+    "export:public": "node scripts/export-public.mjs"
   },
   "private": true,
   "engines": {
@@ -53,5 +59,6 @@
     "xcode": {
       "uuid": "11.1.1"
     }
-  }
+  },
+  "license": "MIT"
 }

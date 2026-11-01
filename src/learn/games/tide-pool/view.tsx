@@ -1,26 +1,26 @@
-import React, { useEffect, useState } from "react";
-import { Animated, View } from "react-native";
-import Svg, { Circle, Ellipse, G, Path } from "react-native-svg";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Platform, View } from "react-native";
+import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
 import { Button, C, Copy, IconButton, PressableScale } from "../../../components/ui";
-import { easeOut, nativeDriver, useReducedMotion } from "../../../components/motion";
+import { easeInOut, nativeDriver, useReducedMotion } from "../../../components/motion";
 import type { BoardProps } from "../../types";
-import { PredictTry } from "../../kit/PredictTry";
+import { CoachSpot } from "../../Coach";
+import { AnswerTile } from "../../AnswerTile";
 import {
-  availableActions,
-  choices,
-  creatures,
-  expected,
-  explanation,
-  initialPool,
-  observed,
-  missionDiscovered,
-  missions,
-  nextExperiment,
-  tryChange,
-  type Action,
+  answer,
+  current,
+  guesser,
+  happy,
+  makeChange,
+  needFor,
+  nextMission,
+  toggle,
+  upgrade,
+  type AnswerPicture,
+  type Control,
   type Creature,
-  type Pool,
-  type TideState,
+  type MissionId,
+  type TideSave,
 } from "./engine";
 export function CreatureArt({
   kind,
@@ -44,13 +44,24 @@ export function CreatureArt({
     >
       <G rotation={kind === "crab" ? facing * 90 : 0} origin="40,40">
         {kind === "coral" ? (
-          <Path
-            d="M39 70V18 M39 44L19 32V18 M39 56L60 39V22 M39 29L52 15 M19 32L8 26 M60 39L70 28"
-            stroke={coral}
-            strokeWidth="10"
-            strokeLinecap="round"
-            fill="none"
-          />
+          <G>
+            {pale && (
+              <Path
+                d="M39 70V18 M39 44L19 32V18 M39 56L60 39V22 M39 29L52 15 M19 32L8 26 M60 39L70 28"
+                stroke="#BFAE98"
+                strokeWidth="14"
+                strokeLinecap="round"
+                fill="none"
+              />
+            )}
+            <Path
+              d="M39 70V18 M39 44L19 32V18 M39 56L60 39V22 M39 29L52 15 M19 32L8 26 M60 39L70 28"
+              stroke={coral}
+              strokeWidth="10"
+              strokeLinecap="round"
+              fill="none"
+            />
+          </G>
         ) : kind === "seaweed" ? (
           <G>
             <Path
@@ -101,286 +112,668 @@ export function CreatureArt({
     </Svg>
   );
 }
-export function PoolScene({ pool, width }: { pool: Pool; width: number }) {
-  return (
-    <View
-      accessible
-      accessibilityLabel={`Tide pool: ${pool.high ? "high" : "low"} tide, ${pool.warm ? "warm" : "cool"}, ${pool.light ? "sunlight" : "shade"}, salt level ${pool.salt} of 2. ${pool.creatures.join(", ")}.${pool.heat === 2 ? " Coral is pale." : ""}`}
-      style={{
-        height: 145,
-        width,
-        alignSelf: "center",
-        overflow: "hidden",
-        borderRadius: 20,
-        backgroundColor: pool.light ? "#F7E7BA" : "#D0DBDF",
-      }}
-    >
-      <Svg width="100%" height="100%" viewBox="0 0 320 145">
-        <Circle cx="282" cy="24" r="16" fill={pool.light ? C.gold : "#ABBCC1"} />
-        <Ellipse cx="160" cy="104" rx="155" ry="42" fill="#B39B7F" />
-        <Ellipse cx="160" cy="98" rx="142" ry={pool.high ? 39 : 22} fill={pool.salt === 2 ? "#8EC6CD" : "#B7DCE2"} />
-        <Path d="M42 101Q64 82 79 104M239 112Q255 92 271 110" fill="none" stroke={C.cream} strokeWidth="5" />
-        {Array.from({ length: pool.algae }, (_, i) => (
-          <Ellipse key={i} cx={90 + i * 60} cy={113} rx={14} ry={5} fill={C.teal} />
-        ))}
-      </Svg>
-      <View
-        style={{
-          position: "absolute",
-          left: 12,
-          right: 12,
-          bottom: 12,
-          flexDirection: "row",
-          justifyContent: "space-evenly",
-          alignItems: "flex-end",
-        }}
-      >
-        {pool.creatures.map((c) => (
-          <View
-            key={c}
-            style={{
-              opacity:
-                pool.salt < 2 || (c === "seaweed" && !pool.light) || (!pool.high && (c === "fish" || c === "sea-star"))
-                  ? 0.5
-                  : 1,
-            }}
-          >
-            <CreatureArt kind={c} pale={c === "coral" && pool.heat === 2} size={Math.min(48, (width - 24) / 6)} />
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-}
-/** Pictures describe each prediction before the simulated change is applied. */
-function PredictionPicture({ action, choice }: { action: Action; choice: number }) {
-  if (creatures.includes(action as Creature))
-    return choice === 0 ? (
-      <CreatureArt kind={action as Creature} size={42} />
-    ) : (
-      <Svg width={42} height={42} viewBox="0 0 48 48" accessible accessibilityLabel="Empty space">
-        <Ellipse cx="24" cy="34" rx="19" ry="8" fill="none" stroke={C.muted} strokeWidth="2" strokeDasharray="4 3" />
-      </Svg>
-    );
-  if (action === "temperature") return <CreatureArt kind="coral" pale={choice === 1} size={42} />;
-  if (action === "sun")
-    return (
-      <View style={{ flexDirection: "row", alignItems: "center", opacity: choice === 0 ? 1 : 0.45 }}>
-        <Svg
-          width={24}
-          height={42}
-          viewBox="0 0 24 42"
-          accessible
-          accessibilityLabel={choice === 0 ? "Sunlight" : "Shade"}
-        >
-          <Circle cx="12" cy="13" r="8" fill={choice === 0 ? C.gold : C.muted} />
-        </Svg>
-        <CreatureArt kind="seaweed" size={38} />
-      </View>
-    );
+/** Small, instantly nameable answer pictures. */
+export function AnswerArt({ picture, size = 64 }: { picture: AnswerPicture; size?: number }) {
+  if (picture === "fish" || picture === "sea-star" || picture === "seaweed")
+    return <CreatureArt kind={picture} size={size} />;
+  if (picture === "pale-coral") return <CreatureArt kind="coral" pale size={size} />;
   return (
     <Svg
-      width={54}
-      height={42}
-      viewBox="0 0 54 42"
-      accessible
-      accessibilityLabel={
-        action === "rain"
-          ? choice === 0
-            ? "Fewer salt grains"
-            : "More salt grains"
-          : choice === 0
-            ? "Fish below the water"
-            : "Fish above low water"
-      }
+      width={size}
+      height={size}
+      viewBox="0 0 80 80"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
     >
-      <Path
-        d={`M1 ${action === "tide" && choice === 1 ? 32 : 12}Q14 6 27 12T53 12`}
-        stroke={C.blue}
-        strokeWidth="3"
-        fill="none"
-      />
-      {action === "rain" ? (
-        Array.from({ length: choice === 0 ? 2 : 6 }, (_, i) => (
-          <Circle key={i} cx={10 + (i % 3) * 16} cy={22 + Math.floor(i / 3) * 12} r={3} fill={C.gold} />
-        ))
+      {picture === "algae" ? (
+        <G>
+          <Path d="M8 66Q8 34 40 30Q72 34 72 66Z" fill="#9AA29C" stroke={C.ink} strokeWidth="2" />
+          <Path
+            d="M14 46Q20 36 28 42Q34 32 42 40Q50 31 56 40Q64 34 68 46Q58 44 50 48Q40 42 32 48Q22 43 14 46Z"
+            fill="#5FA05A"
+          />
+          {[20, 32, 44, 56].map((x) => (
+            <Path
+              key={x}
+              d={`M${x} 44l-2 -7M${x + 4} 44l1 -8`}
+              stroke="#3E7E3B"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          ))}
+        </G>
+      ) : picture === "sand" ? (
+        <G>
+          <Path d="M4 68Q22 34 40 34Q58 34 76 68Z" fill="#E4C88F" stroke="#B89A5E" strokeWidth="2" />
+          {[
+            [24, 56],
+            [36, 48],
+            [48, 58],
+            [56, 50],
+            [30, 62],
+          ].map(([x, y]) => (
+            <Circle key={`${x}${y}`} cx={x} cy={y} r="1.8" fill="#A9864D" />
+          ))}
+        </G>
+      ) : picture === "shell" ? (
+        <G>
+          <Path
+            d="M14 58Q8 30 36 18Q62 10 68 34Q72 56 46 64Q28 70 14 58Z"
+            fill="#F2CBB0"
+            stroke="#B5694E"
+            strokeWidth="2.5"
+          />
+          <Path d="M50 38Q48 28 38 30Q28 34 32 46Q36 54 46 50" fill="none" stroke="#B5694E" strokeWidth="2.5" />
+          <Ellipse cx="30" cy="54" rx="9" ry="6" fill="#5A3A2C" />
+        </G>
+      ) : picture === "sun" ? (
+        <G>
+          {Array.from({ length: 8 }, (_, i) => (
+            <Path
+              key={i}
+              d="M40 6V16"
+              stroke={C.gold}
+              strokeWidth="5"
+              strokeLinecap="round"
+              rotation={i * 45}
+              origin="40,40"
+            />
+          ))}
+          <Circle cx="40" cy="40" r="17" fill={C.gold} />
+        </G>
+      ) : picture === "cloud" ? (
+        <Path
+          d="M18 58Q4 58 6 46Q8 34 22 36Q24 20 42 22Q58 22 60 36Q76 36 74 48Q72 58 60 58Z"
+          fill="#8E9AA0"
+          stroke="#5C676C"
+          strokeWidth="2"
+        />
+      ) : picture === "water" ? (
+        <G>
+          <Path d="M40 8Q22 34 22 48A18 18 0 0 0 58 48Q58 34 40 8Z" fill="#5DA9C2" stroke={C.blue} strokeWidth="2" />
+          <Path d="M32 50Q32 58 40 60" stroke="#D9F0F5" strokeWidth="3" fill="none" strokeLinecap="round" />
+        </G>
+      ) : picture === "air" ? (
+        <G stroke="#7FA9BC" strokeWidth="5" strokeLinecap="round" fill="none">
+          <Path d="M8 30H50Q62 30 60 20Q56 12 48 18" />
+          <Path d="M8 44H62Q74 44 72 54Q68 62 60 56" />
+          <Path d="M14 58H38" />
+        </G>
+      ) : picture === "low" || picture === "deep" ? (
+        <G>
+          <Ellipse cx="40" cy="52" rx="36" ry="20" fill="#B39B7F" />
+          <Ellipse
+            cx="40"
+            cy={picture === "deep" ? 48 : 58}
+            rx={picture === "deep" ? 33 : 24}
+            ry={picture === "deep" ? 17 : 8}
+            fill="#5DA9C2"
+          />
+          {picture === "deep" && (
+            <Path
+              d="M40 6V26M32 18L40 26L48 18"
+              stroke={C.blue}
+              strokeWidth="4"
+              fill="none"
+              strokeLinecap="round"
+              transform="rotate(180 40 16)"
+            />
+          )}
+          {picture === "low" && (
+            <Path d="M40 6V26M32 18L40 26L48 18" stroke={C.blue} strokeWidth="4" fill="none" strokeLinecap="round" />
+          )}
+        </G>
       ) : (
         <G>
-          <Ellipse cx="24" cy="24" rx="12" ry="7" fill={C.coral} />
-          <Path d="M34 24L46 16V32Z" fill={C.gold} />
+          <Path
+            d="M40 76V30M40 56L20 44V30M40 66L60 50V34M40 40L54 26"
+            stroke={C.coral}
+            strokeWidth="9"
+            strokeLinecap="round"
+            fill="none"
+          />
+          <Path d="M64 20V4M57 11L64 4L71 11" stroke={C.teal} strokeWidth="4" fill="none" strokeLinecap="round" />
         </G>
       )}
     </Svg>
   );
 }
-const labels: Record<Action, string> = {
-  sun: "Sun / shade",
-  rain: "Add rain",
-  temperature: "Warm / cool",
-  tide: "Tide in / out",
-  crab: "Hermit crab",
-  snail: "Snail",
-  fish: "Fish",
-  "sea-star": "Sea star",
-  seaweed: "Seaweed",
-  coral: "Coral",
-};
-export function Board({ session, update, practice, sound, width, active }: BoardProps<TideState>) {
-  const s = session.state,
-    together = session.options.mode === "together",
-    need = together ? 2 : 1,
-    reduced = useReducedMotion(),
-    [fade] = useState(() => new Animated.Value(1));
-  const chooser = s.starter,
-    predictor = ((chooser + s.guesses.length + 1) % 2) as 0 | 1;
-  const mission = missions.find((m) => m.id === s.missions[s.index]),
-    done = !mission;
-  const name = (seat: number) => session.names?.[seat] || `Player ${seat + 1}`;
-  const actual = s.last ? observed(s.pool, s.last) : 0;
-  const prompt =
-    s.result && s.last
-      ? `tide-pool-${s.guesses.every((p) => p === actual) ? "why" : "surprise"}-${s.last}-${s.last === "sun" ? Number(s.pool.light) : s.last === "temperature" ? Number(s.pool.warm) : s.last === "tide" ? Number(s.pool.high) : "any"}`
-      : s.action
-        ? `tide-pool-predict-${s.action}`
-        : mission
-          ? `tide-pool-mission-${mission.id}`
-          : "tide-pool-help";
-  useEffect(() => {
-    if (!active || (s.action && !s.result)) return;
-    sound(prompt);
-    if (s.result) {
-      fade.setValue(reduced ? 1 : 0.65);
-      const animation = Animated.timing(fade, {
-        toValue: 1,
-        duration: reduced ? 0 : 240,
-        easing: easeOut,
-        useNativeDriver: nativeDriver,
-      });
-      animation.start();
-      return () => animation.stop();
-    }
-  }, [active, s.action, s.result, prompt, sound, reduced, fade]);
+/** Coral with a face that smiles when it has what it needs. */
+function Coral({ size, happy, pale }: { size: number; happy: boolean; pale: boolean }) {
   return (
-    <View style={{ gap: 9 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <Copy style={{ fontWeight: "700", color: C.ink, flex: 1 }}>
-          {done ? "Our pool discoveries are complete." : mission.text}
-        </Copy>
-        <IconButton icon="sound-on" label="Hear this instruction" onPress={() => sound(prompt)} />
-      </View>
-      {together && !done && (
-        <Copy style={{ fontSize: 13 }}>
-          {!s.action
-            ? `${name(chooser)} chooses a change.`
-            : s.result
-              ? "Compare your ideas. Both can match!"
-              : s.guesses.length < need
-                ? `${name(predictor)} predicts.`
-                : `${name(chooser)} tries the change.`}
-        </Copy>
-      )}
-      <Animated.View style={{ opacity: fade }}>
-        <PoolScene pool={s.pool} width={Math.min(width, 360)} />
+    <View style={{ width: size, height: size }}>
+      <CreatureArt kind="coral" size={size} pale={pale} />
+      <Svg
+        width={size}
+        height={size}
+        viewBox="0 0 80 80"
+        style={{ position: "absolute" }}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
+        <Circle cx="39" cy="48" r="13" fill={pale ? "#F5EBDD" : C.coral} />
+        <Circle cx="34" cy="45" r="2.4" fill={C.ink} />
+        <Circle cx="44" cy="45" r="2.4" fill={C.ink} />
+        <Path
+          d={happy ? "M33 51Q39 57 45 51" : "M33 55Q39 49 45 55"}
+          stroke={C.ink}
+          strokeWidth="2.4"
+          fill="none"
+          strokeLinecap="round"
+        />
+      </Svg>
+    </View>
+  );
+}
+function Thermometer({ warm, size = 34 }: { warm: boolean; size?: number }) {
+  return (
+    <Svg
+      width={size * 0.6}
+      height={size}
+      viewBox="0 0 24 40"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      <Rect x="8" y="2" width="8" height="28" rx="4" fill="#FFF" stroke={C.ink} strokeWidth="1.5" />
+      <Rect x="10" y={warm ? 6 : 20} width="4" height={warm ? 24 : 10} fill={warm ? "#D9553C" : "#4F8FC0"} />
+      <Circle cx="12" cy="32" r="6" fill={warm ? "#D9553C" : "#4F8FC0"} stroke={C.ink} strokeWidth="1.5" />
+    </Svg>
+  );
+}
+type Look = { sun: boolean; cool: boolean; high: boolean };
+/**
+ * The pool and its creatures. `p` runs 0→1 while a change happens; every mission animates its own story
+ * (the snail slides to the rock, the hermit crab moves into the shell, the water drops, the coral pales).
+ */
+export function PoolScene({
+  mission,
+  watched,
+  look,
+  p,
+  width,
+}: {
+  mission: MissionId;
+  watched: boolean;
+  look: Look;
+  p: Animated.Value;
+  width: number;
+}) {
+  const W = Math.min(width, 420),
+    H = W * 0.53,
+    k = W / 320;
+  const at = (x: number, y: number, size: number) => ({
+    position: "absolute" as const,
+    left: x * k - (size * k) / 2,
+    top: y * k - (size * k) / 2,
+  });
+  const over = (from: number, to: number) => p.interpolate({ inputRange: [0, from, to, 1], outputRange: [0, 0, 1, 1] });
+  // Sun and tide during a mission's story.
+  const sunNow = mission === "seaweed" ? watched : look.sun;
+  const highNow = mission === "tide" ? !watched : look.high;
+  const lowWater = mission === "tide" ? over(0.1, 0.7) : new Animated.Value(highNow ? 0 : 1);
+  const label =
+    mission === "snail"
+      ? watched
+        ? "The snail is eating the green fuzz on the rock."
+        : "A rock with green fuzz, a fish and sand."
+      : mission === "crab"
+        ? watched
+          ? "The hermit crab moved into the empty shell."
+          : "An empty shell, a sea star and seaweed."
+        : mission === "coral"
+          ? `The coral looks ${happy(look) ? "happy" : "sad"}. ${look.sun ? "Sunny" : "Cloudy"}, ${look.cool ? "usual reef temperature" : "too hot"} water, tide ${look.high ? "in" : "out"}.`
+          : mission === "seaweed"
+            ? watched
+              ? "The sun is out and the seaweed grew tall."
+              : "Clouds hide the sun. The seaweed is small."
+            : mission === "tide"
+              ? watched
+                ? "The tide went out. The pool is shallow."
+                : "The tide is in. The pool is deep."
+              : mission === "fish"
+                ? watched
+                  ? "The fish swims and breathes in the water."
+                  : "A pool of water with no fish yet."
+                : watched
+                  ? "The water got hot and the coral turned white."
+                  : "Bright coral at its usual reef temperature.";
+  return (
+    <View
+      accessible
+      accessibilityLabel={label}
+      style={{
+        width: W,
+        height: H,
+        alignSelf: "center",
+        overflow: "hidden",
+        borderRadius: 20,
+        backgroundColor: sunNow ? "#F7E7BA" : "#D7DFE2",
+      }}
+    >
+      <Svg width={W} height={H} viewBox="0 0 320 170" style={{ position: "absolute" }}>
+        <Rect x="0" y="52" width="320" height="118" fill="#EED9A8" />
+        <Ellipse cx="160" cy="114" rx="152" ry="52" fill="#B39B7F" />
+        <Ellipse cx="160" cy="128" rx="122" ry="24" fill="#8EC6CD" />
+      </Svg>
+      <Animated.View
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          opacity: lowWater.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+        }}
+      >
+        <Svg width={W} height={H} viewBox="0 0 320 170">
+          <Ellipse cx="160" cy="110" rx="140" ry="44" fill="#8EC6CD" />
+          <Path d="M40 104Q62 90 80 106M230 112Q250 98 268 112" fill="none" stroke="#CFEAEC" strokeWidth="4" />
+        </Svg>
       </Animated.View>
-      <Copy style={{ fontSize: 12 }}>
-        {s.pool.warm ? "Warm water" : "Cool water"} · {s.pool.high ? "High tide" : "Low tide"} ·{" "}
-        {s.pool.salt === 2 ? "Seawater salt" : "Less salty"}
-        {s.pool.grazed ? " · Snails scraped algae" : s.pool.warm && s.pool.heat < 2 ? " · Keep watching the coral" : ""}
-      </Copy>
-      {!done && !s.action && (
-        <>
-          <Copy>Choose one change. First, we will predict.</Copy>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-            {availableActions(session.options.pace).map((a) => (
-              <PressableScale
-                key={a}
-                accessibilityRole="button"
-                accessibilityLabel={`${creatures.includes(a as Creature) ? (s.pool.creatures.includes(a as Creature) ? "Remove" : "Add") : "Change"} ${labels[a]}`}
-                disabled={!active}
-                onPress={() => {
-                  update({ ...s, action: a });
-                }}
+      {/* Sun or cloud */}
+      <View style={at(284, 26, 40)}>
+        <AnswerArt picture="sun" size={40 * k} />
+      </View>
+      {mission === "seaweed" ? (
+        <Animated.View
+          style={[
+            at(278, 28, 56),
+            {
+              opacity: over(0, 0.6).interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+              transform: [{ translateX: over(0, 0.6).interpolate({ inputRange: [0, 1], outputRange: [0, 60 * k] }) }],
+            },
+          ]}
+        >
+          <AnswerArt picture="cloud" size={56 * k} />
+        </Animated.View>
+      ) : (
+        !look.sun && (
+          <View style={at(278, 28, 56)}>
+            <AnswerArt picture="cloud" size={56 * k} />
+          </View>
+        )
+      )}
+      {(mission === "coral" || mission === "heat") && (
+        <View style={[at(26, 26, 34), { flexDirection: "row" }]}>
+          {mission === "heat" ? (
+            <>
+              <Animated.View
                 style={{
-                  width: "31%",
-                  minHeight: 50,
-                  backgroundColor: C.paper,
-                  borderRadius: 12,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: 5,
+                  position: "absolute",
+                  opacity: over(0, 0.4).interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
                 }}
               >
-                {creatures.includes(a as Creature) && <CreatureArt kind={a as Creature} size={27} />}
-                <Copy style={{ fontSize: 12, textAlign: "center" }}>
-                  {creatures.includes(a as Creature) ? `${s.pool.creatures.includes(a as Creature) ? "−" : "+"} ` : ""}
-                  {labels[a]}
-                </Copy>
-              </PressableScale>
-            ))}
+                <Thermometer warm={false} size={34 * k} />
+              </Animated.View>
+              <Animated.View style={{ opacity: over(0, 0.4) }}>
+                <Thermometer warm size={34 * k} />
+              </Animated.View>
+            </>
+          ) : (
+            <Thermometer warm={!look.cool} size={34 * k} />
+          )}
+        </View>
+      )}
+      {/* Rock with green fuzz (snail mission) */}
+      {mission === "snail" && (
+        <View style={at(84, 112, 64)}>
+          <Svg width={64 * k} height={64 * k} viewBox="0 0 80 80">
+            <Path d="M8 66Q8 34 40 30Q72 34 72 66Z" fill="#9AA29C" stroke={C.ink} strokeWidth="2" />
+          </Svg>
+          <Animated.View
+            style={{
+              position: "absolute",
+              opacity: over(0.55, 1).interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+            }}
+          >
+            <AnswerArt picture="algae" size={64 * k} />
+          </Animated.View>
+        </View>
+      )}
+      {mission === "snail" && (
+        <Animated.View
+          style={[
+            at(20, 126, 46),
+            {
+              transform: [
+                { translateX: over(0, 0.55).interpolate({ inputRange: [0, 1], outputRange: [0, 64 * k] }) },
+                { translateY: over(0, 0.55).interpolate({ inputRange: [0, 1], outputRange: [0, -8 * k] }) },
+              ],
+            },
+          ]}
+        >
+          <CreatureArt kind="snail" size={46 * k} />
+        </Animated.View>
+      )}
+      {mission === "crab" && (
+        <>
+          <View style={at(112, 128, 38)}>
+            <CreatureArt kind="sea-star" size={38 * k} />
+          </View>
+          <View style={at(60, 104, 52)}>
+            <CreatureArt kind="seaweed" size={52 * k} />
+          </View>
+          <View style={at(214, 128, 46)}>
+            <AnswerArt picture="shell" size={46 * k} />
+          </View>
+          <Animated.View
+            style={[
+              at(350, 126, 40),
+              {
+                transform: [
+                  { translateX: over(0, 0.7).interpolate({ inputRange: [0, 1], outputRange: [0, -128 * k] }) },
+                  { scale: over(0.7, 1).interpolate({ inputRange: [0, 1], outputRange: [1, 0.55] }) },
+                ],
+              },
+            ]}
+          >
+            <CreatureArt kind="crab" size={40 * k} facing={3} />
+          </Animated.View>
+        </>
+      )}
+      {(mission === "seaweed" || mission === "coral" || mission === "tide") && (
+        <Animated.View
+          style={[
+            at(110, 104, 56),
+            mission === "seaweed" && {
+              transform: [
+                { translateY: over(0.4, 1).interpolate({ inputRange: [0, 1], outputRange: [14 * k, 0] }) },
+                { scaleY: over(0.4, 1).interpolate({ inputRange: [0, 1], outputRange: [0.5, 1.1] }) },
+              ],
+            },
+          ]}
+        >
+          <CreatureArt kind="seaweed" size={56 * k} />
+        </Animated.View>
+      )}
+      {(mission === "coral" || mission === "heat") && (
+        <View style={at(228, 104, 70)}>
+          {mission === "heat" ? (
+            <>
+              <Animated.View
+                style={{
+                  position: "absolute",
+                  opacity: over(0.3, 1).interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+                }}
+              >
+                <CreatureArt kind="coral" size={70 * k} />
+              </Animated.View>
+              <Animated.View style={{ opacity: over(0.3, 1) }}>
+                <CreatureArt kind="coral" pale size={70 * k} />
+              </Animated.View>
+            </>
+          ) : (
+            <Coral size={70 * k} happy={happy(look)} pale={!look.cool} />
+          )}
+        </View>
+      )}
+      {mission === "tide" && (
+        <>
+          <View style={at(150, 134, 34)}>
+            <CreatureArt kind="sea-star" size={34 * k} />
+          </View>
+          <View style={at(196, 128, 40)}>
+            <CreatureArt kind="fish" size={40 * k} />
           </View>
         </>
       )}
-      {!done && s.action && !s.result && (
-        <PredictTry
-          choices={choices(s.action)}
-          pictures={[
-            <PredictionPicture key="a" action={s.action} choice={0} />,
-            <PredictionPicture key="b" action={s.action} choice={1} />,
-          ]}
-          value={s.guesses.length === need ? s.guesses[need - 1] : null}
-          onPredict={(p) => {
-            if (s.guesses.length >= need) return;
-            practice("sci.predict", p === expected(s.pool, s.action!));
-            update({ ...s, guesses: [...s.guesses, p] });
-          }}
-          onTry={() => {
-            practice(
-              "sci.cause-effect",
-              s.guesses.some((p) => p === expected(s.pool, s.action!))
-            );
-            practice(
-              mission.skill,
-              s.guesses.some((p) => p === expected(s.pool, s.action!))
-            );
-            update(tryChange(s, together));
-          }}
-          sound={sound}
-          promptKey={`tide-pool-predict-${s.action}`}
-          disabled={!active || s.guesses.length > need}
-        />
+      {(mission === "snail" || mission === "seaweed" || mission === "coral") && (
+        <View style={at(176, 112, 40)}>
+          <CreatureArt kind="fish" size={40 * k} />
+        </View>
       )}
-      {s.result && s.last && (
-        <>
-          <Copy style={{ fontWeight: "700", color: C.ink }}>
-            {s.guesses.every((p) => p === actual) ? "Let’s see why…" : "Surprise! Here’s why…"}
+      {mission === "fish" && (
+        <Animated.View
+          style={[
+            at(-40, 110, 50),
+            {
+              transform: [{ translateX: over(0, 0.6).interpolate({ inputRange: [0, 1], outputRange: [0, 200 * k] }) }],
+            },
+          ]}
+        >
+          <CreatureArt kind="fish" size={50 * k} />
+          {[0, 1, 2].map((i) => (
+            <Animated.View
+              key={i}
+              style={{
+                position: "absolute",
+                left: -2 * k + i * 6 * k,
+                top: 8 * k,
+                width: 7 * k,
+                height: 7 * k,
+                borderRadius: 4 * k,
+                borderWidth: 1.5,
+                borderColor: "#FFF",
+                opacity: over(0.6, 0.8),
+                transform: [
+                  { translateY: over(0.6, 1).interpolate({ inputRange: [0, 1], outputRange: [0, -(16 + i * 8) * k] }) },
+                ],
+              }}
+            />
+          ))}
+        </Animated.View>
+      )}
+    </View>
+  );
+}
+const controlArt: Record<Control, [React.ReactNode, React.ReactNode, string, string]> = {
+  sun: [
+    <AnswerArt key="s" picture="sun" size={36} />,
+    <AnswerArt key="c" picture="cloud" size={36} />,
+    "Sunny",
+    "Cloudy",
+  ],
+  cool: [<Thermometer key="c" warm={false} size={36} />, <Thermometer key="w" warm size={36} />, "Usual reef temperature", "Too hot"],
+  high: [
+    <AnswerArt key="d" picture="deep" size={36} />,
+    <AnswerArt key="l" picture="low" size={36} />,
+    "Tide in",
+    "Tide out",
+  ],
+};
+export function Board({ session, update, practice, sound, width, active, coach, cheer }: BoardProps<TideSave>) {
+  const o = session.options,
+    s = upgrade(session.state, o),
+    together = o.mode === "together",
+    need = needFor(o),
+    reduced = useReducedMotion(),
+    m = current(s);
+  const [p] = useState(() => new Animated.Value(s.watched ? 1 : 0));
+  const [playing, setPlaying] = useState(false);
+  const name = (seat: number) => session.names?.[seat] || `Player ${seat + 1}`;
+  const right = m?.kind === "guess" && s.guesses.length > 0 && s.guesses.every((g) => g === m.right);
+  // Speak the question when a mission opens. On a brand-new round, wait for the frame's spoken intro.
+  const first = useRef(session.revision === 0);
+  const questionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => {
+    // Web reloads have no user activation yet; the speaker button stays available.
+    const canAutoPlay =
+      Platform.OS !== "web" || (typeof navigator !== "undefined" && navigator.userActivation?.hasBeenActive);
+    if (!active || !m || !canAutoPlay || s.guesses.length > 0 || s.watched) return;
+    const wait = first.current ? 3300 : 250;
+    first.current = false;
+    const timer = setTimeout(() => sound(`tide-pool-q-${m.id}`, true), wait);
+    questionTimer.current = timer;
+    return () => clearTimeout(timer);
+  }, [active, m, sound, s.guesses.length, s.watched]);
+  useEffect(() => {
+    if (!s.watched) p.setValue(0);
+    else if (!playing) p.setValue(1);
+  }, [s.index, s.watched, playing, p]);
+  if (!m)
+    return (
+      <View style={{ gap: 10 }}>
+        <Copy style={{ fontWeight: "700", color: C.ink, fontSize: 20 }}>Every pool question answered!</Copy>
+        <PoolScene mission="coral" watched look={{ sun: true, cool: true, high: true }} p={p} width={width} />
+      </View>
+    );
+  const pick = (choice: number) => {
+    if (!active || s.guesses.length >= need) return;
+    clearTimeout(questionTimer.current);
+    const ok = choice === m.right;
+    practice("sci.predict", ok);
+    practice(m.skill, ok);
+    update(answer(s, choice, o));
+    if (coach.active) coach.done();
+    if (s.guesses.length + 1 === need) sound(`tide-pool-do-${m.id}`, true);
+  };
+  const doChange = () => {
+    if (!active) return;
+    clearTimeout(questionTimer.current);
+    practice("sci.cause-effect", right);
+    update(makeChange(s, o));
+    if (right) cheer("right", `tide-pool-right-${m.id}`);
+    else sound(`tide-pool-surprise-${m.id}`, true);
+    if (reduced) return;
+    setPlaying(true);
+    p.setValue(0);
+    Animated.timing(p, { toValue: 1, duration: 2200, easing: easeInOut, useNativeDriver: nativeDriver }).start(() =>
+      setPlaying(false)
+    );
+  };
+  const flip = (control: Control) => {
+    if (!active) return;
+    clearTimeout(questionTimer.current);
+    const n = toggle(s, control);
+    const score = (x: typeof s.pool) => Number(x.sun) + Number(x.cool) + Number(x.high);
+    const better = score(n.pool) > score(s.pool);
+    practice("sci.cause-effect", better);
+    update(n);
+    if (coach.active) coach.done();
+    if (n.watched) {
+      cheer("right", "science-v25-tide-coral");
+    } else sound(better ? "match" : "tap");
+  };
+  const promptKey = s.watched
+    ? m.kind === "fix"
+      ? "science-v25-tide-coral"
+      : m.id === "heat" ? "science-v25-tide-heat" : `tide-pool-${right ? "right" : "surprise"}-${m.id}`
+    : m.kind === "guess" && s.guesses.length === need
+      ? `tide-pool-do-${m.id}`
+      : `tide-pool-q-${m.id}`;
+  const answers = (
+    <View style={{ flexDirection: "row", gap: 8 }}>
+      {m.answers.map((a, i) => {
+        const chosen = s.guesses.includes(i);
+        const reveal = s.watched && !playing;
+        return (
+          <AnswerTile
+            key={a.picture}
+            label={`${a.label}${chosen ? ", your answer" : ""}${reveal && i === m.right ? ", the answer" : ""}`}
+            selected={chosen}
+            correct={reveal && i === m.right}
+            wrong={reveal && chosen && i !== m.right}
+            disabled={!active || s.guesses.length >= need}
+            onPress={() => pick(i)}
+            style={{
+              flex: 1,
+              minHeight: 104,
+              borderRadius: 16,
+              padding: 6,
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: s.guesses.length >= need && !chosen && !(reveal && i === m.right) ? 0.55 : 1,
+            }}
+          >
+            <AnswerArt picture={a.picture} size={58} />
+            <Copy style={{ fontSize: 14, fontWeight: "700", color: C.ink, textAlign: "center" }}>{a.label}</Copy>
+          </AnswerTile>
+        );
+      })}
+    </View>
+  );
+  const last = s.index === s.missions.length - 1;
+  return (
+    <View style={{ gap: 10 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <Copy style={{ fontWeight: "700", color: C.ink, flex: 1, fontSize: 20 }}>{m.question}</Copy>
+        <IconButton icon="sound-on" label="Hear this" onPress={() => sound(promptKey)} />
+      </View>
+      {together && m.kind === "guess" && !s.watched && (
+        <Copy style={{ fontSize: 14, color: C.ink }}>
+          {s.guesses.length < need ? `${name(guesser(s))} picks an answer` : `${name(s.starter)} makes the change`}
+        </Copy>
+      )}
+      <PoolScene mission={m.id} watched={s.watched} look={s.pool} p={p} width={width} />
+      {m.kind === "fix" ? (
+        <CoachSpot active={coach.active && !s.watched} handAt="none">
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            {(["sun", "cool", "high"] as const).map((control) => (
+              <View key={control} style={{ flex: 1, gap: 4 }}>
+                {[true, false].map((on) => {
+                  const selected = s.pool[control] === on;
+                  const [good, bad, goodLabel, badLabel] = controlArt[control];
+                  return (
+                    <PressableScale
+                      key={String(on)}
+                      accessibilityRole="button"
+                      accessibilityLabel={on ? goodLabel : badLabel}
+                      accessibilityState={{ selected, disabled: s.watched }}
+                      disabled={!active || selected || s.watched}
+                      onPress={() => flip(control)}
+                      style={{
+                        minHeight: control === "cool" ? 90 : 56,
+                        borderRadius: 14,
+                        flexDirection: control === "cool" ? "column" : "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 4,
+                        backgroundColor: selected ? C.soft : C.paper,
+                        borderWidth: 3,
+                        borderColor: selected ? C.teal : C.line,
+                      }}
+                    >
+                      {on ? good : bad}
+                      <Copy style={{ fontSize: 13, fontWeight: "700", color: C.ink, textAlign: "center", flexShrink: 1 }}>{on ? goodLabel : badLabel}</Copy>
+                    </PressableScale>
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+        </CoachSpot>
+      ) : (
+        <CoachSpot active={coach.active && s.guesses.length === 0} handAt="none">
+          {answers}
+        </CoachSpot>
+      )}
+      {m.kind === "guess" && s.guesses.length === need && !s.watched && (
+        <Button onPress={doChange} disabled={!active}>
+          {m.change}
+        </Button>
+      )}
+      {s.watched && !playing && (
+        <View
+          accessibilityLiveRegion="polite"
+          style={{
+            borderRadius: 14,
+            padding: 10,
+            gap: 2,
+            backgroundColor: m.kind === "fix" || right ? C.success : "#FCEFD2",
+          }}
+        >
+          <Copy style={{ fontWeight: "700", color: C.ink, fontSize: 17 }}>
+            {m.kind === "fix" ? "The coral is happy!" : right ? "You guessed it!" : "Surprise!"}
           </Copy>
-          <Copy>{explanation(s.pool, s.last)}</Copy>
-          {together && (
-            <Copy style={{ fontSize: 13 }}>
-              {s.guesses.map((p, i) => `${name((chooser + i + 1) % 2)}: ${choices(s.last!)[p]}`).join(" · ")}
+          <Copy style={{ fontSize: 15, color: C.ink }}>{m.why}</Copy>
+          {together && m.kind === "guess" && (
+            <Copy style={{ fontSize: 13, color: C.ink }}>
+              {s.guesses.map((g, i) => `${name((s.starter + i) % 2)}: ${m.answers[g].label}`).join(" · ")}
             </Copy>
           )}
-          <Button
-            compact
-            onPress={() =>
-              update({ ...nextExperiment(s), starter: together ? (((s.starter + 1) % 2) as 0 | 1) : s.starter })
-            }
-          >
-            {missionDiscovered(s) ? "Mission discovered · next" : "Try another change"}
-          </Button>
-        </>
+        </View>
       )}
-      <Copy style={{ fontSize: 11, lineHeight: 15 }}>
-        In real life, species differ and changes take longer. Watch real tide pools with a grown-up; leave creatures at
-        home.
-      </Copy>
+      {s.watched && !playing && (
+        <Button icon="right" onPress={() => active && update(nextMission(s, o))}>
+          {last ? "Finish" : "Next question"}
+        </Button>
+      )}
     </View>
   );
 }
 export function Art({ size }: { size: number }) {
+  const [p] = useState(() => new Animated.Value(0));
   return (
     <View style={{ width: size, height: size, justifyContent: "center", overflow: "hidden" }}>
-      <PoolScene pool={initialPool()} width={size} />
+      <PoolScene mission="coral" watched look={{ sun: true, cool: true, high: true }} p={p} width={size} />
     </View>
   );
 }

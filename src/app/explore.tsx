@@ -5,10 +5,11 @@ import { Copy, styles } from "../components/ui";
 import { AppState, View } from "react-native";
 import { SaveStatus } from "../components/SaveStatus";
 import { router, useIsFocused } from "expo-router";
-import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import { useAudioPlayerStatus } from "expo-audio";
+import { topicSpeechKey } from "../explore/content";
 import { ExploreScreen } from "../explore/ExploreScreen";
 import { useStore } from "../state/Store";
-import { sources } from "../content/audioSources";
+import { useSoundControls } from "../components/Audio";
 export default function Explore() {
   const store = useStore();
   if (!store.ready)
@@ -28,7 +29,7 @@ export default function Explore() {
 function ExploreReady() {
   const store = useStore(),
     focused = useIsFocused(),
-    player = useAudioPlayer(null),
+    { play, stop: stopAudio, player } = useSoundControls(store.save.settings.sound && focused),
     status = useAudioPlayerStatus(player);
   const [speaking, setSpeaking] = useState<string>();
   const ownedPlayer = useRef<typeof player | null>(player);
@@ -42,12 +43,12 @@ function ExploreReady() {
   const stop = useCallback(() => {
     if (ownedPlayer.current !== player) return;
     try {
-      player.pause();
+      stopAudio();
     } catch {
       /* The transcript stays available when native audio is unavailable. */
     }
     setSpeaking(undefined);
-  }, [player]);
+  }, [player, stopAudio]);
   useEffect(() => {
     const sub = AppState.addEventListener("change", (s) => {
       if (s !== "active") stop();
@@ -55,8 +56,9 @@ function ExploreReady() {
     return () => sub.remove();
   }, [stop]);
   useEffect(() => {
-    if (!focused || !store.save.settings.sound || status.didJustFinish) stop();
-  }, [focused, store.save.settings.sound, status.didJustFinish, stop]);
+    if (!focused || !store.save.settings.sound || store.save.settings.narration === false || status.didJustFinish) stop();
+  }, [focused, store.save.settings.sound, store.save.settings.narration, status.didJustFinish, stop]);
+  useEffect(() => { stop(); }, [store.save.settings.voice, store.save.settings.narrationVolume, stop]);
   return (
     <View style={{ flex: 1 }}>
       {store.error && <SafeAreaView edges={["top", "left", "right"]} style={{ backgroundColor: "#FCFAF4", paddingHorizontal: 18 }}><SaveStatus /></SafeAreaView>}
@@ -66,27 +68,21 @@ function ExploreReady() {
       onToggleFavorite={store.toggleFavorite}
       onBack={() => (router.canGoBack() ? router.back() : router.replace("/"))}
       onStop={stop}
-      narrationEnabled={store.save.settings.sound}
+      narrationEnabled={store.save.settings.sound && (store.save.settings.narration ?? true)}
       speakingTopicId={speaking?.startsWith("explore-") ? speaking.slice(8) : undefined}
+      onCompleteTopic={(topic, progress) => store.exploreUpdate(progress, store.epoch, topic)}
       progress={store.save.explore?.progress}
       onProgressChange={(next) => store.exploreUpdate(next, store.epoch)}
       onToggleSound={() => store.settings({ sound: !store.save.settings.sound })}
       speakingInstructionId={speaking && !speaking.startsWith("explore-") ? speaking : undefined}
       onStopInstruction={stop}
       onSpeakInstruction={(key) => {
-        if (ownedPlayer.current !== player || !store.save.settings.sound || !sources[key]) return;
-        try { player.replace(sources[key]); player.play(); setSpeaking(key); }
-        catch { setSpeaking(undefined); }
+        if (ownedPlayer.current !== player) return;
+        if (play(key)) setSpeaking(key); else setSpeaking(undefined);
       }}
       onSpeak={(id) => {
-        if (ownedPlayer.current !== player || !store.save.settings.sound || !sources[`explore-${id}`]) return;
-        try {
-          player.replace(sources[`explore-${id}`]);
-          player.play();
-          setSpeaking(`explore-${id}`);
-        } catch {
-          setSpeaking(undefined);
-        }
+        if (ownedPlayer.current !== player) return;
+        if (play(topicSpeechKey(id))) setSpeaking(`explore-${id}`); else setSpeaking(undefined);
       }}
     />
     </View>

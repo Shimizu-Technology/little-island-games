@@ -7,7 +7,7 @@ import { emptySave, parseSave, validSession } from "../src/state/validation";
 describe("CHamoru Memory pack", () => {
   for (const difficulty of ["easy", "medium", "hard"] as const) for (const mode of ["solo", "together"] as const) {
     it(`${difficulty} ${mode}: matches pictures to words with legacy scoring and replay`, () => {
-      let s = { ...createMemory({ ...defaultOptions, difficulty, mode }, mode === "together" ? 1 : 0, "chamoru"), match: newMatch(["Stassie", "Dad"]) };
+      let s = { ...createMemory({ ...defaultOptions, difficulty, mode }, mode === "together" ? 1 : 0, "chamoru"), match: newMatch(["Mia", "Dad"]) };
       expect(validSession(s)).toBe(true);
       const a = 0, b = s.cards.findIndex(c => memoryKey(c) !== memoryKey(s.cards[a]));
       const mismatch = flipCard(flipCard(s, a), b);
@@ -27,7 +27,7 @@ describe("CHamoru Memory pack", () => {
       expect(memoryDone(s)).toBe(true);
       const next = replayMemory(s);
       expect(next.pack).toBe("chamoru");
-      expect(next.match?.names).toEqual(["Stassie", "Dad"]);
+      expect(next.match?.names).toEqual(["Mia", "Dad"]);
       expect(next.match?.wins[0]).toBe(1);
       expect(validSession(next)).toBe(true);
       const old = createMemory({ ...defaultOptions, difficulty, mode });

@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-10-31T05:47:41.996Z",
+  "appStoreConnectAppId": "6824481437",
+  "bundleId": "com.shimizutechnology.littleisland",
+  "version": "2.5.0",
+  "build": "24",
+  "sourceCommit": "eb2c103e2fd0944c4a02981f5a3100270e4d1160",
+  "sourceTree": "f1e0e75028043b8854fc53645fd2d88db1135a42",
+  "sourcePr": 16,
+  "merged": false,
+  "ipaSha256": "d0803eb88e63118d7dbad06c2a68d8a44ac1313f8d1b3bb40d8d9a0f7682c0f1",
+  "ipaBytes": 195242018,
+  "embeddedJsSha256": "708647627d0f02bcb1c65b9005550cea0a4ab6d0c2b982d698130542fe8f0b44",
+  "submissionId": "a4dc8d8d-778f-42dd-b99d-45db01a73a55",
+  "submissionStatus": "FINISHED",
+  "completedAppleUploadId": "74f9f702-aa81-4f1f-8090-1798544c8b01",
+  "appleBuildId": "74f9f702-aa81-4f1f-8090-1798544c8b01",
+  "processingState": "VALID",
+  "internalBuildState": "IN_BETA_TESTING",
+  "group": {
+    "id": "95450b29-136b-4227-8df6-7eb3c67ceff9",
+    "name": "Leon",
+    "internal": true,
+    "testerCount": 1,
+    "automaticAllBuildAccess": false,
+    "attached": true
+  },
+  "englishNotesVerified": true,
+  "audioFiles": 6447,
+  "allReferencedAudioMatchesSourceBytes": true,
+  "physicalInstallationVerified": false,
+  "nativeAcceptance": "Lead native walkthrough (iPhone 16 Pro simulator, iOS 18.5, Release of 184a6ec): home island icons and Shimizu Technology credit; Code Lab L3 def -> call -> body once, output verified; Settings grown-up gate -> About (Shimizu Technology, MIT, source link); Beep Bot first-arrow coach with Go on screen. Other fixes verified by slice web journeys and independent review. Physical device and family acceptance pending.",
+  "publicRelease": false,
+  "publicSource": {
+    "repo": "https://github.com/Shimizu-Technology/little-island",
+    "exportedFrom": "61fc8db (same app code as eb2c103; test-only change)"
+  }
+}

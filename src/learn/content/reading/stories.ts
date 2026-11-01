@@ -1,6 +1,19 @@
 import type { ReadingScene } from "../../kit/reading";
-export type Tale = { id: string; pace: "easy" | "medium" | "hard"; title: string; skill: string; pages: { text: string; scene: ReadingScene }[]; questions: { text: string; prompt: string; scenes: ReadingScene[]; difference: string[] }[] };
-export const STORIES: Tale[] = [
+/**
+ * One story page: the sentence, its picture, a near-miss picture that changes exactly one thing, and the word
+ * in the sentence that tells them apart (the "cue"). She reads the page, then picks the picture that matches.
+ */
+export type TalePage = { text: string; scene: ReadingScene; miss: ReadingScene; cue: string };
+export type Tale = {
+  id: string;
+  pace: "easy" | "medium" | "hard";
+  title: string;
+  skill: string;
+  pages: TalePage[];
+  /** Each page's picture check, right picture first (kept beside the pages for content checks). */
+  questions: { scenes: [ReadingScene, ReadingScene] }[];
+};
+const TALES: Omit<Tale, "questions">[] = [
   {
     "id": "tale-0",
     "pace": "easy",
@@ -15,7 +28,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "red",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "hat",
+          "object": "cat",
+          "relation": "beside",
+          "color": "blue",
+          "size": "big"
+        },
+        "cue": "red"
       },
       {
         "text": "Pup sat on the mat.",
@@ -25,7 +46,15 @@ export const STORIES: Tale[] = [
           "relation": "on",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "cat",
+          "object": "mat",
+          "relation": "on",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "pup"
       },
       {
         "text": "Pup can hop and hop.",
@@ -35,7 +64,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "pig",
+          "object": "mat",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "pup"
       },
       {
         "text": "Hop, hop, hop! Pup hit the hat.",
@@ -45,7 +82,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "red",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "hat",
+          "object": "cat",
+          "relation": "beside",
+          "color": "red",
+          "size": "big"
+        },
+        "cue": "pup"
       },
       {
         "text": "The red hat is on Pup!",
@@ -55,7 +100,15 @@ export const STORIES: Tale[] = [
           "relation": "on",
           "color": "red",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "hat",
+          "object": "dog",
+          "relation": "beside",
+          "color": "red",
+          "size": "big"
+        },
+        "cue": "on"
       },
       {
         "text": "Cat and Pup nap in the sun.",
@@ -65,73 +118,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
-      }
-    ],
-    "questions": [
-      {
-        "text": "The hat is on the dog.",
-        "prompt": "Where is the red hat?",
-        "scenes": [
-          {
-            "subject": "hat",
-            "object": "dog",
-            "relation": "on",
-            "color": "red",
-            "size": "big"
-          },
-          {
-            "subject": "hat",
-            "object": "cat",
-            "relation": "on",
-            "color": "red",
-            "size": "big"
-          },
-          {
-            "subject": "hat",
-            "object": "dog",
-            "relation": "under",
-            "color": "red",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "cat",
-          "under"
-        ]
-      },
-      {
-        "text": "The dog is on the mat.",
-        "prompt": "Where did Pup sit?",
-        "scenes": [
-          {
-            "subject": "dog",
-            "object": "mat",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "dog",
-            "object": "rug",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "cat",
-            "object": "mat",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "rug",
-          "cat"
-        ]
+        },
+        "miss": {
+          "subject": "cat",
+          "object": "moon",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "sun"
       }
     ]
   },
@@ -149,7 +144,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "hen",
+          "object": "sun",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "pig"
       },
       {
         "text": "Pig can get in the tub.",
@@ -159,7 +162,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "pig",
+          "object": "tub",
+          "relation": "on",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "in"
       },
       {
         "text": "Hen has a cup.",
@@ -169,7 +180,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "hen",
+          "object": "hat",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "cup"
       },
       {
         "text": "Hen can dip the cup in the tub.",
@@ -179,7 +198,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "pig",
+          "object": "tub",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "hen"
       },
       {
         "text": "Pig is wet. Hen is wet. Yes!",
@@ -189,7 +216,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "cat",
+          "object": "tub",
+          "relation": "in",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "pig"
       },
       {
         "text": "Pig and Hen hug in the sun.",
@@ -199,73 +234,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
-      }
-    ],
-    "questions": [
-      {
-        "text": "The pig is in the tub.",
-        "prompt": "Where is Pig?",
-        "scenes": [
-          {
-            "subject": "pig",
-            "object": "tub",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "pig",
-            "object": "tub",
-            "relation": "under",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "hen",
-            "object": "tub",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "under",
-          "hen"
-        ]
-      },
-      {
-        "text": "The hen has a cup.",
-        "prompt": "What has Hen got?",
-        "scenes": [
-          {
-            "subject": "hen",
-            "object": "cup",
-            "relation": "beside",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "hen",
-            "object": "mug",
-            "relation": "beside",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "pig",
-            "object": "cup",
-            "relation": "beside",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "mug",
-          "pig"
-        ]
+        },
+        "miss": {
+          "subject": "pig",
+          "object": "dog",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "hen"
       }
     ]
   },
@@ -283,7 +260,15 @@ export const STORIES: Tale[] = [
           "relation": "on",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "bug",
+          "object": "rug",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "on"
       },
       {
         "text": "Cat ran to the rug.",
@@ -293,7 +278,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "dog",
+          "object": "rug",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "cat"
       },
       {
         "text": "The bug hid in a cup.",
@@ -303,7 +296,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "bug",
+          "object": "cup",
+          "relation": "on",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "in"
       },
       {
         "text": "Cat can tip the cup.",
@@ -313,7 +314,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "cat",
+          "object": "box",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "cup"
       },
       {
         "text": "Is the bug in the cup? Up, up, up!",
@@ -323,7 +332,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "bee",
+          "object": "cat",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "bug"
       },
       {
         "text": "The bug is on top of Cat. Hum, hum!",
@@ -333,73 +350,15 @@ export const STORIES: Tale[] = [
           "relation": "on",
           "color": "coral",
           "size": "big"
-        }
-      }
-    ],
-    "questions": [
-      {
-        "text": "The bug is in the cup.",
-        "prompt": "Where is the bug?",
-        "scenes": [
-          {
-            "subject": "bug",
-            "object": "cup",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "bug",
-            "object": "cup",
-            "relation": "under",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "bug",
-            "object": "box",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "under",
-          "box"
-        ]
-      },
-      {
-        "text": "The bug is on the cat.",
-        "prompt": "Where can the bug hum?",
-        "scenes": [
-          {
-            "subject": "bug",
-            "object": "cat",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "bug",
-            "object": "dog",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "bug",
-            "object": "cat",
-            "relation": "under",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "dog",
-          "under"
-        ]
+        },
+        "miss": {
+          "subject": "bug",
+          "object": "dog",
+          "relation": "on",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "cat"
       }
     ]
   },
@@ -417,7 +376,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "fox",
+          "object": "bed",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "box"
       },
       {
         "text": "Fox can hop in the box.",
@@ -427,7 +394,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "fox",
+          "object": "box",
+          "relation": "on",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "in"
       },
       {
         "text": "Dog ran up to the box.",
@@ -437,7 +412,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "cat",
+          "object": "box",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "dog"
       },
       {
         "text": "Is Fox in the box? Dog can not get Fox.",
@@ -447,7 +430,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "pig",
+          "object": "box",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "dog"
       },
       {
         "text": "Pop! Fox is up on top of Dog!",
@@ -457,7 +448,15 @@ export const STORIES: Tale[] = [
           "relation": "on",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "fox",
+          "object": "cat",
+          "relation": "on",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "dog"
       },
       {
         "text": "Dog and Fox run to the log.",
@@ -467,73 +466,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
-      }
-    ],
-    "questions": [
-      {
-        "text": "The fox is in the box.",
-        "prompt": "Where is Fox?",
-        "scenes": [
-          {
-            "subject": "fox",
-            "object": "box",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "fox",
-            "object": "box",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "dog",
-            "object": "box",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "on",
-          "dog"
-        ]
-      },
-      {
-        "text": "The fox is on the dog.",
-        "prompt": "Fox is on top. On top of what?",
-        "scenes": [
-          {
-            "subject": "fox",
-            "object": "dog",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "fox",
-            "object": "dog",
-            "relation": "under",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "fox",
-            "object": "log",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "under",
-          "log"
-        ]
+        },
+        "miss": {
+          "subject": "dog",
+          "object": "rock",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "log"
       }
     ]
   },
@@ -551,7 +492,15 @@ export const STORIES: Tale[] = [
           "relation": "on",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "crab",
+          "object": "rock",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "on"
       },
       {
         "text": "Crab has to get a shell.",
@@ -561,7 +510,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "fish",
+          "object": "rock",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "crab"
       },
       {
         "text": "This shell is big. It is not snug.",
@@ -570,8 +527,20 @@ export const STORIES: Tale[] = [
           "object": "shell",
           "relation": "beside",
           "color": "coral",
-          "size": "big"
-        }
+          "size": "big",
+          "subjectSize": 61,
+          "objectSize": 82
+        },
+        "miss": {
+          "subject": "crab",
+          "object": "rock",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big",
+          "subjectSize": 61,
+          "objectSize": 82
+        },
+        "cue": "shell"
       },
       {
         "text": "This shell is little. It is not snug.",
@@ -580,8 +549,20 @@ export const STORIES: Tale[] = [
           "object": "shell",
           "relation": "beside",
           "color": "coral",
-          "size": "little"
-        }
+          "size": "little",
+          "subjectSize": 61,
+          "objectSize": 38
+        },
+        "miss": {
+          "subject": "crab",
+          "object": "rock",
+          "relation": "beside",
+          "color": "coral",
+          "size": "little",
+          "subjectSize": 61,
+          "objectSize": 38
+        },
+        "cue": "shell"
       },
       {
         "text": "This shell is just the best! Crab can hide in the shell.",
@@ -591,7 +572,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "crab",
+          "object": "shell",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "in"
       },
       {
         "text": "Fish can swim up. Crab and Fish clap and grin.",
@@ -601,73 +590,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
-      }
-    ],
-    "questions": [
-      {
-        "text": "The crab is in the shell.",
-        "prompt": "Where can Crab hide?",
-        "scenes": [
-          {
-            "subject": "crab",
-            "object": "shell",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "crab",
-            "object": "shell",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "fish",
-            "object": "shell",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "on",
-          "fish"
-        ]
-      },
-      {
-        "text": "The crab is on the rock.",
-        "prompt": "Where was Crab?",
-        "scenes": [
-          {
-            "subject": "crab",
-            "object": "rock",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "crab",
-            "object": "rock",
-            "relation": "under",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "crab",
-            "object": "sand",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "under",
-          "sand"
-        ]
+        },
+        "miss": {
+          "subject": "crab",
+          "object": "duck",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "fish"
       }
     ]
   },
@@ -685,7 +616,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "red",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "ship",
+          "object": "duck",
+          "relation": "beside",
+          "color": "blue",
+          "size": "big"
+        },
+        "cue": "red"
       },
       {
         "text": "Frog can jump in the ship.",
@@ -695,7 +634,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "frog",
+          "object": "ship",
+          "relation": "on",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "in"
       },
       {
         "text": "Duck and Frog sing a long song.",
@@ -705,17 +652,33 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "duck",
+          "object": "fish",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "frog"
       },
       {
-        "text": "Then, a big wave! Splash!",
+        "text": "A big wave! Splash! Duck is in the ship.",
         "scene": {
           "subject": "duck",
           "object": "ship",
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "frog",
+          "object": "ship",
+          "relation": "in",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "duck"
       },
       {
         "text": "Frog is wet. Duck is wet. The ship is fine.",
@@ -725,83 +688,33 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "frog",
+          "object": "rock",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "ship"
       },
       {
-        "text": "They sing the song with a splash, splash, splash.",
+        "text": "Duck and Frog sing the song. Splash, splash, splash!",
         "scene": {
           "subject": "duck",
           "object": "frog",
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
-      }
-    ],
-    "questions": [
-      {
-        "text": "The frog is in the ship.",
-        "prompt": "Where can Frog jump?",
-        "scenes": [
-          {
-            "subject": "frog",
-            "object": "ship",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "frog",
-            "object": "ship",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "duck",
-            "object": "ship",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "on",
-          "duck"
-        ]
-      },
-      {
-        "text": "Duck has a red ship.",
-        "prompt": "What has Duck got?",
-        "scenes": [
-          {
-            "subject": "ship",
-            "object": "duck",
-            "relation": "beside",
-            "color": "red",
-            "size": "big"
-          },
-          {
-            "subject": "ship",
-            "object": "duck",
-            "relation": "beside",
-            "color": "blue",
-            "size": "big"
-          },
-          {
-            "subject": "boat",
-            "object": "duck",
-            "relation": "beside",
-            "color": "red",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "blue",
-          "boat"
-        ]
+        },
+        "miss": {
+          "subject": "hen",
+          "object": "frog",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "duck"
       }
     ]
   },
@@ -819,7 +732,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "hen",
+          "object": "shell",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "ring"
       },
       {
         "text": "Then the ring is lost in the sand.",
@@ -829,7 +750,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "ring",
+          "object": "sand",
+          "relation": "on",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "in"
       },
       {
         "text": "Hen is sad. Hen can not sing.",
@@ -839,7 +768,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "duck",
+          "object": "sand",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "hen"
       },
       {
         "text": "Crab can dig and dig and dig.",
@@ -849,7 +786,15 @@ export const STORIES: Tale[] = [
           "relation": "on",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "frog",
+          "object": "sand",
+          "relation": "on",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "crab"
       },
       {
         "text": "Crab has the ring!",
@@ -859,7 +804,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "crab",
+          "object": "shell",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "ring"
       },
       {
         "text": "Hen can grin. Hen and Crab sing a long song.",
@@ -869,73 +822,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
-      }
-    ],
-    "questions": [
-      {
-        "text": "The ring is in the sand.",
-        "prompt": "Where is the ring?",
-        "scenes": [
-          {
-            "subject": "ring",
-            "object": "sand",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "ring",
-            "object": "sand",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "shell",
-            "object": "sand",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "on",
-          "shell"
-        ]
-      },
-      {
-        "text": "The crab has the ring.",
-        "prompt": "What has Crab got?",
-        "scenes": [
-          {
-            "subject": "crab",
-            "object": "ring",
-            "relation": "beside",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "crab",
-            "object": "shell",
-            "relation": "beside",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "hen",
-            "object": "ring",
-            "relation": "beside",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "shell",
-          "hen"
-        ]
+        },
+        "miss": {
+          "subject": "hen",
+          "object": "fish",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "crab"
       }
     ]
   },
@@ -953,7 +848,15 @@ export const STORIES: Tale[] = [
           "relation": "on",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "nest",
+          "object": "log",
+          "relation": "on",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "rock"
       },
       {
         "text": "Duck can swim in the pond.",
@@ -963,7 +866,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "duck",
+          "object": "pond",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "in"
       },
       {
         "text": "Frog can hop in the nest to rest.",
@@ -973,7 +884,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "duck",
+          "object": "nest",
+          "relation": "in",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "frog"
       },
       {
         "text": "Duck is back. Frog in the nest?",
@@ -983,7 +902,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "hen",
+          "object": "nest",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "duck"
       },
       {
         "text": "Frog can jump in the pond. Plop!",
@@ -993,7 +920,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "frog",
+          "object": "pond",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "in"
       },
       {
         "text": "Duck can rest in the nest. That is best.",
@@ -1003,73 +938,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
-      }
-    ],
-    "questions": [
-      {
-        "text": "The frog is in the nest.",
-        "prompt": "What was in the nest?",
-        "scenes": [
-          {
-            "subject": "frog",
-            "object": "nest",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "frog",
-            "object": "nest",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "duck",
-            "object": "nest",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "on",
-          "duck"
-        ]
-      },
-      {
-        "text": "The frog is in the pond.",
-        "prompt": "Where can Frog jump?",
-        "scenes": [
-          {
-            "subject": "frog",
-            "object": "pond",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "fish",
-            "object": "pond",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "frog",
-            "object": "pond",
-            "relation": "beside",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "fish",
-          "beside"
-        ]
+        },
+        "miss": {
+          "subject": "frog",
+          "object": "nest",
+          "relation": "in",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "duck"
       }
     ]
   },
@@ -1087,7 +964,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "sheep",
+          "object": "cake",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "goat"
       },
       {
         "text": "Goat and the cake sail in a boat.",
@@ -1097,7 +982,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "goat",
+          "object": "boat",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "in"
       },
       {
         "text": "Rain! The rain is on the sail.",
@@ -1107,7 +1000,15 @@ export const STORIES: Tale[] = [
           "relation": "on",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "sun",
+          "object": "boat",
+          "relation": "on",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "rain"
       },
       {
         "text": "Goat has a coat for the cake.",
@@ -1117,17 +1018,33 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "goat",
+          "object": "hat",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "coat"
       },
       {
         "text": "Sheep is on the beach. The cake is not wet!",
         "scene": {
           "subject": "sheep",
           "object": "sand",
-          "relation": "beside",
+          "relation": "on",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "goat",
+          "object": "sand",
+          "relation": "on",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "sheep"
       },
       {
         "text": "Goat and Sheep eat the cake in the boat.",
@@ -1137,73 +1054,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
-      }
-    ],
-    "questions": [
-      {
-        "text": "The goat is in the boat.",
-        "prompt": "Where can Goat sail?",
-        "scenes": [
-          {
-            "subject": "goat",
-            "object": "boat",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "goat",
-            "object": "boat",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "sheep",
-            "object": "boat",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "on",
-          "sheep"
-        ]
-      },
-      {
-        "text": "The rain is on the boat.",
-        "prompt": "Where is the rain?",
-        "scenes": [
-          {
-            "subject": "rain",
-            "object": "boat",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "rain",
-            "object": "boat",
-            "relation": "beside",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "sun",
-            "object": "boat",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "beside",
-          "sun"
-        ]
+        },
+        "miss": {
+          "subject": "goat",
+          "object": "seal",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "sheep"
       }
     ]
   },
@@ -1221,17 +1080,33 @@ export const STORIES: Tale[] = [
           "relation": "on",
           "color": "coral",
           "size": "big"
-        }
-      },
-      {
-        "text": "Rain! Toad has to get a coat.",
-        "scene": {
+        },
+        "miss": {
           "subject": "toad",
           "object": "road",
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "cue": "on"
+      },
+      {
+        "text": "Rain! Toad has to get a coat.",
+        "scene": {
+          "subject": "toad",
+          "object": "coat",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "miss": {
+          "subject": "seal",
+          "object": "coat",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "toad"
       },
       {
         "text": "Toad can see a big leaf.",
@@ -1241,7 +1116,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "toad",
+          "object": "rock",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "leaf"
       },
       {
         "text": "The leaf is a coat for Toad!",
@@ -1251,7 +1134,15 @@ export const STORIES: Tale[] = [
           "relation": "on",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "leaf",
+          "object": "seal",
+          "relation": "on",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "toad"
       },
       {
         "text": "Bee is wet. Bee can sit on the leaf.",
@@ -1261,7 +1152,15 @@ export const STORIES: Tale[] = [
           "relation": "on",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "bee",
+          "object": "leaf",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "on"
       },
       {
         "text": "Toad and Bee see the rain stop.",
@@ -1271,73 +1170,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
-      }
-    ],
-    "questions": [
-      {
-        "text": "The leaf is on the toad.",
-        "prompt": "Where is the leaf?",
-        "scenes": [
-          {
-            "subject": "leaf",
-            "object": "toad",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "leaf",
-            "object": "bee",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "leaf",
-            "object": "toad",
-            "relation": "under",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "bee",
-          "under"
-        ]
-      },
-      {
-        "text": "The bee is on the leaf.",
-        "prompt": "Where can Bee sit?",
-        "scenes": [
-          {
-            "subject": "bee",
-            "object": "leaf",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "bee",
-            "object": "leaf",
-            "relation": "under",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "bee",
-            "object": "coat",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "under",
-          "coat"
-        ]
+        },
+        "miss": {
+          "subject": "toad",
+          "object": "seal",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "bee"
       }
     ]
   },
@@ -1355,7 +1196,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "red",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "kite",
+          "object": "crab",
+          "relation": "beside",
+          "color": "blue",
+          "size": "big"
+        },
+        "cue": "red"
       },
       {
         "text": "A storm! The kite can rise up, up, up.",
@@ -1365,7 +1214,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "red",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "leaf",
+          "object": "crab",
+          "relation": "beside",
+          "color": "red",
+          "size": "big"
+        },
+        "cue": "kite"
       },
       {
         "text": "Zoom! The kite is in the tree.",
@@ -1375,7 +1232,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "red",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "kite",
+          "object": "tree",
+          "relation": "under",
+          "color": "red",
+          "size": "big"
+        },
+        "cue": "in"
       },
       {
         "text": "Goat has a long rope.",
@@ -1385,7 +1250,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "sheep",
+          "object": "rope",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "goat"
       },
       {
         "text": "Goat can reach the kite with the rope.",
@@ -1395,7 +1268,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "seal",
+          "object": "tree",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "goat"
       },
       {
         "text": "Crab and Goat take the kite to the beach.",
@@ -1405,73 +1286,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
-      }
-    ],
-    "questions": [
-      {
-        "text": "The kite is in the tree.",
-        "prompt": "Where is the kite?",
-        "scenes": [
-          {
-            "subject": "kite",
-            "object": "tree",
-            "relation": "in",
-            "color": "red",
-            "size": "big"
-          },
-          {
-            "subject": "kite",
-            "object": "tree",
-            "relation": "under",
-            "color": "red",
-            "size": "big"
-          },
-          {
-            "subject": "rope",
-            "object": "tree",
-            "relation": "in",
-            "color": "red",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "under",
-          "rope"
-        ]
-      },
-      {
-        "text": "The goat has a rope.",
-        "prompt": "What has Goat got?",
-        "scenes": [
-          {
-            "subject": "goat",
-            "object": "rope",
-            "relation": "beside",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "goat",
-            "object": "kite",
-            "relation": "beside",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "crab",
-            "object": "rope",
-            "relation": "beside",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "kite",
-          "crab"
-        ]
+        },
+        "miss": {
+          "subject": "crab",
+          "object": "sheep",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "goat"
       }
     ]
   },
@@ -1489,7 +1312,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "seal",
+          "object": "pond",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "in"
       },
       {
         "text": "Soon the moon is up.",
@@ -1499,7 +1330,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "sun",
+          "object": "pond",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "moon"
       },
       {
         "text": "Sheep is in a boat on the sea.",
@@ -1509,7 +1348,15 @@ export const STORIES: Tale[] = [
           "relation": "in",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "goat",
+          "object": "boat",
+          "relation": "in",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "sheep"
       },
       {
         "text": "Sheep can see Seal in the pool.",
@@ -1519,7 +1366,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "sheep",
+          "object": "goat",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "seal"
       },
       {
         "text": "Seal can see a star.",
@@ -1529,7 +1384,15 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
+        },
+        "miss": {
+          "subject": "seal",
+          "object": "moon",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "star"
       },
       {
         "text": "Seal and Sheep see the moon and the star.",
@@ -1539,74 +1402,17 @@ export const STORIES: Tale[] = [
           "relation": "beside",
           "color": "coral",
           "size": "big"
-        }
-      }
-    ],
-    "questions": [
-      {
-        "text": "The seal is in the pool.",
-        "prompt": "Where can Seal swim?",
-        "scenes": [
-          {
-            "subject": "seal",
-            "object": "pond",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "seal",
-            "object": "pond",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "sheep",
-            "object": "pond",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "on",
-          "sheep"
-        ]
-      },
-      {
-        "text": "The sheep is in the boat.",
-        "prompt": "Where is Sheep?",
-        "scenes": [
-          {
-            "subject": "sheep",
-            "object": "boat",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "sheep",
-            "object": "boat",
-            "relation": "on",
-            "color": "coral",
-            "size": "big"
-          },
-          {
-            "subject": "goat",
-            "object": "boat",
-            "relation": "in",
-            "color": "coral",
-            "size": "big"
-          }
-        ],
-        "difference": [
-          "",
-          "on",
-          "goat"
-        ]
+        },
+        "miss": {
+          "subject": "seal",
+          "object": "sun",
+          "relation": "beside",
+          "color": "coral",
+          "size": "big"
+        },
+        "cue": "moon"
       }
     ]
   }
 ];
+export const STORIES: Tale[] = TALES.map((t) => ({ ...t, questions: t.pages.map((p) => ({ scenes: [p.scene, p.miss] })) }));

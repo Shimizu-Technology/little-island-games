@@ -9,7 +9,7 @@ import { emptySave, parseSave } from "../src/state/validation";
 import { activityIds } from "../src/state/activities";
 import { learnIds } from "../src/learn/types";
 import { engines } from "../src/learn/engines";
-import { startSession } from "../src/learn/session";
+import { startSession, validLearnSession } from "../src/learn/session";
 import { dailySuggestions, homeContinue, shelfGames, toggleShelfFavorite } from "../src/learn/home";
 import { engine, chooseActivity, islandProgress, tapItem } from "../src/learn/games/hafa-adai/engine";
 import { recordPractice } from "../src/learn/skills";
@@ -17,14 +17,14 @@ import { recordPractice } from "../src/learn/skills";
 const create = (seed = 41, pace = "easy" as "easy" | "medium" | "hard", mode = "solo" as "solo" | "versus") => engine.create({ pace, mode }, { skills: {}, rng: random(seed), starter: 1, today: 20_000 });
 describe("Home and island shelf", () => {
   it("keeps eleven classic games and adds the learning engines to their declared islands", () => {
-    expect(shelfGames.filter(g => g.island === "classic")).toHaveLength(11);
+    expect(shelfGames.filter(g => g.island === "classic")).toHaveLength(16);
     for (const id of learnIds) expect(shelfGames.find(g => g.id === id)?.island).toBe(engines[id].island);
   });
   it("round-trips every classic and learning favorite and toggles without duplicates", () => {
     let save = emptySave();
     for (const id of [...gameIds, ...activityIds, ...learnIds]) save = toggleShelfFavorite(save, id);
     save = parseSave(JSON.stringify(save));
-    expect(save.favoriteGames).toHaveLength(20);
+    expect(save.favoriteGames).toHaveLength(gameIds.length + activityIds.length + learnIds.length);
     expect(toggleShelfFavorite(save, "hafa-adai").favoriteGames).not.toContain("hafa-adai");
     expect(toggleShelfFavorite(save, "unknown" as never)).toBe(save);
     expect(() => parseSave(JSON.stringify({ ...save, favoriteGames: ["hafa-adai", "hafa-adai"] }))).toThrow();
@@ -111,5 +111,16 @@ describe("Håfa Adai Island", () => {
     const selected = engine.create({ mode: "solo", pace: "easy" }, { skills: missed, rng: random(4), starter: 0, today: 20_000 });
     expect(new Set(selected.items.map(id => id.split(".")[0])).size).toBe(6);
     expect(selected.items.some(id => id.startsWith("greetings."))).toBe(true);
+  });
+});
+
+describe("Håfa Adai Island 1.4.0 rounds", () => {
+  it("an I spy round saved by 1.4.0 still passes validLearnSession and parseSave", () => {
+    const o = {"mode": "solo", "pace": "easy"} as const;
+    const state = {"items": ["numbers.two", "greetings.goodbye", "food.egg", "colors.pink", "family.child", "body_parts.mouth"], "activity": "spy", "taps": ["numbers.two", "colors.pink", "greetings.goodbye", "colors.pink", "food.egg", "colors.pink", "greetings.goodbye", "family.child", "numbers.two", "body_parts.mouth"], "starter": 0};
+    const session = { game: "hafa-adai" as const, version: 1 as const, id: "hafa-adai-legacy-1", revision: 11, options: o, state };
+    expect(validLearnSession(session, "hafa-adai")).toBe(true);
+    expect(() => parseSave(JSON.stringify({ ...emptySave(), learn: { "hafa-adai": session } }))).not.toThrow();
+    expect(engine.outcome(state as never, o)).toBe("done");
   });
 });

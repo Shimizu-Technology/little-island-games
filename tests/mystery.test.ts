@@ -107,14 +107,15 @@ describe("Picnic Island authoritative game", () => {
     expect(s.sabotage).toBeNull();
     expect(validMysterySession(s)).toBe(true);
   });
-  it("only host clock advances sabotage to a mischief result", () => {
+  it("nearby sabotage waits for repair without a time-based loss", () => {
     let s = at(fresh("mischief"), "host", PUMP);
     s = { ...s, tick: 20 };
     s = applyMysteryIntent(s, "host", { type: "sabotage" });
     for (let i = 0; i < 59; i++) s = tickMystery(s);
     expect(s.result).toBeNull();
     s = tickMystery(s);
-    expect(s.result).toEqual({ winner: "mischief", reason: "sabotage" });
+    expect(s.result).toBeNull();
+    expect(s.sabotage?.left).toBe(60);
     expect(validMysterySession(s)).toBe(true);
   });
   it("pranks enforce proximity/cooldown, record only nearby witnesses and eventually win", () => {
@@ -148,11 +149,16 @@ describe("Picnic Island authoritative game", () => {
     expect(s.players.every((p) => !p.out)).toBe(true);
     expect(validMysterySession(s)).toBe(true);
   });
-  it("meeting/voting deadlines supply skip votes and return to exploration", () => {
+  it("nearby meeting and voting never supply automatic skip votes", () => {
     let s = applyMysteryIntent(fresh(), "host", { type: "meeting" });
-    for (let i = 0; i < 20; i++) s = tickMystery(s);
+    for (let i = 0; i < 60; i++) s = tickMystery(s);
+    expect(s.phase).toBe("discussion");
+    for (const p of s.players) s = applyMysteryIntent(s, p.id, { type: "ready" });
     expect(s.phase).toBe("voting");
-    for (let i = 0; i < 25; i++) s = tickMystery(s);
+    for (let i = 0; i < 60; i++) s = tickMystery(s);
+    expect(s.phase).toBe("voting");
+    expect(s.votes).toEqual({});
+    s = voteAll(s, "skip");
     expect(s.phase).toBe("explore");
     expect(validMysterySession(s)).toBe(true);
   });

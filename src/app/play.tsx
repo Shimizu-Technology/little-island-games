@@ -1,3 +1,7 @@
+import { BadgeResultCard } from '../badges/ResultCard';
+import { useActiveIslanderLook } from "../islander/active";
+import { Companion, IslanderPortrait } from "../islander/Companion";
+import { classicEvent } from "../islander/reactions";
 import { PlayerNames } from "../components/Match";
 import { newMatch, Seat } from "../games/match";
 import { Mark, replayTic } from "../games/tic";
@@ -32,6 +36,7 @@ import {
 import { useStore } from "../state/Store";
 import { Button, C, Chip, Copy, Heading, GameHeader, Sheet, styles, ToggleRow } from "../components/ui";
 import { useSounds } from "../components/Audio";
+import { useRoundPractice } from "../practice/useRoundPractice";
 import { Recovery } from "../components/Recovery";
 import {
   CheckersBoard,
@@ -48,6 +53,7 @@ export default function Play() {
   return <Game key={id} id={id} />;
 }
 function Game({ id }: { id: GameId }) {
+  const look = useActiveIslanderLook();
   const insets = useSafeAreaInsets(),
     focused = useIsFocused();
   const { width, height } = useWindowDimensions(),
@@ -77,22 +83,24 @@ function Game({ id }: { id: GameId }) {
     [secret, setSecret] = useState(""),
     [error, setError] = useState(""),
     [active, setActive] = useState(AppState.currentState === "active");
-  const sound = useSounds(store.save.settings.sound && focused),
+  const practice = useRoundPractice(id, s);
+  const sound = useSounds(store.save.settings.sound && focused && !practice.pending),
     finished = s ? isFinished(s) : false,
-    wasFinished = useRef(finished);
+    previousRound = useRef({ id: s?.id, epoch: store.epoch, finished });
   const lostWord = s?.game === "word-rescue" && wordStatus(s) === "lost";
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => setActive(state === "active"));
     return () => sub.remove();
   }, []);
   useEffect(() => {
-    if (finished && !wasFinished.current) sound(lostWord ? "tap" : "win");
-    wasFinished.current = finished;
-  }, [finished, sound, lostWord]);
+    if (s?.id === previousRound.current.id && store.epoch === previousRound.current.epoch && finished && !previousRound.current.finished) sound(lostWord ? "tap" : "win");
+    previousRound.current = { id: s?.id, epoch: store.epoch, finished };
+  }, [s?.id, store.epoch, finished, sound, lostWord]);
   const update = store.update;
   const commit = useCallback((next: GameState) => update(id, next, s), [id, s, update]);
   function start() {
     let next: GameState;
+    let remembered: string[] | null = null;
     if (id === "word-rescue") {
       if (options.mode === "together") {
         const custom = customWord(options, secret, clue);
@@ -104,10 +112,11 @@ function Game({ id }: { id: GameId }) {
       } else next = createWord(options, category, s?.game === "word-rescue" ? s.seen : []);
     } else if (id === "memory") next = createMemory(options, starter, memoryPack);
     else next = createGame(id, options);
+    if (next.game === "numbers" && s?.game === "numbers" && s.options.difficulty === options.difficulty && s.bestRemaining !== undefined) next = { ...next, bestRemaining: s.bestRemaining };
     if (next.game === "tic-tac-toe" || next.game === "memory" || next.game === "checkers") {
       const family = options.mode === "together";
       const match = newMatch(family ? names : ["You", "Island friend"], alternate);
-      if (family) store.rememberPlayers(match.names);
+      if (family) remembered = match.names;
       next = { ...next, match, starter: family ? starter : 0 };
       if (next.game === "tic-tac-toe") {
         const assignedX = family ? xSeat : human === "X" ? 0 : 1;
@@ -122,12 +131,15 @@ function Game({ id }: { id: GameId }) {
       }
       if (next.game === "memory") next = { ...next, player: next.starter ?? 0 };
     }
-    store.update(id, next);
-    setSetup(false);
-    setSecret("");
-    setClue("");
-    setShowSecret(false);
-    setError("");
+    practice.request(() => {
+      if (remembered) store.rememberPlayers(remembered);
+      store.update(id, next, s);
+      setSetup(false);
+      setSecret("");
+      setClue("");
+      setShowSecret(false);
+      setError("");
+    });
   }
   function newRound() {
     if (s?.game === "memory") setMemoryPack(s.pack ?? "pictures");
@@ -149,7 +161,7 @@ function Game({ id }: { id: GameId }) {
       newRound();
       return;
     }
-    const next =
+    let next =
       s.game === "word-rescue"
         ? replayWord(s)!
         : s.game === "tic-tac-toe"
@@ -159,7 +171,8 @@ function Game({ id }: { id: GameId }) {
             : s.game === "checkers"
               ? replayCheckers(s)
               : createGame(id, s.options);
-    store.update(id, next, s);
+    if (next.game === "numbers" && s.game === "numbers" && s.bestRemaining !== undefined) next = { ...next, bestRemaining: s.bestRemaining };
+    practice.request(() => store.update(id, next, s));
   }
   const boardProps = {
     // 32 page padding + 24 for the tinted board panel's inner padding.
@@ -169,7 +182,7 @@ function Game({ id }: { id: GameId }) {
     ),
     sound,
     help: store.save.settings.help,
-    active: active && focused && !setup && !help,
+    active: active && focused && !setup && !help && !practice.pending,
   };
   if (!store.ready)
     return (
@@ -219,6 +232,7 @@ function Game({ id }: { id: GameId }) {
           </Copy>
         )}
         <SaveStatus />
+        {s && s.options.mode === "solo" && (s.game === "memory" || s.game === "checkers") && <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}><IslanderPortrait look={look}/><Copy>You</Copy></View>}
         <View style={{ backgroundColor: g.surface, borderRadius: 22, paddingVertical: 12, paddingHorizontal: 12 }}>
           {s?.game === "tic-tac-toe" ? (
             <TicBoard key={s.id} {...boardProps} state={s} commit={commit} />
@@ -273,12 +287,15 @@ function Game({ id }: { id: GameId }) {
               borderTopColor: C.line,
             }}
           >
+            {finished && <BadgeResultCard round={s.id}/>}
+            {finished && <Companion event={classicEvent(s)} active={focused && active && !setup && !help}/> }
             {finished && (
               <Button onPress={replay}>
                 {s.game === "word-rescue" && s.custom ? "Choose a new family word" : "Play again"}
               </Button>
             )}
-            <Button quiet={finished} onPress={newRound}>
+            {/* Kept small and quiet so it's never the obvious tap mid-game; Play again is the main action. */}
+            <Button compact quiet onPress={newRound}>
               New round & options
             </Button>
             <Copy style={{ fontSize: 12, marginTop: 12, textAlign: "center" }}>
@@ -289,10 +306,11 @@ function Game({ id }: { id: GameId }) {
       </ScrollView>
       <Sheet
         visible={setup || !s}
-        onClose={() => (s ? setSetup(false) : router.canGoBack() ? router.back() : router.replace("/"))}
-        title={s ? "A fresh little round" : `Let’s play ${g.name}`}
-        footer={<Button onPress={start}>{s ? "Start a new round" : "Start playing"}</Button>}
+        onClose={() => practice.pending ? practice.cancel() : (s ? setSetup(false) : router.canGoBack() ? router.back() : router.replace("/"))}
+        title={practice.pending ? "A little practice, then play" : s ? "A fresh little round" : `Let’s play ${g.name}`}
+        footer={practice.pending ? undefined : <Button onPress={start}>{s ? "Start a new round" : "Start playing"}</Button>}
       >
+        {practice.pending ? practice.content : <>
         <Copy>
           {s && !finished
             ? "Starting a new round replaces this game’s current round. Your other games stay saved."
@@ -524,7 +542,7 @@ function Game({ id }: { id: GameId }) {
         {id === "numbers" && (
           <Copy>
             {options.difficulty === "easy"
-              ? "Gentle: one die and numbers 1–6."
+              ? "Gentle: one die and numbers 1–6. Roll again whenever no combination fits."
               : options.difficulty === "medium"
                 ? "Growing: two dice and numbers 1–9."
                 : "Challenge: two dice and numbers 1–12. Plan which totals to save."}{" "}
@@ -532,6 +550,7 @@ function Game({ id }: { id: GameId }) {
           </Copy>
         )}
         {!!error && <Copy style={{ color: "#9C432D" }}>{error}</Copy>}
+        </>}
       </Sheet>
       <Sheet visible={help} onClose={() => setHelp(false)} title={`How to play ${g.name}`}>
         <Copy>{g.help}</Copy>
@@ -567,6 +586,7 @@ function Game({ id }: { id: GameId }) {
           </Copy>
         )}
       </Sheet>
+      {!setup && !!s && practice.panel}
     </SafeAreaView>
   );
 }

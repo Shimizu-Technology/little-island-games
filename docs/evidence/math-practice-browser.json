@@ -1,0 +1,91 @@
+{
+  "source": "aba07b25395ba6bac29990014b5fe48934e9d4b6",
+  "mathMatrixSource": "6673f0ab8adcac81bf5ea855b5c50e5a5d159fb6",
+  "mathConfigurations": 18,
+  "mathQuestions": 78,
+  "classicWarmups": [
+    "adult bypass and saved active play",
+    {
+      "game": "tic-tac-toe",
+      "subject": "math",
+      "continue": true,
+      "cancel": true,
+      "completion": true
+    },
+    {
+      "game": "memory",
+      "subject": "reading",
+      "continue": true,
+      "cancel": true,
+      "completion": true
+    },
+    {
+      "game": "checkers",
+      "subject": "mixed",
+      "continue": true,
+      "cancel": true,
+      "completion": true
+    },
+    {
+      "game": "word-rescue",
+      "subject": "math",
+      "continue": true,
+      "cancel": true,
+      "completion": true
+    },
+    {
+      "game": "maze",
+      "subject": "reading",
+      "continue": true,
+      "cancel": true,
+      "completion": true
+    },
+    {
+      "game": "numbers",
+      "subject": "mixed",
+      "continue": true,
+      "cancel": true,
+      "completion": true
+    },
+    "navigation abandons deferred action"
+  ],
+  "activityLaunches": [
+    "Go Fish saved Continue, quick options/name preservation, cancel and complete",
+    "Crazy Eights fresh deal after reading practice",
+    "Secret Word new roles, cancel form preservation and mixed practice",
+    {
+      "case": "finishing race replay, cancellation and complete",
+      "capturedTick": 1291
+    },
+    "Race picker cancel and complete",
+    "Mystery solo role setup, cancel and guided start"
+  ],
+  "settingsConfigurations": 13,
+  "settingsDisabledPersisted": true,
+  "viewports": [
+    [
+      375,
+      667
+    ],
+    [
+      768,
+      1024
+    ],
+    [
+      1024,
+      768
+    ]
+  ],
+  "offlineMixedPracticePassed": true,
+  "offlineReloadPassed": true,
+  "cachedNewSpeechClips": 832,
+  "nextActionPhoneRect": {
+    "x": 22,
+    "y": 547,
+    "width": 331,
+    "height": 48
+  },
+  "browserErrors": [],
+  "native": "blocked before math interaction by simulator host/runner",
+  "listening": "operator not run"
+}

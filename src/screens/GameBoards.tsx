@@ -36,6 +36,9 @@ import {
 import { MazeState, directions, mazeDone, mazeMove, mazeRoute } from "../games/maze";
 import {
   NumbersState,
+  numberAdvice,
+  remainingTotal,
+  needsPracticeRoll,
   closeNumbers,
   numberChoices,
   numberLimit,
@@ -339,7 +342,7 @@ export function TicBoard({ state: s, commit, width, sound, active }: Props<TicSt
         success={!!outcome}
       />
       <BoardArea>
-        <Scoreboard
+        <Scoreboard solo={s.options.mode === "solo"}
           match={s.match ?? newMatch(s.options.mode === "solo" ? ["You", "Island friend"] : undefined)}
           result={ticResult(s)}
           active={outcome ? null : turn === "X" ? ticXSeat(s) : ticXSeat(s) === 0 ? 1 : 0}
@@ -631,11 +634,14 @@ export function WordBoard({
 export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryState>) {
   const { fontScale } = useWindowDimensions();
   const [peek, setPeek] = useState(false);
+  const [grownUpOptions, setGrownUpOptions] = useState(false);
+  const [showEnglish, setShowEnglish] = useState(true);
   useEffect(() => {
-    if (!peek) return;
+    // Picture-only rounds retain their existing brief peek. Reading has no deadline.
+    if (!peek || s.pack === "chamoru") return;
     const timer = setTimeout(() => setPeek(false), 1800);
     return () => clearTimeout(timer);
-  }, [peek]);
+  }, [peek, s.pack]);
   const done = memoryDone(s),
     columns = s.pack === "chamoru" ? (fontScale > 1.3 ? 2 : width >= 600 ? 6 : 4) : width >= 460 ? 6 : 4,
     gap = 9,
@@ -644,7 +650,13 @@ export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryStat
   const mismatch = s.open.length === 2;
   return (
     <BoardLayout>
-      {s.pack === "chamoru" && <><Copy style={{ textAlign: "center", fontSize: 13 }}>Match a picture with its CHamoru word. English is shown small.</Copy><Button quiet compact onPress={() => sound("hafa-adai-memory")}>Hear the card directions</Button></>}
+      {s.pack === "chamoru" && <><Copy style={{ textAlign: "center", fontSize: 13 }}>Match a picture with its CHamoru word. Read at your own pace. English hints start on.</Copy><Button quiet compact onPress={() => sound("hafa-adai-memory")}>Hear the card directions</Button></>}
+      {s.pack === "chamoru" && <>
+        <Button quiet compact onPress={() => setGrownUpOptions(!grownUpOptions)}>Grown-up reading options</Button>
+        {grownUpOptions && <Button quiet compact label={showEnglish ? "Hide English translations" : "Show English translations"}
+          onPress={() => setShowEnglish(!showEnglish)}>{showEnglish ? "Hide English translations" : "Show English translations"}</Button>}
+        {grownUpOptions && <Copy style={{ textAlign: "center", fontSize: 13 }}>For this visit: hide English when the words feel familiar. You can show it again any time.</Copy>}
+      </>}
       <Status
         title={
           done
@@ -667,6 +679,7 @@ export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryStat
         success={done}
       />
       <BoardArea>
+        {peek && s.pack === "chamoru" && <><Copy style={{ textAlign: "center" }}>Reading peek · scroll and look as long as you like.</Copy><Button onPress={() => setPeek(false)}>Hide cards and play</Button></>}
         {s.options.mode === "together" && (
           <Scoreboard
             match={s.match ?? newMatch()}
@@ -687,7 +700,7 @@ export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryStat
             const matched = s.matched.includes(i),
               open = matched || s.open.includes(i) || peek;
             const ch = s.pack === "chamoru" ? chamoruCard(symbol) : null;
-            const faceLabel = ch ? (ch.face === "picture" ? `picture of ${ch.word.english}` : `${ch.word.term}, ${ch.word.english}`) : symbol;
+            const faceLabel = ch ? (ch.face === "picture" ? `picture of ${ch.word.english}` : `${ch.word.term}${showEnglish ? `, ${ch.word.english}` : ""}`) : symbol;
             return (
               <Cell
                 key={i}
@@ -709,7 +722,7 @@ export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryStat
               >
                 <MemoryFace open={open}>
                   {open ? (
-                    ch ? ch.face === "picture" ? <WordPicture word={ch.word} size={cardSize * 0.8} /> : <View style={{ padding: 4, gap: 3 }}><Text style={{ fontSize: 14, lineHeight: 17, fontWeight: "700", color: C.ink, textAlign: "center" }}>{ch.word.term}</Text><Text style={{ fontSize: 10, lineHeight: 12, color: C.muted, textAlign: "center" }}>{ch.word.english.split(" / ")[0]}</Text></View> : <Symbol name={symbol} size={cardSize * 0.68} />
+                    ch ? ch.face === "picture" ? <WordPicture word={ch.word} size={cardSize * 0.8} /> : <View style={{ padding: 4, gap: 3 }}><Text style={{ fontSize: 14, lineHeight: 17, fontWeight: "700", color: C.ink, textAlign: "center" }}>{ch.word.term}</Text>{showEnglish && <Text style={{ fontSize: 10, lineHeight: 12, color: C.muted, textAlign: "center" }}>{ch.word.english.split(" / ")[0]}</Text>}</View> : <Symbol name={symbol} size={cardSize * 0.68} />
                   ) : (
                     <Text style={{ color: "#FFF8DE", fontSize: 29, fontWeight: "700" }}>?</Text>
                   )}
@@ -720,14 +733,14 @@ export function MemoryBoard({ state: s, commit, width, sound }: Props<MemoryStat
         </View>
       </BoardArea>
       <Controls>
-        {mismatch ? (
+        {peek ? <Button onPress={() => setPeek(false)}>Hide cards and play</Button> : mismatch ? (
           <Button onPress={() => commit(closeMismatch(s))}>Turn them over</Button>
         ) : s.options.mode === "solo" ? (
           <Button quiet disabled={done || peek || s.open.length > 0} onPress={() => setPeek(true)}>
             Take a little peek
           </Button>
         ) : null}
-        <Button quiet disabled={!s.history?.length} onPress={() => commit(memoryUndo(s))}>
+        <Button quiet disabled={peek || !s.history?.length} onPress={() => commit(memoryUndo(s))}>
           Undo my turn
         </Button>
       </Controls>
@@ -1033,13 +1046,17 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
 }
 export function MazeBoard({ state: s, commit, width, sound }: Props<MazeState>) {
   const [hint, setHint] = useState<number | null>(null);
+  const [blocked, setBlocked] = useState(false);
   const done = mazeDone(s),
     current = s.path[s.path.length - 1],
     cellSize = Math.floor(Math.min(width, 470) / s.size),
     size = cellSize * s.size;
-  function move(i: number) {
+  function move(i: number, directional = false) {
     const next = mazeMove(s, i);
+    const adjacent = Math.abs(Math.floor(i / s.size) - Math.floor(current / s.size)) + Math.abs(i % s.size - current % s.size) === 1;
+    setBlocked(next === s && !done && (directional || adjacent));
     if (next !== s) {
+      setHint(null);
       commit(next);
       sound("tap");
     }
@@ -1049,7 +1066,7 @@ export function MazeBoard({ state: s, commit, width, sound }: Props<MazeState>) 
       <Status
         title={done ? "You found your island!" : "Where will your path go?"}
         detail={
-          done ? "A whole little adventure, one step at a time." : "Find your way from the boat to the flag."
+          done ? "A whole little adventure, one step at a time." : blocked ? "A wall is here. Try another opening; your path is safe." : "Find your way from the boat to the flag."
         }
         success={done}
       />
@@ -1098,7 +1115,7 @@ export function MazeBoard({ state: s, commit, width, sound }: Props<MazeState>) 
           size={48}
           disabled={done}
           label="Move up"
-          onPress={() => move(current - s.size)}
+          onPress={() => move(current - s.size, true)}
         />
         <View style={{ flexDirection: "row", gap: 9 }}>
           {[3, 2, 1].map((d) => (
@@ -1108,7 +1125,7 @@ export function MazeBoard({ state: s, commit, width, sound }: Props<MazeState>) 
               size={48}
               disabled={done}
               label={`Move ${directions[d].name.toLowerCase()}`}
-              onPress={() => move(current + directions[d].dr * s.size + directions[d].dc)}
+              onPress={() => move(current + directions[d].dr * s.size + directions[d].dc, true)}
             />
           ))}
         </View>
@@ -1168,6 +1185,7 @@ function Die({ value, size = 72 }: { value: number; size?: number }) {
   );
 }
 export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersState>) {
+  const [compare, setCompare] = useState(false);
   const { fontScale } = useWindowDimensions();
   const status = numbersStatus(s),
     target = numberTarget(s),
@@ -1181,7 +1199,9 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
             ? "Your island is clear!"
             : status === "stuck"
               ? "That’s this round!"
-              : s.dice.length
+              : needsPracticeRoll(s)
+                ? "Try a new roll"
+                : s.dice.length
                 ? `Can you make ${target}?`
                 : "Ready to roll?"
         }
@@ -1242,13 +1262,17 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
           })}
         </View>
       </BoardArea>
-      {s.dice.length > 0 && status === "playing" && (
+      <Copy style={{ textAlign: "center" }}>Remaining total: {remainingTotal(s)} · Personal best: {Math.min(s.bestRemaining ?? remainingTotal(s), remainingTotal(s))} (lower is better)</Copy>
+      {compare && !!s.dice.length && <View accessibilityLiveRegion="polite" style={{ gap: 8 }}><Copy>{numberAdvice(s).text}</Copy>{numberAdvice(s).choices.map(choice => <Button quiet key={choice.join()} onPress={() => commit({ ...s, selected: choice })}>Choose {choice.join(" + ")}</Button>)}</View>}
+      {s.gentlePractice && <Copy>Keep small numbers for flexible combinations. If no combination fits, roll again and keep practicing.</Copy>}
+      {needsPracticeRoll(s) && <Copy>No open numbers make {target}. Try a new roll; your closed numbers stay closed.</Copy>}
+      {s.dice.length > 0 && status === "playing" && !needsPracticeRoll(s) && (
         <Copy style={{ textAlign: "center", marginTop: 18, color: C.ink }}>
           {s.selected.length ? `${s.selected.join(" + ")} = ${sum}` : "Tap numbers to build your total."}
         </Copy>
       )}
       <Controls>
-        {!s.dice.length && status === "playing" ? (
+        {(!s.dice.length || needsPracticeRoll(s)) && status === "playing" ? (
           <Button
             onPress={() => {
               commit(rollNumbers(s));
@@ -1270,7 +1294,7 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
         ) : null}
         <Button
           quiet
-          disabled={!s.dice.length || status !== "playing"}
+          disabled={!s.dice.length || status !== "playing" || needsPracticeRoll(s)}
           onPress={() => {
             const choice = numberChoices(s.available, target)[0];
             if (choice) commit({ ...s, selected: choice });
@@ -1278,6 +1302,7 @@ export function NumbersBoard({ state: s, commit, width, sound }: Props<NumbersSt
         >
           Show a combination
         </Button>
+        <Button quiet disabled={!s.dice.length || status !== "playing" || needsPracticeRoll(s)} onPress={() => setCompare(v => !v)}>{compare ? "Hide choices" : "Compare combinations"}</Button>
         <Button quiet disabled={!s.history.length} onPress={() => commit(undoNumbers(s))}>
           Undo my turn
         </Button>

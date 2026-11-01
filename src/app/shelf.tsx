@@ -11,7 +11,7 @@ import { islandNames, shelfGames } from "../learn/home";
 const classicFilters = ["All games", "Play alone", "Play together", "Favorites", "Words & numbers", "Think & explore"];
 export default function Shelf() {
   const { island } = useLocalSearchParams<{ island?: string }>();
-  if (!island || !["reading", "numbers", "science", "thinking", "classic"].includes(island)) return <Redirect href="/" />;
+  if (!island || !["reading", "numbers", "science", "thinking", "coding", "classic"].includes(island)) return <Redirect href="/" />;
   return <IslandShelf key={island} island={island as Exclude<keyof typeof islandNames, "explore">} />;
 }
 function IslandShelf({ island }: { island: Exclude<keyof typeof islandNames, "explore"> }) {

@@ -12,12 +12,14 @@ import {
   Switch,
   View,
   ViewStyle,
+  TextStyle,
   Platform,
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, IconName } from "./Icon";
 import { easeOut, nativeDriver, useReducedMotion } from "./motion";
+import { useSheetPresence } from "./sheetPresence";
 export const C = {
   ink: "#183F39",
   muted: "#64716C",
@@ -117,6 +119,8 @@ export function Button({
   label,
   icon,
   style,
+  textStyle,
+  numberOfLines,
 }: {
   children: React.ReactNode;
   onPress: () => void;
@@ -127,6 +131,8 @@ export function Button({
   label?: string;
   icon?: IconName;
   style?: ViewStyle;
+  textStyle?: TextStyle;
+  numberOfLines?: number;
 }) {
   const [pressed, setPressed] = useState(false);
   const textColor = selected ? C.paper : quiet ? C.ink : "#FFF";
@@ -151,7 +157,7 @@ export function Button({
       ]}
     >
       {icon && <Icon name={icon} size={compact ? 18 : 20} color={textColor} />}
-      <Text style={[styles.buttonText, { color: textColor }]}>{children}</Text>
+      <Text numberOfLines={numberOfLines} style={[styles.buttonText, { color: textColor }, textStyle]}>{children}</Text>
     </PressableScale>
   );
 }
@@ -299,18 +305,24 @@ export function Sheet({
   title,
   children,
   footer,
+  scrollKey,
+  presence = true,
 }: {
   visible: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  scrollKey?: string | number;
+  /** Auto-presented sheets that wait for others (the islander creator) opt out. */
+  presence?: boolean;
 }) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
   const wide = width >= 600;
   const [shown, setShown] = useState(visible);
+  useSheetPresence(shown, presence);
   const [progress] = useState(() => new Animated.Value(visible ? 1 : 0));
   const [drag] = useState(() => new Animated.Value(0));
   useEffect(() => {
@@ -390,7 +402,7 @@ export function Sheet({
               </Button>
             </View>
           </View>
-          <ScrollView
+          <ScrollView key={scrollKey}
             style={{ flexShrink: 1 }}
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingTop: 16, paddingBottom: footer ? 8 : 16 + (wide ? 0 : insets.bottom), paddingHorizontal: 22, gap: 16 }}

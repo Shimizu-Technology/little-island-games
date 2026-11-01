@@ -1,3 +1,6 @@
+import { BadgeResultCard } from '../badges/ResultCard';
+import { Companion } from "../islander/Companion";
+import type { RoundPractice } from "../practice/useRoundPractice";
 import { Text } from "../components/Text";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Platform, StyleSheet, TextInput, View } from "react-native";
@@ -17,6 +20,8 @@ import {
 } from "./engine";
 import { PartyPicture } from "./PartyPicture";
 export type PartyScreenProps = {
+  roundPractice?: RoundPractice;
+  beforeNewRound?: (run: () => void) => void;
   session: PartySession | null;
   onChange: (next: PartySession, previous: PartySession | null) => void;
   active?: boolean;
@@ -44,7 +49,7 @@ function CardBack() {
   );
 }
 /** Secret visibility and unconfirmed vote selection are never serialized. */
-export function PartyScreen({ session, onChange, active = true, width = 340, sound, onSpeakInstructions, onBack, onToggleSound }: PartyScreenProps) {
+export function PartyScreen({ session, onChange, active = true, width = 340, sound, onSpeakInstructions, onBack, onToggleSound, beforeNewRound, roundPractice }: PartyScreenProps) {
   const latest = useRef(session),
     change = useRef(onChange);
   React.useLayoutEffect(() => {
@@ -87,6 +92,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
       queueMicrotask(conceal);
     }
   }, [active, conceal]);
+  const newRound = beforeNewRound ?? ((run: () => void) => run());
   const commit = (next: PartySession) => {
     const previous = latest.current;
     latest.current = next;
@@ -106,6 +112,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
   };
   const start = () => {
     if (!validPartyNames(players.map((p) => p.trim()))) return;
+    newRound(() => {
     commit(
       createPartySession({
         players,
@@ -116,6 +123,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
       })
     );
     setSetup(false);
+    });
   };
   const openSetup = () => {
     conceal();
@@ -135,9 +143,10 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
     <View style={s.root}>
       {onBack ? <GameHeader title="Secret Word" onBack={onBack} sound={onToggleSound ? { on: !!sound, toggle: onToggleSound } : undefined} onHelp={() => { conceal(); setHelp(true); }} /> : <View style={s.row}><Heading style={{ flex: 1, fontSize: 24 }}>Secret Word</Heading><IconButton icon="help" label="How to play Secret Word" onPress={() => { conceal(); setHelp(true); }} /></View>}
       {setup || !session ? (
-        <Sheet visible={setup || !session} title="Secret Word · players & pack" onClose={() => { if (session) setSetup(false); else onBack?.(); }} footer={
+        <Sheet visible={setup || !session} title={roundPractice?.pending ? "A little practice, then play" : "Secret Word · players & pack"} onClose={() => { if (roundPractice?.pending) roundPractice.cancel(); else if (session) setSetup(false); else onBack?.(); }} footer={roundPractice?.pending ? undefined :
           <Button disabled={!namesValid || !active} onPress={start}>Deal the secret roles</Button>
         }>
+          {roundPractice?.pending ? roundPractice.content : <>
           <Copy>
             Gather 3–8 people and pass one device. Everyone sees the same secret word except one Imposter. Can your
             clues help you spot them?
@@ -223,9 +232,11 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
               Return to current game
             </Button>
           )}
+          </>}
         </Sheet>
       ) : session.phase === "result" ? (
-        <View style={s.result}>
+        <View style={s.result}><BadgeResultCard round={session.id}/>
+          <Companion event="draw"/>
           <Label>Everyone can look now</Label>
           <Heading>{session.result!.winner === "family" ? "You found the Imposter!" : "The Imposter escaped!"}</Heading>
           <Copy>
@@ -239,7 +250,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
           <PartyPicture word={session.wordId} size={Math.min(210, width * 0.65)} />
           <Heading style={{ fontSize: 28 }}>The word was {partyWord(session.pack, session.wordId).word}.</Heading>
           <Copy style={s.small}>Votes stay private, even after the game.</Copy>
-          <Button onPress={() => commit(rematchParty(session))}>Play again · new word & roles</Button>
+          <Button onPress={() => newRound(() => commit(rematchParty(session)))}>Play again · new word & roles</Button>
           <Button quiet onPress={openSetup}>
             Change players or pack
           </Button>
@@ -359,6 +370,7 @@ export function PartyScreen({ session, onChange, active = true, width = 340, sou
           Start a different game
         </Button>
       )}
+      {!setup && !!session && roundPractice?.panel}
       <Sheet title="How to play Secret-word Imposter" visible={help} onClose={() => setHelp(false)}>
         <Button quiet disabled={!sound || !onSpeakInstructions} onPress={() => onSpeakInstructions?.()}>Listen to the instructions</Button>
         <Copy>

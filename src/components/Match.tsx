@@ -1,3 +1,7 @@
+import { learnerPortraitOwner } from "../islander/reactions";
+import { IslanderPortrait } from "../islander/Companion";
+import { useStore } from "../state/Store";
+import { personFor } from "../personalization/model";
 import React, { useState } from "react";
 import { TextInput, View } from "react-native";
 import { Text } from "./Text";
@@ -13,12 +17,15 @@ export function Scoreboard({
   result = null,
   active = null,
   marks,
+  solo = false,
 }: {
   match: Match;
+  solo?: boolean;
   result?: RoundResult;
   active?: Seat | null;
   marks?: [React.ReactNode, React.ReactNode];
 }) {
+  const { save } = useStore();
   const shown = settle(match, result);
   const winner = typeof result === "number" ? result : null;
   const summary =
@@ -52,7 +59,11 @@ export function Scoreboard({
               backgroundColor: won ? C.success : on ? C.paper : C.sand,
             }}
           >
-            {marks?.[seat]}
+            {(() => {
+              const name = shown.names[seat];
+              const owner = learnerPortraitOwner(name, save.learning?.people ?? [], save.learning?.active ?? "family", solo && seat === 1);
+              return owner ? <IslanderPortrait look={personFor(save, owner).look}/> : marks?.[seat];
+            })()}
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text numberOfLines={1} style={{ fontFamily: font, fontSize: 15, fontWeight: "700", color: C.ink }}>
                 {shown.names[seat]}

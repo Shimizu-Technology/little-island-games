@@ -64,7 +64,7 @@ describe("learning game contract (every engine)", () => {
         for (const pace of paces)
           for (const language of engine.languages ?? [undefined]) {
             const options: LearnOptions = { mode, pace, ...(language ? { language } : {}) };
-            const s = startSession(id, { options, names: ["Stassie", "Dad"], starter: 1 }, {}, 1234 + paces.indexOf(pace));
+            const s = startSession(id, { options, names: ["Mia", "Dad"], starter: 1 }, {}, 1234 + paces.indexOf(pace));
             expect(validLearnSession(s, id)).toBe(true);
             const roundTrip = JSON.parse(JSON.stringify(s));
             expect(validLearnSession(roundTrip, id)).toBe(true);
@@ -72,7 +72,7 @@ describe("learning game contract (every engine)", () => {
             const again = replaySession(s, {}, 99);
             expect(validLearnSession(again, id)).toBe(true);
             expect(again.id).not.toBe(s.id);
-            if (mode === "versus") expect(again.match?.names).toEqual(["Stassie", "Dad"]);
+            if (mode === "versus") expect(again.match?.names).toEqual(["Mia", "Dad"]);
           }
       expect(engine.validate(null, { mode: engine.modes[0], pace: "easy" })).toBe(false);
       expect(engine.validate({}, { mode: engine.modes[0], pace: "easy" })).toBe(false);
@@ -146,5 +146,14 @@ describe("reading pictures make sense", () => {
       ...STORIES.flatMap((t) => [...t.pages.map((p) => p.scene), ...t.questions.flatMap((q) => q.scenes)]),
     ];
     for (const sc of scenes) if (sc.relation === "in") expect(insideStyle[sc.object], `${sc.subject} in ${sc.object}`).toBeTruthy();
+  });
+});
+
+describe("first-move coaching memory", () => {
+  it("saves which games showed the hand and rejects bad lists", () => {
+    const save = { ...emptySave(), coached: ["sound-boat", "reef-race"] };
+    expect(parseSave(JSON.stringify(save)).coached).toEqual(["sound-boat", "reef-race"]);
+    expect(() => parseSave(JSON.stringify({ ...emptySave(), coached: ["nope"] }))).toThrow();
+    expect(() => parseSave(JSON.stringify({ ...emptySave(), coached: ["reef-race", "reef-race"] }))).toThrow();
   });
 });

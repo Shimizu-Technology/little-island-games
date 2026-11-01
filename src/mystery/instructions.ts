@@ -1,3 +1,4 @@
+import playV25Speech from "../../scripts/learn/play-v25.json";
 /** Parent can bundle these as local audio. Text remains the complete offline instruction source. */
 export const mysteryInstructions = {
   "mystery-welcome":
@@ -14,8 +15,7 @@ export const mysteryInstructions = {
     "Put water, fruit and bread into the basket. Touch each picture. The packed food stays in the basket. Any order works.",
   "mystery-dock":
     "Connect the boat to shore. Choose a rope on the boat, then its matching shore cleat. Match the shape as well as the color. Connect all three ropes.",
-  "mystery-pump":
-    "The water is off. Go to the blue pump. Open the supply, close the valve, then connect the pipe. The picture shows your progress. During a nearby disconnection the countdown waits.",
+  "mystery-pump-v25": playV25Speech["mystery-pump-v25"],
   "mystery-meeting":
     "Talk about what you saw. Your notebook holds private observations. When you are ready, vote for one player or skip. A crew member who gets a wrong vote can still help with jobs. Only the parent can start a nearby rematch.",
 } as const;

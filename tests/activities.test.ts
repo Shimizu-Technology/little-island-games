@@ -5,7 +5,7 @@ import { createCardSession } from "../src/cards/engine";
 import { createMysterySession } from "../src/mystery/engine";
 import { createRaceSession } from "../src/racer/engine";
 import { createPartySession } from "../src/party/engine";
-import { TOPICS, topicNarration } from "../src/explore/content";
+import { TOPICS, topicNarration, topicSpeechKey } from "../src/explore/content";
 import { readFileSync, existsSync } from "node:fs";
 describe("shared activity persistence", () => {
   it("preserves old saves and round-trips every new envelope", () => {
@@ -13,7 +13,7 @@ describe("shared activity persistence", () => {
     expect(parseSave(JSON.stringify(legacy))).toEqual(legacy);
     const card = createCardSession("go-fish", { difficulty: "easy", mode: "solo", computerFirst: false });
     const race = createRaceSession();
-    const party = createPartySession({ players: ["Stassie", "Mom", "Dad"] });
+    const party = createPartySession({ players: ["Mia", "Mom", "Dad"] });
     const save = {
       ...legacy,
       activities: { "go-fish": card, racer: race, "word-imposter": party, "island-mystery": createMysterySession() },
@@ -39,10 +39,10 @@ describe("shared activity persistence", () => {
     expect(applyActivitySave(saved, "racer", card, { id: null, epoch: 2 }, 2)).toBe(saved);
   });
   it("has an exact offline audio transcript and bundled file for each topic", () => {
-    const manifest = JSON.parse(readFileSync("scripts/explore-audio.json", "utf8"));
+    const manifest = { ...JSON.parse(readFileSync("scripts/explore-audio.json", "utf8")), ...JSON.parse(readFileSync("scripts/learn/science-v25.json", "utf8")) };
     for (const topic of TOPICS) {
-      expect(manifest[`explore-${topic.id}`]).toBe(topicNarration(topic));
-      expect(existsSync(`assets/audio/explore-${topic.id}.m4a`)).toBe(true);
+      expect(manifest[topicSpeechKey(topic.id)]).toBe(topicNarration(topic));
+      expect(existsSync(`assets/audio/${topicSpeechKey(topic.id)}.m4a`)).toBe(true);
     }
   });
 });
