@@ -107,7 +107,7 @@ export const Islander = memo(function Islander({ view = 'front', pose = view ===
   if (base) {
     const life = rigIdle(clock, seed, reduced);
     const options = { action, tilt, limbLag, reduced, breath: breath ?? life.breath };
-    const resolved = characterPose(base, action, reduced ? 0 : limbLag, tilt);
+    const resolved = characterPose(base, action, reduced ? 0 : limbLag, tilt * (facing === 'left' ? -1 : 1));
     const box = islanderAnchors(base, facing, options).bounds, origin = islanderOrigin(base);
     const scale = size / 132;
     return <Svg style={{overflow:'visible'}} width={box.width * scale} height={box.height * scale} viewBox={`${box.left} ${box.top} ${box.width} ${box.height}`} accessible={false}>

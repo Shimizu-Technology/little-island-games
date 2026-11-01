@@ -51,7 +51,8 @@ clock. Breathing is a 3.6s cycle with maximum 0.4% scale displacement.
 `blink` and `breath` can also be supplied explicitly. Reduced Motion ignores
 idle, tilt and limb lag while retaining semantic expressions (sleepy eyes).
 
-`tilt` clamps to ±6 degrees around the pose origin. `limbLag` clamps to 0–1;
+`tilt` clamps to ±6 degrees around the pose origin, in room coordinates.
+A positive tilt has the same visible direction with either facing. `limbLag` clamps to 0–1;
 carry arms and legs rotate up to 10 degrees opposite the motion. The hand,
 held prop and wrist details use the resulting joints. No independent prop
 lag is introduced. The crab has loose claw/leg transforms; Pip's tail trails.

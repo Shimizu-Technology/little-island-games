@@ -55,10 +55,10 @@ describe('anchor geometry', () => {
       // boots (foot ±7, bottom +5), skirt hem (+16), headset (±30).
       const points: Point[] = [[1,-2], [79,-2], [1,87], [79,87], [7,4], [73,28], [23,116], [57,116]];
       for (const p of points) assertInside(islanderPoint(p, base, facing, options));
-      for (const p of Object.values(characterPose(base, action, 1, tilt).joints)) assertInside(islanderPoint(p, base, facing, options));
-      const pose = characterPose(base, action, 1, tilt);
+      for (const p of Object.values(characterPose(base, action, 1, tilt * (facing === 'left' ? -1 : 1)).joints)) assertInside(islanderPoint(p, base, facing, options));
+      const pose = characterPose(base, action, 1, tilt * (facing === 'left' ? -1 : 1));
       expect(a.hand).toEqual(islanderPoint(pose.joints.rightHand, base, facing, options));
-      for (const key of ['hand','mouth','head'] as const) expect(a[key].x).toBeCloseTo(-islanderAnchors(base, facing === 'left' ? 'right' : 'left', options)[key].x);
+      for (const key of ['hand','mouth','head'] as const) expect(a[key].x).toBeCloseTo(-islanderAnchors(base, facing === 'left' ? 'right' : 'left', {...options, tilt: -tilt})[key].x);
     }
   });
   it('uses the specified feet, seat, pillow, waterline and grip origins', () => {
@@ -78,13 +78,17 @@ describe('anchor geometry', () => {
 describe('caller-controlled life', () => {
   it('blinks for 100–160ms at varied 3–6 second intervals', () => {
     const runs: {at:number;duration:number}[] = [];
+    let wasBlink = false, minBreath = Infinity, maxBreath = -Infinity;
     for(let time=0; time<54000; time++) {
-      const blink = rigIdle(time).blink;
-      if (blink && !rigIdle(time-1).blink) runs.push({at:time,duration:0});
+      const {blink,breath} = rigIdle(time);
+      if (blink && !wasBlink) runs.push({at:time,duration:0});
       if (blink) runs[runs.length-1].duration++;
-      expect(rigIdle(time).breath).toBeGreaterThanOrEqual(0);
-      expect(rigIdle(time).breath*.004).toBeLessThanOrEqual(.005);
+      minBreath = Math.min(minBreath,breath);
+      maxBreath = Math.max(maxBreath,breath);
+      wasBlink = blink;
     }
+    expect(minBreath).toBeGreaterThanOrEqual(0);
+    expect(maxBreath*.004).toBeLessThanOrEqual(.005);
     for (const [i,run] of runs.entries()) {
       expect(run.duration).toBeGreaterThanOrEqual(100); expect(run.duration).toBeLessThanOrEqual(160);
       if(i) {expect(run.at-runs[i-1].at).toBeGreaterThanOrEqual(3000);expect(run.at-runs[i-1].at).toBeLessThanOrEqual(6000);}
@@ -121,4 +125,13 @@ it('counter-reflects held content once while keeping it attached to the mirrored
     expect(svg.match(/scale\(-1 1\)/g)).toHaveLength(2);
     expect(svg.match(/data-label="juice"/g)).toHaveLength(1);
   }
+});
+
+
+it('leans in the same room direction for either facing under velocity-driven tilt', () => {
+  const right = islanderAnchors('carry', 'right', {tilt:6,limbLag:1});
+  const left = islanderAnchors('carry', 'left', {tilt:6,limbLag:1});
+  expect(right.head.x).toBeGreaterThan(0);
+  expect(left.head.x).toBeCloseTo(right.head.x);
+  expect(left.head.y).toBeCloseTo(right.head.y);
 });

@@ -18,11 +18,11 @@ export function islanderPoint(point: Point, base: CharacterBase, facing: Facing 
 }
 export function rigPoint(point: Point, facing: Facing, options: AnchorOptions = {}): RigPoint {
   const breath = options.reduced ? 0 : clampRig(options.breath, 0, 1) * .004;
-  const p = rotatePoint([point[0], point[1] * (1 + breath)], [0, 0], options.reduced ? 0 : clampRig(options.tilt, -6, 6));
-  return xy([p[0] * (facing === 'left' ? -1 : 1), p[1]]);
+  const p = rotatePoint([point[0] * (facing === 'left' ? -1 : 1), point[1] * (1 + breath)], [0, 0], options.reduced ? 0 : clampRig(options.tilt, -6, 6));
+  return xy(p);
 }
 export function rigTransform(facing: Facing, options: AnchorOptions = {}) {
-  return `scale(${facing === 'left' ? -1 : 1} 1) rotate(${options.reduced ? 0 : clampRig(options.tilt, -6, 6)}) scale(1 ${1 + (options.reduced ? 0 : clampRig(options.breath, 0, 1) * .004)})`;
+  return `rotate(${options.reduced ? 0 : clampRig(options.tilt, -6, 6)}) scale(${facing === 'left' ? -1 : 1} 1) scale(1 ${1 + (options.reduced ? 0 : clampRig(options.breath, 0, 1) * .004)})`;
 }
 function bounds(points: RigPoint[]) {
   const left = Math.min(...points.map(p => p.x)), top = Math.min(...points.map(p => p.y));
@@ -33,7 +33,7 @@ function bounds(points: RigPoint[]) {
  * Carry adds 7 units for the authored ≤10° loose-limb sweep. Held objects
  * have separate bounds in CORE; arbitrary ReactNode props are not wardrobe. */
 export function islanderAnchors(base: CharacterBase, facing: Facing = 'right', options: AnchorOptions = {}): RigAnchors {
-  const pose = characterPose(base, options.action, options.reduced ? 0 : options.limbLag, options.tilt);
+  const pose = characterPose(base, options.action, options.reduced ? 0 : options.limbLag, (options.tilt ?? 0) * (facing === 'left' ? -1 : 1));
   const pad = base === 'carry' ? 7 : 0;
   const corners: Point[] = [[-2-pad, -4], [82+pad, -4], [-2-pad, 136+pad], [82+pad, 136+pad]];
   return {

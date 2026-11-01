@@ -31,7 +31,7 @@ export function RigCrab({ base = 'stand', action = null, face, facing = 'right',
   const box = crabAnchors(base, facing, options).bounds, origin = crabOrigin(base);
   const c = companionContacts('crab', base, action), expression = rigFace(face, mood, action);
   const carry = base === 'carry', tucked = base === 'sit' || base === 'bathe' || base === 'lie';
-  const lag = reduced ? 0 : -clampRig(limbLag, 0, 1) * clampRig(tilt, -6, 6) / 6 * 10;
+  const lag = reduced ? 0 : -clampRig(limbLag, 0, 1) * clampRig(tilt, -6, 6) / 6 * 10 * (facing === 'left' ? -1 : 1);
   return <Svg style={{overflow:'visible'}} width={box.width*size/120} height={box.height*size/120} viewBox={`${box.left} ${box.top} ${box.width} ${box.height}`} accessible={false}>
     <G data-rig="crab" data-base={base} data-action={action ?? 'none'} transform={rigTransform(facing, options)} stroke={ink} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
       <G transform={`translate(${-origin[0]} ${-origin[1]})`}>
@@ -57,7 +57,7 @@ export function Pip({ base = 'stand', action = null, face, facing = 'right', siz
   const box = pipAnchors(base, facing, options).bounds, origin = pipOrigin(base);
   const c = companionContacts('pip', base, action), expression = rigFace(face, mood, action);
   const carry = base === 'carry', rest = base === 'lie', tucked = base === 'sit' || base === 'bathe';
-  const lag = reduced ? 0 : -clampRig(limbLag, 0, 1) * clampRig(tilt, -6, 6) / 6 * 10;
+  const lag = reduced ? 0 : -clampRig(limbLag, 0, 1) * clampRig(tilt, -6, 6) / 6 * 10 * (facing === 'left' ? -1 : 1);
   return <Svg style={{overflow:'visible'}} width={box.width*size/160} height={box.height*size/160} viewBox={`${box.left} ${box.top} ${box.width} ${box.height}`} accessible={false}>
     <G data-rig="pip" data-base={base} data-action={action ?? 'none'} transform={rigTransform(facing, options)} stroke={ink} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <G transform={`translate(${-origin[0]} ${-origin[1]}) rotate(${rest ? -18 : 0} ${origin[0]} ${origin[1]})`}>
