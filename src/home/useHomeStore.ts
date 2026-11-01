@@ -67,6 +67,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
   const setMessage = (message: string) => { const next = { ...live.current, message }; live.current = next; setSession(next); };
   return {
     state: session.history.present,
+    getState: () => live.current.history.present,
     dispatch,
     commitProposal,
     message: session.message,

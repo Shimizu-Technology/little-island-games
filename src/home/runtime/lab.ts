@@ -8,8 +8,8 @@ export function labHome(): HomeStateV2 {
     instances: [
       instance('bed', 'bed', 3, 0),
       instance('chair', 'chair', 10, 6),
-      instance('table', 'coffee-table', 14, 4),
-      { ...instance('lamp', 'table-lamp', 14, 4), on: 'table' },
+      instance('table', 'coffee-table', 12, 4),
+      { ...instance('lamp', 'table-lamp', 12, 4), on: 'table' },
       instance('cup', 'juice', 9, 10),
       instance('banana', 'banana', 7, 10),
     ],

@@ -10,6 +10,7 @@ import { roomOrigin, type Building } from '../camera';
 import { itemSpec } from '../catalog';
 import type { HomeStateV2 } from '../model';
 import type { Scene, SceneEntity } from '../scene/types';
+import { TargetCue } from './TargetCue';
 import { EntityArt, artFrame, type CharacterRender } from './EntityArt';
 import { DragOverlay } from './DragOverlay';
 import type { Interaction, Pickup } from './useInteraction';
@@ -26,10 +27,11 @@ const RestingEntity = memo(function RestingEntity({ entity, owners, interaction,
   onSelect: (id: string) => void; onMove: (id: string, action: string) => void; front?: boolean;
 }) {
   const frame = artFrame(entity);
+  const { slots } = interaction;
   const style = useAnimatedStyle(() => {
     for (let i = 0; i < 2; i++) {
-      const slot = interaction.slots.value[i];
-      if (slot.id && owners.includes(slot.id)) return { opacity: slot.ready ? 0 : 1, transform: [{ translateX: slot.ready ? 0 : slot.x - slot.sourceX }, { translateY: slot.ready ? 0 : slot.y - slot.sourceY }] };
+      const slot = slots.value[i];
+      if (slot.id && owners.includes(slot.restId ?? slot.id)) return { opacity: slot.ready ? 0 : 1, transform: [{ translateX: slot.ready ? 0 : slot.x - slot.sourceX }, { translateY: slot.ready ? 0 : slot.y - slot.sourceY }] };
     }
     return { opacity: 1, transform: [{ translateX: 0 }, { translateY: 0 }] };
   });
@@ -56,7 +58,8 @@ export function SceneView({ state, scene, building, viewport, interaction, picku
   state: HomeStateV2; scene: Scene; building: Building; viewport: Viewport; interaction: Interaction; pickups: (Pickup | undefined)[]; reduced: boolean; renderCharacter?: CharacterRender; selected?: string; stress?: boolean;
   onSelect: (id: string) => void; onMove: (id: string, action: string) => void;
 }) {
-  const cameraStyle = useAnimatedStyle(() => ({ transformOrigin: 'left top', transform: [{ translateX: interaction.camera.value.tx }, { translateY: interaction.camera.value.ty }, { scale: interaction.camera.value.a }] }));
+  const { camera } = interaction;
+  const cameraStyle = useAnimatedStyle(() => ({ transformOrigin: 'left top', transform: [{ translateX: camera.value.tx }, { translateY: camera.value.ty }, { scale: camera.value.a }] }));
   return <GestureDetector gesture={interaction.gesture} touchAction="none"><View testID="house-viewport" style={{ width: viewport.width, height: viewport.height, overflow: 'hidden', backgroundColor: '#BEE4DD' }}>
     <Animated.View testID="house-camera" style={[{ position: 'absolute', width: building.width, height: building.height }, cameraStyle]}>
       <View pointerEvents="none" style={{ position: 'absolute', width: building.width, height: building.height }}><BuildingArt building={building} /></View>
@@ -69,7 +72,8 @@ export function SceneView({ state, scene, building, viewport, interaction, picku
           <View pointerEvents="box-none" style={{ position: 'absolute', left: 8, top: 8, width: 784, height: 544, overflow: 'hidden' }}><View pointerEvents="box-none" style={{ position: 'absolute', left: -8, top: -8 }}>
             {entities.map(entity => <RestingEntity key={entity.id} entity={entity} owners={ancestors(entity, scene)} interaction={interaction} reduced={reduced} renderCharacter={renderCharacter} selected={selected} onSelect={onSelect} onMove={onMove} />)}
             {entities.filter(entity => entity.item && entity.children.some(child => scene.entities[child]?.attachment.kind === 'socket')).map(entity => <RestingEntity key={`front:${entity.id}`} front entity={entity} owners={ancestors(entity, scene)} interaction={interaction} reduced={reduced} onSelect={onSelect} onMove={onMove} />)}
-            {stress && <StressCopies entities={entities} reduced={reduced} renderCharacter={renderCharacter} />}
+            {scene.rooms[roomId].targets.map(target => <TargetCue key={target.id} target={target} interaction={interaction} />)}
+            {stress && roomId === 'home' && <StressCopies extraProps={Math.max(0, 150 - Object.values(scene.entities).filter(e => e.item).length)} entities={entities} reduced={reduced} renderCharacter={renderCharacter} />}
           </View></View>
         </View>;
       })}
@@ -79,7 +83,7 @@ export function SceneView({ state, scene, building, viewport, interaction, picku
   </View></GestureDetector>;
 }
 /** Render-only stress fixture: never bypasses production save identity/capacity limits. */
-function StressCopies({ entities, reduced, renderCharacter }: { entities: SceneEntity[]; reduced: boolean; renderCharacter?: CharacterRender }) {
+function StressCopies({ entities, extraProps, reduced, renderCharacter }: { extraProps: number; entities: SceneEntity[]; reduced: boolean; renderCharacter?: CharacterRender }) {
   const actors = entities.filter(e => e.character), props = entities.filter(e => e.item && !e.children.length);
-  return <View pointerEvents="none" style={{ position: 'absolute' }}>{Array.from({ length: actors.length ? 9 : 0 }, (_, i) => <View key={`actor-${i}`} style={{ position: 'absolute', left: 50 + i % 6 * 110, top: 170 + Math.floor(i / 6) * 80 }}><EntityArt entity={actors[i % actors.length]} reduced={reduced} renderCharacter={renderCharacter} /></View>)}{Array.from({ length: props.length ? 36 : 0 }, (_, i) => <View key={`prop-${i}`} style={{ position: 'absolute', left: 30 + i % 12 * 60, top: 320 + Math.floor(i / 12) * 55 }}><EntityArt entity={props[i % props.length]} reduced={reduced} /></View>)}</View>;
+  return <View pointerEvents="none" style={{ position: 'absolute' }}>{Array.from({ length: actors.length ? 9 : 0 }, (_, i) => <View key={`actor-${i}`} style={{ position: 'absolute', left: 50 + i % 6 * 110, top: 170 + Math.floor(i / 6) * 80 }}><EntityArt entity={actors[i % actors.length]} reduced={reduced} renderCharacter={renderCharacter} /></View>)}{Array.from({ length: props.length ? extraProps : 0 }, (_, i) => <View key={`prop-${i}`} style={{ position: 'absolute', left: 30 + i % 12 * 60, top: 320 + Math.floor(i / 12) * 55 }}><EntityArt entity={props[i % props.length]} reduced={reduced} /></View>)}</View>;
 }
