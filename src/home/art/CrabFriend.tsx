@@ -1,8 +1,10 @@
 import React, { memo } from 'react';
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
+import { RigCrab, type CompanionProps } from '../../islander/rig/Companions';
 export type CrabPose = 'stand' | 'sit' | 'lie' | 'held';
 /** Original coral crab, with a ground contact at (60, 96), in a 120×110 box. */
-export const CrabFriend = memo(function CrabFriend({ pose = 'stand', size = 120, mirrored = false, reduced = false }: { pose?: CrabPose; size?: number; mirrored?: boolean; reduced?: boolean }) {
+export const CrabFriend = memo(function CrabFriend({ pose = 'stand', size = 120, mirrored = false, reduced = false, ...rig }: CompanionProps & { pose?: CrabPose; mirrored?: boolean }) {
+  if (rig.base) return <RigCrab {...rig} size={size} reduced={reduced} facing={rig.facing ?? (mirrored ? 'left' : 'right')}/>;
   const asleep = pose === 'lie', tucked = pose === 'sit' || pose === 'held';
   return <Svg width={size} height={size * 110 / 120} viewBox="0 0 120 110" accessible={false}><G transform={mirrored ? 'translate(120 0) rotate(0) scale(-1 1)' : 'translate(0 0) rotate(0) scale(1 1)'} stroke="#493E38" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
     <G transform={asleep ? 'translate(0 145) rotate(0) scale(1 -1)' : tucked ? 'translate(0 6) rotate(0) scale(1 1)' : 'translate(0 0) rotate(0) scale(1 1)'}>

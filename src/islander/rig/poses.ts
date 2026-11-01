@@ -1,14 +1,14 @@
 import { runnerDrawings, type Point } from '../../arcade/games/scrolling/character';
 export type { Point };
 export type View = 'front' | 'back';
-export type Expression = 'happy' | 'focused' | 'thinking' | 'surprised' | 'proud' | 'sleepy' | 'yum';
+export type Expression = 'neutral' | 'anticipate' | 'chew' | 'happy' | 'focused' | 'thinking' | 'surprised' | 'proud' | 'sleepy' | 'yum';
 export type Side = 'left' | 'right';
 export type Joint = 'head' | 'neck' | 'leftShoulder' | 'rightShoulder' | 'leftElbow' | 'rightElbow' | 'leftHand' | 'rightHand' | 'leftHip' | 'rightHip' | 'leftKnee' | 'rightKnee' | 'leftFoot' | 'rightFoot';
 export type Pose = Readonly<{ id: string; view: View; joints: Readonly<Record<Joint, Point>>; expression: Expression; compact?: boolean; seated?: boolean; desk?: boolean; frame?: number }>;
 const point = (a: Point, length: number, degrees: number): Point => [a[0] + Math.cos(degrees * Math.PI / 180) * length, a[1] + Math.sin(degrees * Math.PI / 180) * length];
 export const BONES = { upperArm: 16, forearm: 16, thigh: 14, shin: 14 } as const;
 /** Two-bone IK preserves length while choosing the authored bend nearest the guide. */
-function solve(a: Point, target: Point, guide: Point, length: number): [Point, Point] {
+export function solve(a: Point, target: Point, guide: Point, length: number): [Point, Point] {
   const dx = target[0] - a[0], dy = target[1] - a[1], raw = Math.hypot(dx, dy), d = Math.max(.01, Math.min(raw, 2 * length));
   const ux = raw ? dx / raw : 0, uy = raw ? dy / raw : 1, h = Math.sqrt(length * length - d * d / 4), mid: Point = [a[0] + ux * d / 2, a[1] + uy * d / 2];
   const candidates: Point[] = [[mid[0] - uy * h, mid[1] + ux * h], [mid[0] + uy * h, mid[1] - ux * h]];
@@ -43,6 +43,7 @@ export const frontPoses: readonly Pose[] = [
   front('desk-write', [100, 50, 116, 82], [15, 90, 40, 90], 'focused', 0, true, true),
   front('sit-relaxed', [95, 20, 85, 160], [15, 90, 40, 90], 'happy', 0, true),
   ...Array.from({ length: 4 }, (_, i) => front(`dance-${i}`, [[170, -80, -45, -105], [-135, -75, 20, -110], [145, -70, -10, -110], [-155, -90, 30, -100]][i], [[115, 80, 65, 120], [115, 60, 65, 100], [105, 95, 75, 110], [100, 70, 80, 100]][i], 'proud', i % 2 ? -1 : 0)),
+  front('carry', [120, 100, 60, 80], [98, 88, 82, 92]),
 ];
 /** Same 24 indices as RunnerFrameArt: 0–7 keys, 8–15 actions, 16–23 in-betweens. */
 export function backPose(frame: number): Pose {
@@ -97,5 +98,5 @@ export const isLying = (pose: Pose) => pose.id === 'lie' || pose.id === 'lie-asl
 export function poseBox(pose: Pose) {
   return isLying(pose)
     ? { width: 144, height: 92, anchor: [44, 46] as Point }
-    : { width: 80, height: 132, anchor: (pose.id === 'bathe' ? [40, 74] : pose.seated ? [44, 107] : [40, 132]) as Point };
+    : { width: 80, height: 132, anchor: (pose.id === 'carry' ? [40, 66] : pose.id === 'bathe' ? [40, 74] : pose.seated ? [44, 107] : [40, 132]) as Point };
 }
