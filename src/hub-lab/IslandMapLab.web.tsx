@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Islander } from '../islander';
 import { personFor } from '../personalization/model';
@@ -31,19 +31,20 @@ export default function IslandMapLab() {
   const learner = activeLearner(store.save.learning), look = personFor(store.save).look;
   const resume = homeContinue(store.save), favorites = store.save.favoriteGames ?? [];
   const suggestions = dailySuggestions(store.save, undefined, shuffle).map(id => shelfGames.find(game => game.id === id)!);
-  const dialog = useRef<HTMLDialogElement>(null), worldScroll = useRef<HTMLDivElement>(null), closeButton = useRef<HTMLButtonElement>(null);
+  const dialog = useRef<HTMLDialogElement>(null), worldScroll = useRef<HTMLDivElement>(null), closeButton = useRef<HTMLButtonElement>(null), panelTitle = useRef<HTMLHeadingElement>(null);
   const mapPosition = useRef({ a: { top: 0, left: 0 }, b: { top: 0, left: 0 } });
   const trigger = useRef<HTMLElement | null>(null);
   function show(next: Panel) { trigger.current = document.activeElement as HTMLElement; setSubject(null); setPanel(next); }
-  function close() { setPanel(null); setSubject(null); }
+  const close = useCallback(() => { dialog.current?.close(); setPanel(null); setSubject(null); }, []);
   useEffect(() => {
     const node = dialog.current;
     if (panel && node && !node.open) { node.showModal(); closeButton.current?.focus(); }
     return () => { if (node?.open) node.close(); if (panel) trigger.current?.focus(); };
   }, [panel]);
   useEffect(() => { worldScroll.current?.scrollTo(mapPosition.current[direction]); }, [direction, list]);
+  useEffect(() => { if (subject) panelTitle.current?.focus(); }, [subject]);
   const games = (items: ShelfGame[], editable = false) => items.map(game => <div className="favorite-row" key={game.id}>
-    <button className="list-row" onClick={() => openGame(game.id)}><span><strong>{game.name}</strong><small>{game.description}</small></span><b aria-hidden="true">→</b></button>
+    <button className="list-row" onClick={() => { close(); openGame(game.id); }}><span><strong>{game.name}</strong><small>{game.description}</small></span><b aria-hidden="true">→</b></button>
     {editable && <button className="favorite-button" aria-label={`${favorites.includes(game.id) ? 'Unfavorite' : 'Favorite'} ${game.name}`} aria-pressed={favorites.includes(game.id)} onClick={() => store.toggleGameFavorite(game.id)}>{favorites.includes(game.id) ? 'Saved' : 'Save'}</button>}
   </div>);
   const pocket = <>
@@ -73,11 +74,11 @@ export default function IslandMapLab() {
       </>}
     </main>
     {panel && <dialog ref={dialog} className="hub-dialog" aria-labelledby="place-title" onCancel={close} onClose={close}>
-      <div className="sheet-head"><p className="eyebrow">{panel === 'pocket' ? 'Your island pocket' : 'A place on your island'}</p><button ref={closeButton} className="plain" onClick={close}>Back to map</button></div>
-      <div className="sheet-heading">{selected && <Building id={selected.id} color={selected.color}/>}<h2 id="place-title">{subject ? subjects.find(item => item.id === subject)?.name : selected?.name ?? 'A little inspiration'}</h2></div>
+      <div className="sheet-head"><p className="eyebrow">{panel === 'pocket' ? 'Your island pocket' : 'A place on your island'}</p><button ref={closeButton} className="plain" onClick={close}>{list ? 'Back to list' : 'Back to map'}</button></div>
+      <div className="sheet-heading">{selected && <Building id={selected.id} color={selected.color}/>}<h2 id="place-title" ref={panelTitle} tabIndex={-1}>{subject ? subjects.find(item => item.id === subject)?.name : selected?.name ?? 'A little inspiration'}</h2></div>
       {panel === 'pocket' ? <div className="sheet-copy">{pocket}</div> : panel === 'school' ? <>
         {subject ? <><button className="plain" onClick={() => setSubject(null)}>← All six subjects</button><p className="sheet-copy">Choose something to try. Take all the time you need.</p>{games(subjectGames(subject), true)}</> : <><p className="sheet-copy">What are you curious about?</p><div className="subject-grid">{subjects.map(item => <button key={item.id} onClick={() => setSubject(item.id)}><span aria-hidden="true" style={{ background: item.color }}>{item.mark}</span>{item.name}</button>)}</div></>}
-      </> : panel === 'home' ? <><p className="sheet-copy">A home for your Islander. Make up a story, move things around, and leave it just your way.</p><div className="preview-house"><Building id="home" color="#DD977E"/><Islander view="front" pose="idle" look={look} size={100}/></div><button className="primary" onClick={() => router.push('/island-home')}>Open Island Home →</button></> : panel === 'arcade' || panel === 'hall' ? <><p className="sheet-copy">{selected?.hint}. Choose a game.</p>{games(placeGames(panel), true)}</> : <><p className="sheet-copy">{panel === 'library' ? 'Explore today: fifty wonders and five hands-on activities. The Library name is a place on the map; the content is today’s Explore.' : selected?.hint}</p><button className="primary" onClick={() => router.push(panel === 'library' ? '/explore' : panel === 'locker' ? '/locker' : '/badges')}>{panel === 'library' ? 'Open Explore' : panel === 'locker' ? 'Open My Locker' : 'Open My Badges'} →</button></>}
+      </> : panel === 'home' ? <><p className="sheet-copy">A home for your Islander. Make up a story, move things around, and leave it just your way.</p><div className="preview-house"><Building id="home" color="#DD977E"/><Islander view="front" pose="idle" look={look} size={100}/></div><button className="primary" onClick={() => { close(); router.push('/island-home'); }}>Open Island Home →</button></> : panel === 'arcade' || panel === 'hall' ? <><p className="sheet-copy">{selected?.hint}. Choose a game.</p>{games(placeGames(panel), true)}</> : <><p className="sheet-copy">{panel === 'library' ? 'Explore today: fifty wonders and five hands-on activities. The Library name is a place on the map; the content is today’s Explore.' : selected?.hint}</p><button className="primary" onClick={() => { close(); router.push(panel === 'library' ? '/explore' : panel === 'locker' ? '/locker' : '/badges'); }}>{panel === 'library' ? 'Open Explore' : panel === 'locker' ? 'Open My Locker' : 'Open My Badges'} →</button></>}
       <p className="dialog-meta">Design preview · opening an activity uses your current offline app and saves.</p>
     </dialog>}
     <Settings visible={settings} onClose={() => setSettings(false)}/>
