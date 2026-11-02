@@ -11,7 +11,7 @@ export type GridCell = Point<"grid">;
 export type EntityId = string;
 export type Facing = "front" | "left" | "right";
 export type CharacterBase = "stand" | "sit" | "lie" | "bathe" | "carry";
-export type CharacterAction = "eat" | "drink" | null;
+export type CharacterAction = "eat" | "drink" | "hold" | null;
 export type Face = "neutral" | "anticipate" | "chew" | "happy" | "sleepy" | "surprised";
 export type Attachment =
   | { kind: "floor"; room: RoomId; at: RoomPoint }

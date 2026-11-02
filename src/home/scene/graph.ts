@@ -87,7 +87,7 @@ function characterEntity(room: RoomId, state: RoomState, character: Character): 
     bounds,
     base: character.pose,
     facing: frame.mirrored ? "left" : "front",
-    action: character.action ?? null,
+    action: character.action ?? (character.holding ? "hold" : null),
     children: [],
     depth: seat ? furnitureDepth(seat) + 1 : point.y + 1,
     band: "occupant",
@@ -142,7 +142,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       entity.contact = roomPoint(400, 510);
       entity.band = "foreground";
     } else if (parent && entity.attachment.kind === "hand" && parent.character) {
-      const anchors = anchorsFor(parent.character.slot, parent.base === "stand" ? "carry" : parent.base, parent.facing);
+      const anchors = anchorsFor(parent.character.slot, parent.base, parent.facing, parent.action);
       entity.contact = roomPoint(parent.contact.x + anchors.hand.x, parent.contact.y + anchors.hand.y);
       entity.band = parent.band;
       entity.depth = parent.depth + 0.1;
@@ -190,14 +190,13 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
     if (entity.attachment.kind === "staging" || entity.attachment.kind === "container") continue;
     if (entity.character) {
       const c = entity.character;
-      const anchors = anchorsFor(c.slot, entity.base === "stand" && c.holding ? "carry" : entity.base, entity.facing);
+      const anchors = anchorsFor(c.slot, entity.base, entity.facing, entity.action);
       const hand = { x: entity.contact.x + anchors.hand.x, y: entity.contact.y + anchors.hand.y };
       const mouth = roomPoint(entity.contact.x + anchors.mouth.x, entity.contact.y + anchors.mouth.y);
-      const carrying = anchorsFor(c.slot, entity.base === "stand" ? "carry" : entity.base, entity.facing);
-      const projectedHand = roomPoint(entity.contact.x + carrying.hand.x, entity.contact.y + carrying.hand.y);
-      // RIG replaces provisional mouth/head metadata; hand uses today's exact rig geometry.
       for (const kind of ["hand", "mouth"] as const) {
         const point = kind === "hand" ? roomPoint(hand.x, hand.y) : mouth;
+        const resultHand = anchorsFor(c.slot, entity.base, entity.facing, kind === "hand" ? "hold" : "drink").hand;
+        const projectedHand = roomPoint(entity.contact.x + resultHand.x, entity.contact.y + resultHand.y);
         targets.push({
           id: `${entity.id}/${kind}`,
           kind,

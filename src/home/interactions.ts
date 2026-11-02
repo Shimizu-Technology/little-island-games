@@ -1,9 +1,9 @@
-import { homeCharacterRigPose } from "./characterPose";
 import { buildRoomIndex } from "./scene/graph";
-import { isLying, poseBox, resolvePose } from "../islander/rig/poses";
+import { anchorsFor } from "./scene/species";
+import { poseBox, resolvePose } from "../islander/rig/poses";
 import { capabilityOf, visualBox, type Socket } from "./world";
 import { decorSpec, isSeat, itemSpec } from "./catalog";
-import { characterFrame, characterPoint, itemPoint, itemSize, surfacePoint, sceneItemDepth } from "./geometry";
+import { itemPoint, itemSize, surfacePoint, sceneItemDepth } from "./geometry";
 import type { Character, Instance, RoomState } from "./model";
 import type { DropBody, DropWorld } from "./drop";
 /** Phase-one compatibility only. ART owns authored sockets/capabilities. */
@@ -127,21 +127,11 @@ export function dropWorld(room: RoomState): DropWorld {
         radius: itemSize(i) * 0.42,
       })),
     people: room.characters.map((c) => {
-      const contact = characterPoint(room, c),
-        frame = characterFrame(room, c),
-        pose = resolvePose("front", homeCharacterRigPose(c.pose, c.holding && c.pose === "stand" ? "hold" : undefined)),
-        box = poseBox(pose),
-        unit = 224 / 132;
-      const point = (x: number, y: number) => {
-        if (isLying(pose)) {
-          const old = x;
-          x = 6 + y;
-          y = 86 - old;
-        }
-        return { x: frame.left + (frame.mirrored ? box.width - x : x) * unit, y: frame.top + y * unit };
-      };
-      const hand = point(...pose.joints.rightHand),
-        mouth = point(pose.joints.head[0], pose.joints.head[1] + 20);
+      const entity = index.entities[`character/${c.slot}`],
+        contact = entity.contact,
+        anchors = anchorsFor(c.slot, entity.base, entity.facing, entity.action),
+        hand = { x: contact.x + anchors.hand.x, y: contact.y + anchors.hand.y },
+        mouth = { x: contact.x + anchors.mouth.x, y: contact.y + anchors.mouth.y };
       return {
         slot: c.slot,
         ...contact,
