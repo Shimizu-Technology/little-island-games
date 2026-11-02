@@ -120,6 +120,7 @@ let current: Interaction;
 let committed = 0;
 let committedId = "";
 let committedContact = entity.contact;
+let destinationRevision = "";
 function Probe({ scene }: { scene: Scene }) {
   const interaction = useInteraction({
     scene,
@@ -136,6 +137,9 @@ function Probe({ scene }: { scene: Scene }) {
     },
     onTap: () => {},
     onClear: () => {},
+    onDestination: (_index, scene) => {
+      destinationRevision = scene.revision;
+    },
     onCommit: (index, proposal, _at, token) => {
       if (!current.isCurrent(index, token)) return;
       committed++;
@@ -165,10 +169,65 @@ beforeEach(() => {
   harness.handlers = {};
   committed = 0;
   committedId = "";
+  destinationRevision = "";
   vi.useFakeTimers();
   vi.setSystemTime(1000);
 });
 describe("actual runtime callback sequencing", () => {
+  it("reveals a pose-changing drop when another edit supersedes its acknowledged revision", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => {
+      renderer = TestRenderer.create(<Probe scene={fixture()} />);
+    });
+    touch("down", 120, 300);
+    touch("move", 150, 320);
+    flushJS();
+    touch("up", 150, 320);
+    // Acknowledge a supported-pose commit without first rendering its revision.
+    const proposal = { ...current.slots.get()[0].proposal!, base: "lie" as const };
+    const acknowledged = fixture("first-commit", proposal.contact);
+    acknowledged.entities[entity.id].base = "lie";
+    current.finish(0, true, proposal, "first-commit", acknowledged);
+    const newer = fixture("second-commit", proposal.contact);
+    newer.entities[entity.id].base = "lie";
+    await act(async () => renderer.update(<Probe scene={newer} />));
+    vi.advanceTimersByTime(260);
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    expect(current.slots.get()[0].id).toBe("");
+    expect(current.controller.get().phase).toBe("idle");
+    await act(async () => renderer.unmount());
+    vi.useRealTimers();
+  });
+  it("retargets a superseded landing from its visible transform and refreshes destination art", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => {
+      renderer = TestRenderer.create(<Probe scene={fixture()} />);
+    });
+    touch("down", 120, 300);
+    touch("move", 150, 320);
+    flushJS();
+    touch("up", 150, 320);
+    const proposal = current.slots.get()[0].proposal!;
+    current.finish(0, true, proposal, "first-commit", fixture("first-commit", proposal.contact));
+    vi.advanceTimersByTime(100);
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    const before = { x: current.slots.get()[0].x, y: current.slots.get()[0].y };
+    const newer = fixture("second-commit", roomPoint(300, 450));
+    await act(async () => renderer.update(<Probe scene={newer} />));
+    const retargeted = current.slots.get()[0];
+    expect(retargeted.releaseX).toBe(before.x);
+    expect(retargeted.releaseY).toBe(before.y);
+    expect(retargeted.targetX).toBe(320);
+    expect(retargeted.targetY).toBe(570);
+    expect(retargeted.proposal?.base).toBe("stand");
+    expect(destinationRevision).toBe("second-commit");
+    vi.advanceTimersByTime(260);
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    expect(current.slots.get()[0].id).toBe("");
+    expect(current.controller.get().phase).toBe("idle");
+    await act(async () => renderer.unmount());
+    vi.useRealTimers();
+  });
   it("retains the release transform while JS is queued and waits for the committed React scene", async () => {
     let renderer: TestRenderer.ReactTestRenderer;
     await act(async () => {

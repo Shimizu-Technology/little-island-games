@@ -119,6 +119,7 @@ export function useInteraction({
   onCommit,
   onTap,
   onClear,
+  onDestination,
   onFrameReport,
   viewportOffset,
 }: {
@@ -133,6 +134,7 @@ export function useInteraction({
   onCommit: (slot: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => void;
   onTap: (id: EntityId | undefined, point: ScreenPoint) => void;
   onClear: (slot: number) => void;
+  onDestination?: (slot: number, scene: Scene) => void;
   onFrameReport?: (times: number[]) => void;
   viewportOffset?: SharedValue<{ x: number; y: number }>;
 }) {
@@ -167,22 +169,47 @@ export function useInteraction({
     prepared.set(resolverScene);
     hitTable.set(hits);
     renderedRevision.set(scene.revision);
+    const refreshed: number[] = [];
     slots.set((current) =>
-      current.map((slot) => {
+      current.map((slot, index) => {
         if (!slot.id || !slot.committed || slot.revision === scene.revision) return slot;
+        refreshed.push(index);
         const entity = scene.entities[slot.restId ?? slot.id];
+        if (!entity) return { ...slot, consumed: true, revision: scene.revision };
         const origin = entity ? roomOrigin(roomIds.indexOf(entity.room), building) : { x: 0, y: 0 };
         const sameContact =
-          entity &&
           Math.abs(origin.x + entity.contact.x - slot.targetX) < 0.01 &&
           Math.abs(origin.y + entity.contact.y - slot.targetY) < 0.01 &&
-          entity.base === slot.subject?.base;
-        const consumed = !entity && slot.proposal?.kind === "mouth";
+          entity.base === (slot.proposal?.base ?? slot.subject?.base);
         const restoredTray = !slot.proposal && entity?.attachment.kind === "staging";
-        return sameContact || consumed || restoredTray ? { ...slot, revision: scene.revision } : slot;
+        if (sameContact || restoredTray) return { ...slot, revision: scene.revision };
+        // A later transaction may displace the landing or finish a held action.
+        // Continue from the visible transform toward that authoritative resting state.
+        return {
+          ...slot,
+          revision: scene.revision,
+          releaseX: slot.x,
+          releaseY: slot.y,
+          targetX: origin.x + entity.contact.x,
+          targetY: origin.y + entity.contact.y,
+          settleAt: slot.phase === "pending" ? 0 : eventTime(),
+          pausedElapsed: 0,
+          finished: false,
+          proposal: slot.proposal
+            ? {
+                ...slot.proposal,
+                contact: entity.contact,
+                room: entity.room,
+                base: entity.base,
+                facing: entity.facing,
+                attachment: entity.attachment,
+              }
+            : undefined,
+        };
       })
     );
-  }, [scene, resolverScene, hits, prepared, hitTable, renderedRevision, slots, building]);
+    refreshed.forEach((index) => onDestination?.(index, scene));
+  }, [scene, resolverScene, hits, prepared, hitTable, renderedRevision, slots, building, onDestination]);
 
   const movable = useSharedValue<Record<string, boolean>>({});
   useLayoutEffect(() => {

@@ -26,7 +26,7 @@ import { itemIds, type ItemId } from "./catalog";
 import { useHomeStore } from "./useHomeStore";
 import { buildScene } from "./scene/graph";
 import { resolve, type DropProposal } from "./scene/proposal";
-import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity } from "./scene/types";
+import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
 import { screenToRoom } from "./scene/camera";
 import { SceneView } from "./runtime/SceneView";
 import { HomeChrome, Tool } from "./runtime/HomeChrome";
@@ -300,6 +300,11 @@ export function HomeScreen({
     (index: number) => setPickups((current) => current.map((p, i) => (i === index ? undefined : p))),
     []
   );
+  const onDestination = useCallback(
+    (index: number, destination: Scene) =>
+      setPickups((current) => current.map((p, i) => (i === index && p ? { ...p, destination } : p))),
+    []
+  );
   const dispatch = (action: HomeAction) => store.dispatch({ ...action, roomId: room });
   const moveTo = (id: string, target: SceneEntity | undefined, point: ScreenPoint) => {
     const c = runtime.current!.camera.get();
@@ -370,6 +375,7 @@ export function HomeScreen({
     onCommit,
     onTap,
     onClear,
+    onDestination,
     onFrameReport: lab ? setFrameReport : undefined,
     viewportOffset,
   });
