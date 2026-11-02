@@ -85,7 +85,7 @@ function eventTime(): number {
   "worklet";
   return Date.now();
 }
-const emptySlot = (): DragSlot => {
+export const emptyDragSlot = (): DragSlot => {
   "worklet";
   return {
     generation: 0,
@@ -188,7 +188,7 @@ export function useInteraction({
     laidOut.modify((current) => { "worklet"; current[id] = token; return current; });
   };
   const controller = useSharedValue<ControllerState>(idleController);
-  const slots = useSharedValue<DragSlot[]>([emptySlot(), emptySlot()]);
+  const slots = useSharedValue<DragSlot[]>([emptyDragSlot(), emptyDragSlot()]);
   const frameTimes = useSharedValue<number[]>([]);
   const probeRing = useSharedValue<ProbeFrame[]>([]);
   const probeCursor = useSharedValue(0);
@@ -433,7 +433,7 @@ export function useInteraction({
         const origin = originFor(effect.entity);
         const visible = existing >= 0 ? slots.value[existing] : undefined;
         const slot = {
-          ...emptySlot(),
+          ...emptyDragSlot(),
           id: effect.entity,
           generation: visible?.generation ?? captureSequence.value + 1,
           epoch: epoch.value,
@@ -944,7 +944,7 @@ export function useInteraction({
     epoch.set(epoch.get() + 1);
     controller.set(idleController);
     inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
-    slots.set([emptySlot(), emptySlot()]);
+    slots.set([emptyDragSlot(), emptyDragSlot()]);
     onClear(0);
     onClear(1);
   };

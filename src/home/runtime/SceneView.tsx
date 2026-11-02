@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from "react";
 import { Platform, View } from "react-native";
-import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useDerivedValue, type SharedValue } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import { roomIds, roomNames } from "../catalogMore";
 import { RoomArt, ShoreArt } from "../art/Room";
@@ -76,39 +76,26 @@ const RestingEntity = memo(function RestingEntity({
   if (stamp.token !== token) setStamp({ token, value: stamp.value + 1 });
   const owners = useMemo(() => ownerKey.split("|"), [ownerKey]);
   const anticipationTargets = useMemo(() => targetKey.split("|"), [targetKey]);
-  const style = useAnimatedStyle(() => {
+  const visible = useDerivedValue(() => {
     if (front && slots.value.some((s) => s.id && s.ready && (s.settleAt > 0 || s.pausedElapsed > 0) &&
       (s.proposal?.attachment ?? s.subject?.attachment)?.kind === "socket" &&
-      ((s.proposal?.attachment ?? s.subject?.attachment) as { item: string }).item === entity.id))
-      return { opacity: 0, transform: [{ translateX: 0 }, { translateY: 0 }] };
-    for (let i = 0; i < 2; i++) {
-      const slot = slots.value[i];
-      if (slot.id && owners.includes(slot.restId ?? slot.id))
-        return {
-          opacity: slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 0 : 1,
-          // Never translate the old supported pose while carry art mounts.
-          transform: [{ translateX: 0 }, { translateY: 0 }],
-        };
-    }
-    const elapsed = clock.value - (fixtureNudges.value[entity.id] ?? -1000);
-    const angle = reduced || elapsed < 0 || elapsed >= 220 ? 0 :
-      Math.sin(elapsed / 220 * Math.PI * 4) * 1.5 * (1 - elapsed / 220);
-    return { opacity: 1, transform: [{ translateX: 0 }, { translateY: 0 }, { rotate: `${angle}deg` }] };
+      ((s.proposal?.attachment ?? s.subject?.attachment) as { item: string }).item === entity.id)) return 0;
+    for (const slot of slots.value) if (slot.id && owners.includes(slot.restId ?? slot.id))
+      return slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 0 : 1;
+    return 1;
   });
-  const normal = useAnimatedStyle(() => ({
-    opacity:
-      entity.character &&
-      slots.value.some((s) => s.id && s.proposal?.target && anticipationTargets.includes(s.proposal.target))
-        ? 0
-        : 1,
-  }));
-  const anticipate = useAnimatedStyle(() => ({
-    opacity:
-      entity.character &&
-      slots.value.some((s) => s.id && s.proposal?.target && anticipationTargets.includes(s.proposal.target))
-        ? 1
-        : 0,
-  }));
+  const wobble = useDerivedValue(() => {
+    const at = fixtureNudges.value[entity.id];
+    if (!at || reduced) return 0;
+    const elapsed = clock.value - at;
+    return elapsed < 0 || elapsed >= 220 ? 0 : Math.sin(elapsed / 220 * Math.PI * 4) * 1.5 * (1 - elapsed / 220);
+  });
+  const style = useAnimatedStyle(() => ({ opacity: visible.value,
+    transform: [{ translateX: 0 }, { translateY: 0 }, { rotate: `${wobble.value}deg` }] }));
+  const anticipating = useDerivedValue(() => entity.character &&
+    slots.value.some((s) => s.id && s.proposal?.target && anticipationTargets.includes(s.proposal.target)) ? 1 : 0);
+  const normal = useAnimatedStyle(() => ({ opacity: 1 - anticipating.value }));
+  const anticipate = useAnimatedStyle(() => ({ opacity: anticipating.value }));
   const name = entity.character ? ["Islander", "Pip", "Crab"][entity.character.slot] : itemSpec(entity.item!.item).name;
   return (
     <Animated.View

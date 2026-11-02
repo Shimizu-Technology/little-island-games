@@ -1,14 +1,13 @@
 import React from "react";
 import { View } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
 import type { Target } from "../scene/types";
 import type { Interaction } from "./useInteraction";
 /** Rounded, pictorial contact cue. It has no input or collision geometry. */
 export function TargetCue({ target, interaction }: { target: Target; interaction: Interaction }) {
   const { slots } = interaction;
-  const style = useAnimatedStyle(() => ({
-    opacity: slots.value.some((s) => s.id && s.phase === "dragging" && s.proposal?.target === target.id) ? 1 : 0,
-  }));
+  const visible = useDerivedValue(() => slots.value.some((s) => s.id && s.phase === "dragging" && s.proposal?.target === target.id) ? 1 : 0);
+  const style = useAnimatedStyle(() => ({ opacity: visible.value }));
   return (
     <Animated.View
       pointerEvents="none"

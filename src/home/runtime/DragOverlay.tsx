@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
 import { roomIds } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { anchorsFor } from "../scene/species";
@@ -10,7 +10,7 @@ import type { Scene, SceneEntity } from "../scene/types";
 import { groupIds, restingVisible } from "./group";
 import { SettleArt } from "./SettleArt";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
-import type { Interaction, Pickup } from "./useInteraction";
+import { emptyDragSlot, type Interaction, type Pickup } from "./useInteraction";
 import { capabilityOf } from "../world";
 
 function OverlayGroup({
@@ -27,7 +27,15 @@ function OverlayGroup({
   renderCharacter?: CharacterRender;
 }) {
   const { scene, id, slot: index } = pickup;
-  const { slots, camera, clock } = interaction;
+  const globalSlots = interaction.slots, globalClock = interaction.clock;
+  const idle = useMemo(() => [emptyDragSlot(), emptyDragSlot()], []);
+  // Publish only this actor's active channel. Hidden, pre-mounted characters do
+  // not enqueue native prop updates for another child's drag.
+  const channel = useDerivedValue(() => globalSlots.value[index].id === id
+    ? globalSlots.value.map((s, i) => i === index ? { ...s } : idle[i]) : idle);
+  const channelClock = useDerivedValue(() => channel.value[index].id ? globalClock.value : 0);
+  const visualInteraction = { ...interaction, slots: channel, clock: channelClock } as Interaction;
+  const { slots, camera, clock } = visualInteraction;
   const root = scene.entities[id],
     origin = roomOrigin(roomIds.indexOf(root.room), building);
   const ids = groupIds(scene, id);
@@ -148,7 +156,7 @@ function OverlayGroup({
                 root={root}
                 destination={destination}
                 pickup={pickup}
-                interaction={interaction}
+                interaction={visualInteraction}
                 reduced={reduced}
               />
             );
@@ -159,7 +167,7 @@ function OverlayGroup({
                 source={root}
                 destination={destination}
                 grip={pickup.grip}
-                interaction={interaction}
+                interaction={visualInteraction}
                 index={index}
                 reduced={reduced}
                 renderCharacter={renderCharacter}
@@ -307,13 +315,12 @@ function SupportFront({ entity, interaction, building, reduced }: {
 }) {
   const frame = artFrame(entity), origin = roomOrigin(roomIds.indexOf(entity.room), building);
   const { slots } = interaction;
-  const style = useAnimatedStyle(() => {
-    return { opacity: slots.value.some((s) => {
+  const visible = useDerivedValue(() => slots.value.some((s) => {
       const attachment = s.proposal?.attachment ?? s.subject?.attachment;
       return s.id && s.ready && (s.settleAt > 0 || s.pausedElapsed > 0) &&
         attachment?.kind === "socket" && attachment.item === entity.id;
-    }) ? 1 : 0 };
-  });
+    }) ? 1 : 0);
+  const style = useAnimatedStyle(() => ({ opacity: visible.value }));
   return <Animated.View pointerEvents="none" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
     style={[{ position: "absolute", left: origin.x + entity.contact.x + frame.left,
       top: origin.y + entity.contact.y + frame.top }, style]}>

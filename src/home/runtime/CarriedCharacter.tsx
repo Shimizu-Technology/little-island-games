@@ -1,5 +1,5 @@
 import React from "react";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
 import type { SceneEntity } from "../scene/types";
 import { EntityArt, type CharacterRender } from "./EntityArt";
 import { renderAnchors, carrySample } from "./rigGeometry";
@@ -22,9 +22,8 @@ function CarryFrame({
   const options = carrySample(sample),
     frame = renderAnchors(entity, true, options.tilt, options.limbLag).bounds;
   const { slots } = interaction;
-  const style = useAnimatedStyle(() => ({
-    opacity: (reduced ? 0 : Math.max(-4, Math.min(4, Math.round(slots.value[index].lag / 2.5)))) === sample ? 1 : 0,
-  }));
+  const visible = useDerivedValue(() => (reduced ? 0 : Math.max(-4, Math.min(4, Math.round(slots.value[index].lag / 2.5)))) === sample ? 1 : 0);
+  const style = useAnimatedStyle(() => ({ opacity: visible.value }));
   return (
     <Animated.View
       style={[

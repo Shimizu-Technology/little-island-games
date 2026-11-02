@@ -19,6 +19,7 @@ vi.mock("react-native-svg", () => ({ default: "Svg", Circle: "Circle", Path: "Pa
 vi.mock("react-native-reanimated", () => ({
   default: { View: "AnimatedView" },
   useAnimatedStyle: (fn: () => unknown) => ({ evaluate: fn }),
+  useDerivedValue: (fn: () => unknown) => ({ get value() { return fn(); } }),
 }));
 vi.mock("../src/home/runtime/CarriedCharacter", () => ({ CarriedCharacter: () => <div /> }));
 vi.mock("../src/home/runtime/EntityArt", async () => ({

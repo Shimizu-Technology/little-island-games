@@ -8,7 +8,7 @@ import { buildScene } from '../src/home/scene/graph';
 import { buildingLayout } from '../src/home/camera';
 import type { Interaction, Pickup } from '../src/home/runtime/useInteraction';
 vi.mock('react-native',()=>({View:'View',Platform:{OS:'ios'}}));
-vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'},useAnimatedStyle:(fn:()=>unknown)=>({evaluate:fn})}));
+vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'},useAnimatedStyle:(fn:()=>unknown)=>({evaluate:fn}),useDerivedValue:(fn:()=>unknown)=>({get value(){return fn();}})}));
 vi.mock('react-native-gesture-handler',()=>({GestureDetector:'GestureDetector'}));
 vi.mock('../src/home/runtime/EntityArt',()=>({EntityArt:()=>null,artFrame:(e:any)=>e.bounds}));
 vi.mock('../src/home/runtime/SettleArt',()=>({SettleArt:()=>null}));
@@ -26,7 +26,8 @@ describe('round4 rendered runtime contracts',()=>{
  it.each(['home/item/banana','character/0'])('T5 carries %s at the intended readable scale and eases exactly to1',async(id)=>{
   const c=context(id);const pickup={id,slot:0,scene:c.scene,generation:1,epoch:0} as Pickup;let tree!:TestRenderer.ReactTestRenderer;
   await act(async()=>{tree=TestRenderer.create(<DragOverlay scene={c.scene} pickups={[pickup]} interaction={c.interaction} building={buildingLayout(4)} reduced={false}/>);});
-  const view=tree.root.findAllByProps({testID:'drag-overlay-0'}).at(-1)!;
+  const views=tree.root.findAllByProps({testID:'drag-overlay-0'});const view=id==='character/0'?views[0]:views.at(-1)!;
+  expect(view.props.style[1].evaluate().opacity).toBe(1);
   const scale=()=>view.props.style[1].evaluate().transform.find((t:any)=>'scaleX'in t).scaleX;
   expect(scale()).toBe(id==='character/0'?1.04:1.2);
   c.slot.phase='settling';c.slot.settleAt=1000;c.clock.value=1070;

@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
 import type { SceneEntity } from "../scene/types";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { CarriedCharacter } from "./CarriedCharacter";
@@ -50,12 +50,19 @@ function TargetPose({ entity, source, startHead, interaction, index, reduced, re
   const { slots, clock } = interaction, frame = artFrame(entity), head = renderAnchors(entity).head;
   const token = poseToken(entity.base, entity.facing, entity.action);
   const angle = entity.base === "lie" ? (entity.facing === "left" ? 90 : -90) : 0;
-  const style = useAnimatedStyle(() => {
+  const selected = useDerivedValue(() => {
     const s = slots.value[index];
-    const active = (s.phase === "settling" && s.settleAt > 0) || (s.phase === "pending" && s.pausedElapsed > 0);
-    const p = active ? settleProgress(s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt, reduced) : 0;
-    const selected = poseToken(s.proposal?.base ?? source.base, s.proposal?.facing ?? source.facing, entity.action) === token;
-    return { opacity: selected ? Math.max(0, Math.min(1, (p - .12) / .65)) : 0,
+    return poseToken(s.proposal?.base ?? source.base, s.proposal?.facing ?? source.facing, entity.action) === token;
+  });
+  const progress = useDerivedValue(() => {
+    if (!selected.value) return 0;
+    const s = slots.value[index];
+    const active = s.phase === "settling" && s.settleAt > 0 || s.phase === "pending" && s.pausedElapsed > 0;
+    return active ? settleProgress(s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt, reduced) : 0;
+  });
+  const style = useAnimatedStyle(() => {
+    const p = progress.value;
+    return { opacity: selected.value ? Math.max(0, Math.min(1, (p - .12) / .65)) : 0,
       transformOrigin: [head.x - frame.left, head.y - frame.top, 0], transform: [
         { translateX: (startHead.x - head.x) * (1 - p) },
         { translateY: (startHead.y - head.y) * (1 - p) }, { rotate: `${angle * (p - 1)}deg` },
