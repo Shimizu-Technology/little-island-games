@@ -14,6 +14,7 @@ import { paintEntries, restingVisible } from "./group";
 import { TargetCue } from "./TargetCue";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { DragOverlay } from "./DragOverlay";
+import { isPortion } from "./portions";
 import type { Interaction, Pickup, DragSlot } from "./useInteraction";
 import type { Viewport } from "./CameraController";
 
@@ -106,7 +107,10 @@ const RestingEntity = memo(function RestingEntity({
       accessibilityHint="Select, then choose a place."
       accessibilityActions={[
         { name: "activate", label: "Select" },
-        ...["left", "right", "back", "forward", "store"].map((name) => ({ name, label: name })),
+        ...["left", "right", "back", "forward", ...(!isPortion(entity.id) ? ["store"] : [])].map((name) => ({
+          name,
+          label: name,
+        })),
       ]}
       onAccessibilityAction={(event) =>
         event.nativeEvent.actionName === "activate"
