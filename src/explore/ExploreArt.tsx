@@ -337,12 +337,12 @@ export function Motif({ name }: { name: string }) {
     </G>
   );
 }
-export function TopicArt({ topic, compact = false }: { topic: ExploreTopic; compact?: boolean }) {
+export function TopicArt({ topic, compact = false, height }: { topic: ExploreTopic; compact?: boolean; height?: number }) {
   const world = WORLDS.find((w) => w.id === topic.world)!;
   return (
     <Svg
       width="100%"
-      height={compact ? 112 : 196}
+      height={height ?? (compact ? 112 : 196)}
       viewBox="0 0 320 196"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"

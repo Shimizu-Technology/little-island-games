@@ -1,5 +1,5 @@
 import generated from "./catalog.generated.json";
-import { TOPICS, WORLDS, topicSpeechKey, type ExploreTopic, type WorldId } from "../explore/content";
+import { TOPICS, WORLDS, type ExploreTopic, type WorldId } from "../explore/content";
 import type { LibraryItem, Sentence } from "./schema";
 import type { IndexedEntry } from "./search";
 import categoryData from "../../content/library/categories.json";
@@ -53,8 +53,15 @@ export const exhibits = WORLDS.map((world) => ({
   }[world.id],
   motif: categories.find((c) => c.id === worldCategory[world.id])!.motif,
 }));
+/** Questions and naming labels are different recordings; never substitute a whole article. */
 export function recordSpeech(record: CatalogItem): { key: string; sentence?: Sentence } {
-  return { key: record.item?.label.speechKey ?? topicSpeechKey(record.id), sentence: record.item?.label };
+  const label = record.item?.label;
+  if (label && label.text.replace(/[.!?]+$/g, "").toLowerCase() === record.title.replace(/[.!?]+$/g, "").toLowerCase())
+    return { key: label.speechKey, sentence: label };
+  return { key: `library-question-${record.id}` };
+}
+export function recordLabelSpeech(record: CatalogItem): { key: string; sentence?: Sentence } {
+  return { key: record.item?.label.speechKey ?? `library-word-${record.motif}`, sentence: record.item?.label };
 }
 export function availableItems(collections: readonly string[]) {
   return catalog.filter((record) => collections.includes(record.category));

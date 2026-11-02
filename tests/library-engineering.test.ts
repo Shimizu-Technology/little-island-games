@@ -10,7 +10,7 @@ import {
   undoDrawing,
   createLibraryPage,
 } from "../src/library/drawing";
-import { canOpen, catalog, categories } from "../src/library/catalog";
+import { canOpen, catalog, categories, recordSpeech } from "../src/library/catalog";
 import { canonicalDestination, exhibitWorld, mayFinishPage } from "../src/library/navigation";
 import {
   pendingPage,
@@ -23,6 +23,10 @@ import {
 } from "../src/library/drafts";
 import { TOPICS } from "../src/explore/content";
 describe("Production Library discovery", () => {
+  it("keeps question playback separate from the original whole-topic narration", () => {
+    const topic = catalog.find((record) => record.id === "dolphins")!;
+    expect(recordSpeech(topic).key).toBe("library-question-dolphins");
+  });
   it("retains all fifty original stable topic IDs, text and sources", () => {
     for (const topic of TOPICS) {
       const record = catalog.find((record) => record.id === topic.id);

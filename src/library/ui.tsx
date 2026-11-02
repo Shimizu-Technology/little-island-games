@@ -91,13 +91,21 @@ export function Action({
     </Pressable>
   );
 }
-export function ItemPicture({ record, large = false }: { record: CatalogItem; large?: boolean }) {
+export function ItemPicture({
+  record,
+  large = false,
+  pictureHeight,
+}: {
+  record: CatalogItem;
+  large?: boolean;
+  pictureHeight?: number;
+}) {
   const path = record.item?.image.path;
   return (
     <View
       style={{
         width: "100%",
-        height: large ? 230 : 148,
+        height: pictureHeight ?? (large ? 230 : 148),
         overflow: "hidden",
         borderRadius: 18,
         backgroundColor: palette.lagoon,
@@ -111,7 +119,7 @@ export function ItemPicture({ record, large = false }: { record: CatalogItem; la
           style={{ width: "100%", height: "100%" }}
         />
       ) : record.legacy ? (
-        <TopicArt topic={record.legacy} compact={!large} />
+        <TopicArt topic={record.legacy} compact={!large} height={pictureHeight} />
       ) : (
         <LibraryArt kind={record.motif} />
       )}
