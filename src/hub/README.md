@@ -1,0 +1,11 @@
+# Living Island hub
+
+`src/app/index.tsx` renders the shared native/web HubScreen. Expo Router owns destinations: School, Everything, existing Arcade and classic shelf, Explore, Home, Locker and Badges. School opens the existing subject shelves; CHamoru opens its existing activity. No HTML dialogs or design-study routes remain.
+
+`model.ts` owns destinations, six subjects, responsive target/door geometry and the cancellable journey controller. `navigation.ts` delegates game launches to the existing handlers (Arcade needs its own route). The catalog, Continue, suggestions, favorites, learner saves, recovery and backups remain shared.
+
+`Landmarks` and `Terrain` are memoized static vector layers. `IslandLife` animates four small composited overlays. The guide follows the central path, then a branch to the selected door in 380 ms, followed by a 160 ms camera zoom. Reanimated owns transform/opacity frames. One cancellable boundary timer opens the route. Any second activation skips travel and opens the newly selected destination; stale timers cannot open another route. Focus loss, settings/creator, rotation and text resize cancel unfinished travel. Reduce Motion skips travel and uses the existing Router fade. Idle animation pauses while the route is not focused or a sheet is open.
+
+Returning through Router preserves the visited door for the lifetime of the mounted Home route; a process restart returns the guide to the central path. This is presentation state, not a new save schema. Existing subject shelf state stays on its Router stack while playing a game. Favorites and Try today open their pocket directly. Everything remains the complete catalog and includes the maker credit.
+
+Native fontScale increases the map's scrollable height and gives labels room for two lines. Web RN Dimensions always reports fontScale 1; browser zoom QA is separate from native Dynamic Type. Native physical performance, VoiceOver and family usability remain lead acceptance. No new audio or native dependency is included.

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { shelfGames } from '../src/learn/home';
-import { directionOf, places, placeGames, subjects, subjectGames } from '../src/hub-lab/model';
+import { places, placeGames, subjects, subjectGames } from '../src/hub/model';
 
-describe('private hub design contract', () => {
+describe('living island hub contract', () => {
   it('offers every current destination without an empty Nursery teaser', () => {
     expect(places.map(place => place.id)).toEqual(['school', 'library', 'arcade', 'hall', 'home', 'locker', 'badges']);
   });
@@ -20,9 +20,5 @@ describe('private hub design contract', () => {
     expect(ids.sort()).toEqual(placeGames('school').map(game => game.id).sort());
     expect(subjectGames('chamoru').map(game => game.id)).toEqual(['hafa-adai']);
     expect(subjectGames('reading').some(game => game.id === 'hafa-adai')).toBe(false);
-  });
-  it('falls back to the postcard for unknown or multi-value direction params', () => {
-    expect(directionOf('b')).toBe('b');
-    for (const value of [undefined, '', 'a', 'c', ['b']]) expect(directionOf(value)).toBe('a');
   });
 });

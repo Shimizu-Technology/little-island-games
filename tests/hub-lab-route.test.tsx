@@ -1,26 +1,21 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import IslandMapLabRoute from '../src/app/island-map-lab';
-
-vi.mock('expo-router', () => ({ Redirect: ({ href }: { href: string }) => <span data-redirect={href}/> }));
-vi.mock('../src/hub-lab/IslandMapLab', () => ({ default: () => <span>Private design lab</span> }));
-afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
-
-describe('design route distribution boundary', () => {
-  it('redirects an ordinary production build to real Home', () => {
-    vi.stubGlobal('__DEV__', false);
-    vi.stubEnv('EXPO_PUBLIC_ISLAND_MAP_LAB', undefined);
-    expect(renderToStaticMarkup(<IslandMapLabRoute/>)).toContain('data-redirect="/"');
-  });
-  it('allows an explicitly opted-in private web export', () => {
-    vi.stubGlobal('__DEV__', false);
-    vi.stubEnv('EXPO_PUBLIC_ISLAND_MAP_LAB', '1');
-    expect(renderToStaticMarkup(<IslandMapLabRoute/>)).toContain('Private design lab');
-  });
-  it('allows development without changing the production default', () => {
-    vi.stubGlobal('__DEV__', true);
-    vi.stubEnv('EXPO_PUBLIC_ISLAND_MAP_LAB', undefined);
-    expect(renderToStaticMarkup(<IslandMapLabRoute/>)).toContain('Private design lab');
-  });
+import { describe, expect, it, vi } from 'vitest';
+import { existsSync } from 'node:fs';
+import Home from '../src/app/index';
+import School from '../src/app/school';
+import Everything from '../src/app/everything';
+vi.mock('../src/hub/HubScreen', () => ({ default: () => <span>Living Island</span> }));
+vi.mock('../src/hub/SchoolScreen', () => ({ default: () => <span>Six subjects</span> }));
+vi.mock('../src/hub/EverythingScreen', () => ({ default: () => <span>All places and games</span> }));
+describe('real hub routes replace the opt-in design study', () => {
+ it('uses the shared native hub as the ordinary home', () => expect(renderToStaticMarkup(<Home/>)).toContain('Living Island'));
+ it('provides real School and Everything destinations', () => {
+  expect(renderToStaticMarkup(<School/>)).toContain('Six subjects');
+  expect(renderToStaticMarkup(<Everything/>)).toContain('All places and games');
+ });
+ it('removes the prototype route and private parallel implementation', () => {
+  expect(existsSync('src/app/island-map-lab.tsx')).toBe(false);
+  expect(existsSync('src/hub-lab')).toBe(false);
+ });
 });
