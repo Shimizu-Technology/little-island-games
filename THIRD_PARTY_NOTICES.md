@@ -247,3 +247,21 @@ Installed npm dependencies retain their own licenses in their packages; the exac
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+## Island Library design fixture — Book Dash
+
+`content/library/assets/busy-*.jpg` and the corresponding English edition text are
+from **A Very Busy Day** (ISBN 978-1-928497-79-0), illustrated by El Marto, written
+by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok, with the
+Book Dash participants in Johannesburg, 26 October 2019.
+
+Source: https://bookdash.org/books/a-very-busy-day/
+
+License: Creative Commons Attribution 4.0 International (CC BY 4.0),
+https://creativecommons.org/licenses/by/4.0/ . A local copy is in
+`content/library/CC-BY-4.0.txt`. These assets and text are licensed separately from
+the application code; the app's MIT license does not replace their license.
+The prototype displays the original spreads without cropping and repeats the
+text in a scalable pane. Per-file original URLs and checksums are in
+`content/library/book-assets.json`, and credits accompany each image in
+`content/library/items.json`. No third-party book recording is included.

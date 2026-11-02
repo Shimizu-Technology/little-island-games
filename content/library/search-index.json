@@ -1,0 +1,1279 @@
+[
+  {
+    "id": "turtle-breath",
+    "title": "How do sea turtles breathe?",
+    "category": "ocean",
+    "aliases": [
+      "turtle",
+      "sea turtle",
+      "breathing",
+      "turtl"
+    ],
+    "tags": [
+      "ocean",
+      "reptile",
+      "lungs"
+    ],
+    "terms": [
+      "how",
+      "do",
+      "sea",
+      "turtles",
+      "breathe",
+      "turtle",
+      "breathing",
+      "turtl",
+      "ocean",
+      "reptile",
+      "lungs"
+    ],
+    "sounds": [
+      "hw",
+      "d",
+      "s",
+      "trtls",
+      "brth",
+      "trtl",
+      "brthng",
+      "trtl",
+      "sn",
+      "rptl",
+      "lngs"
+    ]
+  },
+  {
+    "id": "sun",
+    "title": "Is the Sun a star?",
+    "category": "space",
+    "aliases": [],
+    "tags": [
+      "space"
+    ],
+    "terms": [
+      "is",
+      "the",
+      "sun",
+      "a",
+      "star",
+      "space"
+    ],
+    "sounds": [
+      "s",
+      "th",
+      "sn",
+      "",
+      "str",
+      "sps"
+    ]
+  },
+  {
+    "id": "moon",
+    "title": "Why does the Moon change shape?",
+    "category": "space",
+    "aliases": [
+      "night moon"
+    ],
+    "tags": [
+      "space"
+    ],
+    "terms": [
+      "why",
+      "does",
+      "the",
+      "moon",
+      "change",
+      "shape",
+      "night",
+      "space"
+    ],
+    "sounds": [
+      "why",
+      "ds",
+      "th",
+      "mn",
+      "khng",
+      "shp",
+      "nght",
+      "sps"
+    ]
+  },
+  {
+    "id": "day-night",
+    "title": "What makes day and night?",
+    "category": "space",
+    "aliases": [],
+    "tags": [
+      "space"
+    ],
+    "terms": [
+      "what",
+      "makes",
+      "day",
+      "and",
+      "night",
+      "space"
+    ],
+    "sounds": [
+      "wht",
+      "mks",
+      "dy",
+      "nd",
+      "nght",
+      "sps"
+    ]
+  },
+  {
+    "id": "planets",
+    "title": "Who is in our solar system?",
+    "category": "space",
+    "aliases": [],
+    "tags": [
+      "space"
+    ],
+    "terms": [
+      "who",
+      "is",
+      "in",
+      "our",
+      "solar",
+      "system",
+      "space"
+    ],
+    "sounds": [
+      "wh",
+      "s",
+      "n",
+      "r",
+      "slr",
+      "systm",
+      "sps"
+    ]
+  },
+  {
+    "id": "mars",
+    "title": "Why is Mars red?",
+    "category": "space",
+    "aliases": [],
+    "tags": [
+      "space"
+    ],
+    "terms": [
+      "why",
+      "is",
+      "mars",
+      "red",
+      "space"
+    ],
+    "sounds": [
+      "why",
+      "s",
+      "mrs",
+      "rd",
+      "sps"
+    ]
+  },
+  {
+    "id": "saturn",
+    "title": "What are Saturn's rings?",
+    "category": "space",
+    "aliases": [],
+    "tags": [
+      "space"
+    ],
+    "terms": [
+      "what",
+      "are",
+      "saturn",
+      "s",
+      "rings",
+      "space"
+    ],
+    "sounds": [
+      "wht",
+      "r",
+      "strn",
+      "s",
+      "rngs",
+      "sps"
+    ]
+  },
+  {
+    "id": "gravity",
+    "title": "Why do things fall?",
+    "category": "space",
+    "aliases": [],
+    "tags": [
+      "space"
+    ],
+    "terms": [
+      "why",
+      "do",
+      "things",
+      "fall",
+      "space"
+    ],
+    "sounds": [
+      "why",
+      "d",
+      "thngs",
+      "fl",
+      "sps"
+    ]
+  },
+  {
+    "id": "stars",
+    "title": "Are all stars the same?",
+    "category": "space",
+    "aliases": [],
+    "tags": [
+      "space"
+    ],
+    "terms": [
+      "are",
+      "all",
+      "stars",
+      "the",
+      "same",
+      "space"
+    ],
+    "sounds": [
+      "r",
+      "l",
+      "strs",
+      "th",
+      "sm",
+      "sps"
+    ]
+  },
+  {
+    "id": "rockets",
+    "title": "How does a rocket move?",
+    "category": "space",
+    "aliases": [],
+    "tags": [
+      "space"
+    ],
+    "terms": [
+      "how",
+      "does",
+      "a",
+      "rocket",
+      "move",
+      "space"
+    ],
+    "sounds": [
+      "hw",
+      "ds",
+      "",
+      "rkt",
+      "mv",
+      "sps"
+    ]
+  },
+  {
+    "id": "asteroids",
+    "title": "What is an asteroid?",
+    "category": "space",
+    "aliases": [],
+    "tags": [
+      "space"
+    ],
+    "terms": [
+      "what",
+      "is",
+      "an",
+      "asteroid",
+      "space"
+    ],
+    "sounds": [
+      "wht",
+      "s",
+      "n",
+      "strd",
+      "sps"
+    ]
+  },
+  {
+    "id": "salty",
+    "title": "Why is the ocean salty?",
+    "category": "ocean",
+    "aliases": [],
+    "tags": [
+      "oceans"
+    ],
+    "terms": [
+      "why",
+      "is",
+      "the",
+      "ocean",
+      "salty",
+      "oceans"
+    ],
+    "sounds": [
+      "why",
+      "s",
+      "th",
+      "sn",
+      "slty",
+      "sns"
+    ]
+  },
+  {
+    "id": "tides",
+    "title": "Why does the shore move?",
+    "category": "ocean",
+    "aliases": [],
+    "tags": [
+      "oceans"
+    ],
+    "terms": [
+      "why",
+      "does",
+      "the",
+      "shore",
+      "move",
+      "oceans"
+    ],
+    "sounds": [
+      "why",
+      "ds",
+      "th",
+      "shr",
+      "mv",
+      "sns"
+    ]
+  },
+  {
+    "id": "waves",
+    "title": "What starts an ocean wave?",
+    "category": "ocean",
+    "aliases": [],
+    "tags": [
+      "oceans"
+    ],
+    "terms": [
+      "what",
+      "starts",
+      "an",
+      "ocean",
+      "wave",
+      "oceans"
+    ],
+    "sounds": [
+      "wht",
+      "strts",
+      "n",
+      "sn",
+      "wv",
+      "sns"
+    ]
+  },
+  {
+    "id": "coral",
+    "title": "Is coral a plant or an animal?",
+    "category": "ocean",
+    "aliases": [
+      "reef",
+      "coral reef"
+    ],
+    "tags": [
+      "oceans"
+    ],
+    "terms": [
+      "is",
+      "coral",
+      "a",
+      "plant",
+      "or",
+      "an",
+      "animal",
+      "reef",
+      "oceans"
+    ],
+    "sounds": [
+      "s",
+      "krl",
+      "",
+      "plnt",
+      "r",
+      "n",
+      "nml",
+      "rf",
+      "sns"
+    ]
+  },
+  {
+    "id": "plankton",
+    "title": "What drifts in the ocean?",
+    "category": "ocean",
+    "aliases": [],
+    "tags": [
+      "oceans"
+    ],
+    "terms": [
+      "what",
+      "drifts",
+      "in",
+      "the",
+      "ocean",
+      "oceans"
+    ],
+    "sounds": [
+      "wht",
+      "drfts",
+      "n",
+      "th",
+      "sn",
+      "sns"
+    ]
+  },
+  {
+    "id": "seagrass",
+    "title": "Can grass grow under the sea?",
+    "category": "ocean",
+    "aliases": [],
+    "tags": [
+      "oceans"
+    ],
+    "terms": [
+      "can",
+      "grass",
+      "grow",
+      "under",
+      "the",
+      "sea",
+      "oceans"
+    ],
+    "sounds": [
+      "kn",
+      "grs",
+      "grw",
+      "ndr",
+      "th",
+      "s",
+      "sns"
+    ]
+  },
+  {
+    "id": "deep-ocean",
+    "title": "What happens deeper in the ocean?",
+    "category": "ocean",
+    "aliases": [],
+    "tags": [
+      "oceans"
+    ],
+    "terms": [
+      "what",
+      "happens",
+      "deeper",
+      "in",
+      "the",
+      "ocean",
+      "oceans"
+    ],
+    "sounds": [
+      "wht",
+      "hpns",
+      "dpr",
+      "n",
+      "th",
+      "sn",
+      "sns"
+    ]
+  },
+  {
+    "id": "octopus",
+    "title": "What can eight arms do?",
+    "category": "ocean",
+    "aliases": [],
+    "tags": [
+      "oceans"
+    ],
+    "terms": [
+      "what",
+      "can",
+      "eight",
+      "arms",
+      "do",
+      "oceans"
+    ],
+    "sounds": [
+      "wht",
+      "kn",
+      "ght",
+      "rms",
+      "d",
+      "sns"
+    ]
+  },
+  {
+    "id": "food-web",
+    "title": "Who feeds whom in the sea?",
+    "category": "ocean",
+    "aliases": [],
+    "tags": [
+      "oceans"
+    ],
+    "terms": [
+      "who",
+      "feeds",
+      "whom",
+      "in",
+      "the",
+      "sea",
+      "oceans"
+    ],
+    "sounds": [
+      "wh",
+      "fds",
+      "whm",
+      "n",
+      "th",
+      "s",
+      "sns"
+    ]
+  },
+  {
+    "id": "bats",
+    "title": "Are bats birds?",
+    "category": "animals",
+    "aliases": [],
+    "tags": [
+      "animals"
+    ],
+    "terms": [
+      "are",
+      "bats",
+      "birds",
+      "animals"
+    ],
+    "sounds": [
+      "r",
+      "bts",
+      "brds",
+      "nmls"
+    ]
+  },
+  {
+    "id": "butterflies",
+    "title": "Where does a butterfly come from?",
+    "category": "animals",
+    "aliases": [],
+    "tags": [
+      "animals"
+    ],
+    "terms": [
+      "where",
+      "does",
+      "a",
+      "butterfly",
+      "come",
+      "from",
+      "animals"
+    ],
+    "sounds": [
+      "whr",
+      "ds",
+      "",
+      "btrfly",
+      "km",
+      "frm",
+      "nmls"
+    ]
+  },
+  {
+    "id": "frogs",
+    "title": "Why does a tadpole change?",
+    "category": "animals",
+    "aliases": [],
+    "tags": [
+      "animals"
+    ],
+    "terms": [
+      "why",
+      "does",
+      "a",
+      "tadpole",
+      "change",
+      "animals"
+    ],
+    "sounds": [
+      "why",
+      "ds",
+      "",
+      "tdpl",
+      "khng",
+      "nmls"
+    ]
+  },
+  {
+    "id": "bees",
+    "title": "How can a bee help a flower?",
+    "category": "animals",
+    "aliases": [],
+    "tags": [
+      "animals"
+    ],
+    "terms": [
+      "how",
+      "can",
+      "a",
+      "bee",
+      "help",
+      "flower",
+      "animals"
+    ],
+    "sounds": [
+      "hw",
+      "kn",
+      "",
+      "b",
+      "hlp",
+      "flwr",
+      "nmls"
+    ]
+  },
+  {
+    "id": "camouflage",
+    "title": "Can you hide in plain sight?",
+    "category": "animals",
+    "aliases": [],
+    "tags": [
+      "animals"
+    ],
+    "terms": [
+      "can",
+      "you",
+      "hide",
+      "in",
+      "plain",
+      "sight",
+      "animals"
+    ],
+    "sounds": [
+      "kn",
+      "y",
+      "hd",
+      "n",
+      "pln",
+      "sght",
+      "nmls"
+    ]
+  },
+  {
+    "id": "dolphins",
+    "title": "Is a dolphin a fish?",
+    "category": "animals",
+    "aliases": [
+      "dolphin",
+      "dolfin"
+    ],
+    "tags": [
+      "animals"
+    ],
+    "terms": [
+      "is",
+      "a",
+      "dolphin",
+      "fish",
+      "dolfin",
+      "animals"
+    ],
+    "sounds": [
+      "s",
+      "",
+      "dlfn",
+      "fsh",
+      "dlfn",
+      "nmls"
+    ]
+  },
+  {
+    "id": "habitats",
+    "title": "What makes an animal's home?",
+    "category": "animals",
+    "aliases": [],
+    "tags": [
+      "animals"
+    ],
+    "terms": [
+      "what",
+      "makes",
+      "an",
+      "animal",
+      "s",
+      "home",
+      "animals"
+    ],
+    "sounds": [
+      "wht",
+      "mks",
+      "n",
+      "nml",
+      "s",
+      "hm",
+      "nmls"
+    ]
+  },
+  {
+    "id": "migration",
+    "title": "Why do animals travel far?",
+    "category": "animals",
+    "aliases": [],
+    "tags": [
+      "animals"
+    ],
+    "terms": [
+      "why",
+      "do",
+      "animals",
+      "travel",
+      "far"
+    ],
+    "sounds": [
+      "why",
+      "d",
+      "nmls",
+      "trvl",
+      "fr"
+    ]
+  },
+  {
+    "id": "insect-flight",
+    "title": "How do tiny wings fly?",
+    "category": "animals",
+    "aliases": [],
+    "tags": [
+      "animals"
+    ],
+    "terms": [
+      "how",
+      "do",
+      "tiny",
+      "wings",
+      "fly",
+      "animals"
+    ],
+    "sounds": [
+      "hw",
+      "d",
+      "tny",
+      "wngs",
+      "fly",
+      "nmls"
+    ]
+  },
+  {
+    "id": "bird-feathers",
+    "title": "What are feathers for?",
+    "category": "animals",
+    "aliases": [],
+    "tags": [
+      "animals"
+    ],
+    "terms": [
+      "what",
+      "are",
+      "feathers",
+      "for",
+      "animals"
+    ],
+    "sounds": [
+      "wht",
+      "r",
+      "fthrs",
+      "fr",
+      "nmls"
+    ]
+  },
+  {
+    "id": "blue-sky",
+    "title": "Why is the sky blue?",
+    "category": "weather",
+    "aliases": [],
+    "tags": [
+      "weather"
+    ],
+    "terms": [
+      "why",
+      "is",
+      "the",
+      "sky",
+      "blue",
+      "weather"
+    ],
+    "sounds": [
+      "why",
+      "s",
+      "th",
+      "sky",
+      "bl",
+      "wthr"
+    ]
+  },
+  {
+    "id": "clouds",
+    "title": "What is a cloud made of?",
+    "category": "weather",
+    "aliases": [],
+    "tags": [
+      "weather"
+    ],
+    "terms": [
+      "what",
+      "is",
+      "a",
+      "cloud",
+      "made",
+      "of",
+      "weather"
+    ],
+    "sounds": [
+      "wht",
+      "s",
+      "",
+      "kld",
+      "md",
+      "f",
+      "wthr"
+    ]
+  },
+  {
+    "id": "rain",
+    "title": "How does rain fall from a cloud?",
+    "category": "weather",
+    "aliases": [],
+    "tags": [
+      "weather"
+    ],
+    "terms": [
+      "how",
+      "does",
+      "rain",
+      "fall",
+      "from",
+      "a",
+      "cloud",
+      "weather"
+    ],
+    "sounds": [
+      "hw",
+      "ds",
+      "rn",
+      "fl",
+      "frm",
+      "",
+      "kld",
+      "wthr"
+    ]
+  },
+  {
+    "id": "rainbows",
+    "title": "How does a rainbow appear?",
+    "category": "weather",
+    "aliases": [],
+    "tags": [
+      "weather"
+    ],
+    "terms": [
+      "how",
+      "does",
+      "a",
+      "rainbow",
+      "appear",
+      "weather"
+    ],
+    "sounds": [
+      "hw",
+      "ds",
+      "",
+      "rnbw",
+      "pr",
+      "wthr"
+    ]
+  },
+  {
+    "id": "wind",
+    "title": "What is wind?",
+    "category": "weather",
+    "aliases": [],
+    "tags": [
+      "weather"
+    ],
+    "terms": [
+      "what",
+      "is",
+      "wind",
+      "weather"
+    ],
+    "sounds": [
+      "wht",
+      "s",
+      "wnd",
+      "wthr"
+    ]
+  },
+  {
+    "id": "lightning",
+    "title": "Why does thunder rumble?",
+    "category": "weather",
+    "aliases": [],
+    "tags": [
+      "weather"
+    ],
+    "terms": [
+      "why",
+      "does",
+      "thunder",
+      "rumble",
+      "weather"
+    ],
+    "sounds": [
+      "why",
+      "ds",
+      "thndr",
+      "rmbl",
+      "wthr"
+    ]
+  },
+  {
+    "id": "typhoons",
+    "title": "Is a typhoon a hurricane?",
+    "category": "weather",
+    "aliases": [],
+    "tags": [
+      "weather"
+    ],
+    "terms": [
+      "is",
+      "a",
+      "typhoon",
+      "hurricane",
+      "weather"
+    ],
+    "sounds": [
+      "s",
+      "",
+      "tyfn",
+      "hrkn",
+      "wthr"
+    ]
+  },
+  {
+    "id": "water-cycle",
+    "title": "Where does water go?",
+    "category": "weather",
+    "aliases": [],
+    "tags": [
+      "weather"
+    ],
+    "terms": [
+      "where",
+      "does",
+      "water",
+      "go",
+      "weather"
+    ],
+    "sounds": [
+      "whr",
+      "ds",
+      "wtr",
+      "g",
+      "wthr"
+    ]
+  },
+  {
+    "id": "seasons",
+    "title": "Why do seasons change?",
+    "category": "weather",
+    "aliases": [],
+    "tags": [
+      "weather"
+    ],
+    "terms": [
+      "why",
+      "do",
+      "seasons",
+      "change",
+      "weather"
+    ],
+    "sounds": [
+      "why",
+      "d",
+      "sns",
+      "khng",
+      "wthr"
+    ]
+  },
+  {
+    "id": "forecast",
+    "title": "How do people predict weather?",
+    "category": "weather",
+    "aliases": [],
+    "tags": [
+      "weather"
+    ],
+    "terms": [
+      "how",
+      "do",
+      "people",
+      "predict",
+      "weather"
+    ],
+    "sounds": [
+      "hw",
+      "d",
+      "pl",
+      "prdkt",
+      "wthr"
+    ]
+  },
+  {
+    "id": "guam",
+    "title": "Where is Guam?",
+    "category": "guam",
+    "aliases": [],
+    "tags": [
+      "world"
+    ],
+    "terms": [
+      "where",
+      "is",
+      "guam",
+      "world"
+    ],
+    "sounds": [
+      "whr",
+      "s",
+      "gm",
+      "wrld"
+    ]
+  },
+  {
+    "id": "islands",
+    "title": "How can land be an island?",
+    "category": "guam",
+    "aliases": [],
+    "tags": [
+      "world"
+    ],
+    "terms": [
+      "how",
+      "can",
+      "land",
+      "be",
+      "an",
+      "island",
+      "world"
+    ],
+    "sounds": [
+      "hw",
+      "kn",
+      "lnd",
+      "b",
+      "n",
+      "slnd",
+      "wrld"
+    ]
+  },
+  {
+    "id": "reef",
+    "title": "Why care for Guam's reefs?",
+    "category": "guam",
+    "aliases": [],
+    "tags": [
+      "world"
+    ],
+    "terms": [
+      "why",
+      "care",
+      "for",
+      "guam",
+      "s",
+      "reefs",
+      "world"
+    ],
+    "sounds": [
+      "why",
+      "kr",
+      "fr",
+      "gm",
+      "s",
+      "rfs",
+      "wrld"
+    ]
+  },
+  {
+    "id": "trench",
+    "title": "What is the Mariana Trench?",
+    "category": "guam",
+    "aliases": [],
+    "tags": [
+      "world"
+    ],
+    "terms": [
+      "what",
+      "is",
+      "the",
+      "mariana",
+      "trench",
+      "world"
+    ],
+    "sounds": [
+      "wht",
+      "s",
+      "th",
+      "mrn",
+      "trnkh",
+      "wrld"
+    ]
+  },
+  {
+    "id": "mountains",
+    "title": "How can mountains grow?",
+    "category": "guam",
+    "aliases": [],
+    "tags": [
+      "world"
+    ],
+    "terms": [
+      "how",
+      "can",
+      "mountains",
+      "grow",
+      "world"
+    ],
+    "sounds": [
+      "hw",
+      "kn",
+      "mntns",
+      "grw",
+      "wrld"
+    ]
+  },
+  {
+    "id": "rivers",
+    "title": "Why do rivers wind toward the sea?",
+    "category": "guam",
+    "aliases": [],
+    "tags": [
+      "world"
+    ],
+    "terms": [
+      "why",
+      "do",
+      "rivers",
+      "wind",
+      "toward",
+      "the",
+      "sea",
+      "world"
+    ],
+    "sounds": [
+      "why",
+      "d",
+      "rvrs",
+      "wnd",
+      "twrd",
+      "th",
+      "s",
+      "wrld"
+    ]
+  },
+  {
+    "id": "continents",
+    "title": "What are continents?",
+    "category": "guam",
+    "aliases": [],
+    "tags": [
+      "world"
+    ],
+    "terms": [
+      "what",
+      "are",
+      "continents",
+      "world"
+    ],
+    "sounds": [
+      "wht",
+      "r",
+      "kntnts",
+      "wrld"
+    ]
+  },
+  {
+    "id": "maps",
+    "title": "How do you read a map?",
+    "category": "guam",
+    "aliases": [],
+    "tags": [
+      "world"
+    ],
+    "terms": [
+      "how",
+      "do",
+      "you",
+      "read",
+      "a",
+      "map",
+      "world"
+    ],
+    "sounds": [
+      "hw",
+      "d",
+      "y",
+      "rd",
+      "",
+      "mp",
+      "wrld"
+    ]
+  },
+  {
+    "id": "directions",
+    "title": "Which way is north?",
+    "category": "guam",
+    "aliases": [],
+    "tags": [
+      "world"
+    ],
+    "terms": [
+      "which",
+      "way",
+      "is",
+      "north",
+      "world"
+    ],
+    "sounds": [
+      "whkh",
+      "wy",
+      "s",
+      "nrth",
+      "wrld"
+    ]
+  },
+  {
+    "id": "volcanoes",
+    "title": "What is inside a volcano?",
+    "category": "guam",
+    "aliases": [],
+    "tags": [
+      "world"
+    ],
+    "terms": [
+      "what",
+      "is",
+      "inside",
+      "a",
+      "volcano",
+      "world"
+    ],
+    "sounds": [
+      "wht",
+      "s",
+      "nsd",
+      "",
+      "vlkn",
+      "wrld"
+    ]
+  }
+]
