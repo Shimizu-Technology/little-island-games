@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="forecast-art-title">
+  <title id="forecast-art-title">A weather station has a cup anemometer, a marked thermometer and a rain gauge with a blue water level.</title>
+  <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M77 62v105m-23 0h46M77 62 38 44m39 18 34-25m-34 25 0-32" fill="none" stroke-width="4"/><ellipse cx="36" cy="43" rx="16" ry="8" fill="#FFF9E6" /><ellipse cx="113" cy="35" rx="16" ry="8" fill="#FFF9E6" /><ellipse cx="77" cy="25" rx="16" ry="8" fill="#FFF9E6" /><rect x="159" y="32" width="26" height="106" rx="13" fill="#FFF9E6" /><circle cx="172" cy="147" r="20" fill="#FFF9E6" /><path d="M172 142V82" fill="none" stroke="#D4896C" stroke-width="7"/><circle cx="172" cy="148" r="9" fill="#D4896C" stroke="none"/><path d="M179 54h12m-12 18h12m-12 18h12m-12 18h12" fill="none" stroke-width="2"/><rect x="234" y="65" width="49" height="103" rx="6" fill="#FFF9E6" /><rect x="238" y="119" width="41" height="45" rx="3" fill="#91C5D0" stroke="none"/><path d="M228 57h61m-42 31h12m-12 18h12m-12 18h12m-12 18h12" fill="none" stroke-width="2"/>
+  </g>
+</svg>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="shadow-art-title">
+  <title id="shadow-art-title">A small flashlight shines toward a coral block; the block casts a long dark shadow across a cream sheet of paper.</title>
+  <rect width="320" height="196" rx="22" fill="#EEEAF6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M69 141 140 70 293 121 220 179Z" fill="#FFF9E6" /><path d="M164 120 196 125 267 151 239 164 152 131Z" fill="#718A82" /><path d="M132 82h36v45h-36Z" fill="#D4896C" /><path d="m27 65 39 13-12 36-39-13Z" fill="#80A97D" /><path d="m66 78 15-8-17 53-10-9Z" fill="#F0D397" /><path d="M77 81 132 81m-61 21 61 21" fill="none" stroke="#F0D397" stroke-width="3" stroke-dasharray="4 6"/>
+  </g>
+</svg>

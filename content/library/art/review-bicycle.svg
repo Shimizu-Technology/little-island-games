@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="bicycle-art-title">
+  <title id="bicycle-art-title">A green bicycle has two round wheels, a triangular frame, handlebars and a coral chain connecting the central crank to the rear-wheel sprocket.</title>
+  <rect width="320" height="196" rx="22" fill="#FFF9E6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="75" cy="133" r="44" fill="#FFF9E6" /><circle cx="251" cy="133" r="44" fill="#FFF9E6" /><path d="M75 133 115 62 162 133H75l73-71h63l40 71-52-100h-24m-71 29h29" fill="none" stroke-width="5"/><path d="M75 123 161 118q23 15 0 29L75 142q-13-9 0-19Z" fill="#D4896C" /><circle cx="75" cy="133" r="6" fill="#254E4B" /><circle cx="162" cy="133" r="12" fill="#80A97D" /><path d="m162 133 14 18h15m-29-18-12-15h-13" fill="none" stroke-width="4"/>
+  </g>
+</svg>

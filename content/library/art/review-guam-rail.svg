@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="guam-rail-art-title">
+  <title id="guam-rail-art-title">A brown rail with a long pointed bill, barred flank, short tail and two strong legs stands between broad green leaves.</title>
+  <rect width="320" height="196" rx="22" fill="#F6E8DC"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M26 160q-10-40 4-73 24 17 18 47m-22 26q-4-38-16-47" fill="#80A97D" /><path d="M275 165q-3-44 24-65 7 41-24 65m-5-3q-7-31-24-38-1 24 24 38" fill="#80A97D" /><ellipse cx="142" cy="103" rx="66" ry="35" fill="#A98563" /><path d="M171 85q-10-48 20-49 31-3 31 31l-33 42" fill="#A98563" /><path d="M220 52 267 63l-48 4Z" fill="#F0D397" /><path d="m84 99-34-12 13 31" fill="#A98563" /><path d="M121 130v30m-12 4h28m30-31 8 30h24" fill="none" /><path d="M118 111q30-21 54 0m-56 11 15 9m0-16 18 16m-1-18 18 13" fill="none" stroke="#FFF9E6" stroke-width="2"/><circle cx="205" cy="50" r="4" fill="#254E4B" />
+  </g>
+</svg>

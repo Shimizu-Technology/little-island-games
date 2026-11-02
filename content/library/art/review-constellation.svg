@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="constellation-art-title">
+  <title id="constellation-art-title">Six round golden stars are joined by dashed imaginary lines in an invented bent pattern against a pale purple sky.</title>
+  <rect width="320" height="196" rx="22" fill="#EEEAF6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M39 49 102 94 160 40 216 77 270 135 166 157 102 94" fill="none" stroke-dasharray="5 7"/><circle cx="39" cy="49" r="7" fill="#F0D397" /><circle cx="102" cy="94" r="7" fill="#F0D397" /><circle cx="160" cy="40" r="7" fill="#F0D397" /><circle cx="216" cy="77" r="7" fill="#F0D397" /><circle cx="270" cy="135" r="7" fill="#F0D397" /><circle cx="166" cy="157" r="7" fill="#F0D397" />
+  </g>
+</svg>

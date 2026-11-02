@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="comet-art-title">
+  <title id="comet-art-title">A small pale comet nucleus has a long straight blue ion tail and a separate broad, curved golden dust tail.</title>
+  <rect width="320" height="196" rx="22" fill="#EEEAF6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M58 135 272 27 101 142Z" fill="#91C5D0" /><path d="M58 140Q150 66 284 93q-84 12-138 64-39 15-75 4Z" fill="#F0D397" /><circle cx="70" cy="144" r="26" fill="#E5D8B1" /><circle cx="62" cy="137" r="6" fill="#AFAB9D" /><path d="M48 145q-22 5-29 16m28-2-13 13" fill="none" stroke="#AFAB9D"/>
+  </g>
+</svg>

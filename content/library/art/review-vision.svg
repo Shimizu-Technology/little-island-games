@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="vision-art-title">
+  <title id="vision-art-title">In a side-view eye model, golden light arrows enter the blue cornea and pass through a pale lens toward the back of the eye; a short optic nerve exits behind it.</title>
+  <rect width="320" height="196" rx="22" fill="#FFF9E6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="192" cy="101" rx="71" ry="61" fill="#FFF9E6" /><path d="M135 65q-32 36 0 72Z" fill="#91C5D0" /><path d="M139 78v15m0 16v15" fill="none" stroke="#80A97D" stroke-width="6"/><ellipse cx="151" cy="101" rx="9" ry="26" fill="#E5D8B1" /><path d="M231 51q61 49 0 101" fill="none" stroke="#D4896C" stroke-width="5"/><path d="M260 93h31v16h-31Z" fill="#E5D8B1" /><path d="M25 86L128 94" fill="none" stroke="#F0D397"/><path d="M121.1 98.0L128 94 121.8 89.0" fill="none" stroke="#F0D397"/><path d="M25 116L128 108" fill="none" stroke="#F0D397"/><path d="M121.8 113.0L128 108 121.1 104.0" fill="none" stroke="#F0D397"/><path d="M133 95 153 92 249 102 153 110 133 107" fill="none" stroke="#F0D397" stroke-width="2"/>
+  </g>
+</svg>

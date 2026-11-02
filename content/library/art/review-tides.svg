@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="tides-art-title">
+  <title id="tides-art-title">Two views of the same sloping shore and striped rock show a low waterline on the left and a high waterline on the right.</title>
+  <rect width="320" height="196" rx="22" fill="#E1F0F3"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="19" y="27" width="134" height="144" rx="16" fill="#FFF9E6" /><rect x="167" y="27" width="134" height="144" rx="16" fill="#FFF9E6" /><g transform="translate(27 34)"><path d="M0 128 117 54v74Z" fill="#F0D397" /><path d="M0 128V96H47v32Z" fill="#91C5D0" /><path d="M48 106 44 64l16-14 17 15-4 41Z" fill="#AFAB9D" /><path d="M47 76h27m-26 12h25" fill="none" stroke="#FFF9E6"/><path d="M0 96h47" fill="none" stroke-width="3"/></g><g transform="translate(175 34)"><path d="M0 128 117 54v74Z" fill="#F0D397" /><path d="M0 128V57H107v71Z" fill="#91C5D0" /><path d="M48 106 44 64l16-14 17 15-4 41Z" fill="#AFAB9D" /><path d="M47 76h27m-26 12h25" fill="none" stroke="#FFF9E6"/><path d="M0 57h107" fill="none" stroke-width="3"/></g><rect x="203" y="91" width="49" height="49" rx="0" fill="#91C5D0" opacity=".55" stroke="none"/><path d="M175 91h107" fill="none" stroke-width="3"/><rect x="55" y="130" width="49" height="10" rx="0" fill="#91C5D0" opacity=".55" stroke="none"/><path d="M27 130h47" fill="none" stroke-width="3"/><path d="M130 77L130 112" fill="none" stroke="#254E4B"/><path d="M125.5 105.4L130 112 134.5 105.4" fill="none" stroke="#254E4B"/><path d="M280 115L280 75" fill="none" stroke="#254E4B"/><path d="M284.5 81.6L280 75 275.5 81.6" fill="none" stroke="#254E4B"/>
+  </g>
+</svg>

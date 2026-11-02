@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="waves-art-title">
+  <title id="waves-art-title">A large blue breaking wave curls over a foamy crest while three wind arrows point across the water.</title>
+  <rect width="320" height="196" rx="22" fill="#E1F0F3"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 160q42 3 70-47 30-77 92-61 47 15 20 46-12-30-37-13 35 1 41 40 10 30 95 28v24H20Z" fill="#91C5D0" /><path d="M126 78q25-34 57-23 29 10 19 33-18-24-37-3" fill="#FFF9E6" stroke-width="4"/><path d="M35 41L99 41" fill="none" stroke="#254E4B"/><path d="M92.4 45.5L99 41 92.4 36.5" fill="none" stroke="#254E4B"/><path d="M69 64L112 64" fill="none" stroke="#254E4B"/><path d="M105.4 68.5L112 64 105.4 59.5" fill="none" stroke="#254E4B"/><path d="M220 41L282 41" fill="none" stroke="#254E4B"/><path d="M275.4 45.5L282 41 275.4 36.5" fill="none" stroke="#254E4B"/><path d="M36 159h33m159 4h48" fill="none" stroke="#FFF9E6" stroke-width="5"/>
+  </g>
+</svg>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="crab-shells-art-title">
+  <title id="crab-shells-art-title">A coral crab with jointed legs and raised claws stands beside a pale empty shell, whose lifted top exposes an open interior.</title>
+  <rect width="320" height="196" rx="22" fill="#E1F0F3"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(19 8)"><path d="M40 89 26 72 16 67m26 30-23-5-8 8m33 4-22 10-6 13m33-16-11 18 3 11m57-51 14-17 10-5m-28 30 23-5 8 8m-33 4 22 10 6 13m-33-16 11 18-3 11" fill="none" /><ellipse cx="68" cy="93" rx="32" ry="24" fill="#D4896C" /><path d="m44 77-13-25m62 25 13-25m-75 0-12-9m12 9 3-15m72 15 12-9m-12 9-3-15" fill="none" /><path d="M56 72v-7m24 7v-7" fill="none" /><circle cx="56" cy="63" r="4" fill="#254E4B" /><circle cx="80" cy="63" r="4" fill="#254E4B" /></g><path d="M190 138q-12-43 35-44 40 0 39 37l-9 17Z" fill="#E5D8B1" /><ellipse cx="226" cy="117" rx="27" ry="13" fill="#254E4B" /><path d="M196 102q-9-37 33-41 34 0 35 32l-12 15Z" fill="#FFF9E6" /><path d="m196 131-21 12m26-3-14 17m63-24 25 11m-31-4 15 17" fill="none" stroke="#AFAB9D"/>
+  </g>
+</svg>

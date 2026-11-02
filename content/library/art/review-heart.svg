@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="heart-art-title">
+  <title id="heart-art-title">A coral heart symbol sits between two looping arrows: a solid coral path leaves it and a dashed blue path returns, representing circulation in a simplified model.</title>
+  <rect width="320" height="196" rx="22" fill="#FFF9E6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M159 136Q91 94 119 65q23-23 40 4 18-27 42-4 29 30-42 71Z" fill="#D4896C" /><path d="M195 80C272 10 315 99 263 143h-42" fill="none" stroke="#D4896C" stroke-width="6"/><path d="m231 133-11 10 12 9" fill="none" stroke="#D4896C" stroke-width="5"/><path d="M120 113C56 179 2 95 48 53h53" fill="none" stroke="#91C5D0" stroke-width="6" stroke-dasharray="8 9"/><path d="m90 43 11 10-11 10" fill="none" stroke="#91C5D0" stroke-width="5"/>
+  </g>
+</svg>

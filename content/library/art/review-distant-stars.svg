@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="distant-stars-art-title">
+  <title id="distant-stars-art-title">An eye on the left looks along widening sight lines toward two equal-sized star discs drawn at different distances; a small apparent-size inset shows the farther star as a dot.</title>
+  <rect width="320" height="196" rx="22" fill="#EEEAF6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 110q22-30 43 0-21 30-43 0Z" fill="#FFF9E6" /><circle cx="42" cy="110" r="8" fill="#80A97D" /><path d="M66 109 137 64M66 111 137 142M67 109 268 60M67 111 268 135" fill="none" stroke="#AFAB9D" stroke-width="1.5" stroke-dasharray="3 6"/><circle cx="146" cy="102" r="25" fill="#F0D397" /><circle cx="274" cy="102" r="25" fill="#F0D397" /><rect x="179" y="149" width="111" height="31" rx="10" fill="#FFF9E6" /><circle cx="203" cy="164" r="10" fill="#F0D397" /><circle cx="263" cy="164" r="3" fill="#F0D397" />
+  </g>
+</svg>

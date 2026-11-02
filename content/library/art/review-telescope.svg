@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="telescope-art-title">
+  <title id="telescope-art-title">A green telescope with a wide blue front lens points upward toward a small golden star; a narrow eyepiece sits at the low end above a three-legged stand.</title>
+  <rect width="320" height="196" rx="22" fill="#EEEAF6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="rotate(-27 150 95)"><rect x="80" y="75" width="130" height="34" rx="0" fill="#80A97D" /><rect x="203" y="69" width="17" height="46" rx="0" fill="#91C5D0" /><rect x="58" y="84" width="22" height="16" rx="0" fill="#F0D397" /><ellipse cx="220" cy="92" rx="5" ry="23" fill="#91C5D0" /></g><path d="M153 111v25m0 0-48 39m48-39 48 39m-48-39v39" fill="none" stroke-width="4"/><path d="m266 24 5 12 13 1-10 9 3 13-11-7-11 7 3-13-10-9 13-1Z" fill="#F0D397" /><path d="M235 54 249 42" fill="none" stroke="#AFAB9D" stroke-dasharray="4 6"/>
+  </g>
+</svg>

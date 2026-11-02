@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="stars-art-title">
+  <title id="stars-art-title">Four five-point star symbols of different sizes are colored blue, cream, gold and coral against a pale purple sky; shapes and sizes are symbolic.</title>
+  <rect width="320" height="196" rx="22" fill="#EEEAF6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M78.00,46.00 91.49,78.43 126.50,81.24 99.83,104.09 107.98,138.26 78.00,119.95 48.02,138.26 56.17,104.09 29.50,81.24 64.51,78.43Z" fill="#91C5D0" /><path d="M175.00,29.00 181.88,45.53 199.73,46.97 186.13,58.62 190.28,76.03 175.00,66.70 159.72,76.03 163.87,58.62 150.27,46.97 168.12,45.53Z" fill="#FFF9E6" /><path d="M219.00,93.00 229.32,117.80 256.09,119.95 235.69,137.42 241.92,163.55 219.00,149.55 196.08,163.55 202.31,137.42 181.91,119.95 208.68,117.80Z" fill="#D4896C" /><path d="M276.00,32.00 280.23,42.18 291.22,43.06 282.85,50.22 285.40,60.94 276.00,55.20 266.60,60.94 269.15,50.22 260.78,43.06 271.77,42.18Z" fill="#F0D397" />
+  </g>
+</svg>

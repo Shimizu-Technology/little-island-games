@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="camouflage-art-title">
+  <title id="camouflage-art-title">A leaf-shaped green butterfly rests with folded wings among three similarly shaped leaves on a branch.</title>
+  <rect width="320" height="196" rx="22" fill="#E7F1DD"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M25 165Q130 96 290 77" fill="none" stroke-width="6"/><path d="M67 140Q36 77 98 58q21 54-31 82Z" fill="#80A97D" /><path d="M153 111q-23-66 39-73 26 48-39 73Z" fill="#80A97D" /><path d="M221 92q13-58 69-40-4 43-69 40Z" fill="#80A97D" /><path d="M112 126q-28-67 26-90 38 57-26 90Z" fill="#A8C69A" /><path d="M112 126 138 36m-25 90 22-6m-8-11 13-7m-26 22-2 14m2-14-13 4" fill="none" /><circle cx="121" cy="124" r="4" fill="#254E4B" /><path d="m121 124 15-8m-15 8 16 2m-20 5-8 16" fill="none" stroke-width="2"/>
+  </g>
+</svg>

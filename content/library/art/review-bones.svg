@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="bones-art-title">
+  <title id="bones-art-title">A cream rib cage and spine sit beside two long arm bones meeting at a round elbow joint; this is a simplified skeleton model.</title>
+  <rect width="320" height="196" rx="22" fill="#FFF9E6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M103 32v128m0-10-22 25m22-25 22 25" fill="none" stroke-width="7"/><path d="M100 58q-54-24-56 3 1 19 54 15m8-18q54-24 56 3-1 19-54 15" fill="none" stroke-width="12"/><path d="M100 58q-54-24-56 3 1 19 54 15m8-18q54-24 56 3-1 19-54 15" fill="none" stroke="#E5D8B1" stroke-width="7"/><path d="M100 83q-54-24-56 3 1 19 54 15m8-18q54-24 56 3-1 19-54 15" fill="none" stroke-width="12"/><path d="M100 83q-54-24-56 3 1 19 54 15m8-18q54-24 56 3-1 19-54 15" fill="none" stroke="#E5D8B1" stroke-width="7"/><path d="M100 108q-54-24-56 3 1 19 54 15m8-18q54-24 56 3-1 19-54 15" fill="none" stroke-width="12"/><path d="M100 108q-54-24-56 3 1 19 54 15m8-18q54-24 56 3-1 19-54 15" fill="none" stroke="#E5D8B1" stroke-width="7"/><path d="M211 36q-18-12-22 3-5 11 6 14l10 48q-10 8-1 15 10 8 14-4l-1-63q11-13-6-13Z" fill="#E5D8B1" /><circle cx="211" cy="120" r="10" fill="#FFF9E6" /><path d="M216 128q-13-4-18 4l-25 34q-15-5-15 7 2 12 16 6l38-36q13-3 4-15Z" fill="#E5D8B1" />
+  </g>
+</svg>

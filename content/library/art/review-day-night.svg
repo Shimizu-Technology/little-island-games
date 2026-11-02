@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="day-night-art-title">
+  <title id="day-night-art-title">Sunlight reaches one half of a blue Earth while the other half is shaded; a curved arrow shows Earth turning.</title>
+  <rect width="320" height="196" rx="22" fill="#EEEAF6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="46" cy="97" r="24" fill="#F0D397" /><path d="M86 76L130 76" fill="none" stroke="#F0D397"/><path d="M123.4 80.5L130 76 123.4 71.5" fill="none" stroke="#F0D397"/><path d="M86 99L130 99" fill="none" stroke="#F0D397"/><path d="M123.4 103.5L130 99 123.4 94.5" fill="none" stroke="#F0D397"/><path d="M86 122L130 122" fill="none" stroke="#F0D397"/><path d="M123.4 126.5L130 122 123.4 117.5" fill="none" stroke="#F0D397"/><circle cx="201" cy="98" r="51" fill="#91C5D0" /><path d="M165.3 67.4l30.599999999999998 -5.1000000000000005 15.299999999999999 25.5-20.400000000000002 20.400000000000002-5.1000000000000005 25.5" fill="#80A97D" stroke-width="1.5"/><path d="M201 47a51 51 0 0 1 0 102Z" fill="#7F83A0" stroke="none"/><path d="M169 35Q229 8 263 65m-13-4 13 4-1-14" fill="none" />
+  </g>
+</svg>

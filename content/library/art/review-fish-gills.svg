@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="fish-gills-art-title">
+  <title id="fish-gills-art-title">Water arrows enter a blue fish’s open mouth and leave behind three curved gill marks; the flow is a simplified diagram.</title>
+  <rect width="320" height="196" rx="22" fill="#E1F0F3"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M78 96q49-61 135 0l58-35v76l-58-41q-85 64-135 0l20-8Z" fill="#91C5D0" /><path d="m151 60 23-23 21 37m-47 61 22 24 22-31" fill="#91C5D0" /><circle cx="120" cy="80" r="4" fill="#254E4B" /><path d="M143 72q-14 26 0 50m12-50q-14 26 0 50m12-50q-14 26 0 50" fill="none" /><path d="M26 95L95 95" fill="none" stroke="#254E4B"/><path d="M88.4 99.5L95 95 88.4 90.5" fill="none" stroke="#254E4B"/><path d="M153 119L182 147" fill="none" stroke="#254E4B"/><path d="M174.1 145.7L182 147 180.4 139.2" fill="none" stroke="#254E4B"/><path d="M164 129L191 163" fill="none" stroke="#254E4B"/><path d="M183.4 160.6L191 163 190.4 155.0" fill="none" stroke="#254E4B"/>
+  </g>
+</svg>

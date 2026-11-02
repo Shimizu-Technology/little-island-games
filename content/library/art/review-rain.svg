@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="rain-art-title">
+  <title id="rain-art-title">Rounded drops gather inside a broad blue-gray rain cloud, and three large drops fall toward a puddle.</title>
+  <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M43 91C15 78 27 44 58 48 65 10 112 16 124 42 159 15 202 36 203 58 241 37 283 62 270 94Z" fill="#D9E7E5" /><circle cx="55" cy="70" r="3" fill="#91C5D0" stroke-width="1"/><circle cx="79" cy="56" r="4" fill="#91C5D0" stroke-width="1"/><circle cx="100" cy="73" r="6" fill="#91C5D0" stroke-width="1"/><circle cx="140" cy="63" r="7" fill="#91C5D0" stroke-width="1"/><circle cx="178" cy="79" r="9" fill="#91C5D0" stroke-width="1"/><circle cx="214" cy="69" r="11" fill="#91C5D0" stroke-width="1"/><circle cx="249" cy="79" r="12" fill="#91C5D0" stroke-width="1"/><path d="M91 115q-16 23 0 23 16 0 0-23Z" fill="#91C5D0" /><path d="M167 105q-16 23 0 23 16 0 0-23Z" fill="#91C5D0" /><path d="M235 125q-16 23 0 23 16 0 0-23Z" fill="#91C5D0" /><ellipse cx="160" cy="170" rx="110" ry="8" fill="#91C5D0" stroke-width="2"/>
+  </g>
+</svg>

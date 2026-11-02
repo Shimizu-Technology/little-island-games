@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="native-trees-art-title">
+  <title id="native-trees-art-title">A mature broad-canopied tree shelters a small perched bird, with exposed branching roots and a two-leaf seedling nearby.</title>
+  <rect width="320" height="196" rx="22" fill="#F6E8DC"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M163 67v83m0-40-35-31m35 18 36-25m-36 78-35 25m35-25 38 25m-38-25v25" fill="none" stroke-width="7"/><path d="M63 80Q33 42 77 34 81 2 126 25 157-5 185 26q48-14 57 18 49 15 17 51-49 24-76-4-27 23-59-4-37 24-61-7Z" fill="#80A97D" /><path d="M109 90q16-8 27 8l17-5-7 12q-22 14-37-15Z" fill="#F0D397" /><circle cx="128" cy="96" r="2" fill="#254E4B" /><path d="M124 108v8m8-8v8" fill="none" stroke-width="2"/><path d="M56 176v-24m0 4q-28-27-28-1 6 18 28 12m0-11q28-27 28-1-6 18-28 12" fill="#80A97D" />
+  </g>
+</svg>

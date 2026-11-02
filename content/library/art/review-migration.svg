@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="migration-art-title">
+  <title id="migration-art-title">Three flying birds follow a long dotted route between two separated patches of land.</title>
+  <rect width="320" height="196" rx="22" fill="#E7F1DD"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 159q28-39 68-13l26 31H18Zm180 18q26-48 61-34 30-15 44 34Z" fill="#80A97D" /><path d="M47 143C35 42 218 18 270 126" fill="none" stroke-dasharray="5 8" stroke="#AFAB9D"/><g transform="translate(68 82) scale(1)"><path d="M0 4Q10-10 21 4 30-10 41 4" fill="none" /></g><g transform="translate(139 49) scale(1.15)"><path d="M0 4Q10-10 21 4 30-10 41 4" fill="none" /></g><g transform="translate(216 85) scale(0.9)"><path d="M0 4Q10-10 21 4 30-10 41 4" fill="none" /></g><path d="M261 112L270 126" fill="none" stroke="#254E4B"/><path d="M262.6 122.9L270 126 270.2 118.0" fill="none" stroke="#254E4B"/>
+  </g>
+</svg>
