@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { labHome } from "../src/home/runtime/lab";
+import { renderAnchors } from "../src/home/runtime/rigGeometry";
 import { starterHome, instance } from "../src/home/model";
 import { buildScene, itemEntity } from "../src/home/scene/graph";
 import { roomPoint } from "../src/home/scene/types";
@@ -30,6 +32,22 @@ describe("native round 3 regressions", () => {
         }
       }
     }
+  });
+  it("S1 staged fixtures never leave floating portions behind", () => {
+    const state = labHome();
+    const fridge = state.rooms.kitchen.instances.find((i) => i.item === "fridge")!;
+    fridge.powered = true; fridge.staged = true;
+    const scene = withPortions(buildScene(state));
+    expect(Object.keys(scene.entities).some((id) => id.includes("portion-fridge-"))).toBe(false);
+  });
+  it("S3 the seated head beats transparent padding around the lamp behind it", () => {
+    const state = labHome();
+    state.rooms.home.characters[0] = { slot: 0, anchor: "seat", seatId: "chair", pose: "sit", socket: { itemId: "chair", socketId: "seat" } };
+    const scene = buildScene(state), actor = scene.entities["character/0"], head = renderAnchors(actor).head;
+    const hits = prepareHits(scene).home;
+    expect(pickEntity(hits, roomPoint(actor.contact.x + head.x, actor.contact.y + head.y), .5025)).toBe(actor.id);
+    // The actual forehead touch from native QA, converted through the default portrait camera.
+    expect(pickEntity(hits, roomPoint(210 / .5025, 332), .5025)).toBe(actor.id);
   });
   it.each(["fridge", "stove", "sink-counter"])("S1 %s is a Play fixture", (item) => {
     expect(capabilityOf(item).moveInPlay).toBe(false);

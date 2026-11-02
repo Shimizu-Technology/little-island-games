@@ -1,4 +1,4 @@
-import { paintDepth } from "./group";
+import { paintDepth, restingVisible } from "./group";
 import { capabilityOf } from "../world";
 import { itemSize } from "../geometry";
 import { instance } from "../model";
@@ -10,7 +10,7 @@ export function withPortions(scene: Scene): Scene {
   const entities = { ...scene.entities },
     rooms = { ...scene.rooms };
   for (const source of Object.values(scene.entities)) {
-    if (!source.item) continue;
+    if (!source.item || !restingVisible(source, scene)) continue;
     const choices = capabilityOf(source.item.item).dispenses;
     if (!choices || (source.item.item === "fridge" && !(source.item.powered ?? source.item.state === "active")))
       continue;

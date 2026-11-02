@@ -3,20 +3,35 @@ import { capabilityOf } from "../world";
 import { decorSpec } from "../catalog";
 import type { Bounds, RoomPoint, Scene } from "../scene/types";
 export type PickProxy = { id: string; bounds: Bounds; depth: number; priority: number };
+/** Decorative glow and transparent SVG padding cannot steal a visible actor's grip.
+ * Normalized boxes follow LivingArt's shade, stem and base, including its table transform. */
+function lampHits(entity: import("../scene/types").SceneEntity): Bounds[] | undefined {
+  const item = entity.item;
+  if (!item || !["lamp", "floor-lamp", "table-lamp"].includes(item.item)) return;
+  const boxes = [[28, 20, 94, 67], [70, 61, 10, 61], [48, 119, 54, 14]];
+  const table = item.item === "table-lamp", flip = item.mirrored !== (item.rotation >= 180);
+  const size = entity.bounds.width;
+  return boxes.map(([x, y, w, h]) => {
+    if (table) { x = 15 + x * .8; y = 38 + y * .7; w *= .8; h *= .7; }
+    if (flip) x = 150 - x - w;
+    return { left: entity.contact.x + (x / 150 - .5) * size,
+      top: entity.contact.y + (y / 150 - .85) * size, width: w / 150 * size, height: h / 150 * size };
+  });
+}
 export function prepareHits(scene: Scene): Record<string, PickProxy[]> {
   return Object.fromEntries(
     Object.entries(scene.rooms).map(([room, index]) => [
       room,
       index.hitProxies
         .filter((proxy) => scene.entities[proxy.id] && restingVisible(scene.entities[proxy.id], scene))
-        .map((proxy) => {
+        .flatMap((proxy) => {
           const e = scene.entities[proxy.id];
           const priority = e.character
             ? 2
             : e.item && (capabilityOf(e.item.item).holdable || decorSpec(e.item.item).small)
               ? 3
               : 1;
-          return { ...proxy, depth: paintDepth(e, scene), priority };
+          return (lampHits(e) ?? [proxy.bounds]).map((bounds) => ({ ...proxy, bounds, depth: paintDepth(e, scene), priority }));
         }),
     ])
   );
