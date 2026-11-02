@@ -1,30 +1,15 @@
-import React, { memo, type ReactNode } from "react";
+import { HomeCharacter, type CharacterRenderer } from "../characterRenderer";
+import React, { memo } from "react";
 import { View } from "react-native";
-import { ReefFish } from "../../arcade/Art";
-import { CrabCompanion } from "../CrabCompanion";
 import { ItemArt } from "../art/Items";
 import { MoreItemArt } from "../art/More";
 import { moreCatalog } from "../catalogMore";
 import { itemSize, characterSize } from "../geometry";
 import { capabilityOf } from "../world";
-import { anchorsFor } from "../scene/species";
-import type { CharacterBase, CharacterAction, Face, Facing, SceneEntity } from "../scene/types";
-import type { Character } from "../model";
-import { Islander } from "../../islander";
-import { homeCharacterPose } from "../characterPose";
+import { renderAnchors } from "./rigGeometry";
+import type { CharacterAction, Face, SceneEntity } from "../scene/types";
 
-export type CharacterRender = (input: {
-  slot: Character["slot"];
-  base: CharacterBase;
-  action: CharacterAction;
-  face: Face;
-  facing: Facing;
-  size: number;
-  held?: ReactNode;
-  tilt: number;
-  limbLag: number;
-  reduced: boolean;
-}) => ReactNode;
+export type CharacterRender = CharacterRenderer;
 export const DecorArt = memo(function DecorArt({
   entity,
   layer = "all",
@@ -54,7 +39,7 @@ export function artFrame(entity: SceneEntity, carry = false) {
     const size = itemSize(entity.item);
     return { left: -size / 2, top: -size * 0.85, width: size, height: size };
   }
-  const anchors = anchorsFor(entity.character!.slot, carry ? "carry" : entity.base, entity.facing);
+  const anchors = renderAnchors(entity, carry);
   return anchors.bounds;
 }
 export const EntityArt = memo(function EntityArt({
@@ -66,8 +51,12 @@ export const EntityArt = memo(function EntityArt({
   preview = false,
   actionOverride,
   faceOverride,
+  tilt = 0,
+  limbLag = 0,
 }: {
   entity: SceneEntity;
+  tilt?: number;
+  limbLag?: number;
   carry?: boolean;
   front?: boolean;
   reduced: boolean;
@@ -76,7 +65,7 @@ export const EntityArt = memo(function EntityArt({
   actionOverride?: CharacterAction;
   faceOverride?: Face;
 }) {
-  const frame = artFrame(entity, carry);
+  const frame = entity.character ? renderAnchors(entity, carry, tilt, limbLag).bounds : artFrame(entity, carry);
   if (entity.item)
     return (
       <View style={{ width: frame.width, height: frame.height }}>
@@ -92,39 +81,20 @@ export const EntityArt = memo(function EntityArt({
   const character = entity.character!,
     base = carry ? "carry" : entity.base;
   const size = characterSize(character.slot);
-  const rendered = renderCharacter?.({
+  const input = {
     slot: character.slot,
     base,
-    action: actionOverride ?? entity.action,
-    face: preview ? "anticipate" : (faceOverride ?? "neutral"),
-    facing: entity.facing,
+    action: carry ? (entity.children.length ? ("hold" as const) : null) : (actionOverride ?? entity.action),
+    face: preview ? ("anticipate" as const) : (faceOverride ?? null),
+    facing: entity.facing === "left" ? ("left" as const) : ("right" as const),
     size,
-    tilt: 0,
-    limbLag: 0,
+    tilt,
+    limbLag,
     reduced,
-  });
+  };
   return (
-    <View
-      pointerEvents="none"
-      style={{ width: frame.width, height: frame.height, transform: [{ scaleX: entity.facing === "left" ? -1 : 1 }] }}
-    >
-      {rendered ??
-        (character.slot === 0 ? (
-          <Islander
-            pose={homeCharacterPose(base === "carry" ? "stand" : base, actionOverride ?? entity.action ?? undefined)}
-            size={size}
-            reduced={reduced}
-          />
-        ) : character.slot === 1 ? (
-          <ReefFish size={size} />
-        ) : (
-          <CrabCompanion
-            pose={base === "lie" ? "lie" : base === "stand" || base === "carry" ? "stand" : "sit"}
-            size={size}
-            reduced={reduced}
-            clacking={false}
-          />
-        ))}
+    <View pointerEvents="none" style={{ width: frame.width, height: frame.height }}>
+      {renderCharacter?.(input) ?? <HomeCharacter input={input} />}
     </View>
   );
 });

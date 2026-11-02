@@ -10,7 +10,7 @@ import { roomOrigin, type Building } from "../camera";
 import { itemSpec } from "../catalog";
 import type { HomeStateV2 } from "../model";
 import type { Scene, SceneEntity } from "../scene/types";
-import { paintEntries } from "./group";
+import { paintEntries, restingVisible } from "./group";
 import { TargetCue } from "./TargetCue";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { DragOverlay } from "./DragOverlay";
@@ -235,7 +235,7 @@ export function SceneView({
             const origin = roomOrigin(index, building),
               room = state.rooms[roomId];
             const entities = Object.values(scene.rooms[roomId].entities)
-              .filter((e) => e.attachment.kind !== "staging")
+              .filter((e) => restingVisible(e, scene))
               .sort((a, b) => a.depth - b.depth || a.id.localeCompare(b.id));
             return (
               <View

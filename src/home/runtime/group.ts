@@ -24,3 +24,15 @@ export function paintEntries(
     ])
     .sort((a, b) => a.depth - b.depth || a.entity.id.localeCompare(b.entity.id));
 }
+
+/** Stored descendants are represented by their container and its pictorial contents chooser. */
+export function restingVisible(entity: SceneEntity, scene: Scene): boolean {
+  let current: SceneEntity | undefined = entity;
+  const visited = new Set<string>();
+  while (current && !visited.has(current.id)) {
+    visited.add(current.id);
+    if (current.attachment.kind === "staging" || current.attachment.kind === "container") return false;
+    current = current.parent ? scene.entities[current.parent] : undefined;
+  }
+  return true;
+}

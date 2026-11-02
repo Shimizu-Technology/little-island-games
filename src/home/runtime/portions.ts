@@ -1,7 +1,7 @@
 import { capabilityOf } from "../world";
 import { instance } from "../model";
 import { itemEntityId, roomPoint, type Scene, type SceneEntity } from "../scene/types";
-import { itemSize } from "../geometry";
+import { itemEntity, translatedBounds } from "../scene/graph";
 /** Authored shelves, inside the open source; no floating bubble menu. */
 export function withPortions(scene: Scene): Scene {
   let changed = false;
@@ -21,27 +21,19 @@ export function withPortions(scene: Scene): Scene {
       const id = itemEntityId(source.room, `portion-${source.item!.id}-${item}`);
       const row = Math.floor(i / 2),
         column = i % 2;
-      const size = itemSize(instance("", item, 0, 0));
       const contact = roomPoint(
         source.contact.x + (column - 0.5) * 42,
         source.contact.y - (source.item!.item === "fridge" ? 132 - row * 52 : 28)
       );
-      const bounds = { left: contact.x - size / 2, top: contact.y - size * 0.85, width: size, height: size };
+      const seed = itemEntity(source.room, instance(`portion-${source.item!.id}-${item}`, item, 0, 0));
       const entity: SceneEntity = {
-        id,
-        room: source.room,
-        attachment: { kind: "floor", room: source.room, at: contact },
+        ...seed,
         contact,
-        bounds,
-        base: "stand",
-        facing: "front",
-        action: null,
-        children: [],
+        attachment: { kind: "floor", room: source.room, at: contact },
         depth: source.depth + 3,
         band: "foreground",
-        hitProxies: [bounds],
-        item: instance(`portion-${source.item!.id}-${item}`, item, 0, 0),
       };
+      const bounds = translatedBounds(entity.bounds, contact);
       entities[id] = entity;
       index.entities[id] = entity;
       index.hitProxies.push({ id, bounds, depth: entity.depth, band: entity.band });

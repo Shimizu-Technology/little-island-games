@@ -19,7 +19,7 @@ function fixture(): Scene {
           action: null,
           character: { slot },
           children: [],
-        } as SceneEntity,
+        } as unknown as SceneEntity,
       ])
     ),
   } as Scene;

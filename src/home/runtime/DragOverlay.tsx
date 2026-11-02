@@ -4,8 +4,10 @@ import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { roomIds } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { anchorsFor } from "../scene/species";
+import { renderAnchors, carryBinding, carrySample } from "./rigGeometry";
+import { settleProgress } from "./settle";
 import type { Scene, SceneEntity } from "../scene/types";
-import { groupIds } from "./group";
+import { groupIds, restingVisible } from "./group";
 import { SettleArt } from "./SettleArt";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import type { Interaction, Pickup } from "./useInteraction";
@@ -29,11 +31,15 @@ function OverlayGroup({
     origin = roomOrigin(roomIds.indexOf(root.room), building);
   const ids = groupIds(scene, id);
   const destination =
-    pickup.destination &&
-    Object.values(pickup.destination.entities).find((e) =>
-      root.character ? e.character?.slot === root.character.slot : e.item?.id === root.item?.id
-    );
-  const entities = ids.map((key) => scene.entities[key]).sort((a, b) => a.depth - b.depth || a.id.localeCompare(b.id));
+    (pickup.destination &&
+      Object.values(pickup.destination.entities).find((e) =>
+        root.character ? e.character?.slot === root.character.slot : e.item?.id === root.item?.id
+      )) ??
+    root;
+  const entities = ids
+    .map((key) => scene.entities[key])
+    .filter((e) => e.id === root.id || restingVisible(e, scene))
+    .sort((a, b) => a.depth - b.depth || a.id.localeCompare(b.id));
   useLayoutEffect(() => interaction.ready(index, id), [interaction, index, id]);
   const style = useAnimatedStyle(() => {
     const slot = slots.value[index];
@@ -122,20 +128,27 @@ function OverlayGroup({
       >
         {entities.map((entity) => {
           const frame = artFrame(entity, entity.id === root.id && !!root.character);
-          let dx = entity.contact.x - root.contact.x,
+          const dx = entity.contact.x - root.contact.x,
             dy = entity.contact.y - root.contact.y;
-          if (root.character && entity.attachment.kind === "hand") {
-            const from = anchorsFor(root.character.slot, root.base, root.facing).hand;
-            const to = anchorsFor(root.character.slot, "carry", root.facing).hand;
-            dx += to.x - from.x;
-            dy += to.y - from.y;
-          }
+          if (root.character && entity.attachment.kind === "hand")
+            return (
+              <CarriedProp
+                key={entity.id}
+                entity={entity}
+                root={root}
+                destination={destination}
+                pickup={pickup}
+                interaction={interaction}
+                reduced={reduced}
+              />
+            );
           if (entity.id === root.id && root.character)
             return (
               <SettleArt
                 key={entity.id}
                 source={root}
                 destination={destination}
+                grip={pickup.grip}
                 interaction={interaction}
                 index={index}
                 reduced={reduced}
@@ -174,6 +187,60 @@ function OverlayGroup({
     </>
   );
 }
+function CarriedProp({
+  entity,
+  root,
+  destination,
+  pickup,
+  interaction,
+  reduced,
+}: {
+  entity: SceneEntity;
+  root: SceneEntity;
+  destination: SceneEntity;
+  pickup: Pickup;
+  interaction: Interaction;
+  reduced: boolean;
+}) {
+  const { slots, clock } = interaction,
+    index = pickup.slot;
+  const frame = artFrame(entity),
+    grip = pickup.grip ?? { x: 0, y: 0 },
+    start = carryBinding(root, grip),
+    end = carryBinding(destination, grip, start.marker);
+  const hands = Array.from({ length: 9 }, (_, i) => {
+    const opts = carrySample(i - 4),
+      hand = renderAnchors(root, true, opts.tilt, opts.limbLag).hand;
+    const radians = (-opts.tilt * Math.PI) / 180;
+    return {
+      x: hand.x * Math.cos(radians) - hand.y * Math.sin(radians),
+      y: hand.x * Math.sin(radians) + hand.y * Math.cos(radians),
+    };
+  });
+  const final = anchorsFor(destination.character!.slot, destination.base, destination.facing, destination.action).hand;
+  const style = useAnimatedStyle(() => {
+    const s = slots.value[index],
+      elapsed = s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt;
+    const settling = (s.phase === "settling" && s.settleAt) || (s.phase === "pending" && s.committed);
+    const p = settling ? settleProgress(elapsed, reduced) : 0,
+      blend = settling ? (reduced ? 1 : Math.min(1, Math.max(0, (elapsed - 120) / 120))) : 0;
+    const hand = hands[(reduced ? 0 : Math.max(-4, Math.min(4, Math.round(s.lag / 2.5)))) + 4];
+    const x = hand.x + start.x + (end.x - start.x) * p,
+      y = hand.y + start.y + (end.y - start.y) * p;
+    return { transform: [{ translateX: x + (final.x - x) * blend }, { translateY: y + (final.y - y) * blend }] };
+  });
+  return (
+    <Animated.View
+      style={[
+        { position: "absolute", left: frame.left, top: frame.top, width: frame.width, height: frame.height },
+        style,
+      ]}
+    >
+      <EntityArt entity={entity} reduced={reduced} />
+    </Animated.View>
+  );
+}
+
 function Front({ entity, root, reduced }: { entity: SceneEntity; root: SceneEntity; reduced: boolean }) {
   const frame = artFrame(entity);
   return (

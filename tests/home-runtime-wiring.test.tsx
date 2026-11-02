@@ -77,7 +77,7 @@ const entity: SceneEntity = {
   children: [],
   depth: 300,
   band: "occupant",
-  bounds: { left: 70, top: 80, width: 60, height: 220 },
+  bounds: { left: -30, top: -220, width: 60, height: 220 },
   hitProxies: [{ left: 70, top: 80, width: 60, height: 220 }],
   character: { slot: 0, anchor: "floor", pose: "stand", x: 2, y: 2 },
 };
@@ -97,7 +97,20 @@ function fixture(revision = "initial", contact = entity.contact): Scene {
         buckets: {},
         occlusionBands: [],
         hitProxies:
-          room === "home" ? [{ id: entity.id, bounds: entity.bounds, depth: entity.depth, band: entity.band }] : [],
+          room === "home"
+            ? [
+                {
+                  id: entity.id,
+                  bounds: {
+                    ...entity.bounds,
+                    left: entity.contact.x + entity.bounds.left,
+                    top: entity.contact.y + entity.bounds.top,
+                  },
+                  depth: entity.depth,
+                  band: entity.band,
+                },
+              ]
+            : [],
       },
     ])
   ) as unknown as Scene["rooms"];
@@ -286,14 +299,14 @@ describe("actual runtime callback sequencing", () => {
       parent: table.id,
       attachment: { kind: "surface", parent: table.id, slot: 0 },
       children: [],
-      bounds: { left: 90, top: 100, width: 20, height: 20 },
+      bounds: { left: -10, top: -200, width: 20, height: 20 },
       depth: 301,
     } as SceneEntity;
     scene.entities = { [table.id]: table, [lamp.id]: lamp };
     scene.rooms.home.entities = scene.entities;
     scene.rooms.home.hitProxies = [table, lamp].map((e) => ({
       id: e.id,
-      bounds: e.bounds,
+      bounds: { ...e.bounds, left: e.contact.x + e.bounds.left, top: e.contact.y + e.bounds.top },
       depth: e.depth,
       band: e.band,
     }));

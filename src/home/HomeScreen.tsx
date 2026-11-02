@@ -195,16 +195,32 @@ export function HomeScreen({
     const action = proposal.consume === "drink" ? "drink" : "eat";
     clearTimeout(reactionTimers.current[target.owner]);
     setReactions((current) => ({ ...current, [target.owner]: action }));
-    reactionTimers.current[target.owner] = setTimeout(
-      () =>
-        setReactions((current) => {
-          const next = { ...current };
-          delete next[target.owner];
-          return next;
-        }),
-      750
-    );
+    reactionTimers.current[target.owner] = setTimeout(() => {
+      delete reactionTimers.current[target.owner];
+      const owner = live.current.scene.entities[target.owner];
+      if (owner?.character)
+        live.current.store.dispatch({ type: "finish-action", slot: owner.character.slot, roomId: owner.room });
+      setReactions((current) => {
+        const next = { ...current };
+        delete next[target.owner];
+        return next;
+      });
+    }, 750);
   };
+  React.useEffect(() => {
+    // A restored or interrupted action completes without changing its supported base.
+    for (const entity of Object.values(scene.entities)) {
+      if (!entity.character || !["eat", "drink"].includes(entity.action ?? "") || reactionTimers.current[entity.id])
+        continue;
+      reactionTimers.current[entity.id] = setTimeout(() => {
+        delete reactionTimers.current[entity.id];
+        const latest = live.current.scene.entities[entity.id];
+        if (latest?.character)
+          live.current.store.dispatch({ type: "finish-action", slot: latest.character.slot, roomId: latest.room });
+      }, 750);
+    }
+  }, [scene]);
+
   const onCommit = useCallback(
     (index: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => {
       const stillCurrent = () => runtime.current!.isCurrent(index, token);

@@ -55,7 +55,13 @@ export type DragSlot = CaptureToken & {
   finished: boolean;
   proposal?: DropProposal;
 };
-export type Pickup = CaptureToken & { id: EntityId; slot: number; scene: Scene; destination?: Scene };
+export type Pickup = CaptureToken & {
+  id: EntityId;
+  slot: number;
+  scene: Scene;
+  grip?: { x: number; y: number };
+  destination?: Scene;
+};
 function eventTime(): number {
   "worklet";
   return Date.now();
@@ -203,11 +209,23 @@ export function useInteraction({
     const reservations: Record<string, string> = {};
     for (let i = 0; i < 2; i++) {
       const other = slots.value[i];
-      if (other.id && other.id !== slot.id && other.proposal?.target) reservations[other.proposal.target] = other.id;
+      if (!other.id || other.id === slot.id) continue;
+      if (other.proposal?.target) reservations[other.proposal.target] = other.id;
+      for (const target of prepared.value.rooms[destination].targets) {
+        let owner: string | undefined = target.owner;
+        while (owner) {
+          if (owner === other.id || owner === other.restId) {
+            reservations[target.id] = other.id;
+            break;
+          }
+          owner = prepared.value.entities[owner]?.parent;
+        }
+      }
     }
     return resolve(prepared.value.rooms[destination], subject, anchor, {
       scale: camera.value.a,
       previous: slot.proposal,
+      pending: slot.proposal?.pending,
       now: eventTime(),
       release,
       reservations,
@@ -348,6 +366,7 @@ export function useInteraction({
             id: effect.entity,
             slot: index,
             scene: prepared.value,
+            grip: { x: pointer.grip.x, y: pointer.grip.y },
             generation: slot.generation,
             epoch: slot.epoch,
           });
@@ -463,16 +482,10 @@ export function useInteraction({
       const s = slots.value[i];
       if (!s.id || s.consumed || s.phase !== "settling" || !s.subject) continue;
       const c = camera.value,
-        b = s.subject.bounds,
-        e = s.subject.contact;
+        b = s.subject.bounds;
       const x = point.x / c.a - c.tx / c.a,
         y = point.y / c.a - c.ty / c.a;
-      if (
-        x >= s.x + b.left - e.x &&
-        x <= s.x + b.left - e.x + b.width &&
-        y >= s.y + b.top - e.y &&
-        y <= s.y + b.top - e.y + b.height
-      )
+      if (x >= s.x + b.left && x <= s.x + b.left + b.width && y >= s.y + b.top && y <= s.y + b.top + b.height)
         return s.id;
     }
     const index = roomAtScreen(point.x, point.y, camera.value, building);
@@ -677,6 +690,8 @@ export function useInteraction({
               slot.proposal = proposalFor(slot);
             }
           }
+          if (slot.phase === "dragging" && slot.proposal?.pending && now - slot.proposal.pending.since >= 60)
+            slot.proposal = proposalFor(slot);
           if (slot.phase === "settling" && slot.settleAt) {
             const progress = settleProgress(now - slot.settleAt, reduced);
             slot.x = slot.releaseX + (slot.targetX - slot.releaseX) * progress;

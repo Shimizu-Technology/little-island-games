@@ -1,3 +1,4 @@
+import { restingVisible } from "./group";
 import { capabilityOf } from "../world";
 import { decorSpec } from "../catalog";
 import type { Bounds, RoomPoint, Scene } from "../scene/types";
@@ -6,15 +7,17 @@ export function prepareHits(scene: Scene): Record<string, PickProxy[]> {
   return Object.fromEntries(
     Object.entries(scene.rooms).map(([room, index]) => [
       room,
-      index.hitProxies.map((proxy) => {
-        const e = scene.entities[proxy.id];
-        const priority = e.character
-          ? 2
-          : e.item && (capabilityOf(e.item.item).holdable || decorSpec(e.item.item).small)
-            ? 3
-            : 1;
-        return { ...proxy, priority };
-      }),
+      index.hitProxies
+        .filter((proxy) => scene.entities[proxy.id] && restingVisible(scene.entities[proxy.id], scene))
+        .map((proxy) => {
+          const e = scene.entities[proxy.id];
+          const priority = e.character
+            ? 2
+            : e.item && (capabilityOf(e.item.item).holdable || decorSpec(e.item.item).small)
+              ? 3
+              : 1;
+          return { ...proxy, priority };
+        }),
     ])
   );
 }
