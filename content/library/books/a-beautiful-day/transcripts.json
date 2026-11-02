@@ -1,0 +1,128 @@
+{
+  "review": {
+    "status": "draft",
+    "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+    "date": "2026-11-02",
+    "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+  },
+  "editionIsbn": "978-1-928318-15-6",
+  "pages": [
+    {
+      "page": 0,
+      "image": "content/library/books/a-beautiful-day/page-00.jpg",
+      "text": "A Beautiful Day Lindy Pelzl Elana Bregin Raeesah Vawda",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Front cover of A Beautiful Day.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 1,
+      "image": "content/library/books/a-beautiful-day/page-01.jpg",
+      "text": "“What a beautiful day,” says Mom. “Wake up Nicholas.” “Hello sun,” says Nicholas. “Good morning birds.”",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Mom and baby greet Nicholas as he stretches in bed.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 2,
+      "image": "content/library/books/a-beautiful-day/page-02.jpg",
+      "text": "“It’s a lovely day,” says Dad. “Let’s have a picnic by the river.” “Can my friend Jacob come?” asks Nicholas.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Dad and Nicholas sit at the breakfast table. Nicholas waves to his friend Jacob through the kitchen window.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 3,
+      "image": "content/library/books/a-beautiful-day/page-03.jpg",
+      "text": "“Don’t forget me. I love picnics!” says Donkey. “And me. I want to come too!” says Dog. “Follow us,” say the birds.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "The animals jump up and down with excitement. Nicholas and Jacob put their arms around each other.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 4,
+      "image": "content/library/books/a-beautiful-day/page-04.jpg",
+      "text": "",
+      "artworkText": [],
+      "wordless": true,
+      "alt": "Dad carries a picnic basket on his head. Mom, the children and all the animals follow him to the picnic spot.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 5,
+      "image": "content/library/books/a-beautiful-day/page-05.jpg",
+      "text": "“I’ll race you to that tree,” Nicholas says.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Nicholas and the dog get ready to race.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 6,
+      "image": "content/library/books/a-beautiful-day/page-06.jpg",
+      "text": "“I won, I won,” says Donkey. “Not fair,” says Nicholas. “You’ve got four legs.”",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "At the tree, Nicholas bends over panting.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 7,
+      "image": "content/library/books/a-beautiful-day/page-07.jpg",
+      "text": "“Look what I can do,” says Nicholas. “I bet you can’t do this,” says Jacob.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Nicholas does a handstand. Jacob does a handstand on one hand.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 8,
+      "image": "content/library/books/a-beautiful-day/page-08.jpg",
+      "text": "“Here’s our picnic spot,” says Dad.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Mom, Dad and baby arrive at the river bank.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 9,
+      "image": "content/library/books/a-beautiful-day/page-09.jpg",
+      "text": "“Race you to the water!” says Jacob.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Nicholas, Jacob, Donkey and Dog leap into the river.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 10,
+      "image": "content/library/books/a-beautiful-day/page-10.jpg",
+      "text": "“Come and eat, boys and girls,” says Mom.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "The family sits on a red and white checked picnic blanket and eat their snacks.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 11,
+      "image": "content/library/books/a-beautiful-day/page-11.jpg",
+      "text": "“Time to go home,” says Mom.“Say goodbye to Jacob.”",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Outside Jacob's house, Nicholas waves goodbye to his friend.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 12,
+      "image": "content/library/books/a-beautiful-day/page-12.jpg",
+      "text": "",
+      "artworkText": [],
+      "wordless": true,
+      "alt": "Nicholas and Dog are fast asleep in bed, while Donkey sleeps outside under the stars.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    }
+  ]
+}

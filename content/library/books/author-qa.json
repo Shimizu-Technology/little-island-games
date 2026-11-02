@@ -1,0 +1,50 @@
+{
+  "executor": "Codex content author; author acquisition checks only",
+  "reviewStatus": "draft",
+  "baseCommit": "c934137",
+  "date": "2026-11-02",
+  "contentSha256": "437f3e92f07d3dce88d6196cd0d9060af1b97a6eb927217d44523c86e5d139ff",
+  "checks": [
+    {
+      "name": "content audit: counts, English ISBN digits/equality, local rights/license/art paths, all hashes, draft reviewer identity, title labels, speech keys, pending audio",
+      "status": "passed"
+    },
+    {
+      "name": "decode and visually inspect all 107 page images; compare text-free publisher editions with official text and alt; inspect printed-text Best Thing Ever and Busy Day",
+      "status": "passed",
+      "evidence": "Per-book inspection.jpg; source edition.md and edition.txt; transcripts.json. This is not independent approval."
+    },
+    {
+      "name": "unmodified repository validator for all eight book records with an isolated temporary merged speech map",
+      "status": "passed",
+      "evidence": "validator-result.txt"
+    },
+    {
+      "name": "npm run typecheck",
+      "status": "passed"
+    },
+    {
+      "name": "npm run lint",
+      "status": "passed",
+      "warnings": 33,
+      "errors": 0
+    },
+    {
+      "name": "Final combined parent validator and npm run check / doctor",
+      "status": "not-run",
+      "reason": "Parent integrates book records and speech map, then runs final gate."
+    },
+    {
+      "name": "App/browser/native/physical-family acceptance and independent review",
+      "status": "not-run",
+      "reason": "Outside book-author scope; parent and reviewers execute."
+    }
+  ],
+  "counts": {
+    "books": 8,
+    "pages": 107,
+    "wordless": 7,
+    "speechEntries": 306
+  },
+  "cleanup": "No persistent resources started; lifecycle cleanup/status report no active owned resources."
+}

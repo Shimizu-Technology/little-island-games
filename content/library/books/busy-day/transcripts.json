@@ -1,0 +1,146 @@
+{
+  "review": {
+    "status": "draft",
+    "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+    "date": "2026-11-02",
+    "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+  },
+  "editionIsbn": "978-1-928497-79-0",
+  "pages": [
+    {
+      "page": 0,
+      "image": "content/library/books/busy-day/page-00.jpg",
+      "text": "A very busy day! El Marto Chisanga Mukuka Christian Mokuba",
+      "wordless": false,
+      "alt": "Book cover: Mama and child in a busy town.",
+      "artworkText": []
+    },
+    {
+      "page": 1,
+      "image": "content/library/books/busy-day/page-01.jpg",
+      "text": "Today is a very busy day! Mama and I have lots of things to do and see.",
+      "wordless": false,
+      "alt": "Mama and child leave home together.",
+      "artworkText": []
+    },
+    {
+      "page": 2,
+      "image": "content/library/books/busy-day/page-02.jpg",
+      "text": "We walk to the station and find people in a queue. Old people and young people, loud people and quiet people, all going to town.",
+      "wordless": false,
+      "alt": "People wait by a minibus.",
+      "artworkText": []
+    },
+    {
+      "page": 3,
+      "image": "content/library/books/busy-day/page-03.jpg",
+      "text": "Through the minibus window, I see cars driving by. Fast cars and slow cars, big cars and small cars.",
+      "wordless": false,
+      "alt": "Traffic passes a minibus window.",
+      "artworkText": [
+        "TAXI"
+      ]
+    },
+    {
+      "page": 4,
+      "image": "content/library/books/busy-day/page-04.jpg",
+      "text": "There are so many buildings in town! Tall ones and short ones, glass ones and brick ones, everywhere I look.",
+      "wordless": false,
+      "alt": "Buildings of different sizes.",
+      "artworkText": []
+    },
+    {
+      "page": 5,
+      "image": "content/library/books/busy-day/page-05.jpg",
+      "text": "Mama and I walk in and out of shops. Shops for clothes and shops for books, shops for bags and all sorts of things.",
+      "wordless": false,
+      "alt": "Mama and child look through shop windows.",
+      "artworkText": []
+    },
+    {
+      "page": 6,
+      "image": "content/library/books/busy-day/page-06.jpg",
+      "text": "Mama tries on some shoes. Red shoes and green shoes, high shoes and low shoes.",
+      "wordless": false,
+      "alt": "Mama tries on shoes.",
+      "artworkText": [
+        "SHOP"
+      ]
+    },
+    {
+      "page": 7,
+      "image": "content/library/books/busy-day/page-07.jpg",
+      "text": "Hello! Bonjour! Ola! Jambo!",
+      "wordless": false,
+      "alt": "People greet each other.",
+      "artworkText": []
+    },
+    {
+      "page": 8,
+      "image": "content/library/books/busy-day/page-08.jpg",
+      "text": "",
+      "wordless": true,
+      "alt": "A busy town scene invites looking together.",
+      "artworkText": []
+    },
+    {
+      "page": 9,
+      "image": "content/library/books/busy-day/page-09.jpg",
+      "text": "In a big store, we fill a trolley with food. Boxes of cereal, and sacks of fruit. Bags of flour and bottles of juice.",
+      "wordless": false,
+      "alt": "Mama and child buy food at a store.",
+      "artworkText": []
+    },
+    {
+      "page": 10,
+      "image": "content/library/books/busy-day/page-10.jpg",
+      "text": "Mama shows me the toys and asks me to choose! There are soft toys and round toys, loud toys and fast toys.",
+      "wordless": false,
+      "alt": "Mama and child look at toys.",
+      "artworkText": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    {
+      "page": 11,
+      "image": "content/library/books/busy-day/page-11.jpg",
+      "text": "Today we’ve bought lots of things! Bags of food and bags of clothes. A pair of shoes and even some treats.",
+      "wordless": false,
+      "alt": "Mama and child carry their shopping.",
+      "artworkText": [
+        "TAXI"
+      ]
+    },
+    {
+      "page": 12,
+      "image": "content/library/books/busy-day/page-12.jpg",
+      "text": "Back at home, in our quiet house, I take out the special gift that Mama bought just for me!",
+      "wordless": false,
+      "alt": "The child takes a gift out at home.",
+      "artworkText": []
+    },
+    {
+      "page": 13,
+      "image": "content/library/books/busy-day/page-13.jpg",
+      "text": "",
+      "wordless": true,
+      "alt": "Wordless patterned spread of toys, balls, shoes and boots.",
+      "artworkText": []
+    },
+    {
+      "page": 14,
+      "image": "content/library/books/busy-day/page-14.jpg",
+      "text": "",
+      "wordless": true,
+      "alt": "Wordless back cover with a small picture of the child sitting in a shopping trolley.",
+      "artworkText": []
+    }
+  ],
+  "correctionsFromOriginalFixture": [
+    "Page 13 alt corrected: patterned shoes and toys; no child reading.",
+    "Page 14 transcript removed: source image is wordless; the original record incorrectly used the publisher blurb.",
+    "Cover creator names retained in text and speech registration."
+  ]
+}

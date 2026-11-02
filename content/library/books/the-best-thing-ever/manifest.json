@@ -1,0 +1,372 @@
+{
+  "id": "the-best-thing-ever",
+  "revision": "54916310c5c06a5282e2d5d4add18d64f90e5fde",
+  "metadata": {
+    "title": "The Best Thing Ever",
+    "subtitle": "",
+    "creator": "Melissa Fagan, Lauren Nel, Stefania Origgi",
+    "contributor": "Book Dash volunteers",
+    "subject": "Juvenile Fiction",
+    "description": "Muzi loves to build with his toys. But when he leaves them behind to travel to uGogo’s house, he discovers something very special about the world. And he learns something new about himself.",
+    "publisher": "Book Dash",
+    "date": "2016-03-05",
+    "modified": "2016-06-12",
+    "type": "Story",
+    "format": "Digital",
+    "identifier": "9c9f5790-fe46-11e5-86aa-5e5517507c66",
+    "source": "978-1-928318-55-2",
+    "language": "en",
+    "relation": "",
+    "coverage": "",
+    "rights": "This work is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/). This means you are free to share (copy and redistribute the material in any medium or format) and adapt it (remix, transform, and build upon the material) for any purpose, even commercially, as long as you give appropriate credit, with a link to your source, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.",
+    "translations": null
+  },
+  "publisherCreators": [
+    "Stefania Origgi (Designer)",
+    "Melissa Fagan (Writer)",
+    "Lauren Nel (Illustrator)",
+    "Helen Moffett (Editor)"
+  ],
+  "publisherIsbn": "978-1-928318-55-2",
+  "sources": [
+    {
+      "sourceUrl": "https://bookdash.org/books/the-best-thing-ever/",
+      "resolvedUrl": "https://bookdash.org/books/the-best-thing-ever/",
+      "accessedAt": "2026-11-02T03:09:17.487559+00:00",
+      "sourceSha256": "02d9c8789156d1ddaae5635e1af203f1e4b719fb8c4743d7502e054b3849a603",
+      "path": "content/library/books/the-best-thing-ever/publisher.txt",
+      "sha256": "017d2835c463633f2b86ccc4f4a79f1f9bbf041985d7db1d595afe5dba918242",
+      "bytes": 1083,
+      "transformation": "Visible text extracted from publisher HTML; no script/audio imported."
+    },
+    {
+      "sourceUrl": "https://bookdash.github.io/bookdash-books/the-best-thing-ever/en/",
+      "resolvedUrl": "https://bookdash.github.io/bookdash-books/the-best-thing-ever/en/",
+      "accessedAt": "2026-11-02T03:09:17.962037+00:00",
+      "sourceSha256": "45ddcb60941c45863360e46599f2aaf0992bb37f9dc79bd89ca629e654d27b98",
+      "path": "content/library/books/the-best-thing-ever/edition.txt",
+      "sha256": "e82db06af4add4e47183af324445b2c115ccd939a8209761bf051f378a1fc2a7",
+      "bytes": 1723,
+      "transformation": "Visible text extracted from publisher HTML; no script/audio imported."
+    },
+    {
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/the-best-thing-ever/en/index.md",
+      "resolvedUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/the-best-thing-ever/en/index.md",
+      "accessedAt": "2026-11-02T03:09:18.152273+00:00",
+      "sourceSha256": "8b734558f20707fc98cb012d44343c27549087173f91cde52f75836a81b3e75c",
+      "path": "content/library/books/the-best-thing-ever/edition.md",
+      "sha256": "8b734558f20707fc98cb012d44343c27549087173f91cde52f75836a81b3e75c",
+      "bytes": 2674,
+      "transformation": "None"
+    }
+  ],
+  "pages": [
+    {
+      "alt": "Front cover of The Best Thing Ever.",
+      "text": "The Best Thing Ever",
+      "file": "cover.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-00.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_01-1.jpg",
+      "accessedAt": "2026-11-02T03:09:20.349880+00:00",
+      "sourceSha256": "ca1af30d13bde5bcb3eab7f643f2ef239f0dacb0bf50b2296213d2af7c6b0b1b",
+      "sourceBytes": 90592,
+      "sha256": "d1e0a1bcacecc65b0e844dfafbf157bdf48aaf8f6c3a84dd1e51b16eb0f5ada5",
+      "bytes": 72948,
+      "sourceDimensions": [
+        788,
+        788
+      ],
+      "dimensions": [
+        788,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Muzi looks at the impressive tower he has made with wooden blocks.",
+      "text": "Muzi loves to build things. He dreams of building the best thing ever.",
+      "file": "01.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-01.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_05.jpg",
+      "accessedAt": "2026-11-02T03:09:20.353408+00:00",
+      "sourceSha256": "ccaeed4a0089c5fbb1005c1573ffbbbe46714eb92c180dc1566b10dbe2cd0edc",
+      "sourceBytes": 85613,
+      "sha256": "ac543b96d162c6b31804e3c7f87991e2ae9389daae894c3d6aa0458e788ffb6a",
+      "bytes": 63016,
+      "sourceDimensions": [
+        1575,
+        788
+      ],
+      "dimensions": [
+        1575,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Muzi has built a shelter for his toys. It is a blanket tied to a door handle. His mother opens the door. The shelter falls apart.",
+      "text": "Once he built a shelter for his toys. But it wasn’t the best thing ever.",
+      "file": "02.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-02.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_06.jpg",
+      "accessedAt": "2026-11-02T03:09:20.735455+00:00",
+      "sourceSha256": "bc18b24eb135f338284902382ee08da71f4aa630cc075baa2295710d33db646e",
+      "sourceBytes": 133584,
+      "sha256": "3dd2384128f107b5c059741db2e88f9b78bb05947ce1cda99bf940690e0e67da",
+      "bytes": 125730,
+      "sourceDimensions": [
+        1575,
+        788
+      ],
+      "dimensions": [
+        1575,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Muzi builds a bridge with his blocks. One part falls down under the weight of his toy animals.",
+      "text": "Yesterday he built a bridge for his animals. It was a good thing. But not the best...",
+      "file": "03.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-03.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_07.jpg",
+      "accessedAt": "2026-11-02T03:09:20.678879+00:00",
+      "sourceSha256": "4ae518d68683a99adbc3cf673dd3f81ff7c1f0be1356249d5a7591506aa843f3",
+      "sourceBytes": 118896,
+      "sha256": "69e3f0e055920668dc85a91043bd8bda5f06be2419384597b9e2139d04360fdb",
+      "bytes": 102828,
+      "sourceDimensions": [
+        1575,
+        788
+      ],
+      "dimensions": [
+        1575,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Muzi closes the door to his bedroom where all his toys are packed away. He carries a backpack.",
+      "text": "Today Muzi is going to visit uGogo. He is sad. Without his toys, how can he build the best thing ever?",
+      "file": "04.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-04.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_08.jpg",
+      "accessedAt": "2026-11-02T03:09:22.805894+00:00",
+      "sourceSha256": "7f95c053213f5c6138106c852ebf539c20e19d7ef977ae0a45c5e09a2913336e",
+      "sourceBytes": 108911,
+      "sha256": "08828038ac361767f94a4143eb765d3e64fa83eaed30aa6a0e5676cbd35e78e2",
+      "bytes": 102611,
+      "sourceDimensions": [
+        1575,
+        788
+      ],
+      "dimensions": [
+        1575,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Muzi and his mother stand at the bus stop. They point to a man and his overflowing trolley of recyclable objects.",
+      "text": "At the bus stop, Muzi is amazed. He sees red things and blue things. Small things and big things. New things and old things.",
+      "file": "05.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-05.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_09.jpg",
+      "accessedAt": "2026-11-02T03:09:22.855140+00:00",
+      "sourceSha256": "47c7be6ae100ff67e21655af1bec25bc784493699adab7be49546b19828a9de8",
+      "sourceBytes": 187005,
+      "sha256": "91294731479591f930f015bb2b91e2f0ed385ee32f5f0eae78d61d81bcdc79d5",
+      "bytes": 185677,
+      "sourceDimensions": [
+        1575,
+        788
+      ],
+      "dimensions": [
+        1575,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Muzi sits on his mother's lap inside the bus. He sees clouds in the shape of a house.",
+      "text": "Muzi has a new idea for building the best thing ever.",
+      "file": "06.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-06.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_10.jpg",
+      "accessedAt": "2026-11-02T03:09:23.126366+00:00",
+      "sourceSha256": "ad6d507f6486531e0e4e226ae3c36e312269eb8f116acc8e4c243e7e95ddc54f",
+      "sourceBytes": 115750,
+      "sha256": "03ec8972a30574db684e7cf5e47629ad75ea857de63f5d7ac18f5bb9de05a781",
+      "bytes": 102522,
+      "sourceDimensions": [
+        1575,
+        788
+      ],
+      "dimensions": [
+        1575,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Muzi kneels down and picks up objects in the road: bottle tops and cans and ice cream sticks...",
+      "text": "On the road to uGogo’s, Muzi finds many things. Long things and short things. Round things and square things.",
+      "file": "07.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-07.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_11.jpg",
+      "accessedAt": "2026-11-02T03:09:23.221315+00:00",
+      "sourceSha256": "63874d5fdac0ab6f4abee8205da3487612ff4b33bdadb100b14b940e18e58bf5",
+      "sourceBytes": 152484,
+      "sha256": "c7da679d18ff72ee6f0e6e0849cc6294a62b4c5b09ddc50262331691eade09d4",
+      "bytes": 142637,
+      "sourceDimensions": [
+        1575,
+        788
+      ],
+      "dimensions": [
+        1575,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Muzi stands by the river. He notices leaves and twigs and stones.",
+      "text": "By the riverside, Muzi finds more things. Soft things and pointy things. Green things and brown things.",
+      "file": "08.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-08.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_12.jpg",
+      "accessedAt": "2026-11-02T03:09:25.654207+00:00",
+      "sourceSha256": "2e801b1e2d352043e01e4700b11c93a0fa4f2b178db2e7471e66ed2c1d7db601",
+      "sourceBytes": 222396,
+      "sha256": "2ba9972bc886b5e8545044bedf178b1f9d564314cc6c0e34387daf8e5a94ffe3",
+      "bytes": 238144,
+      "sourceDimensions": [
+        1575,
+        788
+      ],
+      "dimensions": [
+        1575,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Muzi and his mother arrive at Gogo's shack. They carry shopping bags filled with Muzi's found objects.",
+      "text": "Look, Muzi! We are here.",
+      "file": "09.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-09.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_13.jpg",
+      "accessedAt": "2026-11-02T03:09:25.362720+00:00",
+      "sourceSha256": "b4fedde7451df798e58786dcf353dcc013066834628d55b425bfd191065c1637",
+      "sourceBytes": 127988,
+      "sha256": "b95f9bfb61fc9c101d53deb81fcf29814599e559caecdb5df3a1e2860888e8c8",
+      "bytes": 116935,
+      "sourceDimensions": [
+        1575,
+        788
+      ],
+      "dimensions": [
+        1575,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Muzi's mother and Gogo bake bread. Muzi builds in the corner using dough and his newfound things.",
+      "text": "While uGogo bakes for the hungry travellers... Muzi builds.",
+      "file": "10.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-10.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_14.jpg",
+      "accessedAt": "2026-11-02T03:09:25.208020+00:00",
+      "sourceSha256": "719bdfb5e46d91149a0866cb9b9eb8d44c571570a7108e5f3a7ea7b4fd995c59",
+      "sourceBytes": 80383,
+      "sha256": "95dea54ab6e2a4ffbf7df5082a6769cc1b448c94d4c8c51bee5ae7ffd49885b2",
+      "bytes": 58971,
+      "sourceDimensions": [
+        1575,
+        788
+      ],
+      "dimensions": [
+        1575,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Muzi presents his sculpture to Gogo. It is a house made from dough and all his found objects.",
+      "text": "Look Gogo, a new house for you. Oh, Muzi, laughs Gogo. This is the best thing ever!",
+      "file": "11.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-11.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_15.jpg",
+      "accessedAt": "2026-11-02T03:09:25.319536+00:00",
+      "sourceSha256": "5d1f8e48fbbeeecc15eb2efab9c073509379c53a8820f67b81c994b5016d9a8b",
+      "sourceBytes": 78145,
+      "sha256": "564328d1c8390e9a67bc90d6906a7b8f8e2c055eb196892115c03f1538ba9769",
+      "bytes": 53836,
+      "sourceDimensions": [
+        1575,
+        788
+      ],
+      "dimensions": [
+        1575,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "The house is a beautiful mix of colours and textures using bottle tops, sticks, matchboxes and more.",
+      "text": "Gogo, Gogo! says Muzi. The world is full of toys. Look what I can build.",
+      "file": "12.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-12.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_16.jpg",
+      "accessedAt": "2026-11-02T03:09:27.651643+00:00",
+      "sourceSha256": "569729200ef4ff9b7e7dd84560c3edf1b0951226f3fc9d4d1ccb876700f6b09d",
+      "sourceBytes": 113680,
+      "sha256": "031f19583d2f1c06096c3d3854f14c392a5f84d369933b219434f73799baf12e",
+      "bytes": 93419,
+      "sourceDimensions": [
+        1575,
+        788
+      ],
+      "dimensions": [
+        1575,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Back cover of The Best Thing Ever.",
+      "text": "",
+      "file": "back.jpg",
+      "path": "content/library/books/the-best-thing-ever/page-13.jpg",
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2016/04/the-best-thing-ever_english_20160409_Page_18.jpg",
+      "accessedAt": "2026-11-02T03:09:27.384804+00:00",
+      "sourceSha256": "0a28379e6700e9519d647815f9c0225293707741a97f70e458fbe164091cb898",
+      "sourceBytes": 45529,
+      "sha256": "9ac152448c2560d3f1014e9c282e663ac57b1ddcb0cace0b006f84b07972d16f",
+      "bytes": 27387,
+      "sourceDimensions": [
+        788,
+        788
+      ],
+      "dimensions": [
+        788,
+        788
+      ],
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    }
+  ],
+  "rightsEvidence": [
+    "edition.txt: book rights colophon and creator credits",
+    "edition-metadata.json: exact English ISBN and CC BY 4.0 notice",
+    "publisher.txt: exact English title/ISBN and role credits",
+    "../publisher-source-policy.txt: all book source files/illustration reuse",
+    "CREDITS.txt: retained attribution and changes"
+  ],
+  "review": {
+    "status": "draft",
+    "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+    "date": "2026-11-02",
+    "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+  }
+}

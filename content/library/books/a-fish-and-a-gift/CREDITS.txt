@@ -1,0 +1,11 @@
+A Fish and a Gift. Andy Thesen (Designer); Jesse Breytenbach (Illustrator); Liesl Jobson (Writer); Book Dash. Book Dash digital English edition; ISBN 978-0-9922357-8-9. Created 2014-06-28; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.
+
+Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.
+
+License: CC BY 4.0, https://creativecommons.org/licenses/by/4.0/
+Complete license: ../CC-BY-4.0.txt
+Publisher: https://bookdash.org/books/a-fish-and-a-gift/
+Text, cover and all story illustrations carry this attribution. No third-party audio acquired. No endorsement by Book Dash or the creators is implied.
+
+Publisher credit logo: ../book-dash-logo.png (display with these credits; see CREDITS.html).
+The exact official digital edition and current publisher title page name no separate editor; no editor name has been inferred. All named creators are credited above.

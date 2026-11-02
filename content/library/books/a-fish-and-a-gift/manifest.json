@@ -1,0 +1,366 @@
+{
+  "id": "a-fish-and-a-gift",
+  "revision": "54916310c5c06a5282e2d5d4add18d64f90e5fde",
+  "metadata": {
+    "title": "A Fish and a Gift",
+    "subtitle": "",
+    "creator": "Liesl Jobson, Jesse Breytenbach, Andy Thesen",
+    "contributor": "Book Dash volunteers",
+    "subject": "Juvenile Fiction",
+    "description": "Yusuf waits on the beach while Papa pushes out his boat. Surfers, turtles and sharks come from the sea. What will Papa bring back for Yusuf?",
+    "publisher": "Book Dash",
+    "date": "2014-06-28",
+    "modified": "2014-06-28",
+    "type": "Story",
+    "format": "Digital",
+    "identifier": "9c9e6754-fe46-11e5-86aa-5e5517507c66",
+    "source": "978-0-9922357-8-9",
+    "language": "en",
+    "relation": "",
+    "coverage": "",
+    "rights": "This work is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/). This means you are free to share (copy and redistribute the material in any medium or format) and adapt it (remix, transform, and build upon the material) for any purpose, even commercially, as long as you give appropriate credit, with a link to your source, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.",
+    "translations": {
+      "zu": {
+        "identifier": "9c9edd60-fe46-11e5-86aa-5e5517507c66",
+        "title": "Inhlanzi Nesipho",
+        "translator": "Nal'ibali"
+      },
+      "xh": {
+        "identifier": "9c9edc48-fe46-11e5-86aa-5e5517507c66",
+        "title": "Intlanzi Kunye Nesipho",
+        "translator": "Nal'ibali"
+      },
+      "fr": {
+        "identifier": "9c9ee256-fe46-11e5-86aa-5e5517507c66",
+        "title": "Un poisson et un cadeau",
+        "translator": "African Storybook Project"
+      }
+    }
+  },
+  "publisherCreators": [
+    "Andy Thesen (Designer)",
+    "Jesse Breytenbach (Illustrator)",
+    "Liesl Jobson (Writer)"
+  ],
+  "publisherIsbn": "978-0-9922357-8-9",
+  "sources": [
+    {
+      "sourceUrl": "https://bookdash.org/books/a-fish-and-a-gift/",
+      "resolvedUrl": "https://bookdash.org/books/a-fish-and-a-gift/",
+      "accessedAt": "2026-11-02T03:08:04.392673+00:00",
+      "sourceSha256": "f36e33b2852067dbec567934bcf10c1a5a243f931a388dee6cf1bcba8f4137a0",
+      "path": "content/library/books/a-fish-and-a-gift/publisher.txt",
+      "sha256": "cc9cba6ea3bd9fe197cbec0030691231004473d908ddbb97bbf9bcd20120d6ba",
+      "bytes": 908,
+      "transformation": "Visible text extracted from publisher HTML; no script/audio imported."
+    },
+    {
+      "sourceUrl": "https://bookdash.github.io/bookdash-books/a-fish-and-a-gift/en/",
+      "resolvedUrl": "https://bookdash.github.io/bookdash-books/a-fish-and-a-gift/en/",
+      "accessedAt": "2026-11-02T03:08:04.953486+00:00",
+      "sourceSha256": "618cfcce05d8e66d073de9361361cea9fa2dfb45c50d324088f0304526ad7efb",
+      "path": "content/library/books/a-fish-and-a-gift/edition.txt",
+      "sha256": "aef8a4bf3ffdd2bf728678dffb1809337398deda019f07cd8187ac6bd10df284",
+      "bytes": 4476,
+      "transformation": "Visible text extracted from publisher HTML; no script/audio imported."
+    },
+    {
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/index.md",
+      "resolvedUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/index.md",
+      "accessedAt": "2026-11-02T03:08:05.493901+00:00",
+      "sourceSha256": "ae663b0bd5dabd2c76b95fb90f2286c7e2b39a78ef30d6b3758db305647f9e36",
+      "path": "content/library/books/a-fish-and-a-gift/edition.md",
+      "sha256": "ae663b0bd5dabd2c76b95fb90f2286c7e2b39a78ef30d6b3758db305647f9e36",
+      "bytes": 4683,
+      "transformation": "None"
+    }
+  ],
+  "pages": [
+    {
+      "alt": "Front cover of A Fish and a Gift.",
+      "text": "A Fish and a Gift",
+      "file": "cover.jpg",
+      "path": "content/library/books/a-fish-and-a-gift/page-00.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/images/cover.jpg",
+      "accessedAt": "2026-11-02T03:08:06.264194+00:00",
+      "sourceSha256": "70cfc3e20398fe781a2235a978468e10d2f4738e4f659f0c60af9e465f8e6fdd",
+      "sourceBytes": 126184,
+      "sha256": "38ba3ae3b238bdb515a430956d52c2a9fab90fd5cfcf05d7bdc961f8f8d51f69",
+      "bytes": 103215,
+      "sourceDimensions": [
+        788,
+        788
+      ],
+      "dimensions": [
+        788,
+        788
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Yusuf and Papa high-five each other.",
+      "text": "One special Friday Yusuf’s father gets dressed before a flicker of light brightens the sky. He pulls on his heavy weather-proof jacket and the green woollen cap that covers his ears. He waves his boy goodbye. Yusuf’s eyes brighten when Papa says, “Today is the day I will catch a fish and bring a gift home for you.”",
+      "file": "01.jpg",
+      "path": "content/library/books/a-fish-and-a-gift/page-01.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/images/01.jpg",
+      "accessedAt": "2026-11-02T03:08:06.236401+00:00",
+      "sourceSha256": "d168d0ba948e9c125e044fda931c7e184bec1b04ccc2b5b584bef09a63f50268",
+      "sourceBytes": 37024,
+      "sha256": "71acd5b97ed189670ba01ae5bdb2ff478f6e0db2f67832601dab80a3995d0de7",
+      "bytes": 31502,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Papa rides to the beach on his bicycle.",
+      "text": "A fish and a gift? Oh, what will it be? Papa cycles down to Muizenberg Beach. Squeak squeak go the wheels all the way to Surfer’s Corner. Gulls circle the sky. “Whaaat? Whaaat? Whaaat?” they cry. “What will you bring back for Yusuf?” Papa rings his bell. “Wait and see what it will be!”",
+      "file": "02.jpg",
+      "path": "content/library/books/a-fish-and-a-gift/page-02.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/images/02.jpg",
+      "accessedAt": "2026-11-02T03:08:06.090812+00:00",
+      "sourceSha256": "cc913687306662c60b2be99ab2947cece1a6233229a4c988eaba67b1f9de5889",
+      "sourceBytes": 30202,
+      "sha256": "d0d57b5dfd65776ff3381e15ff842be6e1823206c1bd60ee1cc12161b1bec8e8",
+      "bytes": 23037,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Papa waves to the fishermen, who prepare to go to sea.",
+      "text": "The fishermen watch the sun rise. They check their nets. They check their oars. They listen to the wind. They drag their boats down to the water. Yusuf’s grandfather, Oupa Salie was a treknet fisherman. Before him his father, Oupagrootjie Ridwaan, knew the sea too.",
+      "file": "03.jpg",
+      "path": "content/library/books/a-fish-and-a-gift/page-03.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/images/03.jpg",
+      "accessedAt": "2026-11-02T03:08:06.090955+00:00",
+      "sourceSha256": "f3f3179380846183fc5e4b3257c8bc4cef3cd7af6a79f1aabfbe869928582537",
+      "sourceBytes": 32583,
+      "sha256": "e70b8e63be931eadf8d421b36355aa5843cd1bea117f80efc0f269e1454db5d3",
+      "bytes": 26364,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Papa heads out to sea with the other fishermen.",
+      "text": "The boat rides into the waves. Papa’s arms stretch to the oar. His leg braces against the side. His neck strains, his back muscles ripple. Papa sings as he works: “Drop and swish. Find a fish. Pull and plop. Don’t you stop.”",
+      "file": "04.jpg",
+      "path": "content/library/books/a-fish-and-a-gift/page-04.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/images/04.jpg",
+      "accessedAt": "2026-11-02T03:08:06.718306+00:00",
+      "sourceSha256": "c0117372360ecbe0c5900fdf431be92bd9d0a45157e8a5f7c2d0a48b93c991ad",
+      "sourceBytes": 47480,
+      "sha256": "d847eae8cddde12dba022d6876724b45727063581cc3d88680cfabf7308763f9",
+      "bytes": 44220,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Yusuf examines the gifts Papa has brought him.",
+      "text": "All day long Yusuf looks at the sky. It is bright and clear and windless. A fish and a gift! What will Papa bring home from the sea? Sometimes he brings a beautiful shell. Sometimes he brings a jewel green bottle rinsed by the waves.",
+      "file": "05.jpg",
+      "path": "content/library/books/a-fish-and-a-gift/page-05.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/images/05.jpg",
+      "accessedAt": "2026-11-02T03:08:06.707877+00:00",
+      "sourceSha256": "e4156edafeec11cd7c5c2d1d9485c9a9d218e8b49c97db06bf6f8df2265f586d",
+      "sourceBytes": 36804,
+      "sha256": "c0086434544ee32f39a823bbec7ef25c3084b55bb22000cf2ed73f7f491fda93",
+      "bytes": 31542,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Papa stands on the beach with the turtles.",
+      "text": "Some days Yusuf’s father brings a story. Like the time they found sea turtles on the sand, hundreds washed up in a storm. “Whaaat? Whaaat? Whaaat?” cried the gulls. “What will you do to help the turtles?” Papa said, “We saved those turtles, I tell you straight. We sent them back to the ocean, every last one.”",
+      "file": "06.jpg",
+      "path": "content/library/books/a-fish-and-a-gift/page-06.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/images/06.jpg",
+      "accessedAt": "2026-11-02T03:08:06.840594+00:00",
+      "sourceSha256": "0b6389940ec4b4401c850f8bd4c8eb664c77eff701555ae1708561f36b1f3f36",
+      "sourceBytes": 46004,
+      "sha256": "b5545ac4b5ffe59a3aa7ef65021652424042606ff27a8022fb9ce215fb9bbdf5",
+      "bytes": 42705,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Treknet fishermen on the beach.",
+      "text": "Always Papa brings a song. He sings the song while he pulls the oars. He sings the song while he pulls the nets. He sings the song as he winds the ropes. He sings the song as he cycles home. “Drop and swish. Find a fish. Pull and plop. Don’t you stop.”",
+      "file": "07.jpg",
+      "path": "content/library/books/a-fish-and-a-gift/page-07.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/images/07.jpg",
+      "accessedAt": "2026-11-02T03:08:06.807923+00:00",
+      "sourceSha256": "7f45195578659bd4730ec86f150e8a9b016bef9c81aa8223e8401a3878d85947",
+      "sourceBytes": 37006,
+      "sha256": "8ec28f162827e8be49e29aea4cb28e838778c4a36b7d015ca8ba4e39dac53b5a",
+      "bytes": 31154,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Ouma Safiya and Yusuf walk to greet Papa.",
+      "text": "Ouma Safiya wants a nice fat yellowtail for her supper. Mother wants a new dress. “Don’t be silly,” says Ouma. “You’ll be lucky if they catch even a tiny crab. More likely it will be fish tail Friday. There’s not so many fish left in the sea.” Yusuf holds Ouma’s hand. They cross the road at the bathing cabins. “Whaaat? Whaaat? Whaaat?” cry the gulls perched on the bright rooftops. “What is for supper?”",
+      "file": "08.jpg",
+      "path": "content/library/books/a-fish-and-a-gift/page-08.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/images/08.jpg",
+      "accessedAt": "2026-11-02T03:08:07.468263+00:00",
+      "sourceSha256": "c16788dc9c1d3e0b47e1a0b1fe341d00738227b29353aae8365e47109ec55294",
+      "sourceBytes": 44069,
+      "sha256": "5fbe7a8d39ff1c4fb90ad23e3fd8b92c976ae383b76a679928d3dc7512552ebd",
+      "bytes": 39941,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Papa confronts a surfer on the beach.",
+      "text": "Last year the fishermen fought with the surfers. Angry fists and shouting words. “Whaaat? Whaaat? Whaaat?” cried the gulls. “There’s enough sea for everybody,” said Yusuf’s father. He showed them the fishing licence that had been Oupa Salie’s. “Waves for all. Water for free.”",
+      "file": "09.jpg",
+      "path": "content/library/books/a-fish-and-a-gift/page-09.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/images/09.jpg",
+      "accessedAt": "2026-11-02T03:08:07.314038+00:00",
+      "sourceSha256": "ebd678e587609aa2802ec729edad5d4c389fda90f42c0c0ff9e48fb209ae2331",
+      "sourceBytes": 41515,
+      "sha256": "c4cdf01c19ae2885b32c3aa47958fdee122d1187401928033c5c4166c022a8f5",
+      "bytes": 37091,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Ouma Safiya and Yusuf wait for Papa on the beach. Ouma Safiya looks through her binoculars.",
+      "text": "Ouma Safiya watches through her binoculars, her fingers curled in curiosity. The shark siren sounds. Swimmers run back to the sand and grab their towels. Surfers rush to the shore, carrying their boards under their arms. Under the showers they strip off their wetsuits. “Whaaat? Whaaat? Whaaat?” cry the gulls. “What will Yusuf’s father bring from the ocean?”",
+      "file": "10.jpg",
+      "path": "content/library/books/a-fish-and-a-gift/page-10.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/images/10.jpg",
+      "accessedAt": "2026-11-02T03:08:07.381179+00:00",
+      "sourceSha256": "894f34df79cd31717a8fb273e67ef19c60f353a78c3d39eda39c41e802a9cc6f",
+      "sourceBytes": 36671,
+      "sha256": "2562c157521325a5ffc502123f02fc52cd79fe0a4623e57db1cd6ca9d976cb42",
+      "bytes": 31212,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Papa finds a shark in the net.",
+      "text": "Yusuf’s father and uncle and cousins heave and pull. A little shark has been caught. It twists and thrashes in the waves. Yusuf’s father untangles the nets, singing to the shark: “Drop and swish. Find a fish. Pull and plop. Don’t you stop.” When the shark at last is free it streaks back into the waves, leaving only one fat yellowtail in the net. Ouma Safiya will be pleased.",
+      "file": "11.jpg",
+      "path": "content/library/books/a-fish-and-a-gift/page-11.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/images/11.jpg",
+      "accessedAt": "2026-11-02T03:08:07.561426+00:00",
+      "sourceSha256": "0af6ad69b363a54111e539eed86298cfc6c6ebedf24ec24f081213cf373fa9cc",
+      "sourceBytes": 47107,
+      "sha256": "5fa6e612c333387b08e8a5bad560c2d2b8bedc38c71a5300ffd281bb9928fbf9",
+      "bytes": 42777,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Papa's gift to Yusuf is a shark's tooth.",
+      "text": "The men pull the boat in and coil up the cables. A hard white triangle catches Papa’s finger. “Whaaat? Whaaat? Whaaat?” cry the gulls. “What did you bring back for Yusuf?” As the sun goes down, Papa answers the gulls. “A lucky shark tooth for my boy.” At home Yusuf holds his gift up to the stars.",
+      "file": "12.jpg",
+      "path": "content/library/books/a-fish-and-a-gift/page-12.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/images/12.jpg",
+      "accessedAt": "2026-11-02T03:08:08.071409+00:00",
+      "sourceSha256": "c8b2fc649d0d2917547c1684ed4a85f1fa6409065114c229c0917a9d31667b0d",
+      "sourceBytes": 40502,
+      "sha256": "a658219dd3365f16a54c52df260af8688fd1ee1d787ece0c5ae1c1549ab85f68",
+      "bytes": 35624,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    }
+  ],
+  "rightsEvidence": [
+    "edition.txt: book rights colophon and creator credits",
+    "edition-metadata.json: exact English ISBN and CC BY 4.0 notice",
+    "publisher.txt: exact English title/ISBN and role credits",
+    "../publisher-source-policy.txt: all book source files/illustration reuse",
+    "CREDITS.txt: retained attribution and changes"
+  ],
+  "review": {
+    "status": "draft",
+    "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+    "date": "2026-11-02",
+    "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+  }
+}

@@ -1,0 +1,362 @@
+{
+  "id": "sleepy-mr-sloth",
+  "revision": "54916310c5c06a5282e2d5d4add18d64f90e5fde",
+  "metadata": {
+    "title": "Sleepy Mr Sloth",
+    "subtitle": "",
+    "creator": "Graham Paterson, Paul Kennedy, Nick Mulgrew",
+    "contributor": "Book Dash volunteers",
+    "subject": "Juvenile Fiction",
+    "description": "He’s quite good at climbing. He knows how to swing. But sleeping’s his favourite, favourite thing!",
+    "publisher": "Book Dash",
+    "date": "2014-05-10",
+    "modified": "2016-06-08",
+    "type": "Story",
+    "format": "Digital",
+    "identifier": "9c9e7cb2-fe46-11e5-86aa-5e5517507c66",
+    "source": "978-0-9922357-0-3",
+    "language": "en",
+    "relation": "",
+    "coverage": "",
+    "rights": "This work is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/). This means you are free to share (copy and redistribute the material in any medium or format) and adapt it (remix, transform, and build upon the material) for any purpose, even commercially, as long as you give appropriate credit, with a link to your source, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.",
+    "translations": {
+      "xh": {
+        "identifier": "9c9f1b18-fe46-11e5-86aa-5e5517507c66",
+        "translator": "Nal'ibali",
+        "title": "USloth Vilavoco"
+      },
+      "fr": {
+        "identifier": "9c9f27b6-fe46-11e5-86aa-5e5517507c66",
+        "title": "M. Paresseux est fatigué",
+        "translator": "African Storybook Project"
+      }
+    }
+  },
+  "publisherCreators": [
+    "Graham Paterson (Illustrator)",
+    "Paul Kennedy (Writer)",
+    "Nick Mulgrew (Designer)",
+    "Arthur Attwell (Editor)"
+  ],
+  "publisherIsbn": "978-0-9922357-0-3",
+  "sources": [
+    {
+      "sourceUrl": "https://bookdash.org/books/sleepy-mr-sloth/",
+      "resolvedUrl": "https://bookdash.org/books/sleepy-mr-sloth/",
+      "accessedAt": "2026-11-02T03:08:04.381120+00:00",
+      "sourceSha256": "cc0252c34ffe04d103e8438fb182784f71c3da77a2a0809d1a2bb45e379cc428",
+      "path": "content/library/books/sleepy-mr-sloth/publisher.txt",
+      "sha256": "b5f4e93da6337d700c2bf705db7417e66384c460f46f48c76532942dcf9f2000",
+      "bytes": 972,
+      "transformation": "Visible text extracted from publisher HTML; no script/audio imported."
+    },
+    {
+      "sourceUrl": "https://bookdash.github.io/bookdash-books/sleepy-mr-sloth/en/",
+      "resolvedUrl": "https://bookdash.github.io/bookdash-books/sleepy-mr-sloth/en/",
+      "accessedAt": "2026-11-02T03:08:04.950702+00:00",
+      "sourceSha256": "3859b549e35b4ac16cc44718be2682facc5abe413dff852ae3904677ca660ff6",
+      "path": "content/library/books/sleepy-mr-sloth/edition.txt",
+      "sha256": "9f52d4e613be14945e6f54088db022d46588a4c9d7699e002627fe9eb4b173b4",
+      "bytes": 1943,
+      "transformation": "Visible text extracted from publisher HTML; no script/audio imported."
+    },
+    {
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/index.md",
+      "resolvedUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/index.md",
+      "accessedAt": "2026-11-02T03:08:05.464139+00:00",
+      "sourceSha256": "2748730cb37302ca9084795624617d5824950f08959ead29147e333e4738957b",
+      "path": "content/library/books/sleepy-mr-sloth/edition.md",
+      "sha256": "2748730cb37302ca9084795624617d5824950f08959ead29147e333e4738957b",
+      "bytes": 2332,
+      "transformation": "None"
+    }
+  ],
+  "pages": [
+    {
+      "alt": "Front cover of Sleepy Mr Sloth.",
+      "text": "Sleepy Mr Sloth",
+      "file": "cover.jpg",
+      "path": "content/library/books/sleepy-mr-sloth/page-00.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/images/cover.jpg",
+      "accessedAt": "2026-11-02T03:08:06.301006+00:00",
+      "sourceSha256": "4ab8144bd97bb27ab21668bc2da84dc33627770ad8a921f4cacd1107715fa137",
+      "sourceBytes": 262505,
+      "sha256": "bb9c44ed44a6f19da6ae890ad93405f03dfc4b964af8f6f94598a41cb2356114",
+      "bytes": 163609,
+      "sourceDimensions": [
+        1024,
+        1024
+      ],
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mr Sloth is sleepy and yawning.",
+      "text": "One day, Mr Sloth came to visit. He said: I’m sleepy! I need a good branch for a bed!",
+      "file": "01.jpg",
+      "path": "content/library/books/sleepy-mr-sloth/page-01.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/images/01.jpg",
+      "accessedAt": "2026-11-02T03:08:06.265228+00:00",
+      "sourceSha256": "31b4a3e49a01a6fca2e07d40ed6d03726828f6dcea587e1c20e1bbee03fa728c",
+      "sourceBytes": 142769,
+      "sha256": "d548a7696b285fbc461030e0da1620e29e90e0808ce364aac6c466cf207d107b",
+      "bytes": 76112,
+      "sourceDimensions": [
+        1024,
+        1021
+      ],
+      "dimensions": [
+        1024,
+        1021
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mr Sloth starts climbing the tree.",
+      "text": "I’m quite good at climbing. I know how to swing. But sleeping’s my favourite, favourite thing!",
+      "file": "02.jpg",
+      "path": "content/library/books/sleepy-mr-sloth/page-02.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/images/02.jpg",
+      "accessedAt": "2026-11-02T03:08:06.485875+00:00",
+      "sourceSha256": "49238c6a92ede911645b552bce640ea8b912d108b18fb0d526bb6393fc320509",
+      "sourceBytes": 145622,
+      "sha256": "fe398f70d4a844ad1afbfa95a7e79001120ec14c2de4d9b01f7de01822119244",
+      "bytes": 89551,
+      "sourceDimensions": [
+        1024,
+        1023
+      ],
+      "dimensions": [
+        1024,
+        1023
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mr Sloth spots a branch. Is that a big ear nearby?",
+      "text": "This branch looks lovely! I think I’ll sleep here. And you? Don’t you think that’s a splendid idea?",
+      "file": "03.jpg",
+      "path": "content/library/books/sleepy-mr-sloth/page-03.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/images/03.jpg",
+      "accessedAt": "2026-11-02T03:08:06.266645+00:00",
+      "sourceSha256": "64e4b6a2d325f532dcc38165287e15700fdbf8f6473e5e2ca50aee31943a1165",
+      "sourceBytes": 156218,
+      "sha256": "896053577358174d4a8bcd6690887013f91a86e440179ff64852b69b48682c34",
+      "bytes": 95592,
+      "sourceDimensions": [
+        1024,
+        1021
+      ],
+      "dimensions": [
+        1024,
+        1021
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "A giraffe bites Mr Sloth by mistake!",
+      "text": "Oh no, Mr Sloth! A giraffe’s eating there! He might think you’re lunch and start nibbling your hair!",
+      "file": "04.jpg",
+      "path": "content/library/books/sleepy-mr-sloth/page-04.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/images/04.jpg",
+      "accessedAt": "2026-11-02T03:08:06.999417+00:00",
+      "sourceSha256": "4d84a371e5541a7d6a704b9765b1f83a043e97235a5121642d3d73f0e2151890",
+      "sourceBytes": 194539,
+      "sha256": "84380b13564885778f981a4557a16311e93b6e4e294ebf847bfa397bd0c8c924",
+      "bytes": 105741,
+      "sourceDimensions": [
+        1024,
+        1021
+      ],
+      "dimensions": [
+        1024,
+        1021
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mr Sloth spots a branch. There are a few bees flying around.",
+      "text": "This branch looks lovely! I think I’ll sleep here. And you? Don’t you think that’s a splendid idea?",
+      "file": "05.jpg",
+      "path": "content/library/books/sleepy-mr-sloth/page-05.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/images/05.jpg",
+      "accessedAt": "2026-11-02T03:08:07.001388+00:00",
+      "sourceSha256": "56eb75b4c9f585baabf0758209016953d4e8108b7eeb4cf6967e87d1807b32ec",
+      "sourceBytes": 145324,
+      "sha256": "28045da0a4e3955dab66c240a46e47b2a6ec4ad2ac86292aec20e01511cd0745",
+      "bytes": 89164,
+      "sourceDimensions": [
+        1024,
+        1023
+      ],
+      "dimensions": [
+        1024,
+        1023
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Bees fly out of a beehive around Mr Sloth!",
+      "text": "Oh no, Mr Sloth! There’s a beehive right there! You’ll never get sleep with those bees everywhere!",
+      "file": "06.jpg",
+      "path": "content/library/books/sleepy-mr-sloth/page-06.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/images/06.jpg",
+      "accessedAt": "2026-11-02T03:08:07.015334+00:00",
+      "sourceSha256": "96ac8f84b2a38852ad2cc3420db1a75c49ae6927dace23dccb59992543317314",
+      "sourceBytes": 192749,
+      "sha256": "2473e40fd808f4191173402be499988eb09a9e454e8a34c8d100d6daa0667cbd",
+      "bytes": 119072,
+      "sourceDimensions": [
+        1024,
+        976
+      ],
+      "dimensions": [
+        1024,
+        976
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mr Sloth spots a branch. There is a tail nearby.",
+      "text": "This branch looks lovely! I think I’ll sleep here. And you? Don’t you think that’s a splendid idea?",
+      "file": "07.jpg",
+      "path": "content/library/books/sleepy-mr-sloth/page-07.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/images/07.jpg",
+      "accessedAt": "2026-11-02T03:08:07.676159+00:00",
+      "sourceSha256": "f4e65b7b2e19ceade72caf32463765b4b2d915ce0e3addd0f5163976b15d2d18",
+      "sourceBytes": 125195,
+      "sha256": "8bb955384f7239f6bee38879942ea77fc0bfe5e3a37494d4e729676e9c757366",
+      "bytes": 75716,
+      "sourceDimensions": [
+        1024,
+        1023
+      ],
+      "dimensions": [
+        1024,
+        1023
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mr Sloth grabs snake by mistake!",
+      "text": "Oh no, Mr Sloth, that’s a snake over there! Not a branch! Poor old snake. You gave him quite a scare.",
+      "file": "08.jpg",
+      "path": "content/library/books/sleepy-mr-sloth/page-08.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/images/08.jpg",
+      "accessedAt": "2026-11-02T03:08:07.739100+00:00",
+      "sourceSha256": "395fe098ead30ff63999ce32fc8473ee27570f1546fe720ecb2e4b39f64a126c",
+      "sourceBytes": 204002,
+      "sha256": "a00719c49d2992b15371f6c6d7952bed3c7ae36e9b481c757a84e6a7dedc9b67",
+      "bytes": 110854,
+      "sourceDimensions": [
+        1024,
+        1024
+      ],
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mr Sloth spots a branch. There are feet nearby.",
+      "text": "This branch looks lovely! I think I’ll sleep here. And you? Don’t you think that’s a splendid idea?",
+      "file": "09.jpg",
+      "path": "content/library/books/sleepy-mr-sloth/page-09.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/images/09.jpg",
+      "accessedAt": "2026-11-02T03:08:07.687198+00:00",
+      "sourceSha256": "43837e137e0741ee9beecfd61680e44a7c0c35a61a699ae3e915d183066e2c74",
+      "sourceBytes": 154276,
+      "sha256": "802f968d3eb2c2de7bc56d76ed59b4b0340c86e6850d0debfdc931703aaa30a0",
+      "bytes": 94005,
+      "sourceDimensions": [
+        1024,
+        1023
+      ],
+      "dimensions": [
+        1024,
+        1023
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "A hadeda is squawking loudly there!",
+      "text": "Oh no, Mr Sloth! There’s a bird squawking there! You’ll never get sleep with that noise in the air!",
+      "file": "10.jpg",
+      "path": "content/library/books/sleepy-mr-sloth/page-10.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/images/10.jpg",
+      "accessedAt": "2026-11-02T03:08:07.746570+00:00",
+      "sourceSha256": "b50f61e19df9f53d760a853e36833342c1b4e95770d05ff29a55097789d76eca",
+      "sourceBytes": 202647,
+      "sha256": "e720952b2a0a6e47826ac7ec2d3eaf13a1528ca6b9be03fce311e607c4017645",
+      "bytes": 111132,
+      "sourceDimensions": [
+        1024,
+        1021
+      ],
+      "dimensions": [
+        1024,
+        1021
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mr Sloth climbs to the top of the tree and smiles.",
+      "text": "Try climb one more branch, Mr Sloth! they all said. And that branch was just the right one for his bed.",
+      "file": "11.jpg",
+      "path": "content/library/books/sleepy-mr-sloth/page-11.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/images/11.jpg",
+      "accessedAt": "2026-11-02T03:08:08.395664+00:00",
+      "sourceSha256": "6e22a550e77e02f53bcd2a9a84b391acb7aa5b3ace83325243a550a545c63eda",
+      "sourceBytes": 125471,
+      "sha256": "a16837872c9360dbb660ef930aa271227ea4f41749b87fbb6c3259313fe74d3e",
+      "bytes": 75154,
+      "sourceDimensions": [
+        1024,
+        1023
+      ],
+      "dimensions": [
+        1024,
+        1023
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mr Sloth and the animals are all sleeping nicely in the tree together.",
+      "text": "The bird and the snake, the giraffe and each bee were happy to have Mr Sloth in their tree.",
+      "file": "12.jpg",
+      "path": "content/library/books/sleepy-mr-sloth/page-12.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/images/12.jpg",
+      "accessedAt": "2026-11-02T03:08:08.989276+00:00",
+      "sourceSha256": "cb000fc019e64b5e9e878cd6d5975cabf80b75f69af99663db7d94ebf23e8322",
+      "sourceBytes": 140243,
+      "sha256": "59cc8bd249d03407d458ca56e654c669a523803597449179809cd8fe39152afb",
+      "bytes": 81686,
+      "sourceDimensions": [
+        1024,
+        1023
+      ],
+      "dimensions": [
+        1024,
+        1023
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    }
+  ],
+  "rightsEvidence": [
+    "edition.txt: book rights colophon and creator credits",
+    "edition-metadata.json: exact English ISBN and CC BY 4.0 notice",
+    "publisher.txt: exact English title/ISBN and role credits",
+    "../publisher-source-policy.txt: all book source files/illustration reuse",
+    "CREDITS.txt: retained attribution and changes"
+  ],
+  "review": {
+    "status": "draft",
+    "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+    "date": "2026-11-02",
+    "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+  }
+}

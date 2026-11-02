@@ -1,0 +1,350 @@
+{
+  "id": "a-beautiful-day",
+  "revision": "54916310c5c06a5282e2d5d4add18d64f90e5fde",
+  "metadata": {
+    "title": "A Beautiful Day",
+    "subtitle": "",
+    "creator": "Raeesah Vawda, Lindy Pelzl, Elana Bregin",
+    "contributor": "Book Dash volunteers",
+    "subject": "Juvenile Fiction",
+    "description": "It’s a beautiful day for a picnic. Everyone wants to join in the fun.",
+    "publisher": "Book Dash",
+    "date": "2015-11-07",
+    "modified": "2015-11-07",
+    "type": "Story",
+    "format": "Digital",
+    "identifier": "9c9e94e0-fe46-11e5-86aa-5e5517507c66",
+    "source": "978-1-928318-15-6",
+    "language": "en",
+    "relation": "",
+    "coverage": "",
+    "rights": "This work is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/). This means you are free to share (copy and redistribute the material in any medium or format) and adapt it (remix, transform, and build upon the material) for any purpose, even commercially, as long as you give appropriate credit, with a link to your source, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.",
+    "translations": null
+  },
+  "publisherCreators": [
+    "Raeesah Vawda (Designer)",
+    "Lindy Pelzl (Illustrator)",
+    "Elana Bregin (Writer)"
+  ],
+  "publisherIsbn": "978-1-928318-15-6",
+  "sources": [
+    {
+      "sourceUrl": "https://bookdash.org/books/a-beautiful-day/",
+      "resolvedUrl": "https://bookdash.org/books/a-beautiful-day/",
+      "accessedAt": "2026-11-02T03:08:11.278500+00:00",
+      "sourceSha256": "b5d6bd7dd386317ee0fd7bd84c5c6b3ba60a2c2f8b864a80360630a822a1a70d",
+      "path": "content/library/books/a-beautiful-day/publisher.txt",
+      "sha256": "88c7eb21f428acfc0943f6f38b658a8ec3d8dd77b85e78e102fdf801cb263a14",
+      "bytes": 881,
+      "transformation": "Visible text extracted from publisher HTML; no script/audio imported."
+    },
+    {
+      "sourceUrl": "https://bookdash.github.io/bookdash-books/a-beautiful-day/en/",
+      "resolvedUrl": "https://bookdash.github.io/bookdash-books/a-beautiful-day/en/",
+      "accessedAt": "2026-11-02T03:08:11.793721+00:00",
+      "sourceSha256": "d4b9a4d47235eafed2d025745d9ecbd03f8e5bba0655dea4ba1c3b765ead070d",
+      "path": "content/library/books/a-beautiful-day/edition.txt",
+      "sha256": "06fa43583b6f5e067ff57756a0cd8d089102193f91d95f5388716dcfff75f913",
+      "bytes": 1513,
+      "transformation": "Visible text extracted from publisher HTML; no script/audio imported."
+    },
+    {
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/index.md",
+      "resolvedUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/index.md",
+      "accessedAt": "2026-11-02T03:08:12.359524+00:00",
+      "sourceSha256": "be8f87f97e88aa0f1438cce15a10f611a3d3280a86c27cbfbd399fc2bb63a2f1",
+      "path": "content/library/books/a-beautiful-day/edition.md",
+      "sha256": "be8f87f97e88aa0f1438cce15a10f611a3d3280a86c27cbfbd399fc2bb63a2f1",
+      "bytes": 2177,
+      "transformation": "None"
+    }
+  ],
+  "pages": [
+    {
+      "alt": "Front cover of A Beautiful Day.",
+      "text": "A Beautiful Day",
+      "file": "cover.jpg",
+      "path": "content/library/books/a-beautiful-day/page-00.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/images/cover.jpg",
+      "accessedAt": "2026-11-02T03:08:13.054178+00:00",
+      "sourceSha256": "441a713c3fd52455f8d60eac4f6119fa07bb4e3bfc601a9c1b68f512ad79040e",
+      "sourceBytes": 150856,
+      "sha256": "1458cd8adee7132f2940b97fc94e63b994952816385e8f4f13fa0866fc649196",
+      "bytes": 205595,
+      "sourceDimensions": [
+        960,
+        960
+      ],
+      "dimensions": [
+        960,
+        960
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mom and baby greet Nicholas as he stretches in bed.",
+      "text": "“What a beautiful day,” says Mom. “Wake up Nicholas.” “Hello sun,” says Nicholas. “Good morning birds.”",
+      "file": "01.jpg",
+      "path": "content/library/books/a-beautiful-day/page-01.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/images/01.jpg",
+      "accessedAt": "2026-11-02T03:08:13.009750+00:00",
+      "sourceSha256": "508363bbc3d87b9619a2fd94879bcae473e9fdd3fb07893d9b3e44302ba29ad5",
+      "sourceBytes": 119175,
+      "sha256": "6818658259dc5faa7aadf3ed4018d7dfd52645dda4aae4db5ca93daa02377c1f",
+      "bytes": 136841,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Dad and Nicholas sit at the breakfast table. Nicholas waves to his friend Jacob through the kitchen window.",
+      "text": "“It’s a lovely day,” says Dad. “Let’s have a picnic by the river.” “Can my friend Jacob come?” asks Nicholas.",
+      "file": "02.jpg",
+      "path": "content/library/books/a-beautiful-day/page-02.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/images/02.jpg",
+      "accessedAt": "2026-11-02T03:08:13.454300+00:00",
+      "sourceSha256": "2f861de0541fd16dc2ee3c7a16757d032cfb889032aade221becdb2e983eb06e",
+      "sourceBytes": 139079,
+      "sha256": "f2104f5df6af1a83e16c38de86a2ce1071d298cc3dce6279be1caddd4b392ced",
+      "bytes": 160436,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "The animals jump up and down with excitement. Nicholas and Jacob put their arms around each other.",
+      "text": "“Don’t forget me. I love picnics!” says Donkey. “And me. I want to come too!” says Dog. “Follow us,” say the birds.",
+      "file": "03.jpg",
+      "path": "content/library/books/a-beautiful-day/page-03.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/images/03.jpg",
+      "accessedAt": "2026-11-02T03:08:13.051001+00:00",
+      "sourceSha256": "621f8a4dec8571febd626050e3d555e0386adb703c9464c0f9b867f7371fd3cf",
+      "sourceBytes": 141548,
+      "sha256": "6ebbfcefa4ee20d0d230e68a2a7dbc0a2f71ec9829cf8ae1bcc5f0cd013b81ab",
+      "bytes": 163113,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Dad carries a picnic basket on his head. Mom, the children and all the animals follow him to the picnic spot.",
+      "text": "",
+      "file": "04.jpg",
+      "path": "content/library/books/a-beautiful-day/page-04.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/images/04.jpg",
+      "accessedAt": "2026-11-02T03:08:13.710737+00:00",
+      "sourceSha256": "e32193fe8cd873ad9d9fcae4303e9c77f4c1b57badcea031cc0271b2507ce58a",
+      "sourceBytes": 141732,
+      "sha256": "5ffaaf8772e8d8b0892d36252552aa47584d5c7bc1b1cfee1728b51f89b96676",
+      "bytes": 163242,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Nicholas and the dog get ready to race.",
+      "text": "“I’ll race you to that tree,” Nicholas says.",
+      "file": "05.jpg",
+      "path": "content/library/books/a-beautiful-day/page-05.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/images/05.jpg",
+      "accessedAt": "2026-11-02T03:08:13.735180+00:00",
+      "sourceSha256": "91445ac93d20fa1c8c18bdc80ef9b48c7770f6a127cbbaeb7f66647fad36e6ed",
+      "sourceBytes": 144507,
+      "sha256": "079092a8741a4a66c69c1b91aa4262b8211411d6db6b18dca55bbcf6ca453456",
+      "bytes": 165883,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "At the tree, Nicholas bends over panting.",
+      "text": "“I won, I won,” says Donkey. “Not fair,” says Nicholas. “You’ve got four legs.”",
+      "file": "06.jpg",
+      "path": "content/library/books/a-beautiful-day/page-06.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/images/06.jpg",
+      "accessedAt": "2026-11-02T03:08:13.991050+00:00",
+      "sourceSha256": "bd045e9ad2e16d97a8bf05c01c38a79b5cdb7fe06aff13c7cde0b33013fa9769",
+      "sourceBytes": 103790,
+      "sha256": "b62787d2457fbbeae0470384e30c385b9b4fda7e94fa3f770e6b222703b6802d",
+      "bytes": 117454,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Nicholas does a handstand. Jacob does a handstand on one hand.",
+      "text": "“Look what I can do,” says Nicholas. “I bet you can’t do this,” says Jacob.",
+      "file": "07.jpg",
+      "path": "content/library/books/a-beautiful-day/page-07.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/images/07.jpg",
+      "accessedAt": "2026-11-02T03:08:14.459834+00:00",
+      "sourceSha256": "2210162ce493281b5b65871a787ccc8dd5eaa653c7451e6816331adaf798ed0d",
+      "sourceBytes": 124477,
+      "sha256": "1632de6776ae5f38e1a59de342a428f4e932ae4884a74ecdc129a9db1fd22aef",
+      "bytes": 142679,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mom, Dad and baby arrive at the river bank.",
+      "text": "“Here’s our picnic spot,” says Dad.",
+      "file": "08.jpg",
+      "path": "content/library/books/a-beautiful-day/page-08.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/images/08.jpg",
+      "accessedAt": "2026-11-02T03:08:14.419229+00:00",
+      "sourceSha256": "1e94fdf1371a7eb0b4f1ac7ade3898090c2ee5538b446a0e7da25bbd5b0925e8",
+      "sourceBytes": 147813,
+      "sha256": "8736884470ba74bc8754232633217737167a9d21db0b215feec8cb4e6298f16d",
+      "bytes": 169051,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Nicholas, Jacob, Donkey and Dog leap into the river.",
+      "text": "“Race you to the water!” says Jacob.",
+      "file": "09.jpg",
+      "path": "content/library/books/a-beautiful-day/page-09.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/images/09.jpg",
+      "accessedAt": "2026-11-02T03:08:14.705438+00:00",
+      "sourceSha256": "ebbf3fcdddb381bbad2be4a85f48cdff78b64ce2d21c6a1b0ea9e32e69bce645",
+      "sourceBytes": 145898,
+      "sha256": "46666d957be0961651a586bf9f4880fe922e47e09e3721a69457a43adac15a57",
+      "bytes": 166534,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "The family sits on a red and white checked picnic blanket and eat their snacks.",
+      "text": "“Come and eat, boys and girls,” says Mom.",
+      "file": "10.jpg",
+      "path": "content/library/books/a-beautiful-day/page-10.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/images/10.jpg",
+      "accessedAt": "2026-11-02T03:08:14.663311+00:00",
+      "sourceSha256": "75289663e2627e6f1dfa59ce06feca2622ede1795d800ef07a639b6239ab6ae2",
+      "sourceBytes": 155246,
+      "sha256": "dab1ea7eaa284dc875386a9c4e85f9d4b0c1c76f604de0c4de8310d3ae7fa510",
+      "bytes": 179913,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Outside Jacob's house, Nicholas waves goodbye to his friend.",
+      "text": "“Time to go home,” says Mom.“Say goodbye to Jacob.”",
+      "file": "11.jpg",
+      "path": "content/library/books/a-beautiful-day/page-11.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/images/11.jpg",
+      "accessedAt": "2026-11-02T03:08:15.110671+00:00",
+      "sourceSha256": "2f24b23667de6010b9ed0ec08e794df7e98c787637aa0c704e1e7245a323b5bd",
+      "sourceBytes": 141428,
+      "sha256": "71705ac8d613c8071ffd8f4e9d15e7b1a9e511d28857eccac5f40449340658d6",
+      "bytes": 164496,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Nicholas and Dog are fast asleep in bed, while Donkey sleeps outside under the stars.",
+      "text": "",
+      "file": "12.jpg",
+      "path": "content/library/books/a-beautiful-day/page-12.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/images/12.jpg",
+      "accessedAt": "2026-11-02T03:08:15.167064+00:00",
+      "sourceSha256": "143ebfa62b9674cf43d0449b32c3efd320f7e9c156adb81405e8b565827c2d30",
+      "sourceBytes": 161986,
+      "sha256": "37b153b115923340055e22f79d8ee49c48886c29999cb3d894e2c61500673e1f",
+      "bytes": 190643,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    }
+  ],
+  "rightsEvidence": [
+    "edition.txt: book rights colophon and creator credits",
+    "edition-metadata.json: exact English ISBN and CC BY 4.0 notice",
+    "publisher.txt: exact English title/ISBN and role credits",
+    "../publisher-source-policy.txt: all book source files/illustration reuse",
+    "CREDITS.txt: retained attribution and changes"
+  ],
+  "review": {
+    "status": "draft",
+    "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+    "date": "2026-11-02",
+    "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+  }
+}

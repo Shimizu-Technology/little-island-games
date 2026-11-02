@@ -1,0 +1,363 @@
+{
+  "id": "a-tiny-seed",
+  "revision": "54916310c5c06a5282e2d5d4add18d64f90e5fde",
+  "metadata": {
+    "title": "A Tiny Seed",
+    "subtitle": "The Story of Wangari Maathai",
+    "creator": "Nicola Rijsdijk, Maya Marshak, Karen Lilje",
+    "contributor": "Book Dash volunteers",
+    "subject": "Juvenile Fiction",
+    "description": "In a village on the slopes of Mount Kenya, a little girl worked in the fields with her mother. She worried as she saw the big forests disappearing, but she knew the power of a tiny seed.",
+    "publisher": "Book Dash",
+    "date": "2014-08-30",
+    "modified": "2016-06-12",
+    "type": "Story",
+    "format": "Digital",
+    "identifier": "9c9e7a6e-fe46-11e5-86aa-5e5517507c66",
+    "source": "978-0-9946519-2-1",
+    "language": "en",
+    "relation": "",
+    "coverage": "",
+    "rights": "This work is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/). This means you are free to share (copy and redistribute the material in any medium or format) and adapt it (remix, transform, and build upon the material) for any purpose, even commercially, as long as you give appropriate credit, with a link to your source, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.",
+    "translations": {
+      "fr": {
+        "identifier": "9c9f0e84-fe46-11e5-86aa-5e5517507c66",
+        "title": "Une petite graine",
+        "subtitle": "L’Histoire de Wangari Maathai",
+        "translator": "African Storybook Project"
+      },
+      "xh": {
+        "identifier": "9c9f153c-fe46-11e5-86aa-5e5517507c66",
+        "title": "Ukhozo lwembewu oluncinane",
+        "subtitle": "Ibali lobomi bukaWangari Maathai",
+        "translator": "Nal'ibali"
+      }
+    }
+  },
+  "publisherCreators": [
+    "Maya Marshak (Illustrator)",
+    "Nicola Rijsdijk (Writer)",
+    "Tarryn-Anne Anderson (Designer)"
+  ],
+  "publisherIsbn": "978-0-9946519-2-1",
+  "sources": [
+    {
+      "sourceUrl": "https://bookdash.org/books/a-tiny-seed/",
+      "resolvedUrl": "https://bookdash.org/books/a-tiny-seed/",
+      "accessedAt": "2026-11-02T03:08:05.927155+00:00",
+      "sourceSha256": "dcae7fa38fd474a215ea3127023881eb68b711ed74e7f2bfcefa460415fc7dca",
+      "path": "content/library/books/a-tiny-seed/publisher.txt",
+      "sha256": "eb35fa4b90765b62d7892a253850c72dee63bf12e1c04caf88e6b2e9a0cffba6",
+      "bytes": 1074,
+      "transformation": "Visible text extracted from publisher HTML; no script/audio imported."
+    },
+    {
+      "sourceUrl": "https://bookdash.github.io/bookdash-books/a-tiny-seed/en/",
+      "resolvedUrl": "https://bookdash.github.io/bookdash-books/a-tiny-seed/en/",
+      "accessedAt": "2026-11-02T03:08:06.459078+00:00",
+      "sourceSha256": "255f2d57795223c966089b8241874afcc7ca3c903fd7c398c41a2801388fc118",
+      "path": "content/library/books/a-tiny-seed/edition.txt",
+      "sha256": "3ac3bb1ac9d6402ccddb1b61d86a5a4e2e4fa6e372d56c259902b248dd81ba9e",
+      "bytes": 3047,
+      "transformation": "Visible text extracted from publisher HTML; no script/audio imported."
+    },
+    {
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/index.md",
+      "resolvedUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/index.md",
+      "accessedAt": "2026-11-02T03:08:06.970015+00:00",
+      "sourceSha256": "4b1a6f23e08217a755839fc3b253f7ed082cb29495a9cc99580f0372e0e375c4",
+      "path": "content/library/books/a-tiny-seed/edition.md",
+      "sha256": "4b1a6f23e08217a755839fc3b253f7ed082cb29495a9cc99580f0372e0e375c4",
+      "bytes": 3474,
+      "transformation": "None"
+    }
+  ],
+  "pages": [
+    {
+      "alt": "Front cover of A Tiny Seed.",
+      "text": "A Tiny Seed",
+      "file": "cover.jpg",
+      "path": "content/library/books/a-tiny-seed/page-00.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/cover.jpg",
+      "accessedAt": "2026-11-02T03:08:07.899065+00:00",
+      "sourceSha256": "5ae2627895bce866f7c6fce487be07bb97eaf857661ac9827c8501493e707ac7",
+      "sourceBytes": 104641,
+      "sha256": "f6abbc66f00f64202ccf461809b1e7707c1d3b272065177d28023e8f18745c00",
+      "bytes": 86381,
+      "sourceDimensions": [
+        788,
+        788
+      ],
+      "dimensions": [
+        788,
+        788
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Wangari and her mother hold hands in a field.",
+      "text": "In a village on the slopes of Mount Kenya in East Africa, a little girl worked in the fields with her mother. Her name was Wangari.",
+      "file": "01.jpg",
+      "path": "content/library/books/a-tiny-seed/page-01.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/01.jpg",
+      "accessedAt": "2026-11-02T03:08:07.600117+00:00",
+      "sourceSha256": "e5be459a01fdc50b18bbc35d400c788db3e6aee2f0078c405d8e7176e484e110",
+      "sourceBytes": 49183,
+      "sha256": "e8633399f45e84e67bfc9d8d1f9c69252f7ce72bc6cf4368852fc54c73f22165",
+      "bytes": 42025,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Wangari sows vegetable seeds into the earth.",
+      "text": "Wangari loved being outside. In her family’s food garden she broke up the soil with her machete. She pressed tiny seeds into the warm earth.",
+      "file": "02.jpg",
+      "path": "content/library/books/a-tiny-seed/page-02.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/02.jpg",
+      "accessedAt": "2026-11-02T03:08:08.159625+00:00",
+      "sourceSha256": "8903e4496b2c05ff36a561ca6f0a0ef2286ffdd3cd0073286e1fab0616a8247e",
+      "sourceBytes": 36330,
+      "sha256": "f716ee9e0900f59384229519a4eb3b6ec982b394ab50266f7381d0338e0237d9",
+      "bytes": 23707,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "It is twilight. Wangari carries her vegetables home.",
+      "text": "Her favourite time of day was just after sunset. When it got too dark to see the plants, Wangari knew it was time to go home. She would follow the narrow paths through the fields, crossing rivers as she went.",
+      "file": "03.jpg",
+      "path": "content/library/books/a-tiny-seed/page-03.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/03.jpg",
+      "accessedAt": "2026-11-02T03:08:07.591019+00:00",
+      "sourceSha256": "28ff7f8e55252b444ef213083573a0d086692a5d644ef1a9ed45c6dc243dcc04",
+      "sourceBytes": 34581,
+      "sha256": "96d8ca08b4060664b7866b55a76076c4eccdc44bc7c7a0faca640c4d76093c7c",
+      "bytes": 21382,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Wangari and her brother carry her bags to school.",
+      "text": "Wangari was a clever child and couldn’t wait to go to school. But her mother and father wanted her to stay and help them at home. When she was seven years old, her big brother persuaded her parents to let her go to school.",
+      "file": "04.jpg",
+      "path": "content/library/books/a-tiny-seed/page-04.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/04.jpg",
+      "accessedAt": "2026-11-02T03:08:08.187089+00:00",
+      "sourceSha256": "00e698cad3a70a64f4a51f637652922faefa8dfd4e3f5a2b37e5a1b807db4817",
+      "sourceBytes": 38149,
+      "sha256": "1aaac874e83b0f9f739f5eb2f6eed4612a1fcdbde68ba482abb83a51961da3e4",
+      "bytes": 27046,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "A copy book with drawings of the continents lies open on a table.",
+      "text": "She liked to learn! Wangari learnt more and more with every book she read. She did so well at school that she was invited to study in the United States of America. Wangari was excited! She wanted to know more about the world.",
+      "file": "05.jpg",
+      "path": "content/library/books/a-tiny-seed/page-05.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/05.jpg",
+      "accessedAt": "2026-11-02T03:08:08.179943+00:00",
+      "sourceSha256": "27f2d89b069a7796136ceea2fa8ed3c7569c59ce7c8e84691d01a7e2b0f3508c",
+      "sourceBytes": 36062,
+      "sha256": "908b01c5586fd1fbc3803203903eeb2a0849d354bd374c3caa18443efabc2da1",
+      "bytes": 24663,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "A magnifying glass is held over a yellow flower.",
+      "text": "At the American university Wangari learnt many new things. She studied plants and how they grow. And she remembered how she grew: playing games with her brothers in the shade of the trees in the beautiful Kenyan forests.",
+      "file": "06.jpg",
+      "path": "content/library/books/a-tiny-seed/page-06.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/06.jpg",
+      "accessedAt": "2026-11-02T03:08:08.635526+00:00",
+      "sourceSha256": "2f5b103802c6a4a60c4de28f1361c5cd9fa8955a710ec0323f8eec1b778c6dae",
+      "sourceBytes": 31614,
+      "sha256": "ba22b07c61cac6f189660fc9adeb2449ba7e8f7bf2580c69624d983d02800be3",
+      "bytes": 17877,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Wangari sits on top of a pile of books and reads.",
+      "text": "The more she learnt, the more she realised that she loved the people of Kenya. She wanted them to be happy and free. The more she learnt, the more she remembered her African home.",
+      "file": "07.jpg",
+      "path": "content/library/books/a-tiny-seed/page-07.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/07.jpg",
+      "accessedAt": "2026-11-02T03:08:08.743117+00:00",
+      "sourceSha256": "16788991c49637113698197829f81c5f7ce6983d4ff11e441b0674370b02825b",
+      "sourceBytes": 35150,
+      "sha256": "16634e0f47ef48dc3126d760cbbaea1a070f7a3a648264948d155c2c1a3440d8",
+      "bytes": 22339,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "A single buck stands in a barren field.",
+      "text": "When she had finished her studies, she returned to Kenya. But her country had changed. Huge farms stretched across the land. Women had no wood to make cooking fires. The people were poor and the children were hungry.",
+      "file": "08.jpg",
+      "path": "content/library/books/a-tiny-seed/page-08.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/08.jpg",
+      "accessedAt": "2026-11-02T03:08:08.859074+00:00",
+      "sourceSha256": "712174ab418936f766db777d98097a66beeadbed6582ddc41af849ba58248351",
+      "sourceBytes": 36416,
+      "sha256": "9fa7c0f2bff61684e6cecd8427e06c5912c87500c371d7b3b7f7771b63ea2c96",
+      "bytes": 24867,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Wangari shows an older woman how to plant in the earth.",
+      "text": "Wangari knew what to do. She taught the women how to plant trees from seeds. The women sold the trees and used the money to look after their families. The women were very happy. Wangari had helped them to feel powerful and strong.",
+      "file": "09.jpg",
+      "path": "content/library/books/a-tiny-seed/page-09.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/09.jpg",
+      "accessedAt": "2026-11-02T03:08:08.862893+00:00",
+      "sourceSha256": "6656d1a1d500a3b1a5950bdd305d277c8f21effda1ebea35ececbd29f98d8821",
+      "sourceBytes": 35442,
+      "sha256": "321c1843e4e18e241a91cdb0558ec5f4cd4608913ad0067ae7264ed58ec9fa48",
+      "bytes": 23472,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Small seedlings grow into fields of trees.",
+      "text": "As time passed, the new trees grew into forests, and the rivers started flowing again. Wangari’s message spread across Africa. Today, millions of trees have grown from Wangari’s seeds.",
+      "file": "10.jpg",
+      "path": "content/library/books/a-tiny-seed/page-10.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/10.jpg",
+      "accessedAt": "2026-11-02T03:08:09.384001+00:00",
+      "sourceSha256": "32399bc11515871151a1d564689509860e3e887454aff1590e815a2b1ddb6c19",
+      "sourceBytes": 42416,
+      "sha256": "b4b7724a0755c13caeec1b7b856e05827ee5239264493dd15c470bbe8b37a3c8",
+      "bytes": 32213,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "A portrait of Wangari wearing Kenyan headdress is surrounded by trees.",
+      "text": "Wangari had worked hard. People all over the world took notice, and gave her a famous prize. It is called the Nobel Peace Prize, and she was the first African woman ever to receive it.",
+      "file": "11.jpg",
+      "path": "content/library/books/a-tiny-seed/page-11.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/11.jpg",
+      "accessedAt": "2026-11-02T03:08:09.404392+00:00",
+      "sourceSha256": "95bee2bff1b9a2a4e9a2e5acc24d36aa6374adab63894ccb7d63d41a97f2beb5",
+      "sourceBytes": 43693,
+      "sha256": "8c41f44ee5da2d4b664e9aaf77f4fa86623fdb670fd89ed0e8aa72192b1e72e2",
+      "bytes": 33087,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "A beautiful old tree stands tall and proud in the field.",
+      "text": "Wangari died in 2011, but we can think of her every time we see a beautiful tree.",
+      "file": "12.jpg",
+      "path": "content/library/books/a-tiny-seed/page-12.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/12.jpg",
+      "accessedAt": "2026-11-02T03:08:09.483304+00:00",
+      "sourceSha256": "d817f20e038f837a7b4ca87d9b21b29c900d4307f3d382ae1d9c698d2e439562",
+      "sourceBytes": 58419,
+      "sha256": "3a44500d5e0a97d3432e27fd6914b7dfeef6e5030ad4941612a3863a18178c11",
+      "bytes": 51383,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    }
+  ],
+  "rightsEvidence": [
+    "edition.txt: book rights colophon and creator credits",
+    "edition-metadata.json: exact English ISBN and CC BY 4.0 notice",
+    "publisher.txt: exact English title/ISBN and role credits",
+    "../publisher-source-policy.txt: all book source files/illustration reuse",
+    "CREDITS.txt: retained attribution and changes"
+  ],
+  "review": {
+    "status": "draft",
+    "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+    "date": "2026-11-02",
+    "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+  }
+}
