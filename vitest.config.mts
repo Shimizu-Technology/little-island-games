@@ -1,2 +1,4 @@
 import { defineConfig } from "vitest/config";
-export default defineConfig({ test: { include: ["tests/**/*.test.{ts,tsx}"], environment: "node", testTimeout: 120000 /* Full SVG contact matrices exceed Vitest’s 5s default when native builds share this Mac. Assertions are unchanged. */ } });
+// Shared-host queueing can exceed fixture budgets without changing their results.
+// Opt in to more waiting time; normal budgets and every assertion stay unchanged.
+export default defineConfig({ test: { include: ["tests/**/*.test.{ts,tsx}"], environment: "node", testTimeout: process.env.LITTLE_ISLAND_SLOW_HOST === "1" ? 1800000 : 120000 } });

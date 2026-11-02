@@ -15,3 +15,5 @@ Buildings open a keyboard-accessible preview dialog. School, Arcade and Game Hal
 Art is original vector work. Terrain and each landmark are separate memoized components. The only idle animation is CSS transform/opacity on a flag, smoke and water; Reduce Motion stops it. No animation writes to React state. Native performance and VoiceOver remain phase-two acceptance.
 
 The external `v3/hub/REPORT.md` records context, direction comparison, stage proposals, estimated phase-two effort, QA and screenshot paths. Nursery is reserved as the north-edge grove, with no sign, control, teaser or promise before usable content exists.
+
+On a heavily loaded shared host, add `LITTLE_ISLAND_SLOW_HOST=1` to `npm run check`. This gives the existing large fixtures up to thirty minutes; normal budgets, test coverage and assertions stay unchanged.
