@@ -41,6 +41,7 @@ import { useInteraction, type Interaction, type Pickup, type CaptureToken } from
 import { groupIds } from "./runtime/group";
 import { useIdleCharacters } from "./runtime/useIdleCharacters";
 import { isPortion, withPortions } from "./runtime/portions";
+import { writeProbe } from "./runtime/probeReceipt";
 
 export type HomeScreenProps = Ownership & {
   badges?: BadgeId[];
@@ -410,6 +411,7 @@ export function HomeScreen({
     onClear,
     onDestination,
     onFrameReport: lab ? setFrameReport : undefined,
+    onReleaseProbe: lab ? writeProbe : undefined,
     viewportOffset,
   });
   useLayoutEffect(() => {

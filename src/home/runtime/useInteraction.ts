@@ -30,6 +30,7 @@ import { translatedBounds } from "../scene/spatial";
 import { prepareHits, pickEntity } from "./pick";
 import { layoutToken } from "./layout";
 import { settleProgress, canRevealResting } from "./settle";
+import { releaseWindow, type ProbeFrame, type ProbeRelease, type ReleaseProbe } from "./frameProbe";
 
 export type CaptureToken = { generation: number; epoch: number };
 export type DragSlot = CaptureToken & {
@@ -135,6 +136,7 @@ export function useInteraction({
   onClear,
   onDestination,
   onFrameReport,
+  onReleaseProbe,
   viewportOffset,
 }: {
   scene: Scene;
@@ -150,6 +152,7 @@ export function useInteraction({
   onClear: (slot: number) => void;
   onDestination?: (slot: number, scene: Scene) => void;
   onFrameReport?: (times: number[]) => void;
+  onReleaseProbe?: (probe: ReleaseProbe) => void;
   viewportOffset?: SharedValue<{ x: number; y: number }>;
 }) {
   const epoch = useSharedValue(0),
@@ -183,6 +186,9 @@ export function useInteraction({
   const controller = useSharedValue<ControllerState>(idleController);
   const slots = useSharedValue<DragSlot[]>([emptySlot(), emptySlot()]);
   const frameTimes = useSharedValue<number[]>([]);
+  const probeRing = useSharedValue<ProbeFrame[]>([]);
+  const probeCursor = useSharedValue(0);
+  const probePending = useSharedValue<ProbeRelease[]>([]);
   const frameCount = useSharedValue(0);
   const lastFrame = useSharedValue(0);
   const inertia = useSharedValue({ x: 0, y: 0, since: 0, lastMove: 0 });
@@ -732,6 +738,9 @@ export function useInteraction({
             send({ type: "move", pointer: touch.id, point: screenPoint(touch.x, touch.y) });
           const slot = slots.value.find((s) => s.pointer === touch.id && s.id);
           const proposal = slot ? proposalFor(slot, true) : undefined;
+          if (onReleaseProbe && capture?.phase === "dragging" && slot)
+            probePending.set([...probePending.value, { at: eventTime(), id: slot.id,
+              kind: proposal?.kind ?? "restore", target: proposal?.target }]);
           if (capture && !capture.entity && capture.phase === "pending")
             runOnJS(onTap)(undefined, screenPoint(touch.x, touch.y), eventTime());
           if (capture?.phase === "camera" && !capture.entity && pinchDistance.value === 0)
@@ -761,6 +770,14 @@ export function useInteraction({
 
   useFrameCallback((frame) => {
     const dt = frame.timeSincePreviousFrame ?? 16.67;
+    if (onReleaseProbe) {
+      const now = eventTime();
+      probeRing.modify((ring) => { "worklet"; ring[probeCursor.value % 180] = { at: now, delta: dt }; return ring; });
+      probeCursor.value++;
+      const due = probePending.value.filter((p) => now >= p.at + 520);
+      for (const release of due) runOnJS(onReleaseProbe)(releaseWindow(release, probeRing.value));
+      if (due.length) probePending.set(probePending.value.filter((p) => now < p.at + 520));
+    }
     lastFrame.set(eventTime());
     if (revealPan.value && !controller.value.pointers.length) {
       const { from, to, since } = revealPan.value;
