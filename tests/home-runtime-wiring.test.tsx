@@ -8,6 +8,8 @@ import { identityCamera } from "../src/home/scene/camera";
 import { gridCell, roomPoint, type Scene, type SceneEntity } from "../src/home/scene/types";
 import { roomIds } from "../src/home/catalogMore";
 const harness = vi.hoisted(() => ({
+  deferUI: false,
+  ui: [] as (() => void)[],
   frames: [] as ((frame: { timeSincePreviousFrame: number }) => void)[],
   js: [] as (() => void)[],
   handlers: {} as Record<string, (...args: any[]) => void>,
@@ -49,10 +51,13 @@ vi.mock("react-native-reanimated", async () => {
             return this.value;
           },
           modify(fn: (value: any) => any) {
-            this.value = fn(this.value);
+            const apply = () => { this.value = fn(this.value); };
+            if (harness.deferUI) harness.ui.push(apply); else apply();
           },
           set(value: any) {
-            this.value = typeof value === "function" ? value(this.value) : value;
+            const next = typeof value === "function" ? value(this.value) : value;
+            const apply = () => { this.value = next; };
+            if (harness.deferUI) harness.ui.push(apply); else apply();
           },
         };
       return ref.current;
@@ -174,6 +179,8 @@ function flushJS() {
 beforeEach(() => {
   cameraChange.mockClear();
   (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+  harness.deferUI = false;
+  harness.ui = [];
   harness.frames = [];
   harness.js = [];
   harness.handlers = {};
@@ -184,6 +191,18 @@ beforeEach(() => {
   vi.setSystemTime(1000);
 });
 describe("actual runtime callback sequencing", () => {
+  it("T2 preserves every native pose acknowledgment when JS callbacks arrive before UI writes flush", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
+    harness.deferUI = true;
+    const tokens = ["stand:front:none", "sit:front:none", "lie:front:none", "bathe:front:none"];
+    for (const token of tokens) current.acknowledgePose(0, token);
+    while (harness.ui.length) harness.ui.shift()!();
+    for (const token of tokens) expect(current.poseLayouts.get()[`0:${token}`]).toBe(token);
+    harness.deferUI = false;
+    await act(async () => renderer.unmount()); vi.useRealTimers();
+  });
+
   it("R6 does not queue stale camera navigation after a plain overview room tap", async () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     await act(async () => {

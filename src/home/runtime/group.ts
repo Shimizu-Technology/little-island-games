@@ -29,7 +29,8 @@ export function paintEntries(
   return entities
     .flatMap((entity) => [
       { entity, front: false, depth: paintDepth(entity, scene) },
-      ...(entity.item && capabilityOf(entity.item.item).sockets?.length
+      ...(entity.item && (capabilityOf(entity.item.item).sockets?.length ||
+        entity.children.some((id) => scene.entities[id]?.attachment.kind === "socket"))
         ? [{ entity, front: true, depth: paintDepth(entity, scene) + 2 }]
         : []),
     ])
