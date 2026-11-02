@@ -59,6 +59,8 @@ export type Target = {
   contact: RoomPoint;
   projectedContact?: RoomPoint;
   core: Bounds;
+  /** Visible seat/blanket activation region; contact remains the anatomical socket. */
+  activation?: Bounds;
   support?: Bounds;
   base: CharacterBase;
   facing: Facing;

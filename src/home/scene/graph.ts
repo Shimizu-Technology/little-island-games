@@ -225,6 +225,8 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
         attachment: { kind: "socket", item: entity.id, socket: socket.id },
         contact,
         core: rectCore(contact, Math.min(32, itemSize(item) * 0.12)),
+        // Lying contacts are at the pillow. The visible blanket is also a destination.
+        activation: socket.kind === "lie" ? lyingActivation(item, socket.id) : undefined,
         base: socket.kind,
         facing,
         pet: socket.id.startsWith("pet-"),
@@ -300,6 +302,22 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
     hitProxies: Object.values(entities).flatMap((e) =>
       e.hitProxies.map((b) => ({ id: e.id, bounds: translatedBounds(b, e.contact), depth: e.depth, band: e.band }))
     ),
+  };
+}
+
+/** Bounds from SeatShape's 150-unit bedding art, reflected exactly like SeatArt. */
+function lyingActivation(item: Instance, socket: string): Bounds {
+  const size = itemSize(item),
+    p = itemPoint(item);
+  const bed = ["bed", "cloud-bed", "bunk-bed"].includes(item.item);
+  const y = item.item === "bunk-bed" ? (socket === "upper" ? -31 : 29) : 0;
+  const box = bed ? { left: 4, top: 40 + y, width: 143, height: 63 } : { left: 22, top: 48, width: 122, height: 64 };
+  const flip = item.mirrored !== (item.rotation === 180 || item.rotation === 270);
+  return {
+    left: p.x - size / 2 + ((flip ? 150 - box.left - box.width : box.left) * size) / 150,
+    top: p.y - size * 0.85 + (box.top * size) / 150,
+    width: (box.width * size) / 150,
+    height: (box.height * size) / 150,
   };
 }
 export function buildScene(state: SceneState): Scene {

@@ -121,6 +121,7 @@ let committed = 0;
 let committedId = "";
 let committedContact = entity.contact;
 let destinationRevision = "";
+const cameraChange = vi.fn();
 function Probe({ scene }: { scene: Scene }) {
   const interaction = useInteraction({
     scene,
@@ -129,7 +130,7 @@ function Probe({ scene }: { scene: Scene }) {
     initialCamera: identityCamera,
     reduced: false,
     designing: false,
-    onCameraChange: () => {},
+    onCameraChange: cameraChange,
     onPickup: (pickup) => {
       const slot = current.slots.get()[pickup.slot];
       if (slot.id === pickup.id && slot.generation === pickup.generation && slot.epoch === pickup.epoch)
@@ -163,6 +164,7 @@ function flushJS() {
   while (harness.js.length) harness.js.shift()!();
 }
 beforeEach(() => {
+  cameraChange.mockClear();
   (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
   harness.frames = [];
   harness.js = [];
@@ -174,6 +176,19 @@ beforeEach(() => {
   vi.setSystemTime(1000);
 });
 describe("actual runtime callback sequencing", () => {
+  it("R6 does not queue stale camera navigation after a plain overview room tap", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => {
+      renderer = TestRenderer.create(<Probe scene={fixture()} />);
+    });
+    // Empty background is the room hit; no pan or pinch occurred.
+    touch("down", 500, 220);
+    touch("up", 500, 220);
+    flushJS();
+    expect(cameraChange).not.toHaveBeenCalled();
+    await act(async () => renderer.unmount());
+    vi.useRealTimers();
+  });
   it("reveals a pose-changing drop when another edit supersedes its acknowledged revision", async () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     await act(async () => {

@@ -14,9 +14,19 @@ import {
   type EntityId,
   type ScreenPoint,
   type SceneEntity,
+  type Bounds,
 } from "../scene/types";
 import { capabilityOf } from "../world";
-import { boundCamera, edgeVelocity, panInertia, roomAtScreen, zoomCamera, type Viewport } from "./CameraController";
+import {
+  boundCamera,
+  edgeVelocity,
+  panInertia,
+  includeBounds,
+  roomAtScreen,
+  zoomCamera,
+  type Viewport,
+} from "./CameraController";
+import { translatedBounds } from "../scene/spatial";
 import { prepareHits, pickEntity } from "./pick";
 import { settleProgress, canRevealResting } from "./settle";
 
@@ -26,6 +36,7 @@ export type DragSlot = CaptureToken & {
   restId?: EntityId;
   settledId?: EntityId;
   subject?: SceneEntity;
+  carryBounds?: Bounds;
   pointer: number;
   ready: boolean;
   phase: "pending" | "dragging" | "settling";
@@ -134,7 +145,7 @@ export function useInteraction({
   onCameraChange: (overview: boolean, index: number) => void;
   onPickup: (pickup: Pickup) => void;
   onCommit: (slot: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => void;
-  onTap: (id: EntityId | undefined, point: ScreenPoint) => void;
+  onTap: (id: EntityId | undefined, point: ScreenPoint, now: number) => void;
   onClear: (slot: number) => void;
   onDestination?: (slot: number, scene: Scene) => void;
   onFrameReport?: (times: number[]) => void;
@@ -164,9 +175,11 @@ export function useInteraction({
   const frameCount = useSharedValue(0);
   const lastFrame = useSharedValue(0);
   const inertia = useSharedValue({ x: 0, y: 0, since: 0, lastMove: 0 });
+  const revealPan = useSharedValue<{ from: CameraMatrix; to: CameraMatrix; since: number } | null>(null);
   const pinchMid = useSharedValue({ x: 0, y: 0 });
   const pinchDistance = useSharedValue(0);
   const suppressed = useSharedValue<number[]>([]);
+  const cameraGesture = useSharedValue(false);
   useLayoutEffect(() => {
     prepared.set(resolverScene);
     hitTable.set(hits);
@@ -264,6 +277,8 @@ export function useInteraction({
     }
     return resolve(prepared.value.rooms[destination], subject, anchor, {
       scale: camera.value.a,
+      silhouette:
+        index >= 0 && subject.character ? translatedBounds(slot.carryBounds ?? subject.bounds, anchor) : undefined,
       previous: slot.proposal,
       pending: slot.proposal?.pending,
       now: eventTime(),
@@ -320,8 +335,10 @@ export function useInteraction({
       )
     );
   };
-  const ready = (index: number, id: string) => {
-    slots.set((current) => current.map((s, i) => (i === index && s.id === id ? { ...s, ready: true } : s)));
+  const ready = (index: number, id: string, carryBounds?: Bounds) => {
+    slots.set((current) =>
+      current.map((s, i) => (i === index && s.id === id ? { ...s, ready: true, carryBounds } : s))
+    );
   };
 
   const send = (event: ControllerEvent) => {
@@ -494,8 +511,9 @@ export function useInteraction({
             )
           );
         }
-      } else if (effect.type === "tap") runOnJS(onTap)(effect.entity, capture!.point);
+      } else if (effect.type === "tap") runOnJS(onTap)(effect.entity, capture!.point, eventTime());
       else if (effect.type === "pan") {
+        cameraGesture.set(true);
         const now = eventTime(),
           dt = Math.max(1, now - (inertia.value.lastMove || now - 16));
         camera.set(
@@ -512,6 +530,7 @@ export function useInteraction({
           lastMove: now,
         });
       } else if (effect.type === "pinch") {
+        cameraGesture.set(true);
         const [a, b] = effect.pointers;
         const distance = Math.hypot(a.x - b.x, a.y - b.y);
         if (pinchDistance.value > 0)
@@ -615,7 +634,9 @@ export function useInteraction({
   const gesture = Gesture.Manual()
     .onTouchesDown((event, manager) => {
       manager.activate();
+      if (!controller.value.pointers.length) cameraGesture.set(false);
       inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
+      revealPan.set(null);
       for (const touch of event.changedTouches) {
         if (controller.value.pointers.length >= 2) {
           suppressed.set([...suppressed.value, touch.id]);
@@ -685,7 +706,7 @@ export function useInteraction({
           const slot = slots.value.find((s) => s.pointer === touch.id && s.id);
           const proposal = slot ? proposalFor(slot, true) : undefined;
           if (capture && !capture.entity && capture.phase === "pending")
-            runOnJS(onTap)(undefined, screenPoint(touch.x, touch.y));
+            runOnJS(onTap)(undefined, screenPoint(touch.x, touch.y), eventTime());
           if (capture?.phase === "camera" && !capture.entity && pinchDistance.value === 0)
             inertia.set({ ...inertia.value, since: eventTime() });
           send({ type: "up", pointer: touch.id, now: eventTime(), proposal });
@@ -699,7 +720,9 @@ export function useInteraction({
         const index = roomAtScreen(viewport.width / 2, viewport.height / 2, camera.value, building);
         const overview =
           camera.value.a <= Math.min(viewport.width / building.width, viewport.height / building.height) * 1.15;
-        runOnJS(onCameraChange)(overview, index);
+        // A tap may navigate on JS. Do not overwrite that navigation with the old overview camera.
+        if (cameraGesture.value) runOnJS(onCameraChange)(overview, index);
+        cameraGesture.set(false);
       }
     })
     .onTouchesCancelled((event, manager) => {
@@ -712,6 +735,13 @@ export function useInteraction({
   useFrameCallback((frame) => {
     const dt = frame.timeSincePreviousFrame ?? 16.67;
     lastFrame.set(eventTime());
+    if (revealPan.value && !controller.value.pointers.length) {
+      const { from, to, since } = revealPan.value;
+      const t = reduced ? 1 : Math.min(1, (eventTime() - since) / 200);
+      const p = t * t * (3 - 2 * t);
+      camera.set({ ...to, tx: from.tx + (to.tx - from.tx) * p, ty: from.ty + (to.ty - from.ty) * p });
+      if (t === 1) revealPan.set(null);
+    }
     if (onFrameReport && frameCount.value < 3600) {
       frameTimes.value.push(dt);
       frameCount.value++;
@@ -785,6 +815,17 @@ export function useInteraction({
             slot.lag *= 1 - progress;
             slot.finished = progress === 1;
             if (canRevealResting(slot, renderedRevision.value)) {
+              const entity = prepared.value.entities[slot.restId ?? slot.id];
+              if (entity?.character && !slot.consumed && slot.proposal) {
+                const origin = roomOrigin(roomIds.indexOf(entity.room), building);
+                const bounds = translatedBounds(
+                  entity.bounds,
+                  roomPoint(origin.x + entity.contact.x, origin.y + entity.contact.y)
+                );
+                const next = includeBounds(camera.value, bounds, viewport, building);
+                if (next.tx !== camera.value.tx || next.ty !== camera.value.ty)
+                  revealPan.set({ from: camera.value, to: next, since: now });
+              }
               let settled = transition(
                 controller.value,
                 { type: "settled", entity: slot.id },
@@ -816,6 +857,7 @@ export function useInteraction({
       });
   });
   const cancelAll = () => {
+    revealPan.set(null);
     epoch.set(epoch.get() + 1);
     controller.set(idleController);
     inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });

@@ -13,6 +13,7 @@ import {
 import { gridCell, gridToRoom, itemEntityId, roomPoint } from "./types";
 import type {
   Attachment,
+  Bounds,
   CharacterBase,
   EntityId,
   Facing,
@@ -49,6 +50,8 @@ export type DropProposal = {
 }["hand" | "mouth" | "socket" | "surface" | "floor" | "staging" | "transfer"];
 export type ResolveContext = {
   scale: number;
+  /** Actual dragged art in destination room coordinates, after grip/camera conversion. */
+  silhouette?: Bounds;
   intent?: "staging";
   previous?: DropProposal;
   pending?: { target: string; since: number };
@@ -61,7 +64,14 @@ export type ResolveContext = {
   /** Explicit Give can replace a hand's prop; ordinary magnets filter occupied hands. */
   replaceHand?: boolean;
 };
-type Candidate = { target: Target; distance: number; normalized: number; core: boolean; radius: number };
+type Candidate = {
+  target: Target;
+  distance: number;
+  normalized: number;
+  core: boolean;
+  radius: number;
+  silhouetteHit: boolean;
+};
 const priority: Record<Target["kind"], number> = { hand: 0, mouth: 1, socket: 2, container: 2, surface: 3 };
 
 export function magnetRadius(kind: Target["kind"], height: number, scale: number): number {
@@ -325,7 +335,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
         : roomPoint(400, 500);
   const candidates: Candidate[] = [];
   const nearby =
-    ctx.scale >= 0.2
+    ctx.scale >= 0.2 && !ctx.silhouette
       ? (index.buckets[`${Math.floor(point.x / 128)}:${Math.floor(point.y / 128)}`] ?? [])
       : index.targets.map((_, i) => i);
   if (!ctx.floorOnly) {
@@ -336,7 +346,12 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       if (!eligible(index, subject, target, ctx, group)) continue;
       const radius = magnetRadius(target.kind, targetHeight(index, subject, target), ctx.scale);
       const distance = Math.hypot(point.x - target.contact.x, point.y - target.contact.y);
-      const core = contains(target.core, point);
+      const silhouetteHit =
+        !!ctx.silhouette &&
+        target.kind === "socket" &&
+        !!target.activation &&
+        overlaps(ctx.silhouette, target.activation);
+      const core = contains(target.core, point) || silhouetteHit;
       const exitRadius = ctx.previous?.target === target.id ? radius * 1.25 : radius;
       const catchSeat =
         target.kind === "socket" &&
@@ -361,11 +376,13 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
         normalized: distance / Math.max(1, core ? target.core.width / 2 : radius),
         core,
         radius,
+        silhouetteHit,
       });
     }
   }
   candidates.sort(
     (a, b) =>
+      Number(b.silhouetteHit) - Number(a.silhouetteHit) ||
       Number(b.core) - Number(a.core) ||
       (a.core && b.core ? a.normalized - b.normalized : priority[a.target.kind] - priority[b.target.kind]) ||
       a.distance - b.distance ||

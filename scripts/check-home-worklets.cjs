@@ -26,6 +26,9 @@ const { resolve, apply } = require(path.join(root, "src/home/scene/proposal.ts")
 const { resolveDrop } = require(path.join(root, "src/home/drop.ts"));
 const { dropWorld } = require(path.join(root, "src/home/interactions.ts"));
 const { roomPoint } = require(path.join(root, "src/home/scene/types.ts"));
+const { focusCamera } = require(path.join(root, "src/home/runtime/CameraController.ts"));
+const { buildingLayout } = require(path.join(root, "src/home/camera.ts"));
+assert.equal(focusCamera(0, { width: 390, height: 720 }, buildingLayout(4)).a, 390 / 800);
 const state = starterHome();
 const index = buildScene(state).rooms.home;
 const proposal = resolve(index, index.entities["character/0"], roomPoint(610, 480), { scale: 1, release: true });

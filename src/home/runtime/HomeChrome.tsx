@@ -36,7 +36,7 @@ export function Tool({
     </Pressable>
   );
 }
-function FriendsIcon() {
+export function FriendsIcon() {
   return (
     <Svg width={34} height={34} viewBox="0 0 34 34" accessible={false}>
       <Circle cx={10} cy={10} r={6} fill="#E5BB98" stroke={ink} strokeWidth={1.5} />
@@ -79,10 +79,9 @@ export function HomeChrome({
   onOverview,
   onDesign,
   onRoom,
-  onZoom,
   top,
-  headerHeight,
-  rightInset = 0,
+  bottom,
+  onMore,
   onHeaderLayout,
   title,
   saveStatus,
@@ -93,8 +92,8 @@ export function HomeChrome({
   canUndo: boolean;
   canRedo: boolean;
   top: number;
-  headerHeight: number;
-  rightInset?: number;
+  bottom: number;
+  onMore: () => void;
   onHeaderLayout: (height: number) => void;
   title?: string;
   saveStatus?: React.ReactNode;
@@ -106,7 +105,6 @@ export function HomeChrome({
   onOverview: () => void;
   onDesign: () => void;
   onRoom: (room: RoomId) => void;
-  onZoom: (ratio: number) => void;
 }) {
   return (
     <>
@@ -127,60 +125,66 @@ export function HomeChrome({
           onPress={onDesign}
         />
       </View>
-      <View
-        pointerEvents="box-none"
-        style={{ position: "absolute", top: headerHeight + 14, left: 10, zIndex: 30, gap: 8 }}
-      >
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Find my Islander"
-          onPress={onFind}
-          style={styles.tool}
-        >
-          <FindIcon />
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Bring friends here"
-          onPress={onFriends}
-          style={styles.tool}
-        >
-          <FriendsIcon />
-        </Pressable>
-        <Tool
-          label={overview ? "Close up" : "Whole house"}
-          symbol={overview ? "⊕" : "⌂"}
-          selected={overview}
-          onPress={onOverview}
-        />
-        <Tool label="Zoom in" symbol="+" onPress={() => onZoom(1.2)} />
-        <Tool label="Zoom out" symbol="−" onPress={() => onZoom(1 / 1.2)} />
-      </View>
-      <View style={{ position: "absolute", right: 8 + rightInset, top: headerHeight + 12, zIndex: 30, maxWidth: 74 }}>
-        <ScrollView style={{ maxHeight: 280 }} contentContainerStyle={{ gap: 5 }}>
+      <View testID="home-bottom-bar" style={[styles.navigation, { bottom }]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navigationItems}>
+          <Tool label="Whole house" symbol="⌂" selected={overview} onPress={onOverview} />
           {roomIds.map((id) => (
             <Pressable
               key={id}
               accessibilityRole="button"
               accessibilityLabel={`Go to ${roomNames[id]}`}
+              accessibilityHint="Hold to bring friends here."
               accessibilityState={{ selected: room === id && !overview }}
               onPress={() => onRoom(id)}
+              onLongPress={() => {
+                onRoom(id);
+                onFriends();
+              }}
               style={[styles.room, room === id && !overview && { borderColor: "#477D60", backgroundColor: "#E3EBC9" }]}
             >
               <ItemArt
                 item={({ home: "bed", kitchen: "fridge", treehouse: "plant", beach: "shell" } as const)[id]}
-                size={44}
+                size={38}
                 reduced
               />
             </Pressable>
           ))}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Find my Islander"
+            onPress={onFind}
+            style={styles.tool}
+          >
+            <FindIcon />
+          </Pressable>
+          <Tool label="More home controls" symbol="···" onPress={onMore} />
         </ScrollView>
       </View>
-      {saveStatus && <View style={{ position: "absolute", right: 8, bottom: 8 }}>{saveStatus}</View>}
+      {saveStatus && (
+        <View style={{ position: "absolute", right: 8, bottom: bottom + navigationHeight }}>{saveStatus}</View>
+      )}
     </>
   );
 }
+export const navigationHeight = 60;
 const styles = StyleSheet.create({
+  navigation: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    height: navigationHeight,
+    backgroundColor: "#FFF8E9",
+    zIndex: 30,
+    justifyContent: "center",
+  },
+  navigationItems: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 6,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -201,8 +205,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   room: {
-    width: 58,
-    height: 54,
+    width: 48,
+    height: 48,
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
