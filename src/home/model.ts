@@ -509,7 +509,7 @@ export function starterHome(): HomeStateV2 {
     ["plant", "plant", 14, 4],
     ["lamp", "lamp", 13, 0],
     ["rug", "rug", 8, 8],
-    ["toys", "toy-box", 7, 6],
+    ["toys", "toy-box", 3, 6],
   ];
   const home: RoomState = {
     theme: { ...roomDefaultTheme.home },

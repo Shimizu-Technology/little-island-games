@@ -35,10 +35,10 @@ export function LivingShape({id,state={},tint='original',reduced=false}:{id:stri
       {on && <G data-notes={reduced?'static':'still'} fill={wood} strokeWidth={2}><Path d="M20 31V14l12-3v16" fill="none"/><Ellipse cx={16} cy={32} rx={4} ry={3}/><Ellipse cx={28} cy={28} rx={4} ry={3}/></G>}
     </> : id==='fridge' ? <>
       <Rect x={27} y={8} width={94} height={132} rx={10} fill={color}/><Rect x={35} y={17} width={78} height={114} rx={4} fill={on?'#466D63':cream}/>
-      {on ? <><G>{[['mango',39,29],['banana',76,28],['juice',40,78],['rice-ball',77,79]].map(([food,x,y])=><G key={food} transform={`translate(${x} ${y}) scale(1.1)`}><HandProp id={food as HoldableId}/></G>)}</G><Path d="M36 64H112M36 115H112" stroke={cream} strokeWidth={5}/><Rect data-front="open-door" x={120} y={17} width={27} height={114} rx={3} fill="#BCD9CD"/><Rect x={125} y={42} width={17} height={27} rx={2} fill={cream}/><Rect x={125} y={91} width={17} height={28} rx={2} fill={cream}/><Path d="M119 17v114M117 29h5m-5 89h5" stroke={wood} strokeWidth={3}/></> : <><Rect x={35} y={17} width={78} height={42} rx={4} fill={color}/><Rect x={35} y={64} width={78} height={67} rx={4} fill={color}/><Path d="M46 29v19m0 29v24" stroke={cream} strokeWidth={5}/></>}
+      {on ? <><Path d="M36 64H112M36 115H112" stroke={cream} strokeWidth={5}/><Rect data-front="open-door" x={120} y={17} width={27} height={114} rx={3} fill="#BCD9CD"/><Rect x={125} y={42} width={17} height={27} rx={2} fill={cream}/><Rect x={125} y={91} width={17} height={28} rx={2} fill={cream}/><Path d="M119 17v114M117 29h5m-5 89h5" stroke={wood} strokeWidth={3}/></> : <><Rect x={35} y={17} width={78} height={42} rx={4} fill={color}/><Rect x={35} y={64} width={78} height={67} rx={4} fill={color}/><Path d="M46 29v19m0 29v24" stroke={cream} strokeWidth={5}/></>}
       <Path d="M37 140v4m74-4v4" stroke={wood} strokeWidth={5}/>
     </> : id==='fruit-bowl' ? <G transform="translate(0 -8)">
-      <G transform="translate(24 53) scale(1.8)"><HandProp id="mango"/></G><G transform="translate(67 56) scale(1.8)"><HandProp id="banana"/></G><Path d="M16 83Q75 107 134 83Q126 135 75 136Q25 135 16 83Z" fill={color}/><Path d="M28 94Q75 113 122 94" fill="none" stroke={cream} strokeWidth={4}/>
+      <Path d="M16 83Q75 107 134 83Q126 135 75 136Q25 135 16 83Z" fill={color}/><Path d="M28 94Q75 113 122 94" fill="none" stroke={cream} strokeWidth={4}/>
     </G> : null}
   </G>;
 }

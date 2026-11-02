@@ -80,6 +80,7 @@ export function StagingTray({
     <ScrollView
       horizontal
       testID="staging-tray"
+      accessibilityLabel="Basket, items to put back in the house"
       style={{
         position: "absolute",
         bottom,

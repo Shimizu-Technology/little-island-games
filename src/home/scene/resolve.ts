@@ -58,6 +58,8 @@ export type ResolveContext = {
   now?: number;
   release?: boolean;
   floorOnly?: boolean;
+  /** Interactive Design placement also protects visible furniture silhouettes. */
+  avoidFurnitureOverlap?: boolean;
   reservations?: Record<string, EntityId>;
   target?: string;
   kinds?: Target["kind"][];
@@ -163,13 +165,24 @@ function movedGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, gr
   }
   return moves;
 }
-function fitsGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, group: SceneEntity[]): boolean {
+function fitsGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, group: SceneEntity[], avoidFurnitureOverlap = false): boolean {
   "worklet";
   const moves = movedGroup(index, subject, root, group);
   return moves.every((move) => {
     const entity = move.id === subject.id ? subject : index.entities[move.id];
     const bounds = entity.character ? anchorsFor(entity.character.slot, move.base, move.facing).bounds : entity.bounds;
-    return contained(translatedBounds(bounds, move.contact));
+    const placed = translatedBounds(bounds, move.contact);
+    if (!contained(placed)) return false;
+    // Grid footprints alone do not describe tall/wide fixture silhouettes. A Design
+    // move must not hide a neighbouring piece of floor furniture behind its art.
+    if (avoidFurnitureOverlap && entity.body?.layer === "furniture" && !entity.body.small && move.attachment.kind === "floor") {
+      for (const other of Object.values(index.entities)) {
+        if (group.some((member) => member.id === other.id) || other.attachment.kind !== "floor" ||
+            other.body?.layer !== "furniture" || other.body.small) continue;
+        if (overlaps(placed, translatedBounds(other.bounds, other.contact))) return false;
+      }
+    }
+    return true;
   });
 }
 function rootMove(
@@ -369,7 +382,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
         );
         if (!contains(support, point) || overlap / supportWidth < 0.6) continue;
       }
-      if (!fitsGroup(index, subject, move, group)) continue;
+      if (!fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap)) continue;
       candidates.push({
         target,
         distance,
@@ -480,7 +493,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       cell
     );
     const distance = (contact.x - point.x) ** 2 + (contact.y - point.y) ** 2;
-    if (distance >= bestDistance || !fitsGroup(index, subject, move, group)) continue;
+    if (distance >= bestDistance || !fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap)) continue;
     best = move;
     bestDistance = distance;
   }
@@ -499,7 +512,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
         location.cell
       );
       const distance = (contact.x - point.x) ** 2 + (contact.y - point.y) ** 2;
-      if (distance < bestDistance && fitsGroup(index, subject, move, group)) {
+      if (distance < bestDistance && fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap)) {
         best = move;
         bestDistance = distance;
       }

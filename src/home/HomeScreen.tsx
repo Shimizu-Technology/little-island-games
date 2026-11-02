@@ -129,9 +129,9 @@ export function HomeScreen({
     });
     return () => cancelAnimationFrame(frame);
   }, [scene.revision, focusId]);
-  const live = useRef({ store, scene, selected, placing, room });
+  const live = useRef({ store, scene, selected, placing, room, designing });
   useLayoutEffect(() => {
-    live.current = { store, scene, selected, placing, room };
+    live.current = { store, scene, selected, placing, room, designing };
   });
   const ghost = useSharedValue<CatalogGhost>({ active: false, x: 0, y: 0 });
   const viewportOffset = useSharedValue({ x: 0, y: 64 + inset.top });
@@ -158,7 +158,7 @@ export function HomeScreen({
     ) => {
       const current = live.current,
         entity = current.scene.entities[id];
-      if (!entity) return undefined;
+      if (!entity || (!current.designing && entity.item && !capabilityOf(entity.item.item).moveInPlay)) return undefined;
       let next =
         proposal && !isPortion(id) ? current.store.commitProposal(proposal, undefined, stillCurrent) : undefined;
       if (!next && proposal && !isPortion(id) && proposal.revision === buildScene(current.store.getState()).revision)
@@ -190,6 +190,7 @@ export function HomeScreen({
             roomPoint(anchor.x, anchor.y),
             {
               scale: runtime.current!.camera.get().a,
+              avoidFurnitureOverlap: current.designing,
               release: true,
             }
           );
@@ -208,6 +209,7 @@ export function HomeScreen({
           roomPoint(anchor.x, anchor.y),
           {
             scale: runtime.current!.camera.get().a,
+            avoidFurnitureOverlap: current.designing,
             release: true,
           }
         );
@@ -322,13 +324,14 @@ export function HomeScreen({
       origin = roomOrigin(index, building);
     const anchor = screenToRoom(point, c, housePoint(origin.x, origin.y));
     const subject = live.current.scene.entities[id];
-    if (!subject) return;
+    if (!subject || (!designing && subject.item && !capabilityOf(subject.item.item).moveInPlay)) return;
     const targetProposal = resolve(
       { ...live.current.scene.rooms[dest], entities: live.current.scene.entities },
       subject,
       roomPoint(anchor.x, anchor.y),
       {
         scale: c.a,
+        avoidFurnitureOverlap: designing,
         release: true,
       }
     );
@@ -342,6 +345,7 @@ export function HomeScreen({
   };
   const choose = (id: string) => {
     const entity = live.current.scene.entities[id];
+    if (!designing && entity?.item && !capabilityOf(entity.item.item).moveInPlay) return;
     if (overview && entity) goRoom(entity.room);
     else setSelected(id);
   };
@@ -376,7 +380,7 @@ export function HomeScreen({
     if (entity?.item && !isPortion(entity.id) && capabilityOf(entity.item.item).toggle)
       current.store.dispatch({ type: "toggle", id: entity.item.id, roomId: entity.room });
     if (id) {
-      setSelected(id);
+      setSelected(!designing && entity?.item && !capabilityOf(entity.item.item).moveInPlay ? undefined : id);
       if (entity) {
         setRoom(entity.room);
         current.store.dispatch({ type: "room", room: entity.room });
@@ -529,7 +533,7 @@ export function HomeScreen({
     (id: string, action: string) => {
       const { scene, store } = live.current;
       const entity = scene.entities[id];
-      if (!entity) return;
+      if (!entity || (!live.current.designing && entity.item && !capabilityOf(entity.item.item).moveInPlay)) return;
       if (action === "store") {
         const proposal = resolve({ ...scene.rooms[entity.room], entities: scene.entities }, entity, entity.contact, {
           scale: runtime.current!.camera.get().a,
@@ -723,6 +727,7 @@ export function HomeScreen({
         <Destinations
           scene={scene}
           selected={selected}
+          designing={designing}
           scale={1}
           onSelect={setSelected}
           bottom={

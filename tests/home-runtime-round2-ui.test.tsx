@@ -1,6 +1,7 @@
 import React from "react";
 import TestRenderer, { act } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
+import { layoutToken } from "../src/home/runtime/layout";
 import { SettleArt } from "../src/home/runtime/SettleArt";
 import { HomeChrome } from "../src/home/runtime/HomeChrome";
 import { HomePanels } from "../src/home/runtime/HomePanels";
@@ -20,7 +21,10 @@ vi.mock("react-native-reanimated", () => ({
   useAnimatedStyle: (fn: () => unknown) => ({ evaluate: fn }),
 }));
 vi.mock("../src/home/runtime/CarriedCharacter", () => ({ CarriedCharacter: () => <div /> }));
-vi.mock("../src/home/runtime/EntityArt", () => ({}));
+vi.mock("../src/home/runtime/EntityArt", async () => ({
+  EntityArt: () => <div />,
+  artFrame: (entity: import("../src/home/scene/types").SceneEntity) => entity.bounds,
+}));
 vi.mock("../src/home/characterRenderer", () => ({ HomeCharacter: () => <div /> }));
 vi.mock("../src/home/art/Items", () => ({ ItemArt: () => <div /> }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -30,22 +34,26 @@ describe("round 2 pose and chrome", () => {
     const destination = { ...source, base: "lie" as const };
     const slot = { phase: "settling", settleAt: 1000, committed: true, pausedElapsed: 0 },
       clock = { value: 1000 };
-    const interaction = { slots: { value: [slot] }, clock } as unknown as Interaction;
+    const interaction = { slots: { value: [slot] }, clock, poseLayouts: { value: { 0: layoutToken(destination) } } } as unknown as Interaction;
     let tree!: TestRenderer.ReactTestRenderer;
     await act(async () => {
       tree = TestRenderer.create(
         <SettleArt source={source} destination={destination} interaction={interaction} index={0} reduced={false} />
       );
     });
-    const evaluate = tree.root.findByType("AnimatedView" as never).props.style[1].evaluate;
+    const views = tree.root.findAllByType("AnimatedView" as never);
+    const evaluate = () => ({ opacity: views[0].props.style[1].evaluate().opacity + views[1].props.style[1].evaluate().opacity });
     for (let elapsed = 0; elapsed <= 700; elapsed++) {
       clock.value = 1000 + elapsed;
       expect(evaluate().opacity).toBe(1);
     }
+    expect(views[0].props.style[1].evaluate().opacity).toBe(0);
+    expect(views[1].props.style[1].evaluate().opacity).toBe(1);
+    expect(views[0].props.style[1].evaluate().transform[2].rotate).toBe("-90deg");
     slot.phase = "pending";
     slot.pausedElapsed = 170;
     expect(evaluate().opacity).toBe(1);
-    expect(tree.root.findAllByType("AnimatedView" as never)).toHaveLength(1);
+    expect(tree.root.findAllByType("AnimatedView" as never)).toHaveLength(2);
     await act(async () => tree.unmount());
   });
   it("R5 has one reserved bottom bar with Whole house first; zoom and friends are explicit", async () => {

@@ -5,11 +5,14 @@ import { EntityArt, artFrame } from "./EntityArt";
 import { roomNames } from "../catalogMore";
 import { resolve, type DropProposal } from "../scene/proposal";
 import type { Scene } from "../scene/types";
+import { BasketPicture } from "./BasketPicture";
+import { capabilityOf } from "../world";
 import { isPortion } from "./portions";
 /** Switch/keyboard/tap destinations call exactly the drag proposal engine. */
 export function Destinations({
   scene,
   selected,
+  designing = false,
   scale,
   onChoose,
   onSelect,
@@ -17,18 +20,20 @@ export function Destinations({
 }: {
   scene: Scene;
   selected?: string;
+  designing?: boolean;
   scale: number;
   onChoose: (proposal: DropProposal) => void;
   onSelect: (id: string) => void;
   bottom: number;
 }) {
   const subject = selected ? scene.entities[selected] : undefined;
-  if (!subject) return null;
+  if (!subject || (!designing && subject.item && !capabilityOf(subject.item.item).moveInPlay)) return null;
   const choices = Object.values(scene.rooms).flatMap((index) =>
     index.targets
       .map((target) => {
         const proposal = resolve({ ...index, entities: scene.entities }, subject, target.contact, {
           scale,
+          avoidFurnitureOverlap: designing,
           target: target.id,
           release: true,
         });
@@ -77,9 +82,7 @@ export function Destinations({
               backgroundColor: "#EEDDBA",
             }}
           >
-            <Text allowFontScaling={false} style={{ fontSize: 30, color: "#284F4B" }}>
-              ▱
-            </Text>
+            <BasketPicture entity={subject} />
           </Pressable>
         )}
         {contents.map((entity) => {

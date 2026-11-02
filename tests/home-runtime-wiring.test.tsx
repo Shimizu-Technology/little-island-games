@@ -1,6 +1,7 @@
 import React from "react";
 import TestRenderer, { act } from "react-test-renderer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { layoutToken } from "../src/home/runtime/layout";
 import { useInteraction, type Interaction } from "../src/home/runtime/useInteraction";
 import { buildingLayout } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
@@ -122,7 +123,7 @@ let committedId = "";
 let committedContact = entity.contact;
 let destinationRevision = "";
 const cameraChange = vi.fn();
-function Probe({ scene }: { scene: Scene }) {
+function Probe({ scene, layout = true }: { scene: Scene; layout?: boolean }) {
   const interaction = useInteraction({
     scene,
     building: buildingLayout(4, true),
@@ -134,7 +135,8 @@ function Probe({ scene }: { scene: Scene }) {
     onPickup: (pickup) => {
       const slot = current.slots.get()[pickup.slot];
       if (slot.id === pickup.id && slot.generation === pickup.generation && slot.epoch === pickup.epoch)
-        current.ready(pickup.slot, pickup.id);
+        { current.ready(pickup.slot, pickup.id);
+          current.acknowledgePose(pickup.slot, layoutToken(pickup.scene.entities[pickup.id])); }
     },
     onTap: () => {},
     onClear: () => {},
@@ -151,6 +153,12 @@ function Probe({ scene }: { scene: Scene }) {
   });
   React.useLayoutEffect(() => {
     current = interaction;
+    if (layout) for (const entity of Object.values(scene.entities))
+      interaction.acknowledgeLayout(entity.id, layoutToken(entity));
+    if (layout) for (const slot of interaction.slots.get()) {
+      const entity = scene.entities[slot.restId ?? slot.id];
+      if (entity) interaction.acknowledgePose(interaction.slots.get().indexOf(slot), layoutToken(entity));
+    }
   });
   return null;
 }
@@ -286,6 +294,61 @@ describe("actual runtime callback sequencing", () => {
       renderer!.unmount();
     });
     vi.useRealTimers();
+  });
+  it("holds the exact contact through delayed native layout, rejecting an old pose acknowledgement", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
+    touch("down", 120, 300); touch("move", 150, 320); flushJS(); touch("up", 150, 320);
+    const proposal = { ...current.slots.get()[0].proposal!, base: "lie" as const };
+    const final = fixture("mounted-on-js", proposal.contact);
+    final.entities[entity.id].base = "lie";
+    current.finish(0, true, proposal, final.revision, final);
+    await act(async () => renderer.update(<Probe scene={final} layout={false} />));
+    vi.advanceTimersByTime(900);
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    const settled = { ...current.slots.get()[0] };
+    expect(settled.id).toBe(entity.id);
+    expect(settled.x).toBe(settled.targetX); expect(settled.y).toBe(settled.targetY);
+    current.acknowledgeLayout(entity.id, layoutToken(entity)); // old native standing subtree
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    expect(current.slots.get()[0].id).toBe(entity.id);
+    current.acknowledgeLayout(entity.id, layoutToken(final.entities[entity.id]));
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    expect(current.slots.get()[0].id).toBe(entity.id); // overlay final art has not laid out yet
+    current.acknowledgePose(0, layoutToken(final.entities[entity.id]));
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    expect(current.slots.get()[0].id).toBe("");
+    expect(current.slots.get()[0].x).toBe(settled.x); expect(current.slots.get()[0].y).toBe(settled.y);
+    await act(async () => renderer.unmount()); vi.useRealTimers();
+  });
+  it.each(["fridge", "stove", "sink-counter"])("S1 cancels a native Play drag of %s before any pickup motion", async (item) => {
+    const scene = fixture();
+    const fixtureEntity = { ...entity, character: undefined, item: {
+      id: "fixture", item, x: 2, y: 2, rotation: 0, mirrored: false, layer: "furniture", state: "rest",
+    }} as SceneEntity;
+    scene.entities = { [entity.id]: fixtureEntity }; scene.rooms.home.entities = scene.entities;
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={scene} />); });
+    touch("down", 120, 300); flushJS(); touch("move", 200, 420);
+    expect(current.slots.get().every((s) => !s.id)).toBe(true);
+    touch("up", 200, 420); flushJS();
+    expect(committed).toBe(0);
+    expect(current.controller.get().pointers).toHaveLength(0);
+    await act(async () => renderer.unmount()); vi.useRealTimers();
+  });
+  it("prepares a hidden carry capture on touchdown and keeps its native readiness on the first move", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
+    touch("down", 120, 300);
+    expect(current.slots.get()[0].phase).toBe("pending");
+    expect(current.slots.get()[0].ready).toBe(false);
+    flushJS();
+    expect(current.slots.get()[0].ready).toBe(true);
+    touch("move", 132, 300);
+    expect(current.slots.get()[0].phase).toBe("dragging");
+    expect(current.slots.get()[0].ready).toBe(true);
+    expect(harness.js).toHaveLength(0);
+    await act(async () => renderer.unmount()); vi.useRealTimers();
   });
   it("invalidates a queued commit when a new capture regrabs or cancels it", async () => {
     let renderer: TestRenderer.ReactTestRenderer;

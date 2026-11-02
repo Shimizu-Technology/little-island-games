@@ -11,15 +11,25 @@ export function groupIds(scene: Scene, id: string): string[] {
   visit(id);
   return result;
 }
+/** Paint depth uses the visible ground anchor, independently of grid occupancy.
+ * Supported children stay between their parent's back and front paint passes. */
+export function paintDepth(entity: SceneEntity, scene: Scene): number {
+  if (entity.band === "foreground") return entity.depth;
+  if (entity.parent && scene.entities[entity.parent]) {
+    const parent = paintDepth(scene.entities[entity.parent], scene);
+    return parent + (entity.attachment.kind === "socket" ? 1 : 0.5);
+  }
+  return entity.item && entity.attachment.kind === "floor" ? entity.contact.y : entity.depth;
+}
 export function paintEntries(
   entities: SceneEntity[],
   scene: Scene
 ): { entity: SceneEntity; front: boolean; depth: number }[] {
   return entities
     .flatMap((entity) => [
-      { entity, front: false, depth: entity.depth },
+      { entity, front: false, depth: paintDepth(entity, scene) },
       ...(entity.item && entity.children.some((id) => scene.entities[id]?.attachment.kind === "socket")
-        ? [{ entity, front: true, depth: entity.depth + 2 }]
+        ? [{ entity, front: true, depth: paintDepth(entity, scene) + 2 }]
         : []),
     ])
     .sort(

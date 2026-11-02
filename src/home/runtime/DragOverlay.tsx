@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from "react";
+import React from "react";
 import { View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { roomIds } from "../catalogMore";
@@ -6,7 +6,7 @@ import { roomOrigin, type Building } from "../camera";
 import { anchorsFor } from "../scene/species";
 import { renderAnchors, carryBinding, carrySample } from "./rigGeometry";
 import { settleProgress } from "./settle";
-import type { Scene, SceneEntity } from "../scene/types";
+import type { SceneEntity } from "../scene/types";
 import { groupIds, restingVisible } from "./group";
 import { SettleArt } from "./SettleArt";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
@@ -38,11 +38,11 @@ function OverlayGroup({
     .map((key) => scene.entities[key])
     .filter((e) => restingVisible(e, scene, root.id))
     .sort((a, b) => a.depth - b.depth || a.id.localeCompare(b.id));
-  useLayoutEffect(() => {
+  const acknowledge = () => {
     const bounds = root.character ? renderAnchors(root, true).bounds : undefined;
     const binding = root.character ? carryBinding(root, pickup.grip ?? { x: 0, y: 0 }) : { x: 0, y: 0 };
     interaction.ready(index, id, bounds && { ...bounds, left: bounds.left + binding.x, top: bounds.top + binding.y });
-  }, [interaction, index, id, root, pickup.grip]);
+  };
   const style = useAnimatedStyle(() => {
     const slot = slots.value[index];
     const lift = reduced ? 0 : Math.min(1, Math.max(0, (clock.value - slot.liftedAt) / 90));
@@ -57,7 +57,7 @@ function OverlayGroup({
         : 0;
     const propOffset = root.item && !root.children.length && root.bounds.height < 100 ? 18 / camera.value.a : 0;
     return {
-      opacity: slot.id === id && slot.ready ? 1 : 0,
+      opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed) ? 1 : 0,
       transformOrigin: [slot.gripX, slot.gripY, 0],
       transform: [
         { translateX: slot.x - origin.x - root.contact.x },
@@ -93,7 +93,7 @@ function OverlayGroup({
         ? Math.max(0, 1 - (clock.value - slot.settleAt) / 140)
         : Math.min(1, (clock.value - slot.liftedAt) / 90);
     return {
-      opacity: slot.id === id && slot.ready ? 0.18 - 0.06 * lift : 0,
+      opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed) ? 0.18 - 0.06 * lift : 0,
       transform: [{ translateX: groundX - 24 }, { translateY: groundY - 5 }, { scale: 1 - 0.15 * lift }],
     };
   });
@@ -116,6 +116,8 @@ function OverlayGroup({
       />
       <Animated.View
         testID={`drag-overlay-${index}`}
+        collapsable={false}
+        onLayout={acknowledge}
         pointerEvents="none"
         style={[
           {

@@ -14,6 +14,7 @@ import { paintEntries, restingVisible } from "./group";
 import { TargetCue } from "./TargetCue";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { DragOverlay } from "./DragOverlay";
+import { layoutToken } from "./layout";
 import { isPortion } from "./portions";
 import type { Interaction, Pickup, DragSlot } from "./useInteraction";
 import type { Viewport } from "./CameraController";
@@ -31,6 +32,7 @@ const RestingEntity = memo(function RestingEntity({
   entity,
   ownerKey,
   slots,
+  acknowledgeLayout,
   reduced,
   renderCharacter,
   onSelect,
@@ -46,6 +48,7 @@ const RestingEntity = memo(function RestingEntity({
   entity: SceneEntity;
   ownerKey: string;
   slots: SharedValue<DragSlot[]>;
+  acknowledgeLayout: Interaction["acknowledgeLayout"];
   reduced: boolean;
   renderCharacter?: CharacterRender;
   selected: boolean;
@@ -70,11 +73,9 @@ const RestingEntity = memo(function RestingEntity({
       const slot = slots.value[i];
       if (slot.id && owners.includes(slot.restId ?? slot.id))
         return {
-          opacity: slot.ready ? 0 : 1,
-          transform: [
-            { translateX: slot.ready ? 0 : slot.x - slot.sourceX },
-            { translateY: slot.ready ? 0 : slot.y - slot.sourceY },
-          ],
+          opacity: slot.ready && (slot.phase !== "pending" || slot.committed) ? 0 : 1,
+          // Never translate the old supported pose while carry art mounts.
+          transform: [{ translateX: 0 }, { translateY: 0 }],
         };
     }
     return { opacity: 1, transform: [{ translateX: 0 }, { translateY: 0 }] };
@@ -166,6 +167,12 @@ const RestingEntity = memo(function RestingEntity({
           }}
         />
       )}
+      <View
+        key={layoutToken(entity)}
+        collapsable={false}
+        onLayout={() => { if (!front) acknowledgeLayout(entity.id, layoutToken(entity)); }}
+        style={{ width: frame.width, height: frame.height }}
+      >
       <Animated.View style={normal}>
         <EntityArt
           entity={entity}
@@ -181,6 +188,7 @@ const RestingEntity = memo(function RestingEntity({
           <EntityArt entity={entity} preview reduced={reduced} renderCharacter={renderCharacter} />
         </Animated.View>
       )}
+      </View>
     </Animated.View>
   );
 });
@@ -277,6 +285,7 @@ export function SceneView({
                           .map((t) => t.id)
                           .join("|")}
                         slots={interaction.slots}
+                        acknowledgeLayout={interaction.acknowledgeLayout}
                         reduced={reduced}
                         renderCharacter={renderCharacter}
                         selected={!front && selected === entity.id}

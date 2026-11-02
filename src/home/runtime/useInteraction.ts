@@ -28,6 +28,7 @@ import {
 } from "./CameraController";
 import { translatedBounds } from "../scene/spatial";
 import { prepareHits, pickEntity } from "./pick";
+import { layoutToken } from "./layout";
 import { settleProgress, canRevealResting } from "./settle";
 
 export type CaptureToken = { generation: number; epoch: number };
@@ -169,6 +170,16 @@ export function useInteraction({
   const hits = useMemo(() => prepareHits(scene), [scene]);
   const hitTable = useSharedValue(hits);
   const renderedRevision = useSharedValue(scene.revision);
+  const expectedLayout = useMemo(() => Object.fromEntries(Object.values(scene.entities).map((e) => [e.id, layoutToken(e)])), [scene]);
+  const layoutTokens = useSharedValue(expectedLayout);
+  const laidOut = useSharedValue<Record<string, string>>({});
+  const poseLayouts = useSharedValue<Record<string, string>>({});
+  const acknowledgePose = (index: number, token: string) => {
+    poseLayouts.set((current) => ({ ...current, [index]: token }));
+  };
+  const acknowledgeLayout = (id: string, token: string) => {
+    laidOut.set((current) => ({ ...current, [id]: token }));
+  };
   const controller = useSharedValue<ControllerState>(idleController);
   const slots = useSharedValue<DragSlot[]>([emptySlot(), emptySlot()]);
   const frameTimes = useSharedValue<number[]>([]);
@@ -184,6 +195,7 @@ export function useInteraction({
     prepared.set(resolverScene);
     hitTable.set(hits);
     renderedRevision.set(scene.revision);
+    layoutTokens.set(expectedLayout);
     const refreshed: number[] = [];
     slots.set((current) =>
       current.map((slot, index) => {
@@ -223,7 +235,7 @@ export function useInteraction({
       })
     );
     refreshed.forEach((index) => onDestination?.(index, scene));
-  }, [scene, resolverScene, hits, prepared, hitTable, renderedRevision, slots, building, onDestination]);
+  }, [scene, resolverScene, hits, prepared, hitTable, renderedRevision, slots, building, onDestination, expectedLayout, layoutTokens]);
 
   const movable = useSharedValue<Record<string, boolean>>({});
   useLayoutEffect(() => {
@@ -277,6 +289,7 @@ export function useInteraction({
     }
     return resolve(prepared.value.rooms[destination], subject, anchor, {
       scale: camera.value.a,
+      avoidFurnitureOverlap: designing,
       silhouette:
         index >= 0 && subject.character ? translatedBounds(slot.carryBounds ?? subject.bounds, anchor) : undefined,
       previous: slot.proposal,
@@ -396,7 +409,8 @@ export function useInteraction({
             )
           );
         }
-      } else if (effect.type === "pickup") {
+      }
+      if ((effect.type === "contact" && !slots.value.some((s) => s.id === effect.entity)) || effect.type === "pickup") {
         const entity = subjectFor(effect.entity);
         if (!entity) continue;
         const pointer = next.state.pointers.find((p) => p.entity === effect.entity)!;
@@ -416,6 +430,7 @@ export function useInteraction({
           subject: entity,
           ready: visible?.ready ?? false,
           pointer: pointer.pointer,
+          phase: effect.type === "contact" ? "pending" as const : "dragging" as const,
           x: visible?.x ?? entity.contact.x + origin.x,
           y: visible?.y ?? entity.contact.y + origin.y,
           sourceX:
@@ -489,6 +504,12 @@ export function useInteraction({
           { generation: slot.generation, epoch: slot.epoch }
         );
       } else if (effect.type === "restore") {
+        const pending = slots.value.findIndex((s) => s.id === effect.entity && s.phase === "pending" && !s.committed);
+        if (pending >= 0) {
+          slots.set(slots.value.map((s, i) => i === pending ? { ...s, id: "", ready: false } : s));
+          runOnJS(onClear)(pending);
+          continue;
+        }
         const index = slots.value.findIndex((s) => s.id === effect.entity);
         if (index >= 0) {
           const s = slots.value[index];
@@ -611,6 +632,12 @@ export function useInteraction({
   };
   const resumePending = (pointer: number) => {
     "worklet";
+    const pending = slots.value.findIndex((s) => s.id && s.pointer === pointer && s.phase === "pending" && !s.committed);
+    if (pending >= 0) {
+      slots.set(slots.value.map((s, i) => i === pending ? { ...s, id: "", ready: false } : s));
+      runOnJS(onClear)(pending);
+      return;
+    }
     slots.set(
       slots.value.map((s) =>
         s.id && s.pointer === pointer && s.phase === "pending"
@@ -814,8 +841,11 @@ export function useInteraction({
             slot.tilt *= 1 - progress;
             slot.lag *= 1 - progress;
             slot.finished = progress === 1;
-            if (canRevealResting(slot, renderedRevision.value)) {
-              const entity = prepared.value.entities[slot.restId ?? slot.id];
+            const entity = prepared.value.entities[slot.restId ?? slot.id];
+            const nativeReady = slot.consumed || (entity && (entity.attachment.kind === "staging" ||
+              (laidOut.value[entity.id] === layoutTokens.value[entity.id] &&
+                (!entity.character || poseLayouts.value[i] === layoutTokens.value[entity.id]))));
+            if (nativeReady && canRevealResting(slot, renderedRevision.value)) {
               if (entity?.character && !slot.consumed && slot.proposal) {
                 const origin = roomOrigin(roomIds.indexOf(entity.room), building);
                 const bounds = translatedBounds(
@@ -909,6 +939,9 @@ export function useInteraction({
     cancelAll,
     frameTimes,
     renderedRevision,
+    acknowledgeLayout,
+    acknowledgePose,
+    poseLayouts,
     clock: lastFrame,
   };
 }

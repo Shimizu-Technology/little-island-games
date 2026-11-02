@@ -1,4 +1,4 @@
-import { restingVisible } from "./group";
+import { restingVisible, paintDepth } from "./group";
 import { capabilityOf } from "../world";
 import { decorSpec } from "../catalog";
 import type { Bounds, RoomPoint, Scene } from "../scene/types";
@@ -16,7 +16,7 @@ export function prepareHits(scene: Scene): Record<string, PickProxy[]> {
             : e.item && (capabilityOf(e.item.item).holdable || decorSpec(e.item.item).small)
               ? 3
               : 1;
-          return { ...proxy, priority };
+          return { ...proxy, depth: paintDepth(e, scene), priority };
         }),
     ])
   );

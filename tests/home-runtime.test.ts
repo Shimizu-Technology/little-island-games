@@ -201,7 +201,7 @@ it("carries a complete nested attachment group exactly once, including a held ch
   const { groupIds, paintEntries } = await import("../src/home/runtime/group");
   const scene = {
     entities: {
-      table: { id: "table", children: ["lamp", "actor"], item: {}, depth: 100 },
+      table: { id: "table", children: ["lamp", "actor"], item: {}, attachment: { kind: "floor" }, contact: { x: 100, y: 100 }, depth: 100 },
       lamp: { id: "lamp", children: [], attachment: { kind: "surface" }, depth: 100.5 },
       actor: { id: "actor", children: ["cup"], attachment: { kind: "socket" }, depth: 101 },
       cup: { id: "cup", children: [], attachment: { kind: "hand" }, depth: 101.5 },

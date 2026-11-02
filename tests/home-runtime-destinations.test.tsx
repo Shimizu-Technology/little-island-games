@@ -6,6 +6,7 @@ import { labHome } from "../src/home/runtime/lab";
 import { withPortions } from "../src/home/runtime/portions";
 import { buildScene } from "../src/home/scene/graph";
 import { apply } from "../src/home/scene/proposal";
+vi.mock("react-native-svg", () => ({ default: "Svg", Path: "Path" }));
 vi.mock("react-native", () => ({ Pressable: "Pressable", ScrollView: "ScrollView", Text: "Text", View: "View" }));
 vi.mock("../src/home/runtime/EntityArt", () => ({ EntityArt: () => null, artFrame: () => ({ width: 1, height: 1 }) }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -33,6 +34,17 @@ describe("tap tray destinations", () => {
     const result = apply(state, proposal);
     expect("state" in result).toBe(true);
     if ("state" in result) expect(result.state.rooms.home.instances.find((i) => i.id === "cup")?.staged).toBe(true);
+    await act(async () => renderer.unmount());
+  });
+  it.each(["fridge", "sink-counter", "stove"])("S5 a Play tap on %s cannot show a destination or storage panel", async (item) => {
+    const state = labHome();
+    const fixture = { ...state.rooms.kitchen.instances[0], id: "fixture", item };
+    state.rooms.kitchen.instances = [fixture];
+    const scene = withPortions(buildScene(state));
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Destinations scene={scene}
+      selected="kitchen/item/fixture" scale={1} bottom={0} onChoose={() => {}} onSelect={() => {}} />); });
+    expect(renderer.toJSON()).toBe(null);
     await act(async () => renderer.unmount());
   });
   it("keeps virtual source portions on compatible destinations without offering storage", async () => {
