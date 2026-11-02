@@ -62,6 +62,7 @@ export type Pickup = CaptureToken & {
   grip?: { x: number; y: number };
   destination?: Scene;
   identities?: Record<string, string>;
+  committedId?: string;
 };
 function eventTime(): number {
   "worklet";
@@ -297,8 +298,25 @@ export function useInteraction({
     "worklet";
     const capture =
       event.type !== "settled" ? controller.value.pointers.find((p) => p.pointer === event.pointer) : undefined;
+    let state = controller.value;
+    if (event.type === "up" && event.proposal && capture?.entity && event.proposal.id !== capture.entity) {
+      const slot = slots.value.find((s) => s.id === capture.entity && s.restId === event.proposal!.id);
+      if (slot) {
+        const canonical = event.proposal.id;
+        state = {
+          ...state,
+          pointers: state.pointers.map((p) => (p.pointer === event.pointer ? { ...p, entity: canonical } : p)),
+          reservations: Object.fromEntries(
+            Object.entries(state.reservations).map(([key, owner]) => [
+              key,
+              owner === capture.entity ? canonical : owner,
+            ])
+          ),
+        };
+      }
+    }
     const next = transition(
-      controller.value,
+      state,
       event,
       camera.value,
       originFor(capture?.entity ?? (event.type === "down" ? event.entity : undefined))
@@ -369,7 +387,9 @@ export function useInteraction({
           runOnJS(onPickup)({
             id: effect.entity,
             slot: index,
-            scene: prepared.value,
+            scene: prepared.value.entities[effect.entity]
+              ? prepared.value
+              : { ...prepared.value, entities: { ...prepared.value.entities, [effect.entity]: entity } },
             grip: { x: pointer.grip.x, y: pointer.grip.y },
             generation: slot.generation,
             epoch: slot.epoch,
@@ -402,7 +422,7 @@ export function useInteraction({
         nextSlot.proposal = proposalFor(nextSlot);
         slots.set(slots.value.map((s, i) => (i === index ? nextSlot : s)));
       } else if (effect.type === "commit") {
-        const index = slots.value.findIndex((s) => s.id === effect.entity);
+        const index = slots.value.findIndex((s) => s.id === effect.entity || s.restId === effect.entity);
         const slot = slots.value[index];
         if (!slot) continue;
         slots.set(
@@ -726,9 +746,20 @@ export function useInteraction({
             slot.lag *= 1 - progress;
             slot.finished = progress === 1;
             if (canRevealResting(slot, renderedRevision.value)) {
-              controller.set(
-                transition(controller.value, { type: "settled", entity: slot.id }, camera.value, housePoint(0, 0)).state
-              );
+              let settled = transition(
+                controller.value,
+                { type: "settled", entity: slot.id },
+                camera.value,
+                housePoint(0, 0)
+              ).state;
+              if (slot.restId && slot.restId !== slot.id)
+                settled = transition(
+                  settled,
+                  { type: "settled", entity: slot.restId },
+                  camera.value,
+                  housePoint(0, 0)
+                ).state;
+              controller.set(settled);
               slot.id = "";
               slot.ready = false;
               runOnJS(onClear)(i);

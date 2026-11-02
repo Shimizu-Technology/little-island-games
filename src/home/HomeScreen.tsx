@@ -10,7 +10,7 @@ import type { BadgeId } from "../badges/engine";
 import { buildingLayout, roomOrigin } from "./camera";
 import { roomIds, type RoomId } from "./catalogMore";
 import { capabilityOf } from "./world";
-import { instance, owns, MAX_INSTANCES, type HomeAction, type HomeStateV2, type Ownership } from "./model";
+import { instance, owns, placedInstances, MAX_INSTANCES, type HomeAction, type HomeStateV2, type Ownership } from "./model";
 import { ItemArt } from "./art/Items";
 import { MoreItemArt } from "./art/More";
 import { moreCatalog } from "./catalogMore";
@@ -155,7 +155,6 @@ export function HomeScreen({
         if (isPortion(id)) {
           const source = candidate.item!;
           const item = { ...source, id: `food-${Date.now().toString(36)}-${++sequence.current}` };
-          if (latest.rooms[destination].instances.length >= MAX_INSTANCES) return undefined;
           const seed: HomeStateV2 = {
             ...latest,
             rooms: {
@@ -178,6 +177,7 @@ export function HomeScreen({
               release: true,
             }
           );
+          if (resolved.kind === "staging") { current.store.setMessage("Choose a free hand or place."); return undefined; }
           next = current.store.commitProposal(resolved, seed, stillCurrent);
           return next
             ? { state: next, proposal: resolved, identities: current.store.getCommittedIdentities() }
@@ -251,7 +251,11 @@ export function HomeScreen({
         showReaction(result.proposal);
         const destination = buildScene(result.state);
         setPickups((current) =>
-          current.map((p, i) => (i === index && p ? { ...p, destination, identities: result.identities } : p))
+          current.map((p, i) =>
+            i === index && p
+              ? { ...p, destination, identities: result.identities, committedId: result.identities[result.proposal.id] }
+              : p
+          )
         );
         runtime.current!.finish(
           index,
@@ -504,7 +508,7 @@ export function HomeScreen({
       origin = roomOrigin(index, building),
       at = screenToRoom(screenPoint(x, y), c, housePoint(origin.x, origin.y));
     const current = live.current.store.getState();
-    if (current.rooms[dest].instances.length >= MAX_INSTANCES) {
+    if (placedInstances(current.rooms[dest]).length >= MAX_INSTANCES) {
       store.setMessage("Put something away to make room.");
       return;
     }

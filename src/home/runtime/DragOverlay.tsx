@@ -31,7 +31,9 @@ function OverlayGroup({
     origin = roomOrigin(roomIds.indexOf(root.room), building);
   const ids = groupIds(scene, id);
   const destination =
-    (pickup.destination && pickup.destination.entities[pickup.identities?.[root.id] ?? root.id]) ?? root;
+    (pickup.destination &&
+      pickup.destination.entities[pickup.committedId ?? pickup.identities?.[root.id] ?? root.id]) ??
+    root;
   const entities = ids
     .map((key) => scene.entities[key])
     .filter((e) => restingVisible(e, scene, root.id))

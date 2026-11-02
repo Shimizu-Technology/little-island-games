@@ -118,6 +118,7 @@ function fixture(revision = "initial", contact = entity.contact): Scene {
 }
 let current: Interaction;
 let committed = 0;
+let committedId = "";
 let committedContact = entity.contact;
 function Probe({ scene }: { scene: Scene }) {
   const interaction = useInteraction({
@@ -138,6 +139,7 @@ function Probe({ scene }: { scene: Scene }) {
     onCommit: (index, proposal, _at, token) => {
       if (!current.isCurrent(index, token)) return;
       committed++;
+      committedId = proposal.id;
       committedContact = proposal.contact;
       current.finish(index, true, proposal, "committed", undefined, token);
     },
@@ -162,6 +164,7 @@ beforeEach(() => {
   harness.js = [];
   harness.handlers = {};
   committed = 0;
+  committedId = "";
   vi.useFakeTimers();
   vi.setSystemTime(1000);
 });
@@ -218,6 +221,51 @@ describe("actual runtime callback sequencing", () => {
     flushJS();
     expect(committed).toBe(0);
     expect(current.slots.get().every((s) => !s.id)).toBe(true);
+    await act(async () => {
+      renderer!.unmount();
+    });
+    vi.useRealTimers();
+  });
+  it("commits a regrab under the canonical identity after acknowledged cross-room transfer", async () => {
+    const scene = fixture();
+    const source = {
+      ...entity,
+      id: "home/item/cup",
+      character: undefined,
+      item: { id: "cup", item: "juice", x: 2, y: 2, rotation: 0, mirrored: false, layer: "furniture", state: "rest" },
+    } as SceneEntity;
+    scene.entities = { [source.id]: source };
+    scene.rooms.home.entities = scene.entities;
+    scene.rooms.home.hitProxies = scene.rooms.home.hitProxies.map((p) => ({ ...p, id: source.id }));
+    let renderer: TestRenderer.ReactTestRenderer;
+    await act(async () => {
+      renderer = TestRenderer.create(<Probe scene={scene} />);
+    });
+    touch("down", 120, 300);
+    touch("move", 150, 320);
+    flushJS();
+    touch("up", 150, 320);
+    harness.js = [];
+    const moved = { ...source, id: "kitchen/item/cup", room: "kitchen" as const };
+    const destination = fixture("transferred");
+    destination.entities = { [moved.id]: moved };
+    destination.rooms.home.entities = {};
+    destination.rooms.home.hitProxies = [];
+    destination.rooms.kitchen.entities = destination.entities;
+    const proposal = { ...current.slots.get()[0].proposal!, room: "kitchen" as const, contact: moved.contact };
+    current.finish(0, true, proposal, "transferred", destination, undefined, moved.id);
+    await act(async () => {
+      renderer!.update(<Probe scene={destination} />);
+    });
+    vi.advanceTimersByTime(60);
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    const slot = { ...current.slots.get()[0] };
+    touch("down", slot.x, slot.y - 100, 7);
+    touch("move", slot.x + 20, slot.y - 90, 7);
+    touch("up", slot.x + 20, slot.y - 90, 7);
+    flushJS();
+    expect(committed).toBe(1);
+    expect(committedId).toBe(moved.id);
     await act(async () => {
       renderer!.unmount();
     });
