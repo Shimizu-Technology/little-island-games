@@ -1,0 +1,845 @@
+[
+  {
+    "id": "sun",
+    "wordCounts": {
+      "tell": 20,
+      "more": 29,
+      "deep": 130
+    },
+    "tellSentences": 3,
+    "correction": "Fusion and plasma replace the loose particle/campfire comparison; separate energy production from gravity. Retained facts supported, with new causal wording.",
+    "familyJudgment": "Leon: judge the atom explanation and confirm the single Sun-safety line remains visible from every layer; art is symbolic, not a viewing guide.",
+    "evidenceSections": "NASA Sun Facts: Structure, Surface, Orbit and Rotation.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://science.nasa.gov/sun/facts/"
+    ]
+  },
+  {
+    "id": "moon",
+    "wordCounts": {
+      "tell": 13,
+      "more": 31,
+      "deep": 130
+    },
+    "tellSentences": 2,
+    "correction": "Phase geometry, reflected light and synchronous rotation checked; removed repeated shape statements. Retained facts supported.",
+    "familyJudgment": "Leon: judge whether the lit-half viewpoint makes sense when read with the existing picture; no cultural or pronunciation approval is implied.",
+    "evidenceSections": "NASA Moon Facts: Orbit and Rotation; Moon Phases: overview/new/full; Eclipses: lunar basics.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://science.nasa.gov/moon/facts/",
+      "https://science.nasa.gov/moon/moon-phases/",
+      "https://science.nasa.gov/moon/eclipses/"
+    ]
+  },
+  {
+    "id": "day-night",
+    "wordCounts": {
+      "tell": 18,
+      "more": 32,
+      "deep": 131
+    },
+    "tellSentences": 3,
+    "correction": "Separated daily rotation from yearly revolution; removed the technically imprecise full-turn-equals-24-hours claim. Core mechanism supported.",
+    "familyJudgment": "Leon: judge whether the globe example distinguishes spinning from traveling; any light model is caregiver-led and never uses direct Sun viewing.",
+    "evidenceSections": "NASA Earth Facts: Orbit and Rotation; Space Place Seasons: axis/day-night paragraphs. Globe example is an explanatory model, not a measured exhibit claim.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://science.nasa.gov/earth/facts/",
+      "https://spaceplace.nasa.gov/seasons/en/"
+    ]
+  },
+  {
+    "id": "planets",
+    "wordCounts": {
+      "tell": 15,
+      "more": 32,
+      "deep": 138
+    },
+    "tellSentences": 3,
+    "correction": "Added NASA planet catalogue for order and rocky/giant distinctions; removed vague crowded-system phrasing. Retained classifications supported.",
+    "familyJudgment": "Leon: check planet-name pronunciation and whether nested orbits are clear; the illustration is not to scale.",
+    "evidenceSections": "NASA About Planets: Inner Planets, Outer Planets and Dwarf Planets; Earth Facts: orbital year; gravity page: attraction/orbits. Page-size drawing limitation is an explicit model qualification.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://science.nasa.gov/solar-system/",
+      "https://science.nasa.gov/solar-system/planets/",
+      "https://spaceplace.nasa.gov/what-is-gravity/en/",
+      "https://science.nasa.gov/earth/facts/"
+    ]
+  },
+  {
+    "id": "mars",
+    "wordCounts": {
+      "tell": 18,
+      "more": 36,
+      "deep": 134
+    },
+    "tellSentences": 3,
+    "correction": "Oxidation and dust explain apparent color; retained only broad, supported ancient-water evidence, not disputed present-day surface flows.",
+    "familyJudgment": "Leon: judge rust vocabulary and robot framing; no human visit or breathable-air claim is made.",
+    "evidenceSections": "NASA Mars Facts: Namesake, Surface, Water on Mars and Atmosphere. Did not reuse the page’s present-day seasonal brine claim.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://science.nasa.gov/mars/facts/"
+    ]
+  },
+  {
+    "id": "saturn",
+    "wordCounts": {
+      "tell": 18,
+      "more": 31,
+      "deep": 133
+    },
+    "tellSentences": 3,
+    "correction": "Ring particles, reflected light, gaps and thin geometry checked; avoided uncertain ring-origin and age claims.",
+    "familyJudgment": "Leon: judge orbit wording and Cassini pronunciation; keep the existing art's exaggerated ring thickness understood as a model.",
+    "evidenceSections": "NASA Saturn Facts: Rings; Cassini Rings: Overview and Ring Exchange; JPL Voyager image caption: reflection and less-dense Cassini Division. Gap is not asserted completely empty.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://science.nasa.gov/saturn/facts/",
+      "https://science.nasa.gov/mission/cassini/science/rings/",
+      "https://www.jpl.nasa.gov/images/pia00335-full-disk-color-image-of-crescent-saturn-with-rings-and-ring-shadows/"
+    ]
+  },
+  {
+    "id": "gravity",
+    "wordCounts": {
+      "tell": 13,
+      "more": 31,
+      "deep": 134
+    },
+    "tellSentences": 2,
+    "correction": "Mutual attraction and shared freefall checked; removed ambiguous weight definition and kept mass/distance conditions explicit.",
+    "familyJudgment": "Leon: judge whether falling-around-Earth explains floating without inviting a falling experiment.",
+    "evidenceSections": "Space Place Gravity: mass/distance and mutual force; Basics chapter: How Orbits Work and Freefall.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://spaceplace.nasa.gov/what-is-gravity/en/",
+      "https://science.nasa.gov/learn/basics-of-space-flight/chapter3-4/"
+    ]
+  },
+  {
+    "id": "stars",
+    "wordCounts": {
+      "tell": 18,
+      "more": 31,
+      "deep": 133
+    },
+    "tellSentences": 3,
+    "correction": "Replaced unsupported color-temperature elaboration with the cited NASA page's directly supported mass/fusion/lifetime explanation.",
+    "familyJudgment": "Leon: judge fuel and atom vocabulary; stellar death and violent events are not needed for this explanation.",
+    "evidenceSections": "NASA Star Basics: Birth and Life. Color-temperature detail was removed because this page did not establish it.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://science.nasa.gov/universe/stars/"
+    ]
+  },
+  {
+    "id": "rockets",
+    "wordCounts": {
+      "tell": 17,
+      "more": 33,
+      "deep": 137
+    },
+    "tellSentences": 3,
+    "correction": "Thrust, paired forces and orbital speed checked against NASA launch/orbit explanations; no launch-making activity added.",
+    "familyJudgment": "Leon: judge force arrows and the airless-space idea; no real rocket, fuel or pressure experiment is suggested.",
+    "evidenceSections": "Space Place Launch: lift-off/thrust and orbit; Basics: How Orbits Work; Glenn: Rockets in Space.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://spaceplace.nasa.gov/launching-into-space/en/",
+      "https://science.nasa.gov/learn/basics-of-space-flight/chapter3-4/",
+      "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/solid-rocket-engine/"
+    ]
+  },
+  {
+    "id": "asteroids",
+    "wordCounts": {
+      "tell": 17,
+      "more": 31,
+      "deep": 138
+    },
+    "tellSentences": 3,
+    "correction": "Formation, composition, shapes and asteroid moons checked; omitted impact-hazard material unnecessary to this question.",
+    "familyJudgment": "Leon: judge the early-system explanation and metal/rock distinction; no frightening impact scenario has been introduced.",
+    "evidenceSections": "NASA Asteroid Facts: Introduction, Composition and Main Asteroid Belt. Hazard sections not used.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://science.nasa.gov/solar-system/asteroids/facts/"
+    ]
+  },
+  {
+    "id": "salty",
+    "wordCounts": {
+      "tell": 20,
+      "more": 35,
+      "deep": 133
+    },
+    "tellSentences": 3,
+    "correction": "Rock-derived ions, seafloor exchange and evaporation checked; no claim that ordinary table salt alone fills the ocean.",
+    "familyJudgment": "Leon: check dissolved-particle wording; this is an explanation, not an invitation to taste seawater.",
+    "evidenceSections": "NOAA Why Salty: land ions and hydrothermal exchange; JetStream Sea Water: evaporation and regional salinity. Did not reuse the page’s sea-ice drinking suggestion.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://oceanservice.noaa.gov/facts/whysalty.html",
+      "https://www.noaa.gov/jetstream/ocean/sea-water"
+    ]
+  },
+  {
+    "id": "tides",
+    "wordCounts": {
+      "tell": 21,
+      "more": 33,
+      "deep": 136
+    },
+    "tellSentences": 3,
+    "correction": "Long-period wave, high/low tide and tidal range checked; removed duplicate beach instructions and avoided simplistic two-bulge geometry.",
+    "familyJudgment": "Leon: judge the single supervision line and calm shore picture; no tide prediction or invitation to approach exposed rocks is supplied.",
+    "evidenceSections": "NOAA What Are Tides: complete explanatory body, including long-period wave, crest/trough and tidal range.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://oceanservice.noaa.gov/facts/tides.html"
+    ]
+  },
+  {
+    "id": "waves",
+    "wordCounts": {
+      "tell": 19,
+      "more": 34,
+      "deep": 137
+    },
+    "tellSentences": 3,
+    "correction": "Qualified particle motion as deep-water/roughly circular; retained tsunami cause without implying tides cause tsunamis or a safe beach forecast.",
+    "familyJudgment": "Leon: judge the tsunami mention for comfort and confirm the model never functions as a beach-safety signal.",
+    "evidenceSections": "NOAA Waves: wind transfer, local circular motion and seafloor-displacement paragraph. The source’s absolute “water does not travel” is qualified in the rewrite.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://oceanservice.noaa.gov/facts/wavesinocean.html"
+    ]
+  },
+  {
+    "id": "coral",
+    "wordCounts": {
+      "tell": 19,
+      "more": 33,
+      "deep": 136
+    },
+    "tellSentences": 3,
+    "correction": "Polyp feeding, hard-coral framework and algal partnership checked; limited symbiosis to many shallow-water corals rather than all coral.",
+    "familyJudgment": "Leon: judge tentacle feeding and tissue wording, non-graphic art, and the single no-touch line; local/cultural approval remains separate.",
+    "evidenceSections": "NOAA Coral: polyp/skeleton and symbiosis paragraphs. Coral capture is calm, with no graphic detail.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://oceanservice.noaa.gov/facts/coral.html"
+    ]
+  },
+  {
+    "id": "plankton",
+    "wordCounts": {
+      "tell": 13,
+      "more": 36,
+      "deep": 132
+    },
+    "tellSentences": 3,
+    "correction": "Drift-based classification and food roles checked; avoided calling all plankton tiny, plants, or passive motionless particles.",
+    "familyJudgment": "Leon: judge the calm eating/being-eaten explanation and jellyfish example; no independent-reading assessment is claimed.",
+    "evidenceSections": "NOAA Plankton: defining current-limited movement, life stages, phytoplankton and zooplankton/krill paragraphs.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://oceanservice.noaa.gov/facts/plankton.html"
+    ]
+  },
+  {
+    "id": "seagrass",
+    "wordCounts": {
+      "tell": 17,
+      "more": 33,
+      "deep": 135
+    },
+    "tellSentences": 3,
+    "correction": "Photosynthesis, rhizomes, flowering and habitat functions checked; Florida examples are not presented as a Guam species list.",
+    "familyJudgment": "Leon: judge plant reproduction, gentle turtle feeding and no-trampling wording; no collecting or boat activity is invited.",
+    "evidenceSections": "NOAA Florida Keys: What Is Seagrass, Importance of Seagrass and Threats. Rhizomes and nurseries are biological examples, not local species claims.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://floridakeys.noaa.gov/plants/seagrass.html"
+    ]
+  },
+  {
+    "id": "deep-ocean",
+    "wordCounts": {
+      "tell": 20,
+      "more": 35,
+      "deep": 132
+    },
+    "tellSentences": 3,
+    "correction": "Pressure in all directions and sunlight loss checked separately; removed any suggestion of a child diving or pressure demonstration.",
+    "familyJudgment": "Leon: judge the squeeze language and specialist-only framing; no breath-holding, diving or crushing experiment is suggested.",
+    "evidenceSections": "NOAA Pressure: pressure/depth; WHOI Pressure: all-directions and engineered vehicles; NOAA Light: sunlight/twilight/aphotic sections. No crushing demonstration reused.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://oceanservice.noaa.gov/facts/pressure.html",
+      "https://oceanexplorer.noaa.gov/ocean-fact/light-distributed/",
+      "https://www.whoi.edu/ocean-learning-hub/ocean-facts/why-is-pressure-different-in-the-ocean/"
+    ]
+  },
+  {
+    "id": "octopus",
+    "wordCounts": {
+      "tell": 18,
+      "more": 32,
+      "deep": 130
+    },
+    "tellSentences": 3,
+    "correction": "Added the source's suction mechanism; pigment-sac expansion and texture checked. Removed overbroad universal small-gap claim.",
+    "familyJudgment": "Leon: judge arm/sucker anatomy and food handling; art must not invite touching or handling an octopus.",
+    "evidenceSections": "Smithsonian Cephalopods: Arms, Tentacles and Suckers; Masters of Disguise. Color and grip mechanisms checked separately.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://ocean.si.edu/ocean-life/invertebrates/octopuses-squids-and-relatives"
+    ]
+  },
+  {
+    "id": "turtle-breath",
+    "wordCounts": {
+      "tell": 19,
+      "more": 32,
+      "deep": 129
+    },
+    "tellSentences": 3,
+    "correction": "Canonical turtle-breath retained; lungs/surfacing and life-stage habitat checked. Deep now follows one breathing/habitat explanation; unrelated fat-name and diet facts removed, original sensitivity flags preserved.",
+    "familyJudgment": "Leon: judge lungs and egg-laying wording; keep distance, no chase/feed/touch, nesting-route and no-breath-holding rules across the reader paths. Body-fat sensitivity remains as original metadata, not a new child-facing claim.",
+    "evidenceSections": "NOAA Green Turtle: Behavior and Diet, Appearance and life-stage habitats; OR&R: air-breathing/Living the Ocean Life and lung paragraphs. Pollution harms are not introduced into child copy.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.fisheries.noaa.gov/species/green-turtle",
+      "https://response.restoration.noaa.gov/about/media/how-do-oil-spills-affect-sea-turtles.html"
+    ]
+  },
+  {
+    "id": "food-web",
+    "wordCounts": {
+      "tell": 11,
+      "more": 36,
+      "deep": 139
+    },
+    "tellSentences": 3,
+    "correction": "Arrow direction and alternative prey checked; explained possible rather than deterministic effects. No claim that producers create energy from nothing.",
+    "familyJudgment": "Leon: judge animals eating animals and the meaning of arrows; the exhibit remains a limited model rather than a real reef forecast.",
+    "evidenceSections": "NOAA Aquatic Food Webs: What Is a Food Web, Producers, Consumers and Trophic Cascades. Alternative-prey effect is possible, not a guaranteed simulation result.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.noaa.gov/education/resource-collections/marine-life/aquatic-food-webs"
+    ]
+  },
+  {
+    "id": "bats",
+    "wordCounts": {
+      "tell": 22,
+      "more": 31,
+      "deep": 136
+    },
+    "tellSentences": 3,
+    "correction": "Replaced unavailable Smithsonian citation with Maryland DNR plus NPS wing/echo pages; mammal traits and feeding buzz supported. Not all bats use identical senses.",
+    "familyJudgment": "Leon: judge milk, finger bones and insect predation; keep the brief no-touch instruction and non-frightening art.",
+    "evidenceSections": "NPS How Bats Fly: Bat Wing Anatomy; NPS Echolocation: opening and feeding-buzz explanation; Maryland DNR: mammal traits and handling note. Outdated two-group taxonomy not reused.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://home.nps.gov/subjects/bats/how-bats-fly.htm",
+      "https://www.nps.gov/subjects/bats/echolocation.htm",
+      "https://dnr.maryland.gov/wildlife/pages/plants_wildlife/bats/index.aspx"
+    ]
+  },
+  {
+    "id": "butterflies",
+    "wordCounts": {
+      "tell": 19,
+      "more": 32,
+      "deep": 131
+    },
+    "tellSentences": 3,
+    "correction": "Life stages checked in Smithsonian teaching text; monarch feeding example checked in NPS. Removed universal claims about adult lifespan and caterpillar diets.",
+    "familyJudgment": "Leon: judge eggs and transformation language; pupa is a changing life stage, not a new unrelated animal.",
+    "evidenceSections": "Smithsonian Butterflies and Beyond: Short Lifespans and Butterflies Can’t Do It Alone, excluding its overgeneral adult-lifespan figure; NPS Monarch: larval food and coiled adult mouthpart.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://home.nps.gov/articles/monarch-butterfly.htm",
+      "https://naturalhistory.si.edu/education/teaching-resources/life-science/butterflies-and-beyond"
+    ]
+  },
+  {
+    "id": "frogs",
+    "wordCounts": {
+      "tell": 15,
+      "more": 34,
+      "deep": 138
+    },
+    "tellSentences": 3,
+    "correction": "Kept development species-specific; adult aquatic habit, filter-feeding larvae and limb functions checked. General breathing claims removed for lack of detail in cited page.",
+    "familyJudgment": "Leon: judge body change and food handling; observe in pictures rather than handling, collecting, keeping or releasing frogs.",
+    "evidenceSections": "Smithsonian African Clawed Frog: Physical Description, Native Habitat, Food/Eating Habits and Reproduction and Development. No generic all-frogs-leave-water assertion.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://nationalzoo.si.edu/animals/african-clawed-frog"
+    ]
+  },
+  {
+    "id": "bees",
+    "wordCounts": {
+      "tell": 17,
+      "more": 34,
+      "deep": 138
+    },
+    "tellSentences": 3,
+    "correction": "Gardens pages unavailable; FDA Biology of Pollination/Bee's Dinner Plate provides direct replacement evidence. Distinguished transfer from seed formation and same-species compatibility.",
+    "familyJudgment": "Leon: judge anther/stigma vocabulary and plant reproduction without human-body comparisons; watch bees from a distance without catching or disturbing them.",
+    "evidenceSections": "FDA: Biology of Pollination and A Bee’s Dinner Plate; USDA handbook PDF p.1 section 645.1301A: pollination/seed connection. No crop-value, medical or population-count claims copied.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.fda.gov/animal-veterinary/animal-health-literacy/helping-agricultures-helpful-honey-bees",
+      "https://directives.nrcs.usda.gov/sites/default/files2/1719488988/Subpart%20M%20%E2%80%93%20Pollinator%20Habitat%20Considerations%20for%20Range%20and%20Pasturelands.pdf"
+    ]
+  },
+  {
+    "id": "camouflage",
+    "wordCounts": {
+      "tell": 18,
+      "more": 34,
+      "deep": 136
+    },
+    "tellSentences": 3,
+    "correction": "Added Florida Museum's full camouflage explanation; removed unsupported pigment/structural-color digression. Warning and concealment distinguished, without claiming invisibility.",
+    "familyJudgment": "Leon: judge the non-graphic predator and unpleasant-food explanation; no tasting, catching or handling is suggested.",
+    "evidenceSections": "Florida Museum: full What’s Going On explanation; used camouflage and warning-color paragraphs, not its activity instructions or overbroad mimicry equivalence.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.floridamuseum.ufl.edu/educators/resource/butterflies-and-moths-camouflage/"
+    ]
+  },
+  {
+    "id": "dolphins",
+    "wordCounts": {
+      "tell": 19,
+      "more": 34,
+      "deep": 133
+    },
+    "tellSentences": 3,
+    "correction": "Added NOAA Ocean Today breathing transcript; species page supports nursing, changing groups and varied hunting. Removed unnecessary fish-gill comparison and unsupported universal behavior.",
+    "familyJudgment": "Leon: judge milk feeding, blowhole language and calm predation; retain distance/no-feeding/no-chasing expectations.",
+    "evidenceSections": "NOAA Common Bottlenose Dolphin: Behavior and Diet, nursing and harassment; Ocean Today: breathing/blowhole sentence. Did not reuse the anatomy transcript’s questionable brain-rank/hearing-distance claims.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.fisheries.noaa.gov/species/common-bottlenose-dolphin",
+      "https://oceantoday.noaa.gov/dolphinanatomy/"
+    ]
+  },
+  {
+    "id": "habitats",
+    "wordCounts": {
+      "tell": 19,
+      "more": 33,
+      "deep": 131
+    },
+    "tellSentences": 3,
+    "correction": "NPS background and tree/soil examples checked; removed broad conservation claims not needed to explain a habitat match.",
+    "familyJudgment": "Leon: judge the home-versus-nest distinction; picture matching must not imply moving wildlife or building a captive habitat.",
+    "evidenceSections": "NPS Food, Water, Shelter, Space: Background and Procedure tree/soil examples. Did not repeat its absolute native-habitat-only assertion.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.nps.gov/teachers/classrooms/food-water-shelter-space.htm"
+    ]
+  },
+  {
+    "id": "migration",
+    "wordCounts": {
+      "tell": 17,
+      "more": 30,
+      "deep": 134
+    },
+    "tellSentences": 3,
+    "correction": "Restricted migration example to eastern North American monarchs; multigeneration northward journey and long-lived autumn generation checked. Not a claim about Guam butterflies.",
+    "familyJudgment": "Leon: judge the cross-generation explanation and North America/Mexico names; migration is not a rule for every butterfly.",
+    "evidenceSections": "NPS Continental Nomads: A Relay Race Like No Other; NPS Monarch: nectar/milkweed and migration-route habitat. Eastern population is explicitly named.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.nps.gov/subjects/pollinators/migratingmonarchs.htm",
+      "https://home.nps.gov/articles/monarch-butterfly.htm"
+    ]
+  },
+  {
+    "id": "insect-flight",
+    "wordCounts": {
+      "tell": 17,
+      "more": 34,
+      "deep": 139
+    },
+    "tellSentences": 3,
+    "correction": "Replaced dead Smithsonian page with UF flight explanation and NC State locomotion; retained NC State wing reinforcement. Avoided claiming all muscles attach indirectly.",
+    "familyJudgment": "Leon: judge lift/thorax vocabulary and body detail; observation and paper drawing only, with no insect collection.",
+    "evidenceSections": "NC State Wings: veins; Locomotion: Flight section; University of Florida Flight Explained: lift, bee strokes and rotation. No muscle-percentage claim used.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://genent.cals.ncsu.edu/bug-bytes/thorax/wings-2/",
+      "https://onlineentomology.ifas.ufl.edu/about/articles/entomology/insect-flight-explained-the-science-behind-the-buzz/",
+      "https://genent.cals.ncsu.edu/bug-bytes/thorax/locomotion/"
+    ]
+  },
+  {
+    "id": "bird-feathers",
+    "wordCounts": {
+      "tell": 13,
+      "more": 38,
+      "deep": 137
+    },
+    "tellSentences": 3,
+    "correction": "Cornell anatomy/types/function sections read; removed unrelated penguin sentence and repeated collection warnings. Structure-function explanation supported.",
+    "familyJudgment": "Leon: judge anatomy and insulation wording; keep observation to pictures or feathers left in place, without collecting or touching wild feathers.",
+    "evidenceSections": "Cornell All About Feathers: Feather Structure, Wing/Tail/Contour/Down types and Feather Function. No species-independent waterproofing guarantee.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://academy.allaboutbirds.org/feathers-article/"
+    ]
+  },
+  {
+    "id": "blue-sky",
+    "wordCounts": {
+      "tell": 19,
+      "more": 34,
+      "deep": 134
+    },
+    "tellSentences": 3,
+    "correction": "Wavelength-dependent scattering and longer sunset path checked; Mars comparison limited to the cited rover observations. No claim that blue is the only scattered color.",
+    "familyJudgment": "Leon: judge wavelength vocabulary and the single Sun warning; sunset pictures are safer than directing a child to watch the Sun.",
+    "evidenceSections": "NASA Blue Sky: scattering/wavelength, red sunset and Mars atmosphere sections. Did not equate blue with all short-wavelength light.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://spaceplace.nasa.gov/blue-sky/en/"
+    ]
+  },
+  {
+    "id": "clouds",
+    "wordCounts": {
+      "tell": 24,
+      "more": 33,
+      "deep": 138
+    },
+    "tellSentences": 3,
+    "correction": "Condensation nuclei, expansion cooling and simultaneous evaporation checked; vapor distinguished from visible drops. No single cloud shape used as a forecast.",
+    "familyJudgment": "Leon: judge invisible vapor versus visible drops and the saturation term; no heated-water or smoke activity is proposed.",
+    "evidenceSections": "NOAA Clouds: definition; How Clouds Form: Nuclei and Temperature’s Role. Did not copy the page’s misleading claim that isolated molecules need a flatter surface to bond.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.noaa.gov/jetstream/clouds",
+      "https://www.noaa.gov/jetstream/clouds/how-clouds-form"
+    ]
+  },
+  {
+    "id": "rain",
+    "wordCounts": {
+      "tell": 18,
+      "more": 32,
+      "deep": 140
+    },
+    "tellSentences": 3,
+    "correction": "Droplet/updraft mechanism, ice route and drop shape checked in USGS; removed evaporation-before-ground claim not established by this page's relevant text.",
+    "familyJudgment": "Leon: judge the weather language and indoor observation line; no entering floodwater or collecting rain during a storm.",
+    "evidenceSections": "USGS Precipitation: drop-growth/updraft, ice-crystal growth and What Do Raindrops Look Like. Shape rather than an unsupported local rain statistic supplies the last example.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.usgs.gov/water-science-school/science/precipitation-and-water-cycle"
+    ]
+  },
+  {
+    "id": "rainbows",
+    "wordCounts": {
+      "tell": 26,
+      "more": 33,
+      "deep": 136
+    },
+    "tellSentences": 3,
+    "correction": "Refraction/reflection geometry and secondary reversed bow checked; removed filler about collecting an end. No outdoor storm-observation invitation.",
+    "familyJudgment": "Leon: judge the two-reflection explanation and whether the picture-only safety line clearly rules out direct Sun viewing and thunderstorm observation.",
+    "evidenceSections": "NWS Flagstaff: What Makes the Bow and What Makes a Double Rainbow. NASA Sun reference used only for the no-direct-viewing safety constraint.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.weather.gov/fgz/Rainbow",
+      "https://science.nasa.gov/sun/facts/"
+    ]
+  },
+  {
+    "id": "wind",
+    "wordCounts": {
+      "tell": 15,
+      "more": 33,
+      "deep": 132
+    },
+    "tellSentences": 3,
+    "correction": "Used readable NOAA NESDIS replacement for empty/timed-out Boulder video page; pressure-gradient explanation retained without copying the source's misleading diffusion analogy.",
+    "familyJudgment": "Leon: judge pressure wording; any real observation stays indoors or safely sheltered, and the offline article supplies no current wind guidance.",
+    "evidenceSections": "NOAA NESDIS Why Does Wind Blow: temperature/pressure explanation. Coastal example is a general consequence; not a measured Guam breeze. Diffusion analogy rejected.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.nesdis.noaa.gov/about/k-12-education/atmosphere/why-does-wind-blow"
+    ]
+  },
+  {
+    "id": "lightning",
+    "wordCounts": {
+      "tell": 25,
+      "more": 36,
+      "deep": 136
+    },
+    "tellSentences": 3,
+    "correction": "Electrical separation, heating and sound mechanism checked; removed timing/counting and redundant shelter instructions. Old unsafe audio remains prohibited by preserved sensitiveNotes.",
+    "familyJudgment": "Leon: judge fear/comfort and house-shelter wording; ensure the single urgent safety line remains visible at every layer and never reuse the older lightning clip.",
+    "evidenceSections": "NOAA NESDIS: charge separation and What Causes Thunder; NWS Lightning Indoors: substantial shelter/windows. Do not use the source’s outdoor timing activity.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.nesdis.noaa.gov/about/k-12-education/severe-weather/what-causes-lightning-and-thunder",
+      "https://www.weather.gov/safety/lightning-indoors"
+    ]
+  },
+  {
+    "id": "typhoons",
+    "wordCounts": {
+      "tell": 23,
+      "more": 36,
+      "deep": 133
+    },
+    "tellSentences": 3,
+    "correction": "Regional names and warm-water circulation checked; distinguished tropical-cyclone umbrella from sufficiently strong typhoon/hurricane. No current-warning claim.",
+    "familyJudgment": "Leon: judge Guam storm comfort and official-warning line; adults retain preparation responsibility, with cultural/regional wording still pending review.",
+    "evidenceSections": "NOAA Hurricane/Typhoon: definition, strength and location; NASA Hurricanes: rising moist air and rotation. Avoided the NASA page’s wording that calls only hurricane-strength storms tropical cyclones.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://oceanservice.noaa.gov/facts/cyclone.html",
+      "https://spaceplace.nasa.gov/hurricanes/en/"
+    ]
+  },
+  {
+    "id": "water-cycle",
+    "wordCounts": {
+      "tell": 19,
+      "more": 33,
+      "deep": 137
+    },
+    "tellSentences": 3,
+    "correction": "NOAA pools/fluxes, infiltration and transpiration sections checked; replaced repeated definitions with a branching route and storage explanation.",
+    "familyJudgment": "Leon: judge state-change vocabulary and the idea of storage; the water model is not drinking-water advice or a live flood forecast.",
+    "evidenceSections": "NOAA The Water Cycle: pools, fluxes, evaporation, condensation, infiltration and transpiration. Branching journey is illustrative, not a traced physical drop.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.noaa.gov/education/resource-collections/freshwater/water-cycle"
+    ]
+  },
+  {
+    "id": "seasons",
+    "wordCounts": {
+      "tell": 21,
+      "more": 36,
+      "deep": 132
+    },
+    "tellSentences": 3,
+    "correction": "Tilt, angle/day length and opposite hemispheres checked; removed unsupported generic tropical wet/dry assertion rather than treating four snowy seasons as universal.",
+    "familyJudgment": "Leon: judge hemisphere wording and place-specific seasonal meaning; use drawings for models, with no direct Sun viewing.",
+    "evidenceSections": "Space Place Seasons: tilt, axis direction and opposite hemispheres; no unsourced tropical seasonal generalization retained.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://spaceplace.nasa.gov/seasons/en/"
+    ]
+  },
+  {
+    "id": "forecast",
+    "wordCounts": {
+      "tell": 16,
+      "more": 31,
+      "deep": 137
+    },
+    "tellSentences": 3,
+    "correction": "Observation instruments and human/model combination checked; one current-information line replaces repeated warning blocks. No accuracy guarantee or live forecast.",
+    "familyJudgment": "Leon: judge prediction-versus-promise wording and confirm children cannot mistake stored examples for today's forecast; no balloon launching or outdoor storm tools.",
+    "evidenceSections": "NOAA Weather Observations: Observation Methods and Weather Forecasting. Uncertainty is a limit of prediction, not a claim of a measured accuracy rate.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.noaa.gov/education/resource-collections/weather-atmosphere/weather-observations"
+    ]
+  },
+  {
+    "id": "guam",
+    "wordCounts": {
+      "tell": 18,
+      "more": 35,
+      "deep": 137
+    },
+    "tellSentences": 3,
+    "correction": "USGS geology abstract and Guam project overview support location, rock regions, uplift and water differences; NPS supports habitat diversity. No cultural history inferred.",
+    "familyJudgment": "Leon: judge Guam identity/place language and pronunciation; this natural-history page does not represent CHamoru cultural approval, and its generic art is not an accurate map.",
+    "evidenceSections": "USGS 403-A PDF: abstract, printed pp.A1–A2 (PDF pp.8–9); Guam Coral Reef Project: Overview and Motivation; NPS Nature: park habitats. Used descriptive geology, not historic hazard odds or cultural claims.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.nps.gov/wapa/learn/nature/index.htm",
+      "https://pubs.usgs.gov/pp/0403a/report.pdf",
+      "https://www.usgs.gov/centers/pcmsc/science/coral-reef-project-guam?page=1"
+    ]
+  },
+  {
+    "id": "islands",
+    "wordCounts": {
+      "tell": 17,
+      "more": 34,
+      "deep": 139
+    },
+    "tellSentences": 3,
+    "correction": "NPS volcanic growth/hot-spot/subsidence and uplifted limestone checked; removed unsupported blanket sand-island formation claims. Source's swapped Guam/Saipan park labels not reused.",
+    "familyJudgment": "Leon: judge place-name and island-context wording; the Hawaii example is not a claim that Guam formed by the same hot-spot process.",
+    "evidenceSections": "NPS Pacific Islands atlas: Geology and Stratigraphy, hot-spot growth/erosion/subsidence and uplifted limestone; USGS About Volcanoes: accumulating eruptive products. NPS swaps Guam/Saipan park codes in prose; those labels are not reused.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://home.nps.gov/subjects/geology/geodiversity-atlas-pacific-islands-network-index.htm",
+      "https://www.usgs.gov/programs/VHP/about-volcanoes"
+    ]
+  },
+  {
+    "id": "reef",
+    "wordCounts": {
+      "tell": 22,
+      "more": 33,
+      "deep": 139
+    },
+    "tellSentences": 3,
+    "correction": "NOAA reef protection/tutorial and USGS Guam sediment overview checked; no guaranteed storm protection. Local runoff explanation replaces generic stewardship padding.",
+    "familyJudgment": "Leon: judge local stewardship, non-graphic habitat/feeding wording and no-touch line; cultural approval and actual shore safety remain separate.",
+    "evidenceSections": "NOAA Coral/Protection/Tutorial: framework, habitat and wave buffer; USGS Guam Project: Overview and Motivation for land-to-sea sediment. No medical-benefit or precise protection percentage claim retained.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://oceanservice.noaa.gov/facts/coral.html",
+      "https://oceanservice.noaa.gov/facts/coral_protect.html",
+      "https://oceanservice.noaa.gov/education/tutorial_corals/coral07_importance.html",
+      "https://www.usgs.gov/centers/pcmsc/science/coral-reef-project-guam?page=1"
+    ]
+  },
+  {
+    "id": "trench",
+    "wordCounts": {
+      "tell": 27,
+      "more": 34,
+      "deep": 134
+    },
+    "tellSentences": 3,
+    "correction": "USGS plate direction and NOAA deepest-ocean location checked; approximate eleven kilometers avoids false precision. Removed unsupported trench-life detail, retaining exploration constraints.",
+    "familyJudgment": "Leon: judge Mariana/Challenger/Philippine Sea pronunciation and geographic framing; no diving or pressure experiment is implied, and cultural review remains pending.",
+    "evidenceSections": "USGS Philippine Sea plate publication: first tectonic paragraphs; NOAA Ocean Depth: Challenger Deep and approximate depth; pressure/light pages: physical environment. The USGS full map PDF was not needed for the quoted tectonic abstract.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://oceanservice.noaa.gov/facts/oceandepth.html",
+      "https://www.usgs.gov/publications/seismicity-earth-1900-2012-philippine-sea-plate-and-vicinity",
+      "https://oceanservice.noaa.gov/facts/pressure.html",
+      "https://oceanexplorer.noaa.gov/ocean-fact/light-distributed/",
+      "https://www.whoi.edu/ocean-learning-hub/ocean-facts/why-is-pressure-different-in-the-ocean/"
+    ]
+  },
+  {
+    "id": "mountains",
+    "wordCounts": {
+      "tell": 19,
+      "more": 34,
+      "deep": 137
+    },
+    "tellSentences": 3,
+    "correction": "Plate/fault uplift and glacial erosion checked; removed specific mountain naming and numerical uplift claims. USGS volcano overview supports volcanic contrast.",
+    "familyJudgment": "Leon: judge Alaska/world-place context; no climbing, rock breaking or physical folding task is required by the revised layers.",
+    "evidenceSections": "USGS Denali Geology: uplift/fault and glacial-erosion paragraphs; About Volcanoes: volcanic versus folded/faulted mountain building. Did not reuse partly-molten-mantle simplification, height ranking, current official mountain name or uplift-rate estimate.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.usgs.gov/geology-and-ecology-of-national-parks/geology-denali-national-park-and-preserve",
+      "https://www.usgs.gov/programs/VHP/about-volcanoes"
+    ]
+  },
+  {
+    "id": "rivers",
+    "wordCounts": {
+      "tell": 16,
+      "more": 33,
+      "deep": 139
+    },
+    "tellSentences": 3,
+    "correction": "USGS meander text supports outside erosion/inside deposition; rivers page supports groundwater and inland endings. No claim that every river reaches the sea.",
+    "familyJudgment": "Leon: judge local/world river framing; use maps or drawings, never enter a river or floodwater to test the explanation.",
+    "evidenceSections": "USGS Rivers: What Is a River, groundwater and Where Does Water Go; Find-A-Feature Meander: complete mechanism paragraph. Not all rivers reach an ocean.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.usgs.gov/water-science-school/science/rivers-streams-and-creeks",
+      "https://www.usgs.gov/educational-resources/find-feature-meander"
+    ]
+  },
+  {
+    "id": "continents",
+    "wordCounts": {
+      "tell": 19,
+      "more": 35,
+      "deep": 141
+    },
+    "tellSentences": 3,
+    "correction": "Added University of Hawai‘i's continent-convention text; USGS projection and tectonic overview support model limits. Removed unsupported complete seven-name list from weak citations.",
+    "familyJudgment": "Leon: judge grouping and boundary conventions, including Europe/Asia and Guam's world context; no political or cultural approval is implied by factual review.",
+    "evidenceSections": "UH Continent Confusion: full explanatory paragraphs/figure description; USGS This Dynamic Planet: Introduction (tectonic plates); USGS projections: opening explanation. No Wikipedia page was used as evidence, though UH credits its illustrative figure to Wikipedia; no figure imported.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://pubs.usgs.gov/imap/2800/",
+      "https://www.usgs.gov/faqs/how-are-different-map-projections-used",
+      "https://manoa.hawaii.edu/exploringourfluidearth/physical/world-ocean/ocean-basins-and-continents/weird-science-continent-confusion"
+    ]
+  },
+  {
+    "id": "maps",
+    "wordCounts": {
+      "tell": 20,
+      "more": 36,
+      "deep": 138
+    },
+    "tellSentences": 3,
+    "correction": "USGS symbols landing text and full cartographic handout read; legend/scale/contours and purpose explained. Removed repeated non-navigation warnings.",
+    "familyJudgment": "Leon: judge place labels and the single real-navigation line; generic Library art must not be mistaken for a measured chart.",
+    "evidenceSections": "USGS Topographic Map Symbols: full publication abstract (not a claim to read the linked PDF); Cartographic Information: Scale, Legend, Symbols, Contour Lines and Interval. No real navigation guidance inferred.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.usgs.gov/publications/topographic-map-symbols",
+      "https://pubs.usgs.gov/of/1998/of98-805/lessons/chpt1/act3-hnd.htm"
+    ]
+  },
+  {
+    "id": "directions",
+    "wordCounts": {
+      "tell": 14,
+      "more": 39,
+      "deep": 136
+    },
+    "tellSentences": 2,
+    "correction": "USGS three-north definitions and time-dependent declination checked; clarified compass direction is local, not a guaranteed bearing straight at the magnetic pole.",
+    "familyJudgment": "Leon: judge map conventions and local navigation framing; decorative compass is not a live sensor and the real-trip safety line must remain clear.",
+    "evidenceSections": "USGS North Arrows: full true/magnetic/grid definitions and date-dependence paragraph. Rotating a paper map is an explanatory observation.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.usgs.gov/faqs/what-do-different-north-arrows-a-usgs-topographic-map-mean?items_per_page=6&page=1"
+    ]
+  },
+  {
+    "id": "volcanoes",
+    "wordCounts": {
+      "tell": 21,
+      "more": 34,
+      "deep": 136
+    },
+    "tellSentences": 3,
+    "correction": "USGS vent, buoyancy/gas, accumulation and cooling/crystal mechanisms checked; removed generic plate-location list. No live hazard or eruption experiment.",
+    "familyJudgment": "Leon: judge eruption danger and place context, and keep calm picture-only framing; no heat, chemicals, lava approach or current hazard guidance.",
+    "evidenceSections": "USGS About Volcanoes: What Is a Volcano/Why Erupt; Nature of Volcanoes: magma/lava and cooling/crystallization paragraphs. No eruption-making instructions copied.",
+    "unresolvedFactualClaims": "None retained; removed or qualified claims are itemized in correction notes.",
+    "sourceUrls": [
+      "https://www.usgs.gov/programs/VHP/about-volcanoes",
+      "https://pubs.usgs.gov/gip/volc/nature.html"
+    ]
+  }
+]
