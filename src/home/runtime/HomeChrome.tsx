@@ -82,6 +82,7 @@ export function HomeChrome({
   onZoom,
   top,
   headerHeight,
+  rightInset = 0,
   onHeaderLayout,
   title,
   saveStatus,
@@ -93,6 +94,7 @@ export function HomeChrome({
   canRedo: boolean;
   top: number;
   headerHeight: number;
+  rightInset?: number;
   onHeaderLayout: (height: number) => void;
   title?: string;
   saveStatus?: React.ReactNode;
@@ -154,7 +156,7 @@ export function HomeChrome({
         <Tool label="Zoom in" symbol="+" onPress={() => onZoom(1.2)} />
         <Tool label="Zoom out" symbol="−" onPress={() => onZoom(1 / 1.2)} />
       </View>
-      <View style={{ position: "absolute", right: 8, top: headerHeight + 12, zIndex: 30, maxWidth: 74 }}>
+      <View style={{ position: "absolute", right: 8 + rightInset, top: headerHeight + 12, zIndex: 30, maxWidth: 74 }}>
         <ScrollView style={{ maxHeight: 280 }} contentContainerStyle={{ gap: 5 }}>
           {roomIds.map((id) => (
             <Pressable

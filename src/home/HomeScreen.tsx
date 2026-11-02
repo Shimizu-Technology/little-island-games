@@ -559,6 +559,7 @@ export function HomeScreen({
         canRedo={store.canRedo}
         top={inset.top}
         headerHeight={headerHeight}
+        rightInset={vertical ? 220 : 0}
         onHeaderLayout={setHeaderHeight}
         onBack={() => router.back()}
         onUndo={() => {
