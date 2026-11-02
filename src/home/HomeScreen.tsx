@@ -1,3 +1,4 @@
+import { homeRenderInput, type CharacterRenderer } from './characterRenderer';
 import {OccupantPoseGroup} from './OccupantPoseGroup';
 import { HandProp } from './art/PropShape';
 import { holdableIds, dispenserFan, type HoldableId } from './art/living';
@@ -72,7 +73,7 @@ const DecorArt=React.memo(function DecorArt({ item, tint, ...props }: React.Comp
 export type HomeScreenProps = Ownership & {
   badges?: BadgeId[];
   initialItem?: string;
-  renderCharacter?: (slot: Character["slot"], pose: Pose, reaction?:string, size?:number, held?:ReactNode, reduced?:boolean) => ReactNode;
+  renderCharacter?: CharacterRenderer;
   initialState?: unknown;
   persist?: (state: import("./model").HomeStateV2) => boolean;
   saveStatus?: ReactNode;
@@ -598,7 +599,7 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
             }}
           >
             <OccupantPoseGroup key={c.pose} width={frame.width*scale} height={frame.height*scale} mirrored={frame.mirrored} reduced={reduced}>
-              {renderCharacter?.(c.slot,c.pose,action,characterSize(c.slot)*scale,(()=>{const held=reaction?.slot===c.slot&&reaction.item?reaction.item:room.instances.find(i=>i.id===c.holding);return held?(holdableIds.includes(held.item as HoldableId)?<HandProp id={held.item as HoldableId} state={{empty:held.empty,on:held.powered}} tint={held.tint}/>:<DecorArt item={held.item} size={24}/>):undefined;})(),reduced) ?? (c.slot===0?<View style={{transform:[{scale:size/92}]}}><Placeholder pose={c.pose}/></View>:c.slot===1?<ReefFish size={size}/>:<CrabCompanion pose={c.pose==='lie'?'lie':c.pose==='stand'?'stand':'sit'} size={size} reduced={reduced} clacking={reaction?.slot===2}/>)}
+              {renderCharacter?.(homeRenderInput(c.slot,c.pose,action,characterSize(c.slot)*scale,(()=>{const held=reaction?.slot===c.slot&&reaction.item?reaction.item:room.instances.find(i=>i.id===c.holding);return held?(holdableIds.includes(held.item as HoldableId)?<HandProp id={held.item as HoldableId} state={{empty:held.empty,on:held.powered}} tint={held.tint}/>:<DecorArt item={held.item} size={24}/>):undefined;})(),reduced)) ?? (c.slot===0?<View style={{transform:[{scale:size/92}]}}><Placeholder pose={c.pose}/></View>:c.slot===1?<ReefFish size={size}/>:<CrabCompanion pose={c.pose==='lie'?'lie':c.pose==='stand'?'stand':'sit'} size={size} reduced={reduced} clacking={reaction?.slot===2}/>)}
             </OccupantPoseGroup>
             {asleep.includes(c.slot)&&c.pose==='lie'&&<Text pointerEvents="none" style={{position:'absolute',top:0,right:5,color:ink,fontSize:22}}>z</Text>}
             {reaction?.slot===c.slot && <Text pointerEvents="none" style={{position:'absolute',top:-25,left:0,right:0,textAlign:'center',fontSize:24,color:ink}}>{reaction.text}</Text>}

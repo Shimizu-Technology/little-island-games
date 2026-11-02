@@ -1,3 +1,4 @@
+import { homeCharacterRigPose } from "./characterPose";
 import { buildRoomIndex } from "./scene/graph";
 import { isLying, poseBox, resolvePose } from "../islander/rig/poses";
 import { capabilityOf, visualBox, type Socket } from "./world";
@@ -128,10 +129,7 @@ export function dropWorld(room: RoomState): DropWorld {
     people: room.characters.map((c) => {
       const contact = characterPoint(room, c),
         frame = characterFrame(room, c),
-        pose = resolvePose(
-          "front",
-          c.pose === "stand" ? (c.holding ? "hold" : "idle") : c.pose === "sit" ? "sit-front" : c.pose
-        ),
+        pose = resolvePose("front", homeCharacterRigPose(c.pose, c.holding && c.pose === "stand" ? "hold" : undefined)),
         box = poseBox(pose),
         unit = 224 / 132;
       const point = (x: number, y: number) => {
@@ -143,7 +141,7 @@ export function dropWorld(room: RoomState): DropWorld {
         return { x: frame.left + (frame.mirrored ? box.width - x : x) * unit, y: frame.top + y * unit };
       };
       const hand = point(...pose.joints.rightHand),
-        mouth = point(pose.joints.head[0], pose.joints.head[1] + 13);
+        mouth = point(pose.joints.head[0], pose.joints.head[1] + 20);
       return {
         slot: c.slot,
         ...contact,

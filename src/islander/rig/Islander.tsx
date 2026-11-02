@@ -3,6 +3,8 @@ import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from 'react-nati
 import { buildFor, defaultLook, normalizeLook, outfitPalettes, outfitDefaults, skinTones, type IslanderLook } from '../look';
 import { resolvePose, isLying, poseBox, type Point, type Pose, type Side, type View } from './poses';
 import { anchorsFor } from './wardrobe';
+import { characterPose, rigFace, rigIdle, type CharacterAction, type CharacterBase, type CharacterFace, type Facing, type RigLife } from './character';
+import { islanderAnchors, islanderOrigin, rigTransform } from './anchors';
 import { RewardArt } from './Rewards';
 import { Hair } from './Hair';
 import { Face } from './Face';
@@ -32,7 +34,7 @@ export function limbShape(a: Point, b: Point, c: Point, r: number, tip: number):
   return `M${edge(a,n,r)}L${edge(before,n,mid)}Q${edge(b,turn,mid*.82)} ${edge(after,m,mid)}${shin(1)}Q${c[0]+m[1]*tip*1.5} ${c[1]-m[0]*tip*1.5} ${edge(c,m,-tip)}${reverseShin}Q${edge(b,turn,-mid*.82)} ${edge(before,n,-mid)}L${edge(a,n,-r)}Q${a[0]-n[1]*r} ${a[1]+n[0]*r} ${edge(a,n,r)}Z`;
 }
 const between = (a: Point, b: Point, t: number): Point => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-export function IslanderShape({ pose, look: input = defaultLook, held, reduced = false }: { pose: Pose; look?: IslanderLook; held?: React.ReactNode; reduced?: boolean }) {
+export function IslanderShape({ pose, look: input = defaultLook, held, reduced = false, expression, blink = false, heldMirrored = false }: { pose: Pose; look?: IslanderLook; held?: React.ReactNode; reduced?: boolean; expression?: import('./poses').Expression; blink?: boolean; heldMirrored?: boolean }) {
   const look = normalizeLook(input), j = pose.joints, a = anchorsFor(pose), compact = !!pose.compact, front = pose.view === 'front';
   const skin = skinTones[look.skinTone], colors = look.palette ? outfitPalettes[look.palette] : outfitDefaults[look.outfit];
   const [hx, hy] = j.head, r = compact ? 12 : 28, sy = j.leftShoulder[1], hip = j.leftHip[1];
@@ -71,10 +73,10 @@ export function IslanderShape({ pose, look: input = defaultLook, held, reduced =
       {!compact && <><Path data-head="soft-square" d={`M${hx-r} ${hy-9}Q${hx-r} ${hy-28} ${hx} ${hy-28}Q${hx+r} ${hy-28} ${hx+r} ${hy-9}L${hx+r} ${hy+11}Q${hx+r} ${hy+28} ${hx} ${hy+28}Q${hx-r} ${hy+28} ${hx-r} ${hy+11}Z`} fill={skin}/><Path d={`M${hx+24} ${hy-7}V${hy+10}Q${hx+24} ${hy+24} ${hx+4} ${hy+26}Q${hx+28} ${hy+29} ${hx+28} ${hy+11}V${hy-7}Z`} fill="#7E5142" fillOpacity={.10} strokeWidth={0}/></>}</G>
     <G data-layer="clothing"><Clothes look={look} pose={pose} colors={colors}/>{compact && look.accessory === 'backpack' && backpack}</G>
     <G data-layer="front-limbs">{limb(frontArm, true)}</G>
-    <G data-layer="held" transform={`translate(${j.rightHand[0]-12} ${j.rightHand[1]-12})`}>{held}</G>
+    <G data-layer="held" transform={heldMirrored ? `translate(${j.rightHand[0]} ${j.rightHand[1]}) scale(-1 1) translate(-12 -12)` : `translate(${j.rightHand[0]-12} ${j.rightHand[1]-12})`}>{held}</G>
     <G data-layer="hands">{front || compact ? <>{hand('left')}{hand('right')}</> : hand(frontArm)}</G>
     <RewardArt look={look} pose={pose} layer="neckwear"/><G data-layer="front-hair"><Hair look={look} pose={pose}/></G>
-    <RewardArt look={look} pose={pose} layer="hair"/><G data-layer="face"><Face look={look} pose={pose}/></G>
+    <RewardArt look={look} pose={pose} layer="hair"/><G data-layer="face"><Face look={look} pose={pose} expression={expression} blink={blink}/></G>
     <G data-layer="hat" transform={`translate(${a.headTop[0]} ${a.headTop[1]}) scale(${compact ? 1 : 1.12} 1)`}>
       {look.hat === 'sunhat' && <G fill="#F4CC76"><Path d={compact ? 'M-11 3L-10 -2Q0 -5 10 -2L11 3Z' : 'M-19 7L-16 -2Q0 -6 16 -2L19 7Z'}/><Path d={compact ? 'M-15 4Q0 0 15 4Q0 8-15 4Z' : 'M-28 9Q-27 4-19 5H19Q27 4 28 9Q0 18-28 9Z'}/><Path d={compact ? 'M-10 1H10' : 'M-12 2Q0 5 12 2'} stroke="#D47F66" strokeWidth={3}/></G>}
       {look.hat === 'cap' && <G fill={colors.secondary}><Path d={compact ? 'M-12 4Q-11-5 0-5Q11-5 12 4Z' : 'M-23 10Q-24-5 0-5Q23-4 23 10Z'}/><Path d={front ? 'M0 5Q20 1 22 8Q12 12 0 8Z' : 'M-8 5H8V10H-8Z'} fill={colors.primary}/></G>}
@@ -87,7 +89,35 @@ export function IslanderShape({ pose, look: input = defaultLook, held, reduced =
   </G>{pose.id === 'lie-asleep' && !reduced && <SvgText x={38} y={12} transform="rotate(90 38 12)" fontSize={10} fill={ink}>z</SvgText>}</G>;
 }
 /** Static SVG; callers pre-render frames and swap opacity. Never runs a timer or worklet. */
-export const Islander = memo(function Islander({ view = 'front', pose = view === 'back' ? 0 : 'idle', look = defaultLook, size = 120, held, reduced = false }: { view?: View; pose?: string | number | Pose; look?: IslanderLook; size?: number; held?: React.ReactNode; reduced?: boolean }) {
+export type IslanderProps = RigLife & {
+  view?: View;
+  pose?: string | number | Pose;
+  look?: IslanderLook;
+  size?: number;
+  held?: React.ReactNode;
+  reduced?: boolean;
+  base?: CharacterBase;
+  action?: CharacterAction;
+  face?: CharacterFace | null;
+  facing?: Facing;
+  tilt?: number;
+  limbLag?: number;
+};
+export const Islander = memo(function Islander({ view = 'front', pose = view === 'back' ? 0 : 'idle', look = defaultLook, size = 120, held, reduced = false, base, action = null, face, facing = 'right', tilt = 0, limbLag = 0, mood, clock, seed, blink, breath }: IslanderProps) {
+  if (base) {
+    const life = rigIdle(clock, seed, reduced);
+    const options = { action, tilt, limbLag, reduced, breath: breath ?? life.breath };
+    const resolved = characterPose(base, action, reduced ? 0 : limbLag, tilt * (facing === 'left' ? -1 : 1));
+    const box = islanderAnchors(base, facing, options).bounds, origin = islanderOrigin(base);
+    const scale = size / 132;
+    return <Svg style={{overflow:'visible'}} width={box.width * scale} height={box.height * scale} viewBox={`${box.left} ${box.top} ${box.width} ${box.height}`} accessible={false}>
+      <G data-rig="islander" data-base={base} data-action={action ?? 'none'} transform={rigTransform(facing, options)}>
+        <G transform={`translate(${-origin[0]} ${-origin[1]})`}>
+          <IslanderShape pose={resolved} look={look} held={held} reduced={reduced} expression={rigFace(face, mood, action)} heldMirrored={facing === 'left'} blink={!reduced && (blink ?? life.blink)}/>
+        </G>
+      </G>
+    </Svg>;
+  }
   const resolved = resolvePose(view, pose), box = poseBox(resolved), scale = size / 132;
   return <Svg key={`${view}:${resolved.id}`} width={box.width * scale} height={box.height * scale} viewBox={`0 0 ${box.width} ${box.height}`} accessible={false}><IslanderShape pose={resolved} look={look} held={held} reduced={reduced}/></Svg>;
 });

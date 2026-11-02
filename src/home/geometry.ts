@@ -3,7 +3,7 @@ import { buildRoomIndex, itemEntity } from "./scene/graph";
 import { resolve } from "./scene/resolve";
 import { characterEntityId, roomPoint } from "./scene/types";
 import { isLying, poseBox, resolvePose } from "../islander/rig/poses";
-import { homeCharacterPose } from "./characterPose";
+import { homeCharacterRigPose } from "./characterPose";
 import { socketsOf, socketPoint } from "./interactions";
 import { decorSpec, isSeat, itemSpec } from "./catalog";
 import { freeFloor } from "./freeFloor";
@@ -234,7 +234,7 @@ export function characterFrame(room: import("./model").RoomState, c: import("./m
   const contact = characterPoint(room, c),
     seat = room.instances.find((i) => i.id === (c.socket?.itemId ?? c.seatId));
   const mirrored = seat ? seat.mirrored !== (seat.rotation === 180 || seat.rotation === 270) : c.facing === "left";
-  const pose = resolvePose("front", homeCharacterPose(c.pose, reaction)),
+  const pose = resolvePose("front", homeCharacterRigPose(c.pose, reaction)),
     box = poseBox(pose),
     unit = characterSize(c.slot) / 132;
   if (c.slot === 0)
@@ -258,7 +258,7 @@ export function characterFrame(room: import("./model").RoomState, c: import("./m
 /** The visible hand follows the same pose, lying transform and mirror as the rig. */
 export function characterHand(room: import("./model").RoomState, c: import("./model").Character, reaction?: string) {
   const frame = characterFrame(room, c, reaction),
-    pose = resolvePose("front", homeCharacterPose(c.pose, reaction)),
+    pose = resolvePose("front", homeCharacterRigPose(c.pose, reaction)),
     box = poseBox(pose),
     unit = characterSize(c.slot) / 132;
   let [x, y] = pose.joints.rightHand;
