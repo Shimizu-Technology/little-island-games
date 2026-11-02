@@ -18,15 +18,15 @@ describe('one drop rule for preview and commit',()=>{
    expect(d.py+body.top).toBeGreaterThanOrEqual(8);expect(d.py+body.bottom).toBeLessThanOrEqual(552);
   }
  });
- it('returns nothing for nonfinite coordinates or a fully blocked room',()=>{
-  expect(resolveDrop(world,{slot:0},NaN,400)).toBeUndefined();
-  expect(resolveDrop({...world,bodies:[{...dropBody(instance('wall','bed',0,0)),w:20,h:12}]},{slot:0},400,450)).toBeUndefined();
+ it('returns a finite fallback for nonfinite coordinates and staging for a fully blocked room',()=>{
+  expect(Number.isFinite(resolveDrop(world,{slot:0},NaN,400).px)).toBe(true);
+  expect(resolveDrop({...world,bodies:[{...dropBody(instance('wall','bed',0,0)),w:20,h:12}]},{slot:0},400,450).kind).toBe('staging');
  });
  it('distinguishes mouth and hand by head/hand targets, with one held item',()=>{
   const body={...dropBody(instance('food','fruit-bowl',0,0)),holdable:true,edible:'food' as const};
   const w={...world,people:[{slot:0,x:400,y:500}]};
   expect(resolveDrop(w,body,442,416)?.kind).toBe('hand');expect(resolveDrop(w,body,400,340)?.kind).toBe('mouth');
-  expect(resolveDrop({...w,people:[{...w.people[0],holding:'other'}]},body,442,416)?.kind).toBe('hand');
+  expect(resolveDrop({...w,people:[{...w.people[0],holding:'other'}]},body,442,416)?.kind).toBe('floor');
  });
  it('uses free sockets, nearest surface cells, then floor',()=>{
   const w={...world,sockets:[{itemId:'seat',socketId:'a',x:400,y:450,pose:'sit' as const,occupied:1}]};
@@ -38,7 +38,7 @@ describe('one drop rule for preview and commit',()=>{
 describe('version 3 world invariants',()=>{
  it('migrates v1/v2 once, preserving original bytes, themes, identities and valid coordinates',()=>{
   const old=legacyStarterHome(),bytes=JSON.stringify(old),migrated=migrateHome(old)!;
-  expect(migrated.version).toBe(3);expect(validHome(migrated)).toBe(true);expect(JSON.stringify(old)).toBe(bytes);expect(migrateHome(migrated)).toBe(migrated);
+  expect(migrated.version).toBe(4);expect(validHome(migrated)).toBe(true);expect(JSON.stringify(old)).toBe(bytes);expect(migrateHome(migrated)).toBe(migrated);
   const v2={...starterHome(),version:2 as const};v2.rooms.home.instances.push(instance('chair','chair',12,8));v2.rooms.home.characters=[{slot:0,anchor:'chair',pose:'sit',seatId:'chair'}];
   const before=JSON.stringify(v2),v3=migrateHome(v2)!;expect(v3.rooms.home.characters[0].socket?.itemId).toBe('chair');expect(JSON.stringify(v2)).toBe(before);
  });

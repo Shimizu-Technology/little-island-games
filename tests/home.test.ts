@@ -1,4 +1,4 @@
-import { socketsOf } from "../src/home/interactions";
+import { socketPoint, socketsOf } from "../src/home/interactions";
 import { roomDefaultTheme } from '../src/home/art/roomDefaults';
 import { describe, expect, it } from 'vitest';
 import { catalog, furnitureIds, itemSpec } from '../src/home/catalog';
@@ -37,11 +37,11 @@ describe('versioned home saves and recovery', () => {
  });
  it('migrates the validated personalization envelope and round-trips backup/restore', () => {
   const save=initializePersonalization(emptySave()); save.personalization!.people.family.home=legacyStarterHome();
-  const migrated=initializePersonalization(save); expect(migrated.personalization!.people.family.home.version).toBe(3);
+  const migrated=initializePersonalization(save); expect(migrated.personalization!.people.family.home.version).toBe(4);
   expect(save.personalization!.people.family.home.version).toBe(1); expect(initializePersonalization(migrated)).toBe(migrated);
   expect(parseSave(JSON.stringify(migrated))).toEqual(migrated);
  });
- it.each([null,[],{}, { ...starterHome(),version:4 },{...starterHome(),extra:true}, {...starterHome(),current:'attic'}, {...starterHome(),rooms:{home:starterHome().rooms.home}}])('rejects malformed roots without mutation: %j', v=>{
+ it.each([null,[],{}, { ...starterHome(),version:5 },{...starterHome(),extra:true}, {...starterHome(),current:'attic'}, {...starterHome(),rooms:{home:starterHome().rooms.home}}])('rejects malformed roots without mutation: %j', v=>{
   const before=clone(v); expect(validHome(v)).toBe(false); expect(migrateHome(v)).toBeUndefined(); expect(v).toEqual(before);
  });
  it.each([{x:NaN},{x:Infinity},{x:-1},{x:16},{y:12},{y:1.5},{item:'unknown'},{layer:'wall'},{state:'broken'},{state:'active'},{rotation:45},{rotation:90},{mirrored:1},{id:'bad id'},{extra:1},{tint:'invalid'},{tint:undefined},{on:undefined},{on:'missing'}])('rejects malformed instance %j', changes=>{
@@ -54,7 +54,7 @@ describe('versioned home saves and recovery', () => {
  });
  it('preserves malformed legacy data for recovery instead of normalizing it',()=>{const old=legacyStarterHome();old.instances[0].x=-1;const before=clone(old);expect(migrateHome(old)).toBeUndefined();expect(old).toEqual(before);expect(validHome({...legacyStarterHome(),instances:[instance('s','sofa',0,0)],characters:[]})).toBe(false);});
  it('keeps earned-item and room-theme entitlement checks across every room',()=>{
-  const s=starterHome(); s.rooms.beach.instances.push(instance('unowned','abacus',0,9)); expect(validHome(s)).toBe(true); expect(entitledHome(s,[])).toBe(false); expect(entitledHome(s,['abacus'])).toBe(true);
+  const s=starterHome(); s.rooms.beach.instances.push(instance('unowned','abacus',2,2)); expect(validHome(s)).toBe(true); expect(entitledHome(s,[])).toBe(false); expect(entitledHome(s,['abacus'])).toBe(true);
   s.rooms.kitchen.theme.wallpaper='math-lab'; expect(entitledHome(s,['abacus'])).toBe(false); expect(entitledHome(s,['abacus','math-lab'])).toBe(true);
   expect(entitledHome(starterHome(),[])).toBe(true);
  });
@@ -116,7 +116,7 @@ describe('room editing, stacking and colours',()=>{
   expect(itemSize(instance('l','table-lamp',0,0))).toBeLessThan(characterSize(0)/2);
  });
  it('fits three small items in separate cells on one table and preserves them on move',()=>{
-  let s=patch(empty(),{instances:[instance('t','table',4,4),instance('a','lamp',0,0),instance('b','plant',0,4),instance('c','teddy',8,4)]});
+  let s=patch(empty(),{instances:[instance('t','table',4,4),instance('a','lamp',1,0),instance('b','plant',2,4),instance('c','teddy',8,4)]});
   for(const id of ['a','b','c']) {
     const child=room(s).instances.find(i=>i.id===id)!;
     const surface=surfacePoint(room(s).instances[0]);
@@ -159,13 +159,13 @@ describe('room editing, stacking and colours',()=>{
   let h:History={present:s,past:[],future:[]};h=editHistory(h,{type:'tint',id:'bed',tint:'lagoon'});expect(editHistory(h,{type:'undo'}).present).toBe(s);
  });
  it('stacks a lamp on a table, moves the group, rejects overlap and puts the whole group away',()=>{
-  let s=patch(empty(),{instances:[instance('t','table',4,4),instance('l','lamp',0,0),instance('p','plant',0,4)]});
+  let s=patch(empty(),{instances:[instance('t','table',4,4),instance('l','lamp',1,0),instance('p','plant',2,4)]});
   const surface=surfacePoint(room(s).instances[0]); expect(stackSpot(room(s).instances,room(s).instances[1],surface.x,surface.y)).toMatchObject({on:'t'});
   s=homeReducer(s,{type:'move',id:'l',x:4,y:4,on:'t'}).state;expect(room(s).instances[1].on).toBe('t');
-  expect(homeReducer(s,{type:'move',id:'p',x:4,y:4,on:'t'}).state).toBe(s);
+  expect(homeReducer(s,{type:'move',id:'p',x:4,y:4,on:'t'}).state.rooms.home.instances.find(i=>i.id==='p')?.on).toBeUndefined();
   s=homeReducer(s,{type:'move',id:'t',x:8,y:6}).state; expect(room(s).instances[1]).toMatchObject({x:8,y:6,on:'t'});
   expect(itemPoint(room(s).instances[1],room(s).instances).x).toBeLessThan(surfacePoint(room(s).instances[0]).x);
-  const before=s, removed=homeReducer(s,{type:'put-away',id:'t'}).state; expect(room(removed).instances.map(i=>i.id)).toEqual(['p']);expect(validHome(removed)).toBe(true);
+  const before=s, removed=homeReducer(s,{type:'put-away',id:'t'}).state; expect(room(removed).instances.map(i=>i.id)).toEqual(['l','p']);expect(validHome(removed)).toBe(true);
   const h=editHistory({present:before,past:[],future:[]},{type:'put-away',id:'t'});expect(editHistory(h,{type:'undo'}).present).toBe(before);
  });
  it('drops a stacked item to the floor and rejects cycles, non-small children and nested stacks',()=>{
@@ -187,8 +187,8 @@ describe('room editing, stacking and colours',()=>{
   expect(homeReducer(s,{type:'theme',wallpaper:'math-lab'}).state).toBe(s);s=homeReducer(s,{type:'theme',wallpaper:'math-lab'},{ownedWallpapers:['math-lab']}).state;
   const reset=homeReducer(s,{type:'reset'});expect(reset.snapshot).toBe(s);expect(reset.state.rooms.kitchen).toBe(s.rooms.kitchen);expect(reset.state).toEqual(starterHome());
  });
- it('bounds undo/redo at 40 outside the persisted schema and clears redo on edit',()=>{
-  let h:History={present:starterHome(),past:[],future:[]};for(let n=0;n<50;n++)h=editHistory(h,{type:'mirror',id:'bed'});expect(h.past).toHaveLength(40);
+ it('bounds undo/redo at 60 outside the persisted schema and clears redo on edit',()=>{
+  let h:History={present:starterHome(),past:[],future:[]};for(let n=0;n<70;n++)h=editHistory(h,{type:'mirror',id:'bed'});expect(h.past).toHaveLength(60);
   h=editHistory(h,{type:'undo'});expect(h.future).toHaveLength(1);h=editHistory(h,{type:'tint',id:'bed',tint:'coral'});expect(h.future).toEqual([]);expect(validHome(h.present)).toBe(true);
  });
 });
@@ -203,7 +203,7 @@ describe('constant-size seating and depth',()=>{
  it.each(['bed','chair','rug','beanbag','shelf','sofa','armchair','bunk-bed','hammock','floor-cushion','rocking-chair','stool'])('seats each character on %s, follows its seat and stands safely after removal',id=>{
   let s=patch(starterHome(),{instances:[instance('seat',id,4,4)],characters:[0,1,2].map(slot=>({slot:slot as 0|1|2,anchor:'hello',pose:'stand'}))});
   for(const slot of [0,1,2] as const){ const anchor=['bed','chair','rug','beanbag','shelf'].includes(id)?id as 'bed':'seat';
-   const p=characterPoint(room(s),{slot,anchor,pose:'sit',seatId:'seat'});
+   const p=socketPoint(room(s).instances[0],socketsOf(room(s).instances[0]).find(socket=>socket.id.startsWith('pet-')===(slot===2))!);
    expect(characterDrop(room(s),slot,p.x,p.y)).toMatchObject({seatId:'seat'});
    s=homeReducer(s,{type:'character',slot,anchor,seatId:'seat'}).state;expect(room(s).characters[slot].pose).toBe(socketsOf(room(s).instances[0])[0].kind);expect(characterSize(slot)).toBe(slot===0?224:slot===2?98:170);
    expect(characterDepth(room(s),room(s).characters[slot])).toBeGreaterThan(itemPoint(room(s).instances[0]).y);
@@ -213,7 +213,7 @@ describe('constant-size seating and depth',()=>{
   s=homeReducer(s,{type:'put-away',id:'seat'}).state;expect(room(s).characters.every(c=>c.pose==='stand')).toBe(true);expect(validHome(s)).toBe(true);
  });
  it('retains beach anchors and rejects malformed poses or coordinates',()=>{
-  const s=starterHome();expect(characterDrop(room(s),0,400,650)).toEqual({type:'character',slot:0,anchor:'beach-middle'});
+  const s=starterHome();expect(characterDrop(room(s),0,400,650)).toMatchObject({type:'character',slot:0,anchor:'floor'});
   for(const anchor of ['beach-left','beach-middle','beach-right'] as const){const next=homeReducer(s,{type:'character',slot:0,anchor}).state;expect(validHome(next)).toBe(true);expect(characterPoint(room(next),room(next).characters[0]).y).toBeLessThanOrEqual(540);}
  });
  it('retains original catalog earning metadata',()=>{expect(furnitureIds).toHaveLength(24);for(const id of furnitureIds)expect(itemSpec(id)).toEqual(catalog[id]);});

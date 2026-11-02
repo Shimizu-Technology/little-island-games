@@ -1,0 +1,735 @@
+{
+  "socketFailures": {
+    "counts": {
+      "bed:slot1": 4,
+      "sofa:slot1": 4,
+      "bunk-bed:slot1": 8,
+      "floor-cushion:slot1": 4
+    },
+    "examples": [
+      {
+        "item": "bed",
+        "rot": 0,
+        "mirror": false,
+        "slot": 1,
+        "socket": "pillow",
+        "frame": {
+          "left": -0.5666666666666629,
+          "top": 121.53333333333336,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "bed",
+          "x": 3,
+          "y": 0,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "bed",
+        "rot": 0,
+        "mirror": false,
+        "slot": 1,
+        "socket": "pillow",
+        "frame": {
+          "left": -0.5666666666666629,
+          "top": 121.53333333333336,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "bed",
+          "x": 3,
+          "y": 0,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "bed",
+        "rot": 180,
+        "mirror": true,
+        "slot": 1,
+        "socket": "pillow",
+        "frame": {
+          "left": -0.5666666666666629,
+          "top": 121.53333333333336,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "bed",
+          "x": 3,
+          "y": 0,
+          "rotation": 180,
+          "mirrored": true,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "bed",
+        "rot": 180,
+        "mirror": true,
+        "slot": 1,
+        "socket": "pillow",
+        "frame": {
+          "left": -0.5666666666666629,
+          "top": 121.53333333333336,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "bed",
+          "x": 3,
+          "y": 0,
+          "rotation": 180,
+          "mirrored": true,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "sofa",
+        "rot": 0,
+        "mirror": false,
+        "slot": 1,
+        "socket": "pillow",
+        "frame": {
+          "left": -2.0733333333333235,
+          "top": 146.39,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "sofa",
+          "x": 3,
+          "y": 1,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "sofa",
+        "rot": 0,
+        "mirror": false,
+        "slot": 1,
+        "socket": "pillow",
+        "frame": {
+          "left": -2.0733333333333235,
+          "top": 146.39,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "sofa",
+          "x": 3,
+          "y": 1,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "sofa",
+        "rot": 180,
+        "mirror": true,
+        "slot": 1,
+        "socket": "pillow",
+        "frame": {
+          "left": -2.0733333333333235,
+          "top": 146.39,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "sofa",
+          "x": 3,
+          "y": 1,
+          "rotation": 180,
+          "mirrored": true,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "sofa",
+        "rot": 180,
+        "mirror": true,
+        "slot": 1,
+        "socket": "pillow",
+        "frame": {
+          "left": -2.0733333333333235,
+          "top": 146.39,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "sofa",
+          "x": 3,
+          "y": 1,
+          "rotation": 180,
+          "mirrored": true,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "bunk-bed",
+        "rot": 0,
+        "mirror": false,
+        "slot": 1,
+        "socket": "lower",
+        "frame": {
+          "left": -2.0733333333333235,
+          "top": 184.32999999999998,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "bunk-bed",
+          "x": 3,
+          "y": 1,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "bunk-bed",
+        "rot": 0,
+        "mirror": false,
+        "slot": 1,
+        "socket": "upper",
+        "frame": {
+          "left": -2.0733333333333235,
+          "top": 75.92999999999998,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "bunk-bed",
+          "x": 3,
+          "y": 1,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "bunk-bed",
+        "rot": 0,
+        "mirror": false,
+        "slot": 1,
+        "socket": "lower",
+        "frame": {
+          "left": -2.0733333333333235,
+          "top": 184.32999999999998,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "bunk-bed",
+          "x": 3,
+          "y": 1,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "bunk-bed",
+        "rot": 0,
+        "mirror": false,
+        "slot": 1,
+        "socket": "upper",
+        "frame": {
+          "left": -2.0733333333333235,
+          "top": 75.92999999999998,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "bunk-bed",
+          "x": 3,
+          "y": 1,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "bunk-bed",
+        "rot": 180,
+        "mirror": true,
+        "slot": 1,
+        "socket": "lower",
+        "frame": {
+          "left": -2.0733333333333235,
+          "top": 184.32999999999998,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "bunk-bed",
+          "x": 3,
+          "y": 1,
+          "rotation": 180,
+          "mirrored": true,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "bunk-bed",
+        "rot": 180,
+        "mirror": true,
+        "slot": 1,
+        "socket": "upper",
+        "frame": {
+          "left": -2.0733333333333235,
+          "top": 75.92999999999998,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "bunk-bed",
+          "x": 3,
+          "y": 1,
+          "rotation": 180,
+          "mirrored": true,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "bunk-bed",
+        "rot": 180,
+        "mirror": true,
+        "slot": 1,
+        "socket": "lower",
+        "frame": {
+          "left": -2.0733333333333235,
+          "top": 184.32999999999998,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "bunk-bed",
+          "x": 3,
+          "y": 1,
+          "rotation": 180,
+          "mirrored": true,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "bunk-bed",
+        "rot": 180,
+        "mirror": true,
+        "slot": 1,
+        "socket": "upper",
+        "frame": {
+          "left": -2.0733333333333235,
+          "top": 75.92999999999998,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "bunk-bed",
+          "x": 3,
+          "y": 1,
+          "rotation": 180,
+          "mirrored": true,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "floor-cushion",
+        "rot": 0,
+        "mirror": false,
+        "slot": 1,
+        "socket": "seat",
+        "frame": {
+          "left": -1.5,
+          "top": 237.38,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "floor-cushion",
+          "x": 1,
+          "y": 2,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "floor-cushion",
+        "rot": 0,
+        "mirror": true,
+        "slot": 1,
+        "socket": "seat",
+        "frame": {
+          "left": -1.5,
+          "top": 237.38,
+          "width": 170,
+          "height": 170,
+          "mirrored": true
+        },
+        "inst": {
+          "id": "a",
+          "item": "floor-cushion",
+          "x": 1,
+          "y": 2,
+          "rotation": 0,
+          "mirrored": true,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "floor-cushion",
+        "rot": 180,
+        "mirror": false,
+        "slot": 1,
+        "socket": "seat",
+        "frame": {
+          "left": -1.5,
+          "top": 237.38,
+          "width": 170,
+          "height": 170,
+          "mirrored": true
+        },
+        "inst": {
+          "id": "a",
+          "item": "floor-cushion",
+          "x": 1,
+          "y": 2,
+          "rotation": 180,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      },
+      {
+        "item": "floor-cushion",
+        "rot": 180,
+        "mirror": true,
+        "slot": 1,
+        "socket": "seat",
+        "frame": {
+          "left": -1.5,
+          "top": 237.38,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        },
+        "inst": {
+          "id": "a",
+          "item": "floor-cushion",
+          "x": 1,
+          "y": 2,
+          "rotation": 180,
+          "mirrored": true,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      }
+    ]
+  },
+  "liveVsReload": {
+    "validLive": true,
+    "live": [
+      {
+        "id": "table",
+        "item": "coffee-table",
+        "x": 1,
+        "y": 0,
+        "rotation": 0,
+        "mirrored": false,
+        "layer": "furniture",
+        "state": "rest"
+      },
+      {
+        "id": "lamp",
+        "item": "lamp",
+        "x": 1,
+        "y": 0,
+        "rotation": 0,
+        "mirrored": false,
+        "layer": "furniture",
+        "state": "rest",
+        "on": "table"
+      }
+    ],
+    "reloaded": [
+      {
+        "id": "table",
+        "item": "coffee-table",
+        "x": 1,
+        "y": 0,
+        "rotation": 0,
+        "mirrored": false,
+        "layer": "furniture",
+        "state": "rest"
+      },
+      {
+        "id": "lamp",
+        "item": "lamp",
+        "x": 2,
+        "y": 0,
+        "rotation": 0,
+        "mirrored": false,
+        "layer": "furniture",
+        "state": "rest",
+        "on": "table"
+      }
+    ]
+  },
+  "mirroredHand": {
+    "frame": {
+      "left": 287.9090909090909,
+      "top": 231.77424242424243,
+      "width": 135.75757575757575,
+      "height": 224,
+      "mirrored": true
+    },
+    "hand": {
+      "x": 358.5719103855234,
+      "y": 388.5936514518183
+    }
+  },
+  "bunk": {
+    "size": 271,
+    "characters": [
+      {
+        "slot": 0,
+        "pose": "lie",
+        "frame": {
+          "left": 119.26,
+          "top": 261.86939393939394,
+          "width": 244.36363636363637,
+          "height": 156.12121212121212,
+          "mirrored": false
+        }
+      },
+      {
+        "slot": 1,
+        "pose": "lie",
+        "frame": {
+          "left": 108.92666666666668,
+          "top": 61.53,
+          "width": 170,
+          "height": 170,
+          "mirrored": false
+        }
+      }
+    ]
+  },
+  "friendOverlap": {
+    "kind": "floor",
+    "x": 8,
+    "y": 8,
+    "px": 355,
+    "py": 501.2
+  },
+  "sameRoomTransfer": {
+    "valid": true,
+    "characters": [
+      {
+        "slot": 1,
+        "anchor": "floor",
+        "pose": "stand",
+        "x": 17,
+        "y": 2
+      },
+      {
+        "slot": 2,
+        "anchor": "floor",
+        "pose": "stand",
+        "x": 6,
+        "y": 10
+      },
+      {
+        "slot": 0,
+        "anchor": "seat",
+        "pose": "sit",
+        "seatId": "rug",
+        "socket": {
+          "itemId": "rug",
+          "socketId": "legacy-seat"
+        }
+      }
+    ]
+  },
+  "crowded": {
+    "valid": true,
+    "count": 48,
+    "drop": {
+      "kind": "floor",
+      "x": 15,
+      "y": 4,
+      "px": 611.5,
+      "py": 443.6
+    }
+  },
+  "dropMismatch": {
+    "total": 570,
+    "over10": 84,
+    "max": 18,
+    "largest": [
+      {
+        "rid": "home",
+        "slot": 2,
+        "input": {
+          "x": 0,
+          "y": 464
+        },
+        "drop": {
+          "kind": "floor",
+          "x": 0,
+          "y": 10,
+          "px": 58,
+          "py": 530
+        },
+        "actual": {
+          "x": 76,
+          "y": 530
+        },
+        "dist": 18
+      },
+      {
+        "rid": "home",
+        "slot": 2,
+        "input": {
+          "x": 0,
+          "y": 488
+        },
+        "drop": {
+          "kind": "floor",
+          "x": 0,
+          "y": 10,
+          "px": 58,
+          "py": 530
+        },
+        "actual": {
+          "x": 76,
+          "y": 530
+        },
+        "dist": 18
+      },
+      {
+        "rid": "home",
+        "slot": 2,
+        "input": {
+          "x": 25,
+          "y": 488
+        },
+        "drop": {
+          "kind": "floor",
+          "x": 0,
+          "y": 10,
+          "px": 58,
+          "py": 530
+        },
+        "actual": {
+          "x": 76,
+          "y": 530
+        },
+        "dist": 18
+      },
+      {
+        "rid": "home",
+        "slot": 2,
+        "input": {
+          "x": 0,
+          "y": 512
+        },
+        "drop": {
+          "kind": "floor",
+          "x": 0,
+          "y": 10,
+          "px": 58,
+          "py": 530
+        },
+        "actual": {
+          "x": 76,
+          "y": 530
+        },
+        "dist": 18
+      },
+      {
+        "rid": "home",
+        "slot": 2,
+        "input": {
+          "x": 25,
+          "y": 512
+        },
+        "drop": {
+          "kind": "floor",
+          "x": 0,
+          "y": 10,
+          "px": 58,
+          "py": 530
+        },
+        "actual": {
+          "x": 76,
+          "y": 530
+        },
+        "dist": 18
+      }
+    ]
+  }
+}

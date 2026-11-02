@@ -1,6 +1,12 @@
-# Island Home 2.4 engine
+# Island Home 3 pure scene engine
 
-This section is the current contract. The older 1–2.3 notes below are historical.
+The current engine contract is [ISLAND_HOME_3.md](../../docs/ISLAND_HOME_3.md). CORE supplies `scene.buildScene`, `resolve/apply`, the affine camera and the pure pointer controller. `HomeScreen`, `Drag` and `HouseCamera` still use the legacy renderer until RUNTIME replaces them; their clipping, settle and camera behavior below is historical, not a v3 acceptance claim.
+
+New worlds and migrations use save v4. Restores accept v1–v3 without mutating their originals; v4 is validated without geometry repair. Existing `on`, `socket` and `holding` fields remain the persisted attachment representation. V4 adds `in` for contents, `staged` for visible recoverable storage, exact floor-character `at`, and an optional eat/drink action overlay. `finish-action` clears the action without adding an undo step. World history holds 60 transactions; room navigation is excluded. New catalog additions remain capped at 48 visible placements; carried/transferred/staged instances have a separate bounded 256-instance room envelope.
+
+Runtime should dispatch `{type:"apply-proposal",proposal}` using the exact preview. Legacy actions resolve through the same engine. A proposal contains the destination room, attachment/contact, base/facing and every carried or displaced entity. Unsupported or crowded existing objects have floor/staging fallback. A stale proposal leaves the world unchanged and reports `stale:true`.
+
+## Historical 2.4 implementation notes
 
 - `starterHome()` and `migrateHome()` produce version 3. The `HomeStateV2` type name remains as a compatibility alias for existing route/personalization consumers; its version accepts 2 and 3 at restore boundaries. Characters use `WorldPose`, an optional `{itemId,socketId}` socket, and one optional `holding` instance ID. Instances use `powered` for capability toggles and `empty` for consumed drinks. Food is absent after consumption. Transient reactions and sleep timing never enter saves.
 - Validation checks exact keys, IDs, room/slot uniqueness, socket existence/kind, unique socket occupancy and unique held ownership. Holding requires a same-room holdable instance. Legacy v1/v2 records are validated before migration, copied without mutating the original, and gain sockets where available. Only invalid silhouettes are relocated. Existing recovery keeps the original input and blocks replacement of invalid data. Historical coordinate envelopes remain accepted; room clips also contain those restored records.

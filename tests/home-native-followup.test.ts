@@ -9,7 +9,7 @@ import {initializePersonalization} from '../src/personalization/model';
 import {emptySave,parseSave} from '../src/state/validation';
 import {preserveHomeMigration} from '../src/state/homeMigration';
 import type {StorageAdapter} from '../src/state/storage';
-const fixtures=()=>{const s=starterHome();s.rooms.home={...s.rooms.home,characters:[{slot:0,anchor:'floor',pose:'stand',x:9,y:8}],instances:[instance('bed','bed',0,0)]};return s;};
+const fixtures=()=>{const s=starterHome();s.version=3;s.rooms.home={...s.rooms.home,characters:[{slot:0,anchor:'floor',pose:'stand',x:9,y:8}],instances:[instance('bed','bed',0,0)]};return s;};
 const inside=(s:HomeStateV2,scale=1)=>{for(const room of Object.values(s.rooms))for(const i of room.instances){const p=itemPoint(i,room.instances),b=visualBox(i.item,i.rotation,i.mirrored);expect((p.x+b.left)*scale).toBeGreaterThanOrEqual(8*scale);expect((p.x+b.left+b.width)*scale).toBeLessThanOrEqual(792*scale);expect((p.y+b.top)*scale).toBeGreaterThanOrEqual(8*scale);expect((p.y+b.top+b.height)*scale).toBeLessThanOrEqual(552*scale);}};
 describe('native starter and repair acceptance',()=>{
  it.each([{width:390,height:844},{width:844,height:390},{width:402,height:874}])('contains every instance, including surface props, at $width×$height',viewport=>{
@@ -30,32 +30,32 @@ describe('native starter and repair acceptance',()=>{
  });
 });
 describe('forgiving furniture destinations',()=>{
- it('uses the whole visible bed, including the far corner beyond the old 85-unit radius',()=>{
+ it('does not pull a far bed corner to a remote pillow beyond capped snap travel',()=>{
   const s=fixtures(),fixed=migrateHome(s)!,world=dropWorld(fixed.rooms.home),socket=world.sockets.find(s=>!s.pet)!,box=socket.box!;
   const p={x:box.right-2,y:box.bottom-2};expect(Math.hypot(p.x-socket.x,p.y-socket.y)).toBeGreaterThan(85);
-  expect(resolveDrop(world,{slot:0},p.x,p.y)).toMatchObject({kind:'socket',itemId:'bed',socketId:socket.socketId,box});
+  expect(resolveDrop(world,{slot:0},p.x,p.y).kind).toBe('floor');
   // Camera crops the head end. A visible far corner still resolves to its off-screen socket.
   const cameraX=-socket.x-15,screenX=p.x+cameraX;expect(socket.x+cameraX).toBeLessThan(0);expect(screenX).toBeGreaterThan(0);
-  expect(resolveDrop(world,{slot:0},screenX-cameraX,p.y)?.itemId).toBe('bed');
+  expect(resolveDrop(world,{slot:0},screenX-cameraX,p.y).kind).toBe('floor');
  });
- it('accepts a finger or body centre over the bed even when the feet miss it',()=>{
+ it('uses the semantic anchor rather than a remote finger or body centre',()=>{
   const s=migrateHome(fixtures())!,world=dropWorld(s.rooms.home),box=world.sockets[0].box!,feet=floorPoint(12,10),body={x:(box.left+box.right)/2,y:(box.top+box.bottom)/2};
-  expect(resolveDrop(world,{slot:0},feet.x,feet.y,[body])).toMatchObject({kind:'socket',itemId:'bed'});
-  expect(resolveDrop(world,{slot:0},feet.x,feet.y,[{x:box.right-1,y:box.bottom-1}])).toMatchObject({kind:'socket',itemId:'bed'});
+  expect(resolveDrop(world,{slot:0},feet.x,feet.y,[body]).kind).toBe('floor');
+  expect(resolveDrop(world,{slot:0},feet.x,feet.y,[{x:box.right-1,y:box.bottom-1}]).kind).toBe('floor');
   world.sockets=world.sockets.map(s=>({...s,occupied:1}));expect(resolveDrop(world,{slot:0},feet.x,feet.y,[body])?.kind).toBe('floor');
  });
  it('uses a finger or centre across a doorway consistently for preview and release',()=>{
   const s=migrateHome(fixtures())!,world=dropWorld(s.rooms.home),b=world.sockets[0].box!;
   const rooms=[{id:'left',origin:{x:0,y:0},world:{...world,sockets:[]}},{id:'right',origin:{x:800,y:0},world}];
-  expect(characterDropRoom(rooms,0,[{x:800+b.right-2,y:b.bottom-2},{x:790,y:500}])?.id).toBe('right');
+  expect(characterDropRoom(rooms,0,[{x:800+b.right-2,y:b.bottom-2},{x:790,y:500}])?.id).toBe('left'); // Feet are the canonical room anchor; a finger cannot select another room.
  });
- it('prefers the visible bed above its overlapping ground rug',()=>{
+ it('does not promote a bed when only a remote auxiliary pointer overlaps',()=>{
   const room=starterHome().rooms.home,world=dropWorld(room),box=world.sockets.find(s=>s.itemId==='bed')!.box!;
-  expect(resolveDrop(world,{slot:0},box.right-15,box.bottom-12,[{x:box.right-15,y:box.bottom-140}])?.itemId).toBe('bed');
+  expect(resolveDrop(world,{slot:0},box.right-15,box.bottom-12,[{x:box.right-15,y:box.bottom-140}])?.itemId).not.toBe('bed');
  });
- it('chooses the nearest free bunk socket on the hit item',()=>{
+ it('keeps an occupied bunk target occupied instead of snapping to its remote upper socket',()=>{
   const s=fixtures();s.rooms.home.instances=[instance('bunk','bunk-bed',5,0)];const world=dropWorld(s.rooms.home),human=world.sockets.filter(s=>!s.pet);human[0].occupied=1;
-  expect(resolveDrop(world,{slot:0},human[0].x,human[0].y)?.socketId).toBe(human[1].socketId);
+  expect(resolveDrop(world,{slot:0},human[0].x,human[0].y).kind).toBe('floor');
  });
 });
 describe('migration-style byte preservation',()=>{

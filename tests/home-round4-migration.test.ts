@@ -33,7 +33,7 @@ describe('R2-M1 accepted legacy relationships migrate to readable v3 envelopes',
    const c:Character={slot,anchor,pose:poseFor(anchor),...(anchor==='floor'?{x:4,y:4}:{})};
    if('rooms' in source){for(const room of Object.values(source.rooms))room.characters=[];source.rooms.home.characters=[c];}else source.characters=[c];
    if(!validHome(source))continue;accepted++;const bytes=JSON.stringify(source),next=migrateHome(source);
-   expect(next,`v${version} ${slot} ${anchor}`).toBeDefined();expect(next?.version).toBe(3);expect(validHome(next),`v${version} ${slot} ${anchor}`).toBe(true);expect(JSON.stringify(source)).toBe(bytes);
+   expect(next,`v${version} ${slot} ${anchor}`).toBeDefined();expect(next?.version).toBe(4);expect(validHome(next),`v${version} ${slot} ${anchor}`).toBe(true);expect(JSON.stringify(source)).toBe(bytes);
   }
   expect(accepted).toBe(60);
  });

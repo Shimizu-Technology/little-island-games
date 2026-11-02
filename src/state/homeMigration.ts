@@ -23,5 +23,5 @@ export async function preserveImportedHome(adapter:StorageAdapter,encoded:string
 
 /** A migration is never a license to publish an unreadable active save. */
 export function assertMigratedHomes(save:Save){
- for(const person of Object.values(save.personalization?.people??{}))if(person.home.version!==3||!validHome(person.home))throw new Error('This home could not be migrated. Your original has been kept.');
+ for(const person of Object.values(save.personalization?.people??{}))if(person.home.version!==4||!validHome(person.home))throw new Error('This home could not be migrated. Your original has been kept.');
 }

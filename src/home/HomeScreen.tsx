@@ -722,12 +722,12 @@ export function HomeScreen({ renderCharacter, badges = [], initialItem, initialS
               if (!placing) {
                 if(selectedFriend){
                   const {pageX,pageY}=e.nativeEvent;
-                  roomCanvases.current[roomId]?.measureInWindow((x,y)=>{const d=resolveDrop(dropWorld(room),{slot:selectedFriend.slot},(pageX-x)/scale,(pageY-y)/scale);if(!d)return;if(selectedFriend.roomId!==roomId)dispatch({type:'transfer',slot:selectedFriend.slot,roomId:selectedFriend.roomId,room:roomId,x:d.x,y:d.y},true);else dispatch(d.kind==='socket'?{type:'character',slot:selectedFriend.slot,roomId,anchor:'seat',seatId:d.itemId,socketId:d.socketId}:{type:'character',slot:selectedFriend.slot,roomId,anchor:'floor',x:d.x,y:d.y},true);});setSelectedFriend(undefined);return;
+                  roomCanvases.current[roomId]?.measureInWindow((x,y)=>{const d=resolveDrop(dropWorld(room),{slot:selectedFriend.slot},(pageX-x)/scale,(pageY-y)/scale);if(!d)return;if(selectedFriend.roomId!==roomId)dispatch({type:'transfer',slot:selectedFriend.slot,roomId:selectedFriend.roomId,room:roomId,x:d.x,y:d.y,seatId:d.itemId,socketId:d.socketId},true);else dispatch(d.kind==='socket'?{type:'character',slot:selectedFriend.slot,roomId,anchor:'seat',seatId:d.itemId,socketId:d.socketId}:{type:'character',slot:selectedFriend.slot,roomId,anchor:'floor',x:d.x,y:d.y},true);});setSelectedFriend(undefined);return;
                 }
                 if(selected && room.instances.some(i=>i.id===selected&&canHold(i))){
                   const target=room.instances.find(i=>i.id===selected)!;
                   const {pageX,pageY}=e.nativeEvent;
-                  roomCanvases.current[roomId]?.measureInWindow((x,y)=>{const d=resolveDrop(dropWorld(room),dropBody(target),(pageX-x)/scale,(pageY-y)/scale);if(d)dispatch({type:'move',id:target.id,x:d.x,y:d.y,roomId},true);});setSelected(undefined);return;
+                  roomCanvases.current[roomId]?.measureInWindow((x,y)=>{const d=resolveDrop(dropWorld(room),dropBody(target),(pageX-x)/scale,(pageY-y)/scale);if(d)dispatch(d.kind==='hand'||d.kind==='mouth'?{type:'use-item',id:target.id,slot:d.slot as Character['slot'],eat:d.kind==='mouth',roomId}:{type:'move',id:target.id,x:d.x,y:d.y,...(d.on?{on:d.on}:{}),roomId},true);});setSelected(undefined);return;
                 }
                 houseCamera.current?.tap(index);
                 setSelected(undefined);

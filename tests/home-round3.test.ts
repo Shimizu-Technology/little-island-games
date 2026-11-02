@@ -11,23 +11,23 @@ import {preserveImportedHome} from '../src/state/homeMigration';
 import type {StorageAdapter} from '../src/state/storage';
 const bedRoom=()=>{const s=starterHome();s.rooms.home.instances=[instance('bed','bed',4,0)];s.rooms.home.characters=[{slot:0,anchor:'floor',pose:'stand',x:8,y:8}];return s;};
 describe('native headboard release and visible floor settlement',()=>{
- it('converts the reported (162,355) native release against the measured bed into room units and resolves to its socket',()=>{
+ it('converts the reported (162,355) native release against the measured bed into room units and uses a contained floor fallback outside the capped seat region',()=>{
   const s=bedRoom(),w=dropWorld(s.rooms.home),b=w.sockets[0].box!;
   const scale=(308-103)/(b.right-b.left),origin={x:103-b.left*scale,y:403-b.top*scale};
   const release={x:(162-origin.x)/scale,y:(355-origin.y)/scale};
   expect(release.x).toBeCloseTo(137.829268);expect(release.y).toBeCloseTo(104.121951);
-  expect(resolveDrop(w,{slot:0},release.x,release.y)).toMatchObject({kind:'socket',itemId:'bed',pose:'lie'});
+  expect(resolveDrop(w,{slot:0},release.x,release.y).kind).toBe('floor');
   expect(characterDropRoom([{id:'home',origin,world:w}],0,[{x:release.x+origin.x,y:release.y+origin.y}])?.id).toBe('home');
   // Lifting the sleeping occupant follows the very same rule; its own socket remains available.
   s.rooms.home.characters[0]=characterForSocket(s.rooms.home.characters[0],s.rooms.home.instances[0],socketsOf(s.rooms.home.instances[0])[0]);
-  expect(resolveDrop(dropWorld(s.rooms.home),{slot:0},release.x,release.y)?.kind).toBe('socket');
+  expect(resolveDrop(dropWorld(s.rooms.home),{slot:0},release.x,release.y)?.kind).toBe('floor');
  });
- it('uses a full character-height headboard band, with symmetric compatibility and occupied seats excluded',()=>{
+ it('rejects oversized headboard halos while preserving species compatibility',()=>{
   const s=bedRoom(),w=dropWorld(s.rooms.home),b=w.sockets[0].box!;
-  expect(resolveDrop(w,{slot:0},b.right-1,b.top-223)?.kind).toBe('socket');
+  expect(resolveDrop(w,{slot:0},b.right-1,b.top-223)?.kind).toBe('floor');
   w.sockets.find(s=>!s.pet)!.occupied=1;
   expect(resolveDrop(w,{slot:0},b.left+10,b.top-40)?.kind).toBe('floor');
-  expect(resolveDrop(w,{slot:2},b.right-1,b.top-89)).toMatchObject({kind:'socket',pet:true});
+  expect(resolveDrop(w,{slot:2},b.right-1,b.top-89).kind).toBe('floor');
  });
  it('puts a free-floor friend in front when more than a quarter of the silhouette would be covered',()=>{
   const s=bedRoom(),w=dropWorld(s.rooms.home),p=floorPoint(4,0);
@@ -39,8 +39,8 @@ describe('native headboard release and visible floor settlement',()=>{
   const s=bedRoom(),room=s.rooms.home,bed=room.instances[0];room.instances.push(instance('rug','rug',8,8));room.characters[0]=characterForSocket(room.characters[0],bed,socketsOf(bed)[0]);
   const w=dropWorld(room),b=w.sockets[0].box!,release={x:b.right+25,y:b.bottom+40};
   const d=resolveDrop(w,{slot:0},release.x,release.y,[release])!;
-  expect(d.kind).toBe('floor');expect(d.py+1).toBeGreaterThan(w.bodies[0].depth!);expect(Math.abs(d.px-(b.left+b.right)/2)).toBeLessThan(25);
-  expect(resolveDrop(w,{slot:0},w.people[0].x,w.people[0].y,[release,{x:(b.left+b.right)/2,y:(b.top+b.bottom)/2}])?.kind).toBe('floor');
+  expect(d).toMatchObject({kind:'socket',itemId:'rug'});expect(d.py+1).toBeGreaterThan(w.bodies[0].depth!);expect(Math.hypot(d.px-release.x,d.py-release.y)).toBeLessThan(60);
+  expect(resolveDrop(w,{slot:0},w.people[0].x,w.people[0].y,[release,{x:(b.left+b.right)/2,y:(b.top+b.bottom)/2}])?.kind).toBe('socket'); // The semantic anchor still names its original socket.
   expect(occlusion(w,0,d.px,d.py).fraction).toBeLessThanOrEqual(.25);
  });
  it('nudges hidden free friends on the next settled layout edit, preserving held props, and is idempotent',()=>{
@@ -88,11 +88,11 @@ describe('M1 complete-envelope canonical v3 validation',()=>{
  it('accepts v2 only at the legacy boundary, canonicalizes compatible sockets, and deconflicts duplicate occupants',()=>{
   const save=envelope([{slot:0,anchor:'seat',pose:'sit',seatId:'bed'},{slot:1,anchor:'seat',pose:'sit',seatId:'bed'}],'bed');
   save.personalization!.people.family.home.version=2;const raw=JSON.stringify(save),parsed=parseSave(raw),next=backfillRewards(parsed),home=next.personalization!.people.family.home;
-  expect(home.version).toBe(3);expect(validHome(home)).toBe(true);expect('rooms' in home&&home.rooms.home.characters[0]).toMatchObject({pose:'lie',socket:{itemId:'bed',socketId:'pillow'}});expect('rooms' in home&&home.rooms.home.characters[1]).toMatchObject({anchor:'floor'});expect(JSON.stringify(save)).toBe(raw);
+  expect(home.version).toBe(4);expect(validHome(home)).toBe(true);expect('rooms' in home&&home.rooms.home.characters[0]).toMatchObject({pose:'lie',socket:{itemId:'bed',socketId:'pillow'}});expect('rooms' in home&&home.rooms.home.characters[1]).toMatchObject({anchor:'floor'});expect(JSON.stringify(save)).toBe(raw);
  });
 });
 describe('M2 successful restore byte preservation',()=>{
- const fixture=()=>{const before=envelope([{slot:0,anchor:'floor',pose:'stand',x:8,y:8}],'bed');const h=before.personalization!.people.family.home;if('rooms' in h)h.rooms.home.instances[0].x=0;return before;};
+ const fixture=()=>{const before=envelope([{slot:0,anchor:'floor',pose:'stand',x:8,y:8}],'bed');const h=before.personalization!.people.family.home;if('rooms' in h){h.version=3;h.rooms.home.instances[0].x=0;}return before;};
  it('awaits exact incoming whitespace, persisted device and latest device bytes before replacement; both originals are recoverable',async()=>{
   const incoming=' \n'+JSON.stringify(fixture(),null,3)+'\n\t',before=parseSave(incoming),after=backfillRewards(before);let stored='current-device-save';const recovery=new Map<string,string>(),events:string[]=[];
   const adapter:StorageAdapter={get:async()=>stored,set:async raw=>{events.push('set');stored=raw;},preserve:async raw=>{await Promise.resolve();events.push('preserve');recovery.set(String(recovery.size),raw);},listRecovery:async()=>[...recovery.keys()].map(key=>({key,createdAt:0,bytes:0})),readRecovery:async key=>recovery.get(key)??null};

@@ -36,6 +36,7 @@ export type SceneEntity = {
   depth: number;
   band: DepthBand;
   hitProxies: Bounds[];
+  body?: { w: number; h: number; layer: string; small?: boolean; holdable?: boolean; edible?: "food" | "drink" };
   item?: Instance;
   character?: Character;
 };
@@ -56,7 +57,9 @@ export type Target = {
   kind: "hand" | "mouth" | "socket" | "surface" | "container";
   attachment: Attachment;
   contact: RoomPoint;
+  projectedContact?: RoomPoint;
   core: Bounds;
+  support?: Bounds;
   base: CharacterBase;
   facing: Facing;
   owner: EntityId;
@@ -72,11 +75,12 @@ export type RoomIndex = {
   revision: string;
   entities: Record<EntityId, SceneEntity>;
   floor: FloorLocation[];
+  occupancy: Record<string, EntityId[]>;
   surfaces: Target[];
   sockets: Target[];
   targets: Target[];
   buckets: Record<string, number[]>;
-  occlusionBands: { bounds: Bounds; depth: number }[];
+  occlusionBands: { id?: EntityId; bounds: Bounds; depth: number }[];
   hitProxies: { id: EntityId; bounds: Bounds; depth: number; band: DepthBand }[];
 };
 export type SceneState = HomeStateV2;

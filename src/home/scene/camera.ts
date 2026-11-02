@@ -16,7 +16,10 @@ export function houseToRoom(point: HousePoint, origin: HousePoint): RoomPoint {
 export function roomToScreen(point: RoomPoint, camera: CameraMatrix, origin: HousePoint): ScreenPoint {
   "worklet";
   const world = roomToHouse(point, origin);
-  return screenPoint(camera.a * world.x + camera.c * world.y + camera.tx, camera.b * world.x + camera.d * world.y + camera.ty);
+  return screenPoint(
+    camera.a * world.x + camera.c * world.y + camera.tx,
+    camera.b * world.x + camera.d * world.y + camera.ty
+  );
 }
 /** Reject a singular camera at setup, rather than inventing pointer coordinates. */
 export function screenToRoom(point: ScreenPoint, camera: CameraMatrix, origin: HousePoint): RoomPoint {
