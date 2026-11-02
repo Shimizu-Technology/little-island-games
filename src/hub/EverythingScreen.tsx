@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Button, C, Copy, Heading, IconButton, PressableScale } from '../components/ui';
@@ -15,20 +15,21 @@ import { places } from './model';
 import { openGame, placeRoute } from './navigation';
 export default function EverythingScreen() {
  const { section } = useLocalSearchParams<{ section?: string }>(), store = useStore();
+ const { width, fontScale } = useWindowDimensions(), narrow = width < 340 || fontScale > 1.5;
  const [shuffle, setShuffle] = useState(0), [settings, setSettings] = useState(false);
  const favorites = store.save.favoriteGames ?? [], resume = homeContinue(store.save);
  const ideas = dailySuggestions(store.save, undefined, shuffle).map(id => shelfGames.find(game => game.id === id)!);
  const rows = (games: ShelfGame[]) => games.map(game => <View key={game.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, borderBottomWidth: 1, borderBottomColor: C.line, paddingVertical: 8 }}>
-  <PressableScale accessibilityRole="button" accessibilityLabel={`Play ${game.name}`} onPress={() => openGame(game.id)} style={{ flex: 1, flexDirection: 'row', gap: 12, alignItems: 'center', paddingVertical: 6 }}><GameIcon id={game.id} size={52}/><View style={{ flex: 1 }}><Heading style={{ fontSize: 18 }}>{game.name}</Heading><Copy style={{ fontSize: 14, lineHeight: 20 }}>{game.description}</Copy></View></PressableScale>
+  <PressableScale accessibilityRole="button" accessibilityLabel={`Play ${game.name}`} onPress={() => openGame(game.id)} style={{ flex: 1, flexDirection: narrow ? 'column' : 'row', gap: 12, alignItems: narrow ? 'flex-start' : 'center', paddingVertical: 6 }}><GameIcon id={game.id} size={52}/><View style={{ flex: 1, ...(narrow ? { width: '100%' as const } : {}) }}><Heading style={{ fontSize: 18 }}>{game.name}</Heading><Copy style={{ fontSize: 14, lineHeight: 20 }}>{game.description}</Copy></View></PressableScale>
   <IconButton icon={favorites.includes(game.id) ? 'star-filled' : 'star'} selected={favorites.includes(game.id)} label={`${favorites.includes(game.id) ? 'Remove favorite' : 'Favorite'} ${game.name}`} onPress={() => store.toggleGameFavorite(game.id)}/>
  </View>);
  const fav = <View style={{ gap: 8 }}><Heading style={{ fontSize: 24 }}>Favorites</Heading>{favorites.length ? rows(shelfGames.filter(game => favorites.includes(game.id))) : <Copy>Tap a star beside a game to keep it here.</Copy>}</View>;
- const suggestions = <View style={{ gap: 8 }}><View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}><Heading style={{ fontSize: 24 }}>Try today</Heading><Button quiet compact onPress={() => setShuffle(value => value+1)} label="Shuffle today's three game suggestions">Shuffle</Button></View>{rows(ideas)}</View>;
+ const suggestions = <View style={{ gap: 8 }}><View style={{ flexDirection: narrow ? 'column' : 'row', alignItems: narrow ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 8 }}><Heading style={{ fontSize: 24 }}>Try today</Heading><Button quiet compact onPress={() => setShuffle(value => value+1)} label="Shuffle today's three game suggestions">Shuffle</Button></View>{rows(ideas)}</View>;
  const pocket = section === 'favorites' || section === 'ideas';
  if (!store.ready) return <SafeAreaView><Heading>Getting your island ready…</Heading></SafeAreaView>;
  if (store.recovery) return <SafeAreaView><Recovery/></SafeAreaView>;
  return <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}>
-  <View style={{ padding: 16, gap: 10, flexDirection: 'row', alignItems: 'center' }}><Button quiet compact onPress={() => router.canGoBack() ? router.back() : router.replace('/')} label="Back to map">← Map</Button><Heading style={{ fontSize: 26, flex: 1 }}>{pocket ? 'Your pocket' : 'Everything'}</Heading></View>
+  <View style={{ padding: 16, gap: 10, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}><Button quiet compact onPress={() => router.canGoBack() ? router.back() : router.replace('/')} label="Back to map">← Map</Button><Heading style={{ fontSize: 26, flex: 1, ...(narrow ? { flexBasis: '100%' as const } : {}) }}>{pocket ? 'Your pocket' : 'Everything'}</Heading></View>
   <SaveStatus/>
   <ScrollView contentContainerStyle={{ width: '100%', maxWidth: 760, alignSelf: 'center', padding: 20, gap: 28 }}>
    {section === 'favorites' ? fav : section === 'ideas' ? suggestions : <>
