@@ -10,7 +10,15 @@ import type { BadgeId } from "../badges/engine";
 import { buildingLayout, roomOrigin } from "./camera";
 import { roomIds, type RoomId } from "./catalogMore";
 import { capabilityOf } from "./world";
-import { instance, owns, placedInstances, MAX_INSTANCES, type HomeAction, type HomeStateV2, type Ownership } from "./model";
+import {
+  instance,
+  owns,
+  placedInstances,
+  MAX_INSTANCES,
+  type HomeAction,
+  type HomeStateV2,
+  type Ownership,
+} from "./model";
 import { ItemArt } from "./art/Items";
 import { MoreItemArt } from "./art/More";
 import { moreCatalog } from "./catalogMore";
@@ -177,7 +185,10 @@ export function HomeScreen({
               release: true,
             }
           );
-          if (resolved.kind === "staging") { current.store.setMessage("Choose a free hand or place."); return undefined; }
+          if (resolved.kind === "staging") {
+            current.store.setMessage("Choose a free hand or place.");
+            return undefined;
+          }
           next = current.store.commitProposal(resolved, seed, stillCurrent);
           return next
             ? { state: next, proposal: resolved, identities: current.store.getCommittedIdentities() }
