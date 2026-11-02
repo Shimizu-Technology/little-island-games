@@ -73,8 +73,8 @@ const RestingEntity = memo(function RestingEntity({
   const frame = artFrame(entity);
   const token = layoutToken(entity);
   // A tiny native layout stamp acknowledges the commit without remounting SVGs.
-  const stamp = React.useRef({ token, value: 1 });
-  if (stamp.current.token !== token) stamp.current = { token, value: stamp.current.value + 1 };
+  const [stamp, setStamp] = React.useState({ token, value: 1 });
+  if (stamp.token !== token) setStamp({ token, value: stamp.value + 1 });
   const owners = useMemo(() => ownerKey.split("|"), [ownerKey]);
   const anticipationTargets = useMemo(() => targetKey.split("|"), [targetKey]);
   const style = useAnimatedStyle(() => {
@@ -187,7 +187,7 @@ const RestingEntity = memo(function RestingEntity({
       )}
       <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <View collapsable={false} pointerEvents="none" onLayout={() => { if (!front) acknowledgeLayout(entity.id, token); }}
-        style={{ position: "absolute", opacity: 0, width: 1 + stamp.current.value / 1024, height: 1 }} />
+        style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
       <Animated.View style={normal}>
         {entity.character ? <RestingPoses entity={entity} reduced={reduced} renderCharacter={renderCharacter}
           action={action} sleeping={sleeping} /> : <EntityArt
@@ -351,6 +351,7 @@ export function SceneView({
             <BuildingTrim building={building} />
           </View>
           <DragOverlay
+            scene={scene}
             pickups={pickups}
             interaction={interaction}
             building={building}

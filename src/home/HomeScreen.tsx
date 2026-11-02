@@ -24,7 +24,7 @@ import { MoreItemArt } from "./art/More";
 import { moreCatalog } from "./catalogMore";
 import { itemIds, type ItemId } from "./catalog";
 import { useHomeStore } from "./useHomeStore";
-import { buildScene } from "./scene/graph";
+import { buildScene, createSceneBuilder } from "./scene/graph";
 import { resolve, type DropProposal } from "./scene/proposal";
 import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
 import { screenToRoom } from "./scene/camera";
@@ -115,7 +115,8 @@ export function HomeScreen({
     () => buildingLayout(roomIds.length, window.width / window.height > 1.8),
     [window.width, window.height]
   );
-  const baseScene = useMemo(() => buildScene(store.state), [store.state.rooms]); // Navigation is outside the scene revision.
+  const buildRuntimeScene = useMemo(createSceneBuilder, []);
+  const baseScene = useMemo(() => buildRuntimeScene(store.state), [store.state.rooms, buildRuntimeScene]); // Navigation is outside the scene revision.
   const scene = useMemo(() => withPortions(baseScene), [baseScene]);
   const { sleeping, wake } = useIdleCharacters(scene, pickups);
   useLayoutEffect(() => {
@@ -271,7 +272,7 @@ export function HomeScreen({
       );
       if (result) {
         showReaction(result.proposal);
-        const destination = buildScene(result.state);
+        const destination = buildRuntimeScene(result.state);
         setPickups((current) =>
           current.map((p, i) =>
             i === index && p
@@ -292,7 +293,7 @@ export function HomeScreen({
         sound("tap");
       } else runtime.current!.finish(index, false, undefined, undefined, undefined, token);
     },
-    [building, commitAt, sound]
+    [building, commitAt, sound, buildRuntimeScene]
   );
   const onPickup = useCallback(
     (pickup: Pickup) => {

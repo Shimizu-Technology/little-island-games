@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { starterHome, migrateHome, validHome } from "../src/home/model";
-import { buildScene } from "../src/home/scene/graph";
+import { buildScene, createSceneBuilder } from "../src/home/scene/graph";
 import { overlaps } from "../src/home/scene/spatial";
 import { paintedBounds } from "../src/home/art/silhouettes";
 import { buildingLayout } from "../src/home/camera";
@@ -23,9 +23,9 @@ describe("runtime round4", () => {
   expect(migrateHome(saved)).toEqual(saved);expect(JSON.stringify(saved)).toBe(original);
  });
  it("T2 caches unrelated immutable rooms while keeping exact current proposal revisions", () => {
-  const world=starterHome(), first=buildScene(world);
-  const next=structuredClone(world);next.rooms.home.characters[0].x++;
-  const scene=buildScene(next);
+  const build=createSceneBuilder();const world=starterHome(), first=build(world);
+  const next=structuredClone(world);next.rooms.home.characters[0].x=(next.rooms.home.characters[0].x ?? 8)+1;
+  const scene=build(next);
   expect(scene.rooms.kitchen.floor).toBe(first.rooms.kitchen.floor);
   expect(scene.rooms.kitchen.entities).toBe(first.rooms.kitchen.entities);
   expect(scene.rooms.home.entities).not.toBe(first.rooms.home.entities);

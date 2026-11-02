@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import { View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { roomIds } from "../catalogMore";
@@ -6,7 +6,7 @@ import { roomOrigin, type Building } from "../camera";
 import { anchorsFor } from "../scene/species";
 import { renderAnchors, carryBinding, carrySample } from "./rigGeometry";
 import { settleProgress } from "./settle";
-import type { SceneEntity } from "../scene/types";
+import type { Scene, SceneEntity } from "../scene/types";
 import { groupIds, restingVisible } from "./group";
 import { SettleArt } from "./SettleArt";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
@@ -44,6 +44,9 @@ function OverlayGroup({
     const binding = root.character ? carryBinding(root, pickup.grip ?? { x: 0, y: 0 }) : { x: 0, y: 0 };
     interaction.ready(index, id, bounds && { ...bounds, left: bounds.left + binding.x, top: bounds.top + binding.y });
   };
+  // Character trees already laid out while idle. Rebind their existing native
+  // art to this capture without waiting for an unchanged view to emit onLayout.
+  useLayoutEffect(() => { if (root.character) acknowledge(); }, [pickup.generation, pickup.epoch, id, index]); // eslint-disable-line react-hooks/exhaustive-deps
   const style = useAnimatedStyle(() => {
     const slot = slots.value[index];
     const lift = reduced ? 0 : Math.min(1, Math.max(0, (clock.value - slot.liftedAt) / 90));
@@ -262,6 +265,7 @@ function Front({ entity, root, reduced }: { entity: SceneEntity; root: SceneEnti
 }
 /** This sibling follows BuildingTrim and every room clip. */
 export function DragOverlay(props: {
+  scene: Scene;
   pickups: (Pickup | undefined)[];
   interaction: Interaction;
   building: Building;
@@ -274,38 +278,39 @@ export function DragOverlay(props: {
       pointerEvents="none"
       style={{ position: "absolute", left: 0, top: 0, width: "100%", height: "100%" }}
     >
-      {props.pickups.map(
-        (pickup, index) => pickup && <OverlayGroup key={`${index}:${pickup.id}`} pickup={pickup} {...props} />
-      )}
-      {props.pickups.map((pickup, index) => pickup && <SupportFronts key={`fronts:${index}:${pickup.id}`}
-        pickup={pickup} interaction={props.interaction} building={props.building} reduced={props.reduced} />)}
+      {Object.values(props.scene.entities).filter((e) => e.character).map((entity) => {
+        const pickup = props.pickups.find((p) => p?.id === entity.id) ??
+          { id: entity.id, slot: 0, scene: props.scene, generation: 0, epoch: 0 };
+        return <OverlayGroup key={entity.id} pickup={pickup} {...props} />;
+      })}
+      {props.pickups.map((pickup, index) => pickup && !pickup.scene.entities[pickup.id]?.character &&
+        <OverlayGroup key={`${index}:${pickup.id}`} pickup={pickup} {...props} />)}
+      <SupportFronts scene={props.scene} interaction={props.interaction} building={props.building} reduced={props.reduced} />
     </View>
   );
 }
 
 /** The same pre-mounted furniture front replaces its room pass on the release
  * frame. It stays in house space, so the moving actor passes behind it naturally. */
-function SupportFronts({ pickup, interaction, building, reduced }: {
-  pickup: Pickup; interaction: Interaction; building: Building; reduced: boolean;
+function SupportFronts({ scene, interaction, building, reduced }: {
+  scene: Scene; interaction: Interaction; building: Building; reduced: boolean;
 }) {
-  return <>{Object.values((pickup.destination ?? pickup.scene).entities)
+  return <>{Object.values(scene.entities)
     .filter((entity) => entity.item && capabilityOf(entity.item.item).sockets?.length)
-    .map((entity) => <SupportFront key={entity.id} entity={entity} index={pickup.slot}
+    .map((entity) => <SupportFront key={entity.id} entity={entity}
       interaction={interaction} building={building} reduced={reduced} />)}</>;
 }
-function SupportFront({ entity, index, interaction, building, reduced }: {
-  entity: SceneEntity; index: number; interaction: Interaction; building: Building; reduced: boolean;
+function SupportFront({ entity, interaction, building, reduced }: {
+  entity: SceneEntity; interaction: Interaction; building: Building; reduced: boolean;
 }) {
   const frame = artFrame(entity), origin = roomOrigin(roomIds.indexOf(entity.room), building);
   const { slots } = interaction;
   const style = useAnimatedStyle(() => {
-    const s = slots.value[index], attachment = s.proposal?.attachment ?? s.subject?.attachment;
-    // Slot order chooses exactly one front if two independent sockets share a seat.
-    const prior = slots.value.slice(0, index).some((p) => p.id && p.ready && (p.settleAt > 0 || p.pausedElapsed > 0) &&
-      (p.proposal?.attachment ?? p.subject?.attachment)?.kind === "socket" &&
-      ((p.proposal?.attachment ?? p.subject?.attachment) as { item: string }).item === entity.id);
-    return { opacity: !prior && s.id && s.ready && (s.settleAt > 0 || s.pausedElapsed > 0) &&
-      attachment?.kind === "socket" && attachment.item === entity.id ? 1 : 0 };
+    return { opacity: slots.value.some((s) => {
+      const attachment = s.proposal?.attachment ?? s.subject?.attachment;
+      return s.id && s.ready && (s.settleAt > 0 || s.pausedElapsed > 0) &&
+        attachment?.kind === "socket" && attachment.item === entity.id;
+    }) ? 1 : 0 };
   });
   return <Animated.View pointerEvents="none" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
     style={[{ position: "absolute", left: origin.x + entity.contact.x + frame.left,

@@ -507,6 +507,8 @@ export function useInteraction({
             i === index ? { ...s, phase: "settling", proposal: effect.proposal, settledId: effect.entity,
               releaseX: s.x, releaseY: s.y,
               targetX: origin.x + effect.proposal.contact.x, targetY: origin.y + effect.proposal.contact.y,
+              x: reduced ? origin.x + effect.proposal.contact.x : s.x,
+              y: reduced ? origin.y + effect.proposal.contact.y : s.y,
               settleAt: eventTime(), travelDelay: 0, finished: false, commitRequested: false } : s
           )
         );

@@ -322,17 +322,22 @@ function lyingActivation(item: Instance, socket: string): Bounds {
 }
 // One immutable index per room content. A character move must not reconstruct
 // three unrelated rooms or allocate new SVG props for every resting item.
-const sceneRoomCache: Partial<Record<RoomId, { key: string; index: RoomIndex }>> = {};
-export function buildScene(state: SceneState): Scene {
+type SceneRoomCache = Partial<Record<RoomId, { key: string; index: RoomIndex }>>;
+/** Scope memoization to one mounted world. Ordinary engine queries stay pure. */
+export function createSceneBuilder() {
+  const cache: SceneRoomCache = {};
+  return (state: SceneState) => buildScene(state, cache);
+}
+export function buildScene(state: SceneState, cache?: SceneRoomCache): Scene {
   const revision = worldRevision(state);
   const rooms = {} as Scene["rooms"];
   const entities: Scene["entities"] = {};
   for (const room of roomIds) {
     const key = JSON.stringify(state.rooms[room]);
-    let cached = sceneRoomCache[room];
+    let cached = cache?.[room];
     if (!cached || cached.key !== key) {
       cached = { key, index: buildRoomIndex(room, state.rooms[room], revision) };
-      sceneRoomCache[room] = cached;
+      if (cache) cache[room] = cached;
     }
     rooms[room] = cached.index.revision === revision ? cached.index : { ...cached.index, revision };
     Object.assign(entities, rooms[room].entities);
