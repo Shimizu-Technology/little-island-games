@@ -1,13 +1,13 @@
 {
   "generatedAt": "2026-11-02T03:21:34.851896+00:00",
-  "note": "Inventory excludes itself. All artifact paths are task-owned. Source fetch timestamps/original checksums are in manifests; inventory hashes final local files.",
+  "note": "Book acquisition inventory refreshed after parent integration: review identities use role names for the strict privacy boundary. Reading image bytes and rights/edition source bytes are unchanged; policy contact snapshot retained under docs/library/book-evidence.",
   "readingImageBytes": 17409088,
-  "bytesExcludingInventory": 24438115,
+  "bytesExcludingInventory": 24439195,
   "files": [
     {
       "path": "content/library/book-items.json",
-      "bytes": 317050,
-      "sha256": "437f3e92f07d3dce88d6196cd0d9060af1b97a6eb927217d44523c86e5d139ff"
+      "bytes": 323782,
+      "sha256": "e0b5cd04ce5b190d906811fdd450cdda9d79f2128465ef49bdad9822cea70311"
     },
     {
       "path": "content/library/book-speech.json",
@@ -21,8 +21,8 @@
     },
     {
       "path": "content/library/books/REPORT.md",
-      "bytes": 12543,
-      "sha256": "b584c08e71da23bdc4beb697acb9b6e35d49cf637bff24978fbc993c871ae331"
+      "bytes": 12609,
+      "sha256": "6283d0fef32cc1851a70e4816cf1078970c9032b2bed2e7d535cc435e7245947"
     },
     {
       "path": "content/library/books/a-beautiful-day/CREDITS.html",
@@ -56,8 +56,8 @@
     },
     {
       "path": "content/library/books/a-beautiful-day/manifest.json",
-      "bytes": 16749,
-      "sha256": "3f29af0bdfde81f6ee08a2d677584e75580dd63f56f2c9d01f10e1152088c3c2"
+      "bytes": 16793,
+      "sha256": "0ddab4fae450a37f9a681116ecad09030087ea03825414f0baec59ac781fc024"
     },
     {
       "path": "content/library/books/a-beautiful-day/page-00.jpg",
@@ -131,8 +131,8 @@
     },
     {
       "path": "content/library/books/a-beautiful-day/transcripts.json",
-      "bytes": 5865,
-      "sha256": "c308b4f5481ae783854455cb345a671847fa21acf35f6eecbf0906b9a50272bd"
+      "bytes": 5909,
+      "sha256": "d68b6ce134392398934bd8269919ac45160f495aac1d92ebda08c872b850a19a"
     },
     {
       "path": "content/library/books/a-fish-and-a-gift/CREDITS.html",
@@ -166,8 +166,8 @@
     },
     {
       "path": "content/library/books/a-fish-and-a-gift/manifest.json",
-      "bytes": 20004,
-      "sha256": "4e85b00d30fdfc1885fa310ca0cf82445cff5cb038f0be466740ed488ac9a93d"
+      "bytes": 20048,
+      "sha256": "ab489083fca9e129a4774acfe7a643dfc781c8e684f03f53e6e03a74c24f8003"
     },
     {
       "path": "content/library/books/a-fish-and-a-gift/page-00.jpg",
@@ -241,8 +241,8 @@
     },
     {
       "path": "content/library/books/a-fish-and-a-gift/transcripts.json",
-      "bytes": 8627,
-      "sha256": "5c8d42aea879912cfb6b8f0b513713700c38917723fdd4442721a097eeb628cd"
+      "bytes": 8671,
+      "sha256": "462b898bcdbb9506bfb472a11cedef8aa41888c269a88af17e9c2da4354fb209"
     },
     {
       "path": "content/library/books/a-house-for-mouse/CREDITS.html",
@@ -276,8 +276,8 @@
     },
     {
       "path": "content/library/books/a-house-for-mouse/manifest.json",
-      "bytes": 16490,
-      "sha256": "8764bc72dc388a5bbb354fd91ac9df26886be82c2da08b6b42db06e8d6b53973"
+      "bytes": 16534,
+      "sha256": "1d46209b803ed146bb4084a0053111a8a0945b5dbfe1084d43284a008705d8db"
     },
     {
       "path": "content/library/books/a-house-for-mouse/page-00.jpg",
@@ -351,8 +351,8 @@
     },
     {
       "path": "content/library/books/a-house-for-mouse/transcripts.json",
-      "bytes": 5351,
-      "sha256": "0e63ed34fe7bf7d97386fd75196832f2db3bc05ad777a6db19409d5fb559d3b8"
+      "bytes": 5395,
+      "sha256": "351938ab1292f2dbd3f24972ae7d89d5a93c1da1ad68fe65cfb6d2295bc8f880"
     },
     {
       "path": "content/library/books/a-tiny-seed/CREDITS.html",
@@ -386,8 +386,8 @@
     },
     {
       "path": "content/library/books/a-tiny-seed/manifest.json",
-      "bytes": 18407,
-      "sha256": "80bd70bbf293936b727ba07d33fa190727103fb30f409afc1caaacab9c2b9939"
+      "bytes": 18451,
+      "sha256": "660a72f08b15e789db63d96604758e5aca990313205654e72fb08125fbcac8af"
     },
     {
       "path": "content/library/books/a-tiny-seed/page-00.jpg",
@@ -461,8 +461,8 @@
     },
     {
       "path": "content/library/books/a-tiny-seed/transcripts.json",
-      "bytes": 7058,
-      "sha256": "3364a0fa4989778f1dee514f0c0b40d3adb5317954a67800139ebc932b94543d"
+      "bytes": 7102,
+      "sha256": "094416b070e7d27ad19a052e4d87475527849b462d8d5fd4d42bd15e1b4887f6"
     },
     {
       "path": "content/library/books/author-qa.json",
@@ -491,8 +491,8 @@
     },
     {
       "path": "content/library/books/busy-day/manifest.json",
-      "bytes": 13431,
-      "sha256": "ce07df393e0aaf3ce4d909830a5f769aa877730c9b327f97291c6e1f819f2351"
+      "bytes": 13475,
+      "sha256": "c453cdde0a9ca6bcb85d3f185ee8bab67f28c28e32b97f378de3604c7b259345"
     },
     {
       "path": "content/library/books/busy-day/page-00.jpg",
@@ -576,8 +576,8 @@
     },
     {
       "path": "content/library/books/busy-day/transcripts.json",
-      "bytes": 5152,
-      "sha256": "e7d218987b90c4c986dee3c23430213f9977f8eb9daf56bd6e1bc53a081b7584"
+      "bytes": 5196,
+      "sha256": "d02a00b1ec27ae7c064067a9f18a3cdbfff1ec9887c8d3dab166c360cd1bff25"
     },
     {
       "path": "content/library/books/little-ants-big-plan/CREDITS.html",
@@ -611,8 +611,8 @@
     },
     {
       "path": "content/library/books/little-ants-big-plan/manifest.json",
-      "bytes": 17568,
-      "sha256": "2c194c90f35285805edc319e55cce880836c98ca288a6016041202a54836cc5c"
+      "bytes": 17612,
+      "sha256": "dfcf7f3fffd4b461b8a4e1490594a90bab19cddd2a9599103677d9d1c70c0201"
     },
     {
       "path": "content/library/books/little-ants-big-plan/page-00.jpg",
@@ -686,8 +686,8 @@
     },
     {
       "path": "content/library/books/little-ants-big-plan/transcripts.json",
-      "bytes": 6393,
-      "sha256": "226473f214ed10a3266515d9a8f140d617f8ddeb23e857e6269719d120aac74c"
+      "bytes": 6437,
+      "sha256": "cb0293f3cb580cc4773063726af7a039c90880947c8add2d15daa5851114a3c8"
     },
     {
       "path": "content/library/books/publisher-crediting-policy.txt",
@@ -706,8 +706,8 @@
     },
     {
       "path": "content/library/books/publisher-source-policy.txt",
-      "bytes": 6884,
-      "sha256": "821c9115e2449a4e825821abe2521c183d4c53a8bf30b29fd06089e90dca4323"
+      "bytes": 462,
+      "sha256": "02fd5e8144e6bec96b98edc0755ecc8060b787d7b35d08dc7fcfe258f35cdad1"
     },
     {
       "path": "content/library/books/sleepy-mr-sloth/CREDITS.html",
@@ -741,8 +741,8 @@
     },
     {
       "path": "content/library/books/sleepy-mr-sloth/manifest.json",
-      "bytes": 17307,
-      "sha256": "2676f9c119a601c3ef3693efa955da5f4ed263b4278a45334166ff56f399e500"
+      "bytes": 17351,
+      "sha256": "7af5699d2bcdc1290b07b8745e9f6b8daf15d1eaecba88b50eecfa21c0c15284"
     },
     {
       "path": "content/library/books/sleepy-mr-sloth/page-00.jpg",
@@ -816,8 +816,8 @@
     },
     {
       "path": "content/library/books/sleepy-mr-sloth/transcripts.json",
-      "bytes": 6007,
-      "sha256": "bb2c919e30cb155000fec572fcffb9b5fc136d07a260a8e9ae1833aa4a9578bf"
+      "bytes": 6051,
+      "sha256": "6647ec4e7888c463e3c7a5d594028d2eca10759612f50b17da11262d129d9f08"
     },
     {
       "path": "content/library/books/source-manifest.json",
@@ -856,8 +856,8 @@
     },
     {
       "path": "content/library/books/the-best-thing-ever/manifest.json",
-      "bytes": 17849,
-      "sha256": "da633b64d312fc160636ede445d659751b6601c82bbb62b7876916da978b1ee6"
+      "bytes": 17893,
+      "sha256": "786afb22639226f4a43839c4121f17997f349ef34c088042f620a225dfc49dec"
     },
     {
       "path": "content/library/books/the-best-thing-ever/page-00.jpg",
@@ -936,8 +936,8 @@
     },
     {
       "path": "content/library/books/the-best-thing-ever/transcripts.json",
-      "bytes": 6735,
-      "sha256": "7bd97f6ac056b9f6e06a5c0c08a004076221aeb5fcc7fab286bcd5b53bfa37ff"
+      "bytes": 6779,
+      "sha256": "3b4fdbb7fc664a6b6c745713b987bcdb223bc9d6055bb7ec178eefea2ddbb81e"
     },
     {
       "path": "content/library/books/validator-result.txt",

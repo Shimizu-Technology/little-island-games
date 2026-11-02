@@ -1,44 +1,48 @@
 [
   {
     "id": "turtle-breath",
-    "title": "How do sea turtles breathe?",
+    "title": "How does a sea turtle breathe?",
     "category": "ocean",
     "aliases": [
+      "turtles",
       "turtle",
       "sea turtle",
       "breathing",
-      "turtl"
+      "green turtle"
     ],
     "tags": [
       "ocean",
-      "reptile",
-      "lungs"
+      "legacy-explore",
+      "sea turtle",
+      "breathing"
     ],
     "terms": [
       "how",
-      "do",
+      "does",
+      "a",
       "sea",
-      "turtles",
-      "breathe",
       "turtle",
+      "breathe",
+      "turtles",
       "breathing",
-      "turtl",
+      "green",
       "ocean",
-      "reptile",
-      "lungs"
+      "legacy",
+      "explore"
     ],
     "sounds": [
       "hw",
-      "d",
+      "ds",
+      "",
       "s",
-      "trtls",
+      "trtl",
       "brth",
-      "trtl",
+      "trtls",
       "brthng",
-      "trtl",
+      "grn",
       "sn",
-      "rptl",
-      "lngs"
+      "lgsy",
+      "xplr"
     ]
   },
   {

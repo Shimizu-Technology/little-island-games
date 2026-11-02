@@ -1,0 +1,333 @@
+{
+  "fish-gills": {
+    "origin": "new",
+    "planTitle": "How does a fish breathe?",
+    "makePrompt": "Draw a fish with water passing over its gills",
+    "motif": "fish",
+    "review": "drafted"
+  },
+  "crab-shells": {
+    "origin": "new",
+    "planTitle": "Why do crabs have shells?",
+    "makePrompt": "Draw a crab beside its old empty coat",
+    "motif": "crab",
+    "review": "drafted"
+  },
+  "parrotfish": {
+    "origin": "new",
+    "planTitle": "What do parrotfish eat?",
+    "makePrompt": "Draw a reef bite becoming tiny sand grains",
+    "motif": "parrotfish",
+    "review": "drafted"
+  },
+  "tide-pool": {
+    "origin": "new",
+    "planTitle": "Who lives in a tide pool?",
+    "makePrompt": "Make a tide-pool picture with hiding places",
+    "motif": "pool",
+    "review": "drafted"
+  },
+  "beach-sand": {
+    "origin": "new",
+    "planTitle": "Where does beach sand come from?",
+    "makePrompt": "Draw three possible sources of beach grains",
+    "motif": "sand",
+    "review": "drafted"
+  },
+  "mangrove-roots": {
+    "origin": "new",
+    "planTitle": "Why are mangroves important?",
+    "makePrompt": "Draw a root shelter for a small fish",
+    "motif": "mangrove",
+    "review": "drafted"
+  },
+  "jellyfish-move": {
+    "origin": "new",
+    "planTitle": "How do jellyfish move?",
+    "makePrompt": "Draw three shapes of a pulsing jellyfish bell",
+    "motif": "jelly",
+    "review": "drafted"
+  },
+  "whale-song": {
+    "origin": "new",
+    "planTitle": "Why do whales sing?",
+    "makePrompt": "Draw a whale song as a repeating pattern",
+    "motif": "whale",
+    "review": "drafted"
+  },
+  "guam-made": {
+    "origin": "new",
+    "planTitle": "How was Guam made?",
+    "makePrompt": "Make a two-rock map of Guam",
+    "motif": "island",
+    "review": "drafted"
+  },
+  "limestone": {
+    "origin": "new",
+    "planTitle": "What is limestone?",
+    "makePrompt": "Draw shell bits inside an imaginary rock",
+    "motif": "limestone",
+    "review": "drafted"
+  },
+  "guam-rail": {
+    "origin": "new",
+    "planTitle": "What is the Guam rail?",
+    "makePrompt": "Draw a sheltered home for a ground bird",
+    "motif": "rail",
+    "review": "drafted"
+  },
+  "limestone-forest": {
+    "origin": "new",
+    "planTitle": "What is a limestone forest?",
+    "makePrompt": "Draw the high and low layers of a forest",
+    "motif": "forest",
+    "review": "drafted"
+  },
+  "drinking-water": {
+    "origin": "new",
+    "planTitle": "Where does our drinking water come from?",
+    "makePrompt": "Draw rain, rock, a well and a tap",
+    "motif": "aquifer",
+    "review": "drafted"
+  },
+  "village": {
+    "origin": "new",
+    "planTitle": "What is a village?",
+    "makePrompt": "Make a page about a place your family chooses",
+    "motif": "village",
+    "review": "drafted"
+  },
+  "native-trees": {
+    "origin": "new",
+    "planTitle": "Why are native trees important?",
+    "makePrompt": "Draw a tree with food, shade and shelter",
+    "motif": "tree",
+    "review": "drafted"
+  },
+  "family-walk": {
+    "origin": "new",
+    "planTitle": "What can we notice on a family walk?",
+    "makePrompt": "Draw three things from a grown-up-approved walk",
+    "motif": "walk",
+    "review": "drafted",
+    "chamoru": {
+      "repository": "HafaGPT/api/language_content/canonical_vocabulary.json",
+      "fileSha256": "682a3daece1082b692ef27568c127c8c381e0f74a93c6964e6be40a823dbc1cb",
+      "entry": {
+        "id": "family.family",
+        "category": "family",
+        "english": "Family",
+        "canonical_chamorro": "Familia",
+        "recommended_teaching_term": "Familia",
+        "normalized_key": "familia",
+        "part_of_speech": "n.",
+        "teaching_level": "beginner",
+        "review_status": "source_backed",
+        "confidence": "high",
+        "pronunciation": {
+          "guide": "fah-MEE-lee-ah",
+          "status": "needs_native_review"
+        },
+        "variants": [
+          {
+            "term": "Fåmilia",
+            "type": "source_variant",
+            "status": "source_backed",
+            "source": "chamoru_info_dictionary.json",
+            "notes": "Chamoru.info bundled source spelling."
+          }
+        ],
+        "deprecated_app_terms": [],
+        "needs_review_terms": [],
+        "source_citations": [
+          {
+            "source": "revised_and_updated_chamorro_dictionary.json",
+            "headword": "familia",
+            "definition": "family",
+            "part_of_speech": "n."
+          },
+          {
+            "source": "chamoru_info_dictionary.json",
+            "headword": "fåmilia",
+            "definition": "Family; tribe; clan; folk; category of plants or animals."
+          },
+          {
+            "source": "chamorro_english_dictionary_TOD.json",
+            "headword": "familia",
+            "definition": "family, tribe, clan, folk, category of plants or animals"
+          }
+        ],
+        "notes": "Strongly source-backed family/clan term."
+      },
+      "pronunciationReview": "pending; do not mark source-backed as pronunciation approval"
+    }
+  },
+  "distant-stars": {
+    "origin": "new",
+    "planTitle": "Why do stars look tiny?",
+    "makePrompt": "Draw the same star near and far",
+    "motif": "star-distance",
+    "review": "drafted"
+  },
+  "shadow": {
+    "origin": "new",
+    "planTitle": "What is a shadow?",
+    "makePrompt": "Make a page of three shadow shapes",
+    "motif": "shadow",
+    "review": "drafted"
+  },
+  "constellation": {
+    "origin": "new",
+    "planTitle": "What is a constellation?",
+    "makePrompt": "Join drawn star dots into your own invented shape",
+    "motif": "constellation",
+    "review": "drafted"
+  },
+  "night-view": {
+    "origin": "new",
+    "planTitle": "Why does the sky look different at night?",
+    "makePrompt": "Draw daytime and nighttime views from one safe place",
+    "motif": "night",
+    "review": "drafted"
+  },
+  "telescope": {
+    "origin": "new",
+    "planTitle": "What is a telescope?",
+    "makePrompt": "Design a telescope and label its light-gathering part",
+    "motif": "telescope",
+    "review": "drafted"
+  },
+  "milky-way": {
+    "origin": "new",
+    "planTitle": "What is the Milky Way?",
+    "makePrompt": "Draw our solar system as a dot in a galaxy model",
+    "motif": "galaxy",
+    "review": "drafted"
+  },
+  "comet": {
+    "origin": "new",
+    "planTitle": "What is a comet?",
+    "makePrompt": "Draw the Sun and a comet tail pointing away",
+    "motif": "comet",
+    "review": "drafted"
+  },
+  "astronaut-home": {
+    "origin": "new",
+    "planTitle": "How do astronauts live in space?",
+    "makePrompt": "Design a space room for working, resting and storing things",
+    "motif": "astronaut",
+    "review": "drafted"
+  },
+  "breathing": {
+    "origin": "new",
+    "planTitle": "Why do we breathe?",
+    "makePrompt": "Draw air reaching lungs and blood",
+    "motif": "lungs",
+    "review": "drafted"
+  },
+  "heart": {
+    "origin": "new",
+    "planTitle": "What does the heart do?",
+    "makePrompt": "Draw a loop from heart to lungs and body",
+    "motif": "heart",
+    "review": "drafted"
+  },
+  "bones": {
+    "origin": "new",
+    "planTitle": "How do our bones help us?",
+    "makePrompt": "Draw a protective rib cage around a paper heart",
+    "motif": "bones",
+    "review": "drafted"
+  },
+  "muscles": {
+    "origin": "new",
+    "planTitle": "How do muscles move us?",
+    "makePrompt": "Draw two pulling bands around a paper joint",
+    "motif": "muscle",
+    "review": "drafted"
+  },
+  "vision": {
+    "origin": "new",
+    "planTitle": "How do we see?",
+    "makePrompt": "Draw light entering an eye model",
+    "motif": "eye",
+    "review": "drafted"
+  },
+  "hearing": {
+    "origin": "new",
+    "planTitle": "How do we hear?",
+    "makePrompt": "Draw sound becoming motion and then a signal",
+    "motif": "ear",
+    "review": "drafted"
+  },
+  "smell": {
+    "origin": "new",
+    "planTitle": "How do we smell?",
+    "makePrompt": "Draw a familiar safe smell from memory",
+    "motif": "nose",
+    "review": "drafted"
+  },
+  "taste": {
+    "origin": "new",
+    "planTitle": "Why can we taste food?",
+    "makePrompt": "Draw a favorite food using color and texture",
+    "motif": "tongue",
+    "review": "drafted"
+  },
+  "wheel": {
+    "origin": "new",
+    "planTitle": "How does a wheel help?",
+    "makePrompt": "Design a cart for a pretend load",
+    "motif": "wheel",
+    "review": "drafted"
+  },
+  "lever": {
+    "origin": "new",
+    "planTitle": "What is a lever?",
+    "makePrompt": "Draw a lever with the pivot close to a pretend load",
+    "motif": "lever",
+    "review": "drafted"
+  },
+  "ramp": {
+    "origin": "new",
+    "planTitle": "How does a ramp help us lift?",
+    "makePrompt": "Draw two ramps reaching the same height",
+    "motif": "ramp",
+    "review": "drafted"
+  },
+  "gears": {
+    "origin": "new",
+    "planTitle": "How do gears turn together?",
+    "makePrompt": "Draw a pair of gears with opposite arrows",
+    "motif": "gears",
+    "review": "drafted"
+  },
+  "pulley": {
+    "origin": "new",
+    "planTitle": "How does a pulley work?",
+    "makePrompt": "Draw a rope path over a fixed pulley",
+    "motif": "pulley",
+    "review": "drafted"
+  },
+  "boats-float": {
+    "origin": "new",
+    "planTitle": "Why do boats float?",
+    "makePrompt": "Draw a wide hollow hull and the water it moves aside",
+    "motif": "boat",
+    "review": "drafted"
+  },
+  "airplanes": {
+    "origin": "new",
+    "planTitle": "How do airplanes stay up?",
+    "makePrompt": "Draw a plane with lift, weight, thrust and drag arrows",
+    "motif": "plane",
+    "review": "drafted"
+  },
+  "bicycle": {
+    "origin": "new",
+    "planTitle": "How does a bicycle move?",
+    "makePrompt": "Draw the path from pedals through chain to wheel",
+    "motif": "bicycle",
+    "review": "drafted"
+  }
+}

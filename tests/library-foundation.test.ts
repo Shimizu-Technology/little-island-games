@@ -17,7 +17,7 @@ function validate(mutator: (items: typeof data) => void, shipping = false) {
   finally {rmSync(dir,{recursive:true,force:true});}
 }
 describe('Library content admission',()=>{
-  it('accepts explicit design drafts with all rights, review, transcript and pending-audio reasons',()=>expect(validate(()=>{})).toContain('4 items'));
+  it('accepts explicit design drafts with all rights, review, transcript and pending-audio reasons',()=>expect(validate(()=>{})).toContain(`${data.length} items`));
   it('rejects missing image rights even on a draft',()=>expect(()=>validate(items=>{delete (items[0].image.rights as {credit?:string}).credit;})).toThrow());
   it('rejects absent review identity or date',()=>expect(()=>validate(items=>{items[0].review.reviewer='';})).toThrow());
   it('rejects a missing audio declaration rather than silently treating it as pending',()=>expect(()=>validate(items=>{delete (items[0].label as {audio?:unknown}).audio;})).toThrow());

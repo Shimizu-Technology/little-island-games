@@ -31,7 +31,7 @@ The SVG exporter evaluates only the existing `Motif` JSX with standard SVG primi
 
 ## Review and source-access limits
 
-Every new item has `review.status: draft` and reviewer `Codex content author (drafted; independent factual and Leon family review pending)`. There is no factualReviewer or familyReviewer assignment. Author consultation does not satisfy the independent factual pass, Leon’s sensitive/local-cultural pass, reading-content review, or audio review. Model analogies and new definitions also require that independent sentence-level pass. No source quotation or external image is copied into the new elaboration.
+Every new item has `review.status: draft` and reviewer `Codex content author (drafted; independent factual and designated family reviewer family review pending)`. There is no factualReviewer or familyReviewer assignment. Author consultation does not satisfy the independent factual pass, designated family reviewer’s sensitive/local-cultural pass, reading-content review, or audio review. Model analogies and new definitions also require that independent sentence-level pass. No source quotation or external image is copied into the new elaboration.
 
 Some primary URLs could not be read directly. They remain in the source list and complete original payload. `sourceEvidence` distinguishes opened pages, failed attempts and primary-publisher search extracts; its access date is not a claim that every direct fetch succeeded. Specific follow-up:
 
@@ -63,7 +63,7 @@ The parent must merge the 50 records into its catalogue, merge the exact speech 
 
 ## Item ledger
 
-Each entry below records all retained explanation text. Exact original prompts, related IDs, source/review payloads and sentence IDs are in the matching provenance key. Bibliography numbers refer to the exact URL list after the ledger. Safety notes are author flags for Leon, not approval.
+Each entry below records all retained explanation text. Exact original prompts, related IDs, source/review payloads and sentence IDs are in the matching provenance key. Bibliography numbers refer to the exact URL list after the ledger. Safety notes are author flags for designated family reviewer, not approval.
 
 ### sun — Is the Sun a star?
 
@@ -253,7 +253,7 @@ Retained short: Sea turtles breathe air with lungs. They must come to the surfac
 
 Retained deeper: Green turtles often eat seagrass and algae as adults. Female sea turtles come onto beaches to lay eggs. Observe turtles from a distance and give them space; never chase or feed them.
 
-Safety/review flags: body: Lungs, breathing, body fat and egg laying; Leon family review. wildlife safety: Distance, no chase/feed/touch, no blocking a nesting turtle. water safety: No breath-holding or underwater imitation.
+Safety/review flags: body: Lungs, breathing, body fat and egg laying; designated family reviewer family review. wildlife safety: Distance, no chase/feed/touch, no blocking a nesting turtle. water safety: No breath-holding or underwater imitation.
 
 ### food-web — Who feeds whom in the sea?
 
@@ -423,7 +423,7 @@ Retained short: Lightning is a powerful electrical discharge. It heats the air v
 
 Retained deeper: Lightning can happen inside a cloud, between clouds, or between a cloud and the ground. If you hear thunder, tell a grown-up and go inside a substantial building. Watching from shelter is safer.
 
-Safety/review flags: storms/disaster: Lightning can frighten children; calm safety wording and Leon family review. safety: Immediately tell a grown-up and enter a substantial building; stay away from windows. Never suggest watching from an open shelter, going outdoors, or timing thunder. legacy audio safety: Preserve corrected science-v25-explore-lightning key; older clip must not be reused.
+Safety/review flags: storms/disaster: Lightning can frighten children; calm safety wording and designated family reviewer family review. safety: Immediately tell a grown-up and enter a substantial building; stay away from windows. Never suggest watching from an open shelter, going outdoors, or timing thunder. legacy audio safety: Preserve corrected science-v25-explore-lightning key; older clip must not be reused.
 
 ### typhoons — Is a typhoon a hurricane?
 
@@ -433,7 +433,7 @@ Retained short: Both are names for the same kind of large spinning tropical stor
 
 Retained deeper: Tropical cyclones draw energy from warm ocean water. Their winds and rain can be dangerous. This app is for learning, not live warnings: a grown-up should follow local officials and prepare early.
 
-Safety/review flags: storms/disaster: Dangerous wind and rain, Guam context; Leon family review. culture: Regional storm naming and Guam context; no new cultural or CHamoru terms. safety: Offline education only, never current warnings; follow local officials and grown-up preparations.
+Safety/review flags: storms/disaster: Dangerous wind and rain, Guam context; designated family reviewer family review. culture: Regional storm naming and Guam context; no new cultural or CHamoru terms. safety: Offline education only, never current warnings; follow local officials and grown-up preparations.
 
 ### water-cycle — Where does water go?
 
@@ -473,7 +473,7 @@ Retained short: Guam is an island in the western Pacific Ocean. It is the southe
 
 Retained deeper: Guam has beaches, reefs, hills, and forests. Its northern limestone landscape and southern volcanic hills tell parts of its long geological story. People live, work, and care for these connected places.
 
-Safety/review flags: culture: Guam place and identity; Leon local/family review. Natural history does not stand in for cultural history. art accuracy: Generic island motif is not an accurate Guam map. No new CHamoru terms.
+Safety/review flags: culture: Guam place and identity; designated family reviewer local/family review. Natural history does not stand in for cultural history. art accuracy: Generic island motif is not an accurate Guam map. No new CHamoru terms.
 
 ### islands — How can land be an island?
 
@@ -483,7 +483,7 @@ Retained short: An island is a piece of land surrounded by water. Some islands f
 
 Retained deeper: Many ocean islands are the tops of much larger landforms rising from the seafloor. An island's shore can change as waves, currents, and storms move sand and other material.
 
-Safety/review flags: culture: Islands and Guam/world place context; Leon review, no new cultural claims or CHamoru terms. storms/disaster: Original mentions storms reshaping shores; not a safety forecast.
+Safety/review flags: culture: Islands and Guam/world place context; designated family reviewer review, no new cultural claims or CHamoru terms. storms/disaster: Original mentions storms reshaping shores; not a safety forecast.
 
 ### reef — Why care for Guam's reefs?
 
@@ -493,7 +493,7 @@ Retained short: A coral reef is a living neighborhood. Fish and many other anima
 
 Retained deeper: Reefs need suitable water conditions to thrive. Touching coral, leaving litter, and damaging habitats can harm living things. On a family visit, leave animals and coral where they are and follow local guidance.
 
-Safety/review flags: culture: Guam reef stewardship and local guidance; Leon review. storms/disaster: Reefs reduce some wave energy; never a guarantee of storm protection. wildlife safety: Leave animals and coral in place; no touch, collecting, litter or trampling.
+Safety/review flags: culture: Guam reef stewardship and local guidance; designated family reviewer review. storms/disaster: Reefs reduce some wave energy; never a guarantee of storm protection. wildlife safety: Leave animals and coral in place; no touch, collecting, litter or trampling.
 
 ### trench — What is the Mariana Trench?
 
@@ -503,7 +503,7 @@ Retained short: The Mariana Trench is a very deep part of the Pacific Ocean near
 
 Retained deeper: Its deepest known area is called Challenger Deep. The water there is dark and under enormous pressure. Deep does not mean lifeless: scientists use special equipment to investigate this ocean environment.
 
-Safety/review flags: culture: Mariana place name and Guam/world geography; Leon review, no new CHamoru terms. water safety: Specialist vehicles only; no diving or pressure experiment.
+Safety/review flags: culture: Mariana place name and Guam/world geography; designated family reviewer review, no new CHamoru terms. water safety: Specialist vehicles only; no diving or pressure experiment.
 
 ### mountains — How can mountains grow?
 
@@ -513,7 +513,7 @@ Retained short: Earth's outer shell is divided into slowly moving plates. Where 
 
 Retained deeper: Mountains keep changing after they form. Rain, rivers, ice, and wind can wear rock away. Building and wearing down happen over long periods. A mountain is not always a volcano.
 
-Safety/review flags: culture: World place context and Denali example; Leon review of naming/context. model safety: Gently fold scrap paper; no climbing or rock-breaking activity.
+Safety/review flags: culture: World place context and Denali example; designated family reviewer review of naming/context. model safety: Gently fold scrap paper; no climbing or rock-breaking activity.
 
 ### rivers — Why do rivers wind toward the sea?
 
@@ -523,7 +523,7 @@ Retained short: Rivers carry flowing water downhill under gravity. They collect 
 
 Retained deeper: Flowing water can wear away rock and move sediment. A river can curve because of the land and the way water erodes and deposits material. Not every river reaches the sea.
 
-Safety/review flags: culture: Guam/world geography context; Leon review. water safety: Drawing only; no entering a river or floodwater.
+Safety/review flags: culture: Guam/world geography context; designated family reviewer review. water safety: Drawing only; no entering a river or floodwater.
 
 ### continents — What are continents?
 
@@ -533,7 +533,7 @@ Retained short: Continents are Earth's large land regions. A common seven-contin
 
 Retained deeper: A map flattens Earth's curved surface, so it changes some shapes, sizes, or distances. A globe is a round model. Neither a map nor a globe can show every detail at once.
 
-Safety/review flags: culture: Continent grouping and naming conventions differ; retain qualification and request Leon review. map accuracy: Stylized motif does not provide navigational or boundary information.
+Safety/review flags: culture: Continent grouping and naming conventions differ; retain qualification and request designated family reviewer review. map accuracy: Stylized motif does not provide navigational or boundary information.
 
 ### maps — How do you read a map?
 
@@ -543,7 +543,7 @@ Retained short: A map uses shapes, colors, and symbols to show places. A key exp
 
 Retained deeper: Maps are made for different jobs. A walking map may show paths, while a weather map shows air conditions. Our illustrated expedition map is a simplified learning map, not a navigation chart.
 
-Safety/review flags: culture: Human choices of place labels, boundaries and map conventions; Leon review. navigation safety: Learning map only, never a real navigation chart.
+Safety/review flags: culture: Human choices of place labels, boundaries and map conventions; designated family reviewer review. navigation safety: Learning map only, never a real navigation chart.
 
 ### directions — Which way is north?
 
@@ -553,7 +553,7 @@ Retained short: North, east, south, and west are directions. A compass rose on a
 
 Retained deeper: A magnetic compass points toward magnetic north, which is not exactly the same as the geographic North Pole. A map may show different north arrows. Use real navigation tools with a knowledgeable grown-up.
 
-Safety/review flags: culture: Map orientation conventions and Guam/world context; Leon review. navigation safety: Decorative compass is not a live sensor; real navigation with knowledgeable grown-up and current tools.
+Safety/review flags: culture: Map orientation conventions and Guam/world context; designated family reviewer review. navigation safety: Decorative compass is not a live sensor; real navigation with knowledgeable grown-up and current tools.
 
 ### volcanoes — What is inside a volcano?
 
@@ -563,7 +563,7 @@ Retained short: Melted rock below the ground is called magma. When it reaches th
 
 Retained deeper: Volcanoes do not all erupt in the same way. Some build islands and mountains over many eruptions. Many occur near plate boundaries, but some form over hot spots within a plate.
 
-Safety/review flags: storms/disaster: Volcanic eruptions and hazards; calm illustration, Leon family review. culture: Guam/world geographic and place context; no new CHamoru terms. safety: Drawing only; no heat, lava, chemical eruption experiment, or live hazard claim.
+Safety/review flags: storms/disaster: Volcanic eruptions and hazards; calm illustration, designated family reviewer family review. culture: Guam/world geographic and place context; no new CHamoru terms. safety: Drawing only; no heat, lava, chemical eruption experiment, or live hazard claim.
 
 ## Exact source bibliography
 

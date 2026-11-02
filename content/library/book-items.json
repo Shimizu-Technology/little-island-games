@@ -4,9 +4,9 @@
     "revision": 2,
     "review": {
       "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
     },
     "rights": {
       "license": "CC-BY-4.0",
@@ -507,7 +507,7 @@
       "speechKey": "library-sleepy-mr-sloth-label",
       "audio": {
         "status": "pending",
-        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
       }
     },
     "rights": {
@@ -530,9 +530,9 @@
     ],
     "review": {
       "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
     },
     "sources": [
       {
@@ -593,7 +593,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-00-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -602,7 +602,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-00-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -628,7 +628,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-01-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -637,7 +637,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-01-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -646,7 +646,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-01-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -672,7 +672,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-02-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -681,7 +681,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-02-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -690,7 +690,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-02-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -716,7 +716,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-03-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -725,7 +725,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-03-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -734,7 +734,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-03-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -743,7 +743,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-03-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -769,7 +769,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-04-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -778,7 +778,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-04-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -787,7 +787,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-04-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -813,7 +813,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-05-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -822,7 +822,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-05-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -831,7 +831,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-05-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -840,7 +840,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-05-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -866,7 +866,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-06-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -875,7 +875,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-06-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -884,7 +884,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-06-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -910,7 +910,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-07-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -919,7 +919,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-07-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -928,7 +928,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-07-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -937,7 +937,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-07-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -963,7 +963,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-08-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -972,7 +972,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-08-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -981,7 +981,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-08-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -990,7 +990,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-08-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1016,7 +1016,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-09-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1025,7 +1025,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-09-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1034,7 +1034,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-09-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1043,7 +1043,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-09-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1069,7 +1069,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-10-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1078,7 +1078,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-10-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1087,7 +1087,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-10-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1113,7 +1113,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-11-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1122,7 +1122,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-11-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1148,7 +1148,7 @@
             "speechKey": "library-sleepy-mr-sloth-page-12-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1191,7 +1191,7 @@
       "speechKey": "library-a-tiny-seed-label",
       "audio": {
         "status": "pending",
-        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
       }
     },
     "rights": {
@@ -1214,9 +1214,9 @@
     ],
     "review": {
       "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
     },
     "sources": [
       {
@@ -1277,7 +1277,7 @@
             "speechKey": "library-a-tiny-seed-page-00-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1286,7 +1286,7 @@
             "speechKey": "library-a-tiny-seed-page-00-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1295,7 +1295,7 @@
             "speechKey": "library-a-tiny-seed-page-00-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1321,7 +1321,7 @@
             "speechKey": "library-a-tiny-seed-page-01-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1330,7 +1330,7 @@
             "speechKey": "library-a-tiny-seed-page-01-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1356,7 +1356,7 @@
             "speechKey": "library-a-tiny-seed-page-02-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1365,7 +1365,7 @@
             "speechKey": "library-a-tiny-seed-page-02-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1374,7 +1374,7 @@
             "speechKey": "library-a-tiny-seed-page-02-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1400,7 +1400,7 @@
             "speechKey": "library-a-tiny-seed-page-03-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1409,7 +1409,7 @@
             "speechKey": "library-a-tiny-seed-page-03-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1418,7 +1418,7 @@
             "speechKey": "library-a-tiny-seed-page-03-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1444,7 +1444,7 @@
             "speechKey": "library-a-tiny-seed-page-04-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1453,7 +1453,7 @@
             "speechKey": "library-a-tiny-seed-page-04-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1462,7 +1462,7 @@
             "speechKey": "library-a-tiny-seed-page-04-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1488,7 +1488,7 @@
             "speechKey": "library-a-tiny-seed-page-05-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1497,7 +1497,7 @@
             "speechKey": "library-a-tiny-seed-page-05-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1506,7 +1506,7 @@
             "speechKey": "library-a-tiny-seed-page-05-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1515,7 +1515,7 @@
             "speechKey": "library-a-tiny-seed-page-05-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1524,7 +1524,7 @@
             "speechKey": "library-a-tiny-seed-page-05-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1550,7 +1550,7 @@
             "speechKey": "library-a-tiny-seed-page-06-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1559,7 +1559,7 @@
             "speechKey": "library-a-tiny-seed-page-06-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1568,7 +1568,7 @@
             "speechKey": "library-a-tiny-seed-page-06-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1594,7 +1594,7 @@
             "speechKey": "library-a-tiny-seed-page-07-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1603,7 +1603,7 @@
             "speechKey": "library-a-tiny-seed-page-07-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1612,7 +1612,7 @@
             "speechKey": "library-a-tiny-seed-page-07-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1638,7 +1638,7 @@
             "speechKey": "library-a-tiny-seed-page-08-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1647,7 +1647,7 @@
             "speechKey": "library-a-tiny-seed-page-08-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1656,7 +1656,7 @@
             "speechKey": "library-a-tiny-seed-page-08-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1665,7 +1665,7 @@
             "speechKey": "library-a-tiny-seed-page-08-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1674,7 +1674,7 @@
             "speechKey": "library-a-tiny-seed-page-08-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1700,7 +1700,7 @@
             "speechKey": "library-a-tiny-seed-page-09-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1709,7 +1709,7 @@
             "speechKey": "library-a-tiny-seed-page-09-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1718,7 +1718,7 @@
             "speechKey": "library-a-tiny-seed-page-09-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1727,7 +1727,7 @@
             "speechKey": "library-a-tiny-seed-page-09-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1736,7 +1736,7 @@
             "speechKey": "library-a-tiny-seed-page-09-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1762,7 +1762,7 @@
             "speechKey": "library-a-tiny-seed-page-10-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1771,7 +1771,7 @@
             "speechKey": "library-a-tiny-seed-page-10-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1780,7 +1780,7 @@
             "speechKey": "library-a-tiny-seed-page-10-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1806,7 +1806,7 @@
             "speechKey": "library-a-tiny-seed-page-11-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1815,7 +1815,7 @@
             "speechKey": "library-a-tiny-seed-page-11-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1824,7 +1824,7 @@
             "speechKey": "library-a-tiny-seed-page-11-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1850,7 +1850,7 @@
             "speechKey": "library-a-tiny-seed-page-12-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -1893,7 +1893,7 @@
       "speechKey": "library-a-fish-and-a-gift-label",
       "audio": {
         "status": "pending",
-        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
       }
     },
     "rights": {
@@ -1916,9 +1916,9 @@
     ],
     "review": {
       "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
     },
     "sources": [
       {
@@ -1979,7 +1979,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-00-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1988,7 +1988,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-00-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -1997,7 +1997,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-00-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2006,7 +2006,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-00-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -2032,7 +2032,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-01-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2041,7 +2041,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-01-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2050,7 +2050,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-01-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2059,7 +2059,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-01-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -2085,7 +2085,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-02-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2094,7 +2094,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-02-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2103,7 +2103,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-02-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2112,7 +2112,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-02-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2121,7 +2121,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-02-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2130,7 +2130,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-02-6",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2139,7 +2139,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-02-7",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2148,7 +2148,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-02-8",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2157,7 +2157,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-02-9",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2166,7 +2166,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-02-10",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -2192,7 +2192,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-03-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2201,7 +2201,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-03-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2210,7 +2210,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-03-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2219,7 +2219,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-03-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2228,7 +2228,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-03-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2237,7 +2237,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-03-6",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2246,7 +2246,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-03-7",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -2272,7 +2272,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-04-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2281,7 +2281,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-04-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2290,7 +2290,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-04-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2299,7 +2299,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-04-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2308,7 +2308,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-04-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2317,7 +2317,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-04-6",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2326,7 +2326,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-04-7",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2335,7 +2335,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-04-8",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -2361,7 +2361,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-05-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2370,7 +2370,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-05-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2379,7 +2379,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-05-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2388,7 +2388,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-05-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2397,7 +2397,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-05-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2406,7 +2406,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-05-6",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -2432,7 +2432,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-06-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2441,7 +2441,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-06-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2450,7 +2450,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-06-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2459,7 +2459,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-06-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2468,7 +2468,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-06-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2477,7 +2477,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-06-6",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2486,7 +2486,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-06-7",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -2512,7 +2512,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-07-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2521,7 +2521,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-07-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2530,7 +2530,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-07-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2539,7 +2539,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-07-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2548,7 +2548,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-07-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2557,7 +2557,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-07-6",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2566,7 +2566,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-07-7",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2575,7 +2575,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-07-8",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2584,7 +2584,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-07-9",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -2610,7 +2610,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-08-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2619,7 +2619,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-08-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2628,7 +2628,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-08-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2637,7 +2637,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-08-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2646,7 +2646,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-08-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2655,7 +2655,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-08-6",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2664,7 +2664,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-08-7",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2673,7 +2673,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-08-8",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2682,7 +2682,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-08-9",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2691,7 +2691,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-08-10",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2700,7 +2700,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-08-11",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -2726,7 +2726,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-09-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2735,7 +2735,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-09-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2744,7 +2744,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-09-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2753,7 +2753,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-09-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2762,7 +2762,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-09-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2771,7 +2771,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-09-6",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2780,7 +2780,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-09-7",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2789,7 +2789,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-09-8",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2798,7 +2798,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-09-9",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -2824,7 +2824,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-10-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2833,7 +2833,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-10-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2842,7 +2842,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-10-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2851,7 +2851,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-10-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2860,7 +2860,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-10-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2869,7 +2869,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-10-6",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2878,7 +2878,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-10-7",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2887,7 +2887,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-10-8",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2896,7 +2896,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-10-9",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -2922,7 +2922,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-11-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2931,7 +2931,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-11-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2940,7 +2940,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-11-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2949,7 +2949,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-11-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2958,7 +2958,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-11-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2967,7 +2967,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-11-6",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2976,7 +2976,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-11-7",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -2985,7 +2985,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-11-8",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3011,7 +3011,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-12-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3020,7 +3020,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-12-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3029,7 +3029,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-12-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3038,7 +3038,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-12-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3047,7 +3047,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-12-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3056,7 +3056,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-12-6",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3065,7 +3065,7 @@
             "speechKey": "library-a-fish-and-a-gift-page-12-7",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3108,7 +3108,7 @@
       "speechKey": "library-a-beautiful-day-label",
       "audio": {
         "status": "pending",
-        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
       }
     },
     "rights": {
@@ -3131,9 +3131,9 @@
     ],
     "review": {
       "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
     },
     "sources": [
       {
@@ -3194,7 +3194,7 @@
             "speechKey": "library-a-beautiful-day-page-00-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3203,7 +3203,7 @@
             "speechKey": "library-a-beautiful-day-page-00-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3212,7 +3212,7 @@
             "speechKey": "library-a-beautiful-day-page-00-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3221,7 +3221,7 @@
             "speechKey": "library-a-beautiful-day-page-00-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3247,7 +3247,7 @@
             "speechKey": "library-a-beautiful-day-page-01-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3256,7 +3256,7 @@
             "speechKey": "library-a-beautiful-day-page-01-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3265,7 +3265,7 @@
             "speechKey": "library-a-beautiful-day-page-01-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3291,7 +3291,7 @@
             "speechKey": "library-a-beautiful-day-page-02-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3300,7 +3300,7 @@
             "speechKey": "library-a-beautiful-day-page-02-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3326,7 +3326,7 @@
             "speechKey": "library-a-beautiful-day-page-03-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3335,7 +3335,7 @@
             "speechKey": "library-a-beautiful-day-page-03-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3344,7 +3344,7 @@
             "speechKey": "library-a-beautiful-day-page-03-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3353,7 +3353,7 @@
             "speechKey": "library-a-beautiful-day-page-03-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3362,7 +3362,7 @@
             "speechKey": "library-a-beautiful-day-page-03-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3404,7 +3404,7 @@
             "speechKey": "library-a-beautiful-day-page-05-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3430,7 +3430,7 @@
             "speechKey": "library-a-beautiful-day-page-06-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3439,7 +3439,7 @@
             "speechKey": "library-a-beautiful-day-page-06-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3448,7 +3448,7 @@
             "speechKey": "library-a-beautiful-day-page-06-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3474,7 +3474,7 @@
             "speechKey": "library-a-beautiful-day-page-07-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3483,7 +3483,7 @@
             "speechKey": "library-a-beautiful-day-page-07-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3509,7 +3509,7 @@
             "speechKey": "library-a-beautiful-day-page-08-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3535,7 +3535,7 @@
             "speechKey": "library-a-beautiful-day-page-09-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3561,7 +3561,7 @@
             "speechKey": "library-a-beautiful-day-page-10-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3587,7 +3587,7 @@
             "speechKey": "library-a-beautiful-day-page-11-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3646,7 +3646,7 @@
       "speechKey": "library-a-house-for-mouse-label",
       "audio": {
         "status": "pending",
-        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
       }
     },
     "rights": {
@@ -3669,9 +3669,9 @@
     ],
     "review": {
       "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
     },
     "sources": [
       {
@@ -3732,7 +3732,7 @@
             "speechKey": "library-a-house-for-mouse-page-00-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3741,7 +3741,7 @@
             "speechKey": "library-a-house-for-mouse-page-00-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3767,7 +3767,7 @@
             "speechKey": "library-a-house-for-mouse-page-01-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3793,7 +3793,7 @@
             "speechKey": "library-a-house-for-mouse-page-02-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3819,7 +3819,7 @@
             "speechKey": "library-a-house-for-mouse-page-03-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3828,7 +3828,7 @@
             "speechKey": "library-a-house-for-mouse-page-03-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3854,7 +3854,7 @@
             "speechKey": "library-a-house-for-mouse-page-04-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3880,7 +3880,7 @@
             "speechKey": "library-a-house-for-mouse-page-05-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3889,7 +3889,7 @@
             "speechKey": "library-a-house-for-mouse-page-05-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3915,7 +3915,7 @@
             "speechKey": "library-a-house-for-mouse-page-06-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3941,7 +3941,7 @@
             "speechKey": "library-a-house-for-mouse-page-07-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -3950,7 +3950,7 @@
             "speechKey": "library-a-house-for-mouse-page-07-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -3976,7 +3976,7 @@
             "speechKey": "library-a-house-for-mouse-page-08-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4002,7 +4002,7 @@
             "speechKey": "library-a-house-for-mouse-page-09-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4044,7 +4044,7 @@
             "speechKey": "library-a-house-for-mouse-page-11-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4070,7 +4070,7 @@
             "speechKey": "library-a-house-for-mouse-page-12-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4113,7 +4113,7 @@
       "speechKey": "library-little-ants-big-plan-label",
       "audio": {
         "status": "pending",
-        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
       }
     },
     "rights": {
@@ -4136,9 +4136,9 @@
     ],
     "review": {
       "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
     },
     "sources": [
       {
@@ -4199,7 +4199,7 @@
             "speechKey": "library-little-ants-big-plan-page-00-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4208,7 +4208,7 @@
             "speechKey": "library-little-ants-big-plan-page-00-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4217,7 +4217,7 @@
             "speechKey": "library-little-ants-big-plan-page-00-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4226,7 +4226,7 @@
             "speechKey": "library-little-ants-big-plan-page-00-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4252,7 +4252,7 @@
             "speechKey": "library-little-ants-big-plan-page-01-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4261,7 +4261,7 @@
             "speechKey": "library-little-ants-big-plan-page-01-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4270,7 +4270,7 @@
             "speechKey": "library-little-ants-big-plan-page-01-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4279,7 +4279,7 @@
             "speechKey": "library-little-ants-big-plan-page-01-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4288,7 +4288,7 @@
             "speechKey": "library-little-ants-big-plan-page-01-5",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4314,7 +4314,7 @@
             "speechKey": "library-little-ants-big-plan-page-02-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4323,7 +4323,7 @@
             "speechKey": "library-little-ants-big-plan-page-02-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4349,7 +4349,7 @@
             "speechKey": "library-little-ants-big-plan-page-03-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4375,7 +4375,7 @@
             "speechKey": "library-little-ants-big-plan-page-04-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4401,7 +4401,7 @@
             "speechKey": "library-little-ants-big-plan-page-05-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4427,7 +4427,7 @@
             "speechKey": "library-little-ants-big-plan-page-06-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4436,7 +4436,7 @@
             "speechKey": "library-little-ants-big-plan-page-06-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4445,7 +4445,7 @@
             "speechKey": "library-little-ants-big-plan-page-06-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4471,7 +4471,7 @@
             "speechKey": "library-little-ants-big-plan-page-07-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4480,7 +4480,7 @@
             "speechKey": "library-little-ants-big-plan-page-07-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4506,7 +4506,7 @@
             "speechKey": "library-little-ants-big-plan-page-08-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4532,7 +4532,7 @@
             "speechKey": "library-little-ants-big-plan-page-09-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4558,7 +4558,7 @@
             "speechKey": "library-little-ants-big-plan-page-10-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4567,7 +4567,7 @@
             "speechKey": "library-little-ants-big-plan-page-10-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4576,7 +4576,7 @@
             "speechKey": "library-little-ants-big-plan-page-10-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4602,7 +4602,7 @@
             "speechKey": "library-little-ants-big-plan-page-11-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4628,7 +4628,7 @@
             "speechKey": "library-little-ants-big-plan-page-12-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4637,7 +4637,7 @@
             "speechKey": "library-little-ants-big-plan-page-12-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4680,7 +4680,7 @@
       "speechKey": "library-the-best-thing-ever-label",
       "audio": {
         "status": "pending",
-        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+        "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
       }
     },
     "rights": {
@@ -4703,9 +4703,9 @@
     ],
     "review": {
       "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and Leon family review pending)",
+      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and Leon family review pending. No audio or shipping approval."
+      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
     },
     "sources": [
       {
@@ -4766,7 +4766,7 @@
             "speechKey": "library-the-best-thing-ever-page-00-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4775,7 +4775,7 @@
             "speechKey": "library-the-best-thing-ever-page-00-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4784,7 +4784,7 @@
             "speechKey": "library-the-best-thing-ever-page-00-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4793,7 +4793,7 @@
             "speechKey": "library-the-best-thing-ever-page-00-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4819,7 +4819,7 @@
             "speechKey": "library-the-best-thing-ever-page-01-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4828,7 +4828,7 @@
             "speechKey": "library-the-best-thing-ever-page-01-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4854,7 +4854,7 @@
             "speechKey": "library-the-best-thing-ever-page-02-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4863,7 +4863,7 @@
             "speechKey": "library-the-best-thing-ever-page-02-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4889,7 +4889,7 @@
             "speechKey": "library-the-best-thing-ever-page-03-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4898,7 +4898,7 @@
             "speechKey": "library-the-best-thing-ever-page-03-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4907,7 +4907,7 @@
             "speechKey": "library-the-best-thing-ever-page-03-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4933,7 +4933,7 @@
             "speechKey": "library-the-best-thing-ever-page-04-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4942,7 +4942,7 @@
             "speechKey": "library-the-best-thing-ever-page-04-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4951,7 +4951,7 @@
             "speechKey": "library-the-best-thing-ever-page-04-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -4977,7 +4977,7 @@
             "speechKey": "library-the-best-thing-ever-page-05-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4986,7 +4986,7 @@
             "speechKey": "library-the-best-thing-ever-page-05-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -4995,7 +4995,7 @@
             "speechKey": "library-the-best-thing-ever-page-05-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -5004,7 +5004,7 @@
             "speechKey": "library-the-best-thing-ever-page-05-4",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -5030,7 +5030,7 @@
             "speechKey": "library-the-best-thing-ever-page-06-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -5056,7 +5056,7 @@
             "speechKey": "library-the-best-thing-ever-page-07-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -5065,7 +5065,7 @@
             "speechKey": "library-the-best-thing-ever-page-07-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -5074,7 +5074,7 @@
             "speechKey": "library-the-best-thing-ever-page-07-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -5100,7 +5100,7 @@
             "speechKey": "library-the-best-thing-ever-page-08-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -5109,7 +5109,7 @@
             "speechKey": "library-the-best-thing-ever-page-08-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -5118,7 +5118,7 @@
             "speechKey": "library-the-best-thing-ever-page-08-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -5144,7 +5144,7 @@
             "speechKey": "library-the-best-thing-ever-page-09-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -5153,7 +5153,7 @@
             "speechKey": "library-the-best-thing-ever-page-09-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -5179,7 +5179,7 @@
             "speechKey": "library-the-best-thing-ever-page-10-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -5188,7 +5188,7 @@
             "speechKey": "library-the-best-thing-ever-page-10-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -5214,7 +5214,7 @@
             "speechKey": "library-the-best-thing-ever-page-11-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -5223,7 +5223,7 @@
             "speechKey": "library-the-best-thing-ever-page-11-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -5232,7 +5232,7 @@
             "speechKey": "library-the-best-thing-ever-page-11-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
@@ -5258,7 +5258,7 @@
             "speechKey": "library-the-best-thing-ever-page-12-1",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -5267,7 +5267,7 @@
             "speechKey": "library-the-best-thing-ever-page-12-2",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           },
           {
@@ -5276,7 +5276,7 @@
             "speechKey": "library-the-best-thing-ever-page-12-3",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and Leon family review."
+              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
             }
           }
         ]
