@@ -53,18 +53,29 @@ export function search(index: IndexedEntry[], query: string, allowed: ReadonlySe
   return index
     .filter((e) => allowed.has(e.id) && (!category || e.category === category))
     .map((entry) => {
-      const title = normalize(entry.title),
-        aliases = entry.aliases.map(normalize);
-      const scores = words.map((word) => {
-        if (title.split(" ").includes(word) || aliases.includes(word)) return 100;
+      const titleWords = normalize(entry.title).split(" ");
+      const aliases = entry.aliases.map(normalize);
+      const wordScore = (word: string) => {
+        if (titleWords.includes(word) || aliases.includes(word)) return 100;
         if (entry.terms.some((term) => term.startsWith(word))) return 80;
-        if (word.length >= 4 && entry.terms.some((term) => distance(word, term) <= (word.length >= 7 ? 2 : 1)))
+        const limit = word.length >= 7 ? 2 : 1;
+        if (
+          word.length >= 4 &&
+          entry.terms.some((term) => Math.abs(word.length - term.length) <= limit && distance(word, term) <= limit)
+        )
           return 60;
         const sound = phonetic(word);
         if (word.length >= 4 && sound.length >= 3 && entry.sounds.includes(sound)) return 40;
         return 0;
-      });
-      return { entry, score: scores.length ? Math.min(...scores) : 1 };
+      };
+      let score = words.length ? 100 : 1;
+      for (const word of words) {
+        const next = wordScore(word);
+        // Every word is required, so later distance calculations cannot rescue this entry.
+        if (!next) return { entry, score: 0 };
+        score = Math.min(score, next);
+      }
+      return { entry, score };
     })
     .filter((r) => r.score > 0)
     .sort((a, b) => b.score - a.score || a.entry.id.localeCompare(b.entry.id))
