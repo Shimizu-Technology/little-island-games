@@ -36,6 +36,11 @@ def spoken(text):
     text=re.sub(r'[ \t]+', ' ', text)
     for old,new in [(' × ', ' times '), (' + ', ' plus '), (' − ', ' minus '), (' - ', ' minus '), (' = ', ' equals '), ('→', ' right '), ('←', ' left '), ('↓', ' down '), ('↑', ' up '), ('|', ' '), ('CHamoru', 'Chamorro')]:
         text=text.replace(old,new)
+    # Spoken forms for printed words the voice misreads (checked by local
+    # transcription): a stretched "Whaaat?" was heard as the name "Wyatt",
+    # and isiZulu "uGogo" (grandmother) as "you go-go".
+    text=re.sub(r'\bWhaa+t\?', 'What?!', text)
+    text=re.sub(r'\buGogo\b', 'oo-Go-go', text)
     return text.strip()
 
 def input_digest(text,voice,model_hash,legacy=False):

@@ -291,23 +291,23 @@
       "transcriptSha256": "8e0ea267d1700dc71f375938ac12f6c10ad936b2a9eccf94b63a5351ac19080d"
     },
     "library-a-fish-and-a-gift-page-02-6": {
-      "input": "669edb2906cd790c84aeb6c21824194ae97d049c79063ced58361c41551be773",
-      "seconds": 0.917,
-      "sha256": "000cbb45a0d9ee4e80f2ece42c8afd4aaa2d45af0e1c6f4718550229d8384bce",
+      "input": "b7ebb45033d4bcb0cb8b3fe8e7f827074c5ceed555af5699682ad4c318385698",
+      "sha256": "75fdc83b206f572ec4e9af74a60ab06c9385d6dcae0f06b4b3ac0a6a25c7b143",
+      "seconds": 0.912,
       "path": "assets/audio/library-a-fish-and-a-gift-page-02-6.m4a",
       "transcriptSha256": "f4b670efbc88483d31df56fca31cbe748b9e352e4aaa9fe1910c9f58d231fbfa"
     },
     "library-a-fish-and-a-gift-page-02-7": {
-      "input": "92f7d0dc044789c1a61b38612301a463cf7b84de550b19cd1e73e1f43dac2c1f",
-      "seconds": 0.896,
-      "sha256": "6ff1c44097756dd8a50a2c76e8240b12b6d9ba75c4dc7e8531913630c8a7b81b",
+      "input": "f315fab20627bf32f07f2700f9adf8c1877d282be1ca3ca4f6690838f9ebbcb4",
+      "sha256": "c877895b665eb143f108d1c543e35210a03b7e9b40a0af8e862411e381ec9f92",
+      "seconds": 0.871,
       "path": "assets/audio/library-a-fish-and-a-gift-page-02-7.m4a",
       "transcriptSha256": "1a9cc2374a7c6e05345ea24052e5fcdbbf2bc6806d3262488239bb7bca042425"
     },
     "library-a-fish-and-a-gift-page-02-8": {
-      "input": "38f74ea035fc59c38420b61cb950caf2ad162c0b2b622f145dd6a53a155f2ba9",
-      "seconds": 1.806,
-      "sha256": "6f3cdc8b9ba90664c90a23ac79a85bed98f4c844e8080c88a45a639cfd293804",
+      "input": "c6c560cd9d864a5557a757e4ab81194e238939409091f2ed6752795325c64dc5",
+      "sha256": "321e886bb52b7dd6ac8db37a13f6be67122f07e1f35d9a51783bdbeeeb64131e",
+      "seconds": 1.927,
       "path": "assets/audio/library-a-fish-and-a-gift-page-02-8.m4a",
       "transcriptSha256": "c0bd6f6775982b295ff0df3efa716b39f089b9952719d0324156f3632f24cecc"
     },
@@ -480,23 +480,23 @@
       "transcriptSha256": "3b3467de4b209f7b8b088ea654444edc277fea892fc01a4f04502c9d231dcfa4"
     },
     "library-a-fish-and-a-gift-page-06-3": {
-      "input": "669edb2906cd790c84aeb6c21824194ae97d049c79063ced58361c41551be773",
-      "seconds": 0.917,
-      "sha256": "0918edc61996569eccc7e3e42a111c66fdbe95addc3f2b6dde3d072e6347cf36",
+      "input": "b7ebb45033d4bcb0cb8b3fe8e7f827074c5ceed555af5699682ad4c318385698",
+      "sha256": "75fdc83b206f572ec4e9af74a60ab06c9385d6dcae0f06b4b3ac0a6a25c7b143",
+      "seconds": 0.912,
       "path": "assets/audio/library-a-fish-and-a-gift-page-06-3.m4a",
       "transcriptSha256": "f4b670efbc88483d31df56fca31cbe748b9e352e4aaa9fe1910c9f58d231fbfa"
     },
     "library-a-fish-and-a-gift-page-06-4": {
-      "input": "92f7d0dc044789c1a61b38612301a463cf7b84de550b19cd1e73e1f43dac2c1f",
-      "seconds": 0.896,
-      "sha256": "2254ce70f90bcac4124a38ba49dd4bdbb9281c96950142f3ea32a7687fa354d2",
+      "input": "f315fab20627bf32f07f2700f9adf8c1877d282be1ca3ca4f6690838f9ebbcb4",
+      "sha256": "c877895b665eb143f108d1c543e35210a03b7e9b40a0af8e862411e381ec9f92",
+      "seconds": 0.871,
       "path": "assets/audio/library-a-fish-and-a-gift-page-06-4.m4a",
       "transcriptSha256": "1a9cc2374a7c6e05345ea24052e5fcdbbf2bc6806d3262488239bb7bca042425"
     },
     "library-a-fish-and-a-gift-page-06-5": {
-      "input": "5f11e0fdaf044cb232bf3170ef0594bd7760384f65806bb02f03ddde3bf606e1",
-      "seconds": 1.954,
-      "sha256": "6d91d95e2199bd13726a84c47bf49c84181b02928f9737d6552e114f9a2f1926",
+      "input": "959d3704c1d1771780e8401f6b3dcef4b52354b7291113d18493ca76c4966c51",
+      "sha256": "12767036df34ed5054174b9f7b600906edfa725b0b411d6ddc1e39a5f5dca5d8",
+      "seconds": 2.043,
       "path": "assets/audio/library-a-fish-and-a-gift-page-06-5.m4a",
       "transcriptSha256": "c33913fede1e29a826d22d369a313d2a23ebbf4d435e6927638553c5c3cb23ef"
     },
@@ -585,9 +585,9 @@
       "transcriptSha256": "4c735272b07ed056f5177750f0f5c6e59cf538c3383a56cc14b215b4f004e922"
     },
     "library-a-fish-and-a-gift-page-08-10": {
-      "input": "bbbaaab2be5f112955d54ef83b11b2a4995b95c4697600b9089e9bcb688a3cf7",
-      "seconds": 3.327,
-      "sha256": "1b3abe3bea73485c943367b922df52087334ffd13523014b4009f682f595c274",
+      "input": "5c6288c171d3ea65786219033ffb26c07ebe4d237541b539d9dfd2ff5aac90df",
+      "sha256": "3bac4e86f7768a9a8b6ec9480fed38390e6065dcc1603f3f3af6a6ffaff63cad",
+      "seconds": 3.185,
       "path": "assets/audio/library-a-fish-and-a-gift-page-08-10.m4a",
       "transcriptSha256": "f52f76f44e5ebca1bbd61477faba4316a42f34630d6d8290d853ba67e811d710"
     },
@@ -641,16 +641,16 @@
       "transcriptSha256": "47e7546183ee36e0cf879ce931dacc76cfddfc40a80c392a3a3d5ac75a54934b"
     },
     "library-a-fish-and-a-gift-page-08-8": {
-      "input": "669edb2906cd790c84aeb6c21824194ae97d049c79063ced58361c41551be773",
-      "seconds": 0.917,
-      "sha256": "8aeb5323a7d223bab21d5f50999bf321e2809b5d86d9cb73d63c3a9384721273",
+      "input": "b7ebb45033d4bcb0cb8b3fe8e7f827074c5ceed555af5699682ad4c318385698",
+      "sha256": "75fdc83b206f572ec4e9af74a60ab06c9385d6dcae0f06b4b3ac0a6a25c7b143",
+      "seconds": 0.912,
       "path": "assets/audio/library-a-fish-and-a-gift-page-08-8.m4a",
       "transcriptSha256": "f4b670efbc88483d31df56fca31cbe748b9e352e4aaa9fe1910c9f58d231fbfa"
     },
     "library-a-fish-and-a-gift-page-08-9": {
-      "input": "92f7d0dc044789c1a61b38612301a463cf7b84de550b19cd1e73e1f43dac2c1f",
-      "seconds": 0.896,
-      "sha256": "687aeb35633d9fb98f3f0975a3594072a5e218cb3e391d802d69ed6552e91098",
+      "input": "f315fab20627bf32f07f2700f9adf8c1877d282be1ca3ca4f6690838f9ebbcb4",
+      "sha256": "c877895b665eb143f108d1c543e35210a03b7e9b40a0af8e862411e381ec9f92",
+      "seconds": 0.871,
       "path": "assets/audio/library-a-fish-and-a-gift-page-08-9.m4a",
       "transcriptSha256": "1a9cc2374a7c6e05345ea24052e5fcdbbf2bc6806d3262488239bb7bca042425"
     },
@@ -669,23 +669,23 @@
       "transcriptSha256": "5f7c9d0d095ca6cb05c767d3048255ba8bcfcdb7e48e52994efe0ca89d92332c"
     },
     "library-a-fish-and-a-gift-page-09-3": {
-      "input": "669edb2906cd790c84aeb6c21824194ae97d049c79063ced58361c41551be773",
-      "seconds": 0.917,
-      "sha256": "05982f8678817f85d84e41e58a59d0d4bd75f157eaed19645b546a0a8e8483c6",
+      "input": "b7ebb45033d4bcb0cb8b3fe8e7f827074c5ceed555af5699682ad4c318385698",
+      "sha256": "75fdc83b206f572ec4e9af74a60ab06c9385d6dcae0f06b4b3ac0a6a25c7b143",
+      "seconds": 0.912,
       "path": "assets/audio/library-a-fish-and-a-gift-page-09-3.m4a",
       "transcriptSha256": "f4b670efbc88483d31df56fca31cbe748b9e352e4aaa9fe1910c9f58d231fbfa"
     },
     "library-a-fish-and-a-gift-page-09-4": {
-      "input": "92f7d0dc044789c1a61b38612301a463cf7b84de550b19cd1e73e1f43dac2c1f",
-      "seconds": 0.896,
-      "sha256": "421d101a2efbd4faa6db93e6713b418116c55204700375a2b95f17eab39a12fb",
+      "input": "f315fab20627bf32f07f2700f9adf8c1877d282be1ca3ca4f6690838f9ebbcb4",
+      "sha256": "c877895b665eb143f108d1c543e35210a03b7e9b40a0af8e862411e381ec9f92",
+      "seconds": 0.871,
       "path": "assets/audio/library-a-fish-and-a-gift-page-09-4.m4a",
       "transcriptSha256": "1a9cc2374a7c6e05345ea24052e5fcdbbf2bc6806d3262488239bb7bca042425"
     },
     "library-a-fish-and-a-gift-page-09-5": {
-      "input": "5f11e0fdaf044cb232bf3170ef0594bd7760384f65806bb02f03ddde3bf606e1",
-      "seconds": 1.944,
-      "sha256": "a6e218102e7a46a3b89bed32d8f3579e1550abed78fd0d88b4ad94df44afe34d",
+      "input": "959d3704c1d1771780e8401f6b3dcef4b52354b7291113d18493ca76c4966c51",
+      "sha256": "12767036df34ed5054174b9f7b600906edfa725b0b411d6ddc1e39a5f5dca5d8",
+      "seconds": 2.043,
       "path": "assets/audio/library-a-fish-and-a-gift-page-09-5.m4a",
       "transcriptSha256": "c33913fede1e29a826d22d369a313d2a23ebbf4d435e6927638553c5c3cb23ef"
     },
@@ -753,23 +753,23 @@
       "transcriptSha256": "b14310816284dd20166264346fbdd31b6498102780e959ddea5d185bf4d30f75"
     },
     "library-a-fish-and-a-gift-page-10-6": {
-      "input": "669edb2906cd790c84aeb6c21824194ae97d049c79063ced58361c41551be773",
-      "seconds": 0.917,
-      "sha256": "0460b8325bf89a437a6627f61b7303069daedb991646a937af91413e9292a336",
+      "input": "b7ebb45033d4bcb0cb8b3fe8e7f827074c5ceed555af5699682ad4c318385698",
+      "sha256": "75fdc83b206f572ec4e9af74a60ab06c9385d6dcae0f06b4b3ac0a6a25c7b143",
+      "seconds": 0.912,
       "path": "assets/audio/library-a-fish-and-a-gift-page-10-6.m4a",
       "transcriptSha256": "f4b670efbc88483d31df56fca31cbe748b9e352e4aaa9fe1910c9f58d231fbfa"
     },
     "library-a-fish-and-a-gift-page-10-7": {
-      "input": "92f7d0dc044789c1a61b38612301a463cf7b84de550b19cd1e73e1f43dac2c1f",
-      "seconds": 0.896,
-      "sha256": "1b502b92a93db1f7b44d6e9c50f69dcb7398d34e1bf8bf3b2add9f3f82f69392",
+      "input": "f315fab20627bf32f07f2700f9adf8c1877d282be1ca3ca4f6690838f9ebbcb4",
+      "sha256": "c877895b665eb143f108d1c543e35210a03b7e9b40a0af8e862411e381ec9f92",
+      "seconds": 0.871,
       "path": "assets/audio/library-a-fish-and-a-gift-page-10-7.m4a",
       "transcriptSha256": "1a9cc2374a7c6e05345ea24052e5fcdbbf2bc6806d3262488239bb7bca042425"
     },
     "library-a-fish-and-a-gift-page-10-8": {
-      "input": "26520e53ee3466764d77b40d5e057a36606f1d8bc84ed934c19eb0de32a526d7",
-      "seconds": 1.943,
-      "sha256": "a2768537be980ec3c4d51db87e6b59809a687c7bdb0af8de28fe4e10c928b654",
+      "input": "50104f5b09acd35487f24e131c5ed6c4c03f69a797a7245a006f84533808fe02",
+      "sha256": "09f9799d24fa0fe48e8bbf14210d44c1710ede4f59dc02be5da49f6428ab6fe9",
+      "seconds": 2.015,
       "path": "assets/audio/library-a-fish-and-a-gift-page-10-8.m4a",
       "transcriptSha256": "0a3c5f74da54e8704e79565724db1d24b54b73cadf390d1bccb4ef54c0b6f2b0"
     },
@@ -851,23 +851,23 @@
       "transcriptSha256": "7ce82ba811520a4356535fd89eff2752a4677c817762b5138bf0ec9bc63e5860"
     },
     "library-a-fish-and-a-gift-page-12-3": {
-      "input": "669edb2906cd790c84aeb6c21824194ae97d049c79063ced58361c41551be773",
-      "seconds": 0.917,
-      "sha256": "aa0ed666b5bba9c539ca65fbb483267c73704481168c0e1994e346bdf2f98618",
+      "input": "b7ebb45033d4bcb0cb8b3fe8e7f827074c5ceed555af5699682ad4c318385698",
+      "sha256": "75fdc83b206f572ec4e9af74a60ab06c9385d6dcae0f06b4b3ac0a6a25c7b143",
+      "seconds": 0.912,
       "path": "assets/audio/library-a-fish-and-a-gift-page-12-3.m4a",
       "transcriptSha256": "f4b670efbc88483d31df56fca31cbe748b9e352e4aaa9fe1910c9f58d231fbfa"
     },
     "library-a-fish-and-a-gift-page-12-4": {
-      "input": "92f7d0dc044789c1a61b38612301a463cf7b84de550b19cd1e73e1f43dac2c1f",
-      "seconds": 0.896,
-      "sha256": "e20b92f3a84c23013196aa9b7998469eba9a75109c3d9cf8a16c3d177d2fa4b6",
+      "input": "f315fab20627bf32f07f2700f9adf8c1877d282be1ca3ca4f6690838f9ebbcb4",
+      "sha256": "c877895b665eb143f108d1c543e35210a03b7e9b40a0af8e862411e381ec9f92",
+      "seconds": 0.871,
       "path": "assets/audio/library-a-fish-and-a-gift-page-12-4.m4a",
       "transcriptSha256": "1a9cc2374a7c6e05345ea24052e5fcdbbf2bc6806d3262488239bb7bca042425"
     },
     "library-a-fish-and-a-gift-page-12-5": {
-      "input": "26520e53ee3466764d77b40d5e057a36606f1d8bc84ed934c19eb0de32a526d7",
-      "seconds": 1.933,
-      "sha256": "d6c69cb8fba1c6c99916159acfdb7788830dc1e649667cfa9abc8f3f84272c00",
+      "input": "50104f5b09acd35487f24e131c5ed6c4c03f69a797a7245a006f84533808fe02",
+      "sha256": "09f9799d24fa0fe48e8bbf14210d44c1710ede4f59dc02be5da49f6428ab6fe9",
+      "seconds": 2.015,
       "path": "assets/audio/library-a-fish-and-a-gift-page-12-5.m4a",
       "transcriptSha256": "0a3c5f74da54e8704e79565724db1d24b54b73cadf390d1bccb4ef54c0b6f2b0"
     },
@@ -23517,9 +23517,9 @@
       "transcriptSha256": "42c56f454b0b3c21abc523b1b8cb0ab8375dee31c21110bc68352566ac0764cc"
     },
     "library-the-best-thing-ever-page-04-1": {
-      "input": "f4fa40777c602c6d2464c4568089cad945f69598f84146e64db6101f67c27ef6",
-      "seconds": 2.818,
-      "sha256": "f267f0501762fb5c7f5e6e67ba4d149e4c74386250a0c1f09cb51e3ebb223802",
+      "input": "691d07ab90d5ec73cf6d0ddffbde86817851d1843379a5818cd533a20c5c7db3",
+      "sha256": "7d218f069a5765ea90376b6f7c98604e68b5f184522ab61f102fed64224a7e16",
+      "seconds": 2.893,
       "path": "assets/audio/library-the-best-thing-ever-page-04-1.m4a",
       "transcriptSha256": "3e783d87f509448dcfe293e11a8f3a51f6d94a13565bcd2eb63ca58689e7fd21"
     },
@@ -23573,9 +23573,9 @@
       "transcriptSha256": "3c65144b8e015384bb922b9dbdbac6746bb52ac3558e95df77fef36a44598b77"
     },
     "library-the-best-thing-ever-page-07-1": {
-      "input": "20bcd9388c04b7000fb188b5cb94c654ef100a49459d5322ef042e2ad9c43746",
-      "seconds": 3.337,
-      "sha256": "fe0a6713e47058299e206a2caad9143363af36faaccadb44b89f157e36cf7f3d",
+      "input": "556d6872bd083d46b8572836578ffaa52139507e85324441b7953aed628bcaaa",
+      "sha256": "a79690fde765303eeee08bcc5c1f076dbd1941c3ab9594c159e943b077b9015f",
+      "seconds": 3.359,
       "path": "assets/audio/library-the-best-thing-ever-page-07-1.m4a",
       "transcriptSha256": "681d059feae9952c4c15145e71080653dd2b4b1186af4c3d1b9faea40ed3339f"
     },
@@ -23629,9 +23629,9 @@
       "transcriptSha256": "3c45b95c9e5e3c10b902ccecffefa516fbc8d990747a66250dc79f93bab81679"
     },
     "library-the-best-thing-ever-page-10-1": {
-      "input": "431d9d1aef4e69d55c2e2377d2d4e5363dd0e087dfdf834a61a8b828bf7ec28e",
+      "input": "36bad2f5c3d87da551b9c33643c3cdcc4ea0f3bf44846ca44c87fef80bb15190",
+      "sha256": "e27ee7a54d5cc5e13a40aac148f8c8d03e79ad675258d49778e5d8a2955d8571",
       "seconds": 2.911,
-      "sha256": "d2e00ca1e30176f7d1cde414ffae3f94ddc38e6ba8d3d532fbb64c6d4ec4120b",
       "path": "assets/audio/library-the-best-thing-ever-page-10-1.m4a",
       "transcriptSha256": "adf1e9fbd26a988ac4748df2806d5c54d1cc79b2c98629cc9c6d51e8617f346c"
     },

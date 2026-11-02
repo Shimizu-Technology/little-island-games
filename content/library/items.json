@@ -445,7 +445,18 @@
       "status": "draft",
       "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "c5f31753ba387ae33a62da861609cd276e596fedcc93b0aae373a7bd7c30dc8a",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -1242,7 +1253,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "moon: Phase geometry, reflected light and synchronous rotation checked; removed repeated shape statements. Retained facts supported. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "456829e1a99f5eaf8b501639e6327fd34d3c2c9e363a4774090761f9857c2065",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -1483,7 +1505,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "day-night: Separated daily rotation from yearly revolution; removed the technically imprecise full-turn-equals-24-hours claim. Core mechanism supported. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "a285f5b5c7ba452b6a387000ae763ec3bbc9c9395de1e988889baea3d4825556",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -1719,7 +1752,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "planets: Added NASA planet catalogue for order and rocky/giant distinctions; removed vague crowded-system phrasing. Retained classifications supported. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "9311d1c70d42259dc15a51fe5da9023cb4b962c21e054e6e8c14bc3bb124bdb2",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -1974,7 +2018,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "mars: Oxidation and dust explain apparent color; retained only broad, supported ancient-water evidence, not disputed present-day surface flows. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "f709779846e771ff867af9ae023229021c89c64de3db79a1c160289abd705225",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -2200,7 +2255,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "saturn: Ring particles, reflected light, gaps and thin geometry checked; avoided uncertain ring-origin and age claims. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "6584ee4e9fc4095683df57a408504f62205b8fc14b5563f25e013c5997ca5e31",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -2436,7 +2502,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "gravity: Mutual attraction and shared freefall checked; removed ambiguous weight definition and kept mass/distance conditions explicit. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "179981b1ef71680df6354a38764724547abae933995191718483acfa96bbe89f",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -2667,7 +2744,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "stars: Replaced unsupported color-temperature elaboration with the cited NASA page's directly supported mass/fusion/lifetime explanation. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "bf674efccc4ce3eab87e83c1438669a4e51078b8d5754f6e45c1618abcf76559",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -2908,7 +2996,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "rockets: Thrust, paired forces and orbital speed checked against NASA launch/orbit explanations; no launch-making activity added. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "b6874f954f1d3237538ac92390561e77b5d6484800c8d14d81cdfad61e70148f",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -3153,7 +3252,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "asteroids: Formation, composition, shapes and asteroid moons checked; omitted impact-hazard material unnecessary to this question. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "6a7d9ddba5aa7a87c59d93ef75164dce5d758925f8ac76f6bb617dfdbf7d931b",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -3388,7 +3498,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "salty: Rock-derived ions, seafloor exchange and evaporation checked; no claim that ordinary table salt alone fills the ocean. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "4e63a0f307fac6cf6890f772c67c289b8fe82339f15728d88958e3a642b351b2",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -7370,7 +7491,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "migration: Restricted migration example to eastern North American monarchs; multigeneration northward journey and long-lived autumn generation checked. Not a claim about Guam butterflies. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "6e3b391d9a2aad3ab68808075fbf85eecfed44fcbcd572c16abd5995ea706246",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -7619,7 +7751,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "insect-flight: Replaced dead Smithsonian page with UF flight explanation and NC State locomotion; retained NC State wing reinforcement. Avoided claiming all muscles attach indirectly. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "4cae14cf61ea14d822fb7f626c15445866cdd27f943bc12dc626891586ae09bd",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -8365,7 +8508,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "clouds: Condensation nuclei, expansion cooling and simultaneous evaporation checked; vapor distinguished from visible drops. No single cloud shape used as a forecast. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "2c760b0d67976f989d8b9c84d01f125cbcc302f3b7b1cc8ff599fd4788063cb5",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -9865,7 +10019,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "water-cycle: NOAA pools/fluxes, infiltration and transpiration sections checked; replaced repeated definitions with a branching route and storage explanation. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "f3911c8d56385789112896c2fd1be7f8a38a1a98fe1df6ac074f34ab505a45f7",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -10885,7 +11050,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "islands: NPS volcanic growth/hot-spot/subsidence and uplifted limestone checked; removed unsupported blanket sand-island formation claims. Source's swapped Guam/Saipan park labels not reused. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "c52f55fe8934ae71c0f9228e530892498f1708759fe685488501b56f42e8ae4c",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -11380,7 +11556,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "trench: USGS plate direction and NOAA deepest-ocean location checked; approximate eleven kilometers avoids false precision. Removed unsupported trench-life detail, retaining exploration constraints. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "5c35d3e614f7b005b071b14264ca57f6bb0295f008b533e0dd1fc2014d397f4c",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -11621,7 +11808,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "mountains: Plate/fault uplift and glacial erosion checked; removed specific mountain naming and numerical uplift claims. USGS volcano overview supports volcanic contrast. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "efb4c73638c45ad325b1b4293fd34830e24c1904743be657c3c42b792d7db110",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -12825,7 +13023,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "scope": "volcanoes: USGS vent, buoyancy/gas, accumulation and cooling/crystal mechanisms checked; removed generic plate-location list. No live hazard or eruption experiment. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
-      "factualReviewer": "independent factual reviewer"
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "8df1a7c8942fb2a18f1ee47f467e5300612b978cde4f8744c2c1deb32281e25c",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "LicenseRef-Little-Island-Original",
@@ -13343,7 +13552,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Distinguished the grown exoskeleton from a borrowed snail shell; removed a single molt timing that would overgeneralize species. Pending the designated family reviewer family/cultural review: Review shedding and vulnerability for comfort; retain no handling or shell removal. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Distinguished the grown exoskeleton from a borrowed snail shell; removed a single molt timing that would overgeneralize species. Pending the designated family reviewer family/cultural review: Review shedding and vulnerability for comfort; retain no handling or shell removal. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "57c57e7492c240745f0c6f6eb23c47a17f4b6d59465e87924fca4c7a95866ee5",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -14087,7 +14307,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Removed storm/sorting elaboration unsupported by this page and false precision about sand-size limits; retained specific source-supported rock and biological origins without identifying Guam grains. Pending the designated family reviewer family/cultural review: Review shoreline context; no collection or water activity is requested. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Removed storm/sorting elaboration unsupported by this page and false precision about sand-size limits; retained specific source-supported rock and biological origins without identifying Guam grains. Pending the designated family reviewer family/cultural review: Review shoreline context; no collection or water activity is requested. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "cdfc1ee2a9ab38a8028ac32b5d0af66b6ba49e70aa9f44edf4de18538eed75f0",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -17267,7 +17498,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NASA-hosted observing guide for unresolved stellar disks; removed brightness-versus-luminosity elaboration beyond the original citations. Distance/time distinction retained. Pending the designated family reviewer family/cultural review: Review Sun-safety context and the illustration’s symbolic dot sizes; no solar observation is requested. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NASA-hosted observing guide for unresolved stellar disks; removed brightness-versus-luminosity elaboration beyond the original citations. Distance/time distinction retained. Pending the designated family reviewer family/cultural review: Review Sun-safety context and the illustration’s symbolic dot sizes; no solar observation is requested. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "896387fb534dab9dcdff815004792e5c5c85fee3ece3fe37849a962177d8ec4b",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -18053,7 +18295,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Retained scattering, rotation and orbital viewpoint; removed unsourced Moon/light-pollution/weather elaboration. Static illustration is not a current Guam sky chart. Pending the designated family reviewer family/cultural review: Review outdoor-night context and absence of real-time guidance; no independent night outing is requested. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Retained scattering, rotation and orbital viewpoint; removed unsourced Moon/light-pollution/weather elaboration. Static illustration is not a current Guam sky chart. Pending the designated family reviewer family/cultural review: Review outdoor-night context and absence of real-time guidance; no independent night outing is requested. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "a173b497b8e9ef457da8110bf0101e722c91e398304fa1b513fe11a28cf0c680",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -18533,7 +18786,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Checked the full NASA Milky Way explanation and galaxy overview; retained evidence-based mapping, disk and radio-gas example. Removed apparent outside-portrait implication and avoided an exact size/count. Pending the designated family reviewer family/cultural review: Review abstract galaxy-scale explanation for comprehension; no sensitive content or cultural approval asserted. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Checked the full NASA Milky Way explanation and galaxy overview; retained evidence-based mapping, disk and radio-gas example. Removed apparent outside-portrait implication and avoided an exact size/count. Pending the designated family reviewer family/cultural review: Review abstract galaxy-scale explanation for comprehension; no sensitive content or cultural approval asserted. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "0f39d566a956e7076f50fb5723709d52ad050eb99de753947b75fad5ffc42424",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -18784,7 +19048,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Kept nucleus→warming→coma→tails with dust/ion distinction; removed the uncited meteor comparison and tail-ahead claim. No current comet forecast or impact scenario. Pending the designated family reviewer family/cultural review: Review comet scale and Sun-safety sensitivity; no search for a comet near the Sun is requested. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Kept nucleus→warming→coma→tails with dust/ion distinction; removed the uncited meteor comparison and tail-ahead claim. No current comet forecast or impact scenario. Pending the designated family reviewer family/cultural review: Review comet scale and Sun-safety sensitivity; no search for a comet near the Sun is requested. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "baf18952924b7ba27f3e59c334a0453a58df1889409b6f968cba527a583ce98c",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -28608,7 +28883,18 @@
       "status": "draft",
       "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "b8598bfa91f2753440b339727e8066a513c53047d8bccbce277e1ef32a956813",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -28701,7 +28987,18 @@
       "status": "draft",
       "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "c82640f745f174ccd689b9370e8953733455d348da0cbc85fedbe32e87d08afd",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -28789,7 +29086,18 @@
       "status": "draft",
       "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "b648b81822b78fd9bc5d6bb7e7b51b7933dfe839e83de0818484e36caf465736",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -28876,7 +29184,18 @@
       "status": "draft",
       "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "92a1ce606fbd1c3558eb65092beaf7e69730e294c70dfab066b0a89b53bb8a76",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -28957,7 +29276,18 @@
       "status": "draft",
       "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "7897000788e2e0f3603725d5a0172fe370fa616f101331f76e0ec522fabc822b",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -29037,7 +29367,18 @@
       "status": "draft",
       "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "60f95707c4caad5faba9987ff5e3dad581db7f4d3472aed54191b89c9456fdec",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -29118,7 +29459,18 @@
       "status": "draft",
       "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "4be38e68506b22fdaa6e8d4a0339a20cceb4a0486f34903dbf134801c678c103",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -29188,7 +29540,18 @@
       "status": "draft",
       "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
       "date": "2026-11-02",
-      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-03",
+        "scope": "reconciled recommendations",
+        "contentSha256": "5441f775d63de8657ab29020ed703fc7e0aa4bb67f3448534e605fee96bca464",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
