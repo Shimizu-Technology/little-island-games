@@ -23,7 +23,10 @@ function parentItemId(id: string, names: Record<string, string>): string {
   return names[id] ?? id.split("/item/").slice(1).join("/item/");
 }
 /** Canonical complete transaction. Does not repair or independently re-resolve a proposal. */
-export function apply(state: SceneState, proposal: DropProposal): { state: SceneState } | { stale: true } {
+export function apply(
+  state: SceneState,
+  proposal: DropProposal
+): { state: SceneState; identities: Record<EntityId, EntityId> } | { stale: true } {
   if (worldRevision(state) !== proposal.revision || !roomIds.includes(proposal.room)) return { stale: true };
   const moves = proposal.moves;
   if (!moves.length || new Set(moves.map((m) => m.id)).size !== moves.length) return { stale: true };
@@ -162,5 +165,10 @@ export function apply(state: SceneState, proposal: DropProposal): { state: Scene
     rooms[room].characters.sort((a, b) => a.slot - b.slot);
   }
   const result: SceneState = { ...state, version: 4, rooms };
-  return validHome(result) ? { state: result } : { stale: true };
+  const identities = Object.fromEntries(
+    moves
+      .filter((move) => !(proposal.consume === "food" && move.id === proposal.id))
+      .map((move) => [move.id, sources.get(move.id)?.character ? move.id : itemEntityId(move.room, names[move.id])])
+  );
+  return validHome(result) ? { state: result, identities } : { stale: true };
 }
