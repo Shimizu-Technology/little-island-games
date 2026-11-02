@@ -407,16 +407,16 @@
   },
   "bird-feathers": {
     "image": {
-      "path": "content/library/art/legacy-bird-feathers.svg",
-      "alt": "A broad blue feather has a diagonal central shaft and branching teal lines.",
+      "path": "content/library/art/review-bird-feathers.svg",
+      "alt": "A blue feather has a long bare quill, a central shaft and many fine branching barbs.",
       "rights": {
         "license": "LicenseRef-Little-Island-Original",
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Original subject-specific SVG drawn during final rendered review; long quill and branching barbs replace a leaf-like outline."
       },
-      "sha256": "fb18ab32aa82c67ac0dc125008c13bb616bc759d505f251a722e6950bb7c5ee7"
+      "sha256": "e18830190ce167256c579f0f3a48a8d7f4ae5ac8312c7da9e3e8486206085546"
     }
   },
   "blue-sky": {
@@ -996,15 +996,15 @@
   "milky-way": {
     "image": {
       "path": "content/library/art/review-milky-way.svg",
-      "alt": "A flattened pale galaxy oval has a thick green spiral, a golden central oval and a small coral dot marking a schematic solar-system position.",
+      "alt": "A symbolic spiral galaxy has a bright center, curving bands of star dots and an orange dot marking a place for our Sun; distances are not to scale.",
       "rights": {
         "license": "LicenseRef-Little-Island-Original",
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original subject-specific SVG drawn during final rendered review; star dots and curving luminous bands clarify the symbolic galaxy; no imported geometry or source image."
       },
-      "sha256": "f00dac38ff093af02c9cfcac066a30608c69ec30171eecb52142f624aaf55a1e"
+      "sha256": "06ca370bffc63fa434cac36543170b0196fd0a5d12ef4acf40bbdf3e471d9a0b"
     }
   },
   "comet": {

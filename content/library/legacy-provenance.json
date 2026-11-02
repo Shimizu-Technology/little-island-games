@@ -376,10 +376,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "sun: Fusion and plasma replace the loose particle/campfire comparison; separate energy production from gravity. Retained facts supported, with new causal wording. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -389,11 +390,6 @@
         "library-sun-tell-3",
         "library-sun-more-1",
         "library-sun-more-2",
-        "library-sun-more-3",
-        "library-sun-more-4",
-        "library-sun-more-5",
-        "library-sun-more-6",
-        "library-sun-more-7",
         "library-sun-deep-1",
         "library-sun-deep-2",
         "library-sun-deep-3",
@@ -773,22 +769,19 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "moon: Phase geometry, reflected light and synchronous rotation checked; removed repeated shape statements. Retained facts supported. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
         "library-moon-label-1",
         "library-moon-tell-1",
         "library-moon-tell-2",
-        "library-moon-tell-3",
         "library-moon-more-1",
         "library-moon-more-2",
-        "library-moon-more-3",
-        "library-moon-more-4",
-        "library-moon-more-5",
         "library-moon-deep-1",
         "library-moon-deep-2",
         "library-moon-deep-3",
@@ -797,10 +790,13 @@
         "library-moon-deep-6",
         "library-moon-deep-7",
         "library-moon-deep-8",
-        "library-moon-deep-9"
+        "library-moon-deep-9",
+        "library-moon-deep-10"
       ],
       "sourceUrls": [
-        "https://science.nasa.gov/moon/facts/"
+        "https://science.nasa.gov/moon/facts/",
+        "https://science.nasa.gov/moon/moon-phases/",
+        "https://science.nasa.gov/moon/eclipses/"
       ]
     }
   },
@@ -1192,10 +1188,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "day-night: Separated daily rotation from yearly revolution; removed the technically imprecise full-turn-equals-24-hours claim. Core mechanism supported. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -1205,9 +1202,6 @@
         "library-day-night-tell-3",
         "library-day-night-more-1",
         "library-day-night-more-2",
-        "library-day-night-more-3",
-        "library-day-night-more-4",
-        "library-day-night-more-5",
         "library-day-night-deep-1",
         "library-day-night-deep-2",
         "library-day-night-deep-3",
@@ -1570,10 +1564,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "planets: Added NASA planet catalogue for order and rocky/giant distinctions; removed vague crowded-system phrasing. Retained classifications supported. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -1583,8 +1578,6 @@
         "library-planets-tell-3",
         "library-planets-more-1",
         "library-planets-more-2",
-        "library-planets-more-3",
-        "library-planets-more-4",
         "library-planets-deep-1",
         "library-planets-deep-2",
         "library-planets-deep-3",
@@ -1593,10 +1586,14 @@
         "library-planets-deep-6",
         "library-planets-deep-7",
         "library-planets-deep-8",
-        "library-planets-deep-9"
+        "library-planets-deep-9",
+        "library-planets-deep-10"
       ],
       "sourceUrls": [
-        "https://science.nasa.gov/solar-system/"
+        "https://science.nasa.gov/solar-system/",
+        "https://science.nasa.gov/solar-system/planets/",
+        "https://spaceplace.nasa.gov/what-is-gravity/en/",
+        "https://science.nasa.gov/earth/facts/"
       ]
     }
   },
@@ -1942,10 +1939,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "mars: Oxidation and dust explain apparent color; retained only broad, supported ancient-water evidence, not disputed present-day surface flows. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -1955,8 +1953,6 @@
         "library-mars-tell-3",
         "library-mars-more-1",
         "library-mars-more-2",
-        "library-mars-more-3",
-        "library-mars-more-4",
         "library-mars-deep-1",
         "library-mars-deep-2",
         "library-mars-deep-3",
@@ -2319,10 +2315,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "saturn: Ring particles, reflected light, gaps and thin geometry checked; avoided uncertain ring-origin and age claims. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -2332,9 +2329,6 @@
         "library-saturn-tell-3",
         "library-saturn-more-1",
         "library-saturn-more-2",
-        "library-saturn-more-3",
-        "library-saturn-more-4",
-        "library-saturn-more-5",
         "library-saturn-deep-1",
         "library-saturn-deep-2",
         "library-saturn-deep-3",
@@ -2342,10 +2336,13 @@
         "library-saturn-deep-5",
         "library-saturn-deep-6",
         "library-saturn-deep-7",
-        "library-saturn-deep-8"
+        "library-saturn-deep-8",
+        "library-saturn-deep-9"
       ],
       "sourceUrls": [
-        "https://science.nasa.gov/saturn/facts/"
+        "https://science.nasa.gov/saturn/facts/",
+        "https://science.nasa.gov/mission/cassini/science/rings/",
+        "https://www.jpl.nasa.gov/images/pia00335-full-disk-color-image-of-crescent-saturn-with-rings-and-ring-shadows/"
       ]
     }
   },
@@ -2712,22 +2709,19 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "gravity: Mutual attraction and shared freefall checked; removed ambiguous weight definition and kept mass/distance conditions explicit. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
         "library-gravity-label-1",
         "library-gravity-tell-1",
         "library-gravity-tell-2",
-        "library-gravity-tell-3",
         "library-gravity-more-1",
         "library-gravity-more-2",
-        "library-gravity-more-3",
-        "library-gravity-more-4",
-        "library-gravity-more-5",
         "library-gravity-deep-1",
         "library-gravity-deep-2",
         "library-gravity-deep-3",
@@ -3112,10 +3106,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "stars: Replaced unsupported color-temperature elaboration with the cited NASA page's directly supported mass/fusion/lifetime explanation. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -3125,9 +3120,6 @@
         "library-stars-tell-3",
         "library-stars-more-1",
         "library-stars-more-2",
-        "library-stars-more-3",
-        "library-stars-more-4",
-        "library-stars-more-5",
         "library-stars-deep-1",
         "library-stars-deep-2",
         "library-stars-deep-3",
@@ -3486,10 +3478,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "rockets: Thrust, paired forces and orbital speed checked against NASA launch/orbit explanations; no launch-making activity added. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -3499,8 +3492,6 @@
         "library-rockets-tell-3",
         "library-rockets-more-1",
         "library-rockets-more-2",
-        "library-rockets-more-3",
-        "library-rockets-more-4",
         "library-rockets-deep-1",
         "library-rockets-deep-2",
         "library-rockets-deep-3",
@@ -3509,11 +3500,13 @@
         "library-rockets-deep-6",
         "library-rockets-deep-7",
         "library-rockets-deep-8",
-        "library-rockets-deep-9"
+        "library-rockets-deep-9",
+        "library-rockets-deep-10"
       ],
       "sourceUrls": [
         "https://spaceplace.nasa.gov/launching-into-space/en/",
-        "https://science.nasa.gov/learn/basics-of-space-flight/chapter3-4/"
+        "https://science.nasa.gov/learn/basics-of-space-flight/chapter3-4/",
+        "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/solid-rocket-engine/"
       ]
     }
   },
@@ -3857,10 +3850,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "asteroids: Formation, composition, shapes and asteroid moons checked; omitted impact-hazard material unnecessary to this question. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -3870,9 +3864,6 @@
         "library-asteroids-tell-3",
         "library-asteroids-more-1",
         "library-asteroids-more-2",
-        "library-asteroids-more-3",
-        "library-asteroids-more-4",
-        "library-asteroids-more-5",
         "library-asteroids-deep-1",
         "library-asteroids-deep-2",
         "library-asteroids-deep-3",
@@ -3881,7 +3872,8 @@
         "library-asteroids-deep-6",
         "library-asteroids-deep-7",
         "library-asteroids-deep-8",
-        "library-asteroids-deep-9"
+        "library-asteroids-deep-9",
+        "library-asteroids-deep-10"
       ],
       "sourceUrls": [
         "https://science.nasa.gov/solar-system/asteroids/facts/"
@@ -4262,10 +4254,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "salty: Rock-derived ions, seafloor exchange and evaporation checked; no claim that ordinary table salt alone fills the ocean. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -4275,9 +4268,6 @@
         "library-salty-tell-3",
         "library-salty-more-1",
         "library-salty-more-2",
-        "library-salty-more-3",
-        "library-salty-more-4",
-        "library-salty-more-5",
         "library-salty-deep-1",
         "library-salty-deep-2",
         "library-salty-deep-3",
@@ -4286,7 +4276,8 @@
         "library-salty-deep-6",
         "library-salty-deep-7",
         "library-salty-deep-8",
-        "library-salty-deep-9"
+        "library-salty-deep-9",
+        "library-salty-deep-10"
       ],
       "sourceUrls": [
         "https://oceanservice.noaa.gov/facts/whysalty.html",
@@ -4638,10 +4629,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "tides: Long-period wave, high/low tide and tidal range checked; removed duplicate beach instructions and avoided simplistic two-bulge geometry. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -4651,9 +4643,6 @@
         "library-tides-tell-3",
         "library-tides-more-1",
         "library-tides-more-2",
-        "library-tides-more-3",
-        "library-tides-more-4",
-        "library-tides-more-5",
         "library-tides-deep-1",
         "library-tides-deep-2",
         "library-tides-deep-3",
@@ -4661,7 +4650,8 @@
         "library-tides-deep-5",
         "library-tides-deep-6",
         "library-tides-deep-7",
-        "library-tides-deep-8"
+        "library-tides-deep-8",
+        "library-tides-deep-9"
       ],
       "sourceUrls": [
         "https://oceanservice.noaa.gov/facts/tides.html"
@@ -5024,10 +5014,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "waves: Qualified particle motion as deep-water/roughly circular; retained tsunami cause without implying tides cause tsunamis or a safe beach forecast. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -5037,9 +5028,6 @@
         "library-waves-tell-3",
         "library-waves-more-1",
         "library-waves-more-2",
-        "library-waves-more-3",
-        "library-waves-more-4",
-        "library-waves-more-5",
         "library-waves-deep-1",
         "library-waves-deep-2",
         "library-waves-deep-3",
@@ -5047,9 +5035,7 @@
         "library-waves-deep-5",
         "library-waves-deep-6",
         "library-waves-deep-7",
-        "library-waves-deep-8",
-        "library-waves-deep-9",
-        "library-waves-deep-10"
+        "library-waves-deep-8"
       ],
       "sourceUrls": [
         "https://oceanservice.noaa.gov/facts/wavesinocean.html"
@@ -5426,10 +5412,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "coral: Polyp feeding, hard-coral framework and algal partnership checked; limited symbiosis to many shallow-water corals rather than all coral. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -5439,10 +5426,6 @@
         "library-coral-tell-3",
         "library-coral-more-1",
         "library-coral-more-2",
-        "library-coral-more-3",
-        "library-coral-more-4",
-        "library-coral-more-5",
-        "library-coral-more-6",
         "library-coral-deep-1",
         "library-coral-deep-2",
         "library-coral-deep-3",
@@ -5451,7 +5434,8 @@
         "library-coral-deep-6",
         "library-coral-deep-7",
         "library-coral-deep-8",
-        "library-coral-deep-9"
+        "library-coral-deep-9",
+        "library-coral-deep-10"
       ],
       "sourceUrls": [
         "https://oceanservice.noaa.gov/facts/coral.html"
@@ -5814,10 +5798,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "plankton: Drift-based classification and food roles checked; avoided calling all plankton tiny, plants, or passive motionless particles. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -5827,8 +5812,6 @@
         "library-plankton-tell-3",
         "library-plankton-more-1",
         "library-plankton-more-2",
-        "library-plankton-more-3",
-        "library-plankton-more-4",
         "library-plankton-deep-1",
         "library-plankton-deep-2",
         "library-plankton-deep-3",
@@ -5837,8 +5820,7 @@
         "library-plankton-deep-6",
         "library-plankton-deep-7",
         "library-plankton-deep-8",
-        "library-plankton-deep-9",
-        "library-plankton-deep-10"
+        "library-plankton-deep-9"
       ],
       "sourceUrls": [
         "https://oceanservice.noaa.gov/facts/plankton.html"
@@ -6213,10 +6195,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "seagrass: Photosynthesis, rhizomes, flowering and habitat functions checked; Florida examples are not presented as a Guam species list. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -6226,9 +6209,6 @@
         "library-seagrass-tell-3",
         "library-seagrass-more-1",
         "library-seagrass-more-2",
-        "library-seagrass-more-3",
-        "library-seagrass-more-4",
-        "library-seagrass-more-5",
         "library-seagrass-deep-1",
         "library-seagrass-deep-2",
         "library-seagrass-deep-3",
@@ -6236,8 +6216,7 @@
         "library-seagrass-deep-5",
         "library-seagrass-deep-6",
         "library-seagrass-deep-7",
-        "library-seagrass-deep-8",
-        "library-seagrass-deep-9"
+        "library-seagrass-deep-8"
       ],
       "sourceUrls": [
         "https://floridakeys.noaa.gov/plants/seagrass.html"
@@ -6630,10 +6609,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "deep-ocean: Pressure in all directions and sunlight loss checked separately; removed any suggestion of a child diving or pressure demonstration. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -6643,9 +6623,6 @@
         "library-deep-ocean-tell-3",
         "library-deep-ocean-more-1",
         "library-deep-ocean-more-2",
-        "library-deep-ocean-more-3",
-        "library-deep-ocean-more-4",
-        "library-deep-ocean-more-5",
         "library-deep-ocean-deep-1",
         "library-deep-ocean-deep-2",
         "library-deep-ocean-deep-3",
@@ -6654,11 +6631,12 @@
         "library-deep-ocean-deep-6",
         "library-deep-ocean-deep-7",
         "library-deep-ocean-deep-8",
-        "library-deep-ocean-deep-9"
+        "library-deep-ocean-deep-9",
+        "library-deep-ocean-deep-10"
       ],
       "sourceUrls": [
         "https://oceanservice.noaa.gov/facts/pressure.html",
-        "https://oceanexplorer.noaa.gov/facts/light-distributed.html",
+        "https://oceanexplorer.noaa.gov/ocean-fact/light-distributed/",
         "https://www.whoi.edu/ocean-learning-hub/ocean-facts/why-is-pressure-different-in-the-ocean/"
       ]
     }
@@ -7021,10 +6999,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "octopus: Added the source's suction mechanism; pigment-sac expansion and texture checked. Removed overbroad universal small-gap claim. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -7034,9 +7013,6 @@
         "library-octopus-tell-3",
         "library-octopus-more-1",
         "library-octopus-more-2",
-        "library-octopus-more-3",
-        "library-octopus-more-4",
-        "library-octopus-more-5",
         "library-octopus-deep-1",
         "library-octopus-deep-2",
         "library-octopus-deep-3",
@@ -7424,23 +7400,21 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "turtle-breath: Canonical turtle-breath retained; lungs/surfacing and life-stage habitat checked. Deep now follows one breathing/habitat explanation; unrelated fat-name and diet facts removed, original sensitivity flags preserved. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval. Final independent editor replaced a habitat fact list with lung oxygen storage, circulation and a qualified six-green-turtle exercise study (Okuyama et al. 2020); one wildlife note appears in More. Family/cultural and audio review pending.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
         "library-turtles-label-1",
         "library-turtles-tell-1",
         "library-turtles-tell-2",
-        "library-turtles-tell-3",
         "library-turtles-more-1",
         "library-turtles-more-2",
         "library-turtles-more-3",
         "library-turtles-more-4",
-        "library-turtles-more-5",
-        "library-turtles-more-6",
         "library-turtles-deep-1",
         "library-turtles-deep-2",
         "library-turtles-deep-3",
@@ -7449,11 +7423,15 @@
         "library-turtles-deep-6",
         "library-turtles-deep-7",
         "library-turtles-deep-8",
-        "library-turtles-deep-9"
+        "library-turtles-deep-9",
+        "library-turtles-deep-10",
+        "library-turtles-deep-11"
       ],
       "sourceUrls": [
         "https://www.fisheries.noaa.gov/species/green-turtle",
-        "https://response.restoration.noaa.gov/about/media/how-do-oil-spills-affect-sea-turtles.html"
+        "https://response.restoration.noaa.gov/about/media/how-do-oil-spills-affect-sea-turtles.html",
+        "https://www.fisheries.noaa.gov/national/outreach-and-education/fun-facts-about-terrific-sea-turtles",
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC7055368/"
       ]
     }
   },
@@ -7824,10 +7802,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "food-web: Arrow direction and alternative prey checked; explained possible rather than deterministic effects. No claim that producers create energy from nothing. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -7837,9 +7816,6 @@
         "library-food-web-tell-3",
         "library-food-web-more-1",
         "library-food-web-more-2",
-        "library-food-web-more-3",
-        "library-food-web-more-4",
-        "library-food-web-more-5",
         "library-food-web-deep-1",
         "library-food-web-deep-2",
         "library-food-web-deep-3",
@@ -7848,7 +7824,8 @@
         "library-food-web-deep-6",
         "library-food-web-deep-7",
         "library-food-web-deep-8",
-        "library-food-web-deep-9"
+        "library-food-web-deep-9",
+        "library-food-web-deep-10"
       ],
       "sourceUrls": [
         "https://www.noaa.gov/education/resource-collections/marine-life/aquatic-food-webs"
@@ -8247,10 +8224,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "bats: Replaced unavailable Smithsonian citation with Maryland DNR plus NPS wing/echo pages; mammal traits and feeding buzz supported. Not all bats use identical senses. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -8260,10 +8238,6 @@
         "library-bats-tell-3",
         "library-bats-more-1",
         "library-bats-more-2",
-        "library-bats-more-3",
-        "library-bats-more-4",
-        "library-bats-more-5",
-        "library-bats-more-6",
         "library-bats-deep-1",
         "library-bats-deep-2",
         "library-bats-deep-3",
@@ -8272,12 +8246,13 @@
         "library-bats-deep-6",
         "library-bats-deep-7",
         "library-bats-deep-8",
-        "library-bats-deep-9"
+        "library-bats-deep-9",
+        "library-bats-deep-10"
       ],
       "sourceUrls": [
-        "https://www.si.edu/spotlight/bats/batfacts",
         "https://home.nps.gov/subjects/bats/how-bats-fly.htm",
-        "https://www.nps.gov/subjects/bats/echolocation.htm"
+        "https://www.nps.gov/subjects/bats/echolocation.htm",
+        "https://dnr.maryland.gov/wildlife/pages/plants_wildlife/bats/index.aspx"
       ]
     }
   },
@@ -8662,10 +8637,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "butterflies: Life stages checked in Smithsonian teaching text; monarch feeding example checked in NPS. Removed universal claims about adult lifespan and caterpillar diets. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -8675,8 +8651,6 @@
         "library-butterflies-tell-3",
         "library-butterflies-more-1",
         "library-butterflies-more-2",
-        "library-butterflies-more-3",
-        "library-butterflies-more-4",
         "library-butterflies-deep-1",
         "library-butterflies-deep-2",
         "library-butterflies-deep-3",
@@ -8688,7 +8662,6 @@
         "library-butterflies-deep-9"
       ],
       "sourceUrls": [
-        "https://avpreservation.si.edu/spotlight/buginfo/butterfly",
         "https://home.nps.gov/articles/monarch-butterfly.htm",
         "https://naturalhistory.si.edu/education/teaching-resources/life-science/butterflies-and-beyond"
       ]
@@ -9061,10 +9034,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "frogs: Kept development species-specific; adult aquatic habit, filter-feeding larvae and limb functions checked. General breathing claims removed for lack of detail in cited page. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -9075,8 +9049,6 @@
         "library-frogs-more-1",
         "library-frogs-more-2",
         "library-frogs-more-3",
-        "library-frogs-more-4",
-        "library-frogs-more-5",
         "library-frogs-deep-1",
         "library-frogs-deep-2",
         "library-frogs-deep-3",
@@ -9085,7 +9057,8 @@
         "library-frogs-deep-6",
         "library-frogs-deep-7",
         "library-frogs-deep-8",
-        "library-frogs-deep-9"
+        "library-frogs-deep-9",
+        "library-frogs-deep-10"
       ],
       "sourceUrls": [
         "https://nationalzoo.si.edu/animals/african-clawed-frog"
@@ -9472,10 +9445,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "bees: Gardens pages unavailable; FDA Biology of Pollination/Bee's Dinner Plate provides direct replacement evidence. Distinguished transfer from seed formation and same-species compatibility. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -9485,10 +9459,6 @@
         "library-bees-tell-3",
         "library-bees-more-1",
         "library-bees-more-2",
-        "library-bees-more-3",
-        "library-bees-more-4",
-        "library-bees-more-5",
-        "library-bees-more-6",
         "library-bees-deep-1",
         "library-bees-deep-2",
         "library-bees-deep-3",
@@ -9497,11 +9467,12 @@
         "library-bees-deep-6",
         "library-bees-deep-7",
         "library-bees-deep-8",
-        "library-bees-deep-9"
+        "library-bees-deep-9",
+        "library-bees-deep-10"
       ],
       "sourceUrls": [
-        "https://gardens.si.edu/gardens/pollinator-garden/why-what-when-where-who-how-pollination/",
-        "https://gardens.si.edu/gardens/pollinator-garden/"
+        "https://www.fda.gov/animal-veterinary/animal-health-literacy/helping-agricultures-helpful-honey-bees",
+        "https://directives.nrcs.usda.gov/sites/default/files2/1719488988/Subpart%20M%20%E2%80%93%20Pollinator%20Habitat%20Considerations%20for%20Range%20and%20Pasturelands.pdf"
       ]
     }
   },
@@ -9865,10 +9836,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "camouflage: Added Florida Museum's full camouflage explanation; removed unsupported pigment/structural-color digression. Warning and concealment distinguished, without claiming invisibility. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -9878,9 +9850,6 @@
         "library-camouflage-tell-3",
         "library-camouflage-more-1",
         "library-camouflage-more-2",
-        "library-camouflage-more-3",
-        "library-camouflage-more-4",
-        "library-camouflage-more-5",
         "library-camouflage-deep-1",
         "library-camouflage-deep-2",
         "library-camouflage-deep-3",
@@ -9888,12 +9857,10 @@
         "library-camouflage-deep-5",
         "library-camouflage-deep-6",
         "library-camouflage-deep-7",
-        "library-camouflage-deep-8",
-        "library-camouflage-deep-9",
-        "library-camouflage-deep-10"
+        "library-camouflage-deep-8"
       ],
       "sourceUrls": [
-        "https://naturalhistory.si.edu/education/teaching-resources/life-science/butterfly-colors-and-biomimicry"
+        "https://www.floridamuseum.ufl.edu/educators/resource/butterflies-and-moths-camouflage/"
       ]
     }
   },
@@ -10272,10 +10239,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "dolphins: Added NOAA Ocean Today breathing transcript; species page supports nursing, changing groups and varied hunting. Removed unnecessary fish-gill comparison and unsupported universal behavior. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -10285,10 +10253,6 @@
         "library-dolphins-tell-3",
         "library-dolphins-more-1",
         "library-dolphins-more-2",
-        "library-dolphins-more-3",
-        "library-dolphins-more-4",
-        "library-dolphins-more-5",
-        "library-dolphins-more-6",
         "library-dolphins-deep-1",
         "library-dolphins-deep-2",
         "library-dolphins-deep-3",
@@ -10300,7 +10264,8 @@
         "library-dolphins-deep-9"
       ],
       "sourceUrls": [
-        "https://www.fisheries.noaa.gov/species/common-bottlenose-dolphin"
+        "https://www.fisheries.noaa.gov/species/common-bottlenose-dolphin",
+        "https://oceantoday.noaa.gov/dolphinanatomy/"
       ]
     }
   },
@@ -10684,10 +10649,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "habitats: NPS background and tree/soil examples checked; removed broad conservation claims not needed to explain a habitat match. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -10697,9 +10663,6 @@
         "library-habitats-tell-3",
         "library-habitats-more-1",
         "library-habitats-more-2",
-        "library-habitats-more-3",
-        "library-habitats-more-4",
-        "library-habitats-more-5",
         "library-habitats-deep-1",
         "library-habitats-deep-2",
         "library-habitats-deep-3",
@@ -11089,10 +11052,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "migration: Restricted migration example to eastern North American monarchs; multigeneration northward journey and long-lived autumn generation checked. Not a claim about Guam butterflies. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -11102,9 +11066,6 @@
         "library-migration-tell-3",
         "library-migration-more-1",
         "library-migration-more-2",
-        "library-migration-more-3",
-        "library-migration-more-4",
-        "library-migration-more-5",
         "library-migration-deep-1",
         "library-migration-deep-2",
         "library-migration-deep-3",
@@ -11113,7 +11074,8 @@
         "library-migration-deep-6",
         "library-migration-deep-7",
         "library-migration-deep-8",
-        "library-migration-deep-9"
+        "library-migration-deep-9",
+        "library-migration-deep-10"
       ],
       "sourceUrls": [
         "https://www.nps.gov/subjects/pollinators/migratingmonarchs.htm",
@@ -11498,10 +11460,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "insect-flight: Replaced dead Smithsonian page with UF flight explanation and NC State locomotion; retained NC State wing reinforcement. Avoided claiming all muscles attach indirectly. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -11511,9 +11474,6 @@
         "library-insect-flight-tell-3",
         "library-insect-flight-more-1",
         "library-insect-flight-more-2",
-        "library-insect-flight-more-3",
-        "library-insect-flight-more-4",
-        "library-insect-flight-more-5",
         "library-insect-flight-deep-1",
         "library-insect-flight-deep-2",
         "library-insect-flight-deep-3",
@@ -11525,8 +11485,9 @@
         "library-insect-flight-deep-9"
       ],
       "sourceUrls": [
-        "https://www.si.edu/spotlight/buginfo/insect-flight",
-        "https://genent.cals.ncsu.edu/bug-bytes/thorax/wings-2/"
+        "https://genent.cals.ncsu.edu/bug-bytes/thorax/wings-2/",
+        "https://onlineentomology.ifas.ufl.edu/about/articles/entomology/insect-flight-explained-the-science-behind-the-buzz/",
+        "https://genent.cals.ncsu.edu/bug-bytes/thorax/locomotion/"
       ]
     }
   },
@@ -11919,10 +11880,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "bird-feathers: Cornell anatomy/types/function sections read; removed unrelated penguin sentence and repeated collection warnings. Structure-function explanation supported. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -11933,10 +11895,6 @@
         "library-bird-feathers-more-1",
         "library-bird-feathers-more-2",
         "library-bird-feathers-more-3",
-        "library-bird-feathers-more-4",
-        "library-bird-feathers-more-5",
-        "library-bird-feathers-more-6",
-        "library-bird-feathers-more-7",
         "library-bird-feathers-deep-1",
         "library-bird-feathers-deep-2",
         "library-bird-feathers-deep-3",
@@ -11946,8 +11904,7 @@
         "library-bird-feathers-deep-7",
         "library-bird-feathers-deep-8",
         "library-bird-feathers-deep-9",
-        "library-bird-feathers-deep-10",
-        "library-bird-feathers-deep-11"
+        "library-bird-feathers-deep-10"
       ],
       "sourceUrls": [
         "https://academy.allaboutbirds.org/feathers-article/"
@@ -12309,10 +12266,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "blue-sky: Wavelength-dependent scattering and longer sunset path checked; Mars comparison limited to the cited rover observations. No claim that blue is the only scattered color. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -12322,10 +12280,6 @@
         "library-blue-sky-tell-3",
         "library-blue-sky-more-1",
         "library-blue-sky-more-2",
-        "library-blue-sky-more-3",
-        "library-blue-sky-more-4",
-        "library-blue-sky-more-5",
-        "library-blue-sky-more-6",
         "library-blue-sky-deep-1",
         "library-blue-sky-deep-2",
         "library-blue-sky-deep-3",
@@ -12708,10 +12662,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "clouds: Condensation nuclei, expansion cooling and simultaneous evaporation checked; vapor distinguished from visible drops. No single cloud shape used as a forecast. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -12721,9 +12676,6 @@
         "library-clouds-tell-3",
         "library-clouds-more-1",
         "library-clouds-more-2",
-        "library-clouds-more-3",
-        "library-clouds-more-4",
-        "library-clouds-more-5",
         "library-clouds-deep-1",
         "library-clouds-deep-2",
         "library-clouds-deep-3",
@@ -12733,7 +12685,8 @@
         "library-clouds-deep-7",
         "library-clouds-deep-8",
         "library-clouds-deep-9",
-        "library-clouds-deep-10"
+        "library-clouds-deep-10",
+        "library-clouds-deep-11"
       ],
       "sourceUrls": [
         "https://www.noaa.gov/jetstream/clouds",
@@ -13097,10 +13050,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "rain: Droplet/updraft mechanism, ice route and drop shape checked in USGS; removed evaporation-before-ground claim not established by this page's relevant text. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -13110,9 +13064,6 @@
         "library-rain-tell-3",
         "library-rain-more-1",
         "library-rain-more-2",
-        "library-rain-more-3",
-        "library-rain-more-4",
-        "library-rain-more-5",
         "library-rain-deep-1",
         "library-rain-deep-2",
         "library-rain-deep-3",
@@ -13121,7 +13072,8 @@
         "library-rain-deep-6",
         "library-rain-deep-7",
         "library-rain-deep-8",
-        "library-rain-deep-9"
+        "library-rain-deep-9",
+        "library-rain-deep-10"
       ],
       "sourceUrls": [
         "https://www.usgs.gov/water-science-school/science/precipitation-and-water-cycle"
@@ -13497,10 +13449,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "rainbows: Refraction/reflection geometry and secondary reversed bow checked; removed filler about collecting an end. No outdoor storm-observation invitation. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -13510,8 +13463,6 @@
         "library-rainbows-tell-3",
         "library-rainbows-more-1",
         "library-rainbows-more-2",
-        "library-rainbows-more-3",
-        "library-rainbows-more-4",
         "library-rainbows-deep-1",
         "library-rainbows-deep-2",
         "library-rainbows-deep-3",
@@ -13521,9 +13472,7 @@
         "library-rainbows-deep-7",
         "library-rainbows-deep-8",
         "library-rainbows-deep-9",
-        "library-rainbows-deep-10",
-        "library-rainbows-deep-11",
-        "library-rainbows-deep-12"
+        "library-rainbows-deep-10"
       ],
       "sourceUrls": [
         "https://www.weather.gov/fgz/Rainbow",
@@ -13894,10 +13843,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "wind: Used readable NOAA NESDIS replacement for empty/timed-out Boulder video page; pressure-gradient explanation retained without copying the source's misleading diffusion analogy. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -13907,9 +13857,6 @@
         "library-wind-tell-3",
         "library-wind-more-1",
         "library-wind-more-2",
-        "library-wind-more-3",
-        "library-wind-more-4",
-        "library-wind-more-5",
         "library-wind-deep-1",
         "library-wind-deep-2",
         "library-wind-deep-3",
@@ -13918,10 +13865,10 @@
         "library-wind-deep-6",
         "library-wind-deep-7",
         "library-wind-deep-8",
-        "library-wind-deep-9"
+        "library-wind-deep-9",
+        "library-wind-deep-10"
       ],
       "sourceUrls": [
-        "https://www.boulder.noaa.gov/video/what-causes-wind/",
         "https://www.nesdis.noaa.gov/about/k-12-education/atmosphere/why-does-wind-blow"
       ]
     }
@@ -14299,10 +14246,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "lightning: Electrical separation, heating and sound mechanism checked; removed timing/counting and redundant shelter instructions. Old unsafe audio remains prohibited by preserved sensitiveNotes. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -14312,12 +14260,6 @@
         "library-lightning-tell-3",
         "library-lightning-more-1",
         "library-lightning-more-2",
-        "library-lightning-more-3",
-        "library-lightning-more-4",
-        "library-lightning-more-5",
-        "library-lightning-more-6",
-        "library-lightning-more-7",
-        "library-lightning-more-8",
         "library-lightning-deep-1",
         "library-lightning-deep-2",
         "library-lightning-deep-3",
@@ -14702,10 +14644,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "typhoons: Regional names and warm-water circulation checked; distinguished tropical-cyclone umbrella from sufficiently strong typhoon/hurricane. No current-warning claim. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -14715,10 +14658,6 @@
         "library-typhoons-tell-3",
         "library-typhoons-more-1",
         "library-typhoons-more-2",
-        "library-typhoons-more-3",
-        "library-typhoons-more-4",
-        "library-typhoons-more-5",
-        "library-typhoons-more-6",
         "library-typhoons-deep-1",
         "library-typhoons-deep-2",
         "library-typhoons-deep-3",
@@ -14727,8 +14666,7 @@
         "library-typhoons-deep-6",
         "library-typhoons-deep-7",
         "library-typhoons-deep-8",
-        "library-typhoons-deep-9",
-        "library-typhoons-deep-10"
+        "library-typhoons-deep-9"
       ],
       "sourceUrls": [
         "https://oceanservice.noaa.gov/facts/cyclone.html",
@@ -15095,10 +15033,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "water-cycle: NOAA pools/fluxes, infiltration and transpiration sections checked; replaced repeated definitions with a branching route and storage explanation. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -15108,9 +15047,6 @@
         "library-water-cycle-tell-3",
         "library-water-cycle-more-1",
         "library-water-cycle-more-2",
-        "library-water-cycle-more-3",
-        "library-water-cycle-more-4",
-        "library-water-cycle-more-5",
         "library-water-cycle-deep-1",
         "library-water-cycle-deep-2",
         "library-water-cycle-deep-3",
@@ -15119,7 +15055,8 @@
         "library-water-cycle-deep-6",
         "library-water-cycle-deep-7",
         "library-water-cycle-deep-8",
-        "library-water-cycle-deep-9"
+        "library-water-cycle-deep-9",
+        "library-water-cycle-deep-10"
       ],
       "sourceUrls": [
         "https://www.noaa.gov/education/resource-collections/freshwater/water-cycle"
@@ -15496,10 +15433,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "seasons: Tilt, angle/day length and opposite hemispheres checked; removed unsupported generic tropical wet/dry assertion rather than treating four snowy seasons as universal. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -15509,9 +15447,6 @@
         "library-seasons-tell-3",
         "library-seasons-more-1",
         "library-seasons-more-2",
-        "library-seasons-more-3",
-        "library-seasons-more-4",
-        "library-seasons-more-5",
         "library-seasons-deep-1",
         "library-seasons-deep-2",
         "library-seasons-deep-3",
@@ -15520,8 +15455,7 @@
         "library-seasons-deep-6",
         "library-seasons-deep-7",
         "library-seasons-deep-8",
-        "library-seasons-deep-9",
-        "library-seasons-deep-10"
+        "library-seasons-deep-9"
       ],
       "sourceUrls": [
         "https://spaceplace.nasa.gov/seasons/en/"
@@ -15904,10 +15838,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "forecast: Observation instruments and human/model combination checked; one current-information line replaces repeated warning blocks. No accuracy guarantee or live forecast. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -15917,10 +15852,6 @@
         "library-forecast-tell-3",
         "library-forecast-more-1",
         "library-forecast-more-2",
-        "library-forecast-more-3",
-        "library-forecast-more-4",
-        "library-forecast-more-5",
-        "library-forecast-more-6",
         "library-forecast-deep-1",
         "library-forecast-deep-2",
         "library-forecast-deep-3",
@@ -15930,8 +15861,7 @@
         "library-forecast-deep-7",
         "library-forecast-deep-8",
         "library-forecast-deep-9",
-        "library-forecast-deep-10",
-        "library-forecast-deep-11"
+        "library-forecast-deep-10"
       ],
       "sourceUrls": [
         "https://www.noaa.gov/education/resource-collections/weather-atmosphere/weather-observations"
@@ -16326,10 +16256,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "guam: USGS geology abstract and Guam project overview support location, rock regions, uplift and water differences; NPS supports habitat diversity. No cultural history inferred. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -16339,9 +16270,6 @@
         "library-guam-tell-3",
         "library-guam-more-1",
         "library-guam-more-2",
-        "library-guam-more-3",
-        "library-guam-more-4",
-        "library-guam-more-5",
         "library-guam-deep-1",
         "library-guam-deep-2",
         "library-guam-deep-3",
@@ -16707,10 +16635,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "islands: NPS volcanic growth/hot-spot/subsidence and uplifted limestone checked; removed unsupported blanket sand-island formation claims. Source's swapped Guam/Saipan park labels not reused. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -16720,9 +16649,6 @@
         "library-islands-tell-3",
         "library-islands-more-1",
         "library-islands-more-2",
-        "library-islands-more-3",
-        "library-islands-more-4",
-        "library-islands-more-5",
         "library-islands-deep-1",
         "library-islands-deep-2",
         "library-islands-deep-3",
@@ -17134,10 +17060,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "reef: NOAA reef protection/tutorial and USGS Guam sediment overview checked; no guaranteed storm protection. Local runoff explanation replaces generic stewardship padding. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -17147,10 +17074,6 @@
         "library-reef-tell-3",
         "library-reef-more-1",
         "library-reef-more-2",
-        "library-reef-more-3",
-        "library-reef-more-4",
-        "library-reef-more-5",
-        "library-reef-more-6",
         "library-reef-deep-1",
         "library-reef-deep-2",
         "library-reef-deep-3",
@@ -17163,7 +17086,9 @@
       ],
       "sourceUrls": [
         "https://oceanservice.noaa.gov/facts/coral.html",
-        "https://oceanservice.noaa.gov/facts/coral_protect.html"
+        "https://oceanservice.noaa.gov/facts/coral_protect.html",
+        "https://oceanservice.noaa.gov/education/tutorial_corals/coral07_importance.html",
+        "https://www.usgs.gov/centers/pcmsc/science/coral-reef-project-guam?page=1"
       ]
     }
   },
@@ -17552,10 +17477,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "trench: USGS plate direction and NOAA deepest-ocean location checked; approximate eleven kilometers avoids false precision. Removed unsupported trench-life detail, retaining exploration constraints. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -17565,8 +17491,6 @@
         "library-trench-tell-3",
         "library-trench-more-1",
         "library-trench-more-2",
-        "library-trench-more-3",
-        "library-trench-more-4",
         "library-trench-deep-1",
         "library-trench-deep-2",
         "library-trench-deep-3",
@@ -17574,8 +17498,7 @@
         "library-trench-deep-5",
         "library-trench-deep-6",
         "library-trench-deep-7",
-        "library-trench-deep-8",
-        "library-trench-deep-9"
+        "library-trench-deep-8"
       ],
       "sourceUrls": [
         "https://oceanservice.noaa.gov/facts/oceandepth.html",
@@ -17950,10 +17873,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "mountains: Plate/fault uplift and glacial erosion checked; removed specific mountain naming and numerical uplift claims. USGS volcano overview supports volcanic contrast. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -17963,9 +17887,6 @@
         "library-mountains-tell-3",
         "library-mountains-more-1",
         "library-mountains-more-2",
-        "library-mountains-more-3",
-        "library-mountains-more-4",
-        "library-mountains-more-5",
         "library-mountains-deep-1",
         "library-mountains-deep-2",
         "library-mountains-deep-3",
@@ -17974,12 +17895,11 @@
         "library-mountains-deep-6",
         "library-mountains-deep-7",
         "library-mountains-deep-8",
-        "library-mountains-deep-9",
-        "library-mountains-deep-10",
-        "library-mountains-deep-11"
+        "library-mountains-deep-9"
       ],
       "sourceUrls": [
-        "https://www.usgs.gov/geology-and-ecology-of-national-parks/geology-denali-national-park-and-preserve"
+        "https://www.usgs.gov/geology-and-ecology-of-national-parks/geology-denali-national-park-and-preserve",
+        "https://www.usgs.gov/programs/VHP/about-volcanoes"
       ]
     }
   },
@@ -18361,10 +18281,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "rivers: USGS meander text supports outside erosion/inside deposition; rivers page supports groundwater and inland endings. No claim that every river reaches the sea. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -18374,9 +18295,6 @@
         "library-rivers-tell-3",
         "library-rivers-more-1",
         "library-rivers-more-2",
-        "library-rivers-more-3",
-        "library-rivers-more-4",
-        "library-rivers-more-5",
         "library-rivers-deep-1",
         "library-rivers-deep-2",
         "library-rivers-deep-3",
@@ -18384,8 +18302,7 @@
         "library-rivers-deep-5",
         "library-rivers-deep-6",
         "library-rivers-deep-7",
-        "library-rivers-deep-8",
-        "library-rivers-deep-9"
+        "library-rivers-deep-8"
       ],
       "sourceUrls": [
         "https://www.usgs.gov/water-science-school/science/rivers-streams-and-creeks",
@@ -18766,10 +18683,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "continents: Added University of Hawai‘i's continent-convention text; USGS projection and tectonic overview support model limits. Removed unsupported complete seven-name list from weak citations. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -18779,9 +18697,6 @@
         "library-continents-tell-3",
         "library-continents-more-1",
         "library-continents-more-2",
-        "library-continents-more-3",
-        "library-continents-more-4",
-        "library-continents-more-5",
         "library-continents-deep-1",
         "library-continents-deep-2",
         "library-continents-deep-3",
@@ -18795,7 +18710,7 @@
       "sourceUrls": [
         "https://pubs.usgs.gov/imap/2800/",
         "https://www.usgs.gov/faqs/how-are-different-map-projections-used",
-        "https://www.usgs.gov/programs/VHP/about-volcanoes"
+        "https://manoa.hawaii.edu/exploringourfluidearth/physical/world-ocean/ocean-basins-and-continents/weird-science-continent-confusion"
       ]
     }
   },
@@ -19179,10 +19094,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "maps: USGS symbols landing text and full cartographic handout read; legend/scale/contours and purpose explained. Removed repeated non-navigation warnings. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -19192,10 +19108,6 @@
         "library-maps-tell-3",
         "library-maps-more-1",
         "library-maps-more-2",
-        "library-maps-more-3",
-        "library-maps-more-4",
-        "library-maps-more-5",
-        "library-maps-more-6",
         "library-maps-deep-1",
         "library-maps-deep-2",
         "library-maps-deep-3",
@@ -19575,23 +19487,19 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "directions: USGS three-north definitions and time-dependent declination checked; clarified compass direction is local, not a guaranteed bearing straight at the magnetic pole. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
         "library-directions-label-1",
         "library-directions-tell-1",
         "library-directions-tell-2",
-        "library-directions-tell-3",
         "library-directions-more-1",
         "library-directions-more-2",
-        "library-directions-more-3",
-        "library-directions-more-4",
-        "library-directions-more-5",
-        "library-directions-more-6",
         "library-directions-deep-1",
         "library-directions-deep-2",
         "library-directions-deep-3",
@@ -19600,8 +19508,7 @@
         "library-directions-deep-6",
         "library-directions-deep-7",
         "library-directions-deep-8",
-        "library-directions-deep-9",
-        "library-directions-deep-10"
+        "library-directions-deep-9"
       ],
       "sourceUrls": [
         "https://www.usgs.gov/faqs/what-do-different-north-arrows-a-usgs-topographic-map-mean?items_per_page=6&page=1"
@@ -19986,10 +19893,11 @@
     "independentLibraryReview": {
       "date": "2026-11-02",
       "review": {
-        "status": "draft",
-        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
         "date": "2026-11-02",
-        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+        "scope": "volcanoes: USGS vent, buoyancy/gas, accumulation and cooling/crystal mechanisms checked; removed generic plate-location list. No live hazard or eruption experiment. Factual outcome: supported after editorial correction against opened source text. Pending the designated family reviewer family/cultural review, reading-content and pronunciation review, narration generation and audible review; not shipping approval.",
+        "factualReviewer": "independent factual reviewer"
       },
       "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
       "sentenceIds": [
@@ -19999,9 +19907,6 @@
         "library-volcanoes-tell-3",
         "library-volcanoes-more-1",
         "library-volcanoes-more-2",
-        "library-volcanoes-more-3",
-        "library-volcanoes-more-4",
-        "library-volcanoes-more-5",
         "library-volcanoes-deep-1",
         "library-volcanoes-deep-2",
         "library-volcanoes-deep-3",
@@ -20010,7 +19915,8 @@
         "library-volcanoes-deep-6",
         "library-volcanoes-deep-7",
         "library-volcanoes-deep-8",
-        "library-volcanoes-deep-9"
+        "library-volcanoes-deep-9",
+        "library-volcanoes-deep-10"
       ],
       "sourceUrls": [
         "https://www.usgs.gov/programs/VHP/about-volcanoes",

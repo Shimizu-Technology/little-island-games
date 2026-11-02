@@ -15,7 +15,7 @@
       "speechKey": "library-reef-food-web-limits",
       "audio": {
         "status": "pending",
-        "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+        "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
       }
     },
     "labels": {
@@ -25,7 +25,7 @@
         "speechKey": "library-reef-food-web-control-sun",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "producer": {
@@ -34,7 +34,7 @@
         "speechKey": "library-reef-food-web-control-producer",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "grazer": {
@@ -43,7 +43,7 @@
         "speechKey": "library-reef-food-web-control-grazer",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "small": {
@@ -52,7 +52,7 @@
         "speechKey": "library-reef-food-web-control-small",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "large": {
@@ -61,7 +61,7 @@
         "speechKey": "library-reef-food-web-control-large",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "algae": {
@@ -70,7 +70,7 @@
         "speechKey": "library-reef-food-web-control-algae",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "parrotfish": {
@@ -79,7 +79,7 @@
         "speechKey": "library-reef-food-web-control-parrotfish",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "connect": {
@@ -88,7 +88,7 @@
         "speechKey": "library-reef-food-web-control-connect",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "undo": {
@@ -97,7 +97,7 @@
         "speechKey": "library-reef-food-web-control-undo",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "reset": {
@@ -106,7 +106,7 @@
         "speechKey": "library-reef-food-web-control-reset",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "branch": {
@@ -115,7 +115,7 @@
         "speechKey": "library-reef-food-web-control-branch",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       }
     },
@@ -128,7 +128,7 @@
           "speechKey": "library-reef-food-web-light-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -138,7 +138,7 @@
             "speechKey": "library-reef-food-web-light-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -151,7 +151,7 @@
           "speechKey": "library-reef-food-web-producer-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -161,7 +161,7 @@
             "speechKey": "library-reef-food-web-producer-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -174,7 +174,7 @@
           "speechKey": "library-reef-food-web-grazer-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -184,7 +184,7 @@
             "speechKey": "library-reef-food-web-grazer-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -197,7 +197,7 @@
           "speechKey": "library-reef-food-web-predator-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -207,7 +207,7 @@
             "speechKey": "library-reef-food-web-predator-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -220,7 +220,7 @@
           "speechKey": "library-reef-food-web-branch-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -230,7 +230,7 @@
             "speechKey": "library-reef-food-web-branch-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -243,7 +243,7 @@
           "speechKey": "library-reef-food-web-limits-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -253,7 +253,7 @@
             "speechKey": "library-reef-food-web-limits-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -276,7 +276,7 @@
       "speechKey": "library-water-journey-limits",
       "audio": {
         "status": "pending",
-        "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+        "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
       }
     },
     "labels": {
@@ -286,7 +286,7 @@
         "speechKey": "library-water-journey-control-ocean",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "vapor": {
@@ -295,7 +295,7 @@
         "speechKey": "library-water-journey-control-vapor",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "cloud": {
@@ -304,7 +304,7 @@
         "speechKey": "library-water-journey-control-cloud",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "rain": {
@@ -313,7 +313,7 @@
         "speechKey": "library-water-journey-control-rain",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "ground": {
@@ -322,7 +322,7 @@
         "speechKey": "library-water-journey-control-ground",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "ice": {
@@ -331,7 +331,7 @@
         "speechKey": "library-water-journey-control-ice",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "heat": {
@@ -340,7 +340,7 @@
         "speechKey": "library-water-journey-control-heat",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "freeze": {
@@ -349,7 +349,7 @@
         "speechKey": "library-water-journey-control-freeze",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "cool": {
@@ -358,7 +358,7 @@
         "speechKey": "library-water-journey-control-cool",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "grow": {
@@ -367,7 +367,7 @@
         "speechKey": "library-water-journey-control-grow",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "warm": {
@@ -376,7 +376,7 @@
         "speechKey": "library-water-journey-control-warm",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "soak": {
@@ -385,7 +385,7 @@
         "speechKey": "library-water-journey-control-soak",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "runoff": {
@@ -394,7 +394,7 @@
         "speechKey": "library-water-journey-control-runoff",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "flow": {
@@ -403,7 +403,7 @@
         "speechKey": "library-water-journey-control-flow",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "melt": {
@@ -412,7 +412,7 @@
         "speechKey": "library-water-journey-control-melt",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "reset": {
@@ -421,7 +421,7 @@
         "speechKey": "library-water-journey-control-reset",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       }
     },
@@ -434,7 +434,7 @@
           "speechKey": "library-water-journey-heat-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -444,7 +444,7 @@
             "speechKey": "library-water-journey-heat-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -457,7 +457,7 @@
           "speechKey": "library-water-journey-freeze-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -467,7 +467,7 @@
             "speechKey": "library-water-journey-freeze-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -480,7 +480,7 @@
           "speechKey": "library-water-journey-cool-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -490,7 +490,7 @@
             "speechKey": "library-water-journey-cool-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -503,7 +503,7 @@
           "speechKey": "library-water-journey-grow-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -513,7 +513,7 @@
             "speechKey": "library-water-journey-grow-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -526,7 +526,7 @@
           "speechKey": "library-water-journey-warm-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -536,7 +536,7 @@
             "speechKey": "library-water-journey-warm-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -549,7 +549,7 @@
           "speechKey": "library-water-journey-soak-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -559,7 +559,7 @@
             "speechKey": "library-water-journey-soak-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -572,7 +572,7 @@
           "speechKey": "library-water-journey-runoff-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -582,7 +582,7 @@
             "speechKey": "library-water-journey-runoff-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -595,7 +595,7 @@
           "speechKey": "library-water-journey-flow-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -605,7 +605,7 @@
             "speechKey": "library-water-journey-flow-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -618,7 +618,7 @@
           "speechKey": "library-water-journey-melt-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -628,7 +628,7 @@
             "speechKey": "library-water-journey-melt-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -641,7 +641,7 @@
           "speechKey": "library-water-journey-limits-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -651,7 +651,7 @@
             "speechKey": "library-water-journey-limits-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -674,7 +674,7 @@
       "speechKey": "library-night-sky-limits",
       "audio": {
         "status": "pending",
-        "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+        "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
       }
     },
     "labels": {
@@ -684,7 +684,7 @@
         "speechKey": "library-night-sky-control-turn",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "back": {
@@ -693,7 +693,7 @@
         "speechKey": "library-night-sky-control-back",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "pattern": {
@@ -702,7 +702,7 @@
         "speechKey": "library-night-sky-control-pattern",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "unpattern": {
@@ -711,7 +711,7 @@
         "speechKey": "library-night-sky-control-unpattern",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "season": {
@@ -720,7 +720,7 @@
         "speechKey": "library-night-sky-control-season",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       },
       "reset": {
@@ -729,7 +729,7 @@
         "speechKey": "library-night-sky-control-reset",
         "audio": {
           "status": "pending",
-          "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
         }
       }
     },
@@ -742,7 +742,7 @@
           "speechKey": "library-night-sky-day-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -752,7 +752,7 @@
             "speechKey": "library-night-sky-day-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -765,7 +765,7 @@
           "speechKey": "library-night-sky-turn-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -775,7 +775,7 @@
             "speechKey": "library-night-sky-turn-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -788,7 +788,7 @@
           "speechKey": "library-night-sky-night-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -798,7 +798,7 @@
             "speechKey": "library-night-sky-night-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -811,7 +811,7 @@
           "speechKey": "library-night-sky-pattern-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -821,7 +821,7 @@
             "speechKey": "library-night-sky-pattern-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -834,7 +834,7 @@
           "speechKey": "library-night-sky-season-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -844,7 +844,7 @@
             "speechKey": "library-night-sky-season-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]
@@ -857,7 +857,7 @@
           "speechKey": "library-night-sky-limits-label",
           "audio": {
             "status": "pending",
-            "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
           }
         },
         "narration": [
@@ -867,7 +867,7 @@
             "speechKey": "library-night-sky-limits-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
             }
           }
         ]

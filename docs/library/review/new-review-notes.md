@@ -35,7 +35,7 @@ Sources opened (2026-11-02):
 
 Unresolved factual limits: No retained unsupported claim identified in this pass.
 
-**Pending Leon family/cultural judgment:** Decide whether “needs air” is clear enough alongside dissolved oxygen, and review shoreline observation wording.
+**Pending Leon family/cultural judgment:** Decide whether “needs oxygen” is clear enough alongside dissolved oxygen, and review shoreline observation wording.
 
 ### crab-shells — Why do crabs have shells?
 
@@ -680,3 +680,5 @@ Sources opened (2026-11-02):
 Unresolved factual limits: No retained unsupported claim identified in this pass.
 
 **Pending Leon family/cultural judgment:** Review moving-chain boundary, historical comparison and gear example; no required riding or handling a chain.
+
+Final integrating editor clarified the first Deep gear sentence to describe teeth pushing against one another, avoiding an implication of no sliding contact between tooth surfaces.

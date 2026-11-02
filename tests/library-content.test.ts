@@ -88,6 +88,18 @@ describe('3.1 reviewed corpus acceptance', () => {
     if (busy?.type !== 'book') throw new Error('Missing Busy Day edition');
     expect(busy.pages[14].sentences).toEqual([]);
   });
+  it('keeps picture-description replay aligned with every reviewed illustration', () => {
+    const actions = JSON.parse(readFileSync('content/library/spoken-actions.json', 'utf8'));
+    for (const item of data.filter(i => i.type === 'topic')) {
+      const key = actions[item.id]?.['image-description'];
+      expect(typeof key, item.id).toBe('string');
+      expect(speech[key], item.id).toBe(item.image.alt);
+    }
+    for (const envelope of Object.values(legacy) as { libraryId: string; speech: { imageSpeechKeys: string[] } }[]) {
+      const item = data.find(i => i.id === envelope.libraryId)!;
+      for (const key of envelope.speech.imageSpeechKeys) expect(speech[key], key).toBe(item.image.alt);
+    }
+  });
   it('labels the factual book adaptation and preserves its source manuscript', () => {
     const book = data.find(i => i.id === 'a-tiny-seed');
     if (book?.type !== 'book') throw new Error('Missing biography');
