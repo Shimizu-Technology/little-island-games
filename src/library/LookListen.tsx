@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { PanResponder, Pressable, View, useWindowDimensions } from "react-native";
 import { Text } from "../components/Text";
-import { ItemPicture, s } from "./ui";
+import { ItemPicture, LibraryIcon, s } from "./ui";
 import { recordLabelSpeech, type CatalogItem } from "./catalog";
 import type { Sentence } from "./schema";
 export function LookListen({
@@ -15,7 +15,7 @@ export function LookListen({
   stop: () => void;
   onExit: () => void;
 }) {
-  const { width, height } = useWindowDimensions();
+  const { height } = useWindowDimensions();
   const [index, setIndex] = useState(0);
   useEffect(() => () => stop(), [stop]);
   const gesture = useMemo(
@@ -36,16 +36,19 @@ export function LookListen({
   const word = record?.item?.label.text ?? record?.legacy?.illustration.replace(/-/g, " ") ?? "";
   const [hint, setHint] = useState("");
   return (
-    <View style={[s.page, { justifyContent: "center", padding: 24 }]} {...gesture.panHandlers}>
+    <View style={[s.page, { justifyContent: "center", backgroundColor: "#D9EAE0" }]} {...gesture.panHandlers}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Grown-up exit. Hold to exit."
         delayLongPress={1200}
         onLongPress={onExit}
         onPress={() => setHint("Hold the grown-up exit for a moment.")}
-        style={[s.action, { alignSelf: "flex-end", marginBottom: 18 }]}
+        style={[
+          s.action,
+          { position: "absolute", top: 12, right: 12, zIndex: 2, borderRadius: 24, backgroundColor: "#FFFBEF" },
+        ]}
       >
-        <Text style={s.small}>Grown-up exit · hold</Text>
+        <LibraryIcon name="lock" size={24} />
       </Pressable>
       {record ? (
         <Pressable
@@ -55,11 +58,13 @@ export function LookListen({
             const line = recordLabelSpeech(record);
             speak(line.key, line.sentence);
           }}
-          style={{ flex: 1, justifyContent: "center", gap: 30 }}
+          style={{ flex: 1, justifyContent: "center", gap: 16 }}
         >
-          <ItemPicture record={record} large pictureHeight={Math.max(230, Math.min(height * 0.6, width * 0.8))} />
-          <Text style={[s.title, { textAlign: "center", fontSize: 38 }]}>{word}</Text>
-          <Text style={[s.small, { textAlign: "center" }]}>Tap to hear · swipe for the next picture</Text>
+          <ItemPicture record={record} large pictureHeight={Math.max(230, height * 0.76)} />
+          <Text style={[s.title, { textAlign: "center", fontSize: 38, paddingHorizontal: 16 }]}>{word}</Text>
+          <Text style={[s.small, { textAlign: "center", paddingBottom: 14 }]}>
+            Tap to hear · swipe for the next picture
+          </Text>
         </Pressable>
       ) : (
         <Text style={s.body}>A grown-up can choose some pictures in Library settings.</Text>

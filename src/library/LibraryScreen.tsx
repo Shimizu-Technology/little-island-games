@@ -94,6 +94,7 @@ function LibraryReady() {
     store.save.settings.narrationVolume ?? 0.75,
     `${place}:${id}:${childId}:${store.epoch}`
   );
+  const [bookInfo, setBookInfo] = useState(false);
   const [notice, setNotice] = useState("");
   const [paused, setPaused] = useState(false);
   const [now, setNow] = useState(() => new Date());
@@ -292,7 +293,20 @@ function LibraryReady() {
     });
   }, [params.resume, store.save.explore?.progress?.location]);
   const card = (item: CatalogItem) => (
-    <View style={s.card}>
+    <View
+      style={[
+        s.card,
+        item.item?.type === "book" && {
+          backgroundColor: "#E9D6AF",
+          borderColor: "#A77F56",
+          borderBottomWidth: 12,
+          borderBottomColor: "#A77F56",
+          borderRadius: 12,
+          flex: 0,
+          width: (Math.min(width, 1200) - 20) / cols - 12,
+        },
+      ]}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={item.title}
@@ -305,7 +319,7 @@ function LibraryReady() {
           audio.speak(speech.key, speech.sentence);
         }}
       >
-        <ItemPicture record={item} />
+        <ItemPicture record={item} pictureHeight={item.item?.type === "book" ? (width < 650 ? 210 : 300) : undefined} />
         <Text style={s.cardTitle}>{item.title}</Text>
       </Pressable>
       <Pressable
@@ -315,7 +329,18 @@ function LibraryReady() {
           const speech = recordSpeech(item);
           audio.speak(speech.key, speech.sentence);
         }}
-        style={{ position: "absolute", right: 5, top: 5, padding: 8, borderRadius: 25, backgroundColor: "#FFFBEF" }}
+        style={{
+          position: "absolute",
+          right: 5,
+          top: 5,
+          minWidth: 44,
+          minHeight: 44,
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 8,
+          borderRadius: 25,
+          backgroundColor: "#FFFBEF",
+        }}
       >
         <LibraryIcon name="sound" size={22} />
       </Pressable>
@@ -341,9 +366,11 @@ function LibraryReady() {
     <SafeAreaView style={s.page} edges={["top", "left", "right", "bottom"]}>
       <View style={s.header}>
         <Action onPress={back} label="Back">
-          ←
+          <LibraryIcon name="back" size={24} />
         </Action>
-        <Text style={[s.heading, { marginTop: 0, flex: 1, textAlign: "center" }]}>
+        <Text
+          style={[s.heading, { marginTop: 0, flex: 1, fontSize: place === "reader" ? 17 : 20, textAlign: "center" }]}
+        >
           {place === "reader" ? record?.title : "Island Library"}
         </Text>
         <Action
@@ -353,8 +380,26 @@ function LibraryReady() {
             store.settings({ sound: !store.save.settings.sound });
           }}
         >
-          {store.save.settings.sound ? "Sound on" : "Sound off"}
+          <LibraryIcon name={store.save.settings.sound ? "sound" : "muted"} size={24} />
         </Action>
+        {place === "reader" ? (
+          <>
+            <Action
+              label={child.saved.includes(id) ? "Saved book. Remove from My Shelf" : "Save book"}
+              selected={child.saved.includes(id)}
+              onPress={() => toggleSaved(id)}
+            >
+              <LibraryIcon name="heart" size={24} />
+            </Action>
+            <Action label="Book information" onPress={() => setBookInfo(true)}>
+              <LibraryIcon name="info" size={24} />
+            </Action>
+          </>
+        ) : (
+          <Action label="Grown-ups" onPress={() => visit("grownups")}>
+            <LibraryIcon name="lock" size={24} />
+          </Action>
+        )}
       </View>
       {!!store.error && <SaveStatus />}
       {!!(notice || audio.notice) && (
@@ -399,6 +444,19 @@ function LibraryReady() {
           key={`${place}:${cols}`}
           data={place === "books" ? allowed.filter((item) => item.item?.type === "book") : results}
           numColumns={cols}
+          style={place === "books" ? { backgroundColor: "#F0E1C6" } : undefined}
+          columnWrapperStyle={
+            place === "books" && cols > 1
+              ? {
+                  backgroundColor: "#E5D0AC",
+                  borderBottomWidth: 12,
+                  borderColor: "#9B724E",
+                  marginBottom: 24,
+                  borderRadius: 12,
+                  paddingTop: 14,
+                }
+              : undefined
+          }
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => card(item)}
           contentContainerStyle={{ padding: 10, paddingBottom: 28, maxWidth: 1200, width: "100%", alignSelf: "center" }}
@@ -417,16 +475,34 @@ function LibraryReady() {
           }}
           ListHeaderComponent={
             place === "books" ? (
-              <View style={s.content}>
-                <Text style={s.title}>Books</Text>
+              <View style={[s.content, { backgroundColor: "#F0E1C6", borderRadius: 24, marginBottom: 16 }]}>
+                <Text style={s.title}>Our story shelf</Text>
                 <Text style={s.body}>A shelf of stories to share.</Text>
               </View>
             ) : (
               <View style={{ padding: 8, gap: 14 }}>
-                <Text style={s.title}>What do you wonder?</Text>
-                <View style={s.row}>
-                  <Action onPress={() => visit("little")}>Look & Listen</Action>
-                  <Action onPress={() => visit("grownups")}>Grown-ups</Action>
+                <View style={[s.row, { justifyContent: "space-between", flexWrap: "nowrap" }]}>
+                  <Text style={[s.title, { flex: 1, fontSize: 28 }]}>What do you wonder?</Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Look & Listen"
+                    onPress={() => visit("little")}
+                    style={{
+                      width: 84,
+                      minHeight: 80,
+                      borderRadius: 26,
+                      backgroundColor: "#E6E4F1",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: 6,
+                      gap: 3,
+                    }}
+                  >
+                    <LibraryIcon name="listen" size={36} />
+                    <Text style={[s.small, { fontSize: 12, fontWeight: "700", textAlign: "center" }]}>
+                      Look & Listen
+                    </Text>
+                  </Pressable>
                 </View>
                 <TextInput
                   accessibilityLabel="Search the Library"
@@ -463,15 +539,23 @@ function LibraryReady() {
                           }}
                           onLongPress={() => audio.speak(category.speechKey)}
                           style={[
-                            s.action,
-                            { width: width < 650 ? "46%" : "23%", backgroundColor: category.tint },
+                            {
+                              width: fontScale > 1.6 ? "100%" : width < 650 ? "48%" : width < 1000 ? "31%" : "23.5%",
+                              backgroundColor: category.tint,
+                              borderRadius: 24,
+                              overflow: "hidden",
+                              borderWidth: 1.5,
+                              borderColor: "#91AD98",
+                            },
                             child.category === category.id && s.selected,
                           ]}
                         >
-                          <View style={{ width: "100%", height: 84 }}>
+                          <View style={{ width: "100%", height: width < 650 ? 116 : 144 }}>
                             <LibraryArt kind={category.motif} />
                           </View>
-                          <Text style={s.actionText}>{category.title}</Text>
+                          <Text style={[s.actionText, { padding: 8, minHeight: 54, backgroundColor: "#FFF9E8" }]}>
+                            {category.title}
+                          </Text>
                         </Pressable>
                       ))}
                   </View>
@@ -490,6 +574,16 @@ function LibraryReady() {
                               visit("exhibit", exhibit.world);
                             }}
                           >
+                            <View
+                              style={{
+                                width: width < 650 ? 128 : 160,
+                                height: 88,
+                                overflow: "hidden",
+                                borderRadius: 16,
+                              }}
+                            >
+                              <LibraryArt kind={exhibit.motif} />
+                            </View>
                             {exhibit.title}
                           </Action>
                         ))}
@@ -536,14 +630,23 @@ function LibraryReady() {
               audio.stop();
               update({ bookPages: { ...child.bookPages, [id]: page } });
             }}
+            showInfo={bookInfo}
+            onCloseInfo={() => setBookInfo(false)}
             selected={audio.selected}
             speak={(sentence) => audio.speak(sentence.speechKey, sentence)}
             word={audio.word}
           />
-          <Action selected={child.saved.includes(id)} onPress={() => toggleSaved(id)}>
-            {child.saved.includes(id) ? "Saved in My Shelf" : "Save book"}
-          </Action>
         </View>
+      ) : place === "make" && creation ? (
+        <Maker
+          key={creation.id}
+          wide={width >= 700 && fontScale < 1.6}
+          draftKey={pageDraftKey(childId, creation.id)}
+          creation={creation}
+          saving={store.saving}
+          saveError={!!store.error}
+          onChange={(next) => update({ creations: child.creations.map((page) => (page.id === next.id ? next : page)) })}
+        />
       ) : (
         <ScrollView
           ref={scroll}
@@ -677,10 +780,8 @@ function LibraryReady() {
             (place === "exhibit" || (place === "authored-exhibit" && !!authoredExhibit)) &&
             exhibits.some((exhibit) => exhibit.world === exhibitWorld) ? (
             <>
-              <Text style={s.title}>
-                {authoredExhibit?.title ?? exhibits.find((exhibit) => exhibit.world === exhibitWorld)?.title}
-              </Text>
               <Exhibit
+                title={authoredExhibit?.title ?? exhibits.find((exhibit) => exhibit.world === exhibitWorld)?.title}
                 world={exhibitWorld}
                 state={child.labs[exhibitWorld]}
                 onAction={(action) => {

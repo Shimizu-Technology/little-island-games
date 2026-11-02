@@ -15,11 +15,20 @@ import {
   type Drawing,
   type DrawingHistory,
 } from "./drawing";
+import { StudioCard } from "./StudioCard";
+import { LibraryGlyph } from "./LibraryGlyph";
 import { Action, palette, s } from "./ui";
 const colors = ["#254E4B", "#408EAA", "#C2604D", "#DBB04C", "#789B60", "#7E6A9A"];
-export const DrawingArt = React.memo(function DrawingArt({ drawing }: { drawing: Drawing }) {
+export const DrawingArt = React.memo(function DrawingArt({
+  drawing,
+  viewport = { width: 1000, height: 650 },
+}: {
+  drawing: Drawing;
+  viewport?: { width: number; height: number };
+}) {
+  const stampY = (viewport.width / Math.max(1, viewport.height)) * 0.65;
   return (
-    <Svg width="100%" height="100%" viewBox="0 0 1000 650" accessible={false}>
+    <Svg width="100%" height="100%" viewBox="0 0 1000 650" preserveAspectRatio="none" accessible={false}>
       <Rect width={1000} height={650} fill="#FFFFFF" />
       {drawing.strokes.map((stroke, i) => (
         <Path
@@ -27,7 +36,8 @@ export const DrawingArt = React.memo(function DrawingArt({ drawing }: { drawing:
           d={pathForStroke(stroke)}
           fill="none"
           stroke={stroke.color}
-          strokeWidth={stroke.width}
+          strokeWidth={(stroke.width * viewport.width) / 1000}
+          vectorEffect="non-scaling-stroke"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -35,7 +45,7 @@ export const DrawingArt = React.memo(function DrawingArt({ drawing }: { drawing:
       {drawing.stamps.map((stamp, i) => (
         <G
           key={i}
-          transform={`translate(${stamp.x * 1000 - stamp.size * 500} ${stamp.y * 650 - stamp.size * 500}) scale(${(stamp.size * 1000) / 120})`}
+          transform={`translate(${stamp.x * 1000 - stamp.size * 500} ${stamp.y * 650 - stamp.size * 500 * stampY}) scale(${(stamp.size * 1000) / 120} ${((stamp.size * 1000) / 120) * stampY})`}
         >
           <Motif name={stamp.id} />
         </G>
@@ -49,12 +59,14 @@ export function Maker({
   saveError,
   saving,
   draftKey,
+  wide = false,
 }: {
   creation: LibraryCreation;
   onChange: (next: LibraryCreation) => boolean;
   draftKey: string;
   saveError: boolean;
   saving: boolean;
+  wide?: boolean;
 }) {
   const [draft, setDraft] = useState(() => pendingPage(draftKey) ?? creation);
   const [admitted, setAdmitted] = useState(() => !pendingPage(draftKey));
@@ -63,12 +75,15 @@ export function Maker({
     past: [],
     future: [],
   }));
+  const [details, setDetails] = useState(false);
+  const [stampTray, setStampTray] = useState(false);
   const [color, setColor] = useState(colors[0]);
-  const [brush, setBrush] = useState(7);
+  const [brush, setBrush] = useState(10);
   const [stamp, setStamp] = useState("");
   const [liveStroke, setLiveStroke] = useState<DrawingStroke | null>(null);
   const [message, setMessage] = useState("");
   const size = useRef({ width: 1, height: 1 });
+  const [viewport, setViewport] = useState({ width: 1000, height: 650 });
   const state = useRef({ history, color, brush, stamp, creation: draft, onChange });
   useLayoutEffect(() => {
     state.current = { history, color, brush, stamp, creation: draft, onChange };
@@ -172,134 +187,264 @@ export function Maker({
     []
   );
   return (
-    <View style={{ gap: 14 }}>
-      <Text style={s.title}>My page</Text>
-      <TextInput
-        accessibilityLabel="Page title"
-        maxLength={80}
-        value={draft.title}
-        onChangeText={(title) => submit({ ...state.current.creation, title, updatedAt: Date.now() })}
-        style={s.input}
-        placeholder="My page"
-      />
-      <View style={s.row}>
-        {colors.map((value) => (
-          <Pressable
-            key={value}
-            accessibilityRole="button"
-            accessibilityLabel={`Draw with ${value}`}
-            accessibilityState={{ selected: color === value && !stamp }}
-            onPress={() => {
-              setColor(value);
-              setStamp("");
-            }}
-            style={{
-              width: 46,
-              height: 46,
-              backgroundColor: value,
-              borderRadius: 23,
-              borderWidth: color === value ? 4 : 1,
-              borderColor: color === value ? "#DBB04C" : "#FFFFFF",
-            }}
-          />
-        ))}
-        <Action
-          selected={color === "#FFFFFF"}
-          onPress={() => {
-            setColor("#FFFFFF");
-            setStamp("");
+    <View style={{ flex: 1, minHeight: 0, backgroundColor: "#E8DDC7", padding: 8, gap: 6 }}>
+      <View style={{ flex: 1, flexDirection: wide ? "row" : "column", gap: 8 }}>
+        <View
+          style={{
+            width: wide ? 142 : "100%",
+            gap: 6,
+            padding: 6,
+            backgroundColor: "#FCFAF4",
+            borderRadius: 22,
+            justifyContent: "center",
           }}
         >
-          Eraser
-        </Action>
-        {[4, 10, 22].map((value) => (
-          <Action key={value} selected={brush === value} label={`Brush size ${value}`} onPress={() => setBrush(value)}>
-            {value === 4 ? "Thin" : value === 10 ? "Medium" : "Thick"}
-          </Action>
-        ))}
-      </View>
-      <View
-        style={{
-          width: "100%",
-          aspectRatio: 1000 / 650,
-          borderWidth: 2,
-          borderColor: palette.ink,
-          borderRadius: 18,
-          overflow: "hidden",
-        }}
-        onLayout={(event) => {
-          size.current = event.nativeEvent.layout;
-        }}
-        {...gesture.panHandlers}
-        accessibilityLabel="Drawing page. Drag to draw. Choose a stamp then tap to place it."
-      >
-        <DrawingArt drawing={history.present} />
-        {liveStroke && (
-          <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
-            <Svg width="100%" height="100%" viewBox="0 0 1000 650">
-              <Path
-                d={pathForStroke(liveStroke)}
-                fill="none"
-                stroke={liveStroke.color}
-                strokeWidth={liveStroke.width}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 2 }}>
+            {colors.map((value) => (
+              <Pressable
+                key={value}
+                accessibilityRole="button"
+                accessibilityLabel={`Draw with ${value}`}
+                accessibilityState={{ selected: color === value && !stamp }}
+                onPress={() => {
+                  setColor(value);
+                  setStamp("");
+                }}
+                style={{
+                  width: 44,
+                  height: 44,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 22,
+                  borderWidth: color === value && !stamp ? 2 : 0,
+                  borderColor: palette.ink,
+                }}
+              >
+                <View
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: value,
+                    borderWidth: 3,
+                    borderColor: "#FFFFFF",
+                    boxShadow: "0 2px 0 #D4C8AF",
+                  }}
+                />
+              </Pressable>
+            ))}
           </View>
-        )}
-      </View>
-      <View style={s.row}>
-        <Action disabled={!history.past.length} onPress={() => update(undoDrawing(history))}>
-          Undo
-        </Action>
-        <Action disabled={!history.future.length} onPress={() => update(redoDrawing(history))}>
-          Redo
-        </Action>
-        {["turtle", "moon", "coral", "seagrass"].map((value) => (
-          <Pressable
-            key={value}
-            accessibilityRole="button"
-            accessibilityLabel={`Stamp ${value}`}
-            accessibilityState={{ selected: stamp === value }}
-            onPress={() => setStamp(stamp === value ? "" : value)}
-            style={[s.action, stamp === value && s.selected, { width: 64, height: 60 }]}
+          <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 2 }}>
+            {[4, 10, 22].map((value) => (
+              <StudioTool
+                key={value}
+                label={`Brush size ${value}`}
+                selected={brush === value && !stamp}
+                onPress={() => {
+                  setBrush(value);
+                  setStamp("");
+                }}
+              >
+                <View
+                  style={{
+                    width: value / 1.3 + 4,
+                    height: value / 1.3 + 4,
+                    backgroundColor: palette.ink,
+                    borderRadius: 20,
+                  }}
+                />
+              </StudioTool>
+            ))}
+            <StudioTool
+              label="Eraser"
+              selected={color === "#FFFFFF" && !stamp}
+              onPress={() => {
+                setColor("#FFFFFF");
+                setStamp("");
+              }}
+            >
+              <LibraryGlyph name="eraser" />
+            </StudioTool>
+            <StudioTool label="Open stamps" selected={stampTray} onPress={() => setStampTray(!stampTray)}>
+              <LibraryGlyph name="stamps" />
+            </StudioTool>
+            <StudioTool label="Undo" disabled={!history.past.length} onPress={() => update(undoDrawing(history))}>
+              <LibraryGlyph name="undo" />
+            </StudioTool>
+            <StudioTool label="Redo" disabled={!history.future.length} onPress={() => update(redoDrawing(history))}>
+              <LibraryGlyph name="redo" />
+            </StudioTool>
+          </View>
+        </View>
+        <View style={{ flex: 1, gap: 6 }}>
+          {stampTray && (
+            <View
+              style={[s.row, { justifyContent: "center", padding: 4, backgroundColor: "#FFFBEF", borderRadius: 18 }]}
+            >
+              {["turtle", "moon", "coral", "seagrass"].map((value) => (
+                <StudioTool
+                  key={value}
+                  label={`Stamp ${value}`}
+                  selected={stamp === value}
+                  onPress={() => setStamp(stamp === value ? "" : value)}
+                >
+                  <Svg width={38} height={38} viewBox="0 0 120 110">
+                    <Motif name={value} />
+                  </Svg>
+                </StudioTool>
+              ))}
+            </View>
+          )}
+          <View
+            style={{
+              flex: 1,
+              minHeight: 260,
+              backgroundColor: "white",
+              borderWidth: 1,
+              borderColor: palette.ink,
+              borderRadius: 8,
+              overflow: "hidden",
+            }}
+            onLayout={(event) => {
+              const { width, height } = event.nativeEvent.layout;
+              size.current = { width, height };
+              setViewport((previous) =>
+                previous.width === width && previous.height === height ? previous : { width, height }
+              );
+            }}
+            {...gesture.panHandlers}
+            accessibilityLabel="Drawing page. Drag to draw. Choose a stamp then tap to place it."
           >
-            <Svg width={44} height={40} viewBox="0 0 120 110">
-              <Motif name={value} />
-            </Svg>
-          </Pressable>
-        ))}
+            <DrawingArt drawing={history.present} viewport={viewport} />
+            {liveStroke && (
+              <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+                <Svg width="100%" height="100%" viewBox="0 0 1000 650" preserveAspectRatio="none">
+                  <Path
+                    d={pathForStroke(liveStroke)}
+                    fill="none"
+                    stroke={liveStroke.color}
+                    strokeWidth={(liveStroke.width * viewport.width) / 1000}
+                    vectorEffect="non-scaling-stroke"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+              </View>
+            )}
+          </View>
+        </View>
       </View>
-      <TextInput
-        accessibilityLabel="One or two sentences about your page"
-        multiline
-        maxLength={400}
-        value={draft.sentences}
-        onChangeText={(sentences) => submit({ ...state.current.creation, sentences, updatedAt: Date.now() })}
-        style={[s.input, { minHeight: 100 }]}
-        placeholder="Tell about your picture…"
-      />
-      <Text accessibilityLiveRegion="polite" style={s.small}>
-        {saveError || !admitted
-          ? "Your page is still here. Saving needs a retry above."
-          : saving
-            ? "Saving your page…"
-            : "Your page is saved in My Shelf."}
-      </Text>
-      {(!admitted || saveError) && (
-        <Action onPress={() => submit(state.current.creation)}>Retry saving this page</Action>
-      )}
-      {!!message && <Text style={s.small}>{message}</Text>}
-      <Action
-        onPress={() => {
-          void exportBackup(JSON.stringify({ format: "little-island-page", version: 1, page: draft }, null, 2)).catch(
-            () => setMessage("Export could not open. Your saved page is still in My Shelf.")
-          );
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Picture title and story"
+        accessibilityState={{ expanded: details }}
+        onPress={() => setDetails(!details)}
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: 8,
+          minHeight: 48,
+          borderRadius: 18,
+          backgroundColor: "#FFFBEF",
+          gap: 8,
         }}
       >
-        Export my page
-      </Action>
+        <LibraryGlyph name="make" size={24} />
+        <Text style={[s.actionText, { flex: 1, textAlign: "left" }]}>{draft.title || "My page"}</Text>
+        <LibraryGlyph name="details" size={24} />
+      </Pressable>
+      {(saveError || !admitted) && (
+        <Action
+          onPress={() => {
+            submit(state.current.creation);
+          }}
+        >
+          Retry saving this page
+        </Action>
+      )}
+      <Text accessibilityLiveRegion="polite" style={[s.small, { textAlign: "center" }]}>
+        {saveError || !admitted
+          ? "Your picture is here. Saving needs a retry."
+          : saving
+            ? "Saving…"
+            : "Saved in My Shelf"}
+      </Text>
+      {!!message && (
+        <Text accessibilityLiveRegion="polite" style={s.small}>
+          {message}
+        </Text>
+      )}
+      <StudioCard open={details}>
+        <TextInput
+          accessibilityLabel="Page title"
+          maxLength={80}
+          value={draft.title}
+          onChangeText={(title) => submit({ ...state.current.creation, title, updatedAt: Date.now() })}
+          style={s.input}
+          placeholder="My page"
+        />
+        <TextInput
+          accessibilityLabel="One or two sentences about your page"
+          multiline
+          maxLength={400}
+          value={draft.sentences}
+          onChangeText={(sentences) => submit({ ...state.current.creation, sentences, updatedAt: Date.now() })}
+          style={[s.input, { minHeight: 100 }]}
+          placeholder="Tell about your picture…"
+        />
+        <Text accessibilityLiveRegion="polite" style={s.small}>
+          {saveError || !admitted
+            ? "Your page is still here. Saving needs a retry above."
+            : saving
+              ? "Saving your page…"
+              : "Your page is saved in My Shelf."}
+        </Text>
+        <Action
+          onPress={() => {
+            void exportBackup(JSON.stringify({ format: "little-island-page", version: 1, page: draft }, null, 2)).catch(
+              () => setMessage("Export could not open. Your saved page is still in My Shelf.")
+            );
+          }}
+        >
+          Export my page
+        </Action>
+      </StudioCard>
     </View>
+  );
+}
+
+function StudioTool({
+  label,
+  selected,
+  disabled,
+  onPress,
+  children,
+}: {
+  label: string;
+  selected?: boolean;
+  disabled?: boolean;
+  onPress: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected, disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        minWidth: 44,
+        minHeight: 44,
+        borderRadius: 14,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: selected ? "#D0E4DA" : "transparent",
+        opacity: disabled ? 0.35 : pressed ? 0.65 : 1,
+      })}
+    >
+      {children}
+    </Pressable>
   );
 }

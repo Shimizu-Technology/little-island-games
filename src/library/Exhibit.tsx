@@ -21,6 +21,7 @@ import {
 
 export type ExhibitProps = {
   world: WorldId;
+  title?: string;
   state: LabState;
   onAction: (action: LabAction) => void;
   sound: boolean;
@@ -279,7 +280,7 @@ export function Exhibit(props: ExhibitProps) {
   return <ExhibitVisit key={props.world} {...props} />;
 }
 
-function ExhibitVisit({ world, state, onAction, sound, onHear, speaking, limits }: ExhibitProps) {
+function ExhibitVisit({ world, title, state, onAction, sound, onHear, speaking, limits }: ExhibitProps) {
   const [help, setHelp] = useState(false);
   const [observations, setObservations] = useState<ExhibitObservation[]>([]);
   const observable = canObserve(world);
@@ -309,8 +310,7 @@ function ExhibitVisit({ world, state, onAction, sound, onHear, speaking, limits 
 
   return (
     <View style={s.exhibit}>
-      <Heading style={s.title}>{WORLDS.find((entry) => entry.id === world)?.activity}</Heading>
-      <Copy>{introductions[world]}</Copy>
+      <Heading style={s.title}>{title ?? WORLDS.find((entry) => entry.id === world)?.activity}</Heading>
       {observable && (
         <View style={[s.picture, world === "space" && s.sky]}>
           {world === "space" ? (
@@ -320,6 +320,10 @@ function ExhibitVisit({ world, state, onAction, sound, onHear, speaking, limits 
           )}
         </View>
       )}
+      {!observable && !(world === "animals" ? animalDone : mapDone) && (
+        <LabManipulative world={world} state={state} act={onAction} />
+      )}
+      <Copy>{introductions[world]}</Copy>
       <View accessibilityLiveRegion="polite" style={s.status}>
         <Text style={s.summary}>{summary}</Text>
         {world === "space" && (
@@ -352,9 +356,9 @@ function ExhibitVisit({ world, state, onAction, sound, onHear, speaking, limits 
         <Copy>You found a suitable place for each animal.</Copy>
       ) : world === "world" && mapDone ? (
         <Copy>You found Guam, Japan, Australia, Africa, and Antarctica. Start again to revisit the route.</Copy>
-      ) : (
+      ) : observable ? (
         <LabManipulative world={world} state={state} act={onAction} />
-      )}
+      ) : null}
 
       {world === "oceans" && (
         <Control disabled={!state.chain.length} onPress={() => onAction({ type: "unchain" })}>
@@ -446,7 +450,7 @@ const s = StyleSheet.create({
     width: "100%",
     maxWidth: 920,
     alignSelf: "center",
-    padding: 14,
+    padding: 8,
     gap: 16,
     backgroundColor: C.cream,
     borderRadius: 24,
@@ -454,8 +458,8 @@ const s = StyleSheet.create({
   title: { fontSize: 28 },
   subheading: { fontSize: 21 },
   picture: { borderRadius: 24, overflow: "hidden", backgroundColor: "#DAEEE7" },
-  reefFrame: { width: "100%", aspectRatio: 320 / 230, maxHeight: 360 },
-  waterFrame: { width: "100%", aspectRatio: 320 / 240, maxHeight: 360 },
+  reefFrame: { width: "100%", aspectRatio: 320 / 230, maxHeight: 440 },
+  waterFrame: { width: "100%", aspectRatio: 320 / 240, maxHeight: 440 },
   sky: { paddingVertical: 18, backgroundColor: "#EEEAF6" },
   status: { gap: 10, borderLeftWidth: 4, borderLeftColor: C.coral, paddingLeft: 12 },
   summary: { fontSize: 19, fontWeight: "700", color: C.ink },

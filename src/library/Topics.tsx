@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import { Text } from "../components/Text";
 import { topicSpeechKey } from "../explore/content";
+import { LibraryArt } from "./LibraryArt";
 import { SentenceLine } from "./Reader";
 import { Action, ItemPicture, LibraryIcon, s } from "./ui";
 import { canOpen, exhibits, itemById, type CatalogItem } from "./catalog";
@@ -29,6 +30,7 @@ export function TopicPage({
   go: (id: string) => void;
   make: () => void;
 }) {
+  const { width } = useWindowDimensions();
   const [sources, setSources] = useState(false);
   const topic = record.item?.type === "topic" ? record.item : undefined;
   const legacy = record.legacy;
@@ -43,8 +45,8 @@ export function TopicPage({
   return (
     <View style={{ gap: 16 }}>
       <Text style={s.title}>{record.title}</Text>
-      <ItemPicture record={record} large />
-      <View style={s.row}>
+      <ItemPicture record={record} large pictureHeight={width < 650 ? 280 : 370} />
+      <View style={[s.row, { justifyContent: "center", gap: 12 }]}>
         {(["tell", "more", "deep"] as const).map((key, index) => (
           <Action
             key={key}
@@ -54,10 +56,9 @@ export function TopicPage({
           >
             <View style={{ flexDirection: "row" }}>
               {Array.from({ length: index + 1 }, (_, i) => (
-                <LibraryIcon key={i} name="layer" size={22} />
+                <LibraryIcon key={i} name="layer" size={32} />
               ))}
             </View>
-            {"\n"}
             {key === "tell" ? "Tell me" : key === "more" ? "More" : "Deep"}
           </Action>
         ))}
@@ -93,8 +94,10 @@ export function TopicPage({
       <Text style={s.heading}>Where next?</Text>
       {exhibit && (
         <Action onPress={() => go(`lab-${exhibit.world}`)}>
-          <LibraryIcon name="wonder" />
-          {"\n"}Try {exhibit.title}
+          <View style={{ width: "100%", height: 160, borderRadius: 20, overflow: "hidden" }}>
+            <LibraryArt kind={exhibit.motif} />
+          </View>
+          Try {exhibit.title}
         </Action>
       )}
       {links
