@@ -20,9 +20,11 @@ export function DebugOverlay({
   stress: boolean;
   onStress: () => void;
 }) {
-  const { slots, controller, frameTimes, camera } = interaction;
+  const { slots, controller, frameTimes, camera, clock } = interaction;
   const props = useAnimatedProps<TextInputProps & { text: string }>(() => {
     const s = slots.value[0];
+    const sampledAt = clock.value;
+    void sampledAt;
     const times = frameTimes.value;
     const text = `${controller.value.phase} • ${s.proposal?.kind ?? "—"} • ${s.proposal?.target ?? "no target"} • ${(times[times.length - 1] ?? 0).toFixed(1)}ms`;
     return { text, value: text, defaultValue: text };

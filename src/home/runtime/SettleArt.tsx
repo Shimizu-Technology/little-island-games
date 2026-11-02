@@ -23,10 +23,11 @@ export function SettleArt({
   const blend = () => {
     "worklet";
     const s = slots.value[index];
-    return destination && s.phase === "settling" && s.settleAt
+    const elapsed = s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt;
+    return destination && ((s.phase === "settling" && s.settleAt) || (s.phase === "pending" && s.committed))
       ? reduced
         ? 1
-        : Math.min(1, Math.max(0, (clock.value - s.settleAt - 120) / 120))
+        : Math.min(1, Math.max(0, (elapsed - 120) / 120))
       : 0;
   };
   const from = useAnimatedStyle(() => ({ opacity: 1 - blend() }));

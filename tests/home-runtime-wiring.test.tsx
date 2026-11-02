@@ -78,14 +78,15 @@ const entity: SceneEntity = {
   hitProxies: [{ left: 70, top: 80, width: 60, height: 220 }],
   character: { slot: 0, anchor: "floor", pose: "stand", x: 2, y: 2 },
 };
-function fixture(revision = "initial"): Scene {
+function fixture(revision = "initial", contact = entity.contact): Scene {
+  const visible = { ...entity, contact };
   const rooms = Object.fromEntries(
     roomIds.map((room) => [
       room,
       {
         room,
         revision,
-        entities: room === "home" ? { [entity.id]: entity } : {},
+        entities: room === "home" ? { [entity.id]: visible } : {},
         floor: [{ cell: gridCell(4, 7), contact: roomPoint(200, 486), blockers: [], occlusion: [0, 0, 0] }],
         surfaces: [],
         sockets: [],
@@ -97,10 +98,11 @@ function fixture(revision = "initial"): Scene {
       },
     ])
   ) as unknown as Scene["rooms"];
-  return { revision, entities: { [entity.id]: entity }, rooms };
+  return { revision, entities: { [entity.id]: visible }, rooms };
 }
 let current: Interaction;
 let committed = 0;
+let committedContact = entity.contact;
 function Probe({ scene }: { scene: Scene }) {
   current = useInteraction({
     scene,
@@ -113,9 +115,11 @@ function Probe({ scene }: { scene: Scene }) {
     onPickup: (pickup) => current.ready(pickup.slot, pickup.id),
     onTap: () => {},
     onClear: () => {},
-    onCommit: (index, proposal) => {
+    onCommit: (index, proposal, _at, token) => {
+      if (!current.isCurrent(index, token)) return;
       committed++;
-      current.finish(index, true, proposal, "committed");
+      committedContact = proposal.contact;
+      current.finish(index, true, proposal, "committed", undefined, token);
     },
   });
   return null;
@@ -161,10 +165,175 @@ describe("actual runtime callback sequencing", () => {
     harness.frames[0]({ timeSincePreviousFrame: 16.67 });
     expect(current.slots.get()[0].id).toBe(entity.id); // destination React tree is still stale
     await act(async () => {
-      renderer!.update(<Probe scene={fixture("committed")} />);
+      renderer!.update(<Probe scene={fixture("newer-unrelated-commit", committedContact)} />);
     });
     harness.frames[0]({ timeSincePreviousFrame: 16.67 });
     expect(current.slots.get()[0].id).toBe("");
+    await act(async () => {
+      renderer!.unmount();
+    });
+    vi.useRealTimers();
+  });
+  it("invalidates a queued commit when a new capture regrabs or cancels it", async () => {
+    let renderer: TestRenderer.ReactTestRenderer;
+    await act(async () => {
+      renderer = TestRenderer.create(<Probe scene={fixture()} />);
+    });
+    touch("down", 120, 300);
+    touch("move", 150, 320);
+    flushJS();
+    touch("up", 150, 320);
+    const oldGeneration = current.slots.get()[0].generation;
+    touch("down", 150, 320, 9);
+    touch("move", 180, 340, 9);
+    expect(current.slots.get()[0].generation).toBeGreaterThan(oldGeneration);
+    flushJS();
+    expect(committed).toBe(0);
+    expect(current.slots.get()[0].phase).toBe("dragging");
+    touch("up", 180, 340, 9);
+    current.cancelAll();
+    flushJS();
+    expect(committed).toBe(0);
+    expect(current.slots.get().every((s) => !s.id)).toBe(true);
+    await act(async () => {
+      renderer!.unmount();
+    });
+    vi.useRealTimers();
+  });
+  it("freezes a settling transform on contact before the six point threshold", async () => {
+    let renderer: TestRenderer.ReactTestRenderer;
+    await act(async () => {
+      renderer = TestRenderer.create(<Probe scene={fixture()} />);
+    });
+    touch("down", 120, 300);
+    touch("move", 150, 320);
+    flushJS();
+    touch("up", 150, 320);
+    flushJS();
+    vi.advanceTimersByTime(60);
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    const frozen = { ...current.slots.get()[0] };
+    touch("down", frozen.x, frozen.y - 120, 8);
+    expect(current.slots.get()[0].phase).toBe("pending");
+    vi.advanceTimersByTime(100);
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    expect(current.slots.get()[0].x).toBe(frozen.x);
+    expect(current.slots.get()[0].y).toBe(frozen.y);
+    touch("move", frozen.x + 12, frozen.y - 120, 8);
+    expect(current.slots.get()[0].x).toBeCloseTo(frozen.x + 12);
+    expect(current.slots.get()[0].y).toBeCloseTo(frozen.y);
+    await act(async () => {
+      renderer!.unmount();
+    });
+    vi.useRealTimers();
+  });
+  it("compensates a stationary held point after any camera change", async () => {
+    let renderer: TestRenderer.ReactTestRenderer;
+    await act(async () => {
+      renderer = TestRenderer.create(<Probe scene={fixture()} />);
+    });
+    touch("down", 120, 300);
+    touch("move", 150, 320);
+    flushJS();
+    current.camera.set({ a: 2, d: 2, b: 0, c: 0, tx: -10, ty: 30 });
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    const slot = current.slots.get()[0];
+    expect((slot.x + slot.gripX) * 2 - 10).toBeCloseTo(150);
+    expect((slot.y + slot.gripY) * 2 + 30).toBeCloseTo(320);
+    await act(async () => {
+      renderer!.unmount();
+    });
+    vi.useRealTimers();
+  });
+  it("reserves hidden descendants while their parent moves", async () => {
+    const scene = fixture();
+    const table = {
+      ...entity,
+      id: "home/item/table",
+      character: undefined,
+      item: {
+        id: "table",
+        item: "coffee-table",
+        x: 2,
+        y: 2,
+        rotation: 0,
+        mirrored: false,
+        layer: "furniture",
+        state: "rest",
+      },
+      children: ["home/item/lamp"],
+    } as SceneEntity;
+    const lamp = {
+      ...entity,
+      id: "home/item/lamp",
+      character: undefined,
+      item: {
+        id: "lamp",
+        item: "table-lamp",
+        x: 2,
+        y: 2,
+        rotation: 0,
+        mirrored: false,
+        layer: "furniture",
+        state: "rest",
+      },
+      parent: table.id,
+      attachment: { kind: "surface", parent: table.id, slot: 0 },
+      children: [],
+      bounds: { left: 90, top: 100, width: 20, height: 20 },
+      depth: 301,
+    } as SceneEntity;
+    scene.entities = { [table.id]: table, [lamp.id]: lamp };
+    scene.rooms.home.entities = scene.entities;
+    scene.rooms.home.hitProxies = [table, lamp].map((e) => ({
+      id: e.id,
+      bounds: e.bounds,
+      depth: e.depth,
+      band: e.band,
+    }));
+    let renderer: TestRenderer.ReactTestRenderer;
+    await act(async () => {
+      renderer = TestRenderer.create(<Probe scene={scene} />);
+    });
+    touch("down", 120, 300);
+    touch("move", 300, 350);
+    flushJS();
+    expect(current.slots.get()[0].id).toBe(table.id);
+    touch("down", 120, 230, 2);
+    touch("move", 140, 250, 2);
+    expect(
+      current.controller
+        .get()
+        .pointers.filter((p) => p.entity)
+        .map((p) => p.entity)
+    ).toEqual([table.id]);
+    expect(current.slots.get()[1].id).toBe("");
+    await act(async () => {
+      renderer!.unmount();
+    });
+    vi.useRealTimers();
+  });
+  it("makes a committed consumed overlay noninteractive immediately", async () => {
+    let renderer: TestRenderer.ReactTestRenderer;
+    await act(async () => {
+      renderer = TestRenderer.create(<Probe scene={fixture()} />);
+    });
+    touch("down", 120, 300);
+    touch("move", 150, 320);
+    flushJS();
+    touch("up", 150, 320);
+    const slot = current.slots.get()[0];
+    const destination = fixture("consumed");
+    destination.entities = {};
+    destination.rooms.home.entities = {};
+    destination.rooms.home.hitProxies = [];
+    current.finish(0, true, { ...slot.proposal!, kind: "mouth", consume: "food" }, "consumed", destination);
+    expect(current.slots.get()[0].consumed).toBe(true);
+    touch("down", 150, 320, 9);
+    touch("move", 170, 340, 9);
+    expect(current.controller.get().pointers.some((p) => p.entity)).toBe(false);
+    flushJS();
+    expect(committed).toBe(0);
     await act(async () => {
       renderer!.unmount();
     });

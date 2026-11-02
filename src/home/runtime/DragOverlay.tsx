@@ -38,9 +38,11 @@ function OverlayGroup({
   const style = useAnimatedStyle(() => {
     const slot = slots.value[index];
     const lift = reduced ? 0 : Math.min(1, Math.max(0, (clock.value - slot.liftedAt) / 90));
-    const settling = slot.phase === "settling" && slot.settleAt > 0;
-    const blend = settling ? Math.max(0, 1 - (clock.value - slot.settleAt) / 140) : 1;
-    const elapsed = settling ? clock.value - slot.settleAt : 0;
+    const settling = (slot.phase === "settling" && slot.settleAt > 0) || (slot.phase === "pending" && slot.committed);
+    const blend = settling
+      ? Math.max(0, 1 - (slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt) / 140)
+      : 1;
+    const elapsed = settling ? (slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt) : 0;
     const accent =
       !reduced && settling && slot.proposal?.kind === "floor" && elapsed < 160
         ? Math.max(0, elapsed < 60 ? elapsed / 60 : (160 - elapsed) / 100)

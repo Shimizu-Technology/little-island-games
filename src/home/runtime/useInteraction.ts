@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
-import { runOnJS, useFrameCallback, useSharedValue } from "react-native-reanimated";
+import { runOnJS, useFrameCallback, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { roomIds } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { transition, idleController, type ControllerState, type ControllerEvent } from "../scene/controller";
@@ -20,13 +20,17 @@ import { boundCamera, edgeVelocity, panInertia, roomAtScreen, zoomCamera, type V
 import { prepareHits, pickEntity } from "./pick";
 import { settleProgress, canRevealResting } from "./settle";
 
-export type DragSlot = {
+export type CaptureToken = { generation: number; epoch: number };
+export type DragSlot = CaptureToken & {
   id: EntityId;
   restId?: EntityId;
   subject?: SceneEntity;
   pointer: number;
   ready: boolean;
-  phase: "dragging" | "settling";
+  phase: "pending" | "dragging" | "settling";
+  consumed: boolean;
+  absoluteX: number;
+  absoluteY: number;
   x: number;
   y: number;
   sourceX: number;
@@ -45,12 +49,13 @@ export type DragSlot = {
   liftedAt: number;
   edgeAt: number;
   settleAt: number;
+  pausedElapsed: number;
   committed: boolean;
   revision: string;
   finished: boolean;
   proposal?: DropProposal;
 };
-export type Pickup = { id: EntityId; slot: number; scene: Scene; destination?: Scene };
+export type Pickup = CaptureToken & { id: EntityId; slot: number; scene: Scene; destination?: Scene };
 function eventTime(): number {
   "worklet";
   return Date.now();
@@ -58,6 +63,11 @@ function eventTime(): number {
 const emptySlot = (): DragSlot => {
   "worklet";
   return {
+    generation: 0,
+    epoch: 0,
+    consumed: false,
+    absoluteX: 0,
+    absoluteY: 0,
     id: "",
     pointer: -1,
     ready: false,
@@ -80,6 +90,7 @@ const emptySlot = (): DragSlot => {
     liftedAt: 0,
     edgeAt: 0,
     settleAt: 0,
+    pausedElapsed: 0,
     committed: false,
     revision: "",
     finished: false,
@@ -100,6 +111,7 @@ export function useInteraction({
   onTap,
   onClear,
   onFrameReport,
+  viewportOffset,
 }: {
   scene: Scene;
   building: Building;
@@ -109,11 +121,16 @@ export function useInteraction({
   designing: boolean;
   onCameraChange: (overview: boolean, index: number) => void;
   onPickup: (pickup: Pickup) => void;
-  onCommit: (slot: number, proposal: DropProposal, at: { x: number; y: number }) => void;
+  onCommit: (slot: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => void;
   onTap: (id: EntityId | undefined, point: ScreenPoint) => void;
   onClear: (slot: number) => void;
   onFrameReport?: (times: number[]) => void;
+  viewportOffset?: SharedValue<{ x: number; y: number }>;
 }) {
+  const epoch = useSharedValue(0),
+    captureSequence = useSharedValue(0);
+  const defaultOffset = useSharedValue({ x: 0, y: 0 });
+  const offset = viewportOffset ?? defaultOffset;
   const camera = useSharedValue(initialCamera);
   const prepared = useSharedValue(scene);
   const hits = useMemo(() => prepareHits(scene), [scene]);
@@ -132,7 +149,22 @@ export function useInteraction({
     prepared.set(scene);
     hitTable.set(hits);
     renderedRevision.set(scene.revision);
-  }, [scene, hits, prepared, hitTable, renderedRevision]);
+    slots.set((current) =>
+      current.map((slot) => {
+        if (!slot.id || !slot.committed || slot.revision === scene.revision) return slot;
+        const entity = scene.entities[slot.restId ?? slot.id];
+        const origin = entity ? roomOrigin(roomIds.indexOf(entity.room), building) : { x: 0, y: 0 };
+        const sameContact =
+          entity &&
+          Math.abs(origin.x + entity.contact.x - slot.targetX) < 0.01 &&
+          Math.abs(origin.y + entity.contact.y - slot.targetY) < 0.01 &&
+          entity.base === slot.subject?.base;
+        const consumed = !entity && slot.proposal?.kind === "mouth";
+        const restoredTray = !slot.proposal && entity?.attachment.kind === "staging";
+        return sameContact || consumed || restoredTray ? { ...slot, revision: scene.revision } : slot;
+      })
+    );
+  }, [scene, hits, prepared, hitTable, renderedRevision, slots, building]);
 
   const movable = useSharedValue<Record<string, boolean>>({});
   useLayoutEffect(() => {
@@ -148,7 +180,10 @@ export function useInteraction({
   const subjectFor = (id?: string) => {
     "worklet";
     const slot = slots.value.find((s) => s.id === id);
-    return id ? (prepared.value.entities[slot?.restId ?? id] ?? slot?.subject) : undefined;
+    return id
+      ? (prepared.value.entities[slot?.restId ?? id] ??
+          (slot && !slot.consumed && !slot.committed ? slot.subject : undefined))
+      : undefined;
   };
   const originFor = (id?: string) => {
     "worklet";
@@ -178,24 +213,37 @@ export function useInteraction({
       reservations,
     });
   };
+  const isCurrent = (index: number, token: CaptureToken) => {
+    const slot = slots.get()[index];
+    return (
+      !!slot.id &&
+      !slot.consumed &&
+      slot.phase === "settling" &&
+      slot.generation === token.generation &&
+      epoch.get() === token.epoch
+    );
+  };
   const finish = (
     index: number,
     committed: boolean,
     proposal?: DropProposal,
     revision?: string,
-    destination?: Scene
+    destination?: Scene,
+    token?: CaptureToken
   ) => {
+    if (token && !isCurrent(index, token)) return;
     const current = slots.get();
     const slot = current[index];
     if (!slot.id) return;
     const origin = proposal ? roomOrigin(roomIds.indexOf(proposal.room), building) : { x: 0, y: 0 };
     const restEntity =
       destination &&
-      Object.values(destination.entities).find((e) =>
-        slot.subject?.character
-          ? e.character?.slot === slot.subject.character.slot
-          : e.item?.id === slot.subject?.item?.id
-      );
+      ((proposal && destination.entities[proposal.id]) ||
+        Object.values(destination.entities).find((e) =>
+          slot.subject?.character
+            ? e.character?.slot === slot.subject.character.slot
+            : e.item?.id === slot.subject?.item?.id
+        ));
     slots.set(
       current.map((s, i) =>
         i !== index
@@ -208,7 +256,8 @@ export function useInteraction({
               targetX: committed && proposal ? origin.x + proposal.contact.x : s.sourceX,
               targetY: committed && proposal ? origin.y + proposal.contact.y : s.sourceY,
               proposal,
-              restId: restEntity?.id ?? s.id,
+              consumed: committed && proposal?.kind === "mouth" && !restEntity,
+              restId: restEntity?.id ?? (committed && proposal ? proposal.id : (s.restId ?? s.id)),
               subject: restEntity ?? s.subject,
               committed: true,
               revision: revision ?? renderedRevision.get(),
@@ -234,7 +283,28 @@ export function useInteraction({
     );
     controller.set(next.state);
     for (const effect of next.effects) {
-      if (effect.type === "pickup") {
+      if (effect.type === "contact") {
+        const index = slots.value.findIndex((s) => s.id === effect.entity && !s.consumed);
+        if (index >= 0) {
+          captureSequence.set(captureSequence.value + 1);
+          slots.set(
+            slots.value.map((s, i) =>
+              i === index
+                ? {
+                    ...s,
+                    generation: captureSequence.value,
+                    epoch: epoch.value,
+                    pointer: event.type === "down" ? event.pointer : s.pointer,
+                    phase: "pending",
+                    pausedElapsed: s.settleAt ? eventTime() - s.settleAt : 0,
+                    settleAt: 0,
+                    finished: false,
+                  }
+                : s
+            )
+          );
+        }
+      } else if (effect.type === "pickup") {
         const entity = subjectFor(effect.entity);
         if (!entity) continue;
         const pointer = next.state.pointers.find((p) => p.entity === effect.entity)!;
@@ -246,6 +316,10 @@ export function useInteraction({
         const slot = {
           ...emptySlot(),
           id: effect.entity,
+          generation: visible?.generation ?? captureSequence.value + 1,
+          epoch: epoch.value,
+          absoluteX: pointer.point.x + offset.value.x,
+          absoluteY: pointer.point.y + offset.value.y,
           restId: visible?.restId,
           subject: entity,
           ready: visible?.ready ?? false,
@@ -267,8 +341,16 @@ export function useInteraction({
           liftedAt: eventTime(),
           edgeAt: 0,
         };
+        captureSequence.set(Math.max(captureSequence.value, slot.generation));
         slots.set(slots.value.map((s, i) => (i === index ? slot : s)));
-        if (existing < 0) runOnJS(onPickup)({ id: effect.entity, slot: index, scene: prepared.value });
+        if (existing < 0)
+          runOnJS(onPickup)({
+            id: effect.entity,
+            slot: index,
+            scene: prepared.value,
+            generation: slot.generation,
+            epoch: slot.epoch,
+          });
       } else if (effect.type === "drag") {
         const index = slots.value.findIndex((s) => s.id === effect.entity);
         if (index < 0) continue;
@@ -288,6 +370,8 @@ export function useInteraction({
           lastMoveAt: now,
           pointerX: pointer.point.x,
           pointerY: pointer.point.y,
+          absoluteX: pointer.point.x + offset.value.x,
+          absoluteY: pointer.point.y + offset.value.y,
           tilt: reduced ? 0 : slot.tilt + (Math.max(-6, Math.min(6, (vx / 500) * 6)) - slot.tilt) * alpha,
           lag: reduced ? 0 : Math.max(-10, Math.min(10, (-vx / 500) * 10)),
           edgeAt: pointer.point.x < 48 || pointer.point.x > viewport.width - 48 ? slot.edgeAt || now : 0,
@@ -301,7 +385,12 @@ export function useInteraction({
         slots.set(
           slots.value.map((s, i) => (i === index ? { ...s, phase: "settling", proposal: effect.proposal } : s))
         );
-        runOnJS(onCommit)(index, effect.proposal, { x: slot.x, y: slot.y });
+        runOnJS(onCommit)(
+          index,
+          effect.proposal,
+          { x: slot.x, y: slot.y },
+          { generation: slot.generation, epoch: slot.epoch }
+        );
       } else if (effect.type === "restore") {
         const index = slots.value.findIndex((s) => s.id === effect.entity);
         if (index >= 0) {
@@ -372,7 +461,7 @@ export function useInteraction({
     "worklet";
     for (let i = 1; i >= 0; i--) {
       const s = slots.value[i];
-      if (!s.id || s.phase !== "settling" || !s.subject) continue;
+      if (!s.id || s.consumed || s.phase !== "settling" || !s.subject) continue;
       const c = camera.value,
         b = s.subject.bounds,
         e = s.subject.contact;
@@ -390,7 +479,44 @@ export function useInteraction({
     if (index < 0) return undefined;
     const origin = roomOrigin(index, building);
     const p = screenToRoom(point, camera.value, housePoint(origin.x, origin.y));
-    return pickEntity(hitTable.value[roomIds[index]], p, camera.value.a);
+    const free = hitTable.value[roomIds[index]].filter((proxy) => {
+      for (const slot of slots.value) {
+        if (!slot.id) continue;
+        let id: string | undefined = proxy.id;
+        while (id) {
+          if (id === slot.id || id === slot.restId) return false;
+          id = prepared.value.entities[id]?.parent;
+        }
+        id = slot.restId ?? slot.id;
+        while (id) {
+          if (id === proxy.id) return false;
+          id = prepared.value.entities[id]?.parent;
+        }
+      }
+      return true;
+    });
+    return pickEntity(free, p, camera.value.a);
+  };
+  const resumePending = (pointer: number) => {
+    "worklet";
+    slots.set(
+      slots.value.map((s) =>
+        s.id && s.pointer === pointer && s.phase === "pending"
+          ? {
+              ...s,
+              phase: "settling",
+              releaseX: s.committed ? s.releaseX : s.x,
+              releaseY: s.committed ? s.releaseY : s.y,
+              targetX: s.committed ? s.targetX : s.sourceX,
+              targetY: s.committed ? s.targetY : s.sourceY,
+              proposal: s.committed ? s.proposal : undefined,
+              committed: true,
+              revision: renderedRevision.value,
+              settleAt: eventTime() - (s.committed ? s.pausedElapsed : 0),
+            }
+          : s
+      )
+    );
   };
   const gesture = Gesture.Manual()
     .onTouchesDown((event, manager) => {
@@ -465,6 +591,7 @@ export function useInteraction({
           if (capture?.phase === "camera" && !capture.entity && pinchDistance.value === 0)
             inertia.set({ ...inertia.value, since: eventTime() });
           send({ type: "up", pointer: touch.id, now: eventTime(), proposal });
+          resumePending(touch.id);
         }
         suppressed.set(suppressed.value.filter((id) => id !== touch.id));
       }
@@ -487,7 +614,7 @@ export function useInteraction({
   useFrameCallback((frame) => {
     const dt = frame.timeSincePreviousFrame ?? 16.67;
     lastFrame.set(eventTime());
-    if (frameCount.value < 3600) {
+    if (onFrameReport && frameCount.value < 3600) {
       frameTimes.value.push(dt);
       frameCount.value++;
     }
@@ -506,13 +633,12 @@ export function useInteraction({
       inertia.set({ ...v, x: next.tx === old.tx ? 0 : x, y: next.ty === old.ty ? 0 : y, since: x || y ? v.since : 0 });
     }
     const edgeOwner = slots.value.find((s) => s.id && s.phase === "dragging" && s.edgeAt);
-    let moved = false;
+
     if (edgeOwner) {
       const vx = edgeVelocity(edgeOwner.pointerX, viewport.width, eventTime() - edgeOwner.edgeAt);
       if (vx) {
         const before = camera.value;
         camera.set(boundCamera({ ...before, tx: before.tx + (vx * Math.min(32, dt)) / 1000 }, viewport, building));
-        moved = before.tx !== camera.value.tx;
       }
     }
     for (let i = 0; i < 2; i++) {
@@ -527,11 +653,22 @@ export function useInteraction({
         slot = { ...slot, tilt: slot.tilt * factor, lag: slot.lag * factor };
         slots.set(slots.value.map((s, index) => (index === i ? slot : s)));
       }
-      if (moved && slot.phase === "dragging") {
-        const p = screenToRoom(screenPoint(slot.pointerX, slot.pointerY), camera.value, housePoint(0, 0));
-        slot = { ...slot, x: p.x - slot.gripX, y: p.y - slot.gripY };
-        slot.proposal = proposalFor(slot);
-        slots.set(slots.value.map((s, index) => (index === i ? slot : s)));
+      if (slot.phase === "dragging") {
+        const pointerX = slot.absoluteX - offset.value.x,
+          pointerY = slot.absoluteY - offset.value.y;
+        const p = screenToRoom(screenPoint(pointerX, pointerY), camera.value, housePoint(0, 0));
+        const x = p.x - slot.gripX,
+          y = p.y - slot.gripY;
+        if (
+          Math.abs(slot.x - x) > 0.001 ||
+          Math.abs(slot.y - y) > 0.001 ||
+          slot.pointerX !== pointerX ||
+          slot.pointerY !== pointerY
+        ) {
+          slot = { ...slot, x, y, pointerX, pointerY };
+          slot.proposal = proposalFor(slot);
+          slots.set(slots.value.map((s, index) => (index === i ? slot : s)));
+        }
       }
       if (slot.phase === "settling" && slot.settleAt) {
         const elapsed = eventTime() - slot.settleAt,
@@ -555,6 +692,7 @@ export function useInteraction({
     }
   });
   const cancelAll = () => {
+    epoch.set(epoch.get() + 1);
     controller.set(idleController);
     inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
     slots.set([emptySlot(), emptySlot()]);
@@ -591,6 +729,7 @@ export function useInteraction({
     frameCount.set(0);
   };
   return {
+    isCurrent,
     externalDown,
     externalMove,
     externalUp,

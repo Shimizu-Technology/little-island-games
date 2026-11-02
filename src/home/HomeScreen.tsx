@@ -28,7 +28,7 @@ import { Destinations } from "./runtime/Destinations";
 import { DebugOverlay } from "./runtime/DebugOverlay";
 import { type CharacterRender } from "./runtime/EntityArt";
 import { boundCamera, fitCamera, focusCamera, roomAtScreen, zoomCamera } from "./runtime/CameraController";
-import { useInteraction, type Interaction, type Pickup } from "./runtime/useInteraction";
+import { useInteraction, type Interaction, type Pickup, type CaptureToken } from "./runtime/useInteraction";
 import { isPortion, withPortions } from "./runtime/portions";
 
 export type HomeScreenProps = Ownership & {
@@ -107,11 +107,18 @@ export function HomeScreen({
   }, [measure, viewport]);
 
   const commitAt = useCallback(
-    (id: string, destination: RoomId, anchor: { x: number; y: number }, proposal?: DropProposal) => {
+    (
+      id: string,
+      destination: RoomId,
+      anchor: { x: number; y: number },
+      proposal?: DropProposal,
+      stillCurrent?: () => boolean
+    ) => {
       const current = live.current,
         entity = current.scene.entities[id];
       if (!entity) return undefined;
-      let next = proposal && !isPortion(id) ? current.store.commitProposal(proposal) : undefined;
+      let next =
+        proposal && !isPortion(id) ? current.store.commitProposal(proposal, undefined, stillCurrent) : undefined;
       if (!next && proposal && !isPortion(id) && proposal.revision === buildScene(current.store.getState()).revision)
         return undefined;
       if (!next) {
@@ -140,14 +147,14 @@ export function HomeScreen({
             scale: runtime.current!.camera.get().a,
             release: true,
           });
-          next = current.store.commitProposal(resolved, seed);
+          next = current.store.commitProposal(resolved, seed, stillCurrent);
           return next ? { state: next, proposal: resolved } : undefined;
         }
         const resolved = resolve(fresh.rooms[destination], candidate, roomPoint(anchor.x, anchor.y), {
           scale: runtime.current!.camera.get().a,
           release: true,
         });
-        next = current.store.commitProposal(resolved);
+        next = current.store.commitProposal(resolved, undefined, stillCurrent);
         return next ? { state: next, proposal: resolved } : undefined;
       }
       return { state: next, proposal: proposal! };
@@ -172,21 +179,31 @@ export function HomeScreen({
     );
   };
   const onCommit = useCallback(
-    (index: number, proposal: DropProposal, at: { x: number; y: number }) => {
+    (index: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => {
+      const stillCurrent = () => runtime.current!.isCurrent(index, token);
+      if (!stillCurrent()) return;
       const origin = roomOrigin(roomIds.indexOf(proposal.room), building);
-      const result = commitAt(proposal.id, proposal.room, { x: at.x - origin.x, y: at.y - origin.y }, proposal);
+      const result = commitAt(
+        proposal.id,
+        proposal.room,
+        { x: at.x - origin.x, y: at.y - origin.y },
+        proposal,
+        stillCurrent
+      );
       if (result) {
         showReaction(result.proposal);
         const destination = buildScene(result.state);
         setPickups((current) => current.map((p, i) => (i === index && p ? { ...p, destination } : p)));
-        runtime.current!.finish(index, true, result.proposal, destination.revision, destination);
+        runtime.current!.finish(index, true, result.proposal, destination.revision, destination, token);
         setRoom(result.proposal.room);
         sound("tap");
-      } else runtime.current!.finish(index, false);
+      } else runtime.current!.finish(index, false, undefined, undefined, undefined, token);
     },
     [building, commitAt, sound]
   );
   const onPickup = useCallback((pickup: Pickup) => {
+    const current = runtime.current!.slots.get()[pickup.slot];
+    if (current.id !== pickup.id || current.generation !== pickup.generation || current.epoch !== pickup.epoch) return;
     setPickups((current) => current.map((p, i) => (i === pickup.slot ? pickup : p)));
     setSelected(undefined);
   }, []);
@@ -255,6 +272,7 @@ export function HomeScreen({
     onTap,
     onClear,
     onFrameReport: lab ? setFrameReport : undefined,
+    viewportOffset,
   });
   useLayoutEffect(() => {
     runtime.current = interaction;
