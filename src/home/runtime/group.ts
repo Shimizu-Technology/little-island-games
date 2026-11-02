@@ -22,7 +22,12 @@ export function paintEntries(
         ? [{ entity, front: true, depth: entity.depth + 2 }]
         : []),
     ])
-    .sort((a, b) => a.depth - b.depth || a.entity.id.localeCompare(b.entity.id));
+    .sort(
+      (a, b) =>
+        Number(b.entity.item?.layer === "ground") - Number(a.entity.item?.layer === "ground") ||
+        a.depth - b.depth ||
+        a.entity.id.localeCompare(b.entity.id)
+    );
 }
 
 /** Stored descendants are represented by their container and its pictorial contents chooser. */

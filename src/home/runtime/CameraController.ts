@@ -1,6 +1,6 @@
 import type { CameraMatrix } from "../scene/camera";
 import { screenToRoom } from "../scene/camera";
-import { housePoint, screenPoint } from "../scene/types";
+import { housePoint, screenPoint, type Bounds } from "../scene/types";
 import type { Building } from "../camera";
 import { roomOrigin } from "../camera";
 
@@ -27,22 +27,44 @@ export function boundCamera(camera: CameraMatrix, view: Viewport, building: Buil
     ty: h <= view.height ? (view.height - h) / 2 : Math.min(0, Math.max(view.height - h, camera.ty)),
   };
 }
+export function portraitPhone(view: Viewport): boolean {
+  "worklet";
+  return view.width < 600 && view.height > view.width;
+}
+export function roomScale(view: Viewport): number {
+  "worklet";
+  return portraitPhone(view) ? view.width / 800 : view.height / 620;
+}
 export function focusCamera(index: number, view: Viewport, building: Building, at = { x: 400, y: 320 }): CameraMatrix {
   "worklet";
   const origin = roomOrigin(index, building);
-  const scale = view.height / 620;
+  const scale = roomScale(view);
+  // A phone opens the complete room, including when Find locates an actor near an edge.
+  const centerX = portraitPhone(view) ? 400 : at.x;
   return boundCamera(
     {
       a: scale,
       b: 0,
       c: 0,
       d: scale,
-      tx: view.width / 2 - (origin.x + at.x) * scale,
+      tx: view.width / 2 - (origin.x + centerX) * scale,
       ty: view.height / 2 - (origin.y + at.y) * scale,
     },
     view,
     building
   );
+}
+/** Pan only when a committed actor is actually clipped. Never change the zoom. */
+export function includeBounds(camera: CameraMatrix, bounds: Bounds, view: Viewport, building: Building): CameraMatrix {
+  "worklet";
+  const left = bounds.left * camera.a + camera.tx,
+    right = (bounds.left + bounds.width) * camera.a + camera.tx,
+    top = bounds.top * camera.d + camera.ty,
+    bottom = (bounds.top + bounds.height) * camera.d + camera.ty;
+  const dx = left < 0 ? -left : right > view.width ? view.width - right : 0;
+  const dy = top < 0 ? -top : bottom > view.height ? view.height - bottom : 0;
+  if (!dx && !dy) return camera;
+  return boundCamera({ ...camera, tx: camera.tx + dx, ty: camera.ty + dy }, view, building);
 }
 export function zoomCamera(
   camera: CameraMatrix,

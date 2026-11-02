@@ -38,7 +38,11 @@ function OverlayGroup({
     .map((key) => scene.entities[key])
     .filter((e) => restingVisible(e, scene, root.id))
     .sort((a, b) => a.depth - b.depth || a.id.localeCompare(b.id));
-  useLayoutEffect(() => interaction.ready(index, id), [interaction, index, id]);
+  useLayoutEffect(() => {
+    const bounds = root.character ? renderAnchors(root, true).bounds : undefined;
+    const binding = root.character ? carryBinding(root, pickup.grip ?? { x: 0, y: 0 }) : { x: 0, y: 0 };
+    interaction.ready(index, id, bounds && { ...bounds, left: bounds.left + binding.x, top: bounds.top + binding.y });
+  }, [interaction, index, id, root, pickup.grip]);
   const style = useAnimatedStyle(() => {
     const slot = slots.value[index];
     const lift = reduced ? 0 : Math.min(1, Math.max(0, (clock.value - slot.liftedAt) / 90));
@@ -221,7 +225,7 @@ function CarriedProp({
       elapsed = s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt;
     const settling = (s.phase === "settling" && s.settleAt) || (s.phase === "pending" && s.committed);
     const p = settling ? settleProgress(elapsed, reduced) : 0,
-      blend = settling ? (reduced ? 1 : Math.min(1, Math.max(0, (elapsed - 120) / 120))) : 0;
+      blend = settling && p === 1 ? 1 : 0;
     const hand = hands[(reduced ? 0 : Math.max(-4, Math.min(4, Math.round(s.lag / 2.5)))) + 4];
     const x = hand.x + start.x + (end.x - start.x) * p,
       y = hand.y + start.y + (end.y - start.y) * p;

@@ -29,13 +29,14 @@ import { resolve, type DropProposal } from "./scene/proposal";
 import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
 import { screenToRoom } from "./scene/camera";
 import { SceneView } from "./runtime/SceneView";
-import { HomeChrome, Tool } from "./runtime/HomeChrome";
+import { HomeChrome, Tool, navigationHeight } from "./runtime/HomeChrome";
+import { HomePanels } from "./runtime/HomePanels";
 import { DesignTools, portraitDrawerHeight, type CatalogGhost } from "./runtime/DesignTools";
 import { StagingTray } from "./runtime/StagingTray";
 import { Destinations } from "./runtime/Destinations";
 import { DebugOverlay } from "./runtime/DebugOverlay";
 import { type CharacterRender } from "./runtime/EntityArt";
-import { boundCamera, fitCamera, focusCamera, roomAtScreen, zoomCamera } from "./runtime/CameraController";
+import { boundCamera, fitCamera, focusCamera, roomScale, roomAtScreen, zoomCamera } from "./runtime/CameraController";
 import { useInteraction, type Interaction, type Pickup, type CaptureToken } from "./runtime/useInteraction";
 import { groupIds } from "./runtime/group";
 import { useIdleCharacters } from "./runtime/useIdleCharacters";
@@ -72,6 +73,9 @@ export function HomeScreen({
   );
   const [overview, setOverview] = useState(false),
     [room, setRoom] = useState(store.state.current);
+  const [more, setMore] = useState(false),
+    [friends, setFriends] = useState(false);
+  const lastTap = useRef({ x: 0, y: 0, at: 0 });
   const [pickups, setPickups] = useState<(Pickup | undefined)[]>([undefined, undefined]);
   const [debug, setDebug] = useState(lab),
     [stress, setStress] = useState(false);
@@ -97,7 +101,11 @@ export function HomeScreen({
       width: window.width - (vertical ? 220 : 0),
       height: Math.max(
         180,
-        window.height - inset.bottom - headerHeight - (designing && !vertical ? portraitDrawerHeight : 0)
+        window.height -
+          inset.bottom -
+          headerHeight -
+          navigationHeight -
+          (designing && !vertical ? portraitDrawerHeight : 0)
       ),
     }),
     [window.width, window.height, vertical, designing, inset, headerHeight]
@@ -332,10 +340,31 @@ export function HomeScreen({
       restoreFocus(result.proposal.kind === "mouth" ? owner : result.identities[id]);
     }
   };
-  const choose = useCallback((id: string) => setSelected(id), []);
-  const onTap = (id: string | undefined, point: ScreenPoint) => {
+  const choose = (id: string) => {
+    const entity = live.current.scene.entities[id];
+    if (overview && entity) goRoom(entity.room);
+    else setSelected(id);
+  };
+  const onTap = (id: string | undefined, point: ScreenPoint, now: number) => {
     const current = live.current;
+    // Overview room taps always navigate, even over an object or with a previous selection.
+    if (overview) {
+      const index = roomAtScreen(point.x, point.y, runtime.current!.camera.get(), building);
+      if (index >= 0) goRoom(roomIds[index]);
+      return;
+    }
     const entity = id ? current.scene.entities[id] : undefined;
+    if (!id && !current.selected && !current.placing) {
+      const prior = lastTap.current;
+      lastTap.current = { ...point, at: now };
+      if (now - prior.at < 300 && Math.hypot(point.x - prior.x, point.y - prior.y) < 28) {
+        const c = runtime.current!.camera.get();
+        const scale = c.a > roomScale(viewport) * 1.2 ? roomScale(viewport) : (viewport.height / 620) * 1.4;
+        interaction.camera.set(zoomCamera(c, scale / c.a, point.x, point.y, viewport, building));
+        lastTap.current.at = 0;
+        return;
+      }
+    }
     if (current.placing) {
       insertAt(current.placing, point.x, point.y);
       return;
@@ -443,7 +472,7 @@ export function HomeScreen({
       before,
       housePoint(oldOrigin.x, oldOrigin.y)
     );
-    const scale = (before.a * viewport.height) / old.viewport.height;
+    const scale = (before.a * roomScale(viewport)) / roomScale(old.viewport);
     interaction.camera.set(
       overview
         ? fitCamera(viewport, building)
@@ -476,6 +505,9 @@ export function HomeScreen({
   }, []);
   const goRoom = (id: RoomId) => {
     interaction.cancelAll();
+    setSelected(undefined);
+    setMore(false);
+    setFriends(false);
     setRoom(id);
     setOverview(false);
     store.dispatch({ type: "room", room: id });
@@ -488,7 +520,9 @@ export function HomeScreen({
     setOverview(false);
     store.dispatch({ type: "room", room: hero.room });
     interaction.camera.set(focusCamera(roomIds.indexOf(hero.room), viewport, building, hero.contact));
-    setSelected(hero.id);
+    setSelected(undefined);
+    setMore(false);
+    setFriends(false);
     restoreFocus(hero.id);
   };
   const moveAccessible = useCallback(
@@ -564,8 +598,12 @@ export function HomeScreen({
         canUndo={store.canUndo}
         canRedo={store.canRedo}
         top={inset.top}
-        headerHeight={headerHeight}
-        rightInset={vertical ? 220 : 0}
+        bottom={inset.bottom}
+        onMore={() => {
+          setMore(!more);
+          setFriends(false);
+          setSelected(undefined);
+        }}
         onHeaderLayout={setHeaderHeight}
         onBack={() => router.back()}
         onUndo={() => {
@@ -579,10 +617,16 @@ export function HomeScreen({
         onFind={find}
         onFriends={() => {
           interaction.cancelAll();
-          dispatch({ type: "find-friends" });
+          setSelected(undefined);
+          setMore(false);
+          setFriends(true);
         }}
         onOverview={() => {
-          const next = !overview;
+          interaction.cancelAll();
+          setSelected(undefined);
+          setMore(false);
+          setFriends(false);
+          const next = true;
           setOverview(next);
           interaction.camera.set(
             next ? fitCamera(viewport, building) : focusCamera(roomIds.indexOf(room), viewport, building)
@@ -593,12 +637,6 @@ export function HomeScreen({
           setPlacing(undefined);
         }}
         onRoom={goRoom}
-        onZoom={(ratio) => {
-          interaction.camera.set(
-            zoomCamera(interaction.camera.get(), ratio, viewport.width / 2, viewport.height / 2, viewport, building)
-          );
-          setOverview(false);
-        }}
         saveStatus={saveStatus}
       />
       <View style={{ flex: 1, flexDirection: vertical ? "row" : "column" }}>
@@ -681,32 +719,66 @@ export function HomeScreen({
           />
         )}
       </View>
-      <Destinations
-        scene={scene}
-        selected={selected}
-        scale={1}
-        onSelect={setSelected}
-        bottom={inset.bottom + (designing && !vertical ? portraitDrawerHeight + 6 : staged.length ? 100 : 10)}
-        onChoose={(proposal) => {
-          const result = commitAt(proposal.id, proposal.room, proposal.contact, proposal);
-          if (result) {
-            showReaction(result.proposal);
-            const owner = scene.rooms[result.proposal.room].targets.find((t) => t.id === result.proposal.target)?.owner;
-            restoreFocus(result.proposal.kind === "mouth" ? owner : result.identities[result.proposal.id]);
-            setSelected(undefined);
-            setRoom(result.proposal.room);
+      {!overview && !more && !friends && (
+        <Destinations
+          scene={scene}
+          selected={selected}
+          scale={1}
+          onSelect={setSelected}
+          bottom={
+            inset.bottom +
+            navigationHeight +
+            (designing && !vertical ? portraitDrawerHeight + 6 : staged.length ? 100 : 10)
           }
-        }}
-      />
+          onChoose={(proposal) => {
+            const result = commitAt(proposal.id, proposal.room, proposal.contact, proposal);
+            if (result) {
+              showReaction(result.proposal);
+              const owner = scene.rooms[result.proposal.room].targets.find(
+                (t) => t.id === result.proposal.target
+              )?.owner;
+              restoreFocus(result.proposal.kind === "mouth" ? owner : result.identities[result.proposal.id]);
+              setSelected(undefined);
+              setRoom(result.proposal.room);
+            }
+          }}
+        />
+      )}
       <StagingTray
         entities={staged}
         onNode={onNode}
-        bottom={inset.bottom + 8}
+        bottom={inset.bottom + navigationHeight + 8}
         offset={viewportOffset}
         interaction={interaction}
         reduced={reduced}
         renderCharacter={renderCharacter}
         onSelect={setSelected}
+      />
+      <HomePanels
+        more={more}
+        friends={friends}
+        bottom={inset.bottom + navigationHeight}
+        scene={scene}
+        renderCharacter={renderCharacter}
+        onClose={() => {
+          setMore(false);
+          setFriends(false);
+        }}
+        onFriends={() => {
+          setMore(false);
+          setFriends(true);
+        }}
+        onZoom={(ratio) => {
+          interaction.cancelAll();
+          interaction.camera.set(
+            zoomCamera(interaction.camera.get(), ratio, viewport.width / 2, viewport.height / 2, viewport, building)
+          );
+          if (ratio > 1) setOverview(false);
+        }}
+        onBring={(id, slot) => {
+          commitAt(id, room, { x: 350 + slot * 90, y: 490 });
+          setFriends(false);
+        }}
       />
       <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
         {store.message}
