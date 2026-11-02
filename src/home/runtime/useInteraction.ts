@@ -50,6 +50,7 @@ export type DragSlot = CaptureToken & {
   liftedAt: number;
   edgeAt: number;
   settleAt: number;
+  travelDelay: number;
   pausedElapsed: number;
   committed: boolean;
   revision: string;
@@ -99,6 +100,7 @@ const emptySlot = (): DragSlot => {
     liftedAt: 0,
     edgeAt: 0,
     settleAt: 0,
+    travelDelay: 0,
     pausedElapsed: 0,
     committed: false,
     revision: "",
@@ -192,8 +194,7 @@ export function useInteraction({
           releaseY: slot.y,
           targetX: origin.x + entity.contact.x,
           targetY: origin.y + entity.contact.y,
-          settleAt: slot.phase === "pending" ? 0 : eventTime(),
-          pausedElapsed: 0,
+          travelDelay: slot.phase === "pending" ? slot.pausedElapsed : Math.max(0, eventTime() - slot.settleAt),
           finished: false,
           proposal: slot.proposal
             ? {
@@ -313,6 +314,7 @@ export function useInteraction({
               committed: true,
               revision: revision ?? renderedRevision.get(),
               settleAt: eventTime(),
+              travelDelay: 0,
               finished: false,
             }
       )
@@ -484,6 +486,7 @@ export function useInteraction({
                     targetX: s.sourceX,
                     targetY: s.sourceY,
                     settleAt: eventTime(),
+                    travelDelay: 0,
                     committed: true,
                     revision: renderedRevision.value,
                   }
@@ -603,6 +606,7 @@ export function useInteraction({
               committed: true,
               revision: renderedRevision.value,
               settleAt: eventTime() - (s.committed ? s.pausedElapsed : 0),
+              travelDelay: s.committed ? s.travelDelay : 0,
             }
           : s
       )
@@ -774,7 +778,7 @@ export function useInteraction({
           if (slot.phase === "dragging" && slot.proposal?.pending && now - slot.proposal.pending.since >= 60)
             slot.proposal = proposalFor(slot);
           if (slot.phase === "settling" && slot.settleAt) {
-            const progress = settleProgress(now - slot.settleAt, reduced);
+            const progress = settleProgress(now - slot.settleAt - slot.travelDelay, reduced);
             slot.x = slot.releaseX + (slot.targetX - slot.releaseX) * progress;
             slot.y = slot.releaseY + (slot.targetY - slot.releaseY) * progress;
             slot.tilt *= 1 - progress;

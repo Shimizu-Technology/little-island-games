@@ -198,36 +198,49 @@ describe("actual runtime callback sequencing", () => {
     await act(async () => renderer.unmount());
     vi.useRealTimers();
   });
-  it("retargets a superseded landing from its visible transform and refreshes destination art", async () => {
-    let renderer!: TestRenderer.ReactTestRenderer;
-    await act(async () => {
-      renderer = TestRenderer.create(<Probe scene={fixture()} />);
-    });
-    touch("down", 120, 300);
-    touch("move", 150, 320);
-    flushJS();
-    touch("up", 150, 320);
-    const proposal = current.slots.get()[0].proposal!;
-    current.finish(0, true, proposal, "first-commit", fixture("first-commit", proposal.contact));
-    vi.advanceTimersByTime(100);
-    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
-    const before = { x: current.slots.get()[0].x, y: current.slots.get()[0].y };
-    const newer = fixture("second-commit", roomPoint(300, 450));
-    await act(async () => renderer.update(<Probe scene={newer} />));
-    const retargeted = current.slots.get()[0];
-    expect(retargeted.releaseX).toBe(before.x);
-    expect(retargeted.releaseY).toBe(before.y);
-    expect(retargeted.targetX).toBe(320);
-    expect(retargeted.targetY).toBe(570);
-    expect(retargeted.proposal?.base).toBe("stand");
-    expect(destinationRevision).toBe("second-commit");
-    vi.advanceTimersByTime(260);
-    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
-    expect(current.slots.get()[0].id).toBe("");
-    expect(current.controller.get().phase).toBe("idle");
-    await act(async () => renderer.unmount());
-    vi.useRealTimers();
-  });
+  it.each([false, true])(
+    "retargets a superseded landing without rewinding visual progress (pending=%s)",
+    async (pending) => {
+      let renderer!: TestRenderer.ReactTestRenderer;
+      await act(async () => {
+        renderer = TestRenderer.create(<Probe scene={fixture()} />);
+      });
+      touch("down", 120, 300);
+      touch("move", 150, 320);
+      flushJS();
+      touch("up", 150, 320);
+      const proposal = current.slots.get()[0].proposal!;
+      current.finish(0, true, proposal, "first-commit", fixture("first-commit", proposal.contact));
+      vi.advanceTimersByTime(100);
+      harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+      if (pending) {
+        const visible = current.slots.get()[0];
+        touch("down", visible.x, visible.y - 10, 2);
+        expect(current.slots.get()[0].phase).toBe("pending");
+      }
+      const before = { ...current.slots.get()[0] };
+      const newer = fixture("second-commit", roomPoint(300, 450));
+      await act(async () => renderer.update(<Probe scene={newer} />));
+      const retargeted = current.slots.get()[0];
+      expect(retargeted.releaseX).toBe(before.x);
+      expect(retargeted.releaseY).toBe(before.y);
+      // Lift, scale, anatomical binding and pose blend keep their original clock.
+      expect(retargeted.settleAt).toBe(before.settleAt);
+      expect(retargeted.pausedElapsed).toBe(before.pausedElapsed);
+      expect(retargeted.travelDelay).toBe(100);
+      expect(retargeted.targetX).toBe(320);
+      expect(retargeted.targetY).toBe(570);
+      expect(retargeted.proposal?.base).toBe("stand");
+      expect(destinationRevision).toBe("second-commit");
+      if (pending) touch("up", before.x, before.y - 10, 2);
+      vi.advanceTimersByTime(260);
+      harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+      expect(current.slots.get()[0].id).toBe("");
+      expect(current.controller.get().phase).toBe("idle");
+      await act(async () => renderer.unmount());
+      vi.useRealTimers();
+    }
+  );
   it("retains the release transform while JS is queued and waits for the committed React scene", async () => {
     let renderer: TestRenderer.ReactTestRenderer;
     await act(async () => {
