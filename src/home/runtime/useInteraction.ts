@@ -309,7 +309,7 @@ export function useInteraction({
       release,
       reservations,
     });
-  }, [subjectFor, slots, prepared, camera, building, viewport, designing]);
+  }, [subjectFor, slots, prepared, camera, building, designing]);
   const isCurrent = (index: number, token: CaptureToken) => {
     const slot = slots.get()[index];
     return (
@@ -788,7 +788,7 @@ export function useInteraction({
     if (onReleaseProbe) {
       const now = eventTime();
       probeRing.modify((ring) => { "worklet"; ring[probeCursor.value % 180] = { at: now, delta: dt }; return ring; });
-      probeCursor.value++;
+      probeCursor.set(probeCursor.value + 1);
       const due = probePending.value.filter((p) => now >= p.at + 520);
       for (const release of due) runOnJS(onReleaseProbe)({ ...releaseWindow(release, probeRing.value),
         gates: slots.value.map((s, index) => {
@@ -813,11 +813,11 @@ export function useInteraction({
       if (t === 1) revealPan.set(null);
     }
     if (onFrameReport && frameCount.value < 3600) {
-      frameTimes.value.push(dt);
-      frameCount.value++;
+      frameTimes.modify((times) => { "worklet"; times.push(dt); return times; });
+      frameCount.set(frameCount.value + 1);
     }
     if (frameCount.value === 3600 && onFrameReport) {
-      frameCount.value++;
+      frameCount.set(frameCount.value + 1);
       runOnJS(onFrameReport)(frameTimes.value);
     }
     if (inertia.value.since && !controller.value.pointers.length) {
