@@ -1,6 +1,6 @@
-import { useLayoutEffect, useMemo } from "react";
+import { useCallback, useLayoutEffect, useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
-import { runOnJS, useFrameCallback, useSharedValue, type SharedValue } from "react-native-reanimated";
+import { runOnJS, useFrameCallback, useSharedValue, type SharedValue, type FrameInfo } from "react-native-reanimated";
 import { roomIds } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { transition, idleController, type ControllerState, type ControllerEvent } from "../scene/controller";
@@ -259,21 +259,21 @@ export function useInteraction({
       )
     );
   }, [scene, designing, movable]);
-  const subjectFor = (id?: string) => {
+  const subjectFor = useCallback((id?: string) => {
     "worklet";
     const slot = slots.value.find((s) => s.id === id);
     return id
       ? (prepared.value.entities[slot?.restId ?? id] ??
           (slot && !slot.consumed && !slot.committed ? slot.subject : undefined))
       : undefined;
-  };
-  const originFor = (id?: string) => {
+  }, [prepared, slots]);
+  const originFor = useCallback((id?: string) => {
     "worklet";
     const entity = subjectFor(id);
     const p = entity ? roomOrigin(roomIds.indexOf(entity.room), building) : { x: 0, y: 0 };
     return housePoint(p.x, p.y);
-  };
-  const proposalFor = (slot: DragSlot, release = false): DropProposal | undefined => {
+  }, [subjectFor, building]);
+  const proposalFor = useCallback((slot: DragSlot, release = false): DropProposal | undefined => {
     "worklet";
     const subject = subjectFor(slot.id);
     if (!subject) return undefined;
@@ -309,7 +309,7 @@ export function useInteraction({
       release,
       reservations,
     });
-  };
+  }, [subjectFor, slots, prepared, camera, building, viewport, designing]);
   const isCurrent = (index: number, token: CaptureToken) => {
     const slot = slots.get()[index];
     return (
@@ -782,7 +782,8 @@ export function useInteraction({
       manager.end();
     });
 
-  useFrameCallback((frame) => {
+  useFrameCallback(useCallback((frame: FrameInfo) => {
+    "worklet";
     const dt = frame.timeSincePreviousFrame ?? 16.67;
     if (onReleaseProbe) {
       const now = eventTime();
@@ -935,7 +936,9 @@ export function useInteraction({
         }
         return current;
       });
-  });
+  }, [onReleaseProbe, probeRing, probeCursor, probePending, slots, prepared, renderedRevision, laidOut, layoutTokens,
+    poseLayouts, lastFrame, revealPan, controller, reduced, camera, onFrameReport, frameCount, frameTimes, inertia,
+    viewport, building, offset, proposalFor, onCommit, onClear]));
   const cancelAll = () => {
     revealPan.set(null);
     epoch.set(epoch.get() + 1);

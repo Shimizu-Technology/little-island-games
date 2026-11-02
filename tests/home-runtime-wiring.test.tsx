@@ -128,11 +128,18 @@ let committedId = "";
 let committedContact = entity.contact;
 let destinationRevision = "";
 const cameraChange = vi.fn();
+const fixtureBuilding = buildingLayout(4, true), fixtureViewport = { width: 1000, height: 600 };
+const noop = () => {};
+const commitFixture: Parameters<typeof useInteraction>[0]["onCommit"] = (index, proposal, _at, token) => {
+  if (!current.isCurrent(index, token)) return;
+  committed++; committedId = proposal.id; committedContact = proposal.contact;
+  current.finish(index, true, proposal, "committed", undefined, token);
+};
 function Probe({ scene, layout = true }: { scene: Scene; layout?: boolean }) {
   const interaction = useInteraction({
     scene,
-    building: buildingLayout(4, true),
-    viewport: { width: 1000, height: 600 },
+    building: fixtureBuilding,
+    viewport: fixtureViewport,
     initialCamera: identityCamera,
     reduced: false,
     designing: false,
@@ -144,17 +151,11 @@ function Probe({ scene, layout = true }: { scene: Scene; layout?: boolean }) {
           current.acknowledgePose(pickup.slot, layoutToken(pickup.scene.entities[pickup.id])); }
     },
     onTap: () => {},
-    onClear: () => {},
+    onClear: noop,
     onDestination: (_index, scene) => {
       destinationRevision = scene.revision;
     },
-    onCommit: (index, proposal, _at, token) => {
-      if (!current.isCurrent(index, token)) return;
-      committed++;
-      committedId = proposal.id;
-      committedContact = proposal.contact;
-      current.finish(index, true, proposal, "committed", undefined, token);
-    },
+    onCommit: commitFixture,
   });
   React.useLayoutEffect(() => {
     current = interaction;
@@ -191,6 +192,15 @@ beforeEach(() => {
   vi.setSystemTime(1000);
 });
 describe("actual runtime callback sequencing", () => {
+  it("T2 keeps the native frame callback registered across committed scene updates", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
+    const callback = harness.frames[0];
+    await act(async () => { renderer.update(<Probe scene={fixture("updated", roomPoint(200, 450))} />); });
+    expect(harness.frames[0]).toBe(callback);
+    await act(async () => renderer.unmount()); vi.useRealTimers();
+  });
+
   it("T2 preserves every native pose acknowledgment when JS callbacks arrive before UI writes flush", async () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
