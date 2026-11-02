@@ -24,6 +24,7 @@ import {
   clearPageDrafts,
 } from "../src/library/drafts";
 import { TOPICS } from "../src/explore/content";
+import { rememberLibraryDestination } from "../src/library/ids";
 describe("Production Library discovery", () => {
   it("keeps question playback separate from the original whole-topic narration", () => {
     const topic = catalog.find((record) => record.id === "dolphins")!;
@@ -40,6 +41,11 @@ describe("Production Library discovery", () => {
     expect(itemById("turtles")).toBe(itemById("turtle-breath"));
     expect(canOpen("turtle-breath", ["ocean"])).toBe(true);
     expect(canonicalDestination("topic", "turtles")).toBe("turtle-breath");
+  });
+  it("keeps one recent wonder across old and reviewed IDs without mutating the old history", () => {
+    const old = ["turtles", "moon", "turtle-breath"];
+    expect(rememberLibraryDestination(old, "moon")).toEqual(["moon", "turtle-breath"]);
+    expect(old).toEqual(["turtles", "moon", "turtle-breath"]);
   });
   it("indexes layer vocabulary offline and filters before matching", () => {
     const index = buildIndex([

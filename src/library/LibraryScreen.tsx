@@ -43,7 +43,7 @@ import { ReviewedNarration } from "./ReviewedNarration";
 import { Exhibit } from "./Exhibit";
 import { hasPendingPages, pageDraftKey, pendingPage } from "./drafts";
 import { canonicalDestination, exhibitWorld as resolveExhibitWorld, mayFinishPage } from "./navigation";
-import { canonicalLibraryId } from "./ids";
+import { canonicalLibraryId, rememberLibraryDestination } from "./ids";
 import type { ReadingLayer } from "./schema";
 const extensions = new Map<string, number>();
 export default function LibraryScreen() {
@@ -144,7 +144,7 @@ function LibraryReady() {
     if (nextId && !nextId.startsWith("page-")) {
       const destinationId = canonicalDestination(nextPlace, nextId);
       update({
-        recent: [destinationId, ...live.current.recent.filter((item) => item !== destinationId)].slice(0, 24),
+        recent: rememberLibraryDestination(live.current.recent, destinationId),
         current: destinationId,
       });
     }

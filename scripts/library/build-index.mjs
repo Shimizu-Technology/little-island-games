@@ -91,4 +91,5 @@ console.log(
 );
 
 writeFileSync(`${output}/vectors.generated.ts`, `// Generated from unchanged reviewed Library art.\nexport const libraryVectors: Record<string, string> = ${JSON.stringify(vectors, null, 2)};\n`);
-writeFileSync(`${output}/speech.generated.ts`, `// Generated local warm recordings; generation is not audible approval.\nimport { libraryAssets } from "./assets.generated";\nexport const librarySpeech: Record<string, number> = {\n${Object.entries(speechPaths).map(([key, path]) => `  ${JSON.stringify(key)}: libraryAssets[${JSON.stringify(path)}],`).join("\n")}\n};\n`);
+const speechImport = Object.keys(speechPaths).length ? 'import { libraryAssets } from "./assets.generated";\n' : '';
+writeFileSync(`${output}/speech.generated.ts`, `// Generated local warm recordings; generation is not audible approval.\n${speechImport}export const librarySpeech: Record<string, number> = {\n${Object.entries(speechPaths).map(([key, path]) => `  ${JSON.stringify(key)}: libraryAssets[${JSON.stringify(path)}],`).join("\n")}\n};\n`);
