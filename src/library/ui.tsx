@@ -1,11 +1,14 @@
 import React from "react";
-import { SvgXml } from "react-native-svg";
+import Svg, { G, SvgXml } from "react-native-svg";
 import { libraryVectors } from "./vectors.generated";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import { LibraryGlyph } from "./LibraryGlyph";
 import { Text } from "../components/Text";
 import { font } from "../components/ui";
-import { TopicArt } from "../explore/ExploreArt";
+import { Motif, TopicArt } from "../explore/ExploreArt";
+import { SceneBackdrop } from "./SceneBackdrop";
+import { sceneCategory } from "./sceneContext";
+import { sceneVector } from "./sceneVector";
 import { LibraryArt } from "./LibraryArt";
 import { libraryAssets } from "./assets.generated";
 import type { CatalogItem } from "./catalog";
@@ -42,6 +45,8 @@ export function Action({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ selected, disabled, expanded }}
+      aria-selected={selected}
+      aria-expanded={expanded}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
@@ -61,36 +66,68 @@ export function ItemPicture({
   record,
   large = false,
   pictureHeight,
+  scene = false,
+  fill = false,
 }: {
   record: CatalogItem;
   large?: boolean;
   pictureHeight?: number;
+  scene?: boolean;
+  fill?: boolean;
 }) {
   const path = record.item?.image.path;
   return (
     <View
       style={{
         width: "100%",
-        height: pictureHeight ?? (large ? 230 : 148),
+        height: fill ? "100%" : (pictureHeight ?? (large ? 230 : 148)),
         overflow: "hidden",
-        borderRadius: large ? 26 : 18,
+        borderRadius: scene ? 0 : large ? 26 : 18,
         backgroundColor: palette.lagoon,
       }}
     >
-      {path && libraryVectors[path] ? (
-        <SvgXml xml={libraryVectors[path]} width="100%" height="100%" accessibilityLabel={record.item!.image.alt} />
-      ) : path && libraryAssets[path] ? (
-        <Image
-          source={libraryAssets[path]}
-          resizeMode="contain"
-          accessibilityLabel={record.item!.image.alt}
-          style={{ width: "100%", height: "100%" }}
-        />
-      ) : record.legacy ? (
-        <TopicArt topic={record.legacy} compact={!large} height={pictureHeight} />
-      ) : (
-        <LibraryArt kind={record.motif} />
+      {scene && (
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <SceneBackdrop category={sceneCategory(record.id, record.category)} />
+        </View>
       )}
+      {/* A positioned foreground paints above the absolute scene on web and native. */}
+      <View style={scene ? [StyleSheet.absoluteFill, { zIndex: 1 }] : { flex: 1 }}>
+        {path && libraryVectors[path] ? (
+          <SvgXml
+            xml={
+              scene
+                ? sceneVector(
+                    libraryVectors[path],
+                    large && path === "content/library/art/legacy-turtles.svg" ? "110 42 132 108" : undefined
+                  )
+                : libraryVectors[path]
+            }
+            width="100%"
+            height="100%"
+            accessibilityLabel={record.item!.image.alt}
+          />
+        ) : path && libraryAssets[path] ? (
+          <Image
+            source={libraryAssets[path]}
+            resizeMode="contain"
+            accessibilityLabel={record.item!.image.alt}
+            style={{ width: "100%", height: "100%" }}
+          />
+        ) : record.legacy ? (
+          scene ? (
+            <Svg width="100%" height="100%" viewBox="0 0 160 140" accessible={false}>
+              <G transform="translate(20 10)">
+                <Motif name={record.legacy.illustration} />
+              </G>
+            </Svg>
+          ) : (
+            <TopicArt topic={record.legacy} compact={!large} height={pictureHeight} />
+          )
+        ) : (
+          <LibraryArt kind={record.motif} />
+        )}
+      </View>
     </View>
   );
 }

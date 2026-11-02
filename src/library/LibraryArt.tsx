@@ -1,12 +1,13 @@
 import React from "react";
 import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
+import { Palm } from "../hub/Terrain";
 import { Motif } from "../explore/ExploreArt";
 /** Original static scenes in the hub's ink, lagoon, sand and leaf palette. */
 export function LibraryArt({ kind = "turtle", dive = false }: { kind?: string; dive?: boolean }) {
   const night = kind === "moon" || kind === "stars";
   const ocean = kind === "turtle" || kind === "coral";
   return (
-    <Svg width="100%" height="100%" viewBox="0 0 360 220" accessible={false}>
+    <Svg width="100%" height="100%" viewBox="0 0 360 220" preserveAspectRatio="xMidYMid slice" accessible={false}>
       <Rect
         width={360}
         height={220}
@@ -71,6 +72,23 @@ export function LibraryArt({ kind = "turtle", dive = false }: { kind?: string; d
           strokeLinecap="round"
         />
       )}
+      {!night && !ocean && kind !== "heart" && kind !== "gear" && (
+        <G transform="translate(29 192) scale(.5)">
+          <Palm />
+        </G>
+      )}
+      {ocean && (
+        <G stroke="#9B6C56" strokeWidth={3.5} strokeLinecap="round" fill="none">
+          <Path d="M25 220v-28m0 16-10-8v-9m10 10 10-8v-9M320 220v-24m0 12-9-7m9 0 10-8" />
+        </G>
+      )}
+      {night &&
+        [
+          [24, 35],
+          [70, 70],
+          [319, 118],
+          [253, 29],
+        ].map(([x, y], i) => <Path key={i} d={`M${x - 4} ${y}h8M${x} ${y - 4}v8`} stroke="#FFF4C7" strokeWidth={2} />)}
       <Ellipse cx={172} cy={204} rx={84} ry={6} fill="#6EAA9A" opacity={0.25} />
     </Svg>
   );

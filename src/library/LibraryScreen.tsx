@@ -489,29 +489,30 @@ function LibraryReady() {
               </View>
             ) : (
               <View style={{ padding: 8, gap: 14 }}>
-                <View style={[s.row, { justifyContent: "space-between", flexWrap: "nowrap" }]}>
-                  <Text style={[s.title, { flex: 1, fontSize: 28 }]}>What do you wonder?</Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Look & Listen"
-                    onPress={() => visit("little")}
-                    style={{
-                      width: 84,
-                      minHeight: 80,
-                      borderRadius: 26,
-                      backgroundColor: "#E6E4F1",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      padding: 6,
-                      gap: 3,
-                    }}
-                  >
+                <Text style={[s.title, { fontSize: 28 }]}>What do you wonder?</Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Look & Listen"
+                  onPress={() => visit("little")}
+                  style={({ pressed }) => ({
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: "#FFF3D4",
+                    borderWidth: 2,
+                    borderColor: "#577E69",
+                    borderRadius: 26,
+                    overflow: "hidden",
+                    opacity: pressed ? 0.8 : 1,
+                  })}
+                >
+                  <View style={{ width: "45%", height: 130 }}>
+                    <LibraryArt kind="turtle" />
+                  </View>
+                  <View style={{ flex: 1, padding: 12, gap: 8, alignItems: "center" }}>
                     <LibraryIcon name="listen" size={36} />
-                    <Text style={[s.small, { fontSize: 12, fontWeight: "700", textAlign: "center" }]}>
-                      Look & Listen
-                    </Text>
-                  </Pressable>
-                </View>
+                    <Text style={[s.heading, { marginTop: 0, textAlign: "center", fontSize: 21 }]}>Look & Listen</Text>
+                  </View>
+                </Pressable>
                 <TextInput
                   accessibilityLabel="Search the Library"
                   value={child.query}
@@ -529,7 +530,13 @@ function LibraryReady() {
                   selected={child.category === "all" && !child.query}
                   onPress={() => update({ category: "all", query: "", onlyFavorites: false })}
                 >
-                  All pictures
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+                    <LibraryIcon name="wonder" size={36} />
+                    <Text style={[s.actionText, { fontSize: 19 }]}>All pictures</Text>
+                    <View style={{ width: 80, height: 48, overflow: "hidden", borderRadius: 14 }}>
+                      <LibraryArt kind="butterfly" />
+                    </View>
+                  </View>
                 </Action>
                 {!child.query && child.category === "all" && (
                   <View style={s.row}>
@@ -552,16 +559,27 @@ function LibraryReady() {
                               backgroundColor: category.tint,
                               borderRadius: 24,
                               overflow: "hidden",
-                              borderWidth: 1.5,
-                              borderColor: "#91AD98",
+                              borderWidth: 2,
+                              borderColor: "#577E69",
                             },
                             child.category === category.id && s.selected,
                           ]}
                         >
-                          <View style={{ width: "100%", height: width < 650 ? 116 : 144 }}>
+                          <View style={{ width: "100%", height: width < 650 ? 142 : 164 }}>
                             <LibraryArt kind={category.motif} />
                           </View>
-                          <Text style={[s.actionText, { padding: 8, minHeight: 54, backgroundColor: "#FFF9E8" }]}>
+                          <Text
+                            style={[
+                              s.actionText,
+                              {
+                                padding: 10,
+                                minHeight: 54,
+                                backgroundColor: "#FFF3D4",
+                                borderTopWidth: 2,
+                                borderColor: "#A2B18A",
+                              },
+                            ]}
+                          >
                             {category.title}
                           </Text>
                         </Pressable>
@@ -661,7 +679,7 @@ function LibraryReady() {
         <ScrollView
           ref={scroll}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={s.content}
+          contentContainerStyle={[s.content, place === "topic" && { padding: 0, maxWidth: 1300 }]}
           onContentSizeChange={() => {
             if (!restored.current) {
               restored.current = true;
@@ -810,7 +828,14 @@ function LibraryReady() {
                 onHear={(key) => audio.speak(key)}
                 speaking={audio.selected}
               />
-              {authoredExhibit && <ReviewedNarration id={authoredExhibit.id} state={child.labs[exhibitWorld]} selected={audio.selected} speak={audio.speak} />}
+              {authoredExhibit && (
+                <ReviewedNarration
+                  id={authoredExhibit.id}
+                  state={child.labs[exhibitWorld]}
+                  selected={audio.selected}
+                  speak={audio.speak}
+                />
+              )}
             </>
           ) : (
             <>

@@ -3,9 +3,10 @@ import { Pressable, StyleSheet, View } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
 import { Text } from "../components/Text";
 import { C, Copy, Heading } from "../components/ui";
+import { HabitatBoard, MapBoard, ReefBoard, SkyBoard } from "./ExhibitBoard";
 import { EarthLabArt, Motif } from "../explore/ExploreArt";
-import { LabGuidance, LabManipulative } from "../explore/LabManipulatives";
-import { FOOD_CHAIN, HABITATS, LabAction, LabState, PLACES, WaterPlace } from "../explore/activities";
+import { LabGuidance } from "../explore/LabManipulatives";
+import { FOOD_CHAIN, HABITATS, LabAction, LabState, PLACES, WATER_ACTIONS, WaterPlace } from "../explore/activities";
 import { WorldId, WORLDS } from "../explore/content";
 import { GuidanceKey, QUALITY_GUIDANCE } from "../explore/guidance";
 import { LabAudioKey, labAudioKey } from "../explore/labAudio";
@@ -156,7 +157,7 @@ const waterPoints: Record<WaterPlace, [number, number]> = {
   ground: [252, 192],
   ice: [145, 191],
 };
-function WaterScene({ place }: { place: WaterPlace }) {
+function WaterScene({ place, act }: { place: WaterPlace; act?: (action: LabAction) => void }) {
   const next = waterDestinations(place);
   const [sx, sy] = waterPoints[place];
   return (
@@ -187,6 +188,10 @@ function WaterScene({ place }: { place: WaterPlace }) {
             </G>
           );
         })}
+        <G transform={`translate(${sx + 19} ${sy - 28})`}>
+          <Path d="M0-11C-4-5-9 0-9 6a9 9 0 0 0 18 0C9 0 4-5 0-11Z" fill="#367E9A" stroke="#FFF3D4" strokeWidth={2.5} />
+          <Path d="M-4 5q-1 5 4 6" fill="none" stroke="#D9F1EB" strokeWidth={2} />
+        </G>
         {(Object.keys(waterPoints) as WaterPlace[]).map((key) => {
           const [x, y] = waterPoints[key];
           return (
@@ -251,6 +256,53 @@ function WaterScene({ place }: { place: WaterPlace }) {
           );
         })}
       </Svg>
+      {act &&
+        (Object.keys(waterPoints) as WaterPlace[]).map((key) => {
+          const [x, y] = waterPoints[key];
+          const choice = WATER_ACTIONS[place].find((entry) => entry.next === key);
+          return (
+            <Pressable
+              key={key}
+              accessibilityRole="button"
+              accessibilityLabel={choice?.label ?? `${waterLabels[key]}${place === key ? " · you are here" : ""}`}
+              accessibilityState={{ selected: place === key, disabled: !choice }}
+              aria-selected={place === key}
+              disabled={!choice}
+              onPress={() => {
+                if (choice) act({ type: "water", action: choice.action });
+              }}
+              style={({ pressed }) => ({
+                position: "absolute",
+                left: `${((x - 27) / 320) * 100}%`,
+                top: `${((y - 27) / 240) * 100}%`,
+                width: "17%",
+                height: "23%",
+                minHeight: 44,
+                minWidth: 44,
+                borderRadius: 30,
+                borderWidth: choice ? 3 : 0,
+                borderColor: "#315F54",
+                backgroundColor: pressed ? "#FFF3D188" : "transparent",
+                justifyContent: "flex-end",
+                alignItems: "center",
+              })}
+            >
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "700",
+                  color: C.ink,
+                  backgroundColor: "#FFF5DC",
+                  paddingHorizontal: 3,
+                  borderRadius: 5,
+                  top: 16,
+                }}
+              >
+                {waterLabels[key]}
+              </Text>
+            </Pressable>
+          );
+        })}
     </View>
   );
 }
@@ -262,8 +314,7 @@ const introductions: Record<WorldId, string> = {
     "Move a drop through water's different states. Choose an action, watch what changes, and try a different route.",
   space: "Turn Earth while the Sun stays on the left. Follow the coral-colored dot: it marks one place on Earth.",
   animals: "Find a suitable habitat for each animal. Think about food, water, shelter, and space.",
-  world:
-    "Follow five clues around a simplified world map. Tap a numbered destination below the map to choose it. North is up.",
+  world: "Follow a clue around the world. North is up on this map. Tap a numbered map pin.",
 };
 
 function Picture({ world, state }: { world: WorldId; state: LabState }) {
@@ -311,19 +362,37 @@ function ExhibitVisit({ world, title, state, onAction, sound, onHear, speaking, 
   return (
     <View style={s.exhibit}>
       <Heading style={s.title}>{title ?? WORLDS.find((entry) => entry.id === world)?.activity}</Heading>
+      {world === "world" && !mapDone && (
+        <View style={s.notebook}>
+          <Copy>{PLACES[state.expedition].clue}</Copy>
+          <Text style={s.caption}>{PLACES.map((place, i) => `${i + 1} ${place.name}`).join(" · ")}</Text>
+        </View>
+      )}
       {observable && (
         <View style={[s.picture, world === "space" && s.sky]}>
           {world === "space" ? (
-            <LabManipulative world={world} state={state} act={onAction} />
+            <SkyBoard state={state} act={onAction} />
+          ) : world === "oceans" ? (
+            <ReefBoard state={state} act={onAction} />
           ) : (
-            <Picture world={world} state={state} />
+            <WaterScene place={state.water} act={onAction} />
           )}
         </View>
       )}
-      {!observable && !(world === "animals" ? animalDone : mapDone) && (
-        <LabManipulative world={world} state={state} act={onAction} />
-      )}
-      <Copy>{introductions[world]}</Copy>
+      {!observable &&
+        !(world === "animals" ? animalDone : mapDone) &&
+        (world === "animals" ? (
+          <HabitatBoard state={state} act={onAction} />
+        ) : (
+          <MapBoard state={state} act={onAction} />
+        ))}
+      <View style={s.row}>
+        {onHear && (
+          <Control disabled={!sound} onPress={() => onHear(guidance)}>
+            Hear instructions
+          </Control>
+        )}
+      </View>
       <View accessibilityLiveRegion="polite" style={s.status}>
         <Text style={s.summary}>{summary}</Text>
         {world === "space" && (
@@ -356,8 +425,6 @@ function ExhibitVisit({ world, title, state, onAction, sound, onHear, speaking, 
         <Copy>You found a suitable place for each animal.</Copy>
       ) : world === "world" && mapDone ? (
         <Copy>You found Guam, Japan, Australia, Africa, and Antarctica. Start again to revisit the route.</Copy>
-      ) : observable ? (
-        <LabManipulative world={world} state={state} act={onAction} />
       ) : null}
 
       {world === "oceans" && (
@@ -375,20 +442,6 @@ function ExhibitVisit({ world, title, state, onAction, sound, onHear, speaking, 
         <Control onPress={() => onAction({ type: "next-animal" })}>
           {state.habitat === HABITATS.length ? "See all matches" : "Next animal"}
         </Control>
-      )}
-      {world === "world" && !mapDone && (
-        <View style={s.notebook}>
-          <Copy>{PLACES[state.expedition].clue}</Copy>
-          <View style={s.row}>
-            {PLACES.map((place, i) => (
-              <Control
-                key={place.id}
-                selected={state.visited.includes(place.id)}
-                onPress={() => onAction({ type: "place", id: place.id })}
-              >{`${i + 1}. ${place.name}`}</Control>
-            ))}
-          </View>
-        </View>
       )}
 
       {observable && (
@@ -430,6 +483,7 @@ function ExhibitVisit({ world, title, state, onAction, sound, onHear, speaking, 
       </View>
       {help && (
         <View style={s.notebook}>
+          <Copy>{introductions[world]}</Copy>
           <Copy>{QUALITY_GUIDANCE[guidance]}</Copy>
           <LabGuidance world={world} sound={sound} onSpeak={onHear} speaking={speaking} />
         </View>
@@ -459,9 +513,9 @@ const s = StyleSheet.create({
   subheading: { fontSize: 21 },
   picture: { borderRadius: 24, overflow: "hidden", backgroundColor: "#DAEEE7" },
   reefFrame: { width: "100%", aspectRatio: 320 / 230, maxHeight: 440 },
-  waterFrame: { width: "100%", aspectRatio: 320 / 240, maxHeight: 440 },
-  sky: { paddingVertical: 18, backgroundColor: "#EEEAF6" },
-  status: { gap: 10, borderLeftWidth: 4, borderLeftColor: C.coral, paddingLeft: 12 },
+  waterFrame: { width: "100%", aspectRatio: 320 / 240, maxWidth: 720, alignSelf: "center" },
+  sky: { backgroundColor: "#283E59" },
+  status: { gap: 10, backgroundColor: "#FFF3D4", borderRadius: 18, padding: 16 },
   summary: { fontSize: 19, fontWeight: "700", color: C.ink },
   row: { flexDirection: "row", flexWrap: "wrap", gap: 10, alignItems: "center" },
   control: {
