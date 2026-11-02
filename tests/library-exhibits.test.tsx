@@ -7,15 +7,18 @@ import { FOOD_CHAIN, HABITATS, LabAction, PLACES, WATER_ACTIONS, WaterPlace, lab
 import { WorldId } from "../src/explore/content";
 import { labAudioKey } from "../src/explore/labAudio";
 
-// Exercise the real LabManipulative, activity engine, and vector components; only native host primitives are replaced.
+// Exercise the real Library boards, activity engine and vectors; replace native hosts and presentation tokens.
 vi.mock("react-native", () => ({
   View: "View", Text: "Text", Pressable: "Pressable", ScrollView: "ScrollView",
   StyleSheet: { create: (styles: object) => styles, absoluteFill: {} },
+  PanResponder: { create: (handlers: object) => ({ panHandlers: handlers }) },
+  useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1 }),
 }));
 vi.mock("react-native-svg", () => ({
   default: "Svg", Circle: "Circle", Ellipse: "Ellipse", G: "G", Path: "Path", Rect: "Rect", Line: "Line", Text: "SvgText",
 }));
 vi.mock("../src/components/Text", () => ({ Text: "Text" }));
+vi.mock("../src/library/ui", () => ({ s: { small: {}, heading: {}, actionText: {} } }));
 vi.mock("../src/components/ui", () => ({
   C: { ink: "#183F39", teal: "#246858", coral: "#C56D50", cream: "#FCFAF4", paper: "#fff", line: "#DBE3DA", success: "#E3EFE3" },
   Copy: "Copy", Heading: "Heading", Label: "Label", PressableScale: "Pressable",
@@ -174,6 +177,20 @@ describe("controlled cross-platform Exhibit", () => {
     await press("Keep this observation");
     expect(output()).toContain("1 / 8 · The dot has nighttime");
     expect(output()).toContain("2 / 8 · The dot has nighttime");
+  });
+
+  it("consumes a sky swipe and its synthetic click once, then accepts the next tap", async () => {
+    const model = await mount("space");
+    const board = renderer!.root.find((node) => String(node.type) === "View" && !!node.props.onPanResponderRelease);
+    await act(async () => {
+      board.props.onPanResponderRelease({}, { dx: -90 });
+      control("Turn Earth one eighth. Follow the coral place dot.").props.onPress();
+    });
+    expect(model.state().turn).toBe(1);
+    expect(model.actions).toHaveLength(1);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await press("Turn Earth one eighth. Follow the coral place dot.");
+    expect(model.state().turn).toBe(2);
   });
 
   it("retains all six habitat feedback/next steps and does not put a legacy explanation under the next animal", async () => {

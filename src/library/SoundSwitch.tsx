@@ -9,6 +9,7 @@ export function SoundSwitch({ on, onToggle }: { on: boolean; onToggle: () => voi
       accessibilityRole="switch"
       accessibilityLabel="Library sound"
       accessibilityState={{ checked: on }}
+      aria-checked={on}
       onPress={onToggle}
       style={({ pressed }) => [s.action, pressed && { opacity: 0.7 }]}
     >

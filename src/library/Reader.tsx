@@ -21,8 +21,10 @@ export function SentenceLine({
       accessibilityLabel={`Replay sentence: ${sentence.text}`}
       onPress={onSentence}
       style={{
-        padding: 12,
-        borderRadius: 14,
+        paddingVertical: 5,
+        paddingHorizontal: 2,
+        minHeight: 44,
+        borderRadius: 10,
         backgroundColor: selected ? "#D9EBC8" : "transparent",
         borderLeftWidth: 4,
         borderColor: selected ? palette.ink : "transparent",
@@ -91,6 +93,17 @@ export function Reader({
     [count, index, onPage]
   );
   const source = libraryAssets[current.image.path];
+  const resolved = source
+    ? Image.resolveAssetSource
+      ? Image.resolveAssetSource(source)
+      : typeof source === "object"
+        ? (source as { width?: number; height?: number })
+        : undefined
+    : undefined;
+  // Fit the complete illustration into a viewport-sized stage. The image itself,
+  // rather than a flex child with only a minimum height, owns its aspect ratio.
+  const ratio = resolved?.width && resolved?.height ? resolved.width / resolved.height : 1.5;
+  const stage = landscape ? Math.max(280, height - 245) : width / ratio;
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFBEF" }}>
       <ScrollView key={index} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
@@ -99,8 +112,9 @@ export function Reader({
           accessibilityLabel={`Book art, page ${index + 1}. Swipe left or use Next page.`}
           style={{
             width: "100%",
-            flex: 1,
-            minHeight: landscape ? Math.max(280, height - 245) : width * 0.67,
+            height: stage,
+            alignItems: "center",
+            justifyContent: "center",
             backgroundColor: "white",
           }}
         >
@@ -111,7 +125,7 @@ export function Reader({
               resizeMode="contain"
               fadeDuration={0}
               accessibilityLabel={current.image.alt}
-              style={{ width: "100%", flex: 1, minHeight: landscape ? Math.max(280, height - 245) : width * 0.67 }}
+              style={{ width: "100%", height: Math.min(stage, width / ratio) }}
             />
           )}
         </View>
