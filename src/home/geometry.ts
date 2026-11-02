@@ -1,9 +1,8 @@
+import { anchorsFor } from "./scene/species";
 import { buildRoomIndex, itemEntity } from "./scene/graph";
 // Import the independent worklet engine, avoiding the legacy model/apply cycle.
 import { resolve } from "./scene/resolve";
 import { characterEntityId, roomPoint } from "./scene/types";
-import { isLying, poseBox, resolvePose } from "../islander/rig/poses";
-import { homeCharacterRigPose } from "./characterPose";
 import { socketsOf, socketPoint } from "./interactions";
 import { decorSpec, isSeat, itemSpec } from "./catalog";
 import { freeFloor } from "./freeFloor";
@@ -234,38 +233,17 @@ export function characterFrame(room: import("./model").RoomState, c: import("./m
   const contact = characterPoint(room, c),
     seat = room.instances.find((i) => i.id === (c.socket?.itemId ?? c.seatId));
   const mirrored = seat ? seat.mirrored !== (seat.rotation === 180 || seat.rotation === 270) : c.facing === "left";
-  const pose = resolvePose("front", homeCharacterRigPose(c.pose, reaction)),
-    box = poseBox(pose),
-    unit = characterSize(c.slot) / 132;
-  if (c.slot === 0)
-    return {
-      left: contact.x - (mirrored ? box.width - box.anchor[0] : box.anchor[0]) * unit,
-      top: contact.y - box.anchor[1] * unit,
-      width: box.width * unit,
-      height: box.height * unit,
-      mirrored,
-    };
-  const size = characterSize(c.slot);
-  return {
-    left: contact.x - size / 2,
-    top: contact.y - size * (c.slot === 2 ? 96 / 120 : 1),
-    width: size,
-    height: c.slot === 2 ? (size * 110) / 120 : size,
-    mirrored,
-  };
+  const base = c.pose;
+  const action = reaction === "eat" || reaction === "drink" ? reaction : (c.action ?? (c.holding ? "hold" : null));
+  const box = anchorsFor(c.slot, base, mirrored ? "left" : "front", action).bounds;
+  return { left: contact.x + box.left, top: contact.y + box.top, width: box.width, height: box.height, mirrored };
 }
 
 /** The visible hand follows the same pose, lying transform and mirror as the rig. */
 export function characterHand(room: import("./model").RoomState, c: import("./model").Character, reaction?: string) {
-  const frame = characterFrame(room, c, reaction),
-    pose = resolvePose("front", homeCharacterRigPose(c.pose, reaction)),
-    box = poseBox(pose),
-    unit = characterSize(c.slot) / 132;
-  let [x, y] = pose.joints.rightHand;
-  if (isLying(pose)) {
-    const old = x;
-    x = 6 + y;
-    y = 86 - old;
-  }
-  return { x: frame.left + (frame.mirrored ? box.width - x : x) * unit, y: frame.top + y * unit };
+  const contact = characterPoint(room, c),
+    frame = characterFrame(room, c, reaction);
+  const action = reaction === "eat" || reaction === "drink" ? reaction : (c.action ?? (c.holding ? "hold" : null));
+  const anchor = anchorsFor(c.slot, c.pose, frame.mirrored ? "left" : "front", action).hand;
+  return { x: contact.x + anchor.x, y: contact.y + anchor.y };
 }

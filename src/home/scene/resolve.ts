@@ -49,6 +49,7 @@ export type DropProposal = {
 }["hand" | "mouth" | "socket" | "surface" | "floor" | "staging" | "transfer"];
 export type ResolveContext = {
   scale: number;
+  intent?: "staging";
   previous?: DropProposal;
   pending?: { target: string; since: number };
   now?: number;
@@ -130,11 +131,7 @@ function movedGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, gr
         parent.contact.y + child.contact.y - oldParent.contact.y
       );
       if (child.attachment.kind === "hand" && oldParent.character) {
-        const anchors = anchorsFor(
-          oldParent.character.slot,
-          parent.base === "stand" && oldParent.character.holding ? "carry" : parent.base,
-          parent.facing
-        );
+        const anchors = anchorsFor(oldParent.character.slot, parent.base, parent.facing, oldParent.action);
         contact = roomPoint(parent.contact.x + anchors.hand.x, parent.contact.y + anchors.hand.y);
       }
     }
@@ -300,6 +297,21 @@ function placedInRoom(index: RoomIndex, entity: SceneEntity): boolean {
 export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoint, ctx: ResolveContext): DropProposal {
   "worklet";
   const group = movingGroup(index, subject);
+  if (ctx.intent === "staging")
+    return makeProposal(
+      index,
+      subject,
+      rootMove(
+        subject,
+        index.room,
+        { kind: "staging", room: index.room },
+        roomPoint(400, 510),
+        subject.character ? "stand" : subject.base
+      ),
+      group,
+      "staging",
+      "Explicit recoverable tray destination"
+    );
   const existingPlaced = Object.values(index.entities).filter(
     (e) => placedInRoom(index, e) && !group.some((g) => g.id === e.id)
   ).length;

@@ -1,3 +1,4 @@
+import { apply, type DropProposal } from "./scene/proposal";
 import { useRef, useState } from "react";
 import {
   homeReducer,
@@ -53,6 +54,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
     message: "Your own little place by the sea.",
   }));
   const live = useRef(session);
+  const identities = useRef<Record<string, string>>({});
   const dispatch = (action: HomeAction | { type: "undo" | "redo" }) => {
     const current = live.current;
     if (initial !== undefined && !migrateHome(initial)) {
@@ -78,6 +80,33 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
     live.current = next;
     setSession(next);
   };
+  const commitProposal = (
+    proposal: DropProposal,
+    seed?: HomeStateV2,
+    stillCurrent?: () => boolean
+  ): HomeStateV2 | undefined => {
+    const current = live.current;
+    if (initial !== undefined && !migrateHome(initial)) return undefined;
+    if (stillCurrent && !stillCurrent()) return undefined;
+    const result = apply(seed ?? current.history.present, proposal);
+    if ("stale" in result || (stillCurrent && !stillCurrent())) return undefined;
+    if (persist && !persist(result.state)) {
+      const next = { ...current, message: "Your room could not be updated. Please try again." };
+      live.current = next;
+      setSession(next);
+      return undefined;
+    }
+    identities.current = result.identities;
+    const history = {
+      present: result.state,
+      past: [...current.history.past, current.history.present].slice(-60),
+      future: [],
+    };
+    const next = { history, message: "Room updated." };
+    live.current = next;
+    setSession(next);
+    return result.state;
+  };
   const setMessage = (message: string) => {
     const next = { ...live.current, message };
     live.current = next;
@@ -85,7 +114,10 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
   };
   return {
     state: session.history.present,
+    getState: () => live.current.history.present,
+    getCommittedIdentities: () => identities.current,
     dispatch,
+    commitProposal,
     message: session.message,
     setMessage,
     canUndo: session.history.past.length > 0,
