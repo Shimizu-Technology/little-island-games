@@ -137,7 +137,13 @@ export function apply(state: SceneState, proposal: DropProposal): { state: Scene
     if (move.attachment.kind !== "hand" || (proposal.consume === "food" && move.id === proposal.id)) continue;
     const ownerId = move.attachment.character;
     rooms[move.room].characters = rooms[move.room].characters.map((c) =>
-      characterEntityId(c.slot) === ownerId ? { ...c, holding: names[move.id] } : c
+      characterEntityId(c.slot) === ownerId
+        ? (() => {
+            const next = { ...c, holding: names[move.id] };
+            if (!proposal.consume) delete next.action;
+            return next;
+          })()
+        : c
     );
   }
   if (proposal.consume && proposal.attachment.kind === "hand") {

@@ -130,11 +130,7 @@ function movedGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, gr
         parent.contact.y + child.contact.y - oldParent.contact.y
       );
       if (child.attachment.kind === "hand" && oldParent.character) {
-        const anchors = anchorsFor(
-          oldParent.character.slot,
-          parent.base === "stand" && oldParent.character.holding ? "carry" : parent.base,
-          parent.facing
-        );
+        const anchors = anchorsFor(oldParent.character.slot, parent.base, parent.facing, oldParent.action);
         contact = roomPoint(parent.contact.x + anchors.hand.x, parent.contact.y + anchors.hand.y);
       }
     }
