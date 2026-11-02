@@ -1,3 +1,4 @@
+import { clearPageDrafts, draftRecovery } from "../library/drafts";
 import { libraryChild, migrateLibrary, validLibraryChild, validLibraryData, validLibraryPolicy, type LibraryChildState, type LibraryPolicy } from "../library/state";
 import { preserveHomeMigration, preserveImportedHome, assertMigratedHomes } from './homeMigration';
 import { applyWarmup } from './warmupAction';
@@ -57,7 +58,8 @@ type Store = {
   /** Remember that a learning game's first-move hand was shown. */
   markCoached: (game: LearnId) => void;
   /** Child writes cannot change grown-up policy or cross a learner/restore boundary. */
-  libraryUpdate: (next: LibraryChildState, expectedEpoch: number, expectedLearnerId: string) => void;
+  libraryUpdate: (next: LibraryChildState, expectedEpoch: number, expectedLearnerId: string) => boolean;
+  libraryPatch: (patch: Partial<LibraryChildState>, expectedEpoch: number, expectedLearnerId: string) => boolean;
   libraryPolicy: (childId: string, policy: LibraryPolicy) => void;
   /** Drains queued writes; false if a write fails or state is not writable. */
   libraryFlush: () => Promise<boolean>;
@@ -231,22 +233,27 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setError("This Library change could not be saved. It contains invalid data or exceeds the save limit.");
   }, []);
   const libraryUpdate = useCallback((child: LibraryChildState, expectedEpoch: number, expectedLearnerId: string) => {
-    if (!ready || recovery || restoring.current || expectedEpoch !== generation.current) return;
+    if (!ready || recovery || restoring.current || expectedEpoch !== generation.current) return false;
     const before = latest.current, owner = before.learning?.active ?? "family";
-    if (owner !== expectedLearnerId) return;
-    if (!validLibraryChild(child)) { rejectLibraryWrite(); return; }
+    if (owner !== expectedLearnerId) return false;
+    if (!validLibraryChild(child)) { rejectLibraryWrite(); return false; }
     const data = migrateLibrary(before).library, current = libraryChild(data, owner);
     // A delayed reader/drawing autosave must never undo a grown-up's policy.
     const next = { ...child, policy: current.policy };
     if (JSON.stringify(current) === JSON.stringify(next)) {
-      libraryRejected.current = false; if (!lastWriteFailed.current) setError(null); return;
+      libraryRejected.current = false; if (!lastWriteFailed.current) setError(null); return true;
     }
     const library = { ...data, profiles: { ...data.profiles, [owner]: JSON.parse(JSON.stringify(next)) as LibraryChildState } };
     const updated = { ...before, library };
-    if (!validLibraryData(library) || !withinSaveLimit(JSON.stringify(updated))) { rejectLibraryWrite(); return; }
+    if (!validLibraryData(library) || !withinSaveLimit(JSON.stringify(updated))) { rejectLibraryWrite(); return false; }
     libraryRejected.current = false;
     commit(updated);
+    return true;
   }, [commit, ready, recovery, rejectLibraryWrite]);
+  const libraryPatch = useCallback((patch: Partial<LibraryChildState>, expectedEpoch: number, expectedLearnerId: string) => {
+    const current = libraryChild(latest.current.library, expectedLearnerId);
+    return libraryUpdate({ ...current, ...patch }, expectedEpoch, expectedLearnerId);
+  }, [libraryUpdate]);
   const libraryPolicy = useCallback((childId: string, policy: LibraryPolicy) => {
     if (!ready || recovery || restoring.current) return;
     const before = latest.current;
@@ -362,12 +369,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [commit, ready, recovery]);
   const removeLearner = useCallback(async (id: string) => {
     if (!ready || recovery || restoring.current) return false;
-    const before = latest.current, next = withoutLearner(before, id);
-    if (next === before) return false;
+    const before = latest.current, removed = withoutLearner(before, id);
+    if (removed === before) return false;
+    const next = removed.library ? { ...removed, library: { ...removed.library, profiles: Object.fromEntries(Object.entries(removed.library.profiles).filter(([owner]) => owner !== id)) } } : removed;
     restoring.current = true;
     try {
       await queue.current;
+      const pending = draftRecovery(id); if (pending) await storage.preserve(pending);
       await preserveAndReplace(storage, JSON.stringify(next), JSON.stringify(before));
+      clearPageDrafts(id);
       generation.current++; setEpoch(generation.current);
       latest.current = next; setSave(next); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; return true;
     } finally { restoring.current = false; }
@@ -404,8 +414,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           throw error;
         }
         await queue.current;
+        const pending = draftRecovery(); if (pending) await storage.preserve(pending);
         if (!incoming.library) await storage.preserve(encoded);
         await preserveImportedHome(storage, encoded, incoming, next, recovery ? null : JSON.stringify(latest.current));
+        clearPageDrafts();
         generation.current += 1;
         setEpoch(generation.current);
         latest.current = next;
@@ -446,7 +458,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         notePractice,
         markCoached,
         exploreUpdate,
-        libraryUpdate, libraryPolicy, libraryFlush,
+        libraryUpdate, libraryPatch, libraryPolicy, libraryFlush,
         ready,
         error,
         recovery,

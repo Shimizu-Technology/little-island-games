@@ -5,6 +5,7 @@ import { StoreProvider, useStore } from '../src/state/Store';
 import { newLibraryChild, libraryChild } from '../src/library/state';
 import { emptySave, parseSave } from '../src/state/validation';
 import { newExploreProgress } from '../src/explore/progress';
+import { retainPageDraft, pageDraftKey, pendingPage, clearPageDrafts } from '../src/library/drafts';
 import { familyLearners, addLearner } from '../src/learn/learners';
 const db = vi.hoisted(() => ({ raw: null as string | null, preserved: [] as string[], set: vi.fn<(raw: string) => Promise<void>>(), preserve: vi.fn<(raw: string) => Promise<void>>() }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: (raw: string) => db.set(raw), preserve: (raw: string) => db.preserve(raw) } }));
@@ -16,7 +17,7 @@ function Probe() { const value = useStore(); useLayoutEffect(() => { store = val
 async function mount() { await act(async () => { root = TestRenderer.create(<StoreProvider><Probe /></StoreProvider>); }); }
 function deferred() { let resolve!: () => void; const promise = new Promise<void>(done => { resolve = done; }); return { promise, resolve }; }
 beforeEach(() => {
-  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); db.raw = null; db.preserved = [];
+  clearPageDrafts(); vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); db.raw = null; db.preserved = [];
   db.set.mockReset().mockImplementation(async raw => { db.raw = raw; });
   db.preserve.mockReset().mockImplementation(async raw => { db.preserved.push(raw); });
 });
@@ -24,6 +25,39 @@ afterEach(async () => { if (root) await act(async () => { root!.unmount(); }); r
 const legacy = () => { const progress = newExploreProgress(); progress.query = 'moon'; return { ...emptySave(), explore: { favorites: ['moon', 'retired-topic'], progress } }; };
 
 describe('Store Library persistence and recovery', () => {
+  it('applies delayed route patches against current data without resetting a reader or creation', async () => {
+    await mount();
+    const epoch = store.epoch;
+    await act(async () => {
+      store.libraryPatch({ bookPages: { 'busy-day': 2 } }, epoch, 'family');
+      store.libraryPatch({ positions: { 'wonder:index:all:q0': 400 } }, epoch, 'family');
+      store.libraryPatch({ recent: ['moon'] }, epoch, 'family');
+    });
+    expect(store.save.library!.profiles.family.bookPages['busy-day']).toBe(2);
+    expect(store.save.library!.profiles.family.positions['wonder:index:all:q0']).toBe(400);
+    await act(async () => { store.libraryPatch({ bookPages: { 'busy-day': 0 } }, epoch - 1, 'family'); });
+    expect(store.save.library!.profiles.family.bookPages['busy-day']).toBe(2);
+  });
+  it('removes a deleted learner Library profile after preserving the original backup', async () => {
+    await mount(); await act(async () => { store.addLearner('A reader'); });
+    const owner = store.save.learning!.active;
+    await act(async () => { store.libraryUpdate({ ...newLibraryChild(), saved: ['moon'] }, store.epoch, owner); });
+    expect(store.save.library!.profiles[owner]).toBeDefined();
+    await act(async () => { expect(await store.removeLearner(owner)).toBe(true); });
+    expect(store.save.library!.profiles[owner]).toBeUndefined();
+    expect(db.preserved.some(raw => JSON.parse(raw).library?.profiles[owner]?.saved.includes('moon'))).toBe(true);
+  });
+  it('keeps rejected drafts across learner switches and preserves them before a successful restore', async () => {
+    await mount();
+    const page = { id: 'page-pending', title: 'Unsaved', sentences: '', updatedAt: 1, strokes: [], stamps: [] };
+    const key = pageDraftKey('family', page.id);
+    retainPageDraft(key, page, false);
+    await act(async () => { store.addLearner('Other reader'); store.selectLearner('family'); });
+    expect(pendingPage(key)).toEqual(page);
+    await act(async () => { await store.restore(JSON.stringify(emptySave())); });
+    expect(db.preserved.some(raw => raw.includes('little-island-unsaved-pages') && raw.includes('page-pending'))).toBe(true);
+    expect(pendingPage(key)).toBeUndefined();
+  });
   it('preserves exact startup bytes before atomic migrated storage and publishes only after success', async () => {
     const original = ' \n' + JSON.stringify(legacy(), null, 2) + '\n'; db.raw = original;
     const order: string[] = [], gate = deferred();

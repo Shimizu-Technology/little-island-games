@@ -25,7 +25,7 @@ export function subjectGames(subject: SubjectId): ShelfGame[] {
 export function placeGames(place: PlaceId): ShelfGame[] {
   return shelfGames.filter(game => place === 'arcade' ? game.island === 'arcade' : place === 'hall' ? game.island === 'classic' : place === 'school' ? game.island !== 'arcade' && game.island !== 'classic' : false);
 }
-export const directRoutes = { home: '/island-home', library: '/explore', locker: '/locker', badges: '/badges' } as const;
+export const directRoutes = { home: '/island-home', library: '/library', locker: '/locker', badges: '/badges' } as const;
 export type Point = { x: number; y: number };
 /** Common geometry for scene, paths, hit targets and guide. Labels get their own space. */
 export function mapLayout(width: number, height: number, fontScale = 1) {
