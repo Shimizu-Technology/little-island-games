@@ -55,7 +55,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "factualReviewer": "independent factual reviewer",
-      "scope": "Independent factual/editorial review completed. NOAA food-web text verifies energy direction and branching; NOAA photosynthesis page verifies light-powered food production. Added Clements et al. university-hosted full paper for the parrotfish path; retained qualified many, avoiding a universal seaweed diet. Replaced technical caveat pile with a connected invitation. Population removal remains outside this model. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval."
+      "scope": "Independent factual/editorial review completed. NOAA food-web text verifies energy direction and branching; NOAA photosynthesis page verifies light-powered food production. Added Clements et al. university-hosted full paper for the parrotfish path; retained qualified many, avoiding a universal seaweed diet. Replaced technical caveat pile with a connected invitation. Population removal remains outside this model. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "c3f44f6eff22326bd1ed60957869c5f4dc80cef11f65e71bbf34d80fc9b76ff9",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -147,7 +158,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "factualReviewer": "independent factual reviewer",
-      "scope": "Independent factual/editorial review completed. NOAA water-cycle overview and NWS hydrology description verify surface/groundwater storage and transport; USGS precipitation page verifies cloud-drop growth and evaporation; NOAA ocean-freezing page supports salt claim. Added these specific citations because generic water-cycle page did not directly cover each claim. warm remains evaporation, not rainfall. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval."
+      "scope": "Independent factual/editorial review completed. NOAA water-cycle overview and NWS hydrology description verify surface/groundwater storage and transport; USGS precipitation page verifies cloud-drop growth and evaporation; NOAA ocean-freezing page supports salt claim. Added these specific citations because generic water-cycle page did not directly cover each claim. warm remains evaporation, not rainfall. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "df078c87fcdc22c74f9db4b29844cd0fc915f3eb7aaa7dda25c0fae569e4713b",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -249,7 +271,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "factualReviewer": "independent factual reviewer",
-      "scope": "Independent factual/editorial review completed. NASA constellation page verifies imagined lines, unequal star distances, location/hour/year visibility; NASA seasons page verifies rotation and orbit. Added NASA blue-sky page for scattering. Invented-star limitation retained; no traditional navigation or current sky claims. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval."
+      "scope": "Independent factual/editorial review completed. NASA constellation page verifies imagined lines, unequal star distances, location/hour/year visibility; NASA seasons page verifies rotation and orbit. Added NASA blue-sky page for scattering. Invented-star limitation retained; no traditional navigation or current sky claims. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "2df4a8f41397f80878d26f3d29f062de596865f3a28550c6b5391b7b96c0a42c",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {

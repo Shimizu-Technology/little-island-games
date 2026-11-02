@@ -85,7 +85,7 @@ describe('Store Library persistence and recovery', () => {
     expect(store.recovery).toContain('invalid'); expect(db.preserved).toContain(original); expect(db.set).not.toHaveBeenCalled(); expect(db.raw).toBe(original);
   });
   it('does not re-migrate a validated existing Library or overwrite its archive on cold load', async () => {
-    const originalLibrary = { version: 1, profiles: { family: { ...newLibraryChild(), query: 'kept' } }, archive: { explore: legacy().explore } };
+    const originalLibrary = { version: 2, profiles: { family: { ...newLibraryChild(), query: 'kept' } }, archive: { explore: legacy().explore } };
     db.raw = JSON.stringify({ ...emptySave(), library: originalLibrary }); await mount();
     expect(store.save.library).toEqual(originalLibrary); expect(db.set).not.toHaveBeenCalled(); expect(db.preserve).not.toHaveBeenCalled();
   });
@@ -103,7 +103,7 @@ describe('Store Library persistence and recovery', () => {
   it('keeps malformed/oversize Library imports and the current device save intact', async () => {
     await mount(); await act(async () => { store.libraryUpdate({ ...newLibraryChild(), saved: ['moon'] }, store.epoch, 'family'); });
     const current = db.raw;
-    for (const bad of [JSON.stringify({ ...emptySave(), library: { version: 2, profiles: {} } }), 'x'.repeat(2_000_001)]) {
+    for (const bad of [JSON.stringify({ ...emptySave(), library: { version: 3, profiles: {} } }), 'x'.repeat(2_000_001)]) {
       await act(async () => { await expect(store.restore(bad)).rejects.toThrow(); });
       expect(db.raw).toBe(current); expect(db.preserved).toContain(bad); expect(store.recovery).toBeTruthy();
     }
@@ -158,7 +158,8 @@ describe('Store Library persistence and recovery', () => {
     const original = db.raw;
     let result: boolean | undefined;
     await act(async () => { store.libraryUpdate(large, store.epoch, 'family'); result = await store.libraryFlush(); });
-    expect(result).toBe(false); expect(db.raw).toBe(original); expect(store.save.library?.profiles.family).toBeUndefined();
+    expect(result).toBe(false); expect(db.raw).toBe(original); expect(store.save.library?.profiles.family).toEqual(libraryChild(store.save.library, 'family'));
+    expect(store.save.library?.profiles.family.creations).toEqual([]);
   });
   it('flush waits for every queued write, returns false on failures, then succeeds after durable retry', async () => {
     await mount(); const first = deferred(), second = deferred();
@@ -190,5 +191,50 @@ describe('Store Library persistence and recovery', () => {
     let result: boolean | undefined;
     await act(async () => { store.libraryUpdate({ ...newLibraryChild(), query: 'one' }, store.epoch, 'family'); store.libraryUpdate({ ...newLibraryChild(), query: 'two' }, store.epoch, 'family'); result = await store.libraryFlush(); });
     expect(result).toBe(false); expect(parseSave(db.raw!).library?.profiles.family.query).toBe('two');
+  });
+});
+
+describe('Library v2 family migration storage', () => {
+  const v1 = () => ({ ...emptySave(), learning: addLearner(familyLearners(), 'Existing reader', 'old-reader'), library: { version: 1, profiles: { family: { ...newLibraryChild(), saved: ['prayer-our-father'], bookPages: { 'and-also': 6 } } } } });
+  it('starts fresh with both optional collections off, preserves the old save and keeps reset defaults on reload', async () => {
+    db.raw = JSON.stringify(v1()); await mount();
+    const original = db.raw!;
+    expect(store.save.library?.profiles.family.policy.collections).toContain('faith');
+    await act(async () => { await store.startFresh(); });
+    expect(db.preserved).toContain(original);
+    expect(store.save.library?.version).toBe(2);
+    for (const id of ['faith', 'island-history']) expect(store.save.library?.profiles.family.policy.collections).not.toContain(id);
+    await act(async () => { root!.unmount(); }); root = undefined; await mount();
+    for (const id of ['faith', 'island-history']) expect(store.save.library?.profiles.family.policy.collections).not.toContain(id);
+  });
+  it('preserves exact v1 bytes before enabling both collections for every existing learner', async () => {
+    const original = ' \n' + JSON.stringify(v1(), null, 3) + '\n'; db.raw = original;
+    db.set.mockImplementation(async raw => { expect(db.preserved).toContain(original); db.raw = raw; });
+    await mount();
+    expect(store.save.library?.version).toBe(2); expect(db.preserved).toContain(original);
+    for (const child of Object.values(store.save.library!.profiles)) expect(child.policy.collections).toEqual(expect.arrayContaining(['faith', 'island-history']));
+    expect(store.save.library?.profiles.family.bookPages['and-also']).toBe(6);
+    expect(store.save.library?.profiles.family.saved).toEqual(['prayer-our-father']);
+  });
+  it('keeps the original v1 active when preservation fails', async () => {
+    const original = JSON.stringify(v1()); db.raw = original; db.preserve.mockRejectedValue(new Error('preserve failed'));
+    await mount(); expect(store.recovery).toContain('preserve failed'); expect(db.raw).toBe(original); expect(db.set).not.toHaveBeenCalled();
+    expect(store.save.library).toBeUndefined();
+  });
+  it('preserves both the v1 import and replaced save during restore', async () => {
+    await mount(); await act(async () => { store.libraryPatch({ query: 'current' }, store.epoch, 'family'); });
+    const current = db.raw!, incoming = '\n' + JSON.stringify(v1(), null, 2);
+    await act(async () => { await store.restore(incoming); });
+    expect(db.preserved).toContain(current); expect(db.preserved).toContain(incoming);
+    expect(store.save.library?.version).toBe(2); expect(store.save.library?.profiles['old-reader'].policy.collections).toEqual(expect.arrayContaining(['faith', 'island-history']));
+  });
+  it('starts new learners off and does not undo a saved grown-up off choice on reload', async () => {
+    await mount(); expect(store.save.library?.profiles.family.policy.collections).not.toContain('faith');
+    await act(async () => { store.addLearner('New reader'); });
+    const id = store.save.learning!.active;
+    expect(libraryChild(store.save.library, id).policy.collections).not.toContain('faith');
+    await act(async () => { store.libraryPolicy(id, { ...libraryChild(store.save.library, id).policy, collections: ['books'] }); });
+    await act(async () => { root!.unmount(); }); root = undefined; await mount();
+    expect(store.save.library?.profiles[id].policy.collections).toEqual(['books']);
   });
 });

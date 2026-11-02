@@ -1,7 +1,7 @@
 [
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "fish-gills",
     "type": "topic",
     "title": "How does a fish breathe?",
@@ -56,12 +56,28 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Retained dissolved-oxygen exchange and mouth-to-gill flow; removed unsourced air-breathing exceptions and turtle/dolphin comparison. Tell now names oxygen directly, avoiding the misleading suggestion of underwater air bubbles. Pending the designated family reviewer family/cultural review: Decide whether “needs oxygen” is clear enough alongside dissolved oxygen, and review shoreline observation wording. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Retained dissolved-oxygen exchange and mouth-to-gill flow; removed unsourced air-breathing exceptions and turtle/dolphin comparison. Tell now names oxygen directly, avoiding the misleading suggestion of underwater air bubbles. Pending the designated family reviewer family/cultural review: Decide whether “needs oxygen” is clear enough alongside dissolved oxygen, and review shoreline observation wording. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "2727659e14c73a8b8b493b467bf2cecf4dca9c08ac802bb37605bbc85e4a91e7",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
         "title": "Western Australia Department of Primary Industries: Fish anatomy",
         "url": "https://marinewaters.fish.wa.gov.au/resource/fish-anatomy/",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "HåfaGPT canonical source-backed vocabulary (entry IDs in offline language provenance)",
+        "url": "https://github.com/Shimizu-Technology/HafaGPT/blob/609a8eb44c5068bf1b539221de078adeb1f20787/api/language_content/canonical_vocabulary.json",
         "accessed": "2026-11-02"
       }
     ],
@@ -103,6 +119,15 @@
           "audio": {
             "status": "pending",
             "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        {
+          "id": "library-fish-gills-more-r2-3",
+          "text": "Guihan is a CHamoru word for fish.",
+          "speechKey": "library-fish-gills-more-r2-3",
+          "audio": {
+            "status": "pending",
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         },
         {
@@ -527,7 +552,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Replaced algae-only implication with qualified microphagy evidence; grinding and sediment are supported by the full Clements paper and NOAA. No universal coral-eating or Guam sand-production claim. Pending the designated family reviewer family/cultural review: Review animal feeding and waste language; keep ecological interpretation separate from a promise about every species. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Replaced algae-only implication with qualified microphagy evidence; grinding and sediment are supported by the full Clements paper and NOAA. No universal coral-eating or Guam sand-production claim. Pending the designated family reviewer family/cultural review: Review animal feeding and waste language; keep ecological interpretation separate from a promise about every species. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "44c6586b4a082dd0e4e86b022b4339923beb2490748979726f1767ae60685d0e",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -769,7 +805,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Removed evaporation/salinity claim absent from the cited page; connected low-tide warming/oxygen, high-tide replenishment and barnacle attachment. Species examples are possibilities, not a Guam checklist. Pending the designated family reviewer family/cultural review: Review shore danger, predation context and the safe viewing line. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Removed evaporation/salinity claim absent from the cited page; connected low-tide warming/oxygen, high-tide replenishment and barnacle attachment. Species examples are possibilities, not a Guam checklist. Pending the designated family reviewer family/cultural review: Review shore danger, predation context and the safe viewing line. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "f075ef0c9a95597634af7cbaa6f859e082fe6151a7949e39ea5cfbf4c2af8f16",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -1197,7 +1244,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "mangrove-roots",
     "type": "topic",
     "title": "Why are mangroves important?",
@@ -1252,7 +1299,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Removed unsupported specific salt-removal, breathing-root and storm-guarantee discussion; NOAA supports low-oxygen habitat, prop roots, deposition and shelter. Pending the designated family reviewer family/cultural review: Review coastal access and the non-graphic shelter-from-predators example. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Removed unsupported specific salt-removal, breathing-root and storm-guarantee discussion; NOAA supports low-oxygen habitat, prop roots, deposition and shelter. Pending the designated family reviewer family/cultural review: Review coastal access and the non-graphic shelter-from-predators example. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "cede89c7eae069c23c41e25350cfdf027930535be5f9c24b8bb75d823703f2f8",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -1311,12 +1369,12 @@
           }
         },
         {
-          "id": "mangrove-roots-more-3",
-          "text": "Enjoy the view with a grown-up from an established path.",
-          "speechKey": "library-mangrove-roots-more-3",
+          "id": "library-mangrove-roots-more-r2-3",
+          "text": "Enjoy the view with a grown-up from a path or boardwalk.",
+          "speechKey": "library-mangrove-roots-more-r2-3",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         }
       ],
@@ -1499,7 +1557,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added the South Carolina DNR locomotion section and Smithsonian anatomy text because the original NOAA page does not explain propulsion. Removed unsourced species-specific swimming claims; no treatment or species-identification advice. Pending the designated family reviewer family/cultural review: Review stinging cells, catching prey and the single no-touch line. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added the South Carolina DNR locomotion section and Smithsonian anatomy text because the original NOAA page does not explain propulsion. Removed unsourced species-specific swimming claims; no treatment or species-identification advice. Pending the designated family reviewer family/cultural review: Review stinging cells, catching prey and the single no-touch line. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "7d3643d5242f433fb472d1e6b4333d86e93988116f43fe25defba12e34efb777",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -1765,7 +1834,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NOAA sanctuary research with song structure and feeding-ground recordings; removed definitive communication-purpose wording and ungrounded translations. Exact function remains explicitly unsettled. Pending the designated family reviewer family/cultural review: Review general reproduction wording and animal observation; no mating imagery or human-language translation. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NOAA sanctuary research with song structure and feeding-ground recordings; removed definitive communication-purpose wording and ungrounded translations. Exact function remains explicitly unsettled. Pending the designated family reviewer family/cultural review: Review general reproduction wording and animal observation; no mating imagery or human-language translation. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "07729c1d9ab9fc0651a12d186849f25312bee9b7080761419640beb50383adb2",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -2030,7 +2110,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NPS evidence for plate-related uplift; retained USGS north/south and permeability distinction. Removed implication that Guam arose from one volcano or one event. Pending the designated family reviewer family/cultural review: Review local explanation and whether the simplified two-rock Make map needs a caregiver note about mixed areas. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NPS evidence for plate-related uplift; retained USGS north/south and permeability distinction. Removed implication that Guam arose from one volcano or one event. Pending the designated family reviewer family/cultural review: Review local explanation and whether the simplified two-rock Make map needs a caregiver note about mixed areas. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "0e3576eb5ec834f48f772e08ff154190cade3555af9618cecafc2c6c51bd2e4b",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -2281,7 +2372,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Opened the full USGS fact sheet, not just its summary; replaced oversimplified shell-to-rock account with carbonate, chalk, travertine and dissolution. No color-based identification or field experiment. Pending the designated family reviewer family/cultural review: Review local rock examples; retain the no caves/cliffs/collecting sensitivity despite no activity inviting them. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Opened the full USGS fact sheet, not just its summary; replaced oversimplified shell-to-rock account with carbonate, chalk, travertine and dissolution. No color-based identification or field experiment. Pending the designated family reviewer family/cultural review: Review local rock examples; retain the no caves/cliffs/collecting sensitivity despite no activity inviting them. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "c83621068d969e7c1bd6652de17d6ce680c030de29a8425f5c8b54c0dc4451a1",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -2495,7 +2597,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "guam-rail",
     "type": "topic",
     "title": "What is the Guam rail?",
@@ -2551,7 +2653,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Used Smithsonian for adaptation, diet, decline and conservation; USGS provides invasive-snake research context, not rail population evidence. Avoided volatile population/status counts and unverified local-language teaching. Pending the designated family reviewer family/cultural review: Review extinction/introduced-predator wording and local identity; no CHamoru name or community approval is added. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Used Smithsonian for adaptation, diet, decline and conservation; USGS provides invasive-snake research context, not rail population evidence. Avoided volatile population/status counts and unverified local-language teaching. Pending the designated family reviewer family/cultural review: Review extinction/introduced-predator wording and local identity; no CHamoru name or community approval is added. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "8f7c1600001a616b8c404059bd061c55a704202a224f9cc4f51d7aae3215cc08",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -2624,21 +2737,12 @@
           }
         },
         {
-          "id": "guam-rail-more-4",
-          "text": "Conservation breeding has helped keep this bird from disappearing.",
-          "speechKey": "library-guam-rail-more-4",
+          "id": "library-guam-rail-more-r2-4",
+          "text": "Conservation breeding has helped keep this bird from disappearing, and people are still working to bring it home.",
+          "speechKey": "library-guam-rail-more-r2-4",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
-          }
-        },
-        {
-          "id": "guam-rail-more-5",
-          "text": "Give wildlife space with a grown-up.",
-          "speechKey": "library-guam-rail-more-5",
-          "audio": {
-            "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         }
       ],
@@ -2698,12 +2802,12 @@
           }
         },
         {
-          "id": "guam-rail-deep-7",
-          "text": "Breeding and carefully managed releases later established birds on other islands.",
-          "speechKey": "library-guam-rail-deep-7",
+          "id": "library-guam-rail-deep-r2-7",
+          "text": "Breeding and carefully managed releases later returned some rails to the wild on a small island near Guam, and people keep working to help them.",
+          "speechKey": "library-guam-rail-deep-r2-7",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         },
         {
@@ -2811,7 +2915,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Replaced unavailable FWS project page with WERI forest text and USDA soil profile. Removed unverified Guam restoration actions and generalized invasive-species assertions; shallow soil is qualified to the Guam soil series. Pending the designated family reviewer family/cultural review: Review local habitat framing and schematic plant shapes; source examples do not establish every forest’s soil or species. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Replaced unavailable FWS project page with WERI forest text and USDA soil profile. Removed unverified Guam restoration actions and generalized invasive-species assertions; shallow soil is qualified to the Guam soil series. Pending the designated family reviewer family/cultural review: Review local habitat framing and schematic plant shapes; source examples do not establish every forest’s soil or species. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "15b2a70f5b4b92b897cc9cb2757219a33e19d1a4a3562289103ee1575548a8c8",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -2989,7 +3104,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "drinking-water",
     "type": "topic",
     "title": "Where does our drinking water come from?",
@@ -3044,7 +3159,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Anchored lens/pumping explanation in the 2013 USGS scenario study and historical hydrology. Removed unsupported treatment process and contamination elaboration; no present-day safety, percentage or supply guarantee. Pending the designated family reviewer family/cultural review: Review drought/salinity explanation and water safety; the page cannot decide whether a current tap is safe. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Anchored lens/pumping explanation in the 2013 USGS scenario study and historical hydrology. Removed unsupported treatment process and contamination elaboration; no present-day safety, percentage or supply guarantee. Pending the designated family reviewer family/cultural review: Review drought/salinity explanation and water safety; the page cannot decide whether a current tap is safe. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "215cc11b0a34a914d255c9269a97ebd2e177890411c6c7ee250c69bd1f6f6a64",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -3055,6 +3181,11 @@
       {
         "title": "USGS: Withdrawals and drought in the Northern Guam Lens Aquifer",
         "url": "https://www.usgs.gov/publications/effects-withdrawals-and-drought-groundwater-availability-northern-guam-lens-aquifer",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "HåfaGPT canonical source-backed vocabulary (entry IDs in offline language provenance)",
+        "url": "https://github.com/Shimizu-Technology/HafaGPT/blob/609a8eb44c5068bf1b539221de078adeb1f20787/api/language_content/canonical_vocabulary.json",
         "accessed": "2026-11-02"
       }
     ],
@@ -3117,12 +3248,21 @@
           }
         },
         {
-          "id": "drinking-water-more-4",
-          "text": "A grown-up can help follow the water provider’s guidance; untreated water is not for tasting.",
-          "speechKey": "library-drinking-water-more-4",
+          "id": "library-drinking-water-more-r2-4",
+          "text": "Hånom is a CHamoru word for water.",
+          "speechKey": "library-drinking-water-more-r2-4",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
+          }
+        },
+        {
+          "id": "library-drinking-water-more-r2-extra-5",
+          "text": "Ask a grown-up which water is safe to drink.",
+          "speechKey": "library-drinking-water-more-r2-extra-5",
+          "audio": {
+            "status": "pending",
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         }
       ],
@@ -3240,7 +3380,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "village",
     "type": "topic",
     "title": "What is a village?",
@@ -3295,7 +3435,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Confirmed nineteen districts and combined-place names against the council’s full list. Removed sweeping claims about traditions/belonging; family mapping is clearly an invitation, not ethnographic evidence. Pending the designated family reviewer family/cultural review: Review the exact family-memory invitation and combined district example; no name translation or cultural approval is implied. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Confirmed nineteen districts and combined-place names against the council’s full list. Removed sweeping claims about traditions/belonging; family mapping is clearly an invitation, not ethnographic evidence. Pending the designated family reviewer family/cultural review: Review the exact family-memory invitation and combined district example; no name translation or cultural approval is implied. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "875fe174a8e5bace035ce87d0540ef53069d725b941f31690cbac5e946be8187",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -3341,30 +3492,39 @@
       ],
       "more": [
         {
-          "id": "village-more-1",
-          "text": "On Guam, villages are also districts with names and local mayor’s offices.",
-          "speechKey": "library-village-more-1",
+          "id": "library-village-more-r2-1",
+          "text": "On Guam, each village has a name and a mayor's office.",
+          "speechKey": "library-village-more-r2-1",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         },
         {
-          "id": "village-more-2",
-          "text": "A district can include more than one named place.",
-          "speechKey": "library-village-more-2",
+          "id": "library-village-more-r2-2",
+          "text": "Some villages join more than one place name.",
+          "speechKey": "library-village-more-r2-2",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         },
         {
-          "id": "village-more-3",
-          "text": "The names on a map help us find places, while people’s own accounts help us understand what living there means to them.",
-          "speechKey": "library-village-more-3",
+          "id": "library-village-more-r2-3",
+          "text": "A map helps us find a village.",
+          "speechKey": "library-village-more-r2-3",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
+          }
+        },
+        {
+          "id": "library-village-more-r2-4",
+          "text": "Family and neighbors can tell us what it means to live there.",
+          "speechKey": "library-village-more-r2-4",
+          "audio": {
+            "status": "pending",
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         }
       ],
@@ -3477,12 +3637,17 @@
         "kind": "make",
         "target": "wonder-page",
         "label": "Make a page about a place your family chooses"
+      },
+      {
+        "kind": "item",
+        "target": "hafa-adai",
+        "label": "What does Håfa Adai mean?"
       }
     ]
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "native-trees",
     "type": "topic",
     "title": "Why are native trees important?",
@@ -3537,7 +3702,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Replaced failed FWS citation with BLM ecosystem/definition evidence and WERI local context. Removed unsupported specific Guam restoration prescriptions; Joshua tree example is explicitly mainland. Pending the designated family reviewer family/cultural review: Review native-species language and mainland comparison; no foraging, removal or planting instruction is introduced. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Replaced failed FWS citation with BLM ecosystem/definition evidence and WERI local context. Removed unsupported specific Guam restoration prescriptions; Joshua tree example is explicitly mainland. Pending the designated family reviewer family/cultural review: Review native-species language and mainland comparison; no foraging, removal or planting instruction is introduced. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "855a8a402283e68643ba90858b32ac0b8cc576b1abb2cc7f94099ee0c0d52136",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -3548,6 +3724,16 @@
       {
         "title": "University of Guam WERI: Forests of Southern Guam",
         "url": "https://south.hydroguam.net/environment-forests.php",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "University of Guam: Native Plants of Guam — Ifit (March 2017)",
+        "url": "https://www.uog.edu/_resources/files/extension/Ifit.pdf",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "University of Guam: Fruit bats vitally important to Guam's forests (2019)",
+        "url": "https://www.uog.edu/news-announcements/2019-2020/2019-press-release-fruits-bats-vitally-important-to-guams-forests",
         "accessed": "2026-11-02"
       }
     ],
@@ -3648,21 +3834,21 @@
           }
         },
         {
-          "id": "native-trees-deep-5",
-          "text": "The Bureau of Land Management gives a mainland example: small mammals spread Joshua tree seeds while using the tree for food and shelter.",
-          "speechKey": "library-native-trees-deep-5",
+          "id": "library-native-trees-deep-r2-5",
+          "text": "On Guam, the ifit is the territorial tree and grows in limestone forest.",
+          "speechKey": "library-native-trees-deep-r2-5",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         },
         {
-          "id": "native-trees-deep-6",
-          "text": "Guam has different plants, including native trees in its limestone forests, so that example is not a Guam species claim.",
-          "speechKey": "library-native-trees-deep-6",
+          "id": "library-native-trees-deep-r2-6",
+          "text": "Mariana fruit bats help spread native forest seeds, connecting the animals to new trees that can grow.",
+          "speechKey": "library-native-trees-deep-r2-6",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         },
         {
@@ -3724,7 +3910,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "family-walk",
     "type": "topic",
     "title": "What can we notice on a family walk?",
@@ -3780,7 +3966,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Verified Familia in frozen HåfaGPT family.family source_backed entry; removed pronunciation and tradition claims. Observation-versus-explanation example is explicitly hypothetical original pedagogy, with NPS leave-in-place guidance. Pending the designated family reviewer family/cultural review: Review walking/rolling/resting inclusion and the family activity; Familia still needs native pronunciation and the designated family reviewer cultural review. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Verified Familia in frozen HåfaGPT family.family source_backed entry; removed pronunciation and tradition claims. Observation-versus-explanation example is explicitly hypothetical original pedagogy, with NPS leave-in-place guidance. Pending the designated family reviewer family/cultural review: Review walking/rolling/resting inclusion and the family activity; Familia still needs native pronunciation and the designated family reviewer cultural review. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "80f22e0ca7fedb52caab0adfa69ae641c25493b8ffbdbe43e070756b4dc49d1e",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -3797,12 +3994,12 @@
     "layers": {
       "tell": [
         {
-          "id": "family-walk-tell-1",
-          "text": "What can you see near home?",
-          "speechKey": "library-family-walk-tell-1",
+          "id": "library-family-walk-tell-r2-1",
+          "text": "What can you see outside today?",
+          "speechKey": "library-family-walk-tell-r2-1",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         },
         {
@@ -3971,6 +4168,11 @@
         "kind": "make",
         "target": "wonder-page",
         "label": "Draw three things from a grown-up-approved walk"
+      },
+      {
+        "kind": "item",
+        "target": "family-circle",
+        "label": "Who belongs in a family’s circle?"
       }
     ]
   },
@@ -4223,7 +4425,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "shadow",
     "type": "topic",
     "title": "What is a shadow?",
@@ -4278,7 +4480,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added the Smithsonian activity’s full geometric explanation; removed unsupported fuzzy-edge account. Ring orientation and lunar eclipse are sourced examples; phases are not described as Earth’s shadow. Pending the designated family reviewer family/cultural review: Review light handling and whether an eclipse example is comfortable; no Sun-looking or flashlight experiment is required. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added the Smithsonian activity’s full geometric explanation; removed unsupported fuzzy-edge account. Ring orientation and lunar eclipse are sourced examples; phases are not described as Earth’s shadow. Pending the designated family reviewer family/cultural review: Review light handling and whether an eclipse example is comfortable; no Sun-looking or flashlight experiment is required. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "9b731080d400701e40fa3a447fe928834aa27e6c823de42aa60b722f508d7a77",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -4356,12 +4569,12 @@
           }
         },
         {
-          "id": "shadow-more-4",
-          "text": "Let a grown-up handle a small light, aimed away from eyes.",
-          "speechKey": "library-shadow-more-4",
+          "id": "library-shadow-more-r2-4",
+          "text": "Try making shadow shapes with a flashlight, keeping the light out of eyes.",
+          "speechKey": "library-shadow-more-r2-4",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         }
       ],
@@ -4544,7 +4757,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added IAU primary definition to distinguish regions from figures; qualified physical association instead of saying all pattern stars are unrelated. No traditional navigation or local star story is added. Pending the designated family reviewer family/cultural review: Review cultural framing and invented-dot Make prompt; an IAU map convention does not replace community sky knowledge. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added IAU primary definition to distinguish regions from figures; qualified physical association instead of saying all pattern stars are unrelated. No traditional navigation or local star story is added. Pending the designated family reviewer family/cultural review: Review cultural framing and invented-dot Make prompt; an IAU map convention does not replace community sky knowledge. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "394afaa4510ccd6548d69b7d67eed6c30fefaf8b547c244349ee48b47dd59494",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -5033,7 +5257,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Replaced unsupported magnification/false-color/turbulence elaboration with the cited optics mechanism and mirror engineering. Retained a single solar-optics safety sentence. Pending the designated family reviewer family/cultural review: Review eye-safety line and supervised use; the original schematic is not an equipment guide. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Replaced unsupported magnification/false-color/turbulence elaboration with the cited optics mechanism and mirror engineering. Retained a single solar-optics safety sentence. Pending the designated family reviewer family/cultural review: Review eye-safety line and supervised use; the original schematic is not an equipment guide. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "200b0669eff2eb3af56d04dbef8aa0071ca4b866de736ae21a03db8ae82ae5a9",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -5752,7 +5987,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Opened NASA’s technical Q&A for oxygen/water support; removed unsupported sleeping-bag detail. Microgravity remains shared orbital free fall, with exercise explained rather than prescribed. Pending the designated family reviewer family/cultural review: Review body adaptation and water reuse wording; no exercise challenge or unprotected-space scenario. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Opened NASA’s technical Q&A for oxygen/water support; removed unsupported sleeping-bag detail. Microgravity remains shared orbital free fall, with exercise explained rather than prescribed. Pending the designated family reviewer family/cultural review: Review body adaptation and water reuse wording; no exercise challenge or unprotected-space scenario. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "60a84eac268f086c309886895628ad3f680730449b1049de2a0ff00ef286a566",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -5953,7 +6199,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "breathing",
     "type": "topic",
     "title": "Why do we breathe?",
@@ -6009,7 +6255,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Connected breathing mechanics, alveoli and circulation from NHLBI; removed diagnostic/model filler. Oxygen supports cellular energy release rather than being created by lungs. Pending the designated family reviewer family/cultural review: Review body vocabulary and the one gentle no-breath-holding line; no health comparison or test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Connected breathing mechanics, alveoli and circulation from NHLBI; removed diagnostic/model filler. Oxygen supports cellular energy release rather than being created by lungs. Pending the designated family reviewer family/cultural review: Review body vocabulary and the one gentle no-breath-holding line; no health comparison or test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "b03df5cca7dd4ebcc352f4d6123265f1a1b966414e966545cb7d6757872bcd5b",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -6082,12 +6339,12 @@
           }
         },
         {
-          "id": "breathing-more-4",
-          "text": "Let your breath come and go naturally; there is no holding-your-breath game here.",
-          "speechKey": "library-breathing-more-4",
+          "id": "library-breathing-more-r2-4",
+          "text": "Let your breath come and go naturally.",
+          "speechKey": "library-breathing-more-r2-4",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         }
       ],
@@ -6205,7 +6462,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "heart",
     "type": "topic",
     "title": "What does the heart do?",
@@ -6260,7 +6517,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Used NHLBI circulation and beat pages to explain coordinated pumping/valve sounds; removed color-model and comparison-to-other-children filler. Tell’s “food” means nutrients carried by blood. Pending the designated family reviewer family/cultural review: Review simplified food/nutrient wording and valve sounds; no pulse counting, diagnosis or exercise test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Used NHLBI circulation and beat pages to explain coordinated pumping/valve sounds; removed color-model and comparison-to-other-children filler. Tell’s “food” means nutrients carried by blood. Pending the designated family reviewer family/cultural review: Review simplified food/nutrient wording and valve sounds; no pulse counting, diagnosis or exercise test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "3d88c58a56b617a05155025e6985bb722bc9f4c94062348769f92790a47ef7c0",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -6271,6 +6539,11 @@
       {
         "title": "NIH NHLBI: How the Heart Beats",
         "url": "https://www.nhlbi.nih.gov/health/heart/heart-beats",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "HåfaGPT canonical source-backed vocabulary (entry IDs in offline language provenance)",
+        "url": "https://github.com/Shimizu-Technology/HafaGPT/blob/609a8eb44c5068bf1b539221de078adeb1f20787/api/language_content/canonical_vocabulary.json",
         "accessed": "2026-11-02"
       }
     ],
@@ -6339,6 +6612,15 @@
           "audio": {
             "status": "pending",
             "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        {
+          "id": "library-heart-more-r2-5",
+          "text": "Korason is a CHamoru word for heart.",
+          "speechKey": "library-heart-more-r2-5",
+          "audio": {
+            "status": "pending",
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         }
       ],
@@ -6511,7 +6793,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NCI skeletal-system evidence for protection, levers and marrow; NIAMS supports growth/remodeling. Removed diet/exercise prescription language and unsupported protein-composition detail. Pending the designated family reviewer family/cultural review: Review body imagery and marrow explanation; retain sensitivity metadata and avoid comparing children’s bodies. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NCI skeletal-system evidence for protection, levers and marrow; NIAMS supports growth/remodeling. Removed diet/exercise prescription language and unsupported protein-composition detail. Pending the designated family reviewer family/cultural review: Review body imagery and marrow explanation; retain sensitivity metadata and avoid comparing children’s bodies. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "662a7db750b86c38e071b5c0bda41002de06a436cb60b1bbc6af90ea45fe0d37",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -6772,7 +7065,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NCI muscle-types page; kept fiber→connective tissue→tendon→bone mechanism. Removed unsupported isometric/posture and paired-band claims from prose. Pending the designated family reviewer family/cultural review: Review body explanation and the existing two-band Make prompt as a simplified picture, not an exercise instruction. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NCI muscle-types page; kept fiber→connective tissue→tendon→bone mechanism. Removed unsupported isometric/posture and paired-band claims from prose. Pending the designated family reviewer family/cultural review: Review body explanation and the existing two-band Make prompt as a simplified picture, not an exercise instruction. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "7451bfc0c90acfa857d4f2ec88c213d6c426a455466757feca146c2e99af6176",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -7033,7 +7337,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Checked NEI’s full pathway; removed unsupported glasses/diagnosis discussion. The tree example illustrates that pathway without claiming a literal image travels down the nerve. Pending the designated family reviewer family/cultural review: Review body vocabulary and eye-safety line; no vision test or comparison is proposed. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Checked NEI’s full pathway; removed unsupported glasses/diagnosis discussion. The tree example illustrates that pathway without claiming a literal image travels down the nerve. Pending the designated family reviewer family/cultural review: Review body vocabulary and eye-safety line; no vision test or comparison is proposed. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "fa8cd07b057045d272c383485986fafcc7da2f3b6bb19da80b230ad97f4720b8",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -7220,7 +7535,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "hearing",
     "type": "topic",
     "title": "How do we hear?",
@@ -7276,12 +7591,28 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Retained NIDCD sequence and pitch-location example; removed unrelated communication-device and illustration boilerplate. Hair-cell projections are distinguished from ordinary hair. Pending the designated family reviewer family/cultural review: Review sensory inclusivity, quiet-picture line and the cry/bark example; no required hearing response or loudness test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Retained NIDCD sequence and pitch-location example; removed unrelated communication-device and illustration boilerplate. Hair-cell projections are distinguished from ordinary hair. Pending the designated family reviewer family/cultural review: Review sensory inclusivity, quiet-picture line and the cry/bark example; no required hearing response or loudness test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "126b19d2044c52d6b6d4198a00a21e1b8c219ba117724494efadecdd41887b01",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
         "title": "NIH NIDCD: How Do We Hear?",
         "url": "https://www.nidcd.nih.gov/health/how-do-we-hear",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "HåfaGPT canonical source-backed vocabulary (entry IDs in offline language provenance)",
+        "url": "https://github.com/Shimizu-Technology/HafaGPT/blob/609a8eb44c5068bf1b539221de078adeb1f20787/api/language_content/canonical_vocabulary.json",
         "accessed": "2026-11-02"
       }
     ],
@@ -7335,12 +7666,21 @@
           }
         },
         {
-          "id": "hearing-more-3",
-          "text": "Explore the picture quietly; no loud sound or object in an ear is needed.",
-          "speechKey": "library-hearing-more-3",
+          "id": "library-hearing-more-r2-3",
+          "text": "Talanga is a CHamoru word for ear.",
+          "speechKey": "library-hearing-more-r2-3",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
+          }
+        },
+        {
+          "id": "library-hearing-more-r2-extra-4",
+          "text": "Listen for the quietest sound you can hear.",
+          "speechKey": "library-hearing-more-r2-extra-4",
+          "audio": {
+            "status": "pending",
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         }
       ],
@@ -7467,7 +7807,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "smell",
     "type": "topic",
     "title": "How do we smell?",
@@ -7523,12 +7863,28 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Used NIDCD receptor-pattern and two-route explanation; removed unsupported specific hazard-detection claims. Hypothetical remembered drawing avoids a sniffing activity. Pending the designated family reviewer family/cultural review: Review nose/food explanation and no-unknown-sniffing guidance; no allergy exposure or safety-by-smell test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Used NIDCD receptor-pattern and two-route explanation; removed unsupported specific hazard-detection claims. Hypothetical remembered drawing avoids a sniffing activity. Pending the designated family reviewer family/cultural review: Review nose/food explanation and no-unknown-sniffing guidance; no allergy exposure or safety-by-smell test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "5c602d636c8c61c711b5afdae0503fcb643bd5de8ebb2a48f0d35e253b38e0bc",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
         "title": "NIH NIDCD: Smell Disorders, how smell works",
         "url": "https://www.nidcd.nih.gov/health/smell-disorders",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "HåfaGPT canonical source-backed vocabulary (entry IDs in offline language provenance)",
+        "url": "https://github.com/Shimizu-Technology/HafaGPT/blob/609a8eb44c5068bf1b539221de078adeb1f20787/api/language_content/canonical_vocabulary.json",
         "accessed": "2026-11-02"
       }
     ],
@@ -7582,12 +7938,21 @@
           }
         },
         {
-          "id": "smell-more-3",
-          "text": "Draw a remembered smell; skip sniffing unknown things.",
-          "speechKey": "library-smell-more-3",
+          "id": "library-smell-more-r2-3",
+          "text": "Gui'eng is a CHamoru word for nose.",
+          "speechKey": "library-smell-more-r2-3",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
+          }
+        },
+        {
+          "id": "library-smell-more-r2-extra-4",
+          "text": "Think of a smell you love, like bread baking.",
+          "speechKey": "library-smell-more-r2-extra-4",
+          "audio": {
+            "status": "pending",
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         }
       ],
@@ -7705,7 +8070,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "taste",
     "type": "topic",
     "title": "Why can we taste food?",
@@ -7761,12 +8126,28 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Preserved correction of tongue-zone myth and NIDCD flavor mechanism; removed generalized food-need and diagram boilerplate. No tasting activity or allergy exposure. Pending the designated family reviewer family/cultural review: Review food/chili example and optional remembered-food wording; no taste comparison, food ranking or safety test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Preserved correction of tongue-zone myth and NIDCD flavor mechanism; removed generalized food-need and diagram boilerplate. No tasting activity or allergy exposure. Pending the designated family reviewer family/cultural review: Review food/chili example and optional remembered-food wording; no taste comparison, food ranking or safety test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "d36923817286ceccebdca728bf0ab8c6544914cbd0a3c7493bcb090ca4cea29b",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
         "title": "NIH NIDCD: Taste Disorders, how taste works",
         "url": "https://www.nidcd.nih.gov/health/taste-disorders",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "HåfaGPT canonical source-backed vocabulary (entry IDs in offline language provenance)",
+        "url": "https://github.com/Shimizu-Technology/HafaGPT/blob/609a8eb44c5068bf1b539221de078adeb1f20787/api/language_content/canonical_vocabulary.json",
         "accessed": "2026-11-02"
       }
     ],
@@ -7820,12 +8201,21 @@
           }
         },
         {
-          "id": "taste-more-3",
-          "text": "Think of a familiar food without tasting anything here.",
-          "speechKey": "library-taste-more-3",
+          "id": "library-taste-more-r2-3",
+          "text": "Pachot is a CHamoru word for mouth.",
+          "speechKey": "library-taste-more-r2-3",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
+          }
+        },
+        {
+          "id": "library-taste-more-r2-extra-4",
+          "text": "Next time you help in the kitchen, notice how smell and taste work together.",
+          "speechKey": "library-taste-more-r2-extra-4",
+          "audio": {
+            "status": "pending",
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         }
       ],
@@ -8007,7 +8397,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Distinguished rolling resistance from wheel/axle force tradeoff. Added OpenStax and museum road-surface evidence; removed unsupported bearings/material-selection claims. Pending the designated family reviewer family/cultural review: Review heavy-load boundary and cart example; no real vehicle or load test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Distinguished rolling resistance from wheel/axle force tradeoff. Added OpenStax and museum road-surface evidence; removed unsupported bearings/material-selection claims. Pending the designated family reviewer family/cultural review: Review heavy-load boundary and cart example; no real vehicle or load test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "17413d910a7aba76fe80328437ab72183e60c08da320618861bd1518638cef03",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -8218,7 +8619,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "lever",
     "type": "topic",
     "title": "What is a lever?",
@@ -8273,7 +8674,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added OpenStax torque/lever examples and ideal-model limits. Corrected any implication that every lever multiplies force; removed repetitive pinch warnings from layers while retaining metadata. Pending the designated family reviewer family/cultural review: Review the imagined seesaw/shovel examples and drawing-only invitation; no lifting furniture or pinch-point action. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added OpenStax torque/lever examples and ideal-model limits. Corrected any implication that every lever multiplies force; removed repetitive pinch warnings from layers while retaining metadata. Pending the designated family reviewer family/cultural review: Review the imagined seesaw/shovel examples and drawing-only invitation; no lifting furniture or pinch-point action. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "930e0252955405716916d7eff4b0b897585facca03c2b44ada0dcf2da698af2e",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -8361,12 +8773,12 @@
           }
         },
         {
-          "id": "lever-more-4",
-          "text": "Explore the idea in a drawing with a grown-up.",
-          "speechKey": "library-lever-more-4",
+          "id": "library-lever-more-r2-4",
+          "text": "On a seesaw, try sitting closer to the middle and notice what changes.",
+          "speechKey": "library-lever-more-r2-4",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         }
       ],
@@ -8484,7 +8896,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "ramp",
     "type": "topic",
     "title": "How does a ramp help us lift?",
@@ -8539,7 +8951,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Kept force-distance tradeoff explicitly ideal/no-friction; real friction remains. Removed unsupported real-accessibility/control claims and categorical claim that every longer ramp is easier. Pending the designated family reviewer family/cultural review: Review load-moving boundary and gentle-slope comparison; drawing does not certify real ramp accessibility. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Kept force-distance tradeoff explicitly ideal/no-friction; real friction remains. Removed unsupported real-accessibility/control claims and categorical claim that every longer ramp is easier. Pending the designated family reviewer family/cultural review: Review load-moving boundary and gentle-slope comparison; drawing does not certify real ramp accessibility. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "d73b0047c2745c3d955b5281943faf4011c81333d189906fde2f2017292a7a07",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -8627,12 +9050,12 @@
           }
         },
         {
-          "id": "ramp-more-4",
-          "text": "Draw two ramps to compare them; leave real load-moving to grown-ups.",
-          "speechKey": "library-ramp-more-4",
+          "id": "library-ramp-more-r2-4",
+          "text": "Try rolling a toy car down a gentle ramp and a steep one.",
+          "speechKey": "library-ramp-more-r2-4",
           "audio": {
             "status": "pending",
-            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            "reason": "Warm neural generation registered; lead audible and pronunciation acceptance pending."
           }
         }
       ],
@@ -8796,7 +9219,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Opened the attached teaching slides for direction/idler and torque support. Numerical 10:20 example is an original ratio illustration; external-gear qualification prevents universal direction claims. Pending the designated family reviewer family/cultural review: Review machinery boundary and tooth-count example; no operating or touching real gears. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Final editor clarified tooth contact without implying that gear teeth never slide."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Opened the attached teaching slides for direction/idler and torque support. Numerical 10:20 example is an original ratio illustration; external-gear qualification prevents universal direction claims. Pending the designated family reviewer family/cultural review: Review machinery boundary and tooth-count example; no operating or touching real gears. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Final editor clarified tooth contact without implying that gear teeth never slide.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "bfdd93a218e2c4402a1367d47750ad4c04cc55d05e450c2567328def99041534",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -9038,7 +9472,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added ideal load-support and rope-distance mechanism, distinguishing fixed from moving pulley. Removed unsupported safety-engineering detail; metadata still retains ropes/suspension risk. Pending the designated family reviewer family/cultural review: Review paper-only rope tracing and load example; no hoisting, hanging ropes or climbing system. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Added ideal load-support and rope-distance mechanism, distinguishing fixed from moving pulley. Removed unsupported safety-engineering detail; metadata still retains ropes/suspension risk. Pending the designated family reviewer family/cultural review: Review paper-only rope tracing and load example; no hoisting, hanging ropes or climbing system. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "0f4e9b1628aa69ac555abd9ed40a024580a77349367fd708add73d4782fe190a",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -9304,7 +9749,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Confirmed displaced-water weight, average density and loading against OpenStax/TeachEngineering; preserved distinction between buoyancy and stability. No real-water trial. Pending the designated family reviewer family/cultural review: Review water-safety line and sinking/tipping language; no claim that a drawn hull is safe to use. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Confirmed displaced-water weight, average density and loading against OpenStax/TeachEngineering; preserved distinction between buoyancy and stability. No real-water trial. Pending the designated family reviewer family/cultural review: Review water-safety line and sinking/tipping language; no claim that a drawn hull is safe to use. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "014babeb6864231170b3a033fe6b1f3ab3099224b0f5a16615366a18d9b65ef5",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -9546,7 +10002,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Used NASA flow-turning and four-forces explanations; removed unsupported equal-transit rebuttal and detailed pressure/angle claims. Force balance is limited to steady level flight. Pending the designated family reviewer family/cultural review: Review explanatory wing arrows and glider example; no launching, jumping or flight test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Used NASA flow-turning and four-forces explanations; removed unsupported equal-transit rebuttal and detailed pressure/angle claims. Force balance is limited to steady level flight. Pending the designated family reviewer family/cultural review: Review explanatory wing arrows and glider example; no launching, jumping or flight test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "27809cf160db23e5e0844eb8ec941c8e27d4612d2344e07f17d16ffba2d7f28b",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -9806,7 +10273,18 @@
       "reviewer": "Codex independent factual reviewer",
       "factualReviewer": "independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Independent factual outcome: revised claims supported within the stated limits. Opened the museum’s Drives & Gears article, not just its landing page. Original 40:20 example illustrates tooth ratio. Removed unsourced traction/brake and chain-direction elaboration. Pending the designated family reviewer family/cultural review: Review moving-chain boundary, historical comparison and gear example; no required riding or handling a chain. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      "scope": "Independent factual outcome: revised claims supported within the stated limits. Opened the museum’s Drives & Gears article, not just its landing page. Original 40:20 example illustrates tooth ratio. Removed unsourced traction/brake and chain-direction elaboration. Pending the designated family reviewer family/cultural review: Review moving-chain boundary, historical comparison and gear example; no required riding or handling a chain. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "88d5d51e8c0076e086fcc7e43016d108cef3f493570add83c088e93e59c89bb6",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {

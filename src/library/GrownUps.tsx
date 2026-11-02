@@ -159,6 +159,9 @@ export function GrownUps({
                   </Text>
                 ) : null}
                 {record.item?.type === "book" && <BookPreview book={record.item} />}
+                {record.item?.type === "prayer" && <Text style={s.body}>{record.item.sentences.map((line) => line.text).join(" ")}</Text>}
+                {!!record.item?.grownUpNote && <Text style={s.body}>{record.item.grownUpNote}</Text>}
+                {!!record.item && <Text style={s.small}>{record.item.stage.support}</Text>}
                 <Text style={s.small}>{record.item?.sensitiveNotes.join(" ")}</Text>
                 <Text style={s.small}>
                   {record.item

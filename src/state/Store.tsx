@@ -117,11 +117,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       encoded = await storage.get();
       setRaw(encoded);
       const before=encoded?parseSave(encoded):emptySave();
-      const next=backfillRewards(migrateLibrary(before));
+      const next=backfillRewards(migrateLibrary(before, { existingLearners: encoded !== null }));
       if (!validLibraryData(next.library) || !withinSaveLimit(JSON.stringify(next))) throw new Error("This Library could not be migrated. Your original has been kept.");
       assertMigratedHomes(next);
       if(encoded) {
-        if (!before.library) await preserveAndReplace(storage, JSON.stringify(next), encoded);
+        if (!before.library || before.library.version === 1) await preserveAndReplace(storage, JSON.stringify(next), encoded);
         else await preserveHomeMigration(storage,encoded,before,next);
       }
       generation.current += 1;
@@ -415,7 +415,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
         await queue.current;
         const pending = draftRecovery(); if (pending) await storage.preserve(pending);
-        if (!incoming.library) await storage.preserve(encoded);
+        if (!incoming.library || incoming.library.version === 1) await storage.preserve(encoded);
         await preserveImportedHome(storage, encoded, incoming, next, recovery ? null : JSON.stringify(latest.current));
         clearPageDrafts();
         generation.current += 1;
@@ -434,7 +434,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [recovery]
   );
   const startFresh = useCallback(async () => {
-    await restore(JSON.stringify(emptySave()));
+    await restore(JSON.stringify(migrateLibrary(emptySave(), { existingLearners: false })));
   }, [restore]);
   return (
     <Context.Provider

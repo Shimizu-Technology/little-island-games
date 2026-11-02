@@ -48,6 +48,9 @@ interface BaseItem {
   rights: Rights;
   stage: { ageHint: [number, number]; support: string };
   sensitiveNotes: string[];
+  /** Shown only in the gated grown-up preview. */
+  grownUpNote?: string;
+  artBrief?: { subject: string; composition: string; style: string; exactAlt: string };
   review: {
     status: "draft" | "in-review" | "approved";
     reviewer: string;
@@ -60,6 +63,7 @@ interface BaseItem {
       reviewer: string;
       date: string;
       note: string;
+      scope?: string;
       contentSha256: string;
       audioAccepted: boolean;
       pronunciationAccepted: boolean;
@@ -70,6 +74,7 @@ interface BaseItem {
 export type LibraryItem = BaseItem &
   (
     | { type: "topic"; layers: Record<ReadingLayer, Sentence[]>; links: LibraryLink[] }
+    | { type: "prayer"; sentences: Sentence[]; links: LibraryLink[] }
     | { type: "exhibit"; model: { engine: string; limits: string }; links: LibraryLink[] }
     | { type: "collection"; members: string[]; links: LibraryLink[] }
     | {

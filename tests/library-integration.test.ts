@@ -15,8 +15,8 @@ describe("Explicit family-preview admission", () => {
       for(const item of items){item.review.status=item.type==='collection'?'draft':'in-review';delete item.review.familyReviewer;delete item.review.familyDecision;}
       const before=JSON.stringify(items);
       const preview=admittedItems(items,{preview:true});
-      console.log(JSON.stringify({defaultIds:admittedItems(items).map(i=>i.id), counts: ['topic','book','exhibit','collection'].map(type=>preview.filter(i=>i.type===type).length), unchanged:before===JSON.stringify(items), fake:preview.some(i=>i.review.familyReviewer)}));`));
-    expect(result).toEqual({ defaultIds: [], counts: [90, 8, 3, 9], unchanged: true, fake: false });
+      console.log(JSON.stringify({defaultIds:admittedItems(items).map(i=>i.id), counts: ['topic','book','exhibit','collection','prayer'].map(type=>preview.filter(i=>i.type===type).length), unchanged:before===JSON.stringify(items), fake:preview.some(i=>i.review.familyReviewer)}));`));
+    expect(result).toEqual({ defaultIds: [], counts: [118, 9, 3, 11, 5], unchanged: true, fake: false });
   });
   it("rejects every unsupported link kind/target and unsupported exhibit engine", () => {
     const result = JSON.parse(run(`import {destinationErrors} from './scripts/library/destinations.mjs';import {readFileSync} from 'node:fs';
@@ -35,7 +35,7 @@ describe("Explicit family-preview admission", () => {
     try {
       execFileSync(process.execPath, ["scripts/library/record-decisions.mjs", "--template", file], { stdio: "pipe" });
       const template = JSON.parse(readFileSync(file, "utf8"));
-      expect(template.decisions).toHaveLength(110);
+      expect(template.decisions).toHaveLength(146);
       expect(template.decisions.every((d: { decision: string; audioAccepted: boolean }) => d.decision === "pending" && !d.audioAccepted)).toBe(true);
       template.reviewer = "test-only reviewer"; template.date = "2026-11-02";
       writeFileSync(file, JSON.stringify(template));
@@ -57,14 +57,14 @@ describe("Explicit family-preview admission", () => {
       const fixture = { ...original, links: [{ kind: "make", target: "wonder-page", label: "Make a page" }], label: line, layers: { tell: [line], more: [line], deep: [line] } };
       mkdirSync(join(temp, fixture.image.path, ".."), { recursive: true });
       copyFileSync(fixture.image.path, join(temp, fixture.image.path));
-      for (const file of ["content/library/categories.json", "scripts/learn/library.json", "scripts/library/validate.mjs", "assets/audio/library-word-we.m4a"]) copyFileSync(file, join(temp, file));
+      for (const file of ["content/library/categories.json", "scripts/learn/library.json", "scripts/library/validate.mjs", "scripts/library/shipping-report.mjs", "assets/audio/library-word-we.m4a"]) copyFileSync(file, join(temp, file));
       const hash = (bytes: string | Buffer) => createHash("sha256").update(bytes).digest("hex");
       writeFileSync(join(temp, "content/library/items.json"), JSON.stringify([fixture]));
       writeFileSync(join(temp, "scripts/library/audio-receipt.json"), JSON.stringify({ voice: "af_heart", engine: "Kokoro-82M v1.0", networkPlayback: false, clips: { "library-word-we": { path: "assets/audio/library-word-we.m4a", sha256: hash(readFileSync("assets/audio/library-word-we.m4a")), transcriptSha256: hash("we") } } }));
       const tool = resolve("scripts/library/record-decisions.mjs"), decisionFile = join(temp, "answers.json");
       execFileSync(process.execPath, [tool, "--template", decisionFile], { cwd: temp, stdio: "pipe" });
       const answers = JSON.parse(readFileSync(decisionFile, "utf8"));
-      answers.reviewer = "isolated fixture reviewer"; answers.date = "2026-11-02";
+      answers.reviewer = "isolated fixture reviewer"; answers.date = "2026-11-02"; answers.scope = "reconciled recommendations";
       Object.assign(answers.decisions[0], { decision: "Yes", audioAccepted: true, pronunciationAccepted: true });
       writeFileSync(decisionFile, JSON.stringify(answers));
       execFileSync(process.execPath, [tool, "--file", decisionFile], { cwd: temp, stdio: "pipe" });
@@ -74,6 +74,9 @@ describe("Explicit family-preview admission", () => {
       expect(promoted.review.status).toBe("approved");
       expect(promoted.review.familyReviewer).toBe("isolated fixture reviewer");
       expect(promoted.layers.deep[0].audio.status).toBe("ready");
+      expect(promoted.review.familyDecision.scope).toBe("reconciled recommendations");
+      const finalContent = structuredClone(promoted); delete finalContent.review.familyReviewer; delete finalContent.review.familyDecision;
+      expect(promoted.review.familyDecision.contentSha256).toBe(hash(JSON.stringify(finalContent)));
       expect(readFileSync("content/library/items.json", "utf8")).toBe(canonical);
     } finally { rmSync(temp, { recursive: true, force: true }); }
   });

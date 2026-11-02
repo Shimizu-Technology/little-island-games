@@ -40,7 +40,7 @@ if (args.includes('--template')) {
     if (!d || d.decision === 'pending') continue;
     if (!['Yes', 'Change'].includes(d.decision) || d.contentSha256 !== contentHash(items.find(i => i.id === item.id))) throw new Error(`Invalid or stale decision: ${item.id}`);
     if (d.decision === 'Change' && !d.note?.trim()) throw new Error(`Describe the requested change: ${item.id}`);
-    item.review.familyDecision = { decision: d.decision, note: d.note ?? '', reviewer: input.reviewer, date: input.date, contentSha256: d.contentSha256, audioAccepted: d.audioAccepted === true, pronunciationAccepted: d.pronunciationAccepted === true };
+    item.review.familyDecision = { decision: d.decision, note: d.note ?? '', reviewer: input.reviewer, date: input.date, ...(input.scope?.trim() ? { scope: input.scope.trim() } : {}), contentSha256: d.contentSha256, audioAccepted: d.audioAccepted === true, pronunciationAccepted: d.pronunciationAccepted === true };
     if (d.decision === 'Yes') item.review.familyReviewer = input.reviewer;
     else { delete item.review.familyReviewer; item.review.status = item.type === 'collection' ? 'draft' : 'in-review'; }
     if (approve) {
@@ -49,6 +49,9 @@ if (args.includes('--template')) {
       publishSentences(item, item);
       item.review.status = 'approved';
       item.review.scope += ` Family, pronunciation and generated narration accepted by ${input.reviewer} on ${input.date}.`;
+      // Promotion changes audio/review metadata after the supplied hash check.
+      // Keep the stored decision bound to the final atomically validated record.
+      item.review.familyDecision.contentSha256 = contentHash(item);
     }
   }
   const candidate = `${path}.decisions-${process.pid}.tmp`;

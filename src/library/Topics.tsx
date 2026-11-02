@@ -33,8 +33,9 @@ export function TopicPage({
   const { width } = useWindowDimensions();
   const [sources, setSources] = useState(false);
   const topic = record.item?.type === "topic" ? record.item : undefined;
+  const prayer = record.item?.type === "prayer" ? record.item : undefined;
   const legacy = record.legacy;
-  const links: LibraryLink[] = topic?.links ?? [
+  const links: LibraryLink[] = record.item?.links ?? [
     ...(legacy?.related ?? []).map((id) => ({
       kind: "legacy-topic" as const,
       target: id,
@@ -46,7 +47,7 @@ export function TopicPage({
     <View style={{ gap: 16 }}>
       <Text style={s.title}>{record.title}</Text>
       <ItemPicture record={record} large pictureHeight={width < 650 ? 280 : 370} />
-      <View style={[s.row, { justifyContent: "center", gap: 12 }]}>
+      {!prayer && <View style={[s.row, { justifyContent: "center", gap: 12 }]}>
         {(["tell", "more", "deep"] as const).map((key, index) => (
           <Action
             key={key}
@@ -62,9 +63,9 @@ export function TopicPage({
             {key === "tell" ? "Tell me" : key === "more" ? "More" : "Deep"}
           </Action>
         ))}
-      </View>
-      {topic ? (
-        topic.layers[layer].map((sentence) => (
+      </View>}
+      {topic || prayer ? (
+        (prayer?.sentences ?? topic!.layers[layer]).map((sentence) => (
           <SentenceLine
             key={sentence.id}
             sentence={sentence}

@@ -7,7 +7,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "factualReviewer": "independent factual reviewer",
-      "scope": "Independent factual and editorial review completed. Publisher ISBN, four credited creators and printed spreads checked; greetings transcribed as printed, with no added translation or pronunciation claim. Consumer choices are story events. Wordless pages 8, 13 and 14 remain wordless. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+      "scope": "Independent factual and editorial review completed. Publisher ISBN, four credited creators and printed spreads checked; greetings transcribed as printed, with no added translation or pronunciation claim. Consumer choices are story events. Wordless pages 8, 13 and 14 remain wordless. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "34cbe87dceead040436ca7ff1bfc978fa7e6f6900c7b1082f0dbece8ae089d1f",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "rights": {
       "license": "CC-BY-4.0",
@@ -534,7 +545,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "factualReviewer": "independent factual reviewer",
-      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte. All pages and imported art reviewed. Talking animals, giraffe encounter and mixed animal community are fantasy, not natural-history claims. Original regional grammar and verse retained. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte. All pages and imported art reviewed. Talking animals, giraffe encounter and mixed animal community are fantasy, not natural-history claims. Original regional grammar and verse retained. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "8a73d3d497f4fb0a252abe6a5160259a4ec0f3678cc2136e7de82616d43d9623",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -1220,7 +1242,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "factualReviewer": "independent factual reviewer",
-      "scope": "Independent factual and editorial review completed. Factual corrections in a labeled CC BY adaptation: school account corrected against Maathai’s own 2006 interview; national poverty and river-restoration generalizations replaced with specific community work. Published personal scenes remain the author’s biographical storytelling. Nobel facts and university biography support education, award and death. Digital designer Karen Lilje distinguished from current publisher credit Tarryn-Anne Anderson. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+      "scope": "Independent factual and editorial review completed. Factual corrections in a labeled CC BY adaptation: school account corrected against Maathai’s own 2006 interview; national poverty and river-restoration generalizations replaced with specific community work. Published personal scenes remain the author’s biographical storytelling. Nobel facts and university biography support education, award and death. Digital designer Karen Lilje distinguished from current publisher credit Tarryn-Anne Anderson. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "74a46310def033a78d218efd7c7eccd4c70d37955a020ce607c1f11e92cc8ad9",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -1835,7 +1868,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "factualReviewer": "independent factual reviewer",
-      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Family history, shark siren and rescue are fictional story events, not current local services or wildlife instructions. South African terms retained without adding meanings or pronunciation claims. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Family history, shark siren and rescue are fictional story events, not current local services or wildlife instructions. South African terms retained without adding meanings or pronunciation claims. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "29d7630c9a73b90df20b9d754b2c0b32addec2e7dc5d64ec124368f5069e5c13",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -3051,7 +3095,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "factualReviewer": "independent factual reviewer",
-      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Talking animals, racing, handstands and swimming are story events. Missing space in the publisher’s final dialogue normalized for reading. River scene remains flagged for family judgment. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Talking animals, racing, handstands and swimming are story events. Missing space in the publisher’s final dialogue normalized for reading. River scene remains flagged for family judgment. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "6f7c62af24f46c1639a3fc54b94a933d95bf066ddc3dd6a41d5e149c7e9d4838",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -3531,7 +3586,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "a-house-for-mouse",
     "type": "book",
     "title": "A house for Mouse",
@@ -3590,7 +3645,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "factualReviewer": "independent factual reviewer",
-      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Underwater and forest scenes are explicitly dreams in the text; animals’ invitations are fantasy. Fireplace and dream imitation remain family flags. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Underwater and forest scenes are explicitly dreams in the text; animals’ invitations are fantasy. Fireplace and dream imitation remain family flags. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "3f7af77e46bb4279ce0780125c6adc78a75fbd50e54950375959ec908f1ad789",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -3755,7 +3821,7 @@
       {
         "image": {
           "path": "content/library/books/a-house-for-mouse/page-04.jpg",
-          "alt": "Mouse sleeps in a pool of mud.",
+          "alt": "Mouse dreams of being in mud.",
           "sha256": "112d30caed28b5e1467380a0ba754c50b7e6ec864af3769846dca8a661732b7e",
           "rights": {
             "license": "CC-BY-4.0",
@@ -3816,7 +3882,7 @@
       {
         "image": {
           "path": "content/library/books/a-house-for-mouse/page-06.jpg",
-          "alt": "Mouse sleeps in a wild forest.",
+          "alt": "Mouse dreams of a wild forest.",
           "sha256": "f038310f725cbf1529f60cbeffa79e28fbceca0614de3bce9604a035fd1f14cd",
           "rights": {
             "license": "CC-BY-4.0",
@@ -3877,7 +3943,7 @@
       {
         "image": {
           "path": "content/library/books/a-house-for-mouse/page-08.jpg",
-          "alt": "Mouse sleeps underwater surrounded by fish and seaweed.",
+          "alt": "Mouse dreams of being underwater among fish and seaweed.",
           "sha256": "9e83ed251f69c9be7b5c1ca80c3b5809c35d165c5af23d6daa089eba3f0b23c6",
           "rights": {
             "license": "CC-BY-4.0",
@@ -3929,7 +3995,7 @@
       {
         "image": {
           "path": "content/library/books/a-house-for-mouse/page-10.jpg",
-          "alt": "Mouse perches on a couch in front of the fireplace.",
+          "alt": "Mouse sits on a ledge in front of a lit fireplace.",
           "sha256": "23eb43643414147e36ac9b207bf839a9c007e9a73b2f433f8c22b458f78ef45e",
           "rights": {
             "license": "CC-BY-4.0",
@@ -4058,7 +4124,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "factualReviewer": "independent factual reviewer",
-      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Reading ants, seasonal gathering, royal speech and parental reactions belong to this fantasy; no general ant biology is asserted by the Library. Typo in picture description corrected. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Reading ants, seasonal gathering, royal speech and parental reactions belong to this fantasy; no general ant biology is asserted by the Library. Typo in picture description corrected. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "5661cebd23c506056bee7fe871a21cb048ff5162b94d11f8c791c70abcfb7a53",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -4567,7 +4644,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "id": "the-best-thing-ever",
     "type": "book",
     "title": "The best thing ever",
@@ -4626,7 +4703,18 @@
       "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
       "factualReviewer": "independent factual reviewer",
-      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported printed-edition art reviewed. Found objects, river/road scenes and matchbox are fictional events, not a Make instruction. uGogo remains an untranslated South African term with cultural/pronunciation review pending. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported printed-edition art reviewed. Found objects, river/road scenes and matchbox are fictional events, not a Make instruction. uGogo remains an untranslated South African term with cultural/pronunciation review pending. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval. Reconciled family recommendations applied; changed text independently re-checked separately; lead audible acceptance pending.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "96e6b52ebe148df5a64b1020299ad680c6538c69572fb5041ca3bc3eae4ec489",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
     },
     "sources": [
       {
@@ -5047,7 +5135,7 @@
       {
         "image": {
           "path": "content/library/books/the-best-thing-ever/page-09.jpg",
-          "alt": "Muzi and his mother arrive at Gogo's shack. They carry shopping bags filled with Muzi's found objects.",
+          "alt": "Muzi and his mother arrive at Gogo's home. They carry shopping bags filled with Muzi's found objects.",
           "sha256": "b95f9bfb61fc9c101d53deb81fcf29814599e559caecdb5df3a1e2860888e8c8",
           "rights": {
             "license": "CC-BY-4.0",
@@ -5082,7 +5170,7 @@
       {
         "image": {
           "path": "content/library/books/the-best-thing-ever/page-10.jpg",
-          "alt": "Muzi's mother and Gogo bake bread. Muzi builds in the corner using dough and his newfound things.",
+          "alt": "Muzi’s mother and Gogo bake. Nearby, Muzi builds with the things he found.",
           "sha256": "95dea54ab6e2a4ffbf7df5082a6769cc1b448c94d4c8c51bee5ae7ffd49885b2",
           "rights": {
             "license": "CC-BY-4.0",
@@ -5117,7 +5205,7 @@
       {
         "image": {
           "path": "content/library/books/the-best-thing-ever/page-11.jpg",
-          "alt": "Muzi presents his sculpture to Gogo. It is a house made from dough and all his found objects.",
+          "alt": "Muzi shows Gogo the model house he made with the things he found.",
           "sha256": "564328d1c8390e9a67bc90d6906a7b8f8e2c055eb196892115c03f1538ba9769",
           "rights": {
             "license": "CC-BY-4.0",
@@ -5220,5 +5308,452 @@
       }
     ],
     "links": []
+  },
+  {
+    "schemaVersion": 1,
+    "revision": 1,
+    "id": "and-also",
+    "type": "book",
+    "title": "And Also!",
+    "category": "books",
+    "aliases": [
+      "siblings",
+      "brother and sister",
+      "Thabo",
+      "Keitu",
+      "pretend play"
+    ],
+    "tags": [
+      "book",
+      "siblings",
+      "imagination",
+      "playing together"
+    ],
+    "image": {
+      "path": "content/library/books/and-also/page-00.jpg",
+      "alt": "Cover of And Also! with Thabo thinking and Keitu jumping behind him.",
+      "rights": {
+        "license": "CC-BY-4.0",
+        "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+        "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+        "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+        "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+        "licenseFile": "content/library/books/CC-BY-4.0.txt"
+      },
+      "sha256": "29ef4533df4b708a3d872fcad17ba7073b8d0885959914a12dc9db11ea7e3418"
+    },
+    "label": {
+      "id": "library-and-also-label",
+      "text": "And Also!",
+      "speechKey": "library-and-also-label",
+      "audio": {
+        "status": "pending",
+        "reason": "Lead audible acceptance pending."
+      }
+    },
+    "rights": {
+      "license": "CC-BY-4.0",
+      "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+      "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+      "licenseFile": "content/library/books/CC-BY-4.0.txt"
+    },
+    "stage": {
+      "ageHint": [
+        3,
+        10
+      ],
+      "support": "Read or listen together. This is a story about siblings already old enough to play together."
+    },
+    "sensitiveNotes": [
+      "Pretend sharks, shooting stars, lions, crocodiles and dinosaurs.",
+      "Mixed feelings about sibling play resolve through shared imagination; no baby-care responsibility."
+    ],
+    "review": {
+      "status": "in-review",
+      "reviewer": "independent factual reviewer",
+      "date": "2026-11-02",
+      "scope": "Reconciled Book Dash selection; exact edition, page transcripts and alts await final independent re-check; family decision and lead audible acceptance pending. Independent complete-edition, page-text, alt and rights re-check recorded in content-pass/RECHECK-FINAL.md; audio acceptance pending.",
+      "factualReviewer": "independent factual reviewer",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "4d9a292c1d7fbb2c2d8d239eec7e4042f72f0cec582bc59f00937dda14bc7cd1",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
+    },
+    "sources": [
+      {
+        "title": "Book Dash: And Also!, English edition, Cape Town 2 December 2017",
+        "url": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "Book Dash: And Also! publisher record",
+        "url": "https://bookdash.org/books/and-also/",
+        "accessed": "2026-11-02"
+      }
+    ],
+    "edition": {
+      "language": "en",
+      "isbn": "978-1-928442-06-6",
+      "originalTitle": "And Also!",
+      "rights": {
+        "license": "CC-BY-4.0",
+        "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+        "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+        "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+        "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+        "licenseFile": "content/library/books/CC-BY-4.0.txt"
+      }
+    },
+    "pages": [
+      {
+        "image": {
+          "path": "content/library/books/and-also/page-00.jpg",
+          "alt": "Cover of And Also! with Thabo thinking and Keitu jumping behind him.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+            "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+            "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+            "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+            "licenseFile": "content/library/books/CC-BY-4.0.txt"
+          },
+          "sha256": "29ef4533df4b708a3d872fcad17ba7073b8d0885959914a12dc9db11ea7e3418"
+        },
+        "sentences": [
+          {
+            "id": "library-and-also-p0-1",
+            "text": "And Also!",
+            "speechKey": "library-and-also-p0-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Warm neural narration registered; lead audible acceptance pending."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/books/and-also/page-01.jpg",
+          "alt": "Thabo imagines his bed as a raft on the sea.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+            "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+            "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+            "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+            "licenseFile": "content/library/books/CC-BY-4.0.txt"
+          },
+          "sha256": "e77b195d58bd15ca3ebd734a17810f903f3480627049ac870bc2d0f099241f57"
+        },
+        "sentences": [
+          {
+            "id": "library-and-also-p1-1",
+            "text": "Thabo pretends that his bed is a raft on the sea!",
+            "speechKey": "library-and-also-p1-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Warm neural narration registered; lead audible acceptance pending."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/books/and-also/page-02.jpg",
+          "alt": "Keitu imagines sharks around the bed; Thabo says no.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+            "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+            "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+            "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+            "licenseFile": "content/library/books/CC-BY-4.0.txt"
+          },
+          "sha256": "76d87e0ed70aa00438f2df9ebec6d7ef24699e41252957fa1558f464bd3aa2bb"
+        },
+        "sentences": [
+          {
+            "id": "library-and-also-p2-1",
+            "text": "His little sister Keitu says, “Yes! And also! There are sharks.” “No!” says Thabo.",
+            "speechKey": "library-and-also-p2-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Warm neural narration registered; lead audible acceptance pending."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/books/and-also/page-03.jpg",
+          "alt": "Thabo imagines their school taxi as a spaceship.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+            "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+            "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+            "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+            "licenseFile": "content/library/books/CC-BY-4.0.txt"
+          },
+          "sha256": "26ad5da65bd881065a7ae0f15014ed9eae4160f852592b00d4976a3c245be121"
+        },
+        "sentences": [
+          {
+            "id": "library-and-also-p3-1",
+            "text": "Thabo pretends that their taxi is a spaceship!",
+            "speechKey": "library-and-also-p3-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Warm neural narration registered; lead audible acceptance pending."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/books/and-also/page-04.jpg",
+          "alt": "Keitu imagines shooting stars outside the spaceship; Thabo says no.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+            "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+            "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+            "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+            "licenseFile": "content/library/books/CC-BY-4.0.txt"
+          },
+          "sha256": "f27b8764ca20a8fff09bba7f5a0f270544955aeab4608882159bc54868bce4cd"
+        },
+        "sentences": [
+          {
+            "id": "library-and-also-p4-1",
+            "text": "His little sister Keitu says, “Yes! And also! Watch out for shooting stars!” “No,” says Thabo.",
+            "speechKey": "library-and-also-p4-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Warm neural narration registered; lead audible acceptance pending."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/books/and-also/page-05.jpg",
+          "alt": "Thabo imagines the playground as a jungle.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+            "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+            "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+            "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+            "licenseFile": "content/library/books/CC-BY-4.0.txt"
+          },
+          "sha256": "fa1157a88f8e47b40b1da05052e505cc8d1b5998938a1befed4a5d63ba3d4632"
+        },
+        "sentences": [
+          {
+            "id": "library-and-also-p5-1",
+            "text": "Thabo pretends the playground is a jungle!",
+            "speechKey": "library-and-also-p5-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Warm neural narration registered; lead audible acceptance pending."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/books/and-also/page-06.jpg",
+          "alt": "Keitu imagines being a lion; Thabo says no.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+            "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+            "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+            "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+            "licenseFile": "content/library/books/CC-BY-4.0.txt"
+          },
+          "sha256": "8e305f8fcb1dee65fd2e60ac9ed782f5bca7c2d55eb58feb049642a701589c33"
+        },
+        "sentences": [
+          {
+            "id": "library-and-also-p6-1",
+            "text": "His little sister Keitu says, “Yes! And also! We are lions.” “No,” says Thabo.",
+            "speechKey": "library-and-also-p6-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Warm neural narration registered; lead audible acceptance pending."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/books/and-also/page-07.jpg",
+          "alt": "Thabo realizes that Keitu has a great idea. Keitu jumps with delight.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+            "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+            "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+            "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+            "licenseFile": "content/library/books/CC-BY-4.0.txt"
+          },
+          "sha256": "9d6be71fa60d4e322d428c985a94ef280e6a49347d201766a2e576291c95f8b9"
+        },
+        "sentences": [
+          {
+            "id": "library-and-also-p7-1",
+            "text": "“Oh!” says Thabo, “Wait! Wow! Yes! That’s a great idea!” “I know!” says Keitu.",
+            "speechKey": "library-and-also-p7-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Warm neural narration registered; lead audible acceptance pending."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/books/and-also/page-08.jpg",
+          "alt": "Thabo and Keitu both pretend to be lions.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+            "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+            "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+            "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+            "licenseFile": "content/library/books/CC-BY-4.0.txt"
+          },
+          "sha256": "00f0b1691194870e8715f1209aff226f638d9b3c54c32bea0d2f17ae5b9f3733"
+        },
+        "sentences": [
+          {
+            "id": "library-and-also-p8-1",
+            "text": "Thabo pretends to be a lion! Keitu also pretends to be a lion!",
+            "speechKey": "library-and-also-p8-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Warm neural narration registered; lead audible acceptance pending."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/books/and-also/page-09.jpg",
+          "alt": "The other children become an imaginary river of crocodiles while Thabo and Keitu float on a log.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+            "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+            "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+            "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+            "licenseFile": "content/library/books/CC-BY-4.0.txt"
+          },
+          "sha256": "477b22702beea636906fb3d513da7c4c107b1bb013bbab652a8a5a5e7ccd1d5d"
+        },
+        "sentences": [
+          {
+            "id": "library-and-also-p9-1",
+            "text": "Thabo pretends the other kids are a river of crocodiles! Keitu says, “Yes! And also! We can jump on this log to float away.”",
+            "speechKey": "library-and-also-p9-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Warm neural narration registered; lead audible acceptance pending."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/books/and-also/page-10.jpg",
+          "alt": "Thabo and Keitu imagine sliding down a rainbow and watching out for dinosaurs.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+            "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+            "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+            "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+            "licenseFile": "content/library/books/CC-BY-4.0.txt"
+          },
+          "sha256": "e228d8244c1d373c067acd404129bbf35d30d55bba0b2d451150a52b3a6443ee"
+        },
+        "sentences": [
+          {
+            "id": "library-and-also-p10-1",
+            "text": "“Yes! And also!” Thabo says, “We can slide down the rainbow!” Keitu says, “Yes! And also! Watch out for the dinosaurs!”",
+            "speechKey": "library-and-also-p10-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Warm neural narration registered; lead audible acceptance pending."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/books/and-also/page-11.jpg",
+          "alt": "In a wordless pretend scene, Keitu and Thabo fly among colorful creatures, stars and planets.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+            "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+            "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+            "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+            "licenseFile": "content/library/books/CC-BY-4.0.txt"
+          },
+          "sha256": "3a8a693bd8840823a81651a702893264ec680d31c96b5646eaa1441337b72d64"
+        },
+        "sentences": []
+      },
+      {
+        "image": {
+          "path": "content/library/books/and-also/page-12.jpg",
+          "alt": "Back in the bedroom, Thabo and Keitu smile and say they want to play together again.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+            "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+            "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+            "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+            "licenseFile": "content/library/books/CC-BY-4.0.txt"
+          },
+          "sha256": "5ec58f31813be6e4c453877f2f9d03a7223c428aed824310e0c0a4076fff242a"
+        },
+        "sentences": [
+          {
+            "id": "library-and-also-p12-1",
+            "text": "Thabo says, “I had the best day playing pretend with you.” Keitu says, “And also! We should play again tomorrow!”",
+            "speechKey": "library-and-also-p12-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Warm neural narration registered; lead audible acceptance pending."
+            }
+          }
+        ]
+      }
+    ],
+    "links": [
+      {
+        "kind": "item",
+        "target": "family-circle",
+        "label": "Who belongs in a family’s circle?"
+      },
+      {
+        "kind": "make",
+        "target": "wonder-page",
+        "label": "Make a page"
+      }
+    ]
   }
 ]

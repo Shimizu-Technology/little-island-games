@@ -50,8 +50,9 @@
       "text": "That night, Mouse’s dreams were bouncy and muddy.",
       "artworkText": [],
       "wordless": false,
-      "alt": "Mouse sleeps in a pool of mud.",
-      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+      "alt": "Mouse dreams of being in mud.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story.",
+      "originalAlt": "Mouse sleeps in a pool of mud."
     },
     {
       "page": 5,
@@ -68,8 +69,9 @@
       "text": "That night, Mouse’s dreams were noisy and wild.",
       "artworkText": [],
       "wordless": false,
-      "alt": "Mouse sleeps in a wild forest.",
-      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+      "alt": "Mouse dreams of a wild forest.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story.",
+      "originalAlt": "Mouse sleeps in a wild forest."
     },
     {
       "page": 7,
@@ -86,8 +88,9 @@
       "text": "That night, Mouse’s dreams were cold and wet.",
       "artworkText": [],
       "wordless": false,
-      "alt": "Mouse sleeps underwater surrounded by fish and seaweed.",
-      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+      "alt": "Mouse dreams of being underwater among fish and seaweed.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story.",
+      "originalAlt": "Mouse sleeps underwater surrounded by fish and seaweed."
     },
     {
       "page": 9,
@@ -104,8 +107,9 @@
       "text": "",
       "artworkText": [],
       "wordless": true,
-      "alt": "Mouse perches on a couch in front of the fireplace.",
-      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+      "alt": "Mouse sits on a ledge in front of a lit fireplace.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story.",
+      "originalAlt": "Mouse perches on a couch in front of the fireplace."
     },
     {
       "page": 11,

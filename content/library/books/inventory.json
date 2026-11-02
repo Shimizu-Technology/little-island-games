@@ -1,18 +1,18 @@
 {
-  "generatedAt": "2026-11-02T03:21:34.851896+00:00",
-  "note": "Book acquisition inventory refreshed after parent integration: review identities use role names for the strict privacy boundary. Reading image bytes and rights/edition source bytes are unchanged; policy contact snapshot retained under docs/library/book-evidence.",
-  "readingImageBytes": 17409088,
-  "bytesExcludingInventory": 24439195,
+  "generatedAt": "2026-11-02T12:34:17.878295+00:00",
+  "note": "Current content-pass inventory; original acquisition report retained with integration addendum. All nine reading editions, reconciled alts, and current companion metadata.",
+  "readingImageBytes": 19996281,
+  "bytesExcludingInventory": 27085758,
   "files": [
     {
       "path": "content/library/book-items.json",
-      "bytes": 323782,
-      "sha256": "e0b5cd04ce5b190d906811fdd450cdda9d79f2128465ef49bdad9822cea70311"
+      "bytes": 350060,
+      "sha256": "3b227767428411cca649b8dbfc3950daaf0d205c888467288948630c6cfc47e0"
     },
     {
       "path": "content/library/book-speech.json",
-      "bytes": 25308,
-      "sha256": "f5a68f3e528837c9b237870c9861f84278075463579530436a859d66a349043f"
+      "bytes": 27464,
+      "sha256": "b7d80194436048b3b63d042bb6d366931a24f1ae6269bbce07804ce2a9495597"
     },
     {
       "path": "content/library/books/CC-BY-4.0.txt",
@@ -21,8 +21,8 @@
     },
     {
       "path": "content/library/books/REPORT.md",
-      "bytes": 12609,
-      "sha256": "6283d0fef32cc1851a70e4816cf1078970c9032b2bed2e7d535cc435e7245947"
+      "bytes": 13416,
+      "sha256": "625840dfdace121b589672a86bb0a417cb40618627028d9e023469c05bc86edc"
     },
     {
       "path": "content/library/books/a-beautiful-day/CREDITS.html",
@@ -56,8 +56,8 @@
     },
     {
       "path": "content/library/books/a-beautiful-day/manifest.json",
-      "bytes": 16793,
-      "sha256": "0ddab4fae450a37f9a681116ecad09030087ea03825414f0baec59ac781fc024"
+      "bytes": 17032,
+      "sha256": "d778b9a597aa8a2e7b938f51522df0ec971c6246b9277a305da642d4f96f0831"
     },
     {
       "path": "content/library/books/a-beautiful-day/page-00.jpg",
@@ -131,8 +131,8 @@
     },
     {
       "path": "content/library/books/a-beautiful-day/transcripts.json",
-      "bytes": 5909,
-      "sha256": "d68b6ce134392398934bd8269919ac45160f495aac1d92ebda08c872b850a19a"
+      "bytes": 6149,
+      "sha256": "58a3ac48603a5edf394cf5577ec9680276ac3e7a9059021ed070406dfc0d8357"
     },
     {
       "path": "content/library/books/a-fish-and-a-gift/CREDITS.html",
@@ -166,8 +166,8 @@
     },
     {
       "path": "content/library/books/a-fish-and-a-gift/manifest.json",
-      "bytes": 20048,
-      "sha256": "ab489083fca9e129a4774acfe7a643dfc781c8e684f03f53e6e03a74c24f8003"
+      "bytes": 20295,
+      "sha256": "b2e7ce931c1c42d85fb4a213fd49b2db224e3b9fb9a34266e511a7080820db54"
     },
     {
       "path": "content/library/books/a-fish-and-a-gift/page-00.jpg",
@@ -241,8 +241,8 @@
     },
     {
       "path": "content/library/books/a-fish-and-a-gift/transcripts.json",
-      "bytes": 8671,
-      "sha256": "462b898bcdbb9506bfb472a11cedef8aa41888c269a88af17e9c2da4354fb209"
+      "bytes": 8918,
+      "sha256": "9505567cb3ba222fb19cf04d0a742b72303e77ce3ba2188a3344b93457164a03"
     },
     {
       "path": "content/library/books/a-house-for-mouse/CREDITS.html",
@@ -276,8 +276,8 @@
     },
     {
       "path": "content/library/books/a-house-for-mouse/manifest.json",
-      "bytes": 16534,
-      "sha256": "1d46209b803ed146bb4084a0053111a8a0945b5dbfe1084d43284a008705d8db"
+      "bytes": 17083,
+      "sha256": "efcfe418d20702726de87a4240e050ea6322339c57f308e3c49165cef31c5045"
     },
     {
       "path": "content/library/books/a-house-for-mouse/page-00.jpg",
@@ -351,18 +351,18 @@
     },
     {
       "path": "content/library/books/a-house-for-mouse/transcripts.json",
-      "bytes": 5395,
-      "sha256": "351938ab1292f2dbd3f24972ae7d89d5a93c1da1ad68fe65cfb6d2295bc8f880"
+      "bytes": 5860,
+      "sha256": "7b10856158f984504ddd75a296036cb17b3e302d42327a6220df53d16b042989"
     },
     {
       "path": "content/library/books/a-tiny-seed/CREDITS.html",
-      "bytes": 1600,
-      "sha256": "e2e06abe200c8a22e6b2dfc58deee321dd5b8e47d4daab1b2fc2388134adc645"
+      "bytes": 1465,
+      "sha256": "b97ddc2a79c8ce842a83d468a38aac31c33a79f3af9a147b984eab3a411bd291"
     },
     {
       "path": "content/library/books/a-tiny-seed/CREDITS.txt",
-      "bytes": 1124,
-      "sha256": "c2eeacc55cd729fc87153e70061ee9004b344121dccc90eb92aa6c4ac6ec37d9"
+      "bytes": 1082,
+      "sha256": "c2a175f0afd29589e0adb01303cbaf927f302e5e56900f5b19422fa24f931c97"
     },
     {
       "path": "content/library/books/a-tiny-seed/edition-metadata.json",
@@ -386,8 +386,8 @@
     },
     {
       "path": "content/library/books/a-tiny-seed/manifest.json",
-      "bytes": 18451,
-      "sha256": "660a72f08b15e789db63d96604758e5aca990313205654e72fb08125fbcac8af"
+      "bytes": 20282,
+      "sha256": "fb10b415f5b8ad235c62414d21efc3690d713ef1b05b50d888f603f3a42d6314"
     },
     {
       "path": "content/library/books/a-tiny-seed/page-00.jpg",
@@ -461,8 +461,108 @@
     },
     {
       "path": "content/library/books/a-tiny-seed/transcripts.json",
-      "bytes": 7102,
-      "sha256": "094416b070e7d27ad19a052e4d87475527849b462d8d5fd4d42bd15e1b4887f6"
+      "bytes": 7378,
+      "sha256": "53858235701a4952f18065c3c257b18bb27d445ca27e43d4a11b6070f038c171"
+    },
+    {
+      "path": "content/library/books/and-also/CREDITS.html",
+      "bytes": 1770,
+      "sha256": "befb8582da0efd3d72ea5448e2670cbeb83c9b685f803788e8457f51afc74270"
+    },
+    {
+      "path": "content/library/books/and-also/CREDITS.txt",
+      "bytes": 1759,
+      "sha256": "6d88f71c5814a0026190a45db838b3e234af95479bd8a3d60b029070473becf4"
+    },
+    {
+      "path": "content/library/books/and-also/edition-metadata.json",
+      "bytes": 886,
+      "sha256": "2974f8ce0b83b53ad49281222a8686c32ba6f90ab035b2e54eb85b33b190dcdf"
+    },
+    {
+      "path": "content/library/books/and-also/edition.txt",
+      "bytes": 3059,
+      "sha256": "3ed380fe154ac2474a5146582e5a171e5549fa774dd64c728c9f4e950bbfa028"
+    },
+    {
+      "path": "content/library/books/and-also/manifest.json",
+      "bytes": 9560,
+      "sha256": "d09a11c91eae6944fcb2530b736e1704707eb1014066622699cc523cb26f42de"
+    },
+    {
+      "path": "content/library/books/and-also/page-00.jpg",
+      "bytes": 232707,
+      "sha256": "29ef4533df4b708a3d872fcad17ba7073b8d0885959914a12dc9db11ea7e3418"
+    },
+    {
+      "path": "content/library/books/and-also/page-01.jpg",
+      "bytes": 203423,
+      "sha256": "e77b195d58bd15ca3ebd734a17810f903f3480627049ac870bc2d0f099241f57"
+    },
+    {
+      "path": "content/library/books/and-also/page-02.jpg",
+      "bytes": 156800,
+      "sha256": "76d87e0ed70aa00438f2df9ebec6d7ef24699e41252957fa1558f464bd3aa2bb"
+    },
+    {
+      "path": "content/library/books/and-also/page-03.jpg",
+      "bytes": 200963,
+      "sha256": "26ad5da65bd881065a7ae0f15014ed9eae4160f852592b00d4976a3c245be121"
+    },
+    {
+      "path": "content/library/books/and-also/page-04.jpg",
+      "bytes": 183862,
+      "sha256": "f27b8764ca20a8fff09bba7f5a0f270544955aeab4608882159bc54868bce4cd"
+    },
+    {
+      "path": "content/library/books/and-also/page-05.jpg",
+      "bytes": 211357,
+      "sha256": "fa1157a88f8e47b40b1da05052e505cc8d1b5998938a1befed4a5d63ba3d4632"
+    },
+    {
+      "path": "content/library/books/and-also/page-06.jpg",
+      "bytes": 184929,
+      "sha256": "8e305f8fcb1dee65fd2e60ac9ed782f5bca7c2d55eb58feb049642a701589c33"
+    },
+    {
+      "path": "content/library/books/and-also/page-07.jpg",
+      "bytes": 88390,
+      "sha256": "9d6be71fa60d4e322d428c985a94ef280e6a49347d201766a2e576291c95f8b9"
+    },
+    {
+      "path": "content/library/books/and-also/page-08.jpg",
+      "bytes": 213339,
+      "sha256": "00f0b1691194870e8715f1209aff226f638d9b3c54c32bea0d2f17ae5b9f3733"
+    },
+    {
+      "path": "content/library/books/and-also/page-09.jpg",
+      "bytes": 231583,
+      "sha256": "477b22702beea636906fb3d513da7c4c107b1bb013bbab652a8a5a5e7ccd1d5d"
+    },
+    {
+      "path": "content/library/books/and-also/page-10.jpg",
+      "bytes": 229534,
+      "sha256": "e228d8244c1d373c067acd404129bbf35d30d55bba0b2d451150a52b3a6443ee"
+    },
+    {
+      "path": "content/library/books/and-also/page-11.jpg",
+      "bytes": 287606,
+      "sha256": "3a8a693bd8840823a81651a702893264ec680d31c96b5646eaa1441337b72d64"
+    },
+    {
+      "path": "content/library/books/and-also/page-12.jpg",
+      "bytes": 162700,
+      "sha256": "5ec58f31813be6e4c453877f2f9d03a7223c428aed824310e0c0a4076fff242a"
+    },
+    {
+      "path": "content/library/books/and-also/publisher.txt",
+      "bytes": 680,
+      "sha256": "6451a7e47f3b893f64f7b8b935e9d4898ffa89645d49a4cae18f1819636e49fa"
+    },
+    {
+      "path": "content/library/books/and-also/transcripts.json",
+      "bytes": 6101,
+      "sha256": "f7f85cc5c1b036f0fd201c3f163ac5189f046317608e3930ac08b0aa24106d1c"
     },
     {
       "path": "content/library/books/author-qa.json",
@@ -491,8 +591,8 @@
     },
     {
       "path": "content/library/books/busy-day/manifest.json",
-      "bytes": 13475,
-      "sha256": "c453cdde0a9ca6bcb85d3f185ee8bab67f28c28e32b97f378de3604c7b259345"
+      "bytes": 13675,
+      "sha256": "e77552b5b537d24a207b77538d5d58d9145540c11a8b5aa14cbbd219eaa60d6c"
     },
     {
       "path": "content/library/books/busy-day/page-00.jpg",
@@ -576,8 +676,8 @@
     },
     {
       "path": "content/library/books/busy-day/transcripts.json",
-      "bytes": 5196,
-      "sha256": "d02a00b1ec27ae7c064067a9f18a3cdbfff1ec9887c8d3dab166c360cd1bff25"
+      "bytes": 5396,
+      "sha256": "8785aed12871e4d6ed08bffe425480f114f30027091a4d5c495b90635758e37c"
     },
     {
       "path": "content/library/books/little-ants-big-plan/CREDITS.html",
@@ -611,8 +711,8 @@
     },
     {
       "path": "content/library/books/little-ants-big-plan/manifest.json",
-      "bytes": 17612,
-      "sha256": "dfcf7f3fffd4b461b8a4e1490594a90bab19cddd2a9599103677d9d1c70c0201"
+      "bytes": 17845,
+      "sha256": "2c754a8b1bb1fc3296afddba22a99e25957eb7c561671b48826e5f4ab3d25ea2"
     },
     {
       "path": "content/library/books/little-ants-big-plan/page-00.jpg",
@@ -686,8 +786,8 @@
     },
     {
       "path": "content/library/books/little-ants-big-plan/transcripts.json",
-      "bytes": 6437,
-      "sha256": "cb0293f3cb580cc4773063726af7a039c90880947c8add2d15daa5851114a3c8"
+      "bytes": 6671,
+      "sha256": "fa588d99947ad5ddf328751e1b62f08096e8ba4e4100c27a630e1449fa0b0872"
     },
     {
       "path": "content/library/books/publisher-crediting-policy.txt",
@@ -741,8 +841,8 @@
     },
     {
       "path": "content/library/books/sleepy-mr-sloth/manifest.json",
-      "bytes": 17351,
-      "sha256": "7af5699d2bcdc1290b07b8745e9f6b8daf15d1eaecba88b50eecfa21c0c15284"
+      "bytes": 17549,
+      "sha256": "9708b8b7ed59637b9c488f4794cda3f14791631979f21fb23b209a72a32398e3"
     },
     {
       "path": "content/library/books/sleepy-mr-sloth/page-00.jpg",
@@ -816,8 +916,8 @@
     },
     {
       "path": "content/library/books/sleepy-mr-sloth/transcripts.json",
-      "bytes": 6051,
-      "sha256": "6647ec4e7888c463e3c7a5d594028d2eca10759612f50b17da11262d129d9f08"
+      "bytes": 6249,
+      "sha256": "8964723a0ccd3fc6f8985e0c489c3fbbccc7c6a244a0a4097e1d0a895771b353"
     },
     {
       "path": "content/library/books/source-manifest.json",
@@ -856,8 +956,8 @@
     },
     {
       "path": "content/library/books/the-best-thing-ever/manifest.json",
-      "bytes": 17893,
-      "sha256": "786afb22639226f4a43839c4121f17997f349ef34c088042f620a225dfc49dec"
+      "bytes": 18460,
+      "sha256": "0f7840c027515954be5fbfd08eeacc4f4ebaf4416bc5d9a873a223ab395543d7"
     },
     {
       "path": "content/library/books/the-best-thing-ever/page-00.jpg",
@@ -936,8 +1036,8 @@
     },
     {
       "path": "content/library/books/the-best-thing-ever/transcripts.json",
-      "bytes": 6779,
-      "sha256": "3b4fdbb7fc664a6b6c745713b987bcdb223bc9d6055bb7ec178eefea2ddbb81e"
+      "bytes": 7346,
+      "sha256": "01af2dc6086d34a1a779fe1c6143df2e92b631e90f42a4a2e2ecef13b6d659dd"
     },
     {
       "path": "content/library/books/validator-result.txt",

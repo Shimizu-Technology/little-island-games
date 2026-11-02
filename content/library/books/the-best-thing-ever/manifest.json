@@ -251,7 +251,7 @@
       "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
     },
     {
-      "alt": "Muzi and his mother arrive at Gogo's shack. They carry shopping bags filled with Muzi's found objects.",
+      "alt": "Muzi and his mother arrive at Gogo's home. They carry shopping bags filled with Muzi's found objects.",
       "text": "Look, Muzi! We are here.",
       "file": "09.jpg",
       "path": "content/library/books/the-best-thing-ever/page-09.jpg",
@@ -269,10 +269,11 @@
         1575,
         788
       ],
-      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed.",
+      "originalAlt": "Muzi and his mother arrive at Gogo's shack. They carry shopping bags filled with Muzi's found objects."
     },
     {
-      "alt": "Muzi's mother and Gogo bake bread. Muzi builds in the corner using dough and his newfound things.",
+      "alt": "Muzi’s mother and Gogo bake. Nearby, Muzi builds with the things he found.",
       "text": "While uGogo bakes for the hungry travellers... Muzi builds.",
       "file": "10.jpg",
       "path": "content/library/books/the-best-thing-ever/page-10.jpg",
@@ -290,10 +291,11 @@
         1575,
         788
       ],
-      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed.",
+      "originalAlt": "Muzi's mother and Gogo bake bread. Muzi builds in the corner using dough and his newfound things."
     },
     {
-      "alt": "Muzi presents his sculpture to Gogo. It is a house made from dough and all his found objects.",
+      "alt": "Muzi shows Gogo the model house he made with the things he found.",
       "text": "Look Gogo, a new house for you. Oh, Muzi, laughs Gogo. This is the best thing ever!",
       "file": "11.jpg",
       "path": "content/library/books/the-best-thing-ever/page-11.jpg",
@@ -311,7 +313,8 @@
         1575,
         788
       ],
-      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+      "transformation": "Publisher printed-English page image; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed.",
+      "originalAlt": "Muzi presents his sculpture to Gogo. It is a house made from dough and all his found objects."
     },
     {
       "alt": "The house is a beautiful mix of colours and textures using bottle tops, sticks, matchboxes and more.",

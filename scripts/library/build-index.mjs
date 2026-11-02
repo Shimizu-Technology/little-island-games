@@ -28,6 +28,8 @@ const entries = [
           ? Object.values(item.layers)
               .flat()
               .map((s) => s.text)
+          : item.type === "prayer"
+            ? item.sentences.map((s) => s.text)
           : item.type === "book"
             ? item.pages.flatMap((p) => p.sentences.map((s) => s.text))
             : []),
@@ -48,6 +50,8 @@ const sentences = items.flatMap((item) => [
   item.label,
   ...(item.type === "topic"
     ? Object.values(item.layers).flat()
+    : item.type === "prayer"
+      ? item.sentences
     : item.type === "book"
       ? item.pages.flatMap((page) => page.sentences)
       : []),

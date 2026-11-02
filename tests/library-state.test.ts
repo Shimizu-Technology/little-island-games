@@ -26,10 +26,10 @@ export function legacyFixture() {
 }
 
 describe('Library durable data contract', () => {
-  it('returns independent defaults with all authored category IDs, hours off and safe fallback', () => {
+  it('returns independent defaults with standard categories and optional collections off, hours off and safe fallback', () => {
     const a = newLibraryChild(), b = libraryChild(undefined, 'family');
-    expect(validLibraryChild(a)).toBe(true); expect(a.policy.collections).toEqual(categories.map(c => c.id));
-    a.saved.push('moon'); a.policy.collections.pop(); a.labs.space.turn = 1; expect(b.labs.space.turn).toBe(0); expect(b.saved).toEqual([]); expect(b.policy.collections).toHaveLength(categories.length);
+    expect(validLibraryChild(a)).toBe(true); expect(a.policy.collections).toEqual(categories.filter(c => c.defaultEnabled).map(c => c.id));
+    a.saved.push('moon'); a.policy.collections.pop(); a.labs.space.turn = 1; expect(b.labs.space.turn).toBe(0); expect(b.saved).toEqual([]); expect(b.policy.collections).toHaveLength(categories.filter(c => c.defaultEnabled).length);
     const data = { version: 1 as const, profiles: { family: b } };
     expect(libraryChild(data, 'family')).toBe(b); expect(libraryChild(data, '__proto__')).toEqual(newLibraryChild());
   });
@@ -72,7 +72,7 @@ describe('Library durable data contract', () => {
   });
   it('checks profile ownership and archive validity on import', () => {
     expect(() => parseSave(JSON.stringify({ ...emptySave(), library: { version: 1, profiles: { removed: newLibraryChild() } } }))).toThrow();
-    expect(validLibraryData({ version: 2, profiles: {} })).toBe(false);
+    expect(validLibraryData({ version: 3, profiles: {} })).toBe(false);
     expect(validLibraryData({ version: 1, profiles: {}, archive: { explore: { favorites: [], progress: {} } } })).toBe(false);
   });
   it('supports local daytime, overnight, disabled and equal-minute all-day hours', () => {
@@ -110,7 +110,7 @@ describe('immutable Explore migration', () => {
   });
   it('uses the actual active learner, keeps the family fallback, and removes only the deleted profile', () => {
     const learning = addLearner(familyLearners(), 'Child', 'child-1'), migrated = migrateLibrary({ ...legacyFixture(), learning });
-    expect(Object.keys(migrated.library.profiles)).toEqual(['child-1']);
+    expect(Object.keys(migrated.library.profiles)).toEqual(['family', 'child-1']);
     migrated.library.profiles.family = newLibraryChild();
     const next = withoutLearner(migrated, 'child-1');
     expect(next.learning?.active).toBe('family'); expect(Object.keys(next.library!.profiles)).toEqual(['family']);

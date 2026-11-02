@@ -1,0 +1,1583 @@
+{
+  "reviewer": "Leon Shimizu",
+  "date": "2026-11-02",
+  "decisions": [
+    {
+      "id": "turtle-breath",
+      "title": "How does a sea turtle breathe?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "body: Lungs, oxygen and blood circulation; family judgment pending.",
+        "wildlife and water safety: Give turtles room; adult supervision in More. No breath-hold duration or imitation task."
+      ],
+      "contentSha256": "b1f59575597ffae85d3d6642c68101f07002df687e50857303619a9f3ca98ed0",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "reef-food-web",
+      "title": "Build a reef food web",
+      "kind": "exhibit",
+      "sensitiveNotes": [
+        "designated family reviewer family review required: animals eating animals; arrows show energy transfer, without graphic predation."
+      ],
+      "contentSha256": "c3f44f6eff22326bd1ed60957869c5f4dc80cef11f65e71bbf34d80fc9b76ff9",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "busy-day",
+      "title": "A very busy day!",
+      "kind": "book",
+      "sensitiveNotes": [
+        "Shopping and choosing a toy; grown-up previews the complete book. Multilingual greetings need pronunciation review."
+      ],
+      "contentSha256": "34cbe87dceead040436ca7ff1bfc978fa7e6f6900c7b1082f0dbece8ae089d1f",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "sun",
+      "title": "Is the Sun a star?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "sun safety: One direct warning in Tell; family judgment remains pending. The illustration is not a viewing guide."
+      ],
+      "contentSha256": "0ba073cb9b93be1a252f5dcb4a99508e908d5c3d4af65e3dbf64c790cd9fd33c",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "tides",
+      "title": "Why does the shore move?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "water safety: Grown-up supervision and local tide, surf, and weather checks; no invitation to wade or approach a receding shore."
+      ],
+      "contentSha256": "feb109ecadea39f1deef581db1019e441f6865155b3bec9d3f09261ef7dd300e",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "waves",
+      "title": "What starts an ocean wave?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "storms/disaster: Underwater earthquakes and hazardous waves; keep calm and do not imply this offline app supplies alerts.",
+        "water safety: Model does not establish beach safety."
+      ],
+      "contentSha256": "e9607f25fe21a4fd821453a16a0216456986fbcaa9b3be068216f82c68286743",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "coral",
+      "title": "Is coral a plant or an animal?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "body: Animal tentacles and tissue; predation: coral captures food from water.",
+        "wildlife safety: Do not touch, stand on, remove, or collect coral."
+      ],
+      "contentSha256": "fc376cc2bfef85907b88a763d9a33a0ebc8f3a73a639c595998c5b0b87be4c37",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "plankton",
+      "title": "What drifts in the ocean?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "predation: Small animals eating algae and being eaten; no graphic depiction."
+      ],
+      "contentSha256": "abdecf6d927baa81407da87530d25876e6813d1c79b3700b9ea7a92844addd31",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "seagrass",
+      "title": "Can grass grow under the sea?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "wildlife safety: No trampling, collecting, or boat activity suggested.",
+        "body: Plant reproduction includes flowers and seeds."
+      ],
+      "contentSha256": "b6ed6e4ec96ac4cb2441272dfa04ac5cdd499c4c0099a5227133975957ad3066",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "deep-ocean",
+      "title": "What happens deeper in the ocean?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "water safety: No diving, pressure, or breath-holding experiment; specialist exploration only."
+      ],
+      "contentSha256": "08e97acbf3637ab003563aa9a0d15663198fe2065782642272a66cb42dc6c9e4",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "octopus",
+      "title": "What can eight arms do?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "body: Animal arms, suckers, skin, muscles and nerves.",
+        "predation: Food handling; no graphic feeding scene.",
+        "wildlife safety: Do not handle or imitate contact with an octopus."
+      ],
+      "contentSha256": "3e5f5555af45b79769c69260b8621c9a742315e0ce3c60a7c8aff7edc318b76a",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "food-web",
+      "title": "Who feeds whom in the sea?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "predation: Animals eating animals is central; calm language and non-graphic imagery.",
+        "model limits: One possible relationship map, not a real ecosystem forecast."
+      ],
+      "contentSha256": "5695c94a199df0be3fb3c28ba52c23941ab84434f05e4901fd0783260e5a4bc6",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "bats",
+      "title": "Are bats birds?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "body: Milk feeding, fur, finger bones, ears and skin.",
+        "predation: Insect-eating bats; no graphic imagery.",
+        "wildlife safety: No touching bats; tell a grown-up if one is close."
+      ],
+      "contentSha256": "19dba315feb27e95624dd3540faad4ef89f47624aabccca12d6297002acdb88a",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "butterflies",
+      "title": "Where does a butterfly come from?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "body: Animal eggs, life stages and body transformation; no implication that all insects change identically."
+      ],
+      "contentSha256": "8636c4ded26ec8604867e6a168d959c4d7813c723a7b6d18c986657c427edaa4",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "frogs",
+      "title": "Why does a tadpole change?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "body: Animal development, breathing and limb changes.",
+        "wildlife safety: Draw or observe from a distance; no handling, collecting, or releasing frogs."
+      ],
+      "contentSha256": "d4bbcc53e7d64aaf513ae679cfe632307deca8b1b26b6ab355f78ac62794e75c",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "bees",
+      "title": "How can a bee help a flower?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "body: Plant reproductive parts and seeds; explain without adding human-body comparisons.",
+        "wildlife safety: Do not catch, disturb, or approach stinging insects."
+      ],
+      "contentSha256": "fd28ab21d52d90aec9453f23702c085328405581be2368fe0353232abc87bc6c",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "camouflage",
+      "title": "Can you hide in plain sight?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "predation: Hiding from and warning predators; no graphic imagery.",
+        "body: Butterfly wing scales and color structures."
+      ],
+      "contentSha256": "a2423a5ffb4e07f91946a9f287658a2c871f505e2bca7911f2aecad36046f3fd",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "dolphins",
+      "title": "Is a dolphin a fish?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "body: Breathing, blowhole and milk feeding.",
+        "predation: Dolphins eat fish and squid; no graphic depiction.",
+        "wildlife safety: Distance and no feeding or chasing dolphins."
+      ],
+      "contentSha256": "0a2574072f6a8efaa8fa3151916ae8cb46b4e609cfd42ba3a2ef87b6fc9bd175",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "habitats",
+      "title": "What makes an animal's home?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "wildlife safety: Picture matching does not authorize moving animals or building captive habitats."
+      ],
+      "contentSha256": "4c7da99d0487722f028d01099010ffdc567a23fd417fc05ccae569d45128701d",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "bird-feathers",
+      "title": "What are feathers for?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "body: Feather anatomy and insulation.",
+        "wildlife safety: Look without collecting or touching wild feathers."
+      ],
+      "contentSha256": "60502cdd6cb6c1b53da7e5bb05a4373cafd78fedb85e4936a4ce1ad1750e70b4",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "blue-sky",
+      "title": "Why is the sky blue?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "sun safety: Never look directly at the Sun, including at sunset; motif is symbolic."
+      ],
+      "contentSha256": "bcd109a2e19464bf943be2e95159859c0922c22bfa1a169afd67da74edf452c9",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "rain",
+      "title": "How does rain fall from a cloud?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "water safety: Water journey is a model; no entering floodwater or collecting rain during a storm."
+      ],
+      "contentSha256": "d317117c6f8a5702ac933b0668b900736d03ffc22cdfd9517179d59310259a4f",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "rainbows",
+      "title": "How does a rainbow appear?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "sun safety: Never look directly at the Sun; any observation must face away from it.",
+        "water safety: No outdoor observation during thunder or dangerous weather."
+      ],
+      "contentSha256": "cd3202f744f43b1517d1cf0b387854d04ab59bfb08c917143aeb3d9c956a58c1",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "wind",
+      "title": "What is wind?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "storms/disaster: Related typhoon link; no claim of live wind or safety forecast.",
+        "weather safety: Retain original indoor or safely sheltered observation."
+      ],
+      "contentSha256": "d3362d899c40cb10739eb692f834f64e0015e3351a03c742cf5e0d4dec6d53c6",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "lightning",
+      "title": "Why does thunder rumble?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "storms/disaster: Lightning can frighten children; calm safety wording and designated family reviewer family review.",
+        "safety: Immediately tell a grown-up and enter a substantial building; stay away from windows. Never suggest watching from an open shelter, going outdoors, or timing thunder.",
+        "legacy audio safety: Preserve corrected science-v25-explore-lightning key; older clip must not be reused."
+      ],
+      "contentSha256": "778371e8bac448904d4b1127e84d4e9b7fcc9303549572708dac3761010a76f6",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "typhoons",
+      "title": "Is a typhoon a hurricane?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "storms/disaster: Dangerous wind and rain, Guam context; designated family reviewer family review.",
+        "culture: Regional storm naming and Guam context; no new cultural or CHamoru terms.",
+        "safety: Offline education only, never current warnings; follow local officials and grown-up preparations."
+      ],
+      "contentSha256": "4b4ab0ca3328fee1ecbd8d1be0cb4d0aa4a68e36c9f8d3e4e30d89e4b4e07c60",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "seasons",
+      "title": "Why do seasons change?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "sun safety: Globe or drawing model only; never look at the Sun.",
+        "culture: Seasonal labels vary by location; avoid treating snowy four-season weather as universal."
+      ],
+      "contentSha256": "3e7406ea0c8cb34bb875fbe44be8cfab561929a41455004ab938851541b02188",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "forecast",
+      "title": "How do people predict weather?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "storms/disaster: No current forecast or warning; grown-up checks an official current source.",
+        "safety: Imaginary weather station only; no launching balloons or placing tools outdoors in storms."
+      ],
+      "contentSha256": "cfbe362031546e3756be4af9a52e5b9e97fa1a0baf90f9405de5da988d28f8b6",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "guam",
+      "title": "Where is Guam?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture: Guam place and identity; designated family reviewer local/family review. Natural history does not stand in for cultural history.",
+        "art accuracy: The reviewed silhouette is schematic and is not a navigation chart. No new CHamoru terms."
+      ],
+      "contentSha256": "2f706b9f287c27198d255117c03cc64b6b04851abf11a30daffedc4bae104e80",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "reef",
+      "title": "Why care for Guam's reefs?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture: Guam reef stewardship and local guidance; designated family reviewer review.",
+        "storms/disaster: Reefs reduce some wave energy; never a guarantee of storm protection.",
+        "wildlife safety: Leave animals and coral in place; no touch, collecting, litter or trampling."
+      ],
+      "contentSha256": "667f2f21197053d3f8f0f62f401d376eaf9677d43e3484c439b9bcff6cca5f29",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "rivers",
+      "title": "Why do rivers wind toward the sea?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture: Guam/world geography context; designated family reviewer review.",
+        "water safety: Drawing only; no entering a river or floodwater."
+      ],
+      "contentSha256": "e55c07a7b044017db423b5765e3c846637f423a62b009d95ca5aaa103d0f973f",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "continents",
+      "title": "What are continents?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture: Continent grouping and naming conventions differ; retain qualification and request designated family reviewer review.",
+        "map accuracy: Stylized motif does not provide navigational or boundary information."
+      ],
+      "contentSha256": "280d4dc486ea4911137b6d5ce6f02aa852b8a187b62a8acca63b8e8908e64345",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "maps",
+      "title": "How do you read a map?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture: Human choices of place labels, boundaries and map conventions; designated family reviewer review.",
+        "navigation safety: Learning map only, never a real navigation chart."
+      ],
+      "contentSha256": "8640e87632204a41274c0282ccdcb227d4824b58e9f6a7d6f2716e6991d836cd",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "directions",
+      "title": "Which way is north?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture: Map orientation conventions and Guam/world context; designated family reviewer review.",
+        "navigation safety: Decorative compass is not a live sensor; real navigation with knowledgeable grown-up and current tools."
+      ],
+      "contentSha256": "19e6e8acaef1b89d4b0bb8f8dd2eb40c37d826a3610e3f2a75789321442efbdc",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "fish-gills",
+      "title": "How does a fish breathe?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: shoreline/wildlife safety. Observe with a grown-up from a safe place; do not touch, feed or collect animals."
+      ],
+      "contentSha256": "2727659e14c73a8b8b493b467bf2cecf4dca9c08ac802bb37605bbc85e4a91e7",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "parrotfish",
+      "title": "What do parrotfish eat?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: shoreline/wildlife safety. Observe with a grown-up from a safe place; do not touch, feed or collect animals.",
+        "designated family reviewer family review: feeding and animal waste, described without graphic detail."
+      ],
+      "contentSha256": "44c6586b4a082dd0e4e86b022b4339923beb2490748979726f1767ae60685d0e",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "tide-pool",
+      "title": "Who lives in a tide pool?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: shoreline/wildlife safety. Observe with a grown-up from a safe place; do not touch, feed or collect animals."
+      ],
+      "contentSha256": "f075ef0c9a95597634af7cbaa6f859e082fe6151a7949e39ea5cfbf4c2af8f16",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "mangrove-roots",
+      "title": "Why are mangroves important?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: shoreline/wildlife safety. Observe with a grown-up from a safe place; do not touch, feed or collect animals."
+      ],
+      "contentSha256": "cede89c7eae069c23c41e25350cfdf027930535be5f9c24b8bb75d823703f2f8",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "jellyfish-move",
+      "title": "How do jellyfish move?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: shoreline/wildlife safety. Observe with a grown-up from a safe place; do not touch, feed or collect animals.",
+        "designated family reviewer family review: predation and stinging cells; no touching or treatment instructions."
+      ],
+      "contentSha256": "7d3643d5242f433fb472d1e6b4333d86e93988116f43fe25defba12e34efb777",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "whale-song",
+      "title": "Why do whales sing?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: shoreline/wildlife safety. Observe with a grown-up from a safe place; do not touch, feed or collect animals.",
+        "designated family reviewer family review: reproduction mentioned in general terms; no mating imagery."
+      ],
+      "contentSha256": "07729c1d9ab9fc0651a12d186849f25312bee9b7080761419640beb50383adb2",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "guam-made",
+      "title": "How was Guam made?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer review: local island explanation. Geological diagram is simplified and not a field guide."
+      ],
+      "contentSha256": "0e3576eb5ec834f48f772e08ff154190cade3555af9618cecafc2c6c51bd2e4b",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "limestone",
+      "title": "What is limestone?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer review: local geology and safe observing; no caves, cliffs or rock collecting."
+      ],
+      "contentSha256": "c83621068d969e7c1bd6652de17d6ce680c030de29a8425f5c8b54c0dc4451a1",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "guam-rail",
+      "title": "What is the Guam rail?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family/cultural review required: local community, language or identity. Do not present this draft as community approval.",
+        "designated family reviewer family review: species loss and predation, without graphic detail. No unverified local-language name added."
+      ],
+      "contentSha256": "8f7c1600001a616b8c404059bd061c55a704202a224f9cc4f51d7aae3215cc08",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "limestone-forest",
+      "title": "What is a limestone forest?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer review: local ecology; plant shapes are schematic, not species identifications."
+      ],
+      "contentSha256": "15b2a70f5b4b92b897cc9cb2757219a33e19d1a4a3562289103ee1575548a8c8",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "drinking-water",
+      "title": "Where does our drinking water come from?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: drinking water and health; no current safety claim or invitation to drink untreated water."
+      ],
+      "contentSha256": "215cc11b0a34a914d255c9269a97ebd2e177890411c6c7ee250c69bd1f6f6a64",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "village",
+      "title": "What is a village?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family/cultural review required: local community, language or identity. Do not present this draft as community approval."
+      ],
+      "contentSha256": "875fe174a8e5bace035ce87d0540ef53069d725b941f31690cbac5e946be8187",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "native-trees",
+      "title": "Why are native trees important?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer review: local restoration and species language; no foraging, removal or planting instruction."
+      ],
+      "contentSha256": "855a8a402283e68643ba90858b32ac0b8cc576b1abb2cc7f94099ee0c0d52136",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "family-walk",
+      "title": "What can we notice on a family walk?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family/cultural review required: local community, language or identity. Do not present this draft as community approval.",
+        "designated family reviewer review: outdoor and accessibility wording. Familia pronunciation needs native-speaker review; never imply physical walking is required to participate."
+      ],
+      "contentSha256": "80f22e0ca7fedb52caab0adfa69ae641c25493b8ffbdbe43e070756b4dc49d1e",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "shadow",
+      "title": "What is a shadow?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer review: light safety; grown-up flashlight use only, never aim into eyes or look at the Sun."
+      ],
+      "contentSha256": "9b731080d400701e40fa3a447fe928834aa27e6c823de42aa60b722f508d7a77",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "constellation",
+      "title": "What is a constellation?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family/cultural review required: local community, language or identity. Do not present this draft as community approval.",
+        "designated family reviewer review: no local star-name or traditional navigation claim. Invented dot pattern, not a live chart."
+      ],
+      "contentSha256": "394afaa4510ccd6548d69b7d67eed6c30fefaf8b547c244349ee48b47dd59494",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "telescope",
+      "title": "What is a telescope?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: eye safety. Never point telescopes or binoculars at the Sun; adult supervision."
+      ],
+      "contentSha256": "200b0669eff2eb3af56d04dbef8aa0071ca4b866de736ae21a03db8ae82ae5a9",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "astronaut-home",
+      "title": "How do astronauts live in space?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: body adaptation and safe living; no exercise challenge."
+      ],
+      "contentSha256": "60a84eac268f086c309886895628ad3f680730449b1049de2a0ff00ef286a566",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "breathing",
+      "title": "Why do we breathe?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: body and health explanation; no diagnosis, exercise test or comparison of children.",
+        "No breath-holding, forced breathing, racing or health test."
+      ],
+      "contentSha256": "b03df5cca7dd4ebcc352f4d6123265f1a1b966414e966545cb7d6757872bcd5b",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "heart",
+      "title": "What does the heart do?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: body and health explanation; no diagnosis, exercise test or comparison of children."
+      ],
+      "contentSha256": "3d88c58a56b617a05155025e6985bb722bc9f4c94062348769f92790a47ef7c0",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "bones",
+      "title": "How do our bones help us?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: body and health explanation; no diagnosis, exercise test or comparison of children."
+      ],
+      "contentSha256": "662a7db750b86c38e071b5c0bda41002de06a436cb60b1bbc6af90ea45fe0d37",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "muscles",
+      "title": "How do muscles move us?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: body and health explanation; no diagnosis, exercise test or comparison of children.",
+        "No strength test or required physical movement; draw or imagine instead."
+      ],
+      "contentSha256": "7451bfc0c90acfa857d4f2ec88c213d6c426a455466757feca146c2e99af6176",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "vision",
+      "title": "How do we see?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: body and health explanation; no diagnosis, exercise test or comparison of children.",
+        "designated family reviewer family review: eye and Sun safety, inclusive sensory wording."
+      ],
+      "contentSha256": "fa8cd07b057045d272c383485986fafcc7da2f3b6bb19da80b230ad97f4720b8",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "hearing",
+      "title": "How do we hear?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: body and health explanation; no diagnosis, exercise test or comparison of children.",
+        "No loud-sound challenge, objects in ears or requirement to hear a sound."
+      ],
+      "contentSha256": "126b19d2044c52d6b6d4198a00a21e1b8c219ba117724494efadecdd41887b01",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "smell",
+      "title": "How do we smell?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: body and health explanation; no diagnosis, exercise test or comparison of children.",
+        "No unknown-substance sniffing or allergy exposure; smell is not a test of food or chemical safety."
+      ],
+      "contentSha256": "5c602d636c8c61c711b5afdae0503fcb643bd5de8ebb2a48f0d35e253b38e0bc",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "taste",
+      "title": "Why can we taste food?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: body and health explanation; no diagnosis, exercise test or comparison of children.",
+        "No tasting challenge, food ranking or exposure to allergens; do not taste unknown substances."
+      ],
+      "contentSha256": "d36923817286ceccebdca728bf0ab8c6544914cbd0a3c7493bcb090ca4cea29b",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "wheel",
+      "title": "How does a wheel help?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer review: no pushing heavy loads or testing real vehicles."
+      ],
+      "contentSha256": "17413d910a7aba76fe80328437ab72183e60c08da320618861bd1518638cef03",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "lever",
+      "title": "What is a lever?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer review: pinch/crush risk; drawing only, no heavy lifting."
+      ],
+      "contentSha256": "930e0252955405716916d7eff4b0b897585facca03c2b44ada0dcf2da698af2e",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "ramp",
+      "title": "How does a ramp help us lift?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer review: access and slope safety; no riding, climbing or moving real loads."
+      ],
+      "contentSha256": "d73b0047c2745c3d955b5281943faf4011c81333d189906fde2f2017292a7a07",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "gears",
+      "title": "How do gears turn together?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer review: moving-machine pinch risk; use drawing rather than exposed gears."
+      ],
+      "contentSha256": "bfdd93a218e2c4402a1367d47750ad4c04cc55d05e450c2567328def99041534",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "pulley",
+      "title": "How does a pulley work?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer review: ropes, suspension and heavy loads; paper model only."
+      ],
+      "contentSha256": "0f4e9b1628aa69ac555abd9ed40a024580a77349367fd708add73d4782fe190a",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "boats-float",
+      "title": "Why do boats float?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: water safety; no real-water trial or suggestion that an object is safe to ride."
+      ],
+      "contentSha256": "014babeb6864231170b3a033fe6b1f3ab3099224b0f5a16615366a18d9b65ef5",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "airplanes",
+      "title": "How do airplanes stay up?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer review: models only; no jumping, flight test or throwing objects."
+      ],
+      "contentSha256": "27809cf160db23e5e0844eb8ec941c8e27d4612d2344e07f17d16ffba2d7f28b",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "bicycle",
+      "title": "How does a bicycle move?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "designated family reviewer family review: cycling and pinch risks; no handling moving chains or required riding."
+      ],
+      "contentSha256": "88d5d51e8c0076e086fcc7e43016d108cef3f493570add83c088e93e59c89bb6",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "water-journey",
+      "title": "Follow a drop of water",
+      "kind": "exhibit",
+      "sensitiveNotes": [
+        "designated family reviewer family review required: water/weather safety; not a forecast or drinking-water safety guide."
+      ],
+      "contentSha256": "df078c87fcdc22c74f9db4b29844cd0fc915f3eb7aaa7dda25c0fae569e4713b",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "night-sky",
+      "title": "Turn the night-sky model",
+      "kind": "exhibit",
+      "sensitiveNotes": [
+        "designated family reviewer family review required: night and Sun safety; invented stars, not a live sky chart."
+      ],
+      "contentSha256": "2df4a8f41397f80878d26f3d29f062de596865f3a28550c6b5391b7b96c0a42c",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "sleepy-mr-sloth",
+      "title": "Sleepy Mr Sloth",
+      "kind": "book",
+      "sensitiveNotes": [
+        "Animal fantasy, a giraffe nibbling Sloth, bees, snake handling and a noisy bird. Do not imitate approaching wildlife; this is not a sloth habitat or animal-care lesson."
+      ],
+      "contentSha256": "8a73d3d497f4fb0a252abe6a5160259a4ec0f3678cc2136e7de82616d43d9623",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "a-tiny-seed",
+      "title": "A Tiny Seed · Library adaptation",
+      "kind": "book",
+      "sensitiveNotes": [
+        "Biography of Kenyan Wangari Maathai; independent factual and cultural review needed. Includes a machete, poverty, hungry children, loss of trees, and death in 2011. Do not treat tool use as an activity invitation. Historical environmental claims are preserved from the edition, not newly endorsed science statements.",
+        "cultural review: Labeled Library adaptation of a Kenyan biography; four corrected pages and all remaining original personal scenes need family judgment. Cover art retains the source title; source ISBN identifies the original edition."
+      ],
+      "contentSha256": "74a46310def033a78d218efd7c7eccd4c70d37955a020ce607c1f11e92cc8ad9",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "a-fish-and-a-gift",
+      "title": "A Fish and a Gift",
+      "kind": "book",
+      "sensitiveNotes": [
+        "Fishing, live fish/shark in a net, a storm-stranded turtle account, shark warning siren, angry conflict and South African family/cultural terms. Wildlife handling is story content, not advice. Review regional names and pronunciation with a grown-up; do not invite beach/animal handling."
+      ],
+      "contentSha256": "29d7630c9a73b90df20b9d754b2c0b32addec2e7dc5d64ec124368f5069e5c13",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "a-beautiful-day",
+      "title": "A Beautiful Day",
+      "kind": "book",
+      "sensitiveNotes": [
+        "Fantasy talking animals, handstands and children jumping into a river. Read with a caregiver; water scenes are not swimming-safety instructions."
+      ],
+      "contentSha256": "6f7c62af24f46c1639a3fc54b94a933d95bf066ddc3dd6a41d5e149c7e9d4838",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "a-house-for-mouse",
+      "title": "A house for Mouse",
+      "kind": "book",
+      "sensitiveNotes": [
+        "Fantasy animal invitations and dreams of mud, forests and being underwater; a lit fireplace. Do not imitate sleeping underwater or approaching fire."
+      ],
+      "contentSha256": "3f7af77e46bb4279ce0780125c6adc78a75fbd50e54950375959ec908f1ad789",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "little-ants-big-plan",
+      "title": "Little Ant’s Big Plan",
+      "kind": "book",
+      "sensitiveNotes": [
+        "Fantasy ants, teasing and parental anger; food taken from a picnic and restaurant. Seasonal food-storage behavior is story content, not a factual claim about all ants."
+      ],
+      "contentSha256": "5661cebd23c506056bee7fe871a21cb048ff5162b94d11f8c791c70abcfb7a53",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "the-best-thing-ever",
+      "title": "The best thing ever",
+      "kind": "book",
+      "sensitiveNotes": [
+        "South African family term uGogo, a corrugated-metal home, found road/river objects, a matchbox and reused packaging. Cultural/pronunciation and family review pending. Do not invite collecting sharp/dirty litter, entering roads, or using matches."
+      ],
+      "contentSha256": "96e6b52ebe148df5a64b1020299ad680c6538c69572fb5041ca3bc3eae4ec489",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "latte-stones",
+      "title": "What did latte stones hold up?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture",
+        "Leon review",
+        "archaeological reconstruction must be visibly distinguished from surviving stone."
+      ],
+      "contentSha256": "3633cace5e8f3d2a4fbbbf011b39b6e41552e02e37a175c043697dc2ac548df1",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "fiesta-gathering",
+      "title": "What brings a village together?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture",
+        "Catholic practice described on Guam shelf, not a devotional instruction",
+        "family review."
+      ],
+      "contentSha256": "ecebc0b61d8234817753d2b4ae7c80dc9ba37039599201c6a3de54254e088883",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "helping-each-other",
+      "title": "How do people care for one another?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture",
+        "English description only: harmony term absent from canonical vocabulary",
+        "no debt lesson or duty assigned to child."
+      ],
+      "contentSha256": "845fd0d198c8e11ef6be0892dd231f08b07c96badf1e2004d1d2d1869e442dad",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "reef-family-knowledge",
+      "title": "How can a family learn the sea?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture",
+        "named account not universal tradition",
+        "one plain activity note",
+        "neural CHamoru pronunciation pending."
+      ],
+      "contentSha256": "3df93927fe7a6a64d3db663d7af9b292a9a200fdcf13b72b933a409b0d1fbe0a",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "language-everyday",
+      "title": "How does a language stay in daily life?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture",
+        "Hurao program examples are source-specific, not a claim about Stassie’s current timetable."
+      ],
+      "contentSha256": "9790c77d6a9a8c21a3a7fa5325f24191cd6d355c941269b0e271a63af155c199",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "hafa-adai",
+      "title": "What does Håfa Adai mean?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture",
+        "canonical greetings.hello",
+        "informal register",
+        "neural speech needs listening review."
+      ],
+      "contentSha256": "0da1cda3b318e50681212c93225aa1070ed95786e1eb1bfc9a995bc58f977b67",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "proa-canoe",
+      "title": "What is a CHamoru sailing canoe like?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture",
+        "interrupted knowledge and colonial context briefly acknowledged",
+        "no unsourced navigation lesson",
+        "art needs canoe specialist review."
+      ],
+      "contentSha256": "0068f72b91a2405ad8ffad9db102bcc45d6f9e5984edda6b2efcb7dde91c768a",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "leaf-weaving",
+      "title": "How can leaves become a basket?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture",
+        "paper model is not presented as a traditional technique",
+        "grown-up prepares strips."
+      ],
+      "contentSha256": "a00cf49c2d196943598772e56a640f852b56126fab7d1f0a0234c8414d22572d",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "family-stories",
+      "title": "What can a family story keep?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture",
+        "consent-based prompt",
+        "no pressure to recount war, loss or private memories."
+      ],
+      "contentSha256": "b16f5e510bc8f6341e582f989e66931cfe69eabf5c173df0cf3a91228c13663a",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "family-circle",
+      "title": "Who belongs in a family’s circle?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture",
+        "new siblings and family connections require Leon review",
+        "no explicit two-households lesson",
+        "no caregiving duty assigned."
+      ],
+      "contentSha256": "fa70dcbaf07552eeaf834ca109d9dbc1de760af298d10ee888d18a608d8304a8",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "bread-rises",
+      "title": "Why does bread dough rise?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "kitchen activity",
+        "raw dough not tasted",
+        "adult baking",
+        "wheat allergy adaptations belong to grown-up."
+      ],
+      "contentSha256": "d21a75bab02b2d5cc05e8a209b525b575178fa4c390ac0a74a7cce950ce77e84",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "rice-soft",
+      "title": "Why does rice get soft?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "kitchen activity",
+        "one heat/steam note",
+        "microscopy is a three-variety study, not a fixed cooking-time rule."
+      ],
+      "contentSha256": "f39c4192f5f59c0f2a4d5d8400046611dccb7f1bb66c63e54b1e57d34f53dcde",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "coconut-palm",
+      "title": "What can a coconut palm give us?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture",
+        "Niyok medium confidence in canonical record",
+        "no climbing or child coconut opening",
+        "growth from seed checked against University of Hawaii extension."
+      ],
+      "contentSha256": "582420711f8c4e340e9f1f1f9724d7044ab147fffddf44e3902603c1722dc84e",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "chili-heat",
+      "title": "Why can a chili feel hot?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "body sensation",
+        "no tasting or handling hot peppers in prompt."
+      ],
+      "contentSha256": "c29cde9276e6e5a1ea08ce973b2ad7117659649141b96cf1fb9f24596ef43008",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "wheat-flour",
+      "title": "Where does wheat flour come from?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "kitchen activity includes measuring flour with a grown-up; raw flour is not tasted.",
+        "no raw-flour play or tasting."
+      ],
+      "contentSha256": "a026dd01b25edd619aec30e4d2d855f2561ef23898ed8bc255fe3c2486764dbb",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "ice-melts",
+      "title": "Where does an ice cube go?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "kitchen observation with grown-up",
+        "no hot water, dry ice or glass experiment."
+      ],
+      "contentSha256": "59d217fe4ab3437d236393bf43bd6c3e31f32c4dda7f1cbed61b76b898d4d85c",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "fruit-ripens",
+      "title": "Why does fruit change as it ripens?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "food selection belongs to grown-up",
+        "no chemical ripening experiment."
+      ],
+      "contentSha256": "076c5ed5030339dc9ae2638334cc274dc1c4af441d9cb3f446d90ce4e077b091",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "kitchen-hands",
+      "title": "Why wash hands before cooking?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "health",
+        "CDC handwashing guidance",
+        "twenty seconds is hygiene instruction, never a learning timer."
+      ],
+      "contentSha256": "7cb3ac3a5c2f8dc576c16e1b4de4d15273ab6d4c2edabde4fe67a922c171d901",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "food-smells",
+      "title": "How does food’s smell reach you?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "body",
+        "no unfamiliar-substance sniffing prompt",
+        "neural CHamoru pronunciation pending."
+      ],
+      "contentSha256": "7d684958a0b86a5436934d58c0001619230adcce9a84f7de31caa6a2aac97aed",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "guam-red-rice",
+      "title": "What gives Guam’s red rice its color?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture",
+        "no unverified CHamoru dish name",
+        "history brief, non-graphic",
+        "no knife or heat task for child."
+      ],
+      "contentSha256": "f4d6d53c1042928bfa80d0227b334e532a978c282cef48c562afad5a70f49644",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "history-ancient-life",
+      "title": "What was life here like long ago?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "culture",
+        "ancient-life reconstruction and incomplete evidence",
+        "no invented first-person ancestral voice."
+      ],
+      "contentSha256": "9fe418b2f3ca43f506f88b3aa12a6063ef10720435138be2538b92a3ac2886b0",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "history-colonization",
+      "title": "What changed under Spanish rule?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "colonial violence, loss of life, forced relocation, faith and survival",
+        "Leon released this topic now on 2026-11-02; grown-up co-reading is welcome for questions."
+      ],
+      "contentSha256": "0a903866f58014d587642c547aca30ab52fd54d6f9828b6a7220ac79bcb413fa",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "history-war-survival",
+      "title": "Whose stories help us remember the war?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "war, occupation, forced labor, fear and survival",
+        "does not assign blame to present-day Japanese children",
+        "Leon released this topic now on 2026-11-02; grown-up co-reading only."
+      ],
+      "contentSha256": "a880163e63b6f95b26f14d295f34313a6751ee9bab0937ed7d4fbd117b9ad939",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "creation-care",
+      "title": "How can we care for God’s creation?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "optional-catholic-off-by-default",
+        "faith",
+        "parent enablement and Leon review",
+        "no new prayer."
+      ],
+      "contentSha256": "69f40bd4e97800016072b76c463a2134346d972032079156e2991431928fee1c",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "saying-thank-you",
+      "title": "What can we notice when we say thank you?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "optional-catholic-off-by-default",
+        "faith",
+        "no compulsory positive feeling",
+        "no authored prayer."
+      ],
+      "contentSha256": "c0b5af180d0962dbc956d124a3e630c22f87e6574aae60636c86af440a8e0427",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "parish-community",
+      "title": "Who makes up a parish?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "optional-catholic-off-by-default",
+        "faith",
+        "child not assigned service duty",
+        "source CCC 2179."
+      ],
+      "contentSha256": "13934ee0af2d37a912bd7ee8f1a882d52a740715e210f7ccc960b4c8e5aa8828",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "francis-creatures",
+      "title": "How did Saint Francis care for creation?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "optional-catholic-off-by-default",
+        "faith",
+        "no claim that Francis authored the modern Peace Prayer",
+        "devotional art distinguished from zoology."
+      ],
+      "contentSha256": "9bbdd704b9140a4c5f06a039f184e84dbe757d769b9d4188b30b9832bcd0d1e5",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "christmas-guam",
+      "title": "What can Christmas look like in a Guam family?",
+      "kind": "topic",
+      "sensitiveNotes": [
+        "optional-catholic-off-by-default",
+        "faith and culture",
+        "no inherited devotional obligation assigned to eldest girl",
+        "Leon chooses practice."
+      ],
+      "contentSha256": "5bd5c4375bebdb213fd20a9c96a7110c3467386310f04fab95c06392a14c59c8",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "island-history-collection",
+      "title": "Island History",
+      "kind": "collection",
+      "sensitiveNotes": [
+        "Grown-up chooses availability. New learners start with this collection off."
+      ],
+      "contentSha256": "95f578a33757a99aae6656c9ab3bc7ae06eb1c4dd28a24c73ec7766618fddd17",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "faith-collection",
+      "title": "Our Catholic Faith",
+      "kind": "collection",
+      "sensitiveNotes": [
+        "Grown-up chooses availability. New learners start with this collection off."
+      ],
+      "contentSha256": "dd1199e0bfb0e21fff6f7a522ddb742b076e5d3494174d1054062662b347e053",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "prayer-sign-of-cross",
+      "title": "Sign of the Cross",
+      "kind": "prayer",
+      "sensitiveNotes": [
+        "Traditional prayer chosen by Leon."
+      ],
+      "contentSha256": "efb4bd09fbd5610ccc4ce1f206cc98b904f7040717ac0e3b147bfd1a87150fce",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "prayer-grace-before-meals",
+      "title": "Grace before Meals",
+      "kind": "prayer",
+      "sensitiveNotes": [
+        "Traditional prayer chosen by Leon."
+      ],
+      "contentSha256": "5328368bba784ded9787d58e5abae8a079cee2abd95ed745ab6e29752605a6c6",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "prayer-our-father",
+      "title": "Our Father",
+      "kind": "prayer",
+      "sensitiveNotes": [
+        "Traditional prayer chosen by Leon."
+      ],
+      "contentSha256": "0c01148991eaf5eb213ae15ecbf4d41fc19f23b83452f617dc6d055f10ab62ed",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "prayer-hail-mary",
+      "title": "Hail Mary",
+      "kind": "prayer",
+      "sensitiveNotes": [
+        "Traditional prayer chosen by Leon.",
+        "Includes womb and death in the standard words."
+      ],
+      "contentSha256": "6b61e663ee7c09249a194ab536bca1da95329986617791155e5a8ad71ec79887",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "prayer-guardian-angel",
+      "title": "Guardian Angel prayer",
+      "kind": "prayer",
+      "sensitiveNotes": [
+        "Traditional prayer chosen by Leon."
+      ],
+      "contentSha256": "dabe947ca2e89f88389904333a78ef3996cba069f09ad3382d1cb26229dd9f2d",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    },
+    {
+      "id": "and-also",
+      "title": "And Also!",
+      "kind": "book",
+      "sensitiveNotes": [
+        "Pretend sharks, shooting stars, lions, crocodiles and dinosaurs.",
+        "Mixed feelings about sibling play resolve through shared imagination; no baby-care responsibility."
+      ],
+      "contentSha256": "4d9a292c1d7fbb2c2d8d239eec7e4042f72f0cec582bc59f00937dda14bc7cd1",
+      "decision": "Yes",
+      "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+      "audioAccepted": false,
+      "pronunciationAccepted": false
+    }
+  ],
+  "scope": "reconciled recommendations"
+}

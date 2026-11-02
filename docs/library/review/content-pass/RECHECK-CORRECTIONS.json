@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "independent correction reviewer",
+  "snapshotAt": "2026-11-02T22:36:49+10:00",
+  "repository": "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae",
+  "branch": "feat/v31-library-content2",
+  "head": "d2a86bc90167995c5068f6df3690f62194a1ed47",
+  "uncommittedCandidate": true,
+  "scope": [
+    "FINAL-01",
+    "FINAL-02",
+    "v1 restore migration",
+    "public export privacy guard",
+    "And Also factualReviewer metadata"
+  ],
+  "conclusion": "Code and drawing corrections verified; required versioned candidate evidence follow-up remains. No approval or promotion.",
+  "verified": [
+    "FINAL-01",
+    "FINAL-02 drawing and checksum",
+    "existing v1 restore remains on",
+    "production privacy guard unchanged and rejects actual metadata"
+  ],
+  "findings": [
+    {
+      "id": "CORR-01",
+      "required": true,
+      "kind": "evidence",
+      "location": "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/evidence/content-delta-v2.json",
+      "description": "Prior FINAL-02 requested refreshed versioned candidate evidence; only historical freezes exist and v2 retains old war artwork SHA. Preserve originals and create an immutable corrected final candidate snapshot.",
+      "oldImageSha256": "0737a9ab26e22675c180ae5af2137b6a7190de34e9507031097f4d80b4c4fcd1",
+      "currentImageSha256": "a087925d469ffa809ae76f74afc8cd86fa06cde6a41515dba56e2b9b4ff8d173"
+    }
+  ],
+  "fileSha256": {
+    "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae/src/state/Store.tsx": "4e1d81aaa87366cfc3499c6bdc1fa9b573807b6c0557c84ba8da5f258b3a855f",
+    "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae/src/library/state.ts": "e055743bb1d126ad4dd50f6695b49e1e69769633eba40fca7e5d4edb001da56a",
+    "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae/src/state/homeMigration.ts": "bc38f68b38539a0d204ab93c99bb8f6fe78f6e6314bdc40cc54952e7524b5b29",
+    "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae/src/state/replacement.ts": "b13b39fed8887c2e5bb2be5d10b009bfff59036a0e94e0ad973b486da0f07cf1",
+    "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae/tests/library-store.test.tsx": "b12fd47825d702d44cbdbd1aba95261858dc5322b3f364dda747e4fdb8776ca1",
+    "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae/tests/export-public.test.ts": "7417edd28c0aa584264245e69205acfce726d0d5026144661f0e371e52c325e2",
+    "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae/scripts/export-public.mjs": "d04a79a49ee98687135d42dab2ca4b41c665f5672fe13e59fe286470e130d4fe",
+    "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae/content/library/art/next-history-war-survival.svg": "a087925d469ffa809ae76f74afc8cd86fa06cde6a41515dba56e2b9b4ff8d173",
+    "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae/content/library/items.json": "1e2c1a4cfbfc3541f1f819119777a5142b9739113e997f0169293d99d845d194",
+    "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae/content/library/content-pass-items.json": "c35d86abb1bc059809ea0158a9bf5493856a9ab1677e894a3225ede0c27d60a9",
+    "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae/content/library/book-items.json": "3b227767428411cca649b8dbfc3950daaf0d205c888467288948630c6cfc47e0",
+    "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae/content/library/books/and-also/manifest.json": "d09a11c91eae6944fcb2530b736e1704707eb1014066622699cc523cb26f42de",
+    "/Users/leonshimizu/.t3/worktrees/little-island-games/t3-309a23ae/scripts/learn/library.json": "f6199c29a6746f7e90772d624a2a0c9d0fa7d4e52215064dc2a99f569956f1cd",
+    "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/BRIEF.md": "f2e24cef1b14c1ee85783cb4b774785df55b4d69e5198992caa6a8a47271f7ed",
+    "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/RECHECK-FACTS.md": "a905cbf01c2837f2ef9c692df0a64570ecb91c897f9344300f013b0d62a7308b",
+    "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/RECHECK-FACTS.json": "0fe0a0d9b83f67884f715205756fd971144f8bbd42039505601f0f9e2e198000",
+    "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/RECHECK-FINAL.md": "f7ecd529599701ff35bf2d081e213e0f7affe6e3e36b538e7fa9058eb95fb2cd",
+    "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/RECHECK-FINAL.json": "e8e994c459c731995e81e0b0b9b7c6d354e1630115b86840b493a49daf21140f",
+    "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/REVIEW-RESPONSE.md": "27273c5f90fecd7efb39a3cfa1294e103ee24a4cf311652f77e7a760f1fbdba5",
+    "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/final-fixes-tests.log": "a841afd07b921cff6ec99aa5ac4d98f7b3ed720091b21fd911f7f72aa287e084",
+    "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/evidence/art-sheet-4.png": "8fd3b055b0a8c74c50e498e4adbfd61b67cb9baf3f2cb8fa50fa42a4cc353ce8",
+    "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/evidence/content-delta.json": "7cd648ad69eec6267a564b7e2d2f5e22636c7c8977f549e04f7cd59cda5c0deb",
+    "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/evidence/content-delta-v2.json": "a854f1ab6e3ffc36684b4abd6471b90879b043128b292bc167d28eb4a6264772"
+  },
+  "independentExecution": [
+    "Exact hash/equality comparisons",
+    "Canonical/source war and And Also record equality",
+    "All146 canonical records compared to v2 freeze; only non-review delta is war image checksum",
+    "Production scanFile: actual war/And Also review metadata, credential/email/token rejection"
+  ],
+  "visualEvidenceOpened": [
+    "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/evidence/art-sheet-4.png"
+  ],
+  "parentTestEvidence": {
+    "path": "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/final-fixes-tests.log",
+    "reportedTestsPassed": 22,
+    "independentlyRerun": false,
+    "sourceHashInLog": false
+  },
+  "limitations": [
+    "Narrow correction review; prior factual/content review inherited",
+    "Full export and atomic cleanup behavior inspected, not executed",
+    "Private export-test branch omits successful export and synthetic-contamination assertions",
+    "No Vitest/lint/typecheck/check/Doctor or UI/device/audio execution",
+    "Family decisions were already present at read time; no decision hashes validated",
+    "No promotion, approval, PR, merge or resource startup"
+  ],
+  "resources": {
+    "started": [],
+    "cleanup": "none required; no baseline/shared resources touched"
+  },
+  "writes": [
+    "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/RECHECK-CORRECTIONS.md",
+    "/Users/leonshimizu/Desktop/ShimizuTechnology/little-island-games-artifacts/v3/library/content-pass/RECHECK-CORRECTIONS.json"
+  ]
+}

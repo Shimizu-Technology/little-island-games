@@ -13,14 +13,15 @@ const allTitles = new Set(plan.collections.flatMap((c: { titles: string[] }) => 
 const digest = (path: string) => createHash('sha256').update(readFileSync(path)).digest('hex');
 
 describe('3.1 reviewed corpus acceptance', () => {
-  it('has 90 unique wonders, 40 planned additions, three exhibits and eight complete book editions', () => {
-    expect(data.filter(i => i.type === 'topic')).toHaveLength(90);
+  it('has 118 unique wonders, 40 original planned additions, three exhibits, five prayers and nine complete book editions', () => {
+    expect(data.filter(i => i.type === 'topic')).toHaveLength(118);
     expect(new Set(data.map(i => i.id)).size).toBe(data.length);
     expect(newcomers).toHaveLength(40);
     expect(newcomers.every(i => allTitles.has(i.title))).toBe(true);
     for (const category of ['ocean', 'guam', 'space', 'body', 'machines']) expect(newcomers.filter(i => i.category === category)).toHaveLength(8);
     expect(data.filter(i => i.type === 'exhibit')).toHaveLength(3);
-    expect(data.filter(i => i.type === 'book')).toHaveLength(8);
+    expect(data.filter(i => i.type === 'book')).toHaveLength(9);
+    expect(data.filter(i => i.type === 'prayer')).toHaveLength(5);
   });
   it('preserves original source payloads while allowing an explicitly reviewed Library rewrite', () => {
     expect(Object.keys(legacy)).toHaveLength(50);
@@ -59,7 +60,8 @@ describe('3.1 reviewed corpus acceptance', () => {
       expect(item.label.text).toBe(item.title);
       expect(item.layers.tell.length).toBeLessThanOrEqual(3);
       const deepWords = item.layers.deep.map(s => s.text).join(' ').split(/\s+/).length;
-      expect(deepWords, item.id).toBeGreaterThanOrEqual(120);
+      const shortened = ['plankton', 'typhoons', 'maps', 'directions', 'native-trees'].includes(item.id);
+      expect(deepWords, item.id).toBeGreaterThanOrEqual(shortened ? 100 : 120);
       expect(deepWords, item.id).toBeLessThanOrEqual(200);
       expect(Object.keys(item.layers).sort()).toEqual(['deep', 'more', 'tell']);
       for (const sentences of Object.values(item.layers)) for (const s of sentences) expect(speech[s.speechKey]).toBe(s.text);

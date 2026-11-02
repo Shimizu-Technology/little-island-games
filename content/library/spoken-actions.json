@@ -492,7 +492,8 @@
     "item:water-journey": "library-action-village-3",
     "game:maze": "library-action-village-4",
     "make:wonder-page": "library-action-village-5",
-    "image-description": "library-image-village"
+    "image-description": "library-image-village",
+    "item:hafa-adai": "library-action-village-6"
   },
   "native-trees": {
     "item:limestone-forest": "library-action-native-trees-1",
@@ -508,7 +509,8 @@
     "item:water-journey": "library-action-family-walk-3",
     "game:maze": "library-action-family-walk-4",
     "make:wonder-page": "library-action-family-walk-5",
-    "image-description": "library-image-family-walk"
+    "image-description": "library-image-family-walk",
+    "item:family-circle": "library-action-family-walk-6"
   },
   "distant-stars": {
     "item:stars": "library-action-distant-stars-1",
@@ -740,5 +742,173 @@
     "item:day-night": "library-action-night-sky-1",
     "make:wonder-page": "library-action-night-sky-2",
     "image-description": "library-image-night-sky"
+  },
+  "latte-stones": {
+    "image-description": "library-image-latte-stones",
+    "item:limestone": "library-action-latte-stones-1",
+    "item:limestone-forest": "library-action-latte-stones-2",
+    "make:wonder-page": "library-action-latte-stones-3"
+  },
+  "fiesta-gathering": {
+    "image-description": "library-image-fiesta-gathering",
+    "item:village": "library-action-fiesta-gathering-1",
+    "item:guam-red-rice": "library-action-fiesta-gathering-2",
+    "make:wonder-page": "library-action-fiesta-gathering-3"
+  },
+  "helping-each-other": {
+    "image-description": "library-image-helping-each-other",
+    "item:family-circle": "library-action-helping-each-other-1",
+    "item:fiesta-gathering": "library-action-helping-each-other-2",
+    "make:wonder-page": "library-action-helping-each-other-3"
+  },
+  "reef-family-knowledge": {
+    "image-description": "library-image-reef-family-knowledge",
+    "item:reef": "library-action-reef-family-knowledge-1",
+    "item:tides": "library-action-reef-family-knowledge-2",
+    "item:fish-gills": "library-action-reef-family-knowledge-3",
+    "make:wonder-page": "library-action-reef-family-knowledge-4"
+  },
+  "language-everyday": {
+    "image-description": "library-image-language-everyday",
+    "item:hafa-adai": "library-action-language-everyday-1",
+    "item:leaf-weaving": "library-action-language-everyday-2",
+    "make:wonder-page": "library-action-language-everyday-3"
+  },
+  "hafa-adai": {
+    "image-description": "library-image-hafa-adai",
+    "item:language-everyday": "library-action-hafa-adai-1",
+    "make:wonder-page": "library-action-hafa-adai-2"
+  },
+  "proa-canoe": {
+    "image-description": "library-image-proa-canoe",
+    "item:boats-float": "library-action-proa-canoe-1",
+    "item:wind": "library-action-proa-canoe-2",
+    "make:wonder-page": "library-action-proa-canoe-3"
+  },
+  "leaf-weaving": {
+    "image-description": "library-image-leaf-weaving",
+    "item:coconut-palm": "library-action-leaf-weaving-1",
+    "item:language-everyday": "library-action-leaf-weaving-2",
+    "make:wonder-page": "library-action-leaf-weaving-3"
+  },
+  "family-stories": {
+    "image-description": "library-image-family-stories",
+    "item:village": "library-action-family-stories-1",
+    "item:family-walk": "library-action-family-stories-2",
+    "make:wonder-page": "library-action-family-stories-3"
+  },
+  "family-circle": {
+    "image-description": "library-image-family-circle",
+    "item:family-walk": "library-action-family-circle-1",
+    "item:family-stories": "library-action-family-circle-2",
+    "make:wonder-page": "library-action-family-circle-3"
+  },
+  "bread-rises": {
+    "image-description": "library-image-bread-rises",
+    "item:wheat-flour": "library-action-bread-rises-1",
+    "item:food-smells": "library-action-bread-rises-2",
+    "make:wonder-page": "library-action-bread-rises-3"
+  },
+  "rice-soft": {
+    "image-description": "library-image-rice-soft",
+    "item:guam-red-rice": "library-action-rice-soft-1",
+    "item:bread-rises": "library-action-rice-soft-2",
+    "make:wonder-page": "library-action-rice-soft-3"
+  },
+  "coconut-palm": {
+    "image-description": "library-image-coconut-palm",
+    "item:leaf-weaving": "library-action-coconut-palm-1",
+    "item:guam-red-rice": "library-action-coconut-palm-2",
+    "make:wonder-page": "library-action-coconut-palm-3"
+  },
+  "chili-heat": {
+    "image-description": "library-image-chili-heat",
+    "item:taste": "library-action-chili-heat-1",
+    "item:food-smells": "library-action-chili-heat-2",
+    "make:wonder-page": "library-action-chili-heat-3"
+  },
+  "wheat-flour": {
+    "image-description": "library-image-wheat-flour",
+    "item:bread-rises": "library-action-wheat-flour-1",
+    "make:wonder-page": "library-action-wheat-flour-2"
+  },
+  "ice-melts": {
+    "image-description": "library-image-ice-melts",
+    "item:water-cycle": "library-action-ice-melts-1",
+    "item:drinking-water": "library-action-ice-melts-2",
+    "make:wonder-page": "library-action-ice-melts-3"
+  },
+  "fruit-ripens": {
+    "image-description": "library-image-fruit-ripens",
+    "item:food-smells": "library-action-fruit-ripens-1",
+    "item:rice-soft": "library-action-fruit-ripens-2",
+    "make:wonder-page": "library-action-fruit-ripens-3"
+  },
+  "kitchen-hands": {
+    "image-description": "library-image-kitchen-hands",
+    "item:family-circle": "library-action-kitchen-hands-1",
+    "make:wonder-page": "library-action-kitchen-hands-2"
+  },
+  "food-smells": {
+    "image-description": "library-image-food-smells",
+    "item:smell": "library-action-food-smells-1",
+    "item:taste": "library-action-food-smells-2",
+    "item:bread-rises": "library-action-food-smells-3",
+    "make:wonder-page": "library-action-food-smells-4"
+  },
+  "guam-red-rice": {
+    "image-description": "library-image-guam-red-rice",
+    "item:rice-soft": "library-action-guam-red-rice-1",
+    "item:fiesta-gathering": "library-action-guam-red-rice-2",
+    "make:wonder-page": "library-action-guam-red-rice-3"
+  },
+  "history-ancient-life": {
+    "image-description": "library-image-history-ancient-life",
+    "item:latte-stones": "library-action-history-ancient-life-1",
+    "item:leaf-weaving": "library-action-history-ancient-life-2",
+    "make:wonder-page": "library-action-history-ancient-life-3"
+  },
+  "history-colonization": {
+    "image-description": "library-image-history-colonization",
+    "item:history-ancient-life": "library-action-history-colonization-1",
+    "item:language-everyday": "library-action-history-colonization-2",
+    "make:wonder-page": "library-action-history-colonization-3"
+  },
+  "history-war-survival": {
+    "image-description": "library-image-history-war-survival",
+    "item:family-stories": "library-action-history-war-survival-1",
+    "item:history-colonization": "library-action-history-war-survival-2",
+    "make:wonder-page": "library-action-history-war-survival-3"
+  },
+  "creation-care": {
+    "image-description": "library-image-creation-care",
+    "item:native-trees": "library-action-creation-care-1",
+    "make:wonder-page": "library-action-creation-care-2"
+  },
+  "saying-thank-you": {
+    "image-description": "library-image-saying-thank-you",
+    "item:family-circle": "library-action-saying-thank-you-1",
+    "make:wonder-page": "library-action-saying-thank-you-2"
+  },
+  "parish-community": {
+    "image-description": "library-image-parish-community",
+    "item:fiesta-gathering": "library-action-parish-community-1",
+    "make:wonder-page": "library-action-parish-community-2"
+  },
+  "francis-creatures": {
+    "image-description": "library-image-francis-creatures",
+    "item:bird-feathers": "library-action-francis-creatures-1",
+    "item:creation-care": "library-action-francis-creatures-2",
+    "make:wonder-page": "library-action-francis-creatures-3"
+  },
+  "christmas-guam": {
+    "image-description": "library-image-christmas-guam",
+    "item:family-stories": "library-action-christmas-guam-1",
+    "item:fiesta-gathering": "library-action-christmas-guam-2",
+    "make:wonder-page": "library-action-christmas-guam-3"
+  },
+  "and-also": {
+    "item:family-circle": "library-action-and-also-1",
+    "make:wonder-page": "library-action-and-also-2"
   }
 }

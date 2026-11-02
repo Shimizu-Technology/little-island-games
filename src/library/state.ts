@@ -33,7 +33,8 @@ export type LibraryChildState = {
 };
 export type LegacyExplore = { favorites: string[]; progress?: ExploreProgress };
 export type LibraryData = {
-  version: 1;
+  /** v2 records the one-time family collection choice; v1 remains importable. */
+  version: 1 | 2;
   profiles: Record<string, LibraryChildState>;
   /** Exact validated legacy payload, including retired IDs and every interrupted lab. */
   archive?: { explore: LegacyExplore };
@@ -102,7 +103,7 @@ export function newLibraryChild(): LibraryChildState {
     labs: newExploreProgress().labs,
     onlyFavorites: false,
     creations: [],
-    policy: { collections: categories.map((c) => c.id), hours: { enabled: false, start: 0, end: 0 } },
+    policy: { collections: categories.filter((c) => c.defaultEnabled !== false).map((c) => c.id), hours: { enabled: false, start: 0, end: 0 } },
   };
 }
 export function libraryHoursOpen(policy: LibraryPolicy, date: Date): boolean {
@@ -220,7 +221,7 @@ export function validLibraryData(v: unknown): v is LibraryData {
   return (
     object(v) &&
     keys(v, ["version", "profiles", "archive"]) &&
-    v.version === 1 &&
+    (v.version === 1 || v.version === 2) &&
     object(v.profiles) &&
     Object.keys(v.profiles).length <= 5 &&
     Object.entries(v.profiles).every(
@@ -236,9 +237,22 @@ export function libraryChild(data: LibraryData | undefined, childId: string): Li
 }
 /** Pure one-time projection. The original Explore field and archive are never edited. */
 export function migrateLibrary<
-  T extends { library?: LibraryData; explore?: LegacyExplore; learning?: { active: string } },
->(save: T): T & { library: LibraryData } {
-  if (save.library) return save as T & { library: LibraryData };
+  T extends { library?: LibraryData; explore?: LegacyExplore; learning?: { active: string; people?: { id: string }[] } },
+>(save: T, { existingLearners = true } = {}): T & { library: LibraryData } {
+  if (save.library?.version === 2) return save as T & { library: LibraryData };
+  const learnerIds = save.learning?.people?.map((person) => person.id) ?? [save.learning?.active ?? "family"];
+  const familyCollections = (child: LibraryChildState): LibraryChildState => ({
+    ...child,
+    policy: { ...child.policy, collections: [...new Set([...child.policy.collections, "faith", "island-history"])] },
+  });
+  if (save.library) {
+    // Clone every child before editing. Storage preserves the exact v1 bytes
+    // before publishing this migration, including on backup import.
+    const profiles = Object.fromEntries([...new Set([...Object.keys(save.library.profiles), ...learnerIds])].map((id) => [
+      id, familyCollections(JSON.parse(JSON.stringify(save.library!.profiles[id] ?? newLibraryChild())) as LibraryChildState),
+    ]));
+    return { ...save, library: { ...JSON.parse(JSON.stringify(save.library)), version: 2, profiles } };
+  }
   const child = newLibraryChild(),
     explore = save.explore;
   if (explore) {
@@ -264,8 +278,11 @@ export function migrateLibrary<
   return {
     ...save,
     library: {
-      version: 1,
-      profiles: { [save.learning?.active ?? "family"]: child },
+      version: 2,
+      profiles: Object.fromEntries(learnerIds.map((id) => {
+        const profile = id === (save.learning?.active ?? "family") ? child : newLibraryChild();
+        return [id, existingLearners ? familyCollections(profile) : profile];
+      })),
       ...(explore ? { archive: { explore: JSON.parse(JSON.stringify(explore)) as LegacyExplore } } : {}),
     },
   };

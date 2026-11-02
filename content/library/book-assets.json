@@ -88,5 +88,83 @@
     "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page17.jpg",
     "sha256": "7c1f8e5a748f07476481393b2a4e5f18cd2a7c2dff8164fc8d5743d1333b0f57",
     "bytes": 187459
+  },
+  {
+    "path": "content/library/books/and-also/page-00.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "29ef4533df4b708a3d872fcad17ba7073b8d0885959914a12dc9db11ea7e3418",
+    "bytes": 232707
+  },
+  {
+    "path": "content/library/books/and-also/page-01.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "e77b195d58bd15ca3ebd734a17810f903f3480627049ac870bc2d0f099241f57",
+    "bytes": 203423
+  },
+  {
+    "path": "content/library/books/and-also/page-02.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "76d87e0ed70aa00438f2df9ebec6d7ef24699e41252957fa1558f464bd3aa2bb",
+    "bytes": 156800
+  },
+  {
+    "path": "content/library/books/and-also/page-03.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "26ad5da65bd881065a7ae0f15014ed9eae4160f852592b00d4976a3c245be121",
+    "bytes": 200963
+  },
+  {
+    "path": "content/library/books/and-also/page-04.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "f27b8764ca20a8fff09bba7f5a0f270544955aeab4608882159bc54868bce4cd",
+    "bytes": 183862
+  },
+  {
+    "path": "content/library/books/and-also/page-05.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "fa1157a88f8e47b40b1da05052e505cc8d1b5998938a1befed4a5d63ba3d4632",
+    "bytes": 211357
+  },
+  {
+    "path": "content/library/books/and-also/page-06.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "8e305f8fcb1dee65fd2e60ac9ed782f5bca7c2d55eb58feb049642a701589c33",
+    "bytes": 184929
+  },
+  {
+    "path": "content/library/books/and-also/page-07.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "9d6be71fa60d4e322d428c985a94ef280e6a49347d201766a2e576291c95f8b9",
+    "bytes": 88390
+  },
+  {
+    "path": "content/library/books/and-also/page-08.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "00f0b1691194870e8715f1209aff226f638d9b3c54c32bea0d2f17ae5b9f3733",
+    "bytes": 213339
+  },
+  {
+    "path": "content/library/books/and-also/page-09.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "477b22702beea636906fb3d513da7c4c107b1bb013bbab652a8a5a5e7ccd1d5d",
+    "bytes": 231583
+  },
+  {
+    "path": "content/library/books/and-also/page-10.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "e228d8244c1d373c067acd404129bbf35d30d55bba0b2d451150a52b3a6443ee",
+    "bytes": 229534
+  },
+  {
+    "path": "content/library/books/and-also/page-11.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "3a8a693bd8840823a81651a702893264ec680d31c96b5646eaa1441337b72d64",
+    "bytes": 287606
+  },
+  {
+    "path": "content/library/books/and-also/page-12.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "5ec58f31813be6e4c453877f2f9d03a7223c428aed824310e0c0a4076fff242a",
+    "bytes": 162700
   }
 ]

@@ -4,62 +4,87 @@
     "title": "Ocean & Reef",
     "motif": "turtle",
     "tint": "#DCEDE7",
-    "speechKey": "library-category-ocean"
+    "speechKey": "library-category-ocean",
+    "defaultEnabled": true
   },
   {
     "id": "guam",
     "title": "Guam & Our Island",
     "motif": "globe",
     "tint": "#F3E6CB",
-    "speechKey": "library-category-guam"
+    "speechKey": "library-category-guam",
+    "defaultEnabled": true
   },
   {
     "id": "animals",
     "title": "Animals",
     "motif": "butterfly",
     "tint": "#E5ECD8",
-    "speechKey": "library-category-animals"
+    "speechKey": "library-category-animals",
+    "defaultEnabled": true
   },
   {
     "id": "space",
     "title": "Space & Sky",
     "motif": "moon",
     "tint": "#E6E4F1",
-    "speechKey": "library-category-space"
+    "speechKey": "library-category-space",
+    "defaultEnabled": true
   },
   {
     "id": "weather",
     "title": "Weather & Earth",
     "motif": "cloud",
     "tint": "#E1ECF2",
-    "speechKey": "library-category-weather"
+    "speechKey": "library-category-weather",
+    "defaultEnabled": true
   },
   {
     "id": "body",
     "title": "My Body",
     "motif": "heart",
     "tint": "#F5E2D8",
-    "speechKey": "library-category-body"
+    "speechKey": "library-category-body",
+    "defaultEnabled": true
   },
   {
     "id": "machines",
     "title": "How Things Work",
     "motif": "gear",
     "tint": "#EEE7D8",
-    "speechKey": "library-category-machines"
+    "speechKey": "library-category-machines",
+    "defaultEnabled": true
   },
   {
     "id": "plants",
     "title": "Plants & Food",
     "motif": "plant",
     "tint": "#E8EDD5",
-    "speechKey": "library-category-plants"
+    "speechKey": "library-category-plants",
+    "defaultEnabled": true
   },
   {
     "id": "books",
     "title": "Picture books",
     "motif": "globe",
     "tint": "#EFE7D4",
-    "speechKey": "library-category-books"
+    "speechKey": "library-category-books",
+    "defaultEnabled": true
+  },
+  {
+    "id": "island-history",
+    "title": "Island History",
+    "motif": "globe",
+    "tint": "#EFE7D4",
+    "speechKey": "library-category-island-history",
+    "defaultEnabled": false
+  },
+  {
+    "id": "faith",
+    "title": "Our Catholic Faith",
+    "motif": "heart",
+    "tint": "#EEE7D8",
+    "speechKey": "library-category-faith",
+    "defaultEnabled": false
   }
 ]
