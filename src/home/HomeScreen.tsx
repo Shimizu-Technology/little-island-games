@@ -1,5 +1,5 @@
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AppState, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { AccessibilityInfo, Platform, AppState, Pressable, Text, View, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
@@ -14,7 +14,7 @@ import { instance, owns, MAX_INSTANCES, type HomeAction, type HomeStateV2, type 
 import { ItemArt } from "./art/Items";
 import { MoreItemArt } from "./art/More";
 import { moreCatalog } from "./catalogMore";
-import { type ItemId } from "./catalog";
+import { itemIds, type ItemId } from "./catalog";
 import { useHomeStore } from "./useHomeStore";
 import { buildScene } from "./scene/graph";
 import { resolve, type DropProposal } from "./scene/proposal";
@@ -22,7 +22,7 @@ import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity 
 import { screenToRoom } from "./scene/camera";
 import { SceneView } from "./runtime/SceneView";
 import { HomeChrome, Tool } from "./runtime/HomeChrome";
-import { DesignTools, type CatalogGhost } from "./runtime/DesignTools";
+import { DesignTools, portraitDrawerHeight, type CatalogGhost } from "./runtime/DesignTools";
 import { StagingTray } from "./runtime/StagingTray";
 import { Destinations } from "./runtime/Destinations";
 import { DebugOverlay } from "./runtime/DebugOverlay";
@@ -57,13 +57,21 @@ export function HomeScreen({
   const store = useHomeStore(ownership, initialState, persist);
   const [designing, setDesigning] = useState(!!initialItem),
     [selected, setSelected] = useState<string>();
-  const [placing, setPlacing] = useState<ItemId | undefined>(initialItem);
+  const [placing, setPlacing] = useState<ItemId | undefined>(
+    initialItem && itemIds.includes(initialItem) ? initialItem : undefined
+  );
   const [overview, setOverview] = useState(false),
     [room, setRoom] = useState(store.state.current);
   const [pickups, setPickups] = useState<(Pickup | undefined)[]>([undefined, undefined]);
   const [debug, setDebug] = useState(lab),
     [stress, setStress] = useState(false);
   const [reactions, setReactions] = useState<Record<string, "eat" | "drink">>({});
+  const entityNodes = useRef<Record<string, View>>({});
+  const [focusId, restoreFocus] = useState<string>();
+  const onNode = useCallback((id: string, node: View | null) => {
+    if (node) entityNodes.current[id] = node;
+    else delete entityNodes.current[id];
+  }, []);
   const reactionTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   React.useEffect(() => () => Object.values(reactionTimers.current).forEach(clearTimeout), []);
   const [catalogItem, setCatalogItem] = useState<ItemId>();
@@ -77,7 +85,10 @@ export function HomeScreen({
   const viewport = useMemo(
     () => ({
       width: window.width - (vertical ? 220 : 0),
-      height: Math.max(180, window.height - inset.bottom - headerHeight - (designing && !vertical ? 174 : 0)),
+      height: Math.max(
+        180,
+        window.height - inset.bottom - headerHeight - (designing && !vertical ? portraitDrawerHeight : 0)
+      ),
     }),
     [window.width, window.height, vertical, designing, inset, headerHeight]
   );
@@ -87,6 +98,18 @@ export function HomeScreen({
   );
   const baseScene = useMemo(() => buildScene(store.state), [store.state.rooms]); // Navigation is outside the scene revision.
   const scene = useMemo(() => withPortions(baseScene), [baseScene]);
+  useLayoutEffect(() => {
+    if (!focusId) return;
+    const frame = requestAnimationFrame(() => {
+      const node = entityNodes.current[focusId];
+      if (node) {
+        if (Platform.OS === "web") node.focus();
+        else AccessibilityInfo.sendAccessibilityEvent(node, "focus");
+      }
+      restoreFocus(undefined);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [scene.revision, focusId]);
   const live = useRef({ store, scene, selected, placing, room });
   useLayoutEffect(() => {
     live.current = { store, scene, selected, placing, room };
@@ -226,7 +249,12 @@ export function HomeScreen({
       release: true,
     });
     const result = commitAt(id, dest, anchor, targetProposal);
-    if (result) setSelected(undefined);
+    if (result) {
+      showReaction(result.proposal);
+      const owner = live.current.scene.rooms[dest].targets.find((t) => t.id === result.proposal.target)?.owner;
+      setSelected(undefined);
+      restoreFocus(result.proposal.kind === "mouth" ? owner : id);
+    }
   };
   const choose = useCallback((id: string) => setSelected(id), []);
   const onTap = (id: string | undefined, point: ScreenPoint) => {
@@ -372,6 +400,7 @@ export function HomeScreen({
     store.dispatch({ type: "room", room: hero.room });
     interaction.camera.set(focusCamera(roomIds.indexOf(hero.room), viewport, building, hero.contact));
     setSelected(hero.id);
+    restoreFocus(hero.id);
   };
   const moveAccessible = useCallback(
     (id: string, action: string) => {
@@ -384,13 +413,14 @@ export function HomeScreen({
           target: "staging",
           release: true,
         });
-        store.commitProposal(proposal);
+        if (store.commitProposal(proposal)) restoreFocus(id);
         return;
       }
       const delta = (
         { left: [-37.5, 0], right: [37.5, 0], back: [0, -14.4], forward: [0, 14.4] } as Record<string, number[]>
       )[action];
-      if (delta) commitAt(id, entity.room, { x: entity.contact.x + delta[0], y: entity.contact.y + delta[1] });
+      if (delta && commitAt(id, entity.room, { x: entity.contact.x + delta[0], y: entity.contact.y + delta[1] }))
+        restoreFocus(id);
     },
     [commitAt]
   );
@@ -449,7 +479,10 @@ export function HomeScreen({
           interaction.cancelAll();
           store.dispatch({ type: "undo" });
         }}
-        onRedo={() => store.dispatch({ type: "redo" })}
+        onRedo={() => {
+          interaction.cancelAll();
+          store.dispatch({ type: "redo" });
+        }}
         onFind={find}
         onFriends={() => {
           interaction.cancelAll();
@@ -488,6 +521,7 @@ export function HomeScreen({
             renderCharacter={renderCharacter}
             selected={selected}
             reactions={reactions}
+            onNode={onNode}
             onSelect={choose}
             onMove={moveAccessible}
             stress={stress}
@@ -538,6 +572,7 @@ export function HomeScreen({
         {designing && (
           <DesignTools
             state={store.state}
+            initialItem={initialItem}
             ownership={ownership}
             target={target}
             vertical={vertical}
@@ -557,11 +592,13 @@ export function HomeScreen({
         selected={selected}
         scale={1}
         onSelect={setSelected}
-        bottom={inset.bottom + (designing && !vertical ? 180 : staged.length ? 100 : 10)}
+        bottom={inset.bottom + (designing && !vertical ? portraitDrawerHeight + 6 : staged.length ? 100 : 10)}
         onChoose={(proposal) => {
           const result = commitAt(proposal.id, proposal.room, proposal.contact, proposal);
           if (result) {
             showReaction(result.proposal);
+            const owner = scene.rooms[result.proposal.room].targets.find((t) => t.id === result.proposal.target)?.owner;
+            restoreFocus(result.proposal.kind === "mouth" ? owner : result.proposal.id);
             setSelected(undefined);
             setRoom(result.proposal.room);
           }
@@ -569,6 +606,7 @@ export function HomeScreen({
       />
       <StagingTray
         entities={staged}
+        onNode={onNode}
         bottom={inset.bottom + 8}
         offset={viewportOffset}
         interaction={interaction}

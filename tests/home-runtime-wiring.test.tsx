@@ -104,7 +104,7 @@ let current: Interaction;
 let committed = 0;
 let committedContact = entity.contact;
 function Probe({ scene }: { scene: Scene }) {
-  current = useInteraction({
+  const interaction = useInteraction({
     scene,
     building: buildingLayout(4, true),
     viewport: { width: 1000, height: 600 },
@@ -121,6 +121,9 @@ function Probe({ scene }: { scene: Scene }) {
       committedContact = proposal.contact;
       current.finish(index, true, proposal, "committed", undefined, token);
     },
+  });
+  React.useLayoutEffect(() => {
+    current = interaction;
   });
   return null;
 }

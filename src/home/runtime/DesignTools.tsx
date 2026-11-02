@@ -3,7 +3,7 @@ import { FlatList, Modal, Pressable, ScrollView, Text, View } from "react-native
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { runOnJS } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
-import { furnitureIds, itemSpec, floorThemes, wallThemes } from "../catalog";
+import { itemIds, itemSpec, decorSpec, floorThemes, wallThemes } from "../catalog";
 import { moreCatalog, tintIds, tintPalette } from "../catalogMore";
 import { owns, type HomeAction, type HomeStateV2, type Ownership, type Instance } from "../model";
 import { MoreItemArt } from "../art/More";
@@ -11,6 +11,17 @@ import { ItemArt } from "../art/Items";
 import type { ItemId } from "../catalog";
 import { Tool } from "./HomeChrome";
 
+const categoryNames: Record<string, string> = {
+  "beds-seats": "Beds & seats",
+  "tables-storage": "Tables & storage",
+  kitchen: "Kitchen",
+  "plants-nature": "Plants",
+  lights: "Lights",
+  "toys-fun": "Toys",
+  "rugs-floor": "Rugs",
+  "wall-art": "Wall art",
+};
+export const portraitDrawerHeight = 220;
 export type CatalogGhost = { item?: ItemId; x: number; y: number; active: boolean };
 function Thumbnail({
   id,
@@ -75,6 +86,7 @@ function Thumbnail({
 }
 export function DesignTools({
   state,
+  initialItem,
   ownership,
   target,
   vertical,
@@ -85,6 +97,7 @@ export function DesignTools({
   dispatch,
   onClose,
 }: {
+  initialItem?: string;
   state: HomeStateV2;
   ownership: Ownership;
   target?: Instance;
@@ -96,15 +109,26 @@ export function DesignTools({
   dispatch: (action: HomeAction) => void;
   onClose: () => void;
 }) {
-  const [tab, setTab] = useState("Furniture"),
+  const [tab, setTab] = useState(
+      initialItem && !itemIds.includes(initialItem)
+        ? "Room"
+        : initialItem?.startsWith("sticker:")
+          ? "Stickers"
+          : "Furniture"
+    ),
     [confirm, setConfirm] = useState(false);
-  const items = [...furnitureIds, ...Object.keys(moreCatalog)] as ItemId[];
+  const items = itemIds.filter((id) =>
+    tab === "Stickers"
+      ? id.startsWith("sticker:") && owns(id, ownership)
+      : !id.startsWith("sticker:") && (tab === "Furniture" || decorSpec(id).category === tab)
+  ) as ItemId[];
+  const catalogVisible = tab !== "Room" && tab !== "Colours";
   return (
     <View
       testID="design-drawer"
       style={{
         width: vertical ? 220 : "100%",
-        height: vertical ? "100%" : 174,
+        height: vertical ? "100%" : portraitDrawerHeight,
         backgroundColor: "#E8D9BF",
         padding: 8,
         gap: 6,
@@ -116,7 +140,7 @@ export function DesignTools({
         style={{ maxHeight: 44 }}
         contentContainerStyle={{ gap: 8 }}
       >
-        {["Furniture", "Room", "Colours"].map((name) => (
+        {["Furniture", ...Object.keys(categoryNames), "Stickers", "Room", "Colours"].map((name) => (
           <Pressable
             key={name}
             onPress={() => setTab(name)}
@@ -129,17 +153,20 @@ export function DesignTools({
               borderRadius: 14,
             }}
           >
-            <Text style={{ color: "#284F4B" }}>{name}</Text>
+            <Text style={{ color: "#284F4B" }}>{categoryNames[name] ?? name}</Text>
           </Pressable>
         ))}
         <Tool label="Close catalog" symbol="✓" onPress={onClose} />
       </ScrollView>
-      {tab === "Furniture" && (
+      {catalogVisible && (
         <FlatList
-          key={vertical ? "column" : "row"}
+          key={`${tab}-${vertical ? "column" : "row"}`}
           horizontal={!vertical}
           numColumns={vertical ? 2 : 1}
           data={items}
+          style={{ flex: 1 }}
+          getItemLayout={(_, index) => ({ length: vertical ? 100 : 92, offset: (vertical ? 100 : 92) * index, index })}
+          initialScrollIndex={Math.max(0, Math.floor(items.indexOf(initialItem ?? "") / (vertical ? 2 : 1)))}
           keyExtractor={(id) => id}
           initialNumToRender={12}
           maxToRenderPerBatch={8}
@@ -159,7 +186,7 @@ export function DesignTools({
         />
       )}
       {tab === "Room" && (
-        <ScrollView horizontal={!vertical} contentContainerStyle={{ gap: 8 }}>
+        <ScrollView horizontal={!vertical} style={{ flex: 1 }} contentContainerStyle={{ gap: 8 }}>
           {wallThemes
             .filter((id) => !ownership.ownedWallpapers || ownership.ownedWallpapers.includes(id))
             .map((id) => (
@@ -190,7 +217,7 @@ export function DesignTools({
         </ScrollView>
       )}
       {tab === "Colours" && (
-        <ScrollView horizontal={!vertical}>
+        <ScrollView horizontal={!vertical} style={{ flex: 1 }}>
           {target ? (
             tintIds.map((tint) => (
               <Pressable
@@ -217,23 +244,25 @@ export function DesignTools({
           )}
         </ScrollView>
       )}
-      {target && (
-        <View style={{ flexDirection: "row", gap: 6 }}>
-          <Tool
-            label="Rotate"
-            symbol="⟳"
-            disabled={itemSpec(target.item).rotations.length < 2}
-            onPress={() => dispatch({ type: "rotate", id: target.id })}
-          />
-          <Tool
-            label="Mirror"
-            symbol="⇆"
-            disabled={!itemSpec(target.item).mirror}
-            onPress={() => dispatch({ type: "mirror", id: target.id })}
-          />
-          <Tool label="Put away" symbol="▱" onPress={() => dispatch({ type: "put-away", id: target.id })} />
-        </View>
-      )}
+      <View style={{ height: 48 }}>
+        {target && (
+          <View style={{ flexDirection: "row", gap: 6 }}>
+            <Tool
+              label="Rotate"
+              symbol="⟳"
+              disabled={itemSpec(target.item).rotations.length < 2}
+              onPress={() => dispatch({ type: "rotate", id: target.id })}
+            />
+            <Tool
+              label="Mirror"
+              symbol="⇆"
+              disabled={!itemSpec(target.item).mirror}
+              onPress={() => dispatch({ type: "mirror", id: target.id })}
+            />
+            <Tool label="Put away" symbol="▱" onPress={() => dispatch({ type: "put-away", id: target.id })} />
+          </View>
+        )}
+      </View>
       <Modal visible={confirm} transparent onRequestClose={() => setConfirm(false)} animationType="none">
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#284F4B66" }}>
           <View style={{ backgroundColor: "#FFF8E9", padding: 24, borderRadius: 20, maxWidth: 340, gap: 14 }}>

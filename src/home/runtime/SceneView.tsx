@@ -38,7 +38,9 @@ const RestingEntity = memo(function RestingEntity({
   targetKey,
   action,
   front = false,
+  onNode,
 }: {
+  onNode: (id: string, node: View | null) => void;
   entity: SceneEntity;
   ownerKey: string;
   slots: SharedValue<DragSlot[]>;
@@ -51,6 +53,12 @@ const RestingEntity = memo(function RestingEntity({
   onMove: (id: string, action: string) => void;
   front?: boolean;
 }) {
+  const bindNode = React.useCallback(
+    (node: View | null) => {
+      if (!front) onNode(entity.id, node);
+    },
+    [entity.id, front, onNode]
+  );
   const frame = artFrame(entity);
   const owners = useMemo(() => ownerKey.split("|"), [ownerKey]);
   const anticipationTargets = useMemo(() => targetKey.split("|"), [targetKey]);
@@ -85,6 +93,7 @@ const RestingEntity = memo(function RestingEntity({
   const name = entity.character ? ["Islander", "Pip", "Crab"][entity.character.slot] : itemSpec(entity.item!.item).name;
   return (
     <Animated.View
+      ref={bindNode}
       testID={front ? undefined : entity.character ? `character-${entity.character.slot}` : `object-${entity.item!.id}`}
       accessible={!front}
       focusable={!front}
@@ -182,7 +191,9 @@ export function SceneView({
   onMove,
   stress = false,
   reactions,
+  onNode,
 }: {
+  onNode: (id: string, node: View | null) => void;
   state: HomeStateV2;
   scene: Scene;
   building: Building;
@@ -248,6 +259,7 @@ export function SceneView({
                         key={front ? `front:${entity.id}` : entity.id}
                         front={front}
                         entity={entity}
+                        onNode={onNode}
                         action={reactions[entity.id]}
                         ownerKey={ancestors(entity, scene).join("|")}
                         targetKey={scene.rooms[roomId].targets

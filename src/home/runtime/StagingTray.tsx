@@ -14,7 +14,9 @@ function StagedItem({
   reduced,
   renderCharacter,
   onSelect,
+  onNode,
 }: {
+  onNode: (id: string, node: View | null) => void;
   entity: SceneEntity;
   index: number;
   offset: SharedValue<{ x: number; y: number }>;
@@ -23,6 +25,7 @@ function StagedItem({
   renderCharacter?: CharacterRender;
   onSelect: (id: string) => void;
 }) {
+  const bindNode = React.useCallback((node: View | null) => onNode(entity.id, node), [entity.id, onNode]);
   const { externalDown, externalMove, externalUp, slots } = interaction;
   const pointer = -100 - index;
   const frame = artFrame(entity),
@@ -44,6 +47,7 @@ function StagedItem({
     <GestureDetector gesture={gesture} touchAction="pan-x">
       <Animated.View style={style}>
         <Pressable
+          ref={bindNode}
           accessibilityRole="button"
           accessibilityLabel={`Move ${entity.item?.item ?? "friend"} from tray`}
           onPress={() => onSelect(entity.id)}
@@ -62,6 +66,7 @@ export function StagingTray({
   bottom,
   ...props
 }: {
+  onNode: (id: string, node: View | null) => void;
   entities: SceneEntity[];
   bottom: number;
   offset: SharedValue<{ x: number; y: number }>;
