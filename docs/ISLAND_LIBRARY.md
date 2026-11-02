@@ -33,7 +33,7 @@ Cream paper, deep teal ink, sage land, lagoon water and warm sand extend the hub
 
 Two meaningful responses: saving changes the button to “Saved” immediately, and selecting Replay highlights the exact sentence. Neither waits for an animation. Exhibit position changes are deliberate manual steps with an untimed explanation. Reduced motion receives the same immediate settled state; no decorative animation, parallax or background timer is needed. This phase makes no frame-rate claim from still images.
 
-The study is opt-in: `npm run export:library-lab`, then `LITTLE_ISLAND_PORT=43857 npm run preview`, then `/library-lab`. Without `EXPO_PUBLIC_LIBRARY_LAB=1`, the route redirects home; native always redirects. Do not enable the flag in a family/release build. `LibraryLab.tsx` is a web design surface, not a native screen ready to ship. It uses HTML controls within the Expo route and existing native/web vector components. Prototype state is memory-only, visibly identified as an unsaved demo. Refresh resets its shelf, availability, creations and recent places. Real app saves are never read or replaced by it.
+The study is opt-in: `npm run export:library-lab`, then `LITTLE_ISLAND_PORT=43857 npm run preview`, then `/library-lab`. Without `EXPO_PUBLIC_LIBRARY_LAB=1`, the route redirects home; native always redirects. Exports clear Metro’s transform cache so switching between default and opt-in builds cannot reuse a stale compiled flag. Do not enable the flag in a family/release build. `LibraryLab.tsx` is a web design surface, not a native screen ready to ship. It uses HTML controls within the Expo route and existing native/web vector components. Prototype state is memory-only, visibly identified as an unsaved demo. Refresh resets its shelf, availability, creations and recent places. Real app saves are never read or replaced by it.
 
 Replay and category-label controls demonstrate selection and sound-off recovery; **they do not play new narration**. They explicitly say recording is pending. The topic is fully authored at all three depths; that is not family/content approval. The 15 book spreads are a complete original English fixture including wordless spreads and covers. The page maker demonstrates free stamps, undo and keeping a creation during a visit; it is not the planned drawing/book editor.
 
@@ -99,9 +99,9 @@ Apply availability **before ranking**, and again at destination resolution. Do n
 
 Use existing local learners without requiring a birth date. All controls sit behind the existing grown-up multiplication gate; no new account or weaker gate is introduced. The study calls the same pure `makeGate` / `gateAccepts` engine as Settings. It does not claim the existing light gate is tamper-proof device management.
 
-Preview lists show actual items plus sources, sensitivity and review status. Availability changes apply to browse/search/links/shelf/direct routes consistently. Availability and listening preference are separate: hearing a complex available topic does not require passing a reading test. Keep collection revisions visible to adults so an update cannot silently broaden a previously approved shelf.
+A separate gated item-preview screen shows actual text, sources, sensitivity and review status, including collections hidden from the child. The adult can inspect the complete book before enabling it. Availability changes apply to browse/search/links/shelf/direct routes consistently. Availability and listening preference are separate: hearing a complex available topic does not require passing a reading test. Keep collection revisions visible to adults so an update cannot silently broaden a previously approved shelf.
 
-Hours default off. The build must store a validated local schedule with timezone policy and an adult override. Warn gently, confirm durable saving first, then pause new launches at a safe stopping point. Offer “finish this page” according to adult policy. If saving fails, keep work in memory, preserve the prior data and show Retry/recovery; never cover the error with a successful wind-down. Test overnight windows, clock/timezone changes, travel, suspension, restart and switching children. No reading countdown, push reminder, penalty or distressed pet follows an ended session. The prototype’s wind-down is an explicitly labeled memory-only sketch, not a scheduler or save implementation.
+Hours default off. The build must store a validated local schedule with timezone policy and an adult override. Warn gently, confirm durable saving first, then pause new launches at a safe stopping point. Offer “finish this page” according to adult policy. If saving fails, keep work in memory, preserve the prior data and show Retry/recovery; never cover the error with a successful wind-down. Test overnight windows, clock/timezone changes, travel, suspension, restart and switching children. No reading countdown, push reminder, penalty or distressed pet follows an ended session. The prototype’s wind-down is an explicitly labeled memory-only sketch, not a scheduler or save implementation. It uses a native web dialog so it appears in the viewport, owns focus and supports Escape.
 
 ## Size and performance budget
 
@@ -177,7 +177,7 @@ The turtle breathing sketch demonstrates a small connection inside the reef exhi
 2. How was Guam made?
 3. What is limestone?
 4. What is a latte stone?
-5. Who is the ko’ko’?
+5. What is the Guam rail?
 6. What is a limestone forest?
 7. Where does our drinking water come from?
 8. Why are some beaches sandy?
