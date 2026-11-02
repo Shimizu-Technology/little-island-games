@@ -5,6 +5,7 @@ import { EntityArt, artFrame } from "./EntityArt";
 import { roomNames } from "../catalogMore";
 import { resolve, type DropProposal } from "../scene/proposal";
 import type { Scene } from "../scene/types";
+import { isPortion } from "./portions";
 /** Switch/keyboard/tap destinations call exactly the drag proposal engine. */
 export function Destinations({
   scene,
@@ -37,7 +38,7 @@ export function Destinations({
   );
   const contents = subject.children.map((id) => scene.entities[id]).filter((e) => !!e);
   const store =
-    subject.attachment.kind !== "staging"
+    subject.attachment.kind !== "staging" && !isPortion(subject.id)
       ? resolve({ ...scene.rooms[subject.room], entities: scene.entities }, subject, subject.contact, {
           scale,
           intent: "staging",
