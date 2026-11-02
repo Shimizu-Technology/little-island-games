@@ -26,7 +26,7 @@ function IslandShelf({ island }: { island: Exclude<keyof typeof islandNames, "ex
   return <SafeAreaView style={styles.page}><ScrollView contentContainerStyle={[styles.content, { paddingHorizontal: 20, gap: 14 }]}>
     <GameHeader title={islandNames[island]} backLabel="Islands" onBack={() => router.canGoBack() ? router.back() : router.replace("/")} />
     <SaveStatus />
-    <View style={[styles.row, { flexWrap: "wrap", gap: 8 }]} accessibilityLabel="Game categories">
+    <View style={[styles.row, { flexWrap: "wrap", gap: 8 }]} accessible={false} importantForAccessibility="no">
       {(island === "classic" ? classicFilters : ["All games", "Play alone", "Play together", "Favorites"]).map(f => <Chip key={f} selected={f === filter} onPress={() => setFilter(f)}>{f}</Chip>)}
     </View>
     {!choices.length && <Copy>{filter === "Favorites" ? "Tap the star on a game to keep it close by." : "Try another way to play on this island."}</Copy>}

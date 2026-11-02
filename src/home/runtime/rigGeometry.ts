@@ -66,3 +66,20 @@ export function carryBinding(entity: SceneEntity, grip: { x: number; y: number }
 export function carrySample(sample: number) {
   return { tilt: sample === 0 ? 0 : sample < 0 ? 6 : -6, limbLag: Math.abs(sample) / 4 };
 }
+
+/** Authored limb extremities, including shoe/hand stroke. The wardrobe hull
+ * intentionally includes empty standing padding and is not a sitting foot. */
+export function limbBottom(entity: SceneEntity, carry = false): number {
+  if (entity.character!.slot !== 0) {
+    const b = renderAnchors(entity, carry).bounds;
+    return b.top + b.height;
+  }
+  const base = carry ? "carry" : entity.base;
+  const pose = characterPose(base, carry ? null : entity.action);
+  const unit = species[0].unit;
+  return Math.max(...(["leftFoot", "rightFoot", "leftHand", "rightHand"] as const).flatMap((key) => {
+    const p = pose.joints[key], radius = key.endsWith("Foot") ? 6 : 4;
+    return [[p[0] - radius, p[1] - radius], [p[0] + radius, p[1] + radius]].map((point) =>
+      islanderPoint(point as unknown as readonly [number, number], base, entity.facing === "left" ? "left" : "right").y * unit);
+  }));
+}

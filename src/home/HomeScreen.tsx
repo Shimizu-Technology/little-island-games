@@ -24,7 +24,7 @@ import { MoreItemArt } from "./art/More";
 import { moreCatalog } from "./catalogMore";
 import { itemIds, type ItemId } from "./catalog";
 import { useHomeStore } from "./useHomeStore";
-import { buildScene } from "./scene/graph";
+import { buildScene, createSceneBuilder } from "./scene/graph";
 import { resolve, type DropProposal } from "./scene/proposal";
 import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
 import { screenToRoom } from "./scene/camera";
@@ -41,6 +41,8 @@ import { useInteraction, type Interaction, type Pickup, type CaptureToken } from
 import { groupIds } from "./runtime/group";
 import { useIdleCharacters } from "./runtime/useIdleCharacters";
 import { isPortion, withPortions } from "./runtime/portions";
+import type { ReleaseProbe } from "./runtime/frameProbe";
+import { writeProbe } from "./runtime/probeReceipt";
 
 export type HomeScreenProps = Ownership & {
   badges?: BadgeId[];
@@ -91,6 +93,13 @@ export function HomeScreen({
   const [catalogItem, setCatalogItem] = useState<ItemId>();
   const [headerHeight, setHeaderHeight] = useState(64 + inset.top);
   const [frameReport, setFrameReport] = useState<number[]>();
+  const [releaseProbes, setReleaseProbes] = useState<ReleaseProbe[]>([]);
+  const [probeMax, setProbeMax] = useState(0);
+  const onReleaseProbe = useCallback((probe: ReleaseProbe) => {
+    writeProbe(probe);
+    setProbeMax((maximum) => Math.max(maximum, probe.maxDelta));
+    setReleaseProbes((history) => [...history.slice(-4), probe]);
+  }, []);
   const canvas = useRef<View>(null),
     canvasOrigin = useRef({ x: 0, y: 64 + inset.top });
   const runtime = useRef<Interaction | null>(null),
@@ -114,7 +123,8 @@ export function HomeScreen({
     () => buildingLayout(roomIds.length, window.width / window.height > 1.8),
     [window.width, window.height]
   );
-  const baseScene = useMemo(() => buildScene(store.state), [store.state.rooms]); // Navigation is outside the scene revision.
+  const buildRuntimeScene = useMemo(() => createSceneBuilder(), []);
+  const baseScene = useMemo(() => buildRuntimeScene(store.state), [store.state.rooms, buildRuntimeScene]); // Navigation is outside the scene revision.
   const scene = useMemo(() => withPortions(baseScene), [baseScene]);
   const { sleeping, wake } = useIdleCharacters(scene, pickups);
   useLayoutEffect(() => {
@@ -270,7 +280,7 @@ export function HomeScreen({
       );
       if (result) {
         showReaction(result.proposal);
-        const destination = buildScene(result.state);
+        const destination = buildRuntimeScene(result.state);
         setPickups((current) =>
           current.map((p, i) =>
             i === index && p
@@ -291,7 +301,7 @@ export function HomeScreen({
         sound("tap");
       } else runtime.current!.finish(index, false, undefined, undefined, undefined, token);
     },
-    [building, commitAt, sound]
+    [building, commitAt, sound, buildRuntimeScene]
   );
   const onPickup = useCallback(
     (pickup: Pickup) => {
@@ -307,7 +317,11 @@ export function HomeScreen({
     [wake]
   );
   const onClear = useCallback(
-    (index: number) => setPickups((current) => current.map((p, i) => (i === index ? undefined : p))),
+    (index: number) => {
+      // A UI-thread re-grab can outrun this queued clear callback.
+      if (runtime.current?.slots.get()[index].id) return;
+      setPickups((current) => current.map((p, i) => (i === index ? undefined : p)));
+    },
     []
   );
   const onDestination = useCallback(
@@ -356,6 +370,14 @@ export function HomeScreen({
       const index = roomAtScreen(point.x, point.y, runtime.current!.camera.get(), building);
       if (index >= 0) goRoom(roomIds[index]);
       return;
+    }
+    if (!id && !current.selected && !current.placing) {
+      const origin = roomOrigin(roomIds.indexOf("home"), building);
+      const local = screenToRoom(point, runtime.current!.camera.get(), housePoint(origin.x, origin.y));
+      if (local.x >= 524 && local.x <= 702 && local.y >= 26 && local.y <= 198) {
+        router.push("/badges");
+        return;
+      }
     }
     const entity = id ? current.scene.entities[id] : undefined;
     if (!id && !current.selected && !current.placing) {
@@ -410,6 +432,7 @@ export function HomeScreen({
     onClear,
     onDestination,
     onFrameReport: lab ? setFrameReport : undefined,
+    onReleaseProbe: lab ? onReleaseProbe : undefined,
     viewportOffset,
   });
   useLayoutEffect(() => {
@@ -647,6 +670,8 @@ export function HomeScreen({
         <View ref={canvas} onLayout={measure} style={{ width: viewport.width, height: viewport.height }}>
           <SceneView
             state={store.state}
+            badges={ownership.badges}
+            onBadges={() => router.push("/badges")}
             scene={scene}
             building={building}
             viewport={viewport}
@@ -675,6 +700,14 @@ export function HomeScreen({
               }}
             />
           )}
+          {lab && <View pointerEvents="none" accessible accessibilityLabel="Release frame probe"
+            style={{ position: "absolute", left: 8, bottom: 60, backgroundColor: "#FFF8E9", padding: 8, borderRadius: 8, maxWidth: "96%" }}>
+            <Text style={{ fontSize: 12, color: "#284F4B" }}>Release ±500ms · max {probeMax.toFixed(1)}ms</Text>
+            {releaseProbes.map((probe) => <Text key={probe.at} style={{ fontSize: 11, color: "#284F4B" }}>
+              {new Date(probe.at).toLocaleTimeString()} {probe.target?.split("/").slice(-3).join("/") ?? probe.kind} · {probe.maxDelta.toFixed(1)}ms ({probe.frames.length} samples)
+            </Text>)}
+            {!releaseProbes.length && <Text style={{ fontSize: 11 }}>Last 5 release windows appear here.</Text>}
+          </View>}
           {lab && (
             <View style={{ position: "absolute", bottom: 2, right: 8, flexDirection: "row", gap: 6 }}>
               <Tool label="Toggle debug" symbol="⌘" selected={debug} onPress={() => setDebug(!debug)} />

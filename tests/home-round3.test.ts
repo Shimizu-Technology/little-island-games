@@ -8,6 +8,9 @@ import {initializePersonalization,validPerson} from '../src/personalization/mode
 import {emptySave,parseSave} from '../src/state/validation';
 import {backfillRewards} from '../src/badges/transitions';
 import {preserveImportedHome} from '../src/state/homeMigration';
+import {buildScene} from '../src/home/scene/graph';
+import {paintedBounds} from '../src/home/art/silhouettes';
+import {overlaps} from '../src/home/scene/spatial';
 import type {StorageAdapter} from '../src/state/storage';
 const bedRoom=()=>{const s=starterHome();s.rooms.home.instances=[instance('bed','bed',4,0)];s.rooms.home.characters=[{slot:0,anchor:'floor',pose:'stand',x:8,y:8}];return s;};
 describe('native headboard release and visible floor settlement',()=>{
@@ -65,9 +68,9 @@ describe('native headboard release and visible floor settlement',()=>{
   for(const c of r.characters){const p=characterPoint(r,c);expect(occlusion(dropWorld(r),c.slot,p.x,p.y).fraction).toBeLessThanOrEqual(.25);}
   expect(JSON.stringify(s)).toBe(before);expect(editHistory(h,{type:'undo'}).present).toEqual(s);
  });
- it('keeps the new kitchen table, bowl and stools to the right of the open fridge, without changing existing saves',()=>{
+ it('keeps the new kitchen table, bowl and stools clear of the open fridge, without changing existing saves',()=>{
   const s=starterHome(),r=s.rooms.kitchen,fridge=r.instances.find(i=>i.item==='fridge')!,table=r.instances.find(i=>i.item==='kitchen-table')!;
-  expect(itemPoint(table).x-itemPoint(fridge).x).toBeGreaterThan(175);expect(fridge.mirrored).toBe(true);expect(r.instances.filter(i=>i.item==='stool').every(i=>i.x>fridge.x+2)).toBe(true);
+  fridge.powered=true;const scene=buildScene(s),fridgeHull=paintedBounds(scene.entities[`kitchen/item/${fridge.id}`])!;expect(fridge.mirrored).toBe(true);for(const i of r.instances.filter(i=>i.item==='stool'||i.item==='kitchen-table'))expect(overlaps(fridgeHull,paintedBounds(scene.entities[`kitchen/item/${i.id}`])!)).toBe(false);
   expect(r.instances.find(i=>i.item==='fruit-bowl')?.on).toBe(table.id);
   table.x=8;r.instances.find(i=>i.item==='fruit-bowl')!.x=9;const bytes=JSON.stringify(s);expect(migrateHome(s)).toBe(s);expect(JSON.stringify(s)).toBe(bytes);
  });

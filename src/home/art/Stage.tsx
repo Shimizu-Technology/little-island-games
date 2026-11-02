@@ -3,7 +3,7 @@ import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Pattern, Rect, Sto
 import type { HomeState } from "../model";
 import type { RoomId } from "../catalogMore";
 import { BadgeGlyph } from "../../badges/BadgeArt";
-import { tracks, badgeInfo, type BadgeId } from "../../badges/engine";
+import { tracks, type BadgeId } from "../../badges/engine";
 
 const ink = "#64554C";
 const wood = "#BD8C66";
@@ -45,7 +45,7 @@ function Plant({ x, y }: { x: number; y: number }) {
   </G>;
 }
 
-export function StageRoom({ room, theme, badges = [], onBadgePress }: { room: Room; theme: HomeState["theme"]; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void }) {
+export function StageRoom({ room, theme, badges = [] }: { room: Room; theme: HomeState["theme"]; badges?: readonly BadgeId[]; onBadgePress?: (id: BadgeId) => void }) {
   const tree = room === "treehouse", kitchen = room === "kitchen", beach = room === "beach";
   const wall = wallColors[theme.wallpaper], floor = floorColors[theme.floor];
   return <Svg width="100%" height="100%" viewBox="0 0 800 560" accessible={false}>
@@ -76,8 +76,8 @@ export function StageRoom({ room, theme, badges = [], onBadgePress }: { room: Ro
       <Rect x={524} y={26} width={178} height={172} rx={11} fill="#B88562" stroke={ink} strokeWidth={3}/>
       <Rect x={531} y={33} width={164} height={158} rx={7} fill="#E9CC9E"/>
       {tracks.flatMap((track,row)=>([1,2,3,4] as const).map((tier,col)=>{
-        const id: BadgeId = `${track}-${tier}`, earned = badges.includes(id), info = badgeInfo(id);
-        return <G key={id} transform={`translate(${536+col*39} ${37+row*22})`} onPress={()=>onBadgePress?.(id)} accessible accessibilityLabel={`${info.name}. ${earned?'Earned':info.rule}. Open My badges`}>
+        const id: BadgeId = `${track}-${tier}`, earned = badges.includes(id);
+        return <G key={id} transform={`translate(${536+col*39} ${37+row*22})`} accessible={false}>
           <Rect width={34} height={22} rx={4} fill={earned?"#FFF3D4":"#CFAE88"} stroke="#B28D66" strokeWidth={1}/>
           <G transform="translate(4 0) scale(.25)"><BadgeGlyph id={id} earned={earned}/></G>
         </G>;

@@ -1,5 +1,5 @@
 import { apply, type DropProposal } from "./scene/proposal";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   homeReducer,
   starterHome,
@@ -49,6 +49,7 @@ export function editHistory(
  * Invalid initial input is exposed verbatim as recoveryOriginal and never overwritten.
  * Persist only HomeStateV2 through learner-scoped personalization, not session history. */
 export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persist?: (state: HomeStateV2) => boolean) {
+  const initialValid = useMemo(() => initial === undefined || !!migrateHome(initial), [initial]);
   const [session, setSession] = useState(() => ({
     history: { present: migrateHome(initial) ?? starterHome(), past: [], future: [] } as History,
     message: "Your own little place by the sea.",
@@ -57,7 +58,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
   const identities = useRef<Record<string, string>>({});
   const dispatch = (action: HomeAction | { type: "undo" | "redo" }) => {
     const current = live.current;
-    if (initial !== undefined && !migrateHome(initial)) {
+    if (!initialValid) {
       setSession({ ...current, message: "This room needs recovery before it can be changed." });
       return;
     }
@@ -86,7 +87,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
     stillCurrent?: () => boolean
   ): HomeStateV2 | undefined => {
     const current = live.current;
-    if (initial !== undefined && !migrateHome(initial)) return undefined;
+    if (!initialValid) return undefined;
     if (stillCurrent && !stillCurrent()) return undefined;
     const result = apply(seed ?? current.history.present, proposal);
     if ("stale" in result || (stillCurrent && !stillCurrent())) return undefined;
@@ -122,7 +123,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
     setMessage,
     canUndo: session.history.past.length > 0,
     canRedo: session.history.future.length > 0,
-    recoveryOriginal: initial !== undefined && !migrateHome(initial) ? initial : undefined,
+    recoveryOriginal: !initialValid ? initial : undefined,
     persistence: persist ? ("store" as const) : ("session" as const),
   };
 }

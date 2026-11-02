@@ -66,8 +66,8 @@ export function IslandScene({ width, height, fontScale, look, reduced, active, d
  };
  const guide = useAnimatedStyle(() => ({ transform: [{ translateX: x.get()-guideSize*.303 }, { translateY: y.get()-guideSize+bob.get() }] }));
  const camera = useAnimatedStyle(() => ({ opacity: opacity.get(), transform: [{ translateX: cameraX.get() }, { translateY: cameraY.get() }, { scale: zoom.get() }] }));
- return <Animated.View testID="island-scene" style={[{ width, height }, camera]}>
-  <View pointerEvents="none" style={{ position: 'absolute', width, height }}><Terrain wide={width > height*1.15} width={width} height={height}/></View>
+ return <Animated.View accessible={false} importantForAccessibility="no" testID={Platform.OS === "web" ? "island-scene" : undefined} style={[{ width, height }, camera]}>
+  <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: 'absolute', width, height }}><Terrain wide={width > height*1.15} width={width} height={height}/></View>
   <IslandLife width={width} height={height} fontScale={fontScale} reduced={reduced} active={active}/>
   {layout.targets.map(place => <PlaceButton key={place.id} {...place} height={layout.artHeight} labelHeight={layout.labelHeight} reduced={reduced} visit={visit}/>)}
   <Animated.View pointerEvents="none" testID="island-guide" accessibilityRole="image" accessibilityLabel={door ? `Your Islander at ${door === 'hall' ? 'Game Hall' : door}` : 'Your Islander on the island path'} style={[{ position: 'absolute', left: 0, top: 0, width: guideSize*.607, height: guideSize }, guide]}>

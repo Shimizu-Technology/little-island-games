@@ -1,4 +1,5 @@
 import type { Scene, SceneEntity } from "../scene/types";
+import { capabilityOf } from "../world";
 export function groupIds(scene: Scene, id: string): string[] {
   const result: string[] = [];
   const visit = (key: string) => {
@@ -28,7 +29,8 @@ export function paintEntries(
   return entities
     .flatMap((entity) => [
       { entity, front: false, depth: paintDepth(entity, scene) },
-      ...(entity.item && entity.children.some((id) => scene.entities[id]?.attachment.kind === "socket")
+      ...(entity.item && (capabilityOf(entity.item.item).sockets?.length ||
+        entity.children.some((id) => scene.entities[id]?.attachment.kind === "socket"))
         ? [{ entity, front: true, depth: paintDepth(entity, scene) + 2 }]
         : []),
     ])

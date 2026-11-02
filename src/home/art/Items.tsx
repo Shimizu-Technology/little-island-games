@@ -153,7 +153,7 @@ export function ItemArt({
               <Path d="M40 74V30Q41 17 54 17H97Q107 17 107 30V76" fill={`url(#item-coral-${item})`} />
               <Path d="M51 32V58M75 31V57M96 32V57" stroke={highlight("#F9C9AC")} strokeWidth={5} />
               <Path d="M32 83L112 78L125 91L44 99Z" fill={paint("#F7BD9C")} />
-              <Path d="M44 100V119M118 93V113M36 84V103" stroke={wood} strokeWidth={7} />
+              <Path d="M44 100V139M118 93V133M36 84V123" stroke={wood} strokeWidth={7} />
             </>
           ) : item === "shelf" || item === "books" || item === "trophies" ? (
             <>

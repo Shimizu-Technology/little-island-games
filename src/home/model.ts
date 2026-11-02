@@ -526,13 +526,13 @@ export function starterHome(): HomeStateV2 {
   const extra = (room: Exclude<RoomId, "home">): RoomState => {
     const starters: Record<Exclude<RoomId, "home">, readonly [string, number, number][]> = {
       kitchen: [
-        ["fridge", 6, 0],
-        ["sink-counter", 11, 0],
+        ["fridge", 14, 0],
+        ["sink-counter", 8, 0],
         ["stove", 2, 0],
-        ["fruit-bowl", 12, 6],
-        ["kitchen-table", 11, 6],
-        ["stool", 9, 10],
-        ["stool", 14, 10],
+        ["fruit-bowl", 11, 9],
+        ["kitchen-table", 10, 9],
+        ["stool", 5, 9],
+        ["stool", 14, 9],
       ],
       treehouse: [
         ["hammock", 4, 0],
@@ -544,8 +544,8 @@ export function starterHome(): HomeStateV2 {
         ["book", 9, 5],
       ],
       beach: [
-        ["bubble-bath", 4, 0],
-        ["lounger", 10, 1],
+        ["bubble-bath", 3, 0],
+        ["lounger", 9, 1],
         ["beach-towel", 6, 7],
         ["beach-towel", 11, 8],
         ["ball", 6, 4],

@@ -1,4 +1,5 @@
 import { restingVisible, paintDepth } from "./group";
+import { paintedBounds } from "../art/silhouettes";
 import { capabilityOf } from "../world";
 import { decorSpec } from "../catalog";
 import type { Bounds, RoomPoint, Scene } from "../scene/types";
@@ -31,7 +32,7 @@ export function prepareHits(scene: Scene): Record<string, PickProxy[]> {
             : e.item && (capabilityOf(e.item.item).holdable || decorSpec(e.item.item).small)
               ? 3
               : 1;
-          return (lampHits(e) ?? [proxy.bounds]).map((bounds) => ({ ...proxy, bounds, depth: paintDepth(e, scene), priority }));
+          return (lampHits(e) ?? [paintedBounds(e) ?? proxy.bounds]).map((bounds) => ({ ...proxy, bounds, depth: paintDepth(e, scene), priority }));
         }),
     ])
   );

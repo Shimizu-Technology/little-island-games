@@ -1,12 +1,14 @@
 import React, { memo, useMemo } from "react";
-import { Platform, View } from "react-native";
-import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reanimated";
+import { Platform, Pressable, View } from "react-native";
+import Animated, { useAnimatedStyle, useDerivedValue, type SharedValue } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import { roomIds, roomNames } from "../catalogMore";
 import { RoomArt, ShoreArt } from "../art/Room";
 import { RoomShellArt } from "../art/More";
 import { BuildingArt, BuildingTrim, TerraceArt } from "../BuildingArt";
 import { roomOrigin, type Building } from "../camera";
+import type { BadgeId } from "../../badges/engine";
+import { tracks } from "../../badges/engine";
 import { itemSpec } from "../catalog";
 import type { HomeStateV2 } from "../model";
 import type { Scene, SceneEntity } from "../scene/types";
@@ -32,6 +34,8 @@ const RestingEntity = memo(function RestingEntity({
   entity,
   ownerKey,
   slots,
+  fixtureNudges,
+  clock,
   acknowledgeLayout,
   reduced,
   renderCharacter,
@@ -48,6 +52,8 @@ const RestingEntity = memo(function RestingEntity({
   entity: SceneEntity;
   ownerKey: string;
   slots: SharedValue<DragSlot[]>;
+  fixtureNudges: Interaction["fixtureNudges"];
+  clock: Interaction["clock"];
   acknowledgeLayout: Interaction["acknowledgeLayout"];
   reduced: boolean;
   renderCharacter?: CharacterRender;
@@ -66,44 +72,44 @@ const RestingEntity = memo(function RestingEntity({
     [entity.id, front, onNode]
   );
   const frame = artFrame(entity);
+  const token = layoutToken(entity);
+  // A tiny native layout stamp acknowledges the commit without remounting SVGs.
+  const [stamp, setStamp] = React.useState({ token, value: 1 });
+  if (stamp.token !== token) setStamp({ token, value: stamp.value + 1 });
   const owners = useMemo(() => ownerKey.split("|"), [ownerKey]);
   const anticipationTargets = useMemo(() => targetKey.split("|"), [targetKey]);
-  const style = useAnimatedStyle(() => {
-    for (let i = 0; i < 2; i++) {
-      const slot = slots.value[i];
-      if (slot.id && owners.includes(slot.restId ?? slot.id))
-        return {
-          opacity: slot.ready && (slot.phase !== "pending" || slot.committed) ? 0 : 1,
-          // Never translate the old supported pose while carry art mounts.
-          transform: [{ translateX: 0 }, { translateY: 0 }],
-        };
-    }
-    return { opacity: 1, transform: [{ translateX: 0 }, { translateY: 0 }] };
+  const visible = useDerivedValue(() => {
+    if (front && slots.value.some((s) => s.id && s.ready && (s.settleAt > 0 || s.pausedElapsed > 0) &&
+      (s.proposal?.attachment ?? s.subject?.attachment)?.kind === "socket" &&
+      ((s.proposal?.attachment ?? s.subject?.attachment) as { item: string }).item === entity.id)) return 0;
+    for (const slot of slots.value) if (slot.id && owners.includes(slot.restId ?? slot.id))
+      return slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 0 : 1;
+    return 1;
   });
-  const normal = useAnimatedStyle(() => ({
-    opacity:
-      entity.character &&
-      slots.value.some((s) => s.id && s.proposal?.target && anticipationTargets.includes(s.proposal.target))
-        ? 0
-        : 1,
-  }));
-  const anticipate = useAnimatedStyle(() => ({
-    opacity:
-      entity.character &&
-      slots.value.some((s) => s.id && s.proposal?.target && anticipationTargets.includes(s.proposal.target))
-        ? 1
-        : 0,
-  }));
+  const wobble = useDerivedValue(() => {
+    const at = fixtureNudges.value[entity.id];
+    if (!at || reduced) return 0;
+    const elapsed = clock.value - at;
+    return elapsed < 0 || elapsed >= 220 ? 0 : Math.sin(elapsed / 220 * Math.PI * 4) * 1.5 * (1 - elapsed / 220);
+  });
+  const style = useAnimatedStyle(() => ({ opacity: visible.value,
+    transform: [{ translateX: 0 }, { translateY: 0 }, { rotate: `${wobble.value}deg` }] }));
+  const anticipating = useDerivedValue(() => entity.character &&
+    slots.value.some((s) => s.id && s.proposal?.target && anticipationTargets.includes(s.proposal.target)) ? 1 : 0);
+  const normal = useAnimatedStyle(() => ({ opacity: 1 - anticipating.value }));
+  const anticipate = useAnimatedStyle(() => ({ opacity: anticipating.value }));
   const name = entity.character ? ["Islander", "Pip", "Crab"][entity.character.slot] : itemSpec(entity.item!.item).name;
   return (
-    <Animated.View
+    <View
       ref={bindNode}
       testID={front ? undefined : entity.character ? `character-${entity.character.slot}` : `object-${entity.item!.id}`}
       accessible={!front}
       focusable={!front}
       tabIndex={front ? -1 : 0}
       accessibilityRole="button"
-      accessibilityLabel={`${name}, ${roomNames[entity.room]}${entity.character ? `, ${entity.base}` : ""}`}
+      accessibilityLabel={front ? undefined : `${name}, ${roomNames[entity.room]}${entity.character ? `, ${entity.base}` : ""}`}
+      accessibilityElementsHidden={front}
+      importantForAccessibility={front ? "no-hide-descendants" : "auto"}
       accessibilityState={{ selected: selected }}
       accessibilityHint="Select, then choose a place."
       accessibilityActions={[
@@ -148,7 +154,6 @@ const RestingEntity = memo(function RestingEntity({
           width: frame.width,
           height: frame.height,
         },
-        style,
       ]}
     >
       {selected && !front && (
@@ -167,12 +172,9 @@ const RestingEntity = memo(function RestingEntity({
           }}
         />
       )}
-      <View
-        key={layoutToken(entity)}
-        collapsable={false}
-        onLayout={() => { if (!front) acknowledgeLayout(entity.id, layoutToken(entity)); }}
-        style={{ width: frame.width, height: frame.height }}
-      >
+      <Animated.View style={style} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <View collapsable={false} pointerEvents="none" onLayout={() => { if (!front) acknowledgeLayout(entity.id, token); }}
+        style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
       <Animated.View style={normal}>
         <EntityArt
           entity={entity}
@@ -188,8 +190,8 @@ const RestingEntity = memo(function RestingEntity({
           <EntityArt entity={entity} preview reduced={reduced} renderCharacter={renderCharacter} />
         </Animated.View>
       )}
-      </View>
-    </Animated.View>
+      </Animated.View>
+    </View>
   );
 });
 export function SceneView({
@@ -208,7 +210,11 @@ export function SceneView({
   reactions,
   sleeping,
   onNode,
+  badges = [],
+  onBadges,
 }: {
+  badges?: readonly BadgeId[];
+  onBadges?: () => void;
   onNode: (id: string, node: View | null) => void;
   state: HomeStateV2;
   scene: Scene;
@@ -233,14 +239,18 @@ export function SceneView({
   return (
     <GestureDetector gesture={interaction.gesture} touchAction="none">
       <View
-        testID="house-viewport"
+        testID={Platform.OS === "web" ? "house-viewport" : undefined}
+        accessible={false}
+        collapsable={false}
         style={{ width: viewport.width, height: viewport.height, overflow: "hidden", backgroundColor: "#BEE4DD" }}
       >
         <Animated.View
-          testID="house-camera"
+          testID={Platform.OS === "web" ? "house-camera" : undefined}
+          accessible={false}
+          importantForAccessibility="no"
           style={[{ position: "absolute", width: building.width, height: building.height }, cameraStyle]}
         >
-          <View pointerEvents="none" style={{ position: "absolute", width: building.width, height: building.height }}>
+          <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", width: building.width, height: building.height }}>
             <BuildingArt building={building} />
           </View>
           {roomIds.map((roomId, index) => {
@@ -252,20 +262,25 @@ export function SceneView({
             return (
               <View
                 key={roomId}
-                testID={`home-scene-${roomId}`}
+                testID={Platform.OS === "web" ? `home-scene-${roomId}` : undefined}
+                accessible={false}
+                collapsable={false}
                 pointerEvents="box-none"
-                style={{ position: "absolute", left: origin.x, top: origin.y, width: 800, height: 740 }}
+                style={{ position: "absolute", left: origin.x, top: origin.y, width: 800, height: index < building.columns ? 740 : 560 }}
               >
-                <View pointerEvents="none" style={{ width: 800, height: 560 }}>
+                <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ width: 800, height: 560 }}>
                   {roomId === "home" ? (
-                    <RoomArt theme={room.theme} reduced={reduced} />
+                    <RoomArt theme={room.theme} badges={[...badges]} reduced={reduced} />
                   ) : (
                     <RoomShellArt room={roomId} theme={room.theme} />
                   )}
                 </View>
-                <View pointerEvents="none" style={{ position: "absolute", top: 525, width: 800, height: 215 }}>
+                <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", top: 525, width: 800, height: index < building.columns ? 215 : 35 }}>
                   {index < building.columns ? <ShoreArt depth={215} /> : <TerraceArt />}
                 </View>
+                {roomId === "home" && <Pressable accessible accessibilityRole="button"
+                  accessibilityLabel={`Badge board, ${badges.length} of ${tracks.length * 4} earned. Open My badges`}
+                  onPress={onBadges} style={{ position: "absolute", left: 524, top: 26, width: 178, height: 172 }} />}
                 <View
                   pointerEvents="box-none"
                   style={{ position: "absolute", left: 8, top: 8, width: 784, height: 544, overflow: "hidden" }}
@@ -285,6 +300,8 @@ export function SceneView({
                           .map((t) => t.id)
                           .join("|")}
                         slots={interaction.slots}
+                        fixtureNudges={interaction.fixtureNudges}
+                        clock={interaction.clock}
                         acknowledgeLayout={interaction.acknowledgeLayout}
                         reduced={reduced}
                         renderCharacter={renderCharacter}
@@ -309,10 +326,11 @@ export function SceneView({
               </View>
             );
           })}
-          <View pointerEvents="none" style={{ position: "absolute", width: building.width, height: building.height }}>
+          <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", width: building.width, height: building.height }}>
             <BuildingTrim building={building} />
           </View>
           <DragOverlay
+            scene={scene}
             pickups={pickups}
             interaction={interaction}
             building={building}
@@ -339,7 +357,7 @@ function StressCopies({
   const actors = entities.filter((e) => e.character),
     props = entities.filter((e) => e.item && !e.children.length);
   return (
-    <View pointerEvents="none" style={{ position: "absolute" }}>
+    <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute" }}>
       {Array.from({ length: actors.length ? 9 : 0 }, (_, i) => (
         <View
           key={`actor-${i}`}
