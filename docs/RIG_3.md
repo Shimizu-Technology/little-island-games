@@ -106,3 +106,11 @@ The final sweep had zero escapes. Strokes are covered by the reasoned hull
 padding; the browser sweep measures geometry. The old drop-world contact
 adapter now resolves the same action arm as `characterHand`, and uses the
 rig mouth's head+20 coordinate instead of the old head+13 approximation.
+
+For a heavily loaded shared host, run
+`LITTLE_ISLAND_SLOW_QA=1 VITEST_MAX_WORKERS=2 npm run check`. The opt-in gives
+only the public-export fixture and full wardrobe sweep 15 minutes of wall
+time. Their default 120s/180s limits, cases, assertions, path counts and
+privacy guards remain unchanged. This does not establish native frame-rate
+acceptance. On this host the wardrobe sweep completed its assertions at
+713s (43 paths / 52 primitives) before its original wall-clock guard failed.
