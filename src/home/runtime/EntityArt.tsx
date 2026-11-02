@@ -65,6 +65,7 @@ export const EntityArt = memo(function EntityArt({
   renderCharacter,
   preview = false,
   actionOverride,
+  faceOverride,
 }: {
   entity: SceneEntity;
   carry?: boolean;
@@ -73,6 +74,7 @@ export const EntityArt = memo(function EntityArt({
   renderCharacter?: CharacterRender;
   preview?: boolean;
   actionOverride?: CharacterAction;
+  faceOverride?: Face;
 }) {
   const frame = artFrame(entity, carry);
   if (entity.item)
@@ -94,7 +96,7 @@ export const EntityArt = memo(function EntityArt({
     slot: character.slot,
     base,
     action: actionOverride ?? entity.action,
-    face: preview ? "anticipate" : "neutral",
+    face: preview ? "anticipate" : (faceOverride ?? "neutral"),
     facing: entity.facing,
     size,
     tilt: 0,

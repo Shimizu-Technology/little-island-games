@@ -29,6 +29,8 @@ import { DebugOverlay } from "./runtime/DebugOverlay";
 import { type CharacterRender } from "./runtime/EntityArt";
 import { boundCamera, fitCamera, focusCamera, roomAtScreen, zoomCamera } from "./runtime/CameraController";
 import { useInteraction, type Interaction, type Pickup, type CaptureToken } from "./runtime/useInteraction";
+import { groupIds } from "./runtime/group";
+import { useIdleCharacters } from "./runtime/useIdleCharacters";
 import { isPortion, withPortions } from "./runtime/portions";
 
 export type HomeScreenProps = Ownership & {
@@ -98,6 +100,7 @@ export function HomeScreen({
   );
   const baseScene = useMemo(() => buildScene(store.state), [store.state.rooms]); // Navigation is outside the scene revision.
   const scene = useMemo(() => withPortions(baseScene), [baseScene]);
+  const { sleeping, wake } = useIdleCharacters(scene, pickups);
   useLayoutEffect(() => {
     if (!focusId) return;
     const frame = requestAnimationFrame(() => {
@@ -188,6 +191,7 @@ export function HomeScreen({
     if (proposal.kind !== "mouth") return;
     const target = live.current.scene.rooms[proposal.room].targets.find((t) => t.id === proposal.target);
     if (!target) return;
+    wake(target.owner);
     const action = proposal.consume === "drink" ? "drink" : "eat";
     clearTimeout(reactionTimers.current[target.owner]);
     setReactions((current) => ({ ...current, [target.owner]: action }));
@@ -224,12 +228,19 @@ export function HomeScreen({
     },
     [building, commitAt, sound]
   );
-  const onPickup = useCallback((pickup: Pickup) => {
-    const current = runtime.current!.slots.get()[pickup.slot];
-    if (current.id !== pickup.id || current.generation !== pickup.generation || current.epoch !== pickup.epoch) return;
-    setPickups((current) => current.map((p, i) => (i === pickup.slot ? pickup : p)));
-    setSelected(undefined);
-  }, []);
+  const onPickup = useCallback(
+    (pickup: Pickup) => {
+      const current = runtime.current!.slots.get()[pickup.slot];
+      if (current.id !== pickup.id || current.generation !== pickup.generation || current.epoch !== pickup.epoch)
+        return;
+      for (const id of groupIds(pickup.scene, pickup.id)) {
+        if (pickup.scene.entities[id]?.character) wake(id);
+      }
+      setPickups((current) => current.map((p, i) => (i === pickup.slot ? pickup : p)));
+      setSelected(undefined);
+    },
+    [wake]
+  );
   const onClear = useCallback(
     (index: number) => setPickups((current) => current.map((p, i) => (i === index ? undefined : p))),
     []
@@ -533,6 +544,7 @@ export function HomeScreen({
             renderCharacter={renderCharacter}
             selected={selected}
             reactions={reactions}
+            sleeping={sleeping}
             onNode={onNode}
             onSelect={choose}
             onMove={moveAccessible}

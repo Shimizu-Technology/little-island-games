@@ -37,6 +37,7 @@ const RestingEntity = memo(function RestingEntity({
   selected,
   targetKey,
   action,
+  sleeping,
   front = false,
   onNode,
 }: {
@@ -49,6 +50,7 @@ const RestingEntity = memo(function RestingEntity({
   selected: boolean;
   targetKey: string;
   action?: "eat" | "drink";
+  sleeping: boolean;
   onSelect: (id: string) => void;
   onMove: (id: string, action: string) => void;
   front?: boolean;
@@ -164,6 +166,7 @@ const RestingEntity = memo(function RestingEntity({
         <EntityArt
           entity={entity}
           actionOverride={action}
+          faceOverride={sleeping ? "sleepy" : undefined}
           front={front}
           reduced={reduced}
           renderCharacter={renderCharacter}
@@ -191,6 +194,7 @@ export function SceneView({
   onMove,
   stress = false,
   reactions,
+  sleeping,
   onNode,
 }: {
   onNode: (id: string, node: View | null) => void;
@@ -205,6 +209,7 @@ export function SceneView({
   selected?: string;
   stress?: boolean;
   reactions: Record<string, "eat" | "drink">;
+  sleeping: Record<string, boolean>;
   onSelect: (id: string) => void;
   onMove: (id: string, action: string) => void;
 }) {
@@ -261,6 +266,7 @@ export function SceneView({
                         entity={entity}
                         onNode={onNode}
                         action={reactions[entity.id]}
+                        sleeping={!!sleeping[entity.id]}
                         ownerKey={ancestors(entity, scene).join("|")}
                         targetKey={scene.rooms[roomId].targets
                           .filter((t) => t.owner === entity.id && (t.kind === "mouth" || t.kind === "hand"))
