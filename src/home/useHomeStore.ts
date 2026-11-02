@@ -54,6 +54,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
     message: "Your own little place by the sea.",
   }));
   const live = useRef(session);
+  const identities = useRef<Record<string, string>>({});
   const dispatch = (action: HomeAction | { type: "undo" | "redo" }) => {
     const current = live.current;
     if (initial !== undefined && !migrateHome(initial)) {
@@ -95,6 +96,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
       setSession(next);
       return undefined;
     }
+    identities.current = result.identities;
     const history = {
       present: result.state,
       past: [...current.history.past, current.history.present].slice(-60),
@@ -113,6 +115,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
   return {
     state: session.history.present,
     getState: () => live.current.history.present,
+    getCommittedIdentities: () => identities.current,
     dispatch,
     commitProposal,
     message: session.message,

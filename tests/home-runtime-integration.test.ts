@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { labHome } from "../src/home/runtime/lab";
 import { buildScene } from "../src/home/scene/graph";
-import { resolve } from "../src/home/scene/proposal";
+import { resolve, apply } from "../src/home/scene/proposal";
 import { anchorsFor } from "../src/home/scene/species";
 import { carryBinding, renderAnchors, carrySample } from "../src/home/runtime/rigGeometry";
 import { withPortions } from "../src/home/runtime/portions";
 import { prepareHits } from "../src/home/runtime/pick";
 import { restingVisible } from "../src/home/runtime/group";
+import { instance, validHome } from "../src/home/model";
 import { roomPoint } from "../src/home/scene/types";
 
 describe("combined CORE/RIG runtime boundary", () => {
@@ -52,5 +53,47 @@ describe("combined CORE/RIG runtime boundary", () => {
     renderAnchors(actor, true, 6, 1);
     expect(actor.contact).toEqual(before);
     expect(before).toEqual(roomPoint(before.x, before.y));
+  });
+  it("transfers the complete held group and returns exact renamed identities", () => {
+    const state = labHome();
+    state.rooms.home.characters[0].holding = "cup";
+    state.rooms.kitchen.instances.push(instance("cup", "teddy", 10, 10));
+    expect(validHome(state)).toBe(true);
+    const scene = buildScene(state),
+      hero = scene.entities["character/0"];
+    const proposal = resolve({ ...scene.rooms.kitchen, entities: scene.entities }, hero, roomPoint(600, 500), {
+      scale: 1,
+      floorOnly: true,
+      release: true,
+    });
+    expect(proposal.moves.some((move) => move.id === "home/item/cup")).toBe(true);
+    const result = apply(state, proposal);
+    expect("state" in result).toBe(true);
+    if ("state" in result) {
+      expect(result.identities["home/item/cup"]).toBe("kitchen/item/carry-1-cup");
+      const next = buildScene(result.state);
+      expect(next.entities[result.identities["home/item/cup"]].parent).toBe("character/0");
+      expect(next.entities["kitchen/item/cup"].item?.item).toBe("teddy");
+    }
+  });
+  it("stages by explicit intent even with legal floor, keeping visible attachments in its overlay", () => {
+    const state = labHome();
+    state.rooms.home.characters[0].holding = "cup";
+    const scene = buildScene(state),
+      hero = scene.entities["character/0"];
+    const proposal = resolve({ ...scene.rooms.home, entities: scene.entities }, hero, hero.contact, {
+      scale: 1,
+      intent: "staging",
+      release: true,
+    });
+    expect(proposal.kind).toBe("staging");
+    const result = apply(state, proposal);
+    expect("state" in result).toBe(true);
+    if ("state" in result) {
+      const next = buildScene(result.state),
+        cup = next.entities["home/item/cup"];
+      expect(restingVisible(cup, next)).toBe(false);
+      expect(restingVisible(cup, next, hero.id)).toBe(true);
+    }
   });
 });

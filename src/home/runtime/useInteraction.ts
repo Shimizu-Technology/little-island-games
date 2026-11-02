@@ -61,6 +61,7 @@ export type Pickup = CaptureToken & {
   scene: Scene;
   grip?: { x: number; y: number };
   destination?: Scene;
+  identities?: Record<string, string>;
 };
 function eventTime(): number {
   "worklet";
@@ -138,7 +139,16 @@ export function useInteraction({
   const defaultOffset = useSharedValue({ x: 0, y: 0 });
   const offset = viewportOffset ?? defaultOffset;
   const camera = useSharedValue(initialCamera);
-  const prepared = useSharedValue(scene);
+  const resolverScene = useMemo(
+    () => ({
+      ...scene,
+      rooms: Object.fromEntries(
+        Object.entries(scene.rooms).map(([id, index]) => [id, { ...index, entities: scene.entities }])
+      ) as Scene["rooms"],
+    }),
+    [scene]
+  );
+  const prepared = useSharedValue(resolverScene);
   const hits = useMemo(() => prepareHits(scene), [scene]);
   const hitTable = useSharedValue(hits);
   const renderedRevision = useSharedValue(scene.revision);
@@ -152,7 +162,7 @@ export function useInteraction({
   const pinchDistance = useSharedValue(0);
   const suppressed = useSharedValue<number[]>([]);
   useLayoutEffect(() => {
-    prepared.set(scene);
+    prepared.set(resolverScene);
     hitTable.set(hits);
     renderedRevision.set(scene.revision);
     slots.set((current) =>
@@ -170,7 +180,7 @@ export function useInteraction({
         return sameContact || consumed || restoredTray ? { ...slot, revision: scene.revision } : slot;
       })
     );
-  }, [scene, hits, prepared, hitTable, renderedRevision, slots, building]);
+  }, [scene, resolverScene, hits, prepared, hitTable, renderedRevision, slots, building]);
 
   const movable = useSharedValue<Record<string, boolean>>({});
   useLayoutEffect(() => {
@@ -247,21 +257,15 @@ export function useInteraction({
     proposal?: DropProposal,
     revision?: string,
     destination?: Scene,
-    token?: CaptureToken
+    token?: CaptureToken,
+    identity?: string
   ) => {
     if (token && !isCurrent(index, token)) return;
     const current = slots.get();
     const slot = current[index];
     if (!slot.id) return;
     const origin = proposal ? roomOrigin(roomIds.indexOf(proposal.room), building) : { x: 0, y: 0 };
-    const restEntity =
-      destination &&
-      ((proposal && destination.entities[proposal.id]) ||
-        Object.values(destination.entities).find((e) =>
-          slot.subject?.character
-            ? e.character?.slot === slot.subject.character.slot
-            : e.item?.id === slot.subject?.item?.id
-        ));
+    const restEntity = destination && destination.entities[identity ?? proposal?.id ?? slot.restId ?? slot.id];
     slots.set(
       current.map((s, i) =>
         i !== index
@@ -361,7 +365,7 @@ export function useInteraction({
         };
         captureSequence.set(Math.max(captureSequence.value, slot.generation));
         slots.set(slots.value.map((s, i) => (i === index ? slot : s)));
-        if (existing < 0)
+        if (existing < 0 || !visible?.ready)
           runOnJS(onPickup)({
             id: effect.entity,
             slot: index,
@@ -476,11 +480,28 @@ export function useInteraction({
       }
     }
   };
+  const capturedRelative = (id: string): boolean => {
+    "worklet";
+    for (const capture of controller.value.pointers) {
+      if (!capture.entity) continue;
+      let key: string | undefined = id;
+      while (key) {
+        if (key === capture.entity) return true;
+        key = prepared.value.entities[key]?.parent;
+      }
+      key = capture.entity;
+      while (key) {
+        if (key === id) return true;
+        key = prepared.value.entities[key]?.parent;
+      }
+    }
+    return false;
+  };
   const hit = (point: ScreenPoint): string | undefined => {
     "worklet";
     for (let i = 1; i >= 0; i--) {
       const s = slots.value[i];
-      if (!s.id || s.consumed || s.phase !== "settling" || !s.subject) continue;
+      if (!s.id || s.consumed || s.phase !== "settling" || !s.subject || capturedRelative(s.restId ?? s.id)) continue;
       const c = camera.value,
         b = s.subject.bounds;
       const x = point.x / c.a - c.tx / c.a,
@@ -493,6 +514,7 @@ export function useInteraction({
     const origin = roomOrigin(index, building);
     const p = screenToRoom(point, camera.value, housePoint(origin.x, origin.y));
     const free = hitTable.value[roomIds[index]].filter((proxy) => {
+      if (capturedRelative(proxy.id)) return false;
       for (const slot of slots.value) {
         if (!slot.id) continue;
         let id: string | undefined = proxy.id;
@@ -536,6 +558,10 @@ export function useInteraction({
       manager.activate();
       inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
       for (const touch of event.changedTouches) {
+        if (controller.value.pointers.length >= 2) {
+          suppressed.set([...suppressed.value, touch.id]);
+          continue;
+        }
         const point = screenPoint(touch.x, touch.y),
           entity = hit(point);
         if (entity && controller.value.pointers.some((p) => !p.entity)) {
@@ -544,7 +570,7 @@ export function useInteraction({
         }
         const first = controller.value.pointers.find((p) => p.entity && p.phase === "pending");
         // A pinch centred on one actor is a no-op. Different actors remain two captures.
-        if (first && (!entity || entity === first.entity)) {
+        if (first && subjectFor(first.entity)?.character && (!entity || entity === first.entity)) {
           send({ type: "cancel", pointer: first.pointer, now: eventTime() });
           suppressed.set([...suppressed.value, first.pointer, touch.id]);
           continue;

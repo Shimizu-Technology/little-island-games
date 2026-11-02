@@ -128,7 +128,11 @@ function Probe({ scene }: { scene: Scene }) {
     reduced: false,
     designing: false,
     onCameraChange: () => {},
-    onPickup: (pickup) => current.ready(pickup.slot, pickup.id),
+    onPickup: (pickup) => {
+      const slot = current.slots.get()[pickup.slot];
+      if (slot.id === pickup.id && slot.generation === pickup.generation && slot.epoch === pickup.epoch)
+        current.ready(pickup.slot, pickup.id);
+    },
     onTap: () => {},
     onClear: () => {},
     onCommit: (index, proposal, _at, token) => {
@@ -219,6 +223,58 @@ describe("actual runtime callback sequencing", () => {
     });
     vi.useRealTimers();
   });
+  it("ignores a third contact without cancelling either pending actor", async () => {
+    const scene = fixture();
+    const friend = {
+      ...entity,
+      id: "character/1",
+      contact: roomPoint(500, 300),
+      character: { ...entity.character!, slot: 1 as const },
+    };
+    scene.entities[friend.id] = friend;
+    scene.rooms.home.entities = scene.entities;
+    scene.rooms.home.hitProxies.push({
+      id: friend.id,
+      bounds: { left: 470, top: 80, width: 60, height: 220 },
+      depth: friend.depth,
+      band: friend.band,
+    });
+    let renderer: TestRenderer.ReactTestRenderer;
+    await act(async () => {
+      renderer = TestRenderer.create(<Probe scene={scene} />);
+    });
+    touch("down", 120, 300, 1);
+    touch("down", 500, 300, 2);
+    touch("down", 200, 200, 3);
+    expect(current.controller.get().pointers.map((p) => p.entity)).toEqual(["character/0", "character/1"]);
+    touch("move", 150, 320, 1);
+    touch("move", 530, 320, 2);
+    expect(current.slots.get().filter((s) => s.id)).toHaveLength(2);
+    await act(async () => {
+      renderer!.unmount();
+    });
+    vi.useRealTimers();
+  });
+  it("initializes the current overlay after a regrab invalidates a queued pickup", async () => {
+    let renderer: TestRenderer.ReactTestRenderer;
+    await act(async () => {
+      renderer = TestRenderer.create(<Probe scene={fixture()} />);
+    });
+    touch("down", 120, 300);
+    touch("move", 150, 320);
+    touch("up", 150, 320);
+    touch("down", 150, 320, 9);
+    touch("move", 170, 340, 9);
+    expect(current.slots.get()[0].ready).toBe(false);
+    flushJS();
+    expect(current.slots.get()[0].ready).toBe(true);
+    expect(current.slots.get()[0].phase).toBe("dragging");
+    expect(committed).toBe(0);
+    await act(async () => {
+      renderer!.unmount();
+    });
+    vi.useRealTimers();
+  });
   it("freezes a settling transform on contact before the six point threshold", async () => {
     let renderer: TestRenderer.ReactTestRenderer;
     await act(async () => {
@@ -264,7 +320,7 @@ describe("actual runtime callback sequencing", () => {
     });
     vi.useRealTimers();
   });
-  it("reserves hidden descendants while their parent moves", async () => {
+  it.each([false, true])("reserves attachment groups from pointer down (pending=%s)", async (pending) => {
     const scene = fixture();
     const table = {
       ...entity,
@@ -315,10 +371,16 @@ describe("actual runtime callback sequencing", () => {
       renderer = TestRenderer.create(<Probe scene={scene} />);
     });
     touch("down", 120, 300);
-    touch("move", 300, 350);
-    flushJS();
+    if (!pending) {
+      touch("move", 300, 350);
+      flushJS();
+    }
+    touch("down", 100, 110, 2);
+    if (pending) {
+      touch("move", 300, 350);
+      flushJS();
+    }
     expect(current.slots.get()[0].id).toBe(table.id);
-    touch("down", 120, 230, 2);
     touch("move", 140, 250, 2);
     expect(
       current.controller

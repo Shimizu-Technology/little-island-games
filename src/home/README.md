@@ -1,3 +1,9 @@
+# Current Island Home 3.0 runtime
+
+The current scene, save and gesture contract is [ISLAND_HOME_3.md](../../docs/ISLAND_HOME_3.md), with canonical character geometry in [RIG_3.md](../../docs/RIG_3.md). `HomeScreen` composes `runtime/` modules; it no longer uses the legacy Drag or HouseCamera paths. Play exposes Undo, explicit room/overview/Find controls and the recovery tray. Session history retains CORE's 60 actions. Lying actors sleep after eight still seconds and wake on pickup/use; sleep is never saved.
+
+The 1.x/2.x notes below are historical migration and art context. Their old dimensions, renderer signatures, gesture files and history limits do not describe the current screen.
+
 # Island Home 3 pure scene engine
 
 The current engine contract is [ISLAND_HOME_3.md](../../docs/ISLAND_HOME_3.md). CORE supplies `scene.buildScene`, `resolve/apply`, the affine camera and the pure pointer controller. `HomeScreen`, `Drag` and `HouseCamera` still use the legacy renderer until RUNTIME replaces them; their clipping, settle and camera behavior below is historical, not a v3 acceptance claim.

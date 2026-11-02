@@ -169,21 +169,35 @@ export function HomeScreen({
           const prepared = buildScene(seed),
             subject = prepared.entities[`${destination}/item/${item.id}`];
           if (!subject) return undefined;
-          const resolved = resolve(prepared.rooms[destination], subject, roomPoint(anchor.x, anchor.y), {
+          const resolved = resolve(
+            { ...prepared.rooms[destination], entities: prepared.entities },
+            subject,
+            roomPoint(anchor.x, anchor.y),
+            {
+              scale: runtime.current!.camera.get().a,
+              release: true,
+            }
+          );
+          next = current.store.commitProposal(resolved, seed, stillCurrent);
+          return next
+            ? { state: next, proposal: resolved, identities: current.store.getCommittedIdentities() }
+            : undefined;
+        }
+        const resolved = resolve(
+          { ...fresh.rooms[destination], entities: fresh.entities },
+          candidate,
+          roomPoint(anchor.x, anchor.y),
+          {
             scale: runtime.current!.camera.get().a,
             release: true,
-          });
-          next = current.store.commitProposal(resolved, seed, stillCurrent);
-          return next ? { state: next, proposal: resolved } : undefined;
-        }
-        const resolved = resolve(fresh.rooms[destination], candidate, roomPoint(anchor.x, anchor.y), {
-          scale: runtime.current!.camera.get().a,
-          release: true,
-        });
+          }
+        );
         next = current.store.commitProposal(resolved, undefined, stillCurrent);
-        return next ? { state: next, proposal: resolved } : undefined;
+        return next
+          ? { state: next, proposal: resolved, identities: current.store.getCommittedIdentities() }
+          : undefined;
       }
-      return { state: next, proposal: proposal! };
+      return { state: next, proposal: proposal!, identities: current.store.getCommittedIdentities() };
     },
     []
   );
@@ -236,8 +250,18 @@ export function HomeScreen({
       if (result) {
         showReaction(result.proposal);
         const destination = buildScene(result.state);
-        setPickups((current) => current.map((p, i) => (i === index && p ? { ...p, destination } : p)));
-        runtime.current!.finish(index, true, result.proposal, destination.revision, destination, token);
+        setPickups((current) =>
+          current.map((p, i) => (i === index && p ? { ...p, destination, identities: result.identities } : p))
+        );
+        runtime.current!.finish(
+          index,
+          true,
+          result.proposal,
+          destination.revision,
+          destination,
+          token,
+          result.identities[result.proposal.id]
+        );
         setRoom(result.proposal.room);
         sound("tap");
       } else runtime.current!.finish(index, false, undefined, undefined, undefined, token);
@@ -271,16 +295,21 @@ export function HomeScreen({
     const anchor = screenToRoom(point, c, housePoint(origin.x, origin.y));
     const subject = live.current.scene.entities[id];
     if (!subject) return;
-    const targetProposal = resolve(live.current.scene.rooms[dest], subject, roomPoint(anchor.x, anchor.y), {
-      scale: c.a,
-      release: true,
-    });
+    const targetProposal = resolve(
+      { ...live.current.scene.rooms[dest], entities: live.current.scene.entities },
+      subject,
+      roomPoint(anchor.x, anchor.y),
+      {
+        scale: c.a,
+        release: true,
+      }
+    );
     const result = commitAt(id, dest, anchor, targetProposal);
     if (result) {
       showReaction(result.proposal);
       const owner = live.current.scene.rooms[dest].targets.find((t) => t.id === result.proposal.target)?.owner;
       setSelected(undefined);
-      restoreFocus(result.proposal.kind === "mouth" ? owner : id);
+      restoreFocus(result.proposal.kind === "mouth" ? owner : result.identities[id]);
     }
   };
   const choose = useCallback((id: string) => setSelected(id), []);
@@ -447,9 +476,9 @@ export function HomeScreen({
       const entity = scene.entities[id];
       if (!entity) return;
       if (action === "store") {
-        const proposal = resolve(scene.rooms[entity.room], entity, entity.contact, {
+        const proposal = resolve({ ...scene.rooms[entity.room], entities: scene.entities }, entity, entity.contact, {
           scale: runtime.current!.camera.get().a,
-          target: "staging",
+          intent: "staging",
           release: true,
         });
         if (store.commitProposal(proposal)) restoreFocus(id);
@@ -490,7 +519,10 @@ export function HomeScreen({
     const prepared = buildScene(seed),
       subject = prepared.entities[`${dest}/item/${created.id}`];
     if (!subject) return;
-    const proposal = resolve(prepared.rooms[dest], subject, at, { scale: c.a, release: true });
+    const proposal = resolve({ ...prepared.rooms[dest], entities: prepared.entities }, subject, at, {
+      scale: c.a,
+      release: true,
+    });
     store.commitProposal(proposal, seed);
     setPlacing(undefined);
   }
@@ -638,7 +670,7 @@ export function HomeScreen({
           if (result) {
             showReaction(result.proposal);
             const owner = scene.rooms[result.proposal.room].targets.find((t) => t.id === result.proposal.target)?.owner;
-            restoreFocus(result.proposal.kind === "mouth" ? owner : result.proposal.id);
+            restoreFocus(result.proposal.kind === "mouth" ? owner : result.identities[result.proposal.id]);
             setSelected(undefined);
             setRoom(result.proposal.room);
           }

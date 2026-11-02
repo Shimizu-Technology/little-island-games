@@ -31,14 +31,10 @@ function OverlayGroup({
     origin = roomOrigin(roomIds.indexOf(root.room), building);
   const ids = groupIds(scene, id);
   const destination =
-    (pickup.destination &&
-      Object.values(pickup.destination.entities).find((e) =>
-        root.character ? e.character?.slot === root.character.slot : e.item?.id === root.item?.id
-      )) ??
-    root;
+    (pickup.destination && pickup.destination.entities[pickup.identities?.[root.id] ?? root.id]) ?? root;
   const entities = ids
     .map((key) => scene.entities[key])
-    .filter((e) => e.id === root.id || restingVisible(e, scene))
+    .filter((e) => restingVisible(e, scene, root.id))
     .sort((a, b) => a.depth - b.depth || a.id.localeCompare(b.id));
   useLayoutEffect(() => interaction.ready(index, id), [interaction, index, id]);
   const style = useAnimatedStyle(() => {

@@ -26,7 +26,11 @@ export function Destinations({
   const choices = Object.values(scene.rooms).flatMap((index) =>
     index.targets
       .map((target) => {
-        const proposal = resolve(index, subject, target.contact, { scale, target: target.id, release: true });
+        const proposal = resolve({ ...index, entities: scene.entities }, subject, target.contact, {
+          scale,
+          target: target.id,
+          release: true,
+        });
         return proposal.target === target.id ? { target, proposal, room: index.room } : undefined;
       })
       .filter((choice) => !!choice)
