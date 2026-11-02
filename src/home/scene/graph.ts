@@ -320,12 +320,21 @@ function lyingActivation(item: Instance, socket: string): Bounds {
     height: (box.height * size) / 150,
   };
 }
+// One immutable index per room content. A character move must not reconstruct
+// three unrelated rooms or allocate new SVG props for every resting item.
+const sceneRoomCache: Partial<Record<RoomId, { key: string; index: RoomIndex }>> = {};
 export function buildScene(state: SceneState): Scene {
   const revision = worldRevision(state);
   const rooms = {} as Scene["rooms"];
   const entities: Scene["entities"] = {};
   for (const room of roomIds) {
-    rooms[room] = buildRoomIndex(room, state.rooms[room], revision);
+    const key = JSON.stringify(state.rooms[room]);
+    let cached = sceneRoomCache[room];
+    if (!cached || cached.key !== key) {
+      cached = { key, index: buildRoomIndex(room, state.rooms[room], revision) };
+      sceneRoomCache[room] = cached;
+    }
+    rooms[room] = cached.index.revision === revision ? cached.index : { ...cached.index, revision };
     Object.assign(entities, rooms[room].entities);
   }
   return { revision, entities, rooms };

@@ -264,7 +264,7 @@ describe("actual runtime callback sequencing", () => {
       vi.useRealTimers();
     }
   );
-  it("retains the release transform while JS is queued and waits for the committed React scene", async () => {
+  it("starts travel before JS is available and holds the exact target through acknowledgment", async () => {
     let renderer: TestRenderer.ReactTestRenderer;
     await act(async () => {
       renderer = TestRenderer.create(<Probe scene={fixture()} />);
@@ -278,9 +278,14 @@ describe("actual runtime callback sequencing", () => {
     expect(committed).toBe(0);
     vi.advanceTimersByTime(200);
     harness.frames[0]({ timeSincePreviousFrame: 16.67 });
-    expect(current.slots.get()[0].x).toBe(released.x);
-    expect(current.slots.get()[0].y).toBe(released.y);
+    expect(current.slots.get()[0].x).not.toBe(released.x);
+    expect(current.slots.get()[0].y).not.toBe(released.y);
+    expect(committed).toBe(0);
+    vi.advanceTimersByTime(50);
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    const target = { x: current.slots.get()[0].x, y: current.slots.get()[0].y };
     flushJS();
+    expect({ x: current.slots.get()[0].x, y: current.slots.get()[0].y }).toEqual(target);
     expect(committed).toBe(1);
     vi.advanceTimersByTime(260);
     harness.frames[0]({ timeSincePreviousFrame: 16.67 });
@@ -413,6 +418,8 @@ describe("actual runtime callback sequencing", () => {
     touch("down", slot.x, slot.y - 100, 7);
     touch("move", slot.x + 20, slot.y - 90, 7);
     touch("up", slot.x + 20, slot.y - 90, 7);
+    vi.advanceTimersByTime(250);
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
     flushJS();
     expect(committed).toBe(1);
     expect(committedId).toBe(moved.id);

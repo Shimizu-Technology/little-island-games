@@ -18,10 +18,10 @@ export function BuildingArt({building:b}:{building:Building}) {
 
 /** Upstairs has a timber terrace; the shoreline belongs below the ground floor. */
 export function TerraceArt() {
- return <Svg width="100%" height="100%" viewBox="0 0 800 215" accessible={false}>
-  <Rect width={800} height={215} fill="#D7B589"/>
-  {Array.from({length:7},(_,n)=><Path key={n} d={`M0 ${n*32}H800`} stroke="#B18D64" strokeWidth={3}/>)}
-  <Path d="M0 194H800M0 205H800" stroke="#F3D3A1" strokeWidth={5}/>
+ return <Svg width="100%" height="100%" viewBox="0 0 800 35" accessible={false}>
+  <Rect width={800} height={35} fill="#D7B589"/>
+  <Path d="M0 4H800M0 26H800" stroke="#B18D64" strokeWidth={2}/>
+  <Path d="M0 32H800" stroke="#F3D3A1" strokeWidth={3}/>
  </Svg>;
 }
 export function BuildingTrim({building:b}:{building:Building}) {

@@ -7,7 +7,7 @@ import type { Interaction } from "./useInteraction";
 export function TargetCue({ target, interaction }: { target: Target; interaction: Interaction }) {
   const { slots } = interaction;
   const style = useAnimatedStyle(() => ({
-    opacity: slots.value.some((s) => s.id && s.proposal?.target === target.id) ? 1 : 0,
+    opacity: slots.value.some((s) => s.id && s.phase === "dragging" && s.proposal?.target === target.id) ? 1 : 0,
   }));
   return (
     <Animated.View

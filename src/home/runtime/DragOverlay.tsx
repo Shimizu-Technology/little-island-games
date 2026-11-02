@@ -11,6 +11,7 @@ import { groupIds, restingVisible } from "./group";
 import { SettleArt } from "./SettleArt";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import type { Interaction, Pickup } from "./useInteraction";
+import { capabilityOf } from "../world";
 
 function OverlayGroup({
   pickup,
@@ -46,7 +47,7 @@ function OverlayGroup({
   const style = useAnimatedStyle(() => {
     const slot = slots.value[index];
     const lift = reduced ? 0 : Math.min(1, Math.max(0, (clock.value - slot.liftedAt) / 90));
-    const settling = (slot.phase === "settling" && slot.settleAt > 0) || (slot.phase === "pending" && slot.committed);
+    const settling = (slot.phase === "settling" && slot.settleAt > 0) || (slot.phase === "pending" && slot.pausedElapsed > 0);
     const blend = settling
       ? Math.max(0, 1 - (slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt) / 140)
       : 1;
@@ -57,7 +58,7 @@ function OverlayGroup({
         : 0;
     const propOffset = root.item && !root.children.length && root.bounds.height < 100 ? 18 / camera.value.a : 0;
     return {
-      opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed) ? 1 : 0,
+      opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 1 : 0,
       transformOrigin: [slot.gripX, slot.gripY, 0],
       transform: [
         { translateX: slot.x - origin.x - root.contact.x },
@@ -69,8 +70,8 @@ function OverlayGroup({
             (reduced ? 0 : (Math.min(10 / camera.value.a, root.bounds.height * 0.04) + propOffset) * lift * blend),
         },
         { rotate: `${reduced ? 0 : slot.tilt}deg` },
-        { scaleX: 1 + (reduced ? 0 : 0.04 * lift * blend) + 0.02 * accent },
-        { scaleY: 1 + (reduced ? 0 : 0.04 * lift * blend) - 0.02 * accent },
+        { scaleX: 1 + (reduced ? 0 : (root.character ? 0.04 : 0.2) * lift * blend) + 0.02 * accent },
+        { scaleY: 1 + (reduced ? 0 : (root.character ? 0.04 : 0.2) * lift * blend) - 0.02 * accent },
       ],
     };
   });
@@ -93,7 +94,7 @@ function OverlayGroup({
         ? Math.max(0, 1 - (clock.value - slot.settleAt) / 140)
         : Math.min(1, (clock.value - slot.liftedAt) / 90);
     return {
-      opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed) ? 0.18 - 0.06 * lift : 0,
+      opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 0.18 - 0.06 * lift : 0,
       transform: [{ translateX: groundX - 24 }, { translateY: groundY - 5 }, { scale: 1 - 0.15 * lift }],
     };
   });
@@ -182,7 +183,7 @@ function OverlayGroup({
         {entities
           .filter(
             (entity) =>
-              entity.item && entity.children.some((child) => scene.entities[child]?.attachment.kind === "socket")
+              entity.item && capabilityOf(entity.item.item).sockets?.length
           )
           .map((entity) => (
             <Front key={`front-${entity.id}`} entity={entity} root={root} reduced={reduced} />
@@ -225,9 +226,9 @@ function CarriedProp({
   const style = useAnimatedStyle(() => {
     const s = slots.value[index],
       elapsed = s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt;
-    const settling = (s.phase === "settling" && s.settleAt) || (s.phase === "pending" && s.committed);
+    const settling = (s.phase === "settling" && s.settleAt) || (s.phase === "pending" && s.settleAt);
     const p = settling ? settleProgress(elapsed, reduced) : 0,
-      blend = settling && p === 1 ? 1 : 0;
+      blend = p;
     const hand = hands[(reduced ? 0 : Math.max(-4, Math.min(4, Math.round(s.lag / 2.5)))) + 4];
     const x = hand.x + start.x + (end.x - start.x) * p,
       y = hand.y + start.y + (end.y - start.y) * p;
@@ -276,6 +277,39 @@ export function DragOverlay(props: {
       {props.pickups.map(
         (pickup, index) => pickup && <OverlayGroup key={`${index}:${pickup.id}`} pickup={pickup} {...props} />
       )}
+      {props.pickups.map((pickup, index) => pickup && <SupportFronts key={`fronts:${index}:${pickup.id}`}
+        pickup={pickup} interaction={props.interaction} building={props.building} reduced={props.reduced} />)}
     </View>
   );
+}
+
+/** The same pre-mounted furniture front replaces its room pass on the release
+ * frame. It stays in house space, so the moving actor passes behind it naturally. */
+function SupportFronts({ pickup, interaction, building, reduced }: {
+  pickup: Pickup; interaction: Interaction; building: Building; reduced: boolean;
+}) {
+  return <>{Object.values((pickup.destination ?? pickup.scene).entities)
+    .filter((entity) => entity.item && capabilityOf(entity.item.item).sockets?.length)
+    .map((entity) => <SupportFront key={entity.id} entity={entity} index={pickup.slot}
+      interaction={interaction} building={building} reduced={reduced} />)}</>;
+}
+function SupportFront({ entity, index, interaction, building, reduced }: {
+  entity: SceneEntity; index: number; interaction: Interaction; building: Building; reduced: boolean;
+}) {
+  const frame = artFrame(entity), origin = roomOrigin(roomIds.indexOf(entity.room), building);
+  const { slots } = interaction;
+  const style = useAnimatedStyle(() => {
+    const s = slots.value[index], attachment = s.proposal?.attachment ?? s.subject?.attachment;
+    // Slot order chooses exactly one front if two independent sockets share a seat.
+    const prior = slots.value.slice(0, index).some((p) => p.id && p.ready && (p.settleAt > 0 || p.pausedElapsed > 0) &&
+      (p.proposal?.attachment ?? p.subject?.attachment)?.kind === "socket" &&
+      ((p.proposal?.attachment ?? p.subject?.attachment) as { item: string }).item === entity.id);
+    return { opacity: !prior && s.id && s.ready && (s.settleAt > 0 || s.pausedElapsed > 0) &&
+      attachment?.kind === "socket" && attachment.item === entity.id ? 1 : 0 };
+  });
+  return <Animated.View pointerEvents="none" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+    style={[{ position: "absolute", left: origin.x + entity.contact.x + frame.left,
+      top: origin.y + entity.contact.y + frame.top }, style]}>
+    <EntityArt entity={entity} front reduced={reduced} />
+  </Animated.View>;
 }

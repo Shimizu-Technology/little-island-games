@@ -31,6 +31,7 @@ import { prepareHits, pickEntity } from "./pick";
 import { layoutToken } from "./layout";
 import { settleProgress, canRevealResting } from "./settle";
 import { releaseWindow, type ProbeFrame, type ProbeRelease, type ReleaseProbe } from "./frameProbe";
+import { poseToken } from "./poseBank";
 
 export type CaptureToken = { generation: number; epoch: number };
 export type DragSlot = CaptureToken & {
@@ -68,6 +69,7 @@ export type DragSlot = CaptureToken & {
   committed: boolean;
   revision: string;
   finished: boolean;
+  commitRequested?: boolean;
   proposal?: DropProposal;
 };
 export type Pickup = CaptureToken & {
@@ -178,7 +180,7 @@ export function useInteraction({
   const laidOut = useSharedValue<Record<string, string>>({});
   const poseLayouts = useSharedValue<Record<string, string>>({});
   const acknowledgePose = (index: number, token: string) => {
-    poseLayouts.set((current) => ({ ...current, [index]: token }));
+    poseLayouts.set((current) => ({ ...current, [index]: token, [`${index}:${token}`]: token }));
   };
   const acknowledgeLayout = (id: string, token: string) => {
     laidOut.set((current) => ({ ...current, [id]: token }));
@@ -196,6 +198,7 @@ export function useInteraction({
   const pinchMid = useSharedValue({ x: 0, y: 0 });
   const pinchDistance = useSharedValue(0);
   const suppressed = useSharedValue<number[]>([]);
+  const fixtureNudges = useSharedValue<Record<string, number>>({});
   const cameraGesture = useSharedValue(false);
   useLayoutEffect(() => {
     prepared.set(resolverScene);
@@ -337,8 +340,8 @@ export function useInteraction({
           : {
               ...s,
               phase: "settling",
-              releaseX: s.x,
-              releaseY: s.y,
+              releaseX: s.settleAt && committed ? s.releaseX : s.x,
+              releaseY: s.settleAt && committed ? s.releaseY : s.y,
               targetX: committed && proposal ? origin.x + proposal.contact.x : s.sourceX,
               targetY: committed && proposal ? origin.y + proposal.contact.y : s.sourceY,
               proposal,
@@ -347,9 +350,9 @@ export function useInteraction({
               subject: restEntity ?? s.subject,
               committed: true,
               revision: revision ?? renderedRevision.get(),
-              settleAt: eventTime(),
-              travelDelay: 0,
-              finished: false,
+              settleAt: s.settleAt && committed ? s.settleAt : eventTime(),
+              travelDelay: s.settleAt && committed ? s.travelDelay : 0,
+              finished: committed && s.finished,
             }
       )
     );
@@ -498,20 +501,24 @@ export function useInteraction({
         const index = slots.value.findIndex((s) => s.id === effect.entity || s.restId === effect.entity);
         const slot = slots.value[index];
         if (!slot) continue;
+        const origin = roomOrigin(roomIds.indexOf(effect.proposal.room), building);
         slots.set(
           slots.value.map((s, i) =>
-            i === index ? { ...s, phase: "settling", proposal: effect.proposal, settledId: effect.entity } : s
+            i === index ? { ...s, phase: "settling", proposal: effect.proposal, settledId: effect.entity,
+              releaseX: s.x, releaseY: s.y,
+              targetX: origin.x + effect.proposal.contact.x, targetY: origin.y + effect.proposal.contact.y,
+              settleAt: eventTime(), travelDelay: 0, finished: false, commitRequested: false } : s
           )
-        );
-        runOnJS(onCommit)(
-          index,
-          effect.proposal,
-          { x: slot.x, y: slot.y },
-          { generation: slot.generation, epoch: slot.epoch }
         );
       } else if (effect.type === "restore") {
         const pending = slots.value.findIndex((s) => s.id === effect.entity && s.phase === "pending" && !s.committed);
         if (pending >= 0) {
+          const s = slots.value[pending];
+          if (s.pausedElapsed > 0 && s.proposal) {
+            slots.set(slots.value.map((slot, i) => i === pending ? { ...slot, phase: "settling",
+              settleAt: eventTime() - s.pausedElapsed, commitRequested: false } : slot));
+            continue;
+          }
           slots.set(slots.value.map((s, i) => i === pending ? { ...s, id: "", ready: false } : s));
           runOnJS(onClear)(pending);
           continue;
@@ -722,6 +729,7 @@ export function useInteraction({
         const capture = controller.value.pointers.find((p) => p.pointer === touch.id);
         if (capture?.entity && movable.value[capture.entity] === false) {
           if (Math.hypot(touch.x - capture.start.x, touch.y - capture.start.y) > 6) {
+            if (!reduced) fixtureNudges.set({ ...fixtureNudges.value, [capture.entity]: eventTime() });
             send({ type: "cancel", pointer: touch.id, now: eventTime() });
             suppressed.set([...suppressed.value, touch.id]);
           }
@@ -858,10 +866,18 @@ export function useInteraction({
             slot.tilt *= 1 - progress;
             slot.lag *= 1 - progress;
             slot.finished = progress === 1;
+            // Motion and pose start at release on UI. Apply/save only after travel;
+            // the pre-mounted target remains visible while JS/native acknowledge.
+            if (slot.finished && !slot.committed && !slot.commitRequested && slot.proposal) {
+              slot.commitRequested = true;
+              runOnJS(onCommit)(i, slot.proposal, { x: slot.releaseX, y: slot.releaseY },
+                { generation: slot.generation, epoch: slot.epoch });
+            }
             const entity = prepared.value.entities[slot.restId ?? slot.id];
             const nativeReady = slot.consumed || (entity && (entity.attachment.kind === "staging" ||
               (laidOut.value[entity.id] === layoutTokens.value[entity.id] &&
-                (!entity.character || poseLayouts.value[i] === layoutTokens.value[entity.id]))));
+                (!entity.character || poseLayouts.value[i] === layoutTokens.value[entity.id] ||
+                  poseLayouts.value[`${i}:${poseToken(entity.base, entity.facing, entity.action)}`] === poseToken(entity.base, entity.facing, entity.action)))));
             if (nativeReady && canRevealResting(slot, renderedRevision.value)) {
               if (entity?.character && !slot.consumed && slot.proposal) {
                 const origin = roomOrigin(roomIds.indexOf(entity.room), building);
@@ -959,6 +975,7 @@ export function useInteraction({
     acknowledgeLayout,
     acknowledgePose,
     poseLayouts,
+    fixtureNudges,
     clock: lastFrame,
   };
 }

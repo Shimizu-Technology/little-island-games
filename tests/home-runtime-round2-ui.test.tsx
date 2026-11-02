@@ -29,10 +29,10 @@ vi.mock("../src/home/characterRenderer", () => ({ HomeCharacter: () => <div /> }
 vi.mock("../src/home/art/Items", () => ({ ItemArt: () => <div /> }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 describe("round 2 pose and chrome", () => {
-  it("R4 keeps carry fully opaque through every settle millisecond, including delayed acknowledgement and pause", async () => {
+  it("R4 starts the pose blend at release and keeps one opaque actor through delayed acknowledgment and pause", async () => {
     const source = buildScene(labHome()).entities["character/0"];
     const destination = { ...source, base: "lie" as const };
-    const slot = { phase: "settling", settleAt: 1000, committed: true, pausedElapsed: 0 },
+    const slot = { phase: "settling", settleAt: 1000, committed: true, pausedElapsed: 0, proposal: { base: "lie", facing: "front" } },
       clock = { value: 1000 };
     const interaction = { slots: { value: [slot] }, clock, poseLayouts: { value: { 0: layoutToken(destination) } } } as unknown as Interaction;
     let tree!: TestRenderer.ReactTestRenderer;
@@ -42,18 +42,18 @@ describe("round 2 pose and chrome", () => {
       );
     });
     const views = tree.root.findAllByType("AnimatedView" as never);
-    const evaluate = () => ({ opacity: views[0].props.style[1].evaluate().opacity + views[1].props.style[1].evaluate().opacity });
+    const evaluate = () => ({ opacity: views.reduce((sum, v) => sum + v.props.style[1].evaluate().opacity, 0) });
     for (let elapsed = 0; elapsed <= 700; elapsed++) {
       clock.value = 1000 + elapsed;
       expect(evaluate().opacity).toBe(1);
     }
     expect(views[0].props.style[1].evaluate().opacity).toBe(0);
-    expect(views[1].props.style[1].evaluate().opacity).toBe(1);
+    expect(views.slice(1).filter((v) => v.props.style[1].evaluate().opacity === 1)).toHaveLength(1);
     expect(views[0].props.style[1].evaluate().transform[2].rotate).toBe("-90deg");
     slot.phase = "pending";
     slot.pausedElapsed = 170;
     expect(evaluate().opacity).toBe(1);
-    expect(tree.root.findAllByType("AnimatedView" as never)).toHaveLength(2);
+    expect(tree.root.findAllByType("AnimatedView" as never)).toHaveLength(9);
     await act(async () => tree.unmount());
   });
   it("R5 has one reserved bottom bar with Whole house first; zoom and friends are explicit", async () => {
