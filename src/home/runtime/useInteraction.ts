@@ -24,6 +24,7 @@ export type CaptureToken = { generation: number; epoch: number };
 export type DragSlot = CaptureToken & {
   id: EntityId;
   restId?: EntityId;
+  settledId?: EntityId;
   subject?: SceneEntity;
   pointer: number;
   ready: boolean;
@@ -326,6 +327,11 @@ export function useInteraction({
       if (effect.type === "contact") {
         const index = slots.value.findIndex((s) => s.id === effect.entity && !s.consumed);
         if (index >= 0) {
+          const settling = slots.value[index].settledId;
+          if (settling)
+            controller.set(
+              transition(controller.value, { type: "settled", entity: settling }, camera.value, housePoint(0, 0)).state
+            );
           captureSequence.set(captureSequence.value + 1);
           slots.set(
             slots.value.map((s, i) =>
@@ -426,7 +432,9 @@ export function useInteraction({
         const slot = slots.value[index];
         if (!slot) continue;
         slots.set(
-          slots.value.map((s, i) => (i === index ? { ...s, phase: "settling", proposal: effect.proposal } : s))
+          slots.value.map((s, i) =>
+            i === index ? { ...s, phase: "settling", proposal: effect.proposal, settledId: effect.entity } : s
+          )
         );
         runOnJS(onCommit)(
           index,
@@ -756,6 +764,13 @@ export function useInteraction({
                 settled = transition(
                   settled,
                   { type: "settled", entity: slot.restId },
+                  camera.value,
+                  housePoint(0, 0)
+                ).state;
+              if (slot.settledId && slot.settledId !== slot.id && slot.settledId !== slot.restId)
+                settled = transition(
+                  settled,
+                  { type: "settled", entity: slot.settledId },
                   camera.value,
                   housePoint(0, 0)
                 ).state;

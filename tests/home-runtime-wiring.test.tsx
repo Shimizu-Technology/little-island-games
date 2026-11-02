@@ -266,6 +266,18 @@ describe("actual runtime callback sequencing", () => {
     flushJS();
     expect(committed).toBe(1);
     expect(committedId).toBe(moved.id);
+    const returned = { ...source, contact: committedContact };
+    const finalScene = fixture("committed");
+    finalScene.entities = { [source.id]: returned };
+    finalScene.rooms.home.entities = finalScene.entities;
+    current.finish(0, true, current.slots.get()[0].proposal!, "committed", finalScene, undefined, source.id);
+    await act(async () => {
+      renderer!.update(<Probe scene={finalScene} />);
+    });
+    vi.advanceTimersByTime(260);
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    expect(current.controller.get().settling).toEqual([]);
+    expect(current.controller.get().phase).toBe("idle");
     await act(async () => {
       renderer!.unmount();
     });
