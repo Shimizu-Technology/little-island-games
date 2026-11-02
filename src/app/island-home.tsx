@@ -3,9 +3,8 @@ import { badgesFor } from "../badges/engine";
 import { furnitureIds, wallThemes, floorThemes, type ItemId } from "../home/catalog";
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { homeCharacterPose } from "../home/characterPose";
+import { HomeCharacter } from "../home/characterRenderer";
 import { HomeScreen } from "../home/HomeScreen";
-import { Islander } from "../islander";
 import { useStore } from "../state/Store";
 import { personFor } from "../personalization/model";
 import { Copy, styles } from "../components/ui";
@@ -49,18 +48,7 @@ export default function IslandHomeRoute() {
       ]}
       persist={(home) => store.personalize({ home }, expected)}
       saveStatus={<SaveStatus />}
-      renderCharacter={({ slot, base, action, size, held, reduced }) =>
-        slot === 0 ? (
-          <Islander
-            view="front"
-            pose={homeCharacterPose(base === "carry" ? "stand" : base, action ?? undefined)}
-            look={person.look}
-            size={size}
-            held={held}
-            reduced={reduced}
-          />
-        ) : undefined
-      }
+      renderCharacter={(input) => <HomeCharacter input={input} look={person.look} />}
     />
   );
 }

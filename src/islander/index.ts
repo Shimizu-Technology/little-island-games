@@ -4,3 +4,6 @@ export * from './rig/wardrobe';
 export * from './rig/Islander';
 export * from './active';
 export * from './rewards';
+export * from './rig/character';
+export * from './rig/anchors';
+export * from './rig/Companions';

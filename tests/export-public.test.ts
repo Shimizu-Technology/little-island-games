@@ -4,6 +4,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+// Opt in on heavily loaded shared hosts; keep normal CI's hang guard unchanged.
+// This fixture copies and validates complete trees, not interactive latency.
 describe('public source export boundary', () => {
   it('exports a runnable tree with independent identifiers and rejects contaminated input atomically', () => {
     const scratch = mkdtempSync(join(tmpdir(), 'island-export-test-'));
@@ -52,5 +54,5 @@ describe('public source export boundary', () => {
       writeFileSync(join(snapshot, 'assets/audio/apple.m4a'), 'changed recording');
       expect(() => run(script, join(scratch, 'changed-audio'))).toThrow(/generation receipt/);
     } finally { rmSync(scratch, { recursive: true, force: true }); }
-  });
+  }, process.env.LITTLE_ISLAND_SLOW_QA === '1' ? 900_000 : undefined);
 });
