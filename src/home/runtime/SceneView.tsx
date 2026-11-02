@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from "react";
-import { Platform, View } from "react-native";
+import { Platform, Pressable, View } from "react-native";
 import Animated, { useAnimatedStyle, useDerivedValue, type SharedValue } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import { roomIds, roomNames } from "../catalogMore";
@@ -7,6 +7,8 @@ import { RoomArt, ShoreArt } from "../art/Room";
 import { RoomShellArt } from "../art/More";
 import { BuildingArt, BuildingTrim, TerraceArt } from "../BuildingArt";
 import { roomOrigin, type Building } from "../camera";
+import type { BadgeId } from "../../badges/engine";
+import { tracks } from "../../badges/engine";
 import { itemSpec } from "../catalog";
 import type { HomeStateV2 } from "../model";
 import type { Scene, SceneEntity } from "../scene/types";
@@ -98,7 +100,7 @@ const RestingEntity = memo(function RestingEntity({
   const anticipate = useAnimatedStyle(() => ({ opacity: anticipating.value }));
   const name = entity.character ? ["Islander", "Pip", "Crab"][entity.character.slot] : itemSpec(entity.item!.item).name;
   return (
-    <Animated.View
+    <View
       ref={bindNode}
       testID={front ? undefined : entity.character ? `character-${entity.character.slot}` : `object-${entity.item!.id}`}
       accessible={!front}
@@ -152,7 +154,6 @@ const RestingEntity = memo(function RestingEntity({
           width: frame.width,
           height: frame.height,
         },
-        style,
       ]}
     >
       {selected && !front && (
@@ -171,7 +172,7 @@ const RestingEntity = memo(function RestingEntity({
           }}
         />
       )}
-      <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <Animated.View style={style} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <View collapsable={false} pointerEvents="none" onLayout={() => { if (!front) acknowledgeLayout(entity.id, token); }}
         style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
       <Animated.View style={normal}>
@@ -189,8 +190,8 @@ const RestingEntity = memo(function RestingEntity({
           <EntityArt entity={entity} preview reduced={reduced} renderCharacter={renderCharacter} />
         </Animated.View>
       )}
-      </View>
-    </Animated.View>
+      </Animated.View>
+    </View>
   );
 });
 export function SceneView({
@@ -209,7 +210,11 @@ export function SceneView({
   reactions,
   sleeping,
   onNode,
+  badges = [],
+  onBadges,
 }: {
+  badges?: readonly BadgeId[];
+  onBadges?: () => void;
   onNode: (id: string, node: View | null) => void;
   state: HomeStateV2;
   scene: Scene;
@@ -234,17 +239,18 @@ export function SceneView({
   return (
     <GestureDetector gesture={interaction.gesture} touchAction="none">
       <View
-        testID="house-viewport"
+        testID={Platform.OS === "web" ? "house-viewport" : undefined}
         accessible={false}
         collapsable={false}
         style={{ width: viewport.width, height: viewport.height, overflow: "hidden", backgroundColor: "#BEE4DD" }}
       >
         <Animated.View
-          testID="house-camera"
+          testID={Platform.OS === "web" ? "house-camera" : undefined}
           accessible={false}
+          importantForAccessibility="no"
           style={[{ position: "absolute", width: building.width, height: building.height }, cameraStyle]}
         >
-          <View pointerEvents="none" style={{ position: "absolute", width: building.width, height: building.height }}>
+          <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", width: building.width, height: building.height }}>
             <BuildingArt building={building} />
           </View>
           {roomIds.map((roomId, index) => {
@@ -256,22 +262,25 @@ export function SceneView({
             return (
               <View
                 key={roomId}
-                testID={`home-scene-${roomId}`}
+                testID={Platform.OS === "web" ? `home-scene-${roomId}` : undefined}
                 accessible={false}
                 collapsable={false}
                 pointerEvents="box-none"
                 style={{ position: "absolute", left: origin.x, top: origin.y, width: 800, height: index < building.columns ? 740 : 560 }}
               >
-                <View pointerEvents="none" style={{ width: 800, height: 560 }}>
+                <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ width: 800, height: 560 }}>
                   {roomId === "home" ? (
-                    <RoomArt theme={room.theme} reduced={reduced} />
+                    <RoomArt theme={room.theme} badges={[...badges]} reduced={reduced} />
                   ) : (
                     <RoomShellArt room={roomId} theme={room.theme} />
                   )}
                 </View>
-                <View pointerEvents="none" style={{ position: "absolute", top: 525, width: 800, height: index < building.columns ? 215 : 35 }}>
+                <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", top: 525, width: 800, height: index < building.columns ? 215 : 35 }}>
                   {index < building.columns ? <ShoreArt depth={215} /> : <TerraceArt />}
                 </View>
+                {roomId === "home" && <Pressable accessible accessibilityRole="button"
+                  accessibilityLabel={`Badge board, ${badges.length} of ${tracks.length * 4} earned. Open My badges`}
+                  onPress={onBadges} style={{ position: "absolute", left: 524, top: 26, width: 178, height: 172 }} />}
                 <View
                   pointerEvents="box-none"
                   style={{ position: "absolute", left: 8, top: 8, width: 784, height: 544, overflow: "hidden" }}
@@ -317,7 +326,7 @@ export function SceneView({
               </View>
             );
           })}
-          <View pointerEvents="none" style={{ position: "absolute", width: building.width, height: building.height }}>
+          <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", width: building.width, height: building.height }}>
             <BuildingTrim building={building} />
           </View>
           <DragOverlay
@@ -348,7 +357,7 @@ function StressCopies({
   const actors = entities.filter((e) => e.character),
     props = entities.filter((e) => e.item && !e.children.length);
   return (
-    <View pointerEvents="none" style={{ position: "absolute" }}>
+    <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute" }}>
       {Array.from({ length: actors.length ? 9 : 0 }, (_, i) => (
         <View
           key={`actor-${i}`}

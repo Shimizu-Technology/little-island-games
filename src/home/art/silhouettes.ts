@@ -2,7 +2,7 @@ import type { Bounds, SceneEntity } from "../scene/types";
 /** Conservative outer paint hulls in the authored SVG coordinates, with stroke.
  * Transparent square padding is not furniture. Shared by picking and starter QA. */
 const hulls: Record<string, readonly [number, number, number, number, number?]> = {
-  bed: [0, 30, 150, 120], shelf: [12, 26, 138, 121, 130], "toy-box": [22, 47, 130, 123, 130],
+  bed: [0, 30, 150, 120], chair: [28, 14, 129, 143], shelf: [12, 26, 138, 121, 130], "toy-box": [22, 47, 130, 123, 130],
   fridge: [25, 6, 123, 147], "sink-counter": [5, 18, 145, 141], stove: [7, 29, 143, 140],
   "kitchen-table": [7, 56, 143, 142], stool: [27, 80, 123, 136],
   hammock: [2, 23, 150, 134], "floor-cushion": [16, 101, 134, 138],

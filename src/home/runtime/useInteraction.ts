@@ -31,6 +31,7 @@ import { prepareHits, pickEntity } from "./pick";
 import { layoutToken } from "./layout";
 import { settleProgress, canRevealResting } from "./settle";
 import { releaseWindow, type ProbeFrame, type ProbeRelease, type ReleaseProbe } from "./frameProbe";
+import { anchorsFor } from "../scene/species";
 import { poseToken } from "./poseBank";
 
 export type CaptureToken = { generation: number; epoch: number };
@@ -192,6 +193,7 @@ export function useInteraction({
   const frameTimes = useSharedValue<number[]>([]);
   const probeRing = useSharedValue<ProbeFrame[]>([]);
   const probeCursor = useSharedValue(0);
+  const probeLastAt = useSharedValue(0);
   const probePending = useSharedValue<ProbeRelease[]>([]);
   const frameCount = useSharedValue(0);
   const lastFrame = useSharedValue(0);
@@ -200,6 +202,10 @@ export function useInteraction({
   const pinchMid = useSharedValue({ x: 0, y: 0 });
   const pinchDistance = useSharedValue(0);
   const suppressed = useSharedValue<number[]>([]);
+  // Raw down/move/up events survive the JS commit interval, including a whole
+  // fast grab/release. Replay before hiding the landing overlay, against the
+  // acknowledged scene/identity. Never invalidate an in-flight transaction.
+  const queuedInput = useSharedValue<ControllerEvent[]>([]);
   const fixtureNudges = useSharedValue<Record<string, number>>({});
   const cameraGesture = useSharedValue(false);
   useLayoutEffect(() => {
@@ -367,8 +373,29 @@ export function useInteraction({
     });
   };
 
-  const send = (event: ControllerEvent) => {
+  const send = (event: ControllerEvent, replay = false) => {
     "worklet";
+    if (!replay && event.type !== "settled" && (queuedInput.value.length ||
+      slots.value.some((s) => s.id && s.commitRequested && !s.committed))) {
+      queuedInput.set([...queuedInput.value, event]);
+      return;
+    }
+    if (replay && event.type === "down" && event.entity) {
+      const id = event.entity, slot = slots.value.find((s) => s.id === id || s.restId === id);
+      if (slot) {
+        const origin = originFor(slot.id);
+        event = { ...event, entity: slot.id, contact: roomPoint(slot.x - origin.x, slot.y - origin.y) };
+      }
+    }
+    if (replay && event.type === "up") {
+      const pointer = event.pointer;
+      const slot = slots.value.find((s) => s.id && s.pointer === pointer);
+      const proposal = slot ? proposalFor(slot, true) : undefined;
+      if (onReleaseProbe && slot?.phase === "dragging")
+        probePending.set([...probePending.value, { at: event.now, id: slot.id,
+          kind: proposal?.kind ?? "restore", target: proposal?.target }]);
+      event = { ...event, proposal };
+    }
     const capture =
       event.type !== "settled" ? controller.value.pointers.find((p) => p.pointer === event.pointer) : undefined;
     let state = controller.value;
@@ -551,7 +578,10 @@ export function useInteraction({
             )
           );
         }
-      } else if (effect.type === "tap") runOnJS(onTap)(effect.entity, capture!.point, eventTime());
+      } else if (effect.type === "tap") {
+        const identity = slots.value.find((s) => s.id === effect.entity)?.restId ?? effect.entity;
+        runOnJS(onTap)(identity, capture!.point, eventTime());
+      }
       else if (effect.type === "pan") {
         cameraGesture.set(true);
         const now = eventTime(),
@@ -620,7 +650,9 @@ export function useInteraction({
       const s = slots.value[i];
       if (!s.id || s.consumed || s.phase !== "settling" || !s.subject || capturedRelative(s.restId ?? s.id)) continue;
       const c = camera.value,
-        b = s.subject.bounds;
+        b = s.subject.character && s.proposal && s.finished
+          ? anchorsFor(s.subject.character.slot, s.proposal.base, s.proposal.facing, s.subject.action).bounds
+          : s.subject.bounds;
       const x = point.x / c.a - c.tx / c.a,
         y = point.y / c.a - c.ty / c.a;
       if (x >= s.x + b.left && x <= s.x + b.left + b.width && y >= s.y + b.top && y <= s.y + b.top + b.height)
@@ -787,7 +819,9 @@ export function useInteraction({
     const dt = frame.timeSincePreviousFrame ?? 16.67;
     if (onReleaseProbe) {
       const now = eventTime();
-      probeRing.modify((ring) => { "worklet"; ring[probeCursor.value % 180] = { at: now, delta: dt }; return ring; });
+      const delta = Math.max(dt, probeLastAt.value ? now - probeLastAt.value : dt);
+      probeLastAt.set(now);
+      probeRing.modify((ring) => { "worklet"; ring[probeCursor.value % 180] = { at: now, delta }; return ring; });
       probeCursor.set(probeCursor.value + 1);
       const due = probePending.value.filter((p) => now >= p.at + 520);
       for (const release of due) runOnJS(onReleaseProbe)({ ...releaseWindow(release, probeRing.value),
@@ -805,6 +839,15 @@ export function useInteraction({
       if (due.length) probePending.set(probePending.value.filter((p) => now < p.at + 520));
     }
     lastFrame.set(eventTime());
+    if (queuedInput.value.length && !slots.value.some((s) => s.id && s.commitRequested &&
+      (!s.committed || s.revision !== renderedRevision.value))) {
+      const events = queuedInput.value;
+      queuedInput.set([]);
+      for (const event of events) {
+        send(event, true);
+        if (event.type === "up") resumePending(event.pointer);
+      }
+    }
     if (revealPan.value && !controller.value.pointers.length) {
       const { from, to, since } = revealPan.value;
       const t = reduced ? 1 : Math.min(1, (eventTime() - since) / 200);
@@ -936,7 +979,10 @@ export function useInteraction({
         }
         return current;
       });
-  }, [onReleaseProbe, probeRing, probeCursor, probePending, slots, prepared, renderedRevision, laidOut, layoutTokens,
+  // send/resumePending read these shared channels. Keeping their render-local
+  // identities out of dependencies preserves the native callback clock.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onReleaseProbe, probeRing, probeCursor, probeLastAt, probePending, queuedInput, slots, prepared, renderedRevision, laidOut, layoutTokens,
     poseLayouts, lastFrame, revealPan, controller, reduced, camera, onFrameReport, frameCount, frameTimes, inertia,
     viewport, building, offset, proposalFor, onCommit, onClear]));
   const cancelAll = () => {
@@ -944,6 +990,7 @@ export function useInteraction({
     epoch.set(epoch.get() + 1);
     controller.set(idleController);
     inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
+    queuedInput.set([]);
     slots.set([emptyDragSlot(), emptyDragSlot()]);
     onClear(0);
     onClear(1);

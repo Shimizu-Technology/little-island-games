@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import Animated, { useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
+import { paintedBounds } from "../art/silhouettes";
 import { roomIds } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { anchorsFor } from "../scene/species";
@@ -38,6 +39,14 @@ function OverlayGroup({
   const { slots, camera, clock } = visualInteraction;
   const root = scene.entities[id],
     origin = roomOrigin(roomIds.indexOf(root.room), building);
+  const supportPlanes = useMemo(() => Object.fromEntries(Object.values(scene.entities).flatMap((entity) => {
+    if (!entity.item || !capabilityOf(entity.item.item).sockets?.length) return [];
+    const frame = artFrame(entity), hull = paintedBounds(entity) ?? {
+      left: entity.contact.x + frame.left, top: entity.contact.y + frame.top, width: frame.width, height: frame.height };
+    const origin = roomOrigin(roomIds.indexOf(entity.room), building);
+    return [[entity.id, { ...hull, left: hull.left + origin.x, top: hull.top + origin.y,
+      base: hull.top + origin.y + hull.height }]];
+  })), [scene, building]);
   const ids = groupIds(scene, id);
   const destination =
     (pickup.destination &&
@@ -65,6 +74,8 @@ function OverlayGroup({
         ? Math.max(0, elapsed < 60 ? elapsed / 60 : (160 - elapsed) / 100)
         : 0;
     const propOffset = root.item && !root.children.length && root.bounds.height < 100 ? 18 / camera.value.a : 0;
+    const propScale = root.character ? (reduced ? 0 : .04 * lift * blend)
+      : .2 * (settling ? (reduced ? 0 : blend) : (reduced ? 1 : lift));
     return {
       opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 1 : 0,
       transformOrigin: [slot.gripX, slot.gripY, 0],
@@ -78,8 +89,8 @@ function OverlayGroup({
             (reduced ? 0 : (Math.min(10 / camera.value.a, root.bounds.height * 0.04) + propOffset) * lift * blend),
         },
         { rotate: `${reduced ? 0 : slot.tilt}deg` },
-        { scaleX: 1 + (reduced ? 0 : (root.character ? 0.04 : 0.2) * lift * blend) + 0.02 * accent },
-        { scaleY: 1 + (reduced ? 0 : (root.character ? 0.04 : 0.2) * lift * blend) - 0.02 * accent },
+        { scaleX: 1 + propScale + 0.02 * accent },
+        { scaleY: 1 + propScale - 0.02 * accent },
       ],
     };
   });
@@ -165,6 +176,7 @@ function OverlayGroup({
               <SettleArt
                 key={entity.id}
                 source={root}
+                supportPlanes={supportPlanes}
                 destination={destination}
                 grip={pickup.grip}
                 interaction={visualInteraction}
@@ -284,7 +296,8 @@ export function DragOverlay(props: {
 }) {
   return (
     <View
-      testID="building-drag-overlay"
+      testID={Platform.OS === "web" ? "building-drag-overlay" : undefined}
+      accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
       pointerEvents="none"
       style={{ position: "absolute", left: 0, top: 0, width: "100%", height: "100%" }}
     >

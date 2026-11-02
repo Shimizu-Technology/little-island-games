@@ -410,7 +410,37 @@ describe("actual runtime callback sequencing", () => {
     });
     vi.useRealTimers();
   });
-  it("commits a regrab under the canonical identity after acknowledged cross-room transfer", async () => {
+  it.each([false, true])("U4 replays a complete grab during commit, before layout acknowledgment (quick release=%s)", async (quickRelease) => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
+    touch("down", 120, 300); touch("move", 150, 320); flushJS(); touch("up", 150, 320);
+    vi.setSystemTime(1240); harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    const landing = { ...current.slots.get()[0] }, oldGeneration = landing.generation;
+    expect(landing.commitRequested).toBe(true);
+    touch("down", landing.x, landing.y - 30, 9);
+    touch("move", landing.x + 40, landing.y - 10, 9);
+    if (quickRelease) touch("up", landing.x + 40, landing.y - 10, 9);
+    // JS is still busy: retain the landing transaction and all subsequent input.
+    expect(current.slots.get()[0].generation).toBe(oldGeneration);
+    flushJS(); expect(committed).toBe(1);
+    harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    expect(current.slots.get()[0].generation).toBe(oldGeneration);
+    await act(async () => { renderer.update(<Probe scene={fixture("committed", committedContact)} />); });
+    vi.setSystemTime(1300); harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+    expect(current.slots.get()[0].generation).toBeGreaterThan(oldGeneration);
+    if (!quickRelease) {
+      expect(current.slots.get()[0].phase).toBe("dragging");
+      expect(current.controller.get().pointers[0].pointer).toBe(9);
+      touch("up", landing.x + 40, landing.y - 10, 9);
+    }
+    expect(current.slots.get()[0].phase).toBe("settling");
+    vi.setSystemTime(1600); harness.frames[0]({ timeSincePreviousFrame: 16.67 }); flushJS();
+    expect(committed).toBe(2);
+    expect(current.controller.get().pointers).toHaveLength(0);
+    await act(async () => renderer.unmount()); vi.useRealTimers();
+  });
+
+  it.each([false, true])("commits a regrab under the canonical cross-room identity (queued=%s)", async (queued) => {
     const scene = fixture();
     const source = {
       ...entity,
@@ -437,6 +467,13 @@ describe("actual runtime callback sequencing", () => {
     destination.rooms.home.hitProxies = [];
     destination.rooms.kitchen.entities = destination.entities;
     const proposal = { ...current.slots.get()[0].proposal!, room: "kitchen" as const, contact: moved.contact };
+    const before = { ...current.slots.get()[0] };
+    if (queued) {
+      current.slots.get()[0].commitRequested = true;
+      touch("down", before.x, before.y - 100, 7);
+      touch("move", before.x + 20, before.y - 90, 7);
+      touch("up", before.x + 20, before.y - 90, 7);
+    }
     current.finish(0, true, proposal, "transferred", destination, undefined, moved.id);
     await act(async () => {
       renderer!.update(<Probe scene={destination} />);
@@ -444,9 +481,14 @@ describe("actual runtime callback sequencing", () => {
     vi.advanceTimersByTime(60);
     harness.frames[0]({ timeSincePreviousFrame: 16.67 });
     const slot = { ...current.slots.get()[0] };
-    touch("down", slot.x, slot.y - 100, 7);
-    touch("move", slot.x + 20, slot.y - 90, 7);
-    touch("up", slot.x + 20, slot.y - 90, 7);
+    if (!queued) {
+      touch("down", slot.x, slot.y - 100, 7);
+      touch("move", slot.x + 20, slot.y - 90, 7);
+      touch("up", slot.x + 20, slot.y - 90, 7);
+    } else {
+      expect(slot.releaseX).toBeCloseTo(before.x + 20);
+      expect(slot.releaseY).toBeCloseTo(before.y + 10);
+    }
     vi.advanceTimersByTime(250);
     harness.frames[0]({ timeSincePreviousFrame: 16.67 });
     flushJS();

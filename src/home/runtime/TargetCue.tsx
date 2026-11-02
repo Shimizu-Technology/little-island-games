@@ -10,6 +10,7 @@ export function TargetCue({ target, interaction }: { target: Target; interaction
   const style = useAnimatedStyle(() => ({ opacity: visible.value }));
   return (
     <Animated.View
+      accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
       pointerEvents="none"
       style={[
         {

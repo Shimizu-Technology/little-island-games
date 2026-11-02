@@ -30,7 +30,7 @@ vi.mock("../src/home/characterRenderer", () => ({ HomeCharacter: () => <div /> }
 vi.mock("../src/home/art/Items", () => ({ ItemArt: () => <div /> }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 describe("round 2 pose and chrome", () => {
-  it("R4 starts the pose blend at release and keeps one opaque actor through delayed acknowledgment and pause", async () => {
+  it("R5 swaps opaque poses during travel and keeps one opaque actor through delayed acknowledgment and pause", async () => {
     const source = buildScene(labHome()).entities["character/0"];
     const destination = { ...source, base: "lie" as const };
     const slot = { phase: "settling", settleAt: 1000, committed: true, pausedElapsed: 0, proposal: { base: "lie", facing: "front" } },
@@ -47,10 +47,12 @@ describe("round 2 pose and chrome", () => {
     for (let elapsed = 0; elapsed <= 700; elapsed++) {
       clock.value = 1000 + elapsed;
       expect(evaluate().opacity).toBe(1);
+      for (const view of views) expect([0, 1]).toContain(view.props.style[1].evaluate().opacity);
     }
     expect(views[0].props.style[1].evaluate().opacity).toBe(0);
     expect(views.slice(1).filter((v) => v.props.style[1].evaluate().opacity === 1)).toHaveLength(1);
-    expect(views[0].props.style[1].evaluate().transform[2].rotate).toBe("-90deg");
+    expect(views[0].props.style[1].evaluate().transform[2].rotate).toBe("0deg");
+    expect(views.slice(1).find((v) => v.props.style[1].evaluate().opacity === 1)!.props.style[1].evaluate().transform[2].rotate).toBe("0deg");
     slot.phase = "pending";
     slot.pausedElapsed = 170;
     expect(evaluate().opacity).toBe(1);
