@@ -18,16 +18,16 @@ export const Landmark = memo(function Landmark({ id }: { id: PlaceId }) {
     <Path d="M19 111V132M10 118H32M142 119H171M150 113V130" stroke="#F9F0D9" strokeWidth={4}/>
    </>}
    {id === 'library' && <>
-    <Path d="M32 119V58Q32 20 66 20Q101 20 101 58V119Z" fill="#C5D8B8"/>
-    <Path d="M23 48Q65 -5 108 48Z" fill="#658F80"/><Path d="M35 36Q67 26 95 36" stroke="#9EB99C"/>
-    <Rect x={49} y={54} width={32} height={28} rx={13} fill="#FFF1C5"/><Path d="M65 55V81M50 68H80"/>
-    <Path d="M90 69H153V120H90Z" fill="#E6DFC1"/>
-    <Path d="M81 66Q102 50 121 62Q140 48 165 60L160 83Q141 72 122 84Q103 72 84 83Z" fill="#FFF6D8"/>
-    <Path d="M121 62L122 84M91 67L111 67M134 66L154 63" stroke="#BEA979"/>
-    <Path d="M51 120V101Q65 85 79 101V120" fill="#687F76"/>
-    <Path d="M112 120V94H143V120M127 95V119" fill="#90B6AE"/>
-    <Path d="M23 87H12V100"/><Rect x={7} y={99} width={13} height={19} rx={3} fill="#F0C86D"/><Path d="M13 103V114" stroke="#FFF2B8"/>
-    <Path d="M41 124H89M35 130H96" stroke="#CDB88A"/>
+    <Path d="M34 119V53H146V119Z" fill="#C5D8B8"/>
+    {/* The open book is the whole roof: its spine sits directly over the door. */}
+    <Path d="M21 29Q57 13 90 35Q123 13 159 29L155 59Q121 45 90 65Q59 45 25 59Z" fill="#658F80"/>
+    <Path d="M26 23Q59 11 90 32Q121 11 154 23L151 51Q119 39 90 59Q61 39 29 51Z" fill="#FFF6D8"/>
+    <Path d="M90 32V59M38 29Q61 25 79 37M38 38Q61 34 79 46M101 37Q123 25 142 29M101 46Q123 34 142 38" stroke="#BEA979"/>
+    <Path d="M72 120V91Q90 73 108 91V120" fill="#687F76"/>
+    <Rect x={43} y={69} width={19} height={28} rx={9} fill="#FFF1C5"/><Rect x={118} y={69} width={19} height={28} rx={9} fill="#FFF1C5"/>
+    <Path d="M52 70V96M44 83H61M127 70V96M119 83H136M90 88V119"/>
+    <Path d="M35 100H21V105"/><Rect x={15} y={104} width={13} height={19} rx={3} fill="#F0C86D"/><Path d="M21 108V119" stroke="#FFF2B8"/>
+    <Path d="M65 124H115M58 130H122" stroke="#CDB88A"/>
    </>}
    {id === 'arcade' && <>
     <Path d="M25 60H151V125H25Z" fill="#E8A492"/><Path d="M151 60L170 48V115L151 125Z" fill="#BD7E75"/>

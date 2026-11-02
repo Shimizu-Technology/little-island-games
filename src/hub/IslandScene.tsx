@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 import { Islander, type IslanderLook } from '../islander';
@@ -27,18 +27,27 @@ export function IslandScene({ width, height, fontScale, look, reduced, active, d
  const start = layout.targets.find(place => place.id === door)?.door ?? { x: width*.5, y: height*(width > height*1.15 ? .87 : .56) };
  const x = useSharedValue(start.x), y = useSharedValue(start.y), bob = useSharedValue(0), zoom = useSharedValue(1), cameraX = useSharedValue(0), cameraY = useSharedValue(0), opacity = useSharedValue(1);
  const [walking, setWalking] = useState(false);
+ const departing = useRef(false), wasActive = useRef(active);
  const guideSize = Math.min(123, Math.max(96, width*.19));
  const settle = useMemo(() => (place: PlaceId) => {
   const target = mapLayout(width, height, fontScale).targets.find(item => item.id === place)!.door;
   cancelAnimation(x); cancelAnimation(y); cancelAnimation(bob); cancelAnimation(zoom); cancelAnimation(cameraX); cancelAnimation(cameraY);
+  departing.current = true;
   x.set(target.x); y.set(target.y); bob.set(0); setWalking(false); onArrive(place);
  }, [width, height, fontScale, x, y, bob, zoom, cameraX, cameraY, onArrive]);
+ // eslint-disable-next-line react-hooks/refs -- createJourney stores settle for input/timer callbacks; it never calls it during render.
  const journey = useMemo(() => createJourney(settle), [settle]);
  useEffect(() => () => journey.cancel(), [journey]);
- useEffect(() => {
+ useLayoutEffect(() => {
+  const returning = active && !wasActive.current;
+  wasActive.current = active;
   // A route push, app interruption, rotation or text resize cancels unfinished travel.
   // eslint-disable-next-line react-hooks/set-state-in-effect -- Interrupted travel settles at the last accepted door.
   setWalking(false); journey.cancel(); cancelAnimation(x); cancelAnimation(y); cancelAnimation(bob); cancelAnimation(zoom); cancelAnimation(cameraX); cancelAnimation(cameraY); cancelAnimation(opacity);
+  // Updating the accepted door and losing focus both happen while the outgoing
+  // map can still be visible. Freeze its camera until the next activation.
+  if (departing.current && !returning) return;
+  departing.current = false;
   x.set(start.x); y.set(start.y); bob.set(0); zoom.set(1); cameraX.set(0); cameraY.set(0); opacity.set(active && reduced ? withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 120 })) : 1);
  }, [active, width, height, reduced, start.x, start.y, journey, x, y, bob, zoom, cameraX, cameraY, opacity]);
  const visit = (place: PlaceId) => {
