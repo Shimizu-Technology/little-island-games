@@ -36,7 +36,15 @@ export function Destinations({
       .filter((choice) => !!choice)
   );
   const contents = subject.children.map((id) => scene.entities[id]).filter((e) => !!e);
-  if (!choices.length && !contents.length) return null;
+  const store =
+    subject.attachment.kind !== "staging"
+      ? resolve({ ...scene.rooms[subject.room], entities: scene.entities }, subject, subject.contact, {
+          scale,
+          intent: "staging",
+          release: true,
+        })
+      : undefined;
+  if (!choices.length && !contents.length && !store) return null;
   const symbols = { hand: "✋", mouth: "◡", socket: "◠", surface: "▱", container: "▣" };
   return (
     <View
@@ -54,6 +62,25 @@ export function Destinations({
       }}
     >
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+        {store && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Put in tray"
+            onPress={() => onChoose(store)}
+            style={{
+              width: 58,
+              minHeight: 64,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 14,
+              backgroundColor: "#EEDDBA",
+            }}
+          >
+            <Text allowFontScaling={false} style={{ fontSize: 30, color: "#284F4B" }}>
+              ▱
+            </Text>
+          </Pressable>
+        )}
         {contents.map((entity) => {
           const frame = artFrame(entity),
             size = Math.min(42 / frame.width, 42 / frame.height);
