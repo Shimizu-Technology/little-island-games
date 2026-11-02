@@ -29,6 +29,7 @@ import {
 } from "./catalog";
 import { search } from "./search";
 import { Action, ItemPicture, LibraryIcon, s } from "./ui";
+import { SoundSwitch } from "./SoundSwitch";
 import { LibraryArt } from "./LibraryArt";
 import { useLibraryAudio } from "./useLibraryAudio";
 import { TopicPage } from "./Topics";
@@ -303,6 +304,8 @@ function LibraryReady() {
           borderBottomColor: "#A77F56",
           borderRadius: 12,
           flex: 0,
+          flexBasis: (Math.min(width, 1200) - 20) / cols - 12,
+          flexShrink: 0,
           width: (Math.min(width, 1200) - 20) / cols - 12,
         },
       ]}
@@ -373,15 +376,13 @@ function LibraryReady() {
         >
           {place === "reader" ? record?.title : "Island Library"}
         </Text>
-        <Action
-          label="Toggle Library sound"
-          onPress={() => {
+        <SoundSwitch
+          on={store.save.settings.sound}
+          onToggle={() => {
             audio.stop();
             store.settings({ sound: !store.save.settings.sound });
           }}
-        >
-          <LibraryIcon name={store.save.settings.sound ? "sound" : "muted"} size={24} />
-        </Action>
+        />
         {place === "reader" ? (
           <>
             <Action

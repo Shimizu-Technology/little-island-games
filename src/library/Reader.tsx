@@ -195,10 +195,9 @@ export function Reader({
 export function BookCredits({ book }: { book: Extract<LibraryItem, { type: "book" }> }) {
   const rights = [
     ...new Map(
-      [book.edition.rights, book.rights, ...book.pages.map((page) => page.image.rights)].map((right) => [
-        `${right.credit}:${right.license}`,
-        right,
-      ])
+      [book.edition.rights, book.rights, ...book.pages.map((page) => page.image.rights)]
+        .reverse()
+        .map((right) => [`${right.credit}:${right.license}`, right])
     ).values(),
   ];
   return (

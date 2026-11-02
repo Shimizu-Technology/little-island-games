@@ -2,6 +2,7 @@ import React from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Reader, SentenceLine } from "../src/library/Reader";
+import { SoundSwitch } from "../src/library/SoundSwitch";
 import { DrawingArt, Maker } from "../src/library/Maker";
 import type { LibraryCreation } from "../src/library/state";
 import { createLibraryPage } from "../src/library/drawing";
@@ -66,7 +67,7 @@ const book = {
   edition: { rights },
   rights,
   pages: Array.from({ length: 3 }, () => ({
-    image: { path: "page.png", alt: "Sea picture", rights },
+    image: { path: "page.png", alt: "Sea picture", rights: { ...rights, sourceUrl: "https://example.org/page-image" } },
     sentences: [sentence],
   })),
 } as Extract<LibraryItem, { type: "book" }>;
@@ -81,16 +82,34 @@ const renderReader = async (page: number, extra = {}) => {
 };
 const button = (name: string) => root.root.findAllByType("button").find((node) => node.props["aria-label"] === name)!;
 
+describe("Library sound icon", () => {
+  it("announces its on/off state and remains operable without a text pill", async () => {
+    const toggle = vi.fn();
+    await act(async () => {
+      root = create(<SoundSwitch on onToggle={toggle} />);
+    });
+    const control = () => root.root.find((node) => String(node.type) === "Pressable");
+    expect(control().props.accessibilityRole).toBe("switch");
+    expect(control().props.accessibilityState.checked).toBe(true);
+    await act(async () => control().props.onPress());
+    expect(toggle).toHaveBeenCalledOnce();
+    await act(async () => root.update(<SoundSwitch on={false} onToggle={toggle} />));
+    expect(control().props.accessibilityState.checked).toBe(false);
+  });
+});
+
 describe("Library reading presentation", () => {
   it("deduplicates credits on title/end pages and keeps them off story pages", async () => {
     await renderReader(0);
     expect(JSON.stringify(root.toJSON()).match(/Unique book credit/g)).toHaveLength(1);
+    expect(JSON.stringify(root.toJSON())).not.toContain("https://example.org/page-image");
     await act(async () => root.unmount());
     await renderReader(1);
     expect(JSON.stringify(root.toJSON())).not.toContain("Unique book credit");
     await act(async () => root.unmount());
     await renderReader(2);
     expect(JSON.stringify(root.toJSON()).match(/Unique book credit/g)).toHaveLength(1);
+    expect(JSON.stringify(root.toJSON())).not.toContain("https://example.org/page-image");
   });
   it("keeps page arrows and swipe bounds equivalent", async () => {
     const onPage = await renderReader(1);
