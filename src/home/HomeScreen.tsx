@@ -115,7 +115,7 @@ export function HomeScreen({
     () => buildingLayout(roomIds.length, window.width / window.height > 1.8),
     [window.width, window.height]
   );
-  const buildRuntimeScene = useMemo(createSceneBuilder, []);
+  const buildRuntimeScene = useMemo(() => createSceneBuilder(), []);
   const baseScene = useMemo(() => buildRuntimeScene(store.state), [store.state.rooms, buildRuntimeScene]); // Navigation is outside the scene revision.
   const scene = useMemo(() => withPortions(baseScene), [baseScene]);
   const { sleeping, wake } = useIdleCharacters(scene, pickups);

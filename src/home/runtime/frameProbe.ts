@@ -1,7 +1,7 @@
 /** Opt-in lab diagnostics. Times are native UI callback deltas, not video timestamps. */
 export type ProbeFrame = { at: number; delta: number };
 export type ProbeRelease = { at: number; id: string; kind: string; target?: string };
-export type ReleaseProbe = ProbeRelease & { frames: ProbeFrame[]; maxDelta: number };
+export type ReleaseProbe = ProbeRelease & { frames: ProbeFrame[]; maxDelta: number; gates?: unknown };
 export function releaseWindow(release: ProbeRelease, ring: ProbeFrame[]): ReleaseProbe {
   "worklet";
   // Include an interval straddling either edge, including a callback delayed by a stall.

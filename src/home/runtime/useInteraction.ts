@@ -180,10 +180,12 @@ export function useInteraction({
   const laidOut = useSharedValue<Record<string, string>>({});
   const poseLayouts = useSharedValue<Record<string, string>>({});
   const acknowledgePose = (index: number, token: string) => {
-    poseLayouts.set((current) => ({ ...current, [index]: token, [`${index}:${token}`]: token }));
+    poseLayouts.modify((current) => { "worklet";
+      current[index] = token; current[`${index}:${token}`] = token; return current;
+    });
   };
   const acknowledgeLayout = (id: string, token: string) => {
-    laidOut.set((current) => ({ ...current, [id]: token }));
+    laidOut.modify((current) => { "worklet"; current[id] = token; return current; });
   };
   const controller = useSharedValue<ControllerState>(idleController);
   const slots = useSharedValue<DragSlot[]>([emptySlot(), emptySlot()]);
@@ -358,9 +360,11 @@ export function useInteraction({
     );
   };
   const ready = (index: number, id: string, carryBounds?: Bounds) => {
-    slots.set((current) =>
-      current.map((s, i) => (i === index && s.id === id ? { ...s, ready: true, carryBounds } : s))
-    );
+    slots.modify((current) => { "worklet";
+      const slot = current[index];
+      if (slot.id === id) { slot.ready = true; slot.carryBounds = carryBounds; }
+      return current;
+    });
   };
 
   const send = (event: ControllerEvent) => {
@@ -785,7 +789,18 @@ export function useInteraction({
       probeRing.modify((ring) => { "worklet"; ring[probeCursor.value % 180] = { at: now, delta: dt }; return ring; });
       probeCursor.value++;
       const due = probePending.value.filter((p) => now >= p.at + 520);
-      for (const release of due) runOnJS(onReleaseProbe)(releaseWindow(release, probeRing.value));
+      for (const release of due) runOnJS(onReleaseProbe)({ ...releaseWindow(release, probeRing.value),
+        gates: slots.value.map((s, index) => {
+          const entity = prepared.value.entities[s.restId ?? s.id];
+          const pose = entity && poseToken(entity.base, entity.facing, entity.action);
+          return { id: s.id, phase: s.phase, committed: s.committed, finished: s.finished,
+            revisionReady: s.revision === renderedRevision.value,
+            layoutReady: !!entity && laidOut.value[entity.id] === layoutTokens.value[entity.id],
+            poseReady: !!pose && poseLayouts.value[`${index}:${pose}`] === pose,
+            pose, poseKeys: Object.keys(poseLayouts.value),
+          };
+        }),
+      });
       if (due.length) probePending.set(probePending.value.filter((p) => now < p.at + 520));
     }
     lastFrame.set(eventTime());

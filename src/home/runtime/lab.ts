@@ -7,6 +7,7 @@ export function labHome(): HomeStateV2 {
     theme: state.rooms.home.theme,
     instances: [
       instance("bed", "bed", 3, 0),
+      instance("rug", "rug", 8, 8),
       instance("chair", "chair", 10, 6),
       instance("table", "coffee-table", 12, 4),
       { ...instance("lamp", "table-lamp", 12, 4), on: "table" },

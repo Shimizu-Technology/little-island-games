@@ -24,7 +24,7 @@ function context(id:string,reduced=false) {
 }
 describe('round4 rendered runtime contracts',()=>{
  it.each(['home/item/banana','character/0'])('T5 carries %s at the intended readable scale and eases exactly to1',async(id)=>{
-  const c=context(id);const pickup={id,slot:0,scene:c.scene} as Pickup;let tree!:TestRenderer.ReactTestRenderer;
+  const c=context(id);const pickup={id,slot:0,scene:c.scene,generation:1,epoch:0} as Pickup;let tree!:TestRenderer.ReactTestRenderer;
   await act(async()=>{tree=TestRenderer.create(<DragOverlay scene={c.scene} pickups={[pickup]} interaction={c.interaction} building={buildingLayout(4)} reduced={false}/>);});
   const view=tree.root.findAllByProps({testID:'drag-overlay-0'}).at(-1)!;
   const scale=()=>view.props.style[1].evaluate().transform.find((t:any)=>'scaleX'in t).scaleX;
@@ -32,6 +32,7 @@ describe('round4 rendered runtime contracts',()=>{
   c.slot.phase='settling';c.slot.settleAt=1000;c.clock.value=1070;
   expect(scale()).toBeGreaterThan(1);expect(scale()).toBeLessThan(id==='character/0'?1.04:1.2);
   c.clock.value=1240;expect(scale()).toBe(1);
+  expect(tree.root.findByProps({testID:`drag-shadow-${id}`}).props.style[1].evaluate().opacity).toBe(0);
   await act(async()=>tree.unmount());
  });
  it('T4 exposes one item label and keeps every scene wrapper non-accessible; T7 fixture nudge is bounded and stops',async()=>{

@@ -18,7 +18,6 @@ import { layoutToken } from "./layout";
 import { isPortion } from "./portions";
 import type { Interaction, Pickup, DragSlot } from "./useInteraction";
 import type { Viewport } from "./CameraController";
-import { poseToken, poseVariants } from "./poseBank";
 
 function ancestors(entity: SceneEntity, scene: Scene): string[] {
   const result = [entity.id];
@@ -189,40 +188,24 @@ const RestingEntity = memo(function RestingEntity({
       <View collapsable={false} pointerEvents="none" onLayout={() => { if (!front) acknowledgeLayout(entity.id, token); }}
         style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
       <Animated.View style={normal}>
-        {entity.character ? <RestingPoses entity={entity} reduced={reduced} renderCharacter={renderCharacter}
-          action={action} sleeping={sleeping} /> : <EntityArt
+        <EntityArt
           entity={entity}
           actionOverride={action}
           faceOverride={sleeping ? "sleepy" : undefined}
           front={front}
           reduced={reduced}
           renderCharacter={renderCharacter}
-        />}
+        />
       </Animated.View>
       {entity.character && (
         <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, anticipate]}>
-          <RestingPoses entity={entity} preview reduced={reduced} renderCharacter={renderCharacter} />
+          <EntityArt entity={entity} preview reduced={reduced} renderCharacter={renderCharacter} />
         </Animated.View>
       )}
       </View>
     </Animated.View>
   );
 });
-function RestingPoses({ entity, reduced, renderCharacter, action, sleeping, preview = false }: {
-  entity: SceneEntity; reduced: boolean; renderCharacter?: CharacterRender; action?: "eat" | "drink";
-  sleeping?: boolean; preview?: boolean;
-}) {
-  const current = artFrame(entity);
-  return <>{poseVariants(entity).map((variant) => {
-    const frame = artFrame(variant), key = poseToken(variant.base, variant.facing, variant.action);
-    return <View key={key} pointerEvents="none" style={{ position: "absolute", left: frame.left - current.left,
-      top: frame.top - current.top, opacity: variant.base === entity.base &&
-        (variant.facing === "left") === (entity.facing === "left") ? 1 : 0 }}>
-      <EntityArt entity={variant} preview={preview} actionOverride={action} faceOverride={sleeping ? "sleepy" : undefined}
-        reduced={reduced} renderCharacter={renderCharacter} />
-    </View>;
-  })}</>;
-}
 export function SceneView({
   state,
   scene,

@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from "react";
+import React from "react";
 import { View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { roomIds } from "../catalogMore";
@@ -44,9 +44,6 @@ function OverlayGroup({
     const binding = root.character ? carryBinding(root, pickup.grip ?? { x: 0, y: 0 }) : { x: 0, y: 0 };
     interaction.ready(index, id, bounds && { ...bounds, left: bounds.left + binding.x, top: bounds.top + binding.y });
   };
-  // Character trees already laid out while idle. Rebind their existing native
-  // art to this capture without waiting for an unchanged view to emit onLayout.
-  useLayoutEffect(() => { if (root.character) acknowledge(); }, [pickup.generation, pickup.epoch, id, index]); // eslint-disable-line react-hooks/exhaustive-deps
   const style = useAnimatedStyle(() => {
     const slot = slots.value[index];
     const lift = reduced ? 0 : Math.min(1, Math.max(0, (clock.value - slot.liftedAt) / 90));
@@ -96,14 +93,17 @@ function OverlayGroup({
       : slot.phase === "settling" && slot.settleAt
         ? Math.max(0, 1 - (clock.value - slot.settleAt) / 140)
         : Math.min(1, (clock.value - slot.liftedAt) / 90);
+    const settling = slot.phase === "settling" && slot.settleAt > 0 || slot.phase === "pending" && slot.pausedElapsed > 0;
+    const fade = settling ? 1 - settleProgress(slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt, reduced) : 1;
     return {
-      opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 0.18 - 0.06 * lift : 0,
+      opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? (0.18 - 0.06 * lift) * fade : 0,
       transform: [{ translateX: groundX - 24 }, { translateY: groundY - 5 }, { scale: 1 - 0.15 * lift }],
     };
   });
   return (
     <>
       <Animated.View
+        testID={`drag-shadow-${id}`}
         pointerEvents="none"
         style={[
           {
@@ -134,6 +134,8 @@ function OverlayGroup({
           style,
         ]}
       >
+        {root.character && <View collapsable={false} onLayout={acknowledge}
+          style={{ position: "absolute", opacity: 0, width: 1 + pickup.generation, height: 1 }} />}
         {entities.map((entity) => {
           const frame = artFrame(entity, entity.id === root.id && !!root.character);
           const dx = entity.contact.x - root.contact.x,
