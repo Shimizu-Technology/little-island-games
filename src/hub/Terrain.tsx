@@ -8,7 +8,8 @@ export const Palm = memo(function Palm() {
   <Circle cx={3} cy={5} r={4} fill="#A48C5C"/><Circle cx={10} cy={7} r={4} fill="#A48C5C"/>
  </G>;
 });
-export const Terrain = memo(function Terrain({ wide = false }: { wide?: boolean }) {
+export const Terrain = memo(function Terrain({ wide = false, width, height }: { wide?: boolean; width: number; height: number }) {
+ const palmScale = `${height*400/(width*660)*(wide ? 1.4 : 1)} ${wide ? 1.4 : 1}`;
  const paths = wide ? 'M116 185Q200 224 284 185M64 396Q200 350 336 396M132 607Q200 555 268 607M200 212V577' : 'M108 157Q200 203 292 157M100 315Q200 278 300 315M104 473Q203 440 304 473M200 174V540Q201 593 208 617';
  return <Svg width="100%" height="100%" viewBox="0 0 400 660" preserveAspectRatio="none" accessible={false}>
   <Path d="M23 84Q47 14 146 27Q207 -2 263 30Q363 9 379 112Q411 203 377 292Q411 405 359 489Q344 601 250 636Q155 677 78 606Q2 561 26 471Q-5 392 20 308Q-17 187 23 84Z" fill="#93C9C8"/>
@@ -18,11 +19,11 @@ export const Terrain = memo(function Terrain({ wide = false }: { wide?: boolean 
   <Path d={paths} stroke="#F4E6BF" strokeWidth={21} fill="none" strokeLinecap="round"/>
   <Path d="M226 351Q260 335 268 359Q282 382 251 397Q220 403 219 383Q202 365 226 351Z" fill="#7EB5A9" stroke="#90B78F" strokeWidth={5}/>
   <Path d="M230 358Q251 351 258 365M230 381Q247 388 257 378" fill="none" stroke="#D7E7C9" strokeWidth={2.5}/>
-  <G transform="translate(204 52) scale(.7)"><Palm/></G>
-  <G transform="translate(43 231) scale(.69)"><Palm/></G>
-  <G transform="translate(357 235) scale(.77)"><Palm/></G>
-  <G transform="translate(44 454) scale(.57)"><Palm/></G>
-  <G transform="translate(340 560) scale(.74)"><Palm/></G>
+  <G transform="translate(204 52) scale(.7)"><G transform={`scale(${palmScale})`}><Palm/></G></G>
+  <G transform="translate(43 231) scale(.69)"><G transform={`scale(${palmScale})`}><Palm/></G></G>
+  <G transform="translate(357 235) scale(.77)"><G transform={`scale(${palmScale})`}><Palm/></G></G>
+  <G transform="translate(44 454) scale(.57)"><G transform={`scale(${palmScale})`}><Palm/></G></G>
+  <G transform="translate(340 560) scale(.74)"><G transform={`scale(${palmScale})`}><Palm/></G></G>
   <G fill="#9FAE94" stroke="#778B79" strokeWidth={2}>
    <Path d="M24 356Q18 340 30 338Q43 336 46 353Z"/><Path d="M339 405Q338 392 353 391L362 407Z"/>
    <Path d="M90 569Q81 554 94 551Q109 552 110 568Z"/>

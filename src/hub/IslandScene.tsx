@@ -1,5 +1,5 @@
 import React, { memo, useEffect, useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useSharedValue, withDelay, withSequence, withTiming } from 'react-native-reanimated';
 import { Islander, type IslanderLook } from '../islander';
 import { Text } from '../components/Text';
@@ -15,7 +15,7 @@ const PlaceButton = memo(function PlaceButton({ id, name, width, height, labelHe
  return <AnimatedPressable testID={`place-${id}`} accessibilityRole="button" accessibilityLabel={`Visit ${name}`} onPress={() => visit(id)}
   onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
   onPressIn={() => pressed.set(reduced ? 1 : withTiming(.97, { duration: 90 }))} onPressOut={() => pressed.set(withTiming(1, { duration: 150 }))}
-  style={[{ position: 'absolute', left, top, width, height: height + labelHeight, alignItems: 'center', borderRadius: 15, outlineColor: C.blue, outlineWidth: focused ? 3 : 0, outlineStyle: 'solid' }, style]}>
+  style={[{ position: 'absolute', left, top, width, height: height + labelHeight, alignItems: 'center', borderRadius: 15, ...(Platform.OS === 'web' ? {} : { outlineColor: C.blue, outlineWidth: focused ? 3 : 0, outlineStyle: 'solid' as const }) }, style]}>
    <View pointerEvents="none" style={{ width, height }}><Landmark id={id}/></View>
    <View style={{ minHeight: labelHeight, maxWidth: '100%', justifyContent: 'center', backgroundColor: '#FFF3D3', paddingHorizontal: 10, borderRadius: 8, borderWidth: 1.5, borderColor: '#A89672', boxShadow: '0px 3px 0px rgba(68,89,62,.16)' }}>
     <Text style={{ fontFamily: font, fontSize: 17, fontWeight: '700', color: C.ink, textAlign: 'center' }}>{name}</Text>
@@ -24,7 +24,7 @@ const PlaceButton = memo(function PlaceButton({ id, name, width, height, labelHe
 });
 export function IslandScene({ width, height, fontScale, look, reduced, active, door, onArrive }: { width: number; height: number; fontScale: number; look: IslanderLook; reduced: boolean; active: boolean; door: PlaceId | null; onArrive: (place: PlaceId) => void }) {
  const layout = mapLayout(width, height, fontScale);
- const start = layout.targets.find(place => place.id === door)?.door ?? { x: width*.5, y: height*.56 };
+ const start = layout.targets.find(place => place.id === door)?.door ?? { x: width*.5, y: height*(width > height*1.15 ? .87 : .56) };
  const x = useSharedValue(start.x), y = useSharedValue(start.y), bob = useSharedValue(0), zoom = useSharedValue(1), cameraX = useSharedValue(0), cameraY = useSharedValue(0), opacity = useSharedValue(1);
  const [walking, setWalking] = useState(false);
  const guideSize = Math.min(123, Math.max(96, width*.19));
@@ -42,7 +42,8 @@ export function IslandScene({ width, height, fontScale, look, reduced, active, d
   x.set(start.x); y.set(start.y); bob.set(0); zoom.set(1); cameraX.set(0); cameraY.set(0); opacity.set(active && reduced ? withSequence(withTiming(0, { duration: 0 }), withTiming(1, { duration: 120 })) : 1);
  }, [active, width, height, reduced, start.x, start.y, journey, x, y, bob, zoom, cameraX, cameraY, opacity]);
  const visit = (place: PlaceId) => {
-  if (!active) return;
+  // A just-dismissed sheet can retain its presence token briefly. Never drop a visible tap.
+  if (!active) { settle(place); return; }
   if (!journey.visit(place, reduced)) return;
   const target = layout.targets.find(item => item.id === place)!.door;
   setWalking(true);
@@ -57,7 +58,7 @@ export function IslandScene({ width, height, fontScale, look, reduced, active, d
  const guide = useAnimatedStyle(() => ({ transform: [{ translateX: x.get()-guideSize*.303 }, { translateY: y.get()-guideSize+bob.get() }] }));
  const camera = useAnimatedStyle(() => ({ opacity: opacity.get(), transform: [{ translateX: cameraX.get() }, { translateY: cameraY.get() }, { scale: zoom.get() }] }));
  return <Animated.View testID="island-scene" style={[{ width, height }, camera]}>
-  <View pointerEvents="none" style={{ position: 'absolute', width, height }}><Terrain wide={width > height*1.15}/></View>
+  <View pointerEvents="none" style={{ position: 'absolute', width, height }}><Terrain wide={width > height*1.15} width={width} height={height}/></View>
   <IslandLife width={width} height={height} fontScale={fontScale} reduced={reduced} active={active}/>
   {layout.targets.map(place => <PlaceButton key={place.id} {...place} height={layout.artHeight} labelHeight={layout.labelHeight} reduced={reduced} visit={visit}/>)}
   <Animated.View pointerEvents="none" testID="island-guide" accessibilityRole="image" accessibilityLabel={door ? `Your Islander at ${door === 'hall' ? 'Game Hall' : door}` : 'Your Islander on the island path'} style={[{ position: 'absolute', left: 0, top: 0, width: guideSize*.607, height: guideSize }, guide]}>
