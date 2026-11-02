@@ -641,55 +641,61 @@ export function useInteraction({
         camera.set(boundCamera({ ...before, tx: before.tx + (vx * Math.min(32, dt)) / 1000 }, viewport, building));
       }
     }
-    for (let i = 0; i < 2; i++) {
-      let slot = slots.value[i];
-      if (!slot.id) continue;
-      if (
-        slot.phase === "dragging" &&
-        eventTime() - slot.lastMoveAt > 24 &&
-        (Math.abs(slot.tilt) > 0.01 || Math.abs(slot.lag) > 0.01)
-      ) {
-        const factor = eventTime() - slot.lastMoveAt >= 160 ? 0 : Math.exp(-dt / 50);
-        slot = { ...slot, tilt: slot.tilt * factor, lag: slot.lag * factor };
-        slots.set(slots.value.map((s, index) => (index === i ? slot : s)));
-      }
-      if (slot.phase === "dragging") {
-        const pointerX = slot.absoluteX - offset.value.x,
-          pointerY = slot.absoluteY - offset.value.y;
-        const p = screenToRoom(screenPoint(pointerX, pointerY), camera.value, housePoint(0, 0));
-        const x = p.x - slot.gripX,
-          y = p.y - slot.gripY;
-        if (
-          Math.abs(slot.x - x) > 0.001 ||
-          Math.abs(slot.y - y) > 0.001 ||
-          slot.pointerX !== pointerX ||
-          slot.pointerY !== pointerY
-        ) {
-          slot = { ...slot, x, y, pointerX, pointerY };
-          slot.proposal = proposalFor(slot);
-          slots.set(slots.value.map((s, index) => (index === i ? slot : s)));
+    // Mutate the two fixed slots on the UI thread; no array/object copies per settle frame.
+    if (slots.value[0].id || slots.value[1].id)
+      slots.modify((current) => {
+        "worklet";
+        const now = eventTime();
+        for (let i = 0; i < 2; i++) {
+          const slot = current[i];
+          if (!slot.id) continue;
+          if (
+            slot.phase === "dragging" &&
+            now - slot.lastMoveAt > 24 &&
+            (Math.abs(slot.tilt) > 0.01 || Math.abs(slot.lag) > 0.01)
+          ) {
+            const factor = now - slot.lastMoveAt >= 160 ? 0 : Math.exp(-dt / 50);
+            slot.tilt *= factor;
+            slot.lag *= factor;
+          }
+          if (slot.phase === "dragging") {
+            const pointerX = slot.absoluteX - offset.value.x;
+            const pointerY = slot.absoluteY - offset.value.y;
+            // CameraController only produces axis-aligned scale/translation matrices.
+            const x = (pointerX - camera.value.tx) / camera.value.a - slot.gripX;
+            const y = (pointerY - camera.value.ty) / camera.value.d - slot.gripY;
+            if (
+              Math.abs(slot.x - x) > 0.001 ||
+              Math.abs(slot.y - y) > 0.001 ||
+              slot.pointerX !== pointerX ||
+              slot.pointerY !== pointerY
+            ) {
+              slot.x = x;
+              slot.y = y;
+              slot.pointerX = pointerX;
+              slot.pointerY = pointerY;
+              slot.proposal = proposalFor(slot);
+            }
+          }
+          if (slot.phase === "settling" && slot.settleAt) {
+            const progress = settleProgress(now - slot.settleAt, reduced);
+            slot.x = slot.releaseX + (slot.targetX - slot.releaseX) * progress;
+            slot.y = slot.releaseY + (slot.targetY - slot.releaseY) * progress;
+            slot.tilt *= 1 - progress;
+            slot.lag *= 1 - progress;
+            slot.finished = progress === 1;
+            if (canRevealResting(slot, renderedRevision.value)) {
+              controller.set(
+                transition(controller.value, { type: "settled", entity: slot.id }, camera.value, housePoint(0, 0)).state
+              );
+              slot.id = "";
+              slot.ready = false;
+              runOnJS(onClear)(i);
+            }
+          }
         }
-      }
-      if (slot.phase === "settling" && slot.settleAt) {
-        const elapsed = eventTime() - slot.settleAt,
-          progress = settleProgress(elapsed, reduced);
-        const next = {
-          ...slot,
-          x: slot.releaseX + (slot.targetX - slot.releaseX) * progress,
-          y: slot.releaseY + (slot.targetY - slot.releaseY) * progress,
-          tilt: slot.tilt * (1 - progress),
-          lag: slot.lag * (1 - progress),
-          finished: progress === 1,
-        };
-        if (canRevealResting(next, renderedRevision.value)) {
-          slots.set(slots.value.map((s, index) => (index === i ? { ...s, id: "", ready: false } : s)));
-          controller.set(
-            transition(controller.value, { type: "settled", entity: slot.id }, camera.value, housePoint(0, 0)).state
-          );
-          runOnJS(onClear)(i);
-        } else slots.set(slots.value.map((s, index) => (index === i ? next : s)));
-      }
-    }
+        return current;
+      });
   });
   const cancelAll = () => {
     epoch.set(epoch.get() + 1);

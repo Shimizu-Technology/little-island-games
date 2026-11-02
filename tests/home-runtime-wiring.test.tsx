@@ -47,6 +47,9 @@ vi.mock("react-native-reanimated", async () => {
           get() {
             return this.value;
           },
+          modify(fn: (value: any) => any) {
+            this.value = fn(this.value);
+          },
           set(value: any) {
             this.value = typeof value === "function" ? value(this.value) : value;
           },

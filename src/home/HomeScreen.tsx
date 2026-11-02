@@ -318,6 +318,8 @@ export function HomeScreen({
           phase: s.phase,
           x: s.x,
           y: s.y,
+          gripX: s.gripX,
+          gripY: s.gripY,
           ready: s.ready,
           committed: s.committed,
           proposal: s.proposal && {
@@ -328,6 +330,16 @@ export function HomeScreen({
           },
         })),
       }),
+      entities: () =>
+        Object.values(live.current.scene.entities).map((e) => ({
+          id: e.id,
+          room: e.room,
+          contact: e.contact,
+          bounds: e.bounds,
+          base: e.base,
+          parent: e.parent,
+          children: e.children,
+        })),
       targets: () =>
         Object.values(live.current.scene.rooms).flatMap((r) =>
           r.targets.map((t) => ({ id: t.id, kind: t.kind, owner: t.owner, contact: t.contact, room: r.room }))
