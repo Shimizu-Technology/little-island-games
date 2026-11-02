@@ -1,0 +1,817 @@
+[
+  {
+    "schemaVersion": 1,
+    "revision": 1,
+    "review": {
+      "status": "draft",
+      "reviewer": "Codex design worker (source check only; family approval pending)",
+      "date": "2026-11-02",
+      "scope": "Design fixture, not approved child-facing publication"
+    },
+    "rights": {
+      "license": "LicenseRef-Little-Island-Original",
+      "creator": "Shimizu Technology",
+      "sourceUrl": "repo:little-island-games",
+      "credit": "Original Little Island design text and vector illustration, 2026.",
+      "changes": "Original work"
+    },
+    "stage": {
+      "ageHint": [
+        5,
+        9
+      ],
+      "support": "Listening and shared reading welcome; not a decoding assessment"
+    },
+    "sensitiveNotes": [
+      "Do not invite breath-holding or touching wildlife."
+    ],
+    "sources": [
+      {
+        "title": "NOAA Fisheries: Green Turtle",
+        "url": "https://www.fisheries.noaa.gov/species/green-turtle",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "NOAA Fisheries: Sea turtle air breathing and oxygen use",
+        "url": "https://media.fisheries.noaa.gov/dam-migration/sarbo_acoustic_revision_6-2020-opinion_final.pdf",
+        "accessed": "2026-11-02"
+      }
+    ],
+    "id": "turtle-breath",
+    "type": "topic",
+    "title": "How do sea turtles breathe?",
+    "category": "ocean",
+    "aliases": [
+      "turtle",
+      "sea turtle",
+      "breathing",
+      "turtl"
+    ],
+    "tags": [
+      "ocean",
+      "reptile",
+      "lungs"
+    ],
+    "image": {
+      "path": "src/library/LibraryArt.tsx",
+      "alt": "A green sea turtle lifts its nose above the water.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island design text and vector illustration, 2026.",
+        "changes": "Original work"
+      }
+    },
+    "label": {
+      "id": "label-turtle",
+      "text": "Sea turtle.",
+      "speechKey": "library-label-turtle",
+      "audio": {
+        "status": "pending",
+        "reason": "Lead generates and reviews recordings after design approval"
+      }
+    },
+    "layers": {
+      "tell": [
+        {
+          "id": "turtle-tell-1",
+          "text": "A sea turtle swims in the sea.",
+          "speechKey": "library-turtle-tell-1",
+          "audio": {
+            "status": "pending",
+            "reason": "Lead generates and reviews recordings after design approval"
+          }
+        },
+        {
+          "id": "turtle-tell-2",
+          "text": "It must come up for air.",
+          "speechKey": "library-turtle-tell-2",
+          "audio": {
+            "status": "pending",
+            "reason": "Lead generates and reviews recordings after design approval"
+          }
+        },
+        {
+          "id": "turtle-tell-3",
+          "text": "It breathes with lungs, like us.",
+          "speechKey": "library-turtle-tell-3",
+          "audio": {
+            "status": "pending",
+            "reason": "Lead generates and reviews recordings after design approval"
+          }
+        }
+      ],
+      "more": [
+        {
+          "id": "turtle-more-1",
+          "text": "A sea turtle cannot breathe water like a fish.",
+          "speechKey": "library-turtle-more-1",
+          "audio": {
+            "status": "pending",
+            "reason": "Lead generates and reviews recordings after design approval"
+          }
+        },
+        {
+          "id": "turtle-more-2",
+          "text": "It lifts its nose above the surface to take a breath.",
+          "speechKey": "library-turtle-more-2",
+          "audio": {
+            "status": "pending",
+            "reason": "Lead generates and reviews recordings after design approval"
+          }
+        },
+        {
+          "id": "turtle-more-3",
+          "text": "Then it can dive back down to swim and feed.",
+          "speechKey": "library-turtle-more-3",
+          "audio": {
+            "status": "pending",
+            "reason": "Lead generates and reviews recordings after design approval"
+          }
+        }
+      ],
+      "deep": [
+        {
+          "id": "turtle-deep-1",
+          "text": "Sea turtles are reptiles with lungs, not gills.",
+          "speechKey": "library-turtle-deep-1",
+          "audio": {
+            "status": "pending",
+            "reason": "Lead generates and reviews recordings after design approval"
+          }
+        },
+        {
+          "id": "turtle-deep-2",
+          "text": "Air enters their lungs when they come to the surface.",
+          "speechKey": "library-turtle-deep-2",
+          "audio": {
+            "status": "pending",
+            "reason": "Lead generates and reviews recordings after design approval"
+          }
+        },
+        {
+          "id": "turtle-deep-3",
+          "text": "Their bodies use oxygen from that air.",
+          "speechKey": "library-turtle-deep-3",
+          "audio": {
+            "status": "pending",
+            "reason": "Lead generates and reviews recordings after design approval"
+          }
+        },
+        {
+          "id": "turtle-deep-4",
+          "text": "A resting turtle uses oxygen more slowly than an active turtle.",
+          "speechKey": "library-turtle-deep-4",
+          "audio": {
+            "status": "pending",
+            "reason": "Lead generates and reviews recordings after design approval"
+          }
+        },
+        {
+          "id": "turtle-deep-5",
+          "text": "Dive length varies with activity, temperature, and the turtle’s condition.",
+          "speechKey": "library-turtle-deep-5",
+          "audio": {
+            "status": "pending",
+            "reason": "Lead generates and reviews recordings after design approval"
+          }
+        }
+      ]
+    },
+    "links": [
+      {
+        "kind": "item",
+        "target": "reef-model",
+        "label": "Try the breathing model"
+      },
+      {
+        "kind": "legacy-topic",
+        "target": "coral",
+        "label": "Meet the coral reef"
+      },
+      {
+        "kind": "game",
+        "target": "memory",
+        "label": "Play animal Memory Pairs"
+      },
+      {
+        "kind": "make",
+        "target": "sea-page",
+        "label": "Make a turtle page"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "revision": 1,
+    "review": {
+      "status": "draft",
+      "reviewer": "Codex design worker (source check only; family approval pending)",
+      "date": "2026-11-02",
+      "scope": "Design fixture, not approved child-facing publication"
+    },
+    "rights": {
+      "license": "LicenseRef-Little-Island-Original",
+      "creator": "Shimizu Technology",
+      "sourceUrl": "repo:little-island-games",
+      "credit": "Original Little Island design text and vector illustration, 2026.",
+      "changes": "Original work"
+    },
+    "stage": {
+      "ageHint": [
+        5,
+        9
+      ],
+      "support": "Listening and shared reading welcome; not a decoding assessment"
+    },
+    "sensitiveNotes": [
+      "Do not invite breath-holding or touching wildlife."
+    ],
+    "sources": [
+      {
+        "title": "NOAA Fisheries: Green Turtle",
+        "url": "https://www.fisheries.noaa.gov/species/green-turtle",
+        "accessed": "2026-11-02"
+      }
+    ],
+    "id": "reef-model",
+    "type": "exhibit",
+    "title": "A breath, then a dive",
+    "category": "ocean",
+    "aliases": [
+      "reef",
+      "dive"
+    ],
+    "tags": [
+      "ocean"
+    ],
+    "image": {
+      "path": "src/library/LibraryArt.tsx",
+      "alt": "A green sea turtle lifts its nose above the water.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island design text and vector illustration, 2026.",
+        "changes": "Original work"
+      }
+    },
+    "label": {
+      "id": "label-model",
+      "text": "Try the breathing model.",
+      "speechKey": "library-label-model",
+      "audio": {
+        "status": "pending",
+        "reason": "Lead generates and reviews recordings after design approval"
+      }
+    },
+    "model": {
+      "engine": "breath-preview",
+      "limits": "Two manually selected positions. No countdown or breath-holding instruction. No physiological simulation."
+    },
+    "links": [
+      {
+        "kind": "item",
+        "target": "turtle-breath",
+        "label": "Read about turtle lungs"
+      },
+      {
+        "kind": "make",
+        "target": "sea-page",
+        "label": "Make a sea page"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "revision": 1,
+    "review": {
+      "status": "draft",
+      "reviewer": "Codex design worker (source check only; family approval pending)",
+      "date": "2026-11-02",
+      "scope": "Design fixture, not approved child-facing publication"
+    },
+    "rights": {
+      "license": "LicenseRef-Little-Island-Original",
+      "creator": "Shimizu Technology",
+      "sourceUrl": "repo:little-island-games",
+      "credit": "Original Little Island design text and vector illustration, 2026.",
+      "changes": "Original work"
+    },
+    "stage": {
+      "ageHint": [
+        5,
+        9
+      ],
+      "support": "Listening and shared reading welcome; not a decoding assessment"
+    },
+    "sensitiveNotes": [
+      "Do not invite breath-holding or touching wildlife."
+    ],
+    "sources": [
+      {
+        "title": "NOAA Fisheries: Green Turtle",
+        "url": "https://www.fisheries.noaa.gov/species/green-turtle",
+        "accessed": "2026-11-02"
+      }
+    ],
+    "id": "ocean-collection",
+    "type": "collection",
+    "title": "Ocean & Reef",
+    "category": "ocean",
+    "aliases": [
+      "sea"
+    ],
+    "tags": [
+      "ocean"
+    ],
+    "image": {
+      "path": "src/library/LibraryArt.tsx",
+      "alt": "A green sea turtle lifts its nose above the water.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island design text and vector illustration, 2026.",
+        "changes": "Original work"
+      }
+    },
+    "label": {
+      "id": "label-ocean",
+      "text": "Ocean and Reef.",
+      "speechKey": "library-label-ocean",
+      "audio": {
+        "status": "pending",
+        "reason": "Lead generates and reviews recordings after design approval"
+      }
+    },
+    "members": [
+      "turtle-breath",
+      "reef-model"
+    ],
+    "links": []
+  },
+  {
+    "schemaVersion": 1,
+    "revision": 1,
+    "review": {
+      "status": "draft",
+      "reviewer": "Codex design worker (source check only; family approval pending)",
+      "date": "2026-11-02",
+      "scope": "Design fixture, not approved child-facing publication"
+    },
+    "rights": {
+      "license": "CC-BY-4.0",
+      "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+      "sourceUrl": "https://bookdash.org/books/a-very-busy-day/",
+      "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+      "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+      "licenseFile": "content/library/CC-BY-4.0.txt"
+    },
+    "stage": {
+      "ageHint": [
+        3,
+        8
+      ],
+      "support": "Picture book; shared reading or listening, not a decodable sequence."
+    },
+    "sensitiveNotes": [
+      "Shopping and choosing a toy; grown-up previews the complete book. Multilingual greetings need pronunciation review."
+    ],
+    "sources": [
+      {
+        "title": "Book Dash: original English edition",
+        "url": "https://bookdash.org/books/a-very-busy-day/",
+        "accessed": "2026-11-02"
+      }
+    ],
+    "id": "busy-day",
+    "type": "book",
+    "title": "A very busy day!",
+    "category": "books",
+    "aliases": [
+      "book",
+      "town",
+      "mama"
+    ],
+    "tags": [
+      "book",
+      "family"
+    ],
+    "image": {
+      "path": "content/library/assets/busy-0.jpg",
+      "alt": "Book cover: Mama and child in a busy town.",
+      "rights": {
+        "license": "CC-BY-4.0",
+        "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+        "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_cover-1.jpg",
+        "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+        "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+        "licenseFile": "content/library/CC-BY-4.0.txt"
+      },
+      "sha256": "0147843f62a79c8a0e80a09a5429fe02ff4b13caf730945468aa44177dce2221"
+    },
+    "label": {
+      "id": "busy-page-label",
+      "text": "A very busy day!",
+      "speechKey": "library-busy-page-label",
+      "audio": {
+        "status": "pending",
+        "reason": "New authorized recording needed; third-party audio has not been imported."
+      }
+    },
+    "links": [
+      {
+        "kind": "make",
+        "target": "sea-page",
+        "label": "Make a book about your day"
+      }
+    ],
+    "edition": {
+      "language": "en",
+      "isbn": "978-1-928497-79-0",
+      "originalTitle": "A Very Busy Day",
+      "rights": {
+        "license": "CC-BY-4.0",
+        "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+        "sourceUrl": "https://bookdash.org/books/a-very-busy-day/",
+        "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+        "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+        "licenseFile": "content/library/CC-BY-4.0.txt"
+      }
+    },
+    "pages": [
+      {
+        "image": {
+          "path": "content/library/assets/busy-0.jpg",
+          "alt": "Book cover: Mama and child in a busy town.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_cover-1.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "0147843f62a79c8a0e80a09a5429fe02ff4b13caf730945468aa44177dce2221"
+        },
+        "sentences": [
+          {
+            "id": "busy-page-0",
+            "text": "A very busy day!",
+            "speechKey": "library-busy-page-0",
+            "audio": {
+              "status": "pending",
+              "reason": "New authorized recording needed; third-party audio has not been imported."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-1.jpg",
+          "alt": "Mama and child leave home together.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page4.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "c301fdd4eb28bf298f44823865704ce45153c18404f025172049401ee544b5aa"
+        },
+        "sentences": [
+          {
+            "id": "busy-page-1",
+            "text": "Today is a very busy day! Mama and I have lots of things to do and see.",
+            "speechKey": "library-busy-page-1",
+            "audio": {
+              "status": "pending",
+              "reason": "New authorized recording needed; third-party audio has not been imported."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-2.jpg",
+          "alt": "People wait by a minibus.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page5.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "b0bbbe80c68af9fcb3c583d6a0912b4c9670b303181226a2a0b2ccba512ce1a0"
+        },
+        "sentences": [
+          {
+            "id": "busy-page-2",
+            "text": "We walk to the station and find people in a queue. Old people and young people, loud people and quiet people, all going to town.",
+            "speechKey": "library-busy-page-2",
+            "audio": {
+              "status": "pending",
+              "reason": "New authorized recording needed; third-party audio has not been imported."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-3.jpg",
+          "alt": "Traffic passes a minibus window.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page6.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "53c4e37ad8b86b74ed4907b35ea688f69591c7b97d6de86a9f57d5dc62c26dc2"
+        },
+        "sentences": [
+          {
+            "id": "busy-page-3",
+            "text": "Through the minibus window, I see cars driving by. Fast cars and slow cars, big cars and small cars.",
+            "speechKey": "library-busy-page-3",
+            "audio": {
+              "status": "pending",
+              "reason": "New authorized recording needed; third-party audio has not been imported."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-4.jpg",
+          "alt": "Buildings of different sizes.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page7.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "6ba9e7d947877b4b8b1c51b83e1e57ecc900b55275ae5badba9cdb55813a9b07"
+        },
+        "sentences": [
+          {
+            "id": "busy-page-4",
+            "text": "There are so many buildings in town! Tall ones and short ones, glass ones and brick ones, everywhere I look.",
+            "speechKey": "library-busy-page-4",
+            "audio": {
+              "status": "pending",
+              "reason": "New authorized recording needed; third-party audio has not been imported."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-5.jpg",
+          "alt": "Mama and child look through shop windows.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page8.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "3ae8ac8a4826a04461984cddcb0ae340ebff01171507e6a2007bd6acd223b204"
+        },
+        "sentences": [
+          {
+            "id": "busy-page-5",
+            "text": "Mama and I walk in and out of shops. Shops for clothes and shops for books, shops for bags and all sorts of things.",
+            "speechKey": "library-busy-page-5",
+            "audio": {
+              "status": "pending",
+              "reason": "New authorized recording needed; third-party audio has not been imported."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-6.jpg",
+          "alt": "Mama tries on shoes.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page9.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "7990c5001c82a9e46e3534bddb8bbc7a2b15c0c40b003953959256b9328c8162"
+        },
+        "sentences": [
+          {
+            "id": "busy-page-6",
+            "text": "Mama tries on some shoes. Red shoes and green shoes, high shoes and low shoes.",
+            "speechKey": "library-busy-page-6",
+            "audio": {
+              "status": "pending",
+              "reason": "New authorized recording needed; third-party audio has not been imported."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-7.jpg",
+          "alt": "People greet each other.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page10.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "0a54c6c74cd79dce6bfd30b6fb7ff62880eeb8b411684af218cae6bf41d45492"
+        },
+        "sentences": [
+          {
+            "id": "busy-page-7",
+            "text": "Hello! Bonjour! Ola! Jambo!",
+            "speechKey": "library-busy-page-7",
+            "audio": {
+              "status": "pending",
+              "reason": "New authorized recording needed; third-party audio has not been imported."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-8.jpg",
+          "alt": "A busy town scene invites looking together.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page11.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "385684a4daed6e2ae82bbdc953f70f7d35148853266cbe5d06eb9110ac1ae1e8"
+        },
+        "sentences": []
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-9.jpg",
+          "alt": "Mama and child buy food at a store.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page12.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "fd5c834ab306a42c57de6755dacd83bdf24cc841d07f2a4f5631de7f4d43c226"
+        },
+        "sentences": [
+          {
+            "id": "busy-page-9",
+            "text": "In a big store, we fill a trolley with food. Boxes of cereal, and sacks of fruit. Bags of flour and bottles of juice.",
+            "speechKey": "library-busy-page-9",
+            "audio": {
+              "status": "pending",
+              "reason": "New authorized recording needed; third-party audio has not been imported."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-10.jpg",
+          "alt": "Mama and child look at toys.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page13.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "8472e896178bf198b63a0d1d2190f636d79ebafa7023e30dbd4cae533ccb6f81"
+        },
+        "sentences": [
+          {
+            "id": "busy-page-10",
+            "text": "Mama shows me the toys and asks me to choose! There are soft toys and round toys, loud toys and fast toys.",
+            "speechKey": "library-busy-page-10",
+            "audio": {
+              "status": "pending",
+              "reason": "New authorized recording needed; third-party audio has not been imported."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-11.jpg",
+          "alt": "Mama and child carry their shopping.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page14.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "07204981a79d40c0f3be70c08b4ab4762f39cf1999309fc72e2b8f5b8deb7a63"
+        },
+        "sentences": [
+          {
+            "id": "busy-page-11",
+            "text": "Today we’ve bought lots of things! Bags of food and bags of clothes. A pair of shoes and even some treats.",
+            "speechKey": "library-busy-page-11",
+            "audio": {
+              "status": "pending",
+              "reason": "New authorized recording needed; third-party audio has not been imported."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-12.jpg",
+          "alt": "The child takes a gift out at home.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page15.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "7585281995159be1f27c191bb82f4ac3a1bcf47dd138313ff20820a58e9f9215"
+        },
+        "sentences": [
+          {
+            "id": "busy-page-12",
+            "text": "Back at home, in our quiet house, I take out the special gift that Mama bought just for me!",
+            "speechKey": "library-busy-page-12",
+            "audio": {
+              "status": "pending",
+              "reason": "New authorized recording needed; third-party audio has not been imported."
+            }
+          }
+        ]
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-13.jpg",
+          "alt": "The child enjoys a book at home.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page16.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "841307c2a5844f14d72ef719f4a5b0e717319d3ca776bf33e68cab15e1991de1"
+        },
+        "sentences": []
+      },
+      {
+        "image": {
+          "path": "content/library/assets/busy-14.jpg",
+          "alt": "Back cover of A Very Busy Day.",
+          "rights": {
+            "license": "CC-BY-4.0",
+            "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+            "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page17.jpg",
+            "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+            "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+            "licenseFile": "content/library/CC-BY-4.0.txt"
+          },
+          "sha256": "7c1f8e5a748f07476481393b2a4e5f18cd2a7c2dff8164fc8d5743d1333b0f57"
+        },
+        "sentences": [
+          {
+            "id": "busy-page-14",
+            "text": "Today is a very busy day. Come to town with Mama and me!",
+            "speechKey": "library-busy-page-14",
+            "audio": {
+              "status": "pending",
+              "reason": "New authorized recording needed; third-party audio has not been imported."
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

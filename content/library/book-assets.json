@@ -1,0 +1,92 @@
+[
+  {
+    "path": "content/library/assets/busy-0.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_cover-1.jpg",
+    "sha256": "0147843f62a79c8a0e80a09a5429fe02ff4b13caf730945468aa44177dce2221",
+    "bytes": 501721
+  },
+  {
+    "path": "content/library/assets/busy-1.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page4.jpg",
+    "sha256": "c301fdd4eb28bf298f44823865704ce45153c18404f025172049401ee544b5aa",
+    "bytes": 635682
+  },
+  {
+    "path": "content/library/assets/busy-2.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page5.jpg",
+    "sha256": "b0bbbe80c68af9fcb3c583d6a0912b4c9670b303181226a2a0b2ccba512ce1a0",
+    "bytes": 782893
+  },
+  {
+    "path": "content/library/assets/busy-3.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page6.jpg",
+    "sha256": "53c4e37ad8b86b74ed4907b35ea688f69591c7b97d6de86a9f57d5dc62c26dc2",
+    "bytes": 638889
+  },
+  {
+    "path": "content/library/assets/busy-4.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page7.jpg",
+    "sha256": "6ba9e7d947877b4b8b1c51b83e1e57ecc900b55275ae5badba9cdb55813a9b07",
+    "bytes": 870357
+  },
+  {
+    "path": "content/library/assets/busy-5.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page8.jpg",
+    "sha256": "3ae8ac8a4826a04461984cddcb0ae340ebff01171507e6a2007bd6acd223b204",
+    "bytes": 597998
+  },
+  {
+    "path": "content/library/assets/busy-6.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page9.jpg",
+    "sha256": "7990c5001c82a9e46e3534bddb8bbc7a2b15c0c40b003953959256b9328c8162",
+    "bytes": 751515
+  },
+  {
+    "path": "content/library/assets/busy-7.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page10.jpg",
+    "sha256": "0a54c6c74cd79dce6bfd30b6fb7ff62880eeb8b411684af218cae6bf41d45492",
+    "bytes": 723547
+  },
+  {
+    "path": "content/library/assets/busy-8.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page11.jpg",
+    "sha256": "385684a4daed6e2ae82bbdc953f70f7d35148853266cbe5d06eb9110ac1ae1e8",
+    "bytes": 850010
+  },
+  {
+    "path": "content/library/assets/busy-9.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page12.jpg",
+    "sha256": "fd5c834ab306a42c57de6755dacd83bdf24cc841d07f2a4f5631de7f4d43c226",
+    "bytes": 633494
+  },
+  {
+    "path": "content/library/assets/busy-10.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page13.jpg",
+    "sha256": "8472e896178bf198b63a0d1d2190f636d79ebafa7023e30dbd4cae533ccb6f81",
+    "bytes": 726029
+  },
+  {
+    "path": "content/library/assets/busy-11.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page14.jpg",
+    "sha256": "07204981a79d40c0f3be70c08b4ab4762f39cf1999309fc72e2b8f5b8deb7a63",
+    "bytes": 636266
+  },
+  {
+    "path": "content/library/assets/busy-12.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page15.jpg",
+    "sha256": "7585281995159be1f27c191bb82f4ac3a1bcf47dd138313ff20820a58e9f9215",
+    "bytes": 428393
+  },
+  {
+    "path": "content/library/assets/busy-13.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page16.jpg",
+    "sha256": "841307c2a5844f14d72ef719f4a5b0e717319d3ca776bf33e68cab15e1991de1",
+    "bytes": 1005485
+  },
+  {
+    "path": "content/library/assets/busy-14.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page17.jpg",
+    "sha256": "7c1f8e5a748f07476481393b2a4e5f18cd2a7c2dff8164fc8d5743d1333b0f57",
+    "bytes": 187459
+  }
+]

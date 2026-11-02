@@ -1,0 +1,65 @@
+[
+  {
+    "id": "ocean",
+    "title": "Ocean & Reef",
+    "motif": "turtle",
+    "tint": "#DCEDE7",
+    "speechKey": "library-category-ocean"
+  },
+  {
+    "id": "guam",
+    "title": "Guam & Our Island",
+    "motif": "globe",
+    "tint": "#F3E6CB",
+    "speechKey": "library-category-guam"
+  },
+  {
+    "id": "animals",
+    "title": "Animals",
+    "motif": "butterfly",
+    "tint": "#E5ECD8",
+    "speechKey": "library-category-animals"
+  },
+  {
+    "id": "space",
+    "title": "Space & Sky",
+    "motif": "moon",
+    "tint": "#E6E4F1",
+    "speechKey": "library-category-space"
+  },
+  {
+    "id": "weather",
+    "title": "Weather & Earth",
+    "motif": "cloud",
+    "tint": "#E1ECF2",
+    "speechKey": "library-category-weather"
+  },
+  {
+    "id": "body",
+    "title": "My Body",
+    "motif": "heart",
+    "tint": "#F5E2D8",
+    "speechKey": "library-category-body"
+  },
+  {
+    "id": "machines",
+    "title": "How Things Work",
+    "motif": "gear",
+    "tint": "#EEE7D8",
+    "speechKey": "library-category-machines"
+  },
+  {
+    "id": "plants",
+    "title": "Plants & Food",
+    "motif": "plant",
+    "tint": "#E8EDD5",
+    "speechKey": "library-category-plants"
+  },
+  {
+    "id": "books",
+    "title": "Picture books",
+    "motif": "globe",
+    "tint": "#EFE7D4",
+    "speechKey": "library-category-books"
+  }
+]

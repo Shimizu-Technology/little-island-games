@@ -7,7 +7,7 @@ import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const directories = ['src', 'assets', 'scripts', 'tests', 'modules'];
+const directories = ['src', 'assets', 'scripts', 'tests', 'modules', ...(['content'].filter(d => existsSync(join(root, d))))];
 const files = ['app.json', 'eas.json', 'package.json', 'package-lock.json', 'tsconfig.json',
   'eslint.config.js', 'vitest.config.mts', 'LICENSE', 'THIRD_PARTY_NOTICES.md'];
 const optional = ['babel.config.js', 'babel.config.cjs', 'metro.config.js', 'metro.config.cjs'];
@@ -34,7 +34,7 @@ function tree(dir, prefix = '') {
 export function scanFile(name, bytes) {
   if (forbiddenFile.test(name)) throw new Error(`Credential file: ${name}`);
   // Scan binary strings too: metadata must not carry private names or credentials.
-  const text = /\.(?:m4a|wav|png)$/i.test(name)
+  const text = /\.(?:m4a|wav|png|jpe?g)$/i.test(name)
     ? (bytes.toString('latin1').match(/[\x20-\x7e]{20,}/g) ?? []).join('\n')
     : bytes.toString('utf8');
   if (privateName.test(name) || privateName.test(text) || email.test(text) || /\/Users\//.test(text))

@@ -1,0 +1,10 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { buildIndex } from '../../src/library/search.ts';
+import { TOPICS } from '../../src/explore/content.ts';
+const items = JSON.parse(readFileSync('content/library/items.json', 'utf8'));
+const aliases = JSON.parse(readFileSync('content/library/search-aliases.json', 'utf8'));
+const categories = { oceans:'ocean', world:'guam', animals:'animals', space:'space', weather:'weather' };
+const entries = [items.find(i => i.id === 'turtle-breath'), ...TOPICS.filter(t => t.id !== 'turtles').map(t => ({...t, category: categories[t.world], aliases: aliases[t.id] ?? [], tags:[t.world]}))];
+const index = buildIndex(entries.map(({id,title,category,aliases,tags})=>({id,title,category,aliases,tags})));
+writeFileSync('content/library/search-index.json', JSON.stringify(index, null, 2) + '\n');
+console.log(`Built offline Library design index: ${index.length} entries. No child queries stored.`);
