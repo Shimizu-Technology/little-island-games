@@ -1,9 +1,10 @@
 {
   "review": {
-    "status": "draft",
-    "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+    "status": "in-review",
+    "reviewer": "Codex independent factual reviewer",
     "date": "2026-11-02",
-    "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+    "factualReviewer": "independent factual reviewer",
+    "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Reading ants, seasonal gathering, royal speech and parental reactions belong to this fantasy; no general ant biology is asserted by the Library. Typo in picture description corrected. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
   },
   "editionIsbn": "978-1-928318-22-4",
   "pages": [
@@ -49,7 +50,7 @@
       "text": "In autumn when the leaves fall down, the ants must keep food underground.",
       "artworkText": [],
       "wordless": false,
-      "alt": "The trees are bare and autum leaves are all around. The ants look under the leaves and collect a discarded apple core.",
+      "alt": "The trees are bare and autumn leaves are all around. The ants look under the leaves and collect a discarded apple core.",
       "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
     },
     {

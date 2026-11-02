@@ -372,6 +372,41 @@
       "imageSpeechKeys": [
         "library-sun-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-sun-label-1",
+        "library-sun-tell-1",
+        "library-sun-tell-2",
+        "library-sun-tell-3",
+        "library-sun-more-1",
+        "library-sun-more-2",
+        "library-sun-more-3",
+        "library-sun-more-4",
+        "library-sun-more-5",
+        "library-sun-more-6",
+        "library-sun-more-7",
+        "library-sun-deep-1",
+        "library-sun-deep-2",
+        "library-sun-deep-3",
+        "library-sun-deep-4",
+        "library-sun-deep-5",
+        "library-sun-deep-6",
+        "library-sun-deep-7",
+        "library-sun-deep-8",
+        "library-sun-deep-9"
+      ],
+      "sourceUrls": [
+        "https://science.nasa.gov/sun/facts/"
+      ]
     }
   },
   "moon": {
@@ -733,6 +768,39 @@
       ],
       "imageSpeechKeys": [
         "library-moon-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-moon-label-1",
+        "library-moon-tell-1",
+        "library-moon-tell-2",
+        "library-moon-tell-3",
+        "library-moon-more-1",
+        "library-moon-more-2",
+        "library-moon-more-3",
+        "library-moon-more-4",
+        "library-moon-more-5",
+        "library-moon-deep-1",
+        "library-moon-deep-2",
+        "library-moon-deep-3",
+        "library-moon-deep-4",
+        "library-moon-deep-5",
+        "library-moon-deep-6",
+        "library-moon-deep-7",
+        "library-moon-deep-8",
+        "library-moon-deep-9"
+      ],
+      "sourceUrls": [
+        "https://science.nasa.gov/moon/facts/"
       ]
     }
   },
@@ -1120,6 +1188,40 @@
       "imageSpeechKeys": [
         "library-day-night-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-day-night-label-1",
+        "library-day-night-tell-1",
+        "library-day-night-tell-2",
+        "library-day-night-tell-3",
+        "library-day-night-more-1",
+        "library-day-night-more-2",
+        "library-day-night-more-3",
+        "library-day-night-more-4",
+        "library-day-night-more-5",
+        "library-day-night-deep-1",
+        "library-day-night-deep-2",
+        "library-day-night-deep-3",
+        "library-day-night-deep-4",
+        "library-day-night-deep-5",
+        "library-day-night-deep-6",
+        "library-day-night-deep-7",
+        "library-day-night-deep-8",
+        "library-day-night-deep-9"
+      ],
+      "sourceUrls": [
+        "https://science.nasa.gov/earth/facts/",
+        "https://spaceplace.nasa.gov/seasons/en/"
+      ]
     }
   },
   "planets": {
@@ -1464,6 +1566,38 @@
       "imageSpeechKeys": [
         "library-planets-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-planets-label-1",
+        "library-planets-tell-1",
+        "library-planets-tell-2",
+        "library-planets-tell-3",
+        "library-planets-more-1",
+        "library-planets-more-2",
+        "library-planets-more-3",
+        "library-planets-more-4",
+        "library-planets-deep-1",
+        "library-planets-deep-2",
+        "library-planets-deep-3",
+        "library-planets-deep-4",
+        "library-planets-deep-5",
+        "library-planets-deep-6",
+        "library-planets-deep-7",
+        "library-planets-deep-8",
+        "library-planets-deep-9"
+      ],
+      "sourceUrls": [
+        "https://science.nasa.gov/solar-system/"
+      ]
     }
   },
   "mars": {
@@ -1803,6 +1937,38 @@
       ],
       "imageSpeechKeys": [
         "library-mars-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-mars-label-1",
+        "library-mars-tell-1",
+        "library-mars-tell-2",
+        "library-mars-tell-3",
+        "library-mars-more-1",
+        "library-mars-more-2",
+        "library-mars-more-3",
+        "library-mars-more-4",
+        "library-mars-deep-1",
+        "library-mars-deep-2",
+        "library-mars-deep-3",
+        "library-mars-deep-4",
+        "library-mars-deep-5",
+        "library-mars-deep-6",
+        "library-mars-deep-7",
+        "library-mars-deep-8",
+        "library-mars-deep-9"
+      ],
+      "sourceUrls": [
+        "https://science.nasa.gov/mars/facts/"
       ]
     }
   },
@@ -2148,6 +2314,38 @@
       ],
       "imageSpeechKeys": [
         "library-saturn-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-saturn-label-1",
+        "library-saturn-tell-1",
+        "library-saturn-tell-2",
+        "library-saturn-tell-3",
+        "library-saturn-more-1",
+        "library-saturn-more-2",
+        "library-saturn-more-3",
+        "library-saturn-more-4",
+        "library-saturn-more-5",
+        "library-saturn-deep-1",
+        "library-saturn-deep-2",
+        "library-saturn-deep-3",
+        "library-saturn-deep-4",
+        "library-saturn-deep-5",
+        "library-saturn-deep-6",
+        "library-saturn-deep-7",
+        "library-saturn-deep-8"
+      ],
+      "sourceUrls": [
+        "https://science.nasa.gov/saturn/facts/"
       ]
     }
   },
@@ -2509,6 +2707,41 @@
       ],
       "imageSpeechKeys": [
         "library-gravity-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-gravity-label-1",
+        "library-gravity-tell-1",
+        "library-gravity-tell-2",
+        "library-gravity-tell-3",
+        "library-gravity-more-1",
+        "library-gravity-more-2",
+        "library-gravity-more-3",
+        "library-gravity-more-4",
+        "library-gravity-more-5",
+        "library-gravity-deep-1",
+        "library-gravity-deep-2",
+        "library-gravity-deep-3",
+        "library-gravity-deep-4",
+        "library-gravity-deep-5",
+        "library-gravity-deep-6",
+        "library-gravity-deep-7",
+        "library-gravity-deep-8",
+        "library-gravity-deep-9",
+        "library-gravity-deep-10"
+      ],
+      "sourceUrls": [
+        "https://spaceplace.nasa.gov/what-is-gravity/en/",
+        "https://science.nasa.gov/learn/basics-of-space-flight/chapter3-4/"
       ]
     }
   },
@@ -2875,6 +3108,40 @@
       "imageSpeechKeys": [
         "library-stars-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-stars-label-1",
+        "library-stars-tell-1",
+        "library-stars-tell-2",
+        "library-stars-tell-3",
+        "library-stars-more-1",
+        "library-stars-more-2",
+        "library-stars-more-3",
+        "library-stars-more-4",
+        "library-stars-more-5",
+        "library-stars-deep-1",
+        "library-stars-deep-2",
+        "library-stars-deep-3",
+        "library-stars-deep-4",
+        "library-stars-deep-5",
+        "library-stars-deep-6",
+        "library-stars-deep-7",
+        "library-stars-deep-8",
+        "library-stars-deep-9",
+        "library-stars-deep-10"
+      ],
+      "sourceUrls": [
+        "https://science.nasa.gov/universe/stars/"
+      ]
     }
   },
   "rockets": {
@@ -3215,6 +3482,39 @@
       "imageSpeechKeys": [
         "library-rockets-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-rockets-label-1",
+        "library-rockets-tell-1",
+        "library-rockets-tell-2",
+        "library-rockets-tell-3",
+        "library-rockets-more-1",
+        "library-rockets-more-2",
+        "library-rockets-more-3",
+        "library-rockets-more-4",
+        "library-rockets-deep-1",
+        "library-rockets-deep-2",
+        "library-rockets-deep-3",
+        "library-rockets-deep-4",
+        "library-rockets-deep-5",
+        "library-rockets-deep-6",
+        "library-rockets-deep-7",
+        "library-rockets-deep-8",
+        "library-rockets-deep-9"
+      ],
+      "sourceUrls": [
+        "https://spaceplace.nasa.gov/launching-into-space/en/",
+        "https://science.nasa.gov/learn/basics-of-space-flight/chapter3-4/"
+      ]
     }
   },
   "asteroids": {
@@ -3552,6 +3852,39 @@
       ],
       "imageSpeechKeys": [
         "library-asteroids-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-asteroids-label-1",
+        "library-asteroids-tell-1",
+        "library-asteroids-tell-2",
+        "library-asteroids-tell-3",
+        "library-asteroids-more-1",
+        "library-asteroids-more-2",
+        "library-asteroids-more-3",
+        "library-asteroids-more-4",
+        "library-asteroids-more-5",
+        "library-asteroids-deep-1",
+        "library-asteroids-deep-2",
+        "library-asteroids-deep-3",
+        "library-asteroids-deep-4",
+        "library-asteroids-deep-5",
+        "library-asteroids-deep-6",
+        "library-asteroids-deep-7",
+        "library-asteroids-deep-8",
+        "library-asteroids-deep-9"
+      ],
+      "sourceUrls": [
+        "https://science.nasa.gov/solar-system/asteroids/facts/"
       ]
     }
   },
@@ -3925,6 +4258,40 @@
       "imageSpeechKeys": [
         "library-salty-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-salty-label-1",
+        "library-salty-tell-1",
+        "library-salty-tell-2",
+        "library-salty-tell-3",
+        "library-salty-more-1",
+        "library-salty-more-2",
+        "library-salty-more-3",
+        "library-salty-more-4",
+        "library-salty-more-5",
+        "library-salty-deep-1",
+        "library-salty-deep-2",
+        "library-salty-deep-3",
+        "library-salty-deep-4",
+        "library-salty-deep-5",
+        "library-salty-deep-6",
+        "library-salty-deep-7",
+        "library-salty-deep-8",
+        "library-salty-deep-9"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/whysalty.html",
+        "https://www.noaa.gov/jetstream/ocean/sea-water"
+      ]
     }
   },
   "tides": {
@@ -4266,6 +4633,38 @@
       ],
       "imageSpeechKeys": [
         "library-tides-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-tides-label-1",
+        "library-tides-tell-1",
+        "library-tides-tell-2",
+        "library-tides-tell-3",
+        "library-tides-more-1",
+        "library-tides-more-2",
+        "library-tides-more-3",
+        "library-tides-more-4",
+        "library-tides-more-5",
+        "library-tides-deep-1",
+        "library-tides-deep-2",
+        "library-tides-deep-3",
+        "library-tides-deep-4",
+        "library-tides-deep-5",
+        "library-tides-deep-6",
+        "library-tides-deep-7",
+        "library-tides-deep-8"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/tides.html"
       ]
     }
   },
@@ -4620,6 +5019,40 @@
       ],
       "imageSpeechKeys": [
         "library-waves-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-waves-label-1",
+        "library-waves-tell-1",
+        "library-waves-tell-2",
+        "library-waves-tell-3",
+        "library-waves-more-1",
+        "library-waves-more-2",
+        "library-waves-more-3",
+        "library-waves-more-4",
+        "library-waves-more-5",
+        "library-waves-deep-1",
+        "library-waves-deep-2",
+        "library-waves-deep-3",
+        "library-waves-deep-4",
+        "library-waves-deep-5",
+        "library-waves-deep-6",
+        "library-waves-deep-7",
+        "library-waves-deep-8",
+        "library-waves-deep-9",
+        "library-waves-deep-10"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/wavesinocean.html"
       ]
     }
   },
@@ -4989,6 +5422,40 @@
       "imageSpeechKeys": [
         "library-coral-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-coral-label-1",
+        "library-coral-tell-1",
+        "library-coral-tell-2",
+        "library-coral-tell-3",
+        "library-coral-more-1",
+        "library-coral-more-2",
+        "library-coral-more-3",
+        "library-coral-more-4",
+        "library-coral-more-5",
+        "library-coral-more-6",
+        "library-coral-deep-1",
+        "library-coral-deep-2",
+        "library-coral-deep-3",
+        "library-coral-deep-4",
+        "library-coral-deep-5",
+        "library-coral-deep-6",
+        "library-coral-deep-7",
+        "library-coral-deep-8",
+        "library-coral-deep-9"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/coral.html"
+      ]
     }
   },
   "plankton": {
@@ -5342,6 +5809,39 @@
       ],
       "imageSpeechKeys": [
         "library-plankton-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-plankton-label-1",
+        "library-plankton-tell-1",
+        "library-plankton-tell-2",
+        "library-plankton-tell-3",
+        "library-plankton-more-1",
+        "library-plankton-more-2",
+        "library-plankton-more-3",
+        "library-plankton-more-4",
+        "library-plankton-deep-1",
+        "library-plankton-deep-2",
+        "library-plankton-deep-3",
+        "library-plankton-deep-4",
+        "library-plankton-deep-5",
+        "library-plankton-deep-6",
+        "library-plankton-deep-7",
+        "library-plankton-deep-8",
+        "library-plankton-deep-9",
+        "library-plankton-deep-10"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/plankton.html"
       ]
     }
   },
@@ -5709,7 +6209,40 @@
         "library-seagrass-image-1"
       ]
     },
-    "integrationNote": "Classified as Plants & Food for picture discovery; original oceans world is preserved. Related Ocean & Reef links remain."
+    "integrationNote": "Classified as Plants & Food for picture discovery; original oceans world is preserved. Related Ocean & Reef links remain.",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-seagrass-label-1",
+        "library-seagrass-tell-1",
+        "library-seagrass-tell-2",
+        "library-seagrass-tell-3",
+        "library-seagrass-more-1",
+        "library-seagrass-more-2",
+        "library-seagrass-more-3",
+        "library-seagrass-more-4",
+        "library-seagrass-more-5",
+        "library-seagrass-deep-1",
+        "library-seagrass-deep-2",
+        "library-seagrass-deep-3",
+        "library-seagrass-deep-4",
+        "library-seagrass-deep-5",
+        "library-seagrass-deep-6",
+        "library-seagrass-deep-7",
+        "library-seagrass-deep-8",
+        "library-seagrass-deep-9"
+      ],
+      "sourceUrls": [
+        "https://floridakeys.noaa.gov/plants/seagrass.html"
+      ]
+    }
   },
   "deep-ocean": {
     "schemaVersion": 1,
@@ -6093,6 +6626,41 @@
       "imageSpeechKeys": [
         "library-deep-ocean-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-deep-ocean-label-1",
+        "library-deep-ocean-tell-1",
+        "library-deep-ocean-tell-2",
+        "library-deep-ocean-tell-3",
+        "library-deep-ocean-more-1",
+        "library-deep-ocean-more-2",
+        "library-deep-ocean-more-3",
+        "library-deep-ocean-more-4",
+        "library-deep-ocean-more-5",
+        "library-deep-ocean-deep-1",
+        "library-deep-ocean-deep-2",
+        "library-deep-ocean-deep-3",
+        "library-deep-ocean-deep-4",
+        "library-deep-ocean-deep-5",
+        "library-deep-ocean-deep-6",
+        "library-deep-ocean-deep-7",
+        "library-deep-ocean-deep-8",
+        "library-deep-ocean-deep-9"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/pressure.html",
+        "https://oceanexplorer.noaa.gov/facts/light-distributed.html",
+        "https://www.whoi.edu/ocean-learning-hub/ocean-facts/why-is-pressure-different-in-the-ocean/"
+      ]
     }
   },
   "octopus": {
@@ -6448,6 +7016,39 @@
       ],
       "imageSpeechKeys": [
         "library-octopus-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-octopus-label-1",
+        "library-octopus-tell-1",
+        "library-octopus-tell-2",
+        "library-octopus-tell-3",
+        "library-octopus-more-1",
+        "library-octopus-more-2",
+        "library-octopus-more-3",
+        "library-octopus-more-4",
+        "library-octopus-more-5",
+        "library-octopus-deep-1",
+        "library-octopus-deep-2",
+        "library-octopus-deep-3",
+        "library-octopus-deep-4",
+        "library-octopus-deep-5",
+        "library-octopus-deep-6",
+        "library-octopus-deep-7",
+        "library-octopus-deep-8",
+        "library-octopus-deep-9"
+      ],
+      "sourceUrls": [
+        "https://ocean.si.edu/ocean-life/invertebrates/octopuses-squids-and-relatives"
       ]
     }
   },
@@ -6819,7 +7420,42 @@
         "library-turtles-image-1"
       ]
     },
-    "integrationNote": "Canonical Library ID keeps the approved design fixture ID. Original Explore ID, payload and all narration remain unchanged. Destination migration must use this explicit mapping."
+    "integrationNote": "Canonical Library ID keeps the approved design fixture ID. Original Explore ID, payload and all narration remain unchanged. Destination migration must use this explicit mapping.",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-turtles-label-1",
+        "library-turtles-tell-1",
+        "library-turtles-tell-2",
+        "library-turtles-tell-3",
+        "library-turtles-more-1",
+        "library-turtles-more-2",
+        "library-turtles-more-3",
+        "library-turtles-more-4",
+        "library-turtles-more-5",
+        "library-turtles-more-6",
+        "library-turtles-deep-1",
+        "library-turtles-deep-2",
+        "library-turtles-deep-3",
+        "library-turtles-deep-4",
+        "library-turtles-deep-5",
+        "library-turtles-deep-6",
+        "library-turtles-deep-7",
+        "library-turtles-deep-8",
+        "library-turtles-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.fisheries.noaa.gov/species/green-turtle",
+        "https://response.restoration.noaa.gov/about/media/how-do-oil-spills-affect-sea-turtles.html"
+      ]
+    }
   },
   "food-web": {
     "schemaVersion": 1,
@@ -7183,6 +7819,39 @@
       ],
       "imageSpeechKeys": [
         "library-food-web-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-food-web-label-1",
+        "library-food-web-tell-1",
+        "library-food-web-tell-2",
+        "library-food-web-tell-3",
+        "library-food-web-more-1",
+        "library-food-web-more-2",
+        "library-food-web-more-3",
+        "library-food-web-more-4",
+        "library-food-web-more-5",
+        "library-food-web-deep-1",
+        "library-food-web-deep-2",
+        "library-food-web-deep-3",
+        "library-food-web-deep-4",
+        "library-food-web-deep-5",
+        "library-food-web-deep-6",
+        "library-food-web-deep-7",
+        "library-food-web-deep-8",
+        "library-food-web-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.noaa.gov/education/resource-collections/marine-life/aquatic-food-webs"
       ]
     }
   },
@@ -7574,6 +8243,42 @@
       "imageSpeechKeys": [
         "library-bats-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-bats-label-1",
+        "library-bats-tell-1",
+        "library-bats-tell-2",
+        "library-bats-tell-3",
+        "library-bats-more-1",
+        "library-bats-more-2",
+        "library-bats-more-3",
+        "library-bats-more-4",
+        "library-bats-more-5",
+        "library-bats-more-6",
+        "library-bats-deep-1",
+        "library-bats-deep-2",
+        "library-bats-deep-3",
+        "library-bats-deep-4",
+        "library-bats-deep-5",
+        "library-bats-deep-6",
+        "library-bats-deep-7",
+        "library-bats-deep-8",
+        "library-bats-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.si.edu/spotlight/bats/batfacts",
+        "https://home.nps.gov/subjects/bats/how-bats-fly.htm",
+        "https://www.nps.gov/subjects/bats/echolocation.htm"
+      ]
     }
   },
   "butterflies": {
@@ -7953,6 +8658,40 @@
       "imageSpeechKeys": [
         "library-butterflies-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-butterflies-label-1",
+        "library-butterflies-tell-1",
+        "library-butterflies-tell-2",
+        "library-butterflies-tell-3",
+        "library-butterflies-more-1",
+        "library-butterflies-more-2",
+        "library-butterflies-more-3",
+        "library-butterflies-more-4",
+        "library-butterflies-deep-1",
+        "library-butterflies-deep-2",
+        "library-butterflies-deep-3",
+        "library-butterflies-deep-4",
+        "library-butterflies-deep-5",
+        "library-butterflies-deep-6",
+        "library-butterflies-deep-7",
+        "library-butterflies-deep-8",
+        "library-butterflies-deep-9"
+      ],
+      "sourceUrls": [
+        "https://avpreservation.si.edu/spotlight/buginfo/butterfly",
+        "https://home.nps.gov/articles/monarch-butterfly.htm",
+        "https://naturalhistory.si.edu/education/teaching-resources/life-science/butterflies-and-beyond"
+      ]
     }
   },
   "frogs": {
@@ -8317,6 +9056,39 @@
       ],
       "imageSpeechKeys": [
         "library-frogs-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-frogs-label-1",
+        "library-frogs-tell-1",
+        "library-frogs-tell-2",
+        "library-frogs-tell-3",
+        "library-frogs-more-1",
+        "library-frogs-more-2",
+        "library-frogs-more-3",
+        "library-frogs-more-4",
+        "library-frogs-more-5",
+        "library-frogs-deep-1",
+        "library-frogs-deep-2",
+        "library-frogs-deep-3",
+        "library-frogs-deep-4",
+        "library-frogs-deep-5",
+        "library-frogs-deep-6",
+        "library-frogs-deep-7",
+        "library-frogs-deep-8",
+        "library-frogs-deep-9"
+      ],
+      "sourceUrls": [
+        "https://nationalzoo.si.edu/animals/african-clawed-frog"
       ]
     }
   },
@@ -8696,6 +9468,41 @@
       "imageSpeechKeys": [
         "library-bees-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-bees-label-1",
+        "library-bees-tell-1",
+        "library-bees-tell-2",
+        "library-bees-tell-3",
+        "library-bees-more-1",
+        "library-bees-more-2",
+        "library-bees-more-3",
+        "library-bees-more-4",
+        "library-bees-more-5",
+        "library-bees-more-6",
+        "library-bees-deep-1",
+        "library-bees-deep-2",
+        "library-bees-deep-3",
+        "library-bees-deep-4",
+        "library-bees-deep-5",
+        "library-bees-deep-6",
+        "library-bees-deep-7",
+        "library-bees-deep-8",
+        "library-bees-deep-9"
+      ],
+      "sourceUrls": [
+        "https://gardens.si.edu/gardens/pollinator-garden/why-what-when-where-who-how-pollination/",
+        "https://gardens.si.edu/gardens/pollinator-garden/"
+      ]
     }
   },
   "camouflage": {
@@ -9053,6 +9860,40 @@
       ],
       "imageSpeechKeys": [
         "library-camouflage-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-camouflage-label-1",
+        "library-camouflage-tell-1",
+        "library-camouflage-tell-2",
+        "library-camouflage-tell-3",
+        "library-camouflage-more-1",
+        "library-camouflage-more-2",
+        "library-camouflage-more-3",
+        "library-camouflage-more-4",
+        "library-camouflage-more-5",
+        "library-camouflage-deep-1",
+        "library-camouflage-deep-2",
+        "library-camouflage-deep-3",
+        "library-camouflage-deep-4",
+        "library-camouflage-deep-5",
+        "library-camouflage-deep-6",
+        "library-camouflage-deep-7",
+        "library-camouflage-deep-8",
+        "library-camouflage-deep-9",
+        "library-camouflage-deep-10"
+      ],
+      "sourceUrls": [
+        "https://naturalhistory.si.edu/education/teaching-resources/life-science/butterfly-colors-and-biomimicry"
       ]
     }
   },
@@ -9426,6 +10267,40 @@
       ],
       "imageSpeechKeys": [
         "library-dolphins-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-dolphins-label-1",
+        "library-dolphins-tell-1",
+        "library-dolphins-tell-2",
+        "library-dolphins-tell-3",
+        "library-dolphins-more-1",
+        "library-dolphins-more-2",
+        "library-dolphins-more-3",
+        "library-dolphins-more-4",
+        "library-dolphins-more-5",
+        "library-dolphins-more-6",
+        "library-dolphins-deep-1",
+        "library-dolphins-deep-2",
+        "library-dolphins-deep-3",
+        "library-dolphins-deep-4",
+        "library-dolphins-deep-5",
+        "library-dolphins-deep-6",
+        "library-dolphins-deep-7",
+        "library-dolphins-deep-8",
+        "library-dolphins-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.fisheries.noaa.gov/species/common-bottlenose-dolphin"
       ]
     }
   },
@@ -9805,6 +10680,39 @@
       "imageSpeechKeys": [
         "library-habitats-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-habitats-label-1",
+        "library-habitats-tell-1",
+        "library-habitats-tell-2",
+        "library-habitats-tell-3",
+        "library-habitats-more-1",
+        "library-habitats-more-2",
+        "library-habitats-more-3",
+        "library-habitats-more-4",
+        "library-habitats-more-5",
+        "library-habitats-deep-1",
+        "library-habitats-deep-2",
+        "library-habitats-deep-3",
+        "library-habitats-deep-4",
+        "library-habitats-deep-5",
+        "library-habitats-deep-6",
+        "library-habitats-deep-7",
+        "library-habitats-deep-8",
+        "library-habitats-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nps.gov/teachers/classrooms/food-water-shelter-space.htm"
+      ]
     }
   },
   "migration": {
@@ -10176,6 +11084,40 @@
       ],
       "imageSpeechKeys": [
         "library-migration-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-migration-label-1",
+        "library-migration-tell-1",
+        "library-migration-tell-2",
+        "library-migration-tell-3",
+        "library-migration-more-1",
+        "library-migration-more-2",
+        "library-migration-more-3",
+        "library-migration-more-4",
+        "library-migration-more-5",
+        "library-migration-deep-1",
+        "library-migration-deep-2",
+        "library-migration-deep-3",
+        "library-migration-deep-4",
+        "library-migration-deep-5",
+        "library-migration-deep-6",
+        "library-migration-deep-7",
+        "library-migration-deep-8",
+        "library-migration-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nps.gov/subjects/pollinators/migratingmonarchs.htm",
+        "https://home.nps.gov/articles/monarch-butterfly.htm"
       ]
     }
   },
@@ -10551,6 +11493,40 @@
       ],
       "imageSpeechKeys": [
         "library-insect-flight-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-insect-flight-label-1",
+        "library-insect-flight-tell-1",
+        "library-insect-flight-tell-2",
+        "library-insect-flight-tell-3",
+        "library-insect-flight-more-1",
+        "library-insect-flight-more-2",
+        "library-insect-flight-more-3",
+        "library-insect-flight-more-4",
+        "library-insect-flight-more-5",
+        "library-insect-flight-deep-1",
+        "library-insect-flight-deep-2",
+        "library-insect-flight-deep-3",
+        "library-insect-flight-deep-4",
+        "library-insect-flight-deep-5",
+        "library-insect-flight-deep-6",
+        "library-insect-flight-deep-7",
+        "library-insect-flight-deep-8",
+        "library-insect-flight-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.si.edu/spotlight/buginfo/insect-flight",
+        "https://genent.cals.ncsu.edu/bug-bytes/thorax/wings-2/"
       ]
     }
   },
@@ -10939,6 +11915,43 @@
       "imageSpeechKeys": [
         "library-bird-feathers-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-bird-feathers-label-1",
+        "library-bird-feathers-tell-1",
+        "library-bird-feathers-tell-2",
+        "library-bird-feathers-tell-3",
+        "library-bird-feathers-more-1",
+        "library-bird-feathers-more-2",
+        "library-bird-feathers-more-3",
+        "library-bird-feathers-more-4",
+        "library-bird-feathers-more-5",
+        "library-bird-feathers-more-6",
+        "library-bird-feathers-more-7",
+        "library-bird-feathers-deep-1",
+        "library-bird-feathers-deep-2",
+        "library-bird-feathers-deep-3",
+        "library-bird-feathers-deep-4",
+        "library-bird-feathers-deep-5",
+        "library-bird-feathers-deep-6",
+        "library-bird-feathers-deep-7",
+        "library-bird-feathers-deep-8",
+        "library-bird-feathers-deep-9",
+        "library-bird-feathers-deep-10",
+        "library-bird-feathers-deep-11"
+      ],
+      "sourceUrls": [
+        "https://academy.allaboutbirds.org/feathers-article/"
+      ]
     }
   },
   "blue-sky": {
@@ -11291,6 +12304,40 @@
       ],
       "imageSpeechKeys": [
         "library-blue-sky-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-blue-sky-label-1",
+        "library-blue-sky-tell-1",
+        "library-blue-sky-tell-2",
+        "library-blue-sky-tell-3",
+        "library-blue-sky-more-1",
+        "library-blue-sky-more-2",
+        "library-blue-sky-more-3",
+        "library-blue-sky-more-4",
+        "library-blue-sky-more-5",
+        "library-blue-sky-more-6",
+        "library-blue-sky-deep-1",
+        "library-blue-sky-deep-2",
+        "library-blue-sky-deep-3",
+        "library-blue-sky-deep-4",
+        "library-blue-sky-deep-5",
+        "library-blue-sky-deep-6",
+        "library-blue-sky-deep-7",
+        "library-blue-sky-deep-8",
+        "library-blue-sky-deep-9"
+      ],
+      "sourceUrls": [
+        "https://spaceplace.nasa.gov/blue-sky/en/"
       ]
     }
   },
@@ -11657,6 +12704,41 @@
       "imageSpeechKeys": [
         "library-clouds-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-clouds-label-1",
+        "library-clouds-tell-1",
+        "library-clouds-tell-2",
+        "library-clouds-tell-3",
+        "library-clouds-more-1",
+        "library-clouds-more-2",
+        "library-clouds-more-3",
+        "library-clouds-more-4",
+        "library-clouds-more-5",
+        "library-clouds-deep-1",
+        "library-clouds-deep-2",
+        "library-clouds-deep-3",
+        "library-clouds-deep-4",
+        "library-clouds-deep-5",
+        "library-clouds-deep-6",
+        "library-clouds-deep-7",
+        "library-clouds-deep-8",
+        "library-clouds-deep-9",
+        "library-clouds-deep-10"
+      ],
+      "sourceUrls": [
+        "https://www.noaa.gov/jetstream/clouds",
+        "https://www.noaa.gov/jetstream/clouds/how-clouds-form"
+      ]
     }
   },
   "rain": {
@@ -12010,6 +13092,39 @@
       ],
       "imageSpeechKeys": [
         "library-rain-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-rain-label-1",
+        "library-rain-tell-1",
+        "library-rain-tell-2",
+        "library-rain-tell-3",
+        "library-rain-more-1",
+        "library-rain-more-2",
+        "library-rain-more-3",
+        "library-rain-more-4",
+        "library-rain-more-5",
+        "library-rain-deep-1",
+        "library-rain-deep-2",
+        "library-rain-deep-3",
+        "library-rain-deep-4",
+        "library-rain-deep-5",
+        "library-rain-deep-6",
+        "library-rain-deep-7",
+        "library-rain-deep-8",
+        "library-rain-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.usgs.gov/water-science-school/science/precipitation-and-water-cycle"
       ]
     }
   },
@@ -12378,6 +13493,42 @@
       "imageSpeechKeys": [
         "library-rainbows-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-rainbows-label-1",
+        "library-rainbows-tell-1",
+        "library-rainbows-tell-2",
+        "library-rainbows-tell-3",
+        "library-rainbows-more-1",
+        "library-rainbows-more-2",
+        "library-rainbows-more-3",
+        "library-rainbows-more-4",
+        "library-rainbows-deep-1",
+        "library-rainbows-deep-2",
+        "library-rainbows-deep-3",
+        "library-rainbows-deep-4",
+        "library-rainbows-deep-5",
+        "library-rainbows-deep-6",
+        "library-rainbows-deep-7",
+        "library-rainbows-deep-8",
+        "library-rainbows-deep-9",
+        "library-rainbows-deep-10",
+        "library-rainbows-deep-11",
+        "library-rainbows-deep-12"
+      ],
+      "sourceUrls": [
+        "https://www.weather.gov/fgz/Rainbow",
+        "https://science.nasa.gov/sun/facts/"
+      ]
     }
   },
   "wind": {
@@ -12738,6 +13889,40 @@
       ],
       "imageSpeechKeys": [
         "library-wind-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-wind-label-1",
+        "library-wind-tell-1",
+        "library-wind-tell-2",
+        "library-wind-tell-3",
+        "library-wind-more-1",
+        "library-wind-more-2",
+        "library-wind-more-3",
+        "library-wind-more-4",
+        "library-wind-more-5",
+        "library-wind-deep-1",
+        "library-wind-deep-2",
+        "library-wind-deep-3",
+        "library-wind-deep-4",
+        "library-wind-deep-5",
+        "library-wind-deep-6",
+        "library-wind-deep-7",
+        "library-wind-deep-8",
+        "library-wind-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.boulder.noaa.gov/video/what-causes-wind/",
+        "https://www.nesdis.noaa.gov/about/k-12-education/atmosphere/why-does-wind-blow"
       ]
     }
   },
@@ -13110,6 +14295,43 @@
       "imageSpeechKeys": [
         "library-lightning-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-lightning-label-1",
+        "library-lightning-tell-1",
+        "library-lightning-tell-2",
+        "library-lightning-tell-3",
+        "library-lightning-more-1",
+        "library-lightning-more-2",
+        "library-lightning-more-3",
+        "library-lightning-more-4",
+        "library-lightning-more-5",
+        "library-lightning-more-6",
+        "library-lightning-more-7",
+        "library-lightning-more-8",
+        "library-lightning-deep-1",
+        "library-lightning-deep-2",
+        "library-lightning-deep-3",
+        "library-lightning-deep-4",
+        "library-lightning-deep-5",
+        "library-lightning-deep-6",
+        "library-lightning-deep-7",
+        "library-lightning-deep-8",
+        "library-lightning-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nesdis.noaa.gov/about/k-12-education/severe-weather/what-causes-lightning-and-thunder",
+        "https://www.weather.gov/safety/lightning-indoors"
+      ]
     }
   },
   "typhoons": {
@@ -13476,6 +14698,42 @@
       "imageSpeechKeys": [
         "library-typhoons-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-typhoons-label-1",
+        "library-typhoons-tell-1",
+        "library-typhoons-tell-2",
+        "library-typhoons-tell-3",
+        "library-typhoons-more-1",
+        "library-typhoons-more-2",
+        "library-typhoons-more-3",
+        "library-typhoons-more-4",
+        "library-typhoons-more-5",
+        "library-typhoons-more-6",
+        "library-typhoons-deep-1",
+        "library-typhoons-deep-2",
+        "library-typhoons-deep-3",
+        "library-typhoons-deep-4",
+        "library-typhoons-deep-5",
+        "library-typhoons-deep-6",
+        "library-typhoons-deep-7",
+        "library-typhoons-deep-8",
+        "library-typhoons-deep-9",
+        "library-typhoons-deep-10"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/cyclone.html",
+        "https://spaceplace.nasa.gov/hurricanes/en/"
+      ]
     }
   },
   "water-cycle": {
@@ -13832,6 +15090,39 @@
       ],
       "imageSpeechKeys": [
         "library-water-cycle-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-water-cycle-label-1",
+        "library-water-cycle-tell-1",
+        "library-water-cycle-tell-2",
+        "library-water-cycle-tell-3",
+        "library-water-cycle-more-1",
+        "library-water-cycle-more-2",
+        "library-water-cycle-more-3",
+        "library-water-cycle-more-4",
+        "library-water-cycle-more-5",
+        "library-water-cycle-deep-1",
+        "library-water-cycle-deep-2",
+        "library-water-cycle-deep-3",
+        "library-water-cycle-deep-4",
+        "library-water-cycle-deep-5",
+        "library-water-cycle-deep-6",
+        "library-water-cycle-deep-7",
+        "library-water-cycle-deep-8",
+        "library-water-cycle-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.noaa.gov/education/resource-collections/freshwater/water-cycle"
       ]
     }
   },
@@ -14200,6 +15491,40 @@
       ],
       "imageSpeechKeys": [
         "library-seasons-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-seasons-label-1",
+        "library-seasons-tell-1",
+        "library-seasons-tell-2",
+        "library-seasons-tell-3",
+        "library-seasons-more-1",
+        "library-seasons-more-2",
+        "library-seasons-more-3",
+        "library-seasons-more-4",
+        "library-seasons-more-5",
+        "library-seasons-deep-1",
+        "library-seasons-deep-2",
+        "library-seasons-deep-3",
+        "library-seasons-deep-4",
+        "library-seasons-deep-5",
+        "library-seasons-deep-6",
+        "library-seasons-deep-7",
+        "library-seasons-deep-8",
+        "library-seasons-deep-9",
+        "library-seasons-deep-10"
+      ],
+      "sourceUrls": [
+        "https://spaceplace.nasa.gov/seasons/en/"
       ]
     }
   },
@@ -14574,6 +15899,42 @@
       ],
       "imageSpeechKeys": [
         "library-forecast-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-forecast-label-1",
+        "library-forecast-tell-1",
+        "library-forecast-tell-2",
+        "library-forecast-tell-3",
+        "library-forecast-more-1",
+        "library-forecast-more-2",
+        "library-forecast-more-3",
+        "library-forecast-more-4",
+        "library-forecast-more-5",
+        "library-forecast-more-6",
+        "library-forecast-deep-1",
+        "library-forecast-deep-2",
+        "library-forecast-deep-3",
+        "library-forecast-deep-4",
+        "library-forecast-deep-5",
+        "library-forecast-deep-6",
+        "library-forecast-deep-7",
+        "library-forecast-deep-8",
+        "library-forecast-deep-9",
+        "library-forecast-deep-10",
+        "library-forecast-deep-11"
+      ],
+      "sourceUrls": [
+        "https://www.noaa.gov/education/resource-collections/weather-atmosphere/weather-observations"
       ]
     }
   },
@@ -14961,6 +16322,41 @@
       "imageSpeechKeys": [
         "library-guam-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-guam-label-1",
+        "library-guam-tell-1",
+        "library-guam-tell-2",
+        "library-guam-tell-3",
+        "library-guam-more-1",
+        "library-guam-more-2",
+        "library-guam-more-3",
+        "library-guam-more-4",
+        "library-guam-more-5",
+        "library-guam-deep-1",
+        "library-guam-deep-2",
+        "library-guam-deep-3",
+        "library-guam-deep-4",
+        "library-guam-deep-5",
+        "library-guam-deep-6",
+        "library-guam-deep-7",
+        "library-guam-deep-8",
+        "library-guam-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nps.gov/wapa/learn/nature/index.htm",
+        "https://pubs.usgs.gov/pp/0403a/report.pdf",
+        "https://www.usgs.gov/centers/pcmsc/science/coral-reef-project-guam?page=1"
+      ]
     }
   },
   "islands": {
@@ -15306,6 +16702,40 @@
       ],
       "imageSpeechKeys": [
         "library-islands-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-islands-label-1",
+        "library-islands-tell-1",
+        "library-islands-tell-2",
+        "library-islands-tell-3",
+        "library-islands-more-1",
+        "library-islands-more-2",
+        "library-islands-more-3",
+        "library-islands-more-4",
+        "library-islands-more-5",
+        "library-islands-deep-1",
+        "library-islands-deep-2",
+        "library-islands-deep-3",
+        "library-islands-deep-4",
+        "library-islands-deep-5",
+        "library-islands-deep-6",
+        "library-islands-deep-7",
+        "library-islands-deep-8",
+        "library-islands-deep-9"
+      ],
+      "sourceUrls": [
+        "https://home.nps.gov/subjects/geology/geodiversity-atlas-pacific-islands-network-index.htm",
+        "https://www.usgs.gov/programs/VHP/about-volcanoes"
       ]
     }
   },
@@ -15700,6 +17130,41 @@
       "imageSpeechKeys": [
         "library-reef-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-reef-label-1",
+        "library-reef-tell-1",
+        "library-reef-tell-2",
+        "library-reef-tell-3",
+        "library-reef-more-1",
+        "library-reef-more-2",
+        "library-reef-more-3",
+        "library-reef-more-4",
+        "library-reef-more-5",
+        "library-reef-more-6",
+        "library-reef-deep-1",
+        "library-reef-deep-2",
+        "library-reef-deep-3",
+        "library-reef-deep-4",
+        "library-reef-deep-5",
+        "library-reef-deep-6",
+        "library-reef-deep-7",
+        "library-reef-deep-8",
+        "library-reef-deep-9"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/coral.html",
+        "https://oceanservice.noaa.gov/facts/coral_protect.html"
+      ]
     }
   },
   "trench": {
@@ -16083,6 +17548,42 @@
       "imageSpeechKeys": [
         "library-trench-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-trench-label-1",
+        "library-trench-tell-1",
+        "library-trench-tell-2",
+        "library-trench-tell-3",
+        "library-trench-more-1",
+        "library-trench-more-2",
+        "library-trench-more-3",
+        "library-trench-more-4",
+        "library-trench-deep-1",
+        "library-trench-deep-2",
+        "library-trench-deep-3",
+        "library-trench-deep-4",
+        "library-trench-deep-5",
+        "library-trench-deep-6",
+        "library-trench-deep-7",
+        "library-trench-deep-8",
+        "library-trench-deep-9"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/oceandepth.html",
+        "https://www.usgs.gov/publications/seismicity-earth-1900-2012-philippine-sea-plate-and-vicinity",
+        "https://oceanservice.noaa.gov/facts/pressure.html",
+        "https://oceanexplorer.noaa.gov/ocean-fact/light-distributed/",
+        "https://www.whoi.edu/ocean-learning-hub/ocean-facts/why-is-pressure-different-in-the-ocean/"
+      ]
     }
   },
   "mountains": {
@@ -16444,6 +17945,41 @@
       ],
       "imageSpeechKeys": [
         "library-mountains-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-mountains-label-1",
+        "library-mountains-tell-1",
+        "library-mountains-tell-2",
+        "library-mountains-tell-3",
+        "library-mountains-more-1",
+        "library-mountains-more-2",
+        "library-mountains-more-3",
+        "library-mountains-more-4",
+        "library-mountains-more-5",
+        "library-mountains-deep-1",
+        "library-mountains-deep-2",
+        "library-mountains-deep-3",
+        "library-mountains-deep-4",
+        "library-mountains-deep-5",
+        "library-mountains-deep-6",
+        "library-mountains-deep-7",
+        "library-mountains-deep-8",
+        "library-mountains-deep-9",
+        "library-mountains-deep-10",
+        "library-mountains-deep-11"
+      ],
+      "sourceUrls": [
+        "https://www.usgs.gov/geology-and-ecology-of-national-parks/geology-denali-national-park-and-preserve"
       ]
     }
   },
@@ -16821,6 +18357,40 @@
       "imageSpeechKeys": [
         "library-rivers-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-rivers-label-1",
+        "library-rivers-tell-1",
+        "library-rivers-tell-2",
+        "library-rivers-tell-3",
+        "library-rivers-more-1",
+        "library-rivers-more-2",
+        "library-rivers-more-3",
+        "library-rivers-more-4",
+        "library-rivers-more-5",
+        "library-rivers-deep-1",
+        "library-rivers-deep-2",
+        "library-rivers-deep-3",
+        "library-rivers-deep-4",
+        "library-rivers-deep-5",
+        "library-rivers-deep-6",
+        "library-rivers-deep-7",
+        "library-rivers-deep-8",
+        "library-rivers-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.usgs.gov/water-science-school/science/rivers-streams-and-creeks",
+        "https://www.usgs.gov/educational-resources/find-feature-meander"
+      ]
     }
   },
   "continents": {
@@ -17191,6 +18761,41 @@
       ],
       "imageSpeechKeys": [
         "library-continents-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-continents-label-1",
+        "library-continents-tell-1",
+        "library-continents-tell-2",
+        "library-continents-tell-3",
+        "library-continents-more-1",
+        "library-continents-more-2",
+        "library-continents-more-3",
+        "library-continents-more-4",
+        "library-continents-more-5",
+        "library-continents-deep-1",
+        "library-continents-deep-2",
+        "library-continents-deep-3",
+        "library-continents-deep-4",
+        "library-continents-deep-5",
+        "library-continents-deep-6",
+        "library-continents-deep-7",
+        "library-continents-deep-8",
+        "library-continents-deep-9"
+      ],
+      "sourceUrls": [
+        "https://pubs.usgs.gov/imap/2800/",
+        "https://www.usgs.gov/faqs/how-are-different-map-projections-used",
+        "https://www.usgs.gov/programs/VHP/about-volcanoes"
       ]
     }
   },
@@ -17570,6 +19175,41 @@
       "imageSpeechKeys": [
         "library-maps-image-1"
       ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-maps-label-1",
+        "library-maps-tell-1",
+        "library-maps-tell-2",
+        "library-maps-tell-3",
+        "library-maps-more-1",
+        "library-maps-more-2",
+        "library-maps-more-3",
+        "library-maps-more-4",
+        "library-maps-more-5",
+        "library-maps-more-6",
+        "library-maps-deep-1",
+        "library-maps-deep-2",
+        "library-maps-deep-3",
+        "library-maps-deep-4",
+        "library-maps-deep-5",
+        "library-maps-deep-6",
+        "library-maps-deep-7",
+        "library-maps-deep-8",
+        "library-maps-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.usgs.gov/publications/topographic-map-symbols",
+        "https://pubs.usgs.gov/of/1998/of98-805/lessons/chpt1/act3-hnd.htm"
+      ]
     }
   },
   "directions": {
@@ -17930,6 +19570,41 @@
       ],
       "imageSpeechKeys": [
         "library-directions-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-directions-label-1",
+        "library-directions-tell-1",
+        "library-directions-tell-2",
+        "library-directions-tell-3",
+        "library-directions-more-1",
+        "library-directions-more-2",
+        "library-directions-more-3",
+        "library-directions-more-4",
+        "library-directions-more-5",
+        "library-directions-more-6",
+        "library-directions-deep-1",
+        "library-directions-deep-2",
+        "library-directions-deep-3",
+        "library-directions-deep-4",
+        "library-directions-deep-5",
+        "library-directions-deep-6",
+        "library-directions-deep-7",
+        "library-directions-deep-8",
+        "library-directions-deep-9",
+        "library-directions-deep-10"
+      ],
+      "sourceUrls": [
+        "https://www.usgs.gov/faqs/what-do-different-north-arrows-a-usgs-topographic-map-mean?items_per_page=6&page=1"
       ]
     }
   },
@@ -18306,6 +19981,40 @@
       ],
       "imageSpeechKeys": [
         "library-volcanoes-image-1"
+      ]
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author source consultation and lossless Explore migration only. Independent factual, reading-content and designated family reviewer family/local-cultural review, then warm narration generation and audible review, are pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "library-volcanoes-label-1",
+        "library-volcanoes-tell-1",
+        "library-volcanoes-tell-2",
+        "library-volcanoes-tell-3",
+        "library-volcanoes-more-1",
+        "library-volcanoes-more-2",
+        "library-volcanoes-more-3",
+        "library-volcanoes-more-4",
+        "library-volcanoes-more-5",
+        "library-volcanoes-deep-1",
+        "library-volcanoes-deep-2",
+        "library-volcanoes-deep-3",
+        "library-volcanoes-deep-4",
+        "library-volcanoes-deep-5",
+        "library-volcanoes-deep-6",
+        "library-volcanoes-deep-7",
+        "library-volcanoes-deep-8",
+        "library-volcanoes-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.usgs.gov/programs/VHP/about-volcanoes",
+        "https://pubs.usgs.gov/gip/volc/nature.html"
       ]
     }
   }

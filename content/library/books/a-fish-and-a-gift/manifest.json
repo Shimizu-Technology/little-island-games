@@ -358,9 +358,10 @@
     "CREDITS.txt: retained attribution and changes"
   ],
   "review": {
-    "status": "draft",
-    "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+    "status": "in-review",
+    "reviewer": "Codex independent factual reviewer",
     "date": "2026-11-02",
-    "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+    "factualReviewer": "independent factual reviewer",
+    "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Family history, shark siren and rescue are fictional story events, not current local services or wildlife instructions. South African terms retained without adding meanings or pronunciation claims. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
   }
 }

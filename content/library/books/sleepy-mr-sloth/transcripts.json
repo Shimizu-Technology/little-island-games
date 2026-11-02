@@ -1,9 +1,10 @@
 {
   "review": {
-    "status": "draft",
-    "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+    "status": "in-review",
+    "reviewer": "Codex independent factual reviewer",
     "date": "2026-11-02",
-    "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+    "factualReviewer": "independent factual reviewer",
+    "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte. All pages and imported art reviewed. Talking animals, giraffe encounter and mixed animal community are fantasy, not natural-history claims. Original regional grammar and verse retained. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
   },
   "editionIsbn": "978-0-9922357-0-3",
   "pages": [

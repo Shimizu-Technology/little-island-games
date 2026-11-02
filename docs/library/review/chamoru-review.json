@@ -1,0 +1,60 @@
+{
+  "date": "2026-11-02",
+  "repositoryCommit": "609a8eb44c5068bf1b539221de078adeb1f20787",
+  "corpusPath": "/Users/leonshimizu/Desktop/ShimizuTechnology/HafaGPT/api/language_content/canonical_vocabulary.json",
+  "sha256": "682a3daece1082b692ef27568c127c8c381e0f74a93c6964e6be40a823dbc1cb",
+  "explicitlyTaughtTerm": {
+    "id": "family.family",
+    "category": "family",
+    "english": "Family",
+    "canonical_chamorro": "Familia",
+    "recommended_teaching_term": "Familia",
+    "normalized_key": "familia",
+    "part_of_speech": "n.",
+    "teaching_level": "beginner",
+    "review_status": "source_backed",
+    "confidence": "high",
+    "pronunciation": {
+      "guide": "fah-MEE-lee-ah",
+      "status": "needs_native_review"
+    },
+    "variants": [
+      {
+        "term": "Fåmilia",
+        "type": "source_variant",
+        "status": "source_backed",
+        "source": "chamoru_info_dictionary.json",
+        "notes": "Chamoru.info bundled source spelling."
+      }
+    ],
+    "deprecated_app_terms": [],
+    "needs_review_terms": [],
+    "source_citations": [
+      {
+        "source": "revised_and_updated_chamorro_dictionary.json",
+        "headword": "familia",
+        "definition": "family",
+        "part_of_speech": "n."
+      },
+      {
+        "source": "chamoru_info_dictionary.json",
+        "headword": "fåmilia",
+        "definition": "Family; tribe; clan; folk; category of plants or animals."
+      },
+      {
+        "source": "chamorro_english_dictionary_TOD.json",
+        "headword": "familia",
+        "definition": "family, tribe, clan, folk, category of plants or animals"
+      }
+    ],
+    "notes": "Strongly source-backed family/clan term."
+  },
+  "wordMatchesIncludingEnglishHomographs": [
+    [
+      "family.family",
+      "Familia",
+      "source_backed"
+    ]
+  ],
+  "review": "Only explicitly taught CHamoru term is Familia, exact recommended source_backed term. English homographs/name fragments are not taught translations. Native pronunciation and all local cultural judgment remain pending. HafaGPT has unrelated working-tree edits; the canonical corpus itself was not modified."
+}

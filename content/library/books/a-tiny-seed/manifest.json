@@ -355,9 +355,28 @@
     "CREDITS.txt: retained attribution and changes"
   ],
   "review": {
-    "status": "draft",
-    "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+    "status": "in-review",
+    "reviewer": "Codex independent factual reviewer",
     "date": "2026-11-02",
-    "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+    "factualReviewer": "independent factual reviewer",
+    "scope": "Independent factual and editorial review completed. Factual corrections in a labeled CC BY adaptation: school account corrected against Maathai’s own 2006 interview; national poverty and river-restoration generalizations replaced with specific community work. Published personal scenes remain the author’s biographical storytelling. Nobel facts and university biography support education, award and death. Digital designer Karen Lilje distinguished from current publisher credit Tarryn-Anne Anderson. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+  },
+  "libraryAdaptation": {
+    "title": "A Tiny Seed · Library adaptation",
+    "rights": {
+      "license": "CC-BY-4.0",
+      "creator": "Nicola Rijsdijk (writer); Maya Marshak (illustrator); Karen Lilje (digital-edition designer); Tarryn-Anne Anderson (current publisher designer credit); Book Dash; Shimizu Technology (text adaptation)",
+      "sourceUrl": "https://bookdash.org/books/a-tiny-seed/",
+      "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
+      "changes": "Little Island Library adaptation, 2026-11-02: four story pages corrected for factual scope (school, community needs, tree planting and regional spread); adaptation notice added to reading cover. Original publisher manuscript preserved in edition.md and original text in review-adaptation.json. Original illustrations unchanged. No publisher endorsement.",
+      "licenseFile": "content/library/books/CC-BY-4.0.txt"
+    },
+    "changedPages": [
+      4,
+      8,
+      9,
+      10
+    ],
+    "originalManuscript": "edition.md"
   }
 }

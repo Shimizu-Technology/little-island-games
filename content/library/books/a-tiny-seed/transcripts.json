@@ -1,16 +1,17 @@
 {
   "review": {
-    "status": "draft",
-    "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+    "status": "in-review",
+    "reviewer": "Codex independent factual reviewer",
     "date": "2026-11-02",
-    "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+    "factualReviewer": "independent factual reviewer",
+    "scope": "Independent factual and editorial review completed. Factual corrections in a labeled CC BY adaptation: school account corrected against Maathai’s own 2006 interview; national poverty and river-restoration generalizations replaced with specific community work. Published personal scenes remain the author’s biographical storytelling. Nobel facts and university biography support education, award and death. Digital designer Karen Lilje distinguished from current publisher credit Tarryn-Anne Anderson. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
   },
   "editionIsbn": "978-0-9946519-2-1",
   "pages": [
     {
       "page": 0,
       "image": "content/library/books/a-tiny-seed/page-00.jpg",
-      "text": "A Tiny Seed The Story of Wangari Maathai Nicola Rijsdijk & Maya Marshak",
+      "text": "A Tiny Seed The Story of Wangari Maathai Nicola Rijsdijk & Maya Marshak Little Island Library adaptation.",
       "artworkText": [],
       "wordless": false,
       "alt": "Front cover of A Tiny Seed.",
@@ -46,11 +47,11 @@
     {
       "page": 4,
       "image": "content/library/books/a-tiny-seed/page-04.jpg",
-      "text": "Wangari was a clever child and couldn’t wait to go to school. But her mother and father wanted her to stay and help them at home. When she was seven years old, her big brother persuaded her parents to let her go to school.",
+      "text": "Wangari’s big brother asked why she did not go to school with him. Her mother agreed to send her. Wangari later said she loved learning to read and write.",
       "artworkText": [],
       "wordless": false,
       "alt": "Wangari and her brother carry her bags to school.",
-      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+      "note": "Library factual adaptation; exact original preserved in edition.md and review-adaptation.json."
     },
     {
       "page": 5,
@@ -82,29 +83,29 @@
     {
       "page": 8,
       "image": "content/library/books/a-tiny-seed/page-08.jpg",
-      "text": "When she had finished her studies, she returned to Kenya. But her country had changed. Huge farms stretched across the land. Women had no wood to make cooking fires. The people were poor and the children were hungry.",
+      "text": "After her studies, Wangari returned to Kenya. She listened to rural women who needed firewood, food and clean water. Trees and streams that their families relied on were being lost.",
       "artworkText": [],
       "wordless": false,
       "alt": "A single buck stands in a barren field.",
-      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+      "note": "Library factual adaptation; exact original preserved in edition.md and review-adaptation.json."
     },
     {
       "page": 9,
       "image": "content/library/books/a-tiny-seed/page-09.jpg",
-      "text": "Wangari knew what to do. She taught the women how to plant trees from seeds. The women sold the trees and used the money to look after their families. The women were very happy. Wangari had helped them to feel powerful and strong.",
+      "text": "Wangari worked with women to grow and plant trees. Their work became the Green Belt Movement. Together, they cared for the land and worked to improve life in their communities.",
       "artworkText": [],
       "wordless": false,
       "alt": "Wangari shows an older woman how to plant in the earth.",
-      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+      "note": "Library factual adaptation; exact original preserved in edition.md and review-adaptation.json."
     },
     {
       "page": 10,
       "image": "content/library/books/a-tiny-seed/page-10.jpg",
-      "text": "As time passed, the new trees grew into forests, and the rivers started flowing again. Wangari’s message spread across Africa. Today, millions of trees have grown from Wangari’s seeds.",
+      "text": "The movement grew. Women and their communities planted millions of trees in Kenya. People in other African countries took up the idea too.",
       "artworkText": [],
       "wordless": false,
       "alt": "Small seedlings grow into fields of trees.",
-      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+      "note": "Library factual adaptation; exact original preserved in edition.md and review-adaptation.json."
     },
     {
       "page": 11,

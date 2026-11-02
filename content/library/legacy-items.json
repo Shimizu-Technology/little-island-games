@@ -3866,7 +3866,7 @@
     "id": "seagrass",
     "type": "topic",
     "title": "Can grass grow under the sea?",
-    "category": "ocean",
+    "category": "plants",
     "aliases": [
       "seagrass",
       "sea grass",
@@ -4095,7 +4095,7 @@
     "links": [
       {
         "kind": "item",
-        "target": "turtles",
+        "target": "turtle-breath",
         "label": "Explore: How does a sea turtle breathe?"
       },
       {
@@ -4648,8 +4648,8 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 1,
-    "id": "turtles",
+    "revision": 2,
+    "id": "turtle-breath",
     "type": "topic",
     "title": "How does a sea turtle breathe?",
     "category": "ocean",
@@ -6776,7 +6776,7 @@
     "links": [
       {
         "kind": "item",
-        "target": "turtles",
+        "target": "turtle-breath",
         "label": "Explore: How does a sea turtle breathe?"
       },
       {

@@ -1,9 +1,10 @@
 {
   "review": {
-    "status": "draft",
-    "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+    "status": "in-review",
+    "reviewer": "Codex independent factual reviewer",
     "date": "2026-11-02",
-    "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+    "factualReviewer": "independent factual reviewer",
+    "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Talking animals, racing, handstands and swimming are story events. Missing space in the publisher’s final dialogue normalized for reading. River scene remains flagged for family judgment. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
   },
   "editionIsbn": "978-1-928318-15-6",
   "pages": [
@@ -109,7 +110,7 @@
     {
       "page": 11,
       "image": "content/library/books/a-beautiful-day/page-11.jpg",
-      "text": "“Time to go home,” says Mom.“Say goodbye to Jacob.”",
+      "text": "“Time to go home,” says Mom. “Say goodbye to Jacob.”",
       "artworkText": [],
       "wordless": false,
       "alt": "Outside Jacob's house, Nicholas waves goodbye to his friend.",

@@ -2,15 +2,16 @@
   "reef-food-web": {
     "schemaVersion": 1,
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual/editorial review completed. NOAA food-web text verifies energy direction and branching; NOAA photosynthesis page verifies light-powered food production. Added Clements et al. university-hosted full paper for the parrotfish path; retained qualified many, avoiding a universal seaweed diet. Replaced technical caveat pile with a connected invitation. Population removal remains outside this model. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval."
     },
     "engine": "food-web",
     "limits": {
       "id": "reef-food-web-limits",
-      "text": "This model shows a few possible feeding connections, not every species or every meal on Guam’s reefs. Arrows point from food toward the eater to show energy transfer. Sunlight is an energy source, not an organism. Real food webs branch, change, include decomposers and can have other energy sources; this sunlit example leaves most of that out.",
+      "text": "A few possible feeding links in a sunlit reef, with arrows from food to eater. The picture leaves out most species and connections. It does not predict population changes or show every kind of energy source.",
       "speechKey": "library-reef-food-web-limits",
       "audio": {
         "status": "pending",
@@ -132,21 +133,12 @@
         },
         "narration": [
           {
-            "id": "reef-food-web-light-1",
-            "text": "Sunlight supplies energy for photosynthesis in this sunlit-ocean model.",
-            "speechKey": "library-reef-food-web-light-1",
+            "id": "reef-food-web-light-review-1",
+            "text": "Start with sunlight. Tiny ocean drifters use its energy to make food.",
+            "speechKey": "library-reef-food-web-light-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "reef-food-web-light-2",
-            "text": "Sunlight is not food that a fish can swallow.",
-            "speechKey": "library-reef-food-web-light-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -164,30 +156,12 @@
         },
         "narration": [
           {
-            "id": "reef-food-web-producer-1",
-            "text": "Phytoplankton are tiny drifting organisms.",
-            "speechKey": "library-reef-food-web-producer-1",
+            "id": "reef-food-web-producer-review-1",
+            "text": "These drifters are called phytoplankton. Many make sugars using light, water and carbon dioxide. Algae and some tiny microbes on reef surfaces make food this way too.",
+            "speechKey": "library-reef-food-web-producer-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "reef-food-web-producer-2",
-            "text": "Many use light to make food.",
-            "speechKey": "library-reef-food-web-producer-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "reef-food-web-producer-3",
-            "text": "Algae and some microbes on reef surfaces can use light to make food too.",
-            "speechKey": "library-reef-food-web-producer-3",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -205,30 +179,12 @@
         },
         "narration": [
           {
-            "id": "reef-food-web-grazer-1",
-            "text": "Some zooplankton eat phytoplankton.",
-            "speechKey": "library-reef-food-web-grazer-1",
+            "id": "reef-food-web-grazer-review-1",
+            "text": "Some tiny drifting animals, called zooplankton, eat phytoplankton. A small fish may eat the zooplankton. Join each food to its eater: the arrow follows energy through a meal.",
+            "speechKey": "library-reef-food-web-grazer-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "reef-food-web-grazer-2",
-            "text": "Some small fish eat zooplankton.",
-            "speechKey": "library-reef-food-web-grazer-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "reef-food-web-grazer-3",
-            "text": "Draw the arrow from the food toward the eater.",
-            "speechKey": "library-reef-food-web-grazer-3",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -246,30 +202,12 @@
         },
         "narration": [
           {
-            "id": "reef-food-web-predator-1",
-            "text": "A larger fish may eat a smaller fish.",
-            "speechKey": "library-reef-food-web-predator-1",
+            "id": "reef-food-web-predator-review-1",
+            "text": "A larger fish may eat the small fish. Add that connection and follow the arrows from the first food to the last eater. Different fish can have different meals.",
+            "speechKey": "library-reef-food-web-predator-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "reef-food-web-predator-2",
-            "text": "Different kinds eat different foods.",
-            "speechKey": "library-reef-food-web-predator-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "reef-food-web-predator-3",
-            "text": "This line shows one possibility, not a rule for every fish.",
-            "speechKey": "library-reef-food-web-predator-3",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -287,39 +225,12 @@
         },
         "narration": [
           {
-            "id": "reef-food-web-branch-1",
-            "text": "Many parrotfish graze on material on reef surfaces.",
-            "speechKey": "library-reef-food-web-branch-1",
+            "id": "reef-food-web-branch-review-1",
+            "text": "Now add a second path. Many parrotfish scrape tiny living food from reef surfaces. Connect the reef-surface film to the parrotfish. The picture now has branches: that is how a chain begins to become a web.",
+            "speechKey": "library-reef-food-web-branch-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "reef-food-web-branch-2",
-            "text": "Add a reef-surface-film-to-parrotfish connection.",
-            "speechKey": "library-reef-food-web-branch-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "reef-food-web-branch-3",
-            "text": "The film includes tiny living food; this is not a rule that every parrotfish eats large seaweed.",
-            "speechKey": "library-reef-food-web-branch-3",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "reef-food-web-branch-4",
-            "text": "A web can have several paths rather than one straight chain.",
-            "speechKey": "library-reef-food-web-branch-4",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -337,21 +248,12 @@
         },
         "narration": [
           {
-            "id": "reef-food-web-limits-1",
-            "text": "Real reefs include many more organisms, including decomposers.",
-            "speechKey": "library-reef-food-web-limits-1",
+            "id": "reef-food-web-limits-review-1",
+            "text": "Real reefs have many more feeding paths. Decomposers also break down remains. Which connections would you add if our picture had room?",
+            "speechKey": "library-reef-food-web-limits-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "reef-food-web-limits-2",
-            "text": "Our picture does not show every link or calculate what happens when an animal is removed.",
-            "speechKey": "library-reef-food-web-limits-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -361,15 +263,16 @@
   "water-journey": {
     "schemaVersion": 1,
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual/editorial review completed. NOAA water-cycle overview and NWS hydrology description verify surface/groundwater storage and transport; USGS precipitation page verifies cloud-drop growth and evaporation; NOAA ocean-freezing page supports salt claim. Added these specific citations because generic water-cycle page did not directly cover each claim. warm remains evaporation, not rainfall. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval."
     },
     "engine": "water-journey",
     "limits": {
       "id": "water-journey-limits",
-      "text": "These are possible changes, not a required circle or a weather forecast. Real water can stay in one store for a long time, take other routes, move in many places at once and pass through plants. Invisible water vapor is a gas; visible cloud droplets are liquid or ice. The drawing is not to scale and does not show safe drinking water.",
+      "text": "A simplified set of possible water paths. Sizes and travel times are symbolic, and plants and many other routes are left out. Water vapor is invisible; cloud drops or ice are visible. This is not a forecast or a drinking-water guide.",
       "speechKey": "library-water-journey-limits",
       "audio": {
         "status": "pending",
@@ -536,30 +439,12 @@
         },
         "narration": [
           {
-            "id": "water-journey-heat-1",
-            "text": "Some liquid water becomes invisible water vapor.",
-            "speechKey": "library-water-journey-heat-1",
+            "id": "water-journey-heat-review-1",
+            "text": "Some water at the surface becomes an invisible gas called water vapor. Energy from the Sun helps this change, called evaporation. The water left behind can stay in the sea.",
+            "speechKey": "library-water-journey-heat-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-heat-2",
-            "text": "The Sun supplies energy for much evaporation.",
-            "speechKey": "library-water-journey-heat-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-heat-3",
-            "text": "Not all the ocean turns into vapor at once.",
-            "speechKey": "library-water-journey-heat-3",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -577,30 +462,12 @@
         },
         "narration": [
           {
-            "id": "water-journey-freeze-1",
-            "text": "Liquid water can freeze into solid ice.",
-            "speechKey": "library-water-journey-freeze-1",
+            "id": "water-journey-freeze-review-1",
+            "text": "Cool liquid water enough and it can freeze into ice. Salt makes seawater freeze at a lower temperature than fresh water. Our model skips the wait and temperature measurements.",
+            "speechKey": "library-water-journey-freeze-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-freeze-2",
-            "text": "Salty seawater freezes at a lower temperature than pure water.",
-            "speechKey": "library-water-journey-freeze-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-freeze-3",
-            "text": "Our picture skips the temperature and time details.",
-            "speechKey": "library-water-journey-freeze-3",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -618,21 +485,12 @@
         },
         "narration": [
           {
-            "id": "water-journey-cool-1",
-            "text": "When water vapor cools enough, it can condense into tiny liquid droplets.",
-            "speechKey": "library-water-journey-cool-1",
+            "id": "water-journey-cool-review-1",
+            "text": "As moist air cools enough, some water vapor turns into tiny liquid drops. This is condensation. Many drops together make a visible cloud; clouds can also contain ice.",
+            "speechKey": "library-water-journey-cool-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-cool-2",
-            "text": "Clouds contain tiny droplets, ice crystals or both; they are not bags of invisible gas.",
-            "speechKey": "library-water-journey-cool-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -650,30 +508,12 @@
         },
         "narration": [
           {
-            "id": "water-journey-grow-1",
-            "text": "Cloud particles can grow and fall.",
-            "speechKey": "library-water-journey-grow-1",
+            "id": "water-journey-grow-review-1",
+            "text": "Tiny cloud drops can join and grow. Once they fall fast enough to leave the cloud, they become rain. Ice crystals can grow and fall too.",
+            "speechKey": "library-water-journey-grow-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-grow-2",
-            "text": "In warm conditions, falling liquid drops are rain.",
-            "speechKey": "library-water-journey-grow-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-grow-3",
-            "text": "Clouds do not squeeze themselves like a sponge.",
-            "speechKey": "library-water-journey-grow-3",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -691,21 +531,12 @@
         },
         "narration": [
           {
-            "id": "water-journey-warm-1",
-            "text": "Cloud droplets can evaporate back into invisible water vapor.",
-            "speechKey": "library-water-journey-warm-1",
+            "id": "water-journey-warm-review-1",
+            "text": "Cloud droplets can evaporate back into invisible water vapor. Try this path: a cloud can shrink away before it makes rain.",
+            "speechKey": "library-water-journey-warm-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-warm-2",
-            "text": "Water can take many paths; a cloud does not have to become rain.",
-            "speechKey": "library-water-journey-warm-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -723,30 +554,12 @@
         },
         "narration": [
           {
-            "id": "water-journey-soak-1",
-            "text": "Some rain soaks into the ground through pores and cracks.",
-            "speechKey": "library-water-journey-soak-1",
+            "id": "water-journey-soak-review-1",
+            "text": "Rain can soak into soil and cracks in rock. Some stays near plant roots. Some travels deeper, through spaces that let water pass.",
+            "speechKey": "library-water-journey-soak-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-soak-2",
-            "text": "Some water stays near roots and some moves deeper.",
-            "speechKey": "library-water-journey-soak-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-soak-3",
-            "text": "Not every rock passes water at the same rate.",
-            "speechKey": "library-water-journey-soak-3",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -764,21 +577,12 @@
         },
         "narration": [
           {
-            "id": "water-journey-runoff-1",
-            "text": "Some water flows over the land toward streams and the sea.",
-            "speechKey": "library-water-journey-runoff-1",
+            "id": "water-journey-runoff-review-1",
+            "text": "Water that flows over the ground is called runoff. Follow it downhill toward a stream or the sea. The shape and surface of the land help set its path.",
+            "speechKey": "library-water-journey-runoff-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-runoff-2",
-            "text": "The path depends on the land, rain and surfaces it meets.",
-            "speechKey": "library-water-journey-runoff-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -796,30 +600,12 @@
         },
         "narration": [
           {
-            "id": "water-journey-flow-1",
-            "text": "Some groundwater moves toward the ocean.",
-            "speechKey": "library-water-journey-flow-1",
+            "id": "water-journey-flow-review-1",
+            "text": "Water underground can move through connected pores and cracks. Some reaches the ocean; some stays stored much longer than our quick picture shows.",
+            "speechKey": "library-water-journey-flow-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-flow-2",
-            "text": "Other water remains stored or is taken up by plants.",
-            "speechKey": "library-water-journey-flow-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-flow-3",
-            "text": "This step is not a claim that groundwater flows instantly.",
-            "speechKey": "library-water-journey-flow-3",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -837,21 +623,12 @@
         },
         "narration": [
           {
-            "id": "water-journey-melt-1",
-            "text": "Solid ice can melt into liquid water.",
-            "speechKey": "library-water-journey-melt-1",
+            "id": "water-journey-melt-review-1",
+            "text": "Add enough heat and ice melts into liquid water. Freezing and melting change how the water molecules are arranged; they are still water.",
+            "speechKey": "library-water-journey-melt-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-melt-2",
-            "text": "Freezing and melting change water’s state, not its chemical identity.",
-            "speechKey": "library-water-journey-melt-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -869,21 +646,12 @@
         },
         "narration": [
           {
-            "id": "water-journey-limits-1",
-            "text": "A water journey has no single starting place or fixed travel time.",
-            "speechKey": "library-water-journey-limits-1",
+            "id": "water-journey-limits-review-1",
+            "text": "Choose a new route. Water can move through plants, air, ground and sea, with many different stops along the way. A real journey has no set starting point or travel time.",
+            "speechKey": "library-water-journey-limits-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "water-journey-limits-2",
-            "text": "Try another path and compare what our model includes and leaves out.",
-            "speechKey": "library-water-journey-limits-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -893,15 +661,16 @@
   "night-sky": {
     "schemaVersion": 1,
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual/editorial review completed. NASA constellation page verifies imagined lines, unequal star distances, location/hour/year visibility; NASA seasons page verifies rotation and orbit. Added NASA blue-sky page for scattering. Invented-star limitation retained; no traditional navigation or current sky claims. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval."
     },
     "engine": "night-sky",
     "limits": {
       "id": "night-sky-limits",
-      "text": "This is an invented sky model, not tonight’s view from Guam, a star finder or a navigation tool. Dots, distances and brightness are symbolic; connecting lines are imagined. Earth’s rotation changes the view over a night, its orbit changes seasonal views, and location changes the visible sky. No Sun-looking or outdoor activity is needed.",
+      "text": "An invented sky, with symbolic stars, brightness and distances. Imagined lines join dots. Earth’s rotation changes a night’s view; its orbit changes seasonal views. This is not tonight’s Guam sky or a navigation chart.",
       "speechKey": "library-night-sky-limits",
       "audio": {
         "status": "pending",
@@ -978,21 +747,12 @@
         },
         "narration": [
           {
-            "id": "night-sky-day-1",
-            "text": "The marked place faces the Sun in this position.",
-            "speechKey": "library-night-sky-day-1",
+            "id": "night-sky-day-review-1",
+            "text": "Our marked place faces the Sun. Sunlight scattered by the air makes a bright daytime sky, so most other stars are hard to see. They are still there.",
+            "speechKey": "library-night-sky-day-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "night-sky-day-2",
-            "text": "Daylight makes most other stars hard to see, but those stars have not disappeared.",
-            "speechKey": "library-night-sky-day-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -1010,21 +770,12 @@
         },
         "narration": [
           {
-            "id": "night-sky-turn-1",
-            "text": "Turn Earth so the marked place faces away from the Sun.",
-            "speechKey": "library-night-sky-turn-1",
+            "id": "night-sky-turn-review-1",
+            "text": "Turn Earth until our place faces away from the Sun. The view grows dark because Earth turns, rather than the Sun going around Earth each day.",
+            "speechKey": "library-night-sky-turn-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "night-sky-turn-2",
-            "text": "The Sun does not circle our planet to switch the light off.",
-            "speechKey": "library-night-sky-turn-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -1042,21 +793,12 @@
         },
         "narration": [
           {
-            "id": "night-sky-night-1",
-            "text": "As Earth keeps turning, the stars seem to move across the view.",
-            "speechKey": "library-night-sky-night-1",
+            "id": "night-sky-night-review-1",
+            "text": "Keep turning Earth and watch the stars appear to shift. Our place is turning with the ground beneath it. Stop at any step to compare the view.",
+            "speechKey": "library-night-sky-night-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "night-sky-night-2",
-            "text": "This model changes in chosen steps so you can stop and look.",
-            "speechKey": "library-night-sky-night-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -1074,21 +816,12 @@
         },
         "narration": [
           {
-            "id": "night-sky-pattern-1",
-            "text": "Connect a few dots to make an invented shape.",
-            "speechKey": "library-night-sky-pattern-1",
+            "id": "night-sky-pattern-review-1",
+            "text": "Choose a few star dots and join them into a shape. The lines belong to your picture. Real stars that appear near one another in the sky can be far apart in space.",
+            "speechKey": "library-night-sky-pattern-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "night-sky-pattern-2",
-            "text": "Real stars are not joined by those lines and can lie at different distances.",
-            "speechKey": "library-night-sky-pattern-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -1106,21 +839,12 @@
         },
         "narration": [
           {
-            "id": "night-sky-season-1",
-            "text": "As Earth orbits the Sun, the night-facing direction changes.",
-            "speechKey": "library-night-sky-season-1",
+            "id": "night-sky-season-review-1",
+            "text": "Move Earth to another part of its path around the Sun. The night side now faces a different part of space. The stars people can see also depend on their place on Earth and the time of night.",
+            "speechKey": "library-night-sky-season-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "night-sky-season-2",
-            "text": "Which constellations you can see also depends on your location and the hour.",
-            "speechKey": "library-night-sky-season-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]
@@ -1138,21 +862,12 @@
         },
         "narration": [
           {
-            "id": "night-sky-limits-1",
-            "text": "These star dots do not show today’s date, real directions or exact star positions.",
-            "speechKey": "library-night-sky-limits-1",
+            "id": "night-sky-limits-review-1",
+            "text": "Make a pattern of your own. These dots are invented, so the picture cannot tell you which stars are over Guam tonight.",
+            "speechKey": "library-night-sky-limits-review-1",
             "audio": {
               "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
-            }
-          },
-          {
-            "id": "night-sky-limits-2",
-            "text": "Use the picture to ask questions, not to find your way.",
-            "speechKey": "library-night-sky-limits-2",
-            "audio": {
-              "status": "pending",
-              "reason": "Independent text review and warm neural recording/receipt/pronunciation review pending."
+              "reason": "Family review, warm recording and audible review pending after independent factual/editorial revision."
             }
           }
         ]

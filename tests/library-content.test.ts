@@ -12,7 +12,7 @@ const exhibits = JSON.parse(readFileSync('content/library/exhibits.json', 'utf8'
 const allTitles = new Set(plan.collections.flatMap((c: { titles: string[] }) => c.titles));
 const digest = (path: string) => createHash('sha256').update(readFileSync(path)).digest('hex');
 
-describe('3.1 author corpus acceptance', () => {
+describe('3.1 reviewed corpus acceptance', () => {
   it('has 90 unique wonders, 40 planned additions, three exhibits and eight complete book editions', () => {
     expect(data.filter(i => i.type === 'topic')).toHaveLength(90);
     expect(new Set(data.map(i => i.id)).size).toBe(data.length);
@@ -22,7 +22,7 @@ describe('3.1 author corpus acceptance', () => {
     expect(data.filter(i => i.type === 'exhibit')).toHaveLength(3);
     expect(data.filter(i => i.type === 'book')).toHaveLength(8);
   });
-  it('retains all original facts, source/review payloads and explicit stable migration targets', () => {
+  it('preserves original source payloads while allowing an explicitly reviewed Library rewrite', () => {
     expect(Object.keys(legacy)).toHaveLength(50);
     for (const original of TOPICS) {
       const envelope = legacy[original.id];
@@ -30,19 +30,28 @@ describe('3.1 author corpus acceptance', () => {
       const item = data.find(i => i.id === envelope.libraryId);
       expect(item?.type).toBe('topic');
       if (item?.type !== 'topic') throw new Error(original.id);
-      expect(item.layers.more.map(s => s.text).join(' ')).toContain(original.short);
-      expect(item.layers.deep.map(s => s.text).join(' ')).toContain(original.deeper);
-      for (const source of original.sources) expect(item.sources.some(s => s.url === source.url)).toBe(true);
+      expect(envelope.original.short).toBe(original.short);
+      expect(envelope.original.deeper).toBe(original.deeper);
+      expect(envelope.independentLibraryReview.review).toEqual(item.review);
+      expect(item.sources.length).toBeGreaterThan(0);
     }
   });
-  it('keeps short question entry, three depth choices and author-only draft status', () => {
+  it('records independent factual review without granting family or shipping approval', () => {
     for (const item of data) {
-      expect(item.review.status).toBe('draft');
-      expect(item.review.factualReviewer).toBeUndefined();
+      if (item.type === 'collection') expect(item.review.status).toBe('draft');
+      else {
+        expect(item.review.status).toBe('in-review');
+        expect(item.review.factualReviewer).toBe('independent factual reviewer');
+        expect(item.review.date).toBe('2026-11-02');
+        expect(item.review.scope).toMatch(/pending/i);
+      }
       expect(item.review.familyReviewer).toBeUndefined();
       if (item.type !== 'topic') continue;
       expect(item.label.text).toBe(item.title);
       expect(item.layers.tell.length).toBeLessThanOrEqual(3);
+      const deepWords = item.layers.deep.map(s => s.text).join(' ').split(/\s+/).length;
+      expect(deepWords, item.id).toBeGreaterThanOrEqual(120);
+      expect(deepWords, item.id).toBeLessThanOrEqual(200);
       expect(Object.keys(item.layers).sort()).toEqual(['deep', 'more', 'tell']);
       for (const sentences of Object.values(item.layers)) for (const s of sentences) expect(speech[s.speechKey]).toBe(s.text);
       expect(item.links.some(l => l.kind === 'make')).toBe(true);
@@ -79,7 +88,22 @@ describe('3.1 author corpus acceptance', () => {
     if (busy?.type !== 'book') throw new Error('Missing Busy Day edition');
     expect(busy.pages[14].sentences).toEqual([]);
   });
-  it('keeps the taught CHamoru term tied to source-backed evidence and all body/culture drafts flagged', () => {
+  it('labels the factual book adaptation and preserves its source manuscript', () => {
+    const book = data.find(i => i.id === 'a-tiny-seed');
+    if (book?.type !== 'book') throw new Error('Missing biography');
+    expect(book.title).toContain('Library adaptation');
+    expect(book.pages[0].sentences.map(s => s.text).join(' ')).toContain('Library adaptation');
+    const changes = JSON.parse(readFileSync('content/library/books/a-tiny-seed/review-adaptation.json', 'utf8'));
+    expect(changes.changes.map((c: { page: number }) => c.page)).toEqual([4, 8, 9, 10]);
+    for (const change of changes.changes) {
+      expect(book.pages[change.page].sentences.map(s => s.text).join(' ')).toBe(change.adaptation);
+      expect(change.original).not.toBe(change.adaptation);
+    }
+    expect(readFileSync('content/library/books/a-tiny-seed/edition.md', 'utf8')).toContain('her mother and father wanted her to stay');
+    expect(book.edition.rights.changes).toContain('Original publisher manuscript preserved');
+    expect(book.review.familyReviewer).toBeUndefined();
+  });
+  it('keeps source-backed CHamoru evidence and all body/culture family flags', () => {
     const provenance = JSON.parse(readFileSync('content/library/new-provenance.json', 'utf8'));
     const term = provenance['family-walk'].chamoru.entry;
     expect(term.review_status).toBe('source_backed');

@@ -4,105 +4,583 @@
     "planTitle": "How does a fish breathe?",
     "makePrompt": "Draw a fish with water passing over its gills",
     "motif": "fish",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "fish-gills-label",
+        "fish-gills-tell-1",
+        "fish-gills-tell-2",
+        "fish-gills-tell-3",
+        "fish-gills-more-1",
+        "fish-gills-more-2",
+        "fish-gills-more-3",
+        "fish-gills-more-4",
+        "fish-gills-more-5",
+        "fish-gills-deep-1",
+        "fish-gills-deep-2",
+        "fish-gills-deep-3",
+        "fish-gills-deep-4",
+        "fish-gills-deep-5",
+        "fish-gills-deep-6",
+        "fish-gills-deep-7"
+      ],
+      "sourceUrls": [
+        "https://marinewaters.fish.wa.gov.au/resource/fish-anatomy/"
+      ]
+    }
   },
   "crab-shells": {
     "origin": "new",
     "planTitle": "Why do crabs have shells?",
     "makePrompt": "Draw a crab beside its old empty coat",
     "motif": "crab",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "crab-shells-label",
+        "crab-shells-tell-1",
+        "crab-shells-tell-2",
+        "crab-shells-tell-3",
+        "crab-shells-more-1",
+        "crab-shells-more-2",
+        "crab-shells-more-3",
+        "crab-shells-more-4",
+        "crab-shells-more-5",
+        "crab-shells-deep-1",
+        "crab-shells-deep-2",
+        "crab-shells-deep-3",
+        "crab-shells-deep-4",
+        "crab-shells-deep-5",
+        "crab-shells-deep-6",
+        "crab-shells-deep-7"
+      ],
+      "sourceUrls": [
+        "https://www.fisheries.noaa.gov/alaska/science-data/alaska-shellfish-growth-research",
+        "https://nationalzoo.si.edu/animals/land-hermit-crab"
+      ]
+    }
   },
   "parrotfish": {
     "origin": "new",
     "planTitle": "What do parrotfish eat?",
     "makePrompt": "Draw a reef bite becoming tiny sand grains",
     "motif": "parrotfish",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "parrotfish-label",
+        "parrotfish-tell-1",
+        "parrotfish-tell-2",
+        "parrotfish-tell-3",
+        "parrotfish-more-1",
+        "parrotfish-more-2",
+        "parrotfish-more-3",
+        "parrotfish-more-4",
+        "parrotfish-deep-1",
+        "parrotfish-deep-2",
+        "parrotfish-deep-3",
+        "parrotfish-deep-4",
+        "parrotfish-deep-5",
+        "parrotfish-deep-6",
+        "parrotfish-deep-7"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/sand.html",
+        "https://onlinelibrary.wiley.com/doi/10.1111/bij.12914"
+      ]
+    }
   },
   "tide-pool": {
     "origin": "new",
     "planTitle": "Who lives in a tide pool?",
     "makePrompt": "Make a tide-pool picture with hiding places",
     "motif": "pool",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "tide-pool-label",
+        "tide-pool-tell-1",
+        "tide-pool-tell-2",
+        "tide-pool-tell-3",
+        "tide-pool-more-1",
+        "tide-pool-more-2",
+        "tide-pool-more-3",
+        "tide-pool-more-4",
+        "tide-pool-deep-1",
+        "tide-pool-deep-2",
+        "tide-pool-deep-3",
+        "tide-pool-deep-4",
+        "tide-pool-deep-5",
+        "tide-pool-deep-6",
+        "tide-pool-deep-7",
+        "tide-pool-deep-8"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/tide-pool.html"
+      ]
+    }
   },
   "beach-sand": {
     "origin": "new",
     "planTitle": "Where does beach sand come from?",
     "makePrompt": "Draw three possible sources of beach grains",
     "motif": "sand",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "beach-sand-label",
+        "beach-sand-tell-1",
+        "beach-sand-tell-2",
+        "beach-sand-tell-3",
+        "beach-sand-more-1",
+        "beach-sand-more-2",
+        "beach-sand-more-3",
+        "beach-sand-more-4",
+        "beach-sand-more-5",
+        "beach-sand-deep-1",
+        "beach-sand-deep-2",
+        "beach-sand-deep-3",
+        "beach-sand-deep-4",
+        "beach-sand-deep-5",
+        "beach-sand-deep-6",
+        "beach-sand-deep-7",
+        "beach-sand-deep-8"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/sand.html"
+      ]
+    }
   },
   "mangrove-roots": {
     "origin": "new",
     "planTitle": "Why are mangroves important?",
     "makePrompt": "Draw a root shelter for a small fish",
     "motif": "mangrove",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "mangrove-roots-label",
+        "mangrove-roots-tell-1",
+        "mangrove-roots-tell-2",
+        "mangrove-roots-tell-3",
+        "mangrove-roots-more-1",
+        "mangrove-roots-more-2",
+        "mangrove-roots-more-3",
+        "mangrove-roots-more-4",
+        "mangrove-roots-more-5",
+        "mangrove-roots-deep-1",
+        "mangrove-roots-deep-2",
+        "mangrove-roots-deep-3",
+        "mangrove-roots-deep-4",
+        "mangrove-roots-deep-5",
+        "mangrove-roots-deep-6",
+        "mangrove-roots-deep-7"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/mangroves.html"
+      ]
+    }
   },
   "jellyfish-move": {
     "origin": "new",
     "planTitle": "How do jellyfish move?",
     "makePrompt": "Draw three shapes of a pulsing jellyfish bell",
     "motif": "jelly",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "jellyfish-move-label",
+        "jellyfish-move-tell-1",
+        "jellyfish-move-tell-2",
+        "jellyfish-move-tell-3",
+        "jellyfish-move-more-1",
+        "jellyfish-move-more-2",
+        "jellyfish-move-more-3",
+        "jellyfish-move-more-4",
+        "jellyfish-move-more-5",
+        "jellyfish-move-deep-1",
+        "jellyfish-move-deep-2",
+        "jellyfish-move-deep-3",
+        "jellyfish-move-deep-4",
+        "jellyfish-move-deep-5",
+        "jellyfish-move-deep-6",
+        "jellyfish-move-deep-7"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/jellyfish.html"
+      ]
+    }
   },
   "whale-song": {
     "origin": "new",
     "planTitle": "Why do whales sing?",
     "makePrompt": "Draw a whale song as a repeating pattern",
     "motif": "whale",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "whale-song-label",
+        "whale-song-tell-1",
+        "whale-song-tell-2",
+        "whale-song-tell-3",
+        "whale-song-more-1",
+        "whale-song-more-2",
+        "whale-song-more-3",
+        "whale-song-more-4",
+        "whale-song-more-5",
+        "whale-song-deep-1",
+        "whale-song-deep-2",
+        "whale-song-deep-3",
+        "whale-song-deep-4",
+        "whale-song-deep-5",
+        "whale-song-deep-6",
+        "whale-song-deep-7",
+        "whale-song-deep-8"
+      ],
+      "sourceUrls": [
+        "https://www.fisheries.noaa.gov/species/humpback-whale"
+      ]
+    }
   },
   "guam-made": {
     "origin": "new",
     "planTitle": "How was Guam made?",
     "makePrompt": "Make a two-rock map of Guam",
     "motif": "island",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "guam-made-label",
+        "guam-made-tell-1",
+        "guam-made-tell-2",
+        "guam-made-tell-3",
+        "guam-made-more-1",
+        "guam-made-more-2",
+        "guam-made-more-3",
+        "guam-made-more-4",
+        "guam-made-more-5",
+        "guam-made-deep-1",
+        "guam-made-deep-2",
+        "guam-made-deep-3",
+        "guam-made-deep-4",
+        "guam-made-deep-5",
+        "guam-made-deep-6",
+        "guam-made-deep-7"
+      ],
+      "sourceUrls": [
+        "https://pubs.usgs.gov/wri/wri034126/htdocs/wrir03-4126.html"
+      ]
+    }
   },
   "limestone": {
     "origin": "new",
     "planTitle": "What is limestone?",
     "makePrompt": "Draw shell bits inside an imaginary rock",
     "motif": "limestone",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "limestone-label",
+        "limestone-tell-1",
+        "limestone-tell-2",
+        "limestone-tell-3",
+        "limestone-more-1",
+        "limestone-more-2",
+        "limestone-more-3",
+        "limestone-more-4",
+        "limestone-more-5",
+        "limestone-deep-1",
+        "limestone-deep-2",
+        "limestone-deep-3",
+        "limestone-deep-4",
+        "limestone-deep-5",
+        "limestone-deep-6",
+        "limestone-deep-7",
+        "limestone-deep-8"
+      ],
+      "sourceUrls": [
+        "https://pubs.usgs.gov/wri/wri034126/htdocs/wrir03-4126.html",
+        "https://pubs.usgs.gov/fs/2008/3089/"
+      ]
+    }
   },
   "guam-rail": {
     "origin": "new",
     "planTitle": "What is the Guam rail?",
     "makePrompt": "Draw a sheltered home for a ground bird",
     "motif": "rail",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "guam-rail-label",
+        "guam-rail-tell-1",
+        "guam-rail-tell-2",
+        "guam-rail-tell-3",
+        "guam-rail-more-1",
+        "guam-rail-more-2",
+        "guam-rail-more-3",
+        "guam-rail-more-4",
+        "guam-rail-more-5",
+        "guam-rail-deep-1",
+        "guam-rail-deep-2",
+        "guam-rail-deep-3",
+        "guam-rail-deep-4",
+        "guam-rail-deep-5",
+        "guam-rail-deep-6",
+        "guam-rail-deep-7"
+      ],
+      "sourceUrls": [
+        "https://www.nationalzoo.si.edu/animals/guam-rail-koko",
+        "https://www.usgs.gov/news/featured-story/usgs-brown-treesnake-research-continues-guam-national-wildlife-refuge"
+      ]
+    }
   },
   "limestone-forest": {
     "origin": "new",
     "planTitle": "What is a limestone forest?",
     "makePrompt": "Draw the high and low layers of a forest",
     "motif": "forest",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "limestone-forest-label",
+        "limestone-forest-tell-1",
+        "limestone-forest-tell-2",
+        "limestone-forest-tell-3",
+        "limestone-forest-more-1",
+        "limestone-forest-more-2",
+        "limestone-forest-more-3",
+        "limestone-forest-more-4",
+        "limestone-forest-deep-1",
+        "limestone-forest-deep-2",
+        "limestone-forest-deep-3",
+        "limestone-forest-deep-4",
+        "limestone-forest-deep-5",
+        "limestone-forest-deep-6",
+        "limestone-forest-deep-7",
+        "limestone-forest-deep-8"
+      ],
+      "sourceUrls": [
+        "https://www.fws.gov/apps/rivers/carp/carp/project/native-limestone-forest-restoration-and-enhancement",
+        "https://pubs.usgs.gov/wri/wri034126/htdocs/wrir03-4126.html"
+      ]
+    }
   },
   "drinking-water": {
     "origin": "new",
     "planTitle": "Where does our drinking water come from?",
     "makePrompt": "Draw rain, rock, a well and a tap",
     "motif": "aquifer",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "drinking-water-label",
+        "drinking-water-tell-1",
+        "drinking-water-tell-2",
+        "drinking-water-tell-3",
+        "drinking-water-more-1",
+        "drinking-water-more-2",
+        "drinking-water-more-3",
+        "drinking-water-more-4",
+        "drinking-water-more-5",
+        "drinking-water-more-6",
+        "drinking-water-deep-1",
+        "drinking-water-deep-2",
+        "drinking-water-deep-3",
+        "drinking-water-deep-4",
+        "drinking-water-deep-5",
+        "drinking-water-deep-6",
+        "drinking-water-deep-7"
+      ],
+      "sourceUrls": [
+        "https://pubs.usgs.gov/wri/wri034126/htdocs/wrir03-4126.html",
+        "https://www.usgs.gov/publications/effects-withdrawals-and-drought-groundwater-availability-northern-guam-lens-aquifer"
+      ]
+    }
   },
   "village": {
     "origin": "new",
     "planTitle": "What is a village?",
     "makePrompt": "Make a page about a place your family chooses",
     "motif": "village",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "village-label",
+        "village-tell-1",
+        "village-tell-2",
+        "village-tell-3",
+        "village-more-1",
+        "village-more-2",
+        "village-more-3",
+        "village-more-4",
+        "village-more-5",
+        "village-deep-1",
+        "village-deep-2",
+        "village-deep-3",
+        "village-deep-4",
+        "village-deep-5",
+        "village-deep-6",
+        "village-deep-7",
+        "village-deep-8"
+      ],
+      "sourceUrls": [
+        "https://mcog.guam.gov/villages-list",
+        "https://www.visitguam.com/about-guam/villages/"
+      ]
+    }
   },
   "native-trees": {
     "origin": "new",
     "planTitle": "Why are native trees important?",
     "makePrompt": "Draw a tree with food, shade and shelter",
     "motif": "tree",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "native-trees-label",
+        "native-trees-tell-1",
+        "native-trees-tell-2",
+        "native-trees-tell-3",
+        "native-trees-more-1",
+        "native-trees-more-2",
+        "native-trees-more-3",
+        "native-trees-more-4",
+        "native-trees-more-5",
+        "native-trees-deep-1",
+        "native-trees-deep-2",
+        "native-trees-deep-3",
+        "native-trees-deep-4",
+        "native-trees-deep-5",
+        "native-trees-deep-6",
+        "native-trees-deep-7",
+        "native-trees-deep-8",
+        "native-trees-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.fws.gov/apps/rivers/carp/carp/project/native-limestone-forest-restoration-and-enhancement"
+      ]
+    }
   },
   "family-walk": {
     "origin": "new",
@@ -160,6 +638,37 @@
         "notes": "Strongly source-backed family/clan term."
       },
       "pronunciationReview": "pending; do not mark source-backed as pronunciation approval"
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "family-walk-label",
+        "family-walk-tell-1",
+        "family-walk-tell-2",
+        "family-walk-tell-3",
+        "family-walk-more-1",
+        "family-walk-more-2",
+        "family-walk-more-3",
+        "family-walk-more-4",
+        "family-walk-deep-1",
+        "family-walk-deep-2",
+        "family-walk-deep-3",
+        "family-walk-deep-4",
+        "family-walk-deep-5",
+        "family-walk-deep-6",
+        "family-walk-deep-7"
+      ],
+      "sourceUrls": [
+        "https://www.nps.gov/articles/leave-no-trace-seven-principles.htm",
+        "https://github.com/Shimizu-Technology/HafaGPT/blob/609a8eb44c5068bf1b539221de078adeb1f20787/api/language_content/canonical_vocabulary.json"
+      ]
     }
   },
   "distant-stars": {
@@ -167,167 +676,925 @@
     "planTitle": "Why do stars look tiny?",
     "makePrompt": "Draw the same star near and far",
     "motif": "star-distance",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "distant-stars-label",
+        "distant-stars-tell-1",
+        "distant-stars-tell-2",
+        "distant-stars-tell-3",
+        "distant-stars-more-1",
+        "distant-stars-more-2",
+        "distant-stars-more-3",
+        "distant-stars-more-4",
+        "distant-stars-deep-1",
+        "distant-stars-deep-2",
+        "distant-stars-deep-3",
+        "distant-stars-deep-4",
+        "distant-stars-deep-5",
+        "distant-stars-deep-6",
+        "distant-stars-deep-7",
+        "distant-stars-deep-8"
+      ],
+      "sourceUrls": [
+        "https://spaceplace.nasa.gov/all-about-the-sun/en/",
+        "https://spaceplace.nasa.gov/light-year/en/"
+      ]
+    }
   },
   "shadow": {
     "origin": "new",
     "planTitle": "What is a shadow?",
     "makePrompt": "Make a page of three shadow shapes",
     "motif": "shadow",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "shadow-label",
+        "shadow-tell-1",
+        "shadow-tell-2",
+        "shadow-tell-3",
+        "shadow-more-1",
+        "shadow-more-2",
+        "shadow-more-3",
+        "shadow-more-4",
+        "shadow-more-5",
+        "shadow-deep-1",
+        "shadow-deep-2",
+        "shadow-deep-3",
+        "shadow-deep-4",
+        "shadow-deep-5",
+        "shadow-deep-6",
+        "shadow-deep-7"
+      ],
+      "sourceUrls": [
+        "https://hte.si.edu/shadows.html",
+        "https://spaceplace.nasa.gov/seasons/en/"
+      ]
+    }
   },
   "constellation": {
     "origin": "new",
     "planTitle": "What is a constellation?",
     "makePrompt": "Join drawn star dots into your own invented shape",
     "motif": "constellation",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "constellation-label",
+        "constellation-tell-1",
+        "constellation-tell-2",
+        "constellation-tell-3",
+        "constellation-more-1",
+        "constellation-more-2",
+        "constellation-more-3",
+        "constellation-more-4",
+        "constellation-more-5",
+        "constellation-deep-1",
+        "constellation-deep-2",
+        "constellation-deep-3",
+        "constellation-deep-4",
+        "constellation-deep-5",
+        "constellation-deep-6",
+        "constellation-deep-7"
+      ],
+      "sourceUrls": [
+        "https://spaceplace.nasa.gov/constellations/en/"
+      ]
+    }
   },
   "night-view": {
     "origin": "new",
     "planTitle": "Why does the sky look different at night?",
     "makePrompt": "Draw daytime and nighttime views from one safe place",
     "motif": "night",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "night-view-label",
+        "night-view-tell-1",
+        "night-view-tell-2",
+        "night-view-tell-3",
+        "night-view-more-1",
+        "night-view-more-2",
+        "night-view-more-3",
+        "night-view-more-4",
+        "night-view-deep-1",
+        "night-view-deep-2",
+        "night-view-deep-3",
+        "night-view-deep-4",
+        "night-view-deep-5",
+        "night-view-deep-6"
+      ],
+      "sourceUrls": [
+        "https://spaceplace.nasa.gov/constellations/en/",
+        "https://spaceplace.nasa.gov/blue-sky/en/"
+      ]
+    }
   },
   "telescope": {
     "origin": "new",
     "planTitle": "What is a telescope?",
     "makePrompt": "Design a telescope and label its light-gathering part",
     "motif": "telescope",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "telescope-label",
+        "telescope-tell-1",
+        "telescope-tell-2",
+        "telescope-tell-3",
+        "telescope-more-1",
+        "telescope-more-2",
+        "telescope-more-3",
+        "telescope-more-4",
+        "telescope-more-5",
+        "telescope-deep-1",
+        "telescope-deep-2",
+        "telescope-deep-3",
+        "telescope-deep-4",
+        "telescope-deep-5",
+        "telescope-deep-6",
+        "telescope-deep-7"
+      ],
+      "sourceUrls": [
+        "https://spaceplace.nasa.gov/telescopes/en/"
+      ]
+    }
   },
   "milky-way": {
     "origin": "new",
     "planTitle": "What is the Milky Way?",
     "makePrompt": "Draw our solar system as a dot in a galaxy model",
     "motif": "galaxy",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "milky-way-label",
+        "milky-way-tell-1",
+        "milky-way-tell-2",
+        "milky-way-tell-3",
+        "milky-way-more-1",
+        "milky-way-more-2",
+        "milky-way-more-3",
+        "milky-way-more-4",
+        "milky-way-deep-1",
+        "milky-way-deep-2",
+        "milky-way-deep-3",
+        "milky-way-deep-4",
+        "milky-way-deep-5",
+        "milky-way-deep-6",
+        "milky-way-deep-7"
+      ],
+      "sourceUrls": [
+        "https://science.nasa.gov/universe/galaxies/",
+        "https://imagine.gsfc.nasa.gov/features/cosmic/milkyway_info.html"
+      ]
+    }
   },
   "comet": {
     "origin": "new",
     "planTitle": "What is a comet?",
     "makePrompt": "Draw the Sun and a comet tail pointing away",
     "motif": "comet",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "comet-label",
+        "comet-tell-1",
+        "comet-tell-2",
+        "comet-tell-3",
+        "comet-more-1",
+        "comet-more-2",
+        "comet-more-3",
+        "comet-more-4",
+        "comet-more-5",
+        "comet-deep-1",
+        "comet-deep-2",
+        "comet-deep-3",
+        "comet-deep-4",
+        "comet-deep-5",
+        "comet-deep-6"
+      ],
+      "sourceUrls": [
+        "https://science.nasa.gov/solar-system/comets/facts/"
+      ]
+    }
   },
   "astronaut-home": {
     "origin": "new",
     "planTitle": "How do astronauts live in space?",
     "makePrompt": "Design a space room for working, resting and storing things",
     "motif": "astronaut",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "astronaut-home-label",
+        "astronaut-home-tell-1",
+        "astronaut-home-tell-2",
+        "astronaut-home-tell-3",
+        "astronaut-home-more-1",
+        "astronaut-home-more-2",
+        "astronaut-home-more-3",
+        "astronaut-home-more-4",
+        "astronaut-home-deep-1",
+        "astronaut-home-deep-2",
+        "astronaut-home-deep-3",
+        "astronaut-home-deep-4",
+        "astronaut-home-deep-5",
+        "astronaut-home-deep-6",
+        "astronaut-home-deep-7"
+      ],
+      "sourceUrls": [
+        "https://www.nasa.gov/humans-in-space/living-in-space/",
+        "https://www.nasa.gov/learning-resources/for-kids-and-students/what-is-microgravity-grades-5-8/"
+      ]
+    }
   },
   "breathing": {
     "origin": "new",
     "planTitle": "Why do we breathe?",
     "makePrompt": "Draw air reaching lungs and blood",
     "motif": "lungs",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "breathing-label",
+        "breathing-tell-1",
+        "breathing-tell-2",
+        "breathing-tell-3",
+        "breathing-more-1",
+        "breathing-more-2",
+        "breathing-more-3",
+        "breathing-more-4",
+        "breathing-more-5",
+        "breathing-deep-1",
+        "breathing-deep-2",
+        "breathing-deep-3",
+        "breathing-deep-4",
+        "breathing-deep-5",
+        "breathing-deep-6",
+        "breathing-deep-7",
+        "breathing-deep-8",
+        "breathing-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nhlbi.nih.gov/health/lungs",
+        "https://www.nhlbi.nih.gov/health/lungs/breathing-benefits"
+      ]
+    }
   },
   "heart": {
     "origin": "new",
     "planTitle": "What does the heart do?",
     "makePrompt": "Draw a loop from heart to lungs and body",
     "motif": "heart",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "heart-label",
+        "heart-tell-1",
+        "heart-tell-2",
+        "heart-tell-3",
+        "heart-more-1",
+        "heart-more-2",
+        "heart-more-3",
+        "heart-more-4",
+        "heart-more-5",
+        "heart-deep-1",
+        "heart-deep-2",
+        "heart-deep-3",
+        "heart-deep-4",
+        "heart-deep-5",
+        "heart-deep-6",
+        "heart-deep-7",
+        "heart-deep-8"
+      ],
+      "sourceUrls": [
+        "https://www.nhlbi.nih.gov/health/heart",
+        "https://www.nhlbi.nih.gov/health/heart/heart-beats"
+      ]
+    }
   },
   "bones": {
     "origin": "new",
     "planTitle": "How do our bones help us?",
     "makePrompt": "Draw a protective rib cage around a paper heart",
     "motif": "bones",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "bones-label",
+        "bones-tell-1",
+        "bones-tell-2",
+        "bones-tell-3",
+        "bones-more-1",
+        "bones-more-2",
+        "bones-more-3",
+        "bones-more-4",
+        "bones-more-5",
+        "bones-deep-1",
+        "bones-deep-2",
+        "bones-deep-3",
+        "bones-deep-4",
+        "bones-deep-5",
+        "bones-deep-6",
+        "bones-deep-7",
+        "bones-deep-8"
+      ],
+      "sourceUrls": [
+        "https://www.niams.nih.gov/health-topics/kids-and-their-bones",
+        "https://www.niams.nih.gov/health-topics/bone-health-and-osteoporosis"
+      ]
+    }
   },
   "muscles": {
     "origin": "new",
     "planTitle": "How do muscles move us?",
     "makePrompt": "Draw two pulling bands around a paper joint",
     "motif": "muscle",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "muscles-label",
+        "muscles-tell-1",
+        "muscles-tell-2",
+        "muscles-tell-3",
+        "muscles-more-1",
+        "muscles-more-2",
+        "muscles-more-3",
+        "muscles-more-4",
+        "muscles-deep-1",
+        "muscles-deep-2",
+        "muscles-deep-3",
+        "muscles-deep-4",
+        "muscles-deep-5",
+        "muscles-deep-6",
+        "muscles-deep-7",
+        "muscles-deep-8"
+      ],
+      "sourceUrls": [
+        "https://www.niams.nih.gov/health-topics/sports-injuries",
+        "https://training.seer.cancer.gov/anatomy/muscular/structure.html"
+      ]
+    }
   },
   "vision": {
     "origin": "new",
     "planTitle": "How do we see?",
     "makePrompt": "Draw light entering an eye model",
     "motif": "eye",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "vision-label",
+        "vision-tell-1",
+        "vision-tell-2",
+        "vision-tell-3",
+        "vision-more-1",
+        "vision-more-2",
+        "vision-more-3",
+        "vision-more-4",
+        "vision-more-5",
+        "vision-deep-1",
+        "vision-deep-2",
+        "vision-deep-3",
+        "vision-deep-4",
+        "vision-deep-5",
+        "vision-deep-6",
+        "vision-deep-7",
+        "vision-deep-8"
+      ],
+      "sourceUrls": [
+        "https://www.nei.nih.gov/eye-health-information/healthy-vision/how-eyes-work"
+      ]
+    }
   },
   "hearing": {
     "origin": "new",
     "planTitle": "How do we hear?",
     "makePrompt": "Draw sound becoming motion and then a signal",
     "motif": "ear",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "hearing-label",
+        "hearing-tell-1",
+        "hearing-tell-2",
+        "hearing-tell-3",
+        "hearing-more-1",
+        "hearing-more-2",
+        "hearing-more-3",
+        "hearing-more-4",
+        "hearing-more-5",
+        "hearing-deep-1",
+        "hearing-deep-2",
+        "hearing-deep-3",
+        "hearing-deep-4",
+        "hearing-deep-5",
+        "hearing-deep-6",
+        "hearing-deep-7"
+      ],
+      "sourceUrls": [
+        "https://www.nidcd.nih.gov/health/how-do-we-hear"
+      ]
+    }
   },
   "smell": {
     "origin": "new",
     "planTitle": "How do we smell?",
     "makePrompt": "Draw a familiar safe smell from memory",
     "motif": "nose",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "smell-label",
+        "smell-tell-1",
+        "smell-tell-2",
+        "smell-tell-3",
+        "smell-more-1",
+        "smell-more-2",
+        "smell-more-3",
+        "smell-more-4",
+        "smell-more-5",
+        "smell-deep-1",
+        "smell-deep-2",
+        "smell-deep-3",
+        "smell-deep-4",
+        "smell-deep-5",
+        "smell-deep-6"
+      ],
+      "sourceUrls": [
+        "https://www.nidcd.nih.gov/health/smell-disorders"
+      ]
+    }
   },
   "taste": {
     "origin": "new",
     "planTitle": "Why can we taste food?",
     "makePrompt": "Draw a favorite food using color and texture",
     "motif": "tongue",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "taste-label",
+        "taste-tell-1",
+        "taste-tell-2",
+        "taste-tell-3",
+        "taste-more-1",
+        "taste-more-2",
+        "taste-more-3",
+        "taste-more-4",
+        "taste-more-5",
+        "taste-more-6",
+        "taste-deep-1",
+        "taste-deep-2",
+        "taste-deep-3",
+        "taste-deep-4",
+        "taste-deep-5",
+        "taste-deep-6",
+        "taste-deep-7"
+      ],
+      "sourceUrls": [
+        "https://www.nidcd.nih.gov/health/taste-disorders"
+      ]
+    }
   },
   "wheel": {
     "origin": "new",
     "planTitle": "How does a wheel help?",
     "makePrompt": "Design a cart for a pretend load",
     "motif": "wheel",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "wheel-label",
+        "wheel-tell-1",
+        "wheel-tell-2",
+        "wheel-tell-3",
+        "wheel-more-1",
+        "wheel-more-2",
+        "wheel-more-3",
+        "wheel-more-4",
+        "wheel-more-5",
+        "wheel-deep-1",
+        "wheel-deep-2",
+        "wheel-deep-3",
+        "wheel-deep-4",
+        "wheel-deep-5",
+        "wheel-deep-6",
+        "wheel-deep-7",
+        "wheel-deep-8"
+      ],
+      "sourceUrls": [
+        "https://www.nasa.gov/wp-content/uploads/2023/03/simple-machines-classroom-connection-508.pdf",
+        "https://www.teachengineering.org/lessons/cub_simple_lesson01"
+      ]
+    }
   },
   "lever": {
     "origin": "new",
     "planTitle": "What is a lever?",
     "makePrompt": "Draw a lever with the pivot close to a pretend load",
     "motif": "lever",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "lever-label",
+        "lever-tell-1",
+        "lever-tell-2",
+        "lever-tell-3",
+        "lever-more-1",
+        "lever-more-2",
+        "lever-more-3",
+        "lever-more-4",
+        "lever-more-5",
+        "lever-deep-1",
+        "lever-deep-2",
+        "lever-deep-3",
+        "lever-deep-4",
+        "lever-deep-5",
+        "lever-deep-6",
+        "lever-deep-7"
+      ],
+      "sourceUrls": [
+        "https://www.nasa.gov/wp-content/uploads/2023/03/simple-machines-classroom-connection-508.pdf",
+        "https://www.teachengineering.org/lessons/cub_simple_lesson01"
+      ]
+    }
   },
   "ramp": {
     "origin": "new",
     "planTitle": "How does a ramp help us lift?",
     "makePrompt": "Draw two ramps reaching the same height",
     "motif": "ramp",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "ramp-label",
+        "ramp-tell-1",
+        "ramp-tell-2",
+        "ramp-tell-3",
+        "ramp-more-1",
+        "ramp-more-2",
+        "ramp-more-3",
+        "ramp-more-4",
+        "ramp-more-5",
+        "ramp-deep-1",
+        "ramp-deep-2",
+        "ramp-deep-3",
+        "ramp-deep-4",
+        "ramp-deep-5",
+        "ramp-deep-6"
+      ],
+      "sourceUrls": [
+        "https://www.nasa.gov/wp-content/uploads/2023/03/simple-machines-classroom-connection-508.pdf",
+        "https://www.teachengineering.org/lessons/cub_simple_lesson01"
+      ]
+    }
   },
   "gears": {
     "origin": "new",
     "planTitle": "How do gears turn together?",
     "makePrompt": "Draw a pair of gears with opposite arrows",
     "motif": "gears",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "gears-label",
+        "gears-tell-1",
+        "gears-tell-2",
+        "gears-tell-3",
+        "gears-more-1",
+        "gears-more-2",
+        "gears-more-3",
+        "gears-more-4",
+        "gears-more-5",
+        "gears-deep-1",
+        "gears-deep-2",
+        "gears-deep-3",
+        "gears-deep-4",
+        "gears-deep-5",
+        "gears-deep-6",
+        "gears-deep-7"
+      ],
+      "sourceUrls": [
+        "https://www.teachengineering.org/lessons/umo_challenges_lesson02"
+      ]
+    }
   },
   "pulley": {
     "origin": "new",
     "planTitle": "How does a pulley work?",
     "makePrompt": "Draw a rope path over a fixed pulley",
     "motif": "pulley",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "pulley-label",
+        "pulley-tell-1",
+        "pulley-tell-2",
+        "pulley-tell-3",
+        "pulley-more-1",
+        "pulley-more-2",
+        "pulley-more-3",
+        "pulley-more-4",
+        "pulley-more-5",
+        "pulley-deep-1",
+        "pulley-deep-2",
+        "pulley-deep-3",
+        "pulley-deep-4",
+        "pulley-deep-5",
+        "pulley-deep-6",
+        "pulley-deep-7"
+      ],
+      "sourceUrls": [
+        "https://www.nasa.gov/wp-content/uploads/2023/03/simple-machines-classroom-connection-508.pdf",
+        "https://www.grc.nasa.gov/www/k-12/Summer_Training/KaeAvenueES/Simple_Machine_Web.html"
+      ]
+    }
   },
   "boats-float": {
     "origin": "new",
     "planTitle": "Why do boats float?",
     "makePrompt": "Draw a wide hollow hull and the water it moves aside",
     "motif": "boat",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "boats-float-label",
+        "boats-float-tell-1",
+        "boats-float-tell-2",
+        "boats-float-tell-3",
+        "boats-float-more-1",
+        "boats-float-more-2",
+        "boats-float-more-3",
+        "boats-float-more-4",
+        "boats-float-deep-1",
+        "boats-float-deep-2",
+        "boats-float-deep-3",
+        "boats-float-deep-4",
+        "boats-float-deep-5",
+        "boats-float-deep-6",
+        "boats-float-deep-7"
+      ],
+      "sourceUrls": [
+        "https://www.teachengineering.org/lessons/view/duk_float_mary_less",
+        "https://openstax.org/books/university-physics-volume-1/pages/14-4-archimedes-principle-and-buoyancy"
+      ]
+    }
   },
   "airplanes": {
     "origin": "new",
     "planTitle": "How do airplanes stay up?",
     "makePrompt": "Draw a plane with lift, weight, thrust and drag arrows",
     "motif": "plane",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "airplanes-label",
+        "airplanes-tell-1",
+        "airplanes-tell-2",
+        "airplanes-tell-3",
+        "airplanes-more-1",
+        "airplanes-more-2",
+        "airplanes-more-3",
+        "airplanes-more-4",
+        "airplanes-more-5",
+        "airplanes-deep-1",
+        "airplanes-deep-2",
+        "airplanes-deep-3",
+        "airplanes-deep-4",
+        "airplanes-deep-5",
+        "airplanes-deep-6",
+        "airplanes-deep-7"
+      ],
+      "sourceUrls": [
+        "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/what-is-lift/",
+        "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/four-forces-on-an-airplane/"
+      ]
+    }
   },
   "bicycle": {
     "origin": "new",
     "planTitle": "How does a bicycle move?",
     "makePrompt": "Draw the path from pedals through chain to wheel",
     "motif": "bicycle",
-    "review": "drafted"
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "draft",
+        "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+        "date": "2026-11-02",
+        "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "bicycle-label",
+        "bicycle-tell-1",
+        "bicycle-tell-2",
+        "bicycle-tell-3",
+        "bicycle-more-1",
+        "bicycle-more-2",
+        "bicycle-more-3",
+        "bicycle-more-4",
+        "bicycle-more-5",
+        "bicycle-deep-1",
+        "bicycle-deep-2",
+        "bicycle-deep-3",
+        "bicycle-deep-4",
+        "bicycle-deep-5",
+        "bicycle-deep-6"
+      ],
+      "sourceUrls": [
+        "https://annex.exploratorium.edu/cycling/",
+        "https://www.teachengineering.org/lessons/umo_challenges_lesson02"
+      ]
+    }
   }
 }

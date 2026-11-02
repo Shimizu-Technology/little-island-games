@@ -1,7 +1,7 @@
 [
   {
     "schemaVersion": 1,
-    "revision": 1,
+    "revision": 2,
     "id": "reef-food-web",
     "type": "exhibit",
     "title": "Build a reef food web",
@@ -51,10 +51,11 @@
       "designated family reviewer family review required: animals eating animals; arrows show energy transfer, without graphic predation."
     ],
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual/editorial review completed. NOAA food-web text verifies energy direction and branching; NOAA photosynthesis page verifies light-powered food production. Added Clements et al. university-hosted full paper for the parrotfish path; retained qualified many, avoiding a universal seaweed diet. Replaced technical caveat pile with a connected invitation. Population removal remains outside this model. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval."
     },
     "sources": [
       {
@@ -66,11 +67,16 @@
         "title": "NOAA Ocean Explorer: Chemosynthesis and photosynthesis",
         "url": "https://oceanexplorer.noaa.gov/ocean-fact/photochemo/",
         "accessed": "2026-11-02"
+      },
+      {
+        "title": "Clements et al.: Parrotfishes as microphages (author university full text)",
+        "url": "https://german.bio.uci.edu/images/PDF/Clements%20et%20al.%20%282016%29%20BJLS_online.pdf",
+        "accessed": "2026-11-02"
       }
     ],
     "model": {
       "engine": "food-web",
-      "limits": "This model shows a few possible feeding connections, not every species or every meal on Guam’s reefs. Arrows point from food toward the eater to show energy transfer. Sunlight is an energy source, not an organism. Real food webs branch, change, include decomposers and can have other energy sources; this sunlit example leaves most of that out."
+      "limits": "A few possible feeding links in a sunlit reef, with arrows from food to eater. The picture leaves out most species and connections. It does not predict population changes or show every kind of energy source."
     },
     "links": [
       {
@@ -87,7 +93,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 1,
+    "revision": 2,
     "id": "water-journey",
     "type": "exhibit",
     "title": "Follow a drop of water",
@@ -137,10 +143,11 @@
       "designated family reviewer family review required: water/weather safety; not a forecast or drinking-water safety guide."
     ],
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual/editorial review completed. NOAA water-cycle overview and NWS hydrology description verify surface/groundwater storage and transport; USGS precipitation page verifies cloud-drop growth and evaporation; NOAA ocean-freezing page supports salt claim. Added these specific citations because generic water-cycle page did not directly cover each claim. warm remains evaporation, not rainfall. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval."
     },
     "sources": [
       {
@@ -152,11 +159,26 @@
         "title": "NOAA Education: The Water Cycle",
         "url": "https://www.noaa.gov/education/resource-collections/freshwater/water-cycle",
         "accessed": "2026-11-02"
+      },
+      {
+        "title": "USGS: Precipitation and the Water Cycle",
+        "url": "https://www.usgs.gov/water-science-school/science/precipitation-and-water-cycle",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "NOAA NWS: Description of Hydrologic Cycle",
+        "url": "https://www.nwrfc.noaa.gov/info/water_cycle/hydrology.cgi",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "NOAA: Can the ocean freeze?",
+        "url": "https://oceanservice.noaa.gov/facts/oceanfreeze.html",
+        "accessed": "2026-11-02"
       }
     ],
     "model": {
       "engine": "water-journey",
-      "limits": "These are possible changes, not a required circle or a weather forecast. Real water can stay in one store for a long time, take other routes, move in many places at once and pass through plants. Invisible water vapor is a gas; visible cloud droplets are liquid or ice. The drawing is not to scale and does not show safe drinking water."
+      "limits": "A simplified set of possible water paths. Sizes and travel times are symbolic, and plants and many other routes are left out. Water vapor is invisible; cloud drops or ice are visible. This is not a forecast or a drinking-water guide."
     },
     "links": [
       {
@@ -173,7 +195,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 1,
+    "revision": 2,
     "id": "night-sky",
     "type": "exhibit",
     "title": "Turn the night-sky model",
@@ -223,10 +245,11 @@
       "designated family reviewer family review required: night and Sun safety; invented stars, not a live sky chart."
     ],
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Author draft only. Independent factual, reading-content and designated family reviewer family/cultural passes pending."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual/editorial review completed. NASA constellation page verifies imagined lines, unequal star distances, location/hour/year visibility; NASA seasons page verifies rotation and orbit. Added NASA blue-sky page for scattering. Invented-star limitation retained; no traditional navigation or current sky claims. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval."
     },
     "sources": [
       {
@@ -238,11 +261,16 @@
         "title": "NASA Space Place",
         "url": "https://spaceplace.nasa.gov/seasons/en/",
         "accessed": "2026-11-02"
+      },
+      {
+        "title": "NASA Space Place: Why Is the Sky Blue?",
+        "url": "https://spaceplace.nasa.gov/blue-sky/en/",
+        "accessed": "2026-11-02"
       }
     ],
     "model": {
       "engine": "night-sky",
-      "limits": "This is an invented sky model, not tonight’s view from Guam, a star finder or a navigation tool. Dots, distances and brightness are symbolic; connecting lines are imagined. Earth’s rotation changes the view over a night, its orbit changes seasonal views, and location changes the visible sky. No Sun-looking or outdoor activity is needed."
+      "limits": "An invented sky, with symbolic stars, brightness and distances. Imagined lines join dots. Earth’s rotation changes a night’s view; its orbit changes seasonal views. This is not tonight’s Guam sky or a navigation chart."
     },
     "links": [
       {

@@ -1,12 +1,13 @@
 [
   {
     "schemaVersion": 1,
-    "revision": 2,
+    "revision": 3,
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual and editorial review completed. Publisher ISBN, four credited creators and printed spreads checked; greetings transcribed as printed, with no added translation or pronunciation claim. Consumer choices are story events. Wordless pages 8, 13 and 14 remain wordless. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
     },
     "rights": {
       "license": "CC-BY-4.0",
@@ -474,7 +475,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 1,
+    "revision": 2,
     "id": "sleepy-mr-sloth",
     "type": "book",
     "title": "Sleepy Mr Sloth",
@@ -529,10 +530,11 @@
       "Animal fantasy, a giraffe nibbling Sloth, bees, snake handling and a noisy bird. Do not imitate approaching wildlife; this is not a sloth habitat or animal-care lesson."
     ],
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte. All pages and imported art reviewed. Talking animals, giraffe encounter and mixed animal community are fantasy, not natural-history claims. Original regional grammar and verse retained. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
     },
     "sources": [
       {
@@ -1158,10 +1160,10 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 1,
+    "revision": 2,
     "id": "a-tiny-seed",
     "type": "book",
-    "title": "A Tiny Seed: The Story of Wangari Maathai",
+    "title": "A Tiny Seed · Library adaptation",
     "category": "books",
     "aliases": [
       "a tiny seed",
@@ -1187,7 +1189,7 @@
     },
     "label": {
       "id": "a-tiny-seed-label",
-      "text": "A Tiny Seed: The Story of Wangari Maathai",
+      "text": "A Tiny Seed · Library adaptation",
       "speechKey": "library-a-tiny-seed-label",
       "audio": {
         "status": "pending",
@@ -1196,10 +1198,10 @@
     },
     "rights": {
       "license": "CC-BY-4.0",
-      "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
+      "creator": "Nicola Rijsdijk (writer); Maya Marshak (illustrator); Karen Lilje (digital-edition designer); Tarryn-Anne Anderson (current publisher designer credit); Book Dash; Shimizu Technology (text adaptation)",
       "sourceUrl": "https://bookdash.org/books/a-tiny-seed/",
-      "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
-      "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
+      "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
+      "changes": "Little Island Library adaptation, 2026-11-02: four story pages corrected for factual scope (school, community needs, tree planting and regional spread); adaptation notice added to reading cover. Original publisher manuscript preserved in edition.md and original text in review-adaptation.json. Original illustrations unchanged. No publisher endorsement.",
       "licenseFile": "content/library/books/CC-BY-4.0.txt"
     },
     "stage": {
@@ -1210,13 +1212,15 @@
       "support": "Shared reading or listening welcome; age hint is not a reading-level assessment."
     },
     "sensitiveNotes": [
-      "Biography of Kenyan Wangari Maathai; independent factual and cultural review needed. Includes a machete, poverty, hungry children, loss of trees, and death in 2011. Do not treat tool use as an activity invitation. Historical environmental claims are preserved from the edition, not newly endorsed science statements."
+      "Biography of Kenyan Wangari Maathai; independent factual and cultural review needed. Includes a machete, poverty, hungry children, loss of trees, and death in 2011. Do not treat tool use as an activity invitation. Historical environmental claims are preserved from the edition, not newly endorsed science statements.",
+      "cultural review: Labeled Library adaptation of a Kenyan biography; four corrected pages and all remaining original personal scenes need family judgment. Cover art retains the source title; source ISBN identifies the original edition."
     ],
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual and editorial review completed. Factual corrections in a labeled CC BY adaptation: school account corrected against Maathai’s own 2006 interview; national poverty and river-restoration generalizations replaced with specific community work. Published personal scenes remain the author’s biographical storytelling. Nobel facts and university biography support education, award and death. Digital designer Karen Lilje distinguished from current publisher credit Tarryn-Anne Anderson. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
     },
     "sources": [
       {
@@ -1240,6 +1244,26 @@
         "title": "Book Dash: source-file and illustration reuse policy",
         "url": "https://bookdash.org/book-source-files/",
         "accessed": "2026-11-02"
+      },
+      {
+        "title": "Maathai’s own school and community-work account: Fresh Air interview, 25 October 2006",
+        "url": "https://freshairarchive.org/segments/nobel-peace-prize-winner-wangari-maathai",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "Green Belt Movement: Our History",
+        "url": "https://www.greenbeltmovement.org/history/",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "Nobel Prize: Wangari Maathai facts",
+        "url": "https://www.nobelprize.org/prizes/peace/2004/maathai/facts/",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "University of Nairobi: About Prof. Wangari Maathai",
+        "url": "https://wmi.uonbi.ac.ke/node/242",
+        "accessed": "2026-11-02"
       }
     ],
     "edition": {
@@ -1248,10 +1272,10 @@
       "originalTitle": "A Tiny Seed: The Story of Wangari Maathai",
       "rights": {
         "license": "CC-BY-4.0",
-        "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
+        "creator": "Nicola Rijsdijk (writer); Maya Marshak (illustrator); Karen Lilje (digital-edition designer); Tarryn-Anne Anderson (current publisher designer credit); Book Dash; Shimizu Technology (text adaptation)",
         "sourceUrl": "https://bookdash.org/books/a-tiny-seed/",
-        "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
-        "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
+        "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
+        "changes": "Little Island Library adaptation, 2026-11-02: four story pages corrected for factual scope (school, community needs, tree planting and regional spread); adaptation notice added to reading cover. Original publisher manuscript preserved in edition.md and original text in review-adaptation.json. Original illustrations unchanged. No publisher endorsement.",
         "licenseFile": "content/library/books/CC-BY-4.0.txt"
       }
     },
@@ -1265,7 +1289,7 @@
             "license": "CC-BY-4.0",
             "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
             "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/cover.jpg",
-            "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
+            "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
             "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
             "licenseFile": "content/library/books/CC-BY-4.0.txt"
           }
@@ -1291,7 +1315,7 @@
           },
           {
             "id": "a-tiny-seed-page-00-3",
-            "text": "Nicola Rijsdijk & Maya Marshak",
+            "text": "Nicola Rijsdijk & Maya Marshak Little Island Library adaptation.",
             "speechKey": "library-a-tiny-seed-page-00-3",
             "audio": {
               "status": "pending",
@@ -1309,7 +1333,7 @@
             "license": "CC-BY-4.0",
             "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
             "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/01.jpg",
-            "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
+            "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
             "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
             "licenseFile": "content/library/books/CC-BY-4.0.txt"
           }
@@ -1344,7 +1368,7 @@
             "license": "CC-BY-4.0",
             "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
             "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/02.jpg",
-            "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
+            "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
             "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
             "licenseFile": "content/library/books/CC-BY-4.0.txt"
           }
@@ -1388,7 +1412,7 @@
             "license": "CC-BY-4.0",
             "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
             "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/03.jpg",
-            "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
+            "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
             "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
             "licenseFile": "content/library/books/CC-BY-4.0.txt"
           }
@@ -1432,37 +1456,19 @@
             "license": "CC-BY-4.0",
             "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
             "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/04.jpg",
-            "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
+            "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
             "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
             "licenseFile": "content/library/books/CC-BY-4.0.txt"
           }
         },
         "sentences": [
           {
-            "id": "a-tiny-seed-page-04-1",
-            "text": "Wangari was a clever child and couldn’t wait to go to school.",
-            "speechKey": "library-a-tiny-seed-page-04-1",
+            "id": "library-a-tiny-seed-page-04-review",
+            "text": "Wangari’s big brother asked why she did not go to school with him. Her mother agreed to send her. Wangari later said she loved learning to read and write.",
+            "speechKey": "library-a-tiny-seed-page-04-review",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
-            }
-          },
-          {
-            "id": "a-tiny-seed-page-04-2",
-            "text": "But her mother and father wanted her to stay and help them at home.",
-            "speechKey": "library-a-tiny-seed-page-04-2",
-            "audio": {
-              "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
-            }
-          },
-          {
-            "id": "a-tiny-seed-page-04-3",
-            "text": "When she was seven years old, her big brother persuaded her parents to let her go to school.",
-            "speechKey": "library-a-tiny-seed-page-04-3",
-            "audio": {
-              "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
+              "reason": "Fact-checked adaptation; family and pronunciation review, warm recording and audible review pending."
             }
           }
         ]
@@ -1476,7 +1482,7 @@
             "license": "CC-BY-4.0",
             "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
             "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/05.jpg",
-            "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
+            "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
             "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
             "licenseFile": "content/library/books/CC-BY-4.0.txt"
           }
@@ -1538,7 +1544,7 @@
             "license": "CC-BY-4.0",
             "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
             "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/06.jpg",
-            "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
+            "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
             "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
             "licenseFile": "content/library/books/CC-BY-4.0.txt"
           }
@@ -1582,7 +1588,7 @@
             "license": "CC-BY-4.0",
             "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
             "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/07.jpg",
-            "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
+            "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
             "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
             "licenseFile": "content/library/books/CC-BY-4.0.txt"
           }
@@ -1626,55 +1632,19 @@
             "license": "CC-BY-4.0",
             "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
             "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/08.jpg",
-            "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
+            "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
             "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
             "licenseFile": "content/library/books/CC-BY-4.0.txt"
           }
         },
         "sentences": [
           {
-            "id": "a-tiny-seed-page-08-1",
-            "text": "When she had finished her studies, she returned to Kenya.",
-            "speechKey": "library-a-tiny-seed-page-08-1",
+            "id": "library-a-tiny-seed-page-08-review",
+            "text": "After her studies, Wangari returned to Kenya. She listened to rural women who needed firewood, food and clean water. Trees and streams that their families relied on were being lost.",
+            "speechKey": "library-a-tiny-seed-page-08-review",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
-            }
-          },
-          {
-            "id": "a-tiny-seed-page-08-2",
-            "text": "But her country had changed.",
-            "speechKey": "library-a-tiny-seed-page-08-2",
-            "audio": {
-              "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
-            }
-          },
-          {
-            "id": "a-tiny-seed-page-08-3",
-            "text": "Huge farms stretched across the land.",
-            "speechKey": "library-a-tiny-seed-page-08-3",
-            "audio": {
-              "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
-            }
-          },
-          {
-            "id": "a-tiny-seed-page-08-4",
-            "text": "Women had no wood to make cooking fires.",
-            "speechKey": "library-a-tiny-seed-page-08-4",
-            "audio": {
-              "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
-            }
-          },
-          {
-            "id": "a-tiny-seed-page-08-5",
-            "text": "The people were poor and the children were hungry.",
-            "speechKey": "library-a-tiny-seed-page-08-5",
-            "audio": {
-              "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
+              "reason": "Fact-checked adaptation; family and pronunciation review, warm recording and audible review pending."
             }
           }
         ]
@@ -1688,55 +1658,19 @@
             "license": "CC-BY-4.0",
             "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
             "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/09.jpg",
-            "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
+            "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
             "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
             "licenseFile": "content/library/books/CC-BY-4.0.txt"
           }
         },
         "sentences": [
           {
-            "id": "a-tiny-seed-page-09-1",
-            "text": "Wangari knew what to do.",
-            "speechKey": "library-a-tiny-seed-page-09-1",
+            "id": "library-a-tiny-seed-page-09-review",
+            "text": "Wangari worked with women to grow and plant trees. Their work became the Green Belt Movement. Together, they cared for the land and worked to improve life in their communities.",
+            "speechKey": "library-a-tiny-seed-page-09-review",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
-            }
-          },
-          {
-            "id": "a-tiny-seed-page-09-2",
-            "text": "She taught the women how to plant trees from seeds.",
-            "speechKey": "library-a-tiny-seed-page-09-2",
-            "audio": {
-              "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
-            }
-          },
-          {
-            "id": "a-tiny-seed-page-09-3",
-            "text": "The women sold the trees and used the money to look after their families.",
-            "speechKey": "library-a-tiny-seed-page-09-3",
-            "audio": {
-              "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
-            }
-          },
-          {
-            "id": "a-tiny-seed-page-09-4",
-            "text": "The women were very happy.",
-            "speechKey": "library-a-tiny-seed-page-09-4",
-            "audio": {
-              "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
-            }
-          },
-          {
-            "id": "a-tiny-seed-page-09-5",
-            "text": "Wangari had helped them to feel powerful and strong.",
-            "speechKey": "library-a-tiny-seed-page-09-5",
-            "audio": {
-              "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
+              "reason": "Fact-checked adaptation; family and pronunciation review, warm recording and audible review pending."
             }
           }
         ]
@@ -1750,37 +1684,19 @@
             "license": "CC-BY-4.0",
             "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
             "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/10.jpg",
-            "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
+            "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
             "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
             "licenseFile": "content/library/books/CC-BY-4.0.txt"
           }
         },
         "sentences": [
           {
-            "id": "a-tiny-seed-page-10-1",
-            "text": "As time passed, the new trees grew into forests, and the rivers started flowing again.",
-            "speechKey": "library-a-tiny-seed-page-10-1",
+            "id": "library-a-tiny-seed-page-10-review",
+            "text": "The movement grew. Women and their communities planted millions of trees in Kenya. People in other African countries took up the idea too.",
+            "speechKey": "library-a-tiny-seed-page-10-review",
             "audio": {
               "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
-            }
-          },
-          {
-            "id": "a-tiny-seed-page-10-2",
-            "text": "Wangari’s message spread across Africa.",
-            "speechKey": "library-a-tiny-seed-page-10-2",
-            "audio": {
-              "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
-            }
-          },
-          {
-            "id": "a-tiny-seed-page-10-3",
-            "text": "Today, millions of trees have grown from Wangari’s seeds.",
-            "speechKey": "library-a-tiny-seed-page-10-3",
-            "audio": {
-              "status": "pending",
-              "reason": "No audio generated or imported. Parent must generate authorized narration, check pronunciation, listen and review after independent content and designated family reviewer family review."
+              "reason": "Fact-checked adaptation; family and pronunciation review, warm recording and audible review pending."
             }
           }
         ]
@@ -1794,7 +1710,7 @@
             "license": "CC-BY-4.0",
             "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
             "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/11.jpg",
-            "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
+            "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
             "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
             "licenseFile": "content/library/books/CC-BY-4.0.txt"
           }
@@ -1838,7 +1754,7 @@
             "license": "CC-BY-4.0",
             "creator": "Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash",
             "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/images/12.jpg",
-            "credit": "A Tiny Seed: The Story of Wangari Maathai. Maya Marshak (Illustrator); Nicola Rijsdijk (Writer); Tarryn-Anne Anderson (Designer); Book Dash. Book Dash digital English edition; ISBN 978-0-9946519-2-1. Created 2014-08-30; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.",
+            "credit": "A Tiny Seed: The Story of Wangari Maathai. Nicola Rijsdijk (writer), Maya Marshak (illustrator), Karen Lilje (digital-edition designer), Book Dash. Source digital English edition at revision 54916310c5c06a5282e2d5d4add18d64f90e5fde; source ISBN 978-0-9946519-2-1. Current publisher page separately credits designer Tarryn-Anne Anderson. CC BY 4.0. Little Island factual text adaptation by Shimizu Technology, 2026; no endorsement implied.",
             "changes": "Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.",
             "licenseFile": "content/library/books/CC-BY-4.0.txt"
           }
@@ -1860,7 +1776,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 1,
+    "revision": 2,
     "id": "a-fish-and-a-gift",
     "type": "book",
     "title": "A Fish and a Gift",
@@ -1915,10 +1831,11 @@
       "Fishing, live fish/shark in a net, a storm-stranded turtle account, shark warning siren, angry conflict and South African family/cultural terms. Wildlife handling is story content, not advice. Review regional names and pronunciation with a grown-up; do not invite beach/animal handling."
     ],
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Family history, shark siren and rescue are fictional story events, not current local services or wildlife instructions. South African terms retained without adding meanings or pronunciation claims. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
     },
     "sources": [
       {
@@ -3075,7 +2992,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 1,
+    "revision": 2,
     "id": "a-beautiful-day",
     "type": "book",
     "title": "A Beautiful Day",
@@ -3130,10 +3047,11 @@
       "Fantasy talking animals, handstands and children jumping into a river. Read with a caregiver; water scenes are not swimming-safety instructions."
     ],
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Talking animals, racing, handstands and swimming are story events. Missing space in the publisher’s final dialogue normalized for reading. River scene remains flagged for family judgment. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
     },
     "sources": [
       {
@@ -3583,7 +3501,7 @@
         "sentences": [
           {
             "id": "a-beautiful-day-page-11-1",
-            "text": "“Time to go home,” says Mom.“Say goodbye to Jacob.”",
+            "text": "“Time to go home,” says Mom. “Say goodbye to Jacob.”",
             "speechKey": "library-a-beautiful-day-page-11-1",
             "audio": {
               "status": "pending",
@@ -3613,7 +3531,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 1,
+    "revision": 2,
     "id": "a-house-for-mouse",
     "type": "book",
     "title": "A house for Mouse",
@@ -3668,10 +3586,11 @@
       "Fantasy animal invitations and dreams of mud, forests and being underwater; a lit fireplace. Do not imitate sleeping underwater or approaching fire."
     ],
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Underwater and forest scenes are explicitly dreams in the text; animals’ invitations are fantasy. Fireplace and dream imitation remain family flags. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
     },
     "sources": [
       {
@@ -4080,7 +3999,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 1,
+    "revision": 2,
     "id": "little-ants-big-plan",
     "type": "book",
     "title": "Little Ant’s Big Plan",
@@ -4135,10 +4054,11 @@
       "Fantasy ants, teasing and parental anger; food taken from a picnic and restaurant. Seasonal food-storage behavior is story content, not a factual claim about all ants."
     ],
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Reading ants, seasonal gathering, royal speech and parental reactions belong to this fantasy; no general ant biology is asserted by the Library. Typo in picture description corrected. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
     },
     "sources": [
       {
@@ -4357,7 +4277,7 @@
       {
         "image": {
           "path": "content/library/books/little-ants-big-plan/page-04.jpg",
-          "alt": "The trees are bare and autum leaves are all around. The ants look under the leaves and collect a discarded apple core.",
+          "alt": "The trees are bare and autumn leaves are all around. The ants look under the leaves and collect a discarded apple core.",
           "sha256": "e5df22f817b0c058d24e14ac4388da8e0d351e989ec4d9f93ca4253fd2e4330d",
           "rights": {
             "license": "CC-BY-4.0",
@@ -4647,7 +4567,7 @@
   },
   {
     "schemaVersion": 1,
-    "revision": 1,
+    "revision": 2,
     "id": "the-best-thing-ever",
     "type": "book",
     "title": "The best thing ever",
@@ -4702,10 +4622,11 @@
       "South African family term uGogo, a corrugated-metal home, found road/river objects, a matchbox and reused packaging. Cultural/pronunciation and family review pending. Do not invite collecting sharp/dirty litter, entering roads, or using matches."
     ],
     "review": {
-      "status": "draft",
-      "reviewer": "Codex content author (drafted; independent factual and designated family reviewer family review pending)",
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
       "date": "2026-11-02",
-      "scope": "Complete English edition acquisition and author transcription/art check only; independent factual, reading-content, pronunciation and designated family reviewer family review pending. No audio or shipping approval."
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported printed-edition art reviewed. Found objects, river/road scenes and matchbox are fictional events, not a Make instruction. uGogo remains an untranslated South African term with cultural/pronunciation review pending. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
     },
     "sources": [
       {
