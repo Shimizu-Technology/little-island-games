@@ -1,3 +1,5 @@
+import { clearPageDrafts, draftRecovery } from "../library/drafts";
+import { libraryChild, migrateLibrary, validLibraryChild, validLibraryData, validLibraryPolicy, type LibraryChildState, type LibraryPolicy } from "../library/state";
 import { preserveHomeMigration, preserveImportedHome, assertMigratedHomes } from './homeMigration';
 import { applyWarmup } from './warmupAction';
 import { roundOwner } from '../badges/owners';
@@ -11,7 +13,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { AppState } from "react-native";
 import { GameId, GameState } from "../games";
 import { storage } from "./storage";
-import { Save, emptySave, parseSave } from "./validation";
+import { Save, emptySave, parseSave, withinSaveLimit } from "./validation";
 import { preserveAndReplace } from "./replacement";
 import { applySessionAction } from "./sessionAction";
 import { recordWordRound } from "./wordRecords";
@@ -55,6 +57,12 @@ type Store = {
   notePractice: (skill: string, helped: boolean, expectedEpoch?: number) => void;
   /** Remember that a learning game's first-move hand was shown. */
   markCoached: (game: LearnId) => void;
+  /** Child writes cannot change grown-up policy or cross a learner/restore boundary. */
+  libraryUpdate: (next: LibraryChildState, expectedEpoch: number, expectedLearnerId: string) => boolean;
+  libraryPatch: (patch: Partial<LibraryChildState>, expectedEpoch: number, expectedLearnerId: string) => boolean;
+  libraryPolicy: (childId: string, policy: LibraryPolicy) => void;
+  /** Drains queued writes; false if a write fails or state is not writable. */
+  libraryFlush: () => Promise<boolean>;
   exploreUpdate: (next: ExploreProgress, expectedEpoch: number, completedTopic?: string) => void;
   save: Save;
   ready: boolean;
@@ -78,6 +86,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [badgeResult, setBadgeResult] = useState<Store["badgeResult"]>(null);
   const [saving, setSaving] = useState(false);
   const pendingWrites = useRef(0);
+  const writeFailures = useRef(0), lastWriteFailed = useRef(false), libraryRejected = useRef(false);
   const [epoch, setEpoch] = useState(0);
   const audioPreferences = useMemo(() => ({ ...save.settings, epoch }), [save.settings, epoch]);
   const generation = useRef(0);
@@ -93,9 +102,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       .catch(() => {})
       .then(() => storage.set(encoded))
       .then(() => {
-        if (mounted.current) setError(null);
+        lastWriteFailed.current = false;
+        if (mounted.current && !libraryRejected.current) setError(null);
       })
       .catch(() => {
+        writeFailures.current++; lastWriteFailed.current = true;
         if (mounted.current) setError("Your latest changes could not be saved. Keep the app open and try again.");
       }).finally(() => { pendingWrites.current--; if (mounted.current && pendingWrites.current === 0) setSaving(false); });
     return queue.current;
@@ -106,15 +117,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       encoded = await storage.get();
       setRaw(encoded);
       const before=encoded?parseSave(encoded):emptySave();
-      const next=backfillRewards(before);
+      const next=backfillRewards(migrateLibrary(before));
+      if (!validLibraryData(next.library) || !withinSaveLimit(JSON.stringify(next))) throw new Error("This Library could not be migrated. Your original has been kept.");
       assertMigratedHomes(next);
-      if(encoded)await preserveHomeMigration(storage,encoded,before,next);
+      if(encoded) {
+        if (!before.library) await preserveAndReplace(storage, JSON.stringify(next), encoded);
+        else await preserveHomeMigration(storage,encoded,before,next);
+      }
       generation.current += 1;
       setEpoch(generation.current);
       latest.current = next;
       setSave(next);
       setRecovery(null);
       setError(null);
+      lastWriteFailed.current = false; libraryRejected.current = false;
       setReady(true);
     } catch (e) {
       if(encoded)try{await storage.preserve(encoded);}catch{/* Original remains in active storage; do not publish or replace it. */}
@@ -212,6 +228,58 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const next = { ...current, explore: { favorites: [], ...current.explore, progress } };
     commit(completedTopic && topicById(completedTopic) && progress.location.kind === "topic" && progress.location.id === completedTopic ? rewardCompletion(next, { kind: "explore", topic: completedTopic }, roundOwner(current, `explore:${completedTopic}`, `explore:${completedTopic}`)) : next);
   }, [commit]);
+  const rejectLibraryWrite = useCallback(() => {
+    libraryRejected.current = true; writeFailures.current++;
+    setError("This Library change could not be saved. It contains invalid data or exceeds the save limit.");
+  }, []);
+  const libraryUpdate = useCallback((child: LibraryChildState, expectedEpoch: number, expectedLearnerId: string) => {
+    if (!ready || recovery || restoring.current || expectedEpoch !== generation.current) return false;
+    const before = latest.current, owner = before.learning?.active ?? "family";
+    if (owner !== expectedLearnerId) return false;
+    if (!validLibraryChild(child)) { rejectLibraryWrite(); return false; }
+    const data = migrateLibrary(before).library, current = libraryChild(data, owner);
+    // A delayed reader/drawing autosave must never undo a grown-up's policy.
+    const next = { ...child, policy: current.policy };
+    if (JSON.stringify(current) === JSON.stringify(next)) {
+      libraryRejected.current = false; if (!lastWriteFailed.current) setError(null); return true;
+    }
+    const library = { ...data, profiles: { ...data.profiles, [owner]: JSON.parse(JSON.stringify(next)) as LibraryChildState } };
+    const updated = { ...before, library };
+    if (!validLibraryData(library) || !withinSaveLimit(JSON.stringify(updated))) { rejectLibraryWrite(); return false; }
+    libraryRejected.current = false;
+    commit(updated);
+    return true;
+  }, [commit, ready, recovery, rejectLibraryWrite]);
+  const libraryPatch = useCallback((patch: Partial<LibraryChildState>, expectedEpoch: number, expectedLearnerId: string) => {
+    const current = libraryChild(latest.current.library, expectedLearnerId);
+    return libraryUpdate({ ...current, ...patch }, expectedEpoch, expectedLearnerId);
+  }, [libraryUpdate]);
+  const libraryPolicy = useCallback((childId: string, policy: LibraryPolicy) => {
+    if (!ready || recovery || restoring.current) return;
+    const before = latest.current;
+    if (!(before.learning?.people.map(p => p.id) ?? ["family"]).includes(childId)) return;
+    if (!validLibraryPolicy(policy)) { rejectLibraryWrite(); return; }
+    const data = migrateLibrary(before).library, child = libraryChild(data, childId);
+    const next = { ...child, policy: JSON.parse(JSON.stringify(policy)) as LibraryPolicy };
+    if (!validLibraryChild(next)) { rejectLibraryWrite(); return; }
+    if (JSON.stringify(child) === JSON.stringify(next)) {
+      libraryRejected.current = false; if (!lastWriteFailed.current) setError(null); return;
+    }
+    const library = { ...data, profiles: { ...data.profiles, [childId]: next } };
+    const updated = { ...before, library };
+    if (!validLibraryData(library) || !withinSaveLimit(JSON.stringify(updated))) { rejectLibraryWrite(); return; }
+    libraryRejected.current = false;
+    commit(updated);
+  }, [commit, ready, recovery, rejectLibraryWrite]);
+  const libraryFlush = useCallback(async () => {
+    if (!ready || recovery || restoring.current) return false;
+    const failures = writeFailures.current, startEpoch = generation.current;
+    // Include writes appended while the previous tail is settling.
+    let tail: Promise<void>;
+    do { tail = queue.current; await tail; } while (tail !== queue.current);
+    return mounted.current && !restoring.current && startEpoch === generation.current &&
+      writeFailures.current === failures && !lastWriteFailed.current && !libraryRejected.current;
+  }, [ready, recovery]);
   // Arcade uses the same commit/recovery queue, with explicit learner/restore ownership.
   const arcade = useCallback((action: ArcadeAction, expected: ArcadeExpected) => {
     if (!ready || recovery || restoring.current) return false;
@@ -301,14 +369,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [commit, ready, recovery]);
   const removeLearner = useCallback(async (id: string) => {
     if (!ready || recovery || restoring.current) return false;
-    const before = latest.current, next = withoutLearner(before, id);
-    if (next === before) return false;
+    const before = latest.current, removed = withoutLearner(before, id);
+    if (removed === before) return false;
+    const next = removed.library ? { ...removed, library: { ...removed.library, profiles: Object.fromEntries(Object.entries(removed.library.profiles).filter(([owner]) => owner !== id)) } } : removed;
     restoring.current = true;
     try {
       await queue.current;
+      const pending = draftRecovery(id); if (pending) await storage.preserve(pending);
       await preserveAndReplace(storage, JSON.stringify(next), JSON.stringify(before));
+      clearPageDrafts(id);
       generation.current++; setEpoch(generation.current);
-      latest.current = next; setSave(next); setError(null); return true;
+      latest.current = next; setSave(next); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; return true;
     } finally { restoring.current = false; }
   }, [ready, recovery]);
   const recordWarmup = useCallback((results: PracticeResult[], config: PracticeSettings, round: string, expectedEpoch: number) => {
@@ -334,7 +405,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       restoring.current = true;
       try {
         let next: Save, incoming: Save;
-        try { incoming=parseSave(encoded); next = backfillRewards(incoming); assertMigratedHomes(next); }
+        try { incoming=parseSave(encoded); next = backfillRewards(migrateLibrary(incoming)); assertMigratedHomes(next); if (!validLibraryData(next.library) || !withinSaveLimit(JSON.stringify(next))) throw new Error("This Library could not be migrated. Your original has been kept."); }
         catch (error) {
           // Keep both the rejected import and the current live save. Never repair imported bytes.
           await storage.preserve(encoded);
@@ -343,7 +414,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           throw error;
         }
         await queue.current;
+        const pending = draftRecovery(); if (pending) await storage.preserve(pending);
+        if (!incoming.library) await storage.preserve(encoded);
         await preserveImportedHome(storage, encoded, incoming, next, recovery ? null : JSON.stringify(latest.current));
+        clearPageDrafts();
         generation.current += 1;
         setEpoch(generation.current);
         latest.current = next;
@@ -351,6 +425,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setRaw(JSON.stringify(next));
         setRecovery(null);
         setError(null);
+        lastWriteFailed.current = false; libraryRejected.current = false;
         setReady(true);
       } finally {
         restoring.current = false;
@@ -383,6 +458,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         notePractice,
         markCoached,
         exploreUpdate,
+        libraryUpdate, libraryPatch, libraryPolicy, libraryFlush,
         ready,
         error,
         recovery,

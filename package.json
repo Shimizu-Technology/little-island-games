@@ -52,8 +52,9 @@
     "export:public": "node scripts/export-public.mjs",
     "library:validate": "node scripts/library/validate.mjs",
     "library:validate:shipping": "node scripts/library/validate.mjs --shipping",
-    "export:library-lab": "EXPO_PUBLIC_LIBRARY_LAB=1 npm run export:web",
-    "library:index": "node --experimental-strip-types scripts/library/build-index.mjs"
+    "library:index": "node --experimental-strip-types scripts/library/build-index.mjs",
+    "export:library-fixtures": "EXPO_PUBLIC_LIBRARY_FIXTURES=1 npm run export:web",
+    "postinstall": "npm run library:validate && npm run library:index"
   },
   "private": true,
   "engines": {

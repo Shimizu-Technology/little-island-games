@@ -21,7 +21,8 @@ describe("shared activity persistence", () => {
     };
     expect(parseSave(JSON.stringify(save))).toEqual(save);
     expect(() => parseSave(JSON.stringify({ ...save, activities: { racer: card } }))).toThrow();
-    expect(() => parseSave(JSON.stringify({ ...save, explore: { favorites: ["missing"] } }))).toThrow();
+    // Retired IDs remain recoverable during the Library migration.
+    expect(parseSave(JSON.stringify({ ...save, explore: { favorites: ["missing"] } })).explore?.favorites).toEqual(["missing"]);
     expect(() =>
       parseSave(JSON.stringify({ ...save, explore: { favorites: [TOPICS[0].id, TOPICS[0].id] } }))
     ).toThrow();
