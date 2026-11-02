@@ -1,4 +1,6 @@
 import React from "react";
+import { SvgXml } from "react-native-svg";
+import { libraryVectors } from "./vectors.generated";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import { LibraryGlyph } from "./LibraryGlyph";
 import { Text } from "../components/Text";
@@ -75,7 +77,9 @@ export function ItemPicture({
         backgroundColor: palette.lagoon,
       }}
     >
-      {path && libraryAssets[path] ? (
+      {path && libraryVectors[path] ? (
+        <SvgXml xml={libraryVectors[path]} width="100%" height="100%" accessibilityLabel={record.item!.image.alt} />
+      ) : path && libraryAssets[path] ? (
         <Image
           source={libraryAssets[path]}
           resizeMode="contain"

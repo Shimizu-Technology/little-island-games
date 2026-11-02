@@ -50,11 +50,13 @@
     "preview": "node scripts/serve.mjs",
     "doctor": "expo-doctor",
     "export:public": "node scripts/export-public.mjs",
-    "library:validate": "node scripts/library/validate.mjs",
+    "library:validate": "node scripts/library/validate.mjs && npm run library:destinations",
     "library:validate:shipping": "node scripts/library/validate.mjs --shipping",
     "library:index": "node --experimental-strip-types scripts/library/build-index.mjs",
     "export:library-fixtures": "EXPO_PUBLIC_LIBRARY_FIXTURES=1 npm run export:web",
-    "postinstall": "npm run library:validate && npm run library:index"
+    "postinstall": "npm run library:validate && npm run library:index",
+    "library:destinations": "node scripts/library/destinations.mjs",
+    "library:decisions": "node scripts/library/record-decisions.mjs"
   },
   "private": true,
   "engines": {

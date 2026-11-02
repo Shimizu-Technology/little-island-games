@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, rmSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { buildIndex, search } from "../src/library/search";
 import {
   editDrawing,
@@ -10,7 +12,7 @@ import {
   undoDrawing,
   createLibraryPage,
 } from "../src/library/drawing";
-import { canOpen, catalog, categories, recordSpeech } from "../src/library/catalog";
+import { canOpen, catalog, categories, recordSpeech, itemById } from "../src/library/catalog";
 import { canonicalDestination, exhibitWorld, mayFinishPage } from "../src/library/navigation";
 import {
   pendingPage,
@@ -25,14 +27,19 @@ import { TOPICS } from "../src/explore/content";
 describe("Production Library discovery", () => {
   it("keeps question playback separate from the original whole-topic narration", () => {
     const topic = catalog.find((record) => record.id === "dolphins")!;
-    expect(recordSpeech(topic).key).toBe("library-question-dolphins");
+    expect(recordSpeech(topic).key).toBe(topic.item?.label.speechKey ?? "library-question-dolphins");
   });
   it("retains all fifty original stable topic IDs, text and sources", () => {
     for (const topic of TOPICS) {
-      const record = catalog.find((record) => record.id === topic.id);
+      const record = itemById(topic.id);
       expect(record).toBeDefined();
       if (record?.legacy) expect(record.legacy).toEqual(topic);
     }
+  });
+  it("resolves old and reviewed turtle routes to one record and canonical saved location", () => {
+    expect(itemById("turtles")).toBe(itemById("turtle-breath"));
+    expect(canOpen("turtle-breath", ["ocean"])).toBe(true);
+    expect(canonicalDestination("topic", "turtles")).toBe("turtle-breath");
   });
   it("indexes layer vocabulary offline and filters before matching", () => {
     const index = buildIndex([
@@ -54,11 +61,13 @@ describe("Production Library discovery", () => {
     ).toBe(false);
   });
   it("packages no pending draft fixture in the default production registry", () => {
-    execFileSync(process.execPath, ["--experimental-strip-types", "scripts/library/build-index.mjs"], {
-      env: { ...process.env, EXPO_PUBLIC_LIBRARY_FIXTURES: "0" },
+    const output = mkdtempSync(join(tmpdir(), "library-default-"));
+    execFileSync(process.execPath, ["--experimental-strip-types", "scripts/library/build-index.mjs", "--output-dir", output], {
+      env: { ...process.env, EXPO_PUBLIC_LIBRARY_FIXTURES: "0", EXPO_PUBLIC_LIBRARY_PREVIEW: "0" },
       stdio: "pipe",
     });
-    const generated = JSON.parse(readFileSync("src/library/catalog.generated.json", "utf8"));
+    const generated = JSON.parse(readFileSync(join(output, "catalog.generated.json"), "utf8"));
+    rmSync(output, { recursive: true });
     expect(generated.items.every((item: { review: { status: string } }) => item.review.status === "approved")).toBe(
       true
     );

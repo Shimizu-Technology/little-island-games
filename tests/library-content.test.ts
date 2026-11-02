@@ -32,20 +32,29 @@ describe('3.1 reviewed corpus acceptance', () => {
       if (item?.type !== 'topic') throw new Error(original.id);
       expect(envelope.original.short).toBe(original.short);
       expect(envelope.original.deeper).toBe(original.deeper);
-      expect(envelope.independentLibraryReview.review).toEqual(item.review);
+      const factual = envelope.independentLibraryReview.review;
+      for (const key of ['reviewer', 'date', 'factualReviewer'] as const) expect(item.review[key]).toBe(factual[key]);
+      expect(item.review.scope.startsWith(factual.scope)).toBe(true);
       expect(item.sources.length).toBeGreaterThan(0);
     }
   });
-  it('records independent factual review without granting family or shipping approval', () => {
+  it('retains factual review and requires explicit decisions for family or shipping approval', () => {
     for (const item of data) {
-      if (item.type === 'collection') expect(item.review.status).toBe('draft');
+      if (item.type === 'collection') expect(['draft', 'approved']).toContain(item.review.status);
       else {
-        expect(item.review.status).toBe('in-review');
+        expect(['in-review', 'approved']).toContain(item.review.status);
         expect(item.review.factualReviewer).toBe('independent factual reviewer');
         expect(item.review.date).toBe('2026-11-02');
         expect(item.review.scope).toMatch(/pending/i);
       }
-      expect(item.review.familyReviewer).toBeUndefined();
+      if (item.review.familyReviewer) {
+        expect(item.review.familyDecision?.decision).toBe('Yes');
+        expect(item.review.familyReviewer).toBe(item.review.familyDecision?.reviewer);
+      } else expect(item.review.status).not.toBe('approved');
+      if (item.review.status === 'approved') {
+        expect(item.review.familyDecision?.audioAccepted).toBe(true);
+        expect(item.review.familyDecision?.pronunciationAccepted).toBe(true);
+      }
       if (item.type !== 'topic') continue;
       expect(item.label.text).toBe(item.title);
       expect(item.layers.tell.length).toBeLessThanOrEqual(3);
@@ -113,7 +122,7 @@ describe('3.1 reviewed corpus acceptance', () => {
     }
     expect(readFileSync('content/library/books/a-tiny-seed/edition.md', 'utf8')).toContain('her mother and father wanted her to stay');
     expect(book.edition.rights.changes).toContain('Original publisher manuscript preserved');
-    expect(book.review.familyReviewer).toBeUndefined();
+    if (book.review.familyReviewer) expect(book.review.familyDecision?.decision).toBe('Yes');
   });
   it('keeps source-backed CHamoru evidence and all body/culture family flags', () => {
     const provenance = JSON.parse(readFileSync('content/library/new-provenance.json', 'utf8'));

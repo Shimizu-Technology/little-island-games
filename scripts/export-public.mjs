@@ -68,12 +68,26 @@ export function exportPublic(target) {
       ...['song-loop', 'reef-loop', 'sticker', 'coral', 'clear', ...Array.from({ length: 6 }, (_, i) => `shell-${i}`)].map(n => `arcade/${n}.wav`)]);
     if (receipt.speechReceipt.engine !== 'Kokoro-82M v1.0' || receipt.speechReceipt.modelLicense !== 'Apache-2.0' || speech.size !== receipt.speechReceipt.keysPerVoice * 2)
       throw new Error('Neural speech receipt and source map disagree.');
+    // Staged Library recordings have an isolated, complete warm-only receipt.
+    // This source snapshot is not shipping approval or a publication operation.
+    const libraryReceiptPath = join(root, 'scripts/library/audio-receipt.json');
+    const libraryClips = existsSync(libraryReceiptPath) ? JSON.parse(readFileSync(libraryReceiptPath, 'utf8')) : undefined;
+    const libraryHashes = {};
+    if (libraryClips) {
+      const scripts = JSON.parse(readFileSync(join(root, 'scripts/learn/library.json'), 'utf8'));
+      if (libraryClips.voice !== 'af_heart' || libraryClips.networkPlayback !== false) throw new Error('Invalid Library generation receipt');
+      for (const [key, text] of Object.entries(scripts)) {
+        const clip = libraryClips.clips[key], path = `audio/${key}.m4a`;
+        if (!clip || clip.path !== `assets/${path}` || clip.transcriptSha256 !== createHash('sha256').update(text).digest('hex')) throw new Error(`Stale Library generation receipt: ${key}`);
+        libraryHashes[path] = clip.sha256;
+      }
+    }
     const audio = new Set(paths.filter(p => /\.(?:m4a|wav|mp3|aac|aiff?|ogg|flac)$/i.test(p)).map(p => p.replace(/^assets\//, '')));
     for (const path of [...speech, ...tones]) if (!audio.has(path)) throw new Error(`Missing audio: ${path}`);
     for (const path of audio) {
-      if (!speech.has(path) && !tones.has(path)) throw new Error(`Unreferenced or legacy audio: ${path}`);
+      if (!speech.has(path) && !tones.has(path) && !libraryHashes[path]) throw new Error(`Unreferenced or legacy audio: ${path}`);
       const bytes = readFileSync(join(root, 'assets', path));
-      if (createHash('sha256').update(bytes).digest('hex') !== receipt.sha256[path])
+      if (createHash('sha256').update(bytes).digest('hex') !== (libraryHashes[path] ?? receipt.sha256[path]))
         throw new Error(`Audio does not match verified generation receipt: ${path}`);
     }
     for (const path of paths) {

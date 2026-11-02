@@ -72,5 +72,5 @@ for (const item of items) {
   for (const id of item.members ?? []) ok(ids.has(id), `${item.id}: unknown collection member ${id}`);
 }
 for (const c of categories) ok(speech[c.speechKey] === c.title + '.', `${c.id}: category speech missing`);
-if (errors.length) { console.error(errors.join('\n')); process.exitCode = 1; }
+if (errors.length) { if (shipping) console.error('SHIPPING BLOCKED: record the family reviewer’s Yes/Change decisions for every item and collection; then accept pronunciation and the generated warm recordings before --approve. Generation alone is not approval.'); console.error(errors.join('\n')); process.exitCode = 1; }
 else console.log(`Library ${shipping ? 'shipping' : 'design'} validation: ${items.length} items; rights, review, speech registration, files and internal links checked. Draft recordings remain pending.`);

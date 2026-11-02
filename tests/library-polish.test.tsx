@@ -226,3 +226,18 @@ describe("Library art studio", () => {
     expect(changes.mock.calls.at(-1)?.[0].strokes).toHaveLength(1);
   });
 });
+
+
+describe("Reader word boundaries", () => {
+  it("keeps years replayable and leaves punctuation inside the sentence replay", async () => {
+    const word = vi.fn(), replay = vi.fn();
+    await act(async () => { root = create(<SentenceLine sentence={{ ...sentence, text: "Look ... & 2011." }} selected={false} onSentence={replay} onWord={word} />); });
+    const labels = root.root.findAll(node => node.props.accessibilityRole === "button").map(node => node.props.accessibilityLabel);
+    expect(labels).toContain("Hear word: 2011.");
+    expect(labels).not.toContain("Hear word: ...");
+    expect(labels).not.toContain("Hear word: &");
+    await act(async () => root.root.find(node => node.props.accessibilityLabel === "Hear word: 2011.").props.onPress({ stopPropagation() {} }));
+    expect(word).toHaveBeenCalledWith("2011.");
+    expect(replay).not.toHaveBeenCalled();
+  });
+});

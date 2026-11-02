@@ -55,6 +55,15 @@ interface BaseItem {
     scope: string;
     factualReviewer?: string;
     familyReviewer?: string;
+    familyDecision?: {
+      decision: "Yes" | "Change";
+      reviewer: string;
+      date: string;
+      note: string;
+      contentSha256: string;
+      audioAccepted: boolean;
+      pronunciationAccepted: boolean;
+    };
   };
   sources: { title: string; url: string; accessed: string; revision?: string }[];
 }

@@ -1,4 +1,6 @@
 import generated from "./catalog.generated.json";
+import naming from "./naming.json";
+import { canonicalLibraryId } from "./ids";
 import { TOPICS, WORLDS, type ExploreTopic, type WorldId } from "../explore/content";
 import type { LibraryItem, Sentence } from "./schema";
 import type { IndexedEntry } from "./search";
@@ -31,7 +33,7 @@ export const catalog: CatalogItem[] = [
       motif: categories.find((c) => c.id === item.category)?.motif ?? "globe",
       item,
     })),
-  ...TOPICS.filter((topic) => !currentIds.has(topic.id)).map((topic) => ({
+  ...TOPICS.filter((topic) => !currentIds.has(canonicalLibraryId(topic.id))).map((topic) => ({
     id: topic.id,
     title: topic.title,
     category: worldCategory[topic.world],
@@ -39,7 +41,7 @@ export const catalog: CatalogItem[] = [
     legacy: topic,
   })),
 ];
-export const itemById = (id?: string) => catalog.find((item) => item.id === id);
+export const itemById = (id?: string) => id ? catalog.find((item) => canonicalLibraryId(item.id) === canonicalLibraryId(id)) : undefined;
 export const searchIndex = generated.index as IndexedEntry[];
 export const exhibits = WORLDS.map((world) => ({
   world: world.id,
@@ -60,7 +62,9 @@ export function recordSpeech(record: CatalogItem): { key: string; sentence?: Sen
     return { key: label.speechKey, sentence: label };
   return { key: `library-question-${record.id}` };
 }
+export const namingLabel = (record: CatalogItem) => (naming as Record<string, string>)[record.id] ?? record.item?.label.text ?? record.legacy?.illustration.replace(/-/g, " ") ?? "";
 export function recordLabelSpeech(record: CatalogItem): { key: string; sentence?: Sentence } {
+  if ((naming as Record<string, string>)[record.id] && record.item) return { key: `library-name-${record.id}` };
   return { key: record.item?.label.speechKey ?? `library-word-${record.motif}`, sentence: record.item?.label };
 }
 export function availableItems(collections: readonly string[]) {

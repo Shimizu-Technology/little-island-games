@@ -17,6 +17,7 @@ import { labAction } from "../explore/activities";
 import { newExploreProgress } from "../explore/progress";
 import { libraryChild, libraryHoursOpen, type LibraryChildState } from "./state";
 import {
+  authored,
   availableItems,
   canOpen,
   categories,
@@ -38,9 +39,11 @@ import { createLibraryPage } from "./drawing";
 import { Maker, DrawingArt } from "./Maker";
 import { GrownUps } from "./GrownUps";
 import { LookListen } from "./LookListen";
+import { ReviewedNarration } from "./ReviewedNarration";
 import { Exhibit } from "./Exhibit";
 import { hasPendingPages, pageDraftKey, pendingPage } from "./drafts";
 import { canonicalDestination, exhibitWorld as resolveExhibitWorld, mayFinishPage } from "./navigation";
+import { canonicalLibraryId } from "./ids";
 import type { ReadingLayer } from "./schema";
 const extensions = new Map<string, number>();
 export default function LibraryScreen() {
@@ -70,7 +73,7 @@ function LibraryReady() {
   const focused = useIsFocused();
   const params = useLocalSearchParams<{ place?: string; id?: string; resume?: string }>();
   const place = params.place ?? "wonder";
-  const id = params.id ?? "";
+  const id = canonicalLibraryId(params.id ?? "");
   const people = store.save.learning ?? familyLearners();
   const childId = people.active;
   const child = libraryChild(store.save.library, childId);
@@ -162,12 +165,13 @@ function LibraryReady() {
     if (router.canGoBack()) router.back();
     else router.replace("/");
   };
-  const toggleSaved = (itemId: string) =>
-    update({
-      saved: child.saved.includes(itemId)
-        ? child.saved.filter((value) => value !== itemId)
-        : [...child.saved, itemId].slice(-300),
-    });
+  const savedId = (itemId: string) => canonicalLibraryId(itemById(itemId)?.id ?? itemId);
+  const isSaved = (itemId: string) => child.saved.some(value => savedId(value) === savedId(itemId));
+  const toggleSaved = (itemId: string) => update({
+    saved: isSaved(itemId)
+      ? child.saved.filter(value => savedId(value) !== savedId(itemId))
+      : [...child.saved, savedId(itemId)].slice(-300),
+  });
   const openItem = (itemId: string) => {
     if (itemId.startsWith("complete:")) {
       const topicId = itemId.slice(9);
@@ -240,7 +244,10 @@ function LibraryReady() {
       : child.category === "all"
         ? "map"
         : `world:${Object.entries(worldCategory).find(([, category]) => category === child.category)?.[0]}`;
-  const savedY = child.positions[positionKey] ?? child.positions[legacyScrollKey] ?? 0;
+  const oldTurtlePosition = place === "topic" && id === "turtle-breath"
+    ? child.positions[positionKey.replace("turtle-breath", "turtles")] ?? child.positions["topic:turtles"]
+    : undefined;
+  const savedY = child.positions[positionKey] ?? child.positions[legacyScrollKey] ?? oldTurtlePosition ?? 0;
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestPositionKey = useRef(positionKey);
   useLayoutEffect(() => {
@@ -273,7 +280,7 @@ function LibraryReady() {
       search(
         searchIndex,
         child.query,
-        child.onlyFavorites ? new Set(child.saved.filter((id) => allowedIds.has(id))) : allowedIds,
+        child.onlyFavorites ? new Set(child.saved.map(id => itemById(id)?.id ?? id).filter((id) => allowedIds.has(id))) : allowedIds,
         child.category === "all" ? undefined : child.category
       )
         .map((entry) => itemById(entry.id)!)
@@ -386,8 +393,8 @@ function LibraryReady() {
         {place === "reader" ? (
           <>
             <Action
-              label={child.saved.includes(id) ? "Saved book. Remove from My Shelf" : "Save book"}
-              selected={child.saved.includes(id)}
+              label={isSaved(id) ? "Saved book. Remove from My Shelf" : "Save book"}
+              selected={isSaved(id)}
               onPress={() => toggleSaved(id)}
             >
               <LibraryIcon name="heart" size={24} />
@@ -572,7 +579,9 @@ function LibraryReady() {
                             key={exhibit.world}
                             onPress={() => {
                               remember();
-                              visit("exhibit", exhibit.world);
+                              const reviewed = authored.find(item => item.type === "exhibit" && resolveExhibitWorld({ id: item.id, title: item.title, category: item.category, motif: exhibit.motif, item }) === exhibit.world);
+                              if (reviewed) visit("authored-exhibit", reviewed.id);
+                              else visit("exhibit", exhibit.world);
                             }}
                           >
                             <View
@@ -665,12 +674,12 @@ function LibraryReady() {
           {place === "topic" && record ? (
             <TopicPage
               record={record}
-              layer={child.layers[id] ?? "tell"}
+              layer={child.layers[id] ?? (id === "turtle-breath" ? child.layers.turtles : undefined) ?? "tell"}
               onLayer={(layer: ReadingLayer) => {
                 audio.stop();
                 update({ layers: { ...child.layers, [id]: layer } });
               }}
-              saved={child.saved.includes(id)}
+              saved={isSaved(id)}
               toggleSaved={() => toggleSaved(id)}
               collections={child.policy.collections}
               selected={audio.selected}
@@ -800,8 +809,8 @@ function LibraryReady() {
                 sound={store.save.settings.sound}
                 onHear={(key) => audio.speak(key)}
                 speaking={audio.selected}
-                limits={authoredExhibit?.model.limits}
               />
+              {authoredExhibit && <ReviewedNarration id={authoredExhibit.id} state={child.labs[exhibitWorld]} selected={audio.selected} speak={audio.speak} />}
             </>
           ) : (
             <>

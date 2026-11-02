@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { PanResponder, Pressable, View, useWindowDimensions } from "react-native";
 import { Text } from "../components/Text";
 import { ItemPicture, LibraryIcon, s } from "./ui";
-import { recordLabelSpeech, type CatalogItem } from "./catalog";
+import { namingLabel, recordLabelSpeech, type CatalogItem } from "./catalog";
 import type { Sentence } from "./schema";
 export function LookListen({
   items,
@@ -33,7 +33,7 @@ export function LookListen({
     [items.length, stop]
   );
   const record = items[index % Math.max(1, items.length)];
-  const word = record?.item?.label.text ?? record?.legacy?.illustration.replace(/-/g, " ") ?? "";
+  const word = record ? namingLabel(record) : "";
   const [hint, setHint] = useState("");
   return (
     <View style={[s.page, { justifyContent: "center", backgroundColor: "#D9EAE0" }]} {...gesture.panHandlers}>

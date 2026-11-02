@@ -408,3 +408,30 @@ The three authored exhibit engine IDs are `reef-food-web`, `water-cycle`, and `n
 Dependency installation runs the same Library validation/index step via `postinstall`, so native build workers regenerate admitted content and static asset imports after installing the lockfile. Web export regenerates them again. The committed generated registry is always the default admitted build, never the optional QA fixture build.
 
 Question speakers request `library-question-<stable-id>` when an item’s naming label differs from its question. CONTENT/audio should register the exact existing title under that key in the established speech registration pipeline. Look & Listen plays the separate naming label; neither action substitutes full-article narration. Legacy full narration remains reachable on the topic page. Missing question/word clips use the visible uninstalled-recording recovery. This does not change the authoring schema.
+
+
+## Family-review integration (3.0/3.1)
+
+`EXPO_PUBLIC_LIBRARY_PREVIEW=1 npm run export:web` admits all 90 independently reviewed wonders, eight books, three exhibits and their nine structural collections. The flag is opt-in; ordinary installs/exports admit only approved authored records and retain the fifty original Explore topics. `library:index` regenerates the admitted registry, reviewed SVG strings and explicit local asset/speech imports. Native workers use the same flag during postinstall and bundling. Do not set it for a shipping build. No review field is changed by admission. The older `EXPO_PUBLIC_LIBRARY_FIXTURES` flag is for engineering fixtures only.
+
+Canonical `content/library/**` remains byte-identical to review f56330c, including pending audio/review declarations. The separate `scripts/library/audio-receipt.json` proves warm-only local Kokoro bytes and exact registered transcript hashes; it does not assert audible or family approval. Preview admission refuses a missing/stale receipt or clip. Library sentence/question/book-word/naming playback resolves this local bank first. No network speech API or system TTS fallback exists. SVG art is rendered from the exact reviewed file bytes, rather than substituted category motifs. Legacy `turtles` links resolve to `turtle-breath` when the reviewed topic is admitted; original Explore data/archives stay unchanged. `food-web` is the reviewed reef engine alias. All 439 links and three model engines are audited against installed IDs by `npm run library:destinations`.
+
+Generate only the staged Library warm bank with the existing local inference/normalization pipeline:
+
+```sh
+<kokoro-venv>/bin/python scripts/generate-neural-audio.py --slice library --model-dir <local-model-dir> --data-dir <short-local-espeak-dir> --receipt <task-local-cache.json> --workers 2
+```
+
+It leaves the shared inference cache, existing complete Warm/Calm maps and receipts unchanged. Model/venv files are never bundled. The 300 MB budget includes Library art, warm speech, vector source and registry/index metadata; the 1 MB index cap remains enforced. Physical decoded memory and installed size require the lead’s native QA.
+
+### Recording Leon’s decisions
+
+Create an unanswered exact-content template with `npm run library:decisions -- --template /path/leon-decisions.json`. Each row carries its canonical item hash; neither creating the template nor admitting a preview records approval. Leon supplies the reviewer/date and Yes or Change for each record/collection, notes for changes, and explicit audio/pronunciation acceptance after listening. `npm run library:decisions -- --file /path/leon-decisions.json` records supplied family decisions in review fields while leaving shipping gated. `--dry-run` validates without writing. Changes and stale hashes block approval. Recording family-decision fields does not invalidate the same answered file. Copy, image, rights, audio-declaration or factual-review changes do require a fresh template and decision.
+
+Once all requested content changes and factual rechecks are complete and every current item/collection has Yes plus actual audio/pronunciation acceptance, the one-step content promotion is:
+
+```sh
+npm run library:decisions -- --file /path/leon-decisions.json --approve
+```
+
+This validates exact item/clip hashes, records the actual named reviewer/date and ready-audio rights, then atomically replaces items only if the unchanged shipping checks pass. It refuses partial, Change, stale or unanswered decisions. It does not upload, publish, build, or clear public-release rights/device acceptance. Build afterward without the preview flag. While this integration’s decisions remain unanswered, `npm run library:validate:shipping` must fail. Its output identifies each unapproved item, missing family decision and pending reviewed recording. Generation alone does not clear that gate.

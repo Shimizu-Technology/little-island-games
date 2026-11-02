@@ -4,6 +4,7 @@ import { AppState, Platform } from "react-native";
 import { voiceSources } from "../content/neuralAudio";
 import { learnSources } from "../content/learnAudio";
 import { readingSpeech } from "../learn/kit/readingSpeech";
+import { librarySpeech } from "./speech.generated";
 import { libraryAssets } from "./assets.generated";
 import type { Sentence } from "./schema";
 
@@ -71,7 +72,7 @@ export function useLibraryAudio(enabled: boolean, volume: number, scope: string)
       const source =
         sentence?.audio.status === "ready"
           ? libraryAssets[sentence.audio.path]
-          : (voiceSources.warm[key] ?? learnSources[key]);
+          : (librarySpeech[key] ?? voiceSources.warm[key] ?? learnSources[key]);
       if (!source) {
         setNotice("This recording is not installed. The words are here to read together.");
         setSelected(sentence?.id ?? key);
@@ -108,9 +109,9 @@ export function useLibraryAudio(enabled: boolean, volume: number, scope: string)
   );
   const word = useCallback(
     (text: string) => {
-      const clean = text.toLowerCase().replace(/[^a-z'-]/g, "");
+      const clean = text.toLowerCase().replace(/[^a-z0-9'-]/g, "");
       const candidates = [`library-word-${clean}`, clean, readingSpeech(clean)];
-      const key = candidates.find((candidate) => voiceSources.warm[candidate] || learnSources[candidate]);
+      const key = candidates.find((candidate) => librarySpeech[candidate] || voiceSources.warm[candidate] || learnSources[candidate]);
       return speak(key ?? candidates[0]);
     },
     [speak]

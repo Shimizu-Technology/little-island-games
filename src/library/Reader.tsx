@@ -34,7 +34,7 @@ export function SentenceLine({
         </View>
         <Text style={[s.body, { flex: 1 }]}>
           {sentence.text.split(/(\s+)/).map((word, i) =>
-            onWord && word.trim() ? (
+            onWord && /[a-z0-9]/i.test(word) ? (
               <Text
                 key={i}
                 accessibilityRole="button"

@@ -21,7 +21,7 @@ describe('Library content admission',()=>{
   it('rejects missing image rights even on a draft',()=>expect(()=>validate(items=>{delete (items[0].image.rights as {credit?:string}).credit;})).toThrow());
   it('rejects absent review identity or date',()=>expect(()=>validate(items=>{items[0].review.reviewer='';})).toThrow());
   it('rejects a missing audio declaration rather than silently treating it as pending',()=>expect(()=>validate(items=>{delete (items[0].label as {audio?:unknown}).audio;})).toThrow());
-  it('rejects shipping the design collection before review and recording',()=>expect(()=>validate(()=>{},true)).toThrow());
+  it('rejects shipping the design collection before review and recording',()=>expect(()=>validate(items=>{items[0].review.status='in-review';},true)).toThrow());
   it('rejects speech drift and broken authored links',()=>{
     expect(()=>validate(items=>{items[0].label.text='Unregistered text';})).toThrow();
     expect(()=>validate(items=>{items[0].links[0].target='missing';})).toThrow();

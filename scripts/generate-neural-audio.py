@@ -5,7 +5,7 @@ playback. Complete warm/calm banks must be published before a release.
 Usage: <venv>/bin/python scripts/generate-neural-audio.py --model-dir <path>
 """
 from pathlib import Path
-import argparse, concurrent.futures, hashlib, json, os, re, subprocess, tempfile, time
+import argparse, concurrent.futures, hashlib, json, os, re, subprocess, tempfile, time, shutil
 
 ROOT = Path(__file__).resolve().parent.parent
 VOICES = {'warm': 'af_heart', 'calm': 'af_bella'}
@@ -67,15 +67,24 @@ def main():
     parser.add_argument('--data-dir', required=True, help='Short physical path to espeak-ng-data (the library has a path-length limit)')
     parser.add_argument('--workers', type=int,default=2)
     parser.add_argument('--limit', type=int)
+    parser.add_argument('--slice', choices=['library'], help='Generate an isolated warm-only staged Library bank')
+    parser.add_argument('--receipt', help='Isolated resumable generation receipt; required for a slice')
     args = parser.parse_args()
-    speech = json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30))
-    receipt = Path(args.model_dir)/'generated.json'
+    if args.slice:
+        if not args.receipt: parser.error('--slice requires an isolated --receipt')
+        speech = json.loads((ROOT/'scripts/learn/library.json').read_text())
+    else:
+        speech = json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30))
+    voices = {'warm': VOICES['warm']} if args.slice else VOICES
+    receipt = Path(args.receipt) if args.receipt else Path(args.model_dir)/'generated.json'
+    if args.slice and receipt.resolve() == (Path(args.model_dir)/'generated.json').resolve():
+        parser.error('A staged slice must not overwrite the shared full-bank generation receipt')
     records = json.loads(receipt.read_text()) if receipt.exists() else {}
     voice_hash=hashlib.sha256((Path(args.model_dir)/'voices-v1.0.bin').read_bytes()).hexdigest()
     if voice_hash != VOICE_FILE_SHA256: raise RuntimeError('Voice data differs from the pinned v1.0 bank')
     model_hash = hashlib.sha256((Path(args.model_dir)/'kokoro-v1.0.onnx').read_bytes()).hexdigest()
     items=[]
-    for voice in VOICES:
+    for voice in voices:
         for key,text in sorted(speech.items()):
             digest=input_digest(text,voice,model_hash)
             target=ROOT/'assets/audio'/('' if voice=='warm' else 'calm')/f'{key}.m4a'
@@ -88,7 +97,38 @@ def main():
             if file_matches and old.get('input')==digest:continue
             items.append((voice,key,text,digest))
     if args.limit: items=items[:args.limit]
-    print(f'PID {os.getpid()}: {len(items)} pending clips; {len(speech)} keys per voice',flush=True)
+    aliases = {}
+    if args.slice:
+        # Exact text/voice/model/normalization matches reuse verified local bytes.
+        # Keep per-key files and receipts; never infer equality from similar words.
+        reusable = {}
+        reusable_records = {voice: dict(records.get(voice, {})) for voice in voices}
+        shared_receipt = Path(args.model_dir)/'generated.json'
+        if shared_receipt.exists() and shared_receipt.resolve() != receipt.resolve():
+            shared_records = json.loads(shared_receipt.read_text())
+            for voice in voices:
+                for key, record in shared_records.get(voice, {}).items():
+                    reusable_records[voice].setdefault(key, record)
+        for voice in voices:
+            for key, record in reusable_records[voice].items():
+                source = ROOT/'assets/audio'/('' if voice == 'warm' else 'calm')/f'{key}.m4a'
+                if source.exists() and hashlib.sha256(source.read_bytes()).hexdigest() == record.get('sha256'):
+                    reusable[(voice, record.get('input'))] = (source, record)
+        unique, queued = [], {}
+        for item in items:
+            voice, key, text, digest = item
+            target = ROOT/'assets/audio'/('' if voice == 'warm' else 'calm')/f'{key}.m4a'
+            known = reusable.get((voice, digest))
+            if known:
+                shutil.copyfile(known[0], target)
+                records.setdefault(voice, {})[key] = dict(known[1])
+            elif (voice, digest) in queued:
+                aliases.setdefault(queued[(voice, digest)], []).append(key)
+            else:
+                queued[(voice, digest)] = (voice, key)
+                unique.append(item)
+        items = unique
+    print(f'PID {os.getpid()}: {len(items)} pending unique clips; {len(speech)} keys per voice',flush=True)
     started=time.time()
     pool = concurrent.futures.ProcessPoolExecutor(max_workers=max(1,min(args.workers,3)),initializer=initialize,initargs=(args.model_dir,args.data_dir))
     try:
@@ -99,11 +139,19 @@ def main():
             if len(pending)>=max(1,min(args.workers,3))*2: break
         index=0
         while pending:
-            voice,key,entry=pending.pop(0).result(timeout=120)
+            completed, _ = concurrent.futures.wait(pending, timeout=120, return_when=concurrent.futures.FIRST_COMPLETED)
+            if not completed: raise TimeoutError('No local inference worker completed within 120 seconds')
+            future = next(iter(completed))
+            pending.remove(future)
+            voice,key,entry=future.result()
             index+=1
             item=next(iterator,None)
             if item is not None: pending.append(pool.submit(generate,item))
             records.setdefault(voice,{})[key]=entry
+            for alias in aliases.get((voice, key), []):
+                folder = ROOT/'assets/audio'/('' if voice == 'warm' else 'calm')
+                shutil.copyfile(folder/f'{key}.m4a', folder/f'{alias}.m4a')
+                records[voice][alias] = dict(entry)
             if index%10==0 or index==len(items):
                 tmp=receipt.with_suffix('.tmp');tmp.write_text(json.dumps(records,sort_keys=True));tmp.replace(receipt)
             if index%50==0:print(f'{index}/{len(items)} clips · {round(time.time()-started)} seconds',flush=True)
@@ -122,20 +170,34 @@ def main():
         pool.shutdown(wait=True)
     tmp=receipt.with_suffix('.tmp');tmp.write_text(json.dumps(records,sort_keys=True));tmp.replace(receipt)
     if args.limit: return
-    latest=json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30))
+    latest=json.loads((ROOT/'scripts/learn/library.json').read_text()) if args.slice else json.loads(subprocess.check_output([os.sys.executable,str(ROOT/'scripts/generate-audio.py'),'--manifest'],text=True,timeout=30))
     if latest != speech: raise RuntimeError('Speech manifest changed during generation; rerun before publication')
     if hashlib.sha256((Path(args.model_dir)/'kokoro-v1.0.onnx').read_bytes()).hexdigest()!=model_hash or hashlib.sha256((Path(args.model_dir)/'voices-v1.0.bin').read_bytes()).hexdigest()!=voice_hash:
         raise RuntimeError('Inference files changed during generation; refusing publication')
     # A map is published only when every expected clip has the matching input hash.
-    for voice in VOICES:
+    for voice in voices:
         for key,text in speech.items():
             target=ROOT/'assets/audio'/('' if voice=='warm' else 'calm')/f'{key}.m4a'
             expected=input_digest(text,voice,model_hash)
             record=records.get(voice,{}).get(key,{})
             if record.get('input')!=expected or not target.exists() or record.get('sha256')!=hashlib.sha256(target.read_bytes()).hexdigest():
                 raise RuntimeError(f'Incomplete or stale {voice}/{key}')
+    if args.slice:
+        # Generation proves local bytes/transcript identity, never audible or family approval.
+        evidence = {'schemaVersion': 1, 'engine': 'Kokoro-82M v1.0', 'modelLicense': 'Apache-2.0',
+                    'runtime': 'kokoro-onnx 0.6.1 / MIT', 'modelSHA256': model_hash,
+                    'voiceDataSHA256': voice_hash, 'voice': 'af_heart', 'networkPlayback': False,
+                    'normalization': '-20 LUFS, -3 dBTP, LRA7; 24kHz mono AAC48k',
+                    'audibleReview': 'pending', 'clips': {}}
+        for key, text in sorted(speech.items()):
+            record = records['warm'][key]
+            evidence['clips'][key] = {**record, 'path': f'assets/audio/{key}.m4a',
+                                      'transcriptSha256': hashlib.sha256(text.encode()).hexdigest()}
+        (ROOT/'scripts/library/audio-receipt.json').write_text(json.dumps(evidence, indent=2)+'\n')
+        print(f'Published {len(speech)} local warm Library clips; approval remains pending', flush=True)
+        return
     lines=['// Generated offline Kokoro voice banks; see docs/LEARNING_GROWTH.md.','export const voiceSources: Record<"warm" | "calm", Record<string, number>> = {']
-    for voice in VOICES:
+    for voice in voices:
         lines.append(f'  {voice}: {{')
         for key in sorted(speech):
             target=f'../../assets/audio/{"" if voice=="warm" else "calm/"}{key}.m4a'
@@ -154,7 +216,7 @@ def main():
     public=ROOT/'scripts/public-audio-receipt.json'
     previous=json.loads(public.read_text()) if public.exists() else {'sha256':{}}
     hashes={k:v for k,v in previous.get('sha256',{}).items() if k.endswith('.wav')}
-    for voice in VOICES:
+    for voice in voices:
         for key in speech:
             rel=f'audio/{"" if voice=="warm" else "calm/"}{key}.m4a'
             hashes[rel]=hashlib.sha256((ROOT/'assets'/rel).read_bytes()).hexdigest()

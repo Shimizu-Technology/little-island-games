@@ -28,12 +28,18 @@ export function phonetic(value: string) {
     .replace(/[aeiou]/g, "")
     .replace(/(.)\1+/g, "$1");
 }
-function distance(a: string, b: string) {
+/** Bounded edit distance: cells outside the tolerance band cannot rescue a match. */
+function distance(a: string, b: string, limit: number) {
   let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
   for (let i = 1; i <= a.length; i++) {
-    const current = [i];
-    for (let j = 1; j <= b.length; j++)
+    const current = Array<number>(b.length + 1).fill(limit + 1);
+    current[0] = i;
+    let minimum = limit + 1;
+    for (let j = Math.max(1, i - limit); j <= Math.min(b.length, i + limit); j++) {
       current[j] = Math.min(current[j - 1] + 1, previous[j] + 1, previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      minimum = Math.min(minimum, current[j]);
+    }
+    if (minimum > limit) return limit + 1;
     previous = current;
   }
   return previous[b.length];
@@ -50,6 +56,15 @@ export function buildIndex(entries: SearchEntry[]): IndexedEntry[] {
 }
 export function search(index: IndexedEntry[], query: string, allowed: ReadonlySet<string>, category?: string) {
   const words = normalize(query.slice(0, 120)).split(" ").filter(Boolean).slice(0, 8);
+  // Full-text articles share many words. Compute each query/term distance once per search.
+  const near = new Map(words.map(word => [word, new Map<string, boolean>()]));
+  const sounds = new Map(words.map(word => [word, phonetic(word)]));
+  const close = (word: string, term: string, limit: number) => {
+    if (Math.abs(word.length - term.length) > limit) return false;
+    const cache = near.get(word)!;
+    if (!cache.has(term)) cache.set(term, distance(word, term, limit) <= limit);
+    return cache.get(term)!;
+  };
   return index
     .filter((e) => allowed.has(e.id) && (!category || e.category === category))
     .map((entry) => {
@@ -61,10 +76,10 @@ export function search(index: IndexedEntry[], query: string, allowed: ReadonlySe
         const limit = word.length >= 7 ? 2 : 1;
         if (
           word.length >= 4 &&
-          entry.terms.some((term) => Math.abs(word.length - term.length) <= limit && distance(word, term) <= limit)
+          entry.terms.some((term) => close(word, term, limit))
         )
           return 60;
-        const sound = phonetic(word);
+        const sound = sounds.get(word)!;
         if (word.length >= 4 && sound.length >= 3 && entry.sounds.includes(sound)) return 40;
         return 0;
       };
