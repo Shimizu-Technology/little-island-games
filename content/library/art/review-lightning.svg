@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="lightning-art-title">
+  <title id="lightning-art-title">A large golden lightning bolt reaches from a small dark cloud toward distant ground; widening curved lines symbolize thunder.</title>
+  <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M54 56q-13-30 21-32 9-26 35-8 35-7 42 26 15 17-4 22Z" fill="#7F83A0" /><path d="M111 58 87 103h27l-21 54 70-77h-32l17-22Z" fill="#F0D397" /><path d="M177 79q26 19 0 40m22-55q46 37 0 69m24-84q64 51 0 101" fill="none" stroke="#AFAB9D"/><path d="M35 175q80-17 120-3t130-3" fill="none" stroke="#80A97D"/>
+  </g>
+</svg>

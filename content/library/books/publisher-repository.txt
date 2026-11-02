@@ -1,0 +1,311 @@
+GitHub - bookdash/bookdash-books: Book Dash books markdown-HTML workflow · GitHub
+Skip to content
+You signed in with another tab or window.
+Reload
+to refresh your session.
+You signed out in another tab or window.
+Reload
+to refresh your session.
+You switched accounts on another tab or window.
+Reload
+to refresh your session.
+Dismiss alert
+gh-pages
+Branches
+Tags
+Go to file
+Code
+Open more actions menu
+Latest commit
+History
+251 Commits
+251 Commits
+Folders and files
+Name
+Name
+Last commit message
+Last commit date
+_data
+_data
+_includes
+_includes
+_layouts
+_layouts
+_site
+_site
+a-beautiful-day
+a-beautiful-day
+a-dancers-tale
+a-dancers-tale
+a-fish-and-a-gift
+a-fish-and-a-gift
+a-house-for-mouse
+a-house-for-mouse
+a-tiny-seed
+a-tiny-seed
+admin
+admin
+amazing-daisy
+amazing-daisy
+bathtub-safari
+bathtub-safari
+come-back-cat
+come-back-cat
+css
+css
+download
+download
+gracas-dream
+gracas-dream
+grandpas-gold
+grandpas-gold
+hippo-wants-to-dance
+hippo-wants-to-dance
+how-about-you
+how-about-you
+hugs-in-the-city
+hugs-in-the-city
+i-can-dress-myself
+i-can-dress-myself
+i-will-help-you
+i-will-help-you
+images
+images
+is-there-anyone-like-me
+is-there-anyone-like-me
+it-wasnt-me
+it-wasnt-me
+karabos-question
+karabos-question
+katiitis-song
+katiitis-song
+lara-the-yellow-ladybird
+lara-the-yellow-ladybird
+little-ants-big-plan
+little-ants-big-plan
+little-sock
+little-sock
+londi-the-dreaming-girl
+londi-the-dreaming-girl
+lory-dory
+lory-dory
+maddy-moona
+maddy-moona
+miss-helens-magical-world
+miss-helens-magical-world
+mrs-penguins-palace
+mrs-penguins-palace
+queen-of-soweto
+queen-of-soweto
+rafikis-style
+rafikis-style
+sbus-special-shoes
+sbus-special-shoes
+searching-for-the-spirit-of-spring
+searching-for-the-spirit-of-spring
+shongololos-shoes
+shongololos-shoes
+sima-and-siza
+sima-and-siza
+sindi-and-the-moon
+sindi-and-the-moon
+sindiwe-and-the-fireflies
+sindiwe-and-the-fireflies
+singing-the-truth
+singing-the-truth
+sizwes-smile
+sizwes-smile
+sleepy-mr-sloth
+sleepy-mr-sloth
+springloaded
+springloaded
+thatos-birthday-surprise
+thatos-birthday-surprise
+the-best-thing-ever
+the-best-thing-ever
+the-elephant-in-the-room
+the-elephant-in-the-room
+the-lion-who-wouldnt-try
+the-lion-who-wouldnt-try
+there-must-be-a-rainbow
+there-must-be-a-rainbow
+together-were-strong
+together-were-strong
+tortoise-finds-his-home
+tortoise-finds-his-home
+walking-together
+walking-together
+what-if
+what-if
+what-is-it
+what-is-it
+when-i-grow-up
+when-i-grow-up
+who-is-our-friend
+who-is-our-friend
+whose-button-is-this
+whose-button-is-this
+why-is-nita-upside-down
+why-is-nita-upside-down
+zanele-situ-my-story
+zanele-situ-my-story
+.gitattributes
+.gitattributes
+.gitignore
+.gitignore
+Gemfile
+Gemfile
+Gemfile.lock
+Gemfile.lock
+README.md
+README.md
+_config.epub.yml
+_config.epub.yml
+_config.pdf-ebook.yml
+_config.pdf-ebook.yml
+_config.yml
+_config.yml
+_prose.yml
+_prose.yml
+index.md
+index.md
+linux-pdf.sh
+linux-pdf.sh
+mac-pdf.command
+mac-pdf.command
+win-epub.bat
+win-epub.bat
+win-pdf-ebook.bat
+win-pdf-ebook.bat
+win-pdf.bat
+win-pdf.bat
+win-web.bat
+win-web.bat
+View all files
+Repository files navigation
+Book Dash books
+We're creating simple HTML versions of
+Book Dash
+books for the web and ebooks.
+To grab the finished HTML, see
+the website version of these files
+.
+Contributing
+If you'd like to help grow and improve this collection:
+Let us know about mistakes and problems by
+logging issues here
+.
+Complete and clean up infinished versions (any
+Book Dash book
+not listed
+here
+).
+Adding a book requires four components:
+A folder in this repo, organised as
+english-title/language-code
+, e.g.
+sleepy-mr-sloth/en
+for the English edition of
+Sleepy Mr Sloth
+.
+An
+index.md
+file in that folder (containing the story text and links to images)
+An
+images
+folder in that folder (containing JPGs of the front cover and book-page images)
+Information (metadata) about the book stored in the repo's
+_config.yml
+file.
+For technical background on how these files are organised, see the
+Electric Book Workflow
+.
+Creating the
+index.md
+file
+Each book's
+index.md
+file contains all the text and links to images for the story.
+This file is written in markdown: a simple way to structure plain text, which a markdown processor can turn into web- and ebook-ready HTML automatically. You can
+read more about markdown here
+.
+The best way to learn how to create a markdown
+index.md
+file for a book is to look at an existing one.
+Here is the raw markdown for
+Sleepy Mr Sloth
+.
+It's made of four components:
+The YAML header: the part between the three hyphens at the top of the file:
+---
+title: Sleepy Mr Sloth
+---
+The heading:
+# Sleepy Mr Sloth
+. In markdown, a first-level heading is indicated with a hash at the start of the line.
+A link to each image, including a short description of what's in the image:
+![Mr Sloth is sleepy and yawning]({{ site.image-set }}/01.jpg)
+The text of the story, as plain lines of text. The image always precedes the text that relates to it. (This is because in any book we, especially children, always take in the image before we read the text on a page.)
+Each of these elements must be separated by an empty line.
+Images
+These digital versions include cover and story images, always saved as JPG.
+Cover images are language-specific, JPG replicas of the front covers of the book in that language. Covers must always be saved as
+cover.jpg
+. Cover images are always square.
+Story images do not include text, since all the text is in the story markdown/HTML. The should always be saved as two-digit numbered filenames in order:
+01.jpg
+,
+02.jpg
+, etc. The first image is the first story image in the book (i.e. not the book plate, endpapers, or title page). Story images are always landscape (a double-page-spread from the print version). There are almost always 12 story images.
+This means that story images can be reused as is for each language. Although – since each translation has its own
+images
+folder – we can make exceptions if necessary and use language-specific variations, should they exist and be important for the story (e.g. a text-based sign in a picture).
+When preparing images, aim for 100KB per image, and about 1000 pixels across (the longest side, which should almost always be the width of the image). This makes entire books about 1.2MB in size, which is already quite large. Downstream reusers can then choose to downsample or downsize images if necessary.
+The easiest way to create story images is to export to JPEG from the InDesign file, with language layers hidden. If you use this option, we recommend the following export settings:
+Export: Spreads
+Quality: Medium
+Format Method: Baseline
+Resolution (ppi): 72
+Color space: RGB
+Embed Color Profile: sRGB checked
+Anti-alias checked
+Use Document Bleed Settings: unchecked
+Simulate Overprint unchecked
+Editing the metadata file
+Each book's details are included in
+_data/meta.yml
+.
+This file is fairly easy to understand just by reading through it. Each book's details are set in two levels:
+Info that relates to the original and, therefore, all editions of a book (e.g. the original team that created it)
+Info that relates to a specific translation (e.g. the language it's in).
+Since even small mistakes in this file can break the whole website, only certain people are able to edit it.
+As a contributor, you can:
+create just the lines for your book and log them as an issue, or
+if you are familiar with GitHub, you can fork the repo, make the changes, and submit them as a pull request.
+Licence
+All Book Dash content is licensed with a
+Creative Commons Attribution licence
+. If you contribute, you agree that your contributions carry the same license.
+About
+Book Dash books markdown-HTML workflow
+bookdash.github.io/bookdash-books/
+Resources
+Readme
+Activity
+Custom properties
+Stars
+14
+stars
+Watchers
+8
+watching
+Forks
+7
+forks
+Report repository
+Releases
+Packages
+Used by
+Contributors
+Languages
+You can’t perform that action at this time.

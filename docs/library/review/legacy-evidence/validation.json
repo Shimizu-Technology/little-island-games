@@ -1,0 +1,267 @@
+{
+  "sourceBase": "d0c181e66b0baa6f512a1c78630fa0a8f527a289",
+  "date": "2026-11-02",
+  "patchSha256": "669440d83b3ee15c030a6dbd7bb0a83bb01225940b943cd9442b0eb19e76cf7a",
+  "records": 50,
+  "sentenceKeys": 767,
+  "structuralAudit": "passed",
+  "stockValidatorWithTemporaryMergedCorpusAndSpeechOverlay": "passed",
+  "stockOutput": "Library design validation: 110 items; rights, review, speech registration, files and internal links checked. Draft recordings remain pending.",
+  "typecheck": "passed",
+  "lint": "passed: 0 errors, 33 pre-existing warnings",
+  "canonicalFilesModified": false,
+  "shippingApproval": false,
+  "runtimeTests": "not run: text-review scope",
+  "items": [
+    {
+      "id": "sun",
+      "tellSentences": 3,
+      "deepWords": 130
+    },
+    {
+      "id": "moon",
+      "tellSentences": 2,
+      "deepWords": 130
+    },
+    {
+      "id": "day-night",
+      "tellSentences": 3,
+      "deepWords": 131
+    },
+    {
+      "id": "planets",
+      "tellSentences": 3,
+      "deepWords": 138
+    },
+    {
+      "id": "mars",
+      "tellSentences": 3,
+      "deepWords": 134
+    },
+    {
+      "id": "saturn",
+      "tellSentences": 3,
+      "deepWords": 133
+    },
+    {
+      "id": "gravity",
+      "tellSentences": 2,
+      "deepWords": 134
+    },
+    {
+      "id": "stars",
+      "tellSentences": 3,
+      "deepWords": 133
+    },
+    {
+      "id": "rockets",
+      "tellSentences": 3,
+      "deepWords": 137
+    },
+    {
+      "id": "asteroids",
+      "tellSentences": 3,
+      "deepWords": 138
+    },
+    {
+      "id": "salty",
+      "tellSentences": 3,
+      "deepWords": 133
+    },
+    {
+      "id": "tides",
+      "tellSentences": 3,
+      "deepWords": 136
+    },
+    {
+      "id": "waves",
+      "tellSentences": 3,
+      "deepWords": 137
+    },
+    {
+      "id": "coral",
+      "tellSentences": 3,
+      "deepWords": 136
+    },
+    {
+      "id": "plankton",
+      "tellSentences": 3,
+      "deepWords": 132
+    },
+    {
+      "id": "seagrass",
+      "tellSentences": 3,
+      "deepWords": 135
+    },
+    {
+      "id": "deep-ocean",
+      "tellSentences": 3,
+      "deepWords": 132
+    },
+    {
+      "id": "octopus",
+      "tellSentences": 3,
+      "deepWords": 130
+    },
+    {
+      "id": "turtle-breath",
+      "tellSentences": 3,
+      "deepWords": 129
+    },
+    {
+      "id": "food-web",
+      "tellSentences": 3,
+      "deepWords": 139
+    },
+    {
+      "id": "bats",
+      "tellSentences": 3,
+      "deepWords": 136
+    },
+    {
+      "id": "butterflies",
+      "tellSentences": 3,
+      "deepWords": 131
+    },
+    {
+      "id": "frogs",
+      "tellSentences": 3,
+      "deepWords": 138
+    },
+    {
+      "id": "bees",
+      "tellSentences": 3,
+      "deepWords": 138
+    },
+    {
+      "id": "camouflage",
+      "tellSentences": 3,
+      "deepWords": 136
+    },
+    {
+      "id": "dolphins",
+      "tellSentences": 3,
+      "deepWords": 133
+    },
+    {
+      "id": "habitats",
+      "tellSentences": 3,
+      "deepWords": 131
+    },
+    {
+      "id": "migration",
+      "tellSentences": 3,
+      "deepWords": 134
+    },
+    {
+      "id": "insect-flight",
+      "tellSentences": 3,
+      "deepWords": 139
+    },
+    {
+      "id": "bird-feathers",
+      "tellSentences": 3,
+      "deepWords": 137
+    },
+    {
+      "id": "blue-sky",
+      "tellSentences": 3,
+      "deepWords": 134
+    },
+    {
+      "id": "clouds",
+      "tellSentences": 3,
+      "deepWords": 138
+    },
+    {
+      "id": "rain",
+      "tellSentences": 3,
+      "deepWords": 140
+    },
+    {
+      "id": "rainbows",
+      "tellSentences": 3,
+      "deepWords": 136
+    },
+    {
+      "id": "wind",
+      "tellSentences": 3,
+      "deepWords": 132
+    },
+    {
+      "id": "lightning",
+      "tellSentences": 3,
+      "deepWords": 136
+    },
+    {
+      "id": "typhoons",
+      "tellSentences": 3,
+      "deepWords": 133
+    },
+    {
+      "id": "water-cycle",
+      "tellSentences": 3,
+      "deepWords": 137
+    },
+    {
+      "id": "seasons",
+      "tellSentences": 3,
+      "deepWords": 132
+    },
+    {
+      "id": "forecast",
+      "tellSentences": 3,
+      "deepWords": 137
+    },
+    {
+      "id": "guam",
+      "tellSentences": 3,
+      "deepWords": 137
+    },
+    {
+      "id": "islands",
+      "tellSentences": 3,
+      "deepWords": 139
+    },
+    {
+      "id": "reef",
+      "tellSentences": 3,
+      "deepWords": 139
+    },
+    {
+      "id": "trench",
+      "tellSentences": 3,
+      "deepWords": 134
+    },
+    {
+      "id": "mountains",
+      "tellSentences": 3,
+      "deepWords": 137
+    },
+    {
+      "id": "rivers",
+      "tellSentences": 3,
+      "deepWords": 139
+    },
+    {
+      "id": "continents",
+      "tellSentences": 3,
+      "deepWords": 141
+    },
+    {
+      "id": "maps",
+      "tellSentences": 3,
+      "deepWords": 138
+    },
+    {
+      "id": "directions",
+      "tellSentences": 2,
+      "deepWords": 136
+    },
+    {
+      "id": "volcanoes",
+      "tellSentences": 3,
+      "deepWords": 136
+    }
+  ]
+}

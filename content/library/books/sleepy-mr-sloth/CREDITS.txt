@@ -1,0 +1,10 @@
+Sleepy Mr Sloth. Graham Paterson (Illustrator); Paul Kennedy (Writer); Nick Mulgrew (Designer); Arthur Attwell (Editor); Book Dash. Book Dash digital English edition; ISBN 978-0-9922357-0-3. Created 2014-05-10; publisher digital source revision 54916310c5c06a5282e2d5d4add18d64f90e5fde. CC BY 4.0.
+
+Official publisher English digital text reflowed into page reading blocks; whitespace and line breaks normalized, words and punctuation retained. Official digital illustrations recompressed as RGB JPEG quality 88, maximum 1600 pixels, without cropping.
+
+License: CC BY 4.0, https://creativecommons.org/licenses/by/4.0/
+Complete license: ../CC-BY-4.0.txt
+Publisher: https://bookdash.org/books/sleepy-mr-sloth/
+Text, cover and all story illustrations carry this attribution. No third-party audio acquired. No endorsement by Book Dash or the creators is implied.
+
+Publisher credit logo: ../book-dash-logo.png (display with these credits; see CREDITS.html).

@@ -1,0 +1,23 @@
+{
+  "reef-food-web": "NOAA food-web text verifies energy direction and branching; NOAA photosynthesis page verifies light-powered food production. Added Clements et al. university-hosted full paper for the parrotfish path; retained qualified many, avoiding a universal seaweed diet. Replaced technical caveat pile with a connected invitation. Population removal remains outside this model.",
+  "water-journey": "NOAA water-cycle overview and NWS hydrology description verify surface/groundwater storage and transport; USGS precipitation page verifies cloud-drop growth and evaporation; NOAA ocean-freezing page supports salt claim. Added these specific citations because generic water-cycle page did not directly cover each claim. warm remains evaporation, not rainfall.",
+  "night-sky": "NASA constellation page verifies imagined lines, unequal star distances, location/hour/year visibility; NASA seasons page verifies rotation and orbit. Added NASA blue-sky page for scattering. Invented-star limitation retained; no traditional navigation or current sky claims.",
+  "sourceAccess": {
+    "opened": [
+      "https://www.noaa.gov/education/resource-collections/marine-life/aquatic-food-webs",
+      "https://oceanexplorer.noaa.gov/ocean-fact/photochemo/",
+      "https://german.bio.uci.edu/images/PDF/Clements%20et%20al.%20%282016%29%20BJLS_online.pdf",
+      "https://www.noaa.gov/education/resource-collections/freshwater/water-cycle",
+      "https://www.usgs.gov/water-science-school/science/precipitation-and-water-cycle",
+      "https://www.nwrfc.noaa.gov/info/water_cycle/hydrology.cgi",
+      "https://oceanservice.noaa.gov/facts/oceanfreeze.html",
+      "https://spaceplace.nasa.gov/constellations/en/",
+      "https://spaceplace.nasa.gov/seasons/en/",
+      "https://spaceplace.nasa.gov/blue-sky/en/"
+    ],
+    "failedOriginalThenReplaced": [
+      "https://www.usgs.gov/special-topics/water-science-school/science/water-cycle (browser timeout; specific USGS precipitation and NOAA NWS pages opened)",
+      "https://onlinelibrary.wiley.com/doi/10.1111/bij.12914 (403; author-hosted UCI full PDF opened)"
+    ]
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "review": {
+    "status": "in-review",
+    "reviewer": "Codex independent factual reviewer",
+    "date": "2026-11-02",
+    "factualReviewer": "independent factual reviewer",
+    "scope": "Independent factual and editorial review completed. Factual corrections in a labeled CC BY adaptation: school account corrected against Maathai’s own 2006 interview; national poverty and river-restoration generalizations replaced with specific community work. Published personal scenes remain the author’s biographical storytelling. Nobel facts and university biography support education, award and death. Digital designer Karen Lilje distinguished from current publisher credit Tarryn-Anne Anderson. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+  },
+  "editionIsbn": "978-0-9946519-2-1",
+  "pages": [
+    {
+      "page": 0,
+      "image": "content/library/books/a-tiny-seed/page-00.jpg",
+      "text": "A Tiny Seed The Story of Wangari Maathai Nicola Rijsdijk & Maya Marshak Little Island Library adaptation.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Front cover of A Tiny Seed.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 1,
+      "image": "content/library/books/a-tiny-seed/page-01.jpg",
+      "text": "In a village on the slopes of Mount Kenya in East Africa, a little girl worked in the fields with her mother. Her name was Wangari.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Wangari and her mother hold hands in a field.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 2,
+      "image": "content/library/books/a-tiny-seed/page-02.jpg",
+      "text": "Wangari loved being outside. In her family’s food garden she broke up the soil with her machete. She pressed tiny seeds into the warm earth.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Wangari sows vegetable seeds into the earth.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 3,
+      "image": "content/library/books/a-tiny-seed/page-03.jpg",
+      "text": "Her favourite time of day was just after sunset. When it got too dark to see the plants, Wangari knew it was time to go home. She would follow the narrow paths through the fields, crossing rivers as she went.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "It is twilight. Wangari carries her vegetables home.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 4,
+      "image": "content/library/books/a-tiny-seed/page-04.jpg",
+      "text": "Wangari’s big brother asked why she did not go to school with him. Her mother agreed to send her. Wangari later said she loved learning to read and write.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Wangari and her brother carry her bags to school.",
+      "note": "Library factual adaptation; exact original preserved in edition.md and review-adaptation.json."
+    },
+    {
+      "page": 5,
+      "image": "content/library/books/a-tiny-seed/page-05.jpg",
+      "text": "She liked to learn! Wangari learnt more and more with every book she read. She did so well at school that she was invited to study in the United States of America. Wangari was excited! She wanted to know more about the world.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "A copy book with drawings of the continents lies open on a table.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 6,
+      "image": "content/library/books/a-tiny-seed/page-06.jpg",
+      "text": "At the American university Wangari learnt many new things. She studied plants and how they grow. And she remembered how she grew: playing games with her brothers in the shade of the trees in the beautiful Kenyan forests.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "A magnifying glass is held over a yellow flower.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 7,
+      "image": "content/library/books/a-tiny-seed/page-07.jpg",
+      "text": "The more she learnt, the more she realised that she loved the people of Kenya. She wanted them to be happy and free. The more she learnt, the more she remembered her African home.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Wangari sits on top of a pile of books and reads.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 8,
+      "image": "content/library/books/a-tiny-seed/page-08.jpg",
+      "text": "After her studies, Wangari returned to Kenya. She listened to rural women who needed firewood, food and clean water. Trees and streams that their families relied on were being lost.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "A single buck stands in a barren field.",
+      "note": "Library factual adaptation; exact original preserved in edition.md and review-adaptation.json."
+    },
+    {
+      "page": 9,
+      "image": "content/library/books/a-tiny-seed/page-09.jpg",
+      "text": "Wangari worked with women to grow and plant trees. Their work became the Green Belt Movement. Together, they cared for the land and worked to improve life in their communities.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Wangari shows an older woman how to plant in the earth.",
+      "note": "Library factual adaptation; exact original preserved in edition.md and review-adaptation.json."
+    },
+    {
+      "page": 10,
+      "image": "content/library/books/a-tiny-seed/page-10.jpg",
+      "text": "The movement grew. Women and their communities planted millions of trees in Kenya. People in other African countries took up the idea too.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Small seedlings grow into fields of trees.",
+      "note": "Library factual adaptation; exact original preserved in edition.md and review-adaptation.json."
+    },
+    {
+      "page": 11,
+      "image": "content/library/books/a-tiny-seed/page-11.jpg",
+      "text": "Wangari had worked hard. People all over the world took notice, and gave her a famous prize. It is called the Nobel Peace Prize, and she was the first African woman ever to receive it.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "A portrait of Wangari wearing Kenyan headdress is surrounded by trees.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 12,
+      "image": "content/library/books/a-tiny-seed/page-12.jpg",
+      "text": "Wangari died in 2011, but we can think of her every time we see a beautiful tree.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "A beautiful old tree stands tall and proud in the field.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    }
+  ]
+}

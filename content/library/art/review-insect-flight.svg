@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="insect-flight-art-title">
+  <title id="insect-flight-art-title">A dragonfly has four long blue wings, a segmented body, six bent legs and curved wing-motion marks.</title>
+  <rect width="320" height="196" rx="22" fill="#E7F1DD"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="160" cy="113" rx="8" ry="52" fill="#80A97D" /><path d="M151 83Q66 18 39 57q37 37 112 40Z" fill="#91C5D0" /><path d="M169 83Q254 18 281 57q-37 37-112 40Z" fill="#91C5D0" /><path d="M150 101Q64 77 55 120q45 21 96-8Z" fill="#91C5D0" /><path d="M170 101Q256 77 265 120q-45 21-96-8Z" fill="#91C5D0" /><circle cx="151" cy="74" r="8" fill="#80A97D" /><circle cx="169" cy="74" r="8" fill="#80A97D" /><path d="M154 125h12m-12 12h12m-12 12h12M150 100l-12 10-9 25m20-28-16 1-12 7m29-20-15-5-13 3m48 7 12 10 9 25m-20-28 16 1 12 7m-29-20 15-5 13 3" fill="none" /><path d="M52 35q25-14 49-4m118 0q24-10 49 4" fill="none" stroke="#AFAB9D"/>
+  </g>
+</svg>

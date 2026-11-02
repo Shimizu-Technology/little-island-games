@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="reef-art-title">
+  <title id="reef-art-title">A reef habitat contains branching coral, a rounded brain coral, a plate coral and two small fish over a sandy bottom.</title>
+  <rect width="320" height="196" rx="22" fill="#F6E8DC"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 169q137-21 284 0v10H18Z" fill="#F0D397" stroke="none"/><path d="M61 166V98m0 29-22-17V86m22 28 22-18V78" fill="none" stroke="#D4896C" stroke-width="10"/><path d="M121 167q-15-58 27-59 49 1 33 59Z" fill="#80A97D" /><path d="M134 153q-9-19 5-24t6 23q-4 13 11 6m1-41q17 11 5 23t6 17" fill="none" stroke="#FFF9E6" stroke-width="3"/><path d="M231 166v-33m-38-7q38-17 76 0-38 20-76 0Zm7 20q31-12 62 0-31 15-62 0Z" fill="#D4896C" /><g transform="translate(129 56) scale(0.65)"><path d="M0 0Q22-27 53 0 22 27 0 0Zm53 0 20-14v28Z" fill="#91C5D0" /><circle cx="13" cy="-3" r="2" fill="#254E4B" /><path d="m27-13 9-9 8 15" fill="#91C5D0" /></g><g transform="translate(238 80) scale(0.45)"><path d="M0 0Q22-27 53 0 22 27 0 0Zm53 0 20-14v28Z" fill="#F0D397" /><circle cx="13" cy="-3" r="2" fill="#254E4B" /><path d="m27-13 9-9 8 15" fill="#F0D397" /></g>
+  </g>
+</svg>

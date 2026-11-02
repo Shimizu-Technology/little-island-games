@@ -1,0 +1,794 @@
+[
+  {
+    "url": "https://www.fisheries.noaa.gov/species/green-turtle",
+    "finalUrl": "https://www.fisheries.noaa.gov/species/green-turtle",
+    "status": 200,
+    "sha256": "81c0ba2fe7347611c287796bd989b4c41c255d518d57c80c5626850747e18973",
+    "chars": 44629,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://response.restoration.noaa.gov/about/media/how-do-oil-spills-affect-sea-turtles.html",
+    "finalUrl": "https://response.restoration.noaa.gov/about/media/how-do-oil-spills-affect-sea-turtles.html",
+    "status": 200,
+    "sha256": "de32a27266b5a4621b9dec11baba0a5967f493984e3e95d80e3168fdbe636898",
+    "chars": 8238,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://science.nasa.gov/sun/facts/",
+    "finalUrl": "https://science.nasa.gov/sun/facts/",
+    "status": 200,
+    "sha256": "19330c61239d0d819911e9fdfb05f739ff04a889aad75029da19fd1280840a1a",
+    "chars": 17575,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://science.nasa.gov/moon/facts/",
+    "finalUrl": "https://science.nasa.gov/moon/facts/",
+    "status": 200,
+    "sha256": "69198f846ba2fa8455125885a5ddbb8b3159f115477d23bb6a1705e411397644",
+    "chars": 9326,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://science.nasa.gov/earth/facts/",
+    "finalUrl": "https://science.nasa.gov/earth/facts/",
+    "status": 200,
+    "sha256": "c5d53489cdaed157f715c26d777f048654610d732f55e8d2bd0595ae4c3aba39",
+    "chars": 10502,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://spaceplace.nasa.gov/seasons/en/",
+    "finalUrl": "https://spaceplace.nasa.gov/seasons/en/",
+    "status": 200,
+    "sha256": "dacfaa6183b08ac3d55876eda6f0f9395053dd23185c29d3bd23713954e6dd4b",
+    "chars": 4013,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://science.nasa.gov/solar-system/",
+    "finalUrl": "https://science.nasa.gov/solar-system/",
+    "status": 200,
+    "sha256": "0911911ba5150da4081fad027344f26a52f5b3a21a166525742aceb599d3a897",
+    "chars": 4348,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://science.nasa.gov/mars/facts/",
+    "finalUrl": "https://science.nasa.gov/mars/facts/",
+    "status": 200,
+    "sha256": "eb0ac71191fc723e7167ec39de572aefd798d0926e5017a62d94673854a822dc",
+    "chars": 9525,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://science.nasa.gov/saturn/facts/",
+    "finalUrl": "https://science.nasa.gov/saturn/facts/",
+    "status": 200,
+    "sha256": "4597e541a9c2d869161173fd15c52a9326c35deac52692924d972a7beffe5e5c",
+    "chars": 8420,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://spaceplace.nasa.gov/what-is-gravity/en/",
+    "finalUrl": "https://spaceplace.nasa.gov/what-is-gravity/en/",
+    "status": 200,
+    "sha256": "e904643b89200bc9b546a87d715e70a89615276938541de3e2eba25d17b31971",
+    "chars": 3765,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://science.nasa.gov/learn/basics-of-space-flight/chapter3-4/",
+    "finalUrl": "https://science.nasa.gov/learn/basics-of-space-flight/chapter3-4/",
+    "status": 200,
+    "sha256": "3484646f26f57b9558b17197e57a0a22bb773c8007db1a78dfc73a909a784f38",
+    "chars": 7842,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://science.nasa.gov/universe/stars/",
+    "finalUrl": "https://science.nasa.gov/universe/stars/",
+    "status": 200,
+    "sha256": "f8ced48f9de68eb33fa443263ee04bbdc4a07d17d8a2660a03fc2bf949c91540",
+    "chars": 6023,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://spaceplace.nasa.gov/launching-into-space/en/",
+    "finalUrl": "https://spaceplace.nasa.gov/launching-into-space/en/",
+    "status": 200,
+    "sha256": "002e11bd4bc9e32aef83df64b39f5aa8a9f154ef2cb69040d1a9c34a429494a5",
+    "chars": 4519,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://science.nasa.gov/solar-system/asteroids/facts/",
+    "finalUrl": "https://science.nasa.gov/solar-system/asteroids/facts/",
+    "status": 200,
+    "sha256": "f86938421b4703f45c85aa088a38859e0584f2fd8471bb3c73750f142a2980a0",
+    "chars": 13566,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://oceanservice.noaa.gov/facts/whysalty.html",
+    "finalUrl": "https://oceanservice.noaa.gov/facts/whysalty.html",
+    "status": 403,
+    "sha256": "1f2e1251b1d5fab2f47bbfe3e09b149064e61571f98a5e02c6ace5f86bacb1d5",
+    "chars": 66,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://www.noaa.gov/jetstream/ocean/sea-water",
+    "finalUrl": "https://www.noaa.gov/jetstream/ocean/sea-water",
+    "status": 200,
+    "sha256": "0f18a746e2bfc90de87fb491f55156f1849a453d674ec944dc2a19c51c84465f",
+    "chars": 4873,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://oceanservice.noaa.gov/facts/tides.html",
+    "finalUrl": "https://oceanservice.noaa.gov/facts/tides.html",
+    "status": 403,
+    "sha256": "1f2e1251b1d5fab2f47bbfe3e09b149064e61571f98a5e02c6ace5f86bacb1d5",
+    "chars": 66,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://oceanservice.noaa.gov/facts/wavesinocean.html",
+    "finalUrl": "https://oceanservice.noaa.gov/facts/wavesinocean.html",
+    "status": 403,
+    "sha256": "1f2e1251b1d5fab2f47bbfe3e09b149064e61571f98a5e02c6ace5f86bacb1d5",
+    "chars": 66,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://oceanservice.noaa.gov/facts/coral.html",
+    "finalUrl": "https://oceanservice.noaa.gov/facts/coral.html",
+    "status": 403,
+    "sha256": "1f2e1251b1d5fab2f47bbfe3e09b149064e61571f98a5e02c6ace5f86bacb1d5",
+    "chars": 66,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://oceanservice.noaa.gov/facts/plankton.html",
+    "finalUrl": "https://oceanservice.noaa.gov/facts/plankton.html",
+    "status": 403,
+    "sha256": "1f2e1251b1d5fab2f47bbfe3e09b149064e61571f98a5e02c6ace5f86bacb1d5",
+    "chars": 66,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://floridakeys.noaa.gov/plants/seagrass.html",
+    "finalUrl": "https://floridakeys.noaa.gov/plants/seagrass.html",
+    "status": 403,
+    "sha256": "1f2e1251b1d5fab2f47bbfe3e09b149064e61571f98a5e02c6ace5f86bacb1d5",
+    "chars": 66,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://oceanservice.noaa.gov/facts/pressure.html",
+    "finalUrl": "https://oceanservice.noaa.gov/facts/pressure.html",
+    "status": 403,
+    "sha256": "1f2e1251b1d5fab2f47bbfe3e09b149064e61571f98a5e02c6ace5f86bacb1d5",
+    "chars": 66,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://oceanexplorer.noaa.gov/facts/light-distributed.html",
+    "finalUrl": "https://oceanexplorer.noaa.gov/ocean-fact/light-distributed/",
+    "status": 200,
+    "sha256": "fe4cc38b474edb3898abc007267b4c491ee6148ffee29477e72d632ccca80ed1",
+    "chars": 3072,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.whoi.edu/ocean-learning-hub/ocean-facts/why-is-pressure-different-in-the-ocean/",
+    "finalUrl": "https://www.whoi.edu/ocean-learning-hub/ocean-facts/why-is-pressure-different-in-the-ocean/",
+    "status": 200,
+    "sha256": "8f57fb484ca81a169674959d7ded0cde9dd90f0f875c09fbf8d3d013cf5f3f60",
+    "chars": 5151,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://ocean.si.edu/ocean-life/invertebrates/octopuses-squids-and-relatives",
+    "finalUrl": "https://ocean.si.edu/ocean-life/invertebrates/octopuses-squids-and-relatives",
+    "status": 403,
+    "sha256": "5034e2b7051d68b3a42706ab4fe56937fa225e47e9f5010e9b578d6111123753",
+    "chars": 419,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://www.noaa.gov/education/resource-collections/marine-life/aquatic-food-webs",
+    "finalUrl": "https://www.noaa.gov/education/resource-collections/marine-life/aquatic-food-webs",
+    "status": 200,
+    "sha256": "657a84f2192a06c469f215d8d9f8cd031db1f4ca8ba8865ee3607542699993c1",
+    "chars": 22658,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.si.edu/spotlight/bats/batfacts",
+    "finalUrl": "https://www.si.edu/spotlight/bats/batfacts",
+    "status": 403,
+    "sha256": "6b412fc148e6c08a3bcd9665e6ee248ef26eafb6509379974637e1367746f8c1",
+    "chars": 109,
+    "accessed": "2026-11-02",
+    "webOutcome": "web open 404; search index still exposes text, not used as a full-text source"
+  },
+  {
+    "url": "https://home.nps.gov/subjects/bats/how-bats-fly.htm",
+    "finalUrl": "https://home.nps.gov/subjects/bats/how-bats-fly.htm",
+    "status": 200,
+    "sha256": "6c8626fd141c025aee703a582d2cc33a3d38582f54c1f3f9081d49e9c0103af3",
+    "chars": 2328,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.nps.gov/subjects/bats/echolocation.htm",
+    "finalUrl": "https://www.nps.gov/subjects/bats/echolocation.htm",
+    "status": 200,
+    "sha256": "7593cc06326141d9e794b98e2a2032f86e7b0c140c7a1842567492211aad8327",
+    "chars": 3121,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://avpreservation.si.edu/spotlight/buginfo/butterfly",
+    "finalUrl": "https://avpreservation.si.edu/spotlight/buginfo/butterfly",
+    "status": 403,
+    "sha256": "f529d59f98d086fa2cbf2ada50a8b84b006e8475a868b8fdedbe0f7af29be4b4",
+    "chars": 109,
+    "accessed": "2026-11-02",
+    "webOutcome": "web open timeout; replaced with readable Smithsonian/NPS sources"
+  },
+  {
+    "url": "https://home.nps.gov/articles/monarch-butterfly.htm",
+    "finalUrl": "https://home.nps.gov/articles/monarch-butterfly.htm",
+    "status": 200,
+    "sha256": "ce9ac413a2c331ff372af47eb2fb102979e6ae974f729c38b6ae0b548fba7abd",
+    "chars": 4948,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://naturalhistory.si.edu/education/teaching-resources/life-science/butterflies-and-beyond",
+    "finalUrl": "https://naturalhistory.si.edu/education/teaching-resources/life-science/butterflies-and-beyond",
+    "status": 403,
+    "sha256": "222bc370f610d32601744b4413abbf0f4fd4f958ecfecd4e76b8e33e2c23760f",
+    "chars": 58,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://nationalzoo.si.edu/animals/african-clawed-frog",
+    "finalUrl": "https://nationalzoo.si.edu/animals/african-clawed-frog",
+    "status": 200,
+    "sha256": "03fc0f1875c34a2b6229705bb8f2cf66b101f56c93312801b7308dda52547a32",
+    "chars": 7445,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://gardens.si.edu/gardens/pollinator-garden/why-what-when-where-who-how-pollination/",
+    "finalUrl": "https://gardens.si.edu/gardens/pollinator-garden/why-what-when-where-who-how-pollination/",
+    "status": 403,
+    "sha256": "1ff948486e2c1a4bd0ca672cd45de949938494e2248f3ec011d3f6923a847f13",
+    "chars": 419,
+    "accessed": "2026-11-02",
+    "webOutcome": "web open timeout; replaced with FDA/USDA"
+  },
+  {
+    "url": "https://gardens.si.edu/gardens/pollinator-garden/",
+    "finalUrl": "https://gardens.si.edu/gardens/pollinator-garden/",
+    "status": 403,
+    "sha256": "cfda70da0df3f6b880f4bfdc55cac5665c4e60560cac13351ca34859cef009b3",
+    "chars": 419,
+    "accessed": "2026-11-02",
+    "webOutcome": "web open timeout; replaced with FDA/USDA"
+  },
+  {
+    "url": "https://naturalhistory.si.edu/education/teaching-resources/life-science/butterfly-colors-and-biomimicry",
+    "finalUrl": "https://naturalhistory.si.edu/education/teaching-resources/life-science/butterfly-colors-and-biomimicry",
+    "status": 403,
+    "sha256": "e0f8fd36503ef2959a5ef073e1a6040870c87048d011871faf773594f7e52b6c",
+    "chars": 58,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://www.fisheries.noaa.gov/species/common-bottlenose-dolphin",
+    "finalUrl": "https://www.fisheries.noaa.gov/species/common-bottlenose-dolphin",
+    "status": 200,
+    "sha256": "b5fb81c5dbfd0c856a8ed16774e9b1346c4b68a62a3ea36770e21eaff9d142f4",
+    "chars": 33586,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.nps.gov/teachers/classrooms/food-water-shelter-space.htm",
+    "finalUrl": "https://www.nps.gov/teachers/classrooms/food-water-shelter-space.htm",
+    "status": 200,
+    "sha256": "07fc72ebe108e61e89c29b614dd0578921aa37d61d97a9063cbdec9de847c226",
+    "chars": 7299,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://www.nps.gov/subjects/pollinators/migratingmonarchs.htm",
+    "finalUrl": "https://www.nps.gov/subjects/pollinators/migratingmonarchs.htm",
+    "status": 200,
+    "sha256": "b5b5c08389ed47bbead5a6cef1aa2e89b3e60e4571132bc2a0535eef51608373",
+    "chars": 2309,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://www.si.edu/spotlight/buginfo/insect-flight",
+    "finalUrl": "https://www.si.edu/spotlight/buginfo/insect-flight",
+    "status": 403,
+    "sha256": "e9a517a1c5933bb827b4082807530b24c916735ee0c78f4f2176c792459a41ce",
+    "chars": 109,
+    "accessed": "2026-11-02",
+    "webOutcome": "web open 404; search index still exposes text, replaced with full university sources"
+  },
+  {
+    "url": "https://genent.cals.ncsu.edu/bug-bytes/thorax/wings-2/",
+    "finalUrl": "https://genent.cals.ncsu.edu/bug-bytes/thorax/wings-2/",
+    "status": 200,
+    "sha256": "b36f6c42004d813fb51eaf6d050d422ac51871a3f0ba0d6cbab31a64c8a0f36b",
+    "chars": 2835,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://academy.allaboutbirds.org/feathers-article/",
+    "finalUrl": "https://academy.allaboutbirds.org/feathers-article/",
+    "status": 403,
+    "sha256": "c03c8f6b52267b6fdf3074639bf2985a48e79fcb5d9599c9ea3d2f21a4fa68b5",
+    "chars": 786,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://spaceplace.nasa.gov/blue-sky/en/",
+    "finalUrl": "https://spaceplace.nasa.gov/blue-sky/en/",
+    "status": 200,
+    "sha256": "af0f0eb2cb95f3a6771eea70b8f3f919eb7440036cf8a20fb4f97b9f85f5e2c5",
+    "chars": 4045,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.noaa.gov/jetstream/clouds",
+    "finalUrl": "https://www.noaa.gov/jetstream/clouds",
+    "status": 200,
+    "sha256": "83349d4516e51c5145a3d6b2edbe3442bf553eaa1885f36f16e3a5031e3d796e",
+    "chars": 1715,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.noaa.gov/jetstream/clouds/how-clouds-form",
+    "finalUrl": "https://www.noaa.gov/jetstream/clouds/how-clouds-form",
+    "status": 200,
+    "sha256": "6eda00b0665304c2e5d61a43627604b1d4fff545686aee35b253169952d157d7",
+    "chars": 3164,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.usgs.gov/water-science-school/science/precipitation-and-water-cycle",
+    "finalUrl": "https://www.usgs.gov/water-science-school/science/precipitation-and-water-cycle",
+    "status": 200,
+    "sha256": "0febcfc29e4c1fa5fb89b80223f165443c9b829efd0f3419d2f8c718b227d4dd",
+    "chars": 10817,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.weather.gov/fgz/Rainbow",
+    "finalUrl": "https://www.weather.gov/fgz/Rainbow",
+    "status": 200,
+    "sha256": "9ffa695757438d6c2625b4f671ff3864a0f41c4c3235a647b66aa67658637bbb",
+    "chars": 7710,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.boulder.noaa.gov/video/what-causes-wind/",
+    "finalUrl": "https://www.boulder.noaa.gov/video/what-causes-wind/",
+    "status": 200,
+    "sha256": "bc0ff81fba70d01cc6513f6278080cd84527f03a7171fa9b6347b7586fb03883",
+    "chars": 0,
+    "accessed": "2026-11-02",
+    "webOutcome": "direct response had no readable text; web open timeout; replaced with NOAA NESDIS"
+  },
+  {
+    "url": "https://www.nesdis.noaa.gov/about/k-12-education/atmosphere/why-does-wind-blow",
+    "finalUrl": "https://www.nesdis.noaa.gov/about/k-12-education/atmosphere/why-does-wind-blow",
+    "status": 200,
+    "sha256": "126c80d248649f0d998008f67770f751f1467b2a68b2fa5e764a61798076c61b",
+    "chars": 3516,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.nesdis.noaa.gov/about/k-12-education/severe-weather/what-causes-lightning-and-thunder",
+    "finalUrl": "https://www.nesdis.noaa.gov/about/k-12-education/severe-weather/what-causes-lightning-and-thunder",
+    "status": 200,
+    "sha256": "87af2b5d57da4b073cdf2372fa2eada92bc019feff490f7b66c2c420a17677a6",
+    "chars": 7909,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.weather.gov/safety/lightning-indoors",
+    "finalUrl": "https://www.weather.gov/safety/lightning-indoors",
+    "status": 200,
+    "sha256": "5b3bda215251928312886facd4c00ff84fda4454d730414249234f8a91ae8eba",
+    "chars": 2696,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://oceanservice.noaa.gov/facts/cyclone.html",
+    "finalUrl": "https://oceanservice.noaa.gov/facts/cyclone.html",
+    "status": 403,
+    "sha256": "1f2e1251b1d5fab2f47bbfe3e09b149064e61571f98a5e02c6ace5f86bacb1d5",
+    "chars": 66,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://spaceplace.nasa.gov/hurricanes/en/",
+    "finalUrl": "https://spaceplace.nasa.gov/hurricanes/en/",
+    "status": 200,
+    "sha256": "241595b632fd74389536495dbc8c9fea15074033753706d5ee880b2be64f81a1",
+    "chars": 3609,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.noaa.gov/education/resource-collections/freshwater/water-cycle",
+    "finalUrl": "https://www.noaa.gov/education/resource-collections/freshwater/water-cycle",
+    "status": 200,
+    "sha256": "ae1ff5b991c52d920183939b3230f6a5de76c2bce6e5cc07338bda472bf75ebc",
+    "chars": 15692,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.noaa.gov/education/resource-collections/weather-atmosphere/weather-observations",
+    "finalUrl": "https://www.noaa.gov/education/resource-collections/weather-atmosphere/weather-observations",
+    "status": 200,
+    "sha256": "53fa9461f4bb715b23d623638c9a42237ae3e081796f7f8dfb9e316d4cdad006",
+    "chars": 7404,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.nps.gov/wapa/learn/nature/index.htm",
+    "finalUrl": "https://www.nps.gov/wapa/learn/nature/index.htm",
+    "status": 200,
+    "sha256": "3548146484b4d1a242ff4edb3ee1b842b88a69c73616647e032cfad7d95371e1",
+    "chars": 2642,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://pubs.usgs.gov/pp/0403a/report.pdf",
+    "finalUrl": "https://pubs.usgs.gov/pp/0403a/report.pdf",
+    "status": 200,
+    "sha256": "332e886ee31e849ac1c8f27391926069b8a589fc0f4ed180a4e147106ae07f27",
+    "chars": 450083,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.usgs.gov/centers/pcmsc/science/coral-reef-project-guam?page=1",
+    "finalUrl": "https://www.usgs.gov/centers/pcmsc/science/coral-reef-project-guam?page=1",
+    "status": 200,
+    "sha256": "eb90a5d06868d4135aed14cb123fecfdb483a95ff8d44657c79be4ef1f4ab307",
+    "chars": 12457,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://home.nps.gov/subjects/geology/geodiversity-atlas-pacific-islands-network-index.htm",
+    "finalUrl": "https://home.nps.gov/subjects/geology/geodiversity-atlas-pacific-islands-network-index.htm",
+    "status": 200,
+    "sha256": "3e553f76d9812dd0f9bf997e367cd8810eff2370121a64863961aa18780075b9",
+    "chars": 14647,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.usgs.gov/programs/VHP/about-volcanoes",
+    "finalUrl": "https://www.usgs.gov/programs/VHP/about-volcanoes",
+    "status": 200,
+    "sha256": "fcaa89579c3cb0f917d3fdd02aaf92191ac27b35964814a7f395f61bd5d45fd6",
+    "chars": 9189,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://oceanservice.noaa.gov/facts/coral_protect.html",
+    "finalUrl": "https://oceanservice.noaa.gov/facts/coral_protect.html",
+    "status": 403,
+    "sha256": "1f2e1251b1d5fab2f47bbfe3e09b149064e61571f98a5e02c6ace5f86bacb1d5",
+    "chars": 66,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://oceanservice.noaa.gov/facts/oceandepth.html",
+    "finalUrl": "https://oceanservice.noaa.gov/facts/oceandepth.html",
+    "status": 403,
+    "sha256": "1f2e1251b1d5fab2f47bbfe3e09b149064e61571f98a5e02c6ace5f86bacb1d5",
+    "chars": 66,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://www.usgs.gov/publications/seismicity-earth-1900-2012-philippine-sea-plate-and-vicinity",
+    "finalUrl": "https://www.usgs.gov/publications/seismicity-earth-1900-2012-philippine-sea-plate-and-vicinity",
+    "status": 200,
+    "sha256": "c88cd2bbd91be42a1e3c322fba612111d342687055fb78a4526f00f8dc37576e",
+    "chars": 3403,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://oceanexplorer.noaa.gov/ocean-fact/light-distributed/",
+    "finalUrl": "https://oceanexplorer.noaa.gov/ocean-fact/light-distributed/",
+    "status": 200,
+    "sha256": "3d7cae1fb48ebcc4c24f33d1e70eeb780f8736e4b2774c24f22effb8d6fc86af",
+    "chars": 3072,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.usgs.gov/geology-and-ecology-of-national-parks/geology-denali-national-park-and-preserve",
+    "finalUrl": "https://www.usgs.gov/geology-and-ecology-of-national-parks/geology-denali-national-park-and-preserve",
+    "status": 200,
+    "sha256": "5165cbd0c23b989410a2bc3e0ab7fe01250ae5e8c94ffc89d534b4abc9ea7ed5",
+    "chars": 12739,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.usgs.gov/water-science-school/science/rivers-streams-and-creeks",
+    "finalUrl": "https://www.usgs.gov/water-science-school/science/rivers-streams-and-creeks",
+    "status": 200,
+    "sha256": "2ce9c2b855da8d17ead072c897f7433db8cc373630b349f2d034c674a63379be",
+    "chars": 21367,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.usgs.gov/educational-resources/find-feature-meander",
+    "finalUrl": "https://www.usgs.gov/educational-resources/find-feature-meander",
+    "status": 200,
+    "sha256": "65359b91083276afb04b53ab91745deff6e63cba4f25451312d2104b982b01c3",
+    "chars": 2089,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://pubs.usgs.gov/imap/2800/",
+    "finalUrl": "https://pubs.usgs.gov/imap/2800/",
+    "status": 200,
+    "sha256": "ee5180f099caaffc38b27b2ba5a4d31870e4df96909da60775ae18ffa28a60df",
+    "chars": 5405,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.usgs.gov/faqs/how-are-different-map-projections-used",
+    "finalUrl": "https://www.usgs.gov/faqs/how-are-different-map-projections-used",
+    "status": 200,
+    "sha256": "c30b4647a186c777297d9caab45e6d1444f04100e8d5153a5b2b61d062b4ce92",
+    "chars": 21196,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.usgs.gov/publications/topographic-map-symbols",
+    "finalUrl": "https://www.usgs.gov/publications/topographic-map-symbols",
+    "status": 200,
+    "sha256": "ccbbcf1384972fafab45ac41f047f46edcecaef5997a3be78c2d5061bec967b2",
+    "chars": 881,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://pubs.usgs.gov/of/1998/of98-805/lessons/chpt1/act3-hnd.htm",
+    "finalUrl": "https://pubs.usgs.gov/of/1998/of98-805/lessons/chpt1/act3-hnd.htm",
+    "status": 200,
+    "sha256": "75b837a5202d60af39e664dc8c978fbf832243f944fc3b237d230d97ebe9ba36",
+    "chars": 3150,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.usgs.gov/faqs/what-do-different-north-arrows-a-usgs-topographic-map-mean?items_per_page=6&page=1",
+    "finalUrl": "https://www.usgs.gov/faqs/what-do-different-north-arrows-a-usgs-topographic-map-mean?items_per_page=6&page=1",
+    "status": 200,
+    "sha256": "85127920fd5b9bc9d8851b8acd974a4dbaea8301679aba7c5a1db49a35069a68",
+    "chars": 6409,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://pubs.usgs.gov/gip/volc/nature.html",
+    "finalUrl": "https://pubs.usgs.gov/gip/volc/nature.html",
+    "status": 200,
+    "sha256": "b4d6da33efecc1a4d0f9945f6bf1bf04e29e17a7328c05a4f5b4fc8e2225f208",
+    "chars": 6498,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://science.nasa.gov/moon/moon-phases/",
+    "finalUrl": "https://science.nasa.gov/moon/moon-phases/",
+    "status": 200,
+    "sha256": "c61b6735e9d8e4f9436fe86e9978296d128842bfa2ace90518c12e43f18bd571",
+    "chars": 11407,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://science.nasa.gov/solar-system/planets/",
+    "finalUrl": "https://science.nasa.gov/solar-system/planets/",
+    "status": 200,
+    "sha256": "ea9f319672abde42113b90bffbd531a94584c2fd80459a9daab6d8c6bdc885b8",
+    "chars": 4836,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.floridamuseum.ufl.edu/educators/resource/butterflies-and-moths-camouflage/",
+    "finalUrl": "https://www.floridamuseum.ufl.edu/educators/resource/butterflies-and-moths-camouflage/",
+    "status": 200,
+    "sha256": "f164427fff89c481830fa3677cd4be3468b24cc60660f89fd73432c1eb7b27c7",
+    "chars": 3821,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.fda.gov/animal-veterinary/animal-health-literacy/helping-agricultures-helpful-honey-bees",
+    "finalUrl": "https://www.fda.gov/apology_objects/abuse-detection-apology.html",
+    "status": 404,
+    "sha256": "493fda53120050f85836032324409be6c6484f90a0755ae0c6a673ba7626818b",
+    "chars": 9,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://dnr.maryland.gov/wildlife/pages/plants_wildlife/bats/index.aspx",
+    "finalUrl": "https://dnr.maryland.gov/wildlife/pages/plants_wildlife/bats/index.aspx",
+    "status": 403,
+    "sha256": "2b5991f7a01695305dac0ecbbc79911f3c1945c1b0d8df47b14ded6f1be95a6f",
+    "chars": 13,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://genent.cals.ncsu.edu/bug-bytes/thorax/locomotion/",
+    "finalUrl": "https://genent.cals.ncsu.edu/bug-bytes/thorax/locomotion/",
+    "status": 200,
+    "sha256": "4e44fa57696c937acab4e719f2e0cc7d1094be7ec8c673626d3ac43f62cc7dc5",
+    "chars": 8059,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://onlineentomology.ifas.ufl.edu/about/articles/entomology/insect-flight-explained-the-science-behind-the-buzz/",
+    "finalUrl": "https://onlineentomology.ifas.ufl.edu/about/articles/entomology/insect-flight-explained-the-science-behind-the-buzz/",
+    "status": 200,
+    "sha256": "db4c347cbba6d27d1222cfadfd4e7ad36364a67262341ac07ae0b3551cdd0fcb",
+    "chars": 8640,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://manoa.hawaii.edu/exploringourfluidearth/physical/world-ocean/ocean-basins-and-continents/weird-science-continent-confusion",
+    "finalUrl": "https://manoa.hawaii.edu/exploringourfluidearth/physical/world-ocean/ocean-basins-and-continents/weird-science-continent-confusion",
+    "status": 200,
+    "sha256": "896218a32a510090192053ddb1238d00ec80cbfa669f7ad5cf7caddd69f38235",
+    "chars": 317,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://sathee.iitk.ac.in/ncert-books/class-06/social-science/the-earth-our-habitat/chapter-05-major-domains-of-the-earth/",
+    "finalUrl": "https://sathee.iitk.ac.in/ncert-books/class-06/social-science/the-earth-our-habitat/chapter-05-major-domains-of-the-earth/",
+    "status": 403,
+    "sha256": "70bcee132a7d35037255fc9d69ab70e00e6aceeab740a3185e4ef9aa4bc5ab5f",
+    "chars": 40,
+    "accessed": "2026-11-02"
+  },
+  {
+    "url": "https://science.nasa.gov/moon/eclipses/",
+    "finalUrl": "https://science.nasa.gov/moon/eclipses/",
+    "status": 200,
+    "sha256": "cabc987c9fd03cf66f7e9b7762c3d18caa0f90f54b1d59402861751501de3a07",
+    "chars": 9614,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://science.nasa.gov/mission/cassini/science/rings/",
+    "finalUrl": "https://science.nasa.gov/mission/cassini/science/rings/",
+    "status": 200,
+    "sha256": "6893265b2099e90260fa9f1792d9e861bce5831708ed939a8c792527ce0cfb23",
+    "chars": 8594,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://www.jpl.nasa.gov/images/pia00335-full-disk-color-image-of-crescent-saturn-with-rings-and-ring-shadows/",
+    "finalUrl": "https://www.jpl.nasa.gov/images/pia00335-full-disk-color-image-of-crescent-saturn-with-rings-and-ring-shadows/",
+    "status": 403,
+    "sha256": "e9c284fa06435c579ef39f72837036da494e91d7e06d3a9e202c37eb51a83722",
+    "chars": 553,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://oceantoday.noaa.gov/dolphinanatomy/",
+    "finalUrl": "https://oceantoday.noaa.gov/dolphinanatomy/",
+    "status": 403,
+    "sha256": "1f2e1251b1d5fab2f47bbfe3e09b149064e61571f98a5e02c6ace5f86bacb1d5",
+    "chars": 66,
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/solid-rocket-engine/",
+    "finalUrl": "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/solid-rocket-engine/",
+    "status": 200,
+    "sha256": "9c8acb47d9a6c1d2876b442b25d66bc9bef36fa5eeb3cab766870cfa3128b181",
+    "chars": 2722,
+    "accessed": "2026-11-02",
+    "readingOutcome": "Relevant article sections read from directly retrieved HTML/PDF text; sections listed per item in notes."
+  },
+  {
+    "url": "https://oceanservice.noaa.gov/education/tutorial_corals/coral07_importance.html",
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  },
+  {
+    "url": "https://directives.nrcs.usda.gov/sites/default/files2/1719488988/Subpart%20M%20%E2%80%93%20Pollinator%20Habitat%20Considerations%20for%20Range%20and%20Pasturelands.pdf",
+    "accessed": "2026-11-02",
+    "webOutcome": "Full relevant text opened and read via web retrieval"
+  }
+]

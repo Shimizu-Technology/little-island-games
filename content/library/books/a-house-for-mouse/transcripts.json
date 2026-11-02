@@ -1,0 +1,129 @@
+{
+  "review": {
+    "status": "in-review",
+    "reviewer": "Codex independent factual reviewer",
+    "date": "2026-11-02",
+    "factualReviewer": "independent factual reviewer",
+    "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Underwater and forest scenes are explicitly dreams in the text; animals’ invitations are fantasy. Fireplace and dream imitation remain family flags. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+  },
+  "editionIsbn": "978-0-9922357-5-8",
+  "pages": [
+    {
+      "page": 0,
+      "image": "content/library/books/a-house-for-mouse/page-00.jpg",
+      "text": "A house for Mouse Michele Fry, Amy Uzzell & Jennifer Jacobs",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Front cover of A House for Mouse.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 1,
+      "image": "content/library/books/a-house-for-mouse/page-01.jpg",
+      "text": "Mouse was looking for a new house.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Mouse looks at a yellow house in the distance.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 2,
+      "image": "content/library/books/a-house-for-mouse/page-02.jpg",
+      "text": "This looks like a nice house.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "The front door is ajar. Mouse looks inside.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 3,
+      "image": "content/library/books/a-house-for-mouse/page-03.jpg",
+      "text": "“You can come and sleep with me,” said Puppy. “Thank you,” said Mouse.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "A black puppy with a long tongue invites Mouse to join him.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 4,
+      "image": "content/library/books/a-house-for-mouse/page-04.jpg",
+      "text": "That night, Mouse’s dreams were bouncy and muddy.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Mouse sleeps in a pool of mud.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 5,
+      "image": "content/library/books/a-house-for-mouse/page-05.jpg",
+      "text": "“You can come and sleep with me,” said Parrot. “Thank you,” said Mouse.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "A colourful parrot on a perch invites Mouse to join him.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 6,
+      "image": "content/library/books/a-house-for-mouse/page-06.jpg",
+      "text": "That night, Mouse’s dreams were noisy and wild.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Mouse sleeps in a wild forest.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 7,
+      "image": "content/library/books/a-house-for-mouse/page-07.jpg",
+      "text": "“You can come and sleep with me,” said Fish. “Thank you,” said Mouse.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "A goldfish swimming in a tank invites Mouse to join him.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 8,
+      "image": "content/library/books/a-house-for-mouse/page-08.jpg",
+      "text": "That night, Mouse’s dreams were cold and wet.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Mouse sleeps underwater surrounded by fish and seaweed.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 9,
+      "image": "content/library/books/a-house-for-mouse/page-09.jpg",
+      "text": "Mouse needed somewhere warm and dry.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Mouse dashes past the skirting boards.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 10,
+      "image": "content/library/books/a-house-for-mouse/page-10.jpg",
+      "text": "",
+      "artworkText": [],
+      "wordless": true,
+      "alt": "Mouse perches on a couch in front of the fireplace.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 11,
+      "image": "content/library/books/a-house-for-mouse/page-11.jpg",
+      "text": "Mouse found a bookshelf nearby.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "A beautiful bookshelf.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 12,
+      "image": "content/library/books/a-house-for-mouse/page-12.jpg",
+      "text": "That night, Mouse had warm and cosy dreams.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Mouse sleeps peacefully.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    }
+  ]
+}

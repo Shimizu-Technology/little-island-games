@@ -1,0 +1,1692 @@
+{
+  "fish-gills": {
+    "origin": "new",
+    "planTitle": "How does a fish breathe?",
+    "makePrompt": "Draw a fish with water passing over its gills",
+    "motif": "fish",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Retained dissolved-oxygen exchange and mouth-to-gill flow; removed unsourced air-breathing exceptions and turtle/dolphin comparison. Tell now names oxygen directly, avoiding the misleading suggestion of underwater air bubbles. Pending the designated family reviewer family/cultural review: Decide whether “needs oxygen” is clear enough alongside dissolved oxygen, and review shoreline observation wording. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "fish-gills-label",
+        "fish-gills-tell-1",
+        "fish-gills-tell-2",
+        "fish-gills-more-1",
+        "fish-gills-more-2",
+        "fish-gills-more-3",
+        "fish-gills-deep-1",
+        "fish-gills-deep-2",
+        "fish-gills-deep-3",
+        "fish-gills-deep-4",
+        "fish-gills-deep-5",
+        "fish-gills-deep-6",
+        "fish-gills-deep-7",
+        "fish-gills-deep-8",
+        "fish-gills-deep-9"
+      ],
+      "sourceUrls": [
+        "https://marinewaters.fish.wa.gov.au/resource/fish-anatomy/"
+      ]
+    }
+  },
+  "crab-shells": {
+    "origin": "new",
+    "planTitle": "Why do crabs have shells?",
+    "makePrompt": "Draw a crab beside its old empty coat",
+    "motif": "crab",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Distinguished the grown exoskeleton from a borrowed snail shell; removed a single molt timing that would overgeneralize species. Pending the designated family reviewer family/cultural review: Review shedding and vulnerability for comfort; retain no handling or shell removal. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "crab-shells-label",
+        "crab-shells-tell-1",
+        "crab-shells-tell-2",
+        "crab-shells-more-1",
+        "crab-shells-more-2",
+        "crab-shells-more-3",
+        "crab-shells-more-4",
+        "crab-shells-deep-1",
+        "crab-shells-deep-2",
+        "crab-shells-deep-3",
+        "crab-shells-deep-4",
+        "crab-shells-deep-5",
+        "crab-shells-deep-6",
+        "crab-shells-deep-7",
+        "crab-shells-deep-8",
+        "crab-shells-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.fisheries.noaa.gov/alaska/science-data/alaska-shellfish-growth-research",
+        "https://nationalzoo.si.edu/animals/land-hermit-crab"
+      ]
+    }
+  },
+  "parrotfish": {
+    "origin": "new",
+    "planTitle": "What do parrotfish eat?",
+    "makePrompt": "Draw a reef bite becoming tiny sand grains",
+    "motif": "parrotfish",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Replaced algae-only implication with qualified microphagy evidence; grinding and sediment are supported by the full Clements paper and NOAA. No universal coral-eating or Guam sand-production claim. Pending the designated family reviewer family/cultural review: Review animal feeding and waste language; keep ecological interpretation separate from a promise about every species. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "parrotfish-label",
+        "parrotfish-tell-1",
+        "parrotfish-tell-2",
+        "parrotfish-more-1",
+        "parrotfish-more-2",
+        "parrotfish-more-3",
+        "parrotfish-more-4",
+        "parrotfish-more-5",
+        "parrotfish-deep-1",
+        "parrotfish-deep-2",
+        "parrotfish-deep-3",
+        "parrotfish-deep-4",
+        "parrotfish-deep-5",
+        "parrotfish-deep-6",
+        "parrotfish-deep-7",
+        "parrotfish-deep-8"
+      ],
+      "sourceUrls": [
+        "https://german.bio.uci.edu/images/PDF/Clements%20et%20al.%20%282016%29%20BJLS_online.pdf",
+        "https://oceanservice.noaa.gov/facts/sand.html"
+      ]
+    }
+  },
+  "tide-pool": {
+    "origin": "new",
+    "planTitle": "Who lives in a tide pool?",
+    "makePrompt": "Make a tide-pool picture with hiding places",
+    "motif": "pool",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Removed evaporation/salinity claim absent from the cited page; connected low-tide warming/oxygen, high-tide replenishment and barnacle attachment. Species examples are possibilities, not a Guam checklist. Pending the designated family reviewer family/cultural review: Review shore danger, predation context and the safe viewing line. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "tide-pool-label",
+        "tide-pool-tell-1",
+        "tide-pool-tell-2",
+        "tide-pool-tell-3",
+        "tide-pool-more-1",
+        "tide-pool-more-2",
+        "tide-pool-more-3",
+        "tide-pool-deep-1",
+        "tide-pool-deep-2",
+        "tide-pool-deep-3",
+        "tide-pool-deep-4",
+        "tide-pool-deep-5",
+        "tide-pool-deep-6",
+        "tide-pool-deep-7",
+        "tide-pool-deep-8",
+        "tide-pool-deep-9"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/tide-pool.html"
+      ]
+    }
+  },
+  "beach-sand": {
+    "origin": "new",
+    "planTitle": "Where does beach sand come from?",
+    "makePrompt": "Draw three possible sources of beach grains",
+    "motif": "sand",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Removed storm/sorting elaboration unsupported by this page and false precision about sand-size limits; retained specific source-supported rock and biological origins without identifying Guam grains. Pending the designated family reviewer family/cultural review: Review shoreline context; no collection or water activity is requested. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "beach-sand-label",
+        "beach-sand-tell-1",
+        "beach-sand-tell-2",
+        "beach-sand-tell-3",
+        "beach-sand-more-1",
+        "beach-sand-more-2",
+        "beach-sand-more-3",
+        "beach-sand-deep-1",
+        "beach-sand-deep-2",
+        "beach-sand-deep-3",
+        "beach-sand-deep-4",
+        "beach-sand-deep-5",
+        "beach-sand-deep-6",
+        "beach-sand-deep-7",
+        "beach-sand-deep-8",
+        "beach-sand-deep-9",
+        "beach-sand-deep-10"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/sand.html"
+      ]
+    }
+  },
+  "mangrove-roots": {
+    "origin": "new",
+    "planTitle": "Why are mangroves important?",
+    "makePrompt": "Draw a root shelter for a small fish",
+    "motif": "mangrove",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Removed unsupported specific salt-removal, breathing-root and storm-guarantee discussion; NOAA supports low-oxygen habitat, prop roots, deposition and shelter. Pending the designated family reviewer family/cultural review: Review coastal access and the non-graphic shelter-from-predators example. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "mangrove-roots-label",
+        "mangrove-roots-tell-1",
+        "mangrove-roots-tell-2",
+        "mangrove-roots-tell-3",
+        "mangrove-roots-more-1",
+        "mangrove-roots-more-2",
+        "mangrove-roots-more-3",
+        "mangrove-roots-deep-1",
+        "mangrove-roots-deep-2",
+        "mangrove-roots-deep-3",
+        "mangrove-roots-deep-4",
+        "mangrove-roots-deep-5",
+        "mangrove-roots-deep-6",
+        "mangrove-roots-deep-7",
+        "mangrove-roots-deep-8",
+        "mangrove-roots-deep-9",
+        "mangrove-roots-deep-10"
+      ],
+      "sourceUrls": [
+        "https://oceanservice.noaa.gov/facts/mangroves.html"
+      ]
+    }
+  },
+  "jellyfish-move": {
+    "origin": "new",
+    "planTitle": "How do jellyfish move?",
+    "makePrompt": "Draw three shapes of a pulsing jellyfish bell",
+    "motif": "jelly",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Added the South Carolina DNR locomotion section and Smithsonian anatomy text because the original NOAA page does not explain propulsion. Removed unsourced species-specific swimming claims; no treatment or species-identification advice. Pending the designated family reviewer family/cultural review: Review stinging cells, catching prey and the single no-touch line. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "jellyfish-move-label",
+        "jellyfish-move-tell-1",
+        "jellyfish-move-tell-2",
+        "jellyfish-move-tell-3",
+        "jellyfish-move-more-1",
+        "jellyfish-move-more-2",
+        "jellyfish-move-more-3",
+        "jellyfish-move-more-4",
+        "jellyfish-move-more-5",
+        "jellyfish-move-deep-1",
+        "jellyfish-move-deep-2",
+        "jellyfish-move-deep-3",
+        "jellyfish-move-deep-4",
+        "jellyfish-move-deep-5",
+        "jellyfish-move-deep-6",
+        "jellyfish-move-deep-7",
+        "jellyfish-move-deep-8",
+        "jellyfish-move-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.dnr.sc.gov/marine/pub/seascience/jellyfish.html",
+        "https://ocean.si.edu/ocean-life/invertebrates/jellyfish-and-comb-jellies",
+        "https://oceanservice.noaa.gov/facts/jellyfish.html"
+      ]
+    }
+  },
+  "whale-song": {
+    "origin": "new",
+    "planTitle": "Why do whales sing?",
+    "makePrompt": "Draw a whale song as a repeating pattern",
+    "motif": "whale",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NOAA sanctuary research with song structure and feeding-ground recordings; removed definitive communication-purpose wording and ungrounded translations. Exact function remains explicitly unsettled. Pending the designated family reviewer family/cultural review: Review general reproduction wording and animal observation; no mating imagery or human-language translation. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "whale-song-label",
+        "whale-song-tell-1",
+        "whale-song-tell-2",
+        "whale-song-tell-3",
+        "whale-song-more-1",
+        "whale-song-more-2",
+        "whale-song-more-3",
+        "whale-song-more-4",
+        "whale-song-more-5",
+        "whale-song-deep-1",
+        "whale-song-deep-2",
+        "whale-song-deep-3",
+        "whale-song-deep-4",
+        "whale-song-deep-5",
+        "whale-song-deep-6",
+        "whale-song-deep-7",
+        "whale-song-deep-8",
+        "whale-song-deep-9"
+      ],
+      "sourceUrls": [
+        "https://hawaiihumpbackwhale.noaa.gov/science/research/whale-behavior.html",
+        "https://sanctuaries.noaa.gov/news/sep22/mysteries-of-humpback-whale-song.html",
+        "https://www.fisheries.noaa.gov/species/humpback-whale"
+      ]
+    }
+  },
+  "guam-made": {
+    "origin": "new",
+    "planTitle": "How was Guam made?",
+    "makePrompt": "Make a two-rock map of Guam",
+    "motif": "island",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NPS evidence for plate-related uplift; retained USGS north/south and permeability distinction. Removed implication that Guam arose from one volcano or one event. Pending the designated family reviewer family/cultural review: Review local explanation and whether the simplified two-rock Make map needs a caregiver note about mixed areas. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "guam-made-label",
+        "guam-made-tell-1",
+        "guam-made-tell-2",
+        "guam-made-tell-3",
+        "guam-made-more-1",
+        "guam-made-more-2",
+        "guam-made-more-3",
+        "guam-made-more-4",
+        "guam-made-deep-1",
+        "guam-made-deep-2",
+        "guam-made-deep-3",
+        "guam-made-deep-4",
+        "guam-made-deep-5",
+        "guam-made-deep-6",
+        "guam-made-deep-7",
+        "guam-made-deep-8",
+        "guam-made-deep-9"
+      ],
+      "sourceUrls": [
+        "https://home.nps.gov/articles/nps-geodiversity-atlas-war-in-the-pacific-national-historical-park.htm",
+        "https://pubs.usgs.gov/wri/wri034126/htdocs/wrir03-4126.html"
+      ]
+    }
+  },
+  "limestone": {
+    "origin": "new",
+    "planTitle": "What is limestone?",
+    "makePrompt": "Draw shell bits inside an imaginary rock",
+    "motif": "limestone",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Opened the full USGS fact sheet, not just its summary; replaced oversimplified shell-to-rock account with carbonate, chalk, travertine and dissolution. No color-based identification or field experiment. Pending the designated family reviewer family/cultural review: Review local rock examples; retain the no caves/cliffs/collecting sensitivity despite no activity inviting them. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "limestone-label",
+        "limestone-tell-1",
+        "limestone-tell-2",
+        "limestone-tell-3",
+        "limestone-more-1",
+        "limestone-more-2",
+        "limestone-more-3",
+        "limestone-more-4",
+        "limestone-deep-1",
+        "limestone-deep-2",
+        "limestone-deep-3",
+        "limestone-deep-4",
+        "limestone-deep-5",
+        "limestone-deep-6",
+        "limestone-deep-7",
+        "limestone-deep-8",
+        "limestone-deep-9",
+        "limestone-deep-10",
+        "limestone-deep-11"
+      ],
+      "sourceUrls": [
+        "https://pubs.usgs.gov/fs/2008/3089/fs2008-3089.pdf",
+        "https://pubs.usgs.gov/wri/wri034126/htdocs/wrir03-4126.html"
+      ]
+    }
+  },
+  "guam-rail": {
+    "origin": "new",
+    "planTitle": "What is the Guam rail?",
+    "makePrompt": "Draw a sheltered home for a ground bird",
+    "motif": "rail",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Used Smithsonian for adaptation, diet, decline and conservation; USGS provides invasive-snake research context, not rail population evidence. Avoided volatile population/status counts and unverified local-language teaching. Pending the designated family reviewer family/cultural review: Review extinction/introduced-predator wording and local identity; no CHamoru name or community approval is added. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "guam-rail-label",
+        "guam-rail-tell-1",
+        "guam-rail-tell-2",
+        "guam-rail-tell-3",
+        "guam-rail-more-1",
+        "guam-rail-more-2",
+        "guam-rail-more-3",
+        "guam-rail-more-4",
+        "guam-rail-more-5",
+        "guam-rail-deep-1",
+        "guam-rail-deep-2",
+        "guam-rail-deep-3",
+        "guam-rail-deep-4",
+        "guam-rail-deep-5",
+        "guam-rail-deep-6",
+        "guam-rail-deep-7",
+        "guam-rail-deep-8",
+        "guam-rail-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nationalzoo.si.edu/animals/guam-rail-koko",
+        "https://www.usgs.gov/news/featured-story/usgs-brown-treesnake-research-continues-guam-national-wildlife-refuge"
+      ]
+    }
+  },
+  "limestone-forest": {
+    "origin": "new",
+    "planTitle": "What is a limestone forest?",
+    "makePrompt": "Draw the high and low layers of a forest",
+    "motif": "forest",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Replaced unavailable FWS project page with WERI forest text and USDA soil profile. Removed unverified Guam restoration actions and generalized invasive-species assertions; shallow soil is qualified to the Guam soil series. Pending the designated family reviewer family/cultural review: Review local habitat framing and schematic plant shapes; source examples do not establish every forest’s soil or species. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "limestone-forest-label",
+        "limestone-forest-tell-1",
+        "limestone-forest-tell-2",
+        "limestone-forest-tell-3",
+        "limestone-forest-more-1",
+        "limestone-forest-more-2",
+        "limestone-forest-more-3",
+        "limestone-forest-deep-1",
+        "limestone-forest-deep-2",
+        "limestone-forest-deep-3",
+        "limestone-forest-deep-4",
+        "limestone-forest-deep-5",
+        "limestone-forest-deep-6",
+        "limestone-forest-deep-7",
+        "limestone-forest-deep-8"
+      ],
+      "sourceUrls": [
+        "https://south.hydroguam.net/environment-forests.php",
+        "https://soilseries.sc.egov.usda.gov/OSD_Docs/G/GUAM.html"
+      ]
+    }
+  },
+  "drinking-water": {
+    "origin": "new",
+    "planTitle": "Where does our drinking water come from?",
+    "makePrompt": "Draw rain, rock, a well and a tap",
+    "motif": "aquifer",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Anchored lens/pumping explanation in the 2013 USGS scenario study and historical hydrology. Removed unsupported treatment process and contamination elaboration; no present-day safety, percentage or supply guarantee. Pending the designated family reviewer family/cultural review: Review drought/salinity explanation and water safety; the page cannot decide whether a current tap is safe. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "drinking-water-label",
+        "drinking-water-tell-1",
+        "drinking-water-tell-2",
+        "drinking-water-tell-3",
+        "drinking-water-more-1",
+        "drinking-water-more-2",
+        "drinking-water-more-3",
+        "drinking-water-more-4",
+        "drinking-water-deep-1",
+        "drinking-water-deep-2",
+        "drinking-water-deep-3",
+        "drinking-water-deep-4",
+        "drinking-water-deep-5",
+        "drinking-water-deep-6",
+        "drinking-water-deep-7",
+        "drinking-water-deep-8",
+        "drinking-water-deep-9"
+      ],
+      "sourceUrls": [
+        "https://pubs.usgs.gov/wri/wri034126/htdocs/wrir03-4126.html",
+        "https://www.usgs.gov/publications/effects-withdrawals-and-drought-groundwater-availability-northern-guam-lens-aquifer"
+      ]
+    }
+  },
+  "village": {
+    "origin": "new",
+    "planTitle": "What is a village?",
+    "makePrompt": "Make a page about a place your family chooses",
+    "motif": "village",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Confirmed nineteen districts and combined-place names against the council’s full list. Removed sweeping claims about traditions/belonging; family mapping is clearly an invitation, not ethnographic evidence. Pending the designated family reviewer family/cultural review: Review the exact family-memory invitation and combined district example; no name translation or cultural approval is implied. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "village-label",
+        "village-tell-1",
+        "village-tell-2",
+        "village-tell-3",
+        "village-more-1",
+        "village-more-2",
+        "village-more-3",
+        "village-deep-1",
+        "village-deep-2",
+        "village-deep-3",
+        "village-deep-4",
+        "village-deep-5",
+        "village-deep-6",
+        "village-deep-7",
+        "village-deep-8",
+        "village-deep-9"
+      ],
+      "sourceUrls": [
+        "https://mcog.guam.gov/villages-list",
+        "https://www.visitguam.com/about-guam/villages/"
+      ]
+    }
+  },
+  "native-trees": {
+    "origin": "new",
+    "planTitle": "Why are native trees important?",
+    "makePrompt": "Draw a tree with food, shade and shelter",
+    "motif": "tree",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Replaced failed FWS citation with BLM ecosystem/definition evidence and WERI local context. Removed unsupported specific Guam restoration prescriptions; Joshua tree example is explicitly mainland. Pending the designated family reviewer family/cultural review: Review native-species language and mainland comparison; no foraging, removal or planting instruction is introduced. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "native-trees-label",
+        "native-trees-tell-1",
+        "native-trees-tell-2",
+        "native-trees-more-1",
+        "native-trees-more-2",
+        "native-trees-more-3",
+        "native-trees-more-4",
+        "native-trees-deep-1",
+        "native-trees-deep-2",
+        "native-trees-deep-3",
+        "native-trees-deep-4",
+        "native-trees-deep-5",
+        "native-trees-deep-6",
+        "native-trees-deep-7",
+        "native-trees-deep-8",
+        "native-trees-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.blm.gov/sites/default/files/docs/2024-10/Native-Plants-Junior-Ranger-Book-2024.pdf",
+        "https://south.hydroguam.net/environment-forests.php"
+      ]
+    }
+  },
+  "family-walk": {
+    "origin": "new",
+    "planTitle": "What can we notice on a family walk?",
+    "makePrompt": "Draw three things from a grown-up-approved walk",
+    "motif": "walk",
+    "review": "drafted",
+    "chamoru": {
+      "repository": "HafaGPT/api/language_content/canonical_vocabulary.json",
+      "fileSha256": "682a3daece1082b692ef27568c127c8c381e0f74a93c6964e6be40a823dbc1cb",
+      "entry": {
+        "id": "family.family",
+        "category": "family",
+        "english": "Family",
+        "canonical_chamorro": "Familia",
+        "recommended_teaching_term": "Familia",
+        "normalized_key": "familia",
+        "part_of_speech": "n.",
+        "teaching_level": "beginner",
+        "review_status": "source_backed",
+        "confidence": "high",
+        "pronunciation": {
+          "guide": "fah-MEE-lee-ah",
+          "status": "needs_native_review"
+        },
+        "variants": [
+          {
+            "term": "Fåmilia",
+            "type": "source_variant",
+            "status": "source_backed",
+            "source": "chamoru_info_dictionary.json",
+            "notes": "Chamoru.info bundled source spelling."
+          }
+        ],
+        "deprecated_app_terms": [],
+        "needs_review_terms": [],
+        "source_citations": [
+          {
+            "source": "revised_and_updated_chamorro_dictionary.json",
+            "headword": "familia",
+            "definition": "family",
+            "part_of_speech": "n."
+          },
+          {
+            "source": "chamoru_info_dictionary.json",
+            "headword": "fåmilia",
+            "definition": "Family; tribe; clan; folk; category of plants or animals."
+          },
+          {
+            "source": "chamorro_english_dictionary_TOD.json",
+            "headword": "familia",
+            "definition": "family, tribe, clan, folk, category of plants or animals"
+          }
+        ],
+        "notes": "Strongly source-backed family/clan term."
+      },
+      "pronunciationReview": "pending; do not mark source-backed as pronunciation approval"
+    },
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Verified Familia in frozen HåfaGPT family.family source_backed entry; removed pronunciation and tradition claims. Observation-versus-explanation example is explicitly hypothetical original pedagogy, with NPS leave-in-place guidance. Pending the designated family reviewer family/cultural review: Review walking/rolling/resting inclusion and the family activity; Familia still needs native pronunciation and the designated family reviewer cultural review. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "family-walk-label",
+        "family-walk-tell-1",
+        "family-walk-tell-2",
+        "family-walk-tell-3",
+        "family-walk-more-1",
+        "family-walk-more-2",
+        "family-walk-more-3",
+        "family-walk-more-4",
+        "family-walk-deep-1",
+        "family-walk-deep-2",
+        "family-walk-deep-3",
+        "family-walk-deep-4",
+        "family-walk-deep-5",
+        "family-walk-deep-6",
+        "family-walk-deep-7",
+        "family-walk-deep-8",
+        "family-walk-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nps.gov/articles/leave-no-trace-seven-principles.htm",
+        "https://github.com/Shimizu-Technology/HafaGPT/blob/609a8eb44c5068bf1b539221de078adeb1f20787/api/language_content/canonical_vocabulary.json"
+      ]
+    }
+  },
+  "distant-stars": {
+    "origin": "new",
+    "planTitle": "Why do stars look tiny?",
+    "makePrompt": "Draw the same star near and far",
+    "motif": "star-distance",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NASA-hosted observing guide for unresolved stellar disks; removed brightness-versus-luminosity elaboration beyond the original citations. Distance/time distinction retained. Pending the designated family reviewer family/cultural review: Review Sun-safety context and the illustration’s symbolic dot sizes; no solar observation is requested. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "distant-stars-label",
+        "distant-stars-tell-1",
+        "distant-stars-tell-2",
+        "distant-stars-tell-3",
+        "distant-stars-more-1",
+        "distant-stars-more-2",
+        "distant-stars-more-3",
+        "distant-stars-deep-1",
+        "distant-stars-deep-2",
+        "distant-stars-deep-3",
+        "distant-stars-deep-4",
+        "distant-stars-deep-5",
+        "distant-stars-deep-6",
+        "distant-stars-deep-7",
+        "distant-stars-deep-8",
+        "distant-stars-deep-9"
+      ],
+      "sourceUrls": [
+        "https://spaceplace.nasa.gov/all-about-the-sun/en/",
+        "https://spaceplace.nasa.gov/light-year/en/",
+        "https://nightsky.jpl.nasa.gov/docs/TTKReadyObserve1.pdf"
+      ]
+    }
+  },
+  "shadow": {
+    "origin": "new",
+    "planTitle": "What is a shadow?",
+    "makePrompt": "Make a page of three shadow shapes",
+    "motif": "shadow",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Added the Smithsonian activity’s full geometric explanation; removed unsupported fuzzy-edge account. Ring orientation and lunar eclipse are sourced examples; phases are not described as Earth’s shadow. Pending the designated family reviewer family/cultural review: Review light handling and whether an eclipse example is comfortable; no Sun-looking or flashlight experiment is required. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "shadow-label",
+        "shadow-tell-1",
+        "shadow-tell-2",
+        "shadow-tell-3",
+        "shadow-more-1",
+        "shadow-more-2",
+        "shadow-more-3",
+        "shadow-more-4",
+        "shadow-deep-1",
+        "shadow-deep-2",
+        "shadow-deep-3",
+        "shadow-deep-4",
+        "shadow-deep-5",
+        "shadow-deep-6",
+        "shadow-deep-7",
+        "shadow-deep-8",
+        "shadow-deep-9",
+        "shadow-deep-10"
+      ],
+      "sourceUrls": [
+        "https://hte.si.edu/shadows.html",
+        "https://hte.si.edu/Activities/shadows_activities.pdf",
+        "https://spaceplace.nasa.gov/seasons/en/"
+      ]
+    }
+  },
+  "constellation": {
+    "origin": "new",
+    "planTitle": "What is a constellation?",
+    "makePrompt": "Join drawn star dots into your own invented shape",
+    "motif": "constellation",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Added IAU primary definition to distinguish regions from figures; qualified physical association instead of saying all pattern stars are unrelated. No traditional navigation or local star story is added. Pending the designated family reviewer family/cultural review: Review cultural framing and invented-dot Make prompt; an IAU map convention does not replace community sky knowledge. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "constellation-label",
+        "constellation-tell-1",
+        "constellation-tell-2",
+        "constellation-tell-3",
+        "constellation-more-1",
+        "constellation-more-2",
+        "constellation-more-3",
+        "constellation-more-4",
+        "constellation-deep-1",
+        "constellation-deep-2",
+        "constellation-deep-3",
+        "constellation-deep-4",
+        "constellation-deep-5",
+        "constellation-deep-6",
+        "constellation-deep-7",
+        "constellation-deep-8",
+        "constellation-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.iau.org/IAU/Astronomy-FAQs/Constellations.aspx",
+        "https://spaceplace.nasa.gov/constellations/en/"
+      ]
+    }
+  },
+  "night-view": {
+    "origin": "new",
+    "planTitle": "Why does the sky look different at night?",
+    "makePrompt": "Draw daytime and nighttime views from one safe place",
+    "motif": "night",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Retained scattering, rotation and orbital viewpoint; removed unsourced Moon/light-pollution/weather elaboration. Static illustration is not a current Guam sky chart. Pending the designated family reviewer family/cultural review: Review outdoor-night context and absence of real-time guidance; no independent night outing is requested. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "night-view-label",
+        "night-view-tell-1",
+        "night-view-tell-2",
+        "night-view-tell-3",
+        "night-view-more-1",
+        "night-view-more-2",
+        "night-view-more-3",
+        "night-view-deep-1",
+        "night-view-deep-2",
+        "night-view-deep-3",
+        "night-view-deep-4",
+        "night-view-deep-5",
+        "night-view-deep-6",
+        "night-view-deep-7",
+        "night-view-deep-8"
+      ],
+      "sourceUrls": [
+        "https://spaceplace.nasa.gov/blue-sky/en/",
+        "https://spaceplace.nasa.gov/constellations/en/",
+        "https://spaceplace.nasa.gov/seasons/en/"
+      ]
+    }
+  },
+  "telescope": {
+    "origin": "new",
+    "planTitle": "What is a telescope?",
+    "makePrompt": "Design a telescope and label its light-gathering part",
+    "motif": "telescope",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Replaced unsupported magnification/false-color/turbulence elaboration with the cited optics mechanism and mirror engineering. Retained a single solar-optics safety sentence. Pending the designated family reviewer family/cultural review: Review eye-safety line and supervised use; the original schematic is not an equipment guide. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "telescope-label",
+        "telescope-tell-1",
+        "telescope-tell-2",
+        "telescope-more-1",
+        "telescope-more-2",
+        "telescope-more-3",
+        "telescope-deep-1",
+        "telescope-deep-2",
+        "telescope-deep-3",
+        "telescope-deep-4",
+        "telescope-deep-5",
+        "telescope-deep-6",
+        "telescope-deep-7",
+        "telescope-deep-8",
+        "telescope-deep-9"
+      ],
+      "sourceUrls": [
+        "https://spaceplace.nasa.gov/telescopes/en/",
+        "https://science.nasa.gov/eclipses/safety/"
+      ]
+    }
+  },
+  "milky-way": {
+    "origin": "new",
+    "planTitle": "What is the Milky Way?",
+    "makePrompt": "Draw our solar system as a dot in a galaxy model",
+    "motif": "galaxy",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Checked the full NASA Milky Way explanation and galaxy overview; retained evidence-based mapping, disk and radio-gas example. Removed apparent outside-portrait implication and avoided an exact size/count. Pending the designated family reviewer family/cultural review: Review abstract galaxy-scale explanation for comprehension; no sensitive content or cultural approval asserted. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "milky-way-label",
+        "milky-way-tell-1",
+        "milky-way-tell-2",
+        "milky-way-tell-3",
+        "milky-way-more-1",
+        "milky-way-more-2",
+        "milky-way-more-3",
+        "milky-way-more-4",
+        "milky-way-deep-1",
+        "milky-way-deep-2",
+        "milky-way-deep-3",
+        "milky-way-deep-4",
+        "milky-way-deep-5",
+        "milky-way-deep-6",
+        "milky-way-deep-7",
+        "milky-way-deep-8",
+        "milky-way-deep-9"
+      ],
+      "sourceUrls": [
+        "https://science.nasa.gov/universe/galaxies/",
+        "https://imagine.gsfc.nasa.gov/features/cosmic/milkyway_info.html"
+      ]
+    }
+  },
+  "comet": {
+    "origin": "new",
+    "planTitle": "What is a comet?",
+    "makePrompt": "Draw the Sun and a comet tail pointing away",
+    "motif": "comet",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Kept nucleus→warming→coma→tails with dust/ion distinction; removed the uncited meteor comparison and tail-ahead claim. No current comet forecast or impact scenario. Pending the designated family reviewer family/cultural review: Review comet scale and Sun-safety sensitivity; no search for a comet near the Sun is requested. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "comet-label",
+        "comet-tell-1",
+        "comet-tell-2",
+        "comet-tell-3",
+        "comet-more-1",
+        "comet-more-2",
+        "comet-more-3",
+        "comet-deep-1",
+        "comet-deep-2",
+        "comet-deep-3",
+        "comet-deep-4",
+        "comet-deep-5",
+        "comet-deep-6",
+        "comet-deep-7",
+        "comet-deep-8",
+        "comet-deep-9"
+      ],
+      "sourceUrls": [
+        "https://science.nasa.gov/solar-system/comets/facts/"
+      ]
+    }
+  },
+  "astronaut-home": {
+    "origin": "new",
+    "planTitle": "How do astronauts live in space?",
+    "makePrompt": "Design a space room for working, resting and storing things",
+    "motif": "astronaut",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Opened NASA’s technical Q&A for oxygen/water support; removed unsupported sleeping-bag detail. Microgravity remains shared orbital free fall, with exercise explained rather than prescribed. Pending the designated family reviewer family/cultural review: Review body adaptation and water reuse wording; no exercise challenge or unprotected-space scenario. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "astronaut-home-label",
+        "astronaut-home-tell-1",
+        "astronaut-home-tell-2",
+        "astronaut-home-tell-3",
+        "astronaut-home-more-1",
+        "astronaut-home-more-2",
+        "astronaut-home-more-3",
+        "astronaut-home-more-4",
+        "astronaut-home-deep-1",
+        "astronaut-home-deep-2",
+        "astronaut-home-deep-3",
+        "astronaut-home-deep-4",
+        "astronaut-home-deep-5",
+        "astronaut-home-deep-6",
+        "astronaut-home-deep-7",
+        "astronaut-home-deep-8",
+        "astronaut-home-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nasa.gov/learning-resources/for-kids-and-students/what-is-microgravity-grades-5-8/",
+        "https://robotics.nasa.gov/spaceflight-qa/",
+        "https://www.nasa.gov/humans-in-space/living-in-space/"
+      ]
+    }
+  },
+  "breathing": {
+    "origin": "new",
+    "planTitle": "Why do we breathe?",
+    "makePrompt": "Draw air reaching lungs and blood",
+    "motif": "lungs",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Connected breathing mechanics, alveoli and circulation from NHLBI; removed diagnostic/model filler. Oxygen supports cellular energy release rather than being created by lungs. Pending the designated family reviewer family/cultural review: Review body vocabulary and the one gentle no-breath-holding line; no health comparison or test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "breathing-label",
+        "breathing-tell-1",
+        "breathing-tell-2",
+        "breathing-tell-3",
+        "breathing-more-1",
+        "breathing-more-2",
+        "breathing-more-3",
+        "breathing-more-4",
+        "breathing-deep-1",
+        "breathing-deep-2",
+        "breathing-deep-3",
+        "breathing-deep-4",
+        "breathing-deep-5",
+        "breathing-deep-6",
+        "breathing-deep-7",
+        "breathing-deep-8",
+        "breathing-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nhlbi.nih.gov/health/lungs",
+        "https://www.nhlbi.nih.gov/health/lungs/breathing-benefits"
+      ]
+    }
+  },
+  "heart": {
+    "origin": "new",
+    "planTitle": "What does the heart do?",
+    "makePrompt": "Draw a loop from heart to lungs and body",
+    "motif": "heart",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Used NHLBI circulation and beat pages to explain coordinated pumping/valve sounds; removed color-model and comparison-to-other-children filler. Tell’s “food” means nutrients carried by blood. Pending the designated family reviewer family/cultural review: Review simplified food/nutrient wording and valve sounds; no pulse counting, diagnosis or exercise test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "heart-label",
+        "heart-tell-1",
+        "heart-tell-2",
+        "heart-tell-3",
+        "heart-more-1",
+        "heart-more-2",
+        "heart-more-3",
+        "heart-more-4",
+        "heart-deep-1",
+        "heart-deep-2",
+        "heart-deep-3",
+        "heart-deep-4",
+        "heart-deep-5",
+        "heart-deep-6",
+        "heart-deep-7",
+        "heart-deep-8",
+        "heart-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nhlbi.nih.gov/health/heart",
+        "https://www.nhlbi.nih.gov/health/heart/heart-beats"
+      ]
+    }
+  },
+  "bones": {
+    "origin": "new",
+    "planTitle": "How do our bones help us?",
+    "makePrompt": "Draw a protective rib cage around a paper heart",
+    "motif": "bones",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NCI skeletal-system evidence for protection, levers and marrow; NIAMS supports growth/remodeling. Removed diet/exercise prescription language and unsupported protein-composition detail. Pending the designated family reviewer family/cultural review: Review body imagery and marrow explanation; retain sensitivity metadata and avoid comparing children’s bodies. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "bones-label",
+        "bones-tell-1",
+        "bones-tell-2",
+        "bones-tell-3",
+        "bones-more-1",
+        "bones-more-2",
+        "bones-more-3",
+        "bones-more-4",
+        "bones-deep-1",
+        "bones-deep-2",
+        "bones-deep-3",
+        "bones-deep-4",
+        "bones-deep-5",
+        "bones-deep-6",
+        "bones-deep-7",
+        "bones-deep-8",
+        "bones-deep-9",
+        "bones-deep-10"
+      ],
+      "sourceUrls": [
+        "https://training.seer.cancer.gov/anatomy/skeletal/",
+        "https://www.niams.nih.gov/health-topics/kids-and-their-bones"
+      ]
+    }
+  },
+  "muscles": {
+    "origin": "new",
+    "planTitle": "How do muscles move us?",
+    "makePrompt": "Draw two pulling bands around a paper joint",
+    "motif": "muscle",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Added NCI muscle-types page; kept fiber→connective tissue→tendon→bone mechanism. Removed unsupported isometric/posture and paired-band claims from prose. Pending the designated family reviewer family/cultural review: Review body explanation and the existing two-band Make prompt as a simplified picture, not an exercise instruction. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "muscles-label",
+        "muscles-tell-1",
+        "muscles-tell-2",
+        "muscles-tell-3",
+        "muscles-more-1",
+        "muscles-more-2",
+        "muscles-more-3",
+        "muscles-more-4",
+        "muscles-deep-1",
+        "muscles-deep-2",
+        "muscles-deep-3",
+        "muscles-deep-4",
+        "muscles-deep-5",
+        "muscles-deep-6",
+        "muscles-deep-7",
+        "muscles-deep-8",
+        "muscles-deep-9",
+        "muscles-deep-10"
+      ],
+      "sourceUrls": [
+        "https://training.seer.cancer.gov/anatomy/muscular/structure.html",
+        "https://training.seer.cancer.gov/anatomy/muscular/types.html"
+      ]
+    }
+  },
+  "vision": {
+    "origin": "new",
+    "planTitle": "How do we see?",
+    "makePrompt": "Draw light entering an eye model",
+    "motif": "eye",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Checked NEI’s full pathway; removed unsupported glasses/diagnosis discussion. The tree example illustrates that pathway without claiming a literal image travels down the nerve. Pending the designated family reviewer family/cultural review: Review body vocabulary and eye-safety line; no vision test or comparison is proposed. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "vision-label",
+        "vision-tell-1",
+        "vision-tell-2",
+        "vision-tell-3",
+        "vision-more-1",
+        "vision-more-2",
+        "vision-more-3",
+        "vision-deep-1",
+        "vision-deep-2",
+        "vision-deep-3",
+        "vision-deep-4",
+        "vision-deep-5",
+        "vision-deep-6",
+        "vision-deep-7",
+        "vision-deep-8",
+        "vision-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nei.nih.gov/eye-health-information/healthy-vision/how-eyes-work",
+        "https://science.nasa.gov/eclipses/safety/"
+      ]
+    }
+  },
+  "hearing": {
+    "origin": "new",
+    "planTitle": "How do we hear?",
+    "makePrompt": "Draw sound becoming motion and then a signal",
+    "motif": "ear",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Retained NIDCD sequence and pitch-location example; removed unrelated communication-device and illustration boilerplate. Hair-cell projections are distinguished from ordinary hair. Pending the designated family reviewer family/cultural review: Review sensory inclusivity, quiet-picture line and the cry/bark example; no required hearing response or loudness test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "hearing-label",
+        "hearing-tell-1",
+        "hearing-tell-2",
+        "hearing-tell-3",
+        "hearing-more-1",
+        "hearing-more-2",
+        "hearing-more-3",
+        "hearing-deep-1",
+        "hearing-deep-2",
+        "hearing-deep-3",
+        "hearing-deep-4",
+        "hearing-deep-5",
+        "hearing-deep-6",
+        "hearing-deep-7",
+        "hearing-deep-8",
+        "hearing-deep-9",
+        "hearing-deep-10"
+      ],
+      "sourceUrls": [
+        "https://www.nidcd.nih.gov/health/how-do-we-hear"
+      ]
+    }
+  },
+  "smell": {
+    "origin": "new",
+    "planTitle": "How do we smell?",
+    "makePrompt": "Draw a familiar safe smell from memory",
+    "motif": "nose",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Used NIDCD receptor-pattern and two-route explanation; removed unsupported specific hazard-detection claims. Hypothetical remembered drawing avoids a sniffing activity. Pending the designated family reviewer family/cultural review: Review nose/food explanation and no-unknown-sniffing guidance; no allergy exposure or safety-by-smell test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "smell-label",
+        "smell-tell-1",
+        "smell-tell-2",
+        "smell-tell-3",
+        "smell-more-1",
+        "smell-more-2",
+        "smell-more-3",
+        "smell-deep-1",
+        "smell-deep-2",
+        "smell-deep-3",
+        "smell-deep-4",
+        "smell-deep-5",
+        "smell-deep-6",
+        "smell-deep-7",
+        "smell-deep-8",
+        "smell-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nidcd.nih.gov/health/smell-disorders"
+      ]
+    }
+  },
+  "taste": {
+    "origin": "new",
+    "planTitle": "Why can we taste food?",
+    "makePrompt": "Draw a favorite food using color and texture",
+    "motif": "tongue",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Preserved correction of tongue-zone myth and NIDCD flavor mechanism; removed generalized food-need and diagram boilerplate. No tasting activity or allergy exposure. Pending the designated family reviewer family/cultural review: Review food/chili example and optional remembered-food wording; no taste comparison, food ranking or safety test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "taste-label",
+        "taste-tell-1",
+        "taste-tell-2",
+        "taste-tell-3",
+        "taste-more-1",
+        "taste-more-2",
+        "taste-more-3",
+        "taste-deep-1",
+        "taste-deep-2",
+        "taste-deep-3",
+        "taste-deep-4",
+        "taste-deep-5",
+        "taste-deep-6",
+        "taste-deep-7",
+        "taste-deep-8",
+        "taste-deep-9",
+        "taste-deep-10"
+      ],
+      "sourceUrls": [
+        "https://www.nidcd.nih.gov/health/taste-disorders"
+      ]
+    }
+  },
+  "wheel": {
+    "origin": "new",
+    "planTitle": "How does a wheel help?",
+    "makePrompt": "Design a cart for a pretend load",
+    "motif": "wheel",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Distinguished rolling resistance from wheel/axle force tradeoff. Added OpenStax and museum road-surface evidence; removed unsupported bearings/material-selection claims. Pending the designated family reviewer family/cultural review: Review heavy-load boundary and cart example; no real vehicle or load test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "wheel-label",
+        "wheel-tell-1",
+        "wheel-tell-2",
+        "wheel-tell-3",
+        "wheel-more-1",
+        "wheel-more-2",
+        "wheel-more-3",
+        "wheel-more-4",
+        "wheel-deep-1",
+        "wheel-deep-2",
+        "wheel-deep-3",
+        "wheel-deep-4",
+        "wheel-deep-5",
+        "wheel-deep-6",
+        "wheel-deep-7",
+        "wheel-deep-8",
+        "wheel-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nasa.gov/wp-content/uploads/2023/03/simple-machines-classroom-connection-508.pdf",
+        "https://www.teachengineering.org/lessons/cub_simple_lesson01",
+        "https://openstax.org/books/college-physics/pages/9-5-simple-machines",
+        "https://annex.exploratorium.edu/cycling/wheel1.html",
+        "https://www.uml.edu/docs/Simple_Machines_Complete_tcm18-253653.pdf"
+      ]
+    }
+  },
+  "lever": {
+    "origin": "new",
+    "planTitle": "What is a lever?",
+    "makePrompt": "Draw a lever with the pivot close to a pretend load",
+    "motif": "lever",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Added OpenStax torque/lever examples and ideal-model limits. Corrected any implication that every lever multiplies force; removed repetitive pinch warnings from layers while retaining metadata. Pending the designated family reviewer family/cultural review: Review the imagined seesaw/shovel examples and drawing-only invitation; no lifting furniture or pinch-point action. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "lever-label",
+        "lever-tell-1",
+        "lever-tell-2",
+        "lever-tell-3",
+        "lever-more-1",
+        "lever-more-2",
+        "lever-more-3",
+        "lever-more-4",
+        "lever-deep-1",
+        "lever-deep-2",
+        "lever-deep-3",
+        "lever-deep-4",
+        "lever-deep-5",
+        "lever-deep-6",
+        "lever-deep-7",
+        "lever-deep-8",
+        "lever-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nasa.gov/wp-content/uploads/2023/03/simple-machines-classroom-connection-508.pdf",
+        "https://www.teachengineering.org/lessons/cub_simple_lesson01",
+        "https://openstax.org/books/college-physics/pages/9-5-simple-machines",
+        "https://www.grc.nasa.gov/www/k-12/Summer_Training/KaeAvenueES/Simple_Machine_Web.html",
+        "https://www.uml.edu/docs/Simple_Machines_Complete_tcm18-253653.pdf"
+      ]
+    }
+  },
+  "ramp": {
+    "origin": "new",
+    "planTitle": "How does a ramp help us lift?",
+    "makePrompt": "Draw two ramps reaching the same height",
+    "motif": "ramp",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Kept force-distance tradeoff explicitly ideal/no-friction; real friction remains. Removed unsupported real-accessibility/control claims and categorical claim that every longer ramp is easier. Pending the designated family reviewer family/cultural review: Review load-moving boundary and gentle-slope comparison; drawing does not certify real ramp accessibility. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "ramp-label",
+        "ramp-tell-1",
+        "ramp-tell-2",
+        "ramp-tell-3",
+        "ramp-more-1",
+        "ramp-more-2",
+        "ramp-more-3",
+        "ramp-more-4",
+        "ramp-deep-1",
+        "ramp-deep-2",
+        "ramp-deep-3",
+        "ramp-deep-4",
+        "ramp-deep-5",
+        "ramp-deep-6",
+        "ramp-deep-7",
+        "ramp-deep-8"
+      ],
+      "sourceUrls": [
+        "https://www.nasa.gov/wp-content/uploads/2023/03/simple-machines-classroom-connection-508.pdf",
+        "https://www.teachengineering.org/lessons/cub_simple_lesson01",
+        "https://openstax.org/books/college-physics/pages/9-5-simple-machines",
+        "https://www.grc.nasa.gov/www/k-12/Summer_Training/KaeAvenueES/Simple_Machine_Web.html",
+        "https://www.uml.edu/docs/Simple_Machines_Complete_tcm18-253653.pdf"
+      ]
+    }
+  },
+  "gears": {
+    "origin": "new",
+    "planTitle": "How do gears turn together?",
+    "makePrompt": "Draw a pair of gears with opposite arrows",
+    "motif": "gears",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Opened the attached teaching slides for direction/idler and torque support. Numerical 10:20 example is an original ratio illustration; external-gear qualification prevents universal direction claims. Pending the designated family reviewer family/cultural review: Review machinery boundary and tooth-count example; no operating or touching real gears. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping. Final editor clarified tooth contact without implying that gear teeth never slide."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "gears-label",
+        "gears-tell-1",
+        "gears-tell-2",
+        "gears-tell-3",
+        "gears-more-1",
+        "gears-more-2",
+        "gears-more-3",
+        "gears-more-4",
+        "gears-deep-1",
+        "gears-deep-2",
+        "gears-deep-3",
+        "gears-deep-4",
+        "gears-deep-5",
+        "gears-deep-6",
+        "gears-deep-7",
+        "gears-deep-8"
+      ],
+      "sourceUrls": [
+        "https://www.teachengineering.org/lessons/umo_challenges_lesson02",
+        "https://teachengwebstorageprod.blob.core.windows.net/te-content-prod/umo_challenges_lesson02_presentation_v6_dwc_EV3.pdf"
+      ]
+    }
+  },
+  "pulley": {
+    "origin": "new",
+    "planTitle": "How does a pulley work?",
+    "makePrompt": "Draw a rope path over a fixed pulley",
+    "motif": "pulley",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Added ideal load-support and rope-distance mechanism, distinguishing fixed from moving pulley. Removed unsupported safety-engineering detail; metadata still retains ropes/suspension risk. Pending the designated family reviewer family/cultural review: Review paper-only rope tracing and load example; no hoisting, hanging ropes or climbing system. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "pulley-label",
+        "pulley-tell-1",
+        "pulley-tell-2",
+        "pulley-tell-3",
+        "pulley-more-1",
+        "pulley-more-2",
+        "pulley-more-3",
+        "pulley-more-4",
+        "pulley-deep-1",
+        "pulley-deep-2",
+        "pulley-deep-3",
+        "pulley-deep-4",
+        "pulley-deep-5",
+        "pulley-deep-6",
+        "pulley-deep-7",
+        "pulley-deep-8",
+        "pulley-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.nasa.gov/wp-content/uploads/2023/03/simple-machines-classroom-connection-508.pdf",
+        "https://www.teachengineering.org/lessons/cub_simple_lesson01",
+        "https://openstax.org/books/college-physics/pages/9-5-simple-machines",
+        "https://www.grc.nasa.gov/www/k-12/Summer_Training/KaeAvenueES/Simple_Machine_Web.html",
+        "https://www.uml.edu/docs/Simple_Machines_Complete_tcm18-253653.pdf"
+      ]
+    }
+  },
+  "boats-float": {
+    "origin": "new",
+    "planTitle": "Why do boats float?",
+    "makePrompt": "Draw a wide hollow hull and the water it moves aside",
+    "motif": "boat",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Confirmed displaced-water weight, average density and loading against OpenStax/TeachEngineering; preserved distinction between buoyancy and stability. No real-water trial. Pending the designated family reviewer family/cultural review: Review water-safety line and sinking/tipping language; no claim that a drawn hull is safe to use. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "boats-float-label",
+        "boats-float-tell-1",
+        "boats-float-tell-2",
+        "boats-float-tell-3",
+        "boats-float-more-1",
+        "boats-float-more-2",
+        "boats-float-more-3",
+        "boats-float-deep-1",
+        "boats-float-deep-2",
+        "boats-float-deep-3",
+        "boats-float-deep-4",
+        "boats-float-deep-5",
+        "boats-float-deep-6",
+        "boats-float-deep-7",
+        "boats-float-deep-8",
+        "boats-float-deep-9"
+      ],
+      "sourceUrls": [
+        "https://www.teachengineering.org/lessons/view/duk_float_mary_less",
+        "https://openstax.org/books/university-physics-volume-1/pages/14-4-archimedes-principle-and-buoyancy"
+      ]
+    }
+  },
+  "airplanes": {
+    "origin": "new",
+    "planTitle": "How do airplanes stay up?",
+    "makePrompt": "Draw a plane with lift, weight, thrust and drag arrows",
+    "motif": "plane",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Used NASA flow-turning and four-forces explanations; removed unsupported equal-transit rebuttal and detailed pressure/angle claims. Force balance is limited to steady level flight. Pending the designated family reviewer family/cultural review: Review explanatory wing arrows and glider example; no launching, jumping or flight test. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "airplanes-label",
+        "airplanes-tell-1",
+        "airplanes-tell-2",
+        "airplanes-tell-3",
+        "airplanes-more-1",
+        "airplanes-more-2",
+        "airplanes-more-3",
+        "airplanes-more-4",
+        "airplanes-deep-1",
+        "airplanes-deep-2",
+        "airplanes-deep-3",
+        "airplanes-deep-4",
+        "airplanes-deep-5",
+        "airplanes-deep-6",
+        "airplanes-deep-7",
+        "airplanes-deep-8",
+        "airplanes-deep-9",
+        "airplanes-deep-10"
+      ],
+      "sourceUrls": [
+        "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/what-is-lift/",
+        "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/four-forces-on-an-airplane/"
+      ]
+    }
+  },
+  "bicycle": {
+    "origin": "new",
+    "planTitle": "How does a bicycle move?",
+    "makePrompt": "Draw the path from pedals through chain to wheel",
+    "motif": "bicycle",
+    "review": "drafted",
+    "independentLibraryReview": {
+      "date": "2026-11-02",
+      "review": {
+        "status": "in-review",
+        "reviewer": "Codex independent factual reviewer",
+        "factualReviewer": "independent factual reviewer",
+        "date": "2026-11-02",
+        "scope": "Independent factual outcome: revised claims supported within the stated limits. Opened the museum’s Drives & Gears article, not just its landing page. Original 40:20 example illustrates tooth ratio. Removed unsourced traction/brake and chain-direction elaboration. Pending the designated family reviewer family/cultural review: Review moving-chain boundary, historical comparison and gear example; no required riding or handling a chain. Reading-content/decoding assessment, pronunciation, warm narration and audible review remain pending; not approved for shipping."
+      },
+      "scope": "Current revised Library reading copy; original author payload and source-access history above are preserved as historical evidence. The revised copy is not a verbatim migration.",
+      "sentenceIds": [
+        "bicycle-label",
+        "bicycle-tell-1",
+        "bicycle-tell-2",
+        "bicycle-tell-3",
+        "bicycle-more-1",
+        "bicycle-more-2",
+        "bicycle-more-3",
+        "bicycle-more-4",
+        "bicycle-deep-1",
+        "bicycle-deep-2",
+        "bicycle-deep-3",
+        "bicycle-deep-4",
+        "bicycle-deep-5",
+        "bicycle-deep-6",
+        "bicycle-deep-7",
+        "bicycle-deep-8",
+        "bicycle-deep-9"
+      ],
+      "sourceUrls": [
+        "https://annex.exploratorium.edu/cycling/gears1.html",
+        "https://annex.exploratorium.edu/cycling/wheel1.html"
+      ]
+    }
+  }
+}

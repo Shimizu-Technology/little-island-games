@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="astronaut-home-art-title">
+  <title id="astronaut-home-art-title">Inside a station cabin, an astronaut floats beside a round window showing Earth; a green tether connects the suit to a wall handrail.</title>
+  <rect width="320" height="196" rx="22" fill="#EEEAF6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="19" y="17" width="282" height="163" rx="20" fill="#E5D8B1" /><path d="M22 152h276M34 36h32v28H46M272 120h13v38" fill="none" stroke-width="5"/><circle cx="244" cy="62" r="35" fill="#FFF9E6" /><circle cx="245" cy="65" r="24" fill="#91C5D0" /><path d="M228.2 50.6l14.399999999999999 -2.4000000000000004 7.199999999999999 12.0-9.600000000000001 9.600000000000001-2.4000000000000004 12.0" fill="#80A97D" stroke-width="1.5"/><path d="M119 129Q74 165 46 131V64" fill="none" stroke="#80A97D" stroke-width="4"/><circle cx="131" cy="62" r="25" fill="#FFF9E6" /><rect x="112" y="47" width="38" height="26" rx="9" fill="#91C5D0" /><path d="m112 87 40-1 7 40-40 8Zm1 8-28 14 7 14 26-12m35-17 22 8 9-15 11 7-14 24-27-8m-28 23-11 24 18 7 12-24m4-9 12 23 18-7-11-23" fill="#FFF9E6" /><rect x="127" y="99" width="15" height="15" rx="3" fill="#D4896C" />
+  </g>
+</svg>

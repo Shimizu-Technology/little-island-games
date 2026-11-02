@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="frogs-art-title">
+  <title id="frogs-art-title">A legless tadpole, a tadpole growing hind legs and a small adult frog form a three-stage sequence joined by arrows.</title>
+  <rect width="320" height="196" rx="22" fill="#E7F1DD"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M57 98q35-46 42-16-17 0-24 24Z" fill="#80A97D" /><ellipse cx="45" cy="105" rx="23" ry="18" fill="#80A97D" /><circle cx="35" cy="101" r="2" fill="#254E4B" /><path d="M93 110L119 110" fill="none" stroke="#254E4B"/><path d="M112.4 114.5L119 110 112.4 105.5" fill="none" stroke="#254E4B"/><path d="M157 98q29-33 36-10-18 2-20 15" fill="#80A97D" /><ellipse cx="146" cy="109" rx="22" ry="18" fill="#80A97D" /><path d="m154 121 14 13 10-9m-39-1-7 10-10-2" fill="none" /><circle cx="137" cy="105" r="2" fill="#254E4B" /><path d="M193 110L218 110" fill="none" stroke="#254E4B"/><path d="M211.4 114.5L218 110 211.4 105.5" fill="none" stroke="#254E4B"/><ellipse cx="260" cy="111" rx="24" ry="21" fill="#80A97D" /><circle cx="246" cy="91" r="8" fill="#80A97D" /><circle cx="274" cy="91" r="8" fill="#80A97D" /><circle cx="246" cy="91" r="2" fill="#254E4B" /><circle cx="274" cy="91" r="2" fill="#254E4B" /><path d="m241 121-15 18h18m35-18 15 18h-18M251 116q9 8 18 0" fill="none" />
+  </g>
+</svg>

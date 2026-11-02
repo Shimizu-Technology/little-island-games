@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="night-view-art-title">
+  <title id="night-view-art-title">Two views of one house show a pale daytime sky with faint stars on the left and a dark nighttime sky with bright stars on the right.</title>
+  <rect width="320" height="196" rx="22" fill="#EEEAF6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="16" y="25" width="139" height="148" rx="12" fill="#91C5D0" /><rect x="165" y="25" width="139" height="148" rx="12" fill="#56538D" /><circle cx="42" cy="45" r="2" fill="#FFF9E6" stroke="none" opacity="0.4"/><circle cx="99" cy="54" r="2" fill="#FFF9E6" stroke="none" opacity="0.4"/><circle cx="126" cy="82" r="2" fill="#FFF9E6" stroke="none" opacity="0.4"/><circle cx="51" cy="99" r="2" fill="#FFF9E6" stroke="none" opacity="0.4"/><circle cx="191" cy="45" r="3" fill="#F0D397" stroke="none"/><circle cx="248" cy="54" r="3" fill="#F0D397" stroke="none"/><circle cx="275" cy="82" r="3" fill="#F0D397" stroke="none"/><circle cx="200" cy="99" r="3" fill="#F0D397" stroke="none"/><path d="M57 157v-38h48v38m-55-38 31-24 31 24Z" fill="#F0D397" /><path d="M206 157v-38h48v38m-55-38 31-24 31 24Z" fill="#F0D397" /><path d="M22 161h127m22 0h127" fill="none" stroke="#80A97D" stroke-width="6"/>
+  </g>
+</svg>

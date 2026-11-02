@@ -1,0 +1,65 @@
+[
+  {
+    "id": "a-beautiful-day",
+    "url": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/index.md",
+    "resolved": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-beautiful-day/en/index.md",
+    "status": "opened",
+    "sha256": "be8f87f97e88aa0f1438cce15a10f611a3d3280a86c27cbfbd399fc2bb63a2f1",
+    "matchesAuthorSource": true,
+    "local": "content/library/books/a-beautiful-day/edition.md"
+  },
+  {
+    "id": "a-fish-and-a-gift",
+    "url": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/index.md",
+    "resolved": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-fish-and-a-gift/en/index.md",
+    "status": "opened",
+    "sha256": "ae663b0bd5dabd2c76b95fb90f2286c7e2b39a78ef30d6b3758db305647f9e36",
+    "matchesAuthorSource": true,
+    "local": "content/library/books/a-fish-and-a-gift/edition.md"
+  },
+  {
+    "id": "little-ants-big-plan",
+    "url": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/little-ants-big-plan/en/index.md",
+    "resolved": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/little-ants-big-plan/en/index.md",
+    "status": "opened",
+    "sha256": "3ee77e8921d71e07c0fb71babc50d15a67b14f45fde0b9b60ee5c4dbcc8fa4e2",
+    "matchesAuthorSource": true,
+    "local": "content/library/books/little-ants-big-plan/edition.md"
+  },
+  {
+    "id": "a-house-for-mouse",
+    "url": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/index.md",
+    "resolved": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/index.md",
+    "status": "opened",
+    "sha256": "3d2da1444a3fa0f5e8865a7ee7b35cfa88831c0e92eba121be99f87a5346758e",
+    "matchesAuthorSource": true,
+    "local": "content/library/books/a-house-for-mouse/edition.md"
+  },
+  {
+    "id": "a-tiny-seed",
+    "url": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/index.md",
+    "resolved": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-tiny-seed/en/index.md",
+    "status": "opened",
+    "sha256": "4b1a6f23e08217a755839fc3b253f7ed082cb29495a9cc99580f0372e0e375c4",
+    "matchesAuthorSource": true,
+    "local": "content/library/books/a-tiny-seed/edition.md"
+  },
+  {
+    "id": "the-best-thing-ever",
+    "url": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/the-best-thing-ever/en/index.md",
+    "resolved": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/the-best-thing-ever/en/index.md",
+    "status": "opened",
+    "sha256": "8b734558f20707fc98cb012d44343c27549087173f91cde52f75836a81b3e75c",
+    "matchesAuthorSource": true,
+    "local": "content/library/books/the-best-thing-ever/edition.md"
+  },
+  {
+    "id": "sleepy-mr-sloth",
+    "url": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/index.md",
+    "resolved": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/sleepy-mr-sloth/en/index.md",
+    "status": "opened",
+    "sha256": "2748730cb37302ca9084795624617d5824950f08959ead29147e333e4738957b",
+    "matchesAuthorSource": true,
+    "local": "content/library/books/sleepy-mr-sloth/edition.md"
+  }
+]

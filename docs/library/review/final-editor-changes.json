@@ -1,0 +1,122 @@
+[
+  {
+    "id": "planets",
+    "before": "There is a surprise beyond the eight: Pluto still circles the Sun too.",
+    "after": "Beyond the eight planets, Pluto still circles the Sun too."
+  },
+  {
+    "id": "saturn",
+    "before": "A surprising feature is how thin the main rings are compared with their enormous width.",
+    "after": "The main rings are very thin compared with their enormous width."
+  },
+  {
+    "id": "rockets",
+    "before": "The surprising point is that a rocket can also change its motion in empty space: the push comes from its own exhaust, not from pressing against surrounding air.",
+    "after": "A rocket can also change its motion in empty space: the push comes from its own exhaust, not from pressing against surrounding air."
+  },
+  {
+    "id": "asteroids",
+    "before": "An especially surprising discovery is that some asteroids have small moons of their own, making tiny systems within our much larger solar system.",
+    "after": "Some asteroids have small moons of their own, making tiny systems within our much larger solar system."
+  },
+  {
+    "id": "waves",
+    "before": "The surprising link is that both a small wind wave and a tsunami carry energy, although their causes and behavior differ greatly.",
+    "after": "Both a small wind wave and a tsunami carry energy, although their causes and behavior differ greatly."
+  },
+  {
+    "id": "plankton",
+    "before": "There is a surprising change with time as well as size: a young animal can belong to the plankton community, then leave that category as its swimming ability develops.",
+    "after": "A young animal can belong to the plankton community, then leave that category as its swimming ability develops."
+  },
+  {
+    "id": "deep-ocean",
+    "before": "A surprising fact is that darkness does not mean emptiness: deep-sea animals live where our familiar source of daylight never reaches them.",
+    "after": "Darkness does not mean emptiness: deep-sea animals live where our familiar source of daylight never reaches them."
+  },
+  {
+    "id": "frogs",
+    "before": "The surprising change is not a move out of water, but a new body and feeding method within the same watery world.",
+    "after": "The change is not a move out of water, but a new body and feeding method within the same watery world."
+  },
+  {
+    "id": "camouflage",
+    "before": "The surprising difference is that hiding and warning can both protect butterflies, even though one depends on being overlooked and the other on being recognized.",
+    "after": "Hiding and warning can both protect butterflies, even though one depends on being overlooked and the other on being recognized."
+  },
+  {
+    "id": "dolphins",
+    "before": "That flexible behavior is a surprise: a group seen together in one moment may later split apart and form different groups.",
+    "after": "A group seen together in one moment may later split apart and form different groups."
+  },
+  {
+    "id": "insect-flight",
+    "before": "The surprising result is that small wings are not a physics puzzle: their quick, carefully controlled movements make flight possible within the same physical rules that govern larger fliers.",
+    "after": "Quick, carefully controlled wing movements make insect flight possible. The same physical rules govern larger fliers, but small insects use their wings in different ways."
+  },
+  {
+    "id": "bird-feathers",
+    "before": "The surprise is how much these different jobs depend on tiny changes in parts too small to notice in a distant bird.",
+    "after": "These different jobs depend on tiny changes in feather parts that are too small to notice in a distant bird."
+  },
+  {
+    "id": "blue-sky",
+    "before": "A surprising comparison comes from Mars.",
+    "after": "Mars offers a way to test this explanation."
+  },
+  {
+    "id": "clouds",
+    "before": "The surprising point is that a cloud can keep changing even when its overall outline looks familiar.",
+    "after": "A cloud can keep changing even when its overall outline looks familiar."
+  },
+  {
+    "id": "rainbows",
+    "before": "The surprising result is a reversed order of colors in that outer bow, caused by a different route through the same kind of water drop.",
+    "after": "The result is a reversed order of colors in that outer bow, caused by a different route through the same kind of water drop."
+  },
+  {
+    "id": "wind",
+    "before": "The surprising connection is that moving leaves and drifting clouds can trace air responding to pressure differences that our eyes cannot see directly.",
+    "after": "Moving leaves and drifting clouds can trace air responding to pressure differences that our eyes cannot see directly."
+  },
+  {
+    "id": "typhoons",
+    "before": "The surprising difference is the name, rather than a different storm mechanism.",
+    "after": "The difference is the name, rather than a different storm mechanism."
+  },
+  {
+    "id": "seasons",
+    "before": "A surprising test of the explanation is that the two hemispheres have opposite seasons while sharing almost the same distance from the Sun.",
+    "after": "The two hemispheres have opposite seasons while sharing almost the same distance from the Sun."
+  },
+  {
+    "id": "islands",
+    "before": "The surprise is how little of an ocean island may be visible.",
+    "after": "Little of an ocean island may be visible."
+  },
+  {
+    "id": "reef",
+    "before": "The surprising point is that a reef's environment begins beyond the water's edge.",
+    "after": "A reef's environment begins beyond the water's edge."
+  },
+  {
+    "id": "trench",
+    "before": "The surprise is the scale hidden beneath an apparently ordinary sea surface: looking across the water does not reveal the deep valley or the moving plate boundary far below it.",
+    "after": "The scale is hidden beneath an apparently ordinary sea surface: looking across the water does not reveal the deep valley or the moving plate boundary far below it."
+  },
+  {
+    "id": "distant-stars",
+    "before": "Distance has another surprising effect: starlight takes time to arrive.",
+    "after": "Starlight takes time to arrive."
+  },
+  {
+    "id": "bones",
+    "before": "This creates a surprising connection: the hard framework we usually think of as holding us up also contains tissue that helps renew the blood.",
+    "after": "The hard framework we usually think of as holding us up also contains tissue that helps renew the blood."
+  },
+  {
+    "id": "airplanes",
+    "before": "A surprising example is a glider, which can fly without an engine.",
+    "after": "One example is a glider, which can fly without an engine."
+  }
+]

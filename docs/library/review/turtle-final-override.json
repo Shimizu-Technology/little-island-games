@@ -1,0 +1,9 @@
+{
+  "tell": "A sea turtle has lungs. It comes up for air.",
+  "more": "A sea turtle swims underwater, but it gets its oxygen from air. At the surface, it breathes air into its lungs. Blood then carries oxygen from the lungs to the rest of its body. Watch turtles from a safe spot with a grown-up, and give them room.",
+  "deep": "A sea turtle takes its air supply beneath the water instead of drawing oxygen from the seawater around it. Before a dive, it comes to the surface to breathe. In green turtles, the lungs are the main oxygen store. Blood keeps carrying oxygen from that store to working muscles during the dive. This connects breathing with movement: swimming uses oxygen, even when the turtle is not taking another breath. Scientists studied this link by recording heartbeats and movement in six green turtles swimming in a tank. Heart rate generally rose as the animals became more active. The researchers suggest that this response helps deliver oxygen to working tissues. Resting dives usually had lower heart rates. The results describe those turtles under study, rather than one fixed rule for every dive. Even while a turtle swims without taking a breath, its heart keeps oxygen moving through its body.",
+  "sources": [
+    {"title":"NOAA Fisheries: Fun Facts About Terrific Sea Turtles","url":"https://www.fisheries.noaa.gov/national/outreach-and-education/fun-facts-about-terrific-sea-turtles","accessed":"2026-11-02"},
+    {"title":"Okuyama et al. 2020: Heart rate and cardiac response to exercise during voluntary dives in captive sea turtles (Cheloniidae), Biology Open, doi:10.1242/bio.049247","url":"https://pmc.ncbi.nlm.nih.gov/articles/PMC7055368/","accessed":"2026-11-02"}
+  ]
+}

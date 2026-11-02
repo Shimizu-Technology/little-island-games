@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="blue-sky-art-title">
+  <title id="blue-sky-art-title">A blue sky dome sits above green ground; a golden incoming light arrow meets blue arrows scattering in several directions.</title>
+  <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M25 153a135 123 0 0 1 270 0Z" fill="#91C5D0" /><path d="M25 153q134-22 270 0v24H25Z" fill="#80A97D" /><path d="M35 43L148 88" fill="none" stroke="#F0D397"/><path d="M140.2 89.8L148 88 143.5 81.4" fill="none" stroke="#F0D397"/><path d="M151 90L211 61" fill="none" stroke="#276D85"/><path d="M207.0 67.9L211 61 203.1 59.8" fill="none" stroke="#276D85"/><path d="M151 90L226 102" fill="none" stroke="#276D85"/><path d="M218.8 105.4L226 102 220.2 96.5" fill="none" stroke="#276D85"/><path d="M151 90L182 139" fill="none" stroke="#276D85"/><path d="M174.7 135.8L182 139 182.3 131.0" fill="none" stroke="#276D85"/><path d="M151 90L116 126" fill="none" stroke="#276D85"/><path d="M117.4 118.1L116 126 123.8 124.4" fill="none" stroke="#276D85"/><circle cx="151" cy="90" r="5" fill="#FFF9E6" />
+  </g>
+</svg>

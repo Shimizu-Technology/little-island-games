@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="seasons-art-title">
+  <title id="seasons-art-title">Four small Earths travel on an oval path around a golden Sun; all four tilted axes point in the same direction, in a schematic seasons model.</title>
+  <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="160" cy="97" r="19" fill="#F0D397" /><ellipse cx="160" cy="97" rx="114" ry="59" fill="none" stroke="#AFAB9D" stroke-dasharray="4 7"/><circle cx="47" cy="97" r="18" fill="#91C5D0" /><path d="M34.4 86.2l10.799999999999999 -1.8 5.3999999999999995 9.0-7.2 7.2-1.8 9.0" fill="#80A97D" stroke-width="1.5"/><path d="M35 122l24-50" fill="none" stroke-width="2"/><circle cx="160" cy="38" r="18" fill="#91C5D0" /><path d="M147.4 27.200000000000003l10.799999999999999 -1.8 5.3999999999999995 9.0-7.2 7.2-1.8 9.0" fill="#80A97D" stroke-width="1.5"/><path d="M148 63l24-50" fill="none" stroke-width="2"/><circle cx="273" cy="97" r="18" fill="#91C5D0" /><path d="M260.4 86.2l10.799999999999999 -1.8 5.3999999999999995 9.0-7.2 7.2-1.8 9.0" fill="#80A97D" stroke-width="1.5"/><path d="M261 122l24-50" fill="none" stroke-width="2"/><circle cx="160" cy="156" r="18" fill="#91C5D0" /><path d="M147.4 145.2l10.799999999999999 -1.8 5.3999999999999995 9.0-7.2 7.2-1.8 9.0" fill="#80A97D" stroke-width="1.5"/><path d="M148 181l24-50" fill="none" stroke-width="2"/>
+  </g>
+</svg>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="habitats-art-title">
+  <title id="habitats-art-title">A pond cross-section includes water, reeds, a leafy land plant and a small frog sheltering under a rock overhang.</title>
+  <rect width="320" height="196" rx="22" fill="#E7F1DD"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 134q53-24 111-9l33 15 139-7v44H19Z" fill="#F0D397" /><path d="M22 135q85-14 134 14t143-4v32H22Z" fill="#91C5D0" /><path d="M170 131 183 99 221 92 250 119 283 132Z" fill="#AFAB9D" /><path d="M188 132q5-27 35-12l14 12Z" fill="#254E4B" /><ellipse cx="211" cy="128" rx="12" ry="7" fill="#80A97D" /><circle cx="205" cy="120" r="4" fill="#80A97D" /><circle cx="216" cy="120" r="4" fill="#80A97D" /><path d="M52 130V68m12 62V52m13 78V77" fill="none" stroke="#80A97D" stroke-width="5"/><path d="M262 132V63m0 36q-35-2-26-27 25 3 26 27m0-14q28-36 35-9-4 16-35 9" fill="#80A97D" />
+  </g>
+</svg>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="volcanoes-art-title">
+  <title id="volcanoes-art-title">A single volcano is cut open to show a coral magma chamber and a branching conduit leading to its summit crater; pale steam rises above it.</title>
+  <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M34 173 111 81 133 57h39l21 24 95 92Z" fill="#AFAB9D" /><path d="M104 173 142 65h25l72 108Z" fill="#F0D397" /><ellipse cx="155" cy="145" rx="35" ry="21" fill="#D4896C" /><path d="M154 134V66m0 48-23-15m24 25 32-24" fill="none" stroke="#D4896C" stroke-width="11"/><ellipse cx="153" cy="61" rx="22" ry="6" fill="#254E4B" /><path d="M148 43q-17-15-3-27m21 27q18-14 6-27" fill="none" stroke="#FFF9E6" stroke-width="6"/>
+  </g>
+</svg>

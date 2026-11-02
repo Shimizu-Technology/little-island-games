@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="rivers-art-title">
+  <title id="rivers-art-title">A blue river winds through green land from distant hills to the sea, with two small tributaries joining its bends.</title>
+  <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 174V64L66 27l40 39 42-31 37 41 53-29 63 37v90Z" fill="#80A97D" /><path d="M126 64C60 90 205 88 186 114S75 139 126 176h79c-66-31 59-32 9-68S127 97 151 65Z" fill="#91C5D0" /><path d="M51 111q26 34 104 24M261 91q-24 8-48 16" fill="none" stroke="#91C5D0" stroke-width="7"/><path d="M20 174q80-12 143 0t138 0v7H20Z" fill="#91C5D0" stroke="none"/>
+  </g>
+</svg>

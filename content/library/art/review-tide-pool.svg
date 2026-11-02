@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="tide-pool-art-title">
+  <title id="tide-pool-art-title">A blue pool enclosed by gray rocks contains a small fish, a spiral-shelled snail and green seaweed; no species is identified.</title>
+  <rect width="320" height="196" rx="22" fill="#E1F0F3"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="161" cy="108" rx="135" ry="66" fill="#AFAB9D" /><ellipse cx="160" cy="105" rx="111" ry="47" fill="#91C5D0" /><path d="M63 94q-10-30 6-36m3 30q13-14 17-8" fill="none" stroke="#80A97D" stroke-width="6"/><g transform="translate(100 102) scale(0.75)"><path d="M0 0Q22-27 53 0 22 27 0 0Zm53 0 20-14v28Z" fill="#F0D397" /><circle cx="13" cy="-3" r="2" fill="#254E4B" /><path d="m27-13 9-9 8 15" fill="#F0D397" /></g><path d="M207 132h38l4-7" fill="none" stroke-width="4"/><circle cx="217" cy="119" r="16" fill="#D4896C" /><path d="M222 125q-17 0-14-12 3-11 13-4 8 8-2 10m23 8v-11m-5 2 5 5 6-6" fill="none" /><path d="M58 67 76 49m190 57 21 5" fill="none" stroke="#FFF9E6"/>
+  </g>
+</svg>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="ramp-art-title">
+  <title id="ramp-art-title">A long gentle ramp on the left and a short steep ramp on the right both meet the top of one green platform; a coral block rests on the gentle ramp.</title>
+  <rect width="320" height="196" rx="22" fill="#FFF9E6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 169 205 67v102Z" fill="#F0D397" /><path d="M231 67 292 169h-61Z" fill="#F0D397" /><rect x="205" y="67" width="26" height="102" rx="0" fill="#80A97D" /><path d="m108 100 23-13 18 32-24 13Z" fill="#D4896C" /><path d="M20 177h275" fill="none" stroke-width="2"/><path d="M48 140L89 117" fill="none" stroke="#254E4B"/><path d="M85.5 124.2L89 117 81.0 116.3" fill="none" stroke="#254E4B"/><path d="M278 136L258 102" fill="none" stroke="#254E4B"/><path d="M265.2 105.4L258 102 257.5 110.0" fill="none" stroke="#254E4B"/>
+  </g>
+</svg>

@@ -1,0 +1,2 @@
+Book Dash source-file policy, consulted 2026-11-02. Books and source files are CC BY 4.0, with creator and publisher attribution required. Art and edition credits remain in each local book notice. Complete unedited publisher-page snapshot, including contact text, is retained at docs/library/book-evidence/publisher-source-policy.txt. This is a summary, not a replacement for the complete local CC BY 4.0 license.
+Source: https://bookdash.org/book-source-files/

@@ -1,0 +1,107 @@
+[
+  {
+    "path": "content/library/books/busy-day/page-00.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_cover-1.jpg",
+    "status": "opened",
+    "sha256": "0147843f62a79c8a0e80a09a5429fe02ff4b13caf730945468aa44177dce2221",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-01.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page4.jpg",
+    "status": "opened",
+    "sha256": "c301fdd4eb28bf298f44823865704ce45153c18404f025172049401ee544b5aa",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-02.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page5.jpg",
+    "status": "opened",
+    "sha256": "b0bbbe80c68af9fcb3c583d6a0912b4c9670b303181226a2a0b2ccba512ce1a0",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-03.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page6.jpg",
+    "status": "opened",
+    "sha256": "53c4e37ad8b86b74ed4907b35ea688f69591c7b97d6de86a9f57d5dc62c26dc2",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-04.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page7.jpg",
+    "status": "opened",
+    "sha256": "6ba9e7d947877b4b8b1c51b83e1e57ecc900b55275ae5badba9cdb55813a9b07",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-05.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page8.jpg",
+    "status": "opened",
+    "sha256": "3ae8ac8a4826a04461984cddcb0ae340ebff01171507e6a2007bd6acd223b204",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-06.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page9.jpg",
+    "status": "opened",
+    "sha256": "7990c5001c82a9e46e3534bddb8bbc7a2b15c0c40b003953959256b9328c8162",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-07.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page10.jpg",
+    "status": "opened",
+    "sha256": "0a54c6c74cd79dce6bfd30b6fb7ff62880eeb8b411684af218cae6bf41d45492",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-08.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page11.jpg",
+    "status": "opened",
+    "sha256": "385684a4daed6e2ae82bbdc953f70f7d35148853266cbe5d06eb9110ac1ae1e8",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-09.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page12.jpg",
+    "status": "opened",
+    "sha256": "fd5c834ab306a42c57de6755dacd83bdf24cc841d07f2a4f5631de7f4d43c226",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-10.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page13.jpg",
+    "status": "opened",
+    "sha256": "8472e896178bf198b63a0d1d2190f636d79ebafa7023e30dbd4cae533ccb6f81",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-11.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page14.jpg",
+    "status": "opened",
+    "sha256": "07204981a79d40c0f3be70c08b4ab4762f39cf1999309fc72e2b8f5b8deb7a63",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-12.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page15.jpg",
+    "status": "opened",
+    "sha256": "7585281995159be1f27c191bb82f4ac3a1bcf47dd138313ff20820a58e9f9215",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-13.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page16.jpg",
+    "status": "opened",
+    "sha256": "841307c2a5844f14d72ef719f4a5b0e717319d3ca776bf33e68cab15e1991de1",
+    "matchesAuthorSource": true
+  },
+  {
+    "path": "content/library/books/busy-day/page-14.jpg",
+    "url": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page17.jpg",
+    "status": "opened",
+    "sha256": "7c1f8e5a748f07476481393b2a4e5f18cd2a7c2dff8164fc8d5743d1333b0f57",
+    "matchesAuthorSource": true
+  }
+]

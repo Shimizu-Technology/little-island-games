@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="parrotfish-art-title">
+  <title id="parrotfish-art-title">A blue-and-green parrotfish with a broad pale beak bites an algae-covered reef surface; a separate pile of pale sand lies below.</title>
+  <rect width="320" height="196" rx="22" fill="#E1F0F3"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 146Q50 115 84 114l40 64H20Z" fill="#E5D8B1" /><path d="M21 141Q45 117 82 112" fill="none" stroke="#80A97D" stroke-width="10"/><path d="M84 111Q132 38 229 78l54-28v81l-52-30q-82 66-147 10Z" fill="#91C5D0" /><path d="M108 88q58-35 118-12l-8 28q-62 36-111 17Z" fill="#80A97D" /><path d="M82 112 96 92l16 17-13 16Z" fill="#E5D8B1" /><path d="m140 58 31-23 25 28m-50 58 18 25 18-28" fill="#D4896C" /><circle cx="121" cy="87" r="4" fill="#254E4B" /><path d="M164 82q-12 13-1 24m15-27q-12 13-1 24" fill="none" /><circle cx="186" cy="162" r="4" fill="#F0D397" stroke-width="1.5"/><circle cx="201" cy="166" r="3" fill="#F0D397" stroke-width="1.5"/><circle cx="216" cy="160" r="5" fill="#F0D397" stroke-width="1.5"/><circle cx="229" cy="168" r="3" fill="#F0D397" stroke-width="1.5"/><circle cx="206" cy="153" r="3" fill="#F0D397" stroke-width="1.5"/>
+  </g>
+</svg>

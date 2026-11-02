@@ -1,0 +1,131 @@
+{
+  "review": {
+    "status": "in-review",
+    "reviewer": "Codex independent factual reviewer",
+    "date": "2026-11-02",
+    "factualReviewer": "independent factual reviewer",
+    "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Reading ants, seasonal gathering, royal speech and parental reactions belong to this fantasy; no general ant biology is asserted by the Library. Typo in picture description corrected. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+  },
+  "editionIsbn": "978-1-928318-22-4",
+  "pages": [
+    {
+      "page": 0,
+      "image": "content/library/books/little-ants-big-plan/page-00.jpg",
+      "text": "Little Ant’s Big Plan Candice Dingwall Steven McKimmie Telri Stoop",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Front cover of Little Ant's Big Plan.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 1,
+      "image": "content/library/books/little-ants-big-plan/page-01.jpg",
+      "text": "Little Ant loved to read. Little Ant was often teased. “Ants don’t read. Ants must feed. Ants collect the food they need.”",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Little Ant wears glasses and sits on top of a book. The other ants hold items of food.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 2,
+      "image": "content/library/books/little-ants-big-plan/page-02.jpg",
+      "text": "Little Ant would read all day, he’d read and read the day away. The other ants took what they found to store for winter underground.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "A boy lies on a picnic blanket reading a book. The ants carry away his picnic food.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 3,
+      "image": "content/library/books/little-ants-big-plan/page-03.jpg",
+      "text": "His mum and dad got really mad, and Little Ant felt really bad.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Inside his ant heap, Little Ant's Mum and Dad scold him about reading books all the time. His little sister watches with interest.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 4,
+      "image": "content/library/books/little-ants-big-plan/page-04.jpg",
+      "text": "In autumn when the leaves fall down, the ants must keep food underground.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "The trees are bare and autumn leaves are all around. The ants look under the leaves and collect a discarded apple core.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 5,
+      "image": "content/library/books/little-ants-big-plan/page-05.jpg",
+      "text": "The Queen wants food to fill the store, so all the ants must work some more.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "The Queen addresses the ants.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 6,
+      "image": "content/library/books/little-ants-big-plan/page-06.jpg",
+      "text": "Little Ant begins to shout about a place he read about. “A restaurant is what we need, a place where people go to feed. It says so in the books I read.”",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Little Ant's thought bubble shows a hamburger and a restaurant table.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 7,
+      "image": "content/library/books/little-ants-big-plan/page-07.jpg",
+      "text": "The ants go marching one by one. They march into the setting sun.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "The ants march through the day and into the night.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 8,
+      "image": "content/library/books/little-ants-big-plan/page-08.jpg",
+      "text": "And Little Ant said “Hey, there’s one!”",
+      "artworkText": [
+        "NOM NOM"
+      ],
+      "wordless": false,
+      "alt": "Little Ant reaches a burger restaurant with tables inside and out.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 9,
+      "image": "content/library/books/little-ants-big-plan/page-09.jpg",
+      "text": "The ants go marching one by one, carrying a burger, carrying a bun.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "The ants carry hot dogs, burgers and chicken drumsticks through the day and into the night.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 10,
+      "image": "content/library/books/little-ants-big-plan/page-10.jpg",
+      "text": "When they return the Queen is glad. The stores are full. They cheer like mad.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "The Queen shakes Little Ant's hand. The rest of the ants cheer.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 11,
+      "image": "content/library/books/little-ants-big-plan/page-11.jpg",
+      "text": "Ant gets hugs from mum and dad.",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "Inside his ant heap, Little Ant's Mum and Dad hug Little Ant. His little sister beams happily.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    },
+    {
+      "page": 12,
+      "image": "content/library/books/little-ants-big-plan/page-12.jpg",
+      "text": "His baby sister takes his hand “Now I think I understand.” “The way you love to read a book ... Makes me want to take a look.”",
+      "artworkText": [],
+      "wordless": false,
+      "alt": "The boy is reading a book. Little Ant and his little sister hold hands on top of the boy's shoulder.",
+      "note": "Publisher text/alt checked against acquired art. Wordless pages have no inferred story."
+    }
+  ]
+}

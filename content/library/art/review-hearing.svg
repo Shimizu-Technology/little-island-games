@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="hearing-art-title">
+  <title id="hearing-art-title">Curved sound-wave symbols enter an outer ear; a short passage leads to an eardrum symbol and a curled inner-ear model.</title>
+  <rect width="320" height="196" rx="22" fill="#FFF9E6"/>
+  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M105 153q-4-21-22-42-24-53 20-76 45-23 60 17 11 37-21 52-1 46-25 48Z" fill="#E5D8B1" /><path d="M107 94q-23-31 5-43 26-5 27 19 0 18-20 28-14 1-11 20" fill="none" /><path d="M132 101h58" fill="none" stroke-width="9"/><path d="M188 84v35" fill="none" stroke="#D4896C" stroke-width="5"/><path d="M199 100q12-21 20-4l13 1" fill="none" stroke-width="3"/><path d="M238 91q48-8 44 29-3 37-38 28-28-8-17-30 10-19 30-6 16 15-6 21-13 0-8-10" fill="#E5D8B1" /><path d="M33 56q31 43 0 87m22-69q17 27 0 53" fill="none" stroke="#91C5D0" stroke-width="5"/><path d="M61 101L83 101" fill="none" stroke="#254E4B"/><path d="M76.4 105.5L83 101 76.4 96.5" fill="none" stroke="#254E4B"/>
+  </g>
+</svg>
