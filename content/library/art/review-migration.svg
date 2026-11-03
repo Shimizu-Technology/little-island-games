@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="migration-art-title">
+<title id="migration-art-title">Three orange-and-black monarch butterflies follow a dotted route between a flowering patch and a wooded resting place.</title>
+<rect width="320" height="196" rx="22" fill="#E7F1DD"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M22 173Q28 150 59 151Q88 150 108 173Q100 187 64 183Q31 187 22 173Z" fill="#A8C493"/>
+<path d="M211 174Q211 153 241 150Q279 143 299 170Q300 184 270 184Q235 189 211 174Z" fill="#A8C493"/>
+<ellipse cx="64" cy="176" rx="31" ry="4" fill="#739174" opacity=".16" stroke="none"/>
+<ellipse cx="254" cy="177" rx="30" ry="4" fill="#739174" opacity=".16" stroke="none"/>
+<path d="M44 169v-28M73 173v-36M45 157q-18-16-19-5 3 12 19 5M73 159q18-16 21-5-3 12-21 5" fill="#6B9C73" stroke-width="2.2"/>
+<g fill="#E09A7E" stroke-width="2.2"><path d="M44 143Q24 141 32 131Q27 117 40 122Q50 111 54 125Q69 127 58 137Q60 149 44 143Z"/><path d="M72 138Q57 141 57 128Q47 118 60 115Q64 102 73 111Q88 105 88 119Q99 131 85 135Q83 146 72 138Z"/></g>
+<circle cx="45" cy="133" r="5" fill="#F0C86D" stroke-width="1.6"/><circle cx="73" cy="125" r="5" fill="#F0C86D" stroke-width="1.6"/>
+<path d="M243 165L243 116M274 169L274 128" stroke="#A48C5C" stroke-width="7"/>
+<path d="M221 129L241 80L265 128Z" fill="#6B9C73"/><path d="M252 142L273 95L293 141Z" fill="#98B483"/>
+<path d="M228 126L256 126M260 139L286 139" stroke="#476E59" stroke-width="2.2"/>
+<path d="M82 137Q116 91 154 109T238 138" fill="none" stroke="#476E59" stroke-width="2.2" stroke-dasharray="1 8"/>
+<path d="M228 135L240 140L238 128" fill="none" stroke="#476E59" stroke-width="2.2"/>
+<g transform="translate(92 77) rotate(-24) scale(0.85)"><path d="M0-4C-20-38-40-31-30-7Q-19 5-2 3C-26 3-29 22-17 25Q-5 28 0 8Q5 28 17 25C29 22 26 3 2 3Q19 5 30-7C40-31 20-38 0-4Z" fill="#D3915E" stroke-width="4"/>
+<path d="M-1-3L-25-19M-2 1L-29-4M-1 5L-19 20M1-3L25-19M2 1L29-4M1 5L19 20" fill="none" stroke-width="1.6"/>
+<path d="M-1-3Q-10-13-14-23M1-3Q10-13 14-23M-1 5L-12 13M1 5L12 13" fill="none" stroke-width="1.6"/>
+<ellipse cy="3" rx="3" ry="13" fill="#354E49" stroke-width="1.6"/><circle cy="-11" r="3" fill="#354E49" stroke="none"/>
+<path d="M-1-13L-7-20M1-13L7-20" fill="none" stroke-width="1.6"/>
+<g fill="#FFF6D8" stroke="none"><circle cx="-26" cy="-18" r="1.6"/><circle cx="-28" cy="-11" r="1.6"/><circle cx="-20" cy="-25" r="1.6"/><circle cx="26" cy="-18" r="1.6"/><circle cx="28" cy="-11" r="1.6"/><circle cx="20" cy="-25" r="1.6"/><circle cx="-19" cy="18" r="1.6"/><circle cx="-12" cy="23" r="1.6"/><circle cx="19" cy="18" r="1.6"/><circle cx="12" cy="23" r="1.6"/></g></g>
+<g transform="translate(158 52) rotate(5) scale(1)"><path d="M0-4C-20-38-40-31-30-7Q-19 5-2 3C-26 3-29 22-17 25Q-5 28 0 8Q5 28 17 25C29 22 26 3 2 3Q19 5 30-7C40-31 20-38 0-4Z" fill="#D3915E" stroke-width="4"/>
+<path d="M-1-3L-25-19M-2 1L-29-4M-1 5L-19 20M1-3L25-19M2 1L29-4M1 5L19 20" fill="none" stroke-width="1.6"/>
+<path d="M-1-3Q-10-13-14-23M1-3Q10-13 14-23M-1 5L-12 13M1 5L12 13" fill="none" stroke-width="1.6"/>
+<ellipse cy="3" rx="3" ry="13" fill="#354E49" stroke-width="1.6"/><circle cy="-11" r="3" fill="#354E49" stroke="none"/>
+<path d="M-1-13L-7-20M1-13L7-20" fill="none" stroke-width="1.6"/>
+<g fill="#FFF6D8" stroke="none"><circle cx="-26" cy="-18" r="1.6"/><circle cx="-28" cy="-11" r="1.6"/><circle cx="-20" cy="-25" r="1.6"/><circle cx="26" cy="-18" r="1.6"/><circle cx="28" cy="-11" r="1.6"/><circle cx="20" cy="-25" r="1.6"/><circle cx="-19" cy="18" r="1.6"/><circle cx="-12" cy="23" r="1.6"/><circle cx="19" cy="18" r="1.6"/><circle cx="12" cy="23" r="1.6"/></g></g>
+<g transform="translate(223 83) rotate(24) scale(0.85)"><path d="M0-4C-20-38-40-31-30-7Q-19 5-2 3C-26 3-29 22-17 25Q-5 28 0 8Q5 28 17 25C29 22 26 3 2 3Q19 5 30-7C40-31 20-38 0-4Z" fill="#D3915E" stroke-width="4"/>
+<path d="M-1-3L-25-19M-2 1L-29-4M-1 5L-19 20M1-3L25-19M2 1L29-4M1 5L19 20" fill="none" stroke-width="1.6"/>
+<path d="M-1-3Q-10-13-14-23M1-3Q10-13 14-23M-1 5L-12 13M1 5L12 13" fill="none" stroke-width="1.6"/>
+<ellipse cy="3" rx="3" ry="13" fill="#354E49" stroke-width="1.6"/><circle cy="-11" r="3" fill="#354E49" stroke="none"/>
+<path d="M-1-13L-7-20M1-13L7-20" fill="none" stroke-width="1.6"/>
+<g fill="#FFF6D8" stroke="none"><circle cx="-26" cy="-18" r="1.6"/><circle cx="-28" cy="-11" r="1.6"/><circle cx="-20" cy="-25" r="1.6"/><circle cx="26" cy="-18" r="1.6"/><circle cx="28" cy="-11" r="1.6"/><circle cx="20" cy="-25" r="1.6"/><circle cx="-19" cy="18" r="1.6"/><circle cx="-12" cy="23" r="1.6"/><circle cx="19" cy="18" r="1.6"/><circle cx="12" cy="23" r="1.6"/></g></g>
+</g></svg>

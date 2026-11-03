@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img"><title>A sand-colored rectangular cart sits above two blue wheels with dark hubs and a thick teal axle line.</title><rect width="120" height="120" rx="22" fill="#FFF9E6"/>
+<g transform="translate(-3 2)">
+<path d="M8 100Q14 88 40 86Q80 82 108 90Q116 104 92 108Q50 112 18 108Q6 106 8 100Z" fill="#D7C594"/>
+<path d="M24 104h12M64 106h14M86 92h10" fill="none" stroke="#C3B07E" stroke-width="1.6" stroke-linecap="round"/>
+<path d="M10 100q-1-6 2-9M14 100q1-6 5-8M108 92q2-6-1-9" fill="none" stroke="#85AA7D" stroke-width="1.6" stroke-linecap="round"/>
+<ellipse cx="64" cy="98" rx="40" ry="5" fill="#4E7E78" opacity=".16"/>
+<g stroke="#354E49" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M40.5 73.8L40.3 70.7L39.7 68.0L38.8 65.6L37.6 63.7L36.0 62.2L34.2 61.3L32.2 61.0L30.1 61.2L27.9 62.0L25.7 63.4L23.6 65.3L21.6 67.6L19.8 70.3L18.2 73.3L17.0 76.5L16.1 79.8L15.5 83.1L15.3 86.3L15.5 89.4L16.1 92.1L17.0 94.5L18.2 96.4L19.8 97.9L21.6 98.8L23.6 99.1L25.7 98.9L27.9 98.0L30.1 96.7L32.2 94.8L34.2 92.5L36.0 89.8L37.6 86.8L38.8 83.6L39.7 80.3L40.3 77.0Z" fill="#7FB4D6"/>
+<path d="M37.0 75.5L36.9 73.3L36.5 71.3L35.8 69.6L34.9 68.2L33.7 67.2L32.5 66.5L31.0 66.3L29.5 66.5L27.9 67.0L26.3 68.0L24.8 69.4L23.4 71.1L22.1 73.0L20.9 75.2L20.0 77.5L19.3 79.9L18.9 82.3L18.8 84.6L18.9 86.8L19.3 88.8L20.0 90.5L20.9 91.9L22.1 92.9L23.3 93.6L24.8 93.8L26.3 93.6L27.9 93.0L29.5 92.1L31.0 90.7L32.4 89.0L33.7 87.1L34.9 84.9L35.8 82.6L36.5 80.2L36.9 77.8Z" fill="#B7DAEC" stroke-width="1.2"/>
+<path d="M27.9 80.0L36.3 72.2M27.9 80.0L29.8 66.9M27.9 80.0L21.5 74.8M27.9 80.0L19.5 87.9M27.9 80.0L26.0 93.2M27.9 80.0L34.3 85.3" fill="none" stroke-width="1.2"/>
+<circle cx="27.9" cy="80.0" r="4" fill="#354E49"/>
+<path d="M27.9 80.0L99.9 80.0" fill="none" stroke-width="7.6"/>
+<path d="M27.9 80.0L99.9 80.0" fill="none" stroke="#5E9A9A" stroke-width="4.6"/>
+<path d="M24.0 40.0L80.0 40.0L103.8 28.1L47.8 28.1Z" fill="#F0DFB2"/>
+<path d="M29.1 39.0L79.1 39.0L98.7 29.2L48.7 29.2Z" fill="#C3B07E" stroke-width="1.2"/>
+<circle cx="54" cy="32" r="8" fill="#8A6544"/><path d="M49 30q3-4 7-4" fill="none" stroke="#B89270" stroke-width="1.4"/><circle cx="72" cy="30" r="8" fill="#8A6544"/><path d="M67 28q3-4 7-4" fill="none" stroke="#B89270" stroke-width="1.4"/><circle cx="73" cy="34" r="8" fill="#8A6544"/><path d="M68 32q3-4 7-4" fill="none" stroke="#B89270" stroke-width="1.4"/>
+<path d="M80.0 40.0L103.8 28.1L103.8 60.1L80.0 72.0Z" fill="#DCC793"/>
+<path d="M80.0 51.0L103.8 39.1M80.0 62.0L103.8 50.1" fill="none" stroke-width="1.2"/>
+<path d="M24.0 40.0L80.0 40.0L80.0 72.0L24.0 72.0Z" fill="#F0DFB2"/>
+<path d="M24.0 51.0L80.0 51.0M24.0 62.0L80.0 62.0" fill="none" stroke-width="1.2"/>
+<path d="M28 68H76" fill="none" stroke="#D7C594" stroke-width="3"/>
+<path d="M29 44h14M50 55h16" fill="none" stroke="#FFF3CC" stroke-width="1.4"/>
+<path d="M30 40V72M74 40V72" fill="none" stroke-width="1.2"/>
+<path d="M112.5 73.8L112.3 70.7L111.7 68.0L110.8 65.6L109.6 63.7L108.0 62.2L106.2 61.3L104.2 61.0L102.1 61.2L99.9 62.0L97.7 63.4L95.6 65.3L93.6 67.6L91.8 70.3L90.2 73.3L89.0 76.5L88.1 79.8L87.5 83.1L87.3 86.3L87.5 89.4L88.1 92.1L89.0 94.5L90.2 96.4L91.8 97.9L93.6 98.8L95.6 99.1L97.7 98.9L99.9 98.0L102.1 96.7L104.2 94.8L106.2 92.5L108.0 89.8L109.6 86.8L110.8 83.6L111.7 80.3L112.3 77.0Z" fill="#7FB4D6"/>
+<path d="M109.0 75.5L108.9 73.3L108.5 71.3L107.8 69.6L106.9 68.2L105.7 67.2L104.5 66.5L103.0 66.3L101.5 66.5L99.9 67.0L98.3 68.0L96.8 69.4L95.3 71.1L94.1 73.0L92.9 75.2L92.0 77.5L91.3 79.9L90.9 82.3L90.8 84.6L90.9 86.8L91.3 88.8L92.0 90.5L92.9 91.9L94.1 92.9L95.3 93.6L96.8 93.8L98.3 93.6L99.9 93.0L101.5 92.1L103.0 90.7L104.4 89.0L105.7 87.1L106.9 84.9L107.8 82.6L108.5 80.2L108.9 77.8Z" fill="#B7DAEC" stroke-width="1.2"/>
+<path d="M99.9 80.0L108.3 72.2M99.9 80.0L101.8 66.9M99.9 80.0L93.5 74.8M99.9 80.0L91.5 87.9M99.9 80.0L98.0 93.2M99.9 80.0L106.3 85.3" fill="none" stroke-width="1.2"/>
+<circle cx="99.9" cy="80.0" r="4" fill="#354E49"/>
+</g>
+</g></svg>

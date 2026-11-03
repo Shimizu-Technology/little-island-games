@@ -9,6 +9,15 @@ import { chooseActivity, IslandState, islandProgress, tapItem } from "./engine";
 import { WordPicture } from "./pictures";
 export const wordAudioKey = (id: string) => `hafa-adai-word-${id.replaceAll(".", "-").replaceAll("_", "-")}`;
 const first = (english: string) => english.split(" / ")[0];
+/** Keep the sixth discovery visible when the round replaces its picture grid. */
+export function LastPicnicWord({ state }: { state: IslandState }) {
+  const word = state.activity === "explore" && chamoruWord(state.taps.at(-1) ?? "");
+  return word ? <View accessibilityLiveRegion="polite" style={{ alignItems: "center", gap: 4 }}>
+    <WordPicture word={word} size={54} caption={false} />
+    <Heading style={{ fontSize: 24, textAlign: "center" }}>{word.term}</Heading>
+    <Copy>{word.english}</Copy>
+  </View> : null;
+}
 /** Food sits on the table first; everything else gathers on the blanket. */
 const placeOrder: ChamoruWord["category"][] = ["food", "colors", "numbers", "greetings", "family", "body_parts"];
 /** The picnic behind the pictures: bunting, sea, a table along the back and a checked blanket. */
@@ -229,7 +238,7 @@ export function Board({
                     ? `Picture ${placed.indexOf(id) + 1}: ${first(word.english)}${found ? ", found" : ""}`
                     : `${first(word.english)}${visited ? ", seen" : ""}`
                 }
-                accessibilityHint={spy ? undefined : "Shows its word"}
+                accessibilityHint={spy ? undefined : visited ? `CHamoru: ${word.term}` : "Shows its word"}
                 onPress={() => select(id)}
                 amount={0.94}
                 style={{
@@ -247,7 +256,7 @@ export function Board({
                 <WordPicture word={word} size={pictureSize} caption={false} />
                 {!spy && (
                   <Copy style={{ fontSize: 12, lineHeight: 14, textAlign: "center", color: C.ink, fontWeight: "700" }}>
-                    {first(word.english)}
+                    {visited ? word.term : first(word.english)}
                   </Copy>
                 )}
                 {(found || visited) && (

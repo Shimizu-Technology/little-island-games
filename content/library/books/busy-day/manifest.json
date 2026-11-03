@@ -1,0 +1,209 @@
+{
+  "id": "busy-day",
+  "review": {
+    "status": "in-review",
+    "reviewer": "Codex independent factual reviewer",
+    "date": "2026-11-02",
+    "factualReviewer": "independent factual reviewer",
+    "scope": "Independent factual and editorial review completed. Publisher ISBN, four credited creators and printed spreads checked; greetings transcribed as printed, with no added translation or pronunciation claim. Consumer choices are story events. Wordless pages 8, 13 and 14 remain wordless. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+  },
+  "edition": {
+    "language": "en",
+    "isbn": "978-1-928497-79-0",
+    "originalTitle": "A Very Busy Day",
+    "rights": {
+      "license": "CC-BY-4.0",
+      "creator": "El Marto; Chisanga Mukuka; Christian Mokuba; Joey Kok; Book Dash",
+      "sourceUrl": "https://bookdash.org/books/a-very-busy-day/",
+      "credit": "A Very Busy Day, illustrated by El Marto, written by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok. Book Dash, Johannesburg, 26 October 2019. ISBN 978-1-928497-79-0. CC BY 4.0.",
+      "changes": "Original English spreads displayed without cropping; text repeated in scalable reading pane.",
+      "licenseFile": "content/library/books/CC-BY-4.0.txt"
+    }
+  },
+  "sources": [
+    {
+      "sourceUrl": "https://bookdash.org/books/a-very-busy-day/",
+      "resolvedUrl": "https://bookdash.org/books/a-very-busy-day/",
+      "accessedAt": "2026-11-02T03:13:28.723323+00:00",
+      "sourceSha256": "a2fa04152d1e6c2ce316ffdaadaa461d999b09043be97cff2abf18a3ab0c963f",
+      "path": "content/library/books/busy-day/publisher.txt",
+      "sha256": "250fa1c4fa46202eae8cbd736b940c4c07ce2eb3c652bdb9c58c6a1c7ee9a745",
+      "transformation": "HTML visible text extracted; no script/audio imported."
+    }
+  ],
+  "pages": [
+    {
+      "path": "content/library/books/busy-day/page-00.jpg",
+      "sha256": "0147843f62a79c8a0e80a09a5429fe02ff4b13caf730945468aa44177dce2221",
+      "bytes": 501721,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_cover-1.jpg",
+      "sourceSha256": "0147843f62a79c8a0e80a09a5429fe02ff4b13caf730945468aa44177dce2221",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-0.jpg",
+      "accessedAt": "2026-11-02T03:13:16.552704+00:00",
+      "publisherRecheckSha256": "0147843f62a79c8a0e80a09a5429fe02ff4b13caf730945468aa44177dce2221"
+    },
+    {
+      "path": "content/library/books/busy-day/page-01.jpg",
+      "sha256": "c301fdd4eb28bf298f44823865704ce45153c18404f025172049401ee544b5aa",
+      "bytes": 635682,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page4.jpg",
+      "sourceSha256": "c301fdd4eb28bf298f44823865704ce45153c18404f025172049401ee544b5aa",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-1.jpg",
+      "accessedAt": "2026-11-02T03:13:16.604739+00:00",
+      "publisherRecheckSha256": "c301fdd4eb28bf298f44823865704ce45153c18404f025172049401ee544b5aa"
+    },
+    {
+      "path": "content/library/books/busy-day/page-02.jpg",
+      "sha256": "b0bbbe80c68af9fcb3c583d6a0912b4c9670b303181226a2a0b2ccba512ce1a0",
+      "bytes": 782893,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page5.jpg",
+      "sourceSha256": "b0bbbe80c68af9fcb3c583d6a0912b4c9670b303181226a2a0b2ccba512ce1a0",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-2.jpg",
+      "accessedAt": "2026-11-02T03:13:16.923255+00:00",
+      "publisherRecheckSha256": "b0bbbe80c68af9fcb3c583d6a0912b4c9670b303181226a2a0b2ccba512ce1a0"
+    },
+    {
+      "path": "content/library/books/busy-day/page-03.jpg",
+      "sha256": "53c4e37ad8b86b74ed4907b35ea688f69591c7b97d6de86a9f57d5dc62c26dc2",
+      "bytes": 638889,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page6.jpg",
+      "sourceSha256": "53c4e37ad8b86b74ed4907b35ea688f69591c7b97d6de86a9f57d5dc62c26dc2",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-3.jpg",
+      "accessedAt": "2026-11-02T03:13:16.606601+00:00",
+      "publisherRecheckSha256": "53c4e37ad8b86b74ed4907b35ea688f69591c7b97d6de86a9f57d5dc62c26dc2"
+    },
+    {
+      "path": "content/library/books/busy-day/page-04.jpg",
+      "sha256": "6ba9e7d947877b4b8b1c51b83e1e57ecc900b55275ae5badba9cdb55813a9b07",
+      "bytes": 870357,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page7.jpg",
+      "sourceSha256": "6ba9e7d947877b4b8b1c51b83e1e57ecc900b55275ae5badba9cdb55813a9b07",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-4.jpg",
+      "accessedAt": "2026-11-02T03:13:19.917140+00:00",
+      "publisherRecheckSha256": "6ba9e7d947877b4b8b1c51b83e1e57ecc900b55275ae5badba9cdb55813a9b07"
+    },
+    {
+      "path": "content/library/books/busy-day/page-05.jpg",
+      "sha256": "3ae8ac8a4826a04461984cddcb0ae340ebff01171507e6a2007bd6acd223b204",
+      "bytes": 597998,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page8.jpg",
+      "sourceSha256": "3ae8ac8a4826a04461984cddcb0ae340ebff01171507e6a2007bd6acd223b204",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-5.jpg",
+      "accessedAt": "2026-11-02T03:13:19.941966+00:00",
+      "publisherRecheckSha256": "3ae8ac8a4826a04461984cddcb0ae340ebff01171507e6a2007bd6acd223b204"
+    },
+    {
+      "path": "content/library/books/busy-day/page-06.jpg",
+      "sha256": "7990c5001c82a9e46e3534bddb8bbc7a2b15c0c40b003953959256b9328c8162",
+      "bytes": 751515,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page9.jpg",
+      "sourceSha256": "7990c5001c82a9e46e3534bddb8bbc7a2b15c0c40b003953959256b9328c8162",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-6.jpg",
+      "accessedAt": "2026-11-02T03:13:19.978285+00:00",
+      "publisherRecheckSha256": "7990c5001c82a9e46e3534bddb8bbc7a2b15c0c40b003953959256b9328c8162"
+    },
+    {
+      "path": "content/library/books/busy-day/page-07.jpg",
+      "sha256": "0a54c6c74cd79dce6bfd30b6fb7ff62880eeb8b411684af218cae6bf41d45492",
+      "bytes": 723547,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page10.jpg",
+      "sourceSha256": "0a54c6c74cd79dce6bfd30b6fb7ff62880eeb8b411684af218cae6bf41d45492",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-7.jpg",
+      "accessedAt": "2026-11-02T03:13:20.292215+00:00",
+      "publisherRecheckSha256": "0a54c6c74cd79dce6bfd30b6fb7ff62880eeb8b411684af218cae6bf41d45492"
+    },
+    {
+      "path": "content/library/books/busy-day/page-08.jpg",
+      "sha256": "385684a4daed6e2ae82bbdc953f70f7d35148853266cbe5d06eb9110ac1ae1e8",
+      "bytes": 850010,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page11.jpg",
+      "sourceSha256": "385684a4daed6e2ae82bbdc953f70f7d35148853266cbe5d06eb9110ac1ae1e8",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-8.jpg",
+      "accessedAt": "2026-11-02T03:13:23.301703+00:00",
+      "publisherRecheckSha256": "385684a4daed6e2ae82bbdc953f70f7d35148853266cbe5d06eb9110ac1ae1e8"
+    },
+    {
+      "path": "content/library/books/busy-day/page-09.jpg",
+      "sha256": "fd5c834ab306a42c57de6755dacd83bdf24cc841d07f2a4f5631de7f4d43c226",
+      "bytes": 633494,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page12.jpg",
+      "sourceSha256": "fd5c834ab306a42c57de6755dacd83bdf24cc841d07f2a4f5631de7f4d43c226",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-9.jpg",
+      "accessedAt": "2026-11-02T03:13:23.296415+00:00",
+      "publisherRecheckSha256": "fd5c834ab306a42c57de6755dacd83bdf24cc841d07f2a4f5631de7f4d43c226"
+    },
+    {
+      "path": "content/library/books/busy-day/page-10.jpg",
+      "sha256": "8472e896178bf198b63a0d1d2190f636d79ebafa7023e30dbd4cae533ccb6f81",
+      "bytes": 726029,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page13.jpg",
+      "sourceSha256": "8472e896178bf198b63a0d1d2190f636d79ebafa7023e30dbd4cae533ccb6f81",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-10.jpg",
+      "accessedAt": "2026-11-02T03:13:23.330457+00:00",
+      "publisherRecheckSha256": "8472e896178bf198b63a0d1d2190f636d79ebafa7023e30dbd4cae533ccb6f81"
+    },
+    {
+      "path": "content/library/books/busy-day/page-11.jpg",
+      "sha256": "07204981a79d40c0f3be70c08b4ab4762f39cf1999309fc72e2b8f5b8deb7a63",
+      "bytes": 636266,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page14.jpg",
+      "sourceSha256": "07204981a79d40c0f3be70c08b4ab4762f39cf1999309fc72e2b8f5b8deb7a63",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-11.jpg",
+      "accessedAt": "2026-11-02T03:13:23.647153+00:00",
+      "publisherRecheckSha256": "07204981a79d40c0f3be70c08b4ab4762f39cf1999309fc72e2b8f5b8deb7a63"
+    },
+    {
+      "path": "content/library/books/busy-day/page-12.jpg",
+      "sha256": "7585281995159be1f27c191bb82f4ac3a1bcf47dd138313ff20820a58e9f9215",
+      "bytes": 428393,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page15.jpg",
+      "sourceSha256": "7585281995159be1f27c191bb82f4ac3a1bcf47dd138313ff20820a58e9f9215",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-12.jpg",
+      "accessedAt": "2026-11-02T03:13:26.296043+00:00",
+      "publisherRecheckSha256": "7585281995159be1f27c191bb82f4ac3a1bcf47dd138313ff20820a58e9f9215"
+    },
+    {
+      "path": "content/library/books/busy-day/page-13.jpg",
+      "sha256": "841307c2a5844f14d72ef719f4a5b0e717319d3ca776bf33e68cab15e1991de1",
+      "bytes": 1005485,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page16.jpg",
+      "sourceSha256": "841307c2a5844f14d72ef719f4a5b0e717319d3ca776bf33e68cab15e1991de1",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-13.jpg",
+      "accessedAt": "2026-11-02T03:13:27.036395+00:00",
+      "publisherRecheckSha256": "841307c2a5844f14d72ef719f4a5b0e717319d3ca776bf33e68cab15e1991de1"
+    },
+    {
+      "path": "content/library/books/busy-day/page-14.jpg",
+      "sha256": "7c1f8e5a748f07476481393b2a4e5f18cd2a7c2dff8164fc8d5743d1333b0f57",
+      "bytes": 187459,
+      "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page17.jpg",
+      "sourceSha256": "7c1f8e5a748f07476481393b2a4e5f18cd2a7c2dff8164fc8d5743d1333b0f57",
+      "transformation": "Byte-for-byte copy of complete fixture at parent source commit c934137; original existing assets left in place for parent cleanup.",
+      "inheritedFrom": "content/library/assets/busy-14.jpg",
+      "accessedAt": "2026-11-02T03:13:25.880664+00:00",
+      "publisherRecheckSha256": "7c1f8e5a748f07476481393b2a4e5f18cd2a7c2dff8164fc8d5743d1333b0f57"
+    }
+  ],
+  "rightsEvidence": [
+    "Original complete fixture item at c934137 and its original per-page rights records",
+    "publisher.txt: freshly rechecked English ISBN and all four role credits",
+    "../publisher-source-policy.txt: CC BY 4.0 book/art rights"
+  ],
+  "limitations": [
+    "Publisher original source-file CDN returned HTTP 403; original credits leaf not freshly retrieved. Existing exact-edition fixture attribution retained and corroborated with current publisher page."
+  ]
+}

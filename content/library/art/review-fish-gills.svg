@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="fish-gills-art-title">
+  <title id="fish-gills-art-title">Water arrows enter a blue fish’s open mouth and leave behind three curved gill marks; the flow is a simplified diagram.</title>
+  <rect width="320" height="196" rx="22" fill="#E1F0F3"/>
+<g fill="none" stroke="#F4FAF2" stroke-linecap="round" opacity=".85"><path d="M150 22q11-6 22 0M262 166q9-5 18 0" stroke-width="2.5"/><circle cx="66" cy="66" r="3" stroke-width="2"/><circle cx="72" cy="52" r="4.5" stroke-width="2"/><circle cx="64" cy="36" r="2.6" stroke-width="2"/></g>
+<path d="M92 178Q110 164 150 166Q196 160 236 168Q262 170 270 180Q220 188 176 188Q120 188 92 178Z" fill="#E9D6A7"/>
+<g stroke="#5F9177" stroke-width="5" stroke-linecap="round" fill="none"><path d="M240 176Q234 160 244 148M252 176Q256 164 264 160"/></g>
+<ellipse cx="176" cy="160" rx="80" ry="8" fill="#4E7E78" opacity=".15"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M236 92L276 62Q270 96 278 132L236 102Z" fill="#5F92B8"/>
+<path d="M248 92L268 76Q266 96 270 116L248 100" fill="none" stroke="#9CC4DD" stroke-width="2"/>
+<path d="M176 54Q196 30 226 46Q234 56 234 76Z" fill="#5F92B8"/>
+<path d="M196 130Q200 146 216 148Q214 136 218 124Z" fill="#5F92B8"/>
+<path d="M98 86Q112 52 160 52Q212 52 240 92Q214 136 160 138Q112 136 98 108L114 100L114 94Z" fill="#7FB0D2"/>
+<path d="M104 112Q122 132 160 132Q206 130 232 98Q214 124 160 126Q124 126 104 112Z" fill="#D3E6EF" stroke="none"/>
+<path d="M118 70Q140 56 170 58" fill="none" stroke="#B6D3E5" stroke-width="2.6"/>
+<path d="M98 86L114 94L114 100L98 108Q92 98 98 86Z" fill="#46617A"/>
+<path d="M146 66Q156 96 144 128" fill="none" stroke-width="2.4"/>
+<g fill="none" stroke="#C77760" stroke-width="2.6"><path d="M130 80Q137 96 130 112"/><path d="M136 76Q144 96 136 118"/><path d="M142 72Q151 96 142 122"/></g>
+<circle cx="120" cy="78" r="4.6" fill="#FFF6D8" stroke-width="2"/><circle cx="121" cy="78" r="2.4" fill="#354E49" stroke="none"/>
+<g fill="none" stroke="#9CC4DD" stroke-width="1.8"><path d="M176 80q6 6 0 12M194 80q6 6 0 12M185 96q6 6 0 12M203 96q6 6 0 12M176 112q4 4 0 8M194 64q6 6 0 12"/></g>
+</g>
+<g fill="none" stroke="#3E7F86" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M34 82H84M76 76l9 6-9 6"/><path d="M34 112Q60 104 84 102M76 96l9 6-8 7"/>
+<path d="M150 62Q156 42 170 30M160 28l11 1-1 11"/><path d="M150 132Q158 152 176 160M166 164l11-3-5-10"/>
+</g>
+</svg>

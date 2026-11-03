@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="bones-art-title">
+  <title id="bones-art-title">A cream rib cage and spine sit beside two long arm bones meeting at a round elbow joint; this is a simplified skeleton model.</title>
+  <rect width="320" height="196" rx="22" fill="#FFF9E6"/>
+<ellipse cx="160" cy="170" rx="132" ry="13" fill="#E9D6A7" stroke="none"/>
+<path d="M40 170Q160 186 280 170" fill="none" stroke="#D7C594" stroke-width="2.2"/>
+<ellipse cx="100" cy="168" rx="40" ry="5" fill="#739174" opacity=".16"/><ellipse cx="236" cy="160" rx="46" ry="5" fill="#739174" opacity=".16"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+<path d="M78 158h44q6 0 6 6v2H72v-2q0-6 6-6Z" fill="#BC9A69"/><path d="M96 140h8v18h-8Z" fill="#A48C5C"/><path d="M80 162h38" stroke="#D3B88A" stroke-width="1.6"/>
+<path d="M100 44C82.0 36 70 42 70 56C70 64 85.0 65 93 61 M100 44C118.0 36 130 42 130 56C130 64 115.0 65 107 61 M100 63C74.8 55 58 61 58 75C58 83 79.0 84 93 80 M100 63C125.2 55 142 61 142 75C142 83 121.0 84 107 80 M100 82C71.2 74 52 80 52 94C52 102 76.0 103 93 99 M100 82C128.8 74 148 80 148 94C148 102 124.0 103 107 99 M100 101C72.4 93 54 99 54 113C54 121 77.0 122 93 118 M100 101C127.6 93 146 99 146 113C146 121 123.0 122 107 118 M100 120C77.2 112 62 118 62 132C62 140 81.0 141 93 137 M100 120C122.8 112 138 118 138 132C138 140 119.0 141 107 137" stroke="#354E49" stroke-width="9.5"/>
+<path d="M100 44C82.0 36 70 42 70 56C70 64 85.0 65 93 61 M100 44C118.0 36 130 42 130 56C130 64 115.0 65 107 61 M100 63C74.8 55 58 61 58 75C58 83 79.0 84 93 80 M100 63C125.2 55 142 61 142 75C142 83 121.0 84 107 80 M100 82C71.2 74 52 80 52 94C52 102 76.0 103 93 99 M100 82C128.8 74 148 80 148 94C148 102 124.0 103 107 99 M100 101C72.4 93 54 99 54 113C54 121 77.0 122 93 118 M100 101C127.6 93 146 99 146 113C146 121 123.0 122 107 118 M100 120C77.2 112 62 118 62 132C62 140 81.0 141 93 137 M100 120C122.8 112 138 118 138 132C138 140 119.0 141 107 137" stroke="#FFF3CC" stroke-width="4.8"/>
+<rect x="92" y="22" width="16" height="9.5" rx="4" fill="#FFF3CC" stroke-width="2.2"/>
+<rect x="92" y="33" width="16" height="9.5" rx="4" fill="#FFF3CC" stroke-width="2.2"/>
+<rect x="92" y="44" width="16" height="9.5" rx="4" fill="#FFF3CC" stroke-width="2.2"/>
+<rect x="92" y="55" width="16" height="9.5" rx="4" fill="#FFF3CC" stroke-width="2.2"/>
+<rect x="92" y="66" width="16" height="9.5" rx="4" fill="#FFF3CC" stroke-width="2.2"/>
+<rect x="92" y="77" width="16" height="9.5" rx="4" fill="#FFF3CC" stroke-width="2.2"/>
+<rect x="92" y="88" width="16" height="9.5" rx="4" fill="#FFF3CC" stroke-width="2.2"/>
+<rect x="92" y="99" width="16" height="9.5" rx="4" fill="#FFF3CC" stroke-width="2.2"/>
+<rect x="92" y="110" width="16" height="9.5" rx="4" fill="#FFF3CC" stroke-width="2.2"/>
+<rect x="92" y="121" width="16" height="9.5" rx="4" fill="#FFF3CC" stroke-width="2.2"/>
+<rect x="92" y="132" width="16" height="9.5" rx="4" fill="#FFF3CC" stroke-width="2.2"/>
+<rect x="92" y="143" width="16" height="9.5" rx="4" fill="#FFF3CC" stroke-width="2.2"/>
+<path d="M96 31v100" stroke="#E9D6A7" stroke-width="2" opacity=".0"/>
+<path d="M210 40L222 140" stroke="#354E49" stroke-width="15"/>
+<circle cx="204.9" cy="41.6" r="10.5" fill="#354E49" stroke="none"/>
+<circle cx="215.3" cy="40.4" r="10.5" fill="#354E49" stroke="none"/>
+<circle cx="216.7" cy="139.6" r="10.5" fill="#354E49" stroke="none"/>
+<circle cx="227.1" cy="138.4" r="10.5" fill="#354E49" stroke="none"/>
+<circle cx="204.9" cy="41.6" r="7.5" fill="#FFF3CC" stroke="none"/>
+<circle cx="215.3" cy="40.4" r="7.5" fill="#FFF3CC" stroke="none"/>
+<circle cx="216.7" cy="139.6" r="7.5" fill="#FFF3CC" stroke="none"/>
+<circle cx="227.1" cy="138.4" r="7.5" fill="#FFF3CC" stroke="none"/>
+<path d="M210 40L222 140" stroke="#FFF3CC" stroke-width="9"/>
+<path d="M209.3 55.2L217.7 125.4" stroke="#E9D6A7" stroke-width="2.9"/>
+<path d="M222 140L284 66" stroke="#354E49" stroke-width="14"/>
+<circle cx="226.4" cy="142.4" r="10" fill="#354E49" stroke="none"/>
+<circle cx="218.9" cy="136.1" r="10" fill="#354E49" stroke="none"/>
+<circle cx="287.1" cy="69.9" r="10" fill="#354E49" stroke="none"/>
+<circle cx="279.6" cy="63.6" r="10" fill="#354E49" stroke="none"/>
+<circle cx="226.4" cy="142.4" r="7" fill="#FFF3CC" stroke="none"/>
+<circle cx="218.9" cy="136.1" r="7" fill="#FFF3CC" stroke="none"/>
+<circle cx="287.1" cy="69.9" r="7" fill="#FFF3CC" stroke="none"/>
+<circle cx="279.6" cy="63.6" r="7" fill="#FFF3CC" stroke="none"/>
+<path d="M222 140L284 66" stroke="#FFF3CC" stroke-width="8"/>
+<path d="M232.7 130.7L276.7 78.2" stroke="#E9D6A7" stroke-width="2.6"/>
+<circle cx="222" cy="140" r="11" fill="#FFF3CC" stroke-width="3"/><circle cx="222" cy="140" r="5" fill="#E9D6A7" stroke="none"/><path d="M215 134q4-4 9-4" stroke="#FFFBEA" stroke-width="2"/>
+</g>
+<g stroke="#354E49" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M28 150h18l-3 16H31Z" fill="#D3915E"/><path d="M37 150q-10-18-4-26M37 150q2-20 10-26M37 150q-6-12-14-14" fill="none" stroke="#6B9C73" stroke-width="2.6"/></g>
+<g fill="#F0C86D"><path d="M152 28l2 5 5 2-5 2-2 5-2-5-5-2 5-2Z"/><path d="M290 30l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5Z"/></g>
+</svg>

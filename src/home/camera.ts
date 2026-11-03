@@ -2,7 +2,7 @@
 export type Building = { columns:number; floors:number; width:number; height:number; roomHeight:number; roof:number; frame:number; gap:number; count:number };
 export function buildingLayout(count:number, wide=false):Building {
   const columns=Math.max(1,Math.min(count,wide?4:2)), floors=Math.max(1,Math.ceil(count/columns));
-  return {columns,floors,count,width:columns*800+40,height:floors*740+(floors-1)*20+180,roomHeight:740,roof:120,frame:20,gap:20};
+  return {columns,floors,count,width:columns*800+40,height:floors*560+(floors-1)*20+360,roomHeight:560,roof:120,frame:20,gap:20};
 }
 /** Room order fills the ground floor first, then extends upwards. */
 export function roomOrigin(index:number,b:Building) {

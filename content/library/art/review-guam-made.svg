@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img"><title>A schematic island cutaway has a coral-colored rock section beside a sand-colored limestone section above blue water; not to scale.</title><rect width="120" height="120" rx="22" fill="#FFF9E6"/>
+<g stroke="#354E49" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M8 90Q16 80 34 82H92Q108 80 112 90Q112 104 100 106Q60 112 20 106Q8 104 8 90Z" fill="#7EB5C2"/>
+<path d="M16 92V60Q26 42 40 48Q48 36 58 50L64 60L66 92Z" fill="#E09A7E"/>
+<path d="M19 92V62Q24 56 30 56Q26 74 28 92Z" fill="#C77760" stroke="none"/>
+<path d="M60 92L62 72Q84 76 105 74V92Z" fill="#E09A7E"/>
+<path d="M62 72L64 54Q66 46 74 46L100 44Q105 45 105 52V74Q84 76 62 72Z" fill="#F0DFB2"/>
+<path d="M16 60Q26 42 40 48Q48 36 58 50L61 55Q50 46 42 54Q30 50 16 66ZM64 54Q66 46 74 46L100 44Q105 45 105 52Q90 49 76 51Q68 52 64 60Z" fill="#6B9C73" stroke="none"/>
+<path d="M16 60Q26 42 40 48Q48 36 58 50L64 60M62 72L64 54Q66 46 74 46L100 44Q105 45 105 52V92M16 92V60M62 72Q84 76 105 74" fill="none"/>
+<path d="M98 54V68M68 64q10 2 18 0" fill="none" stroke="#D7C594" stroke-width="1.2"/>
+<g fill="#C77760" stroke="none"><circle cx="40" cy="70" r="2.4"/><circle cx="50" cy="62" r="1.8"/><circle cx="46" cy="80" r="2"/><circle cx="84" cy="84" r="1.8"/></g>
+<path d="M78 66l-5-7q5-5 10 0zM78 66v-7M78 66l-3-6M78 66l3-6" fill="#FFF6D8" stroke-width="1"/>
+<g fill="#D7C594" stroke="none"><circle cx="92" cy="58" r="1.6"/><circle cx="88" cy="68" r="1.3"/><circle cx="70" cy="58" r="1.2"/></g>
+<path d="M88 46q0-6 2-12" fill="none" stroke="#A48C5C" stroke-width="1.6"/><path d="M90 34q-6-3-9 2q5-1 9-2q4-4 9 0q-5 0-9 0" fill="#6B9C73" stroke-width="1.2"/>
+<path d="M8 92Q14 88 20 92T32 92T44 92T56 92T68 92T80 92T92 92T104 92Q109 89 112 92Q112 104 100 106Q60 112 20 106Q8 104 8 92Z" fill="#91C5D0"/>
+<path d="M18 100q4-2 8 0M88 100q4-2 8 0M52 104q4-2 8 0" fill="none" stroke="#F4FAF2" stroke-width="1.4"/>
+</g></svg>

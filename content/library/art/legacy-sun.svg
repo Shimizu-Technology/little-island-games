@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-sun-title"><title id="legacy-sun-title">Is the Sun a star?</title><rect width="320" height="196" rx="22" fill="#EEEAF6"></rect>
+<circle cx="156" cy="86" r="64" fill="#FFF6D8" opacity=".6"/>
+<path d="M200 176Q216 164 250 166Q286 166 290 176Q280 186 246 186Q208 186 200 176Z" fill="#93C9C8" stroke="#354E49" stroke-width="2.2" stroke-linejoin="round"/>
+<path d="M212 178q8-3 16 0M266 180q8-3 14 0" fill="none" stroke="#F4FAF2" stroke-width="2" stroke-linecap="round"/>
+<path d="M226 174Q234 163 250 162Q264 163 270 172Q250 177 226 174Z" fill="#F0DFB2" stroke="#354E49" stroke-width="2.2" stroke-linejoin="round"/>
+<path d="M232 172Q250 174 266 170" fill="none" stroke="#D7C594" stroke-width="2.2" stroke-linecap="round"/>
+<g transform="translate(250 142) scale(.42)" stroke="#354E49" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"><path d="M-3 53Q10 25 1 0L9 -2Q21 24 6 54Z" fill="#BC9A69"/><path d="M4 0Q-24 -23 -38 -5Q-18 -6 -4 8Q-22 2 -28 23Q-9 15 5 4Q15 24 34 23Q33 6 12 0Q36 -12 42 -1Q35 -29 7 -6Q12 -33 -3 -30Q-12 -17 4 0Z" fill="#6B9C73"/><path d="M4 0L-26 -5M7 0L29 -6M5 -1L-1 -21" fill="none" stroke="#98B483"/><circle cx="3" cy="5" r="4" fill="#A48C5C"/><circle cx="10" cy="7" r="4" fill="#A48C5C"/></g>
+<path d="M48 37Q50 42 55 44Q50 46 48 51Q46 46 41 44Q46 42 48 37Z" fill="#F0CF7C" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M272 34Q273 39 278 40Q273 41 272 46Q271 41 266 40Q271 39 272 34Z" fill="#F0CF7C" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M268 96Q269 99 272 100Q269 101 268 104Q267 101 264 100Q267 99 268 96Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M52 123Q53 127 57 128Q53 129 52 133Q51 129 47 128Q51 127 52 123Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M156 28L156 15M197 45L206 36M214 86L227 86M197 127L206 136M156 144L156 157M115 127L106 136M98 86L85 86M115 45L106 36" stroke="#354E49" stroke-width="12" stroke-linecap="round" fill="none"/>
+<path d="M156 28L156 15M197 45L206 36M214 86L227 86M197 127L206 136M156 144L156 157M115 127L106 136M98 86L85 86M115 45L106 36" stroke="#7EB5A9" stroke-width="7" stroke-linecap="round" fill="none"/>
+<circle cx="156" cy="86" r="46" fill="#F0C86D"/>
+<path d="M186 51A46 46 0 0 1 116 109Q169 102 186 51Z" fill="#E8B752"/>
+<g fill="#F7DA8E"><circle cx="138" cy="72" r="4.5"/><circle cx="168" cy="66" r="3.5"/><circle cx="148" cy="98" r="3.5"/><circle cx="174" cy="94" r="5"/><circle cx="156" cy="82" r="2.5"/><circle cx="132" cy="92" r="2.5"/></g>
+<path d="M120 76A37 37 0 0 1 143 51" fill="none" stroke="#FFF3CC" stroke-width="4" stroke-linecap="round"/>
+<circle cx="156" cy="86" r="46" fill="none" stroke="#354E49" stroke-width="3"/>
+</svg>

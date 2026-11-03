@@ -1,0 +1,877 @@
+{
+  "reef-food-web": {
+    "schemaVersion": 1,
+    "review": {
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
+      "date": "2026-11-02",
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual/editorial review completed. NOAA food-web text verifies energy direction and branching; NOAA photosynthesis page verifies light-powered food production. Added Clements et al. university-hosted full paper for the parrotfish path; retained qualified many, avoiding a universal seaweed diet. Replaced technical caveat pile with a connected invitation. Population removal remains outside this model. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval."
+    },
+    "engine": "food-web",
+    "limits": {
+      "id": "reef-food-web-limits",
+      "text": "A few possible feeding links in a sunlit reef, with arrows from food to eater. The picture leaves out most species and connections. It does not predict population changes or show every kind of energy source.",
+      "speechKey": "library-reef-food-web-limits",
+      "audio": {
+        "status": "pending",
+        "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+      }
+    },
+    "labels": {
+      "sun": {
+        "id": "reef-food-web-control-sun",
+        "text": "Sunlight",
+        "speechKey": "library-reef-food-web-control-sun",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "producer": {
+        "id": "reef-food-web-control-producer",
+        "text": "Phytoplankton",
+        "speechKey": "library-reef-food-web-control-producer",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "grazer": {
+        "id": "reef-food-web-control-grazer",
+        "text": "Zooplankton",
+        "speechKey": "library-reef-food-web-control-grazer",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "small": {
+        "id": "reef-food-web-control-small",
+        "text": "Small fish",
+        "speechKey": "library-reef-food-web-control-small",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "large": {
+        "id": "reef-food-web-control-large",
+        "text": "Larger fish",
+        "speechKey": "library-reef-food-web-control-large",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "algae": {
+        "id": "reef-food-web-control-algae",
+        "text": "Reef-surface film",
+        "speechKey": "library-reef-food-web-control-algae",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "parrotfish": {
+        "id": "reef-food-web-control-parrotfish",
+        "text": "Parrotfish",
+        "speechKey": "library-reef-food-web-control-parrotfish",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "connect": {
+        "id": "reef-food-web-control-connect",
+        "text": "Connect food to eater",
+        "speechKey": "library-reef-food-web-control-connect",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "undo": {
+        "id": "reef-food-web-control-undo",
+        "text": "Remove the last connection",
+        "speechKey": "library-reef-food-web-control-undo",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "reset": {
+        "id": "reef-food-web-control-reset",
+        "text": "Start a new model",
+        "speechKey": "library-reef-food-web-control-reset",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "branch": {
+        "id": "reef-food-web-control-branch",
+        "text": "Show another feeding path",
+        "speechKey": "library-reef-food-web-control-branch",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      }
+    },
+    "steps": [
+      {
+        "key": "light",
+        "label": {
+          "id": "reef-food-web-light-label",
+          "text": "Start with energy",
+          "speechKey": "library-reef-food-web-light-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "reef-food-web-light-review-1",
+            "text": "Start with sunlight. Tiny ocean drifters use its energy to make food.",
+            "speechKey": "library-reef-food-web-light-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "producer",
+        "label": {
+          "id": "reef-food-web-producer-label",
+          "text": "Add a producer",
+          "speechKey": "library-reef-food-web-producer-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "reef-food-web-producer-review-1",
+            "text": "These drifters are called phytoplankton. Many make sugars using light, water and carbon dioxide. Algae and some tiny microbes on reef surfaces make food this way too.",
+            "speechKey": "library-reef-food-web-producer-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "grazer",
+        "label": {
+          "id": "reef-food-web-grazer-label",
+          "text": "Follow food to an eater",
+          "speechKey": "library-reef-food-web-grazer-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "reef-food-web-grazer-review-1",
+            "text": "Some tiny drifting animals, called zooplankton, eat phytoplankton. A small fish may eat the zooplankton. Join each food to its eater: the arrow follows energy through a meal.",
+            "speechKey": "library-reef-food-web-grazer-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "predator",
+        "label": {
+          "id": "reef-food-web-predator-label",
+          "text": "Add another connection",
+          "speechKey": "library-reef-food-web-predator-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "reef-food-web-predator-review-1",
+            "text": "A larger fish may eat the small fish. Add that connection and follow the arrows from the first food to the last eater. Different fish can have different meals.",
+            "speechKey": "library-reef-food-web-predator-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "branch",
+        "label": {
+          "id": "reef-food-web-branch-label",
+          "text": "Make a web",
+          "speechKey": "library-reef-food-web-branch-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "reef-food-web-branch-review-1",
+            "text": "Now add a second path. Many parrotfish scrape tiny living food from reef surfaces. Connect the reef-surface film to the parrotfish. The picture now has branches: that is how a chain begins to become a web.",
+            "speechKey": "library-reef-food-web-branch-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "limits",
+        "label": {
+          "id": "reef-food-web-limits-label",
+          "text": "Notice what is missing",
+          "speechKey": "library-reef-food-web-limits-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "reef-food-web-limits-review-1",
+            "text": "Real reefs have many more feeding paths. Decomposers also break down remains. Which connections would you add if our picture had room?",
+            "speechKey": "library-reef-food-web-limits-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "water-journey": {
+    "schemaVersion": 1,
+    "review": {
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
+      "date": "2026-11-02",
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual/editorial review completed. NOAA water-cycle overview and NWS hydrology description verify surface/groundwater storage and transport; USGS precipitation page verifies cloud-drop growth and evaporation; NOAA ocean-freezing page supports salt claim. Added these specific citations because generic water-cycle page did not directly cover each claim. warm remains evaporation, not rainfall. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval."
+    },
+    "engine": "water-journey",
+    "limits": {
+      "id": "water-journey-limits",
+      "text": "A simplified set of possible water paths. Sizes and travel times are symbolic, and plants and many other routes are left out. Water vapor is invisible; cloud drops or ice are visible. This is not a forecast or a drinking-water guide.",
+      "speechKey": "library-water-journey-limits",
+      "audio": {
+        "status": "pending",
+        "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+      }
+    },
+    "labels": {
+      "ocean": {
+        "id": "water-journey-control-ocean",
+        "text": "Ocean water",
+        "speechKey": "library-water-journey-control-ocean",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "vapor": {
+        "id": "water-journey-control-vapor",
+        "text": "Invisible water vapor",
+        "speechKey": "library-water-journey-control-vapor",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "cloud": {
+        "id": "water-journey-control-cloud",
+        "text": "Cloud droplets",
+        "speechKey": "library-water-journey-control-cloud",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "rain": {
+        "id": "water-journey-control-rain",
+        "text": "Rain",
+        "speechKey": "library-water-journey-control-rain",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "ground": {
+        "id": "water-journey-control-ground",
+        "text": "Water in the ground",
+        "speechKey": "library-water-journey-control-ground",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "ice": {
+        "id": "water-journey-control-ice",
+        "text": "Ice",
+        "speechKey": "library-water-journey-control-ice",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "heat": {
+        "id": "water-journey-control-heat",
+        "text": "Warm some water",
+        "speechKey": "library-water-journey-control-heat",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "freeze": {
+        "id": "water-journey-control-freeze",
+        "text": "Freeze some water",
+        "speechKey": "library-water-journey-control-freeze",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "cool": {
+        "id": "water-journey-control-cool",
+        "text": "Cool the vapor",
+        "speechKey": "library-water-journey-control-cool",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "grow": {
+        "id": "water-journey-control-grow",
+        "text": "Grow cloud drops",
+        "speechKey": "library-water-journey-control-grow",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "warm": {
+        "id": "water-journey-control-warm",
+        "text": "Evaporate cloud drops",
+        "speechKey": "library-water-journey-control-warm",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "soak": {
+        "id": "water-journey-control-soak",
+        "text": "Soak into the ground",
+        "speechKey": "library-water-journey-control-soak",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "runoff": {
+        "id": "water-journey-control-runoff",
+        "text": "Flow over the land",
+        "speechKey": "library-water-journey-control-runoff",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "flow": {
+        "id": "water-journey-control-flow",
+        "text": "Follow groundwater to the sea",
+        "speechKey": "library-water-journey-control-flow",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "melt": {
+        "id": "water-journey-control-melt",
+        "text": "Melt the ice",
+        "speechKey": "library-water-journey-control-melt",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "reset": {
+        "id": "water-journey-control-reset",
+        "text": "Choose another journey",
+        "speechKey": "library-water-journey-control-reset",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      }
+    },
+    "steps": [
+      {
+        "key": "heat",
+        "label": {
+          "id": "water-journey-heat-label",
+          "text": "Evaporation",
+          "speechKey": "library-water-journey-heat-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "water-journey-heat-review-1",
+            "text": "Some water at the surface becomes an invisible gas called water vapor. Energy from the Sun helps this change, called evaporation. The water left behind can stay in the sea.",
+            "speechKey": "library-water-journey-heat-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "freeze",
+        "label": {
+          "id": "water-journey-freeze-label",
+          "text": "Freezing",
+          "speechKey": "library-water-journey-freeze-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "water-journey-freeze-review-1",
+            "text": "Cool liquid water enough and it can freeze into ice. Salt makes seawater freeze at a lower temperature than fresh water. Our model skips the wait and temperature measurements.",
+            "speechKey": "library-water-journey-freeze-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "cool",
+        "label": {
+          "id": "water-journey-cool-label",
+          "text": "Condensation",
+          "speechKey": "library-water-journey-cool-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "water-journey-cool-review-1",
+            "text": "As moist air cools enough, some water vapor turns into tiny liquid drops. This is condensation. Many drops together make a visible cloud; clouds can also contain ice.",
+            "speechKey": "library-water-journey-cool-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "grow",
+        "label": {
+          "id": "water-journey-grow-label",
+          "text": "Precipitation",
+          "speechKey": "library-water-journey-grow-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "water-journey-grow-review-1",
+            "text": "Tiny cloud drops can join and grow. Once they fall fast enough to leave the cloud, they become rain. Ice crystals can grow and fall too.",
+            "speechKey": "library-water-journey-grow-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "warm",
+        "label": {
+          "id": "water-journey-warm-label",
+          "text": "Evaporating cloud drops",
+          "speechKey": "library-water-journey-warm-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "water-journey-warm-review-1",
+            "text": "Cloud droplets can evaporate back into invisible water vapor. Try this path: a cloud can shrink away before it makes rain.",
+            "speechKey": "library-water-journey-warm-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "soak",
+        "label": {
+          "id": "water-journey-soak-label",
+          "text": "Infiltration",
+          "speechKey": "library-water-journey-soak-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "water-journey-soak-review-1",
+            "text": "Rain can soak into soil and cracks in rock. Some stays near plant roots. Some travels deeper, through spaces that let water pass.",
+            "speechKey": "library-water-journey-soak-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "runoff",
+        "label": {
+          "id": "water-journey-runoff-label",
+          "text": "Runoff",
+          "speechKey": "library-water-journey-runoff-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "water-journey-runoff-review-1",
+            "text": "Water that flows over the ground is called runoff. Follow it downhill toward a stream or the sea. The shape and surface of the land help set its path.",
+            "speechKey": "library-water-journey-runoff-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "flow",
+        "label": {
+          "id": "water-journey-flow-label",
+          "text": "Groundwater flow",
+          "speechKey": "library-water-journey-flow-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "water-journey-flow-review-1",
+            "text": "Water underground can move through connected pores and cracks. Some reaches the ocean; some stays stored much longer than our quick picture shows.",
+            "speechKey": "library-water-journey-flow-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "melt",
+        "label": {
+          "id": "water-journey-melt-label",
+          "text": "Melting",
+          "speechKey": "library-water-journey-melt-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "water-journey-melt-review-1",
+            "text": "Add enough heat and ice melts into liquid water. Freezing and melting change how the water molecules are arranged; they are still water.",
+            "speechKey": "library-water-journey-melt-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "limits",
+        "label": {
+          "id": "water-journey-limits-label",
+          "text": "Choose a different route",
+          "speechKey": "library-water-journey-limits-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "water-journey-limits-review-1",
+            "text": "Choose a new route. Water can move through plants, air, ground and sea, with many different stops along the way. A real journey has no set starting point or travel time.",
+            "speechKey": "library-water-journey-limits-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "night-sky": {
+    "schemaVersion": 1,
+    "review": {
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
+      "date": "2026-11-02",
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual/editorial review completed. NASA constellation page verifies imagined lines, unequal star distances, location/hour/year visibility; NASA seasons page verifies rotation and orbit. Added NASA blue-sky page for scattering. Invented-star limitation retained; no traditional navigation or current sky claims. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval."
+    },
+    "engine": "night-sky",
+    "limits": {
+      "id": "night-sky-limits",
+      "text": "An invented sky, with symbolic stars, brightness and distances. Imagined lines join dots. Earth’s rotation changes a night’s view; its orbit changes seasonal views. This is not tonight’s Guam sky or a navigation chart.",
+      "speechKey": "library-night-sky-limits",
+      "audio": {
+        "status": "pending",
+        "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+      }
+    },
+    "labels": {
+      "turn": {
+        "id": "night-sky-control-turn",
+        "text": "Turn Earth one step",
+        "speechKey": "library-night-sky-control-turn",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "back": {
+        "id": "night-sky-control-back",
+        "text": "Turn Earth back one step",
+        "speechKey": "library-night-sky-control-back",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "pattern": {
+        "id": "night-sky-control-pattern",
+        "text": "Show imagined connecting lines",
+        "speechKey": "library-night-sky-control-pattern",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "unpattern": {
+        "id": "night-sky-control-unpattern",
+        "text": "Hide connecting lines",
+        "speechKey": "library-night-sky-control-unpattern",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "season": {
+        "id": "night-sky-control-season",
+        "text": "Compare a seasonal view",
+        "speechKey": "library-night-sky-control-season",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      },
+      "reset": {
+        "id": "night-sky-control-reset",
+        "text": "Return to the first view",
+        "speechKey": "library-night-sky-control-reset",
+        "audio": {
+          "status": "pending",
+          "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+        }
+      }
+    },
+    "steps": [
+      {
+        "key": "day",
+        "label": {
+          "id": "night-sky-day-label",
+          "text": "Face the Sun",
+          "speechKey": "library-night-sky-day-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "night-sky-day-review-1",
+            "text": "Our marked place faces the Sun. Sunlight scattered by the air makes a bright daytime sky, so most other stars are hard to see. They are still there.",
+            "speechKey": "library-night-sky-day-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "turn",
+        "label": {
+          "id": "night-sky-turn-label",
+          "text": "Turn into night",
+          "speechKey": "library-night-sky-turn-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "night-sky-turn-review-1",
+            "text": "Turn Earth until our place faces away from the Sun. The view grows dark because Earth turns, rather than the Sun going around Earth each day.",
+            "speechKey": "library-night-sky-turn-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "night",
+        "label": {
+          "id": "night-sky-night-label",
+          "text": "Watch the view shift",
+          "speechKey": "library-night-sky-night-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "night-sky-night-review-1",
+            "text": "Keep turning Earth and watch the stars appear to shift. Our place is turning with the ground beneath it. Stop at any step to compare the view.",
+            "speechKey": "library-night-sky-night-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "pattern",
+        "label": {
+          "id": "night-sky-pattern-label",
+          "text": "Imagine a pattern",
+          "speechKey": "library-night-sky-pattern-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "night-sky-pattern-review-1",
+            "text": "Choose a few star dots and join them into a shape. The lines belong to your picture. Real stars that appear near one another in the sky can be far apart in space.",
+            "speechKey": "library-night-sky-pattern-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "season",
+        "label": {
+          "id": "night-sky-season-label",
+          "text": "Compare across a year",
+          "speechKey": "library-night-sky-season-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "night-sky-season-review-1",
+            "text": "Move Earth to another part of its path around the Sun. The night side now faces a different part of space. The stars people can see also depend on their place on Earth and the time of night.",
+            "speechKey": "library-night-sky-season-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      },
+      {
+        "key": "limits",
+        "label": {
+          "id": "night-sky-limits-label",
+          "text": "Read the model’s limits",
+          "speechKey": "library-night-sky-limits-label",
+          "audio": {
+            "status": "pending",
+            "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+          }
+        },
+        "narration": [
+          {
+            "id": "night-sky-limits-review-1",
+            "text": "Make a pattern of your own. These dots are invented, so the picture cannot tell you which stars are over Guam tonight.",
+            "speechKey": "library-night-sky-limits-review-1",
+            "audio": {
+              "status": "pending",
+              "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

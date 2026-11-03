@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="insect-flight-art-title">
+  <title id="insect-flight-art-title">A dragonfly has four long blue wings, a segmented body, six bent legs and curved wing-motion marks.</title>
+  <rect width="320" height="196" rx="22" fill="#E7F1DD"/>
+<path d="M78 176Q100 164 160 165Q228 164 248 176Q232 188 160 188Q92 188 78 176Z" fill="#93C9C8"/>
+<path d="M104 174q10-4 20 0M196 178q10-4 20 0" fill="none" stroke="#F4FAF2" stroke-width="2" stroke-linecap="round"/>
+<ellipse cx="166" cy="175" rx="58" ry="5" fill="#4E7E78" opacity=".16"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M42 184Q40 150 32 112M52 184Q56 156 66 134" fill="none" stroke="#6B9C73"/>
+<path d="M32 112C26 102 26 90 30 82C38 90 38 104 32 112Z" fill="#A48C5C" stroke-width="2.2"/>
+<path d="M48 184Q40 160 26 148Q40 154 54 172Z" fill="#85AA7D" stroke-width="2.2"/>
+<g transform="translate(176 92) rotate(-6) scale(.86)">
+<g>
+<path d="M-60-6C-56-40-36-74-20-78C-6-78-16-40-46-4Z" fill="#8FBEDD" opacity=".9"/>
+<path d="M-76-6C-86-30-80-64-62-78C-50-84-50-60-60-6Z" fill="#8FBEDD" opacity=".9"/>
+<path d="M-70-8Q-70-50-60-74M-54-8Q-38-50-20-74M-64-30l-10-4M-66-50l-10-2M-46-30l10-6M-36-50l10-4" fill="none" stroke="#D6ECF5" stroke-width="1.8"/>
+<path d="M-60-6C-56-40-36-74-20-78C-6-78-16-40-46-4ZM-76-6C-86-30-80-64-62-78C-50-84-50-60-60-6Z" fill="none" stroke-width="2.4"/>
+<ellipse cx="-60" cy="-70" rx="2.4" ry="4.6" fill="#47617C" stroke="none"/><ellipse cx="-19" cy="-71" rx="2.4" ry="4.6" transform="rotate(30 -19 -71)" fill="#47617C" stroke="none"/>
+<path d="M-4-82Q4-72 0-60M8-86Q18-72 12-56M-84-74Q-92-62-86-50" fill="none" stroke="#5E9A9A" stroke-width="2.4"/>
+<path d="M-76-8L-86-18L-98-18M-68-10L-74-22L-84-28M-60-10L-60-24L-68-34" fill="none" stroke-width="2.2"/>
+</g>
+<g transform="scale(1 -1)">
+<path d="M-60-6C-56-40-36-74-20-78C-6-78-16-40-46-4Z" fill="#8FBEDD" opacity=".9"/>
+<path d="M-76-6C-86-30-80-64-62-78C-50-84-50-60-60-6Z" fill="#8FBEDD" opacity=".9"/>
+<path d="M-70-8Q-70-50-60-74M-54-8Q-38-50-20-74M-64-30l-10-4M-66-50l-10-2M-46-30l10-6M-36-50l10-4" fill="none" stroke="#D6ECF5" stroke-width="1.8"/>
+<path d="M-60-6C-56-40-36-74-20-78C-6-78-16-40-46-4ZM-76-6C-86-30-80-64-62-78C-50-84-50-60-60-6Z" fill="none" stroke-width="2.4"/>
+<ellipse cx="-60" cy="-70" rx="2.4" ry="4.6" fill="#47617C" stroke="none"/><ellipse cx="-19" cy="-71" rx="2.4" ry="4.6" transform="rotate(30 -19 -71)" fill="#47617C" stroke="none"/>
+<path d="M-4-82Q4-72 0-60M8-86Q18-72 12-56M-84-74Q-92-62-86-50" fill="none" stroke="#5E9A9A" stroke-width="2.4"/>
+<path d="M-76-8L-86-18L-98-18M-68-10L-74-22L-84-28M-60-10L-60-24L-68-34" fill="none" stroke-width="2.2"/>
+</g>
+<path d="M-52-6Q30-7 118-3Q125 0 118 3Q30 7-52 6Z" fill="#5E9A9A"/>
+<path d="M-34-5.5v11M-16-5.5v11M2-5.5v11M20-5v10M38-5v10M56-4.5v9M74-4.5v9M92-4v8M108-3.5v7" fill="none" stroke-width="1.8"/>
+<path d="M-48-1.5L112-1" fill="none" stroke="#93C9C8" stroke-width="2"/>
+<path d="M120-2l9-4M120 2l9 4" fill="none" stroke-width="2.2"/>
+<ellipse cx="-66" cy="0" rx="17" ry="12" fill="#5E9A9A"/>
+<path d="M-76-5Q-66-9-56-5" fill="none" stroke="#93C9C8" stroke-width="2"/>
+<ellipse cx="-88" cy="0" rx="8" ry="11" fill="#4E8A8A"/>
+<circle cx="-92" cy="-8" r="8.5" fill="#6FA9C9"/><circle cx="-92" cy="8" r="8.5" fill="#6FA9C9"/>
+<circle cx="-95" cy="-11" r="2.4" fill="#F4FAF2" stroke="none"/><circle cx="-95" cy="5" r="2.4" fill="#F4FAF2" stroke="none"/>
+</g>
+</g></svg>

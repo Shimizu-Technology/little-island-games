@@ -14,7 +14,8 @@ export const livingCapabilities: Partial<Record<ItemId, Capability>> = {
   lamp:{moveInPlay:true,toggle:'light'},
   'sink-counter':{moveInPlay:false,toggle:'water'},
   tv:{moveInPlay:true,toggle:'power'}, radio:{moveInPlay:true,toggle:'power'},
-  fridge:{moveInPlay:true,toggle:'open',dispenses:['mango','banana','juice','rice-ball']},
+  stove:{moveInPlay:false},
+  fridge:{moveInPlay:false,toggle:'open',dispenses:['mango','banana','juice','rice-ball']},
   'fruit-bowl':{moveInPlay:true,dispenses:['mango','banana','coconut-drink']},
 };
 export function dispenserChoices(item: ItemId, state: ItemVisualState = {}): readonly ItemId[] {

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="frogs-art-title">
+  <title id="frogs-art-title">A legless tadpole, a tadpole growing hind legs and a small adult frog form a three-stage sequence joined by arrows.</title>
+  <rect width="320" height="196" rx="22" fill="#E7F1DD"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M40 114Q36 84 40 52M52 114Q56 88 52 66" fill="none" stroke="#6B9C73"/>
+<rect x="34" y="50" width="11" height="26" rx="5.5" fill="#A48C5C" stroke-width="2.2"/><rect x="47" y="64" width="10" height="22" rx="5" fill="#A48C5C" stroke-width="2.2"/>
+<path d="M30 114Q24 90 30 72Q32 94 38 114Z" fill="#85AA7D" stroke-width="2.2"/>
+<path d="M24 128Q28 102 80 102Q160 96 240 100Q298 102 298 132Q300 170 240 178Q160 186 80 180Q22 174 24 128Z" fill="#93C9C8"/>
+<path d="M44 156Q120 170 200 166Q262 162 284 146Q282 168 240 174Q160 182 80 176Q50 172 44 156Z" fill="#7EB5A9" stroke="none"/>
+<g fill="none" stroke="#F4FAF2" stroke-width="2.2"><path d="M62 112q10-4 20 0M118 110q12-4 24 0M196 110q8-3 16 0"/><circle cx="98" cy="122" r="2.5"/><circle cx="104" cy="114" r="1.8"/><circle cx="176" cy="124" r="2.5"/></g>
+<path d="M64 137Q48 124 32 132Q44 140 30 148Q50 154 64 142Z" fill="#A6B98A" stroke-width="2.2"/>
+<path d="M64 139Q48 138 34 140" fill="none" stroke="#6E7F5A" stroke-width="2.2"/>
+<ellipse cx="78" cy="139" rx="15" ry="11" fill="#6E7F5A"/>
+<path d="M70 132Q76 129 84 130" fill="none" stroke="#9DAF6E" stroke-width="2"/>
+<circle cx="86" cy="135" r="2.6" fill="#F4FAF2" stroke="none"/><circle cx="86.6" cy="135.4" r="1.4" fill="#354E49" stroke="none"/>
+<g transform="translate(-12 0)">
+<path d="M158 143Q152 150 143 149l-6-2M143 149l-4 4" fill="none" stroke="#56653F" stroke-width="2.6"/>
+<path d="M156 134Q142 124 128 130Q138 138 126 146Q142 150 156 141Z" fill="#A6B98A" stroke-width="2.2"/>
+<path d="M156 137Q142 136 130 138" fill="none" stroke="#6E7F5A" stroke-width="2.2"/>
+<ellipse cx="172" cy="137" rx="18" ry="13" fill="#6E7F5A"/>
+<path d="M165 145Q162 155 152 155Q146 155 141 151M141 151l-6-1M141 151l-4 4" fill="none" stroke-width="5.6"/>
+<path d="M165 145Q162 155 152 155Q146 155 141 151M141 151l-6-1M141 151l-4 4" fill="none" stroke="#7E8F5A" stroke-width="2.6"/>
+<path d="M162 129Q170 125 180 126" fill="none" stroke="#9DAF6E" stroke-width="2"/>
+<circle cx="182" cy="132" r="3" fill="#F4FAF2" stroke="none"/><circle cx="182.8" cy="132.4" r="1.6" fill="#354E49" stroke="none"/>
+</g>
+<g fill="none" stroke="#C77760" stroke-width="3"><path d="M95 141Q102 135 109 141M105 135l4 6-7 1"/><path d="M184 140Q192 133 200 140M196 134l4 6-7 1"/></g>
+<g transform="translate(262 136) scale(.88)">
+<path d="M-14-9L-24-27L-40-17" fill="none" stroke-width="10"/><path d="M-14-9L-24-27L-40-17" fill="none" stroke="#8DB596" stroke-width="5.6"/>
+<path d="M-40-17L-62-29L-67-20L-65-9L-44-12Z" fill="#9DBF8F" stroke-width="2.4"/>
+<path d="M-44-16L-61-28M-45-14L-66-20M-46-12L-64-10" fill="none" stroke="#6B9C73" stroke-width="1.6"/>
+<g fill="#354E49" stroke="none"><circle cx="-62" cy="-29" r="1.6"/><circle cx="-67" cy="-20" r="1.6"/><circle cx="-65" cy="-9" r="1.6"/></g>
+<path d="M17-11L22-20M22-20l5-1M22-20l0-5" fill="none" stroke-width="2.4"/>
+<g transform="scale(1 -1)"><path d="M-14-9L-24-27L-40-17" fill="none" stroke-width="10"/><path d="M-14-9L-24-27L-40-17" fill="none" stroke="#8DB596" stroke-width="5.6"/>
+<path d="M-40-17L-62-29L-67-20L-65-9L-44-12Z" fill="#9DBF8F" stroke-width="2.4"/>
+<path d="M-44-16L-61-28M-45-14L-66-20M-46-12L-64-10" fill="none" stroke="#6B9C73" stroke-width="1.6"/>
+<g fill="#354E49" stroke="none"><circle cx="-62" cy="-29" r="1.6"/><circle cx="-67" cy="-20" r="1.6"/><circle cx="-65" cy="-9" r="1.6"/></g>
+<path d="M17-11L22-20M22-20l5-1M22-20l0-5" fill="none" stroke-width="2.4"/></g>
+<path d="M-20 0C-20-12-8-16 4-15C18-14 30-8 32 0C30 8 18 14 4 15C-8 16-20 12-20 0Z" fill="#7FA98B"/>
+<path d="M-12-8Q0-13 14-11" fill="none" stroke="#C9DDB5" stroke-width="2"/>
+<g fill="#6B9C73" stroke="none"><circle cx="-6" cy="-3" r="2.4"/><circle cx="4" cy="5" r="2"/><circle cx="-10" cy="7" r="1.8"/></g>
+<circle cx="21" cy="-6" r="4" fill="#8DB596" stroke-width="2"/><circle cx="21" cy="6" r="4" fill="#8DB596" stroke-width="2"/>
+<circle cx="21.8" cy="-6" r="2" fill="#354E49" stroke="none"/><circle cx="21.8" cy="6" r="2" fill="#354E49" stroke="none"/>
+</g>
+<path d="M248 120Q262 114 280 120M248 152Q264 158 282 151" fill="none" stroke="#F4FAF2" stroke-width="2"/>
+</g></svg>

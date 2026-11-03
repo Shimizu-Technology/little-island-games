@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-seagrass-title"><title id="legacy-seagrass-title">Can grass grow under the sea?</title><rect width="320" height="196" rx="22" fill="#E1F0F3"></rect>
+<g fill="#F4FAF2" opacity=".28"><path d="M96 14L120 14L150 150L124 150Z"/><path d="M196 14L214 14L224 150L204 150Z"/></g>
+<g fill="none" stroke="#F4FAF2" stroke-linecap="round" stroke-width="2" opacity=".85"><circle cx="232" cy="64" r="4"/><circle cx="240" cy="48" r="5.5"/><circle cx="234" cy="30" r="3"/><path d="M50 46q10-6 20 0" stroke-width="2.5"/></g>
+<ellipse cx="160" cy="176" rx="96" ry="10" fill="#4E7E78" opacity=".16"/>
+<path d="M70 174Q82 150 122 148Q160 140 200 148Q240 150 252 174Q208 186 160 186Q110 186 70 174Z" fill="#E9D6A7"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M140 166C138 126 120 96 106 54Q104 42 114 46C132 92 150 124 154 166Z" fill="#6B9C73"/>
+<path d="M155 166C158 120 150 78 162 26Q168 18 174 28C164 80 172 122 170 166Z" fill="#85AA7D"/>
+<path d="M170 166C178 126 196 96 214 62Q222 54 226 64C208 100 188 130 184 166Z" fill="#98B483"/>
+</g>
+<g fill="none" stroke-linecap="round" stroke-width="2.2"><path d="M147 158C145 124 130 98 116 62M163 156C165 116 158 80 166 40M178 156C186 124 200 100 216 72" stroke="#C9DDB5"/><path d="M152 150C150 130 144 112 138 96M168 150C168 130 167 110 168 92M182 152C186 138 192 124 198 112" stroke="#476E59" opacity=".6"/></g>
+<path d="M76 172Q100 160 132 162Q160 168 188 162Q222 158 246 172Q206 184 160 184Q104 184 76 172Z" fill="#F0DFB2"/>
+<path d="M128 176Q160 170 194 176M140 175l-3 5M160 172v6M178 174l3 5" fill="none" stroke="#C3AE7E" stroke-width="1.8" stroke-linecap="round"/>
+<path d="M92 170Q112 164 128 166" fill="none" stroke="#FFF6D8" stroke-width="2.2" stroke-linecap="round"/>
+<g transform="translate(226 170)" stroke="#354E49" stroke-width="2.2" stroke-linejoin="round"><path d="M-9 2Q-10 -9 0 -10Q10 -10 10 0Q9 6 0 6Q-6 6 -9 2Z" fill="#E09A7E"/><path d="M0 -10Q-2 -2 4 0M-5 -6Q-4 2 3 3" fill="none" stroke-width="1.6"/></g>
+</svg>

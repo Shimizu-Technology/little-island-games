@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img"><title>A coral-colored jellyfish has a domed, scalloped bell and three long curling tentacles.</title><rect width="120" height="120" rx="22" fill="#FFF9E6"/>
+<g fill="none" stroke="#9CCFC9" stroke-width="1.6" stroke-linecap="round" opacity=".9"><path d="M14 30q6-3 12 0M92 22q5-3 10 0"/><circle cx="98" cy="44" r="2.5"/><circle cx="103" cy="34" r="1.8"/><circle cx="18" cy="74" r="2.2"/></g>
+<ellipse cx="60" cy="112" rx="30" ry="4" fill="#4E7E78" opacity=".14"/>
+<g stroke="#354E49" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M45 56Q34 70 42 82T40 104Q36 110 30 106" fill="none" stroke="#C97A62" stroke-width="2.6"/>
+<path d="M60 58Q68 74 58 88T64 110" fill="none" stroke="#C97A62" stroke-width="2.6"/>
+<path d="M75 56Q88 68 80 82T86 102Q90 108 95 103" fill="none" stroke="#C97A62" stroke-width="2.6"/>
+<path d="M45 56Q34 70 42 82T40 104Q36 110 30 106M60 58Q68 74 58 88T64 110M75 56Q88 68 80 82T86 102Q90 108 95 103" fill="none" stroke="#354E49" stroke-width=".9" opacity=".55"/>
+<path d="M24 54Q22 14 60 12Q98 14 96 54Q90 61 84 55Q78 62 72 56Q66 63 60 57Q54 63 48 56Q42 62 36 55Q30 61 24 54Z" fill="#E09A7E"/>
+<path d="M34 50Q36 26 60 22Q84 26 86 50" fill="#EDB59B" stroke="none"/>
+<path d="M34 50Q36 26 60 22Q84 26 86 50" fill="none" stroke="#C97A62" stroke-width="1.6"/>
+<path d="M32 30Q40 18 52 16" fill="none" stroke="#FBE3D2" stroke-width="3"/>
+<g fill="#FBE3D2" stroke="none"><circle cx="48" cy="38" r="2.2"/><circle cx="62" cy="33" r="2.6"/><circle cx="73" cy="41" r="2"/></g>
+</g></svg>

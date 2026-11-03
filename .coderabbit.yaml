@@ -3,3 +3,16 @@ reviews:
   auto_review:
     enabled: true
   profile: assertive
+  # Review source, tests, scripts and content data; skip binary media and
+  # generated bundles (their bytes are verified by receipts and the gate).
+  path_filters:
+    - "!assets/audio/**"
+    - "!**/*.m4a"
+    - "!**/*.wav"
+    - "!**/*.jpg"
+    - "!**/*.png"
+    - "!content/library/art/**/*.svg"
+    - "!src/library/*.generated.*"
+    - "!scripts/library/audio-receipt.json"
+    - "!content/library/books/**"
+    - "!docs/library/**"

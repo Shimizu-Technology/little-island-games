@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="islands-art-title">
+  <title id="islands-art-title">A green island seen from above has an unbroken sandy shore with blue water on every side.</title>
+  <rect width="320" height="196" rx="22" fill="#F6E8DC"/>
+<path d="M160 18C236 14 296 50 294 102C292 154 234 188 160 186C86 188 26 156 26 104C26 52 84 20 160 18Z" fill="#6FA9BC"/>
+<path d="M160 14C234 10 292 46 290 98C288 150 232 182 160 182C88 184 30 152 30 100C30 48 86 16 160 14Z" fill="#91C5D0"/>
+<g fill="none" stroke="#F4FAF2" stroke-width="2.4" stroke-linecap="round" opacity=".85"><path d="M48 76q8-5 16 0M262 128q8-5 16 0M70 160q7-4 14 0M246 40q7-4 14 0M150 28q6-4 12 0"/></g>
+<g stroke-linecap="round" stroke-linejoin="round">
+<path d="M70 96C64 62 100 42 140 46C170 30 214 36 236 60C262 76 262 116 240 134C220 160 178 160 150 152C120 166 82 154 72 130C60 120 62 106 70 96Z" fill="#BFE2DA" stroke="#BFE2DA" stroke-width="22"/>
+<path d="M70 96C64 62 100 42 140 46C170 30 214 36 236 60C262 76 262 116 240 134C220 160 178 160 150 152C120 166 82 154 72 130C60 120 62 106 70 96Z" fill="#F4FAF2" stroke="#F4FAF2" stroke-width="9"/>
+<path d="M70 96C64 62 100 42 140 46C170 30 214 36 236 60C262 76 262 116 240 134C220 160 178 160 150 152C120 166 82 154 72 130C60 120 62 106 70 96Z" fill="#F0DFB2" stroke="#354E49" stroke-width="3"/>
+<path d="M82 128C110 150 128 148 150 140C178 150 214 150 236 126" fill="none" stroke="#D7C594" stroke-width="3"/>
+<path d="M86 96C82 70 110 58 142 62C170 48 206 54 222 72C244 84 244 112 226 124C210 144 178 142 152 136C126 148 96 140 88 122C78 114 80 104 86 96Z" fill="#85AA7D" stroke="#354E49" stroke-width="2.2"/>
+<path d="M92 120C110 138 128 136 152 128C180 136 208 136 224 118C214 138 180 142 152 136C126 148 98 140 92 120Z" fill="#6B9C73"/>
+<path d="M150 78C170 64 196 68 210 82C222 92 214 110 196 110C182 120 160 116 150 106C138 98 138 86 150 78Z" fill="#6B9C73" stroke="#476E59" stroke-width="1.6"/>
+<path d="M160 84q14-10 30-4M100 84q10-12 26-12" fill="none" stroke="#A8C493" stroke-width="2.2"/>
+<g fill="#98B483" stroke="#476E59" stroke-width="1.6"><circle cx="128" cy="96" r="10"/><circle cx="140" cy="108" r="9"/><circle cx="124" cy="116" r="7"/><circle cx="184" cy="122" r="8"/><circle cx="198" cy="124" r="6"/></g>
+<g fill="#6B9C73" stroke="#354E49" stroke-width="1.4"><g transform="translate(104 110)"><path d="M0 0Q6-5 13 0Q6 5 0 0Z" transform="rotate(0)"/><path d="M0 0Q6-5 13 0Q6 5 0 0Z" transform="rotate(72)"/><path d="M0 0Q6-5 13 0Q6 5 0 0Z" transform="rotate(144)"/><path d="M0 0Q6-5 13 0Q6 5 0 0Z" transform="rotate(216)"/><path d="M0 0Q6-5 13 0Q6 5 0 0Z" transform="rotate(288)"/><circle r="2.6" fill="#A48C5C"/></g><g transform="translate(222 98) rotate(30)"><path d="M0 0Q6-5 13 0Q6 5 0 0Z" transform="rotate(0)"/><path d="M0 0Q6-5 13 0Q6 5 0 0Z" transform="rotate(72)"/><path d="M0 0Q6-5 13 0Q6 5 0 0Z" transform="rotate(144)"/><path d="M0 0Q6-5 13 0Q6 5 0 0Z" transform="rotate(216)"/><path d="M0 0Q6-5 13 0Q6 5 0 0Z" transform="rotate(288)"/><circle r="2.6" fill="#A48C5C"/></g></g>
+</g>
+</svg>

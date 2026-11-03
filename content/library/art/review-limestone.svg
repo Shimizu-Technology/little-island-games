@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img"><title>An irregular pale limestone block contains two small pores, a fan-shaped shell symbol and a dark angular crack.</title><rect width="120" height="120" rx="22" fill="#FFF9E6"/><g data-fit="1" transform="translate(-6.2 -15.6) scale(1.104)">
+<path d="M10 102Q20 90 60 92Q100 90 110 102Q100 110 60 110Q20 110 10 102Z" fill="#E9D6A7"/>
+<ellipse cx="60" cy="98" rx="42" ry="5" fill="#4E7E78" opacity=".16"/>
+<g stroke="#354E49" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M20 52L27 44L34 39L44 36L52 32L61 34L70 33L80 28L88 31L96 32L99 41L102 50L93 51L84 54L66 53Z" fill="#F5F2E8"/>
+<path d="M84 54L93 51L102 50L105 62L101 68L106 76L102 84L98 92L92 93L88 96L86 74Z" fill="#C9C3B2"/>
+<path d="M20 52L34 54L50 55L66 53L84 54L86 64L86 74L88 86L88 96L76 97L64 99L56 96L42 97L26 96L23 90L22 84L18 76L19 70L21 66L19 58Z" fill="#E6E2D4"/>
+<path d="M26 66q24 2 54 0M24 84q30 2 58 0M92 66l8-2M90 82l8-2" fill="none" stroke="#D3CDBC" stroke-width="1.6"/>
+<path d="M40 38q14-4 30-4" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+<path d="M48 82L40 70Q48 60 56 70Z" fill="#F5F2E8"/>
+<path d="M48 82l-5-12M48 82l0-14M48 82l5-12" fill="none" stroke-width="1"/>
+<circle cx="30" cy="60" r="2.6" fill="#6E665A"/><circle cx="66" cy="90" r="2.2" fill="#6E665A"/><g fill="none" stroke="#A89F8A" stroke-width="1.1"><path d="M34 76q2-2 4 0M60 62q2-2 4 0M28 90q1.6-1.6 3.2 0M80 66l2 1.6M58 78l1.6 2M94 58q1.6-1.6 3.2 0M38 46q2-1.6 4 0"/></g>
+<path d="M76 54l-5 9 7 5-4 10 4 6" fill="none" stroke="#354E49" stroke-width="2"/>
+<path d="M14 98q-2-8 2-14M20 98q2-6 6-8M104 98q2-8-2-12" fill="none" stroke="#6B9C73" stroke-width="2.4"/>
+<path d="M100 104l-3-4q3-3 6 0z" fill="#E09A7E" stroke-width="1"/>
+</g></g></svg>

@@ -1,0 +1,214 @@
+{
+  "id": "and-also",
+  "edition": "English, 2017-12-02, ISBN 978-1-928442-06-6",
+  "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+  "sourceSha256": "161745a760d3ed1c471a2160c8345bdd09b5249d1b776ea27332e331f9c914d3",
+  "sourceBytes": 2037230,
+  "pdfPages": 18,
+  "readingPages": 13,
+  "rights": {
+    "license": "CC-BY-4.0",
+    "creator": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "credit": "And Also! by Lauren Beukes, illustrated by Anja Venter, designed by Nkosingiphile Mazibuko, edited by Helen Moffett. Created at Book Dash, Cape Town, 2 December 2017. © Book Dash contributors, CC BY 4.0. https://creativecommons.org/licenses/by/4.0/",
+    "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio.",
+    "licenseFile": "content/library/books/CC-BY-4.0.txt"
+  },
+  "pages": [
+    {
+      "page": 0,
+      "pdfPage": 1,
+      "path": "content/library/books/and-also/page-00.jpg",
+      "alt": "Cover of And Also! with Thabo thinking and Keitu jumping behind him.",
+      "text": "And Also!",
+      "sha256": "29ef4533df4b708a3d872fcad17ba7073b8d0885959914a12dc9db11ea7e3418",
+      "bytes": 232707,
+      "dimensions": [
+        1400,
+        1400
+      ],
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "transformation": "Full PDF page raster, no crop; JPEG quality 88, maximum 1400 px."
+    },
+    {
+      "page": 1,
+      "pdfPage": 5,
+      "path": "content/library/books/and-also/page-01.jpg",
+      "alt": "Thabo imagines his bed as a raft on the sea.",
+      "text": "Thabo pretends that his bed is a raft on the sea!",
+      "sha256": "e77b195d58bd15ca3ebd734a17810f903f3480627049ac870bc2d0f099241f57",
+      "bytes": 203423,
+      "dimensions": [
+        1400,
+        700
+      ],
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "transformation": "Full PDF page raster, no crop; JPEG quality 88, maximum 1400 px."
+    },
+    {
+      "page": 2,
+      "pdfPage": 6,
+      "path": "content/library/books/and-also/page-02.jpg",
+      "alt": "Keitu imagines sharks around the bed; Thabo says no.",
+      "text": "His little sister Keitu says, “Yes! And also! There are sharks.” “No!” says Thabo.",
+      "sha256": "76d87e0ed70aa00438f2df9ebec6d7ef24699e41252957fa1558f464bd3aa2bb",
+      "bytes": 156800,
+      "dimensions": [
+        1400,
+        700
+      ],
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "transformation": "Full PDF page raster, no crop; JPEG quality 88, maximum 1400 px."
+    },
+    {
+      "page": 3,
+      "pdfPage": 7,
+      "path": "content/library/books/and-also/page-03.jpg",
+      "alt": "Thabo imagines their school taxi as a spaceship.",
+      "text": "Thabo pretends that their taxi is a spaceship!",
+      "sha256": "26ad5da65bd881065a7ae0f15014ed9eae4160f852592b00d4976a3c245be121",
+      "bytes": 200963,
+      "dimensions": [
+        1400,
+        700
+      ],
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "transformation": "Full PDF page raster, no crop; JPEG quality 88, maximum 1400 px."
+    },
+    {
+      "page": 4,
+      "pdfPage": 8,
+      "path": "content/library/books/and-also/page-04.jpg",
+      "alt": "Keitu imagines shooting stars outside the spaceship; Thabo says no.",
+      "text": "His little sister Keitu says, “Yes! And also! Watch out for shooting stars!” “No,” says Thabo.",
+      "sha256": "f27b8764ca20a8fff09bba7f5a0f270544955aeab4608882159bc54868bce4cd",
+      "bytes": 183862,
+      "dimensions": [
+        1400,
+        700
+      ],
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "transformation": "Full PDF page raster, no crop; JPEG quality 88, maximum 1400 px."
+    },
+    {
+      "page": 5,
+      "pdfPage": 9,
+      "path": "content/library/books/and-also/page-05.jpg",
+      "alt": "Thabo imagines the playground as a jungle.",
+      "text": "Thabo pretends the playground is a jungle!",
+      "sha256": "fa1157a88f8e47b40b1da05052e505cc8d1b5998938a1befed4a5d63ba3d4632",
+      "bytes": 211357,
+      "dimensions": [
+        1400,
+        700
+      ],
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "transformation": "Full PDF page raster, no crop; JPEG quality 88, maximum 1400 px."
+    },
+    {
+      "page": 6,
+      "pdfPage": 10,
+      "path": "content/library/books/and-also/page-06.jpg",
+      "alt": "Keitu imagines being a lion; Thabo says no.",
+      "text": "His little sister Keitu says, “Yes! And also! We are lions.” “No,” says Thabo.",
+      "sha256": "8e305f8fcb1dee65fd2e60ac9ed782f5bca7c2d55eb58feb049642a701589c33",
+      "bytes": 184929,
+      "dimensions": [
+        1400,
+        700
+      ],
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "transformation": "Full PDF page raster, no crop; JPEG quality 88, maximum 1400 px."
+    },
+    {
+      "page": 7,
+      "pdfPage": 11,
+      "path": "content/library/books/and-also/page-07.jpg",
+      "alt": "Thabo realizes that Keitu has a great idea. Keitu jumps with delight.",
+      "text": "“Oh!” says Thabo, “Wait! Wow! Yes! That’s a great idea!” “I know!” says Keitu.",
+      "sha256": "9d6be71fa60d4e322d428c985a94ef280e6a49347d201766a2e576291c95f8b9",
+      "bytes": 88390,
+      "dimensions": [
+        1400,
+        700
+      ],
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "transformation": "Full PDF page raster, no crop; JPEG quality 88, maximum 1400 px."
+    },
+    {
+      "page": 8,
+      "pdfPage": 12,
+      "path": "content/library/books/and-also/page-08.jpg",
+      "alt": "Thabo and Keitu both pretend to be lions.",
+      "text": "Thabo pretends to be a lion! Keitu also pretends to be a lion!",
+      "sha256": "00f0b1691194870e8715f1209aff226f638d9b3c54c32bea0d2f17ae5b9f3733",
+      "bytes": 213339,
+      "dimensions": [
+        1400,
+        700
+      ],
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "transformation": "Full PDF page raster, no crop; JPEG quality 88, maximum 1400 px."
+    },
+    {
+      "page": 9,
+      "pdfPage": 13,
+      "path": "content/library/books/and-also/page-09.jpg",
+      "alt": "The other children become an imaginary river of crocodiles while Thabo and Keitu float on a log.",
+      "text": "Thabo pretends the other kids are a river of crocodiles! Keitu says, “Yes! And also! We can jump on this log to float away.”",
+      "sha256": "477b22702beea636906fb3d513da7c4c107b1bb013bbab652a8a5a5e7ccd1d5d",
+      "bytes": 231583,
+      "dimensions": [
+        1400,
+        700
+      ],
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "transformation": "Full PDF page raster, no crop; JPEG quality 88, maximum 1400 px."
+    },
+    {
+      "page": 10,
+      "pdfPage": 14,
+      "path": "content/library/books/and-also/page-10.jpg",
+      "alt": "Thabo and Keitu imagine sliding down a rainbow and watching out for dinosaurs.",
+      "text": "“Yes! And also!” Thabo says, “We can slide down the rainbow!” Keitu says, “Yes! And also! Watch out for the dinosaurs!”",
+      "sha256": "e228d8244c1d373c067acd404129bbf35d30d55bba0b2d451150a52b3a6443ee",
+      "bytes": 229534,
+      "dimensions": [
+        1400,
+        700
+      ],
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "transformation": "Full PDF page raster, no crop; JPEG quality 88, maximum 1400 px."
+    },
+    {
+      "page": 11,
+      "pdfPage": 15,
+      "path": "content/library/books/and-also/page-11.jpg",
+      "alt": "In a wordless pretend scene, Keitu and Thabo fly among colorful creatures, stars and planets.",
+      "text": "",
+      "sha256": "3a8a693bd8840823a81651a702893264ec680d31c96b5646eaa1441337b72d64",
+      "bytes": 287606,
+      "dimensions": [
+        1400,
+        700
+      ],
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "transformation": "Full PDF page raster, no crop; JPEG quality 88, maximum 1400 px."
+    },
+    {
+      "page": 12,
+      "pdfPage": 16,
+      "path": "content/library/books/and-also/page-12.jpg",
+      "alt": "Back in the bedroom, Thabo and Keitu smile and say they want to play together again.",
+      "text": "Thabo says, “I had the best day playing pretend with you.” Keitu says, “And also! We should play again tomorrow!”",
+      "sha256": "5ec58f31813be6e4c453877f2f9d03a7223c428aed824310e0c0a4076fff242a",
+      "bytes": 162700,
+      "dimensions": [
+        1400,
+        700
+      ],
+      "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+      "transformation": "Full PDF page raster, no crop; JPEG quality 88, maximum 1400 px."
+    }
+  ]
+}

@@ -1,0 +1,200 @@
+[
+  {
+    "page": 0,
+    "pdfPage": 1,
+    "alt": "Cover of And Also! with Thabo thinking and Keitu jumping behind him.",
+    "sentences": [
+      {
+        "id": "library-and-also-p0-1",
+        "text": "And Also!",
+        "speechKey": "library-and-also-p0-1",
+        "audio": {
+          "status": "pending",
+          "reason": "Warm neural narration registered; lead audible acceptance pending."
+        }
+      }
+    ]
+  },
+  {
+    "page": 1,
+    "pdfPage": 5,
+    "alt": "Thabo imagines his bed as a raft on the sea.",
+    "sentences": [
+      {
+        "id": "library-and-also-p1-1",
+        "text": "Thabo pretends that his bed is a raft on the sea!",
+        "speechKey": "library-and-also-p1-1",
+        "audio": {
+          "status": "pending",
+          "reason": "Warm neural narration registered; lead audible acceptance pending."
+        }
+      }
+    ]
+  },
+  {
+    "page": 2,
+    "pdfPage": 6,
+    "alt": "Keitu imagines sharks around the bed; Thabo says no.",
+    "sentences": [
+      {
+        "id": "library-and-also-p2-1",
+        "text": "His little sister Keitu says, “Yes! And also! There are sharks.” “No!” says Thabo.",
+        "speechKey": "library-and-also-p2-1",
+        "audio": {
+          "status": "pending",
+          "reason": "Warm neural narration registered; lead audible acceptance pending."
+        }
+      }
+    ]
+  },
+  {
+    "page": 3,
+    "pdfPage": 7,
+    "alt": "Thabo imagines their school taxi as a spaceship.",
+    "sentences": [
+      {
+        "id": "library-and-also-p3-1",
+        "text": "Thabo pretends that their taxi is a spaceship!",
+        "speechKey": "library-and-also-p3-1",
+        "audio": {
+          "status": "pending",
+          "reason": "Warm neural narration registered; lead audible acceptance pending."
+        }
+      }
+    ]
+  },
+  {
+    "page": 4,
+    "pdfPage": 8,
+    "alt": "Keitu imagines shooting stars outside the spaceship; Thabo says no.",
+    "sentences": [
+      {
+        "id": "library-and-also-p4-1",
+        "text": "His little sister Keitu says, “Yes! And also! Watch out for shooting stars!” “No,” says Thabo.",
+        "speechKey": "library-and-also-p4-1",
+        "audio": {
+          "status": "pending",
+          "reason": "Warm neural narration registered; lead audible acceptance pending."
+        }
+      }
+    ]
+  },
+  {
+    "page": 5,
+    "pdfPage": 9,
+    "alt": "Thabo imagines the playground as a jungle.",
+    "sentences": [
+      {
+        "id": "library-and-also-p5-1",
+        "text": "Thabo pretends the playground is a jungle!",
+        "speechKey": "library-and-also-p5-1",
+        "audio": {
+          "status": "pending",
+          "reason": "Warm neural narration registered; lead audible acceptance pending."
+        }
+      }
+    ]
+  },
+  {
+    "page": 6,
+    "pdfPage": 10,
+    "alt": "Keitu imagines being a lion; Thabo says no.",
+    "sentences": [
+      {
+        "id": "library-and-also-p6-1",
+        "text": "His little sister Keitu says, “Yes! And also! We are lions.” “No,” says Thabo.",
+        "speechKey": "library-and-also-p6-1",
+        "audio": {
+          "status": "pending",
+          "reason": "Warm neural narration registered; lead audible acceptance pending."
+        }
+      }
+    ]
+  },
+  {
+    "page": 7,
+    "pdfPage": 11,
+    "alt": "Thabo realizes that Keitu has a great idea. Keitu jumps with delight.",
+    "sentences": [
+      {
+        "id": "library-and-also-p7-1",
+        "text": "“Oh!” says Thabo, “Wait! Wow! Yes! That’s a great idea!” “I know!” says Keitu.",
+        "speechKey": "library-and-also-p7-1",
+        "audio": {
+          "status": "pending",
+          "reason": "Warm neural narration registered; lead audible acceptance pending."
+        }
+      }
+    ]
+  },
+  {
+    "page": 8,
+    "pdfPage": 12,
+    "alt": "Thabo and Keitu both pretend to be lions.",
+    "sentences": [
+      {
+        "id": "library-and-also-p8-1",
+        "text": "Thabo pretends to be a lion! Keitu also pretends to be a lion!",
+        "speechKey": "library-and-also-p8-1",
+        "audio": {
+          "status": "pending",
+          "reason": "Warm neural narration registered; lead audible acceptance pending."
+        }
+      }
+    ]
+  },
+  {
+    "page": 9,
+    "pdfPage": 13,
+    "alt": "The other children become an imaginary river of crocodiles while Thabo and Keitu float on a log.",
+    "sentences": [
+      {
+        "id": "library-and-also-p9-1",
+        "text": "Thabo pretends the other kids are a river of crocodiles! Keitu says, “Yes! And also! We can jump on this log to float away.”",
+        "speechKey": "library-and-also-p9-1",
+        "audio": {
+          "status": "pending",
+          "reason": "Warm neural narration registered; lead audible acceptance pending."
+        }
+      }
+    ]
+  },
+  {
+    "page": 10,
+    "pdfPage": 14,
+    "alt": "Thabo and Keitu imagine sliding down a rainbow and watching out for dinosaurs.",
+    "sentences": [
+      {
+        "id": "library-and-also-p10-1",
+        "text": "“Yes! And also!” Thabo says, “We can slide down the rainbow!” Keitu says, “Yes! And also! Watch out for the dinosaurs!”",
+        "speechKey": "library-and-also-p10-1",
+        "audio": {
+          "status": "pending",
+          "reason": "Warm neural narration registered; lead audible acceptance pending."
+        }
+      }
+    ]
+  },
+  {
+    "page": 11,
+    "pdfPage": 15,
+    "alt": "In a wordless pretend scene, Keitu and Thabo fly among colorful creatures, stars and planets.",
+    "sentences": []
+  },
+  {
+    "page": 12,
+    "pdfPage": 16,
+    "alt": "Back in the bedroom, Thabo and Keitu smile and say they want to play together again.",
+    "sentences": [
+      {
+        "id": "library-and-also-p12-1",
+        "text": "Thabo says, “I had the best day playing pretend with you.” Keitu says, “And also! We should play again tomorrow!”",
+        "speechKey": "library-and-also-p12-1",
+        "audio": {
+          "status": "pending",
+          "reason": "Warm neural narration registered; lead audible acceptance pending."
+        }
+      }
+    ]
+  }
+]

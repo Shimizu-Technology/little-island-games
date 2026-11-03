@@ -20,6 +20,7 @@ for word,_,clue in word_rows:
     speech[f'clue-{word.lower()}']=clue
 parser=argparse.ArgumentParser()
 parser.add_argument('--manifest', action='store_true', help='Print speech text without generating or changing any assets')
+parser.add_argument('--include-staged', action='store_true', help='Include explicitly staged design transcripts; not part of shipped voice banks')
 parser.add_argument('--only', help='Regenerate exactly one existing speech clip without changing the source map')
 args=parser.parse_args()
 speech.update({
@@ -36,6 +37,14 @@ speech.update(json.loads((ROOT/"scripts/lab-audio.json").read_text()))
 # Learning games: one JSON map per slice (scripts/learn/<slice>.json), each written to its own module.
 learn_maps={}
 for learn_file in sorted((ROOT/"scripts/learn").glob("*.json")):
+    # A design slice registers transcripts before the lead approves generation.
+    # Its explicit sidecar prevents changing the shipped manifest/receipts.
+    stage_file=learn_file.with_suffix('.stage')
+    if stage_file.exists():
+        stage=json.loads(stage_file.read_text())
+        if stage != {"status": "design-only", "shipping": False}:
+            raise RuntimeError(f"Invalid speech staging declaration: {stage_file.name}")
+        if not args.include_staged: continue
     learn_map=json.loads(learn_file.read_text())
     clash=[k for k in learn_map if k in speech]
     if clash: raise RuntimeError(f"{learn_file.name}: keys already used elsewhere: {clash[:5]}")

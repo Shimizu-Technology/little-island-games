@@ -9,6 +9,7 @@ import { createRun, rowSafe, SLIDE_SECONDS } from '../src/arcade/games/lagoon-ru
 import { DUCK_MAX_ELEVATION } from '../src/arcade/games/lagoon-run/geometry';
 import { runnerFrame } from '../src/arcade/games/scrolling/character';
 import { runLevels } from '../src/arcade/games/scrolling/content';
+const artFixtureTimeout = process.env.LITTLE_ISLAND_SLOW_HOST === '1' ? 1800000 : 180000;
 vi.mock('../src/arcade/Sprite',()=>({ArcadeSprite:()=>null}));
 vi.mock('react-native',()=>({View:()=>null}));
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useAnimatedProps:()=>({})}));
@@ -67,7 +68,7 @@ describe('Islander authored art',()=>{
    const top=artTop(renderToStaticMarkup(<Islander view="back" pose={frame} look={look}/>));
    expect(130-top+DUCK_MAX_ELEVATION*85,`${frame} ${look.hairStyle} ${look.hat} ${look.outfit} ${look.accessory}`).toBeLessThan(clearance);
   }
- }, 180000);
+ }, artFixtureTimeout);
  it('keeps the busiest wardrobe silhouettes inside the vector budget', () => {
   const paths: number[] = [], primitives: number[] = [];
   for (const pose of [...frontPoses, ...backPoses]) for (const outfit of outfits) for (const hat of hats) {
@@ -79,7 +80,7 @@ describe('Islander authored art',()=>{
   console.info('Islander vector budget', JSON.stringify(metrics));
   expect(metrics.maxPaths).toBeLessThanOrEqual(48);
   expect(metrics.maxPrimitives).toBeLessThanOrEqual(85);
- }, 180000);
+ }, artFixtureTimeout);
  it('uses four continuous limb contours and two unlined mitten silhouettes',()=>{
   for(const pose of [...frontPoses,...backPoses]) {
    const markup=renderToStaticMarkup(<Islander view={pose.view} pose={pose}/>);
@@ -128,5 +129,5 @@ describe('native rig regressions',()=>{
    // Both legs paint below the shared waist, so neither cap covers its outline.
    expect(markup.lastIndexOf('data-limb="right-leg"')).toBeLessThan(markup.indexOf('data-layer="clothing"'));
   }
- },180000);
+ },artFixtureTimeout);
 });

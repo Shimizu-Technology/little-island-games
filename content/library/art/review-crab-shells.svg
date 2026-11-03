@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="crab-shells-art-title">
+  <title id="crab-shells-art-title">A coral crab with jointed legs and raised claws stands beside a pale empty shell, whose lifted top exposes an open interior.</title>
+  <rect width="320" height="196" rx="22" fill="#E1F0F3"/>
+<g fill="none" stroke="#F4FAF2" stroke-linecap="round" opacity=".85"><path d="M40 38q11-6 22 0M150 24q9-5 18 0" stroke-width="2.5"/><circle cx="284" cy="40" r="3" stroke-width="2"/><circle cx="290" cy="26" r="4" stroke-width="2"/></g>
+<ellipse cx="164" cy="176" rx="128" ry="9" fill="#4E7E78" opacity=".15"/>
+<path d="M28 174Q44 150 92 150Q150 142 210 150Q270 150 292 172Q240 188 160 186Q76 188 28 174Z" fill="#E9D6A7"/>
+<path d="M50 168Q90 160 124 162M210 160Q246 160 274 166" fill="none" stroke="#FFF6D8" stroke-width="2.2" stroke-linecap="round"/>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M66 138L48 130L38 148M66 144L50 144L42 162M68 150L54 156L48 170M72 154L64 164L60 176M114 138L132 130L142 148M114 144L130 144L138 162M112 150L126 156L132 170M108 154L116 164L120 176" stroke="#354E49" stroke-width="6"/><path d="M68 134L54 122M112 134L126 122" stroke="#354E49" stroke-width="7.5"/>
+<path d="M66 138L48 130L38 148M66 144L50 144L42 162M68 150L54 156L48 170M72 154L64 164L60 176M114 138L132 130L142 148M114 144L130 144L138 162M112 150L126 156L132 170M108 154L116 164L120 176" stroke="#FFF3CC" stroke-width="3"/><path d="M68 134L54 122M112 134L126 122" stroke="#FFF3CC" stroke-width="4"/>
+<path d="M188 128L162 118L150 146M190 136L168 134L158 162M192 144L176 150L170 170M196 148L190 160L188 174M242 128L268 118L280 146M240 136L262 134L272 162M238 144L254 150L260 170M234 148L240 160L242 174" stroke="#354E49" stroke-width="10"/>
+<path d="M188 128L162 118L150 146M190 136L168 134L158 162M192 144L176 150L170 170M196 148L190 160L188 174M242 128L268 118L280 146M240 136L262 134L272 162M238 144L254 150L260 170M234 148L240 160L242 174" stroke="#E09A7E" stroke-width="5.5"/>
+<path d="M190 116L168 94L170 72M240 116L262 94L260 72" stroke="#354E49" stroke-width="12"/>
+<path d="M190 116L168 94L170 72M240 116L262 94L260 72" stroke="#E09A7E" stroke-width="7"/>
+</g>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M56 126Q42 128 36 118Q34 106 46 106L48 100Q58 102 58 112Q60 120 56 126Z" fill="#FFF6D8" stroke-width="2.4"/>
+<path d="M46 106Q50 112 56 112" fill="none" stroke-width="1.8"/>
+<path d="M124 126Q138 128 144 118Q146 106 134 106L132 100Q122 102 122 112Q120 120 124 126Z" fill="#FFF6D8" stroke-width="2.4"/>
+<path d="M134 106Q130 112 124 112" fill="none" stroke-width="1.8"/>
+<path d="M62 142Q60 128 74 126H106Q120 128 118 142Q110 158 90 160Q70 158 62 142Z" fill="#F9E5AF"/>
+<path d="M68 136Q72 128 90 128Q108 128 112 136Q104 142 90 142Q76 142 68 136Z" fill="#8C7A58"/>
+<path d="M70 150Q90 158 110 150" fill="none" stroke="#E9D6A7" stroke-width="2.4"/>
+<g transform="translate(94 104) rotate(-14) scale(.72) translate(-215 -124)" stroke-width="4"><path d="M176 126Q172 104 196 100Q215 96 234 100Q258 104 254 126Q244 148 215 150Q186 148 176 126Z" fill="#FFF6D8"/><path d="M180 132Q194 146 215 146Q236 146 250 132Q244 150 215 152Q186 150 180 132Z" fill="#E9D6A7" stroke="none"/><path d="M188 112Q200 104 216 104" fill="none" stroke="#FFFFFF" stroke-width="4"/><g fill="#E9D6A7" stroke="none"><circle cx="230" cy="114" r="3"/><circle cx="240" cy="122" r="2.6"/><circle cx="200" cy="124" r="2.6"/></g></g>
+<path d="M156 30Q170 26 178 40Q180 52 172 60L170 72L160 72Q150 58 152 44Z" fill="#E09A7E"/>
+<path d="M156 30Q148 42 158 54Q162 46 166 40Z" fill="#E09A7E"/>
+<path d="M274 30Q260 26 252 40Q250 52 258 60L260 72L270 72Q280 58 278 44Z" fill="#E09A7E"/>
+<path d="M274 30Q282 42 272 54Q268 46 264 40Z" fill="#E09A7E"/>
+<path d="M162 38Q166 34 172 38M268 38Q264 34 258 38" fill="none" stroke="#F7C7B0" stroke-width="2.4"/>
+<path d="M206 104Q204 90 202 84M224 104Q226 90 228 84" fill="none" stroke-width="2.6"/>
+<circle cx="202" cy="82" r="5" fill="#354E49"/><circle cx="228" cy="82" r="5" fill="#354E49"/>
+<circle cx="203.5" cy="80.5" r="1.5" fill="#FFF3CC" stroke="none"/><circle cx="229.5" cy="80.5" r="1.5" fill="#FFF3CC" stroke="none"/>
+<path d="M176 126Q172 104 196 100Q215 96 234 100Q258 104 254 126Q244 148 215 150Q186 148 176 126Z" fill="#E09A7E"/>
+<path d="M180 132Q194 146 215 146Q236 146 250 132Q244 150 215 152Q186 150 180 132Z" fill="#C77760" stroke="none"/>
+<path d="M188 112Q200 104 216 104" fill="none" stroke="#F7C7B0" stroke-width="3"/>
+<g fill="#C77760" stroke="none"><circle cx="230" cy="114" r="2.4"/><circle cx="240" cy="122" r="2"/><circle cx="200" cy="124" r="2"/></g>
+</g>
+</svg>

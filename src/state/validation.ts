@@ -1,6 +1,7 @@
 import { validRoundOwners, type RoundOwners } from '../badges/owners';
 import { BoardId, BoardSessions, boardIds, isBoardId, validBoardSessions } from "../board";
-import { ExploreProgress, validExploreProgress } from "../explore/progress";
+import { ExploreProgress } from "../explore/progress";
+import { validLibraryData, validLegacyExplore, type LibraryData } from "../library/state";
 import { GameId, GameState, gameIds } from "../games";
 import { checkersResult } from "../games/checkers";
 import { ticOutcome, lines } from "../games/tic";
@@ -8,7 +9,6 @@ import { memoryKey, validMemoryCard } from "../games/memory";
 import { WordRecords, validWordRecords } from "./wordRecords";
 import { Activities, ActivityId, activityIds, validActivities, validActivityRecords } from "./activities";
 import type { RaceRecords } from "../racer/engine";
-import { normalizeExploreFavorites, topicById } from "../explore/content";
 import { WORDS } from "../games/words";
 import { validMatch, validSeat, validPlayers } from "../games/match";
 import type { LearnId, LearnSession, SkillProgress } from "../learn/types";
@@ -23,6 +23,8 @@ export type Settings = { sound: boolean; help: boolean; homeNavigationSeen?: boo
 export type Save = {
   version: 1;
   roundOwners?: RoundOwners;
+  /** Versioned per-child Library state; legacy Explore remains intact. */
+  library?: LibraryData;
   personalization?: Personalization;
   /** Island Arcade progress and validated untimed Reef rounds; real-time rounds are never persisted. */
   arcade?: ArcadeSave;
@@ -343,8 +345,20 @@ export function validSession(v: unknown): v is GameState {
       return false;
   }
 }
+export const MAX_SAVE_BYTES = 2_000_000;
+/** Match the backup pickers' byte limit on both native and web, including Unicode. */
+export function withinSaveLimit(raw: string): boolean {
+  if (raw.length > MAX_SAVE_BYTES) return false;
+  let bytes = 0;
+  for (const character of raw) {
+    const point = character.codePointAt(0)!;
+    bytes += point < 0x80 ? 1 : point < 0x800 ? 2 : point < 0x10000 ? 3 : 4;
+    if (bytes > MAX_SAVE_BYTES) return false;
+  }
+  return true;
+}
 export function parseSave(raw: string): Save {
-  if (raw.length > 2_000_000) throw new Error("This backup is too large.");
+  if (!withinSaveLimit(raw)) throw new Error("This backup is too large.");
   let v: unknown;
   try {
     v = JSON.parse(raw);
@@ -362,6 +376,7 @@ export function parseSave(raw: string): Save {
     (v.settings.narrationVolume !== undefined && (typeof v.settings.narrationVolume !== "number" || !Number.isFinite(v.settings.narrationVolume) || v.settings.narrationVolume < 0 || v.settings.narrationVolume > 1)) ||
     (v.settings.voice !== undefined && !["warm", "calm"].includes(v.settings.voice as string)) ||
     (v.learning !== undefined && !validLearners(v.learning)) ||
+    (v.library !== undefined && (!validLibraryData(v.library) || Object.keys(v.library.profiles).some(id => !(v.learning === undefined ? ["family"] : validLearners(v.learning) ? v.learning.people.map(p => p.id) : []).includes(id)))) ||
     (v.personalization !== undefined && !validPersonalization(v.personalization, validLearners(v.learning) ? v.learning : undefined, validArcade(v.arcade) ? v.arcade : undefined)) ||
     (v.roundOwners !== undefined && !validRoundOwners(v.roundOwners, validLearners(v.learning) ? v.learning.people.map(p=>p.id) : ['family'])) ||
     !validLearningOwners(v.learn, v.learning) ||
@@ -388,13 +403,7 @@ export function parseSave(raw: string): Save {
     (v.skills !== undefined && !validSkills(v.skills)) ||
     (v.coached !== undefined &&
       (!Array.isArray(v.coached) || v.coached.length > learnIds.length || !unique(v.coached) || !v.coached.every((id) => learnIds.includes(id as LearnId)))) ||
-    (v.explore !== undefined &&
-      (!obj(v.explore) ||
-        !Array.isArray(v.explore.favorites) ||
-        v.explore.favorites.length > 50 ||
-        !v.explore.favorites.every((id: unknown) => typeof id === "string" && !!topicById(id)) ||
-        normalizeExploreFavorites(v.explore.favorites).length !== v.explore.favorites.length ||
-        (v.explore.progress !== undefined && !validExploreProgress(v.explore.progress))))
+    (v.explore !== undefined && !validLegacyExplore(v.explore))
   )
     throw new Error("Some saved game data is invalid. Your original has been kept.");
   const save = v as unknown as Save;

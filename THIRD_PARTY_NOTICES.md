@@ -247,3 +247,48 @@ Installed npm dependencies retain their own licenses in their packages; the exac
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+## Island Library design fixture — Book Dash
+
+`content/library/assets/busy-*.jpg` and the corresponding English edition text are
+from **A Very Busy Day** (ISBN 978-1-928497-79-0), illustrated by El Marto, written
+by Chisanga Mukuka, designed by Christian Mokuba, edited by Joey Kok, with the
+Book Dash participants in Johannesburg, 26 October 2019.
+
+Source: https://bookdash.org/books/a-very-busy-day/
+
+License: Creative Commons Attribution 4.0 International (CC BY 4.0),
+https://creativecommons.org/licenses/by/4.0/ . A local copy is in
+`content/library/CC-BY-4.0.txt`. These assets and text are licensed separately from
+the application code; the app's MIT license does not replace their license.
+The prototype displays the original spreads without cropping and repeats the
+text in a scalable pane. Per-file original URLs and checksums are in
+`content/library/book-assets.json`, and credits accompany each image in
+`content/library/items.json`. No third-party book recording is included.
+
+## Island Library 3.1 — eight draft Book Dash editions
+
+The English text, covers and illustrations under `content/library/books/` are
+Book Dash works under CC BY 4.0, separately from this application's MIT code.
+Complete creator/role attribution, exact source editions, English ISBNs and
+modification notices accompany each book in `CREDITS.txt`, `CREDITS.html` and
+`manifest.json`. Display the local Book Dash logo with the book's credits as
+requested by the publisher. The full license is bundled in
+`content/library/books/CC-BY-4.0.txt`; reuse freedoms remain under that license.
+
+- A very busy day! — ISBN 978-1-928497-79-0, `busy-day/CREDITS.txt`.
+- Sleepy Mr Sloth — ISBN 978-0-9922357-0-3, `sleepy-mr-sloth/CREDITS.txt`.
+- A Tiny Seed: The Story of Wangari Maathai — ISBN 978-0-9946519-2-1, `a-tiny-seed/CREDITS.txt`.
+- A Fish and a Gift — ISBN 978-0-9922357-8-9, `a-fish-and-a-gift/CREDITS.txt`.
+- A Beautiful Day — ISBN 978-1-928318-15-6, `a-beautiful-day/CREDITS.txt`.
+- A house for Mouse — ISBN 978-0-9922357-5-8, `a-house-for-mouse/CREDITS.txt`.
+- Little Ant’s Big Plan — ISBN 978-1-928318-22-4, `little-ants-big-plan/CREDITS.txt`.
+- The best thing ever — ISBN 978-1-928318-55-2, `the-best-thing-ever/CREDITS.txt`.
+
+Publisher policy: https://bookdash.org/book-source-files/ . Official digital
+edition sources are frozen at Book Dash repository commit
+54916310c5c06a5282e2d5d4add18d64f90e5fde, with exact per-file URLs and hashes in
+the manifests. Some reading art is resized/re-encoded as documented; no art is
+cropped. Original edition text is reflowed alongside art. No third-party book
+recording is included, and no creator endorsement or family/content approval
+is implied by this acquisition.

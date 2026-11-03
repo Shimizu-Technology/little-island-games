@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="food-web-art-title">
+  <title id="food-web-art-title">Arrows branch from a green algae symbol to a small sand-colored grazer and a blue fish, then from the grazer to the fish; arrows point from food to eater.</title>
+  <rect width="320" height="196" rx="22" fill="#E1F0F3"/>
+<g fill="none" stroke="#F4FAF2" stroke-linecap="round" opacity=".85"><path d="M38 40q11-6 22 0M150 26q9-5 18 0" stroke-width="2.5"/><circle cx="286" cy="128" r="3" stroke-width="2"/><circle cx="292" cy="114" r="4" stroke-width="2"/></g>
+<ellipse cx="160" cy="178" rx="128" ry="9" fill="#4E7E78" opacity=".15"/>
+<path d="M30 176Q46 156 90 156Q140 150 190 158Q250 154 288 174Q236 188 160 186Q78 188 30 176Z" fill="#E9D6A7"/>
+<path d="M52 172Q90 164 120 166M200 168Q236 164 266 170" fill="none" stroke="#FFF6D8" stroke-width="2.2" stroke-linecap="round"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M40 168Q36 140 58 132Q84 124 104 140Q118 156 110 170Q76 178 40 168Z" fill="#B9B4A2"/>
+<path d="M44 160Q70 168 108 162Q106 170 96 172Q70 176 44 168Z" fill="#9FAE94" stroke="none"/>
+<path d="M58 134Q48 112 56 94Q62 76 54 60Q74 72 70 96Q66 116 72 132Z" fill="#6B9C73"/>
+<path d="M72 132Q76 104 90 92Q100 80 98 66Q112 84 102 102Q92 116 88 134Z" fill="#85AA7D"/>
+<path d="M88 136Q104 120 116 116Q126 112 130 100Q136 120 118 130Q106 136 100 142Z" fill="#98B483"/>
+<path d="M62 124Q58 106 64 92M80 124Q86 104 98 88M98 132Q112 124 124 112" fill="none" stroke="#C9DDB5" stroke-width="2"/>
+<g transform="translate(196 165) scale(1.4) translate(-178 -164)" stroke-width="2.2"><path d="M150 164Q148 156 158 154H196Q206 156 206 164Z" fill="#C3BBA5"/>
+<path d="M156 156Q150 146 154 140M162 156Q160 146 166 142" fill="none" stroke-width="2.2"/>
+<circle cx="154" cy="139" r="2.4" fill="#354E49" stroke="none"/><circle cx="166" cy="141" r="2.4" fill="#354E49" stroke="none"/>
+<path d="M164 158Q160 132 182 128Q204 126 206 146Q206 160 190 160Q176 160 176 148Q176 140 186 140Q194 142 192 150" fill="#E9D6A7"/>
+<path d="M170 156Q190 162 204 152Q204 160 190 160Q174 160 170 156Z" fill="#D7C594" stroke="none"/>
+<path d="M172 136Q180 130 190 130" fill="none" stroke="#FFF6D8" stroke-width="2.4"/></g>
+<g transform="translate(258 58) scale(.85) translate(-258 -58)"><path d="M276 62Q262 42 230 44Q206 48 196 66Q206 84 230 86Q262 86 276 70L294 82Q290 66 294 52Z" fill="#6FA3C7"/>
+<path d="M200 70Q216 84 236 84Q262 82 274 70Q256 76 232 76Q214 76 200 70Z" fill="#CFE3EC" stroke="none"/>
+<path d="M226 46Q240 30 258 40Q250 44 248 48Z" fill="#5888AE"/>
+<path d="M232 84Q240 96 252 92Q248 88 248 84Z" fill="#5888AE"/>
+<path d="M226 56Q222 66 226 76" fill="none" stroke-width="2.2"/>
+<path d="M212 56Q230 50 252 54" fill="none" stroke="#B9D5E6" stroke-width="2.4"/>
+<circle cx="210" cy="61" r="3" fill="#354E49" stroke="none"/>
+<path d="M197 68l6 0" fill="none" stroke-width="2"/></g>
+</g>
+<g fill="none" stroke="#C77760" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M122 152Q138 160 150 158M143 152l8 6-9 4"/>
+<path d="M100 66Q140 26 210 50M199 41l12 9-14 5"/>
+<path d="M220 108Q226 96 234 88M224 90l11-3-1 11"/>
+</g>
+</svg>

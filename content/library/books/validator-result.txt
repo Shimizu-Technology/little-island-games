@@ -1,0 +1,3 @@
+Unmodified repository validator; isolated temporary validation root with symlinked content and a merged temporary speech map. Shared items/speech/schema/validator files were not edited.
+
+Library design validation: 8 items; rights, review, speech registration, files and internal links checked. Draft recordings remain pending.

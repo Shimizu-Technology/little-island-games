@@ -260,3 +260,14 @@ export const activityTopic: Record<WorldId, string> = {
   weather: "water-cycle",
   world: "maps",
 };
+
+/** Shared completion rule for legacy Explore and independently owned Library labs. */
+export function labComplete(world: WorldId, state: LabState): boolean {
+  switch (world) {
+    case "oceans": return state.chain.length === FOOD_CHAIN.length;
+    case "animals": return state.habitat === HABITATS.length;
+    case "world": return state.expedition === PLACES.length;
+    case "weather": return state.journey.length > 3 && state.water === "ocean";
+    case "space": return state.turn === 7;
+  }
+}

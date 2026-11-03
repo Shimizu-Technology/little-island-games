@@ -1,0 +1,362 @@
+{
+  "id": "a-house-for-mouse",
+  "revision": "54916310c5c06a5282e2d5d4add18d64f90e5fde",
+  "metadata": {
+    "title": "A House for Mouse",
+    "subtitle": "",
+    "creator": "Michele Fry, Amy Uzzell, Jennifer Jacobs",
+    "contributor": "Book Dash volunteers",
+    "subject": "Juvenile Fiction",
+    "description": "Mouse is looking for a new house. Friendly animals offer to share their homes with him. But nothing is right until he finds his own little spot, warm and cosy.",
+    "publisher": "Book Dash",
+    "date": "2014-06-28",
+    "modified": "2016-06-12",
+    "type": "Story",
+    "format": "Digital",
+    "identifier": "9c9e72e4-fe46-11e5-86aa-5e5517507c66",
+    "source": "978-0-9922357-5-8",
+    "language": "en",
+    "relation": "",
+    "coverage": "",
+    "rights": "This work is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/). This means you are free to share (copy and redistribute the material in any medium or format) and adapt it (remix, transform, and build upon the material) for any purpose, even commercially, as long as you give appropriate credit, with a link to your source, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.",
+    "translations": {
+      "xh": {
+        "title": "Indlu kaMpukwana",
+        "identifier": "9c9ef386-fe46-11e5-86aa-5e5517507c66",
+        "translator": "Nal'ibali"
+      }
+    }
+  },
+  "publisherCreators": [
+    "Michele Fry (Writer)",
+    "Jennifer Jacobs (Designer)",
+    "Amy Richards (Uzzell) (Illustrator)"
+  ],
+  "publisherIsbn": "978-0-9922357-5-8",
+  "sources": [
+    {
+      "sourceUrl": "https://bookdash.org/books/a-house-for-mouse/",
+      "resolvedUrl": "https://bookdash.org/books/a-house-for-mouse/",
+      "accessedAt": "2026-11-02T03:08:12.713991+00:00",
+      "sourceSha256": "379d50386cdb7f0ac029b2755d49a2cb9bb6d38306bc78166bbaf2e563464ce5",
+      "path": "content/library/books/a-house-for-mouse/publisher.txt",
+      "sha256": "bd530cd1f95ce0fb2a6c6c782cacd9bfdf3fe9f10cdc60f25cc804f20f15d178",
+      "bytes": 961,
+      "transformation": "Visible text extracted from publisher HTML; no script/audio imported."
+    },
+    {
+      "sourceUrl": "https://bookdash.github.io/bookdash-books/a-house-for-mouse/en/",
+      "resolvedUrl": "https://bookdash.github.io/bookdash-books/a-house-for-mouse/en/",
+      "accessedAt": "2026-11-02T03:08:13.230249+00:00",
+      "sourceSha256": "1d399418bdf5c316a6ed9a1cee233ea33e8402344572799d7fef481ef6c80a73",
+      "path": "content/library/books/a-house-for-mouse/edition.txt",
+      "sha256": "3fdffb2f1fb86072b261eb0ef767725e531349eb5ef21a287a056247a189e9e1",
+      "bytes": 1298,
+      "transformation": "Visible text extracted from publisher HTML; no script/audio imported."
+    },
+    {
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/index.md",
+      "resolvedUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/index.md",
+      "accessedAt": "2026-11-02T03:08:13.736543+00:00",
+      "sourceSha256": "3d2da1444a3fa0f5e8865a7ee7b35cfa88831c0e92eba121be99f87a5346758e",
+      "path": "content/library/books/a-house-for-mouse/edition.md",
+      "sha256": "3d2da1444a3fa0f5e8865a7ee7b35cfa88831c0e92eba121be99f87a5346758e",
+      "bytes": 1622,
+      "transformation": "None"
+    }
+  ],
+  "pages": [
+    {
+      "alt": "Front cover of A House for Mouse.",
+      "text": "A House for Mouse",
+      "file": "cover.jpg",
+      "path": "content/library/books/a-house-for-mouse/page-00.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/images/cover.jpg",
+      "accessedAt": "2026-11-02T03:08:14.407531+00:00",
+      "sourceSha256": "25d41995ea53d95e67d70fe812299fbecf45fb7336ce7118248cee9ddc4f69b6",
+      "sourceBytes": 119137,
+      "sha256": "c80cfe7a494f8ded22a35e0554b7dd075b39faad62388a07e29ec701e14a04b2",
+      "bytes": 96556,
+      "sourceDimensions": [
+        788,
+        788
+      ],
+      "dimensions": [
+        788,
+        788
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mouse looks at a yellow house in the distance.",
+      "text": "Mouse was looking for a new house.",
+      "file": "01.jpg",
+      "path": "content/library/books/a-house-for-mouse/page-01.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/images/01.jpg",
+      "accessedAt": "2026-11-02T03:08:14.302492+00:00",
+      "sourceSha256": "ca9032b4fa5a525aeb3b4404650daa869c13b5c67c7c4b613af29dd9e98f2492",
+      "sourceBytes": 33650,
+      "sha256": "557ba1d70e2d14b38e48c933eb9774aefbc8f79a4f24ff415b5f72a711455c2e",
+      "bytes": 31874,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "The front door is ajar. Mouse looks inside.",
+      "text": "This looks like a nice house.",
+      "file": "02.jpg",
+      "path": "content/library/books/a-house-for-mouse/page-02.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/images/02.jpg",
+      "accessedAt": "2026-11-02T03:08:14.342874+00:00",
+      "sourceSha256": "5eb1047a0d2db0b371048bb3138552c8bde2dbfeaadcc287843b502a34cdb4da",
+      "sourceBytes": 52363,
+      "sha256": "a5111fbf1edfe563c618cedcf54f016344797543a3aa8f5e7ae2573dab82a2e4",
+      "bytes": 55700,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "A black puppy with a long tongue invites Mouse to join him.",
+      "text": "“You can come and sleep with me,” said Puppy. “Thank you,” said Mouse.",
+      "file": "03.jpg",
+      "path": "content/library/books/a-house-for-mouse/page-03.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/images/03.jpg",
+      "accessedAt": "2026-11-02T03:08:14.331684+00:00",
+      "sourceSha256": "5c13adf7f7faa2b1bb565e11ccec3a1fa2980091081eec00beff9e2a1410df8f",
+      "sourceBytes": 44013,
+      "sha256": "781d00c5ff96ea0a548a5345293f1c337a8a76438f346d49d9cef16a8859e6e6",
+      "bytes": 44548,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed.",
+      "originalAlt": "A black puppy with a long tongue invites Mouse to join him. "
+    },
+    {
+      "alt": "Mouse dreams of being in mud.",
+      "text": "That night, Mouse’s dreams were bouncy and muddy.",
+      "file": "04.jpg",
+      "path": "content/library/books/a-house-for-mouse/page-04.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/images/04.jpg",
+      "accessedAt": "2026-11-02T03:08:14.946136+00:00",
+      "sourceSha256": "28fdb2fb5bbd41709add5869aba2469058faada9cf65a1f37dd28999eb30cd06",
+      "sourceBytes": 80960,
+      "sha256": "112d30caed28b5e1467380a0ba754c50b7e6ec864af3769846dca8a661732b7e",
+      "bytes": 85392,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed.",
+      "originalAlt": "Mouse sleeps in a pool of mud."
+    },
+    {
+      "alt": "A colourful parrot on a perch invites Mouse to join him.",
+      "text": "“You can come and sleep with me,” said Parrot. “Thank you,” said Mouse.",
+      "file": "05.jpg",
+      "path": "content/library/books/a-house-for-mouse/page-05.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/images/05.jpg",
+      "accessedAt": "2026-11-02T03:08:14.977089+00:00",
+      "sourceSha256": "0286d03c089464e90c46e44ed1e7fd24a57b162ce29438b340750657c083b2f3",
+      "sourceBytes": 38815,
+      "sha256": "8a5954f0a77058d7f3b47c192223c69bf67eef40fa5d824ca37972469537245c",
+      "bytes": 36863,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mouse dreams of a wild forest.",
+      "text": "That night, Mouse’s dreams were noisy and wild.",
+      "file": "06.jpg",
+      "path": "content/library/books/a-house-for-mouse/page-06.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/images/06.jpg",
+      "accessedAt": "2026-11-02T03:08:14.951945+00:00",
+      "sourceSha256": "c96f36aac976db2e2439cc9f71a89e8391cf276a2634fbaaf3b06c6520c71e7e",
+      "sourceBytes": 78182,
+      "sha256": "f038310f725cbf1529f60cbeffa79e28fbceca0614de3bce9604a035fd1f14cd",
+      "bytes": 78147,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed.",
+      "originalAlt": "Mouse sleeps in a wild forest."
+    },
+    {
+      "alt": "A goldfish swimming in a tank invites Mouse to join him.",
+      "text": "“You can come and sleep with me,” said Fish. “Thank you,” said Mouse.",
+      "file": "07.jpg",
+      "path": "content/library/books/a-house-for-mouse/page-07.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/images/07.jpg",
+      "accessedAt": "2026-11-02T03:08:14.993579+00:00",
+      "sourceSha256": "4a50f432f1e0fb6cd6547b0a8738862be20e73059eed2bcd6937a1c8e6a630cd",
+      "sourceBytes": 34681,
+      "sha256": "3d49ef0c2cb51b3460cfee41eabc8f83cf6616fc69d670b59c407d0dc95188a2",
+      "bytes": 32512,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mouse dreams of being underwater among fish and seaweed.",
+      "text": "That night, Mouse’s dreams were cold and wet.",
+      "file": "08.jpg",
+      "path": "content/library/books/a-house-for-mouse/page-08.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/images/08.jpg",
+      "accessedAt": "2026-11-02T03:08:15.531975+00:00",
+      "sourceSha256": "5088073099b7a15b4634c84099f1f216665e3a0d768f3edab6807f9c0da83b59",
+      "sourceBytes": 41087,
+      "sha256": "9e83ed251f69c9be7b5c1ca80c3b5809c35d165c5af23d6daa089eba3f0b23c6",
+      "bytes": 41053,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed.",
+      "originalAlt": "Mouse sleeps underwater surrounded by fish and seaweed."
+    },
+    {
+      "alt": "Mouse dashes past the skirting boards.",
+      "text": "Mouse needed somewhere warm and dry.",
+      "file": "09.jpg",
+      "path": "content/library/books/a-house-for-mouse/page-09.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/images/09.jpg",
+      "accessedAt": "2026-11-02T03:08:15.677941+00:00",
+      "sourceSha256": "d3efa8883713e7ddb184e779025b1ffed89515fc0e2d6769db43f57a5ad92e7e",
+      "sourceBytes": 51711,
+      "sha256": "6bbbb11a2c6da29d28bbab061a266f014f098c4497202755b47edda2b89d763e",
+      "bytes": 49377,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mouse sits on a ledge in front of a lit fireplace.",
+      "text": "",
+      "file": "10.jpg",
+      "path": "content/library/books/a-house-for-mouse/page-10.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/images/10.jpg",
+      "accessedAt": "2026-11-02T03:08:15.645882+00:00",
+      "sourceSha256": "cb11b2d325b75a9ac3ff83548121bd738c90cc7cc677434f6329e617a263e2a7",
+      "sourceBytes": 73262,
+      "sha256": "23eb43643414147e36ac9b207bf839a9c007e9a73b2f433f8c22b458f78ef45e",
+      "bytes": 83604,
+      "sourceDimensions": [
+        1134,
+        567
+      ],
+      "dimensions": [
+        1134,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed.",
+      "originalAlt": "Mouse perches on a couch in front of the fireplace."
+    },
+    {
+      "alt": "A beautiful bookshelf.",
+      "text": "Mouse found a bookshelf nearby.",
+      "file": "11.jpg",
+      "path": "content/library/books/a-house-for-mouse/page-11.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/images/11.jpg",
+      "accessedAt": "2026-11-02T03:08:15.839376+00:00",
+      "sourceSha256": "7010b9cda0a7541e5936576e7b7f72fc38d4d257bc2e145cab63c97da7f5f781",
+      "sourceBytes": 75511,
+      "sha256": "71b5c4451669a523f36f8cc298b372d122f27f566958893e7eb9ba05986cebcf",
+      "bytes": 77236,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    },
+    {
+      "alt": "Mouse sleeps peacefully.",
+      "text": "That night, Mouse had warm and cosy dreams.",
+      "file": "12.jpg",
+      "path": "content/library/books/a-house-for-mouse/page-12.jpg",
+      "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/a-house-for-mouse/en/images/12.jpg",
+      "accessedAt": "2026-11-02T03:08:16.250117+00:00",
+      "sourceSha256": "f9136bfd4cce59049fc28f29d7938733dad9eaae3286ba8709a87abedd57ce63",
+      "sourceBytes": 58247,
+      "sha256": "a85b37c5b0d6fb1bc682ba80a56978bfa2cdf653f80f4c1384e1a65631efbf3d",
+      "bytes": 57475,
+      "sourceDimensions": [
+        567,
+        567
+      ],
+      "dimensions": [
+        567,
+        567
+      ],
+      "transformation": "Publisher digital-edition illustration; RGB JPEG recompression quality 88, maximum 1600 px; no cropping, no text added or removed."
+    }
+  ],
+  "rightsEvidence": [
+    "edition.txt: book rights colophon and creator credits",
+    "edition-metadata.json: exact English ISBN and CC BY 4.0 notice",
+    "publisher.txt: exact English title/ISBN and role credits",
+    "../publisher-source-policy.txt: all book source files/illustration reuse",
+    "CREDITS.txt: retained attribution and changes"
+  ],
+  "review": {
+    "status": "in-review",
+    "reviewer": "Codex independent factual reviewer",
+    "date": "2026-11-02",
+    "factualReviewer": "independent factual reviewer",
+    "scope": "Independent factual and editorial review completed. Frozen manuscript re-fetched byte-for-byte; all pages and imported art reviewed. Underwater and forest scenes are explicitly dreams in the text; animals’ invitations are fantasy. Fireplace and dream imitation remain family flags. Family/cultural judgment by the designated family reviewer, pronunciation, recording and audible review remain pending. No shipping approval."
+  }
+}

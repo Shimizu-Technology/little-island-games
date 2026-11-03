@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="ramp-art-title">
+  <title id="ramp-art-title">A long gentle ramp on the left and a short steep ramp on the right both meet the top of one green platform; a coral block rests on the gentle ramp.</title>
+  <rect width="320" height="196" rx="22" fill="#FFF9E6"/>
+  <path d="M16 162Q160 150 304 162Q308 176 160 176Q12 176 16 162Z" fill="#D7C594"/>
+  <path d="M60 170h22M150 172h30M250 171h18" fill="none" stroke="#C3B07E" stroke-width="2.2" stroke-linecap="round"/>
+  <g fill="none" stroke="#85AA7D" stroke-width="2.2" stroke-linecap="round"><path d="M18 162q-2-8 2-12M23 162q1-8 7-10M300 162q2-8-2-12M295 162q-1-8-7-10M150 160q0-6 4-8"/></g>
+  <ellipse cx="160" cy="163" rx="140" ry="4" fill="#4E7E78" opacity=".14"/>
+  <g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M200 58H240V160H200Z" fill="#6B9C73"/>
+    <path d="M200 84H240M200 110H240M200 136H240" fill="none" stroke="#476E59" stroke-width="2.2"/>
+    <path d="M229 63V157" fill="none" stroke="#5E8A66" stroke-width="6" stroke-linecap="butt"/>
+    <path d="M206 70v8M206 96v8" fill="none" stroke="#98B483" stroke-width="2.2"/>
+    <path d="M196 58H244" fill="none" stroke-width="7"/>
+    <path d="M197 58H243" fill="none" stroke="#98B483" stroke-width="3"/>
+    <path d="M20 160L200 58V160Z" fill="#E2BC86"/>
+    <path d="M74.0 160L200 80V160Z" fill="#D2AB74" stroke="none"/>
+    <path d="M110.0 160L200 103.9M155.0 160L200 131.4" fill="none" stroke="#B58F5E" stroke-width="2.2"/>
+    <path d="M20 160L200 58" fill="none" stroke-width="7"/>
+    <path d="M21 160L200 58.5" fill="none" stroke="#A48C5C" stroke-width="3"/>
+    <path d="M240 58L284 160H240Z" fill="#E2BC86"/>
+    <path d="M240 86L272 160H240Z" fill="#D2AB74" stroke="none"/>
+    <path d="M240 108L262 160" fill="none" stroke="#B58F5E" stroke-width="2.2"/>
+    <path d="M240 58L284 160" fill="none" stroke-width="7"/>
+    <path d="M240.5 58.5L283.5 159.5" fill="none" stroke="#A48C5C" stroke-width="3"/>
+    <path d="M20 160L200 58V160ZM240 58L284 160H240Z" fill="none"/>
+    <g transform="translate(98 115.8) rotate(-29.5)">
+      <rect x="-17" y="-32" width="34" height="28" rx="3" fill="#E09A7E"/>
+      <path d="M-16 -12H16V-5H-16Z" fill="#D38F78" stroke="none"/>
+      <rect x="-17" y="-32" width="34" height="28" rx="3" fill="none"/>
+      <path d="M-17 -18H17" fill="none" stroke="#C77760" stroke-width="2.2"/>
+      <path d="M-11 -26h9" fill="none" stroke="#F6C9B3" stroke-width="2.4"/>
+    </g>
+  </g>
+  <g fill="#F0C86D"><path d="M260 30l2 5 5 2-5 2-2 5-2-5-5-2 5-2Z"/><path d="M110 50l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5Z"/></g>
+</svg>

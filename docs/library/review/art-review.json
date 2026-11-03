@@ -1,0 +1,1262 @@
+{
+  "turtle-breath": {
+    "image": {
+      "path": "content/library/art/legacy-turtles.svg",
+      "alt": "A green sea turtle seen from above has a divided oval shell, a rounded head and four thin flippers.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "42cb011cc73d1a284fbdd41bae857719dcd6455beebe0a7e7d2642b9d29681cf"
+    }
+  },
+  "sun": {
+    "image": {
+      "path": "content/library/art/legacy-sun.svg",
+      "alt": "A round golden Sun with eight short teal rays on a pale purple background.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "9544bf7b7d9b5676de1fc07836bccecd9969fdf22e08eb29d4dc2065ecaf5021"
+    }
+  },
+  "moon": {
+    "image": {
+      "path": "content/library/art/legacy-moon.svg",
+      "alt": "A round pale Moon has two visible crater marks and a shaded purple right half.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "d56a42ebf978448790dce0c718136aedbbf59eaf1169e8810f81536aed1161fc"
+    }
+  },
+  "day-night": {
+    "image": {
+      "path": "content/library/art/review-day-night.svg",
+      "alt": "Sunlight reaches one half of a blue Earth while the other half is shaded; a curved arrow shows Earth turning.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "6ce673a4d94a1f1200cd577a932e5b2133bed8a0ee638050be94022460f0fd68"
+    }
+  },
+  "planets": {
+    "image": {
+      "path": "content/library/art/review-planets.svg",
+      "alt": "Eight differently sized planets sit on three schematic orbital paths around a small golden Sun; sizes and spacing are not to scale.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "8efd368aa04fb90652a281cc0fa5b444846b992d3f81c3963202bd941ee2da79"
+    }
+  },
+  "mars": {
+    "image": {
+      "path": "content/library/art/legacy-mars.svg",
+      "alt": "A coral-colored Mars disc has two darker surface marks.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "7548c558e5a700221379dd8a04fc14617e6dd9e20aea490ddeba3cd84088b108"
+    }
+  },
+  "saturn": {
+    "image": {
+      "path": "content/library/art/legacy-saturn.svg",
+      "alt": "A sand-colored Saturn disc is crossed by a broad tilted teal ring.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "c7d4899e672d2feaffdfb8366186ac9a84894e3786fcd5b2a40130051706a240"
+    }
+  },
+  "gravity": {
+    "image": {
+      "path": "content/library/art/review-gravity.svg",
+      "alt": "A coral-colored apple falls from a branch toward the ground, with two faded position circles and a downward arrow.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "954fb9d7230ac1703d046d98950175e07efa4401da961ef82df3ed6b5139d91e"
+    }
+  },
+  "stars": {
+    "image": {
+      "path": "content/library/art/review-stars.svg",
+      "alt": "Four five-point star symbols of different sizes are colored blue, cream, gold and coral against a pale purple sky; shapes and sizes are symbolic.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "683334fede96c3ccd5bf0ec504a76fd2570f16feb08cd578c8a0a8f3ec71b182"
+    }
+  },
+  "rockets": {
+    "image": {
+      "path": "content/library/art/legacy-rockets.svg",
+      "alt": "A cream rocket with coral fins, a blue round window and golden exhaust tilts upward to the right.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "5a460d8ff9e5b6a059745f9e992ae1c2216c127ca0c8237c69809e4230a68183"
+    }
+  },
+  "asteroids": {
+    "image": {
+      "path": "content/library/art/legacy-asteroids.svg",
+      "alt": "An irregular gray asteroid has two darker round marks and three short surrounding strokes.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "59bafc2f05813d78bd5826eecc333d5f798121d0027cda94d075b8c38eef8763"
+    }
+  },
+  "salty": {
+    "image": {
+      "path": "content/library/art/review-salty.svg",
+      "alt": "Mineral-colored dots travel from rocks along a stream into blue seawater, beside an inset of enlarged salt-crystal symbols.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "7e1aa15614653a71c3fc290a1a061c3f9d4af1a884c380124b982a97cdf56b36"
+    }
+  },
+  "tides": {
+    "image": {
+      "path": "content/library/art/review-tides.svg",
+      "alt": "Two views of the same sloping shore and striped rock show a low waterline on the left and a high waterline on the right.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "3a991184f93ae90670e6914a67be361b584039127dfc86d709d984c69d1400fd"
+    }
+  },
+  "waves": {
+    "image": {
+      "path": "content/library/art/review-waves.svg",
+      "alt": "A large blue breaking wave curls over a foamy crest while three wind arrows point across the water.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "da1fbfdc0cc5b66f981b38eb254330c506dd9b9690f751864efc01641b85f7fd"
+    }
+  },
+  "coral": {
+    "image": {
+      "path": "content/library/art/legacy-coral.svg",
+      "alt": "Three branching coral forms rise from a small sandy mound.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "cccc8e864e6e19f83071a55b6d5bb49cdaf1bf2e127a27fa98b456fc2b791b6b"
+    }
+  },
+  "plankton": {
+    "image": {
+      "path": "content/library/art/legacy-plankton.svg",
+      "alt": "Three small green and blue oval plankton symbols have short projecting strokes and dark centers.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "e133902e0b6b53255b9860a42045e2ab219042ef0eef791c156eb8189469a1c2"
+    }
+  },
+  "seagrass": {
+    "image": {
+      "path": "content/library/art/legacy-seagrass.svg",
+      "alt": "Three long curved green seagrass blades rise from a sandy mound.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "90241b08ff3c5ae4fe4e34e46850eaa80422716e50f0e49220e5232f8a581783"
+    }
+  },
+  "deep-ocean": {
+    "image": {
+      "path": "content/library/art/legacy-deep-ocean.svg",
+      "alt": "A golden submersible has two blue round windows, a raised periscope-like tube and a small tail fin.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "d0c271941a09a2d5a2fd3b14ada3bb366be3f1d068342368a5010e12c4ee2dbe"
+    }
+  },
+  "octopus": {
+    "image": {
+      "path": "content/library/art/legacy-octopus.svg",
+      "alt": "A purple octopus has a rounded head, two eyes and eight downward or curling arms.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "0373225e405550e400faea5213a7372123a165ad097c235bb9af2595313a41ad"
+    }
+  },
+  "food-web": {
+    "image": {
+      "path": "content/library/art/review-food-web.svg",
+      "alt": "Arrows branch from a green algae symbol to a small sand-colored grazer and a blue fish, then from the grazer to the fish; arrows point from food to eater.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "e82097933fc71f4903f06a5788c631a61e22dae36b7d8911b90fc98b6c228258"
+    }
+  },
+  "bats": {
+    "image": {
+      "path": "content/library/art/legacy-bats.svg",
+      "alt": "A purple bat spreads scalloped wings beneath two pointed ears.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "33c6929bf3e4ea9ad2efe1e9101dea5bf9080eeaff61a7fd6abfbdfbab5eced0"
+    }
+  },
+  "butterflies": {
+    "image": {
+      "path": "content/library/art/legacy-butterflies.svg",
+      "alt": "A pink butterfly has four rounded wing lobes, two gold wing spots and two antennae.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "4625f049024ed0adfee644a5b6c3db8b647a8f3c5d2ea02a910c19666b40e8c8"
+    }
+  },
+  "frogs": {
+    "image": {
+      "path": "content/library/art/review-frogs.svg",
+      "alt": "A legless tadpole, a tadpole growing hind legs and a small adult frog form a three-stage sequence joined by arrows.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "d1627fa81190026fe255fd628cc36d068de5e84cc72c3a093c2e1521de72fc0d"
+    }
+  },
+  "bees": {
+    "image": {
+      "path": "content/library/art/legacy-bees.svg",
+      "alt": "A golden bee has three dark body stripes, two pale wings and two antennae.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "f2e208a039e66c121d9dc596c0d3e338909bd66155e7a225c6b64a72ec9ffe4e"
+    }
+  },
+  "camouflage": {
+    "image": {
+      "path": "content/library/art/review-camouflage.svg",
+      "alt": "A leaf-shaped green butterfly rests with folded wings among three similarly shaped leaves on a branch.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "0ee5c3fafb44a2050ee37698b634031d5a883dfe008caef9e0a848542f1c280e"
+    }
+  },
+  "dolphins": {
+    "image": {
+      "path": "content/library/art/legacy-dolphins.svg",
+      "alt": "A blue-gray dolphin has a long beak, a dorsal fin, a pale belly stripe, one flipper and tail flukes.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "aa91ac1a37d680751b75c21baa163c56beeceffa6ed45049a2a02953a9ccf71f"
+    }
+  },
+  "habitats": {
+    "image": {
+      "path": "content/library/art/review-habitats.svg",
+      "alt": "A pond cross-section includes water, reeds, a leafy land plant and a small frog sheltering under a rock overhang.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "b577619cd29a5af0079d0b43361995f600720c6187ebecf1453e86bc67a160f6"
+    }
+  },
+  "migration": {
+    "image": {
+      "path": "content/library/art/review-migration.svg",
+      "alt": "Three flying birds follow a long dotted route between two separated patches of land.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "699650e9baf105556f7a5954ed92c654964e6293e2c56e1f515b1296f82710ca"
+    }
+  },
+  "insect-flight": {
+    "image": {
+      "path": "content/library/art/review-insect-flight.svg",
+      "alt": "A dragonfly has four long blue wings, a segmented body, six bent legs and curved wing-motion marks.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "bc4c50e2845c9f20c65deda0650dcf581f3f77af91fb817504b334f3619ff959"
+    }
+  },
+  "bird-feathers": {
+    "image": {
+      "path": "content/library/art/review-bird-feathers.svg",
+      "alt": "A blue feather has a long bare quill, a central shaft and many fine branching barbs.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG drawn during final rendered review; long quill and branching barbs replace a leaf-like outline."
+      },
+      "sha256": "e18830190ce167256c579f0f3a48a8d7f4ae5ac8312c7da9e3e8486206085546"
+    }
+  },
+  "blue-sky": {
+    "image": {
+      "path": "content/library/art/review-blue-sky.svg",
+      "alt": "A blue sky dome sits above green ground; a golden incoming light arrow meets blue arrows scattering in several directions.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "d9fe7277eff02778f03c0eb24f9b9a5243d941c696282cd79538e97925dca794"
+    }
+  },
+  "clouds": {
+    "image": {
+      "path": "content/library/art/legacy-clouds.svg",
+      "alt": "One rounded white cloud with a teal outline sits against a pale sand-colored background.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "0d425ba3b25e37c269ec17b3334cfb305989be78c80d4b6e360070071a53d21d"
+    }
+  },
+  "rain": {
+    "image": {
+      "path": "content/library/art/review-rain.svg",
+      "alt": "Rounded drops gather inside a broad blue-gray rain cloud, and three large drops fall toward a puddle.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "55d6ca059e60e852e5b6cae074175ee146277806c9760b2f150766a63067c4e7"
+    }
+  },
+  "rainbows": {
+    "image": {
+      "path": "content/library/art/legacy-rainbows.svg",
+      "alt": "Four coral, gold, green and blue rainbow arcs appear below a white cloud.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "5f8427ae18159c1c2412ee00f460af9789310dfe20a9bbc106d5eb2cee46f818"
+    }
+  },
+  "wind": {
+    "image": {
+      "path": "content/library/art/review-wind.svg",
+      "alt": "A striped coral-and-cream windsock extends from a tall pole as three air-flow arrows point to the right.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "6892728f4d7537fe9f7d04a386db85f4784f319cf92c141564e52b1214afa4f6"
+    }
+  },
+  "lightning": {
+    "image": {
+      "path": "content/library/art/review-lightning.svg",
+      "alt": "A large golden lightning bolt reaches from a small dark cloud toward distant ground; widening curved lines symbolize thunder.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "fc9c9351489ed80a66e8298106479eba6861be2ea20e1a8af42fb97c0c39acc4"
+    }
+  },
+  "typhoons": {
+    "image": {
+      "path": "content/library/art/review-typhoons.svg",
+      "alt": "Broad cream storm bands spiral around a calm circular eye above a blue ocean.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "7ebea642e11f397d57ffc47f89702ee1251679bf4565821b878946b50dc1f7f5"
+    }
+  },
+  "water-cycle": {
+    "image": {
+      "path": "content/library/art/review-water-cycle.svg",
+      "alt": "Arrows trace a loop from blue surface water upward to a cloud, down as rain over a mountain and back through a river.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "b41ec33cf6b69203285a06111e50259c986d32f8b4a32d6ede0f5d28ff037357"
+    }
+  },
+  "seasons": {
+    "image": {
+      "path": "content/library/art/review-seasons.svg",
+      "alt": "Four small Earths travel on an oval path around a golden Sun; all four tilted axes point in the same direction, in a schematic seasons model.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "27aad33428bc0b826a81da51fc67ccddb6c6ab6474c5bec3b35c7def64d634a8"
+    }
+  },
+  "forecast": {
+    "image": {
+      "path": "content/library/art/review-forecast.svg",
+      "alt": "A weather station has a cup anemometer, a marked thermometer and a rain gauge with a blue water level.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "c993d682c74ac530621e1814a07f8107b08d1294fc320c71fa83f1aa1807921e"
+    }
+  },
+  "guam": {
+    "image": {
+      "path": "content/library/art/review-guam.svg",
+      "alt": "A simplified north-up outline of Guam, with its broad northeast end, narrow middle and rounded southwest end, is surrounded by blue water; a small north arrow sits beside it.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "617b52c8bee71f368e7a13d0093e5fe1fa1dcc723024fd33ade55e4fc1248e0d"
+    }
+  },
+  "islands": {
+    "image": {
+      "path": "content/library/art/review-islands.svg",
+      "alt": "A green island seen from above has an unbroken sandy shore with blue water on every side.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "5f9ef5ef3342fd5dc6432475f4b827e32c9fac40158f2a2841f8f80053554e91"
+    }
+  },
+  "reef": {
+    "image": {
+      "path": "content/library/art/review-reef.svg",
+      "alt": "A reef habitat contains branching coral, a rounded brain coral, a plate coral and two small fish over a sandy bottom.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "883104fd251606b7161383c3f410a219d1128739c5e2b411ff6b0fc45a5e12b8"
+    }
+  },
+  "trench": {
+    "image": {
+      "path": "content/library/art/review-trench.svg",
+      "alt": "A cutaway shows deep blue water above a steep, narrow V-shaped trench in a sand-colored seafloor; a vertical arrow marks its depth.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "a0c9d5b1360547f63e0dc5fdfbacf355a66331e8ec963efc0333f435ecefb0f6"
+    }
+  },
+  "mountains": {
+    "image": {
+      "path": "content/library/art/legacy-mountains.svg",
+      "alt": "Two joined green mountain peaks have one pale pointed summit patch.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "20222d1688a741bb4fee57b98a5133a4a31a9ce685b1ca0e72deec84aa00e446"
+    }
+  },
+  "rivers": {
+    "image": {
+      "path": "content/library/art/review-rivers.svg",
+      "alt": "A blue river winds through green land from distant hills to the sea, with two small tributaries joining its bends.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "57516f471e69eacdd8ec3d3dfbe1d354fd36937a48a016969f9b2c6e35e02d48"
+    }
+  },
+  "continents": {
+    "image": {
+      "path": "content/library/art/review-continents.svg",
+      "alt": "Seven separated simplified land groups appear on a flat blue oval world map, including a long Antarctic strip; boundaries and coastlines are schematic.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "2105f501b2980ee1afdfaaa3bcbc9bae56fbfc25105f16a4f77d3cbb2a356877"
+    }
+  },
+  "maps": {
+    "image": {
+      "path": "content/library/art/review-maps.svg",
+      "alt": "A folded cream map shows a blue river, a dotted route from a circular starting point to a coral destination and a small north arrow.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "60a64fe51443ab59569768093eed059848b8a2d8c988c2455c7f8ffb74a00ec1"
+    }
+  },
+  "directions": {
+    "image": {
+      "path": "content/library/art/legacy-directions.svg",
+      "alt": "A cream circular compass symbol has a long coral needle and four outer tick marks; it is not a working compass.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+      },
+      "sha256": "b5a79b2dc0f0b4f7bf31c00611db2612234ab40d552ffccfc2ad2c05866acbf1"
+    }
+  },
+  "volcanoes": {
+    "image": {
+      "path": "content/library/art/review-volcanoes.svg",
+      "alt": "A single volcano is cut open to show a coral magma chamber and a branching conduit leading to its summit crater; pale steam rises above it.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "118d054310072839fb6cf769148edf8d8fa33c51268a31c5a7def6c665306b7b"
+    }
+  },
+  "fish-gills": {
+    "image": {
+      "path": "content/library/art/review-fish-gills.svg",
+      "alt": "Water arrows enter a blue fish’s open mouth and leave behind three curved gill marks; the flow is a simplified diagram.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "15483caa09edb2da27841c888baf9a1067ddd79937aa035c5329b2cf4a67a2b8"
+    }
+  },
+  "crab-shells": {
+    "image": {
+      "path": "content/library/art/review-crab-shells.svg",
+      "alt": "A coral crab with jointed legs and raised claws stands beside a pale empty shell, whose lifted top exposes an open interior.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "077c12897c7f9b2fb1691f8bbd1a2e35b759aedea30b6cf9893f0a09f15ee7b7"
+    }
+  },
+  "parrotfish": {
+    "image": {
+      "path": "content/library/art/review-parrotfish.svg",
+      "alt": "A blue-and-green parrotfish with a broad pale beak bites an algae-covered reef surface; a separate pile of pale sand lies below.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "1d90aee33df56d465a67e1b8286afd302640d9fe573222e446ad6b89d0db0e4a"
+    }
+  },
+  "tide-pool": {
+    "image": {
+      "path": "content/library/art/review-tide-pool.svg",
+      "alt": "A blue pool enclosed by gray rocks contains a small fish, a spiral-shelled snail and green seaweed; no species is identified.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "eca0cc69d39776af1d2dbc024df007026122bf20f4d66ceb037b764653a69e10"
+    }
+  },
+  "beach-sand": {
+    "image": {
+      "path": "content/library/art/review-beach-sand.svg",
+      "alt": "A gray angular rock and a grooved coral-colored shell sit above a sandy mound containing three enlarged dark grain dots.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "a4ba4e2b87aa6119a8b1bf537c34bd39f7793dd5b32b02f06aea31f09281270c"
+    }
+  },
+  "mangrove-roots": {
+    "image": {
+      "path": "content/library/art/review-mangrove-roots.svg",
+      "alt": "A green coastal tree has three spreading prop-root lines reaching into a rectangular strip of blue water.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "3cbf08634be576195cd7a39ee574e49e1f27a1fb52701201d23729d63df2f35e"
+    }
+  },
+  "jellyfish-move": {
+    "image": {
+      "path": "content/library/art/review-jellyfish-move.svg",
+      "alt": "A coral-colored jellyfish has a domed, scalloped bell and three long curling tentacles.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "822171d4b561246d08fb0a2158ac3d701495155a6117fc64110974791458e669"
+    }
+  },
+  "whale-song": {
+    "image": {
+      "path": "content/library/art/review-whale-song.svg",
+      "alt": "A blue humpback-shaped whale has a long pectoral flipper, throat grooves, a two-lobed tail and curved sound symbols in the water.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "5a9ed1980a53adb970184a3834d9cf6e1134a91efc35bacd0d2570acef5db349"
+    }
+  },
+  "guam-made": {
+    "image": {
+      "path": "content/library/art/review-guam-made.svg",
+      "alt": "A schematic island cutaway has a coral-colored rock section beside a sand-colored limestone section above blue water; not to scale.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "77da4d083df0f315289d1ba3cdd79e80c9d2bda534c40d3bd2faaabe1ed644cc"
+    }
+  },
+  "limestone": {
+    "image": {
+      "path": "content/library/art/review-limestone.svg",
+      "alt": "An irregular pale limestone block contains two small pores, a fan-shaped shell symbol and a dark angular crack.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "ba964259c1be963e0c761e92b9f7dd03cbb0a3c9a97f27aa152fa18bca066a56"
+    }
+  },
+  "guam-rail": {
+    "image": {
+      "path": "content/library/art/review-guam-rail.svg",
+      "alt": "A brown rail with a long pointed bill, barred flank, short tail and two strong legs stands between broad green leaves.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "85e348d958b1438220c2830ccd55785c9789e0b859d821cc13b6770cc6686ff3"
+    }
+  },
+  "limestone-forest": {
+    "image": {
+      "path": "content/library/art/review-limestone-forest.svg",
+      "alt": "Three round green tree crowns at different heights stand above a pale limestone strip crossed by dark cracks.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "0aeb7ad60555cd15c6e2af86f10c1302ef3ae08934a48bda389bcb21c1a51bd2"
+    }
+  },
+  "drinking-water": {
+    "image": {
+      "path": "content/library/art/review-drinking-water.svg",
+      "alt": "Two downward arrows enter a pale ground cross-section above a light-blue lens and darker blue water; a well line reaches the lens beneath a small cloud.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "997d6384c6f3f0b1612659940421693144b5a3af18f2ad6103d03ad4c10150c1"
+    }
+  },
+  "village": {
+    "image": {
+      "path": "content/library/art/review-village.svg",
+      "alt": "Three sand-colored homes with coral roofs stand beside a curved shared path.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "658794de3882d84524b69abca3a3a30d4a8af5c2837c2b62bbd80a72ca45ebf6"
+    }
+  },
+  "native-trees": {
+    "image": {
+      "path": "content/library/art/review-native-trees.svg",
+      "alt": "A mature broad-canopied tree shelters a small perched bird, with exposed branching roots and a two-leaf seedling nearby.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "14e233ee6a20f3067177600f02d4a57e91074ae9e8821d10db05699edbbe4e4c"
+    }
+  },
+  "family-walk": {
+    "image": {
+      "path": "content/library/art/review-family-walk.svg",
+      "alt": "An adult and child stand on a broad curving path, pointing toward leaves on a nearby shrub without touching them.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "bb59ccb7b402ee7a4523ad5c0ed0d41aaad94d944fdeb5bac9ab5e2485e52014"
+    }
+  },
+  "distant-stars": {
+    "image": {
+      "path": "content/library/art/review-distant-stars.svg",
+      "alt": "An eye on the left looks along widening sight lines toward two equal-sized star discs drawn at different distances; a small apparent-size inset shows the farther star as a dot.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "dcc38b22efe669f3e594386162549292a0f68e13a782978de1179c4172b72fc9"
+    }
+  },
+  "shadow": {
+    "image": {
+      "path": "content/library/art/review-shadow.svg",
+      "alt": "A small flashlight shines toward a coral block; the block casts a long dark shadow across a cream sheet of paper.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "1218ddcda8d95eff9a5f4feb707cd99408d8e6fa9a37a1e34d6f4e62c63e3462"
+    }
+  },
+  "constellation": {
+    "image": {
+      "path": "content/library/art/review-constellation.svg",
+      "alt": "Six round golden stars are joined by dashed imaginary lines in an invented bent pattern against a pale purple sky.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "2637c4c00353a814c87d9b29482fec18f140a71ab51bcf461b88254b9edcbcf0"
+    }
+  },
+  "night-view": {
+    "image": {
+      "path": "content/library/art/review-night-view.svg",
+      "alt": "Two views of one house show a pale daytime sky with faint stars on the left and a dark nighttime sky with bright stars on the right.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "27549a99879d0f71f0d22ab28eaa51e42004f0964aae3605c3814d1f1b43ab9d"
+    }
+  },
+  "telescope": {
+    "image": {
+      "path": "content/library/art/review-telescope.svg",
+      "alt": "A green telescope with a wide blue front lens points upward toward a small golden star; a narrow eyepiece sits at the low end above a three-legged stand.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "95af01e15075452380c5a6b01942cb5d5b130136c0c26f3462730532b206ab51"
+    }
+  },
+  "milky-way": {
+    "image": {
+      "path": "content/library/art/review-milky-way.svg",
+      "alt": "A symbolic spiral galaxy has a bright center, curving bands of star dots and an orange dot marking a place for our Sun; distances are not to scale.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG drawn during final rendered review; star dots and curving luminous bands clarify the symbolic galaxy; no imported geometry or source image."
+      },
+      "sha256": "06ca370bffc63fa434cac36543170b0196fd0a5d12ef4acf40bbdf3e471d9a0b"
+    }
+  },
+  "comet": {
+    "image": {
+      "path": "content/library/art/review-comet.svg",
+      "alt": "A small pale comet nucleus has a long straight blue ion tail and a separate broad, curved golden dust tail.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "51e27ce34eb9cfc2b29ed90bcc452969aefcf6a95cb93a2ada30f6ffe2e425ef"
+    }
+  },
+  "astronaut-home": {
+    "image": {
+      "path": "content/library/art/review-astronaut-home.svg",
+      "alt": "Inside a station cabin, an astronaut floats beside a round window showing Earth; a green tether connects the suit to a wall handrail.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "0300f10db536a1f183bab55d846fd769708ffb8a881e49beac376d65a1190029"
+    }
+  },
+  "breathing": {
+    "image": {
+      "path": "content/library/art/review-breathing.svg",
+      "alt": "Two coral-colored lungs hang from a branching airway above a curved green diaphragm line; a simplified body model.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "916ff341c648f9a082091df75b690f390f91a40e5661f207cb0683e858e1cb67"
+    }
+  },
+  "heart": {
+    "image": {
+      "path": "content/library/art/review-heart.svg",
+      "alt": "A coral heart symbol sits between two looping arrows: a solid coral path leaves it and a dashed blue path returns, representing circulation in a simplified model.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "ef84af57f47fd12627415ce353598b6600e79145bf8e4728b4997ad43be9c3bb"
+    }
+  },
+  "bones": {
+    "image": {
+      "path": "content/library/art/review-bones.svg",
+      "alt": "A cream rib cage and spine sit beside two long arm bones meeting at a round elbow joint; this is a simplified skeleton model.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "80090cae5ab49b4f80c5718b786a6542585cc8d8431009ada0a001e7505d3e51"
+    }
+  },
+  "muscles": {
+    "image": {
+      "path": "content/library/art/review-muscles.svg",
+      "alt": "Two coral muscle bands lie beside pale bones meeting at a round joint in a simplified bent-arm model.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "dcf09dd00cc26c1b35392fa71c6cb05c356ec043a0d81eeb9119c29140d04b82"
+    }
+  },
+  "vision": {
+    "image": {
+      "path": "content/library/art/review-vision.svg",
+      "alt": "In a side-view eye model, golden light arrows enter the blue cornea and pass through a pale lens toward the back of the eye; a short optic nerve exits behind it.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "e4311cf078852485c650fc3317b973ec3b7e4dac307405b97c1bad1d284147ee"
+    }
+  },
+  "hearing": {
+    "image": {
+      "path": "content/library/art/review-hearing.svg",
+      "alt": "Curved sound-wave symbols enter an outer ear; a short passage leads to an eardrum symbol and a curled inner-ear model.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "d84a37a97c3ef608965084b6846efa4001c0ac16e0fb07738b9018a68122c84e"
+    }
+  },
+  "smell": {
+    "image": {
+      "path": "content/library/art/review-smell.svg",
+      "alt": "A side-view nose faces two green and coral scent dots, with a curved arrow pointing toward the nostril.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "83ac323898bb59f3c92712411d51e7b4ab827f2860d52cebd3df73c853415f76"
+    }
+  },
+  "taste": {
+    "image": {
+      "path": "content/library/art/review-taste.svg",
+      "alt": "An open coral mouth has a cream upper tooth band and a tongue with four scattered golden taste-bud symbols.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "15aa6cb0d73348933a42e25893cbed0801b61ab40422d5488a1ab6ce2d4ab429"
+    }
+  },
+  "wheel": {
+    "image": {
+      "path": "content/library/art/review-wheel.svg",
+      "alt": "A sand-colored rectangular cart sits above two blue wheels with dark hubs and a thick teal axle line.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "c6a140dd5333908d7116dc907d47e5429cdc2ed3ab43ccfe881d0036dda81731"
+    }
+  },
+  "lever": {
+    "image": {
+      "path": "content/library/art/review-lever.svg",
+      "alt": "A sloping green lever rests on a triangular sand-colored fulcrum, with a coral load on the right and a downward arrow at the left.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "9e119d47b0661b811676a75e1e7db756d46c2f56c30be6a11a6bc3b253e31752"
+    }
+  },
+  "ramp": {
+    "image": {
+      "path": "content/library/art/review-ramp.svg",
+      "alt": "A long gentle ramp on the left and a short steep ramp on the right both meet the top of one green platform; a coral block rests on the gentle ramp.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "c3d17c4e0f87223bd598afda5d0154ca21a10b771e07ad5abfa0994d4d2f6288"
+    }
+  },
+  "gears": {
+    "image": {
+      "path": "content/library/art/review-gears.svg",
+      "alt": "A large green gear meshes with a smaller sand-colored gear; curved arrows above and below them point in opposite turning directions.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "5e942bba8f64e8f8245c7b280fc4f51ae427606a632f5ea6dcfee1ad9af0821b"
+    }
+  },
+  "pulley": {
+    "image": {
+      "path": "content/library/art/review-pulley.svg",
+      "alt": "A rope passes over a fixed green wheel, with a coral block on the right, a down arrow on the left and an up arrow on the right.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "faa5bf7eb8a6eb9a1b6aa93f2eb49c029bace6f88a9fea955f88d384649a7358"
+    }
+  },
+  "boats-float": {
+    "image": {
+      "path": "content/library/art/review-boats-float.svg",
+      "alt": "A hollow coral hull sits partly in blue water below a sand-colored load; an arrow under the hull points upward.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "2bd02f9edc2c358afbc1672a1389626e512250fbb87fed085e5ac26bcf50d5de"
+    }
+  },
+  "airplanes": {
+    "image": {
+      "path": "content/library/art/review-airplanes.svg",
+      "alt": "A blue airplane symbol is surrounded by four arrows pointing up, down, right and left; a simplified force diagram.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+      },
+      "sha256": "e28e34dc4bf44c63f04270a450050728a75052c9f6f907f8b02b73e826e0966b"
+    }
+  },
+  "bicycle": {
+    "image": {
+      "path": "content/library/art/review-bicycle.svg",
+      "alt": "A green bicycle has two round wheels, a triangular frame, handlebars and a coral chain connecting the central crank to the rear-wheel sprocket.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+      },
+      "sha256": "e748cf5c307cd9539e8c461f259d3fc6f243d034f1c8b88c2a2af5dda52624e2"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="day-night-art-title">
+  <title id="day-night-art-title">Sunlight reaches one half of a blue Earth while the other half is shaded; a curved arrow shows Earth turning.</title>
+  <rect width="320" height="196" rx="22" fill="#EEEAF6"/>
+<circle cx="62" cy="98" r="36" fill="#FFF6D8" opacity=".6"/>
+<path d="M94 98L100 98M85 121L89 125M62 130L62 136M39 121L35 125M30 98L24 98M39 75L35 71M62 66L62 60M85 75L89 71" stroke="#E8B752" stroke-width="4" stroke-linecap="round"/>
+<circle cx="62" cy="98" r="26" fill="#F0C86D"/>
+<path d="M79 78A26 26 0 0 1 39 111Q70 107 79 78Z" fill="#E8B752"/>
+<path d="M44 92A19 19 0 0 1 56 80" fill="none" stroke="#FFF3CC" stroke-width="3" stroke-linecap="round"/>
+<circle cx="62" cy="98" r="26" fill="none" stroke="#354E49" stroke-width="3"/>
+<path d="M104 74H140" stroke="#E8B752" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 8"/>
+<path d="M138 68l8 6-8 6" fill="none" stroke="#E8B752" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M104 98H140" stroke="#E8B752" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 8"/>
+<path d="M138 92l8 6-8 6" fill="none" stroke="#E8B752" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M104 122H140" stroke="#E8B752" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 8"/>
+<path d="M138 116l8 6-8 6" fill="none" stroke="#E8B752" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="220" cy="100" r="58" fill="#86BBD8"/>
+<path d="M180 70q14-10 30-6 10 8 4 18-12 2-10 14 4 12-8 20-10 6-18-6-6-12-12-20 0-12 14-20Z" fill="#98B483" stroke="#354E49" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M224 54q16-6 30 2 10 10 0 16-10 0-14 10 6 14-6 22-14 8-20-4-4-14-10-24 0-12 14-18Z" fill="#98B483" stroke="#354E49" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M212 130q12-4 22 4 4 10-6 14-12 2-18-6Z" fill="#98B483" stroke="#354E49" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M170 112q10-4 20 0M240 88q12-5 24 0M226 144q10-4 20 0" stroke="#F4FAF2" stroke-width="3" stroke-linecap="round" fill="none"/>
+<circle cx="190" cy="94" r="4" fill="#D3915E" stroke="#354E49" stroke-width="1.6"/>
+<path d="M220 42A58 58 0 0 1 220 158Q226 100 220 42Z" fill="#373666" opacity=".55"/>
+<g fill="#F0CF7C"><circle cx="240" cy="70" r="2"/><circle cx="248" cy="76" r="1.6"/><circle cx="232" cy="138" r="1.6"/></g>
+<path d="M173 86A49 49 0 0 1 195 58" fill="none" stroke="#E6F3F6" stroke-width="4" stroke-linecap="round"/>
+<circle cx="220" cy="100" r="58" fill="none" stroke="#354E49" stroke-width="3"/>
+<path d="M164 44Q220 4 274 40" fill="none" stroke="#354E49" stroke-width="7" stroke-linecap="round"/>
+<path d="M164 44Q220 4 274 40" fill="none" stroke="#E09A7E" stroke-width="3.5" stroke-linecap="round"/>
+<path d="M284 47L266 45L276 30Z" fill="#E09A7E" stroke="#354E49" stroke-width="2.2" stroke-linejoin="round"/>
+<path d="M290 154Q291 159 296 160Q291 161 290 166Q289 161 284 160Q289 159 290 154Z" fill="#F0CF7C" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M110 156Q111 159 114 160Q111 161 110 164Q109 161 106 160Q109 159 110 156Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M292 32Q293 35 296 36Q293 37 292 40Q291 37 288 36Q291 35 292 32Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+</svg>

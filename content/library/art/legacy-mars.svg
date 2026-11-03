@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-mars-title"><title id="legacy-mars-title">Why is Mars red?</title><rect width="320" height="196" rx="22" fill="#EEEAF6"></rect><g data-fit="1" transform="translate(-36.1 -16.6) scale(1.214)">
+<path d="M48 35Q50 40 55 42Q50 44 48 49Q46 44 41 42Q46 40 48 35Z" fill="#F0CF7C" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M276 144Q277 149 282 150Q277 151 276 156Q275 151 270 150Q275 149 276 144Z" fill="#F0CF7C" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M60 152Q61 155 64 156Q61 157 60 160Q59 157 56 156Q59 155 60 152Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M250 26Q251 29 254 30Q251 31 250 34Q249 31 246 30Q249 29 250 26Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M254 62q6-6 13-3 6 4 2 10-6 5-13 2-5-4-2-9Z" fill="#B9B4A2" stroke="#354E49" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M58 84q4-4 9-2 4 3 1 7-4 3-8 1-4-2-2-6Z" fill="#C3BBA5" stroke="#354E49" stroke-width="1.6" stroke-linejoin="round"/>
+<circle cx="156" cy="98" r="64" fill="#E09A7E"/>
+<g fill="#EAAE93"><ellipse cx="174" cy="78" rx="18" ry="8"/><ellipse cx="126" cy="128" rx="16" ry="7"/><ellipse cx="196" cy="102" rx="9" ry="5"/></g>
+<path d="M193 46A64 64 0 0 1 101 130Q173 117 193 46Z" fill="#D38F78"/>
+<path d="M122 90q10-14 26-10 14 2 12 12-4 6 4 12 4 10-8 12-14 0-20-8-10-6-14-18Z" fill="#B66A55" stroke="#354E49" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M170 124q12-6 24-2 10 6 4 14-10 6-22 4-12-6-6-16Z" fill="#B66A55" stroke="#354E49" stroke-width="1.6" stroke-linejoin="round"/>
+<ellipse cx="152" cy="46" rx="16" ry="6" fill="#FFF6D8" stroke="#354E49" stroke-width="1.6"/>
+<path d="M104 83A54 54 0 0 1 126 53" fill="none" stroke="#F6C9B2" stroke-width="4" stroke-linecap="round"/>
+<circle cx="156" cy="98" r="64" fill="none" stroke="#354E49" stroke-width="3"/>
+</g></svg>

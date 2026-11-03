@@ -1,0 +1,305 @@
+{
+  "date": "2026-11-02",
+  "base": "d0c181e66b0baa6f512a1c78630fa0a8f527a289",
+  "patchSha256": "728a35dec85f1fcdc8546ecd0481bf2dd2b56bda55662e951f686a299985a548",
+  "count": 40,
+  "source": "Existing scripts/library/validate.mjs executed unchanged except read-only in-memory corpus/transcript overlays; no registry file written",
+  "validatorExitCode": 0,
+  "log": [
+    "Library design validation: 110 items; rights, review, speech registration, files and internal links checked. Draft recordings remain pending."
+  ],
+  "errors": [],
+  "uniqueSentences": 669,
+  "preserved": [
+    "image and hash",
+    "sensitiveNotes",
+    "rights",
+    "stage",
+    "title",
+    "aliases/tags",
+    "links",
+    "schema"
+  ],
+  "lengths": [
+    {
+      "id": "fish-gills",
+      "tell": 11,
+      "more": 29,
+      "deep": 127,
+      "tellSentences": 2
+    },
+    {
+      "id": "crab-shells",
+      "tell": 14,
+      "more": 50,
+      "deep": 129,
+      "tellSentences": 2
+    },
+    {
+      "id": "parrotfish",
+      "tell": 12,
+      "more": 52,
+      "deep": 129,
+      "tellSentences": 2
+    },
+    {
+      "id": "tide-pool",
+      "tell": 16,
+      "more": 31,
+      "deep": 130,
+      "tellSentences": 3
+    },
+    {
+      "id": "beach-sand",
+      "tell": 13,
+      "more": 26,
+      "deep": 132,
+      "tellSentences": 3
+    },
+    {
+      "id": "mangrove-roots",
+      "tell": 16,
+      "more": 28,
+      "deep": 133,
+      "tellSentences": 3
+    },
+    {
+      "id": "jellyfish-move",
+      "tell": 17,
+      "more": 49,
+      "deep": 129,
+      "tellSentences": 3
+    },
+    {
+      "id": "whale-song",
+      "tell": 16,
+      "more": 50,
+      "deep": 132,
+      "tellSentences": 3
+    },
+    {
+      "id": "guam-made",
+      "tell": 17,
+      "more": 41,
+      "deep": 134,
+      "tellSentences": 3
+    },
+    {
+      "id": "limestone",
+      "tell": 18,
+      "more": 47,
+      "deep": 131,
+      "tellSentences": 3
+    },
+    {
+      "id": "guam-rail",
+      "tell": 18,
+      "more": 50,
+      "deep": 134,
+      "tellSentences": 3
+    },
+    {
+      "id": "limestone-forest",
+      "tell": 15,
+      "more": 46,
+      "deep": 132,
+      "tellSentences": 3
+    },
+    {
+      "id": "drinking-water",
+      "tell": 15,
+      "more": 47,
+      "deep": 131,
+      "tellSentences": 3
+    },
+    {
+      "id": "village",
+      "tell": 17,
+      "more": 43,
+      "deep": 133,
+      "tellSentences": 3
+    },
+    {
+      "id": "native-trees",
+      "tell": 14,
+      "more": 47,
+      "deep": 131,
+      "tellSentences": 2
+    },
+    {
+      "id": "family-walk",
+      "tell": 18,
+      "more": 48,
+      "deep": 130,
+      "tellSentences": 3
+    },
+    {
+      "id": "distant-stars",
+      "tell": 15,
+      "more": 44,
+      "deep": 129,
+      "tellSentences": 3
+    },
+    {
+      "id": "shadow",
+      "tell": 14,
+      "more": 48,
+      "deep": 130,
+      "tellSentences": 3
+    },
+    {
+      "id": "constellation",
+      "tell": 17,
+      "more": 44,
+      "deep": 130,
+      "tellSentences": 3
+    },
+    {
+      "id": "night-view",
+      "tell": 18,
+      "more": 46,
+      "deep": 128,
+      "tellSentences": 3
+    },
+    {
+      "id": "telescope",
+      "tell": 10,
+      "more": 34,
+      "deep": 133,
+      "tellSentences": 2
+    },
+    {
+      "id": "milky-way",
+      "tell": 19,
+      "more": 48,
+      "deep": 131,
+      "tellSentences": 3
+    },
+    {
+      "id": "comet",
+      "tell": 18,
+      "more": 29,
+      "deep": 134,
+      "tellSentences": 3
+    },
+    {
+      "id": "astronaut-home",
+      "tell": 21,
+      "more": 48,
+      "deep": 128,
+      "tellSentences": 3
+    },
+    {
+      "id": "breathing",
+      "tell": 20,
+      "more": 45,
+      "deep": 125,
+      "tellSentences": 3
+    },
+    {
+      "id": "heart",
+      "tell": 14,
+      "more": 42,
+      "deep": 128,
+      "tellSentences": 3
+    },
+    {
+      "id": "bones",
+      "tell": 18,
+      "more": 44,
+      "deep": 126,
+      "tellSentences": 3
+    },
+    {
+      "id": "muscles",
+      "tell": 16,
+      "more": 47,
+      "deep": 130,
+      "tellSentences": 3
+    },
+    {
+      "id": "vision",
+      "tell": 16,
+      "more": 32,
+      "deep": 129,
+      "tellSentences": 3
+    },
+    {
+      "id": "hearing",
+      "tell": 17,
+      "more": 31,
+      "deep": 128,
+      "tellSentences": 3
+    },
+    {
+      "id": "smell",
+      "tell": 17,
+      "more": 28,
+      "deep": 128,
+      "tellSentences": 3
+    },
+    {
+      "id": "taste",
+      "tell": 16,
+      "more": 29,
+      "deep": 130,
+      "tellSentences": 3
+    },
+    {
+      "id": "wheel",
+      "tell": 17,
+      "more": 46,
+      "deep": 130,
+      "tellSentences": 3
+    },
+    {
+      "id": "lever",
+      "tell": 18,
+      "more": 50,
+      "deep": 129,
+      "tellSentences": 3
+    },
+    {
+      "id": "ramp",
+      "tell": 21,
+      "more": 46,
+      "deep": 126,
+      "tellSentences": 3
+    },
+    {
+      "id": "gears",
+      "tell": 15,
+      "more": 46,
+      "deep": 131,
+      "tellSentences": 3
+    },
+    {
+      "id": "pulley",
+      "tell": 18,
+      "more": 46,
+      "deep": 132,
+      "tellSentences": 3
+    },
+    {
+      "id": "boats-float",
+      "tell": 18,
+      "more": 52,
+      "deep": 136,
+      "tellSentences": 3
+    },
+    {
+      "id": "airplanes",
+      "tell": 18,
+      "more": 46,
+      "deep": 135,
+      "tellSentences": 3
+    },
+    {
+      "id": "bicycle",
+      "tell": 16,
+      "more": 46,
+      "deep": 135,
+      "tellSentences": 3
+    }
+  ]
+}

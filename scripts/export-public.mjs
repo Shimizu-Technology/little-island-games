@@ -7,7 +7,7 @@ import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const directories = ['src', 'assets', 'scripts', 'tests', 'modules'];
+const directories = ['src', 'assets', 'scripts', 'tests', 'modules', ...(['content'].filter(d => existsSync(join(root, d))))];
 const files = ['app.json', 'eas.json', 'package.json', 'package-lock.json', 'tsconfig.json',
   'eslint.config.js', 'vitest.config.mts', 'LICENSE', 'THIRD_PARTY_NOTICES.md'];
 const optional = ['babel.config.js', 'babel.config.cjs', 'metro.config.js', 'metro.config.cjs'];
@@ -34,7 +34,7 @@ function tree(dir, prefix = '') {
 export function scanFile(name, bytes) {
   if (forbiddenFile.test(name)) throw new Error(`Credential file: ${name}`);
   // Scan binary strings too: metadata must not carry private names or credentials.
-  const text = /\.(?:m4a|wav|png)$/i.test(name)
+  const text = /\.(?:m4a|wav|png|jpe?g)$/i.test(name)
     ? (bytes.toString('latin1').match(/[\x20-\x7e]{20,}/g) ?? []).join('\n')
     : bytes.toString('utf8');
   if (privateName.test(name) || privateName.test(text) || email.test(text) || /\/Users\//.test(text))
@@ -68,12 +68,26 @@ export function exportPublic(target) {
       ...['song-loop', 'reef-loop', 'sticker', 'coral', 'clear', ...Array.from({ length: 6 }, (_, i) => `shell-${i}`)].map(n => `arcade/${n}.wav`)]);
     if (receipt.speechReceipt.engine !== 'Kokoro-82M v1.0' || receipt.speechReceipt.modelLicense !== 'Apache-2.0' || speech.size !== receipt.speechReceipt.keysPerVoice * 2)
       throw new Error('Neural speech receipt and source map disagree.');
+    // Staged Library recordings have an isolated, complete warm-only receipt.
+    // This source snapshot is not shipping approval or a publication operation.
+    const libraryReceiptPath = join(root, 'scripts/library/audio-receipt.json');
+    const libraryClips = existsSync(libraryReceiptPath) ? JSON.parse(readFileSync(libraryReceiptPath, 'utf8')) : undefined;
+    const libraryHashes = {};
+    if (libraryClips) {
+      const scripts = JSON.parse(readFileSync(join(root, 'scripts/learn/library.json'), 'utf8'));
+      if (libraryClips.voice !== 'af_heart' || libraryClips.networkPlayback !== false) throw new Error('Invalid Library generation receipt');
+      for (const [key, text] of Object.entries(scripts)) {
+        const clip = libraryClips.clips[key], path = `audio/${key}.m4a`;
+        if (!clip || clip.path !== `assets/${path}` || clip.transcriptSha256 !== createHash('sha256').update(text).digest('hex')) throw new Error(`Stale Library generation receipt: ${key}`);
+        libraryHashes[path] = clip.sha256;
+      }
+    }
     const audio = new Set(paths.filter(p => /\.(?:m4a|wav|mp3|aac|aiff?|ogg|flac)$/i.test(p)).map(p => p.replace(/^assets\//, '')));
     for (const path of [...speech, ...tones]) if (!audio.has(path)) throw new Error(`Missing audio: ${path}`);
     for (const path of audio) {
-      if (!speech.has(path) && !tones.has(path)) throw new Error(`Unreferenced or legacy audio: ${path}`);
+      if (!speech.has(path) && !tones.has(path) && !libraryHashes[path]) throw new Error(`Unreferenced or legacy audio: ${path}`);
       const bytes = readFileSync(join(root, 'assets', path));
-      if (createHash('sha256').update(bytes).digest('hex') !== receipt.sha256[path])
+      if (createHash('sha256').update(bytes).digest('hex') !== (libraryHashes[path] ?? receipt.sha256[path]))
         throw new Error(`Audio does not match verified generation receipt: ${path}`);
     }
     for (const path of paths) {

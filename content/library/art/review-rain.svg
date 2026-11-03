@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="rain-art-title">
+  <title id="rain-art-title">Rounded drops gather inside a broad blue-gray rain cloud, and three large drops fall toward a puddle.</title>
+  <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M40 176Q48 160 100 162Q160 156 220 160Q276 160 282 174Q278 188 220 188Q160 191 100 188Q44 188 40 176Z" fill="#98B483"/>
+<path d="M56 182Q120 188 180 186Q250 184 274 176" fill="none" stroke="#85AA7D" stroke-width="2.2"/>
+<path d="M98 172Q100 162 160 162Q222 162 224 172Q222 182 160 182Q100 182 98 172Z" fill="#93C9C8"/>
+<path d="M112 176Q160 182 210 176" fill="none" stroke="#7EB5A9" stroke-width="2.2"/>
+<path d="M140 170q20-6 40 0M150 174q10-3 20 0" fill="none" stroke="#F4FAF2" stroke-width="2"/>
+<path d="M226 168Q228 154 236 146M236 160Q244 150 252 150" fill="none" stroke="#6B9C73" stroke-width="2.6"/>
+<path d="M236 146C228 140 228 130 234 124C242 130 242 140 236 146ZM252 150C254 142 262 138 270 140C266 148 260 152 252 150Z" fill="#85AA7D" stroke-width="2.2"/>
+<path d="M66 172q-2-10 4-16M78 172q2-8 8-12" fill="none" stroke="#6B9C73" stroke-width="2.6"/>
+<path d="M54 92C26 90 26 58 54 56C54 28 92 18 112 36C126 12 176 12 186 38C206 22 248 30 248 58C276 56 286 88 262 94C240 104 80 104 54 92Z" fill="#AAB9C6"/>
+<path d="M54 92C46 82 60 74 72 80C80 72 96 74 100 82C110 74 128 76 132 84C142 76 160 78 164 86C176 78 194 80 196 88C206 80 226 82 230 90C240 84 256 86 262 94C240 104 80 104 54 92Z" fill="#8FA2B2"/>
+<path d="M54 92C26 90 26 58 54 56C54 28 92 18 112 36C126 12 176 12 186 38C206 22 248 30 248 58C276 56 286 88 262 94C240 104 80 104 54 92Z" fill="none"/>
+<path d="M120 34Q132 20 150 20M60 64Q60 50 72 46M196 40Q212 36 226 44" fill="none" stroke="#CDD8E1" stroke-width="3"/>
+<g fill="#BFD9EC" stroke-width="1.8"><circle cx="82" cy="66" r="5"/><circle cx="104" cy="56" r="3.5"/><circle cx="124" cy="70" r="6.5"/><circle cx="148" cy="50" r="4"/><circle cx="166" cy="68" r="5"/><circle cx="190" cy="56" r="3.5"/><circle cx="208" cy="72" r="6"/><circle cx="232" cy="64" r="4"/><circle cx="96" cy="78" r="3"/><circle cx="182" cy="80" r="3"/></g>
+<g fill="#7FB3D9" stroke-width="2.6">
+<path d="M116 108C122 118 126 124 126 130A10 10 0 0 1 106 130C106 124 110 118 116 108Z"/>
+<path d="M160 118C166 128 170 134 170 140A10 10 0 0 1 150 140C150 134 154 128 160 118Z"/>
+<path d="M204 106C210 116 214 122 214 128A10 10 0 0 1 194 128C194 122 198 116 204 106Z"/>
+</g>
+<path d="M111 126Q111 121 114 118M155 136Q155 131 158 128M199 124Q199 119 202 116" fill="none" stroke="#DCEBF6" stroke-width="2.2"/>
+</g></svg>

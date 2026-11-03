@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="water-cycle-art-title">
+  <title id="water-cycle-art-title">Arrows trace a loop from blue surface water upward to a cloud, down as rain over a mountain and back through a river.</title>
+  <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M126 176Q130 150 170 146Q186 112 222 66Q234 56 244 64Q270 100 290 142Q302 160 298 176Q290 188 240 188Q170 190 126 176Z" fill="#98B483"/>
+<path d="M222 66Q234 56 244 64Q256 82 266 100Q252 92 244 98Q236 86 226 92Q218 84 206 90Q214 76 222 66Z" fill="#B9B4A2"/>
+<path d="M226 72Q232 66 238 68" fill="none" stroke="#DCD6C2" stroke-width="2"/>
+<path d="M248 104Q268 132 282 160M232 112Q238 138 236 160" fill="none" stroke="#85AA7D" stroke-width="2.2"/>
+<g stroke-width="2"><path d="M270 150v-6M284 166v-6M196 142v-6M182 160v-6" fill="none" stroke="#A48C5C" stroke-width="2.4"/><circle cx="270" cy="138" r="8" fill="#6B9C73"/><circle cx="284" cy="155" r="7" fill="#85AA7D"/><circle cx="196" cy="130" r="8" fill="#6B9C73"/><circle cx="182" cy="149" r="7" fill="#85AA7D"/></g>
+<path d="M22 166Q24 148 60 146Q110 144 140 156Q154 166 146 178Q120 188 70 188Q24 186 22 166Z" fill="#7FB3D9"/>
+<path d="M36 174Q80 184 140 174Q130 186 80 187Q40 186 36 174Z" fill="#6A9ECC" stroke="none"/>
+<path d="M22 166Q24 148 60 146Q110 144 140 156Q154 166 146 178Q120 188 70 188Q24 186 22 166Z" fill="none"/>
+<path d="M44 160q10-4 20 0M92 162q10-4 20 0" fill="none" stroke="#F4FAF2" stroke-width="2"/>
+<path d="M226 100Q236 126 214 140Q190 152 204 166Q210 174 186 176L146 170" fill="none" stroke="#354E49" stroke-width="9"/>
+<path d="M226 100Q236 126 214 140Q190 152 204 166Q210 174 186 176L146 170" fill="none" stroke="#7FB3D9" stroke-width="5"/>
+<circle cx="44" cy="40" r="14" fill="#F0C86D"/>
+<path d="M44 18v-4M44 66v-4M22 40h-4M70 40h-4M28 24l-3-3M60 56l3 3M60 24l3-3M28 56l-3 3" fill="none" stroke="#E8B752" stroke-width="2.6"/>
+<g fill="none" stroke="#9CCFC9" stroke-width="2.4" stroke-dasharray="1 7"><path d="M74 142Q68 132 74 122T74 102"/><path d="M98 142Q104 132 98 122T98 102"/></g>
+<g fill="none" stroke="#7F9BB0" stroke-width="2.2"><path d="M178 68l-4 12M190 72l-4 12M226 68l-4 12M240 66l-4 10"/></g>
+<path d="M170 58C148 58 146 34 168 32C168 12 198 6 210 20C224 6 256 12 256 32C276 32 284 52 268 60C264 62 258 62 250 62L176 62C174 62 172 62 170 58Z" fill="#FFFFFF" stroke="#7FA9BE"/>
+<path d="M174 60C170 52 180 46 190 50C196 42 210 44 214 52C222 44 238 46 240 54C248 48 262 50 264 60Z" fill="#E6EEF2" stroke="none"/>
+<path d="M170 58C148 58 146 34 168 32C168 12 198 6 210 20C224 6 256 12 256 32C276 32 284 52 268 60C264 62 258 62 250 62L176 62C174 62 172 62 170 58Z" fill="none" stroke="#7FA9BE"/>
+<path d="M186 26Q194 18 206 18" fill="none" stroke="#F4FAF2" stroke-width="3"/>
+<g fill="none" stroke="#C77760" stroke-width="3.2">
+<path d="M112 138Q118 70 152 44"/><path d="M140 46l13-3-3 13"/>
+<path d="M202 66Q200 80 214 94"/><path d="M203 92l11 3-1-11"/>
+<path d="M176 160Q160 160 150 158"/><path d="M158 151l-9 7 9 6"/>
+</g>
+</g></svg>

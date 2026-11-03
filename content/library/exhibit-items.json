@@ -1,0 +1,321 @@
+[
+  {
+    "schemaVersion": 1,
+    "revision": 2,
+    "id": "reef-food-web",
+    "type": "exhibit",
+    "title": "Build a reef food web",
+    "category": "ocean",
+    "aliases": [
+      "build a reef food web"
+    ],
+    "tags": [
+      "ocean",
+      "model"
+    ],
+    "image": {
+      "path": "content/library/art/parrotfish.svg",
+      "alt": "A parrotfish and reef surface, representing one of many feeding connections.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied."
+      }
+    },
+    "label": {
+      "id": "reef-food-web-label",
+      "text": "Build a reef food web",
+      "speechKey": "library-reef-food-web-label",
+      "audio": {
+        "status": "pending",
+        "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+      }
+    },
+    "rights": {
+      "license": "LicenseRef-Little-Island-Original",
+      "creator": "Shimizu Technology",
+      "sourceUrl": "repo:little-island-games",
+      "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+      "changes": "Original work; source facts paraphrased, no source images copied."
+    },
+    "stage": {
+      "ageHint": [
+        5,
+        13
+      ],
+      "support": "Grown-up co-play welcome. Untimed steps; model limits are part of the explanation."
+    },
+    "sensitiveNotes": [
+      "designated family reviewer family review required: animals eating animals; arrows show energy transfer, without graphic predation."
+    ],
+    "review": {
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
+      "date": "2026-11-02",
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual/editorial review completed. NOAA food-web text verifies energy direction and branching; NOAA photosynthesis page verifies light-powered food production. Added Clements et al. university-hosted full paper for the parrotfish path; retained qualified many, avoiding a universal seaweed diet. Replaced technical caveat pile with a connected invitation. Population removal remains outside this model. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "c3f44f6eff22326bd1ed60957869c5f4dc80cef11f65e71bbf34d80fc9b76ff9",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
+    },
+    "sources": [
+      {
+        "title": "NOAA: Aquatic food webs",
+        "url": "https://www.noaa.gov/education/resource-collections/marine-life/aquatic-food-webs",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "NOAA Ocean Explorer: Chemosynthesis and photosynthesis",
+        "url": "https://oceanexplorer.noaa.gov/ocean-fact/photochemo/",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "Clements et al.: Parrotfishes as microphages (author university full text)",
+        "url": "https://german.bio.uci.edu/images/PDF/Clements%20et%20al.%20%282016%29%20BJLS_online.pdf",
+        "accessed": "2026-11-02"
+      }
+    ],
+    "model": {
+      "engine": "food-web",
+      "limits": "A few possible feeding links in a sunlit reef, with arrows from food to eater. The picture leaves out most species and connections. It does not predict population changes or show every kind of energy source."
+    },
+    "links": [
+      {
+        "kind": "item",
+        "target": "food-web",
+        "label": "Read about sea food webs"
+      },
+      {
+        "kind": "make",
+        "target": "wonder-page",
+        "label": "Draw your own model and label what it leaves out"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "revision": 2,
+    "id": "water-journey",
+    "type": "exhibit",
+    "title": "Follow a drop of water",
+    "category": "weather",
+    "aliases": [
+      "follow a drop of water"
+    ],
+    "tags": [
+      "weather",
+      "model"
+    ],
+    "image": {
+      "path": "content/library/art/drinking-water.svg",
+      "alt": "Rain and a limestone aquifer, one possible water journey.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied."
+      }
+    },
+    "label": {
+      "id": "water-journey-label",
+      "text": "Follow a drop of water",
+      "speechKey": "library-water-journey-label",
+      "audio": {
+        "status": "pending",
+        "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+      }
+    },
+    "rights": {
+      "license": "LicenseRef-Little-Island-Original",
+      "creator": "Shimizu Technology",
+      "sourceUrl": "repo:little-island-games",
+      "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+      "changes": "Original work; source facts paraphrased, no source images copied."
+    },
+    "stage": {
+      "ageHint": [
+        5,
+        13
+      ],
+      "support": "Grown-up co-play welcome. Untimed steps; model limits are part of the explanation."
+    },
+    "sensitiveNotes": [
+      "designated family reviewer family review required: water/weather safety; not a forecast or drinking-water safety guide."
+    ],
+    "review": {
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
+      "date": "2026-11-02",
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual/editorial review completed. NOAA water-cycle overview and NWS hydrology description verify surface/groundwater storage and transport; USGS precipitation page verifies cloud-drop growth and evaporation; NOAA ocean-freezing page supports salt claim. Added these specific citations because generic water-cycle page did not directly cover each claim. warm remains evaporation, not rainfall. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "df078c87fcdc22c74f9db4b29844cd0fc915f3eb7aaa7dda25c0fae569e4713b",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
+    },
+    "sources": [
+      {
+        "title": "USGS Water Science School: The Water Cycle",
+        "url": "https://www.usgs.gov/special-topics/water-science-school/science/water-cycle",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "NOAA Education: The Water Cycle",
+        "url": "https://www.noaa.gov/education/resource-collections/freshwater/water-cycle",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "USGS: Precipitation and the Water Cycle",
+        "url": "https://www.usgs.gov/water-science-school/science/precipitation-and-water-cycle",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "NOAA NWS: Description of Hydrologic Cycle",
+        "url": "https://www.nwrfc.noaa.gov/info/water_cycle/hydrology.cgi",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "NOAA: Can the ocean freeze?",
+        "url": "https://oceanservice.noaa.gov/facts/oceanfreeze.html",
+        "accessed": "2026-11-02"
+      }
+    ],
+    "model": {
+      "engine": "water-journey",
+      "limits": "A simplified set of possible water paths. Sizes and travel times are symbolic, and plants and many other routes are left out. Water vapor is invisible; cloud drops or ice are visible. This is not a forecast or a drinking-water guide."
+    },
+    "links": [
+      {
+        "kind": "item",
+        "target": "water-cycle",
+        "label": "Read the water journey"
+      },
+      {
+        "kind": "make",
+        "target": "wonder-page",
+        "label": "Draw your own model and label what it leaves out"
+      }
+    ]
+  },
+  {
+    "schemaVersion": 1,
+    "revision": 2,
+    "id": "night-sky",
+    "type": "exhibit",
+    "title": "Turn the night-sky model",
+    "category": "space",
+    "aliases": [
+      "turn the night-sky model"
+    ],
+    "tags": [
+      "space",
+      "model"
+    ],
+    "image": {
+      "path": "content/library/art/constellation.svg",
+      "alt": "Invented star dots connected by imaginary lines.",
+      "rights": {
+        "license": "LicenseRef-Little-Island-Original",
+        "creator": "Shimizu Technology",
+        "sourceUrl": "repo:little-island-games",
+        "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+        "changes": "Original work; source facts paraphrased, no source images copied."
+      }
+    },
+    "label": {
+      "id": "night-sky-label",
+      "text": "Turn the night-sky model",
+      "speechKey": "library-night-sky-label",
+      "audio": {
+        "status": "pending",
+        "reason": "Independent factual/editorial pass completed. Family/cultural judgment, reading/pronunciation, warm narration generation and audible review remain pending."
+      }
+    },
+    "rights": {
+      "license": "LicenseRef-Little-Island-Original",
+      "creator": "Shimizu Technology",
+      "sourceUrl": "repo:little-island-games",
+      "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
+      "changes": "Original work; source facts paraphrased, no source images copied."
+    },
+    "stage": {
+      "ageHint": [
+        5,
+        13
+      ],
+      "support": "Grown-up co-play welcome. Untimed steps; model limits are part of the explanation."
+    },
+    "sensitiveNotes": [
+      "designated family reviewer family review required: night and Sun safety; invented stars, not a live sky chart."
+    ],
+    "review": {
+      "status": "in-review",
+      "reviewer": "Codex independent factual reviewer",
+      "date": "2026-11-02",
+      "factualReviewer": "independent factual reviewer",
+      "scope": "Independent factual/editorial review completed. NASA constellation page verifies imagined lines, unequal star distances, location/hour/year visibility; NASA seasons page verifies rotation and orbit. Added NASA blue-sky page for scattering. Invented-star limitation retained; no traditional navigation or current sky claims. Designated family reviewer judgment, engine integration, narration generation and audible review pending; no shipping approval.",
+      "familyDecision": {
+        "decision": "Yes",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending.",
+        "reviewer": "Leon Shimizu",
+        "date": "2026-11-02",
+        "scope": "reconciled recommendations",
+        "contentSha256": "2df4a8f41397f80878d26f3d29f062de596865f3a28550c6b5391b7b96c0a42c",
+        "audioAccepted": false,
+        "pronunciationAccepted": false
+      },
+      "familyReviewer": "Leon Shimizu"
+    },
+    "sources": [
+      {
+        "title": "NASA Space Place",
+        "url": "https://spaceplace.nasa.gov/constellations/en/",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "NASA Space Place",
+        "url": "https://spaceplace.nasa.gov/seasons/en/",
+        "accessed": "2026-11-02"
+      },
+      {
+        "title": "NASA Space Place: Why Is the Sky Blue?",
+        "url": "https://spaceplace.nasa.gov/blue-sky/en/",
+        "accessed": "2026-11-02"
+      }
+    ],
+    "model": {
+      "engine": "night-sky",
+      "limits": "An invented sky, with symbolic stars, brightness and distances. Imagined lines join dots. Earth’s rotation changes a night’s view; its orbit changes seasonal views. This is not tonight’s Guam sky or a navigation chart."
+    },
+    "links": [
+      {
+        "kind": "item",
+        "target": "day-night",
+        "label": "Explore Earth’s turn"
+      },
+      {
+        "kind": "make",
+        "target": "wonder-page",
+        "label": "Draw your own model and label what it leaves out"
+      }
+    ]
+  }
+]

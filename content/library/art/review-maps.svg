@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="maps-art-title">
+  <title id="maps-art-title">A folded cream map shows a blue river, a dotted route from a circular starting point to a coral destination and a small north arrow.</title>
+  <rect width="320" height="196" rx="22" fill="#F6E8DC"/><g data-fit="1" transform="translate(-13.3 -16.9) scale(1.081)">
+<path d="M40 168L112 156L200 176L288 158L286 178L200 186L112 172L40 182Z" fill="#4E7E78" opacity=".16"/>
+<g stroke="#354E49" stroke-linecap="round" stroke-linejoin="round">
+<path d="M34 42L110 28V148L34 162Z" fill="#FFF6D8" stroke-width="3"/>
+<path d="M110 28L198 46V168L110 148Z" fill="#F9E5AF" stroke-width="3"/>
+<path d="M198 46L284 30V150L198 168Z" fill="#FFF6D8" stroke-width="3"/>
+<path d="M110 32V146M198 50V164" fill="none" stroke="#D7C594" stroke-width="5"/>
+<path d="M110 28V148M198 46V168" fill="none" stroke-width="2"/>
+<path d="M210 118Q228 92 250 112Q262 104 272 118Z" fill="#A8C493" stroke-width="2"/>
+<path d="M127 40Q118 66 148 86Q176 102 200 118Q226 134 234 154" fill="none" stroke="#6FA9BC" stroke-width="13"/>
+<path d="M127 40Q118 66 148 86Q176 102 200 118Q226 134 234 154" fill="none" stroke="#91C5D0" stroke-width="8"/>
+<path d="M140 64q4 6 10 8M212 128q6 4 8 10" fill="none" stroke="#F4FAF2" stroke-width="2"/>
+<path d="M62 136Q92 118 118 126Q144 132 162 104Q184 74 240 72" fill="none" stroke-width="3" stroke-dasharray="1 8"/>
+<circle cx="62" cy="138" r="8" fill="#85AA7D" stroke-width="2.6"/><circle cx="62" cy="138" r="3" fill="#FFF6D8" stroke="none"/>
+<path d="M250 76Q238 62 238 54Q238 42 250 42Q262 42 262 54Q262 62 250 76Z" fill="#D3915E" stroke-width="2.6"/><circle cx="250" cy="54" r="4" fill="#FFF6D8" stroke-width="1.6"/>
+<g stroke-width="1.6"><path d="M86 110v-6M98 116v-6M156 140v-6M260 92v-6" fill="none" stroke="#A48C5C"/><g fill="#6B9C73"><circle cx="86" cy="100" r="6"/><circle cx="98" cy="106" r="5.5"/><circle cx="156" cy="130" r="6"/><circle cx="260" cy="82" r="5"/></g></g>
+<path d="M60 88V58" fill="none" stroke-width="2.6"/><path d="M54 66L60 56L66 66Z" fill="#354E49" stroke-width="1.6"/><path d="M55 92h10" fill="none" stroke-width="2"/>
+</g>
+</g></svg>

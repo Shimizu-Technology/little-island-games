@@ -1,0 +1,112 @@
+import React from 'react';
+import { act, create } from 'react-test-renderer';
+import { afterEach, expect, it, vi } from 'vitest';
+import { HomeScreen } from '../src/home/HomeScreen';
+import { starterHome } from '../src/home/model';
+import { buildScene } from '../src/home/scene/graph';
+import { withPortions } from '../src/home/runtime/portions';
+import { resolve } from '../src/home/scene/proposal';
+import { buildingLayout, roomOrigin } from '../src/home/camera';
+import { roomIds } from '../src/home/catalogMore';
+const harness = vi.hoisted(() => ({ options: {} as any, finish: vi.fn() }));
+vi.mock('expo-router', () => ({ router: {} }));
+vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'web' }, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => ({ width: 390, height: 844 }) }));
+vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) }));
+vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useSharedValue: (v: any) => { const ref = React.useRef(v); return { get: () => ref.current, set: (n: any) => { ref.current = n; } }; }, useAnimatedStyle: () => ({}) }));
+vi.mock('../src/components/motion', () => ({ useReducedMotion: () => false }));
+vi.mock('../src/state/Store', () => ({ useStore: () => ({ save: { settings: {} } }) }));
+vi.mock('../src/components/Audio', () => ({ useSounds: () => () => {} }));
+vi.mock('../src/home/runtime/useIdleCharacters', () => ({ useIdleCharacters: () => ({ sleeping: {}, wake: () => {} }) }));
+vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { isCurrent: () => true, finish: harness.finish, camera: { get: () => ({ a: .5, b: 0, c: 0, d: .5, tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => [] }, cancelAll: () => {} }; } }));
+vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: () => null }));
+vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: () => null, Tool: () => null, navigationHeight: 60 }));
+vi.mock('../src/home/runtime/HomePanels', () => ({ HomePanels: () => null }));
+vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: () => null, portraitDrawerHeight: 200 }));
+vi.mock('../src/home/runtime/StagingTray', () => ({ StagingTray: () => null }));
+vi.mock('../src/home/runtime/Destinations', () => ({ Destinations: () => null }));
+vi.mock('../src/home/runtime/DebugOverlay', () => ({ DebugOverlay: () => null }));
+vi.mock('../src/home/art/Items', () => ({ ItemArt: () => null }));
+vi.mock('../src/home/art/More', () => ({ MoreItemArt: () => null }));
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+vi.stubGlobal('requestAnimationFrame', () => 1);
+vi.stubGlobal('cancelAnimationFrame', () => {});
+let root: ReturnType<typeof create>;
+afterEach(async () => { if (root) await act(async () => root.unmount()); harness.finish.mockClear(); });
+async function setup() {
+  const state = starterHome();
+  const actor = state.rooms.home.characters.find(c => c.slot === 0)!;
+  state.rooms.home.characters = state.rooms.home.characters.filter(c => c.slot !== 0);
+  state.rooms.kitchen.characters.push(actor);
+  state.rooms.kitchen.instances.find(i => i.id === 'starter-fridge')!.powered = true;
+  const persist = vi.fn((_state: any) => true);
+  await act(async () => { root = create(<HomeScreen initialState={state} persist={persist} />); });
+  return { state, persist, scene: withPortions(buildScene(state)) };
+}
+function release(proposal: any, anchor = proposal.contact, index = 0) {
+  const origin = roomOrigin(roomIds.indexOf(proposal.room), buildingLayout(roomIds.length, false));
+  harness.options.onCommit(index, proposal, { x: anchor.x + origin.x, y: anchor.y + origin.y }, {});
+}
+it('F2 HomeScreen commits the exact pending hand→mouth floor preview for a new mango', async () => {
+  const { scene, persist } = await setup();
+  const id = 'kitchen/item/portion-starter-fridge-mango', index = { ...scene.rooms.kitchen, entities: scene.entities };
+  const hand = index.targets.find(t => t.id === 'character/0/hand')!;
+  const previous = resolve(index, scene.entities[id], hand.contact, { scale: .5, target: hand.id, release: true });
+  const anchor = { x: 332.7702885316703, y: 391.0326239088868 } as any;
+  const preview = resolve(index, scene.entities[id], anchor, { scale: .5, previous, now: 1000 });
+  expect(preview.kind).toBe('floor'); expect(preview.pending?.target).toBe('character/0/mouth');
+  await act(async () => release(preview, anchor));
+  expect(persist).toHaveBeenCalledOnce();
+  const committed = harness.finish.mock.calls.at(-1)![2];
+  expect(committed.kind).toBe(preview.kind); expect(committed.contact).toEqual(preview.contact);
+  expect(committed.consume).toBe(preview.consume); expect(committed.target).toBe(preview.target);
+  const saved = persist.mock.calls[0][0] as any;
+  const food = saved.rooms.kitchen.instances.find((i: any) => i.id.startsWith('food-'));
+  expect(food?.item).toBe('mango');
+  expect(withPortions(buildScene(saved)).entities[id]).toBeDefined();
+});
+it('F2 two simultaneous portions keep their preview destinations and reject an occupied stale hand', async () => {
+  const { scene, persist } = await setup();
+  const index = { ...scene.rooms.kitchen, entities: scene.entities };
+  const hand = index.targets.find(t => t.id === 'character/0/hand')!;
+  const mango = scene.entities['kitchen/item/portion-starter-fridge-mango'];
+  const banana = scene.entities['kitchen/item/portion-starter-fridge-banana'];
+  const first = resolve(index, mango, hand.contact, { scale: .5, target: hand.id, release: true });
+  const second = resolve(index, banana, hand.contact, { scale: .5, target: hand.id, release: true });
+  expect(first.kind).toBe('hand'); expect(second.kind).toBe('hand');
+  await act(async () => { release(first); release(second, second.contact, 1); });
+  expect(persist).toHaveBeenCalledOnce();
+  expect(harness.finish.mock.calls.at(-1)![1]).toBe(false);
+});
+
+it('F2 simultaneous portions can commit unchanged independent hands with distinct real identities', async () => {
+  const { scene, persist } = await setup();
+  const proposal = (food: string, room: 'home' | 'kitchen', slot: number) => {
+    const index = { ...scene.rooms[room], entities: scene.entities };
+    const hand = index.targets.find(t => t.id === `character/${slot}/hand`)!;
+    return resolve(index, scene.entities[`kitchen/item/portion-starter-fridge-${food}`], hand.contact, { scale: .5, target: hand.id, release: true });
+  };
+  const first = proposal('mango', 'kitchen', 0), second = proposal('banana', 'home', 1);
+  await act(async () => { release(first); release(second, second.contact, 1); });
+  expect(persist).toHaveBeenCalledTimes(2);
+  const saved = persist.mock.calls.at(-1)![0];
+  const mango = saved.rooms.kitchen.characters.find((c: any) => c.slot === 0)!.holding;
+  const banana = saved.rooms.home.characters.find((c: any) => c.slot === 1)!.holding;
+  expect(mango).toMatch(/^food-/); expect(banana).toMatch(/^food-/); expect(mango).not.toBe(banana);
+  expect(saved.rooms.kitchen.instances.find((i: any) => i.id === mango)?.item).toBe('mango');
+  expect(saved.rooms.home.instances.find((i: any) => i.id === banana)?.item).toBe('banana');
+  expect(withPortions(buildScene(saved)).entities['kitchen/item/portion-starter-fridge-mango']).toBeDefined();
+});
+it('F2 a previewed mouth consumes only that food while the fridge restocks', async () => {
+  const { scene, persist } = await setup();
+  const index = { ...scene.rooms.kitchen, entities: scene.entities };
+  const mouth = index.targets.find(t => t.id === 'character/0/mouth')!;
+  const preview = resolve(index, scene.entities['kitchen/item/portion-starter-fridge-mango'], mouth.contact, { scale: .5, target: mouth.id, release: true });
+  expect(preview.consume).toBe('food');
+  await act(async () => release(preview));
+  expect(persist).toHaveBeenCalledOnce();
+  expect(harness.finish.mock.calls.at(-1)![2].consume).toBe('food');
+  const saved = persist.mock.calls.at(-1)![0];
+  expect(saved.rooms.kitchen.instances.some((i: any) => i.id.startsWith('food-'))).toBe(false);
+  expect(saved.rooms.kitchen.characters.find((c: any) => c.slot === 0)?.action).toBe('eat');
+  expect(withPortions(buildScene(saved)).entities[preview.id]).toBeDefined();
+});

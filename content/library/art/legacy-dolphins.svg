@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-dolphins-title"><title id="legacy-dolphins-title">Is a dolphin a fish?</title><rect width="320" height="196" rx="22" fill="#E7F0DF"></rect>
+<g fill="none" stroke="#F4FAF2" stroke-linecap="round" opacity=".85"><path d="M40 40q11-6 22 0M262 28q9-5 18 0" stroke-width="2.5"/><circle cx="214" cy="52" r="3" stroke-width="2"/><circle cx="222" cy="40" r="4.5" stroke-width="2"/><circle cx="216" cy="24" r="2.6" stroke-width="2"/></g>
+<path d="M70 176Q90 160 132 162Q170 156 210 162Q248 164 260 176Q214 186 166 186Q108 186 70 176Z" fill="#E9D6A7"/>
+<path d="M80 174Q118 166 150 168" fill="none" stroke="#FFF6D8" stroke-width="2.2" stroke-linecap="round"/>
+<g stroke="#5F9177" stroke-width="5" stroke-linecap="round" fill="none"><path d="M92 172Q86 154 96 140M104 172Q108 156 118 150"/><path d="M232 170Q228 152 238 138"/></g>
+<ellipse cx="164" cy="150" rx="86" ry="9" fill="#4E7E78" opacity=".15"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M80 68Q62 64 40 50Q54 46 66 52Q74 56 80 60Q86 54 96 50Q106 46 118 46Q104 60 80 68Z" fill="#7F9CB2"/>
+<path d="M79 62Q66 56 52 52M81 62Q94 54 108 50" fill="none" stroke="#A9C0CF" stroke-width="2"/>
+<path d="M186 70Q172 50 148 40Q160 56 154 74Z" fill="#6A879E"/>
+<path d="M270 98Q262 92 248 91Q242 76 222 72Q184 64 146 74C118 82 94 80 74 66L86 66C98 92 120 118 150 124Q198 128 230 112Q250 104 270 101Z" fill="#7F9CB2"/>
+<path d="M266 101Q248 104 232 110Q198 124 150 120Q126 118 112 108Q130 110 152 110Q188 110 212 100Q234 98 266 101Z" fill="#E6EEEC" stroke-width="2.2"/>
+<path d="M210 112Q206 128 186 140Q196 124 194 116Z" fill="#6A879E"/>
+<path d="M230 76Q196 68 156 76Q126 84 104 80" fill="none" stroke="#A9C0CF" stroke-width="2.6"/>
+<path d="M248 91Q258 96 270 99" fill="none" stroke-width="2.2"/>
+<path d="M207 73q5-3 10 0" fill="none" stroke-width="2.6"/>
+<circle cx="236" cy="92" r="2.8" fill="#354E49" stroke="none"/>
+</g>
+</svg>

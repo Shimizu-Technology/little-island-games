@@ -1,0 +1,47 @@
+[
+  {
+    "sourceUrl": "https://bookdash.org/book-source-files/",
+    "resolvedUrl": "https://bookdash.org/book-source-files/",
+    "accessedAt": "2026-11-02T03:13:09.779906+00:00",
+    "sourceSha256": "0a7a9c38ee65d84ba637f10a5188ac1d40e6116c52f736031399631361235885",
+    "path": "content/library/books/publisher-source-policy.txt",
+    "sha256": "821c9115e2449a4e825821abe2521c183d4c53a8bf30b29fd06089e90dca4323",
+    "transformation": "HTML visible text extracted; no script/audio imported."
+  },
+  {
+    "sourceUrl": "https://bookdash.org/book-dash-crediting-requirements_and-identity-guidelines/",
+    "resolvedUrl": "https://bookdash.org/re-using-the-book-dash-content/",
+    "accessedAt": "2026-11-02T03:13:12.077635+00:00",
+    "sourceSha256": "62d8fa0f408da33cb15eade526a1e9808b3974db8a5e06f80f31906440274668",
+    "path": "content/library/books/publisher-crediting-policy.txt",
+    "sha256": "29df826dc4f829a5db22023b356dff0db6d198e76c2ef268992cb873dc6f8be4",
+    "transformation": "HTML visible text extracted; no script/audio imported."
+  },
+  {
+    "sourceUrl": "https://github.com/bookdash/bookdash-books",
+    "resolvedUrl": "https://github.com/bookdash/bookdash-books",
+    "accessedAt": "2026-11-02T03:13:13.136092+00:00",
+    "sourceSha256": "db2201b0591c369f3bbe8deb8465103b982936d4f453de58ab7698f34ec11ac9",
+    "path": "content/library/books/publisher-repository.txt",
+    "sha256": "dc21fb3efaa99e1cbdea33366f070c0e34cdb8aa71de86fb9fd92e91995da08a",
+    "transformation": "HTML visible text extracted; no script/audio imported."
+  },
+  {
+    "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/_data/meta.yml",
+    "revision": "54916310c5c06a5282e2d5d4add18d64f90e5fde",
+    "path": "content/library/books/publisher-metadata.yml",
+    "sha256": "2979394c86bf5a3171500a6d15e2cb45ef0f261d2dcab7a6322504319627564f",
+    "accessedAt": "2026-11-02T03:13:13.137262+00:00",
+    "transformation": "None"
+  },
+  {
+    "sourceUrl": "https://raw.githubusercontent.com/bookdash/bookdash-books/54916310c5c06a5282e2d5d4add18d64f90e5fde/the-best-thing-ever/en/images/book-dash-logo.png",
+    "accessedAt": "2026-11-02T03:19:21.175828+00:00",
+    "path": "content/library/books/book-dash-logo.png",
+    "sourceSha256": "f17d0f4f44db79e3a2170beb549c194828519332627794d9e1d4377aa5c4dc6b",
+    "sha256": "f17d0f4f44db79e3a2170beb549c194828519332627794d9e1d4377aa5c4dc6b",
+    "bytes": 7248,
+    "transformation": "None",
+    "purpose": "Publisher-supplied book credit logo. Retain as requested by the publisher identity/credit guidelines; no endorsement or independent trademark permission is claimed."
+  }
+]

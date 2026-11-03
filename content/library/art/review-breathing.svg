@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img"><title>Two coral-colored lungs hang from a branching airway above a curved green diaphragm line; a simplified body model.</title><rect width="120" height="120" rx="22" fill="#FFF9E6"/>
+<g transform="translate(4.8 6) scale(.92)">
+<g fill="none" stroke="#7EB5A9" stroke-width="1.4" stroke-linecap="round" opacity=".8"><path d="M80 10q5-3 10 0t10 0M84 18q4-2 8 0"/></g>
+<ellipse cx="60" cy="113" rx="40" ry="3.5" fill="#739174" opacity=".16"/>
+<g stroke="#354E49" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+<g fill="#F4D2B4" stroke="#CB956D" stroke-width="1.3">
+<path d="M19 42Q11 46 10 60L10 95Q10 101 14.5 101Q19 101 19 95L19 64ZM101 42Q109 46 110 60L110 95Q110 101 105.5 101Q101 101 101 95L101 64Z"/>
+<path d="M54 26Q56 31 53 35H67Q64 31 66 26Z"/>
+<path d="M40 31Q60 37 80 31Q99 32 102 47Q104 62 100 77Q98 93 100 108Q60 116 20 108Q22 93 20 77Q16 62 18 47Q21 32 40 31Z"/>
+<circle cx="60" cy="18" r="16"/>
+</g>
+<path d="M44 19Q42 1 60 1Q78 1 76 19Q70 9 58 10Q49 11 44 19Z" fill="#302C36" stroke="none"/>
+<path d="M53.5 20h.1M66.5 20h.1" stroke="#493332" stroke-width="2.2"/>
+<path d="M56 26q4 2.2 8 0" fill="none" stroke="#996445" stroke-width="1.1"/>
+<path d="M18 104Q60 76 102 104" fill="none" stroke="#5E8A66" stroke-width="5.4"/>
+<path d="M18 104Q60 76 102 104" fill="none" stroke="#85AA7D" stroke-width="3"/>
+<path d="M53 49C40 43 28 51 25 69C23 80 23 91 25 97Q40 93 55 88Q57 68 53 49Z" fill="#E09A7E"/>
+<path d="M67 49C80 43 92 51 95 69C97 80 97 91 95 97Q82 93 71 89Q73 83 66 79Q69 66 67 49Z" fill="#E09A7E"/>
+<g fill="#D38F78" stroke="none"><path d="M26 89Q40 85 55 79L55 87Q40 92 26 96Z"/><path d="M94 89Q83 86 72 82L71 88Q83 92 94 96Z"/></g>
+<g fill="none" stroke="#C77760" stroke-width="1.1"><path d="M27 67Q40 65 50 58M26 83Q40 79 53 71M93 71Q82 69 70 62"/></g>
+<g fill="none" stroke="#F6C9B3" stroke-width="2"><path d="M31 58Q36 50 44 48M76 48Q84 49 89 57"/></g>
+<path d="M60 37V52L49 60L42 70M49 60L47 73M60 52L71 60L78 70M71 60L74 73" fill="none" stroke-width="5"/>
+<path d="M60 37V52L49 60L42 70M49 60L47 73M60 52L71 60L78 70M71 60L74 73" fill="none" stroke="#FFF3CC" stroke-width="2.6"/>
+<path d="M58 41h4M58 46h4" fill="none" stroke-width=".9"/>
+</g>
+</g></svg>

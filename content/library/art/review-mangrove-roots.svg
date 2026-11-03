@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img"><title>A green coastal tree has three spreading prop-root lines reaching into a rectangular strip of blue water.</title><rect width="120" height="120" rx="22" fill="#FFF9E6"/>
+<ellipse cx="60" cy="108" rx="48" ry="4" fill="#4E7E78" opacity=".14"/>
+<g stroke="#354E49" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M12 83Q18 80 24 83T36 83T48 83T60 83T72 83T84 83T96 83T108 83V100Q108 106 102 106H18Q12 106 12 100Z" fill="#7FB8CF"/>
+<path d="M14 98Q60 104 106 98V100Q106 106 100 106H20Q14 106 14 100Z" fill="#6AA3C0" stroke="none"/>
+<path d="M22 88h10M84 90h12M44 100h8" fill="none" stroke="#D8EEF2" stroke-width="1.2"/>
+<g fill="none"><path d="M58 70Q40 72 32 92M60 72Q58 84 60 94M62 70Q80 72 88 92" stroke="#354E49" stroke-width="5.2"/><path d="M58 70Q40 72 32 92M60 72Q58 84 60 94M62 70Q80 72 88 92" stroke="#A48C5C" stroke-width="2.6"/></g>
+<path d="M28 92q4 2 8 0M56 94q4 2 8 0M84 92q4 2 8 0" fill="none" stroke="#D8EEF2" stroke-width="1.2"/>
+<path d="M56 74L57 46H64L64 74Z" fill="#BC9A69"/>
+<path d="M60 70V52" fill="none" stroke="#A48C5C" stroke-width="1.2"/>
+<path d="M20 44Q10 34 20 26Q22 14 36 16Q44 6 58 10Q70 4 80 12Q96 10 98 24Q110 32 100 44Q96 54 82 52Q70 58 58 52Q46 58 36 52Q22 54 20 44Z" fill="#6B9C73"/>
+<path d="M24 44Q34 50 46 47Q58 54 70 47Q84 52 98 42Q94 52 82 51Q70 57 58 51Q46 57 36 51Q26 52 24 44Z" fill="#476E59" stroke="none" opacity=".45"/>
+<g fill="#85AA7D" stroke="none"><path d="M28 32Q30 20 42 22Q48 14 58 18Q52 26 44 28Q36 36 28 32Z"/><path d="M64 18Q72 10 82 16Q92 16 92 26Q84 24 78 28Q70 24 64 18Z"/><path d="M48 40Q56 32 66 36Q74 32 82 38Q72 44 64 42Q56 46 48 40Z"/></g>
+<path d="M30 28Q34 22 42 22M68 16Q76 12 84 16" fill="none" stroke="#C9DDB5" stroke-width="1.2"/>
+<path d="M36 30l-2 4M54 26l1 4M74 26l-1 4M88 32l2 3M40 42l-1 3M70 42l2 3" fill="none" stroke="#476E59" stroke-width="1.2"/>
+<path d="M80 50Q81 58 80 66" fill="none" stroke="#5F8F4E" stroke-width="2.4"/>
+<path d="M80 50Q81 58 80 66" fill="none" stroke="#98B483" stroke-width=".9"/>
+<path d="M42 92Q47 87 52 91L55 89V95L52 93Q47 97 42 92Z" fill="#F0C86D" stroke-width="1.2"/>
+</g>
+</svg>

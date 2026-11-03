@@ -20,6 +20,8 @@ import { LevelPath } from "./LevelPath";
 import { levelOf, levelTitle, optionsAtLevel, levelStage, type LearningLevel } from "./levels";
 import { activeLearner, readyForNext } from "./learners";
 import { views } from "./views";
+import { LastPicnicWord } from "./games/hafa-adai/view";
+import type { IslandState } from "./games/hafa-adai/engine";
 import { Celebrate } from "./Celebrate";
 import { IslandBackdrop, RoundProgress, subjectTheme } from "./LearnChrome";
 import { LearnArt } from "./LearnArt";
@@ -314,6 +316,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
                 style={{ alignItems: "center", justifyContent: "center", gap: 14, padding: 20, borderRadius: 28, backgroundColor: theme.sky, alignSelf: "stretch", minHeight: Math.max(430, height - insets.top - insets.bottom - 190), borderWidth: 3, borderColor: theme.accent }}
               >
                 <View pointerEvents="none" style={{ position: "absolute", top: 10, left: 0, right: 0, alignItems: "center" }}><Celebrate burst={burst.n} big /></View>
+                {engine.id === "hafa-adai" && !saved.options.stage && <LastPicnicWord state={saved.state as IslandState} />}
                 {!notWon && <Heading style={{ color: theme.accent, fontSize: 38, textAlign: "center" }}>★  ★  ★</Heading>}
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                   {store.save.settings.learningIslander !== false && <Companion event={notWon ? "loss" : result === "draw" ? "draw" : "complete"} active={boardActive} size={166}/>}

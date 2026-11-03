@@ -1,0 +1,675 @@
+{
+  "canonicalPath": "/Users/leonshimizu/Desktop/ShimizuTechnology/HafaGPT/api/language_content/canonical_vocabulary.json",
+  "canonicalSha256": "682a3daece1082b692ef27568c127c8c381e0f74a93c6964e6be40a823dbc1cb",
+  "entries": [
+    {
+      "id": "greetings.hello",
+      "category": "greetings",
+      "english": "Hello / Hi",
+      "canonical_chamorro": "Håfa Adai",
+      "recommended_teaching_term": "Håfa Adai",
+      "normalized_key": "hafa adai",
+      "part_of_speech": "intj.",
+      "teaching_level": "beginner",
+      "review_status": "source_backed",
+      "confidence": "high",
+      "pronunciation": {
+        "guide": "HAH-fah ah-DYE",
+        "status": "needs_native_review"
+      },
+      "variants": [
+        {
+          "term": "Håfa Adai!",
+          "type": "orthographic",
+          "status": "source_backed",
+          "notes": "Punctuated display variant."
+        }
+      ],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [
+        {
+          "term": "Buenas yan hågu",
+          "reason": "Used as a greeting in legacy flashcards/audio but no local dictionary headword was found for this teaching meaning.",
+          "found_in": [
+            "web/src/data/defaultFlashcards.ts",
+            "api/audio_generation/flashcard_words.json",
+            "api/audio_generation/manifest.json"
+          ]
+        }
+      ],
+      "source_citations": [
+        {
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "headword": "håfa adai",
+          "definition": "hello, hi (informal greeting)",
+          "part_of_speech": "intj."
+        }
+      ],
+      "notes": "Primary HåfaGPT greeting."
+    },
+    {
+      "id": "greetings.thank_you",
+      "category": "greetings",
+      "english": "Thank you",
+      "canonical_chamorro": "Si Yu'os Ma'åse'",
+      "recommended_teaching_term": "Si Yu'os Ma'åse'",
+      "normalized_key": "si yuos maase",
+      "part_of_speech": "intj.",
+      "teaching_level": "beginner",
+      "review_status": "source_backed",
+      "confidence": "medium",
+      "pronunciation": {
+        "guide": "see DZOO-ohs mah-AW-seh",
+        "status": "needs_native_review"
+      },
+      "variants": [
+        {
+          "term": "Si Yu'us ma'åse'",
+          "type": "source_variant",
+          "status": "source_backed",
+          "source": "chamoru_info_dictionary.json"
+        },
+        {
+          "term": "Si Yu'us ma'åsi'",
+          "type": "source_variant",
+          "status": "source_backed",
+          "source": "revised_and_updated_chamorro_dictionary.json"
+        }
+      ],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [],
+      "source_citations": [
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "si Yu'us ma'åse'",
+          "definition": "noun. (gratitude) 1. Thank you. 2. Thanks."
+        },
+        {
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "headword": "si Yu'us ma'åsi'",
+          "definition": "thank you",
+          "part_of_speech": "intj."
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "si Yu'us ma'ase'",
+          "definition": "thank you, (literal translation - God have mercy)"
+        }
+      ],
+      "notes": "Current app spelling uses Yu'os; local sources list Yu'us variants. Keep as source-backed but medium confidence pending reviewer sign-off."
+    },
+    {
+      "id": "family.family",
+      "category": "family",
+      "english": "Family",
+      "canonical_chamorro": "Familia",
+      "recommended_teaching_term": "Familia",
+      "normalized_key": "familia",
+      "part_of_speech": "n.",
+      "teaching_level": "beginner",
+      "review_status": "source_backed",
+      "confidence": "high",
+      "pronunciation": {
+        "guide": "fah-MEE-lee-ah",
+        "status": "needs_native_review"
+      },
+      "variants": [
+        {
+          "term": "Fåmilia",
+          "type": "source_variant",
+          "status": "source_backed",
+          "source": "chamoru_info_dictionary.json",
+          "notes": "Chamoru.info bundled source spelling."
+        }
+      ],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [],
+      "source_citations": [
+        {
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "headword": "familia",
+          "definition": "family",
+          "part_of_speech": "n."
+        },
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "fåmilia",
+          "definition": "Family; tribe; clan; folk; category of plants or animals."
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "familia",
+          "definition": "family, tribe, clan, folk, category of plants or animals"
+        }
+      ],
+      "notes": "Strongly source-backed family/clan term."
+    },
+    {
+      "id": "family.sibling",
+      "category": "family",
+      "english": "Sibling / brother / sister",
+      "canonical_chamorro": "Che'lu",
+      "recommended_teaching_term": "Che'lu",
+      "normalized_key": "chelu",
+      "part_of_speech": "n.",
+      "teaching_level": "beginner",
+      "review_status": "source_backed",
+      "confidence": "high",
+      "pronunciation": {
+        "guide": "CHEH-loo",
+        "status": "needs_native_review"
+      },
+      "variants": [],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [],
+      "source_citations": [
+        {
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "headword": "che'lu",
+          "definition": "sibling, brother, sister",
+          "part_of_speech": "n."
+        },
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "che'lu",
+          "definition": "noun. sibling; brother; sister."
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "che'lu",
+          "definition": "sibling, brother, sister"
+        }
+      ],
+      "notes": "Source-backed gender-neutral sibling term."
+    },
+    {
+      "id": "family.child",
+      "category": "family",
+      "english": "Child / infant / kid / baby",
+      "canonical_chamorro": "Påtgon",
+      "recommended_teaching_term": "Påtgon",
+      "normalized_key": "patgon",
+      "part_of_speech": "n.",
+      "teaching_level": "beginner",
+      "review_status": "source_backed",
+      "confidence": "high",
+      "pronunciation": {
+        "guide": "PAWT-gohn",
+        "status": "needs_native_review"
+      },
+      "variants": [
+        {
+          "term": "Patgon",
+          "type": "source_variant",
+          "status": "source_backed",
+          "source": "chamorro_english_dictionary_TOD.json"
+        }
+      ],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [],
+      "source_citations": [
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "påtgon",
+          "definition": "noun. child; infant; kid; baby."
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "patgon",
+          "definition": "child, infant, kid, baby"
+        }
+      ],
+      "notes": "Teaching display keeps Påtgon; unaccented Patgon remains a source-backed variant."
+    },
+    {
+      "id": "body_parts.ear",
+      "category": "body_parts",
+      "english": "Ear",
+      "canonical_chamorro": "Talanga",
+      "recommended_teaching_term": "Talanga",
+      "normalized_key": "talanga",
+      "part_of_speech": "n.",
+      "teaching_level": "intermediate",
+      "review_status": "source_backed",
+      "confidence": "high",
+      "pronunciation": {
+        "guide": "tah-LAHNG-gah",
+        "status": "needs_native_review"
+      },
+      "variants": [],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [],
+      "source_citations": [
+        {
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "headword": "talanga",
+          "definition": "ear",
+          "part_of_speech": "n."
+        },
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "talanga",
+          "definition": "Ear."
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "talanga",
+          "definition": "ear"
+        }
+      ],
+      "notes": "Existing learner-facing term is source-backed."
+    },
+    {
+      "id": "body_parts.nose",
+      "category": "body_parts",
+      "english": "Nose",
+      "canonical_chamorro": "Gui'eng",
+      "recommended_teaching_term": "Gui'eng",
+      "normalized_key": "guieng",
+      "part_of_speech": "n.",
+      "teaching_level": "intermediate",
+      "review_status": "source_backed",
+      "confidence": "high",
+      "pronunciation": {
+        "guide": "GEE-eng",
+        "status": "needs_native_review"
+      },
+      "variants": [
+        {
+          "term": "Gui'ing",
+          "type": "source_variant",
+          "status": "source_backed",
+          "source": "revised_and_updated_chamorro_dictionary.json"
+        }
+      ],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [],
+      "source_citations": [
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "gui'eng",
+          "definition": "Nose."
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "gui'eng",
+          "definition": "nose"
+        },
+        {
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "headword": "gui'ing",
+          "definition": "nose",
+          "part_of_speech": "n."
+        }
+      ],
+      "notes": "Teaching display keeps the existing Gui'eng form backed by Chamoru.info and TOD while preserving revised-dictionary Gui'ing."
+    },
+    {
+      "id": "body_parts.mouth",
+      "category": "body_parts",
+      "english": "Mouth",
+      "canonical_chamorro": "Pachot",
+      "recommended_teaching_term": "Pachot",
+      "normalized_key": "pachot",
+      "part_of_speech": "n.",
+      "teaching_level": "intermediate",
+      "review_status": "source_backed",
+      "confidence": "high",
+      "pronunciation": {
+        "guide": "pah-TSOHT",
+        "status": "needs_native_review"
+      },
+      "variants": [
+        {
+          "term": "Påchot",
+          "type": "source_variant",
+          "status": "source_backed",
+          "source": "chamoru_info_dictionary.json"
+        },
+        {
+          "term": "Påchut",
+          "type": "source_variant",
+          "status": "source_backed",
+          "source": "revised_and_updated_chamorro_dictionary.json"
+        }
+      ],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [],
+      "source_citations": [
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "påchot",
+          "definition": "Mouth."
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "pachot",
+          "definition": "mouth"
+        },
+        {
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "headword": "påchut",
+          "definition": "mouth",
+          "part_of_speech": "n."
+        }
+      ],
+      "notes": "Existing app display Pachot is source-backed by TOD; source variants with å/u are preserved for review/search."
+    },
+    {
+      "id": "body_parts.heart",
+      "category": "body_parts",
+      "english": "Heart",
+      "canonical_chamorro": "Korason",
+      "recommended_teaching_term": "Korason",
+      "normalized_key": "korason",
+      "part_of_speech": "n.",
+      "teaching_level": "intermediate",
+      "review_status": "source_backed",
+      "confidence": "high",
+      "pronunciation": {
+        "guide": "koh-rah-SOHN",
+        "status": "needs_native_review"
+      },
+      "variants": [
+        {
+          "term": "Koråson",
+          "type": "source_variant",
+          "status": "source_backed",
+          "source": "chamoru_info_dictionary.json"
+        },
+        {
+          "term": "Kurasón",
+          "type": "source_variant",
+          "status": "source_backed",
+          "source": "revised_and_updated_chamorro_dictionary.json"
+        }
+      ],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [],
+      "source_citations": [
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "koråson",
+          "definition": "Heart; darling; sweetheart; lover; core."
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "korason",
+          "definition": "heart, darling, sweetheart, lover; core"
+        },
+        {
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "headword": "kurasón",
+          "definition": "heart, darling, sweetheart, lover, core",
+          "part_of_speech": "n."
+        }
+      ],
+      "notes": "Teaching display keeps current app/TOD Korason and records å/u/accented variants for reviewer visibility."
+    },
+    {
+      "id": "food.cooked_rice",
+      "category": "food",
+      "english": "Cooked rice",
+      "canonical_chamorro": "Hineksa'",
+      "recommended_teaching_term": "Hineksa'",
+      "normalized_key": "hineksa",
+      "part_of_speech": "n.",
+      "teaching_level": "beginner",
+      "review_status": "source_backed",
+      "confidence": "high",
+      "pronunciation": {
+        "guide": "hee-NEHK-sah",
+        "status": "needs_native_review"
+      },
+      "variants": [
+        {
+          "term": "Hineksa",
+          "type": "orthographic",
+          "status": "needs_review",
+          "notes": "Glottal-stop fallback used by older game/audio content; keep for compatibility/search, not primary display."
+        }
+      ],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [],
+      "source_citations": [
+        {
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "headword": "hineksa'",
+          "definition": "cooked rice",
+          "part_of_speech": "n."
+        },
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "hineksa'",
+          "definition": "Cooked rice."
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "hineksa'",
+          "definition": "cooked rice"
+        }
+      ],
+      "notes": "Teaching display keeps the glottal stop from all local source headwords."
+    },
+    {
+      "id": "food.fish",
+      "category": "food",
+      "english": "Fish",
+      "canonical_chamorro": "Guihan",
+      "recommended_teaching_term": "Guihan",
+      "normalized_key": "guihan",
+      "part_of_speech": "n.",
+      "teaching_level": "beginner",
+      "review_status": "source_backed",
+      "confidence": "high",
+      "pronunciation": {
+        "guide": "GEE-hahn",
+        "status": "needs_native_review"
+      },
+      "variants": [],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [],
+      "source_citations": [
+        {
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "headword": "guihan",
+          "definition": "fish (generic)",
+          "part_of_speech": "n."
+        },
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "guihan",
+          "definition": "noun. fish (animal)"
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "guihan",
+          "definition": "fish--generic term"
+        }
+      ],
+      "notes": "Source-backed food/animal term already broadly used in the app."
+    },
+    {
+      "id": "food.water",
+      "category": "food",
+      "english": "Water / liquid",
+      "canonical_chamorro": "Hånom",
+      "recommended_teaching_term": "Hånom",
+      "normalized_key": "hanom",
+      "part_of_speech": "n.",
+      "teaching_level": "beginner",
+      "review_status": "source_backed",
+      "confidence": "high",
+      "pronunciation": {
+        "guide": "HAW-nom",
+        "status": "needs_native_review"
+      },
+      "variants": [
+        {
+          "term": "Hanom",
+          "type": "source_variant",
+          "status": "source_backed",
+          "source": "chamorro_english_dictionary_TOD.json",
+          "notes": "TOD unaccented spelling for water/liquid; acceptable typed-answer fallback."
+        },
+        {
+          "term": "Hånum",
+          "type": "source_variant",
+          "status": "source_backed",
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "notes": "RUCD/Finder 2024 spelling for water/liquid."
+        }
+      ],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [],
+      "source_citations": [
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "hånom",
+          "definition": "noun. water; liquid."
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "hanom",
+          "definition": "water, liquid"
+        },
+        {
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "headword": "hånum",
+          "definition": "water, liquid",
+          "part_of_speech": "n."
+        }
+      ],
+      "notes": "Primary display follows Chamoru.info/Learning Hånom; TOD Hanom and RUCD/Finder Hånum are source-backed variants."
+    },
+    {
+      "id": "food.coconut",
+      "category": "food",
+      "english": "Coconut / coconut palm",
+      "canonical_chamorro": "Niyok",
+      "recommended_teaching_term": "Niyok",
+      "normalized_key": "niyok",
+      "part_of_speech": "n.",
+      "teaching_level": "beginner",
+      "review_status": "source_backed",
+      "confidence": "medium",
+      "pronunciation": {
+        "guide": "NEE-dzok",
+        "status": "needs_native_review"
+      },
+      "variants": [
+        {
+          "term": "Niyuk",
+          "type": "source_variant",
+          "status": "source_backed",
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "notes": "RUCD/Finder 2024 spelling for coconut palm / ripe or husked coconut contexts."
+        }
+      ],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [],
+      "source_citations": [
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "niyok",
+          "definition": "Type of plant--cocos nucifera. Coconut palm"
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "niyok",
+          "definition": "type of plant-cocos nucifera; coconut palm"
+        },
+        {
+          "source": "revised_and_updated_chamorro_dictionary.json",
+          "headword": "niyuk",
+          "definition": "type of plant: coconut palm; husked coconut, meat of ripe coconut",
+          "part_of_speech": "n."
+        }
+      ],
+      "notes": "Beginner app can gloss Niyok as coconut/coconut palm; RUCD/Finder Niyuk is source-backed. Månha is specifically green coconut with tender meat."
+    },
+    {
+      "id": "food.hot_sauce",
+      "category": "food",
+      "english": "Hot sauce / condiment",
+      "canonical_chamorro": "Fina'denne'",
+      "recommended_teaching_term": "Fina'denne'",
+      "normalized_key": "finadenne",
+      "part_of_speech": "n.",
+      "teaching_level": "beginner",
+      "review_status": "source_backed",
+      "confidence": "high",
+      "pronunciation": {
+        "guide": "fee-nah-DEN-neh",
+        "status": "needs_native_review"
+      },
+      "variants": [],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [],
+      "source_citations": [
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "fina'denne'",
+          "definition": "noun. sauce (hot); hot sauce consisting of pepper, onion, vinegar or lemon, etc."
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "fina'denne'",
+          "definition": "sauce (hot), hot sauce made of pepper, onion, soy sauce, vinegar or lemon"
+        }
+      ],
+      "notes": "Existing flashcard spelling is source-backed; static audio was missing and is added in this pass."
+    },
+    {
+      "id": "food.mango",
+      "category": "food",
+      "english": "Mango",
+      "canonical_chamorro": "Mångga",
+      "recommended_teaching_term": "Mångga",
+      "normalized_key": "mangga",
+      "part_of_speech": "n.",
+      "teaching_level": "beginner",
+      "review_status": "source_backed",
+      "confidence": "medium",
+      "pronunciation": {
+        "guide": "MAHNG-gah",
+        "status": "needs_native_review"
+      },
+      "variants": [
+        {
+          "term": "Mangga",
+          "type": "source_variant",
+          "status": "source_backed",
+          "source": "chamorro_english_dictionary_TOD.json"
+        }
+      ],
+      "deprecated_app_terms": [],
+      "needs_review_terms": [
+        {
+          "term": "Mangå",
+          "reason": "Appears to be a truncated app Wordle form for mango; local source-backed forms are Mångga/Mangga.",
+          "found_in": [
+            "web/src/components/ChamorroWordle.tsx"
+          ]
+        }
+      ],
+      "source_citations": [
+        {
+          "source": "chamoru_info_dictionary.json",
+          "headword": "mångga",
+          "definition": "Mango (fruit)."
+        },
+        {
+          "source": "chamorro_english_dictionary_TOD.json",
+          "headword": "mangga",
+          "definition": "mango (fruit)"
+        }
+      ],
+      "notes": "Revised local JSON has a conflicting mångga=manganese entry, so teaching display relies on Chamoru.info/TOD and remains medium confidence pending educator review."
+    }
+  ],
+  "held": [
+    "body_parts.eye"
+  ],
+  "pronunciation": "needs_native_review; Leon permits warm neural voice pending lead spot-listening"
+}

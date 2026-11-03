@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="forecast-art-title">
+  <title id="forecast-art-title">A weather station has a cup anemometer, a marked thermometer and a rain gauge with a blue water level.</title>
+  <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M24 176Q30 156 90 158Q160 152 230 158Q294 158 296 176Q290 188 230 188Q160 191 90 188Q26 188 24 176Z" fill="#98B483"/>
+<path d="M36 182Q110 190 180 187Q250 186 288 176" fill="none" stroke="#85AA7D" stroke-width="2.2"/>
+<path d="M276 170q-2-10 4-16M286 170q2-8 8-12M36 170q-2-10 4-14" fill="none" stroke="#6B9C73" stroke-width="2.6"/>
+<ellipse cx="160" cy="170" rx="118" ry="5" fill="#354E49" opacity=".12" stroke="none"/>
+<path d="M66 170V56h8v114Z" fill="#B9B4A2"/>
+<path d="M69 164V60" fill="none" stroke="#DCD6C2" stroke-width="2"/>
+<path d="M58 170h24" fill="none" stroke-width="3.4"/>
+<path d="M70 52L36 45M70 52L102 43M70 52L80 30" fill="none" stroke-width="2.6"/>
+<rect x="64" y="48" width="12" height="9" rx="3" fill="#9FAE94" stroke-width="2.4"/>
+<circle cx="30" cy="44" r="9" fill="#F4FAF2" stroke-width="2.4"/><circle cx="30" cy="44" r="5" fill="#C3BBA5" stroke="none"/>
+<circle cx="110" cy="42" r="9" fill="#F4FAF2" stroke-width="2.4"/><path d="M105 38q4-3 8-1" fill="none" stroke="#C3BBA5" stroke-width="2"/>
+<path d="M80 21A8 8 0 0 1 80 37Z" fill="#F4FAF2" stroke-width="2.4"/>
+<path d="M20 70q10-4 18 0M24 80q8-3 14 0" fill="none" stroke="#7FA9BE" stroke-width="2.2"/>
+<path d="M156 170v-12" fill="none" stroke="#A48C5C" stroke-width="6"/>
+<rect x="134" y="40" width="44" height="120" rx="8" fill="#BC9A69"/>
+<path d="M140 48v104" fill="none" stroke="#D7B88A" stroke-width="2"/>
+<rect x="149" y="50" width="14" height="92" rx="7" fill="#F4FAF2" stroke-width="2.4"/>
+<path d="M156 140V84" fill="none" stroke="#D3915E" stroke-width="5"/>
+<circle cx="156" cy="144" r="10" fill="#D3915E" stroke-width="2.6"/>
+<path d="M152 140q0-4 4-5" fill="none" stroke="#F6C9B4" stroke-width="2"/>
+<path d="M165 58h6M165 70h4M165 82h6M165 94h4M165 106h6M165 118h4M165 130h6" fill="none" stroke-width="2"/>
+<path d="M216 170h44M222 170l4-10h28l4 10" fill="#A48C5C" stroke-width="2.6"/>
+<path d="M210 64h52l-14 16h-24Z" fill="#C3BBA5"/>
+<path d="M224 80h24v80h-24Z" fill="#E8F3F4"/>
+<path d="M224.5 126h23v33.5h-23Z" fill="#7FB3D9" stroke="none"/>
+<path d="M224 126q6-3 12 0t12 0" fill="none" stroke="#5E8FB8" stroke-width="2"/>
+<path d="M224 80h24v80h-24Z" fill="none"/>
+<path d="M228 88v66" fill="none" stroke="#FFFFFF" stroke-width="2.4"/>
+<path d="M248 92h-6M248 104h-4M248 116h-6M248 128h-4M248 140h-6M248 152h-4" fill="none" stroke-width="1.8"/>
+<g fill="#7FB3D9" stroke-width="2"><path d="M236 34C240 40 242 44 242 47A6 6 0 0 1 230 47C230 44 232 40 236 34Z"/><path d="M252 22C255 26 256 29 256 31A4 4 0 0 1 248 31C248 29 249 26 252 22Z"/></g>
+</g></svg>

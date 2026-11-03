@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="trench-art-title">
+  <title id="trench-art-title">A cutaway shows deep blue water above a steep, narrow V-shaped trench in a sand-colored seafloor; a vertical arrow marks its depth.</title>
+  <rect width="320" height="196" rx="22" fill="#F6E8DC"/>
+<ellipse cx="160" cy="182" rx="132" ry="7" fill="#4E7E78" opacity=".15"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M270 50L292 30V160L270 180Z" fill="#46617C"/>
+<path d="M270 112L292 94V160L270 180Z" fill="#C3AE7E" stroke="none"/>
+<path d="M270 50L292 30V160L270 180Z" fill="none"/>
+<path d="M30 50L52 30H292L270 50Z" fill="#A9D6E0"/>
+<path d="M76 42q8-4 16 0M196 40q8-4 16 0M240 36q6-3 12 0" fill="none" stroke="#F4FAF2" stroke-width="2"/>
+<path d="M30 50H270V170Q270 180 260 180H40Q30 180 30 170Z" fill="#50647D"/>
+<path d="M31 51H269V74H31Z" fill="#93C9C8" stroke="none"/>
+<path d="M31 74H269V100H31Z" fill="#6E9FC0" stroke="none"/>
+<path d="M30 112Q60 104 92 108Q120 112 142 110L166 170L194 112Q228 106 270 110V170Q270 180 260 180H40Q30 180 30 170Z" fill="#E9D6A7"/>
+<path d="M32 132Q70 126 110 130Q132 132 148 136L164 178M268 128Q232 124 206 130Q196 142 180 178M32 154Q70 148 120 152M268 150Q240 148 218 154Q206 164 200 178" fill="none" stroke="#C3AE7E" stroke-width="2.2"/>
+<path d="M40 114Q70 108 100 112M210 112Q240 108 262 112" fill="none" stroke="#FFF6D8" stroke-width="2.2"/>
+<path d="M30 50H270V170Q270 180 260 180H40Q30 180 30 170Z" fill="none"/>
+<path d="M120 40Q120 46 126 46H146Q152 46 152 40Z" fill="#E09A7E" stroke-width="2.2"/>
+<path d="M128 40V32H140V40" fill="#FFF6D8" stroke-width="2.2"/>
+</g>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M166 56V160M159 150l7 10 7-10M158 56h16" stroke="#354E49" stroke-width="6"/><path d="M166 56V160M159 150l7 10 7-10M158 56h16" stroke="#FFF3CC" stroke-width="2.8"/></g>
+<g transform="translate(76 86)" stroke="#354E49" stroke-width="2" stroke-linejoin="round"><path d="M-10 0Q-3 -7 6 -3L12 -8V8L6 3Q-3 7 -10 0Z" fill="#F0C86D"/><circle cx="-5" cy="-1" r="1.4" fill="#354E49" stroke="none"/></g>
+</svg>

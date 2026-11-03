@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-deep-ocean-title"><title id="legacy-deep-ocean-title">What happens deeper in the ocean?</title><rect width="320" height="196" rx="22" fill="#E1F0F3"></rect>
+<path d="M34 34Q60 14 100 22Q140 8 180 20Q226 6 266 22Q300 36 294 70Q304 110 292 150Q290 182 236 184Q170 190 104 184Q38 190 28 156Q14 116 24 80Q16 48 34 34Z" fill="#5E7F99"/>
+<path d="M40 56Q70 38 110 46Q150 32 196 44Q240 32 278 50Q294 80 288 120Q292 170 236 178Q170 186 104 180Q42 184 34 150Q24 110 32 80Q30 62 40 56Z" fill="#47617C"/>
+<path d="M36 170Q60 150 100 156Q140 146 186 158Q232 150 284 166Q276 182 220 182Q160 188 100 182Q50 184 36 170Z" fill="#3D5470"/>
+<g fill="#C7D2DE" opacity=".7"><circle cx="58" cy="52" r="1.6"/><circle cx="92" cy="36" r="1.2"/><circle cx="210" cy="40" r="1.6"/><circle cx="268" cy="58" r="1.2"/><circle cx="48" cy="122" r="1.4"/><circle cx="246" cy="34" r="1.1"/><circle cx="76" cy="146" r="1.2"/><circle cx="182" cy="30" r="1.2"/></g>
+<path d="M198 104L286 70Q296 112 286 150Z" fill="#FFF3CC" opacity=".32"/>
+<g transform="translate(252 112)" stroke="#354E49" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M-14 0Q-4 -10 10 -5L20 -12L18 0L20 12L10 5Q-4 10 -14 0Z" fill="#C7D2DE"/><circle cx="-7" cy="-1" r="3.4" fill="#FFF6D8" stroke-width="1.4"/><circle cx="-7" cy="-1" r="1.8" fill="#354E49" stroke="none"/><g fill="#F0CF7C" stroke="none"><circle cx="-2" cy="5" r="1.4"/><circle cx="3" cy="5" r="1.4"/><circle cx="8" cy="4" r="1.4"/></g></g>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M78 136H170M96 128V136M150 128V136" fill="none" stroke="#A48C5C" stroke-width="5"/>
+<path d="M78 136H170M96 128V136M150 128V136" fill="none" stroke-width="1.6" opacity=".5"/>
+<path d="M58 70L44 56L40 64L50 90Z" fill="#E8B752"/>
+<path d="M58 122L44 136L40 128L50 102Z" fill="#E8B752"/>
+<ellipse cx="44" cy="96" rx="6" ry="16" fill="#BC9A69"/>
+<path d="M128 64V40Q128 32 136 32H156V44H140V64Z" fill="#F0C86D"/>
+<path d="M156 30H162V46H156Z" fill="#93C9C8" stroke-width="2.2"/>
+<path d="M56 96Q56 62 108 62H150Q200 62 202 96Q200 130 150 130H108Q56 130 56 96Z" fill="#F0C86D"/>
+<path d="M60 108Q74 128 108 128H150Q190 128 198 106Q186 118 150 118H108Q76 118 60 108Z" fill="#E8B752" stroke="none"/>
+<path d="M74 78Q86 68 108 68H150" fill="none" stroke="#FFE3A0" stroke-width="3.5"/>
+<path d="M100 116V126M126 117V128M152 117V128M176 113V124" fill="none" stroke="#A48C5C" stroke-width="2.2"/>
+<circle cx="112" cy="94" r="14" fill="#BC9A69"/><circle cx="112" cy="94" r="9.5" fill="#93C9C8" stroke-width="2.2"/>
+<circle cx="152" cy="94" r="14" fill="#BC9A69"/><circle cx="152" cy="94" r="9.5" fill="#93C9C8" stroke-width="2.2"/>
+<path d="M106 90q3-4 8-4M146 90q3-4 8-4" fill="none" stroke="#F4FAF2" stroke-width="2.2"/>
+<path d="M196 98H206V110H196Z" fill="#FFF3CC" stroke-width="2.2"/>
+</g>
+</svg>

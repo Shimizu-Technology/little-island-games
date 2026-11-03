@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-bees-title"><title id="legacy-bees-title">How can a bee help a flower?</title><rect width="320" height="196" rx="22" fill="#E7F0DF"/><g data-fit="1" transform="translate(-21.4 -33) scale(1.148)">
+<path d="M52 180Q70 166 120 168T220 168Q262 168 264 180Q220 190 156 189Q90 190 52 180Z" fill="#A8C493"/>
+<ellipse cx="128" cy="178" rx="52" ry="5" fill="#739174" opacity=".18"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M128 168Q124 176 128 184M200 182Q214 160 250 146" fill="none" stroke="#6B9C73"/>
+<g transform="translate(24 18)"><path d="M226 128C218 118 222 104 232 98C238 108 236 122 226 128Z" fill="#E09A7E" stroke-width="2.2"/><path d="M220 130Q222 120 226 128Q230 120 234 124Q230 132 226 130Z" fill="#6B9C73" stroke-width="2"/></g><path d="M214 166C204 156 206 146 214 140C222 148 222 158 214 166Z" fill="#6B9C73" stroke-width="2.2"/>
+<path d="M126 180C108 182 86 178 72 168C92 164 112 170 126 180ZM130 180C148 182 170 178 184 168C164 164 144 170 130 180Z" fill="#6B9C73" stroke-width="2.2"/>
+<path d="M124 179Q100 174 80 169M132 179Q156 174 176 169" fill="none" stroke="#98B483" stroke-width="1.6"/>
+<path d="M130 150C159 142 163 122 128 121C93 122 97 142 126 150Z" fill="#D38F78"/>
+<path d="M128 143L128 128M132 138L141 129M124 138L115 129" fill="none" stroke="#C77760" stroke-width="1.6"/>
+<path d="M129 149C119 135 76 128 63 141C54 155 100 160 127 151Z" fill="#D38F78"/>
+<path d="M112 148L78 143M101 145L85 138M98 148L77 149" fill="none" stroke="#C77760" stroke-width="1.6"/>
+<path d="M129 151C156 160 202 155 193 141C180 128 137 135 127 149Z" fill="#D38F78"/>
+<path d="M144 148L178 143M158 148L179 149M155 145L171 138" fill="none" stroke="#C77760" stroke-width="1.6"/>
+<path d="M126 151C115 164 139 181 168 173C195 164 164 149 130 149Z" fill="#EDB59B"/>
+<path d="M138 156L159 168M142 161L147 170M149 159L168 164" fill="none" stroke="#C77760" stroke-width="1.6"/>
+<path d="M126 149C92 149 61 164 88 173C117 181 141 164 130 151Z" fill="#EDB59B"/>
+<path d="M118 156L97 168M107 159L88 164M114 161L109 170" fill="none" stroke="#C77760" stroke-width="1.6"/>
+
+<ellipse cx="128" cy="150" rx="14" ry="6" fill="#F0C86D" stroke-width="2.2"/>
+<g fill="#E8B752" stroke="none"><circle cx="120" cy="148" r="1.8"/><circle cx="128" cy="146" r="1.8"/><circle cx="136" cy="149" r="1.8"/><circle cx="124" cy="152" r="1.6"/><circle cx="133" cy="152" r="1.6"/></g>
+<g fill="none" stroke="#2A221D" stroke-width="2.4"><path d="M126 116L118 130L114 141M138 120L146 132L142 143M150 116L170 128L172 140"/><path d="M110 96L108 78L96 67"/></g>
+<g transform="translate(184 110) rotate(18)">
+<ellipse rx="38" ry="25" fill="#F0C86D"/>
+<path d="M-36 6Q0 30 36 6Q30 22 0 25Q-30 22-36 6Z" fill="#E8B752" stroke="none"/>
+<path d="M-4-24Q-9 0-4 24M12-23Q7 0 12 23M26-18Q22 0 26 18" fill="none" stroke="#4B3B2F" stroke-width="8" stroke-linecap="butt"/>
+<path d="M-22-18Q-8-24 6-24" fill="none" stroke="#FFF3CC" stroke-width="2.2"/>
+<ellipse rx="38" ry="25" fill="none"/>
+<path d="M37 0l8 1-7 3" fill="#4B3B2F" stroke-width="2"/>
+</g>
+<circle cx="134" cy="102" r="21" fill="#C98E42"/>
+<path d="M124 90l-2-4M132 86v-4M141 88l2-4M120 102l-4-1M128 98l-2-3M138 97l2-3M145 102l3-2" fill="none" stroke="#E2B467" stroke-width="2"/>
+<g fill="#F0CF7C" stroke="none"><circle cx="126" cy="117" r="2.4"/><circle cx="135" cy="119" r="2.2"/><circle cx="143" cy="115" r="2"/></g>
+<ellipse cx="106" cy="110" rx="14" ry="16" transform="rotate(-15 106 110)" fill="#4B3B2F"/>
+<ellipse cx="103" cy="105" rx="6" ry="9" transform="rotate(-15 103 105)" fill="#2B2320" stroke="none"/>
+<circle cx="101" cy="101" r="2" fill="#F4FAF2" stroke="none"/>
+<path d="M110 124L116 138" fill="none" stroke="#2A221D" stroke-width="2.4"/>
+<path d="M104 96L96 80L82 74" fill="none" stroke="#3A2E26" stroke-width="2.6"/>
+<path d="M146 92C170 76 200 70 210 78C214 88 182 96 150 96Z" fill="#F4FAF2" opacity=".9" stroke-width="2.2"/>
+<path d="M138 86C150 52 196 34 220 42C232 48 214 66 146 92Z" fill="#F4FAF2" opacity=".9" stroke-width="2.2"/>
+<path d="M142 88Q180 56 216 46M150 94Q180 84 206 80M170 72l12 6" fill="none" stroke="#9CCFC9" stroke-width="1.6"/>
+<g fill="none" stroke="#3E342D" stroke-width="3"><path d="M120 118L108 130L104 142M132 122L134 134L128 146M146 118L160 132L158 146"/><path d="M100 142h7M124 147h7M154 147h8" stroke-width="2.2"/></g>
+<ellipse cx="155" cy="130" rx="6.5" ry="5" fill="#E8B752" stroke-width="1.8"/>
+<g fill="#F0CF7C" stroke="#E8B752" stroke-width="1"><circle cx="84" cy="126" r="2.2"/><circle cx="74" cy="134" r="1.8"/><circle cx="90" cy="118" r="1.6"/></g>
+</g></g></svg>

@@ -1,0 +1,1048 @@
+{
+  "generatedAt": "2026-11-02T12:34:17.878295+00:00",
+  "note": "Current content-pass inventory; original acquisition report retained with integration addendum. All nine reading editions, reconciled alts, and current companion metadata.",
+  "readingImageBytes": 19996281,
+  "bytesExcludingInventory": 27085758,
+  "files": [
+    {
+      "path": "content/library/book-items.json",
+      "bytes": 350060,
+      "sha256": "3b227767428411cca649b8dbfc3950daaf0d205c888467288948630c6cfc47e0"
+    },
+    {
+      "path": "content/library/book-speech.json",
+      "bytes": 27464,
+      "sha256": "b7d80194436048b3b63d042bb6d366931a24f1ae6269bbce07804ce2a9495597"
+    },
+    {
+      "path": "content/library/books/CC-BY-4.0.txt",
+      "bytes": 18657,
+      "sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
+    },
+    {
+      "path": "content/library/books/REPORT.md",
+      "bytes": 13416,
+      "sha256": "625840dfdace121b589672a86bb0a417cb40618627028d9e023469c05bc86edc"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/CREDITS.html",
+      "bytes": 1567,
+      "sha256": "55913645f93f2ff79012d35a5461fd8ad06d1bc876edcc79291130cc5e796cfd"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/CREDITS.txt",
+      "bytes": 1091,
+      "sha256": "011a85e9db74d25765995d35ec1dea74ae08b8bb1f0c6dbbb47a50c4f06950ba"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/edition-metadata.json",
+      "bytes": 1119,
+      "sha256": "e50876f9c03812e93992d17517722b746b8acf217a4ba5dd79fba485f6afbf5f"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/edition.md",
+      "bytes": 2177,
+      "sha256": "be8f87f97e88aa0f1438cce15a10f611a3d3280a86c27cbfbd399fc2bb63a2f1"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/edition.txt",
+      "bytes": 1513,
+      "sha256": "06fa43583b6f5e067ff57756a0cd8d089102193f91d95f5388716dcfff75f913"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/inspection.jpg",
+      "bytes": 1415391,
+      "sha256": "8c9b6b1a0d21202b38507d138bf792af28090f340cd86d142e0e24b14401aeb5"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/manifest.json",
+      "bytes": 17032,
+      "sha256": "d778b9a597aa8a2e7b938f51522df0ec971c6246b9277a305da642d4f96f0831"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/page-00.jpg",
+      "bytes": 205595,
+      "sha256": "1458cd8adee7132f2940b97fc94e63b994952816385e8f4f13fa0866fc649196"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/page-01.jpg",
+      "bytes": 136841,
+      "sha256": "6818658259dc5faa7aadf3ed4018d7dfd52645dda4aae4db5ca93daa02377c1f"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/page-02.jpg",
+      "bytes": 160436,
+      "sha256": "f2104f5df6af1a83e16c38de86a2ce1071d298cc3dce6279be1caddd4b392ced"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/page-03.jpg",
+      "bytes": 163113,
+      "sha256": "6ebbfcefa4ee20d0d230e68a2a7dbc0a2f71ec9829cf8ae1bcc5f0cd013b81ab"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/page-04.jpg",
+      "bytes": 163242,
+      "sha256": "5ffaaf8772e8d8b0892d36252552aa47584d5c7bc1b1cfee1728b51f89b96676"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/page-05.jpg",
+      "bytes": 165883,
+      "sha256": "079092a8741a4a66c69c1b91aa4262b8211411d6db6b18dca55bbcf6ca453456"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/page-06.jpg",
+      "bytes": 117454,
+      "sha256": "b62787d2457fbbeae0470384e30c385b9b4fda7e94fa3f770e6b222703b6802d"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/page-07.jpg",
+      "bytes": 142679,
+      "sha256": "1632de6776ae5f38e1a59de342a428f4e932ae4884a74ecdc129a9db1fd22aef"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/page-08.jpg",
+      "bytes": 169051,
+      "sha256": "8736884470ba74bc8754232633217737167a9d21db0b215feec8cb4e6298f16d"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/page-09.jpg",
+      "bytes": 166534,
+      "sha256": "46666d957be0961651a586bf9f4880fe922e47e09e3721a69457a43adac15a57"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/page-10.jpg",
+      "bytes": 179913,
+      "sha256": "dab1ea7eaa284dc875386a9c4e85f9d4b0c1c76f604de0c4de8310d3ae7fa510"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/page-11.jpg",
+      "bytes": 164496,
+      "sha256": "71705ac8d613c8071ffd8f4e9d15e7b1a9e511d28857eccac5f40449340658d6"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/page-12.jpg",
+      "bytes": 190643,
+      "sha256": "37b153b115923340055e22f79d8ee49c48886c29999cb3d894e2c61500673e1f"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/publisher.txt",
+      "bytes": 881,
+      "sha256": "88c7eb21f428acfc0943f6f38b658a8ec3d8dd77b85e78e102fdf801cb263a14"
+    },
+    {
+      "path": "content/library/books/a-beautiful-day/transcripts.json",
+      "bytes": 6149,
+      "sha256": "58a3ac48603a5edf394cf5577ec9680276ac3e7a9059021ed070406dfc0d8357"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/CREDITS.html",
+      "bytes": 1575,
+      "sha256": "878e991563859cf6349364ffd764b56fe2d1afbddef534edee22afc32aad9c26"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/CREDITS.txt",
+      "bytes": 1099,
+      "sha256": "3fb1012bb009bbe2d9cb8ccad94652f5434fd628ea98b7b61017eb950faeff22"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/edition-metadata.json",
+      "bytes": 1661,
+      "sha256": "b48fe795aabff3e6472402eda772d21eac8572480805dab65a0622506503a129"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/edition.md",
+      "bytes": 4683,
+      "sha256": "ae663b0bd5dabd2c76b95fb90f2286c7e2b39a78ef30d6b3758db305647f9e36"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/edition.txt",
+      "bytes": 4476,
+      "sha256": "aef8a4bf3ffdd2bf728678dffb1809337398deda019f07cd8187ac6bd10df284"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/inspection.jpg",
+      "bytes": 396595,
+      "sha256": "2e392125805150674f882df1dc7e2cf7fbfc8963efc26365e20158008656e425"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/manifest.json",
+      "bytes": 20295,
+      "sha256": "b2e7ce931c1c42d85fb4a213fd49b2db224e3b9fb9a34266e511a7080820db54"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/page-00.jpg",
+      "bytes": 103215,
+      "sha256": "38ba3ae3b238bdb515a430956d52c2a9fab90fd5cfcf05d7bdc961f8f8d51f69"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/page-01.jpg",
+      "bytes": 31502,
+      "sha256": "71acd5b97ed189670ba01ae5bdb2ff478f6e0db2f67832601dab80a3995d0de7"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/page-02.jpg",
+      "bytes": 23037,
+      "sha256": "d0d57b5dfd65776ff3381e15ff842be6e1823206c1bd60ee1cc12161b1bec8e8"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/page-03.jpg",
+      "bytes": 26364,
+      "sha256": "e70b8e63be931eadf8d421b36355aa5843cd1bea117f80efc0f269e1454db5d3"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/page-04.jpg",
+      "bytes": 44220,
+      "sha256": "d847eae8cddde12dba022d6876724b45727063581cc3d88680cfabf7308763f9"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/page-05.jpg",
+      "bytes": 31542,
+      "sha256": "c0086434544ee32f39a823bbec7ef25c3084b55bb22000cf2ed73f7f491fda93"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/page-06.jpg",
+      "bytes": 42705,
+      "sha256": "b5545ac4b5ffe59a3aa7ef65021652424042606ff27a8022fb9ce215fb9bbdf5"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/page-07.jpg",
+      "bytes": 31154,
+      "sha256": "8ec28f162827e8be49e29aea4cb28e838778c4a36b7d015ca8ba4e39dac53b5a"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/page-08.jpg",
+      "bytes": 39941,
+      "sha256": "5fbe7a8d39ff1c4fb90ad23e3fd8b92c976ae383b76a679928d3dc7512552ebd"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/page-09.jpg",
+      "bytes": 37091,
+      "sha256": "c4cdf01c19ae2885b32c3aa47958fdee122d1187401928033c5c4166c022a8f5"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/page-10.jpg",
+      "bytes": 31212,
+      "sha256": "2562c157521325a5ffc502123f02fc52cd79fe0a4623e57db1cd6ca9d976cb42"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/page-11.jpg",
+      "bytes": 42777,
+      "sha256": "5fa6e612c333387b08e8a5bad560c2d2b8bedc38c71a5300ffd281bb9928fbf9"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/page-12.jpg",
+      "bytes": 35624,
+      "sha256": "a658219dd3365f16a54c52df260af8688fd1ee1d787ece0c5ae1c1549ab85f68"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/publisher.txt",
+      "bytes": 908,
+      "sha256": "cc9cba6ea3bd9fe197cbec0030691231004473d908ddbb97bbf9bcd20120d6ba"
+    },
+    {
+      "path": "content/library/books/a-fish-and-a-gift/transcripts.json",
+      "bytes": 8918,
+      "sha256": "9505567cb3ba222fb19cf04d0a742b72303e77ce3ba2188a3344b93457164a03"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/CREDITS.html",
+      "bytes": 1665,
+      "sha256": "df516e3f27f5275215b598c952689d274f338206cdae41df9c6b93d04a1b47fb"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/CREDITS.txt",
+      "bytes": 1189,
+      "sha256": "cc9b2a846dbd60abc26ea609846cf2699c2fd17d9960bc12d5a42e451b4ee329"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/edition-metadata.json",
+      "bytes": 1355,
+      "sha256": "3aab76f82678e69b37429f91aba503281b1e1822ab79006b054fd81b9464bd12"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/edition.md",
+      "bytes": 1622,
+      "sha256": "3d2da1444a3fa0f5e8865a7ee7b35cfa88831c0e92eba121be99f87a5346758e"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/edition.txt",
+      "bytes": 1298,
+      "sha256": "3fdffb2f1fb86072b261eb0ef767725e531349eb5ef21a287a056247a189e9e1"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/inspection.jpg",
+      "bytes": 609631,
+      "sha256": "c6985eeb9780d71a9b21a776d97ad6b18228f433895b1b763ea7f1fa64fc7a93"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/manifest.json",
+      "bytes": 17083,
+      "sha256": "efcfe418d20702726de87a4240e050ea6322339c57f308e3c49165cef31c5045"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/page-00.jpg",
+      "bytes": 96556,
+      "sha256": "c80cfe7a494f8ded22a35e0554b7dd075b39faad62388a07e29ec701e14a04b2"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/page-01.jpg",
+      "bytes": 31874,
+      "sha256": "557ba1d70e2d14b38e48c933eb9774aefbc8f79a4f24ff415b5f72a711455c2e"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/page-02.jpg",
+      "bytes": 55700,
+      "sha256": "a5111fbf1edfe563c618cedcf54f016344797543a3aa8f5e7ae2573dab82a2e4"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/page-03.jpg",
+      "bytes": 44548,
+      "sha256": "781d00c5ff96ea0a548a5345293f1c337a8a76438f346d49d9cef16a8859e6e6"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/page-04.jpg",
+      "bytes": 85392,
+      "sha256": "112d30caed28b5e1467380a0ba754c50b7e6ec864af3769846dca8a661732b7e"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/page-05.jpg",
+      "bytes": 36863,
+      "sha256": "8a5954f0a77058d7f3b47c192223c69bf67eef40fa5d824ca37972469537245c"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/page-06.jpg",
+      "bytes": 78147,
+      "sha256": "f038310f725cbf1529f60cbeffa79e28fbceca0614de3bce9604a035fd1f14cd"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/page-07.jpg",
+      "bytes": 32512,
+      "sha256": "3d49ef0c2cb51b3460cfee41eabc8f83cf6616fc69d670b59c407d0dc95188a2"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/page-08.jpg",
+      "bytes": 41053,
+      "sha256": "9e83ed251f69c9be7b5c1ca80c3b5809c35d165c5af23d6daa089eba3f0b23c6"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/page-09.jpg",
+      "bytes": 49377,
+      "sha256": "6bbbb11a2c6da29d28bbab061a266f014f098c4497202755b47edda2b89d763e"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/page-10.jpg",
+      "bytes": 83604,
+      "sha256": "23eb43643414147e36ac9b207bf839a9c007e9a73b2f433f8c22b458f78ef45e"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/page-11.jpg",
+      "bytes": 77236,
+      "sha256": "71b5c4451669a523f36f8cc298b372d122f27f566958893e7eb9ba05986cebcf"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/page-12.jpg",
+      "bytes": 57475,
+      "sha256": "a85b37c5b0d6fb1bc682ba80a56978bfa2cdf653f80f4c1384e1a65631efbf3d"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/publisher.txt",
+      "bytes": 961,
+      "sha256": "bd530cd1f95ce0fb2a6c6c782cacd9bfdf3fe9f10cdc60f25cc804f20f15d178"
+    },
+    {
+      "path": "content/library/books/a-house-for-mouse/transcripts.json",
+      "bytes": 5860,
+      "sha256": "7b10856158f984504ddd75a296036cb17b3e302d42327a6220df53d16b042989"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/CREDITS.html",
+      "bytes": 1465,
+      "sha256": "b97ddc2a79c8ce842a83d468a38aac31c33a79f3af9a147b984eab3a411bd291"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/CREDITS.txt",
+      "bytes": 1082,
+      "sha256": "c2a175f0afd29589e0adb01303cbaf927f302e5e56900f5b19422fa24f931c97"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/edition-metadata.json",
+      "bytes": 1686,
+      "sha256": "6b0aa83858d416be38f364408b482e53e8795e521ecbdce5e095b8bb5ccf9e5d"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/edition.md",
+      "bytes": 3474,
+      "sha256": "4b1a6f23e08217a755839fc3b253f7ed082cb29495a9cc99580f0372e0e375c4"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/edition.txt",
+      "bytes": 3047,
+      "sha256": "3ac3bb1ac9d6402ccddb1b61d86a5a4e2e4fa6e372d56c259902b248dd81ba9e"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/inspection.jpg",
+      "bytes": 322025,
+      "sha256": "1806855a23763b98f54de0a07813b9bf984e99c4b0421a1aaf6fbcbccac0165e"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/manifest.json",
+      "bytes": 20282,
+      "sha256": "fb10b415f5b8ad235c62414d21efc3690d713ef1b05b50d888f603f3a42d6314"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/page-00.jpg",
+      "bytes": 86381,
+      "sha256": "f6abbc66f00f64202ccf461809b1e7707c1d3b272065177d28023e8f18745c00"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/page-01.jpg",
+      "bytes": 42025,
+      "sha256": "e8633399f45e84e67bfc9d8d1f9c69252f7ce72bc6cf4368852fc54c73f22165"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/page-02.jpg",
+      "bytes": 23707,
+      "sha256": "f716ee9e0900f59384229519a4eb3b6ec982b394ab50266f7381d0338e0237d9"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/page-03.jpg",
+      "bytes": 21382,
+      "sha256": "96d8ca08b4060664b7866b55a76076c4eccdc44bc7c7a0faca640c4d76093c7c"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/page-04.jpg",
+      "bytes": 27046,
+      "sha256": "1aaac874e83b0f9f739f5eb2f6eed4612a1fcdbde68ba482abb83a51961da3e4"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/page-05.jpg",
+      "bytes": 24663,
+      "sha256": "908b01c5586fd1fbc3803203903eeb2a0849d354bd374c3caa18443efabc2da1"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/page-06.jpg",
+      "bytes": 17877,
+      "sha256": "ba22b07c61cac6f189660fc9adeb2449ba7e8f7bf2580c69624d983d02800be3"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/page-07.jpg",
+      "bytes": 22339,
+      "sha256": "16634e0f47ef48dc3126d760cbbaea1a070f7a3a648264948d155c2c1a3440d8"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/page-08.jpg",
+      "bytes": 24867,
+      "sha256": "9fa7c0f2bff61684e6cecd8427e06c5912c87500c371d7b3b7f7771b63ea2c96"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/page-09.jpg",
+      "bytes": 23472,
+      "sha256": "321c1843e4e18e241a91cdb0558ec5f4cd4608913ad0067ae7264ed58ec9fa48"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/page-10.jpg",
+      "bytes": 32213,
+      "sha256": "b4b7724a0755c13caeec1b7b856e05827ee5239264493dd15c470bbe8b37a3c8"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/page-11.jpg",
+      "bytes": 33087,
+      "sha256": "8c41f44ee5da2d4b664e9aaf77f4fa86623fdb670fd89ed0e8aa72192b1e72e2"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/page-12.jpg",
+      "bytes": 51383,
+      "sha256": "3a44500d5e0a97d3432e27fd6914b7dfeef6e5030ad4941612a3863a18178c11"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/publisher.txt",
+      "bytes": 1074,
+      "sha256": "eb35fa4b90765b62d7892a253850c72dee63bf12e1c04caf88e6b2e9a0cffba6"
+    },
+    {
+      "path": "content/library/books/a-tiny-seed/transcripts.json",
+      "bytes": 7378,
+      "sha256": "53858235701a4952f18065c3c257b18bb27d445ca27e43d4a11b6070f038c171"
+    },
+    {
+      "path": "content/library/books/and-also/CREDITS.html",
+      "bytes": 1770,
+      "sha256": "befb8582da0efd3d72ea5448e2670cbeb83c9b685f803788e8457f51afc74270"
+    },
+    {
+      "path": "content/library/books/and-also/CREDITS.txt",
+      "bytes": 1759,
+      "sha256": "6d88f71c5814a0026190a45db838b3e234af95479bd8a3d60b029070473becf4"
+    },
+    {
+      "path": "content/library/books/and-also/edition-metadata.json",
+      "bytes": 886,
+      "sha256": "2974f8ce0b83b53ad49281222a8686c32ba6f90ab035b2e54eb85b33b190dcdf"
+    },
+    {
+      "path": "content/library/books/and-also/edition.txt",
+      "bytes": 3059,
+      "sha256": "3ed380fe154ac2474a5146582e5a171e5549fa774dd64c728c9f4e950bbfa028"
+    },
+    {
+      "path": "content/library/books/and-also/manifest.json",
+      "bytes": 9560,
+      "sha256": "d09a11c91eae6944fcb2530b736e1704707eb1014066622699cc523cb26f42de"
+    },
+    {
+      "path": "content/library/books/and-also/page-00.jpg",
+      "bytes": 232707,
+      "sha256": "29ef4533df4b708a3d872fcad17ba7073b8d0885959914a12dc9db11ea7e3418"
+    },
+    {
+      "path": "content/library/books/and-also/page-01.jpg",
+      "bytes": 203423,
+      "sha256": "e77b195d58bd15ca3ebd734a17810f903f3480627049ac870bc2d0f099241f57"
+    },
+    {
+      "path": "content/library/books/and-also/page-02.jpg",
+      "bytes": 156800,
+      "sha256": "76d87e0ed70aa00438f2df9ebec6d7ef24699e41252957fa1558f464bd3aa2bb"
+    },
+    {
+      "path": "content/library/books/and-also/page-03.jpg",
+      "bytes": 200963,
+      "sha256": "26ad5da65bd881065a7ae0f15014ed9eae4160f852592b00d4976a3c245be121"
+    },
+    {
+      "path": "content/library/books/and-also/page-04.jpg",
+      "bytes": 183862,
+      "sha256": "f27b8764ca20a8fff09bba7f5a0f270544955aeab4608882159bc54868bce4cd"
+    },
+    {
+      "path": "content/library/books/and-also/page-05.jpg",
+      "bytes": 211357,
+      "sha256": "fa1157a88f8e47b40b1da05052e505cc8d1b5998938a1befed4a5d63ba3d4632"
+    },
+    {
+      "path": "content/library/books/and-also/page-06.jpg",
+      "bytes": 184929,
+      "sha256": "8e305f8fcb1dee65fd2e60ac9ed782f5bca7c2d55eb58feb049642a701589c33"
+    },
+    {
+      "path": "content/library/books/and-also/page-07.jpg",
+      "bytes": 88390,
+      "sha256": "9d6be71fa60d4e322d428c985a94ef280e6a49347d201766a2e576291c95f8b9"
+    },
+    {
+      "path": "content/library/books/and-also/page-08.jpg",
+      "bytes": 213339,
+      "sha256": "00f0b1691194870e8715f1209aff226f638d9b3c54c32bea0d2f17ae5b9f3733"
+    },
+    {
+      "path": "content/library/books/and-also/page-09.jpg",
+      "bytes": 231583,
+      "sha256": "477b22702beea636906fb3d513da7c4c107b1bb013bbab652a8a5a5e7ccd1d5d"
+    },
+    {
+      "path": "content/library/books/and-also/page-10.jpg",
+      "bytes": 229534,
+      "sha256": "e228d8244c1d373c067acd404129bbf35d30d55bba0b2d451150a52b3a6443ee"
+    },
+    {
+      "path": "content/library/books/and-also/page-11.jpg",
+      "bytes": 287606,
+      "sha256": "3a8a693bd8840823a81651a702893264ec680d31c96b5646eaa1441337b72d64"
+    },
+    {
+      "path": "content/library/books/and-also/page-12.jpg",
+      "bytes": 162700,
+      "sha256": "5ec58f31813be6e4c453877f2f9d03a7223c428aed824310e0c0a4076fff242a"
+    },
+    {
+      "path": "content/library/books/and-also/publisher.txt",
+      "bytes": 680,
+      "sha256": "6451a7e47f3b893f64f7b8b935e9d4898ffa89645d49a4cae18f1819636e49fa"
+    },
+    {
+      "path": "content/library/books/and-also/transcripts.json",
+      "bytes": 6101,
+      "sha256": "f7f85cc5c1b036f0fd201c3f163ac5189f046317608e3930ac08b0aa24106d1c"
+    },
+    {
+      "path": "content/library/books/author-qa.json",
+      "bytes": 1818,
+      "sha256": "ee953e16a9bb7b97e2c74b7a0f5552ba9a515965d24b95c25f8b830c6f05ee44"
+    },
+    {
+      "path": "content/library/books/book-dash-logo.png",
+      "bytes": 7248,
+      "sha256": "f17d0f4f44db79e3a2170beb549c194828519332627794d9e1d4377aa5c4dc6b"
+    },
+    {
+      "path": "content/library/books/busy-day/CREDITS.html",
+      "bytes": 1048,
+      "sha256": "cfbd99e43fdb232ceca67c90b9680d3c0713aea0c90f9375a290c0372b4fdd35"
+    },
+    {
+      "path": "content/library/books/busy-day/CREDITS.txt",
+      "bytes": 572,
+      "sha256": "74762c380edd04eb399e219051a0be2cf9f05649eee753d0dc630cb280c5f1b5"
+    },
+    {
+      "path": "content/library/books/busy-day/inspection.jpg",
+      "bytes": 1445195,
+      "sha256": "f430bf2d2f3952bba39ffa086738a18b2a88f4609c2d08e0c18e5a7fd2cc26f8"
+    },
+    {
+      "path": "content/library/books/busy-day/manifest.json",
+      "bytes": 13675,
+      "sha256": "e77552b5b537d24a207b77538d5d58d9145540c11a8b5aa14cbbd219eaa60d6c"
+    },
+    {
+      "path": "content/library/books/busy-day/page-00.jpg",
+      "bytes": 501721,
+      "sha256": "0147843f62a79c8a0e80a09a5429fe02ff4b13caf730945468aa44177dce2221"
+    },
+    {
+      "path": "content/library/books/busy-day/page-01.jpg",
+      "bytes": 635682,
+      "sha256": "c301fdd4eb28bf298f44823865704ce45153c18404f025172049401ee544b5aa"
+    },
+    {
+      "path": "content/library/books/busy-day/page-02.jpg",
+      "bytes": 782893,
+      "sha256": "b0bbbe80c68af9fcb3c583d6a0912b4c9670b303181226a2a0b2ccba512ce1a0"
+    },
+    {
+      "path": "content/library/books/busy-day/page-03.jpg",
+      "bytes": 638889,
+      "sha256": "53c4e37ad8b86b74ed4907b35ea688f69591c7b97d6de86a9f57d5dc62c26dc2"
+    },
+    {
+      "path": "content/library/books/busy-day/page-04.jpg",
+      "bytes": 870357,
+      "sha256": "6ba9e7d947877b4b8b1c51b83e1e57ecc900b55275ae5badba9cdb55813a9b07"
+    },
+    {
+      "path": "content/library/books/busy-day/page-05.jpg",
+      "bytes": 597998,
+      "sha256": "3ae8ac8a4826a04461984cddcb0ae340ebff01171507e6a2007bd6acd223b204"
+    },
+    {
+      "path": "content/library/books/busy-day/page-06.jpg",
+      "bytes": 751515,
+      "sha256": "7990c5001c82a9e46e3534bddb8bbc7a2b15c0c40b003953959256b9328c8162"
+    },
+    {
+      "path": "content/library/books/busy-day/page-07.jpg",
+      "bytes": 723547,
+      "sha256": "0a54c6c74cd79dce6bfd30b6fb7ff62880eeb8b411684af218cae6bf41d45492"
+    },
+    {
+      "path": "content/library/books/busy-day/page-08.jpg",
+      "bytes": 850010,
+      "sha256": "385684a4daed6e2ae82bbdc953f70f7d35148853266cbe5d06eb9110ac1ae1e8"
+    },
+    {
+      "path": "content/library/books/busy-day/page-09.jpg",
+      "bytes": 633494,
+      "sha256": "fd5c834ab306a42c57de6755dacd83bdf24cc841d07f2a4f5631de7f4d43c226"
+    },
+    {
+      "path": "content/library/books/busy-day/page-10.jpg",
+      "bytes": 726029,
+      "sha256": "8472e896178bf198b63a0d1d2190f636d79ebafa7023e30dbd4cae533ccb6f81"
+    },
+    {
+      "path": "content/library/books/busy-day/page-11.jpg",
+      "bytes": 636266,
+      "sha256": "07204981a79d40c0f3be70c08b4ab4762f39cf1999309fc72e2b8f5b8deb7a63"
+    },
+    {
+      "path": "content/library/books/busy-day/page-12.jpg",
+      "bytes": 428393,
+      "sha256": "7585281995159be1f27c191bb82f4ac3a1bcf47dd138313ff20820a58e9f9215"
+    },
+    {
+      "path": "content/library/books/busy-day/page-13.jpg",
+      "bytes": 1005485,
+      "sha256": "841307c2a5844f14d72ef719f4a5b0e717319d3ca776bf33e68cab15e1991de1"
+    },
+    {
+      "path": "content/library/books/busy-day/page-14.jpg",
+      "bytes": 187459,
+      "sha256": "7c1f8e5a748f07476481393b2a4e5f18cd2a7c2dff8164fc8d5743d1333b0f57"
+    },
+    {
+      "path": "content/library/books/busy-day/publisher.txt",
+      "bytes": 817,
+      "sha256": "250fa1c4fa46202eae8cbd736b940c4c07ce2eb3c652bdb9c58c6a1c7ee9a745"
+    },
+    {
+      "path": "content/library/books/busy-day/transcripts.json",
+      "bytes": 5396,
+      "sha256": "8785aed12871e4d6ed08bffe425480f114f30027091a4d5c495b90635758e37c"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/CREDITS.html",
+      "bytes": 1586,
+      "sha256": "43a1e95e9b7a896666e306f30949745a9c14c51a67d348569e65edfca0429679"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/CREDITS.txt",
+      "bytes": 1110,
+      "sha256": "824794bd397affd44eaf97a4bb772787311c2fbb1d1121f99d0a89d8db59903e"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/edition-metadata.json",
+      "bytes": 1344,
+      "sha256": "cd664162549278afb829a91134ef7ac579851dfdf79076c2724c0a57cbe00f8d"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/edition.md",
+      "bytes": 2606,
+      "sha256": "3ee77e8921d71e07c0fb71babc50d15a67b14f45fde0b9b60ee5c4dbcc8fa4e2"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/edition.txt",
+      "bytes": 1837,
+      "sha256": "d6dc4adc994214bed24cdf8f8981613ffd46f9e3251d4d60dcc2a9edceb5dadf"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/inspection.jpg",
+      "bytes": 543125,
+      "sha256": "6aeb86320588e4bf89232a847baf12258a923d4d0582c9e44f44271f72150cd1"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/manifest.json",
+      "bytes": 17845,
+      "sha256": "2c754a8b1bb1fc3296afddba22a99e25957eb7c561671b48826e5f4ab3d25ea2"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/page-00.jpg",
+      "bytes": 190732,
+      "sha256": "8c6de56f737a4a59689f3db06939a7a617ea7821143ab94c214cc2317b87d2e6"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/page-01.jpg",
+      "bytes": 35105,
+      "sha256": "16b03fd37fd022adaeec166ca3ab8c32d26655e47091557848871f822a15dd8c"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/page-02.jpg",
+      "bytes": 52196,
+      "sha256": "101ca22cf134ffbdf05e76babe298281613a6b991f49a003be951da604353ee1"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/page-03.jpg",
+      "bytes": 118749,
+      "sha256": "ca7d28f183613ab762311d185b690a26f25c00664c69b703ae1a7181ee008e8b"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/page-04.jpg",
+      "bytes": 28261,
+      "sha256": "e5df22f817b0c058d24e14ac4388da8e0d351e989ec4d9f93ca4253fd2e4330d"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/page-05.jpg",
+      "bytes": 39868,
+      "sha256": "22329b43bd9ca5db25f7e8ce07bdcd5c964990ab3618da9a51e659b80a0b16d5"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/page-06.jpg",
+      "bytes": 25531,
+      "sha256": "e682ec75c56cf1695bfde88edf0b9e4d80291b58be65405bdf90ea161174e3ba"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/page-07.jpg",
+      "bytes": 40224,
+      "sha256": "8e3cf6041ec6e2c14293e08be5b059ca48cf9804247493d9371202c46e00edbc"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/page-08.jpg",
+      "bytes": 83298,
+      "sha256": "60f0b89c418044bf3b8626612401dde10096845abc58b61d3f670a90f97cb004"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/page-09.jpg",
+      "bytes": 42507,
+      "sha256": "05a5b622de0f1df45a096d9841f472ec94035d4539d0053e7151c90a0af54435"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/page-10.jpg",
+      "bytes": 52664,
+      "sha256": "d5fc3e93a721291748dba7e6102128a1d53dd785d430fbb8e23da524481c6089"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/page-11.jpg",
+      "bytes": 64409,
+      "sha256": "66547869e7a3e5be7cdf473762eaabdac160aa407d703ea49b892448e8b122c7"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/page-12.jpg",
+      "bytes": 44714,
+      "sha256": "98b988aa7a4c04b43603cef92c0f3c09161493f0b8e1e4240136ca3bf6027744"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/publisher.txt",
+      "bytes": 1135,
+      "sha256": "e7ba2ed9ba424f3832c8a71c5feb30eff0136da3d1456d994d337af7fbb273f6"
+    },
+    {
+      "path": "content/library/books/little-ants-big-plan/transcripts.json",
+      "bytes": 6671,
+      "sha256": "fa588d99947ad5ddf328751e1b62f08096e8ba4e4100c27a630e1449fa0b0872"
+    },
+    {
+      "path": "content/library/books/publisher-crediting-policy.txt",
+      "bytes": 6591,
+      "sha256": "29df826dc4f829a5db22023b356dff0db6d198e76c2ef268992cb873dc6f8be4"
+    },
+    {
+      "path": "content/library/books/publisher-metadata.yml",
+      "bytes": 102260,
+      "sha256": "2979394c86bf5a3171500a6d15e2cb45ef0f261d2dcab7a6322504319627564f"
+    },
+    {
+      "path": "content/library/books/publisher-repository.txt",
+      "bytes": 7855,
+      "sha256": "dc21fb3efaa99e1cbdea33366f070c0e34cdb8aa71de86fb9fd92e91995da08a"
+    },
+    {
+      "path": "content/library/books/publisher-source-policy.txt",
+      "bytes": 462,
+      "sha256": "02fd5e8144e6bec96b98edc0755ecc8060b787d7b35d08dc7fcfe258f35cdad1"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/CREDITS.html",
+      "bytes": 1429,
+      "sha256": "f632a98130d3c71631ec6e79140b19dee5ab2c819b31223147914cb4d608cdd8"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/CREDITS.txt",
+      "bytes": 953,
+      "sha256": "c76886cb4377807b6886748494299041ec39281b44a761edc1e489506e0bbafa"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/edition-metadata.json",
+      "bytes": 1469,
+      "sha256": "72db3604c14e9d316504ba3a8f8d2e32ab5362d43de80597102af554edfa691d"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/edition.md",
+      "bytes": 2332,
+      "sha256": "2748730cb37302ca9084795624617d5824950f08959ead29147e333e4738957b"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/edition.txt",
+      "bytes": 1943,
+      "sha256": "9f52d4e613be14945e6f54088db022d46588a4c9d7699e002627fe9eb4b173b4"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/inspection.jpg",
+      "bytes": 478966,
+      "sha256": "1d4a28a4d02964c7853a29a5a1ec374589192a8c9a266e1399bd6f06814166aa"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/manifest.json",
+      "bytes": 17549,
+      "sha256": "9708b8b7ed59637b9c488f4794cda3f14791631979f21fb23b209a72a32398e3"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/page-00.jpg",
+      "bytes": 163609,
+      "sha256": "bb9c44ed44a6f19da6ae890ad93405f03dfc4b964af8f6f94598a41cb2356114"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/page-01.jpg",
+      "bytes": 76112,
+      "sha256": "d548a7696b285fbc461030e0da1620e29e90e0808ce364aac6c466cf207d107b"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/page-02.jpg",
+      "bytes": 89551,
+      "sha256": "fe398f70d4a844ad1afbfa95a7e79001120ec14c2de4d9b01f7de01822119244"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/page-03.jpg",
+      "bytes": 95592,
+      "sha256": "896053577358174d4a8bcd6690887013f91a86e440179ff64852b69b48682c34"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/page-04.jpg",
+      "bytes": 105741,
+      "sha256": "84380b13564885778f981a4557a16311e93b6e4e294ebf847bfa397bd0c8c924"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/page-05.jpg",
+      "bytes": 89164,
+      "sha256": "28045da0a4e3955dab66c240a46e47b2a6ec4ad2ac86292aec20e01511cd0745"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/page-06.jpg",
+      "bytes": 119072,
+      "sha256": "2473e40fd808f4191173402be499988eb09a9e454e8a34c8d100d6daa0667cbd"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/page-07.jpg",
+      "bytes": 75716,
+      "sha256": "8bb955384f7239f6bee38879942ea77fc0bfe5e3a37494d4e729676e9c757366"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/page-08.jpg",
+      "bytes": 110854,
+      "sha256": "a00719c49d2992b15371f6c6d7952bed3c7ae36e9b481c757a84e6a7dedc9b67"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/page-09.jpg",
+      "bytes": 94005,
+      "sha256": "802f968d3eb2c2de7bc56d76ed59b4b0340c86e6850d0debfdc931703aaa30a0"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/page-10.jpg",
+      "bytes": 111132,
+      "sha256": "e720952b2a0a6e47826ac7ec2d3eaf13a1528ca6b9be03fce311e607c4017645"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/page-11.jpg",
+      "bytes": 75154,
+      "sha256": "a16837872c9360dbb660ef930aa271227ea4f41749b87fbb6c3259313fe74d3e"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/page-12.jpg",
+      "bytes": 81686,
+      "sha256": "59cc8bd249d03407d458ca56e654c669a523803597449179809cd8fe39152afb"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/publisher.txt",
+      "bytes": 972,
+      "sha256": "b5f4e93da6337d700c2bf705db7417e66384c460f46f48c76532942dcf9f2000"
+    },
+    {
+      "path": "content/library/books/sleepy-mr-sloth/transcripts.json",
+      "bytes": 6249,
+      "sha256": "8964723a0ccd3fc6f8985e0c489c3fbbccc7c6a244a0a4097e1d0a895771b353"
+    },
+    {
+      "path": "content/library/books/source-manifest.json",
+      "bytes": 2674,
+      "sha256": "7a7a08f2b81d3421343fbd50a26b51d5cc2cf7ccf3f763b3201049b20b241465"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/CREDITS.html",
+      "bytes": 1442,
+      "sha256": "96ff592f8ce29b549b0e7aad31839f5012e216de1818c55beb4791fbd3208e83"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/CREDITS.txt",
+      "bytes": 966,
+      "sha256": "fe1ccfcbc25e33026fdab527f1cd1b9f939d0dced6a6e7aef281c58b177c3dd9"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/edition-metadata.json",
+      "bytes": 1245,
+      "sha256": "4bf1a494dabbf7511424bef21281cafe76a4361f2a6d194a34f71594c82b2d42"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/edition.md",
+      "bytes": 2674,
+      "sha256": "8b734558f20707fc98cb012d44343c27549087173f91cde52f75836a81b3e75c"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/edition.txt",
+      "bytes": 1723,
+      "sha256": "e82db06af4add4e47183af324445b2c115ccd939a8209761bf051f378a1fc2a7"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/inspection.jpg",
+      "bytes": 1046760,
+      "sha256": "7e5678d5b3c8b9c3dcf33c2832cea02214281ecbcd7c293f31604afd7804cf84"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/manifest.json",
+      "bytes": 18460,
+      "sha256": "0f7840c027515954be5fbfd08eeacc4f4ebaf4416bc5d9a873a223ab395543d7"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-00.jpg",
+      "bytes": 72948,
+      "sha256": "d1e0a1bcacecc65b0e844dfafbf157bdf48aaf8f6c3a84dd1e51b16eb0f5ada5"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-01.jpg",
+      "bytes": 63016,
+      "sha256": "ac543b96d162c6b31804e3c7f87991e2ae9389daae894c3d6aa0458e788ffb6a"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-02.jpg",
+      "bytes": 125730,
+      "sha256": "3dd2384128f107b5c059741db2e88f9b78bb05947ce1cda99bf940690e0e67da"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-03.jpg",
+      "bytes": 102828,
+      "sha256": "69e3f0e055920668dc85a91043bd8bda5f06be2419384597b9e2139d04360fdb"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-04.jpg",
+      "bytes": 102611,
+      "sha256": "08828038ac361767f94a4143eb765d3e64fa83eaed30aa6a0e5676cbd35e78e2"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-05.jpg",
+      "bytes": 185677,
+      "sha256": "91294731479591f930f015bb2b91e2f0ed385ee32f5f0eae78d61d81bcdc79d5"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-06.jpg",
+      "bytes": 102522,
+      "sha256": "03ec8972a30574db684e7cf5e47629ad75ea857de63f5d7ac18f5bb9de05a781"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-07.jpg",
+      "bytes": 142637,
+      "sha256": "c7da679d18ff72ee6f0e6e0849cc6294a62b4c5b09ddc50262331691eade09d4"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-08.jpg",
+      "bytes": 238144,
+      "sha256": "2ba9972bc886b5e8545044bedf178b1f9d564314cc6c0e34387daf8e5a94ffe3"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-09.jpg",
+      "bytes": 116935,
+      "sha256": "b95f9bfb61fc9c101d53deb81fcf29814599e559caecdb5df3a1e2860888e8c8"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-10.jpg",
+      "bytes": 58971,
+      "sha256": "95dea54ab6e2a4ffbf7df5082a6769cc1b448c94d4c8c51bee5ae7ffd49885b2"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-11.jpg",
+      "bytes": 53836,
+      "sha256": "564328d1c8390e9a67bc90d6906a7b8f8e2c055eb196892115c03f1538ba9769"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-12.jpg",
+      "bytes": 93419,
+      "sha256": "031f19583d2f1c06096c3d3854f14c392a5f84d369933b219434f73799baf12e"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/page-13.jpg",
+      "bytes": 27387,
+      "sha256": "9ac152448c2560d3f1014e9c282e663ac57b1ddcb0cace0b006f84b07972d16f"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/publisher.txt",
+      "bytes": 1083,
+      "sha256": "017d2835c463633f2b86ccc4f4a79f1f9bbf041985d7db1d595afe5dba918242"
+    },
+    {
+      "path": "content/library/books/the-best-thing-ever/transcripts.json",
+      "bytes": 7346,
+      "sha256": "01af2dc6086d34a1a779fe1c6143df2e92b631e90f42a4a2e2ecef13b6d659dd"
+    },
+    {
+      "path": "content/library/books/validator-result.txt",
+      "bytes": 327,
+      "sha256": "f552043ed141264c95083eed05efb67e492a278f1df67e0a2ef78ae15a4d1283"
+    }
+  ]
+}

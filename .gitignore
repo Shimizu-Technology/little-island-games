@@ -44,3 +44,6 @@ yarn-error.*
 
 # Local continuation notes
 .codex/handoffs/
+
+# Worktree-local simulator builds
+.derivedData/

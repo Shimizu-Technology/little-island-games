@@ -1,0 +1,170 @@
+[
+  {
+    "path": "content/library/assets/busy-0.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_cover-1.jpg",
+    "sha256": "0147843f62a79c8a0e80a09a5429fe02ff4b13caf730945468aa44177dce2221",
+    "bytes": 501721
+  },
+  {
+    "path": "content/library/assets/busy-1.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page4.jpg",
+    "sha256": "c301fdd4eb28bf298f44823865704ce45153c18404f025172049401ee544b5aa",
+    "bytes": 635682
+  },
+  {
+    "path": "content/library/assets/busy-2.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page5.jpg",
+    "sha256": "b0bbbe80c68af9fcb3c583d6a0912b4c9670b303181226a2a0b2ccba512ce1a0",
+    "bytes": 782893
+  },
+  {
+    "path": "content/library/assets/busy-3.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page6.jpg",
+    "sha256": "53c4e37ad8b86b74ed4907b35ea688f69591c7b97d6de86a9f57d5dc62c26dc2",
+    "bytes": 638889
+  },
+  {
+    "path": "content/library/assets/busy-4.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page7.jpg",
+    "sha256": "6ba9e7d947877b4b8b1c51b83e1e57ecc900b55275ae5badba9cdb55813a9b07",
+    "bytes": 870357
+  },
+  {
+    "path": "content/library/assets/busy-5.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page8.jpg",
+    "sha256": "3ae8ac8a4826a04461984cddcb0ae340ebff01171507e6a2007bd6acd223b204",
+    "bytes": 597998
+  },
+  {
+    "path": "content/library/assets/busy-6.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page9.jpg",
+    "sha256": "7990c5001c82a9e46e3534bddb8bbc7a2b15c0c40b003953959256b9328c8162",
+    "bytes": 751515
+  },
+  {
+    "path": "content/library/assets/busy-7.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page10.jpg",
+    "sha256": "0a54c6c74cd79dce6bfd30b6fb7ff62880eeb8b411684af218cae6bf41d45492",
+    "bytes": 723547
+  },
+  {
+    "path": "content/library/assets/busy-8.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page11.jpg",
+    "sha256": "385684a4daed6e2ae82bbdc953f70f7d35148853266cbe5d06eb9110ac1ae1e8",
+    "bytes": 850010
+  },
+  {
+    "path": "content/library/assets/busy-9.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page12.jpg",
+    "sha256": "fd5c834ab306a42c57de6755dacd83bdf24cc841d07f2a4f5631de7f4d43c226",
+    "bytes": 633494
+  },
+  {
+    "path": "content/library/assets/busy-10.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page13.jpg",
+    "sha256": "8472e896178bf198b63a0d1d2190f636d79ebafa7023e30dbd4cae533ccb6f81",
+    "bytes": 726029
+  },
+  {
+    "path": "content/library/assets/busy-11.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page14.jpg",
+    "sha256": "07204981a79d40c0f3be70c08b4ab4762f39cf1999309fc72e2b8f5b8deb7a63",
+    "bytes": 636266
+  },
+  {
+    "path": "content/library/assets/busy-12.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page15.jpg",
+    "sha256": "7585281995159be1f27c191bb82f4ac3a1bcf47dd138313ff20820a58e9f9215",
+    "bytes": 428393
+  },
+  {
+    "path": "content/library/assets/busy-13.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page16.jpg",
+    "sha256": "841307c2a5844f14d72ef719f4a5b0e717319d3ca776bf33e68cab15e1991de1",
+    "bytes": 1005485
+  },
+  {
+    "path": "content/library/assets/busy-14.jpg",
+    "sourceUrl": "https://bookdash.org/wp-content/uploads/2019/11/a-very-busy-day_en_20191124_page17.jpg",
+    "sha256": "7c1f8e5a748f07476481393b2a4e5f18cd2a7c2dff8164fc8d5743d1333b0f57",
+    "bytes": 187459
+  },
+  {
+    "path": "content/library/books/and-also/page-00.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "29ef4533df4b708a3d872fcad17ba7073b8d0885959914a12dc9db11ea7e3418",
+    "bytes": 232707
+  },
+  {
+    "path": "content/library/books/and-also/page-01.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "e77b195d58bd15ca3ebd734a17810f903f3480627049ac870bc2d0f099241f57",
+    "bytes": 203423
+  },
+  {
+    "path": "content/library/books/and-also/page-02.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "76d87e0ed70aa00438f2df9ebec6d7ef24699e41252957fa1558f464bd3aa2bb",
+    "bytes": 156800
+  },
+  {
+    "path": "content/library/books/and-also/page-03.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "26ad5da65bd881065a7ae0f15014ed9eae4160f852592b00d4976a3c245be121",
+    "bytes": 200963
+  },
+  {
+    "path": "content/library/books/and-also/page-04.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "f27b8764ca20a8fff09bba7f5a0f270544955aeab4608882159bc54868bce4cd",
+    "bytes": 183862
+  },
+  {
+    "path": "content/library/books/and-also/page-05.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "fa1157a88f8e47b40b1da05052e505cc8d1b5998938a1befed4a5d63ba3d4632",
+    "bytes": 211357
+  },
+  {
+    "path": "content/library/books/and-also/page-06.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "8e305f8fcb1dee65fd2e60ac9ed782f5bca7c2d55eb58feb049642a701589c33",
+    "bytes": 184929
+  },
+  {
+    "path": "content/library/books/and-also/page-07.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "9d6be71fa60d4e322d428c985a94ef280e6a49347d201766a2e576291c95f8b9",
+    "bytes": 88390
+  },
+  {
+    "path": "content/library/books/and-also/page-08.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "00f0b1691194870e8715f1209aff226f638d9b3c54c32bea0d2f17ae5b9f3733",
+    "bytes": 213339
+  },
+  {
+    "path": "content/library/books/and-also/page-09.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "477b22702beea636906fb3d513da7c4c107b1bb013bbab652a8a5a5e7ccd1d5d",
+    "bytes": 231583
+  },
+  {
+    "path": "content/library/books/and-also/page-10.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "e228d8244c1d373c067acd404129bbf35d30d55bba0b2d451150a52b3a6443ee",
+    "bytes": 229534
+  },
+  {
+    "path": "content/library/books/and-also/page-11.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "3a8a693bd8840823a81651a702893264ec680d31c96b5646eaa1441337b72d64",
+    "bytes": 287606
+  },
+  {
+    "path": "content/library/books/and-also/page-12.jpg",
+    "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+    "sha256": "5ec58f31813be6e4c453877f2f9d03a7223c428aed824310e0c0a4076fff242a",
+    "bytes": 162700
+  }
+]

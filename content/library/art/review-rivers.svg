@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="rivers-art-title">
+  <title id="rivers-art-title">A blue river winds through green land from distant hills to the sea, with two small tributaries joining its bends.</title>
+  <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
+<g stroke="#354E49" stroke-linecap="round" stroke-linejoin="round">
+<path d="M48 84Q70 30 106 60Q136 18 172 52Q208 16 244 56Q268 38 280 84Z" fill="#9FAE94" stroke-width="2.2"/>
+<path d="M110 60Q118 52 126 50M216 42Q228 46 236 56M178 50Q186 44 194 42" fill="none" stroke="#C3BBA5" stroke-width="2"/>
+<path d="M28 150Q20 100 52 78Q100 64 160 72Q220 64 268 78Q300 100 292 150Q160 166 28 150Z" fill="#A8C493" stroke-width="3"/>
+<path d="M36 140Q30 104 56 84Q50 116 70 138ZM284 140Q290 106 266 84Q272 116 252 138Z" fill="#85AA7D" stroke="none"/>
+<path d="M136 92q6 8 4 18M194 122q-6 8-2 18" fill="none" stroke="#F0DFB2" stroke-width="7"/>
+<g fill="none"><path d="M66 82C78 96 100 96 122 100M262 86C252 104 232 110 206 124" stroke-width="9"/><path d="M66 82C78 96 100 96 122 100M262 86C252 104 232 110 206 124" stroke="#91C5D0" stroke-width="4.5"/>
+<path d="M172 64C150 80 116 82 124 102C132 120 210 110 208 130C206 146 156 140 160 160" stroke-width="15"/><path d="M172 64C150 80 116 82 124 102C132 120 210 110 208 130C206 146 156 140 160 160" stroke="#91C5D0" stroke-width="10"/></g>
+<path d="M20 162Q40 146 92 152Q130 158 160 156Q196 158 230 152Q282 146 300 162Q288 184 160 184Q32 184 20 162Z" fill="#91C5D0" stroke-width="3"/>
+<path d="M44 154Q90 148 120 154M200 154Q240 148 276 154" fill="none" stroke="#F0DFB2" stroke-width="4"/>
+<ellipse cx="160" cy="163" rx="9" ry="8" fill="#91C5D0" stroke="none"/>
+<g fill="none" stroke="#F4FAF2" stroke-width="2.2" opacity=".9"><path d="M70 172q8-4 16 0M228 170q8-4 16 0M150 176q8-4 16 0M176 86q8-4 14 0M168 126q6-3 12 0"/></g>
+<g stroke-width="2"><path d="M70 130v-8M90 142v-8M234 142v-8M254 126v-8M218 86v-8M100 112v-6" fill="none" stroke="#A48C5C"/><g fill="#6B9C73"><circle cx="70" cy="118" r="8"/><circle cx="90" cy="130" r="7"/><circle cx="234" cy="130" r="8"/><circle cx="254" cy="114" r="7"/><circle cx="218" cy="74" r="7"/><circle cx="100" cy="102" r="6"/></g></g>
+</g>
+</svg>

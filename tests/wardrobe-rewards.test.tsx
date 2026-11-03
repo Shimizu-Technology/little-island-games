@@ -49,7 +49,9 @@ describe('badge reward art contract',()=>{
    expect((art.match(/<(?:path|rect|circle|ellipse)\b/g)||[]).length).toBeLessThanOrEqual(65);
   }
   console.info('Reward path budget',{paths,primitives}); expect(paths).toBeLessThanOrEqual(48); expect(primitives).toBeLessThanOrEqual(85);
- }, 180000);
+ // Thousands of static variants: the path/primitives assertions stay unchanged.
+ // Shared hosts may opt into more wall time without changing the normal budget.
+ }, process.env.LITTLE_ISLAND_SLOW_QA === '1' || process.env.LITTLE_ISLAND_SLOW_HOST === '1' ? 1_800_000 : 180000);
  it('writes reproducible contact sheets when explicitly requested',()=>{
   if(!process.env.WARDROBE_EVIDENCE) return;
   const dir=process.env.WARDROBE_EVIDENCE; mkdirSync(dir,{recursive:true});

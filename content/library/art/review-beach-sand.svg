@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img"><title>A gray angular rock and a grooved coral-colored shell sit above a sandy mound containing three enlarged dark grain dots.</title><rect width="120" height="120" rx="22" fill="#FFF9E6"/>
+<path d="M14 30q6-4 12 0q6 4 12 0M84 22q5-3 10 0" fill="none" stroke="#7EB5A9" stroke-width="1.6" stroke-linecap="round"/>
+<g fill="#F0C86D"><path d="M98 36l1.4 3 3 1.4-3 1.4-1.4 3-1.4-3-3-1.4 3-1.4Z"/></g>
+<ellipse cx="60" cy="106" rx="48" ry="5" fill="#739174" opacity=".16"/>
+<g stroke="#354E49" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M12 100Q18 70 60 68Q102 70 108 100Q86 110 60 110Q34 110 12 100Z" fill="#F0DFB2"/>
+<path d="M16 100Q36 106 60 106Q86 106 104 100Q100 108 60 109Q24 108 16 100Z" fill="#D7C594" stroke="none"/>
+<path d="M28 80Q40 74 52 74" fill="none" stroke="#FFF6D8" stroke-width="2"/>
+<g fill="#E9D6A7" stroke="none"><circle cx="30" cy="92" r="1.1"/><circle cx="74" cy="80" r="1.1"/><circle cx="92" cy="94" r="1.1"/><circle cx="58" cy="100" r="1.1"/><circle cx="44" cy="86" r="1"/></g>
+<path d="M26 93l3-4 5 0 1 4-3 3-5 0Z" fill="#5E6A62" stroke-width="1.2"/>
+<path d="M48 99l2-5 5-1 3 4-2 4-6 1Z" fill="#6E6A5E" stroke-width="1.2"/>
+<path d="M72 102l4-4 5 1 1 5-5 2-4-1Z" fill="#5E6A62" stroke-width="1.2"/>
+<path d="M18 74L22 54L36 44L50 50L54 66L46 76Q32 80 18 74Z" fill="#B9B4A2"/>
+<path d="M36 44L38 60L54 66M38 60L22 54" fill="none" stroke-width="1.2"/>
+<path d="M38 60L54 66L46 76Q32 80 18 74L22 54Z" fill="#9FA08F" stroke-width="1.2"/>
+<path d="M24 54L35 47" fill="none" stroke="#E2DECF" stroke-width="1.6"/>
+<path d="M78 74Q62 70 62 56Q64 40 80 38Q96 40 98 56Q98 70 82 74Z" fill="#E09A7E"/>
+<path d="M74 72L72 78H88L86 72Z" fill="#D38F78"/>
+<path d="M80 74L68 48M80 74L74 42M80 74L80 40M80 74L86 42M80 74L92 48" fill="none" stroke="#C77760" stroke-width="1.2"/>
+<path d="M66 54Q70 44 78 41" fill="none" stroke="#F7C7B0" stroke-width="1.6"/>
+</g>
+</svg>

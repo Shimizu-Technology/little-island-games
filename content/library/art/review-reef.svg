@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="reef-art-title">
+  <title id="reef-art-title">A reef habitat contains branching coral, a rounded brain coral, a plate coral and two small fish over a sandy bottom.</title>
+  <rect width="320" height="196" rx="22" fill="#F6E8DC"/>
+<g fill="none" stroke="#F4FAF2" stroke-linecap="round" opacity=".85"><path d="M40 34q11-6 22 0M258 22q9-5 18 0" stroke-width="2.5"/><circle cx="196" cy="66" r="3" stroke-width="2"/><circle cx="202" cy="52" r="4" stroke-width="2"/></g>
+<ellipse cx="160" cy="178" rx="132" ry="9" fill="#4E7E78" opacity=".16"/>
+<path d="M26 176Q42 150 92 150Q150 140 210 150Q270 148 294 174Q240 188 160 186Q72 188 26 176Z" fill="#E9D6A7"/>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M76 160Q74 132 72 108L70 82M74 140Q56 130 52 108L50 92M73 122Q88 112 90 94L92 80M52 114L42 104M72 98L82 90M90 102L100 96" stroke="#354E49" stroke-width="15"/>
+<path d="M76 160Q74 132 72 108L70 82M74 140Q56 130 52 108L50 92M73 122Q88 112 90 94L92 80M52 114L42 104M72 98L82 90M90 102L100 96" stroke="#E09A7E" stroke-width="9"/>
+<path d="M71 140Q70 118 68 96M48 108L47 96M88 96L90 86" stroke="#F7C7B0" stroke-width="2.4"/>
+</g>
+<g fill="#FFF3CC"><circle cx="70" cy="82" r="2.2"/><circle cx="50" cy="92" r="2.2"/><circle cx="92" cy="80" r="2.2"/><circle cx="42" cy="104" r="2.2"/><circle cx="82" cy="90" r="2.2"/><circle cx="100" cy="96" r="2.2"/></g>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M214 166Q222 150 230 140Q226 136 236 136H254Q262 136 260 140Q268 150 274 166Z" fill="#9C8BB8"/>
+<path d="M230 160Q236 150 240 142M258 160Q254 150 250 142M244 162V146" fill="none" stroke="#8E7BB0" stroke-width="2"/>
+<g transform="translate(0 16)"><path d="M190 112Q196 98 244 96Q290 98 294 112Q288 124 244 126Q196 124 190 112Z" fill="#AA99C5"/>
+<path d="M194 114Q214 124 244 124Q276 124 292 114Q286 128 244 130Q200 128 194 114Z" fill="#8E7BB0" stroke="none"/>
+<path d="M204 108Q222 102 250 102" fill="none" stroke="#D9CEE8" stroke-width="2.4"/>
+<g fill="#D9CEE8" stroke="none"><circle cx="214" cy="112" r="1.8"/><circle cx="230" cy="108" r="1.8"/><circle cx="246" cy="110" r="1.8"/><circle cx="262" cy="106" r="1.8"/><circle cx="276" cy="110" r="1.8"/><circle cx="238" cy="116" r="1.6"/><circle cx="256" cy="116" r="1.6"/><circle cx="270" cy="102" r="1.6"/></g>
+<path d="M210 112l4-3M228 114l3-4M248 115l2-4M266 114l2-3M280 112l3-3" fill="none" stroke="#8E7BB0" stroke-width="1.8"/>
+</g>
+<path d="M112 162Q110 116 150 112Q192 114 190 162Z" fill="#F0CF7C"/>
+<path d="M116 154Q130 162 150 162Q174 162 188 152Q190 162 186 164H114Z" fill="#E0B35C" stroke="none"/>
+<g fill="none" stroke="#C9A24F" stroke-width="2.4"><path d="M122 140Q126 130 136 132Q140 122 150 124Q160 120 166 128Q176 126 180 136"/><path d="M118 152Q124 144 134 146Q138 138 148 140Q158 136 164 144Q174 140 184 148"/><path d="M132 124Q138 118 146 120M156 118Q164 118 170 122"/></g>
+<path d="M126 126Q134 118 144 116" fill="none" stroke="#FFF3CC" stroke-width="2.6"/>
+<g transform="translate(150 54)"><path d="M-16 0Q-6 -11 8 -5L16 -11L15 0L16 11L8 5Q-6 11 -16 0Z" fill="#F0C86D"/><path d="M-6 -7Q0 -14 8 -6" fill="#E8B752" stroke-width="2"/><circle cx="-10" cy="-1" r="2" fill="#354E49" stroke="none"/></g>
+<g transform="translate(244 62)"><path d="M12 0Q4 -9 -6 -4L-13 -9L-12 0L-13 9L-6 4Q4 9 12 0Z" fill="#83BCB4"/><path d="M0 -6Q-2 0 0 6" fill="none" stroke="#F4FAF2" stroke-width="2"/><circle cx="7" cy="-1" r="1.8" fill="#354E49" stroke="none"/></g>
+</g>
+<path d="M36 172Q80 162 112 166M200 166Q240 162 282 170" fill="none" stroke="#FFF6D8" stroke-width="2.2" stroke-linecap="round"/>
+</svg>

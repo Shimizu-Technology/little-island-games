@@ -1,0 +1,12 @@
+{
+  "title": "And Also!",
+  "language": "en",
+  "isbn": "978-1-928442-06-6",
+  "created": "2017-12-02",
+  "publisher": "Book Dash",
+  "creators": "Lauren Beukes (writer); Anja Venter (illustrator); Nkosingiphile Mazibuko (designer); Helen Moffett (editor); Book Dash",
+  "sourceUrl": "https://data.booksie.org/book-dash/and-also_venter-mazibuko-beukes.pdf",
+  "sourceSha256": "161745a760d3ed1c471a2160c8345bdd09b5249d1b776ea27332e331f9c914d3",
+  "licence": "CC BY 4.0",
+  "changes": "Uncropped 2017 English PDF cover and all 12 story spreads rendered as JPEGs, max 1400 px, quality 88. Print ownership, title/rights and decorative endpapers omitted from reading sequence; credits and licence preserved offline and in the reader. Story wording unchanged; line breaks and punctuation spacing normalized. Original PDF retained in task evidence. New local narration, no publisher audio."
+}
