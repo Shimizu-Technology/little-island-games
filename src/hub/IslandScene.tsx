@@ -18,7 +18,7 @@ const PlaceButton = memo(function PlaceButton({ id, name, width, height, labelHe
   style={[{ position: 'absolute', left, top, width, height: height + labelHeight, alignItems: 'center', borderRadius: 15, ...(Platform.OS === 'web' ? {} : { outlineColor: C.blue, outlineWidth: focused ? 3 : 0, outlineStyle: 'solid' as const }) }, style]}>
    <View pointerEvents="none" style={{ width, height }}><Landmark id={id}/></View>
    <View style={{ minHeight: labelHeight, maxWidth: '100%', justifyContent: 'center', backgroundColor: '#FFF3D3', paddingHorizontal: width < 100 ? 4 : 10, borderRadius: 8, borderWidth: 1.5, borderColor: '#A89672', boxShadow: '0px 3px 0px rgba(68,89,62,.16)' }}>
-    <Text style={{ fontFamily: font, fontSize: 17, fontWeight: '700', color: C.ink, textAlign: 'center' }}>{name}</Text>
+    <Text maxFontSizeMultiplier={1.3} numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: font, fontSize: 17, fontWeight: '700', color: C.ink, textAlign: 'center' }}>{name}</Text>
    </View>
  </AnimatedPressable>;
 });

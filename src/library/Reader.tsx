@@ -16,10 +16,16 @@ export function SentenceLine({
   onSentence: () => void;
   onWord?: (word: string) => void;
 }) {
+  const words = [...new Set(sentence.text.split(/\s+/).filter(word => /[a-z0-9]/i.test(word)))];
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`Replay sentence: ${sentence.text}`}
+      accessibilityActions={onWord ? words.map((word, i) => ({ name: `word-${i}`, label: `Hear word: ${word}` })) : undefined}
+      onAccessibilityAction={onWord ? (event) => {
+        const index = Number(event.nativeEvent.actionName.replace(/^word-/, ""));
+        if (event.nativeEvent.actionName === `word-${index}` && words[index]) onWord(words[index]);
+      } : undefined}
       onPress={onSentence}
       style={{
         paddingVertical: 5,
@@ -173,7 +179,7 @@ export function Reader({
         <Action label="Previous page" disabled={index === 0} onPress={() => onPage(index - 1)}>
           <LibraryIcon name="back" size={32} />
         </Action>
-        <Text style={s.small}>
+        <Text maxFontSizeMultiplier={1.3} numberOfLines={1} style={s.small}>
           Page {index + 1} of {count}
         </Text>
         <Action label="Next page" disabled={index === count - 1} onPress={() => onPage(index + 1)}>

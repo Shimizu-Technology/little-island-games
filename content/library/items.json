@@ -7266,7 +7266,7 @@
     },
     "image": {
       "path": "content/library/art/review-habitats.svg",
-      "alt": "A pond cross-section includes water, reeds, a leafy land plant and a small frog sheltering under a rock overhang.",
+      "alt": "A bird shelters beside three eggs in a woven nest held by a leafy tree branch.",
       "rights": {
         "license": "LicenseRef-Little-Island-Original",
         "creator": "Shimizu Technology",
@@ -7274,7 +7274,7 @@
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
         "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "02fb2100c449ebeb5d18b6f6e4f809a070b417da2918f998b7eca311c7e0af70"
+      "sha256": "1fd58abe2d81861b02a00555ff8552ea5f07dc76ab68205e8d12df2bf1e2fca8"
     },
     "label": {
       "id": "library-habitats-label-1",
@@ -7513,7 +7513,7 @@
     },
     "image": {
       "path": "content/library/art/review-migration.svg",
-      "alt": "Three flying birds follow a long dotted route between two separated patches of land.",
+      "alt": "Three orange-and-black monarch butterflies follow a dotted route between a flowering patch and a wooded resting place.",
       "rights": {
         "license": "LicenseRef-Little-Island-Original",
         "creator": "Shimizu Technology",
@@ -7521,7 +7521,7 @@
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
         "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "d6c391db033832fda197a1430eead5066c7197e578a2cb66a224e9bac16da6bb"
+      "sha256": "28710d4663d6276e3bebfea7e30eb515a835570386a4b30b9ad3e005e974b8fe"
     },
     "label": {
       "id": "library-migration-label-1",

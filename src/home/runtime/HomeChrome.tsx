@@ -113,7 +113,7 @@ export function HomeChrome({
         style={[styles.header, { paddingTop: top }]}
       >
         <Tool label="Back to island" symbol="‹" onPress={onBack} />
-        <Text numberOfLines={2} style={styles.title}>
+        <Text maxFontSizeMultiplier={1.3} numberOfLines={1} adjustsFontSizeToFit style={styles.title}>
           {title ?? (overview ? "Our house" : roomNames[room])}
         </Text>
         <Tool label="Undo" symbol="↶" disabled={!canUndo} onPress={onUndo} />

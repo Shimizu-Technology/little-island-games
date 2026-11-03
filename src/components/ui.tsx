@@ -13,6 +13,7 @@ import {
   View,
   ViewStyle,
   TextStyle,
+  TextProps,
   Platform,
   useWindowDimensions,
 } from "react-native";
@@ -99,8 +100,8 @@ export function PressableScale({
 export function Label({ children, style }: { children: React.ReactNode; style?: object }) {
   return <Text style={[styles.label, style]}>{children}</Text>;
 }
-export function Copy({ children, style }: { children: React.ReactNode; style?: object }) {
-  return <Text style={[styles.copy, style]}>{children}</Text>;
+export function Copy({ children, style, ...props }: TextProps) {
+  return <Text {...props} style={[styles.copy, style]}>{children}</Text>;
 }
 export function Heading({ children, style }: { children: React.ReactNode; style?: object }) {
   return (
@@ -121,6 +122,7 @@ export function Button({
   style,
   textStyle,
   numberOfLines,
+  maxFontSizeMultiplier,
 }: {
   children: React.ReactNode;
   onPress: () => void;
@@ -133,6 +135,7 @@ export function Button({
   style?: ViewStyle;
   textStyle?: TextStyle;
   numberOfLines?: number;
+  maxFontSizeMultiplier?: number;
 }) {
   const [pressed, setPressed] = useState(false);
   const textColor = selected ? C.paper : quiet ? C.ink : "#FFF";
@@ -157,7 +160,7 @@ export function Button({
       ]}
     >
       {icon && <Icon name={icon} size={compact ? 18 : 20} color={textColor} />}
-      <Text numberOfLines={numberOfLines} style={[styles.buttonText, { color: textColor }, textStyle]}>{children}</Text>
+      <Text maxFontSizeMultiplier={maxFontSizeMultiplier} numberOfLines={numberOfLines} style={[styles.buttonText, { color: textColor }, textStyle]}>{children}</Text>
     </PressableScale>
   );
 }
@@ -396,8 +399,8 @@ export function Sheet({
           <View {...(wide ? {} : pan.panHandlers)} style={{ paddingTop: wide ? 20 : 8, paddingHorizontal: 22 }}>
             {!wide && <View style={styles.grabber} />}
             <View style={styles.row}>
-              <Heading style={{ fontSize: 24, flex: 1 }}>{title}</Heading>
-              <Button compact quiet onPress={onClose} label={`Close ${title}`}>
+              <Text accessibilityRole="header" maxFontSizeMultiplier={1.3} style={[styles.heading, { fontSize: 24, flex: 1 }]}>{title}</Text>
+              <Button maxFontSizeMultiplier={1.3} compact quiet onPress={onClose} label={`Close ${title}`}>
                 Close
               </Button>
             </View>

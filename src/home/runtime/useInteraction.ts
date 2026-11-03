@@ -279,7 +279,7 @@ export function useInteraction({
     const p = entity ? roomOrigin(roomIds.indexOf(entity.room), building) : { x: 0, y: 0 };
     return housePoint(p.x, p.y);
   }, [subjectFor, building]);
-  const proposalFor = useCallback((slot: DragSlot, release = false): DropProposal | undefined => {
+  const proposalFor = useCallback((slot: DragSlot): DropProposal | undefined => {
     "worklet";
     const subject = subjectFor(slot.id);
     if (!subject) return undefined;
@@ -306,13 +306,13 @@ export function useInteraction({
     }
     return resolve(prepared.value.rooms[destination], subject, anchor, {
       scale: camera.value.a,
+      contact: index >= 0 ? screenToRoom(screenPoint(slot.pointerX, slot.pointerY), camera.value, housePoint(origin.x, origin.y)) : undefined,
       avoidFurnitureOverlap: designing,
       silhouette:
         index >= 0 && subject.character ? translatedBounds(slot.carryBounds ?? subject.bounds, anchor) : undefined,
       previous: slot.proposal,
       pending: slot.proposal?.pending,
       now: eventTime(),
-      release,
       reservations,
     });
   }, [subjectFor, slots, prepared, camera, building, designing]);
@@ -390,7 +390,7 @@ export function useInteraction({
     if (replay && event.type === "up") {
       const pointer = event.pointer;
       const slot = slots.value.find((s) => s.id && s.pointer === pointer);
-      const proposal = slot ? proposalFor(slot, true) : undefined;
+      const proposal = slot?.proposal;
       if (onReleaseProbe && slot?.phase === "dragging")
         probePending.set([...probePending.value, { at: event.now, id: slot.id,
           kind: proposal?.kind ?? "restore", target: proposal?.target }]);
@@ -783,7 +783,7 @@ export function useInteraction({
           if (capture?.phase === "dragging")
             send({ type: "move", pointer: touch.id, point: screenPoint(touch.x, touch.y) });
           const slot = slots.value.find((s) => s.pointer === touch.id && s.id);
-          const proposal = slot ? proposalFor(slot, true) : undefined;
+          const proposal = slot?.proposal;
           if (onReleaseProbe && capture?.phase === "dragging" && slot)
             probePending.set([...probePending.value, { at: eventTime(), id: slot.id,
               kind: proposal?.kind ?? "restore", target: proposal?.target }]);
@@ -1017,7 +1017,7 @@ export function useInteraction({
       type: cancel ? "cancel" : "up",
       pointer,
       now: eventTime(),
-      proposal: slot ? proposalFor(slot, true) : undefined,
+      proposal: slot?.proposal,
     });
   };
   const resetFrames = () => {

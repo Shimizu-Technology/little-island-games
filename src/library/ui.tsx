@@ -57,7 +57,7 @@ export function Action({
       ]}
     >
       {React.Children.map(children, (child) =>
-        typeof child === "string" || typeof child === "number" ? <Text style={s.actionText}>{child}</Text> : child
+        typeof child === "string" || typeof child === "number" ? <Text maxFontSizeMultiplier={1.3} style={s.actionText}>{child}</Text> : child
       )}
     </Pressable>
   );

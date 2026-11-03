@@ -1,0 +1,343 @@
+{
+  "version": 4,
+  "current": "treehouse",
+  "rooms": {
+    "home": {
+      "theme": {
+        "wallpaper": "cream",
+        "floor": "sand"
+      },
+      "instances": [
+        {
+          "id": "bed",
+          "item": "bed",
+          "x": 4,
+          "y": 0,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "shelf",
+          "item": "shelf",
+          "x": 12,
+          "y": 0,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "plant",
+          "item": "plant",
+          "x": 14,
+          "y": 4,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "lamp",
+          "item": "lamp",
+          "x": 9,
+          "y": 0,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest",
+          "tint": "coral"
+        },
+        {
+          "id": "rug",
+          "item": "rug",
+          "x": 8,
+          "y": 8,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "ground",
+          "state": "rest"
+        },
+        {
+          "id": "toys",
+          "item": "toy-box",
+          "x": 7,
+          "y": 6,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      ],
+      "characters": [
+        {
+          "slot": 1,
+          "anchor": "floor",
+          "pose": "stand",
+          "x": 17,
+          "y": 2
+        },
+        {
+          "slot": 2,
+          "anchor": "floor",
+          "pose": "stand",
+          "x": 6,
+          "y": 10
+        }
+      ]
+    },
+    "kitchen": {
+      "theme": {
+        "wallpaper": "lagoon",
+        "floor": "sand"
+      },
+      "characters": [],
+      "instances": [
+        {
+          "id": "starter-fridge",
+          "item": "fridge",
+          "x": 6,
+          "y": 0,
+          "rotation": 0,
+          "mirrored": true,
+          "layer": "furniture",
+          "state": "active",
+          "powered": true
+        },
+        {
+          "id": "starter-sink-counter",
+          "item": "sink-counter",
+          "x": 11,
+          "y": 0,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "starter-stove",
+          "item": "stove",
+          "x": 2,
+          "y": 0,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "starter-fruit-bowl",
+          "item": "fruit-bowl",
+          "x": 12,
+          "y": 6,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest",
+          "on": "starter-kitchen-table"
+        },
+        {
+          "id": "starter-kitchen-table",
+          "item": "kitchen-table",
+          "x": 11,
+          "y": 6,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "starter-stool",
+          "item": "stool",
+          "x": 9,
+          "y": 9,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "starter-stool-6",
+          "item": "stool",
+          "x": 14,
+          "y": 9,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      ]
+    },
+    "treehouse": {
+      "theme": {
+        "wallpaper": "cream",
+        "floor": "honey"
+      },
+      "characters": [
+        {
+          "slot": 0,
+          "anchor": "floor",
+          "pose": "stand",
+          "x": 13,
+          "y": 0,
+          "at": {
+            "x": 530.5,
+            "y": 386
+          },
+          "facing": "front"
+        }
+      ],
+      "instances": [
+        {
+          "id": "starter-hammock",
+          "item": "hammock",
+          "x": 4,
+          "y": 0,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "starter-floor-cushion",
+          "item": "floor-cushion",
+          "x": 8,
+          "y": 7,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "starter-floor-cushion-2",
+          "item": "floor-cushion",
+          "x": 11,
+          "y": 9,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "starter-string-lights",
+          "item": "string-lights",
+          "x": 6,
+          "y": 0,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "wall",
+          "state": "rest"
+        },
+        {
+          "id": "starter-lantern",
+          "item": "lantern",
+          "x": 10,
+          "y": 2,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "starter-teddy",
+          "item": "teddy",
+          "x": 6,
+          "y": 8,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "starter-book",
+          "item": "book",
+          "x": 9,
+          "y": 5,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      ]
+    },
+    "beach": {
+      "theme": {
+        "wallpaper": "cream",
+        "floor": "sand"
+      },
+      "characters": [],
+      "instances": [
+        {
+          "id": "starter-bubble-bath",
+          "item": "bubble-bath",
+          "x": 4,
+          "y": 0,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "starter-lounger",
+          "item": "lounger",
+          "x": 10,
+          "y": 1,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "starter-beach-towel",
+          "item": "beach-towel",
+          "x": 6,
+          "y": 7,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "ground",
+          "state": "rest"
+        },
+        {
+          "id": "starter-beach-towel-3",
+          "item": "beach-towel",
+          "x": 11,
+          "y": 8,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "ground",
+          "state": "rest"
+        },
+        {
+          "id": "starter-ball",
+          "item": "ball",
+          "x": 6,
+          "y": 4,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "starter-shell",
+          "item": "shell",
+          "x": 12,
+          "y": 6,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        },
+        {
+          "id": "starter-banana-plant",
+          "item": "banana-plant",
+          "x": 14,
+          "y": 5,
+          "rotation": 0,
+          "mirrored": false,
+          "layer": "furniture",
+          "state": "rest"
+        }
+      ]
+    }
+  }
+}

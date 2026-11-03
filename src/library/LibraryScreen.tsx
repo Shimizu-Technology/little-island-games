@@ -1,5 +1,7 @@
+import { collectionEmptyMessage } from "./availability";
+import { savedScrollPosition } from "./scrollPosition";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { AppState, FlatList, Pressable, ScrollView, TextInput, View, useWindowDimensions } from "react-native";
+import { AppState, FlatList, Keyboard, Pressable, ScrollView, TextInput, View, useWindowDimensions } from "react-native";
 import { router, useIsFocused, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "../components/Text";
@@ -381,17 +383,19 @@ function LibraryReady() {
           <LibraryIcon name="back" size={24} />
         </Action>
         <Text
+          maxFontSizeMultiplier={1.3} numberOfLines={1} adjustsFontSizeToFit
           style={[s.heading, { marginTop: 0, flex: 1, fontSize: place === "reader" ? 17 : 20, textAlign: "center" }]}
         >
           {place === "reader" ? record?.title : "Island Library"}
         </Text>
-        <SoundSwitch
+        {place === "make" && creation ? <Action label="Done editing story" onPress={() => Keyboard.dismiss()}>Done</Action> : <SoundSwitch
           on={store.save.settings.sound}
           onToggle={() => {
             audio.stop();
             store.settings({ sound: !store.save.settings.sound });
           }}
         />
+        }
         {place === "reader" ? (
           <>
             <Action
@@ -444,7 +448,7 @@ function LibraryReady() {
       ) : restricted ? (
         <View style={s.content}>
           <Text style={s.body}>
-            This collection is resting. Your place is kept for when a grown-up makes it available.
+            {collectionEmptyMessage(record?.category ?? "", child.policy.collections)}
           </Text>
           <Action onPress={() => visit("wonder", "", true)}>Choose another picture</Action>
         </View>
@@ -475,7 +479,7 @@ function LibraryReady() {
           windowSize={5}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          onScroll={(event) => onScroll(event.nativeEvent.contentOffset.y)}
+          onScroll={(event) => onScroll(savedScrollPosition(event.nativeEvent))}
           scrollEventThrottle={120}
           onContentSizeChange={() => {
             if (!restored.current) {
@@ -627,9 +631,7 @@ function LibraryReady() {
           ListEmptyComponent={
             <View style={s.content}>
               <Text style={s.body}>
-                {place === "books"
-                  ? "Reviewed books will appear here when they are installed."
-                  : "No picture found yet. Try another word, or choose a picture above."}
+                {place === "books" ? collectionEmptyMessage("books", child.policy.collections) : "No picture found yet. Try another word, or choose a picture above."}
               </Text>
               {place !== "books" && (
                 <Action onPress={() => update({ query: "", category: "all", onlyFavorites: false })}>
@@ -680,7 +682,7 @@ function LibraryReady() {
               scroll.current?.scrollTo({ y: savedY, animated: false });
             }
           }}
-          onScroll={(event) => onScroll(event.nativeEvent.contentOffset.y)}
+          onScroll={(event) => onScroll(savedScrollPosition(event.nativeEvent))}
           scrollEventThrottle={120}
         >
           {place === "topic" && record ? (
@@ -854,7 +856,7 @@ function LibraryReady() {
               style={[s.tab, place === tab && { backgroundColor: "#C1DCC8" }]}
             >
               <LibraryIcon name={tab} />
-              <Text style={[s.small, { fontWeight: "700" }]}>
+              <Text maxFontSizeMultiplier={1.2} numberOfLines={1} adjustsFontSizeToFit style={[s.small, { fontWeight: "700" }]}>
                 {tab === "shelf" ? "My Shelf" : tab[0].toUpperCase() + tab.slice(1)}
               </Text>
             </Pressable>

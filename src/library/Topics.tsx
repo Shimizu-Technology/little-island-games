@@ -34,6 +34,7 @@ export function TopicPage({
   const phone = width < 650;
   const wide = width >= 800 && width > height && fontScale < 1.5;
   const [sources, setSources] = useState(false);
+  const [grownUps, setGrownUps] = useState(false);
   const topic = record.item?.type === "topic" ? record.item : undefined;
   const prayer = record.item?.type === "prayer" ? record.item : undefined;
   const legacy = record.legacy;
@@ -109,6 +110,10 @@ export function TopicPage({
         </View>
       </View>
       <View style={{ padding: phone ? 16 : 32, gap: 14 }}>
+        {!!record.item?.grownUpNote && <>
+          <Action expanded={grownUps} onPress={() => setGrownUps(!grownUps)}>For grown-ups</Action>
+          {grownUps && <Text style={s.small}>{record.item.grownUpNote}</Text>}
+        </>}
         <View style={s.row}>
           <Action selected={saved} onPress={toggleSaved}>
             {saved ? "Saved in My Shelf" : "Save to My Shelf"}

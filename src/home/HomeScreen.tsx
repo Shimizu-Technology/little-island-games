@@ -216,13 +216,20 @@ export function HomeScreen({
         const resolved = resolve(
           { ...fresh.rooms[destination], entities: fresh.entities },
           candidate,
-          roomPoint(anchor.x, anchor.y),
+          proposal?.contact ?? roomPoint(anchor.x, anchor.y),
           {
             scale: runtime.current!.camera.get().a,
             avoidFurnitureOverlap: current.designing,
             release: true,
+            target: proposal?.target,
           }
         );
+        // A concurrent edit can invalidate a drop, but must never silently move it
+        // somewhere the child did not preview. Rebase only the same destination.
+        if (proposal && (resolved.kind !== proposal.kind || resolved.target !== proposal.target ||
+          resolved.contact.x !== proposal.contact.x || resolved.contact.y !== proposal.contact.y ||
+          resolved.base !== proposal.base || JSON.stringify(resolved.attachment) !== JSON.stringify(proposal.attachment)))
+          return undefined;
         next = current.store.commitProposal(resolved, undefined, stillCurrent);
         return next
           ? { state: next, proposal: resolved, identities: current.store.getCommittedIdentities() }

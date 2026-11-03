@@ -10,6 +10,7 @@ import type { LibraryItem, Rights, Sentence } from "../src/library/schema";
 
 vi.mock("react-native-gesture-handler", async () => (await import("./helpers/maker-gestures")).gestureMock());
 vi.mock("react-native", () => ({
+  Keyboard: { dismiss: vi.fn() },
   View: "View",
   TextInput: "TextInput",
   Pressable: "Pressable",
@@ -230,6 +231,20 @@ describe("Library art studio", () => {
 
 
 describe("Reader word boundaries", () => {
+  it("Q5 exposes every word as a named native sentence action while preserving sentence replay", async () => {
+    const word = vi.fn(), replay = vi.fn();
+    await act(async () => { root = create(<SentenceLine sentence={sentence} selected={false} onSentence={replay} onWord={word} />); });
+    const control = root.root.find(node => String(node.type) === "Pressable");
+    expect(control.props.accessibilityActions).toEqual([
+      { name: "word-0", label: "Hear word: See" }, { name: "word-1", label: "Hear word: the" }, { name: "word-2", label: "Hear word: sea." },
+    ]);
+    for (const action of control.props.accessibilityActions)
+      await act(async () => control.props.onAccessibilityAction({ nativeEvent: { actionName: action.name } }));
+    expect(word.mock.calls.map(([text]) => text)).toEqual(["See", "the", "sea."]);
+    expect(replay).not.toHaveBeenCalled();
+    await act(async () => control.props.onPress());
+    expect(replay).toHaveBeenCalledOnce();
+  });
   it("keeps years replayable and leaves punctuation inside the sentence replay", async () => {
     const word = vi.fn(), replay = vi.fn();
     await act(async () => { root = create(<SentenceLine sentence={{ ...sentence, text: "Look ... & 2011." }} selected={false} onSentence={replay} onWord={word} />); });
@@ -241,4 +256,16 @@ describe("Reader word boundaries", () => {
     expect(word).toHaveBeenCalledWith("2011.");
     expect(replay).not.toHaveBeenCalled();
   });
+});
+
+it("Q6 visible story Done dismisses the keyboard and retains the story and Export", async () => {
+  const { Keyboard } = await import("react-native");
+  const creation = { ...createLibraryPage(), sentences: "My turtle story." };
+  await act(async () => { root = create(<Maker creation={creation} draftKey="keyboard-owned" saving={false} saveError={false} onChange={vi.fn().mockReturnValue(true)} />); });
+  const toggle = root.root.find(node => String(node.type) === "Pressable" && node.props.accessibilityLabel === "Picture title and story");
+  await act(async () => toggle.props.onPress());
+  await act(async () => button("Done editing story").props.onClick());
+  expect(Keyboard.dismiss).toHaveBeenCalled();
+  expect(root.root.findAll(n=>String(n.type)==="TextInput").find(n => n.props.multiline)?.props.value).toBe("My turtle story.");
+  expect(root.root.findAllByType("button").some(n => n.children.includes("Export my page"))).toBe(true);
 });

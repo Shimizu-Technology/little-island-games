@@ -1,5 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Pressable, TextInput, View } from "react-native";
+import { Keyboard, Pressable, TextInput, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Svg, { G, Path, Rect } from "react-native-svg";
 import { Text } from "../components/Text";
@@ -379,6 +379,7 @@ export function Maker({
         </Text>
       )}
       <StudioCard open={details}>
+        <Action label="Done editing story" onPress={() => { Keyboard.dismiss(); }}>Done</Action>
         <TextInput
           accessibilityLabel="Page title"
           maxLength={80}

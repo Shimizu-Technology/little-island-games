@@ -48,7 +48,7 @@ interface BaseItem {
   rights: Rights;
   stage: { ageHint: [number, number]; support: string };
   sensitiveNotes: string[];
-  /** Shown only in the gated grown-up preview. */
+  /** Co-reading note in the grown-up preview and collapsed on the topic page. */
   grownUpNote?: string;
   artBrief?: { subject: string; composition: string; style: string; exactAlt: string };
   review: {

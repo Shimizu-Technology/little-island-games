@@ -84,6 +84,7 @@ describe("native round 2 regressions", () => {
       const proposal = resolve({ ...scene.rooms.home, entities: scene.entities }, hero, anchor, {
         scale: camera.a,
         release: true,
+        contact: underFinger,
         silhouette,
       });
       expect(proposal.kind).toBe("socket");

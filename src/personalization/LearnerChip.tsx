@@ -11,7 +11,7 @@ export function LearnerChip({ compact = false }: { compact?: boolean }) {
   return <>
     <PressableScale accessibilityRole="button" accessibilityLabel={`Who is playing: ${learner.name}. Switch learner`} onPress={() => setOpen(true)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 3, backgroundColor: C.soft, borderRadius: 24, maxWidth: '100%' }}>
       <Portrait look={personFor(store.save).look} size={compact ? 36 : 44}/>
-      <Copy style={{ fontSize: compact ? 13 : 16, flexShrink: 1 }}>{learner.name} ▾</Copy>
+      <Copy maxFontSizeMultiplier={compact ? 1.3 : undefined} numberOfLines={compact ? 1 : undefined} style={{ fontSize: compact ? 13 : 16, flexShrink: 1 }}>{learner.name} ▾</Copy>
     </PressableScale>
     <Sheet visible={open} title="Who is playing?" onClose={() => setOpen(false)}>
       <Copy>Pick your islander. Your place here stays open.</Copy>

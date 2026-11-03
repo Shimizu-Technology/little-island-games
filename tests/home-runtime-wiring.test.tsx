@@ -192,6 +192,28 @@ beforeEach(() => {
   vi.setSystemTime(1000);
 });
 describe("actual runtime callback sequencing", () => {
+  it("Q3 release commits the visible floor preview during a pending target change", async () => {
+    const scene = fixture();
+    const target = (id: string, x: number, y: number) => ({
+      id, kind: "socket" as const, owner: `home/item/${id}`, attachment: { kind: "socket" as const, item: `home/item/${id}`, socket: "seat" },
+      contact: roomPoint(x, y), core: { left: x-10, top: y-10, width: 20, height: 20 }, base: "sit" as const, facing: "front" as const,
+    });
+    scene.rooms.home.targets = [target("first",130,400), target("next",220,430)];
+    scene.rooms.home.buckets = { "1:3": [0,1] };
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={scene} />); });
+    touch("down",120,300); touch("move",150,520); flushJS();
+    expect(current.slots.get()[0].proposal?.target).toBe("first");
+    touch("move",210,550);
+    const preview = current.slots.get()[0].proposal!;
+    expect(preview.kind).toBe("floor"); expect(preview.pending?.target).toBe("next");
+    touch("up",210,550);
+    expect(current.slots.get()[0].proposal).toEqual(preview);
+    expect(current.slots.get()[0].targetX).toBe(20+preview.contact.x);
+    expect(current.slots.get()[0].targetY).toBe(120+preview.contact.y);
+    await act(async () => renderer.unmount()); vi.useRealTimers();
+  });
+
   it("T2 keeps the native frame callback registered across committed scene updates", async () => {
     let renderer!: TestRenderer.ReactTestRenderer;
     await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
