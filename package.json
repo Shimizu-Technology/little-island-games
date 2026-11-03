@@ -56,7 +56,10 @@
     "export:library-fixtures": "EXPO_PUBLIC_LIBRARY_FIXTURES=1 npm run export:web",
     "postinstall": "npm run library:validate && npm run library:index",
     "library:destinations": "node scripts/library/destinations.mjs",
-    "library:decisions": "node scripts/library/record-decisions.mjs"
+    "library:decisions": "node scripts/library/record-decisions.mjs",
+    "ios:preview-bundle-prep": "node scripts/ios-preview-bundle.mjs prep",
+    "ios:restore-generated": "node scripts/ios-preview-bundle.mjs restore",
+    "ios:preview-build": "node scripts/ios-preview-bundle.mjs build --"
   },
   "private": true,
   "engines": {

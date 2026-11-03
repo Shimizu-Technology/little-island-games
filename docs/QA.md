@@ -119,3 +119,32 @@ Agent-executed affected-flow QA on `feat/run-ramp`, based on `bab60fa`; offline 
 - Passed at 390×844 and 1024×768: W1-2 sand → ramp incline → flat deck/boardwalk → raised obstacle and gap → clear; 15 markers, 45 shells, zero hits, three stars, saved stars retained after reload, no page errors. Inspected frames show feet/shadow on the incline/deck and shells at the matching heights.
 - Evidence: sibling `little-island-games-artifacts/island-arcade/run-ramp/`, including `final-check.log`, `final-doctor.log`, `final-ledger.json`, `frames60/final-w1-2-*`, and `video/*-fixed60.mp4`. Each seven-second clip contains 420 images, one per controlled browser 60 Hz step. These establish web motion/alignment, not physical presented-frame performance. An earlier tablet reload-readiness failure is retained in `attempts/`; both final viewport runs pass.
 - Not run: simulators/native builds and physical family devices, as scoped for this worker. Public-release gates remain unchanged. Independent final-code review belongs to the parent task; this worker did not delegate or open a PR.
+
+
+## Native family-preview build path (Library 3.0)
+
+The Library catalog, asset, speech and vector maps (`src/library/{catalog,assets,speech,vectors}.generated.*`) are committed in **default** mode: 0 reviewed items and the 50 legacy Explore topics. Xcode and EAS bundle whatever is on disk, so a native build made straight from a clean checkout silently ships the legacy catalog. (Build 7 of the combined 3.0 QA did exactly that.) Use the committed path:
+
+```bash
+# one command: regenerate for preview, assert, build, restore (also if the build fails or is interrupted)
+npm run ios:preview-build -- xcodebuild -workspace ios/LittleIsland.xcworkspace -scheme LittleIsland \
+  -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+  -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build
+
+# or in two steps, around any build you drive yourself (EAS, Xcode, an archive)
+npm run ios:preview-bundle-prep   # EXPO_PUBLIC_LIBRARY_PREVIEW=1 regenerate; asserts preview:true and >100 items
+#   ... build ...
+npm run ios:restore-generated     # git checkout the four generated files; asserts the default catalog is back
+```
+
+- The script refuses to start if the four generated files have uncommitted edits, because restoring would discard them. **Never commit preview-mode generated files**; `git status` must be clean afterwards.
+- It sets `EXPO_PUBLIC_LIBRARY_PREVIEW=1` for the build. Add any other `EXPO_PUBLIC_*` flag (for example `EXPO_PUBLIC_HOME_LAB=1`) on the command line before `npm run`.
+- Check the build, not just the script: the installed app's Library must show the reviewed collections, not "50 topics". The bundle hash and the preview item count belong in the QA record.
+- The release path regenerates **default** mode after `--approve`; this path is only for family preview and TestFlight preview builds.
+- `ios/` is generated (gitignored). After `npm ci`, **re-run `pod install`**: `npm ci` wipes ExpoSQLite's generated sources. CocoaPods 1.16 here fails on Ruby `json` 3, so pin it:
+
+  ```bash
+  cd ios && ruby -e "gem 'json', '< 3'; load Gem.bin_path('cocoapods','pod')" install
+  ```
+
+  If ExpoSQLite still fails to compile, clear its stale build outputs under `build/dd` and rebuild.
