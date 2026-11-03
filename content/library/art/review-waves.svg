@@ -2,7 +2,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="waves-art-title">
   <title id="waves-art-title">A large blue breaking wave curls over a foamy crest while three wind arrows point across the water.</title>
   <rect width="320" height="196" rx="22" fill="#E1F0F3"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M20 160q42 3 70-47 30-77 92-61 47 15 20 46-12-30-37-13 35 1 41 40 10 30 95 28v24H20Z" fill="#91C5D0" /><path d="M126 78q25-34 57-23 29 10 19 33-18-24-37-3" fill="#FFF9E6" stroke-width="4"/><path d="M35 41L99 41" fill="none" stroke="#254E4B"/><path d="M92.4 45.5L99 41 92.4 36.5" fill="none" stroke="#254E4B"/><path d="M69 64L112 64" fill="none" stroke="#254E4B"/><path d="M105.4 68.5L112 64 105.4 59.5" fill="none" stroke="#254E4B"/><path d="M220 41L282 41" fill="none" stroke="#254E4B"/><path d="M275.4 45.5L282 41 275.4 36.5" fill="none" stroke="#254E4B"/><path d="M36 159h33m159 4h48" fill="none" stroke="#FFF9E6" stroke-width="5"/>
-  </g>
+<ellipse cx="164" cy="180" rx="134" ry="8" fill="#4E7E78" opacity=".15"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M28 168Q24 150 46 148Q70 144 96 146Q124 142 150 112Q176 66 214 52Q250 44 270 70Q284 92 278 118Q290 136 294 160Q296 178 270 180Q160 186 48 182Q30 180 28 168Z" fill="#7FB8CF"/>
+<path d="M34 170Q60 162 100 164Q160 160 220 168Q260 172 290 168Q290 178 270 180Q160 186 48 182Q34 180 34 170Z" fill="#6AA3C0" stroke="none"/>
+<path d="M262 76Q246 66 232 74Q222 86 230 104Q240 122 264 130Q282 140 288 156Q290 128 278 108Q270 90 262 76Z" fill="#4F87A6"/>
+<path d="M150 112Q170 74 204 60Q236 50 256 62Q266 68 270 76Q258 70 246 72" fill="none" stroke="#B8DDE8" stroke-width="2.6"/>
+<path d="M110 150Q140 136 162 104M140 158Q170 142 192 104M196 120Q206 140 230 150" fill="none" stroke="#A9D3E0" stroke-width="2.4"/>
+<path d="M176 64Q182 50 196 50Q200 40 214 42Q222 34 236 40Q248 36 258 46Q270 46 274 58Q284 64 280 76Q276 86 266 80Q262 70 250 70Q244 62 234 66Q226 58 214 64Q204 58 194 68Q184 70 176 64Z" fill="#F4FAF2"/>
+<path d="M266 80Q274 90 270 98Q262 92 262 84Z" fill="#F4FAF2"/>
+<path d="M38 152Q58 144 82 148Q102 144 118 146" fill="none" stroke="#F4FAF2" stroke-width="2.6"/>
+</g>
+<g fill="#F4FAF2" stroke="#354E49" stroke-width="1.6"><circle cx="186" cy="40" r="3.4"/><circle cx="174" cy="50" r="2.4"/><circle cx="284" cy="52" r="2.8"/><circle cx="292" cy="66" r="2"/><circle cx="200" cy="30" r="2"/></g>
+<g fill="none" stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M30 40Q48 32 66 40T104 40H132M124 33l9 7-9 7"/>
+<path d="M44 72Q60 64 76 72T110 72H140M132 65l9 7-9 7"/>
+<path d="M26 104Q42 96 58 104T92 104H118M110 97l9 7-9 7"/>
+</g>
 </svg>

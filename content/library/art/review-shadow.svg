@@ -2,7 +2,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="shadow-art-title">
   <title id="shadow-art-title">A small flashlight shines toward a coral block; the block casts a long dark shadow across a cream sheet of paper.</title>
   <rect width="320" height="196" rx="22" fill="#EEEAF6"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M69 141 140 70 293 121 220 179Z" fill="#FFF9E6" /><path d="M164 120 196 125 267 151 239 164 152 131Z" fill="#718A82" /><path d="M132 82h36v45h-36Z" fill="#D4896C" /><path d="m27 65 39 13-12 36-39-13Z" fill="#80A97D" /><path d="m66 78 15-8-17 53-10-9Z" fill="#F0D397" /><path d="M77 81 132 81m-61 21 61 21" fill="none" stroke="#F0D397" stroke-width="3" stroke-dasharray="4 6"/>
-  </g>
+<path d="M34 166L84 112H302L274 180Z" fill="#4E7E78" opacity=".16"/>
+<path d="M26 158L76 102H296L268 172Z" fill="#FFF3CC" stroke="#354E49" stroke-width="3" stroke-linejoin="round"/>
+<path d="M252 172l18-2 4-14Z" fill="#F0DFB2" stroke="#354E49" stroke-width="2.2" stroke-linejoin="round"/>
+<path d="M40 160H260" stroke="#F0DFB2" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M112 112L153 90L153 140L112 134Z" fill="#FFFBEA"/>
+<path d="M116 114L150 92M116 132L152 146" fill="none" stroke="#F0C86D" stroke-width="2.2" stroke-dasharray="4 6" stroke-linecap="round"/>
+<path d="M190 142L206 124L286 116L276 152Q230 150 190 142Z" fill="#4E6B66" opacity=".85"/>
+<path d="M152 92h40v50h-40Z" fill="#D38F78" stroke="#354E49" stroke-width="3" stroke-linejoin="round"/>
+<path d="M192 92l14-10v48l-14 12Z" fill="#C77760" stroke="#354E49" stroke-width="3" stroke-linejoin="round"/>
+<path d="M152 92l14-10h40l-14 10Z" fill="#E09A7E" stroke="#354E49" stroke-width="3" stroke-linejoin="round"/>
+<path d="M158 100v32" stroke="#F3C7B4" stroke-width="3" stroke-linecap="round"/>
+<ellipse cx="86" cy="138" rx="36" ry="5" fill="#4E7E78" opacity=".18"/>
+<g transform="translate(100 122) rotate(-6)"><path d="M-40 -9h34v18h-34Q-45 0 -40 -9Z" fill="#6B9C73" stroke="#354E49" stroke-width="3" stroke-linejoin="round"/><path d="M-32 -9v18M-26 -9v18" stroke="#476E59" stroke-width="1.6"/><rect x="-16" y="-14" width="7" height="5" rx="1" fill="#E09A7E" stroke="#354E49" stroke-width="1.6"/><path d="M-6 -9L10 -16V16L-6 9Z" fill="#B9B4A2" stroke="#354E49" stroke-width="3" stroke-linejoin="round"/><path d="M-2 -8l10-4" stroke="#DAD5C3" stroke-width="2" stroke-linecap="round"/><ellipse cx="10" cy="0" rx="3.5" ry="16" fill="#FFF3CC" stroke="#354E49" stroke-width="2.2"/><path d="M-36 -4h24" stroke="#98B483" stroke-width="2" stroke-linecap="round"/></g>
+<path d="M280 41Q281 45 285 46Q281 47 280 51Q279 47 275 46Q279 45 280 41Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M48 52Q49 55 52 56Q49 57 48 60Q47 57 44 56Q47 55 48 52Z" fill="#F0CF7C" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
 </svg>

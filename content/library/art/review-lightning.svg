@@ -2,7 +2,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="lightning-art-title">
   <title id="lightning-art-title">A large golden lightning bolt reaches from a small dark cloud toward distant ground; widening curved lines symbolize thunder.</title>
   <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M54 56q-13-30 21-32 9-26 35-8 35-7 42 26 15 17-4 22Z" fill="#7F83A0" /><path d="M111 58 87 103h27l-21 54 70-77h-32l17-22Z" fill="#F0D397" /><path d="M177 79q26 19 0 40m22-55q46 37 0 69m24-84q64 51 0 101" fill="none" stroke="#AFAB9D"/><path d="M35 175q80-17 120-3t130-3" fill="none" stroke="#80A97D"/>
-  </g>
-</svg>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M22 172Q40 150 90 156Q130 144 180 154Q230 146 268 156Q300 162 298 176Q290 188 230 186Q160 190 90 186Q24 186 22 172Z" fill="#9FBF9C"/>
+<path d="M30 178Q100 188 170 184Q240 182 292 172" fill="none" stroke="#85AA7D" stroke-width="2.2"/>
+<path d="M56 158v-8M70 156v-10M196 154v-8" fill="none" stroke="#6B9C73" stroke-width="2.4"/>
+<circle cx="56" cy="146" r="6" fill="#6B9C73" stroke-width="2"/><circle cx="70" cy="142" r="7" fill="#85AA7D" stroke-width="2"/><circle cx="196" cy="142" r="6" fill="#6B9C73" stroke-width="2"/>
+<path d="M234 160v-18h30v18Z" fill="#FFF3CC" stroke-width="2.4"/>
+<path d="M228 144l21-14 21 14Z" fill="#C77760" stroke-width="2.4"/>
+<rect x="240" y="146" width="8" height="7" rx="1" fill="#F0C86D" stroke-width="1.8"/><path d="M254 160v-11h6v11" fill="#A48C5C" stroke-width="1.8"/>
+<g fill="none" stroke="#7F83A0" stroke-width="2.2"><path d="M72 66l-5 14M92 70l-5 14M152 70l-5 14M170 66l-5 12"/></g>
+<path d="M70 62C44 62 40 36 64 34C64 12 96 6 108 22C122 6 154 10 156 32C176 30 186 50 172 60C168 64 160 64 152 64L76 64C74 64 72 64 70 62Z" fill="#6F7891"/>
+<path d="M72 62C66 54 76 48 86 52C92 44 106 46 110 54C118 46 132 48 136 56C144 50 158 52 162 60L160 64L76 64Z" fill="#5A6280" stroke="none"/>
+<path d="M70 62C44 62 40 36 64 34C64 12 96 6 108 22C122 6 154 10 156 32C176 30 186 50 172 60C168 64 160 64 152 64L76 64C74 64 72 64 70 62Z" fill="none"/>
+<path d="M78 26Q88 16 104 18M60 44Q60 38 66 36" fill="none" stroke="#959CB4" stroke-width="3"/>
+<path d="M112 56L86 110H110L92 160L154 92H128L144 56Z" fill="#F0C86D"/>
+<path d="M119 62L98 104H116" fill="none" stroke="#FFF3CC" stroke-width="3"/>
+<path d="M112 56L86 110H110L92 160L154 92H128L144 56Z" fill="none" stroke-width="3.4"/>
+<g fill="none" stroke="#7E8B9E" stroke-linecap="round"><path d="M164 90Q172 104 164 118" stroke-width="2.4"/><path d="M180 78Q194 104 180 130" stroke-width="3"/><path d="M198 66Q218 104 198 142" stroke-width="3.6"/></g>
+<g fill="#F0C86D" stroke="none"><path d="M84 100l-7-3 2 7ZM158 100l7-1-4 6Z"/></g>
+</g></svg>

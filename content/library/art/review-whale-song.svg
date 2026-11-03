@@ -2,7 +2,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="whale-song-art-title">
   <title id="whale-song-art-title">A blue humpback-shaped whale has a long pectoral flipper, throat grooves, a two-lobed tail and curved sound symbols in the water.</title>
   <rect width="320" height="196" rx="22" fill="#E1F0F3"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M37 106q5-49 94-45l41 11 54-3 17-17-6-26 24 13 22-16-4 31-31 36q-74 58-169 42-34-6-42-26Z" fill="#91C5D0" /><path d="M53 111q47 36 132 3" fill="none" stroke="#FFF9E6" stroke-width="9"/><path d="M112 107q-17 37 31 57l-7-55Z" fill="#91C5D0" /><path d="M60 111q16 18 35 17m-24-18q12 12 23 13m-11-13 11 7" fill="none" stroke-width="2"/><circle cx="62" cy="94" r="3" fill="#254E4B" /><path d="M20 82q-11-17 2-31m12 27q-9-11 1-21" fill="none" stroke="#AFAB9D"/><path d="M192 146q18 10 34-3m-40 17q28 20 52-5" fill="none" stroke="#AFAB9D"/>
-  </g>
+<g fill="none" stroke="#F4FAF2" stroke-linecap="round" opacity=".85"><path d="M150 26q11-6 22 0" stroke-width="2.5"/><circle cx="208" cy="60" r="3" stroke-width="2"/><circle cx="216" cy="46" r="4" stroke-width="2"/></g>
+<ellipse cx="176" cy="178" rx="104" ry="7" fill="#4E7E78" opacity=".13"/>
+<g fill="none" stroke="#5E9A9A" stroke-width="3.4" stroke-linecap="round"><path d="M284 92Q292 106 284 120"/><path d="M294 84Q306 106 294 128" opacity=".75"/></g>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M74 74Q56 70 32 54Q50 50 62 56Q70 60 74 64Q80 58 90 54Q100 50 112 50Q98 66 74 74Z" fill="#5E86A8"/>
+<path d="M73 66Q60 60 46 56M75 66Q88 58 102 54" fill="none" stroke="#86A8C4" stroke-width="2"/>
+<path d="M278 116Q270 96 244 90C206 82 166 84 140 90L130 82L120 92C102 92 84 84 68 72L80 74C92 100 120 128 160 134C200 140 248 136 266 128Q278 122 278 116Z" fill="#5E86A8"/>
+<path d="M278 116Q266 132 236 136Q196 142 160 132Q200 128 232 121Q260 116 278 116Z" fill="#DCE8E4" stroke-width="2.2"/>
+<path d="M272 121Q250 127 222 127M268 125Q246 131 210 131M262 129Q240 135 196 134M252 133Q232 138 186 135" fill="none" stroke="#7F9BB0" stroke-width="1.6"/>
+<path d="M144 94Q180 86 226 90" fill="none" stroke="#86A8C4" stroke-width="2.6"/>
+<path d="M90 82Q106 90 120 96" fill="none" stroke="#86A8C4" stroke-width="2.2"/>
+<path d="M212 128Q198 150 168 168Q148 178 136 174Q146 162 160 152Q180 138 194 126Z" fill="#4D7394"/>
+<path d="M194 130l-4 6M180 144l-4 4M166 156l-5 4" fill="none" stroke-width="1.8"/>
+<path d="M200 130Q180 152 148 170" fill="none" stroke="#DCE8E4" stroke-width="2.2"/>
+<g fill="#4D7394" stroke-width="1.6"><circle cx="258" cy="98" r="2.4"/><circle cx="266" cy="104" r="2.2"/><circle cx="250" cy="94" r="2.2"/><circle cx="271" cy="111" r="2"/></g>
+<circle cx="236" cy="114" r="2.8" fill="#354E49" stroke="none"/>
+<path d="M278 116Q258 120 240 118" fill="none" stroke-width="2"/>
+</g>
 </svg>

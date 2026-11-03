@@ -7,7 +7,7 @@ import { Text } from "../components/Text";
 import { font } from "../components/ui";
 import { Motif, TopicArt } from "../explore/ExploreArt";
 import { SceneBackdrop } from "./SceneBackdrop";
-import { sceneCategory } from "./sceneContext";
+import { sceneCategory, sceneDecor } from "./sceneContext";
 import { sceneVector } from "./sceneVector";
 import { LibraryArt } from "./LibraryArt";
 import { libraryAssets } from "./assets.generated";
@@ -88,21 +88,14 @@ export function ItemPicture({
     >
       {scene && (
         <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <SceneBackdrop category={sceneCategory(record.id, record.category)} />
+          <SceneBackdrop category={sceneCategory(record.id, record.category)} {...sceneDecor(record.id)} />
         </View>
       )}
       {/* A positioned foreground paints above the absolute scene on web and native. */}
       <View style={scene ? [StyleSheet.absoluteFill, { zIndex: 1 }] : { flex: 1 }}>
         {path && libraryVectors[path] ? (
           <SvgXml
-            xml={
-              scene
-                ? sceneVector(
-                    libraryVectors[path],
-                    large && path === "content/library/art/legacy-turtles.svg" ? "110 42 132 108" : undefined
-                  )
-                : libraryVectors[path]
-            }
+            xml={scene ? sceneVector(libraryVectors[path]) : libraryVectors[path]}
             width="100%"
             height="100%"
             accessibilityLabel={record.item!.image.alt}

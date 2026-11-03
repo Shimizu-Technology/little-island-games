@@ -2,7 +2,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="continents-art-title">
   <title id="continents-art-title">Seven separated simplified land groups appear on a flat blue oval world map, including a long Antarctic strip; boundaries and coastlines are schematic.</title>
   <rect width="320" height="196" rx="22" fill="#F6E8DC"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <ellipse cx="160" cy="99" rx="141" ry="79" fill="#91C5D0" /><path d="m40 55 22-16 38 11 12 18-27 20-14 30-13-28-19-9Zm52 62 26 6 12 24-18 18-13-22Zm47-62 12-16 25 6 4 17-17 9Zm12 28 28-6 19 25-15 39-18-7-18-31Zm25-35 40-13 49 22 15 27-35 17-26-27-34 2Zm61 77 22-11 28 17-7 20-31 1ZM59 156q105 18 204 0l-18 16H76Z" fill="#80A97D" stroke-width="2"/>
-  </g>
+<ellipse cx="160" cy="182" rx="112" ry="6" fill="#4E7E78" opacity=".16"/>
+<g stroke="#354E49" stroke-linecap="round" stroke-linejoin="round">
+<ellipse cx="160" cy="98" rx="136" ry="78" fill="#6FA9BC" stroke-width="3"/>
+<ellipse cx="160" cy="96" rx="129" ry="72" fill="#91C5D0" stroke="none"/>
+<g fill="none" stroke="#B4DCE0" stroke-width="1.6"><path d="M32 98H288M44 60Q160 52 276 60M44 136Q160 144 276 136M160 26V170M100 30Q78 98 100 166M220 30Q242 98 220 166"/></g>
+<g stroke-width="2.2">
+<path d="M52 52Q70 34 100 36L124 42Q132 50 120 58L112 70Q102 74 98 84L90 96Q82 92 80 82Q66 76 60 66Q46 62 52 52Z" fill="#85AA7D"/>
+<path d="M96 104Q114 98 126 108Q130 118 120 132L112 154Q104 166 100 154Q100 140 92 126Q86 112 96 104Z" fill="#A8C493"/>
+<path d="M144 44Q156 36 168 42L172 52Q166 60 158 62L150 66Q140 60 144 52Z" fill="#F0CF7C"/>
+<path d="M140 74Q160 68 182 72Q190 78 196 86Q188 92 184 98L174 116Q168 128 163 122Q160 110 156 104Q142 102 135 92Q132 80 140 74Z" fill="#E9B07A"/>
+<path d="M180 40Q206 28 238 34Q262 38 268 52Q264 62 256 64L248 76Q238 84 228 76L218 88Q208 82 206 72Q194 68 186 62Q174 54 180 40Z" fill="#98B483"/>
+<path d="M234 112Q248 102 264 108Q270 120 260 128Q246 132 236 126Q226 120 234 112Z" fill="#D3915E"/>
+<path d="M94 158Q124 151 160 153Q196 151 226 158Q212 167 160 166Q108 167 94 158Z" fill="#F4FAF2"/>
+</g>
+<g fill="none" stroke-width="1.6" opacity=".6"><path d="M64 56Q80 44 100 44M190 44Q214 36 236 42M146 78Q162 74 176 78M104 112q8-2 12 4M240 112q8-4 16-1M150 47q6-3 12-1"/></g>
+<path d="M116 160q18-3 34-2M172 158q16-1 30 2" fill="none" stroke="#C9DCDD" stroke-width="1.6"/>
+<g fill="none" stroke="#F4FAF2" stroke-width="2.2"><path d="M54 120q6-4 12 0M200 136q6-4 12 0M276 86q5-3 10 0M130 92q5-3 10 0"/></g>
+</g>
 </svg>

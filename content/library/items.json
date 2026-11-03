@@ -63,9 +63,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "42cb011cc73d1a284fbdd41bae857719dcd6455beebe0a7e7d2642b9d29681cf"
+      "sha256": "6cb62ceec71d4df0203f6b339faec93d84db83f499d7666a24ec2086910aa00a"
     },
     "label": {
       "id": "library-turtles-label-1",
@@ -1039,9 +1039,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "9544bf7b7d9b5676de1fc07836bccecd9969fdf22e08eb29d4dc2065ecaf5021"
+      "sha256": "f95d50e37c65b2ab51637357daa438a8946a02c981e7191123b779e0d17d2334"
     },
     "label": {
       "id": "library-sun-label-1",
@@ -1281,9 +1281,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "d56a42ebf978448790dce0c718136aedbbf59eaf1169e8810f81536aed1161fc"
+      "sha256": "3dbaeff5ab6a98969bcb891faf680f1812dd34935f9eca4f4b8020613ae32bbf"
     },
     "label": {
       "id": "library-moon-label-1",
@@ -1533,9 +1533,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "6ce673a4d94a1f1200cd577a932e5b2133bed8a0ee638050be94022460f0fd68"
+      "sha256": "f6bf3b294704990cd0d63611aa685af6389f4cc672a3f3eb8b8bf082525f7b7a"
     },
     "label": {
       "id": "library-day-night-label-1",
@@ -1780,9 +1780,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "8efd368aa04fb90652a281cc0fa5b444846b992d3f81c3963202bd941ee2da79"
+      "sha256": "61614f33d4b18f170e6aa629e2bfb9a02c90eeedad1fdca7af3a9b77d60c7929"
     },
     "label": {
       "id": "library-planets-label-1",
@@ -2046,9 +2046,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "7548c558e5a700221379dd8a04fc14617e6dd9e20aea490ddeba3cd84088b108"
+      "sha256": "4d33ffe15213137e3d49431c2648f1cee784ad75d203a660dd7261899dc47c5f"
     },
     "label": {
       "id": "library-mars-label-1",
@@ -2283,9 +2283,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "c7d4899e672d2feaffdfb8366186ac9a84894e3786fcd5b2a40130051706a240"
+      "sha256": "2a3859a7d1559edbf9e497b7626a4d6be8fab5a7c4a8adb9df51c12aae116b1b"
     },
     "label": {
       "id": "library-saturn-label-1",
@@ -2530,9 +2530,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "954fb9d7230ac1703d046d98950175e07efa4401da961ef82df3ed6b5139d91e"
+      "sha256": "c961247bedb10ce51849f7750e06c2b69a6e8b92a8b73ac07357371bfb073dd1"
     },
     "label": {
       "id": "library-gravity-label-1",
@@ -2772,9 +2772,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "683334fede96c3ccd5bf0ec504a76fd2570f16feb08cd578c8a0a8f3ec71b182"
+      "sha256": "231c5a91572f607a55182c728fec9c83e8966a5c52c04978be7a6644b61618a5"
     },
     "label": {
       "id": "library-stars-label-1",
@@ -3024,9 +3024,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "5a460d8ff9e5b6a059745f9e992ae1c2216c127ca0c8237c69809e4230a68183"
+      "sha256": "27befb06afd1cb6c364c7cdc3c6d105f8f12d1dee9a831956a6a759fa8bd8e44"
     },
     "label": {
       "id": "library-rockets-label-1",
@@ -3280,9 +3280,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "59bafc2f05813d78bd5826eecc333d5f798121d0027cda94d075b8c38eef8763"
+      "sha256": "25246fd515220bfb2cb7941808c17b94f332684535a597d4a6dd469d3b6df5fe"
     },
     "label": {
       "id": "library-asteroids-label-1",
@@ -3526,9 +3526,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "7e1aa15614653a71c3fc290a1a061c3f9d4af1a884c380124b982a97cdf56b36"
+      "sha256": "fcdeb0d9974ad22ac7bbfbb4a90ae0d4b5ddef72f96b2e70198706e3dc2e8367"
     },
     "label": {
       "id": "library-salty-label-1",
@@ -3784,9 +3784,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "3a991184f93ae90670e6914a67be361b584039127dfc86d709d984c69d1400fd"
+      "sha256": "7e0ef7d2154931888e675835034b67bf454117664d8e66f25e0ebfef487da857"
     },
     "label": {
       "id": "library-tides-label-1",
@@ -4024,9 +4024,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "da1fbfdc0cc5b66f981b38eb254330c506dd9b9690f751864efc01641b85f7fd"
+      "sha256": "5a9f660950d163f3bff6534fb4f9b07610f66056615dedbe541ed723c976db27"
     },
     "label": {
       "id": "library-waves-label-1",
@@ -4254,9 +4254,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "cccc8e864e6e19f83071a55b6d5bb49cdaf1bf2e127a27fa98b456fc2b791b6b"
+      "sha256": "ea9195c9b926aba7b7bd651dc79e6d5c4a25bf21eae8c6a5deddd2a2beb484b4"
     },
     "label": {
       "id": "library-coral-label-1",
@@ -4507,9 +4507,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "e133902e0b6b53255b9860a42045e2ab219042ef0eef791c156eb8189469a1c2"
+      "sha256": "53dea14e5ccc61e8888a9c0bb872f36a00120ddd76b78e67e972fffcf627e90c"
     },
     "label": {
       "id": "library-plankton-label-1",
@@ -4743,9 +4743,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "90241b08ff3c5ae4fe4e34e46850eaa80422716e50f0e49220e5232f8a581783"
+      "sha256": "755848a39db7cc128c82eb25c7fdaa194a5dcf8c501334dfb018d722fdbe89b1"
     },
     "label": {
       "id": "library-seagrass-label-1",
@@ -4979,9 +4979,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "d0c271941a09a2d5a2fd3b14ada3bb366be3f1d068342368a5010e12c4ee2dbe"
+      "sha256": "a7bb9baf90dea31fbef308bec939830844bc1ccf4f5fa32a73cd340dd8e4b6d0"
     },
     "label": {
       "id": "library-deep-ocean-label-1",
@@ -5239,9 +5239,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "0373225e405550e400faea5213a7372123a165ad097c235bb9af2595313a41ad"
+      "sha256": "ce6443ed27eeaf6eee798a221e23a188346dab24f449f1f7e46e373dbdd640f8"
     },
     "label": {
       "id": "library-octopus-label-1",
@@ -5485,9 +5485,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "e82097933fc71f4903f06a5788c631a61e22dae36b7d8911b90fc98b6c228258"
+      "sha256": "fbe08fb07f42ad3b463a3285ff42361acce5fe8b6c6fa68ac58daaf55c59c8a2"
     },
     "label": {
       "id": "library-food-web-label-1",
@@ -5741,9 +5741,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "33c6929bf3e4ea9ad2efe1e9101dea5bf9080eeaff61a7fd6abfbdfbab5eced0"
+      "sha256": "4dd7b75f0a2996a768d4e88105f0ac8eb8703c1ff0450d720098c4822fab5fc2"
     },
     "label": {
       "id": "library-bats-label-1",
@@ -6005,9 +6005,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "4625f049024ed0adfee644a5b6c3db8b647a8f3c5d2ea02a910c19666b40e8c8"
+      "sha256": "f985a3465f22b082ab8c3f5c0263eabefeec18fc3e18b48d50765e46201e98ed"
     },
     "label": {
       "id": "library-butterflies-label-1",
@@ -6256,9 +6256,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "d1627fa81190026fe255fd628cc36d068de5e84cc72c3a093c2e1521de72fc0d"
+      "sha256": "1a6865ba965f39d5b446eb2728f2a67d0ee9b3188cadc09637f8d41a7df9dce8"
     },
     "label": {
       "id": "library-frogs-label-1",
@@ -6520,9 +6520,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "f2e208a039e66c121d9dc596c0d3e338909bd66155e7a225c6b64a72ec9ffe4e"
+      "sha256": "49e1ad14d9f7977d5b983bcfb89631b4a8afcda7ebf50698d7d641329644e84d"
     },
     "label": {
       "id": "library-bees-label-1",
@@ -6779,9 +6779,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "0ee5c3fafb44a2050ee37698b634031d5a883dfe008caef9e0a848542f1c280e"
+      "sha256": "0d3f0be6347398f5c91ff68a6f5fde9d37274d9868afd666008e1d14bacfc97f"
     },
     "label": {
       "id": "library-camouflage-label-1",
@@ -7017,9 +7017,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "aa91ac1a37d680751b75c21baa163c56beeceffa6ed45049a2a02953a9ccf71f"
+      "sha256": "9df76513213bbc457835e7a45b0fb6e91d6c360e58153a644399fb36696c8ace"
     },
     "label": {
       "id": "library-dolphins-label-1",
@@ -7272,9 +7272,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "b577619cd29a5af0079d0b43361995f600720c6187ebecf1453e86bc67a160f6"
+      "sha256": "02fb2100c449ebeb5d18b6f6e4f809a070b417da2918f998b7eca311c7e0af70"
     },
     "label": {
       "id": "library-habitats-label-1",
@@ -7519,9 +7519,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "699650e9baf105556f7a5954ed92c654964e6293e2c56e1f515b1296f82710ca"
+      "sha256": "d6c391db033832fda197a1430eead5066c7197e578a2cb66a224e9bac16da6bb"
     },
     "label": {
       "id": "library-migration-label-1",
@@ -7779,9 +7779,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "bc4c50e2845c9f20c65deda0650dcf581f3f77af91fb817504b334f3619ff959"
+      "sha256": "126864772e4817ac0a024a4136f63f10453d8c188dd8eb6797aa39a534300c91"
     },
     "label": {
       "id": "library-insect-flight-label-1",
@@ -8035,9 +8035,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG drawn during final rendered review; long quill and branching barbs replace a leaf-like outline."
+        "changes": "Original subject-specific SVG drawn during final rendered review; long quill and branching barbs replace a leaf-like outline. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "e18830190ce167256c579f0f3a48a8d7f4ae5ac8312c7da9e3e8486206085546"
+      "sha256": "7856bbea018b7dc237e2cb5df88220f031eced84ae1bd8ac5d1e7596cf4544f2"
     },
     "label": {
       "id": "library-bird-feathers-label-1",
@@ -8298,9 +8298,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "d9fe7277eff02778f03c0eb24f9b9a5243d941c696282cd79538e97925dca794"
+      "sha256": "5e6e374d272948997d67974e123ed059057593c3bc3c73c1fdbe4b441112c752"
     },
     "label": {
       "id": "library-blue-sky-label-1",
@@ -8536,9 +8536,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "0d425ba3b25e37c269ec17b3334cfb305989be78c80d4b6e360070071a53d21d"
+      "sha256": "06a7192a6d5a0bb67047889e20134cf2ef52064981fb5e1d6bb8ad0e73b8ef37"
     },
     "label": {
       "id": "library-clouds-label-1",
@@ -8803,9 +8803,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "55d6ca059e60e852e5b6cae074175ee146277806c9760b2f150766a63067c4e7"
+      "sha256": "5df43d889d08ab13ddcd984221f3a54208d07f02516c4cd4d4c151afd4c21cd9"
     },
     "label": {
       "id": "library-rain-label-1",
@@ -9057,9 +9057,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "5f8427ae18159c1c2412ee00f460af9789310dfe20a9bbc106d5eb2cee46f818"
+      "sha256": "1bf071bad1cfc97878587d9dca4353b156480ef795313d3393cfcca06a472bbb"
     },
     "label": {
       "id": "library-rainbows-label-1",
@@ -9311,9 +9311,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "6892728f4d7537fe9f7d04a386db85f4784f319cf92c141564e52b1214afa4f6"
+      "sha256": "c19b58769a988673c26672552abed531a83451ad2b24f165be156ddc75586d0f"
     },
     "label": {
       "id": "library-wind-label-1",
@@ -9566,9 +9566,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "fc9c9351489ed80a66e8298106479eba6861be2ea20e1a8af42fb97c0c39acc4"
+      "sha256": "a469fe58ff189d5035d8944de39cec92fd1c745649dced0674a118135f0929aa"
     },
     "label": {
       "id": "library-lightning-label-1",
@@ -9813,9 +9813,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "7ebea642e11f397d57ffc47f89702ee1251679bf4565821b878946b50dc1f7f5"
+      "sha256": "2e32170f60294e70a9ef25ec2c18ff797dc06dc1ee39cdb285e915344905431e"
     },
     "label": {
       "id": "library-typhoons-label-1",
@@ -10047,9 +10047,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "b41ec33cf6b69203285a06111e50259c986d32f8b4a32d6ede0f5d28ff037357"
+      "sha256": "45fe67a6f13b3a16d35c0b6efd7b6d7dcef3bb84d3c8bf8bfc0f1fb420515fe7"
     },
     "label": {
       "id": "library-water-cycle-label-1",
@@ -10301,9 +10301,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "27aad33428bc0b826a81da51fc67ccddb6c6ab6474c5bec3b35c7def64d634a8"
+      "sha256": "5df555c0958ed8f7410dadf9c2a2e50513a5663085d46677a9f2128ccfea2bdb"
     },
     "label": {
       "id": "library-seasons-label-1",
@@ -10560,9 +10560,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "c993d682c74ac530621e1814a07f8107b08d1294fc320c71fa83f1aa1807921e"
+      "sha256": "f7f0460f11bf9d47494379f337347e68eb87f7ae685a8b9dd943bdc17d82f502"
     },
     "label": {
       "id": "library-forecast-label-1",
@@ -10814,9 +10814,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "617b52c8bee71f368e7a13d0093e5fe1fa1dcc723024fd33ade55e4fc1248e0d"
+      "sha256": "a9bb5ca53db6b5d62224be456d89a0630f3d2bac7d69c37c0237e4202b4ce6df"
     },
     "label": {
       "id": "library-guam-label-1",
@@ -11078,9 +11078,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "5f9ef5ef3342fd5dc6432475f4b827e32c9fac40158f2a2841f8f80053554e91"
+      "sha256": "f48fd87b349489bb2c307704d07fd87e8e47e607065c5c7787e2d5e3800448d6"
     },
     "label": {
       "id": "library-islands-label-1",
@@ -11324,9 +11324,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "883104fd251606b7161383c3f410a219d1128739c5e2b411ff6b0fc45a5e12b8"
+      "sha256": "7a6f1e929e6a6daa3019884d45486b3420a57b5794b45e206464ae8e2b4bcb0d"
     },
     "label": {
       "id": "library-reef-label-1",
@@ -11584,9 +11584,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "a0c9d5b1360547f63e0dc5fdfbacf355a66331e8ec963efc0333f435ecefb0f6"
+      "sha256": "e657e64dde43415f664e8defdeacc5e954ae565ccb866fed76deed4a3d1dd5dd"
     },
     "label": {
       "id": "library-trench-label-1",
@@ -11836,9 +11836,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "20222d1688a741bb4fee57b98a5133a4a31a9ce685b1ca0e72deec84aa00e446"
+      "sha256": "5ee7ed7856d9fcfe07c3b36be2218a2881f07d5c6796cd7deff16e04d582de24"
     },
     "label": {
       "id": "library-mountains-label-1",
@@ -12082,9 +12082,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "57516f471e69eacdd8ec3d3dfbe1d354fd36937a48a016969f9b2c6e35e02d48"
+      "sha256": "5844b08dbddb6ac80bb72503df8229187bed5d8fea32db3e3bfea13c08e1de3e"
     },
     "label": {
       "id": "library-rivers-label-1",
@@ -12328,9 +12328,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "2105f501b2980ee1afdfaaa3bcbc9bae56fbfc25105f16a4f77d3cbb2a356877"
+      "sha256": "c31f8eabfd4387d05c5b3b449c5b32b3e6b6c53d35ed6c8450306f1cf639d93d"
     },
     "label": {
       "id": "library-continents-label-1",
@@ -12579,9 +12579,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "60a64fe51443ab59569768093eed059848b8a2d8c988c2455c7f8ffb74a00ec1"
+      "sha256": "1b7b4aba269bd28f52710a19d41f958553e35e4a4189b687fdf21d071068bfa6"
     },
     "label": {
       "id": "library-maps-label-1",
@@ -12822,9 +12822,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "b5a79b2dc0f0b4f7bf31c00611db2612234ab40d552ffccfc2ad2c05866acbf1"
+      "sha256": "2c712c6b1b504eaef38b89302fec0080420a3db0b07492fba1833d5f0b09a23a"
     },
     "label": {
       "id": "library-directions-label-1",
@@ -13051,9 +13051,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "118d054310072839fb6cf769148edf8d8fa33c51268a31c5a7def6c665306b7b"
+      "sha256": "027555053b3aaf331d687eea36e2719f8f4d4dc85dbbb4b5d58c02ace1af6ac8"
     },
     "label": {
       "id": "library-volcanoes-label-1",
@@ -13264,9 +13264,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "15483caa09edb2da27841c888baf9a1067ddd79937aa035c5329b2cf4a67a2b8"
+      "sha256": "c7614ba92a402b73b256d7355953e86973db681567322000b8ea6e1e9208c473"
     },
     "label": {
       "id": "fish-gills-label",
@@ -13517,9 +13517,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "077c12897c7f9b2fb1691f8bbd1a2e35b759aedea30b6cf9893f0a09f15ee7b7"
+      "sha256": "cc59d60df61c6d0f26a5e9206c8d3539cc944ff5febb0705f7ad6fcbee949e83"
     },
     "label": {
       "id": "crab-shells-label",
@@ -13770,9 +13770,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "1d90aee33df56d465a67e1b8286afd302640d9fe573222e446ad6b89d0db0e4a"
+      "sha256": "3a6db9f7daf251d698b5920c38adc61f7b323623dfca9897fabfab912a2386c0"
     },
     "label": {
       "id": "parrotfish-label",
@@ -14024,9 +14024,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "eca0cc69d39776af1d2dbc024df007026122bf20f4d66ceb037b764653a69e10"
+      "sha256": "f6683b57f875ca688ce3da2dada0d7551ab80cee38ccb5fbbc52f31368e32d96"
     },
     "label": {
       "id": "tide-pool-label",
@@ -14272,9 +14272,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "a4ba4e2b87aa6119a8b1bf537c34bd39f7793dd5b32b02f06aea31f09281270c"
+      "sha256": "36a475de2c453ceab8ab6736355174f75a447fe5b8cdc712fbe1a329d78b8071"
     },
     "label": {
       "id": "beach-sand-label",
@@ -14529,9 +14529,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "3cbf08634be576195cd7a39ee574e49e1f27a1fb52701201d23729d63df2f35e"
+      "sha256": "dd7ba40cd61fa16007d69f2eb5400a564c3ed6e4cfee2d3ddc0b6ae85bf217c5"
     },
     "label": {
       "id": "mangrove-roots-label",
@@ -14786,9 +14786,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "822171d4b561246d08fb0a2158ac3d701495155a6117fc64110974791458e669"
+      "sha256": "69f14f672e34d5d258b17ce3575209a46f45a98fb8476a92ee4f045abb680295"
     },
     "label": {
       "id": "jellyfish-move-label",
@@ -15063,9 +15063,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "5a9ed1980a53adb970184a3834d9cf6e1134a91efc35bacd0d2570acef5db349"
+      "sha256": "d04de1c96cbfe6680a26209a9812ee6c7f6369e23b1018ece7286d22135cd755"
     },
     "label": {
       "id": "whale-song-label",
@@ -15340,9 +15340,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "77da4d083df0f315289d1ba3cdd79e80c9d2bda534c40d3bd2faaabe1ed644cc"
+      "sha256": "9258cf96db887c76837df9df2f1e50983f173827193784716b7c332afc66980b"
     },
     "label": {
       "id": "guam-made-label",
@@ -15602,9 +15602,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "ba964259c1be963e0c761e92b9f7dd03cbb0a3c9a97f27aa152fa18bca066a56"
+      "sha256": "1542446c6fc647b8bc8ecadb699df744ca6d82f189313a4cea9d848a67fe25af"
     },
     "label": {
       "id": "limestone-label",
@@ -15882,9 +15882,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "85e348d958b1438220c2830ccd55785c9789e0b859d821cc13b6770cc6686ff3"
+      "sha256": "b64dfd94f540873c4c14acc5103702ffab8fb22049918fe24281eb7cac2be8e4"
     },
     "label": {
       "id": "guam-rail-label",
@@ -16145,9 +16145,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "0aeb7ad60555cd15c6e2af86f10c1302ef3ae08934a48bda389bcb21c1a51bd2"
+      "sha256": "ebee95914ba31b4a05621cdd8a69251006acba7a1a4ddb7a48500986d0a1a0f0"
     },
     "label": {
       "id": "limestone-forest-label",
@@ -16389,9 +16389,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "997d6384c6f3f0b1612659940421693144b5a3af18f2ad6103d03ad4c10150c1"
+      "sha256": "3bba6b5e9f5436d37b3b4c7fa98614f6544d88d3d1e2c3dfe03454b1a8a41e9d"
     },
     "label": {
       "id": "drinking-water-label",
@@ -16665,9 +16665,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "658794de3882d84524b69abca3a3a30d4a8af5c2837c2b62bbd80a72ca45ebf6"
+      "sha256": "a7579549e9a1c11d7e99a989e7c177d344780f827a5d14e9e14f6d203c50bcba"
     },
     "label": {
       "id": "village-label",
@@ -16932,9 +16932,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "14e233ee6a20f3067177600f02d4a57e91074ae9e8821d10db05699edbbe4e4c"
+      "sha256": "84a2de5fc45c7ee178f20c203653e1c248b2d532af2f33f53bda60fb03850f58"
     },
     "label": {
       "id": "native-trees-label",
@@ -17195,9 +17195,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "bb59ccb7b402ee7a4523ad5c0ed0d41aaad94d944fdeb5bac9ab5e2485e52014"
+      "sha256": "b5f2b4ce5933579ac5685ceffe5bb20e69df119842d2321c5539c927799cfebc"
     },
     "label": {
       "id": "family-walk-label",
@@ -17463,9 +17463,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "dcc38b22efe669f3e594386162549292a0f68e13a782978de1179c4172b72fc9"
+      "sha256": "dcbf0a801d2cfb6cc7f4f99820aee4653b31c0720c6e6cc5819e3450bd4e0ab4"
     },
     "label": {
       "id": "distant-stars-label",
@@ -17721,9 +17721,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "1218ddcda8d95eff9a5f4feb707cd99408d8e6fa9a37a1e34d6f4e62c63e3462"
+      "sha256": "a898479d1eb2b57493416c436299803b16bda711be4b9e146416b4a4a12ab4d2"
     },
     "label": {
       "id": "shadow-label",
@@ -17997,9 +17997,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "2637c4c00353a814c87d9b29482fec18f140a71ab51bcf461b88254b9edcbcf0"
+      "sha256": "2b21216a21d755efc8f7642b2b8b6bd193bb7cf3724fd4c28792e18fbb4342b2"
     },
     "label": {
       "id": "constellation-label",
@@ -18260,9 +18260,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "27549a99879d0f71f0d22ab28eaa51e42004f0964aae3605c3814d1f1b43ab9d"
+      "sha256": "0817800edd253cb068e0c0a84a8804feac0318792e527e5d970b23072aebe3b7"
     },
     "label": {
       "id": "night-view-label",
@@ -18509,9 +18509,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "95af01e15075452380c5a6b01942cb5d5b130136c0c26f3462730532b206ab51"
+      "sha256": "ba400679b77311d9e8aa15f8cb123d4d862755a295ca09e2c3819a22aadbbb98"
     },
     "label": {
       "id": "telescope-label",
@@ -18753,9 +18753,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG drawn during final rendered review; star dots and curving luminous bands clarify the symbolic galaxy; no imported geometry or source image."
+        "changes": "Original subject-specific SVG drawn during final rendered review; star dots and curving luminous bands clarify the symbolic galaxy; no imported geometry or source image. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "06ca370bffc63fa434cac36543170b0196fd0a5d12ef4acf40bbdf3e471d9a0b"
+      "sha256": "f631fde3f0780a632f36fde6a5b80ab086ccceebea69c4831a545404f96121a6"
     },
     "label": {
       "id": "milky-way-label",
@@ -19013,9 +19013,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "51e27ce34eb9cfc2b29ed90bcc452969aefcf6a95cb93a2ada30f6ffe2e425ef"
+      "sha256": "03cc48534a5d910f6bf8fd42a82985c88d0333ba583e7337251c5c4315b857a0"
     },
     "label": {
       "id": "comet-label",
@@ -19261,9 +19261,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "0300f10db536a1f183bab55d846fd769708ffb8a881e49beac376d65a1190029"
+      "sha256": "c6a4d8a1761e44ecaccdeb2299b4b281316322ca0667af0fe082b167e19a0778"
     },
     "label": {
       "id": "astronaut-home-label",
@@ -19528,9 +19528,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "916ff341c648f9a082091df75b690f390f91a40e5661f207cb0683e858e1cb67"
+      "sha256": "945f3c3c936fcde3dd3c9b620f6cfb2c509b1525db74a2334e7c9f7788def431"
     },
     "label": {
       "id": "breathing-label",
@@ -19791,9 +19791,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "ef84af57f47fd12627415ce353598b6600e79145bf8e4728b4997ad43be9c3bb"
+      "sha256": "6d1bfa0002ca2cfa9631890a184d6dc7595a86943bdee284f1701776e0c61c72"
     },
     "label": {
       "id": "heart-label",
@@ -20067,9 +20067,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "80090cae5ab49b4f80c5718b786a6542585cc8d8431009ada0a001e7505d3e51"
+      "sha256": "9cc419e78f0f8cbfa889eae1b2b99c768b8d16d3784877951c7388ee51026f0d"
     },
     "label": {
       "id": "bones-label",
@@ -20338,9 +20338,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "dcf09dd00cc26c1b35392fa71c6cb05c356ec043a0d81eeb9119c29140d04b82"
+      "sha256": "cb2d0686e5e6719b0b766fd26937cd2068b5c7b0dc43319cbe81f62b5beba545"
     },
     "label": {
       "id": "muscles-label",
@@ -20610,9 +20610,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "e4311cf078852485c650fc3317b973ec3b7e4dac307405b97c1bad1d284147ee"
+      "sha256": "610b2110143c42c071ddf71a4183a1654011a062bda751b811b2017b1c1adbb8"
     },
     "label": {
       "id": "vision-label",
@@ -20864,9 +20864,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "d84a37a97c3ef608965084b6846efa4001c0ac16e0fb07738b9018a68122c84e"
+      "sha256": "f7a02d6679dd698c2a01ebcaed8ef079f6824e313e7181a59074f3efb05f5b07"
     },
     "label": {
       "id": "hearing-label",
@@ -21136,9 +21136,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "83ac323898bb59f3c92712411d51e7b4ab827f2860d52cebd3df73c853415f76"
+      "sha256": "ea89d8911eaf0215ceb41d45f473ec1badaf2e27da4efc11c0bb476494a3bd56"
     },
     "label": {
       "id": "smell-label",
@@ -21399,9 +21399,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "15aa6cb0d73348933a42e25893cbed0801b61ab40422d5488a1ab6ce2d4ab429"
+      "sha256": "6967dff158c5f6a3dec241f59b2573423e0dcaf0d4f8db70f3fd083effd2d320"
     },
     "label": {
       "id": "taste-label",
@@ -21671,9 +21671,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "c6a140dd5333908d7116dc907d47e5429cdc2ed3ab43ccfe881d0036dda81731"
+      "sha256": "59a57bf9437ae5cff4e220b876e039f075fbcf93b857f62da5fdbe7d5f99164e"
     },
     "label": {
       "id": "wheel-label",
@@ -21948,9 +21948,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "9e119d47b0661b811676a75e1e7db756d46c2f56c30be6a11a6bc3b253e31752"
+      "sha256": "fa3adbfb6ca84e5d7a874979ea46c58268e07625e3e88f2406a39d433488826d"
     },
     "label": {
       "id": "lever-label",
@@ -22225,9 +22225,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "c3d17c4e0f87223bd598afda5d0154ca21a10b771e07ad5abfa0994d4d2f6288"
+      "sha256": "508ea6591cdfe6d8c7eb79fad67d045c0cae7508f3f8c2abd269f94db340e535"
     },
     "label": {
       "id": "ramp-label",
@@ -22493,9 +22493,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "5e942bba8f64e8f8245c7b280fc4f51ae427606a632f5ea6dcfee1ad9af0821b"
+      "sha256": "43d9535e951172bcd00b83fe48423be2585c3ee864716f33378d297c9e83afe9"
     },
     "label": {
       "id": "gears-label",
@@ -22746,9 +22746,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "faa5bf7eb8a6eb9a1b6aa93f2eb49c029bace6f88a9fea955f88d384649a7358"
+      "sha256": "0497ac99d5c1390aabc8e0f252fde64e944ac6ca3c583370b745f283f4f17e6c"
     },
     "label": {
       "id": "pulley-label",
@@ -23023,9 +23023,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "2bd02f9edc2c358afbc1672a1389626e512250fbb87fed085e5ac26bcf50d5de"
+      "sha256": "bbc670b57e8dc79e646e857be260f2b55717909edcd472a497c48d4f0ca7214d"
     },
     "label": {
       "id": "boats-float-label",
@@ -23276,9 +23276,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration."
+        "changes": "Original work; source facts paraphrased, no source images copied. Independent art audit retained every drawn shape and corrected only the embedded descriptive title to match the visible illustration. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "e28e34dc4bf44c63f04270a450050728a75052c9f6f907f8b02b73e826e0966b"
+      "sha256": "35afc265cbf9a947cf6e94affa4ad07fb28e038e5aae4eb5c390a3559dfd0acd"
     },
     "label": {
       "id": "airplanes-label",
@@ -23547,9 +23547,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration. Shimizu Technology, 2026.",
-        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged."
+        "changes": "Original subject-specific SVG composition drawn for the independent 90-topic Library art audit; flat Little Island palette and rounded teal outlines. No external image imported or traced. Replaces the prior repeated or mismatched motif; runtime Explore artwork is unchanged. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "e748cf5c307cd9539e8c461f259d3fc6f243d034f1c8b88c2a2af5dda52624e2"
+      "sha256": "98dd43de1226ea61602b2ec0c7cd60e6f8e21a7fd8bfa432eb28a90003aa7b7c"
     },
     "label": {
       "id": "bicycle-label",
@@ -28953,9 +28953,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "33c6929bf3e4ea9ad2efe1e9101dea5bf9080eeaff61a7fd6abfbdfbab5eced0"
+      "sha256": "4dd7b75f0a2996a768d4e88105f0ac8eb8703c1ff0450d720098c4822fab5fc2"
     },
     "label": {
       "id": "animals-collection-label",
@@ -29052,9 +29052,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "9544bf7b7d9b5676de1fc07836bccecd9969fdf22e08eb29d4dc2065ecaf5021"
+      "sha256": "f95d50e37c65b2ab51637357daa438a8946a02c981e7191123b779e0d17d2334"
     },
     "label": {
       "id": "space-collection-label",
@@ -29425,9 +29425,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island text and vector illustration by Shimizu Technology.",
-        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added."
+        "changes": "Static SVG export of the existing Explore TopicArt and per-topic Motif; React Native SVG rotation/origin converted to standard SVG transforms. Original colors, shapes and composition retained; descriptive title added. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "90241b08ff3c5ae4fe4e34e46850eaa80422716e50f0e49220e5232f8a581783"
+      "sha256": "755848a39db7cc128c82eb25c7fdaa194a5dcf8c501334dfb018d722fdbe89b1"
     },
     "label": {
       "id": "plants-collection-label",
@@ -29600,9 +29600,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "3234902a21b9e4d4101239e3e33aeba4744927aea8e92af20d69d23ee3d65ece"
+      "sha256": "242a0701b8d0fef390a468fe2464fced6c7d9929d37de17a8dd3371ab77ab58e"
     },
     "label": {
       "id": "library-latte-stones-label-1",
@@ -29852,9 +29852,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "f1af595afc7b009a74aefe54f0e74e81cbcfd84abf74e978a7a1077e6427b8c3"
+      "sha256": "2900895a648c6077b16a092417903913884236befb16c8c123faf8476256bc8f"
     },
     "label": {
       "id": "library-fiesta-gathering-label-1",
@@ -30104,9 +30104,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "9de90ffb38157a625b48d60d133787a2be58632a33eb3981805f9ae865ccd51c"
+      "sha256": "50a6f1fb2061cf606d728dc665920069aac4c39a5612e00c48502ffb4b0d125d"
     },
     "label": {
       "id": "library-helping-each-other-label-1",
@@ -30356,9 +30356,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "b77c5b5b6e0a422b78fdd75c96b1a8792b70e175943c0a0874f2285ec0d381fd"
+      "sha256": "fde500c6281c1791fe0d64fe4cdcab34cb3e5b75db960de8e4f3c5fa1674d3c7"
     },
     "label": {
       "id": "library-reef-family-knowledge-label-1",
@@ -30621,9 +30621,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "ef8781c21c6df0410b3aa96cd9e007c793ab65f7e59b37d9f54d42e0edb334e7"
+      "sha256": "a52ae7eff060c2fa60ef1a90cde1f6bcba1c00cbbf6556a0f050012689ddbc9b"
     },
     "label": {
       "id": "library-language-everyday-label-1",
@@ -30877,9 +30877,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "c543676b3081b2a7fa33d35e85394ad378d91f8bf8d2e5cf0ab7dda1510ab8b5"
+      "sha256": "5112afbab85a56c6e7a9a35e31102af12b2c645da4db575e8c05ccb2b9fc2d44"
     },
     "label": {
       "id": "library-hafa-adai-label-1",
@@ -31123,9 +31123,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "d8bd339559304a5f7dca6aaf773bf8e1a6e30738b96a76144e82c75954627ddf"
+      "sha256": "49c8b7aa6e76d7ad2c6749fc25397c9d8ed2c95217bd518e12e6f01c1ac5cff6"
     },
     "label": {
       "id": "library-proa-canoe-label-1",
@@ -31382,9 +31382,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "88da9d969987d5ccbdc4c799481e2942d45f3a2b5695c217f14f6347aa4115f5"
+      "sha256": "43877694e571d7a1d8e58eb36e3b522b7618bc5362993d29b9071364500fda0f"
     },
     "label": {
       "id": "library-leaf-weaving-label-1",
@@ -31625,9 +31625,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "204e6c691b3cd5a5adb41c2a6644eac52984190210219a33c8fff07f60e9e166"
+      "sha256": "fc7895acc5b1a666aaac1a353c7bd5e06aca0090885668721ac394601b4ad219"
     },
     "label": {
       "id": "library-family-stories-label-1",
@@ -31879,9 +31879,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "be0bbae73062684da7ae24792e793e03a745da22d50e07f99126840199bbc3fb"
+      "sha256": "3e246a70007396cf6bdfbb31f258cd1e3356cf575f411c6500f08fcc892ada0c"
     },
     "label": {
       "id": "library-family-circle-label-1",
@@ -32150,9 +32150,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "a9b30db1fa73a2710fab4b7e6aa6ed13b28a0027bf5beb09c77845594d9050ab"
+      "sha256": "0821613e9ddaa2742f916f5460a44ac1f246a7eaf7fe7197b03cb02bdf08f8dd"
     },
     "label": {
       "id": "library-bread-rises-label-1",
@@ -32422,9 +32422,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "bc2011773ff6c76f06ea8cbeb5505462095d7574cceef23052be0b3908f1f234"
+      "sha256": "9159e852a7e92e52e95ac116bb05436c20ecfb2831d98a50c74b3985a4ca7a57"
     },
     "label": {
       "id": "library-rice-soft-label-1",
@@ -32707,9 +32707,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "42065395c17b84f4bf7b8ba35e268a914ae5326a4a1678a2f23151e8207166e8"
+      "sha256": "20a98ea8612b9fb60cfea4da679e3eee90b4d4b9d4fafe4c2b14274ae425a2dd"
     },
     "label": {
       "id": "library-coconut-palm-label-1",
@@ -32995,9 +32995,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "3c5781176db3ff8e0ef714a60124385eb8b2b88e20994276eb824066069fa087"
+      "sha256": "866fac8c6387c2d260f9ac0a190bf5a0dd6573a5ff62881a49c3651835fe5db1"
     },
     "label": {
       "id": "library-chili-heat-label-1",
@@ -33261,9 +33261,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "527cf1095a165c059169961c5d7ede5cfce5238de05cfd929a995abf061e8f06"
+      "sha256": "05dc0ec498edac42643fee1b6f102fb70451a201ea13c43d6f27f376f421db9a"
     },
     "label": {
       "id": "library-wheat-flour-label-1",
@@ -33531,9 +33531,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "ef3c9e56ba002a4091456312fbb2a2ad5aa8241b775e707cac9669b51ef33265"
+      "sha256": "1f7fbd3a838d59af7ae32a4c524336ecd4521ed677265ca3cfbf294f5f649f48"
     },
     "label": {
       "id": "library-ice-melts-label-1",
@@ -33790,9 +33790,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "6b7067f4b1936a0bed541a9e82e789ac0c28a12271a78f3ed74a72662fe08dc1"
+      "sha256": "ce92b068fd6f215059accab0a7ece286edbf36a9788bc56edd36c24d225ee227"
     },
     "label": {
       "id": "library-fruit-ripens-label-1",
@@ -34061,9 +34061,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "8a72b381b327a0c5bef771cb3022161bd2b6460fd15b1d3956eee4fe6e173e4f"
+      "sha256": "3c3ae4c2582bcd599fb0cc315fe68a6b243ce28b6ef225994b07a2ecc73bb98f"
     },
     "label": {
       "id": "library-kitchen-hands-label-1",
@@ -34309,9 +34309,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "bc889494cfe938042fea7cc437ea73e31f44536b132039417fdfb3a71d7a7036"
+      "sha256": "75da6b2fad348739977a916310cba25045b885e50453ffe6214c7717de791ed1"
     },
     "label": {
       "id": "library-food-smells-label-1",
@@ -34577,9 +34577,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "fdf026c60a66ef200724bf67a7efe8b634dc27d3bbf62e9212f1eceea1d33608"
+      "sha256": "4b152e77f2e1c853040ccd038f724abbf806428107cf11d473af5b2ec6b6a4a0"
     },
     "label": {
       "id": "library-guam-red-rice-label-1",
@@ -34861,9 +34861,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "58522424dba41429827b65100977f3d0b22d0dcb5be44982803bac1ea867c736"
+      "sha256": "3f066a9fa32f9f74c358007b9dfbdd8c2d6b5f7785e93b9092f77f7c6d9b4a87"
     },
     "label": {
       "id": "library-history-ancient-life-label-1",
@@ -35136,9 +35136,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "ac575ebb78edc06237fee778119f539d1bfe15deb0ecd0ae215e502d35fb759b"
+      "sha256": "115ae3d029f443e33ecea77c0e78bdfb07f206005aab405f6170b91277fe9e84"
     },
     "label": {
       "id": "library-history-colonization-label-1",
@@ -35398,9 +35398,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "a087925d469ffa809ae76f74afc8cd86fa06cde6a41515dba56e2b9b4ff8d173"
+      "sha256": "ccab22762be61182f147f30771cdc27f2afdb69dc69785f14261fa5c0da2be4e"
     },
     "label": {
       "id": "library-history-war-survival-label-1",
@@ -35667,9 +35667,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "70d2195b3ae9c64dbc900747ded92d089afa4b07dc708d70ea5c7dbd14ca2a09"
+      "sha256": "379ca88cce6f89503e33e518b0d7507ddac189292d9d03aa84425decd4adf815"
     },
     "label": {
       "id": "library-creation-care-label-1",
@@ -35917,9 +35917,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "9d7fe768dcf5a7ee41fab22fd02fa61077eb1c2568fe31e72d309912a656a072"
+      "sha256": "ac1bc69291de38cd4d2725078d43ee7b5119dc5bd18581721ce9469273ffac3f"
     },
     "label": {
       "id": "library-saying-thank-you-label-1",
@@ -36190,9 +36190,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "7494ae49a22f43980f09b6eb4d92ea698841829a54b4065bd968fc91eb30da90"
+      "sha256": "a0af57041965d3605396710ef87435c2bf4a562fba1986e9c099f41289d5a437"
     },
     "label": {
       "id": "library-parish-community-label-1",
@@ -36440,9 +36440,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "885c2e58d1d51cd29394270f203d369b5042d8a80e4c3256e04dce216fd3a339"
+      "sha256": "7b25c560449ab1996a92db792ea0aa9e198e93262dc7d08e33a87ac9ad29dfaf"
     },
     "label": {
       "id": "library-francis-creatures-label-1",
@@ -36727,9 +36727,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island vector illustration by Shimizu Technology.",
-        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review."
+        "changes": "Original flat vector, drawn for the reconciled art brief; subject and exact alt require independent review. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "b9ee7c761d794d09f9b4ad6e22865d66130e45c12c51c6411f645367651255a7"
+      "sha256": "acd4d79efca637b50397061bb2e8fab43eae8974dac61f8949a8f5a4dc654965"
     },
     "label": {
       "id": "library-christmas-guam-label-1",
@@ -37200,9 +37200,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island prayer-book illustration.",
-        "changes": "Original flat vector."
+        "changes": "Original flat vector. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "14234dbaedd4a25de74bc22308992ea5dc6ef64098e0dcf872e9f1ac9e469d21"
+      "sha256": "bf6093b99ca0215e94d627436b95d77cf660c2982e55f47bdb4a9b7e45e7ea95"
     },
     "label": {
       "id": "library-prayer-sign-of-cross-label",
@@ -37290,9 +37290,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island prayer-book illustration.",
-        "changes": "Original flat vector."
+        "changes": "Original flat vector. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "14234dbaedd4a25de74bc22308992ea5dc6ef64098e0dcf872e9f1ac9e469d21"
+      "sha256": "bf6093b99ca0215e94d627436b95d77cf660c2982e55f47bdb4a9b7e45e7ea95"
     },
     "label": {
       "id": "library-prayer-grace-before-meals-label",
@@ -37380,9 +37380,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island prayer-book illustration.",
-        "changes": "Original flat vector."
+        "changes": "Original flat vector. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "14234dbaedd4a25de74bc22308992ea5dc6ef64098e0dcf872e9f1ac9e469d21"
+      "sha256": "bf6093b99ca0215e94d627436b95d77cf660c2982e55f47bdb4a9b7e45e7ea95"
     },
     "label": {
       "id": "library-prayer-our-father-label",
@@ -37470,9 +37470,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island prayer-book illustration.",
-        "changes": "Original flat vector."
+        "changes": "Original flat vector. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "14234dbaedd4a25de74bc22308992ea5dc6ef64098e0dcf872e9f1ac9e469d21"
+      "sha256": "bf6093b99ca0215e94d627436b95d77cf660c2982e55f47bdb4a9b7e45e7ea95"
     },
     "label": {
       "id": "library-prayer-hail-mary-label",
@@ -37561,9 +37561,9 @@
         "creator": "Shimizu Technology",
         "sourceUrl": "repo:little-island-games",
         "credit": "Original Little Island prayer-book illustration.",
-        "changes": "Original flat vector."
+        "changes": "Original flat vector. Redrawn on 2026-11-03 in the Island hub illustration style (3.1 art pass); same subject, same exact alt."
       },
-      "sha256": "14234dbaedd4a25de74bc22308992ea5dc6ef64098e0dcf872e9f1ac9e469d21"
+      "sha256": "bf6093b99ca0215e94d627436b95d77cf660c2982e55f47bdb4a9b7e45e7ea95"
     },
     "label": {
       "id": "library-prayer-guardian-angel-label",

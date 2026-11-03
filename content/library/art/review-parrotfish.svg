@@ -2,7 +2,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="parrotfish-art-title">
   <title id="parrotfish-art-title">A blue-and-green parrotfish with a broad pale beak bites an algae-covered reef surface; a separate pile of pale sand lies below.</title>
   <rect width="320" height="196" rx="22" fill="#E1F0F3"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M20 146Q50 115 84 114l40 64H20Z" fill="#E5D8B1" /><path d="M21 141Q45 117 82 112" fill="none" stroke="#80A97D" stroke-width="10"/><path d="M84 111Q132 38 229 78l54-28v81l-52-30q-82 66-147 10Z" fill="#91C5D0" /><path d="M108 88q58-35 118-12l-8 28q-62 36-111 17Z" fill="#80A97D" /><path d="M82 112 96 92l16 17-13 16Z" fill="#E5D8B1" /><path d="m140 58 31-23 25 28m-50 58 18 25 18-28" fill="#D4896C" /><circle cx="121" cy="87" r="4" fill="#254E4B" /><path d="M164 82q-12 13-1 24m15-27q-12 13-1 24" fill="none" /><circle cx="186" cy="162" r="4" fill="#F0D397" stroke-width="1.5"/><circle cx="201" cy="166" r="3" fill="#F0D397" stroke-width="1.5"/><circle cx="216" cy="160" r="5" fill="#F0D397" stroke-width="1.5"/><circle cx="229" cy="168" r="3" fill="#F0D397" stroke-width="1.5"/><circle cx="206" cy="153" r="3" fill="#F0D397" stroke-width="1.5"/>
-  </g>
+<g fill="none" stroke="#F4FAF2" stroke-linecap="round" opacity=".85"><path d="M150 24q11-6 22 0M266 30q9-5 18 0" stroke-width="2.5"/><circle cx="120" cy="58" r="3" stroke-width="2"/><circle cx="128" cy="44" r="4.5" stroke-width="2"/></g>
+<ellipse cx="160" cy="180" rx="130" ry="8" fill="#4E7E78" opacity=".15"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M22 178Q16 156 30 144Q32 128 48 126Q56 112 72 118Q82 104 96 108Q100 92 112 90Q124 92 124 106Q132 120 126 138Q134 158 126 180Q74 186 22 178Z" fill="#C3BBA5"/>
+<path d="M28 168Q76 176 128 166Q130 176 126 180Q74 186 24 180Z" fill="#9FAE94" stroke="none"/>
+<g fill="none" stroke="#9FAE94" stroke-width="2.2"><circle cx="44" cy="160" r="5"/><circle cx="64" cy="166" r="4"/><circle cx="80" cy="148" r="5"/><circle cx="100" cy="162" r="4"/><circle cx="112" cy="140" r="4"/><circle cx="58" cy="144" r="3.5"/></g>
+<path d="M30 144Q32 128 48 126Q56 112 72 118Q82 104 96 108Q100 92 112 90Q124 92 124 106Q118 104 114 110Q104 106 100 116Q88 112 82 122Q72 124 64 126Q54 128 50 136Q40 138 30 144Z" fill="#98B483"/>
+<path d="M44 128q4-5 8 0M70 118q4-6 8 0M100 98q5-5 9 0" fill="none" stroke="#C9DDB5" stroke-width="2"/>
+<path d="M104 112l6 2M102 118l6 2" fill="none" stroke="#FFF6D8" stroke-width="2"/>
+<path d="M150 160Q166 140 186 138Q206 140 222 160Q228 172 186 174Q144 174 150 160Z" fill="#F0DFB2"/>
+<path d="M160 162Q186 168 214 162" fill="none" stroke="#D7C594" stroke-width="2.2"/>
+<g fill="#D7C594" stroke="none"><circle cx="176" cy="152" r="1.8"/><circle cx="194" cy="148" r="1.6"/><circle cx="186" cy="158" r="1.8"/><circle cx="204" cy="156" r="1.6"/><circle cx="168" cy="160" r="1.6"/></g>
+<g fill="#F0DFB2" stroke-width="1.2"><circle cx="210" cy="128" r="2"/><circle cx="216" cy="118" r="1.6"/></g>
+<path d="M248 82L290 52Q282 88 292 124L250 98Z" fill="#6E9FC8"/>
+<path d="M262 84L282 66Q278 88 284 110L262 96" fill="none" stroke="#9CC4DD" stroke-width="2"/>
+<path d="M150 50Q176 30 222 46Q236 54 240 64L160 60Z" fill="#6E9FC8"/>
+<path d="M176 118Q174 134 192 138Q194 126 200 118Z" fill="#6E9FC8"/>
+<path d="M116 94Q118 64 158 54Q210 46 252 90Q214 130 160 128Q126 126 116 108Z" fill="#79B79A"/>
+<path d="M124 112Q140 126 164 124Q212 122 246 92Q214 116 164 116Q138 116 124 112Z" fill="#5E9A88" stroke="none"/>
+<path d="M134 70Q154 58 180 58" fill="none" stroke="#B8DDC8" stroke-width="2.6"/>
+<g fill="none" stroke="#6E9FC8" stroke-width="2.4"><path d="M170 72q6 6 0 12M188 70q6 6 0 12M206 74q6 6 0 12M178 90q6 6 0 12M196 90q6 6 0 12M214 90q5 5 0 10M188 108q4 4 0 8M170 106q4 4 0 8"/></g>
+<path d="M152 62Q160 90 152 120" fill="none" stroke-width="2.4"/>
+<path d="M118 90Q104 92 102 100Q104 110 118 110Q124 100 118 90Z" fill="#FFF3CC"/>
+<path d="M104 100H118" fill="none" stroke-width="2"/>
+<circle cx="134" cy="88" r="5" fill="#FFF6D8" stroke-width="2"/><circle cx="133" cy="88" r="2.6" fill="#354E49" stroke="none"/>
+</g>
 </svg>

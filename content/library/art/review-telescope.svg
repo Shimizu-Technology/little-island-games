@@ -2,7 +2,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="telescope-art-title">
   <title id="telescope-art-title">A green telescope with a wide blue front lens points upward toward a small golden star; a narrow eyepiece sits at the low end above a three-legged stand.</title>
   <rect width="320" height="196" rx="22" fill="#EEEAF6"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <g transform="rotate(-27 150 95)"><rect x="80" y="75" width="130" height="34" rx="0" fill="#80A97D" /><rect x="203" y="69" width="17" height="46" rx="0" fill="#91C5D0" /><rect x="58" y="84" width="22" height="16" rx="0" fill="#F0D397" /><ellipse cx="220" cy="92" rx="5" ry="23" fill="#91C5D0" /></g><path d="M153 111v25m0 0-48 39m48-39 48 39m-48-39v39" fill="none" stroke-width="4"/><path d="m266 24 5 12 13 1-10 9 3 13-11-7-11 7 3-13-10-9 13-1Z" fill="#F0D397" /><path d="M235 54 249 42" fill="none" stroke="#AFAB9D" stroke-dasharray="4 6"/>
-  </g>
+<path d="M40 178Q60 160 130 160T246 162Q272 166 276 176Q220 188 150 186Q70 188 40 178Z" fill="#A8C493" stroke="#354E49" stroke-width="2.4" stroke-linejoin="round"/>
+<path d="M60 176Q140 168 256 174" fill="none" stroke="#85AA7D" stroke-width="2.2" stroke-linecap="round"/>
+<g stroke="#476E59" stroke-width="2" stroke-linecap="round"><path d="M66 170l-2-7M70 170l2-7M236 170l-1-6M240 170l3-6"/></g>
+<ellipse cx="146" cy="170" rx="44" ry="5" fill="#4E7E78" opacity=".18"/>
+<path d="M146 104L112 172M146 104L182 172M146 104L148 166" fill="none" stroke="#354E49" stroke-width="9" stroke-linecap="round"/>
+<path d="M146 104L112 172M146 104L182 172M146 104L148 166" fill="none" stroke="#BC9A69" stroke-width="5" stroke-linecap="round"/>
+<path d="M126 146h40" stroke="#354E49" stroke-width="3" stroke-linecap="round"/>
+<path d="M138 98h16l-2 14h-12Z" fill="#9FAE94" stroke="#354E49" stroke-width="2.4" stroke-linejoin="round"/>
+<g transform="translate(150 96) rotate(-28)" stroke-linecap="round"><path d="M-74 -9h10v18h-10Z" fill="#9FAE94" stroke="#354E49" stroke-width="2.4" stroke-linejoin="round"/><path d="M-84 -6h10v12h-10Z" fill="#6B9C73" stroke="#354E49" stroke-width="2.4" stroke-linejoin="round"/><path d="M-64 -12L60 -20V20L-64 12Z" fill="#6B9C73" stroke="#354E49" stroke-width="3" stroke-linejoin="round"/><path d="M-60 6L56 12V18L-62 11Z" fill="#4F7F5B"/><path d="M-54 -7L44 -13" stroke="#98B483" stroke-width="3" stroke-linecap="round"/><path d="M-20 -15v30M14 -17v34" stroke="#E8B752" stroke-width="4"/><path d="M-20 -15v30M14 -17v34" stroke="#354E49" stroke-width="1" opacity=".4"/><path d="M58 -24h20v48h-20Z" fill="#6B9C73" stroke="#354E49" stroke-width="3" stroke-linejoin="round"/><ellipse cx="78" cy="0" rx="8" ry="24" fill="#86BBD8" stroke="#354E49" stroke-width="3"/><path d="M76 -14q4 6 4 14" fill="none" stroke="#E6F3F6" stroke-width="2.4" stroke-linecap="round"/><path d="M-30 -24h34v8h-34Z" fill="#98B483" stroke="#354E49" stroke-width="2" stroke-linejoin="round"/><path d="M-20 -16v-0M-14 -16v2M-4 -16v2" stroke="#354E49" stroke-width="2"/></g>
+<circle cx="270" cy="36" r="16" fill="#FFF6D8" opacity=".6"/>
+<path d="M269 25Q270 24 271 25L273 30Q274 31 275 31L280 32Q281 32 281 33L277 37Q276 38 276 39L277 45Q277 46 276 45L271 43Q270 42 269 43L264 45Q263 46 263 45L264 39Q264 38 263 37L259 33Q259 32 260 32L265 31Q266 31 267 30Z" fill="#F0C86D" stroke="#354E49" stroke-width="2.2" stroke-linejoin="round"/>
+<path d="M40 35Q41 39 45 40Q41 41 40 45Q39 41 35 40Q39 39 40 35Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M292 116Q293 119 296 120Q293 121 292 124Q291 121 288 120Q291 119 292 116Z" fill="#F0CF7C" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M210 20Q211 23 214 24Q211 25 210 28Q209 25 206 24Q209 23 210 20Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
 </svg>

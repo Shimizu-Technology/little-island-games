@@ -1,2 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-bats-title"><title id="legacy-bats-title">Are bats birds?</title><rect width="320" height="196" rx="22" fill="#E7F0DF"></rect><circle cx="257" cy="42" r="20" fill="#FFFFFF" opacity="0.55"></circle><path d="M12 154q65-25 120 0t176 0" stroke="#43734C" stroke-width="2" opacity="0.2" fill="none"></path><g transform="translate(100,30) scale(1.12)"><g><path d="M60 49Q33 7 3 38l9 38q16-26 26 7 12-21 22 12 10-33 22-12 10-33 26-7l9-38Q87 7 60 49Z" fill="#7F83A0" stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path><path d="m48 43 1-19 13 12 12-12 0 24" fill="#7F83A0" stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="55" cy="47" r="2" fill="#254E4B"></circle><circle cx="68" cy="47" r="2" fill="#254E4B"></circle></g></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-bats-title"><title id="legacy-bats-title">Are bats birds?</title><rect width="320" height="196" rx="22" fill="#E7F0DF"/>
+<path d="M44 178Q70 162 120 165T230 163Q282 162 284 176Q230 188 160 186Q90 188 44 178Z" fill="#A8C493"/>
+<g stroke="#6B9C73" stroke-width="3" stroke-linecap="round" fill="none"><path d="M62 176q-4-12 2-22M70 176q2-10 10-14M252 174q-2-12 6-20M262 175q4-8 12-10"/></g>
+<ellipse cx="160" cy="174" rx="64" ry="7" fill="#739174" opacity=".18"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<g>
+<path d="M146 80L106 46Q70 30 36 26Q46 54 16 80Q48 92 40 124Q70 116 88 140Q112 120 148 132Z" fill="#8A77B4"/>
+<path d="M106 46L88 140Q112 120 148 132L146 80Z" fill="#7563A0" stroke="none"/>
+<path d="M106 46Q60 60 16 80M106 46Q70 86 40 124M106 46Q96 96 88 140" fill="none" stroke="#5A4A85" stroke-width="2.2"/>
+<path d="M140 78L106 51Q72 36 46 33" fill="none" stroke="#B9A9DA" stroke-width="2"/>
+<path d="M146 80L106 46Q70 30 36 26Q46 54 16 80Q48 92 40 124Q70 116 88 140Q112 120 148 132Z" fill="none"/>
+<path d="M106 46Q100 38 103 32Q107 39 112 43Z" fill="#4A3E6E" stroke-width="2"/>
+</g>
+<g transform="matrix(-1 0 0 1 320 0)">
+<path d="M146 80L106 46Q70 30 36 26Q46 54 16 80Q48 92 40 124Q70 116 88 140Q112 120 148 132Z" fill="#8A77B4"/>
+<path d="M106 46L88 140Q112 120 148 132L146 80Z" fill="#7563A0" stroke="none"/>
+<path d="M106 46Q60 60 16 80M106 46Q70 86 40 124M106 46Q96 96 88 140" fill="none" stroke="#5A4A85" stroke-width="2.2"/>
+<path d="M140 78L106 51Q72 36 46 33" fill="none" stroke="#B9A9DA" stroke-width="2"/>
+<path d="M146 80L106 46Q70 30 36 26Q46 54 16 80Q48 92 40 124Q70 116 88 140Q112 120 148 132Z" fill="none"/>
+<path d="M106 46Q100 38 103 32Q107 39 112 43Z" fill="#4A3E6E" stroke-width="2"/>
+</g>
+<path d="M153 132l-5 11M167 132l5 11M145 143l3 0 2 3M175 143l-3 0-2 3" fill="none" stroke-width="2.2"/>
+<ellipse cx="160" cy="104" rx="18" ry="32" fill="#6E5C98"/>
+<path d="M146 88Q160 98 174 88Q172 110 160 116Q148 110 146 88Z" fill="#A895CF" stroke="none"/>
+<path d="M152 120l2 5M160 122v5M168 120l-2 5M150 104l2 4M170 104l-2 4" fill="none" stroke="#5A4A85" stroke-width="1.6"/>
+<path d="M146 58L140 30L158 47Z" fill="#7D6BA8"/><path d="M174 58L180 30L162 47Z" fill="#7D6BA8"/>
+<path d="M148 51L144 38L153 47ZM172 51L176 38L167 47Z" fill="#C9A7C9" stroke="none"/>
+<path d="M143 58Q143 43 160 43Q177 43 177 58Q177 67 169 74Q165 84 160 87Q155 84 151 74Q143 67 143 58Z" fill="#8A77B4"/>
+<path d="M153 72Q156 80 160 82Q164 80 167 72Q160 69 153 72Z" fill="#A895CF" stroke="none"/>
+<path d="M156.5 83.5h7l-3.5 3.5Z" fill="#354E49" stroke-width="1.6"/>
+<circle cx="151.5" cy="60" r="3.6" fill="#2E2A40" stroke="none"/><circle cx="168.5" cy="60" r="3.6" fill="#2E2A40" stroke="none"/>
+<circle cx="150.5" cy="58.8" r="1.2" fill="#F4FAF2" stroke="none"/><circle cx="167.5" cy="58.8" r="1.2" fill="#F4FAF2" stroke="none"/>
+<path d="M148 52Q153 47 160 46" fill="none" stroke="#B9A9DA" stroke-width="2"/>
+</g></svg>

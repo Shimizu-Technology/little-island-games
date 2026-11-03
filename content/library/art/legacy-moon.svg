@@ -1,2 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-moon-title"><title id="legacy-moon-title">Why does the Moon change shape?</title><rect width="320" height="196" rx="22" fill="#EEEAF6"></rect><circle cx="257" cy="42" r="20" fill="#FFFFFF" opacity="0.55"></circle><path d="M12 154q65-25 120 0t176 0" stroke="#56538D" stroke-width="2" opacity="0.2" fill="none"></path><g transform="translate(100,30) scale(1.12)"><g><circle cx="59" cy="57" r="40" fill="#E5D8B1" stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></circle><circle cx="44" cy="41" r="9" fill="#C1B994"></circle><circle cx="76" cy="70" r="13" fill="#C1B994"></circle><circle cx="40" cy="78" r="6" fill="#C1B994"></circle><path d="M60 17a40 40 0 0 1 0 80Z" fill="#6E769B"></path></g></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-moon-title"><title id="legacy-moon-title">Why does the Moon change shape?</title><rect width="320" height="196" rx="22" fill="#EEEAF6"></rect><g data-fit="1" transform="translate(-24.7 -8.8) scale(1.14)">
+<circle cx="160" cy="92" r="74" fill="#FFFBEA" opacity=".55"/>
+<path d="M52 33Q54 38 59 40Q54 42 52 47Q50 42 45 40Q50 38 52 33Z" fill="#F0CF7C" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M270 29Q271 33 275 34Q271 35 270 39Q269 35 265 34Q269 33 270 29Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M276 106Q277 111 282 112Q277 113 276 118Q275 113 270 112Q275 111 276 106Z" fill="#F0CF7C" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M46 100Q47 103 50 104Q47 105 46 108Q45 105 42 104Q45 103 46 100Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<circle cx="160" cy="92" r="62" fill="#FFF3CC"/>
+<path d="M160 30A62 62 0 0 0 102 92" fill="none"/>
+<path d="M160 154A62 62 0 0 1 106 123Q124 122 160 144Z" fill="#F0DFB2"/>
+<path d="M160 30A62 62 0 0 1 160 154Z" fill="#AA99C5"/>
+<path d="M170 32A62 62 0 0 1 170 152Q212 92 170 32Z" fill="#9786B5"/>
+<ellipse cx="130" cy="72" rx="13" ry="11" fill="#E9D6A7" stroke="#354E49" stroke-width="2.2"/>
+<path d="M120 74Q130 85 140 74" fill="none" stroke="#FFF6D8" stroke-width="2" stroke-linecap="round"/>
+<ellipse cx="140" cy="120" rx="9" ry="8" fill="#E9D6A7" stroke="#354E49" stroke-width="2.2"/>
+<path d="M134 122Q140 130 146 122" fill="none" stroke="#FFF6D8" stroke-width="2" stroke-linecap="round"/>
+<path d="M110 78A52 52 0 0 1 141 44" fill="none" stroke="#FFFBEA" stroke-width="4" stroke-linecap="round"/>
+<path d="M160 30V154" stroke="#354E49" stroke-width="1.6" opacity=".35"/>
+<circle cx="160" cy="92" r="62" fill="none" stroke="#354E49" stroke-width="3"/>
+<path d="M196 168q-2-14 14-14 6-12 20-8 10-8 22 2 16-2 16 12 8 2 6 8Z" fill="#F4FAF2" stroke="#354E49" stroke-width="2.2" stroke-linejoin="round"/>
+<path d="M206 166h52" stroke="#C3CFE0" stroke-width="2" stroke-linecap="round"/>
+<path d="M64 156q2-10 12-9 6-9 16-4 10-2 10 8 6 2 4 7Z" fill="#F4FAF2" stroke="#354E49" stroke-width="2.2" stroke-linejoin="round"/>
+</g></svg>

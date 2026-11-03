@@ -2,7 +2,43 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="migration-art-title">
   <title id="migration-art-title">Three flying birds follow a long dotted route between two separated patches of land.</title>
   <rect width="320" height="196" rx="22" fill="#E7F1DD"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M18 159q28-39 68-13l26 31H18Zm180 18q26-48 61-34 30-15 44 34Z" fill="#80A97D" /><path d="M47 143C35 42 218 18 270 126" fill="none" stroke-dasharray="5 8" stroke="#AFAB9D"/><g transform="translate(68 82) scale(1)"><path d="M0 4Q10-10 21 4 30-10 41 4" fill="none" /></g><g transform="translate(139 49) scale(1.15)"><path d="M0 4Q10-10 21 4 30-10 41 4" fill="none" /></g><g transform="translate(216 85) scale(0.9)"><path d="M0 4Q10-10 21 4 30-10 41 4" fill="none" /></g><path d="M261 112L270 126" fill="none" stroke="#254E4B"/><path d="M262.6 122.9L270 126 270.2 118.0" fill="none" stroke="#254E4B"/>
-  </g>
-</svg>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M70 172Q160 160 250 172Q262 184 160 186Q78 186 70 172Z" fill="#93C9C8" stroke-width="2.4"/>
+<path d="M130 176q8-3 16 0M176 178q8-3 16 0" fill="none" stroke="#F4FAF2" stroke-width="2"/>
+<path d="M20 176Q22 150 54 146Q86 142 106 160Q114 176 100 182Q60 188 20 176Z" fill="#A8C493"/>
+<path d="M26 176Q60 184 100 178" fill="none" stroke="#85AA7D" stroke-width="2.4"/>
+<path d="M52 150Q46 124 56 104L62 104Q54 126 60 150Z" fill="#BC9A69" stroke-width="2.4"/>
+<path d="M59 104Q40 88 26 98Q42 98 52 108Q36 106 30 120Q46 112 58 106Q66 120 80 122Q80 108 64 104Q82 96 90 104Q84 84 62 100Q64 82 52 84Q48 94 59 104Z" fill="#6B9C73" stroke-width="2.4"/>
+<circle cx="58" cy="108" r="3" fill="#A48C5C" stroke-width="1.6"/><circle cx="64" cy="109" r="3" fill="#A48C5C" stroke-width="1.6"/>
+<path d="M216 178Q214 152 246 144Q282 140 298 168Q300 182 270 184Q236 186 216 178Z" fill="#A8C493"/>
+<path d="M222 178Q256 186 292 176" fill="none" stroke="#85AA7D" stroke-width="2.4"/>
+<path d="M256 150v-14M280 156v-12" fill="none" stroke="#A48C5C"/>
+<circle cx="256" cy="126" r="14" fill="#6B9C73" stroke-width="2.4"/><circle cx="280" cy="136" r="11" fill="#85AA7D" stroke-width="2.4"/>
+<path d="M248 118q6-5 12-4" fill="none" stroke="#98B483" stroke-width="2"/>
+<path d="M66 138Q150-40 230 144" fill="none" stroke="#476E59" stroke-width="2.6" stroke-dasharray="1 8"/>
+<path d="M221 139l10 7 2-12" fill="none" stroke="#476E59" stroke-width="2.6"/>
+<g transform="translate(94 84) rotate(-30) scale(1.05)"><path d="M0-4C-4-16-10-26-22-30C-18-18-12-10-6-4Z" fill="#8C7650" stroke-width="2"/>
+<path d="M-15-2L-26 0-15 3Z" fill="#A48C5C" stroke-width="2"/>
+<ellipse rx="16" ry="6.5" fill="#FFF3CC" stroke-width="2"/>
+<path d="M-16-1Q0-11 17-5L15 0Q0-3-16-1Z" fill="#BC9A69" stroke-width="1.6"/>
+<path d="M-2-3C-6-18-16-30-30-34C-24-20-16-8 6-1Z" fill="#BC9A69" stroke-width="2"/>
+<path d="M-12-14Q-18-22-26-28" fill="none" stroke="#E2C48E" stroke-width="1.6"/>
+<circle cx="15" cy="-3" r="6" fill="#BC9A69" stroke-width="2"/><circle cx="17" cy="-4" r="1.5" fill="#354E49" stroke="none"/>
+<path d="M20.5-3.5l6 1.5-6 1.5Z" fill="#354E49" stroke-width="1.4"/></g>
+<g transform="translate(150 50) scale(1.05)"><path d="M0-4C-4-16-10-26-22-30C-18-18-12-10-6-4Z" fill="#8C7650" stroke-width="2"/>
+<path d="M-15-2L-26 0-15 3Z" fill="#A48C5C" stroke-width="2"/>
+<ellipse rx="16" ry="6.5" fill="#FFF3CC" stroke-width="2"/>
+<path d="M-16-1Q0-11 17-5L15 0Q0-3-16-1Z" fill="#BC9A69" stroke-width="1.6"/>
+<path d="M-2-3C-6-18-16-30-30-34C-24-20-16-8 6-1Z" fill="#BC9A69" stroke-width="2"/>
+<path d="M-12-14Q-18-22-26-28" fill="none" stroke="#E2C48E" stroke-width="1.6"/>
+<circle cx="15" cy="-3" r="6" fill="#BC9A69" stroke-width="2"/><circle cx="17" cy="-4" r="1.5" fill="#354E49" stroke="none"/>
+<path d="M20.5-3.5l6 1.5-6 1.5Z" fill="#354E49" stroke-width="1.4"/></g>
+<g transform="translate(204 92) rotate(36) scale(1.05)"><path d="M-2-4C-6-12-12-18-22-20C-16-12-10-6-6-3Z" fill="#8C7650" stroke-width="2"/>
+<path d="M-15-2L-26 0-15 3Z" fill="#A48C5C" stroke-width="2"/>
+<ellipse rx="16" ry="6.5" fill="#FFF3CC" stroke-width="2"/>
+<path d="M-16-1Q0-11 17-5L15 0Q0-3-16-1Z" fill="#BC9A69" stroke-width="1.6"/>
+<path d="M-2 0C-8 10-18 20-32 24C-24 12-14 4 6 0Z" fill="#BC9A69" stroke-width="2"/>
+<path d="M-12 9Q-18 15-26 20" fill="none" stroke="#E2C48E" stroke-width="1.6"/>
+<circle cx="15" cy="-3" r="6" fill="#BC9A69" stroke-width="2"/><circle cx="17" cy="-4" r="1.5" fill="#354E49" stroke="none"/>
+<path d="M20.5-3.5l6 1.5-6 1.5Z" fill="#354E49" stroke-width="1.4"/></g>
+</g></svg>

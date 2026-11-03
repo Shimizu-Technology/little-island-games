@@ -1,1 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img"><title>A rope passes over a fixed green wheel, with a coral block on the right, a down arrow on the left and an up arrow on the right.</title><rect width="120" height="120" rx="22" fill="#FFF9E6"/><g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M60 10v14"/><circle cx="60" cy="40" r="17" fill="#80A97D"/><circle cx="60" cy="40" r="4" fill="#F0D397"/><path d="M41 94V40a19 19 0 0 1 38 0v38" fill="none"/><rect x="67" y="78" width="24" height="27" rx="2" fill="#D4896C"/><path d="M24 63v29m-6-7 6 7 6-7m73 22V70m-6 7 6-7 6 7" fill="none"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img"><title>A rope passes over a fixed green wheel, with a coral block on the right, a down arrow on the left and an up arrow on the right.</title><rect width="120" height="120" rx="22" fill="#FFF9E6"/>
+<path d="M8 106Q60 99 112 106Q114 113 60 113Q6 113 8 106Z" fill="#D7C594"/>
+<path d="M30 110h10M76 110h12" fill="none" stroke="#C3B07E" stroke-width="1.4" stroke-linecap="round"/>
+<ellipse cx="74" cy="106" rx="13" ry="2.5" fill="#4E7E78" opacity=".18"/>
+<g stroke="#354E49" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M13 18H19V106H13ZM101 18H107V106H101Z" fill="#A48C5C"/>
+<path d="M19 26L28 18M101 26L92 18" fill="none" stroke-width="2.4"/>
+<rect x="10" y="9" width="100" height="11" rx="2" fill="#BC9A69"/>
+<path d="M11 17.5H109" fill="none" stroke="#A48C5C" stroke-width="2" stroke-linecap="butt"/>
+<path d="M24 12h14M66 12h10M90 13h8" fill="none" stroke="#D3B88A" stroke-width="1.2"/>
+<path d="M54 20V31L60 37L66 31V20Z" fill="#B9B4A2"/>
+<circle cx="60" cy="37" r="14" fill="#6B9C73"/>
+<circle cx="60" cy="37" r="10" fill="#5E8A66" stroke-width="1.2"/>
+<path d="M49 31q4-7 11-8" fill="none" stroke="#98B483" stroke-width="1.6"/>
+<circle cx="60" cy="37" r="3" fill="#B9B4A2" stroke-width="1.2"/>
+<path d="M46 37V88M46 37A14 14 0 0 1 74 37V72" fill="none" stroke-width="4"/>
+<path d="M46 37V88M46 37A14 14 0 0 1 74 37V72" fill="none" stroke="#CBB184" stroke-width="2.2"/>
+<path d="M46 40V86M74 40V70" fill="none" stroke="#A48C5C" stroke-width="1" stroke-dasharray="1.5 3"/>
+<circle cx="46" cy="91" r="3.5" fill="#CBB184" stroke-width="1.4"/>
+<path d="M70 72h8l-2 3h-4Z" fill="#9FAE94" stroke-width="1.2"/>
+<rect x="62" y="75" width="24" height="20" rx="2" fill="#E09A7E"/>
+<path d="M63 89H85V94H63Z" fill="#D38F78" stroke="none"/>
+<path d="M62 85H86M74 75V85" fill="none" stroke="#C77760" stroke-width="1.2"/>
+<rect x="62" y="75" width="24" height="20" rx="2" fill="none"/>
+<path d="M65 78h5" fill="none" stroke="#F6C9B3" stroke-width="1.4"/>
+<path d="M30 54V82M24 76L30 83L36 76" fill="none" stroke-width="2.6"/>
+<path d="M93 92V64M87 70L93 63L99 70" fill="none" stroke-width="2.6"/>
+</g>
+</svg>

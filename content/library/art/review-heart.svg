@@ -2,7 +2,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="heart-art-title">
   <title id="heart-art-title">A coral heart symbol sits between two looping arrows: a solid coral path leaves it and a dashed blue path returns, representing circulation in a simplified model.</title>
   <rect width="320" height="196" rx="22" fill="#FFF9E6"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M159 136Q91 94 119 65q23-23 40 4 18-27 42-4 29 30-42 71Z" fill="#D4896C" /><path d="M195 80C272 10 315 99 263 143h-42" fill="none" stroke="#D4896C" stroke-width="6"/><path d="m231 133-11 10 12 9" fill="none" stroke="#D4896C" stroke-width="5"/><path d="M120 113C56 179 2 95 48 53h53" fill="none" stroke="#91C5D0" stroke-width="6" stroke-dasharray="8 9"/><path d="m90 43 11 10-11 10" fill="none" stroke="#91C5D0" stroke-width="5"/>
+  <ellipse cx="160" cy="178" rx="44" ry="5" fill="#739174" opacity=".16"/>
+  <path d="M272 162Q244 172 204 172H80C32 164 12 112 26 76C40 40 104 36 134 78" fill="none" stroke="#5B95BF" stroke-width="5" stroke-dasharray="9 8" stroke-linecap="round"/>
+  <g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M146 148V172H138Q134 177 140 178H158V148ZM174 148V172H182Q186 177 180 178H162V148Z" fill="#CB956D"/>
+    <path d="M136 128H184L188 152H164L160 140L156 152H132Z" fill="#DCA95F"/>
+    <path d="M136 72L120 120Q116 132 124 132Q130 132 132 122L140 96ZM184 72L200 120Q204 132 196 132Q190 132 188 122L180 96Z" fill="#CB956D"/>
+    <path d="M140 66H180Q194 68 198 82L202 102L186 104V132H134V104L118 102L122 82Q126 68 140 66Z" fill="#83BCB4"/>
+    <path d="M136 120H184V132H136Z" fill="#6FA59D" stroke="none"/>
+    <path d="M150 62V68Q160 74 170 68V62Z" fill="#CB956D"/>
+    <circle cx="160" cy="44" r="21" fill="#CB956D"/>
+    <path d="M139 44Q136 20 160 20Q184 20 181 44Q176 32 162 30Q148 30 139 44Z" fill="#302C36"/>
+    <path d="M152 46h.1M168 46h.1" stroke-width="3.6"/>
+    <path d="M155 54q5 3 10 0" fill="none" stroke-width="2.2"/>
+    <path d="M160 124C140 112 132 102 134 92C136 80 152 78 160 90C168 78 184 80 186 92C188 102 180 112 160 124Z" fill="#E09A7E" stroke-width="2.6"/>
+    <path d="M160 118C176 108 182 100 183 92C186 104 178 112 160 124Z" fill="#D38F78" stroke="none"/>
+    <path d="M140 92Q141 85 148 84" fill="none" stroke="#F6C9B3" stroke-width="3"/>
   </g>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M182 88C198 50 262 22 290 62C302 82 298 118 286 138" stroke="#354E49" stroke-width="8"/>
+    <path d="M182 88C198 50 262 22 290 62C302 82 298 118 286 138" stroke="#E09A7E" stroke-width="4.6"/>
+    <path d="M293 142L280 150L279 134Z" fill="#E09A7E" stroke="#354E49" stroke-width="2.4"/>
+    <path d="M144 90L140 72L127 84Z" fill="#7FB4D6" stroke="#354E49" stroke-width="2.4"/>
+  </g>
+  <g fill="#F0C86D" stroke="none"><path d="M214 18l2 5 5 2-5 2-2 5-2-5-5-2 5-2Z"/><path d="M104 22l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5Z"/></g>
 </svg>

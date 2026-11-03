@@ -2,7 +2,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="native-trees-art-title">
   <title id="native-trees-art-title">A mature broad-canopied tree shelters a small perched bird, with exposed branching roots and a two-leaf seedling nearby.</title>
   <rect width="320" height="196" rx="22" fill="#F6E8DC"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M163 67v83m0-40-35-31m35 18 36-25m-36 78-35 25m35-25 38 25m-38-25v25" fill="none" stroke-width="7"/><path d="M63 80Q33 42 77 34 81 2 126 25 157-5 185 26q48-14 57 18 49 15 17 51-49 24-76-4-27 23-59-4-37 24-61-7Z" fill="#80A97D" /><path d="M109 90q16-8 27 8l17-5-7 12q-22 14-37-15Z" fill="#F0D397" /><circle cx="128" cy="96" r="2" fill="#254E4B" /><path d="M124 108v8m8-8v8" fill="none" stroke-width="2"/><path d="M56 176v-24m0 4q-28-27-28-1 6 18 28 12m0-11q28-27 28-1-6 18-28 12" fill="#80A97D" />
-  </g>
+<g stroke="#354E49" stroke-linecap="round" stroke-linejoin="round">
+<path d="M30 176Q70 160 160 162Q250 160 290 176Q250 188 160 186Q70 188 30 176Z" fill="#A8C493" stroke-width="2.2"/>
+<ellipse cx="160" cy="174" rx="70" ry="7" fill="#4E7E78" opacity=".16" stroke="none"/>
+<path d="M120 96V146M200 100V140M108 90V128" fill="none" stroke="#A48C5C" stroke-width="2"/>
+<path d="M138 168Q148 132 145 108Q136 96 116 86L122 76Q144 86 154 96Q158 80 172 70L180 76Q169 90 169 108Q167 132 182 168Z" fill="#A48C5C" stroke-width="3"/>
+<path d="M164 112Q196 108 222 98" fill="none" stroke-width="9"/><path d="M164 112Q196 108 222 98" fill="none" stroke="#A48C5C" stroke-width="5"/>
+<path d="M156 162Q160 134 158 110" fill="none" stroke="#BC9A69" stroke-width="3"/>
+<path d="M166 120q2 12 0 30M152 130q-2 10 0 20" fill="none" stroke="#7E6A45" stroke-width="2"/>
+<g fill="none"><path d="M146 162Q134 166 116 172M150 166Q144 172 134 180M174 162Q188 166 206 172M170 166Q176 172 188 180M116 172l-12 1M116 172l-6 6M206 172l12 0M206 172l7 6" stroke-width="8"/><path d="M146 162Q134 166 116 172M150 166Q144 172 134 180M174 162Q188 166 206 172M170 166Q176 172 188 180M116 172l-12 1M116 172l-6 6M206 172l12 0M206 172l7 6" stroke="#A48C5C" stroke-width="4.4"/></g>
+<g fill="#5A8963" stroke-width="3.0"><circle cx="108" cy="64" r="28"/><circle cx="150" cy="46" r="32"/><circle cx="198" cy="48" r="30"/><circle cx="238" cy="66" r="28"/><circle cx="80" cy="80" r="20"/><circle cx="128" cy="84" r="24"/><circle cx="176" cy="86" r="24"/><circle cx="222" cy="88" r="20"/><circle cx="262" cy="84" r="16"/></g><g fill="#5A8963" stroke="none"><circle cx="108" cy="64" r="28"/><circle cx="150" cy="46" r="32"/><circle cx="198" cy="48" r="30"/><circle cx="238" cy="66" r="28"/><circle cx="80" cy="80" r="20"/><circle cx="128" cy="84" r="24"/><circle cx="176" cy="86" r="24"/><circle cx="222" cy="88" r="20"/><circle cx="262" cy="84" r="16"/></g><g fill="#6B9C73" stroke="none"><circle cx="106" cy="59" r="23"/><circle cx="148" cy="41" r="27"/><circle cx="196" cy="43" r="25"/><circle cx="236" cy="61" r="23"/><circle cx="78" cy="75" r="15"/><circle cx="126" cy="79" r="19"/><circle cx="174" cy="81" r="19"/><circle cx="220" cy="83" r="15"/><circle cx="260" cy="79" r="11"/></g>
+<path d="M96 52q8-12 22-14M140 30q10-8 24-8M206 34q10-2 20 6" fill="none" stroke="#98B483" stroke-width="2.4"/>
+<path d="M98 76l6 4M150 66l6 4M196 70l6 4M240 76l6 4M124 52l6 4M180 52l6 4" fill="none" stroke="#476E59" stroke-width="2"/>
+<g stroke-width="2.2"><path d="M220 92L236 86L228 97Z" fill="#8C6A48"/><path d="M196 92Q198 80 210 80Q222 82 224 92Q216 100 202 98Z" fill="#B88A5E"/><circle cx="202" cy="80" r="7" fill="#B88A5E"/><path d="M196 79L188 82L196 84Z" fill="#354E49" stroke-width="1.6"/><path d="M206 88q8-2 14 2" fill="none" stroke="#8C6A48" stroke-width="2"/><path d="M204 99v3M210 99v3" fill="none" stroke-width="1.8"/></g>
+<circle cx="200" cy="79" r="1.8" fill="#354E49" stroke="none"/>
+<path d="M70 178V154" fill="none" stroke="#476E59" stroke-width="3"/>
+<path d="M70 158Q52 162 48 146Q62 142 70 158ZM70 154Q76 138 94 140Q92 156 70 154Z" fill="#98B483" stroke-width="2.4"/><path d="M68 156l-12-8M72 152l14-8" fill="none" stroke="#6B9C73" stroke-width="1.6"/>
+<path d="M248 178q-4-12 2-20M256 178q2-10 10-14" fill="none" stroke="#6B9C73" stroke-width="3"/>
+</g>
 </svg>

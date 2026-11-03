@@ -2,7 +2,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="blue-sky-art-title">
   <title id="blue-sky-art-title">A blue sky dome sits above green ground; a golden incoming light arrow meets blue arrows scattering in several directions.</title>
   <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M25 153a135 123 0 0 1 270 0Z" fill="#91C5D0" /><path d="M25 153q134-22 270 0v24H25Z" fill="#80A97D" /><path d="M35 43L148 88" fill="none" stroke="#F0D397"/><path d="M140.2 89.8L148 88 143.5 81.4" fill="none" stroke="#F0D397"/><path d="M151 90L211 61" fill="none" stroke="#276D85"/><path d="M207.0 67.9L211 61 203.1 59.8" fill="none" stroke="#276D85"/><path d="M151 90L226 102" fill="none" stroke="#276D85"/><path d="M218.8 105.4L226 102 220.2 96.5" fill="none" stroke="#276D85"/><path d="M151 90L182 139" fill="none" stroke="#276D85"/><path d="M174.7 135.8L182 139 182.3 131.0" fill="none" stroke="#276D85"/><path d="M151 90L116 126" fill="none" stroke="#276D85"/><path d="M117.4 118.1L116 126 123.8 124.4" fill="none" stroke="#276D85"/><circle cx="151" cy="90" r="5" fill="#FFF9E6" />
-  </g>
-</svg>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M40 152A124 112 0 0 1 288 152Z" fill="#A9D3E6"/>
+<path d="M62 150A102 92 0 0 1 266 150" fill="none" stroke="#C4E2EE" stroke-width="10"/>
+<path d="M58 118Q74 76 120 56" fill="none" stroke="#E4F3F8" stroke-width="3"/>
+<path d="M206 76q-3-12 10-11 6-10 16-3 13-2 13 12Z" fill="#F4FAF2" stroke="#7FA9BE" stroke-width="2"/>
+<path d="M22 160Q30 140 80 144Q160 136 240 142Q296 144 298 162Q296 182 240 184Q160 190 80 184Q24 180 22 160Z" fill="#98B483"/>
+<path d="M30 168Q90 178 160 176Q240 176 292 166" fill="none" stroke="#85AA7D" stroke-width="2.4"/>
+<path d="M44 150Q100 144 160 144" fill="none" stroke="#C9DDB5" stroke-width="2.2"/>
+<path d="M252 150Q248 126 256 108L262 108Q256 128 260 150Z" fill="#BC9A69" stroke-width="2.2"/>
+<path d="M259 108Q242 94 230 102Q244 102 252 112Q238 112 234 124Q248 116 258 110Q266 122 278 124Q278 112 264 108Q280 102 286 108Q280 92 262 104Q264 88 254 90Q250 98 259 108Z" fill="#6B9C73" stroke-width="2.2"/>
+<ellipse cx="92" cy="152" rx="13" ry="3" fill="#354E49" opacity=".16" stroke="none"/>
+<path d="M88 138v12M96 138v12" fill="none" stroke-width="6"/><path d="M88 138v12M96 138v12" fill="none" stroke="#CB956D" stroke-width="3"/>
+<path d="M84 152h6M94 152h6" fill="none" stroke-width="3.4"/>
+<rect x="83" y="133" width="18" height="8" rx="3" fill="#47617C" stroke-width="2.2"/>
+<path d="M83 136v-10q0-6 6-6h6q6 0 6 6v10Z" fill="#83BCB4" stroke-width="2.2"/>
+<path d="M99 125l7-9" fill="none" stroke-width="2.4"/><circle cx="107" cy="115" r="2.4" fill="#CB956D" stroke-width="1.6"/>
+<circle cx="92" cy="112" r="8" fill="#CB956D" stroke-width="2.2"/>
+<path d="M84 111Q84 102 92 102Q101 102 100 111Q96 106 90 108Q86 108 84 111Z" fill="#302C36" stroke-width="2"/>
+<circle cx="95" cy="110" r="1.2" fill="#354E49" stroke="none"/><path d="M94 115q2 1 3 0" fill="none" stroke-width="1.4"/>
+<circle cx="40" cy="38" r="15" fill="#F0C86D"/>
+<path d="M40 14v-4M40 66v-4M16 38h-4M68 38h-4M23 21l-3-3M60 58l-3-3M57 21l3-3M20 58l3-3" fill="none" stroke="#E8B752" stroke-width="2.6"/>
+<path d="M58 50L140 98" fill="none" stroke="#354E49" stroke-width="8"/>
+<path d="M58 50L140 98" fill="none" stroke="#F0C86D" stroke-width="4.4"/>
+<path d="M131 86l13 14-19 2Z" fill="#F0C86D" stroke-width="2.2"/>
+<g fill="none" stroke="#3F7CB0" stroke-width="3"><path d="M156 104L198 90M190 84l10 5-7 9"/><path d="M156 98L172 60M164 64l8-6 3 10"/><path d="M158 112L206 124M196 128l11-3-6-9"/><path d="M148 96L136 64M131 72l4-9 8 5"/><path d="M144 110L114 98M122 93l-9 5 7 7"/></g>
+<circle cx="150" cy="104" r="5" fill="#F4FAF2" stroke-width="2"/><circle cx="156" cy="100" r="4" fill="#F4FAF2" stroke-width="2"/>
+</g></svg>

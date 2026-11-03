@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { sceneCategory } from "../src/library/sceneContext";
+import { sceneCategory, sceneDecor } from "../src/library/sceneContext";
+import { categoryScene, tileScenes } from "../src/library/tileArt";
 import { sceneVector } from "../src/library/sceneVector";
 
 describe("Library scene framing", () => {
@@ -36,5 +37,26 @@ describe("pictured habitat versus browsing collection", () => {
   it("keeps terrestrial island topics and unknown future categories unchanged", () => {
     expect(sceneCategory("limestone-forest", "guam")).toBe("guam");
     expect(sceneCategory("future-topic", "future-category")).toBe("future-category");
+  });
+  it("shows above-water shore pictures over a shore, not underwater", () => {
+    expect(["salty", "tides", "waves", "beach-sand", "mangrove-roots"].map((id) => sceneCategory(id, "ocean"))).toEqual(Array(5).fill("shore"));
+    expect(sceneCategory("coral", "ocean")).toBe("ocean");
+  });
+  it("never doubles a Sun or the one counted cloud a picture draws itself", () => {
+    expect(sceneDecor("seasons")).toEqual({ sun: false, cloud: true });
+    expect(sceneDecor("clouds")).toEqual({ sun: true, cloud: false });
+    expect(sceneDecor("rain")).toEqual({ sun: true, cloud: true });
+  });
+});
+
+describe("category tile scenes", () => {
+  it("gives every collection motif and the faith and history collections their own static scene", () => {
+    for (const kind of ["turtle", "globe", "butterfly", "moon", "cloud", "heart", "gear", "plant", "faith", "history"]) {
+      expect(tileScenes[kind]).toMatch(/^<svg xmlns="http:\/\/www.w3.org\/2000\/svg" viewBox="0 0 360 220"[^>]*>/);
+      expect(tileScenes[kind]).not.toMatch(/<(script|image|style|text)\b|href=/);
+    }
+    expect(categoryScene({ id: "faith", motif: "heart" })).toBe("faith");
+    expect(categoryScene({ id: "island-history", motif: "globe" })).toBe("history");
+    expect(categoryScene({ id: "body", motif: "heart" })).toBe("heart");
   });
 });

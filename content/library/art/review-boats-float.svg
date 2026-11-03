@@ -1,1 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img"><title>A hollow coral hull sits partly in blue water below a sand-colored load; an arrow under the hull points upward.</title><rect width="120" height="120" rx="22" fill="#FFF9E6"/><g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 63h110v42H5Z" fill="#91C5D0"/><path d="M17 54h86L84 86H38Z" fill="#D4896C"/><path d="M29 54h62L77 70H45Z" fill="#FFF9E6"/><path d="M60 108V80m-7 7 7-7 7 7" fill="none"/><path d="M44 28h32v23H44Z" fill="#F0D397"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img"><title>A hollow coral hull sits partly in blue water below a sand-colored load; an arrow under the hull points upward.</title><rect width="120" height="120" rx="22" fill="#FFF9E6"/>
+<path d="M5 67H115Q109 70 109 78V96Q109 105 98 105Q79 101 60 105Q41 109 22 105Q11 105 11 96V78Q11 70 5 67Z" fill="#93C9C8"/>
+<g stroke="#354E49" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+<path d="M17 52L22 43H98L106 41L96 52Z" fill="#F2C3AE"/>
+<path d="M22 43H98L106 41" fill="none" stroke="#C77760" stroke-width="1.6"/>
+<rect x="36" y="34" width="22" height="22" rx="2" fill="#F0DFB2"/>
+<path d="M37 49H57V55H37Z" fill="#D7C594" stroke="none"/>
+<path d="M36 45H58M47 34V45" fill="none" stroke="#C3B07E" stroke-width="1.2"/>
+<rect x="36" y="34" width="22" height="22" rx="2" fill="none"/>
+<rect x="60" y="40" width="26" height="18" rx="9" fill="#E9D6A7"/>
+<path d="M65 44q5-2 11-1" fill="none" stroke="#FFF3CC" stroke-width="1.4"/>
+<path d="M16 52H96L106 44Q104 70 84 80H38Q22 74 16 52Z" fill="#E09A7E"/>
+<path d="M20 64Q28 76 40 78H82Q96 72 101 62Q92 72 80 75H42Q30 73 20 64Z" fill="#D38F78" stroke="none"/>
+<path d="M16 52H96L106 44" fill="none" stroke-width="5"/>
+<path d="M17 52H96L105 45" fill="none" stroke="#F6C9B3" stroke-width="2"/>
+<path d="M22 60H98" fill="none" stroke="#C77760" stroke-width="1.2"/>
+<path d="M16 52H96L106 44Q104 70 84 80H38Q22 74 16 52Z" fill="none"/>
+</g>
+<path d="M15 67H105Q104 72 104 78V94Q104 100 96 100Q78 97 60 100Q42 103 24 100Q16 100 16 94V78Q16 72 15 67Z" fill="#7EB5A9" opacity=".55"/>
+<g fill="none" stroke="#F4FAF2" stroke-width="1.6" stroke-linecap="round"><path d="M6 67H24M96 67H114M22 90q6-3 12 0M86 92q6-3 12 0"/></g>
+<g fill="none" stroke="#354E49" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M60 102V87M53 93L60 86L67 93"/></g>
+</svg>

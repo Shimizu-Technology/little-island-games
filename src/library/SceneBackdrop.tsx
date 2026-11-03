@@ -11,9 +11,10 @@ export const sceneColors: Record<string, string> = {
   body: "#F0D8C8",
   machines: "#E9D7AC",
   plants: "#D1DFAF",
+  shore: "#C2DFE3",
 };
 /** Quiet edge scenery leaves the reviewed subject and its diagram marks unobstructed. */
-export function SceneBackdrop({ category }: { category: string }) {
+export function SceneBackdrop({ category, sun = true, cloud = true }: { category: string; sun?: boolean; cloud?: boolean }) {
   const sea = category === "ocean";
   const green = category === "plants" || category === "animals" || category === "guam";
   return (
@@ -74,10 +75,17 @@ export function SceneBackdrop({ category }: { category: string }) {
             strokeWidth={2.5}
           />
         </>
+      ) : category === "shore" ? (
+        <>
+          <Circle cx={349} cy={48} r={24} fill="#F0CF7C" />
+          <Path d="M0 300Q100 292 200 300T400 298V400H0Z" fill="#93C9C8" />
+          <Path d="M24 322q14-6 28 0M300 316q14-6 28 0" stroke="#EAF4DE" strokeWidth={3} fill="none" strokeLinecap="round" />
+          <Path d="M0 362Q100 340 205 360T400 352V400H0Z" fill="#EBD6A6" />
+        </>
       ) : category === "weather" ? (
         <>
-          <Circle cx={44} cy={49} r={24} fill="#F0CF7C" />
-          <Path d="M268 42q-3-24 23-20 16-24 34-5 33-8 34 24Z" fill="#F9F5E4" stroke="#769B9A" strokeWidth={2} />
+          {sun && <Circle cx={44} cy={49} r={24} fill="#F0CF7C" />}
+          {cloud && <Path d="M268 42q-3-24 23-20 16-24 34-5 33-8 34 24Z" fill="#F9F5E4" stroke="#769B9A" strokeWidth={2} />}
           <Path d="M0 370 87 301 149 350 250 288 400 367V400H0Z" fill="#9EBB9D" />
           <Path d="m217 311 33-23 34 23-22-4-14 5-12-8Z" fill="#F7F2DE" />
         </>

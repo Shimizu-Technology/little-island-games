@@ -2,7 +2,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="vision-art-title">
   <title id="vision-art-title">In a side-view eye model, golden light arrows enter the blue cornea and pass through a pale lens toward the back of the eye; a short optic nerve exits behind it.</title>
   <rect width="320" height="196" rx="22" fill="#FFF9E6"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <ellipse cx="192" cy="101" rx="71" ry="61" fill="#FFF9E6" /><path d="M135 65q-32 36 0 72Z" fill="#91C5D0" /><path d="M139 78v15m0 16v15" fill="none" stroke="#80A97D" stroke-width="6"/><ellipse cx="151" cy="101" rx="9" ry="26" fill="#E5D8B1" /><path d="M231 51q61 49 0 101" fill="none" stroke="#D4896C" stroke-width="5"/><path d="M260 93h31v16h-31Z" fill="#E5D8B1" /><path d="M25 86L128 94" fill="none" stroke="#F0D397"/><path d="M121.1 98.0L128 94 121.8 89.0" fill="none" stroke="#F0D397"/><path d="M25 116L128 108" fill="none" stroke="#F0D397"/><path d="M121.8 113.0L128 108 121.1 104.0" fill="none" stroke="#F0D397"/><path d="M133 95 153 92 249 102 153 110 133 107" fill="none" stroke="#F0D397" stroke-width="2"/>
+  <ellipse cx="56" cy="152" rx="36" ry="9" fill="#A8C493"/>
+  <ellipse cx="204" cy="172" rx="56" ry="5" fill="#739174" opacity=".16"/>
+  <g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24 152Q56 140 88 152" fill="none" stroke="#85AA7D" stroke-width="2.2"/>
+    <path d="M52 150V86" fill="none" stroke="#6B9C73" stroke-width="3.4"/>
+    <path d="M52 132Q36 118 32 126Q38 138 52 136ZM52 118Q68 104 72 112Q66 124 52 122Z" fill="#98B483" stroke-width="2.2"/>
+    <g fill="#E09A7E" stroke-width="2.2"><circle cx="52" cy="68" r="9"/><circle cx="66" cy="78" r="9"/><circle cx="60" cy="94" r="9"/><circle cx="44" cy="94" r="9"/><circle cx="38" cy="78" r="9"/></g>
+    <circle cx="52" cy="82" r="7" fill="#F0C86D" stroke-width="2.2"/>
+    <path d="M256 100L294 110" fill="none" stroke-width="15"/>
+    <path d="M256 100L294 110" fill="none" stroke="#F0DFB2" stroke-width="9"/>
+    <circle cx="200" cy="98" r="62" fill="#FFF6D8"/>
+    <path d="M150 134Q200 176 252 128Q236 152 200 154Q170 152 150 134Z" fill="#F0E2BE" stroke="none"/>
+    <path d="M222 44A57 57 0 0 1 222 152" fill="none" stroke="#E09A7E" stroke-width="4"/>
+    <path d="M168 50Q184 40 204 40" fill="none" stroke="#FFFFFF" stroke-width="4"/>
+    <path d="M148 62Q110 98 148 134Q138 98 148 62Z" fill="#7FB4D6"/>
+    <path d="M136 82Q132 92 133 100" fill="none" stroke="#B7DAEC" stroke-width="2.6"/>
+    <path d="M150 70V86M150 110V126" fill="none" stroke="#996445" stroke-width="5"/>
+    <ellipse cx="164" cy="98" rx="9" ry="21" fill="#FFF3CC" stroke-width="2.2"/>
+    <path d="M161 86q2-3 5-3" fill="none" stroke="#FFFFFF" stroke-width="2"/>
   </g>
+  <g fill="none" stroke="#E8B752" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M72 68L130 88M72 136L130 110"/>
+    <path d="M136 90L164 96L254 124M136 108L164 100L254 74" stroke-width="2.4"/>
+  </g>
+  <g fill="#E8B752" stroke="#354E49" stroke-width="1.6" stroke-linejoin="round">
+    <path d="M136 90L125 92L129 81Z"/><path d="M136 108L129 117L125 106Z"/>
+  </g>
+  <g fill="#F0C86D"><path d="M96 46l2 5 5 2-5 2-2 5-2-5-5-2 5-2Z"/></g>
 </svg>

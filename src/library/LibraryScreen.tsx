@@ -33,6 +33,7 @@ import { Action, ItemPicture, LibraryIcon, s } from "./ui";
 import { WordLabel } from "./WordLabel";
 import { SoundSwitch } from "./SoundSwitch";
 import { LibraryArt } from "./LibraryArt";
+import { categoryScene } from "./tileArt";
 import { useLibraryAudio } from "./useLibraryAudio";
 import { TopicPage } from "./Topics";
 import { Reader } from "./Reader";
@@ -567,7 +568,7 @@ function LibraryReady() {
                           ]}
                         >
                           <View style={{ width: "100%", height: width < 650 ? 142 : 164 }}>
-                            <LibraryArt kind={category.motif} />
+                            <LibraryArt kind={categoryScene(category)} />
                           </View>
                           <WordLabel textStyle={s.actionText}
                             onWordLayout={(event) => setExpandedCategoryLabels(event.nativeEvent.layout.height > 28)}

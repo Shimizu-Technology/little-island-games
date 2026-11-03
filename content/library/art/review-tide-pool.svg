@@ -2,7 +2,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="tide-pool-art-title">
   <title id="tide-pool-art-title">A blue pool enclosed by gray rocks contains a small fish, a spiral-shelled snail and green seaweed; no species is identified.</title>
   <rect width="320" height="196" rx="22" fill="#E1F0F3"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <ellipse cx="161" cy="108" rx="135" ry="66" fill="#AFAB9D" /><ellipse cx="160" cy="105" rx="111" ry="47" fill="#91C5D0" /><path d="M63 94q-10-30 6-36m3 30q13-14 17-8" fill="none" stroke="#80A97D" stroke-width="6"/><g transform="translate(100 102) scale(0.75)"><path d="M0 0Q22-27 53 0 22 27 0 0Zm53 0 20-14v28Z" fill="#F0D397" /><circle cx="13" cy="-3" r="2" fill="#254E4B" /><path d="m27-13 9-9 8 15" fill="#F0D397" /></g><path d="M207 132h38l4-7" fill="none" stroke-width="4"/><circle cx="217" cy="119" r="16" fill="#D4896C" /><path d="M222 125q-17 0-14-12 3-11 13-4 8 8-2 10m23 8v-11m-5 2 5 5 6-6" fill="none" /><path d="M58 67 76 49m190 57 21 5" fill="none" stroke="#FFF9E6"/>
-  </g>
+<ellipse cx="160" cy="174" rx="132" ry="10" fill="#4E7E78" opacity=".16"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M36 132Q24 106 46 90Q50 64 82 60Q100 42 130 50Q160 36 190 48Q222 40 240 58Q272 58 280 84Q300 104 286 130Q290 160 254 168Q200 182 160 178Q110 182 66 168Q34 160 36 132Z" fill="#B9B4A2"/>
+<path d="M58 72Q74 66 84 70M140 52Q160 46 176 52M232 62Q250 62 262 72" fill="none" stroke="#D6D1C0" stroke-width="2.4"/>
+<path d="M66 118Q60 90 92 80Q124 68 160 72Q206 68 236 82Q262 94 256 118Q246 140 200 146Q160 150 120 146Q74 142 66 118Z" fill="#7FB8CF"/>
+<path d="M70 104Q78 84 108 78Q140 70 168 74Q210 72 236 84Q252 94 254 106Q238 90 200 86Q150 82 110 88Q84 92 70 104Z" fill="#6AA3C0" stroke="none"/>
+<path d="M96 112Q120 106 140 110M190 120Q212 116 230 120" fill="none" stroke="#D8EEF2" stroke-width="2.4"/>
+<path d="M84 140Q80 120 88 100M84 124Q76 116 72 108M94 140Q98 122 108 112M90 128Q98 124 100 118" fill="none" stroke="#354E49" stroke-width="8"/>
+<path d="M84 140Q80 120 88 100M84 124Q76 116 72 108M94 140Q98 122 108 112M90 128Q98 124 100 118" fill="none" stroke="#6B9C73" stroke-width="4.4"/>
+<path d="M84 136Q81 120 87 106M94 136Q98 124 104 116" fill="none" stroke="#A8C493" stroke-width="1.6"/>
+<g transform="translate(160 116)"><path d="M-20 0Q-8 -12 8 -5L18 -12L16 0L18 12L8 5Q-8 12 -20 0Z" fill="#F0C86D"/><path d="M-6 -7Q0 -16 8 -6" fill="#E8B752" stroke-width="2.2"/><path d="M-10 -7Q-6 0 -10 7" fill="none" stroke-width="1.8"/><circle cx="-14" cy="-1" r="2" fill="#354E49" stroke="none"/></g>
+<g transform="translate(222 130)"><path d="M-14 8Q-18 6 -14 2H14Q20 4 16 8Z" fill="#C3BBA5" stroke-width="2.2"/><path d="M-12 4Q-14 -14 2 -14Q14 -12 12 2Q10 6 0 6Q-8 4 -6 -4Q-2 -8 4 -4Q6 0 2 0" fill="#E09A7E" stroke-width="2.2"/><path d="M10 2Q14 -2 18 -6M18 -6l2 -3" fill="none" stroke-width="1.8"/></g>
+<path d="M28 150Q24 132 42 128Q62 124 70 140Q76 158 58 166Q34 168 28 150Z" fill="#B9B4A2"/>
+<path d="M70 160Q66 140 90 136Q118 134 124 152Q126 170 100 174Q74 174 70 160Z" fill="#C3BBA5"/>
+<path d="M120 164Q118 146 144 144Q168 144 172 158Q172 176 146 178Q122 178 120 164Z" fill="#B9B4A2"/>
+<path d="M168 162Q166 144 194 142Q222 142 226 158Q226 174 198 176Q170 176 168 162Z" fill="#C3BBA5"/>
+<path d="M222 156Q222 136 250 134Q276 134 280 150Q282 168 256 172Q226 172 222 156Z" fill="#B9B4A2"/>
+<path d="M260 132Q264 116 284 118Q300 124 296 142Q290 156 272 150Q258 144 260 132Z" fill="#C3BBA5"/>
+<path d="M36 140Q42 132 54 132M80 146Q92 140 106 142M130 152Q142 148 154 150M178 150Q192 146 206 148M232 144Q246 140 260 142M268 126Q276 122 286 124" fill="none" stroke="#E2DECF" stroke-width="2.4"/>
+<path d="M34 158Q48 164 62 160M78 166Q96 172 114 168M128 172Q146 176 164 172M176 170Q196 174 216 170M230 166Q248 170 268 166" fill="none" stroke="#9FA08F" stroke-width="2.4"/>
+</g>
+<g fill="none" stroke="#F4FAF2" stroke-linecap="round" stroke-width="2.5" opacity=".85"><path d="M60 30q11-6 22 0M240 24q9-5 18 0"/></g>
 </svg>

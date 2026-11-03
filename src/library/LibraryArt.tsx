@@ -1,9 +1,12 @@
 import React from "react";
-import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
+import Svg, { Circle, Ellipse, G, Path, Rect, SvgXml } from "react-native-svg";
 import { Palm } from "../hub/Terrain";
 import { Motif } from "../explore/ExploreArt";
+import { tileScenes } from "./tileArt";
 /** Original static scenes in the hub's ink, lagoon, sand and leaf palette. */
 export function LibraryArt({ kind = "turtle", dive = false }: { kind?: string; dive?: boolean }) {
+  const scene = tileScenes[kind];
+  if (scene && !dive) return <SvgXml xml={scene} width="100%" height="100%" accessible={false} />;
   const night = kind === "moon" || kind === "stars";
   const ocean = kind === "turtle" || kind === "coral";
   return (

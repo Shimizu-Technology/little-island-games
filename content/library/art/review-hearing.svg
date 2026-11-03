@@ -2,7 +2,43 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="hearing-art-title">
   <title id="hearing-art-title">Curved sound-wave symbols enter an outer ear; a short passage leads to an eardrum symbol and a curled inner-ear model.</title>
   <rect width="320" height="196" rx="22" fill="#FFF9E6"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M105 153q-4-21-22-42-24-53 20-76 45-23 60 17 11 37-21 52-1 46-25 48Z" fill="#E5D8B1" /><path d="M107 94q-23-31 5-43 26-5 27 19 0 18-20 28-14 1-11 20" fill="none" /><path d="M132 101h58" fill="none" stroke-width="9"/><path d="M188 84v35" fill="none" stroke="#D4896C" stroke-width="5"/><path d="M199 100q12-21 20-4l13 1" fill="none" stroke-width="3"/><path d="M238 91q48-8 44 29-3 37-38 28-28-8-17-30 10-19 30-6 16 15-6 21-13 0-8-10" fill="#E5D8B1" /><path d="M33 56q31 43 0 87m22-69q17 27 0 53" fill="none" stroke="#91C5D0" stroke-width="5"/><path d="M61 101L83 101" fill="none" stroke="#254E4B"/><path d="M76.4 105.5L83 101 76.4 96.5" fill="none" stroke="#254E4B"/>
+  <path d="M200 18C252 18 290 46 292 84L302 102Q304 108 296 110C296 140 274 172 226 174C170 176 120 150 118 100C116 52 150 18 200 18Z" fill="#F4D2B4" opacity=".55"/>
+  <path d="M118 100C116 52 150 18 200 18C236 18 264 32 280 52C252 40 222 42 200 38C172 48 150 70 142 100Z" fill="#493332" opacity=".22"/>
+  <path d="M200 18C252 18 290 46 292 84L302 102Q304 108 296 110C296 140 274 172 226 174C170 176 120 150 118 100C116 52 150 18 200 18Z" fill="none" stroke="#CB956D" stroke-width="2.2" stroke-dasharray="7 6" stroke-linecap="round"/>
+  <g fill="none" stroke="#B5845E" stroke-width="2.2" stroke-linecap="round" opacity=".7"><path d="M262 82h.1" stroke-width="4"/><path d="M270 138q8 2 14-3"/></g>
+  <rect x="192" y="72" width="96" height="66" rx="30" fill="#FFF6EA" stroke="#CB956D" stroke-width="1.6" stroke-dasharray="4 5"/>
+  <g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(-5 -29) scale(1.25)" stroke-width="2.4">
+    <path d="M18 134Q40 128 70 132" fill="none" stroke="#A48C5C" stroke-width="4"/>
+    <path d="M24 132Q18 122 26 118Q32 124 28 132ZM64 131Q72 122 78 128Q74 136 64 133Z" fill="#98B483" stroke-width="2.2"/>
+    <path d="M32 114L14 104L18 122Z" fill="#E8B752" stroke-width="2.2"/>
+    <ellipse cx="44" cy="116" rx="16" ry="12" fill="#F0C86D"/>
+    <path d="M38 126Q50 128 56 118Q50 124 38 122Z" fill="#FFF3CC" stroke="none"/>
+    <circle cx="56" cy="101" r="10" fill="#F0C86D"/>
+    <path d="M65 98L75 97L66 102ZM66 104L74 106L65 106Z" fill="#E09A7E" stroke-width="1.6"/>
+    <circle cx="58" cy="99" r="1.4" fill="#354E49" stroke="none"/>
+    <path d="M34 112Q42 108 50 116Q42 122 34 112Z" fill="#E8B752" stroke-width="2.2"/>
+    <path d="M42 127V133M48 127V133" fill="none" stroke-width="2.2"/>
+    </g>
+    <g transform="translate(266.8 34.9) scale(-.72 .72)" stroke-width="4.2">
+      <path d="M150 42Q184 44 180 92Q178 118 162 132Q156 152 140 154Q124 154 126 140Q130 126 122 118Q108 104 110 76Q114 44 150 42Z" fill="#DEAF86"/>
+      <path d="M170 58Q178 84 170 108Q164 122 156 130Q168 112 170 88Z" fill="#CB956D" stroke="none"/>
+      <path d="M124 68Q134 54 152 58Q166 64 164 88Q162 106 150 114" fill="none" stroke="#B5845E" stroke-width="3"/>
+      <ellipse cx="140" cy="96" rx="9" ry="12" fill="#A86F54" stroke-width="3"/>
+      <path d="M124 92Q118 100 124 108" fill="none" stroke="#B5845E" stroke-width="3"/>
+      <path d="M128 52Q138 46 150 46" fill="none" stroke="#F0CDAA" stroke-width="4"/>
+    </g>
+    <path d="M168 104H212" fill="none" stroke-width="12"/>
+    <path d="M168 104H212" fill="none" stroke="#E7B9A0" stroke-width="7"/>
+    <ellipse cx="166" cy="104" rx="5" ry="7" fill="#A86F54" stroke="none"/>
+    <ellipse cx="215" cy="104" rx="3.5" ry="12" fill="#E09A7E" stroke-width="2.4"/>
+    <path d="M219 102L227 97L234 102L233 109" fill="none" stroke-width="5"/>
+    <path d="M219 102L227 97L234 102L233 109" fill="none" stroke="#FFF3CC" stroke-width="2.2"/>
+    <g transform="translate(62 27.5) scale(.75)">
+      <path d="M232 102C238 76 288 74 290 102C292 128 252 132 250 108C248 92 274 90 276 104C277 114 262 116 262 106" fill="none" stroke-width="13"/>
+      <path d="M232 102C238 76 288 74 290 102C292 128 252 132 250 108C248 92 274 90 276 104C277 114 262 116 262 106" fill="none" stroke="#F0DFB2" stroke-width="7"/>
+      <path d="M256 92Q266 84 280 94" fill="none" stroke="#FFF6D8" stroke-width="2.4"/>
+    </g>
   </g>
+  <g fill="none" stroke="#5B95BF" stroke-width="3.4" stroke-linecap="round"><path d="M98 93Q103 103 98 113M108 85Q116 103 108 121M118 77Q129 103 118 129"/></g>
 </svg>

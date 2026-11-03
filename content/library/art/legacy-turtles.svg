@@ -1,2 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-turtles-title"><title id="legacy-turtles-title">How does a sea turtle breathe?</title><rect width="320" height="196" rx="22" fill="#E1F0F3"></rect><circle cx="257" cy="42" r="20" fill="#FFFFFF" opacity="0.55"></circle><path d="M12 154q65-25 120 0t176 0" stroke="#276D85" stroke-width="2" opacity="0.2" fill="none"></path><g transform="translate(100,30) scale(1.12)"><g><ellipse cx="59" cy="62" rx="31" ry="26" fill="#80A97D" stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></ellipse><ellipse cx="99" cy="54" rx="13" ry="10" fill="#A8C69A" stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></ellipse><path d="m39 39-12-15m12 63-12 15m46-63 12-15m-12 63 12 15M59 37v50M30 59h57" fill="none" stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="102" cy="51" r="2" fill="#254E4B"></circle></g></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-turtles-title"><title id="legacy-turtles-title">How does a sea turtle breathe?</title><rect width="320" height="196" rx="22" fill="#E1F0F3"/>
+<path d="M30 174Q60 154 120 160T250 156Q292 158 296 172Q240 186 160 184Q80 186 30 174Z" fill="#E9D6A7"/>
+<g stroke="#5F9177" stroke-width="5" stroke-linecap="round" fill="none"><path d="M46 172Q40 150 50 134M58 170Q62 152 74 144"/><path d="M262 166Q256 142 266 124M274 166Q282 150 292 146"/></g>
+<g fill="none" stroke="#F4FAF2" stroke-width="2.5" stroke-linecap="round" opacity=".8"><path d="M40 40q12-6 22 0M262 30q10-5 20 0M232 56q8-4 16 0"/></g>
+<g fill="none" stroke="#F4FAF2" stroke-width="2"><circle cx="254" cy="82" r="4"/><circle cx="264" cy="66" r="5.5"/><circle cx="258" cy="46" r="3.5"/></g>
+<ellipse cx="166" cy="128" rx="74" ry="22" fill="#4E7E78" opacity=".16"/>
+<g transform="translate(158 98) rotate(-12)" stroke="#354E49" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+<path d="M34 -24C46 -60 18 -90 -18 -92C-2 -74 6 -54 12 -32Z" fill="#7FA98B"/>
+<path d="M34 24C46 60 18 90 -18 92C-2 74 6 54 12 32Z" fill="#7FA98B"/>
+<path d="M-34 -22C-46 -40 -66 -44 -70 -33C-63 -24 -51 -17 -40 -12Z" fill="#7FA98B"/>
+<path d="M-34 22C-46 40 -66 44 -70 33C-63 24 -51 17 -40 12Z" fill="#7FA98B"/>
+<path d="M-50 -6L-66 0L-50 6Z" fill="#7FA98B"/>
+<path d="M44 -10Q56 -18 70 -16Q86 -12 86 0Q86 12 70 16Q56 18 44 10Z" fill="#8DB596"/>
+<path d="M22 -34C26 -58 12 -78 -8 -86M22 34C26 58 12 78 -8 86" fill="none" stroke="#C9DDB5" stroke-width="2"/>
+<path d="M60 -6q4-4 8 0q-4 4-8 0ZM60 6q4-4 8 0q-4 4-8 0ZM72 0q4-4 8 0q-4 4-8 0Z" fill="#C9DDB5" stroke="none"/>
+<circle cx="74" cy="-11" r="2.6" fill="#354E49" stroke="none"/><circle cx="74" cy="11" r="2.6" fill="#354E49" stroke="none"/>
+<ellipse cx="0" cy="0" rx="54" ry="42" fill="#7E8F5A"/>
+<ellipse cx="-1" cy="0" rx="45" ry="34" fill="#9DAF6E" stroke-width="2.5"/>
+<path d="M-36 0L-30 -10H-20L-14 0L-20 10H-30ZM-14 0L-8 -11H6L12 0L6 11H-8ZM12 0L18 -10H28L34 0L28 10H18Z" fill="#B4C27F" stroke-width="2.5"/>
+<path d="M-25 -10L-30 -31M-1 -11L-1 -34M23 -10L28 -31M-25 10L-30 31M-1 11L-1 34M23 10L28 31M-36 0H-45M34 0H43" fill="none" stroke-width="2.5"/>
+<path d="M-40 -18Q-26 -33 -4 -35" fill="none" stroke="#DCE3AE" stroke-width="3"/>
+
+</g></svg>

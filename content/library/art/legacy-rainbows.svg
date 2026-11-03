@@ -1,2 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-rainbows-title"><title id="legacy-rainbows-title">How does a rainbow appear?</title><rect width="320" height="196" rx="22" fill="#F8EED8"></rect><circle cx="257" cy="42" r="20" fill="#FFFFFF" opacity="0.55"></circle><path d="M12 154q65-25 120 0t176 0" stroke="#936025" stroke-width="2" opacity="0.2" fill="none"></path><g transform="translate(100,30) scale(1.12)"><g><path d="M10 100a50 50 0 0 1 100 0" fill="none" stroke="#CE8065" stroke-width="8"></path><path d="M18 100a42 42 0 0 1 84 0" fill="none" stroke="#F0D397" stroke-width="8"></path><path d="M26 100a34 34 0 0 1 68 0" fill="none" stroke="#80A97D" stroke-width="8"></path><path d="M34 100a26 26 0 0 1 52 0" fill="none" stroke="#91C5D0" stroke-width="8"></path><path d="M26 63C-3 62 2 31 28 33c0-31 48-37 57-6 35-8 44 39 14 39Z" fill="#FDFDF7" stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>  </g></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-rainbows-title"><title id="legacy-rainbows-title">How does a rainbow appear?</title><rect width="320" height="196" rx="22" fill="#F8EED8"/>
+<g stroke-linecap="round" stroke-linejoin="round">
+<g fill="none" stroke-width="12" stroke-linecap="butt">
+<path d="M34 172A126 126 0 0 1 286 172" stroke="#E09A7E"/>
+<path d="M46 172A114 114 0 0 1 274 172" stroke="#F0C86D"/>
+<path d="M58 172A102 102 0 0 1 262 172" stroke="#98B483"/>
+<path d="M70 172A90 90 0 0 1 250 172" stroke="#8DBFE0"/>
+</g>
+<path d="M28 172A132 132 0 0 1 292 172M76 172A84 84 0 0 1 244 172" fill="none" stroke="#354E49" stroke-width="2.4"/>
+<path d="M44 140A118 118 0 0 1 96 70" fill="none" stroke="#F6C9B4" stroke-width="2"/>
+<g stroke="#354E49" stroke-width="3">
+<path d="M18 176Q20 150 54 148Q88 146 104 166Q110 182 90 186Q50 190 18 176Z" fill="#98B483"/>
+<path d="M216 168Q232 146 266 148Q300 150 302 176Q270 190 232 186Q214 182 216 168Z" fill="#98B483"/>
+<path d="M30 178Q60 186 92 180M228 180Q260 186 294 178" fill="none" stroke="#85AA7D" stroke-width="2.2"/>
+<path d="M40 152q-2-10 4-16M50 150q2-8 8-12M274 152q2-10-4-16M264 150q-2-8-8-12" fill="none" stroke="#6B9C73" stroke-width="2.6"/>
+<path d="M118 66C100 66 98 46 116 44C116 26 140 18 152 30C162 14 192 16 196 36C214 32 228 46 220 60C218 66 212 68 206 68L124 68C122 68 120 68 118 66Z" fill="#FFFFFF" stroke="#7FA9BE"/>
+<path d="M122 66C118 58 128 52 136 56C142 50 154 52 156 58C164 52 176 54 178 60C186 54 200 56 202 62C208 56 218 58 214 66Z" fill="#E6EEF2" stroke="none"/>
+<path d="M118 66C100 66 98 46 116 44C116 26 140 18 152 30C162 14 192 16 196 36C214 32 228 46 220 60C218 66 212 68 206 68L124 68C122 68 120 68 118 66Z" fill="none" stroke="#7FA9BE"/>
+<path d="M140 30Q150 22 164 22M108 54Q108 48 114 46" fill="none" stroke="#F4FAF2" stroke-width="3"/>
+</g>
+</g></svg>

@@ -1,1 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" role="img"><title>A blue feather with a long bare quill, central shaft and fine branching barbs</title><rect x="8" y="8" width="304" height="180" rx="20" fill="#E5ECD8"/><g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M84 139 83 118 96 119 91 101 105 104 104 83 121 88 124 68 143 75 151 54 167 62 185 41 197 48 222 29 244 24 242 48 232 70 221 75 220 95 204 96 201 113 181 111 173 128 154 122 145 138 127 130 114 144Z" fill="#91C5D0"/><path d="M61 164 238 30" fill="none" stroke-width="5"/><path d="m92 139-6-17m18 7-8-23m21 13-8-28m21 18-1-33m17 23 9-37m5 26 24-41m-71 86 23 7m-8-19 29 10m-13-21 34 12m-19-24 36 10m-20-23 36 9m-18-22 28 4" fill="none" stroke-width="2"/><path d="M66 156 80 155M74 147 80 136" fill="none"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" role="img"><title>A blue feather with a long bare quill, central shaft and fine branching barbs</title><rect width="320" height="196" rx="22" fill="#E5ECD8"/>
+<path d="M36 178Q60 162 118 166T234 164Q282 162 286 176Q236 188 160 187Q84 189 36 178Z" fill="#A8C493"/>
+<ellipse cx="160" cy="176" rx="72" ry="6" fill="#739174" opacity=".18"/>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<path d="M56 176q-4-12 2-20M64 176q2-10 10-14M262 174q-2-12 6-18M272 175q4-8 12-10" fill="none" stroke="#6B9C73"/>
+<ellipse cx="226" cy="176" rx="8" ry="5" fill="#B9B4A2" stroke-width="2.2"/><ellipse cx="240" cy="178" rx="5" ry="3.5" fill="#C3BBA5" stroke-width="2"/>
+<path d="M226 28q16-6 30 2M244 44q12-4 22 2M38 70q10-8 24-6" fill="none" stroke="#9CCFC9" stroke-width="2.4"/>
+<g transform="translate(56 150) rotate(-27)">
+<path d="M58 0L61 -5L70 -7L79 -9L88 -10L97 -12L105 -13L114 -14L123 -15L131 -16L140 -17L148 -18L156 -18L164 -19L172 -19L180 -18L188 -18L195 -17L189 -8L198 -17L202 -15L209 -13L216 -11L222 -7L228 -3L234 0L234 0L229 5L224 11L218 16L212 21L206 24L199 27L192 29L185 30L177 31L173 31L164 14L170 31L161 31L153 30L145 30L136 28L128 27L119 26L110 24L101 22L92 20L83 17L73 15L64 12Z" fill="#86AEDB"/>
+<path d="M60 1L64 12L73 15L83 17L92 20L101 22L110 24L119 26L128 27L136 28L145 30L153 30L161 31L170 31L164 14L173 31L177 31L185 30L192 29L199 27L206 24L212 21L218 16L224 11L229 5L234 0L232 0Z" fill="#6F98C9" stroke="none"/>
+<path d="M64 -1l4 -6M71 -1l5 -8M78 -1l5 -9M85 -1l6 -10M92 -1l7 -11M99 -1l7 -12M106 -1l8 -13M113 -1l8 -14M120 -1l9 -15M127 -1l9 -15M134 -1l9 -16M141 -1l9 -16M148 -1l9 -16M155 -1l9 -16M162 -1l9 -16M169 -1l9 -15M176 -1l8 -14M183 -1l8 -13M190 -1l7 -12M197 -1l6 -11M204 -1l5 -9M211 -1l4 -7M218 -1l3 -5" fill="none" stroke="#B7D2EE" stroke-width="1.3"/>
+<path d="M64 1l7 14M71 1l8 16M78 1l9 18M85 1l10 20M92 1l11 21M99 1l12 23M106 1l13 24M113 1l13 25M120 1l14 26M127 1l14 26M134 1l14 26M141 1l14 26M148 1l14 26M155 1l13 25M162 1l13 24M169 1l12 23M176 1l11 21M183 1l10 19M190 1l9 17M197 1l8 15M204 1l6 12M211 1l5 9M218 1l3 6" fill="none" stroke="#9BBEE3" stroke-width="1.3"/>
+<path d="M58 0L61 -5L70 -7L79 -9L88 -10L97 -12L105 -13L114 -14L123 -15L131 -16L140 -17L148 -18L156 -18L164 -19L172 -19L180 -18L188 -18L195 -17L189 -8L198 -17L202 -15L209 -13L216 -11L222 -7L228 -3L234 0L234 0L229 5L224 11L218 16L212 21L206 24L199 27L192 29L185 30L177 31L173 31L164 14L170 31L161 31L153 30L145 30L136 28L128 27L119 26L110 24L101 22L92 20L83 17L73 15L64 12Z" fill="none"/>
+<path d="M2 0L228 0" fill="none" stroke-width="5"/>
+<path d="M4 0L226 0" fill="none" stroke="#F4F0E0" stroke-width="2.4"/>
+<path d="M2 0L56 0" fill="none" stroke="#F3E7C6" stroke-width="3.4"/>
+</g>
+</g></svg>

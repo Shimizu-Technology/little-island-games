@@ -2,7 +2,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="seasons-art-title">
   <title id="seasons-art-title">Four small Earths travel on an oval path around a golden Sun; all four tilted axes point in the same direction, in a schematic seasons model.</title>
   <rect width="320" height="196" rx="22" fill="#F8EFD8"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="160" cy="97" r="19" fill="#F0D397" /><ellipse cx="160" cy="97" rx="114" ry="59" fill="none" stroke="#AFAB9D" stroke-dasharray="4 7"/><circle cx="47" cy="97" r="18" fill="#91C5D0" /><path d="M34.4 86.2l10.799999999999999 -1.8 5.3999999999999995 9.0-7.2 7.2-1.8 9.0" fill="#80A97D" stroke-width="1.5"/><path d="M35 122l24-50" fill="none" stroke-width="2"/><circle cx="160" cy="38" r="18" fill="#91C5D0" /><path d="M147.4 27.200000000000003l10.799999999999999 -1.8 5.3999999999999995 9.0-7.2 7.2-1.8 9.0" fill="#80A97D" stroke-width="1.5"/><path d="M148 63l24-50" fill="none" stroke-width="2"/><circle cx="273" cy="97" r="18" fill="#91C5D0" /><path d="M260.4 86.2l10.799999999999999 -1.8 5.3999999999999995 9.0-7.2 7.2-1.8 9.0" fill="#80A97D" stroke-width="1.5"/><path d="M261 122l24-50" fill="none" stroke-width="2"/><circle cx="160" cy="156" r="18" fill="#91C5D0" /><path d="M147.4 145.2l10.799999999999999 -1.8 5.3999999999999995 9.0-7.2 7.2-1.8 9.0" fill="#80A97D" stroke-width="1.5"/><path d="M148 181l24-50" fill="none" stroke-width="2"/>
-  </g>
-</svg>
+<g stroke="#354E49" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<g fill="#E8B752" stroke="none"><path d="M60 22l2 5 5 2-5 2-2 5-2-5-5-2 5-2ZM262 170l2 5 5 2-5 2-2 5-2-5-5-2 5-2ZM272 24l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5ZM44 168l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5Z"/></g>
+<ellipse cx="160" cy="98" rx="124" ry="62" fill="none" stroke="#B39468" stroke-width="2.4" stroke-dasharray="2 8"/>
+<path d="M124 33l-10 6 10 6M196 151l10 6-10 6" fill="none" stroke="#B39468" stroke-width="2.6"/>
+<g fill="none" stroke="#E8B752" stroke-width="3"><path d="M160 65v-3M160 131v3M126 98h-8M194 98h8M136 74l-6-6M184 122l6 6M184 74l6-6M136 122l-6 6"/></g>
+<circle cx="160" cy="98" r="24" fill="#F0C86D"/>
+<circle cx="160" cy="98" r="16" fill="#F4D58A" stroke="none"/>
+<path d="M146 88Q152 80 162 80" fill="none" stroke="#FFF3CC" stroke-width="3"/>
+<g transform="translate(36 98)"><path d="M-9 25L9-25" fill="none" stroke-width="2.4"/><circle r="16" fill="#7FB3D9"/><path d="M-11-3L-6-10L2-10L5-4L-1 2L-8 2ZM3 5L10 3L10 9L5 12Z" fill="#98B483" stroke-width="1.6"/><path d="M0-16A16 16 0 0 0 0 16Z" fill="#354E49" opacity=".28" stroke="none"/><circle r="16" fill="none"/><circle cx="9" cy="-25" r="2.4" fill="#C77760" stroke-width="1.4"/></g>
+<g transform="translate(284 98)"><path d="M-9 25L9-25" fill="none" stroke-width="2.4"/><circle r="16" fill="#7FB3D9"/><path d="M-11-3L-6-10L2-10L5-4L-1 2L-8 2ZM3 5L10 3L10 9L5 12Z" fill="#98B483" stroke-width="1.6"/><path d="M0-16A16 16 0 0 1 0 16Z" fill="#354E49" opacity=".28" stroke="none"/><circle r="16" fill="none"/><circle cx="9" cy="-25" r="2.4" fill="#C77760" stroke-width="1.4"/></g>
+<g transform="translate(160 36)"><path d="M-9 25L9-25" fill="none" stroke-width="2.4"/><circle r="16" fill="#7FB3D9"/><path d="M-11-3L-6-10L2-10L5-4L-1 2L-8 2ZM3 5L10 3L10 9L5 12Z" fill="#98B483" stroke-width="1.6"/><path d="M-16 0A16 16 0 0 1 16 0Z" fill="#354E49" opacity=".28" stroke="none"/><circle r="16" fill="none"/><circle cx="9" cy="-25" r="2.4" fill="#C77760" stroke-width="1.4"/></g>
+<g transform="translate(160 160)"><path d="M-9 25L9-25" fill="none" stroke-width="2.4"/><circle r="16" fill="#7FB3D9"/><path d="M-11-3L-6-10L2-10L5-4L-1 2L-8 2ZM3 5L10 3L10 9L5 12Z" fill="#98B483" stroke-width="1.6"/><path d="M-16 0A16 16 0 0 0 16 0Z" fill="#354E49" opacity=".28" stroke="none"/><circle r="16" fill="none"/><circle cx="9" cy="-25" r="2.4" fill="#C77760" stroke-width="1.4"/></g>
+</g></svg>

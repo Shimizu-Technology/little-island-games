@@ -1,2 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-asteroids-title"><title id="legacy-asteroids-title">What is an asteroid?</title><rect width="320" height="196" rx="22" fill="#EEEAF6"></rect><circle cx="257" cy="42" r="20" fill="#FFFFFF" opacity="0.55"></circle><path d="M12 154q65-25 120 0t176 0" stroke="#56538D" stroke-width="2" opacity="0.2" fill="none"></path><g transform="translate(100,30) scale(1.12)"><g><path d="m32 17 42-4 24 31-6 39-36 18-38-32Z" fill="#AFAB9D" stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="46" cy="46" r="11" fill="#888B81"></circle><circle cx="75" cy="71" r="8" fill="#888B81"></circle><path d="m12 12 10 8M99 4l-6 11M110 91l-9-5" stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></g></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="legacy-asteroids-title"><title id="legacy-asteroids-title">What is an asteroid?</title><rect width="320" height="196" rx="22" fill="#EEEAF6"></rect><g data-fit="1" transform="translate(-16 -9.4) scale(1.085)">
+<path d="M40 72q14-3 28 0M28 102q16-3 32 0M42 132q12-3 24 0" fill="none" stroke="#354E49" stroke-width="3" stroke-linecap="round"/>
+<path d="M93 101Q94 94 97 84L101 74Q104 64 113 60L123 54Q132 50 138 51L144 53Q150 54 158 49L166 43Q174 38 184 41L194 43Q204 46 212 49L220 51Q228 54 232 60L236 68Q240 74 246 80L252 86Q258 92 256 101L254 111Q252 120 248 128L242 138Q238 146 229 149L219 151Q210 154 203 158L195 162Q188 166 178 163L166 161Q156 158 146 157L136 155Q126 154 119 149L111 143Q104 138 100 131L96 123Q92 116 93 109Z" fill="#B9B4A2"/>
+<path d="M250 96Q262 112 248 128Q236 156 200 158Q170 168 140 156Q112 150 100 130Q140 146 180 140Q226 134 250 96Z" fill="#9F9A88"/>
+<path d="M118 70Q134 52 160 50" fill="none" stroke="#DAD5C3" stroke-width="4" stroke-linecap="round"/>
+<path d="M206 66q14 6 18 20M126 112q10 8 24 8M170 86q8-6 18-2" fill="none" stroke="#8E897A" stroke-width="1.6" stroke-linecap="round"/>
+<circle cx="150" cy="84" r="15" fill="#8E897A" stroke="#354E49" stroke-width="2.2"/>
+<path d="M138 88Q150 102 162 88" fill="none" stroke="#C3BBA5" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M141 80Q150 74 159 80" fill="none" stroke="#77736A" stroke-width="1.6" stroke-linecap="round"/>
+<circle cx="210" cy="118" r="11" fill="#8E897A" stroke="#354E49" stroke-width="2.2"/>
+<path d="M202 122Q210 132 218 122" fill="none" stroke="#C3BBA5" stroke-width="2.2" stroke-linecap="round"/>
+<path d="M203 115Q210 110 217 115" fill="none" stroke="#77736A" stroke-width="1.6" stroke-linecap="round"/>
+<path d="M93 101Q94 94 97 84L101 74Q104 64 113 60L123 54Q132 50 138 51L144 53Q150 54 158 49L166 43Q174 38 184 41L194 43Q204 46 212 49L220 51Q228 54 232 60L236 68Q240 74 246 80L252 86Q258 92 256 101L254 111Q252 120 248 128L242 138Q238 146 229 149L219 151Q210 154 203 158L195 162Q188 166 178 163L166 161Q156 158 146 157L136 155Q126 154 119 149L111 143Q104 138 100 131L96 123Q92 116 93 109Z" fill="none" stroke="#354E49" stroke-width="3" stroke-linejoin="round"/>
+<path d="M276 33Q278 38 283 40Q278 42 276 47Q274 42 269 40Q274 38 276 33Z" fill="#F0CF7C" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M292 151Q293 155 297 156Q293 157 292 161Q291 157 287 156Q291 155 292 151Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M100 164Q101 167 104 168Q101 169 100 172Q99 169 96 168Q99 167 100 164Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M70 26Q71 29 74 30Q71 31 70 34Q69 31 66 30Q69 29 70 26Z" fill="#F0CF7C" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+</g></svg>

@@ -2,7 +2,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" width="320" height="196" role="img" aria-labelledby="distant-stars-art-title">
   <title id="distant-stars-art-title">An eye on the left looks along widening sight lines toward two equal-sized star discs drawn at different distances; a small apparent-size inset shows the farther star as a dot.</title>
   <rect width="320" height="196" rx="22" fill="#EEEAF6"/>
-  <g stroke="#254E4B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M19 110q22-30 43 0-21 30-43 0Z" fill="#FFF9E6" /><circle cx="42" cy="110" r="8" fill="#80A97D" /><path d="M66 109 137 64M66 111 137 142M67 109 268 60M67 111 268 135" fill="none" stroke="#AFAB9D" stroke-width="1.5" stroke-dasharray="3 6"/><circle cx="146" cy="102" r="25" fill="#F0D397" /><circle cx="274" cy="102" r="25" fill="#F0D397" /><rect x="179" y="149" width="111" height="31" rx="10" fill="#FFF9E6" /><circle cx="203" cy="164" r="10" fill="#F0D397" /><circle cx="263" cy="164" r="3" fill="#F0D397" />
-  </g>
+<g transform="translate(52 92) scale(1.3) translate(-52 -92)">
+<path d="M30 68Q52 56 72 68" fill="none" stroke="#493332" stroke-width="5" stroke-linecap="round"/>
+<path d="M28 92Q52 64 74 92Q52 116 28 92Z" fill="#DEAF86" stroke="#354E49" stroke-width="3" stroke-linejoin="round"/>
+<path d="M33 92Q52 71 70 92Q52 110 33 92Z" fill="#FFFBEA" stroke="#354E49" stroke-width="2.2" stroke-linejoin="round"/>
+<circle cx="55" cy="92" r="9" fill="#7A5A3E" stroke="#354E49" stroke-width="2.2"/>
+<circle cx="56" cy="92" r="4.5" fill="#191B26"/><circle cx="59" cy="89" r="2" fill="#FFFFFF"/>
+<path d="M38 82l-4-6M48 78l-1-7M59 78l2-7" stroke="#354E49" stroke-width="2.2" stroke-linecap="round"/></g>
+<circle cx="150" cy="132" r="32" fill="#FFF6D8" opacity=".6"/><path d="M150 102L150 96M171 111L175 107M180 132L186 132M171 153L175 157M150 162L150 168M129 153L125 157M120 132L114 132M129 111L125 107" stroke="#E8B752" stroke-width="3" stroke-linecap="round"/><circle cx="150" cy="132" r="24" fill="#F0C86D"/><path d="M165 114A24 24 0 0 1 129 144Q157 140 165 114Z" fill="#E8B752"/><g fill="#F7DA8E"><circle cx="142" cy="126" r="3"/><circle cx="156" cy="137" r="3.5"/></g><path d="M133 126A18 18 0 0 1 144 115" fill="none" stroke="#FFF3CC" stroke-width="3" stroke-linecap="round"/><circle cx="150" cy="132" r="24" fill="none" stroke="#354E49" stroke-width="3"/>
+<circle cx="266" cy="56" r="32" fill="#FFF6D8" opacity=".6"/><path d="M266 26L266 20M287 35L291 31M296 56L302 56M287 77L291 81M266 86L266 92M245 77L241 81M236 56L230 56M245 35L241 31" stroke="#E8B752" stroke-width="3" stroke-linecap="round"/><circle cx="266" cy="56" r="24" fill="#F0C86D"/><path d="M281 38A24 24 0 0 1 245 68Q273 64 281 38Z" fill="#E8B752"/><g fill="#F7DA8E"><circle cx="258" cy="50" r="3"/><circle cx="272" cy="61" r="3.5"/></g><path d="M249 50A18 18 0 0 1 260 39" fill="none" stroke="#FFF3CC" stroke-width="3" stroke-linecap="round"/><circle cx="266" cy="56" r="24" fill="none" stroke="#354E49" stroke-width="3"/>
+<path d="M78 92L155 109M78 92L133 149M78 92L259 33M78 92L268 80" fill="none" stroke="#6E7FA0" stroke-width="2" stroke-dasharray="3 6" stroke-linecap="round"/>
+<rect x="202" y="146" width="98" height="38" rx="12" fill="#FFF3CC" stroke="#354E49" stroke-width="2.2"/>
+<path d="M208 174h86" stroke="#F0DFB2" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="222" cy="165" r="11" fill="#F0C86D" stroke="#354E49" stroke-width="2.2"/><path d="M216 160q3-3 6-3" fill="none" stroke="#FFF3CC" stroke-width="2" stroke-linecap="round"/>
+<path d="M240 165h36" stroke="#B9B4A2" stroke-width="1.6" stroke-dasharray="2 4" stroke-linecap="round"/>
+<circle cx="286" cy="165" r="3" fill="#F0C86D" stroke="#354E49" stroke-width="1.4"/>
+<path d="M170 25Q171 29 175 30Q171 31 170 35Q169 31 165 30Q169 29 170 25Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M60 152Q61 155 64 156Q61 157 60 160Q59 157 56 156Q59 155 60 152Z" fill="#F0CF7C" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
+<path d="M214 108Q215 111 218 112Q215 113 214 116Q213 113 210 112Q213 111 214 108Z" fill="#FFF6D8" stroke="#354E49" stroke-width="1.2" stroke-linejoin="round"/>
 </svg>
