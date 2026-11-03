@@ -4,6 +4,7 @@ import { Text } from "../components/Text";
 import { libraryAssets } from "./assets.generated";
 import type { LibraryItem, Sentence } from "./schema";
 import { Action, LibraryIcon, palette, s } from "./ui";
+import { isPageSwipe, swipeTarget } from "./swipe";
 export function SentenceLine({
   sentence,
   selected,
@@ -85,9 +86,10 @@ export function Reader({
   const gesture = useMemo(
     () =>
       PanResponder.create({
-        onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+        onMoveShouldSetPanResponder: (_, g) => isPageSwipe(g.dx, g.dy),
         onPanResponderRelease: (_, g) => {
-          if (Math.abs(g.dx) > 50) onPage(Math.min(count - 1, Math.max(0, index + (g.dx < 0 ? 1 : -1))));
+          const next = swipeTarget(g.dx, index, count);
+          if (next !== undefined) onPage(next);
         },
       }),
     [count, index, onPage]
@@ -107,50 +109,53 @@ export function Reader({
   return (
     <View style={{ flex: 1, backgroundColor: "#FFFBEF" }}>
       <ScrollView key={index} contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-        <View
-          {...gesture.panHandlers}
-          accessibilityLabel={`Book art, page ${index + 1}. Swipe left or use Next page.`}
-          style={{
-            width: "100%",
-            height: stage,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "white",
-          }}
-        >
-          {source && (
-            <Image
-              key={current.image.path}
-              source={source}
-              resizeMode="contain"
-              fadeDuration={0}
-              accessibilityLabel={current.image.alt}
-              style={{ width: "100%", height: Math.min(stage, width / ratio) }}
-            />
-          )}
-        </View>
-        <View
-          style={{
-            width: "100%",
-            paddingHorizontal: width < 650 ? 8 : 32,
-            paddingVertical: 12,
-            gap: 4,
-            backgroundColor: "#FFFBEF",
-          }}
-        >
-          {current.sentences.map((sentence) => (
-            <SentenceLine
-              key={sentence.id}
-              sentence={sentence}
-              selected={selected === sentence.id}
-              onSentence={() => speak(sentence)}
-              onWord={word}
-            />
-          ))}
-          {!current.sentences.length && (
-            <Text style={[s.body, { textAlign: "center" }]}>A picture to look at together.</Text>
-          )}
-          {(index === 0 || index === count - 1) && <BookCredits book={book} />}
+        {/* One swipe surface for the whole page (art, text band and the paper below it). Word and
+            sentence taps stay taps, and a mostly vertical drag still scrolls a long text band. */}
+        <View testID="reader-swipe-surface" {...gesture.panHandlers} style={{ flexGrow: 1 }}>
+          <View
+            accessibilityLabel={`Book art, page ${index + 1}. Swipe left or use Next page.`}
+            style={{
+              width: "100%",
+              height: stage,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "white",
+            }}
+          >
+            {source && (
+              <Image
+                key={current.image.path}
+                source={source}
+                resizeMode="contain"
+                fadeDuration={0}
+                accessibilityLabel={current.image.alt}
+                style={{ width: "100%", height: Math.min(stage, width / ratio) }}
+              />
+            )}
+          </View>
+          <View
+            style={{
+              width: "100%",
+              paddingHorizontal: width < 650 ? 8 : 32,
+              paddingVertical: 12,
+              gap: 4,
+              backgroundColor: "#FFFBEF",
+            }}
+          >
+            {current.sentences.map((sentence) => (
+              <SentenceLine
+                key={sentence.id}
+                sentence={sentence}
+                selected={selected === sentence.id}
+                onSentence={() => speak(sentence)}
+                onWord={word}
+              />
+            ))}
+            {!current.sentences.length && (
+              <Text style={[s.body, { textAlign: "center" }]}>A picture to look at together.</Text>
+            )}
+            {(index === 0 || index === count - 1) && <BookCredits book={book} />}
+          </View>
         </View>
       </ScrollView>
       <View
