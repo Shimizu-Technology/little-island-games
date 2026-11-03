@@ -10,17 +10,23 @@ const dir = "src/library";
 const files = readdirSync(dir).filter((f) => f.endsWith(".tsx"));
 
 describe("Library display headings cap Dynamic Type", () => {
-  it("every Text/Heading using s.title, s.heading or s.actionText sets maxFontSizeMultiplier", () => {
+  it("every Text/Heading using s.title, s.heading, s.actionText or s.cardTitle sets maxFontSizeMultiplier", () => {
     // s.actionText added after native QA: at the largest size the raw "All pictures"
     // label grew past its row and pushed the decorative picture off the edge.
     const missing: string[] = [];
     for (const file of files) {
       const source = readFileSync(join(dir, file), "utf8");
-      for (const match of source.matchAll(/<(Text|Heading)\b[^>]*?\bs\.(title|heading|actionText)\b[^>]*>/gs)) {
+      for (const match of source.matchAll(/<(Text|Heading)\b[^>]*?\bs\.(title|heading|actionText|cardTitle)\b[^>]*>/gs)) {
         if (!/maxFontSizeMultiplier=\{\s*1(\.\d+)?\s*\}/.test(match[0])) missing.push(`${file}: ${match[0].slice(0, 80)}`);
       }
     }
     expect(missing).toEqual([]);
+  });
+
+  it("WordLabel tile labels cap Dynamic Type by default", () => {
+    const source = readFileSync(join(dir, "WordLabel.tsx"), "utf8");
+    expect(source).toMatch(/maxFontSizeMultiplier = 1\.4/);
+    expect(source).toMatch(/<Text[^>]*maxFontSizeMultiplier=\{maxFontSizeMultiplier\}/s);
   });
 
   it("body reading text is not capped", () => {

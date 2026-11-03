@@ -334,7 +334,7 @@ function LibraryReady() {
         }}
       >
         <ItemPicture record={item} pictureHeight={item.item?.type === "book" ? (width < 650 ? 210 : 300) : undefined} />
-        <Text style={s.cardTitle}>{item.title}</Text>
+        <Text maxFontSizeMultiplier={1.5} style={s.cardTitle}>{item.title}</Text>
       </Pressable>
       <Pressable
         accessibilityRole="button"
