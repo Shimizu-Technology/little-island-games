@@ -437,3 +437,21 @@ Delivery:
 Receipt: [evidence/testflight-build24.json](evidence/testflight-build24.json).
 
 Not verified: physical iPhone and iPad, VoiceOver end to end, nearby multi-device Mystery, and Stassie's acceptance.
+
+## Little Island 3.0: 3.0.0 (25) family preview, available 3 November 2026 Guam time
+
+The 3.0 family preview: the Island map home, the rebuilt Living Island Home, and the Island Library (family-preview mode; records stay unpromoted until Leon accepts the narration on the device). Scope and checklist: [V3_RELEASE.md](V3_RELEASE.md).
+
+Source: commit `7ddb8f5cd4e0883f1b2d419c9705e45a83ec8aab` on `release/testflight-25` (unmerged). That is `feat/v3` @ `d64b4c89` plus one release-only commit carrying the committed family-preview Library catalog. Full gate in preview mode: 2,243 tests. Doctor 21/21. Lead native simulator QA on iPhone 17 Pro and iPad mini (6th gen), iOS 26.5, plus a comprehensive QA ledger, after fixes 1–4.
+
+Delivery:
+- The IPA is 304,982,099 bytes, SHA256 `56a68c4f87711a51d76ac93e917b02974b2fe2d03e3579930f16c5aeb80870a4`.
+- The strict signature, App Store profile and beta entitlements all verified.
+- All 10,884 referenced audio files match the source (6,447 game clips and 4,437 Library narration clips).
+- The first EAS submission (`9b4e9381`) failed with an App Store Connect `SERVER_ERROR`. No build was created; two empty upload reservations were left in AWAITING_UPLOAD. The retry, submission `e8e12ab6-b338-4269-8e03-51d25195f5b6`, finished.
+- Apple build `fdfc7e58-020b-4b26-a76a-ff48ef1e4e8e` is VALID / IN_BETA_TESTING in the Leon group (one adult tester, automatic distribution off), with English notes.
+- EAS also created an internal "Team (Expo)" group with no testers. It was left unchanged.
+
+Receipt: [evidence/testflight-build25.json](evidence/testflight-build25.json).
+
+Not verified: physical iPhone and iPad, real VoiceOver, airplane mode, mid-gesture interruption, narration listening, Stassie's acceptance, and Library promotion to approved.
