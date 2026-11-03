@@ -1,6 +1,5 @@
 import React from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { itemSpec } from "../catalog";
 import { EntityArt, artFrame } from "./EntityArt";
 import { roomNames } from "../catalogMore";
 import { resolve, type DropProposal } from "../scene/proposal";
@@ -8,6 +7,8 @@ import type { Scene } from "../scene/types";
 import { BasketPicture } from "./BasketPicture";
 import { capabilityOf } from "../world";
 import { isPortion } from "./portions";
+import { restingVisible } from "./group";
+import { entityLabels } from "../scene/labels";
 /** Switch/keyboard/tap destinations call exactly the drag proposal engine. */
 export function Destinations({
   scene,
@@ -51,6 +52,18 @@ export function Destinations({
         })
       : undefined;
   if (!choices.length && !contents.length && !store) return null;
+  const contentNames = entityLabels(contents);
+  const ownerNames = entityLabels(Object.values(scene.entities).filter((e) => restingVisible(e, scene)));
+  const verbOf = (target: (typeof choices)[number]["target"], proposal: (typeof choices)[number]["proposal"]) =>
+    target.kind === "mouth" ? "Eat or drink" : target.kind === "hand" ? "Give" : target.kind === "socket" ? (proposal.base === "lie" ? "Lie" : proposal.base === "bathe" ? "Bathe" : "Sit") : "Put on";
+  const choiceLabels = choices.map(({ target, proposal, room }) => `${verbOf(target, proposal)} in ${roomNames[room]}`);
+  // Two cushions in one room would both read "Sit in Tree house": add the numbered owner only then.
+  const choiceLabel = (index: number) => {
+    const plain = choiceLabels[index];
+    return choiceLabels.filter((label) => label === plain).length > 1
+      ? `${plain}, ${ownerNames[choices[index].target.owner] ?? ""}`
+      : plain;
+  };
   const symbols = { hand: "✋", mouth: "◡", socket: "◠", surface: "▱", container: "▣" };
   return (
     <View
@@ -92,7 +105,7 @@ export function Destinations({
             <Pressable
               key={entity.id}
               accessibilityRole="button"
-              accessibilityLabel={`Choose ${entity.item ? itemSpec(entity.item.item).name : "friend"}`}
+              accessibilityLabel={`Choose ${entity.item ? contentNames[entity.id] : "friend"}`}
               onPress={() => onSelect(entity.id)}
               style={{ width: 58, height: 56, padding: 6, backgroundColor: "#EEDDBA", borderRadius: 14 }}
             >
@@ -102,11 +115,11 @@ export function Destinations({
             </Pressable>
           );
         })}
-        {choices.map(({ target, proposal, room }) => (
+        {choices.map(({ target, proposal, room }, choiceIndex) => (
           <Pressable
             key={`${room}:${target.id}`}
             accessibilityRole="button"
-            accessibilityLabel={`${target.kind === "mouth" ? "Eat or drink" : target.kind === "hand" ? "Give" : target.kind === "socket" ? (proposal.base === "lie" ? "Lie" : proposal.base === "bathe" ? "Bathe" : "Sit") : "Put on"} in ${roomNames[room]}`}
+            accessibilityLabel={choiceLabel(choiceIndex)}
             onPress={() => onChoose(proposal)}
             style={{
               minWidth: 58,

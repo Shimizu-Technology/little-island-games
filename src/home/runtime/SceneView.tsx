@@ -9,7 +9,6 @@ import { BuildingArt, BuildingTrim, TerraceArt } from "../BuildingArt";
 import { roomOrigin, type Building } from "../camera";
 import type { BadgeId } from "../../badges/engine";
 import { tracks } from "../../badges/engine";
-import { itemSpec } from "../catalog";
 import type { HomeStateV2 } from "../model";
 import type { Scene, SceneEntity } from "../scene/types";
 import { paintEntries, restingVisible } from "./group";
@@ -18,6 +17,7 @@ import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { DragOverlay } from "./DragOverlay";
 import { layoutToken } from "./layout";
 import { isPortion } from "./portions";
+import { entityLabels } from "../scene/labels";
 import type { Interaction, Pickup, DragSlot } from "./useInteraction";
 import type { Viewport } from "./CameraController";
 
@@ -32,6 +32,7 @@ function ancestors(entity: SceneEntity, scene: Scene): string[] {
 }
 const RestingEntity = memo(function RestingEntity({
   entity,
+  name,
   ownerKey,
   slots,
   fixtureNudges,
@@ -50,6 +51,8 @@ const RestingEntity = memo(function RestingEntity({
 }: {
   onNode: (id: string, node: View | null) => void;
   entity: SceneEntity;
+  /** Accessible name; numbered when the room holds several of the same thing. */
+  name: string;
   ownerKey: string;
   slots: SharedValue<DragSlot[]>;
   fixtureNudges: Interaction["fixtureNudges"];
@@ -98,7 +101,6 @@ const RestingEntity = memo(function RestingEntity({
     slots.value.some((s) => s.id && s.proposal?.target && anticipationTargets.includes(s.proposal.target)) ? 1 : 0);
   const normal = useAnimatedStyle(() => ({ opacity: 1 - anticipating.value }));
   const anticipate = useAnimatedStyle(() => ({ opacity: anticipating.value }));
-  const name = entity.character ? ["Islander", "Pip", "Crab"][entity.character.slot] : itemSpec(entity.item!.item).name;
   return (
     <View
       ref={bindNode}
@@ -259,6 +261,7 @@ export function SceneView({
             const entities = Object.values(scene.rooms[roomId].entities)
               .filter((e) => restingVisible(e, scene))
               .sort((a, b) => a.depth - b.depth || a.id.localeCompare(b.id));
+            const names = entityLabels(entities);
             return (
               <View
                 key={roomId}
@@ -291,6 +294,7 @@ export function SceneView({
                         key={front ? `front:${entity.id}` : entity.id}
                         front={front}
                         entity={entity}
+                        name={names[entity.id]}
                         onNode={onNode}
                         action={reactions[entity.id]}
                         sleeping={!!sleeping[entity.id]}

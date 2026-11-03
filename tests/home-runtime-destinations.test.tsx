@@ -65,7 +65,10 @@ describe("tap tray destinations", () => {
       );
     });
     expect(renderer.root.findAllByProps({ accessibilityLabel: "Put in tray" })).toHaveLength(0);
-    expect(renderer.root.findAllByProps({ accessibilityLabel: "Eat or drink in My room" }).length).toBeGreaterThan(0);
+    // Several mouths share a room, so each label also names its owner ("Eat or drink in My room, Pip").
+    const eat = renderer.root.findAll((n) => String(n.type) === "Pressable" && String(n.props.accessibilityLabel).startsWith("Eat or drink in My room"));
+    expect(eat.length).toBeGreaterThan(0);
+    expect(new Set(eat.map((n) => n.props.accessibilityLabel)).size).toBe(eat.length);
     expect(state.rooms.kitchen.instances.some((i) => i.id.startsWith("portion-"))).toBe(false);
     await act(async () => renderer.unmount());
   });
