@@ -8,7 +8,8 @@ import { personFor } from '../personalization/model';
 import { backfillRewards, rewardTransitions, rewardCompletion, completionSource } from '../badges/transitions';
 import { applyPersonalization, withoutLearner, type Person, type IdentityExpected } from "../personalization/model";
 import { BoardId, BoardSession, applyBoardSave } from "../board";
-import { ExploreProgress, validExploreProgress } from "../explore/progress";
+import { labComplete } from "../explore/activities";
+import { newExploreProgress, ExploreProgress, validExploreProgress } from "../explore/progress";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { GameId, GameState } from "../games";
@@ -153,7 +154,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.remove();
   }, [persist, ready, recovery]);
   const commit = useCallback(
-    (next: Save) => {
+    (next: Save, mirrorLibraryLabs = false) => {
       if (!ready || recovery || restoring.current) return;
       const previousWord = latest.current.sessions["word-rescue"],
         nextWord = next.sessions["word-rescue"];
@@ -164,7 +165,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       );
       if (records !== next.wordRecords) next = { ...next, wordRecords: records };
       const before = latest.current;
-      next = rewardTransitions(before, next);
+      next = rewardTransitions(before, next, mirrorLibraryLabs);
       const owner = next.learning?.active ?? "family", previousBadges = badgesFor(personFor(before, owner).milestones);
       const newBadges = badgesFor(personFor(next, owner).milestones).filter(id => !previousBadges.includes(id));
       const source = completionSource(before, next);
@@ -244,10 +245,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       libraryRejected.current = false; if (!lastWriteFailed.current) setError(null); return true;
     }
     const library = { ...data, profiles: { ...data.profiles, [owner]: JSON.parse(JSON.stringify(next)) as LibraryChildState } };
-    const updated = { ...before, library };
+    let updated: Save = { ...before, library };
+    const changedLabs = (Object.keys(next.labs) as (keyof typeof next.labs)[])
+      .filter(world => JSON.stringify(current.labs[world]) !== JSON.stringify(next.labs[world]));
+    // Reward the accepted learner's own transition. The legacy projection has no reward ownership.
+    for (const world of changedLabs) if (!labComplete(world, current.labs[world]) && labComplete(world, next.labs[world]))
+      updated = rewardCompletion(updated, { kind: "explore", topic: `lab-${world}` }, owner);
+    if (changedLabs.length) updated = { ...updated, explore: {
+      favorites: [], ...before.explore,
+      progress: { ...newExploreProgress(), ...before.explore?.progress,
+        location: { kind: "activity", world: changedLabs[0] }, labs: library.profiles[owner].labs },
+    } };
     if (!validLibraryData(library) || !withinSaveLimit(JSON.stringify(updated))) { rejectLibraryWrite(); return false; }
     libraryRejected.current = false;
-    commit(updated);
+    commit(updated, changedLabs.length > 0);
     return true;
   }, [commit, ready, recovery, rejectLibraryWrite]);
   const libraryPatch = useCallback((patch: Partial<LibraryChildState>, expectedEpoch: number, expectedLearnerId: string) => {

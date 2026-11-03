@@ -1,3 +1,4 @@
+import { contentHash } from './approval.mjs';
 import { Buffer } from "node:buffer";
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, renameSync, unlinkSync } from 'node:fs';
@@ -6,12 +7,6 @@ const args = process.argv.slice(2), option = name => args[args.indexOf(name) + 1
 const path = 'content/library/items.json';
 const items = JSON.parse(readFileSync(path, 'utf8'));
 const hash = value => createHash('sha256').update(typeof value === 'string' || Buffer.isBuffer(value) ? value : JSON.stringify(value)).digest('hex');
-const contentHash = item => {
-  const content = structuredClone(item);
-  delete content.review.familyReviewer;
-  delete content.review.familyDecision;
-  return hash(content);
-};
 if (args.includes('--template')) {
   writeFileSync(option('--template'), JSON.stringify({ reviewer: '', date: '', decisions: items.map(item => ({ id: item.id, title: item.title, kind: item.type, sensitiveNotes: item.sensitiveNotes, contentSha256: contentHash(item), decision: 'pending', note: '', audioAccepted: false, pronunciationAccepted: false })) }, null, 2) + '\n', { flag: 'wx' });
   console.log('Wrote an unanswered template. No approval was recorded.');

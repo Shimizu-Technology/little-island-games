@@ -1,6 +1,7 @@
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve, relative } from 'node:path';
+import { hasShippingApproval } from './approval.mjs';
 import { shippingReport } from './shipping-report.mjs';
 const root = resolve('.');
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -51,7 +52,7 @@ for (const item of items) {
   ok(Array.isArray(item.stage?.ageHint) && item.stage.ageHint.length === 2 && item.stage.ageHint.every(n => Number.isInteger(n) && n >= 0 && n <= 18) && item.stage.ageHint[0] <= item.stage.ageHint[1] && text(item.stage.support), `${id}: missing stage hint`);
   const r = item.review;
   ok(['draft','in-review','approved'].includes(r?.status) && text(r?.reviewer) && date(r?.date) && text(r?.scope), `${id}: missing review fields`);
-  if (shipping) ok(r?.status === 'approved', `${id}: not approved for shipping`);
+  if (shipping) ok(hasShippingApproval(item), `${id}: needs current Yes, audio/pronunciation acceptance and named dated reviewers for shipping`);
   const approved = shipping || r?.status === 'approved';
   if (approved) ok(text(r?.factualReviewer) && text(r?.familyReviewer), `${id}: needs factual and family approval`);
   rights(item.rights, id); image(item.image, id); sentence(item.label, approved, id);

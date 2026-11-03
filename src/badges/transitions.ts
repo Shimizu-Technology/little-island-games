@@ -1,6 +1,6 @@
 import { bindRoundOwners, roundOwner } from './owners';
 import { ticOutcome } from '../games/tic';
-import { FOOD_CHAIN, HABITATS, PLACES } from '../explore/activities';
+import { labComplete } from '../explore/activities';
 import type { Save } from '../state/validation';
 import { initializePersonalization, personFor, type Person } from '../personalization/model';
 import { applyCompletion, badgesFor, grantsFor, type Completion, MAX_MILESTONES, grantCatalog } from './engine';
@@ -28,7 +28,7 @@ function openWorld(save: Save, owner: string): Save {
   return put(save,owner,{...p,milestones,earned:[...p.earned,...grants],unseen:[...p.unseen,...grants]});
 }
 /** Only accepted Store transitions enter here. No screen lifecycle or result effect awards anything. */
-export function rewardTransitions(before: Save, after: Save): Save {
+export function rewardTransitions(before: Save, after: Save, mirrorLibraryLabs = false): Save {
   const owner = before.learning?.active ?? 'family';
   let next = bindRoundOwners(before, after);
   const owned = next;
@@ -61,9 +61,8 @@ export function rewardTransitions(before: Save, after: Save): Save {
     for(const [level,value] of Object.entries(stars)) if(value && !old[level as keyof typeof old]) next=rewardCompletion(next,{kind:'arcade',game,level},owner);
   }
   const oldLabs=before.explore?.progress?.labs, labs=after.explore?.progress?.labs;
-  if(labs) {
-    const checks = { oceans: (s: typeof labs.oceans)=>s.chain.length===FOOD_CHAIN.length, animals:(s:typeof labs.animals)=>s.habitat===HABITATS.length, world:(s:typeof labs.world)=>s.expedition===PLACES.length, weather:(s:typeof labs.weather)=>s.journey.length>3 && s.water==='ocean', space:(s:typeof labs.space)=>s.turn===7 };
-    for(const world of Object.keys(checks) as (keyof typeof checks)[]) if(checks[world](labs[world]) && (!oldLabs || !checks[world](oldLabs[world]))) next=rewardCompletion(next,{kind:'explore',topic:`lab-${world}`},roundOwner(owned,`explore:lab-${world}`,`explore:lab-${world}`));
+  if(labs && !mirrorLibraryLabs) {
+    for(const world of Object.keys(labs) as (keyof typeof labs)[]) if(labComplete(world, labs[world]) && (!oldLabs || !labComplete(world, oldLabs[world]))) next=rewardCompletion(next,{kind:'explore',topic:`lab-${world}`},roundOwner(owned,`explore:lab-${world}`,`explore:lab-${world}`));
   }
   return openWorld(next,owner);
 }

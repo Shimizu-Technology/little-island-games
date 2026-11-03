@@ -24,7 +24,7 @@ it("Q7 identifies the grown-up choice for Books and other hidden collections, wh
 describe("Q8 chrome scaling contract; reading remains uncapped",()=>{
   it.each([
     ["src/hub/IslandScene.tsx", "{name}"], ["src/hub/HubScreen.tsx", "little island"], ["src/hub/HubScreen.tsx", "{label}"],
-    ["src/library/LibraryScreen.tsx", '{place === "reader" ? record?.title'],
+    ["src/library/LibraryScreen.tsx", '{readerAvailable ? record.title'],
     ["src/library/LibraryScreen.tsx", '{tab === "shelf" ? "My Shelf"'],
     ["src/library/Reader.tsx", "Page {index + 1}"], ["src/home/runtime/HomeChrome.tsx", '{title ??'],
   ])("%s keeps %s in capped, unbroken chrome",(path,label)=>{

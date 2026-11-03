@@ -374,6 +374,7 @@ function LibraryReady() {
     );
   const blocked = (paused || (!open && !safePage)) && place !== "grownups";
   const showGrid = (place === "wonder" || place === "books") && !blocked;
+  const readerAvailable = place === "reader" && !restricted && !blocked && record?.item?.type === "book";
   const authoredExhibit = record?.item?.type === "exhibit" ? record.item : undefined;
   const exhibitWorld = place === "exhibit" ? (id as WorldId) : resolveExhibitWorld(record);
   return (
@@ -386,9 +387,9 @@ function LibraryReady() {
           maxFontSizeMultiplier={1.3} numberOfLines={1} adjustsFontSizeToFit
           style={[s.heading, { marginTop: 0, flex: 1, fontSize: place === "reader" ? 17 : 20, textAlign: "center" }]}
         >
-          {place === "reader" ? record?.title : "Island Library"}
+          {readerAvailable ? record.title : "Island Library"}
         </Text>
-        {place === "make" && creation ? <Action label="Done editing story" onPress={() => Keyboard.dismiss()}>Done</Action> : <SoundSwitch
+        {place === "make" && creation && !restricted && !blocked ? <Action label="Done editing story" onPress={() => Keyboard.dismiss()}>Done</Action> : <SoundSwitch
           on={store.save.settings.sound}
           onToggle={() => {
             audio.stop();
@@ -396,7 +397,7 @@ function LibraryReady() {
           }}
         />
         }
-        {place === "reader" ? (
+        {readerAvailable ? (
           <>
             <Action
               label={isSaved(id) ? "Saved book. Remove from My Shelf" : "Save book"}
@@ -812,13 +813,6 @@ function LibraryReady() {
                   audio.stop();
                   const labs = { ...child.labs, [exhibitWorld]: labAction(child.labs[exhibitWorld], action) };
                   update({ labs });
-                  const progress = {
-                    ...newExploreProgress(),
-                    ...store.save.explore?.progress,
-                    location: { kind: "activity" as const, world: exhibitWorld },
-                    labs,
-                  };
-                  store.exploreUpdate(progress, store.epoch);
                 }}
                 sound={store.save.settings.sound}
                 onHear={(key) => audio.speak(key)}

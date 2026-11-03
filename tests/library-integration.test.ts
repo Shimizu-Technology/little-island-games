@@ -57,7 +57,7 @@ describe("Explicit family-preview admission", () => {
       const fixture = { ...original, links: [{ kind: "make", target: "wonder-page", label: "Make a page" }], label: line, layers: { tell: [line], more: [line], deep: [line] } };
       mkdirSync(join(temp, fixture.image.path, ".."), { recursive: true });
       copyFileSync(fixture.image.path, join(temp, fixture.image.path));
-      for (const file of ["content/library/categories.json", "scripts/learn/library.json", "scripts/library/validate.mjs", "scripts/library/shipping-report.mjs", "assets/audio/library-word-we.m4a"]) copyFileSync(file, join(temp, file));
+      for (const file of ["content/library/categories.json", "scripts/learn/library.json", "scripts/library/validate.mjs", "scripts/library/shipping-report.mjs", "scripts/library/approval.mjs", "assets/audio/library-word-we.m4a"]) copyFileSync(file, join(temp, file));
       const hash = (bytes: string | Buffer) => createHash("sha256").update(bytes).digest("hex");
       writeFileSync(join(temp, "content/library/items.json"), JSON.stringify([fixture]));
       writeFileSync(join(temp, "scripts/library/audio-receipt.json"), JSON.stringify({ voice: "af_heart", engine: "Kokoro-82M v1.0", networkPlayback: false, clips: { "library-word-we": { path: "assets/audio/library-word-we.m4a", sha256: hash(readFileSync("assets/audio/library-word-we.m4a")), transcriptSha256: hash("we") } } }));

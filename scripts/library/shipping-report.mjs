@@ -1,3 +1,4 @@
+import { contentHash } from './approval.mjs';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -9,15 +10,12 @@ export function shippingReport(items, speech) {
     return clip && clip.path === `assets/audio/${key}.m4a` && clip.transcriptSha256 === hash(text) && existsSync(clip.path) && hash(readFileSync(clip.path)) === clip.sha256 ? [] : [key];
   });
   const records = items.map(item => {
-    const content = structuredClone(item);
-    delete content.review.familyReviewer;
-    delete content.review.familyDecision;
     const decision = item.review.familyDecision;
     return {
       id: item.id,
       status: item.review.status,
       factualRecheck: item.type === 'collection' ? 'membership decision' : item.review.factualReviewer ? 'recorded' : 'missing',
-      familyDecision: decision?.decision === 'Yes' && decision.contentSha256 === hash(JSON.stringify(content)) ? 'current Yes' : decision ? 'stale or unresolved' : 'missing',
+      familyDecision: decision?.decision === 'Yes' && decision.contentSha256 === contentHash(item) ? 'current Yes' : decision ? 'stale or unresolved' : 'missing',
       audioAccepted: decision?.audioAccepted === true,
       pronunciationAccepted: decision?.pronunciationAccepted === true,
     };

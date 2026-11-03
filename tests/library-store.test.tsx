@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StoreProvider, useStore } from '../src/state/Store';
 import { newLibraryChild, libraryChild } from '../src/library/state';
 import { emptySave, parseSave } from '../src/state/validation';
+import { labAction } from '../src/explore/activities';
+import { personFor } from '../src/personalization/model';
 import { newExploreProgress } from '../src/explore/progress';
 import { retainPageDraft, pageDraftKey, pendingPage, clearPageDrafts } from '../src/library/drafts';
 import { familyLearners, addLearner } from '../src/learn/learners';
@@ -237,4 +239,33 @@ describe('Library v2 family migration storage', () => {
     await act(async () => { root!.unmount(); }); root = undefined; await mount();
     expect(store.save.library?.profiles[id].policy.collections).toEqual(['books']);
   });
+});
+
+it('F1 awards B for B’s own lab while A’s partial lab and milestones stay unchanged', async () => {
+  await mount();
+  await act(async () => { store.addLearner('Learner A'); });
+  const a = store.save.learning!.active;
+  await act(async () => {
+    const child = libraryChild(store.save.library, a);
+    store.libraryPatch({ labs: { ...child.labs, space: labAction(child.labs.space, { type: 'turn', by: 1 }) } }, store.epoch, a);
+    // The pre-fix screen mirrors its labs into the shared legacy round.
+    store.exploreUpdate({ ...newExploreProgress(), location: { kind: 'activity', world: 'space' }, labs: libraryChild(store.save.library, a).labs }, store.epoch);
+  });
+  const aChild = structuredClone(libraryChild(store.save.library, a)), aPerson = structuredClone(personFor(store.save, a));
+  await act(async () => { store.addLearner('Learner B'); });
+  const b = store.save.learning!.active;
+  for (let turn = 1; turn <= 7; turn++) await act(async () => {
+    const child = libraryChild(store.save.library, b);
+    store.libraryPatch({ labs: { ...child.labs, space: labAction(child.labs.space, { type: 'turn', by: 1 }) } }, store.epoch, b);
+    store.exploreUpdate({ ...newExploreProgress(), location: { kind: 'activity', world: 'space' }, labs: libraryChild(store.save.library, b).labs }, store.epoch);
+  });
+  expect(personFor(store.save, b).milestones).toContain('explore:lab-space');
+  expect(libraryChild(store.save.library, a)).toEqual(aChild);
+  expect(personFor(store.save, a)).toEqual(aPerson);
+  expect(libraryChild(store.save.library, b).labs.space.turn).toBe(7);
+  const completed = structuredClone(personFor(store.save, b));
+  await act(async () => { store.libraryPatch({ query: 'moon' }, store.epoch, b); });
+  expect(personFor(store.save, b)).toEqual(completed);
+  await act(async () => { store.libraryPatch({ labs: aChild.labs }, store.epoch - 1, a); });
+  expect(libraryChild(store.save.library, b).labs.space.turn).toBe(7);
 });

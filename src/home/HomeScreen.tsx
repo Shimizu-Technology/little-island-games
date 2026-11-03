@@ -191,23 +191,29 @@ export function HomeScreen({
               },
             },
           };
-          const prepared = buildScene(seed),
-            subject = prepared.entities[`${destination}/item/${item.id}`];
-          if (!subject) return undefined;
-          const resolved = resolve(
-            { ...prepared.rooms[destination], entities: prepared.entities },
-            subject,
-            roomPoint(anchor.x, anchor.y),
-            {
-              scale: runtime.current!.camera.get().a,
-              avoidFurnitureOverlap: current.designing,
-              release: true,
-            }
-          );
-          if (resolved.kind === "staging") {
+          if (!proposal || proposal.kind === "staging") {
             current.store.setMessage("Choose a free hand or place.");
             return undefined;
           }
+          // Materialize the preview, never resolve the raw release anchor again.
+          // Concurrent drags may keep an unchanged destination; a moved/occupied target fails closed.
+          if (proposal.target) {
+            const target = fresh.rooms[destination].targets.find(t => t.id === proposal.target);
+            const contact = target && (proposal.kind === "hand" || (proposal.kind === "mouth" && proposal.consume === "drink")
+              ? target.projectedContact ?? target.contact : target.contact);
+            if (!target || target.closed || target.occupied ||
+              contact!.x !== proposal.contact.x || contact!.y !== proposal.contact.y ||
+              JSON.stringify(target.attachment) !== JSON.stringify(proposal.attachment)) return undefined;
+          }
+          if (proposal.revision !== fresh.revision && (!proposal.target || proposal.moves.length !== 1)) return undefined;
+          const materializedId = `${destination}/item/${item.id}`;
+          const resolved: DropProposal = {
+            ...proposal,
+            id: materializedId,
+            item,
+            revision: buildScene(seed).revision,
+            moves: proposal.moves.map(move => move.id === id ? { ...move, id: materializedId } : move),
+          };
           next = current.store.commitProposal(resolved, seed, stillCurrent);
           return next
             ? { state: next, proposal: resolved, identities: current.store.getCommittedIdentities() }
