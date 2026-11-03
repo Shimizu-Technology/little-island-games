@@ -7193,8 +7193,8 @@
       "transcriptSha256": "3dae57cd5747e645c4c3e0b1e8b068e8b43169df9f1b77fc80de5f7fade84bb7"
     },
     "library-category-faith": {
-      "input": "446eff564af897950a4bca57f0ca396779dd819bbb984218fad8058321cb16ad",
-      "sha256": "b7d67187c3a7affcd3862718f0a77622dd576010a84ba3f568676d6fbe12b585",
+      "input": "5c718c96ecbe413191e680581dbffb3a6cf7b01d91520b9f6ed701d53986f066",
+      "sha256": "5ca964cc4dce39702b19514e923c90874b89caaa0312d781e7d3f19d3b25f8a6",
       "seconds": 1.369,
       "path": "assets/audio/library-category-faith.m4a",
       "transcriptSha256": "d231fe09c3a2b609fad0020bf49248faf69e261a4272f07e269169441b1f1e2f"
@@ -9405,8 +9405,8 @@
       "transcriptSha256": "407dcd01494fbee7299af2d12f10815b07b9bb5c54bc7600baa1d7cb9f61e046"
     },
     "library-faith-collection-label": {
-      "input": "446eff564af897950a4bca57f0ca396779dd819bbb984218fad8058321cb16ad",
-      "sha256": "b7d67187c3a7affcd3862718f0a77622dd576010a84ba3f568676d6fbe12b585",
+      "input": "5c718c96ecbe413191e680581dbffb3a6cf7b01d91520b9f6ed701d53986f066",
+      "sha256": "5ca964cc4dce39702b19514e923c90874b89caaa0312d781e7d3f19d3b25f8a6",
       "seconds": 1.369,
       "path": "assets/audio/library-faith-collection-label.m4a",
       "transcriptSha256": "d231fe09c3a2b609fad0020bf49248faf69e261a4272f07e269169441b1f1e2f"

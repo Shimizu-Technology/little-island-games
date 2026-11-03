@@ -41,6 +41,8 @@ def spoken(text):
     # and isiZulu "uGogo" (grandmother) as "you go-go".
     text=re.sub(r'\bWhaa+t\?', 'What?!', text)
     text=re.sub(r'\buGogo\b', 'oo-Go-go', text)
+    # A short label ending in "Faith." was heard as "face"; exclaiming keeps the "th".
+    text=re.sub(r'^Our Catholic Faith\.$', 'Our Catholic Faith!', text)
     return text.strip()
 
 def input_digest(text,voice,model_hash,legacy=False):
