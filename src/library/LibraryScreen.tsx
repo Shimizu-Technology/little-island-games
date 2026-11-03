@@ -538,8 +538,8 @@ function LibraryReady() {
                 >
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
                     <LibraryIcon name="wonder" size={36} />
-                    <Text style={[s.actionText, { fontSize: 19 }]}>All pictures</Text>
-                    <View style={{ width: 80, height: 48, overflow: "hidden", borderRadius: 14 }}>
+                    <Text maxFontSizeMultiplier={1.4} numberOfLines={2} style={[s.actionText, { fontSize: 19, flexShrink: 1 }]}>All pictures</Text>
+                    <View style={{ width: 80, height: 48, flexShrink: 0, overflow: "hidden", borderRadius: 14 }}>
                       <LibraryArt kind="butterfly" />
                     </View>
                   </View>

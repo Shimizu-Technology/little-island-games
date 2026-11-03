@@ -354,7 +354,7 @@ export function Maker({
         }}
       >
         <LibraryGlyph name="make" size={24} />
-        <Text style={[s.actionText, { flex: 1, textAlign: "left" }]}>{draft.title || "My page"}</Text>
+        <Text maxFontSizeMultiplier={1.4} numberOfLines={2} style={[s.actionText, { flex: 1, textAlign: "left" }]}>{draft.title || "My page"}</Text>
         <LibraryGlyph name="details" size={24} />
       </Pressable>
       {(saveError || !admitted) && (

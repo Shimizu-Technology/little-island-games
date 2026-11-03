@@ -10,11 +10,13 @@ const dir = "src/library";
 const files = readdirSync(dir).filter((f) => f.endsWith(".tsx"));
 
 describe("Library display headings cap Dynamic Type", () => {
-  it("every Text/Heading using s.title or s.heading sets maxFontSizeMultiplier", () => {
+  it("every Text/Heading using s.title, s.heading or s.actionText sets maxFontSizeMultiplier", () => {
+    // s.actionText added after native QA: at the largest size the raw "All pictures"
+    // label grew past its row and pushed the decorative picture off the edge.
     const missing: string[] = [];
     for (const file of files) {
       const source = readFileSync(join(dir, file), "utf8");
-      for (const match of source.matchAll(/<(Text|Heading)\b[^>]*?\bs\.(title|heading)\b[^>]*>/gs)) {
+      for (const match of source.matchAll(/<(Text|Heading)\b[^>]*?\bs\.(title|heading|actionText)\b[^>]*>/gs)) {
         if (!/maxFontSizeMultiplier=\{\s*1(\.\d+)?\s*\}/.test(match[0])) missing.push(`${file}: ${match[0].slice(0, 80)}`);
       }
     }
