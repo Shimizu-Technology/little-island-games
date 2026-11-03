@@ -21,10 +21,14 @@ export function redoDrawing(history: DrawingHistory): DrawingHistory {
     future: history.future.slice(1),
   };
 }
-export const normalizedPoint = (x: number, y: number, width: number, height: number) => ({
-  x: Math.round(Math.max(0, Math.min(1, x / Math.max(1, width))) * 1000) / 1000,
-  y: Math.round(Math.max(0, Math.min(1, y / Math.max(1, height))) * 1000) / 1000,
-});
+/** Ignore incomplete/cancelled native samples rather than admitting NaN to a save. */
+export const normalizedPoint = (x: number, y: number, width: number, height: number) => {
+  if (![x, y, width, height].every(Number.isFinite)) return null;
+  return {
+    x: Math.round(Math.max(0, Math.min(1, x / Math.max(1, width))) * 1000) / 1000,
+    y: Math.round(Math.max(0, Math.min(1, y / Math.max(1, height))) * 1000) / 1000,
+  };
+};
 export const pathForStroke = (stroke: DrawingStroke) =>
   stroke.points.map((point, index) => `${index ? "L" : "M"}${point.x * 1000},${point.y * 650}`).join(" ") +
   (stroke.points.length === 1 ? "l.1,.1" : "");

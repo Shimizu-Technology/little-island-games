@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { PanResponder, Pressable, TextInput, View } from "react-native";
+import { Pressable, TextInput, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Svg, { G, Path, Rect } from "react-native-svg";
 import { Text } from "../components/Text";
 import { Motif } from "../explore/ExploreArt";
@@ -18,7 +19,14 @@ import {
 import { StudioCard } from "./StudioCard";
 import { LibraryGlyph } from "./LibraryGlyph";
 import { Action, palette, s } from "./ui";
-const colors = ["#254E4B", "#408EAA", "#C2604D", "#DBB04C", "#789B60", "#7E6A9A"];
+export const paintColors = [
+  { value: "#254E4B", name: "dark green" },
+  { value: "#408EAA", name: "sky blue" },
+  { value: "#C2604D", name: "red" },
+  { value: "#DBB04C", name: "sunny yellow" },
+  { value: "#789B60", name: "leaf green" },
+  { value: "#7E6A9A", name: "purple" },
+];
 export const DrawingArt = React.memo(function DrawingArt({
   drawing,
   viewport = { width: 1000, height: 650 },
@@ -77,7 +85,7 @@ export function Maker({
   }));
   const [details, setDetails] = useState(false);
   const [stampTray, setStampTray] = useState(false);
-  const [color, setColor] = useState(colors[0]);
+  const [color, setColor] = useState(paintColors[0].value);
   const [brush, setBrush] = useState(10);
   const [stamp, setStamp] = useState("");
   const [liveStroke, setLiveStroke] = useState<DrawingStroke | null>(null);
@@ -98,6 +106,7 @@ export function Maker({
     retainPageDraft(draftKey, next, accepted);
   };
   const update = (next: DrawingHistory) => {
+    state.current.history = next;
     setHistory(next);
     submit({ ...state.current.creation, ...next.present, updatedAt: Date.now() });
   };
@@ -107,7 +116,7 @@ export function Maker({
   });
   const finish = () => {
     if (!active.current) return;
-    const stroke = active.current;
+    const stroke = { ...active.current, points: active.current.points.map((point) => ({ ...point })) };
     active.current = null;
     if (frame.current !== null) {
       cancelAnimationFrame(frame.current);
@@ -125,61 +134,52 @@ export function Maker({
   useLayoutEffect(() => {
     finishRef.current = finish;
   });
-  // PanResponder stores these event callbacks; it never executes them during render.
-  // eslint-disable-next-line react-hooks/refs
-  const [gesture] = useState(() =>
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderTerminationRequest: () => false,
-      onPanResponderGrant: (event) => {
-        const current = state.current;
-        const point = normalizedPoint(
-          event.nativeEvent.locationX,
-          event.nativeEvent.locationY,
-          size.current.width,
-          size.current.height
-        );
-        if (current.stamp) {
-          if (current.history.present.stamps.length >= 24) {
-            setMessage("This page has room for 24 stamps. Undo one or make another page.");
-            return;
-          }
-          updateRef.current(
-            editDrawing(current.history, {
-              ...current.history.present,
-              stamps: [...current.history.present.stamps, { id: current.stamp, ...point, size: 0.17 }],
-            })
-          );
+  // Recognition belongs to RNGH, not the JS responder. Pan owns drags in every
+  // direction, including outside the page. Tap covers motionless iOS touches.
+  // Both finalizers use the same idempotent commit; cancelled drags keep their ink.
+  // eslint-disable-next-line react-hooks/refs -- These callbacks read refs only at touch time.
+  const [gesture] = useState(() => {
+    const begin = (event: { x: number; y: number }) => {
+      finishRef.current();
+      const current = state.current;
+      const point = normalizedPoint(event.x, event.y, size.current.width, size.current.height);
+      if (!point) return;
+      if (current.stamp) {
+        if (current.history.present.stamps.length >= 24) {
+          setMessage("This page has room for 24 stamps. Undo one or make another page.");
           return;
         }
-        if (current.history.present.strokes.length >= 120) {
-          setMessage("This page is full. You can undo or start another page.");
-          return;
-        }
-        active.current = { color: current.color, width: current.brush, points: [point] };
-        setLiveStroke(active.current);
-      },
-      onPanResponderMove: (event) => {
+        updateRef.current(editDrawing(current.history, {
+          ...current.history.present,
+          stamps: [...current.history.present.stamps, { id: current.stamp, ...point, size: 0.17 }],
+        }));
+        return;
+      }
+      if (current.history.present.strokes.length >= 120) {
+        setMessage("This page is full. You can undo or start another page.");
+        return;
+      }
+      active.current = { color: current.color, width: current.brush, points: [point] };
+      setLiveStroke({ ...active.current, points: [...active.current.points] });
+    };
+    const pan = Gesture.Pan().minDistance(0).maxPointers(1).shouldCancelWhenOutside(false).runOnJS(true)
+      .onBegin(begin)
+      .onUpdate((event) => {
         if (!active.current || active.current.points.length >= 256) return;
-        active.current.points.push(
-          normalizedPoint(
-            event.nativeEvent.locationX,
-            event.nativeEvent.locationY,
-            size.current.width,
-            size.current.height
-          )
-        );
+        const point = normalizedPoint(event.x, event.y, size.current.width, size.current.height);
+        if (!point) return;
+        active.current.points.push(point);
         if (frame.current === null)
           frame.current = requestAnimationFrame(() => {
             frame.current = null;
             if (active.current) setLiveStroke({ ...active.current, points: [...active.current.points] });
           });
-      },
-      onPanResponderRelease: () => finish(),
-      onPanResponderTerminate: () => finish(),
-    })
-  );
+      })
+      .onFinalize(() => finishRef.current());
+    const tap = Gesture.Tap().shouldCancelWhenOutside(false).runOnJS(true)
+      .onEnd(() => finishRef.current());
+    return Gesture.Race(pan, tap);
+  });
   useEffect(
     () => () => {
       finishRef.current();
@@ -200,11 +200,11 @@ export function Maker({
           }}
         >
           <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 2 }}>
-            {colors.map((value) => (
+            {paintColors.map(({ value, name }) => (
               <Pressable
                 key={value}
                 accessibilityRole="button"
-                accessibilityLabel={`Draw with ${value}`}
+                accessibilityLabel={`Draw with ${name}`}
                 accessibilityState={{ selected: color === value && !stamp }}
                 onPress={() => {
                   setColor(value);
@@ -238,7 +238,7 @@ export function Maker({
             {[4, 10, 22].map((value) => (
               <StudioTool
                 key={value}
-                label={`Brush size ${value}`}
+                label={`${value === 4 ? "Thin" : value === 10 ? "Medium" : "Thick"} brush`}
                 selected={brush === value && !stamp}
                 onPress={() => {
                   setBrush(value);
@@ -295,7 +295,10 @@ export function Maker({
               ))}
             </View>
           )}
+          <GestureDetector gesture={gesture} touchAction="none">
           <View
+            collapsable={false}
+            testID="drawing-canvas"
             style={{
               flex: 1,
               minHeight: 260,
@@ -312,7 +315,6 @@ export function Maker({
                 previous.width === width && previous.height === height ? previous : { width, height }
               );
             }}
-            {...gesture.panHandlers}
             accessibilityLabel="Drawing page. Drag to draw. Choose a stamp then tap to place it."
           >
             <DrawingArt drawing={history.present} viewport={viewport} />
@@ -332,6 +334,7 @@ export function Maker({
               </View>
             )}
           </View>
+          </GestureDetector>
         </View>
       </View>
       <Pressable

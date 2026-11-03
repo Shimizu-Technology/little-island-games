@@ -8,6 +8,7 @@ import type { LibraryCreation } from "../src/library/state";
 import { createLibraryPage } from "../src/library/drawing";
 import type { LibraryItem, Rights, Sentence } from "../src/library/schema";
 
+vi.mock("react-native-gesture-handler", async () => (await import("./helpers/maker-gestures")).gestureMock());
 vi.mock("react-native", () => ({
   View: "View",
   TextInput: "TextInput",
@@ -189,10 +190,10 @@ describe("Library art studio", () => {
         (node) => String(node.type) === "Pressable" && node.props.accessibilityLabel === "Picture title and story"
       );
     expect(card().props.accessibilityState.expanded).toBe(false);
-    const canvas = root.root.find((node) => !!node.props.onPanResponderGrant);
+    const canvas = root.root.findByProps({ testID: "drawing-canvas" });
     await act(async () => card().props.onPress());
     expect(card().props.accessibilityState.expanded).toBe(true);
-    expect(root.root.find((node) => !!node.props.onPanResponderGrant)).toBe(canvas);
+    expect(root.root.findByProps({ testID: "drawing-canvas" })).toBe(canvas);
   });
   it("keeps icon tool names, brush selection and undo/redo operable", async () => {
     const changes = vi.fn((_next: LibraryCreation) => true);
@@ -209,13 +210,13 @@ describe("Library art studio", () => {
     });
     const tool = (label: string) =>
       root.root.find((node) => String(node.type) === "Pressable" && node.props.accessibilityLabel === label);
-    await act(async () => tool("Brush size 22").props.onPress());
+    await act(async () => tool("Thick brush").props.onPress());
     await act(async () => tool("Eraser").props.onPress());
-    const canvas = root.root.find((node) => !!node.props.onPanResponderGrant);
+    const canvas = root.root.findByProps({ testID: "drawing-canvas" });
     await act(async () => {
       canvas.props.onLayout({ nativeEvent: { layout: { width: 100, height: 200 } } });
-      canvas.props.onPanResponderGrant({ nativeEvent: { locationX: 25, locationY: 100 } });
-      canvas.props.onPanResponderRelease();
+      root.root.findByType("GestureDetector" as any).props.gesture.gestures[0].handlers.onBegin({ x: 25, y: 100 });
+      root!.root.findByType("GestureDetector" as any).props.gesture.gestures[0].handlers.onFinalize();
     });
     expect(changes.mock.calls.at(-1)?.[0]).toMatchObject({
       strokes: [{ width: 22, color: "#FFFFFF", points: [{ x: 0.25, y: 0.5 }] }],

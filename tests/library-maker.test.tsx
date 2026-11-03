@@ -7,6 +7,7 @@ import { createLibraryPage } from "../src/library/drawing";
 import { discardPageDraft } from "../src/library/drafts";
 const exported = vi.hoisted(() => vi.fn(async (_text: string) => {}));
 vi.mock("../src/state/backup", () => ({ exportBackup: exported }));
+vi.mock("react-native-gesture-handler", async () => (await import("./helpers/maker-gestures")).gestureMock());
 vi.mock("react-native", () => ({
   View: "View",
   TextInput: "TextInput",
@@ -43,11 +44,11 @@ describe("Rejected Library drawing drafts", () => {
     await act(async () => {
       root = create(render());
     });
-    const canvas = root!.root.find((node) => !!node.props.onPanResponderGrant);
+    const canvas = root!.root.findByProps({ testID: "drawing-canvas" });
     await act(async () => {
       canvas.props.onLayout({ nativeEvent: { layout: { width: 100, height: 100 } } });
-      canvas.props.onPanResponderGrant({ nativeEvent: { locationX: 20, locationY: 30 } });
-      canvas.props.onPanResponderRelease();
+      root!.root.findByType("GestureDetector" as any).props.gesture.gestures[0].handlers.onBegin({ x: 20, y: 30 });
+      root!.root.findByType("GestureDetector" as any).props.gesture.gestures[0].handlers.onFinalize();
     });
     await act(async () =>
       root!.root.find((node) => node.props.accessibilityLabel === "Page title").props.onChangeText("Still here")

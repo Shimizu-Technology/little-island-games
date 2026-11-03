@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect } from "react-native-svg";
 import { Text } from "../components/Text";
 import { C, Copy, Heading } from "../components/ui";
@@ -19,6 +19,8 @@ import {
   waterDestinations,
   waterLabels,
 } from "./exhibits";
+
+import { WordLabel } from "./WordLabel";
 
 export type ExhibitProps = {
   world: WorldId;
@@ -158,13 +160,16 @@ const waterPoints: Record<WaterPlace, [number, number]> = {
   ice: [145, 191],
 };
 function WaterScene({ place, act }: { place: WaterPlace; act?: (action: LabAction) => void }) {
+  const { fontScale } = useWindowDimensions();
+  const [expandedLabels, setExpandedLabels] = useState(false);
+  const largeText = fontScale > 1.4 || expandedLabels;
   const next = waterDestinations(place);
   const [sx, sy] = waterPoints[place];
   return (
-    <View style={s.waterFrame}>
+    <View style={largeText ? { width: "100%", gap: 12 } : s.waterFrame}>
       <Svg
         width="100%"
-        height="100%"
+        height={largeText ? 254 : "100%"}
         viewBox="0 0 320 240"
         accessible={false}
         accessibilityElementsHidden
@@ -272,11 +277,11 @@ function WaterScene({ place, act }: { place: WaterPlace; act?: (action: LabActio
                 if (choice) act({ type: "water", action: choice.action });
               }}
               style={({ pressed }) => ({
-                position: "absolute",
-                left: `${((x - 27) / 320) * 100}%`,
-                top: `${((y - 27) / 240) * 100}%`,
-                width: "17%",
-                height: "23%",
+                position: largeText ? "relative" : "absolute",
+                left: largeText ? undefined : `${((x - 27) / 320) * 100}%`,
+                top: largeText ? undefined : `${((y - 27) / 240) * 100}%`,
+                width: largeText ? "100%" : "17%",
+                height: largeText ? undefined : "23%",
                 minHeight: 44,
                 minWidth: 44,
                 borderRadius: 30,
@@ -287,19 +292,12 @@ function WaterScene({ place, act }: { place: WaterPlace; act?: (action: LabActio
                 alignItems: "center",
               })}
             >
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: "700",
-                  color: C.ink,
-                  backgroundColor: "#FFF5DC",
-                  paddingHorizontal: 3,
-                  borderRadius: 5,
-                  top: 16,
-                }}
-              >
+              <WordLabel onWordLayout={(event) => setExpandedLabels(event.nativeEvent.layout.height > 22)}
+                style={{ width: largeText ? "100%" : 110, maxWidth: largeText ? "100%" : 110, backgroundColor: "#FFF5DC",
+                paddingHorizontal: 3, borderRadius: 5, top: largeText ? 0 : 16 }}
+                textStyle={{ fontSize: 12, fontWeight: "700", color: C.ink }}>
                 {waterLabels[key]}
-              </Text>
+              </WordLabel>
             </Pressable>
           );
         })}

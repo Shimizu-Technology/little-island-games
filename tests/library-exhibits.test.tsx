@@ -1,6 +1,7 @@
 import React from "react";
 import { act, create, ReactTestRenderer } from "react-test-renderer";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { WordLabel } from "../src/library/WordLabel";
 import { Exhibit, ExhibitProps } from "../src/library/Exhibit";
 import { canObserve, keepObservation, observationLabel, skyLabel, waterDestinations } from "../src/library/exhibits";
 import { FOOD_CHAIN, HABITATS, LabAction, PLACES, WATER_ACTIONS, WaterPlace, labAction, newLab } from "../src/explore/activities";
@@ -246,5 +247,34 @@ describe("controlled cross-platform Exhibit", () => {
     expect(listen).toBeDefined();
     await act(async () => listen.props.onClick());
     expect(hear).toHaveBeenLastCalledWith("lab-weather");
+  });
+});
+
+
+describe("exhibit labels with browser text enlargement", () => {
+  it.each([
+    ["oceans", "Phytoplankton", 32],
+    ["weather", "Groundwater", 29],
+    ["animals", "Freshwater pond", 58],
+  ] as const)("reflows %s to full-width choices when fitting is unavailable", async (world, label, height) => {
+    await mount(world);
+    const words = renderer!.root.findAllByType(WordLabel);
+    const target = words.find(node => node.props.children === label)!;
+    expect(target).toBeDefined();
+    await act(async () => target.props.onWordLayout({ nativeEvent: { layout: { height } } }));
+    const labels = world === "oceans" ? FOOD_CHAIN : world === "weather"
+      ? ["Ocean", "Vapor", "Cloud", "Rain", "Groundwater", "Ice"]
+      : ["Leafy garden", "Coral reef", "Freshwater pond", "Seagrass meadow"];
+    for (const choice of labels) {
+      const node = renderer!.root.findAll(n => String(n.type) === "Pressable" &&
+        (n.props.accessibilityLabel === choice || n.findAllByType(WordLabel).some(w => w.props.children === choice)))[0];
+      expect(node.props.style({ pressed: false }).width).toBe("100%");
+      expect(node.props.style({ pressed: false }).position).not.toBe("absolute");
+    }
+    // Reducing text size restores the compact layout without navigating away.
+    await act(async () => target.props.onWordLayout({ nativeEvent: { layout: { height: world === "animals" ? 19 : 16 } } }));
+    const first = renderer!.root.findAll(n => String(n.type) === "Pressable" &&
+      n.findAllByType(WordLabel).some(w => w.props.children === labels[0]))[0];
+    expect(first.props.style({ pressed: false }).width).not.toBe("100%");
   });
 });

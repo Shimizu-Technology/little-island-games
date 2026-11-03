@@ -20,7 +20,14 @@ export default function Layout() {
               animation: reduced ? "fade" : "default",
               contentStyle: { backgroundColor: "#FCFAF4" },
             }}
-          />
+          >
+            {/* iOS 26 enables full-content pop by default. A drawing drag must
+                never pop the editor; its explicit Back button still works. */}
+            <Stack.Screen name="library" options={({ route }) => ({
+              gestureEnabled: !((route.params as { place?: string; id?: string } | undefined)?.place === "make" &&
+                (route.params as { id?: string } | undefined)?.id),
+            })} />
+          </Stack>
         </StoreProvider>
       </TextLayoutProvider>
     </SafeAreaProvider></GestureHandlerRootView>

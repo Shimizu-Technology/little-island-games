@@ -14,6 +14,7 @@ import {
 } from "../explore/activities";
 import { SceneBackdrop } from "./SceneBackdrop";
 import { s } from "./ui";
+import { WordLabel } from "./WordLabel";
 
 const reef = [
   [53, 61],
@@ -53,7 +54,8 @@ function Creature({ index }: { index: number }) {
 /** Every picture remains a choice. The existing engine decides whether a link is valid. */
 export function ReefBoard({ state, act }: { state: LabState; act: (action: LabAction) => void }) {
   const { fontScale } = useWindowDimensions();
-  const largeText = fontScale > 1.4;
+  const [expandedLabels, setExpandedLabels] = useState(false);
+  const largeText = fontScale > 1.4 || expandedLabels;
   return (
     <View
       style={
@@ -116,7 +118,7 @@ export function ReefBoard({ state, act }: { state: LabState; act: (action: LabAc
           onPress={() => act({ type: "chain", item: FOOD_CHAIN[i] })}
           style={({ pressed }) =>
             largeText
-              ? { width: "47%", alignItems: "center", opacity: pressed ? 0.7 : 1 }
+              ? { width: "100%", alignItems: "center", opacity: pressed ? 0.7 : 1 }
               : {
                   position: "absolute",
                   left: `${((x - 45) / 360) * 100}%`,
@@ -131,6 +133,7 @@ export function ReefBoard({ state, act }: { state: LabState; act: (action: LabAc
           <View
             style={{
               width: "100%",
+              maxWidth: largeText ? 120 : undefined,
               aspectRatio: 1.36,
               borderRadius: 38,
               backgroundColor: state.chain.includes(FOOD_CHAIN[i]) ? "#FFF0B9" : "#E8F3DC",
@@ -140,22 +143,12 @@ export function ReefBoard({ state, act }: { state: LabState; act: (action: LabAc
           >
             <Creature index={i} />
           </View>
-          <Text
-            style={[
-              s.small,
-              {
-                fontSize: 12,
-                lineHeight: 16,
-                fontWeight: "800",
-                textAlign: "center",
-                backgroundColor: "#FFF5DC",
-                paddingHorizontal: 4,
-                borderRadius: 6,
-              },
-            ]}
-          >
-            {FOOD_CHAIN[i]}
-          </Text>
+          <WordLabel
+            onWordLayout={(event) => setExpandedLabels(event.nativeEvent.layout.height > 24)}
+            style={{ width: largeText ? "100%" : 116, maxWidth: largeText ? "100%" : 116,
+              backgroundColor: "#FFF5DC", paddingHorizontal: 4, borderRadius: 6 }}
+            textStyle={[s.small, { fontSize: 12, lineHeight: 16, fontWeight: "800", textAlign: "center" }]}
+          >{FOOD_CHAIN[i]}</WordLabel>
         </Pressable>
       ))}
     </View>
@@ -237,6 +230,7 @@ function SkyPicture({ turn }: { turn: number }) {
 }
 export function HabitatBoard({ state, act }: { state: LabState; act: (a: LabAction) => void }) {
   const { fontScale } = useWindowDimensions();
+  const [expandedLabels, setExpandedLabels] = useState(false);
   const animal = HABITATS[state.habitatFeedback ? state.habitat - 1 : state.habitat];
   if (!animal) return null;
   return (
@@ -249,11 +243,8 @@ export function HabitatBoard({ state, act }: { state: LabState; act: (a: LabActi
           <Svg width={170} height={150} viewBox="0 0 120 120" accessible={false}>
             <Motif name={animal.art} />
           </Svg>
-          <Text
-            style={[s.heading, { marginTop: 0, backgroundColor: "#FFF3D4", borderRadius: 12, paddingHorizontal: 12 }]}
-          >
-            {animal.animal}
-          </Text>
+          <WordLabel style={{ backgroundColor: "#FFF3D4", borderRadius: 12, paddingHorizontal: 12 }}
+            textStyle={[s.heading, { marginTop: 0 }]}>{animal.animal}</WordLabel>
         </View>
       </View>
       {!state.habitatFeedback && (
@@ -265,7 +256,7 @@ export function HabitatBoard({ state, act }: { state: LabState; act: (a: LabActi
               accessibilityLabel={home}
               onPress={() => act({ type: "habitat", choice: home })}
               style={({ pressed }) => ({
-                width: fontScale > 1.4 ? "100%" : "48%",
+                width: fontScale > 1.4 || expandedLabels ? "100%" : "48%",
                 overflow: "hidden",
                 borderRadius: 20,
                 borderWidth: 2,
@@ -288,7 +279,8 @@ export function HabitatBoard({ state, act }: { state: LabState; act: (a: LabActi
                   </G>
                 </Svg>
               </View>
-              <Text style={[s.actionText, { padding: 10 }]}>{home}</Text>
+              <WordLabel onWordLayout={(event) => setExpandedLabels(event.nativeEvent.layout.height > 28)}
+                style={{ padding: 10 }} textStyle={s.actionText}>{home}</WordLabel>
             </Pressable>
           ))}
         </View>

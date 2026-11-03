@@ -30,6 +30,7 @@ import {
 } from "./catalog";
 import { categoryAfterTyping, search, searchCategory } from "./search";
 import { Action, ItemPicture, LibraryIcon, s } from "./ui";
+import { WordLabel } from "./WordLabel";
 import { SoundSwitch } from "./SoundSwitch";
 import { LibraryArt } from "./LibraryArt";
 import { useLibraryAudio } from "./useLibraryAudio";
@@ -98,6 +99,7 @@ function LibraryReady() {
     store.save.settings.narrationVolume ?? 0.75,
     `${place}:${id}:${childId}:${store.epoch}`
   );
+  const [expandedCategoryLabels, setExpandedCategoryLabels] = useState(false);
   const [bookInfo, setBookInfo] = useState(false);
   const [notice, setNotice] = useState("");
   const [paused, setPaused] = useState(false);
@@ -554,7 +556,7 @@ function LibraryReady() {
                           onLongPress={() => audio.speak(category.speechKey)}
                           style={[
                             {
-                              width: fontScale > 1.6 ? "100%" : width < 650 ? "48%" : width < 1000 ? "31%" : "23.5%",
+                              width: fontScale > 1.6 || expandedCategoryLabels ? "100%" : width < 650 ? "48%" : width < 1000 ? "31%" : "23.5%",
                               backgroundColor: category.tint,
                               borderRadius: 24,
                               overflow: "hidden",
@@ -567,20 +569,12 @@ function LibraryReady() {
                           <View style={{ width: "100%", height: width < 650 ? 142 : 164 }}>
                             <LibraryArt kind={category.motif} />
                           </View>
-                          <Text
-                            style={[
-                              s.actionText,
-                              {
-                                padding: 10,
-                                minHeight: 54,
-                                backgroundColor: "#FFF3D4",
-                                borderTopWidth: 2,
-                                borderColor: "#A2B18A",
-                              },
-                            ]}
-                          >
+                          <WordLabel textStyle={s.actionText}
+                            onWordLayout={(event) => setExpandedCategoryLabels(event.nativeEvent.layout.height > 28)}
+                            style={{ padding: 10, minHeight: 54, backgroundColor: "#FFF3D4",
+                              borderTopWidth: 2, borderColor: "#A2B18A" }}>
                             {category.title}
-                          </Text>
+                          </WordLabel>
                         </Pressable>
                       ))}
                   </View>
