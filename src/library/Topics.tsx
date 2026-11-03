@@ -67,7 +67,7 @@ export function TopicPage({
             gap: 4,
           }}
         >
-          <Text style={[s.title, { fontSize: 25, lineHeight: 31, marginBottom: 6 }]}>{record.title}</Text>
+          <Text maxFontSizeMultiplier={1.5} style={[s.title, { fontSize: 25, lineHeight: 31, marginBottom: 6 }]}>{record.title}</Text>
           {!prayer && <View style={[s.row, { justifyContent: "flex-start", gap: 8, marginBottom: 6 }]}>
             {(["tell", "more", "deep"] as const).map((key, index) => (
               <Action
@@ -120,7 +120,7 @@ export function TopicPage({
           </Action>
           {!!legacy && <Action onPress={() => go(`complete:${record.id}`)}>I explored this</Action>}
         </View>
-        <Text style={s.heading}>Where next?</Text>
+        <Text maxFontSizeMultiplier={1.6} style={s.heading}>Where next?</Text>
         {exhibit && (
           <Action onPress={() => go(`lab-${exhibit.world}`)}>
             <View style={{ width: "100%", height: 160, borderRadius: 20, overflow: "hidden" }}>

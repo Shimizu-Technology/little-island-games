@@ -227,7 +227,7 @@ export function BookCredits({ book }: { book: Extract<LibraryItem, { type: "book
   ];
   return (
     <View style={{ gap: 8, padding: 16 }}>
-      <Text style={s.heading}>{book.title}</Text>
+      <Text maxFontSizeMultiplier={1.6} style={s.heading}>{book.title}</Text>
       {rights.map((right, i) => (
         <View key={i} style={{ gap: 3 }}>
           <Text style={s.small}>{right.credit}</Text>

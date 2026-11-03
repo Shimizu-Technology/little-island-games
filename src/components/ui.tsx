@@ -103,9 +103,9 @@ export function Label({ children, style }: { children: React.ReactNode; style?: 
 export function Copy({ children, style, ...props }: TextProps) {
   return <Text {...props} style={[styles.copy, style]}>{children}</Text>;
 }
-export function Heading({ children, style }: { children: React.ReactNode; style?: object }) {
+export function Heading({ children, style, maxFontSizeMultiplier }: { children: React.ReactNode; style?: object; maxFontSizeMultiplier?: number }) {
   return (
-    <Text accessibilityRole="header" style={[styles.heading, style]}>
+    <Text accessibilityRole="header" maxFontSizeMultiplier={maxFontSizeMultiplier} style={[styles.heading, style]}>
       {children}
     </Text>
   );

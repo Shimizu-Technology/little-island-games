@@ -57,7 +57,7 @@ export function GrownUps({
   if (!open)
     return (
       <View style={{ gap: 14 }}>
-        <Text style={s.title}>Grown-ups</Text>
+        <Text maxFontSizeMultiplier={1.5} style={s.title}>Grown-ups</Text>
         <Text style={s.body}>
           What is {gate.a} × {gate.b}?
         </Text>
@@ -87,7 +87,7 @@ export function GrownUps({
     );
   return (
     <View style={{ gap: 14 }}>
-      <Text style={s.title}>Library for your family</Text>
+      <Text maxFontSizeMultiplier={1.5} style={s.title}>Library for your family</Text>
       <View style={s.row}>
         {people.map((person) => (
           <Action
@@ -133,7 +133,7 @@ export function GrownUps({
       ))}
       {!!preview && (
         <View style={{ gap: 14, padding: 14, backgroundColor: "#E9EFE0", borderRadius: 18 }}>
-          <Text style={s.heading}>
+          <Text maxFontSizeMultiplier={1.6} style={s.heading}>
             Grown-up preview · {categories.find((category) => category.id === preview)?.title}
           </Text>
           <Text style={s.small}>Previewing does not change availability.</Text>
@@ -141,7 +141,7 @@ export function GrownUps({
             .filter((record) => record.category === preview)
             .map((record) => (
               <View key={record.id} style={{ gap: 8 }}>
-                <Text style={s.heading}>{record.title}</Text>
+                <Text maxFontSizeMultiplier={1.6} style={s.heading}>{record.title}</Text>
                 <ItemPicture record={record} />
                 {record.item?.type === "topic" ? (
                   Object.entries(record.item.layers).map(([layer, lines]) => (

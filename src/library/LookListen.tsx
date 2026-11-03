@@ -69,7 +69,7 @@ export function LookListen({
               borderColor: "#D9C491",
             }}
           >
-            <Text style={[s.title, { textAlign: "center", fontSize: 44, lineHeight: 54 }]}>{word}</Text>
+            <Text maxFontSizeMultiplier={1.3} style={[s.title, { textAlign: "center", fontSize: 44, lineHeight: 54 }]}>{word}</Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
               <LibraryIcon name="sound" size={30} />
               <Text style={s.small}>{heard ? "Tap to hear again" : "Tap to hear · swipe to explore"}</Text>

@@ -20,9 +20,9 @@ export function ReviewedNarration({ id, state, selected, speak }: {
       : state.turn === 2 || state.turn === 6 ? "turn" : isDay(state.turn) ? "day" : "night";
   const step = script.steps.find(step => step.key === key)!;
   return <View style={{ gap: 8 }}>
-    <Text style={s.heading}>{step.label.text}</Text>
+    <Text maxFontSizeMultiplier={1.6} style={s.heading}>{step.label.text}</Text>
     {step.narration.map(sentence => <SentenceLine key={sentence.id} sentence={sentence} selected={selected === sentence.id} onSentence={() => speak(sentence.speechKey, sentence)} />)}
-    <Text style={s.heading}>What this model leaves out</Text>
+    <Text maxFontSizeMultiplier={1.6} style={s.heading}>What this model leaves out</Text>
     <SentenceLine sentence={script.limits} selected={selected === script.limits.id} onSentence={() => speak(script.limits.speechKey, script.limits)} />
   </View>;
 }

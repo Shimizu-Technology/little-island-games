@@ -438,7 +438,7 @@ function LibraryReady() {
       )}
       {blocked ? (
         <View style={s.content}>
-          <Text style={s.title}>{paused ? "A good place to pause" : "The Library is resting"}</Text>
+          <Text maxFontSizeMultiplier={1.5} style={s.title}>{paused ? "A good place to pause" : "The Library is resting"}</Text>
           <Text style={s.body}>
             {paused ? "Your work is saved in My Shelf." : "Your saved pages and places are here for your next visit."}
           </Text>
@@ -490,12 +490,12 @@ function LibraryReady() {
           ListHeaderComponent={
             place === "books" ? (
               <View style={[s.content, { backgroundColor: "#F0E1C6", borderRadius: 24, marginBottom: 16 }]}>
-                <Text style={s.title}>Our story shelf</Text>
+                <Text maxFontSizeMultiplier={1.5} style={s.title}>Our story shelf</Text>
                 <Text style={s.body}>A shelf of stories to share.</Text>
               </View>
             ) : (
               <View style={{ padding: 8, gap: 14 }}>
-                <Text style={[s.title, { fontSize: 28 }]}>What do you wonder?</Text>
+                <Text maxFontSizeMultiplier={1.5} style={[s.title, { fontSize: 28 }]}>What do you wonder?</Text>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Look & Listen"
@@ -516,7 +516,7 @@ function LibraryReady() {
                   </View>
                   <View style={{ flex: 1, padding: 12, gap: 8, alignItems: "center" }}>
                     <LibraryIcon name="listen" size={36} />
-                    <Text style={[s.heading, { marginTop: 0, textAlign: "center", fontSize: 21 }]}>Look & Listen</Text>
+                    <Text maxFontSizeMultiplier={1.6} style={[s.heading, { marginTop: 0, textAlign: "center", fontSize: 21 }]}>Look & Listen</Text>
                   </View>
                 </Pressable>
                 <TextInput
@@ -586,7 +586,7 @@ function LibraryReady() {
                 )}
                 {!child.query && (
                   <>
-                    <Text style={s.heading}>Try an exhibit</Text>
+                    <Text maxFontSizeMultiplier={1.6} style={s.heading}>Try an exhibit</Text>
                     <View style={s.row}>
                       {exhibits
                         .filter((exhibit) => child.policy.collections.includes(exhibit.category))
@@ -624,7 +624,7 @@ function LibraryReady() {
                     Saved pictures
                   </Action>
                 </View>
-                <Text style={s.heading}>{child.query ? "Your discoveries" : "Follow a picture"}</Text>
+                <Text maxFontSizeMultiplier={1.6} style={s.heading}>{child.query ? "Your discoveries" : "Follow a picture"}</Text>
               </View>
             )
           }
@@ -715,7 +715,7 @@ function LibraryReady() {
               />
             ) : (
               <View style={{ gap: 18 }}>
-                <Text style={s.title}>Make something yours</Text>
+                <Text maxFontSizeMultiplier={1.5} style={s.title}>Make something yours</Text>
                 <Text style={s.body}>Draw freely, add pictures, and tell about a wonder.</Text>
                 <Action onPress={() => make()}>Make my page</Action>
                 {child.creations
@@ -729,9 +729,9 @@ function LibraryReady() {
             )
           ) : place === "shelf" ? (
             <>
-              <Text style={s.title}>My Shelf</Text>
+              <Text maxFontSizeMultiplier={1.5} style={s.title}>My Shelf</Text>
               <Text style={s.small}>{people.people.find((person) => person.id === childId)?.name}</Text>
-              <Text style={s.heading}>Saved wonders & books</Text>
+              <Text maxFontSizeMultiplier={1.6} style={s.heading}>Saved wonders & books</Text>
               {child.saved
                 .filter((item) => canOpen(item, child.policy.collections))
                 .map((item) => (
@@ -743,7 +743,7 @@ function LibraryReady() {
               {!child.saved.length && (
                 <Text style={s.body}>Keep a wonder or book here when you find one you love.</Text>
               )}
-              <Text style={s.heading}>My pages</Text>
+              <Text maxFontSizeMultiplier={1.6} style={s.heading}>My pages</Text>
               {child.creations
                 .filter((page) => !page.sourceId || canOpen(page.sourceId, child.policy.collections))
                 .map((page) => (
@@ -756,7 +756,7 @@ function LibraryReady() {
                       <View style={{ width: "100%", height: 180 }}>
                         <DrawingArt drawing={page} />
                       </View>
-                      <Text style={s.heading}>{page.title}</Text>
+                      <Text maxFontSizeMultiplier={1.6} style={s.heading}>{page.title}</Text>
                     </Pressable>
                     <Action
                       onPress={() => {
@@ -773,7 +773,7 @@ function LibraryReady() {
                     </Action>
                   </View>
                 ))}
-              <Text style={s.heading}>Recent places</Text>
+              <Text maxFontSizeMultiplier={1.6} style={s.heading}>Recent places</Text>
               {child.recent
                 .filter((item) => canOpen(item, child.policy.collections))
                 .map((item) => (

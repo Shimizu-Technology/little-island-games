@@ -359,7 +359,7 @@ function ExhibitVisit({ world, title, state, onAction, sound, onHear, speaking, 
 
   return (
     <View style={s.exhibit}>
-      <Heading style={s.title}>{title ?? WORLDS.find((entry) => entry.id === world)?.activity}</Heading>
+      <Heading maxFontSizeMultiplier={1.5} style={s.title}>{title ?? WORLDS.find((entry) => entry.id === world)?.activity}</Heading>
       {world === "world" && !mapDone && (
         <View style={s.notebook}>
           <Copy>{PLACES[state.expedition].clue}</Copy>
