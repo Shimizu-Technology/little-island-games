@@ -19,3 +19,16 @@ export function exhibitWorld(record: CatalogItem | undefined): WorldId | undefin
 }
 export const mayFinishPage = (place: string, enteredDuringOpenHours: boolean) =>
   enteredDuringOpenHours && ["topic", "reader", "make", "exhibit", "authored-exhibit"].includes(place);
+/** Wonder, Books, Make and My Shelf are the Library's four tab roots. */
+export const libraryTabs = ["wonder", "books", "make", "shelf"] as const;
+export type LibraryBack = "island" | "history";
+/**
+ * Back on a tab root leaves the Library for the Island map, however many topics were
+ * visited. Inside a topic, book, exhibit, page, or Grown-ups, Back returns to where the child came from.
+ */
+export function libraryBack(place: string, id = ""): LibraryBack {
+  const root = (libraryTabs as readonly string[]).includes(place) && !(place === "make" && id);
+  return root ? "island" : "history";
+}
+/** One label for every Library card's speaker; it speaks the title, not a question. */
+export const hearTitleLabel = (title: string) => `Hear title: ${title}`;

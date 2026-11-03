@@ -96,3 +96,11 @@ export function search(index: IndexedEntry[], query: string, allowed: ReadonlySe
     .sort((a, b) => b.score - a.score || a.entry.id.localeCompare(b.entry.id))
     .map((r) => r.entry);
 }
+/**
+ * Category chips narrow browsing only. Any typed word searches everything the learner is
+ * allowed, so a category chosen earlier can never hide a match the child can not see.
+ */
+export const searchCategory = (query: string, category: string) =>
+  normalize(query) || category === "all" ? undefined : category;
+/** Typing clears a stale category (the chips are hidden while a query is present). */
+export const categoryAfterTyping = (query: string, category: string) => (normalize(query) ? "all" : category);

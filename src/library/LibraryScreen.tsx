@@ -28,7 +28,7 @@ import {
   worldCategory,
   type CatalogItem,
 } from "./catalog";
-import { search } from "./search";
+import { categoryAfterTyping, search, searchCategory } from "./search";
 import { Action, ItemPicture, LibraryIcon, s } from "./ui";
 import { SoundSwitch } from "./SoundSwitch";
 import { LibraryArt } from "./LibraryArt";
@@ -42,7 +42,7 @@ import { LookListen } from "./LookListen";
 import { ReviewedNarration } from "./ReviewedNarration";
 import { Exhibit } from "./Exhibit";
 import { hasPendingPages, pageDraftKey, pendingPage } from "./drafts";
-import { canonicalDestination, exhibitWorld as resolveExhibitWorld, mayFinishPage } from "./navigation";
+import { canonicalDestination, exhibitWorld as resolveExhibitWorld, hearTitleLabel, libraryBack, mayFinishPage } from "./navigation";
 import { canonicalLibraryId, rememberLibraryDestination } from "./ids";
 import type { ReadingLayer } from "./schema";
 const extensions = new Map<string, number>();
@@ -158,11 +158,10 @@ function LibraryReady() {
       void pause();
       return;
     }
-    if (place === "reader") {
-      visit("books", "", true);
-      return;
-    }
-    if (router.canGoBack()) router.back();
+    // A tab root leaves for the Island map; everywhere else Back returns to where the child came from.
+    if (libraryBack(place, id) === "island") router.dismissTo("/");
+    else if (router.canGoBack()) router.back();
+    else if (place === "reader") visit("books", "", true);
     else router.replace("/");
   };
   const savedId = (itemId: string) => canonicalLibraryId(itemById(itemId)?.id ?? itemId);
@@ -281,7 +280,7 @@ function LibraryReady() {
         searchIndex,
         child.query,
         child.onlyFavorites ? new Set(child.saved.map(id => itemById(id)?.id ?? id).filter((id) => allowedIds.has(id))) : allowedIds,
-        child.category === "all" ? undefined : child.category
+        searchCategory(child.query, child.category)
       )
         .map((entry) => itemById(entry.id)!)
         .filter(Boolean),
@@ -334,7 +333,7 @@ function LibraryReady() {
       </Pressable>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Hear question: ${item.title}`}
+        accessibilityLabel={hearTitleLabel(item.title)}
         onPress={() => {
           const speech = recordSpeech(item);
           audio.speak(speech.key, speech.sentence);
@@ -518,7 +517,7 @@ function LibraryReady() {
                   value={child.query}
                   onChangeText={(query) => {
                     scrollY.current = 0;
-                    update({ query });
+                    update({ query, category: categoryAfterTyping(query, live.current.category) });
                   }}
                   maxLength={120}
                   style={s.input}
