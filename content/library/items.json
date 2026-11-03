@@ -7247,11 +7247,11 @@
       "factualReviewer": "independent factual reviewer",
       "familyDecision": {
         "decision": "Yes",
-        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending. Art-only refresh (3 Nov 2026): picture redrawn for the same subject and unchanged alt text, checked by independent art review (art/ART-REVIEW.md); text and decision unchanged.",
+        "note": "Reconciled recommendation accepted; required edits applied. Lead audio and pronunciation sign-off pending. Art-only refresh (3 Nov 2026): picture redrawn for the same subject and unchanged alt text, checked by independent art review (art/ART-REVIEW.md); text and decision unchanged. Picture correction (3 Nov 2026): redrawn so the picture and its description match the approved text (habitats: bird nest; migration: monarch butterflies), checked by independent art review; reading text unchanged.",
         "reviewer": "Leon Shimizu",
         "date": "2026-11-03",
         "scope": "reconciled recommendations",
-        "contentSha256": "c1301d25b832e46365b863713b0c53dead09d46a8c68313c32a79b508d1319b8",
+        "contentSha256": "9c19a674263ad61577515b095dbea47777699278f6cf44691084ca5b4c60980a",
         "audioAccepted": false,
         "pronunciationAccepted": false
       },
@@ -7494,11 +7494,11 @@
       "factualReviewer": "independent factual reviewer",
       "familyDecision": {
         "decision": "Yes",
-        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending. Art-only refresh (3 Nov 2026): picture redrawn for the same subject and unchanged alt text, checked by independent art review (art/ART-REVIEW.md); text and decision unchanged.",
+        "note": "Unflagged record; both independent reviewers read it in full. Leon recorded Yes under the reconciled scope (3 Nov 2026). Lead audio and pronunciation sign-off pending. Art-only refresh (3 Nov 2026): picture redrawn for the same subject and unchanged alt text, checked by independent art review (art/ART-REVIEW.md); text and decision unchanged. Picture correction (3 Nov 2026): redrawn so the picture and its description match the approved text (habitats: bird nest; migration: monarch butterflies), checked by independent art review; reading text unchanged.",
         "reviewer": "Leon Shimizu",
         "date": "2026-11-03",
         "scope": "reconciled recommendations",
-        "contentSha256": "f0e75d35a1642599d6248c77791fa40914ff9182af788ea00c8c1f7b1a39a1a7",
+        "contentSha256": "aee57fbeca615232eb3dce6aa5d4a6cd20698c44305567f461525f9ae8398357",
         "audioAccepted": false,
         "pronunciationAccepted": false
       },
