@@ -455,3 +455,22 @@ Delivery:
 Receipt: [evidence/testflight-build25.json](evidence/testflight-build25.json).
 
 Not verified: physical iPhone and iPad, real VoiceOver, airplane mode, mid-gesture interruption, narration listening, Stassie's acceptance, and Library promotion to approved.
+
+## Little Island 3.0: 3.0.0 (26) from main, available 4 November 2026 Guam time
+
+This is the 3.0 family preview built from **`main`** after PR #17 (3.0) and PR #18 (build number) merged. It contains everything in 3.0.0 (25), plus:
+- the fixes from the independent final review (F1–F4): learner-scoped lab awards, dispensed food committing its previewed drop, a fail-closed Library shipping approval, and hidden destinations that no longer leak titles;
+- Dynamic Type caps on Library buttons, tiles and cards.
+
+Source: `5dab3bb1a1ddcd505469572d83f74db42d62a5fb` on `release/testflight-26`. That is `main` @ `3a4c7230` plus one release-only commit carrying the committed family-preview Library catalog. Preview gate: 2,257 tests. Doctor 21/21. CI passed on `main`.
+
+Delivery:
+- The IPA is 304,984,434 bytes, SHA256 `51d3e96b2a10b0eff7f7d4326b56441ee0191a7664802a276e3c00b467ca7004`.
+- The strict signature, App Store profile and beta entitlements all verified.
+- All 10,884 referenced audio files match the source.
+- EAS submission `9f90d28d-3b66-4824-ae34-2d2858d23bce` finished on the first attempt. One empty upload reservation remains in AWAITING_UPLOAD; no extra build exists.
+- Apple build `94ef795e-2884-476f-9250-206583df9e81` is VALID / IN_BETA_TESTING in the Leon group, with English notes.
+
+Receipt: [evidence/testflight-build26.json](evidence/testflight-build26.json).
+
+Not verified: physical iPhone and iPad, real VoiceOver, airplane mode, mid-gesture interruption, narration listening, Stassie's acceptance, and Library promotion to approved.
