@@ -73,6 +73,11 @@ export function migrateProfiles(save: Save): Save {
       Object.assign(target, { [field]: { ...target[field], [game]: round } });
     }
   }
+  // A pointer to a round with a known owner isn't a guess: that child's Continue keeps working.
+  for (const [field, slots, game] of [['recentLearn','learn',save.recentLearn],['recent','sessions',save.recent],['recentBoard','board',save.recentBoard],['recentActivity','activities',save.recentActivity]] as const) {
+    const owner = game ? Object.keys(people).find(id => (people[id][slots] as Record<string, unknown> | undefined)?.[game as string] && (slots !== 'learn' || (people[id].learn?.[game as LearnId]?.learner !== undefined))) : undefined;
+    if (owner) Object.assign(people[owner], { [field]: game });
+  }
   const preferences = { favoriteGames: save.favoriteGames, coached: save.coached, recent: save.recent, recentLearn: save.recentLearn, recentBoard: save.recentBoard, recentActivity: save.recentActivity, recentArcade: save.arcade?.recent };
   if (Object.values(preferences).some(v => v != null && (!Array.isArray(v) || v.length))) unassigned.preferences = clone(preferences);
   if (save.library?.archive?.explore || save.explore) {

@@ -112,6 +112,15 @@ describe('review fixes: earlier work and School stars', () => {
     expect(a.recent).toEqual(['rain', 'sun']);
     expect(a).toMatchObject({ category: 'space', onlyFavorites: true, query: 'old', saved: ['moon'] });
   });
+  it("keeps Continue on the known owner's round, and leaves unowned pointers for a grown-up", () => {
+    const owned = { ...fresh(), learner: 'a' }, base = upgraded(fresh());
+    const save = migrateProfiles(parseSave(JSON.stringify({ version: 1, settings: { sound: true, help: true }, sessions: {}, recent: null, recentLearn: 'shell-math', learn: { 'shell-math': owned }, learning: base.learning })));
+    expect(save.profiles?.people.a.recentLearn).toBe('shell-math');
+    expect(save.profiles?.people.family.recentLearn).toBeUndefined();
+    const unowned = migrateProfiles(parseSave(JSON.stringify({ version: 1, settings: { sound: true, help: true }, sessions: {}, recent: null, recentLearn: 'shell-math', learn: { 'shell-math': fresh() }, learning: base.learning })));
+    expect(unowned.profiles?.people.a.recentLearn).toBeUndefined();
+    expect(unowned.profiles?.unassigned.preferences?.recentLearn).toBe('shell-math');
+  });
   it('sets an item aside without touching Family work', () => {
     const save = upgraded(fresh()), next = assignEarlier(save, 'learn:shell-math', null);
     expect(pendingAssignments(next).map(r => r.key)).not.toContain('learn:shell-math');

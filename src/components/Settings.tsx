@@ -167,7 +167,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
             </Copy>)}
           </View>}
           <Heading style={{ fontSize: 19 }}>Shared family practice signals</Heading>
-          {!practice.length && <Copy>No recent practice yet. As she explores the learning islands, the words and ideas she tries will appear here.</Copy>}
+          {!practice.length && <Copy>No recent practice yet. As your learners explore the islands, the words and ideas they try will appear here.</Copy>}
           {(["reading", "numbers", "science", "thinking", "coding"] as Island[]).map(island => {
             const labels = new Set(Object.values(engines).filter(e => e.island === island).flatMap(e => Object.keys(e.skills)));
             const lines = practice.filter(line => labels.has(line.skill));
