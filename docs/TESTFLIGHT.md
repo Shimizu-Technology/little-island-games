@@ -474,3 +474,21 @@ Delivery:
 Receipt: [evidence/testflight-build26.json](evidence/testflight-build26.json).
 
 Not verified: physical iPhone and iPad, real VoiceOver, airplane mode, mid-gesture interruption, narration listening, Stassie's acceptance, and Library promotion to approved.
+
+## Little Island 3.0: 3.0.0 (27) from main, available 6 November 2026 Guam time
+
+This build adds separate learner progress (PR #20) and six Expo SDK 57 patches (PR #21). Each learner has their own paused games, Continue, Favorites and records. School saves completed levels and earned stars per learner. A grown-up step assigns older work with no known owner.
+
+Source: `1e01b324f12ff54c27114a32eb1fdf54dc071b31` on `release/testflight-27`. That is `main` @ `8fe293e9` plus one release-only commit carrying the committed family-preview Library catalog. Preview gate: 2,300 tests. Doctor 21/21. CI passed on `main`.
+
+Native simulator QA on iPhone 17 Pro: a save produced by the real 3.0.0 (26) engines upgraded with its original preserved, each learner kept their own paused rounds, and the grown-up step's assign and "Not needed" paths survived a relaunch.
+
+Delivery:
+- The IPA is 305,001,525 bytes, SHA256 `6fd9f2c68965f24a3d218937f0f988ff64c60e2b939242443a0f3cdd408f0435`.
+- All 10,884 referenced audio files match the source.
+- EAS submission `a3575c6f-6d68-4c6c-8dc5-26900a3d6854` finished. One empty upload reservation remains in AWAITING_UPLOAD; no extra build exists.
+- Apple build `e666d2c4-17a0-45b1-8b45-daf2daf743ee` is VALID / IN_BETA_TESTING in the Leon group, with English notes.
+
+Receipt: [evidence/testflight-build27.json](evidence/testflight-build27.json).
+
+Not verified: physical iPhone and iPad, real VoiceOver, airplane mode, mid-gesture interruption, narration listening, Stassie's acceptance, and Library promotion to approved.
