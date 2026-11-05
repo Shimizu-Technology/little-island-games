@@ -4,7 +4,7 @@ import { buildFor, defaultLook, normalizeLook, outfitPalettes, outfitDefaults, s
 import { resolvePose, isLying, poseBox, type Point, type Pose, type Side, type View } from './poses';
 import { anchorsFor } from './wardrobe';
 import { characterPose, rigFace, rigIdle, type CharacterAction, type CharacterBase, type CharacterFace, type Facing, type RigLife } from './character';
-import { islanderAnchors, islanderOrigin, rigTransform } from './anchors';
+import { islanderAnchors, islanderOrigin, islanderSurface, rigTransform } from './anchors';
 import { RewardArt } from './Rewards';
 import { Hair } from './Hair';
 import { Face } from './Face';
@@ -56,13 +56,15 @@ export function IslanderShape({ pose, look: input = defaultLook, held, reduced =
   const rearArm: Side = !front && !compact && j.rightHand[1] < j.leftHand[1] ? 'right' : 'left';
   const frontArm: Side = rearArm === 'left' ? 'right' : 'left';
   const limb = (side: Side, arm: boolean) => {
-    const start = j[`${side}${arm ? 'Shoulder' : 'Hip'}`], middle = j[`${side}${arm ? 'Elbow' : 'Knee'}`], end = j[`${side}${arm ? 'Hand' : 'Foot'}`];
+    // A build widens or narrows the shoulder; the arm bends to reach the same hand joint that held props and Home anchors use.
+    const reach = front && arm ? shape.armShift * (side === 'left' ? 1 : -1) : 0, joint = (p: Point, t: number): Point => [p[0] + reach * t, p[1]];
+    const start = joint(j[`${side}${arm ? 'Shoulder' : 'Hip'}`], 1), middle = joint(j[`${side}${arm ? 'Elbow' : 'Knee'}`], .6), end = j[`${side}${arm ? 'Hand' : 'Foot'}`];
     const radius = arm ? shape.arm + (wear.sleeve === 'bulky' ? 1 : wear.sleeve === 'billow' ? .4 : 0) : shape.leg + (wear.bottom === 'space' ? 1 : 0), tip = arm ? shape.armTip : shape.legTip;
     const sleeveEnd = between(start, middle, wear.sleeve === 'cap' ? .34 : front ? .62 : .52);
     const cuff = between(middle,end,.83), cuffLength = Math.max(.001,Math.hypot(end[0]-middle[0],end[1]-middle[1]));
     const cuffX = -(end[1]-middle[1])/cuffLength*2.6, cuffY = (end[0]-middle[0])/cuffLength*2.6;
     const cuffLine = arm && longSleeves ? `M${cuff[0]+cuffX} ${cuff[1]+cuffY}L${cuff[0]-cuffX} ${cuff[1]-cuffY}` : '';
-    const stance = front ? (arm ? shape.armShift * (side === 'left' ? 1 : -1) : shape.legShift * (side === 'left' ? -1 : 1)) : 0;
+    const stance = front && !arm ? shape.legShift * (side === 'left' ? -1 : 1) : 0;
     const legCut = wear.bottom === 'board' ? { reach: .95, width: shape.leg + .9 } : wear.bottom === 'cargo' ? { reach: .72, width: shape.leg + .7 } : wear.bottom === 'breeches' ? { reach: 1.02, width: shape.leg + 1.2 } : wear.bottom === 'none' || wear.bottom === 'skirt' ? { reach: .36, width: shape.leg - .1 } : { reach: .55, width: shape.leg + .6 };
     return <G key={`${side}${arm}`} data-stance={stance} transform={`translate(${stance} 0) rotate(0) scale(1 1)`}>
       <Path data-limb={`${side}-${arm ? 'arm' : 'leg'}`} d={limbShape(start, middle, !arm && longLegs ? between(middle, end, .9) : end, radius, tip + (arm || !longLegs ? 0 : .4))+cuffLine} fill={arm ? (longSleeves ? sleeveFill : skin) : longLegs ? legFill : skin}/>
@@ -80,7 +82,7 @@ export function IslanderShape({ pose, look: input = defaultLook, held, reduced =
       {arm && side === 'right' && <RewardArt look={look} pose={pose} layer="wrist"/>}
     </G>;
   };
-  const hand = (side: Side) => { const off = front ? shape.armShift * (side === 'left' ? 1 : -1) : 0, x = j[`${side}Hand`][0] + off, y = j[`${side}Hand`][1], s = side === 'left' ? 1 : -1; return <Path key={side} data-mitten={side} d={`M${x - s * 1.9} ${y - 2}Q${x - s * 2.6} ${y + 2.5} ${x} ${y + 3}Q${x + s * 2.6} ${y + 3} ${x + s * 2.3} ${y}Q${x + s * 3.8} ${y - 1} ${x + s * 2.6} ${y - 3}Q${x + s * 1.9} ${y - 3} ${x + s * 1.5} ${y - 2}Z`} fill={wear.sleeve === 'bulky' ? colors.trim : skin} strokeWidth={1.2}/>; };
+  const hand = (side: Side) => { const [x, y] = j[`${side}Hand`], s = side === 'left' ? 1 : -1; return <Path key={side} data-mitten={side} d={`M${x - s * 1.9} ${y - 2}Q${x - s * 2.6} ${y + 2.5} ${x} ${y + 3}Q${x + s * 2.6} ${y + 3} ${x + s * 2.3} ${y}Q${x + s * 3.8} ${y - 1} ${x + s * 2.6} ${y - 3}Q${x + s * 1.9} ${y - 3} ${x + s * 1.5} ${y - 2}Z`} fill={wear.sleeve === 'bulky' ? colors.trim : skin} strokeWidth={1.2}/>; };
   const backpack = <G transform={`translate(${a.torso[0] - (compact ? 10 : 0)} ${a.torso[1]})`}><Rect x={compact ? -9 : -12} y={compact ? -3 : -8} width={compact ? 18 : 24} height={compact ? 13 : 28} rx={7} fill="#D2A45E"/><Rect x={compact ? -6 : -8} y={compact ? 1 : 5} width={compact ? 12 : 16} height={compact ? 7 : 11} rx={3} fill="#F4CC76"/><Path d={compact ? "M-3 -3Q0 -7 3 -3" : "M-4 -8Q0 -16 4 -8"} fill="none" strokeWidth={2}/></G>;
   return <G transform={isLying(pose) ? 'translate(6 86) rotate(-90) scale(1 1)' : 'translate(0 0) rotate(0) scale(1 1)'}>
 
@@ -129,7 +131,7 @@ export const Islander = memo(function Islander({ view = 'front', pose = view ===
     const resolved = characterPose(base, action, reduced ? 0 : limbLag, tilt * (facing === 'left' ? -1 : 1));
     const box = islanderAnchors(base, facing, options).bounds, origin = islanderOrigin(base);
     const scale = size / 132;
-    return <Svg style={{overflow:'visible'}} width={box.width * scale} height={box.height * scale} viewBox={`${box.left} ${box.top} ${box.width} ${box.height}`} accessible={false}>
+    return <Svg {...islanderSurface(box, scale)} accessible={false}>
       <G data-rig="islander" data-base={base} data-action={action ?? 'none'} transform={rigTransform(facing, options)}>
         <G transform={`translate(${-origin[0]} ${-origin[1]})`}>
           <IslanderShape pose={resolved} look={look} held={held} reduced={reduced} expression={rigFace(face, mood, action)} heldMirrored={facing === 'left'} blink={!reduced && (blink ?? life.blink)}/>
@@ -138,7 +140,7 @@ export const Islander = memo(function Islander({ view = 'front', pose = view ===
     </Svg>;
   }
   const resolved = resolvePose(view, pose), box = poseBox(resolved), scale = size / 132;
-  return <Svg key={`${view}:${resolved.id}`} style={{overflow:'visible'}} width={box.width * scale} height={box.height * scale} viewBox={`0 0 ${box.width} ${box.height}`} accessible={false}><IslanderShape pose={resolved} look={look} held={held} reduced={reduced}/></Svg>;
+  return <Svg key={`${view}:${resolved.id}`} {...islanderSurface(box, scale)} accessible={false}><IslanderShape pose={resolved} look={look} held={held} reduced={reduced}/></Svg>;
 });
 /** Separate foreground prop: does not distort or hide the character's skeleton. */
 export const IslanderDesk = memo(function IslanderDesk({ size = 120 }: { size?: number }) {
