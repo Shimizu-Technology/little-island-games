@@ -237,7 +237,7 @@ const stubbleSides = [[-24.6, -11], [-22.4, -15.4], [-25.4, -15], [-20, -19], [-
 const stubbleTop = [[-11, -25.6], [-6, -26], [-1, -26.2], [4, -26], [9, -25.6], [-13, -21.6], [-8, -22.4], [-3, -23], [2, -23], [7, -22.4], [12, -21.6], [-10, -19.2], [-5, -19.8], [0, -20], [5, -19.8], [10, -19.2]] as const;
 const buzzSheen = `M-20.6 -17.6C-17 -24 -8 -26.4 2 -26C-6 -24.6 -14 -22 -20.6 -17.6Z${flecks([[-15, -20.4], [-9.6, -22.6], [-4, -24], [8, -24], [14, -21.6]], .5)}`;
 const napeShape = 'M-27.4 4L-27.4 -9Q-27.4 -27.4 0 -27.4Q27.4 -27.4 27.4 -9L27.4 11Q27.4 27.4 0 27.4Q-27.4 27.4 -27.4 11Z';
-const napeRight = [[27.4, 4], [26.6, 11], [23, 16.6], [15, 20.4], [7, 22], [0, 22.4]] as const;
+const napeRight = [[27.4, 3], [26.4, 9], [22.6, 14], [15, 17.6], [7, 19.2], [0, 19.6]] as const;
 const napeDark = `M-27.4 4L-27.4 -9Q-27.4 -27.4 0 -27.4Q27.4 -27.4 27.4 -9L27.4 4${soft(grain([...napeRight, ...napeRight.slice(0, -1).reverse().map(([x, y]) => [-x, y] as const)]))}Z`;
 const stubbleNape = [[-20, -14], [-10, -18], [-3, -9], [11, -18], [20, -13], [-24, -2], [24, -2], [-14, -4], [14, -5], [-5, 6], [7, 5], [-17, 8], [17, 7], [-23, -9], [23, -8], [-6, -24], [8, -25], [-15, -22], [16, -22], [-1, 14], [-10, 13], [10, 13], [-20, 2], [20, 1], [3, -2], [-9, 0], [9, -10], [-19, 13], [19, 13], [-24, 7], [24, 7], [-4, -16], [5, -15]] as const;
 const stubbleNapeLight = [[-14, -13], [-7, -5], [6, -8], [15, -12], [-19, -4], [19, -5], [-11, 6], [11, 8], [0, 3], [-3, -21], [3, 12], [-16, 2], [17, 3]] as const;
@@ -298,22 +298,23 @@ const sidePart: HairDrawing = {
   },
 };
 
-const crestTufts = [[-8.6, -14.6], [-10.6, -24], [-15, -33.4], [-10.2, -32.4], [-9.8, -40], [-4.2, -35.2], [-.4, -42.2], [3.8, -35.4], [9.4, -40.2], [10.2, -32.4], [15, -33.6], [10.6, -24], [8.6, -14.6]] as const;
+const crestTufts = [[-8.6, -14.6], [-10, -24], [-12.6, -34.6], [-8.2, -31.4], [-5.6, -40.6], [-2.6, -34], [.4, -42.4], [3.4, -34], [6, -40.8], [8.2, -31.4], [12.6, -34.8], [10, -24], [8.6, -14.6]] as const;
 const ridgeTop = crestTufts.slice(1, -1);
-const ridge = `M0 25.6C-5 22 -8.4 15 -9 8C-10 0 -11 -12 -10.6 -24${soft(ridgeTop, .42)}C11 -12 10 0 9 8C8.4 15 5 22 0 25.6Z`;
+const ridge = `M0 13C-4.4 11 -7.8 6 -8.6 0C-9.6 -7 -10.4 -15 -10 -24${soft(ridgeTop, .42)}C10.4 -15 9.6 -7 8.6 0C7.8 6 4.4 11 0 13Z`;
 const ridgeOpen = ridge.slice(0, -1);
 const crestOpen = `M-8.6 -14.6${soft(crestTufts, .42)}`;
 const crestRootTufts = lobes([[8.6, -14.6], [4.2, -13.8], [0, -11.8], [-4.2, -13.8], [-8.6, -14.6]], .3);
 const crestSoft = `${crestOpen}${crestRootTufts}Z`;
-const crestRootSide = [[-11.4, -16.4], [-12.4, -19], [-13.2, -22], [-14.6, -27]] as const;
-const crestRoot = `M-11.4 -16.4${soft(grain(crestRootSide, .9, 2.2))}Q0 -28.6 14.6 -27${soft(grain(crestRootSide.map(([x, y]) => [-x, y] as const).reverse(), .9, 2.2))}Z`;
-const ridgeRootSide = [[-14.6, -27], [-14, -12], [-13.4, 2], [-12, 12], [-7, 21], [-.6, 26.4]] as const;
-const ridgeRoot = `M-14.6 -27${soft(grain(ridgeRootSide, .9, 2.4))}L.6 26.4${soft(grain(ridgeRootSide.map(([x, y]) => [-x, y] as const).reverse(), .9, 2.4))}Q0 -28.6 -14.6 -27Z`;
+const crestRootSide = [[-9.4, -15.9], [-12.6, -18.4], [-13.6, -21.6], [-13, -25], [-11.4, -27.2]] as const;
+const crestRoot = `M-9.4 -15.9${soft(grain(crestRootSide, .7, 2.2))}Q0 -28.6 11.4 -27.2${soft(grain(crestRootSide.map(([x, y]) => [-x, y] as const).reverse(), .7, 2.2))}Z`;
+const sideFlecks = flecks([[-24.6, -11], [-22.4, -15.4], [-20, -19], [-20.6, -22.8], [-16.4, -24], [24.6, -11], [22.4, -15.4], [20, -19], [20.6, -22.8], [16.4, -24]], .34);
+const ridgeRootSide = [[-14.6, -27], [-14, -14], [-13, -2], [-10.6, 8], [-5.6, 14.6], [-.6, 17]] as const;
+const ridgeRoot = `M-14.6 -27${soft(grain(ridgeRootSide, .9, 2.4))}L.6 17${soft(grain(ridgeRootSide.map(([x, y]) => [-x, y] as const).reverse(), .9, 2.4))}Q0 -28.6 -14.6 -27Z`;
 const mohawk: HairDrawing = {
   hairline: -14,
   front: {
     fade: shornFade,
-    fadeHigh: `${crestRoot}${flecks(stubbleSides, .4)}`,
+    fadeHigh: `${crestRoot}${sideFlecks}`,
     base: crestSoft,
     edge: `${crestOpen}${crestRootTufts}`,
     shade: `${wisp(-7.4, -30, -6.4, -22, -4.2, -14.4, 1.2)}${wisp(3.2, -34, 3, -24, 1.6, -13.6, 1.3)}${wisp(8.2, -29, 7, -22, 5, -14.6, 1.1)}`,
@@ -322,20 +323,20 @@ const mohawk: HairDrawing = {
   hatFront: { fade: buzzUnderHat, under: hatFlecks },
   back: {
     fade: napeShape,
-    fadeHigh: `${ridgeRoot}${flecks(stubbleNape.filter(([x]) => Math.abs(x) > 13), .4)}`,
+    fadeHigh: `${ridgeRoot}${flecks(stubbleNape.filter(([x]) => Math.abs(x) > 15), .36)}`,
     base: ridge,
     edge: ridgeOpen,
-    shade: `${wisp(-5, -32, -4.6, -8, -2.6, 18, 1.2)}${wisp(4, -33, 4.2, -8, 2.6, 18, 1.2)}`,
-    shine: `${wisp(-7.4, -30, -6.2, -14, -5, 6, 1.1)}${wisp(-1, -37, -1, -26, -1, -14, 1.1)}`,
+    shade: `${wisp(-4.6, -32, -4.4, -12, -2.2, 9, 1.2)}${wisp(3.6, -33, 4, -12, 2.2, 9, 1.2)}`,
+    shine: `${wisp(-7, -28, -6, -14, -4.6, 2, 1.1)}${wisp(-.8, -38, -.8, -28, -.8, -16, 1.1)}`,
   },
-  hatBack: { fade: napeShape, fadeHigh: `${ridgeRoot}${flecks(stubbleNape.filter(([x]) => Math.abs(x) > 13), .4)}`, shade: `${wisp(-5, -20, -4.6, 0, -2.6, 16, 1)}${wisp(4, -20, 4.2, 0, 2.6, 16, 1)}` },
+  hatBack: { fade: napeShape, fadeHigh: `${ridgeRoot}${flecks(stubbleNape.filter(([x]) => Math.abs(x) > 15), .36)}`, shade: `${wisp(-5, -20, -4.6, -4, -2.6, 12, 1)}${wisp(4, -20, 4.2, -4, 2.6, 12, 1)}` },
 };
 
 const puffL = ring(-27, -24.4, 11.2, 11.2, 9, .3, .34);
 const puffShade = wisp(-34, -26, -30, -32, -24, -31, 1.2) + wisp(-33, -18, -28, -14, -22, -16, 1.3) + wisp(-28, -24, -25, -27, -21, -24, 1.1);
 const puffShine = wisp(-33.4, -29, -30, -33, -26, -33, 1.3) + wisp(-24, -28, -22, -29.6, -20, -27.6, .9);
 /** Under a hat the puffs drop to the nape and peek out below the jaw: gathered hair, nothing near the ear. Not mirrored, so they stay lumpy. */
-const lowPuffs = `${ring(-26.6, 23.4, 9.6, 10, 8, .25, .4)}${ring(26.6, 23.2, 9.8, 9.8, 9, 1.1, .36)}`;
+const lowPuffs = `${ring(-27, 23.4, 9.6, 10, 8, .25, .4)}${ring(27, 23.2, 9.8, 9.8, 9, 1.1, .36)}`;
 const lowPuffShade = `${wisp(-34.6, 23, -30, 31, -20, 30, 1.2)}${wisp(-31, 18, -27, 22, -22, 19, 1)}${wisp(33.6, 24, 30, 30, 20, 30, 1.2)}${wisp(31.4, 18, 27, 23, 22, 20, 1)}`;
 const lowPuffShine = `${wisp(-34, 19, -32, 15.6, -28, 15, 1.1)}${wisp(28, 15.4, 31, 15.2, 34, 19, 1.1)}`;
 /** Afro texture for the back: short curling marks, never long straight strands. */
@@ -354,7 +355,7 @@ const afroPuffs: HairDrawing = {
     ties: both(tie(-20.4, -25, -44, 5, 2.3)),
   },
   hatFront: { base: puffCap, shade: partLine, shine: capShine },
-  hatBack: { base: `M-28.7 6${dome}L28.7 9C28 14 24 18 18 20.4C10 22.6 4 23.6 0 25.6C-4 23.6 -10 22.6 -18 20.4C-24 18 -28 14 -28.7 9Z`, shade: `${wisp(0, -33, 0, -4, 0, 24, .9)}${coilMarks}`, shine: coilShine, ties: `${tie(-19.6, 20, 34, 3.8, 1.9)}${tie(19.6, 20, -34, 3.8, 1.9)}` },
+  hatBack: { base: `${fullBack}${lowPuffs}`, shade: `${wisp(0, -33, 0, -4, 0, 28, .9)}${coilMarks}${lowPuffShade}`, shine: `${coilShine}${lowPuffShine}`, ties: `${tie(-19.6, 16.6, 49, 4, 1.9)}${tie(19.6, 16.4, -49, 4, 1.9)}` },
   backBehind: { base: both(puffL), shade: both(puffShade), shine: both(puffShine) },
   back: {
     base: fullBack,
@@ -488,7 +489,7 @@ export const hairDrawings: Readonly<Record<IslanderLook['hairStyle'], HairDrawin
 const hex = (c: string) => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
 export const mix = (a: string, b: string, t: number) => { const x = hex(a), y = hex(b); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
 const light = (c: string) => { const [r, g, b] = hex(c); return (.2126 * r + .7152 * g + .0722 * b) / 255; };
-export type HairTones = Readonly<{ base: string; under: string; shade: string; shine: string; sheen: string; line: string; fade: string; fadeHigh: string }>;
+export type HairTones = Readonly<{ base: string; under: string; shade: string; shine: string; sheen: string; line: string; fade: string; fadeHigh: string; backFade: string }>;
 const toneCache = new Map<string, HairTones>();
 /** Shadow, base, shine and outline all come from the chosen colour. Dark hair gets a cool sheen so it keeps form. */
 export function hairTones(color: IslanderLook['hairColor'], skin: IslanderLook['skinTone']): HairTones {
@@ -501,7 +502,7 @@ export function hairTones(color: IslanderLook['hairColor'], skin: IslanderLook['
   // A short fade stays visibly hair on every skin tone, even blonde on sand or silver on cocoa.
   const apart = (tone: string, deep = .5) => Math.abs(light(tone) - light(s)) >= .06 ? tone : light(s) > .42 ? mix(tone, line, .4) : mix(tone, '#120B0A', deep), cool = color === 'galaxy' ? '#6B5FC8' : '#6F7892';
   const shorn = apart(dark ? mix(base, cool, .12) : mix(base, s, .04), .78);
-  const tones = { base, under: mix(shorn, shade, light(shorn) < light(shade) ? .22 : .5), shade, shine: color === 'lightning-streak' ? '#FFD84D' : shine, sheen: mix(shorn, shine, .3), line, fade: apart(dark ? mix(mix(base, s, .26), cool, .08) : mix(base, s, .42), .55), fadeHigh: shorn };
+  const tones = { base, under: mix(shorn, shade, light(shorn) < light(shade) ? .22 : .32), shade, shine: color === 'lightning-streak' ? '#FFD84D' : shine, sheen: mix(shorn, shine, dark ? .5 : .3), line, fade: apart(dark ? mix(mix(base, s, .15), cool, .06) : mix(base, s, .3), .55), fadeHigh: shorn, backFade: mix(base, dark ? mix(base, s, .15) : mix(base, s, .3), .4) };
   toneCache.set(key, tones);
   return tones;
 }
@@ -528,7 +529,9 @@ export function hairSpecial(style: IslanderLook['hairStyle'], color: IslanderLoo
   const raw = hairDrawings[style], end = back ? -2 : Math.max(-27, raw.hairline - 1.5), f = (d: string) => { const a = covered ? pressed(d) : d; return compact ? rolled(a) : a; };
   if (color === 'lightning-streak') {
     const top = style === 'buzz-cut' || style === 'mohawk-fade' ? -26.6 : -31, t = (u: number) => top + (end - top) * u;
-    return { bolt: f(`M5.4 ${num(t(0))}L.6 ${num(t(.5))}L3.6 ${num(t(.46))}L.4 ${num(t(1))}L6.8 ${num(t(.4))}L3.8 ${num(t(.44))}L8 ${num(t(0))}Z`) };
+    const bolt = `M5.4 ${num(t(0))}L.6 ${num(t(.5))}L3.6 ${num(t(.46))}L.4 ${num(t(1))}L6.8 ${num(t(.4))}L3.8 ${num(t(.44))}L8 ${num(t(0))}Z`;
+    // Short hair gives the bolt less height, so it gets more width.
+    return { bolt: f(style === 'buzz-cut' ? mapPath(bolt, (x, y) => [4 + (x - 4) * 1.7, y]) : bolt) };
   }
   const crown: (readonly [number, number, number])[] = [[-14, -26, 2.6], [5, -29, 2], [16, -21, 2.8], [-5, Math.max(-24, end - 3), 1.7]];
   return { stars: f([...crown, ...(back || !raw.stars ? [] : raw.stars.map(([x, y]) => [x, y, 2.3] as const)), ...(back ? [[-13, -6, 2.2] as const, [11, -9, 1.8] as const] : [])].map(([x, y, r]) => star(x, y, r)).join('')) };
