@@ -64,15 +64,17 @@ There are starter items (always owned), plus 28 badge rewards: one per badge. Th
 
 | Badge | Islander style | Island Home |
 |---|---|---|
-| Math 1 / 2 / 3 / 4 | Calculator watch (accessory) / Number-pattern tee (outfit) / — / Star-math outfit colour | — / Number blocks / Rainbow abacus / **Math Lab** wallpaper |
-| Reading 1 / 2 / 3 / 4 | Bookworm beanie (hat) / — / Storyteller outfit colour / Reading glasses: round frames (accessory) | — / Reading cloud / Storybook library / **Library** wallpaper |
-| Science 1 / 2 / 3 / 4 | Safety goggles (accessory) / Lab coat (outfit) / — / Galaxy hair colour | — / Little blue planet / Stargazer telescope and Pip's reef / **Night Sky** wallpaper |
-| Coding 1 / 2 / 3 / 4 | Robot tee (outfit) / — / Coder headset (accessory) / — | — / Robot buddy / — / Computer desk |
+| Math 1 / 2 / 3 / 4 | Calculator watch (accessory) / Number-pattern tee (outfit) / Star dress (outfit) / Star-math outfit colour | — / Number blocks / Rainbow abacus / **Math Lab** wallpaper |
+| Reading 1 / 2 / 3 / 4 | Bookworm beanie (hat) / Storybook dress (outfit) / Storyteller outfit colour / Reading glasses: round frames (accessory) | — / Reading cloud / Storybook library / **Library** wallpaper |
+| Science 1 / 2 / 3 / 4 | Safety goggles (accessory) / Lab coat (outfit) / Comet gown (outfit) / Galaxy hair colour | — / Little blue planet / Stargazer telescope and Pip's reef / **Night Sky** wallpaper |
+| Coding 1 / 2 / 3 / 4 | Robot tee (outfit) / Circuit hoodie (outfit) / Coder headset (accessory) / — | — / Robot buddy / — / Computer desk |
 | CHamoru 1 / 2 / 3 / 4 | Flower lei (accessory) / Woven sun hat (hat) / — / Sunset outfit colour | — / Woven island mat / Woven glow lamp / **Island Breeze** floor |
 | Arcade 1 / 2 / 3 / 4 | Runner's headband (hat) / Lagoon jersey (outfit) / Star sneakers outfit colour / Lightning streak hair colour | — / Pocket arcade / Good times shelf / **Arcade Neon** wallpaper |
-| Classic 1 / 2 / 3 / 4 | Captain's cap (hat) / — / Checker scarf (accessory) / Royal outfit colour | Checkers for two / Lagoon surfboard / Shell wind chime / **Game Room** floor |
+| Classic 1 / 2 / 3 / 4 | Captain's cap (hat) / Captain's coat (outfit) / Checker scarf (accessory) / Royal outfit colour | Checkers for two / Lagoon surfboard / Shell wind chime / **Game Room** floor |
 
 Rows with "—" in a column still give the other column's reward. Every badge gives at least one reward.
+
+A new item tied to a badge reaches children who already hold that badge. `backfillRewards` adds any missing grant on load and restore, marks it New, keeps everything else, and leaves a settled save untouched.
 
 ## Presentation
 - **Result screens** show one small card when something new is earned, e.g. "New badge: *Builder* · Number blocks are ready". The card offers **Try it on** / **See it at home**, **Keep playing** and **Home**. There is no modal chain.

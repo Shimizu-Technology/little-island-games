@@ -65,7 +65,7 @@ export function IslanderShape({ pose, look: input = defaultLook }: { pose: Pose;
         {front && look.outfit === 'hoodie' && <><Path d={`M34 ${hip - 15}Q40 ${hip - 19} 46 ${hip - 15}L48 ${hip - 8}H32Z`} fill={colors.secondary} strokeWidth={1}/><Path d={`M36 ${sy + 3}v8M44 ${sy + 3}v8`} stroke={colors.trim} strokeWidth={1.2}/></>}
         {look.outfit === 'sundress' && <G fill={colors.trim} strokeWidth={0}>{[31, 43, 51].map((x, i) => <Circle key={x} cx={x} cy={sy + 15 + i * 8} r={2.3}/>)}</G>}
       </>}
-      <RewardArt look={look} pose={pose} layer="clothing"/>{compact && look.accessory === 'backpack' && backpack}
+{compact && look.accessory === 'backpack' && backpack}
     </G>
     <G data-layer="front-limbs">{limb(frontArm, true)}</G>
     <G data-layer="hands">{front || compact ? <>{hand('left')}{hand('right')}</> : hand(frontArm)}</G>
@@ -82,7 +82,7 @@ export function IslanderShape({ pose, look: input = defaultLook }: { pose: Pose;
       {look.hairStyle === 'ponytail' ? (() => { const swing = hairSwing; return <G><Path d={`M${hx-4} ${hy-10}Q${hx+17+swing} ${hy-8} ${hx+11+swing} ${hy+15}Q${hx+7+swing} ${hy+32} ${hx-4+swing} ${hy+28}Q${hx+3+swing} ${hy+14} ${hx-6} ${hy+1}Z`}/><Ellipse cx={hx} cy={hy-7} rx={5.5} ry={3.4} fill={colors.primary} strokeWidth={1.2}/></G>; })() : [-1,1].map(side=><G key={side} transform={`translate(${hairSwing * .55} 0)`}><Path d={`M${hx+side*14} ${hy+8}Q${hx+side*22} ${hy+24} ${hx+side*17} ${hy+37}L${hx+side*10} ${hy+36}Q${hx+side*14} ${hy+22} ${hx+side*9} ${hy+11}Z`}/>{[18,24,30].map(y=><Path key={y} d={`M${hx+side*12} ${hy+y}l${side*7} 3`} strokeWidth={1}/>)}<Circle cx={hx+side*14} cy={hy+36} r={3.2} fill={colors.primary} strokeWidth={1.1}/></G>)}
     </G>}
     </G>
-    <RewardArt look={look} pose={pose} layer="hair"/><G data-layer="face">{front && <G><Ellipse cx={hx - 10} cy={hy + 7} rx={3.5} ry={1.7} fill="#E88D7D" opacity={.5} strokeWidth={0}/><Ellipse cx={hx + 10} cy={hy + 7} rx={3.5} ry={1.7} fill="#E88D7D" opacity={.5} strokeWidth={0}/>
+    <G data-layer="face">{front && <G><Ellipse cx={hx - 10} cy={hy + 7} rx={3.5} ry={1.7} fill="#E88D7D" opacity={.5} strokeWidth={0}/><Ellipse cx={hx + 10} cy={hy + 7} rx={3.5} ry={1.7} fill="#E88D7D" opacity={.5} strokeWidth={0}/>
       {pose.expression === 'proud' ? <Path d={`M${hx - 9} ${hy + 2}q3-4 6 0M${hx + 3} ${hy + 2}q3-4 6 0`} fill="none"/> : <G fill={ink} strokeWidth={0}><Ellipse cx={hx - 7} cy={hy + 2} rx={2.7} ry={3.5}/><Ellipse cx={hx + 7} cy={hy + 2} rx={2.7} ry={3.5}/><Circle cx={hx - 6.2} cy={hy + 1} r={1} fill="white"/><Circle cx={hx + 7.8} cy={hy + 1} r={1} fill="white"/></G>}
       <Path d={`M${hx} ${hy + 4}l-1 3h2`} strokeWidth={.8} opacity={.5} fill="none"/>
       {pose.expression === 'surprised' ? <Ellipse cx={hx} cy={hy + 11} rx={2.8} ry={3} fill="#7A494B"/> : <Path d={`M${hx - 4} ${hy + 10}q4 ${pose.expression === 'focused' || pose.expression === 'thinking' ? 0 : 5} 8 0`} fill="none" strokeWidth={1.3}/>}

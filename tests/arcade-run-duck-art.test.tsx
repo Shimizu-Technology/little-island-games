@@ -13,7 +13,7 @@ vi.mock('../src/arcade/Sprite',()=>({ArcadeSprite:()=>null}));
 vi.mock('react-native',()=>({View:()=>null}));
 vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unknown)=>c},useAnimatedProps:()=>({})}));
 vi.mock('react-native-svg',()=>({default:'svg',G:'g',Path:'path',Circle:'circle',Ellipse:'ellipse',Rect:'rect',Text:'text'}));
-// Conservative Bezier control hull: every point of a quadratic stays inside it.
+// Conservative Bezier control hull: every point of a quadratic or cubic stays inside it.
 // Fail on unsupported commands rather than silently accepting newly authored art.
 function pathYs(d:string){
  const tokens=d.match(/[a-zA-Z]|[-+]?(?:\d*\.\d+|\d+)(?:e[-+]?\d+)?/g)!;
@@ -22,7 +22,7 @@ function pathYs(d:string){
   if(/^[a-zA-Z]$/.test(tokens[i]))cmd=tokens[i++];
   const relative=cmd===cmd.toLowerCase(),op=cmd.toUpperCase();
   if(op==='Z'){x=sx;y=sy;cmd='';continue;}
-  const count=op==='M'||op==='L'?2:op==='Q'?4:op==='H'||op==='V'?1:0;
+  const count=op==='M'||op==='L'?2:op==='Q'?4:op==='C'?6:op==='H'||op==='V'?1:0;
   if(!count)throw new Error(`Unsupported SVG command ${cmd}`);
   const n=tokens.slice(i,i+count).map(Number);i+=count;
   if(op==='H'){x=(relative?x:0)+n[0];continue;}

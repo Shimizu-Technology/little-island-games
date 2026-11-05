@@ -6,15 +6,14 @@ import { anchorsFor } from './wardrobe';
 const leiFlowers = [-1, 1].flatMap(side => [0, 1, 2].map(i => ({ x: side * (10 - i * 3), y: 4 + i * 6, coral: i === 1 })));
 const flowerPath = (x: number, y: number) => `M${x} ${y-4}q5-1 3 4q4 4-1 4q-2 4-4 0q-5 0-1-4q-2-5 3-4Z`;
 /** Reward details use the same rig coordinates and inherited ink as starter clothing. */
-export function RewardArt({look, pose, layer}: {look: IslanderLook; pose: Pose; layer: 'hat' | 'accessory' | 'clothing' | 'hair' | 'wrist' | 'neckwear'}) {
+export function RewardArt({look, pose, layer}: {look: IslanderLook; pose: Pose; layer: 'hat' | 'accessory' | 'wrist' | 'neckwear'}) {
   const a = anchorsFor(pose), [x,y] = pose.joints.head, front = pose.view === 'front', small = !!pose.compact;
 
-  if (layer === 'hair') return <G fill="none" stroke={look.hairColor === 'galaxy' ? '#8982BF' : '#FFE49A'} strokeWidth={look.hairColor === 'galaxy' ? 1.3 : 3}>{['galaxy','lightning-streak'].includes(look.hairColor) && <Path d={`M${x+3} ${y-(small?10:21)}q-7 6 -3 ${small?10:17}${look.hairColor === 'galaxy' ? (small ? 'm7 -10q-5 4 -2 8' : 'm7 -15q-5 6 -2 11') : ''}`}/>}</G>;
-  if (layer === 'hat') return <G transform={`translate(${a.headTop[0]} ${a.headTop[1]}) scale(${small?.55:1.13} ${small?.55:1})`}>
-    {look.hat === 'bookworm-beanie' && <G fill="#95718C"><Path d="M-22 7Q-24-5 0-5Q24-5 22 7Z"/><Rect x={-23} y={2} width={46} height={9} rx={3}/><Path d="M-4 3h8v7h-8Z" fill="#FFF0D1"/><Path d="M0 4v5M-13-5v6M12-5v6" fill="none" stroke="#C6A1B5"/></G>}
-    {look.hat === 'woven-sunhat' && <G fill="#DABB7D"><Path d="M-19 6L-15-3Q0-5 15-3L19 6Z"/><Path d="M-29 8Q-27 3-18 4H18Q27 3 29 8Q0 19-29 8Z"/><Path d="M-14-3L13 5M-8-3L18 2M-14 4L8-3M-5 6L15-3M-22 8Q0 14 22 8" fill="none" stroke="#9D8156" strokeWidth={1}/></G>}
+  if (layer === 'hat') return <G transform={`translate(${a.headTop[0]} ${a.headTop[1]}) scale(${small?.55:look.hat==='runner-headband'?1.3:1.13} ${small?.55:1})`}>
+    {look.hat === 'bookworm-beanie' && <G fill="#95718C"><Path d={small ? "M-22 7Q-24-5 0-5Q24-5 22 7Z" : "M-24 8C-25 -7 -11 -10 0 -10C11 -10 25 -7 24 8Z"}/><Rect x={-25.4} y={3} width={50.8} height={10} rx={3}/>{front && <Path d="M-4 4.5h8v7h-8Z" fill="#FFF0D1"/>}<Path d="M0 4v5M-13-5v6M12-5v6" fill="none" stroke="#C6A1B5"/></G>}
+    {look.hat === 'woven-sunhat' && <G fill="#DABB7D">{small ? <Path d="M-19 6L-15-3Q0-5 15-3L19 6Z"/> : <Path d="M-18.6 9C-18.6 -6 -10 -8.6 0 -8.6C10 -8.6 18.6 -6 18.6 9Z"/>}<Path d={small ? "M-29 8Q-27 3-18 4H18Q27 3 29 8Q0 19-29 8Z" : "M-31 10C-27 5 -18 6 0 6C18 6 27 5 31 10C25 17 -25 17 -31 10Z"}/><Path d="M-14 -6L13 5M-8 -8L18 2M-14 4L8 -8M-5 6L15 -5M-22 10Q0 15 22 10M-18 1Q0 5 18 1" fill="none" stroke="#9D8156" strokeWidth={1}/></G>}
     {look.hat === 'runner-headband' && <G><Path d="M-22 10Q0 3 22 10L22 16Q0 9-22 16Z" fill="#83BCB4"/><Path d="M-6 10h12" stroke="#FFF0D1" strokeWidth={2}/></G>}
-    {look.hat === 'captain-cap' && <G><Path d="M-23 5Q-27-4 0-4Q27-4 23 5Z" fill="#FFF0D1"/><Path d="M-22 5H22V11H-22Z" fill="#526579"/><Path d="M-16 11Q0 22 16 11Z" fill="#526579"/><Path d="M0-4v8m-4-4q4 8 8 0" fill="none" stroke="#D7AC58" strokeWidth={2}/></G>}
+    {look.hat === 'captain-cap' && <G><Path d="M-23 5Q-27-4 0-4Q27-4 23 5Z" fill="#FFF0D1"/><Path d="M-22 5H22V11H-22Z" fill="#526579"/>{front && <Path d="M-16 11Q0 22 16 11Z" fill="#526579"/>}{front && <Path d="M0-4v8m-4-4q4 8 8 0" fill="none" stroke="#D7AC58" strokeWidth={2}/>}</G>}
   </G>;
   const neckwear = ['flower-lei', 'checker-scarf'].includes(look.accessory);
   const accessory = layer === 'wrist' ? (look.accessory === 'calculator-watch' ? look.accessory : 'none') : layer === 'neckwear' ? (!front && neckwear ? look.accessory : 'none') : (look.accessory === 'calculator-watch' || (!front && neckwear) ? 'none' : look.accessory);

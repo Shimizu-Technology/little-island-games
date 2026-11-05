@@ -5,6 +5,7 @@ import { frontPoses, backPoses } from '../src/islander/rig/poses';
 import { Islander } from '../src/islander/rig/Islander';
 import { RunHazard } from '../src/arcade/games/lagoon-run/Art';
 import { defaultLook, hairStyles, hats, outfits, accessories } from '../src/islander/look';
+import { garmentFor } from '../src/islander/rig/Clothes';
 import { createRun, rowSafe, SLIDE_SECONDS } from '../src/arcade/games/lagoon-run/engine';
 import { DUCK_MAX_ELEVATION } from '../src/arcade/games/lagoon-run/geometry';
 import { runnerFrame } from '../src/arcade/games/scrolling/character';
@@ -21,7 +22,7 @@ function pathYs(d:string){
   if(/^[a-zA-Z]$/.test(tokens[i]))cmd=tokens[i++];
   const relative=cmd===cmd.toLowerCase(),op=cmd.toUpperCase();
   if(op==='Z'){x=sx;y=sy;cmd='';continue;}
-  const count=op==='M'||op==='L'?2:op==='Q'?4:op==='H'||op==='V'?1:0;
+  const count=op==='M'||op==='L'?2:op==='Q'?4:op==='C'?6:op==='H'||op==='V'?1:0;
   if(!count)throw new Error(`Unsupported SVG command ${cmd}`);
   const n=tokens.slice(i,i+count).map(Number);i+=count;
   if(op==='H'){x=(relative?x:0)+n[0];continue;}
@@ -117,7 +118,7 @@ describe('Islander authored art',()=>{
 
 describe('native rig regressions',()=>{
  it('uses flat mid-thigh hems on both legs in every short outfit and pose',()=>{
-  for(const outfit of outfits.filter(o=>!['hoodie','space-suit','pirate','overalls'].includes(o))) for(const pose of [...frontPoses,...backPoses]) {
+  for(const outfit of outfits.filter(o=>o!=='mix' && garmentFor({...defaultLook,outfit:o}).legs==='bare' && garmentFor({...defaultLook,outfit:o}).bottom!=='breeches')) for(const pose of [...frontPoses,...backPoses]) {
    const markup=renderToStaticMarkup(<Islander view={pose.view} pose={pose} look={{...defaultLook,outfit}}/>);
    const shorts=[...markup.matchAll(/<path[^>]*data-garment="shorts"[^>]*>/g)].map(m=>m[0]);
    expect(shorts).toHaveLength(2);

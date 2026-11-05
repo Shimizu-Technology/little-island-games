@@ -72,7 +72,7 @@ export function backPose(frame: number): Pose {
       const lift = Math.max(0, -swing), out = i ? 1 : -1, hip = j[`${side}Hip`];
       const knee: Point = [hip[0] + out * 1.5 * lift, hip[1] + BONES.thigh * (1 - .3 * lift)];
       j[`${side}Knee`] = knee;
-      j[`${side}Foot`] = [knee[0] + out * lift, Math.min(128, knee[1] + BONES.shin * (1 - .72 * lift)) - (frame % 4 === 2 ? 2 * lift : 0)];
+      j[`${side}Foot`] = [knee[0] + out * lift, Math.min(128, knee[1] + BONES.shin * (1 - .56 * lift)) - (frame % 4 === 2 ? 2 * lift : 0)];
       // Offset the arm crossover from sampled keys and keep a readable depth
       // difference at every static sample. Forward hands sit inside the shirt;
       // the opposite hand reaches down behind, clear of the waist.

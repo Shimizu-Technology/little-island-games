@@ -61,16 +61,20 @@ export function StyleEditor({ look, equipped, earned, unseen, onChange, onSeen, 
     const start = visibleGroups.slice(0, groupIndex).reduce((sum, previous) => sum + previous.tabs.length * 67 + 11, 0);
     return group.tabs.map((_, index) => start + index * 67);
   }), [visibleGroups]);
-  const previewSize = landscape ? (reason ? 100 : 145) : side ? Math.min(290, height * .48) : Math.min(205, height * .27);
-  const preview = <View testID="style-preview" style={{ minHeight: previewSize + 24, borderRadius: 28, backgroundColor: '#E0F0E9', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', paddingVertical: 12 }}>
+  // Measured, not assumed: large text shrinks the room left over, and the preview gives way before the grid does.
+  const [room, setRoom] = useState(0);
+  const wanted = landscape ? (reason ? 100 : 145) : side ? Math.min(290, height * .48) : Math.min(205, height * .27);
+  const previewSize = Math.max(92, room ? Math.min(wanted, (side ? room : room * (room < 460 ? .32 : .42)) - 28) : wanted);
+  const tight = landscape || (!!room && room < 420);
+  const preview = <View testID="style-preview" style={{ minHeight: previewSize + 24, flexShrink: 0, borderRadius: 28, backgroundColor: '#E0F0E9', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', paddingVertical: 12 }}>
     <Islander view={back ? 'back' : 'front'} pose={back ? 0 : 'idle'} look={look} size={previewSize}/>
     <PressableScale accessibilityRole="button" accessibilityLabel={back ? 'See the front' : 'See the back'} onPress={() => setBack(!back)} style={{ position: 'absolute', right: 10, top: 10, width: 46, height: 46, borderRadius: 23, backgroundColor: C.paper, alignItems: 'center', justifyContent: 'center' }}><Icon name="refresh"/></PressableScale>
     {!!onBadges && <PressableScale accessibilityRole="button" accessibilityLabel="My badges" onPress={onBadges} style={{ position: 'absolute', right: 10, bottom: 10, paddingHorizontal: 12, minHeight: 42, borderRadius: 21, backgroundColor: C.paper, justifyContent: 'center' }}><Copy style={{ color: C.ink, fontSize: 13, fontWeight: '700' }}>My badges</Copy></PressableScale>}
   </View>;
-  const tabs = <View testID="style-tabs" style={{ borderRadius: 22, backgroundColor: C.paper, borderWidth: 1, borderColor: C.line, paddingVertical: 8 }}><View accessibilityLiveRegion="polite" style={{ alignSelf: 'flex-start', marginLeft: 12, marginBottom: 5, paddingHorizontal: 12, paddingVertical: 3, borderRadius: 12, backgroundColor: currentGroup.tint }}><Copy style={{ color: C.ink, fontSize: 12, lineHeight: 16, fontWeight: '700' }}>{currentGroup.name}</Copy></View><ScrollView ref={tabScroll} horizontal snapToOffsets={snapOffsets} decelerationRate="fast" style={Platform.OS === 'web' ? { scrollSnapType: 'x mandatory' } as ViewStyle : undefined} showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingHorizontal: 8 }}>
+  const tabs = <View testID="style-tabs" style={{ borderRadius: 22, backgroundColor: C.paper, borderWidth: 1, borderColor: C.line, paddingVertical: tight ? 4 : 8 }}>{!tight && <View accessibilityLiveRegion="polite" style={{ alignSelf: 'flex-start', marginLeft: 12, marginBottom: 5, paddingHorizontal: 12, paddingVertical: 3, borderRadius: 12, backgroundColor: currentGroup.tint }}><Copy style={{ color: C.ink, fontSize: 12, lineHeight: 16, fontWeight: '700' }}>{currentGroup.name}</Copy></View>}<ScrollView ref={tabScroll} horizontal snapToOffsets={snapOffsets} decelerationRate="fast" style={Platform.OS === 'web' ? { scrollSnapType: 'x mandatory' } as ViewStyle : undefined} showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingHorizontal: 8 }}>
     {visibleGroups.map(group => <View key={group.name} style={{ flexDirection: 'row', gap: 3, padding: 4, borderRadius: 19, backgroundColor: group.tint, alignItems: 'center' }}>{group.tabs.map(t => {
       const active = tab === t;
-      return <PressableScale key={t} accessibilityRole="tab" accessibilityLabel={`${group.name}, ${labels[t]}`} accessibilityState={{ selected: active }} onPress={() => { setTab(t); setDetail(undefined); }} style={{ ...(Platform.OS === 'web' ? { scrollSnapAlign: 'start' } as ViewStyle : {}), width: 64, minHeight: landscape ? 64 : 76, borderRadius: 17, backgroundColor: active ? group.color : 'transparent', alignItems: 'center', justifyContent: 'center', gap: 1, borderWidth: active ? 2 : 0, borderColor: C.ink }}><TabPicture tab={t} color={active ? '#FFFFFF' : C.ink}/><Copy style={{ color: active ? '#FFFFFF' : C.ink, fontSize: 11, lineHeight: 15, fontWeight: '700', textAlign: 'center' }}>{labels[t].replace(' colour', '\ncolour')}</Copy></PressableScale>;
+      return <PressableScale key={t} accessibilityRole="tab" accessibilityLabel={`${group.name}, ${labels[t]}`} accessibilityState={{ selected: active }} onPress={() => { setTab(t); setDetail(undefined); }} style={{ ...(Platform.OS === 'web' ? { scrollSnapAlign: 'start' } as ViewStyle : {}), width: 64, minHeight: tight ? 60 : 76, borderRadius: 17, backgroundColor: active ? group.color : 'transparent', alignItems: 'center', justifyContent: 'center', gap: 1, borderWidth: active ? 2 : 0, borderColor: C.ink }}><TabPicture tab={t} color={active ? '#FFFFFF' : C.ink}/><Copy style={{ color: active ? '#FFFFFF' : C.ink, fontSize: 11, lineHeight: 15, fontWeight: '700', textAlign: 'center' }}>{labels[t].replace(' colour', '\ncolour')}</Copy></PressableScale>;
     })}</View>)}
   </ScrollView></View>;
   const choices = <View style={{ gap: 10 }}>
@@ -80,26 +84,16 @@ export function StyleEditor({ look, equipped, earned, unseen, onChange, onSeen, 
       const chosen = look.presentation === value;
       const candidate = { ...look, ...presentationPresets[value] } as IslanderLook;
       return <PressableScale key={value} accessibilityRole="button" accessibilityLabel={value === 'me' ? 'Just me' : value === 'boy' ? 'Boy' : 'Girl'} accessibilityState={{ selected: chosen }} onPress={() => onChange(candidate)} style={{ flex: 1, minWidth: 0, minHeight: landscape ? 84 : 132, alignItems: 'center', justifyContent: 'center', padding: 5, borderRadius: 22, borderWidth: 3, borderColor: chosen ? currentGroup.color : C.line, backgroundColor: chosen ? currentGroup.tint : C.paper }}><Islander look={candidate} size={landscape ? 48 : 79}/><Copy style={{ fontWeight: '700', fontSize: 14, lineHeight: 18, color: C.ink, textAlign: 'center' }}>{value === 'me' ? 'Just me' : value === 'boy' ? 'Boy' : 'Girl'}</Copy></PressableScale>;
-    })}</View>{!landscape && <Copy style={{ fontSize: 13 }}>Anyone can wear anything.</Copy>}</> : <StyleGrid compact={landscape} category={tab as Category} look={look} equipped={equipped} earned={earned} unseen={unseen} onChoose={item => { onChange(lookWithStyle(look, item), item); setDetail(item); onSeen?.(item.id); }}/ >}
+    })}</View>{!landscape && <Copy style={{ fontSize: 13 }}>Anyone can wear anything.</Copy>}</> : <>{styleCatalog.some(i => i.category === tab && i.audience) && <Copy style={{ fontSize: 13 }}>Anyone can wear anything.</Copy>}<StyleGrid compact={landscape} category={tab as Category} look={look} equipped={equipped} earned={earned} unseen={unseen} onChoose={item => { onChange(lookWithStyle(look, item), item); setDetail(item); onSeen?.(item.id); }}/ ></>}
   </View>;
-  if (creator && landscape) return <View style={{ flexDirection: 'row', gap: 12, height: Math.max(180, height - 180), width: '100%' }}>
-    <View style={{ width: '39%', gap: 6 }}>{preview}{reason ? <LockRule>{reason}</LockRule> : <Copy style={{ fontSize: 12, lineHeight: 16 }}>Tap the pictures to style your islander.</Copy>}</View>
-    <View style={{ flex: 1, gap: 8 }}>{tabs}{!landscape && !!reason && <LockRule>{reason}</LockRule>}<ScrollView style={{ flex: 1 }} nestedScrollEnabled contentContainerStyle={{ paddingBottom: 12 }}>{choices}</ScrollView></View>
+  const grid = <ScrollView testID="style-scroll" style={{ flex: 1, minHeight: 96 }} nestedScrollEnabled contentContainerStyle={{ paddingBottom: 12 }}>{choices}</ScrollView>;
+  // One layout for Creator and Locker: only the grid scrolls, so the preview and its buttons stay in view.
+  if (side) return <View testID="style-editor" onLayout={e => setRoom(e.nativeEvent.layout.height)} style={{ flex: 1, minHeight: 0, flexDirection: 'row', gap: 12, width: '100%', maxWidth: 1100, alignSelf: 'center' }}>
+    <View style={{ width: '39%', gap: 8 }}>{preview}{reason ? <LockRule>{reason}</LockRule> : creator && landscape ? <Copy style={{ fontSize: 12, lineHeight: 16 }}>Tap the pictures to style your islander.</Copy> : null}</View>
+    <View style={{ flex: 1, minHeight: 0, gap: 8 }}>{tabs}{grid}</View>
   </View>;
-  if (!creator && side) return <View style={{ flexDirection: 'row', gap: 12, height: Math.max(180, height - (landscape ? 155 : 230)), width: '100%', maxWidth: 1100, alignSelf: 'center' }}>
-    <View style={{ width: '39%', gap: 8 }}>{preview}{landscape && !!reason && <LockRule>{reason}</LockRule>}</View>
-    <View style={{ flex: 1, gap: 8 }}>{tabs}{!landscape && !!reason && <LockRule>{reason}</LockRule>}<ScrollView style={{ flex: 1 }} nestedScrollEnabled contentContainerStyle={{ paddingBottom: 12 }}>{choices}</ScrollView></View>
-  </View>;
-  if (!creator) return <View style={{ height: Math.max(390, height - 230), gap: 8, width: '100%' }}>
+  return <View testID="style-editor" onLayout={e => setRoom(e.nativeEvent.layout.height)} style={{ flex: 1, minHeight: 0, gap: 8, width: '100%' }}>
     {preview}{tabs}{!!reason && <LockRule>{reason}</LockRule>}
-    <ScrollView style={{ flex: 1 }} nestedScrollEnabled contentContainerStyle={{ paddingBottom: 12 }}>{choices}</ScrollView>
-  </View>;
-  if (!side) return <View style={{ height: Math.max(390, height - 190), gap: 8, width: '100%' }}>
-    {preview}{tabs}{!!reason && <LockRule>{reason}</LockRule>}
-    <ScrollView style={{ flex: 1 }} nestedScrollEnabled contentContainerStyle={{ paddingBottom: 12 }}>{choices}</ScrollView>
-  </View>;
-  return <View style={{ flexDirection: side ? 'row' : 'column', gap: 12, width: '100%', maxWidth: 1100, alignSelf: 'center' }}>
-    <View style={side ? { width: '39%' } : undefined}>{preview}</View>
-    <View style={{ flex: side ? 1 : undefined, gap: 12 }}>{tabs}{!!reason && <LockRule>{reason}</LockRule>}{choices}</View>
+    {grid}
   </View>;
 }

@@ -2,7 +2,7 @@
 export const skinTones = { shell: '#F4D2B4', sand: '#DEAF86', honey: '#CB956D', earth: '#996445', cocoa: '#654332' } as const;
 export const hairColors = { midnight: '#302C36', espresso: '#493332', chestnut: '#754A37', auburn: '#9C533B', honey: '#C59752', silver: '#D0C5BD', lagoon: '#387E86', plum: '#825B94', galaxy: '#373666', 'lightning-streak': '#302C36', blonde: '#E4BD69', 'jet-black': '#191B26', copper: '#BA623F', pink: '#E98CAA', 'sky-blue': '#7DC5E6', mint: '#91C9AC' } as const;
 export const hairStyles = ['crop', 'curls', 'ponytail', 'braids', 'buzz-cut', 'short-spiky', 'side-part', 'afro-puffs', 'top-knot', 'long-straight', 'long-wavy', 'pigtails', 'bob', 'mohawk-fade'] as const;
-export const outfits = ['island', 'sundress', 'explorer', 'hoodie', 'number-tee', 'robot-tee', 'lab-coat', 'lagoon-jersey', 'board-shorts-set', 'polo-shorts', 'aloha-shorts', 'overalls', 'skirt-tee', 'jersey-dress', 'pirate', 'space-suit', 'mix'] as const;
+export const outfits = ['island', 'sundress', 'explorer', 'hoodie', 'number-tee', 'robot-tee', 'lab-coat', 'lagoon-jersey', 'board-shorts-set', 'polo-shorts', 'aloha-shorts', 'overalls', 'skirt-tee', 'jersey-dress', 'pirate', 'space-suit', 'mix', 'ruffle-dress', 'tutu-set', 'star-dress', 'storybook-dress', 'comet-gown', 'varsity-jacket', 'skater-set', 'smart-vest', 'circuit-hoodie', 'captain-coat'] as const;
 export const tops = ['tee', 'polo', 'aloha', 'tank', 'hoodie-top', 'jersey-top'] as const;
 export const bottoms = ['shorts', 'board-shorts', 'skirt', 'trousers', 'cargo-shorts'] as const;
 export const builds = ['boy', 'girl', 'neutral'] as const;
@@ -48,9 +48,13 @@ export const outfitDefaults: Record<typeof outfits[number], { primary: string; s
  island: outfitPalettes.lagoon, sundress: {primary:'#DF9CAC',secondary:'#9B6E8B',trim:'#FFF0D1'},
  explorer:{primary:'#CBB184',secondary:'#718878',trim:'#EFE4BB'}, hoodie:outfitPalettes.twilight,
  'robot-tee':{primary:'#748FC5',secondary:'#415985',trim:'#FFF0CE'}, 'number-tee':{primary:'#DCA95F',secondary:'#5F7389',trim:'#FFF5DA'}, 'lab-coat':{primary:'#9CC6CB',secondary:'#687E99',trim:'#FFF5E4'},
- 'lagoon-jersey':{primary:'#79B5C8',secondary:'#476C94',trim:'#FFF4DF'}, 'board-shorts-set':{primary:'#E5B87C',secondary:'#73A6A2',trim:'#FFF3D7'},
+ 'lagoon-jersey':{primary:'#79B5C8',secondary:'#476C94',trim:'#FFF4DF'}, 'board-shorts-set':{primary:'#F9C846',secondary:'#3F9DA6',trim:'#FFF6DF'},
  'polo-shorts':outfitPalettes.coral, 'aloha-shorts':{primary:'#E8CB82',secondary:'#738E85',trim:'#527F70'},
  overalls:{primary:'#F1DEBF',secondary:'#6A8FA8',trim:'#B16D61'}, 'skirt-tee':{primary:'#9FD3C7',secondary:'#8F94BA',trim:'#FFEFDB'},
- 'jersey-dress':{primary:'#B6B1D2',secondary:'#7D789F',trim:'#FFF0C9'}, pirate:{primary:'#CE9690',secondary:'#57596C',trim:'#F5DAB1'},
- 'space-suit':{primary:'#BCCDD2',secondary:'#8A9EB6',trim:'#E6B879'}, mix:outfitPalettes.coral,
+ 'jersey-dress':{primary:'#B6B1D2',secondary:'#7D789F',trim:'#FFF0C9'}, pirate:{primary:'#C4473F',secondary:'#3F4256',trim:'#F4C662'},
+ 'space-suit':{primary:'#EDF2F4',secondary:'#8FA6BC',trim:'#EE8A49'}, mix:{primary:'#8CC79E',secondary:'#566F88',trim:'#FFF3DC'},
+ 'ruffle-dress':{primary:'#F4A6BC',secondary:'#E37E9E',trim:'#FFF3E4'}, 'tutu-set':{primary:'#B99BE3',secondary:'#D8C4F2',trim:'#FFF1CF'},
+ 'star-dress':{primary:'#6E8FE0',secondary:'#47619F',trim:'#FFDF7C'}, 'storybook-dress':{primary:'#D6698A',secondary:'#C2577A',trim:'#FFDB92'}, 'comet-gown':{primary:'#3F3D80',secondary:'#2C2A62',trim:'#F8D67A'},
+ 'varsity-jacket':{primary:'#3F6EA6',secondary:'#556A87',trim:'#FFF1D9'}, 'skater-set':{primary:'#EE8D5F',secondary:'#4D5C6B',trim:'#FFF3D6'}, 'smart-vest':{primary:'#3F9C8E',secondary:'#4B5966',trim:'#D85F5F'},
+ 'circuit-hoodie':{primary:'#2E6E76',secondary:'#3F5868',trim:'#7CEFD2'}, 'captain-coat':{primary:'#31466B',secondary:'#6C7E9C',trim:'#F2C76A'},
 };

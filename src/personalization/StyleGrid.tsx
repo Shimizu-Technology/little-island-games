@@ -1,18 +1,25 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Text, View, useWindowDimensions } from 'react-native';
 import Svg, { Defs, Filter, FeColorMatrix, G } from 'react-native-svg';
 import { IslanderShape, resolvePose, type IslanderLook } from '../islander';
 import { C, Copy, PressableScale } from '../components/ui';
-import { lookWithStyle, lockedReason, selectedValue, styleCatalog, type Category, type StyleItem } from './catalog';
+import { audienceLabels, audienceOrder, lookWithStyle, lockedReason, selectedValue, styleCatalog, type Category, type StyleItem } from './catalog';
 import { LockBadge, LockIcon } from './LockBadge';
 import { thumbnailFocus } from './thumbnail';
+/** Redraws only when this tile's own picture changes, so tapping a style does not repaint the whole grid. */
+const Thumb = memo(function Thumb({ item, muted, encoded, compact, selected }: { item: StyleItem; muted: boolean; encoded: string; compact: boolean; selected: boolean }) {
+  const shown = JSON.parse(encoded) as IslanderLook, focus = thumbnailFocus(item);
+  const pose = resolvePose(focus.view, focus.view === 'back' ? 0 : 'idle');
+  return <View style={{ width: compact ? 72 : 108, height: compact ? 72 : 108, borderRadius: compact ? 18 : 24, borderWidth: 3, borderColor: selected ? C.teal : '#E9E9DE', backgroundColor: '#FFF4E7', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>{item.color ? <><Svg width={compact ? 62 : 96} height={compact ? 62 : 96} viewBox={focus.box} accessible={false}><IslanderShape pose={pose} look={shown}/></Svg><View style={{ position: 'absolute', bottom: 3, right: 3, width: 26, height: 26, borderRadius: 13, backgroundColor: muted ? '#A4A4A4' : item.color, borderWidth: 2, borderColor: '#FFFFFF' }}/></> : <Svg width={compact ? 66 : 102} height={compact ? 66 : 102} viewBox={focus.box} accessible={false}><Defs><Filter id={`muted-${item.id}`}><FeColorMatrix type="saturate" values="0"/></Filter></Defs><G opacity={muted ? .48 : 1} filter={muted ? `url(#muted-${item.id})` : undefined}><IslanderShape pose={pose} look={shown}/></G></Svg>}</View>;
+});
 export function StyleGrid({ category, look, equipped, earned, unseen, onChoose, catalog = styleCatalog, compact = false }: { category: Category; look: IslanderLook; equipped: IslanderLook; earned: string[]; unseen: string[]; onChoose: (item: StyleItem) => void; compact?: boolean; catalog?: readonly StyleItem[] }) {
   const { width } = useWindowDimensions();
   const tileWidth = width < 420 ? '47%' : width < 700 ? '31%' : width < 1100 ? '47%' : '31%';
-  return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: compact ? 6 : 10 }}>{catalog.filter(i => i.category === category).map(item => {
+  const items = catalog.filter(i => i.category === category), sorted = items.some(i => i.audience);
+  const tiles = (list: readonly StyleItem[]) => <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: compact ? 6 : 10 }}>{list.map(item => {
     const selected = selectedValue(look, item.category) === item.value, worn = selectedValue(equipped, item.category) === item.value, reason = lockedReason(item, earned);
     return <PressableScale key={item.id} accessibilityRole="button" accessibilityLabel={`${item.label}${reason ? ', locked. ' + reason : ''}${selected ? ', previewing' : ''}${worn ? ', wearing' : ''}`} accessibilityState={{ selected }} onPress={() => onChoose(item)} style={{ width: tileWidth, minWidth: 96, minHeight: compact ? 108 : 148, alignItems: 'center', justifyContent: 'center', gap: compact ? 1 : 3, padding: compact ? 3 : 5, borderWidth: 2, borderColor: selected ? C.teal : C.line, backgroundColor: selected ? '#E7F2E7' : C.paper, borderRadius: 22 }}>
-      <View style={{ width: compact ? 64 : 100, height: compact ? 64 : 100, borderRadius: 50, borderWidth: 3, borderColor: selected ? C.teal : '#E9E9DE', backgroundColor: '#FFF4E7', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>{item.color ? <><Svg width={compact ? 60 : 88} height={compact ? 60 : 88} viewBox={thumbnailFocus(item).box} accessible={false}><IslanderShape pose={resolvePose('front', 'idle')} look={lookWithStyle(look, item)}/></Svg><View style={{ position: 'absolute', bottom: 3, right: 3, width: 26, height: 26, borderRadius: 13, backgroundColor: reason ? '#A4A4A4' : item.color, borderWidth: 2, borderColor: '#FFFFFF' }}/></> : <Svg width={compact ? 68 : 105} height={compact ? 68 : 105} viewBox={thumbnailFocus(item).box} accessible={false}><Defs><Filter id={`muted-${item.id}`}><FeColorMatrix type="saturate" values="0"/></Filter></Defs><G opacity={reason ? .48 : 1} filter={reason ? `url(#muted-${item.id})` : undefined}><IslanderShape pose={resolvePose(thumbnailFocus(item).view, thumbnailFocus(item).view === 'back' ? 0 : 'idle')} look={lookWithStyle(look, item)}/></G></Svg>}</View>
+      <Thumb item={item} muted={!!reason} encoded={JSON.stringify(lookWithStyle(look, item))} compact={compact} selected={selected}/>
       {!!reason && <LockBadge/>}
       <Copy style={{ fontWeight: '700', fontSize: 14, lineHeight: 17, textAlign: 'center', color: C.ink }}>{item.label}</Copy>
       {(selected || worn) && <Copy style={{ fontSize: 10, lineHeight: 11 }}>{selected ? 'Previewing' : 'Wearing'}</Copy>}
@@ -21,4 +28,8 @@ export function StyleGrid({ category, look, equipped, earned, unseen, onChoose, 
 
     </PressableScale>;
   })}</View>;
+  if (!sorted) return tiles(items);
+  return <View style={{ gap: 12 }}>
+    {audienceOrder(look.presentation).map(audience => { const list = items.filter(i => (i.audience ?? 'everyone') === audience); return list.length ? <View key={audience} testID={`style-section-${audience}`} style={{ gap: 6 }}><Text accessibilityRole="header" style={{ fontSize: 15, lineHeight: 20, fontWeight: '800', color: C.ink }}>{audienceLabels[audience]}</Text>{tiles(list)}</View> : null; })}
+  </View>;
 }
