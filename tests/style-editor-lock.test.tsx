@@ -52,7 +52,7 @@ describe('locked item explanation', () => {
   });
   it('caps tab labels so large text cannot take the grid’s room', () => {
     open({ width: 375, height: 667 });
-    const labels = byTest('style-tabs').findAll(n => n.type === 'Tab').flatMap(tab => tab.findAll(n => n.type === 'Copy'));
+    const labels = byTest('style-tabs').findAll(n => (n.type as unknown) === 'Tab').flatMap(tab => tab.findAll(n => (n.type as unknown) === 'Copy'));
     expect(labels.length).toBeGreaterThan(5);
     for (const label of labels) expect(label.props.maxFontSizeMultiplier).toBe(1.3);
   });

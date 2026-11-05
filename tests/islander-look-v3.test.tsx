@@ -38,8 +38,9 @@ describe('hair drawings', () => {
   it('covers the top of the head with no rim of skin on the short styles', () => {
     for (const style of ['buzz-cut', 'mohawk-fade'] as const) {
       const pts = numbers((hairDrawings[style].front.fade ?? hairDrawings[style].front.base)!);
-      expect(pts.some(([x, y]) => x === -28.7 && y === -9)).toBe(true);
-      expect(pts.some(([x, y]) => x === 0 && y === -28.7)).toBe(true);
+      // Reaches the head's own outline, whose inner edge is at 27.3.
+      expect(pts.some(([x, y]) => x === -27.4 && y === -9)).toBe(true);
+      expect(pts.some(([x, y]) => x === 0 && y === -27.4)).toBe(true);
     }
   });
   it('derives four distinct tones for every colour and skin, and black hair keeps visible form', () => {

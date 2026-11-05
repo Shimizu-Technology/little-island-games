@@ -26,8 +26,8 @@ export function Hair({ look, pose, rear = false }: { look: IslanderLook; pose: P
   if (rear && (back || compact)) return null;
   const covered = !['none', 'flower-crown', 'runner-headband'].includes(look.hat);
   const art = hairFor(style, covered, compact), tones = hairTones(look.hairColor, look.skinTone);
-  // Gold glints only suit strands; on a buzz cut they read as dust, so the bolt carries the colour alone.
-  const t = style === 'buzz-cut' && look.hairColor === 'lightning-streak' ? { ...tones, shine: tones.fadeHigh } : tones;
+  // A buzz cut is matte: strand-like gloss reads as a swim cap, and gold glints as dust. The bolt carries Lightning Streak alone.
+  const t = style === 'buzz-cut' ? { ...tones, shine: tones.sheen } : tones;
   const tie = tieOn(look.hairColor, art.tieColor), running = pose.frame !== undefined && (pose.frame < 8 || pose.frame >= 16);
   const swing = running ? Math.sin((pose.frame! >= 16 ? pose.frame! - 16 + .5 : pose.frame!) * Math.PI / 4) * 7 : 0;
   const shared = { 'data-hair': style, transform: `translate(${x} ${y})`, stroke: t.line, strokeWidth: 1.3, strokeLinejoin: 'round' } as const;
