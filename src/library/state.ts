@@ -235,6 +235,7 @@ export function validLibraryData(v: unknown): v is LibraryData {
 export function libraryChild(data: LibraryData | undefined, childId: string): LibraryChildState {
   return data && Object.hasOwn(data.profiles, childId) ? data.profiles[childId] : newLibraryChild();
 }
+export const worldCategory = { oceans: "ocean", world: "guam", space: "space", weather: "weather", animals: "animals" } as const;
 /** Pure one-time projection. The original Explore field and archive are never edited. */
 export function migrateLibrary<
   T extends { library?: LibraryData; explore?: LegacyExplore; learning?: { active: string; people?: { id: string }[] } },

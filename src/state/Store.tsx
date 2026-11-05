@@ -39,7 +39,7 @@ type Store = {
   renameLearner: (id: string, name: string) => boolean;
   removeLearner: (id: string) => Promise<boolean>;
   saving: boolean;
-  assignEarlier: (key: string, learner: string, expectedEpoch: number) => Promise<boolean>;
+  assignEarlier: (key: string, learner: string | null, expectedEpoch: number) => Promise<boolean>;
   arcade: (action: ArcadeAction, expected: ArcadeExpected) => boolean;
   epoch: number;
   boardUpdate: (game: BoardId, next: BoardSession, expected: BoardSession | undefined, expectedEpoch: number) => boolean;
@@ -262,8 +262,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       libraryRejected.current = false; if (!lastWriteFailed.current) setError(null); return true;
     }
     const library = { ...data, profiles: { ...data.profiles, [owner]: JSON.parse(JSON.stringify(next)) as LibraryChildState } };
-    const untouched = before.profiles?.unassigned.exploreUntouched;
-    let updated: Save = { ...before, library, ...(untouched?.includes(owner) ? { profiles: { ...before.profiles!, unassigned: { ...before.profiles!.unassigned, exploreUntouched: untouched.filter(id => id !== owner) } } } : {}) };
+    // Reading and scrolling don't count as newer work; only a child's own content ends the old-model fill.
+    const untouched = before.profiles?.unassigned.exploreUntouched, ownWork = (['saved', 'labs', 'creations', 'bookPages', 'layers'] as const).some(field => JSON.stringify(current[field]) !== JSON.stringify(next[field]));
+    let updated: Save = { ...before, library, ...(ownWork && untouched?.includes(owner) ? { profiles: { ...before.profiles!, unassigned: { ...before.profiles!.unassigned, exploreUntouched: untouched.filter(id => id !== owner) } } } : {}) };
     const changedLabs = (Object.keys(next.labs) as (keyof typeof next.labs)[])
       .filter(world => JSON.stringify(current.labs[world]) !== JSON.stringify(next.labs[world]));
     // Reward the accepted learner's own transition. The legacy projection has no reward ownership.
@@ -411,7 +412,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       latest.current = next; setSave(next); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
     } finally { restoring.current = false; }
   }, [ready, recovery]);
-  const assignEarlierWork = useCallback(async (key: string, learner: string, expectedEpoch: number) => {
+  const assignEarlierWork = useCallback(async (key: string, learner: string | null, expectedEpoch: number) => {
     if (!ready || recovery || restoring.current || expectedEpoch !== generation.current) return false;
     const before = latest.current, next = assignEarlier(before, key, learner);
     if (next === before || !withinSaveLimit(encodeSave(next))) return false;

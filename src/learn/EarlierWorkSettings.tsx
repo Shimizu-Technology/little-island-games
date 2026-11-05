@@ -22,10 +22,17 @@ export function EarlierWorkSettings({ disabled }: { disabled: boolean }) {
         setBusy(true); const name = people.people.find(p => p.id === target)?.name ?? 'Family practice';
         void store.assignEarlier(entry.key,target,store.epoch).then(ok => {
           if (ok) { setSelected(null); setMessage(`Assigned to ${name}. The previous save is kept in backups.`); }
-          else setMessage('This learner already has a different paused round, or the assignment could not be saved. Their work is kept. Choose another learner or leave this for later.');
+          else setMessage('This learner already has a different round in this game, or the assignment could not be saved. Their work is kept. Choose another learner, or set this aside.');
         }).catch(() => setMessage('The recovery copy could not be saved. Nothing was assigned. Try again.')).finally(() => setBusy(false));
       }}>{busy ? 'Keeping a recovery copy…' : `Assign to ${people.people.find(p => p.id === target)?.name ?? 'Family practice'}`}</Button>
       <Button quiet disabled={busy} onPress={() => setSelected(null)}>Decide later</Button>
+      <Button quiet disabled={disabled || busy} onPress={() => {
+        setBusy(true);
+        void store.assignEarlier(entry.key,null,store.epoch).then(ok => {
+          if (ok) { setSelected(null); setMessage('Set aside. The previous save is kept in backups.'); }
+          else setMessage('This could not be saved. Nothing changed. Try again.');
+        }).catch(() => setMessage('The recovery copy could not be saved. Nothing changed. Try again.')).finally(() => setBusy(false));
+      }}>Not needed</Button>
     </View>}
     {!!message && <Copy accessibilityLiveRegion="polite">{message}</Copy>}
   </View>;

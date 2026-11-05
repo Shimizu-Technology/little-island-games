@@ -1,15 +1,15 @@
-import { expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { emptySave, parseSave, withinSaveLimit, MAX_SAVE_BYTES } from '../src/state/validation';
 import { migrateProfiles, encodeSave, syncProfile, projectProfile, assignEarlier, pendingAssignments, validProfiles } from '../src/state/profiles';
 import { addLearner, selectLearner, recordLearning, activeLearner, readyForNext } from '../src/learn/learners';
 import { startSession, finished } from '../src/learn/session';
-import { creditSchool, backfillSchool, validSchool } from '../src/learn/schoolProgress';
+import { creditSchool, backfillSchool, validSchool, independentRound, roundStars } from '../src/learn/schoolProgress';
 import { recordLevelRound } from '../src/learn/levelEvidence';
 import { mathMove, questionOf, type MathRound } from '../src/learn/games/shell-math/round';
 import { mathAnswer } from '../src/math/questions';
 import { createGame, gameIds } from '../src/games';
 import { defaultOptions } from '../src/games/types';
-import { migrateLibrary, libraryChild } from '../src/library/state';
+import { migrateLibrary, libraryChild, newLibraryChild } from '../src/library/state';
 import type { Save } from '../src/state/validation';
 import fixture25 from './fixtures/profile-2.5.json';
 const learning = () => selectLearner(addLearner(addLearner(undefined,'A','a'),'B','b'),'a');
@@ -64,11 +64,11 @@ it('five profiles keep independent canonical rounds inside the 2 MB budget witho
 it('assignment moves the latest Family revision of unowned work instead of reverting to its older recovery copy',()=>{
   const round=startSession('shell-math',{options:{mode:'solo',pace:'easy'}},{},71);
   let save=migrateLibrary(migrateProfiles({...emptySave(),learning:learning(),learn:{'shell-math':round}}));
-  const finished=complete(round);
-  save=syncProfile({...projectProfile(save,selectLearner(save.learning,'family')),learn:{'shell-math':finished}}) as typeof save;
+  const later={...round,revision:(round.revision??0)+1};
+  save=syncProfile({...projectProfile(save,selectLearner(save.learning,'family')),learn:{'shell-math':later}}) as typeof save;
   expect(save.profiles!.unassigned.rounds.learn!['shell-math']!.revision).toBe(round.revision);
   const assigned=assignEarlier(save,'learn:shell-math','b');
-  expect(assigned.profiles!.people.b.learn!['shell-math']).toEqual({...finished,learner:'b'});
+  expect(assigned.profiles!.people.b.learn!['shell-math']).toEqual({...later,learner:'b'});
   expect(assigned.profiles!.people.family.learn!['shell-math']).toBeUndefined();
   expect(parseSave(encodeSave(assigned))).toEqual(assigned);
 });
@@ -86,4 +86,42 @@ it('legacy unknown assistance stays unknown through ordinary saves and cannot ea
   const recorded=recordLevelRound(middle,after,'shell-math',100);
   expect(recorded.school?.['shell-math']?.[1]?.stars).toBe(1);
   expect(readyForNext(activeLearner(recorded.learning),'shell-math','easy')).toBe(false);
+});
+
+describe('review fixes: earlier work and School stars', () => {
+  const fresh = () => startSession('shell-math', { options: { mode: 'solo', pace: 'easy' } }, {}, 1);
+  const upgraded = (round: ReturnType<typeof fresh>) => migrateProfiles(parseSave(JSON.stringify({ version: 1, settings: { sound: true, help: true }, sessions: {}, recent: null, learn: { 'shell-math': round }, learning: { active: 'family', people: [{ ...activeLearner(learning()), id: 'family', name: 'Family' }, { ...activeLearner(learning()), id: 'a', name: 'A' }] } })));
+  it('offers an old round only while Family still has it unfinished', () => {
+    const round = fresh(), save = upgraded(round);
+    expect(pendingAssignments(save).map(r => r.key)).toContain('learn:shell-math');
+    const replaced = syncProfile({ ...save, learn: { 'shell-math': { ...round, id: 'newer' } } });
+    expect(pendingAssignments(replaced).map(r => r.key)).not.toContain('learn:shell-math');
+    expect(assignEarlier(replaced, 'learn:shell-math', 'a')).toBe(replaced);
+  });
+  it('stops offering a round Family has finished, so School never credits it twice', () => {
+    const round = fresh(), save = upgraded(round), done = syncProfile({ ...save, learn: { 'shell-math': complete(round) } });
+    expect(pendingAssignments(done).map(r => r.key)).not.toContain('learn:shell-math');
+    expect(assignEarlier(done, 'learn:shell-math', 'a')).toBe(done);
+  });
+  it('restores old discoveries newest first, with their shelf and filter', () => {
+    const places = { sun: { kind: 'topic', id: 'sun' }, moon: { kind: 'topic', id: 'moon' }, rain: { kind: 'topic', id: 'rain' } };
+    const base = migrateLibrary(upgraded(fresh())), child = newLibraryChild();
+    const explore = { favorites: ['moon'], progress: { version: 1, location: { kind: 'world', world: 'space' }, history: [places.sun, places.rain], query: 'old', onlyFavorites: true, labs: child.labs, positions: {} } };
+    const save = { ...base, profiles: { ...base.profiles!, unassigned: { ...base.profiles!.unassigned, explore, exploreUntouched: ['a'] } } } as typeof base;
+    const a = libraryChild(assignEarlier(save, 'explore', 'a').library, 'a');
+    expect(a.recent).toEqual(['rain', 'sun']);
+    expect(a).toMatchObject({ category: 'space', onlyFavorites: true, query: 'old', saved: ['moon'] });
+  });
+  it('sets an item aside without touching Family work', () => {
+    const save = upgraded(fresh()), next = assignEarlier(save, 'learn:shell-math', null);
+    expect(pendingAssignments(next).map(r => r.key)).not.toContain('learn:shell-math');
+    expect(next.profiles?.people.family.learn?.['shell-math']?.id).toBe(save.learn?.['shell-math']?.id);
+  });
+  it('never counts Family practice as independent work, and keeps few round ids', () => {
+    const round = { ...fresh(), levelHelped: false };
+    expect(independentRound(round)).toBe(false);
+    expect(independentRound({ ...round, learner: 'a' })).toBe(true);
+    expect(roundStars(round, 3)).toBe(1);
+    expect(roundStars({ ...round, learner: 'a' }, 3)).toBe(3);
+  });
 });

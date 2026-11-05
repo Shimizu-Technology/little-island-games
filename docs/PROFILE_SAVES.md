@@ -8,7 +8,7 @@ Profile separation uses save envelope version 2 with a required validated `profi
 
 Migration validates the original first and never mutates it. Load and restore preserve exact originals before publishing a new shape. Learning rounds retain `round.learner`, or Family practice when missing. A matching classic/board/activity `roundOwners` tag preserves the known owner. Unmatched rounds go to the assignment bucket. Unowned learning also retains an assignment copy; assigning it removes the matching Family live round, so it never becomes two children’s live work.
 
-The grown-up Settings gate contains **Whose earlier work is this?** A grown-up chooses an owner for each old round, the old device-wide Explore history, practice signals, and favorites/recent places. Assignment first keeps a whole-device recovery copy. It refuses to replace a different target paused round. Library assignment adds saved/recent discoveries, preserves policy and newer fields, and fills old models/search context only into a Library created by this migration that the child has not edited. The exact old Explore archive stays available. Names and active selection never establish ownership. Existing badges stay as saved.
+The grown-up Settings gate contains **Whose earlier work is this?** Before the gate, a short line says older work is waiting. An old learning round is offered only while it is still unfinished in Family practice. A grown-up chooses an owner, or **Not needed**, for each old round, the old device-wide Explore history, practice signals, and favorites/recent places. Assignment first keeps a whole-device recovery copy. It refuses to replace a different target paused round. Library assignment adds saved/recent discoveries, preserves policy and newer fields, and fills old models/search context only into a Library created by this migration that the child has not edited. The exact old Explore archive stays available. Names and active selection never establish ownership. Existing badges stay as saved.
 
 Older word and race aggregates are labeled **Earlier family records**. They cannot be reliably split, so they are neither divided nor copied into personal records. The Family free-play score board stays shared.
 
@@ -16,11 +16,11 @@ Older word and race aggregates are labeled **Earlier family records**. They cann
 
 All five levels stay open. The selected level and completed levels are shown separately. Each learner/game/level record stores best earned stars, completed and independent counts, bounded independent days and deduplication round IDs.
 
-- One star: finish a round, including help or shared play.
+- One star: finish a round, including help or shared play. Family practice is shared, so it earns one star at most.
 - Two stars: finish an independent solo round.
 - Three stars: finish independent solo rounds on at least two distinct days. The days need not be consecutive.
 
-There is no timer, speed threshold, penalty or automatic advancement. Reading stays untimed. Existing engine help/miss flags, growth clean history, non-winning Reef Race and vocabulary browsing rules determine independence. Unknown old help history earns completion only. Stars never decrease.
+There is no timer, speed threshold, penalty or automatic advancement. Reading stays untimed. Existing engine help/miss flags, growth clean history, non-winning Reef Race and vocabulary browsing rules determine independence. Unknown old help history earns completion only. Stars never decrease. The result screen shows what the round earned: nothing for a lost round, one star for a helped round, and the level's best for independent work.
 
 Backfill uses actual completed rounds and exact `completed-round` notes. A remembered setup choice, warm-up or aggregate total cannot prove completion. Old notes do not pair assistance and dates with each round, so they never invent third-star dates. Old totals remain intact. New readiness evidence uses `think.level-round-v2`; optional warm-ups retain practice and badge rewards under a separate summary key and do not earn School completion or next-level invitations.
 

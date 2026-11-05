@@ -3,8 +3,9 @@ import { games } from "../games";
 import { catalog as boardCatalog } from "../board";
 import { parseSave, type Save } from './validation';
 import { familyLearners, type Learners } from '../learn/learners';
-import { backfillSchool, creditSchool, validSchool, type SchoolProgress } from '../learn/schoolProgress';
-import { libraryChild, newLibraryChild, validLegacyExplore, type LegacyExplore } from '../library/state';
+import { backfillSchool, validSchool, type SchoolProgress } from '../learn/schoolProgress';
+import { finished } from '../learn/session';
+import { libraryChild, newLibraryChild, validLegacyExplore, worldCategory, type LegacyExplore } from '../library/state';
 import { validSkills } from '../learn/skills';
 import { validWordRecords } from './wordRecords';
 import { validActivityRecords } from './activities';
@@ -107,11 +108,12 @@ export function validProfiles(v: unknown, learning = familyLearners()): v is Pro
 }
 export type Assignment = { key: string; label: string };
 export function pendingAssignments(save: Save): Assignment[] {
-  const u = save.profiles?.unassigned;
-  if (!u) return [];
-  const rows: Assignment[] = [];
+  if (!save.profiles) return [];
+  const live = syncProfile(save).profiles!, u = live.unassigned, rows: Assignment[] = [];
   const activities: Record<string,string> = { 'go-fish':'Go Fish', 'crazy-eights':'Crazy Eights', racer:'Island Dash', 'word-imposter':'Secret Word', 'island-mystery':'Picnic Mystery' };
   for (const field of ['learn','sessions','board','activities'] as const) for (const game of Object.keys(u.rounds[field] ?? {})) {
+    // An unowned learning round stays Family's live work; once finished or replaced there's nothing left to hand over.
+    if (field === 'learn') { const family = live.people.family?.learn?.[game as LearnId]; if (family?.id !== u.rounds.learn?.[game as LearnId]?.id || finished(family!)) continue; }
     const name = field === 'learn' ? learningEngines[game as LearnId].name : field === 'sessions' ? games[game as import('../games').GameId].name : field === 'board' ? boardCatalog[game as import('../board').BoardId].name : activities[game];
     rows.push({ key: `${field}:${game}`, label: `Earlier ${name} round` });
   }
@@ -120,11 +122,18 @@ export function pendingAssignments(save: Save): Assignment[] {
   if (u.preferences) rows.push({ key:'preferences', label:'Earlier favorites and recent places' });
   return rows;
 }
-/** Grown-up choice, no owner inference and no replacement of a child's newer paused round. */
-export function assignEarlier(save: Save, key: string, owner: string): Save {
-  if (!save.profiles || !save.learning?.people.some(p => p.id === owner) || !pendingAssignments(save).some(p => p.key === key)) return save;
-  const current = syncProfile(save), profiles = clone(current.profiles!), target = profiles.people[owner], u = profiles.unassigned;
+/** Grown-up choice, no owner inference and no replacement of a child's newer paused round. A null owner sets the item aside. */
+export function assignEarlier(save: Save, key: string, owner: string | null): Save {
+  if (!save.profiles || owner !== null && !save.learning?.people.some(p => p.id === owner) || !pendingAssignments(save).some(p => p.key === key)) return save;
+  const current = syncProfile(save), profiles = clone(current.profiles!), u = profiles.unassigned;
   let next = { ...current, profiles };
+  if (owner === null) {
+    if (key.includes(':')) { const [field, game] = key.split(':') as ['learn'|'sessions'|'board'|'activities', string]; delete (u.rounds[field] as Record<string, unknown>)[game]; }
+    else if (key === 'explore') { delete u.explore; delete u.exploreUntouched; }
+    else delete u[key as 'skills' | 'preferences'];
+    return projectProfile(next);
+  }
+  const target = profiles.people[owner];
   if (key.includes(':')) {
     const [field, game] = key.split(':') as ['learn'|'sessions'|'board'|'activities', string];
     const source = u.rounds[field] as Record<string, {id:string;learner?:string}>, slots = (target[field] ?? {}) as Record<string, {id:string;learner?:string}>;
@@ -135,14 +144,14 @@ export function assignEarlier(save: Save, key: string, owner: string): Save {
       if (family?.id === round.id) { round = family; delete profiles.people.family.learn![game as LearnId]; }
     }
     Object.assign(target, { [field]: { ...target[field], [game]: field === 'learn' ? { ...round, learner: owner } : round } });
-    if (field === 'learn') target.school = creditSchool(target.school, { ...round, learner: owner } as import('../learn/types').LearnSession);
     delete source[game];
   } else if (key === 'explore') {
     const old = u.explore!, before = libraryChild(next.library,owner), empty = newLibraryChild();
     const labs = { ...before.labs }, untouched = !next.library?.profiles[owner] || (u.exploreUntouched?.includes(owner) ?? false);
     for (const world of Object.keys(labs) as (keyof typeof labs)[]) if (untouched && JSON.stringify(labs[world]) === JSON.stringify(empty.labs[world]) && old.progress) labs[world] = clone(old.progress.labs[world]);
-    const recent = old.progress ? [old.progress.location,...old.progress.history].flatMap(l => l.kind === 'topic' ? [l.id] : []) : [];
-    const child = { ...before, labs, saved:[...new Set([...before.saved,...old.favorites])], recent:[...new Set([...before.recent,...recent])].slice(0,24), query:untouched ? old.progress?.query ?? before.query : before.query, positions:untouched ? { ...old.progress?.positions,...before.positions } : before.positions, ...(untouched && old.progress?.location.kind === 'topic' ? { current: old.progress.location.id } : {}) };
+    const recent = old.progress ? [old.progress.location,...[...old.progress.history].reverse()].flatMap(l => l.kind === 'topic' ? [l.id] : []) : [];
+    const place = old.progress?.location, category = place && 'world' in place ? worldCategory[place.world] : undefined;
+    const child = { ...before, labs, saved:[...new Set([...before.saved,...old.favorites])], recent:[...new Set([...before.recent,...recent])].slice(0,24), query:untouched && !before.query ? old.progress?.query ?? '' : before.query, onlyFavorites:before.onlyFavorites || untouched && !!old.progress?.onlyFavorites, category:untouched && category && before.category === empty.category ? category : before.category, positions:untouched ? { ...old.progress?.positions,...before.positions } : before.positions, ...(untouched && !before.current && old.progress?.location.kind === 'topic' ? { current: old.progress.location.id } : {}) };
     next = { ...next, library: { ...next.library!, profiles: { ...next.library?.profiles, [owner]: child } } };
     delete u.explore; delete u.exploreUntouched;
   } else if (key === 'skills') {

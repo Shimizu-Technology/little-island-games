@@ -18,6 +18,7 @@ import { growthProgress, growthQuestions } from "./growth/engine";
 import type { GrowthState } from "./growth/types";
 import { LevelPath } from "./LevelPath";
 import { levelOf, levelTitle, optionsAtLevel, levelStage, type LearningLevel } from "./levels";
+import { roundStars } from "./schoolProgress";
 import { activeLearner, readyForNext } from "./learners";
 import { views } from "./views";
 import { LastPicnicWord } from "./games/hafa-adai/view";
@@ -94,6 +95,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const result = saved ? outcomeOf(saved) : null,
     finished = result !== null,
     notWon = saved && result === "done" && engine.notWon ? engine.notWon(saved.state, saved.options) : null,
+    earnedStars = saved ? roundStars(saved, store.save.school?.[id]?.[levelOf(saved.options)]?.stars ?? 1) : 0,
     wasFinished = useRef(finished);
   useLayoutEffect(() => {
     if (finished) scroll.current?.scrollTo({ y: 0, animated: false });
@@ -317,7 +319,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
               >
                 <View pointerEvents="none" style={{ position: "absolute", top: 10, left: 0, right: 0, alignItems: "center" }}><Celebrate burst={burst.n} big /></View>
                 {engine.id === "hafa-adai" && !saved.options.stage && <LastPicnicWord state={saved.state as IslandState} />}
-                {<View accessible accessibilityLabel={`${store.save.school?.[id]?.[levelOf(saved.options)]?.stars ?? 1} earned stars`}><Heading style={{ color: theme.accent, fontSize: 38, textAlign: "center" }}>{"★  ".repeat(store.save.school?.[id]?.[levelOf(saved.options)]?.stars ?? 1).trim()}</Heading></View>}
+                {earnedStars > 0 && <View accessible accessibilityLabel={`${earnedStars} ${earnedStars === 1 ? "star" : "stars"} earned`}><Heading style={{ color: theme.accent, fontSize: 38, textAlign: "center" }}>{"★  ".repeat(earnedStars).trim()}</Heading></View>}
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                   {store.save.settings.learningIslander !== false && <Companion event={notWon ? "loss" : result === "draw" ? "draw" : "complete"} active={boardActive} size={166}/>}
                   {engine.ownLevels ? <view.Art size={86} /> : <LearnArt island={engine.island} size={86} />}

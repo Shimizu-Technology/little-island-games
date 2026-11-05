@@ -15,6 +15,7 @@ import { islandNames } from "../learn/home";
 import type { Island } from "../learn/types";
 import { PracticeOptions } from "./PracticeOptions";
 import { LearnerSettings } from "../learn/LearnerSettings";
+import { pendingAssignments } from "../state/profiles";
 import { useSoundControls } from "./Audio";
 import { emptyArcade } from "../arcade";
 import { learnerPractice } from "../learn/learners";
@@ -110,6 +111,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
       {!unlocked ? (
         <>
           <Copy>Practice notes, backups and About are for grown-ups. Type the answer to unlock.</Copy>
+          {pendingAssignments(store.save).length > 0 && <Copy>Some older work is waiting for a grown-up to choose whose it is.</Copy>}
           <View style={[styles.row, { gap: 10 }]}>
             <Text style={{ fontFamily: font, fontSize: 20, fontWeight: "700", color: C.ink }}>
               {gate.a} × {gate.b} =
