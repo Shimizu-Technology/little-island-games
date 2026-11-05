@@ -29,7 +29,7 @@ export function Hair({ look, pose, rear = false }: { look: IslanderLook; pose: P
   // A buzz cut is matte: strand-like gloss reads as a swim cap, and gold glints as dust. The bolt carries Lightning Streak alone.
   const shorn = style === 'buzz-cut' || style === 'mohawk-fade', matte = style === 'buzz-cut' ? { ...tones, shine: tones.sheen } : tones;
   // No forehead to stand apart from behind: shorn hair keeps its true colour and fades softly.
-  const t = shorn && back ? { ...matte, fade: tones.backFade, fadeHigh: tones.base } : matte;
+  const t = shorn && back ? { ...matte, fade: style === 'buzz-cut' ? tones.napeFade : tones.backFade, fadeHigh: tones.base } : matte;
   const tie = tieOn(look.hairColor, art.tieColor), running = pose.frame !== undefined && (pose.frame < 8 || pose.frame >= 16);
   const swing = running ? Math.sin((pose.frame! >= 16 ? pose.frame! - 16 + .5 : pose.frame!) * Math.PI / 4) * 7 : 0;
   const shared = { 'data-hair': style, transform: `translate(${x} ${y})`, stroke: t.line, strokeWidth: 1.3, strokeLinejoin: 'round' } as const;

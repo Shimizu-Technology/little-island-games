@@ -305,16 +305,15 @@ const ridgeOpen = ridge.slice(0, -1);
 const crestOpen = `M-8.6 -14.6${soft(crestTufts, .42)}`;
 const crestRootTufts = lobes([[8.6, -14.6], [4.2, -13.8], [0, -11.8], [-4.2, -13.8], [-8.6, -14.6]], .3);
 const crestSoft = `${crestOpen}${crestRootTufts}Z`;
-const crestRootSide = [[-9.4, -15.9], [-12.6, -18.4], [-13.6, -21.6], [-13, -25], [-11.4, -27.2]] as const;
-const crestRoot = `M-9.4 -15.9${soft(grain(crestRootSide, .7, 2.2))}Q0 -28.6 11.4 -27.2${soft(grain(crestRootSide.map(([x, y]) => [-x, y] as const).reverse(), .7, 2.2))}Z`;
+const crestShadow = 'M-10 -15C-11 -19 -11.4 -23 -11.6 -27.4L11.6 -27.4C11.4 -23 11 -19 10 -15C5 -14 -5 -14 -10 -15Z';
 const sideFlecks = flecks([[-24.6, -11], [-22.4, -15.4], [-20, -19], [-20.6, -22.8], [-16.4, -24], [24.6, -11], [22.4, -15.4], [20, -19], [20.6, -22.8], [16.4, -24]], .34);
-const ridgeRootSide = [[-14.6, -27], [-14, -14], [-13, -2], [-10.6, 8], [-5.6, 14.6], [-.6, 17]] as const;
-const ridgeRoot = `M-14.6 -27${soft(grain(ridgeRootSide, .9, 2.4))}L.6 17${soft(grain(ridgeRootSide.map(([x, y]) => [-x, y] as const).reverse(), .9, 2.4))}Q0 -28.6 -14.6 -27Z`;
+const ridgeShadow = 'M0 14.6C-5.2 12.4 -8.8 7 -9.8 0C-10.8 -7 -11.6 -15 -11.6 -27.4L11.6 -27.4C11.6 -15 10.8 -7 9.8 0C8.8 7 5.2 12.4 0 14.6Z';
 const mohawk: HairDrawing = {
   hairline: -14,
   front: {
     fade: shornFade,
-    fadeHigh: `${crestRoot}${sideFlecks}`,
+    fadeHigh: sideFlecks,
+    under: crestShadow,
     base: crestSoft,
     edge: `${crestOpen}${crestRootTufts}`,
     shade: `${wisp(-7.4, -30, -6.4, -22, -4.2, -14.4, 1.2)}${wisp(3.2, -34, 3, -24, 1.6, -13.6, 1.3)}${wisp(8.2, -29, 7, -22, 5, -14.6, 1.1)}`,
@@ -323,13 +322,14 @@ const mohawk: HairDrawing = {
   hatFront: { fade: buzzUnderHat, under: hatFlecks },
   back: {
     fade: napeShape,
-    fadeHigh: `${ridgeRoot}${flecks(stubbleNape.filter(([x]) => Math.abs(x) > 15), .36)}`,
+    fadeHigh: flecks(stubbleNape.filter(([x]) => Math.abs(x) > 15), .36),
+    under: ridgeShadow,
     base: ridge,
     edge: ridgeOpen,
     shade: `${wisp(-4.6, -32, -4.4, -12, -2.2, 9, 1.2)}${wisp(3.6, -33, 4, -12, 2.2, 9, 1.2)}`,
     shine: `${wisp(-7, -28, -6, -14, -4.6, 2, 1.1)}${wisp(-.8, -38, -.8, -28, -.8, -16, 1.1)}`,
   },
-  hatBack: { fade: napeShape, fadeHigh: `${ridgeRoot}${flecks(stubbleNape.filter(([x]) => Math.abs(x) > 15), .36)}`, shade: `${wisp(-5, -20, -4.6, -4, -2.6, 12, 1)}${wisp(4, -20, 4.2, -4, 2.6, 12, 1)}` },
+  hatBack: { fade: napeShape, fadeHigh: flecks(stubbleNape.filter(([x]) => Math.abs(x) > 15), .36), under: ridgeShadow, shade: `${wisp(-5, -20, -4.6, -4, -2.6, 12, 1)}${wisp(4, -20, 4.2, -4, 2.6, 12, 1)}` },
 };
 
 const puffL = ring(-27, -24.4, 11.2, 11.2, 9, .3, .34);
@@ -489,7 +489,7 @@ export const hairDrawings: Readonly<Record<IslanderLook['hairStyle'], HairDrawin
 const hex = (c: string) => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
 export const mix = (a: string, b: string, t: number) => { const x = hex(a), y = hex(b); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
 const light = (c: string) => { const [r, g, b] = hex(c); return (.2126 * r + .7152 * g + .0722 * b) / 255; };
-export type HairTones = Readonly<{ base: string; under: string; shade: string; shine: string; sheen: string; line: string; fade: string; fadeHigh: string; backFade: string }>;
+export type HairTones = Readonly<{ base: string; under: string; shade: string; shine: string; sheen: string; line: string; fade: string; fadeHigh: string; backFade: string; napeFade: string }>;
 const toneCache = new Map<string, HairTones>();
 /** Shadow, base, shine and outline all come from the chosen colour. Dark hair gets a cool sheen so it keeps form. */
 export function hairTones(color: IslanderLook['hairColor'], skin: IslanderLook['skinTone']): HairTones {
@@ -502,7 +502,7 @@ export function hairTones(color: IslanderLook['hairColor'], skin: IslanderLook['
   // A short fade stays visibly hair on every skin tone, even blonde on sand or silver on cocoa.
   const apart = (tone: string, deep = .5) => Math.abs(light(tone) - light(s)) >= .06 ? tone : light(s) > .42 ? mix(tone, line, .4) : mix(tone, '#120B0A', deep), cool = color === 'galaxy' ? '#6B5FC8' : '#6F7892';
   const shorn = apart(dark ? mix(base, cool, .12) : mix(base, s, .04), .78);
-  const tones = { base, under: mix(shorn, shade, light(shorn) < light(shade) ? .22 : .32), shade, shine: color === 'lightning-streak' ? '#FFD84D' : shine, sheen: mix(shorn, shine, dark ? .5 : .3), line, fade: apart(dark ? mix(mix(base, s, .15), cool, .06) : mix(base, s, .3), .55), fadeHigh: shorn, backFade: mix(base, dark ? mix(base, s, .15) : mix(base, s, .3), .4) };
+  const tones = { base, under: mix(shorn, shade, light(shorn) < light(shade) ? .22 : .32), shade, shine: color === 'lightning-streak' ? '#FFD84D' : shine, sheen: mix(shorn, shine, dark ? .5 : .3), line, fade: apart(dark ? mix(mix(base, s, .2), cool, .06) : mix(base, s, .3), .55), fadeHigh: shorn, backFade: dark ? mix(base, s, .08) : mix(base, s, .3), napeFade: mix(base, s, dark ? .2 : .3) };
   toneCache.set(key, tones);
   return tones;
 }
