@@ -203,9 +203,6 @@ const braids: HairDrawing = {
   },
 };
 
-const ticks = (pairs: readonly (readonly [number, number])[], w = .75) => pairs.map(([x, y]) => wisp(x, y, x + .3, y - 1.1, x + (x < 0 ? -.3 : .9), y - 2.5, w)).join('');
-/** Stubble follows the growth: every tick leans away from a crown swirl. */
-const stubble = (points: readonly (readonly [number, number])[], cx: number, cy: number, length: number, w: number) => points.map(([x, y]) => { const dx = x - cx, dy = y - cy, l = Math.max(.01, Math.hypot(dx, dy)), ux = dx / l * length, uy = dy / l * length; return wisp(x, y, x + ux / 2, y + uy / 2, x + ux, y + uy, w); }).join('');
 /** Short hair ends in a grain, not a painted edge: tiny soft teeth along the line. */
 function grain(points: readonly (readonly [number, number])[], depth = .8, step = 2.5) {
   const out: [number, number][] = [];
