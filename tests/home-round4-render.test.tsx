@@ -15,14 +15,14 @@ describe('native pose retention regression',()=>{
   for(const lying of ['lie','lie-asleep']){
    await act(()=>subject.update(rig(lying)));
    const oldSvg=subject.root.findByType('svg');
-   expect(oldSvg.props.viewBox).toBe('0 0 144 92');
+   expect(oldSvg.props.viewBox).toBe('-6 -6 156 104');
    expect(subject.root.findAllByType('g')[0].props.transform).toContain('rotate(-90)');
    // Include the stale sleep notification that can race a reducer's floor result.
    await act(()=>subject.update(rig(homeCharacterPose('stand','lie-asleep'))));
    expect(subject.root.findByType('svg')).not.toBe(oldSvg);
    expect(subject.toJSON()).toEqual(fresh.toJSON());
    const svg=subject.root.findByType('svg');
-   expect(svg.props.viewBox).toBe('0 0 80 132');expect(svg.props.height).toBe(224);expect(svg.props.width).toBe(80*224/132);
+   expect(svg.props.viewBox).toBe('-6 -6 92 144');expect(svg.props.height+svg.props.style.margin*2).toBeCloseTo(224);expect(svg.props.width+svg.props.style.margin*2).toBeCloseTo(80*224/132);
    expect(subject.root.findAllByType('g')[0].props.transform).toBe('translate(0 0) rotate(0) scale(1 1)');
    expect(subject.root.findAll(n=>n.props['data-limb']?.endsWith('-leg'))).toHaveLength(2);
    expect(subject.root.findAll(n=>n.props.clipPath||n.type==='clipPath')).toHaveLength(0);

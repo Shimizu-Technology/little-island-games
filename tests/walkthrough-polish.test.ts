@@ -21,7 +21,7 @@ describe('walkthrough reward clarity', () => {
     expect(focus('flower-lei').box).toBe('9 43 62 62');
     expect(focus('checker-scarf')).toEqual(focus('flower-lei'));
     expect(focus('backpack').view).toBe('back');
-    expect(focus('reading-glasses').box).toBe('5 0 70 70');
+    expect(focus('reading-glasses').box).toBe('-1 -6 82 82');
   });
   it('aligns the constant-size seated hip to each illustrated surface', () => {
     const home=starterHome();home.rooms.home.instances.push(instance('chair','chair',12,8));
@@ -42,6 +42,6 @@ it('frames v3 feet and garments below the large head', () => {
   }
   expect(box('top')[1]).toBeGreaterThan(60);
   expect(box('bottom')[1]).toBeGreaterThan(80);
-  expect(box('hairColor')).toEqual([5, 0, 70, 70]);
+  expect(box('hairColor')).toEqual([-1, -6, 82, 82]);
   expect(box('build')[3]).toBeGreaterThanOrEqual(132);
 });

@@ -43,6 +43,17 @@ export function islanderAnchors(base: CharacterBase, facing: Facing = 'right', o
     head: islanderPoint(pose.joints.head, base, facing, options),
   };
 }
+/** Measured art reaches 5.3 units past the layout box, stroke included. tests/islander-surface.test.tsx holds this. */
+const SURFACE_PAD = 6;
+/** The drawing surface includes the whole wardrobe; native SVG crops at its own box. Negative margins keep the layout box, scale and every anchor where they were. */
+export function islanderSurface(box: Readonly<{ left?: number; top?: number; width: number; height: number }>, scale: number) {
+  return {
+    width: (box.width + SURFACE_PAD * 2) * scale,
+    height: (box.height + SURFACE_PAD * 2) * scale,
+    viewBox: `${(box.left ?? 0) - SURFACE_PAD} ${(box.top ?? 0) - SURFACE_PAD} ${box.width + SURFACE_PAD * 2} ${box.height + SURFACE_PAD * 2}`,
+    style: { margin: -SURFACE_PAD * scale },
+  };
+}
 
 export const crabOrigin = (base: CharacterBase): Point => base === 'carry' ? [60, 54] : base === 'lie' ? [60, 72] : base === 'bathe' ? [60, 73] : base === 'sit' ? [60, 96] : [60, 100];
 export const pipOrigin = (base: CharacterBase): Point => base === 'carry' ? [75, 57] : base === 'lie' ? [42, 85] : base === 'sit' || base === 'bathe' ? [75, 111] : [75, 117];

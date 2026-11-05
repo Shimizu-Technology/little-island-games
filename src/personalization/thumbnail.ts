@@ -11,5 +11,8 @@ export function thumbnailFocus(item: Pick<StyleItem, 'category' | 'value'>) {
     if (['flower-lei', 'checker-scarf'].includes(item.value)) return { view: 'front' as const, box: '9 43 62 62' };
   }
   if (item.category === 'palette') return { view: 'front' as const, box: '13 63 54 54' };
-  return { view: 'front' as const, box: ['hat', 'hairStyle', 'hairColor', 'accessory'].includes(item.category) ? '5 0 70 70' : '-26 0 132 132' };
+  // Hair keeps its whole silhouette, braid tips and bun included, so each tile shows what names the style.
+  if (item.category === 'hairStyle') return { view: 'front' as const, box: '-11 -8 102 102' };
+  if (item.category === 'outfit') return { view: 'front' as const, box: '-14 16 108 118' };
+  return { view: 'front' as const, box: ['hat', 'hairColor', 'accessory'].includes(item.category) ? '-1 -6 82 82' : '-26 0 132 132' };
 }

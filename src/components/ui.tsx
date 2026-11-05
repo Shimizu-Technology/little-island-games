@@ -310,6 +310,7 @@ export function Sheet({
   footer,
   scrollKey,
   presence = true,
+  fill = false,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -319,6 +320,8 @@ export function Sheet({
   scrollKey?: string | number;
   /** Auto-presented sheets that wait for others (the islander creator) opt out. */
   presence?: boolean;
+  /** Use the whole sheet and let the content manage its own scrolling, so pinned content stays pinned. */
+  fill?: boolean;
 }) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -393,6 +396,7 @@ export function Sheet({
             wide
               ? { borderRadius: 26 }
               : { borderTopLeftRadius: 26, borderTopRightRadius: 26, borderBottomLeftRadius: 0, borderBottomRightRadius: 0, maxWidth: undefined },
+            fill && { flex: 1, maxWidth: wide ? 900 : undefined },
             { opacity: progress, transform: [...enter, { translateY: drag }] },
           ]}
         >
@@ -405,13 +409,13 @@ export function Sheet({
               </Button>
             </View>
           </View>
-          <ScrollView key={scrollKey}
+          {fill ? <View style={{ flex: 1, minHeight: 0, paddingTop: 10, paddingBottom: 8, paddingHorizontal: 14 }}>{children}</View> : <ScrollView key={scrollKey}
             style={{ flexShrink: 1 }}
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingTop: 16, paddingBottom: footer ? 8 : 16 + (wide ? 0 : insets.bottom), paddingHorizontal: 22, gap: 16 }}
           >
             {children}
-          </ScrollView>
+          </ScrollView>}
           {footer && (
             <View style={[styles.sheetFooter, { paddingBottom: wide ? 18 : Math.max(insets.bottom, 14) }]}>{footer}</View>
           )}

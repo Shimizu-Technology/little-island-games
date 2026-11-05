@@ -42,7 +42,7 @@ export function PreviousSaves({ onChoose }: { onChoose: (raw: string) => void })
   return (
     <View style={{ gap: 12 }}>
       <Heading style={{ fontSize: 19 }}>Previous saves on this device</Heading>
-      <Copy>Copies kept before a restore or fresh start. The date is when the copy was preserved. Nothing changes until you confirm a restore.</Copy>
+      <Copy>Copies kept before a restore, a fresh start or an update that changes saved progress. The date is when the copy was preserved. Nothing changes until you confirm a restore.</Copy>
       {loading && <Copy>Opening previous saves…</Copy>}
       {!loading && !error && entries.length === 0 && <Copy>No previous copies yet. Restoring a backup keeps a copy of the games it replaces.</Copy>}
       {!!error && <View accessibilityRole="alert" style={{ gap: 8 }}><Copy>{error}</Copy><Button quiet disabled={busy} onPress={() => { setLoading(true); setAttempt((n) => n + 1); }}>Try opening copies again</Button></View>}

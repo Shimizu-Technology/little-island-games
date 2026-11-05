@@ -3,22 +3,24 @@ import {validHome} from '../home/model';
 import type {Save} from './validation';
 import type {StorageAdapter} from './storage';
 import {preserveAndReplace} from './replacement';
-/** Hydration publishes no writable state until the exact pre-repair bytes are safe. */
-export async function preserveHomeMigration(adapter:StorageAdapter,encoded:string,before:Save,after:Save){
+/** Hydration publishes no writable state until the exact pre-migration bytes are safe. */
+export async function preserveLearnerMigration(adapter:StorageAdapter,encoded:string,before:Save,after:Save){
  try{assertMigratedHomes(after);}catch(error){await adapter.preserve(encoded);throw error;}
- const changed=homeChanged(before,after);
+ const changed=learnersChanged(before,after);
  if(!changed)return false;
  await preserveAndReplace(adapter,encodeSave(after),encoded);
  return true;
 }
 
-export function homeChanged(before:Save,after:Save){
- return Object.entries(before.personalization?.people??{}).some(([id,person])=>JSON.stringify(person.home)!==JSON.stringify(after.personalization?.people[id]?.home));
+/** Repaired homes and backfilled rewards. Older builds reject reward ids they don't know, so these copies are the rollback point. */
+export function learnersChanged(before:Save,after:Save){
+ const people=before.personalization?.people??{};
+ return Object.entries(after.personalization?.people??{}).some(([id,person])=>Object.hasOwn(people,id)?JSON.stringify(people[id])!==JSON.stringify(person):!!person.earned.length||person.milestones.some(milestone=>milestone!=='migration:badges-v1'));
 }
-/** Restore retains the incoming pre-repair bytes AND the device's persisted/live originals. */
-export async function preserveImportedHome(adapter:StorageAdapter,encoded:string,before:Save,after:Save,current:string|null){
+/** Restore retains the incoming pre-migration bytes AND the device's persisted/live originals. */
+export async function preserveImportedLearners(adapter:StorageAdapter,encoded:string,before:Save,after:Save,current:string|null,upgraded=false){
  try{assertMigratedHomes(after);}catch(error){await adapter.preserve(encoded);throw error;}
- if(homeChanged(before,after))await adapter.preserve(encoded);
+ if(upgraded||learnersChanged(before,after))await adapter.preserve(encoded);
  await preserveAndReplace(adapter,encodeSave(after),current);
 }
 

@@ -14,7 +14,7 @@ export function BadgeResultCard({ round }: { round: string }) {
   const homeName=home && (home in catalog ? catalog[home as keyof typeof catalog].name : themeRewards.find(t=>t.id===home)?.name);
   return <View testID="new-badge-card" style={{ padding:16, gap:10, borderRadius:20, backgroundColor:'#FFF6DA', borderColor:info.color, borderWidth:1, alignSelf:'stretch' }}>
     <Heading style={{fontSize:20}}>New badge: {info.name}</Heading>
-    <Copy>{homeName ? `Ready for your home: ${homeName}.` : `${wearable?.name} is ready to wear.`}</Copy>
+    <Copy>{[wearable && `${wearable.name} is ready to wear.`, homeName && `Ready for your home: ${homeName}.`].filter(Boolean).join(' ')}</Copy>
     <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>
       {wearable && <Button compact onPress={()=>{store.dismissBadge(); router.push({pathname:'/locker',params:{item:`${wearable.slot.toLowerCase()}:${wearable.id}`}});}}>Try it on</Button>}
       {home && <Button compact onPress={()=>{store.dismissBadge();router.push({pathname:'/island-home',params:{item:home}});}}>See it at home</Button>}

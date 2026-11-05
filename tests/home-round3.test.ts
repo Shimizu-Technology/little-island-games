@@ -7,7 +7,7 @@ import {editHistory} from '../src/home/useHomeStore';
 import {initializePersonalization,validPerson} from '../src/personalization/model';
 import {emptySave,parseSave} from '../src/state/validation';
 import {backfillRewards} from '../src/badges/transitions';
-import {preserveImportedHome} from '../src/state/homeMigration';
+import {preserveImportedLearners} from '../src/state/homeMigration';
 import {buildScene} from '../src/home/scene/graph';
 import {paintedBounds} from '../src/home/art/silhouettes';
 import {overlaps} from '../src/home/scene/spatial';
@@ -99,13 +99,13 @@ describe('M2 successful restore byte preservation',()=>{
  it('awaits exact incoming whitespace, persisted device and latest device bytes before replacement; both originals are recoverable',async()=>{
   const incoming=' \n'+JSON.stringify(fixture(),null,3)+'\n\t',before=parseSave(incoming),after=backfillRewards(before);let stored='current-device-save';const recovery=new Map<string,string>(),events:string[]=[];
   const adapter:StorageAdapter={get:async()=>stored,set:async raw=>{events.push('set');stored=raw;},preserve:async raw=>{await Promise.resolve();events.push('preserve');recovery.set(String(recovery.size),raw);},listRecovery:async()=>[...recovery.keys()].map(key=>({key,createdAt:0,bytes:0})),readRecovery:async key=>recovery.get(key)??null};
-  await preserveImportedHome(adapter,incoming,before,after,'latest-device-save');
+  await preserveImportedLearners(adapter,incoming,before,after,'latest-device-save');
   expect([...recovery.values()]).toEqual([incoming,'current-device-save','latest-device-save']);expect(events).toEqual(['preserve','preserve','preserve','set']);expect(parseSave(stored)).toEqual(after);
   expect(await adapter.readRecovery('0')).toBe(incoming);expect(await adapter.readRecovery('1')).toBe('current-device-save');
  });
  it.each([1,2,3])('never replaces any data if preservation step %i fails',async failure=>{
   const incoming=' \n'+JSON.stringify(fixture(),null,4)+'\n',before=parseSave(incoming),after=backfillRewards(before);let stored='device',calls=0;
   const adapter:StorageAdapter={get:async()=>stored,set:async raw=>{stored=raw;},preserve:async()=>{if(++calls===failure)throw Error('disk full');},listRecovery:async()=>[],readRecovery:async()=>null};
-  await expect(preserveImportedHome(adapter,incoming,before,after,'live')).rejects.toThrow('disk full');expect(stored).toBe('device');
+  await expect(preserveImportedLearners(adapter,incoming,before,after,'live')).rejects.toThrow('disk full');expect(stored).toBe('device');
  });
 });

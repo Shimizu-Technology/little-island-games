@@ -16,7 +16,8 @@ import { shelfLevel, homeContinue, dailySuggestions } from '../src/learn/home';
 import { recordLevelRound } from '../src/learn/levelEvidence';
 import { mathMove, questionOf, type MathRound } from '../src/learn/games/shell-math/round';
 import { mathAnswer } from '../src/math/questions';
-import { personFor, withoutLearner } from '../src/personalization/model';
+import { personFor, withoutLearner, type Person } from '../src/personalization/model';
+import { badgesFor, grantsFor } from '../src/badges/engine';
 import { gameIds, createGame } from '../src/games';
 import { defaultOptions } from '../src/games/types';
 import { createTic, ticMove } from '../src/games/tic';
@@ -67,6 +68,8 @@ function activity(game: ActivityId, seed: number): ActivitySession {
   return createMysterySession(undefined,seed,'crew',`mystery-${seed}`,1,'gentle');
 }
 async function saveActivity(r: ActivitySession) { const old = store.save.activities?.[r.game]; await act(async () => { expect(store.activityUpdate(r.game,r,{id:old?.id ?? null,...(old && 'revision' in old ? {revision:old.revision} : {}),epoch:store.epoch})).toBe(true); }); }
+/** Holders of a badge receive catalog items added to it after they earned it; nothing else about them changes. */
+const withAddedGrants = (p: Person): Person => { const added = grantsFor(badgesFor(p.milestones)).filter(id => !p.earned.includes(id)); return { ...p, earned: [...p.earned, ...added], unseen: [...p.unseen, ...added] }; };
 beforeEach(() => { db.preserved=[]; vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true); });
 afterEach(async () => { if(root) await act(async () => { root!.unmount(); }); root=undefined; vi.unstubAllGlobals(); });
 afterAll(() => { if(process.env.AUDIT_OUTPUT) writeFileSync(process.env.AUDIT_OUTPUT, JSON.stringify(observations,null,2)+'\n'); });
@@ -263,7 +266,7 @@ it('W02 warmups retain practice and rewards but never count as School rounds or 
   expect(s.learn).toBeUndefined();expect(readyForNext(activeLearner(s.learning),'quick-practice','easy')).toBe(false);expect(personFor(s,'a').milestones).toContain('learn:quick-practice:1');expect(activeLearner(s.learning).skills['num.add-within-10'].tries).toBeGreaterThan(0);expect(s.school).toBeUndefined();observations.W02={practiceKept:true,noLevelCompletion:true};
 });
 it('M02 actual 2.5 engine fixture retains named progress and exact original; no unowned history copied',async()=>{
-  const old=parseSave(JSON.stringify(fixture25)),oldA=structuredClone(old.personalization!.people.a);await mount(old);expect(store.save.learn?.['shell-math']).toEqual(old.learn?.['shell-math']);expect(shelfLevel(store.save,'shell-math')).toBe(3);expect(personFor(store.save,'a').milestones).toEqual(oldA.milestones);expect(personFor(store.save,'a').earned).toEqual(oldA.earned);expect(personFor(store.save,'a').look).toEqual(oldA.look);expect(personFor(store.save,'a').home.version).toBe(4);expect(store.save.arcade?.people.a).toEqual(old.arcade?.people.a);expect(libraryChild(store.save.library,'a').saved).toEqual([]);expect(pendingAssignments(store.save).some(p=>p.key==='explore')).toBe(true);expect(db.preserved).toContain(JSON.stringify(old));await choose('b');expect(shelfLevel(store.save,'shell-math')).toBe(1);expect(arcadeLearner(store.save.arcade,'b').games).toEqual({});observations.M02={realEngineFixture:true,ownedProgressRetained:true};
+  const old=parseSave(JSON.stringify(fixture25)),oldA=structuredClone(old.personalization!.people.a);await mount(old);expect(store.save.learn?.['shell-math']).toEqual(old.learn?.['shell-math']);expect(shelfLevel(store.save,'shell-math')).toBe(3);expect(personFor(store.save,'a').milestones).toEqual(oldA.milestones);expect(personFor(store.save,'a').earned).toEqual(withAddedGrants(oldA).earned);expect(personFor(store.save,'a').look).toEqual(oldA.look);expect(personFor(store.save,'a').home.version).toBe(4);expect(store.save.arcade?.people.a).toEqual(old.arcade?.people.a);expect(libraryChild(store.save.library,'a').saved).toEqual([]);expect(pendingAssignments(store.save).some(p=>p.key==='explore')).toBe(true);expect(db.preserved).toContain(JSON.stringify(old));await choose('b');expect(shelfLevel(store.save,'shell-math')).toBe(1);expect(arcadeLearner(store.save.arcade,'b').games).toEqual({});observations.M02={realEngineFixture:true,ownedProgressRetained:true};
 });
 it('D03 deleting active A selects Family, retains all B canonical slots, and protects Family',async()=>{
   await mount();for(const [owner,seed] of [['a',1201],['b',1202]] as const){await choose(owner);await learn(round('shell-math',owner,seed));await act(async()=>{store.update('maze',{...createGame('maze',defaultOptions),id:`${owner}-maze`});store.boardUpdate('coconut-drop',createSession('coconut-drop',{seed}),undefined,store.epoch);store.libraryPatch({saved:[owner]},store.epoch,owner);});await saveActivity(activity('go-fish',seed));}
@@ -281,7 +284,7 @@ it('M04 real 77a82ff8 engine fixture upgrades Family plus A/B without losing any
   const expectedClassic={a:'tic-tac-toe',b:'word-rescue',family:'maze'} as const;
   const expectedBoard={a:'coconut-drop',b:'shell-pits',family:'reef-sweep'} as const;
   const expectedActivity={a:'go-fish',b:'crazy-eights',family:'racer'} as const;
-  for(const owner of ['a','b','family'] as const){await choose(owner);expect(store.save.learn?.[expectedLearn[owner]]).toEqual(old.learn?.[expectedLearn[owner]]);expect(store.save.sessions[expectedClassic[owner]]).toEqual(old.sessions[expectedClassic[owner]]);expect(store.save.board?.[expectedBoard[owner]]).toEqual(old.board?.[expectedBoard[owner]]);expect(store.save.activities?.[expectedActivity[owner]]).toEqual(old.activities?.[expectedActivity[owner]]);expect(store.save.library?.profiles[owner]).toEqual(old.library?.profiles[owner]);expect(personFor(store.save,owner)).toEqual(personFor(old,owner));expect(store.save.arcade?.people[owner]).toEqual(old.arcade?.people[owner]);}
+  for(const owner of ['a','b','family'] as const){await choose(owner);expect(store.save.learn?.[expectedLearn[owner]]).toEqual(old.learn?.[expectedLearn[owner]]);expect(store.save.sessions[expectedClassic[owner]]).toEqual(old.sessions[expectedClassic[owner]]);expect(store.save.board?.[expectedBoard[owner]]).toEqual(old.board?.[expectedBoard[owner]]);expect(store.save.activities?.[expectedActivity[owner]]).toEqual(old.activities?.[expectedActivity[owner]]);expect(store.save.library?.profiles[owner]).toEqual(old.library?.profiles[owner]);expect(personFor(store.save,owner)).toEqual(withAddedGrants(personFor(old,owner)));expect(store.save.arcade?.people[owner]).toEqual(old.arcade?.people[owner]);}
   const backup=encodeSave(store.save);await act(async()=>store.startFresh());await act(async()=>store.restore(backup));expect(encodeSave(store.save)).toBe(backup);observations.M04={producer:'77a82ff8',familyAndTwoChildren:true,wholeBackup:true};
 });
 it('assignment recovery failure preserves the entire before-save and all owners; stale assignment cannot run',async()=>{

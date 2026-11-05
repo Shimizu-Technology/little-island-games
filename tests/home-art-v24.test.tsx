@@ -23,7 +23,7 @@ describe('2.4 art and socket contract',()=>{
    expect(Object.values(pose.joints).flat().every(Number.isFinite)).toBe(true);
    expect(svg.indexOf('data-layer="held"')).toBeLessThan(svg.indexOf('data-layer="hands"'));
    if (['hold','eat','drink'].includes(id)) expect(svg).toContain(`translate(${pose.joints.rightHand[0]-12} ${pose.joints.rightHand[1]-12})`);
-   if(id.startsWith('lie')) { expect(svg).toContain('viewBox="0 0 144 92"'); expect(svg).toContain('translate(6 86) rotate(-90)'); expect(poseBox(pose).anchor).toEqual([44,46]); }
+   if(id.startsWith('lie')) { expect(svg).toContain('viewBox="-6 -6 156 104"'); expect(svg).toContain('translate(6 86) rotate(-90)'); expect(poseBox(pose).anchor).toEqual([44,46]); }
   }
   if(process.env.V24_ART_GALLERY) {
    mkdirSync(process.env.V24_ART_GALLERY,{recursive:true});

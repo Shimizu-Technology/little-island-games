@@ -1,7 +1,7 @@
 import { assignEarlier, encodeSave, migrateProfiles, projectProfile, syncProfile } from "./profiles";
 import { clearPageDrafts, draftRecovery } from "../library/drafts";
 import { libraryChild, migrateLibrary, validLibraryChild, validLibraryData, validLibraryPolicy, type LibraryChildState, type LibraryPolicy } from "../library/state";
-import { preserveHomeMigration, preserveImportedHome, assertMigratedHomes } from './homeMigration';
+import { preserveLearnerMigration, preserveImportedLearners, assertMigratedHomes } from './homeMigration';
 import { applyWarmup } from './warmupAction';
 import { badgesFor, type BadgeId } from '../badges/engine';
 import { personFor } from '../personalization/model';
@@ -125,7 +125,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       assertMigratedHomes(next);
       if(encoded) {
         if (!before.profiles || !before.library || before.library.version === 1) await preserveAndReplace(storage, encodeSave(next), encoded);
-        else await preserveHomeMigration(storage,encoded,before,next);
+        else await preserveLearnerMigration(storage,encoded,before,next);
       }
       generation.current += 1;
       setEpoch(generation.current);
@@ -460,8 +460,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
         await queue.current;
         const pending = draftRecovery(); if (pending) await storage.preserve(pending);
-        if (!incoming.profiles || !incoming.library || incoming.library.version === 1) await storage.preserve(encoded);
-        await preserveImportedHome(storage, encoded, incoming, next, recovery ? null : encodeSave(latest.current));
+        await preserveImportedLearners(storage, encoded, incoming, next, recovery ? null : encodeSave(latest.current), !incoming.profiles || !incoming.library || incoming.library.version === 1);
         clearPageDrafts();
         generation.current += 1;
         setEpoch(generation.current);

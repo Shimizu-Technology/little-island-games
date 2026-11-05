@@ -12,6 +12,8 @@ The grown-up Settings gate contains **Whose earlier work is this?** Before the g
 
 Older word and race aggregates are labeled **Earlier family records**. They cannot be reliably split, so they are neither divided nor copied into personal records. The Family free-play score board stays shared.
 
+Reward backfill follows the same rule. When a newer catalog ties a new item to a badge a child already holds, load and restore add it, and older builds then reject that save. So any load or restore that changes a learner's home or badge ledger first keeps the exact incoming bytes in Previous saves, including saves already on envelope v2. A save with nothing to change makes no copy and writes nothing. To roll back, the older build opens to recovery: start fresh there, which keeps the newer save, then restore the pre-update copy from Previous saves. Work done after the update stays in the newer copy. Backups exported after the update can't be opened by the older build.
+
 ## School levels and stars
 
 All five levels stay open. The selected level and completed levels are shown separately. Each learner/game/level record stores best earned stars, completed and independent counts, bounded independent days and deduplication round IDs.

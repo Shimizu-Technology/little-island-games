@@ -15,7 +15,7 @@ vi.mock('react-native-reanimated',()=>({default:{createAnimatedComponent:(c:unkn
 const poses = [...frontPoses, ...backPoses];
 describe('badge reward art contract',()=>{
  it('validates every reward, badge reference, and anchor in every authored pose',()=>{
-  expect(wardrobeRewards).toHaveLength(21); expect(themeRewards).toHaveLength(6);
+  expect(wardrobeRewards).toHaveLength(26); expect(themeRewards).toHaveLength(6);
   for(const reward of [...wardrobeRewards,...themeRewards]) {
    expect(reward.earned).toBe(true); expect(rewardTracks).toContain(reward.track);
    expect(reward.badge).toMatch(new RegExp(`^${reward.track}-[1-4]$`));

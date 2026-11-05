@@ -81,6 +81,15 @@ export function backfillRewards(save: Save): Save {
     const p=personFor(next,learner.id);
     next=put(next,learner.id,{...p,milestones:p.milestones.length < MAX_MILESTONES ? [...p.milestones,'migration:badges-v1'] : p.milestones,unseen:original.unseen});
   }
+  return grantAddedRewards(next);
+}
+/** New catalog items tied to a badge reach children who already hold it. Additive and idempotent: nothing is removed, and a settled save returns unchanged. */
+function grantAddedRewards(save: Save): Save {
+  let next=save;
+  for(const learner of save.learning?.people ?? [{id:'family'}]) {
+    const p=personFor(next,learner.id), added=grantsFor(badgesFor(p.milestones)).filter(id=>!p.earned.includes(id));
+    if(added.length) next=put(next,learner.id,{...p,earned:[...p.earned,...added],unseen:[...p.unseen,...added]});
+  }
   return next;
 }
 /** Identifies a changed result, so a later mount of an old celebration cannot replay the card. */

@@ -22,7 +22,7 @@ describe('Lagoon Run Islander integration',()=>{
   for(const look of looks) for(let frame=0;frame<24;frame++){
    const markup=renderToStaticMarkup(<RunnerFrameArt frame={frame} look={look}/>);
    expect(markup).not.toMatch(/NaN|undefined|Infinity/);
-   expect(markup).toContain('viewBox="0 0 80 132"');
+   expect(markup).toContain('viewBox="-6 -6 92 144"');
    expect([...markup.matchAll(/data-limb=/g)]).toHaveLength(4);
    expect([...markup.matchAll(/data-mitten=/g)]).toHaveLength(2);
    expect(markup).not.toContain('#E88D7D'); // rear view has no face

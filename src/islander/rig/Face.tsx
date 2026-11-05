@@ -7,12 +7,14 @@ export function Face({look,pose,expression,blink=false}: {look: IslanderLook; po
   const [x,y]=pose.joints.head, e=expression??pose.expression, stars=!expression&&(pose.id==='cheer'||pose.id==='dance-1'||pose.id==='dance-3'), wink=!expression&&(pose.id==='dance-0'||pose.id==='dance-2');
   const brows=look.brows??'soft', lash=look.lashes==='lashes'||(look.lashes===undefined&&look.presentation==='girl');
   const star=(cx:number)=>`M${cx} 4l1.4 2.7 3 .4 -2.2 2.1 .5 3 -2.7-1.4 -2.7 1.4 .5-3 -2.2-2.1 3-.4Z`;
-  return <G transform={`translate(${x} ${y})`} data-expression={stars?'star-eyes':wink?'wink':e}>
-    {look.cheeks!=='none'&&<G fill="#E88D7D" fillOpacity={look.cheeks==='rosy'?.65:.45} strokeWidth={0}><Ellipse cx={-16} cy={13} rx={4.6} ry={2.7}/><Ellipse cx={16} cy={13} rx={4.6} ry={2.7}/></G>}
+  // Lines darken on the deepest skin tones, so the face still reads at small sizes.
+  const dark=look.skinTone==='cocoa'||look.skinTone==='earth';
+  return <G transform={`translate(${x} ${y})`} stroke={dark?'#21171A':undefined} data-expression={stars?'star-eyes':wink?'wink':e}>
+    {look.cheeks!=='none'&&<G fill="#E88D7D" fillOpacity={dark?(look.cheeks==='rosy'?.42:.28):look.cheeks==='rosy'?.65:.45} strokeWidth={0}><Ellipse cx={-16} cy={13} rx={4.6} ry={2.7}/><Ellipse cx={16} cy={13} rx={4.6} ry={2.7}/></G>}
     <Path d={e==='thinking'?'M-14 0q3-4 7-3M7-1q3 0 7 2':e==='focused'?'M-14-1l7 2M7 1l7-2':e==='surprised'?'M-14-4q3-3 7 0M7-4q3-3 7 0':brows==='straight'?'M-14-1h6M8-1h6':brows==='arched'?'M-14 0q3-5 7-1M7-1q4-4 7 1':'M-14-1q3-2 7 0M7-1q3-2 7 0'} fill="none" strokeWidth={brows==='bold'?2.6:2.1}/>
     {stars?<Path d={star(-10)+star(10)} fill="#F6CD71" strokeWidth={1.1}/>:<G>
       {(blink||e==='proud'||e==='sleepy'||e==='yum')&&!wink?<Path data-eyes={e==='sleepy'||blink?'closed-arcs':undefined} d={e==='sleepy'||blink?'M-16 7q6 8 12 0M4 7q6 8 12 0':'M-13 8q3-4 6 0M7 8q3-4 6 0'} fill="none" strokeWidth={e==='sleepy'?1.8:1.65}/>:<G fill="#302A2A" strokeWidth={0}>
-        {wink?<Path d="M-13 8q3-4 6 0" fill="none" stroke="#493E38" strokeWidth={1.7}/>:<Circle cx={-9} cy={7.5} r={2.85}/>}
+        {wink?<Path d="M-13 8q3-4 6 0" fill="none" stroke={dark?'#21171A':'#493E38'} strokeWidth={1.7}/>:<Circle cx={-9} cy={7.5} r={2.85}/>}
         <Circle cx={9} cy={7.5} r={2.85}/><Path d={`M8 6.4h.1${wink?'':'M-10 6.4h.1'}`} stroke="#FFFFFF" strokeWidth={1.4}/>
       </G>}
       {lash&&<Path d="M-12 7l-3-2M12 7l3-2" fill="none" strokeWidth={1.5}/>}
