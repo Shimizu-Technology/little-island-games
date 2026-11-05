@@ -117,6 +117,7 @@ function ActivityGame({ id }: { id: ActivityId }) {
             roundPractice={practice}
             session={saved?.game === "racer" ? saved : null}
             records={store.save.raceRecords}
+            earlierRecords={store.save.profiles?.earlier.raceRecords}
             onSave={(next) => save(next)}
             onExit={() => (router.canGoBack() ? router.back() : router.replace("/"))}
             sound={store.save.settings.sound}

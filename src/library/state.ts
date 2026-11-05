@@ -235,6 +235,7 @@ export function validLibraryData(v: unknown): v is LibraryData {
 export function libraryChild(data: LibraryData | undefined, childId: string): LibraryChildState {
   return data && Object.hasOwn(data.profiles, childId) ? data.profiles[childId] : newLibraryChild();
 }
+export const worldCategory = { oceans: "ocean", world: "guam", space: "space", weather: "weather", animals: "animals" } as const;
 /** Pure one-time projection. The original Explore field and archive are never edited. */
 export function migrateLibrary<
   T extends { library?: LibraryData; explore?: LegacyExplore; learning?: { active: string; people?: { id: string }[] } },
@@ -253,34 +254,15 @@ export function migrateLibrary<
     ]));
     return { ...save, library: { ...JSON.parse(JSON.stringify(save.library)), version: 2, profiles } };
   }
-  const child = newLibraryChild(),
-    explore = save.explore;
-  if (explore) {
-    child.saved = [...explore.favorites];
-    const progress = explore.progress;
-    if (progress) {
-      child.query = progress.query;
-      child.onlyFavorites = progress.onlyFavorites;
-      child.labs = JSON.parse(JSON.stringify(progress.labs)) as Record<WorldId, LabState>;
-      child.positions = { ...progress.positions };
-      if (progress.location.kind === "topic") child.current = progress.location.id;
-      if ("world" in progress.location)
-        child.category = (
-          { oceans: "ocean", world: "guam", space: "space", weather: "weather", animals: "animals" } as const
-        )[progress.location.world];
-      child.recent = [
-        ...new Set(
-          [progress.location, ...[...progress.history].reverse()].flatMap((l) => (l.kind === "topic" ? [l.id] : []))
-        ),
-      ].slice(0, 24);
-    }
-  }
+  // Device-wide history has no reliable single owner. Keep the exact archive;
+  // the grown-up assignment transaction can merge it into a chosen child's Library.
+  const explore = save.explore;
   return {
     ...save,
     library: {
       version: 2,
       profiles: Object.fromEntries(learnerIds.map((id) => {
-        const profile = id === (save.learning?.active ?? "family") ? child : newLibraryChild();
+        const profile = newLibraryChild();
         return [id, existingLearners ? familyCollections(profile) : profile];
       })),
       ...(explore ? { archive: { explore: JSON.parse(JSON.stringify(explore)) as LegacyExplore } } : {}),

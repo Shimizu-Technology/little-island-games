@@ -30,6 +30,7 @@ export type RaceScreenProps = {
   onFeedback?: (event: RaceFeedback) => void;
   session?: RaceSession | null;
   records?: RaceRecords;
+  earlierRecords?: RaceRecords;
   onSave: (session: RaceSession, record: RaceRecord | null) => void;
   onExit?: () => void;
   active?: boolean;
@@ -38,7 +39,7 @@ export type RaceScreenProps = {
 };
 export { formatRaceTime as raceTime } from "./engine";
 /** Parent persists onSave transactionally. Remount after external backup replacement. */
-export function RaceScreen({ session, records = {}, onSave, onExit, active = true, onFeedback, sound, onToggleSound, beforeNewRound, roundPractice }: RaceScreenProps) {
+export function RaceScreen({ session, records = {}, earlierRecords = {}, onSave, onExit, active = true, onFeedback, sound, onToggleSound, beforeNewRound, roundPractice }: RaceScreenProps) {
   const viewport = useWindowDimensions();
   const shortLandscape = viewport.width > viewport.height && viewport.height < 520;
   const landscape = viewport.width > viewport.height;
@@ -335,6 +336,7 @@ export function RaceScreen({ session, records = {}, onSave, onExit, active = tru
             <Text style={s.arrow}>›</Text>
           </PressableScale>
         ))}
+        {!!Object.keys(earlierRecords).length && <View style={{gap:6}}><Heading style={{fontSize:18}}>Earlier family records</Heading><Copy>Older course records have no recorded learner.</Copy>{Object.values(earlierRecords).map(r => <Copy key={`${r.course}:${r.mode}`}>{COURSES.find(c => c.id === r.course)?.name ?? r.course} · {r.mode} · {raceTime(r.ticks)}</Copy>)}</View>}
         <Copy style={s.small}>
           Training is always solo. Computer runners face the same obstacles. You can pass through each other. No network
           or other people are involved.

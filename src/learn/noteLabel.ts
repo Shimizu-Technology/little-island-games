@@ -8,5 +8,5 @@ export function noteLabel(key: string, labels: Record<string, string>): string {
   const id = game as LearnId, level = levels[stage];
   const name = engines[id]?.name ?? "Learning practice";
   const activity = level && engines[id] ? `Level ${level} · ${levelInfo(id, level).name}` : "Practice";
-  return `${name} · ${activity} · ${skill === levelRoundSkill ? "Completed rounds" : labels[skill] ?? "Practiced ideas"}`;
+  return `${name} · ${activity} · ${skill === levelRoundSkill ? "Verified completed rounds" : skill === "think.level-round" ? "Earlier round notes (may include warm-ups)" : skill === "think.warmup-round" ? "Warm-ups" : labels[skill] ?? "Practiced ideas"}`;
 }

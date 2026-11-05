@@ -9,7 +9,7 @@ export function applySessionAction(
   transition: (current: GameState) => GameState
 ): Save {
   const current = save.sessions[game];
-  if (!current || current.id !== roundId) return save;
+  if (!current || current.id !== roundId || (save.roundOwners?.rounds[`classic:${game}`]?.round === roundId && save.roundOwners.rounds[`classic:${game}`].owner !== (save.learning?.active ?? 'family'))) return save;
   const next = transition(current);
   if (next === current || next.game !== game || next.id !== roundId) return save;
   return { ...save, sessions: { ...save.sessions, [game]: next }, recent: game, recentActivity: null, recentLearn: null };

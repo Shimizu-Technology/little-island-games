@@ -65,6 +65,9 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   const family: ArcadeFamily = { mode, strength, names: together ? match.names : [name, { gentle: "Bibi", steady: "Bibi ••", zippy: "Bibi •••" }[strength]] };
   const helperUsed = useRef(person.helper);
   useEffect(() => { if (playing && person.helper) helperUsed.current = true; }, [playing, person.helper]);
+  const startAfterTeach = useRef(false), credited = useRef(""), [reminder, setReminder] = useState(false), scroll = useRef<ScrollView>(null);
+  const [finishError, setFinishError] = useState("");
+  const failedResult = useRef<{ result: ArcadeResult; helped: boolean; winner?: 0 | 1 | null } | null>(null);
   const [chestOffer, setChestOffer] = useState<ChestOffer | null>(null);
   const identity = `${owner.id}:${store.epoch}`;
   const lastIdentity = useRef(identity);
@@ -72,14 +75,15 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
     if (lastIdentity.current === identity) return;
     lastIdentity.current = identity;
     // Invalidate the old round without closing Settings or moving the map.
-    setPlaying(false); setPaused(false); setResult(null); setRound("");
+    setPlaying(false); setPaused(false); setResult(null); setRound(""); setLevel(null);
+    startAfterTeach.current = false; credited.current = ""; failedResult.current = null; setFinishError("");
+    setSheet(current => current === "settings" ? current : null);
     setSavedReef(undefined); setChestOffer(null);
     setName(owner.id === "family" ? "Family" : owner.name);
   }, [identity, owner.id, owner.name]);
   function openChest() { if (person.chest?.game !== game.id) return; setChestOffer(person.chest); setSheet("chest"); }
   function closeChest() { setSheet(null); setChestOffer(null); }
-  const startAfterTeach = useRef(false), credited = useRef(""), [reminder, setReminder] = useState(false), scroll = useRef<ScrollView>(null);
-  const active = foreground && playing && !paused && !sheet, sound = useArcadeAudio(game.id, store.save.settings, store.save.arcade?.music ?? false, foreground && !paused, !!sheet);
+  const active = foreground && playing && !paused && !sheet && !finishError, sound = useArcadeAudio(game.id, store.save.settings, store.save.arcade?.music ?? false, foreground && !paused, !!sheet);
   useEffect(() => { markArcadePlaying(active); return () => markArcadePlaying(false); }, [active]);
   const { arcade } = store;
   useEffect(() => { arcade({ type: "visit", game: game.id }, expected); }, [arcade, expected, game.id]);
@@ -91,6 +95,10 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
     setLevel(id === "endless" ? id : play.level(id)); setResult(null); setPlaying(false); setPaused(false); setSheet(null); toTop();
   }
   function start() {
+    if (lastIdentity.current !== identity || !level || (level === 'endless' ? !endlessOpen(p,store.save.arcade?.unlockAll) : !levelOpen(p,level.id,store.save.arcade?.unlockAll))) {
+      startAfterTeach.current = false; setLevel(null); setSheet(null); return;
+    }
+    failedResult.current = null; setFinishError('');
     // eslint-disable-next-line react-hooks/purity -- This user-invoked Start handler creates round entropy, never called by render.
     const round = `arcade-${Date.now().toString(36)}-${Math.floor(Math.random() * 0x1000000).toString(36)}`;
     // eslint-disable-next-line react-hooks/purity -- User-invoked Start handler, not a render calculation.
@@ -113,9 +121,12 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   }
   function teach(andStart: boolean) { startAfterTeach.current = andStart; setSheet("teach"); sound.say(play.speech(level !== "endless" && level?.world === "learn", together)); }
   const onResult = useCallback((next: ArcadeResult, helped = false, winner?: 0 | 1 | null) => {
-    if (!level || !round || credited.current === round) return;
-    credited.current = round;
-    if (!arcade({ type: "finish", game: game.id, level: level === "endless" ? level : level.id, stars: next.cleared ? next.stars : 0, score: next.score, round, name: together ? match.names.join(" & ").slice(0, 24) : name }, expected)) return;
+    if (lastIdentity.current !== `${expected.learner}:${expected.epoch}` || !level || !round || credited.current === round) return;
+    if (!arcade({ type: "finish", game: game.id, level: level === "endless" ? level : level.id, stars: next.cleared ? next.stars : 0, score: next.score, round, name: together ? match.names.join(" & ").slice(0, 24) : name }, expected)) {
+      failedResult.current = { result: next, helped, winner }; setPaused(true);
+      setFinishError("Your result could not be saved. Keep this round open and try again, or return to your map."); return;
+    }
+    credited.current = round; failedResult.current = null; setFinishError('');
     if (together && winner != null) setMatch(previous => settle(previous, winner));
     if (level !== "endless" && level.world === "learn" && next.cleared) {
       const credit = play.learningSkill(level);
@@ -133,7 +144,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   const nextId = level && level !== "endless" ? allLevelIds[allLevelIds.indexOf(level.id) + 1] : undefined;
   const nextOpen = nextId && levelOpen(p, nextId, store.save.arcade?.unlockAll);
   const goal = level ? play.goal?.(level, together) ?? (level === "endless" ? "Make it your own." : level.goals[0]) : "";
-  const onTeachPlay = () => { arcade({ type: "coached", game: game.id }, expected); if (startAfterTeach.current) start(); else setSheet(null); };
+  const onTeachPlay = () => { if (lastIdentity.current !== identity) return; arcade({ type: "coached", game: game.id }, expected); if (startAfterTeach.current) start(); else setSheet(null); };
   const onHear = () => sound.say(play.speech(isLearning, together));
   const board = level && playing ? <play.Board key={round} savedReef={savedReef} onSaveReef={onSaveReef} level={level} seed={seed} helper={person.helper} active={active} outfit={p.outfit} onResult={onResult} onTone={sound.tone} onSay={sound.say} debug={debug || __DEV__} {...arena} family={family}/> : null;
   return <View style={{ flex: 1, backgroundColor: game.color }}>
@@ -145,6 +156,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
         {playing ? <PressableScale accessibilityRole="button" accessibilityLabel="Pause" onPress={() => setPaused(true)} style={{ minWidth: 48, minHeight: 48, borderRadius: 24, backgroundColor: "#FFF3D7", alignItems: "center", justifyContent: "center" }}><Svg width={24} height={24} viewBox="0 0 24 24" accessible={false}><Rect x={5} y={4} width={5} height={16} rx={2} fill="#2E596B"/><Rect x={14} y={4} width={5} height={16} rx={2} fill="#2E596B"/></Svg></PressableScale> : <Button quiet compact onPress={() => setSheet("settings")}>Settings</Button>}
       </View>
     </View>
+    {!!finishError && !paused && <View style={{padding:12,gap:8,backgroundColor:'#FFF4DA'}}><Copy>{finishError}</Copy><Button onPress={() => setPaused(true)}>Save my result</Button></View>}
     {playing ? <View testID="arcade-arena" style={{ flex: 1, minHeight: 0, overflow: "hidden" }} onLayout={event => {
       const { width, height } = event.nativeEvent.layout;
       setArena(previous => previous.width === width && previous.height === height ? previous : { width, height });
@@ -176,7 +188,8 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
       </View> : board}
     </ScrollView>}
     {!playing && level && !result && <View testID="arcade-start-dock" style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: "#FFF4DA", borderTopWidth: 2, borderColor: "#DCC28F" }}><View style={{ width: "100%", maxWidth: 480, alignSelf: "center" }}><Button onPress={() => { if (p.coached) start(); else teach(true); }}>{p.coached ? "Let’s play" : "Show me & play"}</Button></View></View>}
-    <Sheet visible={paused && !sheet} title="Your game is paused" onClose={() => setPaused(false)}><View style={{ alignItems: "center" }}><Hero game={game.id} size={100} outfit={p.outfit} active={false}/></View><Button onPress={() => setPaused(false)}>Resume play</Button><ToggleRow label="Helper" detail={level === "endless" ? game.id === "fruit-bat-flight" ? "Slower flight. One heart in free play. No level stars." : "Slower play. No level stars in free play." : play.helperDetail ?? "Slower play. Five hearts. Same stars."} value={person.helper} onChange={value => arcade({ type: "helper", value }, expected)}/><Button quiet onPress={() => teach(false)}>How to play</Button><Button quiet onPress={() => { setPaused(false); setLevel(null); setResult(null); setPlaying(false); }}>Back to level map</Button></Sheet>
+
+    <Sheet visible={paused && !sheet} title={finishError ? "Keep your result" : "Your game is paused"} onClose={() => setPaused(false)}><View style={{ alignItems: "center" }}><Hero game={game.id} size={100} outfit={p.outfit} active={false}/></View>{finishError ? <><Copy>{finishError}</Copy><Button onPress={() => { const pending = failedResult.current; if (pending) onResult(pending.result,pending.helped,pending.winner); }}>Try saving again</Button></> : <Button onPress={() => setPaused(false)}>Resume play</Button>}<ToggleRow label="Helper" detail={level === "endless" ? game.id === "fruit-bat-flight" ? "Slower flight. One heart in free play. No level stars." : "Slower play. No level stars in free play." : play.helperDetail ?? "Slower play. Five hearts. Same stars."} value={person.helper} onChange={value => arcade({ type: "helper", value }, expected)}/><Button quiet onPress={() => teach(false)}>How to play</Button><Button quiet onPress={() => { failedResult.current = null; setFinishError(""); setPaused(false); setLevel(null); setResult(null); setPlaying(false); }}>Back to level map</Button></Sheet>
     <Sheet visible={sheet === "leave"} title="Back to the map?" onClose={() => setSheet(null)}><Copy>{person.session?.round === round ? "Your reef is saved. Continue this round from the map next time." : "This round will start fresh next time. Your earned stars and stickers are saved."}</Copy><Button onPress={() => { setSheet(null); setPlaying(false); setLevel(null); setResult(null); }}>Leave round · back to map</Button><Button quiet onPress={() => setSheet(null)}>Keep playing</Button></Sheet>
     <Sheet visible={sheet === "teach"} title="Show me" onClose={() => { startAfterTeach.current = false; setSheet(null); }}>{play.Teach ? <PlayTeaching goal={goal} detail={play.teachingDetail?.(isLearning, together) ?? ""} onHear={onHear} onPlay={onTeachPlay}><play.Teach learning={isLearning} together={together} goal={goal} onTone={sound.tone}/></PlayTeaching> : <Teaching game={game} learning={isLearning} onHear={onHear} onPlay={onTeachPlay}/>}</Sheet>
     <Sheet visible={sheet === "book"} title="Sticker book" onClose={() => setSheet(null)}><StickerBook person={person}/></Sheet>

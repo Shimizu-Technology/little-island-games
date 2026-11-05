@@ -19,9 +19,13 @@ import { validSkills } from "../learn/skills";
 import { PracticeNotes, PracticeSettings, validPracticeNotes, validPracticeSettings } from "../practice/types";
 import { arcadeIds, validArcade, migrateArcade, type ArcadeId, type ArcadeSave } from "../arcade";
 import { validPersonalization, type Personalization } from "../personalization/model";
+import { validProfiles, projectProfile, type Profiles } from "./profiles";
+import { validSchool, type SchoolProgress } from "../learn/schoolProgress";
 export type Settings = { sound: boolean; help: boolean; homeNavigationSeen?: boolean; learningIslander?: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
 export type Save = {
-  version: 1;
+  profiles?: Profiles;
+  school?: SchoolProgress;
+  version: 1 | 2;
   roundOwners?: RoundOwners;
   /** Versioned per-child Library state; legacy Explore remains intact. */
   library?: LibraryData;
@@ -365,8 +369,10 @@ export function parseSave(raw: string): Save {
   } catch {
     throw new Error("This save is not readable JSON. Your original has been kept.");
   }
-  if (!obj(v) || v.version !== 1)
+  if (!obj(v) || (v.version !== 1 && v.version !== 2))
     throw new Error("This save uses an unsupported version. Your original has been kept.");
+  if ((v.version === 2 && !obj(v.profiles)) || (v.version === 1 && v.profiles !== undefined))
+    throw new Error("This save has an incomplete profile envelope. Your original has been kept.");
   if (
     (v.arcade !== undefined && (!validArcade(v.arcade) || Object.keys(v.arcade.people).some(id => !(v.learning === undefined ? ["family"] : validLearners(v.learning) ? v.learning.people.map(p => p.id) : []).includes(id)))) ||
     !obj(v.settings) ||
@@ -406,9 +412,12 @@ export function parseSave(raw: string): Save {
     (v.explore !== undefined && !validLegacyExplore(v.explore))
   )
     throw new Error("Some saved game data is invalid. Your original has been kept.");
+  if ((v.profiles !== undefined && !validProfiles(v.profiles, validLearners(v.learning) ? v.learning : undefined)) || (v.school !== undefined && !validSchool(v.school)))
+    throw new Error("Some saved profile data is invalid. Your original has been kept.");
   const save = v as unknown as Save;
   // Feel v2: validate the original first; recovery/restore retain its original bytes.
-  return save.arcade ? { ...save, arcade: migrateArcade(save.arcade) } : save;
+  const next = save.arcade ? { ...save, arcade: migrateArcade(save.arcade) } : save;
+  return next.profiles ? projectProfile(next) : next;
 }
 
 function validLearningOwners(learn: unknown, learning: unknown): boolean {

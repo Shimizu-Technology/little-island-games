@@ -13,6 +13,7 @@ export function applyActivitySave(
   const current = save.activities?.[game];
   if (
     expected.epoch !== epoch ||
+    (current && save.roundOwners?.rounds[`activity:${game}`]?.round === current.id && save.roundOwners.rounds[`activity:${game}`].owner !== (save.learning?.active ?? 'family')) ||
     (current?.id ?? null) !== expected.id ||
     (expected.revision !== undefined &&
       (!current || !("revision" in current) || current.revision !== expected.revision)) ||

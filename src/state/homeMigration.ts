@@ -1,3 +1,4 @@
+import { encodeSave } from "./profiles";
 import {validHome} from '../home/model';
 import type {Save} from './validation';
 import type {StorageAdapter} from './storage';
@@ -7,7 +8,7 @@ export async function preserveHomeMigration(adapter:StorageAdapter,encoded:strin
  try{assertMigratedHomes(after);}catch(error){await adapter.preserve(encoded);throw error;}
  const changed=homeChanged(before,after);
  if(!changed)return false;
- await preserveAndReplace(adapter,JSON.stringify(after),encoded);
+ await preserveAndReplace(adapter,encodeSave(after),encoded);
  return true;
 }
 
@@ -18,7 +19,7 @@ export function homeChanged(before:Save,after:Save){
 export async function preserveImportedHome(adapter:StorageAdapter,encoded:string,before:Save,after:Save,current:string|null){
  try{assertMigratedHomes(after);}catch(error){await adapter.preserve(encoded);throw error;}
  if(homeChanged(before,after))await adapter.preserve(encoded);
- await preserveAndReplace(adapter,JSON.stringify(after),current);
+ await preserveAndReplace(adapter,encodeSave(after),current);
 }
 
 /** A migration is never a license to publish an unreadable active save. */
