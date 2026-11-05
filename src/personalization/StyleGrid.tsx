@@ -23,15 +23,15 @@ export function StyleGrid({ category, look, equipped, earned, unseen, onChoose, 
     return <PressableScale key={item.id} accessibilityRole="button" accessibilityLabel={`${item.label}${reason ? ', locked. ' + reason : ''}${selected ? ', previewing' : ''}${worn ? ', wearing' : ''}`} accessibilityState={{ selected }} onPress={() => onChoose(item)} style={{ width: tileWidth, minWidth: 96, minHeight: compact ? 108 : phone ? 128 : 148, alignItems: 'center', justifyContent: 'center', gap: compact ? 1 : 3, padding: compact ? 3 : 5, borderWidth: 2, borderColor: selected ? C.teal : C.line, backgroundColor: selected ? '#E7F2E7' : C.paper, borderRadius: 22 }}>
       <Thumb item={item} muted={!!reason} encoded={JSON.stringify(lookWithStyle(look, item))} frame={frame} selected={selected}/>
       {!!reason && <LockBadge/>}
-      <Copy style={{ fontWeight: '700', fontSize: 14, lineHeight: 17, textAlign: 'center', color: C.ink }}>{item.label}</Copy>
-      {(selected || worn) && <Copy style={{ fontSize: 10, lineHeight: 11 }}>{selected ? 'Previewing' : 'Wearing'}</Copy>}
-      {!!reason && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}><LockIcon/><Text numberOfLines={1} style={{ fontSize: 11, lineHeight: 16, flexShrink: 1, color: C.ink }}>{item.track}</Text></View>}
-      {unseen.includes(item.id) && <Copy style={{ fontSize: 12 }}>New</Copy>}
+      <Copy maxFontSizeMultiplier={1.2} style={{ fontWeight: '700', fontSize: 14, lineHeight: 17, textAlign: 'center', color: C.ink }}>{item.label}</Copy>
+      {(selected || worn) && <Copy maxFontSizeMultiplier={1.2} style={{ fontSize: 10, lineHeight: 11 }}>{selected ? 'Previewing' : 'Wearing'}</Copy>}
+      {!!reason && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}><LockIcon/><Text maxFontSizeMultiplier={1.2} numberOfLines={1} style={{ fontSize: 11, lineHeight: 16, flexShrink: 1, color: C.ink }}>{item.track}</Text></View>}
+      {unseen.includes(item.id) && <Copy maxFontSizeMultiplier={1.2} style={{ fontSize: 12 }}>New</Copy>}
 
     </PressableScale>;
   })}</View>;
   if (!sorted) return tiles(items);
   return <View style={{ gap: 12 }}>
-    {audienceOrder(look.presentation).map(audience => { const list = items.filter(i => (i.audience ?? 'everyone') === audience); return list.length ? <View key={audience} testID={`style-section-${audience}`} style={{ gap: 6 }}><Text accessibilityRole="header" style={{ fontSize: 15, lineHeight: 20, fontWeight: '800', color: C.ink }}>{audienceLabels[audience]}</Text>{tiles(list)}</View> : null; })}
+    {audienceOrder(look.presentation).map(audience => { const list = items.filter(i => (i.audience ?? 'everyone') === audience); return list.length ? <View key={audience} testID={`style-section-${audience}`} style={{ gap: 6 }}><Text accessibilityRole="header" maxFontSizeMultiplier={1.3} style={{ fontSize: 15, lineHeight: 20, fontWeight: '800', color: C.ink }}>{audienceLabels[audience]}</Text>{tiles(list)}</View> : null; })}
   </View>;
 }
