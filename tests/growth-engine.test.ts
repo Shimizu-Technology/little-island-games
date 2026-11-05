@@ -77,7 +77,7 @@ describe("growth progression and preserved saves", () => {
     let learning = addLearner(undefined, "A", "a");
     for (let day = 1; day <= 4; day++) learning = recordLearning(learning, "a", "which-one", "stretch", "read.test", `q${day}`, `r${day}`, true, day);
     expect(readyForNext(activeLearner(learning), "which-one", "stretch", ["read.test"])).toBe(false);
-    for (let day = 1; day <= 3; day++) learning = recordLearning(learning, "a", "which-one", "stretch", "think.level-round", `q${day}`, `ind${day}`, false, day);
+    for (let day = 1; day <= 3; day++) learning = recordLearning(learning, "a", "which-one", "stretch", "think.level-round-v2", "completed-round", `ind${day}`, false, day);
     expect(readyForNext(activeLearner(learning), "which-one", "stretch", ["read.test"])).toBe(true);
     expect(readyForNext(activeLearner(learning), "which-one", "easy")).toBe(false);
     expect(validLearners(learning)).toBe(true);

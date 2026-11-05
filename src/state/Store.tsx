@@ -1,8 +1,8 @@
+import { assignEarlier, encodeSave, migrateProfiles, projectProfile, syncProfile } from "./profiles";
 import { clearPageDrafts, draftRecovery } from "../library/drafts";
 import { libraryChild, migrateLibrary, validLibraryChild, validLibraryData, validLibraryPolicy, type LibraryChildState, type LibraryPolicy } from "../library/state";
 import { preserveHomeMigration, preserveImportedHome, assertMigratedHomes } from './homeMigration';
 import { applyWarmup } from './warmupAction';
-import { roundOwner } from '../badges/owners';
 import { badgesFor, type BadgeId } from '../badges/engine';
 import { personFor } from '../personalization/model';
 import { backfillRewards, rewardTransitions, rewardCompletion, completionSource } from '../badges/transitions';
@@ -39,6 +39,7 @@ type Store = {
   renameLearner: (id: string, name: string) => boolean;
   removeLearner: (id: string) => Promise<boolean>;
   saving: boolean;
+  assignEarlier: (key: string, learner: string, expectedEpoch: number) => Promise<boolean>;
   arcade: (action: ArcadeAction, expected: ArcadeExpected) => boolean;
   epoch: number;
   boardUpdate: (game: BoardId, next: BoardSession, expected: BoardSession | undefined, expectedEpoch: number) => boolean;
@@ -64,7 +65,7 @@ type Store = {
   libraryPolicy: (childId: string, policy: LibraryPolicy) => void;
   /** Drains queued writes; false if a write fails or state is not writable. */
   libraryFlush: () => Promise<boolean>;
-  exploreUpdate: (next: ExploreProgress, expectedEpoch: number, completedTopic?: string) => void;
+  exploreUpdate: (next: ExploreProgress, expectedEpoch: number, completedTopic?: string, expectedLearner?: string) => void;
   save: Save;
   ready: boolean;
   error: string | null;
@@ -87,7 +88,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [badgeResult, setBadgeResult] = useState<Store["badgeResult"]>(null);
   const [saving, setSaving] = useState(false);
   const pendingWrites = useRef(0);
-  const writeFailures = useRef(0), lastWriteFailed = useRef(false), libraryRejected = useRef(false);
+  const writeFailures = useRef(0), lastWriteFailed = useRef(false), libraryRejected = useRef(false), admissionRejected = useRef(false);
   const [epoch, setEpoch] = useState(0);
   const audioPreferences = useMemo(() => ({ ...save.settings, epoch }), [save.settings, epoch]);
   const generation = useRef(0);
@@ -97,14 +98,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     restoring = useRef(false);
   const persist = useCallback((next: Save) => {
     if (restoring.current) return queue.current;
-    const encoded = JSON.stringify(next);
+    const encoded = encodeSave(next);
     pendingWrites.current++; setSaving(true);
     queue.current = queue.current
       .catch(() => {})
       .then(() => storage.set(encoded))
       .then(() => {
         lastWriteFailed.current = false;
-        if (mounted.current && !libraryRejected.current) setError(null);
+        if (mounted.current && !libraryRejected.current && !admissionRejected.current) setError(null);
       })
       .catch(() => {
         writeFailures.current++; lastWriteFailed.current = true;
@@ -118,11 +119,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       encoded = await storage.get();
       setRaw(encoded);
       const before=encoded?parseSave(encoded):emptySave();
-      const next=backfillRewards(migrateLibrary(before, { existingLearners: encoded !== null }));
-      if (!validLibraryData(next.library) || !withinSaveLimit(JSON.stringify(next))) throw new Error("This Library could not be migrated. Your original has been kept.");
+      const next=syncProfile(backfillRewards(migrateLibrary(migrateProfiles(before), { existingLearners: encoded !== null })));
+      if (!validLibraryData(next.library) || !withinSaveLimit(encodeSave(next))) throw new Error("This Library could not be migrated. Your original has been kept.");
+      parseSave(encodeSave(next));
       assertMigratedHomes(next);
       if(encoded) {
-        if (!before.library || before.library.version === 1) await preserveAndReplace(storage, JSON.stringify(next), encoded);
+        if (!before.profiles || !before.library || before.library.version === 1) await preserveAndReplace(storage, encodeSave(next), encoded);
         else await preserveHomeMigration(storage,encoded,before,next);
       }
       generation.current += 1;
@@ -131,7 +133,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setSave(next);
       setRecovery(null);
       setError(null);
-      lastWriteFailed.current = false; libraryRejected.current = false;
+      lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false;
       setReady(true);
     } catch (e) {
       if(encoded)try{await storage.preserve(encoded);}catch{/* Original remains in active storage; do not publish or replace it. */}
@@ -155,7 +157,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [persist, ready, recovery]);
   const commit = useCallback(
     (next: Save, mirrorLibraryLabs = false) => {
-      if (!ready || recovery || restoring.current) return;
+      if (!ready || recovery || restoring.current) return false;
+      const previous = latest.current;
+      // Identity changes select another complete profile view; they aren't game transitions.
+      if ((previous.learning?.active ?? 'family') !== (next.learning?.active ?? 'family')) {
+        const kept = syncProfile(previous);
+        next = syncProfile(projectProfile({ ...next, profiles: kept.profiles ? { ...kept.profiles, people: { ...next.profiles?.people, ...kept.profiles.people } } : next.profiles }, next.learning));
+        if (!withinSaveLimit(encodeSave(next))) { admissionRejected.current = true; writeFailures.current++; setError("This change exceeds the save limit. Your saved work is kept."); return false; }
+        admissionRejected.current = false; latest.current = next; setSave(next); setBadgeResult(null); void persist(next); return true;
+      }
       const previousWord = latest.current.sessions["word-rescue"],
         nextWord = next.sessions["word-rescue"];
       const records = recordWordRound(
@@ -169,44 +179,51 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const owner = next.learning?.active ?? "family", previousBadges = badgesFor(personFor(before, owner).milestones);
       const newBadges = badgesFor(personFor(next, owner).milestones).filter(id => !previousBadges.includes(id));
       const source = completionSource(before, next);
+      next = syncProfile(next);
+      if (!withinSaveLimit(encodeSave(next))) { admissionRejected.current = true; writeFailures.current++; setError("This change exceeds the save limit. Your saved work is kept."); return false; }
+      admissionRejected.current = false;
       if (newBadges.length && source) setBadgeResult({ owner, epoch: generation.current, badges: newBadges, source });
       latest.current = next;
       setSave(next);
       void persist(next);
+      return true;
     },
     [persist, ready, recovery]
   );
   const update = useCallback(
     (game: GameId, next: GameState, expected?: GameState) => {
       const current = latest.current;
-      if (expected && current.sessions[game] !== expected) return;
+      if (epoch !== generation.current || (expected && current.sessions[game] !== expected)) return;
+      // A captured round from another profile cannot be installed as this learner's work.
+      if (Object.entries(current.profiles?.people ?? {}).some(([id,p]) => id !== (current.learning?.active ?? 'family') && p.sessions[game]?.id === next.id)) return;
       commit({ ...current, sessions: { ...current.sessions, [game]: next }, recent: game, recentActivity: null, recentLearn: null, recentBoard: null });
     },
-    [commit]
+    [commit, epoch]
   );
   const act = useCallback(
     (game: GameId, roundId: string, transition: (current: GameState) => GameState) => {
+      if (epoch !== generation.current) return;
       const next = applySessionAction(latest.current, game, roundId, transition);
       if (next !== latest.current) commit({ ...next, recentBoard: null });
     },
-    [commit]
+    [commit, epoch]
   );
   const activityUpdate = useCallback(
     (game: ActivityId, next: ActivitySession, expected: ActivityExpected) => {
       if (!ready || recovery || restoring.current) return false;
+      if (next.id !== expected.id && Object.entries(latest.current.profiles?.people ?? {}).some(([id,p]) => id !== (latest.current.learning?.active ?? 'family') && p.activities?.[game]?.id === next.id)) return false;
       const updated = applyActivitySave(latest.current, game, next, expected, generation.current);
       if (updated === latest.current) return false;
-      commit({ ...updated, recentBoard: null });
-      return true;
+      return commit({ ...updated, recentBoard: null });
     },
     [commit, ready, recovery]
   );
   const boardUpdate = useCallback((game: BoardId, next: BoardSession, expected: BoardSession | undefined, expectedEpoch: number) => {
     if (!ready || recovery || restoring.current) return false;
+    if (next.id !== expected?.id && Object.entries(latest.current.profiles?.people ?? {}).some(([id,p]) => id !== (latest.current.learning?.active ?? 'family') && p.board?.[game]?.id === next.id)) return false;
     const updated = applyBoardSave(latest.current, game, next, expected, expectedEpoch, generation.current);
     if (updated === latest.current) return false;
-    commit(updated);
-    return true;
+    return commit(updated);
   }, [commit, ready, recovery]);
   const toggleFavorite = useCallback(
     (topic: string) => {
@@ -222,12 +239,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     [commit]
   );
-  const exploreUpdate = useCallback((progress: ExploreProgress, expectedEpoch: number, completedTopic?: string) => {
-    if (expectedEpoch !== generation.current || !validExploreProgress(progress)) return;
+  const exploreUpdate = useCallback((progress: ExploreProgress, expectedEpoch: number, completedTopic?: string, expectedLearner?: string) => {
+    if (expectedEpoch !== generation.current || !validExploreProgress(progress) || expectedLearner !== undefined && expectedLearner !== (latest.current.learning?.active ?? "family")) return;
     const current = latest.current;
     if (!completedTopic && JSON.stringify(current.explore?.progress) === JSON.stringify(progress)) return;
     const next = { ...current, explore: { favorites: [], ...current.explore, progress } };
-    commit(completedTopic && topicById(completedTopic) && progress.location.kind === "topic" && progress.location.id === completedTopic ? rewardCompletion(next, { kind: "explore", topic: completedTopic }, roundOwner(current, `explore:${completedTopic}`, `explore:${completedTopic}`)) : next);
+    commit(completedTopic && topicById(completedTopic) && progress.location.kind === "topic" && progress.location.id === completedTopic ? rewardCompletion(next, { kind: "explore", topic: completedTopic }, (current.learning?.active ?? "family")) : next);
   }, [commit]);
   const rejectLibraryWrite = useCallback(() => {
     libraryRejected.current = true; writeFailures.current++;
@@ -245,7 +262,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       libraryRejected.current = false; if (!lastWriteFailed.current) setError(null); return true;
     }
     const library = { ...data, profiles: { ...data.profiles, [owner]: JSON.parse(JSON.stringify(next)) as LibraryChildState } };
-    let updated: Save = { ...before, library };
+    const untouched = before.profiles?.unassigned.exploreUntouched;
+    let updated: Save = { ...before, library, ...(untouched?.includes(owner) ? { profiles: { ...before.profiles!, unassigned: { ...before.profiles!.unassigned, exploreUntouched: untouched.filter(id => id !== owner) } } } : {}) };
     const changedLabs = (Object.keys(next.labs) as (keyof typeof next.labs)[])
       .filter(world => JSON.stringify(current.labs[world]) !== JSON.stringify(next.labs[world]));
     // Reward the accepted learner's own transition. The legacy projection has no reward ownership.
@@ -256,10 +274,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       progress: { ...newExploreProgress(), ...before.explore?.progress,
         location: { kind: "activity", world: changedLabs[0] }, labs: library.profiles[owner].labs },
     } };
-    if (!validLibraryData(library) || !withinSaveLimit(JSON.stringify(updated))) { rejectLibraryWrite(); return false; }
+    if (!validLibraryData(library) || !withinSaveLimit(encodeSave(updated))) { rejectLibraryWrite(); return false; }
     libraryRejected.current = false;
-    commit(updated, changedLabs.length > 0);
-    return true;
+    return commit(updated, changedLabs.length > 0);
   }, [commit, ready, recovery, rejectLibraryWrite]);
   const libraryPatch = useCallback((patch: Partial<LibraryChildState>, expectedEpoch: number, expectedLearnerId: string) => {
     const current = libraryChild(latest.current.library, expectedLearnerId);
@@ -278,7 +295,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
     const library = { ...data, profiles: { ...data.profiles, [childId]: next } };
     const updated = { ...before, library };
-    if (!validLibraryData(library) || !withinSaveLimit(JSON.stringify(updated))) { rejectLibraryWrite(); return; }
+    if (!validLibraryData(library) || !withinSaveLimit(encodeSave(updated))) { rejectLibraryWrite(); return; }
     libraryRejected.current = false;
     commit(updated);
   }, [commit, ready, recovery, rejectLibraryWrite]);
@@ -289,26 +306,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     let tail: Promise<void>;
     do { tail = queue.current; await tail; } while (tail !== queue.current);
     return mounted.current && !restoring.current && startEpoch === generation.current &&
-      writeFailures.current === failures && !lastWriteFailed.current && !libraryRejected.current;
+      writeFailures.current === failures && !lastWriteFailed.current && !libraryRejected.current && !admissionRejected.current;
   }, [ready, recovery]);
   // Arcade uses the same commit/recovery queue, with explicit learner/restore ownership.
   const arcade = useCallback((action: ArcadeAction, expected: ArcadeExpected) => {
     if (!ready || recovery || restoring.current) return false;
     const before = latest.current, next = applyArcadeAction(before, action, expected, generation.current);
     if (next === before) return false;
-    commit(next); return true;
+    return commit(next);
   }, [commit, ready, recovery]);
   const toggleGameFavorite = useCallback((game: GameId | ActivityId | LearnId | BoardId | ArcadeId) => {
+    if (epoch !== generation.current) return;
     const next = toggleShelfFavorite(latest.current, game);
     if (next !== latest.current) commit(next);
-  }, [commit]);
+  }, [commit, epoch]);
   const learnUpdate = useCallback(
     (game: LearnId, next: LearnSession, expected: LearnExpected) => {
       if (!ready || recovery || restoring.current) return false;
       const updated = applyLearnSave(latest.current, game, next, expected, generation.current);
       if (updated === latest.current) return false;
-      commit({ ...recordLevelRound(latest.current, updated, game), recentBoard: null });
-      return true;
+      return commit({ ...recordLevelRound(latest.current, updated, game), recentBoard: null });
     },
     [commit, ready, recovery]
   );
@@ -321,22 +338,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (updated === latest.current) return;
     if (ownedCredits.current.size > 512) ownedCredits.current.clear();
     ownedCredits.current.add(key);
-    commit(updated);
+    if (!commit(updated)) ownedCredits.current.delete(key);
   }, [commit, ready, recovery]);
   const practice = useCallback(
     (skill: string, correct: boolean) => {
+      if (epoch !== generation.current) return;
       const updated = applyPractice(latest.current, skill, correct);
       if (updated !== latest.current) commit(updated);
     },
-    [commit]
+    [commit, epoch]
   );
   const markCoached = useCallback(
     (game: LearnId) => {
+      if (epoch !== generation.current) return;
       const coached = latest.current.coached ?? [];
       if (coached.includes(game)) return;
       commit({ ...latest.current, coached: [...coached, game] });
     },
-    [commit]
+    [commit, epoch]
   );
   const notePractice = useCallback((skill: string, helped: boolean, expectedEpoch = epoch) => {
     if (expectedEpoch !== generation.current) return;
@@ -356,8 +375,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const learning = appendLearner(before.learning, name, `learner-${Date.now().toString(36)}`);
     if (learning === before.learning || learning.people.length === (before.learning?.people.length ?? 1)) return false;
     generation.current++; setEpoch(generation.current);
-    commit({ ...before, learning });
-    return true;
+    return commit({ ...before, learning, profiles: before.profiles ? { ...before.profiles, people: { ...before.profiles.people, [learning.active]: { sessions: {}, recent: null } } } : undefined });
   }, [commit, ready, recovery]);
   const selectLearner = useCallback((id: string) => {
     if (!ready || recovery || restoring.current) return;
@@ -370,13 +388,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (!ready || recovery || restoring.current) return false;
     const before = latest.current, next = applyPersonalization(before, patch, expected, generation.current);
     if (next === before) return false;
-    commit(next); return true;
+    return commit(next);
   }, [commit, ready, recovery]);
   const renameLearner = useCallback((id: string, name: string) => {
     if (!ready || recovery || restoring.current) return false;
     const before = latest.current, learning = before.learning ?? familyLearners(), clean = name.trim().replace(/\s+/g, " ");
     if (id === "family" || !learning.people.some(p => p.id === id) || !clean || [...clean].length > 24 || learning.people.some(p => p.id !== id && p.name.toLocaleLowerCase() === clean.toLocaleLowerCase())) return false;
-    commit({ ...before, learning: { ...learning, people: learning.people.map(p => p.id === id ? { ...p, name: clean } : p) } }); return true;
+    return commit({ ...before, learning: { ...learning, people: learning.people.map(p => p.id === id ? { ...p, name: clean } : p) } });
   }, [commit, ready, recovery]);
   const removeLearner = useCallback(async (id: string) => {
     if (!ready || recovery || restoring.current) return false;
@@ -387,10 +405,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       await queue.current;
       const pending = draftRecovery(id); if (pending) await storage.preserve(pending);
-      await preserveAndReplace(storage, JSON.stringify(next), JSON.stringify(before));
+      await preserveAndReplace(storage, encodeSave(next), encodeSave(before));
       clearPageDrafts(id);
       generation.current++; setEpoch(generation.current);
-      latest.current = next; setSave(next); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; return true;
+      latest.current = next; setSave(next); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
+    } finally { restoring.current = false; }
+  }, [ready, recovery]);
+  const assignEarlierWork = useCallback(async (key: string, learner: string, expectedEpoch: number) => {
+    if (!ready || recovery || restoring.current || expectedEpoch !== generation.current) return false;
+    const before = latest.current, next = assignEarlier(before, key, learner);
+    if (next === before || !withinSaveLimit(encodeSave(next))) return false;
+    // Validate the whole candidate before preserving/replacing anything.
+    try { parseSave(encodeSave(next)); } catch { return false; }
+    restoring.current = true;
+    try {
+      await queue.current;
+      await preserveAndReplace(storage, encodeSave(next), encodeSave(before));
+      generation.current++; setEpoch(generation.current);
+      latest.current = next; setSave(next); setBadgeResult(null); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
     } finally { restoring.current = false; }
   }, [ready, recovery]);
   const recordWarmup = useCallback((results: PracticeResult[], config: PracticeSettings, round: string, expectedEpoch: number) => {
@@ -401,6 +433,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const settings = useCallback(
     (next: Partial<Save["settings"]>) => {
       const before = latest.current;
+      if (next.practice && epoch !== generation.current) return;
       let learning = before.learning;
       if (next.practice) {
         const people = learning ?? familyLearners();
@@ -408,7 +441,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
       commit({ ...before, ...(learning ? { learning } : {}), settings: { ...before.settings, ...next } });
     },
-    [commit]
+    [commit, epoch]
   );
   const restore = useCallback(
     async (encoded: string) => {
@@ -416,7 +449,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       restoring.current = true;
       try {
         let next: Save, incoming: Save;
-        try { incoming=parseSave(encoded); next = backfillRewards(migrateLibrary(incoming)); assertMigratedHomes(next); if (!validLibraryData(next.library) || !withinSaveLimit(JSON.stringify(next))) throw new Error("This Library could not be migrated. Your original has been kept."); }
+        try { incoming=parseSave(encoded); next = syncProfile(backfillRewards(migrateLibrary(migrateProfiles(incoming)))); assertMigratedHomes(next); parseSave(encodeSave(next)); if (!validLibraryData(next.library) || !withinSaveLimit(encodeSave(next))) throw new Error("This Library could not be migrated. Your original has been kept."); }
         catch (error) {
           // Keep both the rejected import and the current live save. Never repair imported bytes.
           await storage.preserve(encoded);
@@ -426,17 +459,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
         await queue.current;
         const pending = draftRecovery(); if (pending) await storage.preserve(pending);
-        if (!incoming.library || incoming.library.version === 1) await storage.preserve(encoded);
-        await preserveImportedHome(storage, encoded, incoming, next, recovery ? null : JSON.stringify(latest.current));
+        if (!incoming.profiles || !incoming.library || incoming.library.version === 1) await storage.preserve(encoded);
+        await preserveImportedHome(storage, encoded, incoming, next, recovery ? null : encodeSave(latest.current));
         clearPageDrafts();
         generation.current += 1;
         setEpoch(generation.current);
         latest.current = next;
         setSave(next);
-        setRaw(JSON.stringify(next));
+        setRaw(encodeSave(next));
         setRecovery(null);
         setError(null);
-        lastWriteFailed.current = false; libraryRejected.current = false;
+        lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false;
         setReady(true);
       } finally {
         restoring.current = false;
@@ -452,7 +485,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       value={{
         save,
         badgeResult, dismissBadge: () => setBadgeResult(null),
-        personalize, renameLearner, removeLearner, saving,
+        personalize, renameLearner, removeLearner, saving, assignEarlier: assignEarlierWork,
         arcade,
         epoch,
         boardUpdate,

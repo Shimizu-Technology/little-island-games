@@ -91,7 +91,8 @@ export function toggleShelfFavorite(save: Save, id: ShelfId): Save {
 export function dailySuggestions(save: Save, day = dayNumber(), shuffle = 0): LearnId[] {
   const rng = random(day ^ 0x6d2b79f5);
   const ranked = learnIds.map(id => {
-    const skills = Object.keys(engines[id].skills).map(skill => save.skills?.[skill]?.day ?? -1);
+    const ownSkills = activeLearner(save.learning).id === "family" && !save.profiles ? save.skills : activeLearner(save.learning).skills;
+    const skills = Object.keys(engines[id].skills).map(skill => ownSkills?.[skill]?.day ?? -1);
     const session = save.learn?.[id];
     const playedDay = session ? 0 : -1;
     return { id, island: engines[id].island, recent: Math.max(-1, playedDay, ...skills, save.recentLearn === id ? day : -1), tie: rng() };

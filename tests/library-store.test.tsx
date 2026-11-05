@@ -86,10 +86,10 @@ describe('Store Library persistence and recovery', () => {
     db.raw = original; await mount();
     expect(store.recovery).toContain('invalid'); expect(db.preserved).toContain(original); expect(db.set).not.toHaveBeenCalled(); expect(db.raw).toBe(original);
   });
-  it('does not re-migrate a validated existing Library or overwrite its archive on cold load', async () => {
+  it('migrates profile storage once without replacing a validated existing Library or its archive', async () => {
     const originalLibrary = { version: 2, profiles: { family: { ...newLibraryChild(), query: 'kept' } }, archive: { explore: legacy().explore } };
-    db.raw = JSON.stringify({ ...emptySave(), library: originalLibrary }); await mount();
-    expect(store.save.library).toEqual(originalLibrary); expect(db.set).not.toHaveBeenCalled(); expect(db.preserve).not.toHaveBeenCalled();
+    const original = JSON.stringify({ ...emptySave(), library: originalLibrary }); db.raw = original; await mount();
+    expect(store.save.library).toEqual(originalLibrary); expect(store.save.profiles?.version).toBe(1); expect(db.set).toHaveBeenCalledOnce(); expect(db.preserved).toContain(original);
   });
   it('includes all profile data in backups and preserves incoming legacy and current bytes on restore', async () => {
     await mount();

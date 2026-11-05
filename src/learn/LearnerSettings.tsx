@@ -1,3 +1,4 @@
+import { EarlierWorkSettings } from "./EarlierWorkSettings";
 import React, { useState } from "react";
 import { TextInput, View } from "react-native";
 import { useStore } from "../state/Store";
@@ -17,7 +18,7 @@ export function LearnerSettings({ disabled }: { disabled: boolean }) {
   const labels = skillLabels();
   return <View style={{ gap: 10 }}>
     <Heading style={{ fontSize: 19 }}>Who is practicing?</Heading>
-    <Copy>Each learner keeps separate notes and learning choices on this device. Shared family history stays with Family practice. Saved rounds keep their original owner.</Copy>
+    <Copy>Each learner keeps their own saved games, completed School levels and stars, records, Library, badges and house on this device. Earlier family records stay separate.</Copy>
     <View style={[styles.row, { flexWrap: "wrap" }]}>{people.people.map(p => <Chip key={p.id} selected={learner.id === p.id} onPress={() => { if (!disabled && !busy) { setConfirm(null); setRename(""); store.selectLearner(p.id); } }}>{p.name}</Chip>)}</View>
     {people.people.length < 5 && <>
       <TextInput accessibilityLabel="New learner name" placeholder="Learner’s name" value={name} onChangeText={setName} maxLength={24} autoComplete="off" textContentType="none" editable={!disabled && !busy} style={styles.input} returnKeyType="done" onSubmitEditing={() => { if (!disabled && !busy && name.trim()) { if (store.addLearner(name)) { setName(""); setMessage(""); } else setMessage("Use a different name, up to 24 characters."); } }} />
@@ -30,11 +31,12 @@ export function LearnerSettings({ disabled }: { disabled: boolean }) {
     </>}
     {confirm && <View style={{ gap: 10 }}>
       <Heading style={{ fontSize: 18 }}>Remove {people.people.find(p => p.id === confirm)?.name ?? "this learner"}?</Heading>
-      <Copy>This removes their learning notes, saved learning rounds, arcade progress, islander and room from this device. Shared family games stay. A full copy is kept in Previous saves; restore that copy to undo the removal (it replaces your current save).</Copy>
+      <Copy>This removes this learner’s saved learning, classic, board and activity rounds; School levels and stars; word and race records; favorites and recent places; practice notes; Arcade progress; Library books, pages and creations; Islander, badges, earned items and whole house. Other learners, earlier family records and the Family free-play board stay. Previous saves keeps a full copy. Restoring it replaces the whole device save, including every learner’s newer work.</Copy>
       <Button disabled={busy || disabled} onPress={() => { setBusy(true); void store.removeLearner(confirm).then(ok => { if (ok) { setConfirm(null); setMessage("Learner removed. The previous save is kept in backups."); } else setMessage("No learner was removed."); }).catch(() => setMessage("Could not keep a recovery copy. The learner has not been removed.")).finally(() => setBusy(false)); }}>{busy ? "Keeping a recovery copy…" : "Confirm removal"}</Button>
       <Button quiet disabled={busy} onPress={() => setConfirm(null)}>Keep learner</Button>
     </View>}
     {!!message && <Copy>{message}</Copy>}
+    <EarlierWorkSettings disabled={disabled || busy}/>
     {!!Object.keys(learner.skills).length && <>
       <Heading style={{ fontSize: 17 }}>{learner.name}’s practice across activities</Heading>
       <Copy>These signals help choose what to offer again. They do not establish proficiency.</Copy>

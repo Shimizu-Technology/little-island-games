@@ -52,7 +52,7 @@ describe("classic audit regressions", () => {
     expect(source("components/Audio.tsx")).toContain('"NotAllowedError"');
   });
   it("uses friendly foundation and growth parent labels without internal IDs", () => {
-    expect(noteLabel(`sound-boat:easy:${levelRoundSkill}`, {})).toContain("Level 1 · Cat, hen and sun · Completed rounds");
+    expect(noteLabel(`sound-boat:easy:${levelRoundSkill}`, {})).toContain("Level 1 · Cat, hen and sun · Verified completed rounds");
     expect(noteLabel("sound-boat:stretch:internal-id", {})).not.toContain("internal-id");
     expect(noteLabel("shell-math:hard:math.add", { "math.add": "Adding" })).toContain("Level 3 · More sums to 20 · Adding");
   });

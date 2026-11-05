@@ -92,20 +92,20 @@ describe('immutable Explore migration', () => {
     const old = legacyFixture(), original = JSON.stringify(old), migrated = migrateLibrary(parseSave(original));
     expect(JSON.stringify(old)).toBe(original); expect(migrated.explore).toEqual(old.explore);
     expect(migrated.library.archive?.explore).toEqual(old.explore);
-    expect(migrated.library.profiles.family).toMatchObject({ labs: old.explore.progress.labs, onlyFavorites: true, saved: ['moon', 'retired-topic'], current: 'water-cycle', query: 'cloud', recent: ['water-cycle', 'retired-topic', 'moon'], positions: old.explore.progress.positions });
+    expect(migrated.library.profiles.family).toMatchObject({ labs: newLibraryChild().labs, onlyFavorites: false, saved: [], query: '', recent: [], positions: {} });
     expect(validLibraryData(migrated.library)).toBe(true); expect(parseSave(JSON.stringify(migrated))).toEqual(migrated);
-    migrated.library.profiles.family.labs.oceans.chain.pop();
+    migrated.library.profiles.family.query = 'new family search';
     expect(migrated.library.archive!.explore.progress!.labs).toEqual(old.explore.progress.labs);
     migrated.library.archive!.explore.favorites.push('another-retired');
     expect(JSON.stringify(old)).toBe(original); expect(migrated.explore!.favorites).toEqual(old.explore.favorites);
   });
-  it('maps all fifty topic favorites and current destinations without loss and runs only once', () => {
+  it('archives all fifty favorites and current destinations without assigning an owner; runs once', () => {
     const old = { ...emptySave(), explore: { favorites: TOPICS.map(t => t.id) } };
     const migrated = migrateLibrary(old);
-    expect(migrated.library.profiles.family.saved).toEqual(TOPICS.map(t => t.id)); expect(migrateLibrary(migrated)).toBe(migrated);
+    expect(migrated.library.profiles.family.saved).toEqual([]); expect(migrated.library.archive?.explore.favorites).toEqual(TOPICS.map(t => t.id)); expect(migrateLibrary(migrated)).toBe(migrated);
     for (const topic of TOPICS) {
       const progress = newExploreProgress(); progress.location = { kind: 'topic', id: topic.id };
-      expect(migrateLibrary({ ...old, explore: { ...old.explore, progress } }).library.profiles.family.current).toBe(topic.id);
+      const upgraded = migrateLibrary({ ...old, explore: { ...old.explore, progress } }); expect(upgraded.library.profiles.family.current).toBeUndefined(); expect(upgraded.library.archive?.explore.progress?.location).toEqual(progress.location);
     }
   });
   it('uses the actual active learner, keeps the family fallback, and removes only the deleted profile', () => {
@@ -122,7 +122,7 @@ describe('immutable Explore migration', () => {
     expect(validLegacyExplore(explore)).toBe(true);
     const retired = { ...explore, progress: { ...explore.progress, location: { kind: 'topic' as const, id: 'retired-current' } } };
     const migrated = migrateLibrary({ ...emptySave(), explore: retired });
-    expect(migrated.library.profiles.family.current).toBe('retired-current');
+    expect(migrated.library.profiles.family.current).toBeUndefined();
     expect(migrated.library.archive?.explore).toEqual(retired);
     expect(parseSave(JSON.stringify(migrated))).toEqual(migrated);
     for (const patch of [{ version: 2 }, { location: { kind: 'topic', id: 'https://outside' } }, { positions: { 'topic:retired': -1 } }, { labs: { ...explore.progress.labs, space: { ...newLab(), turn: 9 } } }])

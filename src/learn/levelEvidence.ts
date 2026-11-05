@@ -6,12 +6,15 @@ import { growthProgress, growthQuestions } from "./growth/engine";
 import type { GrowthState } from "./growth/types";
 import { levelRoundSkill, recordLearning } from "./learners";
 import { levelStage } from "./levels";
+import { creditSchool } from "./schoolProgress";
 import { dayNumber } from "./skills";
 
 /** A round summary is separate from individual answers and optional warm-up practice. */
 
 export function recordLevelRound(before: Save, after: Save, game: LearnId, day = dayNumber()): Save {
   const old = before.learn?.[game], next = after.learn?.[game];
+  if (old && next && old.id === next.id && !finished(old) && finished(next) &&
+      (next.learner ?? 'family') === (after.learning?.active ?? 'family')) after = { ...after, school: creditSchool(after.school, { ...next, levelHelped: old.levelHelped === false ? next.levelHelped : old.levelHelped }, day) };
   if (!old || !next || old.id !== next.id || finished(old) || !finished(next) || next.options.mode !== "solo" ||
     (next.learner ?? "family") === "family" || next.learner !== after.learning?.active ||
     old.levelHelped === undefined || next.levelHelped === undefined) return after;

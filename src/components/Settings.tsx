@@ -1,3 +1,4 @@
+import { encodeSave } from "../state/profiles";
 import * as Linking from "expo-linking";
 import appConfig from "../../app.json";
 import React, { useState } from "react";
@@ -182,7 +183,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
             quiet
             disabled={busy}
             onPress={() =>
-              void exportBackup(JSON.stringify(store.save))
+              void exportBackup(encodeSave(store.save))
                 .then(() => setMessage("Choose a private place to save your backup."))
                 .catch(() => setMessage("The backup could not be shared. Please try again."))
             }

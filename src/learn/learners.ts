@@ -44,7 +44,7 @@ export function recordLearning(v: Learners | undefined, owner: string, game: Lea
   } : person) };
 }
 /** An invitation after two independently completed rounds on different days. No timing. */
-export const levelRoundSkill = "think.level-round";
+export const levelRoundSkill = "think.level-round-v2";
 export function readyForNext(p: Learner, game: LearnId, stage: string, _requiredSkills: readonly string[] = []) {
   const note = p.notes[`${game}:${stage}:${levelRoundSkill}`];
   return p.id !== "family" && stage !== "deep" && !!note && note.independent >= 2 && note.days.length >= 2 && note.rounds.length >= 2;
