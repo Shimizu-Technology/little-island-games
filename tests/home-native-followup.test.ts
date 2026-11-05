@@ -7,7 +7,7 @@ import {characterDropRoom,resolveDrop} from '../src/home/drop';
 import {stageWidth} from '../src/home/stage';
 import {initializePersonalization} from '../src/personalization/model';
 import {emptySave,parseSave} from '../src/state/validation';
-import {preserveHomeMigration} from '../src/state/homeMigration';
+import {preserveLearnerMigration} from '../src/state/homeMigration';
 import type {StorageAdapter} from '../src/state/storage';
 const fixtures=()=>{const s=starterHome();s.version=3;s.rooms.home={...s.rooms.home,characters:[{slot:0,anchor:'floor',pose:'stand',x:9,y:8}],instances:[instance('bed','bed',0,0)]};return s;};
 const inside=(s:HomeStateV2,scale=1)=>{for(const room of Object.values(s.rooms))for(const i of room.instances){const p=itemPoint(i,room.instances),b=visualBox(i.item,i.rotation,i.mirrored);expect((p.x+b.left)*scale).toBeGreaterThanOrEqual(8*scale);expect((p.x+b.left+b.width)*scale).toBeLessThanOrEqual(792*scale);expect((p.y+b.top)*scale).toBeGreaterThanOrEqual(8*scale);expect((p.y+b.top+b.height)*scale).toBeLessThanOrEqual(552*scale);}};
@@ -62,13 +62,13 @@ describe('migration-style byte preservation',()=>{
  it('preserves exact whitespace-bearing source bytes before replacement, once',async()=>{
   const before=initializePersonalization(emptySave());before.personalization!.people.family.home=fixtures();const raw=' \n'+JSON.stringify(before,null,3)+'\n';let stored=raw;const backups:string[]=[],events:string[]=[];
   const adapter:StorageAdapter={get:async()=>stored,set:async(value)=>{events.push('set');stored=value;},preserve:async(value)=>{events.push('preserve');backups.push(value);},listRecovery:async()=>[],readRecovery:async()=>null};
-  const parsed=parseSave(raw),after=initializePersonalization(parsed);expect(await preserveHomeMigration(adapter,raw,parsed,after)).toBe(true);
+  const parsed=parseSave(raw),after=initializePersonalization(parsed);expect(await preserveLearnerMigration(adapter,raw,parsed,after)).toBe(true);
   expect(backups).toEqual([raw]);expect(events).toEqual(['preserve','set']);expect(JSON.stringify(before.personalization!.people.family.home)).toBe(JSON.stringify(fixtures()));
-  const reloaded=parseSave(stored),again=initializePersonalization(reloaded);expect(await preserveHomeMigration(adapter,stored,reloaded,again)).toBe(false);expect(backups).toHaveLength(1);expect(again).toBe(reloaded);
+  const reloaded=parseSave(stored),again=initializePersonalization(reloaded);expect(await preserveLearnerMigration(adapter,stored,reloaded,again)).toBe(false);expect(backups).toHaveLength(1);expect(again).toBe(reloaded);
  });
  it('does not replace the save if preserving its original fails',async()=>{
   const before=initializePersonalization(emptySave());before.personalization!.people.family.home=fixtures();const raw=JSON.stringify(before);let stored=raw;
   const adapter:StorageAdapter={get:async()=>stored,set:async(value)=>{stored=value;},preserve:async()=>{throw Error('disk full');},listRecovery:async()=>[],readRecovery:async()=>null};
-  await expect(preserveHomeMigration(adapter,raw,before,initializePersonalization(before))).rejects.toThrow('disk full');expect(stored).toBe(raw);
+  await expect(preserveLearnerMigration(adapter,raw,before,initializePersonalization(before))).rejects.toThrow('disk full');expect(stored).toBe(raw);
  });
 });

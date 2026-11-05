@@ -3,7 +3,7 @@ import {anchors,instance,legacyStarterHome,migrateHome,poseFor,starterHome,valid
 import {initializePersonalization} from '../src/personalization/model';
 import {backfillRewards} from '../src/badges/transitions';
 import {emptySave,parseSave} from '../src/state/validation';
-import {assertMigratedHomes,preserveHomeMigration,preserveImportedHome} from '../src/state/homeMigration';
+import {assertMigratedHomes,preserveLearnerMigration,preserveImportedLearners} from '../src/state/homeMigration';
 import type {StorageAdapter} from '../src/state/storage';
 const envelope=(home:HomeStateV2)=>{const save=initializePersonalization(emptySave());save.personalization!.people.family.home=home;return save;};
 const fixture=(slot:Character['slot'])=>{const home=starterHome();home.version=2;home.rooms.home.instances=[instance('bed','bed',4,0),instance('toy','teddy',10,8)];home.rooms.home.characters=[{slot,anchor:'seat',pose:'sit',holding:'toy'}];return envelope(home);};
@@ -13,7 +13,7 @@ describe('R2-M1 accepted legacy relationships migrate to readable v3 envelopes',
   expect(validHome(h)).toBe(true);expect(h.rooms.home.characters[0]).toMatchObject({slot,holding:'toy',anchor:'seat',pose:'lie',socket:{itemId:'bed',socketId:slot===2?'pet-pillow':'pillow'}});
   expect(parseSave(JSON.stringify(next))).toEqual(next);expect(' \n'+JSON.stringify(source,null,3)+'\n').toBe(raw);
   let stored='device';const originals:string[]=[];const adapter:StorageAdapter={get:async()=>stored,set:async s=>{stored=s;},preserve:async s=>{originals.push(s);},listRecovery:async()=>[],readRecovery:async()=>null};
-  await preserveImportedHome(adapter,raw,parsed,next,'device');expect(originals).toEqual([raw,'device']);expect(parseSave(stored)).toEqual(next);
+  await preserveImportedLearners(adapter,raw,parsed,next,'device');expect(originals).toEqual([raw,'device']);expect(parseSave(stored)).toEqual(next);
  });
  it('deconflicts implicit occupants onto free compatible sockets or floor while retaining every held prop',()=>{
   const source=fixture(0),home=source.personalization!.people.family.home as HomeStateV2;
@@ -42,7 +42,7 @@ describe('R2-M1 accepted legacy relationships migrate to readable v3 envelopes',
   h.rooms.home.characters[0]={slot:0,anchor:'seat',pose:'sit'};
   expect(()=>assertMigratedHomes(bad)).toThrow('original has been kept');let stored=path==='startup'?encoded:'device';const originals:string[]=[];let writes=0;
   const adapter:StorageAdapter={get:async()=>stored,set:async s=>{writes++;stored=s;},preserve:async s=>{originals.push(s);},listRecovery:async()=>[],readRecovery:async()=>null};
-  await expect(path==='startup'?preserveHomeMigration(adapter,encoded,before,bad):preserveImportedHome(adapter,encoded,before,bad,'device')).rejects.toThrow('original has been kept');
+  await expect(path==='startup'?preserveLearnerMigration(adapter,encoded,before,bad):preserveImportedLearners(adapter,encoded,before,bad,'device')).rejects.toThrow('original has been kept');
   expect(writes).toBe(0);expect(stored).toBe(path==='startup'?encoded:'device');expect(originals).toEqual([encoded]);
  });
 });
