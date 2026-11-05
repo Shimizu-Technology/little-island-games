@@ -1,3 +1,4 @@
+import { encodeSave } from "../state/profiles";
 import * as Linking from "expo-linking";
 import appConfig from "../../app.json";
 import React, { useState } from "react";
@@ -14,6 +15,7 @@ import { islandNames } from "../learn/home";
 import type { Island } from "../learn/types";
 import { PracticeOptions } from "./PracticeOptions";
 import { LearnerSettings } from "../learn/LearnerSettings";
+import { pendingAssignments } from "../state/profiles";
 import { useSoundControls } from "./Audio";
 import { emptyArcade } from "../arcade";
 import { learnerPractice } from "../learn/learners";
@@ -109,6 +111,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
       {!unlocked ? (
         <>
           <Copy>Practice notes, backups and About are for grown-ups. Type the answer to unlock.</Copy>
+          {pendingAssignments(store.save).length > 0 && <Copy>Some older work is waiting for a grown-up to choose whose it is.</Copy>}
           <View style={[styles.row, { gap: 10 }]}>
             <Text style={{ fontFamily: font, fontSize: 20, fontWeight: "700", color: C.ink }}>
               {gate.a} × {gate.b} =
@@ -164,7 +167,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
             </Copy>)}
           </View>}
           <Heading style={{ fontSize: 19 }}>Shared family practice signals</Heading>
-          {!practice.length && <Copy>No recent practice yet. As she explores the learning islands, the words and ideas she tries will appear here.</Copy>}
+          {!practice.length && <Copy>No recent practice yet. As your learners explore the islands, the words and ideas they try will appear here.</Copy>}
           {(["reading", "numbers", "science", "thinking", "coding"] as Island[]).map(island => {
             const labels = new Set(Object.values(engines).filter(e => e.island === island).flatMap(e => Object.keys(e.skills)));
             const lines = practice.filter(line => labels.has(line.skill));
@@ -182,7 +185,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
             quiet
             disabled={busy}
             onPress={() =>
-              void exportBackup(JSON.stringify(store.save))
+              void exportBackup(encodeSave(store.save))
                 .then(() => setMessage("Choose a private place to save your backup."))
                 .catch(() => setMessage("The backup could not be shared. Please try again."))
             }

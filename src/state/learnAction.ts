@@ -10,11 +10,19 @@ export function applyLearnSave(save: Save, game: LearnId, next: LearnSession, ex
   const current = save.learn?.[game];
   if (
     expected.epoch !== epoch ||
+    (next.learner ?? 'family') !== (save.learning?.active ?? 'family') ||
+    Object.entries(save.profiles?.people ?? {}).some(([owner,p]) => owner !== (save.learning?.active ?? 'family') && p.learn?.[game]?.id === next.id) ||
+    (current && (current.learner ?? 'family') !== (save.learning?.active ?? 'family')) ||
     (current?.id ?? null) !== expected.id ||
     (expected.revision !== undefined && current?.revision !== expected.revision) ||
     !validLearnSession(next, game)
   )
     return save;
+  if (current?.id === next.id) {
+    if (current.levelHelped === true && next.levelHelped !== true) next = { ...next, levelHelped: true };
+    // A normal action cannot reconstruct an older round's unknown assistance history.
+    if (current.levelHelped === undefined && next.levelHelped === false) next = { ...next, levelHelped: undefined };
+  }
   let updated = { ...save, learn: { ...save.learn, [game]: next }, recentLearn: game, recentActivity: null } as Save;
   const owner = next.learner ?? "family";
   if (current?.id !== next.id && owner === (save.learning?.active ?? "family")) updated.learning = rememberLearningChoice(save.learning, owner, game, next.options);
@@ -36,7 +44,7 @@ export function applyPractice(save: Save, skill: string, correct: boolean, day =
 /** Original engines emit practice signals, not independently mastered task records. */
 export function applyOwnedPractice(save: Save, game: LearnId, expected: LearnExpected, epoch: number, skill: string, correct: boolean): Save {
   const current = save.learn?.[game];
-  if (!current || expected.epoch !== epoch || current.id !== expected.id || expected.revision === undefined || current.revision < expected.revision || current.revision > expected.revision + 1) return save;
+  if (!current || (current.learner ?? 'family') !== (save.learning?.active ?? 'family') || expected.epoch !== epoch || current.id !== expected.id || expected.revision === undefined || current.revision < expected.revision || current.revision > expected.revision + 1) return save;
   const shared = applyPractice(save, skill, correct);
   const owner = current.learner ?? "family", learning = save.learning ?? familyLearners();
   if (current.options.mode !== "solo" || learning.active !== owner || !learning.people.some(p => p.id === owner)) return shared;

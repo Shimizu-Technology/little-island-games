@@ -1,3 +1,5 @@
+import { projectProfile } from "../state/profiles";
+import { newExploreProgress } from "../explore/progress";
 import { grantCatalog, MAX_MILESTONES, validMilestone } from '../badges/engine';
 import { themeRewards } from '../home/catalog';
 import { owns } from '../home/model';
@@ -65,10 +67,23 @@ export function withoutLearner(save: Save, id: string): Save {
     next.sessions = Object.fromEntries(Object.entries(save.sessions).filter(([game])=>!owned('classic',game)));
     if (save.board) next.board = Object.fromEntries(Object.entries(save.board).filter(([game])=>!owned('board',game)));
     if (save.activities) next.activities = Object.fromEntries(Object.entries(save.activities).filter(([game])=>!owned('activity',game)));
-    if (Object.entries(save.roundOwners.rounds).some(([key,r])=>key.startsWith('explore:') && r.owner === id) && save.explore) next.explore = { favorites: save.explore.favorites };
+    if (save.explore) {
+      const topics = new Set(Object.entries(save.roundOwners.rounds).filter(([key,r]) => key.startsWith('explore:') && !key.startsWith('explore:lab-') && r.owner === id).map(([key]) => key.slice(8)));
+      const progress = save.explore.progress;
+      next.explore = { favorites: save.explore.favorites.filter(topic => !topics.has(topic)), ...(progress ? { progress: {
+        ...progress,
+        location: progress.location.kind === 'topic' && topics.has(progress.location.id) ? newExploreProgress().location : progress.location,
+        history: progress.history.filter(l => l.kind !== 'topic' || !topics.has(l.id)),
+        positions: Object.fromEntries(Object.entries(progress.positions).filter(([key]) => ![...topics].some(topic => key === `topic:${topic}`))),
+      } } : {}) };
+    }
   }
   if (save.roundOwners) next.roundOwners = { ...save.roundOwners, rounds: Object.fromEntries(Object.entries(save.roundOwners.rounds).filter(([,r])=>r.owner !== id)) };
   if (save.arcade) next.arcade = { ...save.arcade, people: Object.fromEntries(Object.entries(save.arcade.people).filter(([owner]) => owner !== id)) };
   if (save.learn) next.learn = Object.fromEntries(Object.entries(save.learn).filter(([, round]) => (round.learner ?? 'family') !== id));
+  if (save.profiles) {
+    next.profiles = { ...save.profiles, unassigned: { ...save.profiles.unassigned, ...(save.profiles.unassigned.exploreUntouched ? { exploreUntouched: save.profiles.unassigned.exploreUntouched.filter(owner => owner !== id) } : {}) }, people: Object.fromEntries(Object.entries(save.profiles.people).filter(([owner]) => owner !== id)) };
+    return projectProfile(next);
+  }
   return next;
 }

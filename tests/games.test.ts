@@ -175,7 +175,7 @@ describe("Save boundaries", () => {
   });
   it("rejects corrupt, future, mismatched, and oversized data", () => {
     expect(() => parseSave("oops")).toThrow();
-    expect(() => parseSave('{"version":2}')).toThrow(/unsupported/);
+    expect(() => parseSave('{"version":3}')).toThrow(/unsupported/);
     const save = emptySave();
     save.sessions.maze = createTic(opts) as never;
     expect(() => parseSave(JSON.stringify(save))).toThrow(/invalid/);

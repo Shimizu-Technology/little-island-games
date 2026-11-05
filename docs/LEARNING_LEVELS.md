@@ -1,5 +1,7 @@
 # Learning levels
 
+Current profile separation and earned-star behavior is documented in [Local learner saves](PROFILE_SAVES.md). All stones remain open; selected levels and completed levels are separate records. Earlier implementation evidence below is historical.
+
 27 October 2026. Implementation slice based on integration commit 0fbd8af. Sources: docs/ISLAND_ARCADE.md (A07), docs/PRD.md, docs/LEARNING_GROWTH.md, and the pure engines/content in src/learn. The app is private, offline family practice for a seven-year-old and family. There are no accounts or remote learner records. This work makes the existing progression visible; it does not claim mastery or certified learning outcomes.
 
 ## Decisions and compatibility

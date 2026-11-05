@@ -74,7 +74,7 @@ export function backfillRewards(save: Save): Save {
     for(const game of arcadeIds) for(const [level,stars] of Object.entries(next.arcade?.people[learner.id]?.games[game]?.stars ?? {})) if(stars) next=rewardCompletion(next,{kind:'arcade',game,level},learner.id);
     for(const [key,note] of Object.entries(learner.notes)) {
       const [game,stage,skill]=key.split(':');
-      if(skill!=='think.level-round' || !(note.independent+note.helped)) continue;
+      if(!['think.level-round','think.level-round-v2','think.warmup-round'].includes(skill) || !(note.independent+note.helped)) continue;
       next=rewardCompletion(next,{kind:'learning',game,level:['easy','medium','hard','stretch','deep'].indexOf(stage)+1,helped:!!note.helped},learner.id);
     }
     next=openWorld(next,learner.id);

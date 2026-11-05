@@ -18,6 +18,7 @@ import { growthProgress, growthQuestions } from "./growth/engine";
 import type { GrowthState } from "./growth/types";
 import { LevelPath } from "./LevelPath";
 import { levelOf, levelTitle, optionsAtLevel, levelStage, type LearningLevel } from "./levels";
+import { roundStars } from "./schoolProgress";
 import { activeLearner, readyForNext } from "./learners";
 import { views } from "./views";
 import { LastPicnicWord } from "./games/hafa-adai/view";
@@ -57,7 +58,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
     if (growthStep !== undefined) scroll.current?.scrollTo({ y: 0, animated: false });
   }, [growthStep, saved?.id]);
   const learner = activeLearner(store.save.learning);
-  const learningSkills = learner.id === "family" ? store.save.skills : learner.skills;
+  const learningSkills = learner.id === "family" && !store.save.profiles ? store.save.skills : learner.skills;
   const epoch = store.epoch;
   const acceptedRound = useRef(saved);
   useLayoutEffect(() => { acceptedRound.current = saved; }, [saved]);
@@ -94,6 +95,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const result = saved ? outcomeOf(saved) : null,
     finished = result !== null,
     notWon = saved && result === "done" && engine.notWon ? engine.notWon(saved.state, saved.options) : null,
+    earnedStars = saved ? roundStars(saved, store.save.school?.[id]?.[levelOf(saved.options)]?.stars ?? 1) : 0,
     wasFinished = useRef(finished);
   useLayoutEffect(() => {
     if (finished) scroll.current?.scrollTo({ y: 0, animated: false });
@@ -317,7 +319,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
               >
                 <View pointerEvents="none" style={{ position: "absolute", top: 10, left: 0, right: 0, alignItems: "center" }}><Celebrate burst={burst.n} big /></View>
                 {engine.id === "hafa-adai" && !saved.options.stage && <LastPicnicWord state={saved.state as IslandState} />}
-                {!notWon && <Heading style={{ color: theme.accent, fontSize: 38, textAlign: "center" }}>★  ★  ★</Heading>}
+                {earnedStars > 0 && <View accessible accessibilityLabel={`${earnedStars} ${earnedStars === 1 ? "star" : "stars"} earned`}><Heading style={{ color: theme.accent, fontSize: 38, textAlign: "center" }}>{"★  ".repeat(earnedStars).trim()}</Heading></View>}
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                   {store.save.settings.learningIslander !== false && <Companion event={notWon ? "loss" : result === "draw" ? "draw" : "complete"} active={boardActive} size={166}/>}
                   {engine.ownLevels ? <view.Art size={86} /> : <LearnArt island={engine.island} size={86} />}
@@ -343,6 +345,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
               </View>
             )}
             {finished && <BadgeResultCard round={saved.id}/>}
+            {finished && <LevelPath game={id} level={levelOf(saved.options)} progress={store.save.school} onChoose={level => { chooseLevel(level, saved.options); setSetup(true); }}/>}
             {(saved.learner ?? "family") !== learner.id && <Copy style={{ textAlign: "center" }}>This saved round belongs to {store.save.learning?.people.find(p => p.id === (saved.learner ?? "family"))?.name ?? "Family practice"}. New rounds use {learner.name}.</Copy>}
             {/* Options are for grown-ups and changing modes; kept small so it's never the obvious tap mid-game. */}
             <Button compact quiet onPress={openSetup}>
@@ -361,7 +364,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: theme.sky, padding: 12, borderRadius: 22 }}><view.Art size={72}/><View style={{ flex: 1 }}><Heading style={{ fontSize: 21, color: theme.ink }}>{engine.name}</Heading><Copy style={{ color: theme.ink, fontSize: 14 }}>Pick a stepping stone, then play.</Copy></View></View>
         <LearnerChip compact/>
         <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage && !engine.ownLevels ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
-        <LevelPath game={id} level={levelOf(options)} onChoose={chooseLevel} />
+        <LevelPath game={id} level={levelOf(options)} onChoose={chooseLevel} progress={store.save.school} />
         {engine.modes.length > 1 && (
           <>
             <Heading style={{ fontSize: 18 }}>How shall we play?</Heading>

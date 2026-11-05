@@ -47,10 +47,11 @@ import {
   WordBoard,
 } from "../screens/GameBoards";
 export default function Play() {
+  const store = useStore();
   const params = useLocalSearchParams<{ game?: string }>(),
     id = params.game as GameId;
   if (!gameIds.includes(id)) return <Redirect href="/" />;
-  return <Game key={id} id={id} />;
+  return <Game key={`${id}:${store.save.learning?.active ?? "family"}:${store.epoch}`} id={id} />;
 }
 function Game({ id }: { id: GameId }) {
   const look = useActiveIslanderLook();
@@ -269,13 +270,14 @@ function Game({ id }: { id: GameId }) {
         </View>
         {s?.game === "word-rescue" && store.save.wordRecords && (
           <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 20 }}>
-            Challenge record: {store.save.wordRecords.wins} won · {store.save.wordRecords.losses} lost ·{" "}
+            Your Challenge record: {store.save.wordRecords.wins} won · {store.save.wordRecords.losses} lost ·{" "}
             {store.save.wordRecords.assistedWins} assisted wins
             {store.save.wordRecords.bestWrong !== null
               ? ` · Best: ${store.save.wordRecords.bestWrong} wrong guesses without a hint`
               : ""}
           </Copy>
         )}
+        {s?.game === "word-rescue" && store.save.profiles?.earlier.wordRecords && <Copy style={{ textAlign: "center", fontSize: 13, marginTop: 10 }}>Earlier family records: {store.save.profiles.earlier.wordRecords.wins} won · {store.save.profiles.earlier.wordRecords.losses} lost · {store.save.profiles.earlier.wordRecords.assistedWins} assisted wins. These older totals have no recorded learner.</Copy>}
         {s && (
           <View
             style={{

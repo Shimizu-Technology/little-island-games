@@ -184,7 +184,7 @@ function LibraryReady() {
         ...store.save.explore?.progress,
         location: { kind: "topic" as const, id: topicId },
       };
-      store.exploreUpdate(progress, store.epoch, topicId);
+      store.exploreUpdate(progress, store.epoch, topicId, childId);
       setNotice("Your discovery is kept.");
       return;
     }
