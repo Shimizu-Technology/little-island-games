@@ -492,3 +492,21 @@ Delivery:
 Receipt: [evidence/testflight-build27.json](evidence/testflight-build27.json).
 
 Not verified: physical iPhone and iPad, real VoiceOver, airplane mode, mid-gesture interruption, narration listening, Stassie's acceptance, and Library promotion to approved.
+
+## Little Island 3.0: 3.0.0 (28) from main, available 6 November 2026 Guam time
+
+This build adds the redrawn Islander hair and outfits (PR #22): all 14 hairstyles, real garment shapes, ten new outfits, Girls / Boys / Everyone sections with nothing locked by section, and a pinned creator preview. It includes everything in 3.0.0 (27).
+
+Source: `a2a9aa2a6737c4a86bb2d5bc2c6c440098bba471` on `release/testflight-28`. That is `main` @ `9da44e80` plus one release-only commit carrying the committed family-preview Library catalog. Preview gate: 2,366 tests. Doctor 21/21. CI passed on `main`.
+
+Native simulator QA on iPhone 17 Pro and iPad mini: upgrade from a version-2 save with reward grants and an exact recovery copy, creator and Locker, locked items at the largest text, a Home drag into bed, the island and Lagoon Run.
+
+Delivery:
+- The IPA is 305,052,298 bytes, SHA256 `24c8b381bbd148a5823a2048be3871578db8422b7bb884a2ce481bb0003d4ab9`.
+- All 10,884 referenced audio files match the source.
+- EAS submission `54e216e7-d9e3-446f-afbb-b545c707f9ea` finished. One empty upload reservation remains in AWAITING_UPLOAD; no extra build exists.
+- Apple build `cfad0b36-361b-4bbd-8137-53a1ba0cd673` is VALID / IN_BETA_TESTING in the Leon group, with English notes.
+
+Receipt: [evidence/testflight-build28.json](evidence/testflight-build28.json).
+
+Not verified: physical iPhone and iPad, real VoiceOver, airplane mode, mid-gesture interruption, narration listening, Stassie's acceptance, and Library promotion to approved.
