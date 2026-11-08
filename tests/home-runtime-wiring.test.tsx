@@ -135,14 +135,14 @@ const commitFixture: Parameters<typeof useInteraction>[0]["onCommit"] = (index, 
   committed++; committedId = proposal.id; committedContact = proposal.contact;
   current.finish(index, true, proposal, "committed", undefined, token);
 };
-function Probe({ scene, layout = true }: { scene: Scene; layout?: boolean }) {
+function Probe({ scene, layout = true, designing = false }: { scene: Scene; layout?: boolean; designing?: boolean }) {
   const interaction = useInteraction({
     scene,
     building: fixtureBuilding,
     viewport: fixtureViewport,
     initialCamera: identityCamera,
     reduced: false,
-    designing: false,
+    designing,
     onCameraChange: cameraChange,
     onPickup: (pickup) => {
       const slot = current.slots.get()[pickup.slot];
@@ -678,7 +678,7 @@ describe("actual runtime callback sequencing", () => {
     }));
     let renderer: TestRenderer.ReactTestRenderer;
     await act(async () => {
-      renderer = TestRenderer.create(<Probe scene={scene} />);
+      renderer = TestRenderer.create(<Probe scene={scene} designing />);
     });
     touch("down", 120, 300);
     if (!pending) {

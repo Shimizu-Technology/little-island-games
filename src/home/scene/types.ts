@@ -21,6 +21,12 @@ export type Attachment =
   | { kind: "container"; parent: EntityId }
   | { kind: "staging"; room: RoomId };
 export type Bounds = Readonly<{ left: number; top: number; width: number; height: number }>;
+/** A convex piece of what is actually painted, relative to the entity's contact, in room units. */
+export type HitShape =
+  | Readonly<{ kind: "box"; left: number; top: number; width: number; height: number }>
+  | Readonly<{ kind: "ellipse"; x: number; y: number; rx: number; ry: number }>
+  | Readonly<{ kind: "capsule"; ax: number; ay: number; bx: number; by: number; r: number }>
+  | Readonly<{ kind: "polygon"; points: readonly number[] }>;
 export type DepthBand = "background" | "furniture-back" | "occupant" | "furniture-front" | "foreground" | "drag" | "ui";
 export type SceneEntity = {
   id: EntityId;
@@ -36,7 +42,13 @@ export type SceneEntity = {
   depth: number;
   band: DepthBand;
   hitProxies: Bounds[];
-  body?: { w: number; h: number; layer: string; small?: boolean; holdable?: boolean; edible?: "food" | "drink" };
+  /** Painted shapes relative to contact: the one source for picking, occlusion and aim. */
+  shapes?: HitShape[];
+  /** Rectangles known to be painted, relative to contact, for occlusion only. */
+  occluders?: Bounds[];
+  /** Middle of the painted art, relative to contact. Food aims from here, not from its base. */
+  visual?: { x: number; y: number };
+  body?: { w: number; h: number; layer: string; small?: boolean; holdable?: boolean; edible?: "food" | "drink"; portable?: boolean; underfoot?: boolean };
   item?: Instance;
   character?: Character;
 };
@@ -61,6 +73,10 @@ export type Target = {
   core: Bounds;
   /** Visible seat/blanket activation region; contact remains the anatomical socket. */
   activation?: Bounds;
+  /** Head-sized feeding zone. The mouth stays the anatomical target of the reaction. */
+  face?: { x: number; y: number; headRadius: number };
+  /** Visible outline of a floor seat, drawn while a character is about to sit on it. */
+  rim?: Bounds;
   support?: Bounds;
   base: CharacterBase;
   facing: Facing;

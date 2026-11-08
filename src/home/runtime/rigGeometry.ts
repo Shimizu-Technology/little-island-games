@@ -58,7 +58,7 @@ export function carryBinding(entity: SceneEntity, grip: { x: number; y: number }
     to = markers(entity, true);
   const key =
     marker ??
-    (Object.keys(from).filter((k) => k !== "bounds") as Marker[]).sort(
+    (Object.keys(from).filter((k) => k !== "bounds" && k !== "shapes") as Marker[]).sort(
       (a, b) => Math.hypot(grip.x - from[a].x, grip.y - from[a].y) - Math.hypot(grip.x - from[b].x, grip.y - from[b].y)
     )[0];
   return { marker: key, x: from[key].x - to[key].x, y: from[key].y - to[key].y };

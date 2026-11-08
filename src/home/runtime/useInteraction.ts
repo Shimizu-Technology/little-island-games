@@ -27,7 +27,8 @@ import {
   type Viewport,
 } from "./CameraController";
 import { translatedBounds } from "../scene/spatial";
-import { prepareHits, pickEntity } from "./pick";
+import { carriedCentre } from "./carry";
+import { prepareHits, pickEntity, onShapes } from "./pick";
 import { layoutToken } from "./layout";
 import { settleProgress, canRevealResting } from "./settle";
 import { releaseWindow, type ProbeFrame, type ProbeRelease, type ReleaseProbe } from "./frameProbe";
@@ -288,6 +289,7 @@ export function useInteraction({
     const origin = roomOrigin(roomIds.indexOf(destination), building);
     // Gaps return visibly to the committed source instead of cancelling invisibly.
     const anchor = index < 0 ? subject.contact : roomPoint(slot.x - origin.x, slot.y - origin.y);
+    const centre = subject.item && index >= 0 ? carriedCentre(subject, anchor.x, anchor.y, slot.gripX, slot.gripY, camera.value.a) : undefined;
     const reservations: Record<string, string> = {};
     for (let i = 0; i < 2; i++) {
       const other = slots.value[i];
@@ -306,6 +308,7 @@ export function useInteraction({
     }
     return resolve(prepared.value.rooms[destination], subject, anchor, {
       scale: camera.value.a,
+      aim: centre && roomPoint(centre.x, centre.y),
       contact: index >= 0 ? screenToRoom(screenPoint(slot.pointerX, slot.pointerY), camera.value, housePoint(origin.x, origin.y)) : undefined,
       avoidFurnitureOverlap: designing,
       silhouette:
@@ -423,6 +426,8 @@ export function useInteraction({
     );
     controller.set(next.state);
     for (const effect of next.effects) {
+      // Anchored furniture answers a tap or a nudge. It never needs a carry overlay.
+      if ((effect.type === "contact" || effect.type === "pickup") && movable.value[effect.entity] === false) continue;
       if (effect.type === "contact") {
         const index = slots.value.findIndex((s) => s.id === effect.entity && !s.consumed);
         if (index >= 0) {
@@ -649,13 +654,15 @@ export function useInteraction({
     for (let i = 1; i >= 0; i--) {
       const s = slots.value[i];
       if (!s.id || s.consumed || s.phase !== "settling" || !s.subject || capturedRelative(s.restId ?? s.id)) continue;
-      const c = camera.value,
-        b = s.subject.character && s.proposal && s.finished
-          ? anchorsFor(s.subject.character.slot, s.proposal.base, s.proposal.facing, s.subject.action).bounds
-          : s.subject.bounds;
+      const c = camera.value;
+      const pose = s.subject.character && s.proposal && s.finished
+        ? anchorsFor(s.subject.character.slot, s.proposal.base, s.proposal.facing, s.subject.action)
+        : undefined;
+      const b = pose?.bounds ?? s.subject.bounds;
       const x = point.x / c.a - c.tx / c.a,
         y = point.y / c.a - c.ty / c.a;
-      if (x >= s.x + b.left && x <= s.x + b.left + b.width && y >= s.y + b.top && y <= s.y + b.top + b.height)
+      const shapes = pose?.shapes ?? s.subject.shapes;
+      if (shapes ? onShapes(shapes, x - s.x, y - s.y) : x >= s.x + b.left && x <= s.x + b.left + b.width && y >= s.y + b.top && y <= s.y + b.top + b.height)
         return s.id;
     }
     const index = roomAtScreen(point.x, point.y, camera.value, building);
@@ -679,7 +686,7 @@ export function useInteraction({
       }
       return true;
     });
-    return pickEntity(free, p, camera.value.a);
+    return pickEntity(free, p, camera.value.a, movable.value);
   };
   const resumePending = (pointer: number) => {
     "worklet";
@@ -720,8 +727,12 @@ export function useInteraction({
           suppressed.set([...suppressed.value, touch.id]);
           continue;
         }
-        const point = screenPoint(touch.x, touch.y),
-          entity = hit(point);
+        const point = screenPoint(touch.x, touch.y);
+        let entity = hit(point);
+        // Furniture that stays put is scenery to a two-finger pinch.
+        if (controller.value.pointers.length && entity && movable.value[entity] === false) entity = undefined;
+        const fixed = controller.value.pointers.find((p) => p.entity && movable.value[p.entity] === false);
+        if (fixed) send({ type: "to-camera", pointer: fixed.pointer, point: fixed.point });
         if (entity && controller.value.pointers.some((p) => !p.entity)) {
           suppressed.set([...suppressed.value, touch.id]);
           continue;
@@ -766,10 +777,10 @@ export function useInteraction({
         if (suppressed.value.includes(touch.id)) continue;
         const capture = controller.value.pointers.find((p) => p.pointer === touch.id);
         if (capture?.entity && movable.value[capture.entity] === false) {
+          // A wobble says "I stay here" and the same finger carries on panning the room.
           if (Math.hypot(touch.x - capture.start.x, touch.y - capture.start.y) > 6) {
             if (!reduced) fixtureNudges.set({ ...fixtureNudges.value, [capture.entity]: eventTime() });
-            send({ type: "cancel", pointer: touch.id, now: eventTime() });
-            suppressed.set([...suppressed.value, touch.id]);
+            send({ type: "to-camera", pointer: touch.id, point: screenPoint(touch.x, touch.y) });
           }
           continue;
         }

@@ -5,7 +5,7 @@ import { characterFrame, characterPoint } from "../src/home/geometry";
 import { homeCharacterPose } from "../src/home/characterPose";
 import { characterForSocket, socketsOf } from "../src/home/interactions";
 import { homeReducer, instance, legacyStarterHome, migrateHome, starterHome, validHome } from "../src/home/model";
-import { apply, magnetRadius, resolve } from "../src/home/scene/proposal";
+import { apply, faceRadius, magnetRadius, resolve } from "../src/home/scene/proposal";
 import { buildScene, contained, itemEntity, translatedBounds } from "../src/home/scene/graph";
 import { identityCamera, roomToScreen, screenToRoom } from "../src/home/scene/camera";
 import { idleController, transition } from "../src/home/scene/controller";
@@ -136,10 +136,12 @@ describe("scene camera and pointer ownership", () => {
 describe("semantic resolver rules", () => {
   it("converts all four SPEC 29 radii through camera scale", () => {
     expect(magnetRadius("hand", 180, 1)).toBeCloseTo(25.2);
-    expect(magnetRadius("mouth", 180, 1)).toBeCloseTo(21.6);
+    // The mouth is a face zone now, sized by the head and never smaller than 32 pt on screen.
+    expect(faceRadius(50, 1)).toBeCloseTo(55);
+    expect(faceRadius(50, 0.5) * 0.5).toBeCloseTo(32);
     expect(magnetRadius("socket", 180, 1)).toBeCloseTo(39.6);
     expect(magnetRadius("container", 180, 1)).toBeCloseTo(18);
-    expect(magnetRadius("hand", 180, 0.5) * 0.5).toBe(16);
+    expect(magnetRadius("hand", 180, 0.5) * 0.5).toBe(24);
   });
   it("protects mouth cores, filters occupied/reserved/incompatible targets and ignores people order (H11)", () => {
     const state = actors();
@@ -506,7 +508,8 @@ describe("audit property sweeps", () => {
                 samples++;
               }
           }
-    expect(samples).toBe(832);
+    // The toy shelf no longer accepts new seats (HM-10); that is its 48 samples.
+    expect(samples).toBe(784);
   }, 120000);
   it("has no undefined or contact mismatch over the audit's dense starter-room grid (H15)", () => {
     let samples = 0;

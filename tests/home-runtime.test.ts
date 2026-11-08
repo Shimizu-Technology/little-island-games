@@ -171,17 +171,24 @@ describe("settle acknowledgement and bounded contact", () => {
 });
 
 describe("central silhouette picking", () => {
-  it("prioritizes visible props over owners, then resolves overlapping expanded shapes by distance", async () => {
+  it("takes the frontmost painted shape, then resolves overlapping expanded shapes by distance", async () => {
     const { pickEntity } = await import("../src/home/runtime/pick");
-    const proxies = [
-      { id: "actor", priority: 2, depth: 500, bounds: { left: 0, top: 0, width: 120, height: 220 } },
-      { id: "cup", priority: 3, depth: 1, bounds: { left: 70, top: 90, width: 12, height: 12 } },
+    const box = (left: number, top: number, width: number, height: number) => ({ kind: "box" as const, left, top, width, height });
+    // A cup held in front of its owner wins on its own paint; the same cup behind the owner stays hidden.
+    const inFront = [
+      { id: "actor", depth: 500, span: 120, shape: box(0, 0, 120, 220) },
+      { id: "cup", depth: 500.5, span: 12, shape: box(70, 90, 12, 12) },
     ];
-    expect(pickEntity(proxies, roomPoint(75, 95), 1)).toBe("cup");
-    expect(pickEntity(proxies, roomPoint(20, 95), 1)).toBe("actor");
+    expect(pickEntity(inFront, roomPoint(75, 95), 1)).toBe("cup");
+    expect(pickEntity(inFront, roomPoint(20, 95), 1)).toBe("actor");
+    const behind = [
+      { id: "actor", depth: 500, span: 120, shape: box(0, 0, 120, 220) },
+      { id: "cup", depth: 1, span: 12, shape: box(70, 90, 12, 12) },
+    ];
+    expect(pickEntity(behind, roomPoint(75, 95), 1)).toBe("actor");
     const siblings = [
-      { id: "a", priority: 3, depth: 1, bounds: { left: 0, top: 0, width: 12, height: 12 } },
-      { id: "b", priority: 3, depth: 2, bounds: { left: 20, top: 0, width: 12, height: 12 } },
+      { id: "a", depth: 1, span: 12, shape: box(0, 0, 12, 12) },
+      { id: "b", depth: 2, span: 12, shape: box(20, 0, 12, 12) },
     ];
     expect(pickEntity(siblings, roomPoint(15, 6), 1)).toBe("a");
     expect(pickEntity(siblings, roomPoint(18, 6), 1)).toBe("b");

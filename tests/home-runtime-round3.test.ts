@@ -25,10 +25,10 @@ describe("native round 3 regressions", () => {
         const entries = paintEntries(Object.values(scene.rooms.kitchen.entities), scene);
         const source = e.id.includes("portion-starter-fridge") ? scene.entities["kitchen/item/starter-fridge"] : undefined;
         if (source) expect(entries.findIndex((p) => p.entity.id === e.id)).toBeGreaterThan(entries.findIndex((p) => p.entity.id === source.id));
-        // The centre and four inset corners of the actual EntityArt frame.
-        for (const [u, v] of [[.5,.5],[.25,.25],[.75,.25],[.25,.75],[.75,.75]]) {
-          expect(pickEntity(hits, roomPoint(e.contact.x + bounds.left + bounds.width*u,
-            e.contact.y + bounds.top + bounds.height*v), .5)).toBe(e.id);
+        // The middle of the art, and four points still on it.
+        const m = e.visual!, near = bounds.width * .08;
+        for (const [dx, dy] of [[0, 0], [-near, -near], [near, -near], [-near, near], [near, near]]) {
+          expect(pickEntity(hits, roomPoint(e.contact.x + m.x + dx, e.contact.y + m.y + dy), .5, { "kitchen/item/starter-fridge": false })).toBe(e.id);
         }
       }
     }

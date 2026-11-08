@@ -31,6 +31,8 @@ export type ControllerEvent =
   | { type: "down"; pointer: number; point: ScreenPoint; now: number; entity?: EntityId; contact?: RoomPoint }
   | { type: "move"; pointer: number; point: ScreenPoint; proposal?: DropProposal }
   | { type: "up" | "cancel"; pointer: number; now: number; proposal?: DropProposal }
+  /** A touch on something that stays put becomes the camera's, with no pickup and no snap. */
+  | { type: "to-camera"; pointer: number; point: ScreenPoint }
   | { type: "settled"; entity: EntityId };
 export const idleController: ControllerState = { phase: "idle", pointers: [], settling: [], reservations: {} };
 /** No native imports. A captured object never becomes a camera gesture. */
@@ -69,7 +71,9 @@ export function transition(
   } else {
     const capture = pointers.find((p) => p.pointer === event.pointer);
     if (!capture) return { state, effects };
-    if (event.type === "move") {
+    if (event.type === "to-camera") {
+      pointers = pointers.map((p) => (p.pointer === event.pointer ? { ...p, entity: undefined, proposal: undefined, phase: "camera" as const, point: event.point } : p));
+    } else if (event.type === "move") {
       const offered = event.proposal ?? capture.proposal;
       const proposed = offered?.id === capture.entity ? offered : undefined;
       const owner = proposed?.target && state.reservations[proposed.target];
