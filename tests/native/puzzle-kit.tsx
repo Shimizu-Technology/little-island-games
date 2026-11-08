@@ -56,7 +56,7 @@ function Fixture() {
       <View style={{ flexDirection: 'row', gap: 16 }}><Copy style={{ fontSize: 32, backgroundColor: cue?.focus.includes('left') ? C.gold : C.sand }}>{answer.draft[0] || '□'}</Copy><Copy style={{ fontSize: 32 }}>+</Copy><Copy style={{ fontSize: 32, backgroundColor: cue?.focus.includes('right') ? C.gold : C.sand }}>{answer.draft[1] || '□'}</Copy><Copy style={{ fontSize: 32 }}>= {target}</Copy></View>
       {[0, 1].map(cell => <View key={cell} style={{ gap: 8 }}><Copy>{cell === 0 ? 'Left box' : 'Right box'}</Copy><View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>{[1, 2, 3, 4].map(n => <Button key={n} quiet compact selected={answer.draft[cell] === n} label={`${cell === 0 ? 'Left' : 'Right'} ${n}`} onPress={() => { setAnswer(answerEdit(rules, target, answer, answer.draft.map((v, i) => i === cell ? n : v))); setRevision(n => n + 1); }}>{n}</Button>)}</View></View>)}
       <PuzzleFeedback failure={answer.last?.correct === false ? { character: 'Crab', line: 'Oops, I need a different pair!', focus: [] } : null} />
-      <WholeAnswerControls canCheck={canCheckAnswer(rules, target, answer)} missed={answer.last?.correct === false} needsVariant={false} onCheck={check} onVariant={next} />
+      <WholeAnswerControls canCheck={canCheckAnswer(rules, target, answer)} incorrect={answer.last?.correct === false} needsVariant={false} onCheck={check} onVariant={next} />
       <PuzzleHelp key={puzzle} snapshot={{ key: key(puzzle, revision), view: answer.draft }} rules={hints} commit={commit} onFresh={next} kind="grid" failedRuns={answer.misses} onCue={setCue} />
       <Button quiet onPress={next}>Try another</Button><Copy>Checks: {answer.checks} · Finished: {round.finished.length}/4</Copy>
     </>}

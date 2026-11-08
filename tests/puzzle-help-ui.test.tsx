@@ -81,9 +81,9 @@ it('first-open samples make no placement or automatic choice', async () => {
 });
 it('whole controls keep the draft after a miss, and expose a fresh choice instead of narrowed options', async () => {
   const check = vi.fn(), variant = vi.fn();
-  await act(async () => { root = create(<WholeAnswerControls canCheck missed needsVariant={false} onCheck={check} onVariant={variant} />); });
+  await act(async () => { root = create(<WholeAnswerControls canCheck incorrect needsVariant={false} onCheck={check} onVariant={variant} />); });
   expect(text()).toContain('Your answer is still here'); await press('Check'); expect(check).toHaveBeenCalledOnce();
-  await act(async () => root.update(<WholeAnswerControls canCheck={false} missed needsVariant onCheck={check} onVariant={variant} />));
+  await act(async () => root.update(<WholeAnswerControls canCheck={false} incorrect needsVariant onCheck={check} onVariant={variant} />));
   await press('Try another'); expect(variant).toHaveBeenCalledOnce();
 });
 it('drops a Show me route after an ordinary draft edit and re-derives help', async () => {
