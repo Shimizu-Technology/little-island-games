@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import { Buffer } from 'node:buffer';
 import { tmpdir } from 'node:os';
-import { readFileSync, writeFileSync, readdirSync, lstatSync, mkdtempSync, rmSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
+import { readFileSync, writeFileSync, readdirSync, lstatSync, mkdtempSync, rmSync, realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { resolve, relative, join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { guardTree } from './guard.mjs';
@@ -37,12 +39,12 @@ export function verifyReleaseReceipt(root,file,web,ios) {
   requireThat(r.schemaVersion===1 && r.source===execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim() && r.policySha256===lock.policySha256 && r.scanListSha256===lock.scanListSha256 && r.admission?.full===true && r.admission.passed && r.web?.passed && r.ios?.passed && r.web.sha256===treeHash(web) && r.ios.sha256===treeHash(ios),'Stale/missing private word release receipt');
   return {passed:true};
 }
-if(process.argv[1] && resolve(process.argv[1])===resolve(new URL(import.meta.url).pathname)) {
+if(process.argv[1] && realpathSync(process.argv[1])===fileURLToPath(import.meta.url)) {
   let privateDirectory;
   try {
-    if (!process.env.LITTLE_ISLAND_WORD_POLICY_LOCK && process.env.LITTLE_ISLAND_WORD_POLICY_JSON) {
+    if (!process.env.LITTLE_ISLAND_WORD_POLICY_LOCK && (process.env.LITTLE_ISLAND_WORD_POLICY_JSON || process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64)) {
       privateDirectory=mkdtempSync(join(tmpdir(),'li-word-ci-'));
-      const policyFile=join(privateDirectory,'policy.private.json'),bytes=Buffer.from(process.env.LITTLE_ISLAND_WORD_POLICY_JSON);
+      const policyFile=join(privateDirectory,'policy.private.json'),bytes=process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64 ? gunzipSync(Buffer.from(process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64,'base64'),{maxOutputLength:4*1024*1024}) : Buffer.from(process.env.LITTLE_ISLAND_WORD_POLICY_JSON);
       const policy=JSON.parse(bytes);
       writeFileSync(policyFile,bytes,{mode:0o600});
       const lockFile=join(privateDirectory,'lock.private.json');

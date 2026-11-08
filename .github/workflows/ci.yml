@@ -19,9 +19,9 @@ jobs:
       - run: npm ci
       - run: npm run check
         env:
-          LITTLE_ISLAND_WORD_POLICY_JSON: ${{ secrets.LITTLE_ISLAND_WORD_POLICY_JSON }}
+          LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64: ${{ secrets.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64 }}
       - name: Guard the actual web export
         run: npm run check:words:export
         env:
-          LITTLE_ISLAND_WORD_POLICY_JSON: ${{ secrets.LITTLE_ISLAND_WORD_POLICY_JSON }}
+          LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64: ${{ secrets.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64 }}
       - run: npm run doctor
