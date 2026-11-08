@@ -85,21 +85,43 @@ export function occludedFraction(bounds: Bounds, depth: number, bands: RoomIndex
   return area / (bounds.width * bounds.height);
 }
 
-/** Bounded painted-hull sampling, only for catalog candidates. Transparent box corners never count as visible art. */
-export function catalogCovered(entity: SceneEntity, contact: RoomPoint, depth: number, bands: RoomIndex["occlusionBands"]): number {
+/** The same 12x12 painted samples are used by the oracle and the prepared drag data. */
+export function catalogSamples(entity: SceneEntity): RoomPoint[] {
   "worklet";
-  const bounds = entity.bounds;
-  const front = bands.filter(b => b.id !== entity.id && b.depth > depth && overlaps(b.bounds, translatedBounds(bounds, contact)));
-  if (!front.length) return 0;
-  let painted = 0, covered = 0;
+  const points: RoomPoint[] = [], bounds = entity.bounds;
   for (let row = 0; row < 12; row++) for (let col = 0; col < 12; col++) {
     const x = bounds.left + (col + .5) * bounds.width / 12;
     const y = bounds.top + (row + .5) * bounds.height / 12;
-    if (entity.shapes?.length && !onShapes(entity.shapes, x, y)) continue;
-    painted++;
-    if (front.some(b => x + contact.x >= b.bounds.left && x + contact.x <= b.bounds.left + b.bounds.width &&
-      y + contact.y >= b.bounds.top && y + contact.y <= b.bounds.top + b.bounds.height &&
-      (!b.shapes?.length || !b.contact || onShapes(b.shapes, x + contact.x - b.contact.x, y + contact.y - b.contact.y)))) covered++;
+    if (!entity.shapes?.length || onShapes(entity.shapes, x, y)) points.push(roomPoint(x, y));
   }
-  return painted ? covered / painted : 1;
+  return points;
+}
+export function bandCovers(band: RoomIndex["occlusionBands"][number], x: number, y: number): boolean {
+  "worklet";
+  return contains(band.bounds, roomPoint(x, y)) &&
+    (!band.shapes?.length || !band.contact || onShapes(band.shapes, x - band.contact.x, y - band.contact.y));
+}
+/** Prepared on settled edits, outside the UI frame loop. Blocker IDs let a moving group be excluded exactly. */
+export function catalogNeighbours(entities: RoomIndex["entities"], bands: RoomIndex["occlusionBands"]): NonNullable<RoomIndex["catalogNeighbours"]> {
+  "worklet";
+  return Object.values(entities).filter(e => e.attachment.kind === "floor" && e.body?.layer === "furniture" && !e.body.small)
+    .map(entity => {
+      const bounds = translatedBounds(entity.bounds, entity.contact);
+      const front = bands.filter(b => b.id !== entity.id && b.depth > entity.depth && overlaps(b.bounds, bounds));
+      return { id: entity.id, bounds, depth: entity.depth,
+        samples: (entity.catalogSamples ?? catalogSamples(entity)).map(p => {
+          const x = p.x + entity.contact.x, y = p.y + entity.contact.y;
+          return { x, y, blockers: front.filter(b => bandCovers(b, x, y)).map(b => b.id) };
+        }) };
+    });
+}
+/** Bounded painted-hull sampling; transparent box corners never count as visible art. */
+export function catalogCovered(entity: SceneEntity, contact: RoomPoint, depth: number, bands: RoomIndex["occlusionBands"]): number {
+  "worklet";
+  const front = bands.filter(b => b.id !== entity.id && b.depth > depth && overlaps(b.bounds, translatedBounds(entity.bounds, contact)));
+  if (!front.length) return 0;
+  const samples = entity.catalogSamples ?? catalogSamples(entity);
+  let covered = 0;
+  for (const p of samples) if (front.some(b => bandCovers(b, p.x + contact.x, p.y + contact.y))) covered++;
+  return samples.length ? covered / samples.length : 1;
 }

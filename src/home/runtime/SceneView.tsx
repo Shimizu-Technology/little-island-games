@@ -33,6 +33,7 @@ function ancestors(entity: SceneEntity, scene: Scene): string[] {
 }
 const RestingEntity = memo(function RestingEntity({
   entity,
+  sceneRevision,
   name,
   ownerKey,
   slots,
@@ -55,6 +56,7 @@ const RestingEntity = memo(function RestingEntity({
 }: {
   onNode: (id: string, node: View | null) => void;
   entity: SceneEntity;
+  sceneRevision: string;
   /** Accessible name; numbered when the room holds several of the same thing. */
   name: string;
   ownerKey: string;
@@ -93,7 +95,7 @@ const RestingEntity = memo(function RestingEntity({
       (s.proposal?.attachment ?? s.subject?.attachment)?.kind === "socket" &&
       ((s.proposal?.attachment ?? s.subject?.attachment) as { item: string }).item === entity.id)) return 0;
     for (const slot of slots.value) if (slot.id && owners.includes(slot.restId ?? slot.id))
-      return slot.ready && slot.painted !== false && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 0 : 1;
+      return !slot.revealFrame && slot.ready && slot.painted !== false && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 0 : 1;
     return 1;
   });
   const wobble = useDerivedValue(() => {
@@ -106,12 +108,12 @@ const RestingEntity = memo(function RestingEntity({
   const landing = useDerivedValue(() => slots.value.some(s => s.id && s.phase === "dragging" && s.proposal?.target && landingTargets.includes(s.proposal.target)));
   const motion = useDerivedValue(() => {
     const slot = slots.value.find(s => s.id && owners.includes(s.restId ?? s.id));
-    return slot && slot.phase !== "pending" && !(slot.ready && slot.painted !== false)
+    return slot && !(slot.committed && slot.revision === sceneRevision) && slot.phase !== "pending" && !(slot.ready && slot.painted !== false)
       ? pickupTransform(slot, slot.subject ?? entity, camera.value.a, clock.value, reduced) : undefined;
   });
   const style = useAnimatedStyle(() => {
     const slot = slots.value.find(s => s.id && owners.includes(s.restId ?? s.id));
-    const moving = slot && slot.phase !== "pending" && !(slot.ready && slot.painted !== false);
+    const moving = slot && !(slot.committed && slot.revision === sceneRevision) && slot.phase !== "pending" && !(slot.ready && slot.painted !== false);
     const transform = motion.value;
     const pressed = controller?.value.pointers.some(p => p.phase === "pending" && p.entity && owners.includes(p.entity));
     return { opacity: visible.value,
@@ -331,6 +333,7 @@ export function SceneView({
                         key={front ? `front:${entity.id}` : entity.id}
                         front={front}
                         entity={entity}
+                        sceneRevision={scene.revision}
                         name={names[entity.id]}
                         onNode={onNode}
                         action={reactions[entity.id]}

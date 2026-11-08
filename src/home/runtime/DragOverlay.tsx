@@ -109,7 +109,7 @@ const OverlayGroup = memo(function OverlayGroup({
       ? 0
       : slot.phase === "settling" && slot.settleAt
         ? Math.max(0, 1 - (clock.value - slot.settleAt) / 140)
-        : Math.min(1, (clock.value - slot.liftedAt) / 90);
+        : Math.max(0, Math.min(1, (clock.value - slot.liftedAt) / 90));
     const settling = slot.phase === "settling" && slot.settleAt > 0 || slot.phase === "pending" && slot.pausedElapsed > 0;
     const fade = settling ? 1 - settleProgress(slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt, reduced, slot.duration) : 1;
     return {

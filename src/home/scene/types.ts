@@ -44,6 +44,8 @@ export type SceneEntity = {
   hitProxies: Bounds[];
   /** Painted shapes relative to contact: the one source for picking, occlusion and aim. */
   shapes?: HitShape[];
+  /** Cached painted sample offsets; prepared on JS, reused by catalog hover. */
+  catalogSamples?: RoomPoint[];
   /** Rectangles known to be painted, relative to contact, for occlusion only. */
   occluders?: Bounds[];
   /** Middle of the painted art, relative to contact. Food aims from here, not from its base. */
@@ -99,7 +101,15 @@ export type RoomIndex = {
   targets: Target[];
   buckets: Record<string, number[]>;
   occlusionBands: { id?: EntityId; bounds: Bounds; depth: number; shapes?: HitShape[]; contact?: RoomPoint }[];
+  /** Room-fixed neighbour samples and existing occluder IDs, prepared once per edit. */
+  catalogNeighbours?: CatalogNeighbour[];
   hitProxies: { id: EntityId; bounds: Bounds; depth: number; band: DepthBand }[];
+};
+export type CatalogNeighbour = {
+  id: EntityId;
+  bounds: Bounds;
+  depth: number;
+  samples: { x: number; y: number; blockers: (EntityId | undefined)[] }[];
 };
 export type SceneState = HomeStateV2;
 

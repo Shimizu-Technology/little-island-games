@@ -13,7 +13,7 @@ import { buildScene } from '../src/home/scene/graph';
 import { buildingLayout } from '../src/home/camera';
 import type { Interaction, Pickup } from '../src/home/runtime/useInteraction';
 vi.mock('react-native',()=>({View:'View',Pressable:'Pressable',ScrollView:'ScrollView',Text:'Text',Modal:'Modal',FlatList:({data,renderItem}:any)=>data.map((item:any)=>renderItem({item})),Platform:{OS:'ios'}}));
-vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'},useAnimatedStyle:(fn:()=>unknown)=>({evaluate:fn}),useDerivedValue:(fn:()=>unknown)=>({get value(){return fn();}}),useAnimatedReaction:(prepare:any,react:any)=>{const previous=React.useRef<any>(null);React.useLayoutEffect(()=>{const next=prepare();if(next!==previous.current){react(next,previous.current);previous.current=next;}});},runOnJS:(fn:any)=>fn}));
+vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'},useAnimatedStyle:(fn:()=>unknown)=>({evaluate:fn}),useDerivedValue:(fn:()=>unknown)=>({get value(){return fn();}}),useAnimatedReaction:(prepare:any,react:any)=>{const previous=React.useRef<any>(null);React.useLayoutEffect(()=>{const next=prepare();if(next!==previous.current){react(next,previous.current);previous.current=next;}});},runOnJS:(fn:any)=>fn,runOnUI:(fn:any)=>fn}));
 const pans=vi.hoisted(()=>[] as any[]);
 vi.mock('react-native-gesture-handler',()=>({GestureDetector:'GestureDetector',Gesture:{Pan:()=>{
  const handlers:any={};const builder:any=new Proxy({}, {get:(_t,key)=> (...args:any[])=>{if(String(key).startsWith('on'))handlers[key]=args[0];return builder;}});pans.push(handlers);return builder;
@@ -199,4 +199,32 @@ describe('H2 rendered review regressions',()=>{
   expect(tree.root.findAllByProps({testID:'landing-preview-character/0'}).filter(n=>typeof n.type==='string').length).toBeLessThanOrEqual(1);
   await act(async()=>tree.unmount());
  });
+});
+
+it('R2-P2-2 a committed cold Reduced Motion move uses the rendered destination without doubling its offset', async()=>{
+ const c=context('home/item/banana');Object.assign(c.slot,{ready:false,painted:false,phase:'settling',committed:true,revision:c.scene.revision,sourceX:100,sourceY:300,x:200,y:486});
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<SceneView state={c.state} scene={c.scene} building={buildingLayout(4)} viewport={{width:402,height:650}} interaction={c.interaction} pickups={[]} reduced reactions={{}} sleeping={{}} onNode={()=>{}} onSelect={()=>{}} onMove={()=>{}}/>);});
+ const view=tree.root.findByProps({testID:'object-banana'}).findAll(n=>String(n.type)==='AnimatedView'&&n.props.style?.evaluate)[0];
+ expect(view.props.style.evaluate().transform).toContainEqual({translateX:0});expect(view.props.style.evaluate().transform).toContainEqual({translateY:0});
+ await act(async()=>tree.unmount());
+});
+it('R2-P2-3 the resting copy is visible during the acknowledged overlay handoff', async()=>{
+ const c=context('character/0');Object.assign(c.slot,{phase:'settling',committed:true,revealFrame:10});
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<SceneView state={c.state} scene={c.scene} building={buildingLayout(4)} viewport={{width:402,height:650}} interaction={c.interaction} pickups={[]} reduced={false} reactions={{}} sleeping={{}} onNode={()=>{}} onSelect={()=>{}} onMove={()=>{}}/>);});
+ const view=tree.root.findByProps({testID:'character-0'}).findAll(n=>String(n.type)==='AnimatedView'&&n.props.style?.evaluate)[0];
+ expect(view.props.style.evaluate().opacity).toBe(1);await act(async()=>tree.unmount());
+});
+
+it('R2-P3-2 a frozen idle clock cannot make the pickup shadow grow beyond its footprint',async()=>{
+ const c=context('home/item/banana');c.clock.value=0;c.slot.liftedAt=6780;
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<DragOverlay scene={c.scene} pickups={[]} interaction={c.interaction} building={buildingLayout(4)} reduced={false}/>);});
+ const style=tree.root.findByProps({testID:'drag-shadow-home/item/banana'}).props.style[1].evaluate();
+ expect(style.opacity).toBeLessThanOrEqual(.18);expect(style.transform.find((t:any)=>'scale'in t).scale).toBeLessThanOrEqual(1);
+ await act(async()=>tree.unmount());
+});
+it('R2-P3-3 unmounting the owning drawer cell cancels the capture and clears its ghost',async()=>{
+ const c=context(''),cancel=vi.fn();(c.interaction as any).externalUp=cancel;
+ const ghost={value:{item:'chair',active:true,x:100,y:100},set(v:any){this.value=v;}};
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<DesignTools state={c.state} ownership={{}} vertical={false} ghost={ghost as any} onChoose={()=>{}} onDrop={()=>{}} onDragItem={()=>{}} interaction={c.interaction} offset={{value:{x:0,y:0}} as any} dispatch={()=>{}} onClose={()=>{}}/>);});
+ await act(async()=>tree.unmount());expect(cancel).toHaveBeenCalledExactlyOnceWith(-500,true);expect(ghost.value.active).toBe(false);
 });

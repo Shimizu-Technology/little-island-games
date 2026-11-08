@@ -1032,3 +1032,73 @@ it('P3-2 Reduced Motion preserves resting art while a cold overlay awaits JS',as
  flushJS();expect(committed).toBe(1);
  await act(async()=>tree.unmount());vi.useRealTimers();
 });
+
+it('R2-P2-1 system cancel of a re-grabbed catalog travel releases the temporary identity', async () => {
+ let tree!: TestRenderer.ReactTestRenderer; const scene = fixture();
+ await act(async () => { tree = TestRenderer.create(<Probe scene={scene} designing/>); });
+ const prop = {...entity, id:'home/item/catalog-cancel', character:undefined, item:instance('catalog-cancel','chair',2,2)};
+ const {resolve} = await import('../src/home/scene/resolve');
+ current.animateProposal(resolve(scene.rooms.home, prop, roomPoint(200,486), {scale:1,release:true}), prop); flushJS();
+ harness.frames[0]({timeSincePreviousFrame:17}); vi.advanceTimersByTime(70); harness.frames[0]({timeSincePreviousFrame:17});
+ const s = {...current.slots.get()[0]}; touch('down',s.x,s.y-50); touch('move',s.x+20,s.y-30); touch('cancel',s.x+20,s.y-30); flushJS();
+ for(let n=0;n<90;n++){vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});flushJS();}
+ expect(committed).toBe(0); expect(current.slots.get().filter(s=>s.id)).toEqual([]);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+it('R2-P1-1 a changed catalog landing travels from the visible preview instead of jumping', async () => {
+ let tree!: TestRenderer.ReactTestRenderer; const scene=fixture(); await act(async()=>{tree=TestRenderer.create(<Probe scene={scene}/>);});
+ const prop={...entity,id:'home/item/retarget',character:undefined,item:instance('retarget','chair',2,2)};
+ const {resolve}=await import('../src/home/scene/resolve'); const p=resolve(scene.rooms.home,prop,roomPoint(200,486),{scale:1,release:true});
+ current.animateProposal(p,prop);flushJS();harness.frames[0]({timeSincePreviousFrame:17});vi.advanceTimersByTime(450);harness.frames[0]({timeSincePreviousFrame:17});
+ const at={...current.slots.get()[0]}; const next={...p,contact:roomPoint(300,486)};
+ current.finish(0,true,next,'committed',undefined,at);
+ vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});
+ const moving=current.slots.get()[0];expect(moving.x).toBeGreaterThan(at.x);expect(moving.x).toBeLessThan(300);expect(moving.finished).toBe(false);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+it('R2-P2-3 returning from the basket overlaps resting and overlay art for two presented ticks', async () => {
+ let tree!: TestRenderer.ReactTestRenderer; const scene=fixture();
+ scene.entities[entity.id]={...entity,attachment:{kind:'staging',room:'home'}};
+ await act(async()=>{tree=TestRenderer.create(<Probe scene={scene}/>);});
+ current.stagingContacts.set({[entity.id]:{x:82,y:560}});
+ const {resolve}=await import('../src/home/scene/resolve');current.animateProposal(resolve(scene.rooms.home,scene.entities[entity.id],roomPoint(200,486),{scale:1,release:true}));flushJS();
+ harness.frames[0]({timeSincePreviousFrame:17});vi.advanceTimersByTime(450);harness.frames[0]({timeSincePreviousFrame:17});flushJS();
+ await act(async()=>tree.update(<Probe scene={fixture('committed',roomPoint(200,486))}/>));
+ vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});
+ expect(current.slots.get()[0].id).toBe(entity.id);expect((current.slots.get()[0] as any).revealFrame).toBeGreaterThan(0);
+ vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});expect(current.slots.get()[0].id).toBe(entity.id);
+ vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});expect(current.slots.get()[0].id).toBe('');
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+
+it('R2-P3-4 a reused touch ID releases the dragging slot, not an older settling slot', async()=>{
+ const scene=fixture(),second={...entity,id:'character/1',contact:roomPoint(300,300),character:{...entity.character!,slot:1 as const}};
+ scene.entities[second.id]=second;scene.rooms.home.entities=scene.entities;
+ scene.rooms.home.hitProxies.push({id:second.id,bounds:{left:270,top:80,width:60,height:220},depth:300,band:'occupant'});
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={scene}/>);});
+ touch('down',120,300);touch('move',180,400);flushJS();touch('up',180,400);
+ touch('down',300,220);touch('move',400,400);flushJS();touch('up',400,400);
+ const slot=current.slots.get().find(s=>s.id===second.id)!;
+ expect(slot.phase).toBe('settling');expect(slot.proposal?.id).toBe(second.id);expect(slot.targetY).not.toBe(slot.sourceY);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+it('R2-P3-5 early layout reconciliation retains carry bounds and starts settling at readiness', async()=>{
+ let tree!:TestRenderer.ReactTestRenderer;const scene=fixture();await act(async()=>{tree=TestRenderer.create(<Probe scene={scene}/>);});
+ const prop={...entity,id:'home/item/early',character:undefined,item:instance('early','chair',2,2)};
+ const bounds={left:-35,top:-90,width:70,height:95};current.ready(-1,prop.id,bounds,1);
+ const {resolve}=await import('../src/home/scene/resolve');current.animateProposal(resolve(scene.rooms.home,prop,roomPoint(200,486),{scale:1,release:true}),prop);
+ vi.advanceTimersByTime(300);harness.frames[0]({timeSincePreviousFrame:17});
+ const slot=current.slots.get()[0];expect(slot.ready).toBe(true);expect(slot.carryBounds).toEqual(bounds);expect(slot.settleAt).toBe(1300);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+it('R2-P3-1 a catalog capacity refusal reports why its slot was cleared',async()=>{
+ const {labHome}=await import('../src/home/runtime/lab'),{buildScene,itemEntity}=await import('../src/home/scene/graph');
+ const state=labHome('catalog-busy');state.rooms.home.instances.push({...instance('last','chair',14,10),at:roomPoint(702,510)});
+ const scene=buildScene(state),clear=vi.fn(),prop=itemEntity('home',instance('overflow','chair',0,0));
+ function CapacityProbe(){const interaction=useInteraction({scene,building:fixtureBuilding,viewport:fixtureViewport,initialCamera:identityCamera,reduced:false,designing:true,
+  onCameraChange:noop,onPickup:noop,onCommit:commitFixture,onTap:noop,onClear:clear});React.useLayoutEffect(()=>{current=interaction;});return null;}
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<CapacityProbe/>);});
+ current.externalDown(-500,prop.id,screenPoint(100,300),prop);current.externalDrop(-500,screenPoint(400,500),false);flushJS();
+ expect(clear).toHaveBeenCalledExactlyOnceWith(0,prop.id,'capacity');expect(current.slots.get().every(s=>!s.id)).toBe(true);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});

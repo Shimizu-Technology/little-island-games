@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FlatList, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { runOnJS } from "react-native-reanimated";
+import { runOnJS, runOnUI } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 import { itemIds, itemSpec, decorSpec, floorThemes, wallThemes } from "../catalog";
 import { moreCatalog, tintIds, tintPalette } from "../catalogMore";
@@ -47,7 +47,18 @@ function Thumbnail({
   offset: SharedValue<{ x: number; y: number }>;
 }) {
   const owned = owns(id, ownership);
-  const { externalMove } = interaction;
+  const { externalMove, externalUp } = interaction;
+  useEffect(() => () => {
+    runOnUI(() => {
+      "worklet";
+      // A native recognizer may disappear without finalize when its cell unmounts.
+      if (!ghost.value.active || ghost.value.item !== id) return;
+      externalUp(-500, true);
+      ghost.set({ x: 0, y: 0, active: false });
+    })();
+  // The external channel reads stable shared values; rerenders must not cancel it.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, ghost]);
   const pan = Gesture.Pan().enabled(owned).minDistance(8);
   if (vertical) pan.activeOffsetX([-8, 8]).failOffsetY([-14, 14]);
   else pan.activeOffsetY([-8, 8]).failOffsetX([-14, 14]);

@@ -8,7 +8,7 @@ export type TraceEvent =
   | { type: "ready" | "painted"; at: number; id: string; slot: number }
   | { type: "release"; at: number; id: string; kind: string; target?: string; finger: { x: number; y: number }; anchor: { x: number; y: number }; contact?: { x: number; y: number }; room?: string }
   | { type: "commit"; at: number; id: string; kind: string; target?: string; transaction: string }
-  | { type: "frames"; at: number; samples: number; p50: number; p95: number; p99: number; max: number }
+  | { type: "frames" | "catalog-resolve"; at: number; samples: number; p50: number; p95: number; p99: number; max: number }
   | { type: "layout"; at: number; camera: { a: number; tx: number; ty: number }; offset: { x: number; y: number }; entities: { id: string; room: string; x: number; y: number; visual?: { x: number; y: number }; head?: { x: number; y: number } }[] };
 
 const MAX_EVENTS = 6000;

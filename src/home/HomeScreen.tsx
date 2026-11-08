@@ -100,7 +100,7 @@ export function HomeScreen({
   const reactionTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   React.useEffect(() => () => Object.values(reactionTimers.current).forEach(clearTimeout), []);
   const [catalogItem, setCatalogItem] = useState<ItemId>();
-  const catalogSeeds = useRef<Record<string, { seed: HomeStateV2; revision: string }>>({});
+  const catalogSeeds = useRef<Record<string, { seed: HomeStateV2 }>>({});
   const [headerHeight, setHeaderHeight] = useState(64 + inset.top);
   const [frameReport, setFrameReport] = useState<number[]>();
   const [releaseProbes, setReleaseProbes] = useState<ReleaseProbe[]>([]);
@@ -184,8 +184,12 @@ export function HomeScreen({
       const current = live.current;
       const catalog = catalogSeeds.current[id];
       if (catalog) {
-        const pending = catalogCommit(current.store.getState(), catalog, id, proposal, current.scene.revision);
-        if (!pending) return undefined;
+        const pending = catalogCommit(current.store.getState(), catalog, id, proposal);
+        if (!pending) {
+          if (proposal && placedInstances(current.store.getState().rooms[proposal.room]).length >= MAX_INSTANCES)
+            current.store.setMessage("Put something away to make room.");
+          return undefined;
+        }
         const next = current.store.commitProposal(pending.proposal, pending.seed, stillCurrent);
         return next ? { state: next, proposal: pending.proposal, identities: current.store.getCommittedIdentities() } : undefined;
       }
@@ -358,13 +362,14 @@ export function HomeScreen({
     [wake]
   );
   const onClear = useCallback(
-    (index: number, id?: string) => {
-      if (id) clearCatalogSeed(catalogSeeds.current, id, []);
+    (index: number, id?: string, reason?: "capacity") => {
+      if (reason === "capacity") live.current.store.setMessage("Put something away to make room.");
+      if (id) clearCatalogSeed(catalogSeeds.current, id);
       // A UI-thread re-grab can outrun this queued clear callback.
       if (runtime.current?.slots.get()[index].id) return;
       setPickups((current) => {
         const pickup = current[index];
-        clearCatalogSeed(catalogSeeds.current, pickup?.id, []);
+        clearCatalogSeed(catalogSeeds.current, pickup?.id);
         return current.map((p, i) => (i === index ? undefined : p));
       });
     },
@@ -645,7 +650,7 @@ export function HomeScreen({
     const origin = roomOrigin(roomIds.indexOf(dest), building);
     const contact = screenToRoom(screenPoint(x, y), runtime.current!.camera.get(), housePoint(origin.x, origin.y));
     const subject = { ...prepared.entities[id], contact };
-    catalogSeeds.current[id] = { seed, revision: live.current.scene.revision };
+    catalogSeeds.current[id] = { seed };
     return subject;
   }
   function insertAt(item: ItemId, x: number, y: number) {

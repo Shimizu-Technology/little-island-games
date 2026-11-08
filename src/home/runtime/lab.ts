@@ -36,6 +36,9 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
     state.rooms.home.characters[0] = { slot: 0, anchor: "floor", pose: "stand", x: 6, y: 5, at: roomPoint(280.2297114683297, 456.16737609111317) };
     return state;
   },
+  "catalog-busy": () => reviewRoom(Array.from({ length: 47 }, (_, n) =>
+    ({ ...instance(`busy-${n}`, "chair", n % 8 * 2, Math.floor(n / 8) * 2),
+      at: roomPoint(100 + n % 8 * 86, 380 + Math.floor(n / 8) * 26) }))),
   crowded: () => {
     const state = starterHome();
     const room = state.rooms.home;
