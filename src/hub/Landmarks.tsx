@@ -72,6 +72,18 @@ export const Landmark = memo(function Landmark({ id }: { id: PlaceId }) {
     <Path d="M29 124H151M33 130H147" stroke="#D2B58B" strokeWidth={4}/>
     <Path d="M22 105Q8 80 20 76Q32 83 22 105ZM150 115Q145 94 161 91Q168 104 150 115Z" fill="#6FA78C"/>
    </>}
+   {id === 'cove' && <>
+    <Path d="M14 122Q20 108 35 115H149Q166 111 171 128L161 135H23Z" fill="#E4C898"/>
+    <Path d="M24 119V68Q24 44 47 37Q55 15 90 20Q125 15 134 37Q157 44 157 68V119Z" fill="#A9C7BB"/>
+    <Path d="M24 80Q27 39 55 42Q60 23 90 30Q120 23 125 42Q154 39 157 80" fill="none" stroke="#719D91" strokeWidth={9}/>
+    <Path d="M69 121V83Q90 58 112 83V121Z" fill="#426D66"/>
+    <Path d="M47 58H70V80H47ZM111 48H136V71H111Z" fill="#FFF0BD"/>
+    <Path d="M47 69H70M58 58V80M111 60H136M123 48V71" stroke="#8F8963" strokeWidth={1.5}/>
+    <Path d="M48 100H58M53 95V105M129 95L136 102L129 109L122 102Z" fill="#E5B75B"/>
+    <Path d="M82 85H100V103H82ZM91 85V103M82 94H100" stroke="#F4E3B4" strokeWidth={2}/>
+    <Path d="M57 124H124M51 130H131" stroke="#C7AC7E" strokeWidth={4}/>
+    <Path d="M18 130Q31 125 43 131M139 130Q152 125 164 131" stroke="#82B9B0" fill="none"/>
+   </>}
    {id === 'badges' && <>
     <Ellipse cx={90} cy={123} rx={72} ry={12} fill="#DBC8A2"/><Ellipse cx={90} cy={116} rx={57} ry={10} fill="#F3E5C5"/>
     <Path d="M53 44V111M126 44V111" stroke="#A8885E" strokeWidth={7}/>

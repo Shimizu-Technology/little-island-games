@@ -6,8 +6,9 @@ export const places = [
   { id: 'arcade', name: 'Arcade', hint: 'Little adventures', x: .25, y: .48 },
   { id: 'hall', name: 'Game Hall', hint: 'Play together', x: .75, y: .48 },
   { id: 'home', name: 'Home', hint: 'Your stories live here', x: .26, y: .72 },
-  { id: 'locker', name: 'Locker', hint: 'Come as yourself', x: .52, y: .94 },
+  { id: 'locker', name: 'Locker', hint: 'Come as yourself', x: .27, y: .95 },
   { id: 'badges', name: 'Badges', hint: 'Things you have tried', x: .76, y: .72 },
+  { id: 'cove', name: 'Puzzle Cove', hint: 'Think as long as you like', x: .73, y: .95 },
 ] as const;
 export type PlaceId = typeof places[number]['id'];
 export const subjects = [
@@ -25,15 +26,15 @@ export function subjectGames(subject: SubjectId): ShelfGame[] {
 export function placeGames(place: PlaceId): ShelfGame[] {
   return shelfGames.filter(game => place === 'arcade' ? game.island === 'arcade' : place === 'hall' ? game.island === 'classic' : place === 'school' ? game.island !== 'arcade' && game.island !== 'classic' : false);
 }
-export const directRoutes = { home: '/island-home', library: '/library', locker: '/locker', badges: '/badges' } as const;
+export const directRoutes = { home: '/island-home', library: '/library', locker: '/locker', badges: '/badges', cove: '/cove' } as const;
 export type Point = { x: number; y: number };
 /** Common geometry for scene, paths, hit targets and guide. Labels get their own space. */
 export function mapLayout(width: number, height: number, fontScale = 1) {
   const wide = width > height * 1.15;
   const labelHeight = Math.max(width < 280 ? 48 : 30, (fontScale > 1.5 ? 50 : 25) * fontScale);
-  const artWidth = Math.min(width * (wide ? .24 : .405), (height * (wide ? .32 : .22)-labelHeight-6)/.79, wide ? 232 : (height*.28-labelHeight*2-14)/.79, 232);
+  const artWidth = Math.min(width * (wide ? .245 : .405), (height * (wide ? .29 : .225)-labelHeight-10)/.79, wide ? 232 : (height*.28-labelHeight*2-14)/.79, 232);
   const artHeight = artWidth * .79;
-  const points = wide ? { school: [.29, .28], library: [.71, .28], arcade: [.16, .60], hall: [.50, .60], badges: [.84, .60], home: [.33, .92], locker: [.67, .92] } : null;
+  const points = wide ? { school: [.17, .29], library: [.50, .29], cove: [.83, .29], arcade: [.17, .62], hall: [.50, .62], badges: [.83, .62], home: [.33, .95], locker: [.67, .95] } : null;
   return { artWidth, artHeight, labelHeight, targets: places.map(item => { const point = points?.[item.id]; const place = { ...item, x: point?.[0] ?? item.x, y: point?.[1] ?? item.y }; const baseline = Math.min(place.y * height, height-labelHeight-8); return ({ ...place,
     left: place.x * width - artWidth / 2, top: baseline - artHeight,
     width: artWidth, height: artHeight + labelHeight,

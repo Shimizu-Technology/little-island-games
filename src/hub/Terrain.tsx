@@ -10,7 +10,7 @@ export const Palm = memo(function Palm() {
 });
 export const Terrain = memo(function Terrain({ wide = false, width, height }: { wide?: boolean; width: number; height: number }) {
  const palmScale = `${height*400/(width*660)*(wide ? 1.4 : 1)} ${wide ? 1.4 : 1}`;
- const paths = wide ? 'M116 185Q200 224 284 185M64 396Q200 350 336 396M132 607Q200 555 268 607M200 212V577' : 'M108 157Q200 203 292 157M100 315Q200 278 300 315M104 473Q203 440 304 473M200 174V540Q201 593 208 617';
+ const paths = wide ? 'M68 191H332M68 409H332M132 627H268M200 191V627' : 'M108 157Q200 203 292 157M100 315Q200 278 300 315M104 473Q203 440 304 473M200 174V540Q201 593 208 617M108 627H292';
  return <Svg width="100%" height="100%" viewBox="0 0 400 660" preserveAspectRatio="none" accessible={false}>
   <Path d="M23 84Q47 14 146 27Q207 -2 263 30Q363 9 379 112Q411 203 377 292Q411 405 359 489Q344 601 250 636Q155 677 78 606Q2 561 26 471Q-5 392 20 308Q-17 187 23 84Z" fill="#93C9C8"/>
   <Path d="M23 74Q47 4 146 17Q207 -12 263 20Q363 -1 379 102Q411 193 377 282Q411 395 359 479Q344 591 250 626Q155 667 78 596Q2 551 26 461Q-5 382 20 298Q-17 177 23 74Z" fill="#F0DFB2" stroke="#D7C594" strokeWidth={2.5}/>
