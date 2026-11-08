@@ -304,6 +304,12 @@ describe("HM-SP constants in the contract match the code", () => {
   });
 });
 
+describe("lab fixtures", () => {
+  it.each(Object.keys(labFixtures))("%s is a valid home", (name) => {
+    expect(validHome(JSON.parse(JSON.stringify(labFixtures[name]())))).toBe(true);
+  });
+});
+
 describe("HM-S0 trace stays local and out of family builds", () => {
   it("has no network path", () => {
     for (const file of ["trace.ts", "traceFile.ts", "traceFile.native.ts", "HullOverlay.tsx"]) {
