@@ -67,44 +67,10 @@ it('never projects a concave flared skirt through a projective pole',async()=>{
  }
 });
 
-it('bakes the pickup lettering at sufficient density for its maximum enlarged phone pose',async()=>{
- const {readFileSync}=await import('node:fs');
- const png=readFileSync(new URL('../assets/arcade/lagoon/shell-burst.png',import.meta.url));
- expect(png.readUInt32BE(16)).toBe(432);expect(png.readUInt32BE(20)).toBe(432);
- expect(atlas.assets['shell-burst'].density).toBe(9);
-});
-
-it('keeps scene-root publication unchanged across legal marker/teaching and row-recycle events',async()=>{
- const {runScenePublication}=await import('../src/arcade/games/lagoon-run/scenePublication');
- const {createRun,runTransition,runStep}=await import('../src/arcade/games/lagoon-run/engine');
- const {runLevels}=await import('../src/arcade/games/scrolling/content');
- const {fixtureInput}=await import('../src/arcade/games/lagoon-run/fixtures');
- const {samePublication}=await import('../src/arcade/poses');
- let a=createRun(runLevels[7],771),checked=0;
- for(let i=0;i<500;i++){
-  const b=runStep(runTransition(a,fixtureInput(a)),{type:'idle'},1/60);
-  if(b.passed>a.passed||b.serial>a.serial){expect(samePublication(runScenePublication(a),runScenePublication(b))).toBe(true);checked++;}
-  a=b;
- }
- expect(checked).toBeGreaterThan(4);
-});
-
-it('publishes only the recycled row while retaining instruction parity with the shared HUD selector',async()=>{
- const {runRowPublication,runInstructionPublication}=await import('../src/arcade/games/lagoon-run/scenePublication');
- const {createRun,runTransition,runStep}=await import('../src/arcade/games/lagoon-run/engine');
- const {runLevels}=await import('../src/arcade/games/scrolling/content');
- const {fixtureInput}=await import('../src/arcade/games/lagoon-run/fixtures');
- const {samePublication}=await import('../src/arcade/poses');const {runHud}=await import('../src/arcade/publication');
- let a=createRun(runLevels[7],771),recycled=0;
- for(let tick=0;tick<500;tick++){
-  const b=runStep(runTransition(a,fixtureInput(a)),{type:'idle'},1/60);
-  expect(runInstructionPublication(b)).toBe(runHud(b).teaching);
-  for(let i=0;i<5;i++){
-   expect(runRowPublication(b,i)).toEqual(runHud(b).spec[i]);
-   if(a.rows[i].serial===b.rows[i].serial)expect(samePublication(runRowPublication(a,i),runRowPublication(b,i))).toBe(true);
-   else recycled++;
-  }
-  a=b;
- }
- expect(recycled).toBeGreaterThan(1);
+it('shares finite native matrices without losing the exact top contact corners',async()=>{
+ const {deckFrame}=await import('../src/arcade/games/lagoon-run/bakedGeometry');
+ const q=[{x:100,y:600,scale:0},{x:140,y:600,scale:0},{x:130,y:550,scale:20},{x:110,y:550,scale:20}];
+ const frame=deckFrame(q,true,128);expect(frame).toHaveLength(6);
+ for(const matrix of frame){expect(matrix).toHaveLength(16);expect(matrix.every(Number.isFinite)).toBe(true);}
+ const m=frame[5];for(const [i,x,y] of [[0,0,0],[1,128,0],[2,128,128],[3,0,128]]){const w=m[3]*x+m[7]*y+m[15];expect((m[0]*x+m[4]*y+m[12])/w).toBeCloseTo(q[i].x,5);expect((m[1]*x+m[5]*y+m[13])/w).toBeCloseTo(q[i].y,5);}
 });

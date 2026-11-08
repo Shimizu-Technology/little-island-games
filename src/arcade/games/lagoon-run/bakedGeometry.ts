@@ -1,6 +1,6 @@
 import type { SpritePose } from '../../poses';
 import {projectTrack} from './camera';
-import { multiply3, quadHomography, type Quad } from './quad';
+import { matrix4, multiply3, quadHomography, type Quad } from './quad';
 export type CanoeBake = {inverse:number[];width:number;height:number;depth:number};
 export function canoeMatrix(q:Quad,meta:CanoeBake):number[] {
  'worklet';
@@ -31,4 +31,12 @@ export function sideTriangles(q:Quad) {
  const [a,b,c,d]=q;
  const points=area(a,b,c)+area(a,c,d)<=area(a,b,d)+area(b,c,d)?[[a,b,c],[a,c,d]]:[[a,b,d],[b,c,d]];
  return points.map(([a,b,c])=>({points:[a,b,c],matrix:[b.x-a.x,c.x-a.x,a.x,b.y-a.y,c.y-a.y,a.y,0,0,1]}));
+}
+
+/** One materialized transform set per segment, shared by its six native faces. */
+export function deckFrame(q:readonly SpritePose[],incline:boolean,topHeight:number) {
+ 'worklet';
+ const left=sideTriangles(deckSide(q,'left',incline)),right=sideTriangles(deckSide(q,'right',incline));
+ const planes=[quadHomography(deckShadow(q)),left[0].matrix,left[1].matrix,right[0].matrix,right[1].matrix,quadHomography(q as unknown as Quad)];
+ return planes.map((h,i)=>{const w=i===0?16:i<5?32:128,ht=i<5?w:topHeight;return matrix4(multiply3(h,[1/w,0,0,0,1/ht,0,0,0,1]));});
 }

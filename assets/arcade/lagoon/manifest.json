@@ -134,20 +134,6 @@
       "bytes": 623,
       "sha256": "708c29dada0945bc7fc89f57aa742d40560f8112204d6204964fe69e6090e53e"
     },
-    "shell-burst": {
-      "width": 48,
-      "height": 48,
-      "bytes": 15143,
-      "density": 9,
-      "sha256": "6bf6f36f0812c09609fccfaffb4175ae5677936ecb26d73852687c37156e2a38"
-    },
-    "marker-note": {
-      "width": 80,
-      "height": 30,
-      "bytes": 9883,
-      "density": 9,
-      "sha256": "29221248bfa1f0e84544febd3cb299808463c5795b7758d278b07340506e4e0e"
-    },
     "support": {
       "width": 16,
       "height": 128,
