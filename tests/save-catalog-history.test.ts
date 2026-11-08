@@ -26,3 +26,23 @@ it('P2-6 frozen corpus contains advanced game state and rewards beyond fresh con
  expect(s.arcade.people.family.session.state.board.some(Boolean)).toBe(true);expect(s.profiles.people.family.learn['shell-math'].revision).toBeGreaterThan(0);
  expect(s.personalization.people.family.earned.length).toBeGreaterThan(0);expect(s.library.profiles.family.creations.length).toBeGreaterThan(0);expect(s.profiles.unassigned.rounds.sessions['word-rescue']).toBeTruthy();
 });
+
+it('history verifies the packaged chain before converting inline hashes to ranges',async()=>{
+ const {fixture}=await import('./helpers/save-packed'),f=fixture(),b=f.banks.get(100)!;
+ const root=mkdtempSync(join(tmpdir(),'li-packed-history-'));
+ try{
+  mkdirSync(join(root,'scripts'));mkdirSync(join(root,'src/state'),{recursive:true});mkdirSync(join(root,'src/content/puzzles/assets'),{recursive:true});
+  for(const file of ['scripts/check-save-catalog.mjs','src/state/catalogManifest.ts'])writeFileSync(join(root,file),readFileSync(file));
+  writeFileSync(join(root,'src/content/puzzles/root.json'),JSON.stringify(f.root));
+  for(const [asset,text] of f.files)writeFileSync(join(root,'src/content/puzzles/assets',`${asset}.lipuzzle`),text);
+  const entries=Array.from({length:b.count},(_,i)=>({ordinal:b.first+i,hash:f.session('family',0,i).puzzle.hash}));
+  const old={version:1,banks:[{slot:b.slot,engine:b.engine,rules:b.rules,cove:b.cove,awards:Array(100).fill(3),entries}],dares:[],contexts:[]};
+  const file=join(root,'src/state/save-catalog.json'),write=(v:unknown)=>writeFileSync(file,JSON.stringify(v));write(old);
+  const git=(...args:string[])=>execFileSync('git',args,{cwd:root,stdio:'pipe'});git('init','-q');git('add','.');git('-c','user.name=Save Test','-c','user.email=save-test@invalid.local','commit','-qm','Freeze inline catalog');
+  const next={...old,version:2,banks:[b]};write(next);
+  const check=()=>execFileSync(process.execPath,['--experimental-strip-types','scripts/check-save-catalog.mjs'],{cwd:root,stdio:'pipe'});
+  expect(()=>check()).not.toThrow();git('add','.');git('-c','user.name=Save Test','-c','user.email=save-test@invalid.local','commit','-qm','Freeze packed catalog');
+  for(const bank of [{...b,count:99},{...b,cove:false},{...b,awards:1},{...b,packHash:'f'.repeat(64)}]){write({...next,banks:[bank]});expect(()=>check()).toThrow();}
+  write(next);const pack=join(root,'src/content/puzzles/assets/p100.lipuzzle');writeFileSync(pack,readFileSync(pack,'utf8').replace('"a"','"b"'));expect(()=>check()).toThrow();
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

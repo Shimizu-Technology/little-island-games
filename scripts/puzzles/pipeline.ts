@@ -5,7 +5,7 @@ import { BANK_CAPS, assertFamilyAppendOnly, assertRootAppendOnly, catalogIssues,
 import { certify, isCertified, type CertifiedEntry, type CertifyContext, type Rejection } from '../../src/puzzles/checks';
 import { canonical, decodeRow } from '../../src/puzzles/descriptor';
 import { semanticHash } from '../../src/puzzles/semantic';
-import type { AnyAdapter, BandQuota, FamilySpec } from '../../src/puzzles/types';
+import type { BandQuota, FamilySpec } from '../../src/puzzles/types';
 import { utf8Bytes } from '../../src/state/saveBits';
 import { BYTE_MODEL, verifyByteModel, type ByteModelRow, type FamilyActual } from './byte-model';
 import { receiptBody, receiptIssues, type BakeFacts } from './receipts';
@@ -119,7 +119,7 @@ export function bakeFamily<P>(spec: FamilySpec<P>, options: BakeOptions): BakeRe
     const manifestBand = previous!.bands[row[5]];
     const parsed = parsePack(readPackText(dirs, row[0]), row, previous!);
     if (!parsed) throw new Error(`Existing pack ${row[0]} is malformed.`);
-    have[manifestBand] = (have[manifestBand] ?? 0) + parsed.rows.length;
+    if (!previous!.retired.includes(row[0])) have[manifestBand] = (have[manifestBand] ?? 0) + parsed.rows.length;
     for (const line of parsed.rows) {
       const core = decodeRow<P>(line, parsed.header.band, spec.adapter);
       if (!core) throw new Error(`Existing row in pack ${row[0]} no longer decodes.`);
@@ -233,6 +233,7 @@ function publish<P>(spec: FamilySpec<P>, dirs: CatalogDirs, root: RootIndex, pre
   const manifestText = JSON.stringify(manifest);
   if (!validFamily(manifest)) throw new Error('The new family manifest is invalid.');
   if (previous) assertFamilyAppendOnly(previous, manifest);
+  for(const band of spec.bands){const active=manifest.packs.filter(p=>!manifest.retired.includes(p[0]) && manifest.bands[p[5]]===band.id).reduce((n,p)=>n+p[2],0);if(active<band.floor)throw new Error(`Candidate band ${band.id} is below its active floor.`);}
   if (utf8Bytes(manifestText) > BANK_CAPS.familyBytes) throw new Error(`Manifest for ${spec.id} is over ${BANK_CAPS.familyBytes} bytes.`);
   const manifestSha = sha(manifestText), asset = manifestAsset(spec.id, manifestSha);
   staged.push({ asset, text: manifestText });
@@ -394,12 +395,8 @@ export function familyActual(dirs: CatalogDirs, manifest: FamilyManifest): Famil
   }
   return { family: manifest.family, entries, rowBytes };
 }
-/** F2 consumes this shape for the save catalog. Its size at full scale is reported by the scale harness. */
-export function saveCatalogBanks(dirs: CatalogDirs, adapters: ReadonlyMap<string, AnyAdapter>) {
+/** F2 supplies registered capabilities; no entry hashes or rows are part of launch metadata. */
+export function saveCatalogBanks(dirs: CatalogDirs, capabilities: (family: string, slot: number) => {awards:number|readonly number[];cove:boolean}): import('../../src/state/bankFacts').PackedBank[] {
   const { families: manifests } = readCatalog(dirs);
-  return [...manifests.values()].flatMap(m => m.packs.map(row => {
-    if (!adapters.has(m.family)) throw new Error(`No adapter for ${m.family}.`);
-    const parsed = parsePack(readPackText(dirs, row[0]), row, m)!;
-    return { slot: row[0], engine: m.engine, rules: row[6], entries: parsed.rows.map((line, i) => ({ ordinal: row[1] + i, hash: sha(line) })) };
-  }));
+  return [...manifests.values()].flatMap(m => m.packs.map(row => ({slot:row[0],engine:m.engine,rules:row[6],first:row[1],count:row[2],family:m.family,packHash:row[4],...capabilities(m.family,row[0])})));
 }

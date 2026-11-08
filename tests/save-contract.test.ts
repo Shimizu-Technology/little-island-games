@@ -162,13 +162,13 @@ it('P2-5 moving validates only the changed session, not every paused engine',()=
 });
 it('P2-7/P3-3 identical immutable registration is repeatable and reorder/length/hash changes fail',()=>{
  expect(()=>registerSaveContent(fixtureCatalog,catalogManifest(fixtureCatalog))).not.toThrow();
- const b=fixtureCatalog.banks.get(0)!;
+ const b=fixtureCatalog.banks.get(0)!;if(!('entries' in b))throw new Error('Expected inline fixture.');
  for(const entries of [[...b.entries].reverse(),[...b.entries,{ordinal:100000,hash:'c'.repeat(64)}],b.entries.map((e,i)=>i?e:{...e,hash:'c'.repeat(64)})])expect(()=>registerSaveContent({...fixtureCatalog,banks:new Map([[0,{...b,entries}]])})).toThrow();
 });
 it('P3-8 oversized context IDs cannot be registered',()=>{expect(()=>registerSaveContent({banks:new Map(),codecs:new Map(),dares:new Map(),contexts:new Set(['x'.repeat(80)])})).toThrow(/context/);});
 
 it('P2-7 a committed slot is immutable across builds even before runtime registration',()=>{
- const frozen=catalogManifest(fixtureCatalog), b=frozen.banks[0];
+ const frozen=catalogManifest(fixtureCatalog), b=frozen.banks[0];if(!('entries' in b))throw new Error('Expected inline fixture.');
  for(const entries of [[...b.entries,{ordinal:100000,hash:'c'.repeat(64)}],[...b.entries].reverse(),b.entries.map((e,i)=>i?e:{...e,hash:'c'.repeat(64)})])expect(()=>assertFrozenCatalog(frozen,{...frozen,banks:[{...b,entries}]})).toThrow(/Immutable/);
  expect(()=>registerSaveContent(fixtureCatalog,{version:1,banks:[],dares:[],contexts:[]})).toThrow(/Immutable/);
 });

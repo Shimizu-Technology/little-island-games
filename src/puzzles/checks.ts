@@ -1,7 +1,7 @@
 import { measured, replayAttempt } from './attempt';
 import { BOT_STEPS, botSteps, runBots, type BotRun } from './bots';
 import { utf8Bytes } from '../state/saveBits';
-import { canonical, decodeRow, deepFreeze, encodeRow, validCore } from './descriptor';
+import { validPar, canonical, decodeRow, deepFreeze, encodeRow, validCore } from './descriptor';
 import { semanticHash } from './semantic';
 import { sha256Hex } from './sha256';
 import type { AttemptEvent, BandQuota, DescriptorCore, FamilySpec, Par, PuzzleAdapter } from './types';
@@ -131,7 +131,7 @@ export function certify<P>(spec: FamilySpec<P>, band: BandQuota, candidate: Desc
   if (canonical(first) !== canonical(second)) return fail('nondeterministic');
   if (!first.withinLimits) return fail('witness-over-limit');
   const claimedPar = { metric: solved.metric, lower: solved.lower, upper: solved.upper, exact: solved.exact }, cost = first.metrics[solved.metric]!;
-  if (!samePar(d.par, claimedPar) || solved.exact !== (solved.lower === solved.upper) || cost < solved.lower || cost > solved.upper) return fail('par-mismatch');
+  if (!validPar(claimedPar) || !samePar(d.par, claimedPar) || solved.exact !== (solved.lower === solved.upper) || cost < solved.lower || cost > solved.upper) return fail('par-mismatch');
   if (spec.requiresUnique) {
     const one = adapter.count?.(d, 2, ctx.budget), two = adapter.independentCount?.(d, 2, ctx.budget);
     if (!one || !two) return fail('count-disagrees');

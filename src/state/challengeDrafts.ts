@@ -1,3 +1,4 @@
+import { assertContentLive, prepareSessionContent, contentUnavailable, type ContentOptions } from './sessionContent';
 import { progressBytes, rememberProgressBytes, challengeLimit, openProgress, creditProgress, saveCatalog, validChallengeProgress, validChallengeSession, type ChallengeProgress, type ChallengeSession } from './challenge';
 import { asciiId, exactKeys, jsonBytes, plain, uint } from './saveBits';
 import { projectProfile, syncProfile } from './profiles';
@@ -81,12 +82,21 @@ export function finishChallenge(save: Save, session: ChallengeSession, expected:
   return next;
 }
 /** Replay rows only onto their exact base, owner and existing ordinal; never create work from an orphan. */
-export async function recoverChallengeDrafts(save: Save, adapter: StorageAdapter, catalog = saveCatalog): Promise<Save> {
+export async function recoverChallengeDrafts(save: Save, adapter: StorageAdapter, catalog = saveCatalog, options: ContentOptions = {}): Promise<Save> {
   let next = syncProfile(save);
   const preserve = (raw: string) => adapter.quarantineDraft ? adapter.quarantineDraft(raw) : adapter.preserve(raw);
   for (const raw of await adapter.readDrafts?.() ?? []) {
+    assertContentLive(options);
     let row: DraftRow;
-    try { row = parseDraft(raw,catalog); } catch { await preserve(raw); continue; }
+    // Do not read content for orphaned/stale rows. At most the accepted envelope's 56 refs load.
+    try {
+      if(raw.length>5000)throw new Error('Draft row is too large.');
+      const v:unknown=JSON.parse(raw);
+      if(!plain(v)||!plain(v.session)||typeof v.session.owner!=='string')throw new Error('Invalid draft.');
+      const session=v.session, progress=progressFor(next,session.owner as string), old=progress?.paused.find(s=>s.game===session.game);
+      if(v.base!==save.saveRevision || !old || old.id!==v.session.id || old.ordinal!==v.session.ordinal || JSON.stringify(old.puzzle)!==JSON.stringify(v.session.puzzle))throw new Error('Orphan draft.');
+    } catch {await preserve(raw);continue;}
+    try { if(raw.length<=5000)await prepareSessionContent(JSON.parse(raw),catalog,options); assertContentLive(options); row = parseDraft(raw,catalog); } catch(error) { if(contentUnavailable(error))throw error; await preserve(raw); continue; }
     const progress = progressFor(next,row.session.owner), old = progress?.paused.find(s => s.game === row.session.game);
     if (row.base !== save.saveRevision || !old || old.id !== row.session.id || old.ordinal !== row.session.ordinal || old.credited || old.result !== null || old.codec !== row.session.codec || JSON.stringify(old.puzzle) !== JSON.stringify(row.session.puzzle) || JSON.stringify(old.selectedDares) !== JSON.stringify(row.session.selectedDares) || old.partner !== row.session.partner) { await preserve(raw); continue; }
     if (row.session.revision <= old.revision) { if (row.session.revision !== old.revision || JSON.stringify(row.session) !== JSON.stringify(old)) await preserve(raw); continue; }
@@ -95,6 +105,7 @@ export async function recoverChallengeDrafts(save: Save, adapter: StorageAdapter
     if (!validChallengeProgress(challenge,row.session.owner,catalog,row.session.owner.startsWith('cove-'))) { await preserve(raw); continue; }
     next = putProgress(next,row.session.owner,challenge);
   }
+  assertContentLive(options);
   return projectProfile(next);
 }
 /** Incremental admission: row bytes replace its slot, without encoding the full envelope. */

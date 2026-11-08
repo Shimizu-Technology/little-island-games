@@ -1,3 +1,4 @@
+import { packedBank } from '../state/bankFacts';
 import React from 'react';
 import type { ComponentType } from 'react';
 import type { Bank, ChallengeSession, SaveCatalog, SessionBudget, Terminal } from '../state/challenge';
@@ -73,6 +74,7 @@ export function defineReplayGame<D,P,A,S>(config: {
   for (const puzzle of config.puzzles) {
     if (puzzle.ref.engine !== config.game || config.game === 'beep-bot' && puzzle.path === 'deep-water') throw new Error('Incompatible Challenge path.');
     const bank=banks.get(puzzle.ref.bank) ?? {slot:puzzle.ref.bank,engine:config.game,rules:puzzle.ref.rules,entries:[],awards:[],cove:config.cove};
+    if (packedBank(bank)) throw new Error('Replay registrations require authored descriptors.');
     if (puzzle.ref.puzzle !== bank.entries.length || bank.rules !== puzzle.ref.rules) throw new Error('Register bank entries in immutable puzzle order.');
     banks.set(bank.slot,{...bank,entries:[...bank.entries,{ordinal:bank.slot*1024+puzzle.ref.puzzle,hash:puzzle.ref.hash}],awards:[...bank.awards,puzzle.awards.reduce<number>((n,r,i)=>n | (r ? 1<<i:0),0)]});
   }

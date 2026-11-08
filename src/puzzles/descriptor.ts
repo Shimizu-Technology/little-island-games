@@ -7,7 +7,7 @@ const shortId = (x: unknown) => asciiId(x, ROW_LIMITS.idChars);
 const ids = (x: unknown) => Array.isArray(x) && x.length <= ROW_LIMITS.ids && x.every(shortId) && new Set(x).size === x.length;
 const validLimits = (x: unknown): x is Limit[] => Array.isArray(x) && x.length <= METRICS.length && new Set(x.map(l => l?.metric)).size === x.length
   && x.every(l => plain(l) && exactKeys(l, ['metric', 'max']) && metric(l.metric) && uint(l.max, ROW_LIMITS.metric) && l.max > 0);
-const validPar = (x: unknown): x is Par | null => x === null || (plain(x) && exactKeys(x, ['metric', 'lower', 'upper', 'exact']) && metric(x.metric)
+export const validPar = (x: unknown): x is Par | null => x === null || (plain(x) && exactKeys(x, ['metric', 'lower', 'upper', 'exact']) && metric(x.metric)
   && uint(x.lower, ROW_LIMITS.metric) && uint(x.upper, ROW_LIMITS.metric) && x.lower <= x.upper && x.exact === (x.lower === x.upper));
 const validSpeech = (x: unknown): x is Speech | null => x === null || (plain(x) && exactKeys(x, ['template', 'numbers', 'terms']) && shortId(x.template)
   && Array.isArray(x.numbers) && x.numbers.length <= ROW_LIMITS.speechNumbers && x.numbers.every(n => Number.isInteger(n) && n >= -1000 && n <= 1000)
@@ -33,10 +33,11 @@ export function canonical(value: unknown): string {
   if (plain(value)) return `{${Object.keys(value).sort().map(k => `${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`;
   throw new Error('Puzzle data must be plain JSON.');
 }
-export function deepFreeze<T>(value: T): T {
-  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+export function deepFreeze<T>(value: T, seen = new WeakSet<object>()): T {
+  if (value && typeof value === 'object' && !seen.has(value)) {
+    seen.add(value);
     Object.freeze(value);
-    for (const child of Object.values(value)) deepFreeze(child);
+    for (const child of Object.values(value)) deepFreeze(child, seen);
   }
   return value;
 }

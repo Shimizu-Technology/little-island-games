@@ -138,7 +138,7 @@ it('P2-2 terminal full-save refusal explains management and keeps the paused ses
  await act(async()=>expect(await store.challengeSave(moved(s,{end:true}),e(s))).toBe(false));expect(store.challengeRefusal).toBe('full-save');expect(store.error).toMatch(/grown-up.*export.*manage/);expect(store.error).not.toMatch(/backup.*large/);expect(db.raw).toBe(original);expect(store.save.challenge!.paused[0]).toEqual(s);
 });
 it('P2-2 learner ceiling has a typed, visible refusal before any move is lost',async()=>{
- const b=fixtureCatalog.banks.get(0)!;const catalog={banks:new Map(Array.from({length:119},(_,i)=>[i+1,{...b,slot:i+1,entries:b.entries.map((e,j)=>({...e,ordinal:(i+1)*1024+j}))}])),codecs:new Map(),dares:new Map(),contexts:new Set<string>()};registerSaveContent(catalog,catalogManifest(catalog));
+ const b=fixtureCatalog.banks.get(0)!;if(!('entries' in b))throw new Error('Expected inline fixture.');const catalog={banks:new Map(Array.from({length:119},(_,i)=>[i+1,{...b,slot:i+1,entries:b.entries.map((e,j)=>({...e,ordinal:(i+1)*1024+j}))}])),codecs:new Map(),dares:new Map(),contexts:new Set<string>()};registerSaveContent(catalog,catalogManifest(catalog));
  let near=migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')});const s=session('a'),p={...emptyChallenge(),nextOrdinal:2,paused:[s]};
  for(const b of catalog.banks.values()){
   const row:[number,string,string]=[b.slot,pack(Array(1024).fill(6),3),pack(Array(1024).fill(3),2)];

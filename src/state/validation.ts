@@ -1,3 +1,5 @@
+import { assertContentLive, prepareSessionContent, type ContentOptions } from './sessionContent';
+import { saveCatalog } from './challenge';
 import '../challenge/catalog';
 import { defaultComfort, type Comfort } from '../challenge/offers';
 import { validCove, type CovePeople } from './covePeople';
@@ -369,6 +371,15 @@ export function withinSaveLimit(raw: string): boolean {
     if (bytes > MAX_SAVE_BYTES) return false;
   }
   return true;
+}
+/** Storage/import boundary: resolve only referenced content before the synchronous validators run. */
+export async function parseSaveWithContent(raw: string, options: ContentOptions = {}): Promise<Save> {
+  if(!withinSaveLimit(raw))throw new Error('This backup is too large.');
+  let value:unknown;
+  try {value=JSON.parse(raw);}catch {return parseSave(raw);}
+  await prepareSessionContent(value,saveCatalog,options);
+  assertContentLive(options);
+  return parseSave(raw);
 }
 export function parseSave(raw: string): Save {
   if (!withinSaveLimit(raw)) throw new Error("This backup is too large.");

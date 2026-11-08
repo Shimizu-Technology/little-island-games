@@ -71,8 +71,18 @@ export async function measureScale(options: { dirs?: CatalogDirs; keep?: boolean
     const packBytes = [...families.values()].reduce((n, m) => n + m.packs.reduce((c, p) => c + p[3], 0), 0);
     const actual = [...families.values()].map(m => familyActual(dirs, m));
     const modelIssues = verifyByteModel(actual);
-    const saveFragment = saveCatalogBanks(dirs, new Map(models.map(m => [m.family, padAdapter])));
-    const saveFragmentBytes = Buffer.byteLength(JSON.stringify(saveFragment));
+    const saveFragment = saveCatalogBanks(dirs, () => ({awards:0,cove:true}));
+    const launchText=JSON.stringify({version:2,banks:saveFragment,dares:[],contexts:[]});
+    const saveFragmentBytes=Buffer.byteLength(launchText);
+    const launchParse:number[]=[];
+    let launchParsed:unknown;
+    const launchGc=(globalThis as {gc?:()=>void}).gc;
+    launchGc?.();const launchBaseline=process.memoryUsage().heapUsed;
+    const launchStart=performance.now();launchParsed=JSON.parse(launchText);const firstParseMs=performance.now()-launchStart;
+    const launchTransient=process.memoryUsage().heapUsed-launchBaseline;
+    launchGc?.();const launchLive=process.memoryUsage().heapUsed-launchBaseline;
+    for(let i=0;i<100;i++){const started=performance.now();JSON.parse(launchText);launchParse.push(performance.now()-started);}
+    if(!launchParsed)throw new Error('Missing parsed metadata.');
     const transport = { read: async (asset: string) => readFileSync(join(dirs.content, 'assets', `${asset}.lipuzzle`), 'utf8') };
     const families2 = [...families.values()], samples = options.samples ?? 200;
     const gc = (globalThis as { gc?: () => void }).gc;
@@ -113,6 +123,7 @@ export async function measureScale(options: { dirs?: CatalogDirs; keep?: boolean
       entries, modelEntries: modelEntries(), packs: packCount, slotsFree: BANK_CAPS.slots - packCount, packBytes, catalogBytes: root.families.reduce((n, f) => n + f[5], 0), buildMs,
       rootBytes, largestFamilyBytes: Math.max(...familyBytes), familyCount: root.families.length, modelIssues,
       saveFragmentBytes,
+      launch: {saveMetadataBytes:saveFragmentBytes,aggregateEagerBytes:rootBytes+saveFragmentBytes,firstParseMs,parseP95Ms:percentile(launchParse,0.95),liveHeapBytes:launchGc?launchLive:null,transientHeapBytes:launchGc?launchTransient:null},
       memory: { largestPackBytes: largest.map(l => l[1][3]), peakAddedHeap, peakBeforeCollection, gcAvailable: !!gc },
       timingMs: { manifestP95: percentile(manifestOpen, 0.95), coldP50: percentile(cold, 0.5), coldP95: percentile(cold, 0.95), warmP95: percentile(warm, 0.95), samples },
       verify: verified ? { errors: verified.errors.length, firstErrors: verified.errors.slice(0, 5), replayed: verified.stats.replayed, botRuns: verified.stats.botRuns } : null,

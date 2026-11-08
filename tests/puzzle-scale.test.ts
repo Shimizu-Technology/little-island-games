@@ -5,6 +5,8 @@ import { measureScale } from '../scripts/puzzles/scale';
 describe('format at full catalog scale', () => {
   it('holds every boot and manifest limit at 62,647 entries', async () => {
     const r = await measureScale({ samples: 20 });
+    expect(r.saveFragmentBytes).toBeLessThan(100_000);
+    expect(r.launch.aggregateEagerBytes).toBeLessThan(120_000);
     expect(r.entries).toBe(62647);
     expect(r.modelEntries).toBe(62647);
     expect(r.rootBytes).toBeLessThanOrEqual(BANK_CAPS.rootBytes);

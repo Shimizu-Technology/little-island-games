@@ -1,6 +1,7 @@
+import { prepareSessionContent, sessionContentReady, retainSessionContent, contentUnavailable } from './sessionContent';
 import { challengeFor } from '../challenge/catalog';
 import { completedSignal } from '../challenge/offers';
-import { progressBytes, challengeLimit, emptyChallenge, validChallengeProgress, type ChallengeProgress, type Signal, type ChallengeSession } from './challenge';
+import { saveCatalog, progressBytes, challengeLimit, emptyChallenge, validChallengeProgress, type ChallengeProgress, type Signal, type ChallengeSession } from './challenge';
 import { challengeAttempt, recoverChallengeDrafts, newSaveRevision, draftGrowth, progressFor, putProgress, selectedOwner, envelopeWrite, refusalMessage, type ChallengeRefusal, type ChallengeExpected } from './challengeDrafts';
 import { addCovePerson, removeCovePerson } from './covePeople';
 import { DraftQueue } from './draftQueue';
@@ -21,7 +22,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { AppState } from "react-native";
 import { GameId, GameState } from "../games";
 import { storage } from "./storage";
-import { Save, emptySave, parseSave, withinSaveLimit } from "./validation";
+import { Save, emptySave, parseSave, parseSaveWithContent, withinSaveLimit } from "./validation";
 import { preserveAndReplace } from "./replacement";
 import { applySessionAction } from "./sessionAction";
 import { recordWordRound } from "./wordRecords";
@@ -133,7 +134,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     // Prepared commits already passed whole-envelope admission before publication.
     if (!prepared && !admitEnvelope(encoded)) return queue.current;
     admittedBytes.current = utf8Bytes(encoded);
-    latest.current = durable; setSave(durable);
+    latest.current = durable; retainSessionContent(syncProfile(durable),saveCatalog); setSave(durable);
     pendingWrites.current++; setSaving(true);
     queue.current = queue.current
       .catch(() => {})
@@ -167,11 +168,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
   const load = useCallback(async () => {
     let encoded:string|null=null;
+    const startGeneration=generation.current;
+    const live=()=>mounted.current && generation.current===startGeneration && !restoring.current;
     try {
       encoded = await storage.get();
       setRaw(encoded);
-      const before=encoded?parseSave(encoded):emptySave();
-      const recovered = await recoverChallengeDrafts(migrateProfiles(before),storage);
+      const before=encoded?await parseSaveWithContent(encoded,{live}):emptySave();
+      if(!live())return;
+      const recovered = await recoverChallengeDrafts(migrateProfiles(before),storage,saveCatalog,{live});
       let next=syncProfile(backfillRewards(migrateLibrary(recovered, { existingLearners: encoded !== null })));
       const replacementNeeded = !!encoded && (before.version !== 3 || !before.library || before.library.version === 1 || learnersChanged(before,next));
       if (replacementNeeded) next = { ...next, saveRevision:newSaveRevision() };
@@ -184,20 +188,23 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           await preserveAndReplace(storage, encodeSave(next), encoded,envelopeWrite(next));
         } else await preserveLearnerMigration(storage,encoded,before,next);
       }
+      if(!live())return;
       generation.current += 1;
       setEpoch(generation.current);
       admittedBytes.current = utf8Bytes(encodeSave(next));
       latest.current = next;
-      setSave(next);
+      retainSessionContent(syncProfile(next),saveCatalog); setSave(next);
       setRecovery(null); uncertainWrite.current = false;
       setError(null);
       lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false;
       setReady(true);
     } catch (e) {
+      if(!live())return;
       if(encoded)try{
         const newest = (await storage.listRecovery?.())?.[0];
         if (!newest || await storage.readRecovery?.(newest.key) !== encoded) await storage.preserve(encoded);
       }catch{/* Original remains in active storage; do not publish or replace it. */}
+      if(!live())return;
       setRecovery(e instanceof Error ? e.message : "Saved games could not be opened. Please retry.");
       setReady(true);
     }
@@ -231,7 +238,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const kept = syncProfile(previous);
         next = syncProfile(projectProfile({ ...next, profiles: kept.profiles ? { ...kept.profiles, people: { ...next.profiles?.people, ...kept.profiles.people } } : next.profiles }, next.learning));
         if (!admitEnvelope(encodeSave(next))) return false;
-        admissionRejected.current = false; latest.current = next; setSave(next); setBadgeResult(null); void persist(next,true); return true;
+        admissionRejected.current = false; latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setBadgeResult(null); void persist(next,true); return true;
       }
       const previousWord = latest.current.sessions["word-rescue"],
         nextWord = next.sessions["word-rescue"];
@@ -257,7 +264,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       admissionRejected.current = false;
       if (newBadges.length && source) setBadgeResult({ owner, epoch: generation.current, badges: newBadges, source });
       latest.current = next;
-      setSave(next);
+      retainSessionContent(syncProfile(next),saveCatalog); setSave(next);
       void persist(next,true);
       return true;
     },
@@ -390,7 +397,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     // Flush health is a Library gate, never a gate on recovering accepted work.
     let clean = false;
     try { clean = await libraryFlush(); } catch { /* Encoding the coherent accepted state still works. */ }
-    const encoded = encodeSave(latest.current); parseSave(encoded);
+    const encoded = encodeSave(latest.current); await parseSaveWithContent(encoded);
     if (!clean) setError('This backup contains the latest accepted work. Some changes could not be saved on this device.');
     return encoded;
   },[libraryFlush]);
@@ -496,7 +503,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       await preserveAndReplace(storage, encodeSave(next), encodeSave(before),envelopeWrite(next));
       clearPageDrafts(id);
       generation.current++; setEpoch(generation.current);
-      admittedBytes.current = utf8Bytes(encodeSave(next)); latest.current = next; setSave(next); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
+      admittedBytes.current = utf8Bytes(encodeSave(next)); latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
     } finally { restoring.current = false; }
   }, [ready, recovery]);
   const assignEarlierWork = useCallback(async (key: string, learner: string | null, expectedEpoch: number) => {
@@ -510,7 +517,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       await queue.current;
       await preserveAndReplace(storage, encodeSave(next), encodeSave(before),envelopeWrite(next));
       generation.current++; setEpoch(generation.current);
-      admittedBytes.current = utf8Bytes(encodeSave(next)); latest.current = next; setSave(next); setBadgeResult(null); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
+      admittedBytes.current = utf8Bytes(encodeSave(next)); latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setBadgeResult(null); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
     } finally { restoring.current = false; }
   }, [ready, recovery]);
   const recordWarmup = useCallback((results: PracticeResult[], config: PracticeSettings, round: string, expectedEpoch: number) => {
@@ -537,11 +544,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       restoring.current = true;
       try {
         let next: Save, incoming: Save;
-        try { incoming=parseSave(encoded); next = { ...syncProfile(backfillRewards(migrateLibrary(migrateProfiles(incoming)))), saveRevision:newSaveRevision() }; assertMigratedHomes(next); parseSave(encodeSave(next)); if (!validLibraryData(next.library)) throw new Error("This Library could not be opened. Your original is kept. Export it or restore a previous backup.");
+        try { incoming=await parseSaveWithContent(encoded,{live:()=>mounted.current}); next = { ...syncProfile(backfillRewards(migrateLibrary(migrateProfiles(incoming)))), saveRevision:newSaveRevision() }; assertMigratedHomes(next); parseSave(encodeSave(next)); if (!validLibraryData(next.library)) throw new Error("This Library could not be opened. Your original is kept. Export it or restore a previous backup.");
       if (!withinSaveLimit(encodeSave(next))) throw new Error("This save needs more room to upgrade. Your original is kept. Export it and open it in the previous build to manage saved work, or restore a smaller backup."); }
         catch (error) {
           // Keep both the rejected import and the current live save. Never repair imported bytes.
           await storage.preserve(encoded);
+          if(contentUnavailable(error)){setError(error instanceof Error?error.message:'Puzzle content could not be loaded. Please retry.');throw error;}
           generation.current++; setEpoch(generation.current);
           setRaw(encoded); setRecovery(error instanceof Error ? error.message : 'This backup is invalid. Your original has been kept.');
           throw error;
@@ -554,7 +562,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         setEpoch(generation.current);
         admittedBytes.current = utf8Bytes(encodeSave(next));
         latest.current = next;
-        setSave(next);
+        retainSessionContent(syncProfile(next),saveCatalog); setSave(next);
         setRaw(encodeSave(next));
         setRecovery(null); uncertainWrite.current = false;
         setError(null);
@@ -589,6 +597,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const before = latest.current, progress = progressFor(before,session.owner);
     const old = progress?.paused.find(s => s.game === session.game);
     if (old&&old.id===session.id&&!session.result&&progress && progressBytes(progress) + (old ? draftGrowth(old,session) : jsonBytes(session)+1) > challengeLimit(session.owner.startsWith('cove-'))) return refuseChallenge('learner-ceiling');
+    try { if(!sessionContentReady(session,saveCatalog))await prepareSessionContent(session,saveCatalog,{live:()=>mounted.current && !restoring.current && expected.epoch===generation.current && latest.current===before}); }
+    catch(error){setError(error instanceof Error?error.message:'Puzzle content could not be loaded. Please retry.');return false;}
+    if(latest.current!==before || restoring.current || expected.epoch!==generation.current)return refuseChallenge('stale');
     const attempt = challengeAttempt(before,session,expected,generation.current);
     let next = attempt.save;
     if (session.result && next!==before) {
@@ -605,7 +616,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const bytes = admittedBytes.current + draftGrowth(old,session);
       if (bytes > 2_000_000) return refuseChallenge('full-save');
       // Accept before the first await. Later moves and ordinary commits see this revision immediately.
-      admittedBytes.current = bytes; latest.current = next; setSave(next); setChallengeRefusal(null); setError(null);
+      admittedBytes.current = bytes; latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setChallengeRefusal(null); setError(null);
       return writeDraft(JSON.stringify([before.saveRevision,session.owner,session.game]),JSON.stringify({version:1,base:before.saveRevision,session}));
     }
     boundaryRefused.current = false; restoring.current = true;
@@ -631,7 +642,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (head !== encoded) throw error;
       }
       admittedBytes.current = utf8Bytes(encoded);
-      latest.current = next; if(session.result)challengeTerminal.current={epoch:generation.current,session}; setSave(next); setChallengeRefusal(null); if (!boundaryRefused.current) setError(null); return true;
+      latest.current = next; if(session.result)challengeTerminal.current={epoch:generation.current,session}; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setChallengeRefusal(null); if (!boundaryRefused.current) setError(null); return true;
     } catch {
       setError('This change could not be saved. Your saved work is kept. Keep the app open and try again, or export a backup.'); return false;
     } finally { restoring.current = false; }
@@ -651,7 +662,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const meta = envelopeWrite(next);
       await storage.set(encoded,{ ...meta, folded:[...meta.folded,slot] });
       admittedBytes.current = utf8Bytes(encoded); generation.current++; setEpoch(generation.current);
-      latest.current = next; setSave(next); return true;
+      latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); return true;
     } catch {
       setError('This paused game could not be removed. Your saved work is kept. Please try again.'); return false;
     } finally { restoring.current = false; }
@@ -670,7 +681,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       else await storage.set(encoded,envelopeWrite(next));
       admittedBytes.current = utf8Bytes(encoded);
       generation.current++; setEpoch(generation.current);
-      latest.current = next; setSave(next); setBadgeResult(null); return true;
+      latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setBadgeResult(null); return true;
     } catch {
       setError('This person could not be updated. Your saved work is kept. Please try again.'); return false;
     } finally { restoring.current = false; }
