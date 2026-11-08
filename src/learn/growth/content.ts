@@ -7,7 +7,7 @@ export const growthTracks: GrowthTracks = { ...numberTracks, ...literacyTracks, 
 export const growthTrack = (game: LearnId, stage: GrowthStage) => growthTracks[game]?.[stage];
 
 /** The label names a skill, while the persisted pace remains backward compatible. */
-export const foundationLabels: Record<LearnId, readonly string[]> = {
+export const foundationLabels: Partial<Record<LearnId, readonly string[]>> = {
   "reef-race": ["Count to 30", "Count to 60", "Two-dice moves"],
   "island-market": ["Count & compare", "Tens & ones", "Add & make change"],
   "sound-boat": ["Short vowels", "Blends & digraphs", "Vowel teams"],

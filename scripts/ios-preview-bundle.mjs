@@ -9,6 +9,9 @@
 //   node scripts/ios-preview-bundle.mjs restore         git checkout the committed default files
 //   node scripts/ios-preview-bundle.mjs build -- <cmd>  prep, run <cmd>, restore (also on failure or Ctrl-C)
 import { spawnSync } from "node:child_process";
+import { gateDelivery } from "./words/delivery.mjs";
+import { requireCleanSource } from "./words/check.mjs";
+import { checkShippingTree } from "./words/shipping.mjs";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -52,6 +55,7 @@ export function prep(cwd = process.cwd(), env = process.env) {
   const dirty = dirtyGeneratedFiles(cwd);
   if (dirty.length)
     throw new Error(`Refusing to regenerate over uncommitted changes (restore would discard them):\n${dirty.join("\n")}`);
+  checkShippingTree(cwd,env.LITTLE_ISLAND_WORD_RECEIPTS,{full:true});
   const result = spawnSync(process.execPath, ["--experimental-strip-types", "scripts/library/build-index.mjs"], {
     cwd,
     stdio: "inherit",
@@ -64,6 +68,8 @@ export function prep(cwd = process.cwd(), env = process.env) {
   return catalog;
 }
 export function build(command, cwd = process.cwd(), env = process.env) {
+  requireCleanSource(cwd);
+  checkShippingTree(cwd,env.LITTLE_ISLAND_WORD_RECEIPTS,{full:true});
   let restored = false;
   const putBack = () => {
     if (restored) return;
@@ -87,7 +93,10 @@ export function build(command, cwd = process.cwd(), env = process.env) {
       stdio: "inherit",
       env: { ...env, EXPO_PUBLIC_LIBRARY_PREVIEW: "1" },
     });
-    return result.status ?? 1;
+    if(result.status!==0) return result.status ?? 1;
+    putBack();
+    gateDelivery(cwd,env);
+    return 0;
   } finally {
     putBack();
   }

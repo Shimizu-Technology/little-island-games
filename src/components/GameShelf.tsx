@@ -1,18 +1,17 @@
+import { gameDestination } from '../learn/destinations';
 import { GameIcon as ShelfArt } from "./GameIcon";
-import { isBoardId } from "../board";
 import React from "react";
 import { View } from "react-native";
 import { router } from "expo-router";
 import { Text } from "./Text";
 import { C, Copy, Heading, IconButton, PressableScale, font } from "./ui";
-import { GameId, gameIds } from "../games";
 import { LearnId, learnIds } from "../learn/types";
 import { ongoing, shelfLevel, ShelfGame, ShelfId } from "../learn/home";
 import { subjectTheme } from "../learn/LearnChrome";
 import { learningCardArt } from "./learningCardArt";
 import { useStore } from "../state/Store";
 export function openShelfGame(id: ShelfId) {
-  router.push({ pathname: isBoardId(id) ? "/board" : learnIds.includes(id as LearnId) ? "/learn" : gameIds.includes(id as GameId) ? "/play" : "/activity", params: { game: id } });
+  router.push(gameDestination(id));
 }
 // Compatibility name for existing shelves; all listings share the same tile.
 export { GameIcon as ShelfArt } from "./GameIcon";

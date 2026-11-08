@@ -60,6 +60,8 @@ export function withoutLearner(save: Save, id: string): Save {
   if (id === 'family' || !learning?.people.some(p => p.id === id)) return save;
   const people = learning.people.filter(p => p.id !== id);
   const next: Save = { ...save, learning: { active: learning.active === id ? 'family' : learning.active, people } };
+  if (save.settings.learningBridges) next.settings = {...(next.settings ?? save.settings),learningBridges:Object.fromEntries(Object.entries(save.settings.learningBridges).filter(([owner])=>owner!==id))};
+  if (save.settings.learningComfort) next.settings = {...(next.settings ?? save.settings),learningComfort:Object.fromEntries(Object.entries(save.settings.learningComfort).filter(([owner])=>owner!==id))};
   if (save.library) next.library = { ...save.library, profiles: Object.fromEntries(Object.entries(save.library.profiles).filter(([owner]) => owner !== id)) };
   if (save.personalization) next.personalization = { ...save.personalization, people: Object.fromEntries(Object.entries(save.personalization.people).filter(([owner]) => owner !== id)) };
   if (save.roundOwners) {

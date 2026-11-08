@@ -1,0 +1,3508 @@
+{
+  "schemaVersion": 1,
+  "id": "local-supplement-v1",
+  "authorship": "Original editorial candidate selection by gpt-6.1-sol, 2026-11-08",
+  "reviewState": "draft; requires actual word reviews",
+  "entries": [
+    {
+      "spelling": "REEF",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CORAL",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LAGOON",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TIDE",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "WAVE",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SAND",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SHORE",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BEACH",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SHELL",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CRAB",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FISH",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FIN",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GILL",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SCALE",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SEA",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "OCEAN",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SALT",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FOAM",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SPRAY",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SWELL",
+      "theme": "reef",
+      "language": "en",
+      "meaningContext": "reef",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CANOE",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "OUTRIGGER",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PADDLE",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SAIL",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MAST",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BOOM",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HULL",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BOW",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STERN",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "RUDDER",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ANCHOR",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ROPE",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "KNOT",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CREW",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "VOYAGE",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COURSE",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COMPASS",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HORIZON",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STAR",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "WIND",
+      "theme": "voyaging",
+      "language": "en",
+      "meaningContext": "voyaging",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ISLAND",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COVE",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BAY",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "INLET",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CHANNEL",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STRAIT",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COAST",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PENINSULA",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CAPE",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BLUFF",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CLIFF",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "RIDGE",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HILL",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "VALLEY",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PEAK",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SLOPE",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PLATEAU",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CAVE",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ROCK",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STONE",
+      "theme": "island",
+      "language": "en",
+      "meaningContext": "island",
+      "guamFit": 1
+    },
+    {
+      "spelling": "RAIN",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CLOUD",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SUN",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SKY",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BREEZE",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GUST",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "DRIZZLE",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SHOWER",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STORM",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TYPHOON",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "RAINBOW",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "THUNDER",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LIGHTNING",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HUMIDITY",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "DROPLET",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PUDDLE",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FORECAST",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SHADE",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "WARMTH",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SEASON",
+      "theme": "weather",
+      "language": "en",
+      "meaningContext": "weather",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MANGO",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BANANA",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COCONUT",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PAPAYA",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GUAVA",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PINEAPPLE",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LIME",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LEMON",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ORANGE",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TANGERINE",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MELON",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "WATERMELON",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PLUM",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PEACH",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PEAR",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "APPLE",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GRAPE",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BERRY",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FIG",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "DATE",
+      "theme": "fruit",
+      "language": "en",
+      "meaningContext": "fruit",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TARO",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "YAM",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GINGER",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TURMERIC",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CASSAVA",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BREADFRUIT",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BAMBOO",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PALM",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FERN",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MOSS",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ALGAE",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SEAGRASS",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FLOWER",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LEAF",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ROOT",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STEM",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SEED",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SPROUT",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BUD",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PETAL",
+      "theme": "plants",
+      "language": "en",
+      "meaningContext": "plants",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FLOUR",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "DOUGH",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BATTER",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "YEAST",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LOAF",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BREAD",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ROLL",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BUN",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MUFFIN",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COOKIE",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CAKE",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PIE",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TART",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CRUST",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CRUMB",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ICING",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FROSTING",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SPRINKLE",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PASTRY",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SCONE",
+      "theme": "baking",
+      "language": "en",
+      "meaningContext": "baking",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SUGAR",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HONEY",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SYRUP",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MOLASSES",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COCOA",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "VANILLA",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CINNAMON",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "NUTMEG",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CLOVE",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PEPPER",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "RICE",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "OAT",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "WHEAT",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CORN",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STARCH",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BUTTER",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MILK",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CREAM",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "EGG",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "OIL",
+      "theme": "pantry",
+      "language": "en",
+      "meaningContext": "pantry",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BOWL",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SPOON",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FORK",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "KNIFE",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "WHISK",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SPATULA",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LADLE",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SIEVE",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COLANDER",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "APRON",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "OVEN",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STOVE",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PAN",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "POT",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TRAY",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "RACK",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CUP",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PLATE",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SAUCER",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TOWEL",
+      "theme": "kitchen",
+      "language": "en",
+      "meaningContext": "kitchen",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MIX",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STIR",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "KNEAD",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "RISE",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BAKE",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ROAST",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STEAM",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SIMMER",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BOIL",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MELT",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "POUR",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MEASURE",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SIFT",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FOLD",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SPREAD",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SLICE",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "DICE",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CHOP",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PEEL",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MASH",
+      "theme": "cookery",
+      "language": "en",
+      "meaningContext": "cookery",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CHURCH",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CHAPEL",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PARISH",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ALTAR",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PEW",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "AISLE",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BELFRY",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STEEPLE",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CROSS",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CANDLE",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HYMN",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CHOIR",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BELL",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PRIEST",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "DEACON",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "NUN",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "POPE",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SAINT",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BISHOP",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PASTOR",
+      "theme": "parish",
+      "language": "en",
+      "meaningContext": "parish",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BIBLE",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GOD",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "JESUS",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MARY",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "JOSEPH",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ANGEL",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HEAVEN",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HOLY",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PRAY",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PRAYER",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ROSARY",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "NOVENA",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MASS",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "AMEN",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GRACE",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PSALM",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GOSPEL",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SCRIPTURE",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BAPTISM",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COMMUNION",
+      "theme": "faith",
+      "language": "en",
+      "meaningContext": "faith",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ADVENT",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LENT",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "EASTER",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CHRISTMAS",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PENTECOST",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "NATIVITY",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MANGER",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SHEPHERD",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STARLIGHT",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "WREATH",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GARLAND",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "RIBBON",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GIFT",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CELEBRATION",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "JOY",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HOPE",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PEACE",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MERCY",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "KINDNESS",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CHARITY",
+      "theme": "seasons",
+      "language": "en",
+      "meaningContext": "seasons",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FAMILY",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MOTHER",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FATHER",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STEPMOM",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STEPDAD",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GRANDMA",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GRANDPA",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "AUNT",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "UNCLE",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COUSIN",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SISTER",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BROTHER",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BABY",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SIBLING",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CHILD",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GROWNUP",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "NEIGHBOR",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FRIEND",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GUEST",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HELPER",
+      "theme": "family",
+      "language": "en",
+      "meaningContext": "family",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LOVE",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CARE",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SHARE",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HUG",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SMILE",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LAUGH",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LISTEN",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COMFORT",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "WELCOME",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PATIENCE",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TRUST",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "RESPECT",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "THANKS",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HELP",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "VISIT",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CUDDLE",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BLANKET",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CRADLE",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LULLABY",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "NAP",
+      "theme": "care",
+      "language": "en",
+      "meaningContext": "care",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PAINT",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BRUSH",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CANVAS",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PAPER",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CARD",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CRAYON",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PENCIL",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CHALK",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CLAY",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "YARN",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "THREAD",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "NEEDLE",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FABRIC",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FELT",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BEAD",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BUTTON",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GLUE",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SCISSORS",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STENCIL",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COLLAGE",
+      "theme": "craft",
+      "language": "en",
+      "meaningContext": "craft",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SOIL",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COMPOST",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MULCH",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HOE",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "RAKE",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TROWEL",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SPADE",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "WATERING",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SEEDLING",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PATCH",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PLOT",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FENCE",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HEDGE",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "VINE",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SHRUB",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TREE",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BRANCH",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TRUNK",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BARK",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FROND",
+      "theme": "garden",
+      "language": "en",
+      "meaningContext": "garden",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TURTLE",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "DOLPHIN",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "WHALE",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SHARK",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "RAY",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "EEL",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "OCTOPUS",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SQUID",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "JELLYFISH",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STARFISH",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "URCHIN",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CLAM",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "OYSTER",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SHRIMP",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LOBSTER",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HERMIT",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SNAIL",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LIMPET",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BARNACLE",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SPONGE",
+      "theme": "animals",
+      "language": "en",
+      "meaningContext": "animals",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BIRD",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "NEST",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "WING",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FEATHER",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BEAK",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TALON",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CHICK",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HATCH",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "WHITEYE",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "KINGFISHER",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SWIFT",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HERON",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "EGRET",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TERN",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "DOVE",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PIGEON",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "ROOSTER",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HEN",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "DUCK",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GOOSE",
+      "theme": "birds",
+      "language": "en",
+      "meaningContext": "birds",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MAGNET",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "SHADOW",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "LIGHT",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "HEAT",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "SOUND",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "ECHO",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "MOTION",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "FORCE",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "PUSH",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "PULL",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "FLOAT",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "SINK",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "SOLID",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "LIQUID",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "GAS",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "VAPOR",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "WATER",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "ICE",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "FROST",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "DEW",
+      "theme": "science",
+      "language": "en",
+      "meaningContext": "science",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "BODY",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "HEAD",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "HAIR",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "FACE",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "EYE",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "EAR",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "NOSE",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "MOUTH",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "TOOTH",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "TONGUE",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "HAND",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "FINGER",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "THUMB",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "ARM",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "ELBOW",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "LEG",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "KNEE",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "FOOT",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "TOE",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "SKIN",
+      "theme": "bodies",
+      "language": "en",
+      "meaningContext": "bodies",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "BONE",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "BRAIN",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "HEART",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "LUNG",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "BLOOD",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "MUSCLE",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "JOINT",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "CHEST",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "HIP",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "TUMMY",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "BREATH",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "PULSE",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "SENSE",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "SIGHT",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "HEARING",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "TOUCH",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "TASTE",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "SMELL",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "REST",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "SLEEP",
+      "theme": "health",
+      "language": "en",
+      "meaningContext": "health",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "PLAY",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "GAME",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "TOY",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "DOLL",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "BLOCK",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "PUZZLE",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "MARBLE",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "BALL",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "KITE",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "BAT",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "HOOP",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "SWING",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "SLIDE",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "CLIMB",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "HOP",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "SKIP",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "JUMP",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "CATCH",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "TOSS",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "BALANCE",
+      "theme": "play",
+      "language": "en",
+      "meaningContext": "play",
+      "guamFit": 0.6
+    },
+    {
+      "spelling": "PICNIC",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BASKET",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MAT",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "NAPKIN",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SANDWICH",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SNACK",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FRUIT",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "JUICE",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LUNCH",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FEAST",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "POTLUCK",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FIESTA",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TABLE",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BENCH",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "COOLER",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FLASK",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "JUG",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BOTTLE",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LID",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HANDLE",
+      "theme": "picnic",
+      "language": "en",
+      "meaningContext": "picnic",
+      "guamFit": 1
+    },
+    {
+      "spelling": "VILLAGE",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "GUAM",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PACIFIC",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "MARKET",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "SCHOOL",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "LIBRARY",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PARK",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PATH",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TRAIL",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BRIDGE",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BOAT",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "DOCK",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "HARBOR",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "PORT",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "CRAFTSMAN",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "FARMER",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "BAKER",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "TEACHER",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "READER",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    },
+    {
+      "spelling": "STORY",
+      "theme": "community",
+      "language": "en",
+      "meaningContext": "community",
+      "guamFit": 1
+    }
+  ]
+}

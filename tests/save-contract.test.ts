@@ -75,8 +75,8 @@ it('Together credit is one atomic candidate for both survivors and never touches
  const done=moved(old,{end:true,helped:true,awards:3,dares:[0,5,6]});const before=JSON.stringify(original);
  const after=finishChallenge(original,done,expected(old),1,fixtureCatalog);expect(after).not.toBe(original);expect(JSON.stringify(original)).toBe(before);
  for(const owner of ['a','family']){expect(unpack(after.profiles!.people[owner].challenge!.banks[0][1],1024,3)![0]).toBe(3);expect(after.profiles!.people[owner].school).toEqual(original.profiles!.people[owner].school);}
- expect(after.personalization).toEqual(original.personalization);expect(after.challenge!.paused[0].credited).toBe(true);expect(finishChallenge(after,done,expected(old),1,fixtureCatalog)).toBe(after);
- const soloPartner={...original,profiles:{...original.profiles!,people:{a:original.profiles!.people.a}}};expect(finishChallenge(soloPartner,done,expected(old),1,fixtureCatalog).challenge!.paused[0].credited).toBe(true);
+ expect(after.personalization).toEqual(original.personalization);expect(after.challenge!.paused).toEqual([]);expect(finishChallenge(after,done,expected(old),1,fixtureCatalog)).toBe(after);
+ const soloPartner={...original,profiles:{...original.profiles!,people:{a:original.profiles!.people.a}}};expect(finishChallenge(soloPartner,done,expected(old),1,fixtureCatalog).challenge!.paused).toEqual([]);
 });
 it('independent-only dares cannot be forged by helped/Together results',()=>{
  for(const slot of [1,4,7]){const s={...session(),selectedDares:[slot]};const done=moved(s,{end:true,helped:true,dares:[slot]});expect(validChallengeSession(done,'family',fixtureCatalog)).toBe(false);expect(validChallengeSession({...done,partner:'a',result:{...done.result!,event:'together'}},'family',fixtureCatalog)).toBe(false);}

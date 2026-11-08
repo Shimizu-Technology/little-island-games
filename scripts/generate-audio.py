@@ -9,9 +9,9 @@ import concurrent.futures, json, math, re, subprocess, tempfile, wave, struct, a
 ROOT=Path(__file__).resolve().parent.parent
 OUT=ROOT/'assets/audio'
 OUT.mkdir(parents=True,exist_ok=True)
-# WORDS is a JSON-compatible literal; do not silently erase mappings if its format changes.
-source=(ROOT/'src/games/words.ts').read_text()
-match=re.search(r'export const WORDS = (\[.*?\]) as const;', source, re.S)
+# The inherited registry pack is a JSON-compatible literal; do not silently erase mappings if its format changes.
+source=(ROOT/'content/words/legacy-word-rescue.ts').read_text()
+match=re.search(r'export const legacyWordRescue = (\[.*?\]) as const;', source, re.S)
 if not match: raise RuntimeError('Could not locate the curated WORDS array')
 word_rows=json.loads(re.sub(r',\s*([\]\}])', r'\1', match.group(1)))
 if len(word_rows) < 40: raise RuntimeError('Unexpectedly small word list')

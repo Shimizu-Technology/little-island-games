@@ -4,7 +4,7 @@ import { projectProfile, syncProfile } from './profiles';
 import type { Save } from './validation';
 import type { StorageAdapter } from './storage';
 export type DraftRow = { version: 1; base: string; session: ChallengeSession };
-export type ChallengeExpected = { epoch: number; owner: string; game: string; id: string | null; revision: number | null };
+export type ChallengeExpected = { epoch: number; owner: string; game: string; id: string | null; revision: number | null; replace?: { game:string; id:string; revision:number } };
 let serial = 0;
 export const newSaveRevision = () => `save-${Date.now().toString(36).padStart(9,'0')}-${(++serial).toString(36).padStart(8,'0')}-${Math.random().toString(36).slice(2,10).padEnd(8,'0')}`;
 export const draftKey = (row: DraftRow) => `draft:${JSON.stringify([row.base,row.session.owner,row.session.game])}`;
@@ -31,11 +31,12 @@ function eligiblePartner(save: Save, session: ChallengeSession, catalog = saveCa
   if (session.partner === null) return true;
   return !!progressFor(save,session.partner) && (!Object.hasOwn(save.cove?.people ?? {},session.partner) || !!catalog.banks.get(session.puzzle.bank)?.cove);
 }
-export type ChallengeRefusal = 'full-save' | 'session-budget' | 'learner-ceiling' | 'stale';
+export type ChallengeRefusal = 'full-save' | 'session-budget' | 'learner-ceiling' | 'paused-full' | 'stale';
 export const refusalMessage: Record<ChallengeRefusal,string> = {
   'full-save': 'This save has reached its limit. Your saved work is kept. Ask a grown-up to export it, then manage paused games or people.',
   'session-budget': 'This paused game has reached its save limit. Your saved work is kept. Ask a grown-up to export it before starting another attempt.',
   'learner-ceiling': 'This person has reached their save limit. Their saved work is kept. Ask a grown-up to export it, then manage their paused games.',
+  'paused-full': 'All paused spaces are in use. Continue a saved puzzle, export a backup, or choose one to replace.',
   stale: 'This round or person has changed. Reopen the current paused game to continue.',
 };
 /** All runtime entry points check owner and epoch as well as round identity/revision. */
@@ -46,9 +47,13 @@ export function challengeTransition(save: Save, session: ChallengeSession, expec
   if ((before?.id ?? null) !== expected.id || (before?.revision ?? null) !== expected.revision) return save;
   if (!before || before.id !== session.id) {
     if (!eligiblePartner(save,session,catalog)) return save;
-    if (!catalog.codecs.get(session.codec)!.canStart(session) || before || session.ordinal !== progress.nextOrdinal || session.revision !== 0 || session.credited || session.result !== null || progress.paused.length >= (session.owner.startsWith('cove-') ? 4 : 8) || !uint(progress.nextOrdinal,2147483646)) return save;
-    // No silent replacement. Explicit replacement must preserve through the Store barrier.
-    const next = { ...openProgress(progress,session.puzzle,catalog), nextOrdinal:progress.nextOrdinal + 1, paused:[...progress.paused,session].sort((a,b) => a.game < b.game ? -1 : a.game > b.game ? 1 : 0) };
+    if (!catalog.codecs.get(session.codec)!.canStart(session) || before && !before.credited && !expected.replace || session.ordinal !== progress.nextOrdinal || session.revision !== 0 || session.credited || session.result !== null || !uint(progress.nextOrdinal,2147483646)) return save;
+    const replacement=expected.replace;
+    if(replacement && !progress.paused.some(s=>s.game===replacement.game&&s.id===replacement.id&&s.revision===replacement.revision))return save;
+    const paused=progress.paused.filter(s=>!s.credited && s.game!==replacement?.game);
+    if(paused.length >= (session.owner.startsWith('cove-')?4:8)){refused?.('paused-full');return save;}
+    // Store commits this candidate and folds replaced rows atomically; failure keeps the old envelope.
+    const next = { ...openProgress(progress,session.puzzle,catalog), nextOrdinal:progress.nextOrdinal + 1, paused:[...paused,session].sort((a,b) => a.game < b.game ? -1 : a.game > b.game ? 1 : 0) };
     if (progressBytes(next) > challengeLimit(session.owner.startsWith('cove-'))) { refused?.('learner-ceiling'); return save; }
     return validChallengeProgress(next,session.owner,catalog,session.owner.startsWith('cove-')) ? putProgress(save,session.owner,next) : save;
   }
@@ -69,7 +74,7 @@ export function finishChallenge(save: Save, session: ChallengeSession, expected:
     const before = progressFor(next,owner); if (!before) continue;
     const cove = !!next.cove && Object.hasOwn(next.cove.people,owner);
     const credited = creditProgress(before,session.puzzle,session.result,catalog,cove);
-    if (owner === session.owner) credited.paused = credited.paused.map(s => s.id === session.id ? { ...s, credited:true } : s);
+    if (owner === session.owner) credited.paused = credited.paused.filter(s => s.id !== session.id);
     if (!validChallengeProgress(credited,owner,catalog,cove)) { if (owner === session.owner) { if (progressBytes(credited) > challengeLimit(cove)) refused?.('learner-ceiling'); return save; } continue; }
     next = putProgress(next,owner,credited);
   }

@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-08",
+  "sources": [
+    {
+      "id": "scowl",
+      "file": "scowl-release.tar.gz",
+      "revision": "2020.12.07",
+      "url": "https://downloads.sourceforge.net/wordlist/scowl-2020.12.07.tar.gz",
+      "sha256": "5587667caa20c4891390c2d42dbb4d5c4c3f41bee77af1457ece3ba23fb859cc",
+      "bytes": 2569810,
+      "use": "American base; British accept variants",
+      "ship": true,
+      "notice": "notices/scowl-Copyright",
+      "noticeSha256": "be2fd3028cc8b7073ad6241954146e26389e0e42b9f5a262cc2a31c8ef736dee"
+    },
+    {
+      "id": "enable",
+      "file": "enable.txt",
+      "revision": "233d25a56b9ac8bef906916ccf091a976995cce0",
+      "url": "https://raw.githubusercontent.com/dolph/dictionary/233d25a56b9ac8bef906916ccf091a976995cce0/enable1.txt",
+      "sha256": "3f16130220645692ed49c7134e24a18504c2ca55b3c012f7290e3e77c63b1a89",
+      "bytes": 1743363,
+      "use": "checking only",
+      "ship": false,
+      "notice": "notices/scowl-Copyright",
+      "noticeSha256": "be2fd3028cc8b7073ad6241954146e26389e0e42b9f5a262cc2a31c8ef736dee"
+    },
+    {
+      "id": "oewn",
+      "file": "oewn-2024.xml.gz",
+      "revision": "2024-edition",
+      "url": "https://github.com/globalwordnet/english-wordnet/releases/download/2024-edition/english-wordnet-2024.xml.gz",
+      "sha256": "e1f633b0a93758cae34ea27c44c4dad310a8af2467b155f99dd6673af697e875",
+      "bytes": 12912118,
+      "use": "tags, senses and review help; no definitions shipped",
+      "ship": false,
+      "notice": "notices/oewn-LICENSE",
+      "noticeSha256": "5d02a553699c4841d8b33cc5a1313cff1f96264e36e9dc98be829dfc94a6cc73"
+    },
+    {
+      "id": "cmudict",
+      "file": "cmudict.dict",
+      "revision": "74790861f652b15e4ac49015a90074ad62a27690",
+      "url": "https://raw.githubusercontent.com/cmusphinx/cmudict/74790861f652b15e4ac49015a90074ad62a27690/cmudict.dict",
+      "sha256": "81917843c7f44ce2b094ac63873c2c7a4cf802040792c455ba3ca406891c3d22",
+      "bytes": 3618488,
+      "use": "pronunciation flags only",
+      "ship": false,
+      "notice": "notices/cmudict-LICENSE",
+      "noticeSha256": "bd4ce8e44170a5f9f481310ca85c51de3c4f851a65e679b40e603b143bd3542a"
+    },
+    {
+      "id": "editorial",
+      "file": "content/words/supplement.draft.json",
+      "revision": "local-supplement-v1",
+      "sha256": "9fdbcdc5979ad82803a3195c90344aa04dd9b58d3fe627a9f73a30d638053c7e",
+      "bytes": 71524,
+      "use": "Local English supplement; each selected sense still requires review",
+      "ship": true,
+      "notice": null
+    },
+    {
+      "id": "hafagpt-canonical",
+      "file": "canonical-vocabulary.json",
+      "revision": "local-canonical-2026-11-08",
+      "sha256": "682a3daece1082b692ef27568c127c8c381e0f74a93c6964e6be40a823dbc1cb",
+      "bytes": 170382,
+      "url": null,
+      "use": "Private family source-backed terms only; public permissions unresolved",
+      "ship": true,
+      "notice": null
+    }
+  ],
+  "newerScowl": {
+    "revision": "rel-2026.02.25",
+    "commit": "7e99eda",
+    "url": "https://github.com/en-wl/wordlist/releases/tag/rel-2026.02.25",
+    "decision": "Retain 2020.12.07 for reproducible size/category and taboo files. 2026 is a dictionary-only release on a new database architecture, not a stable SCOWL release. Compare as a separate source upgrade, with new reviews."
+  },
+  "rejected": [
+    "Wiktionary",
+    "wordfreq",
+    "Kuperman",
+    "FrequencyWords",
+    "Google/Norvig",
+    "SUBTLEX",
+    "Fry",
+    "NASPA",
+    "Spread the Word(list)",
+    "published crossword clue databases"
+  ]
+}

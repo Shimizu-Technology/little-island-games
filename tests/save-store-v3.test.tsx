@@ -58,13 +58,13 @@ for(const failure of ['writeFails'] as const)it(`terminal ${failure} cannot publ
  await act(async()=>expect(await store.challengeSave(moved(s,{end:true,awards:3}),e(s))).toBe(false));expect(encodeSave(store.save)).toBe(before);expect(db.raw).toBe(raw);expect(store.save.profiles!.people.family.challenge!.banks).toEqual([]);
  db[failure]=false;await act(async()=>expect(await store.challengeSave(moved(s,{end:true,awards:3}),e(s))).toBe(true));
  for(const owner of ['a','family'])expect(unpack(store.save.profiles!.people[owner].challenge!.banks[0][1],1024,3)![0]).toBe(3);
- expect(store.save.challenge!.paused[0].credited).toBe(true);const accepted=db.raw;
+ expect(store.save.challenge!.paused).toEqual([]);const accepted=db.raw;
  await act(async()=>expect(await store.challengeSave(moved(s,{end:true,awards:3}),e(s))).toBe(false));expect(db.raw).toBe(accepted);
 });
 it('interrupt after durable write but before publication recovers exactly one accepted terminal credit',async()=>{
  await mount();const s=await start(),before=store.save;db.responseFails=true;
- await act(async()=>expect(await store.challengeSave(moved(s,{end:true,awards:3}),e(s))).toBe(true));expect(store.save).not.toBe(before);expect(parseSave(db.raw!).challenge!.paused[0].credited).toBe(true);
- db.responseFails=false;await unmount();await mount();expect(store.save.challenge!.paused[0].credited).toBe(true);const accepted=db.raw;
+ await act(async()=>expect(await store.challengeSave(moved(s,{end:true,awards:3}),e(s))).toBe(true));expect(store.save).not.toBe(before);expect(parseSave(db.raw!).challenge!.paused).toEqual([]);
+ db.responseFails=false;await unmount();await mount();expect(store.save.challenge!.paused).toEqual([]);const accepted=db.raw;
  await act(async()=>expect(await store.challengeSave(moved(s,{end:true,awards:3}),e(s))).toBe(false));expect(db.raw).toBe(accepted);
 });
 it('switch A→Family→A and restore reject captured callbacks; explicit discard preserves the draft and advances ordinal',async()=>{
@@ -100,7 +100,7 @@ for(const flag of ['write','library','admission'] as const)it(`P1-1 export remai
 it('P1-2 routine rounds do not add whole-save recovery copies',async()=>{
  db.raw=readFileSync('tests/fixtures/save-v3/main-envelope-2.json','utf8');const preUpdate=db.raw;
  await mount();await act(async()=>store.selectLearner('a'));const copies=db.preserved.length;
- for(let n=0;n<12;n++){const s=await start(session('a',`round-${n}`,n+1));const m=moved(s);await act(async()=>expect(await store.challengeSave(m,e(s))).toBe(true));const end=moved(m,{end:true});await act(async()=>expect(await store.challengeSave(end,e(m))).toBe(true));await act(async()=>expect(await store.challengeDiscard(e({...end,credited:true}))).toBe(true));}
+ for(let n=0;n<12;n++){const s=await start(session('a',`round-${n}`,n+1));const m=moved(s);await act(async()=>expect(await store.challengeSave(m,e(s))).toBe(true));const end=moved(m,{end:true});await act(async()=>expect(await store.challengeSave(end,e(m))).toBe(true));expect(store.save.challenge!.paused).toEqual([]);}
  expect(db.preserved).toHaveLength(copies);expect(db.preserved).toEqual([preUpdate]);
  if(process.env.F1_POST_PLAY_SAVE)writeFileSync(process.env.F1_POST_PLAY_SAVE,encodeSave(store.save));
 });
@@ -122,7 +122,7 @@ it('P2-2 session budget refusal is explained and the current draft stays resumab
 });
 it('P3-1 a lost terminal acknowledgement cannot be overwritten by the next ordinary commit',async()=>{
  await mount();const s=await start();db.responseFails=true;await act(async()=>{await store.challengeSave(moved(s,{end:true}),e(s));});db.responseFails=false;
- await act(async()=>store.settings({sound:false}));expect(parseSave(db.raw!).challenge!.paused[0].credited).toBe(true);
+ await act(async()=>store.settings({sound:false}));expect(parseSave(db.raw!).challenge!.paused).toEqual([]);
 });
 
 it('P2-1 the old failure window now upgrades; exact-limit originals have actionable recovery',async()=>{

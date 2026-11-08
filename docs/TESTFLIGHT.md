@@ -21,6 +21,10 @@ eas submit --platform ios --profile production --id <exact-eas-build-id> --non-i
 
 EAS owns the signing credentials. No private keys, certificates, passwords, or provisioning profiles belong in Git. Existing submission credentials may be reused for this app, without rotating shared account credentials.
 
+## Word-bank delivery gate
+
+For current program builds, use `npm run ios:preview-build -- <build command>` and deliver with `npm run deliver:ios -- <submission command>` (or `deliver:web` for a web delivery). Set `LITTLE_ISLAND_WORD_POLICY_LOCK`, `LITTLE_ISLAND_WORD_RECEIPTS` when banks exist, `LITTLE_ISLAND_WORD_WEB_ARTIFACT`, `LITTLE_ISLAND_WORD_IOS_ARTIFACT` and a new external `LITTLE_ISLAND_WORD_RELEASE_RECEIPT`. The wrappers run full detached admission, scan the actual web and embedded Hermes artifacts, then verify the source/policy/artifact-bound receipt before delivery. A hand-written bank with a matching manifest is insufficient. Keep source clean; default generated Library files are restored before receipt creation. Historical commands below describe earlier deliveries and do not bypass this gate for new builds. Public distribution remains a separate gate.
+
 ## Acceptance and delivery
 
 Success requires an App Store Connect record for this exact bundle ID, an uploaded build that finishes processing, and internal access for Leon. A successful upload alone does not establish that the build is available in TestFlight or installed on a device. Record the exact source, build ID, Apple processing state, tester group, and remaining checks after delivery.

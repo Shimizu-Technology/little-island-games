@@ -14,7 +14,7 @@ export function destinationErrors(items) {
   const provenance = JSON.parse(readFileSync('content/library/legacy-provenance.json', 'utf8'));
   Object.keys(provenance).forEach(id => legacy.add(id));
   const games = new Set([
-    ...ids('src/games/index.ts', 'gameIds'), ...ids('src/learn/types.ts', 'learnIds'),
+    ...ids('src/games/index.ts', 'gameIds'), ...ids('src/learn/generated/ids.ts', 'learnIds'),
     ...ids('src/board/index.ts', 'boardIds'), ...ids('src/arcade/types.ts', 'arcadeIds'),
     ...ids('src/state/activities.ts', 'activityIds'),
   ]);
