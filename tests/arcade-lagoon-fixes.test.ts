@@ -72,3 +72,38 @@ it('bakes the pickup lettering at sufficient density for its maximum enlarged ph
  expect(png.readUInt32BE(16)).toBe(432);expect(png.readUInt32BE(20)).toBe(432);
  expect(atlas.assets['shell-burst'].density).toBe(9);
 });
+
+it('keeps scene-root publication unchanged across legal marker/teaching and row-recycle events',async()=>{
+ const {runScenePublication}=await import('../src/arcade/games/lagoon-run/scenePublication');
+ const {createRun,runTransition,runStep}=await import('../src/arcade/games/lagoon-run/engine');
+ const {runLevels}=await import('../src/arcade/games/scrolling/content');
+ const {fixtureInput}=await import('../src/arcade/games/lagoon-run/fixtures');
+ const {samePublication}=await import('../src/arcade/poses');
+ let a=createRun(runLevels[7],771),checked=0;
+ for(let i=0;i<500;i++){
+  const b=runStep(runTransition(a,fixtureInput(a)),{type:'idle'},1/60);
+  if(b.passed>a.passed||b.serial>a.serial){expect(samePublication(runScenePublication(a),runScenePublication(b))).toBe(true);checked++;}
+  a=b;
+ }
+ expect(checked).toBeGreaterThan(4);
+});
+
+it('publishes only the recycled row while retaining instruction parity with the shared HUD selector',async()=>{
+ const {runRowPublication,runInstructionPublication}=await import('../src/arcade/games/lagoon-run/scenePublication');
+ const {createRun,runTransition,runStep}=await import('../src/arcade/games/lagoon-run/engine');
+ const {runLevels}=await import('../src/arcade/games/scrolling/content');
+ const {fixtureInput}=await import('../src/arcade/games/lagoon-run/fixtures');
+ const {samePublication}=await import('../src/arcade/poses');const {runHud}=await import('../src/arcade/publication');
+ let a=createRun(runLevels[7],771),recycled=0;
+ for(let tick=0;tick<500;tick++){
+  const b=runStep(runTransition(a,fixtureInput(a)),{type:'idle'},1/60);
+  expect(runInstructionPublication(b)).toBe(runHud(b).teaching);
+  for(let i=0;i<5;i++){
+   expect(runRowPublication(b,i)).toEqual(runHud(b).spec[i]);
+   if(a.rows[i].serial===b.rows[i].serial)expect(samePublication(runRowPublication(a,i),runRowPublication(b,i))).toBe(true);
+   else recycled++;
+  }
+  a=b;
+ }
+ expect(recycled).toBeGreaterThan(1);
+});
