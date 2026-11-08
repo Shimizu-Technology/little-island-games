@@ -29,6 +29,7 @@ import {
 import { translatedBounds } from "../scene/spatial";
 import { carriedCentre } from "./carry";
 import { prepareHits, pickEntity, onShapes } from "./pick";
+import { pickupScene, type PickupScene } from "./pickupScene";
 import { layoutToken } from "./layout";
 import { settleProgress, canRevealResting } from "./settle";
 import { releaseWindow, type ProbeFrame, type ProbeRelease, type ReleaseProbe } from "./frameProbe";
@@ -86,7 +87,7 @@ export type DragSlot = CaptureToken & {
 export type Pickup = CaptureToken & {
   id: EntityId;
   slot: number;
-  scene: Scene;
+  scene: PickupScene;
   grip?: { x: number; y: number };
   destination?: Scene;
   identities?: Record<string, string>;
@@ -187,6 +188,11 @@ export function useInteraction({
     }),
     [scene]
   );
+  // Transfer one string, then materialize plain UI objects before a gesture.
+  // Thousands of lazy shareable getters otherwise land on the first drag frame.
+  const encodedScene = useMemo(() => JSON.stringify({ ...scene, rooms: Object.fromEntries(
+    Object.entries(scene.rooms).map(([id, index]) => [id, { ...index, entities: {} }])
+  ) }), [scene]);
   const prepared = useSharedValue(resolverScene);
   const stagingContacts = useSharedValue<Record<string, { x: number; y: number }>>({});
   const externalSubjects = useSharedValue<Record<string, SceneEntity>>({});
@@ -229,7 +235,12 @@ export function useInteraction({
   const fixtureNudges = useSharedValue<Record<string, number>>({});
   const cameraGesture = useSharedValue(false);
   useLayoutEffect(() => {
-    prepared.set(resolverScene);
+    runOnUI((encoded: string) => {
+      "worklet";
+      const next = JSON.parse(encoded) as Scene;
+      for (const index of Object.values(next.rooms)) index.entities = next.entities;
+      prepared.set(next);
+    })(encodedScene);
     hitTable.set(hits);
     renderedRevision.set(scene.revision);
     layoutTokens.set(expectedLayout);
@@ -272,7 +283,7 @@ export function useInteraction({
       })
     );
     refreshed.forEach((index) => onDestination?.(index, scene));
-  }, [scene, resolverScene, hits, prepared, hitTable, renderedRevision, slots, building, onDestination, expectedLayout, layoutTokens]);
+  }, [scene, resolverScene, encodedScene, hits, prepared, hitTable, renderedRevision, slots, building, onDestination, expectedLayout, layoutTokens]);
 
   const movable = useSharedValue<Record<string, boolean>>({});
   useLayoutEffect(() => {
@@ -546,9 +557,7 @@ export function useInteraction({
           runOnJS(onPickup)({
             id: effect.entity,
             slot: index,
-            scene: prepared.value.entities[effect.entity]
-              ? prepared.value
-              : { ...prepared.value, entities: { ...prepared.value.entities, [effect.entity]: entity } },
+            scene: pickupScene(prepared.value, entity),
             grip: { x: pointer.grip.x, y: pointer.grip.y },
             generation: slot.generation,
             epoch: slot.epoch,
@@ -1192,7 +1201,7 @@ export function useInteraction({
       slots.set(current.map((s, i) => i === index ? slot : s));
       if (onAccepted) runOnJS(onAccepted)(true);
       runOnJS(onPickup)({ id: subject.id, slot: index,
-        scene: { ...prepared.value, entities: { ...prepared.value.entities, [subject.id]: subject } },
+        scene: pickupScene(prepared.value, subject),
         generation, epoch: slot.epoch, grip: { x: 0, y: 0 } });
       if (reduced) {
         slots.modify(current => { "worklet";

@@ -3,13 +3,16 @@ import { instance } from "../src/home/model";
 import TestRenderer, { act } from "react-test-renderer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { layoutToken } from "../src/home/runtime/layout";
-import { useInteraction, type Interaction } from "../src/home/runtime/useInteraction";
+import { useInteraction, type Pickup, type Interaction } from "../src/home/runtime/useInteraction";
 import { buildingLayout } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
 import { gridCell, screenPoint, roomPoint, type Scene, type SceneEntity } from "../src/home/scene/types";
 import { roomIds } from "../src/home/catalogMore";
 const harness = vi.hoisted(() => ({
   deferUI: false,
+  pickups: [] as Pickup[],
+  inUI: false,
+  publications: [] as {scene: Scene; inUI: boolean}[],
   ui: [] as (() => void)[],
   frames: [] as ((frame: { timeSincePreviousFrame: number }) => void)[],
   js: [] as (() => void)[],
@@ -57,7 +60,11 @@ vi.mock("react-native-reanimated", async () => {
           },
           set(value: any) {
             const next = typeof value === "function" ? value(this.value) : value;
-            const apply = () => { this.value = next; };
+            const onUI = harness.inUI;
+            const apply = () => {
+              this.value = next;
+              if (next?.rooms && next?.entities && typeof next.revision === 'string') harness.publications.push({scene:next,inUI:onUI});
+            };
             if (harness.deferUI) harness.ui.push(apply); else apply();
           },
         };
@@ -68,8 +75,8 @@ vi.mock("react-native-reanimated", async () => {
     },
     runOnUI: (fn: (...args: any[]) => void) => (...args: any[]) => {
       const apply = () => {
-        const deferred = harness.deferUI; harness.deferUI = false;
-        try { fn(...args); } finally { harness.deferUI = deferred; }
+        const deferred = harness.deferUI, wasUI = harness.inUI; harness.deferUI = false; harness.inUI = true;
+        try { fn(...args); } finally { harness.deferUI = deferred; harness.inUI = wasUI; }
       };
       if (harness.deferUI) harness.ui.push(apply); else apply();
     },
@@ -154,6 +161,7 @@ function Probe({ scene, layout = true, designing = false, reduced = false }: { s
     designing,
     onCameraChange: cameraChange,
     onPickup: (pickup) => {
+      harness.pickups.push(pickup);
       const slot = current.slots.get()[pickup.slot];
       if (slot.id === pickup.id && slot.generation === pickup.generation && slot.epoch === pickup.epoch)
         { current.ready(pickup.slot, pickup.id);
@@ -190,6 +198,9 @@ beforeEach(() => {
   cameraChange.mockClear();
   (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
   harness.deferUI = false;
+  harness.pickups = [];
+  harness.inUI = false;
+  harness.publications = [];
   harness.ui = [];
   harness.frames = [];
   harness.js = [];
@@ -1100,5 +1111,23 @@ it('R2-P3-1 a catalog capacity refusal reports why its slot was cleared',async()
  let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<CapacityProbe/>);});
  current.externalDown(-500,prop.id,screenPoint(100,300),prop);current.externalDrop(-500,screenPoint(400,500),false);flushJS();
  expect(clear).toHaveBeenCalledExactlyOnceWith(0,prop.id,'capacity');expect(current.slots.get().every(s=>!s.id)).toBe(true);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+
+it('R2-P1-2 publishes materialized UI scene data before the first drag query',async()=>{
+ const scene=fixture();let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={scene}/>);});
+ touch('down',120,300);touch('move',180,400);flushJS();
+ const publication=harness.publications.at(-1)!;expect(publication).toBeDefined();expect(publication.inUI).toBe(true);
+ expect(publication.scene.entities[entity.id]).not.toBe(scene.entities[entity.id]);
+ expect(publication.scene.entities[entity.id]).toEqual(scene.entities[entity.id]);
+ for(const room of Object.values(publication.scene.rooms))expect(room.entities).toBe(publication.scene.entities);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+it('R2-P1-2 pickup publication leaves resolver-only sample caches on UI',async()=>{
+ const scene=fixture();scene.entities[entity.id]={...entity,catalogSamples:[roomPoint(1,2)]};scene.rooms.home.entities=scene.entities;
+ scene.rooms.home.catalogNeighbours=[{id:entity.id,bounds:entity.bounds,depth:300,samples:[]}];
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={scene}/>);});
+ touch('down',120,300);touch('move',180,400);flushJS();const pickup=harness.pickups.at(-1)!;
+ expect(pickup.scene.entities[entity.id].catalogSamples).toBeUndefined();expect(pickup.scene).not.toHaveProperty("rooms");
  await act(async()=>tree.unmount());vi.useRealTimers();
 });
