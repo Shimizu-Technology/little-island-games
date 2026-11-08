@@ -2,11 +2,12 @@ import {expect,it} from 'vitest';
 import {canoeMatrix,deckSide} from '../src/arcade/games/lagoon-run/bakedGeometry';
 import {mapPoint,type Quad} from '../src/arcade/games/lagoon-run/quad';
 import {projectTrack} from '../src/arcade/games/lagoon-run/camera';
+import {CANOE_DEPTH} from '../src/arcade/games/lagoon-run/geometry';
 import atlas from '../assets/arcade/lagoon/manifest.json';
 it('keeps the entire canoe crop finite and bounded from the horizon through stern contact, in all lanes',()=>{
  for(let n=-119;n<=156;n++)for(const lane of [0,1,2]) {
   const z=n/100,frame=z<.35?0:z<.8?1:z<1.2?2:3,meta=atlas.canoes[frame];
-  const q=[projectTrack(lane-.3,z),projectTrack(lane+.3,z),projectTrack(lane+.3,z-.18),projectTrack(lane-.3,z-.18)] as Quad,h=canoeMatrix(q,meta);
+  const q=[projectTrack(lane-.3,z),projectTrack(lane+.3,z),projectTrack(lane+.3,z-CANOE_DEPTH),projectTrack(lane-.3,z-CANOE_DEPTH)] as Quad,h=canoeMatrix(q,meta);
   for(const x of [0,meta.width])for(const y of [0,meta.height]) {
    const w=h[6]*x+h[7]*y+h[8],a=mapPoint(h,x,y);
    expect(w,`z=${z} frame=${frame}`).toBeGreaterThan(0);
