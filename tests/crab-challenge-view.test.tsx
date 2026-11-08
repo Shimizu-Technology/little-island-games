@@ -81,3 +81,9 @@ it('P3-5: equivalent replayed arrays do not restart the hint search',async()=>{
  await act(async()=>root!.update(<ChallengeBoard state={{...s,program:[...s.program]}} dispatch={vi.fn()} active width={335}/>));expect(spy.mock.calls.length).toBe(n);expect(JSON.stringify(root!.toJSON())).not.toContain('Finding one step');
  }finally{spy.mockRestore();}
 });
+it('largest text: titles, instructions and navigation scroll while beach and program stay pinned',async()=>{
+ const s=state(7);vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);await act(async()=>{root=create(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335} header={<p>Full size puzzle title</p>} footer={<button>Choose another puzzle</button>}/>);});
+ const controls=root!.root.findByProps({accessibilityLabel:'Plan and commands'});expect(controls.findAllByType('p').some(p=>p.children.includes('Full size puzzle title'))).toBe(true);
+ expect(controls.findAllByType('button').some(b=>b.children.includes('Choose another puzzle'))).toBe(true);
+ expect(root!.root.findByProps({accessibilityLabel:'Your program editor'}).props.horizontal).toBe(true);
+});

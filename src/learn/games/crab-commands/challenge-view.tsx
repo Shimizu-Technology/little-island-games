@@ -10,7 +10,7 @@ import { AudioPreferences, useSoundControls } from '../../../components/Audio';
 import { useCrabHint } from './useCrabHint';
 import { useReducedMotion } from '../../../components/motion';
 
-export function ChallengeBoard({state:s,dispatch,active,width,onSettled}:ChallengeViewProps<State,Action>) {
+export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,footer}:ChallengeViewProps<State,Action>) {
   const prefs=useContext(AudioPreferences), {play,stop}=useSoundControls(prefs.sound??true), reduced=useReducedMotion();
   const [selected,setSelected]=useState<number|null>(null), [mode,setMode]=useState<'replace'|'insert'>('replace');
   const [playback,setPlayback]=useState({run:s.runs,cursor:s.cursor,playing:false});
@@ -47,17 +47,20 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled}:Challen
     <View style={{flexDirection:'row',gap:10,alignItems:'center'}}>
     <Beach level={d.level} walker={result.walker} size={Math.max(140,Math.min(width*0.5,200))} facingHint={d.level.pace!=='easy'} plan={!s.supportOff&&!running&&!s.won?planned:undefined} showBump={!s.supportOff&&!running&&!s.won}/>
     <View style={{flex:1,gap:6}}>
-    {d.budget!==null&&<Copy style={{fontWeight:'700',fontSize:14}}>{s.runs===0?'Plan cost':'Walking steps'}: {s.runs===0?execute(d,s.program).cost:result.cost} of {d.budget} · Mud 2 / sand 1 / turn 0</Copy>}
-    <Copy accessibilityLiveRegion="polite" style={{fontSize:14}}>{result.won?'Home! Every shell collected.':message}</Copy>
+    {d.budget!==null&&<Copy maxFontSizeMultiplier={1.4} style={{fontWeight:'700',fontSize:14}}>{s.runs===0?'Plan cost':'Walking steps'}: {s.runs===0?execute(d,s.program).cost:result.cost} of {d.budget} · Mud 2 / sand 1 / turn 0</Copy>}
+    <Copy maxFontSizeMultiplier={1.4} accessibilityLiveRegion="polite" style={{fontSize:14}}>{result.won?'Home! Every shell collected.':message}</Copy>
     </View></View>
-    <Copy style={{fontSize:14}}>Plan · {s.program.length} {s.program.length===1?'card':'cards'} · {s.runs} {s.runs===1?'run':'runs'}{s.supportOff?' · Footprints off':''}</Copy>
+    <Copy maxFontSizeMultiplier={1.3} style={{fontSize:14}}>Plan · {s.program.length} {s.program.length===1?'card':'cards'} · {s.runs} {s.runs===1?'run':'runs'}{s.supportOff?' · Footprints off':''}</Copy>
     {!s.won&&<ScrollView horizontal style={{flexGrow:0,maxHeight:94}} contentContainerStyle={{flexDirection:'row',gap:6,padding:6,borderRadius:12,backgroundColor:C.paper,minHeight:80}} accessibilityLabel="Your program editor">
       {!s.program.length&&<Copy>Tap a command below to add it.</Copy>}
       {s.program.map((c,i)=><PressableScale key={i} disabled={disabled} accessibilityRole="button" accessibilityState={{selected:selected===i}} accessibilityLabel={`Card ${i+1}: ${cardLabel[c]}. Select to change, insert before, or remove.`} onPress={()=>{setSelected(selected===i?null:i);setMode('replace');}} style={{minWidth:48,minHeight:60,padding:4,alignItems:'center',justifyContent:'center',borderWidth:2,borderColor:selected===i?C.teal:running&&cursor===i?'#B0563A':C.line,borderRadius:10,backgroundColor:selected===i?C.soft:C.cream}}>
-        <Copy style={{fontSize:12}}>{i+1}</Copy><ArrowArt command={c}/>
+        <Copy maxFontSizeMultiplier={1.3} style={{fontSize:12}}>{i+1}</Copy><ArrowArt command={c}/>
       </PressableScale>)}
     </ScrollView>}
     {!s.won&&<ScrollView style={{flex:1,minHeight:0}} contentContainerStyle={{gap:10,paddingBottom:8}} accessibilityLabel="Plan and commands">
+    {header}
+    <Copy>{result.won?'Home! Every shell collected.':message}</Copy>
+    {d.budget!==null&&<Copy>{s.runs===0?'Plan cost':'Walking steps'}: {s.runs===0?execute(d,s.program).cost:result.cost} of {d.budget}. Mud costs 2, sand 1, turns 0.</Copy>}
     <Copy>{d.lesson}</Copy>
     {learnSources[lessonAudio(d.level.id)]&&<Button compact quiet disabled={!active} onPress={()=>play(lessonAudio(d.level.id))}>Hear this puzzle</Button>}
     {learnSources[rulesAudio]&&<Button compact quiet disabled={!active} onPress={()=>play(rulesAudio)}>Hear rules</Button>}
@@ -94,6 +97,7 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled}:Challen
     </View>}
     <Button quiet disabled={disabled} onPress={()=>send(['h'])}>Help</Button>
     {learnSources['c1-crab-marks']&&<Button compact quiet disabled={disabled} onPress={()=>play('c1-crab-marks')}>Hear about marks</Button>}
+    {footer}
     </ScrollView>}
   </View>;
 }

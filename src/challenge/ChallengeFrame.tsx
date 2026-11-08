@@ -75,11 +75,12 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   const round=saved??completed, playable=entry.puzzles.filter(p=>!p.retired), full=progress.paused.filter(s=>!s.credited).length>=(owner.startsWith('cove-')?4:8), marks=dareBits(progress.dares)?.filter(Boolean).length??0;
   const back=()=>router.canGoBack()?router.back():router.replace('/');
   const pinned=!!entry.animatedRuns&&!picking&&!!round&&(!round.result||settling);
-  return <SafeAreaView style={styles.page}><ScrollView scrollEnabled={!pinned} contentContainerStyle={[styles.content,{gap:pinned?8:14,padding:20,...(pinned?{flex:1}: {})}]}>
-    <View style={{flexDirection:'row',flexWrap:'wrap',gap:10,alignItems:'center'}}><Button quiet compact onPress={back}>Back</Button><Heading>Challenge</Heading><LearnerChip compact/></View>
-    {!pinned&&<><Copy>Deep Water is a big stretch. Endless Tide has more puzzles. Every choice is open.</Copy><Copy>Your marks: {marks}. Marks are kept and never spent.</Copy></>}<SaveStatus/>
-    {!!message&&<View accessibilityLiveRegion="polite"><Copy>{message}</Copy></View>}
-    {capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>Start fresh with this plan</Button>}
+  return <SafeAreaView style={styles.page}><ScrollView scrollEnabled={!pinned} contentContainerStyle={[styles.content,{gap:pinned?8:14,padding:20,...(pinned?{flex:1,paddingHorizontal:12,paddingTop:10,paddingBottom:10}: {})}]}>
+    <View style={{flexDirection:'row',flexWrap:'wrap',gap:10,alignItems:'center'}}><Button quiet compact maxFontSizeMultiplier={pinned?1.3:undefined} onPress={back}>Back</Button>{!pinned&&<Heading>Challenge</Heading>}<LearnerChip compact/></View>
+    {!pinned&&<><Copy>Deep Water is a big stretch. Endless Tide has more puzzles. Every choice is open.</Copy><Copy>Your marks: {marks}. Marks are kept and never spent.</Copy></>}
+    {!pinned&&<SaveStatus/>}
+    {!pinned&&!!message&&<View accessibilityLiveRegion="polite"><Copy>{message}</Copy></View>}
+    {!pinned&&capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>Start fresh with this plan</Button>}
     {picking ? <>
       <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>{(['deep-water','endless'] as ChallengePath[]).filter(path=>playable.some(p=>p.path===path)).map(path=><Chip key={path} selected={selection.path===path} onPress={()=>{setSelection(playable.find(p=>p.path===path)!);setDares([]);}}>{path==='deep-water'?'Deep Water · A big stretch':'Endless Tide'}</Chip>)}</View>
       {playable.filter(p=>p.path===selection.path).map(p=><Button quiet key={`${p.ref.bank}-${p.ref.puzzle}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);}}>{p.title} · Tide {p.tier}</Button>)}
@@ -89,16 +90,19 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
       {(!saved || replace)&&(!full||!!saved||!!replacementGame) ? <Button disabled={busy} onPress={()=>void launch()}>Start this puzzle</Button>:null}
       <Button quiet onPress={back}>Easier choice · Levels 1–5</Button>
     </> : round ? <>
-      <Heading style={{fontSize:22}}>{entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.title}</Heading>
+      {!pinned&&<Heading style={{fontSize:22}}>{entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.title}</Heading>}
       {/* The registered Board receives dispatch only as an event callback; render does not invoke it. */}
       {(!round.result||entry.animatedRuns)&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={store.challengeOpen} expected={expected(round)} render={()=><>
-        {entry.render(round,a=>void dispatch(a),focused&&(!busy||settling),width-40,onSettled)}
+        {entry.render(round,a=>void dispatch(a),focused&&(!busy||settling),width-(pinned?24:40),onSettled,pinned?{
+          header:<><Heading style={{fontSize:22}}>{entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.title}</Heading><SaveStatus/>{!!message&&<Copy accessibilityLiveRegion="polite">{message}</Copy>}{capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>Start fresh with this plan</Button>}</>,
+          footer:<><Button quiet disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);}}>Another puzzle</Button><Button quiet onPress={back}>Easier choice · Levels 1–5</Button></>,
+        }:undefined)}
         {!entry.animatedRuns&&<Button quiet disabled={busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}
       </>}/>}
       {round.result&&!settling ? <><Heading>{round.result.event==='together'?'You solved it together!':'Puzzle solved!'}</Heading><Copy>{round.result.dares.length?'Your dare mark is kept.':'Your finished puzzle is kept. Helped finishes count too.'}</Copy>
         {owner!=='family'&&round.partner===null&&<ResultOffer progress={progress} context={entry.contextFor(round.puzzle)} comfort={comfort} facts={{atPar:round.result.event==='independent'&&round.result.cost!==null&&round.result.cost<=(entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.par?.upper??-1),firstHigher:false,dare:!!entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.dares.some(d=>!d.retired),easier:playable.some(p=>p.tier<(entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.tier??1)),harder:playable.some(p=>p.tier>(entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.tier??6))}} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle);const next=kind==='dare'?current:playable.find(p=>p.path===current?.path&&(kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1)));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);}}/>}
       </> : null}
-      <Button quiet disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);}}>Another puzzle</Button><Button quiet onPress={back}>Easier choice · Levels 1–5</Button>
+      {!pinned&&<><Button quiet disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);}}>Another puzzle</Button><Button quiet onPress={back}>Easier choice · Levels 1–5</Button></>}
     </>:null}
   </ScrollView><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;
 }

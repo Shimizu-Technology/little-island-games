@@ -97,6 +97,6 @@ export function defineReplayGame<D,P,A,S>(config: {
       if(jsonBytes(next)>4096 || !replay(next))return null;
       const result={...next,result:evaluate(next)};return validChallengeSession(result,s.owner,catalog,s.owner.startsWith('cove-'))?result:null;
     },
-    render:(s,dispatch,active,width,onSettled)=>{const round=replay(s);return round ? <config.Board state={round.state} dispatch={dispatch} active={active} width={width} onSettled={onSettled}/> : null;},
+    render:(s,dispatch,active,width,onSettled,chrome)=>{const round=replay(s);return round ? <config.Board state={round.state} dispatch={dispatch} active={active} width={width} onSettled={onSettled} {...chrome}/> : null;},
   };
 }
