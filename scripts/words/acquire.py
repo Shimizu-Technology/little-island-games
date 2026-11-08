@@ -5,7 +5,7 @@ ROOT=pathlib.Path(__file__).resolve().parents[2]
 
 def external(path):
     p=pathlib.Path(path).resolve()
-    if p==ROOT or ROOT in p.parents: raise ValueError('Private workspace must be outside app repository')
+    if any(a.exists() and a.samefile(ROOT) for a in [p,*p.parents]): raise ValueError('Private workspace must be outside app repository')
     return p
 
 def verify_sources(directory):

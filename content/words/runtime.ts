@@ -2,7 +2,7 @@
 export const missingWordReply = "That word isn't in this puzzle's list.";
 const key = (s: string) => s.trim().toUpperCase();
 export function acceptsWord(input: string, accept: readonly string[]): boolean {
-  return /^[A-Z]+$/.test(key(input)) && accept.includes(key(input));
+  return /^[A-Z]+(?: [A-Z]+)*$/.test(key(input)) && accept.includes(key(input));
 }
 export function acceptsLadderStep(previous: string, next: string, accept: readonly string[]): boolean {
   const a = key(previous), b = key(next);

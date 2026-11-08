@@ -3,7 +3,7 @@
 Usage: python3 scripts/words/prepare-data.py <private-sources> <new-private-output> <HafaGPT/api>
 Requires pinned public sources plus private scan-sources.private.json downloaded by the lead.
 """
-import collections,gzip,hashlib,json,pathlib,re,sys,tarfile,unicodedata,xml.etree.ElementTree as ET
+import collections,gzip,hashlib,json,pathlib,re,secrets,sys,tarfile,unicodedata,xml.etree.ElementTree as ET
 sys.dont_write_bytecode=True
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent))
 from acquire import ROOT,external,verify_sources
@@ -12,6 +12,16 @@ def sha(data):return hashlib.sha256(data).hexdigest()
 def dump(path,value):path.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')
 def fold(s):return ''.join(c for c in unicodedata.normalize('NFD',s) if not unicodedata.combining(c)).upper()
 def scan_words(words):return {fold(w) for w in words if re.fullmatch('[A-Z]{3,40}',fold(w))}
+def dictionary_definition(record,key):
+    definition=record if isinstance(record,str) else record.get(key) if isinstance(record,dict) and key else None
+    if not isinstance(definition,str) or not definition.strip():raise ValueError('Missing/non-string dictionary definition; explicit schema upgrade required')
+    return definition
+
+def sensitive_headword(head):
+    text=re.sub(r"['’ -]",'',fold(head))
+    if not re.fullmatch('[A-Z]{2,40}',text):raise ValueError('Unrecognized sensitive headword')
+    return text
+
 def components(words):
     words=set(words); patterns=collections.defaultdict(list)
     for word in words:
@@ -55,13 +65,17 @@ def prepare(src,out,hafa):
         broad|=scan_words(words)
     # Keep original dictionary data private. No CHamoru text is generated or corrected.
     sensitive=set();pattern=re.compile(r'\b(vulgar|obscene|taboo|profan\w*|penis|vagina|genital\w*|testicle\w*|copulat\w*|sexual intercourse|fornicat\w*|prostitut\w*|buttocks|anus|feces|excrement|curse word)\b',re.I)
+    dictionary_lock=json.loads((src/'dictionary-sources.private.json').read_text())
+    if dictionary_lock.get('minimumSensitiveHeadwords',0)<1:raise ValueError('Pinned sensitive-headword minimum required')
     dictionary_hashes={}
     for name,key in [('chamorro_english_dictionary_TOD.json','df'),('chamoru_info_dictionary.json',None),('revised_and_updated_chamorro_dictionary.json','Definition')]:
         data=(hafa/'dictionary_data'/name).read_bytes();dictionary_hashes[name]=sha(data)
+        if dictionary_lock['sha256'].get(name)!=sha(data):raise ValueError('Private dictionary hash mismatch')
         for head,record in json.loads(data).items():
-            definition=record if isinstance(record,str) else record.get(key,'')
-            if pattern.search(definition or ''):sensitive|=scan_words([head.replace("'",'').replace('’','').replace('-','')])
-    broad|=sensitive
+            definition=dictionary_definition(record,key)
+            if pattern.search(definition or ''):sensitive.add(sensitive_headword(head))
+    if len(sensitive)<dictionary_lock['minimumSensitiveHeadwords']:raise ValueError('Sensitive-headword census unexpectedly small')
+    broad|={w for w in sensitive if len(w)>=3}
     canonical_path=hafa/'language_content/canonical_vocabulary.json';canonical=json.loads(canonical_path.read_text())['entries']
     if sha(canonical_path.read_bytes())!=sources['hafagpt-canonical']['sha256']:raise ValueError('Local HafaGPT source changed; explicit source upgrade required')
     # Only permitted OEWN senses and form links; no age norms, frequency tables or existing clue lists.
@@ -111,7 +125,7 @@ def prepare(src,out,hafa):
         chosen=[r['id'] for r in theme_queue if r['spelling'] in t['seeds'] or r['topic'] in t['topics']]
         theme_packs.append({'id':t['id'],'name':t['name'],'wordIds':chosen[:60],'needsSemanticReview':True})
     out.mkdir(parents=True)
-    policy={'schemaVersion':1,'scan':sorted(broad),'core':sorted(core),'chamoruSensitive':sorted(sensitive),'exact':sorted(core),'lemmas':sorted({lemma_for(w) for w in core}),'rejectedCounts':{},'sources':scan_sources,'dictionaryHashes':dictionary_hashes,'limits':['Broad union is not proof against unlisted words','Wiktionary vulgar/offensive/slur snapshot is private scanning only; census still needs actual read','CHamoru definition search is not a fluent-reader check']}
+    policy={'schemaVersion':1,'canaries':['PRIVATEWORD'+secrets.token_hex(16).upper()],'scan':sorted(broad),'core':sorted(core),'chamoruSensitive':sorted(sensitive),'exact':sorted(core),'lemmas':sorted({lemma_for(w) for w in core}),'rejectedCounts':{},'sources':scan_sources,'dictionaryHashes':dictionary_hashes,'limits':['Broad union is not proof against unlisted words','Wiktionary vulgar/offensive/slur snapshot is private scanning only; census still needs actual read','CHamoru definition search is not a fluent-reader check']}
     dump(out/'safety-policy.private.json',policy)
     for name,data in [('tiers.queue',{'words':tier_words}),('local.queue',{'words':local}),('themes.queue',{'words':theme_queue,'packs':theme_packs}),('ladder.queue',{'words':[record(w) for w in ladder_words]}),('census.queue',{'words':[{'id':'census-'+w.lower(),'spelling':w,'machineFlag':w in broad} for w in census]})]:
         dump(out/(name+'.json'),{'schemaVersion':1,'fixture':False,'reviewState':'awaiting-actual-review','basis':'SCOWL levels/length + OEWN lemma candidates; bands are guesses, no age/frequency norms',**data})

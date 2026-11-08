@@ -20,7 +20,7 @@ def verify(directory,words,canonical_terms):
             assert any(t['id']==w['canonicalId'] and t['review_status']=='source_backed' and t['recommended_teaching_term']==w['spelling'] for t in canonical_terms),'Invalid canonical spelling'
             continue
         assert w['spelling'] in (american if w['source']['id']=='scowl' else local),'Answer is not in its pinned American/editorial source'
-        assert all(v in american|british for v in w['british']),'Unpinned British variant'
+        assert all(v in british for v in w['british']),'Unpinned British-only variant'
     return {'passed':True,'words':len(words),'implementation':'pinned-source-membership-v1'}
 if __name__=='__main__':
     try:

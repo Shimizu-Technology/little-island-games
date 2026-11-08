@@ -20,9 +20,13 @@ const secret = /-----BEGIN (?:[A-Z ]*PRIVATE KEY|OPENSSH PRIVATE KEY)-----|\b(?:
 const credentialField = /["']?(?:ascApiKeyId|appStoreConnectApiKeyId|apiKeyId|api[_-]?key|access[_-]?token|auth[_-]?token|client[_-]?secret|password)["']?\s*[:=]\s*["'][^"'\s]{8,}["']/i;
 const forbiddenFile = /(?:^|\/)(?:\.env(?:\..*)?|[^/]+\.(?:p8|p12|pem|key|mobileprovision)|credentials\.json)$/i;
 
+export function isPrivateWordFile(name) {
+  return name.startsWith('scripts/words/') || name === 'scripts/words' || /(?:^|\/)words\/.*(?:\.draft\.|sources\.lock)/i.test(name) || /^tests\/(?:word-pipeline|helpers\/word-)/.test(name);
+}
 function tree(dir, prefix = '') {
   return readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
     const path = join(dir, entry.name), name = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (isPrivateWordFile(name)) return [];
     if (entry.isSymbolicLink()) throw new Error(`Symlinks are not exportable: ${name}`);
     if (entry.isDirectory()) return excluded.has(entry.name) ? [] : tree(path, name);
     if (!entry.isFile()) throw new Error(`Unsupported file: ${name}`);
@@ -105,6 +109,11 @@ export function exportPublic(target) {
         if (config.expo.ios?.buildNumber) config.expo.ios.buildNumber = '1';
         if (config.expo.android?.versionCode) config.expo.android.versionCode = 1;
         bytes = Buffer.from(JSON.stringify(config, null, 2) + '\n');
+      } else if (path === 'package.json') {
+        const config=JSON.parse(bytes);
+        for(const key of Object.keys(config.scripts)) if(key.startsWith('check:words')) delete config.scripts[key];
+        config.scripts.check=config.scripts.check.replace(' && npm run check:words:export','');
+        bytes=Buffer.from(JSON.stringify(config,null,2)+'\n');
       } else if (path === 'eas.json') {
         const config = JSON.parse(bytes);
         delete config.submit; // Contributors supply their own account, team and store app.

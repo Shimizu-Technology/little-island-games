@@ -88,7 +88,7 @@ describe('private eight-direction scan and independent verifier', () => {
   it('folds only the scan, including starts/ends inside digraphs and glota', () => {
     const grid=[['Å','Ñ','A']];const original=structuredClone(grid);
     expect(scanGrid(grid,['ANA']).length).toBeGreaterThan(0);
-    expect(()=>independentlyVerify([{id:'accent',cells:grid}],['ANA'])).toThrow();
+    expect(()=>independentlyVerify([{id:'accent',cells:grid}],['ANA'])).toThrow('verification failed');
     expect(grid).toEqual(original);
     expect(scanGrid([['CH','A','T']],['HAT']).length).toBeGreaterThan(0);
     expect(scanGrid([['C',"'",'O','L','D']],['COLD']).length).toBeGreaterThan(0);
@@ -97,7 +97,7 @@ describe('private eight-direction scan and independent verifier', () => {
     const cells=[['C','O','L','D','Q','C','O','L','D']];
     const listed=[{wordId:'test',answer:'COLD',cells:[[0,0],[0,1],[0,2],[0,3]]}];
     expect(scanGrid(cells,policy.scan,listed)).toHaveLength(1);
-    expect(()=>independentlyVerify([{id:'test',cells,listed}],policy.scan)).toThrow();
+    expect(()=>independentlyVerify([{id:'test',cells,listed}],policy.scan)).toThrow('verification failed');
     expect(()=>scanGrid(cells,policy.scan,[{...listed[0],answer:'WARM'}])).toThrow('spelling mismatch');
     const clean=[['C','O','L','D']];
     expect(scanGrid(clean,policy.scan,listed)).toEqual([]);
@@ -111,11 +111,16 @@ describe('private eight-direction scan and independent verifier', () => {
   });
   it('agrees with the independent checker on 100 mixed-cell fixtures', () => {
     let seed=123;
-    const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed;};
+    const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed >>> 16;};
     const alphabet=['A','N','Å','Ñ','C','CH','H','T',"'",'#'],terms=['ANA','HAT','CAT','ANT','NAN'];
     const grids=Array.from({length:100},(_,i)=>({id:`TEST-ONLY-${i}`,cells:Array.from({length:5},()=>Array.from({length:5},()=>alphabet[random()%alphabet.length])),listed:[]}));
+    for (let i=0;i<grids.length;i+=10) {
+      grids[i].cells[0].splice(0,3,'C','A','T');
+      (grids[i].listed as any[]).push({wordId:'cat',answer:'CAT',cells:[[0,0],[0,1],[0,2]]});
+    }
     const cleanPath=(cells: number[][], grid: any)=>cells.filter(([r,c])=>foldScan(grid[r][c]).length).map(p=>p.join(',')).sort().join(';');
-    const expected=new Set(grids.flatMap(g=>scanGrid(g.cells,terms).map((hit: any)=>`${g.id}:${hit.term}:${cleanPath(hit.cells,g.cells)}`)));
+    const expected=new Set(grids.flatMap(g=>scanGrid(g.cells,terms,g.listed).map((hit: any)=>`${g.id}:${hit.term}:${cleanPath(hit.cells,g.cells)}`)));
+    for (const term of terms) expect([...expected].some(k=>k.includes(`:${term}:`))).toBe(true);
     const python=spawnSync('python3',['-I','scripts/words/verify.py'],{input:JSON.stringify({grids,terms}),encoding:'utf8'});
     expect(python.error).toBeUndefined();
     const result=JSON.parse(python.stdout);
@@ -141,18 +146,20 @@ describe('private eight-direction scan and independent verifier', () => {
     expect(checkSurfaces({words,surfaces:[{id:'cross',kind:'crossword',wordIds:['reef'],cells:[['R','E','E','F']]}],policy}).passed).toBe(true);
     expect(()=>checkSurfaces({words,surfaces:[{id:'cross',kind:'crossword',wordIds:['reef'],cells:[['C','O','L','D']]}],policy})).toThrow('unreviewed run');
     expect(checkSurfaces({words,surfaces:[{id:'scramble',kind:'scramble',wordIds:['reef'],shuffle:'FERE'}],policy}).grids).toBe(1);
-    expect(()=>checkSurfaces({words,surfaces:[{id:'ladder',kind:'ladder',wordIds:['reef'],}],policy:{...policy}})).not.toThrow();
+    expect(()=>checkSurfaces({words,surfaces:[{id:'ladder',kind:'ladder',wordIds:['reef'],}],policy:{...policy}})).not.toThrow(Error);
     expect(()=>checkSurfaces({words:[word('COD')],surfaces:[{id:'builder',kind:'builder',wordIds:['cod'],cells:[['C','Q','D'],['Q','O','L'],['R','Q','Q']]}],policy})).toThrow('builder');
   });
   it('keeps synthetic/inline approval claims out of shipping', () => {
     expect(()=>bakeBank({fixture:true,words:[],surfaces:[],policy,sourceDirectory:'unused-test-fixture'})).toThrow('fixtures');
-    expect(()=>bakeBank({words:[{...word(),status:'approved'}],surfaces:[{id:'test'}],policy,sourceDirectory:'unused-test-fixture'})).toThrow('review evidence');
+    expect(()=>requireShippingReview({...word(),status:'approved'},undefined)).toThrow('review evidence');
   });
 });
 
 describe('closed device word helpers', () => {
   it('accepts reviewed British variants, arbitrary listed ladder steps and all listed anagrams', () => {
     expect(acceptsWord(' colour ',['COLOR','COLOUR'])).toBe(true);
+    expect(acceptsWord(' trade wind ',['TRADE WIND'])).toBe(true);
+    expect(acceptsWord('TRADE  WIND',['TRADE WIND'])).toBe(false);
     expect(acceptsLadderStep('COLD','CORD',['CORD'])).toBe(true);
     expect(acceptsLadderStep('COLD','WARM',['WARM'])).toBe(false);
     expect(acceptsAnagram('MEAT','TEAM',['TEAM','MEAT'])).toBe(true);
@@ -162,7 +169,7 @@ describe('closed device word helpers', () => {
   it('has only closed, bounded hint templates', () => {
     expect(wordHintText({kind:'starts',letter:'S'})).toBe('Starts with S.');
     expect(wordHintText({kind:'length',length:4})).toBe('Has 4 letters.');
-    expect(()=>wordHintText({kind:'starts',letter:'Free text'})).toThrow();
+    expect(()=>wordHintText({kind:'starts',letter:'Free text'})).toThrow('Invalid closed word hint');
   });
 });
 
@@ -214,11 +221,13 @@ describe('blind review transport, reconciliation and no fabricated approvals', (
   it('fails partial, duplicate, stale, same-family, edited and transcript-free results', () => {
     const prepared=prepareBatch([clue()],options), [pa,pb]=prepared.packets;
     const a=reviewed(pa,'openai'), b=reviewed(pb,'anthropic');
-    expect(()=>validateReview(pa,{...a,items:[]},a.transcriptSha256)).toThrow();
-    expect(()=>validateReview(pa,{...a,items:[...a.items,...a.items]},a.transcriptSha256)).toThrow();
-    expect(()=>validateReview(pa,{...a,packetSha256:'f'.repeat(64)},a.transcriptSha256)).toThrow();
+    expect(()=>validateReview(pa,{...a,items:[]},a.transcriptSha256)).toThrow('Empty/duplicate IDs');
+    expect(()=>validateReview(pa,{...a,items:[...a.items,...a.items]},a.transcriptSha256)).toThrow('Empty/duplicate IDs');
+    expect(()=>validateReview(pa,{...a,packetSha256:'f'.repeat(64)},a.transcriptSha256)).toThrow('stale');
     expect(()=>validateReview(pa,a,'f'.repeat(64))).toThrow('transcript');
-    expect(()=>reconcile(prepared,a,reviewed(pb,'openai'))).toThrow('independent');
+    const sameFamily={...b,reviewer:{...b.reviewer,family:'openai'}};
+    const {id:_id,elapsedSeconds:_elapsed,...raw}=sameFamily;
+    expect(()=>reconcile(prepared,a,{...raw,id:digest(raw),elapsedSeconds:60})).toThrow('independent');
     expect(()=>reconcile(prepared,a,{...b,items:[{...b.items[0],verdict:'reject'}]})).toThrow('integrity');
   });
 });
@@ -229,7 +238,7 @@ describe('private data stays outside app and source exports', () => {
     try {
       mkdirSync(join(dir,'content/words/banks'),{recursive:true});
       writeFileSync(join(dir,'content/words/banks/unreviewed.json'),'{}');
-      expect(()=>checkShippingTree(dir,undefined)).toThrow('detached');
+      expect(()=>checkShippingTree(dir,undefined)).toThrow('manifest');
     } finally {rmSync(dir,{recursive:true,force:true});}
   });
   it('gates actual app dependencies and any shipped word bank in normal CI', () => {

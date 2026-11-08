@@ -17,7 +17,7 @@ function trieFor(terms) {
 export function validateListed(grid, listed = []) {
   validateGrid(grid);
   for (const entry of listed) {
-    requireThat(typeof entry.wordId === 'string' && entry.wordId && Array.isArray(entry.cells) && entry.cells.length >= 1, 'Invalid listed path');
+    requireThat(typeof entry.wordId === 'string' && entry.wordId && Array.isArray(entry.cells) && entry.cells.length >= 1 && entry.cells.every(p=>Array.isArray(p) && p.length === 2 && p.every(Number.isInteger)), 'Invalid listed path');
     requireThat(new Set(entry.cells.map(p => p.join(','))).size === entry.cells.length, 'Repeated listed cell');
     let direction;
     for (let i = 0; i < entry.cells.length; i++) {

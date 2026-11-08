@@ -18,4 +18,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+        env:
+          LITTLE_ISLAND_WORD_POLICY_JSON: ${{ secrets.LITTLE_ISLAND_WORD_POLICY_JSON }}
+      - name: Guard the actual web export
+        run: npm run check:words:export
+        env:
+          LITTLE_ISLAND_WORD_POLICY_JSON: ${{ secrets.LITTLE_ISLAND_WORD_POLICY_JSON }}
       - run: npm run doctor

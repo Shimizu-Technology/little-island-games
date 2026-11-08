@@ -21,7 +21,7 @@ try {
     requireThat(input && policyFile && out && id, 'prepare <input.json> <private-policy.json> <new-output-directory> <batch-id>');
     external(out);requireThat(!existsSync(out),'Batch output already exists');
     const data=read(input), policy=read(policyFile), records=data.clues ?? data.words;
-    const prepared=(command === 'prepare' ? prepareBatch : prepareWordBatch)(records,{id,fixture:data.fixture === true,vocabularySha256:digest(data.words ?? data.vocabulary ?? []),scanListSha256:digest([...policy.scan].sort()),canonicalTerms:data.canonicalTerms ?? []});
+    const prepared=(command === 'prepare' ? prepareBatch : prepareWordBatch)(records,{id,fixture:data.fixture,vocabularySha256:digest(data.words ?? data.vocabulary ?? []),scanListSha256:digest([...policy.scan].sort()),canonicalTerms:data.canonicalTerms ?? []});
     for (const [name,value] of Object.entries({ 'batch.private.json':prepared.batch, 'review-a.packet.json':prepared.packets[0], 'review-b.packet.json':prepared.packets[1], 'reconcile.pending.json':prepared.sheet, 'receipt.private.json':prepared.receipt })) write(join(out,name),value);
     write(join(out,'prepared.private.json'),prepared);
     console.log(JSON.stringify({count:records.length,batchSha256:digest(prepared.batch),state:'awaiting-review',fixture:prepared.batch.fixture}));
