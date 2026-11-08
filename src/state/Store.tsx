@@ -103,6 +103,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [epoch, setEpoch] = useState(0);
   const audioPreferences = useMemo(() => ({ ...save.settings, epoch }), [save.settings, epoch]);
   const generation = useRef(0);
+  const boundaryRefused = useRef(false);
   const admittedBytes = useRef(0);
   const latest = useRef(save),
     queue = useRef(Promise.resolve()),
@@ -180,7 +181,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false;
       setReady(true);
     } catch (e) {
-      if(encoded)try{await storage.preserve(encoded);}catch{/* Original remains in active storage; do not publish or replace it. */}
+      if(encoded)try{
+        const newest = (await storage.listRecovery?.())?.[0];
+        if (!newest || await storage.readRecovery?.(newest.key) !== encoded) await storage.preserve(encoded);
+      }catch{/* Original remains in active storage; do not publish or replace it. */}
       setRecovery(e instanceof Error ? e.message : "Saved games could not be opened. Please retry.");
       setReady(true);
     }
@@ -201,7 +205,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [persist, ready, recovery]);
   const commit = useCallback(
     (next: Save, mirrorLibraryLabs = false) => {
-      if (!ready || recovery || restoring.current || uncertainWrite.current) return false;
+      if (restoring.current) {
+        boundaryRefused.current = true;
+        setError('Saved games are still being updated. Please try this change again when saving finishes.');
+        return false;
+      }
+      if (!ready || recovery || uncertainWrite.current) return false;
       next = { ...next, saveRevision:newSaveRevision() };
       const previous = latest.current;
       // Identity changes select another complete profile view; they aren't game transitions.
@@ -518,7 +527,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
         await queue.current;
         const pending = draftRecovery(); if (pending) await storage.preserve(pending);
-        await preserveImportedLearners(storage, encoded, incoming, next, recovery ? null : encodeSave(latest.current), incoming.version !== 3 || !incoming.profiles || !incoming.library || incoming.library.version === 1);
+        await preserveImportedLearners(storage, encoded, incoming, next, recovery && !uncertainWrite.current ? null : encodeSave(latest.current), incoming.version !== 3 || !incoming.profiles || !incoming.library || incoming.library.version === 1);
         clearPageDrafts();
         generation.current += 1;
         setEpoch(generation.current);
@@ -554,7 +563,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       admittedBytes.current = bytes; latest.current = next; setSave(next); setChallengeRefusal(null); setError(null);
       return writeDraft(JSON.stringify([before.saveRevision,session.owner,session.game]),JSON.stringify({version:1,base:before.saveRevision,session}));
     }
-    restoring.current = true;
+    boundaryRefused.current = false; restoring.current = true;
     try {
       await queue.current;
       next = { ...next, saveRevision:newSaveRevision() };
@@ -566,13 +575,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         // A committed write can lose its acknowledgement. Reconcile before allowing another persist.
         let head: string | null;
         try { head = await storage.get(); }
-        catch { uncertainWrite.current = true; setRecovery('The saved state could not be confirmed. Keep the app open and export before retrying.'); throw error; }
+        catch { uncertainWrite.current = true; setRaw(encodeSave(latest.current)); setRecovery('The saved state could not be confirmed. Keep the app open and export before retrying.'); throw error; }
         if (head !== encoded) throw error;
       }
       admittedBytes.current = utf8Bytes(encoded);
-      latest.current = next; setSave(next); setChallengeRefusal(null); setError(null); return true;
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'This change could not be saved. Your saved work is kept.'); return false;
+      latest.current = next; setSave(next); setChallengeRefusal(null); if (!boundaryRefused.current) setError(null); return true;
+    } catch {
+      setError('This change could not be saved. Your saved work is kept. Keep the app open and try again, or export a backup.'); return false;
     } finally { restoring.current = false; }
   },[ready,recovery,writeDraft,refuseChallenge]);
   const challengeDiscard = useCallback(async (expected: ChallengeExpected) => {
@@ -587,9 +596,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const encoded = encodeSave(next); parseSave(encoded);
       if (!storage.discardSession) throw new Error('Discard recovery storage is unavailable.');
       await storage.discardSession(JSON.stringify(slot));
-      await storage.set(encoded,envelopeWrite(next));
+      const meta = envelopeWrite(next);
+      await storage.set(encoded,{ ...meta, folded:[...meta.folded,slot] });
       admittedBytes.current = utf8Bytes(encoded); generation.current++; setEpoch(generation.current);
       latest.current = next; setSave(next); return true;
+    } catch {
+      setError('This paused game could not be removed. Your saved work is kept. Please try again.'); return false;
     } finally { restoring.current = false; }
   },[ready,recovery]);
   const covePerson = useCallback(async (action: Parameters<Store['covePerson']>[0], expectedEpoch:number) => {
@@ -607,6 +619,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       admittedBytes.current = utf8Bytes(encoded);
       generation.current++; setEpoch(generation.current);
       latest.current = next; setSave(next); setBadgeResult(null); return true;
+    } catch {
+      setError('This person could not be updated. Your saved work is kept. Please try again.'); return false;
     } finally { restoring.current = false; }
   },[ready,recovery]);
   const startFresh = useCallback(async () => {

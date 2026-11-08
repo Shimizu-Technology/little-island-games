@@ -217,6 +217,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
           </Copy>
         </>
       )}
+      {!!store.error && <Copy accessibilityRole="alert" style={{ color: C.ink }}>{store.error}</Copy>}
       {!!message && <Copy style={{ color: C.ink }}>{message}</Copy>}
     </Sheet>
   );
