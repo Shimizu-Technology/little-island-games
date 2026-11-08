@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Animated, View } from "react-native";
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from "react-native-svg";
 import { Button, C, Copy, IconButton, PressableScale } from "../../../components/ui";
 import { easeInOut, nativeDriver, useReducedMotion } from "../../../components/motion";
 import type { BoardProps } from "../../types";
+import { useCrabHint } from "./useCrabHint";
 import { CoachSpot } from "../../Coach";
 import { CreatureArt } from "../tide-pool/view";
 import {
@@ -171,7 +172,7 @@ export function Beach({
         accessible
         accessibilityLabel={`Beach. The crab is in row ${Math.floor(walker.pos / 5) + 1}, column ${(walker.pos % 5) + 1}.${
           plan ? ` Your plan walks ${plan.steps.length} squares.` : ""
-        }${bumpAt ? " The plan bumps into something." : ""}${walker.bump ? " The crab bumped." : ""}`}
+        }${bumpAt ? " The plan bumps into something." : ""}${walker.bump ? " The crab bumped." : ""} ${cells.flatMap((c, i) => ["S", "H", "#", "m"].includes(c) ? [`${c === "S" ? "Shell" : c === "H" ? "Home" : c === "m" ? "Mud, two steps" : "Sandcastle"} at row ${Math.floor(i / 5) + 1}, column ${i % 5 + 1}`] : []).join(". ")}`}
       >
         <Rect x="0" y="0" width="250" height="250" rx="16" fill="#F6E3B9" />
         {cells.map((c, i) => {
@@ -207,7 +208,13 @@ export function Beach({
           const x = (i % 5) * 50,
             y = Math.floor(i / 5) * 50,
             gone = c === "S" && !!(walker.shells & (1 << shell++));
-          return c === "#" ? (
+          return c === "m" ? (
+            <G key={i}>
+              <Rect x={x + 3} y={y + 3} width="44" height="44" rx="12" fill="#AD8264" />
+              <Path d={`M${x + 10} ${y + 17}q8 -6 15 0t15 0M${x + 8} ${y + 30}q8 -6 15 0t15 0`} fill="none" stroke="#6F4F3E" strokeWidth="2" />
+              <SvgText x={x + 25} y={y + 43} textAnchor="middle" fontSize="12" fontWeight="700" fill="#FFF9EA">2</SvgText>
+            </G>
+          ) : c === "#" ? (
             <G key={i}>
               <Rect x={x + 2} y={y + 2} width="46" height="46" rx="9" fill="#DDBB8C" />
               <Path
@@ -314,7 +321,7 @@ export function Board({
     done = s.completed.length === 3,
     won = !done && solved(l, w),
     reduced = useReducedMotion(),
-    [hint, setHint] = useState(false),
+    [hint, setHint] = useState(0),
     [wobble, setWobble] = useState(0),
     [flash] = useState(() => new Animated.Value(0));
   const plan = trail(l, s.program);
@@ -365,11 +372,13 @@ export function Board({
   const edit = (program: Command[], placed = false) => {
     if (!active || s.running) return;
     update({ ...s, program, cursor: 0, cards: placed ? Math.min(1000000, s.cards + 1) : s.cards });
-    setHint(false);
+    setHint(0);
     setWobble(0);
   };
   const shortest = solve(l);
   const firstCard = shortest[0];
+  const helpDescriptor = useMemo(() => ({ level: l, budget: null, starter: [], lesson: "" }), [l]);
+  const helpPlan = useCrabHint(helpDescriptor, s.program, hint > 0 && active);
   const bumpedCard = w.bump ? s.cursor - 1 : null;
   const planBumps = plan.bumpCard !== null;
   const beachSize = Math.min(width, height < 740 ? 200 : 280);
@@ -456,7 +465,7 @@ export function Board({
           {won ? (
             <Button
               onPress={() => {
-                setHint(false);
+                setHint(0);
                 update({
                   ...s,
                   completed: [...s.completed, s.program.slice(0, s.cursor)],
@@ -535,18 +544,18 @@ export function Board({
                   disabled={s.running}
                   onPress={() => {
                     if (!hint) assistance?.();
-                    setHint(!hint);
+                    setHint(hint ? 0 : 1);
                     if (!hint) sound("crab-commands-hint");
                   }}
                 >
                   Hint
                 </Button>
               </View>
-              {hint && (
+              {hint > 0 && (
                 <View style={{ gap: 4 }}>
-                  <Copy style={{ fontSize: 13, color: C.ink }}>One plan that works:</Copy>
+                  <Copy style={{ fontSize: 13, color: C.ink }}>{!helpPlan ? "Finding one step…" : hint === 1 ? (helpPlan.next ? `${helpPlan.keep < s.program.length ? "Change" : "Add"} card ${helpPlan.keep + 1}: ${cardLabel[helpPlan.next]}. Keep the cards before it.` : "Your plan reaches home. Press Go to try it.") : hint === 2 ? "Try that one step, or ask for the whole plan." : "One plan that works:"}</Copy>
                   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
-                    {shortest.map((c, i) => (
+                    {(hint === 3 ? helpPlan?.plan ?? shortest : []).map((c, i) => (
                       <PressableScale
                         key={i}
                         accessibilityRole="button"
@@ -565,6 +574,7 @@ export function Board({
                       </PressableScale>
                     ))}
                   </View>
+                  {hint < 3 && <Button quiet disabled={s.running} onPress={() => setHint(hint + 1)}>{hint === 1 ? "More help" : "Show the whole plan"}</Button>}
                 </View>
               )}
             </>

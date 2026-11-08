@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+// The scale model occupies synthetic global ordinals, independent of shipped game banks.
+vi.mock('../src/challenge/registry.generated',()=>({challengeEntries:[]}));
 import { BANK_CAPS } from '../src/puzzles/bank';
 import { measureScale } from '../scripts/puzzles/scale';
 

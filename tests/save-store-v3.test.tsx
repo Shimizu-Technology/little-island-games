@@ -14,6 +14,8 @@ import { addLearner } from '../src/learn/learners';
 import { parseDraft, type ChallengeExpected } from '../src/state/challengeDrafts';
 import { fixtureCatalog, installFixture, moved, session } from './helpers/save-contract';
 const db=vi.hoisted(()=>({raw:null as string|null,preserved:[] as string[],drafts:[] as string[],sets:0,moves:0,preserveFails:false,writeFails:false,draftFails:false,responseFails:false,releaseDraft:null as null|(()=>void),holdDraft:false}));
+// Synthetic ceiling banks deliberately reuse slots; keep this fixture catalog isolated.
+vi.mock('../src/challenge/registry.generated',()=>({challengeEntries:[]}));
 vi.mock('../src/state/storage',()=>({storage:{
  discardSession:async()=>{},
  get:async()=>db.raw,

@@ -129,7 +129,7 @@ function sameCodec(a: SessionCodec, b: SessionCodec): boolean {
   return a.game === b.game && a.cove === b.cove && JSON.stringify(a.budget) === JSON.stringify(b.budget) && a.validate.toString() === b.validate.toString() && a.evaluate.toString() === b.evaluate.toString() && a.canStart.toString() === b.canStart.toString() && a.extends.toString() === b.extends.toString();
 }
 /** Append-only registration seam. F2 passes its generated immutable catalog here before hydration. */
-export function registerSaveContent(content: SaveCatalog, manifest: CatalogManifest = frozenCatalog as CatalogManifest): void {
+export function registerSaveContent(content: SaveCatalog, manifest: CatalogManifest = frozenCatalog as unknown as CatalogManifest): void {
   const ranges: [number,number][]=[], inlineOrdinals=new Set<number>();
   const addRange=(first:number,end:number)=>{if(ranges.some(([a,b])=>first<b && a<end) || [...inlineOrdinals].some(n=>n>=first&&n<end))throw new Error('Duplicate ordinal.');ranges.push([first,end]);};
   const addBank=(bank:Bank)=>{if(packedBank(bank))addRange(bank.first,bank.first+bank.count);else for(const entry of bank.entries){const n=entry.ordinal;if(inlineOrdinals.has(n)||ranges.some(([a,b])=>n>=a&&n<b))throw new Error('Duplicate ordinal.');inlineOrdinals.add(n);}};

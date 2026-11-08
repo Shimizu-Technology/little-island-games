@@ -1,6 +1,8 @@
 import type { InlineBank } from '../src/state/bankFacts';
 import { catalogManifest } from '../src/state/catalogManifest';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
+// Capacity fixtures occupy every dare slot; isolate them from shipped registrations.
+vi.mock('../src/challenge/registry.generated',()=>({challengeEntries:[]}));
 import { readFileSync, writeFileSync } from 'node:fs';
 import { registerSaveContent, emptyChallenge, validChallengeProgress, type ChallengeProgress, type ChallengeSession, type SaveCatalog } from '../src/state/challenge';
 import { jsonBytes, pack, base64, plain } from '../src/state/saveBits';
