@@ -98,7 +98,8 @@ export function checkShippingTree(root, evidenceDirectory, {full=false}={}) {
       requireThat(sha256(readFileSync(path))==='973258bfb54566a992c340c5647f12cd8ff801d1fbbcb722efffbb60a0c8f3d6','Unadmitted edit to inherited word pack');continue;
     }
     const wordLocation=/^content\/(?:words|clues)\/|^(?:src\/games|assets)\/(?:words?|wordsearch|word-search)(?:\/|\.)/i.test(name);
-    const bankLocation=/(?:^|\/)(?:banks?)(?:\/|\.)|^content\/clues\//i.test(name);
+    // The puzzle kit's bank reader is code, not word data; anything else named bank still needs admission.
+    const bankLocation=name!=='src/puzzles/bank.ts' && /(?:^|\/)(?:banks?)(?:\/|\.)|^content\/clues\//i.test(name);
     let candidate=bankLocation || (wordLocation && /\.(?:txt|csv|tsv)$/i.test(name));
     if(/\.json$/i.test(name)) candidate ||= wordData(JSON.parse(readFileSync(path,'utf8')),wordLocation);
     if(sourceFile) {const fragments=wordDataFragments(source,name,wordLocation);candidate ||= fragments.length>0 && digest(fragments)!==inheritedFragments[name];}
