@@ -57,3 +57,47 @@ Final publication is verified against `refs/heads/p4/f1-save`; the final respons
 ## Cleanup
 
 Lifecycle session `01a1bb41-8a22-7b70-9fbe-d4123e68e67c`. All owned test/export processes have exited. Lifecycle cleanup/status reports no active owned resources. The task-created `node_modules`, `dist`, `.expo` and two temporary source archives are removed after verification. No server, browser, simulator, emulator or container was started or handed off. Borrowed/protected services and other sessions were left alone. This task worktree and branch remain for the lead; no integration merge or cleanup of another worktree was performed.
+
+
+## Round 2 implementation — 9 November 2026
+
+Continued from `origin/p4/f1-save` at `b738f87b799a56a1307c105d9dbe926d217e585d` in `/Users/leonshimizu/.t3/worktrees/little-island-games/t3-10dcd645`. I did the work myself. The verified remote is the private `Shimizu-Technology/little-island-games` repository. This round publishes only `p4/f1-save`; no PR, integration merge, release action or version/build change is authorized. The earlier `t3-b469ba4e` and `t3-ec809d90` worktrees were left untouched; their working files remain at the previous snapshot even though they share the local branch reference.
+
+The scoped product and acceptance brief comes from COMMON, the F1 brief, the v3 master plan sections 4/5/9/10/15/16, FND-01..05/15/16, docs/PRD.md, docs/QA.md and SAVE_CONTRACT. Little Island remains an offline private family app with validated versioned saves and exact original preservation. The production Challenge catalog is still empty; tests register a structural fixture codec. This round's required acceptance is to reproduce and fix the three R2 P1/P2 findings through the actual Store and both real storage adapters, retain exact rollback bytes, and pass default/Library-preview checks plus Doctor. Installed/native/family acceptance stays separate.
+
+| Finding | Result |
+| --- | --- |
+| R2-P1-1 | Discard includes its removed slot in folded metadata. Twelve start → move → mid-round discard cycles on each production adapter leave one exact pre-update recovery copy, zero draft rows and eight bounded diagnostic session slots; reloading has no paused round. |
+| R2-P2-1 | An uncertain boundary write snapshots the latest accepted state into Recovery's export source before displaying Recovery. The actual rendered recovery export button returns revision 3 and sound off even after the ambient envelope write, boundary write and read-back fail. Start fresh preserves the unsaved live snapshot as well as readable disk bytes. The button is labelled “Save a recovery backup.” |
+| R2-P2-2 | Chosen fix: explicit refusal, not replay. `commit` reports a retry message during a boundary; start/finish success does not erase that message. Held real-adapter boundary tests check settings/coached refusals, then explicit retry and cold reload. SAVE_CONTRACT tells F2 to await start/finish before practice credit, coached flags or other commits. |
+| R2-P3-1 | Failed hydration compares exact bytes with the newest recovery entry before preserving. Repeated retry/relaunch of the frozen 1,999,990-byte source keeps one copy on each adapter. |
+| R2-P3-2 | Documented the existing draft-promise contract: false plus null challengeRefusal is an accepted in-memory move with failed durability. Callers retain that revision; a typed refusal means admission failed. No return-type migration imposed on F2. |
+| R2-P3-3 | Finish, discard and Cove failures return false with family-facing messages; SQL/storage exception text is not displayed. Six adapter tests keep the accepted save unchanged and prove messages appear. |
+| R2-P3-4 | Settings renders store.error inside the sheet, so the accepted-work/export warning is available alongside the sharing message. |
+| R2-P3-5 | Softened the contract: the eight-slot on-disk discard ring is diagnostic only, with no reader or export. This round does not claim a usable attempt-recovery feature. |
+| R2-P3-6 | Documented the codec's fixed 25-cell stride and required 625-cell allocation for every displayed paint size, including the row/column mapping for a 5×5 display. No schema/stride change is needed. |
+| R2-P3-7 | Deferred duplicate engine validation. Both the Store admission boundary and independently callable adapter validate drafts today. Removing the second validation requires a deliberate trusted-row API or validation split and device measurements; it is not a cheap safe change. No oldest-iPad latency claim is made. |
+| R2-P3-8 | Corrected contract growth to 937 bytes with the runtime 32-character revision; the corresponding five-person source ceiling is 1,999,063 bytes. Historical round-1 figures above describe the earlier placeholder measurement. |
+
+`tests/save-store-adapters-r2.test.tsx` runs the real Store and production native/web adapters. Native SQL executes on an isolated Node SQLite database; only Expo transport is replaced. Web uses isolated localStorage. A routing facade injects held/failed I/O, without reimplementing adapter preservation/folding/transaction behavior. The recovery case invokes the rendered Recovery button with the platform sharing transport captured. This establishes component/Store/storage behavior, not an installed native share sheet or physical Files delivery.
+
+Before-fix rehearsal substitutes the unmodified `b738f87b` Store under the same final tests, restoring fixed source in a finally block. All 18 tests fail: redundant recovery rows, stale export, missing live preservation, silent boundary refusals, raw/unreported errors and duplicate failed-upgrade copies. Fixed focused run: 50/50 tests across the new suite and existing save Store/adapter suites. `r2-before.log` retains the failures; `r2-focused.log` retains the passes. Impeccable 4.6.0 advisory check returned `[]` for both changed components.
+
+QA execution owner: agent. Required automated affected scenarios passed on both native SQL and web adapters: discard/rollback findability; Recovery export; uncertain-state fresh-start preservation; start-boundary refusal/retry; finish-boundary refusal/retry; finish/discard/person failure messages; repeated failed upgrade. Native iOS 18.5/26.5 installs, physical Files sharing, low disk, kill-at-move and oldest-iPad timing were not run: no simulator was assigned in this brief. No browser, simulator or server is needed for the adapter regression proof. Those program acceptance gaps are unchanged. Independent final-code review remains with the lead; no review approval is claimed.
+
+Both full gate results, final publication and lifecycle cleanup are recorded below after completion.
+
+
+### Round 2 gates, publication and cleanup
+
+Implementation commit: `920c8b23fecb08707cdb628813bbf539d147b04a`. The final follow-up commit contains report/log evidence only. Default gate started before this commit was recorded, with the same runtime and test source; preview ran on that commit. No implementation changed after either gate.
+
+- `LITTLE_ISLAND_SLOW_QA=1 LITTLE_ISLAND_SLOW_HOST=1 npm run check` — passed: immutable catalog history, typecheck, lint (0 errors / 39 existing warnings), 2,457 tests across 202 files, offline export `22a699ecf896` / 6,480 resources.
+- `EXPO_PUBLIC_LIBRARY_PREVIEW=1 LITTLE_ISLAND_SLOW_QA=1 LITTLE_ISLAND_SLOW_HOST=1 npm run check` — passed: the same 2,457 tests across 202 files, offline export `d69d1d8cd340` / 11,037 resources.
+- `npm run doctor` — passed 21/21 using the default PATH, Node v22.22.3, darwin arm64.
+- `npm run ios:restore-generated` — passed; restored 0 authored items / 50 index entries. All four generated Library files match Git exactly.
+- `git diff --check` — passed. No speech lines, audio generation, app configuration, package/lockfile or version/build changes.
+
+The external `r2-*.log` transcripts are copied into `docs/evidence/f1-save/fixes/r2-*.txt`. `R2-GATES.json` records their hashes and the tested implementation. The appended report is copied into the same committed evidence folder. Final pushed head and remote equality are recorded in external `R2-PUBLICATION.json` after pushing only `p4/f1-save`.
+
+Lifecycle session `01a1bb7b-705a-7c63-846c-31cd3a31298e`: both claimed gate process trees exited; cleanup/status shows no active owned resources. The task-created node_modules, dist and .expo directories were removed after verification. No server, browser tab, simulator, emulator or container was started or handed off. Borrowed/protected resources and other worktrees were left unchanged. This clean worktree and branch remain for the lead's independent review and integration.
