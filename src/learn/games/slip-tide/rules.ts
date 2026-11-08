@@ -179,3 +179,5 @@ export function hintFocus(p: SlipPuzzle, from: Crabs, route: readonly Dir[]): Hi
   }
   return { crab, stop, blocker, pool: p.pools[crab] };
 }
+/** Water shading for the board. Row and column both count, so odd-sized boards still make a checkerboard. */
+export const lightTile = (cell: number, size: number) => (cell % size + Math.floor(cell / size)) % 2 === 0;

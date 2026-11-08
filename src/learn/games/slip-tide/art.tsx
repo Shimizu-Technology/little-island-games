@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
-import type { SlipPuzzle } from './rules';
+import { lightTile, type SlipPuzzle } from './rules';
 
 /** Every crab differs in colour and shell mark, so the board never relies on colour alone. */
 export const crabLooks = [
@@ -79,7 +79,7 @@ export const LagoonArt = memo(function LagoonArt({ puzzle, cell }: { puzzle: Sli
   const size = puzzle.size * cell, cells = Array.from({ length: puzzle.size * puzzle.size }, (_, i) => i), at = (i: number) => ({ x: (i % puzzle.size) * cell, y: Math.floor(i / puzzle.size) * cell });
   return <Svg width={size} height={size} {...hide}>
     <Rect x={0} y={0} width={size} height={size} fill="#6EC6C4" />
-    {cells.filter(i => (i % puzzle.size + Math.floor(i / puzzle.size)) % 2 === 0).map(i => <Rect key={i} x={at(i).x} y={at(i).y} width={cell} height={cell} fill="#7ED2CD" />)}
+    {cells.filter(i => lightTile(i, puzzle.size)).map(i => <Rect key={i} x={at(i).x} y={at(i).y} width={cell} height={cell} fill="#7ED2CD" />)}
     <G opacity={0.45}>
       {cells.filter(i => (Math.floor(i / puzzle.size) * 3 + (i % puzzle.size) * 4 + 1) % 7 === 0).map(i => <Path key={i} d={`M${at(i).x + cell * 0.2} ${at(i).y + cell * 0.55}q${cell * 0.15} ${-cell * 0.1} ${cell * 0.3} 0t${cell * 0.3} 0`} fill="none" stroke="#E2F7F2" strokeWidth={Math.max(1.5, cell * 0.04)} strokeLinecap="round" />)}
     </G>

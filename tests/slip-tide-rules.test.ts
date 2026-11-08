@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canGoAlone, crabsKey, cellsText, dirOf, explore, gridOf, HOME, hintMove, homeAll, nextOnRoute, shortestRoute, slide, slideOn, tuplePuzzle, puzzleTuple, validPuzzle, type Crabs, type Dir, type SlipPuzzle } from '../src/learn/games/slip-tide/rules';
+import { canGoAlone, crabsKey, cellsText, dirOf, explore, gridOf, HOME, hintMove, homeAll, lightTile, nextOnRoute, shortestRoute, slide, slideOn, tuplePuzzle, puzzleTuple, validPuzzle, type Crabs, type Dir, type SlipPuzzle } from '../src/learn/games/slip-tide/rules';
 
 // The audit's independent samples: capital crab, small pool, # rock.
 function board(rows: string[], route = ''): SlipPuzzle {
@@ -92,6 +92,14 @@ describe('hints', () => {
     const p = board(['A # . .', '# . . .', '. . . .', '. . . a']);
     expect(shortestRoute(p, p.crabs).status).toBe('stuck');
     expect(shortestRoute(board(samples[5][1]), board(samples[5][1]).crabs, 2).status).toBe('budget');
+  });
+});
+describe('board shading', () => {
+  it.each([4, 5, 6, 7])('alternates along rows and columns at board size %i', size => {
+    for (let c = 0; c < size * size; c++) {
+      if ((c + 1) % size) expect(lightTile(c, size)).not.toBe(lightTile(c + 1, size));
+      if (c + size < size * size) expect(lightTile(c, size)).not.toBe(lightTile(c + size, size));
+    }
   });
 });
 describe('board data', () => {
