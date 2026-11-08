@@ -1,0 +1,63 @@
+{
+  "cases": [
+    {
+      "id": "W01",
+      "result": "passed",
+      "viewport": "320x667",
+      "detail": "Thinking Levels group; no unfinished originals"
+    },
+    {
+      "id": "W02",
+      "result": "passed",
+      "detail": "Three actual clean rounds; second-round offer dismissed across reload; third-round optional face dismissed; saved signals and stars verified"
+    },
+    {
+      "id": "W03",
+      "result": "passed",
+      "detail": "Existing grown-up gate unlocks per-learner comfort; young-child choice saved"
+    },
+    {
+      "id": "W04",
+      "result": "passed",
+      "detail": "World 6 level 8 opens at zero Reef Builder stars"
+    },
+    {
+      "id": "W05",
+      "result": "passed",
+      "viewport": "1024x768",
+      "detail": "Thinking shelf tablet layout"
+    },
+    {
+      "id": "W06",
+      "result": "passed",
+      "detail": "Extracted Tic view: actual two-player win, exact reload, undo"
+    },
+    {
+      "id": "W07",
+      "result": "passed",
+      "detail": "Extracted Word view: pack word completed with actual letter controls"
+    },
+    {
+      "id": "W08",
+      "result": "passed",
+      "detail": "Extracted Memory view: actual flip and exact reload"
+    },
+    {
+      "id": "W09",
+      "result": "passed",
+      "detail": "Extracted Checkers view: legal B6-A5 move and computer response"
+    },
+    {
+      "id": "W10",
+      "result": "passed",
+      "detail": "Extracted Maze view: legal cell move saved"
+    },
+    {
+      "id": "W11",
+      "result": "passed",
+      "detail": "Extracted Number Island view: roll, select and close saved"
+    }
+  ],
+  "errors": [],
+  "result": "passed"
+}
