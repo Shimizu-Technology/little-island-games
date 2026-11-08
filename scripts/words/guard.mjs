@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, lstatSync } from 'node:fs';
 import { resolve, join, relative } from 'node:path';
 import { requireThat, digest, sha256 } from './core.mjs';
+import { contentPolicy } from './policy.mjs';
 
 // Failure links find overlapping terms in one byte pass, including nested terms.
 // Match both the single-byte and UTF-16LE string tables used by Hermes.
@@ -56,7 +57,7 @@ export function artifactScanner(policy) {
 export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]}, privateReceipts = []) {
   const root=resolve(directory);
   const groups=['scan','core','exact','lemmas','chamoruSensitive','canaries'].map(k=>policy[k] ?? []);
-  const hashes=new Set([digest([...policy.scan].sort()),digest(policy),...groups.filter(a=>a.length).map(a=>digest([...a].sort())),...privateReceipts.flatMap(r=>[r.scanListSha256,r.vocabularySha256,r.policySha256])].filter(Boolean));
+  const hashes=new Set([digest([...policy.scan].sort()),digest(policy),digest(contentPolicy(policy)),...groups.filter(a=>a.length).map(a=>digest([...a].sort())),...privateReceipts.flatMap(r=>[r.scanListSha256,r.vocabularySha256,r.policySha256])].filter(Boolean));
   const blobs=groups.filter(a=>a.length).flatMap(a=>[JSON.stringify(a),...(a.length>1?[a.join('\n')]:[])]);
   const bannedNames=/(?:^|\/)(?:private|scan-list|block-list|review-[ab])(?:[/.]|$)|\.private\.|\.queue\.json$|reconcil|\.draft\.|sources\.lock\.json$/i;
   const findings=[];let files=0,termExceptionsUsed=0;
@@ -80,8 +81,8 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       files++;
       const bytes=readFileSync(path),fileHash=sha256(bytes);
       // Bytecode string storage is not guaranteed to begin at an even offset.
-      const {views,uppers,broadHits,literalHits}=scan(bytes);
-      if (bannedNames.test(name) || hashes.has(fileHash) || views.some(text=>[...hashes].some(h=>text.includes(h)) || blobs.some(b=>text.includes(b)))) findings.push(name);
+      const {uppers,broadHits,literalHits}=scan(bytes);
+      if (bannedNames.test(name) || hashes.has(fileHash) || uppers.some(upper=>[...hashes].some(h=>upper.includes(h.toUpperCase())) || blobs.some(b=>upper.includes(b.toUpperCase())))) findings.push(name);
       const allowed={broad:new Set(),literal:new Set()};
       for(const rule of exceptions) if(pathMatches(rule.path,name)) for(const e of rule.terms) allowed[e.check].add(e.term.toUpperCase());
       for(const [check,hits] of [['broad',broadHits],['literal',literalHits]]) {
