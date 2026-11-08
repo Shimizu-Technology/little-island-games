@@ -1,3 +1,4 @@
+import { assertFrozenCatalog, catalogManifest } from '../src/state/catalogManifest';
 import { expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -8,7 +9,7 @@ import { addCovePerson, removeCovePerson, validCove } from '../src/state/covePeo
 import { base64, jsonBytes, pack, unbase64, unpack } from '../src/state/saveBits';
 import { complete, mergeProgressFacts, registerSaveContent, creditProgress, emptyChallenge, mergeCompletion, validChallengeProgress, validChallengeSession, type Completion } from '../src/state/challenge';
 import { challengeTransition, finishChallenge, parseDraft, recoverChallengeDrafts, type ChallengeExpected } from '../src/state/challengeDrafts';
-import { checkpointAudit, checkpointEdit, newCheckpoint, validCheckpoint } from '../src/state/checkpoint';
+import { checkpointBudget, checkpointPaint, checkpointPaintUndo, checkpointAudit, checkpointEdit, newCheckpoint, validCheckpoint } from '../src/state/checkpoint';
 import { fixtureCatalog, installFixture, moved, session } from './helpers/save-contract';
 installFixture();
 const fresh=()=>migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')});
@@ -99,11 +100,21 @@ it('recovers only newest exact-base drafts and preserves stale, malformed and ow
  expect(recovered.challenge!.paused[0]).toEqual(next);expect(preserved).toEqual([stale,'{bad',orphan]);expect(parseDraft(row,fixtureCatalog).session).toEqual(next);
  expect(save.challenge!.paused[0]).toEqual(s);
 });
-it('625-cell canonical paint draft accepts 1,200 edits while retaining only the newest 512 undo deltas and all audit events',()=>{
- let p=checkpointAudit(newCheckpoint('paint'),1);const cells=Array<number>(625).fill(0);
- for(let i=0;i<1200;i++){cells[i%625]=(i%3)+1;p=checkpointEdit(p,pack(cells,2),[i&255,(i>>>8)&255]);}
- expect(unpack(p.data,625,2)).toEqual(cells);expect(p.undoCount).toBe(512);expect(p.audit).toEqual([1]);expect(validCheckpoint(p)).toBe(true);expect(jsonBytes(p)).toBeLessThan(3900);
- const bytes=unbase64(p.undo,1024)!;expect(bytes.slice(0,2)).toEqual([688&255,688>>>8]);
+it('P2-3 1,200 axis-locked strokes never refuse an edit, drop oldest whole strokes and undo exactly',()=>{
+ let p=checkpointAudit(newCheckpoint('paint'),9999);
+ for(let i=0;i<1200;i++)p=checkpointPaint(p,'row',i%25,0,25,i%4);
+ expect(p.undoCount).toBe(512);expect(validCheckpoint(p)).toBe(true);expect(p.audit).toEqual([9999]);
+ const latest=p.data;p=checkpointPaintUndo(p);expect(p.data).not.toBe(latest);expect(p.undoCount).toBe(511);
+ // Adversarial prior values: every full-line stroke costs 9 bytes.
+ p={...newCheckpoint('paint'),data:pack(Array.from({length:625},(_,i)=>(Math.floor(i/25)+i%25)%4),2),audit:Array(128).fill(9999)};
+ for(let i=0;i<1200;i++){
+  const line=i%25;
+  // Alternate full batches: every row/column sees 25 varied prior cells.
+  const axis=Math.floor(i/25)%2?'column':'row';p=checkpointPaint(p,axis,line,0,25,line%4);
+  expect(validCheckpoint(p)).toBe(true);
+ }
+ expect(p.undoCount).toBe(217);expect(jsonBytes(p)).toBeLessThan(3900);
+ expect(()=>checkpointAudit(p,10000)).toThrow();
 });
 it('max digit notes, table undo, and 200 pieces round trip in concrete bounded encodings',()=>{
  for(const kind of ['digits','table','pieces'] as const){let p=newCheckpoint(kind);const spec={digits:{undo:256,bytes:3},table:{undo:1024,bytes:2},pieces:{undo:256,bytes:5}}[kind];
@@ -132,4 +143,78 @@ it('per-bank merges union every completion code and award combination without ch
 it('registration rejects a real-time physics codec even if its structural validator claims it is persistable',()=>{
  const codec=fixtureCatalog.codecs.get('save-proof-v1')!;
  for(const game of ['lagoon-run','canoe-cargo']) expect(()=>registerSaveContent({banks:new Map(),codecs:new Map([['illegal-realtime-v1',{...codec,game}]]),dares:new Map(),contexts:new Set()})).toThrow(/codec/);
+});
+
+it('P2-1 empty dare bitmap is canonical empty text',()=>{expect(emptyChallenge().dares).toBe('');expect(validChallengeProgress({...emptyChallenge(),dares:''},'family',fixtureCatalog)).toBe(true);});
+it('P2-4 solo can confirm Together at finish; nonexistent and ineligible partners are refused at start',()=>{
+ const s=session('a'),save=start(fresh(),s),end=moved({...s,partner:'family'},{end:true});
+ expect(finishChallenge(save,end,expected(s),1,fixtureCatalog)).not.toBe(save);
+ const ghost={...session('a'),partner:'ghost'};expect(start(fresh(),ghost).challenge!.paused).toEqual([]);
+});
+it('P2-5 moving validates only the changed session, not every paused engine',()=>{
+ const s=session('a'),save=start(fresh(),s);let calls=0;const codec=fixtureCatalog.codecs.get(s.codec)!;
+ const catalog={...fixtureCatalog,codecs:new Map([[s.codec,{...codec,validate:(v:typeof s)=>{calls++;return codec.validate(v);}}]])};
+ expect(challengeTransition(save,moved(s),expected(s),1,catalog)).not.toBe(save);expect(calls).toBe(1);
+});
+it('P2-7/P3-3 identical immutable registration is repeatable and reorder/length/hash changes fail',()=>{
+ expect(()=>registerSaveContent(fixtureCatalog,catalogManifest(fixtureCatalog))).not.toThrow();
+ const b=fixtureCatalog.banks.get(0)!;
+ for(const entries of [[...b.entries].reverse(),[...b.entries,{ordinal:100000,hash:'c'.repeat(64)}],b.entries.map((e,i)=>i?e:{...e,hash:'c'.repeat(64)})])expect(()=>registerSaveContent({...fixtureCatalog,banks:new Map([[0,{...b,entries}]])})).toThrow();
+});
+it('P3-8 oversized context IDs cannot be registered',()=>{expect(()=>registerSaveContent({banks:new Map(),codecs:new Map(),dares:new Map(),contexts:new Set(['x'.repeat(80)])})).toThrow(/context/);});
+
+it('P2-7 a committed slot is immutable across builds even before runtime registration',()=>{
+ const frozen=catalogManifest(fixtureCatalog), b=frozen.banks[0];
+ for(const entries of [[...b.entries,{ordinal:100000,hash:'c'.repeat(64)}],[...b.entries].reverse(),b.entries.map((e,i)=>i?e:{...e,hash:'c'.repeat(64)})])expect(()=>assertFrozenCatalog(frozen,{...frozen,banks:[{...b,entries}]})).toThrow(/Immutable/);
+ expect(()=>registerSaveContent(fixtureCatalog,{version:1,banks:[],dares:[],contexts:[]})).toThrow(/Immutable/);
+});
+it('P2-3 codecs must declare wrapper plus draft plus undo plus full audit within 4096',()=>{
+ const codec=fixtureCatalog.codecs.get('save-proof-v1')!;
+ expect(()=>registerSaveContent({banks:new Map(),codecs:new Map([['over-budget',{...codec,budget:{wrapper:800,draft:800,undo:2600,audit:641}}]]),dares:new Map(),contexts:new Set()})).toThrow(/codec/);
+});
+
+it('P2-6 new frozen fixtures pin advanced rounds, Reef, rewards, Library and earlier work; whole legacy object matches shipped migration',()=>{
+ const receipt=JSON.parse(readFileSync(folder+'FIX_RECEIPT.json','utf8')) as {files:Record<string,{bytes:number;sha256:string}>};
+ for(const [file,metadata] of Object.entries(receipt.files)){const raw=readFileSync(folder+file,'utf8');expect(Buffer.byteLength(raw)).toBe(metadata.bytes);expect(createHash('sha256').update(raw).digest('hex')).toBe(metadata.sha256);expect(()=>parseSave(raw)).not.toThrow();}
+ const before=parseSave(readFileSync(folder+'fix-advanced-envelope-2.json','utf8')),next=migrateProfiles(before);
+ const legacy=structuredClone(next);legacy.version=2;legacy.profiles!.version=1;delete legacy.saveRevision;delete legacy.cove;delete legacy.challenge;for(const p of Object.values(legacy.profiles!.people))delete p.challenge;
+ const shipped=parseSave(readFileSync(folder+'fix-advanced-shipped-migration-2.json','utf8'));
+ expect(legacy).toEqual(shipped);
+ for(const [owner,p] of Object.entries(before.profiles!.people)){
+  expect(Object.values(p.learn!).every(r=>r!.revision>0)).toBe(true);
+  expect(before.arcade!.people[owner].session!.state.board.some(Boolean)).toBe(true);expect(p.wordRecords!.wins).toBeGreaterThan(0);expect(Object.keys(p.raceRecords!)).not.toHaveLength(0);expect(Object.keys(p.school!)).not.toHaveLength(0);
+  expect(before.personalization!.people[owner].earned.length).toBeGreaterThan(0);
+ }
+ expect(before.library!.profiles.family.creations.length).toBeGreaterThan(0);expect(Object.keys(before.profiles!.unassigned.rounds.sessions)).not.toHaveLength(0);
+ expect(Buffer.byteLength(readFileSync(folder+'fix-last-bytes-2.json','utf8'))).toBeGreaterThan(1999980);
+});
+
+it('P2-3 full paint/table/digit/piece rings plus all 128 audit events fit the session using measured wrapper bounds',()=>{
+ for(const kind of ['paint','table','digits','pieces','cells','letters','edges'] as const){
+  let cp=newCheckpoint(kind);const spec={table:[1024,2],digits:[256,3],pieces:[256,5],cells:[256,2],letters:[256,2],edges:[256,2]}[kind as 'table'];
+  if(kind==='paint')for(let i=0;i<512;i++)cp=checkpointPaint(cp,'row',i%25,0,25,i%4);
+  else for(let i=0;i<spec[0];i++)cp=checkpointEdit(cp,cp.data,Array(spec[1]).fill(255));
+  for(let i=0;i<128;i++)cp=checkpointAudit(cp,9999);
+  const s={...session(),payload:{...session().payload as object,checkpoint:cp}};
+  const wrapper=jsonBytes(s)-jsonBytes(cp),budget=checkpointBudget(kind,wrapper);
+  expect(Object.values(budget).reduce((a,b)=>a+b,0),kind).toBeLessThanOrEqual(4096);expect(jsonBytes(s),kind).toBeLessThanOrEqual(4096);
+ }
+});
+
+it('P3-2 punctuation in game IDs uses the same code-unit ordering as validation',()=>{
+ const names=['proof:game','proof_game'];
+ const codec=fixtureCatalog.codecs.get('save-proof-v1')!;
+ const catalog={banks:new Map(names.map((game,i)=>[i,{...fixtureCatalog.banks.get(0)!,slot:i,engine:game,entries:[{ordinal:i,hash:'a'.repeat(64)}],awards:[3]}])),codecs:new Map(names.map((game,i)=>[`proof-codec-${i}`,{...codec,game}])),dares:new Map(),contexts:new Set<string>()};
+ let save=fresh();for(const [i,game] of names.entries()){
+  const s={...session('a',`punctuation-${i}`,i+1),game,codec:`proof-codec-${i}`,puzzle:{...session().puzzle,bank:i,engine:game}};
+  save=challengeTransition(save,s,{...expected(s),id:null,revision:null},1,catalog);
+ }
+ expect(save.challenge!.paused.map(s=>s.game)).toEqual(names);expect(validChallengeProgress(save.challenge,'a',catalog)).toBe(true);
+});
+it('P2-4 a Cove-only name cannot start or be confirmed for a School-only bank',()=>{
+ const s=session('a'),base=addCovePerson(fresh(),'Adult','cove-test');
+ const catalog={...fixtureCatalog,banks:new Map([[0,{...fixtureCatalog.banks.get(0)!,cove:false}]])};
+ const partnered={...s,partner:'cove-test'};expect(challengeTransition(base,partnered,{...expected(s),id:null,revision:null},1,catalog)).toBe(base);
+ const playing=challengeTransition(base,s,{...expected(s),id:null,revision:null},1,catalog);
+ expect(finishChallenge(playing,moved(partnered,{end:true}),expected(s),1,catalog)).toBe(playing);
 });

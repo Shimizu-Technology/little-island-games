@@ -1,3 +1,5 @@
+import frozenCatalog from './save-catalog.json';
+import { assertFrozenCatalog, catalogManifest, type CatalogManifest } from './catalogManifest';
 import { arcadeIds } from '../arcade/types';
 import { asciiId, exactKeys, hashId, jsonBytes, pack, plain, uint, unpack } from './saveBits';
 export type Completion = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -17,7 +19,8 @@ export type Bank = { slot: number; engine: string; rules: number; entries: reado
 export type Terminal = { event: Exclude<CompletionEvent, 'opened'>; awards: number; dares: number[]; cost: number | null; solution: string | null };
 export type ChallengeSession = { version: 1; owner: string; game: string; id: string; ordinal: number; revision: number; puzzle: PuzzleRef; codec: string; payload: unknown; selectedDares: number[]; partner: string | null; result: Terminal | null; credited: boolean };
 /** Boundary is unknown until the exact registered engine has validated and replayed it. */
-export type SessionCodec = { game: string; cove: boolean; validate: (session: ChallengeSession) => boolean; evaluate: (session: ChallengeSession) => Terminal | null; canStart: (session: ChallengeSession) => boolean; extends: (before: ChallengeSession, next: ChallengeSession) => boolean };
+export type SessionBudget = { wrapper: number; draft: number; undo: number; audit: number };
+export type SessionCodec = { budget: SessionBudget; game: string; cove: boolean; validate: (session: ChallengeSession) => boolean; evaluate: (session: ChallengeSession) => Terminal | null; canStart: (session: ChallengeSession) => boolean; extends: (before: ChallengeSession, next: ChallengeSession) => boolean };
 export type Dare = { kind: 'par'|'clean'|'plan'|'blind'|'whole'|'two-ways'|'pick-up'|'own-read'|'edits'; help: 'allowed'|'independent'; bank: number; puzzle: number };
 export type SaveCatalog = { banks: ReadonlyMap<number, Bank>; codecs: ReadonlyMap<string, SessionCodec>; dares: ReadonlyMap<number, Dare>; contexts: ReadonlySet<string> };
 /** F2 owns generated registrations. An empty catalog intentionally accepts no invented content. */
@@ -30,7 +33,19 @@ export type ChallengeProgress = {
   bests: Best[]; recent: [number, number][]; cursors: [number, number][]; practice: [string, number, number][];
   choice: [string, 'deep-water'|'endless', number] | null; solutions: [number, number, string][];
 };
-export const emptyChallenge = (cove = false): ChallengeProgress => ({ version:1, banks:[], dares:cove ? '' : pack(Array<number>(4096).fill(0),1), nextOrdinal:1, paused:[], signals:[], bests:[], recent:[], cursors:[], practice:[], choice:null, solutions:[] });
+export const emptyChallenge = (_cove = false): ChallengeProgress => ({ version:1, banks:[], dares:'', nextOrdinal:1, paused:[], signals:[], bests:[], recent:[], cursors:[], practice:[], choice:null, solutions:[] });
+const measuredProgress = new WeakMap<ChallengeProgress,number>();
+export function progressBytes(progress: ChallengeProgress): number {
+  let bytes=measuredProgress.get(progress);
+  if (bytes === undefined) { bytes=jsonBytes(progress); measuredProgress.set(progress,bytes); }
+  return bytes;
+}
+export function rememberProgressBytes(progress: ChallengeProgress, bytes:number): void { measuredProgress.set(progress,bytes); }
+export const dareBits = (raw: unknown) => {
+  if (raw === '') return Array<number>(4096).fill(0);
+  const bits=unpack(raw,4096,1); return bits?.some(Boolean) ? bits : null;
+};
+const encodeDares = (bits: number[]) => bits.some(Boolean) ? pack(bits,1) : '';
 export const challengeLimit = (cove = false) => cove ? 72_000 : 104_000;
 function validRef(v: unknown, catalog: SaveCatalog, cove = false): v is PuzzleRef {
   if (!plain(v) || !exactKeys(v,['bank','puzzle','engine','rules','hash']) || !uint(v.bank,511) || !uint(v.puzzle,1023) || !asciiId(v.engine) || !uint(v.rules,65535) || !v.rules || !hashId(v.hash)) return false;
@@ -69,12 +84,18 @@ export function validChallengeProgress(v: unknown, owner: string, catalog = save
     const codes = unpack(states,bank.entries.length,3), bits = unpack(awards,bank.entries.length,2);
     if (!codes || !bits || codes.some(n => n === 7) || bits.some((n,i) => n & ~(bank.awards[i] ?? 0) || n && codes[i] < 2)) return false;
   }
-  const dares = cove ? v.dares === '' ? [] : null : unpack(v.dares,4096,1);
+  const dares = cove ? v.dares === '' ? [] : null : dareBits(v.dares);
   if (!dares || dares.some((n,i) => n && !catalog.dares.has(i))) return false;
   if (!Array.isArray(v.paused) || v.paused.length > (cove ? 4 : 8) || !v.paused.every(s => validChallengeSession(s,owner,catalog,cove) && s.ordinal < (v.nextOrdinal as number)) || new Set(v.paused.map(s => s.game)).size !== v.paused.length || new Set(v.paused.map(s => s.ordinal)).size !== v.paused.length || !v.paused.every((s,i) => !i || (v.paused as ChallengeSession[])[i-1].game < s.game)) return false;
   const ref = (bank: unknown, puzzle: unknown) => uint(bank,511) && uint(puzzle,1023) && !!catalog.banks.get(bank)?.entries[puzzle] && (!cove || !!catalog.banks.get(bank)?.cove);
-  if (!tupleArray(v.bests,cove ? 128 : 256,3) || !uniqueKeys(v.bests,2) || !v.bests.every(([b,p,n]) => ref(b,p) && uint(n)) || !tupleArray(v.recent,cove ? 32 : 64,2) || !uniqueKeys(v.recent,2) || !v.recent.every(([b,p]) => ref(b,p)) || !tupleArray(v.cursors,cove ? 64 : 128,2) || !uniqueKeys(v.cursors,1) || !v.cursors.every(([b,n]) => uint(b,511) && catalog.banks.has(b) && (!cove || catalog.banks.get(b)!.cove) && uint(n)) || !tupleArray(v.practice,cove ? 16 : 64,3) || !uniqueKeys(v.practice,1) || !v.practice.every(([ctx,helped,clean]) => typeof ctx === 'string' && catalog.contexts.has(ctx) && uint(helped) && uint(clean)) || !tupleArray(v.signals,cove ? 8 : 32,5) || !uniqueKeys(v.signals,1) || !v.signals.every(([ctx,recent,failures,rating,dismissed]) => typeof ctx === 'string' && catalog.contexts.has(ctx) && typeof recent === 'string' && /^[chf]{0,5}$/.test(recent) && uint(failures,999) && ['easy','right','hard',null].includes(rating as null) && typeof dismissed === 'boolean') || !tupleArray(v.solutions,cove ? 16 : 32,3) || !uniqueKeys(v.solutions,3) || !v.solutions.every(([b,p,h]) => ref(b,p) && hashId(h))) return false;
+  if (!tupleArray(v.bests,cove ? 128 : 256,3) || !uniqueKeys(v.bests,2) || !v.bests.every(([b,p,n]) => ref(b,p) && uint(n)) || !tupleArray(v.recent,cove ? 32 : 64,2) || !uniqueKeys(v.recent,2) || !v.recent.every(([b,p]) => ref(b,p)) || !tupleArray(v.cursors,cove ? 64 : 128,2) || !uniqueKeys(v.cursors,1) || !v.cursors.every(([b,n]) => uint(b,511) && catalog.banks.has(b) && (!cove || catalog.banks.get(b)!.cove) && uint(n)) || !tupleArray(v.practice,cove ? 16 : 64,3) || !uniqueKeys(v.practice,1) || !v.practice.every(([ctx,helped,clean]) => asciiId(ctx,16) && catalog.contexts.has(ctx) && uint(helped) && uint(clean)) || !tupleArray(v.signals,cove ? 8 : 32,5) || !uniqueKeys(v.signals,1) || !v.signals.every(([ctx,recent,failures,rating,dismissed]) => asciiId(ctx,16) && catalog.contexts.has(ctx) && typeof recent === 'string' && /^[chf]{0,5}$/.test(recent) && uint(failures,999) && ['easy','right','hard',null].includes(rating as null) && typeof dismissed === 'boolean') || !tupleArray(v.solutions,cove ? 16 : 32,3) || !uniqueKeys(v.solutions,3) || !v.solutions.every(([b,p,h]) => ref(b,p) && hashId(h))) return false;
   return v.choice === null || Array.isArray(v.choice) && v.choice.length === 3 && typeof v.choice[0] === 'string' && [...catalog.banks.values()].some(b => b.engine === (v.choice as unknown[])[0] && (!cove || b.cove)) && ['deep-water','endless'].includes(v.choice[1]) && uint(v.choice[2],6) && v.choice[2] > 0;
+}
+export function openProgress(progress: ChallengeProgress, ref: PuzzleRef, catalog: SaveCatalog): ChallengeProgress {
+  const bank=catalog.banks.get(ref.bank)!,row=progress.banks.find(b=>b[0]===ref.bank);
+  const states=row?unpack(row[1],bank.entries.length,3)!:Array<number>(bank.entries.length).fill(0);
+  states[ref.puzzle]=complete(states[ref.puzzle] as Completion,'opened');
+  return {...progress,banks:[...progress.banks.filter(b=>b[0]!==ref.bank),[ref.bank,pack(states,3),row?.[2] ?? pack(Array<number>(bank.entries.length).fill(0),2)] as BankProgress].sort((a,b)=>a[0]-b[0])};
 }
 /** Monotonic permanent facts; optional working sets are managed separately. */
 export function creditProgress(progress: ChallengeProgress, ref: PuzzleRef, result: Terminal, catalog: SaveCatalog, cove = false): ChallengeProgress {
@@ -83,30 +104,38 @@ export function creditProgress(progress: ChallengeProgress, ref: PuzzleRef, resu
   const states = previous ? unpack(previous[1],bank.entries.length,3)! : Array<number>(bank.entries.length).fill(0);
   const awards = previous ? unpack(previous[2],bank.entries.length,2)! : Array<number>(bank.entries.length).fill(0);
   states[ref.puzzle] = complete(states[ref.puzzle] as Completion,result.event); awards[ref.puzzle] |= result.awards;
-  const dares = cove ? [] : unpack(progress.dares,4096,1)!; for (const slot of result.dares) if (!cove) dares[slot] = 1;
+  const dares = cove ? [] : dareBits(progress.dares)!; for (const slot of result.dares) if (!cove) dares[slot] = 1;
   const bests: Best[] = result.cost === null ? progress.bests : [...progress.bests.filter(([b,p]) => b !== ref.bank || p !== ref.puzzle), [ref.bank,ref.puzzle,Math.min(result.cost,progress.bests.find(([b,p]) => b === ref.bank && p === ref.puzzle)?.[2] ?? Infinity)] as Best].slice(-(cove ? 128 : 256));
-  return { ...progress, banks:[...progress.banks.filter(row => row[0] !== ref.bank),[ref.bank,pack(states,3),pack(awards,2)] as BankProgress].sort((a,b) => a[0]-b[0]), dares:cove ? '' : pack(dares,1), bests,
+  return { ...progress, banks:[...progress.banks.filter(row => row[0] !== ref.bank),[ref.bank,pack(states,3),pack(awards,2)] as BankProgress].sort((a,b) => a[0]-b[0]), dares:cove ? '' : encodeDares(dares), bests,
     recent:[...progress.recent.filter(([b,p]) => b !== ref.bank || p !== ref.puzzle),[ref.bank,ref.puzzle] as [number,number]].slice(-(cove ? 32 : 64)),
     solutions: result.solution === null ? progress.solutions : [...progress.solutions.filter(([b,p,h]) => b !== ref.bank || p !== ref.puzzle || h !== result.solution),[ref.bank,ref.puzzle,result.solution] as [number,number,string]].slice(-(cove ? 16 : 32)) };
 }
 
+export function validSessionBudget(budget: SessionBudget): boolean {
+  return plain(budget) && exactKeys(budget,['wrapper','draft','undo','audit']) && ['wrapper','draft','undo','audit'].every(key => uint(budget[key as keyof SessionBudget],4096)) && Object.values(budget).reduce((a,b) => a+b,0) <= 4096;
+}
+function sameCodec(a: SessionCodec, b: SessionCodec): boolean {
+  return a.game === b.game && a.cove === b.cove && JSON.stringify(a.budget) === JSON.stringify(b.budget) && a.validate.toString() === b.validate.toString() && a.evaluate.toString() === b.evaluate.toString() && a.canStart.toString() === b.canStart.toString() && a.extends.toString() === b.extends.toString();
+}
 /** Append-only registration seam. F2 passes its generated immutable catalog here before hydration. */
-export function registerSaveContent(content: SaveCatalog): void {
+export function registerSaveContent(content: SaveCatalog, manifest: CatalogManifest = frozenCatalog as CatalogManifest): void {
   const ordinals = new Set([...saveCatalog.banks.values()].flatMap(b => b.entries.map(e => e.ordinal)));
   for (const [slot,bank] of content.banks) {
     const old = saveCatalog.banks.get(slot);
-    if (old && old !== bank) throw new Error('An immutable bank slot cannot be replaced.');
+    if (old && JSON.stringify(old) !== JSON.stringify(bank)) throw new Error('An immutable bank slot cannot be replaced.');
     if (old) continue;
     if (!uint(slot,511) || bank.slot !== slot || !asciiId(bank.engine) || !uint(bank.rules,65535) || !bank.rules || !bank.entries.length || bank.entries.length > 1024 || bank.awards.length !== bank.entries.length || bank.awards.some(n => !uint(n,3)) || bank.entries.some(e => !uint(e.ordinal,2147483647) || !hashId(e.hash) || ordinals.has(e.ordinal))) throw new Error('Invalid immutable bank registration.');
     for (const entry of bank.entries) { if (ordinals.has(entry.ordinal)) throw new Error('Duplicate ordinal.'); ordinals.add(entry.ordinal); }
   }
-  for (const [id,codec] of content.codecs) if (!asciiId(id) || realTimeArcade.has(codec.game) || !asciiId(codec.game) || typeof codec.validate !== 'function' || typeof codec.evaluate !== 'function' || typeof codec.canStart !== 'function' || typeof codec.extends !== 'function' || saveCatalog.codecs.has(id) && saveCatalog.codecs.get(id) !== codec) throw new Error('Invalid or replaced session codec.');
-  for (const [slot,dare] of content.dares) if (!uint(slot,4095) || !['par','clean','plan','blind','whole','two-ways','pick-up','own-read','edits'].includes(dare.kind) || !['allowed','independent'].includes(dare.help) || !(content.banks.get(dare.bank) ?? saveCatalog.banks.get(dare.bank))?.entries[dare.puzzle] || saveCatalog.dares.has(slot) && saveCatalog.dares.get(slot) !== dare) throw new Error('Invalid or replaced dare slot.');
-  if ([...content.contexts].some(id => !asciiId(id))) throw new Error('Invalid signal context.');
+  for (const [id,codec] of content.codecs) if (!validSessionBudget(codec.budget) || !asciiId(id) || realTimeArcade.has(codec.game) || !asciiId(codec.game) || typeof codec.validate !== 'function' || typeof codec.evaluate !== 'function' || typeof codec.canStart !== 'function' || typeof codec.extends !== 'function' || saveCatalog.codecs.has(id) && !sameCodec(saveCatalog.codecs.get(id)!,codec)) throw new Error('Invalid or replaced session codec.');
+  for (const [slot,dare] of content.dares) if (!uint(slot,4095) || !['par','clean','plan','blind','whole','two-ways','pick-up','own-read','edits'].includes(dare.kind) || !['allowed','independent'].includes(dare.help) || !(content.banks.get(dare.bank) ?? saveCatalog.banks.get(dare.bank))?.entries[dare.puzzle] || saveCatalog.dares.has(slot) && JSON.stringify(saveCatalog.dares.get(slot)) !== JSON.stringify(dare)) throw new Error('Invalid or replaced dare slot.');
+  if ([...content.contexts].some(id => !asciiId(id,16))) throw new Error('Invalid signal context.');
+  // Content cannot hydrate saves unless its exact meanings were committed in the build manifest.
+  assertFrozenCatalog(catalogManifest(content),manifest);
   // Validate the whole batch before changing any registration.
-  for (const [slot,bank] of content.banks) (saveCatalog.banks as Map<number,Bank>).set(slot,Object.freeze({ ...bank, entries:Object.freeze(bank.entries.map(e => Object.freeze({ ...e }))), awards:Object.freeze([...bank.awards]) }));
-  for (const [id,codec] of content.codecs) (saveCatalog.codecs as Map<string,SessionCodec>).set(id,Object.freeze({ ...codec }));
-  for (const [slot,dare] of content.dares) (saveCatalog.dares as Map<number,Dare>).set(slot,Object.freeze({ ...dare }));
+  for (const [slot,bank] of content.banks) if (!saveCatalog.banks.has(slot)) (saveCatalog.banks as Map<number,Bank>).set(slot,Object.freeze({ ...bank, entries:Object.freeze(bank.entries.map(e => Object.freeze({ ...e }))), awards:Object.freeze([...bank.awards]) }));
+  for (const [id,codec] of content.codecs) if (!saveCatalog.codecs.has(id)) (saveCatalog.codecs as Map<string,SessionCodec>).set(id,Object.freeze({ ...codec }));
+  for (const [slot,dare] of content.dares) if (!saveCatalog.dares.has(slot)) (saveCatalog.dares as Map<number,Dare>).set(slot,Object.freeze({ ...dare }));
   for (const context of content.contexts) (saveCatalog.contexts as Set<string>).add(context);
 }
 /** Merge permanent facts only. Working drafts/cursors never erase accepted facts. */
@@ -119,7 +148,7 @@ export function mergeProgressFacts(left: ChallengeProgress, right: ChallengeProg
     const awards = [a,b].map(row => row ? unpack(row[2],bank.entries.length,2)! : Array<number>(bank.entries.length).fill(0));
     banks.push([slot,pack(states[0].map((n,i) => mergeCompletion(n as Completion,states[1][i] as Completion)),3),pack(awards[0].map((n,i) => n | awards[1][i]),2)]);
   }
-  const a = cove ? [] : unpack(left.dares,4096,1), b = cove ? [] : unpack(right.dares,4096,1);
+  const a = cove ? [] : dareBits(left.dares), b = cove ? [] : dareBits(right.dares);
   if (!a || !b) throw new Error('Invalid permanent marks.');
-  return { ...left,banks,dares:cove ? '' : pack(a.map((n,i) => n | b[i]),1) };
+  return { ...left,banks,dares:cove ? '' : encodeDares(a.map((n,i) => n | b[i])) };
 }

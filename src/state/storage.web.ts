@@ -1,4 +1,4 @@
-import { parseDraft, draftKey } from './challengeDrafts';
+import { parseDraft, draftKey, isFolded } from './challengeDrafts';
 import type { StorageAdapter } from "./storage";
 import { recoveryKey } from "./recoveryKey";
 import { recoveryEntries } from "./recoveryHistory";
@@ -25,12 +25,12 @@ export const storage: StorageAdapter = {
     if (raw) { try { localStorage.setItem('little-island.draft-head',JSON.parse(raw).saveRevision ?? ''); } catch { /* Parser/recovery owns invalid data. */ } }
     return raw;
   },
-  set: async (value) => {
-    const revision = JSON.parse(value).saveRevision ?? '';
+  set: async (value, metadata) => {
+    const revision = metadata?.revision ?? '';
     const draftKeys: string[] = [];
     for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key?.startsWith('little-island.draft:')) draftKeys.push(key); }
     // Preservation can fail on quota. In that case the authoritative envelope is untouched.
-    for (const key of draftKeys) { const row = localStorage.getItem(key); if (row !== null) localStorage.setItem(`little-island.${recoveryKey()}`,row); }
+    for (const key of draftKeys) { const row = localStorage.getItem(key); if (row !== null && !isFolded(row,metadata)) localStorage.setItem(`little-island.${recoveryKey()}`,row); }
     // Stage the cache first. If the envelope write fails, roll it back; old rows remain untouched.
     const previous = localStorage.getItem('little-island.draft-head');
     localStorage.setItem('little-island.draft-head',revision);
@@ -38,6 +38,23 @@ export const storage: StorageAdapter = {
     catch (error) { if (previous === null) localStorage.removeItem('little-island.draft-head'); else localStorage.setItem('little-island.draft-head',previous); throw error; }
     for (const key of draftKeys) localStorage.removeItem(key);
     // A crash before this cleanup leaves obsolete rows, already preserved and never applied to a new base.
+  },
+  discardSession: async raw => {
+    const index = Number(localStorage.getItem('little-island.discard-cursor') ?? 0) % 8;
+    localStorage.setItem(`little-island.discarded-session-${index}`,raw);
+    localStorage.setItem('little-island.discard-cursor',String(index+1));
+  },
+  quarantineDraft: async raw => {
+    // Preserve first. A crash before delete is deduplicated by exact bytes on retry.
+    let kept = false;
+    for (let i=0;i<localStorage.length;i++) {
+      const key=localStorage.key(i);
+      if (key?.startsWith('little-island.recovery-') && localStorage.getItem(key) === raw) kept=true;
+    }
+    if (!kept) localStorage.setItem(`little-island.${recoveryKey()}`,raw);
+    const keys:string[]=[];
+    for (let i=0;i<localStorage.length;i++) { const key=localStorage.key(i); if (key?.startsWith('little-island.draft:') && localStorage.getItem(key) === raw) keys.push(key); }
+    for (const key of keys) localStorage.removeItem(key);
   },
   preserve: async (value) => {
     localStorage.setItem(`little-island.${recoveryKey()}`, value);
