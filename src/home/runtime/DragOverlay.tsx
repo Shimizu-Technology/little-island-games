@@ -46,14 +46,14 @@ function OverlayGroup({
   const visualInteraction = { ...interaction, slots: channel, clock: channelClock } as Interaction;
   const { slots, camera, clock } = visualInteraction;
   const origin = roomOrigin(roomIds.indexOf(root.room), building);
-  const supportPlanes = useMemo(() => Object.fromEntries(Object.values(scene.entities).flatMap((entity) => {
+  const supportPlanes = useMemo(() => !root.character ? {} : Object.fromEntries(Object.values(scene.entities).flatMap((entity) => {
     if (!entity.item || !capabilityOf(entity.item.item).sockets?.length) return [];
     const frame = artFrame(entity), hull = paintedBounds(entity) ?? {
       left: entity.contact.x + frame.left, top: entity.contact.y + frame.top, width: frame.width, height: frame.height };
     const origin = roomOrigin(roomIds.indexOf(entity.room), building);
     return [[entity.id, { ...hull, left: hull.left + origin.x, top: hull.top + origin.y,
       base: hull.top + origin.y + hull.height }]];
-  })), [scene, building]);
+  })), [scene, building, root.character]);
   const ids = groupIds(scene, id);
   const destination =
     (pickup.destination &&
@@ -293,7 +293,7 @@ export function DragOverlay(props: {
   reduced: boolean;
   renderCharacter?: CharacterRender;
 }) {
-  const items: Pickup[] = Object.values(props.scene.entities).filter(e => e.item).map(entity =>
+  const items: Pickup[] = Object.values(props.scene.entities).filter(e => e.item && e.body?.small).map(entity =>
     props.pickups.find(p => p?.id === entity.id) ?? { id: entity.id, slot: 0, scene: props.scene, generation: 0, epoch: 0 });
   for (const pickup of props.pickups) if (pickup && !pickup.scene.entities[pickup.id]?.character &&
     !items.some(p => p.id === pickup.id)) items.push(pickup);
