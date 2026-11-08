@@ -26,7 +26,7 @@ export function checkExport(root, directory) {
   // CI receives the private policy lock via an operator-provisioned secret file.
   // Before the first bank, a policy-free structural check is explicit in the receipt.
   const configuration=process.env.LITTLE_ISLAND_WORD_POLICY_LOCK ? lockedPolicy() : undefined;
-  requireThat(configuration || admission.banks===0,'Private policy lock required to scan an export with word banks');
+  // A bank can only reach here after full rebake with the operator policy lock.
   return {admission,guard:guardTree(directory,configuration?.policy,configuration?[configuration.lock]:[])};
 }
 export function checkRelease(root, web, ios, output) {

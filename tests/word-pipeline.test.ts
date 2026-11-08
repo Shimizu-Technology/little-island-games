@@ -11,6 +11,8 @@ import { prepareBatch, validateReview, reconcile, requireShippingReview } from '
 import { independentlyVerify, bakeBank, checkSurfaces } from '../scripts/words/bake.mjs';
 import { guardTree } from '../scripts/words/guard.mjs';
 import { checkShippingTree } from '../scripts/words/shipping.mjs';
+import {loadWordBank, legacyWordRescue} from '../content/words/registry';
+import {WORDS} from '../src/games/words';
 import { acceptsAnagram, acceptsLadderStep, acceptsWord, missingWordReply, wordHintText } from '../content/words/runtime';
 
 const word = (spelling = 'REEF') => ({ schemaVersion:1,id:spelling.toLowerCase(),spelling,lemma:spelling,language:'en',sense:'A ridge of coral in the sea',readerLevel:'Little',knownBand:1,readBand:1,spellBand:2,clueBand:1,theme:'ocean',topic:'nature',guamFit:1,audio:null,source:JSON.parse(readFileSync('scripts/words/sources.lock.json','utf8')).sources.find((s: any)=>s.id==='scowl'),form:'lemma',properNoun:false,abbreviation:false,british:[],locale:'en-US' });
@@ -156,6 +158,11 @@ describe('private eight-direction scan and independent verifier', () => {
 });
 
 describe('closed device word helpers', () => {
+  it('loads word data only through registered IDs and preserves the inherited game pack',()=>{
+    for(const id of ['unknown','constructor','__proto__']) expect(()=>loadWordBank(id)).toThrow('Unknown admitted word bank');
+    expect(WORDS).toBe(legacyWordRescue);
+    expect(WORDS[0]).toEqual(['CAT','Animals','A small pet that purrs.']);
+  });
   it('accepts reviewed British variants, arbitrary listed ladder steps and all listed anagrams', () => {
     expect(acceptsWord(' colour ',['COLOR','COLOUR'])).toBe(true);
     expect(acceptsWord(' trade wind ',['TRADE WIND'])).toBe(true);
