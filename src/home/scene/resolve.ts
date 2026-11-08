@@ -6,6 +6,7 @@ import {
   contains,
   movingGroup,
   occludedFraction,
+  catalogCovered,
   overlaps,
   standingContact,
   translatedBounds,
@@ -64,6 +65,8 @@ export type ResolveContext = {
   floorOnly?: boolean;
   /** Interactive Design placement also protects visible furniture silhouettes. */
   avoidFurnitureOverlap?: boolean;
+  /** Uncommitted catalog placement requires at least half its art to remain visible. */
+  catalog?: boolean;
   reservations?: Record<string, EntityId>;
   target?: string;
   kinds?: Target["kind"][];
@@ -176,7 +179,7 @@ function movedGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, gr
   }
   return moves;
 }
-function fitsGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, group: SceneEntity[], avoidFurnitureOverlap = false): boolean {
+function fitsGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, group: SceneEntity[], avoidFurnitureOverlap = false, catalog = false): boolean {
   "worklet";
   const moves = movedGroup(index, subject, root, group);
   return moves.every((move) => {
@@ -186,7 +189,8 @@ function fitsGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, gro
     if (!contained(placed)) return false;
     // Grid footprints alone do not describe tall/wide fixture silhouettes. A Design
     // move must not hide a neighbouring piece of floor furniture behind its art.
-    if (avoidFurnitureOverlap && entity.body?.layer === "furniture" && !entity.body.small && move.attachment.kind === "floor") {
+    if (catalog && (occludedFraction(placed, move.contact.y, index.occlusionBands.filter(b => !group.some(g => g.id === b.id))) > .5 || catalogCovered(entity, move.contact, move.contact.y, index.occlusionBands.filter(b => !group.some(g => g.id === b.id))) > .4)) return false;
+    if (!catalog && avoidFurnitureOverlap && entity.body?.layer === "furniture" && !entity.body.small && move.attachment.kind === "floor") {
       for (const other of Object.values(index.entities)) {
         if (other.room !== index.room || group.some((member) => member.id === other.id) || other.attachment.kind !== "floor" ||
             other.body?.layer !== "furniture" || other.body.small) continue;
@@ -338,7 +342,7 @@ function exactFloorMove(index: RoomIndex, subject: SceneEntity, point: RoomPoint
     if (occludedFraction(translatedBounds(anchorsFor(slot, "stand", "front").bounds, contact), contact.y + 1, index.occlusionBands) > 0.25) return;
   }
   const exact = rootMove(subject, index.room, { kind: "floor", room: index.room, at: contact }, contact, slot !== undefined ? "stand" : subject.base, subject.facing, cell);
-  return fitsGroup(index, subject, exact, group, ctx.avoidFurnitureOverlap) ? exact : undefined;
+  return fitsGroup(index, subject, exact, group, ctx.avoidFurnitureOverlap, ctx.catalog) ? exact : undefined;
 }
 function placedInRoom(index: RoomIndex, entity: SceneEntity): boolean {
   "worklet";
@@ -433,7 +437,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
         );
         if (!contains(support, point) || overlap / supportWidth < 0.6) continue;
       }
-      if (!fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap)) continue;
+      if (!fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap, ctx.catalog)) continue;
       candidates.push({
         target,
         distance,
@@ -533,7 +537,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       cell
     );
     const distance = (contact.x - point.x) ** 2 + (contact.y - point.y) ** 2;
-    if (distance >= bestDistance || !fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap)) continue;
+    if (distance >= bestDistance || !fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap, ctx.catalog)) continue;
     best = move;
     bestDistance = distance;
   }
@@ -552,7 +556,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
         location.cell
       );
       const distance = (contact.x - point.x) ** 2 + (contact.y - point.y) ** 2;
-      if (distance < bestDistance && fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap)) {
+      if (distance < bestDistance && fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap, ctx.catalog)) {
         best = move;
         bestDistance = distance;
       }

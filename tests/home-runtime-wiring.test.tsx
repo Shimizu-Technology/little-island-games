@@ -802,3 +802,39 @@ describe("actual runtime callback sequencing", () => {
     vi.useRealTimers();
   });
 });
+
+describe('H2 capture handoff and synthetic moves', () => {
+ it('starts lift at readiness and keeps the resting copy through one presented overlay frame', async () => {
+  let renderer!: TestRenderer.ReactTestRenderer;
+  await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
+  touch('down', 120, 300);
+  touch('move', 150, 320);
+  vi.advanceTimersByTime(180);
+  flushJS();
+  const slot = current.slots.get()[0];
+  expect(slot.liftedAt).toBe(1180);
+  expect(slot.painted).toBe(false);
+  harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+  expect(current.slots.get()[0].painted).toBe(false);
+  vi.advanceTimersByTime(17); harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+  expect(current.slots.get()[0].painted).toBe(true);
+  await act(async () => renderer.unmount()); vi.useRealTimers();
+ });
+ it('tap travel captures once, travels through intermediate positions and commits only at arrival', async () => {
+  let renderer!: TestRenderer.ReactTestRenderer;
+  await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
+  const { resolve } = await import("../src/home/scene/resolve");
+  const scene = fixture();
+  const proposal = resolve(scene.rooms.home, scene.entities[entity.id], roomPoint(300, 486), { scale: 1, release: true });
+  expect(current.animateProposal(proposal)).toBe(true);
+  flushJS();
+  const start = current.slots.get()[0];
+  expect(start.synthetic).toBe(true); expect(committed).toBe(0);
+  vi.advanceTimersByTime(100); harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+  expect(current.slots.get()[0].x).toBeGreaterThan(start.sourceX);
+  expect(current.slots.get()[0].x).toBeLessThan(start.targetX); expect(committed).toBe(0);
+  vi.advanceTimersByTime(400); harness.frames[0]({ timeSincePreviousFrame: 16.67 }); flushJS();
+  expect(committed).toBe(1);
+  await act(async () => renderer.unmount()); vi.useRealTimers();
+ });
+});

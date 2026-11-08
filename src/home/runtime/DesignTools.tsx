@@ -9,6 +9,8 @@ import { owns, type HomeAction, type HomeStateV2, type Ownership, type Instance 
 import { MoreItemArt } from "../art/More";
 import { ItemArt } from "../art/Items";
 import type { ItemId } from "../catalog";
+import { screenPoint } from "../scene/types";
+import type { Interaction } from "./useInteraction";
 import { Tool } from "./HomeChrome";
 
 const categoryNames: Record<string, string> = {
@@ -31,31 +33,38 @@ function Thumbnail({
   onChoose,
   onDrop,
   onDragItem,
+  interaction,
+  offset,
 }: {
   id: ItemId;
   ownership: Ownership;
   vertical: boolean;
   ghost: SharedValue<CatalogGhost>;
   onChoose: (id: ItemId) => void;
-  onDrop: (id: ItemId, x: number, y: number) => void;
-  onDragItem: (id: ItemId) => void;
+  onDrop: (id: ItemId, x: number, y: number, cancel?: boolean) => void;
+  onDragItem: (id: ItemId, x: number, y: number) => void;
+  interaction: Interaction;
+  offset: SharedValue<{ x: number; y: number }>;
 }) {
   const owned = owns(id, ownership);
+  const { externalMove } = interaction;
   const pan = Gesture.Pan().enabled(owned).minDistance(8);
   if (vertical) pan.activeOffsetX([-8, 8]).failOffsetY([-14, 14]);
   else pan.activeOffsetY([-8, 8]).failOffsetX([-14, 14]);
   pan
     .onStart((event) => {
-      runOnJS(onDragItem)(id);
+      runOnJS(onDragItem)(id, event.absoluteX, event.absoluteY);
       ghost.set({ item: id, x: event.absoluteX, y: event.absoluteY, active: true });
     })
     .onUpdate((event) => {
+      externalMove(-500, screenPoint(event.absoluteX - offset.value.x, event.absoluteY - offset.value.y));
       ghost.set({ item: id, x: event.absoluteX, y: event.absoluteY, active: true });
     })
     .onEnd((event) => {
       runOnJS(onDrop)(id, event.absoluteX, event.absoluteY);
     })
-    .onFinalize(() => {
+    .onFinalize((event, success) => {
+      if (!success) runOnJS(onDrop)(id, event.absoluteX, event.absoluteY, true);
       ghost.set({ x: 0, y: 0, active: false });
     });
   return (
@@ -94,6 +103,8 @@ export function DesignTools({
   onChoose,
   onDrop,
   onDragItem,
+  interaction,
+  offset,
   dispatch,
   onClose,
 }: {
@@ -104,8 +115,10 @@ export function DesignTools({
   vertical: boolean;
   ghost: SharedValue<CatalogGhost>;
   onChoose: (id: ItemId) => void;
-  onDrop: (id: ItemId, x: number, y: number) => void;
-  onDragItem: (id: ItemId) => void;
+  onDrop: (id: ItemId, x: number, y: number, cancel?: boolean) => void;
+  onDragItem: (id: ItemId, x: number, y: number) => void;
+  interaction: Interaction;
+  offset: SharedValue<{ x: number; y: number }>;
   dispatch: (action: HomeAction) => void;
   onClose: () => void;
 }) {
@@ -181,6 +194,8 @@ export function DesignTools({
               onChoose={onChoose}
               onDrop={onDrop}
               onDragItem={onDragItem}
+              interaction={interaction}
+              offset={offset}
             />
           )}
         />

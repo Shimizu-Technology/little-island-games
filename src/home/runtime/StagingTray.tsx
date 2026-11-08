@@ -42,7 +42,7 @@ function StagedItem({
     .onFinalize((_e, success) => {
       if (!success) externalUp(pointer, true);
     });
-  const style = useAnimatedStyle(() => ({ opacity: slots.value.some((s) => s.id === entity.id && s.ready) ? 0 : 1 }));
+  const style = useAnimatedStyle(() => ({ opacity: slots.value.some((s) => s.id === entity.id && s.ready && s.painted !== false) ? 0 : 1 }));
   return (
     <GestureDetector gesture={gesture} touchAction="pan-x">
       <Animated.View style={style}>

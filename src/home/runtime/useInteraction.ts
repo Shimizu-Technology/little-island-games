@@ -45,6 +45,12 @@ export type DragSlot = CaptureToken & {
   carryBounds?: Bounds;
   pointer: number;
   ready: boolean;
+  painted: boolean;
+  readyFrame: number;
+  synthetic?: boolean;
+  catalog?: boolean;
+  duration?: number;
+  landedAt?: number;
   phase: "pending" | "dragging" | "settling";
   consumed: boolean;
   absoluteX: number;
@@ -99,6 +105,8 @@ export const emptyDragSlot = (): DragSlot => {
     id: "",
     pointer: -1,
     ready: false,
+    painted: false,
+    readyFrame: 0,
     phase: "dragging",
     x: 0,
     y: 0,
@@ -178,6 +186,7 @@ export function useInteraction({
     [scene]
   );
   const prepared = useSharedValue(resolverScene);
+  const externalSubjects = useSharedValue<Record<string, SceneEntity>>({});
   const hits = useMemo(() => prepareHits(scene), [scene]);
   const hitTable = useSharedValue(hits);
   const renderedRevision = useSharedValue(scene.revision);
@@ -276,9 +285,10 @@ export function useInteraction({
     const slot = slots.value.find((s) => s.id === id);
     return id
       ? (prepared.value.entities[slot?.restId ?? id] ??
+          externalSubjects.value[id] ??
           (slot && !slot.consumed && !slot.committed ? slot.subject : undefined))
       : undefined;
-  }, [prepared, slots]);
+  }, [prepared, slots, externalSubjects]);
   const originFor = useCallback((id?: string) => {
     "worklet";
     const entity = subjectFor(id);
@@ -316,6 +326,7 @@ export function useInteraction({
       aim: centre && roomPoint(centre.x, centre.y),
       contact: index >= 0 ? screenToRoom(screenPoint(slot.pointerX, slot.pointerY), camera.value, housePoint(origin.x, origin.y)) : undefined,
       avoidFurnitureOverlap: designing,
+      catalog: slot.catalog,
       silhouette:
         index >= 0 && subject.character ? translatedBounds(slot.carryBounds ?? subject.bounds, anchor) : undefined,
       previous: slot.proposal,
@@ -376,7 +387,14 @@ export function useInteraction({
   const ready = (index: number, id: string, carryBounds?: Bounds) => {
     slots.modify((current) => { "worklet";
       const slot = current[index];
-      if (slot.id === id) { slot.ready = true; slot.carryBounds = carryBounds; }
+      if (slot.id === id) {
+        if (!slot.ready) {
+          slot.liftedAt = eventTime();
+          slot.readyFrame = 0;
+          if (slot.phase === "settling") slot.settleAt = eventTime();
+        }
+        slot.ready = true; slot.carryBounds = carryBounds;
+      }
       return current;
     });
     if (onTrace) {
@@ -483,6 +501,9 @@ export function useInteraction({
           restId: visible?.restId,
           subject: entity,
           ready: visible?.ready ?? false,
+          painted: visible?.painted ?? false,
+          readyFrame: visible?.readyFrame ?? 0,
+          catalog: !!externalSubjects.value[effect.entity],
           pointer: pointer.pointer,
           phase: effect.type === "contact" ? "pending" as const : "dragging" as const,
           x: visible?.x ?? entity.contact.x + origin.x,
@@ -499,7 +520,7 @@ export function useInteraction({
           gripY: pointer.grip.y,
           pointerX: pointer.point.x,
           pointerY: pointer.point.y,
-          liftedAt: eventTime(),
+          liftedAt: effect.type === "pickup" && visible?.ready ? eventTime() : visible?.liftedAt ?? 0,
           edgeAt: 0,
         };
         captureSequence.set(Math.max(captureSequence.value, slot.generation));
@@ -537,7 +558,7 @@ export function useInteraction({
           absoluteX: pointer.point.x + offset.value.x,
           absoluteY: pointer.point.y + offset.value.y,
           tilt: reduced ? 0 : slot.tilt + (Math.max(-6, Math.min(6, (vx / 500) * 6)) - slot.tilt) * alpha,
-          lag: reduced ? 0 : Math.max(-10, Math.min(10, (-vx / 500) * 10)),
+          lag: reduced ? 0 : slot.lag + (Math.max(-10, Math.min(10, (-vx / 500) * 10)) - slot.lag) * alpha,
           edgeAt: pointer.point.x < 48 || pointer.point.x > viewport.width - 48 ? slot.edgeAt || now : 0,
         };
         nextSlot.proposal = proposalFor(nextSlot);
@@ -924,6 +945,10 @@ export function useInteraction({
         for (let i = 0; i < 2; i++) {
           const slot = current[i];
           if (!slot.id) continue;
+          if (slot.ready && !slot.painted) {
+            if (slot.readyFrame > 0) slot.painted = true;
+            else slot.readyFrame = now;
+          }
           if (
             slot.phase === "dragging" &&
             now - slot.lastMoveAt > 24 &&
@@ -954,13 +979,14 @@ export function useInteraction({
           }
           if (slot.phase === "dragging" && slot.proposal?.pending && now - slot.proposal.pending.since >= 60)
             slot.proposal = proposalFor(slot);
-          if (slot.phase === "settling" && slot.settleAt) {
-            const progress = settleProgress(now - slot.settleAt - slot.travelDelay, reduced);
+          if (slot.phase === "settling" && slot.settleAt && slot.ready) {
+            const progress = settleProgress(now - slot.settleAt - slot.travelDelay, reduced, slot.duration);
             slot.x = slot.releaseX + (slot.targetX - slot.releaseX) * progress;
             slot.y = slot.releaseY + (slot.targetY - slot.releaseY) * progress;
             slot.tilt *= 1 - progress;
             slot.lag *= 1 - progress;
             slot.finished = progress === 1;
+            if (slot.finished && slot.catalog && !slot.landedAt) slot.landedAt = now;
             // Motion and pose start at release on UI. Apply/save only after travel;
             // the pre-mounted target remains visible while JS/native acknowledge.
             if (slot.finished && !slot.committed && !slot.commitRequested && slot.proposal) {
@@ -973,7 +999,7 @@ export function useInteraction({
               (laidOut.value[entity.id] === layoutTokens.value[entity.id] &&
                 (!entity.character || poseLayouts.value[i] === layoutTokens.value[entity.id] ||
                   poseLayouts.value[`${i}:${poseToken(entity.base, entity.facing, entity.action)}`] === poseToken(entity.base, entity.facing, entity.action)))));
-            if (nativeReady && canRevealResting(slot, renderedRevision.value)) {
+            if (nativeReady && (!slot.catalog || reduced || !!slot.landedAt && now - slot.landedAt >= 160) && canRevealResting(slot, renderedRevision.value)) {
               if (entity?.character && !slot.consumed && slot.proposal) {
                 const origin = roomOrigin(roomIds.indexOf(entity.room), building);
                 const bounds = translatedBounds(
@@ -1005,6 +1031,7 @@ export function useInteraction({
                   housePoint(0, 0)
                 ).state;
               controller.set(settled);
+              if (slot.catalog) externalSubjects.modify((subjects) => { "worklet"; delete subjects[slot.id]; return subjects; });
               slot.id = "";
               slot.ready = false;
               runOnJS(onClear)(i);
@@ -1017,7 +1044,7 @@ export function useInteraction({
   // identities out of dependencies preserves the native callback clock.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onTrace, traceFrames, onReleaseProbe, probeRing, probeCursor, probeLastAt, probePending, queuedInput, slots, prepared, renderedRevision, laidOut, layoutTokens,
-    poseLayouts, lastFrame, revealPan, controller, reduced, camera, onFrameReport, frameCount, frameTimes, inertia,
+    poseLayouts, externalSubjects, lastFrame, revealPan, controller, reduced, camera, onFrameReport, frameCount, frameTimes, inertia,
     viewport, building, offset, proposalFor, onCommit, onClear]));
   const cancelAll = () => {
     revealPan.set(null);
@@ -1025,12 +1052,14 @@ export function useInteraction({
     controller.set(idleController);
     inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
     queuedInput.set([]);
+    externalSubjects.set({});
     slots.set([emptyDragSlot(), emptyDragSlot()]);
     onClear(0);
     onClear(1);
   };
-  const externalDown = (pointer: number, id: string, point: ScreenPoint) => {
+  const externalDown = (pointer: number, id: string, point: ScreenPoint, subject?: SceneEntity) => {
     "worklet";
+    if (subject) externalSubjects.set({ ...externalSubjects.value, [id]: subject });
     send({
       type: "down",
       pointer,
@@ -1047,6 +1076,14 @@ export function useInteraction({
   const externalUp = (pointer: number, cancel: boolean) => {
     "worklet";
     const slot = slots.value.find((s) => s.id && s.pointer === pointer);
+    if (slot?.catalog && (cancel || !slot.proposal || slot.proposal.kind === "staging")) {
+      controller.set(transition(controller.value, { type: "cancel", pointer, now: eventTime() }, camera.value, originFor(slot.id)).state);
+      externalSubjects.modify((subjects) => { "worklet"; delete subjects[slot.id]; return subjects; });
+      const index = slots.value.indexOf(slot);
+      slots.set(slots.value.map((s, i) => i === index ? emptyDragSlot() : s));
+      runOnJS(onClear)(index);
+      return;
+    }
     send({
       type: cancel ? "cancel" : "up",
       pointer,
@@ -1054,12 +1091,42 @@ export function useInteraction({
       proposal: slot?.proposal,
     });
   };
+  /** Non-drag moves own a normal slot and the same commit/re-grab gates. */
+  const animateProposal = (proposal: DropProposal, subjectOverride?: SceneEntity, start?: { x: number; y: number }) => {
+    const subject = subjectOverride ?? subjectFor(proposal.id);
+    const current = slots.get();
+    if (!subject || current.some(s => s.id === subject.id || s.restId === subject.id)) return false;
+    const index = current.findIndex(s => !s.id);
+    if (index < 0) return false;
+    const origin = roomOrigin(roomIds.indexOf(subject.room), building);
+    const dest = roomOrigin(roomIds.indexOf(proposal.room), building);
+    const from = start ?? { x: origin.x + subject.contact.x, y: origin.y + subject.contact.y };
+    const generation = captureSequence.get() + 1;
+    captureSequence.set(generation);
+    const slot: DragSlot = { ...emptyDragSlot(), id: subject.id, subject, pointer: -1000 - index,
+      generation, epoch: epoch.get(), phase: "settling", synthetic: true, catalog: !!subjectOverride,
+      sourceX: from.x, sourceY: from.y, releaseX: from.x, releaseY: from.y, x: from.x, y: from.y,
+      targetX: dest.x + proposal.contact.x, targetY: dest.y + proposal.contact.y,
+      proposal, settleAt: eventTime(), duration: Math.min(400, Math.max(240,
+        Math.hypot(dest.x + proposal.contact.x - from.x, dest.y + proposal.contact.y - from.y) * camera.get().a * 1.2)),
+    };
+    slots.set(current.map((s, i) => i === index ? slot : s));
+    onPickup({ id: subject.id, slot: index, scene: { ...prepared.get(), entities: { ...prepared.get().entities, [subject.id]: subject } },
+      generation, epoch: slot.epoch, grip: { x: 0, y: 0 } });
+    if (reduced) {
+      slots.set(slots.get().map((s, i) => i === index ? { ...s, ready: true, painted: true, finished: true,
+        x: s.targetX, y: s.targetY, commitRequested: true } : s));
+      onCommit(index, proposal, from, { generation, epoch: slot.epoch });
+    }
+    return true;
+  };
   const resetFrames = () => {
     frameTimes.set([]);
     frameCount.set(0);
   };
   return {
     isCurrent,
+    animateProposal,
     externalDown,
     externalMove,
     externalUp,

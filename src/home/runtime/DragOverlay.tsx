@@ -9,11 +9,12 @@ import { renderAnchors, carryBinding, carrySample } from "./rigGeometry";
 import { settleProgress } from "./settle";
 import type { Scene, SceneEntity } from "../scene/types";
 import { groupIds, restingVisible } from "./group";
+import { LandingPreview } from "./LandingPreview";
 import { SettleArt } from "./SettleArt";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { emptyDragSlot, type Interaction, type Pickup } from "./useInteraction";
 import { capabilityOf } from "../world";
-import { carriedPropGrowth, carryLift } from "./carry";
+import { pickupTransform, footprintShadow } from "./handFeel";
 
 function OverlayGroup({
   pickup,
@@ -64,18 +65,7 @@ function OverlayGroup({
   };
   const style = useAnimatedStyle(() => {
     const slot = slots.value[index];
-    const lift = reduced ? 0 : Math.min(1, Math.max(0, (clock.value - slot.liftedAt) / 90));
-    const settling = (slot.phase === "settling" && slot.settleAt > 0) || (slot.phase === "pending" && slot.pausedElapsed > 0);
-    const blend = settling
-      ? Math.max(0, 1 - (slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt) / 140)
-      : 1;
-    const elapsed = settling ? (slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt) : 0;
-    const accent =
-      !reduced && settling && slot.proposal?.kind === "floor" && elapsed < 160
-        ? Math.max(0, elapsed < 60 ? elapsed / 60 : (160 - elapsed) / 100)
-        : 0;
-    const propScale = root.character ? (reduced ? 0 : .04 * lift * blend)
-      : carriedPropGrowth * (settling ? (reduced ? 0 : blend) : (reduced ? 1 : lift));
+    const motion = pickupTransform(slot, root, camera.value.a, clock.value, reduced);
     return {
       opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 1 : 0,
       transformOrigin: [slot.gripX, slot.gripY, 0],
@@ -86,14 +76,15 @@ function OverlayGroup({
             slot.y -
             origin.y -
             root.contact.y -
-            (reduced ? 0 : carryLift(root, camera.value.a) * lift * blend),
+            motion.lift,
         },
-        { rotate: `${reduced ? 0 : slot.tilt}deg` },
-        { scaleX: 1 + propScale + 0.02 * accent },
-        { scaleY: 1 + propScale - 0.02 * accent },
+        { rotate: `${motion.tilt}deg` },
+        { scaleX: motion.scaleX },
+        { scaleY: motion.scaleY },
       ],
     };
   });
+  const footprint = footprintShadow(root);
   const shadow = useAnimatedStyle(() => {
     const slot = slots.value[index];
     const p = slot.proposal,
@@ -113,14 +104,16 @@ function OverlayGroup({
         ? Math.max(0, 1 - (clock.value - slot.settleAt) / 140)
         : Math.min(1, (clock.value - slot.liftedAt) / 90);
     const settling = slot.phase === "settling" && slot.settleAt > 0 || slot.phase === "pending" && slot.pausedElapsed > 0;
-    const fade = settling ? 1 - settleProgress(slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt, reduced) : 1;
+    const fade = settling ? 1 - settleProgress(slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt, reduced, slot.duration) : 1;
     return {
       opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? (0.18 - 0.06 * lift) * fade : 0,
-      transform: [{ translateX: groundX - 24 }, { translateY: groundY - 5 }, { scale: 1 - 0.15 * lift }],
+      transform: [{ translateX: groundX - footprint.width / 2 }, { translateY: groundY - footprint.height / 2 }, { scale: 1 - 0.15 * lift }],
     };
   });
   return (
     <>
+      {pickup.generation > 0 && <LandingPreview source={root} index={index} interaction={visualInteraction}
+        building={building} renderCharacter={renderCharacter} />}
       <Animated.View
         testID={`drag-shadow-${id}`}
         pointerEvents="none"
@@ -129,8 +122,8 @@ function OverlayGroup({
             position: "absolute",
             left: 0,
             top: 0,
-            width: 48,
-            height: 10,
+            width: footprint.width,
+            height: footprint.height,
             borderRadius: 30,
             backgroundColor: "#284F4B",
           },
@@ -252,7 +245,7 @@ function CarriedProp({
     const s = slots.value[index],
       elapsed = s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt;
     const settling = (s.phase === "settling" && s.settleAt) || (s.phase === "pending" && s.settleAt);
-    const p = settling ? settleProgress(elapsed, reduced) : 0,
+    const p = settling ? settleProgress(elapsed, reduced, s.duration) : 0,
       blend = p;
     const hand = hands[(reduced ? 0 : Math.max(-4, Math.min(4, Math.round(s.lag / 2.5)))) + 4];
     const x = hand.x + start.x + (end.x - start.x) * p,

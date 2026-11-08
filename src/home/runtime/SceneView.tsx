@@ -16,6 +16,7 @@ import { SeatRimCue, TargetCue } from "./TargetCue";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { DragOverlay } from "./DragOverlay";
 import { layoutToken } from "./layout";
+import { pickupTransform } from "./handFeel";
 import { isPortion } from "./portions";
 import { entityLabels } from "../scene/labels";
 import type { Interaction, Pickup, DragSlot } from "./useInteraction";
@@ -35,6 +36,9 @@ const RestingEntity = memo(function RestingEntity({
   name,
   ownerKey,
   slots,
+  controller,
+  camera,
+  landingKey,
   fixtureNudges,
   clock,
   acknowledgeLayout,
@@ -55,6 +59,9 @@ const RestingEntity = memo(function RestingEntity({
   name: string;
   ownerKey: string;
   slots: SharedValue<DragSlot[]>;
+  controller?: Interaction["controller"];
+  camera: Interaction["camera"];
+  landingKey: string;
   fixtureNudges: Interaction["fixtureNudges"];
   clock: Interaction["clock"];
   acknowledgeLayout: Interaction["acknowledgeLayout"];
@@ -86,7 +93,7 @@ const RestingEntity = memo(function RestingEntity({
       (s.proposal?.attachment ?? s.subject?.attachment)?.kind === "socket" &&
       ((s.proposal?.attachment ?? s.subject?.attachment) as { item: string }).item === entity.id)) return 0;
     for (const slot of slots.value) if (slot.id && owners.includes(slot.restId ?? slot.id))
-      return slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 0 : 1;
+      return slot.ready && slot.painted !== false && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 0 : 1;
     return 1;
   });
   const wobble = useDerivedValue(() => {
@@ -95,8 +102,24 @@ const RestingEntity = memo(function RestingEntity({
     const elapsed = clock.value - at;
     return elapsed < 0 || elapsed >= 220 ? 0 : Math.sin(elapsed / 220 * Math.PI * 4) * 1.5 * (1 - elapsed / 220);
   });
-  const style = useAnimatedStyle(() => ({ opacity: visible.value,
-    transform: [{ translateX: 0 }, { translateY: 0 }, { rotate: `${wobble.value}deg` }] }));
+  const landingTargets = useMemo(() => landingKey.split("|"), [landingKey]);
+  const landing = useDerivedValue(() => slots.value.some(s => s.id && s.phase === "dragging" && s.proposal?.target && landingTargets.includes(s.proposal.target)));
+  const style = useAnimatedStyle(() => {
+    const slot = slots.value.find(s => s.id && owners.includes(s.restId ?? s.id));
+    const moving = slot && slot.phase !== "pending" && !(slot.ready && slot.painted !== false);
+    const motion = moving ? pickupTransform(slot, slot.subject ?? entity, camera.value.a, clock.value, reduced) : undefined;
+    const pressed = controller?.value.pointers.some(p => p.phase === "pending" && p.entity && owners.includes(p.entity));
+    return { opacity: visible.value,
+      transformOrigin: [slot ? slot.gripX - frame.left : -frame.left, slot ? slot.gripY - frame.top : -frame.top, 0],
+      transform: [
+        { translateX: moving ? slot.x - slot.sourceX : 0 },
+        { translateY: moving ? slot.y - slot.sourceY - (motion?.lift ?? 0) : landing.value && !reduced ? -3 : 0 },
+        { rotate: `${motion?.tilt ?? wobble.value}deg` },
+        { scaleX: motion?.scaleX ?? (pressed || landing.value ? 1.02 : 1) },
+        { scaleY: motion?.scaleY ?? (pressed ? entity.character ? .99 : 1.02 : landing.value ? 1.02 : 1) },
+      ] };
+  });
+  const rimStyle = useAnimatedStyle(() => ({ opacity: landing.value ? 1 : 0 }));
   const anticipating = useDerivedValue(() => entity.character &&
     slots.value.some((s) => s.id && s.proposal?.target && anticipationTargets.includes(s.proposal.target)) ? 1 : 0);
   const normal = useAnimatedStyle(() => ({ opacity: 1 - anticipating.value }));
@@ -177,6 +200,9 @@ const RestingEntity = memo(function RestingEntity({
       <Animated.View style={style} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
       <View collapsable={false} pointerEvents="none" onLayout={() => { if (!front) acknowledgeLayout(entity.id, token); }}
         style={{ position: "absolute", opacity: 0, width: stamp.value, height: 1 }} />
+      {!entity.character && !front && <Animated.View testID={`landing-rim-${entity.id}`} pointerEvents="none"
+        style={[{ position: "absolute", left: "8%", right: "8%", top: "8%", bottom: "4%", borderRadius: 18,
+          borderWidth: 4, borderColor: "#78B693", backgroundColor: "#E8F7C822" }, rimStyle]} />}
       <Animated.View style={normal}>
         <EntityArt
           entity={entity}
@@ -310,6 +336,9 @@ export function SceneView({
                           .map((t) => t.id)
                           .join("|")}
                         slots={interaction.slots}
+                        controller={interaction.controller}
+                        camera={interaction.camera}
+                        landingKey={scene.rooms[roomId].targets.filter(t => t.owner === entity.id && t.kind !== "mouth" && t.kind !== "hand").map(t => t.id).join("|")}
                         fixtureNudges={interaction.fixtureNudges}
                         clock={interaction.clock}
                         acknowledgeLayout={interaction.acknowledgeLayout}

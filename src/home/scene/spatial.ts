@@ -1,3 +1,4 @@
+import { onShapes } from "./hitShapes";
 // Worklet primitives stay independent of legacy geometry and reducer imports.
 import { anchorsFor } from "./species";
 import { roomPoint } from "./types";
@@ -82,4 +83,22 @@ export function occludedFraction(bounds: Bounds, depth: number, bands: RoomIndex
     area += (edges[i] - edges[i - 1]) * height;
   }
   return area / (bounds.width * bounds.height);
+}
+
+/** Bounded painted-hull sampling, only for catalog candidates. Transparent box corners never count as visible art. */
+export function catalogCovered(entity: SceneEntity, contact: RoomPoint, depth: number, bands: RoomIndex["occlusionBands"]): number {
+  "worklet";
+  const bounds = entity.bounds;
+  const front = bands.filter(b => b.id !== entity.id && b.depth > depth && overlaps(b.bounds, translatedBounds(bounds, contact)));
+  if (!front.length) return 0;
+  let painted = 0, covered = 0;
+  for (let row = 0; row < 12; row++) for (let col = 0; col < 12; col++) {
+    const x = bounds.left + (col + .5) * bounds.width / 12;
+    const y = bounds.top + (row + .5) * bounds.height / 12;
+    if (entity.shapes?.length && !onShapes(entity.shapes, x, y)) continue;
+    painted++;
+    if (front.some(b => x + contact.x >= b.bounds.left && x + contact.x <= b.bounds.left + b.bounds.width &&
+      y + contact.y >= b.bounds.top && y + contact.y <= b.bounds.top + b.bounds.height)) covered++;
+  }
+  return painted ? covered / painted : 1;
 }
