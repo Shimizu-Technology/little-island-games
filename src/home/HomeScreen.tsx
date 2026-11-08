@@ -154,6 +154,7 @@ export function HomeScreen({
   useLayoutEffect(() => {
     live.current = { store, scene, selected, placing, room, designing };
   });
+  const recordLayoutRef = useRef<(() => void) | undefined>(undefined);
   const ghost = useSharedValue<CatalogGhost>({ active: false, x: 0, y: 0 });
   const viewportOffset = useSharedValue({ x: 0, y: 64 + inset.top });
   const measure = useCallback(
@@ -161,6 +162,7 @@ export function HomeScreen({
       canvas.current?.measureInWindow((x, y) => {
         canvasOrigin.current = { x, y };
         viewportOffset.set({ x, y });
+        recordLayoutRef.current?.();
       }),
     [viewportOffset]
   );
@@ -465,16 +467,18 @@ export function HomeScreen({
   useLayoutEffect(() => {
     runtime.current = interaction;
   });
-  React.useEffect(() => {
-    if (!trace) return;
-    const c = interaction.camera.get();
-    trace.record({ type: "layout", at: Date.now(), camera: { a: c.a, tx: c.tx, ty: c.ty }, offset: viewportOffset.get(),
+  // Reference frame for planning and checking recorded gestures: after each settled edit and each measure.
+  const recordLayout = useCallback(() => {
+    const camera = runtime.current?.camera.get();
+    if (!trace || !camera) return;
+    const { scene } = live.current;
+    trace.record({ type: "layout", at: Date.now(), camera: { a: camera.a, tx: camera.tx, ty: camera.ty }, offset: canvasOrigin.current,
       entities: Object.values(scene.entities).filter((e) => restingVisible(e, scene)).map((e) => ({
         id: e.id, room: e.room, x: e.contact.x, y: e.contact.y, visual: e.visual,
         head: e.character ? anchorsFor(e.character.slot, e.base, e.facing, e.action).head : undefined })) });
-    // Reference frame for planning and checking recorded gestures; refreshed after each settled edit.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trace, scene]);
+  }, [trace]);
+  React.useEffect(recordLayout, [recordLayout, scene]);
+  useLayoutEffect(() => { recordLayoutRef.current = recordLayout; });
   React.useEffect(() => () => trace?.dispose(), [trace]);
   React.useEffect(() => {
     if (!lab) return;

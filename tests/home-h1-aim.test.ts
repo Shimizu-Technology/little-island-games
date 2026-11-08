@@ -274,7 +274,7 @@ describe("HM-10 seats and landing", () => {
   });
   it("floor picks still respect characterPoint for saved exact spots", () => {
     const state = starterHome();
-    const c = { slot: 0 as const, anchor: "floor" as const, pose: "stand" as const, x: 8, y: 8, at: { x: 400.5, y: 500 } };
+    const c = { slot: 0 as const, anchor: "floor" as const, pose: "stand" as const, x: 8, y: 8, at: roomPoint(400.5, 500) };
     expect(characterPoint(state.rooms.home, c)).toEqual({ x: 400.5, y: 500 });
   });
 });

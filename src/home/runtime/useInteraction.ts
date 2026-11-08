@@ -196,6 +196,7 @@ export function useInteraction({
   const controller = useSharedValue<ControllerState>(idleController);
   const slots = useSharedValue<DragSlot[]>([emptyDragSlot(), emptyDragSlot()]);
   const frameTimes = useSharedValue<number[]>([]);
+  const traceFrames = useSharedValue<number[]>([]);
   const probeRing = useSharedValue<ProbeFrame[]>([]);
   const probeCursor = useSharedValue(0);
   const probeLastAt = useSharedValue(0);
@@ -293,7 +294,7 @@ export function useInteraction({
     const origin = roomOrigin(roomIds.indexOf(destination), building);
     // Gaps return visibly to the committed source instead of cancelling invisibly.
     const anchor = index < 0 ? subject.contact : roomPoint(slot.x - origin.x, slot.y - origin.y);
-    const centre = subject.item && index >= 0 ? carriedCentre(subject, anchor.x, anchor.y, slot.gripX, slot.gripY, camera.value.a) : undefined;
+    const centre = subject.item && index >= 0 ? carriedCentre(subject, anchor.x, anchor.y, slot.gripX, slot.gripY, camera.value.a, reduced) : undefined;
     const reservations: Record<string, string> = {};
     for (let i = 0; i < 2; i++) {
       const other = slots.value[i];
@@ -322,7 +323,7 @@ export function useInteraction({
       now: eventTime(),
       reservations,
     });
-  }, [subjectFor, slots, prepared, camera, building, designing]);
+  }, [subjectFor, slots, prepared, camera, building, designing, reduced]);
   const isCurrent = (index: number, token: CaptureToken) => {
     const slot = slots.get()[index];
     return (
@@ -880,10 +881,13 @@ export function useInteraction({
       camera.set({ ...to, tx: from.tx + (to.tx - from.tx) * p, ty: from.ty + (to.ty - from.ty) * p });
       if (t === 1) revealPan.set(null);
     }
-    if (onTrace && frameTimes.value.length >= 120) {
-      const sorted = [...frameTimes.value].sort((a, b) => a - b), at = (q: number) => sorted[Math.floor(sorted.length * q)];
-      runOnJS(onTrace)({ type: "frames", at: eventTime(), samples: sorted.length, p50: at(.5), p95: at(.95), p99: at(.99), max: sorted[sorted.length - 1] });
-      frameTimes.set([]);
+    if (onTrace) {
+      traceFrames.modify((times) => { "worklet"; times.push(dt); return times; });
+      if (traceFrames.value.length >= 120) {
+        const sorted = [...traceFrames.value].sort((a, b) => a - b), at = (q: number) => sorted[Math.floor(sorted.length * q)];
+        runOnJS(onTrace)({ type: "frames", at: eventTime(), samples: sorted.length, p50: at(.5), p95: at(.95), p99: at(.99), max: sorted[sorted.length - 1] });
+        traceFrames.set([]);
+      }
     }
     if (onFrameReport && frameCount.value < 3600) {
       frameTimes.modify((times) => { "worklet"; times.push(dt); return times; });
@@ -1012,7 +1016,7 @@ export function useInteraction({
   // send/resumePending read these shared channels. Keeping their render-local
   // identities out of dependencies preserves the native callback clock.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onTrace, onReleaseProbe, probeRing, probeCursor, probeLastAt, probePending, queuedInput, slots, prepared, renderedRevision, laidOut, layoutTokens,
+  }, [onTrace, traceFrames, onReleaseProbe, probeRing, probeCursor, probeLastAt, probePending, queuedInput, slots, prepared, renderedRevision, laidOut, layoutTokens,
     poseLayouts, lastFrame, revealPan, controller, reduced, camera, onFrameReport, frameCount, frameTimes, inertia,
     viewport, building, offset, proposalFor, onCommit, onClear]));
   const cancelAll = () => {

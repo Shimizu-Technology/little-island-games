@@ -44,7 +44,7 @@ function shapesFor(slot: number, base: CharacterBase, facing: "left" | "right", 
   const c = companionContacts(species, base, action);
   const p = (x: number, y: number) => { const v = companionPoint(species, [x, y], base, facing); return { x: v.x * unit, y: v.y * unit }; };
   if (slot === 1)
-    return [bar(p(45, 85), p(105, 85), 33 * unit), bar(p(112, 82), p(146, 78), 22 * unit), bar(p(73, 91), p(c.hand[0], c.hand[1]), 8 * unit)];
+    return [bar(p(45, 85), p(105, 85), 31 * unit), bar(p(112, 82), p(146, 78), 20 * unit), bar(p(73, 91), p(c.hand[0], c.hand[1]), 8 * unit)];
   return [
     bar(p(40, 73), p(80, 73), 24 * unit), bar(p(45, 55), p(45, 40), 10 * unit), bar(p(75, 55), p(75, 40), 10 * unit),
     bar(p(35, 66), p(21, 47), 13 * unit), bar(p(85, 66), p(c.hand[0], c.hand[1]), 7 * unit), round(p(c.hand[0], c.hand[1] - 8), 13 * unit),

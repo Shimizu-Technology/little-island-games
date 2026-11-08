@@ -11,6 +11,9 @@ import { moreCatalog } from "../src/home/catalogMore";
 import { instance } from "../src/home/model";
 import { itemShapes } from "../src/home/art/silhouettes";
 import type { HitShape } from "../src/home/scene/types";
+import { HomeCharacter } from "../src/home/characterRenderer";
+import { anchorsFor, species } from "../src/home/scene/species";
+import { characterSize } from "../src/home/geometry";
 vi.mock("react-native-reanimated", () => ({ default: { createAnimatedComponent: (c: unknown) => c }, useSharedValue: (value: number) => ({ value }), useAnimatedProps: () => ({}), cancelAnimation: () => {}, withRepeat: () => 0, withSequence: () => 0, withTiming: () => 0, Easing: { inOut: () => 0, sin: 0 } }));
 vi.mock("react-native-svg", () => {
   const tags = { default: "svg", Circle: "circle", Ellipse: "ellipse", G: "g", Path: "path", Rect: "rect", Defs: "defs", Filter: "filter", FeColorMatrix: "feColorMatrix", ClipPath: "clipPath", Pattern: "pattern", Text: "text", LinearGradient: "linearGradient", Stop: "stop" };
@@ -62,6 +65,25 @@ describe.skipIf(!out)("hull raster audit", () => {
       execFileSync("rsvg-convert", ["-w", String(pixels), "-h", String(pixels), "-b", "none", "-o", `${base}.hull.png`, `${base}.hull.svg`]);
       execFileSync("magick", [`${base}.png`, `${base}.hull.png`, "-background", "#F4E7CF", "-layers", "flatten", "-resize", "200x200", `${base}.sheet.png`]);
       report.push({ id, active, painted, ratio: +(hullArea / Math.max(1, painted)).toFixed(3), missed: +(missed / Math.max(1, painted)).toFixed(3) });
+    }
+    for (const slot of [0, 1, 2] as const) for (const base of ["stand", "sit", "lie"] as const) {
+      const unit = species[slot].unit, shapes = anchorsFor(slot, base, "front").shapes;
+      const markup = renderToStaticMarkup(<HomeCharacter input={{ slot, base, action: null, face: null, facing: "right", size: characterSize(slot), tilt: 0, limbLag: 0, reduced: true }} />).replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
+      const vb = /viewBox="([-\d. ]+)"/.exec(markup)![1].split(" ").map(Number);
+      const b = join(out!, `character-${slot}-${base}`);
+      const px = 800, h = Math.round(px * vb[3] / vb[2]);
+      writeFileSync(`${b}.svg`, markup);
+      execFileSync("rsvg-convert", ["-w", String(px), "-h", String(h), "-b", "none", "-o", `${b}.png`, `${b}.svg`]);
+      execFileSync("magick", [`${b}.png`, "-alpha", "extract", "-depth", "8", `gray:${b}.raw`]);
+      const alpha = readFileSync(`${b}.raw`);
+      let painted = 0, hullArea = 0, missed = 0;
+      for (let py = 0; py < h; py++) for (let x = 0; x < px; x++) {
+        const a = alpha[py * px + x] > 200;
+        const rx = (vb[0] + (x + .5) / px * vb[2]) * unit, ry = (vb[1] + (py + .5) / h * vb[3]) * unit;
+        const hit = shapes.some((s) => inside(s, rx, ry));
+        if (a) painted++; if (hit) hullArea++; if (a && !hit) missed++;
+      }
+      report.push({ id: `character-${slot}-${base}`, painted, ratio: +(hullArea / Math.max(1, painted)).toFixed(3), missed: +(missed / Math.max(1, painted)).toFixed(3) });
     }
     writeFileSync(join(out!, "audit.json"), JSON.stringify(report, null, 1));
     const bad = report.filter((r) => (r.ratio as number) > 1.3 || (r.missed as number) > .1);
