@@ -19,7 +19,7 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
   crowded: () => {
     const state = starterHome();
     const room = state.rooms.home;
-    room.instances.push(instance("mango-behind", "mango", 8, 7), instance("towel", "beach-towel", 12, 9), instance("cushion", "floor-cushion", 2, 10));
+    room.instances.push(instance("mango-behind", "mango", 8, 7), instance("towel", "beach-towel", 12, 6), instance("cushion", "floor-cushion", 2, 10));
     return migrateHome(state) ?? state;
   },
 };
