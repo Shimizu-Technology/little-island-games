@@ -503,7 +503,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
   const challengeSave = useCallback(async (session: ChallengeSession, expected: ChallengeExpected) => {
     if (!ready || recovery || restoring.current || expected.epoch !== generation.current) return false;
-    session = JSON.parse(JSON.stringify(session)) as ChallengeSession;
+    try { session = JSON.parse(JSON.stringify(session)) as ChallengeSession; }
+    catch { setError('This draft is invalid. Your saved work is kept.'); return false; }
     restoring.current = true;
     try {
       await queue.current;

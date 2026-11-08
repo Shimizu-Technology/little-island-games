@@ -1,6 +1,8 @@
+import { arcadeIds } from '../arcade/types';
 import { asciiId, exactKeys, hashId, jsonBytes, pack, plain, uint, unpack } from './saveBits';
 export type Completion = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export type CompletionEvent = 'opened' | 'helped' | 'together' | 'independent';
+const realTimeArcade = new Set<string>(arcadeIds.filter(id => id !== 'reef-builder' && id !== 'canoe-cargo'));
 const transitions: Record<CompletionEvent, readonly Completion[]> = {
   opened: [1,1,2,3,4,5,6], helped: [2,2,2,4,4,5,6], together: [3,3,4,3,4,6,6], independent: [5,5,5,6,6,5,6],
 };
@@ -36,7 +38,7 @@ function validRef(v: unknown, catalog: SaveCatalog, cove = false): v is PuzzleRe
   return !!entry && (!cove || !!bank?.cove) && bank?.engine === v.engine && bank.rules === v.rules && entry.hash === v.hash;
 }
 export function validChallengeSession(v: unknown, owner: string, catalog = saveCatalog, cove = false): v is ChallengeSession {
-  if (!plain(v) || !exactKeys(v,['version','owner','game','id','ordinal','revision','puzzle','codec','payload','selectedDares','partner','result','credited']) || v.version !== 1 || v.owner !== owner || !asciiId(v.game) || !asciiId(v.id,100) || !uint(v.ordinal,2147483646) || !v.ordinal || !uint(v.revision,2147483647) || !asciiId(v.codec) || !validRef(v.puzzle,catalog,cove) || v.puzzle.engine !== v.game || !(v.partner === null || asciiId(v.partner,40) && v.partner !== owner) || typeof v.credited !== 'boolean' || !Array.isArray(v.selectedDares) || v.selectedDares.length > 3 || new Set(v.selectedDares).size !== v.selectedDares.length || !v.selectedDares.every(slot => {
+  if (!plain(v) || !exactKeys(v,['version','owner','game','id','ordinal','revision','puzzle','codec','payload','selectedDares','partner','result','credited']) || v.version !== 1 || v.owner !== owner || realTimeArcade.has(v.game as string) || !asciiId(v.game) || !asciiId(v.id,100) || !uint(v.ordinal,2147483646) || !v.ordinal || !uint(v.revision,2147483647) || !asciiId(v.codec) || !validRef(v.puzzle,catalog,cove) || v.puzzle.engine !== v.game || !(v.partner === null || asciiId(v.partner,40) && v.partner !== owner) || typeof v.credited !== 'boolean' || !Array.isArray(v.selectedDares) || v.selectedDares.length > 3 || new Set(v.selectedDares).size !== v.selectedDares.length || !v.selectedDares.every(slot => {
     const dare = uint(slot,4095) ? catalog.dares.get(slot) : undefined;
     return !!dare && dare.bank === (v.puzzle as PuzzleRef).bank && dare.puzzle === (v.puzzle as PuzzleRef).puzzle;
   }) || jsonBytes(v) > 4096) return false;
@@ -98,7 +100,7 @@ export function registerSaveContent(content: SaveCatalog): void {
     if (!uint(slot,511) || bank.slot !== slot || !asciiId(bank.engine) || !uint(bank.rules,65535) || !bank.rules || !bank.entries.length || bank.entries.length > 1024 || bank.awards.length !== bank.entries.length || bank.awards.some(n => !uint(n,3)) || bank.entries.some(e => !uint(e.ordinal,2147483647) || !hashId(e.hash) || ordinals.has(e.ordinal))) throw new Error('Invalid immutable bank registration.');
     for (const entry of bank.entries) { if (ordinals.has(entry.ordinal)) throw new Error('Duplicate ordinal.'); ordinals.add(entry.ordinal); }
   }
-  for (const [id,codec] of content.codecs) if (!asciiId(id) || !asciiId(codec.game) || typeof codec.validate !== 'function' || typeof codec.evaluate !== 'function' || typeof codec.canStart !== 'function' || typeof codec.extends !== 'function' || saveCatalog.codecs.has(id) && saveCatalog.codecs.get(id) !== codec) throw new Error('Invalid or replaced session codec.');
+  for (const [id,codec] of content.codecs) if (!asciiId(id) || realTimeArcade.has(codec.game) || !asciiId(codec.game) || typeof codec.validate !== 'function' || typeof codec.evaluate !== 'function' || typeof codec.canStart !== 'function' || typeof codec.extends !== 'function' || saveCatalog.codecs.has(id) && saveCatalog.codecs.get(id) !== codec) throw new Error('Invalid or replaced session codec.');
   for (const [slot,dare] of content.dares) if (!uint(slot,4095) || !['par','clean','plan','blind','whole','two-ways','pick-up','own-read','edits'].includes(dare.kind) || !['allowed','independent'].includes(dare.help) || !(content.banks.get(dare.bank) ?? saveCatalog.banks.get(dare.bank))?.entries[dare.puzzle] || saveCatalog.dares.has(slot) && saveCatalog.dares.get(slot) !== dare) throw new Error('Invalid or replaced dare slot.');
   if ([...content.contexts].some(id => !asciiId(id))) throw new Error('Invalid signal context.');
   // Validate the whole batch before changing any registration.

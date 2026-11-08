@@ -6,7 +6,7 @@ import { migrateProfiles, encodeSave, projectProfile } from '../src/state/profil
 import { addLearner, selectLearner } from '../src/learn/learners';
 import { addCovePerson, removeCovePerson, validCove } from '../src/state/covePeople';
 import { base64, jsonBytes, pack, unbase64, unpack } from '../src/state/saveBits';
-import { complete, creditProgress, emptyChallenge, mergeCompletion, validChallengeProgress, validChallengeSession, type Completion } from '../src/state/challenge';
+import { complete, mergeProgressFacts, registerSaveContent, creditProgress, emptyChallenge, mergeCompletion, validChallengeProgress, validChallengeSession, type Completion } from '../src/state/challenge';
 import { challengeTransition, finishChallenge, parseDraft, recoverChallengeDrafts, type ChallengeExpected } from '../src/state/challengeDrafts';
 import { checkpointAudit, checkpointEdit, newCheckpoint, validCheckpoint } from '../src/state/checkpoint';
 import { fixtureCatalog, installFixture, moved, session } from './helpers/save-contract';
@@ -118,4 +118,18 @@ it('malformed checkpoint edits cannot erase assistance evidence through the regi
  const initial=session('a'),save=start(fresh(),initial),helped=moved(initial,{helped:true});
  const accepted=challengeTransition(save,helped,expected(initial),1,fixtureCatalog);
  const forged=moved(helped,{helped:false});expect(challengeTransition(accepted,forged,expected(helped),1,fixtureCatalog)).toBe(accepted);
+});
+
+it('per-bank merges union every completion code and award combination without changing working drafts',()=>{
+ for(let a=0;a<7;a++)for(let b=0;b<7;b++)for(let marks=0;marks<4;marks++){
+  const progress=(code:number,award:number)=>{const p=emptyChallenge(),states=Array<number>(1024).fill(0),awards=Array<number>(1024).fill(0);states[0]=code;awards[0]=code>=2?award:0;p.banks=[[0,pack(states,3),pack(awards,2)]];return p;};
+  const left=progress(a,marks),right=progress(b,3^marks),merged=mergeProgressFacts(left,right,fixtureCatalog);
+  expect(unpack(merged.banks[0][1],1024,3)![0]).toBe(mergeCompletion(a as Completion,b as Completion));
+  expect(unpack(merged.banks[0][2],1024,2)![0]).toBe((a>=2?marks:0)|(b>=2?3^marks:0));expect(merged.paused).toBe(left.paused);
+  expect(validChallengeProgress(merged,'family',fixtureCatalog)).toBe(true);
+ }
+});
+it('registration rejects a real-time physics codec even if its structural validator claims it is persistable',()=>{
+ const codec=fixtureCatalog.codecs.get('save-proof-v1')!;
+ expect(()=>registerSaveContent({banks:new Map(),codecs:new Map([['illegal-realtime-v1',{...codec,game:'lagoon-run'}]]),dares:new Map(),contexts:new Set()})).toThrow(/codec/);
 });
