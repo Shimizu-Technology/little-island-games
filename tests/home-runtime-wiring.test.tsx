@@ -837,7 +837,9 @@ describe('H2 capture handoff and synthetic moves', () => {
   flushJS();
   const start = current.slots.get()[0];
   expect(start.synthetic).toBe(true); expect(committed).toBe(0);
+  vi.advanceTimersByTime(500); // A busy JS publication must not spend the unseen animation.
   harness.frames[0]({ timeSincePreviousFrame: 16.67 });
+  expect(current.slots.get()[0].x).toBe(start.sourceX);
   vi.advanceTimersByTime(100); harness.frames[0]({ timeSincePreviousFrame: 16.67 });
   expect(current.slots.get()[0].x).toBeGreaterThan(start.sourceX);
   expect(current.slots.get()[0].x).toBeLessThan(start.targetX); expect(committed).toBe(0);
