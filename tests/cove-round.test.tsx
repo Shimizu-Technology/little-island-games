@@ -10,11 +10,11 @@ import { addLearner } from '../src/learn/learners';
 import { registration, puzzle, solve, type Payload } from './helpers/challenge-replay';
 import { progressFor, selectedOwner } from '../src/state/challengeDrafts';
 import { completion } from '../src/cove/catalog';
-const db = vi.hoisted(() => ({ raw: null as string | null, rows: [] as string[], fail: false }));
+const db = vi.hoisted(() => ({ raw: null as string | null, rows: [] as string[], fail: false, focused: true }));
 vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set: async (raw: string) => { if (db.fail) throw new Error('disk'); db.raw = raw; }, preserve: async () => {}, writeDraft: async (raw: string) => { db.rows.push(raw); }, readDrafts: async () => db.rows, discardSession: async () => {} } }));
 vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', useWindowDimensions: () => ({ width: 393, height: 852 }), AppState: { addEventListener: () => ({ remove() {} }) } }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main' }));
-vi.mock('expo-router', () => ({ useIsFocused: () => true, router: {} }));
+vi.mock('expo-router', () => ({ useIsFocused: () => db.focused, router: {} }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Heading: 'h2', Copy: 'p', styles: {} }));
 vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: vi.fn() }) }));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));
@@ -55,4 +55,15 @@ describe('Cove round real Store acceptance', () => {
       expect(JSON.stringify(screen.toJSON())).toContain('Solved together');
     } finally { if (screen) await act(async () => screen.unmount()); vi.unstubAllGlobals(); }
   });
+  it('does not start a new attempt while its retained route is out of focus', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); registerSaveContent(registration.catalog, catalogManifest(registration.catalog));
+    db.focused = false; db.rows = []; db.raw = JSON.stringify({ ...emptySave(), learning: addLearner(undefined, 'A', 'a') }); let screen!: ReactTestRenderer;
+    try {
+      await act(async () => { screen = create(<StoreProvider><Probe/><Ready/></StoreProvider>); });
+      expect(store.save.challenge!.paused).toEqual([]);
+      db.focused = true; await act(async () => screen.update(<StoreProvider><Probe/><Ready/></StoreProvider>));
+      expect(store.save.challenge!.paused).toHaveLength(1);
+    } finally { db.focused = true; if (screen) await act(async () => screen.unmount()); vi.unstubAllGlobals(); }
+  });
+
 });

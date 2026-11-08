@@ -24,7 +24,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   const expected = (session?: ChallengeSession) => ({ owner, epoch: store.epoch, game: entry.game, id: session?.id ?? null, revision: session?.revision ?? null });
   const full = !saved && (progress?.paused.filter(s => !s.credited).length ?? 0) >= (owner.startsWith('cove-') ? 4 : 8);
   async function launch() {
-    if (lock.current || !progress || saved && !replace) return;
+    if (!focused || lock.current || !progress || saved && !replace) return;
     lock.current = true; setBusy(true); setMessage('');
     try {
       let next = { ...entry.start(card.ref, owner, `cove-${owner}-${progress.nextOrdinal}`, progress, { supportOff: false, ownRead: false }, []), partner };
@@ -38,7 +38,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   }
   // One launch per mounted owner/epoch/ref. Parent keys this component at every identity boundary.
   useEffect(() => {
-    if (!auto.current && !saved && !full) { auto.current = true; void launch(); }
+    if (focused && !auto.current && !saved && !full) { auto.current = true; void launch(); }
   });
   async function dispatch(action: unknown) {
     const before = current.current;
@@ -57,7 +57,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   // Store may publish an accepted draft even if its disk write later fails.
   useEffect(() => { if (saved && (!current.current || saved.id !== current.current.id || saved.revision > current.current.revision)) current.current = saved; }, [saved]);
   const round = saved ?? finished, actual = round ? entry.puzzles.find(p => sameRef(p.ref, round.puzzle)) : card;
-  const changeAttempt = !!saved && replace && !sameRef(saved.puzzle, card.ref);
+  const changeAttempt = !!saved && replace && (!sameRef(saved.puzzle, card.ref) || !!remix);
   return <View style={{ gap: 14 }}>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button quiet compact onPress={onClose}>← Cove</Button><Heading style={{ flexShrink: 1 }}>{infoFor(entry.game).name}</Heading></View><SaveStatus/>
     {!!message && <Copy accessibilityLiveRegion="polite">{message}</Copy>}

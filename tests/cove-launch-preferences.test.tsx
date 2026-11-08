@@ -2,6 +2,7 @@ import React from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import CoveScreen from '../src/cove/CoveScreen';
+import { emptyChallenge } from '../src/state/challenge';
 import { emptySave } from '../src/state/validation';
 import { emptyLocal, defaults } from '../src/cove/local';
 import type { ChallengeCard, ChallengeEntry } from '../src/challenge/types';
@@ -34,7 +35,7 @@ it('waits for local choices before opening a game deep link, respects the owner 
 });
 
 it('clears a Cove-only identity when the route loses focus through Back', async () => {
-  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); fixture.save = { ...emptySave(), cove: { version: 1, active: 'cove-leon', people: {} } };
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); fixture.save = { ...emptySave(), cove: { version: 1, active: 'cove-leon', people: { 'cove-leon': { name: 'Leon', challenge: emptyChallenge(true) } } } };
   fixture.local = { data: emptyLocal(), ready: false, error: '', load: vi.fn(), reset: vi.fn(), change: vi.fn() };
   fixture.covePerson.mockReset(); let screen!: ReactTestRenderer;
   try {
