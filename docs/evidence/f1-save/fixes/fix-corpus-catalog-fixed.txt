@@ -1,0 +1,13 @@
+
+> little-island-games@1.0.0 test
+> vitest run tests/save-catalog-history.test.ts
+
+
+ RUN  v5.0.5 /Users/leonshimizu/.t3/worktrees/little-island-games/t3-ec809d90
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  23:29:04
+   Duration  1.33s (tests 97%, transform 2%, import 1%)
+

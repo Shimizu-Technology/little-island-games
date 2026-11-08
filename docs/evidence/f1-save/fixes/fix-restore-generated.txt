@@ -1,0 +1,5 @@
+
+> little-island-games@1.0.0 ios:restore-generated
+> node scripts/ios-preview-bundle.mjs restore
+
+restored committed default catalog: 0 items, 50 index entries

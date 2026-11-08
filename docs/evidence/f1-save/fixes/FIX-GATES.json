@@ -1,0 +1,111 @@
+{
+  "branch": "p4/f1-save",
+  "runtimeHead": "c7321b0c5476700bff31b3de3355defca083d03e",
+  "defaultInvocationHead": "c7321b0c5476700bff31b3de3355defca083d03e",
+  "previewInvocationHead": "6ce8eba8759ae9c32eb6bd60e1345bc4319901b3",
+  "assertionHead": "696057738cbe3db12fc094a87af03bc93885e63c",
+  "runtimeUnchangedAfterGatedHead": true,
+  "default": {
+    "exitCode": 0,
+    "tests": 2439,
+    "files": 201,
+    "shell": "7d2b6650169a",
+    "resources": 6480
+  },
+  "preview": {
+    "exitCode": 0,
+    "tests": 2439,
+    "files": 201,
+    "shell": "6cca74d009ba",
+    "resources": 11037
+  },
+  "doctor": {
+    "exitCode": 0,
+    "checks": "21/21",
+    "path": "default"
+  },
+  "generatedLibrary": "restored default; verified no diff in all four files",
+  "catalogFinal": "2 tests plus actual check and lint passed; full/shallow history covered",
+  "paintFinal": "31 tests passed, all 217 retained adversarial prior states restored exactly",
+  "environment": {
+    "node": "v22.22.3",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "evidence": {
+    "fix-doctor.txt": {
+      "bytes": 129,
+      "sha256": "003e767fd412baf71a4f375c7a65fbbd2ac6ae5c2de22f2962c9ee9a9edc3302"
+    },
+    "fix-check-default.txt": {
+      "bytes": 579406,
+      "sha256": "0c0e1e761f733be5d473f46cb250ea215590d0d98714d0b2251545119903752a"
+    },
+    "fix-save-suite.txt": {
+      "bytes": 590,
+      "sha256": "577716110c681724a91a925bd3bf95f1e009167f2faf6003e9f16fa48db18531"
+    },
+    "fix-restore-generated.txt": {
+      "bytes": 160,
+      "sha256": "516ab6fe7c9642e1f3e98d96157eb559cf6726613f92794b70aa0f74a46a99b5"
+    },
+    "fix-post-play.txt": {
+      "bytes": 328,
+      "sha256": "65b477b1dc33c3cdcbcdc8d29ab042ce69698a287ef5bc25a0a62d9bb3d4d3eb"
+    },
+    "fix-corpus-catalog-fixed.txt": {
+      "bytes": 295,
+      "sha256": "fd9f231f1875448ba91df4e01fe67118d363b240b8d0f77db184e0ea719d5771"
+    },
+    "fix-corpus-catalog-before.txt": {
+      "bytes": 2211,
+      "sha256": "0d1c1117a71f7efd7f6dd1ce651c194878e3edf06f1af906ab4c7eb050fff9a1"
+    },
+    "fix-catalog-final.txt": {
+      "bytes": 306,
+      "sha256": "5c2cb32fb1c6b9b7cfca79cbb6e13aa34cabb989b520dd3846b08974e3b0eaf8"
+    },
+    "fix-catalog-check.txt": {
+      "bytes": 572,
+      "sha256": "d8f850fad4df2dbd440d57ac67173e4640c048efd7b7544ce7c61467b8cfe84c"
+    },
+    "fix-check-preview.txt": {
+      "bytes": 956925,
+      "sha256": "b3961eff0a949be10362e1c8d3635cef549be79c9d2202b5265087c117ac33d1"
+    },
+    "fix-contract-final.txt": {
+      "bytes": 291,
+      "sha256": "bfa5bbe55e285d3a9208e57997832c07a3b3ba7afddd814013dbb343009d39d9"
+    },
+    "fix-old-build-rollback.txt": {
+      "bytes": 267,
+      "sha256": "8a9cbb8e6bfce079060d20fa3f685199dc71c1f4d3073dd4ca47f568745169d0"
+    },
+    "fix-final-tooling-lint.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "fix-regressions-before.txt": {
+      "bytes": 15325,
+      "sha256": "bc309fe7f0349f3ca1b85ad6d68d9056d361470f0e0f8bc5bf19ce35821a5c06"
+    },
+    "fix-cleanup.txt": {
+      "bytes": 149,
+      "sha256": "6fcab2c8d5cad5c5f7f32f91e13fb9beedf5643a780403bd6161759be044fe2c"
+    }
+  },
+  "runtimeFiles": {
+    "src/state/Store.tsx": "99d751c2a9eb5d21ce53a1285e15120ac029cda41bb08cb34daa1378a0168536",
+    "src/state/catalogManifest.ts": "1a959ebb1e06e48cf22c858aa68fec02e7e48c73a7735ab3c9c6457e975697c2",
+    "src/state/challenge.ts": "176b33cb367e41a31e21a9c9487c9dba76c1eec295cbb14ca485a97b6efad19d",
+    "src/state/challengeDrafts.ts": "2f362814cf1e4673f2ca0c382eb6068af88d62767aaccc93323ee73e3bf8f8b6",
+    "src/state/checkpoint.ts": "6fcbd959ad40a9ded929afc78fe2b712d1010376fe0ad16e75b39e211a1cf037",
+    "src/state/draftQueue.ts": "58da469756d041f8637448eb0d9d32470276a640973d2660488013dd48d78fce",
+    "src/state/homeMigration.ts": "327bf394736c40e996ec6638663e16f3da53fd003762c99777562e10dadfb4af",
+    "src/state/replacement.ts": "a636c6bcfc53e0937fa7bb83f6b67cb13ed7b9e83e4eaced40374cf114df8dc2",
+    "src/state/save-catalog.json": "0112c31bac9261155bb849ad92261245b9a30ccc76920b09d9844a702beb3855",
+    "src/state/storage.native.ts": "dac70056353bb4bc00ffa142de91a113baabf745cb6482dc7d6293ec9f2ebed9",
+    "src/state/storage.ts": "3f6379809db4f4d5b2aece59a7b40b19646f5bfb0f64ed5b63397256cd0fe516",
+    "src/state/storage.web.ts": "0e314c09271fd7084f3c58b0a4c80bac6cd89286d65885e299c6286e986c2a0b"
+  }
+}
