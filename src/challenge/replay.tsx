@@ -22,12 +22,15 @@ export function defineReplayGame<D,P,A,S>(config: {
     if(!['school','deep-water','endless','play'].includes(p.source.kind))throw new Error('Unknown source.');
     if(p.source.kind==='school' && (p.source.game!==config.game || ![1,2,3,4,5].includes(p.source.level) || !asciiId(p.source.puzzle)) || p.source.kind==='endless' && (p.source.bank!==p.ref.bank || p.source.puzzle!==p.ref.puzzle) || p.source.kind==='play' && (p.source.game!==config.game || p.source.rules!==p.ref.rules || !asciiId(p.source.content)) || p.source.kind==='deep-water' && (!uint(p.source.collection,511) || !uint(p.source.puzzle,1023)))throw new Error('Source does not match puzzle.');
     if(p.par && (!metrics.includes(p.par.metric) || !uint(p.par.lower) || !uint(p.par.upper) || p.par.lower>p.par.upper))throw new Error('Invalid certified par bounds.');
+    // Awards and optional dares use the same immutable evidence parameters.
+    for(const {rule} of [...p.dares,...p.awards.filter(a=>a!==null)]) {
+      if(!['par','clean','plan','blind','whole','two-ways','pick-up','own-read','edits'].includes(rule.kind) || (rule.kind==='par' && (!metrics.includes(rule.metric) || !uint(rule.max) || !rule.max)) || (rule.kind==='edits' && !uint(rule.max)) || (rule.kind==='plan' && ![1,2,3].includes(rule.max)) || (rule.kind==='pick-up' && !objectiveIds.has(rule.objective)))throw new Error('Invalid Challenge rule.');
+    }
     for(const a of p.awards) if(a && (!['allowed','independent'].includes(a.help) || ['clean','whole','own-read'].includes(a.rule.kind) && a.help!=='independent'))throw new Error('Invalid award help policy.');
     for(const d of p.dares) {
       if(!uint(d.slot,4095) || slots.has(d.slot) || !asciiId(d.id) || ids.has(d.id) || !['allowed','independent'].includes(d.help))throw new Error('Invalid dare registration.');
       slots.add(d.slot);ids.add(d.id);
       if(['clean','whole','own-read'].includes(d.rule.kind) && d.help!=='independent')throw new Error('This dare needs independent evidence.');
-      if((d.rule.kind==='par' && (!metrics.includes(d.rule.metric) || !uint(d.rule.max) || !d.rule.max)) || (d.rule.kind==='edits' && !uint(d.rule.max)) || (d.rule.kind==='plan' && ![1,2,3].includes(d.rule.max)) || (d.rule.kind==='pick-up' && !objectiveIds.has(d.rule.objective)))throw new Error('Invalid dare rule.');
     }
   }
   const sameRef=(a:ChallengeSession['puzzle'],b:ChallengeSession['puzzle'])=>a.bank===b.bank&&a.puzzle===b.puzzle&&a.engine===b.engine&&a.rules===b.rules&&a.hash===b.hash;

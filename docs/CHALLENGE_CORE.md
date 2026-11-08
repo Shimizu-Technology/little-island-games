@@ -1,6 +1,6 @@
 # Challenge core
 
-F2 builds on `docs/SAVE_CONTRACT.md` revision 2. Envelope 3, profiles 2, Challenge session/progress 1, the seven completion codes, permanent award bits and admission ceilings are unchanged. Old School stars remain separate. This branch registers the existing 28 School games and their bounded signal contexts; it registers no new puzzle or game.
+F2 builds on `docs/SAVE_CONTRACT.md` revision 3. Envelope 3, profiles 2, Challenge session/progress 1, the seven completion codes, permanent award bits and admission ceilings are unchanged. Old School stars remain separate. This branch registers the existing 28 School games and their bounded signal contexts; it registers no new puzzle or game.
 
 ## Precedence and evidence
 
@@ -30,7 +30,7 @@ Each immutable puzzle includes its exact F1 ref, source, tier, path, descriptor,
 
 `defineReplayGame` keeps launch options and first-solution hashes fixed, replays only legal typed engine actions, retains help/run/check/reset evidence, rejects actions after terminal state and derives the terminal result and marks. Replay logs are capped at 512 actions plus the 4,096-byte session limit. Checkpoint engines must supply their own typed bounded codec using F1's packing/rings and prove monotonic audit extension; this replay helper is not a checkpoint implementation.
 
-`ChallengeFrame` has explicit Start, accessible Help/Back/Easier/Another puzzle, per-person remembered path, a separate paused slot, and explicit attempt replacement through `challengeDiscard`. Start/finish is awaited before writing working choices. A refused transition keeps saved work. Draft durability failures retain Store's accepted revision and offer Retry/export through SaveStatus. No real-time frame log is added.
+`ChallengeFrame` has explicit Start, accessible Help/Back/Easier/Another puzzle, per-person remembered path, a separate paused slot, and explicit attempt replacement through one guarded `challengeSave` with `expected.replace`. Start/finish is awaited before writing working choices. A refused transition keeps saved work. Draft durability failures retain Store's accepted revision and offer Retry/export through SaveStatus. No real-time frame log is added.
 
 ## Saved School boards
 

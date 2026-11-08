@@ -12,6 +12,8 @@ import { registration, engine, puzzle, solve, type Action, type Payload } from '
 import { defaultComfort, completedSignal } from '../src/challenge/offers';
 import { defineReplayGame } from '../src/challenge/replay';
 import { buildCatalog } from '../src/challenge/catalog';
+import * as challengeCatalog from '../src/challenge/catalog';
+import type { ChallengeEntry } from '../src/challenge/types';
 import { migrateProfiles, encodeSave } from '../src/state/profiles';
 import { putProgress } from '../src/state/challengeDrafts';
 import { startSession } from '../src/learn/session';
@@ -27,9 +29,28 @@ vi.mock('../src/components/SaveStatus',()=>({SaveStatus:()=>null}));
 vi.mock('../src/personalization/LearnerChip',()=>({LearnerChip:()=>null}));
 let store:ReturnType<typeof useStore>;
 function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return null;}
-function ReadyFrame(){const s=useStore();return s.ready?<ChallengeFrame key={`${s.epoch}`} entry={entry}/>:null;}
+function ReadyFrame({selectedEntry=entry}:{selectedEntry?:ChallengeEntry}){const s=useStore();return s.ready?<ChallengeFrame key={`${s.epoch}`} entry={selectedEntry}/>:null;}
 const entry={...registration,render:(session:Parameters<typeof registration.move>[0],dispatch:(a:unknown)=>void)=>{const actions=(solve(registration.start(puzzle.ref,'a','route',emptyChallenge(),{supportOff:false,ownRead:false},[])).payload as Payload).actions;const n=(session.payload as Payload).actions.filter(a=>a.type==='move').length;return <><button onClick={()=>dispatch({type:'read-aloud'} satisfies Action)}>Read aloud</button><button onClick={()=>dispatch(actions[n])}>Next maze step</button></>;}};
 const press=async(root:ReactTestRenderer,label:string)=>act(async()=>{const button=root.root.findAllByType('button').find(n=>n.children.filter(c=>typeof c==='string').join('')===label);expect(button,label).toBeDefined();(button!.props.onPress??button!.props.onClick)();});
+it('R2 P2-1: a stretch invitation clears a dare from the completed puzzle before Start',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ const first={...puzzle,par:undefined,ref:{...puzzle.ref,engine:'stretch-proof',bank:430},source:{kind:'endless' as const,bank:430,puzzle:0},dares:puzzle.dares.map((d,i)=>({...d,slot:3300+i,id:`stretch-dare-${i}`}))};
+ const puzzles=[first,{...first,title:'A higher test maze',tier:2 as const,ref:{...first.ref,puzzle:1,hash:'b'.repeat(64)},source:{kind:'endless' as const,bank:430,puzzle:1},dares:[{...puzzle.dares[0],slot:3400,id:'higher-par'}]}];
+ const registered=defineReplayGame({game:'stretch-proof',codec:'stretch-proof-v1',context:'stretch',cove:true,budget:{wrapper:700,draft:3396,undo:0,audit:0},puzzles,engine,Board:()=>null,controls:{help:()=>({type:'help'} as Action),reset:()=>({type:'reset'} as Action)}});
+ const selectedEntry={...registered,render:entry.render};
+ registerSaveContent(registered.catalog,catalogManifest(registered.catalog));
+ // One prior clean finish plus the real finish below produces the two-clean-finish stretch signal.
+ db.raw=encodeSave(putProgress(migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')}),'a',completedSignal(emptyChallenge(),'stretch-1',true,true)));
+ const spy=vi.spyOn(challengeCatalog,'challengeFor').mockReturnValue(selectedEntry);let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame selectedEntry={selectedEntry}/></StoreProvider>);});
+  await press(r,'blind · Help welcome');await press(r,'Start this puzzle');expect(store.save.challenge!.paused[0].selectedDares).toEqual([3303]);
+  for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');
+  await press(r,'Try a stretch');await press(r,'Start this puzzle');
+  expect(store.challengeRefusal).toBeNull();expect(store.save.challenge!.paused).toHaveLength(1);
+  expect(store.save.challenge!.paused[0].puzzle.puzzle).toBe(1);expect(store.save.challenge!.paused[0].selectedDares).toEqual([]);
+  expect((store.save.challenge!.paused[0].payload as Payload).options.supportOff).toBe(false);
+ }finally{spy.mockRestore();if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
 it('keeps School paused while Challenge starts, admits new edits during draft I/O, and restores the exact paused Challenge',async()=>{
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));
   const school={...startSession('crab-commands',{options:{mode:'solo',pace:'easy'}},{},42),learner:'a'};
@@ -87,7 +108,7 @@ it('P1-4: a full unfinished set offers Continue, export and explicit replacement
  const entries=Array.from({length:8},(_,i)=>defineReplayGame({game:`slot-${i}`,codec:`slot-${i}-v1`,context:`slot${i}`,cove:true,objectives:['shell'],budget:{wrapper:700,draft:3396,undo:0,audit:0},puzzles:[{...puzzle,dares:[],awards:[null,null],ref:{...puzzle.ref,bank:410+i,engine:`slot-${i}`},source:{kind:'endless',bank:410+i,puzzle:0}}],engine,Board:()=>null,controls:{help:()=>({type:'help'} as Action),reset:()=>({type:'reset'} as Action)}}));
  const catalog=buildCatalog([registration,...entries]);registerSaveContent(catalog,catalogManifest(catalog));let p=emptyChallenge();for(const e of entries){const session=e.start(e.puzzles[0].ref,'a',`saved-${p.nextOrdinal}`,p,{supportOff:false,ownRead:false},[]);p={...p,nextOrdinal:p.nextOrdinal+1,paused:[...p.paused,session]};}
  db.raw=encodeSave(putProgress(migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')}),'a',p));let r!:ReactTestRenderer;
- try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});expect(JSON.stringify(r.toJSON())).toContain('Your paused spaces are full');expect(JSON.stringify(r.toJSON())).toContain('Export backup in Settings');expect(r.root.findAllByType('button').some(n=>n.children.join('')==='Continue slot-0')).toBe(true);await press(r,'Replace slot-0');await press(r,'Start this puzzle');expect(store.save.challenge!.paused).toHaveLength(8);expect(store.save.challenge!.paused.some(s=>s.game==='slot-0')).toBe(false);expect(store.save.challenge!.paused.some(s=>s.game==='maze-proof')).toBe(true);
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});expect(JSON.stringify(r.toJSON())).toContain('Your paused spaces are full');expect(JSON.stringify(r.toJSON())).toContain('Export backup in Settings');expect(r.root.findAllByType('button').some(n=>n.children.join('')==='Continue Slot 0')).toBe(true);await press(r,'Replace Slot 0');await press(r,'Start this puzzle');expect(store.save.challenge!.paused).toHaveLength(8);expect(store.save.challenge!.paused.some(s=>s.game==='slot-0')).toBe(false);expect(store.save.challenge!.paused.some(s=>s.game==='maze-proof')).toBe(true);
  }finally{await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
 

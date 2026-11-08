@@ -11,6 +11,7 @@ import { emptySave } from '../src/state/validation';
 import { migrateProfiles } from '../src/state/profiles';
 import { addLearner } from '../src/learn/learners';
 import { completedSignal, rateSignal, resultOffer, defaultComfort } from '../src/challenge/offers';
+import type { DareRule } from '../src/challenge/types';
 
 it('P1-1/P3-7: registry checks an exported source tree with no registrations directory or git history',()=>{
  const dir=mkdtempSync(`${tmpdir()}/f2-registry-`);
@@ -38,8 +39,19 @@ it.each(['pick-up','two-ways','par'] as const)('P2-2: helped and Together award 
   for(const a of actions)s=e.move(s,a)!;expect(s.result?.awards).toBe(2);
  }
 });
-it('P1-3: a hard rating steers the next finish once',()=>{
- let p=emptyChallenge();for(let i=0;i<3;i++)p=completedSignal(p,'s0-2',true,true);p=rateSignal(p,'s0-2','hard');p=completedSignal(p,'s0-2',true,true);expect(resultOffer(p.signals[0],defaultComfort,{atPar:false,firstHigher:false,dare:false,harder:true})?.kind).toBe('easier');p=completedSignal(p,'s0-2',true,true);p=completedSignal(p,'s0-2',true,true);expect(p.signals[0][3]).toBeNull();
+it('P1-3: a hard rating steers the next two finishes until the third-finish face',()=>{
+ let p=emptyChallenge();for(let i=0;i<3;i++)p=completedSignal(p,'s0-2',true,true);p=rateSignal(p,'s0-2','hard');
+ for(let i=0;i<2;i++){p=completedSignal(p,'s0-2',true,true);expect(resultOffer(p.signals[0],defaultComfort,{atPar:false,firstHigher:false,dare:false,harder:true})?.kind).toBe('easier');}
+ p=completedSignal(p,'s0-2',true,true);expect(p.signals[0][3]).toBeNull();
+});
+it.each([
+ {kind:'par',metric:'bogus',max:4}, {kind:'par',metric:'steps',max:0}, {kind:'par',metric:'steps',max:-1},
+ {kind:'plan',max:99}, {kind:'edits',max:-1}, {kind:'pick-up',objective:'outside-list'},
+] as unknown as DareRule[])('R2 P3-2: rejects invalid award parameters %j',rule=>{
+ expect(()=>makeEntry(0,[{rule,help:'allowed'},null])).toThrow(/rule/i);
+});
+it('R2 P3-2: Pick Up with an explicit independent policy remains valid',()=>{
+ expect(()=>makeEntry(0,[{rule:{kind:'pick-up',objective:'shell'},help:'independent'},null])).not.toThrow();
 });
 it('P3-6: a hard rating at the floor never reverses into a harder invitation',()=>{
  const facts={atPar:false,firstHigher:false,dare:false,harder:true,easier:false};

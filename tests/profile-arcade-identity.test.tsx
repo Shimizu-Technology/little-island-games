@@ -73,6 +73,9 @@ it('R04 identity clears another learner’s selection and pending start; finish 
     expect(root.root.findAll(n=>String(n.type)==='Copy'&&String(n.props.children).includes('could not be checked')).length).toBeGreaterThan(0);
     expect(root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Try saving again')).toHaveLength(0);
     expect(store.arcade).toBe(acceptedArcade);
+    await act(async()=>root.root.findAll(n=>n.props.title==='Keep your result'&&typeof n.props.onClose==='function')[0].props.onClose());
+    expect(root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Save my result')).toHaveLength(0);
+    expect(root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Result options')).toHaveLength(1);
     await act(async()=>board.props.onResult({cleared:true,stars:3,score:100,detail:'cleared'}));
     expect(gameProgress(arcadeLearner(store.save.arcade,'b'),'reef-builder').stars['w1-1']).toBe(3);
     expect(root.root.findAll(n=>String(n.type)==='audit-board')).toHaveLength(0);

@@ -117,15 +117,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     mounted = useRef(true),
     uncertainWrite = useRef(false),
     restoring = useRef(false);
+  const admitEnvelope = useCallback((encoded: string) => {
+    let message: string;
+    if (!withinSaveLimit(encoded)) message = 'This change exceeds the save limit. Your saved work is kept. Export it before managing paused games or people.';
+    else {
+      try { parseSave(encoded); return true; }
+      catch { message = 'This change contains invalid saved game data. Your saved work is kept. Please try again.'; }
+    }
+    admissionRejected.current = true; writeFailures.current++; setError(message); return false;
+  }, []);
   const persist = useCallback((next: Save, prepared = false) => {
     if (restoring.current || uncertainWrite.current) return queue.current;
     const durable = prepared ? next : { ...next, saveRevision:newSaveRevision() };
     const encoded = encodeSave(durable);
-    if (!withinSaveLimit(encoded)) {
-      admissionRejected.current = true; writeFailures.current++;
-      setError('This change exceeds the save limit. Your saved work is kept. Export it before managing paused games or people.');
-      return queue.current;
-    }
+    // Prepared commits already passed whole-envelope admission before publication.
+    if (!prepared && !admitEnvelope(encoded)) return queue.current;
     admittedBytes.current = utf8Bytes(encoded);
     latest.current = durable; setSave(durable);
     pendingWrites.current++; setSaving(true);
@@ -141,7 +147,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (mounted.current) setError("Your latest changes could not be saved. Keep the app open and try again.");
       }).finally(() => { pendingWrites.current--; if (mounted.current && pendingWrites.current === 0) setSaving(false); });
     return queue.current;
-  }, []);
+  }, [admitEnvelope]);
   const [draftWriter] = useState(() => new DraftQueue());
   const writeDraft = useCallback((key:string,raw:string) => draftWriter.enqueue(key,raw,{schedule:work => {
     pendingWrites.current++; setSaving(true);
@@ -224,7 +230,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if ((previous.learning?.active ?? 'family') !== (next.learning?.active ?? 'family')) {
         const kept = syncProfile(previous);
         next = syncProfile(projectProfile({ ...next, profiles: kept.profiles ? { ...kept.profiles, people: { ...next.profiles?.people, ...kept.profiles.people } } : next.profiles }, next.learning));
-        if (!withinSaveLimit(encodeSave(next))) { admissionRejected.current = true; writeFailures.current++; setError("This change exceeds the save limit. Your saved work is kept."); return false; }
+        if (!admitEnvelope(encodeSave(next))) return false;
         admissionRejected.current = false; latest.current = next; setSave(next); setBadgeResult(null); void persist(next,true); return true;
       }
       const previousWord = latest.current.sessions["word-rescue"],
@@ -247,7 +253,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const prior=progressFor(before,owner), progress=progressFor(next,owner);
         if(prior&&progress)next=putProgress(next,owner,{...progress,signals:prior.signals,practice:prior.practice});
       }
-      if (!withinSaveLimit(encodeSave(next))) { admissionRejected.current = true; writeFailures.current++; setError("This change exceeds the save limit. Your saved work is kept."); return false; }
+      if (!admitEnvelope(encodeSave(next))) return false;
       admissionRejected.current = false;
       if (newBadges.length && source) setBadgeResult({ owner, epoch: generation.current, badges: newBadges, source });
       latest.current = next;
@@ -255,7 +261,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       void persist(next,true);
       return true;
     },
-    [persist, ready, recovery]
+    [persist, ready, recovery, admitEnvelope]
   );
   const update = useCallback(
     (game: GameId, next: GameState, expected?: GameState) => {
@@ -481,6 +487,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const before = latest.current, removed = withoutLearner(before, id);
     if (removed === before) return false;
     const next = removed.library ? { ...removed, library: { ...removed.library, profiles: Object.fromEntries(Object.entries(removed.library.profiles).filter(([owner]) => owner !== id)) } } : removed;
+    // Reject a malformed candidate before preserving drafts or replacing the family save.
+    try { parseSave(encodeSave(next)); } catch { return false; }
     restoring.current = true;
     try {
       await queue.current;
