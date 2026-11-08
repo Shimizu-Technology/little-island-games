@@ -1,4 +1,5 @@
 import React from "react";
+import { instance } from "../src/home/model";
 import TestRenderer, { act } from "react-test-renderer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { layoutToken } from "../src/home/runtime/layout";
@@ -190,6 +191,54 @@ beforeEach(() => {
   destinationRevision = "";
   vi.useFakeTimers();
   vi.setSystemTime(1000);
+});
+describe("HM-03 anchored furniture in Play", () => {
+  function roomWith(item: string) {
+    const scene = fixture();
+    const thing = { ...entity, id: `home/item/${item}`, character: undefined, base: "stand" as const, band: "furniture-back" as const,
+      item: { ...instance(item, item, 2, 2) }, body: { w: 2, h: 2, layer: "furniture", small: false, holdable: false, portable: item !== "bed" } } as SceneEntity;
+    scene.entities = { [thing.id]: thing };
+    scene.rooms.home.entities = scene.entities;
+    scene.rooms.home.occupancy = {};
+    scene.rooms.home.hitProxies = [{ id: thing.id, bounds: { left: 70, top: 80, width: 60, height: 220 }, depth: thing.depth, band: thing.band }];
+    return { scene, thing };
+  }
+  it("a stray bed drag wobbles, becomes a camera pan and commits nothing", async () => {
+    const { scene, thing } = roomWith("bed");
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={scene} />); });
+    touch("down", 100, 200); flushJS();
+    expect(current.slots.get()[0].id).toBe("");
+    touch("move", 112, 200); flushJS();
+    expect(current.controller.get().pointers).toMatchObject([{ phase: "camera" }]);
+    expect(current.controller.get().pointers[0].entity).toBeUndefined();
+    expect(current.fixtureNudges.get()[thing.id]).toBeGreaterThan(0);
+    touch("move", 140, 230); flushJS();
+    touch("up", 140, 230); flushJS();
+    expect(committed).toBe(0);
+    expect(current.slots.get()[0].id).toBe("");
+    await act(async () => renderer.unmount());
+  });
+  it("a tap on a bed is still a tap, and a second finger on it is camera input", async () => {
+    const { scene } = roomWith("bed");
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={scene} />); });
+    touch("down", 100, 200); flushJS();
+    harness.handlers.down({ changedTouches: [{ x: 110, y: 260, id: 2 }], numberOfTouches: 2 }, manager); flushJS();
+    expect(current.controller.get().pointers.every((p) => !p.entity)).toBe(true);
+    expect(current.controller.get().pointers).toHaveLength(2);
+    await act(async () => renderer.unmount());
+  });
+  it("a portable item still lifts and moves", async () => {
+    const { scene, thing } = roomWith("teddy");
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={scene} />); });
+    touch("down", 100, 200); flushJS();
+    expect(current.slots.get()[0].id).toBe(thing.id);
+    touch("move", 140, 230); flushJS();
+    expect(current.slots.get()[0].phase).toBe("dragging");
+    await act(async () => renderer.unmount());
+  });
 });
 describe("actual runtime callback sequencing", () => {
   it("Q3 release commits the visible floor preview during a pending target change", async () => {
