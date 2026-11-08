@@ -67,3 +67,14 @@ it('the busiest native catalog fixture has room for exactly one more catalog ins
  const {validHome,MAX_INSTANCES}=await import('../src/home/model');const state=labHome('catalog-busy');
  expect(validHome(state)).toBe(true);expect(state.rooms.home.instances).toHaveLength(MAX_INSTANCES-1);
 });
+it('R2-P1-1 commit retains the target exit margin used by the final hover preview',()=>{
+ const latest=labHome(),seed=structuredClone(latest);seed.rooms.home.instances.push(instance('hover-food','rice-ball',0,0));
+ const scene=buildScene(seed),id='home/item/hover-food',subject=scene.entities[id];
+ const hover=(x:number,y:number,previous?:ReturnType<typeof resolve>)=>{
+  const point=roomPoint(x,y),centre=carriedCentre(subject,x,y,0,0,.5025);
+  return resolve(scene.rooms.home,subject,point,{scale:.5025,aim:roomPoint(centre.x,centre.y),contact:point,previous,catalog:true,avoidFurnitureOverlap:true});
+ };
+ const entered=hover(355,400),released=hover(303.4,350,entered);expect(entered.kind).toBe('mouth');expect(released.kind).toBe('mouth');
+ const committed=catalogCommit(latest,{seed},id,released);
+ expect(committed).toBeDefined();expect(committed!.proposal.kind).toBe(released.kind);expect(committed!.proposal.target).toBe(released.target);expect(committed!.proposal.contact).toEqual(released.contact);
+});

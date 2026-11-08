@@ -16,7 +16,7 @@ export function catalogCommit(latest: HomeStateV2, catalog: CatalogSeed, id: str
  const scene = buildCatalogScene(seed), subject = scene.entities[id];
  if (!subject) return;
  const resolved = resolve(scene.rooms[proposal.room], subject, proposal.contact,
-  { scale: proposal.catalogIntent?.scale ?? 1, ...proposal.catalogIntent, target: proposal.target,
+  { scale: proposal.catalogIntent?.scale ?? 1, ...proposal.catalogIntent, previous: proposal, target: proposal.target,
     floorOnly: proposal.kind === "floor", release: true, catalog: true, avoidFurnitureOverlap: true });
  if (resolved.kind !== proposal.kind || resolved.target !== proposal.target) return;
  return { seed, proposal: resolved };
