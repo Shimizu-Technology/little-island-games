@@ -62,7 +62,8 @@
     "ios:restore-generated": "node scripts/ios-preview-bundle.mjs restore",
     "ios:preview-build": "node scripts/ios-preview-bundle.mjs build --",
     "registry:generate": "node scripts/generate-game-registry.mjs",
-    "registry:check": "node scripts/generate-game-registry.mjs --check"
+    "registry:check": "node scripts/generate-game-registry.mjs --check",
+    "ios:dev": "node scripts/ios-dev.mjs"
   },
   "private": true,
   "engines": {

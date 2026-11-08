@@ -40,7 +40,7 @@ export type Socket = Readonly<{
 export type ToggleKind = "light" | "water" | "power" | "open";
 
 export type Capability = Readonly<{
-  /** Toca rule: almost everything can be dragged in Play. Built-in fixtures (stove, sink) can set false. */
+  /** False keeps it put during Play: it still answers taps and drops, and Design rearranges it. */
   moveInPlay: boolean;
   /** A character can carry it: drop it on a hand. */
   holdable?: boolean;
@@ -57,9 +57,24 @@ export type Capability = Readonly<{
 /** Art fills this per item (src/home/art). The engine reads it only through `capabilityOf`. */
 export const capabilities: Partial<Record<ItemId, Capability>> = { ...Object.fromEntries(Object.entries(seatSockets).map(([id, sockets]) => [id, { moveInPlay: true, sockets }])), ...livingCapabilities };
 
-/** The default for items the art slice hasn't described yet: movable in Play, no special behaviour. */
+/**
+ * The frozen Play list (MP-D6). Beds, tables and storage, the large things that hold a room
+ * together, stay put so a stray drag cannot rearrange it. Rugs and wall art are the same:
+ * a pan attempt must not move them. Cushions, plants, lamps and props stay movable.
+ */
+export const anchoredInPlay: readonly ItemId[] = [
+  "bed", "bunk-bed", "hammock", "lounger", "sofa", "armchair", "chair", "rocking-chair", "bench", "stool", "bathtub", "bubble-bath",
+  "table", "kitchen-table", "coffee-table", "side-table", "desk", "computer-desk", "checkers",
+  "shelf", "bookcase", "dresser", "books", "trophies", "toy-box",
+  "fridge", "stove", "sink-counter", "tv", "aquarium", "arcade", "dollhouse",
+  "rug", "mat", "round-rug", "striped-rug", "star-rug", "beach-towel",
+  "chime", "string-lights", "kite", "sea-picture", "clock", "mirror", "world-map",
+];
+for (const id of anchoredInPlay) capabilities[id] = { ...capabilities[id], moveInPlay: false };
+
+/** Anything without an entry is a loose decoration or toy. Stickers live on the wall. */
 export function capabilityOf(item: ItemId): Capability {
-  return capabilities[item] ?? { moveInPlay: true };
+  return capabilities[item] ?? { moveInPlay: !String(item).startsWith("sticker:") };
 }
 
 /** The layer to draw. "all" is the classic single image; "back"/"front" split around an occupant. */

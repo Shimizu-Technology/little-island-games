@@ -8,8 +8,8 @@ import { translatedBounds, overlaps } from "../src/home/scene/spatial";
 import { resolve } from "../src/home/scene/proposal";
 import { withPortions, isPortion } from "../src/home/runtime/portions";
 import { paintEntries } from "../src/home/runtime/group";
-import { prepareHits, pickEntity } from "../src/home/runtime/pick";
 import { capabilityOf } from "../src/home/world";
+import { prepareHits, pickEntity } from "../src/home/runtime/pick";
 
 describe("native round 3 regressions", () => {
   it("S1 every visible shelf portion beats the fixture behind it, in both facings", () => {
@@ -18,6 +18,7 @@ describe("native round 3 regressions", () => {
       const fridge = world.rooms.kitchen.instances.find((i) => i.item === "fridge")!;
       fridge.powered = true; fridge.mirrored = mirrored;
       const scene = withPortions(buildScene(world)), hits = prepareHits(scene).kitchen;
+      const movable = Object.fromEntries(Object.values(scene.entities).map((e) => [e.id, !e.item || capabilityOf(e.item.item).moveInPlay]));
       const portions = Object.values(scene.entities).filter((e) => e.room === "kitchen" && isPortion(e.id));
       expect(portions.length).toBeGreaterThanOrEqual(4);
       for (const e of portions) {
@@ -25,10 +26,10 @@ describe("native round 3 regressions", () => {
         const entries = paintEntries(Object.values(scene.rooms.kitchen.entities), scene);
         const source = e.id.includes("portion-starter-fridge") ? scene.entities["kitchen/item/starter-fridge"] : undefined;
         if (source) expect(entries.findIndex((p) => p.entity.id === e.id)).toBeGreaterThan(entries.findIndex((p) => p.entity.id === source.id));
-        // The centre and four inset corners of the actual EntityArt frame.
-        for (const [u, v] of [[.5,.5],[.25,.25],[.75,.25],[.25,.75],[.75,.75]]) {
-          expect(pickEntity(hits, roomPoint(e.contact.x + bounds.left + bounds.width*u,
-            e.contact.y + bounds.top + bounds.height*v), .5)).toBe(e.id);
+        // The middle of the art, and four points still on it.
+        const m = e.visual!, near = bounds.width * .08;
+        for (const [dx, dy] of [[0, 0], [-near, -near], [near, -near], [-near, near], [near, near]]) {
+          expect(pickEntity(hits, roomPoint(e.contact.x + m.x + dx, e.contact.y + m.y + dy), .5, movable)).toBe(e.id);
         }
       }
     }

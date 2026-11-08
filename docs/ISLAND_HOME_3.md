@@ -37,7 +37,7 @@ The early contract commit kept saves unchanged. The implementation adds the comp
 | drop.occlusion / friendBounds | graph precomputed occlusion bands/cells; species pose anchors |
 | geometry.floorPoint / spotFromPoint | types.gridToRoom / roomToGrid and camera.screenToRoom |
 | geometry.itemPoint / surfacePoint / characterPoint | graph entity contact and attachment transform |
-| geometry.characterFrame / characterHand | species anchors + scene contact; exact RIG anchors replace provisional metadata |
+| geometry.characterFrame / characterHand | species anchors + scene contact, read from the canonical RIG anchors |
 | geometry.stackSpot / characterDrop | proposal.resolve + apply |
 | geometry.*Depth / seatClipTop | graph depth bands/proxies plus authored socket front mask in RUNTIME |
 | interactions.dropBody / dropWorld | graph.buildScene and RoomIndex; deprecated compatibility data for old renderer |
@@ -66,7 +66,7 @@ Hysteresis retains an eligible previous target through its 1.25 entry radius, le
 
 RUNTIME must consume the affine inverse for every pointer, own two gesture captures, render real art for each moving group above room clips, draw a visible staging/recycle tray, keep overlays through settle, and stop post-drop camera reframing. It also owns drawer-axis arbitration, accessibility focus, edge pan, actual frame measurements, and native/family acceptance. CORE cannot establish those outcomes while the existing renderer remains active.
 
-RIG should replace provisional pose metadata with `islanderAnchors(base,facing)` and authored species silhouettes/hand/mouth anchors. The Islander's temporary metadata preserves today's rig geometry; Pip and crab mouth/hand defaults remain explicitly provisional. Supported base poses are independent of action overlays; the compatibility pose helper no longer substitutes upright eating/drinking for a bed, seat or bath base. RIG still supplies the final upper-body action art.
+Pose metadata comes from `islanderAnchors(base,facing)` and the species anchors. Pip's mouth and fin anchors and the crab's mouth and claw anchors are the points the art draws (`companionContacts` and `Companions.tsx`). Supported base poses are independent of action overlays; the compatibility pose helper no longer substitutes upright eating/drinking for a bed, seat or bath base. RIG still supplies the final upper-body action art.
 
 Worklet primitives live in `scene/spatial.ts` independently of legacy geometry/reducer imports. Worklet callees are declared before their callers because the production transform captures their closures during module initialization. `scripts/check-home-worklets.cjs` exercises the actual installed worklet Babel transform, then initializes and resolves/applies a real scene edit.
 
@@ -88,3 +88,21 @@ Runtime sleep is an unsaved face after eight seconds of actual stillness in a ly
 The runtime binds the nearest anatomical feature when switching into upright carry. Nine authored secondary-lag frames are selected by shared UI-thread opacity; their global rig tilt is cancelled because the building overlay applies continuous tilt around the captured grip. The held prop uses the same sampled hand. Pointer position and saved contact never receive lag. This keeps React out of pointer moves; device throughput still requires native measurement.
 
 Runtime destination indexes combine destination geometry with scene-wide entities so attached groups survive cross-room proposals. `apply` additionally returns `identities`, mapping original scene IDs to exact committed scene IDs after collision renaming; overlays and focus use this map. `ResolveContext.intent = 'staging'` requests the visible recovery tray explicitly and cannot fall through to floor placement. These additions preserve the original state/preview API and do not create another placement engine.
+
+## Aim contract (4.0)
+
+Every item in the catalog has a hull: convex pieces of what is actually painted (`art/silhouettes.ts`), with characters drawn from their rig joints (`scene/species.ts`). One table feeds touch, occlusion and support planes. Picking takes the frontmost painted shape; a prop beats its owner only where its own art was touched. Expansion is at most 8 pt and only for objects smaller than a 44 pt target, and only when no loose object's art was hit. In Play, something that stays put (below) gives way to a loose object within reach that is painted in front of it.
+
+Hand and mouth drops are tested against the carried prop's visible centre, not its base. Constants, in screen points at the current zoom:
+
+- Face zone: radius max(32 pt, 1.1 × head radius). Food whose art is on the head counts as a mouth drop, and the mouth stays the anatomical target of the reaction.
+- Hand magnet: clamp(24, 0.14 × h, 34) pt.
+- Seat magnet clamp(20, 0.22 × h, 48) pt and surface magnet clamp(14, 0.1 × h, 26) pt are unchanged.
+
+On open floor, a character or loose item lands on the exact release point. The grid only decides whether that point is legal, and the save stores the exact point as `at`. Furniture stays on the grid. Nobody new can sit inside the toy shelf; a friend already saved there keeps the seat until moved.
+
+The frozen Play list is `anchoredInPlay` in `world.ts`: beds, baths, large seats, tables, storage, kitchen fixtures, screens and rugs and wall art. They answer taps and drops. A drag on one wobbles and pans the camera with the same finger, and a two-finger pinch that touches one is camera input. Cushions, plants, lamps and props stay movable. Design rearranges everything.
+
+### Home trace (HM-S0)
+
+`runtime/trace.ts` is the local QA log for probes P1–P6: pick, ready, painted, release, commit (with a save transaction hash), frame-time summaries and a layout snapshot, with device and build on the session line. It writes to the app's own Documents folder as `home-trace-<session>.jsonl` and has no network path. It only runs under `lab`, and `HomeScreen` requires it inside a `__DEV__ || EXPO_PUBLIC_HOME_LAB` branch, so a build without that flag folds the module and the hit-shape overlay away. P1 (240 fps video) and P6 (thermal) are physical-device measurements.

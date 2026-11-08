@@ -13,6 +13,7 @@ import { SettleArt } from "./SettleArt";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { emptyDragSlot, type Interaction, type Pickup } from "./useInteraction";
 import { capabilityOf } from "../world";
+import { carriedPropGrowth, carryLift } from "./carry";
 
 function OverlayGroup({
   pickup,
@@ -73,9 +74,8 @@ function OverlayGroup({
       !reduced && settling && slot.proposal?.kind === "floor" && elapsed < 160
         ? Math.max(0, elapsed < 60 ? elapsed / 60 : (160 - elapsed) / 100)
         : 0;
-    const propOffset = root.item && !root.children.length && root.bounds.height < 100 ? 18 / camera.value.a : 0;
     const propScale = root.character ? (reduced ? 0 : .04 * lift * blend)
-      : .2 * (settling ? (reduced ? 0 : blend) : (reduced ? 1 : lift));
+      : carriedPropGrowth * (settling ? (reduced ? 0 : blend) : (reduced ? 1 : lift));
     return {
       opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 1 : 0,
       transformOrigin: [slot.gripX, slot.gripY, 0],
@@ -86,7 +86,7 @@ function OverlayGroup({
             slot.y -
             origin.y -
             root.contact.y -
-            (reduced ? 0 : (Math.min(10 / camera.value.a, root.bounds.height * 0.04) + propOffset) * lift * blend),
+            (reduced ? 0 : carryLift(root, camera.value.a) * lift * blend),
         },
         { rotate: `${reduced ? 0 : slot.tilt}deg` },
         { scaleX: 1 + propScale + 0.02 * accent },

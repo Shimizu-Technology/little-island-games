@@ -27,12 +27,14 @@ import {
   type Viewport,
 } from "./CameraController";
 import { translatedBounds } from "../scene/spatial";
-import { prepareHits, pickEntity } from "./pick";
+import { carriedCentre } from "./carry";
+import { prepareHits, pickEntity, onShapes } from "./pick";
 import { layoutToken } from "./layout";
 import { settleProgress, canRevealResting } from "./settle";
 import { releaseWindow, type ProbeFrame, type ProbeRelease, type ReleaseProbe } from "./frameProbe";
 import { anchorsFor } from "../scene/species";
 import { poseToken } from "./poseBank";
+import type { TraceEvent } from "./trace";
 
 export type CaptureToken = { generation: number; epoch: number };
 export type DragSlot = CaptureToken & {
@@ -140,6 +142,7 @@ export function useInteraction({
   onDestination,
   onFrameReport,
   onReleaseProbe,
+  onTrace,
   viewportOffset,
 }: {
   scene: Scene;
@@ -156,6 +159,8 @@ export function useInteraction({
   onDestination?: (slot: number, scene: Scene) => void;
   onFrameReport?: (times: number[]) => void;
   onReleaseProbe?: (probe: ReleaseProbe) => void;
+  /** Lab-only local log. Omitted everywhere else, including every family build. */
+  onTrace?: (event: TraceEvent) => void;
   viewportOffset?: SharedValue<{ x: number; y: number }>;
 }) {
   const epoch = useSharedValue(0),
@@ -191,6 +196,7 @@ export function useInteraction({
   const controller = useSharedValue<ControllerState>(idleController);
   const slots = useSharedValue<DragSlot[]>([emptyDragSlot(), emptyDragSlot()]);
   const frameTimes = useSharedValue<number[]>([]);
+  const traceFrames = useSharedValue<number[]>([]);
   const probeRing = useSharedValue<ProbeFrame[]>([]);
   const probeCursor = useSharedValue(0);
   const probeLastAt = useSharedValue(0);
@@ -288,6 +294,7 @@ export function useInteraction({
     const origin = roomOrigin(roomIds.indexOf(destination), building);
     // Gaps return visibly to the committed source instead of cancelling invisibly.
     const anchor = index < 0 ? subject.contact : roomPoint(slot.x - origin.x, slot.y - origin.y);
+    const centre = subject.item && index >= 0 ? carriedCentre(subject, anchor.x, anchor.y, slot.gripX, slot.gripY, camera.value.a, reduced) : undefined;
     const reservations: Record<string, string> = {};
     for (let i = 0; i < 2; i++) {
       const other = slots.value[i];
@@ -306,6 +313,7 @@ export function useInteraction({
     }
     return resolve(prepared.value.rooms[destination], subject, anchor, {
       scale: camera.value.a,
+      aim: centre && roomPoint(centre.x, centre.y),
       contact: index >= 0 ? screenToRoom(screenPoint(slot.pointerX, slot.pointerY), camera.value, housePoint(origin.x, origin.y)) : undefined,
       avoidFurnitureOverlap: designing,
       silhouette:
@@ -315,7 +323,7 @@ export function useInteraction({
       now: eventTime(),
       reservations,
     });
-  }, [subjectFor, slots, prepared, camera, building, designing]);
+  }, [subjectFor, slots, prepared, camera, building, designing, reduced]);
   const isCurrent = (index: number, token: CaptureToken) => {
     const slot = slots.get()[index];
     return (
@@ -371,6 +379,10 @@ export function useInteraction({
       if (slot.id === id) { slot.ready = true; slot.carryBounds = carryBounds; }
       return current;
     });
+    if (onTrace) {
+      onTrace({ type: "ready", at: Date.now(), id, slot: index });
+      requestAnimationFrame(() => onTrace({ type: "painted", at: Date.now(), id, slot: index }));
+    }
   };
 
   const send = (event: ControllerEvent, replay = false) => {
@@ -423,6 +435,8 @@ export function useInteraction({
     );
     controller.set(next.state);
     for (const effect of next.effects) {
+      // Anchored furniture answers a tap or a nudge. It never needs a carry overlay.
+      if ((effect.type === "contact" || effect.type === "pickup") && movable.value[effect.entity] === false) continue;
       if (effect.type === "contact") {
         const index = slots.value.findIndex((s) => s.id === effect.entity && !s.consumed);
         if (index >= 0) {
@@ -649,13 +663,15 @@ export function useInteraction({
     for (let i = 1; i >= 0; i--) {
       const s = slots.value[i];
       if (!s.id || s.consumed || s.phase !== "settling" || !s.subject || capturedRelative(s.restId ?? s.id)) continue;
-      const c = camera.value,
-        b = s.subject.character && s.proposal && s.finished
-          ? anchorsFor(s.subject.character.slot, s.proposal.base, s.proposal.facing, s.subject.action).bounds
-          : s.subject.bounds;
+      const c = camera.value;
+      const pose = s.subject.character && s.proposal && s.finished
+        ? anchorsFor(s.subject.character.slot, s.proposal.base, s.proposal.facing, s.subject.action)
+        : undefined;
+      const b = pose?.bounds ?? s.subject.bounds;
       const x = point.x / c.a - c.tx / c.a,
         y = point.y / c.a - c.ty / c.a;
-      if (x >= s.x + b.left && x <= s.x + b.left + b.width && y >= s.y + b.top && y <= s.y + b.top + b.height)
+      const shapes = pose?.shapes ?? s.subject.shapes;
+      if (shapes ? onShapes(shapes, x - s.x, y - s.y) : x >= s.x + b.left && x <= s.x + b.left + b.width && y >= s.y + b.top && y <= s.y + b.top + b.height)
         return s.id;
     }
     const index = roomAtScreen(point.x, point.y, camera.value, building);
@@ -679,7 +695,7 @@ export function useInteraction({
       }
       return true;
     });
-    return pickEntity(free, p, camera.value.a);
+    return pickEntity(free, p, camera.value.a, movable.value);
   };
   const resumePending = (pointer: number) => {
     "worklet";
@@ -720,8 +736,13 @@ export function useInteraction({
           suppressed.set([...suppressed.value, touch.id]);
           continue;
         }
-        const point = screenPoint(touch.x, touch.y),
-          entity = hit(point);
+        const point = screenPoint(touch.x, touch.y);
+        let entity = hit(point);
+        // Furniture that stays put is scenery to a two-finger pinch.
+        if (controller.value.pointers.length && entity && movable.value[entity] === false) entity = undefined;
+        const fixed = controller.value.pointers.find((p) => p.entity && movable.value[p.entity] === false);
+        if (fixed) send({ type: "to-camera", pointer: fixed.pointer, point: fixed.point });
+        if (onTrace) runOnJS(onTrace)({ type: "pick", at: eventTime(), pointer: touch.id, x: touch.x, y: touch.y, entity });
         if (entity && controller.value.pointers.some((p) => !p.entity)) {
           suppressed.set([...suppressed.value, touch.id]);
           continue;
@@ -766,10 +787,10 @@ export function useInteraction({
         if (suppressed.value.includes(touch.id)) continue;
         const capture = controller.value.pointers.find((p) => p.pointer === touch.id);
         if (capture?.entity && movable.value[capture.entity] === false) {
+          // A wobble says "I stay here" and the same finger carries on panning the room.
           if (Math.hypot(touch.x - capture.start.x, touch.y - capture.start.y) > 6) {
             if (!reduced) fixtureNudges.set({ ...fixtureNudges.value, [capture.entity]: eventTime() });
-            send({ type: "cancel", pointer: touch.id, now: eventTime() });
-            suppressed.set([...suppressed.value, touch.id]);
+            send({ type: "to-camera", pointer: touch.id, point: screenPoint(touch.x, touch.y) });
           }
           continue;
         }
@@ -784,6 +805,11 @@ export function useInteraction({
             send({ type: "move", pointer: touch.id, point: screenPoint(touch.x, touch.y) });
           const slot = slots.value.find((s) => s.pointer === touch.id && s.id);
           const proposal = slot?.proposal;
+          if (onTrace && capture?.phase === "dragging" && slot) {
+            const origin = originFor(slot.id);
+            runOnJS(onTrace)({ type: "release", at: eventTime(), id: slot.id, kind: proposal?.kind ?? "restore", target: proposal?.target,
+              finger: { x: touch.x, y: touch.y }, anchor: { x: slot.x - origin.x, y: slot.y - origin.y }, contact: proposal?.contact, room: proposal?.room });
+          }
           if (onReleaseProbe && capture?.phase === "dragging" && slot)
             probePending.set([...probePending.value, { at: eventTime(), id: slot.id,
               kind: proposal?.kind ?? "restore", target: proposal?.target }]);
@@ -854,6 +880,14 @@ export function useInteraction({
       const p = t * t * (3 - 2 * t);
       camera.set({ ...to, tx: from.tx + (to.tx - from.tx) * p, ty: from.ty + (to.ty - from.ty) * p });
       if (t === 1) revealPan.set(null);
+    }
+    if (onTrace) {
+      traceFrames.modify((times) => { "worklet"; times.push(dt); return times; });
+      if (traceFrames.value.length >= 120) {
+        const sorted = [...traceFrames.value].sort((a, b) => a - b), at = (q: number) => sorted[Math.floor(sorted.length * q)];
+        runOnJS(onTrace)({ type: "frames", at: eventTime(), samples: sorted.length, p50: at(.5), p95: at(.95), p99: at(.99), max: sorted[sorted.length - 1] });
+        traceFrames.set([]);
+      }
     }
     if (onFrameReport && frameCount.value < 3600) {
       frameTimes.modify((times) => { "worklet"; times.push(dt); return times; });
@@ -982,7 +1016,7 @@ export function useInteraction({
   // send/resumePending read these shared channels. Keeping their render-local
   // identities out of dependencies preserves the native callback clock.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onReleaseProbe, probeRing, probeCursor, probeLastAt, probePending, queuedInput, slots, prepared, renderedRevision, laidOut, layoutTokens,
+  }, [onTrace, traceFrames, onReleaseProbe, probeRing, probeCursor, probeLastAt, probePending, queuedInput, slots, prepared, renderedRevision, laidOut, layoutTokens,
     poseLayouts, lastFrame, revealPan, controller, reduced, camera, onFrameReport, frameCount, frameTimes, inertia,
     viewport, building, offset, proposalFor, onCommit, onClear]));
   const cancelAll = () => {

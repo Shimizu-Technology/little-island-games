@@ -67,11 +67,11 @@ describe('Lagoon Run v4 course contract',()=>{
     const jump=runTransition({...s,sandals:.05},{type:'jump'}),air=ticks(jump,24);
     expect(air.sandals).toBe(0);expect(jumpHeight(air)).toBeCloseTo(2);
     const drop=runTransition(air,{type:'duck'});expect(drop.elevation).toBeCloseTo(2);
-    expect(runTransition(drop,{type:'jump'})).toBe(drop);
+    expect(runTransition(drop,{type:'jump'}).jump).toBe(0); // Buffered, never an airborne second jump.
     expect(runTransition(collectPower(s,'kite'),{type:'jump'}).jump).toBe(0);
   });
   it('expires timed powers, preserves a shield during heart protection, and spends it once',()=>{
-    let s=collectPower(createRun(runLevels[0],1),'shield');
+    let s=collectPower({...createRun(runLevels[0],1),learned:7},'shield'); // Collision witness after the teaching guard.
     const contact=(v:RunState)=>({...v,rows:v.rows.map((r,i)=>i?r:{...r,z:1,passed:false})});
     s=runStep(contact({...s,lives:{...s.lives,invulnerable:.5}}),idle,dt);expect(s.shield).toBe(true);
     s=runStep(contact({...s,lives:{...s.lives,invulnerable:0}}),idle,dt);expect(s.shield).toBe(false);expect(s.lives.hearts).toBe(3);

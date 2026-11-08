@@ -4,6 +4,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { HomeScreen } from '../src/home/HomeScreen';
 import { starterHome } from '../src/home/model';
 import { buildScene } from '../src/home/scene/graph';
+import { roomPoint } from '../src/home/scene/types';
 import { withPortions } from '../src/home/runtime/portions';
 import { resolve } from '../src/home/scene/proposal';
 import { buildingLayout, roomOrigin } from '../src/home/camera';
@@ -46,22 +47,16 @@ function release(proposal: any, anchor = proposal.contact, index = 0) {
   const origin = roomOrigin(roomIds.indexOf(proposal.room), buildingLayout(roomIds.length, false));
   harness.options.onCommit(index, proposal, { x: anchor.x + origin.x, y: anchor.y + origin.y }, {});
 }
-it('F2 HomeScreen commits the exact pending hand→mouth floor preview for a new mango', async () => {
+it('F2 HomeScreen feeds a portion released over the face and leaves the shelf stocked', async () => {
   const { scene, persist } = await setup();
   const id = 'kitchen/item/portion-starter-fridge-mango', index = { ...scene.rooms.kitchen, entities: scene.entities };
-  const hand = index.targets.find(t => t.id === 'character/0/hand')!;
-  const previous = resolve(index, scene.entities[id], hand.contact, { scale: .5, target: hand.id, release: true });
-  const anchor = { x: 332.7702885316703, y: 391.0326239088868 } as any;
-  const preview = resolve(index, scene.entities[id], anchor, { scale: .5, previous, now: 1000 });
-  expect(preview.kind).toBe('floor'); expect(preview.pending?.target).toBe('character/0/mouth');
-  await act(async () => release(preview, anchor));
+  const mouth = index.targets.find(t => t.id === 'character/0/mouth')!;
+  const preview = resolve(index, scene.entities[id], mouth.contact, { scale: .5, aim: roomPoint(mouth.face!.x, mouth.face!.y), now: 1000 });
+  expect(preview.kind).toBe('mouth'); expect(preview.target).toBe('character/0/mouth');
+  await act(async () => release(preview));
   expect(persist).toHaveBeenCalledOnce();
-  const committed = harness.finish.mock.calls.at(-1)![2];
-  expect(committed.kind).toBe(preview.kind); expect(committed.contact).toEqual(preview.contact);
-  expect(committed.consume).toBe(preview.consume); expect(committed.target).toBe(preview.target);
   const saved = persist.mock.calls[0][0] as any;
-  const food = saved.rooms.kitchen.instances.find((i: any) => i.id.startsWith('food-'));
-  expect(food?.item).toBe('mango');
+  expect(saved.rooms.kitchen.instances.some((i: any) => i.id.startsWith('food-'))).toBe(false);
   expect(withPortions(buildScene(saved)).entities[id]).toBeDefined();
 });
 it('F2 two simultaneous portions keep their preview destinations and reject an occupied stale hand', async () => {

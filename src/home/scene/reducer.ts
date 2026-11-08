@@ -240,7 +240,7 @@ export function reduceSceneAction(save: HomeStateV2, action: HomeAction, ownersh
         : action.type === "mirror"
           ? { ...item, mirrored: !item.mirrored }
           : action.type === "move"
-            ? { ...item, x: action.x, y: action.y }
+            ? { ...item, at: undefined, x: action.x, y: action.y }
             : item;
     // A changed orientation is projected with its newly authored child/socket transforms.
     // The revision still names the original world; apply commits the entire group once.

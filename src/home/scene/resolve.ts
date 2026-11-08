@@ -50,6 +50,8 @@ export type DropProposal = {
 }["hand" | "mouth" | "socket" | "surface" | "floor" | "staging" | "transfer"];
 export type ResolveContext = {
   scale: number;
+  /** Middle of the carried art in destination-room units. Hand and face are tested here. */
+  aim?: RoomPoint;
   /** Finger/contact in destination-room units. Body overlap cannot express drop intent. */
   contact?: RoomPoint;
   /** Actual dragged art in destination room coordinates, after grip/camera conversion. */
@@ -73,23 +75,31 @@ type Candidate = {
   distance: number;
   normalized: number;
   core: boolean;
+  /** The aim is on the visible head, so food belongs to the face even with a hand nearby. */
+  onHead: boolean;
   radius: number;
 };
 const priority: Record<Target["kind"], number> = { hand: 0, mouth: 1, socket: 2, container: 2, surface: 3 };
 
-export function magnetRadius(kind: Target["kind"], height: number, scale: number): number {
+export const faceZone = { minPt: 32, headFactor: 1.1 };
+export const handMagnet = { minPt: 24, heightFactor: 0.14, maxPt: 34 };
+export function magnetRadius(kind: Exclude<Target["kind"], "mouth">, height: number, scale: number): number {
   "worklet";
   const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
   const h = height * safeScale;
   const pt =
     kind === "hand"
-      ? Math.max(16, Math.min(30, 0.14 * h))
-      : kind === "mouth"
-        ? Math.max(16, Math.min(28, 0.12 * h))
-        : kind === "socket"
-          ? Math.max(20, Math.min(48, 0.22 * h))
-          : Math.max(14, Math.min(26, 0.1 * h));
+      ? Math.max(handMagnet.minPt, Math.min(handMagnet.maxPt, handMagnet.heightFactor * h))
+      : kind === "socket"
+        ? Math.max(20, Math.min(48, 0.22 * h))
+        : Math.max(14, Math.min(26, 0.1 * h));
   return pt / safeScale;
+}
+/** A face is a head-sized place, never the single mouth point: never below 32 pt on screen. */
+export function faceRadius(headRadius: number, scale: number): number {
+  "worklet";
+  const safeScale = Number.isFinite(scale) && scale > 0 ? scale : 1;
+  return Math.max(faceZone.minPt / safeScale, headRadius * faceZone.headFactor);
 }
 function targetHeight(index: RoomIndex, subject: SceneEntity, target: Target): number {
   "worklet";
@@ -213,13 +223,13 @@ function displacedFriends(
   const bands = index.occlusionBands.filter((b) => !group.some((e) => e.id === b.id));
   const movedBands = group
     .filter((e) => e.body?.layer === "furniture")
-    .map((e) => ({
+    .flatMap((e) => (e.occluders ?? [e.bounds]).map((bounds) => ({
       bounds: translatedBounds(
-        e.bounds,
+        bounds,
         roomPoint(e.contact.x + move.contact.x - subject.contact.x, e.contact.y + deltaY)
       ),
       depth: e.depth + deltaY,
-    }));
+    })));
   const allBands = [...bands, ...movedBands];
   const result: EntityMove[] = [];
   for (const friend of Object.values(index.entities)
@@ -232,7 +242,7 @@ function displacedFriends(
     const slot = friend.character!.slot;
     for (const location of index.floor) {
       if (location.occlusion[slot] > 0.25) continue;
-      if (location.blockers.some((id) => !group.some((e) => e.id === id) && !index.entities[id]?.body?.small)) continue;
+      if (location.blockers.some((id) => !group.some((e) => e.id === id) && !index.entities[id]?.body?.underfoot)) continue;
       const contact = standingContact(location.contact, slot);
       if (
         movedBands.some((b) => b.depth > contact.y + 1 && overlaps(b.bounds, translatedBounds(friend.bounds, contact)))
@@ -299,6 +309,37 @@ function targetMove(index: RoomIndex, subject: SceneEntity, target: Target): Ent
     cell
   );
 }
+/** Open floor lands where the finger let go. The grid only decides what is legal. */
+function floorCellAllowed(index: RoomIndex, subject: SceneEntity, group: SceneEntity[], cell: GridCell, overlapProps = false): boolean {
+  "worklet";
+  const body = subject.body;
+  if (!body) return true;
+  if (cell.x < 0 || cell.y < 0 || cell.x + body.w > 16 || cell.y + body.h > (body.layer === "wall" ? 4 : 12)) return false;
+  for (let y = cell.y; y < cell.y + body.h; y++) for (let x = cell.x; x < cell.x + body.w; x++) {
+    if ((index.occupancy[`${body.layer}:${x}:${y}`] ?? []).some(
+      (id) => !group.some((e) => e.id === id) && !(overlapProps && index.entities[id]?.body?.small)
+    )) return false;
+  }
+  return true;
+}
+function exactFloorMove(index: RoomIndex, subject: SceneEntity, point: RoomPoint, group: SceneEntity[], ctx: ResolveContext): EntityMove | undefined {
+  "worklet";
+  const slot = subject.character?.slot;
+  if (slot === undefined && !(subject.body?.portable && !subject.children.length && subject.body.layer !== "wall")) return;
+  const contact = slot !== undefined ? standingContact(point, slot) : roomPoint(Math.max(8, Math.min(792, point.x)), Math.max(350, Math.min(552, point.y)));
+  // The exact contact decides containment and visibility. The bounded grid cell only decides
+  // occupancy, including the legal floor strip above row zero and the room edges.
+  const y = Math.max(0, Math.min(12 - (subject.body?.h ?? 1), Math.round((contact.y - 386) / 14.4)));
+  const x = Math.max(0, Math.min((subject.body ? 16 : 20) - (subject.body?.w ?? 1), Math.round((contact.x - 43 - y * 1.5) / 37.5)));
+  const cell = gridCell(x, y);
+  if (!floorCellAllowed(index, subject, group, cell)) return;
+  if (slot !== undefined) {
+    if ((index.floor.find((location) => location.cell.x === x && location.cell.y === y)?.blockers ?? []).some((id) => !group.some((e) => e.id === id) && !index.entities[id]?.body?.underfoot)) return;
+    if (occludedFraction(translatedBounds(anchorsFor(slot, "stand", "front").bounds, contact), contact.y + 1, index.occlusionBands) > 0.25) return;
+  }
+  const exact = rootMove(subject, index.room, { kind: "floor", room: index.room, at: contact }, contact, slot !== undefined ? "stand" : subject.base, subject.facing, cell);
+  return fitsGroup(index, subject, exact, group, ctx.avoidFurnitureOverlap) ? exact : undefined;
+}
 function placedInRoom(index: RoomIndex, entity: SceneEntity): boolean {
   "worklet";
   if (!entity.item || entity.room !== index.room || !["floor", "surface"].includes(entity.attachment.kind))
@@ -358,16 +399,24 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       if (ctx.target && ctx.target !== target.id) continue;
       if (capacityOverflow && target.kind === "surface") continue;
       if (!eligible(index, subject, target, ctx, group)) continue;
-      const radius = magnetRadius(target.kind, targetHeight(index, subject, target), ctx.scale);
-      const targetPoint = target.kind === "socket" ? (ctx.contact ?? point) : point;
-      const distance = Math.hypot(targetPoint.x - target.contact.x, targetPoint.y - target.contact.y);
+      const face = target.kind === "mouth" ? target.face : undefined;
+      const radius = target.kind === "mouth" && face
+        ? faceRadius(face.headRadius, ctx.scale)
+        : target.kind === "mouth"
+          ? magnetRadius("hand", targetHeight(index, subject, target), ctx.scale)
+          : magnetRadius(target.kind, targetHeight(index, subject, target), ctx.scale);
+      const aim = ctx.aim && Number.isFinite(ctx.aim.x) && Number.isFinite(ctx.aim.y) ? ctx.aim : point;
+      const targetPoint = target.kind === "socket" ? (ctx.contact ?? point) : target.kind === "surface" || target.kind === "container" ? point : aim;
+      const centre = face ?? target.contact;
+      const distance = Math.hypot(targetPoint.x - centre.x, targetPoint.y - centre.y);
       const activationHit =
         !!ctx.contact &&
         target.kind === "socket" &&
         !!target.activation &&
         contains(target.activation, targetPoint);
-      const core = contains(target.core, targetPoint) || activationHit;
       const exitRadius = ctx.previous?.target === target.id ? radius * 1.25 : radius;
+      const onFace = !!face && !!subject.body?.edible && distance <= exitRadius;
+      const core = contains(target.core, targetPoint) || activationHit || onFace;
       const catchSeat =
         target.kind === "socket" &&
         overlaps(translatedBounds(subject.bounds, point), target.core) &&
@@ -388,8 +437,9 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       candidates.push({
         target,
         distance,
-        normalized: distance / Math.max(1, core ? target.core.width / 2 : radius),
+        normalized: distance / Math.max(1, face ? radius : core ? target.core.width / 2 : radius),
         core,
+        onHead: onFace && distance <= face!.headRadius,
         radius,
       });
     }
@@ -397,6 +447,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
   candidates.sort(
     (a, b) =>
       Number(b.core) - Number(a.core) ||
+      Number(b.onHead) - Number(a.onHead) ||
       (a.core && b.core ? a.normalized - b.normalized : priority[a.target.kind] - priority[b.target.kind]) ||
       a.distance - b.distance ||
       a.target.id.localeCompare(b.target.id)
@@ -454,21 +505,10 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
   const wall = subject.body?.layer === "wall";
   const allowed = (cell: GridCell, overlapProps = false): boolean => {
     "worklet";
-    const body = subject.body;
-    if (!body) return true;
-    if (cell.x + body.w > 16 || cell.y + body.h > (wall ? 4 : 12)) return false;
-    for (let y = cell.y; y < cell.y + body.h; y++) {
-      for (let x = cell.x; x < cell.x + body.w; x++) {
-        if (
-          (index.occupancy[`${body.layer}:${x}:${y}`] ?? []).some(
-            (id) => !group.some((e) => e.id === id) && !(overlapProps && index.entities[id]?.body?.small)
-          )
-        )
-          return false;
-      }
-    }
-    return true;
+    return floorCellAllowed(index, subject, group, cell, overlapProps);
   };
+  const exact = !capacityOverflow && exactFloorMove(index, subject, point, group, ctx);
+  if (exact) return { ...makeProposal(index, subject, exact, group, "floor", "Exact contained visible floor support"), pending };
   for (const location of index.floor) {
     const cell = location.cell;
     if (capacityOverflow) continue;
@@ -477,7 +517,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
     if (
       subject.character &&
       (location.occlusion[subject.character.slot] > 0.25 ||
-        location.blockers.some((id) => !group.some((e) => e.id === id) && !index.entities[id]?.body?.small))
+        location.blockers.some((id) => !group.some((e) => e.id === id) && !index.entities[id]?.body?.underfoot))
     )
       continue;
     let contact = wall ? gridToRoom(cell, true) : location.contact;

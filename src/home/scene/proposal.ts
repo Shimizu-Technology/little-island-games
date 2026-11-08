@@ -3,11 +3,11 @@ import type { DropProposal } from "./resolve";
 import { roomIds, type RoomId } from "../catalogMore";
 import { validHome } from "../model";
 import { worldRevision } from "./spatial";
-import { characterEntityId, itemEntityId } from "./types";
+import { characterEntityId, gridCell, gridToRoom, itemEntityId } from "./types";
 import type { SceneState, EntityId } from "./types";
 import type { Character, Instance } from "../model";
 
-export { resolve, magnetRadius } from "./resolve";
+export { resolve, magnetRadius, faceRadius } from "./resolve";
 export type { DropProposal, EntityMove, ResolveContext } from "./resolve";
 
 /** Resolve item/character IDs from the original room before atomically moving a group. */
@@ -79,10 +79,11 @@ export function apply(
     const item = move.id === proposal.id ? (proposal.item ?? source?.item) : source?.item;
     if (item) {
       if (proposal.consume === "food" && move.id === proposal.id) continue;
-      const { on, in: container, staged, ...rest } = item;
+      const { on, in: container, staged, at: lastDrop, ...rest } = item;
       void on;
       void container;
       void staged;
+      void lastDrop;
       const attachment = move.attachment;
       const parent = attachment.kind === "surface" ? moves.find((m) => m.id === attachment.parent) : undefined;
       const originalParent = attachment.kind === "surface" ? locate(state, attachment.parent)?.item : undefined;
@@ -94,6 +95,9 @@ export function apply(
             ? originalParent.x + attachment.slot
             : item.x);
       const y = move.cell?.y ?? parent?.cell?.y ?? originalParent?.y ?? item.y;
+      // Keep the save lean: a drop that landed exactly on its grid point stays as x/y alone.
+      const grid = gridToRoom(gridCell(x, y), item.layer === "wall");
+      const exactDrop = attachment.kind === "floor" && (Math.abs(move.contact.x - grid.x) > 0.01 || Math.abs(move.contact.y - grid.y) > 0.01);
       const next: Instance = {
         ...rest,
         id: names[move.id],
@@ -102,6 +106,7 @@ export function apply(
         ...(attachment.kind === "surface" ? { on: parentItemId(attachment.parent, names) } : {}),
         ...(attachment.kind === "container" ? { in: parentItemId(attachment.parent, names) } : {}),
         ...(attachment.kind === "staging" ? { staged: true } : {}),
+        ...(exactDrop ? { at: { x: move.contact.x, y: move.contact.y } } : {}),
         ...(proposal.consume === "drink" && move.id === proposal.id ? { empty: true } : {}),
       };
       rooms[move.room].instances.push(next);
