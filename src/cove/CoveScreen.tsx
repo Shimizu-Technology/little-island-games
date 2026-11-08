@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, TextInput, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Button, C, Chip, Copy, Heading, Sheet, ToggleRow, font } from '../components/ui';
 import { Recovery } from '../components/Recovery';
 import { SaveStatus } from '../components/SaveStatus';
@@ -25,6 +25,10 @@ import { PuzzleBrowser } from './PuzzleBrowser';
 
 export default function CoveScreen() {
   const store = useStore();
+  const active = store.save.cove?.active, epoch = store.epoch, covePerson = store.covePerson;
+  // A native Back/swipe or another destination has the same identity boundary as Map.
+  // A cleanup captured before a person/restore change is rejected by Store's epoch guard.
+  useFocusEffect(useCallback(() => () => { if (active) void covePerson({ type: 'select', id: null }, epoch); }, [active, epoch, covePerson]));
   if (!store.ready) return <SafeAreaView><Heading>Getting your Cove ready…</Heading></SafeAreaView>;
   if (store.recovery) return <SafeAreaView><Recovery/></SafeAreaView>;
   return <CoveLocalGate key={`${selectedOwner(store.save)}:${store.epoch}`}/>;
