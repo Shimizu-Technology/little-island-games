@@ -257,7 +257,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   // G1 supplies the Cove route. Until then there is no link to an unfinished surface.
   const bridge=bridgeFor(id,levelOf(saved?.options??options),coveReady);
   const changeWorking=(next:NonNullable<typeof challengeProgress>)=>store.challengeWorking({signal:next.signals.find(s=>s[0]===context)},{owner:learner.id,epoch,game:id,id:saved?.id??'',revision:saved?.revision??-1,kind:'school'});
-  const openChallenge=()=>{stopSound();router.push({pathname:'/challenge',params:{game:id}});};
+  const openChallenge=()=>{stopSound();setSetup(false);router.push({pathname:'/challenge',params:{game:id}});};
   const back = () => (router.canGoBack() ? router.back() : router.replace("/"));
   const twoPlayer = options.mode !== "solo";
   const turn = saved && engine.turn && saved.options.mode !== "solo" && !finished ? engine.turn(saved.state, saved.options) : null;
@@ -372,7 +372,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
       </ScrollView>
       <Sheet
-        visible={setup || !saved}
+        visible={focused && (setup || !saved)}
         onClose={() => (saved ? setSetup(false) : back())}
         title={saved ? "A fresh round" : `Let’s play ${engine.name}`}
         footer={<Button onPress={start} style={{ minHeight: 62, borderRadius: 20, backgroundColor: theme.accent, borderColor: theme.accent }}>Play this level</Button>}
