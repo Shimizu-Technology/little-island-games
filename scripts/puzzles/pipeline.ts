@@ -136,7 +136,10 @@ export function bakeFamily<P>(spec: FamilySpec<P>, options: BakeOptions): BakeRe
   spec.bands.forEach((band: BandQuota, bandIndex) => {
     const entries: CertifiedEntry<P>[] = [], need = Math.max(0, band.target - have[band.id]);
     const published = publishedTemplates.get(band.id) ?? new Map<string, number>();
-    const cap = templateCap(band.target), perTemplate = new Map(published);
+    // Verification counts retired templates too. The active target therefore sits beside, rather
+    // than replaces, that historical population when setting the prospective template cap.
+    const retired = [...published.values()].reduce((n,count)=>n+count,0) - have[band.id];
+    const cap = templateCap(band.target + retired), perTemplate = new Map(published);
     // Dropping a repeated layout shrinks the band and so its template share. Repeat until both rules hold at once.
     const settle = (items: readonly CertifiedEntry<P>[]) => {
       let ordered = [...items], templates = 0, layouts = 0;
