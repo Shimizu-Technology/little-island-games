@@ -131,5 +131,5 @@ it('per-bank merges union every completion code and award combination without ch
 });
 it('registration rejects a real-time physics codec even if its structural validator claims it is persistable',()=>{
  const codec=fixtureCatalog.codecs.get('save-proof-v1')!;
- expect(()=>registerSaveContent({banks:new Map(),codecs:new Map([['illegal-realtime-v1',{...codec,game:'lagoon-run'}]]),dares:new Map(),contexts:new Set()})).toThrow(/codec/);
+ for(const game of ['lagoon-run','canoe-cargo']) expect(()=>registerSaveContent({banks:new Map(),codecs:new Map([['illegal-realtime-v1',{...codec,game}]]),dares:new Map(),contexts:new Set()})).toThrow(/codec/);
 });

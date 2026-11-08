@@ -2,7 +2,7 @@ import { arcadeIds } from '../arcade/types';
 import { asciiId, exactKeys, hashId, jsonBytes, pack, plain, uint, unpack } from './saveBits';
 export type Completion = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export type CompletionEvent = 'opened' | 'helped' | 'together' | 'independent';
-const realTimeArcade = new Set<string>(arcadeIds.filter(id => id !== 'reef-builder' && id !== 'canoe-cargo'));
+const realTimeArcade = new Set<string>(arcadeIds.filter(id => id !== 'reef-builder'));
 const transitions: Record<CompletionEvent, readonly Completion[]> = {
   opened: [1,1,2,3,4,5,6], helped: [2,2,2,4,4,5,6], together: [3,3,4,3,4,6,6], independent: [5,5,5,6,6,5,6],
 };
