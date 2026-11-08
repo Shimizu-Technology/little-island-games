@@ -317,7 +317,7 @@ function exactFloorMove(index: RoomIndex, subject: SceneEntity, best: EntityMove
   // Only the finger's own patch of a legal cell counts as open floor. Anything else slides there.
   const dx = point.x - best.contact.x, dy = point.y - best.contact.y;
   const spanX = 37.5 * ((subject.body?.w ?? 1) - 1), spanY = 14.4 * ((subject.body?.h ?? 1) - 1);
-  if (!best.cell || dx < -19.5 || dx > spanX + 19.5 || dy < -8 || dy > spanY + 8) return best;
+  if (!best.cell || Math.hypot(Math.max(0, dx - spanX, -dx), Math.max(0, dy - spanY, -dy)) > 21.2) return best;
   const contact = slot !== undefined ? standingContact(point, slot) : roomPoint(Math.max(8, Math.min(792, point.x)), Math.max(350, Math.min(552, point.y)));
   if (slot !== undefined && occludedFraction(translatedBounds(anchorsFor(slot, "stand", "front").bounds, contact), contact.y + 1, index.occlusionBands) > 0.25)
     return best;
