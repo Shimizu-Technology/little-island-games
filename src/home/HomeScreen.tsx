@@ -10,6 +10,7 @@ import type { BadgeId } from "../badges/engine";
 import { buildingLayout, roomOrigin } from "./camera";
 import { roomIds, type RoomId } from "./catalogMore";
 import { capabilityOf } from "./world";
+import { catalogCommit, clearCatalogSeed } from "./runtime/catalogCapture";
 import {
   instance,
   owns,
@@ -99,6 +100,7 @@ export function HomeScreen({
   const reactionTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   React.useEffect(() => () => Object.values(reactionTimers.current).forEach(clearTimeout), []);
   const [catalogItem, setCatalogItem] = useState<ItemId>();
+  const catalogSeeds = useRef<Record<string, { seed: HomeStateV2 }>>({});
   const [headerHeight, setHeaderHeight] = useState(64 + inset.top);
   const [frameReport, setFrameReport] = useState<number[]>();
   const [releaseProbes, setReleaseProbes] = useState<ReleaseProbe[]>([]);
@@ -179,8 +181,19 @@ export function HomeScreen({
       proposal?: DropProposal,
       stillCurrent?: () => boolean
     ) => {
-      const current = live.current,
-        entity = current.scene.entities[id];
+      const current = live.current;
+      const catalog = catalogSeeds.current[id];
+      if (catalog) {
+        const pending = catalogCommit(current.store.getState(), catalog, id, proposal);
+        if (!pending) {
+          if (proposal && placedInstances(current.store.getState().rooms[proposal.room]).length >= MAX_INSTANCES)
+            current.store.setMessage("Put something away to make room.");
+          return undefined;
+        }
+        const next = current.store.commitProposal(pending.proposal, pending.seed, stillCurrent);
+        return next ? { state: next, proposal: pending.proposal, identities: current.store.getCommittedIdentities() } : undefined;
+      }
+      const entity = current.scene.entities[id];
       if (!entity || (!current.designing && entity.item && !capabilityOf(entity.item.item).moveInPlay)) return undefined;
       let next =
         proposal && !isPortion(id) ? current.store.commitProposal(proposal, undefined, stillCurrent) : undefined;
@@ -326,6 +339,10 @@ export function HomeScreen({
           result.identities[result.proposal.id]
         );
         setRoom(result.proposal.room);
+        if (runtime.current!.slots.get()[index]?.synthetic) {
+          const owner = live.current.scene.rooms[result.proposal.room].targets.find(t => t.id === result.proposal.target)?.owner;
+          restoreFocus(result.proposal.kind === "mouth" ? owner : result.identities[result.proposal.id]);
+        }
         sound("tap");
       } else runtime.current!.finish(index, false, undefined, undefined, undefined, token);
     },
@@ -345,10 +362,16 @@ export function HomeScreen({
     [wake]
   );
   const onClear = useCallback(
-    (index: number) => {
+    (index: number, id?: string, reason?: "capacity") => {
+      if (reason === "capacity") live.current.store.setMessage("Put something away to make room.");
+      if (id) clearCatalogSeed(catalogSeeds.current, id);
       // A UI-thread re-grab can outrun this queued clear callback.
       if (runtime.current?.slots.get()[index].id) return;
-      setPickups((current) => current.map((p, i) => (i === index ? undefined : p)));
+      setPickups((current) => {
+        const pickup = current[index];
+        clearCatalogSeed(catalogSeeds.current, pickup?.id);
+        return current.map((p, i) => (i === index ? undefined : p));
+      });
     },
     []
   );
@@ -377,13 +400,7 @@ export function HomeScreen({
         release: true,
       }
     );
-    const result = commitAt(id, dest, anchor, targetProposal);
-    if (result) {
-      showReaction(result.proposal);
-      const owner = live.current.scene.rooms[dest].targets.find((t) => t.id === result.proposal.target)?.owner;
-      setSelected(undefined);
-      restoreFocus(result.proposal.kind === "mouth" ? owner : result.identities[id]);
-    }
+    if (runtime.current!.animateProposal(targetProposal)) setSelected(undefined);
   };
   const choose = (id: string) => {
     const entity = live.current.scene.entities[id];
@@ -596,7 +613,7 @@ export function HomeScreen({
   };
   const moveAccessible = useCallback(
     (id: string, action: string) => {
-      const { scene, store } = live.current;
+      const { scene } = live.current;
       const entity = scene.entities[id];
       if (!entity || (!live.current.designing && entity.item && !capabilityOf(entity.item.item).moveInPlay)) return;
       if (action === "store") {
@@ -605,55 +622,67 @@ export function HomeScreen({
           intent: "staging",
           release: true,
         });
-        if (store.commitProposal(proposal)) restoreFocus(id);
+        runtime.current!.animateProposal(proposal);
         return;
       }
       const delta = (
         { left: [-37.5, 0], right: [37.5, 0], back: [0, -14.4], forward: [0, 14.4] } as Record<string, number[]>
       )[action];
-      if (delta && commitAt(id, entity.room, { x: entity.contact.x + delta[0], y: entity.contact.y + delta[1] }))
-        restoreFocus(id);
+      if (delta) {
+        const proposal = resolve({ ...scene.rooms[entity.room], entities: scene.entities }, entity,
+          roomPoint(entity.contact.x + delta[0], entity.contact.y + delta[1]), {
+            scale: runtime.current!.camera.get().a, avoidFurnitureOverlap: live.current.designing, release: true });
+        runtime.current!.animateProposal(proposal);
+      }
     },
-    [commitAt]
+    []
   );
-  function insertAt(item: ItemId, x: number, y: number) {
-    if (!owns(item, ownership)) {
-      store.setMessage("This showpiece is in the Locker.");
-      return;
-    }
-    const c = runtime.current!.camera.get(),
-      index = roomAtScreen(x, y, c, building);
-    if (index < 0) return;
-    const dest = roomIds[index],
-      origin = roomOrigin(index, building),
-      at = screenToRoom(screenPoint(x, y), c, housePoint(origin.x, origin.y));
-    const current = live.current.store.getState();
-    if (placedInstances(current.rooms[dest]).length >= MAX_INSTANCES) {
-      store.setMessage("Put something away to make room.");
-      return;
+  function catalogSubject(item: ItemId, x: number, y: number, destination?: RoomId) {
+    if (!owns(item, ownership)) { store.setMessage("This showpiece is in the Locker."); return; }
+    const current = live.current.store.getState(), dest = destination ?? live.current.room;
+    if (destination && placedInstances(current.rooms[dest]).length >= MAX_INSTANCES) {
+      store.setMessage("Put something away to make room."); return;
     }
     const created = instance(`home-${Date.now().toString(36)}-${++sequence.current}`, item, 0, 0);
-    const seed: HomeStateV2 = {
-      ...current,
-      rooms: {
-        ...current.rooms,
-        [dest]: { ...current.rooms[dest], instances: [...current.rooms[dest].instances, created] },
-      },
-    };
-    const prepared = buildScene(seed),
-      subject = prepared.entities[`${dest}/item/${created.id}`];
-    if (!subject) return;
-    const proposal = resolve({ ...prepared.rooms[dest], entities: prepared.entities }, subject, at, {
-      scale: c.a,
-      release: true,
-    });
-    store.commitProposal(proposal, seed);
-    setPlacing(undefined);
+    const seed = { ...current, rooms: { ...current.rooms,
+      [dest]: { ...current.rooms[dest], instances: [...current.rooms[dest].instances, created] } } };
+    const prepared = buildScene(seed), id = `${dest}/item/${created.id}`;
+    const origin = roomOrigin(roomIds.indexOf(dest), building);
+    const contact = screenToRoom(screenPoint(x, y), runtime.current!.camera.get(), housePoint(origin.x, origin.y));
+    const subject = { ...prepared.entities[id], contact };
+    catalogSeeds.current[id] = { seed };
+    return subject;
   }
-  const dropCatalog = (item: ItemId, x: number, y: number) =>
-    insertAt(item, x - canvasOrigin.current.x, y - canvasOrigin.current.y);
+  function insertAt(item: ItemId, x: number, y: number) {
+    const c = runtime.current!.camera.get(), index = roomAtScreen(x, y, c, building);
+    if (index < 0) return;
+    const subject = catalogSubject(item, x, viewport.height + 40, roomIds[index]);
+    if (!subject) return;
+    const dest = roomIds[index], origin = roomOrigin(index, building);
+    const at = screenToRoom(screenPoint(x, y), c, housePoint(origin.x, origin.y));
+    const proposal = resolve({ ...live.current.scene.rooms[dest], entities: live.current.scene.entities }, subject, at,
+      { scale: c.a, release: true, avoidFurnitureOverlap: true, catalog: true });
+    if (proposal.kind === "staging") {
+      delete catalogSeeds.current[subject.id]; store.setMessage("Try another place or put something away."); return;
+    }
+    if (!runtime.current!.animateProposal(proposal, subject, undefined, accepted => {
+      if (accepted) setPlacing(undefined);
+      else delete catalogSeeds.current[subject.id];
+    })) delete catalogSeeds.current[subject.id];
+  }
+  const beginCatalog = (item: ItemId, x: number, y: number) => {
+    setCatalogItem(item);
+    const subject = catalogSubject(item, x - canvasOrigin.current.x, y - canvasOrigin.current.y);
+    if (subject) runtime.current!.externalDown(-500, subject.id,
+      screenPoint(x - canvasOrigin.current.x, y - canvasOrigin.current.y), subject);
+  };
+  const dropCatalog = (_item: ItemId, x: number, y: number, cancel = false) => {
+    runtime.current!.externalDrop(-500, screenPoint(x - canvasOrigin.current.x, y - canvasOrigin.current.y), cancel || roomAtScreen(x - canvasOrigin.current.x, y - canvasOrigin.current.y,
+      runtime.current!.camera.get(), building) < 0);
+  };
+  const { slots: catalogSlots } = interaction;
   const ghostStyle = useAnimatedStyle(() => ({
-    opacity: ghost.value.active ? 1 : 0,
+    opacity: ghost.value.active && !catalogSlots.value.some(s => s.pointer === -500 && s.ready && s.painted) ? 1 : 0,
     transform: [{ translateX: ghost.value.x - 35 }, { translateY: ghost.value.y - 70 }],
   }));
   const target = selected ? scene.entities[selected]?.item : undefined;
@@ -711,7 +740,7 @@ export function HomeScreen({
       <View style={{ flex: 1, flexDirection: vertical ? "row" : "column" }}>
         <View ref={canvas} onLayout={measure} style={{ width: viewport.width, height: viewport.height }}>
           <SceneView
-            state={store.state}
+            state={{ ...store.state, current: room }}
             badges={ownership.badges}
             onBadges={() => router.push("/badges")}
             scene={scene}
@@ -794,7 +823,9 @@ export function HomeScreen({
               if (owns(id, ownership)) setPlacing(id);
             }}
             onDrop={dropCatalog}
-            onDragItem={setCatalogItem}
+            onDragItem={beginCatalog}
+            interaction={interaction}
+            offset={viewportOffset}
             dispatch={dispatch}
             onClose={() => setDesigning(false)}
           />
@@ -813,16 +844,8 @@ export function HomeScreen({
             (designing && !vertical ? portraitDrawerHeight + 6 : staged.length ? 100 : 10)
           }
           onChoose={(proposal) => {
-            const result = commitAt(proposal.id, proposal.room, proposal.contact, proposal);
-            if (result) {
-              showReaction(result.proposal);
-              const owner = scene.rooms[result.proposal.room].targets.find(
-                (t) => t.id === result.proposal.target
-              )?.owner;
-              restoreFocus(result.proposal.kind === "mouth" ? owner : result.identities[result.proposal.id]);
-              setSelected(undefined);
-              setRoom(result.proposal.room);
-            }
+            if (runtime.current!.animateProposal(proposal)) { setSelected(undefined); setRoom(proposal.room); }
+
           }}
         />
       )}
@@ -858,7 +881,9 @@ export function HomeScreen({
           if (ratio > 1) setOverview(false);
         }}
         onBring={(id, slot) => {
-          commitAt(id, room, { x: 350 + slot * 90, y: 490 });
+          const subject = live.current.scene.entities[id];
+          if (subject) runtime.current!.animateProposal(resolve({ ...scene.rooms[room], entities: scene.entities }, subject,
+            roomPoint(350 + slot * 90, 490), { scale: interaction.camera.get().a, release: true }));
           setFriends(false);
         }}
       />

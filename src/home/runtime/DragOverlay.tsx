@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { memo, useEffect, useMemo } from "react";
 import { Platform, View } from "react-native";
 import Animated, { useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
 import { paintedBounds } from "../art/silhouettes";
@@ -9,13 +9,14 @@ import { renderAnchors, carryBinding, carrySample } from "./rigGeometry";
 import { settleProgress } from "./settle";
 import type { Scene, SceneEntity } from "../scene/types";
 import { groupIds, restingVisible } from "./group";
+import { LandingPreview } from "./LandingPreview";
 import { SettleArt } from "./SettleArt";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { emptyDragSlot, type Interaction, type Pickup } from "./useInteraction";
 import { capabilityOf } from "../world";
-import { carriedPropGrowth, carryLift } from "./carry";
+import { pickupTransform, footprintShadow } from "./handFeel";
 
-function OverlayGroup({
+const OverlayGroup = memo(function OverlayGroup({
   pickup,
   interaction,
   building,
@@ -28,26 +29,33 @@ function OverlayGroup({
   reduced: boolean;
   renderCharacter?: CharacterRender;
 }) {
-  const { scene, id, slot: index } = pickup;
+  const { scene, id } = pickup;
+  const unready = interaction.unready;
+  useEffect(() => () => unready?.(id), [id, unready]);
+  const root = scene.entities[id];
+  const index = root.character ? pickup.slot : 0;
   const globalSlots = interaction.slots, globalClock = interaction.clock;
   const idle = useMemo(() => [emptyDragSlot(), emptyDragSlot()], []);
   // Publish only this actor's active channel. Hidden, pre-mounted characters do
   // not enqueue native prop updates for another child's drag.
-  const channel = useDerivedValue(() => globalSlots.value[index].id === id
-    ? globalSlots.value.map((s, i) => i === index ? { ...s } : idle[i]) : idle);
+  const channel = useDerivedValue(() => {
+    if (root.character) return globalSlots.value[index].id === id
+      ? globalSlots.value.map((s, i) => i === index ? { ...s } : idle[i]) : idle;
+    const slot = globalSlots.value.find(s => s.id === id);
+    return slot ? [{ ...slot }, idle[1]] : idle;
+  });
   const channelClock = useDerivedValue(() => channel.value[index].id ? globalClock.value : 0);
   const visualInteraction = { ...interaction, slots: channel, clock: channelClock } as Interaction;
   const { slots, camera, clock } = visualInteraction;
-  const root = scene.entities[id],
-    origin = roomOrigin(roomIds.indexOf(root.room), building);
-  const supportPlanes = useMemo(() => Object.fromEntries(Object.values(scene.entities).flatMap((entity) => {
+  const origin = roomOrigin(roomIds.indexOf(root.room), building);
+  const supportPlanes = useMemo(() => !root.character ? {} : Object.fromEntries(Object.values(scene.entities).flatMap((entity) => {
     if (!entity.item || !capabilityOf(entity.item.item).sockets?.length) return [];
     const frame = artFrame(entity), hull = paintedBounds(entity) ?? {
       left: entity.contact.x + frame.left, top: entity.contact.y + frame.top, width: frame.width, height: frame.height };
     const origin = roomOrigin(roomIds.indexOf(entity.room), building);
     return [[entity.id, { ...hull, left: hull.left + origin.x, top: hull.top + origin.y,
       base: hull.top + origin.y + hull.height }]];
-  })), [scene, building]);
+  })), [scene, building, root.character]);
   const ids = groupIds(scene, id);
   const destination =
     (pickup.destination &&
@@ -60,22 +68,11 @@ function OverlayGroup({
   const acknowledge = () => {
     const bounds = root.character ? renderAnchors(root, true).bounds : undefined;
     const binding = root.character ? carryBinding(root, pickup.grip ?? { x: 0, y: 0 }) : { x: 0, y: 0 };
-    interaction.ready(index, id, bounds && { ...bounds, left: bounds.left + binding.x, top: bounds.top + binding.y });
+    interaction.ready(interaction.slots.value.findIndex(s => s.id === id), id, bounds && { ...bounds, left: bounds.left + binding.x, top: bounds.top + binding.y }, pickup.generation);
   };
   const style = useAnimatedStyle(() => {
     const slot = slots.value[index];
-    const lift = reduced ? 0 : Math.min(1, Math.max(0, (clock.value - slot.liftedAt) / 90));
-    const settling = (slot.phase === "settling" && slot.settleAt > 0) || (slot.phase === "pending" && slot.pausedElapsed > 0);
-    const blend = settling
-      ? Math.max(0, 1 - (slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt) / 140)
-      : 1;
-    const elapsed = settling ? (slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt) : 0;
-    const accent =
-      !reduced && settling && slot.proposal?.kind === "floor" && elapsed < 160
-        ? Math.max(0, elapsed < 60 ? elapsed / 60 : (160 - elapsed) / 100)
-        : 0;
-    const propScale = root.character ? (reduced ? 0 : .04 * lift * blend)
-      : carriedPropGrowth * (settling ? (reduced ? 0 : blend) : (reduced ? 1 : lift));
+    const motion = pickupTransform(slot, root, camera.value.a, clock.value, reduced);
     return {
       opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 1 : 0,
       transformOrigin: [slot.gripX, slot.gripY, 0],
@@ -86,14 +83,15 @@ function OverlayGroup({
             slot.y -
             origin.y -
             root.contact.y -
-            (reduced ? 0 : carryLift(root, camera.value.a) * lift * blend),
+            motion.lift,
         },
-        { rotate: `${reduced ? 0 : slot.tilt}deg` },
-        { scaleX: 1 + propScale + 0.02 * accent },
-        { scaleY: 1 + propScale - 0.02 * accent },
+        { rotate: `${motion.tilt}deg` },
+        { scaleX: motion.scaleX },
+        { scaleY: motion.scaleY },
       ],
     };
   });
+  const footprint = footprintShadow(root);
   const shadow = useAnimatedStyle(() => {
     const slot = slots.value[index];
     const p = slot.proposal,
@@ -111,16 +109,18 @@ function OverlayGroup({
       ? 0
       : slot.phase === "settling" && slot.settleAt
         ? Math.max(0, 1 - (clock.value - slot.settleAt) / 140)
-        : Math.min(1, (clock.value - slot.liftedAt) / 90);
+        : Math.max(0, Math.min(1, (clock.value - slot.liftedAt) / 90));
     const settling = slot.phase === "settling" && slot.settleAt > 0 || slot.phase === "pending" && slot.pausedElapsed > 0;
-    const fade = settling ? 1 - settleProgress(slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt, reduced) : 1;
+    const fade = settling ? 1 - settleProgress(slot.phase === "pending" ? slot.pausedElapsed : clock.value - slot.settleAt, reduced, slot.duration) : 1;
     return {
       opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? (0.18 - 0.06 * lift) * fade : 0,
-      transform: [{ translateX: groundX - 24 }, { translateY: groundY - 5 }, { scale: 1 - 0.15 * lift }],
+      transform: [{ translateX: groundX - footprint.width / 2 }, { translateY: groundY - footprint.height / 2 }, { scale: 1 - 0.15 * lift }],
     };
   });
   return (
     <>
+      {pickup.generation > 0 && <LandingPreview source={root} interaction={interaction}
+        building={building} renderCharacter={renderCharacter} />}
       <Animated.View
         testID={`drag-shadow-${id}`}
         pointerEvents="none"
@@ -129,8 +129,8 @@ function OverlayGroup({
             position: "absolute",
             left: 0,
             top: 0,
-            width: 48,
-            height: 10,
+            width: footprint.width,
+            height: footprint.height,
             borderRadius: 30,
             backgroundColor: "#284F4B",
           },
@@ -139,6 +139,7 @@ function OverlayGroup({
       />
       <Animated.View
         testID={`drag-overlay-${index}`}
+        nativeID={`drag-overlay-${id}`}
         collapsable={false}
         onLayout={acknowledge}
         pointerEvents="none"
@@ -153,8 +154,8 @@ function OverlayGroup({
           style,
         ]}
       >
-        {root.character && <View collapsable={false} onLayout={acknowledge}
-          style={{ position: "absolute", opacity: 0, width: 1 + pickup.generation, height: 1 }} />}
+        <View collapsable={false} onLayout={acknowledge}
+          style={{ position: "absolute", opacity: 0, width: 1 + pickup.generation, height: 1 }} />
         {entities.map((entity) => {
           const frame = artFrame(entity, entity.id === root.id && !!root.character);
           const dx = entity.contact.x - root.contact.x,
@@ -216,7 +217,10 @@ function OverlayGroup({
       </Animated.View>
     </>
   );
-}
+}, (previous, next) => previous.pickup === next.pickup && previous.building === next.building &&
+  previous.reduced === next.reduced && previous.renderCharacter === next.renderCharacter &&
+  previous.interaction.slots === next.interaction.slots && previous.interaction.camera === next.interaction.camera);
+
 function CarriedProp({
   entity,
   root,
@@ -252,7 +256,7 @@ function CarriedProp({
     const s = slots.value[index],
       elapsed = s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt;
     const settling = (s.phase === "settling" && s.settleAt) || (s.phase === "pending" && s.settleAt);
-    const p = settling ? settleProgress(elapsed, reduced) : 0,
+    const p = settling ? settleProgress(elapsed, reduced, s.duration) : 0,
       blend = p;
     const hand = hands[(reduced ? 0 : Math.max(-4, Math.min(4, Math.round(s.lag / 2.5)))) + 4];
     const x = hand.x + start.x + (end.x - start.x) * p,
@@ -288,12 +292,20 @@ function Front({ entity, root, reduced }: { entity: SceneEntity; root: SceneEnti
 /** This sibling follows BuildingTrim and every room clip. */
 export function DragOverlay(props: {
   scene: Scene;
+  activeRoom?: SceneEntity["room"];
   pickups: (Pickup | undefined)[];
   interaction: Interaction;
   building: Building;
   reduced: boolean;
   renderCharacter?: CharacterRender;
 }) {
+  const warm = useMemo(() => Object.values(props.scene.entities)
+    .filter(e => e.item && e.body?.small && e.room === (props.activeRoom ?? "home") && e.attachment.kind !== "staging")
+    .slice(0, 16).map(entity => ({ id: entity.id, slot: 0, scene: props.scene, generation: 0, epoch: 0 })),
+    [props.scene, props.activeRoom]);
+  const items: Pickup[] = warm.map(p => props.pickups.find(active => active?.id === p.id) ?? p);
+  for (const pickup of props.pickups) if (pickup && !pickup.scene.entities[pickup.id]?.character &&
+    !items.some(p => p.id === pickup.id)) items.push(pickup);
   return (
     <View
       testID={Platform.OS === "web" ? "building-drag-overlay" : undefined}
@@ -304,10 +316,9 @@ export function DragOverlay(props: {
       {Object.values(props.scene.entities).filter((e) => e.character).map((entity) => {
         const pickup = props.pickups.find((p) => p?.id === entity.id) ??
           { id: entity.id, slot: 0, scene: props.scene, generation: 0, epoch: 0 };
-        return <OverlayGroup key={entity.id} pickup={pickup} {...props} />;
+        return <OverlayGroup key={entity.id} pickup={pickup} interaction={props.interaction} building={props.building} reduced={props.reduced} renderCharacter={props.renderCharacter} />;
       })}
-      {props.pickups.map((pickup, index) => pickup && !pickup.scene.entities[pickup.id]?.character &&
-        <OverlayGroup key={`${index}:${pickup.id}`} pickup={pickup} {...props} />)}
+      {items.map(pickup => <OverlayGroup key={pickup.id} pickup={pickup} interaction={props.interaction} building={props.building} reduced={props.reduced} renderCharacter={props.renderCharacter} />)}
       <SupportFronts scene={props.scene} interaction={props.interaction} building={props.building} reduced={props.reduced} />
     </View>
   );
