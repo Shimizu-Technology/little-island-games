@@ -59,3 +59,28 @@ it('uses an 8ms search slice and resumes without changing the route', () => {
 it('offers help from the start on grids and after three failed build runs; Help itself is never locked', () => {
   expect(hintOffered('grid', 0)).toBe(true); expect(hintOffered('build-run', 2)).toBe(false); expect(hintOffered('build-run', 3)).toBe(true);
 });
+it('uses the real maze move and completion rules from a wandering draft, without a stored route', async () => {
+  const { createMaze, directions, mazeDone, mazeMove, mazeRoute } = await import('../src/games/maze');
+  const { defaultOptions } = await import('../src/games/types');
+  type Maze = ReturnType<typeof createMaze>;
+  const visible: PublicHintRules<Maze, number> = {
+    look: () => ({ text: 'Look at the open paths.', focus: [] }), think: () => ({ text: 'Follow the paths toward home.', focus: [] }), preserves: () => true,
+    problem: start => ({ start, key: s => s.path.at(-1)!, goal: mazeDone, apply: mazeMove, nodeBudget: 1000,
+      moves: s => { const cell = s.path.at(-1)!; return directions.flatMap(d => {
+        const r = Math.floor(cell / s.size) + d.dr, c = cell % s.size + d.dc;
+        return !(s.walls[cell] & d.bit) && r >= 0 && c >= 0 && r < s.size && c < s.size ? [r * s.size + c] : [];
+      }); } }),
+  };
+  for (let seed = 1; seed <= 50; seed++) {
+    let draft = createMaze(defaultOptions, seed);
+    // Deliberately follow legal choices rather than a witness, including backtracking.
+    for (let step = 0; step < 8 && !mazeDone(draft); step++) {
+      const moves = visible.problem(draft).moves(draft); draft = mazeMove(draft, moves[(seed + step) % moves.length]);
+    }
+    const before = JSON.stringify(draft), result = await requestHint(visible, draft, 'show-me', signal());
+    expect(JSON.stringify(draft)).toBe(before); expect(result.status).toBe('route');
+    if (result.status !== 'route') throw new Error('Missing real-engine route');
+    for (const action of result.actions) { const next = mazeMove(draft, action); expect(next).not.toBe(draft); draft = next; }
+    expect(mazeDone(draft)).toBe(true); expect(mazeRoute(draft)).toHaveLength(1);
+  }
+});
