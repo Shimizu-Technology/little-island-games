@@ -65,3 +65,10 @@ it('never projects a concave flared skirt through a projective pole',async()=>{
   }
  }
 });
+
+it('bakes the pickup lettering at sufficient density for its maximum enlarged phone pose',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const png=readFileSync(new URL('../assets/arcade/lagoon/shell-burst.png',import.meta.url));
+ expect(png.readUInt32BE(16)).toBe(432);expect(png.readUInt32BE(20)).toBe(432);
+ expect(atlas.assets['shell-burst'].density).toBe(9);
+});

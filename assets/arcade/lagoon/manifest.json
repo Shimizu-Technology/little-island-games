@@ -134,6 +134,13 @@
       "bytes": 623,
       "sha256": "708c29dada0945bc7fc89f57aa742d40560f8112204d6204964fe69e6090e53e"
     },
+    "shell-burst": {
+      "width": 48,
+      "height": 48,
+      "bytes": 15143,
+      "density": 9,
+      "sha256": "6bf6f36f0812c09609fccfaffb4175ae5677936ecb26d73852687c37156e2a38"
+    },
     "support": {
       "width": 16,
       "height": 128,

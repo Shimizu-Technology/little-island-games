@@ -10,12 +10,12 @@ import { quadHomography, inverse3 } from '../../src/arcade/games/lagoon-run/quad
 import { canoePath } from './lagoon-paths.ts';
 const dir='assets/arcade/lagoon';mkdirSync(dir,{recursive:true});
 const manifest:Record<string,unknown>={density:3,source:'scripts/art/bake-lagoon.ts',assets:{}};
-function bake(name:string,width:number,height:number,body:string) {
+function bake(name:string,width:number,height:number,body:string,density=3) {
  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${body}</svg>`;
  writeFileSync(`${dir}/${name}.svg`,svg);
- execFileSync('rsvg-convert',['-w',String(Math.ceil(width*3)),'-h',String(Math.ceil(height*3)),'-o',`${dir}/${name}.png`,`${dir}/${name}.svg`]);
+ execFileSync('rsvg-convert',['-w',String(Math.ceil(width*density)),'-h',String(Math.ceil(height*density)),'-o',`${dir}/${name}.png`,`${dir}/${name}.svg`]);
  const bytes=readFileSync(`${dir}/${name}.png`);
- (manifest.assets as Record<string,unknown>)[name]={width,height,bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')};
+ (manifest.assets as Record<string,unknown>)[name]={width,height,bytes:bytes.length,...(density===3?{}:{density}),sha256:createHash('sha256').update(bytes).digest('hex')};
 }
 for(let f=0;f<12;f++) {
  let joints='',grain='',nails='';const phase=f*.065/12;
@@ -39,6 +39,7 @@ bake('deck-left',16,16,'<rect width="16" height="16" fill="#A0643E" stroke="#674
 bake('deck-right',16,16,'<rect width="16" height="16" fill="#704A36" stroke="#674B3E"/>');
 bake('deck-side-left',32,32,'<path d="M0 0H32L0 32Z" fill="#A0643E"/>');
 bake('deck-side-right',32,32,'<path d="M0 0H32L0 32Z" fill="#704A36"/>');
+bake('shell-burst',48,48,'<path d="M24 2L28 15L42 8L34 22L47 27L33 30L38 44L25 35L16 47L17 32L2 33L13 23L3 12L19 16Z" fill="#FFE9A7" stroke="#B76A20" stroke-width="1"/><text x="24" y="30" text-anchor="middle" fill="#5B4844" font-family="Arial" font-size="14" font-weight="900">+1</text>',9);
 bake('support',16,128,'<path d="M2 1H14V127H2Z" fill="#78513A" stroke="#674B3E" stroke-width="2"/><path d="M3 6H13" stroke="#E9B56B" stroke-width="4"/>');
 const depths=[.1,.6,1,1.4],canoes=[];
 for(let f=0;f<depths.length;f++) {
