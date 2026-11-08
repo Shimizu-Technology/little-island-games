@@ -1,0 +1,81 @@
+import { createHash } from 'node:crypto';
+
+export const TIERS = ['Little', 'Growing', 'Strong', 'Grown-up'];
+export const sha256 = value => createHash('sha256').update(value).digest('hex');
+export function canonical(value) {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
+  if (value && typeof value === 'object') return `{${Object.keys(value).sort().map(k => `${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`;
+  if (value === undefined || (typeof value === 'number' && !Number.isFinite(value))) throw new Error('Non-JSON value');
+  return JSON.stringify(value);
+}
+export const digest = value => sha256(canonical(value));
+export function requireThat(ok, message) { if (!ok) throw new Error(message); }
+export const nonempty = s => typeof s === 'string' && s.trim().length > 0;
+export const isDate = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(s) && Number.isFinite(Date.parse(s));
+export const foldScan = s => s.normalize('NFD').replace(/\p{M}/gu, '').replace(/['’\s-]/g, '').toUpperCase();
+export const englishKey = s => s.trim().toUpperCase();
+export const CHAMORU_ALPHABET = ["'", 'A', 'Å', 'B', 'CH', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'Ñ', 'NG', 'O', 'P', 'R', 'S', 'T', 'U', 'Y'];
+export function cellsFor(spelling, language = 'en') {
+  requireThat(nonempty(spelling), 'Missing spelling');
+  const s = spelling.normalize('NFC').toUpperCase();
+  if (language === 'en') {
+    requireThat(/^[A-Z]+(?: [A-Z]+)*$/.test(s), 'English spelling must contain letters and spaces');
+    return [...s.replaceAll(' ', '')];
+  }
+  requireThat(language === 'ch', 'Unknown language');
+  const cells = s.match(/CH|NG|./gu) ?? [];
+  requireThat(cells.every(c => CHAMORU_ALPHABET.includes(c)), 'Invalid CHamoru letter or phrase');
+  return cells;
+}
+export function validateWord(w, canonicalTerms = []) {
+  requireThat(w?.schemaVersion === 1 && nonempty(w.id) && nonempty(w.sense), 'Invalid word identity/sense');
+  requireThat(w.language === 'en' || w.language === 'ch', 'Invalid word language');
+  cellsFor(w.spelling, w.language);
+  requireThat(nonempty(w.lemma) && TIERS.includes(w.readerLevel), 'Missing lemma/reader level');
+  for (const k of ['knownBand', 'readBand', 'spellBand', 'clueBand']) requireThat(Number.isInteger(w[k]) && w[k] >= 1 && w[k] <= 4, `Invalid ${k}`);
+  requireThat(nonempty(w.theme) && nonempty(w.topic) && Number.isFinite(w.guamFit) && w.guamFit >= 0 && w.guamFit <= 1, 'Missing word tags');
+  requireThat(w.audio === null || nonempty(w.audio), 'Missing audio field');
+  requireThat(nonempty(w.source?.id) && nonempty(w.source?.revision) && /^[a-f0-9]{64}$/.test(w.source?.sha256), 'Missing pinned source');
+  requireThat(['lemma', 'plural', 'inflection'].includes(w.form) && typeof w.properNoun === 'boolean' && typeof w.abbreviation === 'boolean', 'Missing spelling metadata');
+  requireThat(Array.isArray(w.british) && w.british.every(v => /^[A-Z]+$/.test(v)), 'Invalid British variants');
+  const tier = TIERS.indexOf(w.readerLevel) + 1;
+  requireThat(!w.abbreviation, 'Abbreviations are not launch answers');
+  requireThat(!w.spelling.includes(' ') || tier === 4, 'Multi-word answers are adult only');
+  if (w.spelling.includes(' ')) requireThat(canonical(w.wordLengths) === canonical(w.spelling.split(' ').map(p => p.length)), 'Missing multi-word lengths');
+  requireThat(tier > 2 || w.form === 'lemma', 'Child answers must be lemmas');
+  requireThat(tier > 2 || !w.properNoun || ['GUAM', 'ADVENT', 'EASTER', 'GOD', 'JESUS', 'MARY', 'JOSEPH', 'CHRISTMAS', 'PENTECOST'].includes(w.spelling), 'Child proper noun requires policy exception');
+  requireThat(!['FAT','UGLY'].includes(w.spelling) || tier === 4, 'Body labels stay out of child answers');
+  requireThat(w.topic !== 'other-faith' || tier >= 3, 'Other faiths require an older factual context');
+  requireThat(!w.livingPerson, 'No living people');
+  requireThat(!['DRAGON', 'FAIRY', 'GIANT', 'GHOST'].includes(w.spelling) || w.topic === 'stories', 'Story sense required');
+  requireThat(!['WITCH', 'DEVIL', 'DEMON'].includes(w.spelling) || tier >= 3, 'Spooky word requires Strong or above');
+  requireThat(!['DEAD', 'DEATH', 'GUN'].includes(w.spelling) || (tier >= 2 && ['science', 'history'].includes(w.topic)), 'Hard word requires calm science/history sense');
+  requireThat(w.spelling !== 'SWORD' || w.topic === 'stories', 'Sword requires story context');
+  if (w.language === 'ch') {
+    const source = canonicalTerms.find(t => t.id === w.canonicalId);
+    requireThat(source?.review_status === 'source_backed' && source.recommended_teaching_term === w.spelling, 'CHamoru must match source-backed teaching spelling exactly');
+    requireThat(w.uses?.length > 0 && w.uses.every(u => ['word-search', 'matching'].includes(u)), 'CHamoru is limited to word search/matching');
+    requireThat(w.fluentReaderChecked === false, 'Record CHamoru as not checked by a fluent reader');
+  } else requireThat(w.spelling === englishKey(w.spelling) && w.locale === 'en-US', 'Answers use American uppercase spelling');
+  return w;
+}
+export function validateClue(c) {
+  requireThat(c?.schemaVersion === 1 && nonempty(c.id) && nonempty(c.wordId) && nonempty(c.answer) && nonempty(c.meaning) && nonempty(c.text) && TIERS.includes(c.tier), 'Invalid clue');
+  requireThat(c.candidates?.length === 3 && new Set(c.candidates).size === 3 && c.candidates.includes(c.text) && c.candidates.every(nonempty), 'Keep three distinct draft candidates');
+  requireThat(nonempty(c.provenance?.model) && isDate(c.provenance?.date) && nonempty(c.provenance?.promptVersion) && /^[a-f0-9]{64}$/.test(c.provenance?.promptSha256), 'Missing drafting provenance');
+  requireThat(c.provenance.webUsed === false && c.provenance.inputs === 'answer,meaning,tier,tone', 'Clean-room drafting required');
+  return c;
+}
+
+/** Exact answer decisions are separate from the intentionally broad grid scan. */
+export function answerAllowed(word, policy) {
+  const key = englishKey(word.spelling), lemma = englishKey(word.lemma);
+  return !new Set(policy.exact.map(englishKey)).has(key) && !new Set(policy.lemmas.map(englishKey)).has(lemma);
+}
+export function rankedWords(words) { return [...words].sort((a, b) => b.guamFit - a.guamFit || a.spelling.localeCompare(b.spelling)); }
+export function validatePack(words) {
+  requireThat(new Set(words.map(w => w.id)).size === words.length, 'Duplicate record');
+  requireThat(new Set(words.map(w => `${w.language}:${englishKey(w.lemma)}`)).size === words.length, 'Word and inflection cannot share a pack');
+  const adults = words.filter(w => w.readerLevel === 'Grown-up');
+  requireThat(adults.filter(w => w.form !== 'lemma').length <= Math.floor(adults.length * 0.1), 'Adult inflection cap is 10%');
+}
