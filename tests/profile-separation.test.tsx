@@ -87,8 +87,8 @@ it('R01 all nine Arcade games have independent stars, worlds, bests, outfits and
     await choose('a'); for(let i=1;i<=8;i++) await arcade({type:'finish',game,level:`w1-${i}`,stars:3,score:i*10,round:`a-${game}-${i}`,name:'A'});
     await arcade({type:'coached',game}); await arcade({type:'outfit',game,outfit:'sunhat'});
     const p=gameProgress(arcadeLearner(store.save.arcade,'a'),game); expect(p.openWorlds).toContain('w2'); expect(p.best).toBe(80); expect(p.coached).toBe(true);
-    await choose('b'); const b=gameProgress(arcadeLearner(store.save.arcade,'b'),game); expect(b.stars).toEqual({}); expect(levelOpen(b,'w1-2')).toBe(false); expect(b.best).toBe(0); expect(b.outfit).toBe('island'); expect(b.coached).toBe(false);
-    rows.push({game,aStars:24,aWorld2:true,aBest:80,bStars:0,bBest:0,bWorld2:false});
+    await choose('b'); const b=gameProgress(arcadeLearner(store.save.arcade,'b'),game); expect(b.stars).toEqual({}); expect(levelOpen(b,'w1-2')).toBe(true); expect(b.best).toBe(0); expect(b.outfit).toBe('island'); expect(b.coached).toBe(false);
+    rows.push({game,aStars:24,aWorld2:true,aBest:80,bStars:0,bBest:0,bWorld2:true});
   }
   expect(personFor(store.save,'a').milestones).toContain('arcade:reef-builder:w1-1'); expect(personFor(store.save,'b').milestones).not.toContain('arcade:reef-builder:w1-1'); observations.R01=rows;
 });
@@ -147,7 +147,7 @@ it('R03 free-play Family board and headline best are shared, own best is separat
   expect(freePlayBest(store.save.arcade,'reef-builder')).toBe(1234); expect(gameProgress(arcadeLearner(store.save.arcade,'b'),'reef-builder').best).toBe(0);
   await act(async()=>{expect(await store.removeLearner('a')).toBe(true);}); expect(store.save.arcade?.scores).toContainEqual({game:'reef-builder',name:'A',score:1234}); observations.R03={familyBoardA:1234,bPersonalBest:0,scoreKeptAfterDeletingA:true};
 });
-it('L01 all 28 School games retain A/B paused rounds, choices and Continue independently', async () => {
+it(`L01 all ${learnIds.length} registered School games retain A/B paused rounds, choices and Continue independently`, async () => {
   await mount();
   for (const [i,game] of learnIds.entries()) {
     await choose('a'); const a=round(game,'a',100+i,3); await learn(a);

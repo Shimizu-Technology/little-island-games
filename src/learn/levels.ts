@@ -7,7 +7,7 @@ export { levelNumbers, levelOf, optionsAtLevel, levelStage } from "./levelOption
 export type { LearningLevel } from "./levelOptions";
 
 type LevelName = { name: string; description: string };
-const foundation: Record<LearnId, readonly [LevelName, LevelName, LevelName]> = {
+const foundation: Partial<Record<LearnId, readonly [LevelName, LevelName, LevelName]>> = {
   "reef-race": [
     { name: "Hop to 30", description: "Count along stones 1–30 with a spinner showing 1, 2 or 3." },
     { name: "Hop to 60", description: "Count along stones 1–60 with one die." },
@@ -88,7 +88,7 @@ const foundation: Record<LearnId, readonly [LevelName, LevelName, LevelName]> = 
 export function levelInfo(game: LearnId, level: LearningLevel): LevelName {
   const own = engines[game].levelNames?.[level - 1];
   if (own) return own;
-  if (level <= 3) return foundation[game][level - 1];
+  if (level <= 3) return foundation[game]?.[level - 1] ?? {name:`Level ${level}`,description:engines[game].description};
   const track = growthTrack(game, level === 4 ? "stretch" : "deep");
   return track ? { name: track.label, description: track.description } : { name: `Level ${level}`, description: "" };
 }

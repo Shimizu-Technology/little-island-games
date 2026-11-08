@@ -1,8 +1,9 @@
+import { learningComfort } from '../state/validation';
+import { ToggleRow , Button, Chip, Copy, Heading, styles } from '../components/ui';
 import { EarlierWorkSettings } from "./EarlierWorkSettings";
 import React, { useState } from "react";
 import { TextInput, View } from "react-native";
 import { useStore } from "../state/Store";
-import { Button, Chip, Copy, Heading, styles } from "../components/ui";
 import { activeLearner, familyLearners } from "./learners";
 import { practiceSummary } from "./skills";
 import { noteLabel } from "./noteLabel";
@@ -16,6 +17,8 @@ export function LearnerSettings({ disabled }: { disabled: boolean }) {
   const [confirm, setConfirm] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const labels = skillLabels();
+  const comfort=learningComfort(store.save,learner.id);
+  const setComfort=(patch:Partial<typeof comfort>)=>store.settings({learningComfort:{...store.save.settings.learningComfort,[learner.id]:{...comfort,...patch}}});
   return <View style={{ gap: 10 }}>
     <Heading style={{ fontSize: 19 }}>Who is practicing?</Heading>
     <Copy>Each learner keeps their own saved games, completed School levels and stars, records, Library, badges and house on this device. Earlier family records stay separate.</Copy>
@@ -36,6 +39,11 @@ export function LearnerSettings({ disabled }: { disabled: boolean }) {
       <Button quiet disabled={busy} onPress={() => setConfirm(null)}>Keep learner</Button>
     </View>}
     {!!message && <Copy>{message}</Copy>}
+    <Heading style={{fontSize:18}}>Learning choices for {learner.name}</Heading>
+    <ToggleRow label="Challenge invitations" detail="Optional offers after a finished puzzle" value={comfort.offers} disabled={disabled || busy} onChange={offers=>setComfort({offers})}/>
+    <ToggleRow label="Young-child choices" detail="Hide dares and Challenge invitations; help stays available" value={comfort.youngChild} disabled={disabled || busy} onChange={youngChild=>setComfort({youngChild})}/>
+    <Copy>Where a new learning path opens. Saved rounds and remembered choices stay where they are.</Copy>
+    <View style={[styles.row,{flexWrap:'wrap'}]}>{([1,2,3,4,5] as const).map(opening=><Chip key={opening} selected={comfort.opening===opening} onPress={()=>{if(!disabled&&!busy)setComfort({opening});}}>Level {opening}</Chip>)}</View>
     <EarlierWorkSettings disabled={disabled || busy}/>
     {!!Object.keys(learner.skills).length && <>
       <Heading style={{ fontSize: 17 }}>{learner.name}’s practice across activities</Heading>

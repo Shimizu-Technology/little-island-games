@@ -1,3 +1,5 @@
+import { learningGroups } from '../learn/generated/ids';
+import type { LearnId } from '../learn/types';
 import React, { useState } from "react";
 import { ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -30,7 +32,7 @@ function IslandShelf({ island }: { island: Exclude<keyof typeof islandNames, "ex
       {(island === "classic" ? classicFilters : ["All games", "Play alone", "Play together", "Favorites"]).map(f => <Chip key={f} selected={f === filter} onPress={() => setFilter(f)}>{f}</Chip>)}
     </View>
     {!choices.length && <Copy>{filter === "Favorites" ? "Tap the star on a game to keep it close by." : "Try another way to play on this island."}</Copy>}
-    <GameCards games={choices} width={cardWidth} />
+    {island === 'thinking' ? (['levels','originals'] as const).map(group=>{const games=choices.filter(g=>learningGroups[g.id as LearnId]===group);return games.length ? <View key={group} style={{gap:12}}><Heading style={{fontSize:23}}>{group==='levels'?'Levels':'Island originals'}</Heading><GameCards games={games} width={cardWidth}/></View>:null;}) : <GameCards games={choices} width={cardWidth} />}
     <Copy style={{ fontSize: 12, textAlign: "center", paddingVertical: 10 }}>Offline · No ads · Made for little moments together.</Copy>
   </ScrollView></SafeAreaView>;
 }
