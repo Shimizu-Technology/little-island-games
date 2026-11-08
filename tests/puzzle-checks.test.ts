@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { isCertified, certify, type CertifyContext } from '../src/puzzles/checks';
-import { runBots } from '../src/puzzles/bots';
+import { BOT_STEPS, botSteps, runBots } from '../src/puzzles/bots';
 import { logicLagoonAdapter } from '../src/puzzles/adapters/logic-lagoon';
 import { mazeAdapter } from '../src/puzzles/adapters/maze';
 import { logicProofFamily, mazeProofFamily } from '../scripts/puzzles/proof-families';
@@ -111,6 +111,14 @@ describe('dumb-player bots', () => {
     expect(runs.find(r => r.id === 'repeat-first')).toMatchObject({ ran: true, solved: true });
     // Repeating +2 from 6 asks for an illegal move forever. A dumb player is allowed to get stuck.
     expect(runs.find(r => r.id === 'repeat-last')).toMatchObject({ ran: true, solved: false });
+  });
+  it('get four times the shortest solution, up to the hard cap', () => {
+    expect(botSteps(3)).toBe(20);
+    expect(botSteps(10_000)).toBe(BOT_STEPS);
+    const route: number[] = [];
+    const counting = toyAdapter({ reduce: (s, a, d) => { route.push(a); return toyAdapter().reduce(s, a, d); } });
+    runBots(counting, toyCore({ payload: { goal: 100 }, par: null }), botSteps(1));
+    expect(route.length).toBeLessThanOrEqual(botSteps(1) * 7);
   });
   it('are reproducible', () => expect(runBots(toyAdapter(), toyCore())).toEqual(runBots(toyAdapter(), toyCore())));
   it('honour the Check requirement before counting a win', () => {
