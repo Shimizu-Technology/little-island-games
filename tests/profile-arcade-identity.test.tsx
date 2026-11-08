@@ -43,7 +43,7 @@ vi.mock('../src/arcade/plays',async()=>{const {reefLevel,reefLevels}=await impor
 let store:ReturnType<typeof useStore>;
 function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return null;}
 const game:ArcadeGame={id:'reef-builder',name:'Reef Builder',color:'#123',hero:'Pip',tagline:'Audit',surface:'#fff',subject:'math',twoPlayer:false,worlds:[{id:'w1',name:'One',detail:'',stars:0},{id:'w2',name:'Two',detail:'',stars:12}]};
-it('R04 identity clears locked selection and pending start; finish rejection is recoverable',async()=>{
+it('R04 identity clears another learner’s selection and pending start; finish rejection is recoverable',async()=>{
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('__DEV__',false);
   const learning=selectLearner(addLearner(addLearner(undefined,'A','a'),'B','b'),'a');
   let arcade=arcadeTransition(undefined,'a',{type:'finish',game:'reef-builder',level:'w1-1',stars:3,score:1,round:'a1',name:'A'});
@@ -54,7 +54,7 @@ it('R04 identity clears locked selection and pending start; finish rejection is 
     await act(async()=>{root.root.findAllByType('button').find(n=>n.children.includes('Choose w2-1'))!.props.onClick();});
     await act(async()=>{root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Settings')[0].props.onPress();});
     await act(async()=>{store.selectLearner('b');});
-    expect(levelOpen(gameProgress(arcadeLearner(store.save.arcade,'b'),'reef-builder'),'w2-1')).toBe(false);
+    expect(levelOpen(gameProgress(arcadeLearner(store.save.arcade,'b'),'reef-builder'),'w2-1')).toBe(true);
     await act(async()=>{root.root.findAllByType('button').find(n=>n.children.includes('Close settings'))!.props.onClick();});
     expect(root.root.findAll(n=>String(n.type)==='Copy'&&n.props.children==='Two · Level 1')).toHaveLength(0);
     expect(root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Show me & play')).toHaveLength(0);
@@ -66,13 +66,16 @@ it('R04 identity clears locked selection and pending start; finish rejection is 
     await act(async()=>{root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Show me & play')[0].props.onPress();});
     await act(async()=>{root.root.findAllByType('button').find(n=>n.children.includes('Teach play'))!.props.onClick();});
     const board=root.root.findAll(n=>String(n.type)==='audit-board')[0];expect(board.props.level.id).toBe('w1-1');
-    // An admission rejection leaves a visible Retry, and doesn't consume result credit.
+    // A malformed terminal offers a real exit, and doesn't consume result credit.
     const acceptedArcade = store.arcade;
     // Exercise real admission rejection with an invalid score.
     await act(async()=>board.props.onResult({cleared:true,stars:3,score:-1,detail:'invalid'}));
-    expect(root.root.findAll(n=>String(n.type)==='Copy'&&String(n.props.children).includes('could not be saved')).length).toBeGreaterThan(0);
-    expect(root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Try saving again')).toHaveLength(1);
+    expect(root.root.findAll(n=>String(n.type)==='Copy'&&String(n.props.children).includes('could not be checked')).length).toBeGreaterThan(0);
+    expect(root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Try saving again')).toHaveLength(0);
     expect(store.arcade).toBe(acceptedArcade);
+    await act(async()=>root.root.findAll(n=>n.props.title==='Keep your result'&&typeof n.props.onClose==='function')[0].props.onClose());
+    expect(root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Save my result')).toHaveLength(0);
+    expect(root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Result options')).toHaveLength(1);
     await act(async()=>board.props.onResult({cleared:true,stars:3,score:100,detail:'cleared'}));
     expect(gameProgress(arcadeLearner(store.save.arcade,'b'),'reef-builder').stars['w1-1']).toBe(3);
     expect(root.root.findAll(n=>String(n.type)==='audit-board')).toHaveLength(0);

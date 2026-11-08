@@ -1,6 +1,6 @@
 import { validReef, type ReefState } from "./games/reef-builder/engine";
 import { type PracticeResult, type PracticeSettings, validPracticeSettings } from "../practice/types";
-import { arcadeIds, allLevelIds, type ArcadeId, type LevelId, type Stars, type WorldId, validLevelId, worldIds, worldStars, worldOf, levelNumber, starCount } from "./types";
+import { arcadeIds, allLevelIds, type ArcadeId, type LevelId, type Stars, type WorldId, validLevelId, worldIds, worldStars, starCount } from "./types";
 export const stickerIds = ["reef-fish", "singing-shell", "little-crab", "sea-turtle", "moon-canoe", "sun-coral", "rainbow-fish", "star-shell", "coconut", "flying-fox", "lagoon-ray", "island-flower", "tiny-rail", "hermit-home", "sea-star", "jelly-light"] as const;
 export type StickerId = typeof stickerIds[number];
 export const outfitIds = ["island", "sunhat", "explorer", "starlight"] as const;
@@ -32,8 +32,8 @@ export const arcadeLearner = (arcade: ArcadeSave | undefined, owner = "family") 
 export const gameProgress = (person: ArcadeLearner, game: ArcadeId) => person.games[game] ?? emptyGameProgress();
 export const openedWorlds = (stars: Partial<Record<LevelId, Stars>>) => worldIds.filter(id => starCount(stars) >= worldStars[id]);
 export const openedOutfits = (stars: Partial<Record<LevelId, Stars>>) => outfitIds.filter(id => starCount(stars) >= outfitStars[id]);
-export const endlessOpen = (p: GameProgress, unlockAll = false) => unlockAll || allLevelIds.filter(id => worldOf(id) === "w1").every(id => !!p.stars[id]);
-export const levelOpen = (p: GameProgress, id: LevelId, unlockAll = false) => validLevelId(id) && (unlockAll || (p.openWorlds.includes(worldOf(id)) && (levelNumber(id) === 1 || !!p.stars[`${worldOf(id)}-${levelNumber(id) - 1}` as LevelId])));
+export const endlessOpen = (_p: GameProgress, _unlockAll = false) => true;
+export const levelOpen = (_p: GameProgress, id: LevelId, _unlockAll = false) => validLevelId(id);
 export function offeredSticker(person: ArcadeLearner, game: ArcadeId, level: LevelId): StickerId {
   const start = (arcadeIds.indexOf(game) * 7 + allLevelIds.indexOf(level)) % stickerIds.length;
   return Array.from({ length: stickerIds.length }, (_, i) => stickerIds[(start + i) % stickerIds.length]).find(id => !person.stickers.includes(id)) ?? stickerIds[start];

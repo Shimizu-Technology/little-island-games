@@ -1,39 +1,11 @@
+import type { LearnId } from './generated/ids';
 import type { Match, RoundResult, Seat } from "../games/match";
 import type { MathOperation } from "../math/questions";
 import type { GrowthStage } from "./growth/types";
 
 /** Wave 1 learning games. Each id has a pure engine (src/learn/games/<id>/engine.ts) and a Board. */
-export const learnIds = [
-  "reef-race",
-  "island-market",
-  "sound-boat",
-  "turtle-tales",
-  "which-one",
-  "tide-pool",
-  "float-sink",
-  "crab-commands",
-  "hafa-adai",
-  "shell-math",
-  "number-hop",
-  "quick-practice",
-  "beep-bot",
-  "turtle-draw",
-  "tide-logic",
-  "code-lab",
-  "pattern-path",
-  "shape-shift",
-  "logic-lagoon",
-  "weather-watch",
-  "food-web",
-  "space-station",
-  "times-tide",
-  "fraction-feast",
-  "treasure-algebra",
-  "letter-lagoon",
-  "word-workshop",
-  "story-studio",
-] as const;
-export type LearnId = (typeof learnIds)[number];
+export { learnIds } from './generated/ids';
+export type { LearnId } from './generated/ids';
 export type Island = "reading" | "numbers" | "science" | "thinking" | "coding";
 /** solo: on my own · together: with a grown-up (cooperative turns) · versus: take turns with a family score. */
 export type LearnMode = "solo" | "together" | "versus";
@@ -110,6 +82,8 @@ export type LearnEngine<S> = {
   ages?: readonly [number, number];
   /** The game implements all five levels itself (levelOf(options)); skip the shared Level 4–5 quiz board. */
   ownLevels?: boolean;
+  /** New stage mechanics, while archived growth states still dispatch to their shared board. Never flip ownLevels on a migrated game. */
+  nativeStages?: boolean;
   /** Names for all five levels when ownLevels is set (Level 1 easiest … Level 5 hardest). */
   levelNames?: readonly { name: string; description: string }[];
   /** Skill id → kid-and-parent friendly label (shown in the grown-up practice view). Ids look like "read.short-a". */

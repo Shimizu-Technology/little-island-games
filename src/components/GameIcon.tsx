@@ -1,3 +1,5 @@
+import { additionalArt } from '../learn/generated/art';
+import { learnIds, type LearnId } from '../learn/types';
 import React from "react";
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from "react-native-svg";
 import type { ShelfId } from "../learn/home";
@@ -7,7 +9,7 @@ import type { ShelfId } from "../learn/home";
 const ink = "#254D49", cream = "#FFF9E9", coral = "#DC8062", gold = "#E8B958", blue = "#599CB4", green = "#6B9D70", purple = "#9679B7";
 export type IslandIconId = "reading" | "numbers" | "science" | "thinking" | "coding" | "classic" | "arcade" | "explore";
 type IconId = ShelfId | "explore";
-const surfaces: Record<IconId, string> = {
+const surfaces: Partial<Record<IconId, string>> = {
   "tic-tac-toe": "#DFECF7", "word-rescue": "#F8DFD0", memory: "#EDE2F5", checkers: "#DCECD7", maze: "#F6E8BF", numbers: "#D5EDEE",
   "go-fish": "#D6EAF2", "crazy-eights": "#F6E7BE", racer: "#DFEBCB", "island-mystery": "#E8E6C7", "word-imposter": "#E7DDF2", explore: "#DAEAF1",
   "coconut-drop": "#E9E9C6", "fishing-nets": "#D5E9E9", "hidden-canoes": "#D7EAF4", "shell-pits": "#F3E0C4", "reef-sweep": "#E6DFF0",
@@ -110,7 +112,7 @@ function Scene({ id }: { id: IconId }): React.ReactElement {
 }
 function Tile({ size, surface, children }: { size: number; surface: string; children: React.ReactNode }) { return <Svg width={size} height={size} viewBox="0 0 100 100" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Rect x={3} y={3} width={94} height={94} rx={23} fill={surface} stroke={ink} strokeWidth={3}/><G stroke={ink} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">{children}</G></Svg>; }
 /** Decorative inside a labelled game control; never adds a second screen-reader stop. */
-export function GameIcon({ id, size = 74 }: { id: IconId; size?: number }) { return <Tile size={size} surface={surfaces[id]}><Scene id={id}/></Tile>; }
+export function GameIcon({ id, size = 74 }: { id: IconId; size?: number }) { const Art=!surfaces[id]&&learnIds.includes(id as LearnId)?additionalArt[id as LearnId]:undefined;return Art?<Art size={size}/>:<Tile size={size} surface={surfaces[id]??cream}><Scene id={id}/></Tile>; }
 export function IslandIcon({ island, size = 74 }: { island: IslandIconId; size?: number }) {
   const representative: Record<IslandIconId, IconId> = { reading: "turtle-tales", numbers: "number-hop", science: "float-sink", thinking: "pattern-path", coding: "beep-bot", classic: "tic-tac-toe", arcade: "reef-builder", explore: "explore" };
   if (island === "reading") return <Tile size={size} surface="#DFE8F4"><Book/></Tile>;
