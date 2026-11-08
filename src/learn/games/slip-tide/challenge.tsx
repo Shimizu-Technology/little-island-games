@@ -1,15 +1,13 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React from 'react';
 import { defineReplayGame } from '../../../challenge/replay';
 import type { ChallengeViewProps, Puzzle, ReplayEngine, ReplayPayload } from '../../../challenge/types';
 import { sha256Hex } from '../../../puzzles/sha256';
 import sets from './sets.generated.json';
 import { rowPuzzle } from './engine';
-import { Playfield } from './field';
 import { gridOf, homeAll, MAX_ROUTE, slideOn, type Dir, type SlipPuzzle } from './rules';
 
 /** Inline authored set of certified bank rows. The whole bank stays packed; see the slice report for the packed-replay gap. */
-export const DEEP_BANK = 480, ENDLESS_BANK = 481, FIRST_DARE_SLOT = 1200;
-const MAX_ACTIONS = 500;
+export const MAX_ACTIONS = 500, DEEP_BANK = 298, ENDLESS_BANK = 299, FIRST_DARE_SLOT = 1200;
 export type Descriptor = { puzzle: SlipPuzzle };
 export type Action = Dir | 'undo' | 'reset' | 'help';
 export type State = { puzzle: SlipPuzzle; crabs: number[]; moves: string; resets: number; undos: number; stack: number[][]; actions: number };
@@ -64,43 +62,14 @@ export const puzzles: Puzzle<Descriptor>[] = sets.challenge.flatMap(group => gro
   return entry(row, bank, index, path, tierOf[`${group.path}:${group.band}`], `${nameOf[group.band]} ${index + 1}`);
 }));
 
-/** The frame ignores a dispatch while a save is in flight, so actions go through one at a time and retry until accepted. */
-export function ChallengeBoard({ state, dispatch, active, width }: ChallengeViewProps<State, Action>) {
-  const queue = useRef<Action[]>([]), sending = useRef<Action | null>(null), retry = useRef<ReturnType<typeof setTimeout> | null>(null), seen = useRef(state.actions);
-  const stopRetry = () => { if (retry.current) clearTimeout(retry.current); retry.current = null; };
-  const send = useCallback((action: Action) => {
-    sending.current = action;
-    const attempt = () => {
-      if (sending.current !== action) return;
-      dispatch(action);
-      retry.current = setTimeout(attempt, 400);
-    };
-    attempt();
-  }, [dispatch]);
-  useEffect(() => stopRetry, []);
-  useEffect(() => {
-    if (state.actions === seen.current) return;
-    seen.current = state.actions;
-    sending.current = null;
-    stopRetry();
-    const next = queue.current.shift();
-    if (next !== undefined) send(next);
-  }, [send, state.actions]);
-  const enqueue = (action: Action) => {
-    if (sending.current === null) send(action);
-    else if (queue.current.length < 2) queue.current.push(action);
-  };
-  const full = state.actions >= MAX_ACTIONS;
-  const onMove = (d: Dir) => {
-    if (full || !active || (sending.current === null && slideOn(gridOf(state.puzzle), state.crabs, d) === state.crabs)) return false;
-    enqueue(d);
-    return true;
-  };
-  return <Playfield puzzle={state.puzzle} crabs={state.crabs} title="Slip Tide" steps={state.moves.length} active={active} width={width} height={820}
-    canUndo={state.stack.length > 0} canReset={state.moves.length > 0} notice={full ? 'That is a lot of tries! Choose Another puzzle for a fresh start.' : undefined}
-    onMove={onMove} onHelp={() => enqueue('help')} onUndo={() => enqueue('undo')} onReset={() => enqueue('reset')} />;
+// The save catalog loads this file in plain Node tests; only a live screen needs the native board.
+let board: typeof import('./challengeBoard').ChallengeBoard | undefined;
+function LazyBoard(props: ChallengeViewProps<State, Action>) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  board ??= (require('./challengeBoard') as typeof import('./challengeBoard')).ChallengeBoard;
+  return React.createElement(board, props);
 }
 export const registration = defineReplayGame({
-  game: 'slip-tide', codec: 'slip-tide-v1', context: 'slip', cove: false, budget: { wrapper: 700, draft: 3396, undo: 0, audit: 0 }, puzzles, objectives: ['no-reset'], engine,
-  Board: ChallengeBoard, controls: { help: () => 'help' as const, reset: () => 'reset' as const },
+  game: 'slip-tide', codec: 'slip-tide-replay-v1', context: 'slip', cove: false, budget: { wrapper: 700, draft: 3396, undo: 0, audit: 0 }, puzzles, objectives: ['no-reset'], engine,
+  Board: LazyBoard, controls: { help: () => 'help' as const, reset: () => 'reset' as const },
 });

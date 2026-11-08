@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { slipTideAdapter, rungRules } from '../src/puzzles/adapters/slip-tide';
@@ -12,9 +12,6 @@ import { registration, puzzles, type Action, type Payload } from '../src/learn/g
 import { emptyChallenge, type ChallengeSession } from '../src/state/challenge';
 import { readCatalog, productionDirs, readPackText } from '../scripts/puzzles/pipeline';
 import { parsePack } from '../src/puzzles/bank';
-
-// The board's view needs native modules; the engine, kit and replay rules under test do not.
-vi.mock('../src/learn/games/slip-tide/field', () => ({ Playfield: () => null }));
 
 const rng = (() => { let x = 7; return () => { x = (x * 16807) % 2147483647; return (x - 1) / 2147483646; }; })();
 const route = (s: SlipState) => [...tuplePuzzle(s.puzzles[s.index])!.route].map(dirOf);
@@ -163,7 +160,7 @@ describe('Challenge replay', () => {
     expect(registration.move(s, 'undo')).toBeNull();
     expect(registration.move(s, 9 as unknown as Action)).toBeNull();
     const payload = s.payload as Payload;
-    expect(registration.catalog.codecs.get('slip-tide-v1')!.validate({ ...s, payload: { ...payload, actions: [1, 1, 1, 7] } })).toBe(false);
+    expect(registration.catalog.codecs.get('slip-tide-replay-v1')!.validate({ ...s, payload: { ...payload, actions: [1, 1, 1, 7] } })).toBe(false);
   });
   it('binds every Challenge puzzle to its row hash', () => {
     const inline = sets.challenge.flatMap(c => c.rows);
@@ -176,14 +173,14 @@ describe('Challenge replay', () => {
 });
 describe('board rules visible in the source', () => {
   it('routes both swipe and arrows through the one engine and hides shortest length until a win', () => {
-    const source = readFileSync('src/learn/games/slip-tide/view.tsx', 'utf8');
+    const source = readFileSync('src/learn/games/slip-tide/schoolBoard.tsx', 'utf8');
     expect(source).toContain('swipeBoard');
     expect(source).toContain('There is a way in');
     expect(source.indexOf('There is a way in')).toBeGreaterThan(source.indexOf('finishedBoard(state)'));
     expect(readFileSync('src/learn/games/slip-tide/field.tsx', 'utf8')).toContain('accessibilityLabel={`Slide all crabs');
   });
   it('keeps the board controls still on a win and bounds each hint slice by time', () => {
-    const view = readFileSync('src/learn/games/slip-tide/view.tsx', 'utf8'), field = readFileSync('src/learn/games/slip-tide/field.tsx', 'utf8');
+    const view = readFileSync('src/learn/games/slip-tide/schoolBoard.tsx', 'utf8'), field = readFileSync('src/learn/games/slip-tide/field.tsx', 'utf8');
     expect(view.match(/cheer\(/g)).toHaveLength(1);
     expect(view).toContain("next.index === next.puzzles.length - 1) cheer('big'");
     expect(field).toContain('Date.now() - started < HINT_BUDGET_MS');
