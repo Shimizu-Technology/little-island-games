@@ -896,3 +896,15 @@ it('H2 synthetic pickup is published before its JS callback even with deferred n
  expect(committed).toBe(1);
  await act(async()=>renderer.unmount());vi.useRealTimers();
 });
+
+it('H2 a queued synthetic request cannot resurrect after navigation cancellation', async () => {
+ let renderer!:TestRenderer.ReactTestRenderer;const scene=fixture();
+ await act(async()=>{renderer=TestRenderer.create(<Probe scene={scene}/>);});
+ const {resolve}=await import('../src/home/scene/resolve');
+ const p=resolve(scene.rooms.home,scene.entities[entity.id],roomPoint(200,486),{scale:1,release:true});
+ harness.deferUI=true;current.animateProposal(p);
+ const queuedBegin=harness.ui.shift()!;
+ harness.deferUI=false;current.cancelAll();queuedBegin();flushJS();
+ expect(current.slots.get().every(s=>!s.id)).toBe(true);expect(committed).toBe(0);
+ await act(async()=>renderer.unmount());vi.useRealTimers();
+});

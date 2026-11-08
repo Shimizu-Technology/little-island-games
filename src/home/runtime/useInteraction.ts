@@ -1113,10 +1113,12 @@ export function useInteraction({
     const end = proposal.kind === "staging"
       ? screenToRoom(screenPoint(112, viewport.height - 48), camera.get(), housePoint(0, 0))
       : { x: dest.x + proposal.contact.x, y: dest.y + proposal.contact.y };
+    const requestedEpoch = epoch.get();
     // JS SharedValue writes are asynchronous on native. Allocate, publish, then
     // notify JS in one UI transaction so pickup cannot read an empty old slot.
     runOnUI(() => {
       "worklet";
+      if (epoch.value !== requestedEpoch) return;
       const current = slots.value;
       if (current.some(s => s.id === subject.id || s.restId === subject.id)) return;
       const index = current.findIndex(s => !s.id);
