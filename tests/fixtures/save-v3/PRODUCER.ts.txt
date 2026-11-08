@@ -1,0 +1,53 @@
+import { it, expect, vi } from 'vitest';
+import { writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { emptySave, parseSave, type Save } from '../src/state/validation';
+import { migrateProfiles, encodeSave, syncProfile, projectProfile } from '../src/state/profiles';
+import { addLearner, selectLearner } from '../src/learn/learners';
+import { learnIds } from '../src/learn/types';
+import { engines } from '../src/learn/engines';
+import { optionsAtLevel } from '../src/learn/levels';
+import { startSession } from '../src/learn/session';
+import { gameIds, createGame } from '../src/games';
+import { defaultOptions } from '../src/games/types';
+import { boardIds, createSession } from '../src/board';
+import { createCardSession } from '../src/cards/engine';
+import { createRaceSession } from '../src/racer/engine';
+import { createPartySession } from '../src/party/engine';
+import { createMysterySession } from '../src/mystery/engine';
+import { migrateLibrary } from '../src/library/state';
+import { backfillRewards } from '../src/badges/transitions';
+import { createReef, reefLevel } from '../src/arcade/games/reef-builder/engine';
+import { createCargo, cargoLevel } from '../src/arcade/games/canoe-cargo/engine';
+const folder='tests/fixtures/save-v3/';
+it('FREEZE ONCE with origin/main 0f428c2 engines, envelope 2 profiles 1',()=>{
+ vi.spyOn(Date,'now').mockReturnValue(1794096000000);vi.spyOn(Math,'random').mockReturnValue(0.425);
+ let learning=addLearner(addLearner(addLearner(addLearner(undefined,'A','a'),'B','b'),'C','c'),'D','d');
+ let save=migrateProfiles({...emptySave(),learning});let seed=2700;
+ for(const p of learning.people){
+  save=projectProfile(save,selectLearner(learning,p.id));
+  for(const game of learnIds){ const e=engines[game], options=optionsAtLevel({mode:e.modes[0],pace:'easy',...(e.languages?{language:e.languages[0]}:{})},4);save={...save,learn:{...save.learn,[game]:{...startSession(game,{options},{},seed++),learner:p.id}}}; }
+  for(const game of gameIds) save={...save,sessions:{...save.sessions,[game]:{...createGame(game,defaultOptions),id:`${p.id}-${game}`}}};
+  save={...save,board:Object.fromEntries(boardIds.map(game=>[game,{...createSession(game,{seed:seed++}),id:`${p.id}-${game}`}]))};
+  save={...save,activities:{'go-fish':createCardSession('go-fish',defaultOptions,seed++,`${p.id}-fish`,{round:'quick'}),'crazy-eights':createCardSession('crazy-eights',defaultOptions,seed++,`${p.id}-eights`,{round:'quick'}),racer:createRaceSession('training','practice',seed++,`${p.id}-race`),'word-imposter':createPartySession({players:['One','Two','Three'],seed:seed++,id:`${p.id}-party`}),'island-mystery':createMysterySession(undefined,seed++,'crew',`${p.id}-mystery`,1,'gentle')}};
+  save=syncProfile(save);learning=save.learning!;
+ }
+ save=syncProfile(backfillRewards(migrateLibrary(save)));
+ const receipt:Record<string,unknown>={source:'0f428c2fef43a821bbea782823f7548b5d514971',build:'3.0.0 (28) game source; synthetic local data, not a device extraction',libraryMode:'default; game constructors identical to shipped preview',learnGames:learnIds,classicGames:gameIds,boardGames:boardIds,files:{}};
+ const write=(name:string,raw:string)=>{expect(()=>parseSave(raw)).not.toThrow();writeFileSync(folder+name,raw);(receipt.files as Record<string,unknown>)[name]={bytes:Buffer.byteLength(raw),sha256:createHash('sha256').update(raw).digest('hex')};};
+ write('main-envelope-2.json',encodeSave(save));
+ const old:Save={...emptySave(),learning:save.learning,learn:save.learn,sessions:save.sessions,board:save.board,activities:save.activities,personalization:save.personalization,library:save.library};
+ write('main-backup-1.json',JSON.stringify(old));
+ // Engine-produced persistent Arcade states (real-time physics remains excluded).
+ const reef=createReef(reefLevel('w1-1'),81),cargo=createCargo(cargoLevel('w1-1'),82,false);
+ writeFileSync(folder+'arcade-states.json',JSON.stringify({reef,cargo}));
+ // Dense real legacy notes, not whitespace or an invalid filler namespace.
+ const dense=structuredClone(save);const person=dense.learning!.people[0];
+ for(let i=0;i<200;i++){
+  const note={independent:99999,helped:99999,days:[1],rounds:[`round-${i}`],items:Array.from({length:40},(_,j)=>`${i}-${j}-`+'x'.repeat(270))};
+  person.notes[`shell-math:easy:think.fixture-${i}`]=note;
+  if(Buffer.byteLength(encodeSave(dense))>1_990_000){delete person.notes[`shell-math:easy:think.fixture-${i}`];break;}
+ }
+ write('main-near-limit-2.json',encodeSave(dense));
+ writeFileSync(folder+'RECEIPT.json',JSON.stringify(receipt,null,2)+'\n');
+});

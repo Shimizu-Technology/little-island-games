@@ -1,0 +1,13 @@
+
+> little-island-games@1.0.0 test
+> vitest run tests/fix-rollback.test.tsx
+
+
+ RUN  v5.0.5 /private/tmp/li-f1-fix-shipped
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  23:38:34
+   Duration  2.29s (transform 52%, tests 30%, import 16%, worker 1%)
+

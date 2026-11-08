@@ -7,7 +7,7 @@ import mainSave from './fixtures/profile-main-v2.json';
 import fixture25 from './fixtures/profile-2.5.json';
 import { backfillRewards } from '../src/badges/transitions';
 import { personFor } from '../src/personalization/model';
-import { encodeSave } from '../src/state/profiles';
+import { encodeSave, migrateProfiles } from '../src/state/profiles';
 import { StoreProvider, useStore } from '../src/state/Store';
 import { parseSave, type Save } from '../src/state/validation';
 const db = vi.hoisted(() => ({ raw: null as string | null, preserved: [] as string[], sets: 0, preserveFails: false }));
@@ -33,7 +33,7 @@ afterEach(async () => { await unmount(); vi.unstubAllGlobals(); });
 it('fixture holds badges without the new outfits, under the previous catalog', () => {
   expect(previousAccepts(source())).toBe(true);
   for (const id of added) expect(previousCatalog).not.toContain(id);
-  const after = encodeSave(backfillRewards(parseSave(source())));
+  const after = encodeSave(backfillRewards(migrateProfiles(parseSave(source()))));
   expect(previousAccepts(after)).toBe(false);
   expect([...personFor(parseSave(after), 'a').earned, ...personFor(parseSave(after), 'b').earned]).toEqual(expect.arrayContaining(added));
 });
@@ -56,12 +56,12 @@ it('a settled save writes nothing on later launches', async () => {
   expect(db.raw).toBe(settled); expect(db.sets).toBe(sets); expect(db.preserved).toHaveLength(1);
 });
 it('a save with no learner changes makes no copy and no write', async () => {
-  const raw = encodeSave(backfillRewards(parseSave(source()))); db.raw = raw;
+  const raw = encodeSave(backfillRewards(migrateProfiles(parseSave(source())))); db.raw = raw;
   await mount();
   expect(db.preserved).toEqual([]); expect(db.sets).toBe(0); expect(db.raw).toBe(raw);
 });
 it('a learner seen for the first time with nothing earned makes no copy', async () => {
-  const settled = JSON.parse(encodeSave(backfillRewards(parseSave(source())))) as Save;
+  const settled = JSON.parse(encodeSave(backfillRewards(migrateProfiles(parseSave(source()))))) as Save;
   delete settled.personalization!.people.b;
   for (const p of Object.values(settled.personalization!.people)) expect(p.milestones).toContain('migration:badges-v1');
   // B's learning notes would earn badges; a brand-new learner has none.
@@ -79,7 +79,7 @@ it('load publishes nothing when the rollback copy cannot be kept', async () => {
   expect(store.recovery).toBeTruthy(); expect(db.raw).toBe(raw); expect(db.sets).toBe(0);
 });
 it('restore keeps the exact pre-grant bytes of the backup and the device copy', async () => {
-  const device = encodeSave(backfillRewards(parseSave(source()))); db.raw = device;
+  const device = encodeSave(backfillRewards(migrateProfiles(parseSave(source())))); db.raw = device;
   await mount();
   const incoming = source();
   await act(async () => store.restore(incoming));
@@ -89,7 +89,7 @@ it('restore keeps the exact pre-grant bytes of the backup and the device copy', 
   expect(personFor(store.save, 'a').earned).toContain('outfit:star-dress');
 });
 it('restoring a settled backup keeps only what it replaces', async () => {
-  const device = encodeSave(backfillRewards(parseSave(source()))); db.raw = device;
+  const device = encodeSave(backfillRewards(migrateProfiles(parseSave(source())))); db.raw = device;
   await mount();
   const incoming = ` ${device}\n`;
   await act(async () => store.restore(incoming));
@@ -97,7 +97,7 @@ it('restoring a settled backup keeps only what it replaces', async () => {
 });
 it('an older envelope that also gains grants is copied once on restore and on load', async () => {
   const older = ` ${JSON.stringify(fixture25)}\n`;
-  db.raw = encodeSave(backfillRewards(parseSave(source())));
+  db.raw = encodeSave(backfillRewards(migrateProfiles(parseSave(source()))));
   await mount();
   await act(async () => store.restore(older));
   expect(db.preserved.filter(copy => copy === older)).toHaveLength(1);

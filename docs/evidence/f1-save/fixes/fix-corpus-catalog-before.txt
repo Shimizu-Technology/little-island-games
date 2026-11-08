@@ -1,0 +1,50 @@
+
+> little-island-games@1.0.0 test
+> vitest run tests/save-catalog-history.test.ts
+
+
+ RUN  v5.0.5 /private/tmp/li-f1-fix-before
+
+ ❯ tests/save-catalog-history.test.ts (2 tests | 2 failed) 11ms
+   × P2-7 build gate rejects changes to a committed bank length, hash or order and allows a new slot 8ms
+   × P2-6 frozen corpus contains advanced game state and rewards beyond fresh constructors 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/save-catalog-history.test.ts > P2-7 build gate rejects changes to a committed bank length, hash or order and allows a new slot
+Error: ENOENT: no such file or directory, open 'scripts/check-save-catalog.mjs'
+ ❯ tests/save-catalog-history.test.ts:10:117
+      8|  try{
+      9|   mkdirSync(join(root,'scripts'));mkdirSync(join(root,'src/state'),{re…
+     10|   for(const file of ['scripts/check-save-catalog.mjs','src/state/catal…
+       |                                                                                                                     ^
+     11|   const file=join(root,'src/state/save-catalog.json');
+     12|   const bank={slot:0,engine:'proof',rules:1,cove:true,awards:[3,3],ent…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/save-catalog-history.test.ts > P2-6 frozen corpus contains advanced game state and rewards beyond fresh constructors
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/save-catalog-history.test.ts:22:86
+     20| });
+     21| it('P2-6 frozen corpus contains advanced game state and rewards beyond…
+     22|  const receipt='tests/fixtures/save-v3/FIX_RECEIPT.json';expect(exists…
+       |                                                                                      ^
+     23|  const s=JSON.parse(readFileSync('tests/fixtures/save-v3/fix-advanced-…
+     24|  expect(s.arcade.people.family.session.state.board.some(Boolean)).toBe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  23:29:05
+   Duration  196ms (transform 43%, tests 29%, import 21%, worker 7%)
+

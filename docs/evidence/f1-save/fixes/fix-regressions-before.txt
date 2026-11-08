@@ -1,0 +1,382 @@
+
+> little-island-games@1.0.0 test
+> vitest run tests/save-review-regressions.test.ts tests/save-store-v3.test.tsx
+
+
+ RUN  v5.0.5 /private/tmp/li-f1-fix-before
+
+ ❯ tests/save-review-regressions.test.ts (6 tests | 6 failed) 18ms
+   × P2-1 canonical empty dares remove the 4KB upgrade window 5ms
+   × P2-3 audit codes are at most four digits 2ms
+   × P2-3 registration refuses an overcommitted session allocation 1ms
+   × P2-4 Together can be confirmed at terminal transition 7ms
+   × P2-4 nonexistent partners are caught before a board starts 2ms
+   × P2-5 a move validates one engine exactly once 2ms
+stderr | tests/save-store-v3.test.tsx > draft failure retains the synchronously accepted move and reports retry; caller mutation cannot change accepted state
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-v3.test.tsx > interrupt after durable write but before publication recovers exactly one accepted terminal credit
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-v3.test.tsx > switch A→Family→A and restore reject captured callbacks; explicit discard preserves the draft and advances ordinal
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-v3.test.tsx > P1-1 export remains available after write rejection
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-v3.test.tsx > P1-1 export remains available after library rejection
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-v3.test.tsx > P1-1 export remains available after admission rejection
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-v3.test.tsx > P1-2 routine rounds do not add whole-save recovery copies
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-v3.test.tsx > P1-3 synchronous acceptance queues K moves while a draft write is pending and keeps ambient changes
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-v3.test.tsx > P2-2 session budget refusal is explained and the current draft stays resumable
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-v3.test.tsx > P3-1 a lost terminal acknowledgement cannot be overwritten by the next ordinary commit
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-v3.test.tsx > P2-1 the old failure window now upgrades; exact-limit originals have actionable recovery
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ ❯ tests/save-store-v3.test.tsx (17 tests | 11 failed) 1071ms
+   × draft failure retains the synchronously accepted move and reports retry; caller mutation cannot change accepted state 11ms
+   × interrupt after durable write but before publication recovers exactly one accepted terminal credit 9ms
+   × switch A→Family→A and restore reject captured callbacks; explicit discard preserves the draft and advances ordinal 14ms
+   × P1-1 export remains available after write rejection 6ms
+   × P1-1 export remains available after library rejection 4ms
+   × P1-1 export remains available after admission rejection 375ms
+   × P1-2 routine rounds do not add whole-save recovery copies 85ms
+   × P1-3 synchronous acceptance queues K moves while a draft write is pending and keeps ambient changes 6ms
+   × P2-2 session budget refusal is explained and the current draft stays resumable 4ms
+   × P3-1 a lost terminal acknowledgement cannot be overwritten by the next ordinary commit 9ms
+   × P2-1 the old failure window now upgrades; exact-limit originals have actionable recovery 351ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 17 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/save-review-regressions.test.ts > P2-1 canonical empty dares remove the 4KB upgrade window
+AssertionError: expected 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA…' to be '' // Object.is equality
+
+- Expected
++ Received
+
++ AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+
+ ❯ tests/save-review-regressions.test.ts:14:33
+     12| const start=(s:ReturnType<typeof session>)=>{const save=fresh();return…
+     13| it('P2-1 canonical empty dares remove the 4KB upgrade window',()=>{
+     14|  expect(emptyChallenge().dares).toBe('');expect(validChallengeProgress…
+       |                                 ^
+     15|  const old=parseSave(readFileSync('tests/fixtures/save-v3/fix-upgrade-…
+     16| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/17]⎯
+
+ FAIL  tests/save-review-regressions.test.ts > P2-3 audit codes are at most four digits
+AssertionError: expected [Function] to throw an error
+ ❯ tests/save-review-regressions.test.ts:17:110
+     15|  const old=parseSave(readFileSync('tests/fixtures/save-v3/fix-upgrade-…
+     16| });
+     17| it('P2-3 audit codes are at most four digits',()=>{expect(()=>checkpoi…
+       |                                                                                                              ^
+     18| it('P2-3 registration refuses an overcommitted session allocation',()=…
+     19|  const codec={...fixtureCatalog.codecs.get('save-proof-v1')!,budget:{w…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/17]⎯
+
+ FAIL  tests/save-review-regressions.test.ts > P2-3 registration refuses an overcommitted session allocation
+AssertionError: expected [Function] to throw an error
+ ❯ tests/save-review-regressions.test.ts:20:130
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/17]⎯
+
+ FAIL  tests/save-review-regressions.test.ts > P2-4 Together can be confirmed at terminal transition
+AssertionError: expected { version: 3, …(10) } not to be { version: 3, …(10) } // Object.is equality
+
+Compared values have no visual difference.
+
+ ❯ tests/save-review-regressions.test.ts:22:206
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/17]⎯
+
+ FAIL  tests/save-review-regressions.test.ts > P2-4 nonexistent partners are caught before a board starts
+AssertionError: expected [ { version: 1, owner: 'a', …(11) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "codec": "save-proof-v1",
++     "credited": false,
++     "game": "save-proof",
++     "id": "proof-a",
++     "ordinal": 1,
++     "owner": "a",
++     "partner": "ghost",
++     "payload": {
++       "awards": 0,
++       "checkpoint": null,
++       "dares": [],
++       "end": false,
++       "helped": false,
++       "moves": 0,
++     },
++     "puzzle": {
++       "bank": 0,
++       "engine": "save-proof",
++       "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
++       "puzzle": 0,
++       "rules": 1,
++     },
++     "result": null,
++     "revision": 0,
++     "selectedDares": [],
++     "version": 1,
++   },
++ ]
+
+ ❯ tests/save-review-regressions.test.ts:23:147
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/17]⎯
+
+ FAIL  tests/save-review-regressions.test.ts > P2-5 a move validates one engine exactly once
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ tests/save-review-regressions.test.ts:27:89
+     25|  const s=session('a'),save=start(s),codec=fixtureCatalog.codecs.get(s.…
+     26|  const catalog={...fixtureCatalog,codecs:new Map([[s.codec,{...codec,v…
+     27|  expect(challengeTransition(save,moved(s),e(s),1,catalog)).not.toBe(sa…
+       |                                                                                         ^
+     28| });
+     29|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/17]⎯
+
+ FAIL  tests/save-store-v3.test.tsx > draft failure retains the synchronously accepted move and reports retry; caller mutation cannot change accepted state
+AssertionError: expected { version: 1, owner: 'a', …(11) } to deeply equal { version: 1, owner: 'a', …(11) }
+
+- Expected
++ Received
+
+@@ -10,19 +10,19 @@
+      "awards": 0,
+      "checkpoint": null,
+      "dares": [],
+      "end": false,
+      "helped": false,
+-     "moves": 1,
++     "moves": 0,
+    },
+    "puzzle": {
+      "bank": 0,
+      "engine": "save-proof",
+      "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "puzzle": 0,
+      "rules": 1,
+    },
+    "result": null,
+-   "revision": 1,
++   "revision": 0,
+    "selectedDares": [],
+    "version": 1,
+  }
+
+ ❯ tests/save-store-v3.test.tsx:50:123
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/17]⎯
+
+ FAIL  tests/save-store-v3.test.tsx > interrupt after durable write but before publication recovers exactly one accepted terminal credit
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/save-store-v3.test.tsx:63:90
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/17]⎯
+
+ FAIL  tests/save-store-v3.test.tsx > switch A→Family→A and restore reject captured callbacks; explicit discard preserves the draft and advances ordinal
+AssertionError: expected [ …(4) ] to have a length of 3 but got 4
+
+- Expected
++ Received
+
+- 3
++ 4
+
+ ❯ tests/save-store-v3.test.tsx:72:130
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/17]⎯
+
+ FAIL  tests/save-store-v3.test.tsx > P1-1 export remains available after write rejection
+ FAIL  tests/save-store-v3.test.tsx > P1-1 export remains available after library rejection
+Error: The latest work could not be flushed. Please retry.
+ ❯ Object.backup src/state/Store.tsx:332:38
+    330|   }, [ready, recovery, persist]);
+    331|   const backup = useCallback(async () => {
+    332|     if (!await libraryFlush()) throw new Error('The latest work could …
+       |                                      ^
+    333|     const encoded = encodeSave(latest.current); parseSave(encoded); re…
+    334|   },[libraryFlush]);
+ ❯ tests/save-store-v3.test.tsx:95:81
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/17]⎯
+
+ FAIL  tests/save-store-v3.test.tsx > P1-1 export remains available after admission rejection
+RangeError: Invalid count value: -2408
+ ❯ tests/save-store-v3.test.tsx:91:36
+     89|   const child=newLibraryChild();child.creations=[{id:'capacity-drawing…
+     90|   near.library={version:2,profiles:{...near.library!.profiles,family:c…
+     91|   child.creations[0].sentences='x'.repeat(1999999-Buffer.byteLength(en…
+       |                                    ^
+     92|   db.raw=encodeSave(near);expect(()=>parseSave(db.raw!)).not.toThrow()…
+     93|   await act(async()=>store.rememberPlayers(['A long family player name…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/17]⎯
+
+ FAIL  tests/save-store-v3.test.tsx > P1-2 routine rounds do not add whole-save recovery copies
+AssertionError: expected [ …(49) ] to have a length of 1 but got 49
+
+- Expected
++ Received
+
+- 1
++ 49
+
+ ❯ tests/save-store-v3.test.tsx:100:23
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/17]⎯
+
+ FAIL  tests/save-store-v3.test.tsx > P1-3 synchronous acceptance queues K moves while a draft write is pending and keeps ambient changes
+AssertionError: expected [ true, false, false, false, …(16) ] to deeply equal [ true, true, true, true, true, …(15) ]
+
+- Expected
++ Received
+
+  [
+    true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
+-   true,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
++   false,
+  ]
+
+ ❯ tests/save-store-v3.test.tsx:109:39
+    107|   // Permit the first queued write to start, then release it.
+    108|   for(let n=0;n<10;n++)await Promise.resolve();db.holdDraft=false;db.r…
+    109|   expect(await Promise.all(promises)).toEqual(Array(20).fill(true));
+       |                                       ^
+    110|  });
+    111|  expect(store.save.challenge!.paused[0].revision).toBe(20);expect(stor…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/17]⎯
+
+ FAIL  tests/save-store-v3.test.tsx > P2-2 session budget refusal is explained and the current draft stays resumable
+TypeError: .toMatch() expects to receive a string, but got object
+ ❯ tests/save-store-v3.test.tsx:116:101
+    114| it('P2-2 session budget refusal is explained and the current draft sta…
+    115|  await mount();const s=await start();const tooBig=moved(s,{checkpoint:…
+    116|  await act(async()=>expect(await store.challengeSave(tooBig,e(s))).toB…
+       |                                                                                                     ^
+    117| });
+    118| it('P3-1 a lost terminal acknowledgement cannot be overwritten by the …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/17]⎯
+
+ FAIL  tests/save-store-v3.test.tsx > P3-1 a lost terminal acknowledgement cannot be overwritten by the next ordinary commit
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/save-store-v3.test.tsx:120:109
+    118| it('P3-1 a lost terminal acknowledgement cannot be overwritten by the …
+    119|  await mount();const s=await start();db.responseFails=true;await act(a…
+    120|  await act(async()=>store.settings({sound:false}));expect(parseSave(db…
+       |                                                                                                             ^
+    121| });
+    122|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/17]⎯
+
+ FAIL  tests/save-store-v3.test.tsx > P2-1 the old failure window now upgrades; exact-limit originals have actionable recovery
+AssertionError: expected 'This save is full. Your original is k…' to be null
+
+- Expected:
+null
+
++ Received:
+"This save is full. Your original is kept. Export it and explicitly manage paused games or people before retrying."
+
+ ❯ tests/save-store-v3.test.tsx:124:134
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/17]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  17 failed | 6 passed (23)
+   Start at  23:17:25
+   Duration  1.87s (tests 45%, transform 44%, import 10%)
+

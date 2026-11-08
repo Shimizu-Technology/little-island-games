@@ -1,0 +1,21 @@
+import React,{createContext,useLayoutEffect} from 'react';
+import TestRenderer,{act} from 'react-test-renderer';
+import {expect,it,vi} from 'vitest';
+import {readFileSync} from 'node:fs';
+import {StoreProvider,useStore} from '../src/state/Store';
+import {parseSave} from '../src/state/validation';
+const db=vi.hoisted(()=>({raw:null as string|null,preserved:[] as string[]}));
+vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async(raw:string)=>{db.preserved.push(raw);}}}));
+vi.mock('react-native',()=>({AppState:{addEventListener:()=>({remove(){}})}}));
+vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({})}));
+let store:ReturnType<typeof useStore>;function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return null;}
+it('actual origin/main Store rejects/preserves envelope 3, starts fresh preserving newer bytes, restores its exact pre-update v2 copy',async()=>{
+ const newer=readFileSync(process.env.F1_NEW_SAVE!,'utf8'),previous=readFileSync(process.env.F1_OLD_SAVE!,'utf8');
+ expect(()=>parseSave(newer)).toThrow(/unsupported version/);expect(parseSave(previous).version).toBe(2);
+ db.raw=newer;vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);let root!:ReturnType<typeof TestRenderer.create>;
+ try{
+ await act(async()=>{root=TestRenderer.create(<StoreProvider><Probe/></StoreProvider>);});expect(store.recovery).toMatch(/unsupported version/);expect(db.raw).toBe(newer);expect(db.preserved).toContain(newer);
+ await act(async()=>store.startFresh());expect(store.recovery).toBeNull();expect(db.preserved).toContain(newer);
+ await act(async()=>store.restore(previous));expect(store.recovery).toBeNull();expect(store.save.profiles).toEqual(parseSave(previous).profiles);expect(store.save.personalization).toEqual(parseSave(previous).personalization);expect(store.save.library).toEqual(parseSave(previous).library);
+ }finally{if(root)await act(async()=>root.unmount());vi.unstubAllGlobals();}
+});

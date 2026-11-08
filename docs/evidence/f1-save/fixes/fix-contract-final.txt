@@ -1,0 +1,13 @@
+
+> little-island-games@1.0.0 test
+> vitest run tests/save-contract.test.ts
+
+
+ RUN  v5.0.5 /Users/leonshimizu/.t3/worktrees/little-island-games/t3-ec809d90
+
+
+ Test Files  1 passed (1)
+      Tests  31 passed (31)
+   Start at  23:40:34
+   Duration  17.65s (tests 95%, transform 3%, import 1%)
+

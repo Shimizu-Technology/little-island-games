@@ -1,0 +1,86 @@
+import {it,expect,vi} from 'vitest';
+import {readFileSync,writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {parseSave, type Save} from '../src/state/validation';
+import {encodeSave,migrateProfiles,syncProfile,projectProfile} from '../src/state/profiles';
+import {engines} from '../src/learn/engines';
+import {isGrowth,growthMove,growthQuestions} from '../src/learn/growth/engine';
+import {move as scienceMove,currentTask} from '../src/learn/games/weather-watch/model';
+import {ticMove} from '../src/games/tic';
+import {guessLetter,wordHint} from '../src/games/words';
+import {flipCard} from '../src/games/memory';
+import {checkersMove,checkersMoves} from '../src/games/checkers';
+import {mazeMove,mazeRoute} from '../src/games/maze';
+import {rollNumbers} from '../src/games/numbers';
+import {engines as boards} from '../src/board';
+import {cardAction,chooseCardAction,cardPublicView} from '../src/cards/engine';
+import {startRace,stepRace,pauseRace} from '../src/racer/engine';
+import {partyAction,partyActor} from '../src/party/engine';
+import {soloMysteryTick} from '../src/mystery/engine';
+import {arcadeTransition} from '../src/arcade/progress';
+import {createReef,reefLevel,reefTransition,legalReefMoves} from '../src/arcade/games/reef-builder/engine';
+import {rewardCompletion} from '../src/badges/transitions';
+const out=process.env.F1_FIX_FOLDER!;
+const receipt={source:'0f428c2fef43a821bbea782823f7548b5d514971',build:'3.0.0 (28) source, synthetic engine-validated local saves',files:{} as Record<string,{bytes:number;sha256:string}>};
+function write(name:string,raw:string){expect(()=>parseSave(raw)).not.toThrow();writeFileSync(out+name,raw);receipt.files[name]={bytes:Buffer.byteLength(raw),sha256:createHash('sha256').update(raw).digest('hex')};}
+function pad(s:Save,target:number){
+ const notes=s.learning!.people[0].notes;
+ for(let i=0;Buffer.byteLength(encodeSave(s))<target;i++){
+  const key=`shell-math:easy:think.fix-${i}`;
+  notes[key]={independent:1,helped:1,days:[1],rounds:[`fix-${i}`],items:[]};
+  let left=target-Buffer.byteLength(encodeSave(s));
+  if(left<4){delete notes[key];break;}
+  for(let j=0;j<40&&left>=4;j++){
+   const n=Math.min(281,left-(j?3:2));notes[key].items.push(`${i}-${j}-`+'x'.repeat(Math.max(0,n-(`${i}-${j}-`).length)));left=target-Buffer.byteLength(encodeSave(s));
+  }
+ }
+ return encodeSave(s);
+}
+it('freeze additional advanced and exact-limit saves once from unmodified shipped code',()=>{
+ vi.spyOn(Math,'random').mockReturnValue(.425);vi.spyOn(Date,'now').mockReturnValue(1794096000000);
+ let s=parseSave(readFileSync(out+'main-envelope-2.json','utf8'));
+ for(const person of s.learning!.people){
+  s=projectProfile(s,{...s.learning!,active:person.id});
+  for(const [game,r] of Object.entries(s.learn!)){
+   const state=r!.state as Record<string,unknown>;let next:unknown;
+   if(isGrowth(state))next=growthMove(state,{type:'help'},growthQuestions(r!.game,r!.options,state));
+   else if(['weather-watch','food-web','space-station'].includes(game)){
+    const q=currentTask(game as never,state as never);next=scienceMove(game as never,state as never,{type:'set',slot:0,value:q.target[0]});
+   }else next={...state,helped:true};
+   expect(engines[r!.game].validate(next,r!.options),game).toBe(true);expect(next,game).not.toEqual(state);
+   s.learn![r!.game]={...r!,state:next,revision:1,levelHelped:true};
+  }
+  for(const r of Object.values(s.sessions)){
+   if(!r)continue;
+   if(r.game==='tic-tac-toe')s.sessions[r.game]=ticMove(r,0);
+   if(r.game==='word-rescue')s.sessions[r.game]=guessLetter(r,r.word[0]);
+   if(r.game==='memory')s.sessions[r.game]=flipCard(r,0);
+   if(r.game==='checkers')s.sessions[r.game]=checkersMove(r,checkersMoves(r.position)[0]);
+   if(r.game==='maze')s.sessions[r.game]=mazeMove(r,mazeRoute(r)[1]);
+   if(r.game==='numbers')s.sessions[r.game]=rollNumbers(r);
+  }
+  for(const [g,r] of Object.entries(s.board!)){const e=boards[g as keyof typeof boards];s.board![g as keyof typeof boards]={...r!,position:e.move(r!.position,e.legal(r!.position)[0])};}
+  for(const r of Object.values(s.activities!)){
+   if(r.game==='go-fish'||r.game==='crazy-eights')s.activities![r.game]=cardAction(r,chooseCardAction(cardPublicView(r)));
+   if(r.game==='racer')s.activities!.racer=pauseRace(stepRace(startRace(r),{direction:1}));
+   if(r.game==='word-imposter')s.activities![r.game]=partyAction(r,{sessionId:r.id,revision:r.revision,player:partyActor(r)!,type:'role-done'});
+   if(r.game==='island-mystery')s.activities![r.game]=soloMysteryTick(r);
+  }
+  const reef=createReef(reefLevel('w1-1'),81);const move=legalReefMoves(reef)[0];
+  s.arcade=arcadeTransition(s.arcade,person.id,{type:'save-round',session:{version:1,game:'reef-builder',round:`reef-${person.id}`,state:reefTransition(reef,{type:'place',...move})}});
+  s.arcade=arcadeTransition(s.arcade,person.id,{type:'finish',game:'lagoon-run',level:'w1-1',stars:3,score:250,round:`win-${person.id}`,name:person.name});
+  s.wordRecords={wins:2,losses:1,assistedWins:1,bestWrong:1,counted:[`words-${person.id}`]};
+  s.raceRecords={'training:practice':{edition:2,sessionId:`best-${person.id}`,course:'training',mode:'practice',ticks:2400,falls:1,placement:1,entrants:1}};
+  s.school={'shell-math':{1:{stars:3,completed:3,independent:2,days:[1,2],rounds:[`school-${person.id}`]}}};
+  s=rewardCompletion(s,{kind:'learning',game:'shell-math',level:1,helped:false},person.id);
+  s=rewardCompletion(s,{kind:'classic',game:'tic-tac-toe',won:true,opponentStrength:'hard'},person.id);
+  s=syncProfile(s);
+ }
+ s.profiles!.unassigned.rounds={sessions:{'word-rescue':wordHint({...s.sessions['word-rescue']!,id:'pending-word'})},recent:'word-rescue',wordRecords:{wins:1,losses:0,assistedWins:0,bestWrong:0,counted:['pending-result']}};
+ s.profiles!.earlier.wordRecords={wins:3,losses:1,assistedWins:1,bestWrong:2,counted:['earlier-result']};
+ s.library!.profiles.family.creations=[{id:'saved-drawing',title:'Our island',sentences:'A family story.',updatedAt:1,strokes:[{color:'#123456',width:2,points:[{x:.1,y:.2},{x:.3,y:.4}]}],stamps:[]}];
+ const raw=encodeSave(syncProfile(s));write('fix-advanced-envelope-2.json',raw);write('fix-advanced-shipped-migration-2.json',encodeSave(migrateProfiles(parseSave(raw))));
+ const dense=()=>parseSave(readFileSync(out+'main-near-limit-2.json','utf8'));
+ write('fix-upgrade-window-2.json',pad(dense(),1998000));write('fix-last-bytes-2.json',pad(dense(),1999990));
+ writeFileSync(out+'FIX_RECEIPT.json',JSON.stringify(receipt,null,2)+'\n');
+});

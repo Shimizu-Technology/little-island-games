@@ -1,0 +1,9 @@
+
+ RUN  v5.0.5 /private/tmp/li-f1-old-proof
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  21:22:56
+   Duration  1.95s (transform 42%, tests 31%, import 27%)
+
