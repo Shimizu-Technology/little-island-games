@@ -12,7 +12,7 @@ export function completedSignal(progress: ChallengeProgress, context: string, cl
 }
 export function resultOffer(signal: Signal | undefined, comfort: Comfort, facts: {atPar:boolean;firstHigher:boolean;dare:boolean;harder:boolean;easier?:boolean}): Offer | null {
   if(!signal || !comfort.offers || comfort.youngChild || signal[4])return null;
-  if(signal[3]==='hard' && facts.easier!==false)return {kind:'easier',title:'Choose a gentler puzzle?'};
+  if(signal[3]==='hard')return facts.easier===false?null:{kind:'easier',title:'Choose a gentler puzzle?'};
   if(signal[3]==='easy' && facts.dare)return {kind:'dare',title:'Try a dare?'};
   if(signal[1].endsWith('c') && facts.atPar && facts.dare)return {kind:'dare',title:'Try a dare?'};
   if(facts.harder && (signal[1].endsWith('cc') || signal[1].endsWith('c') && facts.firstHigher))return {kind:'harder',title:'Want something harder?'};

@@ -41,3 +41,8 @@ it.each(['pick-up','two-ways','par'] as const)('P2-2: helped and Together award 
 it('P1-3: a hard rating steers the next finish once',()=>{
  let p=emptyChallenge();for(let i=0;i<3;i++)p=completedSignal(p,'s0-2',true,true);p=rateSignal(p,'s0-2','hard');p=completedSignal(p,'s0-2',true,true);expect(resultOffer(p.signals[0],defaultComfort,{atPar:false,firstHigher:false,dare:false,harder:true})?.kind).toBe('easier');p=completedSignal(p,'s0-2',true,true);p=completedSignal(p,'s0-2',true,true);expect(p.signals[0][3]).toBeNull();
 });
+it('P3-6: a hard rating at the floor never reverses into a harder invitation',()=>{
+ const facts={atPar:false,firstHigher:false,dare:false,harder:true,easier:false};
+ expect(resultOffer(['s0-1','cc',0,'hard',false],defaultComfort,facts)).toBeNull();
+ expect(resultOffer(['s0-1','hhh',0,null,false],defaultComfort,{...facts,harder:false})).toBeNull();
+});
