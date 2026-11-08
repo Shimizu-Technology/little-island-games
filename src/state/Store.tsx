@@ -1,7 +1,11 @@
+import { emptyChallenge, type ChallengeSession } from './challenge';
+import { challengeTransition, finishChallenge, recoverChallengeDrafts, newSaveRevision, draftGrowth, progressFor, putProgress, selectedOwner, type ChallengeExpected } from './challengeDrafts';
+import { addCovePerson, removeCovePerson } from './covePeople';
+import { utf8Bytes } from './saveBits';
 import { assignEarlier, encodeSave, migrateProfiles, projectProfile, syncProfile } from "./profiles";
 import { clearPageDrafts, draftRecovery } from "../library/drafts";
 import { libraryChild, migrateLibrary, validLibraryChild, validLibraryData, validLibraryPolicy, type LibraryChildState, type LibraryPolicy } from "../library/state";
-import { preserveLearnerMigration, preserveImportedLearners, assertMigratedHomes } from './homeMigration';
+import { learnersChanged, preserveLearnerMigration, preserveImportedLearners, assertMigratedHomes } from './homeMigration';
 import { applyWarmup } from './warmupAction';
 import { badgesFor, type BadgeId } from '../badges/engine';
 import { personFor } from '../personalization/model';
@@ -33,6 +37,10 @@ import { recordPracticeNote } from "../practice/notes";
 import { type ArcadeAction, type ArcadeExpected, type ArcadeId } from "../arcade";
 import { applyArcadeAction } from "../arcade/saveAction";
 type Store = {
+  backup: () => Promise<string>;
+  challengeDiscard: (expected: ChallengeExpected) => Promise<boolean>;
+  challengeSave: (session: ChallengeSession, expected: ChallengeExpected) => Promise<boolean>;
+  covePerson: (action: { type:'add'; name:string; id:string } | { type:'remove'; id:string } | { type:'select'; id:string|null }, expectedEpoch:number) => Promise<boolean>;
   badgeResult: { owner: string; epoch: number; badges: BadgeId[]; source: string } | null;
   dismissBadge: () => void;
   personalize: (patch: Partial<Pick<Person, "look" | "made" | "home" | "unseen">>, expected: IdentityExpected) => boolean;
@@ -92,13 +100,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [epoch, setEpoch] = useState(0);
   const audioPreferences = useMemo(() => ({ ...save.settings, epoch }), [save.settings, epoch]);
   const generation = useRef(0);
+  const admittedBytes = useRef(0);
   const latest = useRef(save),
     queue = useRef(Promise.resolve()),
     mounted = useRef(true),
     restoring = useRef(false);
   const persist = useCallback((next: Save) => {
     if (restoring.current) return queue.current;
-    const encoded = encodeSave(next);
+    const durable = { ...next, saveRevision:newSaveRevision() };
+    const encoded = encodeSave(durable);
+    admittedBytes.current = utf8Bytes(encoded);
+    latest.current = durable; setSave(durable);
     pendingWrites.current++; setSaving(true);
     queue.current = queue.current
       .catch(() => {})
@@ -119,16 +131,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       encoded = await storage.get();
       setRaw(encoded);
       const before=encoded?parseSave(encoded):emptySave();
-      const next=syncProfile(backfillRewards(migrateLibrary(migrateProfiles(before), { existingLearners: encoded !== null })));
-      if (!validLibraryData(next.library) || !withinSaveLimit(encodeSave(next))) throw new Error("This Library could not be migrated. Your original has been kept.");
+      const recovered = await recoverChallengeDrafts(migrateProfiles(before),storage);
+      let next=syncProfile(backfillRewards(migrateLibrary(recovered, { existingLearners: encoded !== null })));
+      const replacementNeeded = !!encoded && (before.version !== 3 || !before.library || before.library.version === 1 || learnersChanged(before,next));
+      if (replacementNeeded) next = { ...next, saveRevision:newSaveRevision() };
+      if (!validLibraryData(next.library) || !withinSaveLimit(encodeSave(next))) throw new Error("This save is full. Your original is kept. Export it and explicitly manage paused games or people before retrying.");
       parseSave(encodeSave(next));
       assertMigratedHomes(next);
       if(encoded) {
-        if (!before.profiles || !before.library || before.library.version === 1) await preserveAndReplace(storage, encodeSave(next), encoded);
-        else await preserveLearnerMigration(storage,encoded,before,next);
+        if (replacementNeeded) {
+          await preserveAndReplace(storage, encodeSave(next), encoded);
+        } else await preserveLearnerMigration(storage,encoded,before,next);
       }
       generation.current += 1;
       setEpoch(generation.current);
+      admittedBytes.current = utf8Bytes(encodeSave(next));
       latest.current = next;
       setSave(next);
       setRecovery(null);
@@ -303,12 +320,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const libraryFlush = useCallback(async () => {
     if (!ready || recovery || restoring.current) return false;
     const failures = writeFailures.current, startEpoch = generation.current;
+    // Every accepted Challenge move is already durable; fold rows into the backup at this boundary.
+    if (await storage.readDrafts?.().then(rows => rows.length > 0)) await persist(latest.current);
     // Include writes appended while the previous tail is settling.
     let tail: Promise<void>;
     do { tail = queue.current; await tail; } while (tail !== queue.current);
     return mounted.current && !restoring.current && startEpoch === generation.current &&
       writeFailures.current === failures && !lastWriteFailed.current && !libraryRejected.current && !admissionRejected.current;
-  }, [ready, recovery]);
+  }, [ready, recovery, persist]);
+  const backup = useCallback(async () => {
+    if (!await libraryFlush()) throw new Error('The latest work could not be flushed. Please retry.');
+    const encoded = encodeSave(latest.current); parseSave(encoded); return encoded;
+  },[libraryFlush]);
   // Arcade uses the same commit/recovery queue, with explicit learner/restore ownership.
   const arcade = useCallback((action: ArcadeAction, expected: ArcadeExpected) => {
     if (!ready || recovery || restoring.current) return false;
@@ -376,14 +399,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const learning = appendLearner(before.learning, name, `learner-${Date.now().toString(36)}`);
     if (learning === before.learning || learning.people.length === (before.learning?.people.length ?? 1)) return false;
     generation.current++; setEpoch(generation.current);
-    return commit({ ...before, learning, profiles: before.profiles ? { ...before.profiles, people: { ...before.profiles.people, [learning.active]: { sessions: {}, recent: null } } } : undefined });
+    return commit({ ...before, learning, profiles: before.profiles ? { ...before.profiles, people: { ...before.profiles.people, [learning.active]: { sessions: {}, recent: null, challenge:emptyChallenge() } } } : undefined });
   }, [commit, ready, recovery]);
   const selectLearner = useCallback((id: string) => {
     if (!ready || recovery || restoring.current) return;
     const before = latest.current, learning = chooseLearner(before.learning, id);
-    if (learning.active === (before.learning?.active ?? "family")) return;
+    if (learning.active === (before.learning?.active ?? "family") && !before.cove?.active) return;
     generation.current++; setEpoch(generation.current);
-    commit({ ...before, learning });
+    commit({ ...before, learning, ...(before.cove ? { cove:{ ...before.cove, active:null } } : {}) });
   }, [commit, ready, recovery]);
   const personalize = useCallback((patch: Partial<Pick<Person, "look" | "made" | "home" | "unseen">>, expected: IdentityExpected) => {
     if (!ready || recovery || restoring.current) return false;
@@ -409,7 +432,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       await preserveAndReplace(storage, encodeSave(next), encodeSave(before));
       clearPageDrafts(id);
       generation.current++; setEpoch(generation.current);
-      latest.current = next; setSave(next); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
+      admittedBytes.current = utf8Bytes(encodeSave(next)); latest.current = next; setSave(next); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
     } finally { restoring.current = false; }
   }, [ready, recovery]);
   const assignEarlierWork = useCallback(async (key: string, learner: string | null, expectedEpoch: number) => {
@@ -423,7 +446,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       await queue.current;
       await preserveAndReplace(storage, encodeSave(next), encodeSave(before));
       generation.current++; setEpoch(generation.current);
-      latest.current = next; setSave(next); setBadgeResult(null); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
+      admittedBytes.current = utf8Bytes(encodeSave(next)); latest.current = next; setSave(next); setBadgeResult(null); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
     } finally { restoring.current = false; }
   }, [ready, recovery]);
   const recordWarmup = useCallback((results: PracticeResult[], config: PracticeSettings, round: string, expectedEpoch: number) => {
@@ -450,7 +473,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       restoring.current = true;
       try {
         let next: Save, incoming: Save;
-        try { incoming=parseSave(encoded); next = syncProfile(backfillRewards(migrateLibrary(migrateProfiles(incoming)))); assertMigratedHomes(next); parseSave(encodeSave(next)); if (!validLibraryData(next.library) || !withinSaveLimit(encodeSave(next))) throw new Error("This Library could not be migrated. Your original has been kept."); }
+        try { incoming=parseSave(encoded); next = { ...syncProfile(backfillRewards(migrateLibrary(migrateProfiles(incoming)))), saveRevision:newSaveRevision() }; assertMigratedHomes(next); parseSave(encodeSave(next)); if (!validLibraryData(next.library) || !withinSaveLimit(encodeSave(next))) throw new Error("This save is full. Your original is kept. Export it and explicitly manage paused games or people before retrying."); }
         catch (error) {
           // Keep both the rejected import and the current live save. Never repair imported bytes.
           await storage.preserve(encoded);
@@ -460,10 +483,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
         await queue.current;
         const pending = draftRecovery(); if (pending) await storage.preserve(pending);
-        await preserveImportedLearners(storage, encoded, incoming, next, recovery ? null : encodeSave(latest.current), !incoming.profiles || !incoming.library || incoming.library.version === 1);
+        await preserveImportedLearners(storage, encoded, incoming, next, recovery ? null : encodeSave(latest.current), incoming.version !== 3 || !incoming.profiles || !incoming.library || incoming.library.version === 1);
         clearPageDrafts();
         generation.current += 1;
         setEpoch(generation.current);
+        admittedBytes.current = utf8Bytes(encodeSave(next));
         latest.current = next;
         setSave(next);
         setRaw(encodeSave(next));
@@ -477,13 +501,71 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     [recovery]
   );
+  const challengeSave = useCallback(async (session: ChallengeSession, expected: ChallengeExpected) => {
+    if (!ready || recovery || restoring.current || expected.epoch !== generation.current) return false;
+    session = JSON.parse(JSON.stringify(session)) as ChallengeSession;
+    restoring.current = true;
+    try {
+      await queue.current;
+      const before = latest.current;
+      let next = session.result === null ? challengeTransition(before,session,expected,generation.current) : finishChallenge(before,session,expected,generation.current);
+      if (next === before) return false;
+      const old = progressFor(before,session.owner)?.paused.find(s => s.game === session.game);
+      if (old && session.result === null) {
+        const bytes = admittedBytes.current + draftGrowth(old,session);
+        if (bytes > 2_000_000 || !storage.writeDraft) throw new Error('This save is full or draft storage is unavailable. Export and manage paused games before retrying.');
+        await storage.writeDraft(JSON.stringify({ version:1, base:before.saveRevision, session }));
+        admittedBytes.current = bytes;
+      } else {
+        next = { ...next, saveRevision:newSaveRevision() };
+        const encoded = encodeSave(next); parseSave(encoded);
+        await preserveAndReplace(storage,encoded,encodeSave(before));
+        admittedBytes.current = utf8Bytes(encoded);
+      }
+      // No terminal award is visible before the atomic replacement has succeeded.
+      latest.current = next; setSave(next); setError(null); return true;
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'This change could not be saved. Your saved work is kept.'); return false;
+    } finally { restoring.current = false; }
+  },[ready,recovery]);
+  const challengeDiscard = useCallback(async (expected: ChallengeExpected) => {
+    if (!ready || recovery || restoring.current || expected.epoch !== generation.current) return false;
+    restoring.current = true;
+    try {
+      await queue.current;
+      const before = latest.current, progress = progressFor(before,expected.owner), slot = progress?.paused.find(s => s.game === expected.game);
+      if (selectedOwner(before) !== expected.owner || !slot || slot.id !== expected.id || slot.revision !== expected.revision) return false;
+      let next = putProgress(before,expected.owner,{ ...progress!, paused:progress!.paused.filter(s => s.game !== expected.game) });
+      next = { ...next, saveRevision:newSaveRevision() };
+      const encoded = encodeSave(next); parseSave(encoded);
+      await preserveAndReplace(storage,encoded,encodeSave(before));
+      admittedBytes.current = utf8Bytes(encoded); generation.current++; setEpoch(generation.current);
+      latest.current = next; setSave(next); return true;
+    } finally { restoring.current = false; }
+  },[ready,recovery]);
+  const covePerson = useCallback(async (action: Parameters<Store['covePerson']>[0], expectedEpoch:number) => {
+    if (!ready || recovery || restoring.current || expectedEpoch !== generation.current) return false;
+    restoring.current = true;
+    try {
+      await queue.current;
+      const before = latest.current;
+      let next = action.type === 'add' ? addCovePerson(before,action.name,action.id) : action.type === 'remove' ? removeCovePerson(before,action.id) : before.cove && (action.id === null || Object.hasOwn(before.cove.people,action.id)) ? { ...before, cove:{ ...before.cove, active:action.id } } : before;
+      if (next === before) return false;
+      next = { ...next, saveRevision:newSaveRevision() };
+      const encoded = encodeSave(next); parseSave(encoded);
+      await preserveAndReplace(storage,encoded,encodeSave(before));
+      admittedBytes.current = utf8Bytes(encoded);
+      generation.current++; setEpoch(generation.current);
+      latest.current = next; setSave(next); setBadgeResult(null); return true;
+    } finally { restoring.current = false; }
+  },[ready,recovery]);
   const startFresh = useCallback(async () => {
     await restore(JSON.stringify(migrateLibrary(emptySave(), { existingLearners: false })));
   }, [restore]);
   return (
     <Context.Provider
       value={{
-        save,
+        save, backup, challengeSave, challengeDiscard, covePerson,
         badgeResult, dismissBadge: () => setBadgeResult(null),
         personalize, renameLearner, removeLearner, saving, assignEarlier: assignEarlierWork,
         arcade,

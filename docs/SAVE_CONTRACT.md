@@ -60,7 +60,7 @@ Checkpoint edits have no replay action log: keep canonical draft, bounded undo, 
 
 ## Storage and admission
 
-Challenge payload ceiling: learner 104,000 bytes, Cove-only person 72,000 bytes. Learner: 8 paused games, 32 signals, 256 bests. Cove: 4 paused games, 8 signals, 128 bests, no School dare bitmap. At most five learners including Family and four Cove-only people, outside child pickers. Metadata, ring, cursors and practice aggregates are bounded. IDs are ASCII; byte budgets are UTF-8.
+Challenge payload ceiling: learner 104,000 bytes, Cove-only person 72,000 bytes. Learner: 8 paused games, 32 signals, 256 bests. Cove: 4 paused games, 8 signals, 128 bests, no School dare bitmap. At most five learners including Family and four Cove-only people, outside child pickers. Metadata and working sets are bounded. Learner recent/cursors/practice/solution-hash capacities are 64/128/64/32; Cove capacities are 32/64/16/16. These smaller Cove working sets reserve space for four 4,096-byte paused sessions without changing permanent facts. Each codec must validate initial state and monotonic extension of earlier assistance/audit evidence, as well as terminal truth. IDs are ASCII; byte budgets are UTF-8.
 
 Whole save remains 2,000,000 bytes; shared Library remains 1,000,000 bytes. These are admission boundaries, not a guarantee that every maximum fits together. Failed admission preserves accepted state and exact source. Export and explicit management are the recovery actions; never prune earned work or another person's draft. No increase to 2,500,000 is made.
 
