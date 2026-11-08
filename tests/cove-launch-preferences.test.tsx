@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import CoveScreen from '../src/cove/CoveScreen';
+import { GridInteraction } from '../src/puzzles/grid/preferences';
 import { emptyChallenge } from '../src/state/challenge';
 import { emptySave } from '../src/state/validation';
 import { emptyLocal, defaults } from '../src/cove/local';
@@ -10,12 +11,12 @@ const fixture = vi.hoisted(() => ({ local: {} as ReturnType<typeof import('../sr
 vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', TextInput: 'input', useWindowDimensions: () => ({ width: 320, height: 667, fontScale: 1 }) }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main' }));
 vi.mock('expo-router', async () => { const { useEffect } = await import('react'); return { useFocusEffect: (effect: () => void | (() => void)) => useEffect(effect, [effect]), useLocalSearchParams: () => ({ game: 'sudoku' }), router: {} }; });
-vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Copy: 'p', Heading: 'h2', Sheet: () => null, ToggleRow: 'switch', C: {}, font: undefined }));
+vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Copy: 'p', Heading: 'h2', Sheet: ({ visible, children }: { visible: boolean; children: React.ReactNode }) => visible ? <aside>{children}</aside> : null, ToggleRow: 'switch', C: {}, font: undefined }));
 vi.mock('../src/components/Recovery', () => ({ Recovery: () => null }));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));
 vi.mock('../src/hub/Landmarks', () => ({ Landmark: () => null }));
 vi.mock('../src/cove/PeoplePicker', () => ({ PeoplePicker: () => null, solvingPeople: () => [{ id: 'family', name: 'Family practice' }] }));
-vi.mock('../src/cove/CoveRound', () => ({ CoveRound: ({ card }: { card: ChallengeCard }) => <section data-tier={card.tier} data-hash={card.ref.hash}/> }));
+vi.mock('../src/cove/CoveRound', () => ({ CoveRound: ({ card }: { card: ChallengeCard }) => { const hold = useContext(GridInteraction); return <section data-tier={card.tier} data-hash={card.ref.hash}><button onClick={() => hold(true)}>Grid touch down</button><button onClick={() => hold(false)}>Grid release</button></section>; } }));
 vi.mock('../src/cove/useCoveLocal', () => ({ useCoveLocal: () => fixture.local }));
 vi.mock('../src/state/Store', () => ({ useStore: () => ({ ready: true, epoch: 1, save: fixture.save, covePerson: fixture.covePerson }) }));
 vi.mock('../src/hub/navigation', () => ({ openGame: vi.fn() }));
@@ -43,4 +44,24 @@ it('clears a Cove-only identity when the route loses focus through Back', async 
     await act(async () => screen.unmount());
     expect(fixture.covePerson).toHaveBeenCalledWith({ type: 'select', id: null }, 1);
   } finally { vi.unstubAllGlobals(); }
+});
+
+it('4 disables the real Cove scroll container throughout a grid touch', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); fixture.save = emptySave(); fixture.local = { data: emptyLocal(), ready: true, error: '', load: vi.fn(), reset: vi.fn(), change: vi.fn() }; let screen!: ReactTestRenderer;
+  try {
+    await act(async () => { screen = create(<CoveScreen/>); });
+    const page = () => screen.root.findAllByType('section').find(n => n.props.keyboardShouldPersistTaps === 'handled')!;
+    expect(page().props.scrollEnabled).toBe(true);
+    await act(async () => screen.root.findAllByType('button').find(b => b.children.includes('Grid touch down'))!.props.onClick()); expect(page().props.scrollEnabled).toBe(false);
+    await act(async () => screen.root.findAllByType('button').find(b => b.children.includes('Grid release'))!.props.onClick()); expect(page().props.scrollEnabled).toBe(true);
+  } finally { await act(async () => screen?.unmount()); vi.unstubAllGlobals(); }
+});
+it('17 keeps fill-notes behind the grown-up gate even for Grown-up readers', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); fixture.save = emptySave(); fixture.local = { data: { ...emptyLocal(), people: { family: { ...defaults(), reader: 'Grown-up' } } }, ready: true, error: '', load: vi.fn(), reset: vi.fn(), change: vi.fn() }; let screen!: ReactTestRenderer;
+  try {
+    await act(async () => { screen = create(<CoveScreen/>); });
+    await act(async () => screen.root.findAllByType('button').find(b => b.children.includes('Cove choices'))!.props.onPress());
+    expect(screen.root.findAllByType('switch')).toHaveLength(0);
+    expect(JSON.stringify(screen.toJSON())).toContain('For grown-ups');
+  } finally { await act(async () => screen?.unmount()); vi.unstubAllGlobals(); }
 });

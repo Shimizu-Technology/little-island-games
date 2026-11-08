@@ -45,3 +45,8 @@ describe('shared grid input and checkpoint draft', () => {
     expect(gridGeometry(704, 620, spec(9), false).needsZoom).toBe(false);
   });
 });
+
+it('24 notes on a filled cell preserve its ink', () => {
+  const grid = spec(9); let state = gridAction(createGrid(grid), { type: 'write', cells: [1], value: 2 }, grid);
+  state = gridAction(state, { type: 'pencil' }, grid); expect(gridAction(state, { type: 'write', cells: [1], value: 3 }, grid)).toBe(state);
+});

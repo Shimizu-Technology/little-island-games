@@ -26,3 +26,11 @@ describe('checkpoint audit and engine-owned completion', () => {
     checkpointMove(start, { type: 'help' }, rules); expect(JSON.stringify(start)).toBe(raw);
   });
 });
+
+it('27 saturates audit evidence without ever refusing Check or Help', () => {
+  const full: GridRules = { ...rules, spec: { rows: 9, columns: 9, kind: 'digits', symbols: ['1','2','3','4','5','6','7','8','9'], givens: Array(81).fill(0) } };
+  let state = newCheckpoint(full);
+  for (let i = 0; i < 1001; i++) { const before = state; state = checkpointMove(state, { type: i % 2 ? 'help' : 'check' }, full)!; expect(state).not.toBeNull(); expect(extendsAudit(before, state)).toBe(true); }
+  expect(checkpointFacts(state, full)).toMatchObject({ helpUsed: true, failed: true });
+  state = checkpointMove(state, { type: 'check' }, full)!; expect(checkpointFacts(state, full)?.solved).toBe(true);
+});

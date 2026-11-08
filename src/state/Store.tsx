@@ -178,6 +178,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if(!live())return;
       const recovered = await recoverChallengeDrafts(migrateProfiles(before),storage,saveCatalog,{live});
       let next=syncProfile(backfillRewards(migrateLibrary(recovered, { existingLearners: encoded !== null })));
+      // Cove identity is temporary. Keep all people and boards, but launch as the learner.
+      if (next.cove?.active) next = { ...next, cove: { ...next.cove, active: null } };
       const replacementNeeded = !!encoded && (before.version !== 3 || !before.library || before.library.version === 1 || learnersChanged(before,next));
       if (replacementNeeded) next = { ...next, saveRevision:newSaveRevision() };
       if (!validLibraryData(next.library)) throw new Error("This Library could not be opened. Your original is kept. Export it or restore a previous backup.");
@@ -545,7 +547,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       restoring.current = true;
       try {
         let next: Save, incoming: Save;
-        try { incoming=parseSave(encoded); next = { ...syncProfile(backfillRewards(migrateLibrary(migrateProfiles(incoming)))), saveRevision:newSaveRevision() }; assertMigratedHomes(next); parseSave(encodeSave(next)); if (!validLibraryData(next.library)) throw new Error("This Library could not be opened. Your original is kept. Export it or restore a previous backup.");
+        try { incoming=parseSave(encoded); next = { ...syncProfile(backfillRewards(migrateLibrary(migrateProfiles(incoming)))), saveRevision:newSaveRevision() }; if (next.cove?.active) next = { ...next, cove: { ...next.cove, active: null } }; assertMigratedHomes(next); parseSave(encodeSave(next)); if (!validLibraryData(next.library)) throw new Error("This Library could not be opened. Your original is kept. Export it or restore a previous backup.");
       if (!withinSaveLimit(encodeSave(next))) throw new Error("This save needs more room to upgrade. Your original is kept. Export it and open it in the previous build to manage saved work, or restore a smaller backup."); }
         catch (error) {
           // Keep both the rejected import and the current live save. Never repair imported bytes.
@@ -688,6 +690,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     } finally { restoring.current = false; }
   },[ready,recovery]);
   const covePerson = useCallback(async (action: Parameters<Store['covePerson']>[0], expectedEpoch:number) => {
+    // A blur cleanup waits for the current boundary, then rechecks its captured epoch.
+    if (action.type === 'select' && action.id === null) while (restoring.current && mounted.current && expectedEpoch === generation.current) await new Promise(resolve => setTimeout(resolve, 25));
     if (!ready || recovery || restoring.current || expectedEpoch !== generation.current) return false;
     restoring.current = true;
     try {

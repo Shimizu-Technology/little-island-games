@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useIsFocused } from 'expo-router';
 import { Button, Copy, Heading } from '../components/ui';
@@ -11,6 +11,7 @@ import { useSoundControls } from '../components/Audio';
 import { GridFeedback } from '../puzzles/grid/preferences';
 import { SessionGate } from '../challenge/SessionGate';
 import { infoFor, sameRef } from './catalog';
+import { solvingPeople } from './PeoplePicker';
 import { presentationFor } from './presentation';
 
 /** All progress and autosave go through the existing owner/epoch-guarded Store. */
@@ -18,14 +19,16 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   const store = useStore(), owner = selectedOwner(store.save), focused = useIsFocused();
   const sound = useSoundControls(store.save.settings.sound && focused);
   const progress = progressFor(store.save, owner), saved = progress?.paused.find(s => s.game === entry.game && !s.credited && !s.result);
-  const [finished, setFinished] = useState<ChallengeSession>(), [message, setMessage] = useState(''), [busy, setBusy] = useState(false), [role, setRole] = useState(true), [replacement, setReplacement] = useState<ChallengeSession>();
-  const current = useRef<ChallengeSession | undefined>(saved), lock = useRef(false), mounted = useRef(true), auto = useRef(false);
+  const [pending, setPending] = useState<ChallengeSession>(), [finished, setFinished] = useState<ChallengeSession>(), [message, setMessage] = useState(''), [busy, setBusy] = useState(false), [role, setRole] = useState(true), [replacement, setReplacement] = useState<ChallengeSession>();
+  const current = useRef<ChallengeSession | undefined>(saved), lock = useRef(false), mounted = useRef(true), auto = useRef(false), boundary = useRef(false), dispatchToken = useRef(0);
+  // Release draft input on acceptance, before disk I/O; launches/results stay serialized.
+  useLayoutEffect(() => { if (saved && (!current.current || saved.id !== current.current.id || saved.revision >= current.current.revision)) { current.current = saved; if (!boundary.current) lock.current = false; } }, [saved]);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const expected = (session?: ChallengeSession) => ({ owner, epoch: store.epoch, game: entry.game, id: session?.id ?? null, revision: session?.revision ?? null });
   const full = !saved && (progress?.paused.filter(s => !s.credited).length ?? 0) >= (owner.startsWith('cove-') ? 4 : 8);
   async function launch() {
     if (!focused || lock.current || !progress || saved && !replace) return;
-    lock.current = true; setBusy(true); setMessage('');
+    boundary.current = true; lock.current = true; setBusy(true); setMessage('');
     try {
       let next = { ...entry.start(card.ref, owner, `cove-${owner}-${progress.nextOrdinal}`, progress, { supportOff: false, ownRead: false }, []), partner };
       if (remix) { const recipe = presentationFor(entry).remixes?.find(r => r.id === remix); if (!recipe) throw new Error('Unknown remix.'); const remixed = recipe.start(next); if (!sameRef(remixed.puzzle, next.puzzle)) throw new Error('A remix keeps the same puzzle ref.'); next = remixed; }
@@ -34,7 +37,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
         current.current = next;
       } else if (mounted.current) setMessage('This puzzle could not start. Your saved work is kept. Continue a saved puzzle or export a backup in Settings.');
     } catch { if (mounted.current) setMessage('This puzzle could not open. Your saved work is kept. Try again.'); }
-    finally { lock.current = false; if (mounted.current) setBusy(false); }
+    finally { boundary.current = false; lock.current = false; if (mounted.current) setBusy(false); }
   }
   // One launch per mounted owner/epoch/ref. Parent keys this component at every identity boundary.
   useEffect(() => {
@@ -42,29 +45,42 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   });
   async function dispatch(action: unknown) {
     const before = current.current;
-    if (!focused || !before || lock.current || before.result) return;
+    if (!focused || !before || lock.current || before.result || pending) { if (focused && !before?.result) setMessage('Wait for this change to finish, then try again. Your accepted work is kept.'); return; }
+    const token = ++dispatchToken.current;
     lock.current = true; setMessage('');
     try {
       const next = entry.move(before, action);
       if (!next) { setMessage('That change could not be saved. Your accepted draft is kept.'); return; }
-      if (next.result) setBusy(true);
+      if (next.result && !next.partner) { setPending(next); return; }
+      if (next.result) { boundary.current = true; setBusy(true); }
       if (await store.challengeSave(next, expected(before))) {
-        current.current = next;
+        if (!current.current || current.current.id === next.id && current.current.revision <= next.revision) current.current = next;
         if (next.result && mounted.current) setFinished(next);
       } else if (mounted.current) setMessage('Keep the app open. Retry saving or export your accepted work in Settings.');
-    } catch { if (mounted.current) setMessage('This change could not be made. Your accepted draft is kept. Try again.'); } finally { lock.current = false; if (mounted.current) setBusy(false); }
+    } catch { if (mounted.current) setMessage('This change could not be made. Your accepted draft is kept. Try again.'); } finally { if (token === dispatchToken.current) { boundary.current = false; lock.current = false; if (mounted.current) setBusy(false); } }
   }
-  // Store may publish an accepted draft even if its disk write later fails.
-  useEffect(() => { if (saved && (!current.current || saved.id !== current.current.id || saved.revision > current.current.revision)) current.current = saved; }, [saved]);
-  const round = saved ?? finished, actual = round ? entry.puzzles.find(p => sameRef(p.ref, round.puzzle)) : card;
+  async function confirmFinish(withPerson: string | null) {
+    if (!pending || lock.current || !current.current || !focused) return;
+    boundary.current = true; lock.current = true; setBusy(true); setMessage('');
+    try {
+      const candidate = { ...pending, partner: withPerson };
+      const next = { ...candidate, result: entry.catalog.codecs.get(candidate.codec)!.evaluate(candidate) };
+      if (!next.result) throw new Error('The engine could not confirm this finish.');
+      if (await store.challengeSave(next, expected(current.current))) { current.current = next; setFinished(next); setPending(undefined); }
+      else setMessage('Your finish has not saved yet. Keep this screen open and try again.');
+    } catch { setMessage('Your finish has not saved yet. Keep this screen open and try again.'); }
+    finally { boundary.current = false; lock.current = false; setBusy(false); }
+  }
+  const round = pending ?? saved ?? finished, actual = round ? entry.puzzles.find(p => sameRef(p.ref, round.puzzle)) : card;
   const changeAttempt = !!saved && replace && (!sameRef(saved.puzzle, card.ref) || !!remix);
   return <View style={{ gap: 14 }}>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button quiet compact onPress={onClose}>← Cove</Button><Heading style={{ flexShrink: 1 }}>{infoFor(entry.game).name}</Heading></View><SaveStatus/>
     {!!message && <Copy accessibilityLiveRegion="polite">{message}</Copy>}
     {changeAttempt ? <><Copy>Your unfinished puzzle is kept until this new attempt saves. Its notes and undo will then be replaced. Finished history stays kept.</Copy><Button disabled={busy} onPress={() => void launch()}>Replace paused puzzle</Button><Button quiet onPress={onClose}>Keep paused puzzle</Button></> : round ? <>
       <Copy>{actual?.title}</Copy>
+      {round.partner && <Copy>Together with {solvingPeople(store.save).find(p => p.id === round.partner)?.name ?? 'family'}</Copy>}
       {round.partner && role && infoFor(entry.game).role && <View style={{ gap: 8 }}><Copy>{infoFor(entry.game).role}</Copy><Button quiet compact onPress={() => setRole(false)}>Put role card away</Button></View>}
-      {round.result ? <><Heading style={{ fontSize: 24 }}>{round.result.event === 'together' ? 'Solved together' : 'Puzzle solved'}</Heading><Copy>Your finished puzzle is kept. Take your time choosing what comes next.</Copy><Button onPress={onBrowse}>Replay or choose another puzzle</Button></> : <SessionGate key={`${owner}:${store.epoch}:${round.id}`} open={store.challengeOpen} expected={expected(round)} render={() => <>
+      {pending ? <><Heading style={{ fontSize: 24 }}>Keep this finish</Heading><Copy>Did you solve together? One tap credits both people. Your finish saves when you choose.</Copy><Button disabled={busy} onPress={() => void confirmFinish(null)}>Save my finish</Button>{solvingPeople(store.save).filter(p => p.id !== owner).map(p => <Button key={p.id} quiet disabled={busy} onPress={() => void confirmFinish(p.id)}>Solved together with {p.name}</Button>)}<Button quiet disabled={busy} onPress={() => setPending(undefined)}>Back to my board</Button></> : round.result ? <><Heading style={{ fontSize: 24 }}>{round.result.event === 'together' ? 'Solved together' : 'Puzzle solved'}</Heading><Copy>Your finished puzzle is kept. Take your time choosing what comes next.</Copy><Button onPress={onBrowse}>Replay or choose another puzzle</Button></> : <SessionGate key={`${owner}:${store.epoch}:${round.id}`} open={store.challengeOpen} expected={expected(round)} render={() => <>
         <GridFeedback.Provider value={() => { sound.play('tap'); }}>{entry.render(round, a => void dispatch(a), focused && !busy, width)}</GridFeedback.Provider>
         <Button quiet disabled={busy} onPress={() => void dispatch(entry.controls.help())}>Help · show me how</Button><Copy>Helping a child? Ask what they notice, then let them choose the next step.</Copy>
       </>}/>}

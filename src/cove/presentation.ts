@@ -1,6 +1,6 @@
 import type { ChallengeCard, ChallengeEntry } from '../challenge/types';
 import type { ChallengeSession } from '../state/challenge';
-import { infoFor, type CoveInfo, type Reader } from './catalog';
+import { gameInfo, infoFor, type CoveInfo, type Reader } from './catalog';
 export type PuzzleDetails = { specifics: string; techniques: string[]; template: string; readers?: readonly Reader[] };
 export type CovePresentation = {
   info: CoveInfo;
@@ -13,6 +13,7 @@ const presentations = new Map<string, CovePresentation>();
 export function presentCove(entry: ChallengeEntry, presentation: CovePresentation): void {
   if (!entry.cove || presentations.has(entry.game) || !presentation.info.provenance || entry.puzzles.some(p => { const d = presentation.details(p); return !d.specifics.trim() || !d.template.trim() || !d.techniques.length; })) throw new Error('Cove presentation must describe every registered puzzle.');
   if (/(?:\bkenken\b|\bpicross\b|\bjumble\b|\bwordle\b|\bshanghai\b|\bbinairo\b|\btakuzu\b)/i.test(presentation.info.name)) throw new Error('Choose an original Cove name.');
+  gameInfo[entry.game] = presentation.info;
   presentations.set(entry.game, presentation);
 }
 export const presentationFor = (entry: ChallengeEntry): CovePresentation => presentations.get(entry.game) ?? { info: infoFor(entry.game), details: card => ({ specifics: card.title, techniques: [], template: '' }) };

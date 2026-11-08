@@ -20,7 +20,7 @@ import { useStore } from '../state/Store';
 import { IslandScene } from './IslandScene';
 import { openGame, placeRoute } from './navigation';
 import type { PlaceId } from './model';
-import { coveContinue } from '../cove/HubCove';
+import { coveContinue, CovePersonResume } from '../cove/HubCove';
 import { infoFor } from '../cove/catalog';
 function HeaderIcon({ lock = false }: { lock?: boolean }) {
  return <Svg width={24} height={24} viewBox="0 0 24 24" accessible={false}>{lock ? <><Path d="M7 10V7a5 5 0 0110 0v3M5 10h14v11H5Z" fill="none" stroke={C.ink} strokeWidth={1.8}/><Circle cx={12} cy={15} r={1.5} fill={C.ink}/></> : <Path d="M8 6h13M8 12h13M8 18h13M3 6h1M3 12h1M3 18h1" stroke={C.ink} strokeWidth={2} strokeLinecap="round"/>}</Svg>;
@@ -51,8 +51,10 @@ export default function HubScreen() {
   <ScrollView style={{ flex: 1 }} contentContainerStyle={{ alignItems: 'center', flexGrow: 1, justifyContent: 'center' }}>
    <IslandScene width={sceneWidth} height={sceneHeight} fontScale={Math.min(fontScale, 1.3)} look={personFor(store.save).look} reduced={reduced} active={focused && !settings && clear} door={door} onArrive={arrive}/>
   </ScrollView>
+  <CovePersonResume/>
   <View style={{ paddingHorizontal: 18, paddingVertical: 8, backgroundColor: '#AFDAD6' }}><View style={{ flexDirection: 'row', maxWidth: 520, width: '100%', alignSelf: 'center', backgroundColor: '#FFFAEB', borderRadius: 24, borderWidth: 1, borderColor: '#91B7A9', boxShadow: '0px 4px 12px rgba(43,80,67,.1)' }}>
-   {coveResume ? dock('Continue', 'right', () => router.push({ pathname: '/cove', params: { game: coveResume.game } }), infoFor(coveResume.game).name) : resume && dock('Continue', 'right', () => openGame(resume), shelfGames.find(game => game.id === resume)?.name)}
+   {coveResume ? dock('Continue', 'right', () => router.push({ pathname: '/cove', params: { game: coveResume.game } }), infoFor(coveResume.game).name) : null}
+   {resume && dock('School', 'right', () => openGame(resume), shelfGames.find(game => game.id === resume)?.name)}
    {dock('Try today', 'refresh', () => router.push({ pathname: '/everything', params: { section: 'ideas' } }))}
    {dock('Favorites', 'star', () => router.push({ pathname: '/everything', params: { section: 'favorites' } }))}
   </View></View>

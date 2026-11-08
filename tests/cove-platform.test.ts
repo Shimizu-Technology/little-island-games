@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import { bands, packsFor, tideTable, coveEntries, mixedPack, completion, suggested } from '../src/cove/catalog';
+import { describe, expect, it, vi } from 'vitest';
+import { bands, packsFor, tideTable, coveEntries, mixedPack, completion, suggested, infoFor, completionLookup } from '../src/cove/catalog';
 import { defaults, emptyLocal, localAction, localRepository, validLocal } from '../src/cove/local';
 import { emptyChallenge, type ChallengeProgress } from '../src/state/challenge';
+import * as bits from '../src/state/saveBits';
 import { pack } from '../src/state/saveBits';
 import type { ChallengeCard, ChallengeEntry } from '../src/challenge/types';
 import { places } from '../src/hub/model';
@@ -71,5 +72,46 @@ describe('validated device-local Cove choices', () => {
     await repo.read(); await Promise.all([repo.write({ type: 'favorite', game: 'sudoku' }), repo.write({ type: 'favorite', game: 'bridges' })]);
     expect((await repo.read()).favorites).toEqual(['sudoku', 'bridges']); fail = true;
     await expect(repo.write({ type: 'favorite', game: 'solitaire' })).rejects.toThrow('disk'); expect((await repo.read()).favorites).toEqual(['sudoku', 'bridges']);
+  });
+});
+
+describe('review regressions: offers and explicit metadata', () => {
+  it('14 excludes Together-only history from personal mixed practice', () => {
+    const progress = solvedProgress(); progress.banks[0][1] = pack(cards.map(() => 3), 3);
+    expect(mixedPack(entry, progress, p => ({ technique: String(p.ref.puzzle % 2), template: String(p.ref.puzzle % 4) }))).toEqual([]);
+    progress.banks[0][1] = pack(cards.map(() => 4), 3);
+    expect(mixedPack(entry, progress, p => ({ technique: String(p.ref.puzzle % 2), template: String(p.ref.puzzle % 4) }))).toEqual([]);
+  });
+  it('15 rotates three distinct shelf genres independent of registration order', () => {
+    const entries = ['word-search','crossword','word-ladder','sudoku','cage-math','picture-grid','bridges','solitaire'].map(game => ({ ...entry, game }));
+    for (let day = 1; day <= 28; day++) {
+      const picks = tideTable(`2026-11-${String(day).padStart(2, '0')}`, entries);
+      expect(new Set(picks.map(p => infoFor(p.entry.game).row)).size).toBe(3);
+    }
+  });
+  it('18 decodes each bank once for every card lookup', () => {
+    const spy = vi.spyOn(bits, 'unpack');
+    try { const lookup = completionLookup(solvedProgress(), entry); for (const p of cards) expect(lookup(p.ref)).toBe(5); expect(spy).toHaveBeenCalledTimes(1); }
+    finally { spy.mockRestore(); }
+  });
+  it('19 refuses to invent original provenance for unknown games', () => {
+    expect(infoFor('unreviewed-game').provenance).toBeNull();
+    expect(() => coveEntries([{ ...entry, game: 'unreviewed-game' }])).toThrow(/provenance/i);
+  });
+  it('21 prunes removed owners before accepting a new preference', () => {
+    let data = emptyLocal(); for (let i = 0; i < 9; i++) data = localAction(data, { type: 'preferences', owner: `old-${i}`, value: {} });
+    data = localAction(data, { type: 'prune', owners: ['family'] });
+    data = localAction(data, { type: 'preferences', owner: 'family', value: { band: 4 } });
+    expect(Object.keys(data.people)).toEqual(['family']); expect(data.people.family.band).toBe(4);
+  });
+  it('22 preserves a malformed original once across retries', async () => {
+    const rows = new Map([['cove-device-v1', '{bad']]), repo = localRepository({ get: async k => rows.get(k) ?? null, set: async (k,v) => { rows.set(k,v); } });
+    for (let i = 0; i < 3; i++) await expect(repo.read()).rejects.toThrow();
+    expect([...rows.keys()].filter(k => k.startsWith('cove-preserved-'))).toHaveLength(1);
+  });
+  it('23 notifies retained local-choice subscribers after durable changes', async () => {
+    const repo = localRepository({ get: async () => null, set: async () => {} }), changed = vi.fn(); await repo.read();
+    const release = repo.subscribe(changed); await repo.write({ type: 'favorite', game: 'sudoku' }); expect(changed).toHaveBeenCalledTimes(1);
+    release(); await repo.write({ type: 'favorite', game: 'bridges' }); expect(changed).toHaveBeenCalledTimes(1);
   });
 });

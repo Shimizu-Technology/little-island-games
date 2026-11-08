@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { GridShell } from '../src/puzzles/grid/GridShell';
 import { createGrid, gridAction, type GridSpec } from '../src/puzzles/grid/model';
 const counts = vi.hoisted(() => ({ cells: 0, svg: 0 }));
-vi.mock('react-native', () => ({
+vi.mock('react-native', () => ({ AccessibilityInfo: { isScreenReaderEnabled: async () => false, addEventListener: () => ({ remove() {} }) },
   TextInput: 'input', View: 'div', ScrollView: 'section', Platform: { OS: 'ios' }, useWindowDimensions: () => ({ width: 744, height: 1133 }),
   Pressable: (props: Record<string, unknown>) => { counts.cells++; return React.createElement('button', props); },
   PanResponder: { create: () => ({ panHandlers: {} }) },
@@ -50,4 +50,31 @@ it('routes native typed symbols and Backspace through the same selected-cell act
     expect(dispatch).toHaveBeenLastCalledWith({ type: 'write', cells: [0], value: 0 });
     expect(dispatch).toHaveBeenCalledTimes(2);
   } finally { if (screen) await act(async () => screen.unmount()); }
+});
+
+it('8 advertises only supported iOS keyboard input', async () => {
+  const spec: GridSpec = { rows: 4, columns: 4, symbols: ['1','2','3','4'], givens: Array(16).fill(0), kind: 'digits' }; let screen!: ReactTestRenderer;
+  try { await act(async () => { screen = create(<GridShell spec={spec} state={createGrid(spec)} dispatch={() => {}} active width={320}/>); });
+    expect(JSON.stringify(screen.toJSON())).not.toMatch(/Keyboard: arrows|Command-Z/);
+  } finally { await act(async () => screen?.unmount()); }
+});
+it('9 routes accessibility activation directly to the intended cell', async () => {
+  const spec: GridSpec = { rows: 9, columns: 9, symbols: ['1'], givens: Array(81).fill(0), kind: 'digits' }, dispatch = vi.fn(); let screen!: ReactTestRenderer;
+  try { await act(async () => { screen = create(<GridShell spec={spec} state={createGrid(spec)} dispatch={dispatch} active width={320}/>); });
+    const cell = screen.root.findAllByType('button').find(b => b.props.accessibilityLabel?.startsWith('Row 9, column 9,'))!;
+    expect(cell.props.onAccessibilityTap).toBeTypeOf('function'); await act(async () => cell.props.onAccessibilityTap()); expect(dispatch).toHaveBeenLastCalledWith({ type: 'select', cell: 80 });
+  } finally { await act(async () => screen?.unmount()); }
+});
+it('6 and 28 keeps selected paint visible and mounts no empty symbols', async () => {
+  const spec: GridSpec = { rows: 25, columns: 25, symbols: ['Fill','×'], givens: Array(625).fill(0), kind: 'paint' }; let screen!: ReactTestRenderer;
+  try { const state = gridAction(createGrid(spec), { type: 'write', cells: [0], value: 1 }, spec); await act(async () => { screen = create(<GridShell spec={spec} state={state} dispatch={() => {}} active width={320}/>); });
+    const cells = screen.root.findAllByType('button').filter(b => b.props.accessibilityLabel?.startsWith('Row '));
+    expect(cells[0].props.style.backgroundColor).toBe('#246858'); expect(screen.root.findAllByType('span')).toHaveLength(0);
+  } finally { await act(async () => screen?.unmount()); }
+});
+it('7 keeps the content viewport separate from its border', async () => {
+  const spec: GridSpec = { rows: 9, columns: 9, symbols: ['1'], givens: Array(81).fill(0), kind: 'digits' }; let screen!: ReactTestRenderer;
+  try { await act(async () => { screen = create(<GridShell spec={spec} state={createGrid(spec)} dispatch={() => {}} active width={351}/>); });
+    const clip = screen.root.findAllByType('div').find(n => n.props.style?.overflow === 'hidden')!; expect(clip.props.style.borderWidth ?? 0).toBe(0);
+  } finally { await act(async () => screen?.unmount()); }
 });

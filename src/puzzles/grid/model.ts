@@ -3,7 +3,7 @@ export type GridSpec = { rows: number; columns: number; symbols: readonly string
 export type CellDelta = [index: number, before: number, beforeNotes: number, after: number, afterNotes: number];
 export type Stroke = CellDelta[];
 export type GridState = { version: 1; values: number[]; notes: number[]; selected: number; tool: number; pencil: boolean; undo: Stroke[]; redo: Stroke[]; edits: number };
-export type GridAction = { type: 'select'; cell: number } | { type: 'tool'; value: number } | { type: 'pencil' } | { type: 'write'; cells: number[]; value: number } | { type: 'undo' } | { type: 'redo' };
+export type GridAction = { type: 'select'; cell: number } | { type: 'tool'; value: number } | { type: 'pencil' } | { type: 'write'; cells: number[]; value: number; selected?: number } | { type: 'undo' } | { type: 'redo' };
 export const historyLimit = (spec: GridSpec) => spec.kind === 'paint' ? 512 : 256;
 export function validSpec(spec: GridSpec): boolean {
   return ['digits', 'paint', 'letters', 'cells'].includes(spec.kind) && new Set(spec.symbols).size === spec.symbols.length && Number.isInteger(spec.rows) && spec.rows >= 1 && spec.rows <= 25 && Number.isInteger(spec.columns) && spec.columns >= 1 && spec.columns <= 25 && spec.symbols.length > 0 && spec.symbols.length <= (spec.kind === 'digits' ? 9 : 31) && spec.symbols.every(s => typeof s === 'string' && [...s].length >= 1 && [...s].length <= 4) && spec.givens.length === spec.rows * spec.columns && spec.givens.every(n => uint(n, spec.symbols.length));
@@ -24,16 +24,18 @@ export function gridAction(state: GridState, action: GridAction, spec: GridSpec)
     for (const [i, v, n, after, afterNotes] of stroke) { values[i] = reverse ? v : after; notes[i] = reverse ? n : afterNotes; }
     return { ...state, values, notes, undo: reverse ? source.slice(0, -1) : [...state.undo, stroke], redo: reverse ? [...state.redo, stroke] : source.slice(0, -1), edits: state.edits + 1 };
   }
+  if (action.selected !== undefined && !uint(action.selected, count - 1)) return state;
   if (!uint(action.value, spec.symbols.length) || !action.cells.length || action.cells.length > count || !action.cells.every(i => uint(i, count - 1))) return state;
   const values = [...state.values], notes = [...state.notes], stroke: Stroke = [];
   for (const i of new Set(action.cells)) {
-    if (spec.givens[i]) continue;
+    if (spec.givens[i] || state.pencil && action.value > 0 && state.values[i]) continue;
     const v = state.pencil && action.value > 0 ? 0 : action.value;
     const n = state.pencil && action.value > 0 ? state.notes[i] ^ (1 << (action.value - 1)) : 0;
     if (v === values[i] && n === notes[i]) continue;
     stroke.push([i, values[i], notes[i], v, n]); values[i] = v; notes[i] = n;
   }
-  return stroke.length ? { ...state, values, notes, undo: [...state.undo, stroke].slice(-historyLimit(spec)), redo: [], edits: state.edits + 1 } : state;
+  const selected = action.selected ?? state.selected;
+  return stroke.length ? { ...state, selected, values, notes, undo: [...state.undo, stroke].slice(-historyLimit(spec)), redo: [], edits: state.edits + 1 } : selected !== state.selected ? { ...state, selected } : state;
 }
 /** Select nearest cell even beyond the border. There are no dead strips between cells. */
 export function nearestCell(x: number, y: number, cell: number, spec: Pick<GridSpec, 'rows' | 'columns'>): number {

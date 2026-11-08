@@ -67,3 +67,19 @@ describe('Cove round real Store acceptance', () => {
   });
 
 });
+
+it('13 confirms Together at a solo finish and credits both people in one save', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); registerSaveContent(registration.catalog, catalogManifest(registration.catalog));
+  db.rows = []; db.raw = JSON.stringify({ ...emptySave(), learning: addLearner(undefined, 'A', 'a') }); let screen!: ReactTestRenderer;
+  try {
+    await act(async () => { screen = create(<StoreProvider><Probe/><Ready/></StoreProvider>); });
+    for (let i = 0; i < 40 && screen.root.findAllByType('button').some(b => b.children.includes('Next legal step')); i++) await press(screen, 'Next legal step');
+    expect(store.save.challenge!.paused).toHaveLength(1);
+    const confirm = screen.root.findAllByType('button').find(b => b.children.join('') === 'Solved together with Family practice'); expect(confirm).toBeDefined();
+    await act(async () => confirm!.props.onPress());
+    expect(store.save.challenge!.paused).toEqual([]);
+    expect(completion(progressFor(store.save, 'a')!, puzzle.ref, entry)).toBe(3);
+    expect(completion(progressFor(store.save, 'family')!, puzzle.ref, entry)).toBe(3);
+    expect(JSON.stringify(screen.toJSON())).toContain('Together with ');
+  } finally { if (screen) await act(async () => screen.unmount()); vi.unstubAllGlobals(); }
+});

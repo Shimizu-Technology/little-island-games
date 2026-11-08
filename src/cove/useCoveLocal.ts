@@ -4,7 +4,7 @@ import { emptyLocal, type LocalAction } from './local';
 export function useCoveLocal() {
   const [data, setData] = useState(emptyLocal), [ready, setReady] = useState(false), [error, setError] = useState('');
   const load = useCallback(() => { void coveLocal.read().then(value => { setData(value); setReady(true); setError(''); }).catch(e => setError(String(e.message))); }, []);
-  useEffect(load, [load]);
+  useEffect(() => { const unsubscribe = coveLocal.subscribe(load); load(); return unsubscribe; }, [load]);
   const change = async (action: LocalAction) => {
     if (!ready) return false;
     try { const next = await coveLocal.write(action); setData(next); setError(''); return true; }
