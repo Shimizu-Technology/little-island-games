@@ -67,12 +67,13 @@ export function createSearch<S, A>(p: SearchProblem<S, A>) {
     return out.reverse();
   };
   return {
-    run(maxNodes = Number.POSITIVE_INFINITY): SearchStatus<A> {
+    run(maxNodes = Number.POSITIVE_INFINITY, maxMs = Number.POSITIVE_INFINITY): SearchStatus<A> {
       if (done) return done;
       let slice = 0;
+      const started = performance.now();
       while (heap.length) {
         if (expanded >= p.nodeBudget) return (done = { status: 'budget-exhausted', nodes: expanded });
-        if (slice >= maxNodes) return { status: 'running', nodes: expanded };
+        if (slice >= maxNodes || slice > 0 && performance.now() - started >= maxMs) return { status: 'running', nodes: expanded };
         const index = pop()[2], node = nodes[index], key = p.key(node.s);
         // A cheaper route reached this state after this entry was queued, so the entry is stale.
         if (node.g > best.get(key)!) continue;

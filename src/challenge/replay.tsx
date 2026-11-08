@@ -11,6 +11,7 @@ const metrics = ['cards','steps','placements','loads','turns'];
 /** Replay-only kit. Checkpoint engines register their bounded exact codecs separately. */
 export function defineReplayGame<D,P,A,S>(config: {
   game: string; codec: string; context: string; cove: boolean; budget: SessionBudget;
+  completionText?: (ref: ChallengeSession['puzzle']) => string;
   puzzles: readonly Puzzle<D>[]; objectives?: readonly string[]; engine: ReplayEngine<D,P,A,S>;
   Board: ComponentType<ChallengeViewProps<S,A>>; controls: { help: () => A; reset: () => A };
 }): TypedRegistration<ReplayPayload<P,A>,A,S> {
@@ -82,7 +83,7 @@ export function defineReplayGame<D,P,A,S>(config: {
     canStart:(s:ChallengeSession)=>replay(s)!==null && (s.payload as ReplayPayload<P,A>).actions.length===0 && s.result===null,
     extends:(a:ChallengeSession,b:ChallengeSession)=>{const p=a.payload as ReplayPayload<P,A>,q=b.payload as ReplayPayload<P,A>;return q.actions.length>p.actions.length && JSON.stringify({...p,actions:[]})===JSON.stringify({...q,actions:[]}) && p.actions.every((action,i)=>JSON.stringify(action)===JSON.stringify(q.actions[i]));}};
   const catalog:SaveCatalog={banks,dares,codecs:new Map([[config.codec,codec]]),contexts:new Set(config.puzzles.map(p=>`${config.context}-${p.tier}`))};
-  return {game:config.game,codec:config.codec,cove:config.cove,contextFor:ref=>`${config.context}-${config.puzzles.find(p=>p.ref.bank===ref.bank&&p.ref.puzzle===ref.puzzle)?.tier??1}`,puzzles:config.puzzles,catalog,controls:config.controls,
+  return {game:config.game,codec:config.codec,cove:config.cove,contextFor:ref=>`${config.context}-${config.puzzles.find(p=>p.ref.bank===ref.bank&&p.ref.puzzle===ref.puzzle)?.tier??1}`,puzzles:config.puzzles,catalog,controls:config.controls,completionText:config.completionText,
     start:(ref,owner,id,progress,options,selectedDares)=>{
       const puzzle=config.puzzles.find(p=>sameRef(p.ref,ref)); if(!puzzle)throw new Error('Unknown puzzle.');
       const payload:ReplayPayload<P,A>={version:1,initial:engine.initial(puzzle.descriptor),options:{...options},firstSolutions:progress.solutions.filter(([b,p])=>b===ref.bank&&p===ref.puzzle).map(([, ,hash])=>hash),actions:[]};
@@ -94,6 +95,6 @@ export function defineReplayGame<D,P,A,S>(config: {
       if(jsonBytes(next)>4096 || !replay(next))return null;
       const result={...next,result:evaluate(next)};return validChallengeSession(result,s.owner,catalog,s.owner.startsWith('cove-'))?result:null;
     },
-    render:(s,dispatch,active,width)=>{const round=replay(s);return round ? <config.Board state={round.state} dispatch={dispatch} active={active} width={width}/> : null;},
+    render:(s,dispatch,active,width,host)=>{const round=replay(s);return round ? <config.Board state={round.state} dispatch={dispatch} active={active} width={width} sessionKey={host?.key} commit={host?async(action,expectedKey)=>{const accepted=await host.commit(action,expectedKey);if(!accepted)return null;const restored=replay(accepted.session);return restored?{key:accepted.key,state:restored.state}:null;}:undefined}/> : null;},
   };
 }

@@ -1,3 +1,5 @@
+import { PuzzleEnding } from '../puzzles/ui/PuzzleEnding';
+import { adjacentTide } from '../puzzles/flow';
 import { SessionGate } from './SessionGate';
 import { ResultOffer } from './ResultOffer';
 import React, { useLayoutEffect, useRef, useState } from 'react';
@@ -27,35 +29,37 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
   // Store accepts a draft synchronously before durability; render receives that accepted revision.
   useLayoutEffect(()=>{if(saved && (!accepted.current || saved.id!==accepted.current.id || saved.revision>=accepted.current.revision)){accepted.current=saved;if(!saved.result)lock.current=false;}},[saved]);
   const expected=(s:ChallengeSession|undefined)=>({owner,game:entry.game,epoch:store.epoch,id:s?.id??null,revision:s?.revision??null});
-  async function launch() {
+  async function launch(target: ChallengeCard = selection, chosenDares: number[] = dares) {
     if(lock.current || saved && !replace)return;
     const token=++dispatchToken.current;
     lock.current=true;setBusy(true);setMessage('');
     try {
-      const selected=comfort.youngChild?[]:dares;
-      const options={supportOff:selection.dares.some(d=>selected.includes(d.slot)&&d.rule.kind==='blind'),ownRead:selection.dares.some(d=>selected.includes(d.slot)&&d.rule.kind==='own-read')};
+      const selected=comfort.youngChild?[]:chosenDares;
+      const options={supportOff:target.dares.some(d=>selected.includes(d.slot)&&d.rule.kind==='blind'),ownRead:target.dares.some(d=>selected.includes(d.slot)&&d.rule.kind==='own-read')};
       // Construct first: a throwing adapter cannot discard accepted work.
-      const next=entry.start(selection.ref,owner,`challenge-${owner}-${progress.nextOrdinal}`,progress,options,selected);
+      const next=entry.start(target.ref,owner,`challenge-${owner}-${progress.nextOrdinal}`,progress,options,selected);
       const replacement=saved&&replace?saved:progress.paused.find(s=>s.game===replacementGame);
       const guard={...expected(progress.paused.find(s=>s.game===entry.game)),...(replacement?{replace:{game:replacement.game,id:replacement.id,revision:replacement.revision}}:{})};
       if(await store.challengeSave(next,guard)) {
         accepted.current=next;setCompleted(undefined);setPicking(false);setReplace(false);setReplacementGame(undefined);
-        store.challengeWorking({choice:[entry.game,selection.path,selection.tier]},{owner,epoch:store.epoch,game:entry.game,id:next.id,revision:next.revision,kind:'challenge'});
+        store.challengeWorking({choice:[entry.game,target.path,target.tier]},{owner,epoch:store.epoch,game:entry.game,id:next.id,revision:next.revision,kind:'challenge'});
       } else setMessage('This puzzle could not start. Your saved work is kept. Continue a saved puzzle, or export a backup in Settings.');
     } catch {setMessage('This puzzle could not start. Your saved work is kept.');}
     finally {if(dispatchToken.current===token){lock.current=false;setBusy(false);}}
   }
-  async function dispatch(action:unknown) {
-    const current=accepted.current;if(!current || lock.current || !focused || picking)return;
-    const next=entry.move(current,action);if(!next){setMessage('That change could not be saved. Keep this draft, or export before choosing another puzzle.');return;}
+  const sessionKey=(s:ChallengeSession)=>`${owner}:${store.epoch}:${s.id}:${s.revision}`;
+  async function dispatch(action:unknown):Promise<ChallengeSession|null> {
+    const current=accepted.current;if(!current || lock.current || !focused || picking)return null;
+    const next=entry.move(current,action);if(!next){setMessage('That change could not be saved. Keep this draft, or export before choosing another puzzle.');return null;}
     const token=++dispatchToken.current;
     lock.current=true;setBusy(next.result!==null);setMessage('');
     const guard=expected(current);
     try {
       const durable=await store.challengeSave(next,guard);
-      if(durable){if(!accepted.current || accepted.current.id===next.id&&accepted.current.revision<=next.revision)accepted.current=next;if(next.result)setCompleted(next);}
+      if(durable){if(!accepted.current || accepted.current.id===next.id&&accepted.current.revision<=next.revision)accepted.current=next;if(next.result)setCompleted(next);return next;}
       // On a draft I/O failure Store still owns the accepted revision; render supplies it.
       else setMessage('Keep the app open. Retry saving or export your accepted work in Settings.');
+      return null;
     }finally{if(dispatchToken.current===token){lock.current=false;setBusy(false);}}
   }
   const round=saved??completed, full=progress.paused.filter(s=>!s.credited).length>=(owner.startsWith('cove-')?4:8), marks=dareBits(progress.dares)?.filter(Boolean).length??0;
@@ -76,11 +80,15 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
       <Heading style={{fontSize:22}}>{entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.title}</Heading>
       {/* The registered Board receives dispatch only as an event callback; render does not invoke it. */}
       {!round.result&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={store.challengeOpen} expected={expected(round)} render={()=><>
-        {entry.render(round,a=>void dispatch(a),focused&&!busy,width-40)}
+        {entry.render(round,a=>void dispatch(a),focused&&!busy,width-40,{key:sessionKey(round),commit:async(action,key)=>{const current=accepted.current;if(!current||key!==sessionKey(current))return null;const session=await dispatch(action);return session?{key:sessionKey(session),session}:null;}})}
         <Button quiet disabled={busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>
       </>}/>}
       {round.result ? <><Heading>{round.result.event==='together'?'You solved it together!':'Puzzle solved!'}</Heading><Copy>{round.result.dares.length?'Your dare mark is kept.':'Your finished puzzle is kept. Helped finishes count too.'}</Copy>
         {owner!=='family'&&round.partner===null&&<ResultOffer progress={progress} context={entry.contextFor(round.puzzle)} comfort={comfort} facts={{atPar:round.result.event==='independent'&&round.result.cost!==null&&round.result.cost<=(entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.par?.upper??-1),firstHigher:false,dare:entry.puzzles.some(p=>p.dares.length>0),easier:entry.puzzles.some(p=>p.tier<(entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.tier??1)),harder:entry.puzzles.some(p=>p.tier>(entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.tier??6))}} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle);const next=kind==='dare'?current:entry.puzzles.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);}}/>}
+        <PuzzleEnding praise={entry.completionText?.(round.puzzle) ?? 'You found a way through this puzzle.'} disabled={busy}
+          onChoose={direction=>{const current=entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle);if(!current)return;const next=adjacentTide(entry.puzzles.filter(p=>p.path===current.path),current,direction);if(next){setSelection(next);setDares([]);void launch(next,[]);}else{setPicking(true);setReplace(false);}}}
+          onAnother={()=>{const current=entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle);if(!current)return;const next=adjacentTide(entry.puzzles.filter(p=>p.path===current.path),current,'same');if(next){setSelection(next);setDares([]);void launch(next,[]);}}}
+          onRest={back}/>
       </> : null}
       <Button quiet disabled={busy} onPress={()=>{setPicking(true);setReplace(false);}}>Another puzzle</Button><Button quiet onPress={back}>Easier choice · Levels 1–5</Button>
     </>:null}

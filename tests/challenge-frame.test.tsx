@@ -126,3 +126,23 @@ it('P3-8: older draft completions cannot unlock a pending terminal boundary',asy
   await act(async()=>{db.boundaryBlock=null;releaseBoundary();await new Promise(resolve=>setTimeout(resolve,0));});expect(store.save.challenge!.paused).toEqual([]);
  }finally{db.block=null;db.boundaryBlock=null;releaseDraft?.();releaseBoundary?.();await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
+
+it('F4: end choices are equal and Try another starts a saved fresh attempt in one tap without carrying dares',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});await press(r,'blind · Help welcome');await press(r,'Start this puzzle');for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');
+  const choices=r.root.findByProps({testID:'tide-choices'}).findAllByType('button');expect(choices.map(b=>b.props.quiet)).toEqual([true,true,true]);expect(choices.map(b=>b.children.join(''))).toEqual(['Easier','Same','Harder']);
+  await press(r,'Try another');expect(store.save.challenge!.paused).toHaveLength(1);expect(store.save.challenge!.paused[0].ordinal).toBe(2);expect(store.save.challenge!.paused[0].selectedDares).toEqual([]);expect(store.challengeRefusal).toBeNull();
+ }finally{await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+
+it('F4: a hint commit returns the durable accepted revision and rejects a stale expected key',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer,host:import('../src/challenge/types').ChallengeRenderHost|undefined;
+ const selectedEntry:ChallengeEntry={...entry};
+ selectedEntry.render=(session,dispatch,active,width,h)=>{host=h;return entry.render(session,dispatch);};
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame selectedEntry={selectedEntry}/></StoreProvider>);});await press(r,'Start this puzzle');
+  const before=host!,key=before.key;let result:Awaited<ReturnType<typeof before.commit>>=null;
+  await act(async()=>{result=await before.commit({type:'help'},key);});
+  expect(result).not.toBeNull();expect(result!.session.revision).toBe(1);expect(result!.key).toBe(host!.key);expect(result!.key).not.toBe(key);
+  const saved=store.save.challenge!.paused[0];await act(async()=>{expect(await host!.commit({type:'help'},key)).toBeNull();});expect(store.save.challenge!.paused[0]).toEqual(saved);
+ }finally{await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});

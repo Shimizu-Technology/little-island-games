@@ -40,14 +40,25 @@ export type ReplayEngine<D,P,A,S> = {
   step: (state: S, action: A, descriptor: D) => { state: S; event: ReplayEvent; correct?: boolean } | null;
   inspect: (state: S, descriptor: D) => EngineInspection;
 };
-export type ChallengeViewProps<S,A> = { state: S; dispatch: (action: A) => void; active: boolean; width: number };
+export type ChallengeViewProps<S,A> = {
+  state: S; dispatch: (action: A) => void; active: boolean; width: number;
+  /** Optional in standalone renders. Includes owner, epoch, puzzle and accepted revision. */
+  sessionKey?: string;
+  commit?: (action: A, expectedKey: string) => Promise<{ key: string; state: S } | null>;
+};
+export type ChallengeRenderHost = {
+  key: string;
+  commit: (action: unknown, expectedKey: string) => Promise<{ key: string; session: ChallengeSession } | null>;
+};
 export type ChallengeCard = Omit<Puzzle<unknown>, 'descriptor'|'awards'>;
 /** Erasure happens only after a typed registration validates its own payload. No action bags. */
 export type ChallengeEntry = {
   game: string; codec: string; cove: boolean; contextFor: (ref: PuzzleRef) => string; puzzles: readonly ChallengeCard[]; catalog: SaveCatalog;
   start: (puzzle: PuzzleRef, owner: string, id: string, progress: ChallengeProgress, options: LaunchOptions, dares: number[]) => ChallengeSession;
   move: (session: ChallengeSession, action: unknown) => ChallengeSession | null;
-  render: (session: ChallengeSession, dispatch: (action: unknown) => void, active: boolean, width: number) => ReactNode;
+  render: (session: ChallengeSession, dispatch: (action: unknown) => void, active: boolean, width: number, host?: ChallengeRenderHost) => ReactNode;
+  /** Specific praise supplied by the real engine's game, never speed-based. */
+  completionText?: (ref: PuzzleRef) => string;
   controls: { help: () => unknown; reset: () => unknown };
 };
 export type TypedRegistration<P,A,S> = ChallengeEntry & { readonly types?: { Payload: P; Action: A; State: S } };
