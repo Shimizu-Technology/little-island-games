@@ -1,0 +1,45 @@
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { expect, it, vi } from 'vitest';
+import { createBankLoader } from '../src/puzzles/loader';
+import { manifestAsset, type FamilyManifest, type RootIndex, type PackRow } from '../src/puzzles/bank';
+import type { Bank } from '../src/state/bankFacts';
+import type { ChallengeSession, SaveCatalog } from '../src/state/challenge';
+const dir='tests/fixtures/catalog-revision/', read=(name:string)=>readFileSync(dir+name,'utf8');
+const sha=(s:string)=>createHash('sha256').update(s).digest('hex');
+const proof=JSON.parse(read('inline-proof.json'));
+const codec={game:'catalog-proof',cove:true,budget:{wrapper:700,draft:3396,undo:0,audit:0},validate:(s:ChallengeSession)=>s.payload===s.revision,evaluate:()=>null,canStart:()=>true,extends:(a:ChallengeSession,b:ChallengeSession)=>b.revision>a.revision};
+it('F4-3: exact envelope 3 and draft from f8d06028 keep all seven states, awards, marks, bests, refs, credit and merge across inline → packed',async()=>{
+ const raw=read('inline-v3.json'),draft=read('inline-draft.json'),text=read('inline-bank.lipuzzle');
+ expect(sha(raw)).toBe('c0e7b145887ce868df61924fc46b8d70269765167d0baab15496a3ec1f9b733e');
+ expect(sha(draft)).toBe('fa000743a8b87e0e8d3e977f8f4ef13b89b65543e96a4a7827414c5a49516601');
+ expect(sha(text)).toBe('f5a271fca4c57ba8a1c1658467a09fa6c24024d172a28d172dc93efbbcce123a');
+ const family='catalog-proof',pack:PackRow=[398,400000,7,Buffer.byteLength(text),sha(text),0,1,1];
+ const manifest:FamilyManifest={format:1,family,engine:family,bands:['open'],packs:[pack],retired:[],daily:[],speech:{count:0,hash:null}},manifestText=JSON.stringify(manifest),asset=manifestAsset(family,sha(manifestText));
+ const root:RootIndex={format:1,revision:1,nextSlot:399,nextOrdinal:400007,families:[[family,asset,sha(manifestText),7,1,Buffer.byteLength(text)+Buffer.byteLength(manifestText)]]};
+ for(const form of ['inline','packed'] as const){
+  vi.resetModules();
+  const {registerSaveContent,creditProgress,mergeProgressFacts,emptyChallenge,validChallengeSession}=await import('../src/state/challenge');
+  const {catalogManifest}=await import('../src/state/catalogManifest');
+  const {parseSave}=await import('../src/state/validation');const {encodeSave}=await import('../src/state/profiles');
+  const {recoverChallengeDrafts,parseDraft}=await import('../src/state/challengeDrafts');
+  const {prepareSessionContent}=await import('../src/state/sessionContent');const {unpack}=await import('../src/state/saveBits');
+  const bank:Bank=form==='inline'?proof.bank:{slot:398,first:400000,count:7,family,engine:family,rules:1,packHash:sha(text),awards:3,cove:true};
+  const catalog:SaveCatalog={banks:new Map([[398,bank]]),codecs:new Map([['catalog-proof-v1',codec]]),dares:new Map([[3990,{kind:'par',help:'independent',bank:398,puzzle:5}]]),contexts:new Set(['proof'])};
+  registerSaveContent(catalog,catalogManifest(catalog));
+  const reads:string[]=[],loader=createBankLoader({root,transport:{read:async name=>{reads.push(name);return name===asset?manifestText:text;}}});
+  const save=parseSave(raw);expect(encodeSave(save)).toBe(raw);expect(reads).toEqual([]);
+  const progress=save.profiles!.people.family.challenge!,session=progress.paused[0];
+  expect(unpack(progress.banks[0][1],7,3)).toEqual([0,1,2,3,4,5,6]);
+  expect(unpack(progress.banks[0][2],7,2)).toEqual([0,0,2,3,0,1,2]);
+  const preserved=vi.fn();const recovered=await recoverChallengeDrafts(save,{get:async()=>null,set:async()=>{},preserve:preserved,listRecovery:async()=>[],readRecovery:async()=>null,readDrafts:async()=>[draft]},catalog,{loader});
+  expect(encodeSave(recovered)).toBe(proof.folded);expect(preserved).not.toHaveBeenCalled();expect(reads).toEqual([]);
+  await prepareSessionContent(session,catalog,{loader});
+  expect(validChallengeSession(session,'family',catalog)).toBe(true);expect(parseDraft(draft,catalog).session.revision).toBe(1);
+  const wrong={...session,puzzle:{...session.puzzle,puzzle:0}};await prepareSessionContent(wrong,catalog,{loader});
+  expect(validChallengeSession(wrong,'family',catalog)).toBe(false);
+  const result={event:'independent' as const,awards:3,dares:[],cost:1,solution:null};
+  expect(creditProgress(progress,session.puzzle,result,catalog)).toEqual(proof.credit);
+  expect(mergeProgressFacts(progress,creditProgress(emptyChallenge(),session.puzzle,result,catalog),catalog)).toEqual(proof.merge);
+ }
+});

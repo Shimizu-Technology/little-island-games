@@ -1,7 +1,8 @@
+import type { InlineBank } from '../src/state/bankFacts';
 import { catalogManifest } from '../src/state/catalogManifest';
 import { expect, it } from 'vitest';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { registerSaveContent, emptyChallenge, validChallengeProgress, type Bank, type ChallengeProgress, type ChallengeSession, type SaveCatalog } from '../src/state/challenge';
+import { registerSaveContent, emptyChallenge, validChallengeProgress, type ChallengeProgress, type ChallengeSession, type SaveCatalog } from '../src/state/challenge';
 import { jsonBytes, pack, base64, plain } from '../src/state/saveBits';
 import { checkpointPaint, checkpointKinds, newCheckpoint, checkpointEdit, validCheckpoint, type CheckpointKind } from '../src/state/checkpoint';
 import { encodeSave, migrateProfiles, projectProfile } from '../src/state/profiles';
@@ -9,7 +10,7 @@ import { addCovePerson } from '../src/state/covePeople';
 import { parseSave, MAX_SAVE_BYTES } from '../src/state/validation';
 import { newLibraryChild, validLibraryData } from '../src/library/state';
 const hash='b'.repeat(64);
-const banks:Bank[]=[];let ordinal=0;
+const banks:InlineBank[]=[];let ordinal=0;
 // 54,000 Cove entries + 8,647 School entries; exactly 62,647 entries, not an all-ones invalid bitmap.
 for(let i=0;i<200;i++){
  const count=i===179||i===199?1024:i<4?119:i<180?300:i<183?237:432;

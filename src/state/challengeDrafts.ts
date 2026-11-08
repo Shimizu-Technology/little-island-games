@@ -1,4 +1,5 @@
-import { progressBytes, rememberProgressBytes, challengeLimit, openProgress, creditProgress, saveCatalog, validChallengeProgress, validChallengeSession, type ChallengeProgress, type ChallengeSession } from './challenge';
+import { assertContentLive, type ContentOptions } from './sessionContent';
+import { progressBytes, rememberProgressBytes, challengeLimit, openProgress, creditProgress, saveCatalog, validChallengeProgress, validChallengeSession, validStoredChallengeSession, type ChallengeProgress, type ChallengeSession } from './challenge';
 import { asciiId, exactKeys, jsonBytes, plain, uint } from './saveBits';
 import { projectProfile, syncProfile } from './profiles';
 import type { Save } from './validation';
@@ -8,10 +9,10 @@ export type ChallengeExpected = { epoch: number; owner: string; game: string; id
 let serial = 0;
 export const newSaveRevision = () => `save-${Date.now().toString(36).padStart(9,'0')}-${(++serial).toString(36).padStart(8,'0')}-${Math.random().toString(36).slice(2,10).padEnd(8,'0')}`;
 export const draftKey = (row: DraftRow) => `draft:${JSON.stringify([row.base,row.session.owner,row.session.game])}`;
-export function parseDraft(raw: string, catalog = saveCatalog): DraftRow {
+export function parseDraft(raw: string, catalog = saveCatalog, structural = false): DraftRow {
   if (raw.length > 5000) throw new Error('Draft row is too large.');
   const v: unknown = JSON.parse(raw);
-  if (!plain(v) || !exactKeys(v,['version','base','session']) || v.version !== 1 || !asciiId(v.base) || !plain(v.session) || !asciiId(v.session.owner,40) || !validChallengeSession(v.session,v.session.owner,catalog,v.session.owner.startsWith('cove-')) || v.session.result !== null || v.session.credited) throw new Error('Invalid draft. The original has been kept.');
+  if (!plain(v) || !exactKeys(v,['version','base','session']) || v.version !== 1 || !asciiId(v.base) || !plain(v.session) || !asciiId(v.session.owner,40) || !(structural ? validStoredChallengeSession : validChallengeSession)(v.session,v.session.owner,catalog,v.session.owner.startsWith('cove-')) || v.session.result !== null || v.session.credited) throw new Error('Invalid draft. The original has been kept.');
   return v as DraftRow;
 }
 export function progressFor(save: Save, owner: string): ChallengeProgress | undefined {
@@ -81,20 +82,34 @@ export function finishChallenge(save: Save, session: ChallengeSession, expected:
   return next;
 }
 /** Replay rows only onto their exact base, owner and existing ordinal; never create work from an orphan. */
-export async function recoverChallengeDrafts(save: Save, adapter: StorageAdapter, catalog = saveCatalog): Promise<Save> {
+export async function recoverChallengeDrafts(save: Save, adapter: StorageAdapter, catalog = saveCatalog, options: ContentOptions = {}): Promise<Save> {
   let next = syncProfile(save);
   const preserve = (raw: string) => adapter.quarantineDraft ? adapter.quarantineDraft(raw) : adapter.preserve(raw);
   for (const raw of await adapter.readDrafts?.() ?? []) {
+    assertContentLive(options);
     let row: DraftRow;
-    try { row = parseDraft(raw,catalog); } catch { await preserve(raw); continue; }
+    // Structural recovery never reads assets, including for matching rows.
+    try {
+      if(raw.length>5000)throw new Error('Draft row is too large.');
+      const v:unknown=JSON.parse(raw);
+      if(!plain(v)||!plain(v.session)||typeof v.session.owner!=='string')throw new Error('Invalid draft.');
+      const session=v.session, progress=progressFor(next,session.owner as string), old=progress?.paused.find(s=>s.game===session.game);
+      if(v.base!==save.saveRevision || !old || old.id!==v.session.id || old.ordinal!==v.session.ordinal || JSON.stringify(old.puzzle)!==JSON.stringify(v.session.puzzle))throw new Error('Orphan draft.');
+    } catch {await preserve(raw);continue;}
+    // Load and fold structurally; a failed asset must never quarantine work or block launch.
+    assertContentLive(options);
+    try { row = parseDraft(raw,catalog,true); } catch { await preserve(raw); continue; }
     const progress = progressFor(next,row.session.owner), old = progress?.paused.find(s => s.game === row.session.game);
     if (row.base !== save.saveRevision || !old || old.id !== row.session.id || old.ordinal !== row.session.ordinal || old.credited || old.result !== null || old.codec !== row.session.codec || JSON.stringify(old.puzzle) !== JSON.stringify(row.session.puzzle) || JSON.stringify(old.selectedDares) !== JSON.stringify(row.session.selectedDares) || old.partner !== row.session.partner) { await preserve(raw); continue; }
     if (row.session.revision <= old.revision) { if (row.session.revision !== old.revision || JSON.stringify(row.session) !== JSON.stringify(old)) await preserve(raw); continue; }
-    if (!catalog.codecs.get(row.session.codec)!.extends(old,row.session)) { await preserve(raw); continue; }
+    let extendsOld = false;
+    try { extendsOld = catalog.codecs.get(row.session.codec)!.extends(old,row.session); } catch { extendsOld = false; }
+    if (!extendsOld) { await preserve(raw); continue; }
     const challenge = { ...progress!, paused:progress!.paused.map(s => s.game === row.session.game ? row.session : s) };
     if (!validChallengeProgress(challenge,row.session.owner,catalog,row.session.owner.startsWith('cove-'))) { await preserve(raw); continue; }
     next = putProgress(next,row.session.owner,challenge);
   }
+  assertContentLive(options);
   return projectProfile(next);
 }
 /** Incremental admission: row bytes replace its slot, without encoding the full envelope. */
