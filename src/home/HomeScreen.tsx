@@ -675,8 +675,9 @@ export function HomeScreen({
     runtime.current!.externalUp(-500, cancel || roomAtScreen(x - canvasOrigin.current.x, y - canvasOrigin.current.y,
       runtime.current!.camera.get(), building) < 0);
   };
+  const { slots: catalogSlots } = interaction;
   const ghostStyle = useAnimatedStyle(() => ({
-    opacity: ghost.value.active && !interaction.slots.value.some(s => s.pointer === -500 && s.ready) ? 1 : 0,
+    opacity: ghost.value.active && !catalogSlots.value.some(s => s.pointer === -500 && s.ready) ? 1 : 0,
     transform: [{ translateX: ghost.value.x - 35 }, { translateY: ghost.value.y - 70 }],
   }));
   const target = selected ? scene.entities[selected]?.item : undefined;
