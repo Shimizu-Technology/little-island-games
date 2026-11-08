@@ -67,3 +67,47 @@ Initial web cases used default shell d8e08a92234d; final reload, Together, high-
 The owned T3 tab was closed and its lifecycle record released. The exact owned server PID 29652 was stopped; its process exited 0. Lifecycle status for session 01a1bbd5-5423-7c20-b640-8fd047df4a79 reports no active owned resources. Task-owned temporary clones, dependency trees, dist and Metro cache were removed. No runtime handoff remains. Borrowed simulators and protected/shared services were untouched. The supplied clean source worktree remains for the lead.
 
 Delivery is the implementation plus this report/QA record on p4/f2-challenge; only that remote branch is pushed. Existing PR: https://github.com/Shimizu-Technology/little-island-games/pull/30. Independent final re-review and integration remain lead-owned.
+
+
+## Round 2 fixes — 9 November 2026
+
+Branch: `p4/f2-challenge`; implementation `0c209857f6272617c8a019d1b94a9a099c7a577f`, based directly on `origin/p4/f2-challenge` at `c014b0dfb38304fa23ed02e5a480fe42a6b63a5f`. Private remote and existing PR #30 into `program/4.0` verified. The supplied isolated worktree uses detached HEAD because the named local branch is in another worktree; that checkout was not changed. Only `HEAD:refs/heads/p4/f2-challenge` is to be pushed. No delegates, PR creation, integration merge, version/build change, release or Apple/EAS action.
+
+Read FIX-BRIEF-2.md in full, COMMON, REVIEW-R2, prior reports, canonical agreements/skills, PRD/QA, SAVE_CONTRACT/CHALLENGE_CORE, the assigned F2 ledger rows, and the applicable v3 PLAN sections. COMMON's master-plan relative path is stale; the original F2 BRIEF correctly points to `v3/master-plan/`. Current Expo dependency is SDK 57; its versioned docs and llms index were checked. No native API, dependency or generated registry was added.
+
+### Findings addressed
+
+| Review | Change/evidence |
+| --- | --- |
+| P0-1 | Both filtered settings maps spread the already-updated `next.settings`. `removeLearner` calls `parseSave(encodeSave(next))` before any draft preservation or replacement. Real Store regressions remove both active and inactive learners with bridge and comfort maps present, remount, change sound and remount again; surviving maps/profile and original bytes are checked. A fault-injected invalid removal candidate produces no write, preservation, publication or epoch change. |
+| Save-writing audit | Load, restore, earlier-work assignment, Challenge start/finish/discard and Cove operations already validate their encoded candidates. Ordinary `commit` (including profile switching) and `persist` retry/background/fold were the other gap. They now validate whole-envelope admission before publication/write. Prepared commits reuse that validation; Challenge move drafts retain the existing codec/ownership/revision/budget path without whole-envelope parsing per move. An invalid ordinary settings candidate is refused, and the next valid write/reload succeeds. |
+| P2-1 | A non-dare invitation clears selected dares when it changes the puzzle. A two-puzzle real-engine Store/frame regression chooses Blind, solves, follows Try a stretch and starts the higher puzzle with no stale dare/support-off option. The real registry has no adapters, so the private registration is supplied to `challengeFor` for this test. |
+| P2-2 | SAVE_CONTRACT now records the lead's FIX-BRIEF-2 ratification of `expected.replace`, `paused-full` and `settings.learningBridges`, separately from the earlier completed-slot permission. F2 re-gating is recorded below. F1/F3 integrated re-gating is explicitly lead-owned before downstream adapters land; it is not claimed as completed here. |
+| P3-1 | Retained the documented two intermediate gentler offers until the next third-finish face. Corrected the misleading test title and asserted both offers and the reset. |
+| P3-2 | Awards and dares share registration-time rule/parameter validation. Six malformed award fixtures fail before the fix and reject afterward. Valid independent Pick Up remains a control under the existing explicit help policy. |
+| P3-3 | Full-slot Continue/Replace labels use the shelf's game display name, with readable spacing/capitalization for future IDs without shelf metadata. Full-slot replacement regression remains green. |
+| P3-4 | Corrected CHALLENGE_CORE's replacement description and revision number; SAVE_CONTRACT's diagnostic-ring paragraph now includes replacement as well as discard. |
+| P3-5 | The invalid-result banner says Result options after its sheet closes. It cannot promise to save an invalid result. The real Arcade screen regression checks this label, no invalid credit and a subsequent valid terminal. |
+| P3-6 | Added the missing K1-SPEECH BUILD row to external `v3/master-plan/WORK-LEDGER.md` and noted the gate in `v4/STATUS.md`. The exact row is mirrored in pushed FIX-QA.md. F2 controls and lead-generated complete voice banks/offline iOS 18.5/26.5 listening remain required before child/family acceptance. No live speech lines or generated audio were added. |
+
+No P3 finding is skipped. K1-SPEECH audio production/listening is outstanding integration work, not a claim that silent cards are accepted for non-readers.
+
+### Regression evidence and limits
+
+`r2-regressions-before.log`: the new save/selection/award regressions on unchanged `c014b0df` production source fail 11 cases / pass 20. Both learner-removal variants fail on remount with the saved-game-data Recovery error; the invalid-removal and invalid-settings guards, stretch launch, and six malformed awards also fail. Early fixture-setup mistakes were corrected before recording this final before log. `r2-regressions-after.log`: 32/32 focused tests pass across four files, including the Arcade sheet case. The full-slot and Arcade label assertions were updated after the before run; no failing-before claim is made for those labels.
+
+Node 22.22.3, fresh `npm ci`, default PATH. Scoped acceptance is automated real Store/frame/engine coverage with mocked storage/presentation, plus the full repository adapter/migration suite. No new browser/device acceptance run is claimed. The brief assigns no simulator, and the shipping catalog remains 28 School games / zero Challenge adapters. Native iOS 18.5/26.5, physical-family performance/usability, and audible K1-SPEECH acceptance remain not run. Independent final re-review and integration remain the lead's responsibility.
+
+
+### Round 2 final gates and cleanup
+
+Both full gates passed against implementation `0c209857f6272617c8a019d1b94a9a099c7a577f` (the subsequent commit adds this report and QA record only):
+
+- Default: `LITTLE_ISLAND_SLOW_QA=1 LITTLE_ISLAND_SLOW_HOST=1 npm run check`, exit 0. Registry/history, immutable save catalog, typecheck, lint, 2,625 passing tests / two existing opt-in skips, and offline export passed. 220 files passed / one skipped. Shell `6e09bf78006d`, 6,507 resources. Evidence: `r2-default-check.log`.
+- Library preview: `EXPO_PUBLIC_LIBRARY_PREVIEW=1 LITTLE_ISLAND_SLOW_QA=1 LITTLE_ISLAND_SLOW_HOST=1 npm run check`, exit 0, same tests/file totals. Shell `deeca20c89f7`, 11,064 resources. Evidence: `r2-preview-check.log`.
+- Both lint runs: zero errors and the same 42 pre-existing repository warnings. `npm run doctor`: 21/21, exit 0 with default PATH (`r2-doctor.log`). Advisory UI scan: `[]` (`r2-impeccable.json`).
+- Ran `npm run library:index` with default environment after preview; all four generated Library files match Git exactly. Default remains `preview: false`, zero authored items. `git diff --check` passed. No generated Library changes are included in delivery.
+
+Cleanup: the exact owned preview-export process completed normally; lifecycle cleanup/status for `01a1bc1f-b042-7e03-88b0-8db7f3d782b5` reports no active owned resources (`r2-cleanup.log`). Removed this task's fresh `node_modules`, exported `dist` and `.expo` directories after gates. No browser tabs, simulators, emulators, containers or persistent servers were started. No runtime handoff remains. Borrowed/protected resources and other worktrees were untouched. The isolated source worktree stays available for the lead's final re-review. External WORK-LEDGER/STATUS updates are mirrored by the K1-SPEECH entry in pushed FIX-QA.md; bulky logs remain in the sibling artifacts folder.
+
+Delivery target remains only `p4/f2-challenge`, updating existing https://github.com/Shimizu-Technology/little-island-games/pull/30. Final remote-head verification follows the push; independent re-review and integration are lead-owned, not approval claimed by this worker.
