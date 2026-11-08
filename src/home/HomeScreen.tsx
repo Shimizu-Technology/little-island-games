@@ -677,7 +677,7 @@ export function HomeScreen({
   };
   const { slots: catalogSlots } = interaction;
   const ghostStyle = useAnimatedStyle(() => ({
-    opacity: ghost.value.active && !catalogSlots.value.some(s => s.pointer === -500 && s.ready) ? 1 : 0,
+    opacity: ghost.value.active && !catalogSlots.value.some(s => s.pointer === -500 && s.ready && s.painted) ? 1 : 0,
     transform: [{ translateX: ghost.value.x - 35 }, { translateY: ghost.value.y - 70 }],
   }));
   const target = selected ? scene.entities[selected]?.item : undefined;

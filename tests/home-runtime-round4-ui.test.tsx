@@ -27,7 +27,7 @@ describe('round4 rendered runtime contracts',()=>{
  it.each(['home/item/banana','kitchen/item/portion-fridge-banana','kitchen/item/portion-bowl-banana','character/0'])('T5 carries %s at the intended readable scale and eases exactly to1',async(id)=>{
   const c=context(id);const pickup={id,slot:0,scene:c.scene,generation:1,epoch:0} as Pickup;let tree!:TestRenderer.ReactTestRenderer;
   await act(async()=>{tree=TestRenderer.create(<DragOverlay scene={c.scene} pickups={[pickup]} interaction={c.interaction} building={buildingLayout(4)} reduced={false}/>);});
-  const views=tree.root.findAllByProps({testID:'drag-overlay-0'});const view=id==='character/0'?views[0]:views.at(-1)!;
+  const view=tree.root.findByProps({nativeID:`drag-overlay-${id}`});
   expect(view.props.style[1].evaluate().opacity).toBe(1);
   const scale=()=>view.props.style[1].evaluate().transform.find((t:any)=>'scaleX'in t).scaleX;
   expect(scale()).toBe(id==='character/0'?1.04:1.08);
@@ -92,7 +92,7 @@ describe('round4 rendered runtime contracts',()=>{
   const c=context('kitchen/item/portion-fridge-banana',true);const pickup={id:c.slot.id,slot:0,scene:c.scene,generation:1,epoch:0} as Pickup;
   let tree!:TestRenderer.ReactTestRenderer;
   await act(async()=>{tree=TestRenderer.create(<DragOverlay scene={c.scene} pickups={[pickup]} interaction={c.interaction} building={buildingLayout(4)} reduced/>);});
-  const view=tree.root.findAllByProps({testID:'drag-overlay-0'}).at(-1)!;
+  const view=tree.root.findByProps({nativeID:`drag-overlay-${c.slot.id}`});
   expect(view.props.style[1].evaluate().transform.find((t:any)=>'scaleX'in t).scaleX).toBe(1);
   c.slot.phase='settling';c.slot.settleAt=1000;
   expect(view.props.style[1].evaluate().transform.find((t:any)=>'scaleX'in t).scaleX).toBe(1);
@@ -121,5 +121,17 @@ it('H2 resting art answers a held finger and follows before an overlay can mount
  expect(style().opacity).toBe(1);
  c.slot.painted=true;
  expect(style().opacity).toBe(0);
+ await act(async()=>tree.unmount());
+});
+
+it('H2 a pre-mounted prop follows the second pointer even while pickup JS is withheld', async () => {
+ const c=context('home/item/banana');
+ c.interaction.slots.value=[{} as any,c.slot as any];
+ let tree!:TestRenderer.ReactTestRenderer;
+ await act(async()=>{tree=TestRenderer.create(<DragOverlay scene={c.scene} pickups={[]} interaction={c.interaction}
+  building={buildingLayout(4)} reduced={false}/>);});
+ const view=tree.root.findByProps({nativeID:'drag-overlay-home/item/banana'});
+ expect(view.props.style[1].evaluate().opacity).toBe(1);
+ expect(view.props.style[1].evaluate().transform.find((t:any)=>'scaleX'in t).scaleX).toBe(1.08);
  await act(async()=>tree.unmount());
 });

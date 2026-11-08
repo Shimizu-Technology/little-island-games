@@ -29,18 +29,23 @@ function OverlayGroup({
   reduced: boolean;
   renderCharacter?: CharacterRender;
 }) {
-  const { scene, id, slot: index } = pickup;
+  const { scene, id } = pickup;
+  const root = scene.entities[id];
+  const index = root.character ? pickup.slot : 0;
   const globalSlots = interaction.slots, globalClock = interaction.clock;
   const idle = useMemo(() => [emptyDragSlot(), emptyDragSlot()], []);
   // Publish only this actor's active channel. Hidden, pre-mounted characters do
   // not enqueue native prop updates for another child's drag.
-  const channel = useDerivedValue(() => globalSlots.value[index].id === id
-    ? globalSlots.value.map((s, i) => i === index ? { ...s } : idle[i]) : idle);
+  const channel = useDerivedValue(() => {
+    if (root.character) return globalSlots.value[index].id === id
+      ? globalSlots.value.map((s, i) => i === index ? { ...s } : idle[i]) : idle;
+    const slot = globalSlots.value.find(s => s.id === id);
+    return slot ? [{ ...slot }, idle[1]] : idle;
+  });
   const channelClock = useDerivedValue(() => channel.value[index].id ? globalClock.value : 0);
   const visualInteraction = { ...interaction, slots: channel, clock: channelClock } as Interaction;
   const { slots, camera, clock } = visualInteraction;
-  const root = scene.entities[id],
-    origin = roomOrigin(roomIds.indexOf(root.room), building);
+  const origin = roomOrigin(roomIds.indexOf(root.room), building);
   const supportPlanes = useMemo(() => Object.fromEntries(Object.values(scene.entities).flatMap((entity) => {
     if (!entity.item || !capabilityOf(entity.item.item).sockets?.length) return [];
     const frame = artFrame(entity), hull = paintedBounds(entity) ?? {
@@ -61,7 +66,7 @@ function OverlayGroup({
   const acknowledge = () => {
     const bounds = root.character ? renderAnchors(root, true).bounds : undefined;
     const binding = root.character ? carryBinding(root, pickup.grip ?? { x: 0, y: 0 }) : { x: 0, y: 0 };
-    interaction.ready(index, id, bounds && { ...bounds, left: bounds.left + binding.x, top: bounds.top + binding.y });
+    interaction.ready(interaction.slots.value.findIndex(s => s.id === id), id, bounds && { ...bounds, left: bounds.left + binding.x, top: bounds.top + binding.y });
   };
   const style = useAnimatedStyle(() => {
     const slot = slots.value[index];
@@ -132,6 +137,7 @@ function OverlayGroup({
       />
       <Animated.View
         testID={`drag-overlay-${index}`}
+        nativeID={`drag-overlay-${id}`}
         collapsable={false}
         onLayout={acknowledge}
         pointerEvents="none"
@@ -287,6 +293,10 @@ export function DragOverlay(props: {
   reduced: boolean;
   renderCharacter?: CharacterRender;
 }) {
+  const items: Pickup[] = Object.values(props.scene.entities).filter(e => e.item).map(entity =>
+    props.pickups.find(p => p?.id === entity.id) ?? { id: entity.id, slot: 0, scene: props.scene, generation: 0, epoch: 0 });
+  for (const pickup of props.pickups) if (pickup && !pickup.scene.entities[pickup.id]?.character &&
+    !items.some(p => p.id === pickup.id)) items.push(pickup);
   return (
     <View
       testID={Platform.OS === "web" ? "building-drag-overlay" : undefined}
@@ -299,8 +309,7 @@ export function DragOverlay(props: {
           { id: entity.id, slot: 0, scene: props.scene, generation: 0, epoch: 0 };
         return <OverlayGroup key={entity.id} pickup={pickup} {...props} />;
       })}
-      {props.pickups.map((pickup, index) => pickup && !pickup.scene.entities[pickup.id]?.character &&
-        <OverlayGroup key={`${index}:${pickup.id}`} pickup={pickup} {...props} />)}
+      {items.map(pickup => <OverlayGroup key={pickup.id} pickup={pickup} {...props} />)}
       <SupportFronts scene={props.scene} interaction={props.interaction} building={props.building} reduced={props.reduced} />
     </View>
   );

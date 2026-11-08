@@ -194,6 +194,7 @@ export function useInteraction({
   const layoutTokens = useSharedValue(expectedLayout);
   const laidOut = useSharedValue<Record<string, string>>({});
   const poseLayouts = useSharedValue<Record<string, string>>({});
+  const overlayLayouts = useSharedValue<Record<string, boolean>>({});
   const acknowledgePose = (index: number, token: string) => {
     poseLayouts.modify((current) => { "worklet";
       current[index] = token; current[`${index}:${token}`] = token; return current;
@@ -385,9 +386,10 @@ export function useInteraction({
     );
   };
   const ready = (index: number, id: string, carryBounds?: Bounds) => {
+    overlayLayouts.modify((layouts) => { "worklet"; layouts[id] = true; return layouts; });
     slots.modify((current) => { "worklet";
       const slot = current[index];
-      if (slot.id === id) {
+      if (slot?.id === id) {
         if (!slot.ready) {
           slot.liftedAt = eventTime();
           slot.readyFrame = 0;
@@ -500,7 +502,7 @@ export function useInteraction({
           absoluteY: pointer.point.y + offset.value.y,
           restId: visible?.restId,
           subject: entity,
-          ready: visible?.ready ?? false,
+          ready: visible?.ready ?? (!!entity.item && !!overlayLayouts.value[effect.entity]),
           painted: visible?.painted ?? false,
           readyFrame: visible?.readyFrame ?? 0,
           catalog: !!externalSubjects.value[effect.entity],
@@ -520,7 +522,7 @@ export function useInteraction({
           gripY: pointer.grip.y,
           pointerX: pointer.point.x,
           pointerY: pointer.point.y,
-          liftedAt: effect.type === "pickup" && visible?.ready ? eventTime() : visible?.liftedAt ?? 0,
+          liftedAt: effect.type === "pickup" && (visible?.ready || !!entity.item && overlayLayouts.value[effect.entity]) ? eventTime() : visible?.liftedAt ?? 0,
           edgeAt: 0,
         };
         captureSequence.set(Math.max(captureSequence.value, slot.generation));

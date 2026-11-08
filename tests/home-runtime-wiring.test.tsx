@@ -851,3 +851,18 @@ it('H2 reduced motion commits synthetic travel immediately, without a hop or del
  expect(current.slots.get()[0].y).toBe(current.slots.get()[0].targetY);
  await act(async()=>renderer.unmount());vi.useRealTimers();
 });
+
+it('H2 a pre-painted prop follows on UI before queued pickup JS can execute', async () => {
+ let renderer!:TestRenderer.ReactTestRenderer;
+ const scene=fixture(),prop={...entity,id:'home/item/banana',character:undefined,item:instance('banana','banana',2,2),
+  body:{w:1,h:1,layer:'furniture',small:true,holdable:true,portable:true}};
+ scene.entities={[prop.id]:prop};scene.rooms.home.entities=scene.entities;scene.rooms.home.occupancy={};
+ scene.rooms.home.hitProxies=scene.rooms.home.hitProxies.map(p=>({...p,id:prop.id}));
+ await act(async()=>{renderer=TestRenderer.create(<Probe scene={scene}/>);});
+ current.ready(-1,prop.id);
+ touch('down',120,300);touch('move',150,320);
+ const slot=current.slots.get()[0];
+ expect(slot.ready).toBe(true);expect(slot.phase).toBe('dragging');
+ expect(slot.x).toBeGreaterThan(slot.sourceX);expect(harness.js.length).toBeGreaterThan(0);
+ await act(async()=>renderer.unmount());vi.useRealTimers();
+});
