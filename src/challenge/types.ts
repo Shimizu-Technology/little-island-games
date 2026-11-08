@@ -18,12 +18,13 @@ export type DareRule =
   | { kind: 'pick-up'; objective: string }
   | { kind: 'own-read' }
   | { kind: 'edits'; max: number };
+export type AwardRule = { rule: DareRule; help: Dare['help'] };
 export type RegisteredDare = { slot: number; id: string; label: string; rule: DareRule; help: Dare['help'] };
 export type Puzzle<D> = {
   ref: PuzzleRef; source: Source; path: ChallengePath; tier: 1|2|3|4|5|6; title: string;
   descriptor: D; dares: readonly RegisteredDare[];
   /** A/B award bits use the same replay evidence as permanent dare marks. */
-  awards: readonly [DareRule | null, DareRule | null];
+  awards: readonly [AwardRule | null, AwardRule | null];
   par?: { metric: Metric; lower: number; upper: number };
 };
 export type LaunchOptions = { supportOff: boolean; ownRead: boolean };

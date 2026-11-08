@@ -10,7 +10,9 @@ const ledger='src/learn/registered-ids.json', committed=JSON.parse(readFileSync(
 if(committed.some((id,i)=>ids[i]!==id)) throw new Error('Registered learning IDs are append-only. Restore the missing registration.');
 if(!check && ids.length>committed.length) writeFileSync(ledger,JSON.stringify(ids,null,2)+'\n');
 if(check && JSON.stringify(ids)!==JSON.stringify(committed)) throw new Error('Regenerate the learning ID ledger.');
-const commits=execFileSync('git',['log','--format=%H','--',ledger],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
+const inRepository=()=>{try{return execFileSync('git',['rev-parse','--show-toplevel'],{encoding:'utf8',stdio:['ignore','pipe','ignore']}).trim()===process.cwd();}catch{return false;}};
+const historyCommits=path=>inRepository()?execFileSync('git',['log','--format=%H','--',path],{encoding:'utf8'}).trim().split('\n').filter(Boolean):[];
+const commits=historyCommits(ledger);
 for(const sha of commits) { const old=JSON.parse(execFileSync('git',['show',`${sha}:${ledger}`],{encoding:'utf8'})); if(old.some((id,i)=>ids[i]!==id)) throw new Error('A committed learning ID was removed or reordered.'); }
 emit('src/learn/generated/ids.ts', `export const learnIds = ${JSON.stringify(ids,null,2)} as const;\nexport type LearnId = (typeof learnIds)[number];\nexport const learningGroups = ${JSON.stringify(Object.fromEntries(registrations.map(r=>[r.id,r.group])),null,2)} as const;\n`);
 emit('src/learn/generated/engines.ts', registrations.map((r,i)=>`import { engine as e${i} } from '../games/${r.id}/engine';`).join('\n')+`\nimport type { LearnEngine, LearnId } from '../types';\nexport const registeredEngines: Record<LearnId, LearnEngine<unknown>> = {\n`+registrations.map((r,i)=>`  '${r.id}': e${i} as LearnEngine<unknown>,`).join('\n')+'\n};\n');
@@ -18,12 +20,12 @@ emit('src/learn/generated/views.ts', registrations.map((r,i)=>`import * as v${i}
 const art=registrations.filter(r=>r.group==='originals');
 emit('src/learn/generated/art.ts', art.map((r,i)=>`import { Art as a${i} } from '../games/${r.id}/view';`).join('\n')+"\nimport type { ComponentType } from 'react';\nimport type { LearnId } from '../types';\nexport const additionalArt: Partial<Record<LearnId,ComponentType<{size:number}>>> = {\n"+art.map((r,i)=>`  '${r.id}': a${i},`).join('\n')+'\n};\n');
 const challengeRoot='src/challenge/registrations';
-const entries=readdirSync(challengeRoot).filter(f=>f.endsWith('.ts')).map(f=>f.slice(0,-3)).sort();
+const entries=(existsSync(challengeRoot)?readdirSync(challengeRoot):[]).filter(f=>f.endsWith('.ts')).map(f=>f.slice(0,-3)).sort();
 for(const id of entries) if(!/^[a-z][a-z0-9-]{0,79}$/.test(id)) throw new Error('Invalid Challenge registration name.');
 const history='src/challenge/registered-ids.json';
 const prior=JSON.parse(readFileSync(history,'utf8'));
 if(prior.some(id=>!entries.includes(id))) throw new Error('Registered Challenge IDs cannot be removed.');
-for(const sha of execFileSync('git',['log','--format=%H','--',history],{encoding:'utf8'}).trim().split('\n').filter(Boolean)) { const old=JSON.parse(execFileSync('git',['show',`${sha}:${history}`],{encoding:'utf8'})); if(old.some(id=>!entries.includes(id))) throw new Error('Committed Challenge adapter removed.'); }
+for(const sha of historyCommits(history)) { const old=JSON.parse(execFileSync('git',['show',`${sha}:${history}`],{encoding:'utf8'})); if(old.some(id=>!entries.includes(id))) throw new Error('Committed Challenge adapter removed.'); }
 if(!check) writeFileSync(history,JSON.stringify(entries,null,2)+'\n');
 else if(JSON.stringify(entries)!==JSON.stringify(prior)) throw new Error('Regenerate Challenge registrations.');
 emit('src/challenge/registry.generated.ts', entries.map((id,i)=>`import { registration as r${i} } from './registrations/${id}';\nimport type { Payload as P${i}, Action as A${i}, State as S${i} } from './registrations/${id}';`).join('\n')+'\nimport type { ChallengeEntry'+(entries.length?', TypedRegistration':'')+' } from "./types";\nexport type Registry = Record<never, never> & {\n'+entries.map((id,i)=>`  '${id}': { Payload: P${i}; Action: A${i}; State: S${i} };`).join('\n')+'\n};\nexport const challengeEntries: readonly ChallengeEntry[] = ['+entries.map((_,i)=>`r${i} satisfies TypedRegistration<P${i}, A${i}, S${i}>`).join(', ')+'];\n');

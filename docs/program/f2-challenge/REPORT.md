@@ -1,3 +1,5 @@
+> Evidence-location update, 9 November 2026: the original committed evidence was preserved byte-for-byte in the sibling artifacts folder at `v4/f2-challenge/original-committed-evidence/` and removed from the product tree during review fixes. See FIX-REPORT.md for current results.
+
 # F2 Challenge core
 
 Implementation branch: `p4/f2-challenge`.

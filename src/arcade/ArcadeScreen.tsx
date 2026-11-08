@@ -1,4 +1,4 @@
-import { validTerminalResult } from './terminal';
+import { terminalBelongs } from './terminal';
 import { BadgeResultCard } from '../badges/ResultCard';
 import { Companion } from "../islander/Companion";
 import { LearnerChip } from "../personalization/LearnerChip";
@@ -67,7 +67,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   const helperUsed = useRef(person.helper);
   useEffect(() => { if (playing && person.helper) helperUsed.current = true; }, [playing, person.helper]);
   const startAfterTeach = useRef(false), credited = useRef(""), [reminder, setReminder] = useState(false), scroll = useRef<ScrollView>(null);
-  const [finishError, setFinishError] = useState("");
+  const [finishError, setFinishError] = useState(""), [invalidResult,setInvalidResult]=useState(false);
   const failedResult = useRef<{ result: ArcadeResult; helped: boolean; winner?: 0 | 1 | null } | null>(null);
   const [chestOffer, setChestOffer] = useState<ChestOffer | null>(null);
   const identity = `${owner.id}:${store.epoch}`;
@@ -125,8 +125,9 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   }
   function teach(andStart: boolean) { startAfterTeach.current = andStart; setSheet("teach"); sound.say(play.speech(level !== "endless" && level?.world === "learn", together)); }
   const onResult = useCallback((next: ArcadeResult, helped = false, winner?: 0 | 1 | null) => {
-    if (lastIdentity.current !== `${expected.learner}:${expected.epoch}` || !level || (!round || liveRound.current!==round) || credited.current === round) return;
-    if (!validTerminalResult(next)) { setPaused(true); setFinishError("Your result could not be saved. Keep this round open and try again."); return; }
+    if (lastIdentity.current !== `${expected.learner}:${expected.epoch}` || !level || !round || liveRound.current!==round || credited.current === round) return;
+    if (!terminalBelongs(liveRound.current,round,next)) { setInvalidResult(true); failedResult.current=null; setPaused(true); setFinishError("This result could not be checked. Return to the level map to start another round. Your earned progress is kept."); return; }
+    setInvalidResult(false);
     if (!arcade({ type: "finish", game: game.id, level: level === "endless" ? level : level.id, stars: next.cleared ? next.stars : 0, score: next.score, round, name: together ? match.names.join(" & ").slice(0, 24) : name }, expected)) {
       failedResult.current = { result: next, helped, winner }; setPaused(true);
       setFinishError("Your result could not be saved. Keep this round open and try again, or return to your map."); return;
@@ -194,7 +195,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
     </ScrollView>}
     {!playing && level && !result && <View testID="arcade-start-dock" style={{ paddingHorizontal: 16, paddingVertical: 10, backgroundColor: "#FFF4DA", borderTopWidth: 2, borderColor: "#DCC28F" }}><View style={{ width: "100%", maxWidth: 480, alignSelf: "center" }}><Button onPress={() => { if (p.coached) start(); else teach(true); }}>{p.coached ? "Let’s play" : "Show me & play"}</Button></View></View>}
 
-    <Sheet visible={paused && !sheet} title={finishError ? "Keep your result" : "Your game is paused"} onClose={() => setPaused(false)}><View style={{ alignItems: "center" }}><Hero game={game.id} size={100} outfit={p.outfit} active={false}/></View>{finishError ? <><Copy>{finishError}</Copy><Button onPress={() => { const pending = failedResult.current; if (pending) onResult(pending.result,pending.helped,pending.winner); }}>Try saving again</Button></> : <Button onPress={() => setPaused(false)}>Resume play</Button>}<ToggleRow label="Helper" detail={level === "endless" ? game.id === "fruit-bat-flight" ? "Slower flight. One heart in free play. No level stars." : "Slower play. No level stars in free play." : play.helperDetail ?? "Slower play. Five hearts. Same stars."} value={person.helper} onChange={value => arcade({ type: "helper", value }, expected)}/><Button quiet onPress={() => teach(false)}>How to play</Button><Button quiet onPress={() => { failedResult.current = null; setFinishError(""); setPaused(false); setLevel(null); setResult(null); setPlaying(false); }}>Back to level map</Button></Sheet>
+    <Sheet visible={paused && !sheet} title={finishError ? "Keep your result" : "Your game is paused"} onClose={() => setPaused(false)}><View style={{ alignItems: "center" }}><Hero game={game.id} size={100} outfit={p.outfit} active={false}/></View>{finishError ? <><Copy>{finishError}</Copy>{!invalidResult&&<Button onPress={() => { const pending = failedResult.current; if (pending) onResult(pending.result,pending.helped,pending.winner); }}>Try saving again</Button>}</> : <Button onPress={() => setPaused(false)}>Resume play</Button>}<ToggleRow label="Helper" detail={level === "endless" ? game.id === "fruit-bat-flight" ? "Slower flight. One heart in free play. No level stars." : "Slower play. No level stars in free play." : play.helperDetail ?? "Slower play. Five hearts. Same stars."} value={person.helper} onChange={value => arcade({ type: "helper", value }, expected)}/><Button quiet onPress={() => teach(false)}>How to play</Button><Button quiet onPress={() => { failedResult.current = null; setFinishError(""); setPaused(false); setLevel(null); setResult(null); setPlaying(false); }}>Back to level map</Button></Sheet>
     <Sheet visible={sheet === "leave"} title="Back to the map?" onClose={() => setSheet(null)}><Copy>{person.session?.round === round ? "Your reef is saved. Continue this round from the map next time." : "This round will start fresh next time. Your earned stars and stickers are saved."}</Copy><Button onPress={() => { setSheet(null); setPlaying(false); setLevel(null); setResult(null); }}>Leave round · back to map</Button><Button quiet onPress={() => setSheet(null)}>Keep playing</Button></Sheet>
     <Sheet visible={sheet === "teach"} title="Show me" onClose={() => { startAfterTeach.current = false; setSheet(null); }}>{play.Teach ? <PlayTeaching goal={goal} detail={play.teachingDetail?.(isLearning, together) ?? ""} onHear={onHear} onPlay={onTeachPlay}><play.Teach learning={isLearning} together={together} goal={goal} onTone={sound.tone}/></PlayTeaching> : <Teaching game={game} learning={isLearning} onHear={onHear} onPlay={onTeachPlay}/>}</Sheet>
     <Sheet visible={sheet === "book"} title="Sticker book" onClose={() => setSheet(null)}><StickerBook person={person}/></Sheet>

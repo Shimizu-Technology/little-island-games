@@ -66,12 +66,12 @@ it('R04 identity clears another learner’s selection and pending start; finish 
     await act(async()=>{root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Show me & play')[0].props.onPress();});
     await act(async()=>{root.root.findAllByType('button').find(n=>n.children.includes('Teach play'))!.props.onClick();});
     const board=root.root.findAll(n=>String(n.type)==='audit-board')[0];expect(board.props.level.id).toBe('w1-1');
-    // An admission rejection leaves a visible Retry, and doesn't consume result credit.
+    // A malformed terminal offers a real exit, and doesn't consume result credit.
     const acceptedArcade = store.arcade;
     // Exercise real admission rejection with an invalid score.
     await act(async()=>board.props.onResult({cleared:true,stars:3,score:-1,detail:'invalid'}));
-    expect(root.root.findAll(n=>String(n.type)==='Copy'&&String(n.props.children).includes('could not be saved')).length).toBeGreaterThan(0);
-    expect(root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Try saving again')).toHaveLength(1);
+    expect(root.root.findAll(n=>String(n.type)==='Copy'&&String(n.props.children).includes('could not be checked')).length).toBeGreaterThan(0);
+    expect(root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Try saving again')).toHaveLength(0);
     expect(store.arcade).toBe(acceptedArcade);
     await act(async()=>board.props.onResult({cleared:true,stars:3,score:100,detail:'cleared'}));
     expect(gameProgress(arcadeLearner(store.save.arcade,'b'),'reef-builder').stars['w1-1']).toBe(3);

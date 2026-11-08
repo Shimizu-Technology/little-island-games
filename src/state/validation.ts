@@ -26,7 +26,7 @@ import { arcadeIds, validArcade, migrateArcade, type ArcadeId, type ArcadeSave }
 import { validPersonalization, type Personalization } from "../personalization/model";
 import { validProfiles, projectProfile, type Profiles } from "./profiles";
 import { validSchool, type SchoolProgress } from "../learn/schoolProgress";
-export type Settings = { learningComfort?: Partial<Record<string, Comfort>>; sound: boolean; help: boolean; homeNavigationSeen?: boolean; learningIslander?: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
+export type Settings = { learningBridges?: Partial<Record<string, LearnId[]>>; learningComfort?: Partial<Record<string, Comfort>>; sound: boolean; help: boolean; homeNavigationSeen?: boolean; learningIslander?: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
 export type Save = {
   profiles?: Profiles;
   /** Runtime projection only; encoded in profiles.people exactly once. */
@@ -398,6 +398,7 @@ export function parseSave(raw: string): Save {
     (v.roundOwners !== undefined && !validRoundOwners(v.roundOwners, validLearners(v.learning) ? v.learning.people.map(p=>p.id) : ['family'])) ||
     !validLearningOwners(v.learn, v.learning) ||
     (v.settings.practice !== undefined && !validPracticeSettings(v.settings.practice)) ||
+    !validLearningBridges(v.settings.learningBridges, validLearners(v.learning) ? v.learning.people.map(p=>p.id) : ['family']) ||
     !validLearningComfort(v.settings.learningComfort, validLearners(v.learning) ? v.learning.people.map(p=>p.id) : ['family']) ||
     (v.practiceNotes !== undefined && !validPracticeNotes(v.practiceNotes)) ||
     (v.board !== undefined && !validBoardSessions(v.board)) ||
@@ -451,3 +452,7 @@ export function validLearningComfort(value: unknown, owners: string[]): boolean 
   return value === undefined || obj(value) && Object.keys(value).length <= 5 && Object.entries(value).every(([owner,p]) => owners.includes(owner) && obj(p) && Object.keys(p).sort().join() === 'offers,opening,youngChild' && typeof p.offers === 'boolean' && typeof p.youngChild === 'boolean' && [1,2,3,4,5].includes(p.opening as number));
 }
 export const learningComfort = (save: Save, owner = save.learning?.active ?? 'family'): Comfort => save.settings.learningComfort?.[owner] ?? defaultComfort;
+
+export function validLearningBridges(value:unknown,owners:string[]):boolean {
+  return value===undefined || obj(value)&&Object.keys(value).length<=5&&Object.entries(value).every(([owner,ids])=>owners.includes(owner)&&Array.isArray(ids)&&ids.length<=learnIds.length&&new Set(ids).size===ids.length&&ids.every(id=>learnIds.includes(id)));
+}

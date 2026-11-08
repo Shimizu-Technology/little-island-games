@@ -1,7 +1,7 @@
 import { coveReady } from './generated/readiness';
 import { challengeFor, schoolContext } from '../challenge/catalog';
 import { ResultOffer } from '../challenge/ResultOffer';
-import { resultOffer, ratingDue, dismissSignal } from '../challenge/offers';
+import { resultOffer, ratingDue } from '../challenge/offers';
 import { progressFor } from '../state/challengeDrafts';
 import { learningComfort } from '../state/validation';
 import { bridgeFor } from './destinations';
@@ -60,7 +60,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const saved = store.save.learn?.[id];
   const scroll = useRef<ScrollView | null>(null);
   const growthState = saved && isGrowth(saved.state) ? saved.state as GrowthState : undefined;
-  const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : saved ? (saved.state as { index?: number }).index : undefined;
+  const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : saved && (engine.ownLevels||engine.nativeStages) ? (saved.state as { index?: number }).index : undefined;
   useLayoutEffect(() => {
     if (growthStep !== undefined) scroll.current?.scrollTo({ y: 0, animated: false });
   }, [growthStep, saved?.id]);
@@ -250,9 +250,10 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const challenge = challengeFor(id), challengeProgress=progressFor(store.save,learner.id);
   const context=schoolContext(id,levelOf(saved?.options??options));
   const levelRecord=store.save.school?.[id]?.[levelOf(saved?.options??options)];
-  const offerFacts={atPar:false,firstHigher:!!saved && levelOf(saved.options)>1 && levelRecord?.completed===1 && Object.keys(store.save.school?.[id]??{}).some(level=>Number(level)<levelOf(saved.options)),dare:!!challenge,harder:!!saved&&(levelOf(saved.options)<5||!!challenge)};
+  const offerFacts={atPar:false,firstHigher:!!saved && levelOf(saved.options)>1 && levelRecord?.completed===1 && Object.keys(store.save.school?.[id]??{}).some(level=>Number(level)<levelOf(saved.options)),dare:!!challenge,easier:!!saved&&levelOf(saved.options)>1,harder:!!saved&&(levelOf(saved.options)<5||!!challenge)};
   const signal=challengeProgress?.signals.find(s=>s[0]===context);
-  const hasOffer=!!challengeProgress&&(ratingDue(challengeProgress,context)||!!resultOffer(signal,comfort,offerFacts));
+  const ownsResult=!!saved&&(saved.learner??'family')===learner.id&&saved.options.mode==='solo';
+  const hasOffer=ownsResult&&learner.id!=='family'&&comfort.offers&&!comfort.youngChild&&!!signal&&!signal[4]&&!!challengeProgress&&(ratingDue(challengeProgress,context)||!!resultOffer(signal,comfort,offerFacts));
   // G1 supplies the Cove route. Until then there is no link to an unfinished surface.
   const bridge=bridgeFor(id,levelOf(saved?.options??options),coveReady);
   const changeWorking=(next:NonNullable<typeof challengeProgress>)=>store.challengeWorking({signal:next.signals.find(s=>s[0]===context)},{owner:learner.id,epoch,game:id,id:saved?.id??'',revision:saved?.revision??-1,kind:'school'});
@@ -349,11 +350,11 @@ export function LearnFrame({ id }: { id: LearnId }) {
                       : (notWon ?? "You did it!")}
                 </Heading>
                 <Copy style={{ color: theme.ink, fontSize: 17, fontWeight: "800", textAlign: "center" }}>{notWon ? "Ready to try the island again?" : "Your stars are shining. Ready for another adventure?"}</Copy>
-                {saved.options.mode==='solo'&&learner.id!=='family'&&challengeProgress&&<ResultOffer progress={challengeProgress} context={context} comfort={comfort} facts={offerFacts} onChange={changeWorking} onChoose={kind=>{
+                {ownsResult&&learner.id!=='family'&&challengeProgress&&<ResultOffer progress={challengeProgress} context={context} comfort={comfort} facts={offerFacts} onHear={soundOn&&resultOffer(signal,comfort,offerFacts)?.kind==='harder'&&levelOf(saved.options)<5?()=>sound(`learning-try-level-${levelOf(saved.options)+1}`):undefined} onChange={changeWorking} onChoose={kind=>{
                   if(kind==='dare'||kind==='harder'&&levelOf(saved.options)===5)openChallenge();
                   else {chooseLevel(Math.max(1,Math.min(5,levelOf(saved.options)+(kind==='easier'?-1:1))) as LearningLevel,saved.options);setSetup(true);}
                 }}/>}
-                {!hasOffer&&bridge&&signal&&!signal[4]&&comfort.offers&&!comfort.youngChild&&challengeProgress&&<View style={{gap:8}}><Button quiet onPress={()=>{if(changeWorking(dismissSignal(challengeProgress,context)))router.push(bridge.route);}}>{bridge.label}</Button><Button quiet compact onPress={()=>changeWorking(dismissSignal(challengeProgress,context))}>Not now</Button></View>}
+                {ownsResult&&!hasOffer&&bridge&&!store.save.settings.learningBridges?.[learner.id]?.includes(id)&&!signal?.[4]&&comfort.offers&&!comfort.youngChild&&<View style={{gap:8}}><Button quiet onPress={()=>{if(store.challengeWorking({bridge:id},{owner:learner.id,epoch,game:id,id:saved.id,revision:saved.revision,kind:'school'}))router.push(bridge.route);}}>{bridge.label}</Button><Button quiet compact onPress={()=>store.challengeWorking({bridge:id},{owner:learner.id,epoch,game:id,id:saved.id,revision:saved.revision,kind:'school'})}>Not now</Button></View>}
                 <Button icon="right" onPress={replay} style={{ minWidth: 220, minHeight: 62, backgroundColor: theme.accent, borderColor: theme.accent }}>
                   Keep going
                 </Button>

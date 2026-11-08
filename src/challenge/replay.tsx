@@ -14,7 +14,7 @@ export function defineReplayGame<D,P,A,S>(config: {
   Board: ComponentType<ChallengeViewProps<S,A>>; controls: { help: () => A; reset: () => A };
 }): TypedRegistration<ReplayPayload<P,A>,A,S> {
   const { engine } = config;
-  const objectiveIds=new Set(config.objectives??config.puzzles.flatMap(p=>p.dares.flatMap(d=>d.rule.kind==='pick-up'?[d.rule.objective]:[])));
+  const objectiveIds=new Set(config.objectives??config.puzzles.flatMap(p=>[...p.dares,...p.awards.filter(a=>a!==null)].flatMap(d=>d.rule.kind==='pick-up'?[d.rule.objective]:[])));
   if(!asciiId(config.game) || !asciiId(config.codec) || !asciiId(config.context,14) || ['story-studio','island-home'].includes(config.game))throw new Error('Invalid Challenge registration.');
   const slots=new Set<number>(),ids=new Set<string>();
   for(const p of config.puzzles) {
@@ -22,6 +22,7 @@ export function defineReplayGame<D,P,A,S>(config: {
     if(!['school','deep-water','endless','play'].includes(p.source.kind))throw new Error('Unknown source.');
     if(p.source.kind==='school' && (p.source.game!==config.game || ![1,2,3,4,5].includes(p.source.level) || !asciiId(p.source.puzzle)) || p.source.kind==='endless' && (p.source.bank!==p.ref.bank || p.source.puzzle!==p.ref.puzzle) || p.source.kind==='play' && (p.source.game!==config.game || p.source.rules!==p.ref.rules || !asciiId(p.source.content)) || p.source.kind==='deep-water' && (!uint(p.source.collection,511) || !uint(p.source.puzzle,1023)))throw new Error('Source does not match puzzle.');
     if(p.par && (!metrics.includes(p.par.metric) || !uint(p.par.lower) || !uint(p.par.upper) || p.par.lower>p.par.upper))throw new Error('Invalid certified par bounds.');
+    for(const a of p.awards) if(a && (!['allowed','independent'].includes(a.help) || ['clean','whole','own-read'].includes(a.rule.kind) && a.help!=='independent'))throw new Error('Invalid award help policy.');
     for(const d of p.dares) {
       if(!uint(d.slot,4095) || slots.has(d.slot) || !asciiId(d.id) || ids.has(d.id) || !['allowed','independent'].includes(d.help))throw new Error('Invalid dare registration.');
       slots.add(d.slot);ids.add(d.id);
@@ -61,7 +62,7 @@ export function defineReplayGame<D,P,A,S>(config: {
     const e=round.evidence, together=session.partner !== null;
     const event=together?'together':e.helpUsed || e.failed?'helped':'independent';
     const dares=session.selectedDares.filter(slot=>{const dare=puzzle.dares.find(d=>d.slot===slot);return !!dare && proves(dare.rule,e,dare.help,together);}).sort((a,b)=>a-b);
-    const awards=puzzle.awards.reduce<number>((bits,rule,i)=>bits | (rule && proves(rule,e,'independent',together) ? 1<<i : 0),0);
+    const awards=puzzle.awards.reduce<number>((bits,rule,i)=>bits | (rule && proves(rule.rule,e,rule.help,together) ? 1<<i : 0),0);
     return {event,awards,dares,cost:puzzle.par ? e.metrics[puzzle.par.metric] ?? null : null,solution:e.solution};
   }
   const banks=new Map<number,Bank>();

@@ -56,7 +56,7 @@ describe('replay evidence, never caller results',()=>{
     let current=s;
     const solved=solve(s), actions=(solved.payload as Payload).actions;
     for(const action of actions){const next=move(current,action), guard={...expected,id:current.id,revision:current.revision};save=next.result?finishChallenge(save,next,guard,1,registration.catalog):challengeTransition(save,next,guard,1,registration.catalog);current=next;}
-    expect(save.challenge?.paused[0].credited).toBe(true);expect(finishChallenge(save,current,{...expected,id:current.id,revision:current.revision},1,registration.catalog)).toBe(save);
+    expect(save.challenge?.paused).toEqual([]);expect(finishChallenge(save,current,{...expected,id:current.id,revision:current.revision},1,registration.catalog)).toBe(save);
     expect(parseSave(encodeSave(save)).profiles?.people.a.challenge).toEqual(save.challenge);
   });
 });

@@ -8,23 +8,28 @@ import { registerSaveContent, emptyChallenge } from '../src/state/challenge';
 import { catalogManifest } from '../src/state/catalogManifest';
 import { emptySave } from '../src/state/validation';
 import { addLearner } from '../src/learn/learners';
-import { registration, type Action } from './helpers/challenge-replay';
+import { registration, engine, puzzle, solve, type Action, type Payload } from './helpers/challenge-replay';
 import { defaultComfort, completedSignal } from '../src/challenge/offers';
+import { defineReplayGame } from '../src/challenge/replay';
+import { buildCatalog } from '../src/challenge/catalog';
+import { migrateProfiles, encodeSave } from '../src/state/profiles';
+import { putProgress } from '../src/state/challengeDrafts';
 import { startSession } from '../src/learn/session';
-const db=vi.hoisted(()=>({raw:null as string|null,block:null as Promise<void>|null}));
-vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async()=>{},writeDraft:async()=>{if(db.block)await db.block;},discardSession:async()=>{}}}));
+const db=vi.hoisted(()=>({raw:null as string|null,block:null as Promise<void>|null,fail:false,boundaryBlock:null as Promise<void>|null}));
+vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{if(db.fail)throw new Error('disk full');if(db.boundaryBlock)await db.boundaryBlock;db.raw=raw;},preserve:async()=>{},writeDraft:async()=>{if(db.block)await db.block;},discardSession:async()=>{}}}));
 vi.mock('react-native',()=>({ScrollView:'section',View:'div',useWindowDimensions:()=>({width:320,height:667}),AppState:{addEventListener:()=>({remove(){}})}}));
 vi.mock('react-native-safe-area-context',()=>({SafeAreaView:'main'}));
 vi.mock('expo-router',()=>({useIsFocused:()=>true,router:{canGoBack:()=>false,replace:vi.fn()}}));
 vi.mock('../src/components/ui',()=>({Button:'button',Chip:'button',Heading:'h2',Copy:'p',ToggleRow:'switch',styles:{}}));
 vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({})}));
+vi.mock('../src/components/Settings',()=>({Settings:()=>null}));
 vi.mock('../src/components/SaveStatus',()=>({SaveStatus:()=>null}));
 vi.mock('../src/personalization/LearnerChip',()=>({LearnerChip:()=>null}));
 let store:ReturnType<typeof useStore>;
 function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return null;}
-function ReadyFrame(){return useStore().ready?<ChallengeFrame entry={entry}/>:null;}
-const entry={...registration,render:(_session:unknown,dispatch:(a:unknown)=>void)=><button onClick={()=>dispatch({type:'read-aloud'} satisfies Action)}>Read aloud</button>};
-const press=async(root:ReactTestRenderer,label:string)=>act(async()=>{const button=root.root.findAllByType('button').find(n=>n.children.includes(label));expect(button,label).toBeDefined();(button!.props.onPress??button!.props.onClick)();});
+function ReadyFrame(){const s=useStore();return s.ready?<ChallengeFrame key={`${s.epoch}`} entry={entry}/>:null;}
+const entry={...registration,render:(session:Parameters<typeof registration.move>[0],dispatch:(a:unknown)=>void)=>{const actions=(solve(registration.start(puzzle.ref,'a','route',emptyChallenge(),{supportOff:false,ownRead:false},[])).payload as Payload).actions;const n=(session.payload as Payload).actions.filter(a=>a.type==='move').length;return <><button onClick={()=>dispatch({type:'read-aloud'} satisfies Action)}>Read aloud</button><button onClick={()=>dispatch(actions[n])}>Next maze step</button></>;}};
+const press=async(root:ReactTestRenderer,label:string)=>act(async()=>{const button=root.root.findAllByType('button').find(n=>n.children.filter(c=>typeof c==='string').join('')===label);expect(button,label).toBeDefined();(button!.props.onPress??button!.props.onClick)();});
 it('keeps School paused while Challenge starts, admits new edits during draft I/O, and restores the exact paused Challenge',async()=>{
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));
   const school={...startSession('crab-commands',{options:{mode:'solo',pace:'easy'}},{},42),learner:'a'};
@@ -51,4 +56,52 @@ it('too-easy face opens one related challenge; dismissal is saved; young-child c
     await act(async()=>root.update(<ResultOffer {...props()}/>));expect(root.toJSON()).toBeNull();
     await act(async()=>root.update(<ResultOffer {...props()} progress={completedSignal(progress,'s0-1',true,true)} comfort={{...defaultComfort,youngChild:true}}/>));expect(root.toJSON()).toBeNull();
   }finally{if(root)await act(async()=>root.unmount());vi.unstubAllGlobals();}
+});
+
+it.each(['Just right','Too hard'])('P1-3: %s consumes the round card',async label=>{
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);let p=emptyChallenge();for(let i=0;i<3;i++)p=completedSignal(p,'s0-1',true,true);
+  let root!:ReactTestRenderer;const props=()=>({progress:p,context:'s0-1',comfort:defaultComfort,facts:{atPar:true,firstHigher:true,dare:true,harder:true},onChange:(next:typeof p)=>{p=next;return true;},onChoose:vi.fn()});
+  try{await act(async()=>{root=create(<ResultOffer {...props()}/>);});await press(root,label);await act(async()=>root.update(<ResultOffer {...props()}/>));expect(root.toJSON()).toBeNull();}finally{await act(async()=>root.unmount());vi.unstubAllGlobals();}
+});
+it.each([false,true])('P1-2/P2-5: replacement is atomic (storage failure %s)',async fail=>{
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let root!:ReactTestRenderer;
+  try{await act(async()=>{root=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});await press(root,'Start this puzzle');const old=store.save.challenge!.paused[0],raw=db.raw;
+    await press(root,'Another puzzle');await act(async()=>root.root.findByType('switch').props.onChange(true));db.fail=fail;await press(root,'Start this puzzle');
+    if(fail){expect(store.save.challenge!.paused[0]).toEqual(old);expect(db.raw).toBe(raw);}else{expect(store.save.challenge!.paused).toHaveLength(1);expect(store.save.challenge!.paused[0].ordinal).toBe(2);expect(store.challengeRefusal).toBeNull();}
+  }finally{db.fail=false;await act(async()=>root.unmount());vi.unstubAllGlobals();}
+});
+it.each([['blind',3003,'supportOff'],['own-read',3007,'ownRead']] as const)('P2-1: selecting %s sets its launch option',async(label,slot,option)=>{
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let root!:ReactTestRenderer;
+  try{await act(async()=>{root=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});const chip=root.root.findAllByType('button').find(n=>n.children[0]===label)!;await act(async()=>chip.props.onPress());await press(root,'Start this puzzle');const s=store.save.challenge!.paused[0];expect(s.selectedDares).toEqual([slot]);expect((s.payload as {options:Record<string,boolean>}).options[option]).toBe(true);
+  }finally{await act(async()=>root.unmount());vi.unstubAllGlobals();}
+});
+
+it('P2-6: a finish frees its slot; Another puzzle starts directly; reopening has no old result',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});await press(r,'Start this puzzle');for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');expect(store.save.challenge!.paused).toEqual([]);expect(JSON.stringify(r.toJSON())).toContain('Puzzle solved!');await press(r,'Another puzzle');expect(JSON.stringify(r.toJSON())).not.toContain('Continue saved puzzle');await press(r,'Start this puzzle');expect(store.save.challenge!.paused[0].ordinal).toBe(2);
+  for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');await act(async()=>r.unmount());await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});expect(JSON.stringify(r.toJSON())).not.toContain('Puzzle solved!');expect(JSON.stringify(r.toJSON())).toContain('Start this puzzle');
+ }finally{await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+it('P1-4: a full unfinished set offers Continue, export and explicit replacement',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ const entries=Array.from({length:8},(_,i)=>defineReplayGame({game:`slot-${i}`,codec:`slot-${i}-v1`,context:`slot${i}`,cove:true,objectives:['shell'],budget:{wrapper:700,draft:3396,undo:0,audit:0},puzzles:[{...puzzle,dares:[],awards:[null,null],ref:{...puzzle.ref,bank:410+i,engine:`slot-${i}`},source:{kind:'endless',bank:410+i,puzzle:0}}],engine,Board:()=>null,controls:{help:()=>({type:'help'} as Action),reset:()=>({type:'reset'} as Action)}}));
+ const catalog=buildCatalog([registration,...entries]);registerSaveContent(catalog,catalogManifest(catalog));let p=emptyChallenge();for(const e of entries){const session=e.start(e.puzzles[0].ref,'a',`saved-${p.nextOrdinal}`,p,{supportOff:false,ownRead:false},[]);p={...p,nextOrdinal:p.nextOrdinal+1,paused:[...p.paused,session]};}
+ db.raw=encodeSave(putProgress(migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')}),'a',p));let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});expect(JSON.stringify(r.toJSON())).toContain('Your paused spaces are full');expect(JSON.stringify(r.toJSON())).toContain('Export backup in Settings');expect(r.root.findAllByType('button').some(n=>n.children.join('')==='Continue slot-0')).toBe(true);await press(r,'Replace slot-0');await press(r,'Start this puzzle');expect(store.save.challenge!.paused).toHaveLength(8);expect(store.save.challenge!.paused.some(s=>s.game==='slot-0')).toBe(false);expect(store.save.challenge!.paused.some(s=>s.game==='maze-proof')).toBe(true);
+ }finally{await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+
+it('P2-5: an adapter start exception leaves the accepted attempt intact',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;let spy:ReturnType<typeof vi.spyOn>|undefined;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});await press(r,'Start this puzzle');const old=store.save.challenge!.paused[0],raw=db.raw;await press(r,'Another puzzle');await act(async()=>r.root.findByType('switch').props.onChange(true));spy=vi.spyOn(entry,'start').mockImplementation(()=>{throw new Error('invalid descriptor');});await press(r,'Start this puzzle');expect(store.save.challenge!.paused[0]).toEqual(old);expect(db.raw).toBe(raw);expect(JSON.stringify(r.toJSON())).toContain('Your saved work is kept.');
+ }finally{spy?.mockRestore();await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+it('P3-8: older draft completions cannot unlock a pending terminal boundary',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer,releaseDraft!:()=>void,releaseBoundary!:()=>void;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});await press(r,'Start this puzzle');db.block=new Promise(resolve=>{releaseDraft=resolve;});
+  const actions=(solve(registration.start(puzzle.ref,'a','route',emptyChallenge(),{supportOff:false,ownRead:false},[])).payload as Payload).actions;
+  for(let i=0;i<actions.length-1;i++)await press(r,'Next maze step');db.boundaryBlock=new Promise(resolve=>{releaseBoundary=resolve;});await press(r,'Next maze step');
+  await act(async()=>{db.block=null;releaseDraft();await new Promise(resolve=>setTimeout(resolve,0));});const another=r.root.findAllByType('button').find(n=>n.children.includes('Another puzzle'))!;expect(another.props.disabled).toBe(true);const revision=store.save.challenge!.paused[0].revision;await press(r,'Read aloud');expect(store.save.challenge!.paused[0].revision).toBe(revision);
+  await act(async()=>{db.boundaryBlock=null;releaseBoundary();await new Promise(resolve=>setTimeout(resolve,0));});expect(store.save.challenge!.paused).toEqual([]);
+ }finally{db.block=null;db.boundaryBlock=null;releaseDraft?.();releaseBoundary?.();await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
