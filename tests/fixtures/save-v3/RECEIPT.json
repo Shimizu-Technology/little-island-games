@@ -1,0 +1,64 @@
+{
+  "source": "0f428c2fef43a821bbea782823f7548b5d514971",
+  "build": "3.0.0 (28) game source; synthetic local data, not a device extraction",
+  "libraryMode": "default; game constructors identical to shipped preview",
+  "learnGames": [
+    "reef-race",
+    "island-market",
+    "sound-boat",
+    "turtle-tales",
+    "which-one",
+    "tide-pool",
+    "float-sink",
+    "crab-commands",
+    "hafa-adai",
+    "shell-math",
+    "number-hop",
+    "quick-practice",
+    "beep-bot",
+    "turtle-draw",
+    "tide-logic",
+    "code-lab",
+    "pattern-path",
+    "shape-shift",
+    "logic-lagoon",
+    "weather-watch",
+    "food-web",
+    "space-station",
+    "times-tide",
+    "fraction-feast",
+    "treasure-algebra",
+    "letter-lagoon",
+    "word-workshop",
+    "story-studio"
+  ],
+  "classicGames": [
+    "tic-tac-toe",
+    "word-rescue",
+    "memory",
+    "checkers",
+    "maze",
+    "numbers"
+  ],
+  "boardGames": [
+    "coconut-drop",
+    "fishing-nets",
+    "hidden-canoes",
+    "shell-pits",
+    "reef-sweep"
+  ],
+  "files": {
+    "main-envelope-2.json": {
+      "bytes": 120028,
+      "sha256": "0d620b9a0c07eebe7336b1cb3e34839965de069d3a23f9cdb6e89b5e2b8b1e2f"
+    },
+    "main-backup-1.json": {
+      "bytes": 44318,
+      "sha256": "b1096de4bf57edb7ca2a5e6ae7424ffb23c52a76d4a89452c3247d026f6a29dd"
+    },
+    "main-near-limit-2.json": {
+      "bytes": 1981062,
+      "sha256": "42f8f09a85eadf5092c9b00056ef97bf1691da755356b2d84526a676fc802c4d"
+    }
+  }
+}
