@@ -56,7 +56,6 @@ describe('descriptor shell', () => {
     expect(() => canonical({ a: Number.NaN })).toThrow();
     expect(() => canonical({ a: Infinity })).toThrow();
     expect(() => canonical([-0])).toThrow();
-    // eslint-disable-next-line no-sparse-arrays
     expect(() => canonical([1, , 3])).toThrow();
     expect(() => canonical(new Date())).toThrow();
     expect(() => canonical({ a: undefined })).toThrow();

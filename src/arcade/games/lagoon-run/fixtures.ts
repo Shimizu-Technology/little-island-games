@@ -4,6 +4,7 @@ import type { ScrollLevel } from '../scrolling/content';
 /** Legal input fixture. It follows authored shell trails and reacts ahead of contact;
  * it never edits physics, hearts, powers, score, or collision state. */
 export function fixtureInput(s: RunState): RunInput {
+  "worklet";
   const row = s.rows.filter(r => !r.passed).sort((a,b) => b.z-a.z)[0];
   if (!row) return { type: 'idle' };
   const lane = runLearning(s) ? row.fact.choices.indexOf(row.fact.answer) : row.shellLane;

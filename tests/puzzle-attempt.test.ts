@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ATTEMPT_LIMITS, appendEvent, replayAttempt } from '../src/puzzles/attempt';
-import type { AttemptEvent } from '../src/puzzles/types';
+import type { AttemptEvent, PuzzleAdapter } from '../src/puzzles/types';
 import { toyAdapter, toyCore, type ToyAction, type ToyPayload, type ToyState } from './helpers/puzzle-toy';
-import type { PuzzleAdapter } from '../src/puzzles/types';
 
 type E = AttemptEvent<ToyAction>;
 const a = (n: ToyAction): E => ['a', n];

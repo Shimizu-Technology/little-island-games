@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
-import Animated, { useAnimatedProps, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import type { SpritePose } from '../../poses';
 import type { WorldId } from '../../types';
 import { ArcadeSprite } from '../../Sprite';
@@ -49,59 +49,7 @@ export function SpeedLines({poses}:{poses:SharedValue<SpritePose[]>}) {
 }
 export function Shell({size=30}:{size?:number}) {return <Svg width={size} height={size} viewBox="0 0 32 32" accessible={false}><Circle cx={16} cy={16} r={15} fill="#FFF1A0" opacity={.24}/><Path d="M8 24L3 14Q2 8 7 7Q9 2 14 5Q19 1 23 6Q30 5 29 13L24 24L19 28H13Z" fill="#FFD476" stroke="#9B693F" strokeWidth={1.7}/><Path d="M14 24L8 10M17 24V8M20 24L25 10" stroke="#FFF3BF" strokeWidth={2} strokeLinecap="round"/><Path d="M10 25H23L20 29H13Z" fill="#E9A957" stroke="#9B693F" strokeWidth={1.3}/><Circle cx={8} cy={9} r={2} fill="#FFFBE0"/></Svg>;}
 
-const MovingPath=Animated.createAnimatedComponent(Path);
-/** World-spaced boards, grain, nails and pilings. One compound path per material. */
-export function HarborPlanks({poses}:{poses:SharedValue<SpritePose[]>}) {
-  const geometry=(part:string)=>{
-    'worklet';
-    const first=poses.value[35],scale=first?.scale??0;
-    // Recover travel phase from the existing projected stripe slot; no extra engine state.
-    const z=2.2*(2*scale/(1+scale))-1.2;
-    const travel=z+(typeof first?.identity==='number'?first.identity:0)*1.18;
-    const phase=((travel% .52)+.52)%.52;
-    let d='';
-    for(let i=-8;i<41;i++){
-      const depth=-1.18+i*.065+phase;if(depth<=-1.2||depth>=1.45)continue;
-      const p=projectTrack(1,depth),s=p.scale,w=179.4*s,y=p.y;
-      if(part==='joints')d+=`M${195-w} ${y}H${195+w}`;
-      if(part==='grain')for(let lane=0;lane<3;lane++){
-        const x=projectTrack(lane,depth).x;
-        d+=`M${x-39*s} ${y-3*s}q${16*s} ${-4*s} ${42*s} ${-1*s}m${-23*s} ${-3*s}q${7*s} ${-3*s} ${12*s} 0`;
-      }
-      if(part==='nails')for(const lane of [-.4,.4,.6,1.4,1.6,2.4]){
-        const x=projectTrack(lane,depth).x;
-        d+=`M${x-s} ${y-3*s}h${2*s}`;
-      }
-      if(part==='posts'&&i%4===0)for(const side of [-1,1]){
-        const x=195+side*(w+5*s),h=45*s;
-        d+=`M${x-4*s} ${y}v${-h}h${8*s}v${h}Z M${x-7*s} ${y-h}h${14*s}v${5*s}h${-14*s}Z`;
-      }
-      if(part==='lanterns'&&i%8===0)for(const side of [-1,1]){const x=195+side*(w+5*s);d+=`M${x-4*s} ${y-40*s}h${8*s}v${9*s}h${-8*s}Z`;}
-      if(part==='rope'&&i%4===0)for(const side of [-1,1]){const next=projectTrack(1+side*1.55,Math.min(1.45,depth+.26)),x=195+side*(w+5*s);d+=`M${x} ${y-32*s}Q${(x+next.x)/2} ${(y+next.y)/2-17*s} ${next.x} ${next.y-32*next.scale}`;}
-      if(part==='shadows'&&i%4===0)for(const side of [-1,1]){
-        const x=195+side*w;
-        d+=`M${x} ${y}l${-22*s} ${9*s}h${9*s}l${21*s} ${-9*s}Z`;
-      }
-    }
-    return d||'M0 0';
-  };
-  const joints=useAnimatedProps(()=>({d:geometry('joints')}));
-  const grain=useAnimatedProps(()=>({d:geometry('grain')}));
-  const nails=useAnimatedProps(()=>({d:geometry('nails')}));
-  const posts=useAnimatedProps(()=>({d:geometry('posts')}));
-  const lanterns=useAnimatedProps(()=>({d:geometry('lanterns')}));
-  const rope=useAnimatedProps(()=>({d:geometry('rope')}));
-  const shadows=useAnimatedProps(()=>({d:geometry('shadows')}));
-  return <Svg width={390} height={660} style={{position:'absolute'}} accessible={false}>
-    <MovingPath animatedProps={shadows} fill="#183F69" opacity={.32}/>
-    <MovingPath animatedProps={joints} stroke="#126272" strokeWidth={.85} fill="none"/>
-    <MovingPath animatedProps={grain} stroke="#8C4829" strokeWidth={.8} fill="none" opacity={.7}/>
-    <MovingPath animatedProps={nails} stroke="#443F51" strokeWidth={1.4} strokeLinecap="round"/>
-    <MovingPath animatedProps={rope} fill="none" stroke="#FFF0A7" strokeWidth={1.4}/>
-    <MovingPath animatedProps={posts} fill="#E68D36" stroke="#6E4038" strokeWidth={1}/>
-    <MovingPath animatedProps={lanterns} fill="#FFF298" stroke="#D46D25" strokeWidth={.5}/>
-  </Svg>;
-}
+export { BakedFloor as HarborPlanks } from './Baked';
 
 /** Foreground palms frame the route without entering its collision corridor. */
 export const HarborFrame=memo(function HarborFrame(){return <Svg width={390} height={660} style={{position:'absolute'}} accessible={false}><G stroke="#315448" strokeWidth={2} strokeLinejoin="round">

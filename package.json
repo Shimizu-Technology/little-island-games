@@ -63,7 +63,8 @@
     "library:decisions": "node scripts/library/record-decisions.mjs",
     "ios:preview-bundle-prep": "node scripts/ios-preview-bundle.mjs prep",
     "ios:restore-generated": "node scripts/ios-preview-bundle.mjs restore",
-    "ios:preview-build": "node scripts/ios-preview-bundle.mjs build --"
+    "ios:preview-build": "node scripts/ios-preview-bundle.mjs build --",
+    "ios:dev": "node scripts/ios-dev.mjs"
   },
   "private": true,
   "engines": {

@@ -88,7 +88,6 @@ export type PuzzleAdapter<P, S, A> = {
   claims?(d: DescriptorCore<P>, budget: number): Claim[];
 };
 // Adapters vary per engine, so collections of them can only name the kit's common surface.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyAdapter = PuzzleAdapter<any, any, any>;
 
 export type BandQuota = { id: string; target: number; floor: number; /** dumb bots may not meet this band's objective */ advanced: boolean };
@@ -99,7 +98,7 @@ export type FamilySpec<P = unknown> = {
   id: string;
   /** Files whose hash identifies the generator in each receipt. */
   sources: string[];
-  adapter: PuzzleAdapter<P, any, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  adapter: PuzzleAdapter<P, any, any>;
   bands: BandQuota[];
   provenance: Provenance;
   review: ReviewStatus;

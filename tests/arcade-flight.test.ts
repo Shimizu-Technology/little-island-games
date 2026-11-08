@@ -138,7 +138,7 @@ describe("Lagoon camera, actions, patterns and lives",()=>{
   it("uses a 120ms lane tween and exactly .55s/.6s jump/slide with landing squash",()=>{
     const s=createRun(runLevels[0],22);const left=runTransition(s,{type:"left"});expect(left.poseLane).toBe(1);
     expect(advanceRun(left,4).poseLane).toBeGreaterThan(0);expect(advanceRun(left,8).poseLane).toBe(0);
-    const jump=runTransition(s,{type:"jump"});expect(jump.jump).toBe(.55);expect(runTransition(jump,{type:"jump"})).toBe(jump);
+    const jump=runTransition(s,{type:"jump"});expect(jump.jump).toBe(.55);expect(runTransition(jump,{type:"jump"}).jump).toBe(jump.jump); // Queued, never an air jump.
     expect(advanceRun(jump,34).jump).toBe(0);expect(advanceRun(jump,34).landing).toBeGreaterThan(0);
     const duck=runTransition(jump,{type:"duck"});expect(duck.duck).toBe(.6);expect(duck.jump).toBe(0);expect(advanceRun(duck,37).duck).toBe(0);
     for(const lane of [-1,3,.5,NaN,Infinity])expect(runTransition(s,{type:"lane",lane})).toBe(s);
@@ -161,13 +161,13 @@ describe("Lagoon camera, actions, patterns and lives",()=>{
     expect(createRun(runLevels[6],42).rows.some(r=>r.kind==="moving-canoe")).toBe(true);
   });
   it("no-input arcade loses with Helper on/off; learning retains unlimited retries",()=>{
-    for(const helper of [false,true]){let s=createRun(runLevels[0],6,helper);s=advanceRun(s,10000);expect(runResult(s)?.outcome).toBe("game-over");expect(s.lives.hearts).toBe(0);expect(runStep(s,{type:"idle"},FIXED_DT)).toBe(s);}
+    for(const helper of [false,true]){let s=createRun(runLevels[1],6,helper);s=advanceRun(s,10000);expect(runResult(s)?.outcome).toBe("game-over");expect(s.lives.hearts).toBe(0);expect(runStep(s,{type:"idle"},FIXED_DT)).toBe(s);}
     const s=createRun(runLevels[48],14),row={...s.rows[0],z:1},lane=row.fact.choices.findIndex(n=>n!==row.fact.answer);
     const next=runStep({...s,lane,poseLane:lane,laneFrom:lane,rows:[row,...s.rows.slice(1)]},{type:"idle"},FIXED_DT);
     expect(next.cue).toBe("try");expect(next.lives.hearts).toBe(3);expect(next.helped).toBe(true);expect(next.rows[0].fact).toEqual(row.fact);
   });
   it("spends one heart per protected hit without stopping road travel, scores accurate shell trails",()=>{
-    const s=createRun(runLevels[0],2),row={...s.rows[0],z:1,lane:1};const hit=runStep({...s,rows:[row,...s.rows.slice(1)]},{type:"idle"},FIXED_DT);
+    const s={...createRun(runLevels[0],2),learned:7},row={...s.rows[0],z:1,lane:1};const hit=runStep({...s,rows:[row,...s.rows.slice(1)]},{type:"idle"},FIXED_DT);
     expect(hit.lives.hearts).toBe(2);expect(hit.passed).toBe(0);expect(runStep(hit,{type:"idle"},FIXED_DT).travel).toBeGreaterThan(hit.travel);
     for(const [bumps,shells,stars] of [[0,42,3],[0,0,2],[1,42,2],[2,42,1]])expect(runResult({...s,status:"cleared",passed:14,bumps,shells})?.stars).toBe(stars);
     expect(runResult(runTransition(createRun("endless",1),{type:"finish"}))?.outcome).toBe("stopped");

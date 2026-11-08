@@ -227,7 +227,7 @@ export function ItemArt({
                 </>
               )}
               <Path d={star} transform="translate(74 92)" fill={pale} />
-              <Path d="M33 106Q73 119 111 107" stroke={tint === "original" ? "#C67D69" : shade(material(tint, defaultCoral), -.18)} />
+              <Path d="M33 106Q73 119 111 107" fill="none" stroke={tint === "original" ? "#C67D69" : shade(material(tint, defaultCoral), -.18)} />
             </>
           ) : item === "blocks" ? (
             <>
@@ -304,7 +304,7 @@ export function ItemArt({
             </>
           ) : item === "telescope" ? (
             <>
-              <Path d="M73 67V86L43 118M73 86L105 118M73 86L72 121" stroke={wood} strokeWidth={5} />
+              <Path d="M73 67V86L43 118M73 86L105 118M73 86L72 121" fill="none" stroke={wood} strokeWidth={5} />
               <G transform="rotate(-28 75 50)">
                 <Rect x={27} y={34} width={95} height={28} rx={6} fill={`url(#item-teal-${item})`} />
                 <Rect x={19} y={30} width={19} height={36} rx={5} fill={pale} />
