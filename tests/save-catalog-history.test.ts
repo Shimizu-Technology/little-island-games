@@ -16,6 +16,8 @@ it('P2-7 build gate rejects changes to a committed bank length, hash or order an
   expect(()=>check()).not.toThrow();
   for(const entries of [[...bank.entries,{ordinal:2,hash:'c'.repeat(64)}],[...bank.entries].reverse(),bank.entries.map((e,i)=>i?e:{...e,hash:'c'.repeat(64)})]){write({...snapshot,banks:[{...bank,entries}]});expect(()=>check()).toThrow();}
   write({...snapshot,banks:[bank,{...bank,slot:1,entries:bank.entries.map(e=>({...e,ordinal:e.ordinal+2}))}]});expect(()=>check()).not.toThrow();
+  // A shallow clone cannot prove that an earlier immutable meaning was retained.
+  writeFileSync(join(root,'.git/shallow'),git('rev-parse','HEAD'));expect(()=>check()).toThrow();
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 it('P2-6 frozen corpus contains advanced game state and rewards beyond fresh constructors',()=>{
