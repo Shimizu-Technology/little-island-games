@@ -21,8 +21,9 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   const store=useStore(), owner=selectedOwner(store.save), focused=useIsFocused(), {width}=useWindowDimensions();
   const progress=progressFor(store.save,owner)??emptyChallenge(), saved=progress.paused.find(s=>s.game===entry.game&&!s.result&&!s.credited);
   const comfort=learningComfort(store.save,owner);
-  const [selection,setSelection]=useState<ChallengeCard>(()=>entry.puzzles.find(p=>!p.retired&&`${p.ref.bank}:${p.ref.puzzle}`===requestedPuzzle)??entry.puzzles.find(p=>!p.retired&&progress.choice?.[0]===entry.game&&p.path===progress.choice?.[1]&&p.tier===progress.choice?.[2])??entry.puzzles.find(p=>!p.retired)!);
-  const [completed,setCompleted]=useState<ChallengeSession>(), [settings,setSettings]=useState(false), [replacementGame,setReplacementGame]=useState<string>(), [dares,setDares]=useState<number[]>([]), [picking,setPicking]=useState(!saved), [busy,setBusy]=useState(false), [message,setMessage]=useState(''), [replace,setReplace]=useState(false);
+  const requested=entry.puzzles.find(p=>!p.retired&&`${p.ref.bank}:${p.ref.puzzle}`===requestedPuzzle);
+  const [selection,setSelection]=useState<ChallengeCard>(()=>requested??entry.puzzles.find(p=>!p.retired&&progress.choice?.[0]===entry.game&&p.path===progress.choice?.[1]&&p.tier===progress.choice?.[2])??entry.puzzles.find(p=>!p.retired)!);
+  const [completed,setCompleted]=useState<ChallengeSession>(), [settings,setSettings]=useState(false), [replacementGame,setReplacementGame]=useState<string>(), [dares,setDares]=useState<number[]>([]), [picking,setPicking]=useState(!!requested||!saved), [busy,setBusy]=useState(false), [message,setMessage]=useState(''), [replace,setReplace]=useState(false);
   const [settling,setSettling]=useState(false), [capacity,setCapacity]=useState(false);
   const onSettled=useCallback(()=>setSettling(false),[]);
   const accepted=useRef(saved), lock=useRef(false), dispatchToken=useRef(0);

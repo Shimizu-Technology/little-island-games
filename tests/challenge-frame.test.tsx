@@ -146,3 +146,13 @@ it('Crab P2-3: a clean puzzle without dares offers a harder puzzle even when oth
  expect(JSON.stringify(r.toJSON())).not.toContain('Try a dare?');await press(r,'Try a stretch');await press(r,'Start this puzzle');expect(store.save.challenge!.paused[0].puzzle.puzzle).toBe(1);
  }finally{spy.mockRestore();if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
+it('a requested School replay opens its picker while preserving an existing Challenge draft',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));
+ let save=migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')});const progress=emptyChallenge(),paused=registration.start(puzzle.ref,'a','kept-draft',progress,{supportOff:false,ownRead:false},[]);
+ save=putProgress(save,'a',{...progress,nextOrdinal:paused.ordinal+1,paused:[paused]});db.raw=encodeSave(save);let r!:ReactTestRenderer;
+ function RequestedFrame(){const s=useStore();return s.ready?<ChallengeFrame entry={entry} requestedPuzzle={`${puzzle.ref.bank}:${puzzle.ref.puzzle}`}/>:null;}
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><RequestedFrame/></StoreProvider>);});
+  expect(r.root.findAllByType('switch').some(s=>s.props.label==='Start another attempt')).toBe(true);
+  expect(store.save.challenge!.paused[0]).toEqual(paused);expect(JSON.stringify(r.toJSON())).toContain('Continue saved puzzle');expect(JSON.stringify(r.toJSON())).not.toContain('Start this puzzle');
+ }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
