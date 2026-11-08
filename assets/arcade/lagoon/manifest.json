@@ -1,0 +1,246 @@
+{
+  "density": 3,
+  "source": "scripts/art/bake-lagoon.ts",
+  "assets": {
+    "floor-0": {
+      "width": 390,
+      "height": 370,
+      "bytes": 108557,
+      "sha256": "f828f93d412d2a247f5ff0134782601b042b5a348a4081ffb3486e3770ae2800"
+    },
+    "floor-1": {
+      "width": 390,
+      "height": 370,
+      "bytes": 108861,
+      "sha256": "0b5452294abb044b3c6a5e3bbc92fd85394cf5199992786fed6a59b8ddd05288"
+    },
+    "floor-2": {
+      "width": 390,
+      "height": 370,
+      "bytes": 107267,
+      "sha256": "fc8b8a8ea1d5211c3823dd0f8c02eded92aff7e170a8b18778bf223d21170680"
+    },
+    "floor-3": {
+      "width": 390,
+      "height": 370,
+      "bytes": 108743,
+      "sha256": "7b47452af0b5563ca6f69570552a92860f7ebb79ebb3f2d5d0ab3f90febb0dda"
+    },
+    "floor-4": {
+      "width": 390,
+      "height": 370,
+      "bytes": 108085,
+      "sha256": "bae8fbc91f4a62df8ca0b1ad0466e8400fd2931469b33735b01cdcd1710f7ec1"
+    },
+    "floor-5": {
+      "width": 390,
+      "height": 370,
+      "bytes": 108907,
+      "sha256": "33631fe9004d6c92cc3549f70fbc3ae760f9cb5bc7b3bd8fabb920e460c78809"
+    },
+    "floor-6": {
+      "width": 390,
+      "height": 370,
+      "bytes": 106852,
+      "sha256": "522072f75222a9782782c470bd994272c0a401cb0f5c9ef6123c5e63dd548567"
+    },
+    "floor-7": {
+      "width": 390,
+      "height": 370,
+      "bytes": 107176,
+      "sha256": "a7fc52e3531696cffea7856f837435eb0dae249028ee7b5d333bc51655351655"
+    },
+    "floor-8": {
+      "width": 390,
+      "height": 370,
+      "bytes": 107012,
+      "sha256": "45df17f6357b0a04ed068fb62899c52bec2f4e3df71e5219be9c2d52c5abf2ff"
+    },
+    "floor-9": {
+      "width": 390,
+      "height": 370,
+      "bytes": 104855,
+      "sha256": "4ba20d6b598f614d62e70eabc1e3452a2653f493f43cce4bf8f9b43417193513"
+    },
+    "floor-10": {
+      "width": 390,
+      "height": 370,
+      "bytes": 103316,
+      "sha256": "8bff13015576a7302d6f474a72b735144f8ce612e1dc4b5f5ab3007c9570e3c4"
+    },
+    "floor-11": {
+      "width": 390,
+      "height": 370,
+      "bytes": 107190,
+      "sha256": "c8760d7dce6382a0ee05b6faa8def92c59a3108458ade43c6f085afbe0fc40aa"
+    },
+    "deck": {
+      "width": 128,
+      "height": 256,
+      "bytes": 3445,
+      "sha256": "f89bc537b258ba80801c5241f44451a53bf403190862a3facd3877ea5f89539f"
+    },
+    "incline": {
+      "width": 128,
+      "height": 128,
+      "bytes": 6750,
+      "sha256": "f7d28ce6076a726827b600ea3f79e32f00b8be718b89169dc63a555620b04782"
+    },
+    "roof": {
+      "width": 128,
+      "height": 256,
+      "bytes": 3438,
+      "sha256": "6b092e34c169f5218986f6a7b7045c2e680f91941fecd4aca5202cfb888f16db"
+    },
+    "post": {
+      "width": 24,
+      "height": 64,
+      "bytes": 1402,
+      "sha256": "2a0cd5f8f0deac6bc7d9f415eb2e2399628e65d57bfc864e6c1cdd39dc4aa4ba"
+    },
+    "rail": {
+      "width": 160,
+      "height": 144,
+      "bytes": 6862,
+      "sha256": "7e0b0f1009d6af20e5f9929b6e08632cef762311be35d107ce4e8e3011703c75"
+    },
+    "rope": {
+      "width": 128,
+      "height": 24,
+      "bytes": 3649,
+      "sha256": "e266686b4fdd235202411aeccede7658d6ab63befff83778fd89e96400c1e21b"
+    },
+    "deck-left": {
+      "width": 16,
+      "height": 16,
+      "bytes": 202,
+      "sha256": "230dc042e739b90342cf9748dde39f2fe1f5db34801cb6fe4ce6506a47d788e3"
+    },
+    "deck-right": {
+      "width": 16,
+      "height": 16,
+      "bytes": 199,
+      "sha256": "ab43af363fab71dbc14ea338873fcb580f2806db8a0b6902d74046e6a668631f"
+    },
+    "support": {
+      "width": 16,
+      "height": 128,
+      "bytes": 587,
+      "sha256": "2489b461e572837074bbc66f8e59d00e0ba98f200ba68b0a6256f73ad3f59a11"
+    },
+    "canoe-still-0": {
+      "width": 73,
+      "height": 64,
+      "bytes": 10876,
+      "sha256": "98dbcedf78a323ccf95d2b1fdb78b84987070c071f1f6eeebc38d74b3a49529b"
+    },
+    "canoe-moving-0": {
+      "width": 73,
+      "height": 64,
+      "bytes": 13183,
+      "sha256": "d70631d9da8c57c7b0f471f7344eea241d27a7e15f13a5d27ca0d5bc5318219b"
+    },
+    "canoe-still-1": {
+      "width": 120,
+      "height": 100,
+      "bytes": 20715,
+      "sha256": "d89e4ef39757336bd76a30d66db154a0803656af7d46eaac5f4ba605af66df35"
+    },
+    "canoe-moving-1": {
+      "width": 120,
+      "height": 100,
+      "bytes": 24424,
+      "sha256": "560049b3a1af3b6c1a584dc40f0f8d9290b5d684d915c49b3d0ce4ffaa25c7a8"
+    },
+    "canoe-still-2": {
+      "width": 172,
+      "height": 143,
+      "bytes": 30882,
+      "sha256": "f3fc30800bdb1d5bfb88a4fd78be2a3847c1ddb8a511cace6356b7ad52a87c8b"
+    },
+    "canoe-moving-2": {
+      "width": 172,
+      "height": 143,
+      "bytes": 35827,
+      "sha256": "1a831eb918fc75bddd71508d2693344127ec660b574d87021ff5aa5a722791be"
+    },
+    "canoe-still-3": {
+      "width": 249,
+      "height": 207,
+      "bytes": 48487,
+      "sha256": "f36cb1f3bfeed61648e703ee24e08f01935c7e805400b39b93fccb510a5c42f8"
+    },
+    "canoe-moving-3": {
+      "width": 249,
+      "height": 207,
+      "bytes": 55072,
+      "sha256": "c45f1c0ca35753b5900b39fb86f090ba8cdeb9cf2f9b0f214852a1a8b9dc6b53"
+    }
+  },
+  "canoes": [
+    {
+      "depth": 0.1,
+      "width": 73,
+      "height": 64,
+      "inverse": [
+        0.0332304262070148,
+        0.004516317016317038,
+        -0.7277402920379508,
+        0,
+        -0.03959760777942592,
+        2.023820960184593,
+        0,
+        0.009032634032634075,
+        0.5383449883449866
+      ]
+    },
+    {
+      "depth": 0.6,
+      "width": 120,
+      "height": 100,
+      "inverse": [
+        0.020128824476650573,
+        0.0027356902356902237,
+        -0.7230237154150194,
+        0,
+        -0.029097796143250695,
+        2.303650137741045,
+        0,
+        0.005471380471380447,
+        0.5668350168350191
+      ]
+    },
+    {
+      "depth": 1,
+      "width": 172,
+      "height": 143,
+      "inverse": [
+        0.01393534002229654,
+        0.0018939393939394066,
+        -0.7022879294618434,
+        0,
+        -0.02125420875420873,
+        2.3889730639730606,
+        0,
+        0.0037878787878787928,
+        0.5742424242424237
+      ]
+    },
+    {
+      "depth": 1.4,
+      "width": 249,
+      "height": 207,
+      "inverse": [
+        0.009647543092359148,
+        0.0013111888111888112,
+        -0.707071064387118,
+        0,
+        -0.014423076923076933,
+        2.347115384615383,
+        0,
+        0.0026223776223776234,
+        0.5732517482517487
+      ]
+    }
+  ]
+}

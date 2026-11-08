@@ -6,13 +6,13 @@ import { runSpeed, runnerHeight, shellHeight, obstacleLane, runLearning, type Ru
 import { RAMP_DEPTH, RAMP_SECTIONS, surfaceProfile, surfaceSpan } from "../lagoon-run/surface";
 import { CAMERA_SLOT, TRACK_WIDTH, projectTrack, trackSprite } from "../lagoon-run/camera";
 import { runnerFrame, RUN_POSES, RUN_EXTRA } from "./character";
-import { groundTexturePose, SCENE_COUNT, SCENE_START, TEXTURE_START, TEXTURE_COUNT } from "./environmentPoses";
+import { SCENE_COUNT, SCENE_START } from "./environmentPoses";
 export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA = INCLINE_START + 5 * INCLINE_STRIDE, CANOE_START = RUN_EXTRA + 8, RUN_SLOTS = CANOE_START + 15 * 4 + 1;
 export function runPoses(s: RunState, reduced = false): SpritePose[] {
   "worklet";
   const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=visualRunHeight(runnerHeight(s))*85;
   // Root is bottom-centre; poses have their own authored contact/compression, never free limbs.
-  p[0]={identity:s.lives.hit,x:contact.x-40,y:contact.y-130-lift,angle:reduced||s.duck>0||s.kite>0?0:(s.lane-s.poseLane)*.14};
+  p[0]={identity:s.lives.hit,x:contact.x-40+(reduced?0:Math.sin((1-s.edgeTime/.12)*Math.PI)*s.edge*6),y:contact.y-130-lift,angle:reduced||s.duck>0||s.kite>0?0:(s.lane-s.poseLane)*.14};
   for(let i=0;i<RUN_POSES;i++)p[i<16?80+i:RUN_EXTRA+i-16]=i===frame?{x:0,y:0,snap:true}:HIDDEN_POSE;
   p[55]=reduced||s.landing<=0?HIDDEN_POSE:{x:contact.x-40,y:contact.y-15-lift,scale:1+(1-s.landing/.13)*.5,opacity:s.landing/.13};
   p[50]={x:contact.x-35,y:contact.y-7,scale:1-Math.min(2.7,runnerHeight(s))*.18,opacity:.8};
@@ -58,9 +58,10 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   p[POWER_AURA+1]={x:contact.x-43,y:contact.y-20-lift,opacity:s.sandals>0?1:0};
   p[172]={x:contact.x-36,y:contact.y-200-lift,opacity:s.kite>0?1:0};
   p[173]={x:contact.x-48,y:contact.y-134-lift,opacity:s.shield||s.protection>0?.7:0};
-  for(let i=0;i<14;i++){const distance=s.travel+Math.floor(i/2)*.17,z=distance%1.18;p[35+i]={identity:Math.floor(distance/1.18),...trackSprite(i%2?1.5:.5,z,4,36)};}
+  // Always-visible travel carrier: never infer phase from a clipped decorative sprite.
+  p[35]={x:s.travel,y:0,opacity:1};
+  p[36]={identity:s.lives.hit,x:reduced?0:Math.max(0,(s.cooldown-.20)/.10)*.45,y:0,scale:reduced?1:s.lives.invulnerable>0&&Math.floor(s.time*16)%2?.38:1,snap:true};
   for(let i=0;i<SCENE_COUNT;i++)p[SCENE_START+i]=harborSceneryPose(s.travel,i);
-  for(let i=0;i<TEXTURE_COUNT;i++)p[TEXTURE_START+i]=groundTexturePose(s.travel,i);
   const lean = reduced ? 0 : s.lane-s.poseLane;
   const shake = reduced ? 0 : Math.max(0,s.cooldown/.3);
   // Camera is always visible. Its scale field carries speed-line intensity, not zoom.
@@ -70,7 +71,7 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   p[57]={x:260,y:78,opacity:!learn&&next&&next.z>.35&&(next.action!=="idle"||s.lane!==next.shellLane)&&!(s.learned&move)?1:0};
   const f=s.feedback/.45,scored=s.lastGain>0;
   p[56]={x:Math.min(TRACK_WIDTH-88,contact.x+42),y:396-(1-f)*25,opacity:scored&&s.cue!=="shell"?f:0};
-  if(s.cue==="bump"&&!reduced)for(let i=0;i<6;i++){const a=i*Math.PI/3;p[26+i]={x:contact.x+Math.cos(a)*(1-f)*50,y:contact.y-60+Math.sin(a)*(1-f)*50,opacity:f};}
+  if((s.cooldown>0||s.nearMiss>0)&&!reduced)for(let i=0;i<6;i++){const a=i*Math.PI/3;p[26+i]={x:contact.x+Math.cos(a)*(1-f)*50,y:contact.y-60+Math.sin(a)*(1-f)*50,opacity:f};}
   // Inactive slots retain one canonical object and never send hidden native transforms.
   for(let i=0;i<p.length;i++)if(p[i].opacity===0)p[i]=HIDDEN_POSE;
   return rankPainterPoses(p);
