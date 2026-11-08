@@ -14,7 +14,7 @@ export function defineReplayGame<D,P,A,S>(config: {
   completionText?: (ref: ChallengeSession['puzzle'], result: Terminal) => string;
   helpUI?: 'board';
   /** Worst-case full help sequence, including terminal result overhead, certified by each adopter. */
-  assistance?: { bytes: number; actions: number; isAction: (action: A) => boolean };
+  assistance?: { bytes: number; actions: number; idempotentHelp: true; isAction: (action: A) => boolean };
   puzzles: readonly Puzzle<D>[]; objectives?: readonly string[]; engine: ReplayEngine<D,P,A,S>;
   Board: ComponentType<ChallengeViewProps<S,A>>; controls: { help: () => A; reset: () => A };
 }): TypedRegistration<ReplayPayload<P,A>,A,S> {
@@ -87,7 +87,7 @@ export function defineReplayGame<D,P,A,S>(config: {
   }
   const codec={game:config.game,cove:config.cove,budget:config.budget,validate:(s:ChallengeSession)=>replay(s)!==null,evaluate,
     canStart:(s:ChallengeSession)=>replay(s)!==null && (s.payload as ReplayPayload<P,A>).actions.length===0 && s.result===null,
-    extends:(a:ChallengeSession,b:ChallengeSession)=>{const p=a.payload as ReplayPayload<P,A>,q=b.payload as ReplayPayload<P,A>;return (q.actions.length>p.actions.length || q.actions.length===p.actions.length && !!replay(a)?.evidence.helpUsed) && JSON.stringify({...p,actions:[]})===JSON.stringify({...q,actions:[]}) && p.actions.every((action,i)=>JSON.stringify(action)===JSON.stringify(q.actions[i]));}};
+    extends:(a:ChallengeSession,b:ChallengeSession)=>{const p=a.payload as ReplayPayload<P,A>,q=b.payload as ReplayPayload<P,A>;return (q.actions.length>p.actions.length || q.actions.length===p.actions.length && config.assistance?.idempotentHelp===true && !!replay(a)?.evidence.helpUsed) && JSON.stringify({...p,actions:[]})===JSON.stringify({...q,actions:[]}) && p.actions.every((action,i)=>JSON.stringify(action)===JSON.stringify(q.actions[i]));}};
   const catalog:SaveCatalog={banks,dares,codecs:new Map([[config.codec,codec]]),contexts:new Set(config.puzzles.map(p=>`${config.context}-${p.tier}`))};
   return {game:config.game,codec:config.codec,cove:config.cove,contextFor:ref=>`${config.context}-${config.puzzles.find(p=>p.ref.bank===ref.bank&&p.ref.puzzle===ref.puzzle)?.tier??1}`,puzzles:config.puzzles,catalog,controls:config.controls,completionText:config.completionText,helpUI:config.helpUI,
     start:(ref,owner,id,progress,options,selectedDares)=>{
@@ -98,7 +98,7 @@ export function defineReplayGame<D,P,A,S>(config: {
     },
     move:(s,action)=>{if(!engine.validAction(action) || !validChallengeSession(s,s.owner,catalog,s.owner.startsWith('cove-')) || s.result || s.credited)return null;
       const payload=s.payload as ReplayPayload<P,A>;
-      const repeatedHelp = JSON.stringify(action) === JSON.stringify(config.controls.help()) && replay(s)?.evidence.helpUsed;
+      const repeatedHelp = config.assistance?.idempotentHelp===true && JSON.stringify(action) === JSON.stringify(config.controls.help()) && replay(s)?.evidence.helpUsed;
       const next={...s,revision:s.revision+1,payload:{...payload,actions:repeatedHelp?payload.actions:[...payload.actions,action]}};
       const restored = replay(next);
       if(!restored)return null;

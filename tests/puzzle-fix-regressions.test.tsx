@@ -68,7 +68,7 @@ function Board({ state, sessionKey, commit, active }: ChallengeViewProps<ReturnT
 }
 function makeEntry(count = 3, completionText?: ChallengeEntry['completionText']) {
   return defineReplayGame({ game: 'fix-proof', codec: `fix-proof-${count}-v1`, context: 'fixproof', cove: true, budget: { wrapper: 700, draft: 3396, undo: 0, audit: 0 }, engine:ladderEngine, Board,
-    assistance:{bytes:1600,actions:48,isAction:(a:LadderAction)=>a.type==='help'||a.type==='demo'},
+    assistance:{idempotentHelp:true,bytes:1600,actions:48,isAction:(a:LadderAction)=>a.type==='help'||a.type==='demo'},
     helpUI: 'board', completionText, objectives: ['shell'],
     puzzles: Array.from({ length: count }, (_, i) => ({ ...puzzle, dares: [], awards: [null, null] as const, par: undefined, ref: { ...puzzle.ref, engine: 'fix-proof', bank: 450 + count, puzzle: i, hash: String(i + 1).repeat(64) }, source: { kind: 'endless' as const, bank: 450 + count, puzzle: i }, title: `Maze ${i}` })),
     controls: { help: () => ({ type: 'help' } as Action), reset: () => ({ type: 'reset' } as Action) } });
@@ -119,7 +119,7 @@ it('F9: a full ordinary draft reserves saved help and a whole bounded demonstrat
   const assistEngine = { ...engine, validAction: (v: unknown): v is Assisted => engine.validAction(v) || !!v && typeof v === 'object' && (v as Assisted).type === 'demo' && Number.isInteger((v as {cell?:number}).cell),
     step: (s: ReturnType<typeof engine.create>, a: Assisted, d: {seed:number}) => engine.step(s, a.type === 'demo' ? { type: 'move', cell: a.cell } : a, d) };
   const e = defineReplayGame({ game: 'budget-proof', codec: 'budget-proof-v1', context: 'budget', cove: true, budget: { wrapper: 700, draft: 3396, undo: 0, audit: 0 }, engine: assistEngine, Board: () => null, objectives: ['shell'],
-    assistance: { bytes: 1600, actions: 48, isAction: (a: Assisted) => a.type === 'help' || a.type === 'demo' },
+    assistance: { idempotentHelp:true, bytes: 1600, actions: 48, isAction: (a: Assisted) => a.type === 'help' || a.type === 'demo' },
     puzzles: [{ ...puzzle, ref: { ...puzzle.ref, engine: 'budget-proof', bank: 437 }, source: { kind: 'endless', bank: 437, puzzle: 0 }, dares: [], awards: [null, null] }], controls: { help: () => ({ type: 'help' } as Assisted), reset: () => ({ type: 'reset' } as Assisted) } });
   let s = e.start(e.puzzles[0].ref, 'a', 'budget-1', emptyChallenge(), { supportOff: false, ownRead: false }, []);
   const first = engine.create({seed:1},{seed:1},{supportOff:false,ownRead:false}).board, cell = mazeRoute(first)[1];
@@ -174,7 +174,7 @@ it.each([1,3])('F1/F2/F6: real frame draft %i keeps One step neutral and Check-o
    return next?{key:next.key,view:publicSumView({target:6,draft:next.state.draft})}:null;
   }}/>
  </>;}
- const e=defineReplayGame({game:'grid-proof',codec:`grid-proof-${left}-v1`,context:'gridproof',cove:true,budget:{wrapper:700,draft:3396,undo:0,audit:0},engine:gridEngine,Board:GridBoard,helpUI:'board',assistance:{bytes:800,actions:16,isAction:a=>a.type==='help'||a.type==='demo'},controls:{help:()=>({type:'help'} as GridAction),reset:()=>({type:'reset'} as GridAction)},puzzles:[{...puzzle,descriptor:6,ref:{...puzzle.ref,engine:'grid-proof',bank:460+left},source:{kind:'endless',bank:460+left,puzzle:0},dares:[],awards:[null,null]}]});
+ const e=defineReplayGame({game:'grid-proof',codec:`grid-proof-${left}-v1`,context:'gridproof',cove:true,budget:{wrapper:700,draft:3396,undo:0,audit:0},engine:gridEngine,Board:GridBoard,helpUI:'board',assistance:{idempotentHelp:true,bytes:800,actions:16,isAction:a=>a.type==='help'||a.type==='demo'},controls:{help:()=>({type:'help'} as GridAction),reset:()=>({type:'reset'} as GridAction)},puzzles:[{...puzzle,descriptor:6,ref:{...puzzle.ref,engine:'grid-proof',bank:460+left},source:{kind:'endless',bank:460+left,puzzle:0},dares:[],awards:[null,null]}]});
  await mount(e);await press('Enter left');await press('Help');await press('Look');await press('Think');await press('One step');
  expect(text()).toContain('Your entries are kept. Choose Show me or try another puzzle.');expect(labels()).toContain('Show me');
  const actions=(store.save.challenge!.paused[0].payload as {actions:GridAction[]}).actions;
