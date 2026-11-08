@@ -34,6 +34,7 @@ import { settleProgress, canRevealResting } from "./settle";
 import { releaseWindow, type ProbeFrame, type ProbeRelease, type ReleaseProbe } from "./frameProbe";
 import { anchorsFor } from "../scene/species";
 import { poseToken } from "./poseBank";
+import type { TraceEvent } from "./trace";
 
 export type CaptureToken = { generation: number; epoch: number };
 export type DragSlot = CaptureToken & {
@@ -141,6 +142,7 @@ export function useInteraction({
   onDestination,
   onFrameReport,
   onReleaseProbe,
+  onTrace,
   viewportOffset,
 }: {
   scene: Scene;
@@ -157,6 +159,8 @@ export function useInteraction({
   onDestination?: (slot: number, scene: Scene) => void;
   onFrameReport?: (times: number[]) => void;
   onReleaseProbe?: (probe: ReleaseProbe) => void;
+  /** Lab-only local log. Omitted everywhere else, including every family build. */
+  onTrace?: (event: TraceEvent) => void;
   viewportOffset?: SharedValue<{ x: number; y: number }>;
 }) {
   const epoch = useSharedValue(0),
@@ -374,6 +378,10 @@ export function useInteraction({
       if (slot.id === id) { slot.ready = true; slot.carryBounds = carryBounds; }
       return current;
     });
+    if (onTrace) {
+      onTrace({ type: "ready", at: Date.now(), id, slot: index });
+      requestAnimationFrame(() => onTrace({ type: "painted", at: Date.now(), id, slot: index }));
+    }
   };
 
   const send = (event: ControllerEvent, replay = false) => {
@@ -733,6 +741,7 @@ export function useInteraction({
         if (controller.value.pointers.length && entity && movable.value[entity] === false) entity = undefined;
         const fixed = controller.value.pointers.find((p) => p.entity && movable.value[p.entity] === false);
         if (fixed) send({ type: "to-camera", pointer: fixed.pointer, point: fixed.point });
+        if (onTrace) runOnJS(onTrace)({ type: "pick", at: eventTime(), pointer: touch.id, x: touch.x, y: touch.y, entity });
         if (entity && controller.value.pointers.some((p) => !p.entity)) {
           suppressed.set([...suppressed.value, touch.id]);
           continue;
@@ -795,6 +804,11 @@ export function useInteraction({
             send({ type: "move", pointer: touch.id, point: screenPoint(touch.x, touch.y) });
           const slot = slots.value.find((s) => s.pointer === touch.id && s.id);
           const proposal = slot?.proposal;
+          if (onTrace && capture?.phase === "dragging" && slot) {
+            const origin = originFor(slot.id);
+            runOnJS(onTrace)({ type: "release", at: eventTime(), id: slot.id, kind: proposal?.kind ?? "restore", target: proposal?.target,
+              finger: { x: touch.x, y: touch.y }, anchor: { x: slot.x - origin.x, y: slot.y - origin.y }, contact: proposal?.contact, room: proposal?.room });
+          }
           if (onReleaseProbe && capture?.phase === "dragging" && slot)
             probePending.set([...probePending.value, { at: eventTime(), id: slot.id,
               kind: proposal?.kind ?? "restore", target: proposal?.target }]);
@@ -865,6 +879,11 @@ export function useInteraction({
       const p = t * t * (3 - 2 * t);
       camera.set({ ...to, tx: from.tx + (to.tx - from.tx) * p, ty: from.ty + (to.ty - from.ty) * p });
       if (t === 1) revealPan.set(null);
+    }
+    if (onTrace && frameTimes.value.length >= 120) {
+      const sorted = [...frameTimes.value].sort((a, b) => a - b), at = (q: number) => sorted[Math.floor(sorted.length * q)];
+      runOnJS(onTrace)({ type: "frames", at: eventTime(), samples: sorted.length, p50: at(.5), p95: at(.95), p99: at(.99), max: sorted[sorted.length - 1] });
+      frameTimes.set([]);
     }
     if (onFrameReport && frameCount.value < 3600) {
       frameTimes.modify((times) => { "worklet"; times.push(dt); return times; });
@@ -993,7 +1012,7 @@ export function useInteraction({
   // send/resumePending read these shared channels. Keeping their render-local
   // identities out of dependencies preserves the native callback clock.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onReleaseProbe, probeRing, probeCursor, probeLastAt, probePending, queuedInput, slots, prepared, renderedRevision, laidOut, layoutTokens,
+  }, [onTrace, onReleaseProbe, probeRing, probeCursor, probeLastAt, probePending, queuedInput, slots, prepared, renderedRevision, laidOut, layoutTokens,
     poseLayouts, lastFrame, revealPan, controller, reduced, camera, onFrameReport, frameCount, frameTimes, inertia,
     viewport, building, offset, proposalFor, onCommit, onClear]));
   const cancelAll = () => {

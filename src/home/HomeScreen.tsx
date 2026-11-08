@@ -38,11 +38,19 @@ import { DebugOverlay } from "./runtime/DebugOverlay";
 import { type CharacterRender } from "./runtime/EntityArt";
 import { boundCamera, fitCamera, focusCamera, roomScale, roomAtScreen, zoomCamera } from "./runtime/CameraController";
 import { useInteraction, type Interaction, type Pickup, type CaptureToken } from "./runtime/useInteraction";
-import { groupIds } from "./runtime/group";
+import { groupIds, restingVisible } from "./runtime/group";
+import { anchorsFor } from "./scene/species";
 import { useIdleCharacters } from "./runtime/useIdleCharacters";
 import { isPortion, withPortions } from "./runtime/portions";
 import type { ReleaseProbe } from "./runtime/frameProbe";
 import { writeProbe } from "./runtime/probeReceipt";
+import type { HomeTrace } from "./runtime/trace";
+
+/** Metro folds this branch away, so a build without the lab flag carries none of this code. */
+const labKit: { trace: typeof import("./runtime/trace"); overlay: typeof import("./runtime/HullOverlay") } | undefined =
+  __DEV__ || process.env.EXPO_PUBLIC_HOME_LAB === "1"
+    ? { trace: require("./runtime/trace"), overlay: require("./runtime/HullOverlay") }
+    : undefined;
 
 export type HomeScreenProps = Ownership & {
   badges?: BadgeId[];
@@ -95,6 +103,9 @@ export function HomeScreen({
   const [frameReport, setFrameReport] = useState<number[]>();
   const [releaseProbes, setReleaseProbes] = useState<ReleaseProbe[]>([]);
   const [probeMax, setProbeMax] = useState(0);
+  const [trace] = useState<HomeTrace | undefined>(() => (lab && labKit ? labKit.trace.createHomeTrace() : undefined));
+  const onTrace = useCallback((event: Parameters<HomeTrace["record"]>[0]) => trace?.record(event), [trace]);
+  const [hulls, setHulls] = useState(lab);
   const onReleaseProbe = useCallback((probe: ReleaseProbe) => {
     writeProbe(probe);
     setProbeMax((maximum) => Math.max(maximum, probe.maxDelta));
@@ -292,6 +303,8 @@ export function HomeScreen({
         stillCurrent
       );
       if (result) {
+        if (labKit && trace)
+          trace.record({ type: "commit", at: Date.now(), id: proposal.id, kind: result.proposal.kind, target: result.proposal.target, transaction: labKit.trace.transactionId(JSON.stringify(result.state)) });
         showReaction(result.proposal);
         const destination = buildRuntimeScene(result.state);
         setPickups((current) =>
@@ -314,7 +327,7 @@ export function HomeScreen({
         sound("tap");
       } else runtime.current!.finish(index, false, undefined, undefined, undefined, token);
     },
-    [building, commitAt, sound, buildRuntimeScene]
+    [building, commitAt, sound, buildRuntimeScene, trace]
   );
   const onPickup = useCallback(
     (pickup: Pickup) => {
@@ -446,11 +459,23 @@ export function HomeScreen({
     onDestination,
     onFrameReport: lab ? setFrameReport : undefined,
     onReleaseProbe: lab ? onReleaseProbe : undefined,
+    onTrace: lab && labKit ? onTrace : undefined,
     viewportOffset,
   });
   useLayoutEffect(() => {
     runtime.current = interaction;
   });
+  React.useEffect(() => {
+    if (!trace) return;
+    const c = interaction.camera.get();
+    trace.record({ type: "layout", at: Date.now(), camera: { a: c.a, tx: c.tx, ty: c.ty }, offset: viewportOffset.get(),
+      entities: Object.values(scene.entities).filter((e) => restingVisible(e, scene)).map((e) => ({
+        id: e.id, room: e.room, x: e.contact.x, y: e.contact.y, visual: e.visual,
+        head: e.character ? anchorsFor(e.character.slot, e.base, e.facing, e.action).head : undefined })) });
+    // Reference frame for planning and checking recorded gestures; refreshed after each settled edit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trace, scene]);
+  React.useEffect(() => () => trace?.dispose(), [trace]);
   React.useEffect(() => {
     if (!lab) return;
     const host = globalThis as unknown as Record<string, unknown>;
@@ -692,6 +717,7 @@ export function HomeScreen({
             pickups={pickups}
             reduced={reduced}
             renderCharacter={renderCharacter}
+            debugLayer={lab && labKit && hulls ? <labKit.overlay.HullOverlay scene={scene} building={building} scale={roomScale(viewport)} /> : undefined}
             selected={selected}
             reactions={reactions}
             sleeping={sleeping}
@@ -723,6 +749,7 @@ export function HomeScreen({
           </View>}
           {lab && (
             <View style={{ position: "absolute", bottom: 2, right: 8, flexDirection: "row", gap: 6 }}>
+              <Tool label="Toggle hit shapes" symbol="◍" selected={hulls} onPress={() => setHulls(!hulls)} />
               <Tool label="Toggle debug" symbol="⌘" selected={debug} onPress={() => setDebug(!debug)} />
               <Pressable
                 accessibilityRole="button"

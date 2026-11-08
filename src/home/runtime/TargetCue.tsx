@@ -9,6 +9,28 @@ export function TargetCue({ target, interaction }: { target: Target; interaction
   const visible = useDerivedValue(() => slots.value.some((s) => s.id && s.phase === "dragging" && s.proposal?.target === target.id) ? 1 : 0);
   const style = useAnimatedStyle(() => ({ opacity: visible.value }));
   return (
+    <>
+    {target.rim && (
+      <Animated.View
+        testID="seat-rim"
+        accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
+        pointerEvents="none"
+        style={[
+          {
+            position: "absolute",
+            left: target.rim.left,
+            top: target.rim.top,
+            width: target.rim.width,
+            height: target.rim.height,
+            borderRadius: target.rim.height,
+            borderWidth: 6,
+            borderColor: "#78B693",
+            backgroundColor: "#E8F7C844",
+          },
+          style,
+        ]}
+      />
+    )}
     <Animated.View
       accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"
       pointerEvents="none"
@@ -40,5 +62,6 @@ export function TargetCue({ target, interaction }: { target: Target; interaction
         }}
       />
     </Animated.View>
+    </>
   );
 }

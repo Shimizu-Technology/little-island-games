@@ -8,8 +8,8 @@ import { translatedBounds, overlaps } from "../src/home/scene/spatial";
 import { resolve } from "../src/home/scene/proposal";
 import { withPortions, isPortion } from "../src/home/runtime/portions";
 import { paintEntries } from "../src/home/runtime/group";
-import { prepareHits, pickEntity } from "../src/home/runtime/pick";
 import { capabilityOf } from "../src/home/world";
+import { prepareHits, pickEntity } from "../src/home/runtime/pick";
 
 describe("native round 3 regressions", () => {
   it("S1 every visible shelf portion beats the fixture behind it, in both facings", () => {
@@ -18,6 +18,7 @@ describe("native round 3 regressions", () => {
       const fridge = world.rooms.kitchen.instances.find((i) => i.item === "fridge")!;
       fridge.powered = true; fridge.mirrored = mirrored;
       const scene = withPortions(buildScene(world)), hits = prepareHits(scene).kitchen;
+      const movable = Object.fromEntries(Object.values(scene.entities).map((e) => [e.id, !e.item || capabilityOf(e.item.item).moveInPlay]));
       const portions = Object.values(scene.entities).filter((e) => e.room === "kitchen" && isPortion(e.id));
       expect(portions.length).toBeGreaterThanOrEqual(4);
       for (const e of portions) {
@@ -28,7 +29,7 @@ describe("native round 3 regressions", () => {
         // The middle of the art, and four points still on it.
         const m = e.visual!, near = bounds.width * .08;
         for (const [dx, dy] of [[0, 0], [-near, -near], [near, -near], [-near, near], [near, near]]) {
-          expect(pickEntity(hits, roomPoint(e.contact.x + m.x + dx, e.contact.y + m.y + dy), .5, { "kitchen/item/starter-fridge": false })).toBe(e.id);
+          expect(pickEntity(hits, roomPoint(e.contact.x + m.x + dx, e.contact.y + m.y + dy), .5, movable)).toBe(e.id);
         }
       }
     }

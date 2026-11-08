@@ -214,7 +214,10 @@ export function SceneView({
   onNode,
   badges = [],
   onBadges,
+  debugLayer,
 }: {
+  /** Lab-only layer in house space, under the carried object. */
+  debugLayer?: React.ReactNode;
   badges?: readonly BadgeId[];
   onBadges?: () => void;
   onNode: (id: string, node: View | null) => void;
@@ -333,6 +336,7 @@ export function SceneView({
           <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", width: building.width, height: building.height }}>
             <BuildingTrim building={building} />
           </View>
+          {debugLayer}
           <DragOverlay
             scene={scene}
             pickups={pickups}
