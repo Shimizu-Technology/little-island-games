@@ -98,7 +98,8 @@ export function catalogCovered(entity: SceneEntity, contact: RoomPoint, depth: n
     if (entity.shapes?.length && !onShapes(entity.shapes, x, y)) continue;
     painted++;
     if (front.some(b => x + contact.x >= b.bounds.left && x + contact.x <= b.bounds.left + b.bounds.width &&
-      y + contact.y >= b.bounds.top && y + contact.y <= b.bounds.top + b.bounds.height)) covered++;
+      y + contact.y >= b.bounds.top && y + contact.y <= b.bounds.top + b.bounds.height &&
+      (!b.shapes?.length || !b.contact || onShapes(b.shapes, x + contact.x - b.contact.x, y + contact.y - b.contact.y)))) covered++;
   }
   return painted ? covered / painted : 1;
 }

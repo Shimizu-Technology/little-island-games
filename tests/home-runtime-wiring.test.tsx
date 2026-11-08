@@ -6,7 +6,7 @@ import { layoutToken } from "../src/home/runtime/layout";
 import { useInteraction, type Interaction } from "../src/home/runtime/useInteraction";
 import { buildingLayout } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
-import { gridCell, roomPoint, type Scene, type SceneEntity } from "../src/home/scene/types";
+import { gridCell, screenPoint, roomPoint, type Scene, type SceneEntity } from "../src/home/scene/types";
 import { roomIds } from "../src/home/catalogMore";
 const harness = vi.hoisted(() => ({
   deferUI: false,
@@ -109,6 +109,7 @@ function fixture(revision = "initial", contact = entity.contact): Scene {
         sockets: [],
         targets: [],
         buckets: {},
+        occupancy: {},
         occlusionBands: [],
         hitProxies:
           room === "home"
@@ -907,4 +908,127 @@ it('H2 a queued synthetic request cannot resurrect after navigation cancellation
  harness.deferUI=false;current.cancelAll();queuedBegin();flushJS();
  expect(current.slots.get().every(s=>!s.id)).toBe(true);expect(committed).toBe(0);
  await act(async()=>renderer.unmount());vi.useRealTimers();
+});
+
+describe('H2 independent review capture regressions', () => {
+ it.each([0,100])('P1-3 tap during synthetic travel resumes its proposal (elapsed %i)', async elapsed => {
+  let tree!:TestRenderer.ReactTestRenderer; const scene=fixture();
+  await act(async()=>{tree=TestRenderer.create(<Probe scene={scene}/>);});
+  const {resolve}=await import('../src/home/scene/resolve');
+  current.animateProposal(resolve(scene.rooms.home,entity,roomPoint(200,486),{scale:1,release:true}));
+  flushJS();
+  if(elapsed){harness.frames[0]({timeSincePreviousFrame:17});vi.advanceTimersByTime(elapsed);harness.frames[0]({timeSincePreviousFrame:17});}
+  const s={...current.slots.get()[0]};
+  touch('down',s.x,s.y-50);touch('up',s.x,s.y-50);flushJS();
+  expect(current.slots.get()[0].id).toBe(entity.id);
+  expect(current.slots.get()[0].proposal).toEqual(s.proposal);
+  harness.frames[0]({timeSincePreviousFrame:17});vi.advanceTimersByTime(500);harness.frames[0]({timeSincePreviousFrame:17});flushJS();
+  expect(committed).toBe(1);
+  await act(async()=>tree.unmount());vi.useRealTimers();
+ });
+ it('P1-4 second furniture pickup cannot reuse an unmounted overlay layout',async()=>{
+  let tree!:TestRenderer.ReactTestRenderer;const scene=fixture();
+  const prop={...entity,id:'home/item/chair',character:undefined,item:instance('chair','chair',2,2),
+   body:{w:2,h:2,layer:'furniture',small:false,holdable:false,portable:true}} as SceneEntity;
+  scene.entities={[prop.id]:prop};scene.rooms.home.entities=scene.entities;scene.rooms.home.occupancy={};
+  scene.rooms.home.hitProxies=scene.rooms.home.hitProxies.map(p=>({...p,id:prop.id}));
+  await act(async()=>{tree=TestRenderer.create(<Probe scene={scene} designing/>);});
+  touch('down',120,300);touch('move',150,320);flushJS();
+  expect(current.slots.get()[0].ready).toBe(true);
+  current.cancelAll();flushJS();
+  touch('down',120,300);touch('move',150,320);
+  for(let n=0;n<4;n++){vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});}
+  expect(current.slots.get()[0].ready).toBe(false);expect(current.slots.get()[0].painted).toBe(false);
+  await act(async()=>tree.unmount());vi.useRealTimers();
+ });
+ it.each([false,true])('P1-2 catalog fast release is atomic with deferred JS writes (cancel %s)',async cancel=>{
+  let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={fixture()} designing/>);});
+  const prop={...entity,id:'home/item/catalog-x',character:undefined,item:instance('catalog-x','chair',2,2),
+   body:{w:2,h:2,layer:'furniture',small:false,holdable:false,portable:true}} as SceneEntity;
+  harness.deferUI=true;
+  current.externalDown(-500,prop.id,screenPoint(100,300),prop);
+  // Same JS tick, before any shared writes publish.
+  const drop = (current as Partial<Interaction>).externalDrop;
+  if (drop) drop(-500,screenPoint(240,480),cancel);
+  else {current.externalMove(-500,screenPoint(240,480));current.externalUp(-500,cancel);}
+  while(harness.ui.length)harness.ui.shift()!();harness.deferUI=false;flushJS();
+  expect(current.controller.get().pointers).toHaveLength(0);
+  expect(current.slots.get().every(s=>!s.id||s.phase==='settling')).toBe(true);
+  for(let n=0;n<40;n++){vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});flushJS();}
+  expect(committed).toBe(cancel?0:1);
+  if(!cancel){
+    const saved=fixture('committed');saved.entities[prop.id]={...prop,contact:committedContact};
+    await act(async()=>tree.update(<Probe scene={saved} designing/>));
+    for(let n=0;n<15;n++){vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});flushJS();}
+  }
+  expect(current.slots.get().every(s=>!s.id)).toBe(true);
+  await act(async()=>tree.unmount());vi.useRealTimers();
+ });
+ it('P1-1 rejected catalog commit frees its slot even without a destination entity',async()=>{
+  let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={fixture()}/>);});
+  const prop={...entity,id:'home/item/catalog-x',character:undefined,item:instance('catalog-x','chair',2,2)};
+  const {resolve}=await import('../src/home/scene/resolve');
+  current.animateProposal(resolve(fixture().rooms.home,prop,roomPoint(200,486),{scale:1,release:true}),prop);
+  flushJS();const slot=current.slots.get()[0];current.finish(0,false,undefined,undefined,undefined,slot);
+  for(let n=0;n<60;n++){vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});flushJS();}
+  expect(current.slots.get().every(s=>!s.id)).toBe(true);
+  await act(async()=>tree.unmount());vi.useRealTimers();
+ });
+ it('P1-5 staged synthetic travel begins at the measured basket cell',async()=>{
+  let tree!:TestRenderer.ReactTestRenderer;const scene=fixture();scene.entities[entity.id]={...entity,attachment:{kind:'staging',room:'home'}};
+  await act(async()=>{tree=TestRenderer.create(<Probe scene={scene}/>);});
+  const {resolve}=await import('../src/home/scene/resolve');
+  current.stagingContacts.set({[entity.id]:{x:82,y:560}});
+  current.animateProposal(resolve(scene.rooms.home,scene.entities[entity.id],roomPoint(200,486),{scale:1,release:true}));flushJS();
+  expect(current.slots.get()[0].releaseX).toBe(82);expect(current.slots.get()[0].releaseY).toBe(560);
+  await act(async()=>tree.unmount());vi.useRealTimers();
+ });
+});
+
+it('P2-7 idle entities do not receive a new animation clock every frame',async()=>{
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={fixture()}/>);});
+ const before=current.clock.get();for(let n=0;n<20;n++){vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});}
+ expect(current.clock.get()).toBe(before);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+it('P3-5 an overlay layout racing slot publication is reconciled by capture generation',async()=>{
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={fixture()}/>);});
+ const prop={...entity,id:'home/item/catalog-x',character:undefined,item:instance('catalog-x','chair',2,2)};
+ current.ready(-1,prop.id,undefined,1);
+ const {resolve}=await import('../src/home/scene/resolve');
+ current.animateProposal(resolve(fixture().rooms.home,prop,roomPoint(200,486),{scale:1,release:true}),prop);
+ harness.frames[0]({timeSincePreviousFrame:17});
+ expect(current.slots.get()[0].ready).toBe(true);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+it('P3-3 a UI allocation lost to cancellation reports rejection to its catalog owner',async()=>{
+ let tree!:TestRenderer.ReactTestRenderer;const scene=fixture();await act(async()=>{tree=TestRenderer.create(<Probe scene={scene}/>);});
+ const {resolve}=await import('../src/home/scene/resolve');const result=vi.fn();
+ harness.deferUI=true;current.animateProposal(resolve(scene.rooms.home,entity,roomPoint(200,486),{scale:1,release:true}),undefined,undefined,result);
+ const begin=harness.ui.shift()!;harness.deferUI=false;current.cancelAll();begin();flushJS();expect(result).toHaveBeenCalledWith(false);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+it('P2-7 the gated clock publishes the final fixture nudge frame before sleeping',async()=>{
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={fixture()}/>);});
+ current.fixtureNudges.set({fixture:1000});
+ for(let n=0;n<20;n++){vi.advanceTimersByTime(17);harness.frames[0]({timeSincePreviousFrame:17});}
+ expect(current.clock.get()).toBeGreaterThanOrEqual(1220);const stopped=current.clock.get();
+ vi.advanceTimersByTime(100);harness.frames[0]({timeSincePreviousFrame:17});expect(current.clock.get()).toBe(stopped);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+it('P1-3 tapping a released drag continues to its destination once',async()=>{
+ let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<Probe scene={fixture()}/>);});
+ touch('down',120,300);touch('move',200,380);flushJS();touch('up',200,380);
+ vi.advanceTimersByTime(70);harness.frames[0]({timeSincePreviousFrame:17});const s={...current.slots.get()[0]};
+ touch('down',s.x,s.y-50);touch('up',s.x,s.y-50);flushJS();
+ expect(current.slots.get()[0].proposal).toEqual(s.proposal);expect(current.slots.get()[0].id).toBe(entity.id);
+ vi.advanceTimersByTime(500);harness.frames[0]({timeSincePreviousFrame:17});flushJS();expect(committed).toBe(1);
+ await act(async()=>tree.unmount());vi.useRealTimers();
+});
+it('P3-2 Reduced Motion preserves resting art while a cold overlay awaits JS',async()=>{
+ let tree!:TestRenderer.ReactTestRenderer;const scene=fixture();await act(async()=>{tree=TestRenderer.create(<Probe scene={scene} reduced/>);});
+ const {resolve}=await import('../src/home/scene/resolve');current.animateProposal(resolve(scene.rooms.home,entity,roomPoint(200,486),{scale:1,release:true}));
+ const slot=current.slots.get()[0];expect(slot.ready).toBe(false);expect(slot.painted).toBe(false);
+ flushJS();expect(committed).toBe(1);
+ await act(async()=>tree.unmount());vi.useRealTimers();
 });

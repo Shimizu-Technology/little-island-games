@@ -98,7 +98,7 @@ export type RoomIndex = {
   sockets: Target[];
   targets: Target[];
   buckets: Record<string, number[]>;
-  occlusionBands: { id?: EntityId; bounds: Bounds; depth: number }[];
+  occlusionBands: { id?: EntityId; bounds: Bounds; depth: number; shapes?: HitShape[]; contact?: RoomPoint }[];
   hitProxies: { id: EntityId; bounds: Bounds; depth: number; band: DepthBand }[];
 };
 export type SceneState = HomeStateV2;

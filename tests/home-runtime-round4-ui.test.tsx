@@ -1,6 +1,10 @@
 import React from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
 import { describe, expect, it, vi } from 'vitest';
+import { TargetCue } from '../src/home/runtime/TargetCue';
+import { LandingPreview } from '../src/home/runtime/LandingPreview';
+import { StagingTray } from '../src/home/runtime/StagingTray';
+import { DesignTools } from '../src/home/runtime/DesignTools';
 import { DragOverlay } from '../src/home/runtime/DragOverlay';
 import { SceneView } from '../src/home/runtime/SceneView';
 import { withPortions } from '../src/home/runtime/portions';
@@ -8,13 +12,18 @@ import { labHome } from '../src/home/runtime/lab';
 import { buildScene } from '../src/home/scene/graph';
 import { buildingLayout } from '../src/home/camera';
 import type { Interaction, Pickup } from '../src/home/runtime/useInteraction';
-vi.mock('react-native',()=>({View:'View',Pressable:'Pressable',Platform:{OS:'ios'}}));
-vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'},useAnimatedStyle:(fn:()=>unknown)=>({evaluate:fn}),useDerivedValue:(fn:()=>unknown)=>({get value(){return fn();}})}));
-vi.mock('react-native-gesture-handler',()=>({GestureDetector:'GestureDetector'}));
+vi.mock('react-native',()=>({View:'View',Pressable:'Pressable',ScrollView:'ScrollView',Text:'Text',Modal:'Modal',FlatList:({data,renderItem}:any)=>data.map((item:any)=>renderItem({item})),Platform:{OS:'ios'}}));
+vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'},useAnimatedStyle:(fn:()=>unknown)=>({evaluate:fn}),useDerivedValue:(fn:()=>unknown)=>({get value(){return fn();}}),useAnimatedReaction:(prepare:any,react:any)=>{const previous=React.useRef<any>(null);React.useLayoutEffect(()=>{const next=prepare();if(next!==previous.current){react(next,previous.current);previous.current=next;}});},runOnJS:(fn:any)=>fn}));
+const pans=vi.hoisted(()=>[] as any[]);
+vi.mock('react-native-gesture-handler',()=>({GestureDetector:'GestureDetector',Gesture:{Pan:()=>{
+ const handlers:any={};const builder:any=new Proxy({}, {get:(_t,key)=> (...args:any[])=>{if(String(key).startsWith('on'))handlers[key]=args[0];return builder;}});pans.push(handlers);return builder;
+}}}));
 vi.mock('../src/home/runtime/EntityArt',()=>({EntityArt:()=>null,artFrame:(e:any)=>e.bounds}));
 vi.mock('../src/home/runtime/SettleArt',()=>({SettleArt:()=>null}));
 vi.mock('../src/home/art/Room',()=>({RoomArt:()=>null,ShoreArt:()=>null}));
-vi.mock('../src/home/art/More',()=>({RoomShellArt:()=>null}));
+vi.mock('../src/home/art/More',()=>({RoomShellArt:()=>null,MoreItemArt:()=>null}));
+vi.mock('../src/home/art/Items',()=>({ItemArt:()=>null}));
+vi.mock('../src/home/runtime/HomeChrome',()=>({Tool:()=>null}));
 vi.mock('../src/home/BuildingArt',()=>({BuildingArt:()=>null,BuildingTrim:()=>null,TerraceArt:()=>null}));
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;
 function context(id:string,reduced=false) {
@@ -150,4 +159,44 @@ it('H2 pose previews retain a native layout anchor and follow the live proposal 
  expect(active[0].props.style[0]).toMatchObject({width:1,height:1});
  expect(active[0].props.style[1].evaluate().transform).toEqual([{translateX:origin.x+427},{translateY:origin.y+442.15}]);
  await act(async()=>tree.unmount());
+});
+
+
+describe('H2 rendered review regressions',()=>{
+ it('P2-5 hand cue uses the same projected contact as the release',async()=>{
+  const c=context('home/item/banana'),target=c.scene.rooms.home.targets.find(t=>t.kind==='hand'&&t.owner==='character/0')!;
+  let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<TargetCue target={target} interaction={c.interaction}/>);});
+  const style=tree.root.findByProps({testID:'open-hand-preview'}).props.style[0];
+  expect(style.left+16).toBe(target.projectedContact!.x);expect(style.top+22).toBe(target.projectedContact!.y);
+  await act(async()=>tree.unmount());
+ });
+ it('P2-6 basket art answers pending contact with the same 1.02 press',async()=>{
+  const c=context(''),entity=c.scene.entities['home/item/banana'];c.interaction.controller={value:{pointers:[{entity:entity.id,phase:'pending'}]}} as any;
+  let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<StagingTray entities={[entity]} bottom={0} offset={{value:{x:0,y:0}} as any} interaction={c.interaction} reduced={false} onNode={()=>{}} onSelect={()=>{}}/>);});
+  const style=tree.root.findByType('AnimatedView' as never).props.style.evaluate();expect(style.transform).toContainEqual({scale:1.02});
+  await act(async()=>tree.unmount());
+ });
+ it('P2-1/P3-1 a stray thumbnail finalize or failed end cannot drop another capture',async()=>{
+  const c=context(''),ghost={value:{item:'chair',active:true,x:100,y:100},set(v:any){this.value=v;}};const drop=vi.fn();pans.length=0;
+  let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<DesignTools state={c.state} ownership={{}} vertical={false} ghost={ghost as any} onChoose={()=>{}} onDrop={drop} onDragItem={()=>{}} interaction={c.interaction} offset={{value:{x:0,y:0}} as any} dispatch={()=>{}} onClose={()=>{}}/>);});
+  const thumbnails=tree.root.findAllByProps({testID:'inventory-chair'});expect(thumbnails.length).toBeGreaterThan(0);
+  const chairIndex=tree.root.findAll(n=>typeof n.type==='string'&&n.props.testID?.startsWith('inventory-')).findIndex(n=>n.props.testID==='inventory-chair');
+  const other=pans.find((_,n)=>n!==chairIndex)!;other.onFinalize({absoluteX:20,absoluteY:20},false);
+  expect(drop).not.toHaveBeenCalled();expect(ghost.value.active).toBe(true);
+  pans[chairIndex].onEnd({absoluteX:120,absoluteY:120},false);expect(drop).not.toHaveBeenCalled();
+  pans[chairIndex].onFinalize({absoluteX:120,absoluteY:120},false);expect(drop).toHaveBeenCalledTimes(1);expect(drop.mock.calls[0][3]).toBe(true);
+  await act(async()=>tree.unmount());
+ });
+ it('P2-7 warm overlays are bounded to the active room at the save limit',async()=>{
+  const c=context('');for(const room of Object.values(c.state.rooms))for(let n=0;n<40;n++)room.instances.push({...c.state.rooms.home.instances.find(i=>i.id==='banana')!,id:`extra-${n}`});c.scene=buildScene(c.state);
+  let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<DragOverlay scene={c.scene} pickups={[]} interaction={c.interaction} building={buildingLayout(4)} reduced={false}/>);});
+  const ids=tree.root.findAll(n=>typeof n.type==='string'&&n.props.nativeID?.startsWith('drag-overlay-')).map(n=>n.props.nativeID);
+  expect(ids.filter(id=>id.includes('/item/')).length).toBeLessThanOrEqual(16);expect(ids.filter(id=>id.includes('/item/')).every(id=>id.includes('home/item/'))).toBe(true);
+  await act(async()=>tree.unmount());
+ });
+ it('P2-8 a character preview does not mount eight rig trees during pickup readiness',async()=>{
+  const c=context('character/0');let tree!:TestRenderer.ReactTestRenderer;await act(async()=>{tree=TestRenderer.create(<LandingPreview source={c.scene.entities['character/0']} interaction={c.interaction} building={buildingLayout(4)}/>);});
+  expect(tree.root.findAllByProps({testID:'landing-preview-character/0'}).filter(n=>typeof n.type==='string').length).toBeLessThanOrEqual(1);
+  await act(async()=>tree.unmount());
+ });
 });

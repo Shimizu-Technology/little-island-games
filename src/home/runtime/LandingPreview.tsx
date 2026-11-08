@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View } from 'react-native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle } from 'react-native-reanimated';
 import { roomOrigin, type Building } from '../camera';
 import { roomIds } from '../catalogMore';
 import type { SceneEntity } from '../scene/types';
 import { EntityArt, artFrame, type CharacterRender } from './EntityArt';
-import { poseVariants } from './poseBank';
 import type { Interaction } from './useInteraction';
 import { footprintShadow } from './handFeel';
 
@@ -13,7 +12,18 @@ import { footprintShadow } from './handFeel';
 export function LandingPreview({ source, interaction, building, renderCharacter }: {
   source: SceneEntity; interaction: Interaction; building: Building; renderCharacter?: CharacterRender;
 }) {
-  const variants = source.character ? poseVariants(source) : [source];
+  const [pose, setPose] = useState<{ base: SceneEntity["base"]; facing: SceneEntity["facing"] }>();
+  const { slots } = interaction;
+  useAnimatedReaction(() => {
+    const slot = slots.value.find(s => s.id === source.id), p = slot?.proposal;
+    return source.character && slot?.ready && slot.phase === "dragging" && p && p.kind !== "staging"
+      ? `${p.base}:${p.facing === "left" ? "left" : "front"}` : "";
+  }, (next, previous) => {
+    if (next === previous) return;
+    if (!next) runOnJS(setPose)(undefined);
+    else { const [base, facing] = next.split(":"); runOnJS(setPose)({ base: base as SceneEntity["base"], facing: facing as SceneEntity["facing"] }); }
+  });
+  const variants = source.character ? pose ? [{ ...source, ...pose }] : [] : [source];
   return <>{variants.map((entity, n) => <PreviewPose key={n} entity={entity} source={source}
     interaction={interaction} building={building} renderCharacter={renderCharacter} />)}</>;
 }

@@ -104,19 +104,24 @@ const RestingEntity = memo(function RestingEntity({
   });
   const landingTargets = useMemo(() => landingKey.split("|"), [landingKey]);
   const landing = useDerivedValue(() => slots.value.some(s => s.id && s.phase === "dragging" && s.proposal?.target && landingTargets.includes(s.proposal.target)));
+  const motion = useDerivedValue(() => {
+    const slot = slots.value.find(s => s.id && owners.includes(s.restId ?? s.id));
+    return slot && slot.phase !== "pending" && !(slot.ready && slot.painted !== false)
+      ? pickupTransform(slot, slot.subject ?? entity, camera.value.a, clock.value, reduced) : undefined;
+  });
   const style = useAnimatedStyle(() => {
     const slot = slots.value.find(s => s.id && owners.includes(s.restId ?? s.id));
     const moving = slot && slot.phase !== "pending" && !(slot.ready && slot.painted !== false);
-    const motion = moving ? pickupTransform(slot, slot.subject ?? entity, camera.value.a, clock.value, reduced) : undefined;
+    const transform = motion.value;
     const pressed = controller?.value.pointers.some(p => p.phase === "pending" && p.entity && owners.includes(p.entity));
     return { opacity: visible.value,
       transformOrigin: [slot ? slot.gripX - frame.left : -frame.left, slot ? slot.gripY - frame.top : -frame.top, 0],
       transform: [
         { translateX: moving ? slot.x - slot.sourceX : 0 },
-        { translateY: moving ? slot.y - slot.sourceY - (motion?.lift ?? 0) : landing.value && !reduced ? -3 : 0 },
-        { rotate: `${motion?.tilt ?? wobble.value}deg` },
-        { scaleX: motion?.scaleX ?? (pressed || landing.value ? 1.02 : 1) },
-        { scaleY: motion?.scaleY ?? (pressed ? entity.character ? .99 : 1.02 : landing.value ? 1.02 : 1) },
+        { translateY: moving ? slot.y - slot.sourceY - (transform?.lift ?? 0) : landing.value && !reduced ? -3 : 0 },
+        { rotate: `${transform?.tilt ?? wobble.value}deg` },
+        { scaleX: transform?.scaleX ?? (pressed || landing.value ? 1.02 : 1) },
+        { scaleY: transform?.scaleY ?? (pressed ? entity.character ? .99 : 1.02 : landing.value ? 1.02 : 1) },
       ] };
   });
   const rimStyle = useAnimatedStyle(() => ({ opacity: landing.value ? 1 : 0 }));
@@ -370,6 +375,7 @@ export function SceneView({
           </View>
           {debugLayer}
           <DragOverlay
+            activeRoom={state.current}
             scene={scene}
             pickups={pickups}
             interaction={interaction}

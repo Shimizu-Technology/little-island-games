@@ -10,6 +10,7 @@ import type { BadgeId } from "../badges/engine";
 import { buildingLayout, roomOrigin } from "./camera";
 import { roomIds, type RoomId } from "./catalogMore";
 import { capabilityOf } from "./world";
+import { catalogCommit, clearCatalogSeed } from "./runtime/catalogCapture";
 import {
   instance,
   owns,
@@ -183,10 +184,10 @@ export function HomeScreen({
       const current = live.current;
       const catalog = catalogSeeds.current[id];
       if (catalog) {
-        if (!proposal || proposal.kind === "staging" || current.scene.revision !== catalog.revision) return undefined;
-        const resolved = { ...proposal, revision: buildScene(catalog.seed).revision };
-        const next = current.store.commitProposal(resolved, catalog.seed, stillCurrent);
-        return next ? { state: next, proposal: resolved, identities: current.store.getCommittedIdentities() } : undefined;
+        const pending = catalogCommit(current.store.getState(), catalog, id, proposal, current.scene.revision);
+        if (!pending) return undefined;
+        const next = current.store.commitProposal(pending.proposal, pending.seed, stillCurrent);
+        return next ? { state: next, proposal: pending.proposal, identities: current.store.getCommittedIdentities() } : undefined;
       }
       const entity = current.scene.entities[id];
       if (!entity || (!current.designing && entity.item && !capabilityOf(entity.item.item).moveInPlay)) return undefined;
@@ -357,15 +358,13 @@ export function HomeScreen({
     [wake]
   );
   const onClear = useCallback(
-    (index: number) => {
+    (index: number, id?: string) => {
+      if (id) clearCatalogSeed(catalogSeeds.current, id, []);
       // A UI-thread re-grab can outrun this queued clear callback.
       if (runtime.current?.slots.get()[index].id) return;
-      for (const id of Object.keys(catalogSeeds.current)) {
-        if (!runtime.current?.slots.get().some(s => s.id === id)) delete catalogSeeds.current[id];
-      }
       setPickups((current) => {
         const pickup = current[index];
-        if (pickup) delete catalogSeeds.current[pickup.id];
+        clearCatalogSeed(catalogSeeds.current, pickup?.id, []);
         return current.map((p, i) => (i === index ? undefined : p));
       });
     },
@@ -633,10 +632,10 @@ export function HomeScreen({
     },
     []
   );
-  function catalogSubject(item: ItemId, x: number, y: number) {
+  function catalogSubject(item: ItemId, x: number, y: number, destination?: RoomId) {
     if (!owns(item, ownership)) { store.setMessage("This showpiece is in the Locker."); return; }
-    const current = live.current.store.getState(), dest = live.current.room;
-    if (placedInstances(current.rooms[dest]).length >= MAX_INSTANCES) {
+    const current = live.current.store.getState(), dest = destination ?? live.current.room;
+    if (destination && placedInstances(current.rooms[dest]).length >= MAX_INSTANCES) {
       store.setMessage("Put something away to make room."); return;
     }
     const created = instance(`home-${Date.now().toString(36)}-${++sequence.current}`, item, 0, 0);
@@ -652,7 +651,7 @@ export function HomeScreen({
   function insertAt(item: ItemId, x: number, y: number) {
     const c = runtime.current!.camera.get(), index = roomAtScreen(x, y, c, building);
     if (index < 0) return;
-    const subject = catalogSubject(item, x, viewport.height + 40);
+    const subject = catalogSubject(item, x, viewport.height + 40, roomIds[index]);
     if (!subject) return;
     const dest = roomIds[index], origin = roomOrigin(index, building);
     const at = screenToRoom(screenPoint(x, y), c, housePoint(origin.x, origin.y));
@@ -661,8 +660,10 @@ export function HomeScreen({
     if (proposal.kind === "staging") {
       delete catalogSeeds.current[subject.id]; store.setMessage("Try another place or put something away."); return;
     }
-    runtime.current!.animateProposal(proposal, subject);
-    setPlacing(undefined);
+    if (!runtime.current!.animateProposal(proposal, subject, undefined, accepted => {
+      if (accepted) setPlacing(undefined);
+      else delete catalogSeeds.current[subject.id];
+    })) delete catalogSeeds.current[subject.id];
   }
   const beginCatalog = (item: ItemId, x: number, y: number) => {
     setCatalogItem(item);
@@ -671,8 +672,7 @@ export function HomeScreen({
       screenPoint(x - canvasOrigin.current.x, y - canvasOrigin.current.y), subject);
   };
   const dropCatalog = (_item: ItemId, x: number, y: number, cancel = false) => {
-    runtime.current!.externalMove(-500, screenPoint(x - canvasOrigin.current.x, y - canvasOrigin.current.y));
-    runtime.current!.externalUp(-500, cancel || roomAtScreen(x - canvasOrigin.current.x, y - canvasOrigin.current.y,
+    runtime.current!.externalDrop(-500, screenPoint(x - canvasOrigin.current.x, y - canvasOrigin.current.y), cancel || roomAtScreen(x - canvasOrigin.current.x, y - canvasOrigin.current.y,
       runtime.current!.camera.get(), building) < 0);
   };
   const { slots: catalogSlots } = interaction;
@@ -735,7 +735,7 @@ export function HomeScreen({
       <View style={{ flex: 1, flexDirection: vertical ? "row" : "column" }}>
         <View ref={canvas} onLayout={measure} style={{ width: viewport.width, height: viewport.height }}>
           <SceneView
-            state={store.state}
+            state={{ ...store.state, current: room }}
             badges={ownership.badges}
             onBadges={() => router.push("/badges")}
             scene={scene}

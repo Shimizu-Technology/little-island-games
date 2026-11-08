@@ -190,6 +190,18 @@ function fitsGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, gro
     // Grid footprints alone do not describe tall/wide fixture silhouettes. A Design
     // move must not hide a neighbouring piece of floor furniture behind its art.
     if (catalog && (occludedFraction(placed, move.contact.y, index.occlusionBands.filter(b => !group.some(g => g.id === b.id))) > .5 || catalogCovered(entity, move.contact, move.contact.y, index.occlusionBands.filter(b => !group.some(g => g.id === b.id))) > .4)) return false;
+    if (catalog && avoidFurnitureOverlap && move.attachment.kind === "floor") {
+      const added = [{ id: entity.id, bounds: placed, depth: move.contact.y, shapes: entity.shapes, contact: move.contact }];
+      for (const other of Object.values(index.entities)) {
+        if (other.room !== index.room || group.some(member => member.id === other.id) || other.attachment.kind !== "floor" ||
+          other.body?.layer !== "furniture" || other.body.small) continue;
+        // Test painted samples against the candidate's painted hull; allow transparent corners.
+        const existing = index.occlusionBands.filter(b => !group.some(member => member.id === b.id));
+        const before = catalogCovered(other, other.contact, other.depth, existing);
+        const after = catalogCovered(other, other.contact, other.depth, [...existing, ...added]);
+        if (after > Math.max(.5, before)) return false;
+      }
+    }
     if (!catalog && avoidFurnitureOverlap && entity.body?.layer === "furniture" && !entity.body.small && move.attachment.kind === "floor") {
       for (const other of Object.values(index.entities)) {
         if (other.room !== index.room || group.some((member) => member.id === other.id) || other.attachment.kind !== "floor" ||

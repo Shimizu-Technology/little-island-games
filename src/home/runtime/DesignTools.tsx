@@ -53,17 +53,21 @@ function Thumbnail({
   else pan.activeOffsetY([-8, 8]).failOffsetX([-14, 14]);
   pan
     .onStart((event) => {
+      if (ghost.value.active) return;
       runOnJS(onDragItem)(id, event.absoluteX, event.absoluteY);
       ghost.set({ item: id, x: event.absoluteX, y: event.absoluteY, active: true });
     })
     .onUpdate((event) => {
+      if (!ghost.value.active || ghost.value.item !== id) return;
       externalMove(-500, screenPoint(event.absoluteX - offset.value.x, event.absoluteY - offset.value.y));
       ghost.set({ item: id, x: event.absoluteX, y: event.absoluteY, active: true });
     })
-    .onEnd((event) => {
+    .onEnd((event, success) => {
+      if (!success || !ghost.value.active || ghost.value.item !== id) return;
       runOnJS(onDrop)(id, event.absoluteX, event.absoluteY);
     })
     .onFinalize((event, success) => {
+      if (!ghost.value.active || ghost.value.item !== id) return;
       if (!success) runOnJS(onDrop)(id, event.absoluteX, event.absoluteY, true);
       ghost.set({ x: 0, y: 0, active: false });
     });

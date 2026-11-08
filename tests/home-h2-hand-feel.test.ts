@@ -39,3 +39,50 @@ it('HM-16 shadows distinguish a small prop, a friend and a piece of furniture', 
  expect(banana.width).toBeLessThan(friend.width); expect(friend.width).toBeLessThan(bed.width);
  expect(banana.height).toBeLessThan(bed.height);
 });
+
+it('P3-6 every catalog body across every room preserves visibility in both fixtures', async () => {
+ const { itemIds } = await import('../src/home/catalog');
+ const { itemSpec } = await import('../src/home/catalog');
+ const { roomIds } = await import('../src/home/catalogMore');
+ const { catalogCovered } = await import('../src/home/scene/spatial');
+ let placed = 0;
+ for (const fixture of ['lab','starter'] as const) for (const room of roomIds) for (const item of itemIds) {
+  if (item.startsWith('sticker:') || itemSpec(item).layer === 'wall') continue;
+  const state = labHome(fixture), created = instance('sweep', item, 0, 0);
+  state.rooms[room].instances.push(created);
+  const scene = buildScene(state), subject = scene.entities[`${room}/item/sweep`];
+  for (let x=80;x<800;x+=160) for (let y=350;y<=530;y+=60) {
+   const p=resolve(scene.rooms[room],subject,roomPoint(x,y),{scale:.5,release:true,catalog:true,avoidFurnitureOverlap:true});
+   if(p.kind==='staging')continue;
+   placed++;
+   const bands=scene.rooms[room].occlusionBands.filter(b=>b.id!==subject.id);
+   expect(occludedFraction(translatedBounds(subject.bounds,p.contact),p.contact.y,bands)).toBeLessThanOrEqual(.5);
+   expect(catalogCovered(subject,p.contact,p.contact.y,bands)).toBeLessThanOrEqual(.4);
+  }
+ }
+ expect(placed).toBeGreaterThan(100);
+});
+
+it('P3-6 preview moves equal apply/rebuild results across floor, socket, surface, hand and mouth', async () => {
+ const { apply } = await import('../src/home/scene/proposal');
+ const { roomIds } = await import('../src/home/catalogMore');
+ const state=labHome(),scene=buildScene(state),kinds=new Set<string>();let checked=0;
+ for(const subject of Object.values(scene.entities).filter(e=>e.character||e.body?.small)) for(const room of roomIds) {
+  const targets=scene.rooms[room].targets.map(t=>t.projectedContact??t.contact);
+  const points=[...targets,...Array.from({length:24},(_,n)=>roomPoint(80+n%6*120,350+Math.floor(n/6)*60))];
+  for(const point of points){
+   const p=resolve(scene.rooms[room],subject,point,{scale:.5,release:true});
+   const result=apply(state,p);expect('state' in result).toBe(true);if(!('state' in result))continue;
+   const rebuilt=buildScene(result.state);kinds.add(p.kind);
+   for(const move of p.moves){
+    const entity=rebuilt.entities[result.identities[move.id]??move.id];
+    if(!entity && p.kind==='mouth')continue;
+    expect(entity,`${subject.id}/${p.kind}/${move.id}`).toBeDefined();
+    expect(entity.contact.x).toBeCloseTo(move.contact.x,6);expect(entity.contact.y).toBeCloseTo(move.contact.y,6);
+    expect(entity.base).toBe(move.base);expect(entity.facing).toBe(move.facing);expect(entity.attachment.kind).toBe(move.attachment.kind);checked++;
+   }
+  }
+ }
+ expect(checked).toBeGreaterThan(500);
+ expect([...kinds]).toEqual(expect.arrayContaining(['floor','socket','surface','hand','mouth']));
+});
