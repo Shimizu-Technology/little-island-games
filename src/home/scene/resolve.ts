@@ -381,9 +381,10 @@ function placedInRoom(index: RoomIndex, entity: SceneEntity): boolean {
   return true;
 }
 /** One query for hover, release, tap and accessibility. Always floor or staging fallback. */
-function resolvePlacement(index: RoomIndex, subject: SceneEntity, anchor: RoomPoint, ctx: ResolveContext): DropProposal {
+export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoint, ctx: ResolveContext): DropProposal {
   "worklet";
   const group = movingGroup(index, subject);
+  const catalogIntent = ctx.catalog ? { scale: ctx.scale, aim: ctx.aim, contact: ctx.contact } : undefined;
   if (ctx.intent === "staging")
     return makeProposal(
       index,
@@ -520,7 +521,7 @@ function resolvePlacement(index: RoomIndex, subject: SceneEntity, anchor: RoomPo
       });
       proposal.moves.push(...fallback.moves);
     }
-    return proposal;
+    return { ...proposal, catalogIntent };
   }
   let best: EntityMove | undefined;
   let bestDistance = Infinity;
@@ -530,7 +531,7 @@ function resolvePlacement(index: RoomIndex, subject: SceneEntity, anchor: RoomPo
     return floorCellAllowed(index, subject, group, cell, overlapProps);
   };
   const exact = !capacityOverflow && exactFloorMove(index, subject, point, group, ctx);
-  if (exact) return { ...makeProposal(index, subject, exact, group, "floor", "Exact contained visible floor support"), pending };
+  if (exact) return { ...makeProposal(index, subject, exact, group, "floor", "Exact contained visible floor support"), pending, catalogIntent };
   const floor = ctx.catalog ? [...index.floor].sort((a, b) => {
     const ac = wall ? gridToRoom(a.cell, true) : a.contact, bc = wall ? gridToRoom(b.cell, true) : b.contact;
     return (ac.x - point.x) ** 2 + (ac.y - point.y) ** 2 - (bc.x - point.x) ** 2 - (bc.y - point.y) ** 2;
@@ -590,6 +591,7 @@ function resolvePlacement(index: RoomIndex, subject: SceneEntity, anchor: RoomPo
     return {
       ...makeProposal(index, subject, best, group, "floor", "Nearest contained visible floor support"),
       pending,
+      catalogIntent,
     };
   const staging = rootMove(
     subject,
@@ -603,10 +605,4 @@ function resolvePlacement(index: RoomIndex, subject: SceneEntity, anchor: RoomPo
     refusal: capacityOverflow ? "capacity" : undefined,
     pending,
   };
-}
-
-export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoint, ctx: ResolveContext): DropProposal {
-  "worklet";
-  const proposal = resolvePlacement(index, subject, anchor, ctx);
-  return ctx.catalog ? { ...proposal, catalogIntent: { scale: ctx.scale, aim: ctx.aim, contact: ctx.contact } } : proposal;
 }
