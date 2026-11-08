@@ -2,6 +2,7 @@ import React, { createContext, useLayoutEffect } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { expect, it, vi } from 'vitest';
 import { LearnFrame } from '../src/learn/LearnFrame';
+import * as storeModule from '../src/state/Store';
 import { StoreProvider, useStore } from '../src/state/Store';
 import { emptySave } from '../src/state/validation';
 import { encodeSave, migrateProfiles } from '../src/state/profiles';
@@ -43,7 +44,11 @@ async function mount(owner='a',active=owner,mode:'solo'|'together'='solo',count=
 const buttons=(r:ReactTestRenderer)=>r.root.findAllByType('button');
 const press=async(r:ReactTestRenderer,label:string)=>act(async()=>{const b=buttons(r).find(n=>n.children.includes(label));expect(b,label).toBeDefined();b!.props.onPress();});
 it.each([['a','b','solo'],['a','a','together']] as const)('P2-3: suppresses foreign and Together result controls (%s %s %s)',async(owner,active,mode)=>{
- vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);let r!:ReactTestRenderer;try{r=await mount(owner,active,mode,mode==='together'?1:2);expect(r.root.findAllByProps({testID:'challenge-offer'})).toHaveLength(0);expect(JSON.stringify(r.toJSON())).not.toContain('Keep going with Sound Boat');}finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);let r!:ReactTestRenderer,spy:ReturnType<typeof vi.spyOn>|undefined;
+ try{r=await mount(active,active,mode,mode==='together'?1:2);
+  if(owner!==active){const current=store,round=current.save.learn!['letter-lagoon']!;spy=vi.spyOn(storeModule,'useStore').mockReturnValue({...current,save:{...current.save,learn:{...current.save.learn,'letter-lagoon':{...round,learner:owner}}}});await act(async()=>r.update(<LearnFrame id="letter-lagoon"/>));}
+  expect(JSON.stringify(r.toJSON())).toContain('You did it!');expect(r.root.findAllByProps({testID:'challenge-offer'})).toHaveLength(0);expect(JSON.stringify(r.toJSON())).not.toContain('Keep going with Sound Boat');
+ }finally{spy?.mockRestore();if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
 it.each(['family','a'])('P2-4: bridge works for %s and dismissal survives another round and reload',async owner=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);let r!:ReactTestRenderer;try{r=await mount(owner,owner,'solo',0);expect(JSON.stringify(r.toJSON())).toContain('Keep going with Sound Boat');await press(r,'Not now');expect(JSON.stringify(r.toJSON())).not.toContain('Keep going with Sound Boat');await act(async()=>r.unmount());

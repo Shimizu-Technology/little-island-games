@@ -10,7 +10,7 @@ import { progressFor, putProgress } from '../src/state/challengeDrafts';
 it('P3-9: optional School signals cannot push a valid finish over the envelope ceiling',()=>{
  const source=migrateProfiles(parseSave(readFileSync('tests/fixtures/save-v3/fix-upgrade-window-2.json','utf8'))),owner=source.learning!.active;
  const start={...startSession('letter-lagoon',{options:optionsAtLevel({mode:'solo',pace:'easy'},2)},{},42),learner:owner};
- const beforeRound={...start,state:{...start.state as object,index:3,placed:['a'],clean:[true,true,true],helped:false,hint:false,miss:false}};
+ const beforeRound={...start,state:{...start.state as object,index:3,placed:[],clean:[true,true,true],helped:false,hint:false,miss:false}};
  const done={...start,revision:1,state:{...start.state as object,index:4,placed:[],clean:[true,true,true,true],helped:false,hint:false,miss:false}};
  const child=newLibraryChild();child.creations=[{id:'capacity-drawing',title:'Island',sentences:'',updatedAt:1,strokes:[],stamps:[]}];
  source.library={version:2,profiles:{...source.library!.profiles,family:child}};
@@ -19,6 +19,7 @@ it('P3-9: optional School signals cannot push a valid finish over the envelope c
  const trial=recordLevelRound(source,finished,'letter-lagoon',1),progress=progressFor(trial,owner)!;
  const noSignal=putProgress(trial,owner,{...progress,signals:progressFor(source,owner)!.signals,practice:progressFor(source,owner)!.practice});
  child.creations[0].sentences='x'.repeat(1_999_995-Buffer.byteLength(encodeSave(noSignal)));
+ expect(()=>parseSave(encodeSave(source))).not.toThrow();
  const after=recordLevelRound(source,finished,'letter-lagoon',1);
  expect(after.school?.['letter-lagoon']?.[2]?.completed).toBeGreaterThan(0);
  expect(progressFor(after,owner)!.signals).toEqual(progressFor(source,owner)!.signals);
