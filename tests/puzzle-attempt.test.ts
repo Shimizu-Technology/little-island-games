@@ -51,6 +51,17 @@ describe('attempt replay', () => {
     expect(replayAttempt(toyAdapter({ create: () => { throw new Error('should not run'); } }), d, long)).toBeNull();
   });
 });
+describe('attempt replay fails closed', () => {
+  it('R4: a limit on a metric the engine never reported is not met', () => {
+    const unmeasured = toyCore({ payload: { goal: 3 }, par: null, limits: [{ metric: 'cards', max: 5 }] });
+    expect(replayAttempt(toyAdapter(), unmeasured, [a(1), a(2)])).toMatchObject({ outcome: 'solved', withinLimits: false });
+  });
+  it('R5: refuses a log that passes through a state the engine calls invalid', () => {
+    expect(replayAttempt(toyAdapter({ validState: (x): x is ToyState => false }), d, [])).toBeNull();
+    expect(replayAttempt(toyAdapter({ validState: (x): x is ToyState => (x as ToyState).at < 1 }), d, [a(1)])).toBeNull();
+    expect(replayAttempt(toyAdapter({ validState: (x): x is ToyState => (x as ToyState).at < 1 }), d, [a(1), ['reset']])).toBeNull();
+  });
+});
 describe('attempt log limits', () => {
   it('appends without mutating', () => {
     const start = Object.freeze([]) as readonly E[];

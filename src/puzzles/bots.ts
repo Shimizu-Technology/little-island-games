@@ -2,7 +2,8 @@ import { replayAttempt } from './attempt';
 import { createRng } from './rng';
 import type { AttemptEvent, DescriptorCore, PuzzleAdapter } from './types';
 
-export type BotRun = { id: string; ran: boolean; solved: boolean; beat: boolean; steps: number };
+/** `legal` is false when the bot's own moves replay through a state the engine calls invalid. */
+export type BotRun = { id: string; ran: boolean; solved: boolean; beat: boolean; legal: boolean; steps: number };
 type Choose<A> = (actions: readonly A[], step: number) => A;
 const policies = <A,>(seed: number): Record<string, Choose<A>> => {
   const rng = createRng(seed);
@@ -39,7 +40,7 @@ export function runBots<P, S, A>(adapter: PuzzleAdapter<P, S, A>, d: DescriptorC
     }
     const evidence = replayAttempt(adapter, d, events);
     const solved = evidence?.outcome === 'solved';
-    return { id, ran: true, solved, beat: solved && !!evidence?.withinLimits, steps };
+    return { id, ran: true, solved, beat: solved && !!evidence?.withinLimits, legal: evidence !== null, steps };
   };
   const runs = Object.entries(policies<A>(d.seed)).map(([id, pick]) => play(id, (_, actions, step) => pick(actions, step)));
   const tried = new Set<string>();
@@ -62,6 +63,6 @@ export function runBots<P, S, A>(adapter: PuzzleAdapter<P, S, A>, d: DescriptorC
       }
       return best;
     })
-    : { id: 'greedy', ran: false, solved: false, beat: false, steps: 0 });
+    : { id: 'greedy', ran: false, solved: false, beat: false, legal: true, steps: 0 });
   return runs;
 }

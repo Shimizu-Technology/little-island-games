@@ -36,3 +36,13 @@ describe('SHA-256 over UTF-8', () => {
     expect(stopped).toBeNull();
   });
 });
+describe('R10: cancellation does not depend on a pause happening', () => {
+  const quiet = { budgetMs: 8, now: () => 0, pause: async () => undefined };
+  it('stops before hashing when already cancelled', async () => {
+    await expect(sha256Sliced('short', { ...quiet, cancelled: () => true })).resolves.toBeNull();
+  });
+  it('stops at the end when cancelled during the last slice', async () => {
+    let calls = 0;
+    await expect(sha256Sliced('short', { ...quiet, cancelled: () => calls++ > 0 })).resolves.toBeNull();
+  });
+});

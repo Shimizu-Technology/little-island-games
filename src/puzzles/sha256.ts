@@ -80,6 +80,7 @@ export type Slicing = { budgetMs: number; now: () => number; pause: () => Promis
 export async function sha256Sliced(text: string, slicing: Slicing): Promise<{ hex: string; bytes: number } | null> {
   const sha = createSha256(), step = 2048;
   let at = 0, started = slicing.now();
+  if (slicing.cancelled?.()) return null;
   while (at < text.length) {
     const end = Math.min(text.length, at + step);
     sha.update(text, at, end);
@@ -90,6 +91,7 @@ export async function sha256Sliced(text: string, slicing: Slicing): Promise<{ he
       started = slicing.now();
     }
   }
+  if (slicing.cancelled?.()) return null;
   const bytes = sha.bytes(), hex = sha.hex();
   return { hex, bytes };
 }

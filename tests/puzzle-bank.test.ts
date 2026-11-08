@@ -30,13 +30,23 @@ describe('bank format', () => {
     ['duplicate band', family({ bands: ['paddling', 'paddling'] })],
     ['unsorted daily pool', family({ daily: [{ version: 1, bands: [['paddling', [[5, 1], [2, 1]]]] }] })],
     ['speech count without hash', family({ speech: { count: 2, hash: null } })],
+    ['R6: a daily range outside every pack', family({ daily: [{ version: 1, bands: [['paddling', [[900000, 16]]]] }] })],
+    ['R6: a daily range running past its pack', family({ daily: [{ version: 1, bands: [['shallows', [[10, 21]]]] }] })],
+    ['R6: a daily range in another band', family({ daily: [{ version: 1, bands: [['paddling', [[10, 5]]]] }] })],
+    ['R6: a daily range across a hole', family({ packs: [pack(0, 0, 10), pack(1, 20, 10)], daily: [{ version: 1, bands: [['paddling', [[5, 20]]]] }] })],
+    ['R6: two rows for one band in a pool', family({ daily: [{ version: 1, bands: [['paddling', [[0, 5]]], ['paddling', [[5, 5]]]] }] })],
+    ['R7: an ordinal past the supported range', family({ packs: [pack(0, 2147483647, 1)], daily: [] })],
   ])('rejects a family manifest with %s', (_, value) => expect(validFamily(value)).toBe(false));
   it.each<[string, unknown]>([
     ['unknown key', { ...root(), extra: 1 }],
     ['too many slots', root({ nextSlot: 513 })],
     ['wrong asset name', root({ families: [['sudoku', 'f-sudoku-zzz', hash, 30, 2, 400]] })],
     ['duplicate families', root({ families: [root().families[0], root().families[0]] })],
+    ['R7: an allocation counter past the supported range', root({ nextOrdinal: 2147483648 })],
   ])('rejects a root index with %s', (_, value) => expect(validRoot(value)).toBe(false));
+  it('R6: accepts a daily range spanning touching packs of one band', () => {
+    expect(validFamily(family({ packs: [pack(0, 0, 10), pack(1, 10, 10)], daily: [{ version: 1, bands: [['paddling', [[5, 10]]]] }] }))).toBe(true);
+  });
   it('finds any ordinal without scanning', () => {
     const m = family();
     expect(locate(m, 0)).toMatchObject({ index: 0, row: m.packs[0] });
@@ -104,7 +114,7 @@ describe('pack layout rules', () => {
     const byCount = splitPacks(many, 80);
     expect(byCount.map(p => p.length)).toEqual([1024, 1024, 2]);
     expect(() => splitPacks([{ ...many[0] }], 80)).toThrow(/certified/);
-    expect(() => splitPacks([Object.assign(many[0], { row: 'x'.repeat(131072) })], 80)).toThrow(/larger than a pack/);
+    expect(() => splitPacks([many[0]], BANK_CAPS.packBytes)).toThrow(/larger than a pack/);
   });
 });
 describe('byte model', () => {

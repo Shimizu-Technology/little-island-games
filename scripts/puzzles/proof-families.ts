@@ -12,7 +12,7 @@ const deadEnds = (walls: readonly number[]) => walls.filter(w => [1, 2, 4, 8].fi
 const sizes: Record<string, Difficulty> = { small: 'easy', middle: 'medium', big: 'hard' };
 export function mazeProofFamily(targets: Record<string, number> = { small: 16, middle: 16, big: 16 }): FamilySpec<MazePayload> {
   return {
-    id: 'proof-maze', adapter: mazeAdapter, maxRowBytes: 256, requiresUnique: false, requiresTrace: false,
+    id: 'proof-maze', adapter: mazeAdapter, maxRowBytes: 256, requiresUnique: false, requiresTrace: false, hiddenInformation: false,
     sources: ['src/games/maze.ts', 'src/puzzles/adapters/maze.ts', 'scripts/puzzles/proof-families.ts'],
     provenance: { source: 'original', note: 'Seeded by the app maze engine.' }, review: { ids: [], complete: false },
     bands: Object.keys(sizes).map((id, i) => ({ id, target: targets[id] ?? 0, floor: Math.min(4, targets[id] ?? 0), advanced: i === 2 })),
@@ -34,7 +34,7 @@ export function mazeProofFamily(targets: Record<string, number> = { small: 16, m
 const logicLevels: Record<string, number> = { little: 2, growing: 3, grown: 4 };
 export function logicProofFamily(targets: Record<string, number> = { little: 4, growing: 8, grown: 2 }): FamilySpec<LogicPayload> {
   return {
-    id: 'proof-logic', adapter: logicLagoonAdapter, maxRowBytes: 256, requiresUnique: true, requiresTrace: true,
+    id: 'proof-logic', adapter: logicLagoonAdapter, maxRowBytes: 256, requiresUnique: true, requiresTrace: true, hiddenInformation: false,
     sources: ['src/learn/games/logic-lagoon/engine.ts', 'src/puzzles/adapters/logic-lagoon.ts', 'scripts/puzzles/proof-families.ts'],
     provenance: { source: 'original', note: 'Seeded by the app Logic Lagoon engine.' }, review: { ids: [], complete: false },
     bands: Object.keys(logicLevels).map((id, i) => ({ id, target: targets[id] ?? 0, floor: Math.min(2, targets[id] ?? 0), advanced: i === 2 })),

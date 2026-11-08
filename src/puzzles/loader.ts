@@ -43,18 +43,20 @@ export function createBankLoader(options: LoaderOptions) {
     try { return await transport.read(asset); }
     catch { throw new BankError('read-failed', `Could not read puzzle asset ${asset}.`); }
   };
-  const checkToken = (token?: CancelToken) => { if (token?.cancelled) throw new BankError('cancelled', 'Puzzle load was cancelled.'); };
+  /** Called after every await, so a load that started before a release can never publish or return. */
+  const assertLive = (gen: number, token?: CancelToken) => { if (gen !== generation || token?.cancelled) throw new BankError('cancelled', 'Puzzle load was cancelled.'); };
 
-  async function family(id: string, token?: CancelToken): Promise<FamilyManifest> {
+  async function familyAt(id: string, gen: number, token?: CancelToken): Promise<FamilyManifest> {
+    assertLive(gen, token);
     const memo = families.get(id);
     if (memo) { families.delete(id); families.set(id, memo); return memo; }
     const entry = root.families.find(f => f[0] === id);
     if (!entry) throw new BankError('unknown', `Unknown puzzle family ${id}.`);
-    const gen = generation;
     const text = await read(entry[1]);
-    checkToken(token);
+    assertLive(gen, token);
     if (utf8Bytes(text) > BANK_CAPS.familyBytes) throw new BankError('too-large', `Manifest for ${id} is over its limit.`);
     const checked = await sha256Sliced(text, slicing(gen));
+    assertLive(gen, token);
     if (!checked) throw new BankError('cancelled', 'Puzzle load was cancelled.');
     if (checked.hex !== entry[2]) throw new BankError('hash-mismatch', `Manifest for ${id} failed its hash.`);
     let parsed: unknown;
@@ -66,13 +68,15 @@ export function createBankLoader(options: LoaderOptions) {
   }
 
   async function load(manifest: FamilyManifest, row: PackRow, gen: number): Promise<LoadedPack> {
+    assertLive(gen);
     const slot = row[0], started = now();
     // Evict before reading, so the peak is two packs plus the one being checked.
     while (packs.size >= capacity) packs.delete(packs.keys().next().value as number);
     const text = await read(packAsset(slot));
-    if (gen !== generation) throw new BankError('cancelled', 'Puzzle load was cancelled.');
+    assertLive(gen);
     if (text.length > BANK_CAPS.packBytes) throw new BankError('too-large', `Pack ${slot} is over its limit.`);
     const checked = await sha256Sliced(text, slicing(gen));
+    assertLive(gen);
     if (!checked) throw new BankError('cancelled', 'Puzzle load was cancelled.');
     if (checked.bytes !== row[3] || checked.hex !== row[4]) throw new BankError('hash-mismatch', `Pack ${slot} failed its hash.`);
     const parsed = parsePack(text, row, manifest);
@@ -83,8 +87,8 @@ export function createBankLoader(options: LoaderOptions) {
     return loaded;
   }
 
-  async function pack(manifest: FamilyManifest, row: PackRow, token?: CancelToken): Promise<LoadedPack> {
-    checkToken(token);
+  async function packAt(manifest: FamilyManifest, row: PackRow, gen: number, token?: CancelToken): Promise<LoadedPack> {
+    assertLive(gen, token);
     const slot = row[0], started = now(), warm = packs.get(slot);
     if (warm) {
       packs.delete(slot);
@@ -94,24 +98,25 @@ export function createBankLoader(options: LoaderOptions) {
     }
     let pending = inFlight.get(slot);
     if (!pending) {
-      const gen = generation;
       // One read at a time keeps the memory peak predictable.
-      pending = queue.then(() => load(manifest, row, gen)).finally(() => inFlight.delete(slot));
+      const started: Promise<LoadedPack> = queue.then(() => load(manifest, row, gen)).finally(() => { if (inFlight.get(slot) === started) inFlight.delete(slot); });
+      pending = started;
       queue = pending.catch(() => undefined);
       inFlight.set(slot, pending);
     }
     const loaded = await pending;
-    checkToken(token);
+    assertLive(gen, token);
     return loaded;
   }
 
   /** Decodes one row. The caller's adapter validates it, and the ref carries the row's own hash. */
   async function entry<P, S, A>(adapter: PuzzleAdapter<P, S, A>, familyId: string, ordinal: number, token?: CancelToken): Promise<PuzzleDescriptor<P>> {
-    const manifest = await family(familyId, token);
+    const gen = generation;
+    const manifest = await familyAt(familyId, gen, token);
     const place = locate(manifest, ordinal);
     if (!place) throw new BankError('unknown', `Ordinal ${ordinal} is not in ${familyId}.`);
     if (manifest.engine !== adapter.engine || place.row[6] !== adapter.rules) throw new BankError('malformed', `Pack ${place.row[0]} needs a different engine revision.`);
-    const loaded = await pack(manifest, place.row, token);
+    const loaded = await packAt(manifest, place.row, gen, token);
     const line = loaded.rows[place.index];
     const core = decodeRow<P>(line, loaded.band, adapter);
     if (!core) throw new BankError('malformed', `Row ${place.index} of pack ${place.row[0]} is invalid.`);
@@ -119,9 +124,11 @@ export function createBankLoader(options: LoaderOptions) {
   }
 
   return {
-    family, pack, entry,
+    family: (id: string, token?: CancelToken) => familyAt(id, generation, token),
+    pack: (manifest: FamilyManifest, row: PackRow, token?: CancelToken) => packAt(manifest, row, generation, token),
+    entry,
     /** Drops every decoded pack and abandons work in progress. Call on navigation away or memory pressure. */
-    release() { generation++; packs.clear(); families.clear(); },
+    release() { generation++; packs.clear(); families.clear(); inFlight.clear(); },
     decodedPacks: () => [...packs.keys()],
     timings: () => [...timings],
   };

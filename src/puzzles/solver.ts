@@ -14,17 +14,19 @@ export type SearchProblem<S, A> = {
   apply(s: S, a: A): S;
   goal(s: S): boolean;
   cost?(s: S, a: A): number;
-  /** Must be admissible, or `cost` is only an upper bound. */
+  /** Must never overestimate or go below zero, or `cost` is only an upper bound. It need not be consistent. */
   heuristic?(s: S): number;
   nodeBudget: number;
 };
 type Node<S, A> = { s: S; parent: number; action: A | undefined; g: number };
 
-/** Resumable best-first search: `run` returns between slices so device hints can stay under a frame. */
+/**
+ * Resumable best-first search: `run` returns between slices so device hints can stay under a frame.
+ * A state reopens whenever its best cost improves, which keeps an admissible estimate exact.
+ */
 export function createSearch<S, A>(p: SearchProblem<S, A>) {
   const nodes: Node<S, A>[] = [{ s: p.start, parent: -1, action: undefined, g: 0 }];
   const best = new Map<string | number, number>([[p.key(p.start), 0]]);
-  const closed = new Set<string | number>();
   const heap: [number, number, number][] = []; // f, insertion order, node index
   let order = 0, expanded = 0, done: SearchStatus<A> | null = null;
   const less = (a: [number, number, number], b: [number, number, number]) => a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]);
@@ -53,7 +55,12 @@ export function createSearch<S, A>(p: SearchProblem<S, A>) {
     }
     return top;
   };
-  push([p.heuristic?.(p.start) ?? 0, order++, 0]);
+  const estimate = (s: S) => {
+    const h = p.heuristic?.(s) ?? 0;
+    if (!(h >= 0)) throw new Error('Search heuristics cannot be negative.');
+    return h;
+  };
+  push([estimate(p.start), order++, 0]);
   const witness = (index: number) => {
     const out: A[] = [];
     for (let i = index; nodes[i].parent >= 0; i = nodes[i].parent) out.push(nodes[i].action as A);
@@ -67,8 +74,8 @@ export function createSearch<S, A>(p: SearchProblem<S, A>) {
         if (expanded >= p.nodeBudget) return (done = { status: 'budget-exhausted', nodes: expanded });
         if (slice >= maxNodes) return { status: 'running', nodes: expanded };
         const index = pop()[2], node = nodes[index], key = p.key(node.s);
-        if (closed.has(key)) continue;
-        closed.add(key);
+        // A cheaper route reached this state after this entry was queued, so the entry is stale.
+        if (node.g > best.get(key)!) continue;
         expanded++;
         slice++;
         if (p.goal(node.s)) return (done = { status: 'solved', witness: witness(index), cost: node.g, nodes: expanded });
@@ -78,10 +85,10 @@ export function createSearch<S, A>(p: SearchProblem<S, A>) {
           const step = p.cost?.(node.s, action) ?? 1;
           if (!(step >= 0)) throw new Error('Search step costs cannot be negative.');
           const g = node.g + step, nextKey = p.key(next), known = best.get(nextKey);
-          if (closed.has(nextKey) || (known !== undefined && known <= g)) continue;
+          if (known !== undefined && known <= g) continue;
           best.set(nextKey, g);
           nodes.push({ s: next, parent: index, action, g });
-          push([g + (p.heuristic?.(next) ?? 0), order++, nodes.length - 1]);
+          push([g + estimate(next), order++, nodes.length - 1]);
         }
       }
       return (done = { status: 'unsolved', nodes: expanded });

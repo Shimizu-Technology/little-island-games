@@ -4,7 +4,8 @@ import { BOT_STEPS, botSteps, runBots } from '../src/puzzles/bots';
 import { logicLagoonAdapter } from '../src/puzzles/adapters/logic-lagoon';
 import { mazeAdapter } from '../src/puzzles/adapters/maze';
 import { logicProofFamily, mazeProofFamily } from '../scripts/puzzles/proof-families';
-import { hardBand, openBand, toyAdapter, toyCore, toySpec, type ToyAction } from './helpers/puzzle-toy';
+import { splitPacks } from '../scripts/puzzles/pipeline';
+import { hardBand, openBand, toyAdapter, toyCore, toySpec, type ToyAction, type ToyPayload, type ToyState } from './helpers/puzzle-toy';
 import type { FamilySpec, PuzzleAdapter } from '../src/puzzles/types';
 
 const ctx = (): CertifyContext => ({ budget: 1000, seenExact: new Set(), seenSemantic: new Set() });
@@ -70,10 +71,36 @@ describe('quality gates', () => {
     expect(reason({ hint: (s, d) => (s.at + 1 >= d.payload.goal ? 1 : 2) })).toBe('accepted');
     expect(reason({ hint: () => 1 }, {}, openBand, toyCore({ limits: [{ metric: 'steps', max: 3 }] }))).toBe('hint-route');
   });
-  it('rejects a hint that changes with information the player cannot see', () => {
-    const leak = { hint: (_: { at: number }, d: { payload: { goal: number; tag?: number } }) => (d.payload.tag ? 2 : 1) as ToyAction };
-    const variant = toyCore({ payload: { goal: 5, tag: 9 } });
-    expect(reason({ ...leak, hiddenVariants: () => [variant] })).toBe('hint-leak');
+  describe('R11: hints may not use hidden information anywhere', () => {
+    const hiddenWorld = toyCore({ payload: { goal: 5, tag: 9 } });
+    const sameWorld = { view: (s: ToyState) => s, twins: (s: ToyState) => [{ state: s, descriptor: hiddenWorld }] };
+    const hiddenFamily = { hiddenInformation: true };
+    it('rejects a hint that changes with information the player cannot see', () => {
+      expect(reason({ hint: (_, d) => (d.payload.tag ? 2 : 1), hidden: sameWorld }, hiddenFamily)).toBe('hint-leak');
+    });
+    it('rejects a leak that only starts on a later hint', () => {
+      expect(reason({ hint: (s, d) => (s.at === 0 ? 1 : d.payload.tag ? 2 : 1), hidden: sameWorld }, hiddenFamily)).toBe('hint-leak');
+    });
+    it('checks states off the hinted route too', () => {
+      const offRoute = (s: ToyState, d: { payload: ToyPayload }): ToyAction => (s.at % 2 ? (d.payload.tag ? 2 : 1) : s.at === 4 ? 1 : 2);
+      expect(reason({ hint: offRoute, hidden: sameWorld }, hiddenFamily)).toBe('hint-leak');
+    });
+    it('accepts hints that only use the public view', () => {
+      expect(reason({ hint: () => 1, hidden: sameWorld }, hiddenFamily)).toBe('accepted');
+    });
+    it('does not skip the gate when a hidden family supplies no twins', () => {
+      expect(reason({ hint: () => 1 }, hiddenFamily)).toBe('hint-unproven');
+      expect(reason({ hint: () => 1, hidden: { view: s => s, twins: () => [] } }, hiddenFamily)).toBe('hint-unproven');
+    });
+    it('refuses twins that prove nothing', () => {
+      expect(reason({ hint: () => 1, hidden: { view: s => s, twins: (s, d) => [{ state: s, descriptor: d }] } }, hiddenFamily)).toBe('hint-unproven');
+      expect(reason({ hint: () => 1, hidden: { view: (s, d) => [s.at, d.payload.tag ?? 0], twins: sameWorld.twins } }, hiddenFamily)).toBe('hint-unproven');
+      expect(reason({ hint: () => 1, hidden: { view: s => s, twins: () => [{ state: { at: 0.5 }, descriptor: hiddenWorld }] } }, hiddenFamily)).toBe('hint-unproven');
+    });
+    it('leaves families with nothing hidden, or no hints, alone', () => {
+      expect(reason({ hint: () => 1 })).toBe('accepted');
+      expect(reason({}, hiddenFamily)).toBe('accepted');
+    });
   });
   it('rejects a required-mechanic claim that was not proven', () => {
     expect(reason({ claims: () => [{ id: 'rock', proven: false, evidence: 'no change' }] })).toBe('claim-unproven');
@@ -101,6 +128,109 @@ describe('quality gates', () => {
     const shared = ctx();
     certify(toySpec({ adapter: toyAdapter({ solve: () => ({ status: 'unsolved' }) }) }), openBand, toyCore(), shared);
     expect(shared.seenExact.size).toBe(0);
+  });
+});
+describe('R3: a certificate cannot be altered', () => {
+  type Writable = { row: string; witnessHash: string; solve: { upper: number }; bots: { beat: boolean }[]; core: { payload: { goal: number } } };
+  const certified = () => {
+    const r = certify(toySpec(), openBand, toyCore(), ctx());
+    if (!r.ok) throw new Error(r.reason);
+    return r.entry;
+  };
+  it('freezes the row, its hashes and every nested proof fact', () => {
+    const entry = certified(), open = entry as unknown as Writable, row = entry.row;
+    expect(() => { open.row = '[1,"a","t",999]'; }).toThrow(TypeError);
+    expect(() => { open.witnessHash = 'x'; }).toThrow(TypeError);
+    expect(() => { open.solve.upper = 1; }).toThrow(TypeError);
+    expect(() => { open.bots[0].beat = true; }).toThrow(TypeError);
+    expect(() => open.bots.push({ beat: true })).toThrow(TypeError);
+    expect(() => { open.core.payload.goal = 1; }).toThrow(TypeError);
+    expect(entry.row).toBe(row);
+    expect(splitPacks([entry], 80)[0][0].row).toBe(row);
+  });
+  it('does not let a look-alike borrow the brand', () => {
+    const entry = certified();
+    expect(() => splitPacks([{ ...entry, row: '[1,"a","t",999]' }], 80)).toThrow(/certified/);
+  });
+});
+describe('R4: missing measurements fail closed', () => {
+  it('rejects a limit on a metric the adapter does not report', () => {
+    expect(reason({}, {}, openBand, toyCore({ limits: [{ metric: 'cards', max: 1 }] }))).toBe('metric-missing');
+  });
+  it('rejects a par or scored objective in a metric the adapter does not report', () => {
+    const cards = { solve: () => ({ status: 'solved' as const, witness: [2, 2, 1] as ToyAction[], metric: 'cards' as const, lower: 3, upper: 3, exact: true }) };
+    expect(reason(cards, {}, openBand, toyCore({ par: { metric: 'cards', lower: 3, upper: 3, exact: true } }))).toBe('metric-missing');
+    expect(reason(cards, {}, openBand, toyCore({ par: null }))).toBe('metric-missing');
+  });
+  it.each([['negative', -1], ['fractional', 1.5], ['not a number', Number.NaN], ['infinite', Number.POSITIVE_INFINITY]])('rejects a %s measurement', (_, steps) => {
+    expect(reason({ metrics: () => ({ steps }) }, {}, openBand, toyCore({ par: null }))).toBe('metric-missing');
+  });
+  it('checks solver bounds against the measured witness even with no par on the descriptor', () => {
+    const claim = (lower: number, upper: number, exact: boolean) => ({ solve: () => ({ status: 'solved' as const, witness: [2, 2, 1] as ToyAction[], metric: 'steps' as const, lower, upper, exact }) });
+    expect(reason(claim(1, 1, true), {}, openBand, toyCore({ par: null }))).toBe('par-mismatch');
+    expect(reason(claim(4, 4, true), {}, openBand, toyCore({ par: null }))).toBe('par-mismatch');
+    expect(reason(claim(2, 3, true), {}, openBand, toyCore({ par: null }))).toBe('par-mismatch');
+    expect(reason(claim(2, 3, false), {}, openBand, toyCore({ par: null }))).toBe('accepted');
+  });
+});
+describe('R5: certified means the engine accepts its own states', () => {
+  it('rejects a puzzle whose opening state fails the validator', () => {
+    expect(reason({ validState: (x): x is ToyState => false })).toBe('invalid-state');
+  });
+  it('rejects a witness that walks through an invalid state', () => {
+    expect(reason({ validState: (x): x is ToyState => (x as ToyState).at < 3 })).toBe('witness-replay');
+  });
+  it('rejects a state only a wandering player would reach', () => {
+    expect(reason({ validState: (x): x is ToyState => (x as ToyState).at % 2 === 0 || (x as ToyState).at === 5 })).toBe('invalid-state');
+  });
+  const roundTrip = <T,>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
+  describe('maze validator', () => {
+    const family = mazeProofFamily(), core = Array.from({ length: 40 }, (_, i) => family.generate(i + 1, family.bands[0])!).find(c => c.payload.walls[0] & 2 || c.payload.walls[0] & 4)!;
+    const start = mazeAdapter.create(core), step = mazeAdapter.actions(start, core)[0], moved = mazeAdapter.reduce(start, step, core);
+    const size = core.payload.size, blocked = core.payload.walls[0] & 2 ? 1 : size;
+    it('accepts legal states through a JSON round trip', () => {
+      const solved = (mazeAdapter.solve(core, 20_000) as { witness: number[] }).witness.reduce((s, a) => mazeAdapter.reduce(s, a, core), start);
+      for (const s of [start, moved, solved]) expect(mazeAdapter.validState(roundTrip(s), core)).toBe(true);
+    });
+    it.each<[string, () => unknown]>([
+      ['a step through a wall', () => ({ ...start, path: [0, blocked] })],
+      ['a jump between far cells', () => ({ ...start, path: [0, size * size - 1] })],
+      ['a path that does not start at the entrance', () => ({ ...moved, path: moved.path.slice(1) })],
+      ['an empty path', () => ({ ...start, path: [] })],
+      ['a cell off the board', () => ({ ...start, path: [0, -1] })],
+      ['a retraced step the engine would have undone', () => ({ ...moved, path: [0, step, 0] })],
+      ['different walls', () => ({ ...start, walls: start.walls.map((w, i) => (i ? w : w ^ 1)) })],
+      ['a different size', () => ({ ...start, size: size + 1 })],
+      ['a different seed', () => ({ ...start, seed: start.seed + 1 })],
+      ['another game', () => ({ ...start, game: 'tic' })],
+      ['an unknown field', () => ({ ...start, extra: 1 })],
+      ['a non-object', () => 7],
+    ])('rejects %s', (_, corrupt) => expect(mazeAdapter.validState(corrupt(), core)).toBe(false));
+  });
+  describe('Logic Lagoon validator', () => {
+    const family = logicProofFamily(), core = family.generate(5, family.bands[1])!;
+    const start = logicLagoonAdapter.create(core), blank = core.payload.givens.findIndex(v => !v), given = core.payload.givens.findIndex(Boolean);
+    const moved = logicLagoonAdapter.reduce(start, [blank, 1], core), cells = core.payload.givens.length;
+    const entriesWith = (cell: number, value: number) => Array.from({ length: cells }, (_, i) => (i === cell ? value : 0));
+    it('accepts legal states through a JSON round trip, including a finished round', () => {
+      const witness = (logicLagoonAdapter.solve(core, 20_000) as { witness: (readonly [number, number])[] }).witness;
+      const solved = witness.reduce((s, a) => logicLagoonAdapter.reduce(s, a, core), start);
+      expect(logicLagoonAdapter.solved(solved, core)).toBe(true);
+      for (const s of [start, moved, solved]) expect(logicLagoonAdapter.validState(roundTrip(s), core)).toBe(true);
+    });
+    it.each<[string, () => unknown]>([
+      ['an entry over a given', () => ({ ...start, entries: entriesWith(given, 1) })],
+      ['an entry above the grid size', () => ({ ...start, entries: entriesWith(blank, 9) })],
+      ['too many entries', () => ({ ...start, entries: [...entriesWith(blank, 1), 0] })],
+      ['entries left on a finished round', () => ({ ...start, index: core.payload.index + 1, entries: entriesWith(blank, 1) })],
+      ['another round', () => ({ ...start, index: core.payload.index + 2 })],
+      ['another level', () => ({ ...start, level: core.payload.level + 1 })],
+      ['another seed', () => ({ ...start, seed: core.payload.seed + 1 })],
+      ['a changed total', () => ({ ...start, total: 3 })],
+      ['a non-boolean help flag', () => ({ ...start, helped: 'no' })],
+      ['an unknown field', () => ({ ...start, extra: 1 })],
+      ['null', () => null],
+    ])('rejects %s', (_, corrupt) => expect(logicLagoonAdapter.validState(corrupt(), core)).toBe(false));
   });
 });
 describe('dumb-player bots', () => {

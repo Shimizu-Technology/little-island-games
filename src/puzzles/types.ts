@@ -80,19 +80,30 @@ export type PuzzleAdapter<P, S, A> = {
   progress?(s: S, d: DescriptorCore<P>): number; // public information only, for the greedy bot
   solutionHash?(s: S, d: DescriptorCore<P>): string;
   hint?(s: S, d: DescriptorCore<P>): A | null;
-  /** Variants with the same public view. A hint may not depend on what differs between them. */
-  hiddenVariants?(d: DescriptorCore<P>): DescriptorCore<P>[];
+  /** Required when the family's `hiddenInformation` is true and it offers hints. */
+  hidden?: HiddenWorlds<P, S>;
   count?(d: DescriptorCore<P>, cap: number, budget: number): CountResult;
   independentCount?(d: DescriptorCore<P>, cap: number, budget: number): CountResult;
   technique?(d: DescriptorCore<P>, budget: number): TechniqueResult;
   claims?(d: DescriptorCore<P>, budget: number): Claim[];
+};
+/** A different world the player could equally be in right now: the same public view, other hidden facts. */
+export type HiddenTwin<P, S> = { state: S; descriptor: DescriptorCore<P> };
+export type HiddenWorlds<P, S> = {
+  /** Exactly what the player can see. */
+  view(s: S, d: DescriptorCore<P>): unknown;
+  /**
+   * Reachable states matching `s`, for this point in play. The opening must have at least one.
+   * A later state may return none only when nothing is left hidden there.
+   */
+  twins(s: S, d: DescriptorCore<P>): readonly HiddenTwin<P, S>[];
 };
 // Adapters vary per engine, so collections of them can only name the kit's common surface.
 export type AnyAdapter = PuzzleAdapter<any, any, any>;
 
 export type BandQuota = { id: string; target: number; floor: number; /** dumb bots may not meet this band's objective */ advanced: boolean };
 export type Provenance = { source: 'original' | 'reviewed'; note: string; vocabulary?: string };
-/** Review is recorded, never assumed. A bank is not shippable until review IDs exist. */
+/** A family-level note only. Approval is recorded per pack in its receipt, against that pack's hash. */
 export type ReviewStatus = { ids: string[]; complete: boolean };
 export type FamilySpec<P = unknown> = {
   id: string;
@@ -106,6 +117,8 @@ export type FamilySpec<P = unknown> = {
   maxRowBytes: number;
   requiresUnique: boolean;
   requiresTrace: boolean;
+  /** True when the board holds facts the player cannot see. Its hints must then be proven not to use them. */
+  hiddenInformation: boolean;
   /** Registered templates, for bank validation. Absent means descriptors must carry no speech. */
   knownSpeech?: (speech: Speech) => boolean;
   generate(seed: number, band: BandQuota): DescriptorCore<P> | null;

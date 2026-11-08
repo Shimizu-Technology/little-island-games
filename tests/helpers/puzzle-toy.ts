@@ -33,7 +33,7 @@ export const toyCore = (over: Partial<DescriptorCore<ToyPayload>> = {}): Descrip
 export const openBand: BandQuota = { id: 'open', target: 8, floor: 1, advanced: false };
 export const hardBand: BandQuota = { id: 'open', target: 8, floor: 1, advanced: true };
 export const toySpec = (over: Partial<FamilySpec<ToyPayload>> = {}): FamilySpec<ToyPayload> => ({
-  id: 'toy', adapter: toyAdapter(), bands: [openBand], provenance: { source: 'original', note: 'test' }, review: { ids: [], complete: false }, maxRowBytes: 200, requiresUnique: false, requiresTrace: false, sources: [],
+  id: 'toy', adapter: toyAdapter(), bands: [openBand], provenance: { source: 'original', note: 'test' }, review: { ids: [], complete: false }, maxRowBytes: 200, requiresUnique: false, requiresTrace: false, hiddenInformation: false, sources: [],
   generate: seed => toyCore({ seed, payload: { goal: (seed % 40) + 1 }, layout: seed % 2 ? 'a' : 'b', template: `t${seed % 4}` }),
   ...over,
 });

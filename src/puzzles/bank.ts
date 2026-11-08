@@ -1,7 +1,7 @@
 import { asciiId, exactKeys, hashId, plain, uint } from '../state/saveBits';
 
 export const BANK_CAPS = {
-  slots: 512, packEntries: 1024, packBytes: 131_072, rootBytes: 16_384, familyBytes: 16_384,
+  slots: 512, ordinals: 2_147_483_647, /* a save's ordinal is a signed 32-bit value */ packEntries: 1024, packBytes: 131_072, rootBytes: 16_384, familyBytes: 16_384,
   catalogBytes: 29_360_128, /* 28 MiB, compatibility banks included */ decodedBytes: 4_194_304, decodedPacks: 2, templateShare: 0.25,
 } as const;
 
@@ -26,6 +26,15 @@ function validRanges(x: unknown): x is DailyRange[] {
   // Sorted and disjoint: the pool's order is part of what Today's hash selects from.
   return x.every(r => Array.isArray(r) && r.length === 2 && uint(r[0]) && positive(r[1], BANK_CAPS.packEntries * BANK_CAPS.slots) && r[0] >= end && ((end = r[0] + r[1]), true));
 }
+/** A pool may only name entries that exist in its own band, across packs that touch. */
+function coveredByBand(packs: PackRow[], band: number, [first, count]: DailyRange): boolean {
+  for (let at = first, end = first + count; at < end;) {
+    const place = locate({ packs }, at);
+    if (!place || place.row[5] !== band) return false;
+    at = place.row[1] + place.row[2];
+  }
+  return true;
+}
 export function validFamily(x: unknown): x is FamilyManifest {
   if (!plain(x) || !exactKeys(x, ['format', 'family', 'engine', 'bands', 'packs', 'retired', 'daily', 'speech']) || x.format !== 1 || !asciiId(x.family) || !asciiId(x.engine)) return false;
   if (!Array.isArray(x.bands) || !x.bands.length || !x.bands.every(b => asciiId(b, 24)) || new Set(x.bands).size !== x.bands.length) return false;
@@ -33,7 +42,7 @@ export function validFamily(x: unknown): x is FamilyManifest {
   if (!Array.isArray(x.packs) || !x.packs.every(p => {
     if (!Array.isArray(p) || p.length !== 8) return false;
     const [s, first, count, bytes, sha, band, rules, rng] = p;
-    const ok = uint(s, BANK_CAPS.slots - 1) && s > slot && uint(first) && first >= ordinal && positive(count, BANK_CAPS.packEntries) && positive(bytes, BANK_CAPS.packBytes)
+    const ok = uint(s, BANK_CAPS.slots - 1) && s > slot && uint(first, BANK_CAPS.ordinals) && first >= ordinal && positive(count, BANK_CAPS.packEntries) && first + count <= BANK_CAPS.ordinals && positive(bytes, BANK_CAPS.packBytes)
       && hashId(sha) && uint(band, (x.bands as string[]).length - 1) && positive(rules, 65535) && rng === 1;
     if (ok) { slot = s; ordinal = first + count; }
     return ok;
@@ -43,12 +52,30 @@ export function validFamily(x: unknown): x is FamilyManifest {
   const speech = x.speech;
   if (!plain(speech) || !exactKeys(speech, ['count', 'hash']) || !uint(speech.count) || !(speech.hash === null ? speech.count === 0 : hashId(speech.hash))) return false;
   return Array.isArray(x.daily) && new Set(x.daily.map(d => d?.version)).size === x.daily.length && x.daily.every(d => plain(d) && exactKeys(d, ['version', 'bands']) && positive(d.version, 65535)
-    && Array.isArray(d.bands) && d.bands.every(b => Array.isArray(b) && b.length === 2 && (x.bands as string[]).includes(b[0]) && validRanges(b[1])));
+    && Array.isArray(d.bands) && new Set(d.bands.map(b => b?.[0])).size === d.bands.length
+    && d.bands.every(b => Array.isArray(b) && b.length === 2 && (x.bands as string[]).includes(b[0]) && validRanges(b[1]) && b[1].every(r => coveredByBand(x.packs as PackRow[], (x.bands as string[]).indexOf(b[0]), r))));
 }
 export function validRoot(x: unknown): x is RootIndex {
-  if (!plain(x) || !exactKeys(x, ['format', 'revision', 'nextSlot', 'nextOrdinal', 'families']) || x.format !== 1 || !uint(x.revision) || !uint(x.nextSlot, BANK_CAPS.slots) || !uint(x.nextOrdinal)) return false;
+  if (!plain(x) || !exactKeys(x, ['format', 'revision', 'nextSlot', 'nextOrdinal', 'families']) || x.format !== 1 || !uint(x.revision) || !uint(x.nextSlot, BANK_CAPS.slots) || !uint(x.nextOrdinal, BANK_CAPS.ordinals)) return false;
   if (!Array.isArray(x.families) || new Set(x.families.map(f => f?.[0])).size !== x.families.length) return false;
   return x.families.every(f => Array.isArray(f) && f.length === 6 && asciiId(f[0]) && typeof f[1] === 'string' && f[1] === manifestAsset(f[0], String(f[2])) && hashId(f[2]) && uint(f[3]) && uint(f[4], BANK_CAPS.slots) && uint(f[5], BANK_CAPS.catalogBytes));
+}
+
+/** What no single manifest can see: slots and ordinals are allocated across every family at once. */
+export function catalogIssues(root: Pick<RootIndex, 'nextSlot' | 'nextOrdinal'>, manifests: Iterable<FamilyManifest>): string[] {
+  const issues: string[] = [], slots = new Set<number>();
+  const packs = [...manifests].flatMap(m => m.packs.map(p => ({ family: m.family, slot: p[0], first: p[1], end: p[1] + p[2] }))).sort((a, b) => a.first - b.first);
+  let previous: (typeof packs)[number] | null = null;
+  for (const pack of packs) {
+    if (slots.has(pack.slot)) issues.push(`Slot ${pack.slot} is used twice.`);
+    slots.add(pack.slot);
+    if (pack.slot >= root.nextSlot) issues.push(`Slot ${pack.slot} of ${pack.family} is not below nextSlot ${root.nextSlot}.`);
+    if (pack.end > root.nextOrdinal) issues.push(`Ordinals of slot ${pack.slot} in ${pack.family} run past nextOrdinal ${root.nextOrdinal}.`);
+    if (pack.end > BANK_CAPS.ordinals) issues.push(`Ordinals of slot ${pack.slot} in ${pack.family} are outside the supported range.`);
+    if (previous && pack.first < previous.end) issues.push(`Ordinals of slot ${pack.slot} in ${pack.family} overlap slot ${previous.slot} in ${previous.family}.`);
+    if (!previous || pack.end > previous.end) previous = pack;
+  }
+  return issues;
 }
 
 /** Header line, then one self-contained JSON tuple per line, so a row decodes only when it is opened. */

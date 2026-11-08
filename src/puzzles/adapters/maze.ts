@@ -1,5 +1,7 @@
 import { directions, mazeDone, mazeMove, mazeRoute, type MazeState } from '../../games/maze';
 import { defaultOptions } from '../../games/types';
+import { exactKeys, plain, uint } from '../../state/saveBits';
+import { ATTEMPT_LIMITS } from '../attempt';
 import { smallest, squareSymmetries } from '../semantic';
 import { solveExactly } from '../solver';
 import type { Claim, DescriptorCore, PuzzleAdapter } from '../types';
@@ -29,6 +31,16 @@ const neighbours = (s: MazeState) => directions.flatMap(d => {
   const cell = head(s), r = Math.floor(cell / s.size) + d.dr, c = (cell % s.size) + d.dc;
   return !(s.walls[cell] & d.bit) && r >= 0 && r < s.size && c >= 0 && c < s.size ? [r * s.size + c] : [];
 });
+/** Each step must be one the engine could have made: open, adjacent, and not a retrace, which it undoes instead. */
+function legalPath(path: unknown, walls: readonly number[], size: number): boolean {
+  if (!Array.isArray(path) || !path.length || path.length > ATTEMPT_LIMITS.events + 1 || path[0] !== 0) return false;
+  return path.every((cell, i) => {
+    if (!uint(cell, size * size - 1)) return false;
+    if (!i) return true;
+    const from = path[i - 1] as number, dir = directions.find(d => d.dr === Math.floor(cell / size) - Math.floor(from / size) && d.dc === (cell % size) - (from % size));
+    return !!dir && !(walls[from] & dir.bit) && (i < 2 || path[i - 2] !== cell);
+  });
+}
 const create = (d: D): MazeState => ({ game: 'maze', id: 'bank', options: defaultOptions, size: d.payload.size, walls: d.payload.walls, path: [0], seed: d.seed });
 
 export const mazeAdapter: PuzzleAdapter<MazePayload, MazeState, MazeAction> = {
@@ -45,10 +57,8 @@ export const mazeAdapter: PuzzleAdapter<MazePayload, MazeState, MazeAction> = {
     return { size: x[0], walls: Array.from(x[1], c => parseInt(c, 16)) };
   },
   create,
-  validState: (x, d): x is MazeState => {
-    const s = x as MazeState;
-    return !!s && s.game === 'maze' && s.size === d.payload.size && Array.isArray(s.path) && s.path.length > 0;
-  },
+  validState: (x, d): x is MazeState => plain(x) && exactKeys(x, ['game', 'id', 'options', 'size', 'walls', 'path', 'seed']) && x.game === 'maze' && x.id === 'bank' && x.seed === d.seed
+    && x.size === d.payload.size && JSON.stringify(x.options) === JSON.stringify(defaultOptions) && JSON.stringify(x.walls) === JSON.stringify(d.payload.walls) && legalPath(x.path, d.payload.walls, d.payload.size),
   reduce: (s, a) => mazeMove(s, a),
   actions: s => (mazeDone(s) ? [] : neighbours(s)),
   solved: s => mazeDone(s),

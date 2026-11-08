@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createRng } from '../src/puzzles/rng';
 import { createSearch, parFrom, parWording, solveExactly, type SearchProblem } from '../src/puzzles/solver';
 
 // A line 0..n where each state can step +1 or +2, optionally with walls.
@@ -55,5 +56,44 @@ describe('par', () => {
   it('only lets a proven par be worded as the best', () => {
     expect(parWording(parFrom('steps', 6, 6))).toBe('best-possible');
     expect(parWording(parFrom('steps', 4, 6))).toBe('try-this-budget');
+  });
+});
+describe('R1: an admissible heuristic that is not consistent', () => {
+  const edges: Record<string, [string, number][]> = { S: [['A', 3], ['B', 1]], B: [['A', 1]], A: [['G', 2]], G: [] };
+  const h: Record<string, number> = { S: 0, A: 0, B: 3, G: 0 };
+  const problem: SearchProblem<string, string> = {
+    start: 'S', key: s => s, moves: s => edges[s].map(e => e[0]), apply: (_, a) => a, goal: s => s === 'G',
+    cost: (s, a) => edges[s].find(e => e[0] === a)![1], heuristic: s => h[s], nodeBudget: 100,
+  };
+  it('reopens a state when a cheaper route reaches it, and keeps that route as the witness', () => {
+    expect(solveExactly(problem, 'steps')).toEqual({ status: 'solved', witness: ['B', 'A', 'G'], metric: 'steps', lower: 4, upper: 4, exact: true });
+  });
+  it('gives the same proof when run in slices', () => {
+    const sliced = createSearch(problem);
+    let result = sliced.run(1);
+    while (result.status === 'running') result = sliced.run(1);
+    expect(result).toMatchObject({ status: 'solved', witness: ['B', 'A', 'G'], cost: 4 });
+  });
+  it('matches uniform-cost search on random weighted graphs with inconsistent estimates', () => {
+    const rng = createRng(11);
+    for (let round = 0; round < 300; round++) {
+      const size = 6 + rng.below(8), goal = size - 1;
+      const graph = Array.from({ length: size }, () => Array.from({ length: 1 + rng.below(4) }, () => [rng.below(size), 1 + rng.below(9)] as const));
+      const base: SearchProblem<number, number> = { start: 0, key: s => s, moves: s => graph[s].map((_, i) => i), apply: (s, i) => graph[s][i][0], cost: (s, i) => graph[s][i][1], goal: s => s === goal, nodeBudget: 100_000 };
+      const toGoal = Array.from({ length: size }, (_, s) => { const r = createSearch({ ...base, start: s }).run(); return r.status === 'solved' ? r.cost : 0; });
+      // Any share of the true remaining cost is admissible, and random shares are rarely consistent.
+      const scale = Array.from({ length: size }, () => rng.below(101) / 100);
+      const plain = createSearch(base).run(), guided = createSearch({ ...base, heuristic: s => toGoal[s] * scale[s] }).run();
+      expect(guided.status).toBe(plain.status);
+      if (plain.status === 'solved' && guided.status === 'solved') {
+        expect(guided.cost).toBe(plain.cost);
+        let at = 0, walked = 0;
+        for (const i of guided.witness) { walked += graph[at][i][1]; at = graph[at][i][0]; }
+        expect([at, walked]).toEqual([goal, guided.cost]);
+      }
+    }
+  });
+  it('rejects a negative estimate, which could end the search on a dearer goal', () => {
+    expect(() => createSearch({ ...problem, heuristic: () => -1 }).run()).toThrow(/heuristic/i);
   });
 });

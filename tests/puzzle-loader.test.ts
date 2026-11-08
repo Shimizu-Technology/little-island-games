@@ -123,6 +123,78 @@ describe('bank loader', () => {
     expect(loader.decodedPacks()).toEqual([]);
     expect((await loader.entry(adapter, 'toy', 8)).payload.goal).toBe(9);
   });
+  describe('R10: release cancels work at every await', () => {
+    const held = (files: Map<string, string>, stops: (name: string) => boolean) => {
+      let open = () => {};
+      const gate = new Promise<void>(resolve => { open = resolve; });
+      const reads: string[] = [];
+      const transport: BankTransport = { read: async name => { reads.push(name); if (stops(name)) await gate; const f = files.get(name); if (f === undefined) throw new Error('missing'); return f; } };
+      return { transport, reads, open: () => open() };
+    };
+    const settle = () => new Promise(resolve => setTimeout(resolve, 0));
+    it('cancels an entry when release lands during the family read', async () => {
+      const c = catalog(), h = held(c.files, name => name.startsWith('f-'));
+      const loader = createBankLoader({ root: c.root, transport: h.transport });
+      const pending = loader.entry(c.adapter, 'toy', 0);
+      await settle();
+      loader.release();
+      h.open();
+      expect(await kinds(pending)).toBe('cancelled');
+      expect(loader.decodedPacks()).toEqual([]);
+      expect(h.reads.filter(r => r.startsWith('p'))).toEqual([]);
+    });
+    it('does not cache a manifest that was read before the release', async () => {
+      const c = catalog(), h = held(c.files, name => name.startsWith('f-'));
+      const loader = createBankLoader({ root: c.root, transport: h.transport });
+      const pending = loader.family('toy');
+      await settle();
+      loader.release();
+      h.open();
+      expect(await kinds(pending)).toBe('cancelled');
+      await loader.family('toy');
+      expect(h.reads.filter(r => r.startsWith('f-'))).toHaveLength(2);
+    });
+    it('cancels when release lands during a hashing pause of the manifest', async () => {
+      const c = catalog(60, 1);
+      let clock = 0, released = false;
+      const loader = createBankLoader({ root: c.root, transport: c.transport, budgetMs: 1, now: () => (clock += 1), pause: async () => { if (!released) { released = true; loader.release(); } } });
+      expect(await kinds(loader.entry(c.adapter, 'toy', 0))).toBe('cancelled');
+      expect(loader.decodedPacks()).toEqual([]);
+      expect(released).toBe(true);
+    });
+    it('cancels when release lands during a hashing pause of the pack', async () => {
+      const c = catalog(1, 1000);
+      let clock = 0, armed = false, released = false;
+      const loader = createBankLoader({ root: c.root, transport: c.transport, budgetMs: 1, now: () => (clock += 1), pause: async () => { if (armed && !released) { released = true; loader.release(); } } });
+      await loader.family('toy');
+      armed = true;
+      expect(await kinds(loader.entry(c.adapter, 'toy', 0))).toBe('cancelled');
+      expect(loader.decodedPacks()).toEqual([]);
+    });
+    it('keeps the starting generation from the family through the pack', async () => {
+      const c = catalog(), h = held(c.files, name => name.startsWith('p'));
+      const loader = createBankLoader({ root: c.root, transport: h.transport });
+      const pending = loader.entry(c.adapter, 'toy', 0);
+      await settle();
+      expect(h.reads.filter(r => r.startsWith('p'))).toEqual(['p0']);
+      loader.release();
+      h.open();
+      expect(await kinds(pending)).toBe('cancelled');
+      expect(loader.decodedPacks()).toEqual([]);
+    });
+    it('gives a request made after release its own read, not the abandoned one', async () => {
+      const c = catalog(), h = held(c.files, name => name === 'p0');
+      const loader = createBankLoader({ root: c.root, transport: h.transport });
+      const old = loader.pack(c.manifest, c.manifest.packs[0]);
+      await settle();
+      loader.release();
+      const fresh = loader.pack(c.manifest, c.manifest.packs[0]);
+      h.open();
+      expect(await kinds(old)).toBe('cancelled');
+      expect(await kinds(fresh)).toBe('ok');
+      expect(loader.decodedPacks()).toEqual([0]);
+    });
+  });
   it('recovers after a failed read: the queue is not stuck', async () => {
     const c = catalog(), original = c.files.get('p0')!;
     c.files.delete('p0');

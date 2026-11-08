@@ -1,14 +1,14 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { gzipSync } from 'node:zlib';
-import { BANK_CAPS, assertFamilyAppendOnly, assertRootAppendOnly, emptyRoot, encodePack, manifestAsset, packAsset, parsePack, validFamily, validRoot, type DailyPool, type FamilyManifest, type PackHeader, type PackRow, type RootFamily, type RootIndex } from '../../src/puzzles/bank';
+import { BANK_CAPS, assertFamilyAppendOnly, assertRootAppendOnly, catalogIssues, emptyRoot, encodePack, manifestAsset, packAsset, parsePack, validFamily, validRoot, type DailyPool, type FamilyManifest, type PackHeader, type PackRow, type RootFamily, type RootIndex } from '../../src/puzzles/bank';
 import { certify, isCertified, type CertifiedEntry, type CertifyContext, type Rejection } from '../../src/puzzles/checks';
 import { canonical, decodeRow } from '../../src/puzzles/descriptor';
 import { semanticHash } from '../../src/puzzles/semantic';
 import type { AnyAdapter, BandQuota, FamilySpec } from '../../src/puzzles/types';
 import { utf8Bytes } from '../../src/state/saveBits';
-import { verifyByteModel, type FamilyActual } from './byte-model';
+import { BYTE_MODEL, verifyByteModel, type ByteModelRow, type FamilyActual } from './byte-model';
+import { receiptBody, receiptIssues, type BakeFacts } from './receipts';
 
 export type CatalogDirs = { content: string; receipts: string };
 export const productionDirs: CatalogDirs = { content: 'src/content/puzzles', receipts: 'content/puzzles/receipts' };
@@ -44,12 +44,14 @@ export function orderLayouts<P>(entries: readonly CertifiedEntry<P>[]): { ordere
   }
   return { ordered, dropped: [...queues.values()].flat() };
 }
-/** Keeps every template family at or under its share of what actually ships in the band. */
-export function capTemplates<P>(entries: readonly CertifiedEntry<P>[], share: number = BANK_CAPS.templateShare): { kept: CertifiedEntry<P>[]; dropped: CertifiedEntry<P>[] } {
+const templateCap = (size: number, share: number = BANK_CAPS.templateShare) => Math.max(1, Math.floor(size * share));
+/** Keeps every template family at or under its share of what actually ships in the band, published entries included. */
+export function capTemplates<P>(entries: readonly CertifiedEntry<P>[], share: number = BANK_CAPS.templateShare, published: ReadonlyMap<string, number> = new Map()): { kept: CertifiedEntry<P>[]; dropped: CertifiedEntry<P>[] } {
+  const base = [...published.values()].reduce((a, b) => a + b, 0);
   let kept = [...entries];
   const dropped: CertifiedEntry<P>[] = [];
   for (;;) {
-    const cap = Math.max(1, Math.floor(kept.length * share)), seen = new Map<string, number>(), next: CertifiedEntry<P>[] = [];
+    const cap = templateCap(base + kept.length, share), seen = new Map(published), next: CertifiedEntry<P>[] = [];
     let removed = false;
     for (const e of kept) {
       const count = (seen.get(e.core.template) ?? 0) + 1;
@@ -59,6 +61,11 @@ export function capTemplates<P>(entries: readonly CertifiedEntry<P>[], share: nu
     kept = next;
     if (!removed || !kept.length) return { kept, dropped };
   }
+}
+/** One message per template over its share of a band. Baking and verifying apply the same rule. */
+function templateIssues(band: string, counts: ReadonlyMap<string, number>): string[] {
+  const size = [...counts.values()].reduce((a, b) => a + b, 0), cap = templateCap(size);
+  return [...counts].filter(([, n]) => n > cap).map(([template, n]) => `template ${template} is ${n}/${size} of ${band}.`);
 }
 /** Packs are cut by entry count and bytes. Each row keeps its place in the no-repeat sequence. */
 export function splitPacks<P>(entries: readonly CertifiedEntry<P>[], headerBytes: number): CertifiedEntry<P>[][] {
@@ -75,13 +82,6 @@ export function splitPacks<P>(entries: readonly CertifiedEntry<P>[], headerBytes
   if (current.length) packs.push(current);
   return packs;
 }
-const histogram = (values: readonly (string | null)[]) => {
-  const out: Record<string, number> = {};
-  for (const v of values) if (v !== null) out[v] = (out[v] ?? 0) + 1;
-  return Object.fromEntries(Object.entries(out).sort(([a], [b]) => (a < b ? -1 : 1)));
-};
-const aggregate = (values: readonly (string | null)[]) => sha(values.filter(v => v !== null).join());
-
 export type BakeOptions = {
   dirs: CatalogDirs;
   seedBase?: number;
@@ -109,9 +109,12 @@ const rejectKey = (reason: Rejection | 'construction' | 'template-cap' | 'layout
 export function bakeFamily<P>(spec: FamilySpec<P>, options: BakeOptions): BakeReport {
   const { dirs, seedBase = 1, maxAttempts = 200_000, deadlineMs = 6 * 3600_000, budget = 200_000, sourceSha = 'unknown', now = Date.now } = options;
   const { root, families } = readCatalog(dirs);
+  const broken = catalogIssues(root, families.values());
+  if (broken.length) throw new Error(`The published catalog is inconsistent, so nothing can be baked: ${broken.join(' ')}`);
   const previous = families.get(spec.id) ?? null;
   const ctx: CertifyContext = { budget, seenExact: new Set(), seenSemantic: new Set() };
   const have: Record<string, number> = Object.fromEntries(spec.bands.map(b => [b.id, 0]));
+  const publishedTemplates = new Map<string, Map<string, number>>();
   for (const row of previous?.packs ?? []) {
     const manifestBand = previous!.bands[row[5]];
     const parsed = parsePack(readPackText(dirs, row[0]), row, previous!);
@@ -122,6 +125,9 @@ export function bakeFamily<P>(spec: FamilySpec<P>, options: BakeOptions): BakeRe
       if (!core) throw new Error(`Existing row in pack ${row[0]} no longer decodes.`);
       ctx.seenExact.add(sha(`exact|${canonical(core)}`));
       ctx.seenSemantic.add(semanticHash(spec.adapter.semanticKey(core)));
+      const templates = publishedTemplates.get(manifestBand) ?? new Map<string, number>();
+      templates.set(core.template, (templates.get(core.template) ?? 0) + 1);
+      publishedTemplates.set(manifestBand, templates);
     }
   }
   const started = now(), rejects: Record<string, number> = {}, accepted: Record<string, CertifiedEntry<P>[]> = {};
@@ -129,15 +135,27 @@ export function bakeFamily<P>(spec: FamilySpec<P>, options: BakeOptions): BakeRe
   let attempts = 0, budgetHits = 0, timedOut = false;
   spec.bands.forEach((band: BandQuota, bandIndex) => {
     const entries: CertifiedEntry<P>[] = [], need = Math.max(0, band.target - have[band.id]);
-    const cap = Math.max(1, Math.floor(band.target * BANK_CAPS.templateShare)), perTemplate = new Map<string, number>();
-    // The band is full only once the trimmed, ordered result reaches its quota, not when raw accepts do.
-    const finish = () => {
-      // Lay out first: later varied entries must be able to rescue an early run of one layout.
-      const capped = capTemplates(entries), spread = orderLayouts(capped.kept), pool = capTemplates(spread.ordered.slice(0, need));
-      return { laid: orderLayouts(pool.kept), templates: capped.dropped.length + pool.dropped.length };
+    const published = publishedTemplates.get(band.id) ?? new Map<string, number>();
+    const cap = templateCap(band.target), perTemplate = new Map(published);
+    // Dropping a repeated layout shrinks the band and so its template share. Repeat until both rules hold at once.
+    const settle = (items: readonly CertifiedEntry<P>[]) => {
+      let ordered = [...items], templates = 0, layouts = 0;
+      for (;;) {
+        const capped = capTemplates(ordered, BANK_CAPS.templateShare, published), laid = orderLayouts(capped.kept);
+        templates += capped.dropped.length;
+        layouts += laid.dropped.length;
+        ordered = laid.ordered;
+        if (!capped.dropped.length && !laid.dropped.length) return { ordered, templates, layouts };
+      }
     };
-    let done = need === 0 ? { laid: { ordered: [] as CertifiedEntry<P>[], dropped: [] as CertifiedEntry<P>[] }, templates: 0 } : finish();
-    for (let i = 0; i < maxAttempts && done.laid.ordered.length < need; i++) {
+    // The band is full only once the trimmed, ordered result reaches its quota, not when raw accepts do.
+    // Lay out first: later varied entries must be able to rescue an early run of one layout.
+    const finish = () => {
+      const spread = settle(entries), pool = settle(spread.ordered.slice(0, need));
+      return { ordered: pool.ordered, templates: spread.templates + pool.templates, layouts: spread.layouts + pool.layouts };
+    };
+    let done = need === 0 ? { ordered: [] as CertifiedEntry<P>[], templates: 0, layouts: 0 } : finish();
+    for (let i = 0; i < maxAttempts && done.ordered.length < need; i++) {
       if (now() - started > deadlineMs) { timedOut = true; break; }
       attempts++;
       const seed = (seedBase + bandIndex * 0x1000000 + i) % 0x100000000;
@@ -153,25 +171,30 @@ export function bakeFamily<P>(spec: FamilySpec<P>, options: BakeOptions): BakeRe
     // An exhausted band still ships whatever it certified, as long as it clears its floor.
     if (need > 0) done = finish();
     reject(rejectKey('template-cap'), done.templates);
-    reject(rejectKey('layout-repeat'), done.laid.dropped.length);
-    const laid = done.laid;
-    accepted[band.id] = laid.ordered;
+    reject(rejectKey('layout-repeat'), done.layouts);
+    accepted[band.id] = done.ordered;
   });
   const counts = Object.fromEntries(spec.bands.map(b => [b.id, have[b.id] + accepted[b.id].length]));
-  const complete = spec.bands.every(b => counts[b.id] >= b.target);
+  // The combined band must pass the same check verify will run, or the accepted bank stays as it was.
+  const overfull = spec.bands.filter(b => accepted[b.id].length).flatMap(b => {
+    const combined = new Map(publishedTemplates.get(b.id) ?? []);
+    for (const e of accepted[b.id]) combined.set(e.core.template, (combined.get(e.core.template) ?? 0) + 1);
+    return templateIssues(b.id, combined);
+  });
+  const complete = !overfull.length && spec.bands.every(b => counts[b.id] >= b.target);
   const short = spec.bands.filter(b => counts[b.id] < b.floor);
   const report = (published: boolean, reason: string | null, slots: number[] = []): BakeReport => ({ family: spec.id, status: complete ? 'complete' : 'exhausted', published, reason, accepted: counts, attempts, rejects, slots });
   const attemptReceipt = { format: 1, family: spec.id, seedBase, attempts, rejects, budget, budgetHits, timedOut, counts, sourceSha, status: complete ? 'complete' : 'exhausted' };
   mkdirSync(join(dirs.receipts, spec.id), { recursive: true });
   writeFileSync(join(dirs.receipts, spec.id, `attempt-${seedBase}-${attempts}.json`), `${JSON.stringify(attemptReceipt, null, 1)}\n`);
   if (short.length) return report(false, `Below floor: ${short.map(b => `${b.id} ${counts[b.id]}/${b.floor}`).join(', ')}.`);
+  if (overfull.length) return report(false, overfull.join(' '));
   if (!spec.bands.some(b => accepted[b.id].length)) return report(false, complete ? 'Already at target.' : 'Nothing new was accepted.');
   const slots = publish(spec, dirs, root, previous, accepted, { sourceSha, seedBase, attempts, rejects, budget, budgetHits, timedOut }, options.beforeCommit);
   return report(true, null, slots);
 }
 
-type BakeFacts = { sourceSha: string; seedBase: number; attempts: number; rejects: Record<string, number>; budget: number; budgetHits: number; timedOut: boolean };
-const kitSources = ['src/puzzles/checks.ts', 'src/puzzles/descriptor.ts', 'src/puzzles/rng.ts', 'src/puzzles/bank.ts', 'src/puzzles/bots.ts', 'src/puzzles/attempt.ts'];
+const kitSources = ['src/puzzles/checks.ts', 'src/puzzles/descriptor.ts', 'src/puzzles/rng.ts', 'src/puzzles/bank.ts', 'src/puzzles/bots.ts', 'src/puzzles/attempt.ts', 'src/puzzles/solver.ts', 'src/puzzles/semantic.ts'];
 const hashFiles = (files: readonly string[]) => {
   const h = createHash('sha256');
   for (const file of files) if (existsSync(file)) h.update(file).update(readFileSync(file));
@@ -182,7 +205,7 @@ function publish<P>(spec: FamilySpec<P>, dirs: CatalogDirs, root: RootIndex, pre
   const bands = previous?.bands ?? spec.bands.map(b => b.id);
   let nextSlot = root.nextSlot, nextOrdinal = root.nextOrdinal;
   const newRows: PackRow[] = [], staged: { asset: string; text: string }[] = [], receipts: { slot: number; body: string }[] = [], newRanges = new Map<string, [number, number][]>();
-  const speech = new Set<string>();
+  const speech = new Set<string>(), kitHash = hashFiles(kitSources), familyHash = hashFiles(spec.sources);
   for (const band of spec.bands) {
     const entries = accepted[band.id];
     const headerBytes = utf8Bytes(JSON.stringify({ format: 1, family: spec.id, slot: 511, first: 2147483647, count: 1024, band: band.id, rules: spec.adapter.rules, rng: 1 } satisfies PackHeader));
@@ -200,19 +223,8 @@ function publish<P>(spec: FamilySpec<P>, dirs: CatalogDirs, root: RootIndex, pre
       ranges.push([first, group.length]);
       newRanges.set(band.id, ranges);
       group.forEach(e => { if (e.core.speech) speech.add(e.core.speech.template); });
-      const solves = group.map(e => e.solve);
-      receipts.push({ slot, body: `${JSON.stringify({
-        format: 1, family: spec.id, slot, catalogRevision: root.revision + 1, band: band.id, ordinals: [first, group.length], sourceSha: facts.sourceSha,
-        hashes: { kit: hashFiles(kitSources), family: hashFiles(spec.sources) }, rng: 1, rules: spec.adapter.rules,
-        seeds: { base: facts.seedBase, attempts: facts.attempts, kept: group.map(e => e.core.seed) }, rejects: facts.rejects,
-        distinct: { exact: new Set(group.map(e => e.exactHash)).size, semantic: new Set(group.map(e => e.semanticHash)).size },
-        histograms: { technique: histogram(group.map(e => e.technique)), template: histogram(group.map(e => e.core.template)), layout: histogram(group.map(e => e.core.layout)) },
-        solve: { status: 'solved', budget: facts.budget, budgetExhausted: facts.budgetHits, timedOut: facts.timedOut, bounds: [Math.min(...solves.map(s => s.lower)), Math.max(...solves.map(s => s.upper))], exact: solves.filter(s => s.exact).length },
-        proofHashes: { witness: aggregate(group.map(e => e.witnessHash)), trace: aggregate(group.map(e => e.traceHash)), claims: aggregate(group.map(e => e.claimsHash)) },
-        bots: group.reduce<Record<string, number>>((all, e) => { for (const b of e.bots) if (b.ran) all[b.id] = (all[b.id] ?? 0) + (b.beat ? 1 : 0); return all; }, {}),
-        provenance: spec.provenance, review: spec.review, speech: group.flatMap(e => (e.core.speech ? [e.core.speech.template] : [])).length,
-        bytes: { raw: bytes, gzip: gzipSync(text).length }, sha256: hash, native: [], machineGates: true, allShippingGates: false,
-      }, null, 1)}\n` });
+      receipts.push({ slot, body: receiptBody({ family: spec.id, engine: spec.adapter.engine, slot, band: band.id, first, count: group.length, rules: spec.adapter.rules, text }, group as readonly CertifiedEntry<unknown>[],
+        { catalogRevision: root.revision + 1, kit: kitHash, family: familyHash, reviewIds: spec.review.ids, provenance: spec.provenance }, facts) });
     }
   }
   const daily: DailyPool[] = previous?.daily.length ? previous.daily : [{ version: 1, bands: spec.bands.map(b => [b.id, newRanges.get(b.id) ?? []] as [string, [number, number][]]).filter(([, r]) => r.length) }];
@@ -232,6 +244,8 @@ function publish<P>(spec: FamilySpec<P>, dirs: CatalogDirs, root: RootIndex, pre
   if (!validRoot(nextRoot)) throw new Error('The new root index is invalid.');
   if (utf8Bytes(rootText) > BANK_CAPS.rootBytes) throw new Error(`Root index is over ${BANK_CAPS.rootBytes} bytes.`);
   if (nextRoot.families.reduce((n, f) => n + f[5], 0) > BANK_CAPS.catalogBytes) throw new Error('The catalog is over its 28 MiB cap.');
+  const candidate = families(dirs, root, spec.id, manifest), invalid = catalogIssues(nextRoot, candidate.values());
+  if (invalid.length) throw new Error(`The new catalog would be inconsistent: ${invalid.join(' ')}`);
   for (const { slot, body } of receipts) {
     const path = join(dirs.receipts, spec.id, `slot-${String(slot).padStart(4, '0')}.json`);
     if (existsSync(path) && readFileSync(path, 'utf8') !== body) throw new Error(`Receipt for slot ${slot} already exists and is immutable.`);
@@ -240,7 +254,7 @@ function publish<P>(spec: FamilySpec<P>, dirs: CatalogDirs, root: RootIndex, pre
     mkdirSync(join(staging, 'assets'), { recursive: true });
     mkdirSync(join(dirs.content, 'assets'), { recursive: true });
     for (const { asset: name, text } of staged) writeFileSync(join(staging, 'assets', `${name}.lipuzzle`), text);
-    writeFileSync(join(staging, 'assets.generated.ts'), generatedAssets(nextRoot, families(dirs, root, spec.id, manifest)));
+    writeFileSync(join(staging, 'assets.generated.ts'), generatedAssets(nextRoot, candidate));
     writeFileSync(join(staging, 'root.json'), rootText);
     beforeCommit?.();
     for (const { asset: name } of staged) renameSync(join(staging, 'assets', `${name}.lipuzzle`), assetFile(dirs, name));
@@ -277,11 +291,12 @@ export function sweepOrphans(dirs: CatalogDirs): string[] {
 export type VerifyStats = { families: number; packs: number; entries: number; catalogBytes: number; rootBytes: number; largestFamilyBytes: number; replayed: number; botRuns: number };
 export type VerifyResult = { errors: string[]; stats: VerifyStats };
 /** Re-proves every shipped row through its real engine. Hashes alone would only prove the file is unchanged. */
-export function verifyCatalog(dirs: CatalogDirs, specs: readonly FamilySpec<unknown>[], options: { shipping?: boolean; budget?: number; byteModel?: boolean } = {}): VerifyResult {
+export function verifyCatalog(dirs: CatalogDirs, specs: readonly FamilySpec<unknown>[], options: { shipping?: boolean; budget?: number; byteModel?: boolean; promised?: readonly Pick<ByteModelRow, 'family' | 'floor'>[] } = {}): VerifyResult {
   const errors: string[] = [], { root, families: manifests } = readCatalog(dirs);
   const stats: VerifyStats = { families: root.families.length, packs: 0, entries: 0, catalogBytes: 0, rootBytes: utf8Bytes(readFileSync(rootFile(dirs), 'utf8')), largestFamilyBytes: 0, replayed: 0, botRuns: 0 };
   if (stats.rootBytes > BANK_CAPS.rootBytes) errors.push(`Root index is ${stats.rootBytes} bytes.`);
-  const slots = new Set<number>();
+  errors.push(...catalogIssues(root, manifests.values()));
+  const slots = new Set<number>(), certifiedCounts = new Map<string, Map<string, number>>();
   for (const [id, asset, hash, entries, packCount, familyBytes] of root.families) {
     const manifest = manifests.get(id)!, text = readFileSync(assetFile(dirs, asset), 'utf8'), spec = specs.find(s => s.id === id);
     if (sha(text) !== hash) errors.push(`${id}: manifest hash mismatch.`);
@@ -294,7 +309,6 @@ export function verifyCatalog(dirs: CatalogDirs, specs: readonly FamilySpec<unkn
     const templates = new Map<string, Map<string, number>>();
     for (const row of manifest.packs) {
       const [slot, , count, packBytes, packHash, bandIndex, rules] = row;
-      if (slots.has(slot)) errors.push(`Slot ${slot} is used twice.`);
       slots.add(slot);
       const file = assetFile(dirs, packAsset(slot));
       if (!existsSync(file)) { errors.push(`${id}: pack ${slot} is missing.`); continue; }
@@ -307,6 +321,7 @@ export function verifyCatalog(dirs: CatalogDirs, specs: readonly FamilySpec<unkn
       const bandId = manifest.bands[bandIndex], band = spec.bands.find(b => b.id === bandId);
       if (!band) { errors.push(`${id}: pack ${slot} is in unknown band ${bandId}.`); continue; }
       let last = '';
+      const certified: CertifiedEntry<unknown>[] = [];
       for (const line of parsed.rows) {
         const core = decodeRow<unknown>(line, bandId, spec.adapter);
         if (!core) { errors.push(`${id}: pack ${slot} has an undecodable row.`); continue; }
@@ -316,6 +331,7 @@ export function verifyCatalog(dirs: CatalogDirs, specs: readonly FamilySpec<unkn
         if (!result.ok) errors.push(`${id}: pack ${slot} seed ${core.seed} failed ${result.reason}.`);
         else {
           stats.replayed++;
+          certified.push(result.entry);
           stats.botRuns += result.entry.bots.filter(b => b.ran).length;
           if (result.entry.row !== line) errors.push(`${id}: pack ${slot} row is not canonical.`);
           const perBand = templates.get(bandId) ?? new Map<string, number>();
@@ -326,22 +342,36 @@ export function verifyCatalog(dirs: CatalogDirs, specs: readonly FamilySpec<unkn
       total += count;
       bytes += packBytes;
       stats.packs++;
+      if (!manifest.retired.includes(slot)) {
+        const counts = certifiedCounts.get(id) ?? new Map<string, number>();
+        counts.set(bandId, (counts.get(bandId) ?? 0) + certified.length);
+        certifiedCounts.set(id, counts);
+      }
       const receipt = join(dirs.receipts, id, `slot-${String(slot).padStart(4, '0')}.json`);
       if (!existsSync(receipt)) errors.push(`${id}: pack ${slot} has no receipt.`);
-      else if (options.shipping) {
-        const body = JSON.parse(readFileSync(receipt, 'utf8')) as { review?: { complete?: boolean; ids?: string[] }; native?: unknown[] };
-        if (!body.review?.complete || !body.review.ids?.length) errors.push(`${id}: pack ${slot} has no completed human review.`);
-        if (!body.native?.length) errors.push(`${id}: pack ${slot} has no native QA link.`);
+      else {
+        // Seeds and proofs can only be compared when every row of the pack certified again.
+        const provenRows = certified.length === parsed.rows.length ? certified : null;
+        const pack = { family: id, engine: spec.adapter.engine, slot, band: bandId, first: row[1], count, rules, text: packText };
+        for (const issue of receiptIssues(readFileSync(receipt, 'utf8'), pack, provenRows, root.revision, !!options.shipping)) errors.push(`${id}: pack ${slot} ${issue}.`);
       }
     }
-    for (const [band, counts] of templates) {
-      const size = [...counts.values()].reduce((a, b) => a + b, 0), cap = Math.max(1, Math.floor(size * BANK_CAPS.templateShare));
-      for (const [template, n] of counts) if (n > cap) errors.push(`${id}: template ${template} is ${n}/${size} of ${band}.`);
-    }
+    for (const [band, counts] of templates) errors.push(...templateIssues(band, counts).map(issue => `${id}: ${issue}`));
     if (total !== entries || manifest.packs.length !== packCount || bytes !== familyBytes) errors.push(`${id}: root totals disagree with its manifest.`);
     if (options.byteModel !== false) errors.push(...verifyByteModel([familyActual(dirs, manifest)]));
     stats.entries += total;
     stats.catalogBytes += bytes;
+  }
+  // Registering a family promises its floors. Content nobody has registered is foundation work, invisible
+  // here until a shipping build, which also holds the whole promised list to account.
+  for (const spec of specs) for (const band of spec.bands) {
+    const n = certifiedCounts.get(spec.id)?.get(band.id) ?? 0;
+    if (n < band.floor) errors.push(`${spec.id}: band ${band.id} has ${n} certified, below its floor of ${band.floor}.`);
+  }
+  if (options.shipping) for (const { family, floor } of options.promised ?? BYTE_MODEL) {
+    if (!specs.some(s => s.id === family)) { errors.push(`${family}: promised for shipping but not registered.`); continue; }
+    const n = [...(certifiedCounts.get(family)?.values() ?? [])].reduce((a, b) => a + b, 0);
+    if (n < floor) errors.push(`${family}: ${n} certified, below its shipping floor of ${floor}.`);
   }
   if (stats.catalogBytes > BANK_CAPS.catalogBytes) errors.push(`Catalog is ${stats.catalogBytes} bytes.`);
   if (slots.size > BANK_CAPS.slots) errors.push(`${slots.size} slots are in use.`);

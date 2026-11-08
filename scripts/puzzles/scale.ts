@@ -43,7 +43,7 @@ export function fixtureSpec(model: ByteModelRow): FamilySpec<Pad> {
     return { id: bandNames[i], target, floor: 0, advanced: false };
   });
   return {
-    id: model.family, adapter: padAdapter, bands, maxRowBytes: model.rowBytes, requiresUnique: false, requiresTrace: false, sources: [],
+    id: model.family, adapter: padAdapter, bands, maxRowBytes: model.rowBytes, requiresUnique: false, requiresTrace: false, hiddenInformation: false, sources: [],
     provenance: { source: 'original', note: 'Sizing fixture only.' }, review: { ids: [], complete: false },
     generate(seed: number, band: BandQuota): DescriptorCore<Pad> {
       const overhead = `[${seed},"l${seed % 5}","t${seed % 8}","",["steps",1,1]]`.length;

@@ -1,4 +1,5 @@
 import { enter, hint, solutionCount, taskAt, type GridTask, type LogicState } from '../../learn/games/logic-lagoon/engine';
+import { exactKeys, plain, uint } from '../../state/saveBits';
 import { relabel, smallest, squareSymmetries } from '../semantic';
 import type { CountResult, DescriptorCore, PuzzleAdapter, TechniqueResult } from '../types';
 
@@ -102,7 +103,14 @@ export const logicLagoonAdapter: PuzzleAdapter<LogicPayload, LogicState, LogicAc
     return givens && solution && typeof x[0] === 'number' && typeof x[1] === 'number' && typeof x[2] === 'number' ? { level: x[0], seed: x[1], index: x[2], givens, solution } : null;
   },
   create,
-  validState: (x, d): x is LogicState => (x as LogicState)?.version === 1 && (x as LogicState).seed === d.payload.seed,
+  // The engine's own validator rules, using the cached grid because taskAt recomputes the whole puzzle.
+  validState: (x, d): x is LogicState => {
+    if (!plain(x) || !exactKeys(x, ['version', 'level', 'seed', 'index', 'total', 'entries', 'helped']) || x.version !== 1 || x.level !== d.payload.level || x.seed !== d.payload.seed
+      || x.total !== 4 || typeof x.helped !== 'boolean' || !Array.isArray(x.entries)) return false;
+    if (x.index === d.payload.index + 1) return x.entries.length === 0;
+    const task = shape(d);
+    return x.index === d.payload.index && x.entries.length <= task.givens.length && x.entries.every((n, i) => uint(n, task.size) && (!task.givens[i] || n === 0));
+  },
   reduce: (s, [cell, value], d) => {
     if (s.index !== d.payload.index || s.entries[cell] === value) return s;
     return enter(s, cell, value);
