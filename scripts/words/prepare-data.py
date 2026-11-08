@@ -111,7 +111,7 @@ def prepare(src,out,hafa):
         chosen=[r['id'] for r in theme_queue if r['spelling'] in t['seeds'] or r['topic'] in t['topics']]
         theme_packs.append({'id':t['id'],'name':t['name'],'wordIds':chosen[:60],'needsSemanticReview':True})
     out.mkdir(parents=True)
-    policy={'schemaVersion':1,'scan':sorted(broad),'core':sorted(core),'exact':sorted(core),'lemmas':sorted({lemma_for(w) for w in core}),'rejectedCounts':{},'sources':scan_sources,'dictionaryHashes':dictionary_hashes,'limits':['Broad union is not proof against unlisted words','Wiktionary vulgar/offensive/slur snapshot is private scanning only; census still needs actual read','CHamoru definition search is not a fluent-reader check']}
+    policy={'schemaVersion':1,'scan':sorted(broad),'core':sorted(core),'chamoruSensitive':sorted(sensitive),'exact':sorted(core),'lemmas':sorted({lemma_for(w) for w in core}),'rejectedCounts':{},'sources':scan_sources,'dictionaryHashes':dictionary_hashes,'limits':['Broad union is not proof against unlisted words','Wiktionary vulgar/offensive/slur snapshot is private scanning only; census still needs actual read','CHamoru definition search is not a fluent-reader check']}
     dump(out/'safety-policy.private.json',policy)
     for name,data in [('tiers.queue',{'words':tier_words}),('local.queue',{'words':local}),('themes.queue',{'words':theme_queue,'packs':theme_packs}),('ladder.queue',{'words':[record(w) for w in ladder_words]}),('census.queue',{'words':[{'id':'census-'+w.lower(),'spelling':w,'machineFlag':w in broad} for w in census]})]:
         dump(out/(name+'.json'),{'schemaVersion':1,'fixture':False,'reviewState':'awaiting-actual-review','basis':'SCOWL levels/length + OEWN lemma candidates; bands are guesses, no age/frequency norms',**data})

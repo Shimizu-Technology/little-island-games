@@ -69,6 +69,11 @@ export function validateClue(c) {
 
 /** Exact answer decisions are separate from the intentionally broad grid scan. */
 export function answerAllowed(word, policy) {
+  if (word.language === 'ch') {
+    requireThat(Array.isArray(policy.chamoruSensitive), 'Private CHamoru sensitive-headword policy required');
+    const sensitive=new Set(policy.chamoruSensitive.map(foldScan));
+    if (sensitive.has(foldScan(word.spelling)) || sensitive.has(foldScan(word.lemma))) return false;
+  }
   const key = englishKey(word.spelling), lemma = englishKey(word.lemma);
   return !new Set(policy.exact.map(englishKey)).has(key) && !new Set(policy.lemmas.map(englishKey)).has(lemma);
 }

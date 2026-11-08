@@ -37,6 +37,12 @@ describe('word records and non-destructive content policy', () => {
     expect(answerAllowed(word('COLD'),policy)).toBe(false);
     expect(answerAllowed({...word('COLDEST'),lemma:'COLD'},policy)).toBe(false);
   });
+  it('applies the private sensitive-headword filter to CHamoru matching too', () => {
+    // Neutral source-backed term used only as a synthetic policy restriction.
+    const ch={...word(),language:'ch',spelling:'Chotda',lemma:'Chotda'};
+    expect(answerAllowed(ch,{...policy,chamoruSensitive:['CHOTDA']})).toBe(false);
+    expect(()=>answerAllowed(ch,policy)).toThrow('sensitive');
+  });
   it('enforces spelling, child nouns/inflections, lengths and repeat/cap rules', () => {
     expect(() => validateWord({...word('GREY'),locale:'en-GB'})).toThrow('American');
     expect(() => validateWord({...word('REEFS'),form:'plural'})).toThrow('lemmas');
