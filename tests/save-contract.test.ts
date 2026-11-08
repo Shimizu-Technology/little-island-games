@@ -107,13 +107,17 @@ it('P2-3 1,200 axis-locked strokes never refuse an edit, drop oldest whole strok
  const latest=p.data;p=checkpointPaintUndo(p);expect(p.data).not.toBe(latest);expect(p.undoCount).toBe(511);
  // Adversarial prior values: every full-line stroke costs 9 bytes.
  p={...newCheckpoint('paint'),data:pack(Array.from({length:625},(_,i)=>(Math.floor(i/25)+i%25)%4),2),audit:Array(128).fill(9999)};
+ const history:string[]=[];
  for(let i=0;i<1200;i++){
+  history.push(p.data);
   const line=i%25;
   // Alternate full batches: every row/column sees 25 varied prior cells.
   const axis=Math.floor(i/25)%2?'column':'row';p=checkpointPaint(p,axis,line,0,25,line%4);
   expect(validCheckpoint(p)).toBe(true);
  }
  expect(p.undoCount).toBe(217);expect(jsonBytes(p)).toBeLessThan(3900);
+ for(let i=1199;i>=1200-217;i--){p=checkpointPaintUndo(p);expect(p.data).toBe(history[i]);expect(p.audit).toEqual(Array(128).fill(9999));}
+ expect(p.undoCount).toBe(0);
  expect(()=>checkpointAudit(p,10000)).toThrow();
 });
 it('max digit notes, table undo, and 200 pieces round trip in concrete bounded encodings',()=>{
