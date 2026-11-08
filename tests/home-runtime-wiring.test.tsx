@@ -66,6 +66,13 @@ vi.mock("react-native-reanimated", async () => {
     useFrameCallback: (fn: (frame: { timeSincePreviousFrame: number }) => void) => {
       harness.frames[0] = fn;
     },
+    runOnUI: (fn: (...args: any[]) => void) => (...args: any[]) => {
+      const apply = () => {
+        const deferred = harness.deferUI; harness.deferUI = false;
+        try { fn(...args); } finally { harness.deferUI = deferred; }
+      };
+      if (harness.deferUI) harness.ui.push(apply); else apply();
+    },
     runOnJS:
       (fn: (...args: any[]) => void) =>
       (...args: any[]) =>
@@ -830,6 +837,7 @@ describe('H2 capture handoff and synthetic moves', () => {
   flushJS();
   const start = current.slots.get()[0];
   expect(start.synthetic).toBe(true); expect(committed).toBe(0);
+  harness.frames[0]({ timeSincePreviousFrame: 16.67 });
   vi.advanceTimersByTime(100); harness.frames[0]({ timeSincePreviousFrame: 16.67 });
   expect(current.slots.get()[0].x).toBeGreaterThan(start.sourceX);
   expect(current.slots.get()[0].x).toBeLessThan(start.targetX); expect(committed).toBe(0);
@@ -846,6 +854,7 @@ it('H2 reduced motion commits synthetic travel immediately, without a hop or del
  const {resolve}=await import('../src/home/scene/resolve');
  const p=resolve(scene.rooms.home,scene.entities[entity.id],roomPoint(200,486),{scale:1,release:true});
  expect(current.animateProposal(p)).toBe(true);
+ flushJS();
  expect(committed).toBe(1);
  expect(current.slots.get()[0].x).toBe(current.slots.get()[0].targetX);
  expect(current.slots.get()[0].y).toBe(current.slots.get()[0].targetY);
@@ -864,5 +873,24 @@ it('H2 a pre-painted prop follows on UI before queued pickup JS can execute', as
  const slot=current.slots.get()[0];
  expect(slot.ready).toBe(true);expect(slot.phase).toBe('dragging');
  expect(slot.x).toBeGreaterThan(slot.sourceX);expect(harness.js.length).toBeGreaterThan(0);
+ await act(async()=>renderer.unmount());vi.useRealTimers();
+});
+
+it('H2 synthetic pickup is published before its JS callback even with deferred native writes', async () => {
+ let renderer!:TestRenderer.ReactTestRenderer;const scene=fixture();
+ await act(async()=>{renderer=TestRenderer.create(<Probe scene={scene}/>);});
+ const {resolve}=await import('../src/home/scene/resolve');
+ const p=resolve(scene.rooms.home,scene.entities[entity.id],roomPoint(200,486),{scale:1,release:true});
+ harness.deferUI=true;
+ expect(current.animateProposal(p)).toBe(true);
+ while(harness.ui.length)harness.ui.shift()!();
+ flushJS();while(harness.ui.length)harness.ui.shift()!();
+ expect(current.slots.get()[0].id).toBe(entity.id);
+ expect(current.slots.get()[0].ready).toBe(true);
+ expect(committed).toBe(0);
+ harness.deferUI=false;
+ harness.frames[0]({timeSincePreviousFrame:16.67});
+ vi.advanceTimersByTime(450);harness.frames[0]({timeSincePreviousFrame:16.67});flushJS();
+ expect(committed).toBe(1);
  await act(async()=>renderer.unmount());vi.useRealTimers();
 });

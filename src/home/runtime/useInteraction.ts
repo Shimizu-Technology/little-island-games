@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
-import { runOnJS, useFrameCallback, useSharedValue, type SharedValue, type FrameInfo } from "react-native-reanimated";
+import { runOnJS, runOnUI, useFrameCallback, useSharedValue, type SharedValue, type FrameInfo } from "react-native-reanimated";
 import { roomIds } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { transition, idleController, type ControllerState, type ControllerEvent } from "../scene/controller";
@@ -393,7 +393,7 @@ export function useInteraction({
         if (!slot.ready) {
           slot.liftedAt = eventTime();
           slot.readyFrame = 0;
-          if (slot.phase === "settling") slot.settleAt = eventTime();
+          if (slot.phase === "settling") slot.settleAt = slot.synthetic ? 0 : eventTime();
         }
         slot.ready = true; slot.carryBounds = carryBounds;
       }
@@ -981,6 +981,10 @@ export function useInteraction({
           }
           if (slot.phase === "dragging" && slot.proposal?.pending && now - slot.proposal.pending.since >= 60)
             slot.proposal = proposalFor(slot);
+          if (slot.phase === "settling" && slot.ready && slot.synthetic && !slot.settleAt) {
+            slot.settleAt = now;
+            slot.liftedAt = now;
+          }
           if (slot.phase === "settling" && slot.settleAt && slot.ready) {
             const progress = settleProgress(now - slot.settleAt - slot.travelDelay, reduced, slot.duration);
             slot.x = slot.releaseX + (slot.targetX - slot.releaseX) * progress;
@@ -1109,23 +1113,39 @@ export function useInteraction({
     const end = proposal.kind === "staging"
       ? screenToRoom(screenPoint(112, viewport.height - 48), camera.get(), housePoint(0, 0))
       : { x: dest.x + proposal.contact.x, y: dest.y + proposal.contact.y };
-    const generation = captureSequence.get() + 1;
-    captureSequence.set(generation);
-    const slot: DragSlot = { ...emptyDragSlot(), id: subject.id, subject, pointer: -1000 - index,
-      generation, epoch: epoch.get(), phase: "settling", synthetic: true, catalog: !!subjectOverride,
-      sourceX: from.x, sourceY: from.y, releaseX: from.x, releaseY: from.y, x: from.x, y: from.y,
-      targetX: end.x, targetY: end.y,
-      proposal, settleAt: eventTime(), duration: Math.min(400, Math.max(240,
-        Math.hypot(end.x - from.x, end.y - from.y) * camera.get().a * 1.2)),
-    };
-    slots.set(current.map((s, i) => i === index ? slot : s));
-    onPickup({ id: subject.id, slot: index, scene: { ...prepared.get(), entities: { ...prepared.get().entities, [subject.id]: subject } },
-      generation, epoch: slot.epoch, grip: { x: 0, y: 0 } });
-    if (reduced) {
-      slots.set(slots.get().map((s, i) => i === index ? { ...s, ready: true, painted: true, finished: true,
-        x: s.targetX, y: s.targetY, commitRequested: true } : s));
-      onCommit(index, proposal, from, { generation, epoch: slot.epoch });
-    }
+    // JS SharedValue writes are asynchronous on native. Allocate, publish, then
+    // notify JS in one UI transaction so pickup cannot read an empty old slot.
+    runOnUI(() => {
+      "worklet";
+      const current = slots.value;
+      if (current.some(s => s.id === subject.id || s.restId === subject.id)) return;
+      const index = current.findIndex(s => !s.id);
+      if (index < 0) return;
+      const generation = captureSequence.value + 1;
+      captureSequence.set(generation);
+      const warm = !subjectOverride && !!overlayLayouts.value[subject.id] && (!!subject.item || index === 0);
+      const now = eventTime();
+      const slot: DragSlot = { ...emptyDragSlot(), id: subject.id, subject, pointer: -1000 - index,
+        generation, epoch: epoch.value, phase: "settling", synthetic: true, catalog: !!subjectOverride,
+        ready: warm, liftedAt: warm ? now : 0,
+        sourceX: from.x, sourceY: from.y, releaseX: from.x, releaseY: from.y, x: from.x, y: from.y,
+        targetX: end.x, targetY: end.y,
+        proposal, settleAt: 0, duration: Math.min(400, Math.max(240,
+          Math.hypot(end.x - from.x, end.y - from.y) * camera.value.a * 1.2)),
+      };
+      slots.set(current.map((s, i) => i === index ? slot : s));
+      runOnJS(onPickup)({ id: subject.id, slot: index,
+        scene: { ...prepared.value, entities: { ...prepared.value.entities, [subject.id]: subject } },
+        generation, epoch: slot.epoch, grip: { x: 0, y: 0 } });
+      if (reduced) {
+        slots.modify(current => { "worklet";
+          current[index] = { ...current[index], ready: true, painted: true, finished: true,
+            x: slot.targetX, y: slot.targetY, commitRequested: true };
+          return current;
+        });
+        runOnJS(onCommit)(index, proposal, from, { generation, epoch: slot.epoch });
+      }
+    })();
     return true;
   };
   const resetFrames = () => {
