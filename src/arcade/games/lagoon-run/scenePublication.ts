@@ -9,3 +9,5 @@ export function runInstructionPublication(s:RunState){
  for(const r of s.rows)if(!r.passed&&(!row||r.z>row.z))row=r;
  return row?.action==='idle'?row.shellLane<s.lane?'left':'right':row?.action??'idle';
 }
+
+export function runCoursePublication(s:RunState){'worklet';return s.rows.map((_,i)=>runRowPublication(s,i));}

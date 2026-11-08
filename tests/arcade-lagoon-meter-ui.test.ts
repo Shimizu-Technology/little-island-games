@@ -1,7 +1,7 @@
 import {beforeEach,expect,it,vi} from 'vitest';
 import {createRun} from '../src/arcade/games/lagoon-run/engine';
 import {runLevels} from '../src/arcade/games/scrolling/content';
-import {useRunMeter} from '../src/arcade/games/lagoon-run/useRunMeter';
+import {useRunMeter,runEventTags} from '../src/arcade/games/lagoon-run/useRunMeter';
 import type {SharedValue} from 'react-native-reanimated';
 const runtime=vi.hoisted(()=>({effects:[] as (()=>unknown)[],callback:null as null|((info:{timeSincePreviousFrame:number})=>void),batches:[] as number[],files:[] as string[],measurement:true}));
 vi.mock('react',()=>({useCallback:(fn:unknown)=>fn,useEffect:(fn:()=>unknown)=>runtime.effects.push(fn),useRef:(current:unknown)=>({current}),useState:(value:unknown)=>[value,()=>{}]}));
@@ -49,4 +49,11 @@ it('never writes into a family sandbox even when budget debug is requested',()=>
  const cleanups=runtime.effects.map(effect=>effect()).filter((f):f is ()=>void=>typeof f==='function');
  for(let i=0;i<3605;i++)runtime.callback!({timeSincePreviousFrame:1000/60});
  for(const cleanup of cleanups)cleanup();expect(runtime.files).toHaveLength(0);
+});
+
+it('tags the hazard contact-plane crossing once and never confuses a recycled row with a crossing',()=>{
+ const a=createRun(runLevels[7],771);a.rows[0]={...a.rows[0],z:.999};
+ const b={...a,rows:a.rows.map((r,i)=>i===0?{...r,z:1.001}:r)};
+ expect(runEventTags(a,b)).toContain('hazard-front');expect(runEventTags(b,b)).not.toContain('hazard-front');
+ expect(runEventTags(a,{...b,rows:b.rows.map((r,i)=>i===0?{...r,serial:100}:r)})).not.toContain('hazard-front');
 });

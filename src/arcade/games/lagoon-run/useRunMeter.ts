@@ -5,12 +5,13 @@ import { Platform } from 'react-native';
 import { File, Paths } from 'expo-file-system';
 import { runOnJS, runOnUI, useFrameCallback, useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { createMeter, recordFrame, summarizeFrames, eventWindows, type Meter } from './frameMeter';
-import type { RunState } from './engine';
+import {runLearning,type RunState} from './engine';
 
 export function runEventTags(a: RunState, b: RunState): string[] {
   'worklet';
   const tags: string[] = [];
   if (b.serial !== a.serial) tags.push('spawn');
+  if(!runLearning(b) && b.rows.some(row=>row.z>1 && a.rows.some(old=>old.serial===row.serial && old.z<=1)))tags.push('hazard-front');
   if (b.shells > a.shells) tags.push('pickup');
   if (b.lane !== a.lane) tags.push('lane');
   if (b.jump > a.jump) tags.push('jump');
