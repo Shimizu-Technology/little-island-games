@@ -1,3 +1,6 @@
+import { validCove, type CovePeople } from './covePeople';
+import { asciiId } from './saveBits';
+import type { ChallengeProgress } from './challenge';
 import { validRoundOwners, type RoundOwners } from '../badges/owners';
 import { BoardId, BoardSessions, boardIds, isBoardId, validBoardSessions } from "../board";
 import { ExploreProgress } from "../explore/progress";
@@ -24,8 +27,12 @@ import { validSchool, type SchoolProgress } from "../learn/schoolProgress";
 export type Settings = { sound: boolean; help: boolean; homeNavigationSeen?: boolean; learningIslander?: boolean; practice?: PracticeSettings; narration?: boolean; effects?: boolean; automaticSpeech?: boolean; narrationVolume?: number; voice?: "warm" | "calm" };
 export type Save = {
   profiles?: Profiles;
+  /** Runtime projection only; encoded in profiles.people exactly once. */
+  challenge?: ChallengeProgress;
+  saveRevision?: string;
+  cove?: CovePeople;
   school?: SchoolProgress;
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   roundOwners?: RoundOwners;
   /** Versioned per-child Library state; legacy Explore remains intact. */
   library?: LibraryData;
@@ -369,10 +376,12 @@ export function parseSave(raw: string): Save {
   } catch {
     throw new Error("This save is not readable JSON. Your original has been kept.");
   }
-  if (!obj(v) || (v.version !== 1 && v.version !== 2))
+  if (!obj(v) || (v.version !== 1 && v.version !== 2 && v.version !== 3))
     throw new Error("This save uses an unsupported version. Your original has been kept.");
-  if ((v.version === 2 && !obj(v.profiles)) || (v.version === 1 && v.profiles !== undefined))
+  if (((v.version === 2 || v.version === 3) && !obj(v.profiles)) || (v.version === 1 && v.profiles !== undefined))
     throw new Error("This save has an incomplete profile envelope. Your original has been kept.");
+  if (v.version === 3 ? !obj(v.profiles) || v.profiles.version !== 2 || !asciiId(v.saveRevision,80) || !validCove(v.cove, validLearners(v.learning) ? v.learning.people.map(p => p.id) : ['family']) || v.challenge !== undefined : v.challenge !== undefined || v.cove !== undefined || v.saveRevision !== undefined || v.version === 2 && (!obj(v.profiles) || v.profiles.version !== 1))
+    throw new Error("This save has an invalid versioned namespace. Your original has been kept.");
   if (
     (v.arcade !== undefined && (!validArcade(v.arcade) || Object.keys(v.arcade.people).some(id => !(v.learning === undefined ? ["family"] : validLearners(v.learning) ? v.learning.people.map(p => p.id) : []).includes(id)))) ||
     !obj(v.settings) ||
@@ -414,6 +423,13 @@ export function parseSave(raw: string): Save {
     throw new Error("Some saved game data is invalid. Your original has been kept.");
   if ((v.profiles !== undefined && !validProfiles(v.profiles, validLearners(v.learning) ? v.learning : undefined)) || (v.school !== undefined && !validSchool(v.school)))
     throw new Error("Some saved profile data is invalid. Your original has been kept.");
+  if (v.version === 3) {
+    const ids = new Set<string>();
+    for (const p of [...Object.values((v.profiles as Profiles).people), ...Object.values((v.cove as CovePeople).people)]) for (const round of p.challenge?.paused ?? []) {
+      if (ids.has(round.id)) throw new Error("A paused challenge has duplicate owners. Your original has been kept.");
+      ids.add(round.id);
+    }
+  }
   const save = v as unknown as Save;
   // Feel v2: validate the original first; recovery/restore retain its original bytes.
   const next = save.arcade ? { ...save, arcade: migrateArcade(save.arcade) } : save;

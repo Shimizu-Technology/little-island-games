@@ -1,3 +1,4 @@
+import { encodeSave } from '../src/state/profiles';
 import React, { createContext, useLayoutEffect } from 'react';
 import TestRenderer, { act } from 'react-test-renderer';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -89,12 +90,12 @@ describe('Store Library persistence and recovery', () => {
   it('migrates profile storage once without replacing a validated existing Library or its archive', async () => {
     const originalLibrary = { version: 2, profiles: { family: { ...newLibraryChild(), query: 'kept' } }, archive: { explore: legacy().explore } };
     const original = JSON.stringify({ ...emptySave(), library: originalLibrary }); db.raw = original; await mount();
-    expect(store.save.library).toEqual(originalLibrary); expect(store.save.profiles?.version).toBe(1); expect(db.set).toHaveBeenCalledOnce(); expect(db.preserved).toContain(original);
+    expect(store.save.library).toEqual(originalLibrary); expect(store.save.profiles?.version).toBe(2); expect(db.set).toHaveBeenCalledOnce(); expect(db.preserved).toContain(original);
   });
   it('includes all profile data in backups and preserves incoming legacy and current bytes on restore', async () => {
     await mount();
     await act(async () => { store.libraryUpdate({ ...newLibraryChild(), saved: ['moon'], bookPages: { busy: 4 }, current: 'busy', onlyFavorites: true, creations: [{ id: 'made-1', title: 'Turtle', sourceId: 'moon', sentences: 'It swims.', updatedAt: 123, strokes: [{ color: '#123abc', width: 22, points: [{ x: .4, y: .8 }] }], stamps: [{ id: 'turtle', x: .5, y: .5, size: .17 }] }] }, store.epoch, 'family'); });
-    const current = db.raw!, backup = JSON.stringify(store.save);
+    const current = db.raw!, backup = encodeSave(store.save);
     const incoming = ' \n' + JSON.stringify(legacy(), null, 3) + '\n';
     await act(async () => { await store.restore(incoming); });
     expect(db.preserved).toContain(incoming); expect(db.preserved).toContain(current);
@@ -124,7 +125,7 @@ describe('Store Library persistence and recovery', () => {
     await act(async () => { store.selectLearner('child-1'); });
     await act(async () => { store.libraryUpdate({ ...newLibraryChild(), query: 'turtle' }, store.epoch, 'child-1'); });
     expect(store.save.library?.profiles['child-1'].policy).toEqual(policy); expect(libraryChild(store.save.library, 'family').saved).toEqual([]);
-    const staleEpoch = store.epoch, backup = JSON.stringify(store.save);
+    const staleEpoch = store.epoch, backup = encodeSave(store.save);
     await act(async () => { await store.restore(backup); store.libraryUpdate(newLibraryChild(), staleEpoch, 'child-1'); });
     expect(store.save.library?.profiles['child-1'].query).toBe('turtle');
     await act(async () => { expect(await store.removeLearner('child-1')).toBe(true); });

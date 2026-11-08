@@ -1,0 +1,5 @@
+Save catalog immutable history: 1 generations checked.
+(node:83397) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/leonshimizu/.t3/worktrees/little-island-games/t3-ec809d90/src/state/catalogManifest.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/leonshimizu/.t3/worktrees/little-island-games/t3-ec809d90/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)

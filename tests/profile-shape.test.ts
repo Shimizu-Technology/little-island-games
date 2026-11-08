@@ -28,7 +28,7 @@ it('migrates known owners immutably, buckets unknowns, never infers ownership fr
 });
 it('rejects partial, unknown-version, cross-owner and invalid nested profile input through normal recovery parser',()=>{
   const next=migrateProfiles({...emptySave(),learning:learning()}),raw=JSON.parse(encodeSave(next));
-  for(const alter of [(v:typeof raw)=>{delete v.profiles;},(v:typeof raw)=>{v.version=1;},(v:typeof raw)=>{v.profiles.version=2;},(v:typeof raw)=>{delete v.profiles.people.b;},(v:typeof raw)=>{v.profiles.people.a.sessions.maze={game:'maze'};},(v:typeof raw)=>{v.profiles.unassigned.rounds=null;},(v:typeof raw)=>{v.profiles.people.a.learn={'shell-math':{...startSession('shell-math',{options:{mode:'solo',pace:'easy'}},{},2),learner:'b'}};},(v:typeof raw)=>{v.profiles.people.extra={sessions:{},recent:null};}]) {
+  for(const alter of [(v:typeof raw)=>{delete v.profiles;},(v:typeof raw)=>{v.version=1;},(v:typeof raw)=>{v.profiles.version=3;},(v:typeof raw)=>{delete v.profiles.people.b;},(v:typeof raw)=>{v.profiles.people.a.sessions.maze={game:'maze'};},(v:typeof raw)=>{v.profiles.unassigned.rounds=null;},(v:typeof raw)=>{v.profiles.people.a.learn={'shell-math':{...startSession('shell-math',{options:{mode:'solo',pace:'easy'}},{},2),learner:'b'}};},(v:typeof raw)=>{v.profiles.people.extra={sessions:{},recent:null};}]) {
     const bad=structuredClone(raw);alter(bad);expect(()=>parseSave(JSON.stringify(bad))).toThrow(/original has been kept/);
   }
 });

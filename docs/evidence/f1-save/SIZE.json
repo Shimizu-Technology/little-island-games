@@ -1,0 +1,66 @@
+{
+  "catalogEntries": 62647,
+  "coveEntries": 54000,
+  "bankCount": 200,
+  "learnerBytes": 100579,
+  "adultChallengeBytes": 69601,
+  "adultRecordBytes": 69632,
+  "sessionBytes": {
+    "digits": 1287,
+    "paint": 1667,
+    "cells": 847,
+    "letters": 1029,
+    "edges": 931,
+    "table": 3012,
+    "pieces": 2864
+  },
+  "pausedSessionBytes": [
+    {
+      "game": "capacity-0",
+      "bytes": 4096
+    },
+    {
+      "game": "capacity-1",
+      "bytes": 4096
+    },
+    {
+      "game": "capacity-2",
+      "bytes": 4096
+    },
+    {
+      "game": "capacity-3",
+      "bytes": 4096
+    },
+    {
+      "game": "capacity-4",
+      "bytes": 4096
+    },
+    {
+      "game": "capacity-5",
+      "bytes": 4096
+    },
+    {
+      "game": "capacity-6",
+      "bytes": 4096
+    },
+    {
+      "game": "capacity-7",
+      "bytes": 4096
+    }
+  ],
+  "fiveLearnersChallengeBytes": 502895,
+  "fourAdultRecordBytes": 278528,
+  "libraryBytes": 999900,
+  "drawingCount": 80,
+  "wholeSaveBytes": 1896524,
+  "remainingBytes": 103476,
+  "nearLimitMigratedBytes": 1985398,
+  "nearLimitPlusDenseChallengeBytes": 2085138,
+  "limits": {
+    "save": 2000000,
+    "library": 1000000,
+    "learner": 104000,
+    "adult": 72000
+  },
+  "coverage": "Actual canonical production storage primitives and validators, test-only structural codecs. Not proof of future game-engine reachability, arbitrary multi-cell undo, Home storage/delta formats or device timing."
+}

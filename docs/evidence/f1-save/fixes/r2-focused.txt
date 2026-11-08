@@ -1,0 +1,12 @@
+
+ RUN  v5.0.5 /Users/leonshimizu/.t3/worktrees/little-island-games/t3-10dcd645
+
+(node:92129) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:92131) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  3 passed (3)
+      Tests  50 passed (50)
+   Start at  00:12:11
+   Duration  5.74s (tests 86%, transform 8%, import 5%)

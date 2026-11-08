@@ -1,0 +1,15 @@
+
+> little-island-games@1.0.0 test
+> vitest run tests/save-adapters-v3.test.ts tests/save-store-v3.test.tsx tests/save-contract.test.ts tests/save-capacity-v3.test.ts tests/save-review-regressions.test.ts
+
+
+ RUN  v5.0.5 /Users/leonshimizu/.t3/worktrees/little-island-games/t3-ec809d90
+
+(node:12209) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  5 passed (5)
+      Tests  68 passed (68)
+   Start at  23:24:14
+   Duration  11.81s (tests 85%, transform 11%, import 4%)
+

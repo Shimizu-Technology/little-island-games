@@ -1,0 +1,1588 @@
+
+ RUN  v5.0.5 /Users/leonshimizu/.t3/worktrees/little-island-games/t3-10dcd645
+
+(node:91815) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | tests/save-store-adapters-r2.test.tsx > native: R2-P1-1 mid-round discard never buries the exact pre-update copy
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > native: R2-P2-1 reachable Recovery export contains the latest accepted work
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > native: R2-P2-1 Start fresh preserves the live save even when Recovery is active
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > native: R2-P2-2 start reports refused ambient commits and permits an explicit retry
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > native: R2-P2-2 finish reports refused ambient commits and permits an explicit retry
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > native: R2-P3-3 finish failures report a family-facing error and keep accepted work
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > native: R2-P3-3 discard failures report a family-facing error and keep accepted work
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > native: R2-P3-3 person failures report a family-facing error and keep accepted work
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > native: R2-P3-1 repeated failed upgrades keep one exact recovery copy
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > native: R2-P3-1 repeated failed upgrades keep one exact recovery copy
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > web: R2-P1-1 mid-round discard never buries the exact pre-update copy
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > web: R2-P2-1 reachable Recovery export contains the latest accepted work
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > web: R2-P2-1 Start fresh preserves the live save even when Recovery is active
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > web: R2-P2-2 start reports refused ambient commits and permits an explicit retry
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > web: R2-P2-2 finish reports refused ambient commits and permits an explicit retry
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > web: R2-P3-3 finish failures report a family-facing error and keep accepted work
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > web: R2-P3-3 discard failures report a family-facing error and keep accepted work
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > web: R2-P3-3 person failures report a family-facing error and keep accepted work
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > web: R2-P3-1 repeated failed upgrades keep one exact recovery copy
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+stderr | tests/save-store-adapters-r2.test.tsx > web: R2-P3-1 repeated failed upgrades keep one exact recovery copy
+react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer
+
+ ❯ tests/save-store-adapters-r2.test.tsx (18 tests | 18 failed) 2971ms
+   × native: R2-P1-1 mid-round discard never buries the exact pre-update copy 472ms
+   × native: R2-P2-1 reachable Recovery export contains the latest accepted work 18ms
+   × native: R2-P2-1 Start fresh preserves the live save even when Recovery is active 22ms
+   × native: R2-P2-2 start reports refused ambient commits and permits an explicit retry 5ms
+   × native: R2-P2-2 finish reports refused ambient commits and permits an explicit retry 6ms
+   × native: R2-P3-3 finish failures report a family-facing error and keep accepted work 8ms
+   × native: R2-P3-3 discard failures report a family-facing error and keep accepted work 12ms
+   × native: R2-P3-3 person failures report a family-facing error and keep accepted work 10ms
+   × native: R2-P3-1 repeated failed upgrades keep one exact recovery copy 1040ms
+   × web: R2-P1-1 mid-round discard never buries the exact pre-update copy 345ms
+   × web: R2-P2-1 reachable Recovery export contains the latest accepted work 11ms
+   × web: R2-P2-1 Start fresh preserves the live save even when Recovery is active 11ms
+   × web: R2-P2-2 start reports refused ambient commits and permits an explicit retry 3ms
+   × web: R2-P2-2 finish reports refused ambient commits and permits an explicit retry 5ms
+   × web: R2-P3-3 finish failures report a family-facing error and keep accepted work 5ms
+   × web: R2-P3-3 discard failures report a family-facing error and keep accepted work 4ms
+   × web: R2-P3-3 person failures report a family-facing error and keep accepted work 4ms
+   × web: R2-P3-1 repeated failed upgrades keep one exact recovery copy 987ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 18 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/save-store-adapters-r2.test.tsx > native: R2-P1-1 mid-round discard never buries the exact pre-update copy
+AssertionError: expected [ { …(2) }, { …(2) }, { …(2) }, …(10) ] to deeply equal [ { …(2) } ]
+
+- Expected
++ Received
+
+  [
+    {
++     "createdAt": 1794147112644,
++     "key": "recovery-1794147112644-13-5wsay8vx",
++   },
++   {
++     "createdAt": 1794147112617,
++     "key": "recovery-1794147112617-12-1mt5zibl",
++   },
++   {
++     "createdAt": 1794147112591,
++     "key": "recovery-1794147112591-11-t34n7f1d",
++   },
++   {
++     "createdAt": 1794147112560,
++     "key": "recovery-1794147112560-10-9a0plogn",
++   },
++   {
++     "createdAt": 1794147112530,
++     "key": "recovery-1794147112530-9-cg0lem7d",
++   },
++   {
++     "createdAt": 1794147112491,
++     "key": "recovery-1794147112491-8-6hwcsj7i",
++   },
++   {
++     "createdAt": 1794147112461,
++     "key": "recovery-1794147112461-7-kxddoi0t",
++   },
++   {
++     "createdAt": 1794147112432,
++     "key": "recovery-1794147112432-6-6v5w82gj",
++   },
++   {
++     "createdAt": 1794147112397,
++     "key": "recovery-1794147112397-5-p2a1krtp",
++   },
++   {
++     "createdAt": 1794147112369,
++     "key": "recovery-1794147112369-4-84w5rkpc",
++   },
++   {
++     "createdAt": 1794147112341,
++     "key": "recovery-1794147112341-3-hbyr32yf",
++   },
++   {
++     "createdAt": 1794147112309,
++     "key": "recovery-1794147112309-2-ykqowugd",
++   },
++   {
+      "createdAt": 1794147112261,
+      "key": "recovery-1794147112261-1-st9ilxe0",
+    },
+  ]
+
+ ❯ tests/save-store-adapters-r2.test.tsx:84:42
+     82|       expect(await adapter.readDrafts!()).toEqual([]);
+     83|     }
+     84|     expect(await adapter.listRecovery()).toEqual(copies);
+       |                                          ^
+     85|     expect(await adapter.readRecovery(copies[0].key)).toBe(original);
+     86|     await unmount(); await mount(); expect(store.save.challenge!.pause…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/18]⎯
+
+ FAIL  tests/save-store-adapters-r2.test.tsx > native: R2-P2-1 reachable Recovery export contains the latest accepted work
+AssertionError: expected { Object (version, settings, ...) } to deeply equal { version: 3, …(12) }
+
+- Expected
++ Received
+
+  {
+-   "challenge": {
+-     "banks": [
+-       [
+-         0,
+-         "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+-         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+-       ],
+-     ],
+-     "bests": [],
+-     "choice": null,
+-     "cursors": [],
+-     "dares": "",
+-     "nextOrdinal": 2,
+-     "paused": [
+-       {
+-         "codec": "save-proof-v1",
+-         "credited": false,
+-         "game": "save-proof",
+-         "id": "proof-family",
+-         "ordinal": 1,
+-         "owner": "family",
+-         "partner": null,
+-         "payload": {
+-           "awards": 0,
+-           "checkpoint": null,
+-           "dares": [],
+-           "end": false,
+-           "helped": false,
+-           "moves": 3,
+-         },
+-         "puzzle": {
+-           "bank": 0,
+-           "engine": "save-proof",
+-           "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+-           "puzzle": 0,
+-           "rules": 1,
+-         },
+-         "result": null,
+-         "revision": 3,
+-         "selectedDares": [],
+-         "version": 1,
+-       },
+-     ],
+-     "practice": [],
+-     "recent": [],
+-     "signals": [],
+-     "solutions": [],
+-     "version": 1,
+-   },
+-   "cove": {
+-     "active": null,
+-     "people": {},
+-     "version": 1,
+-   },
+-   "learning": {
+-     "active": "family",
+-     "people": [
+-       {
+-         "choices": {},
+-         "id": "family",
+-         "name": "Family practice",
+-         "notes": {},
+-         "skills": {},
+-       },
+-     ],
+-   },
+-   "library": {
+-     "profiles": {
+-       "family": {
+-         "bookPages": {},
+-         "category": "all",
+-         "creations": [],
+-         "labs": {
+-           "animals": {
+-             "chain": [],
+-             "expedition": 0,
+-             "habitat": 0,
+-             "journey": [
+-               "ocean",
+-             ],
+-             "matched": [],
+-             "message": "",
+-             "turn": 0,
+-             "visited": [],
+-             "water": "ocean",
+-           },
+-           "oceans": {
+-             "chain": [],
+-             "expedition": 0,
+-             "habitat": 0,
+-             "journey": [
+-               "ocean",
+-             ],
+-             "matched": [],
+-             "message": "",
+-             "turn": 0,
+-             "visited": [],
+-             "water": "ocean",
+-           },
+-           "space": {
+-             "chain": [],
+-             "expedition": 0,
+-             "habitat": 0,
+-             "journey": [
+-               "ocean",
+-             ],
+-             "matched": [],
+-             "message": "",
+-             "turn": 0,
+-             "visited": [],
+-             "water": "ocean",
+-           },
+-           "weather": {
+-             "chain": [],
+-             "expedition": 0,
+-             "habitat": 0,
+-             "journey": [
+-               "ocean",
+-             ],
+-             "matched": [],
+-             "message": "",
+-             "turn": 0,
+-             "visited": [],
+-             "water": "ocean",
+-           },
+-           "world": {
+-             "chain": [],
+-             "expedition": 0,
+-             "habitat": 0,
+-             "journey": [
+-               "ocean",
+-             ],
+-             "matched": [],
+-             "message": "",
+-             "turn": 0,
+-             "visited": [],
+-             "water": "ocean",
+-           },
+-         },
+-         "layers": {},
+-         "onlyFavorites": false,
+-         "policy": {
+-           "collections": [
+-             "ocean",
+-             "guam",
+-             "animals",
+-             "space",
+-             "weather",
+-             "body",
+-             "machines",
+-             "plants",
+-             "books",
+-             "faith",
+-             "island-history",
+-           ],
+-           "hours": {
+-             "enabled": false,
+-             "end": 0,
+-             "start": 0,
+-           },
+-         },
+-         "positions": {},
+-         "query": "",
+-         "recent": [],
+-         "saved": [],
+-         "version": 1,
+-       },
+-     },
+-     "version": 2,
+-   },
+-   "personalization": {
+-     "catalogVersion": 1,
+-     "people": {
+-       "family": {
+-         "earned": [],
+-         "home": {
+-           "current": "home",
+-           "rooms": {
+-             "beach": {
+-               "characters": [],
+-               "instances": [
+-                 {
+-                   "id": "starter-bubble-bath",
+-                   "item": "bubble-bath",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 3,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "starter-lounger",
+-                   "item": "lounger",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 9,
+-                   "y": 1,
+-                 },
+-                 {
+-                   "id": "starter-beach-towel",
+-                   "item": "beach-towel",
+-                   "layer": "ground",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 6,
+-                   "y": 7,
+-                 },
+-                 {
+-                   "id": "starter-beach-towel-3",
+-                   "item": "beach-towel",
+-                   "layer": "ground",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 11,
+-                   "y": 8,
+-                 },
+-                 {
+-                   "id": "starter-ball",
+-                   "item": "ball",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 6,
+-                   "y": 4,
+-                 },
+-                 {
+-                   "id": "starter-shell",
+-                   "item": "shell",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 12,
+-                   "y": 6,
+-                 },
+-                 {
+-                   "id": "starter-banana-plant",
+-                   "item": "banana-plant",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 14,
+-                   "y": 5,
+-                 },
+-               ],
+-               "theme": {
+-                 "floor": "sand",
+-                 "wallpaper": "cream",
+-               },
+-             },
+-             "home": {
+-               "characters": [
+-                 {
+-                   "anchor": "floor",
+-                   "pose": "stand",
+-                   "slot": 0,
+-                   "x": 8,
+-                   "y": 8,
+-                 },
+-                 {
+-                   "anchor": "floor",
+-                   "pose": "stand",
+-                   "slot": 1,
+-                   "x": 17,
+-                   "y": 2,
+-                 },
+-                 {
+-                   "anchor": "floor",
+-                   "pose": "stand",
+-                   "slot": 2,
+-                   "x": 6,
+-                   "y": 10,
+-                 },
+-               ],
+-               "instances": [
+-                 {
+-                   "id": "bed",
+-                   "item": "bed",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 4,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "shelf",
+-                   "item": "shelf",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 12,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "plant",
+-                   "item": "plant",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 14,
+-                   "y": 4,
+-                 },
+-                 {
+-                   "id": "lamp",
+-                   "item": "lamp",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "on": "shelf",
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 13,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "rug",
+-                   "item": "rug",
+-                   "layer": "ground",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 8,
+-                   "y": 8,
+-                 },
+-                 {
+-                   "id": "toys",
+-                   "item": "toy-box",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 3,
+-                   "y": 6,
+-                 },
+-               ],
+-               "theme": {
+-                 "floor": "sand",
+-                 "wallpaper": "cream",
+-               },
+-             },
+-             "kitchen": {
+-               "characters": [],
+-               "instances": [
+-                 {
+-                   "id": "starter-fridge",
+-                   "item": "fridge",
+-                   "layer": "furniture",
+-                   "mirrored": true,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 14,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "starter-sink-counter",
+-                   "item": "sink-counter",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 8,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "starter-stove",
+-                   "item": "stove",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 2,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "starter-fruit-bowl",
+-                   "item": "fruit-bowl",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "on": "starter-kitchen-table",
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 11,
+-                   "y": 9,
+-                 },
+-                 {
+-                   "id": "starter-kitchen-table",
+-                   "item": "kitchen-table",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 10,
+-                   "y": 9,
+-                 },
+-                 {
+-                   "id": "starter-stool",
+-                   "item": "stool",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 5,
+-                   "y": 9,
+-                 },
+-                 {
+-                   "id": "starter-stool-6",
+-                   "item": "stool",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 14,
+-                   "y": 9,
+-                 },
+-               ],
+-               "theme": {
+-                 "floor": "sand",
+-                 "wallpaper": "lagoon",
+-               },
+-             },
+-             "treehouse": {
+-               "characters": [],
+-               "instances": [
+-                 {
+-                   "id": "starter-hammock",
+-                   "item": "hammock",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 4,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "starter-floor-cushion",
+-                   "item": "floor-cushion",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 8,
+-                   "y": 7,
+-                 },
+-                 {
+-                   "id": "starter-floor-cushion-2",
+-                   "item": "floor-cushion",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 11,
+-                   "y": 9,
+-                 },
+-                 {
+-                   "id": "starter-string-lights",
+-                   "item": "string-lights",
+-                   "layer": "wall",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 6,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "starter-lantern",
+-                   "item": "lantern",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 10,
+-                   "y": 2,
+-                 },
+-                 {
+-                   "id": "starter-teddy",
+-                   "item": "teddy",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 6,
+-                   "y": 8,
+-                 },
+-                 {
+-                   "id": "starter-book",
+-                   "item": "book",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 9,
+-                   "y": 5,
+-                 },
+-               ],
+-               "theme": {
+-                 "floor": "honey",
+-                 "wallpaper": "cream",
+-               },
+-             },
+-           },
+-           "version": 4,
+-         },
+-         "look": {
+-           "accessory": "none",
+-           "hairColor": "espresso",
+-           "hairStyle": "ponytail",
+-           "hat": "none",
+-           "outfit": "island",
+-           "skinTone": "honey",
+-         },
+-         "made": true,
+-         "milestones": [
+-           "migration:badges-v1",
+-         ],
+-         "unseen": [],
+-       },
+-     },
+-     "version": 1,
+-   },
+-   "profiles": {
+-     "earlier": {},
+-     "people": {
+-       "family": {
+-         "challenge": {
+-           "banks": [
+-             [
+-               0,
+-               "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+-               "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+-             ],
+-           ],
+-           "bests": [],
+-           "choice": null,
+-           "cursors": [],
+-           "dares": "",
+-           "nextOrdinal": 2,
+-           "paused": [
+-             {
+-               "codec": "save-proof-v1",
+-               "credited": false,
+-               "game": "save-proof",
+-               "id": "proof-family",
+-               "ordinal": 1,
+-               "owner": "family",
+-               "partner": null,
+-               "payload": {
+-                 "awards": 0,
+-                 "checkpoint": null,
+-                 "dares": [],
+-                 "end": false,
+-                 "helped": false,
+-                 "moves": 3,
+-               },
+-               "puzzle": {
+-                 "bank": 0,
+-                 "engine": "save-proof",
+-                 "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+-                 "puzzle": 0,
+-                 "rules": 1,
+-               },
+-               "result": null,
+-               "revision": 3,
+-               "selectedDares": [],
+-               "version": 1,
+-             },
+-           ],
+-           "practice": [],
+-           "recent": [],
+-           "signals": [],
+-           "solutions": [],
+-           "version": 1,
+-         },
+-         "recent": null,
+-         "school": {},
+-         "sessions": {},
+-       },
+-     },
+-     "unassigned": {
+-       "rounds": {
+    "recent": null,
+    "sessions": {},
+-       },
+-     },
+-     "version": 2,
+-   },
+-   "recent": null,
+-   "roundOwners": {
+-     "rounds": {},
+-     "version": 1,
+-   },
+-   "saveRevision": "save-0mw7wv843-0000000t-7duwch8e",
+-   "school": {},
+-   "sessions": {},
+    "settings": {
+      "help": true,
+-     "sound": false,
++     "sound": true,
+    },
+-   "version": 3,
++   "version": 1,
+  }
+
+ ❯ tests/save-store-adapters-r2.test.tsx:94:39
+     92|     const button = root!.root.findAllByType('Button' as never).find(b …
+     93|     expect(button).toBeDefined(); await act(async () => button!.props.…
+     94|     expect(parseSave(route.exported)).toEqual(parseSave(accepted));
+       |                                       ^
+     95|     expect(parseSave(route.exported).settings.sound).toBe(false);
+     96|     expect(parseSave(route.exported).challenge!.paused[0].revision).to…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/18]⎯
+
+ FAIL  tests/save-store-adapters-r2.test.tsx > native: R2-P2-1 Start fresh preserves the live save even when Recovery is active
+ FAIL  tests/save-store-adapters-r2.test.tsx > web: R2-P2-1 Start fresh preserves the live save even when Recovery is active
+AssertionError: expected [ …(4) ] to include '{"version":3,"settings":{"sound":fals…'
+ ❯ tests/save-store-adapters-r2.test.tsx:102:18
+    100|     await act(async () => store.startFresh());
+    101|     const kept = await Promise.all((await adapter.listRecovery()).map(…
+    102|     expect(kept).toContain(accepted); expect(store.save.challenge!.pau…
+       |                  ^
+    103|   });
+    104|   for (const boundary of ['start', 'finish'] as const) it(`${name}: R2…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/18]⎯
+
+ FAIL  tests/save-store-adapters-r2.test.tsx > native: R2-P2-2 start reports refused ambient commits and permits an explicit retry
+ FAIL  tests/save-store-adapters-r2.test.tsx > native: R2-P2-2 finish reports refused ambient commits and permits an explicit retry
+ FAIL  tests/save-store-adapters-r2.test.tsx > web: R2-P2-2 start reports refused ambient commits and permits an explicit retry
+ FAIL  tests/save-store-adapters-r2.test.tsx > web: R2-P2-2 finish reports refused ambient commits and permits an explicit retry
+TypeError: .toMatch() expects to receive a string, but got object
+ ❯ tests/save-store-adapters-r2.test.tsx:111:25
+    109|     expect(route.entered).toBe(true);
+    110|     await act(async () => { store.settings({ sound: false }); store.ma…
+    111|     expect(store.error).toMatch(/try.*again.*saving finishes/i);
+       |                         ^
+    112|     route.hold = false; route.release!(); await act(async () => expect…
+    113|     expect(store.error).toMatch(/try.*again.*saving finishes/i);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/18]⎯
+
+ FAIL  tests/save-store-adapters-r2.test.tsx > native: R2-P3-3 finish failures report a family-facing error and keep accepted work
+ FAIL  tests/save-store-adapters-r2.test.tsx > web: R2-P3-3 finish failures report a family-facing error and keep accepted work
+AssertionError: expected 'private SQLite failure details' to match /could not be/
+
+- Expected:
+/could not be/
+
++ Received:
+"private SQLite failure details"
+
+ ❯ tests/save-store-adapters-r2.test.tsx:126:25
+    124|       expect(result).toBe(false);
+    125|     });
+    126|     expect(store.error).toMatch(/could not be/); expect(store.error).n…
+       |                         ^
+    127|     expect(encodeSave(store.save)).toBe(accepted); expect(await adapte…
+    128|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/18]⎯
+
+ FAIL  tests/save-store-adapters-r2.test.tsx > native: R2-P3-3 discard failures report a family-facing error and keep accepted work
+ FAIL  tests/save-store-adapters-r2.test.tsx > web: R2-P3-3 discard failures report a family-facing error and keep accepted work
+Error: private SQLite failure details
+ ❯ Proxy.<anonymous> tests/save-store-adapters-r2.test.tsx:34:30
+     32|   if (key === 'set') return async (...args: Parameters<StorageAdapter[…
+     33|     if (route.hold) { route.entered = true; await new Promise<void>(re…
+     34|     if (route.failSet) throw new Error('private SQLite failure details…
+       |                              ^
+     35|     return route.adapter!.set(...args);
+     36|   };
+ ❯ Object.challengeDiscard src/state/Store.tsx:590:21
+ ❯ tests/save-store-adapters-r2.test.tsx:123:133
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/18]⎯
+
+ FAIL  tests/save-store-adapters-r2.test.tsx > native: R2-P3-3 person failures report a family-facing error and keep accepted work
+ FAIL  tests/save-store-adapters-r2.test.tsx > web: R2-P3-3 person failures report a family-facing error and keep accepted work
+Error: private SQLite failure details
+ ❯ Proxy.<anonymous> tests/save-store-adapters-r2.test.tsx:34:30
+     32|   if (key === 'set') return async (...args: Parameters<StorageAdapter[…
+     33|     if (route.hold) { route.entered = true; await new Promise<void>(re…
+     34|     if (route.failSet) throw new Error('private SQLite failure details…
+       |                              ^
+     35|     return route.adapter!.set(...args);
+     36|   };
+ ❯ Object.covePerson src/state/Store.tsx:606:26
+ ❯ tests/save-store-adapters-r2.test.tsx:123:177
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/18]⎯
+
+ FAIL  tests/save-store-adapters-r2.test.tsx > native: R2-P3-1 repeated failed upgrades keep one exact recovery copy
+ FAIL  tests/save-store-adapters-r2.test.tsx > web: R2-P3-1 repeated failed upgrades keep one exact recovery copy
+AssertionError: expected [ { …(2) }, { …(2) }, { …(2) } ] to have a length of 1 but got 3
+
+- Expected
++ Received
+
+- 1
++ 3
+
+ ❯ tests/save-store-adapters-r2.test.tsx:133:65
+    131|     await seed(original); await mount(); expect(store.recovery).toMatc…
+    132|     await act(async () => store.retry()); await unmount(); await mount…
+    133|     const copies = await adapter.listRecovery(); expect(copies).toHave…
+       |                                                                 ^
+    134|     expect(await adapter.readRecovery(copies[0].key)).toBe(original); …
+    135|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/18]⎯
+
+ FAIL  tests/save-store-adapters-r2.test.tsx > web: R2-P1-1 mid-round discard never buries the exact pre-update copy
+AssertionError: expected [ { …(2) }, { …(2) }, { …(2) }, …(10) ] to deeply equal [ { …(2) } ]
+
+- Expected
++ Received
+
+  [
+    {
++     "createdAt": 1794147114117,
++     "key": "recovery-1794147114117-39-xzuxyimq",
++   },
++   {
++     "createdAt": 1794147114094,
++     "key": "recovery-1794147114094-38-dxnq1qm0",
++   },
++   {
++     "createdAt": 1794147114068,
++     "key": "recovery-1794147114068-37-86nr1rrc",
++   },
++   {
++     "createdAt": 1794147114047,
++     "key": "recovery-1794147114047-36-7pcs2hqt",
++   },
++   {
++     "createdAt": 1794147114025,
++     "key": "recovery-1794147114025-35-hjs7xyf5",
++   },
++   {
++     "createdAt": 1794147114003,
++     "key": "recovery-1794147114003-34-h7xvwism",
++   },
++   {
++     "createdAt": 1794147113972,
++     "key": "recovery-1794147113972-33-1qxe68wa",
++   },
++   {
++     "createdAt": 1794147113948,
++     "key": "recovery-1794147113948-32-3cxjh7hk",
++   },
++   {
++     "createdAt": 1794147113923,
++     "key": "recovery-1794147113923-31-dvwjowv8",
++   },
++   {
++     "createdAt": 1794147113901,
++     "key": "recovery-1794147113901-30-l226z415",
++   },
++   {
++     "createdAt": 1794147113873,
++     "key": "recovery-1794147113873-29-ve18r24g",
++   },
++   {
++     "createdAt": 1794147113847,
++     "key": "recovery-1794147113847-28-12jpjvuo",
++   },
++   {
+      "createdAt": 1794147113817,
+      "key": "recovery-1794147113817-27-ltx792ou",
+    },
+  ]
+
+ ❯ tests/save-store-adapters-r2.test.tsx:84:42
+     82|       expect(await adapter.readDrafts!()).toEqual([]);
+     83|     }
+     84|     expect(await adapter.listRecovery()).toEqual(copies);
+       |                                          ^
+     85|     expect(await adapter.readRecovery(copies[0].key)).toBe(original);
+     86|     await unmount(); await mount(); expect(store.save.challenge!.pause…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/18]⎯
+
+ FAIL  tests/save-store-adapters-r2.test.tsx > web: R2-P2-1 reachable Recovery export contains the latest accepted work
+AssertionError: expected { Object (version, settings, ...) } to deeply equal { version: 3, …(12) }
+
+- Expected
++ Received
+
+  {
+-   "challenge": {
+-     "banks": [
+-       [
+-         0,
+-         "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+-         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+-       ],
+-     ],
+-     "bests": [],
+-     "choice": null,
+-     "cursors": [],
+-     "dares": "",
+-     "nextOrdinal": 2,
+-     "paused": [
+-       {
+-         "codec": "save-proof-v1",
+-         "credited": false,
+-         "game": "save-proof",
+-         "id": "proof-family",
+-         "ordinal": 1,
+-         "owner": "family",
+-         "partner": null,
+-         "payload": {
+-           "awards": 0,
+-           "checkpoint": null,
+-           "dares": [],
+-           "end": false,
+-           "helped": false,
+-           "moves": 3,
+-         },
+-         "puzzle": {
+-           "bank": 0,
+-           "engine": "save-proof",
+-           "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+-           "puzzle": 0,
+-           "rules": 1,
+-         },
+-         "result": null,
+-         "revision": 3,
+-         "selectedDares": [],
+-         "version": 1,
+-       },
+-     ],
+-     "practice": [],
+-     "recent": [],
+-     "signals": [],
+-     "solutions": [],
+-     "version": 1,
+-   },
+-   "cove": {
+-     "active": null,
+-     "people": {},
+-     "version": 1,
+-   },
+-   "learning": {
+-     "active": "family",
+-     "people": [
+-       {
+-         "choices": {},
+-         "id": "family",
+-         "name": "Family practice",
+-         "notes": {},
+-         "skills": {},
+-       },
+-     ],
+-   },
+-   "library": {
+-     "profiles": {
+-       "family": {
+-         "bookPages": {},
+-         "category": "all",
+-         "creations": [],
+-         "labs": {
+-           "animals": {
+-             "chain": [],
+-             "expedition": 0,
+-             "habitat": 0,
+-             "journey": [
+-               "ocean",
+-             ],
+-             "matched": [],
+-             "message": "",
+-             "turn": 0,
+-             "visited": [],
+-             "water": "ocean",
+-           },
+-           "oceans": {
+-             "chain": [],
+-             "expedition": 0,
+-             "habitat": 0,
+-             "journey": [
+-               "ocean",
+-             ],
+-             "matched": [],
+-             "message": "",
+-             "turn": 0,
+-             "visited": [],
+-             "water": "ocean",
+-           },
+-           "space": {
+-             "chain": [],
+-             "expedition": 0,
+-             "habitat": 0,
+-             "journey": [
+-               "ocean",
+-             ],
+-             "matched": [],
+-             "message": "",
+-             "turn": 0,
+-             "visited": [],
+-             "water": "ocean",
+-           },
+-           "weather": {
+-             "chain": [],
+-             "expedition": 0,
+-             "habitat": 0,
+-             "journey": [
+-               "ocean",
+-             ],
+-             "matched": [],
+-             "message": "",
+-             "turn": 0,
+-             "visited": [],
+-             "water": "ocean",
+-           },
+-           "world": {
+-             "chain": [],
+-             "expedition": 0,
+-             "habitat": 0,
+-             "journey": [
+-               "ocean",
+-             ],
+-             "matched": [],
+-             "message": "",
+-             "turn": 0,
+-             "visited": [],
+-             "water": "ocean",
+-           },
+-         },
+-         "layers": {},
+-         "onlyFavorites": false,
+-         "policy": {
+-           "collections": [
+-             "ocean",
+-             "guam",
+-             "animals",
+-             "space",
+-             "weather",
+-             "body",
+-             "machines",
+-             "plants",
+-             "books",
+-             "faith",
+-             "island-history",
+-           ],
+-           "hours": {
+-             "enabled": false,
+-             "end": 0,
+-             "start": 0,
+-           },
+-         },
+-         "positions": {},
+-         "query": "",
+-         "recent": [],
+-         "saved": [],
+-         "version": 1,
+-       },
+-     },
+-     "version": 2,
+-   },
+-   "personalization": {
+-     "catalogVersion": 1,
+-     "people": {
+-       "family": {
+-         "earned": [],
+-         "home": {
+-           "current": "home",
+-           "rooms": {
+-             "beach": {
+-               "characters": [],
+-               "instances": [
+-                 {
+-                   "id": "starter-bubble-bath",
+-                   "item": "bubble-bath",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 3,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "starter-lounger",
+-                   "item": "lounger",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 9,
+-                   "y": 1,
+-                 },
+-                 {
+-                   "id": "starter-beach-towel",
+-                   "item": "beach-towel",
+-                   "layer": "ground",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 6,
+-                   "y": 7,
+-                 },
+-                 {
+-                   "id": "starter-beach-towel-3",
+-                   "item": "beach-towel",
+-                   "layer": "ground",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 11,
+-                   "y": 8,
+-                 },
+-                 {
+-                   "id": "starter-ball",
+-                   "item": "ball",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 6,
+-                   "y": 4,
+-                 },
+-                 {
+-                   "id": "starter-shell",
+-                   "item": "shell",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 12,
+-                   "y": 6,
+-                 },
+-                 {
+-                   "id": "starter-banana-plant",
+-                   "item": "banana-plant",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 14,
+-                   "y": 5,
+-                 },
+-               ],
+-               "theme": {
+-                 "floor": "sand",
+-                 "wallpaper": "cream",
+-               },
+-             },
+-             "home": {
+-               "characters": [
+-                 {
+-                   "anchor": "floor",
+-                   "pose": "stand",
+-                   "slot": 0,
+-                   "x": 8,
+-                   "y": 8,
+-                 },
+-                 {
+-                   "anchor": "floor",
+-                   "pose": "stand",
+-                   "slot": 1,
+-                   "x": 17,
+-                   "y": 2,
+-                 },
+-                 {
+-                   "anchor": "floor",
+-                   "pose": "stand",
+-                   "slot": 2,
+-                   "x": 6,
+-                   "y": 10,
+-                 },
+-               ],
+-               "instances": [
+-                 {
+-                   "id": "bed",
+-                   "item": "bed",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 4,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "shelf",
+-                   "item": "shelf",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 12,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "plant",
+-                   "item": "plant",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 14,
+-                   "y": 4,
+-                 },
+-                 {
+-                   "id": "lamp",
+-                   "item": "lamp",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "on": "shelf",
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 13,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "rug",
+-                   "item": "rug",
+-                   "layer": "ground",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 8,
+-                   "y": 8,
+-                 },
+-                 {
+-                   "id": "toys",
+-                   "item": "toy-box",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 3,
+-                   "y": 6,
+-                 },
+-               ],
+-               "theme": {
+-                 "floor": "sand",
+-                 "wallpaper": "cream",
+-               },
+-             },
+-             "kitchen": {
+-               "characters": [],
+-               "instances": [
+-                 {
+-                   "id": "starter-fridge",
+-                   "item": "fridge",
+-                   "layer": "furniture",
+-                   "mirrored": true,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 14,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "starter-sink-counter",
+-                   "item": "sink-counter",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 8,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "starter-stove",
+-                   "item": "stove",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 2,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "starter-fruit-bowl",
+-                   "item": "fruit-bowl",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "on": "starter-kitchen-table",
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 11,
+-                   "y": 9,
+-                 },
+-                 {
+-                   "id": "starter-kitchen-table",
+-                   "item": "kitchen-table",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 10,
+-                   "y": 9,
+-                 },
+-                 {
+-                   "id": "starter-stool",
+-                   "item": "stool",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 5,
+-                   "y": 9,
+-                 },
+-                 {
+-                   "id": "starter-stool-6",
+-                   "item": "stool",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 14,
+-                   "y": 9,
+-                 },
+-               ],
+-               "theme": {
+-                 "floor": "sand",
+-                 "wallpaper": "lagoon",
+-               },
+-             },
+-             "treehouse": {
+-               "characters": [],
+-               "instances": [
+-                 {
+-                   "id": "starter-hammock",
+-                   "item": "hammock",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 4,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "starter-floor-cushion",
+-                   "item": "floor-cushion",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 8,
+-                   "y": 7,
+-                 },
+-                 {
+-                   "id": "starter-floor-cushion-2",
+-                   "item": "floor-cushion",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 11,
+-                   "y": 9,
+-                 },
+-                 {
+-                   "id": "starter-string-lights",
+-                   "item": "string-lights",
+-                   "layer": "wall",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 6,
+-                   "y": 0,
+-                 },
+-                 {
+-                   "id": "starter-lantern",
+-                   "item": "lantern",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 10,
+-                   "y": 2,
+-                 },
+-                 {
+-                   "id": "starter-teddy",
+-                   "item": "teddy",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 6,
+-                   "y": 8,
+-                 },
+-                 {
+-                   "id": "starter-book",
+-                   "item": "book",
+-                   "layer": "furniture",
+-                   "mirrored": false,
+-                   "rotation": 0,
+-                   "state": "rest",
+-                   "x": 9,
+-                   "y": 5,
+-                 },
+-               ],
+-               "theme": {
+-                 "floor": "honey",
+-                 "wallpaper": "cream",
+-               },
+-             },
+-           },
+-           "version": 4,
+-         },
+-         "look": {
+-           "accessory": "none",
+-           "hairColor": "espresso",
+-           "hairStyle": "ponytail",
+-           "hat": "none",
+-           "outfit": "island",
+-           "skinTone": "honey",
+-         },
+-         "made": true,
+-         "milestones": [
+-           "migration:badges-v1",
+-         ],
+-         "unseen": [],
+-       },
+-     },
+-     "version": 1,
+-   },
+-   "profiles": {
+-     "earlier": {},
+-     "people": {
+-       "family": {
+-         "challenge": {
+-           "banks": [
+-             [
+-               0,
+-               "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+-               "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+-             ],
+-           ],
+-           "bests": [],
+-           "choice": null,
+-           "cursors": [],
+-           "dares": "",
+-           "nextOrdinal": 2,
+-           "paused": [
+-             {
+-               "codec": "save-proof-v1",
+-               "credited": false,
+-               "game": "save-proof",
+-               "id": "proof-family",
+-               "ordinal": 1,
+-               "owner": "family",
+-               "partner": null,
+-               "payload": {
+-                 "awards": 0,
+-                 "checkpoint": null,
+-                 "dares": [],
+-                 "end": false,
+-                 "helped": false,
+-                 "moves": 3,
+-               },
+-               "puzzle": {
+-                 "bank": 0,
+-                 "engine": "save-proof",
+-                 "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+-                 "puzzle": 0,
+-                 "rules": 1,
+-               },
+-               "result": null,
+-               "revision": 3,
+-               "selectedDares": [],
+-               "version": 1,
+-             },
+-           ],
+-           "practice": [],
+-           "recent": [],
+-           "signals": [],
+-           "solutions": [],
+-           "version": 1,
+-         },
+-         "recent": null,
+-         "school": {},
+-         "sessions": {},
+-       },
+-     },
+-     "unassigned": {
+-       "rounds": {
+    "recent": null,
+    "sessions": {},
+-       },
+-     },
+-     "version": 2,
+-   },
+-   "recent": null,
+-   "roundOwners": {
+-     "rounds": {},
+-     "version": 1,
+-   },
+-   "saveRevision": "save-0mw7wv98r-00000029-y8jvhied",
+-   "school": {},
+-   "sessions": {},
+    "settings": {
+      "help": true,
+-     "sound": false,
++     "sound": true,
+    },
+-   "version": 3,
++   "version": 1,
+  }
+
+ ❯ tests/save-store-adapters-r2.test.tsx:94:39
+     92|     const button = root!.root.findAllByType('Button' as never).find(b …
+     93|     expect(button).toBeDefined(); await act(async () => button!.props.…
+     94|     expect(parseSave(route.exported)).toEqual(parseSave(accepted));
+       |                                       ^
+     95|     expect(parseSave(route.exported).settings.sound).toBe(false);
+     96|     expect(parseSave(route.exported).challenge!.paused[0].revision).to…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/18]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  18 failed (18)
+   Start at  00:11:51
+   Duration  3.76s (tests 83%, transform 11%, import 6%)

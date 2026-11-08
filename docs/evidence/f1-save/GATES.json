@@ -1,0 +1,38 @@
+{
+  "implementationHead": "c540c7ea8ba56ab72683d4edb281daa09ea862ed",
+  "implementationTree": "f822f4fbf07dc2a8690e8ee5ef23ff5f9efe68a3",
+  "lockfileSha256": "007f2264a08a61840aa9956ce1bf16cc6bc38b668e150885524cf65f479337f6",
+  "node": "v22.22.3",
+  "checks": {
+    "default": {
+      "status": "passed",
+      "tests": 2405,
+      "testFiles": 199,
+      "offlineShell": "88032002a7f2",
+      "resources": 6480,
+      "command": "LITTLE_ISLAND_SLOW_QA=1 LITTLE_ISLAND_SLOW_HOST=1 npm run check"
+    },
+    "preview": {
+      "status": "passed",
+      "tests": 2405,
+      "testFiles": 199,
+      "offlineShell": "435b554be5ba",
+      "resources": 11037,
+      "command": "EXPO_PUBLIC_LIBRARY_PREVIEW=1 LITTLE_ISLAND_SLOW_QA=1 LITTLE_ISLAND_SLOW_HOST=1 npm run check"
+    }
+  },
+  "doctor": {
+    "command": "npm run doctor",
+    "status": "passed",
+    "checks": "21/21",
+    "path": "default session PATH"
+  },
+  "generatedLibrary": "restored default: 0 authored items / 50 index entries",
+  "baselineRollback": {
+    "source": "0f428c2fef43a821bbea782823f7548b5d514971",
+    "status": "passed"
+  },
+  "independentIntegrationReview": "lead pending",
+  "nativeAndPhysicalAcceptance": "not run; see QA.md",
+  "cleanup": "no active owned runtime resources; task-owned scratch outputs removed"
+}

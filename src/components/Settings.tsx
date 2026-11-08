@@ -1,4 +1,3 @@
-import { encodeSave } from "../state/profiles";
 import * as Linking from "expo-linking";
 import appConfig from "../../app.json";
 import React, { useState } from "react";
@@ -185,7 +184,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
             quiet
             disabled={busy}
             onPress={() =>
-              void exportBackup(encodeSave(store.save))
+              void store.backup().then(exportBackup)
                 .then(() => setMessage("Choose a private place to save your backup."))
                 .catch(() => setMessage("The backup could not be shared. Please try again."))
             }
@@ -218,6 +217,7 @@ export function Settings({ visible, onClose }: { visible: boolean; onClose: () =
           </Copy>
         </>
       )}
+      {!!store.error && <Copy accessibilityRole="alert" style={{ color: C.ink }}>{store.error}</Copy>}
       {!!message && <Copy style={{ color: C.ink }}>{message}</Copy>}
     </Sheet>
   );

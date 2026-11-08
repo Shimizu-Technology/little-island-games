@@ -1,3 +1,5 @@
+import { emptyChallenge, validChallengeProgress, type ChallengeProgress } from './challenge';
+import { emptyCove } from './covePeople';
 import { engines as learningEngines } from "../learn/engines";
 import { games } from "../games";
 import { catalog as boardCatalog } from "../board";
@@ -13,10 +15,10 @@ import type { LearnId, SkillProgress } from '../learn/types';
 import { arcadeIds } from '../arcade/types';
 
 /** Top-level game fields are the active learner's view. Only these canonical slots are encoded. */
-export type ProfileProgress = Pick<Save, 'sessions' | 'recent' | 'learn' | 'board' | 'activities' | 'recentLearn' | 'recentBoard' | 'recentActivity' | 'favoriteGames' | 'coached' | 'wordRecords' | 'raceRecords'> & { recentArcade?: import('../arcade').ArcadeId | null; school?: SchoolProgress };
+export type ProfileProgress = Pick<Save, 'sessions' | 'recent' | 'learn' | 'board' | 'activities' | 'recentLearn' | 'recentBoard' | 'recentActivity' | 'favoriteGames' | 'coached' | 'wordRecords' | 'raceRecords'> & { challenge?: ChallengeProgress; recentArcade?: import('../arcade').ArcadeId | null; school?: SchoolProgress };
 export type EarlierWork = { rounds: ProfileProgress; explore?: LegacyExplore; exploreUntouched?: string[]; skills?: SkillProgress; preferences?: Pick<ProfileProgress, 'favoriteGames' | 'coached' | 'recent' | 'recentLearn' | 'recentBoard' | 'recentActivity' | 'recentArcade'> };
-export type Profiles = { version: 1; people: Record<string, ProfileProgress>; earlier: { wordRecords?: Save['wordRecords']; raceRecords?: Save['raceRecords'] }; unassigned: EarlierWork };
-const fields = ['sessions','recent','learn','board','activities','recentLearn','recentBoard','recentActivity','favoriteGames','coached','wordRecords','raceRecords','school'] as const;
+export type Profiles = { version: 1 | 2; people: Record<string, ProfileProgress>; earlier: { wordRecords?: Save['wordRecords']; raceRecords?: Save['raceRecords'] }; unassigned: EarlierWork };
+const fields = ['sessions','recent','learn','board','activities','recentLearn','recentBoard','recentActivity','favoriteGames','coached','wordRecords','raceRecords','school','challenge'] as const;
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 export const emptyProfile = (): ProfileProgress => ({ sessions: {}, recent: null });
 export function captureProfile(save: Save): ProfileProgress {
@@ -48,7 +50,7 @@ export function projectProfile(save: Save, learning: Learners = save.learning ??
 /** No duplicate active round payload in storage/backups, leaving the same 2 MB envelope. */
 export function encodeSave(save: Save): string {
   if (!save.profiles) return JSON.stringify(save);
-  const next: Save = { ...syncProfile(save), version: 2 };
+  const next: Save = { ...syncProfile(save) };
   for (const field of fields) delete next[field];
   next.sessions = {}; next.recent = null;
   if (next.arcade) next.arcade = { ...next.arcade, recent: null };
@@ -56,7 +58,7 @@ export function encodeSave(save: Save): string {
   next.roundOwners = { version: 1, rounds: Object.fromEntries(Object.entries(next.roundOwners?.rounds ?? {}).filter(([key]) => key.startsWith('explore:'))) };
   return JSON.stringify(next);
 }
-export function migrateProfiles(save: Save): Save {
+function migrateLegacyProfiles(save: Save): Save {
   if (save.profiles) return projectProfile({ ...save, version: 2 });
   const learning = save.learning ?? familyLearners(), people = Object.fromEntries(learning.people.map(p => [p.id, emptyProfile()]));
   const unassigned: EarlierWork = { rounds: emptyProfile() };
@@ -89,17 +91,28 @@ export function migrateProfiles(save: Save): Save {
   const profiles: Profiles = { version: 1, people, earlier: { ...(save.wordRecords ? { wordRecords: save.wordRecords } : {}), ...(save.raceRecords ? { raceRecords: save.raceRecords } : {}) }, unassigned };
   return projectProfile({ ...save, version: 2, learning, profiles });
 }
+/** One pure migration for the entire unreleased program. Old validation runs at parse/load. */
+export function migrateProfiles(save: Save): Save {
+  if (![1,2,3].includes(save.version) || save.version === 3 && save.profiles?.version !== 2 || save.version === 2 && save.profiles?.version !== 1) throw new Error('Unsupported save contract. Your original has been kept.');
+  const validated = parseSave(encodeSave(save));
+  if (save.version === 3 && save.profiles?.version === 2) return projectProfile(validated);
+  const legacy = migrateLegacyProfiles(clone(validated));
+  const profiles: Profiles = { ...legacy.profiles!, version: 2, people: Object.fromEntries(Object.entries(legacy.profiles!.people).map(([id, p]) => [id, { ...p, challenge: emptyChallenge() }])) };
+  return projectProfile({ ...legacy, version: 3, saveRevision: 'migrated-v3', cove: emptyCove(), profiles });
+}
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype;
 /** Reuse every real engine validator through a legacy envelope, without recursive profile data. */
-function validProgress(v: unknown, learning: Learners, owner?: string): v is ProfileProgress {
+function validProgress(v: unknown, learning: Learners, owner?: string, challenge = false): v is ProfileProgress {
   if (!object(v) || Object.keys(v).some(k => ![...fields,'recentArcade'].includes(k as typeof fields[number])) || !Object.hasOwn(v,'sessions') || !Object.hasOwn(v,'recent') || (v.school !== undefined && !validSchool(v.school)) || (v.recentArcade !== undefined && v.recentArcade !== null && !arcadeIds.includes(v.recentArcade as import('../arcade').ArcadeId))) return false;
+  if (challenge ? !owner || !validChallengeProgress(v.challenge, owner) : v.challenge !== undefined) return false;
   try {
-    const test = parseSave(JSON.stringify({ version: 1, settings: {sound:true,help:true}, ...v, learning }));
+    const { challenge: _challenge, ...legacy } = v;
+    const test = parseSave(JSON.stringify({ version: 1, settings: {sound:true,help:true}, ...legacy, learning }));
     return !owner || Object.values(test.learn ?? {}).every(round => (round?.learner ?? 'family') === owner);
   } catch { return false; }
 }
 export function validProfiles(v: unknown, learning = familyLearners()): v is Profiles {
-  if (!object(v) || Object.keys(v).sort().join() !== 'earlier,people,unassigned,version' || v.version !== 1 || !object(v.people) || Object.keys(v.people).length !== learning.people.length || !learning.people.every(p => Object.hasOwn(v.people as object,p.id)) || !Object.entries(v.people).every(([id,p]) => validProgress(p,learning,id)) || !object(v.earlier) || Object.keys(v.earlier).some(k => !['wordRecords','raceRecords'].includes(k)) || (v.earlier.wordRecords !== undefined && !validWordRecords(v.earlier.wordRecords)) || (v.earlier.raceRecords !== undefined && !validActivityRecords(v.earlier.raceRecords)) || !object(v.unassigned)) return false;
+  if (!object(v) || Object.keys(v).sort().join() !== 'earlier,people,unassigned,version' || ![1,2].includes(v.version as number) || !object(v.people) || Object.keys(v.people).length !== learning.people.length || !learning.people.every(p => Object.hasOwn(v.people as object,p.id)) || !Object.entries(v.people).every(([id,p]) => validProgress(p,learning,id,v.version === 2)) || !object(v.earlier) || Object.keys(v.earlier).some(k => !['wordRecords','raceRecords'].includes(k)) || (v.earlier.wordRecords !== undefined && !validWordRecords(v.earlier.wordRecords)) || (v.earlier.raceRecords !== undefined && !validActivityRecords(v.earlier.raceRecords)) || !object(v.unassigned)) return false;
   // A round can have one live owner. The explicit recovery bucket may retain an original.
   const seen = new Set<string>();
   for (const profile of Object.values(v.people) as ProfileProgress[]) for (const field of ['learn','sessions','board','activities'] as const)

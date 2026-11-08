@@ -19,7 +19,7 @@ export function Recovery() {
       <Heading>Let’s look after your saved games.</Heading>
       <Copy>{store.recovery}</Copy>
       <Copy>
-        Retry first. You can keep a copy of the original before starting fresh. Starting fresh preserves the original in
+        Retry first. Save a recovery backup before starting fresh. Starting fresh preserves the available saved work in
         recovery storage.
       </Copy>
       {error && <Copy>{error}</Copy>}
@@ -28,10 +28,10 @@ export function Recovery() {
         <Button
           quiet
           onPress={() =>
-            void exportBackup(store.raw!).catch(() => setError("The original could not be exported. Please try again."))
+            void exportBackup(store.raw!).catch(() => setError("The backup could not be exported. Please try again."))
           }
         >
-          Save the original backup
+          Save a recovery backup
         </Button>
       )}
       <Button quiet onPress={() => (confirm ? void fresh() : setConfirm(true))}>

@@ -1,0 +1,3 @@
+Session: 01a1bb7b-705a-7c63-846c-31cd3a31298e
+Project: /Users/leonshimizu/.t3/worktrees/little-island-games/t3-10dcd645
+Active owned resources: none

@@ -1,0 +1,22 @@
+{
+  "source": "0f428c2fef43a821bbea782823f7548b5d514971",
+  "build": "3.0.0 (28) source, synthetic engine-validated local saves",
+  "files": {
+    "fix-advanced-envelope-2.json": {
+      "bytes": 134754,
+      "sha256": "a5ed5770617aa89a64a86dbe38c4227d9de8fc8117bb07255ebe2c23739b3dbc"
+    },
+    "fix-advanced-shipped-migration-2.json": {
+      "bytes": 134754,
+      "sha256": "a5ed5770617aa89a64a86dbe38c4227d9de8fc8117bb07255ebe2c23739b3dbc"
+    },
+    "fix-upgrade-window-2.json": {
+      "bytes": 1998000,
+      "sha256": "48446bb1a4301881e49000fc1d2bcdbaef84fb6e667908423eb65e49c2a77f49"
+    },
+    "fix-last-bytes-2.json": {
+      "bytes": 1999990,
+      "sha256": "a4acb39e7f678ac9a38b80d62e5e9bbb0420ec194f02fa4895e6611844083489"
+    }
+  }
+}

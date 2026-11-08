@@ -1,0 +1,70 @@
+{
+  "implementation": "920c8b23fecb08707cdb628813bbf539d147b04a",
+  "base": "b738f87b799a56a1307c105d9dbe926d217e585d",
+  "branch": "p4/f1-save",
+  "regressions": {
+    "baselineFailed": 18,
+    "fixedFocusedPassed": 50,
+    "adapterHarness": "real Store + native SQL (Node SQLite Expo transport) + web localStorage"
+  },
+  "gates": {
+    "default": {
+      "exit": 0,
+      "tests": 2457,
+      "files": 202,
+      "offline": "22a699ecf896",
+      "resources": 6480
+    },
+    "preview": {
+      "exit": 0,
+      "tests": 2457,
+      "files": 202,
+      "offline": "d69d1d8cd340",
+      "resources": 11037
+    },
+    "doctor": {
+      "exit": 0,
+      "passed": 21,
+      "total": 21
+    }
+  },
+  "cleanup": "no active owned resources; task-created dependencies/build output/cache removed",
+  "evidence": {
+    "r2-before.txt": {
+      "sha256": "791ea683083892b057af087d6a099a0474978cdeea83239c8d46de912a138bb7",
+      "bytes": 55731
+    },
+    "r2-focused.txt": {
+      "sha256": "2c372d358a3d0fe6d496b0c24f7d4142da454625fa48b2af7398c441e264a6bf",
+      "bytes": 551
+    },
+    "r2-check-default.txt": {
+      "sha256": "bea95215a3c7b360f8690640259ce0c00f52e65e1acaa294e529191783a0db86",
+      "bytes": 579567
+    },
+    "r2-check-preview.txt": {
+      "sha256": "edb6807c16e5f5c315dc9282c687c014270af34c0c5061f71ba85c38297fd111",
+      "bytes": 957094
+    },
+    "r2-doctor.txt": {
+      "sha256": "003e767fd412baf71a4f375c7a65fbbd2ac6ae5c2de22f2962c9ee9a9edc3302",
+      "bytes": 129
+    },
+    "r2-impeccable.txt": {
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "bytes": 3
+    },
+    "r2-npm-ci.txt": {
+      "sha256": "8d9ea646306ce9079aa31f86afd5428d43010294cb66c16b3708a113c5b144bc",
+      "bytes": 1664
+    },
+    "r2-restore-generated.txt": {
+      "sha256": "516ab6fe7c9642e1f3e98d96157eb559cf6726613f92794b70aa0f74a46a99b5",
+      "bytes": 160
+    },
+    "r2-cleanup.txt": {
+      "sha256": "8dc3fc9a4b8d0afbbde233ce755ae64ece38bf1768a1bdfeb7dfdc8e86c612d2",
+      "bytes": 149
+    }
+  }
+}
