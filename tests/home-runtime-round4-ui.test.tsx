@@ -135,3 +135,19 @@ it('H2 a pre-mounted prop follows the second pointer even while pickup JS is wit
  expect(view.props.style[1].evaluate().transform.find((t:any)=>'scaleX'in t).scaleX).toBe(1.08);
  await act(async()=>tree.unmount());
 });
+
+it('H2 pose previews retain a native layout anchor and follow the live proposal after a slot changes', async () => {
+ const {LandingPreview}=await import('../src/home/runtime/LandingPreview');
+ const {roomOrigin}=await import('../src/home/camera');
+ const c=context('character/0'),building=buildingLayout(4),origin=roomOrigin(0,building);
+ Object.assign(c.slot,{proposal:{kind:'socket',room:'home',base:'sit',facing:'front',contact:{x:427,y:442.15}}});
+ c.interaction.slots.value=[{} as any,c.slot as any];
+ let tree!:TestRenderer.ReactTestRenderer;
+ await act(async()=>{tree=TestRenderer.create(<LandingPreview source={c.scene.entities['character/0']} interaction={c.interaction} building={building}/>);});
+ const active=tree.root.findAll(n=>String(n.type)==='AnimatedView'&&n.props.testID==='landing-preview-character/0'&&n.props.style[1].evaluate().opacity>0);
+ expect(active).toHaveLength(1);
+ expect(active[0].props.collapsable).toBe(false);
+ expect(active[0].props.style[0]).toMatchObject({width:1,height:1});
+ expect(active[0].props.style[1].evaluate().transform).toEqual([{translateX:origin.x+427},{translateY:origin.y+442.15}]);
+ await act(async()=>tree.unmount());
+});

@@ -117,7 +117,7 @@ function OverlayGroup({
   });
   return (
     <>
-      {pickup.generation > 0 && <LandingPreview source={root} index={index} interaction={visualInteraction}
+      {pickup.generation > 0 && <LandingPreview source={root} interaction={interaction}
         building={building} renderCharacter={renderCharacter} />}
       <Animated.View
         testID={`drag-shadow-${id}`}
