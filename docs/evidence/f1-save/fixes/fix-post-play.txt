@@ -1,0 +1,13 @@
+
+> little-island-games@1.0.0 test
+> vitest run tests/save-store-v3.test.tsx -t P1-2 routine rounds
+
+
+ RUN  v5.0.5 /Users/leonshimizu/.t3/worktrees/little-island-games/t3-ec809d90
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 19 skipped (20)
+   Start at  23:38:03
+   Duration  5.22s (tests 70%, transform 18%, import 12%)
+

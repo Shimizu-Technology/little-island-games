@@ -3,14 +3,16 @@ import { worldRevision, translatedBounds, standingContact, occludedFraction } fr
 import { roomIds, type RoomId } from "../catalogMore";
 import { decorSpec, itemSpec } from "../catalog";
 import { capabilityOf, visualBox } from "../world";
-import { canHold, socketPoint, socketsOf } from "../interactions";
+import { canHold, retiredSeat, socketPoint, socketsOf } from "../interactions";
+import { itemShapes, occluderBounds, paintedBounds, unionBounds } from "../art/silhouettes";
 import { characterFrame, characterPoint, furnitureDepth, itemPoint, itemSize, surfacePoint } from "../geometry";
-import { anchorsFor } from "./species";
+import { anchorsFor, species } from "./species";
 import { characterEntityId, gridCell, gridToRoom, itemEntityId, roomPoint } from "./types";
 import type {
   Attachment,
   Bounds,
   FloorLocation,
+  HitShape,
   RoomIndex,
   RoomPoint,
   Scene,
@@ -31,11 +33,20 @@ export {
   occludedFraction,
 } from "./spatial";
 
+function surveyed(shapes: HitShape[], fallback: Bounds): Pick<SceneEntity, "shapes" | "occluders" | "visual"> {
+  const outline = unionBounds(shapes) ?? fallback;
+  return {
+    shapes: shapes.length ? shapes : [{ kind: "box", ...fallback }],
+    occluders: shapes.flatMap((shape) => occluderBounds(shape) ?? []),
+    visual: { x: outline.left + outline.width / 2, y: outline.top + outline.height / 2 },
+  };
+}
 export function itemEntity(room: RoomId, item: Instance, instances: readonly Instance[] = []): SceneEntity {
   const spec = itemSpec(item.item);
   const [a, b] = spec.footprint;
   const capability = capabilityOf(item.item);
   const point = itemPoint(item, instances);
+  const box = visualBox(item.item, item.rotation, item.mirrored);
   const parent = item.on && instances.find((i) => i.id === item.on);
   const attachment: Attachment = item.staged
     ? { kind: "staging", room }
@@ -49,14 +60,15 @@ export function itemEntity(room: RoomId, item: Instance, instances: readonly Ins
     room,
     attachment,
     contact: roomPoint(point.x, point.y),
-    bounds: visualBox(item.item, item.rotation, item.mirrored),
+    bounds: box,
+    ...surveyed(itemShapes(item, box.width), box),
     base: "stand",
     facing: item.mirrored !== item.rotation >= 180 ? "left" : "front",
     action: null,
     children: [],
     depth: furnitureDepth(item),
     band: item.layer === "wall" || item.layer === "ground" ? "background" : "furniture-back",
-    hitProxies: [visualBox(item.item, item.rotation, item.mirrored)],
+    hitProxies: [box],
     item,
     body: {
       w: item.rotation % 180 ? b * 2 : a * 2,
@@ -65,6 +77,8 @@ export function itemEntity(room: RoomId, item: Instance, instances: readonly Ins
       small: !!decorSpec(item.item).small,
       holdable: canHold(item),
       edible: item.empty ? undefined : capability.edible,
+      portable: capability.moveInPlay,
+      underfoot: capability.holdable === true,
     },
   };
 }
@@ -92,6 +106,8 @@ function characterEntity(room: RoomId, state: RoomState, character: Character): 
     depth: seat ? furnitureDepth(seat) + 1 : point.y + 1,
     band: "occupant",
     hitProxies: [bounds],
+    shapes: anchorsFor(character.slot, character.pose, frame.mirrored ? "left" : "front", character.action ?? (character.holding ? "hold" : null)).shapes,
+    visual: { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 },
     character,
   };
 }
@@ -160,7 +176,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
   for (const entity of Object.values(entities)) transform(entity);
   const occlusionBands = Object.values(entities)
     .filter((e) => e.item?.layer === "furniture" && !e.parent && !e.item.staged)
-    .map((e) => ({ id: e.id, bounds: translatedBounds(e.bounds, e.contact), depth: e.depth }));
+    .flatMap((e) => (e.occluders ?? []).map((bounds) => ({ id: e.id, bounds: translatedBounds(bounds, e.contact), depth: e.depth })));
   const floor: FloorLocation[] = [];
   const occupancy: RoomIndex["occupancy"] = {};
   for (const entity of Object.values(entities)) {
@@ -193,6 +209,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       const anchors = anchorsFor(c.slot, entity.base, entity.facing, entity.action);
       const hand = { x: entity.contact.x + anchors.hand.x, y: entity.contact.y + anchors.hand.y };
       const mouth = roomPoint(entity.contact.x + anchors.mouth.x, entity.contact.y + anchors.mouth.y);
+      const face = { x: entity.contact.x + anchors.head.x, y: entity.contact.y + anchors.head.y, headRadius: species[c.slot].headRadius };
       for (const kind of ["hand", "mouth"] as const) {
         const point = kind === "hand" ? roomPoint(hand.x, hand.y) : mouth;
         const resultHand = anchorsFor(c.slot, entity.base, entity.facing, kind === "hand" ? "hold" : "drink").hand;
@@ -207,6 +224,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
           core: rectCore(point, 10),
           base: entity.base,
           facing: entity.facing,
+          ...(kind === "mouth" ? { face } : {}),
           occupied: kind === "hand" && c.holding ? itemEntityId(room, c.holding) : undefined,
           hidden: occludedFraction(rectCore(point, 10), entity.depth, occlusionBands) >= 0.99,
         });
@@ -218,6 +236,10 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       const point = socketPoint(item, socket);
       const contact = roomPoint(point.x, point.y);
       const facing = entity.facing;
+      const occupied = Object.values(entities).find(
+        (e) => e.attachment.kind === "socket" && e.attachment.item === entity.id && e.attachment.socket === socket.id
+      )?.id;
+      if (retiredSeat(item) && !occupied) continue;
       targets.push({
         id: `${entity.id}/socket/${socket.id}`,
         kind: "socket",
@@ -230,9 +252,8 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
         base: socket.kind,
         facing,
         pet: socket.id.startsWith("pet-"),
-        occupied: Object.values(entities).find(
-          (e) => e.attachment.kind === "socket" && e.attachment.item === entity.id && e.attachment.socket === socket.id
-        )?.id,
+        ...(item.layer === "ground" ? { rim: paintedBounds(entity) } : {}),
+        occupied,
       });
     }
     if (decorSpec(item.item).surface) {

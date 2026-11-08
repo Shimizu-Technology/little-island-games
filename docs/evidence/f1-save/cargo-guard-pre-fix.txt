@@ -1,0 +1,28 @@
+
+ RUN  v5.0.5 /private/tmp/li-f1-pre-cargo
+
+ ❯ tests/save-contract.test.ts (20 tests | 1 failed | 19 skipped) 9ms
+   × registration rejects a real-time physics codec even if its structural validator claims it is persistable 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/save-contract.test.ts > registration rejects a real-time physics codec even if its structural validator claims it is persistable
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/save-contract.test.ts:134:194
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 19 skipped (20)
+   Start at  21:34:13
+   Duration  2.18s (transform 91%, import 8%)
+

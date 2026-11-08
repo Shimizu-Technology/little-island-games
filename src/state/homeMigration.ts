@@ -1,3 +1,4 @@
+import { envelopeWrite } from './challengeDrafts';
 import { encodeSave } from "./profiles";
 import {validHome} from '../home/model';
 import type {Save} from './validation';
@@ -8,7 +9,7 @@ export async function preserveLearnerMigration(adapter:StorageAdapter,encoded:st
  try{assertMigratedHomes(after);}catch(error){await adapter.preserve(encoded);throw error;}
  const changed=learnersChanged(before,after);
  if(!changed)return false;
- await preserveAndReplace(adapter,encodeSave(after),encoded);
+ await preserveAndReplace(adapter,encodeSave(after),encoded,envelopeWrite(after));
  return true;
 }
 
@@ -21,7 +22,7 @@ export function learnersChanged(before:Save,after:Save){
 export async function preserveImportedLearners(adapter:StorageAdapter,encoded:string,before:Save,after:Save,current:string|null,upgraded=false){
  try{assertMigratedHomes(after);}catch(error){await adapter.preserve(encoded);throw error;}
  if(upgraded||learnersChanged(before,after))await adapter.preserve(encoded);
- await preserveAndReplace(adapter,encodeSave(after),current);
+ await preserveAndReplace(adapter,encodeSave(after),current,envelopeWrite(after));
 }
 
 /** A migration is never a license to publish an unreadable active save. */

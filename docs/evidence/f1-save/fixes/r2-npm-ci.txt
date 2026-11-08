@@ -1,0 +1,39 @@
+npm warn deprecated eslint@9.39.5: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+
+> little-island-games@1.0.0 postinstall
+> npm run library:validate && npm run library:index
+
+
+> little-island-games@1.0.0 library:validate
+> node scripts/library/validate.mjs && npm run library:destinations
+
+Library design validation: 146 items; rights, review, speech registration, files and internal links checked. Draft recordings remain pending.
+
+> little-island-games@1.0.0 library:destinations
+> node scripts/library/destinations.mjs
+
+All 523 typed links and 3 exhibit engines resolve.
+
+> little-island-games@1.0.0 library:index
+> node --experimental-strip-types scripts/library/build-index.mjs
+
+Built offline Library index: 50 entries; 0 authored items; 68202 bytes.
+(node:83323) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/leonshimizu/.t3/worktrees/little-island-games/t3-10dcd645/src/library/ids.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/leonshimizu/.t3/worktrees/little-island-games/t3-10dcd645/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+added 864 packages, and audited 865 packages in 11s
+
+181 packages are looking for funding
+  run `npm fund` for details
+
+15 vulnerabilities (11 moderate, 4 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.

@@ -59,6 +59,7 @@ export function movingGroup(index: Pick<RoomIndex, "entities">, subject: SceneEn
   }
   return result;
 }
+/** A dropped thing's bounds. `occludedFraction` subtracts only what is really painted in front. */
 export function occludedFraction(bounds: Bounds, depth: number, bands: RoomIndex["occlusionBands"]): number {
   "worklet";
   const clipped = bands

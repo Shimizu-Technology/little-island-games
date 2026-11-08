@@ -12,7 +12,7 @@ import { tracks } from "../../badges/engine";
 import type { HomeStateV2 } from "../model";
 import type { Scene, SceneEntity } from "../scene/types";
 import { paintEntries, restingVisible } from "./group";
-import { TargetCue } from "./TargetCue";
+import { SeatRimCue, TargetCue } from "./TargetCue";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { DragOverlay } from "./DragOverlay";
 import { layoutToken } from "./layout";
@@ -214,7 +214,10 @@ export function SceneView({
   onNode,
   badges = [],
   onBadges,
+  debugLayer,
 }: {
+  /** Lab-only layer in house space, under the carried object. */
+  debugLayer?: React.ReactNode;
   badges?: readonly BadgeId[];
   onBadges?: () => void;
   onNode: (id: string, node: View | null) => void;
@@ -289,7 +292,10 @@ export function SceneView({
                   style={{ position: "absolute", left: 8, top: 8, width: 784, height: 544, overflow: "hidden" }}
                 >
                   <View pointerEvents="box-none" style={{ position: "absolute", left: -8, top: -8 }}>
-                    {paintEntries(entities, scene).map(({ entity, front }) => (
+                    {paintEntries(entities, scene).flatMap(({ entity, front }, order, entries) => [
+                      ...(order === entries.findIndex((entry) => entry.entity.item?.layer !== "ground")
+                        ? scene.rooms[roomId].targets.filter((target) => target.rim).map((target) => <SeatRimCue key={`rim:${target.id}`} target={target} interaction={interaction} />)
+                        : []),
                       <RestingEntity
                         key={front ? `front:${entity.id}` : entity.id}
                         front={front}
@@ -312,9 +318,9 @@ export function SceneView({
                         selected={!front && selected === entity.id}
                         onSelect={onSelect}
                         onMove={onMove}
-                      />
-                    ))}
-                    {scene.rooms[roomId].targets.map((target) => (
+                      />,
+                    ])}
+                    {scene.rooms[roomId].targets.filter((target) => !target.rim).map((target) => (
                       <TargetCue key={target.id} target={target} interaction={interaction} />
                     ))}
                     {stress && roomId === "home" && (
@@ -333,6 +339,7 @@ export function SceneView({
           <View accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" pointerEvents="none" style={{ position: "absolute", width: building.width, height: building.height }}>
             <BuildingTrim building={building} />
           </View>
+          {debugLayer}
           <DragOverlay
             scene={scene}
             pickups={pickups}

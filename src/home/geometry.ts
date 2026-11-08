@@ -28,6 +28,7 @@ export function surfacePoint(i: Instance) {
 }
 export function itemPoint(i: Instance, items: readonly Instance[] = []) {
   if (i.staged) return { x: 400, y: 510 };
+  if (i.at && !i.on && !i.in) return i.at;
   const parent = (i.on ?? i.in) && items.find((p) => p.id === (i.on ?? i.in));
   if (parent) {
     const p = surfacePoint(parent),
