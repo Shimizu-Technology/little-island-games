@@ -1,5 +1,6 @@
 // Import the independent worklet engine, avoiding the legacy model/apply cycle.
 import { resolve } from "./scene/resolve";
+import { occludedFraction } from "./scene/spatial";
 import { anchorsFor } from "./scene/species";
 import { characterEntityId, gridCell, gridToRoom, itemEntityId, roomPoint } from "./scene/types";
 import type { RoomIndex, SceneEntity, Target } from "./scene/types";
@@ -85,6 +86,14 @@ export function occlusion(world: DropWorld, slot: number, x: number, y: number) 
     left = x - size.width / 2,
     right = x + size.width / 2,
     top = y - size.height;
+  // Prepared rooms answer from painted hulls, never from a whole transparent art square.
+  if (world.index) {
+    const bands = world.index.occlusionBands.filter((b) => b.depth > y + 1 && b.bounds.left < right && b.bounds.left + b.bounds.width > left && b.bounds.top < y && b.bounds.top + b.bounds.height > top);
+    return {
+      fraction: occludedFraction({ left, top, width: size.width, height: size.height }, y + 1, bands),
+      depth: bands.reduce((depth, b) => Math.max(depth, b.depth), -Infinity),
+    };
+  }
   const boxes = world.bodies
     .filter((b) => b.box && b.layer === "furniture" && (b.depth ?? -Infinity) > y + 1)
     .map((b) => ({

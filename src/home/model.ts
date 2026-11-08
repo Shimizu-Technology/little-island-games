@@ -38,6 +38,8 @@ export type Instance = {
   empty?: boolean;
   staged?: boolean;
   in?: string;
+  /** Exact room point a loose item was dropped on. Grid x/y stay the collision cell. */
+  at?: { x: number; y: number };
 };
 export const anchors = [
   "hello",
@@ -136,6 +138,11 @@ function footprint(i: Instance) {
   const [w, h] = dimensions(i);
   return { id: i.id, x: i.x, y: i.y, w, h, layer: i.layer };
 }
+function validRoomPoint(v: unknown): boolean {
+  return !!v && typeof v === "object" && exact(v, ["x", "y"]) &&
+    typeof v.x === "number" && Number.isFinite(v.x) && v.x >= 0 && v.x <= 800 &&
+    typeof v.y === "number" && Number.isFinite(v.y) && v.y >= 0 && v.y <= 560;
+}
 export function validInstance(v: unknown, legacy = false, canonicalV4 = false): v is Instance {
   if (
     !exact(v, [
@@ -149,7 +156,7 @@ export function validInstance(v: unknown, legacy = false, canonicalV4 = false): 
       "state",
       ...(!legacy && v && typeof v === "object" && Object.hasOwn(v, "tint") ? ["tint"] : []),
       ...(!legacy && v && typeof v === "object" && Object.hasOwn(v, "on") ? ["on"] : []),
-      ...["staged", "in"].filter((k) => canonicalV4 && v && typeof v === "object" && Object.hasOwn(v, k)),
+      ...["staged", "in", "at"].filter((k) => canonicalV4 && v && typeof v === "object" && Object.hasOwn(v, k)),
       ...["powered", "empty"].filter((k) => !legacy && v && typeof v === "object" && Object.hasOwn(v, k)),
     ]) ||
     typeof v.id !== "string" ||
@@ -164,6 +171,7 @@ export function validInstance(v: unknown, legacy = false, canonicalV4 = false): 
     (!Object.hasOwn(v, "on") || typeof v.on === "string") &&
     (!Object.hasOwn(v, "staged") || v.staged === true) &&
     (!Object.hasOwn(v, "in") || typeof v.in === "string") &&
+    (!Object.hasOwn(v, "at") || validRoomPoint(v.at)) &&
     !(Object.hasOwn(v, "on") && Object.hasOwn(v, "in")) &&
     (!Object.hasOwn(v, "powered") || typeof v.powered === "boolean") &&
     (!Object.hasOwn(v, "empty") ||

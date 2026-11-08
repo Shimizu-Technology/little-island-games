@@ -28,6 +28,8 @@ export function socketsOf(i: Instance): readonly Socket[] {
       })),
   ];
 }
+/** Nobody new can sit inside the shelf. A saved friend already there keeps their seat until moved. */
+export const retiredSeat = (i: Instance) => i.item === "shelf";
 export function socketPoint(i: Instance, s: Socket) {
   const p = itemPoint(i),
     size = itemSize(i),

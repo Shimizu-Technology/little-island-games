@@ -200,9 +200,9 @@ describe('constant-size seating and depth',()=>{
   expect(p.y).toBeLessThan(560);
   expect(characterDrop(room(s),0,p.x,p.y)).toMatchObject({seatId:'front-seat'});
  });
- it.each(['bed','chair','rug','beanbag','shelf','sofa','armchair','bunk-bed','hammock','floor-cushion','rocking-chair','stool'])('seats each character on %s, follows its seat and stands safely after removal',id=>{
+ it.each(['bed','chair','rug','beanbag','sofa','armchair','bunk-bed','hammock','floor-cushion','rocking-chair','stool'])('seats each character on %s, follows its seat and stands safely after removal',id=>{
   let s=patch(starterHome(),{instances:[instance('seat',id,4,4)],characters:[0,1,2].map(slot=>({slot:slot as 0|1|2,anchor:'hello',pose:'stand'}))});
-  for(const slot of [0,1,2] as const){ const anchor=['bed','chair','rug','beanbag','shelf'].includes(id)?id as 'bed':'seat';
+  for(const slot of [0,1,2] as const){ const anchor=['bed','chair','rug','beanbag'].includes(id)?id as 'bed':'seat';
    const p=socketPoint(room(s).instances[0],socketsOf(room(s).instances[0]).find(socket=>socket.id.startsWith('pet-')===(slot===2))!);
    expect(characterDrop(room(s),slot,p.x,p.y)).toMatchObject({seatId:'seat'});
    s=homeReducer(s,{type:'character',slot,anchor,seatId:'seat'}).state;expect(room(s).characters[slot].pose).toBe(socketsOf(room(s).instances[0])[0].kind);expect(characterSize(slot)).toBe(slot===0?224:slot===2?98:170);
