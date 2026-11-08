@@ -33,7 +33,7 @@ export function ChallengeBoard({state:s,dispatch,active,width}:ChallengeViewProp
     {d.budget!==null&&<Copy style={{fontWeight:'700'}}>Walking steps: {result.cost} of {d.budget} · Mud 2 / sand 1 / turn 0</Copy>}
     <Copy accessibilityLiveRegion="polite">{message}</Copy>
     <Beach level={d.level} walker={result.walker} size={Math.max(180,Math.min(width,280))} facingHint={d.level.pace!=='easy'} plan={!s.supportOff&&!s.running?planned:undefined} showBump={!s.supportOff&&!s.running}/>
-    <Copy style={{fontSize:14}}>Plan · {s.program.length} cards · {s.runs} {s.runs===1?'run':'runs'}{s.supportOff?' · Footprints off':''}</Copy>
+    <Copy style={{fontSize:14}}>Plan · {s.program.length} {s.program.length===1?'card':'cards'} · {s.runs} {s.runs===1?'run':'runs'}{s.supportOff?' · Footprints off':''}</Copy>
     <View style={{flexDirection:'row',flexWrap:'wrap',gap:6,padding:6,borderRadius:12,backgroundColor:C.paper,minHeight:60}} accessibilityLabel="Your program editor">
       {!s.program.length&&<Copy>Tap a command below to add it.</Copy>}
       {s.program.map((c,i)=><PressableScale key={i} disabled={disabled} accessibilityRole="button" accessibilityState={{selected:selected===i}} accessibilityLabel={`Card ${i+1}: ${cardLabel[c]}. Select to change, insert before, or remove.`} onPress={()=>{setSelected(selected===i?null:i);setMode('replace');}} style={{minWidth:48,minHeight:60,padding:4,alignItems:'center',justifyContent:'center',borderWidth:2,borderColor:selected===i?C.teal:s.running&&s.cursor===i?'#B0563A':C.line,borderRadius:10,backgroundColor:selected===i?C.soft:C.cream}}>
