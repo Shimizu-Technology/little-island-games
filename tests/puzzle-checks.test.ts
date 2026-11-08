@@ -300,3 +300,22 @@ describe('real engines through the gates', () => {
     expect(typed.rules).toBe(1);
   });
 });
+
+describe('F4 round-two proof regressions', () => {
+  it.each([[NaN,NaN],[-1,3],[0,Infinity],[0,3.5],[0,4097],[4,3]])('R2-2 rejects invalid solver bounds %s/%s without a par', (lower,upper) => {
+    expect(reason({solve:()=>({status:'solved',witness:[2,2,1],metric:'steps',lower,upper,exact:lower===upper})}, {}, openBand, toyCore({par:null}))).toBe('par-mismatch');
+  });
+  it.each(['root','nested container'])('R2-3 deeply freezes a shallow-frozen %s', place => {
+    const core=toyCore({speech:{template:'say',numbers:[1],terms:[]}}); Object.freeze(place==='root'?core:core.speech);
+    const r=certify(toySpec({knownSpeech:()=>true}),openBand,core,ctx()); expect(r.ok).toBe(true);
+    if(r.ok){expect(Object.isFrozen(r.entry.core.payload)).toBe(true);expect(Object.isFrozen(r.entry.core.speech!.numbers)).toBe(true);expect(()=>{r.entry.core.payload.goal=999;}).toThrow();expect(()=>r.entry.core.speech!.numbers.push(9)).toThrow();}
+  });
+  it('R2-4 rejects a JSON-round-tripped path continuing past the exit',()=>{
+    const core={...toyCore(),payload:{size:3,walls:[9,1,3,8,0,2,12,4,6]}};
+    const start=mazeAdapter.create(core), path=[0,1,2,5,8,7,6,3];
+    const real=path.slice(1).reduce((s,a)=>mazeAdapter.reduce(s,a,core),start);
+    expect(real.path).toEqual([0,1,2,5,8]);
+    expect(mazeAdapter.validState(JSON.parse(JSON.stringify({...start,path})),core)).toBe(false);
+    expect(mazeAdapter.validState(JSON.parse(JSON.stringify(real)),core)).toBe(true);
+  });
+});

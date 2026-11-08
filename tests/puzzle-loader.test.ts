@@ -195,6 +195,14 @@ describe('bank loader', () => {
       expect(loader.decodedPacks()).toEqual([0]);
     });
   });
+  it('R2-1 cancels a warm entry between awaited continuations', async () => {
+    const c = catalog(), loader = createBankLoader({ root: c.root, transport: c.transport });
+    await loader.entry(c.adapter, 'toy', 0);
+    const pending = loader.entry(c.adapter, 'toy', 0);
+    queueMicrotask(() => loader.release());
+    expect(await kinds(pending)).toBe('cancelled');
+    expect(loader.decodedPacks()).toEqual([]);
+  });
   it('recovers after a failed read: the queue is not stuck', async () => {
     const c = catalog(), original = c.files.get('p0')!;
     c.files.delete('p0');
@@ -219,4 +227,18 @@ describe('bank loader', () => {
     for (let i = 0; i < 400; i++) await loader.entry(adapter, 'toy', 0);
     expect(loader.timings().length).toBe(256);
   });
+});
+
+it('freezes verified family, pack and entry facts against cache mutation',async()=>{
+ const c=catalog(),loader=createBankLoader({root:c.root,transport:c.transport});
+ const m=await loader.family('toy');expect(()=>{m.packs[0][4]='f'.repeat(64);}).toThrow();
+ const p=await loader.pack(m,m.packs[0]);expect(()=>{(p.rows as string[])[0]='forged';}).toThrow();
+ const d=await loader.entry(c.adapter,'toy',0);expect(()=>{d.ref.hash='f'.repeat(64);}).toThrow();expect(()=>{d.payload.goal=999;}).toThrow();
+});
+it('a warm externally supplied pack cannot substitute for the root-verified saved-ref chain',async()=>{
+ const c=catalog(),loader=createBankLoader({root:c.root,transport:c.transport});
+ const forgedText=c.files.get('p0')!.replace(',1]',',999]'), row=[...c.manifest.packs[0]] as PackRow;row[3]=Buffer.byteLength(forgedText);row[4]=sha(forgedText);
+ const original=c.files.get('p0')!;c.files.set('p0',forgedText);await loader.pack(c.manifest,row);c.files.set('p0',original);
+ const bank={slot:0,engine:'toy',rules:1,first:0,count:8,family:'toy',packHash:c.manifest.packs[0][4],awards:0,cove:true};
+ expect(await loader.savedHash(bank,0)).toBe(sha(original.split('\n')[1]));
 });

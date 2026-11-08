@@ -35,7 +35,7 @@ const neighbours = (s: MazeState) => directions.flatMap(d => {
 function legalPath(path: unknown, walls: readonly number[], size: number): boolean {
   if (!Array.isArray(path) || !path.length || path.length > ATTEMPT_LIMITS.events + 1 || path[0] !== 0) return false;
   return path.every((cell, i) => {
-    if (!uint(cell, size * size - 1)) return false;
+    if (!uint(cell, size * size - 1) || cell === size * size - 1 && i !== path.length - 1) return false;
     if (!i) return true;
     const from = path[i - 1] as number, dir = directions.find(d => d.dr === Math.floor(cell / size) - Math.floor(from / size) && d.dc === (cell % size) - (from % size));
     return !!dir && !(walls[from] & dir.bit) && (i < 2 || path[i - 2] !== cell);

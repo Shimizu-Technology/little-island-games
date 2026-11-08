@@ -1,7 +1,8 @@
 import { utf8Bytes } from '../state/saveBits';
 import { BANK_CAPS, locate, packAsset, parsePack, validFamily, type FamilyManifest, type PackRow, type RootIndex } from './bank';
-import { decodeRow, withRef } from './descriptor';
+import { decodeRow, withRef, deepFreeze } from './descriptor';
 import { sha256Hex, sha256Sliced } from './sha256';
+import type { PackedBank } from '../state/bankFacts';
 import type { PuzzleAdapter, PuzzleDescriptor } from './types';
 
 export type BankTransport = { read(asset: string): Promise<string> };
@@ -31,6 +32,7 @@ const FAMILY_CACHE = 4, TIMING_RING = 256;
  */
 export function createBankLoader(options: LoaderOptions) {
   const { root, transport, now = defaultNow, pause = defaultPause, budgetMs = 8 } = options;
+  deepFreeze(root);
   const capacity = options.packCapacity ?? BANK_CAPS.decodedPacks;
   const families = new Map<string, FamilyManifest>();
   const packs = new Map<number, LoadedPack>();
@@ -62,6 +64,7 @@ export function createBankLoader(options: LoaderOptions) {
     let parsed: unknown;
     try { parsed = JSON.parse(text); } catch { throw new BankError('malformed', `Manifest for ${id} is not JSON.`); }
     if (!validFamily(parsed) || parsed.family !== id) throw new BankError('malformed', `Manifest for ${id} is invalid.`);
+    deepFreeze(parsed);
     families.set(id, parsed);
     if (families.size > FAMILY_CACHE) families.delete(families.keys().next().value as string);
     return parsed;
@@ -81,7 +84,7 @@ export function createBankLoader(options: LoaderOptions) {
     if (checked.bytes !== row[3] || checked.hex !== row[4]) throw new BankError('hash-mismatch', `Pack ${slot} failed its hash.`);
     const parsed = parsePack(text, row, manifest);
     if (!parsed) throw new BankError('malformed', `Pack ${slot} is malformed.`);
-    const loaded: LoadedPack = { row, rows: parsed.rows, band: parsed.header.band, family: manifest.family };
+    const loaded: LoadedPack = deepFreeze({ row, rows: parsed.rows, band: parsed.header.band, family: manifest.family });
     packs.set(slot, loaded);
     record({ kind: 'cold', ms: now() - started, slot });
     return loaded;
@@ -90,7 +93,7 @@ export function createBankLoader(options: LoaderOptions) {
   async function packAt(manifest: FamilyManifest, row: PackRow, gen: number, token?: CancelToken): Promise<LoadedPack> {
     assertLive(gen, token);
     const slot = row[0], started = now(), warm = packs.get(slot);
-    if (warm) {
+    if (warm && warm.family===manifest.family && JSON.stringify(warm.row)===JSON.stringify(row)) {
       packs.delete(slot);
       packs.set(slot, warm);
       record({ kind: 'warm', ms: now() - started, slot });
@@ -106,6 +109,7 @@ export function createBankLoader(options: LoaderOptions) {
     }
     const loaded = await pending;
     assertLive(gen, token);
+    if(loaded.family!==manifest.family || JSON.stringify(loaded.row)!==JSON.stringify(row))throw new BankError('malformed','Conflicting pack identity.');
     return loaded;
   }
 
@@ -113,20 +117,36 @@ export function createBankLoader(options: LoaderOptions) {
   async function entry<P, S, A>(adapter: PuzzleAdapter<P, S, A>, familyId: string, ordinal: number, token?: CancelToken): Promise<PuzzleDescriptor<P>> {
     const gen = generation;
     const manifest = await familyAt(familyId, gen, token);
+    assertLive(gen, token);
     const place = locate(manifest, ordinal);
     if (!place) throw new BankError('unknown', `Ordinal ${ordinal} is not in ${familyId}.`);
     if (manifest.engine !== adapter.engine || place.row[6] !== adapter.rules) throw new BankError('malformed', `Pack ${place.row[0]} needs a different engine revision.`);
     const loaded = await packAt(manifest, place.row, gen, token);
+    assertLive(gen, token);
     const line = loaded.rows[place.index];
     const core = decodeRow<P>(line, loaded.band, adapter);
     if (!core) throw new BankError('malformed', `Row ${place.index} of pack ${place.row[0]} is invalid.`);
-    return withRef(core, { bank: place.row[0], puzzle: place.index, engine: adapter.engine, rules: adapter.rules, hash: sha256Hex(line) });
+    return deepFreeze(withRef(core, { bank: place.row[0], puzzle: place.index, engine: adapter.engine, rules: adapter.rules, hash: sha256Hex(line) }));
+  }
+
+  /** Exact saved bank/index binding, including retired compatibility packs. Never selects another row. */
+  async function savedHash(bank: PackedBank, index: number, token?: CancelToken): Promise<string> {
+    const gen=generation;
+    assertLive(gen,token);
+    const manifest=await familyAt(bank.family,gen,token);
+    assertLive(gen,token);
+    const row=manifest.packs.find(p=>p[0]===bank.slot);
+    if (!Number.isInteger(index) || index<0 || index>=bank.count || manifest.engine!==bank.engine || !row || row[1]!==bank.first || row[2]!==bank.count || row[4]!==bank.packHash || row[6]!==bank.rules)
+      throw new BankError('malformed','The saved bank does not match its packaged manifest.');
+    const loaded=await packAt(manifest,row,gen,token);
+    assertLive(gen,token);
+    return sha256Hex(loaded.rows[index]);
   }
 
   return {
     family: (id: string, token?: CancelToken) => familyAt(id, generation, token),
     pack: (manifest: FamilyManifest, row: PackRow, token?: CancelToken) => packAt(manifest, row, generation, token),
-    entry,
+    entry, savedHash,
     /** Drops every decoded pack and abandons work in progress. Call on navigation away or memory pressure. */
     release() { generation++; packs.clear(); families.clear(); inFlight.clear(); },
     decodedPacks: () => [...packs.keys()],

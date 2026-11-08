@@ -1,3 +1,4 @@
+import { SessionGate } from './SessionGate';
 import { ResultOffer } from './ResultOffer';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
@@ -74,11 +75,13 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
     </> : round ? <>
       <Heading style={{fontSize:22}}>{entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.title}</Heading>
       {/* The registered Board receives dispatch only as an event callback; render does not invoke it. */}
-      {/* eslint-disable-next-line react-hooks/refs -- Typed registration binds dispatch to Board event handlers. */}
-      {!round.result&&entry.render(round,a=>void dispatch(a),focused&&!busy,width-40)}
+      {!round.result&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={store.challengeOpen} expected={expected(round)} render={()=><>
+        {entry.render(round,a=>void dispatch(a),focused&&!busy,width-40)}
+        <Button quiet disabled={busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>
+      </>}/>}
       {round.result ? <><Heading>{round.result.event==='together'?'You solved it together!':'Puzzle solved!'}</Heading><Copy>{round.result.dares.length?'Your dare mark is kept.':'Your finished puzzle is kept. Helped finishes count too.'}</Copy>
         {owner!=='family'&&round.partner===null&&<ResultOffer progress={progress} context={entry.contextFor(round.puzzle)} comfort={comfort} facts={{atPar:round.result.event==='independent'&&round.result.cost!==null&&round.result.cost<=(entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.par?.upper??-1),firstHigher:false,dare:entry.puzzles.some(p=>p.dares.length>0),easier:entry.puzzles.some(p=>p.tier<(entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.tier??1)),harder:entry.puzzles.some(p=>p.tier>(entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.tier??6))}} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle);const next=kind==='dare'?current:entry.puzzles.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);}}/>}
-      </> : <Button quiet disabled={busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}
+      </> : null}
       <Button quiet disabled={busy} onPress={()=>{setPicking(true);setReplace(false);}}>Another puzzle</Button><Button quiet onPress={back}>Easier choice · Levels 1–5</Button>
     </>:null}
   </ScrollView><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;

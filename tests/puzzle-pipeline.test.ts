@@ -9,7 +9,7 @@ import { bakeFamily, generatedAssets, productionDirs, readCatalog, sweepOrphans,
 import { logicProofFamily, mazeProofFamily } from '../scripts/puzzles/proof-families';
 import { families } from '../scripts/puzzles/families';
 import { BYTE_MODEL } from '../scripts/puzzles/byte-model';
-import { toySpec } from './helpers/puzzle-toy';
+import { toySpec, toyCore } from './helpers/puzzle-toy';
 import type { FamilySpec } from '../src/puzzles/types';
 
 const dirs = (): CatalogDirs => { const base = mkdtempSync(join(tmpdir(), 'puzzle-bake-')); return { content: join(base, 'content'), receipts: join(base, 'receipts') }; };
@@ -432,4 +432,28 @@ describe('committed catalog', () => {
     expect(readCatalog(productionDirs).root.families).toEqual([]);
     expect(verifyCatalog(productionDirs, families).errors).toEqual([]);
   });
+});
+
+it('R2-5 excludes retired rows from active bake quotas and preserves a below-floor append',()=>{
+ const d=dirs();
+ try {
+   bakeFamily(toy(16),{dirs:d});bakeFamily(toy(32,16),{dirs:d,seedBase:17});
+   rewriteFamily(d,'toy',m=>{m.retired=[0];});
+   expect(verify(d,[toy(32,16)]).errors).toEqual([]);
+   const before=snapshot(d), base=toy(48,48), spec={...base,generate:(seed:number)=>toyCore({seed,payload:{goal:100+seed},layout:seed%2?'a':'b',template:`t${seed%4}`})};
+   const report=bakeFamily(spec,{dirs:d,seedBase:33,maxAttempts:16});
+   expect(report).toMatchObject({status:'exhausted',published:false,accepted:{open:32}});
+   expect(snapshot(d)).toEqual(before);
+   expect(verify(d,[toy(32,16)]).errors).toEqual([]);
+ } finally {rmSync(join(d.content,'..'),{recursive:true,force:true});}
+});
+
+it('R2-5 can replace retired quota with a complete verifier-clean active band',()=>{
+ const d=dirs();
+ try {
+  bakeFamily(toy(16),{dirs:d});bakeFamily(toy(32,16),{dirs:d,seedBase:17});rewriteFamily(d,'toy',m=>{m.retired=[0];});
+  const base=toy(48,48),spec={...base,generate:(seed:number)=>toyCore({seed,payload:{goal:100+seed},layout:seed%2?'a':'b',template:`t${seed%4}`})};
+  expect(bakeFamily(spec,{dirs:d,seedBase:33,maxAttempts:32})).toMatchObject({status:'complete',published:true,accepted:{open:48}});
+  expect(verify(d,[spec]).errors).toEqual([]);expect(readCatalog(d).families.get('toy')!.retired).toEqual([0]);
+ }finally{rmSync(join(d.content,'..'),{recursive:true,force:true});}
 });
