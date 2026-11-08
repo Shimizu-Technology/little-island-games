@@ -13,13 +13,13 @@ export const labFixtures: Record<string, () => HomeStateV2> = {
   starter: () => migrateHome(starterHome()) ?? starterHome(),
   "feed-stand": () => feedRoom([], { slot: 0, anchor: "floor", pose: "stand", x: 7, y: 7 }),
   "feed-sit": () => feedRoom([instance("seat", "stool", 6, 7)], { slot: 0, anchor: "seat", pose: "sit", seatId: "seat", socket: { itemId: "seat", socketId: "seat" } }),
-  "feed-bed": () => feedRoom([instance("cot", "bed", 3, 6)], { slot: 0, anchor: "bed", pose: "lie", seatId: "cot", socket: { itemId: "cot", socketId: "pillow" } }),
+  "feed-bed": () => feedRoom([instance("cot", "bed", 3, 6)], { slot: 0, anchor: "seat", pose: "lie", seatId: "cot", socket: { itemId: "cot", socketId: "pillow" } }),
   "feed-pip": () => feedRoom([], { slot: 1, anchor: "floor", pose: "stand", x: 7, y: 7 }),
   "feed-crab": () => feedRoom([], { slot: 2, anchor: "floor", pose: "stand", x: 7, y: 7 }),
   crowded: () => {
     const state = starterHome();
     const room = state.rooms.home;
-    room.instances.push(instance("mango-behind", "mango", 8, 7), instance("towel", "beach-towel", 15, 9), instance("cushion", "floor-cushion", 2, 10));
+    room.instances.push(instance("mango-behind", "mango", 8, 7), instance("towel", "beach-towel", 12, 9), instance("cushion", "floor-cushion", 2, 10));
     return migrateHome(state) ?? state;
   },
 };
