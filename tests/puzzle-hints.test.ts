@@ -23,16 +23,18 @@ it('re-derives a sound next step off the stored route; One step stops after one 
   expect(await requestHint(rules, 1, 'show-me', signal())).toEqual({ status: 'route', actions: [3, 5], last: false });
   expect(await requestHint({ ...rules, problem: () => rules.problem(0) }, 3, 'one-step', signal())).toEqual({ status: 'route', actions: [5], last: true });
 });
-it('does not overwrite a valid alternative grid entry, even if a stored solution would', async () => {
+it('shows a separate engine-solved example without overwriting a valid alternative grid entry', async () => {
   type Grid = readonly number[];
   const valid = (s: Grid) => s.length === 2 && s[0] + s[1] === 5;
   const grid: PublicHintRules<Grid, Grid> = {
-    draft: {hasEntries:s=>s.some(Boolean),complete:s=>s.every(Boolean)},
+    draft: {hasEntries:s=>s.some(Boolean),complete:s=>s.every(Boolean),opening:()=>[0,0],describe:s=>({text:`One way: ${s.join(' + ')} = 5.`,focus:[]})},
     look: () => ({ text: 'Look at the empty box.', focus: ['1'] }), think: () => ({ text: 'The two boxes add to five.', focus: [] }),
     preserves: (s, next) => s.every((n, i) => !n || n === next[i]),
     problem: start => ({ start, key: s => s.join(), moves: () => [[1, 4], [2, 3], [3, 2], [4, 1]], apply: (_, a) => a, goal: valid, nodeBudget: 20 }),
   };
-  expect(await requestHint(grid, [3, 0], 'show-me', signal())).toEqual({ status: 'route', actions: [[3, 2]], last: true });
+  const draft = [3,0];
+  expect(await requestHint(grid, draft, 'show-me', signal())).toEqual({ status: 'example', cue: {text:'One way: 1 + 4 = 5.',focus:[]} });
+  expect(draft).toEqual([3,0]);
 });
 it('F14: the native adapter view builder excludes varied hidden facts for all four rungs', async () => {
   const {publicSumView,sumHints}=await import('./helpers/puzzle-kit');
@@ -42,7 +44,7 @@ it('F14: the native adapter view builder excludes varied hidden facts for all fo
     expect(results[0]).toEqual(results[1]);
   }
   expect(publicSumView(worlds[0])).toEqual({target:6,draft:[3,0]});
-  expect(await requestHint(sumHints,publicSumView(worlds[0]),'show-me',signal())).toMatchObject({status:'route',actions:[[3,3]]});
+  expect(await requestHint(sumHints,publicSumView(worlds[0]),'show-me',signal())).toMatchObject({status:'example',cue:{text:'One way: 2 + 4 = 6.',focus:[]}});
   expect(await requestHint(sumHints,publicSumView({...worlds[0],target:7}),'think',signal())).not.toEqual(await requestHint(sumHints,publicSumView(worlds[0]),'think',signal()));
 });
 it('reports exhaustion honestly, supports cancellation, and does not reset a dead-end draft', async () => {
@@ -91,5 +93,16 @@ it('uses the real maze move and completion rules from a wandering draft, without
     if (result.status !== 'route') throw new Error('Missing real-engine route');
     for (const action of result.actions) { const next = mazeMove(draft, action); expect(next).not.toBe(draft); draft = next; }
     expect(mazeDone(draft)).toBe(true); expect(mazeRoute(draft)).toHaveLength(1);
+  }
+});
+
+it('F17: a grid example never solves or compares the entered draft, including on solver exhaustion', async () => {
+  const {sumHints,publicSumView}=await import('./helpers/puzzle-kit');
+  const problem=vi.fn((v:ReturnType<typeof publicSumView>)=>sumHints.problem(v));
+  for(const draft of [[0,0],[1,0],[3,0],[1,1],[2,4],[3,3]]) {
+    const result=await requestHint({...sumHints,problem},publicSumView({target:6,draft}),'show-me',signal());
+    expect(result).toEqual({status:'example',cue:{text:'One way: 2 + 4 = 6.',focus:[]}});
+    expect(problem.mock.calls.at(-1)?.[0].draft).toEqual([0,0]);
+    expect(await requestHint({...sumHints,problem:v=>({...sumHints.problem(v),nodeBudget:0})},publicSumView({target:6,draft}),'show-me',signal())).toEqual({status:'unavailable'});
   }
 });

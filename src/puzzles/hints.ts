@@ -7,7 +7,13 @@ export type HintCue = { text: string; focus: readonly string[] };
 /** V contains only visible rules, clues and the current draft. Never pass a bank descriptor/solution. */
 export type PublicHintRules<V, A> = {
   /** Entry grids defer One step after an entry, without inspecting its correctness. */
-  draft: { hasEntries(view: V): boolean; complete(view: V): boolean } | null;
+  draft: {
+    hasEntries(view: V): boolean; complete(view: V): boolean;
+    /** A blank example built only from visible clues, independent of the child's entries. */
+    opening(view: V): V;
+    /** Describe the solved example without comparing it with or highlighting the child's draft. */
+    describe(example: V): HintCue;
+  } | null;
   look(view: V): HintCue;
   think(view: V): HintCue;
   /** Start at this exact draft, using the same pure move/goal rules as gameplay. No stored route. */
@@ -17,6 +23,7 @@ export type PublicHintRules<V, A> = {
 };
 export type HintResult<A> =
   | { status: 'cue'; cue: HintCue }
+  | { status: 'example'; cue: HintCue }
   | { status: 'route'; actions: readonly A[]; last: boolean }
   | { status: 'unavailable' }
   | { status: 'cancelled' };
@@ -29,9 +36,11 @@ export async function requestHint<V, A>(rules: PublicHintRules<V, A>, view: V, s
   if (step === 'one-step' && rules.draft?.hasEntries(view)) return { status: 'cue', cue: {
     text: rules.draft.complete(view) ? 'Every box is filled. Check when you are ready, or choose Show me.' : 'Your entries are kept. Choose Show me or try another puzzle.', focus: [],
   } };
-  const problem = rules.problem(view);
-  // Enforce the requested starting draft even if an adapter accidentally supplies its opening.
-  const search = createSearch({ ...problem, start: view, apply: (s, a) => {
+  const example = step === 'show-me' ? rules.draft : null;
+  const start = example ? example.opening(view) : view;
+  const problem = rules.problem(start);
+  // Enforce the current draft for moves, or the separate blank example for an explicit reveal.
+  const search = createSearch({ ...problem, start, apply: (s, a) => {
     const next = problem.apply(s, a);
     return rules.preserves(s, next) ? next : s;
   } });
@@ -40,7 +49,7 @@ export async function requestHint<V, A>(rules: PublicHintRules<V, A>, view: V, s
     const result = search.run(64, 8);
     if (result.status === 'solved') {
       // Check the returned actions against the real rules before showing even the first one.
-      let current = view, checked = 0, started = performance.now();
+      let current = start, checked = 0, started = performance.now();
       for (const action of result.witness) {
         if (signal.aborted) return { status: 'cancelled' };
         if (checked++ >= 64 || performance.now() - started >= 8) {
@@ -52,6 +61,7 @@ export async function requestHint<V, A>(rules: PublicHintRules<V, A>, view: V, s
         current = next;
       }
       if (!problem.goal(current)) return { status: 'unavailable' };
+      if (example) return { status: 'example', cue: example.describe(current) };
       return { status: 'route', actions: step === 'one-step' ? result.witness.slice(0, 1) : result.witness, last: result.witness.length <= 1 };
     }
     if (result.status !== 'running') return { status: 'unavailable' };

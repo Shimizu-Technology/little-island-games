@@ -107,7 +107,7 @@ it('Show me checks an already filled draft through the helped finish callback', 
   const commit = vi.fn(async (_event: HintCommit<number>, key: string) => ({ key, view: 3 }));
   await act(async () => { root = create(<PuzzleHelp snapshot={{ key: 'filled', view: 3 }} rules={rules} kind="grid" failedRuns={0} commit={commit} onFresh={vi.fn()} />); });
   await press('Help'); await press('Look'); await press('Think'); await press('One step');
-  expect(text()).toContain('Every box is filled'); await press('Show me');
+  expect(text()).toContain('Check when you are ready'); await press('Show me');
   expect(commit).toHaveBeenLastCalledWith({ kind: 'finish' }, 'filled'); expect(text()).toContain('Try another');
 });
 
@@ -115,7 +115,7 @@ it.each([[1, 0], [3, 0], [1, 1], [2, 4]])('F1/F2: entry draft %j never gets a fr
   type Grid = number[];
   const grid: PublicHintRules<Grid, Grid> = {
     look: () => ({ text: 'Look at the boxes.', focus: [] }), think: () => ({ text: 'Make six.', focus: [] }),
-    draft: { hasEntries: s => s.some(Boolean), complete: s => s.every(Boolean) },
+    draft: { hasEntries: s => s.some(Boolean), complete: s => s.every(Boolean), opening: () => [0, 0], describe: s => ({ text: `One way: ${s.join(' + ')} = 6.`, focus: [] }) },
     preserves: (s, n) => s.every((v, i) => !v || v === n[i]),
     problem: start => ({ start, key: s => s.join(), moves: () => [[2, 4], [3, 3], [4, 2]], apply: (_, n) => n, goal: s => s.every(Boolean) && s[0] + s[1] === 6, nodeBudget: 20 }),
   };
@@ -156,4 +156,23 @@ it('F10: an immediate commit can beat the render for both help and its move',asy
  await act(async()=>root.update(<PuzzleHelp snapshot={{key:'instant:1',view:0}} rules={rules} kind="grid" failedRuns={0} commit={commit} onFresh={vi.fn()}/>));
  await press('Think');await act(async()=>root.update(<PuzzleHelp snapshot={{key:'instant:2',view:0}} rules={rules} kind="grid" failedRuns={0} commit={commit} onFresh={vi.fn()}/>));
  await press('One step');expect(text()).not.toContain('Your draft changed');expect(text()).toContain('Show me');expect(commit.mock.calls.at(-1)?.[0].kind).toBe('step');
+});
+
+it('F17: Show me reveals the same example for blank, wrong, partial and correct grids, without checking or changing a draft', async () => {
+  const { sumHints, publicSumView } = await import('./helpers/puzzle-kit');
+  const screens: string[] = [];
+  for (const draft of [[0,0], [1,0], [3,0], [1,1], [2,4], [3,3]]) {
+    const view = publicSumView({ target: 6, draft });
+    const commit = vi.fn(async (_e: HintCommit<readonly number[]>, key: string) => ({ key, view }));
+    await act(async () => { root = create(<PuzzleHelp snapshot={{ key: 'grid', view }} rules={sumHints} kind="grid" failedRuns={0} commit={commit} onFresh={vi.fn()} />); });
+    await press('Help'); await press('Look'); await press('Think'); await press('One step');
+    commit.mockClear(); await press('Show me');
+    expect(commit).toHaveBeenCalledExactlyOnceWith({ kind: 'help' }, 'grid');
+    expect(draft).toEqual(view.draft);
+    expect(text()).toContain('One way: 2 + 4 = 6.');
+    expect(text()).not.toContain('Puzzle solved'); expect(text()).not.toContain('Next step');
+    screens.push(text());
+    await act(async () => root.unmount());
+  }
+  expect(new Set(screens).size).toBe(1);
 });

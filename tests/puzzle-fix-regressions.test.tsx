@@ -93,7 +93,7 @@ it('F3: one offer replaces directions, and dismissing it does not reveal another
 });
 it.each([{ offers: false }, { youngChild: true }])('F3: comfort %j leaves plain replay without direction prompts', async comfort => {
   await mount(makeEntry(), emptyChallenge(), comfort); await press('Solve');
-  expect(labels()).not.toContain('Harder'); expect(labels()).not.toContain('Easier'); expect(labels()).toContain('Try another');
+  expect(labels()).not.toContain('Harder'); expect(labels()).not.toContain('Easier'); expect(labels()).not.toContain('Same'); expect(labels()).toContain('Try another');
 });
 it('F4: saved endings rotate the whole tier, including after remount, without carrying dares', async () => {
   const e = makeEntry(4); await mount(e); const seen: number[] = [];
@@ -108,9 +108,9 @@ it('F4: a one-card tier opens the chooser and does not redeal the demonstration'
   expect(store.save.challenge!.paused).toEqual([]); expect(labels()).toContain('Start this puzzle');
 });
 it('F7: a saved helped finish receives honest outcome-dependent praise', async () => {
-  const praise = vi.fn((_ref, result) => result.event === 'helped' ? 'You watched the path reach home.' : 'You connected the path home.');
+  const praise = vi.fn((_ref, _result, facts) => facts?.helpUsed ? 'You watched the path reach home.' : 'You connected the path home.');
   await mount(makeEntry(3, praise)); await press('Help'); await press('Look'); await press('Solve');
-  expect(text()).toContain('You watched the path reach home.'); expect(praise.mock.calls.at(-1)?.[1]?.event).toBe('helped');
+  expect(text()).toContain('You watched the path reach home.'); expect(praise.mock.calls.at(-1)?.[1]?.event).toBe('helped'); expect(praise.mock.calls.at(-1)?.[2]).toEqual({helpUsed:true,failed:false});
   expect(store.save.challenge!.recent).toEqual([[453, 0]]);
 });
 it('F9: a full ordinary draft reserves saved help and a whole bounded demonstration', async () => {
@@ -151,7 +151,7 @@ it('F6/F8: choice miss, neutral sibling, serialized pause and finish replay as o
  expect(store.save.challenge!.paused[0]).toEqual(original);await press('Six pair');expect(text()).not.toContain('Not quite yet');await press('Check');
  expect(store.save.challenge!.paused).toEqual([]);expect(store.save.challenge!.signals[0][1]).toBe('h');expect(text()).toContain('Puzzle solved!');
 });
-it.each([1,3])('F1/F2/F6: real frame draft %i keeps One step neutral and Check-only; a dead end opens a fresh chooser',async left=>{
+it.each([[1,0],[3,0],[1,1],[2,4],[3,3]])('F1/F2/F6/F17/F20: real frame draft %i + %i stays neutral, keeps its entries, and offers a fresh sibling',async(left,right)=>{
  const {publicSumView,sumHints,sumRules}=await import('./helpers/puzzle-kit');
  type GridAction={type:'edit'|'demo';draft:readonly number[]}|{type:'check'|'help'|'reset'};
  type GridState=import('../src/puzzles/wholeAnswer').AnswerState<readonly number[]>;
@@ -166,7 +166,7 @@ it.each([1,3])('F1/F2/F6: real frame draft %i keeps One step neutral and Check-o
   },inspect:s=>({solved:s.solved,metrics:{},edits:s.revision,solution:null,objectives:[]}),
  };
  function GridBoard({state,dispatch,commit,sessionKey,onFresh}:ChallengeViewProps<GridState,GridAction>){return <>
-  <button onClick={()=>dispatch({type:'edit',draft:[left,0]})}>Enter left</button><button onClick={()=>dispatch({type:'edit',draft:[1,1]})}>Enter wrong pair</button><button onClick={()=>dispatch({type:'edit',draft:[2,4]})}>Enter six</button>
+  <button onClick={()=>dispatch({type:'edit',draft:[left,right]})}>Enter left</button><button onClick={()=>dispatch({type:'edit',draft:[1,1]})}>Enter wrong pair</button><button onClick={()=>dispatch({type:'edit',draft:[2,4]})}>Enter six</button>
   <WholeAnswerControls canCheck={sumRules.complete(state.draft,6)} incorrect={answerMissed(state)} needsVariant={false} onCheck={()=>dispatch({type:'check'})} onVariant={()=>false}/>
   <PuzzleHelp snapshot={{key:sessionKey!,view:publicSumView({target:6,draft:state.draft})}} rules={sumHints} kind="grid" failedRuns={state.misses} onFresh={onFresh!} commit={async(e,key)=>{
    let next=await commit?.(e.kind==='step'?{type:'demo',draft:e.action}:e.kind==='finish'?{type:'check'}:{type:'help'},key);
@@ -174,14 +174,17 @@ it.each([1,3])('F1/F2/F6: real frame draft %i keeps One step neutral and Check-o
    return next?{key:next.key,view:publicSumView({target:6,draft:next.state.draft})}:null;
   }}/>
  </>;}
- const e=defineReplayGame({game:'grid-proof',codec:`grid-proof-${left}-v1`,context:'gridproof',cove:true,budget:{wrapper:700,draft:3396,undo:0,audit:0},engine:gridEngine,Board:GridBoard,helpUI:'board',assistance:{idempotentHelp:true,bytes:800,actions:16,isAction:a=>a.type==='help'||a.type==='demo'},controls:{help:()=>({type:'help'} as GridAction),reset:()=>({type:'reset'} as GridAction)},puzzles:[{...puzzle,descriptor:6,ref:{...puzzle.ref,engine:'grid-proof',bank:460+left},source:{kind:'endless',bank:460+left,puzzle:0},dares:[],awards:[null,null]}]});
+ const e=defineReplayGame({game:'grid-proof',codec:`grid-proof-${left}-v1`,context:'gridproof',cove:true,budget:{wrapper:700,draft:3396,undo:0,audit:0},engine:gridEngine,Board:GridBoard,helpUI:'board',assistance:{idempotentHelp:true,bytes:800,actions:16,isAction:a=>a.type==='help'||a.type==='demo'},controls:{help:()=>({type:'help'} as GridAction),reset:()=>({type:'reset'} as GridAction)},puzzles:Array.from({length:3},(_,i)=>({...puzzle,descriptor:6,ref:{...puzzle.ref,engine:'grid-proof',bank:460+left,puzzle:i,hash:String(i+1).repeat(64)},source:{kind:'endless' as const,bank:460+left,puzzle:i},dares:[],awards:[null,null] as const}))});
  await mount(e);await press('Enter left');await press('Help');await press('Look');await press('Think');await press('One step');
- expect(text()).toContain('Your entries are kept. Choose Show me or try another puzzle.');expect(labels()).toContain('Show me');
+ expect(text()).toContain(right?'Every box is filled. Check when you are ready':'Your entries are kept. Choose Show me or try another puzzle.');expect(labels()).toContain('Show me');
  const actions=(store.save.challenge!.paused[0].payload as {actions:GridAction[]}).actions;
  expect(actions.filter(a=>a.type==='demo'||a.type==='check')).toEqual([]);
  await press('Show me');
- if(left===1){const kept=store.save.challenge!.paused[0];await press('Try another');expect(labels()).toContain('Continue saved puzzle');expect(store.save.challenge!.paused[0]).toEqual(kept);await press('Continue saved puzzle');}
- else {expect(labels()).toContain('Next step');}
+ expect(text()).toContain('One way: 2 + 4 = 6.');expect(labels()).toContain('Try another');expect(labels()).not.toContain('Next step');
+ const kept=store.save.challenge!.paused[0];expect((kept.payload as {actions:GridAction[]}).actions.filter(a=>a.type==='demo'||a.type==='check')).toEqual([]);
+ expect((kept.payload as {actions:GridAction[]}).actions.filter(a=>a.type==='help')).toHaveLength(1);
+ await press('Try another');expect(labels()).toContain('Start fresh puzzle');expect(labels()).toContain('Continue saved puzzle');expect(store.save.challenge!.paused[0]).toEqual(kept);
+ await press('Continue saved puzzle');
  await press('Enter wrong pair');await press('Check');expect(text()).toContain('Not quite yet');await press('Enter six');expect(text()).not.toContain('Not quite yet');await press('Check');expect(store.save.challenge!.paused).toEqual([]);
 });
 it('F9: full draft still reaches and saves Look and a whole demonstration through frame/Store',async()=>{
@@ -197,4 +200,52 @@ it('F9: full draft still reaches and saves Look and a whole demonstration throug
  await press('Help');await press('Look');expect(text()).toContain('Look at the open paths.');await press('Think');await press('One step');await press('Show me');
  for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press('Next step');
  expect(store.save.challenge!.paused).toEqual([]);expect(store.save.challenge!.signals[0][1]).toBe('h');
+});
+
+it('F18: frame Help starts state-driven hints for a board without its own ladder', async () => {
+  const base = makeEntry();
+  const e: ChallengeEntry = { ...base, helpUI: undefined,
+    render: (session) => <p>{(session.payload as Payload).actions.some(a => a.type === 'help') ? 'Crab hint is visible' : 'Build a path'}</p> };
+  await mount(e); expect(labels().filter(l => l === 'Help')).toHaveLength(1);
+  expect(text()).not.toContain('Crab hint is visible'); await press('Help');
+  expect(text()).toContain('Crab hint is visible');
+  expect((store.save.challenge!.paused[0].payload as Payload).actions).toEqual([{type:'help'}]);
+});
+it.each([false, true])('F19: miss-only finish has truthful default and callback facts (callback %s)', async custom => {
+  const praise = vi.fn((_ref, _result, facts) => facts?.helpUsed ? 'You followed help home.' : facts?.failed ? 'You kept trying and found the path home.' : 'You found the path home.');
+  const base = makeEntry(3, custom ? praise : undefined);
+  const e: ChallengeEntry = { ...base, render: (s, dispatch, active, width, host) => <>
+    <button onClick={() => dispatch({type:'check'})}>Miss Check</button>{base.render(s,dispatch,active,width,host)}
+  </> };
+  await mount(e); await press('Miss Check'); await press('Solve');
+  expect(text()).not.toContain('with help');
+  expect(text()).toContain(custom ? 'You kept trying and found the path home.' : 'You kept trying and solved it.');
+  if(custom) expect(praise.mock.calls.at(-1)?.[2]).toEqual({helpUsed:false,failed:true});
+  expect(store.save.challenge!.signals[0][1]).toBe('h');
+});
+it('F20: fresh chooser selects a different same-tier card, preserves Continue, and replaces only after plain confirmation', async () => {
+  const base=makeEntry();
+  const e:ChallengeEntry={...base,render:(s,d,a,w,host)=><><button onClick={host?.onFresh}>Fresh from help</button>{base.render(s,d,a,w,host)}</>};
+  await mount(e); await press('Move'); const kept=store.save.challenge!.paused[0];
+  await press('Fresh from help'); expect(labels()).toContain('Continue saved puzzle');
+  expect(labels()).toContain('Start fresh puzzle'); expect(text()).not.toContain('Start another attempt');
+  expect(root.root.findAllByType('button').find(b=>b.children.join('')==='Maze 1 · Tide 1')?.props.selected).toBe(true);
+  expect(store.save.challenge!.paused[0]).toEqual(kept);
+  await press('Continue saved puzzle'); expect(store.save.challenge!.paused[0]).toEqual(kept);
+  await press('Fresh from help'); await press('Start fresh puzzle'); expect(store.save.challenge!.paused[0]).toEqual(kept);
+  await press('Replace saved puzzle and start');
+  const next=store.save.challenge!.paused[0]; expect(next.id).not.toBe(kept.id); expect(next.puzzle.puzzle).toBe(1);
+  expect((next.payload as Payload).actions).toEqual([]);
+});
+it.each(['check','run'] as const)('F21: a failed %s spends the reserve after ordinary edits stop', type => {
+  const e=defineReplayGame({game:'reserve-proof',codec:'reserve-proof-v1',context:'reserveproof',cove:true,budget:{wrapper:700,draft:3396,undo:0,audit:0},engine,Board:()=>null,objectives:['shell'],
+    puzzles:[{...puzzle,ref:{...puzzle.ref,engine:'reserve-proof',bank:435},source:{kind:'endless',bank:435,puzzle:0},dares:[],awards:[null,null]}],controls:{help:()=>({type:'help'} as Action),reset:()=>({type:'reset'} as Action)}});
+  let s=e.start(e.puzzles[0].ref,'a','reserve-1',emptyChallenge(),{supportOff:false,ownRead:false},[]);
+  const cell=mazeRoute(engine.create({seed:1},{seed:1},{supportOff:false,ownRead:false}).board)[1];
+  for(let i=0;i<512;i++){const n=e.move(s,{type:'move',cell:i%2?0:cell});if(!n)break;s=n;}
+  // Fill the remaining ordinary bytes with shorter valid edits, leaving no Check-sized slack.
+  for(let i=0;i<30;i++){const n=e.move(s,{type:'reset'});if(!n)break;s=n;}
+  const next=e.move(s,{type}); expect(next).not.toBeNull();
+  expect((next!.payload as Payload).actions.at(-1)).toEqual({type});
+  expect(next!.result).toBeNull();
 });

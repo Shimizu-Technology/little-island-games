@@ -5,13 +5,13 @@ import type { Bank, ChallengeSession, SaveCatalog, SessionBudget, Terminal } fro
 import { validChallengeSession } from '../state/challenge';
 import { asciiId, exactKeys, hashId, jsonBytes, plain, uint } from '../state/saveBits';
 import { proves } from './evidence';
-import type { ChallengeViewProps, Evidence, Puzzle, ReplayEngine, ReplayPayload, TypedRegistration } from './types';
+import type { ChallengeViewProps, CompletionFacts, Evidence, Puzzle, ReplayEngine, ReplayPayload, TypedRegistration } from './types';
 const dense = (v: unknown, max: number): v is unknown[] => Array.isArray(v) && v.length <= max && Object.keys(v).length === v.length;
 const metrics = ['cards','steps','placements','loads','turns'];
 /** Replay-only kit. Checkpoint engines register their bounded exact codecs separately. */
 export function defineReplayGame<D,P,A,S>(config: {
   game: string; codec: string; context: string; cove: boolean; budget: SessionBudget;
-  completionText?: (ref: ChallengeSession['puzzle'], result: Terminal) => string;
+  completionText?: (ref: ChallengeSession['puzzle'], result: Terminal, facts: CompletionFacts | null) => string;
   helpUI?: 'board';
   /** Worst-case full help sequence, including terminal result overhead, certified by each adopter. */
   assistance?: { bytes: number; actions: number; idempotentHelp: true; isAction: (action: A) => boolean };
@@ -89,7 +89,7 @@ export function defineReplayGame<D,P,A,S>(config: {
     canStart:(s:ChallengeSession)=>replay(s)!==null && (s.payload as ReplayPayload<P,A>).actions.length===0 && s.result===null,
     extends:(a:ChallengeSession,b:ChallengeSession)=>{const p=a.payload as ReplayPayload<P,A>,q=b.payload as ReplayPayload<P,A>;return (q.actions.length>p.actions.length || q.actions.length===p.actions.length && config.assistance?.idempotentHelp===true && !!replay(a)?.evidence.helpUsed) && JSON.stringify({...p,actions:[]})===JSON.stringify({...q,actions:[]}) && p.actions.every((action,i)=>JSON.stringify(action)===JSON.stringify(q.actions[i]));}};
   const catalog:SaveCatalog={banks,dares,codecs:new Map([[config.codec,codec]]),contexts:new Set(config.puzzles.map(p=>`${config.context}-${p.tier}`))};
-  return {game:config.game,codec:config.codec,cove:config.cove,contextFor:ref=>`${config.context}-${config.puzzles.find(p=>p.ref.bank===ref.bank&&p.ref.puzzle===ref.puzzle)?.tier??1}`,puzzles:config.puzzles,catalog,controls:config.controls,completionText:config.completionText,helpUI:config.helpUI,
+  return {game:config.game,codec:config.codec,cove:config.cove,contextFor:ref=>`${config.context}-${config.puzzles.find(p=>p.ref.bank===ref.bank&&p.ref.puzzle===ref.puzzle)?.tier??1}`,puzzles:config.puzzles,catalog,controls:config.controls,completionText:config.completionText,completionFacts:s=>{const e=replay(s)?.evidence;return e?{helpUsed:e.helpUsed,failed:e.failed}:null;},helpUI:config.helpUI,
     start:(ref,owner,id,progress,options,selectedDares)=>{
       const puzzle=config.puzzles.find(p=>sameRef(p.ref,ref)); if(!puzzle)throw new Error('Unknown puzzle.');
       const payload:ReplayPayload<P,A>={version:1,initial:engine.initial(puzzle.descriptor),options:{...options},firstSolutions:progress.solutions.filter(([b,p])=>b===ref.bank&&p===ref.puzzle).map(([, ,hash])=>hash),actions:[]};
@@ -98,11 +98,13 @@ export function defineReplayGame<D,P,A,S>(config: {
     },
     move:(s,action)=>{if(!engine.validAction(action) || !validChallengeSession(s,s.owner,catalog,s.owner.startsWith('cove-')) || s.result || s.credited)return null;
       const payload=s.payload as ReplayPayload<P,A>;
-      const repeatedHelp = config.assistance?.idempotentHelp===true && JSON.stringify(action) === JSON.stringify(config.controls.help()) && replay(s)?.evidence.helpUsed;
+      const previous = replay(s);
+      const repeatedHelp = config.assistance?.idempotentHelp===true && JSON.stringify(action) === JSON.stringify(config.controls.help()) && previous?.evidence.helpUsed;
       const next={...s,revision:s.revision+1,payload:{...payload,actions:repeatedHelp?payload.actions:[...payload.actions,action]}};
       const restored = replay(next);
       if(!restored)return null;
-      const assisted = reserve.isAction(action) || restored.evidence.solved;
+      const checked = !!previous && restored.evidence.runs > previous.evidence.runs;
+      const assisted = reserve.isAction(action) || restored.evidence.solved || checked;
       // Ordinary play cannot spend the bytes/actions reserved for the full help sequence.
       if (!assisted && (jsonBytes(next) > 4096 - reserve.bytes || next.payload.actions.length > 512 - reserve.actions)) return null;
       const result={...next,result:evaluate(next)};

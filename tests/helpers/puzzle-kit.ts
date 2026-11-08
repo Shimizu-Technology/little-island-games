@@ -11,7 +11,7 @@ export const sumRules: AnswerRules<number, Draft, Draft> = {
   edit: (_, a) => a, complete: d => d.every(Boolean), accepts: (d, t) => d[0] + d[1] === t,
 };
 export const sumHints: PublicHintRules<PublicSum, Draft> = {
-  draft: { hasEntries: s => s.draft.some(Boolean), complete: s => s.draft.every(Boolean) },
+  draft: { hasEntries: s => s.draft.some(Boolean), complete: s => s.draft.every(Boolean), opening: s => ({ ...s, draft: [0, 0] }), describe: s => ({ text: `One way: ${s.draft[0]} + ${s.draft[1]} = ${s.target}.`, focus: [] }) },
   look: () => ({ text: 'Look at the two number boxes.', focus: ['left', 'right'] }),
   think: s => ({ text: `Find two numbers that add to ${s.target}.`, focus: [] }),
   preserves: (before, after) => before.draft.every((n, i) => !n || n === after.draft[i]),

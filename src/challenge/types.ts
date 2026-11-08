@@ -52,6 +52,7 @@ export type ChallengeRenderHost = {
   key: string;
   commit: (action: unknown, expectedKey: string) => Promise<{ key: string; session: ChallengeSession } | null>;
 };
+export type CompletionFacts = { helpUsed: boolean; failed: boolean };
 export type ChallengeCard = Omit<Puzzle<unknown>, 'descriptor'|'awards'>;
 /** Erasure happens only after a typed registration validates its own payload. No action bags. */
 export type ChallengeEntry = {
@@ -60,8 +61,10 @@ export type ChallengeEntry = {
   move: (session: ChallengeSession, action: unknown) => ChallengeSession | null;
   render: (session: ChallengeSession, dispatch: (action: unknown) => void, active: boolean, width: number, host?: ChallengeRenderHost) => ReactNode;
   /** Specific praise supplied by the real engine's game, never speed-based. */
-  completionText?: (ref: PuzzleRef, result: Terminal) => string;
-  /** Boards own their visible help; the frame never records an invisible hint. */
+  completionText?: (ref: PuzzleRef, result: Terminal, facts: CompletionFacts | null) => string;
+  /** Praise facts re-derived from the accepted replay, never persisted or inferred from Terminal. */
+  completionFacts?: (session: ChallengeSession) => CompletionFacts | null;
+  /** The frame supplies Help unless the board declares its own help UI. */
   helpUI?: 'board';
   controls: { help: () => unknown; reset: () => unknown };
 };
