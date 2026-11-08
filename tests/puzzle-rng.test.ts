@@ -17,11 +17,12 @@ function sfc32BigInt(seed: number, count: number): number[] {
   for (let i = 0; i < 15; i++) next();
   return Array.from({ length: count }, next);
 }
+// Literal values: these fail if the algorithm and the BigInt check above ever drift together.
 const FROZEN: [number, number[]][] = [
-  [0, sfc32BigInt(0, 5)],
-  [1, sfc32BigInt(1, 5)],
-  [0xffffffff, sfc32BigInt(0xffffffff, 5)],
-  [2026, sfc32BigInt(2026, 5)],
+  [0, [2381108232, 3976095626, 2467262069, 1823274075, 3001101427]],
+  [1, [2212199553, 1506684997, 389392296, 138374344, 482077534]],
+  [4294967295, [4182873111, 638246997, 1384417266, 3840555370, 1834555596]],
+  [2026, [2674361848, 1497872819, 2944102448, 1624280410, 3620756346]],
 ];
 describe('RNG revision 1', () => {
   it('matches an independent implementation for every checked seed', () => {

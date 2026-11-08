@@ -22,11 +22,15 @@ describe('FNV-1a', () => {
     for (const text of ['Håfa', 'ñåmu', '漢字', '😀 tide', todayKey('sudoku', 'shallows', '2028-02-29')]) expect(fnv1a32(text)).toBe(fnvBig(text));
   });
   it('keeps frozen date vectors', () => {
-    const vectors: [string, string, string][] = [
-      ['sudoku', 'shallows', '2026-11-09'], ['sudoku', 'shallows', '2028-02-29'], ['sudoku', 'trench', '2028-03-01'],
-      ['maze', 'paddling', '2000-02-29'], ['maze', 'paddling', '1999-12-31'], ['word-search', 'reef', '2100-02-28'],
+    const vectors: [string, string, string, number][] = [
+      ['sudoku', 'shallows', '2026-11-09', 2190570279],
+      ['sudoku', 'shallows', '2028-02-29', 527631527],
+      ['sudoku', 'trench', '2028-03-01', 748079281],
+      ['maze', 'paddling', '2000-02-29', 310459425],
+      ['maze', 'paddling', '1999-12-31', 3794520289],
+      ['word-search', 'reef', '2100-02-28', 3625647062],
     ];
-    for (const [g, t, d] of vectors) expect(fnv1a32(todayKey(g, t, d))).toBe(fnvBig(`LI-TODAY-V1|${g}|${t}|${d}`));
+    for (const [g, t, d, hash] of vectors) expect(fnv1a32(todayKey(g, t, d))).toBe(hash);
   });
 });
 describe('civil date', () => {
