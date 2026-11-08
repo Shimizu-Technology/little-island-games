@@ -47,7 +47,7 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
     <View style={{flexDirection:'row',gap:10,alignItems:'center'}}>
     <Beach level={d.level} walker={result.walker} size={Math.max(140,Math.min(width*0.5,200))} facingHint={d.level.pace!=='easy'} plan={!s.supportOff&&!running&&!s.won?planned:undefined} showBump={!s.supportOff&&!running&&!s.won}/>
     <View style={{flex:1,gap:6}}>
-    {d.budget!==null&&<Copy maxFontSizeMultiplier={1.4} style={{fontWeight:'700',fontSize:14}}>{s.runs===0?'Plan cost':'Walking steps'}: {s.runs===0?execute(d,s.program).cost:result.cost} of {d.budget} · Mud 2 / sand 1 / turn 0</Copy>}
+    {d.budget!==null&&<Copy maxFontSizeMultiplier={1.4} style={{fontWeight:'700',fontSize:14}}>{s.cursor===0?'Plan cost':'Walking steps'}: {s.cursor===0?execute(d,s.program).cost:result.cost} of {d.budget} · Mud 2 / sand 1 / turn 0</Copy>}
     <Copy maxFontSizeMultiplier={1.4} accessibilityLiveRegion="polite" style={{fontSize:14}}>{result.won?'Home! Every shell collected.':message}</Copy>
     </View></View>
     <Copy maxFontSizeMultiplier={1.3} style={{fontSize:14}}>Plan · {s.program.length} {s.program.length===1?'card':'cards'} · {s.runs} {s.runs===1?'run':'runs'}{s.supportOff?' · Footprints off':''}</Copy>
@@ -60,7 +60,7 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
     {!s.won&&<ScrollView style={{flex:1,minHeight:0}} contentContainerStyle={{gap:10,paddingBottom:8}} accessibilityLabel="Plan and commands">
     {header}
     <Copy>{result.won?'Home! Every shell collected.':message}</Copy>
-    {d.budget!==null&&<Copy>{s.runs===0?'Plan cost':'Walking steps'}: {s.runs===0?execute(d,s.program).cost:result.cost} of {d.budget}. Mud costs 2, sand 1, turns 0.</Copy>}
+    {d.budget!==null&&<Copy>{s.cursor===0?'Plan cost':'Walking steps'}: {s.cursor===0?execute(d,s.program).cost:result.cost} of {d.budget}. Mud costs 2, sand 1, turns 0.</Copy>}
     <Copy>{d.lesson}</Copy>
     {learnSources[lessonAudio(d.level.id)]&&<Button compact quiet disabled={!active} onPress={()=>play(lessonAudio(d.level.id))}>Hear this puzzle</Button>}
     {learnSources[rulesAudio]&&<Button compact quiet disabled={!active} onPress={()=>play(rulesAudio)}>Hear rules</Button>}

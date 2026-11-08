@@ -87,3 +87,8 @@ it('largest text: titles, instructions and navigation scroll while beach and pro
  expect(controls.findAllByType('button').some(b=>b.children.includes('Choose another puzzle'))).toBe(true);
  expect(root!.root.findByProps({accessibilityLabel:'Your program editor'}).props.horizontal).toBe(true);
 });
+it('P3-3: editing after a failed run returns to the full planned cost',async()=>{
+ let s=state(0);s=challengeEngine.step(s,['a',4],s.descriptor)!.state;s=challengeEngine.step(s,['g'],s.descriptor)!.state;s=challengeEngine.step(s,['a',4],s.descriptor)!.state;
+ expect(s.runs).toBe(1);expect(s.cursor).toBe(0);await mount(s);
+ expect(root!.root.findAllByType('p').some(p=>p.children.join('').startsWith('Plan cost: 3 of 3'))).toBe(true);
+});
