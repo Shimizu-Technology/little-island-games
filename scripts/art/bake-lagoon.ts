@@ -40,6 +40,7 @@ bake('deck-right',16,16,'<rect width="16" height="16" fill="#704A36" stroke="#67
 bake('deck-side-left',32,32,'<path d="M0 0H32L0 32Z" fill="#A0643E"/>');
 bake('deck-side-right',32,32,'<path d="M0 0H32L0 32Z" fill="#704A36"/>');
 bake('shell-burst',48,48,'<path d="M24 2L28 15L42 8L34 22L47 27L33 30L38 44L25 35L16 47L17 32L2 33L13 23L3 12L19 16Z" fill="#FFE9A7" stroke="#B76A20" stroke-width="1"/><text x="24" y="30" text-anchor="middle" fill="#5B4844" font-family="Arial" font-size="14" font-weight="900">+1</text>',9);
+bake('marker-note',80,30,'<rect width="80" height="26" rx="9" fill="#FFF2CF"/><text x="0" y="21" fill="#243D51" font-family="Arial" font-size="21" font-weight="900">+10</text>',9);
 bake('support',16,128,'<path d="M2 1H14V127H2Z" fill="#78513A" stroke="#674B3E" stroke-width="2"/><path d="M3 6H13" stroke="#E9B56B" stroke-width="4"/>');
 const depths=[.1,.6,1,1.4],canoes=[];
 for(let f=0;f<depths.length;f++) {

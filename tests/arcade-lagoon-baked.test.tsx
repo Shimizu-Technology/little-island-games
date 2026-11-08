@@ -3,7 +3,7 @@ import {createRequire} from 'node:module';
 import {expect,it,vi} from 'vitest';
 import type {SharedValue} from 'react-native-reanimated';
 import type {SpritePose} from '../src/arcade/poses';
-import {PickupBurst} from '../src/arcade/games/lagoon-run/PickupBurst';
+import {PickupBurst,MarkerNote} from '../src/arcade/games/lagoon-run/PickupBurst';
 import {BakedDeck} from '../src/arcade/games/lagoon-run/Baked';
 import {RAMP_SECTIONS} from '../src/arcade/games/lagoon-run/surface';
 vi.mock('react-native-svg',()=>({default:'Svg',Path:'Path',Text:'SvgText'}));
@@ -24,4 +24,9 @@ it('mounts both side skirts and a shadow for every rendered incline section',()=
 it('keeps the pickup +1 art on a cached image rather than invoking SVG text shaping at collection',()=>{
  const extensions=createRequire(import.meta.url).extensions,old=extensions['.png'];extensions['.png']=module=>{module.exports=1;};
  try{const node=PickupBurst();expect(node.type).toBe('Image');}finally{if(old)extensions['.png']=old;else delete extensions['.png'];}
+});
+
+it('caches the world marker +10 note instead of repainting native text at every third pickup',()=>{
+ const extensions=createRequire(import.meta.url).extensions,old=extensions['.png'];extensions['.png']=module=>{module.exports=1;};
+ try{expect(MarkerNote().type).toBe('Image');}finally{if(old)extensions['.png']=old;else delete extensions['.png'];}
 });
