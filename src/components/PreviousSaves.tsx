@@ -1,9 +1,8 @@
-import { contentUnavailable } from '../state/sessionContent';
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { storage } from "../state/storage";
 import { RecoveryEntry } from "../state/recoveryHistory";
-import { parseSaveWithContent } from "../state/validation";
+import { parseSave } from "../state/validation";
 import { exportBackup } from "../state/backup";
 import { Button, C, Copy, Heading } from "./ui";
 
@@ -29,11 +28,11 @@ export function PreviousSaves({ onChoose }: { onChoose: (raw: string) => void })
       if (raw === null) throw new Error("missing");
       let summary: string, valid = false;
       try {
-        const save = await parseSaveWithContent(raw);
+        const save = parseSave(raw);
         summary = `${Object.keys(save.sessions).length + Object.keys(save.activities ?? {}).length} saved game rounds · ${save.explore?.favorites.length ?? 0} favorite discoveries`;
         valid = true;
-      } catch (error) {
-        summary = contentUnavailable(error) ? "Puzzle content could not be loaded. Your copy is kept. Inspect it again to retry." : "This copy cannot be opened by this version. Export it to keep the original data.";
+      } catch {
+        summary = "This copy cannot be opened by this version. Export it to keep the original data.";
       }
       setSelected({ key: entry.key, raw, summary, valid });
     } catch {

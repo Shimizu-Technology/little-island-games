@@ -1,0 +1,283 @@
+{
+  "source": "f8d06028",
+  "bank": {
+    "slot": 398,
+    "engine": "catalog-proof",
+    "rules": 1,
+    "entries": [
+      {
+        "ordinal": 400000,
+        "hash": "a7580c5c89764ce6295c9ca3f59cf695475872745f9e27391113e192046e9637"
+      },
+      {
+        "ordinal": 400001,
+        "hash": "71dea1859ba7c78a41ed0df5125bea994e58da474a3e09c2a3591ac74735522b"
+      },
+      {
+        "ordinal": 400002,
+        "hash": "d1a8d1b4b55204c8cae13430868e3adcbe0351457cd2c98261802b2e08b87c75"
+      },
+      {
+        "ordinal": 400003,
+        "hash": "7cc887145ae5214af294fc75521f91bd6d19b21e30c8f9a2884e2dc2f53a651a"
+      },
+      {
+        "ordinal": 400004,
+        "hash": "4583d7b8364dac275fb7eebf968067c44e14f8559c1e7f2f7060b9b0bea4e6a1"
+      },
+      {
+        "ordinal": 400005,
+        "hash": "f766dce53ae1a88503c4effa55eece6de349f062add82682305436bccc3ef6f1"
+      },
+      {
+        "ordinal": 400006,
+        "hash": "e6abf827014b73360818dfbcd36978f3a430a139bdb555cf78d28b153328defd"
+      }
+    ],
+    "awards": [
+      3,
+      3,
+      3,
+      3,
+      3,
+      3,
+      3
+    ],
+    "cove": true
+  },
+  "codec": "catalog-proof-v1",
+  "credit": {
+    "version": 1,
+    "banks": [
+      [
+        398,
+        "qMYa",
+        "7CQ="
+      ]
+    ],
+    "dares": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAA=",
+    "nextOrdinal": 2,
+    "paused": [
+      {
+        "version": 1,
+        "owner": "family",
+        "game": "catalog-proof",
+        "id": "inline-paused",
+        "ordinal": 1,
+        "revision": 0,
+        "puzzle": {
+          "bank": 398,
+          "puzzle": 1,
+          "engine": "catalog-proof",
+          "rules": 1,
+          "hash": "71dea1859ba7c78a41ed0df5125bea994e58da474a3e09c2a3591ac74735522b"
+        },
+        "codec": "catalog-proof-v1",
+        "payload": 0,
+        "selectedDares": [],
+        "partner": null,
+        "result": null,
+        "credited": false
+      }
+    ],
+    "signals": [
+      [
+        "proof",
+        "ch",
+        1,
+        "right",
+        false
+      ]
+    ],
+    "bests": [
+      [
+        398,
+        2,
+        4
+      ],
+      [
+        398,
+        3,
+        5
+      ],
+      [
+        398,
+        4,
+        6
+      ],
+      [
+        398,
+        5,
+        7
+      ],
+      [
+        398,
+        6,
+        8
+      ],
+      [
+        398,
+        1,
+        1
+      ]
+    ],
+    "recent": [
+      [
+        398,
+        2
+      ],
+      [
+        398,
+        3
+      ],
+      [
+        398,
+        4
+      ],
+      [
+        398,
+        5
+      ],
+      [
+        398,
+        6
+      ],
+      [
+        398,
+        1
+      ]
+    ],
+    "cursors": [
+      [
+        398,
+        9
+      ]
+    ],
+    "practice": [
+      [
+        "proof",
+        2,
+        3
+      ]
+    ],
+    "choice": [
+      "catalog-proof",
+      "endless",
+      1
+    ],
+    "solutions": []
+  },
+  "merge": {
+    "version": 1,
+    "banks": [
+      [
+        398,
+        "qMYa",
+        "7CQ="
+      ]
+    ],
+    "dares": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAA=",
+    "nextOrdinal": 2,
+    "paused": [
+      {
+        "version": 1,
+        "owner": "family",
+        "game": "catalog-proof",
+        "id": "inline-paused",
+        "ordinal": 1,
+        "revision": 0,
+        "puzzle": {
+          "bank": 398,
+          "puzzle": 1,
+          "engine": "catalog-proof",
+          "rules": 1,
+          "hash": "71dea1859ba7c78a41ed0df5125bea994e58da474a3e09c2a3591ac74735522b"
+        },
+        "codec": "catalog-proof-v1",
+        "payload": 0,
+        "selectedDares": [],
+        "partner": null,
+        "result": null,
+        "credited": false
+      }
+    ],
+    "signals": [
+      [
+        "proof",
+        "ch",
+        1,
+        "right",
+        false
+      ]
+    ],
+    "bests": [
+      [
+        398,
+        2,
+        4
+      ],
+      [
+        398,
+        3,
+        5
+      ],
+      [
+        398,
+        4,
+        6
+      ],
+      [
+        398,
+        5,
+        7
+      ],
+      [
+        398,
+        6,
+        8
+      ]
+    ],
+    "recent": [
+      [
+        398,
+        2
+      ],
+      [
+        398,
+        3
+      ],
+      [
+        398,
+        4
+      ],
+      [
+        398,
+        5
+      ],
+      [
+        398,
+        6
+      ]
+    ],
+    "cursors": [
+      [
+        398,
+        9
+      ]
+    ],
+    "practice": [
+      [
+        "proof",
+        2,
+        3
+      ]
+    ],
+    "choice": [
+      "catalog-proof",
+      "endless",
+      1
+    ],
+    "solutions": []
+  },
+  "folded": "{\"version\":3,\"settings\":{\"sound\":true,\"help\":true},\"learning\":{\"active\":\"family\",\"people\":[{\"id\":\"family\",\"name\":\"Family practice\",\"skills\":{},\"notes\":{},\"choices\":{}}]},\"profiles\":{\"version\":2,\"people\":{\"family\":{\"sessions\":{},\"recent\":null,\"school\":{},\"challenge\":{\"version\":1,\"banks\":[[398,\"iMYa\",\"4CQ=\"]],\"dares\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAA=\",\"nextOrdinal\":2,\"paused\":[{\"version\":1,\"owner\":\"family\",\"game\":\"catalog-proof\",\"id\":\"inline-paused\",\"ordinal\":1,\"revision\":1,\"puzzle\":{\"bank\":398,\"puzzle\":1,\"engine\":\"catalog-proof\",\"rules\":1,\"hash\":\"71dea1859ba7c78a41ed0df5125bea994e58da474a3e09c2a3591ac74735522b\"},\"codec\":\"catalog-proof-v1\",\"payload\":1,\"selectedDares\":[],\"partner\":null,\"result\":null,\"credited\":false}],\"signals\":[[\"proof\",\"ch\",1,\"right\",false]],\"bests\":[[398,2,4],[398,3,5],[398,4,6],[398,5,7],[398,6,8]],\"recent\":[[398,2],[398,3],[398,4],[398,5],[398,6]],\"cursors\":[[398,9]],\"practice\":[[\"proof\",2,3]],\"choice\":[\"catalog-proof\",\"endless\",1],\"solutions\":[]}}},\"earlier\":{},\"unassigned\":{\"rounds\":{\"sessions\":{},\"recent\":null}}},\"roundOwners\":{\"version\":1,\"rounds\":{}},\"saveRevision\":\"migrated-v3\",\"cove\":{\"version\":1,\"active\":null,\"people\":{}},\"sessions\":{},\"recent\":null}"
+}

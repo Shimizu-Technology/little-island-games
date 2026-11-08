@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { bankSize, type PackedBank } from '../src/state/bankFacts';
 import { catalogManifest, assertFrozenCatalog } from '../src/state/catalogManifest';
 import { registerSaveContent, saveCatalog, emptyChallenge, validChallengeProgress, validChallengeSession, creditProgress, type ChallengeSession } from '../src/state/challenge';
-import { ContentPendingError, prepareSessionContent, retainSessionContent, sessionContentSize } from '../src/state/sessionContent';
+import { ContentPendingError, prepareSessionContent, prepareSaveContent, retainSessionContent, sessionContentSize } from '../src/state/sessionContent';
 import { BankError } from '../src/puzzles/loader';
 import { parseSaveWithContent, parseSave } from '../src/state/validation';
 import { encodeSave } from '../src/state/profiles';
@@ -39,7 +39,7 @@ describe('range-based save catalog',()=>{
  it('checks all 56 distinct refs sequentially within the two-pack LRU',async()=>{
   const f=fixture(),v=envelope(f);let n=0;
   for(const p of [...Object.values(v.profiles!.people),...Object.values(v.cove!.people)])for(const s of p.challenge!.paused)s.puzzle=f.session(s.owner,Number(s.game.slice(-1)),n++).puzzle;
-  await prepareSessionContent(v,f.catalog,{loader:f.loader});expect(sessionContentSize(f.catalog).recent).toBe(56);expect(f.loader.decodedPacks().length).toBeLessThanOrEqual(2);
+  await prepareSaveContent(v,f.catalog,{loader:f.loader});expect(sessionContentSize(f.catalog).recent).toBe(56);expect(f.loader.decodedPacks().length).toBeLessThanOrEqual(2);
  });
  it.each(['read','cancel','identity'] as const)('preserves input and admits no hashes on %s failure',async kind=>{
   const f=fixture(),s=f.session(),before=JSON.stringify(s);let live=true;
@@ -51,14 +51,15 @@ describe('range-based save catalog',()=>{
   const f=fixture();registerSaveContent(f.catalog,catalogManifest(f.catalog));const raw=encodeSave(envelope(f));let live=true;
   let armed=false;const p=parseSaveWithContent(raw,{loader:f.loader,live:()=>{if(!armed){armed=true;queueMicrotask(()=>{live=false;});}return live;}});await expect(p).rejects.toMatchObject({kind:'cancelled'});
  });
- it('draft recovery does not quarantine an unread or cancelled row',async()=>{
+ it('draft recovery folds structurally without reading content; cancellation never quarantines',async()=>{
   const f=fixture(),s=f.session(),base=envelope(f);let preserved=0;
   const row=JSON.stringify({version:1,base:base.saveRevision,session:{...s,revision:1,payload:1}});
   const storage={readDrafts:async()=>[row],get:async()=>null,set:async()=>{},listRecovery:async()=>[],readRecovery:async()=>null,preserve:async()=>{preserved++;}};
-  await expect(recoverChallengeDrafts(base,storage,f.catalog,{loader:{savedHash:async()=>{throw new BankError('read-failed','retry');}}})).rejects.toMatchObject({kind:'read-failed'});expect(preserved).toBe(0);
+  const recovered=await recoverChallengeDrafts(base,storage,f.catalog,{loader:{savedHash:async()=>{throw new BankError('read-failed','retry');}}});expect(recovered.profiles!.people.family.challenge!.paused[0].revision).toBe(1);expect(preserved).toBe(0);
+  await expect(recoverChallengeDrafts(base,storage,f.catalog,{live:()=>false})).rejects.toMatchObject({kind:'cancelled'});expect(preserved).toBe(0);
  });
- it('resolves before folding valid drafts, and quarantines a forged hash without changing the accepted slot',async()=>{
-  const f=fixture(),s=f.session(),base=envelope(f);await prepareSessionContent(base,f.catalog,{loader:f.loader});
+ it('folds valid drafts structurally, and quarantines a changed slot identity without changing accepted work',async()=>{
+  const f=fixture(),s=f.session(),base=envelope(f);await prepareSaveContent(base,f.catalog,{loader:f.loader});
   let preserved=0;const moved={...s,revision:1,payload:1},row=(session:ChallengeSession)=>JSON.stringify({version:1,base:base.saveRevision,session});
   const storage={readDrafts:async()=>[row(moved)],get:async()=>null,set:async()=>{},listRecovery:async()=>[],readRecovery:async()=>null,preserve:async()=>{preserved++;}};
   const recovered=await recoverChallengeDrafts(base,storage,f.catalog,{loader:f.loader});expect(recovered.profiles!.people.family.challenge!.paused[0].revision).toBe(1);

@@ -1,3 +1,10 @@
+import { createHash } from 'node:crypto';
+import { emptySave, parseSave } from '../../src/state/validation';
+import { migrateProfiles, encodeSave } from '../../src/state/profiles';
+import { addLearner } from '../../src/learn/learners';
+import { emptyChallenge, registerSaveContent, validChallengeSession, type SaveCatalog, type ChallengeSession } from '../../src/state/challenge';
+import { catalogManifest } from '../../src/state/catalogManifest';
+import { prepareSessionContent } from '../../src/state/sessionContent';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -43,7 +50,7 @@ export function fixtureSpec(model: ByteModelRow): FamilySpec<Pad> {
     return { id: bandNames[i], target, floor: 0, advanced: false };
   });
   return {
-    id: model.family, adapter: padAdapter, bands, maxRowBytes: model.rowBytes, requiresUnique: false, requiresTrace: false, hiddenInformation: false, sources: [],
+    id: model.family, adapter: {...padAdapter,engine:model.family}, bands, maxRowBytes: model.rowBytes, requiresUnique: false, requiresTrace: false, hiddenInformation: false, sources: [],
     provenance: { source: 'original', note: 'Sizing fixture only.' }, review: { ids: [], complete: false },
     generate(seed: number, band: BandQuota): DescriptorCore<Pad> {
       const overhead = `[${seed},"l${seed % 5}","t${seed % 8}","",["steps",1,1]]`.length;
@@ -52,6 +59,59 @@ export function fixtureSpec(model: ByteModelRow): FamilySpec<Pad> {
   };
 }
 const percentile = (values: number[], p: number) => [...values].sort((a, b) => a - b)[Math.min(values.length - 1, Math.floor(values.length * p))];
+
+/** Same structural parser used at startup, plus the single-session work deferred to Continue. */
+async function measurePausedLaunch(dirs:CatalogDirs,root:import('../../src/puzzles/bank').RootIndex,banks:ReturnType<typeof saveCatalogBanks>,metadata:string) {
+  const sha=(s:string)=>createHash('sha256').update(s).digest('hex');
+  const catalog:SaveCatalog={banks:new Map(banks.map(b=>[b.slot,b])),codecs:new Map(banks.map(b=>[`${b.engine}-v1`,{game:b.engine,cove:true,budget:{wrapper:700,draft:3396,undo:0,audit:0},validate:(s:ChallengeSession)=>s.payload===0,evaluate:()=>null,canStart:()=>true,extends:()=>true}])),contexts:new Set(),dares:new Map()};
+  const registrationStart=performance.now();registerSaveContent(catalog,catalogManifest(catalog));const registrationMs=performance.now()-registrationStart;
+  const sizes=new Map(banks.map(b=>[b.slot,readFileSync(join(dirs.content,'assets',`p${b.slot}.lipuzzle`)).byteLength]));
+  const bySize=(a:typeof banks[number],b:typeof banks[number])=>sizes.get(b.slot)!-sizes.get(a.slot)!;
+  const chosen=[...banks].sort(bySize).filter((b,i,all)=>all.findIndex(x=>x.engine===b.engine)===i).slice(0,8).sort((a,b)=>a.engine.localeCompare(b.engine));
+  if(chosen.length<8)throw new Error('Launch fixture needs eight families.');
+  const rootText=JSON.stringify(root), gc=(globalThis as {gc?:()=>void}).gc;
+  let assetReads=0;
+  const transport={read:async(asset:string)=>{assetReads++;return readFileSync(join(dirs.content,'assets',`${asset}.lipuzzle`),'utf8');}};
+  const session=(owner:string,i:number,index:number):ChallengeSession=>{
+    const b=chosen[i],row=readFileSync(join(dirs.content,'assets',`p${b.slot}.lipuzzle`),'utf8').split('\n')[index+1];
+    return {version:1,owner,game:b.engine,id:`${owner}-${i}`,ordinal:i+1,revision:0,puzzle:{bank:b.slot,puzzle:index,engine:b.engine,rules:b.rules,hash:sha(row)},codec:`${b.engine}-v1`,payload:0,selectedDares:[],partner:null,result:null,credited:false};
+  };
+  const paused=[];
+  for(const count of [1,8,56]){
+    let learning=addLearner(undefined,'A','a');for(const id of ['b','c','d'])learning=addLearner(learning,id,id);
+    const save=migrateProfiles({...emptySave(),learning});
+    save.cove={version:1,active:null,people:Object.fromEntries(Array.from({length:4},(_,i)=>[`cove-${i}`,{name:`Adult ${i}`,challenge:emptyChallenge(true)}]))};
+    let remaining=count,index=0;
+    for(const [owner,p] of [...Object.entries(save.profiles!.people),...Object.entries(save.cove.people)]){
+      const slots=Math.min(remaining,owner.startsWith('cove-')?4:8);
+      p.challenge={...emptyChallenge(),nextOrdinal:slots+1,paused:Array.from({length:slots},(_,i)=>session(owner,i,index++))};remaining-=slots;
+    }
+    const raw=encodeSave(save),timings:number[]=[];let peak=0,retained=0;
+    const reads=assetReads;
+    for(let i=0;i<12;i++){
+      gc?.();const baseline=process.memoryUsage().heapUsed,start=performance.now();
+      JSON.parse(metadata);JSON.parse(rootText);parseSave(raw);
+      timings.push(performance.now()-start);peak=Math.max(peak,process.memoryUsage().heapUsed-baseline);
+      gc?.();retained=Math.max(retained,process.memoryUsage().heapUsed-baseline);
+    }
+    paused.push({sessions:count,envelopeBytes:Buffer.byteLength(raw),structureP50Ms:percentile(timings,0.5),structureP95Ms:percentile(timings,0.95),assetReads:assetReads-reads,peakBeforeCollection:gc?peak:null,retainedHeapBytes:gc?retained:null,samples:12});
+  }
+  // Use the largest pack's exact row, including manifest load, row hashing and codec validation.
+  const largest=[...banks].sort(bySize)[0],i=chosen.findIndex(b=>b.slot===largest.slot);
+  const ref=session('family',i>=0?i:0,0),cold:number[]=[],warm:number[]=[];let peak=0,retained=0;
+  for(let n=0;n<12;n++){
+    const local={...catalog},loader=createBankLoader({root,transport});
+    gc?.();const baseline=process.memoryUsage().heapUsed,start=performance.now();
+    await prepareSessionContent(ref,local,{loader});
+    if(!validChallengeSession(ref,'family',local))throw new Error('Scale Continue failed.');
+    cold.push(performance.now()-start);peak=Math.max(peak,process.memoryUsage().heapUsed-baseline);
+    gc?.();retained=Math.max(retained,process.memoryUsage().heapUsed-baseline);
+    const warmStart=performance.now();await prepareSessionContent(ref,local,{loader});
+    if(!validChallengeSession(ref,'family',local))throw new Error('Scale warm Continue failed.');
+    warm.push(performance.now()-warmStart);loader.release();
+  }
+  return {paused,registrationMs,continue:{refsPerOpen:1,coldP50Ms:percentile(cold,0.5),coldP95Ms:percentile(cold,0.95),warmP95Ms:percentile(warm,0.95),peakBeforeCollection:gc?peak:null,retainedHeapBytes:gc?retained:null,samples:12},budgets:{structureP95Ms:150,continueColdP95Ms:250,continueWarmP95Ms:100,decodedBytes:BANK_CAPS.decodedBytes}};
+}
 
 export async function measureScale(options: { dirs?: CatalogDirs; keep?: boolean; samples?: number; models?: readonly ByteModelRow[]; verify?: boolean } = {}) {
   const base = mkdtempSync(join(tmpdir(), 'puzzle-scale-'));
@@ -83,6 +143,7 @@ export async function measureScale(options: { dirs?: CatalogDirs; keep?: boolean
     launchGc?.();const launchLive=process.memoryUsage().heapUsed-launchBaseline;
     for(let i=0;i<100;i++){const started=performance.now();JSON.parse(launchText);launchParse.push(performance.now()-started);}
     if(!launchParsed)throw new Error('Missing parsed metadata.');
+    const pausedLaunch=await measurePausedLaunch(dirs,root,saveFragment,launchText);
     const transport = { read: async (asset: string) => readFileSync(join(dirs.content, 'assets', `${asset}.lipuzzle`), 'utf8') };
     const families2 = [...families.values()], samples = options.samples ?? 200;
     const gc = (globalThis as { gc?: () => void }).gc;
@@ -123,7 +184,7 @@ export async function measureScale(options: { dirs?: CatalogDirs; keep?: boolean
       entries, modelEntries: modelEntries(), packs: packCount, slotsFree: BANK_CAPS.slots - packCount, packBytes, catalogBytes: root.families.reduce((n, f) => n + f[5], 0), buildMs,
       rootBytes, largestFamilyBytes: Math.max(...familyBytes), familyCount: root.families.length, modelIssues,
       saveFragmentBytes,
-      launch: {saveMetadataBytes:saveFragmentBytes,aggregateEagerBytes:rootBytes+saveFragmentBytes,firstParseMs,parseP95Ms:percentile(launchParse,0.95),liveHeapBytes:launchGc?launchLive:null,transientHeapBytes:launchGc?launchTransient:null},
+      launch: {...pausedLaunch,saveMetadataBytes:saveFragmentBytes,aggregateEagerBytes:rootBytes+saveFragmentBytes,firstParseMs,parseP95Ms:percentile(launchParse,0.95),liveHeapBytes:launchGc?launchLive:null,transientHeapBytes:launchGc?launchTransient:null},
       memory: { largestPackBytes: largest.map(l => l[1][3]), peakAddedHeap, peakBeforeCollection, gcAvailable: !!gc },
       timingMs: { manifestP95: percentile(manifestOpen, 0.95), coldP50: percentile(cold, 0.5), coldP95: percentile(cold, 0.95), warmP95: percentile(warm, 0.95), samples },
       verify: verified ? { errors: verified.errors.length, firstErrors: verified.errors.slice(0, 5), replayed: verified.stats.replayed, botRuns: verified.stats.botRuns } : null,

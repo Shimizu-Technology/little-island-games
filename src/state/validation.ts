@@ -1,5 +1,5 @@
-import { assertContentLive, prepareSessionContent, type ContentOptions } from './sessionContent';
-import { saveCatalog } from './challenge';
+import { assertContentLive, prepareSaveContent, type ContentOptions } from './sessionContent';
+import { saveCatalog, validChallengeSession } from './challenge';
 import '../challenge/catalog';
 import { defaultComfort, type Comfort } from '../challenge/offers';
 import { validCove, type CovePeople } from './covePeople';
@@ -372,14 +372,15 @@ export function withinSaveLimit(raw: string): boolean {
   }
   return true;
 }
-/** Storage/import boundary: resolve only referenced content before the synchronous validators run. */
+/** Explicit integrity audit, separate from structural storage/import/export validation. */
 export async function parseSaveWithContent(raw: string, options: ContentOptions = {}): Promise<Save> {
-  if(!withinSaveLimit(raw))throw new Error('This backup is too large.');
-  let value:unknown;
-  try {value=JSON.parse(raw);}catch {return parseSave(raw);}
-  await prepareSessionContent(value,saveCatalog,options);
+  const save=parseSave(raw);
+  await prepareSaveContent(save,saveCatalog,options);
   assertContentLive(options);
-  return parseSave(raw);
+  for(const p of [...Object.values(save.profiles?.people??{}),...Object.values(save.cove?.people??{})]){
+    for(const session of p.challenge?.paused??[])if(!validChallengeSession(session,session.owner,saveCatalog,session.owner.startsWith('cove-')))throw new Error('This paused puzzle could not be verified. Your saved work is kept.');
+  }
+  return save;
 }
 export function parseSave(raw: string): Save {
   if (!withinSaveLimit(raw)) throw new Error("This backup is too large.");

@@ -49,21 +49,30 @@ export const dareBits = (raw: unknown) => {
 };
 const encodeDares = (bits: number[]) => bits.some(Boolean) ? pack(bits,1) : '';
 export const challengeLimit = (cove = false) => cove ? 72_000 : 104_000;
-function validRef(v: unknown, catalog: SaveCatalog, cove = false): v is PuzzleRef {
+function validRef(v: unknown, catalog: SaveCatalog, cove = false, structural = false): v is PuzzleRef {
   if (!plain(v) || !exactKeys(v,['bank','puzzle','engine','rules','hash']) || !uint(v.bank,511) || !uint(v.puzzle,1023) || !asciiId(v.engine) || !uint(v.rules,65535) || !v.rules || !hashId(v.hash)) return false;
   const bank = catalog.banks.get(v.bank);
-  return !!bank && v.puzzle < bankSize(bank) && (!cove || !!bank?.cove) && bank?.engine === v.engine && bank.rules === v.rules && sessionHash(bank,v.puzzle,catalog) === v.hash;
+  return !!bank && v.puzzle < bankSize(bank) && (!cove || !!bank?.cove) && bank?.engine === v.engine && bank.rules === v.rules && (structural && packedBank(bank) || sessionHash(bank,v.puzzle,catalog) === v.hash);
+}
+/** Stored packed slots stay inert until Continue; no content I/O or engine replay at load. */
+export function validStoredChallengeSession(v: unknown, owner: string, catalog = saveCatalog, cove = false): v is ChallengeSession {
+  return checkSession(v,owner,catalog,cove,true);
 }
 export function validChallengeSession(v: unknown, owner: string, catalog = saveCatalog, cove = false): v is ChallengeSession {
-  if (!plain(v) || !exactKeys(v,['version','owner','game','id','ordinal','revision','puzzle','codec','payload','selectedDares','partner','result','credited']) || v.version !== 1 || v.owner !== owner || realTimeArcade.has(v.game as string) || !asciiId(v.game) || !asciiId(v.id,100) || !uint(v.ordinal,2147483646) || !v.ordinal || !uint(v.revision,2147483647) || !asciiId(v.codec) || !validRef(v.puzzle,catalog,cove) || v.puzzle.engine !== v.game || !(v.partner === null || asciiId(v.partner,40) && v.partner !== owner) || typeof v.credited !== 'boolean' || !Array.isArray(v.selectedDares) || v.selectedDares.length > 3 || new Set(v.selectedDares).size !== v.selectedDares.length || !v.selectedDares.every(slot => {
+  return checkSession(v,owner,catalog,cove,false);
+}
+function checkSession(v: unknown, owner: string, catalog: SaveCatalog, cove: boolean, structural: boolean): v is ChallengeSession {
+  if (!plain(v) || !exactKeys(v,['version','owner','game','id','ordinal','revision','puzzle','codec','payload','selectedDares','partner','result','credited']) || v.version !== 1 || v.owner !== owner || realTimeArcade.has(v.game as string) || !asciiId(v.game) || !asciiId(v.id,100) || !uint(v.ordinal,2147483646) || !v.ordinal || !uint(v.revision,2147483647) || !asciiId(v.codec) || !validRef(v.puzzle,catalog,cove,structural) || v.puzzle.engine !== v.game || !(v.partner === null || asciiId(v.partner,40) && v.partner !== owner) || typeof v.credited !== 'boolean' || !Array.isArray(v.selectedDares) || v.selectedDares.length > 3 || new Set(v.selectedDares).size !== v.selectedDares.length || !v.selectedDares.every(slot => {
     const dare = uint(slot,4095) ? catalog.dares.get(slot) : undefined;
     return !!dare && dare.bank === (v.puzzle as PuzzleRef).bank && dare.puzzle === (v.puzzle as PuzzleRef).puzzle;
   }) || jsonBytes(v) > 4096) return false;
   const codec = catalog.codecs.get(v.codec); if (!codec || codec.game !== v.game || cove && !codec.cove) return false;
   try {
     const session = v as ChallengeSession;
-    if (!codec.validate(session)) return false;
-    const result = codec.evaluate(session);
+    // Inline authored codecs are already resident; packed payload replay waits for exact content.
+    const deferred = structural && packedBank(catalog.banks.get(session.puzzle.bank)!);
+    if (!deferred && !codec.validate(session)) return false;
+    const result = deferred ? session.result : codec.evaluate(session);
     if (JSON.stringify(result) !== JSON.stringify(v.result) || v.credited && result === null) return false;
     if (result === null) return true;
     if (!plain(result) || !exactKeys(result,['event','awards','dares','cost','solution']) || !['helped','together','independent'].includes(result.event) || !uint(result.awards,3) || result.awards & ~(bankAward(catalog.banks.get(v.puzzle.bank)!,v.puzzle.puzzle) ?? 0) || !Array.isArray(result.dares) || new Set(result.dares).size !== result.dares.length || !result.dares.every(slot => (v.selectedDares as number[]).includes(slot)) || !(result.cost === null || uint(result.cost)) || !(result.solution === null || hashId(result.solution))) return false;
@@ -88,7 +97,7 @@ export function validChallengeProgress(v: unknown, owner: string, catalog = save
   }
   const dares = cove ? v.dares === '' ? [] : null : dareBits(v.dares);
   if (!dares || dares.some((n,i) => n && !catalog.dares.has(i))) return false;
-  if (!Array.isArray(v.paused) || v.paused.length > (cove ? 4 : 8) || !v.paused.every(s => validChallengeSession(s,owner,catalog,cove) && s.ordinal < (v.nextOrdinal as number)) || new Set(v.paused.map(s => s.game)).size !== v.paused.length || new Set(v.paused.map(s => s.ordinal)).size !== v.paused.length || !v.paused.every((s,i) => !i || (v.paused as ChallengeSession[])[i-1].game < s.game)) return false;
+  if (!Array.isArray(v.paused) || v.paused.length > (cove ? 4 : 8) || !v.paused.every(s => validStoredChallengeSession(s,owner,catalog,cove) && s.ordinal < (v.nextOrdinal as number)) || new Set(v.paused.map(s => s.game)).size !== v.paused.length || new Set(v.paused.map(s => s.ordinal)).size !== v.paused.length || !v.paused.every((s,i) => !i || (v.paused as ChallengeSession[])[i-1].game < s.game)) return false;
   const ref = (bank: unknown, puzzle: unknown) => uint(bank,511) && uint(puzzle,1023) && !!catalog.banks.get(bank) && puzzle < bankSize(catalog.banks.get(bank)!) && (!cove || !!catalog.banks.get(bank)?.cove);
   if (!tupleArray(v.bests,cove ? 128 : 256,3) || !uniqueKeys(v.bests,2) || !v.bests.every(([b,p,n]) => ref(b,p) && uint(n)) || !tupleArray(v.recent,cove ? 32 : 64,2) || !uniqueKeys(v.recent,2) || !v.recent.every(([b,p]) => ref(b,p)) || !tupleArray(v.cursors,cove ? 64 : 128,2) || !uniqueKeys(v.cursors,1) || !v.cursors.every(([b,n]) => uint(b,511) && catalog.banks.has(b) && (!cove || catalog.banks.get(b)!.cove) && uint(n)) || !tupleArray(v.practice,cove ? 16 : 64,3) || !uniqueKeys(v.practice,1) || !v.practice.every(([ctx,helped,clean]) => asciiId(ctx,16) && catalog.contexts.has(ctx) && uint(helped) && uint(clean)) || !tupleArray(v.signals,cove ? 8 : 32,5) || !uniqueKeys(v.signals,1) || !v.signals.every(([ctx,recent,failures,rating,dismissed]) => asciiId(ctx,16) && catalog.contexts.has(ctx) && typeof recent === 'string' && /^[chf]{0,5}$/.test(recent) && uint(failures,999) && ['easy','right','hard',null].includes(rating as null) && typeof dismissed === 'boolean') || !tupleArray(v.solutions,cove ? 16 : 32,3) || !uniqueKeys(v.solutions,3) || !v.solutions.every(([b,p,h]) => ref(b,p) && hashId(h))) return false;
   return v.choice === null || Array.isArray(v.choice) && v.choice.length === 3 && typeof v.choice[0] === 'string' && [...catalog.banks.values()].some(b => b.engine === (v.choice as unknown[])[0] && (!cove || b.cove)) && ['deep-water','endless'].includes(v.choice[1]) && uint(v.choice[2],6) && v.choice[2] > 0;

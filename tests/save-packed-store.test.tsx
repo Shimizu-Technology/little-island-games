@@ -28,17 +28,19 @@ it('Store cold hydration, backup and restore retain every paused session',async(
  expect(store.recovery).toBeNull();expect(store.save.profiles!.people.family.challenge!.paused).toHaveLength(8);
  expect(store.save.cove!.people['cove-3'].challenge.paused).toHaveLength(4);expect(db.preserved).toContain(original);
 });
-it('Store read failure keeps exact bytes and retries instead of starting blank',async()=>{
+it('Store loads and exports with unread content; only Continue waits, and retry reopens the exact slot',async()=>{
  const f=setup(80),original=db.raw!,asset=f.root.families[0][1],text=f.files.get(asset)!;f.files.delete(asset);
- await mount();expect(store.recovery).toMatch(/Could not read/);expect(db.raw).toBe(original);expect(db.preserved).toContain(original);
- f.files.set(asset,text);await act(async()=>{await store.retry();});expect(store.recovery).toBeNull();expect(encodeSave(store.save)).toBe(original);
+ await mount();expect(store.recovery).toBeNull();expect(db.raw).toBe(original);expect(f.reads).toEqual([]);expect(await store.backup()).toBe(original);
+ const owner=store.save.learning!.active,slot=store.save.challenge!.paused[0],guard={owner,game:slot.game,epoch:store.epoch,id:slot.id,revision:slot.revision};
+ await act(async()=>{expect(await store.challengeOpen(guard)).toMatchObject({ok:false,kind:'content-unavailable'});});
+ f.files.set(asset,text);await act(async()=>{expect(await store.challengeOpen(guard)).toEqual({ok:true});});expect(encodeSave(store.save)).toBe(original);
 });
-it('a failed import keeps the accepted save playable and preserves the incoming bytes',async()=>{
+it('import of structurally valid unopened work succeeds without assets and preserves both saves',async()=>{
  const f=setup(20),accepted=db.raw!;await mount();const incoming=envelope(f);
  for(const p of Object.values(incoming.profiles!.people))for(const s of p.challenge!.paused)s.puzzle=f.session(s.owner,Number(s.game.slice(-1)),70).puzzle;
  const raw=encodeSave(projectProfile(incoming)),asset=f.root.families[0][1];f.loader.release();f.files.delete(asset);const epoch=store.epoch;
- await act(async()=>{await expect(store.restore(raw)).rejects.toMatchObject({kind:'read-failed'});});
- expect(store.recovery).toBeNull();expect(store.epoch).toBe(epoch);expect(encodeSave(store.save)).toBe(accepted);expect(db.raw).toBe(accepted);expect(db.preserved).toContain(raw);
+ await act(async()=>{await store.restore(raw);});
+ expect(store.recovery).toBeNull();expect(store.epoch).toBeGreaterThan(epoch);expect(store.save.challenge!.paused[0].puzzle.puzzle).toBe(70);expect(db.raw).toBe(encodeSave(store.save));expect(db.preserved).toContain(accepted);expect({...JSON.parse(db.raw!),saveRevision:JSON.parse(raw).saveRevision}).toEqual(JSON.parse(raw));expect(f.reads).toEqual([]);
 });
 it('a delayed start cannot publish after a person switch',async()=>{
  const f=setup(30),empty=envelope(f);for(const p of [...Object.values(empty.profiles!.people),...Object.values(empty.cove!.people)])p.challenge!.paused=[];
