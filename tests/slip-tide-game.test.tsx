@@ -178,9 +178,15 @@ describe('board rules visible in the source', () => {
   it('routes both swipe and arrows through the one engine and hides shortest length until a win', () => {
     const source = readFileSync('src/learn/games/slip-tide/view.tsx', 'utf8');
     expect(source).toContain('swipeBoard');
-    expect(source).toContain('Could you do it in');
-    expect(source.indexOf('Could you do it in')).toBeGreaterThan(source.indexOf('finishedBoard(state)'));
+    expect(source).toContain('There is a way in');
+    expect(source.indexOf('There is a way in')).toBeGreaterThan(source.indexOf('finishedBoard(state)'));
     expect(readFileSync('src/learn/games/slip-tide/field.tsx', 'utf8')).toContain('accessibilityLabel={`Slide all crabs');
+  });
+  it('keeps the board controls still on a win and bounds each hint slice by time', () => {
+    const view = readFileSync('src/learn/games/slip-tide/view.tsx', 'utf8'), field = readFileSync('src/learn/games/slip-tide/field.tsx', 'utf8');
+    expect(view.match(/cheer\(/g)).toHaveLength(1);
+    expect(view).toContain("next.index === next.puzzles.length - 1) cheer('big'");
+    expect(field).toContain('Date.now() - started < HINT_BUDGET_MS');
   });
   it('does not import the slicing-free route search into a frame callback', () => {
     expect(readFileSync('src/learn/games/slip-tide/field.tsx', 'utf8')).not.toMatch(/shortestRoute\(/);
