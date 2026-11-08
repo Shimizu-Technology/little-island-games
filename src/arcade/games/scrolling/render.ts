@@ -7,7 +7,7 @@ import { RAMP_DEPTH, RAMP_SECTIONS, surfaceProfile, surfaceSpan } from "../lagoo
 import { CAMERA_SLOT, TRACK_WIDTH, projectTrack, trackSprite } from "../lagoon-run/camera";
 import { runnerFrame, RUN_POSES, RUN_EXTRA } from "./character";
 import { SCENE_COUNT, SCENE_START } from "./environmentPoses";
-export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA = INCLINE_START + 5 * INCLINE_STRIDE, CANOE_START = RUN_EXTRA + 8, NEAR_START=312, RUN_SLOTS = NEAR_START+6;
+export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA = INCLINE_START + 5 * INCLINE_STRIDE, CANOE_START = RUN_EXTRA + 8, NEAR_START=37, RUN_SLOTS = CANOE_START+15*4+1;
 export function runPoses(s: RunState, reduced = false): SpritePose[] {
   "worklet";
   const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=visualRunHeight(runnerHeight(s))*85;
