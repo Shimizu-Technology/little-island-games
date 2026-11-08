@@ -136,13 +136,13 @@ const commitFixture: Parameters<typeof useInteraction>[0]["onCommit"] = (index, 
   committed++; committedId = proposal.id; committedContact = proposal.contact;
   current.finish(index, true, proposal, "committed", undefined, token);
 };
-function Probe({ scene, layout = true, designing = false }: { scene: Scene; layout?: boolean; designing?: boolean }) {
+function Probe({ scene, layout = true, designing = false, reduced = false }: { scene: Scene; layout?: boolean; designing?: boolean; reduced?: boolean }) {
   const interaction = useInteraction({
     scene,
     building: fixtureBuilding,
     viewport: fixtureViewport,
     initialCamera: identityCamera,
-    reduced: false,
+    reduced,
     designing,
     onCameraChange: cameraChange,
     onPickup: (pickup) => {
@@ -837,4 +837,17 @@ describe('H2 capture handoff and synthetic moves', () => {
   expect(committed).toBe(1);
   await act(async () => renderer.unmount()); vi.useRealTimers();
  });
+});
+
+it('H2 reduced motion commits synthetic travel immediately, without a hop or delayed save', async () => {
+ let renderer!: TestRenderer.ReactTestRenderer;
+ const scene=fixture();
+ await act(async()=>{renderer=TestRenderer.create(<Probe scene={scene} reduced/>);});
+ const {resolve}=await import('../src/home/scene/resolve');
+ const p=resolve(scene.rooms.home,scene.entities[entity.id],roomPoint(200,486),{scale:1,release:true});
+ expect(current.animateProposal(p)).toBe(true);
+ expect(committed).toBe(1);
+ expect(current.slots.get()[0].x).toBe(current.slots.get()[0].targetX);
+ expect(current.slots.get()[0].y).toBe(current.slots.get()[0].targetY);
+ await act(async()=>renderer.unmount());vi.useRealTimers();
 });

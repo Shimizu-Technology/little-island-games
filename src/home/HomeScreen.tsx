@@ -609,7 +609,7 @@ export function HomeScreen({
   };
   const moveAccessible = useCallback(
     (id: string, action: string) => {
-      const { scene, store } = live.current;
+      const { scene } = live.current;
       const entity = scene.entities[id];
       if (!entity || (!live.current.designing && entity.item && !capabilityOf(entity.item.item).moveInPlay)) return;
       if (action === "store") {
@@ -618,7 +618,7 @@ export function HomeScreen({
           intent: "staging",
           release: true,
         });
-        if (store.commitProposal(proposal)) restoreFocus(id);
+        runtime.current!.animateProposal(proposal);
         return;
       }
       const delta = (

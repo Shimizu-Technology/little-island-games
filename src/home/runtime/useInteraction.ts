@@ -240,7 +240,7 @@ export function useInteraction({
           Math.abs(origin.x + entity.contact.x - slot.targetX) < 0.01 &&
           Math.abs(origin.y + entity.contact.y - slot.targetY) < 0.01 &&
           entity.base === (slot.proposal?.base ?? slot.subject?.base);
-        const restoredTray = !slot.proposal && entity?.attachment.kind === "staging";
+        const restoredTray = entity?.attachment.kind === "staging";
         if (sameContact || restoredTray) return { ...slot, revision: scene.revision };
         // A later transaction may displace the landing or finish a held action.
         // Continue from the visible transform toward that authoritative resting state.
@@ -369,8 +369,8 @@ export function useInteraction({
               phase: "settling",
               releaseX: s.settleAt && committed ? s.releaseX : s.x,
               releaseY: s.settleAt && committed ? s.releaseY : s.y,
-              targetX: committed && proposal ? origin.x + proposal.contact.x : s.sourceX,
-              targetY: committed && proposal ? origin.y + proposal.contact.y : s.sourceY,
+              targetX: committed && proposal ? s.synthetic && proposal.kind === "staging" ? s.targetX : origin.x + proposal.contact.x : s.sourceX,
+              targetY: committed && proposal ? s.synthetic && proposal.kind === "staging" ? s.targetY : origin.y + proposal.contact.y : s.sourceY,
               proposal,
               consumed: committed && proposal?.kind === "mouth" && !restEntity,
               restId: restEntity?.id ?? (committed && proposal ? proposal.id : (s.restId ?? s.id)),
@@ -1084,6 +1084,9 @@ export function useInteraction({
       runOnJS(onClear)(index);
       return;
     }
+    if (!cancel && slot?.proposal && onTrace) runOnJS(onTrace)({ type: "release", at: eventTime(), id: slot.id,
+      kind: slot.proposal.kind, target: slot.proposal.target, finger: { x: slot.pointerX, y: slot.pointerY },
+      anchor: { x: slot.x, y: slot.y }, contact: slot.proposal.contact, room: slot.proposal.room });
     send({
       type: cancel ? "cancel" : "up",
       pointer,
@@ -1101,14 +1104,17 @@ export function useInteraction({
     const origin = roomOrigin(roomIds.indexOf(subject.room), building);
     const dest = roomOrigin(roomIds.indexOf(proposal.room), building);
     const from = start ?? { x: origin.x + subject.contact.x, y: origin.y + subject.contact.y };
+    const end = proposal.kind === "staging"
+      ? screenToRoom(screenPoint(112, viewport.height - 48), camera.get(), housePoint(0, 0))
+      : { x: dest.x + proposal.contact.x, y: dest.y + proposal.contact.y };
     const generation = captureSequence.get() + 1;
     captureSequence.set(generation);
     const slot: DragSlot = { ...emptyDragSlot(), id: subject.id, subject, pointer: -1000 - index,
       generation, epoch: epoch.get(), phase: "settling", synthetic: true, catalog: !!subjectOverride,
       sourceX: from.x, sourceY: from.y, releaseX: from.x, releaseY: from.y, x: from.x, y: from.y,
-      targetX: dest.x + proposal.contact.x, targetY: dest.y + proposal.contact.y,
+      targetX: end.x, targetY: end.y,
       proposal, settleAt: eventTime(), duration: Math.min(400, Math.max(240,
-        Math.hypot(dest.x + proposal.contact.x - from.x, dest.y + proposal.contact.y - from.y) * camera.get().a * 1.2)),
+        Math.hypot(end.x - from.x, end.y - from.y) * camera.get().a * 1.2)),
     };
     slots.set(current.map((s, i) => i === index ? slot : s));
     onPickup({ id: subject.id, slot: index, scene: { ...prepared.get(), entities: { ...prepared.get().entities, [subject.id]: subject } },
