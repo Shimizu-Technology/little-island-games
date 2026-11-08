@@ -378,7 +378,8 @@ describe("actual runtime callback sequencing", () => {
     expect(committed).toBe(0);
     vi.advanceTimersByTime(200);
     harness.frames[0]({ timeSincePreviousFrame: 16.67 });
-    expect(current.slots.get()[0].x).not.toBe(released.x);
+    // Exact open-floor placement keeps x; only the contained y needs travel.
+    expect(current.slots.get()[0].x).toBe(released.x);
     expect(current.slots.get()[0].y).not.toBe(released.y);
     expect(committed).toBe(0);
     vi.advanceTimersByTime(50);

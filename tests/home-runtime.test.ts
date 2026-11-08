@@ -176,19 +176,19 @@ describe("central silhouette picking", () => {
     const box = (left: number, top: number, width: number, height: number) => ({ kind: "box" as const, left, top, width, height });
     // A cup held in front of its owner wins on its own paint; the same cup behind the owner stays hidden.
     const inFront = [
-      { id: "actor", depth: 500, span: 120, shape: box(0, 0, 120, 220) },
-      { id: "cup", depth: 500.5, span: 12, shape: box(70, 90, 12, 12) },
+      { id: "actor", depth: 500, paintOrder: 1, span: 120, shape: box(0, 0, 120, 220) },
+      { id: "cup", depth: 500.5, paintOrder: 2, span: 12, shape: box(70, 90, 12, 12) },
     ];
     expect(pickEntity(inFront, roomPoint(75, 95), 1)).toBe("cup");
     expect(pickEntity(inFront, roomPoint(20, 95), 1)).toBe("actor");
     const behind = [
-      { id: "actor", depth: 500, span: 120, shape: box(0, 0, 120, 220) },
-      { id: "cup", depth: 1, span: 12, shape: box(70, 90, 12, 12) },
+      { id: "actor", depth: 500, paintOrder: 1, span: 120, shape: box(0, 0, 120, 220) },
+      { id: "cup", depth: 1, paintOrder: 0, span: 12, shape: box(70, 90, 12, 12) },
     ];
     expect(pickEntity(behind, roomPoint(75, 95), 1)).toBe("actor");
     const siblings = [
-      { id: "a", depth: 1, span: 12, shape: box(0, 0, 12, 12) },
-      { id: "b", depth: 2, span: 12, shape: box(20, 0, 12, 12) },
+      { id: "a", depth: 1, paintOrder: 0, span: 12, shape: box(0, 0, 12, 12) },
+      { id: "b", depth: 2, paintOrder: 1, span: 12, shape: box(20, 0, 12, 12) },
     ];
     expect(pickEntity(siblings, roomPoint(15, 6), 1)).toBe("a");
     expect(pickEntity(siblings, roomPoint(18, 6), 1)).toBe("b");

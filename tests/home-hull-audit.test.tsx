@@ -38,6 +38,35 @@ function inside(shape: HitShape, x: number, y: number): boolean {
   return !(pos && neg);
 }
 describe.skipIf(!out)("hull raster audit", () => {
+  it("keeps raster coverage when rectangular catalog art is mirrored or rotated", () => {
+    const dir = join(out!, "transforms"); mkdirSync(dir, { recursive: true });
+    const report: Record<string, unknown>[] = [];
+    for (const id of ["shelf", "fridge", "armchair", "stove", "tv", "blocks", "aquarium", "computer-desk"] as const) for (const active of [false, true]) {
+      let baseline = 0;
+      for (const rotation of [0, 90, 180, 270] as const) for (const mirrored of [false, true]) {
+        const props = { size: 150, active, rotation, mirrored };
+        const svg = renderToStaticMarkup(moreCatalog[id] ? <MoreItemArt id={id} {...props} /> : <ItemArt item={id} {...props} />).replaceAll("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
+        const base = join(dir, `${id}-${Number(active)}-${rotation}-${Number(mirrored)}`);
+        writeFileSync(`${base}.svg`, svg);
+        execFileSync("rsvg-convert", ["-w", "200", "-h", "200", "-b", "none", "-o", `${base}.png`, `${base}.svg`]);
+        execFileSync("magick", [`${base}.png`, "-alpha", "extract", "-depth", "8", `gray:${base}.raw`]);
+        const alpha = readFileSync(`${base}.raw`);
+        const shapes = itemShapes({ ...instance("x", id, 5, 5), rotation, mirrored, powered: active }, 150);
+        let painted = 0, missed = 0;
+        for (let y = 0; y < 200; y++) for (let x = 0; x < 200; x++) {
+          if (alpha[y * 200 + x] <= 200) continue;
+          painted++;
+          if (!shapes.some((shape) => inside(shape, (x + .5) / 200 * 150 - 75, (y + .5) / 200 * 150 - 127.5))) missed++;
+        }
+        const fraction = missed / painted;
+        if (rotation === 0 && !mirrored) baseline = fraction;
+        report.push({ id, active, rotation, mirrored, painted, missed: fraction, baseline });
+        writeFileSync(join(dir, "coverage.json"), JSON.stringify(report, null, 1));
+        expect(fraction, `${id}/${active}/${rotation}/${mirrored}`).toBeLessThanOrEqual(baseline + .005);
+      }
+    }
+    expect(report).toHaveLength(128);
+  }, 600000);
   it("compares every hull with its painted alpha", () => {
     mkdirSync(out!, { recursive: true });
     const report: Record<string, unknown>[] = [];

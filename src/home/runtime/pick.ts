@@ -1,7 +1,7 @@
-import { paintDepth, restingVisible } from "./group";
+import { paintDepth, paintEntries, restingVisible } from "./group";
 import type { Bounds, HitShape, RoomPoint, Scene } from "../scene/types";
-import { unionBounds } from "../art/silhouettes";
-export type PickProxy = { id: string; shape: HitShape; depth: number; span: number };
+import { itemFrontShapes, unionBounds } from "../art/silhouettes";
+export type PickProxy = { id: string; shape: HitShape; depth: number; paintOrder: number; span: number };
 function translated(shape: HitShape, x: number, y: number): HitShape {
   switch (shape.kind) {
     case "box":
@@ -19,17 +19,16 @@ export function prepareHits(scene: Scene): Record<string, PickProxy[]> {
   return Object.fromEntries(
     Object.entries(scene.rooms).map(([room, index]) => [
       room,
-      [...new Set(index.hitProxies.map((proxy) => proxy.id))]
-        .filter((id) => scene.entities[id] && restingVisible(scene.entities[id], scene))
-        .flatMap((id) => {
-          const e = scene.entities[id];
-          const shapes: HitShape[] = e.shapes?.length
-            ? e.shapes.map((s) => translated(s, e.contact.x, e.contact.y))
-            : index.hitProxies.filter((p) => p.id === id).map((p): HitShape => ({ kind: "box", ...p.bounds }));
+      paintEntries(Object.values(index.entities).filter((e) => restingVisible(e, scene)), scene)
+        .flatMap(({ entity: e, front }, paintOrder) => {
+          const shapes: HitShape[] = front && e.item
+            ? itemFrontShapes(e.item, e.bounds.width).map((s) => translated(s, e.contact.x, e.contact.y))
+            : e.shapes?.length
+              ? e.shapes.map((s) => translated(s, e.contact.x, e.contact.y))
+              : index.hitProxies.filter((p) => p.id === e.id).map((p): HitShape => ({ kind: "box", ...p.bounds }));
           const outline: Bounds = unionBounds(shapes) ?? { left: 0, top: 0, width: 0, height: 0 };
-          // Ground art always paints first, whatever its floor row, so it can never be in front.
-          const depth = paintDepth(e, scene) - (e.item?.layer === "ground" ? 100000 : 0);
-          return shapes.map((shape) => ({ id, shape, depth, span: Math.min(outline.width, outline.height) }));
+          const depth = paintDepth(e, scene) + (front ? 2 : 0) - (e.item?.layer === "ground" ? 100000 : 0);
+          return shapes.map((shape) => ({ id: e.id, shape, depth, paintOrder, span: Math.min(outline.width, outline.height) }));
         }),
     ])
   );
@@ -73,29 +72,24 @@ export function shapeDistance(shape: HitShape, x: number, y: number): number {
  */
 export function pickEntity(proxies: readonly PickProxy[], point: RoomPoint, scale: number, movable?: Record<string, boolean>): string | undefined {
   "worklet";
-  let exact: PickProxy | undefined, exactDistance = Infinity;
+  let exact: PickProxy | undefined;
   let near: PickProxy | undefined, nearDistance = Infinity;
   for (const p of proxies) {
     const distance = shapeDistance(p.shape, point.x, point.y);
     if (distance === 0) {
-      const box = p.shape.kind === "ellipse" ? { x: p.shape.x, y: p.shape.y } : p.shape.kind === "capsule" ? { x: (p.shape.ax + p.shape.bx) / 2, y: (p.shape.ay + p.shape.by) / 2 } : undefined;
-      const middle = box ? Math.hypot(point.x - box.x, point.y - box.y) : 0;
-      if (!exact || p.depth > exact.depth || (p.depth === exact.depth && (middle < exactDistance || (middle === exactDistance && p.id < exact.id)))) {
-        exact = p;
-        exactDistance = middle;
-      }
+      if (!exact || p.paintOrder > exact.paintOrder) exact = p;
       continue;
     }
     if (movable && movable[p.id] === false) continue;
     const reach = Math.min(8 / scale, Math.max(0, 22 / scale - p.span / 2));
     if (distance > reach) continue;
-    if (!near || distance < nearDistance || (distance === nearDistance && (p.depth > near.depth || (p.depth === near.depth && p.id < near.id)))) {
+    if (!near || distance < nearDistance || (distance === nearDistance && p.paintOrder > near.paintOrder)) {
       near = p;
       nearDistance = distance;
     }
   }
   if (exact && (!movable || movable[exact.id] !== false)) return exact.id;
-  if (near && (!exact || near.depth >= exact.depth)) return near.id;
+  if (near && (!exact || near.paintOrder >= exact.paintOrder)) return near.id;
   return exact?.id;
 }
 /** True when a point is on any of an entity's painted shapes, offset to where it is drawn now. */

@@ -133,6 +133,27 @@ const hulls: Record<string, Hull> = {
   clock: hull(130, ["e", 75, 65, 45, 45]),
 };
 
+/** Front-pass paint from SeatShape, in its 150-unit viewport. Other art has no front pass. */
+const beddingFront = (dy: number): Prim[] => [
+  ["p", 60, 67 + dy, 147, 67 + dy, 147, 96 + dy, 105, 104 + dy, 60, 98 + dy],
+  ["r", 5, 103 + dy, 142, 7], ["c", 10, 110 + dy, 10, 117 + dy, 3], ["c", 142, 110 + dy, 142, 117 + dy, 3],
+];
+const bathFront: Prim[] = [["p", 12, 76, 138, 76, 130, 121, 75, 138, 20, 121], ["r", 15, 70, 120, 14],
+  ["c", 30, 127, 30, 136, 3], ["c", 120, 127, 120, 136, 3]];
+const frontHulls: Record<string, Prim[]> = {
+  bed: beddingFront(0),
+  "bunk-bed": [...beddingFront(29), ...beddingFront(-31), ["c", 121, 65, 121, 143, 2], ["c", 138, 65, 138, 143, 2],
+    ...[86, 106, 126].map((y): Prim => ["c", 121, y, 138, y, 2])],
+  hammock: [["p", 57, 65, 148, 60, 148, 101, 100, 126, 57, 115], ["p", 22, 95, 57, 101, 100, 115, 100, 126, 27, 107]],
+  sofa: [["r", 58, 68, 74, 43], ["r", 7, 99, 136, 14], ["r", 129, 67, 15, 44]],
+  armchair: [["r", 23, 72, 16, 40], ["r", 111, 72, 16, 40]],
+  beanbag: [["p", 23, 95, 43, 101, 45, 119, 18, 122, 18, 104], ["p", 107, 101, 127, 95, 132, 104, 132, 122, 105, 119]],
+  bathtub: bathFront, "bubble-bath": bathFront,
+};
+export function itemFrontShapes(item: NonNullable<SceneEntity["item"]>, size: number): HitShape[] {
+  return (frontHulls[item.item] ?? []).map((prim) => rescale(prim, 150, size, item.mirrored !== (item.rotation >= 180)));
+}
+
 function hullOf(id: ItemId): Hull | undefined {
   return id.startsWith("sticker:") ? STICKER : hulls[id];
 }
@@ -144,8 +165,8 @@ function rescale(prim: Prim, box: number, size: number, flip: boolean): HitShape
   const y = (v: number) => (v + (150 - box) / 2) * scale - 0.85 * size;
   switch (prim[0]) {
     case "r": {
-      const left = flip ? 150 - prim[1] - prim[3] : prim[1];
-      return { kind: "box", left: x(left), top: y(prim[2]), width: prim[3] * scale, height: prim[4] * scale };
+      const left = Math.min(x(prim[1]), x(prim[1] + prim[3]));
+      return { kind: "box", left, top: y(prim[2]), width: prim[3] * scale, height: prim[4] * scale };
     }
     case "e":
       return { kind: "ellipse", x: x(prim[1]), y: y(prim[2]), rx: prim[3] * scale, ry: prim[4] * scale };
@@ -208,9 +229,22 @@ export function occluderBounds(shape: HitShape): Bounds | undefined {
       const k = Math.SQRT1_2;
       return { left: shape.x - shape.rx * k, top: shape.y - shape.ry * k, width: shape.rx * 2 * k, height: shape.ry * 2 * k };
     }
-    case "capsule":
-      // A thin leg never hides a hand. Only the middle of a broad bar counts.
-      return shape.r * 2 < 26 ? undefined : { left: b.left + shape.r * .3, top: b.top + shape.r * .3, width: b.width - shape.r * .6, height: b.height - shape.r * .6 };
+    case "capsule": {
+      // A capsule is convex: all four corners inside proves the entire rectangle is painted.
+      // An inset of its bounding box alone is not safe for diagonal bars.
+      if (shape.r * 2 < 26) return undefined;
+      const cx = (shape.ax + shape.bx) / 2, cy = (shape.ay + shape.by) / 2;
+      const vx = shape.bx - shape.ax, vy = shape.by - shape.ay, length = vx * vx + vy * vy;
+      for (let k = 1; k > 0; k -= .04) {
+        const halfW = b.width * k / 2, halfH = b.height * k / 2;
+        const corners = [[cx - halfW, cy - halfH], [cx + halfW, cy - halfH], [cx + halfW, cy + halfH], [cx - halfW, cy + halfH]];
+        if (corners.every(([x, y]) => {
+          const t = length ? Math.max(0, Math.min(1, ((x - shape.ax) * vx + (y - shape.ay) * vy) / length)) : 0;
+          return Math.hypot(x - shape.ax - vx * t, y - shape.ay - vy * t) <= shape.r;
+        })) return { left: cx - halfW, top: cy - halfH, width: halfW * 2, height: halfH * 2 };
+      }
+      return undefined;
+    }
     default: {
       // Shrink the bounding box about the centroid until every corner is inside.
       const n = shape.points.length / 2;

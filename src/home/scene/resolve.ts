@@ -310,19 +310,35 @@ function targetMove(index: RoomIndex, subject: SceneEntity, target: Target): Ent
   );
 }
 /** Open floor lands where the finger let go. The grid only decides what is legal. */
-function exactFloorMove(index: RoomIndex, subject: SceneEntity, best: EntityMove, point: RoomPoint, group: SceneEntity[], ctx: ResolveContext): EntityMove {
+function floorCellAllowed(index: RoomIndex, subject: SceneEntity, group: SceneEntity[], cell: GridCell, overlapProps = false): boolean {
+  "worklet";
+  const body = subject.body;
+  if (!body) return true;
+  if (cell.x < 0 || cell.y < 0 || cell.x + body.w > 16 || cell.y + body.h > (body.layer === "wall" ? 4 : 12)) return false;
+  for (let y = cell.y; y < cell.y + body.h; y++) for (let x = cell.x; x < cell.x + body.w; x++) {
+    if ((index.occupancy[`${body.layer}:${x}:${y}`] ?? []).some(
+      (id) => !group.some((e) => e.id === id) && !(overlapProps && index.entities[id]?.body?.small)
+    )) return false;
+  }
+  return true;
+}
+function exactFloorMove(index: RoomIndex, subject: SceneEntity, point: RoomPoint, group: SceneEntity[], ctx: ResolveContext): EntityMove | undefined {
   "worklet";
   const slot = subject.character?.slot;
-  if (slot === undefined && !(subject.body?.portable && !subject.children.length && subject.body.layer !== "wall")) return best;
-  // Only the finger's own patch of a legal cell counts as open floor. Anything else slides there.
-  const dx = point.x - best.contact.x, dy = point.y - best.contact.y;
-  const spanX = 37.5 * ((subject.body?.w ?? 1) - 1), spanY = 14.4 * ((subject.body?.h ?? 1) - 1);
-  if (!best.cell || Math.hypot(Math.max(0, dx - spanX, -dx), Math.max(0, dy - spanY, -dy)) > 21.2) return best;
+  if (slot === undefined && !(subject.body?.portable && !subject.children.length && subject.body.layer !== "wall")) return;
   const contact = slot !== undefined ? standingContact(point, slot) : roomPoint(Math.max(8, Math.min(792, point.x)), Math.max(350, Math.min(552, point.y)));
-  if (slot !== undefined && occludedFraction(translatedBounds(anchorsFor(slot, "stand", "front").bounds, contact), contact.y + 1, index.occlusionBands) > 0.25)
-    return best;
-  const exact: EntityMove = { ...best, contact, attachment: { kind: "floor", room: index.room, at: contact } };
-  return fitsGroup(index, subject, exact, group, ctx.avoidFurnitureOverlap) ? exact : best;
+  // The exact contact decides containment and visibility. The bounded grid cell only decides
+  // occupancy, including the legal floor strip above row zero and the room edges.
+  const y = Math.max(0, Math.min(12 - (subject.body?.h ?? 1), Math.round((contact.y - 386) / 14.4)));
+  const x = Math.max(0, Math.min((subject.body ? 16 : 20) - (subject.body?.w ?? 1), Math.round((contact.x - 43 - y * 1.5) / 37.5)));
+  const cell = gridCell(x, y);
+  if (!floorCellAllowed(index, subject, group, cell)) return;
+  if (slot !== undefined) {
+    if ((index.floor.find((location) => location.cell.x === x && location.cell.y === y)?.blockers ?? []).some((id) => !group.some((e) => e.id === id) && !index.entities[id]?.body?.underfoot)) return;
+    if (occludedFraction(translatedBounds(anchorsFor(slot, "stand", "front").bounds, contact), contact.y + 1, index.occlusionBands) > 0.25) return;
+  }
+  const exact = rootMove(subject, index.room, { kind: "floor", room: index.room, at: contact }, contact, slot !== undefined ? "stand" : subject.base, subject.facing, cell);
+  return fitsGroup(index, subject, exact, group, ctx.avoidFurnitureOverlap) ? exact : undefined;
 }
 function placedInRoom(index: RoomIndex, entity: SceneEntity): boolean {
   "worklet";
@@ -489,21 +505,10 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
   const wall = subject.body?.layer === "wall";
   const allowed = (cell: GridCell, overlapProps = false): boolean => {
     "worklet";
-    const body = subject.body;
-    if (!body) return true;
-    if (cell.x + body.w > 16 || cell.y + body.h > (wall ? 4 : 12)) return false;
-    for (let y = cell.y; y < cell.y + body.h; y++) {
-      for (let x = cell.x; x < cell.x + body.w; x++) {
-        if (
-          (index.occupancy[`${body.layer}:${x}:${y}`] ?? []).some(
-            (id) => !group.some((e) => e.id === id) && !(overlapProps && index.entities[id]?.body?.small)
-          )
-        )
-          return false;
-      }
-    }
-    return true;
+    return floorCellAllowed(index, subject, group, cell, overlapProps);
   };
+  const exact = !capacityOverflow && exactFloorMove(index, subject, point, group, ctx);
+  if (exact) return { ...makeProposal(index, subject, exact, group, "floor", "Exact contained visible floor support"), pending };
   for (const location of index.floor) {
     const cell = location.cell;
     if (capacityOverflow) continue;
@@ -555,7 +560,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
   }
   if (best)
     return {
-      ...makeProposal(index, subject, exactFloorMove(index, subject, best, point, group, ctx), group, "floor", "Nearest contained visible floor support"),
+      ...makeProposal(index, subject, best, group, "floor", "Nearest contained visible floor support"),
       pending,
     };
   const staging = rootMove(
