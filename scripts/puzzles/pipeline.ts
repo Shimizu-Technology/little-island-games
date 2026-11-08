@@ -132,7 +132,8 @@ export function bakeFamily<P>(spec: FamilySpec<P>, options: BakeOptions): BakeRe
     const cap = Math.max(1, Math.floor(band.target * BANK_CAPS.templateShare)), perTemplate = new Map<string, number>();
     // The band is full only once the trimmed, ordered result reaches its quota, not when raw accepts do.
     const finish = () => {
-      const capped = capTemplates(entries), pool = capTemplates(capped.kept.slice(0, need));
+      // Lay out first: later varied entries must be able to rescue an early run of one layout.
+      const capped = capTemplates(entries), spread = orderLayouts(capped.kept), pool = capTemplates(spread.ordered.slice(0, need));
       return { laid: orderLayouts(pool.kept), templates: capped.dropped.length + pool.dropped.length };
     };
     let done = need === 0 ? { laid: { ordered: [] as CertifiedEntry<P>[], dropped: [] as CertifiedEntry<P>[] }, templates: 0 } : finish();

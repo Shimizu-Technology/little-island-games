@@ -118,7 +118,8 @@ describe('dumb-player bots', () => {
     const route: number[] = [];
     const counting = toyAdapter({ reduce: (s, a, d) => { route.push(a); return toyAdapter().reduce(s, a, d); } });
     runBots(counting, toyCore({ payload: { goal: 100 }, par: null }), botSteps(1));
-    expect(route.length).toBeLessThanOrEqual(botSteps(1) * 7);
+    // Six policies have no progress heuristic to call; each plays once and is then replayed once.
+    expect(route.length).toBeLessThanOrEqual(botSteps(1) * 6 * 2);
   });
   it('are reproducible', () => expect(runBots(toyAdapter(), toyCore())).toEqual(runBots(toyAdapter(), toyCore())));
   it('honour the Check requirement before counting a win', () => {

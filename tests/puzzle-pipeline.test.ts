@@ -50,8 +50,8 @@ describe('real banks through the whole pipeline', () => {
 });
 describe('band quotas after trimming', () => {
   it('keeps baking until the trimmed result fills the band', () => {
-    // Early seeds are all one template and one layout, so raw accepts reach 8 long before the band is really full.
-    const spec = toySpec({ bands: [{ id: 'open', target: 8, floor: 8, advanced: false }], generate: seed => ({ ...toySpec().generate(seed, spec.bands[0])!, layout: seed <= 12 ? 'same' : seed % 2 ? 'a' : 'b', template: seed <= 12 ? 'common' : `t${seed % 4}` }) });
+    // The first eight accepts share one layout, so raw accepts reach 8 long before the band can really be laid out.
+    const spec = toySpec({ bands: [{ id: 'open', target: 8, floor: 8, advanced: false }], generate: seed => ({ ...toySpec().generate(seed, spec.bands[0])!, layout: seed <= 8 ? 'same' : seed % 2 ? 'a' : 'b', template: `t${seed % 16}` }) });
     const d = dirs(), report = bakeFamily(spec, { dirs: d });
     expect(report).toMatchObject({ status: 'complete', published: true, accepted: { open: 8 } });
     expect(verify(d, [spec]).errors).toEqual([]);
