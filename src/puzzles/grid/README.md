@@ -7,3 +7,5 @@ Edge input: OPEN. G2 owns the adapter-integrated edge renderer and input path fo
 On iOS, the hidden text input accepts typed symbols, Backspace and the notes shortcut. Arrows and Command-Z are web-only; native users have selection and undo controls. With a screen reader the entire board fits, and each cell has an explicit accessibility activation callback. Real VoiceOver acceptance remains a device gate.
 
 The Check/help audit retains event totals after its ordered prefix reaches 64 entries. Check, help and reset evidence is never removed; counters saturate at the validated integer ceiling. Undo history remains bounded working memory and does not reset evidence.
+
+Number-first mode uses a visibly named on/off button in the wrapping toolbar. A shrink-wrapped Switch row can collapse its label to zero width on native; the button keeps the choice readable on narrow layouts.

@@ -78,3 +78,13 @@ it('7 keeps the content viewport separate from its border', async () => {
     const clip = screen.root.findAllByType('div').find(n => n.props.style?.overflow === 'hidden')!; expect(clip.props.style.borderWidth ?? 0).toBe(0);
   } finally { await act(async () => screen?.unmount()); }
 });
+
+it('keeps the Number first mode visibly named and toggles it in a wrapping toolbar', async () => {
+  const spec: GridSpec = { rows: 9, columns: 9, symbols: ['1','2','3','4','5','6','7','8','9'], givens: Array(81).fill(0), kind: 'digits' }; let screen!: ReactTestRenderer;
+  try {
+    await act(async () => { screen = create(<GridShell spec={spec} state={createGrid(spec)} dispatch={() => {}} active width={320}/>); });
+    const off = screen.root.findAllByType('button').find(b => b.children.join('') === 'Number first off'); expect(off).toBeDefined();
+    await act(async () => off!.props.onPress());
+    const on = screen.root.findAllByType('button').find(b => b.children.join('') === 'Number first on'); expect(on?.props.selected).toBe(true);
+  } finally { await act(async () => screen?.unmount()); }
+});
