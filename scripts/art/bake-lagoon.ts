@@ -37,6 +37,8 @@ bake('rail',160,144,'<path d="M16 128L0 139H13L31 128Z" fill="#183F69" fill-opac
 bake('rope',128,24,'<path d="M0 3Q64 35 128 3" fill="none" stroke="#FFF0A7" stroke-width="3"/>');
 bake('deck-left',16,16,'<rect width="16" height="16" fill="#A0643E" stroke="#674B3E"/>');
 bake('deck-right',16,16,'<rect width="16" height="16" fill="#704A36" stroke="#674B3E"/>');
+bake('deck-side-left',32,32,'<path d="M0 0H32L0 32Z" fill="#A0643E"/>');
+bake('deck-side-right',32,32,'<path d="M0 0H32L0 32Z" fill="#704A36"/>');
 bake('support',16,128,'<path d="M2 1H14V127H2Z" fill="#78513A" stroke="#674B3E" stroke-width="2"/><path d="M3 6H13" stroke="#E9B56B" stroke-width="4"/>');
 const depths=[.1,.6,1,1.4],canoes=[];
 for(let f=0;f<depths.length;f++) {

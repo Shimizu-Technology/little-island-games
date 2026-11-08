@@ -16,5 +16,5 @@ it('mounts both side skirts and a shadow for every rendered incline section',()=
  const sides:Record<string,number[]>={left:[],right:[],shadow:[]};
  function walk(node:React.ReactNode){React.Children.forEach(node,n=>{if(!React.isValidElement(n))return;const props=n.props as {side?:string;index:number;children?:React.ReactNode};if(props.side)sides[props.side].push(props.index);walk(props.children);});}
  walk(node);
- for(const side of ['left','right','shadow'])expect(sides[side]).toEqual(Array.from({length:RAMP_SECTIONS},(_,i)=>179+i*4));
+ for(const side of ['left','right','shadow'])expect(sides[side]).toEqual(Array.from({length:RAMP_SECTIONS},(_,i)=>Array.from({length:side==='shadow'?1:2},()=>179+i*4)).flat());
 });

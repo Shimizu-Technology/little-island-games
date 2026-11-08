@@ -24,3 +24,11 @@ export function deckSide(q:readonly SpritePose[],side:'left'|'right',incline:boo
 export function deckShadow(q:readonly SpritePose[]):Quad {
  'worklet';return q.map((v,i)=>({x:v.x+(i===0||i===3?5:10),y:v.y+(v.scale??0)+5})) as unknown as Quad;
 }
+/** Flat skirts can be concave: two affine triangles have no projective pole. */
+export function sideTriangles(q:Quad) {
+ 'worklet';
+ const area=(a:{x:number;y:number},b:{x:number;y:number},c:{x:number;y:number})=>Math.abs((b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x));
+ const [a,b,c,d]=q;
+ const points=area(a,b,c)+area(a,c,d)<=area(a,b,d)+area(b,c,d)?[[a,b,c],[a,c,d]]:[[a,b,d],[b,c,d]];
+ return points.map(([a,b,c])=>({points:[a,b,c],matrix:[b.x-a.x,c.x-a.x,a.x,b.y-a.y,c.y-a.y,a.y,0,0,1]}));
+}

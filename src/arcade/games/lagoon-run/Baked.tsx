@@ -5,7 +5,7 @@ import type { SpritePose } from '../../poses';
 import { projectTrack } from './camera';
 import { matrix4, multiply3, quadHomography, type Quad } from './quad';
 import atlas from '../../../../assets/arcade/lagoon/manifest.json';
-import { canoeMatrix, deckSide, deckShadow } from './bakedGeometry';
+import { canoeMatrix, deckSide, deckShadow, sideTriangles } from './bakedGeometry';
 import { RAMP_SECTIONS } from './surface';
 export const TRAVEL_SLOT = 35;
 const floorSources = () => [
@@ -35,7 +35,7 @@ const movingCanoes = () => [
   require('../../../../assets/arcade/lagoon/canoe-moving-3.png'),
 ];
 const deckSource = () => require('../../../../assets/arcade/lagoon/deck.png'), roofSource = () => require('../../../../assets/arcade/lagoon/roof.png'), inclineSource = () => require('../../../../assets/arcade/lagoon/incline.png');
-const leftSource=()=>require('../../../../assets/arcade/lagoon/deck-left.png'),rightSource=()=>require('../../../../assets/arcade/lagoon/deck-right.png');
+const leftSource=()=>require('../../../../assets/arcade/lagoon/deck-side-left.png'),rightSource=()=>require('../../../../assets/arcade/lagoon/deck-side-right.png');
 const railSource = () => require('../../../../assets/arcade/lagoon/rail.png'), supportSource = () => require('../../../../assets/arcade/lagoon/support.png');
 const absolute={position:'absolute' as const,left:0,top:0};
 export function floorFrame(travel:number) {
@@ -63,14 +63,14 @@ function Rail({poses,index,side}:{poses:SharedValue<SpritePose[]>;index:number;s
  return <Animated.View style={[absolute,{width:160,height:144,transformOrigin:[0,0,0]},style]}><Image accessible={false} source={railSource()} style={{width:160,height:144}} fadeDuration={0}/></Animated.View>;
 }
 const Rails=memo(function Rails({poses}:{poses:SharedValue<SpritePose[]>}) {return <>{Array.from({length:11},(_,i)=><React.Fragment key={i}><Rail poses={poses} index={i} side={-1}/><Rail poses={poses} index={i} side={1}/></React.Fragment>)}</>;});
-function TextureQuad({poses,index,source,width,height,side,incline=false}:{poses:SharedValue<SpritePose[]>;index:number;source:number;width:number;height:number;side?:'left'|'right'|'shadow';incline?:boolean}) {
+function TextureQuad({poses,index,source,width,height,side,incline=false,triangle=0}:{poses:SharedValue<SpritePose[]>;index:number;source:number;width:number;height:number;side?:'left'|'right'|'shadow';incline?:boolean;triangle?:number}) {
  const slot=useSharedValue<SpritePose[]>([]);
  useAnimatedReaction(()=>poses.value[index]?.opacity===0?null:poses.value.slice(index,index+4),q=>{if(q)slot.set(q);else if(slot.value.length)slot.set([]);},[poses,index]);
  const style=useAnimatedStyle(()=>{
   let q=slot.value as unknown as Quad;
   if(q.length<4)return {opacity:0,transform:[{scale:0}]};
   if(side==='shadow')q=deckShadow(slot.value);else if(side)q=deckSide(slot.value,side,incline);
-  const h=quadHomography(q);
+  const h=side && side!=='shadow'?sideTriangles(q)[triangle].matrix:quadHomography(q);
   return {opacity:side==='shadow'?.22:1,transform:[{matrix:matrix4(multiply3(h,[1/width,0,0,0,1/height,0,0,0,1]))}]};
  });
  return <Animated.View style={[absolute,{width,height,transformOrigin:[0,0,0]},style]}>{side==='shadow'?<Animated.View style={{width,height,backgroundColor:'#344B50'}}/>:<Image accessible={false} source={source} style={{width,height}} fadeDuration={0}/>}</Animated.View>;
@@ -83,7 +83,7 @@ function Support({poses,index}:{poses:SharedValue<SpritePose[]>;index:number}) {
  return <Animated.View style={[absolute,{width:16,height:128,transformOrigin:[0,0,0]},style]}><Image accessible={false} source={supportSource()} style={{width:16,height:128}} fadeDuration={0}/></Animated.View>;
 }
 export const BakedDeck=memo(function BakedDeck({poses,index,surface,incline=false}:{poses:SharedValue<SpritePose[]>;index:number;surface:string;incline?:boolean}) {
- return <>{Array.from({length:incline?RAMP_SECTIONS:1},(_,i)=><React.Fragment key={`side${i}`}><TextureQuad poses={poses} index={index+i*4} source={leftSource()} width={16} height={16} side="shadow"/><TextureQuad poses={poses} index={index+i*4} source={leftSource()} width={16} height={16} side="left" incline={incline}/><TextureQuad poses={poses} index={index+i*4} source={rightSource()} width={16} height={16} side="right" incline={incline}/></React.Fragment>)}{!incline && <><Support poses={poses} index={index}/><Support poses={poses} index={index+1}/><Support poses={poses} index={index+2}/></>}{Array.from({length:incline?RAMP_SECTIONS:1},(_,i)=><TextureQuad key={i} poses={poses} index={index+i*4} source={incline&&i===0?inclineSource():surface==='canoe-roof'?roofSource():deckSource()} width={128} height={incline&&i===0?128:256}/>)}</>;
+ return <>{Array.from({length:incline?RAMP_SECTIONS:1},(_,i)=><React.Fragment key={`side${i}`}><TextureQuad poses={poses} index={index+i*4} source={leftSource()} width={16} height={16} side="shadow"/>{[0,1].map(triangle=><React.Fragment key={triangle}><TextureQuad poses={poses} index={index+i*4} source={leftSource()} width={32} height={32} side="left" incline={incline} triangle={triangle}/><TextureQuad poses={poses} index={index+i*4} source={rightSource()} width={32} height={32} side="right" incline={incline} triangle={triangle}/></React.Fragment>)}</React.Fragment>)}{!incline && <><Support poses={poses} index={index}/><Support poses={poses} index={index+1}/><Support poses={poses} index={index+2}/></>}{Array.from({length:incline?RAMP_SECTIONS:1},(_,i)=><TextureQuad key={i} poses={poses} index={index+i*4} source={incline&&i===0?inclineSource():surface==='canoe-roof'?roofSource():deckSource()} width={128} height={incline&&i===0?128:256}/>)}</>;
 });
 function CanoeFrame({poses,index,frame,moving}:{poses:SharedValue<SpritePose[]>;index:number;frame:number;moving:boolean}) {
  const meta=atlas.canoes[frame];

@@ -122,6 +122,18 @@
       "bytes": 199,
       "sha256": "ab43af363fab71dbc14ea338873fcb580f2806db8a0b6902d74046e6a668631f"
     },
+    "deck-side-left": {
+      "width": 32,
+      "height": 32,
+      "bytes": 624,
+      "sha256": "9aed9eac79f9b58ca5d6286b03ca61086561a54f47eba450f1457a16708d7ac0"
+    },
+    "deck-side-right": {
+      "width": 32,
+      "height": 32,
+      "bytes": 623,
+      "sha256": "708c29dada0945bc7fc89f57aa742d40560f8112204d6204964fe69e6090e53e"
+    },
     "support": {
       "width": 16,
       "height": 128,

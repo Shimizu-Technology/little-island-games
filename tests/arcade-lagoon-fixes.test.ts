@@ -48,3 +48,20 @@ it('refuses an unsafe config or an existing family native project before any nat
  expect(()=>assertDevConfig({ios:{bundleIdentifier:'com.shimizutechnology.littleisland.dev'},scheme:'littleisland-dev',extra:{lagoonMeasurement:true}})).not.toThrow();
  expect(()=>assertDevNative(['PRODUCT_BUNDLE_IDENTIFIER = "com.shimizutechnology.littleisland.dev";'])).not.toThrow();
 });
+it('never projects a concave flared skirt through a projective pole',async()=>{
+ const {sideTriangles}=await import('../src/arcade/games/lagoon-run/bakedGeometry');
+ for(let section=0;section<3;section++)for(const side of ['left','right'] as const) {
+  const top=[{x:100,y:600,scale:section*20},{x:140,y:600,scale:section*20},{x:130,y:550,scale:(section+1)*20},{x:110,y:550,scale:(section+1)*20}];
+  const q=deckSide(top,side,true);
+  const triangles=sideTriangles(q);
+  const area=(points:readonly {x:number;y:number}[])=>Math.abs(points.reduce((n,p,i)=>{const next=points[(i+1)%points.length];return n+p.x*next.y-next.x*p.y;},0));
+  expect(triangles.reduce((n,t)=>n+area(t.points),0)).toBeCloseTo(area(q),5);
+  for(const t of triangles)for(const [index,x,y] of [[0,0,0],[1,1,0],[2,0,1]]) {
+   const actual=mapPoint(t.matrix,x,y);expect(actual.x).toBeCloseTo(t.points[index].x,5);expect(actual.y).toBeCloseTo(t.points[index].y,5);
+  }
+  for(const triangle of triangles)for(const [x,y] of [[0,0],[1,0],[0,1],[1,1]]) {
+   const h=triangle.matrix,w=h[6]*x+h[7]*y+h[8];expect(w).toBeGreaterThan(0);
+   const pixel=mapPoint(h,x,y);expect(Math.abs(pixel.x-q[0].x)).toBeLessThan(200);expect(Math.abs(pixel.y-q[0].y)).toBeLessThan(200);
+  }
+ }
+});
