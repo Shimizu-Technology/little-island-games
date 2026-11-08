@@ -23,3 +23,25 @@ Owned fixtures: authored banks 7 (12 registered School beaches), 8 (four debuggi
 Final results and exact source/build hashes go in REPORT.md. This table distinguishes source coverage from native and family acceptance; green gates do not imply P01–P06 fully accepted.
 
 Final source: c967b580. Default and preview full gates each pass 3,053 tests (2 skipped); lint has 0 errors/42 existing warnings. Doctor 21/21. Final c967 Hermes bundle native iPad retest preserves draft and help through update and Back. The nine cases include physical/family dimensions that remain partial/not_run; this is not nine fully accepted family cases. All owned simulators/sessions/build resources cleaned; source worktree retained for lead review.
+
+## Review fixes — 9 November 2026
+
+The fix brief, independent review and lead's portrait-layout note refresh the context above. Work starts at `origin/p4/c1-crab` `9c778592`; merging `origin/program/4.0` reported already up to date (`8be501bd` is an ancestor). The private remote is unchanged. The fix branch is pushed only to `p4/c1-crab`; the lead owns review and integration. This round runs on one new iOS 26.5 phone simulator, `li4-crab-2`, as FIX-BRIEF directs. iOS 18.5, iPad and physical/family dimensions are not rerun in this round.
+
+Acceptance for this affected-flow round (agent executes):
+
+| ID | Fixture and required outcome | Verification |
+| --- | --- | --- |
+| F01 | All four original bug starters: literal Help edits finish in 1/1/1/2 edits, with Change / Insert before / Remove verbs. Editing consumes the hint; another step requires Help. | Engine and renderer regressions; native debug edit/help/undo |
+| F02 | Saturated attempts never save a partial run. A fresh attempt preserves the current plan and previous help, and preserves the replaced replay through Store's existing replacement path. | Capacity, full 80-card plan, codec and Store regressions; native fresh/relaunch |
+| F03 | Each dare is selected individually. Full-plan help keeps the finish but earns no dare mark. Two-run dares hide footprints; current footprints-off dares use longer beaches. | Individual replay proofs, tamper rejection and renderer/native checks |
+| F04 | Clean Mud/debug results have no empty dare invitation. Harder stays on the current path and excludes the easy finish after Mud 6. Mud par is the independent minimum walking cost. | Frame/offer regressions, weighted search |
+| F05 | Mud 3 needs a different route; Mud 6 is 10 cards at 8 steps, while the 9-card route costs 9; Mud 7 is Tide 1. | Real-engine witnesses and independent bounds |
+| F06 | A successful Go shows the crab arriving home, plays arrival feedback and keeps the final beach visible before showing the result. | Local-playback/Frame regressions; native observed frames |
+| F07 | A registered just-finished School beach preselects that exact Challenge ref. Unregistered beaches use the related picker. School data stays intact. | Registered and unregistered School renderer cases; native route |
+| F08 | Lesson, rules, feedback, help, footprints and marks expose staged speech keys once generated sources exist. | Mocked-source button tests; audio regeneration/listening remains lead/operator |
+| F09 | Beach and program remain visible while phone-portrait editing controls scroll. Idle Reset spends no edit; stage 2 keeps the step; planned cost updates; equal replay arrays do not restart hints; titles use authored beach names. | Renderer regressions and native portrait frames |
+
+Frozen catalog banks 7–9 and dare identities are preserved. The revised Mud 3/6 descriptors are appended in bank 10. Old Mud descriptors remain replayable but are omitted from new selection. Short-beach blind slots 129/133 remain recognized; their picker entries retire, replaced by slots 152/153 on longer beaches. There are still 24 visible dare choices. No frozen save fixture changes. Speech text remains staged in `scripts/learn/c1-crab.json`; generation is lead-only.
+
+The required source gates run sequentially in default and Library preview modes, then Doctor with the default PATH. Native checks follow those gates. Exact final source, logs, frames, pass/blocked/not-run outcomes and cleanup are recorded in the slice's `FIX-REPORT.md`; prior round evidence above is historical.

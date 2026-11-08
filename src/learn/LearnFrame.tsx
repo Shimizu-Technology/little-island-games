@@ -248,6 +248,9 @@ export function LearnFrame({ id }: { id: LearnId }) {
     setOptions(optionsAtLevel(base, level));
   }
   const challenge = challengeFor(id), challengeProgress=progressFor(store.save,learner.id);
+  const schoolState=id==='crab-commands'&&saved?saved.state as {levels:string[];completed:unknown[]}:undefined;
+  const schoolBeach=schoolState?.levels?.[Math.min(schoolState.completed.length,schoolState.levels.length-1)];
+  const sameBeach=challenge?.puzzles.find(p=>!p.retired&&p.source.kind==='school'&&p.source.game===id&&p.source.puzzle===schoolBeach);
   const context=schoolContext(id,levelOf(saved?.options??options));
   const levelRecord=store.save.school?.[id]?.[levelOf(saved?.options??options)];
   const offerFacts={atPar:false,firstHigher:!!saved && levelOf(saved.options)>1 && levelRecord?.completed===1 && Object.keys(store.save.school?.[id]??{}).some(level=>Number(level)<levelOf(saved.options)),dare:!!challenge,easier:!!saved&&levelOf(saved.options)>1,harder:!!saved&&(levelOf(saved.options)<5||!!challenge)};
@@ -257,7 +260,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   // G1 supplies the Cove route. Until then there is no link to an unfinished surface.
   const bridge=bridgeFor(id,levelOf(saved?.options??options),coveReady);
   const changeWorking=(next:NonNullable<typeof challengeProgress>)=>store.challengeWorking({signal:next.signals.find(s=>s[0]===context)},{owner:learner.id,epoch,game:id,id:saved?.id??'',revision:saved?.revision??-1,kind:'school'});
-  const openChallenge=()=>{stopSound();setSetup(false);router.push({pathname:'/challenge',params:{game:id}});};
+  const openChallenge=(same=false)=>{stopSound();setSetup(false);router.push({pathname:'/challenge',params:{game:id,...(same&&sameBeach?{puzzle:`${sameBeach.ref.bank}:${sameBeach.ref.puzzle}`}:{})}});};
   const back = () => (router.canGoBack() ? router.back() : router.replace("/"));
   const twoPlayer = options.mode !== "solo";
   const turn = saved && engine.turn && saved.options.mode !== "solo" && !finished ? engine.turn(saved.state, saved.options) : null;
@@ -350,8 +353,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
                       : (notWon ?? "You did it!")}
                 </Heading>
                 <Copy style={{ color: theme.ink, fontSize: 17, fontWeight: "800", textAlign: "center" }}>{notWon ? "Ready to try the island again?" : "Your stars are shining. Ready for another adventure?"}</Copy>
-                {ownsResult&&learner.id!=='family'&&challengeProgress&&<ResultOffer progress={challengeProgress} context={context} comfort={comfort} facts={offerFacts} onHear={soundOn&&resultOffer(signal,comfort,offerFacts)?.kind==='harder'&&levelOf(saved.options)<5?()=>sound(`learning-try-level-${levelOf(saved.options)+1}`):undefined} onChange={changeWorking} onChoose={kind=>{
-                  if(kind==='dare'||kind==='harder'&&levelOf(saved.options)===5)openChallenge();
+                {ownsResult&&learner.id!=='family'&&challengeProgress&&<ResultOffer progress={challengeProgress} context={context} comfort={comfort} facts={offerFacts} samePuzzle={!!sameBeach} onHear={soundOn&&resultOffer(signal,comfort,offerFacts)?.kind==='harder'&&levelOf(saved.options)<5?()=>sound(`learning-try-level-${levelOf(saved.options)+1}`):undefined} onChange={changeWorking} onChoose={kind=>{
+                  if(kind==='dare'||kind==='harder'&&levelOf(saved.options)===5)openChallenge(kind==='dare');
                   else {chooseLevel(Math.max(1,Math.min(5,levelOf(saved.options)+(kind==='easier'?-1:1))) as LearningLevel,saved.options);setSetup(true);}
                 }}/>}
                 {ownsResult&&!hasOffer&&bridge&&!store.save.settings.learningBridges?.[learner.id]?.includes(id)&&!signal?.[4]&&comfort.offers&&!comfort.youngChild&&<View style={{gap:8}}><Button quiet onPress={()=>{if(store.challengeWorking({bridge:id},{owner:learner.id,epoch,game:id,id:saved.id,revision:saved.revision,kind:'school'}))router.push(bridge.route);}}>{bridge.label}</Button><Button quiet compact onPress={()=>store.challengeWorking({bridge:id},{owner:learner.id,epoch,game:id,id:saved.id,revision:saved.revision,kind:'school'})}>Not now</Button></View>}
@@ -382,7 +385,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         {id==='code-lab'&&<Copy>Ages 9–14, with the top challenges for older learners and grown-ups.</Copy>}
         <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage && !engine.ownLevels && !engine.nativeStages ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
         <LevelPath game={id} level={levelOf(options)} onChoose={chooseLevel} progress={store.save.school} />
-        {challenge&&!comfort.youngChild&&<Button quiet onPress={openChallenge}>Challenge</Button>}
+        {challenge&&!comfort.youngChild&&<Button quiet onPress={()=>openChallenge()}>Challenge</Button>}
         {engine.modes.length > 1 && (
           <>
             <Heading style={{ fontSize: 18 }}>How shall we play?</Heading>

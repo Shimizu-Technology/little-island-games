@@ -19,10 +19,10 @@ export type DareRule =
   | { kind: 'own-read' }
   | { kind: 'edits'; max: number };
 export type AwardRule = { rule: DareRule; help: Dare['help'] };
-export type RegisteredDare = { slot: number; id: string; label: string; rule: DareRule; help: Dare['help'] };
+export type RegisteredDare = { slot: number; id: string; label: string; retired?: boolean; rule: DareRule; help: Dare['help'] };
 export type Puzzle<D> = {
   ref: PuzzleRef; source: Source; path: ChallengePath; tier: 1|2|3|4|5|6; title: string;
-  descriptor: D; dares: readonly RegisteredDare[];
+  retired?: boolean; descriptor: D; dares: readonly RegisteredDare[];
   /** A/B award bits use the same replay evidence as permanent dare marks. */
   awards: readonly [AwardRule | null, AwardRule | null];
   par?: { metric: Metric; lower: number; upper: number };
@@ -30,7 +30,7 @@ export type Puzzle<D> = {
 export type LaunchOptions = { supportOff: boolean; ownRead: boolean };
 export type ReplayPayload<P,A> = { version: 1; initial: P; options: LaunchOptions; firstSolutions: string[]; actions: A[] };
 export type ReplayEvent = 'edit'|'run'|'check'|'help'|'read-aloud'|'reset';
-export type EngineInspection = { solved: boolean; metrics: Partial<Record<Metric, number>>; edits: number; solution: string | null; objectives: string[] };
+export type EngineInspection = { solved: boolean; metrics: Partial<Record<Metric, number>>; edits: number; solution: string | null; objectives: string[]; dareEligible?: boolean };
 export type Evidence = EngineInspection & LaunchOptions & { helpUsed: boolean; heard: boolean; failed: boolean; runs: number; checks: number; resets: number; firstSolutions: readonly string[] };
 export type ReplayEngine<D,P,A,S> = {
   validInitial: (value: unknown, descriptor: D) => value is P;
@@ -40,14 +40,14 @@ export type ReplayEngine<D,P,A,S> = {
   step: (state: S, action: A, descriptor: D) => { state: S; event: ReplayEvent; correct?: boolean } | null;
   inspect: (state: S, descriptor: D) => EngineInspection;
 };
-export type ChallengeViewProps<S,A> = { state: S; dispatch: (action: A) => void; active: boolean; width: number };
+export type ChallengeViewProps<S,A> = { state: S; dispatch: (action: A) => void; active: boolean; width: number; onSettled?: () => void };
 export type ChallengeCard = Omit<Puzzle<unknown>, 'descriptor'|'awards'>;
 /** Erasure happens only after a typed registration validates its own payload. No action bags. */
 export type ChallengeEntry = {
-  game: string; codec: string; cove: boolean; contextFor: (ref: PuzzleRef) => string; puzzles: readonly ChallengeCard[]; catalog: SaveCatalog;
+  game: string; codec: string; cove: boolean; animatedRuns?: boolean; restart?: (session: ChallengeSession, id: string, progress: ChallengeProgress) => ChallengeSession; contextFor: (ref: PuzzleRef) => string; puzzles: readonly ChallengeCard[]; catalog: SaveCatalog;
   start: (puzzle: PuzzleRef, owner: string, id: string, progress: ChallengeProgress, options: LaunchOptions, dares: number[]) => ChallengeSession;
   move: (session: ChallengeSession, action: unknown) => ChallengeSession | null;
-  render: (session: ChallengeSession, dispatch: (action: unknown) => void, active: boolean, width: number) => ReactNode;
+  render: (session: ChallengeSession, dispatch: (action: unknown) => void, active: boolean, width: number, onSettled?: () => void) => ReactNode;
   controls: { help: () => unknown; reset: () => unknown };
 };
 export type TypedRegistration<P,A,S> = ChallengeEntry & { readonly types?: { Payload: P; Action: A; State: S } };

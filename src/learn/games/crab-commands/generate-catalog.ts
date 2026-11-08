@@ -14,4 +14,4 @@ for(const p of [...crabPuzzles].sort((a,b)=>a.ref.bank-b.ref.bank||a.ref.puzzle-
 const next:CatalogManifest={version:2,banks:[...previous.banks.filter(b=>!banks.has(b.slot)),...banks.values()].sort((a,b)=>a.slot-b.slot),dares:[...previous.dares.filter(([slot])=>!dares.some(([s])=>s===slot)),...dares].sort((a,b)=>a[0]-b[0]),contexts:[...new Set([...previous.contexts,...crabPuzzles.map(p=>`crab-${p.tier}`)])]};
 assertFrozenCatalog(previous,next);
 writeFileSync(file,JSON.stringify(next,null,2)+'\n');
-console.log('Crab catalog generated: 3 authored banks, 24 dares.');
+console.log(`Crab catalog generated: ${banks.size} authored banks, ${dares.length} retained dares.`);

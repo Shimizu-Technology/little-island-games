@@ -2,10 +2,11 @@ import React, { createContext } from 'react';
 import { act, create, type ReactTestRenderer } from 'react-test-renderer';
 import { afterEach, expect, it, vi } from 'vitest';
 import { ChallengeBoard } from '../src/learn/games/crab-commands/challenge-view';
+import * as hintEngine from '../src/learn/games/crab-commands/challenge-engine';
 import { challengeEngine, type State } from '../src/learn/games/crab-commands/challenge-engine';
 import { crabPuzzles } from '../src/learn/games/crab-commands/challenge-content';
-vi.mock('../src/content/learnAudio',()=>({learnSources:{}}));
-vi.mock('react-native',()=>({View:'div'}));
+vi.mock('../src/content/learnAudio',async()=>({learnSources:Object.fromEntries(Object.keys((await import('../scripts/learn/c1-crab.json')).default).map(k=>[k,1]))}));
+vi.mock('react-native',()=>({View:'div',ScrollView:'section'}));
 vi.mock('../src/components/ui',()=>({View:'div',Button:'button',Copy:'p',PressableScale:'button',C:{ink:'#183F39',soft:'#E5EFE5'}}));
 vi.mock('../src/components/motion',()=>({useReducedMotion:()=>true}));
 const sound=vi.hoisted(()=>({play:vi.fn(),stop:vi.fn()}));
@@ -35,4 +36,48 @@ it('hides footprints for the blind dare, keeps help available and labels walking
 it('an inactive board has no automatic ticks and makes no accepted edit',async()=>{
  const s=state(),dispatch=vi.fn();vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
  await act(async()=>{root=create(<ChallengeBoard state={s} dispatch={dispatch} active={false} width={335}/>);});await press('Add Walk');expect(dispatch).not.toHaveBeenCalled();
+});
+it('P2-1: editing consumes the displayed hint until another explicit Help, including after undo',async()=>{
+ let s=state(1);s=challengeEngine.step(s,['h'],s.descriptor)!.state;await mount(s);
+ await vi.waitFor(async()=>{await act(async()=>{});expect(JSON.stringify(root!.toJSON())).toContain('Add card 1:');});
+ s=challengeEngine.step(s,['a',6],s.descriptor)!.state;
+ await act(async()=>root!.update(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>));
+ expect(JSON.stringify(root!.toJSON())).not.toContain('Add card 2:');expect(JSON.stringify(root!.toJSON())).not.toContain('Finding one step');
+ s=challengeEngine.step(s,['u'],s.descriptor)!.state;
+ await act(async()=>root!.update(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>));expect(JSON.stringify(root!.toJSON())).not.toContain('Add card 1:');
+});
+it('P3-1: More help keeps the exact proposed step visible',async()=>{
+ let s=state(1);s=challengeEngine.step(s,['h'],s.descriptor)!.state;s=challengeEngine.step(s,['h'],s.descriptor)!.state;await mount(s);
+ await vi.waitFor(async()=>{await act(async()=>{});expect(JSON.stringify(root!.toJSON())).toContain('Add card 1:');});expect(JSON.stringify(root!.toJSON())).toContain('Show the whole plan');
+});
+it('P3-3: planning displays the current planned walking cost',async()=>{
+ let s=state(0);s=challengeEngine.step(s,['a',4],s.descriptor)!.state;await mount(s);const text=JSON.stringify(root!.toJSON());expect(text).toContain('Plan cost');expect(text).toContain('1');
+});
+it('P2-6: local playback reaches home and plays win without saving any animation tick',async()=>{
+ vi.useFakeTimers();const settled=vi.fn(),dispatch=vi.fn();let s=state(0);s=challengeEngine.step(s,['a',4],s.descriptor)!.state;s=challengeEngine.step(s,['a',4],s.descriptor)!.state;
+ try{await mount(s,dispatch);s=challengeEngine.step(s,['g'],s.descriptor)!.state;await act(async()=>root!.update(<ChallengeBoard state={s} dispatch={dispatch} active width={335} onSettled={settled}/>));
+ expect(settled).not.toHaveBeenCalled();for(let i=0;i<4;i++)await act(async()=>{vi.advanceTimersByTime(140);});
+ expect(JSON.stringify(root!.toJSON())).toContain('Home! Every shell collected.');expect(sound.play).toHaveBeenCalledWith('win',true);expect(settled).toHaveBeenCalledTimes(1);expect(dispatch).not.toHaveBeenCalled();
+ }finally{vi.useRealTimers();}
+});
+it('LEAD-NOTES: the beach and horizontal program stay outside the scrolling editing controls',async()=>{
+ await mount(state(7));const beach=root!.root.findByProps({level:state(7).descriptor.level}),program=root!.root.findByProps({accessibilityLabel:'Your program editor'}),controls=root!.root.findByProps({accessibilityLabel:'Plan and commands'});
+ expect(program.props.horizontal).toBe(true);expect(program.parent).toBe(beach.parent?.parent);expect(controls.parent).toBe(program.parent);expect(controls.props.style.flex).toBe(1);
+});
+
+it('P2-8: staged speech keys have reachable lesson, feedback, help, footprints and marks buttons',async()=>{
+ await mount({...state(0),supportOff:true});await press('Hear this puzzle');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-mud-teach');
+ await press('Hear rules');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-mud-rules');await press('Hear about footprints');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-footprints');await press('Hear about marks');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-marks');
+ let s=state(1);s=challengeEngine.step(s,['h'],s.descriptor)!.state;await act(async()=>root!.update(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>));
+ await vi.waitFor(async()=>{await act(async()=>{});expect(JSON.stringify(root!.toJSON())).toContain('Add card 1:');});await press('Hear help');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-first-hint');
+ s=challengeEngine.step(s,['h'],s.descriptor)!.state;await act(async()=>root!.update(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>));await press('Hear help');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-more-help');
+ s=state(1);for(let i=0;i<4;i++)s=challengeEngine.step(s,['a',4],s.descriptor)!.state;s={...s,runs:1,cursor:4};await act(async()=>root!.unmount());root=undefined;await mount(s);await press('Hear feedback');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-budget');
+ s={...state(0),runs:1,cursor:0};await act(async()=>root!.unmount());root=undefined;await mount(s);await press('Hear feedback');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-retry');
+});
+
+it('P3-5: equivalent replayed arrays do not restart the hint search',async()=>{
+ const spy=vi.spyOn(hintEngine,'nextHintSliced');let s=state(1);s=challengeEngine.step(s,['h'],s.descriptor)!.state;
+ try{await mount(s);await vi.waitFor(async()=>{await act(async()=>{});expect(JSON.stringify(root!.toJSON())).toContain('Add card 1:');});const n=spy.mock.calls.length;
+ await act(async()=>root!.update(<ChallengeBoard state={{...s,program:[...s.program]}} dispatch={vi.fn()} active width={335}/>));expect(spy.mock.calls.length).toBe(n);expect(JSON.stringify(root!.toJSON())).not.toContain('Finding one step');
+ }finally{spy.mockRestore();}
 });

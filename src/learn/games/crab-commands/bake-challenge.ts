@@ -18,20 +18,20 @@ const debug=['m7','m2','m4','m8'].map((id,i)=>{
 const mudRows=[
  ['CmH##','#####','#####','#####','#####'],
  ['CmmmH','.....','#####','#####','#####'],
- ['CmmmH','..S..','#####','#####','#####'],
+ ['CmmmH','.....','##S##','#####','#####'],
  ['Cmm#H','...m.','.....','#####','#####'],
  ['#..mH','#S...','#mC..','m....','...m.'],
- ['C#m.H','.m#..','.S#..','..m..','.....'],
+ ['H..#C','m.mSm','.m#.#','.#...','....#'],
  ['C.mH#','....#','#####','#####','#####'],
 ];
-const budgets=[3,6,6,8,6,11,5];
+const budgets=[3,6,8,8,6,8,5];
 const lessons=[
  'Mud costs 2 walking steps. Sand costs 1. Turns cost no steps. Walk across this patch to try it.',
  'The straight path costs 7 steps. You have 6. Can a longer plan walk around the mud?',
- 'The shell is near the mud. Plan where to return to the top row.',
+ 'The shell sits in a little pocket. Visit it, then find a dry way home.',
  'A sandcastle blocks the straight path. Look for a dry crossing.',
  'Cards and walking steps are different. A short plan can cost more steps.',
- 'Collect the shell on the way. Plan your way back around the sandcastles.',
+ 'The shortest plan costs 9 steps. You have 8. Find one extra card that avoids a muddy step.',
  'One small patch to finish. The budget is roomy: choose your own route.',
 ];
 const mud=mudRows.map((rows,i)=>descriptor({id:`mud-${i+1}`,pace:'medium',skill:'think.sequence',rows,facing:1,tier:Math.min(2,Math.floor(i/2)) as 0|1|2},budgets[i],[],lessons[i]));
@@ -45,4 +45,5 @@ const certify=(d:Descriptor)=>{
 };
 const output={version:1,replays:replays.map(certify),debug:debug.map(certify),mud:mud.map(certify)};
 writeFileSync(new URL('./challenge-content.json',import.meta.url),JSON.stringify(output,null,2)+'\n');
+writeFileSync(new URL('./repair-plans.json',import.meta.url),JSON.stringify(output.debug.map(p=>({id:p.descriptor.level.id,starter:p.descriptor.starter,plan:p.witness})),null,2)+'\n');
 console.log(output.mud.map(p=>`${p.descriptor.level.id}: ${p.cards} cards / ${p.steps} steps`).join('\n'));

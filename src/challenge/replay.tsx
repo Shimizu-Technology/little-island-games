@@ -11,6 +11,8 @@ const metrics = ['cards','steps','placements','loads','turns'];
 /** Replay-only kit. Checkpoint engines register their bounded exact codecs separately. */
 export function defineReplayGame<D,P,A,S>(config: {
   game: string; codec: string; context: string; cove: boolean; budget: SessionBudget;
+  planningDaresHideSupport?: boolean;
+  prefilledStart?: (payload: ReplayPayload<P,A>) => boolean;
   puzzles: readonly Puzzle<D>[]; objectives?: readonly string[]; engine: ReplayEngine<D,P,A,S>;
   Board: ComponentType<ChallengeViewProps<S,A>>; controls: { help: () => A; reset: () => A };
 }): TypedRegistration<ReplayPayload<P,A>,A,S> {
@@ -41,6 +43,7 @@ export function defineReplayGame<D,P,A,S>(config: {
     const puzzle=find(session), p=session.payload;
     if (!puzzle || !plain(p) || !exactKeys(p,['version','initial','options','firstSolutions','actions']) || p.version !== 1 || !plain(p.options) || !exactKeys(p.options,['supportOff','ownRead']) || typeof p.options.supportOff !== 'boolean' || typeof p.options.ownRead !== 'boolean' || !dense(p.firstSolutions,32) || !p.firstSolutions.every(hashId) || new Set(p.firstSolutions).size !== p.firstSolutions.length || !engine.validInitial(p.initial,puzzle.descriptor) || !dense(p.actions,512) || !p.actions.every(engine.validAction)) return null;
     const payload=p as ReplayPayload<P,A>;
+    if(config.planningDaresHideSupport&&!payload.options.supportOff&&puzzle.dares.some(d=>session.selectedDares.includes(d.slot)&&d.rule.kind==='plan'))return null;
     let state=engine.create(puzzle.descriptor,payload.initial,payload.options);
     let helpUsed=false, heard=false, failed=false, runs=0, checks=0, resets=0;
     for (const action of payload.actions) {
@@ -57,7 +60,7 @@ export function defineReplayGame<D,P,A,S>(config: {
       state=next.state;
     }
     const result=engine.inspect(state,puzzle.descriptor);
-    if (typeof result.solved !== 'boolean' || !plain(result.metrics) || Object.entries(result.metrics).some(([k,v])=>!metrics.includes(k) || !uint(v)) || !uint(result.edits) || !(result.solution === null || hashId(result.solution)) || !dense(result.objectives,8) || !result.objectives.every(id=>asciiId(id)&&objectiveIds.has(id)) || new Set(result.objectives).size !== result.objectives.length) return null;
+    if (result.dareEligible!==undefined&&typeof result.dareEligible!=='boolean' || typeof result.solved !== 'boolean' || !plain(result.metrics) || Object.entries(result.metrics).some(([k,v])=>!metrics.includes(k) || !uint(v)) || !uint(result.edits) || !(result.solution === null || hashId(result.solution)) || !dense(result.objectives,8) || !result.objectives.every(id=>asciiId(id)&&objectiveIds.has(id)) || new Set(result.objectives).size !== result.objectives.length) return null;
     return {state,evidence:{...result,...payload.options,helpUsed,heard,failed,runs,checks,resets,firstSolutions:payload.firstSolutions}};
     } catch { return null; }
   }
@@ -65,7 +68,7 @@ export function defineReplayGame<D,P,A,S>(config: {
     const round=replay(session), puzzle=find(session); if (!round?.evidence.solved || !puzzle) return null;
     const e=round.evidence, together=session.partner !== null;
     const event=together?'together':e.helpUsed || e.failed?'helped':'independent';
-    const dares=session.selectedDares.filter(slot=>{const dare=puzzle.dares.find(d=>d.slot===slot);return !!dare && proves(dare.rule,e,dare.help,together);}).sort((a,b)=>a-b);
+    const dares=session.selectedDares.filter(slot=>{const dare=puzzle.dares.find(d=>d.slot===slot);return e.dareEligible!==false && !!dare && proves(dare.rule,e,dare.help,together);}).sort((a,b)=>a-b);
     const awards=puzzle.awards.reduce<number>((bits,rule,i)=>bits | (rule && proves(rule.rule,e,rule.help,together) ? 1<<i : 0),0);
     return {event,awards,dares,cost:puzzle.par ? e.metrics[puzzle.par.metric] ?? null : null,solution:e.solution};
   }
@@ -79,13 +82,13 @@ export function defineReplayGame<D,P,A,S>(config: {
     banks.set(bank.slot,{...bank,entries:[...bank.entries,{ordinal:bank.slot*1024+puzzle.ref.puzzle,hash:puzzle.ref.hash}],awards:[...bank.awards,puzzle.awards.reduce<number>((n,r,i)=>n | (r ? 1<<i:0),0)]});
   }
   const codec={game:config.game,cove:config.cove,budget:config.budget,validate:(s:ChallengeSession)=>replay(s)!==null,evaluate,
-    canStart:(s:ChallengeSession)=>replay(s)!==null && (s.payload as ReplayPayload<P,A>).actions.length===0 && s.result===null,
+    canStart:(s:ChallengeSession)=>replay(s)!==null && ((s.payload as ReplayPayload<P,A>).actions.length===0 || config.prefilledStart?.(s.payload as ReplayPayload<P,A>)===true) && s.result===null,
     extends:(a:ChallengeSession,b:ChallengeSession)=>{const p=a.payload as ReplayPayload<P,A>,q=b.payload as ReplayPayload<P,A>;return q.actions.length>p.actions.length && JSON.stringify({...p,actions:[]})===JSON.stringify({...q,actions:[]}) && p.actions.every((action,i)=>JSON.stringify(action)===JSON.stringify(q.actions[i]));}};
   const catalog:SaveCatalog={banks,dares,codecs:new Map([[config.codec,codec]]),contexts:new Set(config.puzzles.map(p=>`${config.context}-${p.tier}`))};
   return {game:config.game,codec:config.codec,cove:config.cove,contextFor:ref=>`${config.context}-${config.puzzles.find(p=>p.ref.bank===ref.bank&&p.ref.puzzle===ref.puzzle)?.tier??1}`,puzzles:config.puzzles,catalog,controls:config.controls,
     start:(ref,owner,id,progress,options,selectedDares)=>{
       const puzzle=config.puzzles.find(p=>sameRef(p.ref,ref)); if(!puzzle)throw new Error('Unknown puzzle.');
-      const payload:ReplayPayload<P,A>={version:1,initial:engine.initial(puzzle.descriptor),options:{...options},firstSolutions:progress.solutions.filter(([b,p])=>b===ref.bank&&p===ref.puzzle).map(([, ,hash])=>hash),actions:[]};
+      const payload:ReplayPayload<P,A>={version:1,initial:engine.initial(puzzle.descriptor),options:{...options,supportOff:options.supportOff||!!config.planningDaresHideSupport&&puzzle.dares.some(d=>selectedDares.includes(d.slot)&&d.rule.kind==='plan')},firstSolutions:progress.solutions.filter(([b,p])=>b===ref.bank&&p===ref.puzzle).map(([, ,hash])=>hash),actions:[]};
       const s:ChallengeSession={version:1,owner,game:config.game,id,ordinal:progress.nextOrdinal,revision:0,puzzle:ref,codec:config.codec,payload,selectedDares:[...selectedDares],partner:null,result:null,credited:false};
       if(!validChallengeSession(s,owner,catalog,owner.startsWith('cove-')) || !codec.canStart(s))throw new Error('Invalid launch.');return s;
     },
@@ -94,6 +97,6 @@ export function defineReplayGame<D,P,A,S>(config: {
       if(jsonBytes(next)>4096 || !replay(next))return null;
       const result={...next,result:evaluate(next)};return validChallengeSession(result,s.owner,catalog,s.owner.startsWith('cove-'))?result:null;
     },
-    render:(s,dispatch,active,width)=>{const round=replay(s);return round ? <config.Board state={round.state} dispatch={dispatch} active={active} width={width}/> : null;},
+    render:(s,dispatch,active,width,onSettled)=>{const round=replay(s);return round ? <config.Board state={round.state} dispatch={dispatch} active={active} width={width} onSettled={onSettled}/> : null;},
   };
 }

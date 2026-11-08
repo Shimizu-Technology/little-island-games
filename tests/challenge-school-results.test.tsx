@@ -4,6 +4,7 @@ import { expect, it, vi } from 'vitest';
 import { LearnFrame } from '../src/learn/LearnFrame';
 import * as storeModule from '../src/state/Store';
 import { StoreProvider, useStore } from '../src/state/Store';
+import { emptyChallenge } from '../src/state/challenge';
 import { emptySave } from '../src/state/validation';
 import { encodeSave, migrateProfiles } from '../src/state/profiles';
 import { addLearner } from '../src/learn/learners';
@@ -77,4 +78,13 @@ it.each([false,true])('Crab entry dismisses setup without changing a School draf
   expect(r.root.findByProps({title:hasDraft?'A fresh round':'Let’s play Crab Commands'}).props.visible).toBe(false);
   expect(JSON.stringify(store.save.learn?.['crab-commands'])).toBe(before);
  }finally{route.focused=true;if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+it.each(['e7','e6'])('Crab P2-7: finished %s beach offers same-puzzle only when registered',async id=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.mocked(router.push).mockClear();route.focused=true;
+ const {levels,solve}=await import('../src/learn/games/crab-commands/engine');
+ let save=migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')});const round=startSession('crab-commands',{options:{mode:'solo',pace:'easy'}},{},42),ids=['ea1','eb1',id];
+ const completed=ids.map(id=>solve(levels.find(l=>l.id===id)!));save.learn={'crab-commands':{...round,learner:'a',state:{...round.state as object,levels:ids,completed,program:[],cursor:0,running:false,cards:completed.flat().length}}};
+ let progress=completedSignal(emptyChallenge(),schoolContext('crab-commands',1),true,true);progress=completedSignal(progress,schoolContext('crab-commands',1),true,true);progress.signals[0][3]='easy';save.challenge=progress;save.profiles!.people.a.challenge=progress;db.raw=encodeSave(save);let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><CrabProbe/></StoreProvider>);});await press(r,id==='e7'?'Try this beach with a dare':'Try a related challenge');expect(router.push).toHaveBeenCalledWith({pathname:'/challenge',params:{game:'crab-commands',...(id==='e7'?{puzzle:'7:3'}:{})}});
+ }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });

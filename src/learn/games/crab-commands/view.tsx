@@ -553,7 +553,7 @@ export function Board({
               </View>
               {hint > 0 && (
                 <View style={{ gap: 4 }}>
-                  <Copy style={{ fontSize: 13, color: C.ink }}>{!helpPlan ? "Finding one step…" : hint === 1 ? (helpPlan.next ? `${helpPlan.keep < s.program.length ? "Change" : "Add"} card ${helpPlan.keep + 1}: ${cardLabel[helpPlan.next]}. Keep the cards before it.` : "Your plan reaches home. Press Go to try it.") : hint === 2 ? "Try that one step, or ask for the whole plan." : "One plan that works:"}</Copy>
+                  <Copy style={{ fontSize: 13, color: C.ink }}>{!helpPlan ? "Finding one step…" : hint === 1 ? (helpPlan.next ? `${helpPlan.keep < s.program.length ? "Change" : "Add"} card ${helpPlan.keep + 1}: ${cardLabel[helpPlan.next]}. Keep the cards before it.` : "Your plan reaches home. Press Go to try it.") : hint === 2 ? (helpPlan.next ? `${helpPlan.keep < s.program.length ? "Change" : "Add"} card ${helpPlan.keep + 1}: ${cardLabel[helpPlan.next]}. Try this step, or ask for the whole plan.` : "Your plan reaches home. Press Go to try it.") : "One plan that works:"}</Copy>
                   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
                     {(hint === 3 ? helpPlan?.plan ?? shortest : []).map((c, i) => (
                       <PressableScale

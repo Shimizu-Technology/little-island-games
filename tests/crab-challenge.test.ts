@@ -12,13 +12,13 @@ const change=(s:State,a:Action)=>{const n=e.step(s,a,s.descriptor);expect(n,JSON
 const move=(s:ChallengeSession,a:Action)=>{const n=registration.move(s,a);expect(n,JSON.stringify(a)).not.toBeNull();return n!;};
 function finish(s:ChallengeSession,program:Command[]) {
  for(const c of program)s=move(s,['a',cardCodes.indexOf(c)]);
- s=move(s,['g']);for(let i=0;i<program.length&&!s.result;i++)s=move(s,['t']);return s;
+ s=move(s,['g']);return s;
 }
 describe('Crab authored first proof',()=>{
  it('registers 24 distinct dares on exactly replayable School beaches, without changing those beaches',()=>{
   const replays=crabPuzzles.filter(p=>p.source.kind==='school');
-  expect(replays).toHaveLength(12);expect(replays.flatMap(p=>p.dares)).toHaveLength(24);
-  expect(new Set(replays.flatMap(p=>p.dares.map(d=>d.slot))).size).toBe(24);
+  expect(replays).toHaveLength(12);expect(replays.flatMap(p=>p.dares.filter(d=>!d.retired))).toHaveLength(24);
+  expect(new Set(replays.flatMap(p=>p.dares.filter(d=>!d.retired).map(d=>d.slot))).size).toBe(24);
   for(const p of replays){expect(p.source.kind).toBe('school');if(p.source.kind!=='school')continue;
    const source=p.source;expect(p.descriptor.level).toEqual(levels.find(l=>l.id===source.puzzle));
    expect(p.ref.hash).toBe(sha256Hex(JSON.stringify(p.descriptor)));
@@ -36,7 +36,7 @@ describe('Crab authored first proof',()=>{
  it('teaches walking costs before the detour, three developments, twist, hard and easy finish',()=>{
   expect(proofContent.mud).toHaveLength(7);
   const [teach,detour,,develop,twist,hard,easy]=proofContent.mud;
-  expect([teach.cards,detour.cards,twist.cards,hard.cards,easy.cards]).toEqual([2,9,11,15,3]);
+  expect([teach.cards,detour.cards,twist.cards,hard.cards,easy.cards]).toEqual([2,9,11,10,3]);
   expect(execute(detour.descriptor as Descriptor,['forward','forward','forward','forward'])).toMatchObject({won:false,cost:7});
   expect(execute({...detour.descriptor,budget:null} as Descriptor,['forward','forward','forward','forward']).won).toBe(true);
   expect([detour.steps,develop.steps,twist.steps]).toEqual([6,8,6]);
@@ -65,7 +65,7 @@ describe('Crab authored first proof',()=>{
  it('inserts missing cards, removes extras, resets and undoes without losing attempt evidence',()=>{
   let s=initial(proofContent.debug[1].descriptor as Descriptor),before=[...s.program];
   s=change(s,['i',2,cardCodes.indexOf(proofContent.debug[1].witness[2] as Command)]);expect(execute(s.descriptor,s.program).won).toBe(true);
-  s=change(s,['x',2]);expect(s.program).toEqual(before);s=change(s,['z']);s=change(s,['u']);expect(s.program).toEqual(before);
+  s=change(s,['x',2]);expect(s.program).toEqual(before);expect(e.step(s,['z'],s.descriptor)).toBeNull();s=change(s,['u']);expect(execute(s.descriptor,s.program).won).toBe(true);
  });
  it('one-step hints preserve valid alternate prefixes and never silently replace the plan',()=>{
   for(const p of proofContent.mud){const d=p.descriptor as Descriptor, before=JSON.stringify(d),hint=nextHint(d,[]);expect(hint.keep).toBe(0);expect(execute(d,hint.plan).won).toBe(true);expect(JSON.stringify(d)).toBe(before);}
@@ -100,19 +100,21 @@ describe('Crab authored first proof',()=>{
  });
 });
 describe('Crab real Challenge replay and marks',()=>{
- it.each(crabPuzzles.filter(p=>p.source.kind==='school'))('proves the selected dares on $title, and preserves them after helped replay',p=>{
-  let s=registration.start(p.ref,'a','crab-proof',emptyChallenge(),{...options,supportOff:p.dares.some(d=>d.rule.kind==='blind')},p.dares.map(d=>d.slot));
-  s=finish(s,solution(p.descriptor)!);expect(s.result?.dares).toEqual(p.dares.map(d=>d.slot));expect(validChallengeSession(s,'a',registration.catalog)).toBe(true);
-  const progress=creditProgress(emptyChallenge(),p.ref,s.result!,registration.catalog);expect(dareBits(progress.dares)?.filter(Boolean)).toHaveLength(2);
-  const next=creditProgress(progress,p.ref,{event:'helped',awards:0,dares:[],cost:null,solution:null},registration.catalog);expect(next.dares).toBe(progress.dares);
-  expect(registration.move(s,['h'])).toBeNull();
+ it.each(crabPuzzles.filter(p=>p.source.kind==='school'))('proves one selected dare at a time on $title, preserving it after helped replay',p=>{
+  for(const dare of p.dares.filter(d=>!d.retired)){
+   let s=registration.start(p.ref,'a','crab-proof',emptyChallenge(),{...options,supportOff:dare.rule.kind==='blind'||dare.rule.kind==='plan'},[dare.slot]);
+   s=finish(s,solution(p.descriptor)!);expect(s.result?.dares).toEqual([dare.slot]);expect(validChallengeSession(s,'a',registration.catalog)).toBe(true);
+   const progress=creditProgress(emptyChallenge(),p.ref,s.result!,registration.catalog);expect(dareBits(progress.dares)?.filter(Boolean)).toHaveLength(1);
+   const next=creditProgress(progress,p.ref,{event:'helped',awards:0,dares:[],cost:null,solution:null},registration.catalog);expect(next.dares).toBe(progress.dares);
+   expect(registration.move(s,['h'])).toBeNull();
+  }
  });
  it('resumes an exact running draft, retains failed runs after undo/reset, and allows a helped finish',()=>{
   const p=crabPuzzles.find(p=>p.source.kind==='school')!;let s=registration.start(p.ref,'a','crab-save',emptyChallenge(),options,p.dares.map(d=>d.slot));
-  s=move(s,['a',0]);s=move(s,['g']);s=move(s,['t']);s=move(s,['z']);s=move(s,['h']);
-  for(const c of solution(p.descriptor)!)s=move(s,['a',cardCodes.indexOf(c)]);s=move(s,['g']);s=move(s,['t']);
+  s=move(s,['a',0]);s=move(s,['g']);s=move(s,['z']);s=move(s,['h']);
+  for(const c of solution(p.descriptor)!)s=move(s,['a',cardCodes.indexOf(c)]);s=move(s,['g']);
   s=JSON.parse(JSON.stringify(s));expect(validChallengeSession(s,'a',registration.catalog)).toBe(true);
-  for(let i=0;i<80&&!s.result;i++)s=move(s,['t']);expect(s.result?.event).toBe('helped');expect(s.result?.dares).not.toContain(p.dares[0].slot);
+expect(s.result?.event).toBe('helped');expect(s.result?.dares).not.toContain(p.dares[0].slot);
   expect(validChallengeSession({...s,result:{...s.result,dares:[p.dares[0].slot]}},'a',registration.catalog)).toBe(false);
   expect(validChallengeSession(s,'b',registration.catalog)).toBe(false);
  });

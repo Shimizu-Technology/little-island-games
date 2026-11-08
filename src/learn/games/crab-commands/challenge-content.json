@@ -805,17 +805,17 @@
           "skill": "think.sequence",
           "rows": [
             "CmmmH",
-            "..S..",
-            "#####",
+            ".....",
+            "##S##",
             "#####",
             "#####"
           ],
           "facing": 1,
           "tier": 1
         },
-        "budget": 6,
+        "budget": 8,
         "starter": [],
-        "lesson": "The shell is near the mud. Plan where to return to the top row."
+        "lesson": "The shell sits in a little pocket. Visit it, then find a dry way home."
       },
       "witness": [
         "turn-right",
@@ -823,15 +823,21 @@
         "turn-left",
         "forward",
         "forward",
+        "turn-right",
+        "forward",
+        "turn-left",
+        "turn-left",
+        "forward",
+        "turn-right",
         "forward",
         "forward",
         "turn-left",
         "forward"
       ],
-      "cards": 9,
-      "steps": 6,
-      "minimumSteps": 6,
-      "flatCards": 9,
+      "cards": 15,
+      "steps": 8,
+      "minimumSteps": 8,
+      "flatCards": 15,
       "commands": [
         "forward",
         "turn-left",
@@ -929,40 +935,35 @@
           "pace": "medium",
           "skill": "think.sequence",
           "rows": [
-            "C#m.H",
-            ".m#..",
-            ".S#..",
-            "..m..",
-            "....."
+            "H..#C",
+            "m.mSm",
+            ".m#.#",
+            ".#...",
+            "....#"
           ],
           "facing": 1,
           "tier": 2
         },
-        "budget": 11,
+        "budget": 8,
         "starter": [],
-        "lesson": "Collect the shell on the way. Plan your way back around the sandcastles."
+        "lesson": "The shortest plan costs 9 steps. You have 8. Find one extra card that avoids a muddy step."
       },
       "witness": [
         "turn-right",
         "forward",
+        "turn-right",
         "forward",
-        "turn-left",
+        "forward",
         "forward",
         "turn-right",
         "forward",
         "turn-left",
-        "forward",
-        "forward",
-        "forward",
-        "turn-left",
-        "forward",
-        "forward",
         "forward"
       ],
-      "cards": 15,
-      "steps": 11,
-      "minimumSteps": 11,
-      "flatCards": 15,
+      "cards": 10,
+      "steps": 8,
+      "minimumSteps": 8,
+      "flatCards": 10,
       "commands": [
         "forward",
         "turn-left",

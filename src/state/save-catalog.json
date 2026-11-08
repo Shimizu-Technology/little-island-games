@@ -145,6 +145,26 @@
         1
       ],
       "cove": false
+    },
+    {
+      "slot": 10,
+      "engine": "crab-commands",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 10240,
+          "hash": "2330ada53f9d0fae798e6d52cf3e60a52510e2ab7084f801e356957ecf95c6fa"
+        },
+        {
+          "ordinal": 10241,
+          "hash": "4d5ea2027b0f53a6fa4240f83b784b1e1ed407289407d97f654f8df09386642a"
+        }
+      ],
+      "awards": [
+        1,
+        1
+      ],
+      "cove": false
     }
   ],
   "dares": [
@@ -362,6 +382,24 @@
         "help": "allowed",
         "bank": 7,
         "puzzle": 11
+      }
+    ],
+    [
+      152,
+      {
+        "kind": "blind",
+        "help": "allowed",
+        "bank": 7,
+        "puzzle": 3
+      }
+    ],
+    [
+      153,
+      {
+        "kind": "blind",
+        "help": "allowed",
+        "bank": 7,
+        "puzzle": 7
       }
     ]
   ],
