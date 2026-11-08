@@ -33,13 +33,13 @@ export function LevelMap({ game, person, levels, unlockAll, onLevel, onOutfits, 
     </View>
     <View style={{ flexDirection: width >= 760 ? "row" : "column", flexWrap: "wrap", gap: 18, paddingHorizontal: width >= 760 ? 16 : 0, justifyContent: "space-between" }}>{game.worlds.map((world, worldIndex) => {
       if (world.id !== selectedWorld) return null;
-      const open = unlockAll || p.openWorlds.includes(world.id), own = levels.filter(l => l.world === world.id), high = 310;
+      const own = levels.filter(l => l.world === world.id), high = 310;
       const xs = [0, 1, 2, 3, 3, 2, 1, 0].map(c => c * unit + unit / 2), ys = [65, 46, 65, 84, 205, 223, 205, 187];
       const d = `M${xs[0]} ${ys[0]} C${xs[1]} 5 ${xs[2]} 26 ${xs[3]} ${ys[3]} Q${pathWidth + 10} 160 ${xs[4]} ${ys[4]} C${xs[5]} 267 ${xs[6]} 229 ${xs[7]} ${ys[7]}`;
       return <View key={world.id} testID={`world-${world.id}`} style={{ marginHorizontal: width >= 760 ? 0 : width >= 600 ? 24 : 8, width: width >= 760 ? "100%" : undefined, maxWidth: 700, alignSelf: "center", borderRadius: 32, overflow: "hidden", borderWidth: 3, borderColor: "#D5E8D3" }}>
         <PlayScene Scene={Scene} game={game.id} world={world.id} active={active}/>
         {world.palette && <View pointerEvents="none" style={{ position: "absolute", inset: 0, backgroundColor: world.palette[0], opacity: .38 }}/>}
-        <View style={{ paddingTop: 20, paddingHorizontal: 20, gap: 5 }}><Copy style={{ color: "#FFF1C5", fontSize: 12, fontWeight: "800", letterSpacing: 2, backgroundColor: "#24536A", alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 }}>{world.learning ? "PLAY & DISCOVER" : `WORLD ${worldIndex + 1}`}</Copy><Heading style={{ fontSize: 28, color: "#FFF8E4", backgroundColor: "#24536A", alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>{world.name}</Heading><Copy style={{ color: "#FFF8E4", fontSize: 15, backgroundColor: "#24536A", paddingHorizontal: 9, paddingVertical: 5, borderRadius: 12 }}>{open ? worldNote?.(world.id) ?? world.detail : `${world.stars} stars to explore · ${starCount(p.stars)} found`}</Copy></View>
+        <View style={{ paddingTop: 20, paddingHorizontal: 20, gap: 5 }}><Copy style={{ color: "#FFF1C5", fontSize: 12, fontWeight: "800", letterSpacing: 2, backgroundColor: "#24536A", alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 }}>{world.learning ? "PLAY & DISCOVER" : `WORLD ${worldIndex + 1}`}</Copy><Heading style={{ fontSize: 28, color: "#FFF8E4", backgroundColor: "#24536A", alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>{world.name}</Heading><Copy style={{ color: "#FFF8E4", fontSize: 15, backgroundColor: "#24536A", paddingHorizontal: 9, paddingVertical: 5, borderRadius: 12 }}>{worldNote?.(world.id) ?? world.detail}</Copy></View>
         <View style={{ width: pathWidth, height: high, alignSelf: "center", marginTop: 10 }}><Svg width={pathWidth} height={high} style={{ position: "absolute" }} accessible={false}><Path d={d} fill="none" stroke="#325F77" strokeWidth={23} strokeLinecap="round" opacity={.5}/><Path d={d} fill="none" stroke="#F2DDA5" strokeWidth={16} strokeLinecap="round"/><Path d={d} fill="none" stroke="#FFF3CE" strokeWidth={3} strokeDasharray="2 13" strokeLinecap="round"/></Svg>
           {own.map((level, i) => {
             const available = levelOpen(p, level.id, unlockAll), stars = p.stars[level.id] ?? 0, current = next?.id === level.id;
@@ -54,6 +54,6 @@ export function LevelMap({ game, person, levels, unlockAll, onLevel, onOutfits, 
         </View>
       </View>;
     })}</View>
-    <View style={{ marginHorizontal: 16, padding: 20, backgroundColor: "#FFF2CE", borderRadius: 28, gap: 10 }}><Heading style={{ fontSize: 25 }}>Free play</Heading><Copy>{endlessOpen(p, unlockAll) ? "Your own pace. Stop whenever you like." : "Clear the eight first-world levels to explore."}</Copy><Copy>Free-play record: {freeBest}</Copy><Copy>{bestLabel}: {p.best}</Copy><Copy style={{ fontSize: 13 }}>Historical scores include Helper and different level settings.</Copy><Button disabled={!endlessOpen(p, unlockAll)} onPress={() => onLevel("endless")}>Play freely</Button></View>
+    <View style={{ marginHorizontal: 16, padding: 20, backgroundColor: "#FFF2CE", borderRadius: 28, gap: 10 }}><Heading style={{ fontSize: 25 }}>Free play</Heading><Copy>{"Your own pace. Stop whenever you like."}</Copy><Copy>Free-play record: {freeBest}</Copy><Copy>{bestLabel}: {p.best}</Copy><Copy style={{ fontSize: 13 }}>Historical scores include Helper and different level settings.</Copy><Button disabled={!endlessOpen(p, unlockAll)} onPress={() => onLevel("endless")}>Play freely</Button></View>
   </View>;
 }

@@ -1,4 +1,6 @@
-import { progressBytes, challengeLimit, emptyChallenge, type ChallengeSession } from './challenge';
+import { challengeFor } from '../challenge/catalog';
+import { completedSignal } from '../challenge/offers';
+import { progressBytes, challengeLimit, emptyChallenge, validChallengeProgress, type ChallengeProgress, type Signal, type ChallengeSession } from './challenge';
 import { challengeAttempt, recoverChallengeDrafts, newSaveRevision, draftGrowth, progressFor, putProgress, selectedOwner, envelopeWrite, refusalMessage, type ChallengeRefusal, type ChallengeExpected } from './challengeDrafts';
 import { addCovePerson, removeCovePerson } from './covePeople';
 import { DraftQueue } from './draftQueue';
@@ -28,6 +30,7 @@ import { ActivityExpected, applyActivitySave } from "./activityAction";
 import { topicById } from "../explore/content";
 import { rememberNames } from "../games/match";
 import type { LearnId, LearnSession } from "../learn/types";
+import { finished as schoolFinished } from '../learn/session';
 import { recordLevelRound } from "../learn/levelEvidence";
 import { toggleShelfFavorite } from "../learn/home";
 import { LearnExpected, applyLearnSave, applyPractice, applyOwnedPractice } from "./learnAction";
@@ -37,7 +40,10 @@ import { AudioPreferences } from "../components/Audio";
 import { recordPracticeNote } from "../practice/notes";
 import { type ArcadeAction, type ArcadeExpected, type ArcadeId } from "../arcade";
 import { applyArcadeAction } from "../arcade/saveAction";
+type WorkingPatch = {bridge?:LearnId;signal?:Signal;choice?:ChallengeProgress['choice']};
+type WorkingExpected = {owner:string;epoch:number;game:string;id:string;revision:number;kind:'school'|'challenge'};
 type Store = {
+  challengeWorking: (patch: WorkingPatch, expected: WorkingExpected) => boolean;
   challengeRefusal: ChallengeRefusal | null;
   backup: () => Promise<string>;
   challengeDiscard: (expected: ChallengeExpected) => Promise<boolean>;
@@ -103,6 +109,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [epoch, setEpoch] = useState(0);
   const audioPreferences = useMemo(() => ({ ...save.settings, epoch }), [save.settings, epoch]);
   const generation = useRef(0);
+  const challengeTerminal = useRef<{epoch:number;session:ChallengeSession}|null>(null);
   const boundaryRefused = useRef(false);
   const admittedBytes = useRef(0);
   const latest = useRef(save),
@@ -110,15 +117,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     mounted = useRef(true),
     uncertainWrite = useRef(false),
     restoring = useRef(false);
+  const admitEnvelope = useCallback((encoded: string) => {
+    let message: string;
+    if (!withinSaveLimit(encoded)) message = 'This change exceeds the save limit. Your saved work is kept. Export it before managing paused games or people.';
+    else {
+      try { parseSave(encoded); return true; }
+      catch { message = 'This change contains invalid saved game data. Your saved work is kept. Please try again.'; }
+    }
+    admissionRejected.current = true; writeFailures.current++; setError(message); return false;
+  }, []);
   const persist = useCallback((next: Save, prepared = false) => {
     if (restoring.current || uncertainWrite.current) return queue.current;
     const durable = prepared ? next : { ...next, saveRevision:newSaveRevision() };
     const encoded = encodeSave(durable);
-    if (!withinSaveLimit(encoded)) {
-      admissionRejected.current = true; writeFailures.current++;
-      setError('This change exceeds the save limit. Your saved work is kept. Export it before managing paused games or people.');
-      return queue.current;
-    }
+    // Prepared commits already passed whole-envelope admission before publication.
+    if (!prepared && !admitEnvelope(encoded)) return queue.current;
     admittedBytes.current = utf8Bytes(encoded);
     latest.current = durable; setSave(durable);
     pendingWrites.current++; setSaving(true);
@@ -134,7 +147,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (mounted.current) setError("Your latest changes could not be saved. Keep the app open and try again.");
       }).finally(() => { pendingWrites.current--; if (mounted.current && pendingWrites.current === 0) setSaving(false); });
     return queue.current;
-  }, []);
+  }, [admitEnvelope]);
   const [draftWriter] = useState(() => new DraftQueue());
   const writeDraft = useCallback((key:string,raw:string) => draftWriter.enqueue(key,raw,{schedule:work => {
     pendingWrites.current++; setSaving(true);
@@ -217,7 +230,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if ((previous.learning?.active ?? 'family') !== (next.learning?.active ?? 'family')) {
         const kept = syncProfile(previous);
         next = syncProfile(projectProfile({ ...next, profiles: kept.profiles ? { ...kept.profiles, people: { ...next.profiles?.people, ...kept.profiles.people } } : next.profiles }, next.learning));
-        if (!withinSaveLimit(encodeSave(next))) { admissionRejected.current = true; writeFailures.current++; setError("This change exceeds the save limit. Your saved work is kept."); return false; }
+        if (!admitEnvelope(encodeSave(next))) return false;
         admissionRejected.current = false; latest.current = next; setSave(next); setBadgeResult(null); void persist(next,true); return true;
       }
       const previousWord = latest.current.sessions["word-rescue"],
@@ -234,7 +247,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const newBadges = badgesFor(personFor(next, owner).milestones).filter(id => !previousBadges.includes(id));
       const source = completionSource(before, next);
       next = syncProfile(next);
-      if (!withinSaveLimit(encodeSave(next))) { admissionRejected.current = true; writeFailures.current++; setError("This change exceeds the save limit. Your saved work is kept."); return false; }
+      if(!withinSaveLimit(encodeSave(next)) && Object.entries(next.learn??{}).some(([game,round])=>{
+        const old=before.learn?.[game as LearnId];return old&&round&&old.id===round.id&&!schoolFinished(old)&&schoolFinished(round);
+      })){
+        const prior=progressFor(before,owner), progress=progressFor(next,owner);
+        if(prior&&progress)next=putProgress(next,owner,{...progress,signals:prior.signals,practice:prior.practice});
+      }
+      if (!admitEnvelope(encodeSave(next))) return false;
       admissionRejected.current = false;
       if (newBadges.length && source) setBadgeResult({ owner, epoch: generation.current, badges: newBadges, source });
       latest.current = next;
@@ -242,7 +261,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       void persist(next,true);
       return true;
     },
-    [persist, ready, recovery]
+    [persist, ready, recovery, admitEnvelope]
   );
   const update = useCallback(
     (game: GameId, next: GameState, expected?: GameState) => {
@@ -468,6 +487,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const before = latest.current, removed = withoutLearner(before, id);
     if (removed === before) return false;
     const next = removed.library ? { ...removed, library: { ...removed.library, profiles: Object.fromEntries(Object.entries(removed.library.profiles).filter(([owner]) => owner !== id)) } } : removed;
+    // Reject a malformed candidate before preserving drafts or replacing the family save.
+    try { parseSave(encodeSave(next)); } catch { return false; }
     restoring.current = true;
     try {
       await queue.current;
@@ -545,6 +566,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     [recovery]
   );
+  const challengeWorking = useCallback((patch: WorkingPatch, expected:WorkingExpected) => {
+    const before=latest.current, progress=progressFor(before,expected.owner);
+    if(expected.epoch!==generation.current || (expected.kind==='school'?(before.learning?.active??'family'):selectedOwner(before))!==expected.owner || !progress)return false;
+    const round=expected.kind==='challenge'?(progress.paused.find(s=>s.game===expected.game)??(challengeTerminal.current?.epoch===expected.epoch&&challengeTerminal.current.session.game===expected.game?challengeTerminal.current.session:undefined)):before.learn?.[expected.game as LearnId];
+    if(!round || round.id!==expected.id || round.revision!==expected.revision || ('owner' in round?round.owner:round.learner??'family')!==expected.owner)return false;
+    const signals=patch.signal?[...progress.signals.filter(s=>s[0]!==patch.signal![0]),patch.signal].slice(-(expected.owner.startsWith('cove-')?8:32)):progress.signals;
+    const next={...progress,signals,choice:patch.choice===undefined?progress.choice:patch.choice};
+    if(!validChallengeProgress(next,expected.owner,undefined,expected.owner.startsWith('cove-')))return false;
+    let candidate=putProgress(before,expected.owner,next);
+    if(patch.bridge){
+      if(expected.kind!=='school'||patch.bridge!==expected.game||!('options' in round)||round.options.mode!=='solo')return false;
+      candidate={...candidate,settings:{...candidate.settings,learningBridges:{...candidate.settings.learningBridges,[expected.owner]:[...new Set([...(candidate.settings.learningBridges?.[expected.owner]??[]),patch.bridge])]}}};
+    }
+    return commit(candidate);
+  },[commit]);
   const challengeSave = useCallback(async (session: ChallengeSession, expected: ChallengeExpected) => {
     if (!ready || recovery || restoring.current || uncertainWrite.current || expected.epoch !== generation.current) return refuseChallenge('stale');
     try { session = JSON.parse(JSON.stringify(session)) as ChallengeSession; }
@@ -552,11 +588,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (jsonBytes(session) > 4096) return refuseChallenge('session-budget');
     const before = latest.current, progress = progressFor(before,session.owner);
     const old = progress?.paused.find(s => s.game === session.game);
-    if (progress && progressBytes(progress) + (old ? draftGrowth(old,session) : jsonBytes(session)+1) > challengeLimit(session.owner.startsWith('cove-'))) return refuseChallenge('learner-ceiling');
+    if (old&&old.id===session.id&&!session.result&&progress && progressBytes(progress) + (old ? draftGrowth(old,session) : jsonBytes(session)+1) > challengeLimit(session.owner.startsWith('cove-'))) return refuseChallenge('learner-ceiling');
     const attempt = challengeAttempt(before,session,expected,generation.current);
     let next = attempt.save;
+    if (session.result && next!==before) {
+      const entry=challengeFor(session.game), nextProgress=progressFor(next,session.owner), previousPuzzle=progress?.recent.at(-1);
+      const differentPuzzle=!previousPuzzle || previousPuzzle[0]!==session.puzzle.bank || previousPuzzle[1]!==session.puzzle.puzzle;
+      if(entry&&nextProgress){
+        const optional=completedSignal(nextProgress,entry.contextFor(session.puzzle),session.result.event==='independent',session.owner!=='family'&&session.partner===null,session.owner.startsWith('cove-'),differentPuzzle);
+        const candidate=putProgress(next,session.owner,optional);
+        if(progressBytes(optional)<=challengeLimit(session.owner.startsWith('cove-'))&&withinSaveLimit(encodeSave(candidate)))next=candidate;
+      }
+    }
     if (attempt.refusal) return refuseChallenge(attempt.refusal);
-    if (old && session.result === null) {
+    if (old && old.id===session.id && session.result === null) {
       const bytes = admittedBytes.current + draftGrowth(old,session);
       if (bytes > 2_000_000) return refuseChallenge('full-save');
       // Accept before the first await. Later moves and ordinary commits see this revision immediately.
@@ -570,7 +615,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const encoded = encodeSave(next);
       if (!withinSaveLimit(encoded)) return refuseChallenge('full-save');
       parseSave(encoded);
-      try { await storage.set(encoded,envelopeWrite(next)); }
+      const folded=progress?.paused.filter(s=>!progressFor(next,session.owner)?.paused.some(p=>p.id===s.id))??[];
+      if(expected.replace){
+        const removed=folded.find(s=>s.game===expected.replace!.game);
+        if(!removed||!storage.discardSession)throw new Error('Replacement preservation unavailable.');
+        await storage.discardSession(JSON.stringify(removed));
+      }
+      const metadata=envelopeWrite(next);
+      try { await storage.set(encoded,{...metadata,folded:[...metadata.folded,...folded,...(session.result?[session]:[])]}); }
       catch (error) {
         // A committed write can lose its acknowledgement. Reconcile before allowing another persist.
         let head: string | null;
@@ -579,7 +631,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (head !== encoded) throw error;
       }
       admittedBytes.current = utf8Bytes(encoded);
-      latest.current = next; setSave(next); setChallengeRefusal(null); if (!boundaryRefused.current) setError(null); return true;
+      latest.current = next; if(session.result)challengeTerminal.current={epoch:generation.current,session}; setSave(next); setChallengeRefusal(null); if (!boundaryRefused.current) setError(null); return true;
     } catch {
       setError('This change could not be saved. Your saved work is kept. Keep the app open and try again, or export a backup.'); return false;
     } finally { restoring.current = false; }
@@ -629,7 +681,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   return (
     <Context.Provider
       value={{
-        save, backup, challengeRefusal, challengeSave, challengeDiscard, covePerson,
+        save, backup, challengeWorking, challengeRefusal, challengeSave, challengeDiscard, covePerson,
         badgeResult, dismissBadge: () => setBadgeResult(null),
         personalize, renameLearner, removeLearner, saving, assignEarlier: assignEarlierWork,
         arcade,

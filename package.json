@@ -50,7 +50,7 @@
     "puzzles": "node --import ./scripts/puzzles/register.mjs scripts/puzzles/cli.ts",
     "puzzles:verify": "npm run puzzles -- verify",
     "puzzles:scale": "node --expose-gc --import ./scripts/puzzles/register.mjs scripts/puzzles/cli.ts scale",
-    "check": "npm run save:catalog && npm run puzzles:verify && npm run typecheck && npm run lint && npm test && npm run export:web",
+    "check": "npm run registry:check && npm run save:catalog && npm run puzzles:verify && npm run typecheck && npm run lint && npm test && npm run export:web",
     "preview": "node scripts/serve.mjs",
     "doctor": "expo-doctor",
     "export:public": "node scripts/export-public.mjs",
@@ -64,6 +64,8 @@
     "ios:preview-bundle-prep": "node scripts/ios-preview-bundle.mjs prep",
     "ios:restore-generated": "node scripts/ios-preview-bundle.mjs restore",
     "ios:preview-build": "node scripts/ios-preview-bundle.mjs build --",
+    "registry:generate": "node scripts/generate-game-registry.mjs",
+    "registry:check": "node scripts/generate-game-registry.mjs --check",
     "ios:dev": "node scripts/ios-dev.mjs"
   },
   "private": true,

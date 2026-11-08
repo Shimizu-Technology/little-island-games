@@ -2,7 +2,7 @@ import { BoardId, boardIds, catalog, isBoardId } from "../board";
 import { GameId, gameIds, games, isFinished } from "../games";
 import { random } from "../games/types";
 import { ActivityId, activityFinished, activityIds } from "../state/activities";
-import type { Save } from "../state/validation";
+import { learningComfort, type Save } from "../state/validation";
 import { engines } from "./engines";
 import { finished } from "./session";
 import { activeLearner } from "./learners";
@@ -105,5 +105,5 @@ export function dailySuggestions(save: Save, day = dayNumber(), shuffle = 0): Le
 /** Shelf and setup agree for the active learner; a different owner's saved round stays intact. */
 export function shelfLevel(save: Save, game: LearnId) {
   const learner = activeLearner(save.learning), round = save.learn?.[game];
-  return levelOf(round && (round.learner ?? "family") === learner.id ? round.options : learner.choices[game]);
+  return round && (round.learner ?? "family") === learner.id ? levelOf(round.options) : learner.choices[game] ? levelOf(learner.choices[game]) : learningComfort(save).opening;
 }

@@ -90,16 +90,15 @@ export function validGrowth(s: unknown, game: LearnId, o: LearnOptions): s is Gr
 }
 /** Preserve every original engine contract when an additive stage is absent. */
 export function withGrowth(base: LearnEngine<unknown>): LearnEngine<unknown> {
-  if (base.ownLevels) return base;
   return { ...base,
     get skills() {
       const extra = Object.values(growthTracksFor(base.id)).flatMap(t => t?.questions ?? []);
       return { ...base.skills, ...Object.fromEntries(extra.map(q => [q.skill, q.skillLabel])) };
     },
-    create: (o, c) => o.stage ? createGrowth(base.id, o, c) : base.create(o, c),
-    validate: (s, o): s is unknown => o.stage ? validGrowth(s, base.id, o) : !isGrowth(s) && base.validate(s, o),
+    create: (o, c) => o.stage && !base.ownLevels && !base.nativeStages ? createGrowth(base.id, o, c) : base.create(o, c),
+    validate: (s, o): s is unknown => isGrowth(s) ? !!o.stage && validGrowth(s, base.id, o) : (!o.stage || !!base.ownLevels || !!base.nativeStages) && base.validate(s, o),
     outcome: (s, o) => {
-      if (!o.stage) return base.outcome(s, o);
+      if (!isGrowth(s)) return base.outcome(s, o);
       const p = growthProgress(s as GrowthState, growthQuestions(base.id, o, s as GrowthState));
       if (p.index < (s as GrowthState).ids.length) return null;
       if (o.mode !== "versus") return "done";
@@ -107,8 +106,8 @@ export function withGrowth(base: LearnEngine<unknown>): LearnEngine<unknown> {
       const a = p.clean.filter((_, i) => (i + (s as GrowthState).starter) % 2 === 0).length, b = p.clean.filter((_, i) => (i + (s as GrowthState).starter) % 2 === 1).length;
       return a === b ? "draw" : a > b ? 0 : 1;
     },
-    turn: (s, o) => o.stage ? (growthProgress(s as GrowthState, growthQuestions(base.id, o, s as GrowthState)).index + (s as GrowthState).starter) % 2 as 0 | 1 : base.turn?.(s, o) ?? null,
-    notWon: (s, o) => o.stage ? null : base.notWon?.(s, o) ?? null,
+    turn: (s, o) => isGrowth(s) ? (growthProgress(s as GrowthState, growthQuestions(base.id, o, s as GrowthState)).index + (s as GrowthState).starter) % 2 as 0 | 1 : base.turn?.(s, o) ?? null,
+    notWon: (s, o) => isGrowth(s) ? null : base.notWon?.(s, o) ?? null,
   };
 }
 function growthTracksFor(game: LearnId) { return { stretch: growthTrack(game, "stretch"), deep: growthTrack(game, "deep") }; }
