@@ -102,7 +102,9 @@ export async function recoverChallengeDrafts(save: Save, adapter: StorageAdapter
     const progress = progressFor(next,row.session.owner), old = progress?.paused.find(s => s.game === row.session.game);
     if (row.base !== save.saveRevision || !old || old.id !== row.session.id || old.ordinal !== row.session.ordinal || old.credited || old.result !== null || old.codec !== row.session.codec || JSON.stringify(old.puzzle) !== JSON.stringify(row.session.puzzle) || JSON.stringify(old.selectedDares) !== JSON.stringify(row.session.selectedDares) || old.partner !== row.session.partner) { await preserve(raw); continue; }
     if (row.session.revision <= old.revision) { if (row.session.revision !== old.revision || JSON.stringify(row.session) !== JSON.stringify(old)) await preserve(raw); continue; }
-    if (!catalog.codecs.get(row.session.codec)!.extends(old,row.session)) { await preserve(raw); continue; }
+    let extendsOld = false;
+    try { extendsOld = catalog.codecs.get(row.session.codec)!.extends(old,row.session); } catch { extendsOld = false; }
+    if (!extendsOld) { await preserve(raw); continue; }
     const challenge = { ...progress!, paused:progress!.paused.map(s => s.game === row.session.game ? row.session : s) };
     if (!validChallengeProgress(challenge,row.session.owner,catalog,row.session.owner.startsWith('cove-'))) { await preserve(raw); continue; }
     next = putProgress(next,row.session.owner,challenge);
