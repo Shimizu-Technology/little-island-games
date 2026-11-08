@@ -5,6 +5,7 @@ import { createSearch } from '../src/puzzles/solver';
 // A branching route: the child chose 0→1→3 instead of the stored route 0→2→4→5.
 const paths: Record<number, number[]> = { 0: [1, 2], 1: [3], 2: [4], 3: [5], 4: [5], 5: [] };
 const rules: PublicHintRules<number, number> = {
+  draft: null,
   look: v => ({ text: 'Look at the paths leaving this stone.', focus: [String(v)] }),
   think: () => ({ text: 'Follow a path toward home.', focus: [] }),
   preserves: () => true,
@@ -18,24 +19,31 @@ it('Look and Think never solve or return an answer action', async () => {
   expect(problem).not.toHaveBeenCalled();
 });
 it('re-derives a sound next step off the stored route; One step stops after one action', async () => {
-  expect(await requestHint(rules, 1, 'one-step', signal())).toEqual({ status: 'route', actions: [3] });
-  expect(await requestHint(rules, 1, 'show-me', signal())).toEqual({ status: 'route', actions: [3, 5] });
-  expect(await requestHint({ ...rules, problem: () => rules.problem(0) }, 3, 'one-step', signal())).toEqual({ status: 'route', actions: [5] });
+  expect(await requestHint(rules, 1, 'one-step', signal())).toEqual({ status: 'route', actions: [3], last: false });
+  expect(await requestHint(rules, 1, 'show-me', signal())).toEqual({ status: 'route', actions: [3, 5], last: false });
+  expect(await requestHint({ ...rules, problem: () => rules.problem(0) }, 3, 'one-step', signal())).toEqual({ status: 'route', actions: [5], last: true });
 });
 it('does not overwrite a valid alternative grid entry, even if a stored solution would', async () => {
   type Grid = readonly number[];
   const valid = (s: Grid) => s.length === 2 && s[0] + s[1] === 5;
   const grid: PublicHintRules<Grid, Grid> = {
+    draft: {hasEntries:s=>s.some(Boolean),complete:s=>s.every(Boolean)},
     look: () => ({ text: 'Look at the empty box.', focus: ['1'] }), think: () => ({ text: 'The two boxes add to five.', focus: [] }),
     preserves: (s, next) => s.every((n, i) => !n || n === next[i]),
     problem: start => ({ start, key: s => s.join(), moves: () => [[1, 4], [2, 3], [3, 2], [4, 1]], apply: (_, a) => a, goal: valid, nodeBudget: 20 }),
   };
-  expect(await requestHint(grid, [3, 0], 'one-step', signal())).toEqual({ status: 'route', actions: [[3, 2]] });
+  expect(await requestHint(grid, [3, 0], 'show-me', signal())).toEqual({ status: 'route', actions: [[3, 2]], last: true });
 });
-it('cannot use an unseen answer: changing hidden facts leaves a public hint identical', async () => {
-  const worlds = [{ visible: 1, secret: 5 }, { visible: 1, secret: 99 }];
-  const requests = await Promise.all(worlds.map(world => requestHint(rules, world.visible, 'one-step', signal())));
-  expect(requests[0]).toEqual(requests[1]);
+it('F14: the native adapter view builder excludes varied hidden facts for all four rungs', async () => {
+  const {publicSumView,sumHints}=await import('./helpers/puzzle-kit');
+  const worlds=[{target:6,draft:[3,0],solution:[2,4],privateRecord:{answer:99}},{target:6,draft:[3,0],solution:[4,2],privateRecord:{answer:1}}];
+  for(const step of ['look','think','one-step','show-me'] as const){
+    const results=await Promise.all(worlds.map(world=>requestHint(sumHints,publicSumView(world),step,signal())));
+    expect(results[0]).toEqual(results[1]);
+  }
+  expect(publicSumView(worlds[0])).toEqual({target:6,draft:[3,0]});
+  expect(await requestHint(sumHints,publicSumView(worlds[0]),'show-me',signal())).toMatchObject({status:'route',actions:[[3,3]]});
+  expect(await requestHint(sumHints,publicSumView({...worlds[0],target:7}),'think',signal())).not.toEqual(await requestHint(sumHints,publicSumView(worlds[0]),'think',signal()));
 });
 it('reports exhaustion honestly, supports cancellation, and does not reset a dead-end draft', async () => {
   expect(await requestHint({ ...rules, problem: v => ({ ...rules.problem(v), nodeBudget: 0 }) }, 1, 'show-me', signal())).toEqual({ status: 'unavailable' });
@@ -64,6 +72,7 @@ it('uses the real maze move and completion rules from a wandering draft, without
   const { defaultOptions } = await import('../src/games/types');
   type Maze = ReturnType<typeof createMaze>;
   const visible: PublicHintRules<Maze, number> = {
+    draft: null,
     look: () => ({ text: 'Look at the open paths.', focus: [] }), think: () => ({ text: 'Follow the paths toward home.', focus: [] }), preserves: () => true,
     problem: start => ({ start, key: s => s.path.at(-1)!, goal: mazeDone, apply: mazeMove, nodeBudget: 1000,
       moves: s => { const cell = s.path.at(-1)!; return directions.flatMap(d => {

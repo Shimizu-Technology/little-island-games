@@ -6,6 +6,8 @@ export const hintLabels: Record<HintStep, string> = { look: 'Look', think: 'Thin
 export type HintCue = { text: string; focus: readonly string[] };
 /** V contains only visible rules, clues and the current draft. Never pass a bank descriptor/solution. */
 export type PublicHintRules<V, A> = {
+  /** Entry grids defer One step after an entry, without inspecting its correctness. */
+  draft: { hasEntries(view: V): boolean; complete(view: V): boolean } | null;
   look(view: V): HintCue;
   think(view: V): HintCue;
   /** Start at this exact draft, using the same pure move/goal rules as gameplay. No stored route. */
@@ -15,7 +17,7 @@ export type PublicHintRules<V, A> = {
 };
 export type HintResult<A> =
   | { status: 'cue'; cue: HintCue }
-  | { status: 'route'; actions: readonly A[] }
+  | { status: 'route'; actions: readonly A[]; last: boolean }
   | { status: 'unavailable' }
   | { status: 'cancelled' };
 export const hintOffered = (kind: 'grid' | 'build-run', failedRuns: number) => kind === 'grid' || failedRuns >= 3;
@@ -24,6 +26,9 @@ const yieldTurn = () => new Promise<void>(resolve => setTimeout(resolve, 0));
 export async function requestHint<V, A>(rules: PublicHintRules<V, A>, view: V, step: HintStep, signal: AbortSignal, schedule = yieldTurn): Promise<HintResult<A>> {
   if (signal.aborted) return { status: 'cancelled' };
   if (step === 'look' || step === 'think') return { status: 'cue', cue: rules[step](view) };
+  if (step === 'one-step' && rules.draft?.hasEntries(view)) return { status: 'cue', cue: {
+    text: rules.draft.complete(view) ? 'Every box is filled. Check when you are ready, or choose Show me.' : 'Your entries are kept. Choose Show me or try another puzzle.', focus: [],
+  } };
   const problem = rules.problem(view);
   // Enforce the requested starting draft even if an adapter accidentally supplies its opening.
   const search = createSearch({ ...problem, start: view, apply: (s, a) => {
@@ -47,7 +52,7 @@ export async function requestHint<V, A>(rules: PublicHintRules<V, A>, view: V, s
         current = next;
       }
       if (!problem.goal(current)) return { status: 'unavailable' };
-      return { status: 'route', actions: step === 'one-step' ? result.witness.slice(0, 1) : result.witness };
+      return { status: 'route', actions: step === 'one-step' ? result.witness.slice(0, 1) : result.witness, last: result.witness.length <= 1 };
     }
     if (result.status !== 'running') return { status: 'unavailable' };
     await schedule();

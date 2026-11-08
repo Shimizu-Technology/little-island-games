@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { answerCheck, answerEdit, answerHelp, answerIndependent, answerStart, answerVariant, canCheckAnswer, cellFeedback, type AnswerRules } from '../src/puzzles/wholeAnswer';
+import { answerMissed, answerCheck, answerEdit, answerHelp, answerIndependent, answerStart, answerVariant, canCheckAnswer, cellFeedback, type AnswerRules } from '../src/puzzles/wholeAnswer';
 import { deepFreeze } from '../src/puzzles/descriptor';
 
 type Puzzle = { sum: number };
@@ -45,7 +45,7 @@ it('retires missed choice options and retains the submission until a distinct sa
   expect(answerVariant(rules, missed, previous, { ...previous, puzzle })).toBe(missed);
   expect(answerVariant(rules, missed, previous, { id: 'b', skill: 'read', puzzle })).toBe(missed);
   const fresh = answerVariant(rules, missed, previous, { id: 'b', skill: 'add', puzzle: { sum: 6 } });
-  expect(fresh.draft).toEqual([]); expect(fresh.last?.draft).toEqual([2, 2]); expect(fresh.misses).toBe(1);
+  expect(fresh.draft).toEqual([]); expect(fresh.last).toBeNull(); expect(fresh.misses).toBe(1);
   expect(fresh.needsVariant).toBe(false);
 });
 it('helped finishes count as solved while first-try independence remains false', () => {
@@ -59,4 +59,16 @@ describe('immutable inputs', () => {
     expect(answerEdit(rules, puzzle, start, [-1])).toBe(start);
     expect(start.draft).toEqual([]);
   });
+});
+it('F6: variants clear the old visible verdict, retaining attempt misses',()=>{
+ const missed=answerCheck(rules,puzzle,answerEdit(rules,puzzle,answerStart(rules,puzzle),[2,2]),'choice');
+ const fresh=answerVariant(rules,missed,{id:'a',skill:'add'},{id:'b',skill:'add',puzzle:{sum:6}});
+ expect(fresh.last).toBeNull();expect(fresh.misses).toBe(1);
+});
+
+it('F6: a new unsubmitted edit clears the visible miss without judging it',()=>{
+ const missed=answerCheck(rules,puzzle,answerEdit(rules,puzzle,answerStart(rules,puzzle),[2,2]));
+ expect(answerMissed(missed)).toBe(true);
+ expect(answerMissed(answerEdit(rules,puzzle,missed,[3,2]))).toBe(false);
+ expect(answerMissed(answerEdit(rules,puzzle,missed,[4,4]))).toBe(false);
 });

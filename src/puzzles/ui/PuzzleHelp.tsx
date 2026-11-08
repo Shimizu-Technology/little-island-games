@@ -15,14 +15,14 @@ export function PuzzleHelp<V, A>({ snapshot, rules, commit, onFresh, kind, faile
   onFresh: () => void; onCue?: (cue: HintCue | null) => void; kind: 'grid' | 'build-run'; failedRuns: number; active?: boolean;
 }) {
   const [open, setOpen] = useState(false), [stage, setStage] = useState(0), [cue, setCue] = useState<HintCue | null>(null);
-  const [route, setRoute] = useState<readonly A[] | null>(null), [done, setDone] = useState(false), [busy, setBusy] = useState(false), [message, setMessage] = useState('');
+  const [route, setRoute] = useState<readonly A[] | null>(null), [done, setDone] = useState(false), [busy, setBusy] = useState(false), [message, setMessage] = useState(''), [unavailable, setUnavailable] = useState(false);
   const live = useRef({ snapshot, active, rules, commit, onCue }), controller = useRef<AbortController | null>(null), lock = useRef(false), expectedRoute = useRef('');
   useLayoutEffect(() => { live.current = { snapshot, active, rules, commit, onCue }; }, [snapshot, active, rules, commit, onCue]);
-  useEffect(() => { live.current.onCue?.(cue); }, [cue]);
+  useEffect(() => { live.current.onCue?.(open ? cue : null); }, [cue, open]);
   useEffect(() => () => { live.current.active = false; live.current.onCue?.(null); controller.current?.abort(); }, []);
   useEffect(() => {
     controller.current?.abort();
-    if (!active || snapshot.key !== expectedRoute.current) { setCue(null); setRoute(null); setDone(false); }
+    if (!active || snapshot.key !== expectedRoute.current) { setCue(null); setRoute(null); setDone(false); setUnavailable(false); setStage(0); setMessage(''); }
   }, [snapshot.key, active]);
   const current = (key: string) => live.current.active && live.current.snapshot.key === key;
   async function ask() {
@@ -33,9 +33,14 @@ export function PuzzleHelp<V, A>({ snapshot, rules, commit, onFresh, kind, faile
     try {
       const result = await requestHint(rules, start.view, step, abort.signal);
       if (!current(start.key) || abort.signal.aborted || result.status === 'cancelled') return;
-      if (result.status === 'unavailable') { setMessage('Keep your draft. Try undo, another hint, or another puzzle.'); return; }
+      if (result.status === 'unavailable') {
+        setCue(null); setStage(3);
+        if (step === 'show-me') { setUnavailable(true); setMessage('Your entries are kept. Try a fresh puzzle with the same idea.'); }
+        else setMessage('Your entries are kept. Choose Show me or try another puzzle.');
+        return;
+      }
       const accepted = await commit({ kind: 'help' }, start.key);
-      if (!accepted || !live.current.active) { setMessage('Your draft is kept. Save it before trying help again.'); return; }
+      if (!accepted || !live.current.active) { setMessage('Your draft is kept. Try help again, or choose another puzzle.'); return; }
       // A host returns its accepted revision; a switch/restore cannot authorize this request.
       if (live.current.snapshot.key !== start.key && live.current.snapshot.key !== accepted.key) return;
       expectedRoute.current = accepted.key;
@@ -43,15 +48,15 @@ export function PuzzleHelp<V, A>({ snapshot, rules, commit, onFresh, kind, faile
       else if (step === 'one-step') {
         const action = result.actions[0];
         if (result.actions.length) {
-          const moved = await live.current.commit({ kind: 'step', action, last: false }, accepted.key);
-          if (!moved || !live.current.active || live.current.snapshot.key !== accepted.key && live.current.snapshot.key !== moved.key) { setMessage('Your draft changed. Ask for a fresh hint.'); return; }
+          const moved = await live.current.commit({ kind: 'step', action, last: result.last }, accepted.key);
+          if (!moved || !live.current.active || live.current.snapshot.key !== start.key && live.current.snapshot.key !== accepted.key && live.current.snapshot.key !== moved.key) { setMessage('Your draft changed. Ask for a fresh hint.'); return; }
           expectedRoute.current = moved.key;
         }
-        setCue({ text: result.actions.length ? 'One step. Your turn to keep going.' : 'Your draft is ready. Try Check.', focus: [] });
+        setCue({ text: result.actions.length ? result.last ? 'One step completes the demonstration.' : 'One step. Your turn to keep going.' : 'Every box is filled. Check when you are ready, or choose Show me.', focus: [] });
       } else {
         if (!result.actions.length) {
           const finished = await live.current.commit({ kind: 'finish' }, accepted.key);
-          if (!finished || !live.current.active || live.current.snapshot.key !== accepted.key && live.current.snapshot.key !== finished.key) return;
+          if (!finished || !live.current.active || live.current.snapshot.key !== start.key && live.current.snapshot.key !== accepted.key && live.current.snapshot.key !== finished.key) return;
           expectedRoute.current = finished.key;
         }
         setCue(null); setRoute(result.actions); setDone(result.actions.length === 0);
@@ -78,10 +83,11 @@ export function PuzzleHelp<V, A>({ snapshot, rules, commit, onFresh, kind, faile
     {open && <>
       <Heading style={{ fontSize: 21 }}>A little help</Heading><Copy>A helped finish counts too.</Copy>
       {cue && <Copy accessibilityLiveRegion="polite">{cue.text}</Copy>}
-      {route?.length ? <><Copy>One move at a time. Tap when you are ready.</Copy><Button quiet disabled={!active || busy} onPress={() => void next()}>Next step</Button></> : done ? <>
+      {unavailable ? <Button quiet disabled={!active || busy} onPress={onFresh}>Try another</Button> : route?.length ? <><Copy>One move at a time. Tap when you are ready.</Copy><Button quiet disabled={!active || busy} onPress={() => void next()}>Next step</Button></> : done ? <>
         <Copy>The puzzle is shown. Try a fresh one with the same idea.</Copy><Button quiet disabled={!active || busy} onPress={() => { if (current(expectedRoute.current)) onFresh(); }}>Try another</Button>
       </> : <Button quiet disabled={!active || busy} onPress={() => void ask()}>{busy ? 'Finding a hint…' : hintLabels[hintSteps[stage]]}</Button>}
     </>}
+    {!!message && !unavailable && <Button quiet disabled={!active || busy} onPress={onFresh}>Try another puzzle</Button>}
     {!!message && <Copy accessibilityLiveRegion="polite">{message}</Copy>}
   </View>;
 }

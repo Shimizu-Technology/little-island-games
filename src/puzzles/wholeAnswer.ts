@@ -38,7 +38,7 @@ export function answerVariant<P, D, A>(rules: AnswerRules<P, D, A>, state: Answe
   if (!state.needsVariant || previous.id === next.id || previous.skill !== next.skill) return state;
   const draft = rules.initial(next.puzzle);
   if (!rules.valid(draft, next.puzzle)) return state;
-  return { ...state, draft, revision: state.revision + 1, checkedRevision: null, needsVariant: false };
+  return { ...state, draft, revision: state.revision + 1, checkedRevision: null, needsVariant: false, last: null };
 }
 export const answerHelp = <D,>(state: AnswerState<D>): AnswerState<D> => state.helped || state.solved ? state : { ...state, helped: true };
 export const answerIndependent = <D,>(state: AnswerState<D>) => state.solved && !state.helped && state.misses === 0;
@@ -48,3 +48,42 @@ export function cellFeedback<T>(mode: 'beginner' | 'whole', judge: () => T): T |
 }
 export const canCheckAnswer = <P, D, A>(rules: AnswerRules<P, D, A>, puzzle: P, state: AnswerState<D>) =>
   !state.solved && !state.needsVariant && state.checkedRevision !== state.revision && rules.valid(state.draft, puzzle) && rules.complete(state.draft, puzzle);
+
+/** The last submission is feedback only while that exact draft revision is still displayed. */
+export const answerMissed = <D,>(state: AnswerState<D>) => state.last?.correct === false && state.checkedRevision === state.revision;
+
+export type ChoiceSet<P> = { siblings: readonly { id: string; skill: string; puzzle: P }[] };
+export type ChoiceState<D> = { puzzleId: string; retired: readonly string[]; answer: AnswerState<D> };
+export type ChoiceAction<A> = { type: 'edit'; action: A } | { type: 'check' | 'variant' | 'help' | 'reset' };
+/** A sibling set is one immutable descriptor and one replay attempt; misses never cross a save boundary. */
+export function choiceAnswerEngine<P, D, A>(rules: AnswerRules<P, D, A>, validEdit: (value: unknown) => value is A): import('../challenge/types').ReplayEngine<ChoiceSet<P>, string, ChoiceAction<A>, ChoiceState<D>> {
+  return {
+    initial: d => d.siblings[0].id,
+    validInitial: (v, d): v is string => v === d.siblings[0]?.id && d.siblings.length > 0 && new Set(d.siblings.map(p => p.id)).size === d.siblings.length,
+    create: (d, id) => ({ puzzleId: id, retired: [], answer: answerStart(rules, d.siblings.find(p => p.id === id)!.puzzle) }),
+    validAction: (v): v is ChoiceAction<A> => {
+      if (!v || typeof v !== 'object' || Array.isArray(v)) return false;
+      const a = v as Record<string, unknown>;
+      return a.type === 'edit' ? Object.keys(a).length === 2 && Object.hasOwn(a, 'action') && validEdit(a.action) : Object.keys(a).length === 1 && ['check', 'variant', 'help', 'reset'].includes(a.type as string);
+    },
+    step: (s, a, d) => {
+      const selected = d.siblings.find(p => p.id === s.puzzleId);
+      if (!selected || s.answer.solved) return null;
+      if (a.type === 'variant') {
+        const next = d.siblings.find(p => p.id !== selected.id && p.skill === selected.skill && !s.retired.includes(p.id));
+        if (!next) return null;
+        const answer = answerVariant(rules, s.answer, selected, next);
+        return answer === s.answer ? null : { state: { puzzleId: next.id, retired: [...s.retired, selected.id], answer }, event: 'reset' };
+      }
+      if (a.type === 'help') return { state: { ...s, answer: answerHelp(s.answer) }, event: 'help' };
+      if (a.type === 'reset') {
+        if (s.answer.needsVariant) return null;
+        const answer = { ...answerStart(rules, selected.puzzle), revision: s.answer.revision + 1, checks: s.answer.checks, misses: s.answer.misses, helped: s.answer.helped };
+        return { state: { ...s, answer }, event: 'reset' };
+      }
+      const answer = a.type === 'edit' ? answerEdit(rules, selected.puzzle, s.answer, a.action) : answerCheck(rules, selected.puzzle, s.answer, 'choice');
+      return answer === s.answer ? null : { state: { ...s, answer }, event: a.type === 'edit' ? 'edit' : 'check', ...(a.type === 'check' ? { correct: answer.solved } : {}) };
+    },
+    inspect: s => ({ solved: s.answer.solved, metrics: {}, edits: s.answer.revision, solution: null, objectives: [] }),
+  };
+}

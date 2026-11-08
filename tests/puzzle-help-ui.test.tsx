@@ -11,6 +11,7 @@ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
 let root: ReactTestRenderer;
 afterEach(async () => { if (root) await act(async () => root.unmount()); });
 const rules: PublicHintRules<number, number> = {
+  draft: null,
   look: () => ({ text: 'Look at the next stepping stone.', focus: ['stone'] }), think: () => ({ text: 'Each step gets closer to shore.', focus: [] }),
   problem: start => ({ start, key: n => n, moves: n => [n + 1], apply: (_, a) => a, goal: n => n === 3, nodeBudget: 10 }), preserves: () => true,
 };
@@ -100,12 +101,59 @@ it('drops a Show me route after an ordinary draft edit and re-derives help', asy
   expect(text()).toContain('Next step');
   await act(async () => { snapshot = { key: 'a:external-edit', view: 2 }; root.update(<PuzzleHelp {...props()} />); });
   expect(text()).not.toContain('Next step'); expect(log.filter(e => e.kind === 'step')).toHaveLength(1);
-  await press('Show me'); await press('Next step'); expect(snapshot.view).toBe(3);
+  await press('Look'); await press('Think'); await press('One step'); expect(snapshot.view).toBe(3);
 });
 it('Show me checks an already filled draft through the helped finish callback', async () => {
   const commit = vi.fn(async (_event: HintCommit<number>, key: string) => ({ key, view: 3 }));
   await act(async () => { root = create(<PuzzleHelp snapshot={{ key: 'filled', view: 3 }} rules={rules} kind="grid" failedRuns={0} commit={commit} onFresh={vi.fn()} />); });
   await press('Help'); await press('Look'); await press('Think'); await press('One step');
-  expect(text()).toContain('Your draft is ready'); await press('Show me');
+  expect(text()).toContain('Every box is filled'); await press('Show me');
   expect(commit).toHaveBeenLastCalledWith({ kind: 'finish' }, 'filled'); expect(text()).toContain('Try another');
+});
+
+it.each([[1, 0], [3, 0], [1, 1], [2, 4]])('F1/F2: entry draft %j never gets a free verdict from One step and can reach Show me', async (a, b) => {
+  type Grid = number[];
+  const grid: PublicHintRules<Grid, Grid> = {
+    look: () => ({ text: 'Look at the boxes.', focus: [] }), think: () => ({ text: 'Make six.', focus: [] }),
+    draft: { hasEntries: s => s.some(Boolean), complete: s => s.every(Boolean) },
+    preserves: (s, n) => s.every((v, i) => !v || v === n[i]),
+    problem: start => ({ start, key: s => s.join(), moves: () => [[2, 4], [3, 3], [4, 2]], apply: (_, n) => n, goal: s => s.every(Boolean) && s[0] + s[1] === 6, nodeBudget: 20 }),
+  };
+  const commit = vi.fn(async (_e: HintCommit<Grid>, key: string) => ({ key, view: [a, b] }));
+  const fresh = vi.fn();
+  await act(async () => { root = create(<PuzzleHelp snapshot={{key:'grid',view:[a,b]}} rules={grid} kind="grid" failedRuns={0} commit={commit} onFresh={fresh}/>); });
+  await press('Help'); await press('Look'); await press('Think'); await press('One step');
+  expect(text()).not.toContain('Your draft is ready'); expect(text()).not.toContain('Try undo');
+  expect(commit.mock.calls.every(([e]) => e.kind === 'help')).toBe(true);
+  expect(text()).toContain('Show me');
+  if (a === 1) { await press('Show me'); expect(text()).toContain('Try another'); await press('Try another'); expect(fresh).toHaveBeenCalledOnce(); }
+});
+it('F11: One step reports its terminal action accurately', async () => {
+  const commit = vi.fn(async (_e: HintCommit<number>, key: string) => ({key,view:2}));
+  await act(async () => { root = create(<PuzzleHelp snapshot={{key:'last',view:2}} rules={rules} kind="grid" failedRuns={0} commit={commit} onFresh={vi.fn()}/>); });
+  await press('Help'); await press('Look'); await press('Think'); await press('One step');
+  expect(commit.mock.calls.at(-1)?.[0]).toEqual({kind:'step',action:3,last:true}); expect(text()).not.toContain('Your turn to keep going');
+});
+it('F12/F16: Close clears highlight; child edits restore the ladder so Look and Think can be reread', async () => {
+  const onCue=vi.fn(), props={rules,kind:'grid' as const,failedRuns:0,commit:async (_e: HintCommit<number>,key:string)=>({key,view:0}),onFresh:vi.fn(),onCue};
+  await act(async()=>{root=create(<PuzzleHelp {...props} snapshot={{key:'a',view:0}}/>);});
+  await press('Help');await press('Look'); expect(onCue.mock.calls.at(-1)?.[0]?.focus).toEqual(['stone']);
+  await press('Close help');expect(onCue).toHaveBeenLastCalledWith(null);
+  await press('Help');await press('Think');
+  await act(async()=>root.update(<PuzzleHelp {...props} snapshot={{key:'a:edit',view:1}}/>));
+  expect(text()).toContain('Look'); await press('Look'); expect(text()).toContain('Think');
+});
+it('F13: a refused choice sibling leaves a visible explanation', async()=>{
+  await act(async()=>{root=create(<WholeAnswerControls canCheck={false} incorrect needsVariant onCheck={vi.fn()} onVariant={()=>false}/>);});
+  await press('Try another'); expect(text()).toContain('No fresh puzzle');
+});
+
+it('F10: an immediate commit can beat the render for both help and its move',async()=>{
+ let revision=0;const commit=vi.fn(async(_e:HintCommit<number>,_key:string)=>({key:`instant:${++revision}`,view:1}));
+ await act(async()=>{root=create(<PuzzleHelp snapshot={{key:'instant:0',view:0}} rules={rules} kind="grid" failedRuns={0} commit={commit} onFresh={vi.fn()}/>);});
+ await press('Help');await press('Look');
+ // Supply the host's latest saved key for the next explicit rung, then withhold renders within One step.
+ await act(async()=>root.update(<PuzzleHelp snapshot={{key:'instant:1',view:0}} rules={rules} kind="grid" failedRuns={0} commit={commit} onFresh={vi.fn()}/>));
+ await press('Think');await act(async()=>root.update(<PuzzleHelp snapshot={{key:'instant:2',view:0}} rules={rules} kind="grid" failedRuns={0} commit={commit} onFresh={vi.fn()}/>));
+ await press('One step');expect(text()).not.toContain('Your draft changed');expect(text()).toContain('Show me');expect(commit.mock.calls.at(-1)?.[0].kind).toBe('step');
 });

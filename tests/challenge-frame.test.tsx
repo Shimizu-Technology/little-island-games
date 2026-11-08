@@ -99,7 +99,7 @@ it.each([['blind',3003,'supportOff'],['own-read',3007,'ownRead']] as const)('P2-
 
 it('P2-6: a finish frees its slot; Another puzzle starts directly; reopening has no old result',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;
- try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});await press(r,'Start this puzzle');for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');expect(store.save.challenge!.paused).toEqual([]);expect(JSON.stringify(r.toJSON())).toContain('Puzzle solved!');await press(r,'Another puzzle');expect(JSON.stringify(r.toJSON())).not.toContain('Continue saved puzzle');await press(r,'Start this puzzle');expect(store.save.challenge!.paused[0].ordinal).toBe(2);
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});await press(r,'Start this puzzle');for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');expect(store.save.challenge!.paused).toEqual([]);expect(JSON.stringify(r.toJSON())).toContain('Puzzle solved!');await press(r,'Try another');expect(JSON.stringify(r.toJSON())).not.toContain('Continue saved puzzle');await press(r,'Start this puzzle');expect(store.save.challenge!.paused[0].ordinal).toBe(2);
   for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');await act(async()=>r.unmount());await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});expect(JSON.stringify(r.toJSON())).not.toContain('Puzzle solved!');expect(JSON.stringify(r.toJSON())).toContain('Start this puzzle');
  }finally{await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
@@ -127,11 +127,11 @@ it('P3-8: older draft completions cannot unlock a pending terminal boundary',asy
  }finally{db.block=null;db.boundaryBlock=null;releaseDraft?.();releaseBoundary?.();await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
 
-it('F4: end choices are equal and Try another starts a saved fresh attempt in one tap without carrying dares',async()=>{
+it('F4: end choices are equal and a one-card tier returns to the chooser without carrying dares',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;
  try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});await press(r,'blind · Help welcome');await press(r,'Start this puzzle');for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');
   const choices=r.root.findByProps({testID:'tide-choices'}).findAllByType('button');expect(choices.map(b=>b.props.quiet)).toEqual([true,true,true]);expect(choices.map(b=>b.children.join(''))).toEqual(['Easier','Same','Harder']);
-  await press(r,'Try another');expect(store.save.challenge!.paused).toHaveLength(1);expect(store.save.challenge!.paused[0].ordinal).toBe(2);expect(store.save.challenge!.paused[0].selectedDares).toEqual([]);expect(store.challengeRefusal).toBeNull();
+  await press(r,'Try another');expect(store.save.challenge!.paused).toHaveLength(0);await press(r,'Start this puzzle');expect(store.save.challenge!.paused).toHaveLength(1);expect(store.save.challenge!.paused[0].ordinal).toBe(2);expect(store.save.challenge!.paused[0].selectedDares).toEqual([]);expect(store.challengeRefusal).toBeNull();
  }finally{await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
 

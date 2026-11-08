@@ -44,9 +44,11 @@ export type ChallengeViewProps<S,A> = {
   state: S; dispatch: (action: A) => void; active: boolean; width: number;
   /** Optional in standalone renders. Includes owner, epoch, puzzle and accepted revision. */
   sessionKey?: string;
+  onFresh?: () => void;
   commit?: (action: A, expectedKey: string) => Promise<{ key: string; state: S } | null>;
 };
 export type ChallengeRenderHost = {
+  onFresh?: () => void;
   key: string;
   commit: (action: unknown, expectedKey: string) => Promise<{ key: string; session: ChallengeSession } | null>;
 };
@@ -58,7 +60,9 @@ export type ChallengeEntry = {
   move: (session: ChallengeSession, action: unknown) => ChallengeSession | null;
   render: (session: ChallengeSession, dispatch: (action: unknown) => void, active: boolean, width: number, host?: ChallengeRenderHost) => ReactNode;
   /** Specific praise supplied by the real engine's game, never speed-based. */
-  completionText?: (ref: PuzzleRef) => string;
+  completionText?: (ref: PuzzleRef, result: Terminal) => string;
+  /** Boards own their visible help; the frame never records an invisible hint. */
+  helpUI?: 'board';
   controls: { help: () => unknown; reset: () => unknown };
 };
 export type TypedRegistration<P,A,S> = ChallengeEntry & { readonly types?: { Payload: P; Action: A; State: S } };
