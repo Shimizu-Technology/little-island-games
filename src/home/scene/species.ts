@@ -34,6 +34,8 @@ function shapesFor(slot: number, base: CharacterBase, facing: "left" | "right", 
     const hip: readonly [number, number] = [(j.leftHip[0] + j.rightHip[0]) / 2, (j.leftHip[1] + j.rightHip[1]) / 2];
     return [
       round(p(j.head), 34 * unit), bar(p(j.neck), p(hip), 17 * unit),
+      // The ponytail hangs past the head circle on her far side.
+      bar(p([j.head[0] + 31, j.head[1] + 8]), p([j.head[0] + 35, j.head[1] + 58]), 9 * unit),
       bar(p(j.leftShoulder), p(j.leftElbow), 7 * unit), bar(p(j.leftElbow), p(j.leftHand), 7 * unit),
       bar(p(j.rightShoulder), p(j.rightElbow), 7 * unit), bar(p(j.rightElbow), p(j.rightHand), 7 * unit),
       bar(p(j.leftHip), p(j.leftKnee), 9 * unit), bar(p(j.leftKnee), p(j.leftFoot), 9 * unit),

@@ -11,7 +11,7 @@ function Shape({ shape, color }: { shape: HitShape; color: string }) {
   if (shape.kind === "box") return <Rect x={shape.left} y={shape.top} width={shape.width} height={shape.height} {...paint} />;
   if (shape.kind === "ellipse") return <Ellipse cx={shape.x} cy={shape.y} rx={shape.rx} ry={shape.ry} {...paint} />;
   if (shape.kind === "capsule")
-    return <Line x1={shape.ax} y1={shape.ay} x2={shape.bx} y2={shape.by} stroke={color} strokeOpacity={0.3} strokeWidth={shape.r * 2} strokeLinecap="round" />;
+    return <Line x1={shape.ax} y1={shape.ay} x2={shape.bx} y2={shape.by} stroke={color} strokeOpacity={0.45} strokeWidth={shape.r * 2} strokeLinecap="round" />;
   return <Polygon points={shape.points.join(" ")} {...paint} />;
 }
 
