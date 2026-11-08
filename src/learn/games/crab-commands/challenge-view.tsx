@@ -62,7 +62,7 @@ export function ChallengeBoard({state:s,dispatch,active,width}:ChallengeViewProp
     </View>
     {s.hints>0&&!hint&&<Copy>Finding one step…</Copy>}
     {hint&&<View style={{gap:8,padding:12,backgroundColor:C.soft,borderRadius:12}} accessibilityLiveRegion="polite">
-      <Copy>{s.hints===1?(hint.next?`${hint.keep<s.program.length?'Change':'Add'} card ${hint.keep+1}: ${cardLabel[hint.next]}. Keep the cards before it.`:'Your plan reaches home. Press Go to try it.'):s.hints===2?'You can ask for the whole plan, or try that one step first.':`One working plan: ${hint.plan.map(c=>cardLabel[c]).join(', ')}.`}</Copy>
+      <Copy style={{color:C.ink}}>{s.hints===1?(hint.next?`${hint.keep<s.program.length?'Change':'Add'} card ${hint.keep+1}: ${cardLabel[hint.next]}. Keep the cards before it.`:'Your plan reaches home. Press Go to try it.'):s.hints===2?'You can ask for the whole plan, or try that one step first.':`One working plan: ${hint.plan.map(c=>cardLabel[c]).join(', ')}.`}</Copy>
       {s.hints<3&&<Button quiet disabled={disabled} onPress={()=>send(['h'])}>{s.hints===1?'More help':'Show the whole plan'}</Button>}
     </View>}
   </View>;

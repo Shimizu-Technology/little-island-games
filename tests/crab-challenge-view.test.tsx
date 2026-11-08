@@ -6,7 +6,7 @@ import { challengeEngine, type State } from '../src/learn/games/crab-commands/ch
 import { crabPuzzles } from '../src/learn/games/crab-commands/challenge-content';
 vi.mock('../src/content/learnAudio',()=>({learnSources:{}}));
 vi.mock('react-native',()=>({View:'div'}));
-vi.mock('../src/components/ui',()=>({View:'div',Button:'button',Copy:'p',PressableScale:'button',C:{}}));
+vi.mock('../src/components/ui',()=>({View:'div',Button:'button',Copy:'p',PressableScale:'button',C:{ink:'#183F39',soft:'#E5EFE5'}}));
 vi.mock('../src/components/motion',()=>({useReducedMotion:()=>true}));
 const sound=vi.hoisted(()=>({play:vi.fn(),stop:vi.fn()}));
 vi.mock('../src/components/Audio',()=>({AudioPreferences:createContext({sound:false}),useSoundControls:()=>sound}));
@@ -19,6 +19,7 @@ const press=async(label:string)=>act(async()=>{const b=root!.root.findAllByType(
 it('first help shows only the next step; full plan takes two more explicit choices',async()=>{
  let s=state(1);s=challengeEngine.step(s,['h'],s.descriptor)!.state;await mount(s);
  await vi.waitFor(async()=>{await act(async()=>{});expect(JSON.stringify(root!.toJSON())).toContain('Add card 1:');},{timeout:5000,interval:20});expect(JSON.stringify(root!.toJSON())).not.toContain('One working plan:');
+ expect(root!.root.findAllByType('p').find(p=>p.children.join('').startsWith('Add card 1:'))!.props.style.color).toBe('#183F39');
  await press('More help');s=challengeEngine.step(s,['h'],s.descriptor)!.state;
  await act(async()=>root!.update(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>));expect(JSON.stringify(root!.toJSON())).toContain('Show the whole plan');
 });
