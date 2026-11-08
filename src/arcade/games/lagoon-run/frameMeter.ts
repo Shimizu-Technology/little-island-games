@@ -29,3 +29,13 @@ export function summarizeFrames(samples: FrameSample[]) {
   for (const n of gaps) histogram[GAP_LIMITS.findIndex(limit => n <= limit + .08) < 0 ? 4 : GAP_LIMITS.findIndex(limit => n <= limit + .08)]++;
   return { frames: gaps.length, fps: gaps.length ? gaps.length*1000/gaps.reduce((a,b)=>a+b,0) : 0, gap: { p95: percentile(gaps,.95), p99: percentile(gaps,.99), max: gaps.at(-1) ?? 0, histogram, limits: GAP_LIMITS }, tick: { mean: ticks.length ? ticks.reduce((a,b)=>a+b,0)/ticks.length : 0, p95: percentile(ticks,.95), max: ticks.at(-1) ?? 0 } };
 }
+
+/** Tags mark the FIRST gap following an event. Keep all three causal gaps inspectable. */
+export function eventWindows(samples:FrameSample[]) {
+ const events:Record<string,{index:number;gaps:number[];worst:number;complete:boolean}[]>={};
+ for(let i=0;i<samples.length;i++)for(const tag of samples[i].tags) {
+  const gaps=samples.slice(i,i+3).map(s=>s.gap);
+  (events[tag]??=[]).push({index:i,gaps,worst:Math.max(...gaps),complete:gaps.length===3});
+ }
+ return events;
+}

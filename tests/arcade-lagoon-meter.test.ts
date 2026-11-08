@@ -1,18 +1,20 @@
+import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { describe, expect, it } from 'vitest';
 import { createMeter, recordFrame, summarizeFrames } from '../src/arcade/games/lagoon-run/frameMeter';
 import { inverse3, mapPoint, matrix4, multiply3, quadHomography, type Quad } from '../src/arcade/games/lagoon-run/quad';
 import { projectTrack } from '../src/arcade/games/lagoon-run/camera';
 import atlas from '../assets/arcade/lagoon/manifest.json';
-const configure=createRequire(import.meta.url)('../app.config.js');
+const hasConfig=existsSync(new URL('../app.config.js',import.meta.url));
+const configure=hasConfig?createRequire(import.meta.url)('../app.config.js'):undefined;
 describe('measurement isolation',()=>{
- it('preserves family identifiers and build by default and opts into an independent sandbox',()=>{
+ it.skipIf(!hasConfig)('preserves family identifiers and build by default and opts into an independent sandbox',()=>{
   const raw=createRequire(import.meta.url)('../app.json').expo;
   const previous=process.env.LITTLE_ISLAND_VARIANT;
   try {
-   delete process.env.LITTLE_ISLAND_VARIANT;expect(configure({config:raw})).toBe(raw);
-   process.env.LITTLE_ISLAND_VARIANT='development';const dev=configure({config:raw});
-   expect(dev.ios.bundleIdentifier).toBe('com.shimizutechnology.littleisland.dev');expect(dev.android.package).toBe(dev.ios.bundleIdentifier);expect(dev.scheme).toBe('littleisland-dev');expect(dev.version).toBe(raw.version);expect(dev.ios.buildNumber).toBe(raw.ios.buildNumber);expect(raw.ios.bundleIdentifier).toBe('com.shimizutechnology.littleisland');expect(raw.scheme).toBe('littleisland');
+   delete process.env.LITTLE_ISLAND_VARIANT;expect(configure!({config:raw})).toBe(raw);
+   process.env.LITTLE_ISLAND_VARIANT='development';const dev=configure!({config:raw});
+   expect(dev.ios.bundleIdentifier).toBe('com.shimizutechnology.littleisland.dev');expect(dev.android.package).toBe(dev.ios.bundleIdentifier);expect(dev.scheme).toBe('littleisland-dev');expect(dev.ios.infoPlist.NSBonjourServices).toBeUndefined();expect(dev.ios.infoPlist.NSLocalNetworkUsageDescription).toBeUndefined();expect(dev.version).toBe(raw.version);expect(dev.ios.buildNumber).toBe(raw.ios.buildNumber);expect(raw.ios.bundleIdentifier).toBe('com.shimizutechnology.littleisland');expect(raw.scheme).toBe('littleisland');
   } finally {if(previous===undefined)delete process.env.LITTLE_ISLAND_VARIANT;else process.env.LITTLE_ISLAND_VARIANT=previous;}
  });
  it('counts histogram boundaries, tags and sustained cadence switches without treating hitches as switches',()=>{

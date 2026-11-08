@@ -1,0 +1,26 @@
+import type { SpritePose } from '../../poses';
+import {projectTrack} from './camera';
+import { multiply3, quadHomography, type Quad } from './quad';
+export type CanoeBake = {inverse:number[];width:number;height:number;depth:number};
+export function canoeMatrix(q:Quad,meta:CanoeBake):number[] {
+ 'worklet';
+ const width=q[1].x-q[0].x;
+ // Upright cargo must not extrapolate a ground homography near the horizon.
+ // Anchor the complete distant silhouette to its bow with a similarity transform.
+ if(width < projectTrack(1.3,.35).x-projectTrack(.7,.35).x) {
+  const scale=width/(projectTrack(1.3,meta.depth).x-projectTrack(.7,meta.depth).x);
+  const [a,b,c,d,e,f]=meta.inverse,det=a*e-b*d;
+  const x=(b*f-c*e)/det,y=(c*d-a*f)/det;
+  return [scale,0,q[0].x-scale*x,0,scale,q[0].y-scale*y,0,0,1];
+ }
+ return multiply3(quadHomography(q),meta.inverse);
+}
+export function deckSide(q:readonly SpritePose[],side:'left'|'right',incline:boolean):Quad {
+ 'worklet';const a=q[side==='left'?0:1],b=q[side==='left'?3:2];
+ const sign=side==='left'?-1:1;
+ const bottom=(v:SpritePose)=>{ 'worklet';return {x:v.x+(incline?sign*(v.scale??0)*.5:0),y:v.y+(incline?Math.max(5,v.scale??0):5)};};
+ return [a,b,bottom(b),bottom(a)];
+}
+export function deckShadow(q:readonly SpritePose[]):Quad {
+ 'worklet';return q.map((v,i)=>({x:v.x+(i===0||i===3?5:10),y:v.y+(v.scale??0)+5})) as unknown as Quad;
+}

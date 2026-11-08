@@ -55,7 +55,7 @@ describe('L1 reactions and score integrity',()=>{
   const {runPoses}=await import('../src/arcade/games/scrolling/render');
   const s=clear(createRun(runLevels[7],771));s.learned=7;s.rows[0]={...s.rows[0],z:.999,passed:false,lane:1,second:-1,third:false,kind:'wall',shellDone:7};
   const next=runStep(s,idle,1/60),pose=runPoses(next),quiet=runPoses(next,true);
-  expect(next.lives.hit).toBe(1);expect(pose[36].x).toBeGreaterThan(0);expect(pose[36].snap).toBe(true);expect(quiet[36].x).toBe(0);expect(quiet[36].scale).toBe(1);
+  expect(next.lives.hit).toBe(1);expect(pose[36].x).toBeGreaterThan(0);expect(pose[36].snap).toBe(true);expect(quiet[36].x).toBe(0);expect(quiet[36].scale).toBe(.65);
  });
 });
 
@@ -65,4 +65,12 @@ it('carries continuous world travel while decorative stripes would be clipped at
  for(const travel of [0,.065,.52,1.149,1.16,1.17,1.18,1.19,2.35,2.36,10.001]) {
   const p=runPoses({...s,travel});expect(p[35].opacity).toBe(1);expect(p[35].x).toBe(travel);
  }
+});
+
+it('gives splash and near-miss sparkle distinct complete lifetimes',async()=>{
+ const {runPoses,NEAR_START}=await import('../src/arcade/games/scrolling/render');
+ const s=clear(createRun(runLevels[7],771));
+ const splash=runPoses({...s,cooldown:.01,feedback:.15}),near=runPoses({...s,nearMiss:.01,feedback:.15});
+ expect(splash[26].opacity).toBeCloseTo(.01/.3);expect(splash[NEAR_START].opacity).toBe(0);
+ expect(near[NEAR_START].opacity).toBeCloseTo(.01/.3);expect(near[26].opacity).toBe(0);
 });

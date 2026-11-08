@@ -7,7 +7,7 @@ import { RAMP_DEPTH, RAMP_SECTIONS, surfaceProfile, surfaceSpan } from "../lagoo
 import { CAMERA_SLOT, TRACK_WIDTH, projectTrack, trackSprite } from "../lagoon-run/camera";
 import { runnerFrame, RUN_POSES, RUN_EXTRA } from "./character";
 import { SCENE_COUNT, SCENE_START } from "./environmentPoses";
-export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA = INCLINE_START + 5 * INCLINE_STRIDE, CANOE_START = RUN_EXTRA + 8, RUN_SLOTS = CANOE_START + 15 * 4 + 1;
+export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA = INCLINE_START + 5 * INCLINE_STRIDE, CANOE_START = RUN_EXTRA + 8, NEAR_START=312, RUN_SLOTS = NEAR_START+6;
 export function runPoses(s: RunState, reduced = false): SpritePose[] {
   "worklet";
   const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=visualRunHeight(runnerHeight(s))*85;
@@ -60,7 +60,7 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   p[173]={x:contact.x-48,y:contact.y-134-lift,opacity:s.shield||s.protection>0?.7:0};
   // Always-visible travel carrier: never infer phase from a clipped decorative sprite.
   p[35]={x:s.travel,y:0,opacity:1};
-  p[36]={identity:s.lives.hit,x:reduced?0:Math.max(0,(s.cooldown-.20)/.10)*.45,y:0,scale:reduced?1:s.lives.invulnerable>0&&Math.floor(s.time*16)%2?.38:1,snap:true};
+  p[36]={identity:s.lives.hit,x:reduced?0:Math.max(0,(s.cooldown-.20)/.10)*.45,y:0,scale:reduced?(s.cooldown>.14?.65:1):s.lives.invulnerable>0&&Math.floor(s.time*16)%2?.38:1,snap:true};
   for(let i=0;i<SCENE_COUNT;i++)p[SCENE_START+i]=harborSceneryPose(s.travel,i);
   const lean = reduced ? 0 : s.lane-s.poseLane;
   const shake = reduced ? 0 : Math.max(0,s.cooldown/.3);
@@ -71,7 +71,10 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   p[57]={x:260,y:78,opacity:!learn&&next&&next.z>.35&&(next.action!=="idle"||s.lane!==next.shellLane)&&!(s.learned&move)?1:0};
   const f=s.feedback/.45,scored=s.lastGain>0;
   p[56]={x:Math.min(TRACK_WIDTH-88,contact.x+42),y:396-(1-f)*25,opacity:scored&&s.cue!=="shell"?f:0};
-  if((s.cooldown>0||s.nearMiss>0)&&!reduced)for(let i=0;i<6;i++){const a=i*Math.PI/3;p[26+i]={x:contact.x+Math.cos(a)*(1-f)*50,y:contact.y-60+Math.sin(a)*(1-f)*50,opacity:f};}
+  for(const [start,lifetime] of [[26,s.cooldown],[NEAR_START,s.nearMiss]])if(lifetime>0&&!reduced)for(let i=0;i<6;i++){
+    const t=Math.min(1,lifetime/.3),a=i*Math.PI/3;
+    p[start+i]={x:contact.x+Math.cos(a)*(1-t)*50,y:contact.y-60+Math.sin(a)*(1-t)*50,opacity:t};
+  }
   // Inactive slots retain one canonical object and never send hidden native transforms.
   for(let i=0;i<p.length;i++)if(p[i].opacity===0)p[i]=HIDDEN_POSE;
   return rankPainterPoses(p);
