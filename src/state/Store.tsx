@@ -1,4 +1,6 @@
-import { progressBytes, challengeLimit, emptyChallenge, type ChallengeSession } from './challenge';
+import { challengeFor } from '../challenge/catalog';
+import { completedSignal } from '../challenge/offers';
+import { progressBytes, challengeLimit, emptyChallenge, validChallengeProgress, type ChallengeProgress, type Signal, type ChallengeSession } from './challenge';
 import { challengeAttempt, recoverChallengeDrafts, newSaveRevision, draftGrowth, progressFor, putProgress, selectedOwner, envelopeWrite, refusalMessage, type ChallengeRefusal, type ChallengeExpected } from './challengeDrafts';
 import { addCovePerson, removeCovePerson } from './covePeople';
 import { DraftQueue } from './draftQueue';
@@ -37,7 +39,10 @@ import { AudioPreferences } from "../components/Audio";
 import { recordPracticeNote } from "../practice/notes";
 import { type ArcadeAction, type ArcadeExpected, type ArcadeId } from "../arcade";
 import { applyArcadeAction } from "../arcade/saveAction";
+type WorkingPatch = {signal?:Signal;choice?:ChallengeProgress['choice']};
+type WorkingExpected = {owner:string;epoch:number;game:string;id:string;revision:number;kind:'school'|'challenge'};
 type Store = {
+  challengeWorking: (patch: WorkingPatch, expected: WorkingExpected) => boolean;
   challengeRefusal: ChallengeRefusal | null;
   backup: () => Promise<string>;
   challengeDiscard: (expected: ChallengeExpected) => Promise<boolean>;
@@ -545,6 +550,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     [recovery]
   );
+  const challengeWorking = useCallback((patch: WorkingPatch, expected:WorkingExpected) => {
+    const before=latest.current, progress=progressFor(before,expected.owner);
+    if(expected.epoch!==generation.current || selectedOwner(before)!==expected.owner || !progress)return false;
+    const round=expected.kind==='challenge'?progress.paused.find(s=>s.game===expected.game):before.learn?.[expected.game as LearnId];
+    if(!round || round.id!==expected.id || round.revision!==expected.revision || ('owner' in round?round.owner:round.learner??'family')!==expected.owner)return false;
+    const signals=patch.signal?[...progress.signals.filter(s=>s[0]!==patch.signal![0]),patch.signal].slice(-(expected.owner.startsWith('cove-')?8:32)):progress.signals;
+    const next={...progress,signals,choice:patch.choice===undefined?progress.choice:patch.choice};
+    if(!validChallengeProgress(next,expected.owner,undefined,expected.owner.startsWith('cove-')))return false;
+    return commit(putProgress(before,expected.owner,next));
+  },[commit]);
   const challengeSave = useCallback(async (session: ChallengeSession, expected: ChallengeExpected) => {
     if (!ready || recovery || restoring.current || uncertainWrite.current || expected.epoch !== generation.current) return refuseChallenge('stale');
     try { session = JSON.parse(JSON.stringify(session)) as ChallengeSession; }
@@ -555,6 +570,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (progress && progressBytes(progress) + (old ? draftGrowth(old,session) : jsonBytes(session)+1) > challengeLimit(session.owner.startsWith('cove-'))) return refuseChallenge('learner-ceiling');
     const attempt = challengeAttempt(before,session,expected,generation.current);
     let next = attempt.save;
+    if (session.result && next!==before) {
+      const entry=challengeFor(session.game), nextProgress=progressFor(next,session.owner), previousPuzzle=progress?.recent.at(-1);
+      const differentPuzzle=!previousPuzzle || previousPuzzle[0]!==session.puzzle.bank || previousPuzzle[1]!==session.puzzle.puzzle;
+      if(entry&&nextProgress)next=putProgress(next,session.owner,completedSignal(nextProgress,entry.contextFor(session.puzzle),session.result.event==='independent',session.owner!=='family'&&session.partner===null,session.owner.startsWith('cove-'),differentPuzzle));
+    }
     if (attempt.refusal) return refuseChallenge(attempt.refusal);
     if (old && session.result === null) {
       const bytes = admittedBytes.current + draftGrowth(old,session);
@@ -629,7 +649,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   return (
     <Context.Provider
       value={{
-        save, backup, challengeRefusal, challengeSave, challengeDiscard, covePerson,
+        save, backup, challengeWorking, challengeRefusal, challengeSave, challengeDiscard, covePerson,
         badgeResult, dismissBadge: () => setBadgeResult(null),
         personalize, renameLearner, removeLearner, saving, assignEarlier: assignEarlierWork,
         arcade,

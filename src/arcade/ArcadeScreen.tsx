@@ -1,3 +1,4 @@
+import { validTerminalResult } from './terminal';
 import { BadgeResultCard } from '../badges/ResultCard';
 import { Companion } from "../islander/Companion";
 import { LearnerChip } from "../personalization/LearnerChip";
@@ -70,10 +71,10 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   const failedResult = useRef<{ result: ArcadeResult; helped: boolean; winner?: 0 | 1 | null } | null>(null);
   const [chestOffer, setChestOffer] = useState<ChestOffer | null>(null);
   const identity = `${owner.id}:${store.epoch}`;
-  const lastIdentity = useRef(identity);
+  const lastIdentity = useRef(identity), liveRound = useRef('');
   useEffect(() => {
     if (lastIdentity.current === identity) return;
-    lastIdentity.current = identity;
+    lastIdentity.current = identity; liveRound.current = '';
     // Invalidate the old round without closing Settings or moving the map.
     setPlaying(false); setPaused(false); setResult(null); setRound(""); setLevel(null);
     startAfterTeach.current = false; credited.current = ""; failedResult.current = null; setFinishError("");
@@ -91,6 +92,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   useEffect(() => { if (playing && !foreground) setPaused(true); }, [playing, foreground]);
   function toTop() { scroll.current?.scrollTo({ y: 0, animated: false }); }
   function choose(id: LevelId | "endless") {
+    liveRound.current = '';
     if (id === "endless" ? !endlessOpen(p, store.save.arcade?.unlockAll) : !levelOpen(p, id, store.save.arcade?.unlockAll)) return;
     setLevel(id === "endless" ? id : play.level(id)); setResult(null); setPlaying(false); setPaused(false); setSheet(null); toTop();
   }
@@ -103,6 +105,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
     const round = `arcade-${Date.now().toString(36)}-${Math.floor(Math.random() * 0x1000000).toString(36)}`;
     // eslint-disable-next-line react-hooks/purity -- User-invoked Start handler, not a render calculation.
     const nextSeed = Math.floor(Math.random() * 0x100000000);
+    liveRound.current = round;
     setSavedReef(undefined); setRound(round); setSeed(nextSeed === seed ? (seed + 1) >>> 0 : nextSeed); setResult(null); setPaused(false); setPlaying(true); setSheet(null);
     helperUsed.current = person.helper;
     if (together) setMatch(previous => ({ ...previous, names: newMatch(previous.names).names }));
@@ -115,13 +118,15 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   function resumeReef() {
     const session = person.session;
     if (!session || session.game !== game.id) return;
+    liveRound.current = session.round;
     setSavedReef(session.state); setRound(session.round); setLevel(session.state.level);
     helperUsed.current = session.state.helper || !!session.state.helped;
     setResult(null); setPaused(false); setPlaying(true); setSheet(null); toTop();
   }
   function teach(andStart: boolean) { startAfterTeach.current = andStart; setSheet("teach"); sound.say(play.speech(level !== "endless" && level?.world === "learn", together)); }
   const onResult = useCallback((next: ArcadeResult, helped = false, winner?: 0 | 1 | null) => {
-    if (lastIdentity.current !== `${expected.learner}:${expected.epoch}` || !level || !round || credited.current === round) return;
+    if (lastIdentity.current !== `${expected.learner}:${expected.epoch}` || !level || (!round || liveRound.current!==round) || credited.current === round) return;
+    if (!validTerminalResult(next)) { setPaused(true); setFinishError("Your result could not be saved. Keep this round open and try again."); return; }
     if (!arcade({ type: "finish", game: game.id, level: level === "endless" ? level : level.id, stars: next.cleared ? next.stars : 0, score: next.score, round, name: together ? match.names.join(" & ").slice(0, 24) : name }, expected)) {
       failedResult.current = { result: next, helped, winner }; setPaused(true);
       setFinishError("Your result could not be saved. Keep this round open and try again, or return to your map."); return;

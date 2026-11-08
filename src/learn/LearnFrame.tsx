@@ -1,3 +1,10 @@
+import { coveReady } from './generated/readiness';
+import { challengeFor, schoolContext } from '../challenge/catalog';
+import { ResultOffer } from '../challenge/ResultOffer';
+import { resultOffer, ratingDue, dismissSignal } from '../challenge/offers';
+import { progressFor } from '../state/challengeDrafts';
+import { learningComfort } from '../state/validation';
+import { bridgeFor } from './destinations';
 import { BadgeResultCard } from '../badges/ResultCard';
 import { isMathGame, type MathRound } from "./games/shell-math/round";
 import { Companion, LearningCompanion, PhoneLearningCompanion, useCompanionReaction } from "../islander/Companion";
@@ -14,12 +21,12 @@ import { PlayerNames, Scoreboard } from "../components/Match";
 import type { Seat } from "../games/match";
 import { engines } from "./engines";
 import { GrowthBoard } from "./growth/Board";
-import { growthProgress, growthQuestions } from "./growth/engine";
+import { growthProgress, growthQuestions, isGrowth } from "./growth/engine";
 import type { GrowthState } from "./growth/types";
 import { LevelPath } from "./LevelPath";
-import { levelOf, levelTitle, optionsAtLevel, levelStage, type LearningLevel } from "./levels";
+import { levelOf, levelTitle, optionsAtLevel, type LearningLevel } from "./levels";
 import { roundStars } from "./schoolProgress";
-import { activeLearner, readyForNext } from "./learners";
+import { activeLearner } from "./learners";
 import { views } from "./views";
 import { LastPicnicWord } from "./games/hafa-adai/view";
 import type { IslandState } from "./games/hafa-adai/engine";
@@ -52,12 +59,13 @@ export function LearnFrame({ id }: { id: LearnId }) {
     view = views[id];
   const saved = store.save.learn?.[id];
   const scroll = useRef<ScrollView | null>(null);
-  const growthState = saved?.options.stage && !engine.ownLevels ? saved.state as GrowthState : undefined;
-  const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : engine.ownLevels && saved ? (saved.state as { index?: number }).index : undefined;
+  const growthState = saved && isGrowth(saved.state) ? saved.state as GrowthState : undefined;
+  const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : saved ? (saved.state as { index?: number }).index : undefined;
   useLayoutEffect(() => {
     if (growthStep !== undefined) scroll.current?.scrollTo({ y: 0, animated: false });
   }, [growthStep, saved?.id]);
   const learner = activeLearner(store.save.learning);
+  const comfort = learningComfort(store.save, learner.id);
   const learningSkills = learner.id === "family" && !store.save.profiles ? store.save.skills : learner.skills;
   const epoch = store.epoch;
   const acceptedRound = useRef(saved);
@@ -70,7 +78,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
   const [setup, setSetup] = useState(false),
     [help, setHelp] = useState(false),
     [options, setOptions] = useState<LearnOptions>(
-      (saved && (saved.learner ?? "family") === learner.id ? saved.options : learner.choices[id]) ?? { mode: engine.modes[0], pace: "easy", ...(engine.languages ? { language: engine.languages[0] } : {}) }
+      (saved && (saved.learner ?? "family") === learner.id ? saved.options : learner.choices[id]) ?? { mode: engine.modes[0], pace: (["easy","medium","hard"] as const)[Math.min(3,comfort.opening)-1], ...(comfort.opening>3 ? {stage:comfort.opening===4 ? "stretch" as const : "deep" as const} : {}), ...(engine.languages ? { language: engine.languages[0] } : {}) }
     ),
     [names, setNames] = useState<[string, string]>(
       saved?.names && !saved.names.every((n, i) => n === `Player ${i + 1}`) ? saved.names : ["", ""]
@@ -84,8 +92,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
     if (previousIdentity.current === identity) return;
     previousIdentity.current = identity;
     // Keep the options/help sheet open, but use this learner's own learning choices.
-    setOptions((saved && (saved.learner ?? "family") === learner.id ? saved.options : learner.choices[id]) ?? { mode: engine.modes[0], pace: "easy", ...(engine.languages ? { language: engine.languages[0] } : {}) });
-  }, [identity, saved, learner, id, engine]);
+    setOptions((saved && (saved.learner ?? "family") === learner.id ? saved.options : learner.choices[id]) ?? { mode: engine.modes[0], pace: (["easy","medium","hard"] as const)[Math.min(3,comfort.opening)-1], ...(comfort.opening>3 ? {stage:comfort.opening===4 ? "stretch" as const : "deep" as const} : {}), ...(engine.languages ? { language: engine.languages[0] } : {}) });
+  }, [identity, saved, learner, id, engine, comfort.opening]);
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => setAppActive(state === "active"));
     return () => sub.remove();
@@ -164,12 +172,12 @@ export function LearnFrame({ id }: { id: LearnId }) {
   // Say the game's goal once when a fresh round opens, so a non-reader knows what to do.
   const introduced = useRef<string | null>(null);
   useEffect(() => {
-    if (!saved || !engine.introAudio || !soundOn || !boardActive || (saved.options.stage && !engine.ownLevels)) return;
+    if (!saved || !engine.introAudio || !soundOn || !boardActive || (isGrowth(saved.state))) return;
     if (saved.revision !== 0 || introduced.current === saved.id) return;
     introduced.current = saved.id;
     const timer = setTimeout(() => sound(engine.introAudio!, true), 450);
     return () => clearTimeout(timer);
-  }, [saved, engine.introAudio, engine.ownLevels, soundOn, boardActive, sound]);
+  }, [saved, engine.introAudio, soundOn, boardActive, sound]);
 
   const { learnUpdate, practiceOwned } = store;
   const save = useCallback(
@@ -198,7 +206,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
       if (!saved || expected.current.id !== saved.id || !boardActive || store.epoch !== epoch) return;
       const revision = Math.max(saved.revision, expected.current.revision ?? 0) + 1;
       if (save({ ...saved, state, revision })) {
-        if (saved.options.stage && !engine.ownLevels) {
+        if (isGrowth(saved.state)) {
           const next = state as GrowthState;
           if (next.history.at(-1)?.type === "answer" && next.history !== (saved.state as GrowthState).history) {
             const progress = growthProgress(next, growthQuestions(id, saved.options, next));
@@ -207,7 +215,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
         } else if (isMathGame(id) && (state as MathRound).wrong !== null && !(state as MathRound).solved) reactCompanion("incorrect");
       }
     },
-    [saved, save, boardActive, store.epoch, epoch, id, reactCompanion, engine.ownLevels]
+    [saved, save, boardActive, store.epoch, epoch, id, reactCompanion]
   );
 
   function start() {
@@ -221,30 +229,39 @@ export function LearnFrame({ id }: { id: LearnId }) {
     // A different learner starts with their own remembered choices, never the other child's level.
     const next = (saved.learner ?? "family") === learner.id
       ? replaySession(saved, learningSkills, undefined, learner.id)
-      : startSession(id, { options: learner.choices[id] ?? { mode: engine.modes[0], pace: "easy", ...(engine.languages ? { language: engine.languages[0] } : {}) } }, learningSkills);
+      : startSession(id, { options: learner.choices[id] ?? { mode: engine.modes[0], pace: (["easy","medium","hard"] as const)[Math.min(3,comfort.opening)-1], ...(comfort.opening>3 ? {stage:comfort.opening===4 ? "stretch" as const : "deep" as const} : {}), ...(engine.languages ? { language: engine.languages[0] } : {}) } }, learningSkills);
     next.learner = learner.id;
     if (save(next)) { stopSound(); setBurst({ n: 0, big: false }); }
   }
   function openSetup() {
     if (saved) {
-      setOptions((saved.learner ?? "family") === learner.id ? saved.options : learner.choices[id] ?? { mode: engine.modes[0], pace: "easy", ...(engine.languages ? { language: engine.languages[0] } : {}) });
+      setOptions((saved.learner ?? "family") === learner.id ? saved.options : learner.choices[id] ?? { mode: engine.modes[0], pace: (["easy","medium","hard"] as const)[Math.min(3,comfort.opening)-1], ...(comfort.opening>3 ? {stage:comfort.opening===4 ? "stretch" as const : "deep" as const} : {}), ...(engine.languages ? { language: engine.languages[0] } : {}) });
       setAlternate(saved.match?.alternate ?? true);
       setStarter(saved.starter ?? 0);
     }
     setSetup(true);
   }
-  const [stay, setStay] = useState<string | null>(null);
+
   function chooseLevel(level: LearningLevel, base = options) {
     stopSound();
     sound(`learning-level-${level}`);
     setOptions(optionsAtLevel(base, level));
   }
-  const canSuggest = !!saved && finished && saved.options.mode === "solo" && (saved.learner ?? "family") === learner.id && levelOf(saved.options) < 5 && stay !== saved.id && readyForNext(learner, id, levelStage(saved.options));
+  const challenge = challengeFor(id), challengeProgress=progressFor(store.save,learner.id);
+  const context=schoolContext(id,levelOf(saved?.options??options));
+  const levelRecord=store.save.school?.[id]?.[levelOf(saved?.options??options)];
+  const offerFacts={atPar:false,firstHigher:!!saved && levelOf(saved.options)>1 && levelRecord?.completed===1 && Object.keys(store.save.school?.[id]??{}).some(level=>Number(level)<levelOf(saved.options)),dare:!!challenge,harder:!!saved&&(levelOf(saved.options)<5||!!challenge)};
+  const signal=challengeProgress?.signals.find(s=>s[0]===context);
+  const hasOffer=!!challengeProgress&&(ratingDue(challengeProgress,context)||!!resultOffer(signal,comfort,offerFacts));
+  // G1 supplies the Cove route. Until then there is no link to an unfinished surface.
+  const bridge=bridgeFor(id,levelOf(saved?.options??options),coveReady);
+  const changeWorking=(next:NonNullable<typeof challengeProgress>)=>store.challengeWorking({signal:next.signals.find(s=>s[0]===context)},{owner:learner.id,epoch,game:id,id:saved?.id??'',revision:saved?.revision??-1,kind:'school'});
+  const openChallenge=()=>{stopSound();router.push({pathname:'/challenge',params:{game:id}});};
   const back = () => (router.canGoBack() ? router.back() : router.replace("/"));
   const twoPlayer = options.mode !== "solo";
   const turn = saved && engine.turn && saved.options.mode !== "solo" && !finished ? engine.turn(saved.state, saved.options) : null;
   const boardWidth = Math.min(width - insets.left - insets.right - 56, 900);
-  const Board = saved?.options.stage && !engine.ownLevels ? GrowthBoard : view.Board;
+  const Board = saved && isGrowth(saved.state) ? GrowthBoard : view.Board;
   const island = id === "hafa-adai" ? "reading" : engine.island;
   const theme = id === "hafa-adai" ? { sky: "#FFE4D9", land: "#F5BCA6", accent: "#A44E3A", ink: "#65382D" } : subjectTheme[island];
   const cheerText = companionEvent === "correct" ? "You got it!" : companionEvent === "incorrect" ? "Try again!" : companionEvent === "entry" ? "Let's play!" : null;
@@ -332,13 +349,11 @@ export function LearnFrame({ id }: { id: LearnId }) {
                       : (notWon ?? "You did it!")}
                 </Heading>
                 <Copy style={{ color: theme.ink, fontSize: 17, fontWeight: "800", textAlign: "center" }}>{notWon ? "Ready to try the island again?" : "Your stars are shining. Ready for another adventure?"}</Copy>
-                {canSuggest && <View style={{ alignSelf: "stretch", gap: 10 }}>
-                  <Heading style={{ fontSize: 22, textAlign: "center" }}>Try Level {levelOf(saved.options) + 1}?</Heading>
-                  <Copy style={{ textAlign: "center" }}>You worked this level out on your own in rounds on two different days. You can stay and play here, too.</Copy>
-                  <Button quiet onPress={() => { chooseLevel((levelOf(saved.options) + 1) as LearningLevel, saved.options); setSetup(true); }}>Try Level {levelOf(saved.options) + 1}?</Button>
-                  <Button quiet onPress={() => { stopSound(); setStay(saved.id); }}>Stay here</Button>
-                  <Button quiet compact icon="sound-on" disabled={!soundOn} onPress={() => sound(`learning-try-level-${levelOf(saved.options) + 1}`)}>Hear the invitation</Button>
-                </View>}
+                {saved.options.mode==='solo'&&learner.id!=='family'&&challengeProgress&&<ResultOffer progress={challengeProgress} context={context} comfort={comfort} facts={offerFacts} onChange={changeWorking} onChoose={kind=>{
+                  if(kind==='dare'||kind==='harder'&&levelOf(saved.options)===5)openChallenge();
+                  else {chooseLevel(Math.max(1,Math.min(5,levelOf(saved.options)+(kind==='easier'?-1:1))) as LearningLevel,saved.options);setSetup(true);}
+                }}/>}
+                {!hasOffer&&bridge&&signal&&!signal[4]&&comfort.offers&&!comfort.youngChild&&challengeProgress&&<View style={{gap:8}}><Button quiet onPress={()=>{if(changeWorking(dismissSignal(challengeProgress,context)))router.push(bridge.route);}}>{bridge.label}</Button><Button quiet compact onPress={()=>changeWorking(dismissSignal(challengeProgress,context))}>Not now</Button></View>}
                 <Button icon="right" onPress={replay} style={{ minWidth: 220, minHeight: 62, backgroundColor: theme.accent, borderColor: theme.accent }}>
                   Keep going
                 </Button>
@@ -363,8 +378,10 @@ export function LearnFrame({ id }: { id: LearnId }) {
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: theme.sky, padding: 12, borderRadius: 22 }}><view.Art size={72}/><View style={{ flex: 1 }}><Heading style={{ fontSize: 21, color: theme.ink }}>{engine.name}</Heading><Copy style={{ color: theme.ink, fontSize: 14 }}>Pick a stepping stone, then play.</Copy></View></View>
         <LearnerChip compact/>
-        <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage && !engine.ownLevels ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
+        {id==='code-lab'&&<Copy>Ages 9–14, with the top challenges for older learners and grown-ups.</Copy>}
+        <Copy>{saved && !finished ? "Starting a new round replaces this round. Your other games stay saved." : options.stage && !engine.ownLevels && !engine.nativeStages ? "Choose a skill to explore. Pictures and help stay available at every level." : engine.description}</Copy>
         <LevelPath game={id} level={levelOf(options)} onChoose={chooseLevel} progress={store.save.school} />
+        {challenge&&!comfort.youngChild&&<Button quiet onPress={openChallenge}>Challenge</Button>}
         {engine.modes.length > 1 && (
           <>
             <Heading style={{ fontSize: 18 }}>How shall we play?</Heading>
@@ -419,8 +436,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
         )}
       </Sheet>
       <Sheet visible={help} onClose={() => { stopSound(); setHelp(false); }} title={`How to play ${engine.name}`}>
-        <Copy>{saved?.options.stage && !engine.ownLevels ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>
-        {!(saved?.options.stage && !engine.ownLevels) && engine.helpAudio && (
+        <Copy>{saved && isGrowth(saved.state) ? "Read or hear the question, then choose an answer or put the pieces in order. Show me explains the idea and counts as helped practice. Take your time, then tap Next idea. Pictures and demonstrations stay available at every stage." : engine.help}</Copy>
+        {!(saved && isGrowth(saved.state)) && engine.helpAudio && (
           <>
             <Button icon="sound-on" onPress={() => sound(engine.helpAudio!)} disabled={!soundOn}>
               Hear a quick guide

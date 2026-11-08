@@ -43,7 +43,7 @@ vi.mock('../src/arcade/plays',async()=>{const {reefLevel,reefLevels}=await impor
 let store:ReturnType<typeof useStore>;
 function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return null;}
 const game:ArcadeGame={id:'reef-builder',name:'Reef Builder',color:'#123',hero:'Pip',tagline:'Audit',surface:'#fff',subject:'math',twoPlayer:false,worlds:[{id:'w1',name:'One',detail:'',stars:0},{id:'w2',name:'Two',detail:'',stars:12}]};
-it('R04 identity clears locked selection and pending start; finish rejection is recoverable',async()=>{
+it('R04 identity clears another learner’s selection and pending start; finish rejection is recoverable',async()=>{
   vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('__DEV__',false);
   const learning=selectLearner(addLearner(addLearner(undefined,'A','a'),'B','b'),'a');
   let arcade=arcadeTransition(undefined,'a',{type:'finish',game:'reef-builder',level:'w1-1',stars:3,score:1,round:'a1',name:'A'});
@@ -54,7 +54,7 @@ it('R04 identity clears locked selection and pending start; finish rejection is 
     await act(async()=>{root.root.findAllByType('button').find(n=>n.children.includes('Choose w2-1'))!.props.onClick();});
     await act(async()=>{root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Settings')[0].props.onPress();});
     await act(async()=>{store.selectLearner('b');});
-    expect(levelOpen(gameProgress(arcadeLearner(store.save.arcade,'b'),'reef-builder'),'w2-1')).toBe(false);
+    expect(levelOpen(gameProgress(arcadeLearner(store.save.arcade,'b'),'reef-builder'),'w2-1')).toBe(true);
     await act(async()=>{root.root.findAllByType('button').find(n=>n.children.includes('Close settings'))!.props.onClick();});
     expect(root.root.findAll(n=>String(n.type)==='Copy'&&n.props.children==='Two · Level 1')).toHaveLength(0);
     expect(root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Show me & play')).toHaveLength(0);

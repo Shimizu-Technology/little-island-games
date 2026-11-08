@@ -22,7 +22,7 @@ vi.mock("../src/arcade/Juice", () => ({ Hero: () => null, HudPill: ({ children }
 vi.mock("../src/arcade/PlayScene", () => ({ PlayScene: () => null }));
 vi.mock("../src/arcade/TreasureArt", () => ({ ChestArt: () => null }));
 describe("shared 56-level map", () => {
-  it.each([[390, 844], [1024, 768]])("renders seven world choices and only the selected world at %s×%s, respecting locks", (width, height) => {
+  it.each([[390, 844], [1024, 768]])("renders seven world choices and only the selected world at %s×%s, with every level open", (width, height) => {
     Object.assign(viewport, { width, height });
     const props = { game: arcadeGames.find(g => g.id === "shell-song")!, person: emptyArcadeLearner(), levels: songLevels, unlockAll: false, onLevel: vi.fn(), onOutfits: vi.fn(), onChest: vi.fn(), active: false };
     const locked = renderToStaticMarkup(<LevelMap {...props}/>);
@@ -32,7 +32,7 @@ describe("shared 56-level map", () => {
     expect(locked).not.toContain('data-testid="world-w2"');
     for (const level of allLevelIds.filter(id => id.startsWith("w1-"))) expect(locked).toContain(`data-testid="level-${level}"`);
     expect((locked.match(/data-testid="level-/g) ?? []).length).toBe(8);
-    expect(locked).toMatch(/disabled=""[^>]*aria-label="[^"<]*, level 2/);
+    expect(locked).not.toContain('disabled=""');
     const open = renderToStaticMarkup(<LevelMap {...props} unlockAll/>);
     expect(open).not.toContain('disabled=""');
   });
