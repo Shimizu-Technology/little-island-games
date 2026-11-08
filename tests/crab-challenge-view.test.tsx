@@ -18,7 +18,7 @@ const mount=async(s:State,dispatch=vi.fn())=>{vi.stubGlobal('IS_REACT_ACT_ENVIRO
 const press=async(label:string)=>act(async()=>{const b=root!.root.findAllByType('button').find(b=>b.props.accessibilityLabel===label||b.children.join('')===label);expect(b,label).toBeDefined();b!.props.onPress();});
 it('first help shows only the next step; full plan takes two more explicit choices',async()=>{
  let s=state(1);s=challengeEngine.step(s,['h'],s.descriptor)!.state;await mount(s);
- expect(JSON.stringify(root!.toJSON())).toContain('Add card 1:');expect(JSON.stringify(root!.toJSON())).not.toContain('One working plan:');
+ await vi.waitFor(async()=>{await act(async()=>{});expect(JSON.stringify(root!.toJSON())).toContain('Add card 1:');},{timeout:5000,interval:20});expect(JSON.stringify(root!.toJSON())).not.toContain('One working plan:');
  await press('More help');s=challengeEngine.step(s,['h'],s.descriptor)!.state;
  await act(async()=>root!.update(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>));expect(JSON.stringify(root!.toJSON())).toContain('Show the whole plan');
 });
