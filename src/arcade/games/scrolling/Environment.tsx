@@ -3,7 +3,7 @@ import Svg, { Circle, Ellipse, G, Path } from "react-native-svg";
 import type { WorldId } from "../../types";
 import { ArcadeSprite, type SpritePose } from "../../Sprite";
 import type { SharedValue } from "react-native-reanimated";
-import { SCENE_COUNT, SCENE_START, TEXTURE_START, TEXTURE_COUNT } from "./environmentPoses";
+import { SCENE_COUNT, SCENE_START } from "./environmentPoses";
 import { palette } from "./Art";
 const SideObject = memo(function SideObject({ index, world }: { index: number; world: WorldId }) {
   const [,,sea,sand]=palette("lagoon-run",world),kind=index%4;
@@ -15,7 +15,7 @@ const SideObject = memo(function SideObject({ index, world }: { index: number; w
   </G></Svg>;
 });
 export const RunEnvironment = memo(function RunEnvironment({ poses, world }: { poses: SharedValue<SpritePose[]>; world: WorldId }) {
-  return <>{Array.from({length:SCENE_COUNT},(_,i)=><ArcadeSprite key={i} poses={poses} index={SCENE_START+i} width={100} height={140}><SideObject index={i} world={world}/></ArcadeSprite>)}{Array.from({length:TEXTURE_COUNT},(_,i)=><ArcadeSprite key={`t${i}`} poses={poses} index={TEXTURE_START+i} width={16} height={5}><Svg width={16} height={5}><Path d="M1 3L6 1M10 3L14 2" stroke="#B89B6C" opacity={.5} strokeWidth={1.5}/></Svg></ArcadeSprite>)}</>;
+  return <>{Array.from({length:SCENE_COUNT},(_,i)=><ArcadeSprite key={i} poses={poses} index={SCENE_START+i} width={100} height={140}><SideObject index={i} world={world}/></ArcadeSprite>)}</>;
 });
 /** Far landmarks remain fixed and use six distinct silhouettes. */
 export function Landmark({ world }: { world: WorldId }) {
