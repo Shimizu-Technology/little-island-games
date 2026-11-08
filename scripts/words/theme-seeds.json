@@ -1,0 +1,1447 @@
+[
+  {
+    "id": "reef",
+    "name": "Reef",
+    "seeds": [
+      "REEF",
+      "CORAL",
+      "LAGOON",
+      "TIDE",
+      "WAVE",
+      "SAND",
+      "SHORE",
+      "BEACH",
+      "SHELL",
+      "CRAB",
+      "FISH",
+      "FIN",
+      "GILL",
+      "SCALE",
+      "SEA",
+      "OCEAN",
+      "SALT",
+      "FOAM",
+      "SPRAY",
+      "SWELL"
+    ],
+    "topics": [
+      "reef"
+    ]
+  },
+  {
+    "id": "voyaging",
+    "name": "Voyaging",
+    "seeds": [
+      "CANOE",
+      "OUTRIGGER",
+      "PADDLE",
+      "SAIL",
+      "MAST",
+      "BOOM",
+      "HULL",
+      "BOW",
+      "STERN",
+      "RUDDER",
+      "ANCHOR",
+      "ROPE",
+      "KNOT",
+      "CREW",
+      "VOYAGE",
+      "COURSE",
+      "COMPASS",
+      "HORIZON",
+      "STAR",
+      "WIND"
+    ],
+    "topics": [
+      "voyaging"
+    ]
+  },
+  {
+    "id": "island",
+    "name": "Island",
+    "seeds": [
+      "ISLAND",
+      "COVE",
+      "BAY",
+      "INLET",
+      "CHANNEL",
+      "STRAIT",
+      "COAST",
+      "PENINSULA",
+      "CAPE",
+      "BLUFF",
+      "CLIFF",
+      "RIDGE",
+      "HILL",
+      "VALLEY",
+      "PEAK",
+      "SLOPE",
+      "PLATEAU",
+      "CAVE",
+      "ROCK",
+      "STONE"
+    ],
+    "topics": [
+      "island"
+    ]
+  },
+  {
+    "id": "weather",
+    "name": "Weather",
+    "seeds": [
+      "RAIN",
+      "CLOUD",
+      "SUN",
+      "SKY",
+      "BREEZE",
+      "GUST",
+      "DRIZZLE",
+      "SHOWER",
+      "STORM",
+      "TYPHOON",
+      "RAINBOW",
+      "THUNDER",
+      "LIGHTNING",
+      "HUMIDITY",
+      "DROPLET",
+      "PUDDLE",
+      "FORECAST",
+      "SHADE",
+      "WARMTH",
+      "SEASON"
+    ],
+    "topics": [
+      "weather"
+    ]
+  },
+  {
+    "id": "fruit",
+    "name": "Fruit",
+    "seeds": [
+      "MANGO",
+      "BANANA",
+      "COCONUT",
+      "PAPAYA",
+      "GUAVA",
+      "PINEAPPLE",
+      "LIME",
+      "LEMON",
+      "ORANGE",
+      "TANGERINE",
+      "MELON",
+      "WATERMELON",
+      "PLUM",
+      "PEACH",
+      "PEAR",
+      "APPLE",
+      "GRAPE",
+      "BERRY",
+      "FIG",
+      "DATE"
+    ],
+    "topics": [
+      "fruit"
+    ]
+  },
+  {
+    "id": "plants",
+    "name": "Plants",
+    "seeds": [
+      "TARO",
+      "YAM",
+      "GINGER",
+      "TURMERIC",
+      "CASSAVA",
+      "BREADFRUIT",
+      "BAMBOO",
+      "PALM",
+      "FERN",
+      "MOSS",
+      "ALGAE",
+      "SEAGRASS",
+      "FLOWER",
+      "LEAF",
+      "ROOT",
+      "STEM",
+      "SEED",
+      "SPROUT",
+      "BUD",
+      "PETAL"
+    ],
+    "topics": [
+      "plants"
+    ]
+  },
+  {
+    "id": "baking",
+    "name": "Baking",
+    "seeds": [
+      "FLOUR",
+      "DOUGH",
+      "BATTER",
+      "YEAST",
+      "LOAF",
+      "BREAD",
+      "ROLL",
+      "BUN",
+      "MUFFIN",
+      "COOKIE",
+      "CAKE",
+      "PIE",
+      "TART",
+      "CRUST",
+      "CRUMB",
+      "ICING",
+      "FROSTING",
+      "SPRINKLE",
+      "PASTRY",
+      "SCONE"
+    ],
+    "topics": [
+      "baking"
+    ]
+  },
+  {
+    "id": "pantry",
+    "name": "Pantry",
+    "seeds": [
+      "SUGAR",
+      "HONEY",
+      "SYRUP",
+      "MOLASSES",
+      "COCOA",
+      "VANILLA",
+      "CINNAMON",
+      "NUTMEG",
+      "CLOVE",
+      "PEPPER",
+      "RICE",
+      "OAT",
+      "WHEAT",
+      "CORN",
+      "STARCH",
+      "BUTTER",
+      "MILK",
+      "CREAM",
+      "EGG",
+      "OIL"
+    ],
+    "topics": [
+      "pantry"
+    ]
+  },
+  {
+    "id": "kitchen",
+    "name": "Kitchen",
+    "seeds": [
+      "BOWL",
+      "SPOON",
+      "FORK",
+      "KNIFE",
+      "WHISK",
+      "SPATULA",
+      "LADLE",
+      "SIEVE",
+      "COLANDER",
+      "APRON",
+      "OVEN",
+      "STOVE",
+      "PAN",
+      "POT",
+      "TRAY",
+      "RACK",
+      "CUP",
+      "PLATE",
+      "SAUCER",
+      "TOWEL"
+    ],
+    "topics": [
+      "kitchen"
+    ]
+  },
+  {
+    "id": "cookery",
+    "name": "Cookery",
+    "seeds": [
+      "MIX",
+      "STIR",
+      "KNEAD",
+      "RISE",
+      "BAKE",
+      "ROAST",
+      "STEAM",
+      "SIMMER",
+      "BOIL",
+      "MELT",
+      "POUR",
+      "MEASURE",
+      "SIFT",
+      "FOLD",
+      "SPREAD",
+      "SLICE",
+      "DICE",
+      "CHOP",
+      "PEEL",
+      "MASH"
+    ],
+    "topics": [
+      "cookery"
+    ]
+  },
+  {
+    "id": "parish",
+    "name": "Parish",
+    "seeds": [
+      "CHURCH",
+      "CHAPEL",
+      "PARISH",
+      "ALTAR",
+      "PEW",
+      "AISLE",
+      "BELFRY",
+      "STEEPLE",
+      "CROSS",
+      "CANDLE",
+      "HYMN",
+      "CHOIR",
+      "BELL",
+      "PRIEST",
+      "DEACON",
+      "NUN",
+      "POPE",
+      "SAINT",
+      "BISHOP",
+      "PASTOR"
+    ],
+    "topics": [
+      "parish"
+    ]
+  },
+  {
+    "id": "faith",
+    "name": "Faith",
+    "seeds": [
+      "BIBLE",
+      "GOD",
+      "JESUS",
+      "MARY",
+      "JOSEPH",
+      "ANGEL",
+      "HEAVEN",
+      "HOLY",
+      "PRAY",
+      "PRAYER",
+      "ROSARY",
+      "NOVENA",
+      "MASS",
+      "AMEN",
+      "GRACE",
+      "PSALM",
+      "GOSPEL",
+      "SCRIPTURE",
+      "BAPTISM",
+      "COMMUNION"
+    ],
+    "topics": [
+      "faith"
+    ]
+  },
+  {
+    "id": "seasons",
+    "name": "Seasons",
+    "seeds": [
+      "ADVENT",
+      "LENT",
+      "EASTER",
+      "CHRISTMAS",
+      "PENTECOST",
+      "NATIVITY",
+      "MANGER",
+      "SHEPHERD",
+      "STARLIGHT",
+      "WREATH",
+      "GARLAND",
+      "RIBBON",
+      "GIFT",
+      "CELEBRATION",
+      "JOY",
+      "HOPE",
+      "PEACE",
+      "MERCY",
+      "KINDNESS",
+      "CHARITY"
+    ],
+    "topics": [
+      "seasons"
+    ]
+  },
+  {
+    "id": "family",
+    "name": "Family",
+    "seeds": [
+      "FAMILY",
+      "MOTHER",
+      "FATHER",
+      "STEPMOM",
+      "STEPDAD",
+      "GRANDMA",
+      "GRANDPA",
+      "AUNT",
+      "UNCLE",
+      "COUSIN",
+      "SISTER",
+      "BROTHER",
+      "BABY",
+      "SIBLING",
+      "CHILD",
+      "GROWNUP",
+      "NEIGHBOR",
+      "FRIEND",
+      "GUEST",
+      "HELPER"
+    ],
+    "topics": [
+      "family"
+    ]
+  },
+  {
+    "id": "care",
+    "name": "Care",
+    "seeds": [
+      "LOVE",
+      "CARE",
+      "SHARE",
+      "HUG",
+      "SMILE",
+      "LAUGH",
+      "LISTEN",
+      "COMFORT",
+      "WELCOME",
+      "PATIENCE",
+      "TRUST",
+      "RESPECT",
+      "THANKS",
+      "HELP",
+      "VISIT",
+      "CUDDLE",
+      "BLANKET",
+      "CRADLE",
+      "LULLABY",
+      "NAP"
+    ],
+    "topics": [
+      "care"
+    ]
+  },
+  {
+    "id": "craft",
+    "name": "Craft",
+    "seeds": [
+      "PAINT",
+      "BRUSH",
+      "CANVAS",
+      "PAPER",
+      "CARD",
+      "CRAYON",
+      "PENCIL",
+      "CHALK",
+      "CLAY",
+      "YARN",
+      "THREAD",
+      "NEEDLE",
+      "FABRIC",
+      "FELT",
+      "BEAD",
+      "BUTTON",
+      "GLUE",
+      "SCISSORS",
+      "STENCIL",
+      "COLLAGE"
+    ],
+    "topics": [
+      "craft"
+    ]
+  },
+  {
+    "id": "garden",
+    "name": "Garden",
+    "seeds": [
+      "SOIL",
+      "COMPOST",
+      "MULCH",
+      "HOE",
+      "RAKE",
+      "TROWEL",
+      "SPADE",
+      "WATERING",
+      "SEEDLING",
+      "PATCH",
+      "PLOT",
+      "FENCE",
+      "HEDGE",
+      "VINE",
+      "SHRUB",
+      "TREE",
+      "BRANCH",
+      "TRUNK",
+      "BARK",
+      "FROND"
+    ],
+    "topics": [
+      "garden"
+    ]
+  },
+  {
+    "id": "animals",
+    "name": "Animals",
+    "seeds": [
+      "TURTLE",
+      "DOLPHIN",
+      "WHALE",
+      "SHARK",
+      "RAY",
+      "EEL",
+      "OCTOPUS",
+      "SQUID",
+      "JELLYFISH",
+      "STARFISH",
+      "URCHIN",
+      "CLAM",
+      "OYSTER",
+      "SHRIMP",
+      "LOBSTER",
+      "HERMIT",
+      "SNAIL",
+      "LIMPET",
+      "BARNACLE",
+      "SPONGE"
+    ],
+    "topics": [
+      "animals"
+    ]
+  },
+  {
+    "id": "birds",
+    "name": "Birds",
+    "seeds": [
+      "BIRD",
+      "NEST",
+      "WING",
+      "FEATHER",
+      "BEAK",
+      "TALON",
+      "CHICK",
+      "HATCH",
+      "WHITEYE",
+      "KINGFISHER",
+      "SWIFT",
+      "HERON",
+      "EGRET",
+      "TERN",
+      "DOVE",
+      "PIGEON",
+      "ROOSTER",
+      "HEN",
+      "DUCK",
+      "GOOSE"
+    ],
+    "topics": [
+      "birds"
+    ]
+  },
+  {
+    "id": "science",
+    "name": "Science",
+    "seeds": [
+      "MAGNET",
+      "SHADOW",
+      "LIGHT",
+      "HEAT",
+      "SOUND",
+      "ECHO",
+      "MOTION",
+      "FORCE",
+      "PUSH",
+      "PULL",
+      "FLOAT",
+      "SINK",
+      "SOLID",
+      "LIQUID",
+      "GAS",
+      "VAPOR",
+      "WATER",
+      "ICE",
+      "FROST",
+      "DEW"
+    ],
+    "topics": [
+      "science"
+    ]
+  },
+  {
+    "id": "bodies",
+    "name": "Bodies",
+    "seeds": [
+      "BODY",
+      "HEAD",
+      "HAIR",
+      "FACE",
+      "EYE",
+      "EAR",
+      "NOSE",
+      "MOUTH",
+      "TOOTH",
+      "TONGUE",
+      "HAND",
+      "FINGER",
+      "THUMB",
+      "ARM",
+      "ELBOW",
+      "LEG",
+      "KNEE",
+      "FOOT",
+      "TOE",
+      "SKIN"
+    ],
+    "topics": [
+      "bodies"
+    ]
+  },
+  {
+    "id": "health",
+    "name": "Health",
+    "seeds": [
+      "BONE",
+      "BRAIN",
+      "HEART",
+      "LUNG",
+      "BLOOD",
+      "MUSCLE",
+      "JOINT",
+      "CHEST",
+      "HIP",
+      "TUMMY",
+      "BREATH",
+      "PULSE",
+      "SENSE",
+      "SIGHT",
+      "HEARING",
+      "TOUCH",
+      "TASTE",
+      "SMELL",
+      "REST",
+      "SLEEP"
+    ],
+    "topics": [
+      "health"
+    ]
+  },
+  {
+    "id": "play",
+    "name": "Play",
+    "seeds": [
+      "PLAY",
+      "GAME",
+      "TOY",
+      "DOLL",
+      "BLOCK",
+      "PUZZLE",
+      "MARBLE",
+      "BALL",
+      "KITE",
+      "BAT",
+      "HOOP",
+      "SWING",
+      "SLIDE",
+      "CLIMB",
+      "HOP",
+      "SKIP",
+      "JUMP",
+      "CATCH",
+      "TOSS",
+      "BALANCE"
+    ],
+    "topics": [
+      "play"
+    ]
+  },
+  {
+    "id": "picnic",
+    "name": "Picnic",
+    "seeds": [
+      "PICNIC",
+      "BASKET",
+      "MAT",
+      "NAPKIN",
+      "SANDWICH",
+      "SNACK",
+      "FRUIT",
+      "JUICE",
+      "LUNCH",
+      "FEAST",
+      "POTLUCK",
+      "FIESTA",
+      "TABLE",
+      "BENCH",
+      "COOLER",
+      "FLASK",
+      "JUG",
+      "BOTTLE",
+      "LID",
+      "HANDLE"
+    ],
+    "topics": [
+      "picnic"
+    ]
+  },
+  {
+    "id": "community",
+    "name": "Community",
+    "seeds": [
+      "VILLAGE",
+      "GUAM",
+      "PACIFIC",
+      "MARKET",
+      "SCHOOL",
+      "LIBRARY",
+      "PARK",
+      "PATH",
+      "TRAIL",
+      "BRIDGE",
+      "BOAT",
+      "DOCK",
+      "HARBOR",
+      "PORT",
+      "CRAFTSMAN",
+      "FARMER",
+      "BAKER",
+      "TEACHER",
+      "READER",
+      "STORY"
+    ],
+    "topics": [
+      "community"
+    ]
+  },
+  {
+    "id": "beach-walk",
+    "name": "Beach walk",
+    "seeds": [
+      "SAND",
+      "SHORE",
+      "SHELL"
+    ],
+    "topics": [
+      "object"
+    ]
+  },
+  {
+    "id": "under-the-waves",
+    "name": "Under the waves",
+    "seeds": [
+      "REEF",
+      "CORAL",
+      "FISH"
+    ],
+    "topics": [
+      "animal"
+    ]
+  },
+  {
+    "id": "coral-homes",
+    "name": "Coral homes",
+    "seeds": [
+      "CORAL",
+      "REEF",
+      "SPONGE"
+    ],
+    "topics": [
+      "animal"
+    ]
+  },
+  {
+    "id": "tide-pools",
+    "name": "Tide pools",
+    "seeds": [
+      "CRAB",
+      "SNAIL",
+      "LIMPET"
+    ],
+    "topics": [
+      "animal"
+    ]
+  },
+  {
+    "id": "shell-shapes",
+    "name": "Shell shapes",
+    "seeds": [
+      "CLAM",
+      "OYSTER",
+      "SHELL"
+    ],
+    "topics": [
+      "animal"
+    ]
+  },
+  {
+    "id": "big-swimmers",
+    "name": "Big swimmers",
+    "seeds": [
+      "WHALE",
+      "DOLPHIN",
+      "SHARK"
+    ],
+    "topics": [
+      "animal"
+    ]
+  },
+  {
+    "id": "tiny-sea-life",
+    "name": "Tiny sea life",
+    "seeds": [
+      "SHRIMP",
+      "PLANKTON",
+      "ALGAE"
+    ],
+    "topics": [
+      "animal"
+    ]
+  },
+  {
+    "id": "sea-travelers",
+    "name": "Sea travelers",
+    "seeds": [
+      "TURTLE",
+      "TERN",
+      "RAY"
+    ],
+    "topics": [
+      "animal"
+    ]
+  },
+  {
+    "id": "water-ways",
+    "name": "Water ways",
+    "seeds": [
+      "CHANNEL",
+      "STRAIT",
+      "INLET"
+    ],
+    "topics": [
+      "object"
+    ]
+  },
+  {
+    "id": "sailing-gear",
+    "name": "Sailing gear",
+    "seeds": [
+      "SAIL",
+      "MAST",
+      "BOOM"
+    ],
+    "topics": [
+      "artifact"
+    ]
+  },
+  {
+    "id": "paddle-together",
+    "name": "Paddle together",
+    "seeds": [
+      "CANOE",
+      "PADDLE",
+      "CREW"
+    ],
+    "topics": [
+      "act"
+    ]
+  },
+  {
+    "id": "boat-parts",
+    "name": "Boat parts",
+    "seeds": [
+      "HULL",
+      "BOW",
+      "STERN"
+    ],
+    "topics": [
+      "artifact"
+    ]
+  },
+  {
+    "id": "safe-at-harbor",
+    "name": "Safe at harbor",
+    "seeds": [
+      "ANCHOR",
+      "DOCK",
+      "HARBOR"
+    ],
+    "topics": [
+      "location"
+    ]
+  },
+  {
+    "id": "finding-a-course",
+    "name": "Finding a course",
+    "seeds": [
+      "COMPASS",
+      "STAR",
+      "HORIZON"
+    ],
+    "topics": [
+      "cognition"
+    ]
+  },
+  {
+    "id": "coastal-land",
+    "name": "Coastal land",
+    "seeds": [
+      "CAPE",
+      "BLUFF",
+      "CLIFF"
+    ],
+    "topics": [
+      "object"
+    ]
+  },
+  {
+    "id": "island-paths",
+    "name": "Island paths",
+    "seeds": [
+      "TRAIL",
+      "PATH",
+      "BRIDGE"
+    ],
+    "topics": [
+      "artifact"
+    ]
+  },
+  {
+    "id": "garden-leaves",
+    "name": "Garden leaves",
+    "seeds": [
+      "LEAF",
+      "FROND",
+      "FERN"
+    ],
+    "topics": [
+      "plant"
+    ]
+  },
+  {
+    "id": "growing-roots",
+    "name": "Growing roots",
+    "seeds": [
+      "ROOT",
+      "TARO",
+      "YAM"
+    ],
+    "topics": [
+      "plant"
+    ]
+  },
+  {
+    "id": "fresh-fruit",
+    "name": "Fresh fruit",
+    "seeds": [
+      "MANGO",
+      "GUAVA",
+      "PAPAYA"
+    ],
+    "topics": [
+      "food"
+    ]
+  },
+  {
+    "id": "coconut-grove",
+    "name": "Coconut grove",
+    "seeds": [
+      "PALM",
+      "COCONUT",
+      "HUSK"
+    ],
+    "topics": [
+      "plant"
+    ]
+  },
+  {
+    "id": "seeds-and-sprouts",
+    "name": "Seeds and sprouts",
+    "seeds": [
+      "SEED",
+      "SPROUT",
+      "SEEDLING"
+    ],
+    "topics": [
+      "plant"
+    ]
+  },
+  {
+    "id": "flowers-open",
+    "name": "Flowers open",
+    "seeds": [
+      "PETAL",
+      "BUD",
+      "FLOWER"
+    ],
+    "topics": [
+      "plant"
+    ]
+  },
+  {
+    "id": "rainy-afternoon",
+    "name": "Rainy afternoon",
+    "seeds": [
+      "RAIN",
+      "PUDDLE",
+      "DRIZZLE"
+    ],
+    "topics": [
+      "phenomenon"
+    ]
+  },
+  {
+    "id": "look-at-the-sky",
+    "name": "Look at the sky",
+    "seeds": [
+      "SKY",
+      "CLOUD",
+      "RAINBOW"
+    ],
+    "topics": [
+      "object"
+    ]
+  },
+  {
+    "id": "a-gentle-breeze",
+    "name": "A gentle breeze",
+    "seeds": [
+      "WIND",
+      "BREEZE",
+      "GUST"
+    ],
+    "topics": [
+      "phenomenon"
+    ]
+  },
+  {
+    "id": "weather-watching",
+    "name": "Weather watching",
+    "seeds": [
+      "FORECAST",
+      "RAIN",
+      "GAUGE"
+    ],
+    "topics": [
+      "cognition"
+    ]
+  },
+  {
+    "id": "baking-bread",
+    "name": "Baking bread",
+    "seeds": [
+      "LOAF",
+      "YEAST",
+      "DOUGH"
+    ],
+    "topics": [
+      "food"
+    ]
+  },
+  {
+    "id": "a-cake-to-share",
+    "name": "A cake to share",
+    "seeds": [
+      "CAKE",
+      "ICING",
+      "FROSTING"
+    ],
+    "topics": [
+      "food"
+    ]
+  },
+  {
+    "id": "cookie-tray",
+    "name": "Cookie tray",
+    "seeds": [
+      "COOKIE",
+      "CRUMB",
+      "TRAY"
+    ],
+    "topics": [
+      "food"
+    ]
+  },
+  {
+    "id": "mix-and-measure",
+    "name": "Mix and measure",
+    "seeds": [
+      "BOWL",
+      "CUP",
+      "WHISK"
+    ],
+    "topics": [
+      "artifact"
+    ]
+  },
+  {
+    "id": "pantry-shelf",
+    "name": "Pantry shelf",
+    "seeds": [
+      "FLOUR",
+      "RICE",
+      "OAT"
+    ],
+    "topics": [
+      "food"
+    ]
+  },
+  {
+    "id": "sweet-flavors",
+    "name": "Sweet flavors",
+    "seeds": [
+      "HONEY",
+      "SUGAR",
+      "VANILLA"
+    ],
+    "topics": [
+      "food"
+    ]
+  },
+  {
+    "id": "warm-spices",
+    "name": "Warm spices",
+    "seeds": [
+      "GINGER",
+      "CINNAMON",
+      "NUTMEG"
+    ],
+    "topics": [
+      "food"
+    ]
+  },
+  {
+    "id": "at-the-stove",
+    "name": "At the stove",
+    "seeds": [
+      "POT",
+      "PAN",
+      "LADLE"
+    ],
+    "topics": [
+      "artifact"
+    ]
+  },
+  {
+    "id": "cooking-changes",
+    "name": "Cooking changes",
+    "seeds": [
+      "MELT",
+      "STEAM",
+      "BOIL"
+    ],
+    "topics": [
+      "change"
+    ]
+  },
+  {
+    "id": "picnic-basket",
+    "name": "Picnic basket",
+    "seeds": [
+      "MAT",
+      "NAPKIN",
+      "BASKET"
+    ],
+    "topics": [
+      "artifact"
+    ]
+  },
+  {
+    "id": "family-feast",
+    "name": "Family feast",
+    "seeds": [
+      "FIESTA",
+      "FEAST",
+      "POTLUCK"
+    ],
+    "topics": [
+      "event"
+    ]
+  },
+  {
+    "id": "market-morning",
+    "name": "Market morning",
+    "seeds": [
+      "MARKET",
+      "FARMER",
+      "BAKER"
+    ],
+    "topics": [
+      "person"
+    ]
+  },
+  {
+    "id": "parish-sounds",
+    "name": "Parish sounds",
+    "seeds": [
+      "BELL",
+      "CHOIR",
+      "HYMN"
+    ],
+    "topics": [
+      "communication"
+    ]
+  },
+  {
+    "id": "inside-a-church",
+    "name": "Inside a church",
+    "seeds": [
+      "ALTAR",
+      "PEW",
+      "AISLE"
+    ],
+    "topics": [
+      "artifact"
+    ]
+  },
+  {
+    "id": "people-who-serve",
+    "name": "People who serve",
+    "seeds": [
+      "PRIEST",
+      "NUN",
+      "DEACON"
+    ],
+    "topics": [
+      "person"
+    ]
+  },
+  {
+    "id": "prayer-words",
+    "name": "Prayer words",
+    "seeds": [
+      "AMEN",
+      "PRAYER",
+      "ROSARY"
+    ],
+    "topics": [
+      "communication"
+    ]
+  },
+  {
+    "id": "advent-light",
+    "name": "Advent light",
+    "seeds": [
+      "CANDLE",
+      "WREATH",
+      "HOPE"
+    ],
+    "topics": [
+      "feeling"
+    ]
+  },
+  {
+    "id": "easter-joy",
+    "name": "Easter joy",
+    "seeds": [
+      "EASTER",
+      "JOY",
+      "GRACE"
+    ],
+    "topics": [
+      "feeling"
+    ]
+  },
+  {
+    "id": "caring-for-a-baby",
+    "name": "Caring for a baby",
+    "seeds": [
+      "CRADLE",
+      "BLANKET",
+      "LULLABY"
+    ],
+    "topics": [
+      "artifact"
+    ]
+  },
+  {
+    "id": "people-who-care",
+    "name": "People who care",
+    "seeds": [
+      "AUNT",
+      "UNCLE",
+      "GRANDMA"
+    ],
+    "topics": [
+      "person"
+    ]
+  },
+  {
+    "id": "sharing-and-kindness",
+    "name": "Sharing and kindness",
+    "seeds": [
+      "SHARE",
+      "HELP",
+      "CARE"
+    ],
+    "topics": [
+      "act"
+    ]
+  },
+  {
+    "id": "quiet-together",
+    "name": "Quiet together",
+    "seeds": [
+      "READ",
+      "REST",
+      "LISTEN"
+    ],
+    "topics": [
+      "act"
+    ]
+  },
+  {
+    "id": "painting-day",
+    "name": "Painting day",
+    "seeds": [
+      "CANVAS",
+      "BRUSH",
+      "PAINT"
+    ],
+    "topics": [
+      "artifact"
+    ]
+  },
+  {
+    "id": "paper-crafts",
+    "name": "Paper crafts",
+    "seeds": [
+      "PAPER",
+      "GLUE",
+      "SCISSORS"
+    ],
+    "topics": [
+      "artifact"
+    ]
+  },
+  {
+    "id": "stitch-a-gift",
+    "name": "Stitch a gift",
+    "seeds": [
+      "YARN",
+      "THREAD",
+      "NEEDLE"
+    ],
+    "topics": [
+      "artifact"
+    ]
+  },
+  {
+    "id": "colors-and-shapes",
+    "name": "Colors and shapes",
+    "seeds": [
+      "SHAPE",
+      "COLOR",
+      "PATTERN"
+    ],
+    "topics": [
+      "attribute"
+    ]
+  },
+  {
+    "id": "sounds-around-us",
+    "name": "Sounds around us",
+    "seeds": [
+      "SOUND",
+      "ECHO",
+      "MUSIC"
+    ],
+    "topics": [
+      "communication"
+    ]
+  },
+  {
+    "id": "push-and-pull",
+    "name": "Push and pull",
+    "seeds": [
+      "PUSH",
+      "PULL",
+      "FORCE"
+    ],
+    "topics": [
+      "phenomenon"
+    ]
+  },
+  {
+    "id": "float-or-sink",
+    "name": "Float or sink",
+    "seeds": [
+      "FLOAT",
+      "SINK",
+      "WATER"
+    ],
+    "topics": [
+      "substance"
+    ]
+  },
+  {
+    "id": "solid-and-liquid",
+    "name": "Solid and liquid",
+    "seeds": [
+      "ICE",
+      "WATER",
+      "VAPOR"
+    ],
+    "topics": [
+      "substance"
+    ]
+  },
+  {
+    "id": "our-senses",
+    "name": "Our senses",
+    "seeds": [
+      "SIGHT",
+      "TASTE",
+      "TOUCH"
+    ],
+    "topics": [
+      "cognition"
+    ]
+  },
+  {
+    "id": "moving-bodies",
+    "name": "Moving bodies",
+    "seeds": [
+      "KNEE",
+      "ELBOW",
+      "JOINT"
+    ],
+    "topics": [
+      "body"
+    ]
+  },
+  {
+    "id": "bird-watching",
+    "name": "Bird watching",
+    "seeds": [
+      "BEAK",
+      "WING",
+      "FEATHER"
+    ],
+    "topics": [
+      "animal"
+    ]
+  },
+  {
+    "id": "outdoor-play",
+    "name": "Outdoor play",
+    "seeds": [
+      "KITE",
+      "BALL",
+      "HOOP"
+    ],
+    "topics": [
+      "artifact"
+    ]
+  }
+]
