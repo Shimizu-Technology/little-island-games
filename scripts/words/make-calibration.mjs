@@ -6,7 +6,7 @@ import { digest, sha256, requireThat, validateClue } from './core.mjs';
 import { lintClue } from './lint.mjs';
 const [queueFile,output,provenanceFile]=process.argv.slice(2);
 try {
-  requireThat(output,'Usage: make-calibration.mjs <tiers.queue.json> <new-external-output-directory>');
+  requireThat(output,'Usage: make-calibration.mjs <tiers.queue.json> <new-external-output-directory> <authoring-provenance.json>');
   const out=privatePath(output);
   requireThat(!existsSync(out),'Refusing to overwrite calibration');
   const source=readFileSync(new URL('./calibration.draft.tsv',import.meta.url),'utf8');

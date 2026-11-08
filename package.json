@@ -47,7 +47,7 @@
     "test": "vitest run",
     "export:web": "npm run library:validate && npm run library:index && expo export --platform web --clear && node scripts/offline-web.mjs",
     "save:catalog": "node --experimental-strip-types scripts/check-save-catalog.mjs",
-    "check": "npm run save:catalog && npm run typecheck && npm run lint && npm test && npm run export:web && npm run check:words:export",
+    "check": "npm run check:source && npm run check:words:export",
     "preview": "node scripts/serve.mjs",
     "doctor": "expo-doctor",
     "export:public": "node scripts/export-public.mjs",
@@ -65,7 +65,10 @@
     "check:words": "node scripts/words/check.mjs full",
     "check:words:export": "node scripts/words/check.mjs export",
     "check:words:release": "node scripts/words/check.mjs release",
-    "check:words:receipt": "node scripts/words/check.mjs receipt"
+    "check:words:receipt": "node scripts/words/check.mjs receipt",
+    "deliver:web": "node scripts/words/delivery.mjs web --",
+    "deliver:ios": "node scripts/words/delivery.mjs ios --",
+    "check:source": "npm run save:catalog && npm run typecheck && npm run lint && npm test && npm run export:web"
   },
   "private": true,
   "engines": {

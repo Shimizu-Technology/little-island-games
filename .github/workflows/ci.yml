@@ -2,7 +2,7 @@ name: Validate
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, p4/w1-words]
 permissions:
   contents: read
 jobs:
@@ -17,11 +17,10 @@ jobs:
           node-version: 22.22.3
           cache: npm
       - run: npm ci
-      - run: npm run check
-        env:
-          LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64: ${{ secrets.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64 }}
+      - run: npm run check:source
       - name: Guard the actual web export
         run: npm run check:words:export
         env:
           LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64: ${{ secrets.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64 }}
+          LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64_2: ${{ secrets.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64_2 }}
       - run: npm run doctor

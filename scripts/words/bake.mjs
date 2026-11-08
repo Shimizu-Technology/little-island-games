@@ -1,4 +1,4 @@
-import { lockedPolicy } from './policy.mjs';
+import { lockedPolicy, contentPolicy } from './policy.mjs';
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -27,7 +27,8 @@ export function bakeBank({ words, clues = [], surfaces, evidence = {}, canonical
   function admit(record) {
     const ref=evidence[record.id],ev=typeof ref === 'string' ? reviewBatches[ref] : ref;
     requireThat(ev?.prepared?.batch?.scanListSha256 === scanListSha256, 'Review scan hash binding mismatch; changed policy needs fresh review');
-    requireThat(ev?.prepared?.batch?.vocabularySha256 === vocabularySha256, 'Review vocabulary hash binding mismatch; review the whole bank vocabulary');
+    // requireShippingReview binds the exact current record to the prepared batch.
+    // Removing or separately reviewing another record cannot stale this one.
     return requireShippingReview(record,ev,batchCache);
   }
   words.forEach(w => {
@@ -49,7 +50,7 @@ export function bakeBank({ words, clues = [], surfaces, evidence = {}, canonical
   const independent = checkSurfaces({words,surfaces,policy});
   const scanned = independent.grids;
   const clueReviewIds = [...new Set(clues.flatMap(c => verifiedEvidence[c.id].reviewIds))].sort();
-  const receipt = { schemaVersion:1, vocabularySha256, scanListSha256, policySha256:lock.policySha256, evidence:verifiedEvidence, clueReviewIds, wordReviewIds:[...new Set(words.flatMap(w => verifiedEvidence[w.id].reviewIds))].sort(), counts:{ words:words.length,clues:clues.length,surfaces:surfaces.length,scanned }, rejectedCounts:policy.rejectedCounts ?? {}, primary:{ implementation:'js-trie-v1',passed:true,hits:0 }, independent };
+  const receipt = { schemaVersion:1, vocabularySha256, scanListSha256, policySha256:digest(contentPolicy(policy)), evidence:verifiedEvidence, clueReviewIds, wordReviewIds:[...new Set(words.flatMap(w => verifiedEvidence[w.id].reviewIds))].sort(), counts:{ words:words.length,clues:clues.length,surfaces:surfaces.length,scanned }, rejectedCounts:policy.rejectedCounts ?? {}, primary:{ implementation:'js-trie-v1',passed:true,hits:0 }, independent };
   // Explicit runtime projection strips private policies, review state, hashes and provenance.
   const asset = { schemaVersion:1, words:words.map(w => ({ id:w.id, spelling:w.spelling, language:w.language, readerLevel:w.readerLevel, knownBand:w.knownBand,readBand:w.readBand,spellBand:w.spellBand,clueBand:w.clueBand,theme:w.theme,topic:w.topic,guamFit:w.guamFit,audio:w.audio, ...(w.language === 'ch' ? {canonicalId:w.canonicalId,fluentReaderChecked:false}: {}) })), clues:clues.map(c => ({id:c.id,wordId:c.wordId,text:c.text})), surfaces:surfaces.map(s => {const {id,kind,wordIds,cells,listed,shuffle,letters}=s; return {id,kind,wordIds,...(cells?{cells}:{}),...(listed?{listed:listed.map(({wordId,answer,cells})=>({wordId,answer,cells}))}:{}),...(shuffle?{shuffle}:{}),...(letters?{letters}:{})};}), accept:[...new Set(words.filter(w => w.language === 'en').flatMap(w => [w.spelling,...w.british]))].sort() };
   return { asset,receipt };
@@ -63,6 +64,8 @@ export function checkSurfaces({words,surfaces,policy}) {
     requireThat(['word-search','matching','crossword','scramble','builder','wheel','ladder'].includes(s.kind), 'Unknown word surface');
     requireThat(s.wordIds?.length > 0 && new Set(s.wordIds).size === s.wordIds.length && s.wordIds.every(id => ids.has(id)), 'Surface has unreviewed word');
     requireThat(s.listed === undefined || s.kind === 'word-search', 'Listed paths only belong to word-search');
+    const fields={'word-search':['cells','listed'],crossword:['cells'],builder:['cells'],scramble:['shuffle'],wheel:['letters'],matching:[],ladder:[]};
+    requireThat(Object.keys(s).every(k=>['id','kind','wordIds',...fields[s.kind]].includes(k)), 'Unexpected fields for word surface kind');
     const answers = words.filter(w => s.wordIds.includes(w.id));
     validatePack(answers);
     requireThat(answers.every(w=>!w.uses || w.uses.includes(s.kind)), 'Word uses do not allow this surface');

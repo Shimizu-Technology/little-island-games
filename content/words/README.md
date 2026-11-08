@@ -2,7 +2,7 @@
 
 This directory owns the word schema/runtime helpers for the Cove adapters. There is no approved vocabulary or new shipped bank yet. Do not import raw candidate queues or review packets into application code.
 
-Run `node scripts/words/cli.mjs bake ...` with detached, current review evidence and a private safety policy. It fails on unreviewed records, stale decisions, fixture reviews, missing family sampling, unsupported CHamoru uses, unsafe surfaces or a failed independent verifier. The resulting `bank.json` contains only the runtime projection. Keep `receipt.private.json` outside application assets and public source exports.
+Application code loads admitted data through `registry.ts`. Bank assets contain only the runtime projection. Admission binds their bytes to the manifest and detached review evidence; delivery requires a current private receipt. Private preparation and review tooling is available only in the private repository.
 
 Reader level (`Little`, `Growing`, `Strong`, `Grown-up`) is separate from an engine's difficulty band. The four per-record bands describe knowing, reading, spelling and clue reading. All choices stay open. A Grown-up word still has the same family-safety standard.
 

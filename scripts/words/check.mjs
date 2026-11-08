@@ -17,8 +17,12 @@ export function treeHash(root) {
   function walk(dir) {for(const e of readdirSync(dir,{withFileTypes:true})) {const p=join(dir,e.name);requireThat(!lstatSync(p).isSymbolicLink(),'Symlink in release artifact');if(e.isDirectory())walk(p);else entries.push([relative(root,p),sha256(readFileSync(p))]);}}
   walk(root);return digest(entries.sort((a,b)=>a[0].localeCompare(b[0])));
 }
+export function requireCleanSource(root) {
+  const dirty=execFileSync('git',['status','--porcelain','--untracked-files=normal'],{cwd:root,encoding:'utf8'}).trim();
+  requireThat(!dirty,'Word release gate requires a clean source tree');
+}
 export function checkExport(root, directory) {
-  const admission=checkShippingTree(root);
+  const admission=checkShippingTree(root,process.env.LITTLE_ISLAND_WORD_RECEIPTS,{full:true});
   // CI receives the private policy lock via an operator-provisioned secret file.
   // Before the first bank, a policy-free structural check is explicit in the receipt.
   const configuration=process.env.LITTLE_ISLAND_WORD_POLICY_LOCK ? lockedPolicy() : undefined;
@@ -26,6 +30,7 @@ export function checkExport(root, directory) {
   return {admission,guard:guardTree(directory,configuration?.policy,configuration?[configuration.lock]:[])};
 }
 export function checkRelease(root, web, ios, output) {
+  requireCleanSource(root);
   const {policy,lock}=lockedPolicy();
   const admission=checkShippingTree(root,process.env.LITTLE_ISLAND_WORD_RECEIPTS,{full:true});
   let hbc=false;
@@ -35,8 +40,9 @@ export function checkRelease(root, web, ios, output) {
   writeFileSync(privatePath(output),JSON.stringify(receipt,null,2)+'\n',{flag:'wx'});return receipt;
 }
 export function verifyReleaseReceipt(root,file,web,ios) {
+  requireCleanSource(root);
   const r=JSON.parse(readFileSync(privatePath(file),'utf8')),{lock}=lockedPolicy();
-  requireThat(r.schemaVersion===1 && r.source===execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim() && r.policySha256===lock.policySha256 && r.scanListSha256===lock.scanListSha256 && r.admission?.full===true && r.admission.passed && r.web?.passed && r.ios?.passed && r.web.sha256===treeHash(web) && r.ios.sha256===treeHash(ios),'Stale/missing private word release receipt');
+  requireThat(r.schemaVersion===1 && r.source===execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim() && r.policySha256===lock.policySha256 && r.scanListSha256===lock.scanListSha256 && r.admission?.full===true && r.admission.passed===true && r.web?.passed===true && r.ios?.passed===true && r.web.sha256===treeHash(web) && r.ios.sha256===treeHash(ios),'Stale/missing private word release receipt');
   return {passed:true};
 }
 if(process.argv[1] && realpathSync(process.argv[1])===fileURLToPath(import.meta.url)) {
@@ -44,7 +50,7 @@ if(process.argv[1] && realpathSync(process.argv[1])===fileURLToPath(import.meta.
   try {
     if (!process.env.LITTLE_ISLAND_WORD_POLICY_LOCK && (process.env.LITTLE_ISLAND_WORD_POLICY_JSON || process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64)) {
       privateDirectory=mkdtempSync(join(tmpdir(),'li-word-ci-'));
-      const policyFile=join(privateDirectory,'policy.private.json'),bytes=process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64 ? gunzipSync(Buffer.from(process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64,'base64'),{maxOutputLength:4*1024*1024}) : Buffer.from(process.env.LITTLE_ISLAND_WORD_POLICY_JSON);
+      const policyFile=join(privateDirectory,'policy.private.json'),bytes=process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64 ? gunzipSync(Buffer.from(process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64+(process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64_2??''),'base64'),{maxOutputLength:4*1024*1024}) : Buffer.from(process.env.LITTLE_ISLAND_WORD_POLICY_JSON);
       const policy=JSON.parse(bytes);
       writeFileSync(policyFile,bytes,{mode:0o600});
       const lockFile=join(privateDirectory,'lock.private.json');

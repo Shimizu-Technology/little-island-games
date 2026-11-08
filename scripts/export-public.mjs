@@ -21,7 +21,7 @@ const credentialField = /["']?(?:ascApiKeyId|appStoreConnectApiKeyId|apiKeyId|ap
 const forbiddenFile = /(?:^|\/)(?:\.env(?:\..*)?|[^/]+\.(?:p8|p12|pem|key|mobileprovision)|credentials\.json)$/i;
 
 export function isPrivateWordFile(name) {
-  return name.startsWith('scripts/words/') || name === 'scripts/words' || /(?:^|\/)words\/.*(?:\.draft\.|sources\.lock)/i.test(name) || /^tests\/(?:word-pipeline|helpers\/word-)/.test(name);
+  return ['scripts/ios-preview-bundle.mjs','tests/ios-preview-bundle.test.ts'].includes(name) || name.startsWith('scripts/words/') || name === 'scripts/words' || /(?:^|\/)words\/.*(?:\.draft\.|sources\.lock)/i.test(name) || /^tests\/(?:word-pipeline|helpers\/word-)/.test(name);
 }
 function tree(dir, prefix = '') {
   return readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
@@ -111,7 +111,7 @@ export function exportPublic(target) {
         bytes = Buffer.from(JSON.stringify(config, null, 2) + '\n');
       } else if (path === 'package.json') {
         const config=JSON.parse(bytes);
-        for(const key of Object.keys(config.scripts)) if(key.startsWith('check:words')) delete config.scripts[key];
+        for(const key of Object.keys(config.scripts)) if(key.startsWith('check:words') || key.startsWith('deliver:') || ['ios:preview-bundle-prep','ios:preview-build','ios:restore-generated'].includes(key)) delete config.scripts[key];
         config.scripts.check=config.scripts.check.replace(' && npm run check:words:export','');
         bytes=Buffer.from(JSON.stringify(config,null,2)+'\n');
       } else if (path === 'eas.json') {
