@@ -19,14 +19,33 @@ export const gameInfo: Record<string, CoveInfo> = {
   'word-ladder': { name: 'Word Ladder', row: 'Words', provenance: original, role: 'Say the next word aloud together, then type it.' },
   sudoku: { name: 'Sudoku', row: 'Numbers', provenance: original, role: 'Spotter says where to look. Placer decides what to put there. Swap when you like.' },
   'cage-math': { name: 'Cage Math', row: 'Numbers', provenance: original, role: 'Spotter says where to look. Placer decides what to put there. Swap when you like.' },
+  'greater-than': { name: 'Greater-Than Grid', row: 'Numbers', provenance: original, role: 'One person reads an arrow aloud. The other finds a number that fits it.' },
+  skyline: { name: 'Skyline', row: 'Logic', provenance: original, role: 'Stand at one edge together and count the roofs you could see.' },
+  killer: { name: 'Cage Sudoku', row: 'Numbers', provenance: original, role: 'One person adds up a cage. The other checks the row, column and box.' },
+  'cross-sums': { name: 'Cross Sums', row: 'Numbers', provenance: original, role: 'Take turns choosing which run to work on next.' },
   'picture-grid': { name: 'Picture Grid', row: 'Logic', provenance: original, role: 'Guess the picture together before the reveal.' },
   bridges: { name: 'Bridges', row: 'Logic', provenance: original, role: 'Explain why a bridge belongs before placing it. Take turns.' },
   solitaire: { name: 'Solitaire', row: 'Cards', provenance: original, role: 'One person moves the cards. The other can offer advice.' },
 };
 export const infoFor = (game: string): CoveInfo => gameInfo[game] ?? { name: game.replace(/(^|-)(\w)/g, (_, gap: string, c: string) => `${gap ? ' ' : ''}${c.toUpperCase()}`), row: 'Logic', provenance: null };
-export const coveEntries = (entries: readonly ChallengeEntry[] = challengeEntries) => entries.filter(e => { if (!e.cove || !e.puzzles.length) return false; if (!infoFor(e.game).provenance) throw new Error(`Missing Cove provenance: ${e.game}`); return true; });
+/** Packed banks count whole; their entries load only when one is opened. */
+export const packedCount = (e: ChallengeEntry) => e.packed?.bands.reduce((n, b) => n + b.count, 0) ?? 0;
+export const shownCount = (e: ChallengeEntry, hidden: readonly string[] = []) => e.puzzles.filter(p => !hidden.includes(p.ref.hash)).length + packedCount(e);
+export const coveEntries = (entries: readonly ChallengeEntry[] = challengeEntries) => entries.filter(e => { if (!e.cove || !e.puzzles.length && !packedCount(e)) return false; if (!infoFor(e.game).provenance) throw new Error(`Missing Cove provenance: ${e.game}`); return true; });
 export const sameRef = (a: PuzzleRef, b: PuzzleRef) => a.bank === b.bank && a.puzzle === b.puzzle && a.engine === b.engine && a.rules === b.rules && a.hash === b.hash;
-export const cardFor = (ref: PuzzleRef, entries = coveEntries()) => entries.flatMap(e => e.puzzles).find(p => sameRef(p.ref, ref));
+export const cardFor = (ref: PuzzleRef, entries = coveEntries()) => entries.flatMap(e => e.puzzles).find(p => sameRef(p.ref, ref)) ?? entries.find(e => e.game === ref.engine)?.packed?.card(ref);
+/** An extra the Latin registration offers: open one exact entry of a packed bank by index. */
+export type PackedOpen = { open?: (bank: number, index: number) => Promise<PuzzleRef>; teaches?: (ref: PuzzleRef) => string | undefined };
+export const packedOpen = (e: ChallengeEntry) => (e.packed as (ChallengeEntry['packed'] & PackedOpen) | undefined);
+/** The packed counterpart of `suggested`: the saved attempt, otherwise the next entry of a bank at or nearest this tier. */
+export async function suggestedPacked(entry: ChallengeEntry, progress: ChallengeProgress, tier = 1): Promise<ChallengeCard | undefined> {
+  const packed = entry.packed;
+  if (!packed?.bands.length) return undefined;
+  const saved = progress.paused.find(s => s.game === entry.game && !s.result && !s.credited);
+  if (saved) { await packed.prepare(saved.puzzle); return packed.card(saved.puzzle); }
+  const band = [...packed.bands].sort((a, b) => Math.abs(a.tier - tier) - Math.abs(b.tier - tier) || a.tier - b.tier)[0];
+  return packed.card(await packed.choose(band.bank, progress));
+}
 /** Decode once per bank for an immutable render snapshot. */
 export function completionLookup(progress: ChallengeProgress, entry: ChallengeEntry): (ref: PuzzleRef) => number {
   const decoded = new Map<number, number[]>();
@@ -52,18 +71,24 @@ export function packsFor(cards: readonly ChallengeCard[], size = 24): ChallengeC
   }
   return packs;
 }
-export type TidePick = { size: 'Small' | 'Medium' | 'Large'; entry: ChallengeEntry; card: ChallengeCard };
+export type TidePick = { size: 'Small' | 'Medium' | 'Large'; entry: ChallengeEntry; card: ChallengeCard | null; bank?: number; title: string };
 /** Date-only shortcut. No expiry, played count or daily history. Monday selects gentler bands. */
 export function tideTable(date: string, entries = coveEntries()): TidePick[] {
   if (!validCivilDate(date) || !entries.length) return [];
   const monday = new Date(`${date}T12:00:00Z`).getUTCDay() === 1;
   const offset = fnv1a32(`LI-COVE-TIDE-V1|${date}`);
   const rows = [...new Set(entries.map(e => infoFor(e.game).row))];
-  return (['Small', 'Medium', 'Large'] as const).flatMap((size, i) => {
+  return (['Small', 'Medium', 'Large'] as const).flatMap((size, i): TidePick[] => {
     const row = rows[(offset + i) % rows.length], games = entries.filter(e => infoFor(e.game).row === row);
     const entry = games[fnv1a32(`${date}|${row}`) % games.length], tier = Math.min(6, (monday ? 1 : 2) + i);
     const pool = entry.puzzles.filter(p => p.tier === tier), available = pool.length ? pool : entry.puzzles;
-    return [{ size, entry, card: available[fnv1a32(`${date}|${size}|${entry.game}`) % available.length] }];
+    // A packed game offers today's bank; its next entry is dealt when the tile is opened.
+    if (!available.length && entry.packed?.bands.length) {
+      const banks = entry.packed.bands.filter(b => b.tier === tier), from = banks.length ? banks : entry.packed.bands, band = from[fnv1a32(`${date}|${size}|${entry.game}`) % from.length];
+      return [{ size, entry, card: null, bank: band.bank, title: band.title }];
+    }
+    const card = available[fnv1a32(`${date}|${size}|${entry.game}`) % available.length];
+    return [{ size, entry, card, title: card.title }];
   });
 }
 /** Solved-technique practice uses existing refs only. A template occupies at most 25%. */

@@ -4,8 +4,12 @@ import type { ChallengeCard, ChallengeEntry } from '../challenge/types';
 import type { ChallengeProgress } from '../state/challenge';
 import { Button, Chip, Copy, Heading } from '../components/ui';
 import { presentationFor } from './presentation';
+import { PackedBrowser } from './PackedBrowser';
 import { bands, completionLookup, infoFor, isSolved, packsFor, mixedPack, type Reader } from './catalog';
-export function PuzzleBrowser({ entry, progress, initialBand, hidden, reader = 'Growing', onChoose, onBand, onBack, onRemix }: { entry: ChallengeEntry; progress: ChallengeProgress; initialBand: number; hidden: string[]; reader?: Reader; onChoose: (card: ChallengeCard) => void; onBand: (band: number) => void; onBack: () => void; onRemix: (card: ChallengeCard, remix: string) => void }) {
+export function PuzzleBrowser(props: { entry: ChallengeEntry; progress: ChallengeProgress; initialBand: number; hidden: string[]; reader?: Reader; onChoose: (card: ChallengeCard) => void; onBand: (band: number) => void; onBack: () => void; onRemix: (card: ChallengeCard, remix: string) => void }) {
+  return props.entry.packed && !props.entry.puzzles.length ? <PackedBrowser {...props}/> : <CardBrowser {...props}/>;
+}
+function CardBrowser({ entry, progress, initialBand, hidden, reader = 'Growing', onChoose, onBand, onBack, onRemix }: { entry: ChallengeEntry; progress: ChallengeProgress; initialBand: number; hidden: string[]; reader?: Reader; onChoose: (card: ChallengeCard) => void; onBand: (band: number) => void; onBack: () => void; onRemix: (card: ChallengeCard, remix: string) => void }) {
   const [band, setBand] = useState(initialBand), [mode, setMode] = useState<'packs' | 'all' | 'album' | 'mixed'>('packs'), [pack, setPack] = useState(0);
   const presentation = presentationFor(entry);
   const index = useMemo(() => new Map(entry.puzzles.map((p, i) => [p.ref.hash, i + 1])), [entry]);

@@ -1,0 +1,59 @@
+import { boxOf, colOf, rowOf, type Group, type LatinPuzzle } from './core';
+import type { HintPlan, Step, Technique } from './solver';
+
+/** Short, plain names for the named techniques, as a person would say them. */
+export const techniqueNames: Record<Technique, string> = {
+  single: 'One number left', 'hidden-single': 'Only one place', inequality: 'Greater and smaller', 'cage-sum': 'Cage totals', 'skyline-line': 'Counting roofs',
+  'locked-candidates': 'Pointing and claiming', 'naked-pair': 'A pair', 'hidden-pair': 'A hidden pair', 'naked-triple': 'A triple', 'hidden-triple': 'A hidden triple',
+  'x-wing': 'X-Wing', swordfish: 'Swordfish', 'xy-wing': 'XY-Wing', 'simple-coloring': 'Colour chain',
+};
+const boxNames = (p: Pick<LatinPuzzle, 'size' | 'box'>) => {
+  const across = p.box ? p.size / (p.size / p.box) : 0, down = p.box ? p.size / p.box : 0;
+  return (b: number) => {
+    const r = Math.floor(b / across), c = b % across;
+    const v = down === 1 ? '' : r === 0 ? 'top' : r === down - 1 ? 'bottom' : 'middle', h = across === 1 ? '' : c === 0 ? 'left' : c === across - 1 ? 'right' : 'middle';
+    return v === 'middle' && h === 'middle' ? 'the centre box' : `the ${[v, h].filter(Boolean).join('-')} box`;
+  };
+};
+export const cellName = (p: LatinPuzzle, i: number) => `row ${rowOf(p, i) + 1}, column ${colOf(p, i) + 1}`;
+export function groupName(p: LatinPuzzle, g: Group): string {
+  if (g.kind === 'row') return `row ${g.index + 1}`;
+  if (g.kind === 'column') return `column ${g.index + 1}`;
+  if (g.kind === 'box') return boxNames(p)(g.index);
+  if (g.kind === 'cage') return `the cage of ${p.cages[g.index].target}`;
+  return `the run of ${p.cages[g.index].target}`;
+}
+const list = (xs: readonly (string | number)[]) => xs.length < 2 ? String(xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
+/** The cells a person should look at for one step, and the sentence that explains it. */
+export function explainStep(p: LatinPuzzle, s: Step): { look: string; think: string } {
+  const [g, h] = s.groups, v = s.digits[0];
+  switch (s.technique) {
+    case 'single': return { look: `Look at ${cellName(p, s.focus[0])}.`, think: 'Its row, column and box already use every other number.' };
+    case 'hidden-single': return { look: `Look for ${v} in ${groupName(p, g)}.`, think: `${v} has only one free place in ${groupName(p, g)}.` };
+    case 'inequality': return { look: 'Look at the arrow between the shaded cells.', think: 'The arrow points at the smaller number. Some numbers are too big or too small to fit.' };
+    case 'cage-sum': return { look: `Look at ${g ? groupName(p, g) : 'the shaded cage'}.`, think: `Only some numbers can make ${s.digits[0]} together here. The others cannot fit.` };
+    case 'skyline-line': return { look: 'Look along the shaded line from its clue.', think: `From that edge exactly ${v} roofs can be seen. A taller roof hides every shorter roof behind it.` };
+    case 'locked-candidates': return { look: `Look for ${v} in ${groupName(p, g)}.`, think: `In ${groupName(p, g)}, ${v} can only be where it meets ${groupName(p, h)}. So the rest of ${groupName(p, h)} cannot have ${v}.` };
+    case 'naked-pair': case 'naked-triple': return { look: `Look at the shaded cells in ${groupName(p, g)}.`, think: `These ${s.focus.length} cells can only hold ${list(s.digits)}. They use those numbers up, so no other cell in ${groupName(p, g)} can.` };
+    case 'hidden-pair': case 'hidden-triple': return { look: `Look for ${list(s.digits)} in ${groupName(p, g)}.`, think: `${list(s.digits)} only fit in these ${s.focus.length} cells of ${groupName(p, g)}. So these cells hold nothing else.` };
+    case 'x-wing': case 'swordfish': {
+      const lines = s.groups.filter(x => x.kind === s.groups[0].kind), crossing = s.groups.filter(x => x.kind !== s.groups[0].kind);
+      return { look: `Look for ${v} in ${list(lines.map(x => groupName(p, x)))}.`, think: `In those lines ${v} only fits in ${list(crossing.map(x => groupName(p, x)))}. Each of those takes its ${v} from them, so ${v} leaves the rest of ${crossing.length === 2 ? 'both' : 'those'}.` };
+    }
+    case 'xy-wing': return { look: `Look at the three shaded cells, each with two numbers.`, think: `Whichever number the middle cell takes, one of the other two becomes ${s.digits[2]}. A cell that sees both of them cannot be ${s.digits[2]}.` };
+    case 'simple-coloring': return { look: `Follow the chain of ${v}s that come in pairs.`, think: `Along the chain, ${v} alternates: if one end is ${v}, the next is not. A cell that sees both colours cannot be ${v}.` };
+  }
+}
+export type Cue = { look: string; think: string; show: string; focus: number[]; technique: Technique | 'clash' | 'mistake' | null };
+/** Three rungs of help for one board: where to look, why, then the move itself. */
+export function cueFor(p: LatinPuzzle, plan: HintPlan): Cue {
+  if (plan.kind === 'clash') return { look: 'Look at the cells marked in red.', think: 'Two of them break a rule: the same number twice, or a total that does not match.', show: `Clear ${cellName(p, plan.erase)} and look again.`, focus: plan.cells, technique: 'clash' };
+  if (plan.kind === 'mistake') return { look: `Look at ${cellName(p, plan.cell)}.`, think: 'Following the starting numbers, this number cannot stay here. Nothing breaks yet, but it will.', show: `Clear ${cellName(p, plan.cell)} and look again.`, focus: [plan.cell], technique: 'mistake' };
+  if (plan.kind === 'none') return { look: 'Every number is in place.', think: '', show: '', focus: [], technique: null };
+  const key = plan.steps.at(-1);
+  const named = key ? explainStep(p, key) : explainStep(p, { technique: 'single', focus: [plan.cell], groups: [], digits: [plan.value], remove: [] });
+  const focus = key ? [...new Set([...key.focus, plan.cell])] : [plan.cell];
+  const lead = plan.steps.length > 1 ? ' That leaves one place.' : '';
+  return { look: named.look, think: `${named.think}${lead}`, show: `${plan.value} goes in ${cellName(p, plan.cell)}.`, focus, technique: plan.technique };
+}
+export const boxLabel = (p: LatinPuzzle, i: number) => boxNames(p)(boxOf(p, i));

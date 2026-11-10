@@ -1,12 +1,11 @@
-import { GridFeedback, GridInteraction } from '../puzzles/grid/preferences';
-import { useSoundControls } from '../components/Audio';
+import { GridScroll } from '../puzzles/grid/GridScroll';
 import { PuzzleEnding } from '../puzzles/ui/PuzzleEnding';
 import { adjacentTide } from '../puzzles/flow';
 import { SessionGate } from './SessionGate';
 import { ResultOffer } from './ResultOffer';
 import { ratingDue, resultOffer } from './offers';
 import React, { useLayoutEffect, useRef, useState } from 'react';
-import { ScrollView, View, useWindowDimensions } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useIsFocused } from 'expo-router';
 import { Button, Chip, Copy, Heading, ToggleRow, styles } from '../components/ui';
@@ -26,8 +25,6 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
   const store=useStore(), owner=selectedOwner(store.save), focused=useIsFocused(), {width}=useWindowDimensions();
   const progress=progressFor(store.save,owner)??emptyChallenge(), saved=progress.paused.find(s=>s.game===entry.game&&!s.result&&!s.credited);
   const comfort=learningComfort(store.save,owner);
-  const [gridTouch,setGridTouch]=useState(false);
-  const sound=useSoundControls(store.save.settings.sound);
   const [selection,setSelection]=useState<ChallengeCard>(()=>entry.puzzles.find(p=>progress.choice?.[0]===entry.game&&p.path===progress.choice?.[1]&&p.tier===progress.choice?.[2])??entry.puzzles[0]);
   const [completed,setCompleted]=useState<ChallengeSession>(), [settings,setSettings]=useState(false), [replacementGame,setReplacementGame]=useState<string>(), [dares,setDares]=useState<number[]>([]), [picking,setPicking]=useState(!saved), [busy,setBusy]=useState(false), [launching,setLaunching]=useState(false), [message,setMessage]=useState(''), [replace,setReplace]=useState(false);
   const [fresh,setFresh]=useState<'choose'|'confirm'|null>(null);
@@ -93,7 +90,7 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
   const completionFacts=round?.result?entry.completionFacts?.(round)??null:null;
   const defaultPraise=round?.result?.event==='together'?'You worked through this puzzle together.':completionFacts?.helpUsed?'You finished this puzzle with help.':completionFacts?.failed?'You kept trying and solved it.':'You completed this puzzle.';
   const back=()=>router.canGoBack()?router.back():router.replace('/');
-  return <SafeAreaView style={styles.page}><GridInteraction.Provider value={setGridTouch}><GridFeedback.Provider value={() => sound.play('tap')}><ScrollView scrollEnabled={!gridTouch} contentContainerStyle={[styles.content,{gap:14,padding:20}]}>
+  return <SafeAreaView style={styles.page}><GridScroll contentContainerStyle={[styles.content,{gap:14,padding:20}]}>
     <View style={{flexDirection:'row',flexWrap:'wrap',gap:10,alignItems:'center'}}><Button quiet compact onPress={back}>Back</Button><Heading>Challenge</Heading><LearnerChip compact/></View>
     <Copy>Deep Water is a big stretch. Endless Tide has more puzzles. Every choice is open.</Copy><Copy>Your marks: {marks}. Marks are kept and never spent.</Copy><SaveStatus/>
     {!!message&&<View accessibilityLiveRegion="polite"><Copy>{message}</Copy></View>}
@@ -125,5 +122,5 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
       </> : null}
       {!round.result&&<><Button quiet disabled={busy} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>Easier choice · Levels 1–5</Button></>}
     </>:null}
-  </ScrollView></GridFeedback.Provider></GridInteraction.Provider><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;
+  </GridScroll><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;
 }

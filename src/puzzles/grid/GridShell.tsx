@@ -15,20 +15,24 @@ export const GridLines = memo(function GridLines({ rows, columns, cell, borders 
   for (let c = 0; c <= columns; c++) d += `M${c * cell} 0V${rows * cell}`;
   return <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0 }}><Svg width={columns * cell} height={rows * cell}><Path d={d} stroke="#A1B4A9" strokeWidth={1} fill="none"/>{!!borders && <Path d={borders} stroke={C.ink} strokeWidth={2.5} fill="none"/>}</Svg></View>;
 });
-const Cell = memo(function Cell({ index, value, notes, given, selected, conflict, cell, columns, symbols, paint, select }: { index: number; value: number; notes: number; given: boolean; selected: boolean; conflict: boolean; cell: number; columns: number; symbols: readonly string[]; paint: boolean; select: (index: number) => void }) {
+const Cell = memo(function Cell({ index, value, notes, given, selected, conflict, cell, columns, symbols, paint, select, tint = 0 }: { index: number; value: number; notes: number; given: boolean; selected: boolean; conflict: boolean; cell: number; columns: number; symbols: readonly string[]; paint: boolean; select: (index: number) => void; tint?: 0 | 1 | 2 }) {
   const noteText = symbols.map((s, i) => notes & 1 << i ? s : '·').reduce((lines, s, i) => lines + s + (i % 3 === 2 ? '\n' : ' '), '').trim();
-  const label = `Row ${Math.floor(index / columns) + 1}, column ${index % columns + 1}, ${value ? symbols[value - 1] : notes ? `notes ${symbols.filter((_, i) => notes & 1 << i).join(', ')}` : 'empty'}${given ? ', given' : ''}${conflict ? ', conflict' : ''}`;
-  return <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }} onPress={() => select(index)} onAccessibilityTap={() => select(index)} style={{ width: cell, height: cell, alignItems: 'center', justifyContent: 'center', backgroundColor: paint && value === 1 ? '#246858' : selected && !paint ? '#D7EBDE' : given ? '#F0EDDF' : '#FFFDF7', borderWidth: selected || conflict ? 2 : 0, borderColor: conflict ? C.error : C.teal }}>
+  const label = `Row ${Math.floor(index / columns) + 1}, column ${index % columns + 1}, ${value ? symbols[value - 1] : notes ? `notes ${symbols.filter((_, i) => notes & 1 << i).join(', ')}` : 'empty'}${given ? ', given' : ''}${conflict ? ', conflict' : ''}${tint === 2 ? ', hint focus' : ''}`;
+  return <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }} onPress={() => select(index)} onAccessibilityTap={() => select(index)} style={{ width: cell, height: cell, alignItems: 'center', justifyContent: 'center', backgroundColor: paint && value === 1 ? '#246858' : selected && !paint ? '#D7EBDE' : tint === 2 ? '#F6E3A8' : tint === 1 ? '#E6F1EA' : given ? '#F0EDDF' : '#FFFDF7', borderWidth: selected || conflict ? 2 : 0, borderColor: conflict ? C.error : C.teal }}>
     {notes ? <Text maxFontSizeMultiplier={1} style={{ color: C.ink, fontSize: Math.max(8, cell * .19), lineHeight: cell * .25, fontVariant: ['tabular-nums'], textAlign: 'center' }}>{noteText}</Text> : value > 0 && (!paint || value !== 1) && <Text maxFontSizeMultiplier={1.4} adjustsFontSizeToFit numberOfLines={1} style={{ color: conflict ? C.error : C.ink, fontSize: cell * .48, fontWeight: given ? '800' : '500' }}>{symbols[value - 1] ?? ''}</Text>}
   </Pressable>;
 });
 export type GridShellProps = {
   spec: GridSpec; state: GridState; dispatch: (action: GridAction) => void; width: number; active: boolean;
   mistakes?: Mistakes; /** Computed by the same pure engine as validation/hints. */ conflicts?: readonly number[];
-  fillNotes?: () => void; borders?: string; numberFirst?: boolean; onAccepted?: () => void;
+  fillNotes?: () => void; /** A path, or a path for a given cell size. */ borders?: string | ((cell: number) => string); numberFirst?: boolean; onAccepted?: () => void;
+  /** Cell tints: 1 for a quiet same-number echo, 2 for a hint's focus. Presentation only. */
+  tints?: ReadonlyMap<number, 1 | 2>;
+  /** A static layer above the cells and lines (cage sums, inequality marks). Never input. */
+  overlay?: (cell: number) => React.ReactNode;
 };
 /** Input/render only. Adapters own truth, hint evidence, checkpoint codec and Store autosave. */
-export function GridShell({ spec, state, dispatch, width, active, mistakes: mistakeChoice, conflicts = [], borders, fillNotes, numberFirst = false, onAccepted }: GridShellProps) {
+export function GridShell({ spec, state, dispatch, width, active, mistakes: mistakeChoice, conflicts = [], borders, fillNotes, numberFirst = false, onAccepted, tints, overlay }: GridShellProps) {
   const feedback = useContext(GridFeedback), interaction = useContext(GridInteraction), adult = useContext(GridAdult), preferences = useContext(GridPreferences), mistakes = mistakeChoice ?? preferences.mistakes;
   const { height } = useWindowDimensions(), [zoom, setZoom] = useState(() => spec.kind !== 'digits' && gridGeometry(width, Math.min(height * .55, 620), spec, false).needsZoom), [first, setFirst] = useState(numberFirst), [line, setLine] = useState<number[]>([]);
   const [screenReader, setScreenReader] = useState(false);
@@ -132,9 +136,10 @@ export function GridShell({ spec, state, dispatch, width, active, mistakes: mist
     <Copy>Selected row {Math.floor(state.selected / spec.columns) + 1}, column {state.selected % spec.columns + 1}{state.notes[state.selected] ? ` · Notes: ${spec.symbols.filter((_, i) => state.notes[state.selected] & 1 << i).join(', ')}` : ''}</Copy>
     <View style={{ width: Math.min(width, geometry.width), alignSelf: 'center', height: Math.min(geometry.height, height * .55, 620), overflow: 'hidden', borderRadius: 8, ...(Platform.OS === 'web' ? { touchAction: spec.kind === 'paint' || zoom ? 'none' as const : 'auto' as const } : {}) }}>
       <Animated.View style={[{ width: geometry.width, height: geometry.height }, panStyle]}>
-        {Array.from({ length: spec.rows }, (_, r) => <View key={r} style={{ flexDirection: 'row' }}>{Array.from({ length: spec.columns }, (_, c) => { const i = r * spec.columns + c; return <Cell key={i} index={i} value={state.values[i]} notes={state.notes[i]} selected={state.selected === i} conflict={mistakes === 'Friendly' && conflicts.includes(i)} given={!!spec.givens[i]} cell={cell} columns={spec.columns} symbols={spec.symbols} paint={spec.kind === 'paint'} select={stableSelect}/>; })}</View>)}
+        {Array.from({ length: spec.rows }, (_, r) => <View key={r} style={{ flexDirection: 'row' }}>{Array.from({ length: spec.columns }, (_, c) => { const i = r * spec.columns + c; return <Cell key={i} index={i} value={state.values[i]} notes={state.notes[i]} selected={state.selected === i} conflict={mistakes === 'Friendly' && conflicts.includes(i)} given={!!spec.givens[i]} cell={cell} columns={spec.columns} symbols={spec.symbols} paint={spec.kind === 'paint'} select={stableSelect} tint={tints?.get(i) ?? 0}/>; })}</View>)}
         {line.map(i => <View key={`stroke-${i}`} testID={`stroke-${i}`} pointerEvents="none" accessible={false} style={{ position: 'absolute', left: i % spec.columns * cell, top: Math.floor(i / spec.columns) * cell, width: cell, height: cell, backgroundColor: state.tool === 1 ? '#246858' : '#FFFDF7', opacity: .7, borderWidth: 2, borderColor: C.gold }}/>) }
-        <GridLines rows={spec.rows} columns={spec.columns} cell={cell} borders={borders}/>
+        <GridLines rows={spec.rows} columns={spec.columns} cell={cell} borders={typeof borders === 'function' ? borders(cell) : borders}/>
+        {overlay && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0 }}>{overlay(cell)}</View>}
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, width: cell, height: cell, borderWidth: 3, borderColor: C.gold }, cursorStyle]}/>
       </Animated.View>
       <View testID="cove-grid-input" accessible={false} importantForAccessibility="no" tabIndex={Platform.OS === 'web' ? 0 : undefined} onPointerDown={Platform.OS === 'web' ? e => e.currentTarget.focus() : undefined} {...responder.panHandlers} style={{ position: 'absolute', inset: 0 }}/>
