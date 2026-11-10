@@ -10,6 +10,9 @@ import { Scoreboard } from "../../components/Match";
 import { newMatch } from "../../games/match";
 
 import { type Props, coords, Cell, BoardArea, BoardLayout } from "./shared";
+import { headStarts, rivalFor } from "../../playPolicies/rivals";
+import { reviewCheckers, type CheckersMoment } from "../../playPolicies/checkersReview";
+const strengthOf = { easy: "gentle", medium: "growing", hard: "challenge" } as const;
 function Piece({ red = false }: { red?: boolean }) {
   return (
     <View
@@ -28,8 +31,11 @@ function Piece({ red = false }: { red?: boolean }) {
 export function CheckersBoard({ state: s, commit, width, sound, help, active }: Props<CheckersState>) {
   const [from, setFrom] = useState<number | null>(null),
     [path, setPath] = useState<number[]>([]),
-    [hint, setHint] = useState<CheckersMove | null>(null);
+    [hint, setHint] = useState<CheckersMove | null>(null),
+    [review, setReview] = useState<CheckersMoment | "none" | null>(null);
   const rules = checkersRules(s);
+  const rival = s.options.mode === "solo" && s.lesson === null ? rivalFor("checkers", strengthOf[s.options.difficulty]) : null,
+    moment = review && review !== "none" && s.position.outcome ? review : null;
   const moves = useMemo(() => checkersMoves(s.position, rules), [s.position, rules]),
     lesson = s.lesson === null ? null : LESSONS[s.lesson];
   const computer =
@@ -50,7 +56,7 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
   const candidates = moves.filter((m) => m.from === from && path.every((v, i) => m.path[i] === v));
   const destinations = candidates.map((m) => m.path[path.length]);
   const locked = path.length > 0,
-    displayBoard = [...s.position.board];
+    displayBoard = [...(moment ? moment.before.board : s.position.board)];
   if (from !== null && path.length) {
     const route = candidates[0];
     displayBoard[from] = 0;
@@ -92,7 +98,7 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
       : outcome
         ? `${outcome === "red" ? "Red" : "Blue"} wins this round!`
         : computer
-          ? "Your island friend is thinking…"
+          ? `${rival?.name ?? "Your island friend"} is thinking…`
           : `${s.position.turn === 1 ? "Red" : "Blue"} to move`;
   return (
     <BoardLayout>
@@ -113,6 +119,45 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
         }
         success={!!outcome || lessonComplete}
       />
+      {rival && !outcome && (
+        <Copy style={{ fontSize: 14, textAlign: "center" }}>
+          {rival.name} is {rival.who}. {rival.plays}
+        </Copy>
+      )}
+      {rival && s.options.checkersHeadStart === 1 && (
+        <Copy style={{ fontSize: 14, color: C.ink, padding: 10, backgroundColor: "#FFF4D6", borderRadius: 12, textAlign: "center" }}>
+          Head start for you: {headStarts("checkers")[0].label.toLowerCase()}. {rival.name} still plays its best.
+        </Copy>
+      )}
+      {outcome && s.lesson === null && review === null && (
+        <Controls>
+          <Button
+            quiet
+            onPress={() => {
+              const side = s.options.mode === "solo" ? 1 : outcome === "red" ? 1 : outcome === "blue" ? -1 : 1;
+              setReview(reviewCheckers(s, side) ?? "none");
+              sound("tap");
+            }}
+          >
+            See the winning move
+          </Button>
+        </Controls>
+      )}
+      {outcome && review !== null && (
+        <View accessibilityLiveRegion="polite" style={{ gap: 8, padding: 12, backgroundColor: C.paper, borderRadius: 16, marginBottom: 8 }}>
+          <Text style={{ fontSize: 19, fontWeight: "800", color: C.ink }}>
+            {moment ? moment.title : "No single turning point"}
+          </Text>
+          <Copy style={{ color: C.ink }}>
+            {moment
+              ? `${moment.text} The board below shows the moment before; the gold squares mark the move.`
+              : "The look-back didn’t find one move that clearly changed this game. Play again, or try a head start."}
+          </Copy>
+          <Button quiet compact onPress={() => setReview(null)}>
+            Back to the final board
+          </Button>
+        </View>
+      )}
       <BoardArea>
         {s.options.mode === "together" && s.lesson === null && (
           <Scoreboard
@@ -156,7 +201,8 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
               const dark = (row(i) + col(i)) % 2 === 1,
                 canMove = moves.some((m) => m.from === i),
                 destination = destinations.includes(i),
-                suggested = hint && (i === hint.from || hint.path.includes(i));
+                shownHint = moment ? moment.show : hint,
+                suggested = shownHint && (i === shownHint.from || shownHint.path.includes(i));
               return (
                 <Cell
                   key={i}

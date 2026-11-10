@@ -115,10 +115,13 @@ export function applyCheckers(p: Position, move: CheckersMove, rules: CheckersRu
   next.outcome = checkersResult(next, rules);
   return next;
 }
+export const checkersHeadStartSquare = 60;
 export function createCheckers(options: Options): CheckersState {
   const board = Array<number>(64).fill(0);
   for (let i = 0; i < 64; i++)
     if ((row(i) + col(i)) % 2 === 1) board[i] = row(i) < 3 ? 1 : row(i) > 4 ? -1 : 0;
+  // The computer plays blue; its head-start piece comes from the middle of its back row.
+  if (options.mode === "solo" && options.checkersHeadStart === 1) board[checkersHeadStartSquare] = 0;
   return {
     ...base("checkers", options),
     game: "checkers",

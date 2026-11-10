@@ -125,7 +125,9 @@ export function validSession(v: unknown): v is GameState {
     typeof v.options.computerFirst !== "boolean" ||
     (v.options.checkersRules !== undefined &&
       !["friendly", "classic"].includes(v.options.checkersRules as string)) ||
-    (v.options.wordRules !== undefined && !["practice", "challenge"].includes(v.options.wordRules as string))
+    (v.options.wordRules !== undefined && !["practice", "challenge"].includes(v.options.wordRules as string)) ||
+    // Only a solo Checkers round acts on it; elsewhere it is a harmless remembered choice.
+    (v.options.checkersHeadStart !== undefined && v.options.checkersHeadStart !== 1)
   )
     return false;
   if (
