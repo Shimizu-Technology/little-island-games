@@ -26,15 +26,15 @@ it('P1-2: Go completes atomically, tick is not an action, and a full attempt can
 });
 function replay(s:ReturnType<typeof registration.start>){const p=crabPuzzles.find(p=>p.ref.bank===s.puzzle.bank&&p.ref.puzzle===s.puzzle.puzzle)!,payload=s.payload as {actions:Action[]};let st=e.create(p.descriptor,{version:1},options);for(const a of payload.actions)st=e.step(st,a,p.descriptor)!.state;return st;}
 it('P2-2: copying a full-plan hint cannot earn a stretch dare; run dares disable footprints',()=>{
- for(const p of crabPuzzles.filter(p=>p.source.kind==='school'))for(const dare of p.dares){
+ for(const p of crabPuzzles.filter(p=>p.source.kind==='school'))for(const dare of p.dares.filter(d=>!d.retired)){
   let s=registration.start(p.ref,'a','dare',emptyChallenge(),{...options,supportOff:dare.rule.kind==='blind'||dare.rule.kind==='plan'},[dare.slot]);
   for(let i=0;i<3;i++)s=registration.move(s,['h'])!;
   for(const c of solution(p.descriptor)!)s=registration.move(s,['a',cardCodes.indexOf(c)])!;
   s=registration.move(s,['g'])!;
-  expect(s.result?.dares).toEqual([]);
+  expect(s.result?.event).toBe('helped');expect(s.result?.dares).toEqual([]);
  }
 });
-it('P2-3: Mud par is the proved minimum walking cost',()=>{for(const p of crabPuzzles.filter(p=>p.title.startsWith('Mud'))){const proof=proofContent.mud.find(m=>m.descriptor.level.id===p.descriptor.level.id)!;expect(p.par?.upper).toBe(proof.minimumSteps);}});
+it('P2-3: Mud par is the proved minimum walking cost',()=>{for(const p of crabPuzzles.filter(p=>p.title.startsWith('Mud')&&!p.retired)){const proof=proofContent.mud.find(m=>m.descriptor.level.id===p.descriptor.level.id)!;expect(p.par?.upper).toBe(proof.minimumSteps);}});
 it('P2-4: card-count dares say what they count and allow two extra arrows',()=>{for(const p of crabPuzzles.filter(p=>p.source.kind==='school')){const d=p.dares[1];if(d.rule.kind==='par'){expect(d.label).not.toBe('No extra turns');if(p.descriptor.level.pace==='easy'){expect(d.label).toBe('Two extra cards at most');expect(d.rule.max).toBe(solution(p.descriptor)!.length+2);}}}});
 it('P2-5: Mud develops, then a short budget trade-off, and ends easy',()=>{
  const [,_two,three,,,hard,easy]=proofContent.mud;expect(execute(three.descriptor as Descriptor,_two.witness as never[]).won).toBe(false);

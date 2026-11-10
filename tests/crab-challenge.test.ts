@@ -110,7 +110,7 @@ describe('Crab real Challenge replay and marks',()=>{
   }
  });
  it('resumes an exact running draft, retains failed runs after undo/reset, and allows a helped finish',()=>{
-  const p=crabPuzzles.find(p=>p.source.kind==='school')!;let s=registration.start(p.ref,'a','crab-save',emptyChallenge(),options,p.dares.map(d=>d.slot));
+  const p=crabPuzzles.find(p=>p.source.kind==='school')!;let s=registration.start(p.ref,'a','crab-save',emptyChallenge(),options,p.dares.filter(d=>!d.retired).map(d=>d.slot));
   s=move(s,['a',0]);s=move(s,['g']);s=move(s,['z']);s=move(s,['h']);
   for(const c of solution(p.descriptor)!)s=move(s,['a',cardCodes.indexOf(c)]);s=move(s,['g']);
   s=JSON.parse(JSON.stringify(s));expect(validChallengeSession(s,'a',registration.catalog)).toBe(true);

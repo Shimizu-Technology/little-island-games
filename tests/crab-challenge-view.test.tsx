@@ -66,7 +66,7 @@ it('LEAD-NOTES: the beach and horizontal program stay outside the scrolling edit
 });
 
 it('P2-8: staged speech keys have reachable lesson, feedback, help, footprints and marks buttons',async()=>{
- await mount({...state(0),supportOff:true});await press('Hear this puzzle');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-mud-teach');
+ await mount({...state(0),supportOff:true});await press('Hear this puzzle');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-lesson-mud-1');
  await press('Hear rules');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-mud-rules');await press('Hear about footprints');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-footprints');await press('Hear about marks');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-marks');
  let s=state(1);s=challengeEngine.step(s,['h'],s.descriptor)!.state;await act(async()=>root!.update(<ChallengeBoard state={s} dispatch={vi.fn()} active width={335}/>));
  await vi.waitFor(async()=>{await act(async()=>{});expect(JSON.stringify(root!.toJSON())).toContain('Add card 1:');});await press('Hear help');expect(sound.play).toHaveBeenLastCalledWith('c1-crab-first-hint');

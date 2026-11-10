@@ -8,6 +8,8 @@ import { Button, C, Copy, PressableScale } from '../../../components/ui';
 import { learnSources } from '../../../content/learnAudio';
 import { AudioPreferences, useSoundControls } from '../../../components/Audio';
 import { useCrabHint } from './useCrabHint';
+import { hintText } from './hint-text';
+import { lessonAudio } from './lesson-audio';
 import { useReducedMotion } from '../../../components/motion';
 
 export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,footer}:ChallengeViewProps<State,Action>) {
@@ -41,7 +43,8 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
   const disabled=!active||running||s.won;
   const over=d.budget!==null&&result.cost>d.budget;
   const message=running?'Watch your plan.':result.walker.bump?'Bump. Your plan is kept. Change a card and try again.':over?'That route costs too many walking steps. Try a drier path.':s.cursor>0?'Not home yet. Your plan is kept: add or change a card.':d.starter.length?'Find the bug. Tap any card to change it.':'Collect every shell, then go home.';
-  const stepText=hint?hintText(hint,s.program.length):'';
+  const stepText=hint?hintText(hint,s.program.length,cardLabel):'';
+  const lessonKey=lessonAudio(d.lesson);
   const feedbackAudio=over?'c1-crab-budget':'c1-crab-retry';
   return <View style={{gap:8,flex:1,minHeight:0}}>
     <View style={{flexDirection:'row',gap:10,alignItems:'center'}}>
@@ -62,7 +65,7 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
     <Copy>{result.won?'Home! Every shell collected.':message}</Copy>
     {d.budget!==null&&<Copy>{s.cursor===0?'Plan cost':'Walking steps'}: {s.cursor===0?execute(d,s.program).cost:result.cost} of {d.budget}. Mud costs 2, sand 1, turns 0.</Copy>}
     <Copy>{d.lesson}</Copy>
-    {learnSources[lessonAudio(d.level.id)]&&<Button compact quiet disabled={!active} onPress={()=>play(lessonAudio(d.level.id))}>Hear this puzzle</Button>}
+    {lessonKey&&learnSources[lessonKey]&&<Button compact quiet disabled={!active} onPress={()=>play(lessonKey)}>Hear this puzzle</Button>}
     {learnSources[rulesAudio]&&<Button compact quiet disabled={!active} onPress={()=>play(rulesAudio)}>Hear rules</Button>}
     {s.runs>0&&learnSources[feedbackAudio]&&<Button compact quiet disabled={!active} onPress={()=>play(feedbackAudio)}>Hear feedback</Button>}
     {s.supportOff&&learnSources['c1-crab-footprints']&&<Button compact quiet disabled={!active} onPress={()=>play('c1-crab-footprints')}>Hear about footprints</Button>}
@@ -95,18 +98,9 @@ export function ChallengeBoard({state:s,dispatch,active,width,onSettled,header,f
       {s.hintStage<3&&<Button quiet disabled={disabled} onPress={()=>send(['h'])}>{s.hintStage===1?'More help':'Show the whole plan'}</Button>}
 
     </View>}
-    <Button quiet disabled={disabled} onPress={()=>send(['h'])}>Help</Button>
+    {!hintVisible&&<Button quiet disabled={disabled} onPress={()=>send(['h'])}>Help</Button>}
     {learnSources['c1-crab-marks']&&<Button compact quiet disabled={disabled} onPress={()=>play('c1-crab-marks')}>Hear about marks</Button>}
     {footer}
     </ScrollView>}
   </View>;
-}
-
-export const lessonAudio=(id:string)=>id==='mud-1'?'c1-crab-mud-teach':id==='mud-2'?'c1-crab-mud-detour':id==='mud-5'?'c1-crab-mud-twist':`c1-crab-lesson-${id}`;
-export function hintText(hint:import('./challenge-engine').Hint,length:number) {
- const edit=hint.edit;
- if(edit?.op==='remove')return `Remove card ${edit.at+1}. Keep the other cards.`;
- if(edit?.op==='insert')return `Insert before card ${edit.at+1}: ${cardLabel[edit.card!]}. Keep the other cards.`;
- if(edit?.op==='change')return `Change card ${edit.at+1}: ${cardLabel[edit.card!]}. Keep the other cards.`;
- return hint.next?`${hint.keep<length?'Change':'Add'} card ${hint.keep+1}: ${cardLabel[hint.next]}. Keep the cards before it.`:'Your plan reaches home. Press Go to try it.';
 }

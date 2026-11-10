@@ -29,7 +29,7 @@ const mud: Puzzle<Descriptor>[]=authored.mud.map((p,i)=>{
 // Keep immutable pre-fix bank 9 entries available to saved refs, outside the picker.
 const legacy: Puzzle<Descriptor>[]=legacyMud.map((p,j)=>{
  const i=[2,5][j],d=descriptor(p.descriptor),current=mud[i];
- return {...current,retired:true,ref:{...current.ref,bank:9,puzzle:i,hash:sha256Hex(JSON.stringify(d))},descriptor:d};
+ return {...current,retired:true,ref:{...current.ref,bank:9,puzzle:i,hash:sha256Hex(JSON.stringify(d))},descriptor:d,par:{metric:'steps',lower:p.minimumSteps,upper:p.minimumSteps}};
 });
 // Small authored proof sets use the replay kit. Bulk Endless banks are a later slice.
 export const crabPuzzles:readonly Puzzle<Descriptor>[]=[...mud,...debug,...replays,...legacy];

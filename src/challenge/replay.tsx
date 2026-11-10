@@ -100,6 +100,7 @@ export function defineReplayGame<D,P,A,S>(config: {
   return {game:config.game,codec:config.codec,cove:config.cove,contextFor:ref=>`${config.context}-${config.puzzles.find(p=>p.ref.bank===ref.bank&&p.ref.puzzle===ref.puzzle)?.tier??1}`,puzzles:config.puzzles,catalog,controls:config.controls,completionText:config.completionText,completionFacts:s=>{const e=replay(s)?.evidence;return e?{helpUsed:e.helpUsed,failed:e.failed}:null;},helpUI:config.helpUI,
     start:(ref,owner,id,progress,options,selectedDares)=>{
       const puzzle=config.puzzles.find(p=>sameRef(p.ref,ref)); if(!puzzle)throw new Error('Unknown puzzle.');
+      if(selectedDares.some(slot=>puzzle.dares.find(d=>d.slot===slot)?.retired))throw new Error('Retired dares cannot start.');
       const payload:ReplayPayload<P,A>={version:1,initial:engine.initial(puzzle.descriptor),options:{...options,supportOff:options.supportOff||!!config.planningDaresHideSupport&&puzzle.dares.some(d=>selectedDares.includes(d.slot)&&d.rule.kind==='plan')},firstSolutions:progress.solutions.filter(([b,p])=>b===ref.bank&&p===ref.puzzle).map(([, ,hash])=>hash),actions:[]};
       const s:ChallengeSession={version:1,owner,game:config.game,id,ordinal:progress.nextOrdinal,revision:0,puzzle:ref,codec:config.codec,payload,selectedDares:[...selectedDares],partner:null,result:null,credited:false};
       if(jsonBytes(s)>4096-reserve.bytes || !validChallengeSession(s,owner,catalog,owner.startsWith('cove-')) || !codec.canStart(s))throw new Error('Invalid launch.');return s;

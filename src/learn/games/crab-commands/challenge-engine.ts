@@ -1,4 +1,3 @@
-import repairs from './repair-plans.json';
 import { commands, solved, start, step, type Command, type Level, type Walker } from './engine';
 import type { LaunchOptions, ReplayEngine, ReplayPayload } from '../../../challenge/types';
 import { sha256Hex } from '../../../puzzles/sha256';
@@ -7,11 +6,15 @@ export type Descriptor = { level: Level; budget: number | null; starter: Command
 export const cardCodes: Command[] = ['up','right','down','left','forward','turn-left','turn-right','repeat'];
 /** Compact tuples retain replay and undo evidence within the shared 4 KiB slot. */
 export type Action = ['a',number] | ['x',number] | ['r',number,number] | ['i',number,number] | ['g'|'h'|'u'|'z'];
-export type Initial = { version: 1 };
+/** `prior` carries an earlier attempt's runs, misses and hinted steps into a continued attempt. */
+export type Prior = { runs: number; failed: boolean; steps: number };
+export type Initial = { version: 1; prior?: Prior };
+/** Help may show this many steps in an attempt and still leave dare marks open. */
+export const freeHintSteps = 2;
 export type Payload = ReplayPayload<Initial,Action>;
 export type State = {
   descriptor: Descriptor; program: Command[]; history: Command[][]; cursor: number; running: boolean;
-  edits: number; runs: number; hints: number; hintStage: number; hintProgram: string | null; fullPlanShown: boolean; supportOff: boolean; won: boolean;
+  edits: number; runs: number; hints: number; steps: number; hintStage: number; hintProgram: string | null; fullPlanShown: boolean; supportOff: boolean; won: boolean;
 };
 const key = (w: Walker) => `${w.pos}/${w.facing}/${w.shells}/${w.previous}`;
 /** Turns are free; entering mud costs two walking steps. Movement always uses the School engine. */
@@ -76,19 +79,70 @@ export function repairStep(program:readonly Command[], plan:Command[]):Repair|un
  if(at<program.length&&dp[at][at]===1+dp[at+1][at])return {op:'remove',at};
  return {op:'change',at,card:plan[at]};
 }
+type Node = { walker: Walker; cost: number; next: [Command, number][] };
+/** Every card-optimal winner as a layered graph: each path of L cards from the start to a
+ * goal is one shortest winning program. Mud keeps the walking cost in the node. */
+function* winnerGraph(d: Descriptor): Generator<void, {layers: Node[][]; goals: number[]} | null> {
+  const layers: Node[][] = [[{walker:start(d.level),cost:0,next:[]}]];
+  while(layers.length<=80) {
+    const index=new Map<string,number>(), layer:Node[]=[], goals:number[]=[];
+    for(const node of layers.at(-1)!) {
+      yield;
+      for(const c of commands(d.level.pace)) {
+        const n=advance(d.level,node.walker,c), cost=node.cost+n.cost;
+        if(n.walker.bump || d.budget!==null&&cost>d.budget)continue;
+        const id=`${key(n.walker)}/${d.budget===null?0:cost}`;
+        let at=index.get(id);
+        if(at===undefined){at=layer.length;index.set(id,at);layer.push({walker:n.walker,cost,next:[]});if(solved(d.level,n.walker))goals.push(at);}
+        node.next.push([c,at]);
+      }
+    }
+    if(!layer.length)return null;
+    layers.push(layer);
+    if(goals.length) {
+      // Keep only edges that still reach a goal in exactly the remaining cards.
+      let alive=new Set(goals);
+      for(let k=layers.length-2;k>=0;k--) {
+        const keep=new Set<number>();
+        layers[k].forEach((node,i)=>{node.next=node.next.filter(([,to])=>alive.has(to));if(node.next.length)keep.add(i);});
+        alive=keep;
+      }
+      return {layers,goals};
+    }
+  }
+  return null;
+}
+/** The card-optimal winner fewest edits away from the child's program (change, insert, remove). */
+function* nearestWinner(d: Descriptor, program: readonly Command[]): Generator<void, Command[] | null> {
+  const graph=yield* winnerGraph(d);if(!graph)return null;
+  const {layers,goals}=graph;
+  const n=program.length, L=layers.length-1;
+  type Cell = { cost: number; from: [number, number, number] | null; card: Command | null };
+  const table=layers.map(layer=>layer.map(()=>Array.from({length:n+1},():Cell=>({cost:Infinity,from:null,card:null}))));
+  table[0][0][0].cost=0;
+  for(let k=0;k<=L;k++)for(let u=0;u<layers[k].length;u++) {
+    yield;
+    const row=table[k][u];
+    for(let i=0;i<n;i++)if(row[i].cost+1<row[i+1].cost)row[i+1]={cost:row[i].cost+1,from:[k,u,i],card:null};
+    for(const [c,v] of layers[k][u].next)for(let i=0;i<=n;i++) {
+      const here=row[i].cost;if(here===Infinity)continue;
+      const target=table[k+1][v];
+      if(i<n){const cost=here+(program[i]===c?0:1);if(cost<target[i+1].cost)target[i+1]={cost,from:[k,u,i],card:c};}
+      if(here+1<target[i].cost)target[i]={cost:here+1,from:[k,u,i],card:c};
+    }
+  }
+  const best=goals.reduce((g,h)=>table[L][h][n].cost<table[L][g][n].cost?h:g);
+  if(table[L][best][n].cost===Infinity)return null;
+  const plan:Command[]=[];let at:[number,number,number]|null=[L,best,n];
+  while(at){const cell:Cell=table[at[0]][at[1]][at[2]];if(cell.card)plan.unshift(cell.card);at=cell.from;}
+  return plan;
+}
 function* hintWork(d: Descriptor, program: readonly Command[]):Generator<void,Hint> {
-  if(d.starter.length) {
-    if(execute(d,program).won)return {keep:program.length,plan:[...program],next:null};
-    const baked=repairs.find(p=>p.id===d.level.id&&JSON.stringify(p.starter)===JSON.stringify(d.starter));
-    const plan=baked?.plan as Command[]|undefined;
-    const target=plan&&execute(d,plan).won?plan:(yield* solutionWork(d))??[], edit=repairStep(program,target);
-    return {keep:edit?.at??program.length,plan:target,next:edit?.card??null,edit};
-  }
-  for(let keep=program.length;keep>=0;keep--) {
-    const plan=yield* solutionWork(d,program.slice(0,keep));
-    if(plan)return {keep,plan,next:plan[keep]??null};
-  }
-  return {keep:0,plan:[] as Command[],next:null};
+  if(execute(d,program).won)return {keep:program.length,plan:[...program],next:null};
+  const target=yield* nearestWinner(d,program);
+  if(!target)return {keep:0,plan:[] as Command[],next:null};
+  const edit=repairStep(program,target);
+  return {keep:edit?.at??program.length,plan:target,next:edit?.card??null,edit};
 }
 export function nextHint(d: Descriptor, program: readonly Command[]):Hint {
   const work=hintWork(d,program);let result=work.next();while(!result.done)result=work.next();return result.value;
@@ -104,11 +158,13 @@ export async function nextHintSliced(d:Descriptor,program:readonly Command[], op
  return null;
 }
 const integer = (v: unknown, max: number): v is number => Number.isInteger(v) && (v as number)>=0 && (v as number)<=max;
-const make = (d: Descriptor, o: LaunchOptions): State => ({descriptor:d,program:[...d.starter],history:[],cursor:0,running:false,edits:0,runs:0,hints:0,hintStage:0,hintProgram:null,fullPlanShown:false,supportOff:o.supportOff,won:false});
+const make = (d: Descriptor, o: LaunchOptions, initial: Initial): State => ({descriptor:d,program:[...d.starter],history:[],cursor:0,running:false,edits:0,runs:0,hints:0,steps:initial.prior?.steps??0,hintStage:0,hintProgram:null,fullPlanShown:false,supportOff:o.supportOff,won:false});
+const validPrior = (v: unknown): v is Prior => !!v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).length===3&&integer((v as Prior).runs,65535)&&typeof (v as Prior).failed==='boolean'&&integer((v as Prior).steps,255);
 export const challengeEngine: ReplayEngine<Descriptor,Initial,Action,State> = {
   initial:()=>({version:1}),
-  validInitial:(v):v is Initial=>!!v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).length===1&&(v as Initial).version===1,
-  create:(d,_initial,o)=>make(d,o),
+  validInitial:(v):v is Initial=>!!v&&typeof v==='object'&&!Array.isArray(v)&&(v as Initial).version===1&&(Object.keys(v).length===1||Object.keys(v).length===2&&validPrior((v as Initial).prior)),
+  create:(d,initial,o)=>make(d,o,initial),
+  prior:initial=>initial.prior?{runs:initial.prior.runs,failed:initial.prior.failed}:null,
   validAction:(v):v is Action=>Array.isArray(v)&&Object.keys(v).length===v.length&&(
     v.length===1&&['g','h','u','z'].includes(v[0]) ||
     v.length===2&&(v[0]==='a'?integer(v[1],7):v[0]==='x'&&integer(v[1],79)) ||
@@ -116,8 +172,11 @@ export const challengeEngine: ReplayEngine<Descriptor,Initial,Action,State> = {
   step:(s,a,d)=>{
     if(s.won)return null;
     if(a[0]==='h') {
-      const hintProgram=JSON.stringify(s.program), hintStage=s.hintProgram===hintProgram?Math.min(3,s.hintStage+1):1;
-      return {state:{...s,hints:s.hints+1,hintProgram,hintStage,fullPlanShown:s.fullPlanShown||hintStage===3},event:'help'};
+      // Each press reveals more; once the whole plan shows, another press would only grow the log.
+      const hintProgram=JSON.stringify(s.program), same=s.hintProgram===hintProgram;
+      if(same&&s.hintStage>=3)return null;
+      const hintStage=same?s.hintStage+1:1;
+      return {state:{...s,hints:s.hints+1,steps:s.steps+(same?0:1),hintProgram,hintStage,fullPlanShown:s.fullPlanShown||hintStage===3},event:'help'};
     }
     if(a[0]==='g') {
       if(!s.program.length)return null;
@@ -147,6 +206,7 @@ export const challengeEngine: ReplayEngine<Descriptor,Initial,Action,State> = {
     // Again and its flat expansion are the same solution, not a second way.
     let previous:Command|null=null;
     const primitives=s.program.slice(0,s.cursor).flatMap(c=>{if(c==='repeat')return previous?[previous,previous]:[];previous=c;return [c];});
-    return {solved:s.won,edits:s.edits,dareEligible:!s.fullPlanShown,metrics:{cards:s.cursor,steps:result.cost},solution:s.won?sha256Hex(JSON.stringify(primitives)):null,objectives:[]};
+    // Two hinted steps leave dares open; a third step or the whole plan keeps only the finish.
+    return {solved:s.won,edits:s.edits,dareEligible:!s.fullPlanShown&&s.steps<=freeHintSteps,metrics:{cards:s.cursor,steps:result.cost},solution:s.won?sha256Hex(JSON.stringify(primitives)):null,objectives:[]};
   },
 };
