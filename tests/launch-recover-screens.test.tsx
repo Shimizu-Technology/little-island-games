@@ -90,10 +90,10 @@ it('the learner whose rounds were set aside sees one plain line, and can put it 
   const dismiss = vi.fn();
   store({ setAside: [{ owner: 'family', games: ['loop'], marks: 1 }, { owner: 'b', games: ['bridges'], marks: 0 }], dismissSetAside: dismiss });
   await render(<SaveStatus/>);
-  expect(text(view!.root)).toBe(setAsideLine(['loop']) + 'OK');
-  expect(setAsideLine(['loop'])).toMatch(/^Your paused .+ puzzle couldn’t be resumed, so it was set aside\. Your marks and stars are kept\./);
-  expect(setAsideLine(['loop', 'bridges'])).toMatch(/ and .+ puzzles couldn’t be resumed, so they were set aside\./);
-  expect(setAsideLine([])).toContain('Your other marks and stars are kept.');
+  expect(text(view!.root)).toBe(setAsideLine(['loop'], 1) + 'OK');
+  expect(setAsideLine(['loop'])).toMatch(/^Your paused .+ puzzle couldn’t be resumed, so it was set aside\. Your marks and stars are kept\. You can start fresh any time\.$/);
+  expect(setAsideLine(['loop', 'bridges'], 6)).toMatch(/ and .+ puzzles couldn’t be resumed, so they were set aside with some puzzle marks from another version\. Everything else is kept\./);
+  expect(setAsideLine([], 1)).toBe('Some puzzle marks from another version of the app couldn’t be opened, so they were set aside. Everything else is kept.');
   await act(async () => button('OK').props.onClick());
   expect(dismiss).toHaveBeenCalledWith('family');
   // Another learner sees nothing about it.
