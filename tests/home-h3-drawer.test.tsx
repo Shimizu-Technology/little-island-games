@@ -139,3 +139,11 @@ describe("HR-03 larger targets behind the grown-up gate (rule 62)", () => {
     await act(async () => tree.unmount());
   });
 });
+describe("HM-18 lab fixture", () => {
+  it("'full' is a valid home at exactly the room limit", async () => {
+    const { placedInstances, MAX_INSTANCES } = await import("../src/home/model");
+    const state = labHome("full");
+    expect(validHome(state)).toBe(true);
+    expect(placedInstances(state.rooms.home)).toHaveLength(MAX_INSTANCES);
+  });
+});
