@@ -71,9 +71,11 @@ if (process.argv[1]?.endsWith('bake.ts')) {
   });
   const logs = process.env.LATIN_LOGS;
   if (logs) { mkdirSync(logs, { recursive: true }); writeFileSync(join(logs, `pool-${kind}.json`), JSON.stringify(chosen.map((c, i) => ({ rung: gen.rungs[i].id, seeds: c.map(x => x.seed), workload: c.map(x => Math.round(gen.workload(x) * 10) / 10), ceilings: c.map(x => x.grade.ceiling) })))); }
-  if (!dry) {
+  const short = gen.rungs.filter((r, i) => chosen[i].length < r.floor);
+  if (short.length) { console.error(`Below floor, nothing published: ${short.map(r => r.id).join(', ')}.`); process.exitCode = 1; }
+  else if (!dry) {
     reserve(productionDirs, kind);
-    const listed: FamilySpec<LatinPuzzle> = { ...spec, bands: spec.bands.map((b, i) => ({ ...b, target: chosen[i].length, floor: Math.min(b.floor, chosen[i].length) })),
+    const listed: FamilySpec<LatinPuzzle> = { ...spec, bands: spec.bands.map((b, i) => ({ ...b, target: chosen[i].length })),
       generate: (seed, band) => { const i = spec.bands.findIndex(b => b.id === band.id), k = seed - 1 - i * 0x1000000, c = chosen[i]?.[k]; return c ? describe(c, band.id) as DescriptorCore<LatinPuzzle> : null; } };
     const report = bakeFamily(listed, { dirs: productionDirs, seedBase: 1, maxAttempts: Math.max(...chosen.map(c => c.length)), sourceSha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim() });
     console.log(JSON.stringify(report));

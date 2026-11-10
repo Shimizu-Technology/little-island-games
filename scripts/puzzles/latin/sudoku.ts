@@ -49,9 +49,12 @@ export function generateSudoku(rung: Rung, seed: number): Candidate | null {
   if (!full) return null;
   p.givens = [...full];
   const keep = (g: Grade) => g.status === 'complete';
+  // Gentle rungs stop at a random clue count inside their range, so a rung runs from plenty of
+  // starting numbers down to few. Harder rungs remove as far as their technique window allows.
+  const floor = rank(rung.min) <= rank('hidden-single') ? rung.givens[0] + rng.below(rung.givens[1] - rung.givens[0] + 1) : rung.givens[0];
   for (const orbit of rng.shuffle(orbits(n, template))) {
     const left = p.givens.filter(Boolean).length;
-    if (left - orbit.length < rung.givens[0]) continue;
+    if (left - orbit.length < floor) continue;
     const old = orbit.map(i => p.givens[i]);
     orbit.forEach(i => { p.givens[i] = 0; });
     const unique = search(p, 2, 400_000);
