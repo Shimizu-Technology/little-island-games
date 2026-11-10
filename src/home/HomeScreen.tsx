@@ -664,10 +664,11 @@ export function HomeScreen({
         const again = nextHintAt(hints.current);
         if (again === undefined || again > Date.now() + 16) { arm(); return; }
         const { scene } = live.current;
-        // Things you can switch first (fridge, lamp, sink), then food, then beach shells.
+        // Only small things wiggle (a whole cabinet tilting looks broken): a small thing you can
+        // switch, such as a lamp, then food, then beach shells.
         const rank = (e: SceneEntity) => (e.item && capabilityOf(e.item.item).toggle ? 0 : e.id.includes("/item/portion-shore-") ? 2 : 1);
         const candidates = Object.values(scene.rooms[room].entities)
-          .filter((e) => restingVisible(e, scene) && e.item && (isPortion(e.id) || capabilityOf(e.item.item).toggle))
+          .filter((e) => restingVisible(e, scene) && e.item && !!e.body?.small && (isPortion(e.id) || capabilityOf(e.item.item).toggle))
           .sort((a, b) => rank(a) - rank(b) || a.contact.x - b.contact.x)
           .map((e) => e.id);
         const next = takeHint(hints.current, Date.now(), candidates, reduced);
