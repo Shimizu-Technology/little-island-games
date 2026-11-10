@@ -750,6 +750,7 @@ export function HomeScreen({
             pickups={pickups}
             reduced={reduced}
             renderCharacter={renderCharacter}
+            liveRoom={overview ? undefined : room}
             debugLayer={lab && labKit && hulls ? <labKit.overlay.HullOverlay scene={scene} building={building} scale={roomScale(viewport)} /> : undefined}
             selected={selected}
             reactions={reactions}

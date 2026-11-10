@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, View } from "react-native";
-import Animated, { useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
+import Animated, { Easing, cancelAnimation, useAnimatedStyle, useDerivedValue, useSharedValue, withRepeat, withTiming, type SharedValue } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import { roomIds, roomNames } from "../catalogMore";
 import { RoomArt, ShoreArt } from "../art/Room";
@@ -17,6 +17,7 @@ import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { DragOverlay } from "./DragOverlay";
 import { layoutToken } from "./layout";
 import { anyIn, firstFollow, firstRest } from "./restingState";
+import { BREATH_SCALE, LIFE_PERIOD, lifeBlink, lifeBreath, lifeSeed } from "./life";
 import { isPortion } from "./portions";
 import { entityLabels } from "../scene/labels";
 import type { Interaction, Pickup } from "./useInteraction";
@@ -50,7 +51,10 @@ const RestingEntity = memo(function RestingEntity({
   sleeping,
   front = false,
   onNode,
+  life,
 }: {
+  /** HM-11: the shared life clock, given only to friends at rest in the room on screen. */
+  life?: SharedValue<number>;
   onNode: (id: string, node: View | null) => void;
   entity: SceneEntity;
   sceneRevision: string;
@@ -88,6 +92,7 @@ const RestingEntity = memo(function RestingEntity({
   // HM-13: one shared resting state, changed only on pickup, press, target and front edges.
   // The motion channel carries per-frame values only while art follows before its overlay
   // is ready, or while something wobbles; otherwise nothing here runs during a drag.
+  const seed = entity.character ? lifeSeed(entity.character.slot) : 0;
   const style = useAnimatedStyle(() => {
     const flags = restingFlags.value, motion = restingMotion.value;
     const rest = firstRest(flags, owners);
@@ -103,9 +108,12 @@ const RestingEntity = memo(function RestingEntity({
         { translateY: follow ? follow.dy : landing && !reduced ? -3 : 0 },
         { rotate: `${follow ? follow.tilt : wobble}deg` },
         { scaleX: follow ? follow.sx : (pressed || landing ? 1.02 : 1) },
-        { scaleY: follow ? follow.sy : (pressed ? entity.character ? .99 : 1.02 : landing ? 1.02 : 1) },
+        { scaleY: follow ? follow.sy : (pressed ? entity.character ? .99 : 1.02 : landing ? 1.02 :
+          life && !rest ? 1 + BREATH_SCALE * lifeBreath(life.value, seed) : 1) },
       ] };
   });
+  const open = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 0 : 1 }));
+  const closed = useAnimatedStyle(() => ({ opacity: life && lifeBlink(life.value, seed) ? 1 : 0 }));
   const rimStyle = useAnimatedStyle(() => ({ opacity: anyIn(restingFlags.value.dragTargets, landingTargets) ? 1 : 0 }));
   const anticipating = useDerivedValue(() => entity.character && anyIn(restingFlags.value.targets, anticipationTargets) ? 1 : 0);
   const normal = useAnimatedStyle(() => ({ opacity: 1 - anticipating.value }));
@@ -190,14 +198,21 @@ const RestingEntity = memo(function RestingEntity({
         style={[{ position: "absolute", left: "8%", right: "8%", top: "8%", bottom: "4%", borderRadius: 18,
           borderWidth: 4, borderColor: "#78B693", backgroundColor: "#E8F7C822" }, rimStyle]} />}
       <Animated.View style={normal}>
-        <EntityArt
-          entity={entity}
-          actionOverride={action}
-          faceOverride={sleeping ? "sleepy" : undefined}
-          front={front}
-          reduced={reduced}
-          renderCharacter={renderCharacter}
-        />
+        <Animated.View style={life ? open : undefined}>
+          <EntityArt
+            entity={entity}
+            actionOverride={action}
+            faceOverride={sleeping ? "sleepy" : undefined}
+            front={front}
+            reduced={reduced}
+            renderCharacter={renderCharacter}
+          />
+        </Animated.View>
+        {life && (
+          <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, closed]}>
+            <EntityArt entity={entity} actionOverride={action} reduced={reduced} renderCharacter={renderCharacter} blink />
+          </Animated.View>
+        )}
       </Animated.View>
       {entity.character && (
         <Animated.View pointerEvents="none" style={[{ position: "absolute", left: 0, top: 0 }, anticipate]}>
@@ -227,7 +242,10 @@ export function SceneView({
   badges = [],
   onBadges,
   debugLayer,
+  liveRoom,
 }: {
+  /** HM-11: friends at rest in this room blink and breathe. None in the overview. */
+  liveRoom?: string;
   /** Lab-only layer in house space, under the carried object. */
   debugLayer?: React.ReactNode;
   badges?: readonly BadgeId[];
@@ -249,6 +267,15 @@ export function SceneView({
   onMove: (id: string, action: string) => void;
 }) {
   const { camera } = interaction;
+  // One UI-thread clock for every friend on screen; nothing re-renders an SVG.
+  const lifeClock = useSharedValue(0);
+  const living = !reduced && !!liveRoom;
+  React.useEffect(() => {
+    if (!living) return;
+    lifeClock.set(0);
+    lifeClock.set(withRepeat(withTiming(LIFE_PERIOD, { duration: LIFE_PERIOD, easing: Easing.linear }), -1, false));
+    return () => cancelAnimation(lifeClock);
+  }, [living, lifeClock]);
   const cameraStyle = useAnimatedStyle(() => ({
     transformOrigin: "left top",
     transform: [{ translateX: camera.value.tx }, { translateY: camera.value.ty }, { scale: camera.value.a }],
@@ -331,6 +358,8 @@ export function SceneView({
                         selected={!front && selected === entity.id}
                         onSelect={onSelect}
                         onMove={onMove}
+                        life={living && !front && entity.character && entity.room === liveRoom && !sleeping[entity.id] &&
+                          !reactions[entity.id] && !entity.action ? lifeClock : undefined}
                       />,
                     ])}
                     {scene.rooms[roomId].targets.filter((target) => !target.rim && (target.kind === "hand" || target.kind === "surface")).map((target) => (
