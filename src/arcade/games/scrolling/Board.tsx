@@ -184,7 +184,7 @@ const RunScene=memo(function RunScene({poses,state,learn,world}:{poses:SharedVal
   const s=useRunSnapshot(state,sceneSpec);
   // The runner is live vector art: supersample it to the stage's total zoom so it stays sharp.
   const stage=useStage(),sample=Math.max(1,Math.min(2,Math.ceil(HERO_ZOOM*HERO_SCALE*stage.scale*4)/4));
-  const runner=useMemo(()=><LastHit dead={s.dead} x={195} y={TRACK_HEIGHT*CONTACT}><RunHit poses={poses}><RunnerRig poses={poses} sample={sample}/></RunHit></LastHit>,[poses,s.dead,sample]);
+  const runner=useMemo(()=><LastHit dead={s.dead} x={195} y={TRACK_HEIGHT*CONTACT}><RunHit poses={poses}><RunnerRig poses={poses} sample={sample} wrap={frames=><View pointerEvents="none" style={{position:"absolute",left:-(80*sample-80)/2,top:-(132*sample-132)/2,width:80*sample,height:132*sample,transform:[{scale:1/sample}]}}>{frames}</View>}/></RunHit></LastHit>,[poses,s.dead,sample]);
   return <><RunLayer poses={poses} spec={s.spec} learn={learn} world={world} runner={runner}/><RunHitFlash poses={poses}/></>;
 });
 function displayRun(s:RunState) {"worklet";const h=runHud(s);return {level:h.level,passed:h.passed,score:h.score,lives:h.lives,powers:h.powers,next:h.next,shellNotes:runLearning(s)?0:s.shells};}
