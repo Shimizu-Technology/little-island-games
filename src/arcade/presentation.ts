@@ -8,7 +8,7 @@ export const stickerSections = (person: ArcadeLearner) => [
   { name: "Collected · latest first", stickers: [...person.stickers].reverse() },
   { name: "Still to find", stickers: stickerIds.filter(id => !person.stickers.includes(id)) },
 ].filter(section => section.stickers.length);
-export const currentLevel = (person: ArcadeLearner, game: ArcadeId, levels: readonly ArcadeLevel[], unlockAll: boolean) => levels.find(l => levelOpen(gameProgress(person, game), l.id, unlockAll) && !gameProgress(person, game).stars[l.id]);
+export const currentLevel = (person: ArcadeLearner, game: ArcadeId, levels: readonly ArcadeLevel[]) => levels.find(l => levelOpen(gameProgress(person, game), l.id) && !gameProgress(person, game).stars[l.id]);
 
 export function nextStarGoal(goals: readonly [string, string, string], earned: number): string {
   return earned >= 3 ? "All three stars earned! You can enjoy this level again." : `Next star goal · ${goals[Math.max(0, Math.min(2, earned))]}`;

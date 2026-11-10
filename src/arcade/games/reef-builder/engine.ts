@@ -115,7 +115,7 @@ export function reefTransition(s: ReefState, input: ReefInput): ReefState {
 export function reefResult(s: ReefState): ArcadeResult | null {
   if (s.status === "playing") return null;
   const stars = s.status === "cleared" && s.level !== "endless" ? s.moves <= s.level.greatMoves ? 3 : s.moves <= s.level.goodMoves ? 2 : 1 : 0;
-  return { cleared: s.status === "cleared", outcome: s.status === "cleared" ? "cleared" : s.status === "stopped" ? "stopped" : "game-over", stars, score: s.score, detail: `${s.lines} line${s.lines === 1 ? "" : "s"} · ${s.rescued} fish · ${s.moves} move${s.moves === 1 ? "" : "s"}` };
+  return { cleared: s.status === "cleared", outcome: s.status === "cleared" ? "cleared" : s.status === "stopped" ? "stopped" : "game-over", stars, score: s.score, facts: { fish: s.rescued }, detail: `${s.lines} line${s.lines === 1 ? "" : "s"} · ${s.rescued} fish · ${s.moves} move${s.moves === 1 ? "" : "s"}` };
 }
 const object = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const exact = (v: unknown, keys: string[]): v is Record<string, unknown> => object(v) && Object.keys(v).sort().join() === [...keys].sort().join();

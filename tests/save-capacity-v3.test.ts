@@ -11,6 +11,8 @@ import { parseSave, MAX_SAVE_BYTES } from '../src/state/validation';
 import { newLibraryChild, validLibraryData } from '../src/library/state';
 // Capacity fixtures occupy every dare slot; isolate them from shipped registrations.
 vi.mock('../src/challenge/registry.generated',()=>({challengeEntries:[]}));
+// Capacity fixtures occupy bank slots 312–511 and every dare slot; isolate them from the shipped Arcade dare registration.
+vi.mock('../src/arcade/dares',async original=>({...await original<typeof import('../src/arcade/dares')>(),arcadeDareCatalog:()=>({banks:new Map(),dares:new Map(),codecs:new Map(),contexts:new Set()})}));
 const hash='b'.repeat(64);
 const banks:InlineBank[]=[];let ordinal=0;
 // 54,000 Cove entries + 8,647 School entries; exactly 62,647 entries, not an all-ones invalid bitmap.

@@ -379,6 +379,7 @@ export function beachResult(s: BeachState): ArcadeResult | null {
     stars: !cleared ? 0 : losing === 0 ? 3 : losing <= 1 ? 2 : 1,
     score: s.score,
     detail: `${s.points[0] * count} : ${s.points[1] * count} · best rally ${s.bestRally}`,
+    facts: { rally: s.bestRally },
   };
 }
 export function validBeach(v: unknown): v is BeachState {

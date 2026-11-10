@@ -440,6 +440,7 @@ export function palmResult(s: PalmState): ArcadeResult | null {
     detail: learning
       ? `${s.fact} facts matched · ${s.misses} retries`
       : `${s.caught} netted · ${Math.round(accuracy * 100)}% aim · ${s.lives.hit} hearts lost · ${Math.round(s.time)}s`,
+    facts: { aim: learning ? 0 : Math.floor(accuracy * 100) },
   };
 }
 export function validPalm(v: unknown): v is PalmState {
