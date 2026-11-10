@@ -12,8 +12,9 @@ import { labHome } from '../src/home/runtime/lab';
 import { buildScene } from '../src/home/scene/graph';
 import { buildingLayout } from '../src/home/camera';
 import type { Interaction, Pickup } from '../src/home/runtime/useInteraction';
+import { restingFlagsOf, restingMotionOf } from '../src/home/runtime/restingState';
 vi.mock('react-native',()=>({View:'View',Pressable:'Pressable',ScrollView:'ScrollView',Text:'Text',Modal:'Modal',FlatList:({data,renderItem}:any)=>data.map((item:any)=>renderItem({item})),Platform:{OS:'ios'}}));
-vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'},useAnimatedStyle:(fn:()=>unknown)=>({evaluate:fn}),useDerivedValue:(fn:()=>unknown)=>({get value(){return fn();}}),useAnimatedReaction:(prepare:any,react:any)=>{const previous=React.useRef<any>(null);React.useLayoutEffect(()=>{const next=prepare();if(next!==previous.current){react(next,previous.current);previous.current=next;}});},runOnJS:(fn:any)=>fn,runOnUI:(fn:any)=>fn}));
+vi.mock('react-native-reanimated',()=>({default:{View:'AnimatedView'},useSharedValue:(v:any)=>React.useRef({value:v,set(n:any){this.value=n;},get(){return this.value;}}).current,withRepeat:(x:any)=>x,withTiming:(x:any)=>x,cancelAnimation:()=>{},Easing:{linear:(t:number)=>t},useAnimatedStyle:(fn:()=>unknown)=>({evaluate:fn}),useDerivedValue:(fn:()=>unknown)=>({get value(){return fn();}}),useAnimatedReaction:(prepare:any,react:any)=>{const previous=React.useRef<any>(null);React.useLayoutEffect(()=>{const next=prepare();if(next!==previous.current){react(next,previous.current);previous.current=next;}});},runOnJS:(fn:any)=>fn,runOnUI:(fn:any)=>fn}));
 const pans=vi.hoisted(()=>[] as any[]);
 vi.mock('react-native-gesture-handler',()=>({GestureDetector:'GestureDetector',Gesture:{Pan:()=>{
  const handlers:any={};const builder:any=new Proxy({}, {get:(_t,key)=> (...args:any[])=>{if(String(key).startsWith('on'))handlers[key]=args[0];return builder;}});pans.push(handlers);return builder;
@@ -30,6 +31,10 @@ function context(id:string,reduced=false) {
  const state=labHome();state.rooms.kitchen.instances.find(i=>i.id==='fridge')!.powered=true;const scene=withPortions(buildScene(state)),clock={value:1000};
  const slot={id,ready:true,painted:true,phase:'dragging',liftedAt:0,x:0,y:0,gripX:0,gripY:0,tilt:0,lag:0,settleAt:0,pausedElapsed:0};
  const interaction={clock,slots:{value:[slot,{}]},camera:{value:{a:1}},fixtureNudges:{value:{}},acknowledgeLayout:()=>{},acknowledgePose:()=>{},ready:()=>{}} as unknown as Interaction;
+ // HM-13: resting art reads the published state; derive it from the same fake channels.
+ const live=interaction as any;
+ live.restingFlags={get value(){return restingFlagsOf(live.slots.value.filter((s:any)=>s.id!==undefined).map((s:any)=>({...s})),live.controller?.value.pointers??[]);}};
+ live.restingMotion={get value(){return restingMotionOf(live.slots.value.filter((s:any)=>s.id).map((s:any)=>({...s,subject:s.subject??scene.entities[s.id]})),scene.revision,live.camera.value.a,clock.value,reduced,live.fixtureNudges.value,null);}};
  return {state,scene,clock,slot,interaction,reduced};
 }
 describe('round4 rendered runtime contracts',()=>{

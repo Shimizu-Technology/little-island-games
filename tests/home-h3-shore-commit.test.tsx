@@ -1,0 +1,73 @@
+import React from 'react';
+import { act, create } from 'react-test-renderer';
+import { afterEach, expect, it, vi } from 'vitest';
+import { HomeScreen } from '../src/home/HomeScreen';
+import { starterHome } from '../src/home/model';
+import { buildScene } from '../src/home/scene/graph';
+import { roomPoint } from '../src/home/scene/types';
+import { withPortions } from '../src/home/runtime/portions';
+import { resolve } from '../src/home/scene/proposal';
+import { buildingLayout, roomOrigin } from '../src/home/camera';
+import { roomIds } from '../src/home/catalogMore';
+const harness = vi.hoisted(() => ({ options: {} as any, finish: vi.fn() }));
+vi.mock('expo-router', () => ({ router: {} }));
+vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'web' }, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => ({ width: 390, height: 844 }) }));
+vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) }));
+vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useSharedValue: (v: any) => { const ref = React.useRef(v); return { get: () => ref.current, set: (n: any) => { ref.current = n; } }; }, useAnimatedStyle: () => ({}) }));
+vi.mock('../src/components/motion', () => ({ useReducedMotion: () => false }));
+vi.mock('../src/state/Store', () => ({ useStore: () => ({ save: { settings: {} } }) }));
+vi.mock('../src/components/Audio', () => ({ useSounds: () => () => {} }));
+vi.mock('../src/home/runtime/useIdleCharacters', () => ({ useIdleCharacters: () => ({ sleeping: {}, wake: () => {} }) }));
+vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { isCurrent: () => true, finish: harness.finish, camera: { get: () => ({ a: .5, b: 0, c: 0, d: .5, tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => [] }, cancelAll: () => {} }; } }));
+vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: () => null }));
+vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: () => null, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
+vi.mock('../src/home/runtime/HomePanels', () => ({ HomePanels: () => null }));
+vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: () => null, portraitDrawerHeight: 200 }));
+vi.mock('../src/home/runtime/StagingTray', () => ({ StagingTray: () => null }));
+vi.mock('../src/home/runtime/Destinations', () => ({ Destinations: () => null }));
+vi.mock('../src/home/runtime/DebugOverlay', () => ({ DebugOverlay: () => null }));
+vi.mock('../src/home/runtime/FriendDrawer', () => ({ FriendDrawer: () => null }));
+vi.mock('../src/home/runtime/CapacityCue', () => ({ CapacityCue: () => null, CAPACITY_CUE_MS: 3200, CAPACITY_MESSAGE: 'Put something away to make room.' }));
+vi.mock('../src/home/art/Items', () => ({ ItemArt: () => null }));
+vi.mock('../src/home/art/More', () => ({ MoreItemArt: () => null }));
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+vi.stubGlobal('requestAnimationFrame', () => 1);
+vi.stubGlobal('cancelAnimationFrame', () => {});
+let root: ReturnType<typeof create>;
+afterEach(async () => { if (root) await act(async () => root.unmount()); harness.finish.mockClear(); });
+async function setup() {
+  const state = starterHome();
+  const actor = state.rooms.home.characters.find(c => c.slot === 0)!;
+  state.rooms.home.characters = state.rooms.home.characters.filter(c => c.slot !== 0);
+  state.rooms.kitchen.characters.push(actor);
+  state.rooms.kitchen.instances.find(i => i.id === 'starter-fridge')!.powered = true;
+  const persist = vi.fn((_state: any) => true);
+  await act(async () => { root = create(<HomeScreen initialState={state} persist={persist} />); });
+  return { state, persist, scene: withPortions(buildScene(state)) };
+}
+function release(proposal: any, anchor = proposal.contact, index = 0) {
+  const origin = roomOrigin(roomIds.indexOf(proposal.room), buildingLayout(roomIds.length, false));
+  harness.options.onCommit(index, proposal, { x: anchor.x + origin.x, y: anchor.y + origin.y }, {});
+}
+it('HC-02 a beach shell placed in the room becomes a new shell and the beach keeps its own', async () => {
+  const { state, persist } = await setup();
+  const scene = withPortions(buildScene(state), ['home', 'kitchen']);
+  const id = 'home/item/portion-shore-1', index = { ...scene.rooms.home, entities: scene.entities };
+  const proposal = resolve(index, scene.entities[id], roomPoint(300, 470), { scale: .5, release: true, floorOnly: true });
+  expect(proposal.kind).toBe('floor');
+  await act(async () => release(proposal));
+  expect(persist).toHaveBeenCalledOnce();
+  const saved = persist.mock.calls[0][0] as any;
+  const shells = saved.rooms.home.instances.filter((i: any) => i.item === 'shell');
+  expect(shells).toHaveLength(state.rooms.home.instances.filter(i => i.item === 'shell').length + 1);
+  expect(withPortions(buildScene(saved), ['home']).entities[id]).toBeDefined();
+});
+it('HM-18 a full room refuses a new shell with the visible capacity message, not a silent no', async () => {
+  const { state } = await setup();
+  void state;
+  const scene = withPortions(buildScene(state), ['home', 'kitchen']);
+  const id = 'home/item/portion-shore-0', index = { ...scene.rooms.home, entities: scene.entities };
+  const staged = resolve(index, scene.entities[id], roomPoint(300, 470), { scale: .5, intent: 'staging', release: true });
+  await act(async () => release({ ...staged, refusal: 'capacity' }));
+  expect(harness.finish.mock.calls.at(-1)![1]).toBe(false);
+});

@@ -4,8 +4,14 @@ import { itemSize } from "../geometry";
 import { instance } from "../model";
 import { itemEntityId, roomPoint, type Scene, type SceneEntity } from "../scene/types";
 import { itemEntity, translatedBounds } from "../scene/graph";
-/** Authored shelves, inside the open source; no floating bubble menu. */
-export function withPortions(scene: Scene): Scene {
+import type { RoomId } from "../catalogMore";
+/** HC-02: the three beach shells, in room units on the shore below a ground-floor room. */
+export const shoreShells: readonly (readonly [number, number])[] = [[160, 624], [361, 591], [570, 641]];
+export const SHORE_TOP = 560;
+export const shoreShellId = (room: RoomId, n: number) => itemEntityId(room, `portion-shore-${n}`);
+/** Authored shelves, inside the open source; no floating bubble menu. Beach shells, like the
+ * fridge, never run out: picking one up leaves it on the sand, and placing it makes a new shell. */
+export function withPortions(scene: Scene, shoreRooms: readonly RoomId[] = []): Scene {
   let changed = false;
   const entities = { ...scene.entities },
     rooms = { ...scene.rooms };
@@ -44,6 +50,21 @@ export function withPortions(scene: Scene): Scene {
       changed = true;
     });
     rooms[source.room] = index;
+  }
+  for (const room of shoreRooms) {
+    if (!rooms[room]) continue;
+    const index = { ...rooms[room], entities: { ...rooms[room].entities }, hitProxies: [...rooms[room].hitProxies] };
+    shoreShells.forEach(([x, y], n) => {
+      const id = shoreShellId(room, n);
+      const seed = itemEntity(index.room, instance(`portion-shore-${n}`, "shell", 0, 0));
+      const contact = roomPoint(x, y);
+      const entity: SceneEntity = { ...seed, contact, attachment: { kind: "floor", room: index.room, at: contact }, depth: y, band: "foreground" };
+      entities[id] = entity;
+      index.entities[id] = entity;
+      index.hitProxies.push({ id, bounds: translatedBounds(entity.bounds, contact), depth: entity.depth, band: entity.band });
+    });
+    rooms[room] = index;
+    changed = true;
   }
   return changed ? { ...scene, entities, rooms } : scene;
 }

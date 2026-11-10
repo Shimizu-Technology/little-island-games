@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import Animated, { useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
-import type { SceneEntity } from "../scene/types";
+import type { CharacterBase, SceneEntity } from "../scene/types";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { CarriedCharacter } from "./CarriedCharacter";
 import { carryBinding, renderAnchors, limbBottom } from "./rigGeometry";
@@ -13,8 +13,10 @@ import type { Interaction } from "./useInteraction";
 /** Destination trees mount before release. A single opaque art swap happens
  * during continuous travel, without waiting for a JS proposal render. */
 export function SettleArt({ source, destination = source, grip = { x: 0, y: 0 }, interaction, index, reduced, supportPlanes,
-  renderCharacter }: {
+  renderCharacter, bases }: {
   source: SceneEntity; destination?: SceneEntity; grip?: { x: number; y: number };
+  /** HM-13: mount target poses only for bases the reachable rooms offer. Geometry covers all. */
+  bases?: readonly CharacterBase[];
   interaction: Interaction; index: number; reduced: boolean; supportPlanes?: Record<string, SupportPlane>; renderCharacter?: CharacterRender;
 }) {
   const { slots, clock } = interaction;
@@ -28,7 +30,7 @@ export function SettleArt({ source, destination = source, grip = { x: 0, y: 0 },
     const active = (s.phase === "settling" && s.settleAt > 0) || (s.phase === "pending" && s.pausedElapsed > 0);
     const p = active ? settleProgress(s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt, reduced, s.duration) : 0;
     const base = s.proposal?.base ?? source.base, facing = s.proposal?.facing ?? source.facing;
-    const pose = poses[poseToken(base, facing, destination.action)];
+    const pose = poses[poseToken(base, facing, destination.action)] ?? poses[poseToken("stand", "front", destination.action)];
     const attachment = s.proposal?.attachment;
     const support = attachment?.kind === "socket" ? supportPlanes?.[attachment.item] : undefined;
     const sample = poseHandoff(p, { x: s.releaseX, y: s.releaseY }, { x: s.targetX, y: s.targetY },
@@ -42,7 +44,7 @@ export function SettleArt({ source, destination = source, grip = { x: 0, y: 0 },
     <Animated.View style={[{ position: "absolute", left: 0, top: 0 }, from]}>
       <CarriedCharacter entity={source} interaction={interaction} index={index} reduced={reduced} renderCharacter={renderCharacter} />
     </Animated.View>
-    {variants.map((entity) => <TargetPose key={poseToken(entity.base, entity.facing, entity.action)}
+    {variants.filter((v) => !bases || bases.includes(v.base)).map((entity) => <TargetPose key={poseToken(entity.base, entity.facing, entity.action)}
       entity={entity} source={source} startHead={{ x: head.x + start.x, y: head.y + start.y }}
       interaction={interaction} index={index} reduced={reduced} supportPlanes={supportPlanes} renderCharacter={renderCharacter} />)}
   </>;

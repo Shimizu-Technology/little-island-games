@@ -1,0 +1,135 @@
+import React from 'react';
+import { act, create } from 'react-test-renderer';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { HomeScreen, REDO_VISIBLE_MS } from '../src/home/HomeScreen';
+import { starterHome } from '../src/home/model';
+import { buildScene } from '../src/home/scene/graph';
+import { roomPoint } from '../src/home/scene/types';
+import { resolve } from '../src/home/scene/proposal';
+import { buildingLayout, roomOrigin } from '../src/home/camera';
+import { roomIds } from '../src/home/catalogMore';
+const harness = vi.hoisted(() => ({ options: {} as any, chrome: {} as any, finish: vi.fn(), hint: vi.fn(), reduced: false }));
+vi.mock('expo-router', () => ({ router: {} }));
+vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'web' }, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => ({ width: 390, height: 844 }) }));
+vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) }));
+vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useSharedValue: (v: any) => { const ref = React.useRef(v); return { get: () => ref.current, set: (n: any) => { ref.current = n; } }; }, useAnimatedStyle: () => ({}) }));
+vi.mock('../src/components/motion', () => ({ useReducedMotion: () => harness.reduced }));
+vi.mock('../src/state/Store', () => ({ useStore: () => ({ save: { settings: {} } }) }));
+vi.mock('../src/components/Audio', () => ({ useSounds: () => () => {} }));
+vi.mock('../src/home/runtime/useIdleCharacters', () => ({ useIdleCharacters: () => ({ sleeping: {}, wake: () => {} }) }));
+vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { isCurrent: () => true, finish: harness.finish, camera: { get: () => ({ a: .5, b: 0, c: 0, d: .5, tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => [{}, {}] }, cancelAll: () => {}, animateCamera: () => {}, showHint: harness.hint, dropZones: { set: () => {} } }; } }));
+vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: () => null }));
+vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: (props: any) => { harness.chrome = props; return null; }, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
+vi.mock('../src/home/runtime/HomePanels', () => ({ HomePanels: () => null }));
+vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: () => null, portraitDrawerHeight: 200 }));
+vi.mock('../src/home/runtime/StagingTray', () => ({ StagingTray: () => null }));
+vi.mock('../src/home/runtime/Destinations', () => ({ Destinations: () => null }));
+vi.mock('../src/home/runtime/DebugOverlay', () => ({ DebugOverlay: () => null }));
+vi.mock('../src/home/runtime/FriendDrawer', () => ({ FriendDrawer: () => null }));
+vi.mock('../src/home/runtime/CapacityCue', () => ({ CapacityCue: 'CapacityCue', CAPACITY_CUE_MS: 3200, CAPACITY_MESSAGE: 'Put something away to make room.' }));
+vi.mock('../src/home/art/Items', () => ({ ItemArt: () => null }));
+vi.mock('../src/home/art/More', () => ({ MoreItemArt: () => null }));
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+vi.stubGlobal('requestAnimationFrame', () => 1);
+vi.stubGlobal('cancelAnimationFrame', () => {});
+let root: ReturnType<typeof create>;
+beforeEach(() => { vi.useFakeTimers(); });
+afterEach(async () => { if (root) await act(async () => root.unmount()); vi.useRealTimers(); });
+function commitMove(state: ReturnType<typeof starterHome>) {
+  const scene = buildScene(state);
+  const friend = Object.values(scene.entities).find(e => e.character && e.room === 'home')!;
+  const proposal = resolve({ ...scene.rooms.home, entities: scene.entities }, friend, roomPoint(friend.contact.x + 120, friend.contact.y), { scale: .5, release: true });
+  expect(proposal.kind).toBe('floor');
+  const origin = roomOrigin(0, buildingLayout(roomIds.length, false));
+  harness.options.onCommit(0, proposal, { x: proposal.contact.x + origin.x, y: proposal.contact.y + origin.y }, {});
+}
+it('HM-18 Redo shows in Play for 10 s after an Undo, then goes away', async () => {
+  const state = starterHome(), persist = vi.fn((_s: any) => true);
+  await act(async () => { root = create(<HomeScreen initialState={state} persist={persist} />); });
+  expect(harness.chrome.designing).toBe(false);
+  expect(harness.chrome.showRedo).toBe(false);
+  await act(async () => commitMove(state));
+  expect(persist).toHaveBeenCalledTimes(1);
+  await act(async () => harness.chrome.onUndo());
+  expect(harness.chrome.canRedo).toBe(true);
+  expect(harness.chrome.showRedo).toBe(true);
+  await act(async () => { vi.advanceTimersByTime(REDO_VISIBLE_MS - 100); });
+  expect(harness.chrome.showRedo).toBe(true);
+  await act(async () => { vi.advanceTimersByTime(200); });
+  expect(harness.chrome.showRedo).toBe(false);
+  expect(harness.chrome.canRedo).toBe(true); // Redo is still there in Design.
+});
+it('HM-18 a full room shows the capacity picture, again on a second refusal, then it clears', async () => {
+  await act(async () => { root = create(<HomeScreen initialState={starterHome()} persist={() => true} />); });
+  const cue = () => root.root.findAll((n) => (n.type as unknown) === 'CapacityCue');
+  expect(cue()).toHaveLength(0);
+  await act(async () => harness.options.onClear(0, undefined, 'capacity'));
+  expect(cue()).toHaveLength(1);
+  await act(async () => { vi.advanceTimersByTime(3300); });
+  expect(cue()).toHaveLength(0);
+  await act(async () => harness.options.onClear(0, undefined, 'capacity'));
+  expect(cue()).toHaveLength(1);
+});
+it('HM-18 rule 57: put something away, relaunch from the save, and Undo brings it back', async () => {
+  const { useHomeStore } = await import('../src/home/useHomeStore');
+  const saved: any[] = [];
+  let store!: ReturnType<typeof useHomeStore>;
+  function Host({ initial }: { initial?: unknown }) { store = useHomeStore({}, initial, (s) => { saved.push(JSON.parse(JSON.stringify(s))); return true; }); return null; }
+  await act(async () => { root = create(<Host initial={starterHome()} />); });
+  const plant = store.state.rooms.home.instances.find(i => i.item === 'plant')!;
+  await act(async () => store.dispatch({ type: 'put-away', id: plant.id, roomId: 'home' } as never));
+  expect(store.state.rooms.home.instances.some(i => i.id === plant.id)).toBe(false);
+  const relaunch = saved.at(-1);
+  await act(async () => root.unmount());
+  await act(async () => { root = create(<Host initial={relaunch} />); });
+  expect(store.canUndo).toBe(true);
+  await act(async () => store.dispatch({ type: 'undo' }));
+  expect(store.state.rooms.home.instances.find(i => i.id === plant.id)).toEqual(plant);
+});
+
+it('HR-02 after 6 s of quiet one usable thing wiggles once; never more than once per 20 s, and three per quiet', async () => {
+  harness.hint.mockClear(); harness.reduced = false;
+  const { capabilityOf } = await import('../src/home/world');
+  await act(async () => { root = create(<HomeScreen initialState={starterHome()} persist={() => true} />); });
+  await act(async () => { vi.advanceTimersByTime(5900); });
+  expect(harness.hint).not.toHaveBeenCalled();
+  await act(async () => { vi.advanceTimersByTime(200); });
+  expect(harness.hint).toHaveBeenCalledTimes(1);
+  const id = harness.hint.mock.calls[0][0] as string;
+  const instance = starterHome().rooms.home.instances.find((i) => id.endsWith(`/item/${i.id}`));
+  expect(id.includes('/item/portion-') || (instance && capabilityOf(instance.item).toggle)).toBeTruthy();
+  // Only small things wiggle; never a bed, fridge or cabinet.
+  const { buildScene } = await import('../src/home/scene/graph');
+  const { withPortions } = await import('../src/home/runtime/portions');
+  const hinted = withPortions(buildScene(starterHome()), ['home', 'kitchen']).entities[id];
+  expect(hinted.body?.small).toBe(true);
+  await act(async () => { vi.advanceTimersByTime(19000); });
+  expect(harness.hint).toHaveBeenCalledTimes(1);
+  await act(async () => { vi.advanceTimersByTime(1200); });
+  expect(harness.hint).toHaveBeenCalledTimes(2);
+  await act(async () => { vi.advanceTimersByTime(60000); });
+  expect(harness.hint).toHaveBeenCalledTimes(3);
+  // A touch starts a new quiet spell; the next hint waits 6 s from it.
+  const view = root.root.findAll((n) => typeof n.props.onTouchStart === 'function')[0];
+  await act(async () => view.props.onTouchStart());
+  await act(async () => { vi.advanceTimersByTime(5000); });
+  expect(harness.hint).toHaveBeenCalledTimes(3);
+  await act(async () => { vi.advanceTimersByTime(1200); });
+  expect(harness.hint).toHaveBeenCalledTimes(4);
+});
+it('HR-02 nothing wiggles under Reduced Motion, in Design, or with a panel open', async () => {
+  harness.hint.mockClear(); harness.reduced = true;
+  await act(async () => { root = create(<HomeScreen initialState={starterHome()} persist={() => true} />); });
+  await act(async () => { vi.advanceTimersByTime(30000); });
+  expect(harness.hint).not.toHaveBeenCalled();
+  await act(async () => root.unmount());
+  harness.reduced = false;
+  await act(async () => { root = create(<HomeScreen initialState={starterHome()} persist={() => true} />); });
+  await act(async () => harness.chrome.onDesign());
+  await act(async () => { vi.advanceTimersByTime(30000); });
+  expect(harness.hint).not.toHaveBeenCalled();
+  await act(async () => harness.chrome.onDesign());
+  await act(async () => harness.chrome.onFriends());
+  await act(async () => { vi.advanceTimersByTime(30000); });
+  expect(harness.hint).not.toHaveBeenCalled();
+});
