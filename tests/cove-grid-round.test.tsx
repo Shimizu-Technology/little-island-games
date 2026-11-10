@@ -18,7 +18,9 @@ vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set
 vi.mock('react-native', () => ({ AccessibilityInfo: { isScreenReaderEnabled: async () => false, addEventListener: () => ({ remove() {} }) }, ScrollView: 'section', View: 'div', TextInput: 'input', Pressable: 'button', Platform: { OS: 'ios' }, useWindowDimensions: () => ({ width: 393, height: 852 }), PanResponder: { create: (handlers: unknown) => ({ panHandlers: handlers }) }, AppState: { addEventListener: () => ({ remove() {} }) } }));
 vi.mock('react-native-reanimated', async () => { const { useRef } = await import('react'); return { default: { View: 'animated' }, useAnimatedStyle: (fn: () => unknown) => fn(), useSharedValue: (value: number) => useRef({ value, get() { return this.value; }, set(n: number) { this.value = n; } }).current }; });
 vi.mock('react-native-svg', () => ({ default: 'svg', Path: 'path' }));
-vi.mock('expo-router', () => ({ useIsFocused: () => true }));
+vi.mock('expo-router', () => ({ useIsFocused: () => true, router: {} }));
+vi.mock('../src/components/Settings', () => ({ Settings: () => null }));
+vi.mock('../src/personalization/LearnerChip', () => ({ LearnerChip: () => null }));
 vi.mock('../src/components/ui', () => ({ Button: 'button', Copy: 'p', Heading: 'h2', ToggleRow: 'switch', C: {} }));
 vi.mock('../src/components/Text', () => ({ Text: 'span' }));
 vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: db.play }) }));
@@ -105,4 +107,21 @@ it('2 retries blur identity cleanup after an in-flight launch boundary', async (
     await act(async () => { db.envelopeHold = null; release(); await launch; await blur; });
     expect(selectedOwner(store.save)).toBe('a'); expect(progressFor(store.save, owner)?.paused[0].id).toBe('boundary-test');
   } finally { db.envelopeHold = null; release?.(); await act(async () => screen?.unmount()); }
+});
+
+it('G3 R2 Challenge route holds its page during a grid touch, releases on cancel and supplies accepted feedback', async()=>{
+  const { ChallengeFrame }=await import('../src/challenge/ChallengeFrame');
+  const entry=fixture('digits');registerSaveContent(entry.catalog,catalogManifest(entry.catalog));let screen!:ReactTestRenderer;
+  function Frame(){const s=useStore();return s.ready?<ChallengeFrame entry={entry}/>:null;}
+  try{
+    await act(async()=>{screen=create(<StoreProvider><Probe/><Frame/></StoreProvider>);});
+    await act(async()=>screen.root.findAllByType('button').find(b=>b.children.includes('Start this puzzle'))!.props.onPress());
+    const page=()=>screen.root.findByType('section'),input=()=>screen.root.findByProps({testID:'cove-grid-input'}).props;
+    expect(page().props.scrollEnabled).toBe(true);
+    await act(async()=>input().onPanResponderGrant({nativeEvent:{locationX:4,locationY:4}},{numberActiveTouches:1,dx:0,dy:0}));
+    expect(page().props.scrollEnabled).toBe(false);
+    await act(async()=>input().onPanResponderTerminate());expect(page().props.scrollEnabled).toBe(true);
+    await act(async()=>screen.root.findAllByType('button').filter(b=>b.props.accessibilityLabel?.startsWith('Row '))[1].props.onPress());
+    expect(stateOf(entry).revision).toBe(1);expect(db.play).toHaveBeenCalledTimes(1);
+  }finally{await act(async()=>screen?.unmount());}
 });

@@ -51,7 +51,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
     try {
       const next = entry.move(before, action);
       if (!next) { setMessage('That change could not be saved. Your accepted draft is kept.'); return; }
-      if (next.result && !next.partner) { setPending(next); return; }
+      if (next.result && !next.partner && solvingPeople(store.save).some(p => p.id !== owner)) { setPending(next); return; }
       if (next.result) { boundary.current = true; setBusy(true); }
       if (await store.challengeSave(next, expected(before))) {
         if (!current.current || current.current.id === next.id && current.current.revision <= next.revision) current.current = next;
