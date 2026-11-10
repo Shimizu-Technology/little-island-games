@@ -1,7 +1,7 @@
 import { BadgeResultCard } from '../badges/ResultCard';
 import { Companion } from "../islander/Companion";
 import { resultEvent } from "../islander/reactions";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Platform, ScrollView, View, useWindowDimensions } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
@@ -15,10 +15,14 @@ import { useStore } from "../state/Store";
 import { useRoundPractice } from "../practice/useRoundPractice";
 import { Seat } from "../games/match";
 import { BoardId, BoardSession, catalog, createSession, engines, playAgain, strengths, Strength, undo } from "./index";
+import { edgeOf } from "./types";
+import { computerTask, hintTask, runSteps, runTask, type Cancel } from "../playPolicies/decide";
+import { headStartLabel, headStarts, rivalFor } from "../playPolicies/rivals";
+import { reviewGame, type KeyMoment } from "../playPolicies/review";
 import { Text } from "../components/Text";
 import { BoardArt, Piece } from "./Art";
 import { Boards, demoPosition } from "./Boards";
-import { coordinate } from "./hidden-canoes/engine";
+import { coordinate, target as canoeTarget } from "./hidden-canoes/engine";
 import { hintReason as coconutHintReason } from "./coconut-drop/engine";
 import { hintReason as netsHintReason, edgeDots } from "./fishing-nets/engine";
 const strengthNames = { gentle: "Gentle", growing: "Growing", challenge: "Challenge" };
@@ -91,7 +95,11 @@ function Setup({
     [size, setSize] = useState(previous?.position.size ?? info.sizes[0]),
     [names, setNames] = useState<[string, string]>(previous?.mode === "together" ? previous.match.names : ["", ""]),
     [starter, setStarter] = useState<Seat>(previous?.position.starter ?? 0),
-    [alternate, setAlternate] = useState(previous?.match.alternate ?? true);
+    [alternate, setAlternate] = useState(previous?.match.alternate ?? true),
+    [edge, setEdge] = useState(previous?.position.edge?.[0] ?? 0);
+  const rival = game === "reef-sweep" ? null : rivalFor(game, strength),
+    offers = game === "reef-sweep" ? [] : headStarts(game, size),
+    headStart = offers.find((h) => h.amount === edge);
   return (
     <SafeAreaView style={styles.page}>
       <ScrollView
@@ -105,6 +113,11 @@ function Setup({
           <Copy style={{ textAlign: "center" }}>{info.description}</Copy>
         </View>
         <Copy>{info.rule}</Copy>
+        {game === "shell-pits" && (
+          <Button quiet onPress={() => router.push({ pathname: "/challenge", params: { game: "shell-pits" } })}>
+            Endgame puzzles · win in a few sows
+          </Button>
+        )}
         {game !== "reef-sweep" && (
           <>
             <Label>Who is playing?</Label>
@@ -116,22 +129,34 @@ function Setup({
                 Two players
               </Chip>
             </View>
-            {mode === "solo" ? (
+            {mode === "solo" && rival ? (
               <>
-                <Label>Computer strength</Label>
+                <Label>Choose a rival</Label>
                 <View style={[styles.row, { flexWrap: "wrap" }]}>
                   {strengths.map((level) => (
                     <Chip key={level} selected={strength === level} onPress={() => setStrength(level)}>
-                      {strengthNames[level]}
+                      {`${rivalFor(game as Exclude<BoardId, "reef-sweep">, level).name} · ${strengthNames[level]}`}
                     </Chip>
                   ))}
                 </View>
                 <Copy style={{ fontSize: 14 }}>
-                  {strength === "gentle"
-                    ? "A relaxed companion for a first game."
-                    : strength === "growing"
-                      ? "Plans a little further. Take your time."
-                      : "Looks ahead and notices useful patterns."}
+                  {rival.name} is {rival.who}. {rival.plays}
+                </Copy>
+                <Label>Head start</Label>
+                <View style={[styles.row, { flexWrap: "wrap" }]}>
+                  <Chip selected={!headStart} onPress={() => setEdge(0)}>
+                    Even game
+                  </Chip>
+                  {offers.map((h) => (
+                    <Chip key={h.amount} selected={headStart === h} onPress={() => setEdge(h.amount)}>
+                      {h.label}
+                    </Chip>
+                  ))}
+                </View>
+                <Copy style={{ fontSize: 14 }}>
+                  {headStart
+                    ? `${headStart.detail} ${rival.name} still plays its best. The head start shows on the board the whole game.`
+                    : `No head start. ${rival.name} plays its best either way.`}
                 </Copy>
               </>
             ) : (
@@ -141,7 +166,7 @@ function Setup({
             <View style={[styles.row, { flexWrap: "wrap" }]}>
               {([0, 1] as const).map((seat) => (
                 <Chip key={seat} selected={starter === seat} onPress={() => setStarter(seat)}>
-                  {mode === "solo" ? (seat === 0 ? "You" : "Computer") : names[seat].trim() || `Player ${seat + 1}`}
+                  {mode === "solo" ? (seat === 0 ? "You" : (rival?.name ?? "Computer")) : names[seat].trim() || `Player ${seat + 1}`}
                 </Chip>
               ))}
             </View>
@@ -180,8 +205,9 @@ function Setup({
                 strength,
                 size,
                 starter,
-                names: mode === "solo" ? ["You", "Computer"] : names,
+                names: mode === "solo" ? ["You", rival?.name ?? "Computer"] : names,
                 alternate,
+                edge: mode === "solo" && headStart ? [headStart.amount, 0] : undefined,
               }),
               taught: previous?.taught ?? false,
             })
@@ -256,17 +282,59 @@ function Round({
     };
   }, [conceal]);
   const commit = useCallback((next: BoardSession) => store.boardUpdate(s.game, next, s, store.epoch), [store, s]);
+  const rival = s.mode === "solo" && s.game !== "reef-sweep" ? s.match.names[1] : null,
+    edge = edgeOf(p),
+    headStart =
+      s.game !== "reef-sweep" && (edge[0] || edge[1])
+        ? headStartLabel(s.game, edge[0] || edge[1], p.size) ?? `${edge[0] || edge[1]} ahead`
+        : null,
+    headStartFor = edge[0] ? s.match.names[0] : s.match.names[1];
   useEffect(() => {
     if (!ai || teaching) return;
+    // The search runs in short slices after a brief pause; leaving cancels it.
+    const cancel: Cancel = { cancelled: false };
     const timer = setTimeout(() => {
-      const action = engine.choose(p, s.strength);
-      if (action !== null) {
+      const task = computerTask(s);
+      if (!task) return;
+      void runTask(task, cancel).then((action) => {
+        if (cancel.cancelled || action === null) return;
         const position = engine.move(p, action);
         if (commit({ ...s, position })) play(position.outcome !== null && position.outcome === 0 ? "win" : "tap");
-      }
+      });
     }, 380);
-    return () => clearTimeout(timer);
+    return () => {
+      cancel.cancelled = true;
+      clearTimeout(timer);
+    };
   }, [ai, teaching, engine, p, s, commit, play]);
+  const hintRun = useRef<Cancel | null>(null),
+    [hinting, setHinting] = useState(false);
+  useEffect(
+    () => () => {
+      if (hintRun.current) hintRun.current.cancelled = true;
+    },
+    [token]
+  );
+  const [review, setReview] = useState<KeyMoment | null | "working" | "none">(null);
+  const reviewRun = useRef<Cancel | null>(null);
+  useEffect(
+    () => () => {
+      if (reviewRun.current) reviewRun.current.cancelled = true;
+    },
+    [s.id]
+  );
+  const reviewSeat = s.mode === "solo" ? 0 : typeof p.outcome === "number" ? p.outcome : null;
+  const seeWinningMove = () => {
+    if (s.game === "reef-sweep" || reviewSeat === null || p.outcome === null) return;
+    const cancel: Cancel = { cancelled: false };
+    reviewRun.current = cancel;
+    setReview("working");
+    const task = reviewGame(s.game, p, reviewSeat);
+    void runSteps(task, () => task.result(), cancel).then((moment) => {
+      if (!cancel.cancelled) setReview(moment ?? "none");
+    });
+    play("tap");
+  };
   const move = (action: number) => {
     if (locked) return;
     const position = engine.move(p, action);
@@ -299,7 +367,18 @@ function Round({
     }
   };
   const showHint = () => {
-    const action = engine.choose(p, "challenge");
+    if (s.game === "reef-sweep") return explain(engine.choose(p, "challenge"));
+    const task = hintTask(s);
+    if (!task) return explain(null);
+    const cancel: Cancel = { cancelled: false };
+    hintRun.current = cancel;
+    setHinting(true);
+    void runTask(task, cancel).then((action) => {
+      setHinting(false);
+      if (!cancel.cancelled) explain(action);
+    });
+  };
+  const explain = (action: number | null) => {
     setHint(action);
     if (action === null) {
       setNotice(
@@ -341,7 +420,7 @@ function Round({
   const title =
     p.outcome === null
       ? ai
-        ? "Computer is thinking…"
+        ? `${rival ?? "Computer"} is thinking…`
         : concealed
           ? `Pass to ${s.match.names[p.turn]}`
           : s.game === "reef-sweep"
@@ -356,7 +435,7 @@ function Round({
           : s.mode === "solo"
             ? p.outcome === 0
               ? "You win!"
-              : "The computer wins this time."
+              : `${rival ?? "The computer"} wins this time.`
             : `${s.match.names[p.outcome]} wins!`;
   return (
     <SafeAreaView style={styles.page}>
@@ -408,9 +487,14 @@ function Round({
                 : "Your family score includes this round. Play again to carry it forward."
               : s.game === "reef-sweep"
                 ? "First tap is safe. Open every pearl space."
-                : `${s.mode === "solo" ? strengthNames[s.strength] + " computer" : "Family match"} · ${s.game === "shell-pits" ? (p.turn === 0 ? "Circle side below" : "Square side above") : s.game === "fishing-nets" ? "Closing a box gives another turn." : s.game === "hidden-canoes" ? "Find all seven canoe spaces." : "Four in a line wins."}`
+                : `${s.mode === "solo" ? `${rival} · ${strengthNames[s.strength]}` : "Family match"} · ${s.game === "shell-pits" ? (p.turn === 0 ? "Circle side below" : "Square side above") : s.game === "fishing-nets" ? "Closing a box gives another turn." : s.game === "hidden-canoes" ? (canoeTarget(p, p.turn) === 7 ? "Find all seven canoe spaces." : `Find ${canoeTarget(p, p.turn)} canoe spaces.`) : "Four in a line wins."}`
           }
         />
+        {headStart && (
+          <Copy accessibilityLabel={`Head start for ${headStartFor}: ${headStart}`} style={{ fontSize: 14, color: C.ink, padding: 10, backgroundColor: "#FFF4D6", borderRadius: 12 }}>
+            Head start for {headStartFor}: {headStart.charAt(0).toLowerCase() + headStart.slice(1)}.{rival && edge[0] ? ` ${rival} still plays its best.` : ""}
+          </Copy>
+        )}
         {p.outcome !== null && <BadgeResultCard round={s.id}/>}
         {p.outcome !== null && success && <Celebrate burst={1} />}
         {p.outcome !== null && (
@@ -434,8 +518,13 @@ function Round({
         )}
         <View style={[styles.row, { flexWrap: "wrap", justifyContent: "center" }]}>
           {p.outcome === null && !concealed && (
-            <Button quiet compact disabled={locked} onPress={showHint}>
-              Hint
+            <Button quiet compact disabled={locked || hinting} onPress={showHint}>
+              {hinting ? "Thinking…" : "Hint"}
+            </Button>
+          )}
+          {p.outcome !== null && s.game !== "reef-sweep" && reviewSeat !== null && review === null && (
+            <Button quiet compact onPress={seeWinningMove}>
+              See the winning move
             </Button>
           )}
           {(s.mode === "solo" || s.game === "reef-sweep") && s.game !== "hidden-canoes" && (
@@ -475,7 +564,44 @@ function Round({
         <Copy style={{ fontSize: 12, textAlign: "center" }}>Saved on this device · No rush, take your time.</Copy>
         </View>
         <View style={{ flex: wide ? 1.15 : undefined, gap: 12, justifyContent: "center" }}>
-        {concealed ? (
+        {p.outcome !== null && review !== null ? (
+          <View accessibilityLiveRegion="polite" style={{ gap: 10, padding: 14, backgroundColor: C.paper, borderRadius: 20 }}>
+            {review === "working" ? (
+              <Copy>Looking back over the game…</Copy>
+            ) : review === "none" ? (
+              <>
+                <Heading style={{ fontSize: 21 }}>No single turning point</Heading>
+                <Copy>
+                  The look-back didn’t find one move that clearly changed this game. Play again, or try a head start.
+                </Copy>
+              </>
+            ) : (
+              <>
+                <Heading style={{ fontSize: 21 }}>{review.title}</Heading>
+                <Copy style={{ color: C.ink }}>{review.text}</Copy>
+                <Copy style={{ fontSize: 13 }}>
+                  {s.game === "shell-pits"
+                    ? "The board as it was before that sow. The outlined pit is the sow to look at; the gold ring shows where its last shell lands."
+                    : `The board as it was before that ${s.game === "hidden-canoes" ? "search" : "move"}. Gold marks the ${s.game === "hidden-canoes" ? "search" : "move"}.`}
+                </Copy>
+                <Boards
+                  key={`review:${review.ply}`}
+                  game={s.game}
+                  state={review.before}
+                  width={Math.min(available, 420)}
+                  hint={review.show}
+                  onMove={() => {}}
+                  locked
+                  still
+                  speak={play}
+                />
+              </>
+            )}
+            <Button quiet compact onPress={() => setReview(null)}>
+              Back to the final board
+            </Button>
+          </View>
+        ) : concealed ? (
           <View style={{ padding: 24, gap: 16, alignItems: "center", backgroundColor: "#DEEDEF", borderRadius: 24 }}>
             <BoardArt game="hidden-canoes" size={110} />
             <Heading style={{ fontSize: 24, textAlign: "center" }}>Keep the lagoon private</Heading>

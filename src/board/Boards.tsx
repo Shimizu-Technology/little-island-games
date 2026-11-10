@@ -6,9 +6,10 @@ import { Button, C, Copy, PressableScale, font } from "../components/ui";
 import { other } from "../games/match";
 import { Piece } from "./Art";
 import { BoardId, engines, Position } from "./index";
+import { edgeOf } from "./types";
 import { edgeDots, edgeFromDots } from "./fishing-nets/engine";
 import { lines } from "./coconut-drop/engine";
-import { coordinate } from "./hidden-canoes/engine";
+import { coordinate, target } from "./hidden-canoes/engine";
 import { sowPath } from "./shell-pits/engine";
 import { urchins } from "./reef-sweep/engine";
 type Props = {
@@ -18,6 +19,8 @@ type Props = {
   onMove: (m: number) => void;
   locked?: boolean;
   hint?: number | null;
+  /** Display only, for looking back at a finished game: no move controls. */
+  still?: boolean;
   flag?: boolean;
   speak: (key: string) => unknown;
 };
@@ -228,12 +231,13 @@ function Nets({ state: s, width, onMove, locked, hint }: Props) {
         })}
       </View>
       <Copy style={{ fontSize: 14 }}>
-        ● {s.scores[0]} nets · ■ {s.scores[1]} nets
+        ● {s.scores[0]}{edgeOf(s)[0] ? ` + ${edgeOf(s)[0]} head start` : ""} nets · ■ {s.scores[1]}
+        {edgeOf(s)[1] ? ` + ${edgeOf(s)[1]} head start` : ""} nets
       </Copy>
     </View>
   );
 }
-function Pits({ state: s, width, onMove, locked, hint, speak }: Props) {
+function Pits({ state: s, width, onMove, locked, hint, speak, still }: Props) {
   const [selected, setSelected] = useState<number | null>(null),
     [count, setCount] = useState(0),
     [counting, setCounting] = useState(false);
@@ -260,7 +264,7 @@ function Pits({ state: s, width, onMove, locked, hint, speak }: Props) {
     <PressableScale
       key={i}
       accessibilityRole="button"
-      accessibilityLabel={`Pit ${i < 6 ? i + 1 : i - 6}, ${i < 6 ? "circle" : "square"} side, ${s.board[i]} shells`}
+      accessibilityLabel={`Pit ${i < 6 ? i + 1 : i - 6}, ${i < 6 ? "circle" : "square"} side, ${s.board[i]} ${s.board[i] === 1 ? "shell" : "shells"}`}
       accessibilityState={{ disabled: !!locked || !legal.includes(i), selected: pit === i }}
       disabled={locked || !legal.includes(i)}
       onPress={() => {
@@ -313,6 +317,7 @@ function Pits({ state: s, width, onMove, locked, hint, speak }: Props) {
           >
             <NumberText size={17}>
               {i === 13 ? "■" : "●"} Store {s.board[i]}
+              {edgeOf(s)[i === 13 ? 1 : 0] ? ` + ${edgeOf(s)[i === 13 ? 1 : 0]}` : ""}
             </NumberText>
           </View>
         ))}
@@ -323,7 +328,7 @@ function Pits({ state: s, width, onMove, locked, hint, speak }: Props) {
       {pit !== null && path.length > 0 ? (
         <View style={{ gap: 8, padding: 6 }}>
           <Copy style={{ fontSize: 14, color: C.ink }}>
-            {s.board[pit]} shells. Last shell →{" "}
+            {s.board[pit]} {s.board[pit] === 1 ? "shell" : "shells"}. Last shell →{" "}
             {last === 6
               ? "circle store"
               : last === 13
@@ -334,6 +339,8 @@ function Pits({ state: s, width, onMove, locked, hint, speak }: Props) {
           <Copy style={{ fontSize: 13 }}>
             {count ? `Counting: ${count} of ${path.length}` : "The gold ring marks the last pit."}
           </Copy>
+{!still && (
+            <>
           <Button
             quiet
             compact
@@ -348,6 +355,8 @@ function Pits({ state: s, width, onMove, locked, hint, speak }: Props) {
           <Button disabled={locked} onPress={() => onMove(pit)}>
             Sow shells
           </Button>
+            </>
+          )}
         </View>
       ) : (
         <Copy style={{ textAlign: "center", fontSize: 14 }}>
@@ -423,7 +432,10 @@ function Canoes({ state: s, width, onMove, locked, hint }: Props) {
           </View>
         ))}
       </View>
-      <Copy style={{ fontSize: 14 }}>{s.scores[seat]} of 7 canoe spaces found</Copy>
+      <Copy style={{ fontSize: 14 }}>
+        {s.scores[seat]} of {target(s, seat)} canoe spaces found
+        {edgeOf(s)[seat] ? ` (head start: ${target(s, seat)} instead of 7)` : ""}
+      </Copy>
     </View>
   );
 }
