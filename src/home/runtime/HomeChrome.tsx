@@ -1,8 +1,10 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reanimated";
 import Svg, { Circle, Path } from "react-native-svg";
 import { roomIds, roomNames, type RoomId } from "../catalogMore";
 import { ItemArt } from "../art/Items";
+import type { RoomHover } from "./useInteraction";
 const ink = "#284F4B";
 export function Tool({
   label,
@@ -65,7 +67,54 @@ function FindIcon() {
     </Svg>
   );
 }
-export function HomeChrome({
+export type WindowRect = { x: number; y: number; width: number; height: number };
+/** A room button is also a drop target (HM-14): it fills while a carried thing waits on it. */
+function RoomButton({ id, selected, onRoom, onFriends, hover, onRect, size, token }: {
+  token: number;
+  id: RoomId; selected: boolean; onRoom: (room: RoomId) => void; onFriends: () => void;
+  hover?: SharedValue<RoomHover | null>; onRect?: (room: RoomId, rect: WindowRect) => void; size: number;
+}) {
+  const ref = React.useRef<View>(null);
+  const measure = React.useCallback(() => ref.current?.measureInWindow((x, y, width, height) => onRect?.(id, { x, y, width, height })), [id, onRect]);
+  React.useEffect(() => { if (token) measure(); }, [token, measure]);
+  const ring = useAnimatedStyle(() => {
+    const on = hover?.value?.room === id;
+    return { opacity: on ? 1 : 0, transform: [{ scale: on ? 1.12 : 1 }] };
+  });
+  const fill = useAnimatedStyle(() => ({ height: `${(hover?.value?.room === id ? hover.value.progress : 0) * 100}%` }));
+  return (
+    <Pressable
+      ref={ref}
+      onLayout={measure}
+      accessibilityRole="button"
+      accessibilityLabel={`Go to ${roomNames[id]}`}
+      accessibilityHint="Hold to bring friends here. Carry something here to move it."
+      accessibilityState={{ selected }}
+      onPress={() => onRoom(id)}
+      onLongPress={() => {
+        onRoom(id);
+        onFriends();
+      }}
+      style={[styles.room, { width: size, height: size }, selected && { borderColor: "#477D60", backgroundColor: "#E3EBC9" }]}
+    >
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 15, borderWidth: 3, borderColor: "#477D60",
+        backgroundColor: "#FFF8E9", overflow: "hidden", justifyContent: "flex-end" }, ring]}>
+        <Animated.View style={[{ width: "100%", backgroundColor: "#CFE6B8" }, fill]} />
+      </Animated.View>
+      <ItemArt
+        item={({ home: "bed", kitchen: "fridge", treehouse: "plant", beach: "shell" } as const)[id]}
+        size={Math.round(size * 0.8)}
+        reduced
+      />
+    </Pressable>
+  );
+}
+export function HomeChrome(props: Parameters<typeof HomeChromeView>[0]) {
+  // Room buttons are drop targets in window space; re-measure after the bar scrolls.
+  const [token, setToken] = React.useState(0);
+  return <HomeChromeView {...props} measureToken={token} onScrolled={() => setToken((n) => n + 1)} />;
+}
+function HomeChromeView({
   room,
   overview,
   designing,
@@ -85,7 +134,18 @@ export function HomeChrome({
   onHeaderLayout,
   title,
   saveStatus,
+  roomHover,
+  onRoomRect,
+  large = false,
+  measureToken = 0,
+  onScrolled,
 }: {
+  measureToken?: number;
+  onScrolled?: () => void;
+  roomHover?: SharedValue<RoomHover | null>;
+  onRoomRect?: (room: RoomId, rect: WindowRect) => void;
+  /** HR-03: the grown-ups' larger-target mode. */
+  large?: boolean;
   room: RoomId;
   overview: boolean;
   designing: boolean;
@@ -126,28 +186,12 @@ export function HomeChrome({
         />
       </View>
       <View testID="home-bottom-bar" style={[styles.navigation, { bottom }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navigationItems}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navigationItems}
+          onScrollEndDrag={onScrolled} onMomentumScrollEnd={onScrolled}>
           <Tool label="Whole house" symbol="⌂" selected={overview} onPress={onOverview} />
           {roomIds.map((id) => (
-            <Pressable
-              key={id}
-              accessibilityRole="button"
-              accessibilityLabel={`Go to ${roomNames[id]}`}
-              accessibilityHint="Hold to bring friends here."
-              accessibilityState={{ selected: room === id && !overview }}
-              onPress={() => onRoom(id)}
-              onLongPress={() => {
-                onRoom(id);
-                onFriends();
-              }}
-              style={[styles.room, room === id && !overview && { borderColor: "#477D60", backgroundColor: "#E3EBC9" }]}
-            >
-              <ItemArt
-                item={({ home: "bed", kitchen: "fridge", treehouse: "plant", beach: "shell" } as const)[id]}
-                size={38}
-                reduced
-              />
-            </Pressable>
+            <RoomButton key={id} id={id} selected={room === id && !overview} onRoom={onRoom} onFriends={onFriends}
+              hover={roomHover} onRect={onRoomRect} size={large ? 64 : 48} token={measureToken} />
           ))}
           <Pressable
             accessibilityRole="button"

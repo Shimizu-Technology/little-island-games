@@ -480,7 +480,19 @@ export function HomeScreen({
     onReleaseProbe: lab ? onReleaseProbe : undefined,
     onTrace: lab && labKit ? onTrace : undefined,
     viewportOffset,
+    currentRoom: room,
+    // HM-14: a carried thing held on a room button takes the child there, still carried.
+    onRoomHover: (next) => {
+      setOverview(false);
+      setRoom(next);
+      live.current.store.dispatch({ type: "room", room: next });
+    },
   });
+  const zoneRects = useRef<Record<string, { x: number; y: number; width: number; height: number }>>({});
+  const onRoomRect = useCallback((id: RoomId, rect: { x: number; y: number; width: number; height: number }) => {
+    zoneRects.current[id] = rect;
+    runtime.current?.dropZones.set(Object.entries(zoneRects.current).map(([room, r]) => ({ kind: "room" as const, room: room as RoomId, ...r })));
+  }, []);
   useLayoutEffect(() => {
     runtime.current = interaction;
   });
@@ -740,6 +752,8 @@ export function HomeScreen({
           setPlacing(undefined);
         }}
         onRoom={goRoom}
+        roomHover={interaction.roomHover}
+        onRoomRect={onRoomRect}
         saveStatus={saveStatus}
       />
       <View style={{ flex: 1, flexDirection: vertical ? "row" : "column" }}>

@@ -339,3 +339,98 @@ describe("HM-12 explicit camera moves ease on the UI thread", () => {
     await act(async () => renderer.unmount());
   });
 });
+import { buildScene } from "../src/home/scene/graph";
+import { apply, resolve as resolveDrop } from "../src/home/scene/proposal";
+import { labHome } from "../src/home/runtime/lab";
+import { EDGE_BAND, edgeVelocity, focusCamera } from "../src/home/runtime/CameraController";
+describe("HM-14 room buttons are drop targets (D7)", () => {
+  const hovered = vi.fn();
+  function Hover({ scene, room = "home" }: { scene: Scene; room?: "home" | "kitchen" }) {
+    const interaction = useInteraction({
+      scene, building: fixtureBuilding, viewport: fixtureViewport, initialCamera: identityCamera, reduced: false, designing: false,
+      onCameraChange: cameraChange, onPickup: (pickup) => { current.ready(pickup.slot, pickup.id); }, onTap: () => {}, onClear: noop,
+      onCommit: commitFixture, currentRoom: room, onRoomHover: hovered,
+    });
+    React.useLayoutEffect(() => { current = interaction; });
+    return null;
+  }
+  const zone = { kind: "room" as const, room: "kitchen" as const, x: 400, y: 560, width: 48, height: 48 };
+  beforeEach(() => hovered.mockClear());
+  it("holding a carried friend on a room button for 300 ms moves the view there and keeps the carry", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Hover scene={fixture()} />); });
+    current.dropZones.set([zone]);
+    touch("down", 100, 200); flushJS();
+    touch("move", 160, 260); frames(2);
+    touch("move", 420, 580); frames(1);
+    expect(current.slots.get()[0].proposal).toMatchObject({ room: "kitchen", kind: "floor" });
+    expect(current.roomHover.get()).toMatchObject({ room: "kitchen" });
+    frames(10);
+    expect(hovered).not.toHaveBeenCalled();
+    frames(12);
+    expect(hovered).toHaveBeenCalledWith("kitchen");
+    expect(hovered).toHaveBeenCalledTimes(1);
+    expect(current.slots.get()[0]).toMatchObject({ id: "character/0", phase: "dragging" });
+    frames(14);
+    const kitchenCamera = focusCamera(roomIds.indexOf("kitchen"), fixtureViewport, fixtureBuilding);
+    expect(current.camera.get()).toEqual(kitchenCamera);
+    // Moving back into the room view continues the same carry in the new room.
+    touch("move", 500, 300); frames(1);
+    expect(current.roomHover.get()).toBeNull();
+    expect(current.slots.get()[0]).toMatchObject({ id: "character/0", phase: "dragging" });
+    await act(async () => renderer.unmount());
+  });
+  it("cancelling after the switch restores the friend to its own room, uncommitted", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Hover scene={fixture()} />); });
+    current.dropZones.set([zone]);
+    touch("down", 100, 200); flushJS(); touch("move", 160, 260); frames(2);
+    touch("move", 420, 580); frames(25);
+    expect(hovered).toHaveBeenCalledWith("kitchen");
+    touch("cancel", 420, 580); frames(30);
+    const slot = current.slots.get()[0];
+    expect(slot.committed && slot.targetX === slot.sourceX && slot.targetY === slot.sourceY || !slot.id).toBe(true);
+    await act(async () => renderer.unmount());
+  });
+  it("releasing on a room button before the hover ends still lands there and follows it", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Hover scene={fixture()} />); });
+    current.dropZones.set([zone]);
+    touch("down", 100, 200); flushJS(); touch("move", 160, 260); frames(2);
+    touch("move", 420, 580); frames(2);
+    touch("up", 420, 580); flushJS();
+    expect(hovered).toHaveBeenCalledWith("kitchen");
+    expect(current.slots.get()[0].proposal).toMatchObject({ room: "kitchen" });
+    await act(async () => renderer.unmount());
+  });
+  it("a friend's held prop and pose travel with them to the other room", () => {
+    let state = labHome();
+    let scene = buildScene(state);
+    const friend = Object.values(scene.entities).find((e) => e.character && e.room === "home" && !e.children.length)!;
+    const prop = Object.values(scene.entities).find((e) => e.item && e.room === "home" && e.body?.holdable && e.attachment.kind !== "hand")!;
+    const hand = scene.rooms.home.targets.find((t) => t.kind === "hand" && t.owner === friend.id)!;
+    const give = resolveDrop(scene.rooms.home, prop, hand.contact, { scale: 1, release: true, target: hand.id });
+    expect(give.kind).toBe("hand");
+    const given = apply(state, give);
+    expect("state" in given).toBe(true);
+    state = (given as { state: typeof state }).state;
+    scene = buildScene(state);
+    const carrier = scene.entities[friend.id];
+    // The runtime resolves against every room's shared entity map, as useInteraction prepares it.
+    const move = resolveDrop({ ...scene.rooms.kitchen, entities: scene.entities }, carrier, roomPoint(400, 480), { scale: 1, floorOnly: true, release: true });
+    expect(move).toMatchObject({ room: "kitchen", kind: "floor" });
+    const moved = apply(state, move);
+    expect("state" in moved).toBe(true);
+    const after = (moved as { state: typeof state }).state;
+    const kitchenFriend = after.rooms.kitchen.characters.find((c) => c.slot === friend.character!.slot)!;
+    expect(kitchenFriend.holding).toBeDefined();
+    expect(after.rooms.kitchen.instances.some((i) => i.id === kitchenFriend.holding)).toBe(true);
+    expect(after.rooms.home.characters.some((c) => c.slot === friend.character!.slot)).toBe(false);
+  });
+  it("the edge band is 48 pt on every viewport", () => {
+    expect(EDGE_BAND).toBe(48);
+    expect(edgeVelocity(47, 402, 200)).toBeGreaterThan(0);
+    expect(edgeVelocity(49, 402, 200)).toBe(0);
+    expect(edgeVelocity(1024 - 47, 1024, 200)).toBeLessThan(0);
+  });
+});

@@ -94,10 +94,12 @@ export function roomAtScreen(x: number, y: number, camera: CameraMatrix, buildin
   }
   return -1;
 }
+export const EDGE_BAND = 48;
 export function edgeVelocity(x: number, width: number, elapsed: number): number {
   "worklet";
   if (elapsed < 180) return 0;
-  const band = Math.max(24, Math.min(48, width * 0.06));
+  // HM-14 (Leon's D7): a 48 pt band on every device, matching the carry gate.
+  const band = EDGE_BAND;
   if (x < band) return 360 * Math.min(1, (band - x) / band) ** 2;
   if (x > width - band) return -360 * Math.min(1, (x - width + band) / band) ** 2;
   return 0;

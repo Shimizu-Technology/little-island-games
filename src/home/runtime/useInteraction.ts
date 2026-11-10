@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import { runOnJS, runOnUI, useFrameCallback, useSharedValue, type SharedValue, type FrameInfo } from "react-native-reanimated";
-import { roomIds } from "../catalogMore";
+import { roomIds, type RoomId } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { transition, idleController, type ControllerState, type ControllerEvent } from "../scene/controller";
 import { screenToRoom, type CameraMatrix } from "../scene/camera";
@@ -20,6 +20,8 @@ import { capabilityOf } from "../world";
 import {
   boundCamera,
   edgeVelocity,
+  EDGE_BAND,
+  focusCamera,
   panInertia,
   includeBounds,
   roomAtScreen,
@@ -101,6 +103,17 @@ export type Pickup = CaptureToken & {
   identities?: Record<string, string>;
   committedId?: string;
 };
+export const ROOM_HOVER_MS = 300;
+export type DropZone =
+  | { kind: "room"; room: RoomId; x: number; y: number; width: number; height: number }
+  | { kind: "drawer"; x: number; y: number; width: number; height: number };
+export type RoomHover = { room: RoomId; since: number; progress: number; switched: boolean };
+/** Window coordinates, as gesture absolute positions are. */
+export function zoneAt(zones: readonly DropZone[], x: number, y: number): DropZone | undefined {
+  "worklet";
+  for (const zone of zones) if (x >= zone.x && x <= zone.x + zone.width && y >= zone.y && y <= zone.y + zone.height) return zone;
+  return undefined;
+}
 export const CAMERA_EASE_MS = 180;
 export const DOOR_MS = 160;
 export type CameraTween = { from: CameraMatrix; to: CameraMatrix; since: number; duration: number; door: boolean };
@@ -202,6 +215,8 @@ export function useInteraction({
   onReleaseProbe,
   onTrace,
   viewportOffset,
+  currentRoom,
+  onRoomHover,
 }: {
   scene: Scene;
   building: Building;
@@ -220,6 +235,9 @@ export function useInteraction({
   /** Lab-only local log. Omitted everywhere else, including every family build. */
   onTrace?: (event: TraceEvent) => void;
   viewportOffset?: SharedValue<{ x: number; y: number }>;
+  /** The room the child is looking at; a held room-button hover moves there (HM-14). */
+  currentRoom?: RoomId;
+  onRoomHover?: (room: RoomId) => void;
 }) {
   const epoch = useSharedValue(0),
     captureSequence = useSharedValue(0);
@@ -274,6 +292,10 @@ export function useInteraction({
   const revealPan = useSharedValue<{ from: CameraMatrix; to: CameraMatrix; since: number } | null>(null);
   // HM-12 / HR-02: explicit camera moves ease on the UI thread; a floor change dips through a veil.
   const cameraTween = useSharedValue<CameraTween | null>(null);
+  // HM-14: window-space places a carried thing can be dropped on outside the room view.
+  const dropZones = useSharedValue<DropZone[]>([]);
+  const roomHover = useSharedValue<RoomHover | null>(null);
+  const activeRoom = useSharedValue<string>(currentRoom ?? "");
   const veil = useSharedValue(0);
   const pinchMid = useSharedValue({ x: 0, y: 0 });
   const pinchDistance = useSharedValue(0);
@@ -356,6 +378,7 @@ export function useInteraction({
     refreshed.forEach((index) => onDestination?.(index, scene));
   }, [scene, resolverScene, roomPayloads, hits, prepared, hitTable, renderedRevision, slots, building, onDestination, expectedLayout, layoutTokens]);
 
+  useLayoutEffect(() => { activeRoom.set(currentRoom ?? ""); }, [currentRoom, activeRoom]);
   const movable = useSharedValue<Record<string, boolean>>({});
   useLayoutEffect(() => {
     movable.set(
@@ -386,6 +409,12 @@ export function useInteraction({
     "worklet";
     const subject = subjectFor(slot.id);
     if (!subject) return undefined;
+    const zone = slot.catalog ? undefined : zoneAt(dropZones.value, slot.absoluteX, slot.absoluteY);
+    if (zone?.kind === "room")
+      // A room button is a destination: the open floor in front of that room.
+      return resolve(prepared.value.rooms[zone.room], subject, roomPoint(400, 480), { scale: camera.value.a, floorOnly: true, release: true });
+    if (zone?.kind === "drawer")
+      return resolve(prepared.value.rooms[subject.room], subject, subject.contact, { scale: camera.value.a, intent: "staging", release: true });
     const index = roomAtScreen(slot.pointerX, slot.pointerY, camera.value, building);
     const destination = index < 0 ? subject.room : roomIds[index];
     const origin = roomOrigin(roomIds.indexOf(destination), building);
@@ -515,7 +544,18 @@ export function useInteraction({
       const next = restingMotionOf(slots.value, renderedRevision.value, camera.value.a, eventTime(), reduced, fixtureNudges.value, hint.value);
       return next.key === previous.key ? previous : next;
     }, false);
-  };  const sendEvent = (event: ControllerEvent, replay = false) => {
+  };  const switchRoom = (room: RoomId) => {
+    "worklet";
+    if (activeRoom.value === room) return;
+    const from = roomIds.indexOf(activeRoom.value as RoomId), to = roomIds.indexOf(room);
+    const door = from >= 0 && Math.floor(from / building.columns) !== Math.floor(to / building.columns);
+    activeRoom.set(room);
+    const target = focusCamera(to, viewport, building);
+    if (reduced) camera.set(target);
+    else cameraTween.set({ from: camera.value, to: target, since: eventTime(), duration: door ? DOOR_MS : CAMERA_EASE_MS, door });
+    if (onRoomHover) runOnJS(onRoomHover)(room);
+  };
+  const sendEvent = (event: ControllerEvent, replay = false) => {
     "worklet";
     if (!replay && event.type !== "settled" && (queuedInput.value.length ||
       slots.value.some((s) => s.id && s.commitRequested && !s.committed))) {
@@ -670,7 +710,7 @@ export function useInteraction({
           absoluteY: pointer.point.y + offset.value.y,
           tilt: reduced ? 0 : slot.tilt + (Math.max(-6, Math.min(6, (vx / 500) * 6)) - slot.tilt) * alpha,
           lag: reduced ? 0 : slot.lag + (Math.max(-10, Math.min(10, (-vx / 500) * 10)) - slot.lag) * alpha,
-          edgeAt: pointer.point.x < 48 || pointer.point.x > viewport.width - 48 ? slot.edgeAt || now : 0,
+          edgeAt: pointer.point.x < EDGE_BAND || pointer.point.x > viewport.width - EDGE_BAND ? slot.edgeAt || now : 0,
         };
         nextSlot.proposal = proposalFor(nextSlot);
         slots.set(slots.value.map((s, i) => (i === index ? nextSlot : s)));
@@ -961,6 +1001,8 @@ export function useInteraction({
             runOnJS(onTrace)({ type: "release", at: eventTime(), id: slot.id, kind: proposal?.kind ?? "restore", target: proposal?.target,
               finger: { x: touch.x, y: touch.y }, anchor: { x: slot.x - origin.x, y: slot.y - origin.y }, contact: proposal?.contact, room: proposal?.room });
           }
+          const dropZone = slot && !slot.catalog ? zoneAt(dropZones.value, slot.absoluteX, slot.absoluteY) : undefined;
+          if (dropZone?.kind === "room" && proposal) switchRoom(dropZone.room);
           if (onReleaseProbe && capture?.phase === "dragging" && slot)
             probePending.set([...probePending.value, { at: eventTime(), id: slot.id,
               kind: proposal?.kind ?? "restore", target: proposal?.target }]);
@@ -1200,6 +1242,23 @@ export function useInteraction({
         }
         return current;
       });
+    let hovering: RoomId | undefined;
+    for (const slot of slots.value) {
+      if (!slot.id || slot.phase !== "dragging" || slot.catalog) continue;
+      const zone = zoneAt(dropZones.value, slot.absoluteX, slot.absoluteY);
+      if (zone?.kind === "room") hovering = zone.room;
+    }
+    const before = roomHover.value;
+    if (!hovering) { if (before) roomHover.set(null); }
+    else {
+      const now = eventTime();
+      const since = before?.room === hovering ? before.since : now;
+      const progress = Math.min(1, (now - since) / ROOM_HOVER_MS);
+      const switched = before?.room === hovering && before.switched;
+      if (progress >= 1 && !switched) switchRoom(hovering);
+      if (!before || before.room !== hovering || before.progress !== progress || (progress >= 1 && !switched))
+        roomHover.set({ room: hovering, since, progress, switched: switched || progress >= 1 });
+    }
     publish();
     const busy = !!slots.value[0].id || !!slots.value[1].id || queuedInput.value.length > 0 || !!revealPan.value || !!cameraTween.value ||
       !!inertia.value.since || nudging || probePending.value.length > 0 || controller.value.pointers.some((p) => !!p.entity);
@@ -1405,6 +1464,8 @@ export function useInteraction({
     showHint,
     animateCamera,
     veil,
+    dropZones,
+    roomHover,
     clock: lastFrame,
   };
 }
