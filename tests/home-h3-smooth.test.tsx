@@ -510,3 +510,90 @@ describe("HM-18 background taps", () => {
     await act(async () => renderer.unmount());
   });
 });
+describe("HR-01 friends drawer pickups", () => {
+  function Drawer({ scene }: { scene: Scene }) {
+    const interaction = useInteraction({
+      scene, building: fixtureBuilding, viewport: fixtureViewport, initialCamera: identityCamera, reduced: false, designing: false,
+      onCameraChange: cameraChange, onPickup: (pickup) => { current.ready(pickup.slot, pickup.id); }, onTap: () => {}, onClear: noop,
+      onCommit: commitFixture, currentRoom: "home",
+    });
+    React.useLayoutEffect(() => { current = interaction; });
+    return null;
+  }
+  it("a friend carried out of the drawer starts under the finger and its room copy does not slide", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Drawer scene={fixture()} />); });
+    current.externalDown(-200, "character/0", { x: 700, y: 560 } as never, undefined, { below: 100 });
+    current.externalMove(-200, { x: 690, y: 540 } as never);
+    flushJS();
+    const slot = current.slots.get()[0];
+    expect(slot).toMatchObject({ id: "character/0", drawer: true, phase: "dragging" });
+    // Identity camera: the house point is the screen point; the contact sits 100 below the finger.
+    expect(slot.sourceX).toBeCloseTo(700);
+    expect(slot.sourceY).toBeCloseTo(660);
+    expect(slot.x).toBeCloseTo(690);
+    expect(slot.y).toBeCloseTo(640);
+    expect(current.restingMotion.get().follow).toEqual([]);
+    await act(async () => renderer.unmount());
+  });
+  it("let go in the room, the friend lands there as the same friend; on the Friends button, they wait", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Drawer scene={fixture()} />); });
+    current.dropZones.set([{ kind: "drawer", x: 900, y: 560, width: 48, height: 48 }]);
+    current.externalDown(-200, "character/0", { x: 700, y: 560 } as never, undefined, { below: 100 });
+    current.externalMove(-200, { x: 300, y: 380 } as never); frames(2);
+    expect(current.slots.get()[0].proposal).toMatchObject({ id: "character/0", kind: "floor", room: "home" });
+    current.externalMove(-200, { x: 920, y: 580 } as never); frames(2);
+    expect(current.slots.get()[0].proposal).toMatchObject({ id: "character/0", kind: "staging" });
+    expect(current.drawerHover.get()).toBe(true);
+    current.externalUp(-200, false); flushJS(); frames(1);
+    const slot = current.slots.get()[0];
+    // It flies to the button it was let go on, not back to its old spot.
+    expect(slot.targetX).toBeCloseTo(924);
+    expect(slot.targetY).toBeCloseTo(584);
+    frames(2);
+    expect(current.drawerHover.get()).toBe(false);
+    await act(async () => renderer.unmount());
+  });
+  it("a prop carried over the Friends button is not put in the drawer", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    const scene = buildScene(labHome());
+    await act(async () => { renderer = TestRenderer.create(<Drawer scene={scene} />); });
+    current.dropZones.set([{ kind: "drawer", x: 900, y: 560, width: 48, height: 48 }]);
+    current.externalDown(-300, "home/item/cup", { x: 300, y: 380 } as never);
+    current.externalMove(-300, { x: 330, y: 400 } as never); frames(1);
+    current.externalMove(-300, { x: 920, y: 580 } as never); frames(1);
+    expect(current.slots.get()[0]).toMatchObject({ id: "home/item/cup", phase: "dragging" });
+    expect(current.slots.get()[0].proposal?.kind).not.toBe("staging");
+    expect(current.drawerHover.get()).toBe(false);
+    await act(async () => renderer.unmount());
+  });
+});
+describe("HR-02 one quiet wiggle", () => {
+  it("a hint wiggles only its own thing, for 180 ms, then the frame callback stops again", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
+    frames(5);
+    registry.calls = [];
+    act(() => current.showHint("character/0"));
+    expect(registry.calls).toEqual([[7, true]]);
+    frames(3);
+    const wobble = current.restingMotion.get().wobble;
+    expect(Object.keys(wobble)).toEqual(["character/0"]);
+    expect(Math.abs(wobble["character/0"])).toBeLessThanOrEqual(3);
+    frames(20);
+    expect(current.restingMotion.get().wobble).toEqual({});
+    expect(registry.calls.at(-1)).toEqual([7, false]);
+    await act(async () => renderer.unmount());
+  });
+  it("no hint starts under a finger", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
+    touch("down", 700, 500);
+    act(() => current.showHint("character/0"));
+    frames(3);
+    expect(current.restingMotion.get().wobble).toEqual({});
+    touch("up", 700, 500); flushJS();
+    await act(async () => renderer.unmount());
+  });
+});

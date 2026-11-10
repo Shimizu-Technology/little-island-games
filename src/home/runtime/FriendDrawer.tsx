@@ -1,0 +1,148 @@
+import React, { useEffect, useRef } from "react";
+import { Pressable, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
+import { roomNames, type RoomId } from "../catalogMore";
+import { ItemArt } from "../art/Items";
+import { screenPoint, type Scene, type SceneEntity } from "../scene/types";
+import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
+import { Tool } from "./HomeChrome";
+import type { Interaction } from "./useInteraction";
+
+/**
+ * HR-01 (rules 4 and 47): the friends drawer. Every friend has a cell you can drag them out of,
+ * straight into the room under your finger, as the same friend with what they hold. A tap
+ * brings them here. A friend carried onto the Friends button waits in the drawer. Opening or
+ * closing it never moves the camera and never removes anyone.
+ */
+export const DRAWER_MS = 160;
+export const friendNames = ["Islander", "Pip", "Crab"] as const;
+const roomIcon = { home: "bed", kitchen: "fridge", treehouse: "plant", beach: "shell" } as const;
+export type FriendPlace = { waiting: boolean; room: RoomId };
+export function friendPlace(entity: SceneEntity): FriendPlace {
+  return { waiting: entity.attachment.kind === "staging", room: entity.room };
+}
+export function friendLabel(entity: SceneEntity, here: RoomId): string {
+  const name = friendNames[entity.character!.slot] ?? "Friend";
+  const place = friendPlace(entity);
+  const where = place.waiting ? "waiting in the drawer" : place.room === here ? "in this room" : `in the ${roomNames[place.room]}`;
+  return `${name}, ${where}. Drag into the room, or tap to bring here.`;
+}
+function FriendCell({ entity, scene, here, size, offset, interaction, renderCharacter, onBring, onCarry }: {
+  entity: SceneEntity;
+  scene: Scene;
+  here: RoomId;
+  size: number;
+  offset: SharedValue<{ x: number; y: number }>;
+  interaction: Interaction;
+  renderCharacter?: CharacterRender;
+  onBring: (id: string, slot: number, from?: { x: number; y: number }) => void;
+  onCarry: (carrying: boolean) => void;
+}) {
+  const cell = useRef<View | null>(null);
+  const { externalDown, externalMove, externalUp, slots } = interaction;
+  const slot = entity.character!.slot, pointer = -200 - slot;
+  const standing: SceneEntity = { ...entity, base: "stand", facing: "front", action: null, children: [] };
+  const frame = artFrame(standing), scale = Math.min((size - 10) / frame.width, (size - 8) / frame.height);
+  // Hold them at the middle of the body, as you would pick a doll up.
+  const below = frame.height * 0.45;
+  const begin = useSharedValue({ x: 0, y: 0 }), carrying = useSharedValue(false);
+  const held = entity.children.map((id) => scene.entities[id]).find((e) => e?.attachment.kind === "hand");
+  const place = friendPlace(entity);
+  const pan = Gesture.Pan()
+    .minDistance(8)
+    .onBegin((e) => { begin.set({ x: e.absoluteX, y: e.absoluteY }); })
+    .onStart((e) => {
+      if (slots.value.some((s) => s.id === entity.id)) return;
+      carrying.set(true);
+      externalDown(pointer, entity.id, screenPoint(begin.value.x - offset.value.x, begin.value.y - offset.value.y), undefined, { below });
+      externalMove(pointer, screenPoint(e.absoluteX - offset.value.x, e.absoluteY - offset.value.y));
+      runOnJS(onCarry)(true);
+    })
+    .onUpdate((e) => { if (carrying.value) externalMove(pointer, screenPoint(e.absoluteX - offset.value.x, e.absoluteY - offset.value.y)); })
+    .onEnd(() => { if (carrying.value) externalUp(pointer, false); })
+    .onFinalize((_e, success) => {
+      if (!carrying.value) return;
+      if (!success) externalUp(pointer, true);
+      carrying.set(false);
+      runOnJS(onCarry)(false);
+    });
+  const style = useAnimatedStyle(() => ({ opacity: slots.value.some((s) => s.id === entity.id && s.drawer && s.ready) ? 0.35 : 1 }));
+  return (
+    <GestureDetector gesture={pan}>
+      <Animated.View style={style}>
+        <Pressable
+          ref={cell}
+          testID={`friend-cell-${slot}`}
+          accessibilityRole="button"
+          accessibilityLabel={friendLabel(entity, here)}
+          onPress={() => cell.current?.measureInWindow((x, y, w, h) => onBring(entity.id, slot, { x: x + w / 2, y: y + h / 2 }))}
+          style={{ width: size, height: size + 10, borderRadius: 16, alignItems: "center", justifyContent: "flex-end", paddingBottom: 4,
+            backgroundColor: place.waiting ? "#F3E2C2" : place.room === here ? "#E3EBC9" : "#EEF0E2", overflow: "hidden" }}
+        >
+          <View pointerEvents="none" style={{ width: frame.width * scale, height: frame.height * scale }}>
+            <View style={{ width: frame.width, height: frame.height, transform: [{ scale }], transformOrigin: "left top" }}>
+              <EntityArt entity={standing} reduced renderCharacter={renderCharacter} />
+            </View>
+          </View>
+          {held && (
+            <View pointerEvents="none" style={{ position: "absolute", left: 3, top: 3, width: 22, height: 22, alignItems: "center", justifyContent: "center",
+              borderRadius: 11, backgroundColor: "#FFF8E9" }}>
+              <View style={{ transform: [{ scale: Math.min(18 / artFrame(held).width, 18 / artFrame(held).height) }] }}>
+                <EntityArt entity={held} reduced />
+              </View>
+            </View>
+          )}
+          {!place.waiting && place.room !== here && (
+            <View pointerEvents="none" style={{ position: "absolute", right: 3, top: 3, width: 22, height: 22, borderRadius: 11,
+              backgroundColor: "#FFF8E9", alignItems: "center", justifyContent: "center" }}>
+              <ItemArt item={roomIcon[place.room]} size={18} reduced />
+            </View>
+          )}
+        </Pressable>
+      </Animated.View>
+    </GestureDetector>
+  );
+}
+export function FriendDrawer({ open, scene, here, bottom, interaction, offset, reduced, large = false, renderCharacter, onBring, onClose, onCarry }: {
+  open: boolean;
+  scene: Scene;
+  here: RoomId;
+  bottom: number;
+  interaction: Interaction;
+  offset: SharedValue<{ x: number; y: number }>;
+  reduced: boolean;
+  large?: boolean;
+  renderCharacter?: CharacterRender;
+  onBring: (id: string, slot: number, from?: { x: number; y: number }) => void;
+  onClose: () => void;
+  onCarry: (carrying: boolean) => void;
+}) {
+  const shown = useSharedValue(open ? 1 : 0);
+  const [carrying, setCarrying] = React.useState(false);
+  useEffect(() => {
+    const to = open && !carrying ? 1 : 0;
+    shown.set(reduced ? to : withTiming(to, { duration: DRAWER_MS }));
+  }, [open, carrying, reduced, shown]);
+  const style = useAnimatedStyle(() => ({ opacity: shown.value, transform: [{ translateY: (1 - shown.value) * 18 }] }));
+  const friends = Object.values(scene.entities).filter((e) => e.character).sort((a, b) => a.character!.slot - b.character!.slot);
+  const size = large ? 76 : 64;
+  return (
+    <Animated.View
+      testID="friend-drawer"
+      accessibilityViewIsModal={false}
+      pointerEvents={open ? "box-none" : "none"}
+      importantForAccessibility={open ? "auto" : "no-hide-descendants"}
+      accessibilityElementsHidden={!open}
+      style={[{ position: "absolute", bottom, alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 8, padding: 8,
+        borderRadius: 20, backgroundColor: "#FFF8E9", borderWidth: 2, borderColor: "#D7C29A", zIndex: 41 }, style]}
+    >
+      {friends.map((entity) => (
+        <FriendCell key={entity.id} entity={entity} scene={scene} here={here} size={size} offset={offset} interaction={interaction}
+          renderCharacter={renderCharacter} onBring={onBring}
+          onCarry={(on) => { setCarrying(on); onCarry(on); }} />
+      ))}
+      <Tool label="Close friends" symbol="×" onPress={onClose} large={large} />
+    </Animated.View>
+  );
+}

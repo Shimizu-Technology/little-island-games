@@ -30,7 +30,8 @@ import { resolve, type DropProposal } from "./scene/proposal";
 import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
 import { screenToRoom } from "./scene/camera";
 import { SceneView } from "./runtime/SceneView";
-import { HomeChrome, Tool, navigationHeight } from "./runtime/HomeChrome";
+import { HomeChrome, Tool, navigationHeight as smallNavigationHeight, largeNavigationHeight } from "./runtime/HomeChrome";
+import { FriendDrawer } from "./runtime/FriendDrawer";
 import { HomePanels } from "./runtime/HomePanels";
 import { DesignTools, portraitDrawerHeight, type CatalogGhost } from "./runtime/DesignTools";
 import { StagingTray } from "./runtime/StagingTray";
@@ -44,6 +45,7 @@ import { groupIds, restingVisible } from "./runtime/group";
 import { anchorsFor } from "./scene/species";
 import { useIdleCharacters } from "./runtime/useIdleCharacters";
 import { isPortion, withPortions } from "./runtime/portions";
+import { freshHints, nextHintAt, takeHint, touchedHints, type HintState } from "./runtime/quietHints";
 import type { ReleaseProbe } from "./runtime/frameProbe";
 import { writeProbe } from "./runtime/probeReceipt";
 import type { HomeTrace } from "./runtime/trace";
@@ -105,10 +107,13 @@ export function HomeScreen({
   // HM-18: Redo shows in Play for 10 s after an Undo; a full room shows a picture, not just words.
   const [redoWindow, setRedoWindow] = useState(false);
   const redoTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const [capacityShown, setCapacityShown] = useState(false);
+  const [capacityGone, setCapacityGone] = useState(0);
   React.useEffect(() => () => clearTimeout(redoTimer.current), []);
   const catalogSeeds = useRef<Record<string, { seed: HomeStateV2 }>>({});
   const [headerHeight, setHeaderHeight] = useState(64 + inset.top);
+  // HR-03: the grown-ups' larger-target mode, saved with this child's home.
+  const large = !!store.access?.largeTargets;
+  const navigationHeight = large ? largeNavigationHeight : smallNavigationHeight;
   const [frameReport, setFrameReport] = useState<number[]>();
   const [releaseProbes, setReleaseProbes] = useState<ReleaseProbe[]>([]);
   const [probeMax, setProbeMax] = useState(0);
@@ -137,7 +142,7 @@ export function HomeScreen({
           (designing && !vertical ? portraitDrawerHeight : 0)
       ),
     }),
-    [window.width, window.height, vertical, designing, inset, headerHeight]
+    [window.width, window.height, vertical, designing, inset, headerHeight, navigationHeight]
   );
   const building = useMemo(
     () => buildingLayout(roomIds.length, window.width / window.height > 1.8),
@@ -161,10 +166,12 @@ export function HomeScreen({
     });
     return () => cancelAnimationFrame(frame);
   }, [scene.revision, focusId]);
+  // Each refusal is a new message serial, so a second refusal shows the picture again.
+  const capacityShown = store.message === CAPACITY_MESSAGE && !!store.messageSerial && capacityGone !== store.messageSerial;
   React.useEffect(() => {
     if (store.message !== CAPACITY_MESSAGE || !store.messageSerial) return;
-    setCapacityShown(true);
-    const timer = setTimeout(() => setCapacityShown(false), CAPACITY_CUE_MS);
+    const serial = store.messageSerial;
+    const timer = setTimeout(() => setCapacityGone(serial), CAPACITY_CUE_MS);
     return () => clearTimeout(timer);
   }, [store.message, store.messageSerial]);
   const live = useRef({ store, scene, selected, placing, room, designing });
@@ -505,10 +512,17 @@ export function HomeScreen({
     },
   });
   const zoneRects = useRef<Record<string, { x: number; y: number; width: number; height: number }>>({});
+  const publishZones = useCallback(() => runtime.current?.dropZones.set(Object.entries(zoneRects.current).map(([id, r]) =>
+    id === "drawer" ? { kind: "drawer" as const, ...r } : { kind: "room" as const, room: id as RoomId, ...r })), []);
   const onRoomRect = useCallback((id: RoomId, rect: { x: number; y: number; width: number; height: number }) => {
     zoneRects.current[id] = rect;
-    runtime.current?.dropZones.set(Object.entries(zoneRects.current).map(([room, r]) => ({ kind: "room" as const, room: room as RoomId, ...r })));
-  }, []);
+    publishZones();
+  }, [publishZones]);
+  // HR-01: the Friends button is where a carried friend goes to wait.
+  const onDrawerRect = useCallback((rect: { x: number; y: number; width: number; height: number }) => {
+    zoneRects.current.drawer = rect;
+    publishZones();
+  }, [publishZones]);
   useLayoutEffect(() => {
     runtime.current = interaction;
   });
@@ -630,6 +644,50 @@ export function HomeScreen({
       !overview && floorOf(id) !== floorOf(room));
   };
   const floorOf = (id: RoomId) => Math.floor(roomIds.indexOf(id) / building.columns);
+  // HR-02 (rule 52): after 6 s without a touch, one thing you can use gives one small wiggle.
+  // A JS timer, not a frame loop: nothing runs while waiting. Any touch starts the quiet over.
+  const hints = useRef<HintState>(freshHints(0));
+  React.useEffect(() => { hints.current = freshHints(Date.now()); }, []);
+  const [hintTick, setHintTick] = useState(0);
+  const quiet = !designing && !overview && !selected && !placing && !more && !friends;
+  React.useEffect(() => {
+    if (!quiet || reduced) return;
+    const due = nextHintAt(hints.current);
+    if (due === undefined) return;
+    const timer = setTimeout(() => {
+      // A touch since this was armed moved the quiet start later: wait again, without a render per touch.
+      const again = nextHintAt(hints.current);
+      if (again === undefined || again > Date.now() + 16) { setHintTick((n) => n + 1); return; }
+      const { scene } = live.current;
+      const candidates = Object.values(scene.rooms[room].entities)
+        .filter((e) => restingVisible(e, scene) && e.item && (isPortion(e.id) || capabilityOf(e.item.item).toggle))
+        .sort((a, b) => a.contact.x - b.contact.x)
+        .map((e) => e.id);
+      const next = takeHint(hints.current, Date.now(), candidates, reduced);
+      hints.current = next.state;
+      if (next.id) runtime.current?.showHint(next.id);
+      setHintTick((n) => n + 1);
+    }, Math.max(0, due - Date.now()));
+    return () => clearTimeout(timer);
+  }, [quiet, reduced, room, hintTick]);
+  const touched = () => {
+    const spent = nextHintAt(hints.current) === undefined;
+    hints.current = touchedHints(hints.current, Date.now());
+    if (spent) setHintTick((n) => n + 1);
+  };
+  /** Bring a friend here. One who is elsewhere or waiting comes out of the drawer cell, visibly. */
+  const bring = (id: string, slot: number, from?: { x: number; y: number }) => {
+    const subject = live.current.scene.entities[id];
+    if (subject) {
+      const nearby = subject.room === room && subject.attachment.kind !== "staging";
+      const c = interaction.camera.get();
+      const start = !nearby && from
+        ? screenToRoom(screenPoint(from.x - canvasOrigin.current.x, from.y - canvasOrigin.current.y), c, housePoint(0, 0)) : undefined;
+      runtime.current!.animateProposal(resolve({ ...scene.rooms[room], entities: scene.entities }, subject,
+        roomPoint(350 + slot * 90, 490), { scale: c.a, release: true }), undefined, start);
+    }
+    setFriends(false);
+  };
   const find = () => {
     const hero = scene.entities["character/0"];
     if (!hero) return;
@@ -719,9 +777,10 @@ export function HomeScreen({
     transform: [{ translateX: ghost.value.x - 35 }, { translateY: ghost.value.y - 70 }],
   }));
   const target = selected ? scene.entities[selected]?.item : undefined;
-  const staged = Object.values(baseScene.entities).filter((e) => e.attachment.kind === "staging");
+  // Friends who are put away wait in the friends drawer, not in the basket (HR-01).
+  const staged = Object.values(baseScene.entities).filter((e) => e.attachment.kind === "staging" && !e.character);
   return (
-    <View style={{ flex: 1, backgroundColor: "#FFF8E9", paddingBottom: inset.bottom }}>
+    <View style={{ flex: 1, backgroundColor: "#FFF8E9", paddingBottom: inset.bottom }} onTouchStart={touched}>
       <HomeChrome
         room={room}
         overview={overview}
@@ -751,10 +810,11 @@ export function HomeScreen({
         }}
         onFind={find}
         onFriends={() => {
+          // Opening or closing the drawer never moves the camera (rule 47).
           interaction.cancelAll();
           setSelected(undefined);
           setMore(false);
-          setFriends(true);
+          setFriends(!friends);
         }}
         onOverview={() => {
           interaction.cancelAll();
@@ -774,6 +834,10 @@ export function HomeScreen({
         onRoom={goRoom}
         roomHover={interaction.roomHover}
         onRoomRect={onRoomRect}
+        friendsOpen={friends}
+        drawerHover={interaction.drawerHover}
+        onDrawerRect={onDrawerRect}
+        large={large}
         saveStatus={saveStatus}
       />
       <View style={{ flex: 1, flexDirection: vertical ? "row" : "column" }}>
@@ -879,6 +943,12 @@ export function HomeScreen({
           selected={selected}
           designing={designing}
           scale={1}
+          camera={interaction.camera}
+          building={building}
+          canvasTop={headerHeight}
+          windowHeight={window.height}
+          renderCharacter={renderCharacter}
+          large={large}
           onSelect={setSelected}
           bottom={
             inset.bottom +
@@ -922,12 +992,23 @@ export function HomeScreen({
           );
           if (ratio > 1) setOverview(false);
         }}
-        onBring={(id, slot) => {
-          const subject = live.current.scene.entities[id];
-          if (subject) runtime.current!.animateProposal(resolve({ ...scene.rooms[room], entities: scene.entities }, subject,
-            roomPoint(350 + slot * 90, 490), { scale: interaction.camera.get().a, release: true }));
-          setFriends(false);
-        }}
+        onBring={bring}
+        large={large}
+        onLarge={(on) => store.setAccess(on ? { largeTargets: true } : undefined)}
+      />
+      <FriendDrawer
+        open={friends && !overview && !more}
+        scene={scene}
+        here={room}
+        bottom={inset.bottom + navigationHeight + 8}
+        interaction={interaction}
+        offset={viewportOffset}
+        reduced={reduced}
+        large={large}
+        renderCharacter={renderCharacter}
+        onBring={bring}
+        onClose={() => setFriends(false)}
+        onCarry={(carrying) => { if (!carrying) setFriends(false); }}
       />
       <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
         {store.message}

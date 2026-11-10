@@ -75,7 +75,8 @@ export function restingMotionOf(
   for (const slot of slots) {
     if (!slot.id || !slot.subject) continue;
     const moving = !(slot.committed && slot.revision === renderedRevision) && slot.phase !== "pending" && !(slot.ready && slot.painted !== false);
-    if (!moving) continue;
+    // A friend carried out of the drawer leaves its resting art where it is until the overlay is up.
+    if (!moving || slot.drawer) continue;
     const t = pickupTransform(slot, slot.subject as SceneEntity, scale, now, reduced);
     const follow = { owner: slot.restId ?? slot.id, dx: slot.x - slot.sourceX, dy: slot.y - slot.sourceY - t.lift, tilt: t.tilt, sx: t.scaleX, sy: t.scaleY };
     motion.follow.push(follow);

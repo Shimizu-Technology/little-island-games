@@ -12,12 +12,15 @@ export function Tool({
   onPress,
   selected,
   disabled,
+  large = false,
 }: {
   label: string;
   symbol: string;
   onPress: () => void;
   selected?: boolean;
   disabled?: boolean;
+  /** HR-03: 64 pt in the grown-ups' larger-target mode. */
+  large?: boolean;
 }) {
   return (
     <Pressable
@@ -28,11 +31,12 @@ export function Tool({
       onPress={onPress}
       style={({ pressed }) => [
         styles.tool,
+        large && { minWidth: 64, minHeight: 64, borderRadius: 32 },
         selected && { backgroundColor: "#D6E9C8" },
         { opacity: disabled ? 0.35 : pressed ? 0.65 : 1 },
       ]}
     >
-      <Text allowFontScaling={false} style={{ fontSize: 25, color: ink }}>
+      <Text allowFontScaling={false} style={{ fontSize: large ? 30 : 25, color: ink }}>
         {symbol}
       </Text>
     </Pressable>
@@ -109,6 +113,32 @@ function RoomButton({ id, selected, onRoom, onFriends, hover, onRect, size, toke
     </Pressable>
   );
 }
+/** HR-01: opens the friends drawer; a carried friend let go on it waits there. */
+function FriendsButton({ open, onPress, hover, onRect, size, token }: {
+  open: boolean; onPress: () => void; hover?: SharedValue<boolean>; onRect?: (rect: WindowRect) => void; size: number; token: number;
+}) {
+  const ref = React.useRef<View>(null);
+  const measure = React.useCallback(() => ref.current?.measureInWindow((x, y, width, height) => onRect?.({ x, y, width, height })), [onRect]);
+  React.useEffect(() => { if (token) measure(); }, [token, measure]);
+  const ring = useAnimatedStyle(() => ({ opacity: hover?.value ? 1 : 0, transform: [{ scale: hover?.value ? 1.12 : 1 }] }));
+  return (
+    <Pressable
+      ref={ref}
+      onLayout={measure}
+      testID="friends-button"
+      accessibilityRole="button"
+      accessibilityLabel="Friends"
+      accessibilityHint="Opens the friends drawer. Carry a friend here to let them wait."
+      accessibilityState={{ expanded: open }}
+      onPress={onPress}
+      style={[styles.tool, { minWidth: size, minHeight: size, borderRadius: size / 2 }, open && { backgroundColor: "#D6E9C8" }]}
+    >
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: size / 2, borderWidth: 3, borderColor: "#477D60",
+        backgroundColor: "#CFE6B8" }, ring]} />
+      <FriendsIcon />
+    </Pressable>
+  );
+}
 export function HomeChrome(props: Parameters<typeof HomeChromeView>[0]) {
   // Room buttons are drop targets in window space; re-measure after the bar scrolls.
   const [token, setToken] = React.useState(0);
@@ -140,7 +170,13 @@ function HomeChromeView({
   large = false,
   measureToken = 0,
   onScrolled,
+  friendsOpen = false,
+  drawerHover,
+  onDrawerRect,
 }: {
+  friendsOpen?: boolean;
+  drawerHover?: SharedValue<boolean>;
+  onDrawerRect?: (rect: WindowRect) => void;
   measureToken?: number;
   onScrolled?: () => void;
   roomHover?: SharedValue<RoomHover | null>;
@@ -175,23 +211,25 @@ function HomeChromeView({
         onLayout={(event) => onHeaderLayout(event.nativeEvent.layout.height)}
         style={[styles.header, { paddingTop: top }]}
       >
-        <Tool label="Back to island" symbol="‹" onPress={onBack} />
+        <Tool label="Back to island" symbol="‹" onPress={onBack} large={large} />
         <Text maxFontSizeMultiplier={1.3} numberOfLines={1} adjustsFontSizeToFit style={styles.title}>
           {title ?? (overview ? "Our house" : roomNames[room])}
         </Text>
-        <Tool label="Undo" symbol="↶" disabled={!canUndo} onPress={onUndo} />
-        {(designing || showRedo) && <Tool label="Redo" symbol="↷" disabled={!canRedo} onPress={onRedo} />}
+        <Tool label="Undo" symbol="↶" disabled={!canUndo} onPress={onUndo} large={large} />
+        {(designing || showRedo) && <Tool label="Redo" symbol="↷" disabled={!canRedo} onPress={onRedo} large={large} />}
         <Tool
           label={designing ? "Done designing" : "Design"}
           symbol={designing ? "✓" : "✎"}
           selected={designing}
           onPress={onDesign}
+          large={large}
         />
+        <Tool label="More home controls" symbol="···" onPress={onMore} large={large} />
       </View>
-      <View testID="home-bottom-bar" style={[styles.navigation, { bottom }]}>
+      <View testID="home-bottom-bar" style={[styles.navigation, { bottom, height: large ? largeNavigationHeight : navigationHeight }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navigationItems}
           onScrollEndDrag={onScrolled} onMomentumScrollEnd={onScrolled}>
-          <Tool label="Whole house" symbol="⌂" selected={overview} onPress={onOverview} />
+          <Tool label="Whole house" symbol="⌂" selected={overview} onPress={onOverview} large={large} />
           {roomIds.map((id) => (
             <RoomButton key={id} id={id} selected={room === id && !overview} onRoom={onRoom} onFriends={onFriends}
               hover={roomHover} onRect={onRoomRect} size={large ? 64 : 48} token={measureToken} />
@@ -200,20 +238,22 @@ function HomeChromeView({
             accessibilityRole="button"
             accessibilityLabel="Find my Islander"
             onPress={onFind}
-            style={styles.tool}
+            style={[styles.tool, large && { minWidth: 64, minHeight: 64, borderRadius: 32 }]}
           >
             <FindIcon />
           </Pressable>
-          <Tool label="More home controls" symbol="···" onPress={onMore} />
+          <FriendsButton open={friendsOpen} onPress={onFriends} hover={drawerHover} onRect={onDrawerRect} size={large ? 64 : 48} token={measureToken} />
         </ScrollView>
       </View>
       {saveStatus && (
-        <View style={{ position: "absolute", right: 8, bottom: bottom + navigationHeight }}>{saveStatus}</View>
+        <View style={{ position: "absolute", right: 8, bottom: bottom + (large ? largeNavigationHeight : navigationHeight) }}>{saveStatus}</View>
       )}
     </>
   );
 }
 export const navigationHeight = 60;
+/** HR-03: the bottom bar with 64 pt buttons. */
+export const largeNavigationHeight = 76;
 const styles = StyleSheet.create({
   navigation: {
     position: "absolute",

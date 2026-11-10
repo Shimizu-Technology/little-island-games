@@ -61,6 +61,10 @@ export type DragSlot = CaptureToken & {
   readyFrame: number;
   synthetic?: boolean;
   catalog?: boolean;
+  /** HR-01: carried out of the friends drawer; the art starts under the finger, not in its room. */
+  drawer?: boolean;
+  /** HR-01: house point of the drawer button a carried friend waits on; a put-away lands there. */
+  stagingAt?: { x: number; y: number };
   duration?: number;
   landedAt?: number;
   phase: "pending" | "dragging" | "settling";
@@ -263,6 +267,8 @@ export function useInteraction({
   const prepared = useSharedValue(resolverScene);
   const stagingContacts = useSharedValue<Record<string, { x: number; y: number }>>({});
   const externalSubjects = useSharedValue<Record<string, SceneEntity>>({});
+  // HR-01: external pointers that began on a friends-drawer cell.
+  const drawerPointers = useSharedValue<number[]>([]);
   const hits = useMemo(() => prepareHits(scene), [scene]);
   const hitTable = useSharedValue(hits);
   const renderedRevision = useSharedValue(scene.revision);
@@ -297,6 +303,7 @@ export function useInteraction({
   // HM-14: window-space places a carried thing can be dropped on outside the room view.
   const dropZones = useSharedValue<DropZone[]>([]);
   const roomHover = useSharedValue<RoomHover | null>(null);
+  const drawerHover = useSharedValue(false);
   const activeRoom = useSharedValue<string>(currentRoom ?? "");
   const veil = useSharedValue(0);
   const pinchMid = useSharedValue({ x: 0, y: 0 });
@@ -417,7 +424,8 @@ export function useInteraction({
     if (zone?.kind === "room")
       // A room button is a destination: the open floor in front of that room.
       return resolve(prepared.value.rooms[zone.room], subject, roomPoint(400, 480), { scale: camera.value.a, floorOnly: true, release: true });
-    if (zone?.kind === "drawer")
+    // HR-01: only friends wait in the friends drawer; anything else over it just goes back.
+    if (zone?.kind === "drawer" && subject.character)
       return resolve(prepared.value.rooms[subject.room], subject, subject.contact, { scale: camera.value.a, intent: "staging", release: true });
     const index = roomAtScreen(slot.pointerX, slot.pointerY, camera.value, building);
     if (index < 0) {
@@ -492,7 +500,10 @@ export function useInteraction({
     const current = slots.get();
     const slot = current[index];
     if (!slot.id) return;
-    const origin = proposal ? roomOrigin(roomIds.indexOf(proposal.room), building) : { x: 0, y: 0 };
+    const room = proposal ? roomOrigin(roomIds.indexOf(proposal.room), building) : { x: 0, y: 0 };
+    // A friend put away on the drawer button lands there, not back at its old spot (HR-01).
+    const origin = proposal?.kind === "staging" && slot.stagingAt
+      ? { x: slot.stagingAt.x - proposal.contact.x, y: slot.stagingAt.y - proposal.contact.y } : room;
     const restEntity = destination && destination.entities[identity ?? proposal?.id ?? slot.restId ?? slot.id];
     const retargeted = committed && proposal && !(slot.synthetic && proposal.kind === "staging") &&
       (Math.abs(origin.x + proposal.contact.x - slot.targetX) > .01 || Math.abs(origin.y + proposal.contact.y - slot.targetY) > .01);
@@ -658,6 +669,9 @@ export function useInteraction({
         if (index < 0) continue;
         const origin = originFor(effect.entity);
         const visible = existing >= 0 ? slots.value[existing] : undefined;
+        // HR-01: a friend carried out of the drawer starts under the finger, like a basket item.
+        const fromDrawer = visible?.drawer ?? drawerPointers.value.includes(pointer.pointer);
+        const start = screenToRoom(pointer.start, camera.value, housePoint(0, 0));
         const slot = {
           ...emptyDragSlot(),
           id: effect.entity,
@@ -672,17 +686,18 @@ export function useInteraction({
           painted: visible?.painted ?? false,
           readyFrame: visible?.readyFrame ?? 0,
           catalog: visible?.catalog ?? !!externalSubjects.value[effect.entity],
+          drawer: fromDrawer,
           pointer: pointer.pointer,
           phase: effect.type === "contact" ? "pending" as const : "dragging" as const,
-          x: visible?.x ?? entity.contact.x + origin.x,
-          y: visible?.y ?? entity.contact.y + origin.y,
+          x: visible?.x ?? (fromDrawer ? start.x - pointer.grip.x : entity.contact.x + origin.x),
+          y: visible?.y ?? (fromDrawer ? start.y - pointer.grip.y : entity.contact.y + origin.y),
           sourceX:
-            entity.attachment.kind === "staging"
-              ? screenToRoom(pointer.start, camera.value, housePoint(0, 0)).x - pointer.grip.x
+            entity.attachment.kind === "staging" || fromDrawer
+              ? start.x - pointer.grip.x
               : entity.contact.x + origin.x,
           sourceY:
-            entity.attachment.kind === "staging"
-              ? screenToRoom(pointer.start, camera.value, housePoint(0, 0)).y - pointer.grip.y
+            entity.attachment.kind === "staging" || fromDrawer
+              ? start.y - pointer.grip.y
               : entity.contact.y + origin.y,
           gripX: pointer.grip.x,
           gripY: pointer.grip.y,
@@ -728,19 +743,25 @@ export function useInteraction({
           edgeAt: pointer.point.x < EDGE_BAND || pointer.point.x > viewport.width - EDGE_BAND ? slot.edgeAt || now : 0,
         };
         nextSlot.proposal = proposalFor(nextSlot);
+        const zone = nextSlot.catalog ? undefined : zoneAt(dropZones.value, nextSlot.absoluteX, nextSlot.absoluteY);
+        nextSlot.stagingAt = zone?.kind === "drawer" && nextSlot.proposal?.kind === "staging"
+          ? screenToRoom(screenPoint(zone.x + zone.width / 2 - offset.value.x, zone.y + zone.height / 2 - offset.value.y), camera.value, housePoint(0, 0))
+          : undefined;
         slots.set(slots.value.map((s, i) => (i === index ? nextSlot : s)));
       } else if (effect.type === "commit") {
         const index = slots.value.findIndex((s) => s.id === effect.entity || s.restId === effect.entity);
         const slot = slots.value[index];
         if (!slot) continue;
         const origin = roomOrigin(roomIds.indexOf(effect.proposal.room), building);
+        const at = effect.proposal.kind === "staging" && slot.stagingAt ? slot.stagingAt
+          : { x: origin.x + effect.proposal.contact.x, y: origin.y + effect.proposal.contact.y };
         slots.set(
           slots.value.map((s, i) =>
             i === index ? { ...s, phase: "settling", proposal: effect.proposal, settledId: effect.entity,
               releaseX: s.x, releaseY: s.y,
-              targetX: origin.x + effect.proposal.contact.x, targetY: origin.y + effect.proposal.contact.y,
-              x: reduced ? origin.x + effect.proposal.contact.x : s.x,
-              y: reduced ? origin.y + effect.proposal.contact.y : s.y,
+              targetX: at.x, targetY: at.y,
+              x: reduced ? at.x : s.x,
+              y: reduced ? at.y : s.y,
               settleAt: eventTime(), travelDelay: 0, finished: false, commitRequested: false } : s
           )
         );
@@ -1263,12 +1284,14 @@ export function useInteraction({
         }
         return current;
       });
-    let hovering: RoomId | undefined;
+    let hovering: RoomId | undefined, overDrawer = false;
     for (const slot of slots.value) {
       if (!slot.id || slot.phase !== "dragging" || slot.catalog) continue;
       const zone = zoneAt(dropZones.value, slot.absoluteX, slot.absoluteY);
       if (zone?.kind === "room") hovering = zone.room;
+      if (zone?.kind === "drawer" && slot.proposal?.kind === "staging" && slot.subject?.character) overDrawer = true;
     }
+    if (drawerHover.value !== overDrawer) drawerHover.set(overDrawer);
     const before = roomHover.value;
     if (!hovering) { if (before) roomHover.set(null); }
     else {
@@ -1318,23 +1341,28 @@ export function useInteraction({
     inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
     queuedInput.set([]);
     externalSubjects.set({});
+    drawerPointers.set([]);
     slots.set([emptyDragSlot(), emptyDragSlot()]);
     restingFlags.set(emptyRestingFlags());
     restingMotion.set(emptyRestingMotion());
     onClear(0);
     onClear(1);
   };
-  const externalDown = (pointer: number, id: string, point: ScreenPoint, subject?: SceneEntity) => {
+  /** `drawer`: carried out of the friends drawer; `below` puts the contact that far under the finger, in room units. */
+  const externalDown = (pointer: number, id: string, point: ScreenPoint, subject?: SceneEntity, drawer?: { below: number }) => {
     "worklet";
     const begin = () => {
       "worklet";
     if (subject) externalSubjects.set({ ...externalSubjects.value, [id]: subject });
+    if (drawer) drawerPointers.set([...drawerPointers.value.filter((p) => p !== pointer), pointer]);
+    else if (drawerPointers.value.includes(pointer)) drawerPointers.set(drawerPointers.value.filter((p) => p !== pointer));
+    const contact = screenToRoom(point, camera.value, originFor(id));
     send({
       type: "down",
       pointer,
       entity: id,
       point,
-      contact: screenToRoom(point, camera.value, originFor(id)),
+      contact: drawer ? { ...contact, y: contact.y + drawer.below } : contact,
       now: eventTime(),
     });
     };
@@ -1487,6 +1515,7 @@ export function useInteraction({
     veil,
     dropZones,
     roomHover,
+    drawerHover,
     clock: lastFrame,
   };
 }

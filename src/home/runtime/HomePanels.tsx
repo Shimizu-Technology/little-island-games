@@ -1,6 +1,6 @@
-import React from "react";
-import { Pressable, Text, View } from "react-native";
-import { HomeCharacter } from "../characterRenderer";
+import React, { useState } from "react";
+import { Pressable, Text, TextInput, View } from "react-native";
+import { gateAccepts, makeGate } from "../../state/grownUpGate";
 import type { Scene } from "../scene/types";
 import type { CharacterRender } from "./EntityArt";
 import { FriendsIcon, Tool } from "./HomeChrome";
@@ -16,7 +16,12 @@ export function HomePanels({
   onFriends,
   onZoom,
   onBring,
+  large = false,
+  onLarge,
 }: {
+  /** HR-03: the larger-target mode, changed only behind the grown-up question. */
+  large?: boolean;
+  onLarge?: (on: boolean) => boolean;
   more: boolean;
   friends: boolean;
   bottom: number;
@@ -27,10 +32,12 @@ export function HomePanels({
   onZoom: (ratio: number) => void;
   onBring: (id: string, slot: number) => void;
 }) {
-  if (!more && !friends) return null;
+  // HR-01: friends live in the friends drawer now; this panel is only More.
+  void friends; void scene; void renderCharacter; void onBring;
+  if (!more) return null;
   return (
     <View
-      testID={friends ? "bring-friends" : "more-home-controls"}
+      testID="more-home-controls"
       style={{
         position: "absolute",
         bottom,
@@ -43,63 +50,77 @@ export function HomePanels({
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <Text style={{ flex: 1, color: "#284F4B", fontWeight: "700" }}>
-          {friends ? "Bring friends here" : "Home controls"}
-        </Text>
+        <Text style={{ flex: 1, color: "#284F4B", fontWeight: "700" }}>Home controls</Text>
         <Tool label="Close home controls" symbol="×" onPress={onClose} />
       </View>
-      {more ? (
-        <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
-          <Tool label="Zoom in" symbol="+" onPress={() => onZoom(1.3)} />
-          <Tool label="Zoom out" symbol="−" onPress={() => onZoom(1 / 1.3)} />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Bring friends here"
-            onPress={onFriends}
-            style={{ alignItems: "center", minWidth: 100 }}
-          >
-            <FriendsIcon />
-            <Text style={{ color: "#284F4B" }}>Bring here ↓</Text>
-          </Pressable>
-        </View>
-      ) : (
-        <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
-          {Object.values(scene.entities)
-            .filter((e) => e.character)
-            .map((entity) => {
-              const input = {
-                slot: entity.character!.slot,
-                base: "stand" as const,
-                action: null,
-                face: null,
-                facing: "right" as const,
-                size: 64,
-                reduced: true,
-              };
-              return (
-                <Pressable
-                  key={entity.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Bring ${["Islander", "Pip", "Crab"][input.slot]} here`}
-                  onPress={() => onBring(entity.id, input.slot)}
-                  style={{
-                    width: 86,
-                    height: 104,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 16,
-                    backgroundColor: "#E3EBC9",
-                  }}
-                >
-                  <View style={{ width: 64, height: 68, alignItems: "center", justifyContent: "center" }}>
-                    {renderCharacter?.(input) ?? <HomeCharacter input={input} />}
-                  </View>
-                  <Text style={{ fontSize: 18, color: "#284F4B" }}>↓ here</Text>
-                </Pressable>
-              );
-            })}
-        </View>
-      )}
+      <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
+        <Tool label="Zoom in" symbol="+" onPress={() => onZoom(1.3)} />
+        <Tool label="Zoom out" symbol="−" onPress={() => onZoom(1 / 1.3)} />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Friends drawer"
+          onPress={onFriends}
+          style={{ alignItems: "center", minWidth: 100 }}
+        >
+          <FriendsIcon />
+        </Pressable>
+      </View>
+      {onLarge && <GrownUpAccess large={large} onLarge={onLarge} />}
     </View>
+  );
+}
+const ink = "#284F4B";
+/** HR-03 (rule 62): a grown-up turns on 64 pt targets for a child who needs them. Typed, not chosen. */
+export function GrownUpAccess({ large, onLarge }: { large: boolean; onLarge: (on: boolean) => boolean }) {
+  const [asking, setAsking] = useState(false), [open, setOpen] = useState(false);
+  const [gate, setGate] = useState(() => makeGate()), [answer, setAnswer] = useState(""), [note, setNote] = useState("");
+  const check = () => {
+    if (gateAccepts(gate, answer)) { setOpen(true); setNote(""); }
+    else { setGate(makeGate()); setNote("A grown-up can try a new question."); }
+    setAnswer("");
+  };
+  if (!asking)
+    return (
+      <Pressable testID="home-grown-ups" accessibilityRole="button" accessibilityLabel="For grown-ups" onPress={() => setAsking(true)}
+        style={{ alignSelf: "flex-end", minHeight: 44, justifyContent: "center", paddingHorizontal: 12 }}>
+        <Text style={{ color: ink, fontSize: 14, textDecorationLine: "underline" }}>For grown-ups</Text>
+      </Pressable>
+    );
+  if (!open)
+    return (
+      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+        <Text style={{ color: ink, fontSize: 15 }}>For grown-ups · {gate.a} × {gate.b} =</Text>
+        <TextInput
+          accessibilityLabel={`Grown-up question: ${gate.a} times ${gate.b}`}
+          value={answer}
+          onChangeText={(v) => setAnswer(v.replace(/[^0-9]/g, "").slice(0, 3))}
+          keyboardType="number-pad"
+          returnKeyType="done"
+          onSubmitEditing={check}
+          autoComplete="off"
+          textContentType="none"
+          style={{ width: 80, minHeight: 44, borderWidth: 1, borderColor: "#477D60", borderRadius: 10, textAlign: "center", fontSize: 18, color: ink }}
+        />
+        <Pressable accessibilityRole="button" accessibilityLabel="Unlock grown-up choices" disabled={!answer} onPress={check}
+          style={{ minHeight: 44, paddingHorizontal: 14, justifyContent: "center", borderRadius: 12, backgroundColor: "#E3EBC9", opacity: answer ? 1 : 0.5 }}>
+          <Text style={{ color: ink, fontSize: 15 }}>Unlock</Text>
+        </Pressable>
+        {!!note && <Text accessibilityLiveRegion="polite" style={{ color: ink, fontSize: 14 }}>{note}</Text>}
+      </View>
+    );
+  return (
+    <Pressable
+      testID="home-large-targets"
+      accessibilityRole="switch"
+      accessibilityLabel="Larger buttons for this child"
+      accessibilityHint="Room, tray and friend buttons become at least 64 points."
+      accessibilityState={{ checked: large }}
+      onPress={() => { if (!onLarge(!large)) setNote("That could not be saved. Please try again."); }}
+      style={{ flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48, marginTop: 8, paddingHorizontal: 12, borderRadius: 14, backgroundColor: large ? "#D6E9C8" : "#F3EBDA" }}
+    >
+      <Text style={{ flex: 1, color: ink, fontSize: 15 }}>Larger buttons for this child</Text>
+      <Text style={{ color: ink, fontSize: 15, fontWeight: "700" }}>{large ? "On" : "Off"}</Text>
+      {!!note && <Text style={{ color: ink, fontSize: 13 }}>{note}</Text>}
+    </Pressable>
   );
 }
