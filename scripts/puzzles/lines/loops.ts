@@ -78,13 +78,23 @@ export type LineCandidate = { seed: number; puzzle: LinePuzzle; template: string
 function thin(rng: Rng, p: LinePuzzle, upTo: number, pairs: boolean, keep: number): LinePuzzle {
   const values = p.kind === 'loop' ? [...p.clues] : [...p.pearls], blank = p.kind === 'loop' ? NONE : 0, n = values.length;
   const make = (v: number[]): LinePuzzle => p.kind === 'loop' ? { ...p, clues: v } : { ...p, pearls: v };
-  for (const i of rng.shuffle(values.map((_, k) => k))) {
-    if (values[i] === blank || values.filter(v => v !== blank).length <= keep) continue;
+  // Zeros go first: a board full of 0s reads as empty sea and teaches little, so numbers that
+  // carry a shape are the ones kept when either would do.
+  const order = rng.shuffle(values.map((_, k) => k)), zerosFirst = p.kind === 'loop' ? [...order.filter(k => values[k] === 0), ...order.filter(k => values[k] !== 0)] : order;
+  const tryRemove = (i: number, limit: number) => {
+    if (values[i] === blank || values.filter(v => v !== blank).length <= keep) return false;
     const trial = [...values], twin = n - 1 - i;
     trial[i] = blank;
     if (pairs) trial[twin] = blank;
-    if (grade(make(trial), undefined, 4000, upTo).status === 'complete') { values[i] = blank; if (pairs) values[twin] = blank; }
-  }
+    if (grade(make(trial), undefined, 4000, limit).status !== 'complete') return false;
+    values[i] = blank; if (pairs) values[twin] = blank;
+    return true;
+  };
+  // Trials are slow, so a first pass keeps the board readable without them; then a few more numbers
+  // go only if the board stays solvable with the rung's harder ideas.
+  const cheap = Math.min(upTo, rank(p.kind, 'what-if'));
+  for (const i of zerosFirst) tryRemove(i, cheap);
+  if (upTo > cheap) { let tries = 0; for (const i of zerosFirst) { if (values[i] === blank) continue; if (++tries > 15) break; tryRemove(i, upTo); } }
   return make(values);
 }
 export function generateLine(kind: LinePuzzle['kind'], rung: LineRung, seed: number): LineCandidate | null {
@@ -107,7 +117,7 @@ export const lineWorkload = (kind: LinePuzzle['kind'], g: Extract<Grade, { statu
   const weights = lineWeights[kind];
   return g.steps.reduce((n, s) => n + weights[rank(kind, s.technique)], 0);
 };
-const loopSupply: Record<string, [number, number]> = { pebble: [240, 100], cove: [240, 100], reef: [240, 100], kelp: [240, 100], current: [240, 100], abyss: [200, 64] };
+const loopSupply: Record<string, [number, number]> = { pebble: [240, 100], cove: [240, 100], reef: [240, 100], kelp: [240, 100], current: [240, 100], abyss: [160, 64] };
 const pearlSupply: Record<string, [number, number]> = { seed: [48, 32], string: [48, 32], deep: [32, 24] };
 const lineGenerator = (kind: LinePuzzle['kind'], rungs: readonly LineRung[], supply: Record<string, [number, number]>): EdgeGenerator<LinePuzzle, LineRung> => ({
   family: kind,
