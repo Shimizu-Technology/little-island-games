@@ -73,11 +73,13 @@ export default [
     ],
   },
   {
-    word: 'RIVER', meaning: 'a river', alt: 'A blue river winding through green grassy land from the hills down to the front.',
+    word: 'RIVER', meaning: 'a river', alt: 'A blue river winding between grassy green banks, with small trees on each side.',
     draw: () => [
-      rect(8, 10, 104, 100, 16, P.leaf, { ns: true }), patch('M8 32Q30 18 60 26Q90 16 112 28V10H8Z', P.mint),
-      path('M58 22Q74 22 70 34Q60 46 74 58Q96 72 80 90Q72 100 84 110H44Q32 96 46 84Q62 70 44 56Q32 42 48 30Q52 24 58 22Z', P.blue),
-      line('M60 40q6-2 8 2M66 70q8 0 10 4M54 94q8-2 10 2', { stroke: P.paper, sw: 2.5 }), ...tree(24, 54, 0.7, P.forest), ...tree(98, 76, 0.7, P.forest), rect(8, 10, 104, 100, 16),
+      path('M8 48Q30 34 60 36Q90 32 112 44V100Q112 112 100 112H20Q8 112 8 100Z', P.leaf),
+      path('M54 36Q72 38 66 50Q56 62 72 74Q92 88 76 112H40Q54 92 40 82Q26 70 44 56Q54 46 48 38Z', P.blue),
+      line('M56 52q6-2 8 2M62 78q8 0 10 4M50 100q8-2 10 2', { stroke: P.paper, sw: 2.5 }),
+      rect(19, 46, 6, 14, 2, P.brown), circle(22, 40, 11, P.forest), rect(95, 66, 6, 14, 2, P.brown), circle(98, 60, 11, P.forest),
+      rect(87, 30, 5, 10, 2, P.brown), circle(89, 26, 8, P.forest),
     ],
   },
   {
@@ -136,11 +138,13 @@ export default [
     ],
   },
   {
-    word: 'GARAGE', meaning: 'a garage', alt: 'A garage with a sloped roof and a wide roll-up door, half open with a car inside.',
+    word: 'GARAGE', meaning: 'a garage', alt: 'A garage with a sloped roof and a wide open door, a red car parked inside and a grey driveway in front.',
     draw: () => [
-      path('M6 48L60 14L114 48Z', P.navy), rect(12, 48, 96, 60, 2, P.cream),
-      rect(22, 58, 76, 50, 2, P.charcoal), path('M30 108V94Q30 88 36 88H44L50 80H72L78 88H86Q92 88 92 94V108Z', P.red, { sw: 2 }),
-      rect(22, 58, 76, 24, 0, P.stone), line('M22 64H98M22 70H98M22 76H98', { stroke: P.slate, sw: 2 }), line('M4 108H116'),
+      path('M6 44L60 12L114 44Z', P.navy), rect(12, 44, 96, 54, 2, P.cream),
+      rect(22, 52, 76, 46, 2, P.charcoal), rect(22, 52, 76, 12, 0, P.stone), line('M22 58H98', { stroke: P.slate, sw: 2 }),
+      path('M30 96V82Q30 76 36 76H42L50 68H72L80 76H86Q92 76 92 82V96Z', P.red), rect(52, 72, 16, 6, 2, P.sky, { sw: 2 }),
+      circle(40, 96, 6, P.charcoal), circle(82, 96, 6, P.charcoal), rect(34, 82, 8, 5, 2, P.yellow, { sw: 1.5 }), rect(80, 82, 8, 5, 2, P.yellow, { sw: 1.5 }),
+      path('M22 98H98L112 114H8Z', P.stone),
     ],
   },
   {

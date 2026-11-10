@@ -21,13 +21,16 @@ export default [
     ],
   },
   {
-    word: 'DOLL', meaning: 'a toy doll', alt: 'A toy doll in a pink dress, with yellow pigtails, a round face and button eyes.',
+    word: 'DOLL', meaning: 'a toy rag doll', alt: 'A soft toy rag doll with button eyes, stitched smile, orange yarn hair and a stitched pink dress.',
     draw: () => [
-      path('M30 30Q14 30 16 50Q20 58 28 50ZM90 30Q106 30 104 50Q100 58 92 50Z', P.yellow),
-      path('M60 56L28 104H92Z', P.pink), ...rod('M40 104v8M80 104v8', P.skin, 7), ...rod('M44 70L28 84M76 70L92 84', P.skin, 7),
-      circle(60, 36, 22, P.skin), path('M38 34Q38 12 60 12Q82 12 82 34Q72 22 60 24Q48 22 38 34Z', P.yellow),
-      eyes(52, 38, 68, 38, 3), path('M54 46Q60 52 66 46', undefined, { sw: 2 }), circle(46, 44, 3, P.pink, { ns: true }), circle(74, 44, 3, P.pink, { ns: true }),
-      path('M60 56l-6 8h12Z', P.paper, { sw: 2 }),
+      path('M26 18Q14 22 14 42Q18 52 28 46ZM94 18Q106 22 106 42Q102 52 92 46Z', P.orange),
+      path('M60 56L30 104H90Z', P.pink), line('M38 92h44', { sw: 2, dash: '3 3' }),
+      line('M44 104v10M76 104v10', { stroke: P.ink, sw: 8 }), line('M44 104v10M76 104v10', { stroke: P.skin, sw: 3.5 }),
+      line('M44 66L26 82M76 66L94 82', { stroke: P.ink, sw: 9 }), line('M44 66L26 82M76 66L94 82', { stroke: P.skin, sw: 4.5 }),
+      circle(60, 36, 22, P.skin), path('M38 32Q40 12 60 12Q80 12 82 32Q72 20 60 22Q48 20 38 32Z', P.orange),
+      circle(52, 38, 4.5, P.charcoal), circle(68, 38, 4.5, P.charcoal), dot(51, 37, 0.1),
+      circle(51, 37, 1, P.paper, { ns: true }), circle(53, 39, 1, P.paper, { ns: true }), circle(67, 37, 1, P.paper, { ns: true }), circle(69, 39, 1, P.paper, { ns: true }),
+      path('M52 48Q60 54 68 48', undefined, { sw: 2, dash: '2 2' }), circle(46, 46, 3, P.pink, { ns: true }), circle(74, 46, 3, P.pink, { ns: true }),
     ],
   },
   {
@@ -65,12 +68,13 @@ export default [
     ],
   },
   {
-    word: 'GUITAR', meaning: 'a guitar', alt: 'A wooden guitar lying on a slant, with a round body, a sound hole, a long neck and strings.',
+    word: 'GUITAR', fit: [0.822, 55.5, 60.5], meaning: 'a guitar', alt: 'A wooden acoustic guitar lying on a slant, with a big curvy body, a round sound hole, a long neck and six strings.',
     draw: () => [
       group({ t: 'rotate(35 60 60)' },
-        rect(53, 4, 14, 52, 3, P.brown), rect(50, 0, 20, 12, 4, P.charcoal),
-        path('M60 50Q80 46 82 64Q82 74 76 78Q90 86 88 102Q84 120 60 120Q36 120 32 102Q30 86 44 78Q38 74 38 64Q40 46 60 50Z', P.wood),
-        circle(60, 84, 9, P.charcoal), rect(48, 102, 24, 5, 2, P.brown), line('M57 8V104M63 8V104', { stroke: P.paper, sw: 1.5 })),
+        rect(54, -6, 12, 62, 3, P.brown), rect(51, -12, 18, 12, 4, P.charcoal),
+        path('M60 48Q84 44 86 62Q86 72 80 78Q96 88 94 104Q90 126 60 126Q30 126 26 104Q24 88 40 78Q34 72 34 62Q36 44 60 48Z', P.wood),
+        circle(60, 84, 9, P.charcoal), rect(48, 104, 24, 5, 2, P.brown),
+        line('M56 -4V106M58.5 -4V106M61 -4V106M63.5 -4V106', { stroke: P.paper, sw: 1 })),
     ],
   },
   {
@@ -92,21 +96,21 @@ export default [
     ],
   },
   {
-    word: 'FLUTE', meaning: 'a flute', alt: 'A long silver flute lying on a slant, with a row of round finger keys.',
+    word: 'FLUTE', meaning: 'a flute', alt: 'A long silver flute lying flat, with a mouthpiece hole near one end and a row of round keys.',
     draw: () => [
-      group({ t: 'rotate(-30 60 60)' },
-        rect(4, 52, 112, 16, 8, P.stone), ...[30, 46, 62, 74, 86, 98].map(x => circle(x, 60, 4, P.slate, { sw: 2 })), ellipse(16, 60, 5, 3, P.charcoal, { ns: true }),
-        line('M38 54V66M70 54V66', { stroke: P.slate, sw: 2 })),
+      rect(2, 52, 116, 16, 8, P.stone), ellipse(18, 56, 5, 2.5, P.charcoal, { ns: true }), rect(30, 52, 4, 16, 1, P.slate, { sw: 1.5 }),
+      ...[46, 58, 70, 84, 96, 106].map(x => circle(x, 60, 4, P.paper, { sw: 2 })), line('M44 66H110', { stroke: P.slate, sw: 2 }),
     ],
   },
   {
-    word: 'VIOLIN', meaning: 'a violin', alt: 'A brown violin standing upright with a curled scroll on top, f-shaped holes and a bow beside it.',
+    word: 'VIOLIN', meaning: 'a violin', alt: 'A brown violin standing up with a curled scroll at the top, two f-shaped holes, a dark chin rest and a bow beside it.',
     draw: () => [
-      ...rod('M98 14L76 110', P.stone, 6),
-      path('M50 34Q34 34 34 50Q34 60 42 64Q32 70 32 84Q32 108 54 110Q60 110 66 110Q88 108 88 84Q88 70 78 64Q86 60 86 50Q86 34 70 34Z', P.wood, { t: 'translate(-8 0)' }),
-      rect(48, 6, 8, 34, 2, P.charcoal), circle(52, 8, 6, P.brown),
-      path('M42 62q-4 6 0 12q4 6 0 12M62 62q-4 6 0 12q4 6 0 12', undefined, { sw: 2 }),
-      rect(40, 94, 24, 6, 2, P.charcoal), line('M50 14V94M54 14V94', { stroke: P.paper, sw: 1.2 }),
+      line('M104 8L82 112', { stroke: P.ink, sw: 6 }), line('M104 8L82 112', { stroke: P.stone, sw: 1.5 }), line('M100 8L78 112', { sw: 1.5 }),
+      path('M46 40Q32 40 32 54Q32 62 38 66Q30 72 30 86Q30 108 52 110Q64 110 76 108Q86 104 86 86Q86 72 78 66Q84 62 84 54Q84 40 70 40Z', P.wood, { t: 'translate(-4 0)' }),
+      rect(51, 8, 6, 36, 2, P.charcoal), path('M50 10Q46 2 54 2Q62 2 58 10Q54 12 50 10Z', P.brown),
+      line('M48 16h-6M60 16h6', { sw: 3 }),
+      path('M42 64q-4 6 0 12q4 6 0 12M66 64q-4 6 0 12q4 6 0 12', undefined, { sw: 2 }),
+      rect(46, 92, 16, 5, 2, P.charcoal), path('M58 98Q70 98 72 106Q64 108 58 104Z', P.charcoal, { sw: 2 }), line('M52 14V92M56 14V92', { stroke: P.paper, sw: 1.2 }),
     ],
   },
   {
@@ -159,13 +163,14 @@ export default [
     ],
   },
   {
-    word: 'TOP', meaning: 'a spinning top', otherMeaning: 'the top of something', alt: 'A spinning top with red and yellow stripes, a handle on top and a point at the bottom.',
+    word: 'TOP', meaning: 'a spinning top', otherMeaning: 'the top of something', alt: 'A tilted spinning top with red and yellow stripes, a knob on top and its point spinning on the floor, with swirl lines around it.',
     draw: () => [
-      ...rod('M60 6V30', P.brown, 9),
-      path('M60 116L14 64Q14 30 60 30Q106 30 106 64Z', P.yellow),
-      path('M60 116L14 64Q20 56 34 54Z', P.red, { sw: 2 }), path('M60 116L48 52Q60 50 72 52Z', P.red, { sw: 2 }), path('M60 116L86 54Q100 56 106 64Z', P.red, { sw: 2 }),
-      ellipse(60, 44, 46, 14, P.blue), path('M60 116L14 64Q14 30 60 30Q106 30 106 64Z'),
-      line('M4 100q8 4 16 0M100 100q8 4 16 0', { stroke: P.stone, sw: 3 }),
+      line('M8 108H112', { stroke: P.stone, sw: 3 }), path('M24 92Q40 100 60 98M66 30Q90 24 104 40', undefined, { stroke: P.slate, sw: 3 }),
+      group({ t: 'rotate(15 60 70)' },
+        line('M60 6V28', { stroke: P.ink, sw: 9 }), line('M60 6V28', { stroke: P.brown, sw: 4.5 }),
+        path('M60 108L16 62Q16 30 60 30Q104 30 104 62Z', P.yellow),
+        path('M60 108L16 62Q22 54 36 52Z', P.red, { sw: 2 }), path('M60 108L48 50Q60 48 72 50Z', P.red, { sw: 2 }), path('M60 108L84 52Q98 54 104 62Z', P.red, { sw: 2 }),
+        ellipse(60, 42, 44, 12, P.blue), path('M60 108L16 62Q16 30 60 30Q104 30 104 62Z')),
     ],
   },
   {
@@ -214,12 +219,13 @@ export default [
     ],
   },
   {
-    word: 'PUPPET', meaning: 'a hand puppet', alt: 'A green sock-style hand puppet with big eyes and a wide open red mouth.',
+    word: 'PUPPET', meaning: 'a hand puppet', alt: 'A green sock puppet with big eyes and an open red mouth, worn on a child’s hand and arm coming up from below.',
     draw: () => [
-      path('M30 116V70Q30 22 64 22Q100 22 100 56V60H66V116Z', P.leaf),
-      path('M100 60Q100 84 66 84V60Z', P.red), path('M66 60H100Q100 68 92 68H66Z', P.leaf, { sw: 2 }),
-      circle(56, 36, 11, P.paper), circle(80, 34, 11, P.paper), eyes(58, 38, 82, 36, 4),
-      line('M30 102H66', { stroke: P.forest, sw: 3 }),
+      path('M40 114V84H70V114Z', P.skin),
+      path('M30 92V62Q30 16 64 16Q100 16 100 50V54H66V92Q50 98 30 92Z', P.leaf),
+      path('M100 54Q100 78 66 78V54Z', P.red), path('M66 54H100Q100 62 92 62H66Z', P.leaf, { sw: 2 }),
+      circle(56, 30, 11, P.paper), circle(80, 28, 11, P.paper), eyes(58, 32, 82, 30, 4),
+      path('M28 84Q48 96 70 86V98Q48 106 28 96Z', P.forest),
     ],
   },
   {

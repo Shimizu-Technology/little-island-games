@@ -546,7 +546,7 @@
       "id": "canoe",
       "wordId": "en-canoe",
       "queue": "tiers",
-      "meaning": "an outrigger canoe"
+      "meaning": "a canoe"
     },
     {
       "id": "hut",
@@ -735,7 +735,7 @@
       "id": "garlic",
       "wordId": "en-garlic",
       "queue": "tiers",
-      "meaning": "a garlic bulb"
+      "meaning": "garlic"
     },
     {
       "id": "olive",
@@ -1313,7 +1313,7 @@
       "id": "doll",
       "wordId": "en-doll",
       "queue": "tiers",
-      "meaning": "a toy doll"
+      "meaning": "a toy rag doll"
     },
     {
       "id": "robot",
@@ -1535,7 +1535,7 @@
       "id": "chalk",
       "wordId": "en-chalk",
       "queue": "tiers",
-      "meaning": "a stick of chalk"
+      "meaning": "sticks of chalk"
     },
     {
       "id": "easel",
@@ -1910,7 +1910,7 @@
       "id": "snow",
       "wordId": "en-snow",
       "queue": "tiers",
-      "meaning": "snow (a snowflake)"
+      "meaning": "snow"
     },
     {
       "id": "wind",

@@ -86,12 +86,12 @@ export default [
     ],
   },
   {
-    word: 'PEACH', meaning: 'a peach', alt: 'A soft round peach, orange-pink with a crease down one side and a green leaf.',
+    word: 'PEACH', meaning: 'a peach', alt: 'A soft round peach, pink blushing to orange, with a deep crease down its middle and a green leaf at the top.',
     draw: () => [
-      line('M60 28L62 18', { stroke: P.brown, sw: 4 }), leaf(62, 22, -20, P.leaf, 1.4),
-      path('M60 28Q100 22 106 64Q106 106 64 108Q20 110 14 70Q12 30 60 28Z', P.coral),
-      patch('M60 28Q96 26 104 60Q100 92 74 104Q94 80 90 56Q84 34 60 28Z', P.orange),
-      path('M60 28Q100 22 106 64Q106 106 64 108Q20 110 14 70Q12 30 60 28Z'), line('M60 30Q52 66 64 106', { sw: 2.5 }),
+      line('M60 26L62 16', { stroke: P.brown, sw: 4 }), path('M62 20Q74 6 94 12Q86 26 66 24Z', P.leaf),
+      path('M60 28Q100 22 106 64Q106 106 62 108Q18 110 14 70Q12 30 60 28Z', P.orange),
+      patch('M60 28Q26 30 18 60Q16 96 52 106Q28 86 34 60Q40 36 60 28Z', P.pink), patch('M64 30Q96 28 102 60Q100 84 86 98Q96 74 90 56Q84 38 64 30Z', P.coral),
+      path('M60 28Q100 22 106 64Q106 106 62 108Q18 110 14 70Q12 30 60 28Z'), path('M60 30Q48 66 62 106', undefined, { sw: 3 }),
     ],
   },
   {
@@ -153,12 +153,12 @@ export default [
     ],
   },
   {
-    word: 'PEPPER', meaning: 'a bell pepper', otherMeaning: 'black pepper, the spice', alt: 'A shiny green bell pepper with bumpy lobes and a thick curved stem.',
+    word: 'PEPPER', meaning: 'a bell pepper', otherMeaning: 'black pepper, the spice', alt: 'A boxy red bell pepper with four rounded lobes at the bottom and a thick green stem.',
     draw: () => [
-      ...[line('M60 28Q60 14 70 10', { stroke: P.ink, sw: 10 }), line('M60 28Q60 14 70 10', { stroke: P.forest, sw: 5 })],
-      path('M60 30Q74 22 90 30Q108 40 104 72Q100 104 82 106Q72 108 66 100Q60 108 52 100Q46 108 36 106Q18 104 16 72Q12 40 30 30Q46 22 60 30Z', P.leaf),
-      line('M60 34Q56 66 60 98M40 36Q32 66 40 98M80 36Q88 66 80 98', { stroke: P.forest, sw: 2.5 }),
-      path('M48 30Q60 38 72 30Q66 24 60 26Q54 24 48 30Z', P.forest, { sw: 2 }), shine(26, 52, 1),
+      path('M60 26Q60 12 72 8', undefined, { stroke: P.ink, sw: 11 }), path('M60 26Q60 12 72 8', undefined, { stroke: P.forest, sw: 6 }),
+      path('M30 30Q46 22 60 28Q74 22 90 30Q104 38 102 70Q100 98 92 106Q84 112 76 104Q68 112 60 104Q52 112 44 104Q36 112 28 106Q18 98 18 70Q16 38 30 30Z', P.red),
+      line('M44 34Q38 70 44 104M76 34Q82 70 76 104M60 32V102', { stroke: P.coral, sw: 2.5 }),
+      path('M46 30Q60 40 74 30Q66 22 60 26Q54 22 46 30Z', P.leaf, { sw: 2 }), patch('M26 46Q28 38 34 36Q30 46 30 58Z', P.paper),
     ],
   },
   {
@@ -180,30 +180,30 @@ export default [
     ],
   },
   {
-    word: 'RADISH', meaning: 'a radish', alt: 'A round red radish with a thin white tail and green leaves on top.',
+    word: 'RADISH', meaning: 'a radish', alt: 'A round pinkish-red radish with a white tip, a long thin root tail and small green leaves on top.',
     draw: () => [
-      path('M56 46Q36 30 34 8Q50 12 58 40ZM62 44Q66 20 84 8Q88 30 66 46Z', P.leaf), line('M56 46L46 20M64 44L78 18', { stroke: P.forest, sw: 2 }),
-      path('M60 44Q96 44 96 74Q94 98 66 100L60 116L54 100Q26 98 24 74Q24 44 60 44Z', P.red),
-      patch('M54 98Q60 104 66 98L60 114Z', P.paper), shine(34, 64, 1),
+      path('M56 40Q42 30 40 14Q52 16 58 34ZM64 40Q70 22 82 16Q84 32 68 40Z', P.leaf),
+      path('M60 38Q92 38 92 66Q90 86 70 90L60 98L50 90Q30 86 28 66Q28 38 60 38Z', P.pink), patch('M60 38Q90 40 90 64Q88 80 76 86Q84 70 78 56Q70 42 60 38Z', P.red),
+      path('M60 38Q92 38 92 66Q90 86 70 90L60 98L50 90Q30 86 28 66Q28 38 60 38Z'),
+      path('M50 90Q60 96 70 90L60 100Z', P.paper, { sw: 2 }), path('M60 100Q58 110 64 118', undefined, { sw: 2 }),
     ],
   },
   {
-    word: 'GARLIC', meaning: 'a garlic bulb', alt: 'A white garlic bulb with curved clove lines and a pointed tip.',
+    word: 'GARLIC', meaning: 'garlic', alt: 'A white garlic bulb with clove lines and a pointed tip, with one loose clove beside it.',
     draw: () => [
-      line('M50 102l-4 8M60 102v10M70 102l4 8', { stroke: P.wood, sw: 2 }),
-      path('M60 10Q62 30 74 38Q104 52 102 76Q98 104 60 104Q22 104 18 76Q16 52 46 38Q58 30 60 10Z', P.paper),
-      line('M58 32Q38 52 42 102M62 32Q82 52 78 102M60 34V104M50 36Q22 60 30 96M70 36Q98 60 90 96', { stroke: P.stone, sw: 2 }),
-      path('M60 10Q62 30 74 38Q104 52 102 76Q98 104 60 104Q22 104 18 76Q16 52 46 38Q58 30 60 10Z'),
+      line('M38 104l-4 8M48 106v8M58 104l4 8', { stroke: P.wood, sw: 2 }),
+      path('M48 14Q50 32 60 40Q86 52 84 76Q80 104 48 104Q16 104 12 76Q10 52 36 40Q46 32 48 14Z', P.paper),
+      line('M46 36Q30 56 34 102M50 36Q66 56 62 102M48 38V104M40 40Q18 62 24 96', { stroke: P.stone, sw: 2 }),
+      path('M48 14Q50 32 60 40Q86 52 84 76Q80 104 48 104Q16 104 12 76Q10 52 36 40Q46 32 48 14Z'),
+      path('M92 66Q110 72 110 92Q108 106 96 108Q86 108 86 96Q86 80 92 66Z', P.cream), line('M92 70Q94 90 96 106', { stroke: P.stone, sw: 2 }),
     ],
   },
   {
-    word: 'OLIVE', fit: [0.768, 61.0, 39.5], meaning: 'olives', alt: 'Three green olives on a small twig with narrow silver-green leaves.',
+    word: 'OLIVE', meaning: 'olives', alt: 'Two shiny oval olives, one green and one black, with a small olive leaf.',
     draw: () => [
-      line('M14 30Q60 20 106 30', { stroke: P.brown, sw: 4 }),
-      leaf(30, 28, -150, P.mint, 1.4), leaf(70, 24, -40, P.mint, 1.4), leaf(96, 30, 10, P.mint, 1.2),
-      line('M40 26V40M64 24V44M88 28V40', { stroke: P.brown, sw: 2.5 }),
-      ellipse(40, 58, 15, 19, P.leaf), ellipse(64, 66, 15, 19, P.leaf), ellipse(88, 58, 15, 19, P.leaf),
-      shine(32, 52, 0.7), shine(56, 60, 0.7), shine(80, 52, 0.7),
+      path('M20 30Q40 6 70 14Q50 30 20 30Z', P.mint), line('M22 30Q46 22 68 16', { stroke: P.forest, sw: 2 }),
+      ellipse(42, 70, 24, 32, P.leaf, { t: 'rotate(-20 42 70)' }), patch('M30 52Q34 42 42 40Q36 50 36 60Z', P.paper),
+      ellipse(84, 76, 22, 30, P.charcoal, { t: 'rotate(15 84 76)' }), patch('M76 58Q80 50 88 48Q82 56 82 66Z', P.slate),
     ],
   },
   {
@@ -426,12 +426,12 @@ export default [
     ],
   },
   {
-    word: 'CABBAGE', meaning: 'a cabbage', alt: 'A round pale green cabbage with layers of leaves and white veins.',
+    word: 'CABBAGE', meaning: 'a cabbage', alt: 'A round green cabbage seen from the side, with big curling outer leaves and pale veins.',
     draw: () => [
-      circle(60, 62, 46, P.leaf),
-      path('M60 22Q90 24 94 56Q92 86 60 92Q30 88 28 58Q30 26 60 22Z', P.mint),
-      path('M60 40Q76 42 78 60Q74 78 58 78Q44 74 44 58Q46 42 60 40Z', P.paper, { sw: 2 }),
-      line('M60 92V60M60 76L44 64M60 70L76 60M24 74Q40 80 50 92M96 74Q80 80 70 92', { stroke: P.paper, sw: 2.5 }), circle(60, 62, 46),
+      path('M12 70Q8 40 30 36Q50 30 60 44Q72 30 92 36Q114 42 108 72Q104 104 60 106Q16 104 12 70Z', P.leaf),
+      path('M30 40Q50 22 60 30Q72 20 90 40Q76 34 66 46Q60 38 52 46Q42 36 30 40Z', P.mint),
+      path('M36 52Q46 36 60 40Q74 36 84 52Q90 78 60 82Q30 78 36 52Z', P.mint),
+      line('M60 104V82M60 92L40 80M60 96L82 82M20 76Q32 84 38 98M100 76Q88 84 82 98M60 60V80M60 66L50 56M60 66L70 56', { stroke: P.paper, sw: 2.5 }),
     ],
   },
   {
@@ -443,12 +443,12 @@ export default [
     ],
   },
   {
-    word: 'WAFFLE', meaning: 'a waffle', alt: 'A square golden waffle with a grid of little squares, a pat of butter and syrup.',
+    word: 'WAFFLE', meaning: 'a waffle', alt: 'A square golden waffle with a neat grid of deep square pockets, a pat of butter and a drip of syrup.',
     draw: () => [
-      rect(12, 12, 96, 96, 16, P.gold),
-      ...[30, 48, 66, 84].map(v => [rect(v, 26, 12, 12, 2, P.wood, { sw: 2 }), rect(v, 44, 12, 12, 2, P.wood, { sw: 2 }), rect(v, 62, 12, 12, 2, P.wood, { sw: 2 }), rect(v, 80, 12, 12, 2, P.wood, { sw: 2 })]).flat().filter((_, i) => i % 1 === 0),
-      path('M40 48Q50 30 72 40Q86 48 82 64Q78 78 66 70Q60 84 52 74Q38 70 40 48Z', P.brown, { sw: 2 }),
-      rect(52, 44, 18, 14, 3, P.yellow, { sw: 2 }),
+      rect(10, 10, 100, 100, 14, P.gold),
+      ...[0, 1, 2, 3].flatMap(r => [0, 1, 2, 3].map(c => rect(20 + c * 21, 20 + r * 21, 16, 16, 3, P.wood, { sw: 2 }))),
+      rect(46, 46, 28, 22, 4, P.yellow), patch('M50 50h16v4h-16Z', P.cream),
+      path('M74 60Q86 60 88 72Q90 90 84 100Q80 104 78 96Q78 80 70 70Z', P.brown, { sw: 2 }),
     ],
   },
 ];

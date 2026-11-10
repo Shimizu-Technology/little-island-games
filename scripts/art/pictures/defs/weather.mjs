@@ -25,8 +25,13 @@ export default [
     draw: () => [group({ t: 'translate(0 8)' }, cloud(P.paper), path('M22 70Q60 76 98 70', undefined, { stroke: P.sky, sw: 3 }))],
   },
   {
-    word: 'RAIN', meaning: 'rain', alt: 'A grey rain cloud with blue raindrops falling from it.',
-    draw: () => [group({ t: 'translate(0 -10)' }, cloud(P.stone)), drop(32, 76, 0.8), drop(56, 88, 0.8), drop(80, 76, 0.8), drop(44, 98, 0.6), drop(70, 104, 0.55), drop(94, 96, 0.6)],
+    word: 'RAIN', meaning: 'rain', alt: 'Lots of blue raindrops falling in slanting rows from a grey sky, splashing on the ground.',
+    draw: () => [
+      path('M6 26Q6 6 26 8Q40 2 54 8Q70 0 84 8Q104 4 114 22Q100 30 84 24Q70 32 56 24Q40 32 26 24Q14 32 6 26Z', P.stone),
+      ...[[22, 36], [50, 34], [78, 36], [104, 38], [12, 62], [38, 60], [66, 62], [94, 60], [26, 86], [54, 84], [82, 86], [108, 84]].map(([x, y]) =>
+        path(`M${x} ${y}Q${x + 6} ${y + 9} ${x + 6} ${y + 12}Q${x + 6} ${y + 17} ${x} ${y + 17}Q${x - 6} ${y + 17} ${x - 6} ${y + 12}Q${x - 6} ${y + 9} ${x} ${y}Z`, P.blue)),
+      line('M8 112h22M44 112h30M88 112h24', { stroke: P.sky, sw: 3 }),
+    ],
   },
   {
     word: 'RAINBOW', meaning: 'a rainbow', alt: 'A rainbow arch of red, orange, yellow, green and blue bands, with a cloud at each end.',
@@ -36,15 +41,18 @@ export default [
     ],
   },
   {
-    word: 'LIGHTNING', meaning: 'a bolt of lightning', alt: 'A dark storm cloud with a big yellow zigzag lightning bolt coming out of it.',
-    draw: () => [group({ t: 'translate(0 -14)' }, cloud(P.slate)), path('M62 50H86L72 74H90L48 116L60 84H42Z', P.yellow)],
+    word: 'LIGHTNING', meaning: 'a bolt of lightning', alt: 'A big bright yellow zigzag bolt of lightning with little sparks around it.',
+    draw: () => [
+      path('M66 4H100L74 46H96L36 116L52 64H30Z', P.yellow), patch('M70 10H88L66 46L60 40Z', P.paper),
+      line('M20 30l8 6M12 50h10M104 70l8-4M100 88l10 4', { stroke: P.orange, sw: 4 }),
+    ],
   },
   {
-    word: 'SNOW', meaning: 'snow (a snowflake)', alt: 'A white six-armed snowflake with little branches on each arm.',
+    word: 'SNOW', meaning: 'snow', alt: 'Thick white snow piled up in soft drifts on the ground, with snowflakes falling from a pale sky.',
     draw: () => [
-      line('M60 8V112M15 34L105 86M15 86L105 34M60 22l-10-10M60 22l10-10M60 98l-10 10M60 98l10 10M27 41l-14 0M27 41l-6 -12M93 41l14 0M93 41l6-12M27 79l-14 0M27 79l-6 12M93 79l14 0M93 79l6 12', { stroke: P.ink, sw: 9 }),
-      line('M60 8V112M15 34L105 86M15 86L105 34M60 22l-10-10M60 22l10-10M60 98l-10 10M60 98l10 10M27 41l-14 0M27 41l-6 -12M93 41l14 0M93 41l6-12M27 79l-14 0M27 79l-6 12M93 79l14 0M93 79l6 12', { stroke: P.sky, sw: 4 }),
-      poly(ring(60, 60, 10, 6, -90), P.paper),
+      path('M6 82Q20 64 40 72Q56 58 76 70Q94 60 114 72V110H6Z', P.paper), path('M6 96Q30 84 56 94Q84 86 114 96', undefined, { stroke: P.sky, sw: 3 }),
+      ...[[20, 20, 8], [52, 14, 6], [86, 22, 8], [36, 44, 6], [70, 46, 7], [104, 48, 5], [14, 56, 5]].map(([x, y, r]) =>
+        line(`M${x - r} ${y}H${x + r}M${x - r * 0.5} ${y - r * 0.87}L${x + r * 0.5} ${y + r * 0.87}M${x - r * 0.5} ${y + r * 0.87}L${x + r * 0.5} ${y - r * 0.87}`, { stroke: P.blue, sw: 2.5 })),
     ],
   },
   {
@@ -82,11 +90,10 @@ export default [
     ],
   },
   {
-    word: 'COMET', meaning: 'a comet', alt: 'A comet: a bright yellow ball with a long streaming tail behind it.',
+    word: 'COMET', meaning: 'a comet', alt: 'A comet: a bright icy ball with one long glowing tail streaming behind it.',
     draw: () => [
       path('M86 26Q50 30 6 62Q50 52 74 52Q46 64 14 98Q60 74 84 58Z', P.sky), path('M88 30Q60 40 30 64Q58 56 80 54Z', P.paper, { sw: 2 }),
       circle(88, 40, 20, P.yellow), patch('M78 34Q82 26 90 26Q84 32 84 40Z', P.paper),
-      poly(ring(40, 22, 6, 4, -90, 2.2), P.yellow, { sw: 2 }), poly(ring(100, 92, 7, 4, -90, 2.6), P.yellow, { sw: 2 }),
     ],
   },
   {
@@ -99,12 +106,14 @@ export default [
     ],
   },
   {
-    word: 'TYPHOON', meaning: 'a typhoon (a big tropical storm)', alt: 'A huge swirling storm seen from above, with spiral cloud arms around a calm eye.',
+    word: 'TYPHOON', meaning: 'a typhoon (a big tropical storm)', alt: 'A typhoon: the storm sign of a dark round eye with two curved arms, over a rough sea with slanting rain and a palm tree bending in the wind.',
     draw: () => [
-      circle(60, 60, 50, P.blue, { ns: true }),
-      path('M60 60Q60 38 82 40Q108 46 106 72Q100 104 66 108', undefined, { stroke: P.ink, sw: 15 }), path('M60 60Q60 38 82 40Q108 46 106 72Q100 104 66 108', undefined, { stroke: P.paper, sw: 10 }),
-      path('M60 60Q60 82 38 80Q12 74 14 48Q20 16 54 12', undefined, { stroke: P.ink, sw: 15 }), path('M60 60Q60 82 38 80Q12 74 14 48Q20 16 54 12', undefined, { stroke: P.paper, sw: 10 }),
-      circle(60, 60, 9, P.blue), circle(60, 60, 50),
+      path('M6 100Q20 90 34 100Q48 110 60 100Q72 90 86 100Q100 110 114 100V112H6Z', P.blue),
+      path('M48 22Q70 2 104 12Q76 14 64 30Z', P.slate), path('M72 70Q50 90 16 80Q44 78 56 62Z', P.slate),
+      circle(60, 46, 22, P.slate), circle(60, 46, 8, P.paper),
+      line('M12 66L6 78M100 62L94 74M110 74L104 86', { stroke: P.blue, sw: 3 }),
+      line('M98 102Q96 90 86 82', { stroke: P.ink, sw: 7 }), line('M98 102Q96 90 86 82', { stroke: P.brown, sw: 3 }),
+      path('M86 82Q76 74 64 80Q76 80 86 82Q78 70 68 68Q80 70 86 82Q84 68 78 62Q88 68 86 82Z', P.leaf, { sw: 2 }),
     ],
   },
   {

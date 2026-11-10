@@ -1,14 +1,15 @@
-import { P, circle, ellipse, rect, path, line, patch, group, rays } from '../style.mjs';
+import { P, circle, ellipse, rect, path, line, patch, group } from '../style.mjs';
 
 const rod = (d, fill, w = 7) => [line(d, { stroke: P.ink, sw: w }), line(d, { stroke: fill, sw: w - 4.5 })];
 
 export default [
   {
-    word: 'HAMMER', meaning: 'a hammer', alt: 'A hammer with a wooden handle and a grey metal head with a claw at the back.',
+    word: 'HAMMER', fit: [0.922, 44.0, 52.5], meaning: 'a hammer', alt: 'A hammer with a wooden handle, a flat round striking face on one side and a split claw on the other.',
     draw: () => [
-      group({ t: 'translate(9 16) scale(0.85) rotate(-35 60 60)' },
-        rect(52, 38, 16, 78, 6, P.wood), line('M60 96V110', { stroke: P.brown, sw: 2 }),
-        path('M24 22H78V48H24Q18 48 18 42V28Q18 22 24 22Z', P.stone), path('M78 26Q92 24 98 14Q104 32 94 42Q88 48 78 46Z', P.stone)),
+      group({ t: 'rotate(-30 60 62)' },
+        rect(53, 40, 14, 74, 6, P.wood), line('M60 96V108', { stroke: P.brown, sw: 2 }),
+        path('M24 22H66V48H24Z', P.stone), rect(12, 18, 14, 34, 4, P.slate),
+        path('M66 24Q86 24 100 10Q104 20 96 32L88 34L98 40Q102 50 90 48Q78 46 66 46Z', P.stone)),
     ],
   },
   {
@@ -70,12 +71,14 @@ export default [
     ],
   },
   {
-    word: 'ROPE', meaning: 'a rope', alt: 'A coil of thick twisted rope with one loose end.',
-    draw: () => [
-      path('M88 72Q108 82 112 104', undefined, { stroke: P.ink, sw: 15 }), path('M88 72Q108 82 112 104', undefined, { stroke: P.sand, sw: 10 }),
-      ...[44, 34, 24, 14].map(r => [circle(58, 58, r, undefined, { stroke: P.ink, sw: 14 }), circle(58, 58, r, undefined, { stroke: P.sand, sw: 9 }), circle(58, 58, r, undefined, { stroke: P.wood, sw: 2, dash: '3 6' })]).flat(),
-      circle(58, 58, 6, P.sand),
-    ],
+    word: 'ROPE', meaning: 'a rope', alt: 'A thick twisted rope tied in a loose knot, with frayed ends.',
+    draw: () => {
+      const d = 'M10 100Q20 70 48 66Q80 62 82 42Q82 20 60 20Q40 22 44 42Q48 62 76 76Q96 86 110 70';
+      return [
+        path(d, undefined, { stroke: P.ink, sw: 15 }), path(d, undefined, { stroke: P.sand, sw: 10 }), path(d, undefined, { stroke: P.wood, sw: 10, dash: '2.5 5' }),
+        line('M10 100l-4 6M10 100l2 8M10 100l-7 1M110 70l6-4M110 70l7 2M110 70l4 6', { stroke: P.wood, sw: 2.5 }),
+      ];
+    },
   },
   {
     word: 'NEEDLE', meaning: 'a sewing needle', alt: 'A thin silver sewing needle with red thread through its eye.',
@@ -85,11 +88,11 @@ export default [
     ],
   },
   {
-    word: 'HOOK', meaning: 'a fishing hook', otherMeaning: 'a coat hook', alt: 'A shiny metal fishing hook on a line, with a curved barb at the bottom.',
+    word: 'HOOK', meaning: 'a fishing hook', otherMeaning: 'a coat hook', alt: 'A shiny metal fishing hook hanging from a fishing line, with a round eye at the top and a sharp barbed point.',
     draw: () => [
-      line('M60 4V24', { sw: 2 }), circle(60, 28, 5, undefined, { stroke: P.ink, sw: 9 }), circle(60, 28, 5, undefined, { stroke: P.stone, sw: 4 }),
-      path('M60 34V84Q60 108 40 108Q20 108 20 88V78', undefined, { stroke: P.ink, sw: 11 }), path('M60 34V84Q60 108 40 108Q20 108 20 88V78', undefined, { stroke: P.stone, sw: 6 }),
-      path('M20 66L30 84H12Z', P.stone),
+      line('M60 2V18', { sw: 2 }), circle(60, 22, 6, undefined, { stroke: P.ink, sw: 10 }), circle(60, 22, 6, undefined, { stroke: P.stone, sw: 5 }),
+      path('M60 30V82Q60 108 38 108Q16 108 16 86V70', undefined, { stroke: P.ink, sw: 12 }), path('M60 30V82Q60 108 38 108Q16 108 16 86V70', undefined, { stroke: P.stone, sw: 7 }),
+      path('M16 54L28 74L16 70L8 78Z', P.stone), patch('M56 40h2v36h-2Z', P.paper),
     ],
   },
   {
@@ -102,8 +105,13 @@ export default [
     ],
   },
   {
-    word: 'WHEEL', meaning: 'a wheel', alt: 'A wheel with a black rubber tyre, grey spokes and a round hub.',
-    draw: () => [circle(60, 60, 50, P.charcoal), circle(60, 60, 36, P.stone), line(rays(60, 60, 10, 34, 6), { sw: 5 }), line(rays(60, 60, 10, 34, 6), { stroke: P.paper, sw: 2 }), circle(60, 60, 11, P.slate), circle(60, 60, 4, P.charcoal)],
+    word: 'WHEEL', meaning: 'a wheel', alt: 'A big wooden cart wheel with a thick rim, eight spokes and a round hub in the middle.',
+    draw: () => [
+      circle(60, 60, 50, P.brown), circle(60, 60, 40, P.paper),
+      ...[0, 45, 90, 135].map(a => rect(56, 22, 8, 76, 3, P.wood, { t: `rotate(${a} 60 60)` })),
+      circle(60, 60, 13, P.brown), circle(60, 60, 5, P.charcoal),
+      ...Array.from({ length: 8 }, (_, i) => circle(60 + 45 * Math.cos(i * Math.PI / 4 + 0.39), 60 + 45 * Math.sin(i * Math.PI / 4 + 0.39), 2, P.charcoal, { ns: true })),
+    ],
   },
   {
     word: 'GEAR', meaning: 'a gear wheel', alt: 'A green toothed gear wheel with a hole in the middle.', basedOn: 'content/library/art/gears.svg',
@@ -129,20 +137,23 @@ export default [
     ],
   },
   {
-    word: 'PLIERS', meaning: 'pliers', alt: 'A pair of pliers with short chunky grey jaws and long red handles.',
+    word: 'PLIERS', meaning: 'pliers', alt: 'A pair of pliers gripping a nail, with short ridged grey jaws and long blue rubber handles.',
     draw: () => [
-      path('M56 52L48 22Q48 12 56 14L66 50Z', P.stone), path('M64 52L72 22Q72 12 64 14L54 50Z', P.stone),
-      line('M52 24l6-1M53 32l6-1M55 40l5-1M68 24l-6-1M67 32l-6-1M65 40l-5-1', { sw: 2 }),
+      group({ t: 'rotate(80 60 22)' }, rect(54, 14, 24, 6, 2, P.stone, { sw: 2 }), rect(50, 12, 6, 10, 1, P.stone, { sw: 2 })),
+      path('M56 52L50 22Q50 12 58 14L66 50Z', P.stone), path('M64 52L70 22Q70 12 62 14L54 50Z', P.stone),
+      line('M53 30l5-1M54 38l5-1M67 30l-5-1M66 38l-5-1', { sw: 2 }),
       circle(60, 56, 8, P.slate), circle(60, 56, 3, P.charcoal, { ns: true }),
-      path('M54 62L26 110Q30 118 38 114L64 64Z', P.red), path('M66 62L94 110Q90 118 82 114L56 64Z', P.red),
+      path('M54 62L26 110Q30 118 38 114L64 64Z', P.blue), path('M66 62L94 110Q90 118 82 114L56 64Z', P.blue),
     ],
   },
   {
-    word: 'TROWEL', meaning: 'a garden trowel', alt: 'A small garden trowel with a pointed metal scoop and a green handle.',
+    word: 'TROWEL', meaning: 'a garden trowel', alt: 'A small garden trowel with a green handle and a pointed scoop holding brown soil, next to a little plant in a pot.',
     draw: () => [
-      group({ t: 'rotate(-40 60 60)' },
-        rect(52, 4, 16, 40, 7, P.leaf), rect(56, 42, 8, 14, 2, P.stone),
-        path('M60 54Q84 54 84 76Q82 100 60 118Q38 100 36 76Q36 54 60 54Z', P.stone), line('M60 62V104', { stroke: P.paper, sw: 2.5 })),
+      path('M84 84H112L106 112H90Z', P.coral), rect(80, 78, 36, 8, 3, P.orange), line('M98 78V60', { stroke: P.forest, sw: 4 }),
+      path('M98 64Q86 54 90 46Q100 50 98 64ZM98 62Q110 52 108 44Q98 48 98 62Z', P.leaf, { sw: 2 }),
+      group({ t: 'rotate(-40 50 60)' },
+        rect(42, 4, 16, 40, 7, P.leaf), rect(46, 42, 8, 14, 2, P.stone),
+        path('M50 54Q74 54 74 76Q72 100 50 118Q28 100 26 76Q26 54 50 54Z', P.stone), path('M34 76Q50 66 66 76Q60 92 50 102Q40 92 34 76Z', P.brown, { sw: 2 })),
     ],
   },
   {

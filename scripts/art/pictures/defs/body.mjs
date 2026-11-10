@@ -8,11 +8,11 @@ export default [
     draw: () => [hand(P.skin), line('M56 50V36M70 50V30M84 54V40', { stroke: P.skinDeep, sw: 2 }), path('M54 82Q66 90 80 82', undefined, { stroke: P.skinDeep, sw: 2 })],
   },
   {
-    word: 'FOOT', meaning: 'a foot', alt: 'A bare foot seen from above, with five round toes, the big toe biggest.',
+    word: 'FOOT', meaning: 'a foot', alt: 'A bare foot seen from the side, with the ankle, a rounded heel, the arch and five toes.',
     draw: () => [
-      path('M40 34Q62 26 80 36Q88 46 86 66Q84 90 78 104Q72 116 58 116Q42 116 40 102Q38 88 36 72Q32 48 40 34Z', P.skinDeep),
-      ellipse(44, 22, 10, 13, P.skinDeep), ellipse(62, 18, 7, 9, P.skinDeep), ellipse(75, 22, 6, 8, P.skinDeep), ellipse(85, 30, 5, 7, P.skinDeep), ellipse(92, 40, 4.5, 6, P.skinDeep),
-      patch('M42 16q4-4 8 0q-4 2-8 0Z', P.pink),
+      path('M26 8H54V62Q60 74 80 80Q100 84 110 92Q116 100 108 106H34Q18 106 18 90Q18 76 24 64Z', P.skin),
+      path('M18 92Q24 104 40 106', undefined, { stroke: P.skinDeep, sw: 2 }), path('M52 70Q46 76 50 82', undefined, { stroke: P.skinDeep, sw: 2 }),
+      line('M90 92v12M98 94v12M104 98v8', { stroke: P.skinDeep, sw: 2 }), patch('M104 96q6 2 4 8h-4Z', P.pink),
     ],
   },
   {
@@ -66,20 +66,20 @@ export default [
     ],
   },
   {
-    word: 'ARM', meaning: 'an arm', alt: 'A strong bent arm making a muscle, with the fist raised, coming out of a blue sleeve.',
+    word: 'ARM', meaning: 'an arm', alt: 'A whole arm reaching out from a short blue sleeve: shoulder, elbow, forearm and an open hand.',
     draw: () => [
-      path('M18 62Q36 34 60 52Q68 58 72 56L74 40H102V82Q102 102 82 102H18Z', P.skin),
-      path('M30 60Q44 50 58 60', undefined, { stroke: P.skinDeep, sw: 2 }), path('M74 82Q84 86 92 80', undefined, { stroke: P.skinDeep, sw: 2 }),
-      circle(88, 28, 17, P.skin), line('M76 20h14M76 28h16M78 36h12', { stroke: P.skinDeep, sw: 2 }),
-      rect(4, 56, 20, 50, 4, P.blue),
+      path('M30 40Q50 44 64 62L86 96L76 104L54 72Q42 60 28 58Z', P.skin),
+      path('M84 92Q90 82 100 84L112 88Q116 90 112 94L104 94L114 100Q116 104 112 104L102 102L110 110Q110 114 104 112L94 106Q96 112 90 112Q80 108 76 102Z', P.skin),
+      path('M52 66Q56 60 62 62', undefined, { stroke: P.skinDeep, sw: 2 }),
+      path('M6 30Q6 18 18 18H30Q40 18 40 30V60Q40 66 34 66H12Q6 66 6 60Z', P.blue),
     ],
   },
   {
-    word: 'LEG', meaning: 'a leg', alt: 'A leg below a pair of shorts, bending slightly at the knee, with a sneaker on the foot.',
+    word: 'LEG', meaning: 'a leg', alt: 'A bare leg side on below a pair of shorts: thigh, a bent knee, shin, ankle and foot.',
     draw: () => [
-      path('M40 6H76L72 34H44Z', P.navy),
-      path('M46 32H70L68 58Q70 66 66 74L64 96H48L50 74Q46 66 48 58Z', P.skinDeep), path('M52 58Q58 64 64 58', undefined, { stroke: P.brown, sw: 2 }),
-      path('M44 92H66L70 100Q94 102 96 110Q96 116 88 116H44Z', P.red), rect(42, 110, 56, 6, 3, P.paper, { sw: 2 }),
+      path('M36 18H64L76 56Q78 64 72 68L60 96Q76 98 94 100Q104 102 102 108Q100 114 90 114H46Q38 114 40 104L46 92L54 66Q44 52 38 34Z', P.skin),
+      path('M66 62Q72 60 74 54', undefined, { stroke: P.skinDeep, sw: 2 }), line('M84 104v8M92 104v8M98 106v6', { stroke: P.skinDeep, sw: 1.5 }),
+      rect(30, 6, 40, 18, 4, P.navy),
     ],
   },
   {
@@ -94,9 +94,9 @@ export default [
   {
     word: 'THUMB', meaning: 'a thumb', alt: 'A closed fist with the thumb sticking straight up: a thumbs-up.',
     draw: () => [
-      path('M28 54L32 14Q34 4 43 5Q52 6 50 18L48 50Z', P.skinDeep), patch('M35 12q6-4 11 1l-1 6q-6-1-10-7Z', P.pink),
-      path('M24 58Q24 48 36 48H90Q100 48 100 58V96Q100 112 82 112H40Q24 112 24 96Z', P.skinDeep),
-      path('M50 48H88Q96 48 96 56Q96 64 88 64H50M52 64H90Q98 64 98 72Q98 80 90 80H52M52 80H90Q98 80 98 88Q98 96 90 96H52', undefined, { stroke: P.brown, sw: 2 }),
+      path('M28 54L32 14Q34 4 43 5Q52 6 50 18L48 50Z', P.skin), patch('M35 12q6-4 11 1l-1 6q-6-1-10-7Z', P.pink),
+      path('M24 58Q24 48 36 48H90Q100 48 100 58V96Q100 112 82 112H40Q24 112 24 96Z', P.skin),
+      path('M50 48H88Q96 48 96 56Q96 64 88 64H50M52 64H90Q98 64 98 72Q98 80 90 80H52M52 80H90Q98 80 98 88Q98 96 90 96H52', undefined, { stroke: P.skinDeep, sw: 2 }),
     ],
   },
   {
@@ -124,12 +124,13 @@ export default [
     ],
   },
   {
-    word: 'FACE', meaning: 'a face', alt: 'A happy round face with eyes, rosy cheeks, a nose and a big smile, with dark hair on top.',
+    word: 'FACE', meaning: 'a face', alt: 'A smiling round face with two eyes, rosy cheeks, a small nose, a big smile and two ears.',
     draw: () => [
-      circle(60, 62, 46, P.skin), path('M14 56Q14 14 60 14Q106 14 106 56Q96 34 76 32Q66 42 46 36Q26 36 14 56Z', P.brown),
-      ellipse(16, 64, 5, 9, P.skin), ellipse(104, 64, 5, 9, P.skin),
-      eyes(44, 58, 76, 58, 4), circle(36, 74, 6, P.pink, { ns: true }), circle(84, 74, 6, P.pink, { ns: true }),
-      path('M57 64Q60 72 63 64', undefined, { stroke: P.skinDeep, sw: 2.5 }), path('M42 82Q60 98 78 82', P.paper),
+      ellipse(14, 62, 7, 11, P.skin), ellipse(106, 62, 7, 11, P.skin),
+      circle(60, 60, 48, P.skin),
+      path('M34 40Q42 34 50 38M70 38Q78 34 86 40', undefined, { stroke: P.brown, sw: 3 }),
+      eyes(44, 52, 76, 52, 5), circle(30, 72, 7, P.pink, { ns: true }), circle(90, 72, 7, P.pink, { ns: true }),
+      path('M56 60Q60 72 64 60', undefined, { stroke: P.skinDeep, sw: 2.5 }), path('M38 80Q60 102 82 80Z', P.paper),
     ],
   },
 ];

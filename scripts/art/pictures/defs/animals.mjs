@@ -92,15 +92,15 @@ export default [
     ],
   },
   {
-    word: 'ROOSTER', meaning: 'a male chicken', alt: 'A proud rooster with a tall red comb and a big arching green and blue tail.',
+    word: 'ROOSTER', meaning: 'a male chicken', alt: 'A proud rooster standing tall, with a big red comb and wattle and long curving green and blue tail feathers.',
     draw: () => [
-      line('M54 88V104M48 106H60M68 88V104M62 106H74', { stroke: P.orange, sw: 4 }),
-      path('M38 66Q10 64 8 28Q22 30 30 44Q22 20 36 10Q42 30 44 52Z', P.forest),
-      path('M40 64Q22 46 26 20Q36 32 44 50Z', P.navy),
-      ellipse(60, 70, 26, 20, P.orange), path('M46 66Q60 56 72 68Q60 80 46 66Z', P.red),
-      path('M78 22Q74 8 82 12Q84 2 90 12Q96 4 98 14Q104 12 100 24Z', P.red),
-      path('M72 58L78 30Q80 22 90 22Q100 24 98 36L88 62Z', P.gold), poly('98,30 110,34 98,38', P.yellow),
-      path('M96 40Q100 52 93 52Q90 46 96 40Z', P.red, { sw: 2 }), dot(90, 30),
+      line('M54 90V106M48 108H60M68 90V106M62 108H74', { stroke: P.orange, sw: 4 }),
+      path('M40 68Q8 70 4 34Q18 32 26 46Q16 18 30 6Q40 28 44 54Z', P.forest),
+      path('M42 66Q22 50 22 22Q34 30 44 52Z', P.navy), path('M42 70Q14 84 10 64Q24 66 40 60Z', P.blue),
+      ellipse(60, 72, 24, 19, P.orange), path('M46 68Q60 58 72 70Q60 82 46 68Z', P.red),
+      path('M74 60L78 32Q80 22 90 22Q102 24 100 38L88 64Z', P.gold), poly('99,32 112,36 99,40', P.yellow),
+      path('M76 24Q70 4 80 8Q82 -2 90 8Q96 0 100 12Q108 10 102 26Z', P.red, { t: 'translate(0 2)' }),
+      path('M96 42Q104 56 94 58Q88 50 96 42Z', P.red, { sw: 2 }), dot(90, 31),
     ],
   },
   {
@@ -355,13 +355,13 @@ export default [
     ],
   },
   {
-    word: 'LLAMA', meaning: 'a llama', alt: 'A fluffy cream llama standing side on, with a long upright neck and tall banana-shaped ears.',
+    word: 'LLAMA', meaning: 'a llama', alt: 'A fluffy light brown llama standing side on, with a very long upright neck and tall banana-shaped ears.',
     draw: () => [
-      legs([28, 38, 62, 72], 70, 34, P.cream, 8), hooves([28, 38, 62, 72], 100, P.wood, 8),
-      path('M20 66Q14 52 26 48Q32 42 44 46Q58 42 70 48Q84 48 84 62Q88 74 76 76H28Q18 76 20 66Z', P.cream),
-      path('M72 56L74 26Q74 18 82 16Q92 14 98 20L104 30Q104 36 96 36L88 34L86 58Z', P.cream),
-      path('M78 18Q74 2 80 4Q84 8 82 18ZM88 16Q90 0 96 4Q96 10 90 18Z', P.cream, { sw: 2 }),
-      line('M22 56q4-4 8 0q4-4 8 0M74 40q4 3 8 0', { sw: 2 }), dot(88, 24), circle(101, 31, 2, P.ink, { ns: true }),
+      ...[26, 36, 62, 72].map(x => rect(x, 72, 8, 34, 3, P.sand)), ...[26, 36, 62, 72].map(x => rect(x, 102, 8, 6, 2, P.brown)),
+      path('M16 68Q10 52 24 48Q32 42 44 46Q58 42 70 48Q86 48 86 62Q90 76 78 78H26Q14 78 16 68Z', P.sand),
+      path('M70 58L72 22Q72 12 82 10Q92 8 98 14L106 26Q106 34 96 34L88 32L86 60Z', P.sand),
+      path('M76 12Q70 -4 78 0Q84 4 82 12ZM88 10Q90 -6 98 -2Q98 6 92 12Z', P.sand, { sw: 2, t: 'translate(0 4)' }),
+      line('M18 58q4-4 8 0q4-4 8 0M74 38q4 3 8 0M74 48q4 3 8 0', { stroke: P.wood, sw: 2 }), dot(88, 20), circle(103, 29, 2, P.ink, { ns: true }),
     ],
   },
   {
@@ -460,13 +460,14 @@ export default [
     ],
   },
   {
-    word: 'WALRUS', meaning: 'a walrus', alt: 'A big brown walrus with two long white tusks, a whiskery snout and flippers.',
+    word: 'WALRUS', meaning: 'a walrus', alt: 'A big brown walrus lying on its belly, its head up, with a bushy whiskered snout, two very long white tusks and flippers.',
     draw: () => [
-      path('M18 104Q6 92 14 76L24 98ZM102 104Q114 92 106 76L96 98Z', P.brown),
-      path('M20 104Q18 50 60 34Q102 50 100 104Z', P.wood),
-      path('M50 70L46 104L54 104L56 72ZM70 70L74 104L66 104L64 72Z', P.paper),
-      ellipse(48, 66, 13, 10, P.cream), ellipse(72, 66, 13, 10, P.cream), line('M42 64l-12-2M42 70l-12 2M78 64l12-2M78 70l12 2', { sw: 2 }),
-      ellipse(60, 58, 5, 4, P.brown, { sw: 2 }), eyes(48, 46, 72, 46, 3),
+      path('M6 86L2 72L4 96ZM6 86L4 104L18 96Z', P.brown),
+      path('M8 96Q6 66 36 58Q56 52 64 36Q74 18 92 20Q112 24 112 48Q112 66 98 74Q90 92 66 98H12Z', P.wood),
+      path('M58 92L48 110L74 102Z', P.brown),
+      path('M78 64L74 112H82L86 66ZM96 64L100 110H108L102 62Z', P.paper),
+      path('M70 56Q72 44 88 46Q104 44 110 56Q110 70 90 70Q70 70 70 56Z', P.cream), line('M76 54l-10-4M76 60l-10 2M104 54l8-6M106 60l8 0', { sw: 2 }),
+      circle(86, 54, 1.6, P.brown, { ns: true }), circle(94, 54, 1.6, P.brown, { ns: true }), dot(84, 34), dot(100, 34),
     ],
   },
   {
@@ -521,10 +522,12 @@ export default [
     ],
   },
   {
-    word: 'FEATHER', meaning: 'a bird feather', alt: 'A single long blue feather lying on a slant, with a thin quill down the middle.',
+    word: 'FEATHER', meaning: 'a bird feather', alt: 'A single long red and orange bird feather lying on a slant, with a hollow white quill and little splits along its edges.',
     draw: () => [
-      path('M30 92Q20 58 48 34Q72 14 102 12Q106 40 84 66Q62 92 30 92Z', P.blue),
-      line('M18 104L34 88Q60 56 98 18'), line('M46 70L38 58M56 58L48 44M68 46L60 34M60 66L74 70M70 54L86 56M82 40L96 42', { sw: 2 }),
+      path('M28 90Q16 60 40 34Q60 14 104 8Q100 30 88 50L96 52Q82 70 70 74L76 80Q56 92 28 90Z', P.red),
+      path('M34 86Q30 62 50 40L60 46Q48 66 46 84Z', P.orange, { ns: true }),
+      line('M14 106L28 92Q58 54 100 12', { stroke: P.ink, sw: 7 }), line('M14 106L28 92Q58 54 100 12', { stroke: P.paper, sw: 2.5 }),
+      line('M44 70L36 62M58 52L50 42M74 36L68 24M60 66L72 70M72 50L86 52', { sw: 2 }),
     ],
   },
   {

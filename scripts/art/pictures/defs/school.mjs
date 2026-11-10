@@ -20,11 +20,12 @@ export default [
     ],
   },
   {
-    word: 'PEN', meaning: 'a ballpoint pen', otherMeaning: 'an animal pen', alt: 'A blue ballpoint pen lying on a slant, with a cap and a pocket clip.',
+    word: 'PEN', meaning: 'a ballpoint pen', otherMeaning: 'an animal pen', alt: 'A blue ballpoint pen lying on a slant, with its cap on, a pocket clip and a short pointed tip.',
     draw: () => [
       group({ t: 'rotate(-40 60 60)' },
-        rect(10, 52, 76, 16, 6, P.paper), path('M86 52L106 58Q110 60 106 62L86 68Z', P.stone), line('M106 60H114', { sw: 3 }),
-        rect(8, 50, 36, 20, 7, P.blue), path('M18 50V42H44V46', undefined, { stroke: P.ink, sw: 6 }), path('M18 50V42H44V46', undefined, { stroke: P.blue, sw: 2 })),
+        rect(30, 50, 62, 20, 6, P.blue), path('M92 52L104 58Q108 60 104 62L92 68Z', P.stone), circle(106, 60, 2, P.ink, { ns: true }),
+        rect(6, 48, 34, 24, 8, P.navy), path('M14 48V40H44V46', undefined, { stroke: P.ink, sw: 7 }), path('M14 48V40H44V46', undefined, { stroke: P.stone, sw: 2.5 }),
+        line('M48 56H86', { stroke: P.sky, sw: 3 })),
     ],
   },
   {
@@ -62,12 +63,11 @@ export default [
     ],
   },
   {
-    word: 'ERASER', meaning: 'a pencil eraser', alt: 'A pink rubber eraser block with a worn corner and a few crumbs, next to a pencil line being rubbed out.',
+    word: 'ERASER', meaning: 'a pencil eraser', alt: 'A pink rubber eraser rubbing out a grey pencil scribble, leaving little crumbs behind.',
     draw: () => [
-      path('M8 104Q30 92 52 100', undefined, { stroke: P.slate, sw: 3, dash: '6 6' }),
-      group({ t: 'rotate(-25 66 58)' }, path('M30 44H100V76H40Q30 76 30 66Z', P.pink), path('M30 44L44 30H112L100 44Z', P.coral), path('M100 44L112 30V62L100 76Z', P.coral),
-        rect(54, 44, 30, 32, 0, P.sky, { sw: 2 })),
-      circle(24, 96, 3, P.pink, { sw: 1.5 }), circle(34, 104, 2.4, P.pink, { sw: 1.5 }), circle(16, 108, 2, P.pink, { sw: 1.5 }),
+      path('M10 96Q20 82 30 96Q40 110 50 96', undefined, { stroke: P.slate, sw: 3 }),
+      circle(58, 102, 2.4, P.pink, { sw: 1.5 }), circle(66, 108, 2, P.pink, { sw: 1.5 }), circle(54, 112, 1.8, P.pink, { sw: 1.5 }),
+      group({ t: 'rotate(-30 76 56)' }, path('M44 46L54 34H110L100 46Z', P.coral), path('M100 46L110 34V62L100 74Z', P.coral), path('M44 46H100V74H54L44 64Z', P.pink)),
     ],
   },
   {
@@ -80,19 +80,19 @@ export default [
     ],
   },
   {
-    word: 'CHALK', meaning: 'a stick of chalk', alt: 'A white stick of chalk drawing a line on a small green chalkboard.',
+    word: 'CHALK', meaning: 'sticks of chalk', alt: 'Three thick sticks of chalk, white, pink and blue, with a chalk scribble and dust on dark ground.',
     draw: () => [
-      rect(8, 14, 104, 74, 6, P.brown), rect(16, 22, 88, 58, 2, P.forest, { sw: 2 }),
-      path('M26 64Q38 36 52 56Q62 72 72 46', undefined, { stroke: P.paper, sw: 4 }),
-      group({ t: 'rotate(-35 80 88)' }, rect(62, 80, 40, 14, 6, P.paper)), circle(66, 104, 2, P.paper, { sw: 1.5 }), circle(74, 108, 1.6, P.paper, { sw: 1.5 }),
+      rect(6, 70, 108, 42, 10, P.charcoal), path('M16 98Q30 82 42 96Q52 108 62 94', undefined, { stroke: P.paper, sw: 4 }),
+      circle(70, 92, 1.8, P.paper, { ns: true }), circle(76, 98, 1.6, P.paper, { ns: true }), circle(66, 102, 1.4, P.paper, { ns: true }),
+      ...[[P.paper, -30, 18], [P.pink, -12, 44], [P.sky, 10, 72]].map(([c, r, x]) => group({ t: `rotate(${r} ${x + 14} 48)` }, rect(x, 18, 28, 62, 12, c), ellipse(x + 14, 24, 12, 5, c, { sw: 2 }))),
     ],
   },
   {
-    word: 'EASEL', meaning: "an artist's easel", alt: "A wooden artist's easel with three legs holding a canvas painting of a sun and hills.",
+    word: 'EASEL', meaning: "an artist's easel", alt: "A wooden artist's easel on three tall legs, holding a half-painted canvas, with a paintbrush resting on its ledge.",
     draw: () => [
-      ...rod('M60 8L24 114M60 8L96 114M60 8V108', P.wood, 9),
-      rect(22, 18, 76, 58, 3, P.paper), path('M26 72L48 46L62 58L76 44L94 72Z', P.leaf, { sw: 2 }), circle(42, 34, 7, P.yellow, { sw: 2 }),
-      rect(18, 76, 84, 8, 3, P.brown),
+      line('M60 4L18 116M60 4L102 116M60 4V110', { stroke: P.ink, sw: 10 }), line('M60 4L18 116M60 4L102 116M60 4V110', { stroke: P.wood, sw: 5 }),
+      rect(24, 16, 72, 54, 3, P.paper), path('M28 66L46 44L58 56L70 42L80 54V66Z', P.leaf, { sw: 2 }), circle(40, 30, 6, P.yellow, { sw: 2 }),
+      rect(18, 70, 84, 8, 3, P.brown), line('M70 66L94 54', { stroke: P.ink, sw: 6 }), line('M70 66L94 54', { stroke: P.red, sw: 2 }),
     ],
   },
   {
@@ -113,18 +113,19 @@ export default [
     ],
   },
   {
-    word: 'STAMP', meaning: 'a postage stamp', alt: 'A postage stamp with zigzag edges and a little picture of a palm tree and the sun.',
+    word: 'STAMP', meaning: 'a postage stamp', alt: 'A postage stamp with bold zigzag edges and a little picture of a palm tree, with wavy postmark lines across one corner.',
     draw: () => {
       const zig = [];
-      for (let i = 0; i <= 10; i++) zig.push(`${18 + i * 8.4},${i % 2 ? 14 : 8}`);
-      for (let i = 1; i <= 12; i++) zig.push(`${i % 2 ? 108 : 102},${8 + i * 8.5}`);
-      for (let i = 9; i >= 0; i--) zig.push(`${18 + i * 8.4},${i % 2 ? 106 : 112}`);
-      for (let i = 11; i >= 1; i--) zig.push(`${i % 2 ? 12 : 18},${8 + i * 8.5}`);
+      for (let i = 0; i <= 10; i++) zig.push(`${16 + i * 8},${i % 2 ? 14 : 6}`);
+      for (let i = 1; i <= 12; i++) zig.push(`${i % 2 ? 104 : 96},${6 + i * 8.5}`);
+      for (let i = 9; i >= 0; i--) zig.push(`${16 + i * 8},${i % 2 ? 100 : 108}`);
+      for (let i = 11; i >= 1; i--) zig.push(`${i % 2 ? 8 : 16},${6 + i * 8.5}`);
       return [
         poly(zig.join(' '), P.paper),
-        rect(26, 22, 68, 76, 2, P.sky, { sw: 2 }), path('M26 84Q60 72 94 84V98H26Z', P.sand, { sw: 2 }),
-        line('M62 86Q64 64 56 48', { stroke: P.brown, sw: 4 }), path('M56 48Q44 40 36 46Q46 44 56 48Q54 34 44 32Q54 36 56 48Q66 36 78 38Q66 42 56 48Q70 46 76 56Q66 48 56 48Z', P.leaf, { sw: 1.5 }),
-        circle(80, 36, 7, P.yellow, { sw: 2 }),
+        rect(22, 20, 62, 72, 2, P.sky, { sw: 2 }), path('M22 80Q52 68 84 80V92H22Z', P.sand, { sw: 2 }),
+        line('M54 82Q56 60 48 44', { stroke: P.brown, sw: 4 }), path('M48 44Q36 36 28 42Q38 40 48 44Q46 30 36 28Q46 32 48 44Q58 32 70 34Q58 38 48 44Q62 42 68 52Q58 44 48 44Z', P.leaf, { sw: 1.5 }),
+        circle(72, 32, 6, P.yellow, { sw: 2 }),
+        path('M70 96Q80 88 90 96Q100 104 110 96M70 106Q80 98 90 106Q100 114 110 106M74 86Q84 78 94 86Q104 94 114 86', undefined, { stroke: P.charcoal, sw: 2.5 }),
       ];
     },
   },

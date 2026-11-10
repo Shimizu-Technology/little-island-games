@@ -1,4 +1,4 @@
-import { P, circle, ellipse, rect, path, line, patch, dot, group } from '../style.mjs';
+import { P, circle, ellipse, rect, path, line, patch, dot } from '../style.mjs';
 
 const petals = (x, y, n, r, pr, fill, o = {}) => Array.from({ length: n }, (_, i) => ellipse(x + r * Math.cos((i * 2 * Math.PI) / n - Math.PI / 2), y + r * Math.sin((i * 2 * Math.PI) / n - Math.PI / 2), pr * 0.62, pr, fill, { ...o, t: `rotate(${(i * 360) / n} ${x + r * Math.cos((i * 2 * Math.PI) / n - Math.PI / 2)} ${y + r * Math.sin((i * 2 * Math.PI) / n - Math.PI / 2)})` }));
 const stem = (d, w = 8) => [line(d, { stroke: P.ink, sw: w }), line(d, { stroke: P.leaf, sw: w - 4.5 })];
@@ -30,11 +30,14 @@ export default [
     ],
   },
   {
-    word: 'ROSE', meaning: 'a rose', alt: 'A red rose with tightly curled petals, a green stem, leaves and a thorn.',
+    word: 'ROSE', meaning: 'a rose', alt: 'A red rose seen from the side with layered swirled petals, on a green stem with leaves and sharp thorns.',
     draw: () => [
-      ...stem('M60 58V114'), leafShape(60, 86, -150, 1.3), leafShape(60, 98, -20, 1.1), path('M60 74L66 70L60 78Z', P.leaf, { sw: 2 }),
-      path('M30 34Q30 62 60 64Q90 62 90 34Q80 44 70 38Q74 22 60 14Q46 22 50 38Q40 44 30 34Z', P.red),
-      path('M50 38Q52 28 60 26Q70 28 70 38Q66 48 58 46Q52 42 56 36', undefined, { stroke: P.ink, sw: 2.5 }), path('M36 46Q46 58 60 56Q74 58 84 46', undefined, { sw: 2 }),
+      line('M60 58V114', { stroke: P.ink, sw: 8 }), line('M60 58V114', { stroke: P.leaf, sw: 3.5 }),
+      path('M60 82l-8-4 8 0ZM60 98l8-4v4Z', P.leaf, { sw: 2 }),
+      path('M60 90Q40 92 28 82Q40 74 60 84Z', P.leaf), path('M60 74Q80 76 92 66Q80 58 60 68Z', P.leaf),
+      path('M28 30Q26 58 60 64Q94 58 92 30Q84 40 76 36Q78 18 60 12Q42 18 44 36Q36 40 28 30Z', P.red),
+      path('M44 36Q46 22 60 18Q74 22 76 36Q70 46 60 44Q50 46 44 36Z', P.coral, { sw: 2 }),
+      path('M52 34Q54 26 60 26Q68 28 66 36Q60 40 56 34', undefined, { sw: 2 }), path('M34 44Q46 56 60 54Q74 56 86 44', undefined, { sw: 2 }),
     ],
   },
   {
@@ -81,11 +84,13 @@ export default [
     ],
   },
   {
-    word: 'BRANCH', fit: [0.946, 66.0, 52.5], meaning: 'a tree branch', alt: 'A brown tree branch lying on a slant, with smaller twigs and green leaves.',
-    draw: () => [group({ t: 'translate(60 60) scale(0.86) translate(-58 -62)' },
-      path('M6 96Q40 80 72 56Q92 40 112 20', undefined, { stroke: P.ink, sw: 12 }), path('M6 96Q40 80 72 56Q92 40 112 20', undefined, { stroke: P.brown, sw: 7 }),
-      path('M48 72Q50 96 64 106M80 48Q96 54 104 70M64 62Q60 40 66 24', undefined, { stroke: P.ink, sw: 8 }), path('M48 72Q50 96 64 106M80 48Q96 54 104 70M64 62Q60 40 66 24', undefined, { stroke: P.brown, sw: 4 }),
-      leafShape(64, 106, 10, 1), leafShape(104, 70, 50, 1), leafShape(66, 24, -70, 1), leafShape(112, 20, -40, 0.9), leafShape(30, 86, -110, 1), leafShape(90, 40, -130, 0.9))],
+    word: 'BRANCH', fit: [0.855, 59.0, 56.5], meaning: 'a tree branch', alt: 'A thick brown tree branch lying on a slant, with a couple of side twigs and a few green leaves.',
+    draw: () => [
+      path('M6 100Q40 84 72 60Q92 44 112 26', undefined, { stroke: P.ink, sw: 17 }), path('M6 100Q40 84 72 60Q92 44 112 26', undefined, { stroke: P.brown, sw: 12 }),
+      path('M48 76Q52 96 66 104M84 52Q98 56 106 70', undefined, { stroke: P.ink, sw: 10 }), path('M48 76Q52 96 66 104M84 52Q98 56 106 70', undefined, { stroke: P.brown, sw: 5.5 }),
+      line('M20 94l8-2M60 70l6 0', { stroke: P.wood, sw: 2 }),
+      path('M66 104Q72 92 86 96Q80 108 66 104Z', P.leaf), path('M106 70Q118 62 116 50Q104 56 106 70Z', P.leaf), path('M112 26Q118 12 108 6Q102 18 112 26Z', P.leaf),
+    ],
   },
   {
     word: 'LOG', meaning: 'a wooden log', alt: 'A brown wooden log lying on its side, its cut end showing tree rings.',
@@ -105,14 +110,19 @@ export default [
     ],
   },
   {
-    word: 'FERN', fit: [0.914, 48.5, 71.0], meaning: 'a fern', alt: 'A green fern frond curving over, with many small leaflets along both sides of its stem.',
-    draw: () => [
-      path('M30 114Q34 60 70 26Q84 14 96 16', undefined, { stroke: P.forest, sw: 4 }),
-      ...Array.from({ length: 9 }, (_, i) => {
-        const t = i / 9, x = 32 + t * 60 - t * t * 10, y = 104 - t * 82 + t * t * 6, s = 1.2 - t * 0.7;
-        return [path(`M${x} ${y}Q${x - 18 * s} ${y - 2 * s} ${x - 26 * s} ${y - 12 * s}Q${x - 12 * s} ${y - 14 * s} ${x} ${y}Z`, P.leaf, { sw: 2 }), path(`M${x} ${y}Q${x + 6 * s} ${y + 14 * s} ${x + 18 * s} ${y + 20 * s}Q${x + 16 * s} ${y + 6 * s} ${x} ${y}Z`, P.leaf, { sw: 2 })];
-      }).flat(),
-    ],
+    word: 'FERN', meaning: 'a fern', alt: 'A green fern plant with several upright fronds growing from one base, each lined with small leaflets, and a curled-up new frond.',
+    draw: () => {
+      const frond = (x2, y2, bend) => {
+        const out = [];
+        for (let i = 1; i <= 7; i++) {
+          const t = i / 8, x = 60 + (x2 - 60) * t + bend * t * (1 - t), y = 110 + (y2 - 110) * t, s = 1 - t * 0.6;
+          out.push(path(`M${x} ${y}Q${x - 12 * s} ${y - 2} ${x - 18 * s} ${y - 9 * s}Q${x - 6 * s} ${y - 9 * s} ${x} ${y}ZM${x} ${y}Q${x + 12 * s} ${y - 2} ${x + 18 * s} ${y - 9 * s}Q${x + 6 * s} ${y - 9 * s} ${x} ${y}Z`, P.leaf, { sw: 1.5 }));
+        }
+        return [path(`M60 110Q${(60 + x2) / 2 + bend / 2} ${(110 + y2) / 2} ${x2} ${y2}`, undefined, { stroke: P.forest, sw: 3 }), ...out];
+      };
+      return [...frond(24, 30, -20), ...frond(96, 30, 20), ...frond(60, 8, 0),
+        path('M60 110Q78 96 82 80Q84 70 76 70Q70 72 74 78', undefined, { stroke: P.forest, sw: 4 })];
+    },
   },
   {
     word: 'CLOVER', meaning: 'a four-leaf clover', alt: 'A green four-leaf clover with heart-shaped leaves and a short curved stem.',

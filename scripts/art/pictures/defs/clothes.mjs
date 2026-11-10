@@ -41,10 +41,10 @@ export default [
     ],
   },
   {
-    word: 'PANTS', meaning: 'long pants (trousers)', alt: 'A pair of long blue jeans with a waistband, belt loops and front pockets.',
+    word: 'PANTS', meaning: 'long pants (trousers)', alt: 'A pair of plain brown long pants with a waistband and two front pockets.',
     draw: () => [
-      path('M28 8H92L102 112H68L60 46L52 112H18Z', P.navy), rect(28, 8, 64, 10, 2, P.blue, { sw: 2 }),
-      line('M60 18V46M36 18Q40 30 30 34M84 18Q80 30 90 34', { stroke: P.sky, sw: 2 }), line('M20 102H50M70 102H100', { stroke: P.sky, sw: 2 }),
+      path('M28 8H92L102 112H68L60 46L52 112H18Z', P.wood), rect(28, 8, 64, 10, 2, P.brown),
+      line('M60 18V46', { stroke: P.brown, sw: 2 }), path('M34 18Q38 32 28 34M86 18Q82 32 92 34', undefined, { stroke: P.brown, sw: 2 }),
     ],
   },
   {
@@ -79,12 +79,13 @@ export default [
     ],
   },
   {
-    word: 'SANDAL', meaning: 'a sandal', alt: 'A brown sandal seen from above: a foot-shaped sole with crossing straps and a buckle.',
+    word: 'SANDAL', meaning: 'a sandal', alt: 'A brown sandal seen from the side: a flat sole, a wide strap over the toes and a strap with a gold buckle around the heel.',
     draw: () => [
-      group({ t: 'rotate(-20 60 60)' },
-        path('M60 6Q82 6 84 34Q86 54 80 70Q78 92 76 104Q72 116 60 116Q48 116 44 104Q42 92 40 70Q34 54 36 34Q38 6 60 6Z', P.wood),
-        path('M60 14Q76 14 78 34Q78 50 74 64Q72 92 70 102Q66 110 60 110Q54 110 50 102Q48 92 46 64Q42 50 42 34Q44 14 60 14Z', P.sand, { ns: true }),
-        rect(34, 30, 52, 12, 5, P.brown), rect(36, 56, 48, 12, 5, P.brown), rect(36, 84, 48, 10, 5, P.brown), rect(74, 84, 10, 10, 2, P.gold, { sw: 2 })),
+      path('M6 94Q6 86 16 86H104Q114 86 114 94V98Q114 106 104 106H16Q6 106 6 98Z', P.sand), line('M8 100H112', { stroke: P.wood, sw: 2 }),
+      path('M64 86Q66 60 84 60Q100 60 102 86H92Q90 70 84 70Q74 70 74 86Z', P.brown),
+      path('M14 86V58Q14 46 26 46H34Q46 46 46 58V86H38V60Q38 54 32 54H28Q22 54 22 60V86Z', P.brown),
+      path('M42 66Q56 64 70 72', undefined, { stroke: P.ink, sw: 9 }), path('M42 66Q56 64 70 72', undefined, { stroke: P.brown, sw: 4.5 }),
+      rect(36, 60, 14, 14, 2, P.gold), rect(41, 65, 4, 4, 1, P.brown, { sw: 1.5 }),
     ],
   },
   {

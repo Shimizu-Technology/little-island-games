@@ -1,4 +1,4 @@
-import { P, circle, ellipse, rect, path, line } from '../style.mjs';
+import { P, circle, ellipse, rect, path, line, patch } from '../style.mjs';
 
 const rod = (d, fill, w = 7) => [line(d, { stroke: P.ink, sw: w }), line(d, { stroke: fill, sw: w - 4.5 })];
 const wheel = (x, y, r = 12) => [circle(x, y, r, P.charcoal), circle(x, y, r * 0.42, P.stone)];
@@ -85,12 +85,12 @@ export default [
     ],
   },
   {
-    word: 'VAN', meaning: 'a van', alt: 'A tall white delivery van side on, with a big window in front, a sliding door and two wheels.',
+    word: 'VAN', meaning: 'a van', alt: 'A tall green family van side on, with a long row of side windows, a sliding door and two wheels.',
     draw: () => [
-      path('M6 88V30Q6 20 16 20H84Q92 20 98 30L112 56V88Z', P.paper),
-      path('M84 28Q90 28 94 34L104 54H84Z', P.sky, { sw: 2 }), rect(52, 28, 26, 20, 2, P.sky, { sw: 2 }),
-      line('M48 26V86M80 26V86', { sw: 2 }), rect(6, 60, 106, 8, 0, P.blue, { sw: 2 }), rect(104, 70, 8, 6, 2, P.yellow, { sw: 2 }),
-      ...wheel(28, 88, 13), ...wheel(90, 88, 13),
+      path('M6 88V30Q6 20 16 20H84Q92 20 98 30L112 56V88Z', P.leaf),
+      path('M86 28Q90 28 94 34L104 54H86Z', P.sky, { sw: 2 }), rect(14, 28, 22, 20, 3, P.sky, { sw: 2 }), rect(40, 28, 20, 20, 3, P.sky, { sw: 2 }), rect(64, 28, 18, 20, 3, P.sky, { sw: 2 }),
+      line('M38 56V86M62 56V86', { sw: 2 }), rect(54, 62, 6, 3, 1, P.charcoal), rect(104, 70, 8, 6, 2, P.yellow, { sw: 2 }), rect(4, 76, 8, 6, 2, P.red, { sw: 2 }),
+      circle(28, 88, 13, P.charcoal), circle(28, 88, 5.5, P.stone), circle(90, 88, 13, P.charcoal), circle(90, 88, 5.5, P.stone),
     ],
   },
   {
@@ -111,11 +111,12 @@ export default [
     ],
   },
   {
-    word: 'BLIMP', meaning: 'a blimp (airship)', alt: 'A big grey-blue blimp floating in the air, shaped like a long balloon, with tail fins and a small cabin underneath.',
+    word: 'BLIMP', meaning: 'a blimp (airship)', alt: 'A long silver-grey blimp floating in the sky, shaped like a stretched balloon, with fins at the back and a small cabin underneath.',
     draw: () => [
-      path('M18 46L4 30V62ZM18 66L4 82V58Z', P.red),
-      ellipse(62, 52, 52, 28, P.sky), line('M30 32Q20 52 30 72M60 24V80M90 30Q102 52 90 74', { stroke: P.blue, sw: 2.5 }), ellipse(62, 52, 52, 28),
-      path('M48 80H76L72 94H52Z', P.red), rect(54, 84, 6, 5, 1, P.paper, { sw: 1.5 }), rect(64, 84, 6, 5, 1, P.paper, { sw: 1.5 }),
+      path('M28 40L10 24H24L40 36ZM28 64L10 82H24L40 68Z', P.red),
+      ellipse(64, 52, 52, 26, P.stone), line('M36 32Q26 52 36 72M64 26V78M94 30Q106 52 94 74', { stroke: P.slate, sw: 2.5 }), ellipse(64, 52, 52, 26),
+      path('M14 48H34V56H14Z', P.red), patch('M40 38Q54 30 74 30Q56 34 46 42Z', P.paper),
+      path('M50 78H78L74 92H54Z', P.red), rect(56, 82, 6, 5, 1, P.sky, { sw: 1.5 }), rect(66, 82, 6, 5, 1, P.sky, { sw: 1.5 }),
     ],
   },
 ];
