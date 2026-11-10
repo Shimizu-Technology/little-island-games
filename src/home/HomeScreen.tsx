@@ -431,7 +431,7 @@ export function HomeScreen({
       if (now - prior.at < 300 && Math.hypot(point.x - prior.x, point.y - prior.y) < 28) {
         const c = runtime.current!.camera.get();
         const scale = c.a > roomScale(viewport) * 1.2 ? roomScale(viewport) : (viewport.height / 620) * 1.4;
-        interaction.camera.set(zoomCamera(c, scale / c.a, point.x, point.y, viewport, building));
+        interaction.animateCamera(zoomCamera(c, scale / c.a, point.x, point.y, viewport, building));
         lastTap.current.at = 0;
         return;
       }
@@ -597,15 +597,19 @@ export function HomeScreen({
     setRoom(id);
     setOverview(false);
     store.dispatch({ type: "room", room: id });
-    interaction.camera.set(focusCamera(roomIds.indexOf(id), viewport, building));
+    // HR-02: another floor is a door, not a jump; the same floor eases across.
+    interaction.animateCamera(focusCamera(roomIds.indexOf(id), viewport, building),
+      !overview && floorOf(id) !== floorOf(room));
   };
+  const floorOf = (id: RoomId) => Math.floor(roomIds.indexOf(id) / building.columns);
   const find = () => {
     const hero = scene.entities["character/0"];
     if (!hero) return;
     setRoom(hero.room);
     setOverview(false);
     store.dispatch({ type: "room", room: hero.room });
-    interaction.camera.set(focusCamera(roomIds.indexOf(hero.room), viewport, building, hero.contact));
+    interaction.animateCamera(focusCamera(roomIds.indexOf(hero.room), viewport, building, hero.contact),
+      !overview && floorOf(hero.room) !== floorOf(room));
     setSelected(undefined);
     setMore(false);
     setFriends(false);
@@ -680,7 +684,8 @@ export function HomeScreen({
     runtime.current!.externalDrop(-500, screenPoint(x - canvasOrigin.current.x, y - canvasOrigin.current.y), cancel || roomAtScreen(x - canvasOrigin.current.x, y - canvasOrigin.current.y,
       runtime.current!.camera.get(), building) < 0);
   };
-  const { slots: catalogSlots } = interaction;
+  const { slots: catalogSlots, veil } = interaction;
+  const veilStyle = useAnimatedStyle(() => ({ opacity: veil.value }));
   const ghostStyle = useAnimatedStyle(() => ({
     opacity: ghost.value.active && !catalogSlots.value.some(s => s.pointer === -500 && s.ready && s.painted) ? 1 : 0,
     transform: [{ translateX: ghost.value.x - 35 }, { translateY: ghost.value.y - 70 }],
@@ -726,7 +731,7 @@ export function HomeScreen({
           setFriends(false);
           const next = true;
           setOverview(next);
-          interaction.camera.set(
+          interaction.animateCamera(
             next ? fitCamera(viewport, building) : focusCamera(roomIds.indexOf(room), viewport, building)
           );
         }}
@@ -760,6 +765,8 @@ export function HomeScreen({
             onMove={moveAccessible}
             stress={stress}
           />
+          <Animated.View testID="room-door-veil" pointerEvents="none"
+            style={[{ position: "absolute", left: 0, top: 0, width: viewport.width, height: viewport.height, backgroundColor: "#FFF8E9" }, veilStyle]} />
           {debug && (
             <DebugOverlay
               interaction={interaction}
@@ -876,7 +883,7 @@ export function HomeScreen({
         }}
         onZoom={(ratio) => {
           interaction.cancelAll();
-          interaction.camera.set(
+          interaction.animateCamera(
             zoomCamera(interaction.camera.get(), ratio, viewport.width / 2, viewport.height / 2, viewport, building)
           );
           if (ratio > 1) setOverview(false);

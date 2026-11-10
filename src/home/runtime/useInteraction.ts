@@ -101,6 +101,23 @@ export type Pickup = CaptureToken & {
   identities?: Record<string, string>;
   committedId?: string;
 };
+export const CAMERA_EASE_MS = 180;
+export const DOOR_MS = 160;
+export type CameraTween = { from: CameraMatrix; to: CameraMatrix; since: number; duration: number; door: boolean };
+/** Smooth ease for one room move; a door holds the old view, swaps under a full veil, then clears. */
+export function cameraTweenSample(tween: CameraTween, now: number): { camera: CameraMatrix; veil: number; done: boolean } {
+  "worklet";
+  const t = Math.max(0, Math.min(1, (now - tween.since) / tween.duration));
+  if (tween.door) return { camera: t < 0.5 ? tween.from : tween.to, veil: 1 - Math.abs(2 * t - 1), done: t === 1 };
+  const p = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const { from, to } = tween;
+  return {
+    camera: { ...to, a: from.a + (to.a - from.a) * p, d: from.d + (to.d - from.d) * p,
+      tx: from.tx + (to.tx - from.tx) * p, ty: from.ty + (to.ty - from.ty) * p },
+    veil: 0,
+    done: t === 1,
+  };
+}
 /** Each room's index (without the shared entity map) and its own entities, as one string. */
 export function roomPayloadsOf(scene: Scene): Record<string, string> {
   const byRoom: Record<string, SceneEntity[]> = {};
@@ -255,6 +272,9 @@ export function useInteraction({
   const lastFrame = useSharedValue(0);
   const inertia = useSharedValue({ x: 0, y: 0, since: 0, lastMove: 0 });
   const revealPan = useSharedValue<{ from: CameraMatrix; to: CameraMatrix; since: number } | null>(null);
+  // HM-12 / HR-02: explicit camera moves ease on the UI thread; a floor change dips through a veil.
+  const cameraTween = useSharedValue<CameraTween | null>(null);
+  const veil = useSharedValue(0);
   const pinchMid = useSharedValue({ x: 0, y: 0 });
   const pinchDistance = useSharedValue(0);
   const suppressed = useSharedValue<number[]>([]);
@@ -856,6 +876,12 @@ export function useInteraction({
       if (!controller.value.pointers.length) cameraGesture.set(false);
       inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
       revealPan.set(null);
+      // A carried thing keeps an explicit room move running; a new hand on the room takes over.
+      if (!controller.value.pointers.some((p) => !!p.entity) && cameraTween.value) {
+        camera.set(cameraTween.value.to);
+        cameraTween.set(null);
+        veil.set(0);
+      }
       for (const touch of event.changedTouches) {
         if (controller.value.pointers.length >= 2) {
           suppressed.set([...suppressed.value, touch.id]);
@@ -1000,6 +1026,13 @@ export function useInteraction({
         send(event, true);
         if (event.type === "up") resumePending(event.pointer);
       }
+    }
+    if (cameraTween.value) {
+      const tween = cameraTween.value;
+      const sample = cameraTweenSample(tween, eventTime());
+      camera.set(sample.camera);
+      veil.set(sample.veil);
+      if (sample.done) cameraTween.set(null);
     }
     if (revealPan.value && !controller.value.pointers.length) {
       const { from, to, since } = revealPan.value;
@@ -1168,7 +1201,7 @@ export function useInteraction({
         return current;
       });
     publish();
-    const busy = !!slots.value[0].id || !!slots.value[1].id || queuedInput.value.length > 0 || !!revealPan.value ||
+    const busy = !!slots.value[0].id || !!slots.value[1].id || queuedInput.value.length > 0 || !!revealPan.value || !!cameraTween.value ||
       !!inertia.value.since || nudging || probePending.value.length > 0 || controller.value.pointers.some((p) => !!p.entity);
     if (busy) idleFrames.set(0);
     else {
@@ -1315,6 +1348,22 @@ export function useInteraction({
     })();
     return true;
   };
+  /** HM-12: ease to `to` in 180 ms, or dip through the veil for another floor. Reduced Motion jumps. */
+  const animateCamera = (to: CameraMatrix, door = false) => {
+    runOnUI(() => {
+      "worklet";
+      revealPan.set(null);
+      inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
+      if (reduced) {
+        cameraTween.set(null);
+        veil.set(0);
+        camera.set(to);
+        return;
+      }
+      cameraTween.set({ from: camera.value, to, since: eventTime(), duration: door ? DOOR_MS : CAMERA_EASE_MS, door });
+      wakeFrames();
+    })();
+  };
   /** HR-02: one quiet wiggle on `id`. The frame callback runs only for its 180 ms. */
   const showHint = (id: string) => {
     runOnUI(() => {
@@ -1354,6 +1403,8 @@ export function useInteraction({
     restingFlags,
     restingMotion,
     showHint,
+    animateCamera,
+    veil,
     clock: lastFrame,
   };
 }

@@ -2,7 +2,7 @@ import React from "react";
 import TestRenderer, { act } from "react-test-renderer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { layoutToken } from "../src/home/runtime/layout";
-import { useInteraction, mergeRoomPayloads, roomPayloadsOf, type Pickup, type Interaction } from "../src/home/runtime/useInteraction";
+import { useInteraction, mergeRoomPayloads, roomPayloadsOf, cameraTweenSample, CAMERA_EASE_MS, DOOR_MS, type Pickup, type Interaction } from "../src/home/runtime/useInteraction";
 import { buildingLayout } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
 import { gridCell, roomPoint, type Scene, type SceneEntity } from "../src/home/scene/types";
@@ -293,5 +293,49 @@ describe("HM-13 resting mappers never read per-frame channels", () => {
     walk(result.ast);
     expect(captured.size).toBeGreaterThan(0);
     for (const name of ["slots", "clock", "controller", "fixtureNudges"]) expect([...captured]).not.toContain(name);
+  });
+});
+describe("HM-12 explicit camera moves ease on the UI thread", () => {
+  const to = { ...identityCamera, a: 0.5, d: 0.5, tx: -400, ty: -120 };
+  it("eases over 180 ms with intermediate frames, then lands exactly", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
+    frames(4);
+    registry.calls = [];
+    current.animateCamera(to);
+    expect(registry.calls).toEqual([[7, true]]);
+    const xs: number[] = [];
+    for (let i = 0; i < 14; i++) { vi.advanceTimersByTime(16); frame(); xs.push(current.camera.get().tx); }
+    expect(xs.filter((x) => x !== 0 && x !== -400).length).toBeGreaterThanOrEqual(5);
+    expect(current.camera.get()).toEqual(to);
+    expect(xs.every((x, i) => i === 0 || x <= xs[i - 1])).toBe(true);
+    frames(4);
+    expect(registry.calls.at(-1)).toEqual([7, false]);
+    await act(async () => renderer.unmount());
+  });
+  it("is immediate under Reduced Motion", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} reduced />); });
+    current.animateCamera(to);
+    expect(current.camera.get()).toEqual(to);
+    expect(current.veil.get()).toBe(0);
+    await act(async () => renderer.unmount());
+  });
+  it("a floor change swaps the view under a full veil instead of sliding through walls", () => {
+    const tween = { from: identityCamera, to, since: 0, duration: DOOR_MS, door: true };
+    expect(cameraTweenSample(tween, 40)).toMatchObject({ camera: identityCamera, done: false });
+    expect(cameraTweenSample(tween, DOOR_MS / 2).veil).toBeCloseTo(1);
+    expect(cameraTweenSample(tween, DOOR_MS / 2).camera).toEqual(to);
+    expect(cameraTweenSample(tween, DOOR_MS)).toMatchObject({ camera: to, veil: 0, done: true });
+    expect(CAMERA_EASE_MS).toBe(180);
+  });
+  it("a new hand on the room finishes the move at once and takes the camera", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
+    current.animateCamera(to);
+    vi.advanceTimersByTime(40); frame();
+    touch("down", 600, 50); flushJS();
+    expect(current.camera.get()).toEqual(to);
+    await act(async () => renderer.unmount());
   });
 });
