@@ -180,17 +180,17 @@ function pitsLesson(states: Position[], final: Position, mine: number[], make: M
     const missed = rows.filter((r) => r.best !== final.moves[r.i]);
     const win = missed.find((r) => r.bestScore >= WIN && r.playedScore < WIN);
     if (win)
-      return make(win.i, win.best, "winning", "The winning move", `Sowing ${pit(win.best)} wins with best play from here, looking eight sows ahead.`);
+      return make(win.i, win.best, "winning", "The winning move", `Sowing ${pit(win.best)} here wins, if you keep playing your best.`);
     // The first sow after which the other side could force a win, when another sow kept the game open.
     const opened = missed.find((r) => r.playedScore <= -WIN && r.bestScore > -WIN);
     if (opened)
-      return make(opened.i, opened.best, "stronger", "A sow to look at again", `After the sow you chose, the other side could force a win. Sowing ${pit(opened.best)} kept the game open, looking eight sows ahead.`);
+      return make(opened.i, opened.best, "stronger", "A better sow", `After the sow you chose, the other side could win whatever you did next. Sowing ${pit(opened.best)} would have kept your chance to win.`);
     const drop = missed
       .filter((r) => Math.abs(r.bestScore) < WIN && Math.abs(r.playedScore) < WIN)
       .reduce<(typeof rows)[number] | null>((a, r) => (r.bestScore - r.playedScore > (a ? a.bestScore - a.playedScore : 23) ? r : a), null);
     if (!drop) return null;
     const shells = Math.max(2, Math.round((drop.bestScore - drop.playedScore) / 12));
-    return make(drop.i, drop.best, "stronger", "A sow to look at again", `Sowing ${pit(drop.best)} looks about ${shells} shells better, eight sows ahead.`);
+    return make(drop.i, drop.best, "stronger", "A better sow", `Sowing ${pit(drop.best)} would have kept about ${shells} more shells for you.`);
   };
   return {
     get done() {

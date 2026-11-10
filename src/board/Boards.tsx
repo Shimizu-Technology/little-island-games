@@ -434,7 +434,7 @@ function Canoes({ state: s, width, onMove, locked, hint }: Props) {
       </View>
       <Copy style={{ fontSize: 14 }}>
         {s.scores[seat]} of {target(s, seat)} canoe spaces found
-        {edgeOf(s)[seat] ? ` · head start: ${edgeOf(s)[seat]} already counted` : ""}
+        {edgeOf(s)[seat] ? ` (head start: ${target(s, seat)} instead of 7)` : ""}
       </Copy>
     </View>
   );

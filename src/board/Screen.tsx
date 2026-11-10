@@ -492,7 +492,7 @@ function Round({
         />
         {headStart && (
           <Copy accessibilityLabel={`Head start for ${headStartFor}: ${headStart}`} style={{ fontSize: 14, color: C.ink, padding: 10, backgroundColor: "#FFF4D6", borderRadius: 12 }}>
-            Head start for {headStartFor}: {headStart}.{rival && edge[0] ? ` ${rival} plays its best.` : ""}
+            Head start for {headStartFor}: {headStart.charAt(0).toLowerCase() + headStart.slice(1)}.{rival && edge[0] ? ` ${rival} still plays its best.` : ""}
           </Copy>
         )}
         {p.outcome !== null && <BadgeResultCard round={s.id}/>}

@@ -28,12 +28,12 @@ export function TacticsBoard({ state: s, dispatch, active, width }: ChallengeVie
       : s.hint === null
         ? "No sure win from here. Undo a sow or start again."
         : s.hint !== undefined
-          ? `Help: try ${pitName(s.hint)}. It has the outline; the gold ring shows where its last shell lands.`
+          ? `Help suggests ${pitName(s.hint)}. It has the outline; the gold ring shows where its last shell lands.`
           : last?.replies.length
             ? `Ray sowed ${last.replies.map(pitName).join(", then ")}. Your turn.`
             : last
               ? "Another turn! Your last shell landed in your store."
-              : "Win this endgame. You are the circle side. Ray answers every sow with its best defence.";
+              : "Win this endgame: finish with more shells than Ray. You are the circle side. Ray answers every sow with its best reply.";
   return (
     <View style={{ gap: 10 }}>
       <Copy accessibilityLiveRegion="polite" style={{ color: C.ink, fontSize: 15 }}>

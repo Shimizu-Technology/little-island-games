@@ -126,7 +126,7 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
       )}
       {rival && s.options.checkersHeadStart === 1 && (
         <Copy style={{ fontSize: 14, color: C.ink, padding: 10, backgroundColor: "#FFF4D6", borderRadius: 12, textAlign: "center" }}>
-          Head start for you: {headStarts("checkers")[0].label.toLowerCase()}. {rival.name} still plays its best.
+          Head start for you: {rival.name} starts with one piece fewer. {rival.name} still plays its best.
         </Copy>
       )}
       {outcome && s.lesson === null && review === null && (
