@@ -106,3 +106,24 @@ The frozen Play list is `anchoredInPlay` in `world.ts`: beds, baths, large seats
 ### Home trace (HM-S0)
 
 `runtime/trace.ts` is the local QA log for probes P1–P6: pick, ready, painted, release, commit (with a save transaction hash), frame-time summaries and a layout snapshot, with device and build on the session line. It writes to the app's own Documents folder as `home-trace-<session>.jsonl` and has no network path. It only runs under `lab`, and `HomeScreen` requires it inside a `__DEV__ || EXPO_PUBLIC_HOME_LAB` branch, so a build without that flag folds the module and the hit-shape overlay away. P1 (240 fps video) and P6 (thermal) are physical-device measurements.
+
+## Getting around and smooth (4.0, H3)
+
+- **Idle:** the Home frame callback stops itself after three quiet frames and restarts on the next touch, hint or camera move. Resting art reads one shared resting state that changes only on pickup, press, target and front edges, never per drag frame. Only rooms whose contents changed are sent to the UI thread.
+- **Life:** friends in the room on screen blink (four blinks per 18 s, never more than 6 s apart, staggered) and breathe (0.4% scale). The clock is a timer that wakes only at blink edges and in 250 ms breath steps. No life in the overview, other rooms or Reduced Motion.
+- **Camera:** room buttons, Find, zoom and double-tap ease over 180 ms on the UI thread; another floor dips through a 160 ms veil. Reduced Motion jumps. A new touch on the room finishes the move at once.
+- **Room moves:** a 48 pt edge band on every device. Room buttons are drop targets: a carry held on one for 300 ms switches room and keeps the carry; letting go on one lands on that room's open floor. Cancel still returns to the source.
+- **Sand:** a thing let go on the beach below a ground-floor room lands on the nearest open floor, travelling there. Each ground-floor beach has three shells; picking one leaves it on the sand and placing it makes a new shell.
+- **Tray:** each choice is a picture of the destination with the chosen thing in the resolved pose. The tray lifts above the selected thing so it never covers it.
+- **Friends drawer:** a Friends button beside Find. Each friend has a 64 pt cell (76 pt in larger-target mode). Dragging a cell carries that same friend into the room under the finger; a tap brings them here; a friend let go on the Friends button waits in the drawer (staging), keeping what they hold. Opening and closing takes 160 ms and never moves the camera.
+- **Quiet hints:** after 6 s without a touch, one usable thing (a toggle, a food or a shell) gives one ±3° wiggle over 180 ms; at most once per 20 s and three times per quiet spell. Never in Design, with a panel open, or under Reduced Motion. No sound, badge or prompt.
+- **Small rules:** a background touch longer than 500 ms is not a tap; a two-finger tap is ignored; a full room shows a picture cue; Redo shows in Play for 10 s after an Undo.
+
+### Saved undo and access (v4 only)
+
+`HomeStateV2` v4 may carry two optional fields, both outside history and validated by `validHome`:
+
+- `undo: { version: 1, steps }` — the last 20 undo steps, each the smallest per-room patch that turns the state after one committed action back into the state before it, at most 6,144 bytes. Every step must rebuild a valid earlier home, or the save is invalid. Navigation is never a step and Redo is not saved. Five learners' worst case fits the measured whole-save headroom in `docs/evidence/f1-save/SIZE.json`.
+- `access: { largeTargets: true }` — the grown-up larger-target mode, set only behind the typed grown-up question in More. Never an undo step.
+
+Older saves and saves without these fields are unchanged; migrations never write them.
