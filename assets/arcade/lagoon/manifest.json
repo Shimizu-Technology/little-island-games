@@ -989,6 +989,125 @@
       "bytes": 33884,
       "sha256": "5b8eadbe127aed706c6fb359a13dd7d675d66d6aa762d3dd16ad1ce358b25042"
     },
+    "actors/log": {
+      "width": 72,
+      "height": 72,
+      "density": 4,
+      "bytes": 13060,
+      "sha256": "3add0861c694425079b495c6a2941bcc0d115f62e2f720479e5ad0e72b5c7c6f"
+    },
+    "actors/crate": {
+      "width": 72,
+      "height": 72,
+      "density": 4,
+      "bytes": 9889,
+      "sha256": "cbbd41adf86d966345cad568b7e09d4d5451ff88abd694c0bd08a790abf49f0a"
+    },
+    "actors/cooler": {
+      "width": 72,
+      "height": 72,
+      "density": 4,
+      "bytes": 7216,
+      "sha256": "41cbe195a99870dbedf5a230a45794dacfdc1a9298a4d7b62a5c76fb41bb1aa9"
+    },
+    "actors/crab": {
+      "width": 72,
+      "height": 72,
+      "density": 4,
+      "bytes": 19181,
+      "sha256": "b20ce91411060dd6a59c83b9cc39a5d81d6ccf266ae58fa3b157979d664a55be"
+    },
+    "actors/coconut": {
+      "width": 72,
+      "height": 72,
+      "density": 4,
+      "bytes": 2300,
+      "sha256": "4a1a34ca5d7fbaec25904461220f8fc7a2dbc422d219bf657c37abf0df27004f"
+    },
+    "actors/coconut-ball": {
+      "width": 72,
+      "height": 72,
+      "density": 4,
+      "bytes": 9209,
+      "sha256": "b7fc2c35929a43c446904624a128f04aa329f6ca6866c4cf6e9481bae0c84c5f"
+    },
+    "actors/net": {
+      "width": 112,
+      "height": 129.6,
+      "density": 4,
+      "bytes": 48988,
+      "sha256": "b6f2d5918fb6b8b896198a5f73b59363fecaa12c653b5cb051a0a9a7fe578d5b"
+    },
+    "actors/frond": {
+      "width": 112,
+      "height": 129.6,
+      "density": 4,
+      "bytes": 26348,
+      "sha256": "210867b87a1a3285617b0a06e92c163bd25dd8ef60a746aa3518048da0568885"
+    },
+    "actors/banner": {
+      "width": 112,
+      "height": 129.6,
+      "density": 4,
+      "bytes": 17151,
+      "sha256": "fa308bb9e0d206bf338220e1b3312e96b560eb83ce3304dddd6073b2eec64ba9"
+    },
+    "actors/line": {
+      "width": 112,
+      "height": 129.6,
+      "density": 4,
+      "bytes": 17009,
+      "sha256": "77b5baaaf57f4d994a724e7bd9a73b0fd5ad8ef74ec743726d2732caba51a234"
+    },
+    "actors/rock": {
+      "width": 72,
+      "height": 129.6,
+      "density": 4,
+      "bytes": 22085,
+      "sha256": "b6d0011b2bf6a6dfa089069f7ec004f07918d2ddb4899ed42cacb6f6e5c7142d"
+    },
+    "actors/wall": {
+      "width": 72,
+      "height": 129.6,
+      "density": 4,
+      "bytes": 18115,
+      "sha256": "6fc4a9e716aa04e5aecbe85303b90624518a0026c845ca97d1d6b39ed0897d75"
+    },
+    "actors/shell": {
+      "width": 30,
+      "height": 30,
+      "density": 5,
+      "bytes": 7780,
+      "sha256": "bf3e7c43730b748286c626dfa7f8efb796ca199a6a195679c28794012e965960"
+    },
+    "actors/power-magnet": {
+      "width": 44,
+      "height": 44,
+      "density": 5,
+      "bytes": 13679,
+      "sha256": "d16da35d4a3bdcac470e8b031d3d46ac515c5199ccd757308c49e191e5901981"
+    },
+    "actors/power-kite": {
+      "width": 44,
+      "height": 44,
+      "density": 5,
+      "bytes": 15170,
+      "sha256": "aa5c47bfeba60e48bbdf42def8ac6c1843c37ed2b924cabf3905cf623fb7da63"
+    },
+    "actors/power-sandals": {
+      "width": 44,
+      "height": 44,
+      "density": 5,
+      "bytes": 16680,
+      "sha256": "0a82c2fe149c25925c68e0ce52683c0f27523e04ba5522cf08b0e571ffaaf30f"
+    },
+    "actors/power-shield": {
+      "width": 44,
+      "height": 44,
+      "density": 5,
+      "bytes": 19238,
+      "sha256": "051b7af46632a571b16ad214a31cf9cfbec338c6a0d5a5bd1d47d4745aae21b8"
+    },
     "deck": {
       "width": 128,
       "height": 256,

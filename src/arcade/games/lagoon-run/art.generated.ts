@@ -12,3 +12,24 @@ export const propArt: Partial<Record<string, () => number[]>> = {
   morning: () => [require('../../../../assets/arcade/lagoon/morning/prop-0.png'), require('../../../../assets/arcade/lagoon/morning/prop-1.png'), require('../../../../assets/arcade/lagoon/morning/prop-2.png'), require('../../../../assets/arcade/lagoon/morning/prop-3.png')],
   festival: () => [require('../../../../assets/arcade/lagoon/festival/prop-0.png'), require('../../../../assets/arcade/lagoon/festival/prop-1.png'), require('../../../../assets/arcade/lagoon/festival/prop-2.png'), require('../../../../assets/arcade/lagoon/festival/prop-3.png')],
 };
+/** Lazy, like the other art maps: tests never load PNG sources. */
+export const hazardArt = (): Record<string, { art: number; ball?: number }> => ({
+  "log": { art: require('../../../../assets/arcade/lagoon/actors/log.png') },
+  "crate": { art: require('../../../../assets/arcade/lagoon/actors/crate.png') },
+  "cooler": { art: require('../../../../assets/arcade/lagoon/actors/cooler.png') },
+  "crab": { art: require('../../../../assets/arcade/lagoon/actors/crab.png') },
+  "coconut": { art: require('../../../../assets/arcade/lagoon/actors/coconut.png'), ball: require('../../../../assets/arcade/lagoon/actors/coconut-ball.png') },
+  "net": { art: require('../../../../assets/arcade/lagoon/actors/net.png') },
+  "frond": { art: require('../../../../assets/arcade/lagoon/actors/frond.png') },
+  "banner": { art: require('../../../../assets/arcade/lagoon/actors/banner.png') },
+  "line": { art: require('../../../../assets/arcade/lagoon/actors/line.png') },
+  "rock": { art: require('../../../../assets/arcade/lagoon/actors/rock.png') },
+  "wall": { art: require('../../../../assets/arcade/lagoon/actors/wall.png') },
+});
+export const shellArt = () => require('../../../../assets/arcade/lagoon/actors/shell.png');
+export const powerArt = (): Record<string, number> => ({
+  magnet: require('../../../../assets/arcade/lagoon/actors/power-magnet.png'),
+  kite: require('../../../../assets/arcade/lagoon/actors/power-kite.png'),
+  sandals: require('../../../../assets/arcade/lagoon/actors/power-sandals.png'),
+  shield: require('../../../../assets/arcade/lagoon/actors/power-shield.png'),
+});

@@ -124,3 +124,42 @@ export const PROPS: Record<string, ((look: LagoonLook) => string)[]> = {
   festival: [stall, drum, lanternPole, flowerArch],
 };
 export const PROP_SIZE = { width: 100, height: 240 } as const;
+
+/* ---------- Hazards (touchable: 3-unit ink). Same frames and silhouettes as the live art, baked. ---------- */
+const INK = '#3E424F';
+/** Frame (points) and viewBox per action: jump is low, roll is high with a gap below, lane is tall. */
+export const HAZARD_FRAMES = { jump: { width: 72, height: 72, vb: [100, 100] }, duck: { width: 112, height: 129.6, vb: [100, 180] }, lane: { width: 72, height: 129.6, vb: [100, 180] } } as const;
+const g = (body: string) => `<g stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${body}</g>`;
+function duckFrame(fill: string, inner: string) {
+  return g(`<path d="M5 177V26L13 21V172M87 172V21L95 26V177" fill="#B48358"/><path d="M4 27L12 20H88L96 27V92L88 101H12L4 92Z" fill="${fill}"/><path d="M4 27L12 20H88L96 27Z" fill="#D2D998" stroke-width="0"/><path d="M88 29L96 27V92L88 101Z" fill="#214E52" fill-opacity=".3" stroke-width="0"/><path d="M4 27H96M12 101H88" stroke="#FFE2AA" stroke-width="5"/>${inner}<path d="M8 120V151M92 120V151" stroke="#F0C78B" stroke-width="2"/>`);
+}
+/** Redrawn fishing net (LG-S3): float line on top, sagging mesh, weights, a clear gap below to roll under. */
+function net() {
+  const mesh = Array.from({ length: 9 }, (_, i) => `<path d="M${10 + i * 10} 30Q${12 + i * 10} 66 ${9 + i * 10.2} 98" fill="none"/>`).join('') + Array.from({ length: 6 }, (_, i) => `<path d="M8 ${40 + i * 11}Q50 ${50 + i * 12} 92 ${40 + i * 11}" fill="none"/>`).join('');
+  return g(`<path d="M5 177V22M95 177V22" stroke-width="3" fill="none"/><path d="M2 177V24H10V177ZM90 177V24H98V177Z" fill="#9A6B45"/><path d="M4 30V177" stroke="#D6A16B" stroke-width="2"/><path d="M92 30V177" stroke="#D6A16B" stroke-width="2"/>`
+    + `<path d="M8 30Q50 42 92 30L92 96Q50 112 8 96Z" fill="#7FC2B8" fill-opacity=".45" stroke-width="2"/>`)
+    + `<g stroke="#2F6F69" stroke-width="2" stroke-opacity=".9">${mesh}</g>`
+    + g(`<path d="M6 30Q50 42 94 30" fill="none" stroke="#F4E6C2" stroke-width="3.5"/>${[18, 34, 50, 66, 82].map((x, i) => `<ellipse cx="${x}" cy="${34 + (i === 2 ? 3 : i % 2 ? 2 : 0)}" rx="6" ry="4.5" fill="${i % 2 ? '#F6CF6A' : '#F28F6B'}" stroke-width="2"/>`).join('')}${[14, 38, 62, 86].map(x => `<circle cx="${x}" cy="${100 + (x === 38 || x === 62 ? 6 : 2)}" r="3.5" fill="#6F7B80" stroke-width="2"/>`).join('')}<path d="M8 120V151M92 120V151" stroke="#F0C78B" stroke-width="2"/>`);
+}
+export const HAZARD_ART: Record<string, { action: 'jump' | 'duck' | 'lane'; svg: () => string; ball?: () => string }> = {
+  log: { action: 'jump', svg: () => `<ellipse cx="50" cy="94" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g(`<path d="M13 58L78 43L90 77L23 92Z" fill="#A77250"/><path d="M15 58L78 43L85 52L22 70Z" fill="#DDA56D"/><ellipse cx="22" cy="75" rx="15" ry="17" fill="#E9C38B"/><ellipse cx="22" cy="75" rx="7" ry="10" fill="none" stroke="#AF7D55"/><path d="M41 70L80 61M45 82L84 73" stroke="#7E5945" fill="none" stroke-width="2"/>`) },
+  crate: { action: 'jump', svg: () => `<ellipse cx="50" cy="94" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g(`<path d="M8 58L70 44L92 58V83L29 96L8 80Z" fill="#B88054"/><path d="M8 58L70 44L92 58L29 72Z" fill="#E7BE7C"/><path d="M29 72V96" fill="none"/><path d="M36 74L83 86M83 64L36 91" stroke="#F6D699" stroke-width="4"/>`) },
+  cooler: { action: 'jump', svg: () => `<ellipse cx="50" cy="94" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g(`<path d="M8 58L70 44L92 58V83L29 96L8 80Z" fill="#58A4B7"/><path d="M8 58L70 44L92 58L29 72Z" fill="#EAF2CC"/><path d="M29 72V96" fill="none"/><path d="M48 72V82H68V68" stroke="#E7EDCF" stroke-width="4" fill="none"/>`) },
+  crab: { action: 'jump', svg: () => `<ellipse cx="50" cy="94" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g(`<path d="M28 77L12 67L5 75M26 84L9 85L4 93M73 77L88 67L95 75M75 84L92 85L97 93" fill="none" stroke="#B96450" stroke-width="5"/><ellipse cx="50" cy="78" rx="27" ry="17" fill="#E28E6F"/><path d="M30 72L19 59L9 64L7 49L18 44L28 55M70 72L81 59L91 64L93 49L82 44L72 55" fill="#F3AC84"/><path d="M39 64V54M61 64V54" stroke-width="4"/><circle cx="39" cy="52" r="4" fill="#FFF0C6"/><circle cx="61" cy="52" r="4" fill="#FFF0C6"/><path d="M39 52h1M61 52h1" stroke-width="3"/><path d="M41 82Q50 87 59 82" fill="none" stroke-width="2"/>`) },
+  coconut: { action: 'jump', svg: () => `<ellipse cx="50" cy="94" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>`, ball: () => g(`<circle cx="49" cy="72" r="23" fill="#AE7950"/><path d="M34 59Q49 44 63 61" stroke="#E4BA7D" stroke-width="5" fill="none"/><path d="M38 85Q35 69 48 55" stroke="#815743" fill="none"/>${[43, 51, 47].map((x, i) => `<circle cx="${x}" cy="${66 + i * 6}" r="2" fill="#493C37" stroke-width="0"/>`).join('')}`) },
+  net: { action: 'duck', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + net() },
+  frond: { action: 'duck', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + duckFrame('#568B66', `<g fill="#92BE78">${[12, 30, 48, 66, 84].map(x => `<path d="M${x} 32q15 17 7 58q-16-20-7-58Z"/>`).join('')}</g>`) },
+  banner: { action: 'duck', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + duckFrame('#DC8872', `<path d="M15 37L29 79L43 37L57 79L71 37L85 79" stroke="#FFE8AC" stroke-width="6" fill="none"/>`) },
+  line: { action: 'duck', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + duckFrame('#80B5A2', `<path d="M15 37L29 79L43 37L57 79L71 37L85 79" stroke="#FFE8AC" stroke-width="6" fill="none"/>`) },
+  rock: { action: 'lane', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g(`<path d="M7 163L14 79L39 47L70 58L92 117L86 172L44 177Z" fill="#78979D"/><path d="M14 79L45 99L39 47L70 58L45 99Z" fill="#B8CFC6"/><path d="M45 99L44 177L86 172L92 117Z" fill="#5F7E89"/><path d="M14 79L45 99L70 58M45 99L44 177" fill="none"/>`) },
+  wall: { action: 'lane', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g([[8, 112, 42, 60], [51, 112, 40, 60], [26, 51, 49, 60]].map(([x, y, w, h], i) => `<path d="M${x} ${y}l8-9h${w}v${h}l-8 9Z" fill="#936047"/><path d="M${x} ${y}h${w}v${h}H${x}Z" fill="${i === 2 ? '#C18B54' : '#B37D50'}"/><path d="M${x} ${y}l8-9h${w}l-8 9Z" fill="#E3B77A"/><path d="M${x + 5} ${y + 6}l${w - 10} ${h - 12}M${x + w - 5} ${y + 6}l${10 - w} ${h - 12}" fill="none" stroke="#F0CC8B" stroke-width="5"/><path d="M${x + 5} ${y + 4}h${w - 10}M${x + 5} ${y + h - 4}h${w - 10}" stroke="#75523E" stroke-width="3"/>`).join('')) },
+};
+/** Collectable shell, 32-unit source drawn at 30 points. */
+export const SHELL_SVG = `<circle cx="16" cy="16" r="15" fill="#FFF1A0" fill-opacity=".24"/><path d="M8 24L3 14Q2 8 7 7Q9 2 14 5Q19 1 23 6Q30 5 29 13L24 24L19 28H13Z" fill="#FFD476" stroke="#9B693F" stroke-width="1.7"/><path d="M14 24L8 10M17 24V8M20 24L25 10" stroke="#FFF3BF" stroke-width="2" stroke-linecap="round"/><path d="M10 25H23L20 29H13Z" fill="#E9A957" stroke="#9B693F" stroke-width="1.3"/><circle cx="8" cy="9" r="2" fill="#FFFBE0"/>`;
+export const POWER_SVG: Record<string, string> = {
+  magnet: `<path d="M14 14V35Q15 56 32 56Q50 56 50 35V14H38V34Q38 43 32 43Q26 43 26 34V14Z" fill="#EF977F"/><path d="M14 23H26M38 23H50" stroke="#FFF7DA" stroke-width="6"/><path d="M5 14L10 19M54 20L60 14" stroke="#E4AA4E"/>`,
+  kite: `<path d="M32 7L53 26L32 44L11 26Z" fill="#6FC0C8"/><path d="M32 7V44M11 26H53" fill="none" stroke="#FFE4A0"/><path d="M32 44Q17 49 35 57" fill="none"/><path d="M24 47L36 52M25 54L36 58" stroke="#EF977F"/>`,
+  sandals: `<path d="M19 12Q26 12 25 25L20 36Q17 43 10 39Q6 35 11 26L13 16Q14 12 19 12M44 10Q52 11 50 25L46 35Q43 43 36 38Q32 35 36 26L38 14Q40 10 44 10" fill="#F4C86A"/><path d="M9 45L21 48L10 52L22 56M34 44L48 47L37 52L50 55" fill="none" stroke="#5B9A87"/>`,
+  shield: `<path d="M32 9L52 18V34Q48 49 32 57Q16 49 12 34V18Z" fill="#8EBE85"/><ellipse cx="32" cy="31" rx="14" ry="17" fill="#4F8A76"/><path d="M24 19L32 27L41 20M32 27V43M19 34L32 27L46 34" fill="none" stroke="#D5E5A1"/>`,
+};
+export const powerSvg = (kind: string) => `<circle cx="32" cy="32" r="29" fill="#FFF4CD" stroke="${INK}" stroke-width="3"/><g stroke="${INK}" stroke-width="3" stroke-linejoin="round">${POWER_SVG[kind]}</g>`;

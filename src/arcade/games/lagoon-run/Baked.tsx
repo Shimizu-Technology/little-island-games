@@ -8,7 +8,7 @@ import atlas from '../../../../assets/arcade/lagoon/manifest.json';
 import { canoeMatrix, deckFrame } from './bakedGeometry';
 import { RAMP_SECTIONS } from './surface';
 import { FLOOR_BANDS, floorBandMatrix, type FloorBand } from './floorBands';
-import { floorArt } from './art.generated';
+import { floorArt, hazardArt, powerArt, shellArt } from './art.generated';
 import { lagoonLook } from './look';
 import type { WorldId } from '../../types';
 export const TRAVEL_SLOT = 35;
@@ -98,3 +98,18 @@ function CanoeFrame({poses,index,frame,moving}:{poses:SharedValue<SpritePose[]>;
 export const BakedCanoe=memo(function BakedCanoe({poses,index,moving}:{poses:SharedValue<SpritePose[]>;index:number;moving:boolean}) {
  return <>{atlas.canoes.map((_,frame)=><CanoeFrame key={frame} poses={poses} index={index} frame={frame} moving={moving}/>)}</>;
 });
+
+/** Hazards, shells and power-ups as baked images (LG-S3 bake pipeline). A pre-mounted front twin
+ * shows an already-decoded image: nothing is drawn on the CPU when it first becomes visible. */
+export const BakedHazard=memo(function BakedHazard({kind,width,height,poses,index}:{kind:string;width:number;height:number;poses:SharedValue<SpritePose[]>;index:number}) {
+ const art=hazardArt()[kind];
+ if(!art)return null;
+ return <>{<Image accessible={false} source={art.art} style={{width,height}} fadeDuration={0}/>}{art.ball!==undefined&&<CoconutBall source={art.ball} width={width} height={height} poses={poses} index={index}/>}</>;
+});
+/** The ball rolls about its own centre (49,72 in the 100-unit source); its ground shadow stays put. */
+function CoconutBall({source,width,height,poses,index}:{source:number;width:number;height:number;poses:SharedValue<SpritePose[]>;index:number}) {
+ const style=useAnimatedStyle(()=>({transform:[{rotate:`${poses.value[index]?.angle??0}rad`}]}));
+ return <Animated.View style={[absolute,{width,height,transformOrigin:[width*.49,height*.72,0]},style]}><Image accessible={false} source={source} style={{width,height}} fadeDuration={0}/></Animated.View>;
+}
+export function BakedShell({size=30}:{size?:number}) { return <Image accessible={false} source={shellArt()} style={{width:size,height:size}} fadeDuration={0}/>; }
+export function BakedPower({kind,size=44}:{kind:string;size?:number}) { const source=powerArt()[kind]; return source===undefined?null:<Image accessible={false} source={source} style={{width:size,height:size}} fadeDuration={0}/>; }
