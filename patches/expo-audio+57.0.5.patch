@@ -1,0 +1,61 @@
+diff --git a/node_modules/expo-audio/ios/AudioPlayer.swift b/node_modules/expo-audio/ios/AudioPlayer.swift
+index 0742943..1a8bf62 100644
+--- a/node_modules/expo-audio/ios/AudioPlayer.swift
++++ b/node_modules/expo-audio/ios/AudioPlayer.swift
+@@ -6,6 +6,12 @@ private enum AudioConstants {
+   static let audioSample = "audioSampleUpdate"
+ }
+ 
++// Little Island patch (expo-audio 57.0.5): periodic status observers run here, not on the main queue.
++// The observer fires as soon as a player's rate changes, and its status read (-[AVPlayerItem currentTime])
++// waits on MediaToolbox's item lock while playback starts. On the main queue that wait stalled UI frames
++// on every short sound on iOS 18. Status events are emitted to JS, and lock-screen updates hop to main.
++let audioStatusQueue = DispatchQueue(label: "expo.modules.audio.status", qos: .userInitiated)
++
+ public class AudioPlayer: SharedRef<AVPlayer>, Playable {
+   let id = UUID().uuidString
+   var shouldCorrectPitch = true
+@@ -187,12 +193,15 @@ public class AudioPlayer: SharedRef<AVPlayer>, Playable {
+ 
+     await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+       ref.seek(to: time, toleranceBefore: toleranceBefore, toleranceAfter: toleranceAfter) { [weak self] _ in
+-        if let self {
+-          self.updateStatus(with: [
+-            "currentTime": self.currentTime
+-          ])
++        // AVFoundation calls this on the main queue; read the status on audioStatusQueue instead.
++        audioStatusQueue.async { [weak self] in
++          if let self {
++            self.updateStatus(with: [
++              "currentTime": self.currentTime
++            ])
++          }
++          continuation.resume()
+         }
+-        continuation.resume()
+       }
+     }
+   }
+@@ -479,7 +488,7 @@ public class AudioPlayer: SharedRef<AVPlayer>, Playable {
+     let updateInterval = interval / 1000
+     let interval = CMTime(seconds: updateInterval, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+ 
+-    timeToken = ref.addPeriodicTimeObserver(forInterval: interval, queue: nil) { [weak self] time in
++    timeToken = ref.addPeriodicTimeObserver(forInterval: interval, queue: audioStatusQueue) { [weak self] time in
+       guard let self else {
+         return
+       }
+diff --git a/node_modules/expo-audio/ios/AudioPlaylist.swift b/node_modules/expo-audio/ios/AudioPlaylist.swift
+index 98dabcf..ce408bb 100644
+--- a/node_modules/expo-audio/ios/AudioPlaylist.swift
++++ b/node_modules/expo-audio/ios/AudioPlaylist.swift
+@@ -345,7 +345,8 @@ public class AudioPlaylist: SharedRef<AVQueuePlayer>, Playable {
+     let updateInterval = interval / 1000
+     let interval = CMTime(seconds: updateInterval, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+ 
+-    timeToken = ref.addPeriodicTimeObserver(forInterval: interval, queue: nil) { [weak self] time in
++    // See audioStatusQueue in AudioPlayer.swift.
++    timeToken = ref.addPeriodicTimeObserver(forInterval: interval, queue: audioStatusQueue) { [weak self] time in
+       guard let self else {
+         return
+       }
