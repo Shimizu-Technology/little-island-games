@@ -3,6 +3,7 @@ import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createSession, type BoardSession } from "../src/board";
 import * as coconut from "../src/board/coconut-drop/engine";
+import * as canoes from "../src/board/hidden-canoes/engine";
 import * as pits from "../src/board/shell-pits/engine";
 import { computerTask } from "../src/playPolicies/decide";
 import { BoardScreen } from "../src/board/Screen";
@@ -157,6 +158,13 @@ describe("board rivals on screen", () => {
       r = create(<BoardScreen game="hidden-canoes" />);
     });
     expect(text(r)).not.toContain("See the winning move");
+    await act(() => r.unmount());
+    fixture.store.save.board = { "hidden-canoes": { ...s, position: canoes.create(2, 6, 0, [1, 0]) } };
+    await act(() => {
+      r = create(<BoardScreen game="hidden-canoes" />);
+    });
+    expect(text(r)).toContain("Find 6 canoe spaces.");
+    expect(text(r)).not.toContain("Find all seven");
     await act(() => r.unmount());
   });
 });

@@ -22,7 +22,7 @@ import { reviewGame, type KeyMoment } from "../playPolicies/review";
 import { Text } from "../components/Text";
 import { BoardArt, Piece } from "./Art";
 import { Boards, demoPosition } from "./Boards";
-import { coordinate } from "./hidden-canoes/engine";
+import { coordinate, target as canoeTarget } from "./hidden-canoes/engine";
 import { hintReason as coconutHintReason } from "./coconut-drop/engine";
 import { hintReason as netsHintReason, edgeDots } from "./fishing-nets/engine";
 const strengthNames = { gentle: "Gentle", growing: "Growing", challenge: "Challenge" };
@@ -487,7 +487,7 @@ function Round({
                 : "Your family score includes this round. Play again to carry it forward."
               : s.game === "reef-sweep"
                 ? "First tap is safe. Open every pearl space."
-                : `${s.mode === "solo" ? `${rival} · ${strengthNames[s.strength]}` : "Family match"} · ${s.game === "shell-pits" ? (p.turn === 0 ? "Circle side below" : "Square side above") : s.game === "fishing-nets" ? "Closing a box gives another turn." : s.game === "hidden-canoes" ? "Find all seven canoe spaces." : "Four in a line wins."}`
+                : `${s.mode === "solo" ? `${rival} · ${strengthNames[s.strength]}` : "Family match"} · ${s.game === "shell-pits" ? (p.turn === 0 ? "Circle side below" : "Square side above") : s.game === "fishing-nets" ? "Closing a box gives another turn." : s.game === "hidden-canoes" ? (canoeTarget(p, p.turn) === 7 ? "Find all seven canoe spaces." : `Find ${canoeTarget(p, p.turn)} canoe spaces.`) : "Four in a line wins."}`
           }
         />
         {headStart && (
