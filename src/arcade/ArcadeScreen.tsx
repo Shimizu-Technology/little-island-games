@@ -93,11 +93,11 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   function toTop() { scroll.current?.scrollTo({ y: 0, animated: false }); }
   function choose(id: LevelId | "endless") {
     liveRound.current = '';
-    if (id === "endless" ? !endlessOpen(p, store.save.arcade?.unlockAll) : !levelOpen(p, id, store.save.arcade?.unlockAll)) return;
+    if (id === "endless" ? !endlessOpen(p) : !levelOpen(p, id)) return;
     setLevel(id === "endless" ? id : play.level(id)); setResult(null); setPlaying(false); setPaused(false); setSheet(null); toTop();
   }
   function start() {
-    if (lastIdentity.current !== identity || !level || (level === 'endless' ? !endlessOpen(p,store.save.arcade?.unlockAll) : !levelOpen(p,level.id,store.save.arcade?.unlockAll))) {
+    if (lastIdentity.current !== identity || !level || (level === 'endless' ? !endlessOpen(p) : !levelOpen(p,level.id))) {
       startAfterTeach.current = false; setLevel(null); setSheet(null); return;
     }
     failedResult.current = null; setFinishError('');
@@ -148,7 +148,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   }, [arcade, game.id, level, round, name, expected, together, match.names, play]);
   const isLearning = !!level && level !== "endless" && level.world === "learn", levels = play.levels;
   const nextId = level && level !== "endless" ? allLevelIds[allLevelIds.indexOf(level.id) + 1] : undefined;
-  const nextOpen = nextId && levelOpen(p, nextId, store.save.arcade?.unlockAll);
+  const nextOpen = nextId && levelOpen(p, nextId);
   const goal = level ? play.goal?.(level, together) ?? (level === "endless" ? "Make it your own." : level.goals[0]) : "";
   const onTeachPlay = () => { if (lastIdentity.current !== identity) return; arcade({ type: "coached", game: game.id }, expected); if (startAfterTeach.current) start(); else setSheet(null); };
   const onHear = () => sound.say(play.speech(isLearning, together));
@@ -168,7 +168,7 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
       setArena(previous => previous.width === width && previous.height === height ? previous : { width, height });
     }}><SaveStatus/>{board}</View> : <ScrollView ref={scroll} contentContainerStyle={{ flexGrow: 1, width: "100%", paddingBottom: playing ? 0 : 24, gap: 12 }}>
       <SaveStatus/>
-      {!level ? <>{person.session?.game === game.id && <View style={{ paddingHorizontal: 16 }}><Button onPress={resumeReef}>Continue saved Reef Builder round</Button><Copy style={{ color: "#FFF4DA", textAlign: "center" }}>Your reef, pieces and moves are saved.</Copy></View>}<LevelMap learnerChip={<LearnerChip/>} game={game} person={person} levels={levels} unlockAll={store.save.arcade?.unlockAll ?? false} onLevel={choose} onOutfits={() => setSheet("outfits")} onChest={openChest} freeBest={freePlayBest(store.save.arcade, game.id)} active={foreground && !sheet} Scene={play.Scene} worldNote={play.worldNote}/>
+      {!level ? <>{person.session?.game === game.id && <View style={{ paddingHorizontal: 16 }}><Button onPress={resumeReef}>Continue saved Reef Builder round</Button><Copy style={{ color: "#FFF4DA", textAlign: "center" }}>Your reef, pieces and moves are saved.</Copy></View>}<LevelMap learnerChip={<LearnerChip/>} game={game} person={person} levels={levels} onLevel={choose} onOutfits={() => setSheet("outfits")} onChest={openChest} freeBest={freePlayBest(store.save.arcade, game.id)} active={foreground && !sheet} Scene={play.Scene} worldNote={play.worldNote}/>
         <View style={{ paddingHorizontal: 16, gap: 12 }}><Button quiet onPress={() => setSheet("book")}>My sticker book</Button>
         {!!store.save.arcade?.scores.some(s => s.game === game.id) && <View style={{ padding: 16, gap: 8, borderRadius: 24, backgroundColor: "#FFF3D7" }}><Heading style={{ fontSize: 21 }}>Family free-play board</Heading>{store.save.arcade.scores.filter(s => s.game === game.id).sort((a, b) => b.score - a.score).map(s => <Copy key={s.name}>{s.name} · {s.score} points</Copy>)}</View>}</View>
       </> : result ? <View style={{ flex: 1, minHeight: Math.max(0, height - insets.top - insets.bottom - 86), justifyContent: "center", gap: 14, alignItems: "center", paddingHorizontal: 18, maxWidth: 600, width: "100%", alignSelf: "center" }}>

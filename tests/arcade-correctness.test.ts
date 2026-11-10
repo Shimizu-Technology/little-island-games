@@ -119,7 +119,7 @@ it("puts collected stickers first, newest first, without changing ownership orde
   expect(stickerSections(person)[1].stickers).not.toContain("star-shell");
   expect(person.stickers).toEqual(["reef-fish", "star-shell"]);
 });
-it("targets the first unlocked uncleared level for the direct current-level shortcut", () => {
+it("targets the first uncleared level for the direct current-level shortcut", () => {
   const a = arcadeTransition(emptyArcade(), "family", finish("clear-first"));
-  expect(currentLevel(arcadeLearner(a), "reef-builder", reefLevels, false)?.id).toBe("w1-2");
+  expect(currentLevel(arcadeLearner(a), "reef-builder", reefLevels)?.id).toBe("w1-2");
 });

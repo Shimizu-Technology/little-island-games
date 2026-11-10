@@ -16,8 +16,8 @@ Base: `feat/learning-growth` at `01d5e68` (private TestFlight 1.7.0 (13)). Integ
 Allowed:
 - Level maps grouped into worlds
 - 1–3 stars per level with goals shown before play
-- New worlds that open with stars
-- Cosmetic outfits or trails that unlock with stars
+- Every world, level and Endless open from the start (Leon's decision D1, 8 November 2026). Stars are achievements, not keys
+- Cosmetic outfits that are earned with stars, kept as themed showpieces
 - A shared sticker book
 - Personal bests and a local family high-score board using the remembered player names
 - Celebrations, music, sound effects and haptics
@@ -30,7 +30,7 @@ Never allowed:
 
 Other rules:
 - **Gentle start.** The first world of every game is forgiving and teaches by showing. Each real-time game has a **Helper** option (slower speed, wider gaps, or bumps that cost time instead of ending the run). Stars stay earnable with Helper on.
-- **Grown-up controls,** behind the existing grown-up gate: unlock every level, and an optional **arcade break reminder** (off by default; 15/20/30/45 minutes). The reminder appears only between levels, never during play.
+- **Grown-up controls,** behind the existing grown-up gate: an optional **arcade break reminder** (off by default; 15/20/30/45 minutes). The reminder appears only between levels, never during play.
 - **Learning:**
   1. **Treasure chest.** After a cleared level, an optional chest offers one question from the existing practice engine (`src/practice`) at the active learner's practice settings, or the game's natural subject. Help is always available and helped answers count. A wrong answer gives a hint and another try. Skipping costs nothing; a chest comes back after the next level. Solving it adds the shown sticker. Results go to the existing learner and practice notes.
   2. **Learning world.** Every arcade game has at least one world where the learning is the mechanic itself. See the game table.
