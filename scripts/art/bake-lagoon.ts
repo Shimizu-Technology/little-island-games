@@ -1,15 +1,26 @@
-/** Reproducible SVG->PNG sources; no native dependency. Run: node --experimental-strip-types scripts/art/bake-lagoon.ts */
+/** Reproducible SVG->PNG sources; no native dependency.
+ * Run: node --import ./scripts/puzzles/register.mjs scripts/art/bake-lagoon.ts
+ * Needs rsvg-convert (librsvg). Writes assets/arcade/lagoon and src/arcade/games/lagoon-run/art.generated.ts. */
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-// @ts-expect-error Node's type-stripping runner requires explicit extensions.
-import { projectTrack } from '../../src/arcade/games/lagoon-run/camera.ts';
-// @ts-expect-error Node's type-stripping runner requires explicit extensions.
-import { quadHomography, inverse3 } from '../../src/arcade/games/lagoon-run/quad.ts';
-// @ts-expect-error Node's type-stripping runner requires explicit extensions.
-import { canoePath } from './lagoon-paths.ts';
+import { projectTrack } from '../../src/arcade/games/lagoon-run/camera';
+import { quadHomography, inverse3 } from '../../src/arcade/games/lagoon-run/quad';
+import { FLOOR_BANDS, FLOOR_DENSITY } from '../../src/arcade/games/lagoon-run/floorBands';
+import { LOOKS } from '../../src/arcade/games/lagoon-run/look';
+import { canoePath } from './lagoon-paths';
+import { floorBandSvg, PROPS, PROP_SIZE } from './lagoon-art';
 const dir='assets/arcade/lagoon';mkdirSync(dir,{recursive:true});
 const manifest:Record<string,unknown>={density:3,source:'scripts/art/bake-lagoon.ts',assets:{}};
+/** Body already drawn in output pixels (density applied by the caller). */
+function bakeSized(name:string,width:number,height:number,density:number,body:string,pixelBody=false) {
+ const w=Math.ceil(width*density),h=Math.ceil(height*density);
+ const svg=pixelBody?`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${body}</svg>`:`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${body}</svg>`;
+ writeFileSync(`${dir}/${name}.svg`,svg);
+ execFileSync('rsvg-convert',['-w',String(w),'-h',String(h),'-o',`${dir}/${name}.png`,`${dir}/${name}.svg`]);
+ const bytes=readFileSync(`${dir}/${name}.png`);
+ (manifest.assets as Record<string,unknown>)[name]={width,height,density,bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')};
+}
 function bake(name:string,width:number,height:number,body:string) {
  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${body}</svg>`;
  writeFileSync(`${dir}/${name}.svg`,svg);
@@ -17,16 +28,23 @@ function bake(name:string,width:number,height:number,body:string) {
  const bytes=readFileSync(`${dir}/${name}.png`);
  (manifest.assets as Record<string,unknown>)[name]={width,height,bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')};
 }
-for(let f=0;f<12;f++) {
- let joints='',grain='',nails='';const phase=f*.065/12;
- for(let i=-1;i<43;i++) {
-  const z=-1.18+i*.065+phase;if(z<=-1.2||z>=1.5)continue;
-  const p=projectTrack(1,z),s=p.scale,w=179.4*s,y=p.y-290;
-  joints+=`M${195-w} ${y}H${195+w}`;
-  for(let lane=0;lane<3;lane++) {const x=projectTrack(lane,z).x;grain+=`M${x-39*s} ${y-3*s}q${16*s} ${-4*s} ${42*s} ${-s}m${-23*s} ${-3*s}q${7*s} ${-3*s} ${12*s} 0`;}
-  for(const lane of [-.4,.4,.6,1.4,1.6,2.4]) {const x=projectTrack(lane,z).x;nails+=`M${x-s} ${y-3*s}h${2*s}`;}
- }
- bake(`floor-${f}`,390,370,`<path d="${joints}" stroke="#126272" stroke-width=".85" fill="none"/><path d="${grain}" stroke="#8C4829" stroke-width=".8" stroke-opacity=".7" fill="none"/><path d="${nails}" stroke="#443F51" stroke-width="1.4" stroke-linecap="round"/>`);
+const generated:string[]=[];
+// Scrolling deck: one periodic slice per camera band and world (see floorBands.ts).
+for(const look of Object.values(LOOKS)) {
+ mkdirSync(`${dir}/${look.id}`,{recursive:true});
+ const files=FLOOR_BANDS.map(band=>{
+  const name=`${look.id}/floor-${band.index}`;
+  bakeSized(name,band.width,band.height,FLOOR_DENSITY,floorBandSvg(band,look,band.width*FLOOR_DENSITY,band.height*FLOOR_DENSITY),true);
+  return `require('../../../../assets/arcade/lagoon/${name}.png')`;
+ });
+ generated.push(`  ${look.id}: () => [${files.join(', ')}],`);
+}
+// Scenery props per world, at uniform proportions (density covers the nearest pass at 1.25 zoom).
+const propLines:string[]=[];
+for(const [id,makers] of Object.entries(PROPS)) {
+ const look=LOOKS[id as keyof typeof LOOKS];
+ const files=makers.map((make,i)=>{const name=`${id}/prop-${i}`;bakeSized(name,PROP_SIZE.width,PROP_SIZE.height,4,make(look));return `require('../../../../assets/arcade/lagoon/${name}.png')`;});
+ propLines.push(`  ${id}: () => [${files.join(', ')}],`);
 }
 // Material textures map to existing projected deck corners (including every incline section).
 bake('deck',128,256,'<rect x="1" y="1" width="126" height="254" fill="#DDA35E" stroke="#674B3E" stroke-width="2"/>'+Array.from({length:12},(_,i)=>`<path d="M1 ${(i+1)*256/13}H127" stroke="#A56B3F"/>`).join(''));
@@ -53,3 +71,4 @@ for(let f=0;f<depths.length;f++) {
  canoes.push({depth:z,width,height,inverse:inverse3(quadHomography(p.map(a=>({x:a.x-minX,y:a.y-minY})) as [typeof p[0],typeof p[0],typeof p[0],typeof p[0]]))});
 }
 writeFileSync(`${dir}/manifest.json`,JSON.stringify({...manifest,canoes},null,2)+'\n');
+writeFileSync('src/arcade/games/lagoon-run/art.generated.ts',`/* Generated by scripts/art/bake-lagoon.ts. Do not edit. */\nexport const floorArt = {\n${generated.join('\n')}\n} as const;\nexport const propArt: Partial<Record<string, () => number[]>> = {\n${propLines.join('\n')}\n};\n`);

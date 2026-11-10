@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Image } from 'react-native';
+import { Image, View } from 'react-native';
 import Animated, { useAnimatedReaction, useSharedValue, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import type { SpritePose } from '../../poses';
 import { projectTrack } from './camera';
@@ -7,21 +7,11 @@ import { matrix4, multiply3, quadHomography, type Quad } from './quad';
 import atlas from '../../../../assets/arcade/lagoon/manifest.json';
 import { canoeMatrix, deckFrame } from './bakedGeometry';
 import { RAMP_SECTIONS } from './surface';
+import { FLOOR_BANDS, floorBandMatrix, type FloorBand } from './floorBands';
+import { floorArt } from './art.generated';
+import { lagoonLook } from './look';
+import type { WorldId } from '../../types';
 export const TRAVEL_SLOT = 35;
-const floorSources = () => [
-  require('../../../../assets/arcade/lagoon/floor-0.png'),
-  require('../../../../assets/arcade/lagoon/floor-1.png'),
-  require('../../../../assets/arcade/lagoon/floor-2.png'),
-  require('../../../../assets/arcade/lagoon/floor-3.png'),
-  require('../../../../assets/arcade/lagoon/floor-4.png'),
-  require('../../../../assets/arcade/lagoon/floor-5.png'),
-  require('../../../../assets/arcade/lagoon/floor-6.png'),
-  require('../../../../assets/arcade/lagoon/floor-7.png'),
-  require('../../../../assets/arcade/lagoon/floor-8.png'),
-  require('../../../../assets/arcade/lagoon/floor-9.png'),
-  require('../../../../assets/arcade/lagoon/floor-10.png'),
-  require('../../../../assets/arcade/lagoon/floor-11.png'),
-];
 const stillCanoes = () => [
   require('../../../../assets/arcade/lagoon/canoe-still-0.png'),
   require('../../../../assets/arcade/lagoon/canoe-still-1.png'),
@@ -38,19 +28,20 @@ const deckSource = () => require('../../../../assets/arcade/lagoon/deck.png'), r
 const leftSource=()=>require('../../../../assets/arcade/lagoon/deck-side-left.png'),rightSource=()=>require('../../../../assets/arcade/lagoon/deck-side-right.png');
 const railSource = () => require('../../../../assets/arcade/lagoon/rail.png'), supportSource = () => require('../../../../assets/arcade/lagoon/support.png');
 const absolute={position:'absolute' as const,left:0,top:0};
-export function floorFrame(travel:number) {
-  'worklet';
-  return Math.floor(((travel % .065 + .065) % .065) / .065 * 12) % 12;
+/** One camera band of the scrolling deck: a static clip and one projective transform per frame. */
+function FloorBandView({poses,band,source}:{poses:SharedValue<SpritePose[]>;band:FloorBand;source:number}) {
+ const clipTop=Math.floor(band.top)-.5,clipHeight=Math.ceil(band.bottom)-Math.floor(band.top)+1;
+ const style=useAnimatedStyle(()=>{
+  const p=poses.value[TRAVEL_SLOT];
+  return {transform:[{matrix:floorBandMatrix(band,p?.opacity===0?0:p?.x??0,FLOOR_CLIP_LEFT,clipTop)}]};
+ });
+ return <View style={{position:'absolute',left:FLOOR_CLIP_LEFT,top:clipTop,width:390-2*FLOOR_CLIP_LEFT,height:clipHeight,overflow:'hidden'}}><Animated.View style={[absolute,{width:band.width,height:band.height,transformOrigin:[0,0,0]},style]}><Image accessible={false} source={source} style={{width:band.width,height:band.height}} fadeDuration={0}/></Animated.View></View>;
 }
-function FloorFrame({poses,frame}:{poses:SharedValue<SpritePose[]>;frame:number}) {
-  const visible=useSharedValue(frame===0);
-  useAnimatedReaction(()=>{const p=poses.value[TRAVEL_SLOT];return floorFrame(p?.opacity===0?0:p?.x??0)===frame;},next=>{if(next!==visible.value)visible.set(next);},[poses,frame]);
-  const style=useAnimatedStyle(()=>({opacity:visible.value?1:0}));
-  return <Animated.View style={[absolute,{top:290,width:390,height:370},style]}><Image accessible={false} source={floorSources()[frame]} resizeMode="stretch" style={{width:390,height:370}} fadeDuration={0}/></Animated.View>;
-}
-/** Twelve decoded material frames. No path generation, parsing or CPU SVG paint per frame. */
-export const BakedFloor=memo(function BakedFloor({poses}:{poses:SharedValue<SpritePose[]>}) {
- return <>{floorSources().map((_,frame)=><FloorFrame key={frame} poses={poses} frame={frame}/>)}<Rails poses={poses}/></>;
+const FLOOR_CLIP_LEFT=-460;
+/** Scrolling deck (floorBands.ts) and rails. Seams stay locked to track depth. */
+export const BakedFloor=memo(function BakedFloor({poses,world}:{poses:SharedValue<SpritePose[]>;world:WorldId}) {
+ const sources=floorArt[lagoonLook(world).id]();
+ return <>{FLOOR_BANDS.map((band,i)=><FloorBandView key={band.index} poses={poses} band={band} source={sources[i]}/>)}<Rails poses={poses}/></>;
 });
 function Rail({poses,index,side}:{poses:SharedValue<SpritePose[]>;index:number;side:number}) {
  const style=useAnimatedStyle(()=>{

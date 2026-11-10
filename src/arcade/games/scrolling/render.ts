@@ -4,18 +4,29 @@ import { HAZARDS } from "../lagoon-run/course";
 import { HIDDEN_POSE, rankPainterPoses, type SpritePose } from "../../poses";
 import { runSpeed, runnerHeight, shellHeight, obstacleLane, runLearning, type RunState } from "../lagoon-run/engine";
 import { RAMP_DEPTH, RAMP_SECTIONS, surfaceProfile, surfaceSpan } from "../lagoon-run/surface";
-import { CAMERA_SLOT, TRACK_WIDTH, projectTrack, trackSprite } from "../lagoon-run/camera";
+import { CAMERA_SLOT, HERO_SCALE, TRACK_WIDTH, arrivalOpacity, projectTrack, trackSprite } from "../lagoon-run/camera";
 import { runnerFrame, RUN_POSES, RUN_EXTRA } from "./character";
 import { SCENE_COUNT, SCENE_START } from "./environmentPoses";
 export const INCLINE_START = 179, INCLINE_STRIDE = RAMP_SECTIONS * 4, POWER_AURA = INCLINE_START + 5 * INCLINE_STRIDE, CANOE_START = RUN_EXTRA + 8, NEAR_START=37, RUN_SLOTS = CANOE_START+15*4+1;
+/** Where a pose's local point lands, for a w×h sprite scaled about its centre (as native draws it). */
+export function spritePoint(p: SpritePose, w: number, h: number, x: number, y: number) {
+  "worklet";
+  const k = p.scale ?? 1;
+  return { x: p.x + w / 2 + (x - w / 2) * k, y: p.y + h / 2 + (y - h / 2) * k };
+}
+/** The runner's drawn contact: its 80×132 frame's planted-shoe line (y 130), after HERO_SCALE. */
+export function heroContactY(p: SpritePose) { "worklet"; return spritePoint(p, 80, 132, 40, 130).y; }
 export function runPoses(s: RunState, reduced = false): SpritePose[] {
   "worklet";
   const p:SpritePose[]=Array(RUN_SLOTS).fill(HIDDEN_POSE),learn=runLearning(s),contact=projectTrack(s.poseLane,1),frame=runnerFrame(s,reduced),lift=visualRunHeight(runnerHeight(s))*85;
   // Root is bottom-centre; poses have their own authored contact/compression, never free limbs.
-  p[0]={identity:s.lives.hit,x:contact.x-40+(reduced?0:Math.sin((1-s.edgeTime/.12)*Math.PI)*s.edge*6),y:contact.y-130-lift,angle:reduced||s.duck>0||s.kite>0?0:(s.lane-s.poseLane)*.14};
+  // The runner is drawn HERO_SCALE of track scale, scaled about its foot so contact never moves.
+  const foot=contact.y-lift,hero=(x:number,y:number,w:number,h:number,extra?:Partial<SpritePose>):SpritePose=>{ "worklet";
+    return {x:contact.x+(x+w/2-contact.x)*HERO_SCALE-w/2,y:foot+(y+h/2-foot)*HERO_SCALE-h/2,scale:HERO_SCALE,...extra}; };
+  p[0]=hero(contact.x-40+(reduced?0:Math.sin((1-s.edgeTime/.12)*Math.PI)*s.edge*6),contact.y-130-lift,80,132,{identity:s.lives.hit,angle:reduced||s.duck>0||s.kite>0?0:(s.lane-s.poseLane)*.14});
   for(let i=0;i<RUN_POSES;i++)p[i<16?80+i:RUN_EXTRA+i-16]=i===frame?{x:0,y:0,snap:true}:HIDDEN_POSE;
-  p[55]=reduced||s.landing<=0?HIDDEN_POSE:{x:contact.x-40,y:contact.y-15-lift,scale:1+(1-s.landing/.13)*.5,opacity:s.landing/.13};
-  p[50]={x:contact.x-35,y:contact.y-7,scale:1-Math.min(2.7,runnerHeight(s))*.18,opacity:.8};
+  p[55]=reduced||s.landing<=0?HIDDEN_POSE:{x:contact.x-40,y:contact.y-15-lift,scale:HERO_SCALE*(1+(1-s.landing/.13)*.5),opacity:s.landing/.13};
+  p[50]={x:contact.x-35,y:contact.y-7,scale:HERO_SCALE*(1-Math.min(2.7,runnerHeight(s))*.18),opacity:.8};
   s.rows.forEach((row,i)=>{
     const visible=!learn&&row.z> -1.2;
     // Each obstacle uses its own kind for size, contact height and spin (a row can mix kinds).
@@ -28,7 +39,7 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
         }
         return {identity:row.serial,x:0,y:0,painterDepth:projectTrack(1,row.z).scale,painterKey:row.serial*7+actor%3,opacity:1};
       }
-      const a=trackSprite(lane,row.z,HAZARDS[kind]==="duck"?112:72,HAZARDS[kind]==="jump"?72:129.6),height=surfaceProfile(row,row.surface==="gap"?RAMP_DEPTH:0,lane); return {identity:row.serial,...a,painterDepth:a.scale,painterKey:row.serial*7+actor%3,opacity:a.opacity===0?0:.4+.6*Math.max(0,Math.min(1,(row.z+1.2)/2.2)),y:a.y-height*85*a.scale,angle:kind === "coconut" && !reduced ? s.time*3 : 0}; };
+      const a=trackSprite(lane,row.z,HAZARDS[kind]==="duck"?112:72,HAZARDS[kind]==="jump"?72:129.6),height=surfaceProfile(row,row.surface==="gap"?RAMP_DEPTH:0,lane); return {identity:row.serial,...a,painterDepth:a.scale,painterKey:row.serial*7+actor%3,opacity:a.opacity===0?0:arrivalOpacity(row.z),y:a.y-height*85*a.scale,angle:kind === "coconut" && !reduced ? s.time*3 : 0}; };
     p[1+i*2]=visible?hazardPose(obstacleLane(row,s.time),row.kind,i*3):HIDDEN_POSE;
     p[2+i*2]=visible&&row.second>=0?hazardPose(row.second,row.secondKind,i*3+1):HIDDEN_POSE;
     p[75+i]=visible&&row.third?hazardPose(row.shellLane,row.kind,i*3+2):HIDDEN_POSE;
@@ -54,10 +65,11 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
       }
     }
   });
-  p[POWER_AURA]={x:contact.x-56,y:contact.y-144-lift,opacity:s.magnet>0?.65:0,scale:reduced?1:1+Math.sin(s.time*5)*.025};
-  p[POWER_AURA+1]={x:contact.x-43,y:contact.y-20-lift,opacity:s.sandals>0?1:0};
-  p[172]={x:contact.x-36,y:contact.y-200-lift,opacity:s.kite>0?1:0};
-  p[173]={x:contact.x-48,y:contact.y-134-lift,opacity:s.shield||s.protection>0?.7:0};
+  const aura=hero(contact.x-56,contact.y-144-lift,112,154,{opacity:s.magnet>0?.65:0});
+  p[POWER_AURA]={...aura,scale:HERO_SCALE*(reduced?1:1+Math.sin(s.time*5)*.025)};
+  p[POWER_AURA+1]=hero(contact.x-43,contact.y-20-lift,86,28,{opacity:s.sandals>0?1:0});
+  p[172]=hero(contact.x-36,contact.y-200-lift,72,110,{opacity:s.kite>0?1:0});
+  p[173]=hero(contact.x-48,contact.y-134-lift,96,142,{opacity:s.shield||s.protection>0?.7:0});
   // Always-visible travel carrier: never infer phase from a clipped decorative sprite.
   p[35]={x:s.travel,y:0,opacity:1};
   p[36]={identity:s.lives.hit,x:reduced?0:Math.max(0,(s.cooldown-.20)/.10)*.45,y:0,scale:reduced?(s.cooldown>.14?.65:1):s.lives.invulnerable>0&&Math.floor(s.time*16)%2?.38:1,snap:true};
@@ -65,7 +77,7 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   const lean = reduced ? 0 : s.lane-s.poseLane;
   const shake = reduced ? 0 : Math.max(0,s.cooldown/.3);
   // Camera is always visible. Its scale field carries speed-line intensity, not zoom.
-  p[CAMERA_SLOT]={x:-(contact.x-195)*.7-lean*5+Math.sin(s.time*95)*shake*5,y:reduced?0:Math.sin(s.travel*32)*1.1+Math.cos(s.time*83)*shake*3,angle:lean*.018,opacity:1,scale:reduced?0:Math.max(0,Math.min(.65,(runSpeed(s)-.42)*2.5))};
+  p[CAMERA_SLOT]={x:-(contact.x-195)*.45-lean*5+Math.sin(s.time*95)*shake*5,y:reduced?0:Math.sin(s.travel*32)*1.1+Math.cos(s.time*83)*shake*3,angle:lean*.018,opacity:1,scale:reduced?0:Math.max(0,Math.min(.65,(runSpeed(s)-.42)*2.5))};
   const next=s.rows.filter(r=>!r.passed).sort((a,b)=>b.z-a.z)[0];
   const move=next?.action==="idle"?4:next?.action==="jump"?1:2;
   p[57]={x:260,y:78,opacity:!learn&&next&&next.z>.35&&(next.action!=="idle"||s.lane!==next.shellLane)&&!(s.learned&move)?1:0};

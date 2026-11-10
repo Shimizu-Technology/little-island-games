@@ -135,7 +135,8 @@ export const arcadePlays: Record<ArcadeId, ArcadePlay> = {
     levels: runLevels,
     level: runLevel,
     speech: learning => learning ? "arcade-run-math" : "arcade-run-intro",
-    clearedTitle: "What a run!", fullBleed: true, worldNote: stormNote,
+    // Lagoon draws no storm trails (LG-S3 decision): no note advertises them.
+    clearedTitle: "What a run!", fullBleed: true,
     goal: level => level !== "endless" && level.world === "learn" ? "Run into the answer lane." : "Swipe to steer. Jump up. Duck down.",
     Scene: p => <Scenery game="lagoon-run" world={p.world}/>,
     Teach: p => <Rehearsal game="lagoon-run" learning={p.learning} onTone={p.onTone}/>,

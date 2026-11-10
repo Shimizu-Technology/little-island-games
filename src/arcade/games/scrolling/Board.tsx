@@ -8,12 +8,14 @@ import { useLagoonUiLoop } from "../lagoon-run/useLagoonUiLoop";
 import { useRunMeter, runEventTags } from "../lagoon-run/useRunMeter";
 import { fixtureInput } from "../lagoon-run/fixtures";
 import { runLevels } from "./content";
-import { RunHud } from '../lagoon-run/Hud';
-import { HarborBackdrop, HarborFrame, HarborPlanks, HarborEnvironment, RunCamera, SpeedLines, Shell } from '../lagoon-run/World';
+import { RunHud, HUD_TOP } from '../lagoon-run/Hud';
+import { HarborPlanks, HarborEnvironment, RunCamera, SpeedLines, Shell } from '../lagoon-run/World';
+import { DeckBase, DeckHaze } from '../lagoon-run/Backdrop';
+import { RunArena } from '../lagoon-run/Arena';
 import { FlightPalm, FlightForest, FlightShore, FlightSky, FlightWideSky } from "../fruit-bat-flight/Art";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, View } from "react-native";
-import Svg, { G, Path, Rect, Text as SvgText } from "react-native-svg";
+import { AccessibilityInfo, Platform, Pressable, View } from "react-native";
+import Svg, { Path, Rect, Text as SvgText } from "react-native-svg";
 import { runOnJS, runOnUI, useFrameCallback, useAnimatedReaction, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { useReducedMotion } from "../../../components/motion";
 import { Button } from "../../../components/ui";
@@ -42,7 +44,6 @@ import { BatRig, RunnerRig, LastHit } from "./FeelArt";
 import { batAngle } from "../fruit-bat-flight/hull";
 import { runPoses, RUN_SLOTS, NEAR_START, CANOE_START, INCLINE_START, INCLINE_STRIDE, POWER_AURA } from "./render";
 
-import { Landmark } from "./Environment";
 import { flightFrame, runFrame, type Commands } from "./commands";
 export type BoardProps = { level: ScrollLevel | "endless"; seed: number; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped: boolean) => void; onTone: (key: string, haptic?: boolean) => void; onPause?: () => void; debug: boolean };
 const W = 390, H = 660, still = HIDDEN_POSE;
@@ -139,7 +140,7 @@ export function FlightBoard(props: BoardProps) {
 }
 type RunRowSpec=ReturnType<typeof runHud>["spec"][number];
 const RunRow=memo(function RunRow({poses,row,i,learn,front=false}:{poses:SharedValue<SpritePose[]>;row:RunRowSpec;i:number;learn:boolean;front?:boolean}) {
-  return <><DepthSprite front={front} poses={poses} index={1 + i * 2} rotate={row.kind!=="coconut"} width={isCanoe(row.kind)?390:HAZARDS[row.kind as HazardKind]==="duck"?112:72} height={isCanoe(row.kind)?660:HAZARDS[row.kind as HazardKind]==="jump"?72:129.6}>{isCanoe(row.kind)?<Canoe poses={poses} index={CANOE_START+(i*3)*4} moving={row.kind==="moving-canoe"}/>:<RunHazard kind={row.kind} size={72} poses={poses} index={1 + i * 2}/>}</DepthSprite><DepthSprite front={front} poses={poses} index={2 + i * 2} rotate={row.secondKind!=="coconut"} width={isCanoe(row.secondKind)?390:HAZARDS[row.secondKind as HazardKind]==="duck"?112:72} height={isCanoe(row.secondKind)?660:HAZARDS[row.secondKind as HazardKind]==="jump"?72:129.6}>{isCanoe(row.secondKind)?<Canoe poses={poses} index={CANOE_START+(i*3+1)*4} moving={row.secondKind==="moving-canoe"}/>:<RunHazard kind={row.secondKind} size={72} poses={poses} index={2 + i * 2}/>}</DepthSprite><DepthSprite front={front} poses={poses} index={75 + i} rotate={row.kind!=="coconut"} width={isCanoe(row.kind)?390:HAZARDS[row.kind as HazardKind]==="duck"?112:72} height={isCanoe(row.kind)?660:HAZARDS[row.kind as HazardKind]==="jump"?72:129.6}>{isCanoe(row.kind)?<Canoe poses={poses} index={CANOE_START+(i*3+2)*4} moving={row.kind==="moving-canoe"}/>:<RunHazard kind={row.kind} size={72} poses={poses} index={75 + i}/>}</DepthSprite><DepthSprite front={front} poses={poses} index={167+i} width={44} height={44}><PowerIcon kind={row.power} size={44}/></DepthSprite>{[0, 1, 2].map(c => <DepthSprite key={c} poses={poses} index={11 + i * 3 + c} width={30} height={30}><Shell size={30}/></DepthSprite>)}{learn && !front && row.choices.map((n, c) => <DepthSprite key={`a${c}`} poses={poses} index={60 + i * 3 + c} width={64} height={64}><Portal value={n} index={c}/></DepthSprite>)}</>;
+  return <><DepthSprite front={front} poses={poses} index={1 + i * 2} rotate={row.kind!=="coconut"} width={isCanoe(row.kind)?390:HAZARDS[row.kind as HazardKind]==="duck"?112:72} height={isCanoe(row.kind)?660:HAZARDS[row.kind as HazardKind]==="jump"?72:129.6}>{isCanoe(row.kind)?<Canoe poses={poses} index={CANOE_START+(i*3)*4} moving={row.kind==="moving-canoe"}/>:<RunHazard kind={row.kind} size={72} poses={poses} index={1 + i * 2}/>}</DepthSprite><DepthSprite front={front} poses={poses} index={2 + i * 2} rotate={row.secondKind!=="coconut"} width={isCanoe(row.secondKind)?390:HAZARDS[row.secondKind as HazardKind]==="duck"?112:72} height={isCanoe(row.secondKind)?660:HAZARDS[row.secondKind as HazardKind]==="jump"?72:129.6}>{isCanoe(row.secondKind)?<Canoe poses={poses} index={CANOE_START+(i*3+1)*4} moving={row.secondKind==="moving-canoe"}/>:<RunHazard kind={row.secondKind} size={72} poses={poses} index={2 + i * 2}/>}</DepthSprite><DepthSprite front={front} poses={poses} index={75 + i} rotate={row.kind!=="coconut"} width={isCanoe(row.kind)?390:HAZARDS[row.kind as HazardKind]==="duck"?112:72} height={isCanoe(row.kind)?660:HAZARDS[row.kind as HazardKind]==="jump"?72:129.6}>{isCanoe(row.kind)?<Canoe poses={poses} index={CANOE_START+(i*3+2)*4} moving={row.kind==="moving-canoe"}/>:<RunHazard kind={row.kind} size={72} poses={poses} index={75 + i}/>}</DepthSprite><DepthSprite front={front} poses={poses} index={167+i} width={44} height={44}><PowerIcon kind={row.power} size={44}/></DepthSprite>{[0, 1, 2].map(c => <DepthSprite key={c} front={front} poses={poses} index={11 + i * 3 + c} width={30} height={30}><Shell size={30}/></DepthSprite>)}{learn && !front && row.choices.map((n, c) => <DepthSprite key={`a${c}`} poses={poses} index={60 + i * 3 + c} width={64} height={64}><Portal value={n} index={c}/></DepthSprite>)}</>;
 },(a,b)=>a.poses===b.poses && a.i===b.i && a.learn===b.learn && a.front===b.front && samePublication(a.row,b.row));
 /** Effects never depend on the course, so a spawn or crossing cannot re-render them. */
 const RunEffects=memo(function RunEffects({poses}:{poses:SharedValue<SpritePose[]>}) {
@@ -152,7 +153,7 @@ function teachingMove(s:RunState){"worklet";return runHud(s).teaching;}
 /** The teaching cue owns its own subscription: the next row changing at a crossing re-renders one small view. */
 function RunTeaching({poses,state}:{poses:SharedValue<SpritePose[]>;state:SharedValue<RunState>}) {
   const move=useRunSnapshot(state,teachingMove);
-  return <RunTeachingCue poses={poses} move={move}/>;
+  return <View pointerEvents="none" style={{position:"absolute",right:10,top:HUD_TOP+44,width:110,height:60}}><RunTeachingCue poses={poses} move={move}/></View>;
 }
 const LAYER={position:"absolute" as const,left:0,top:0,width:W,height:H};
 /**
@@ -160,11 +161,11 @@ const LAYER={position:"absolute" as const,left:0,top:0,width:W,height:H};
  * front of the runner. Nothing reorders past the runner (see DepthSprite); a passing row hands
  * off between its pre-mounted twins by opacity only.
  */
-export const RunLayer = memo(function RunLayer({ poses, spec, learn, world, runner, teaching }: { poses: SharedValue<SpritePose[]>; spec: RunRowSpec[]; learn: boolean; world: WorldId; runner?: React.ReactNode; teaching?: React.ReactNode }) {
-  return <RunCamera poses={poses}><View testID="run-art" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ position: "absolute", width: W, height: H }}><HarborBackdrop world={world}/><Svg width={390} height={660} style={{position:"absolute"}}><G transform="translate(0 79)"><Landmark world={world}/></G></Svg><HarborEnvironment poses={poses}/><HarborFrame/><ArcadeSprite poses={poses} index={50} width={70} height={14}><Svg width={70} height={14}><Path d="M2 7Q35-5 68 7Q35 20 2 7Z" fill="#173F67" opacity={.48}/></Svg></ArcadeSprite><HarborPlanks poses={poses}/>
+export const RunLayer = memo(function RunLayer({ poses, spec, learn, world, runner }: { poses: SharedValue<SpritePose[]>; spec: RunRowSpec[]; learn: boolean; world: WorldId; runner?: React.ReactNode }) {
+  return <RunCamera poses={poses}><View testID="run-art" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ position: "absolute", width: W, height: H }}><DeckBase world={world}/><HarborPlanks poses={poses} world={world}/><DeckHaze world={world}/><HarborEnvironment poses={poses} world={world}/><ArcadeSprite poses={poses} index={50} width={70} height={14}><Svg width={70} height={14}><Path d="M2 7Q35-5 68 7Q35 20 2 7Z" fill="#173F67" opacity={.48}/></Svg></ArcadeSprite>
     <View style={LAYER}>{spec.map((row,i)=><React.Fragment key={i}><Deck poses={poses} index={147+i*4} surface={row.surface}/>{row.surface==="ramp"&&<Deck poses={poses} index={INCLINE_START+i*INCLINE_STRIDE} surface={row.surface} incline/>}</React.Fragment>)}</View>
     <View testID="run-behind" style={LAYER}>{spec.map((row,i)=><RunRow key={i} row={row} i={i} poses={poses} learn={learn}/>)}</View>
-    <RunEffects poses={poses}/>{teaching}
+    <RunEffects poses={poses}/>
     <View collapsable={false} style={LAYER}>{runner}<RunnerPowers poses={poses}/></View>
     <View testID="run-front" style={LAYER}>{spec.map((row,i)=><RunRow key={i} row={row} i={i} poses={poses} learn={learn} front/>)}</View>
     <SpeedLines poses={poses}/></View></RunCamera>;
@@ -179,16 +180,27 @@ function sceneSpec(s:RunState) { "worklet"; const h=runHud(s);return {spec:h.spe
 const RunScene=memo(function RunScene({poses,state,learn,world}:{poses:SharedValue<SpritePose[]>;state:SharedValue<RunState>;learn:boolean;world:WorldId}) {
   const s=useRunSnapshot(state,sceneSpec);
   const runner=useMemo(()=><LastHit dead={s.dead} x={195} y={554}><RunHit poses={poses}><RunnerRig poses={poses}/></RunHit></LastHit>,[poses,s.dead]);
-  const teaching=useMemo(()=><RunTeaching poses={poses} state={state}/>,[poses,state]);
-  return <><RunLayer poses={poses} spec={s.spec} learn={learn} world={world} runner={runner} teaching={teaching}/><RunHitFlash poses={poses}/></>;
+  return <><RunLayer poses={poses} spec={s.spec} learn={learn} world={world} runner={runner}/><RunHitFlash poses={poses}/></>;
 });
 function displayRun(s:RunState) {"worklet";const h=runHud(s);return {level:h.level,passed:h.passed,score:h.score,lives:h.lives,powers:h.powers,next:h.next,shellNotes:runLearning(s)?0:s.shells};}
 function RunReadout({state,learn}:{state:SharedValue<RunState>;learn:boolean}) {
   const s=useRunSnapshot(state,displayRun);
-  return <><RunHud s={s} learning={learn}/><View pointerEvents="none" style={{position:"absolute",left:10,top:112,flexDirection:"row",gap:4}}>{(["magnet","kite","sandals","shield"] as const).filter(k=>s.powers[k]>0).map(k=><PowerRing key={k} kind={k} remaining={s.powers[k]} state={state}/>)}</View></>;
+  return <><RunHud s={s} learning={learn}/><View pointerEvents="none" style={{position:"absolute",left:10,top:HUD_TOP+44,flexDirection:"row",gap:4}}>{(["magnet","kite","sandals","shield"] as const).filter(k=>s.powers[k]>0).map(k=><PowerRing key={k} kind={k} remaining={s.powers[k]} state={state}/>)}</View></>;
 }
 function RunEquation({state}:{state:SharedValue<RunState>}) {
-  const s=useRunSnapshot(state,displayRun);return s.next?<View pointerEvents="none" style={{position:"absolute",top:116,alignSelf:"center",padding:8,borderRadius:14,backgroundColor:"#192B49"}}><Text testID="math-fact" style={{color:"#FFF4D3",fontSize:28,fontWeight:"900"}}>{equation(s.next)}</Text></View>:null;
+  const s=useRunSnapshot(state,displayRun);return s.next?<View pointerEvents="none" style={{position:"absolute",top:HUD_TOP+44,alignSelf:"center",padding:8,borderRadius:14,backgroundColor:"#192B49"}}><Text testID="math-fact" style={{color:"#FFF4D3",fontSize:28,fontWeight:"900"}}>{equation(s.next)}</Text></View>:null;
+}
+/** Arrow buttons are an option, not the default look (LG-S3). The choice lasts for this app
+ * session only, like teaching memory: no save field. VoiceOver users get them by default. */
+let runArrowsChoice: boolean | null = null;
+function useRunArrows(): [boolean, (v: boolean) => void] {
+  const [screenReader, setScreenReader] = useState(false), [choice, setChoice] = useState(runArrowsChoice);
+  useEffect(() => { let live = true; AccessibilityInfo.isScreenReaderEnabled().then(v => { if (live) setScreenReader(v); }).catch(() => {}); const sub = AccessibilityInfo.addEventListener("screenReaderChanged", setScreenReader); return () => { live = false; sub.remove(); }; }, []);
+  const set = useCallback((v: boolean) => { runArrowsChoice = v; setChoice(v); }, []);
+  return [choice ?? screenReader, set];
+}
+function ArrowToggle({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
+  return <Pressable accessibilityRole="switch" accessibilityState={{ checked: shown }} accessibilityLabel="Arrow buttons" onPress={onToggle} hitSlop={8} style={{ position: "absolute", right: 12, bottom: shown ? 68 : 14, width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: shown ? "#FFF2CCDD" : "#10303ECC", borderWidth: 1, borderColor: "#FFF2CC" }}><Text style={{ fontSize: 18, fontWeight: "900", color: shown ? "#34354D" : "#FFF2CC" }}>✥</Text></Pressable>;
 }
 // Runtime-only teaching memory is deliberately outside saves; reload starts a new app session.
 let learnedRunMoves = 0;
@@ -232,7 +244,9 @@ function RunRound(props:BoardProps & {replay:boolean;witness:number;quietHud:boo
   const origin=useSharedValue({x:0,y:0});
   const swipe=useMemo(()=>runSwipe(input,origin).enabled(active),[input,origin,active]);
   const learn = level !== "endless" && level.world === "learn";
-  const controls = <><View style={{ position: "absolute", left: 12, right: 12, bottom: 10, flexDirection: "row", justifyContent: "center", gap: 10 }}><Control overlay disabled={!active} label="Move left" glyph="←" mailbox={input} action={{ type: "left" }} feedback={() => actionTone({ type: "left" })} onPress={() => action({ type: "left" })}/><Control overlay disabled={!active} label="Jump" glyph="↑" mailbox={input} action={{ type: "jump" }} feedback={() => actionTone({ type: "jump" })} onPress={() => action({ type: "jump" })}/><Control overlay disabled={!active} label="Roll or drop" glyph="↓" mailbox={input} action={{ type: "duck" }} feedback={() => actionTone({ type: "duck" })} onPress={() => action({ type: "duck" })}/><Control overlay disabled={!active} label="Move right" glyph="→" mailbox={input} action={{ type: "right" }} feedback={() => actionTone({ type: "right" })} onPress={() => action({ type: "right" })}/></View>{level === "endless" && <View style={{ position: "absolute", bottom: 76, right: 12 }}><Button compact quiet onPress={() => send({ type: "finish" })}>Finish free run</Button></View>}</>;
-  return <Arena game="run" world={level === "endless" ? "w3" : level.world} controls={controls} hud={quietHud?null:<RunReadout state={state} learn={learn}/>} overlay={learn && <RunEquation state={state}/>}><RunScene poses={poses} state={state} learn={learn} world={level === "endless" ? "w3" : level.world}/><GestureDetector gesture={swipe} touchAction="none"><Animated.View collapsable={false} testID="run-touch" accessible accessibilityRole="button" accessibilityLabel="Lagoon track. Swipe to steer, up to jump, down to duck" style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}/></GestureDetector>{debug && <Text testID="lagoon-meter" pointerEvents="none" style={{position:"absolute",top:150,left:5,color:"white",backgroundColor:"#14273E",fontSize:11}}>{witness?`W1-8 / 771 / frozen tick ${witness} | `:""}{meterLabel}</Text>}</Arena>;
+  const [arrows,setArrows]=useRunArrows();
+  const toggleArrows=useCallback(()=>setArrows(!arrows),[arrows,setArrows]);
+  const controls = <>{arrows&&<View style={{ position: "absolute", left: 12, right: 12, bottom: 10, flexDirection: "row", justifyContent: "center", gap: 10 }}><Control overlay disabled={!active} label="Move left" glyph="←" mailbox={input} action={{ type: "left" }} feedback={() => actionTone({ type: "left" })} onPress={() => action({ type: "left" })}/><Control overlay disabled={!active} label="Jump" glyph="↑" mailbox={input} action={{ type: "jump" }} feedback={() => actionTone({ type: "jump" })} onPress={() => action({ type: "jump" })}/><Control overlay disabled={!active} label="Roll or drop" glyph="↓" mailbox={input} action={{ type: "duck" }} feedback={() => actionTone({ type: "duck" })} onPress={() => action({ type: "duck" })}/><Control overlay disabled={!active} label="Move right" glyph="→" mailbox={input} action={{ type: "right" }} feedback={() => actionTone({ type: "right" })} onPress={() => action({ type: "right" })}/></View>}<ArrowToggle shown={arrows} onToggle={toggleArrows}/>{level === "endless" && <View style={{ position: "absolute", bottom: 76, right: 12 }}><Button compact quiet onPress={() => send({ type: "finish" })}>Finish free run</Button></View>}</>;
+  return <RunArena active={active} world={level === "endless" ? "w3" : level.world} controls={controls} hud={quietHud?null:<><RunReadout state={state} learn={learn}/><RunTeaching poses={poses} state={state}/></>} overlay={learn && <RunEquation state={state}/>}><RunScene poses={poses} state={state} learn={learn} world={level === "endless" ? "w3" : level.world}/><GestureDetector gesture={swipe} touchAction="none"><Animated.View collapsable={false} testID="run-touch" accessible accessibilityRole="button" accessibilityLabel="Lagoon track. Swipe to steer, up to jump, down to duck" style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}/></GestureDetector>{debug && <Text testID="lagoon-meter" pointerEvents="none" style={{position:"absolute",top:150,left:5,color:"white",backgroundColor:"#14273E",fontSize:11}}>{witness?`W1-8 / 771 / frozen tick ${witness} | `:""}{meterLabel}</Text>}</RunArena>;
 }
 export function ScrollBoard({ game, ...props }: BoardProps & { game: ScrollGame }) { return game === "fruit-bat-flight" ? <FlightBoard {...props}/> : <RunBoard {...props}/>; }

@@ -7,7 +7,7 @@ import { anchorsFor } from '../src/islander/rig/wardrobe';
 import { defaultLook, hairStyles, hats, outfits, accessories, skinTones, hairColors, outfitPalettes } from '../src/islander/look';
 import * as active from '../src/islander/active';
 import { KITE_HANDS, KITE_STRINGS } from '../src/arcade/games/scrolling/runnerAnchors';
-import { runPoses } from '../src/arcade/games/scrolling/render';
+import { runPoses, spritePoint } from '../src/arcade/games/scrolling/render';
 import { createRun, runLevels } from '../src/arcade/games/lagoon-run/engine';
 import { RUN_EXTRA } from '../src/arcade/games/scrolling/character';
 vi.mock('../src/islander/active',async()=>{const {defaultLook}=await import('../src/islander/look');return {useActiveIslanderLook:()=>defaultLook};});
@@ -76,8 +76,10 @@ describe('Lagoon Run Islander integration',()=>{
   expect(KITE_STRINGS.match(/M36 72L/g)).toHaveLength(2);
   KITE_HANDS.forEach(([x,y],i)=>{
    const hand=i?backPoses[9].joints.rightHand:backPoses[9].joints.leftHand;
-   expect(p[172].x+x).toBeCloseTo(p[0].x+hand[0]);
-   expect(p[172].y+y).toBeCloseTo(p[0].y+hand[1]);
+   // Both rigs scale by HERO_SCALE about the same foot, so the drawn string meets the drawn hand.
+   const kite=spritePoint(p[172],72,110,x,y),body=spritePoint(p[0],80,132,hand[0],hand[1]);
+   expect(kite.x).toBeCloseTo(body.x);
+   expect(kite.y).toBeCloseTo(body.y);
   });
  });
 });
