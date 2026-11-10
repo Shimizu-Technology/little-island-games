@@ -1,13 +1,13 @@
 import React, { memo } from 'react';
 import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
-import { lightTile, type SlipPuzzle } from './rules';
+import { crabNames, lightTile, type SlipPuzzle } from './rules';
 
 /** Every crab differs in colour and shell mark, so the board never relies on colour alone. */
 export const crabLooks = [
-  { fill: '#E97356', dark: '#B9472F', mark: 'flower', name: 'coral crab with a flower' },
-  { fill: '#F0B43A', dark: '#B97F16', mark: 'fish', name: 'golden crab with a fish' },
-  { fill: '#55B394', dark: '#2F7F67', mark: 'drop', name: 'green crab with a drop' },
-  { fill: '#A77ACB', dark: '#6F4A91', mark: 'moon', name: 'purple crab with a moon' },
+  { fill: '#E97356', dark: '#B9472F', mark: 'flower', name: crabNames[0] },
+  { fill: '#F0B43A', dark: '#B97F16', mark: 'fish', name: crabNames[1] },
+  { fill: '#55B394', dark: '#2F7F67', mark: 'drop', name: crabNames[2] },
+  { fill: '#A77ACB', dark: '#6F4A91', mark: 'moon', name: crabNames[3] },
 ] as const;
 type Mark = (typeof crabLooks)[number]['mark'];
 const ink = '#20474A';

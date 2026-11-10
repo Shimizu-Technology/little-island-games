@@ -8,7 +8,7 @@ import sets from '../src/learn/games/slip-tide/sets.generated.json';
 import { certify } from '../src/puzzles/checks';
 import { slipTideFamily, rungs, drawBoard } from '../scripts/puzzles/families/slip-tide';
 import { decodeRow } from '../src/puzzles/descriptor';
-import { registration, puzzles, type Action, type Payload } from '../src/learn/games/slip-tide/challenge';
+import { registration, puzzles, HELP, RESET, UNDO, type Action, type Payload } from '../src/learn/games/slip-tide/challenge';
 import { emptyChallenge, type ChallengeSession } from '../src/state/challenge';
 import { readCatalog, productionDirs, readPackText } from '../scripts/puzzles/pipeline';
 import { parsePack } from '../src/puzzles/bank';
@@ -146,21 +146,22 @@ describe('Challenge replay', () => {
     expect(done.result?.cost).toBe(puzzles[0].par!.upper);
   });
   it('a reset removes the no-reset mark but still accepts the solve', () => {
-    const p = puzzles[0], done = play(start(p, [p.dares[1].slot]), [moves(p)[0], 'reset', ...moves(p)]);
+    const p = puzzles[0], done = play(start(p, [p.dares[1].slot]), [moves(p)[0], RESET, ...moves(p)]);
     expect(done.result?.dares).toEqual([]);
     expect(done.result?.event).toBe('independent');
   });
   it('help makes a helped finish, with no dares, on the real engine evidence', () => {
-    const done = play(start(), ['help', ...moves()]);
+    const done = play(start(), [HELP, ...moves()]);
     expect(done.result?.event).toBe('helped');
     expect(done.result?.dares).toEqual([]);
   });
   it('rejects a no-op or impossible action and forged payload', () => {
     const s = start();
-    expect(registration.move(s, 'undo')).toBeNull();
-    expect(registration.move(s, 9 as unknown as Action)).toBeNull();
+    expect(registration.move(s, UNDO)).toBeNull();
+    expect(registration.move(s, 11 as unknown as Action)).toBeNull();
+    expect(registration.move(s, 'undo' as unknown as Action)).toBeNull();
     const payload = s.payload as Payload;
-    expect(registration.catalog.codecs.get('slip-tide-replay-v1')!.validate({ ...s, payload: { ...payload, actions: [1, 1, 1, 7] } })).toBe(false);
+    expect(registration.catalog.codecs.get('slip-tide-replay-v1')!.validate({ ...s, payload: { ...payload, actions: [1, 1, 1, 11] as Action[] } })).toBe(false);
   });
   it('binds every Challenge puzzle to its row hash', () => {
     const inline = sets.challenge.flatMap(c => c.rows);
@@ -179,11 +180,12 @@ describe('board rules visible in the source', () => {
     expect(source.indexOf('There is a way in')).toBeGreaterThan(source.indexOf('finishedBoard(state)'));
     expect(readFileSync('src/learn/games/slip-tide/field.tsx', 'utf8')).toContain('accessibilityLabel={`Slide all crabs');
   });
-  it('keeps the board controls still on a win and bounds each hint slice by time', () => {
+  it('keeps the board controls still on a win, and leaves every hint to the shared sliced help', () => {
     const view = readFileSync('src/learn/games/slip-tide/schoolBoard.tsx', 'utf8'), field = readFileSync('src/learn/games/slip-tide/field.tsx', 'utf8');
     expect(view.match(/cheer\(/g)).toHaveLength(1);
     expect(view).toContain("next.index === next.puzzles.length - 1) cheer('big'");
-    expect(field).toContain('Date.now() - started < HINT_BUDGET_MS');
+    for (const board of ['schoolBoard', 'challengeBoard']) expect(readFileSync(`src/learn/games/slip-tide/${board}.tsx`, 'utf8')).toContain('<PuzzleHelp');
+    expect(field).not.toMatch(/routeSearch|createSearch|storedRouteFrom|setTimeout/);
   });
   it('does not import the slicing-free route search into a frame callback', () => {
     expect(readFileSync('src/learn/games/slip-tide/field.tsx', 'utf8')).not.toMatch(/shortestRoute\(/);

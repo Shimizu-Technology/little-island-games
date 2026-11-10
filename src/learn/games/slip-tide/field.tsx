@@ -1,36 +1,39 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
+import Animated, { Easing, cancelAnimation, runOnJS, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useReducedMotion } from '../../../components/motion';
 import { Button, C, Copy, PressableScale } from '../../../components/ui';
+import type { HintCue } from '../../../puzzles/hints';
 import { CoachSpot, Hand } from '../../Coach';
-import { Arrow, CrabSprite, HomeEyes, LagoonArt, PoolBadge, crabLooks } from './art';
-import { HOME, hintFocus, routeSearch, storedRouteFrom, type Crabs, type Dir, type HintFocus, type SlipPuzzle } from './rules';
+import { Arrow, CrabSprite, HomeEyes, LagoonArt, PoolBadge } from './art';
+import { describeBoard, focusOf, slipView } from './help';
+import { HOME, type Crabs, type Dir, type SlipPuzzle } from './rules';
 
 const names_ = ['up', 'right', 'down', 'left'];
-const ladder: [string, number][] = [['Look', 1], ['Think', 2], ['One step', 3], ['Show me', 4]];
 const SLIDE_MS = 62, SLIDE_MIN = 130, SLIDE_MAX = 460;
 const easeSlide = Easing.bezier(0.3, 0.7, 0.3, 1);
 const cellXY = (cell: number, n: number, c: number) => ({ x: (cell % n) * c, y: Math.floor(cell / n) * c });
-const describe = (p: SlipPuzzle, crabs: Crabs) => crabs.map((cell, i) => {
-  if (cell === HOME) return `${crabLooks[i].name} is home`;
-  const where = (c: number) => `row ${Math.floor(c / p.size) + 1}, column ${(c % p.size) + 1}`;
-  return `${crabLooks[i].name} at ${where(cell)}, its pool at ${where(p.pools[i])}`;
-}).join('. ');
 
 /** One crab token: only its transform animates, so a slide costs a few native properties per frame. */
 function CrabToken({ puzzle, index, cell: crab, size, reduced, glow }: { puzzle: SlipPuzzle; index: number; cell: number; size: number; reduced: boolean; glow: boolean }) {
   const start = crab === HOME ? puzzle.pools[index] : crab, xy0 = cellXY(start, puzzle.size, size);
   const x = useSharedValue(xy0.x), y = useSharedValue(xy0.y), scale = useSharedValue(crab === HOME ? 0 : 1), squash = useSharedValue(0), ripple = useSharedValue(0), halo = useSharedValue(0);
-  const prev = useRef(crab);
+  const prev = useRef(crab), prevSize = useRef(size);
   const parked = crab !== HOME && puzzle.pools.includes(crab);
   const seat = useSharedValue(parked ? 0.82 : 1), ringX = useSharedValue(xy0.x), ringY = useSharedValue(xy0.y), ringBig = useSharedValue(0);
   useEffect(() => {
-    const was = prev.current;
-    prev.current = crab;
-    if (was === crab) return;
+    const was = prev.current, resized = prevSize.current !== size;
+    prev.current = crab; prevSize.current = size;
     const end = crab === HOME ? puzzle.pools[index] : crab, xy = cellXY(end, puzzle.size, size);
+    if (resized) {
+      // New board geometry (rotation, split view, text size): every token jumps to its cell. Only real moves animate.
+      [x, y, scale, squash, ripple, seat].forEach(v => cancelAnimation(v));
+      x.value = xy.x; y.value = xy.y; scale.value = crab === HOME ? 0 : 1; squash.value = 0; ripple.value = 0; seat.value = parked ? 0.82 : 1;
+      ringX.set(xy.x); ringY.set(xy.y);
+      return;
+    }
+    if (was === crab) return;
     seat.set(withTiming(parked ? 0.82 : 1, { duration: 140 }));
     const dist = Math.max(Math.abs(xy.x - x.value), Math.abs(xy.y - y.value)) / size, ms = Math.min(SLIDE_MAX, Math.max(SLIDE_MIN, SLIDE_MS * dist + 90));
     if (reduced) { x.value = xy.x; y.value = xy.y; scale.value = crab === HOME ? 0 : 1; return; }
@@ -46,7 +49,7 @@ function CrabToken({ puzzle, index, cell: crab, size, reduced, glow }: { puzzle:
       ringX.set(xy.x); ringY.set(xy.y); ringBig.set(0);
       ripple.value = withSequence(withTiming(0, { duration: ms * 0.9 }), withTiming(1, { duration: 300, easing: Easing.out(Easing.quad) }), withTiming(0, { duration: 0 }));
     }
-    // Shared values are stable; only the crab's cell starts a slide.
+    // Shared values are stable; a new cell slides, a new cell size only repositions.
   }, [crab, index, parked, puzzle, reduced, seat, size, ringBig, ringX, ringY, ripple, scale, squash, x, y]);
   useEffect(() => {
     if (glow && !reduced) halo.value = withRepeat(withTiming(1, { duration: 620, easing: Easing.inOut(Easing.quad) }), -1, true);
@@ -92,9 +95,6 @@ function Spark({ t, angle, reach, color }: { t: SharedValue<number>; angle: numb
   const style = useAnimatedStyle(() => ({ opacity: t.get() < 0.6 ? 1 : 1 - (t.get() - 0.6) / 0.4, transform: [{ translateX: Math.cos(angle) * reach * t.get() }, { translateY: Math.sin(angle) * reach * t.get() }, { scale: 0.5 + t.get() * 0.8 }, { rotate: `${t.get() * 200}deg` }] }));
   return <Animated.View style={[{ position: 'absolute', left: -12, top: -12, width: 24, height: 24, borderRadius: 7, backgroundColor: color }, style]} />;
 }
-type Plan = { status: 'looking' } | { status: 'ready'; route: Dir[] } | { status: 'stuck' };
-// One tiny search chunk, repeated until this slice has used its share of the frame.
-const HINT_CHUNK = 24, HINT_BUDGET_MS = 6;
 export type PlayfieldProps = {
   puzzle: SlipPuzzle;
   crabs: Crabs;
@@ -108,38 +108,27 @@ export type PlayfieldProps = {
   coach?: { active: boolean; done: () => void };
   canUndo: boolean;
   canReset: boolean;
-  /** Returns false when the swipe moved nothing. `hinted` is true for moves the help ladder makes. */
-  onMove: (d: Dir, hinted: boolean) => boolean;
-  /** Reads a short help line aloud where the game has one. */
-  onSpeak?: (key: string) => void;
-  onHelp: () => void;
+  /** Returns false when the swipe cannot move anything; the board nudges instead. */
+  onMove: (d: Dir) => boolean;
   onUndo: () => void;
   onReset: () => void;
   onAnother?: () => void;
-  /** Called after Show me has played the route out. */
-  onShown?: () => void;
   notice?: string;
   /** Shown instead of the controls when the board is finished. */
   finished?: React.ReactNode;
+  /** The shared four-step help (`PuzzleHelp`), under the arrows. It owns every hint and help record. */
+  help?: React.ReactNode;
+  /** The public cue that help is showing: the board draws its crab, where it stops, and what stops it. */
+  cue?: HintCue | null;
 };
-export function Playfield({ puzzle, crabs, title, steps, active, width, height, together = false, names, coach, canUndo, canReset, onMove, onHelp, onUndo, onReset, onAnother, onShown, onSpeak, notice, finished }: PlayfieldProps) {
+export function Playfield({ puzzle, crabs, title, steps, active, width, height, together = false, names, coach, canUndo, canReset, onMove, onUndo, onReset, onAnother, notice, finished, help, cue = null }: PlayfieldProps) {
   const reduced = useReducedMotion();
-  const latestCrabs = useRef(crabs);
-  useEffect(() => { latestCrabs.current = crabs; }, [crabs]);
-  const [plan, setPlan] = useState<Plan | null>(null), [hintStep, setHintStep] = useState(0), [showing, setShowing] = useState(false), [note, setNote] = useState('');
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null), searchCancel = useRef<(() => void) | null>(null), playing = useRef<Dir[] | null>(null);
-  const stopHelp = useCallback(() => { if (timer.current) clearTimeout(timer.current); timer.current = null; searchCancel.current?.(); searchCancel.current = null; playing.current = null; }, []);
-  useEffect(() => stopHelp, [stopHelp]);
   const n = puzzle.size, solved = !!finished;
   const cell = boardCell(width, height, n, together);
-  const clearHints = () => { setPlan(null); setHintStep(0); setNote(''); };
-  const apply = useCallback((d: Dir, hinted = false) => {
+  const apply = useCallback((d: Dir) => {
     if (!active) return false;
-    const moved = onMove(d, hinted);
-    if (moved) {
-      coach?.done();
-      if (!hinted) { setPlan(null); setHintStep(0); setNote(''); }
-    }
+    const moved = onMove(d);
+    if (moved) coach?.done();
     return moved;
   }, [active, coach, onMove]);
   const fired = useSharedValue(false), nudgeX = useSharedValue(0), nudgeY = useSharedValue(0);
@@ -150,21 +139,7 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
     nudgeX.set(withSequence(withTiming(dx * 7, { duration: 55 }), withSpring(0, { damping: 8, stiffness: 320 })));
     nudgeY.set(withSequence(withTiming(dy * 7, { duration: 55 }), withSpring(0, { damping: 8, stiffness: 320 })));
   }, [nudgeX, nudgeY, reduced]);
-  const swipe = useCallback((d: Dir) => { if (!showing && !solved && !apply(d)) nudge(d); }, [apply, nudge, showing, solved]);
-  // Show me waits for each move to be accepted: Challenge saves one action at a time, so a timer could overrun it.
-  const shownAt = useRef(crabs.join());
-  const stepShown = useCallback(() => {
-    const route = playing.current;
-    if (!route) return;
-    if (!route.length) { playing.current = null; timer.current = setTimeout(() => { setShowing(false); onShown?.(); }, 700); return; }
-    if (!apply(route.shift()!, true)) { playing.current = null; setShowing(false); }
-  }, [apply, onShown]);
-  useEffect(() => {
-    const position = crabs.join();
-    if (!playing.current || shownAt.current === position) return;
-    shownAt.current = position;
-    timer.current = setTimeout(stepShown, reduced ? 260 : 620);
-  }, [crabs, reduced, stepShown]);
+  const swipe = useCallback((d: Dir) => { if (!solved && !apply(d)) nudge(d); }, [apply, nudge, solved]);
   const pan = useMemo(() => Gesture.Pan().enabled(!together).maxPointers(1).minDistance(3)
     .onUpdate(e => {
       'worklet';
@@ -175,56 +150,17 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
       runOnJS(swipe)(ax > ay ? (e.translationX > 0 ? 1 : 3) : e.translationY > 0 ? 2 : 0);
     })
     .onFinalize(() => { 'worklet'; fired.set(false); }), [fired, swipe, together]);
-  function findPlan(then: (p: Plan) => void) {
-    const stored = storedRouteFrom(puzzle, latestCrabs.current);
-    if (stored) { const p: Plan = { status: 'ready', route: stored }; setPlan(p); then(p); return; }
-    // Off the stored route: search in slices so a tap never stalls a frame.
-    const search = routeSearch(puzzle, latestCrabs.current, 200_000);
-    setPlan({ status: 'looking' });
-    let cancelled = false;
-    searchCancel.current = () => { cancelled = true; };
-    const slice = () => {
-      if (cancelled) return;
-      const started = Date.now();
-      let r = search.run(HINT_CHUNK);
-      while (r.status === 'running' && Date.now() - started < HINT_BUDGET_MS) r = search.run(HINT_CHUNK);
-      if (r.status === 'running') { timer.current = setTimeout(slice, 0); return; }
-      searchCancel.current = null;
-      if (r.status === 'solved') { const p: Plan = { status: 'ready', route: r.witness }; setPlan(p); then(p); }
-      else { setPlan({ status: 'stuck' }); setNote('These crabs cannot get home from here. Undo or Reset, and nothing is lost.'); onSpeak?.('slip-stuck'); }
-    };
-    slice();
-  }
-  function ask(step: number) {
-    if (showing) return;
-    onHelp();
-    setHintStep(Math.max(hintStep, step));
-    findPlan(p => {
-      if (p.status !== 'ready') return;
-      if (step === 1) onSpeak?.('slip-hint-look');
-      if (step === 2) onSpeak?.('slip-hint-think');
-      if (step === 3) { apply(p.route[0], true); setHintStep(0); setPlan(null); }
-      if (step === 4) playRoute(p.route);
-    });
-  }
-  function playRoute(route: Dir[]) {
-    playing.current = [...route];
-    shownAt.current = latestCrabs.current.join();
-    setShowing(true);
-    stepShown();
-  }
-  const focus: HintFocus | null = plan?.status === 'ready' && !solved && hintStep ? hintFocus(puzzle, crabs, plan.route) : null;
+  // Help draws only what its saved cue names, and nothing once the board is finished.
+  const focus = solved ? { crab: null, stop: null, blocker: null } : focusOf(cue);
   const atXY = (c: number) => cellXY(c, n, cell);
   const nameA = names?.[0] ?? 'Player 1', nameB = names?.[1] ?? 'Player 2';
   const arrowSize = Math.min(72, Math.floor((Math.min(width, 440) - 24) / 4));
   const arrowsFor = (group: Dir[], label?: string) => <View key={group.join()} style={{ alignItems: 'center', gap: 4 }}>
     {label && <Copy style={{ fontSize: 13, fontWeight: '800', color: C.ink }}>{label}</Copy>}
-    <View style={{ flexDirection: 'row', gap: 8 }}>{group.map(d => <PressableScale key={d} accessibilityRole="button" accessibilityLabel={`Slide all crabs ${names_[d]}`} disabled={!active || solved || showing} onPress={() => { if (!apply(d)) nudge(d); }} style={{ width: arrowSize, height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: together ? (d % 2 === 0 ? '#CFEDE6' : '#FAD9C7') : '#E8F2DF', borderWidth: together ? 3 : 2, borderColor: together ? (d % 2 === 0 ? '#2F8C7C' : '#D2693F') : '#7C9C75', opacity: solved ? 0.45 : 1 }}><Arrow dir={d} size={32} color={together ? (d % 2 === 0 ? '#3D9B8C' : '#DE7F5A') : '#3D7F73'} /></PressableScale>)}</View>
+    <View style={{ flexDirection: 'row', gap: 8 }}>{group.map(d => <PressableScale key={d} accessibilityRole="button" accessibilityLabel={`Slide all crabs ${names_[d]}`} disabled={!active || solved} onPress={() => { if (!apply(d)) nudge(d); }} style={{ width: arrowSize, height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: together ? (d % 2 === 0 ? '#CFEDE6' : '#FAD9C7') : '#E8F2DF', borderWidth: together ? 3 : 2, borderColor: together ? (d % 2 === 0 ? '#2F8C7C' : '#D2693F') : '#7C9C75', opacity: solved ? 0.45 : 1 }}><Arrow dir={d} size={32} color={together ? (d % 2 === 0 ? '#3D9B8C' : '#DE7F5A') : '#3D7F73'} /></PressableScale>)}</View>
   </View>;
   const boardSize = cell * n + boardPad * 2;
-  const hintLine = hintStep === 1 && focus ? 'Look at this crab.' : hintStep >= 2 && focus ? (focus.blocker ? 'See what stops it.' : 'It can slide there.') : plan?.status === 'looking' ? 'Thinking…' : '';
-  const caption = showing ? 'Watch how they get home.' : coach?.active && !steps ? (together ? 'Each person has two arrows. Talk it through.' : 'Swipe the water to slide every crab.') : note || notice || hintLine || title;
-  const clear = () => clearHints();
+  const caption = coach?.active && !steps ? (together ? 'Each person has two arrows. Talk it through.' : 'Swipe the water to slide every crab.') : notice || title;
   return <View style={{ gap: 12, alignItems: 'center' }}>
     <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch', gap: 8, paddingHorizontal: 2, minHeight: 46 }}>
       <View style={{ flex: 1 }}>
@@ -232,19 +168,19 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
         <Copy accessibilityLabel={steps === 1 ? '1 swipe so far' : `${steps} swipes so far`} style={{ color: C.ink, fontSize: 13, lineHeight: 17 }}>{steps === 1 ? '1 swipe' : `${steps} swipes`}</Copy>
       </View>
       {!finished && <>
-        <Button quiet compact disabled={!canUndo || showing} onPress={() => { clear(); onUndo(); }}>Undo</Button>
-        <Button compact disabled={!canReset || showing} onPress={() => { clear(); onReset(); }}>Reset</Button>
+        <Button quiet compact disabled={!active || !canUndo} onPress={onUndo}>Undo</Button>
+        <Button compact disabled={!active || !canReset} onPress={onReset}>Reset</Button>
       </>}
     </View>
     <CoachSpot active={!!coach?.active} handAt="none" style={{ borderRadius: 26 }}>
       <GestureDetector gesture={pan}>
-        <View accessible accessibilityRole="image" accessibilityLabel={`Lagoon board. ${describe(puzzle, crabs)}.`} style={{ width: boardSize, height: boardSize, padding: boardPad, borderRadius: 24, backgroundColor: '#F2DFA9', borderWidth: 2, borderColor: '#A98F58', overflow: 'hidden' }}>
+        <View accessible accessibilityRole="image" accessibilityLabel={describeBoard(slipView(puzzle, crabs))} style={{ width: boardSize, height: boardSize, padding: boardPad, borderRadius: 24, backgroundColor: '#F2DFA9', borderWidth: 2, borderColor: '#A98F58', overflow: 'hidden' }}>
           <View style={{ width: cell * n, height: cell * n, borderRadius: 16, overflow: 'hidden' }}>
             <LagoonArt puzzle={puzzle} cell={cell} />
-            {focus && hintStep >= 2 && <View pointerEvents="none" style={{ position: 'absolute', left: atXY(focus.stop).x + 4, top: atXY(focus.stop).y + 4, width: cell - 8, height: cell - 8, borderRadius: (cell - 8) / 2, borderWidth: 3, borderStyle: 'dashed', borderColor: '#FFF2A8' }} />}
-            {focus?.blocker && hintStep >= 2 && <View pointerEvents="none" style={{ position: 'absolute', left: atXY(focus.blocker.cell).x + 2, top: atXY(focus.blocker.cell).y + 2, width: cell - 4, height: cell - 4, borderRadius: 16, borderWidth: 3, borderColor: '#FFD36B' }} />}
+            {focus.stop !== null && <View testID="hint-stop" pointerEvents="none" style={{ position: 'absolute', left: atXY(focus.stop).x + 4, top: atXY(focus.stop).y + 4, width: cell - 8, height: cell - 8, borderRadius: (cell - 8) / 2, borderWidth: 3, borderStyle: 'dashed', borderColor: '#FFF2A8' }} />}
+            {focus.blocker !== null && <View testID="hint-blocker" pointerEvents="none" style={{ position: 'absolute', left: atXY(focus.blocker).x + 2, top: atXY(focus.blocker).y + 2, width: cell - 4, height: cell - 4, borderRadius: 16, borderWidth: 3, borderColor: '#FFD36B' }} />}
             <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, right: 0, bottom: 0 }, nudged]}>
-              {crabs.map((c, i) => <CrabToken key={i} puzzle={puzzle} index={i} cell={c} size={cell} reduced={reduced} glow={hintStep > 0 && focus?.crab === i} />)}
+              {crabs.map((c, i) => <CrabToken key={i} puzzle={puzzle} index={i} cell={c} size={cell} reduced={reduced} glow={focus.crab === i} />)}
             </Animated.View>
             {crabs.map((c, i) => {
               const under = c === HOME ? -1 : puzzle.pools.indexOf(c);
@@ -252,20 +188,18 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
               const badge = Math.max(16, cell * 0.36), at = atXY(c);
               return <View key={`badge-${i}`} pointerEvents="none" style={{ position: 'absolute', left: at.x + cell * 0.04, top: at.y + cell - badge * 0.98 }}><PoolBadge index={under} size={badge} /></View>;
             })}
-            {solved && !showing && !reduced && <HomeBurst size={cell * n} />}
+            {solved && !reduced && <HomeBurst size={cell * n} />}
             {!!coach?.active && !steps && !together && <SwipeDemo size={cell * n} reduced={reduced} />}
           </View>
         </View>
       </GestureDetector>
     </CoachSpot>
-    {(showing ? null : finished) ?? <>
+    {finished ?? <>
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
-      {together ? <>{arrowsFor([0, 2], `${nameA}: up and down`)}{arrowsFor([3, 1], `${nameB}: left and right`)}</> : arrowsFor([3, 0, 2, 1])}
-    </View>
-      <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }} accessibilityRole="toolbar" accessibilityLabel="Help steps">
-        {ladder.map(([label, step]) => <Button key={step} quiet compact disabled={showing || (step !== 4 && step > hintStep + 1)} selected={hintStep === step} onPress={() => ask(step)}>{label}</Button>)}
+        {together ? <>{arrowsFor([0, 2], `${nameA}: up and down`)}{arrowsFor([3, 1], `${nameB}: left and right`)}</> : arrowsFor([3, 0, 2, 1])}
       </View>
-      {onAnother && <Button quiet compact disabled={showing} onPress={() => { stopHelp(); onAnother(); }}>Try another</Button>}
+      {help && <View style={{ alignSelf: 'stretch' }}>{help}</View>}
+      {onAnother && <Button quiet compact disabled={!active} onPress={onAnother}>Try another</Button>}
     </>}
   </View>;
 }

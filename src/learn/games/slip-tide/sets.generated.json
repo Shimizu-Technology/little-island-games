@@ -239,5 +239,39 @@
     "[120924507,\"first-d\",\"rocks-1\",[7,\"aijnstxFGHK\",\"53k2\",\"bfoE\",\"DLRDLURDLURURDLULDRU\"],[\"steps\",20,20],0,[[\"steps\",20]],[\"stopper\"]]"
    ]
   }
+ ],
+ "packed": [
+  [
+   3,
+   620,
+   400,
+   "f50b64c55987b0613e222aee68afb39aa42ce8c7d80425f05a3ee00e3ecc668d",
+   1,
+   "d"
+  ],
+  [
+   4,
+   1020,
+   400,
+   "c31e7f9c7defb83beb4023264d377247fc23f3d665ecfa4ddb235dfe37d2aa97",
+   1,
+   "e"
+  ],
+  [
+   5,
+   1420,
+   256,
+   "9881a46925e5a784b89113233865768d82bd23470cafd856edd83b842e1002e6",
+   1,
+   "f"
+  ],
+  [
+   6,
+   1676,
+   128,
+   "ce9bb7b00d80a173e614178e923ee3c2d13ef60d1ea099ba39206b7ce34fd43b",
+   1,
+   "g"
+  ]
  ]
 }

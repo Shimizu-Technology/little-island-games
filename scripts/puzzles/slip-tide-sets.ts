@@ -6,6 +6,7 @@ import { parsePack } from '../../src/puzzles/bank';
 /** Copies certified pack rows, unchanged, into the small School and Challenge sets the board can open without a pack load. */
 const OUT = 'src/learn/games/slip-tide/sets.generated.json';
 const LEVELS: Record<string, string> = { 1: 'a', 2: 'b', 3: 'c', 4: 'd', 5: 'e' };
+const ENDLESS_BANDS = ['d', 'e', 'f', 'g'];
 const LEVEL_SIZE = 32, TIERS: [string, string, number][] = [['deep', 'f', 8], ['deep', 'g', 6], ['endless', 'd', 4], ['endless', 'e', 4], ['endless', 'f', 4], ['endless', 'g', 4]];
 const { families } = readCatalog(productionDirs), manifest = families.get('slip-tide');
 if (!manifest) throw new Error('Bake the slip-tide family first.');
@@ -16,5 +17,7 @@ const take = (band: string, count: number) => { const from = taken.get(band) ?? 
 const challenge = TIERS.map(([path, band, count]) => ({ path, band, rows: take(band, count) }));
 const rows = [...Object.values(levels).flat(), ...challenge.flatMap(c => c.rows)];
 const hash = createHash('sha256').update(rows.join('\n')).digest('hex');
-writeFileSync(OUT, `${JSON.stringify({ hash, levels, challenge }, null, 1)}\n`);
+/** Immutable facts for the packed Endless Tide banks: [slot, first ordinal, entries, pack sha256, rules, band]. */
+const packed = manifest.packs.filter(p => ENDLESS_BANDS.includes(manifest.bands[p[5]])).map(p => [p[0], p[1], p[2], p[4], p[6], manifest.bands[p[5]]]);
+writeFileSync(OUT, `${JSON.stringify({ hash, levels, challenge, packed }, null, 1)}\n`);
 console.log(`Wrote ${rows.length} certified rows, ${readFileSync(OUT).length} bytes.`);

@@ -1,7 +1,7 @@
 import type { LearnEngine, LearnOptions, Outcome } from '../../types';
 import { levelOf } from '../../levelOptions';
 import sets from './sets.generated.json';
-import { dirOf, gridOf, HOME, homeAll, puzzleTuple, slideOn, tuplePuzzle, type Crabs, type Dir, type SlipPuzzle } from './rules';
+import { dirOf, dirs, gridOf, HOME, homeAll, puzzleTuple, slideOn, tuplePuzzle, type Crabs, type Dir, type SlipPuzzle } from './rules';
 
 /** Four boards a round, chosen from certified bank rows. Undo keeps the recent positions, not an unbounded log. */
 export const ROUND = 4;
@@ -83,19 +83,41 @@ function legalCrabs(p: SlipPuzzle, v: unknown): boolean {
   const grid = gridOf(p), live = v.filter(c => c !== HOME);
   return v.every((c, i) => c === HOME || (nat(c, p.size * p.size - 1) && !grid.rocks[c] && p.pools[i] !== c)) && new Set(live).size === live.length;
 }
-export function validSlip(v: unknown): v is SlipState {
+/** Saved boards must be byte-for-byte certified rows of their own level, so every stored route is a proven shortest one. */
+const certified = new Map<number, Set<string>>();
+const certifiedAt = (level: number) => {
+  let rows = certified.get(level);
+  if (!rows) { rows = new Set(setFor(level).map(row => JSON.stringify(toTuple(rowPuzzle(row))))); certified.set(level, rows); }
+  return rows;
+};
+const same = (a: readonly number[], b: readonly number[]) => a.length === b.length && a.every((c, i) => c === b[i]);
+/** One swipe joins each remembered position to the next. Four slides per step, never a search. */
+const oneSwipe = (p: SlipPuzzle, from: readonly number[], to: readonly number[]) => dirs.some(d => same(slideOn(gridOf(p), from, d), to));
+/**
+ * Shape, certified boards, and a history that could have happened: a finished board took at least its
+ * shortest route, zero swipes means the starting position, and Undo remembers real one-swipe steps.
+ * Anything else is rejected whole, so the frame keeps the original and offers recovery.
+ */
+export function validSlip(v: unknown, level?: number): v is SlipState {
   const s = v as SlipState;
-  if (!s || typeof s !== 'object' || s.version !== 1 || !nat(s.level, 5) || s.level < 1 || !Array.isArray(s.puzzles) || s.puzzles.length !== ROUND || !nat(s.index, ROUND)
+  if (!s || typeof s !== 'object' || s.version !== 1 || !nat(s.level, 5) || s.level < 1 || level !== undefined && s.level !== level || !Array.isArray(s.puzzles) || s.puzzles.length !== ROUND || !nat(s.index, ROUND)
     || !nat(s.steps) || !nat(s.resets) || typeof s.helped !== 'boolean' || !Array.isArray(s.undo) || s.undo.length > UNDO_LIMIT || !Array.isArray(s.done) || s.done.length !== s.index
     || !s.done.every(d => Array.isArray(d) && d.length === 2 && nat(d[0]) && nat(d[1]))) return false;
-  const boards = s.puzzles.map(t => tuplePuzzle(t));
-  if (boards.some(b => !b)) return false;
-  if (s.index === ROUND) return Array.isArray(s.crabs) && s.crabs.length === 0 && !s.undo.length;
-  const current = boards[s.index]!;
-  return legalCrabs(current, s.crabs) && s.undo.every(u => legalCrabs(current, u));
+  const rows = certifiedAt(s.level);
+  if (!s.puzzles.every(t => rows.has(JSON.stringify(t)))) return false;
+  const boards = s.puzzles.map(t => tuplePuzzle(t)!);
+  if (!s.done.every(([steps, par], i) => par === parOf(boards[i]) && steps >= par)) return false;
+  if (s.index === ROUND) return Array.isArray(s.crabs) && s.crabs.length === 0 && !s.undo.length && !s.steps && !s.resets && !s.helped;
+  const current = boards[s.index];
+  if (!legalCrabs(current, s.crabs) || !s.undo.every(u => legalCrabs(current, u)) || s.undo.length > s.steps) return false;
+  if (!s.steps && !same(s.crabs, current.crabs)) return false;
+  if (homeAll(s.crabs) && s.steps < parOf(current)) return false;
+  const chain = [...s.undo, s.crabs];
+  if (s.undo.length === s.steps && s.steps && !same(s.undo[0], current.crabs)) return false;
+  return chain.every((at, i) => !i || oneSwipe(current, chain[i - 1], at));
 }
-export const finishedBoard = (s: SlipState) => s.index < s.puzzles.length && homeAll(s.crabs);
 export const parOf = (p: SlipPuzzle) => p.route.length;
+export const finishedBoard = (s: SlipState) => s.index < s.puzzles.length && homeAll(s.crabs);
 export const replayRoute = (p: SlipPuzzle, route: readonly Dir[], from: Crabs = p.crabs) => route.reduce<Crabs>((at, d) => slideOn(gridOf(p), at, d), from);
 export const routeDirs = (p: SlipPuzzle) => [...p.route].map(dirOf);
 export const levelInfo = [
@@ -123,6 +145,6 @@ export const engine: Omit<LearnEngine<SlipState>, 'id'> & { id: 'slip-tide' } = 
   levelNames: levelInfo,
   skills: { 'think.slide-plan': 'Planning slides ahead' },
   create: (options: LearnOptions, ctx) => startRound(levelOf(options), ctx.rng, ctx.previous),
-  validate: (state: unknown, _options: LearnOptions): state is SlipState => validSlip(state),
+  validate: (state: unknown, options: LearnOptions): state is SlipState => validSlip(state, levelOf(options)),
   outcome: (s: SlipState): Outcome => (s.index >= ROUND ? 'done' : null),
 };

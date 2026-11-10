@@ -9,6 +9,8 @@ const steps: readonly (readonly [number, number])[] = [[0, -1], [1, 0], [0, 1], 
 export const MAX_SIZE = 7;
 export const MAX_CRABS = 4;
 export const MAX_ROUTE = 72;
+/** Spoken and read names; art.tsx draws the matching colour and shell mark. */
+export const crabNames = ['coral crab with a flower', 'golden crab with a fish', 'green crab with a drop', 'purple crab with a moon'] as const;
 
 /** Cells count row by row. `crabs[i]` heads for `pools[i]`. `route` is one certified shortest answer, as swipes. */
 export type SlipPuzzle = { size: number; rocks: readonly number[]; crabs: readonly number[]; pools: readonly number[]; route: string };
