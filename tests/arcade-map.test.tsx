@@ -48,7 +48,7 @@ describe("AR-10 dare marks and choices", () => {
     expect((html.match(/dare/g) ?? []).length).toBe(2);
     const [song] = arcadeDares.filter(d => d.game === "shell-song");
     const choice = renderToStaticMarkup(<DareChoice dares={[song]} selected={null} marked={() => false} onSelect={vi.fn()}/>);
-    expect(choice).toContain("Want a dare?"); expect(choice).toContain("Stars count the same either way."); expect(choice).toContain("Dare: Listen-only song"); expect(choice).not.toContain("checked");
+    expect(choice).toContain("Want a dare?"); expect(choice).toContain("Just for fun. Your stars stay the same."); expect(choice).toContain("Listen-only song"); expect(choice).toContain('aria-label="Dare: Listen-only song.'); expect(choice).not.toContain("checked");
     expect(renderToStaticMarkup(<DareResult dare={song} proved marked/>)).toContain("Dare done: Listen-only song!");
     expect(renderToStaticMarkup(<DareResult dare={song} proved={false} marked={false}/>)).toContain("Your dare will wait for you. Try it any time!");
     expect(renderToStaticMarkup(<DareResult dare={song} proved={false} marked/>)).toContain("Your dare mark stays yours.");
