@@ -1,16 +1,15 @@
 import React, { memo } from 'react';
-import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import type { SpritePose } from '../../poses';
 import type { WorldId } from '../../types';
 import { ArcadeSprite } from '../../Sprite';
-import { CAMERA_SLOT, CONTACT, FOV_KICK, HERO_ZOOM, projectTrack, roadEdge } from './camera';
+import { CAMERA_SLOT, CONTACT, FOV_KICK, HERO_ZOOM } from './camera';
 import { useStage } from './stage';
 import { Image } from 'react-native';
 import { propArt } from './art.generated';
 import { lagoonLook } from './look';
 import { SCENE_COUNT, SCENE_START } from '../scrolling/environmentPoses';
-import { palette } from '../scrolling/Art';
 
 /** Only presentation consumes this slot. Engine state and contact projection stay unchanged. */
 
@@ -24,23 +23,6 @@ export function RunCamera({ poses, children }: { poses: SharedValue<SpritePose[]
   });
   return <Animated.View style={[{ position: 'absolute', left: 0, top: 0, width: 390, height: 660 }, style]}>{children}</Animated.View>;
 }
-export const HarborBackdrop = memo(function HarborBackdrop({ world }: { world: WorldId }) {
-  const [,horizon] = palette('lagoon-run',world), h=projectTrack(1,-1.2), l=roadEdge(1.5,false),r=roadEdge(1.5,true);
-  return <Svg width={390} height={660} viewBox="0 0 390 660" accessible={false}>
-    <Defs><LinearGradient id="harbor-sky" x2="0" y2="1"><Stop stopColor="#19B9DA"/><Stop offset="1" stopColor="#FFD37B"/></LinearGradient><LinearGradient id="harbor-water" x2="0" y2="1"><Stop stopColor="#12C5B8"/><Stop offset="1" stopColor="#006B91"/></LinearGradient><LinearGradient id="harbor-deck" x2="0" y2="1"><Stop stopColor="#FFC567"/><Stop offset="1" stopColor="#BD642C"/></LinearGradient><LinearGradient id="harbor-fog" x2="0" y2="1"><Stop stopColor="#FFF4D4" stopOpacity={.85}/><Stop offset="1" stopColor="#FFF4D4" stopOpacity={0}/></LinearGradient></Defs>
-    <Rect width={390} height={660} fill="url(#harbor-sky)"/><Circle cx={290} cy={72} r={48} fill="#FFE9AB" opacity={.3}/><Circle cx={290} cy={72} r={29} fill="#FFF2BC"/>
-    <Path d="M0 65q24-15 49 0h36q13-22 35 0h28M230 119q15-14 30 0h58q14-22 37 0h35" fill="none" stroke="#FFF7DC" strokeWidth={11} strokeLinecap="round" opacity={.6}/>
-    <G transform="translate(0 79)"><Path d="M0 213V135Q20 94 42 128L58 174Q84 132 102 183L143 213M245 213Q269 158 294 180L317 129Q344 85 365 134L390 157V213" fill={horizon}/><Path d="M0 213V179Q23 143 43 181Q60 153 80 183L112 213M275 213Q303 162 328 192Q356 140 390 173V213" fill="#4B9E87"/>
-    <Rect y={211} width={390} height={449} fill="url(#harbor-water)"/>
-    <G fill="none" stroke="#9FE4CF" strokeWidth={3} opacity={.6}><Path d="M0 247h53m264 0h73M0 300h74m240 0h76M0 387h36m322 0h32M0 498h27m339 12h24"/></G>
-    </G><Path d={`M${h.x} ${h.y}L${r.x} ${r.y}H${l.x}Z`} fill="url(#harbor-deck)"/>
-    {[-.5,.5,1.5,2.5].map(lane=>{const p=projectTrack(lane,1.5);return <Path key={lane} d={`M195 290.4L${p.x} ${p.y}`} stroke={lane===-.5||lane===2.5?'#FFE5A6':'#773B35'} strokeWidth={lane===-.5||lane===2.5?7:2} opacity={.8}/>;})}
-    <Path d="M165 340L116 660M225 340L274 660" stroke="#FFE0A1" strokeWidth={2} opacity={.3}/>
-    <Path d="M80 290H310L390 365H0Z" fill="url(#harbor-fog)"/>
-    <G fill="#23785E" stroke="#195E53" strokeWidth={2}><Path d="M0 0H101Q62 20 84 49Q42 30 49 69Q13 47 0 93Z"/><Path d="M390 0H307Q328 21 302 52Q349 25 341 74Q378 48 390 96Z"/></G>
-    <G stroke="#E4B76E" strokeWidth={2} opacity={.6}><Path d="M0 8L64 31M390 8L325 32"/></G>
-  </Svg>;
-});
 const HarborProp=memo(function HarborProp({index}:{index:number}) {
   const kind=Math.floor(index/2)%3;
   return <Svg width={100} height={240} viewBox="0 0 100 140" preserveAspectRatio="xMidYMax meet" accessible={false}><Ellipse cx={50} cy={135} rx={43} ry={5} fill="#165B5C" opacity={.25}/><G stroke="#164B53" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round">
@@ -60,11 +42,3 @@ export function SpeedLines({poses}:{poses:SharedValue<SpritePose[]>}) {
 export function Shell({size=30}:{size?:number}) {return <Svg width={size} height={size} viewBox="0 0 32 32" accessible={false}><Circle cx={16} cy={16} r={15} fill="#FFF1A0" opacity={.24}/><Path d="M8 24L3 14Q2 8 7 7Q9 2 14 5Q19 1 23 6Q30 5 29 13L24 24L19 28H13Z" fill="#FFD476" stroke="#9B693F" strokeWidth={1.7}/><Path d="M14 24L8 10M17 24V8M20 24L25 10" stroke="#FFF3BF" strokeWidth={2} strokeLinecap="round"/><Path d="M10 25H23L20 29H13Z" fill="#E9A957" stroke="#9B693F" strokeWidth={1.3}/><Circle cx={8} cy={9} r={2} fill="#FFFBE0"/></Svg>;}
 
 export { BakedFloor as HarborPlanks } from './Baked';
-
-/** Foreground palms frame the route without entering its collision corridor. */
-export const HarborFrame=memo(function HarborFrame(){return <Svg width={390} height={660} style={{position:'absolute'}} accessible={false}><G stroke="#315448" strokeWidth={2} strokeLinejoin="round">
-  <Path d="M-39 660Q18 378 21 164L33 164Q43 395-15 660Z" fill="#94623E"/><Path d="M-26 619L-7 625M-15 555L5 561M-3 487L16 493M7 418L25 423M15 350L32 354M20 281L36 284M23 218L36 220" stroke="#DBA86A" strokeWidth={4}/>
-  <Path d="M23 173Q-9 107-53 145Q-5 145 23 173Q44 102 97 135Q55 139 23 173Q-23 152-40 218Q-2 182 23 173Q70 158 94 210Q56 182 23 173Q17 211 36 237Q45 198 23 173Z" fill="#287F57"/><Path d="M-19 148L23 173L76 137M-23 200L23 173L77 196M23 173L35 219" fill="none" stroke="#90C56B"/>
-  <Path d="M428 660Q372 382 365 150L353 150Q346 404 404 660Z" fill="#78533D"/><Path d="M420 616L400 623M409 548L389 555M397 481L378 488M386 414L367 420M375 346L359 351M367 279L353 283M363 215L350 217" stroke="#C9945C" strokeWidth={4}/>
-  <Path d="M360 158Q328 94 281 135Q327 130 360 158Q385 91 433 131Q388 131 360 158Q313 142 295 210Q333 173 360 158Q404 142 431 196Q387 170 360 158Q349 193 369 224Q379 183 360 158Z" fill="#236F53"/><Path d="M302 130L360 158L410 127M311 190L360 158L413 183M360 158L368 207" fill="none" stroke="#6FAB68"/>
-</G></Svg>;});
