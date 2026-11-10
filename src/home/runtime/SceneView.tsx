@@ -18,7 +18,7 @@ import { DragOverlay } from "./DragOverlay";
 import { layoutToken } from "./layout";
 import { anyIn, firstFollow, firstRest } from "./restingState";
 import { BREATH_SCALE, LIFE_PERIOD, lifeBlink, lifeBreath, lifeSeed } from "./life";
-import { isPortion } from "./portions";
+import { isPortion, SHORE_TOP } from "./portions";
 import { entityLabels } from "../scene/labels";
 import type { Interaction, Pickup } from "./useInteraction";
 import type { Viewport } from "./CameraController";
@@ -300,10 +300,40 @@ export function SceneView({
           {roomIds.map((roomId, index) => {
             const origin = roomOrigin(index, building),
               room = state.rooms[roomId];
-            const entities = Object.values(scene.rooms[roomId].entities)
+            const all = Object.values(scene.rooms[roomId].entities)
               .filter((e) => restingVisible(e, scene))
               .sort((a, b) => a.depth - b.depth || a.id.localeCompare(b.id));
-            const names = entityLabels(entities);
+            // HC-02: beach shells lie on the sand, outside the room's clip.
+            const entities = all.filter((e) => e.contact.y <= SHORE_TOP), shore = all.filter((e) => e.contact.y > SHORE_TOP);
+            const names = entityLabels(all);
+            const resting = (entity: SceneEntity, front: boolean) => (
+              <RestingEntity
+                key={front ? `front:${entity.id}` : entity.id}
+                front={front}
+                entity={entity}
+                sceneRevision={scene.revision}
+                name={names[entity.id]}
+                onNode={onNode}
+                action={reactions[entity.id]}
+                sleeping={!!sleeping[entity.id]}
+                ownerKey={ancestors(entity, scene).join("|")}
+                targetKey={scene.rooms[roomId].targets
+                  .filter((t) => t.owner === entity.id && (t.kind === "mouth" || t.kind === "hand"))
+                  .map((t) => t.id)
+                  .join("|")}
+                restingFlags={interaction.restingFlags}
+                restingMotion={interaction.restingMotion}
+                landingKey={scene.rooms[roomId].targets.filter(t => t.owner === entity.id && t.kind !== "mouth" && t.kind !== "hand").map(t => t.id).join("|")}
+                acknowledgeLayout={interaction.acknowledgeLayout}
+                reduced={reduced}
+                renderCharacter={renderCharacter}
+                selected={!front && selected === entity.id}
+                onSelect={onSelect}
+                onMove={onMove}
+                life={living && !front && entity.character && entity.room === liveRoom && !sleeping[entity.id] &&
+                  !reactions[entity.id] && !entity.action ? lifeClock : undefined}
+              />
+            );
             return (
               <View
                 key={roomId}
@@ -335,32 +365,7 @@ export function SceneView({
                       ...(order === entries.findIndex((entry) => entry.entity.item?.layer !== "ground")
                         ? scene.rooms[roomId].targets.filter((target) => target.rim).map((target) => <SeatRimCue key={`rim:${target.id}`} target={target} interaction={interaction} />)
                         : []),
-                      <RestingEntity
-                        key={front ? `front:${entity.id}` : entity.id}
-                        front={front}
-                        entity={entity}
-                        sceneRevision={scene.revision}
-                        name={names[entity.id]}
-                        onNode={onNode}
-                        action={reactions[entity.id]}
-                        sleeping={!!sleeping[entity.id]}
-                        ownerKey={ancestors(entity, scene).join("|")}
-                        targetKey={scene.rooms[roomId].targets
-                          .filter((t) => t.owner === entity.id && (t.kind === "mouth" || t.kind === "hand"))
-                          .map((t) => t.id)
-                          .join("|")}
-                        restingFlags={interaction.restingFlags}
-                        restingMotion={interaction.restingMotion}
-                        landingKey={scene.rooms[roomId].targets.filter(t => t.owner === entity.id && t.kind !== "mouth" && t.kind !== "hand").map(t => t.id).join("|")}
-                        acknowledgeLayout={interaction.acknowledgeLayout}
-                        reduced={reduced}
-                        renderCharacter={renderCharacter}
-                        selected={!front && selected === entity.id}
-                        onSelect={onSelect}
-                        onMove={onMove}
-                        life={living && !front && entity.character && entity.room === liveRoom && !sleeping[entity.id] &&
-                          !reactions[entity.id] && !entity.action ? lifeClock : undefined}
-                      />,
+                      resting(entity, front),
                     ])}
                     {scene.rooms[roomId].targets.filter((target) => !target.rim && (target.kind === "hand" || target.kind === "surface")).map((target) => (
                       <TargetCue key={target.id} target={target} interaction={interaction} />
@@ -375,6 +380,11 @@ export function SceneView({
                     )}
                   </View>
                 </View>
+                {shore.length > 0 && (
+                  <View pointerEvents="box-none" style={{ position: "absolute", left: 0, top: 0 }}>
+                    {shore.map((entity) => resting(entity, false))}
+                  </View>
+                )}
               </View>
             );
           })}

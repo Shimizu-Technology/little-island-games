@@ -138,7 +138,9 @@ export function HomeScreen({
   );
   const buildRuntimeScene = useMemo(() => createSceneBuilder(), []);
   const baseScene = useMemo(() => buildRuntimeScene(store.state), [store.state.rooms, buildRuntimeScene]); // Navigation is outside the scene revision.
-  const scene = useMemo(() => withPortions(baseScene), [baseScene]);
+  // HC-02: ground-floor rooms have a beach whose shells can be picked up.
+  const shoreRooms = useMemo(() => roomIds.slice(0, building.columns), [building.columns]);
+  const scene = useMemo(() => withPortions(baseScene, shoreRooms), [baseScene, shoreRooms]);
   const { sleeping, wake } = useIdleCharacters(scene, pickups);
   useLayoutEffect(() => {
     if (!focusId) return;
@@ -201,7 +203,7 @@ export function HomeScreen({
         return undefined;
       if (!next) {
         const latest = current.store.getState();
-        const fresh = withPortions(buildScene(latest));
+        const fresh = withPortions(buildScene(latest), shoreRooms);
         const candidate = fresh.entities[id];
         if (!candidate) return undefined;
         if (isPortion(id)) {
@@ -218,7 +220,8 @@ export function HomeScreen({
             },
           };
           if (!proposal || proposal.kind === "staging") {
-            current.store.setMessage("Choose a free hand or place.");
+            current.store.setMessage(proposal?.refusal === "capacity" || placedInstances(latest.rooms[destination]).length >= MAX_INSTANCES
+              ? "Put something away to make room." : "Choose a free hand or place.");
             return undefined;
           }
           // Materialize the preview, never resolve the raw release anchor again.
@@ -269,7 +272,7 @@ export function HomeScreen({
       }
       return { state: next, proposal: proposal!, identities: current.store.getCommittedIdentities() };
     },
-    []
+    [shoreRooms]
   );
   const showReaction = (proposal: DropProposal) => {
     if (proposal.kind !== "mouth") return;

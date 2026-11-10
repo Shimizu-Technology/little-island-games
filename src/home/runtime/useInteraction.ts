@@ -25,6 +25,7 @@ import {
   panInertia,
   includeBounds,
   roomAtScreen,
+  shoreAtScreen,
   zoomCamera,
   type Viewport,
 } from "./CameraController";
@@ -416,6 +417,17 @@ export function useInteraction({
     if (zone?.kind === "drawer")
       return resolve(prepared.value.rooms[subject.room], subject, subject.contact, { scale: camera.value.a, intent: "staging", release: true });
     const index = roomAtScreen(slot.pointerX, slot.pointerY, camera.value, building);
+    if (index < 0) {
+      // HM-15: the sand is not a place. A thing let go there drops onto the nearest open floor,
+      // travelling there visibly. A beach shell let go on the sand goes back to its spot.
+      const shore = shoreAtScreen(slot.pointerX, slot.pointerY, camera.value, building);
+      if (shore >= 0) {
+        if (subject.id.includes("/item/portion-") && subject.contact.y > 560) return undefined;
+        const at = roomOrigin(shore, building);
+        return resolve(prepared.value.rooms[roomIds[shore]], subject, roomPoint(slot.x - at.x, slot.y - at.y),
+          { scale: camera.value.a, floorOnly: true, release: true });
+      }
+    }
     const destination = index < 0 ? subject.room : roomIds[index];
     const origin = roomOrigin(roomIds.indexOf(destination), building);
     // Gaps return visibly to the committed source instead of cancelling invisibly.
@@ -853,7 +865,8 @@ export function useInteraction({
       if (shapes ? onShapes(shapes, x - s.x, y - s.y) : x >= s.x + b.left && x <= s.x + b.left + b.width && y >= s.y + b.top && y <= s.y + b.top + b.height)
         return s.id;
     }
-    const index = roomAtScreen(point.x, point.y, camera.value, building);
+    let index = roomAtScreen(point.x, point.y, camera.value, building);
+    if (index < 0) index = shoreAtScreen(point.x, point.y, camera.value, building);
     if (index < 0) return undefined;
     const origin = roomOrigin(index, building);
     const p = screenToRoom(point, camera.value, housePoint(origin.x, origin.y));

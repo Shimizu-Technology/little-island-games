@@ -94,6 +94,16 @@ export function roomAtScreen(x: number, y: number, camera: CameraMatrix, buildin
   }
   return -1;
 }
+/** HM-15 / HC-02: the sand below a ground-floor room, or -1. */
+export function shoreAtScreen(x: number, y: number, camera: CameraMatrix, building: Building): number {
+  "worklet";
+  const p = screenToRoom(screenPoint(x, y), camera, housePoint(0, 0));
+  for (let i = 0; i < Math.min(building.columns, building.count); i++) {
+    const origin = roomOrigin(i, building);
+    if (p.x >= origin.x && p.x <= origin.x + 800 && p.y > origin.y + 560 && p.y <= origin.y + 740) return i;
+  }
+  return -1;
+}
 export const EDGE_BAND = 48;
 export function edgeVelocity(x: number, width: number, elapsed: number): number {
   "worklet";

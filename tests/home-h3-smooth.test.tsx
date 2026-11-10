@@ -434,3 +434,49 @@ describe("HM-14 room buttons are drop targets (D7)", () => {
     expect(edgeVelocity(1024 - 47, 1024, 200)).toBeLessThan(0);
   });
 });
+import { withPortions, shoreShellId, shoreShells } from "../src/home/runtime/portions";
+import { prepareHits, pickEntity } from "../src/home/runtime/pick";
+import { settleProgress } from "../src/home/runtime/settle";
+describe("HM-15 the sand drops onto the floor visibly; HC-02 beach shells", () => {
+  it("a friend let go on the sand lands on the nearest open floor, with visible travel", async () => {
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} />); });
+    touch("down", 100, 200); flushJS(); touch("move", 140, 260); frames(2);
+    touch("move", 300, 760); frames(1);
+    const proposal = current.slots.get()[0].proposal!;
+    expect(proposal).toMatchObject({ kind: "floor", room: "home" });
+    expect(proposal.contact.y).toBeLessThan(560);
+    touch("up", 300, 760); flushJS();
+    const slot = current.slots.get()[0];
+    expect(slot.phase).toBe("settling");
+    expect(slot.targetY).toBeLessThan(slot.releaseY - 100);
+    expect(settleProgress(16, false, slot.duration)).toBeLessThan(0.5);
+    await act(async () => renderer.unmount());
+  });
+  it("each ground-floor beach has three shells to pick up, on the sand, outside the room", () => {
+    const scene = withPortions(buildScene(labHome()), ["home", "kitchen"]);
+    for (const room of ["home", "kitchen"] as const) shoreShells.forEach(([x, y], n) => {
+      const shell = scene.entities[shoreShellId(room, n)];
+      expect(shell.item!.item).toBe("shell");
+      expect(shell.contact).toEqual(roomPoint(x, y));
+      expect(pickEntity(prepareHits(scene)[room], roomPoint(x, y - 12), 0.5)).toBe(shell.id);
+    });
+    expect(scene.entities[shoreShellId("treehouse", 0)]).toBeUndefined();
+  });
+  it("a shell let go on the sand goes back to its spot and saves nothing", async () => {
+    const scene = withPortions(buildScene(labHome()), ["home", "kitchen", "treehouse", "beach"]);
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={scene} />); });
+    const [x, y] = shoreShells[0];
+    touch("down", 20 + x, 120 + y - 14); flushJS();
+    expect(current.slots.get()[0].id).toBe(shoreShellId("home", 0));
+    touch("move", 20 + x + 40, 120 + y + 20); frames(2);
+    touch("move", 20 + x + 180, 120 + y + 30); frames(1);
+    expect(current.slots.get()[0].proposal).toBeUndefined();
+    touch("up", 20 + x + 180, 120 + y + 30); flushJS();
+    const slot = current.slots.get()[0];
+    expect(slot.targetX).toBe(slot.sourceX);
+    expect(slot.targetY).toBe(slot.sourceY);
+    await act(async () => renderer.unmount());
+  });
+});
