@@ -163,3 +163,25 @@ it('R2: Crab praise names the real outcome',()=>{
  expect(text(p.ref,{...result,event:'helped'},{helpUsed:false,failed:true})).toBe('You kept changing your plan until the crab got home.');
  expect(text(find('Mud 2').ref,result,{helpUsed:false,failed:false})).toBe('You found a route within the walking steps.');
 });
+
+it('R2 native finding: School board hints use only its own edits (take a card out, add at the end) and reach a card-optimal winner in the fewest',()=>{
+ const winners=(d:Descriptor,L:number)=>{const cs=commands(d.level.pace),out:Command[][]=[];const walk=(q:Command[])=>{if(q.length===L){if(execute(d,q).won&&execute(d,q).cursor===L)out.push(q);return;}for(const c of cs)walk([...q,c]);};walk([]);return out;};
+ const kept=(program:readonly Command[],w:readonly Command[])=>{let k=0;for(const c of program)if(k<w.length&&c===w[k])k++;return k;};
+ let checked=0;
+ for(const level of levels.filter(l=>!l.retired)){
+  const d={level,budget:null,starter:[],lesson:''} as Descriptor,good=solution(d)!;if(good.length>7)continue;
+  const all=winners(d,good.length);
+  for(const c of commands(d.level.pace).filter(c=>c!==good[0])){
+   let program=[c,...good.slice(1)];if(execute(d,program).won)continue;
+   const fewest=Math.min(...all.map(w=>program.length+w.length-2*kept(program,w)));
+   let edits=0;
+   while(!execute(d,program).won&&edits<40){
+    const h=nextHint(d,program,'append');expect(h.edit).toBeDefined();
+    expect(h.edit!.op==='remove'||h.edit!.op==='insert'&&h.edit!.at===program.length,`${level.id}: ${hintText(h,program.length,label)}`).toBe(true);
+    program=apply(program,h.edit!);edits++;
+   }
+   expect(execute(d,program).won,level.id).toBe(true);expect(edits,`${level.id} first card ${c}`).toBe(fewest);checked++;
+  }
+ }
+ expect(checked).toBeGreaterThan(10);
+});

@@ -137,19 +137,53 @@ function* nearestWinner(d: Descriptor, program: readonly Command[]): Generator<v
   while(at){const cell:Cell=table[at[0]][at[1]][at[2]];if(cell.card)plan.unshift(cell.card);at=cell.from;}
   return plan;
 }
-function* hintWork(d: Descriptor, program: readonly Command[]):Generator<void,Hint> {
+/** Editors that can only take a card out or add one at the end (the School board). The nearest
+ * card-optimal winner keeps the longest run of the child's cards that starts one, in order. */
+function* nearestAppendWinner(d: Descriptor, program: readonly Command[]): Generator<void, {plan: Command[]; remove: number | null} | null> {
+  const graph=yield* winnerGraph(d);if(!graph)return null;
+  const {layers}=graph, n=program.length, L=layers.length-1;
+  type Cell = { cost: number; from: [number, number, number] | null; skipped: boolean };
+  const table=layers.map(layer=>layer.map(()=>Array.from({length:n+1},():Cell=>({cost:Infinity,from:null,skipped:false}))));
+  table[0][0][0].cost=0;
+  let best:[number,number]|null=null, bestCost=Infinity;
+  for(let k=0;k<=L;k++)for(let u=0;u<layers[k].length;u++) {
+    yield;
+    const row=table[k][u];
+    for(let i=0;i<n;i++) {
+      if(row[i].cost===Infinity)continue;
+      if(row[i].cost+1<row[i+1].cost)row[i+1]={cost:row[i].cost+1,from:[k,u,i],skipped:true};
+      const edge=layers[k][u].next.find(([c])=>c===program[i]);
+      if(edge&&row[i].cost<table[k+1][edge[1]][i+1].cost)table[k+1][edge[1]][i+1]={cost:row[i].cost,from:[k,u,i],skipped:false};
+    }
+    // Every alive node still reaches a goal in exactly the remaining cards, added at the end.
+    if(row[n].cost+L-k<bestCost){bestCost=row[n].cost+L-k;best=[k,u];}
+  }
+  if(!best)return null;
+  const kept:Command[]=[];let remove:number|null=null,at:[number,number,number]|null=[best[0],best[1],n];
+  while(at){const cell:Cell=table[at[0]][at[1]][at[2]];if(cell.from){if(cell.skipped)remove=cell.from[2];else kept.unshift(program[cell.from[2]]);}at=cell.from;}
+  const plan=[...kept];for(let k=best[0],u=best[1];k<L;k++){const [c,v]=layers[k][u].next[0];plan.push(c);u=v;}
+  return {plan,remove};
+}
+export type HintEdits = 'any' | 'append';
+function* hintWork(d: Descriptor, program: readonly Command[], edits: HintEdits = 'any'):Generator<void,Hint> {
   if(execute(d,program).won)return {keep:program.length,plan:[...program],next:null};
+  if(edits==='append') {
+    const found=yield* nearestAppendWinner(d,program);
+    if(!found)return {keep:0,plan:[] as Command[],next:null};
+    const edit:Repair=found.remove!==null?{op:'remove',at:found.remove}:{op:'insert',at:program.length,card:found.plan[program.length]};
+    return {keep:edit.at,plan:found.plan,next:edit.card??null,edit};
+  }
   const target=yield* nearestWinner(d,program);
   if(!target)return {keep:0,plan:[] as Command[],next:null};
   const edit=repairStep(program,target);
   return {keep:edit?.at??program.length,plan:target,next:edit?.card??null,edit};
 }
-export function nextHint(d: Descriptor, program: readonly Command[]):Hint {
-  const work=hintWork(d,program);let result=work.next();while(!result.done)result=work.next();return result.value;
+export function nextHint(d: Descriptor, program: readonly Command[], edits: HintEdits = 'any'):Hint {
+  const work=hintWork(d,program,edits);let result=work.next();while(!result.done)result=work.next();return result.value;
 }
 /** Hint work is cancellable and returns to the event loop at most every 8 ms. */
-export async function nextHintSliced(d:Descriptor,program:readonly Command[], options:{cancelled:()=>boolean;now?:()=>number;pause?:()=>Promise<void>;budgetMs?:number}):Promise<Hint|null> {
- const now=options.now??(()=>performance.now()), pause=options.pause??(()=>new Promise<void>(resolve=>setTimeout(resolve,0))), budget=Math.min(8,options.budgetMs??8), work=hintWork(d,program);
+export async function nextHintSliced(d:Descriptor,program:readonly Command[], options:{cancelled:()=>boolean;now?:()=>number;pause?:()=>Promise<void>;budgetMs?:number;edits?:HintEdits}):Promise<Hint|null> {
+ const now=options.now??(()=>performance.now()), pause=options.pause??(()=>new Promise<void>(resolve=>setTimeout(resolve,0))), budget=Math.min(8,options.budgetMs??8), work=hintWork(d,program,options.edits);
  let deadline=now()+budget;
  while(!options.cancelled()) {
   const result=work.next();if(result.done)return options.cancelled()?null:result.value;

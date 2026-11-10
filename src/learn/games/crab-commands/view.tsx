@@ -379,7 +379,8 @@ export function Board({
   const shortest = solve(l);
   const firstCard = shortest[0];
   const helpDescriptor = useMemo(() => ({ level: l, budget: null, starter: [], lesson: "" }), [l]);
-  const helpPlan = useCrabHint(helpDescriptor, s.program, hint > 0 && active);
+  // This editor takes a card out or adds one at the end, so hints use only those edits.
+  const helpPlan = useCrabHint(helpDescriptor, s.program, hint > 0 && active, "append");
   const bumpedCard = w.bump ? s.cursor - 1 : null;
   const planBumps = plan.bumpCard !== null;
   const beachSize = Math.min(width, height < 740 ? 200 : 280);
