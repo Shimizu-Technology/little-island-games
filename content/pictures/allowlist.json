@@ -3,8 +3,8 @@
   "checkedOn": "2026-11-10",
   "source": "W1 word pipeline queues (private, see the W4 report); checks: present in a queue, validateWord, answerAllowed, lemma, not proper noun or abbreviation",
   "counts": {
-    "tiers": 391,
-    "local": 12
+    "tiers": 395,
+    "local": 10
   },
   "words": {
     "DOG": {
@@ -436,11 +436,6 @@
       "wordId": "en-breadfruit",
       "queue": "local",
       "readerLevel": "Strong"
-    },
-    "TARO": {
-      "wordId": "en-taro",
-      "queue": "local",
-      "readerLevel": "Growing"
     },
     "PALM": {
       "wordId": "en-palm",
@@ -1072,6 +1067,11 @@
       "queue": "tiers",
       "readerLevel": "Growing"
     },
+    "YARN": {
+      "wordId": "en-yarn",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
     "BALL": {
       "wordId": "en-ball",
       "queue": "tiers",
@@ -1214,6 +1214,16 @@
     },
     "CROWN": {
       "wordId": "en-crown",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WAND": {
+      "wordId": "en-wand",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "HARP": {
+      "wordId": "en-harp",
       "queue": "tiers",
       "readerLevel": "Little"
     },
@@ -1602,11 +1612,6 @@
       "queue": "tiers",
       "readerLevel": "Little"
     },
-    "TYPHOON": {
-      "wordId": "en-typhoon",
-      "queue": "local",
-      "readerLevel": "Growing"
-    },
     "DROP": {
       "wordId": "en-drop",
       "queue": "tiers",
@@ -1872,6 +1877,11 @@
       "queue": "tiers",
       "readerLevel": "Little"
     },
+    "FLAG": {
+      "wordId": "en-flag",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
     "TREE": {
       "wordId": "en-tree",
       "queue": "tiers",
@@ -2007,11 +2017,6 @@
       "queue": "tiers",
       "readerLevel": "Growing"
     },
-    "SPHERE": {
-      "wordId": "en-sphere",
-      "queue": "tiers",
-      "readerLevel": "Little"
-    },
     "ARROW": {
       "wordId": "en-arrow",
       "queue": "tiers",
@@ -2019,6 +2024,11 @@
     },
     "SPIRAL": {
       "wordId": "en-spiral",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ZIGZAG": {
+      "wordId": "en-zigzag",
       "queue": "tiers",
       "readerLevel": "Little"
     }

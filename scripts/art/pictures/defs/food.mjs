@@ -86,11 +86,11 @@ export default [
     ],
   },
   {
-    word: 'PEACH', meaning: 'a peach', alt: 'A soft round peach, pink blushing to orange, with a deep crease down its middle and a green leaf at the top.',
+    word: 'PEACH', meaning: 'a peach', alt: 'A soft round pink peach with a rosy blush, a deep crease down its middle and a green leaf at the top.',
     draw: () => [
       line('M60 26L62 16', { stroke: P.brown, sw: 4 }), path('M62 20Q74 6 94 12Q86 26 66 24Z', P.leaf),
-      path('M60 28Q100 22 106 64Q106 106 62 108Q18 110 14 70Q12 30 60 28Z', P.orange),
-      patch('M60 28Q26 30 18 60Q16 96 52 106Q28 86 34 60Q40 36 60 28Z', P.pink), patch('M64 30Q96 28 102 60Q100 84 86 98Q96 74 90 56Q84 38 64 30Z', P.coral),
+      path('M60 28Q100 22 106 64Q106 106 62 108Q18 110 14 70Q12 30 60 28Z', P.pink),
+      patch('M64 30Q96 28 102 60Q100 84 86 98Q96 74 90 56Q84 38 64 30Z', P.coral), patch('M30 52Q34 40 46 36Q38 46 38 58Z', P.paper),
       path('M60 28Q100 22 106 64Q106 106 62 108Q18 110 14 70Q12 30 60 28Z'), path('M60 30Q48 66 62 106', undefined, { sw: 3 }),
     ],
   },
@@ -144,12 +144,12 @@ export default [
     ],
   },
   {
-    word: 'ONION', meaning: 'an onion', alt: 'A round golden-brown onion with a pointed top, lines down its skin and little roots.',
+    word: 'ONION', meaning: 'an onion', alt: 'A round red onion with papery purple skin, a pointed top, lines down its sides and a tuft of roots.',
     draw: () => [
-      line('M52 104l-4 10M60 104v10M68 104l4 10', { stroke: P.wood, sw: 2 }),
-      path('M60 8Q64 30 84 40Q110 54 104 80Q96 106 60 106Q24 106 16 80Q10 54 36 40Q56 30 60 8Z', P.gold),
-      line('M60 12Q44 40 42 70Q42 92 56 104M60 12Q76 40 78 70Q78 92 64 104M60 14V104', { stroke: P.wood, sw: 2 }),
-      path('M60 8Q64 30 84 40Q110 54 104 80Q96 106 60 106Q24 106 16 80Q10 54 36 40Q56 30 60 8Z'),
+      line('M50 106l-6 8M56 108l-2 8M64 108l2 8M70 106l6 8', { stroke: P.wood, sw: 2 }),
+      path('M60 14Q62 30 80 36Q108 48 106 74Q102 106 60 106Q18 106 14 74Q12 48 40 36Q58 30 60 14Z', P.purple),
+      line('M60 18Q40 44 38 72Q38 96 54 104M60 18Q80 44 82 72Q82 96 66 104M60 20V104', { stroke: P.pink, sw: 2.5 }),
+      path('M60 14Q62 30 80 36Q108 48 106 74Q102 106 60 106Q18 106 14 74Q12 48 40 36Q58 30 60 14Z'), path('M56 16L60 4L64 16', P.wood, { sw: 2 }),
     ],
   },
   {
@@ -426,12 +426,10 @@ export default [
     ],
   },
   {
-    word: 'CABBAGE', meaning: 'a cabbage', alt: 'A round green cabbage seen from the side, with big curling outer leaves and pale veins.',
+    word: 'CABBAGE', meaning: 'a cabbage', alt: 'A round pale green cabbage head with tightly wrapped leaves and thick white veins.',
     draw: () => [
-      path('M12 70Q8 40 30 36Q50 30 60 44Q72 30 92 36Q114 42 108 72Q104 104 60 106Q16 104 12 70Z', P.leaf),
-      path('M30 40Q50 22 60 30Q72 20 90 40Q76 34 66 46Q60 38 52 46Q42 36 30 40Z', P.mint),
-      path('M36 52Q46 36 60 40Q74 36 84 52Q90 78 60 82Q30 78 36 52Z', P.mint),
-      line('M60 104V82M60 92L40 80M60 96L82 82M20 76Q32 84 38 98M100 76Q88 84 82 98M60 60V80M60 66L50 56M60 66L70 56', { stroke: P.paper, sw: 2.5 }),
+      circle(60, 62, 48, P.leaf), path('M28 30Q60 6 92 30Q84 50 60 50Q36 50 28 30Z', P.mint), path('M36 50Q60 34 84 50Q80 70 60 72Q40 70 36 50Z', P.mint),
+      path('M60 110V74M60 92L36 74M60 92L84 74M60 98L22 86M60 98L98 86M60 74L46 58M60 74L74 58', undefined, { stroke: P.paper, sw: 4 }), circle(60, 62, 48),
     ],
   },
   {

@@ -1,4 +1,4 @@
-import { P, circle, ellipse, rect, path, line, patch } from '../style.mjs';
+import { P, circle, ellipse, rect, path, line, poly, patch, ring } from '../style.mjs';
 
 const rod = (d, fill, w = 7) => [line(d, { stroke: P.ink, sw: w }), line(d, { stroke: fill, sw: w - 4.5 })];
 const tree = (x, y, s = 1, fill = P.leaf) => [rect(x - 4 * s, y, 8 * s, 22 * s, 2, P.brown), circle(x, y - 6 * s, 16 * s, fill)];
@@ -73,13 +73,12 @@ export default [
     ],
   },
   {
-    word: 'RIVER', meaning: 'a river', alt: 'A blue river winding between grassy green banks, with small trees on each side.',
+    word: 'RIVER', meaning: 'a river', alt: 'A blue river winding towards you between green grassy banks, with hills and trees beside it.',
     draw: () => [
-      path('M8 48Q30 34 60 36Q90 32 112 44V100Q112 112 100 112H20Q8 112 8 100Z', P.leaf),
-      path('M54 36Q72 38 66 50Q56 62 72 74Q92 88 76 112H40Q54 92 40 82Q26 70 44 56Q54 46 48 38Z', P.blue),
-      line('M56 52q6-2 8 2M62 78q8 0 10 4M50 100q8-2 10 2', { stroke: P.paper, sw: 2.5 }),
-      rect(19, 46, 6, 14, 2, P.brown), circle(22, 40, 11, P.forest), rect(95, 66, 6, 14, 2, P.brown), circle(98, 60, 11, P.forest),
-      rect(87, 30, 5, 10, 2, P.brown), circle(89, 26, 8, P.forest),
+      rect(8, 10, 104, 100, 16, P.leaf, { ns: true }), patch('M8 10H112V36H8Z', P.sky), path('M8 40Q30 26 54 36Q80 24 112 38V44H8Z', P.forest, { ns: true }),
+      path('M56 40H64Q58 50 70 58Q90 70 78 86Q70 98 86 110H30Q52 98 46 84Q40 72 54 62Q66 52 56 40Z', P.blue),
+      line('M60 56q6-2 8 2M62 80q8 0 10 4M54 100q8-2 10 2', { stroke: P.paper, sw: 2.5 }),
+      rect(21, 62, 6, 12, 2, P.brown), circle(24, 58, 9, P.forest), rect(95, 72, 6, 12, 2, P.brown), circle(98, 68, 9, P.forest), rect(8, 10, 104, 100, 16),
     ],
   },
   {
@@ -189,6 +188,15 @@ export default [
     draw: () => [
       path('M60 12L112 104H8Z', P.leaf), path('M60 12L84 104H36Z', P.charcoal), path('M60 12L36 104H50Q54 70 60 12Z', P.mint), path('M60 12L84 104H70Q66 70 60 12Z', P.mint),
       line('M60 12L54 4M60 12L66 4', { sw: 3 }), line('M8 104L2 110M112 104L118 110', { sw: 3 }), line('M2 104H118', { stroke: P.brown, sw: 3 }),
+    ],
+  },
+  {
+    word: 'FLAG', meaning: 'a flag on a pole', alt: 'A bright red and yellow flag with a star, waving from the top of a tall pole.',
+    draw: () => [
+      line('M24 112V10', { stroke: P.ink, sw: 8 }), line('M24 112V10', { stroke: P.stone, sw: 3.5 }), circle(24, 8, 5, P.gold),
+      path('M27 16Q50 6 72 16Q94 26 112 16V64Q94 74 72 64Q50 54 27 64Z', P.red),
+      path('M27 40Q50 30 72 40Q94 50 112 40V52Q94 62 72 52Q50 42 27 52Z', P.yellow, { sw: 2 }),
+      poly(ring(56, 26, 7, 5, -90, 3), P.paper, { sw: 2 }), ellipse(24, 112, 14, 4, P.stone),
     ],
   },
 ];

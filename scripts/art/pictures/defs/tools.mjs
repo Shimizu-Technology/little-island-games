@@ -21,10 +21,11 @@ export default [
     ],
   },
   {
-    word: 'NAIL', meaning: 'a metal nail', otherMeaning: 'a fingernail', alt: 'A long metal nail with a flat round head and a sharp point.',
+    word: 'NAIL', meaning: 'a metal nail', otherMeaning: 'a fingernail', alt: 'A long metal nail standing upright, half hammered into a wooden plank, with a flat round head.',
     draw: () => [
-      group({ t: 'rotate(40 60 60)' },
-        rect(30, 8, 60, 12, 5, P.stone), path('M53 20H67V94L60 116L53 94Z', P.stone), line('M57 28V90', { stroke: P.paper, sw: 2.5 })),
+      rect(6, 82, 108, 28, 4, P.wood), line('M14 92H50M64 100H104', { stroke: P.brown, sw: 2 }),
+      path('M52 22H68V82H52Z', P.stone), line('M56 28V78', { stroke: P.paper, sw: 2.5 }), ellipse(60, 18, 26, 8, P.stone),
+      line('M86 30l10-6M88 44h12M34 30l-10-6M32 44h-12', { stroke: P.slate, sw: 3 }),
     ],
   },
   {
@@ -71,12 +72,12 @@ export default [
     ],
   },
   {
-    word: 'ROPE', meaning: 'a rope', alt: 'A thick twisted rope tied in a loose knot, with frayed ends.',
+    word: 'ROPE', meaning: 'a rope', alt: 'A thick twisted rope tied in a loose knot in the middle, with frayed ends.',
     draw: () => {
-      const d = 'M10 100Q20 70 48 66Q80 62 82 42Q82 20 60 20Q40 22 44 42Q48 62 76 76Q96 86 110 70';
+      const d = 'M8 104Q20 70 48 66Q80 62 82 40Q82 18 60 18Q38 20 42 40Q46 62 76 76Q96 86 112 70';
       return [
-        path(d, undefined, { stroke: P.ink, sw: 15 }), path(d, undefined, { stroke: P.sand, sw: 10 }), path(d, undefined, { stroke: P.wood, sw: 10, dash: '2.5 5' }),
-        line('M10 100l-4 6M10 100l2 8M10 100l-7 1M110 70l6-4M110 70l7 2M110 70l4 6', { stroke: P.wood, sw: 2.5 }),
+        path(d, undefined, { stroke: P.ink, sw: 17 }), path(d, undefined, { stroke: P.sand, sw: 12 }), path(d, undefined, { stroke: P.wood, sw: 12, dash: '3 5', cap: 'butt' }),
+        line('M8 104l-4 8M8 104l3 9M8 104l-7 2M112 70l5-6M112 70l7 1M112 70l3 7', { stroke: P.wood, sw: 2.5 }),
       ];
     },
   },
@@ -137,23 +138,22 @@ export default [
     ],
   },
   {
-    word: 'PLIERS', meaning: 'pliers', alt: 'A pair of pliers gripping a nail, with short ridged grey jaws and long blue rubber handles.',
+    word: 'PLIERS', meaning: 'pliers', alt: 'A pair of pliers with big ridged grey jaws, a round pivot bolt and long blue handles.',
     draw: () => [
-      group({ t: 'rotate(80 60 22)' }, rect(54, 14, 24, 6, 2, P.stone, { sw: 2 }), rect(50, 12, 6, 10, 1, P.stone, { sw: 2 })),
-      path('M56 52L50 22Q50 12 58 14L66 50Z', P.stone), path('M64 52L70 22Q70 12 62 14L54 50Z', P.stone),
-      line('M53 30l5-1M54 38l5-1M67 30l-5-1M66 38l-5-1', { sw: 2 }),
-      circle(60, 56, 8, P.slate), circle(60, 56, 3, P.charcoal, { ns: true }),
-      path('M54 62L26 110Q30 118 38 114L64 64Z', P.blue), path('M66 62L94 110Q90 118 82 114L56 64Z', P.blue),
+      path('M54 58L40 18Q38 6 50 8L66 54Z', P.stone), path('M66 58L80 18Q82 6 70 8L54 54Z', P.stone),
+      line('M44 20l8-2M46 28l8-2M48 36l8-2M76 20l-8-2M74 28l-8-2M72 36l-8-2', { sw: 2 }),
+      circle(60, 60, 10, P.slate), circle(60, 60, 4, P.charcoal, { ns: true }),
+      path('M54 66L28 112Q32 118 40 114L64 68Z', P.blue), path('M66 66L92 112Q88 118 80 114L56 68Z', P.blue),
     ],
   },
   {
-    word: 'TROWEL', meaning: 'a garden trowel', alt: 'A small garden trowel with a green handle and a pointed scoop holding brown soil, next to a little plant in a pot.',
+    word: 'TROWEL', meaning: 'a garden trowel', alt: 'A big garden trowel with a green handle and a pointed metal scoop, stuck into a mound of brown soil.',
     draw: () => [
-      path('M84 84H112L106 112H90Z', P.coral), rect(80, 78, 36, 8, 3, P.orange), line('M98 78V60', { stroke: P.forest, sw: 4 }),
-      path('M98 64Q86 54 90 46Q100 50 98 64ZM98 62Q110 52 108 44Q98 48 98 62Z', P.leaf, { sw: 2 }),
-      group({ t: 'rotate(-40 50 60)' },
-        rect(42, 4, 16, 40, 7, P.leaf), rect(46, 42, 8, 14, 2, P.stone),
-        path('M50 54Q74 54 74 76Q72 100 50 118Q28 100 26 76Q26 54 50 54Z', P.stone), path('M34 76Q50 66 66 76Q60 92 50 102Q40 92 34 76Z', P.brown, { sw: 2 })),
+      path('M6 112Q16 84 60 82Q104 84 114 112Z', P.brown), circle(30, 100, 2, P.wood, { ns: true }), circle(88, 98, 2, P.wood, { ns: true }), circle(60, 104, 2, P.wood, { ns: true }),
+      group({ t: 'rotate(-20 60 50)' },
+        rect(52, 2, 16, 40, 7, P.leaf), rect(56, 40, 8, 14, 2, P.stone),
+        path('M60 52Q86 52 86 74Q84 98 60 116Q36 98 34 74Q34 52 60 52Z', P.stone), line('M60 60V104', { stroke: P.paper, sw: 2.5 })),
+      path('M6 112Q16 92 60 92Q104 92 114 112Z', P.brown),
     ],
   },
   {

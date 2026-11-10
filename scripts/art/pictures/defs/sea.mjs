@@ -115,22 +115,21 @@ export default [
     ],
   },
   {
-    word: 'URCHIN', meaning: 'a sea urchin', alt: 'A round dark purple sea urchin covered in thick short spines, sitting on sand.',
+    word: 'URCHIN', meaning: 'a sea urchin', alt: 'A round dark purple sea urchin covered all over in long spines, sitting on a rock under the sea.',
     draw: () => [
-      path('M6 108Q20 96 60 96Q100 96 114 108Z', P.sand),
-      ...Array.from({ length: 16 }, (_, i) => { const a = Math.PI + (i * Math.PI) / 15, d = `M${60 + 26 * Math.cos(a)} ${68 + 26 * Math.sin(a)}L${60 + 50 * Math.cos(a)} ${68 + 50 * Math.sin(a)}`; return [line(d, { stroke: P.ink, sw: 9 }), line(d, { stroke: P.purple, sw: 4 })]; }).flat(),
-      path('M24 98Q22 42 60 40Q98 42 96 98Z', P.purple), line('M40 54l6 6M60 48v8M80 54l-6 6M36 74l8 2M84 74l-8 2', { stroke: P.charcoal, sw: 3 }),
+      path('M22 112Q24 96 60 94Q96 96 98 112Z', P.stone),
+      ...Array.from({ length: 18 }, (_, i) => { const a = (i * 2 * Math.PI) / 18, d = `M${60 + 24 * Math.cos(a)} ${60 + 24 * Math.sin(a)}L${60 + 50 * Math.cos(a)} ${60 + 50 * Math.sin(a)}`; return [line(d, { stroke: P.ink, sw: 7 }), line(d, { stroke: P.purple, sw: 3 })]; }).flat(),
+      circle(60, 60, 28, P.purple), circle(60, 60, 5, P.pink, { sw: 2 }), patch('M44 48Q48 40 56 38Q50 46 50 54Z', P.pink),
     ],
   },
   {
-    word: 'EEL', fit: [0.898, 57.0, 59.0], meaning: 'an eel', alt: 'A long green eel swimming through water in a wave shape, with a pale stripe along its body, a pointed head and bubbles.',
+    word: 'EEL', meaning: 'an eel', alt: 'A long green eel poking its head and body out of a hole in a rock, with its mouth open showing small teeth.',
     draw: () => [
-      line('M4 108Q20 100 36 108M70 112Q86 104 102 112', { stroke: P.sky, sw: 3 }),
-      path('M8 86Q24 66 40 80Q56 94 72 74Q86 56 96 44', undefined, { stroke: P.ink, sw: 19 }),
-      path('M8 86Q24 66 40 80Q56 94 72 74Q86 56 96 44', undefined, { stroke: P.forest, sw: 13 }),
-      line('M12 80Q24 62 40 74Q56 88 70 68Q80 52 90 44', { stroke: P.mint, sw: 3 }),
-      path('M90 32Q104 24 114 32L106 40L114 46Q104 54 92 48Z', P.forest), dot(100, 34, 2.6),
-      circle(108, 16, 3.5, P.sky, { sw: 2 }), circle(100, 8, 2.5, P.sky, { sw: 2 }),
+      path('M6 112V70Q10 46 38 50Q60 50 64 70Q70 92 60 112Z', P.stone), ellipse(36, 76, 14, 16, P.charcoal),
+      path('M36 80Q34 48 60 34Q86 22 98 34', undefined, { stroke: P.ink, sw: 21 }), path('M36 80Q34 48 60 34Q86 22 98 34', undefined, { stroke: P.forest, sw: 15 }),
+      path('M42 70Q42 50 60 40Q78 32 90 34', undefined, { stroke: P.mint, sw: 3 }),
+      path('M90 24Q106 18 114 28L104 34L114 40Q104 48 92 44Z', P.forest), path('M104 34L114 30L114 38Z', P.red, { sw: 1.5 }), line('M106 30l2 3M110 30l2 3', { stroke: P.paper, sw: 1.5 }), dot(98, 28, 2.6),
+      circle(110, 12, 3.5, P.sky, { sw: 2 }), circle(102, 6, 2.5, P.sky, { sw: 2 }),
     ],
   },
   {
@@ -153,13 +152,13 @@ export default [
     ],
   },
   {
-    word: 'CLAM', meaning: 'a clam', alt: 'An open clam: two ridged pink shells joined at the back, the top one lifted to show the soft inside.',
+    word: 'CLAM', meaning: 'a clam', alt: 'A clam lying on sand: two rounded ridged shells joined at the back, slightly open, with its soft pink foot poking out.',
     draw: () => [
-      path('M12 70Q14 104 60 106Q106 104 108 70Z', P.pink), line('M24 74L30 98M40 72L44 104M60 72V106M80 72L76 104M96 74L90 98', { stroke: P.coral, sw: 2.5 }),
-      path('M12 70Q14 104 60 106Q106 104 108 70Z'),
-      ellipse(60, 70, 48, 10, P.paper), ellipse(60, 70, 26, 5, P.cream, { ns: true }),
-      path('M14 64Q12 22 60 12Q100 12 106 62Q60 52 14 64Z', P.pink), line('M60 56L60 16M60 56L36 22M60 56L84 22M60 56L22 40M60 56L98 40', { stroke: P.coral, sw: 2.5 }),
-      path('M14 64Q12 22 60 12Q100 12 106 62Q60 52 14 64Z'),
+      path('M6 108Q14 96 60 96Q106 96 114 108Z', P.sand),
+      path('M12 70Q14 98 60 100Q106 98 108 70Z', P.cream), path('M24 72Q60 82 96 72', undefined, { sw: 2 }),
+      path('M84 84Q102 86 108 96Q96 100 82 92Z', P.pink),
+      path('M12 70Q12 22 60 18Q108 22 108 70Q60 80 12 70Z', P.cream), line('M24 66Q22 44 34 30M42 70Q38 42 48 22M60 72V20M78 70Q82 42 72 22M96 66Q98 44 86 30', { stroke: P.wood, sw: 2.5 }),
+      path('M12 70Q12 22 60 18Q108 22 108 70Q60 80 12 70Z'),
     ],
   },
   {
@@ -232,13 +231,13 @@ export default [
     ],
   },
   {
-    word: 'RAFT', meaning: 'a wooden raft', alt: 'A raft made of logs tied side by side, floating on blue water.',
+    word: 'RAFT', meaning: 'a wooden raft', alt: 'A flat raft of logs tied together with rope, floating on blue water, with a paddle lying across it.',
     draw: () => [
-      path('M6 92Q20 86 34 92Q48 98 60 92Q72 86 86 92Q100 98 114 92V104H6Z', P.blue),
-      line('M60 46V8', { stroke: P.brown, sw: 4 }), path('M62 12L94 40H62Z', P.paper),
-      rect(14, 46, 92, 10, 5, P.wood), rect(14, 58, 92, 10, 5, P.wood), rect(14, 70, 92, 10, 5, P.wood), rect(14, 82, 92, 10, 5, P.wood),
-      line('M30 44V94M90 44V94', { stroke: P.sand, sw: 4 }), line('M26 44V94M34 44V94M86 44V94M94 44V94', { sw: 2 }),
-      circle(19, 51, 2, P.brown, { ns: true }), circle(19, 63, 2, P.brown, { ns: true }), circle(19, 75, 2, P.brown, { ns: true }), circle(19, 87, 2, P.brown, { ns: true }),
+      path('M2 92Q16 86 30 92Q44 98 60 92Q76 86 90 92Q104 98 118 92V108H2Z', P.blue),
+      path('M8 70L22 46H110L96 70Z', P.wood), path('M8 70H96V84H8Z', P.wood),
+      line('M24 46L12 70M42 46L30 70M60 46L48 70M78 46L66 70M96 46L84 70', { stroke: P.brown, sw: 2.5 }), line('M8 77H96', { stroke: P.brown, sw: 2 }),
+      ...[20, 40, 60, 80].map(x => circle(x, 77, 2, P.brown, { ns: true })),
+      line('M30 62L70 52', { stroke: P.sand, sw: 4 }), line('M46 60L102 30', { stroke: P.ink, sw: 6 }), line('M46 60L102 30', { stroke: P.wood, sw: 2 }), path('M96 26L112 18L114 26L100 34Z', P.wood),
     ],
   },
   {
@@ -270,12 +269,12 @@ export default [
     ],
   },
   {
-    word: 'PADDLE', fit: [0.93, 60.0, 55.0], meaning: 'a canoe paddle', alt: 'A single wooden canoe paddle with a T-shaped grip and a wide flat blade dipping into the water.',
+    word: 'PADDLE', meaning: 'a canoe paddle', alt: 'A short wooden canoe paddle with a T-shaped grip and a very wide flat blade, dipping into the water.',
     draw: () => [
-      path('M44 104Q60 96 76 104Q90 112 104 104', undefined, { stroke: P.blue, sw: 4 }), path('M16 108Q28 102 40 108', undefined, { stroke: P.blue, sw: 4 }),
+      path('M40 106Q56 98 72 106Q86 114 100 106', undefined, { stroke: P.blue, sw: 4 }),
       group({ t: 'rotate(25 60 60)' },
-        line('M46 4H74M60 4V58', { stroke: P.ink, sw: 10 }), line('M46 4H74M60 4V58', { stroke: P.wood, sw: 5 }),
-        path('M60 52Q38 56 38 80Q40 110 60 114Q80 110 82 80Q82 56 60 52Z', P.wood), line('M60 62V104', { stroke: P.brown, sw: 2 })),
+        line('M44 10H76M60 10V52', { stroke: P.ink, sw: 11 }), line('M44 10H76M60 10V52', { stroke: P.wood, sw: 6 }),
+        path('M60 46Q30 50 30 78Q32 110 60 116Q88 110 90 78Q90 50 60 46Z', P.wood), line('M60 58V104', { stroke: P.brown, sw: 2 })),
     ],
   },
 ];

@@ -82,13 +82,14 @@ export default [
     ],
   },
   {
-    word: 'HEN', meaning: 'a hen (a mother chicken)', otherMeaning: 'chicken as food', alt: 'A round brown hen with a red comb, yellow beak and thin legs.',
+    word: 'HEN', meaning: 'a hen (a mother chicken)', otherMeaning: 'chicken as food', alt: 'A round brown hen sitting on a straw nest with eggs peeking out, with a small red comb and a yellow beak.',
     draw: () => [
-      line('M50 88V102M44 104H56M66 88V102M60 104H72', { stroke: P.orange, sw: 4 }),
-      path('M30 66Q10 58 12 38Q24 42 30 50Q24 36 34 30Q40 44 40 54Z', P.brown),
-      ellipse(58, 68, 30, 23, P.wood), path('M42 64Q56 54 70 66Q56 80 42 64Z', P.brown),
-      path('M74 30Q72 18 80 22Q82 14 87 22Q93 16 93 30Z', P.red),
-      circle(84, 42, 14, P.wood), poly('96,38 108,43 96,48', P.yellow), path('M94 50Q98 60 92 60Q89 56 94 50Z', P.red, { sw: 2 }), dot(87, 39),
+      path('M8 86Q12 110 60 112Q108 110 112 86Z', P.sand), line('M14 92Q40 104 74 98M22 104Q56 112 96 100M50 92Q80 106 106 92', { stroke: P.wood, sw: 2.5 }),
+      ellipse(30, 84, 9, 7, P.paper), ellipse(90, 84, 9, 7, P.paper),
+      path('M26 64Q8 56 10 36Q22 40 28 48Q22 34 32 28Q38 42 38 52Z', P.brown),
+      ellipse(58, 66, 34, 24, P.wood), path('M40 62Q56 50 72 64Q56 78 40 62Z', P.brown), path('M8 86Q34 80 60 82Q86 80 112 86', undefined),
+      path('M76 28Q74 18 80 21Q82 13 86 21Q91 16 91 28Z', P.red),
+      circle(84, 40, 14, P.wood), poly('96,36 108,41 96,46', P.yellow), path('M94 48Q98 58 92 58Q89 54 94 48Z', P.red, { sw: 2 }), dot(87, 37),
     ],
   },
   {
@@ -355,13 +356,13 @@ export default [
     ],
   },
   {
-    word: 'LLAMA', meaning: 'a llama', alt: 'A fluffy light brown llama standing side on, with a very long upright neck and tall banana-shaped ears.',
+    word: 'LLAMA', meaning: 'a llama', alt: 'A fluffy cream llama standing side on, with a woolly body and neck, a long face and tall banana-shaped ears.',
     draw: () => [
-      ...[26, 36, 62, 72].map(x => rect(x, 72, 8, 34, 3, P.sand)), ...[26, 36, 62, 72].map(x => rect(x, 102, 8, 6, 2, P.brown)),
-      path('M16 68Q10 52 24 48Q32 42 44 46Q58 42 70 48Q86 48 86 62Q90 76 78 78H26Q14 78 16 68Z', P.sand),
-      path('M70 58L72 22Q72 12 82 10Q92 8 98 14L106 26Q106 34 96 34L88 32L86 60Z', P.sand),
-      path('M76 12Q70 -4 78 0Q84 4 82 12ZM88 10Q90 -6 98 -2Q98 6 92 12Z', P.sand, { sw: 2, t: 'translate(0 4)' }),
-      line('M18 58q4-4 8 0q4-4 8 0M74 38q4 3 8 0M74 48q4 3 8 0', { stroke: P.wood, sw: 2 }), dot(88, 20), circle(103, 29, 2, P.ink, { ns: true }),
+      ...[26, 36, 62, 72].map(x => rect(x, 74, 8, 30, 3, P.cream)), ...[26, 36, 62, 72].map(x => rect(x, 100, 8, 6, 2, P.brown)),
+      path('M16 70Q8 62 16 54Q14 44 26 44Q32 36 44 42Q54 36 64 42Q76 38 82 48Q94 52 88 64Q94 76 80 78Q70 84 58 78Q46 84 36 78Q20 82 16 70Z', P.cream),
+      path('M66 52Q62 44 68 36Q64 26 72 22Q72 14 80 12Q90 10 96 16L106 28Q106 36 96 36L88 34Q92 44 86 50Q90 58 80 60Z', P.cream),
+      path('M76 14Q70 -2 78 2Q84 6 82 14ZM88 12Q90 -4 98 0Q98 8 92 14Z', P.cream, { sw: 2, t: 'translate(0 4)' }),
+      dot(88, 22), circle(103, 31, 2, P.ink, { ns: true }), path('M100 34Q102 38 98 38', undefined, { sw: 1.5 }),
     ],
   },
   {
@@ -410,11 +411,12 @@ export default [
     ],
   },
   {
-    word: 'SWAN', meaning: 'a swan', alt: 'A white swan floating side on, with a long curved neck and an orange beak.',
+    word: 'SWAN', meaning: 'a swan', alt: 'A white swan gliding on blue water, with a long S-curved neck and an orange beak with a black knob.',
     draw: () => [
-      path('M10 60Q24 66 40 66H64Q64 54 58 40Q50 22 62 14Q76 8 84 20Q88 28 82 30Q76 22 70 24Q64 30 72 46Q80 62 84 70Q98 66 104 56Q112 72 98 90Q86 102 58 102Q24 100 10 60Z', P.paper),
-      path('M28 76Q54 66 76 84Q54 94 28 76Z', P.paper), line('M36 78Q54 72 68 82', { sw: 2 }),
-      path('M84 20L100 26L86 30Z', P.orange), patch('M80 18Q84 22 84 26L80 26Z', P.charcoal), dot(76, 18, 2.2),
+      path('M4 100Q20 94 36 100Q52 106 68 100Q84 94 100 100Q110 104 116 100V108H4Z', P.blue),
+      path('M14 64Q26 72 42 72H62Q60 58 52 44Q42 24 56 14Q72 6 82 20Q86 28 80 30Q74 22 66 24Q58 30 66 46Q76 64 80 72Q96 68 104 58Q112 76 98 92Q86 100 58 100Q26 98 14 64Z', P.paper),
+      line('M34 82Q54 74 70 86', { sw: 2 }),
+      path('M82 20L100 28L84 32Z', P.orange), path('M78 16Q84 18 84 26L78 26Z', P.charcoal), dot(74, 18, 2.2),
     ],
   },
   {

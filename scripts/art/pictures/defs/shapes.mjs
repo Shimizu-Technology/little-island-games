@@ -1,4 +1,4 @@
-import { P, circle, ellipse, rect, path, poly, patch, group } from '../style.mjs';
+import { P, circle, ellipse, rect, path, line, poly, patch, group } from '../style.mjs';
 
 export default [
   { word: 'CIRCLE', meaning: 'a circle', alt: 'A flat blue circle.', draw: () => [circle(60, 60, 48, P.blue)] },
@@ -27,16 +27,6 @@ export default [
     ],
   },
   {
-    word: 'SPHERE', meaning: 'a sphere (a solid round shape)', alt: 'A solid blue sphere drawn like a maths shape, with a dashed line around its middle, a light patch and a shadow underneath.',
-    draw: () => [
-      ellipse(60, 110, 36, 5, P.stone, { ns: true }),
-      circle(60, 56, 48, P.blue), patch('M60 104A48 48 0 0 0 108 56Q100 90 60 96Q30 96 18 80A48 48 0 0 0 60 104Z', P.navy),
-      ellipse(44, 36, 16, 11, P.sky, { ns: true, t: 'rotate(-35 44 36)' }),
-      path('M12 56Q14 70 60 72Q106 70 108 56', undefined, { stroke: P.paper, sw: 2.5 }), path('M12 56Q14 42 60 40Q106 42 108 56', undefined, { stroke: P.paper, sw: 2.5, dash: '5 5' }),
-      circle(60, 56, 48),
-    ],
-  },
-  {
     word: 'ARROW', meaning: 'an arrow sign', alt: 'A thick blue arrow pointing to the right.',
     draw: () => [path('M8 46H64V22L112 60L64 98V74H8Z', P.blue)],
   },
@@ -47,5 +37,9 @@ export default [
       for (let a = 0.3; a <= 5.6 * Math.PI; a += 0.15) { const r = 2 + a * 2.85; d += `L${(60 + r * Math.cos(a)).toFixed(1)} ${(60 + r * Math.sin(a)).toFixed(1)}`; }
       return [path(d, undefined, { stroke: P.ink, sw: 11 }), path(d, undefined, { stroke: P.purple, sw: 6 })];
     },
+  },
+  {
+    word: 'ZIGZAG', meaning: 'a zigzag line', alt: 'A thick orange zigzag line going up and down in sharp points.',
+    draw: () => [line('M8 84L30 36L52 84L74 36L96 84L112 50', { stroke: P.ink, sw: 15 }), line('M8 84L30 36L52 84L74 36L96 84L112 50', { stroke: P.orange, sw: 9 })],
   },
 ];

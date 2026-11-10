@@ -75,11 +75,11 @@ export default [
     ],
   },
   {
-    word: 'LEG', meaning: 'a leg', alt: 'A bare leg side on below a pair of shorts: thigh, a bent knee, shin, ankle and foot.',
+    word: 'LEG', meaning: 'a leg', alt: 'A whole bare leg standing straight, from a pair of shorts at the top down past the knee to the ankle and foot.',
     draw: () => [
-      path('M36 18H64L76 56Q78 64 72 68L60 96Q76 98 94 100Q104 102 102 108Q100 114 90 114H46Q38 114 40 104L46 92L54 66Q44 52 38 34Z', P.skin),
-      path('M66 62Q72 60 74 54', undefined, { stroke: P.skinDeep, sw: 2 }), line('M84 104v8M92 104v8M98 106v6', { stroke: P.skinDeep, sw: 1.5 }),
-      rect(30, 6, 40, 18, 4, P.navy),
+      path('M44 18H70L68 50Q70 60 66 66L64 98Q78 100 94 102Q102 104 100 110Q98 114 90 114H52Q44 114 46 106L48 66Q44 58 46 50Z', P.skin),
+      path('M48 58Q56 62 66 58', undefined, { stroke: P.skinDeep, sw: 2 }), line('M80 106v8M88 106v8M94 108v6', { stroke: P.skinDeep, sw: 1.5 }),
+      rect(36, 4, 42, 22, 4, P.navy),
     ],
   },
   {

@@ -76,20 +76,19 @@ export default [
     ],
   },
   {
-    word: 'BUSH', meaning: 'a bush (shrub)', alt: 'A round green bush with lumpy leafy edges and a few red berries, sitting on the ground.',
+    word: 'BUSH', meaning: 'a bush (shrub)', alt: 'A wide, low, leafy green bush growing from the ground, with lots of small rounded clumps of leaves.',
     draw: () => [
-      path('M10 98Q4 78 18 70Q14 50 34 46Q38 28 58 30Q72 20 86 34Q104 34 104 54Q116 64 110 80Q114 98 100 98Z', P.forest),
-      patch('M26 64Q30 52 42 50Q34 58 34 70Z', P.leaf), patch('M58 44Q64 36 74 38Q66 44 64 52Z', P.leaf),
-      ...[[44, 70], [70, 62], [86, 78], [30, 84], [62, 86]].map(([x, y]) => circle(x, y, 4.5, P.red, { sw: 2 })), line('M4 98H116', { stroke: P.brown, sw: 4 }),
+      path('M6 98Q2 80 16 74Q12 56 30 52Q36 36 54 42Q66 30 80 40Q98 36 102 54Q118 60 112 78Q118 96 104 98Z', P.forest),
+      ...[[26, 66], [46, 54], [68, 48], [88, 56], [100, 74], [60, 70], [34, 84], [80, 84]].map(([x, y]) => path(`M${x - 8} ${y + 4}Q${x - 6} ${y - 6} ${x} ${y - 6}Q${x + 6} ${y - 6} ${x + 8} ${y + 4}`, undefined, { stroke: P.leaf, sw: 3 })),
+      line('M2 98H118', { stroke: P.brown, sw: 4 }),
     ],
   },
   {
-    word: 'BRANCH', fit: [0.855, 59.0, 56.5], meaning: 'a tree branch', alt: 'A thick brown tree branch lying on a slant, with a couple of side twigs and a few green leaves.',
+    word: 'BRANCH', fit: [0.791, 65.0, 59.5], meaning: 'a tree branch', alt: 'A brown tree branch that forks into smaller twigs, with several green leaves along it.',
     draw: () => [
-      path('M6 100Q40 84 72 60Q92 44 112 26', undefined, { stroke: P.ink, sw: 17 }), path('M6 100Q40 84 72 60Q92 44 112 26', undefined, { stroke: P.brown, sw: 12 }),
-      path('M48 76Q52 96 66 104M84 52Q98 56 106 70', undefined, { stroke: P.ink, sw: 10 }), path('M48 76Q52 96 66 104M84 52Q98 56 106 70', undefined, { stroke: P.brown, sw: 5.5 }),
-      line('M20 94l8-2M60 70l6 0', { stroke: P.wood, sw: 2 }),
-      path('M66 104Q72 92 86 96Q80 108 66 104Z', P.leaf), path('M106 70Q118 62 116 50Q104 56 106 70Z', P.leaf), path('M112 26Q118 12 108 6Q102 18 112 26Z', P.leaf),
+      path('M6 104Q38 88 62 66Q80 50 96 24', undefined, { stroke: P.ink, sw: 15 }), path('M6 104Q38 88 62 66Q80 50 96 24', undefined, { stroke: P.brown, sw: 10 }),
+      path('M62 66Q86 64 110 70M40 84Q40 64 30 50M80 46Q96 40 106 28', undefined, { stroke: P.ink, sw: 9 }), path('M62 66Q86 64 110 70M40 84Q40 64 30 50M80 46Q96 40 106 28', undefined, { stroke: P.brown, sw: 4.5 }),
+      ...[[110, 70, 20], [30, 50, -110], [106, 28, -40], [96, 24, -80], [86, 64, 60], [52, 74, 100], [70, 56, -60], [22, 96, 120]].map(([x, y, r]) => path('M0 0Q8 -10 20 -6Q12 6 0 0Z', P.leaf, { t: `translate(${x} ${y}) rotate(${r}) scale(1.1)` })),
     ],
   },
   {
@@ -110,18 +109,18 @@ export default [
     ],
   },
   {
-    word: 'FERN', meaning: 'a fern', alt: 'A green fern plant with several upright fronds growing from one base, each lined with small leaflets, and a curled-up new frond.',
+    word: 'FERN', meaning: 'a fern', alt: 'A green fern: long arching fronds lined with pairs of small leaflets, and one new frond curled up tight like a spiral.',
     draw: () => {
-      const frond = (x2, y2, bend) => {
-        const out = [];
-        for (let i = 1; i <= 7; i++) {
-          const t = i / 8, x = 60 + (x2 - 60) * t + bend * t * (1 - t), y = 110 + (y2 - 110) * t, s = 1 - t * 0.6;
-          out.push(path(`M${x} ${y}Q${x - 12 * s} ${y - 2} ${x - 18 * s} ${y - 9 * s}Q${x - 6 * s} ${y - 9 * s} ${x} ${y}ZM${x} ${y}Q${x + 12 * s} ${y - 2} ${x + 18 * s} ${y - 9 * s}Q${x + 6 * s} ${y - 9 * s} ${x} ${y}Z`, P.leaf, { sw: 1.5 }));
+      const frond = ([x0, y0, cx, cy, x1, y1]) => {
+        let d = `M${x0} ${y0}Q${cx} ${cy} ${x1} ${y1}`;
+        for (let i = 1; i <= 9; i++) {
+          const t = i / 10, x = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * cx + t * t * x1, y = (1 - t) ** 2 * y0 + 2 * (1 - t) * t * cy + t * t * y1, s = 1.1 - t * 0.7;
+          d += `M${x} ${y}l${-13 * s} ${-7 * s}M${x} ${y}l${13 * s} ${-7 * s}`;
         }
-        return [path(`M60 110Q${(60 + x2) / 2 + bend / 2} ${(110 + y2) / 2} ${x2} ${y2}`, undefined, { stroke: P.forest, sw: 3 }), ...out];
+        return [path(d, undefined, { stroke: P.ink, sw: 9 }), path(d, undefined, { stroke: P.leaf, sw: 4.5 })];
       };
-      return [...frond(24, 30, -20), ...frond(96, 30, 20), ...frond(60, 8, 0),
-        path('M60 110Q78 96 82 80Q84 70 76 70Q70 72 74 78', undefined, { stroke: P.forest, sw: 4 })];
+      return [...frond([56, 112, 20, 50, 12, 18]), ...frond([64, 112, 100, 50, 108, 18]), ...frond([60, 112, 62, 50, 54, 8]),
+        path('M60 112Q84 100 88 82Q90 70 80 70Q72 72 76 80', undefined, { stroke: P.ink, sw: 8 }), path('M60 112Q84 100 88 82Q90 70 80 70Q72 72 76 80', undefined, { stroke: P.leaf, sw: 4 })];
     },
   },
   {

@@ -79,13 +79,12 @@ export default [
     ],
   },
   {
-    word: 'SANDAL', meaning: 'a sandal', alt: 'A brown sandal seen from the side: a flat sole, a wide strap over the toes and a strap with a gold buckle around the heel.',
+    word: 'SANDAL', meaning: 'a sandal', alt: 'A brown sandal seen from above: a foot-shaped sole with two wide crossing straps and a gold buckle.',
     draw: () => [
-      path('M6 94Q6 86 16 86H104Q114 86 114 94V98Q114 106 104 106H16Q6 106 6 98Z', P.sand), line('M8 100H112', { stroke: P.wood, sw: 2 }),
-      path('M64 86Q66 60 84 60Q100 60 102 86H92Q90 70 84 70Q74 70 74 86Z', P.brown),
-      path('M14 86V58Q14 46 26 46H34Q46 46 46 58V86H38V60Q38 54 32 54H28Q22 54 22 60V86Z', P.brown),
-      path('M42 66Q56 64 70 72', undefined, { stroke: P.ink, sw: 9 }), path('M42 66Q56 64 70 72', undefined, { stroke: P.brown, sw: 4.5 }),
-      rect(36, 60, 14, 14, 2, P.gold), rect(41, 65, 4, 4, 1, P.brown, { sw: 1.5 }),
+      group({ t: 'rotate(-25 60 60)' },
+        path('M60 4Q84 4 86 30Q88 50 82 66Q80 90 78 104Q74 116 60 116Q46 116 42 104Q40 90 38 66Q32 50 34 30Q36 4 60 4Z', P.sand),
+        path('M34 26L86 46V60L34 40Z', P.brown), path('M86 26L34 46V60L86 40Z', P.wood),
+        path('M38 80H82V94H38Z', P.brown), rect(72, 78, 14, 18, 3, P.gold), rect(76, 84, 6, 6, 1, P.brown, { sw: 1.5 })),
     ],
   },
   {

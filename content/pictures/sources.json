@@ -530,12 +530,6 @@
       "meaning": "a breadfruit"
     },
     {
-      "id": "taro",
-      "wordId": "en-taro",
-      "queue": "local",
-      "meaning": "a taro plant and root"
-    },
-    {
       "id": "palm",
       "wordId": "en-palm",
       "queue": "tiers",
@@ -1059,7 +1053,8 @@
       "id": "brush",
       "wordId": "en-brush",
       "queue": "tiers",
-      "meaning": "a hairbrush"
+      "meaning": "a paintbrush",
+      "otherMeaning": "a hairbrush"
     },
     {
       "id": "comb",
@@ -1298,6 +1293,12 @@
       "otherMeaning": "a music keyboard"
     },
     {
+      "id": "yarn",
+      "wordId": "en-yarn",
+      "queue": "tiers",
+      "meaning": "a ball of yarn"
+    },
+    {
       "id": "ball",
       "wordId": "en-ball",
       "queue": "tiers",
@@ -1475,6 +1476,18 @@
       "wordId": "en-crown",
       "queue": "tiers",
       "meaning": "a king's or queen's crown"
+    },
+    {
+      "id": "wand",
+      "wordId": "en-wand",
+      "queue": "tiers",
+      "meaning": "a magic wand"
+    },
+    {
+      "id": "harp",
+      "wordId": "en-harp",
+      "queue": "tiers",
+      "meaning": "a harp"
     },
     {
       "id": "book",
@@ -1949,12 +1962,6 @@
       "meaning": "a sunset over the sea"
     },
     {
-      "id": "typhoon",
-      "wordId": "en-typhoon",
-      "queue": "local",
-      "meaning": "a typhoon (a big tropical storm)"
-    },
-    {
       "id": "drop",
       "wordId": "en-drop",
       "queue": "tiers",
@@ -2283,6 +2290,12 @@
       "meaning": "a camping tent"
     },
     {
+      "id": "flag",
+      "wordId": "en-flag",
+      "queue": "tiers",
+      "meaning": "a flag on a pole"
+    },
+    {
       "id": "tree",
       "wordId": "en-tree",
       "queue": "tiers",
@@ -2451,12 +2464,6 @@
       "meaning": "a cylinder"
     },
     {
-      "id": "sphere",
-      "wordId": "en-sphere",
-      "queue": "tiers",
-      "meaning": "a sphere (a solid round shape)"
-    },
-    {
       "id": "arrow",
       "wordId": "en-arrow",
       "queue": "tiers",
@@ -2467,6 +2474,12 @@
       "wordId": "en-spiral",
       "queue": "tiers",
       "meaning": "a spiral"
+    },
+    {
+      "id": "zigzag",
+      "wordId": "en-zigzag",
+      "queue": "tiers",
+      "meaning": "a zigzag line"
     }
   ]
 }

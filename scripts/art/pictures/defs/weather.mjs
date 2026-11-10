@@ -90,10 +90,12 @@ export default [
     ],
   },
   {
-    word: 'COMET', meaning: 'a comet', alt: 'A comet: a bright icy ball with one long glowing tail streaming behind it.',
+    word: 'COMET', meaning: 'a comet', alt: 'A comet in a dark night sky: a bright icy head with a long wide glowing tail streaming behind it, and a few small stars.',
     draw: () => [
-      path('M86 26Q50 30 6 62Q50 52 74 52Q46 64 14 98Q60 74 84 58Z', P.sky), path('M88 30Q60 40 30 64Q58 56 80 54Z', P.paper, { sw: 2 }),
-      circle(88, 40, 20, P.yellow), patch('M78 34Q82 26 90 26Q84 32 84 40Z', P.paper),
+      rect(8, 10, 104, 100, 16, P.navy, { ns: true }),
+      path('M86 30Q50 30 10 64Q50 54 74 52Q46 64 18 100Q62 74 86 58Z', P.sky, { ns: true }), path('M88 34Q60 42 30 64Q58 56 80 54Z', P.paper, { ns: true }),
+      circle(88, 42, 16, P.yellow), patch('M80 36Q84 30 90 30Q84 36 84 42Z', P.paper),
+      ...[[30, 26], [56, 20], [100, 80], [80, 98], [20, 82]].map(([x, y]) => circle(x, y, 2, P.paper, { ns: true })), rect(8, 10, 104, 100, 16),
     ],
   },
   {
@@ -103,17 +105,6 @@ export default [
       path('M26 66A34 34 0 0 1 94 66Z', P.orange), line([200, 230, 260, 280, 310, 340].map(a => rays(60, 66, 40, 50, 1, a)).join(''), { stroke: P.orange, sw: 4 }),
       patch('M8 66H112V92Q112 106 98 106H22Q8 106 8 92Z', P.navy),
       line('M36 76h48M46 86h28M54 96h12', { stroke: P.orange, sw: 3 }), line('M8 66H112'), rect(8, 14, 104, 92, 16),
-    ],
-  },
-  {
-    word: 'TYPHOON', meaning: 'a typhoon (a big tropical storm)', alt: 'A typhoon: the storm sign of a dark round eye with two curved arms, over a rough sea with slanting rain and a palm tree bending in the wind.',
-    draw: () => [
-      path('M6 100Q20 90 34 100Q48 110 60 100Q72 90 86 100Q100 110 114 100V112H6Z', P.blue),
-      path('M48 22Q70 2 104 12Q76 14 64 30Z', P.slate), path('M72 70Q50 90 16 80Q44 78 56 62Z', P.slate),
-      circle(60, 46, 22, P.slate), circle(60, 46, 8, P.paper),
-      line('M12 66L6 78M100 62L94 74M110 74L104 86', { stroke: P.blue, sw: 3 }),
-      line('M98 102Q96 90 86 82', { stroke: P.ink, sw: 7 }), line('M98 102Q96 90 86 82', { stroke: P.brown, sw: 3 }),
-      path('M86 82Q76 74 64 80Q76 80 86 82Q78 70 68 68Q80 70 86 82Q84 68 78 62Q88 68 86 82Z', P.leaf, { sw: 2 }),
     ],
   },
   {

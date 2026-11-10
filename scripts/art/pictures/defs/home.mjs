@@ -188,22 +188,20 @@ export default [
     ],
   },
   {
-    word: 'TOWEL', meaning: 'a towel', alt: 'A stack of three folded fluffy towels, blue, pink and yellow, each with a stripe near the end.',
+    word: 'TOWEL', meaning: 'a towel', alt: 'A striped blue towel hanging over a silver towel rail, with fringed ends.',
     draw: () => [
-      ...[[78, P.yellow], [50, P.pink], [22, P.blue]].map(([y, c]) => [
-        path(`M14 ${y + 8}Q14 ${y} 24 ${y}H100Q108 ${y} 108 ${y + 8}V${y + 24}Q108 ${y + 32} 100 ${y + 32}H24Q14 ${y + 32} 14 ${y + 24}Z`, c),
-        line(`M88 ${y + 2}V${y + 30}M94 ${y + 2}V${y + 30}`, { stroke: P.paper, sw: 3 }), path(`M14 ${y + 16}H108`, undefined, { sw: 2 }),
-      ]).flat(),
+      rect(4, 16, 10, 20, 3, P.stone), rect(106, 16, 10, 20, 3, P.stone), line('M10 24H110', { stroke: P.ink, sw: 9 }), line('M10 24H110', { stroke: P.stone, sw: 4.5 }),
+      path('M24 24H96V100H24Z', P.blue), path('M24 24H96V38H24Z', P.navy), rect(24, 70, 72, 8, 0, P.paper, { sw: 2 }), rect(24, 82, 72, 5, 0, P.paper, { sw: 2 }),
+      line('M28 100v10M36 100v10M44 100v10M52 100v10M60 100v10M68 100v10M76 100v10M84 100v10M92 100v10', { sw: 2 }),
     ],
   },
   {
-    word: 'BRUSH', meaning: 'a hairbrush', alt: 'A pink hairbrush seen from the side, with a long handle and a thick row of bristles.',
+    word: 'BRUSH', meaning: 'a paintbrush', otherMeaning: 'a hairbrush', alt: 'A paintbrush with a long wooden handle, a silver band and a soft tip dipped in red paint.',
     draw: () => [
-      group({ t: 'rotate(-25 60 60)' },
-        path('M6 52Q6 44 14 44H52L60 48H112Q116 48 116 54Q116 60 112 60H60L52 64H14Q6 64 6 56Z', P.pink),
-        rect(56, 64, 56, 6, 2, P.coral),
-        ...Array.from({ length: 13 }, (_, i) => line(`M${60 + i * 4.2} 70V90`, { stroke: P.charcoal, sw: 2 })),
-        line('M60 92H112', { stroke: P.charcoal, sw: 2, dash: '1 3.2' })),
+      group({ t: 'rotate(40 60 60)' },
+        rect(53, 4, 14, 64, 7, P.wood), rect(51, 64, 18, 14, 2, P.stone), line('M51 70H69', { sw: 2 }),
+        path('M51 78Q46 98 60 116Q74 98 69 78Z', P.sand), path('M50 96Q54 108 60 116Q66 108 70 96Q60 102 50 96Z', P.red, { sw: 2 })),
+      path('M14 104Q24 96 34 104Q42 110 52 104', undefined, { stroke: P.red, sw: 5 }),
     ],
   },
   {
@@ -432,12 +430,11 @@ export default [
     ],
   },
   {
-    word: 'JAR', meaning: 'a glass jar', alt: 'A glass jar with a gold lid, filled with red jam.',
+    word: 'JAR', meaning: 'a glass jar', alt: 'An empty clear glass jar with a gold screw lid and shiny highlights on the glass.',
     draw: () => [
-      rect(26, 10, 68, 18, 4, P.gold), line('M34 14v10M44 14v10M54 14v10M64 14v10M74 14v10M84 14v10', { stroke: P.wood, sw: 2 }),
-      path('M30 28H90Q100 34 100 46V100Q100 112 88 112H32Q20 112 20 100V46Q20 34 30 28Z', P.paper),
-      path('M21 52H99V100Q100 112 88 112H32Q20 112 20 100Z', P.red, { sw: 2 }), patch('M30 60h8v40h-8Z', P.coral),
-      path('M30 28H90Q100 34 100 46V100Q100 112 88 112H32Q20 112 20 100V46Q20 34 30 28Z'),
+      rect(28, 8, 64, 18, 4, P.gold), line('M36 12v10M46 12v10M56 12v10M66 12v10M76 12v10M84 12v10', { stroke: P.wood, sw: 2 }),
+      path('M32 26H88Q98 32 98 44V100Q98 112 86 112H34Q22 112 22 100V44Q22 32 32 26Z', P.sky),
+      path('M34 40V96', undefined, { stroke: P.paper, sw: 6 }), path('M46 40V60', undefined, { stroke: P.paper, sw: 3 }), line('M24 100Q60 108 96 100', { stroke: P.paper, sw: 2.5 }),
     ],
   },
   {
@@ -478,11 +475,11 @@ export default [
     ],
   },
   {
-    word: 'PACIFIER', meaning: "a baby's pacifier", alt: "A baby's pacifier side on: a small rounded teat, a wide butterfly-shaped shield and a ring handle.",
+    word: 'PACIFIER', meaning: "a baby's pacifier", alt: "A baby's pacifier seen from the front: a wide rounded shield with air holes and a ring handle in the middle.",
     draw: () => [
-      circle(84, 60, 18, undefined, { stroke: P.ink, sw: 10 }), circle(84, 60, 18, undefined, { stroke: P.blue, sw: 5 }),
-      path('M48 14Q62 14 62 34V86Q62 106 48 106Q40 106 40 94V26Q40 14 48 14Z', P.sky), rect(60, 50, 10, 20, 3, P.blue),
-      path('M40 50Q20 46 16 60Q20 74 40 70Z', P.cream), circle(54, 34, 3, P.paper, { ns: true }), circle(54, 86, 3, P.paper, { ns: true }),
+      path('M60 34Q78 18 100 30Q114 44 104 64Q96 80 76 76Q66 92 60 92Q54 92 44 76Q24 80 16 64Q6 44 20 30Q42 18 60 34Z', P.sky),
+      circle(30, 50, 5, P.paper, { sw: 2 }), circle(90, 50, 5, P.paper, { sw: 2 }),
+      circle(60, 64, 22, undefined, { stroke: P.ink, sw: 11 }), circle(60, 64, 22, undefined, { stroke: P.blue, sw: 6 }), circle(60, 54, 8, P.navy),
     ],
   },
   {
@@ -494,10 +491,11 @@ export default [
     ],
   },
   {
-    word: 'LADLE', meaning: 'a soup ladle', alt: 'A silver soup ladle with a long handle hooked at the top and a deep round cup at the bottom.',
+    word: 'LADLE', meaning: 'a soup ladle', alt: 'A silver soup ladle lying on a slant: a long handle with a hook at the end and a deep round cup.',
     draw: () => [
-      line('M70 10Q82 4 86 14L64 70', { stroke: P.ink, sw: 10 }), line('M70 10Q82 4 86 14L64 70', { stroke: P.stone, sw: 5 }),
-      path('M26 68H100Q100 112 63 112Q26 112 26 68Z', P.stone), ellipse(63, 68, 37, 8, P.slate), patch('M36 78q2 16 16 24q-14-4-16-24Z', P.paper),
+      group({ t: 'rotate(-35 60 60)' },
+        line('M60 6Q70 4 70 12V66', { stroke: P.ink, sw: 9 }), line('M60 6Q70 4 70 12V66', { stroke: P.stone, sw: 4.5 }),
+        path('M40 66H100Q100 104 70 104Q40 104 40 66Z', P.stone), ellipse(70, 66, 30, 7, P.slate), patch('M48 76q2 14 14 20q-12-4-14-20Z', P.paper)),
     ],
   },
   {
@@ -518,12 +516,13 @@ export default [
     ],
   },
   {
-    word: 'VACUUM', meaning: 'a vacuum cleaner', alt: 'An upright vacuum cleaner with a tall handle, a red bag in the middle and a wide floor brush on wheels sucking up dust.',
+    word: 'VACUUM', meaning: 'a vacuum cleaner', alt: 'An upright vacuum cleaner with a tall handle, a red bag, a curly cord and a wide floor brush on wheels sucking up dust.',
     draw: () => [
+      path('M44 40Q24 44 26 64Q28 80 18 86Q10 92 14 100', undefined, { sw: 2.5 }),
       line('M50 6H70', { stroke: P.ink, sw: 10 }), line('M50 6H70', { stroke: P.charcoal, sw: 5 }), line('M60 6V30', { stroke: P.ink, sw: 8 }), line('M60 6V30', { stroke: P.stone, sw: 3.5 }),
       rect(44, 28, 32, 52, 12, P.red), rect(52, 40, 16, 26, 4, P.coral, { sw: 2 }), rect(54, 80, 12, 10, 2, P.stone),
       rect(28, 88, 64, 16, 6, P.stone), circle(36, 106, 5, P.charcoal), circle(84, 106, 5, P.charcoal),
-      circle(14, 104, 2.5, P.wood, { ns: true }), circle(20, 98, 2, P.wood, { ns: true }), circle(10, 96, 1.8, P.wood, { ns: true }),
+      circle(104, 104, 2.5, P.wood, { ns: true }), circle(110, 98, 2, P.wood, { ns: true }), circle(100, 96, 1.8, P.wood, { ns: true }),
     ],
   },
   {
@@ -532,6 +531,16 @@ export default [
       rect(4, 34, 112, 56, 8, P.stone),
       ...[42, 56, 70].flatMap(y => Array.from({ length: 9 }, (_, i) => rect(12 + i * 11 + (y === 56 ? 3 : y === 70 ? 6 : 0), y, 8, 9, 2, P.paper, { sw: 2 }))),
       rect(36, 80, 48, 6, 2, P.paper, { sw: 2 }),
+    ],
+  },
+  {
+    word: 'YARN', meaning: 'a ball of yarn', alt: 'A round pink ball of knitting yarn with a loose strand and two knitting needles stuck in it.',
+    draw: () => [
+      line('M18 22L70 74M30 12L76 66', { stroke: P.ink, sw: 7 }), line('M18 22L70 74M30 12L76 66', { stroke: P.stone, sw: 2.5 }), circle(18, 22, 5, P.gold), circle(30, 12, 5, P.gold),
+      path('M30 96Q16 106 8 100Q4 92 14 92', undefined, { sw: 3 }),
+      circle(64, 70, 40, P.pink),
+      path('M28 58Q60 44 96 62M26 74Q62 58 102 78M34 92Q66 74 98 94M46 34Q40 70 52 108M68 30Q58 70 76 110', undefined, { stroke: P.coral, sw: 3 }),
+      circle(64, 70, 40),
     ],
   },
 ];

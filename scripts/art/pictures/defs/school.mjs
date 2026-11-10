@@ -1,4 +1,4 @@
-import { P, circle, ellipse, rect, path, line, poly, group } from '../style.mjs';
+import { P, circle, ellipse, rect, path, line, poly, patch, group } from '../style.mjs';
 
 const rod = (d, fill, w = 7) => [line(d, { stroke: P.ink, sw: w }), line(d, { stroke: fill, sw: w - 4.5 })];
 
@@ -20,12 +20,12 @@ export default [
     ],
   },
   {
-    word: 'PEN', meaning: 'a ballpoint pen', otherMeaning: 'an animal pen', alt: 'A blue ballpoint pen lying on a slant, with its cap on, a pocket clip and a short pointed tip.',
+    word: 'PEN', meaning: 'a ballpoint pen', otherMeaning: 'an animal pen', alt: 'A blue ballpoint pen lying on a slant, with a push button on top, a metal clip and a fine metal tip.',
     draw: () => [
       group({ t: 'rotate(-40 60 60)' },
-        rect(30, 50, 62, 20, 6, P.blue), path('M92 52L104 58Q108 60 104 62L92 68Z', P.stone), circle(106, 60, 2, P.ink, { ns: true }),
-        rect(6, 48, 34, 24, 8, P.navy), path('M14 48V40H44V46', undefined, { stroke: P.ink, sw: 7 }), path('M14 48V40H44V46', undefined, { stroke: P.stone, sw: 2.5 }),
-        line('M48 56H86', { stroke: P.sky, sw: 3 })),
+        rect(2, 54, 12, 12, 3, P.navy), rect(12, 50, 76, 20, 7, P.blue), path('M88 52L104 58Q108 60 104 62L88 68Z', P.stone), line('M104 60H112', { sw: 3 }),
+        path('M20 50V42H50V48', undefined, { stroke: P.ink, sw: 7 }), path('M20 50V42H50V48', undefined, { stroke: P.stone, sw: 2.5 }),
+        rect(60, 50, 18, 20, 0, P.navy, { sw: 2 })),
     ],
   },
   {
@@ -113,27 +113,26 @@ export default [
     ],
   },
   {
-    word: 'STAMP', meaning: 'a postage stamp', alt: 'A postage stamp with bold zigzag edges and a little picture of a palm tree, with wavy postmark lines across one corner.',
+    word: 'STAMP', meaning: 'a postage stamp', alt: 'A postage stamp with bold zigzag edges and a little picture of a palm tree and the sun on a beach.',
     draw: () => {
       const zig = [];
-      for (let i = 0; i <= 10; i++) zig.push(`${16 + i * 8},${i % 2 ? 14 : 6}`);
-      for (let i = 1; i <= 12; i++) zig.push(`${i % 2 ? 104 : 96},${6 + i * 8.5}`);
-      for (let i = 9; i >= 0; i--) zig.push(`${16 + i * 8},${i % 2 ? 100 : 108}`);
-      for (let i = 11; i >= 1; i--) zig.push(`${i % 2 ? 8 : 16},${6 + i * 8.5}`);
+      for (let i = 0; i <= 12; i++) zig.push(`${10 + i * 8.33},${i % 2 ? 16 : 6}`);
+      for (let i = 1; i <= 12; i++) zig.push(`${i % 2 ? 104 : 114},${6 + i * 8.67}`);
+      for (let i = 11; i >= 0; i--) zig.push(`${10 + i * 8.33},${i % 2 ? 104 : 114}`);
+      for (let i = 11; i >= 1; i--) zig.push(`${i % 2 ? 16 : 6},${6 + i * 8.67}`);
       return [
         poly(zig.join(' '), P.paper),
-        rect(22, 20, 62, 72, 2, P.sky, { sw: 2 }), path('M22 80Q52 68 84 80V92H22Z', P.sand, { sw: 2 }),
-        line('M54 82Q56 60 48 44', { stroke: P.brown, sw: 4 }), path('M48 44Q36 36 28 42Q38 40 48 44Q46 30 36 28Q46 32 48 44Q58 32 70 34Q58 38 48 44Q62 42 68 52Q58 44 48 44Z', P.leaf, { sw: 1.5 }),
-        circle(72, 32, 6, P.yellow, { sw: 2 }),
-        path('M70 96Q80 88 90 96Q100 104 110 96M70 106Q80 98 90 106Q100 114 110 106M74 86Q84 78 94 86Q104 94 114 86', undefined, { stroke: P.charcoal, sw: 2.5 }),
+        rect(24, 24, 72, 72, 2, P.sky, { sw: 2 }), path('M24 82Q60 70 96 82V96H24Z', P.sand, { sw: 2 }),
+        line('M58 84Q60 60 52 42', { stroke: P.brown, sw: 4 }), path('M52 42Q40 34 30 40Q42 38 52 42Q50 28 40 26Q50 30 52 42Q62 30 76 32Q62 36 52 42Q66 40 72 50Q62 42 52 42Z', P.leaf, { sw: 1.5 }),
+        circle(80, 38, 7, P.yellow, { sw: 2 }),
       ];
     },
   },
   {
-    word: 'ENVELOPE', meaning: 'an envelope for a letter', alt: 'A closed white envelope with a pointed flap and a red heart seal.',
+    word: 'ENVELOPE', meaning: 'an envelope for a letter', alt: 'A plain closed white envelope seen from the back, with its pointed flap folded down.',
     draw: () => [
-      rect(6, 24, 108, 72, 6, P.paper), path('M6 90L50 58M114 90L70 58', undefined, { sw: 2 }),
-      path('M8 26L60 66L112 26Z', P.cream), path('M60 54Q46 42 52 36Q56 32 60 38Q64 32 68 36Q74 42 60 54Z', P.red, { sw: 2 }),
+      rect(6, 24, 108, 72, 6, P.paper), path('M6 92L52 56M114 92L68 56', undefined, { sw: 2.5 }),
+      path('M8 26L60 70L112 26Z', P.cream), patch('M14 30h8v4h-8Z', P.cream),
     ],
   },
   {

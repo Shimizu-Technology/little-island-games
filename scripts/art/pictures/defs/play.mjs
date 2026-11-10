@@ -103,14 +103,14 @@ export default [
     ],
   },
   {
-    word: 'VIOLIN', meaning: 'a violin', alt: 'A brown violin standing up with a curled scroll at the top, two f-shaped holes, a dark chin rest and a bow beside it.',
+    word: 'VIOLIN', meaning: 'a violin', alt: 'A small brown violin lying on a slant with a long thin bow across it, showing its curled scroll, f-shaped holes and strings.',
     draw: () => [
-      line('M104 8L82 112', { stroke: P.ink, sw: 6 }), line('M104 8L82 112', { stroke: P.stone, sw: 1.5 }), line('M100 8L78 112', { sw: 1.5 }),
-      path('M46 40Q32 40 32 54Q32 62 38 66Q30 72 30 86Q30 108 52 110Q64 110 76 108Q86 104 86 86Q86 72 78 66Q84 62 84 54Q84 40 70 40Z', P.wood, { t: 'translate(-4 0)' }),
-      rect(51, 8, 6, 36, 2, P.charcoal), path('M50 10Q46 2 54 2Q62 2 58 10Q54 12 50 10Z', P.brown),
-      line('M48 16h-6M60 16h6', { sw: 3 }),
-      path('M42 64q-4 6 0 12q4 6 0 12M66 64q-4 6 0 12q4 6 0 12', undefined, { sw: 2 }),
-      rect(46, 92, 16, 5, 2, P.charcoal), path('M58 98Q70 98 72 106Q64 108 58 104Z', P.charcoal, { sw: 2 }), line('M52 14V92M56 14V92', { stroke: P.paper, sw: 1.2 }),
+      group({ t: 'rotate(-35 60 62) translate(0 4) scale(0.9)' },
+        path('M46 40Q32 40 32 54Q32 62 38 66Q30 72 30 86Q30 108 52 110Q64 110 76 108Q86 104 86 86Q86 72 78 66Q84 62 84 54Q84 40 70 40Z', P.wood, { t: 'translate(-4 0)' }),
+        rect(51, 8, 6, 36, 2, P.charcoal), path('M50 10Q46 2 54 2Q62 2 58 10Q54 12 50 10Z', P.brown),
+        path('M42 64q-4 6 0 12q4 6 0 12M66 64q-4 6 0 12q4 6 0 12', undefined, { sw: 2 }),
+        rect(46, 92, 16, 5, 2, P.charcoal), line('M52 14V92M56 14V92', { stroke: P.paper, sw: 1.2 })),
+      line('M8 40L112 90', { stroke: P.ink, sw: 6 }), line('M8 40L112 90', { stroke: P.stone, sw: 1.5 }), line('M10 36L114 86', { sw: 1.5 }),
     ],
   },
   {
@@ -253,6 +253,24 @@ export default [
       ...[[8, 32], [60, 20], [112, 32], [34, 58], [86, 58]].map(([x, y]) => circle(x, y, 5, P.yellow, { sw: 2 })),
       rect(12, 88, 96, 16, 4, P.gold), circle(36, 96, 5, P.red, { sw: 2 }), circle(60, 96, 5, P.blue, { sw: 2 }), circle(84, 96, 5, P.red, { sw: 2 }),
       circle(60, 64, 6, P.blue, { sw: 2 }),
+    ],
+  },
+  {
+    word: 'WAND', meaning: 'a magic wand', alt: 'A toy magic wand: a thin stick with a shiny yellow star on the end and sparkles around it.',
+    draw: () => [
+      line('M14 106L66 54', { stroke: P.ink, sw: 9 }), line('M14 106L66 54', { stroke: P.purple, sw: 4.5 }), line('M22 98l6 6M30 90l6 6', { stroke: P.paper, sw: 2 }),
+      poly(ring(78, 42, 30, 5, -72, 13), P.yellow),
+      path('M108 84l3 7 7 3-7 3-3 7-3-7-7-3 7-3Z', P.gold, { sw: 2 }), path('M30 24l2 5 5 2-5 2-2 5-2-5-5-2 5-2Z', P.gold, { sw: 2 }), circle(100, 106, 3, P.pink, { sw: 1.5 }),
+    ],
+  },
+  {
+    word: 'HARP', meaning: 'a harp', alt: 'A tall golden harp with a curved neck, a straight pillar and strings running down to the sound box.',
+    draw: () => [
+      path('M24 112L96 112L100 104L34 18Q26 8 20 16Z', P.wood, ),
+      path('M28 108V30', undefined, { stroke: P.ink, sw: 11 }), path('M28 108V30', undefined, { stroke: P.gold, sw: 6 }),
+      path('M28 24Q50 10 72 30Q88 44 104 40', undefined, { stroke: P.ink, sw: 11 }), path('M28 24Q50 10 72 30Q88 44 104 40', undefined, { stroke: P.gold, sw: 6 }),
+      path('M104 40L60 108H30', undefined, { stroke: P.ink, sw: 11 }), path('M104 40L60 108H30', undefined, { stroke: P.wood, sw: 6 }),
+      line('M36 24V104M46 20V100M56 22V96M66 26V90M76 34V82M86 38V72M94 40V58', { stroke: P.charcoal, sw: 1.5 }),
     ],
   },
 ];
