@@ -1,4 +1,4 @@
-import facts from '../../puzzles/latin/banks.generated.json';
+import facts from '../../puzzles/latin/packs.generated.json';
 import { LazyLatinBoard } from '../../puzzles/latin/LazyBoard';
 import { defineLatinGame, type BankFacts, type LatinEvent, type LatinPayload, type LatinView } from '../../puzzles/latin/registration';
 

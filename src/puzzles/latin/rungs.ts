@@ -14,7 +14,7 @@ export const latinRungs: Record<LatinKind, readonly RungInfo[]> = {
     r('coral', 2, 6, 'Coral', '6×6 where a number has only one place in a row, column or box.', 'hidden-single', 'hidden-single'),
     r('lagoon', 3, 9, 'Lagoon', 'Full 9×9. Every step is a cell with one number left.', 'single', 'single'),
     r('tidepool', 3, 9, 'Tide Pool', '9×9 that needs “only one place for this number”.', 'hidden-single', 'hidden-single'),
-    r('reef', 4, 9, 'Reef', '9×9 that needs pointing and claiming: a number locked inside a box and a line.', 'locked-candidates', 'locked-candidates'),
+    r('reef', 4, 9, 'Reef', '9×9 that needs pointing and claiming: a number that only fits where a box and a line cross.', 'locked-candidates', 'locked-candidates'),
     r('deep', 5, 9, 'Deep', '9×9 that needs pairs and triples: cells that share a few numbers between them.', 'naked-pair', 'hidden-triple'),
     r('trench', 6, 9, 'Trench', '9×9 for grown-ups: wings, fish and colour chains.', 'x-wing', 'simple-coloring'),
   ],
