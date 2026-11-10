@@ -96,7 +96,7 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
       <Copy style={{ color: C.ink }}>{stage === 2 ? ladder.cue!.think : ladder.cue!.look}</Copy>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {stage === 1 && <Button quiet compact disabled={!active} onPress={() => setLadder(l => ({ ...l, stage: 2 }))}>Why?</Button>}
-        <Button compact disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Clear it for me' : 'Show me the move'}</Button>
+        <Button compact disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Clear it for me' : 'Show me'}</Button>
         <Button quiet compact onPress={() => { const target = ladder.cue?.target; setLadder(closed(state.edits, view.helps)); if (target !== undefined && target !== state.selected) send({ type: 'select', cell: target }); }}>I'll try it</Button>
       </View>
     </View>}

@@ -86,8 +86,8 @@ describe('Sudoku in the Cove, through the real Store and packed bank', () => {
       await waitFor(() => !!cellButton(screen, 0));
       for (let i = 0; i < 20 && !text(screen).includes('Puzzle solved'); i++) {
         await press(screen, 'Hint: where should I look?');
-        await waitFor(() => !!button(screen, n => n.children.includes('Show me the move')));
-        await press(screen, 'Show me the move');
+        await waitFor(() => !!button(screen, n => n.children.includes('Show me')));
+        await press(screen, 'Show me');
         await settle();
       }
       expect(text(screen)).toContain('Puzzle solved');
