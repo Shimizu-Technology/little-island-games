@@ -5,6 +5,7 @@ import { View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Rect, Text as SvgText } from 'react-native-svg';
 import Animated, { useAnimatedProps, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import type { SpritePose } from '../../poses';
+import { CUE_MOVES } from './drawOrder';
 import { HAZARDS, POWER_LABELS, POWER_SECONDS, type HazardKind, type PowerKind } from './course';
 const AnimatedCircle=Animated.createAnimatedComponent(Circle);
 const AnimatedGroup=Animated.createAnimatedComponent(G);
@@ -61,8 +62,13 @@ export function GhostMove({move}:{move:string}) {
 
 export const KiteRig = memo(function KiteRig(){return <Svg width={72} height={110} viewBox="0 0 72 110" accessible={false}><G stroke="#3E424F" strokeWidth={2.5} strokeLinejoin="round"><Path d="M36 3L68 36L36 72L4 36Z" fill="#79CFD1"/><Path d="M36 3V72L4 36Z" fill="#F3B178"/><Path d="M36 3V72M4 36H68" stroke="#FFF1CB"/><Path d={KITE_STRINGS} fill="none" stroke="#FFF0C9"/><Path d="M36 72Q24 80 39 88Q47 96 34 101" fill="none" stroke="#EF9B83"/></G></Svg>});
 
-/** Teaching never travels: opacity-only avoids a hidden-sprite transform flash on web. */
-export function RunTeachingCue({poses,move}:{poses:SharedValue<SpritePose[]>;move:string}) {
-  const style=useAnimatedStyle(()=>({opacity:poses.value[57]?.opacity??0}));
-  return <Animated.View pointerEvents="none" style={[{position:'absolute',left:260,top:78,width:110,height:60},style]}><GhostMove move={move}/></Animated.View>;
+/** Teaching never travels: opacity-only avoids a hidden-sprite transform flash on web.
+ * All four moves are pre-mounted; the pose picks one on the UI thread. A passing row never
+ * re-renders SVG text (that re-render was the remaining pickup hitch, L2). */
+function CueVariant({poses,index}:{poses:SharedValue<SpritePose[]>;index:number}) {
+  const style=useAnimatedStyle(()=>{const p=poses.value[57];return {opacity:p&&p.frame===index?p.opacity??0:0};});
+  return <Animated.View pointerEvents="none" style={[{position:'absolute',left:0,top:0,width:110,height:60},style]}><GhostMove move={CUE_MOVES[index]}/></Animated.View>;
 }
+export const RunTeachingCue = memo(function RunTeachingCue({poses}:{poses:SharedValue<SpritePose[]>}) {
+  return <View pointerEvents="none" style={{width:110,height:60}}>{CUE_MOVES.map((_,i)=><CueVariant key={i} poses={poses} index={i}/>)}</View>;
+});

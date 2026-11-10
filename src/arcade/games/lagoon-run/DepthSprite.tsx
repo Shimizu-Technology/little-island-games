@@ -2,21 +2,7 @@ import React, { memo } from 'react';
 import Animated, { useAnimatedReaction, useAnimatedStyle, useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { HIDDEN_POSE, type SpritePose } from '../../poses';
 
-/** Painter rank at or above this frame value is nearer than the runner (painterDepth > 1). */
-export const FRONT_FRAME = 10000;
-/** A stable draw key for one actor's whole lifetime. Rows never overtake each other, so newer
- * serials are always farther away; within a row, shells and power sit nearer than its hazards.
- * The value changes only when a recycled slot gets a new actor, never while it moves. */
-export function stableDrawOrder(painterKey: number) {
-  'worklet';
-  const serial = Math.floor(painterKey / 7), part = painterKey - serial * 7;
-  return (1 << 30) - serial * 8 + part;
-}
-export function depthLayer(p: SpritePose, front: boolean) {
-  'worklet';
-  const visible = (p.opacity ?? 1) > 0;
-  return visible && ((p.frame ?? 0) >= FRONT_FRAME) === front ? p.opacity ?? 1 : 0;
-}
+import { depthLayer, stableDrawOrder } from './drawOrder';
 type Slot = { x: number; y: number; angle: number; scale: number; opacity: number; order: number };
 const HIDDEN_SLOT: Slot = { x: HIDDEN_POSE.x, y: HIDDEN_POSE.y, angle: 0, scale: 1, opacity: 0, order: 0 };
 /**
