@@ -1,5 +1,5 @@
 import { createRng, type Rng } from '../../../src/puzzles/rng';
-import { digits, sightCells, visible, type Cage, type CageOp, type LatinKind, type LatinPuzzle } from '../../../src/puzzles/latin/core';
+import { canonicalCages, digits, sightCells, visible, type Cage, type CageOp, type LatinKind, type LatinPuzzle } from '../../../src/puzzles/latin/core';
 import { latinRungs } from '../../../src/puzzles/latin/rungs';
 import { grade, rank, search, type Technique } from '../../../src/puzzles/latin/solver';
 import type { Candidate, GenRung, LatinGenerator } from './family';
@@ -72,6 +72,7 @@ export function generateCages(kind: 'cage-math' | 'killer', rung: VariantRung, s
   // The rung's newest operator must actually appear.
   const newest = ops.at(-1)!;
   if (newest !== '+' && !p.cages.some(c => c.op === newest || newest === '*' && c.op === '/')) return null;
+  p.cages = canonicalCages(p.cages);
   const g = grade(p, 2_000_000);
   if (g.status !== 'complete' || rank(g.ceiling) > rank(rung.max)) return null;
   return { seed, puzzle: p, template: templateOf(p), grade: g };

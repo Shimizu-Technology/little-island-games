@@ -91,7 +91,7 @@ export function validPuzzle(x: unknown): x is LatinPuzzle {
   if (p.kind === 'cage-math' || p.kind === 'killer') {
     const all = p.cages.flatMap(c => c.cells);
     if (all.length !== n * n || new Set(all).size !== all.length) return false;
-    if (p.kind === 'killer' && p.cages.some(c => c.op !== '+' && c.op !== '=')) return false;
+    if (p.kind === 'killer' && p.cages.some(c => c.op !== '+' && c.op !== '=') || p.cages.length > 62) return false;
   }
   if (p.kind === 'cross-sums') {
     // Runs are maximal horizontal or vertical strips of open cells, each clued with its sum.
@@ -127,20 +127,39 @@ export function solved(p: LatinPuzzle, v: readonly number[]): boolean {
   return v.length === p.givens.length && cellsOf(p).every(i => Number.isInteger(v[i]) && v[i] > 0 && v[i] <= max && (!p.givens[i] || v[i] === p.givens[i])) && p.mask.every((m, i) => !m || v[i] === 0) && !conflicts(p, v).length;
 }
 
+/** One character per cell names its cage; cages are numbered by their first cell in reading order. */
+const CAGE_NAMES = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const tiled = (p: LatinPuzzle) => p.kind === 'cage-math' || p.kind === 'killer';
+/** Cage order that a decoded pack row reproduces: by first cell, cells ascending. */
+export const canonicalCages = (cages: readonly Cage[]): Cage[] => cages.map(c => ({ ...c, cells: [...c.cells].sort((a, b) => a - b) })).sort((a, b) => a.cells[0] - b.cells[0]);
 /**
  * Compact, solution-free pack tuple: [kind index, size, givens digits, cages, less, sights, mask digits].
- * `box` follows from kind and size. Digits are one character each (Cross Sums givens stay 1–9).
+ * `box` follows from kind and size. Cage Math and Cage Sudoku pack cages as [cage letter per cell,
+ * "target op" pairs]; Cross Sums keeps explicit runs. Empty trailing fields are dropped.
  */
 export const encodePuzzle = (p: LatinPuzzle): unknown[] => {
-  const row: unknown[] = [kinds.indexOf(p.kind), p.size, p.givens.join(''), p.cages.map(c => [c.cells, c.op, c.target]), p.less, p.sights, p.mask.some(Boolean) ? p.mask.join('') : 0];
+  const cages = tiled(p) && p.cages.length ? (() => { const names = p.givens.map(() => '?'); p.cages.forEach((c, k) => c.cells.forEach(i => { names[i] = CAGE_NAMES[k] ?? '?'; })); return [names.join(''), p.cages.map(c => `${c.target}${c.op}`).join('')]; })() : p.cages.map(c => [c.cells, c.op, c.target]);
+  const row: unknown[] = [kinds.indexOf(p.kind), p.size, p.givens.join(''), cages, p.less, p.sights, p.mask.some(Boolean) ? p.mask.join('') : 0];
   while (row.length > 3 && (row[row.length - 1] === 0 || Array.isArray(row[row.length - 1]) && !(row[row.length - 1] as unknown[]).length)) row.pop();
   return row;
 };
+function untile(names: unknown, totals: unknown, n: number): Cage[] | null {
+  if (typeof names !== 'string' || typeof totals !== 'string' || names.length !== n * n || totals.length > 600) return null;
+  const parts = [...totals.matchAll(/(\d{1,9})([-+*/=])/g)];
+  if (parts.map(m => m[0]).join('') !== totals) return null;
+  const cages: Cage[] = parts.map(m => ({ cells: [], op: m[2] as CageOp, target: Number(m[1]) }));
+  for (let i = 0; i < n * n; i++) { const k = CAGE_NAMES.indexOf(names[i]); if (k < 0 || k >= cages.length) return null; cages[k].cells.push(i); }
+  return cages.every((c, k) => c.cells.length && (!k || c.cells[0] > cages[k - 1].cells[0])) ? cages : null;
+}
 export function decodePuzzle(x: unknown): LatinPuzzle | null {
   if (!Array.isArray(x) || x.length < 3 || x.length > 7 || !uint(x[0], kinds.length - 1) || !uint(x[1], 10) || typeof x[2] !== 'string' || !/^[0-9]{1,100}$/.test(x[2])) return null;
-  const [kind, size, givens, cages = [], less = [], sights = [], mask = 0] = x as [number, number, string, unknown, unknown, unknown, unknown];
-  if (!Array.isArray(cages) || cages.length > 100 || !cages.every(c => Array.isArray(c) && c.length === 3) || !(mask === 0 || typeof mask === 'string' && /^[01]{1,100}$/.test(mask))) return null;
+  const [kind, size, givens, rawCages = [], less = [], sights = [], mask = 0] = x as [number, number, string, unknown, unknown, unknown, unknown];
   const k = kinds[kind], boxed = k === 'sudoku' || k === 'killer';
-  const p = { kind: k, size, box: boxed ? boxRows(size) : 0, givens: [...givens].map(Number), cages: (cages as unknown[][]).map(([cells, op, target]) => ({ cells, op, target })), less, sights, mask: mask === 0 ? Array<number>(size * size).fill(0) : [...mask].map(Number) };
-  return validPuzzle(p) ? p : null;
+  if (!(mask === 0 || typeof mask === 'string' && /^[01]{1,100}$/.test(mask)) || !Array.isArray(rawCages)) return null;
+  let cages: Cage[] | null;
+  if ((k === 'cage-math' || k === 'killer') && rawCages.length) cages = rawCages.length === 2 ? untile(rawCages[0], rawCages[1], size) : null;
+  else cages = rawCages.length <= 100 && rawCages.every(c => Array.isArray(c) && c.length === 3) ? (rawCages as unknown[][]).map(([cells, op, target]) => ({ cells, op, target }) as Cage) : null;
+  if (!cages) return null;
+  const p = { kind: k, size, box: boxed ? boxRows(size) : 0, givens: [...givens].map(Number), cages, less, sights, mask: mask === 0 ? Array<number>(size * size).fill(0) : [...mask].map(Number) };
+  return validPuzzle(p) && (!tiled(p) || JSON.stringify(canonicalCages(p.cages)) === JSON.stringify(p.cages)) ? p : null;
 }
