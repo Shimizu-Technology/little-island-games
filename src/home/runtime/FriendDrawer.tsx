@@ -110,7 +110,7 @@ function FriendCell({ entity, scene, here, size, offset, interaction, renderChar
     </GestureDetector>
   );
 }
-const badge = { position: "absolute" as const, right: 2, top: 2, width: 28, height: 28, borderRadius: 14, backgroundColor: "#FFF8E9",
+const badge = { position: "absolute" as const, right: 2, bottom: 2, width: 28, height: 28, borderRadius: 14, backgroundColor: "#FFF8E9",
   borderWidth: 1.5, borderColor: "#D7C29A", alignItems: "center" as const, justifyContent: "center" as const };
 /** A friend waiting in the drawer: the same woven basket as the tray, so "put away" always looks the same. */
 function WaitingBasket() {

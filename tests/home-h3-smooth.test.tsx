@@ -328,6 +328,10 @@ describe("HM-12 explicit camera moves ease on the UI thread", () => {
     expect(cameraTweenSample(tween, DOOR_MS / 2).camera).toEqual(to);
     expect(cameraTweenSample(tween, DOOR_MS)).toMatchObject({ camera: to, veil: 0, done: true });
     expect(CAMERA_EASE_MS).toBe(180);
+    // It fades in over a few frames rather than appearing at once.
+    expect(cameraTweenSample(tween, 16.7).veil).toBeGreaterThan(0.1);
+    expect(cameraTweenSample(tween, 16.7).veil).toBeLessThan(0.6);
+    expect(DOOR_MS).toBeLessThanOrEqual(180);
     // Whatever 60 Hz frame lands near the swap, the veil is fully closed on both sides of it.
     for (let offset = 0; offset < 16.7; offset += 1) {
       const swap = [...Array(Math.ceil(DOOR_MS / 16.7) + 1).keys()].map((n) => offset + n * 16.7)

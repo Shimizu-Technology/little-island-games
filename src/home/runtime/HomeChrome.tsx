@@ -100,7 +100,7 @@ function RoomButton({ id, selected, onRoom, onFriends, hover, onRect, size, toke
         onRoom(id);
         onFriends();
       }}
-      style={[styles.room, { width: size, height: size }, selected && { borderColor: "#477D60", backgroundColor: "#E3EBC9" }]}
+      style={[styles.room, { width: size, height: size }, size > 48 && { backgroundColor: "#F1E6CF" }, selected && { borderColor: "#477D60", backgroundColor: "#E3EBC9" }]}
     >
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 15, borderWidth: 3, borderColor: "#477D60",
         backgroundColor: "#FFF8E9", overflow: "hidden", justifyContent: "flex-end" }, ring]}>

@@ -121,14 +121,14 @@ export function zoneAt(zones: readonly DropZone[], x: number, y: number): DropZo
   return undefined;
 }
 export const CAMERA_EASE_MS = 180;
-export const DOOR_MS = 160;
+export const DOOR_MS = 180;
 export type CameraTween = { from: CameraMatrix; to: CameraMatrix; since: number; duration: number; door: boolean };
 /** Smooth ease for one room move; a door holds the old view, swaps under a full veil, then clears. */
 export function cameraTweenSample(tween: CameraTween, now: number): { camera: CameraMatrix; veil: number; done: boolean } {
   "worklet";
   const t = Math.max(0, Math.min(1, (now - tween.since) / tween.duration));
   // The veil reaches full cover early, holds it across the swap, then clears: no frame shows a cut.
-  if (tween.door) return { camera: t < 0.5 ? tween.from : tween.to, veil: Math.min(1, 2.5 * (1 - Math.abs(2 * t - 1))), done: t === 1 };
+  if (tween.door) return { camera: t < 0.5 ? tween.from : tween.to, veil: Math.min(1, 1.8 * (1 - Math.abs(2 * t - 1))), done: t === 1 };
   // Ease out: most of the move happens at once, then it settles. No hesitation at the start.
   const p = 1 - Math.pow(1 - t, 3);
   const { from, to } = tween;

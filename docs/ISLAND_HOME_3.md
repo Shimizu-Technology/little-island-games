@@ -111,7 +111,7 @@ The frozen Play list is `anchoredInPlay` in `world.ts`: beds, baths, large seats
 
 - **Idle:** the Home frame callback stops itself after three quiet frames and restarts on the next touch, hint or camera move. Resting art reads one shared resting state that changes only on pickup, press, target and front edges, never per drag frame. Only rooms whose contents changed are sent to the UI thread.
 - **Life:** friends in the room on screen blink (four blinks per 18 s, never more than 6 s apart, staggered) and breathe (0.4% scale). The clock is a timer that wakes only at blink edges and in 250 ms breath steps. No life in the overview, other rooms or Reduced Motion.
-- **Camera:** room buttons, Find, zoom and double-tap ease over 180 ms on the UI thread; another floor dips through a 160 ms veil. Reduced Motion jumps. A new touch on the room finishes the move at once.
+- **Camera:** room buttons, Find, zoom and double-tap ease over 180 ms on the UI thread; another floor dips through a 180 ms veil that fades in, holds across the swap and fades out. Reduced Motion jumps. A new touch on the room finishes the move at once.
 - **Room moves:** a 48 pt edge band on every device. Room buttons are drop targets: a carry held on one for 300 ms switches room and keeps the carry; letting go on one lands on that room's open floor. Cancel still returns to the source.
 - **Sand:** a thing let go on the beach below a ground-floor room lands on the nearest open floor, travelling there. Each ground-floor beach has three shells; picking one leaves it on the sand and placing it makes a new shell.
 - **Tray:** each choice is a picture of the destination with the chosen thing in the resolved pose. The tray lifts above the selected thing so it never covers it.
