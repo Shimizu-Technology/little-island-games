@@ -28,17 +28,21 @@ export function canoePath(p: SpritePose[], index: number, part: string) {
   if (part === 'inside') return `${line(ts.slice(1, -1).map(near))}${ts.slice(1, -1).reverse().map(t => `L${f(far(t))}`).join('')}Z`;
   if (part === 'rail') return `${line(ts.map(near))} ${line(ts.slice(1, -1).map(far))}`;
   if (part === 'cargo') {
-    const base = [at(.36, .38, 16), at(.64, .38, 16), at(.64, .52, 16), at(.36, .52, 16)];
-    const top = base.map((q, i) => ({ x: q.x, y: q.y - 20 * (i < 2 ? ns + (fs - ns) * .38 : ns + (fs - ns) * .52) }));
-    return `M${f(base[0])}L${f(base[1])}L${f(top[1])}L${f(top[0])}Z M${f(top[0])}L${f(top[1])}L${f(top[2])}L${f(top[3])}Z M${f(lerp(base[0], base[1], .5))}L${f(lerp(top[0], top[1], .5))}L${f(lerp(top[3], top[2], .5))} M${f(lerp(base[0], top[0], .5))}L${f(lerp(base[1], top[1], .5))}`;
+    // A rolled sail lashed amidships (low and round: never a crate) and a paddle across the hull.
+    const roll = (t: number, top: number) => at(t, .42, top);
+    const ts2 = [.3, .36, .44, .5, .56, .64, .7];
+    const body = `${line(ts2.map(t => roll(t, 26)))}${ts2.slice().reverse().map(t => `L${f(roll(t, 16))}`).join('')}Z`;
+    const bands = [.38, .5, .62].map(t => `M${f(roll(t, 26))}L${f(roll(t, 16))}`).join('');
+    const paddle = `M${f(at(.1, .36, 22))}L${f(at(.86, .48, 25))}`;
+    return `${body} ${bands} ${paddle}`;
   }
   if (part === 'float') {
     // Float behind the hull, joined by two booms.
-    const fts = ts.slice(3, -3), ama = (t: number, up: number) => at(t, 1.0, up);
+    const fts = ts.slice(2, -2), ama = (t: number, up: number) => at(t, 1.05, up + 6);
     const body = `${line(fts.map(t => ama(t, 7 + 3 * Math.pow(Math.abs(t - .5) / .5, 2))))}${fts.slice().reverse().map(t => `L${f(ama(t, 1))}`).join('')}Z`;
-    const booms = [.2, .78].map(t => `M${f(at(t, .55, sheer(t) - 2))}L${f(at(t, 1.0, 8))}L${f(at(t + .03, 1.0, 8))}L${f(at(t + .03, .55, sheer(t + .03) - 2))}Z`).join(' ');
+    const booms = [.2, .78].map(t => `M${f(at(t, .55, sheer(t) - 2))}L${f(at(t, 1.05, 15))}L${f(at(t + .03, 1.05, 15))}L${f(at(t + .03, .55, sheer(t + .03) - 2))}Z`).join(' ');
     return `${booms} ${body}`;
   }
   // Wake curls off both tips, only on the moving canoe.
-  return `M${f(at(-.18, .1, 0))}q${-10 * ns} ${2 * ns} ${-18 * ns} ${10 * ns} M${f(at(1.18, .1, 0))}q${10 * ns} ${2 * ns} ${18 * ns} ${10 * ns}`;
+  return `M${f(at(-.18, .1, 0))}q${-10 * ns} ${2 * ns} ${-22 * ns} ${12 * ns} M${f(at(-.1, .2, 0))}q${-6 * ns} ${4 * ns} ${-12 * ns} ${12 * ns} M${f(at(1.18, .1, 0))}q${10 * ns} ${2 * ns} ${22 * ns} ${12 * ns} M${f(at(1.1, .2, 0))}q${6 * ns} ${4 * ns} ${12 * ns} ${12 * ns}`;
 }

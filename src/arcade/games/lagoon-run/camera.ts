@@ -1,5 +1,5 @@
 /** A single pinhole camera in the uniform 390×660 arena. z=-1.2 is the horizon, z=1 contact. */
-export const TRACK_WIDTH = 390, TRACK_HEIGHT = 660, HORIZON = .44, CONTACT = .84, ROAD_HALF = .46;
+export const TRACK_WIDTH = 390, TRACK_HEIGHT = 660, HORIZON = .44, CONTACT = .87, ROAD_HALF = .46;
 export function projectTrack(lane: number, z: number) {
   "worklet";
   // Perspective grows slowly at the horizon, rapidly near the runner.

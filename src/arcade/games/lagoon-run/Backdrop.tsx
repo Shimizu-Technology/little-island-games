@@ -18,7 +18,7 @@ export const RunBackdrop = memo(function RunBackdrop({ world, layout, width, hei
   const [sx, sy, core, glow] = look.sun, sun = { x: W * sx, y: hz * sy };
   return <Svg width={width} height={height} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ position: 'absolute' }} accessible={false}>
     <Defs>
-      <LinearGradient id="lr-sky" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.sky[0]}/><Stop offset=".62" stopColor={look.sky[1]}/><Stop offset="1" stopColor={look.sky[2]}/></LinearGradient>
+      <LinearGradient id="lr-sky" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.sky[0]}/><Stop offset=".72" stopColor={look.sky[1]}/><Stop offset="1" stopColor={look.sky[2]}/></LinearGradient>
       <LinearGradient id="lr-water" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.water[0]}/><Stop offset="1" stopColor={look.water[1]}/></LinearGradient>
       <RadialGradient id="lr-sun" cx="50%" cy="50%" r="50%"><Stop offset="0" stopColor={glow} stopOpacity={.9}/><Stop offset=".35" stopColor={glow} stopOpacity={.42}/><Stop offset="1" stopColor={glow} stopOpacity={0}/></RadialGradient>
       <LinearGradient id="lr-haze" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.haze} stopOpacity={0}/><Stop offset="1" stopColor={look.haze} stopOpacity={look.hazeOpacity}/></LinearGradient>
@@ -86,7 +86,7 @@ export const DeckHaze = memo(function DeckHaze({ world }: { world: WorldId }) {
 export const RunForeground = memo(function RunForeground({ world, layout, width, height }: { world: WorldId; layout: StageLayout; width: number; height: number }) {
   const look = lagoonLook(world), W = layout.width, hz = layout.horizon;
   return <Svg pointerEvents="none" width={width} height={height} viewBox={`0 0 ${W} ${layout.height}`} preserveAspectRatio="none" style={{ position: 'absolute' }} accessible={false}>
-    {look.id === 'festival' ? <Bunting look={look} W={W} hz={hz}/> : <Fronds look={look} W={W} hz={hz}/>}
+    {look.id === 'festival' ? <Bunting look={look} W={W} hz={hz}/> : null}
   </Svg>;
 });
 function Fronds({ look, W, hz }: { look: LagoonLook; W: number; hz: number }) {

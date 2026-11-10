@@ -4,7 +4,7 @@ import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reani
 import type { SpritePose } from '../../poses';
 import type { WorldId } from '../../types';
 import { ArcadeSprite } from '../../Sprite';
-import { CAMERA_SLOT, FOV_KICK, HERO_ZOOM, projectTrack, roadEdge } from './camera';
+import { CAMERA_SLOT, CONTACT, FOV_KICK, HERO_ZOOM, projectTrack, roadEdge } from './camera';
 import { useStage } from './stage';
 import { Image } from 'react-native';
 import { propArt } from './art.generated';
@@ -20,7 +20,7 @@ export function RunCamera({ poses, children }: { poses: SharedValue<SpritePose[]
     const p = poses.value[CAMERA_SLOT];
     // Speed-line intensity (0..0.65, zero with Reduce Motion) widens the view a little: a small FOV kick.
     const zoom = HERO_ZOOM * (1 - FOV_KICK * Math.min(1, (p?.scale ?? 0) / .65));
-    return { transform: [{ translateX: offsetX + (p?.x ?? 0) }, { translateY: offsetY + (p?.y ?? 0) - (zoom - 1) * (660 * .84 - 330) }, { rotate: `${p?.angle ?? 0}rad` }, { scale: zoom }] };
+    return { transform: [{ translateX: offsetX + (p?.x ?? 0) }, { translateY: offsetY + (p?.y ?? 0) - (zoom - 1) * (660 * CONTACT - 330) }, { rotate: `${p?.angle ?? 0}rad` }, { scale: zoom }] };
   });
   return <Animated.View style={[{ position: 'absolute', left: 0, top: 0, width: 390, height: 660 }, style]}>{children}</Animated.View>;
 }

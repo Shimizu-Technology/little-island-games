@@ -34,7 +34,9 @@ export function floorBandSvg(band: FloorBand, look: LagoonLook, width: number, h
     // Plank joints alternate, like a real boardwalk, so the deck never reads as a ladder.
     const joints = parity ? [DECK_U0, .18, 1.02, 1.86, DECK_U1] : [DECK_U0, -.12, .62, 1.44, 2.22, DECK_U1];
     for (let j = 0; j < joints.length - 1; j++) {
-      const tone = [lit, base, mid, base, mid, lit][(j * 3 + parity * 2) % 6];
+      // Festival boards: some planks are painted (worn paint over wood); the rest stay bare.
+      const painted = look.paint && (j * 5 + parity * 3) % 3 === 0 ? mix(look.paint[(j + parity * 2) % look.paint.length], base, .22) : undefined;
+      const tone = painted ?? [lit, base, mid, base, mid, lit][(j * 3 + parity * 2) % 6];
       const n = hash(parity * 31 + j * 7.3);
       const tint = mix(tone, n > .5 ? shade : '#FFF4DC', Math.abs(n - .5) * .22);
       planks += `<rect x="${X(joints[j])}" y="${Y(w0)}" width="${f(X(joints[j + 1]) - X(joints[j]))}" height="${f(Y(w1) - Y(w0)) + .6}" fill="${tint}"/>`;
@@ -59,7 +61,10 @@ export function floorBandSvg(band: FloorBand, look: LagoonLook, width: number, h
 }
 
 /* ---------- Scenery props: 100×240 frames, base at y=236, no ink (scenery is never touched). ---------- */
-const shadow = (look: LagoonLook, rx = 40) => `<ellipse cx="50" cy="235" rx="${rx}" ry="5" fill="${look.shade}" fill-opacity=".28"/>`;
+/** Contact shadow plus a long soft shadow cast away from the world's sun. */
+const shadow = (look: LagoonLook, rx = 40) => { const dir = look.sun[0] > .5 ? -1 : 1; return `<ellipse cx="${50 + dir * 18}" cy="234" rx="${Math.min(48, rx * 1.35)}" ry="6" fill="${look.shade}" fill-opacity=".18"/><ellipse cx="50" cy="235" rx="${rx * .8}" ry="4.5" fill="${look.shade}" fill-opacity=".3"/>`; };
+/** Festival props stand on small pier platforms, never on open water. */
+const platform = (look: LagoonLook) => `<path d="M6 226H94V236H6Z" fill="#8C5A40"/><path d="M6 226H94V229H6Z" fill="#C08660"/><path d="M12 236V240M50 236V240M88 236V240" stroke="#5B3A2E" stroke-width="4"/><path d="M6 226H94" stroke="${look.glow}" stroke-opacity=".35"/>`;
 function palm(look: LagoonLook, lean = 1) {
   const trunk = '#A8754A', trunkLit = '#D29A62', frond = '#2F8F5E', frondLit = '#6CC17A', frondShade = '#1F6B48';
   const top = { x: 50 + 6 * lean, y: 62 };
@@ -92,29 +97,30 @@ function gullRock(look: LagoonLook) {
   <path d="M46 176q-2-12 8-14q10 0 9 8l8 1l-7 4q-2 6-10 6q-8-1-8-5Z" fill="#F7F4EA"/><path d="M54 170q8-3 15 2l-12 4Z" fill="#B9C3C2"/><circle cx="51" cy="166" r="1.3" fill="#2B3A40"/><path d="M45 164l-6 1l6 2Z" fill="#F2B04C"/><path d="M52 180v6M57 180v6" stroke="#F2B04C" stroke-width="1.4"/>`;
 }
 function stall(look: LagoonLook) {
+  const base = platform(look);
   const stripes = Array.from({ length: 6 }, (_, i) => `<path d="M${6 + i * 15} 126L${21 + i * 15} 126L${21 + i * 15} 138Q${13.5 + i * 15} 146 ${6 + i * 15} 138Z" fill="${i % 2 ? '#F4E6C2' : '#E9786E'}"/>`).join('');
-  return `${shadow(look, 46)}<path d="M12 236V126M88 236V126" stroke="#6E4A36" stroke-width="5"/>
-  <path d="M8 182H92V236H8Z" fill="#B27650"/><path d="M8 182H92V188H8Z" fill="#D9A06C"/><path d="M8 200H92M8 218H92" stroke="#8E5C3E" stroke-width="1.5"/>
+  return `${shadow(look, 46)}${base}<path d="M12 226V126M88 226V126" stroke="#6E4A36" stroke-width="5"/>
+  <path d="M8 182H92V226H8Z" fill="#B27650"/><path d="M66 182H92V226H66Z" fill="#8E5C3E"/><path d="M8 182H92V188H8Z" fill="#D9A06C"/><path d="M8 200H92M8 218H92" stroke="#8E5C3E" stroke-width="1.5"/>
   ${[22, 36, 50, 64, 78].map((x, i) => `<circle cx="${x}" cy="176" r="6.5" fill="${['#F6C760', '#F28B5E', '#9BD06A', '#F6C760', '#E9786E'][i]}"/><circle cx="${x - 2}" cy="174" r="2" fill="#FFF4D2" fill-opacity=".7"/>`).join('')}
   <path d="M2 128L50 98L98 128Z" fill="#E9786E"/><path d="M50 98L98 128H70Z" fill="#C85A55"/>${stripes}
   <circle cx="50" cy="150" r="16" fill="${look.glow}" fill-opacity=".28"/><path d="M50 128V140" stroke="#5B3A2E" stroke-width="1"/><ellipse cx="50" cy="148" rx="7" ry="9" fill="#F7A65C"/><path d="M43 148H57" stroke="#FFE19A" stroke-width="1.2"/>`;
 }
 function drum(look: LagoonLook) {
-  return `${shadow(look, 36)}<path d="M26 236L36 196M74 236L64 196M30 222H70" stroke="#6E4A36" stroke-width="4"/>
+  return `${shadow(look, 36)}${platform(look)}<path d="M26 226L36 196M74 226L64 196M30 216H70" stroke="#6E4A36" stroke-width="4"/>
   <path d="M24 150Q22 176 30 198H70Q78 176 76 150Z" fill="#B86A48"/><path d="M52 150Q58 176 54 198H70Q78 176 76 150Z" fill="#8E4C38"/>
   ${[0, 1, 2, 3, 4].map(i => `<path d="M${28 + i * 11} 150L${33 + i * 9} 198" stroke="#F3C46B" stroke-width="2" stroke-opacity=".8"/>`).join('')}
   <ellipse cx="50" cy="150" rx="26" ry="8" fill="#F4E2BE"/><ellipse cx="50" cy="150" rx="26" ry="8" fill="none" stroke="#7A4B33" stroke-width="2"/><path d="M30 170H70" stroke="#F3C46B" stroke-width="3"/>
-  <path d="M64 130l14-16M70 134l16-12" stroke="#7A4B33" stroke-width="3" stroke-linecap="round"/><circle cx="78" cy="114" r="3.5" fill="#F4E2BE"/><circle cx="86" cy="122" r="3.5" fill="#F4E2BE"/>
+  <path d="M66 148l14-18M72 150l16-14" stroke="#7A4B33" stroke-width="3" stroke-linecap="round"/><circle cx="80" cy="130" r="3.5" fill="#F4E2BE"/><circle cx="88" cy="136" r="3.5" fill="#F4E2BE"/>
   <path d="M30 196V96" stroke="#6E4A36" stroke-width="2.5"/><path d="M31 96l22 8l-22 8Z" fill="#7FC8C4"/>`;
 }
 function lanternPole(look: LagoonLook) {
   const lantern = (x: number, y: number, c: string) => `<circle cx="${x}" cy="${y}" r="17" fill="${look.glow}" fill-opacity=".3"/><path d="M${x} ${y - 16}v5" stroke="#4E3328" stroke-width="1"/><ellipse cx="${x}" cy="${y}" rx="9" ry="11" fill="${c}"/><path d="M${x - 9} ${y}H${x + 9}M${x - 6} ${y - 7}H${x + 6}M${x - 6} ${y + 7}H${x + 6}" stroke="#FFE19A" stroke-width="1"/><path d="M${x - 4} ${y - 11}h8M${x - 4} ${y + 11}h8" stroke="#4E3328" stroke-width="2"/>`;
-  return `${shadow(look, 22)}<path d="M50 236V52" stroke="#5B3A2E" stroke-width="5"/><path d="M51 236V52" stroke="#9C6B4C" stroke-width="1.4"/><path d="M18 60H82" stroke="#5B3A2E" stroke-width="3"/><path d="M50 52L18 60M50 52L82 60" stroke="#5B3A2E" stroke-width="1.5"/>
+  return `${shadow(look, 22)}${platform(look)}<path d="M50 226V52" stroke="#5B3A2E" stroke-width="5"/><path d="M51 236V52" stroke="#9C6B4C" stroke-width="1.4"/><path d="M18 60H82" stroke="#5B3A2E" stroke-width="3"/><path d="M50 52L18 60M50 52L82 60" stroke="#5B3A2E" stroke-width="1.5"/>
   ${lantern(20, 84, '#F48A62')}${lantern(80, 92, '#F6C760')}${lantern(50, 118, '#E9786E')}<path d="M20 61v12M80 61v20M50 60v47" stroke="#4E3328" stroke-width="1"/>`;
 }
 function flowerArch(look: LagoonLook) {
   const flowers = Array.from({ length: 13 }, (_, i) => { const t = i / 12, a = Math.PI * (1 - t), x = 50 + Math.cos(a) * 38, y = 150 - Math.sin(a) * 52; return `<circle cx="${x}" cy="${y}" r="6" fill="${['#F9B9C4', '#FFE1A1', '#F6A3A0', '#FFFFFF'][i % 4]}"/><circle cx="${x}" cy="${y}" r="2" fill="#F2B04C"/>`; }).join('');
-  return `${shadow(look, 44)}<path d="M12 236V150Q12 92 50 92Q88 92 88 150V236" fill="none" stroke="#5E8F55" stroke-width="7"/><path d="M14 236V150Q14 96 50 96" fill="none" stroke="#8CC47A" stroke-width="2"/>
+  return `${shadow(look, 44)}${platform(look)}<path d="M12 226V150Q12 92 50 92Q88 92 88 150V226" fill="none" stroke="#5E8F55" stroke-width="7"/><path d="M14 236V150Q14 96 50 96" fill="none" stroke="#8CC47A" stroke-width="2"/>
   ${Array.from({ length: 8 }, (_, i) => `<path d="M${i % 2 ? 88 : 12} ${160 + i * 9}q${i % 2 ? -10 : 10} -2 ${i % 2 ? -12 : 12} 6q${i % 2 ? 6 : -6} 2 ${i % 2 ? 12 : -12} -6Z" fill="#4E8A4F"/>`).join('')}${flowers}
   <path d="M30 150q10 16 20 0q10 16 20 0" fill="none" stroke="#F4E6C2" stroke-width="1.6"/>`;
 }
@@ -144,15 +150,15 @@ function net() {
 export const HAZARD_ART: Record<string, { action: 'jump' | 'duck' | 'lane'; svg: () => string; ball?: () => string }> = {
   log: { action: 'jump', svg: () => `<ellipse cx="50" cy="94" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g(`<path d="M13 58L78 43L90 77L23 92Z" fill="#A77250"/><path d="M15 58L78 43L85 52L22 70Z" fill="#DDA56D"/><ellipse cx="22" cy="75" rx="15" ry="17" fill="#E9C38B"/><ellipse cx="22" cy="75" rx="7" ry="10" fill="none" stroke="#AF7D55"/><path d="M41 70L80 61M45 82L84 73" stroke="#7E5945" fill="none" stroke-width="2"/>`) },
   crate: { action: 'jump', svg: () => `<ellipse cx="50" cy="94" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g(`<path d="M8 58L70 44L92 58V83L29 96L8 80Z" fill="#B88054"/><path d="M8 58L70 44L92 58L29 72Z" fill="#E7BE7C"/><path d="M29 72V96" fill="none"/><path d="M36 74L83 86M83 64L36 91" stroke="#F6D699" stroke-width="4"/>`) },
-  cooler: { action: 'jump', svg: () => `<ellipse cx="50" cy="94" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g(`<path d="M8 58L70 44L92 58V83L29 96L8 80Z" fill="#58A4B7"/><path d="M8 58L70 44L92 58L29 72Z" fill="#EAF2CC"/><path d="M29 72V96" fill="none"/><path d="M48 72V82H68V68" stroke="#E7EDCF" stroke-width="4" fill="none"/>`) },
+  cooler: { action: 'jump', svg: () => `<ellipse cx="50" cy="94" rx="44" ry="5" fill="#344B50" fill-opacity=".22"/>` + g(`<path d="M14 62Q14 52 24 52H76Q86 52 86 62V84Q86 92 78 92H22Q14 92 14 84Z" fill="#4FA0B8"/><path d="M60 52H76Q86 52 86 62V84Q86 92 78 92H60Z" fill="#3B7F96" stroke-width="0"/><path d="M10 54Q10 44 22 44H78Q90 44 90 54V58H10Z" fill="#F2F4E2"/><path d="M36 44V36Q36 31 41 31H59Q64 31 64 36V44" fill="none" stroke-width="4"/><path d="M22 70H40" stroke="#EAF7F4" stroke-width="4"/>`) },
   crab: { action: 'jump', svg: () => `<ellipse cx="50" cy="94" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g(`<path d="M28 77L12 67L5 75M26 84L9 85L4 93M73 77L88 67L95 75M75 84L92 85L97 93" fill="none" stroke="#B96450" stroke-width="5"/><ellipse cx="50" cy="78" rx="27" ry="17" fill="#E28E6F"/><path d="M30 72L19 59L9 64L7 49L18 44L28 55M70 72L81 59L91 64L93 49L82 44L72 55" fill="#F3AC84"/><path d="M39 64V54M61 64V54" stroke-width="4"/><circle cx="39" cy="52" r="4" fill="#FFF0C6"/><circle cx="61" cy="52" r="4" fill="#FFF0C6"/><path d="M39 52h1M61 52h1" stroke-width="3"/><path d="M41 82Q50 87 59 82" fill="none" stroke-width="2"/>`) },
   coconut: { action: 'jump', svg: () => `<ellipse cx="50" cy="94" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>`, ball: () => g(`<circle cx="49" cy="72" r="23" fill="#AE7950"/><path d="M34 59Q49 44 63 61" stroke="#E4BA7D" stroke-width="5" fill="none"/><path d="M38 85Q35 69 48 55" stroke="#815743" fill="none"/>${[43, 51, 47].map((x, i) => `<circle cx="${x}" cy="${66 + i * 6}" r="2" fill="#493C37" stroke-width="0"/>`).join('')}`) },
   net: { action: 'duck', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + net() },
   frond: { action: 'duck', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + duckFrame('#568B66', `<g fill="#92BE78">${[12, 30, 48, 66, 84].map(x => `<path d="M${x} 32q15 17 7 58q-16-20-7-58Z"/>`).join('')}</g>`) },
   banner: { action: 'duck', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + duckFrame('#DC8872', `<path d="M15 37L29 79L43 37L57 79L71 37L85 79" stroke="#FFE8AC" stroke-width="6" fill="none"/>`) },
   line: { action: 'duck', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + duckFrame('#80B5A2', `<path d="M15 37L29 79L43 37L57 79L71 37L85 79" stroke="#FFE8AC" stroke-width="6" fill="none"/>`) },
-  rock: { action: 'lane', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g(`<path d="M7 163L14 79L39 47L70 58L92 117L86 172L44 177Z" fill="#78979D"/><path d="M14 79L45 99L39 47L70 58L45 99Z" fill="#B8CFC6"/><path d="M45 99L44 177L86 172L92 117Z" fill="#5F7E89"/><path d="M14 79L45 99L70 58M45 99L44 177" fill="none"/>`) },
-  wall: { action: 'lane', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g([[8, 112, 42, 60], [51, 112, 40, 60], [26, 51, 49, 60]].map(([x, y, w, h], i) => `<path d="M${x} ${y}l8-9h${w}v${h}l-8 9Z" fill="#936047"/><path d="M${x} ${y}h${w}v${h}H${x}Z" fill="${i === 2 ? '#C18B54' : '#B37D50'}"/><path d="M${x} ${y}l8-9h${w}l-8 9Z" fill="#E3B77A"/><path d="M${x + 5} ${y + 6}l${w - 10} ${h - 12}M${x + w - 5} ${y + 6}l${10 - w} ${h - 12}" fill="none" stroke="#F0CC8B" stroke-width="5"/><path d="M${x + 5} ${y + 4}h${w - 10}M${x + 5} ${y + h - 4}h${w - 10}" stroke="#75523E" stroke-width="3"/>`).join('')) },
+  rock: { action: 'lane', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g(`<path d="M8 172Q2 128 18 96Q30 64 56 62Q84 62 92 104Q100 142 90 172Q50 182 8 172Z" fill="#A99683"/><path d="M56 62Q84 62 92 104Q100 142 90 172Q70 178 52 176Q72 140 56 62Z" fill="#857261" stroke-width="0"/><path d="M20 98Q32 70 54 68Q40 82 34 104Z" fill="#CFC0A8" stroke-width="0"/><path d="M14 150Q30 160 48 150Q40 168 18 166Z" fill="#6E9A6A" stroke-width="0"/>`) + `<g fill="#EFE6D6" stroke="#857261" stroke-width="1.2">${[[30,132],[38,140],[26,142],[66,118],[72,126]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3.2"/>`).join('')}</g>` },
+  wall: { action: 'lane', svg: () => `<ellipse cx="50" cy="175" rx="46" ry="5" fill="#344B50" fill-opacity=".22"/>` + g(`<path d="M4 177V64Q50 52 96 64V177Z" fill="#7B8C8C"/>` + [[6,150,30,26],[38,150,28,26],[68,150,26,26],[14,122,30,26],[46,122,34,26],[6,94,26,26],[34,94,30,26],[66,94,28,26],[18,66,32,26],[52,66,32,26]].map(([x,y,w,h],i)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="9" fill="${['#B8B2A2','#A39D8D','#C9C2B0','#9A9585'][i%4]}"/><path d="M${x+5} ${y+6}h${w*.5}" stroke="#E6E0CE" stroke-width="3" fill="none"/>`).join('') + `<path d="M2 62Q50 48 98 62" stroke="#7A5436" stroke-width="7" fill="none"/>`) },
 };
 /** Collectable shell, 32-unit source drawn at 30 points. */
 export const SHELL_SVG = `<circle cx="16" cy="16" r="15" fill="#FFF1A0" fill-opacity=".24"/><path d="M8 24L3 14Q2 8 7 7Q9 2 14 5Q19 1 23 6Q30 5 29 13L24 24L19 28H13Z" fill="#FFD476" stroke="#9B693F" stroke-width="1.7"/><path d="M14 24L8 10M17 24V8M20 24L25 10" stroke="#FFF3BF" stroke-width="2" stroke-linecap="round"/><path d="M10 25H23L20 29H13Z" fill="#E9A957" stroke="#9B693F" stroke-width="1.3"/><circle cx="8" cy="9" r="2" fill="#FFFBE0"/>`;

@@ -4,990 +4,1039 @@
   "assets": {
     "morning/floor-0": {
       "width": 86,
-      "height": 23,
+      "height": 24,
       "density": 3,
-      "bytes": 5869,
-      "sha256": "2e35b66c7523babf2275da84681b92f87ec32fba81a8b2f410a7353735291131"
+      "bytes": 5864,
+      "sha256": "a417876a898d18f6d6fca090d7a7b8427bcd09ec7fb0ce13483d72ff31090afd"
     },
     "morning/floor-1": {
       "width": 103,
-      "height": 27,
+      "height": 29,
       "density": 3,
-      "bytes": 7152,
-      "sha256": "a3a26cb090d0befa8d70d129b5c387bc6551d1f49f2b2926248cf7d8b03ba9aa"
+      "bytes": 7405,
+      "sha256": "b10a225217c816e083239453233aa58f84fdba2adc308a4bcf1b5dc646c87cf2"
     },
     "morning/floor-2": {
-      "width": 122,
-      "height": 30,
+      "width": 120,
+      "height": 31,
       "density": 3,
-      "bytes": 8619,
-      "sha256": "aedd8baecd982e6798fb0cba3d17d85968449611eeca20bf5900de5cc398ec2a"
+      "bytes": 8689,
+      "sha256": "c1f0cb9183c7d629bd905723a2f479976e67753a6c2af4d38e1fe43223a6d3e2"
     },
     "morning/floor-3": {
-      "width": 143,
-      "height": 32,
-      "density": 3,
-      "bytes": 9135,
-      "sha256": "3c14c37827670bf7e1be152940cebc3ac9e06b11afe01a40281a49a4a6814f2e"
-    },
-    "morning/floor-4": {
-      "width": 166,
+      "width": 141,
       "height": 35,
       "density": 3,
-      "bytes": 10287,
-      "sha256": "1064745dacc990a0a2e8d80e6812f72cd52026e33c681273941c33e86733b27a"
+      "bytes": 9531,
+      "sha256": "40bbdec70ec9c34dfa78bb1864c767d3d3f7975ced5ac8825d3eb829adec8f1e"
+    },
+    "morning/floor-4": {
+      "width": 164,
+      "height": 37,
+      "density": 3,
+      "bytes": 10728,
+      "sha256": "61b9bf0190ddf211f9d8c25f3079699a4c5527b247053776d7f0f2bfd9e3b5fb"
     },
     "morning/floor-5": {
-      "width": 192,
-      "height": 39,
+      "width": 188,
+      "height": 40,
       "density": 3,
-      "bytes": 12101,
-      "sha256": "111d3ecce1e6461a829e44956920f86353d9be694378914511ad92dfa617b08a"
+      "bytes": 11515,
+      "sha256": "e1cd37feaf6aee0f37eb6327df39de60a00630a07c42ceb5191dd331a4430f07"
     },
     "morning/floor-6": {
-      "width": 220,
+      "width": 214,
       "height": 43,
       "density": 3,
-      "bytes": 13514,
-      "sha256": "26278b8ea40d034e0a3477313ab1654d95467e0aaa7b65b71484411d16146aa4"
+      "bytes": 13331,
+      "sha256": "db9226deabe597d25ac05ec2a2a914d0ecd151e1b876fdfeeb3febc16fbfd1e8"
     },
     "morning/floor-7": {
-      "width": 252,
+      "width": 242,
       "height": 47,
       "density": 3,
-      "bytes": 14761,
-      "sha256": "f4fad4d097100a0b55cad57bd999a8aaf9486ba0477c13df8eee53599db976d4"
+      "bytes": 13589,
+      "sha256": "041746ddfa9ee4e28618776d890522806c467362dc4af12bc88be79f19b2654a"
     },
     "morning/floor-8": {
-      "width": 286,
+      "width": 272,
       "height": 51,
       "density": 3,
-      "bytes": 15987,
-      "sha256": "db60f9c8db9ee44364d4cb779ae0696b595f0ce5ba6cc0af87bd8bab63df56d4"
+      "bytes": 16232,
+      "sha256": "7b61c058bcc7bf54fec99dbf86187e522f5d16895e50c1bade1825ba0174b840"
     },
     "morning/floor-9": {
-      "width": 323,
+      "width": 306,
       "height": 56,
       "density": 3,
-      "bytes": 17974,
-      "sha256": "725030db18e8d4caf7aea2abfbef3366ae74eb8187a9fc2988d0cacfaa55549e"
+      "bytes": 17388,
+      "sha256": "cf5ecd3bf51d474580681d05023d0caaa1b1872da1c7d08f94e4e99e28a1f42d"
     },
     "morning/floor-10": {
-      "width": 365,
-      "height": 62,
+      "width": 342,
+      "height": 61,
       "density": 3,
-      "bytes": 19751,
-      "sha256": "31f26df7be24e60d8dc35e21ea9fa8ded94bbf35c3ccf91af1dcde065b372823"
+      "bytes": 18921,
+      "sha256": "dd468b2fdf15d2600d85df51083b9776ba369e4917d79321f96e426bd554c0f6"
     },
     "morning/floor-11": {
-      "width": 407,
-      "height": 66,
+      "width": 382,
+      "height": 67,
       "density": 3,
-      "bytes": 21445,
-      "sha256": "d3e9f5396f18a9a57e7f99128f5919e0464dcc04ffddc10d19b840be44057872"
+      "bytes": 20499,
+      "sha256": "1f31d8a1716308fa4f020c08c8edc9291beb720892df426d9ed2da80343f78a8"
     },
     "morning/floor-12": {
-      "width": 454,
-      "height": 73,
+      "width": 426,
+      "height": 74,
       "density": 3,
-      "bytes": 21599,
-      "sha256": "16a5a79ad77b7f74acbdd46901af83e5b44556769410c9ca513502d61a4f8f85"
+      "bytes": 21912,
+      "sha256": "ab3cfcb61f3a70943de4d0da2e79ac246b7120568394d78defda5a917f7ff47b"
     },
     "morning/floor-13": {
-      "width": 507,
-      "height": 82,
+      "width": 471,
+      "height": 78,
       "density": 3,
-      "bytes": 25088,
-      "sha256": "d8c1d971f554c9bab19fbf1003220f3255f2a6eb7f499b2098fff00852fbe945"
+      "bytes": 23419,
+      "sha256": "78bd17418e7363d78614b9f958354d2ef7469a2786ac89460807d623509c2a4c"
     },
     "morning/floor-14": {
-      "width": 560,
+      "width": 521,
       "height": 87,
       "density": 3,
-      "bytes": 25779,
-      "sha256": "b2f6a2f561667f75fabaefcb1775fb305fa21bca128b79969f0ce2425b881d4c"
+      "bytes": 25196,
+      "sha256": "164400bad511c3309ed0fe19359b5da80cffd361ece435dc45ba43ef34b11120"
     },
     "morning/floor-15": {
-      "width": 620,
-      "height": 98,
+      "width": 576,
+      "height": 97,
       "density": 3,
-      "bytes": 28146,
-      "sha256": "d5ef879f784ff1ee57ab6926d45bddabc8c4a75203257574aeebb01fa4cb83d4"
+      "bytes": 27200,
+      "sha256": "9272fff7cac15e8efa7ceed25c4daf87c47482faf780b14145c95a5adf9078d6"
     },
     "morning/floor-16": {
       "width": 630,
-      "height": 110,
+      "height": 103,
       "density": 3,
-      "bytes": 30797,
-      "sha256": "c0b1329bb83d20b3e01df5c66aede010b86a839da19a093c5f6e607ca8df888c"
+      "bytes": 29375,
+      "sha256": "6061638b013021d5585d2eafe0d8f8729605b6e9bdf256f51b572450537d93f3"
     },
     "morning/floor-17": {
       "width": 630,
-      "height": 118,
+      "height": 115,
       "density": 3,
-      "bytes": 31126,
-      "sha256": "164c1c61d1411b9221606cee8351bdd9383dafd2000e5234840c5e78d9a9ae67"
+      "bytes": 29820,
+      "sha256": "5845b6f01cd2d78fc17053195a97b81bc65c68f56a82f7a3a026bcb2e9fd5d2f"
     },
     "morning/floor-18": {
       "width": 630,
-      "height": 134,
+      "height": 129,
       "density": 3,
-      "bytes": 29929,
-      "sha256": "66fc1222fcde6a2fb6c7208f20bbbfa43171578b7ba47489143b4e6854515e89"
+      "bytes": 31975,
+      "sha256": "bb960bbdf9992758dbee52ab49a42513e197760bead5b5103c0366eb849df53a"
+    },
+    "morning/floor-19": {
+      "width": 630,
+      "height": 138,
+      "density": 3,
+      "bytes": 31063,
+      "sha256": "6e93bb6ae3551b2885ba7dc3d01dd3c096a4556fc88e1aeda61f773f555fd10f"
     },
     "festival/floor-0": {
       "width": 86,
-      "height": 23,
+      "height": 24,
       "density": 3,
-      "bytes": 6045,
-      "sha256": "738e0ace22ca434b6722375b067756bae3ab9c2455cc13f8586d354ec4030b0f"
+      "bytes": 6003,
+      "sha256": "b5116aefa009a8b3e6adad876c0d6c5e7a30212123a9821f3d7040d7208027f6"
     },
     "festival/floor-1": {
       "width": 103,
-      "height": 27,
+      "height": 29,
       "density": 3,
-      "bytes": 7105,
-      "sha256": "ec765502321ff61a24754a8c6638af37e83da2e93f0889abf1f129b50b29dc02"
+      "bytes": 7572,
+      "sha256": "14d8fffac2832debbe30f9e3fa5351e828b593f4107d8162462f151144592f23"
     },
     "festival/floor-2": {
-      "width": 122,
-      "height": 30,
+      "width": 120,
+      "height": 31,
       "density": 3,
-      "bytes": 8658,
-      "sha256": "7590ba6fad80c03e2d825b5cb3f754ad558a0c658c659a5588120f2e955a0189"
+      "bytes": 8850,
+      "sha256": "8a6163439cd9b5a8514cf3504c083aa7ab321a1e3497a087c38b09108ffa02bf"
     },
     "festival/floor-3": {
-      "width": 143,
-      "height": 32,
-      "density": 3,
-      "bytes": 9207,
-      "sha256": "07002b37f518306bfa53e675998d92f66fd9dd0ff218b579c4c6bdfbace91757"
-    },
-    "festival/floor-4": {
-      "width": 166,
+      "width": 141,
       "height": 35,
       "density": 3,
-      "bytes": 10318,
-      "sha256": "e8fb91bd659f55933fea2556d78e8ba9a7ff142a02d6ef70ed762f5756a6972a"
+      "bytes": 9771,
+      "sha256": "bb2b6e6d429a3beab1ca3495ff5482651bd1e1225c4af3491471ecfed330cb5e"
+    },
+    "festival/floor-4": {
+      "width": 164,
+      "height": 37,
+      "density": 3,
+      "bytes": 10938,
+      "sha256": "1a2bcc816f57040bfb3b0241e974fe87ff03b03866ee5db8dd1423c7330c0c6d"
     },
     "festival/floor-5": {
-      "width": 192,
-      "height": 39,
+      "width": 188,
+      "height": 40,
       "density": 3,
-      "bytes": 12101,
-      "sha256": "f1b3ac18e08276a61e2fe345898f60efc1eee7f6fc53e1fc8d756de1116a015a"
+      "bytes": 11540,
+      "sha256": "3c28c0f6bb626ab218aea2dd537b5eb33bfedebeebe84303b0d22a3d79dc1d7a"
     },
     "festival/floor-6": {
-      "width": 220,
+      "width": 214,
       "height": 43,
       "density": 3,
-      "bytes": 13448,
-      "sha256": "6f045e39594a5c4599d0c621237ad75165900e5dc9c955a8a996c1a4a22f1e94"
+      "bytes": 13242,
+      "sha256": "442e7fbf69d1cce8a6f8557992a442370b01eb067d5fa8b79efcc4996a0ff5f1"
     },
     "festival/floor-7": {
-      "width": 252,
+      "width": 242,
       "height": 47,
       "density": 3,
-      "bytes": 14843,
-      "sha256": "17c6030ba7f6acc5d8498a1a6d8a36eb47980ec93e223f892ff3befc497a04df"
+      "bytes": 13673,
+      "sha256": "9f2f2e43dacf29434e8b3d784fba137e604110ab26d0fabc63cc97dd5831e028"
     },
     "festival/floor-8": {
-      "width": 286,
+      "width": 272,
       "height": 51,
       "density": 3,
-      "bytes": 15829,
-      "sha256": "395ce622f81d7edb5e7b57bffbc50ddfd7cf52394c0313576b6b37931734c61a"
+      "bytes": 16245,
+      "sha256": "c19ac2fe19821631ac1d5430d464d6982474e6efcc9d074e75cb8b4b6fdfbd25"
     },
     "festival/floor-9": {
-      "width": 323,
+      "width": 306,
       "height": 56,
       "density": 3,
-      "bytes": 17918,
-      "sha256": "7049de5ec466dd53c5073f3b5e7621f83960edad04a1758ed1c2b42bb6ed21e9"
+      "bytes": 17606,
+      "sha256": "efd7468a8230f0ad6be06730a38fb81e197369f93d664ff172b96d92ab6a3709"
     },
     "festival/floor-10": {
-      "width": 365,
-      "height": 62,
+      "width": 342,
+      "height": 61,
       "density": 3,
-      "bytes": 19595,
-      "sha256": "8c753bda49beddd40e0c5891253302e9450fe6259dc07bc84269650e520a8df7"
+      "bytes": 18984,
+      "sha256": "c9a105ccc7a2411bec8d6356484786d2def55cdfbe81b5a26e87c0944c3637ee"
     },
     "festival/floor-11": {
-      "width": 407,
-      "height": 66,
+      "width": 382,
+      "height": 67,
       "density": 3,
-      "bytes": 21304,
-      "sha256": "e8e4b059a9c2a816856df14eeadf4e786ce35d2988334a954de2425682cad562"
+      "bytes": 20681,
+      "sha256": "f51dda6b080ae6b5f7748e47142fdfc3d2f64eca8f09f5d2d857667c76c218d4"
     },
     "festival/floor-12": {
-      "width": 454,
-      "height": 73,
+      "width": 426,
+      "height": 74,
       "density": 3,
-      "bytes": 21745,
-      "sha256": "af8337dd3c8cef8736d399f18ce7aa5def8107cea2d7825b530b73f61fa9bdc8"
+      "bytes": 22185,
+      "sha256": "a1f1a19055396d89cbbd282308ce9d3058327cebc939134ce3c6360c42df9c54"
     },
     "festival/floor-13": {
-      "width": 507,
-      "height": 82,
+      "width": 471,
+      "height": 78,
       "density": 3,
-      "bytes": 25373,
-      "sha256": "5a7f86b21249c270248008e166c0a932b5b92b614e47b5ea82fc440d3b843025"
+      "bytes": 23398,
+      "sha256": "25d1a3be86c687ddb5b78309167ea6413b85478a4b80f14bc5362250aa53168c"
     },
     "festival/floor-14": {
-      "width": 560,
+      "width": 521,
       "height": 87,
       "density": 3,
-      "bytes": 25782,
-      "sha256": "efd205ec617f9fc72796238c8aede332e9aaadccb497424e807a78af19d5bc81"
+      "bytes": 25520,
+      "sha256": "bab06f8c82ae0f4fca20ee010b62475f2126c3e2c7001e41af244165a8112c89"
     },
     "festival/floor-15": {
-      "width": 620,
-      "height": 98,
+      "width": 576,
+      "height": 97,
       "density": 3,
-      "bytes": 27842,
-      "sha256": "9bf2362cc573cb01e4f78143b19d21d9e115a757006f6641b0c8a2e88f3a2225"
+      "bytes": 27442,
+      "sha256": "a7219daa54e6a6c5e7a4a41ec1e868a238a655b06fbb7bd6d3e437b0dc227346"
     },
     "festival/floor-16": {
       "width": 630,
-      "height": 110,
+      "height": 103,
       "density": 3,
-      "bytes": 30790,
-      "sha256": "d211c968e1aa6a4ea5ca14977ad3eb5133ad1358c1623189eaac44457c2b3ed0"
+      "bytes": 29955,
+      "sha256": "6aa48159143197b34a356f1497835ea124a851a5b08c779d5df092913f55aede"
     },
     "festival/floor-17": {
       "width": 630,
-      "height": 118,
+      "height": 115,
       "density": 3,
-      "bytes": 30772,
-      "sha256": "ba74258e12ccde6f92b30400a70f91c07415c0adf5d309fc70878c3071bc85c8"
+      "bytes": 30242,
+      "sha256": "d67b92a20a51a3ed3bd00e70f399eb4ec5891b644e637b19eedbc06d5930b13b"
     },
     "festival/floor-18": {
       "width": 630,
-      "height": 134,
+      "height": 129,
       "density": 3,
-      "bytes": 29949,
-      "sha256": "052afa22be2c12c5fa90ee003457dfecbfab88f86e947ed92393fcd7dbef25e5"
+      "bytes": 32066,
+      "sha256": "4ef2eb22defe02112bfa0a53671ffaa347156056c3a1d5c7f7e836a593caff71"
+    },
+    "festival/floor-19": {
+      "width": 630,
+      "height": 138,
+      "density": 3,
+      "bytes": 31303,
+      "sha256": "b702064962d05450e97b0582a3a5ca022a964ffadcbd18a09a3da268c3063413"
     },
     "sunset/floor-0": {
       "width": 86,
-      "height": 23,
+      "height": 24,
       "density": 3,
-      "bytes": 5898,
-      "sha256": "6ceabd1f6bea0ff6fae96f3c993da16a50b44672eba3b7db340f896f5a1c6a62"
+      "bytes": 5934,
+      "sha256": "848474f6b00951105def76af6db67e4c82b62bb8727c767c75e7aad444a65d8f"
     },
     "sunset/floor-1": {
       "width": 103,
-      "height": 27,
+      "height": 29,
       "density": 3,
-      "bytes": 7060,
-      "sha256": "5094ce7d5f5be2a7860f5479ab4079e05882efb772d5ab10b13055f0b8ee2fbe"
+      "bytes": 7425,
+      "sha256": "a9d53f4d4abfd8f762bcb430d9b6db57bea7f30e661c719b7f6c1edf9c2c89f7"
     },
     "sunset/floor-2": {
-      "width": 122,
-      "height": 30,
+      "width": 120,
+      "height": 31,
       "density": 3,
-      "bytes": 8564,
-      "sha256": "7f05bde1cc5f2089b98960c3cf5dc0322f68c23ceb9662b54a24f1522f97b24c"
+      "bytes": 8616,
+      "sha256": "dd8659a27ea978d9928fdd3891ea14b8b495b5c5df33cb3da26954c2b4a1a890"
     },
     "sunset/floor-3": {
-      "width": 143,
-      "height": 32,
-      "density": 3,
-      "bytes": 9192,
-      "sha256": "555cb7e9d19514b81bfad1844f848d80a90598aaf6d995d6fc4693d6f88f2556"
-    },
-    "sunset/floor-4": {
-      "width": 166,
+      "width": 141,
       "height": 35,
       "density": 3,
-      "bytes": 10261,
-      "sha256": "a3c444968315cd3924de6d3d9dc37a357a239a969f0ff8493ac8b87744cb3f21"
+      "bytes": 9475,
+      "sha256": "cc1ace924c326617a462e60b166e5743559faa12284afc95c8d41e1ad7b364c9"
+    },
+    "sunset/floor-4": {
+      "width": 164,
+      "height": 37,
+      "density": 3,
+      "bytes": 10630,
+      "sha256": "6628ad5aed15abf7774fed73ebdea25d2983b17e1dcdcf38fb5b524b145c6c6a"
     },
     "sunset/floor-5": {
-      "width": 192,
-      "height": 39,
+      "width": 188,
+      "height": 40,
       "density": 3,
-      "bytes": 12031,
-      "sha256": "0fb28cdb956ab6c085e8853022920543fc9b58289e0c21b71661aff5233a9920"
+      "bytes": 11409,
+      "sha256": "d5818db9e6296c062c81590d273853bc5c293ac7d139144237556382a252fe1f"
     },
     "sunset/floor-6": {
-      "width": 220,
+      "width": 214,
       "height": 43,
       "density": 3,
-      "bytes": 13283,
-      "sha256": "79e3140088e71bdef266b9b8bbe085e0cef3b546e14278d523f44f4ccdd43a63"
+      "bytes": 13022,
+      "sha256": "ea8227bff2b8cf4ed4692384ef87cd276237cfe952e339fb5fd231f7d9fed957"
     },
     "sunset/floor-7": {
-      "width": 252,
+      "width": 242,
       "height": 47,
       "density": 3,
-      "bytes": 14599,
-      "sha256": "e33e5f8836c2436d62d9fa6a168815e5fdb0fb00cbf78a30868cf8d1b96bc3b6"
+      "bytes": 13601,
+      "sha256": "19556063f2329dc713e486676e233d107eec052f30b8dbe21ac5869ada691108"
     },
     "sunset/floor-8": {
-      "width": 286,
+      "width": 272,
       "height": 51,
       "density": 3,
-      "bytes": 15711,
-      "sha256": "5efe91480455946a10ad918c38526329f9405b2e4b19cf37a29a6eb74bfca984"
+      "bytes": 15865,
+      "sha256": "303e00506809f92095f68ae2de9e3b1a2754aab225f67c06520fb57f03fe8893"
     },
     "sunset/floor-9": {
-      "width": 323,
+      "width": 306,
       "height": 56,
       "density": 3,
-      "bytes": 17427,
-      "sha256": "884d3b1c526d32ae4c37181b6563f0ff56b28323bc0de8e73c8688a5c565e50b"
+      "bytes": 17082,
+      "sha256": "b53d6bfe498538c699d7f81c80c5d31c988cb3a846d7833a9595418ba41472eb"
     },
     "sunset/floor-10": {
-      "width": 365,
-      "height": 62,
+      "width": 342,
+      "height": 61,
       "density": 3,
-      "bytes": 19498,
-      "sha256": "3d1d4b668982dd6b30c3e880107362b4f242d88b9876da32eabd053a2d263f88"
+      "bytes": 18341,
+      "sha256": "09f944de09b5e5cee2c0775878b555fd27c0dc5d7e1d2c2ca931e3563a835166"
     },
     "sunset/floor-11": {
-      "width": 407,
-      "height": 66,
+      "width": 382,
+      "height": 67,
       "density": 3,
-      "bytes": 20921,
-      "sha256": "f06006139394d587cf3a129210aeb5049e8ecdeb7d011df1cd0cda6e1fe71531"
+      "bytes": 20179,
+      "sha256": "5a5a528fda2b0c80513f325e3b3c60ad97a391a63b8b37999ae4fb36d0977936"
     },
     "sunset/floor-12": {
-      "width": 454,
-      "height": 73,
+      "width": 426,
+      "height": 74,
       "density": 3,
-      "bytes": 21379,
-      "sha256": "36c6cf845237c0a9731f306da170879bc7256db705e7dac41f25073bb2b49d8b"
+      "bytes": 21605,
+      "sha256": "7ea78cc84a7249a1a4e5fae46c12e10d2f99af5f6d0f48f6b6101c4d84763da3"
     },
     "sunset/floor-13": {
-      "width": 507,
-      "height": 82,
+      "width": 471,
+      "height": 78,
       "density": 3,
-      "bytes": 24942,
-      "sha256": "573882e6054a2c78b3d91d056627a3ed32f07af90cffaf3b7ea46af9754eb4f0"
+      "bytes": 22929,
+      "sha256": "488c3ffb97d09179000aba54c02311f82070ffffff9b62c8c4fe4c88fcaef8c5"
     },
     "sunset/floor-14": {
-      "width": 560,
+      "width": 521,
       "height": 87,
       "density": 3,
-      "bytes": 25548,
-      "sha256": "e6a9b9cef3f6c1326fe08c3b74009736994cf2036b81e3686d398d95ce4ee1fe"
+      "bytes": 24826,
+      "sha256": "6bb4df6af89a9a3139ec67584b6671dc424e695c77e3dffb56b7516099ee75cc"
     },
     "sunset/floor-15": {
-      "width": 620,
-      "height": 98,
+      "width": 576,
+      "height": 97,
       "density": 3,
-      "bytes": 27406,
-      "sha256": "0e05c6b1fddf0ada98b37c22afaa500f71c0cb533c88a13bc22a2616a249e2f0"
+      "bytes": 26823,
+      "sha256": "0cda8def238db72f387aa9934f5bf2fb9f0dde00495a6ccb68738456bfcb423b"
     },
     "sunset/floor-16": {
       "width": 630,
-      "height": 110,
+      "height": 103,
       "density": 3,
-      "bytes": 30339,
-      "sha256": "42291c128a6590778e9f46045225cf5b66b0beda54576a8f3ffffb74fabf9ebd"
+      "bytes": 29086,
+      "sha256": "8fc5ff1060b5b98bbb69c0f1490a901a2401215449c0b9b64b0fee43b058c21a"
     },
     "sunset/floor-17": {
       "width": 630,
-      "height": 118,
+      "height": 115,
       "density": 3,
-      "bytes": 30517,
-      "sha256": "de5c770bc96e952168d031534eb41e4a62c30c7c1c16ef83fb0cf5785329e550"
+      "bytes": 29188,
+      "sha256": "2620f767041996c666db83c01231710236553b67c3f104deb33c1626c1075e37"
     },
     "sunset/floor-18": {
       "width": 630,
-      "height": 134,
+      "height": 129,
       "density": 3,
-      "bytes": 29426,
-      "sha256": "0e3fb4429730e7de5bba1a1a12cd1883f077fbf14a5a978b27a0d92759c2f895"
+      "bytes": 31428,
+      "sha256": "8ef70a3efe8e4167efabeee9527c1b31836e15cf805fc67c02517756ddaed552"
+    },
+    "sunset/floor-19": {
+      "width": 630,
+      "height": 138,
+      "density": 3,
+      "bytes": 30572,
+      "sha256": "b2bb2d38ad3e6301f95feddd0f1cf836a2634e1b10f7a45fce6fd70aad79bb77"
     },
     "mangrove/floor-0": {
       "width": 86,
-      "height": 23,
+      "height": 24,
       "density": 3,
-      "bytes": 5886,
-      "sha256": "b293623cf762c310c24bba5ff5efde0b92366ee6febabccbf9a2690e2e17854b"
+      "bytes": 5850,
+      "sha256": "8e2c8eae60c8db941a143be0619bb69626dd196b37d4e44f34b4181a767a4c98"
     },
     "mangrove/floor-1": {
       "width": 103,
-      "height": 27,
+      "height": 29,
       "density": 3,
-      "bytes": 7213,
-      "sha256": "d34d9041f501ab278fef0939078a08a8e5c3adf698dbb0213857df25dd453c50"
+      "bytes": 7505,
+      "sha256": "2e645ee77e1519b87cd174e52104d9db0457996eff2e54ef92049a5cb7fcea97"
     },
     "mangrove/floor-2": {
-      "width": 122,
-      "height": 30,
+      "width": 120,
+      "height": 31,
       "density": 3,
-      "bytes": 8597,
-      "sha256": "0283487e656f06d454cafc6a61823c5d0f0226b45c1e8b6efd86522b72c9e42b"
+      "bytes": 8670,
+      "sha256": "b0e97b34ab7e21d3c8209a335bac2044d3815325a917db776fb167c36ea89881"
     },
     "mangrove/floor-3": {
-      "width": 143,
-      "height": 32,
-      "density": 3,
-      "bytes": 9191,
-      "sha256": "e6e96d5dbd094d07efc1555cc1fb8c8ac3e04ef2237e6936420a8a6bafbc2bcc"
-    },
-    "mangrove/floor-4": {
-      "width": 166,
+      "width": 141,
       "height": 35,
       "density": 3,
-      "bytes": 10311,
-      "sha256": "3fef710eb24512619200da43380aab739cb67e5f2b85043b9e988e292e7c06fc"
+      "bytes": 9613,
+      "sha256": "25a932a2e1289c666b251f08a68acc42783c212b1ddfafbe1a45c57d5099c495"
+    },
+    "mangrove/floor-4": {
+      "width": 164,
+      "height": 37,
+      "density": 3,
+      "bytes": 10740,
+      "sha256": "bd1509b75c2a3ee79e0edfb49e29d4457b6afc972cbaaab22381fc81b2a6e9d4"
     },
     "mangrove/floor-5": {
-      "width": 192,
-      "height": 39,
+      "width": 188,
+      "height": 40,
       "density": 3,
-      "bytes": 12081,
-      "sha256": "34841231107abd2612e75c4d20c5f7753ecba636808632ecf1571ad8a00fb088"
+      "bytes": 11575,
+      "sha256": "1f341644a90a40fd160fc9cd09fa53f9c6bc061400503ce1f43f1297bca103db"
     },
     "mangrove/floor-6": {
-      "width": 220,
+      "width": 214,
       "height": 43,
       "density": 3,
-      "bytes": 13408,
-      "sha256": "7a1b8a52ea9e928a1963287e86ed870bdfee50635f6c76b0067b208f496bd98c"
+      "bytes": 13119,
+      "sha256": "a1c38dd64f44766d9564bb120702bce15929e2f11b8264dabd22ad77f602ffb6"
     },
     "mangrove/floor-7": {
-      "width": 252,
+      "width": 242,
       "height": 47,
       "density": 3,
-      "bytes": 14644,
-      "sha256": "55a42dd26ab310da46cf3d2b09d6e67732b545cd17594a74db0b241db2cfacb9"
+      "bytes": 13503,
+      "sha256": "559d3dc4d714426afe97156b205b818ab5502264a1b982007a15ac00a53ace32"
     },
     "mangrove/floor-8": {
-      "width": 286,
+      "width": 272,
       "height": 51,
       "density": 3,
-      "bytes": 15782,
-      "sha256": "8ad6d0e143b84521ef76f4c2615289a47a2ab474e6b3e6c7b4417a93d6aabc69"
+      "bytes": 16149,
+      "sha256": "7e539cc19157d520b82d1f9dffc4137c0a9fc8ed345b27d6f6218a97f7b240ef"
     },
     "mangrove/floor-9": {
-      "width": 323,
+      "width": 306,
       "height": 56,
       "density": 3,
-      "bytes": 17549,
-      "sha256": "5db033c793cac65367af60178484e0a2b1cf85f609557b26cdeda7893874f1a9"
+      "bytes": 17410,
+      "sha256": "82608032375892c71a61ab77a07668298daaa616a859b96b43de943208aa9c27"
     },
     "mangrove/floor-10": {
-      "width": 365,
-      "height": 62,
+      "width": 342,
+      "height": 61,
       "density": 3,
-      "bytes": 19450,
-      "sha256": "c9638c34ced82337e89b4ef406a16406ef319693d363e5217ca2b666a3e80a0c"
+      "bytes": 18738,
+      "sha256": "3d2c4aee0fff4688fcdabb9ed68fc540a3d7f08a1b6505528d0a1083d1dde961"
     },
     "mangrove/floor-11": {
-      "width": 407,
-      "height": 66,
+      "width": 382,
+      "height": 67,
       "density": 3,
-      "bytes": 21286,
-      "sha256": "b3949bdd35f21d9e9a492c68c7b2e27582c23f7e0fcb0b877d6b3d710a5ec85e"
+      "bytes": 20475,
+      "sha256": "f002c1d4f92e481be1a881978facef58a7686436da1f7d5056d6bdbac493d915"
     },
     "mangrove/floor-12": {
-      "width": 454,
-      "height": 73,
+      "width": 426,
+      "height": 74,
       "density": 3,
-      "bytes": 21668,
-      "sha256": "ee57a0890aba3b502638c2d0ad1e5cf54db92d041cbac7c0605f0fc0eaa4558a"
+      "bytes": 21754,
+      "sha256": "1d4e4821bc07022f5254ef704131fb480480da6e810437e1e72e0ba71267def9"
     },
     "mangrove/floor-13": {
-      "width": 507,
-      "height": 82,
+      "width": 471,
+      "height": 78,
       "density": 3,
-      "bytes": 24980,
-      "sha256": "5b56ef9621a280a0c2690df745caf056a326380519a12ba3d5f99e8d6edf0258"
+      "bytes": 23485,
+      "sha256": "7b74b7eb3161c22ad90a624c4e8b449472c53d0526e03783eb65eb1adde7a226"
     },
     "mangrove/floor-14": {
-      "width": 560,
+      "width": 521,
       "height": 87,
       "density": 3,
-      "bytes": 25724,
-      "sha256": "c1e2e2a260fc51f5828bc73c9c0bd828019f5ffd51bf61d77e72de5795df61c2"
+      "bytes": 25021,
+      "sha256": "fe78bb9896a5d0c491330c55c390fcaa292e1c92da92a04b9b7cd37b69652402"
     },
     "mangrove/floor-15": {
-      "width": 620,
-      "height": 98,
+      "width": 576,
+      "height": 97,
       "density": 3,
-      "bytes": 27896,
-      "sha256": "deb348c5f127aa9390b319b7e4fb90f91ae4e7969e1dafda31f15dac4e8680fb"
+      "bytes": 27042,
+      "sha256": "eeea68889352370a5fdcbd7e7b10afc8e896fd609f46781dc3fca7f18043676f"
     },
     "mangrove/floor-16": {
       "width": 630,
-      "height": 110,
+      "height": 103,
       "density": 3,
-      "bytes": 30627,
-      "sha256": "e08063fffed06bf3937bb443d70a2d62404e0408e48f969111f6b6c0ddafcb77"
+      "bytes": 29262,
+      "sha256": "a9352f36aeb0fbe1bd4e75c4f9f04007d286c9fc68ee8144a27035591bb02f68"
     },
     "mangrove/floor-17": {
       "width": 630,
-      "height": 118,
+      "height": 115,
       "density": 3,
-      "bytes": 30908,
-      "sha256": "6e251083fbba856aac61699d58df80349ab863d9a60337e590cabf3c37b4a2d4"
+      "bytes": 29721,
+      "sha256": "3dfff7cf08bc39350f9630215521b4949a25d567ef675f763efc5f0d7d84e3ee"
     },
     "mangrove/floor-18": {
       "width": 630,
-      "height": 134,
+      "height": 129,
       "density": 3,
-      "bytes": 29750,
-      "sha256": "cddca7698384a3a8a65a70ebddc984522a5cba87a95b2a78e7043292d32f56fd"
+      "bytes": 31565,
+      "sha256": "0f0277c0867334f7b6008955ad4df032d0eb9631936f8f64e1fa672659928a2a"
+    },
+    "mangrove/floor-19": {
+      "width": 630,
+      "height": 138,
+      "density": 3,
+      "bytes": 30925,
+      "sha256": "e192f276880bdb8d7e11f45281930b2b6a27f1002238595ef0310551dedd1bed"
     },
     "rain/floor-0": {
       "width": 86,
-      "height": 23,
+      "height": 24,
       "density": 3,
-      "bytes": 5758,
-      "sha256": "f349f3adc2ab5c9f3b8716e35a345adae5a96d900e20a841c427ef51c5b48f4c"
+      "bytes": 5657,
+      "sha256": "aaf0b5a0e9f2c523ff14d3a6f70bee8b2ed383fba2a36db500746ff3eebae437"
     },
     "rain/floor-1": {
       "width": 103,
-      "height": 27,
+      "height": 29,
       "density": 3,
-      "bytes": 7017,
-      "sha256": "7ba802bfae20fb6734c9c3040c4536bfd53e65df018cb3cc450753e763baeb63"
+      "bytes": 7324,
+      "sha256": "dfb40bc99fc69ec6ff9753683ae661366e76c9fb19af8e9651002381b9813aea"
     },
     "rain/floor-2": {
-      "width": 122,
-      "height": 30,
+      "width": 120,
+      "height": 31,
       "density": 3,
-      "bytes": 8468,
-      "sha256": "60f74771230275336ca5e7c43ef3a924d6ed6cc880d8aa684a3ec39589050c00"
+      "bytes": 8459,
+      "sha256": "0c01e365352b664601010a39098bbd72fb840b6bc30f46f2d93a182ea8d4d45c"
     },
     "rain/floor-3": {
-      "width": 143,
-      "height": 32,
-      "density": 3,
-      "bytes": 8860,
-      "sha256": "2daeb765a1db4770c9f8f29fcea08c145adf7e05bf75b757778d681b7ba5ffb7"
-    },
-    "rain/floor-4": {
-      "width": 166,
+      "width": 141,
       "height": 35,
       "density": 3,
-      "bytes": 9922,
-      "sha256": "c424c62057c9db04a8f6e04bd478c90d89d0aba3de0d177e3fdc39caab8592eb"
+      "bytes": 9188,
+      "sha256": "2e45ad6d33cd1a124a081593239fcfeccdd9cf2b38f03bec825c501e0d7938d6"
+    },
+    "rain/floor-4": {
+      "width": 164,
+      "height": 37,
+      "density": 3,
+      "bytes": 10358,
+      "sha256": "2bf292f201e49fc07d7cc84d51bc6c7fa1ee9b1c5a15871cddd207e735816d7e"
     },
     "rain/floor-5": {
-      "width": 192,
-      "height": 39,
+      "width": 188,
+      "height": 40,
       "density": 3,
-      "bytes": 11905,
-      "sha256": "4d18d5ad23c2b1d3241a9bd1a34656a6f8754eb01d5b7bf0498734c62935d562"
+      "bytes": 11281,
+      "sha256": "3a36c0c4d28a7f8152b8a415c82fb78a746d7c9f0de0106d8aeb76fb5b4bf921"
     },
     "rain/floor-6": {
-      "width": 220,
+      "width": 214,
       "height": 43,
       "density": 3,
-      "bytes": 13045,
-      "sha256": "d2e7efa1195f09b8790155efa52d36be2d2cf52eeeae70d9cb7e185ac35cf5a8"
+      "bytes": 12676,
+      "sha256": "c3e01ba0d66e2efe4a7660b03e24ab6ec07953e1c29cd4cf36c9267919a6373d"
     },
     "rain/floor-7": {
-      "width": 252,
+      "width": 242,
       "height": 47,
       "density": 3,
-      "bytes": 14281,
-      "sha256": "539845c41ca46b6d656b144b6f27b2214ba454f4f528e1cf09cdfafccea022b7"
+      "bytes": 13258,
+      "sha256": "f4d91ee6941a6ec8c454a34e93f7c9992cf5e773430c5085459a7f30bb166eea"
     },
     "rain/floor-8": {
-      "width": 286,
+      "width": 272,
       "height": 51,
       "density": 3,
-      "bytes": 15439,
-      "sha256": "4226987721bbbbb6798e6178f328bbd51f27fe6d3632831f69bc5a3fa4b772c4"
+      "bytes": 15692,
+      "sha256": "46be1c6d561ccf7bc7adbacc2d327e72f53cc15062e94285cdbe04ef2af19bf7"
     },
     "rain/floor-9": {
-      "width": 323,
+      "width": 306,
       "height": 56,
       "density": 3,
-      "bytes": 17259,
-      "sha256": "46addd6b2134dc6513e6b4658863737db9f5e0fe34237e4ebdaeb4d78a34a3ab"
+      "bytes": 16841,
+      "sha256": "561350be6031ca03a4611150201117df2b767d17165d4e4ee486d45df5cccec3"
     },
     "rain/floor-10": {
-      "width": 365,
-      "height": 62,
+      "width": 342,
+      "height": 61,
       "density": 3,
-      "bytes": 18918,
-      "sha256": "1f25c390dd087ae2fe82ad826bba45f6f51668008f78827909d20c32454f0518"
+      "bytes": 18094,
+      "sha256": "4571ab68eaf37620a8937b862ac82dcdf49b1b416857dacbf6cc8635852dc83a"
     },
     "rain/floor-11": {
-      "width": 407,
-      "height": 66,
+      "width": 382,
+      "height": 67,
       "density": 3,
-      "bytes": 20472,
-      "sha256": "c17f8c1c40ef26b0dc92124f36dd96732fb7184878f66af145d621e0ac67a79d"
+      "bytes": 19808,
+      "sha256": "0aa148f39b2f63a2427cb0730649c951ff4d370973cef6ef2a6353691f61007b"
     },
     "rain/floor-12": {
-      "width": 454,
-      "height": 73,
+      "width": 426,
+      "height": 74,
       "density": 3,
-      "bytes": 20994,
-      "sha256": "ee8b2ff2eb9459538ecef8ce7f5070a11649a0a9e4a25230ffc30bf41d249dd1"
+      "bytes": 21216,
+      "sha256": "8a7a3bcab14867c635119cd1d097f2ac45dd6bfbac0e7bf699792023ce54f1e9"
     },
     "rain/floor-13": {
-      "width": 507,
-      "height": 82,
+      "width": 471,
+      "height": 78,
       "density": 3,
-      "bytes": 24400,
-      "sha256": "e59a481484ad6a7a85ba1c31c7c173aa2600364fa9f23b1e66391f204efe1e5c"
+      "bytes": 22616,
+      "sha256": "9faabbb56a3195f99d6c853eb7b8789fe09ead26ef1adf76dedf1da65dd9e790"
     },
     "rain/floor-14": {
-      "width": 560,
+      "width": 521,
       "height": 87,
       "density": 3,
-      "bytes": 25026,
-      "sha256": "936059644cdeeb427399c69fd9a49715fbfa0da3072a8cc05bfeea8ad81e9c80"
+      "bytes": 24528,
+      "sha256": "9d3e5e5ae1db5f571c45436c1e1aed4feda74906acefc332d748935e6aa28a7e"
     },
     "rain/floor-15": {
-      "width": 620,
-      "height": 98,
+      "width": 576,
+      "height": 97,
       "density": 3,
-      "bytes": 26982,
-      "sha256": "75327740d14184a8ee99dba8d7857a936ee8c5ab6082b087e0e4ae95ad9ed82d"
+      "bytes": 26429,
+      "sha256": "10d830a9fe426c2c20bf5eca2bd91a3f36106b8b2f587cce2bfb8a05e7938585"
     },
     "rain/floor-16": {
       "width": 630,
-      "height": 110,
+      "height": 103,
       "density": 3,
-      "bytes": 29760,
-      "sha256": "6597704b5d70b36b22c445991e47d8f4897a153a96bd660d3e026332998bc5fd"
+      "bytes": 28601,
+      "sha256": "5463ba82d2fee2d48461b403312187aca489a93916d3556ca36bfe5e359a25e2"
     },
     "rain/floor-17": {
       "width": 630,
-      "height": 118,
+      "height": 115,
       "density": 3,
-      "bytes": 30238,
-      "sha256": "676769ef9d45317391a51f4e944d55bb522b018c1a7ed3f6bab8d5fcc998d92e"
+      "bytes": 28581,
+      "sha256": "cbe072c608a140a18beed699862de5dbd2dc33cbbffa5489df43d53b1e9ec5fb"
     },
     "rain/floor-18": {
       "width": 630,
-      "height": 134,
+      "height": 129,
       "density": 3,
-      "bytes": 28731,
-      "sha256": "9e6cfc1415b5f23ffa8b89520e230e035034dcbfb19c868d140dc08cfb70df95"
+      "bytes": 30990,
+      "sha256": "87e491ad2a4f18a6f71a1c838f3be550a866419b0a10746fda6162df04b26518"
+    },
+    "rain/floor-19": {
+      "width": 630,
+      "height": 138,
+      "density": 3,
+      "bytes": 30026,
+      "sha256": "1f7c325e10849d99222d3194af5028c8f57e1251a387392d54389518122afbbd"
     },
     "headland/floor-0": {
       "width": 86,
-      "height": 23,
+      "height": 24,
       "density": 3,
-      "bytes": 5904,
-      "sha256": "fbb22789f1afe814a697815f9e069e145f3c6a1df37c579c718adb063f15b8e5"
+      "bytes": 5865,
+      "sha256": "707fb24bceab85d4913b24d8da8feb76fef48d0b7f93ae8a625dd8452c8fcc06"
     },
     "headland/floor-1": {
       "width": 103,
-      "height": 27,
+      "height": 29,
       "density": 3,
-      "bytes": 7202,
-      "sha256": "836aef8918f190db3dbabfca6b9a9066399d16e2efbf9eaed2e3786c865c38bb"
+      "bytes": 7468,
+      "sha256": "397f78a22bbcba5f7cd9d704934f35bf64377121239fa27c6582381821a7456e"
     },
     "headland/floor-2": {
-      "width": 122,
-      "height": 30,
+      "width": 120,
+      "height": 31,
       "density": 3,
-      "bytes": 8658,
-      "sha256": "d1613930f34ae2146b54df7c293bb98a3a1ceb6e1807712974c14c44dbb07470"
+      "bytes": 8679,
+      "sha256": "3f5df3fcd346e57bb288e279fbb384d0acac8e0475b8b6d1c64ff1200343cee9"
     },
     "headland/floor-3": {
-      "width": 143,
-      "height": 32,
-      "density": 3,
-      "bytes": 9095,
-      "sha256": "e1131f5c33bfb016957b660048939c16a40ed7cc7256cb6ed1652f317ecceaf6"
-    },
-    "headland/floor-4": {
-      "width": 166,
+      "width": 141,
       "height": 35,
       "density": 3,
-      "bytes": 10278,
-      "sha256": "1edc73c246016b348029765717ed2f07ba677fdc0259e5a2f8d2407a2f6b16ad"
+      "bytes": 9659,
+      "sha256": "10295ec14f3a40fa90f3acab195c3f99471477f000d6fc8382de8e23329aa0fc"
+    },
+    "headland/floor-4": {
+      "width": 164,
+      "height": 37,
+      "density": 3,
+      "bytes": 10867,
+      "sha256": "2335b59029b6b857c4485057619206672fa2506035f4f7770788aa2a8c645fd0"
     },
     "headland/floor-5": {
-      "width": 192,
-      "height": 39,
+      "width": 188,
+      "height": 40,
       "density": 3,
-      "bytes": 12096,
-      "sha256": "4de4ec96a6d91e3a149e5f73b2ee585b68374561e473aaa8a2ccabec64f8de7f"
+      "bytes": 11555,
+      "sha256": "734388b08989d2dfd816c7ff5f0e461a33716e81d16d8e641646da6c53273607"
     },
     "headland/floor-6": {
-      "width": 220,
+      "width": 214,
       "height": 43,
       "density": 3,
-      "bytes": 13500,
-      "sha256": "a77e9e84f199d6c600c8998d4ddf7ab71d465ce970f3a3e28aef1c9f3777159b"
+      "bytes": 13132,
+      "sha256": "749c4bdbfe49d41d23abfdd97e000ff89874abd3aabdaff6ec257cafd2c94318"
     },
     "headland/floor-7": {
-      "width": 252,
+      "width": 242,
       "height": 47,
       "density": 3,
-      "bytes": 14697,
-      "sha256": "717092c9ea0710019acac74ac7139628e4225186058b2c8524a2a432c00f3321"
+      "bytes": 13662,
+      "sha256": "97bf68e7f34def724602b0a620861bb319dab86c4c57460639ecbefecd582ed4"
     },
     "headland/floor-8": {
-      "width": 286,
+      "width": 272,
       "height": 51,
       "density": 3,
-      "bytes": 15891,
-      "sha256": "190b16a3b82cc0af50a0cc583df52596409dd202549ccbb21277c3692c24a293"
+      "bytes": 16175,
+      "sha256": "f068ac99242da24e903db573b7933840f91dbf910ecfb34da67943a6176b6c02"
     },
     "headland/floor-9": {
-      "width": 323,
+      "width": 306,
       "height": 56,
       "density": 3,
-      "bytes": 17801,
-      "sha256": "0b85cdd3fa0cca7bbe5d2e74aacd0eb727c08bc0c2d017da30fd694aa62488a7"
+      "bytes": 17408,
+      "sha256": "4893777d09aeffec12508b9ff342e77f6250e0faafb5d2654c9c8d30677d0794"
     },
     "headland/floor-10": {
-      "width": 365,
-      "height": 62,
+      "width": 342,
+      "height": 61,
       "density": 3,
-      "bytes": 19734,
-      "sha256": "75b2eb71a0090dff539cb8b7f4ded071b041615e821a6ea1be8f55afad155153"
+      "bytes": 18662,
+      "sha256": "0da503daa8b3cc2e3047d7fc8af262c078d69028520d9fd9577f82945a5aefb6"
     },
     "headland/floor-11": {
-      "width": 407,
-      "height": 66,
+      "width": 382,
+      "height": 67,
       "density": 3,
-      "bytes": 21356,
-      "sha256": "a9ce48072991750fab8f0dfc658753d40e9f46c17e6a719b06d4178bc6035182"
+      "bytes": 20407,
+      "sha256": "cfe3665a685ac9fcf4e4eaa47d66cbc7113557a766be07d5dcfeef378b6278d4"
     },
     "headland/floor-12": {
-      "width": 454,
-      "height": 73,
+      "width": 426,
+      "height": 74,
       "density": 3,
-      "bytes": 21822,
-      "sha256": "f1fd51c8b60ac6bde7a8e6f3332838dcd42f4cbe8426aea24c76dca8f25bf454"
+      "bytes": 21912,
+      "sha256": "8ea053e2c8825488d82b813e72968cdbc871b235010f925528dd76d468479e8e"
     },
     "headland/floor-13": {
-      "width": 507,
-      "height": 82,
+      "width": 471,
+      "height": 78,
       "density": 3,
-      "bytes": 24899,
-      "sha256": "44b9855ec6482cdd57e9e6d5208cb87998d57e1b9696655e7fae7f1c90602792"
+      "bytes": 23432,
+      "sha256": "f038d96a6a4ea729b4b7e1aea5ad9833dace4ef0a615e9ac6a571cbec4f6208a"
     },
     "headland/floor-14": {
-      "width": 560,
+      "width": 521,
       "height": 87,
       "density": 3,
-      "bytes": 25817,
-      "sha256": "8e4ddb350b90d16434975d524098ff1c9fcdc91c283ad6bb009bc990e032ecff"
+      "bytes": 25255,
+      "sha256": "f64318acad782ab8d260ec7debaa94e52c4a831f4d9dcdf888ffa1abd5e2dc22"
     },
     "headland/floor-15": {
-      "width": 620,
-      "height": 98,
+      "width": 576,
+      "height": 97,
       "density": 3,
-      "bytes": 27937,
-      "sha256": "137dbc4479cafaa0c5452a00e337a99f7d55937bc0cf9e41b801673c4473b77d"
+      "bytes": 27274,
+      "sha256": "9626d1189b24d83557b3b4358d11425f59dbbfc7fe1264926e7233de25333989"
     },
     "headland/floor-16": {
       "width": 630,
-      "height": 110,
+      "height": 103,
       "density": 3,
-      "bytes": 30767,
-      "sha256": "17a3678bc4dc6908347dbb7751d65c1550c19a2be2551aae8379f98fe9337b6b"
+      "bytes": 28989,
+      "sha256": "bdddb3fe079d65636320220fcbbeb5d80133527031267b6cff66a26b23de33b9"
     },
     "headland/floor-17": {
       "width": 630,
-      "height": 118,
+      "height": 115,
       "density": 3,
-      "bytes": 30962,
-      "sha256": "e79c0481c551941677b3d0cf1ebe0cbb67458fabbe8c6a3120574618432e353a"
+      "bytes": 29753,
+      "sha256": "5ae1facd4d4a8c5e9a8e051079d4ecda65b502d1b7094a7cf2123fe63c481c82"
     },
     "headland/floor-18": {
       "width": 630,
-      "height": 134,
+      "height": 129,
       "density": 3,
-      "bytes": 29564,
-      "sha256": "88908ab2cc9c16b75fb7e9e1c2e62d5989852e84aaeccddb26f613eafe41eabf"
+      "bytes": 31896,
+      "sha256": "3dca6bf40c9ed977771e7b433243670f9035a5a7eeaeb671781fb5cca63ab06d"
+    },
+    "headland/floor-19": {
+      "width": 630,
+      "height": 138,
+      "density": 3,
+      "bytes": 30811,
+      "sha256": "67afd416a5320e7664c4b00332392338c18cbf0d305a3bf12a7d025f8c42810c"
     },
     "learn/floor-0": {
       "width": 86,
-      "height": 23,
+      "height": 24,
       "density": 3,
-      "bytes": 5903,
-      "sha256": "df967b9ec24d0e2993bf645d74d3a1796b0524e5749650c4434c167e021120df"
+      "bytes": 5887,
+      "sha256": "833aa3f0e2bc5829416aa5b19a110c902a059d182fca0545e0470733f659ea61"
     },
     "learn/floor-1": {
       "width": 103,
-      "height": 27,
+      "height": 29,
       "density": 3,
-      "bytes": 7271,
-      "sha256": "5d9dc94f2a14288d64370b72cb4bf2bd9dc9e91612d3f48429bbb62ac06734b6"
+      "bytes": 7446,
+      "sha256": "2a2651ceb4e367694f36a9d2c6b01fe7348dcaec59cdd308948026d69aa0bbff"
     },
     "learn/floor-2": {
-      "width": 122,
-      "height": 30,
+      "width": 120,
+      "height": 31,
       "density": 3,
-      "bytes": 8666,
-      "sha256": "d61261d37d4a5d4f21f880c2f7585a24ceeafbdbb23dd6c3dbea720fb6720bbd"
+      "bytes": 8858,
+      "sha256": "c640922952f1256abd9843530c876ad8c16f9786c16ac66433b95d650dadded0"
     },
     "learn/floor-3": {
-      "width": 143,
-      "height": 32,
-      "density": 3,
-      "bytes": 9168,
-      "sha256": "3ce01baeca0e5295d758dfaab8f1435232d7db3383b474f4392d4a14669c3363"
-    },
-    "learn/floor-4": {
-      "width": 166,
+      "width": 141,
       "height": 35,
       "density": 3,
-      "bytes": 10405,
-      "sha256": "422fac9f5115b51a353031f67ac5a30ca148a8f3f1b80360bb5e1e12453c1603"
+      "bytes": 9662,
+      "sha256": "d6415a931da474d1b3010576664e178aa09775b8974e28103ad7c6284db00347"
+    },
+    "learn/floor-4": {
+      "width": 164,
+      "height": 37,
+      "density": 3,
+      "bytes": 10958,
+      "sha256": "29e02dba428de8d80bcbd5d3b1ceca47b5998924b0ab131d0640498f705b0dc9"
     },
     "learn/floor-5": {
-      "width": 192,
-      "height": 39,
+      "width": 188,
+      "height": 40,
       "density": 3,
-      "bytes": 12274,
-      "sha256": "0ecab47aac52c8aff96ec000b0a1626d79f759c2e69cc2ffa669d734edb48b77"
+      "bytes": 11651,
+      "sha256": "3c3456ecbbd927302a5489701787d55c70a299b813cbefe2bb16048183fa68a5"
     },
     "learn/floor-6": {
-      "width": 220,
+      "width": 214,
       "height": 43,
       "density": 3,
-      "bytes": 13512,
-      "sha256": "ecadb53931386a7c999b56fda4b18be1fee7b54e405ac3fb8aa32cac0794d515"
+      "bytes": 13480,
+      "sha256": "d96e316fd44b4ab19cdab473d9f36529252e8eb6f282d55624003f6c4717bf03"
     },
     "learn/floor-7": {
-      "width": 252,
+      "width": 242,
       "height": 47,
       "density": 3,
-      "bytes": 14822,
-      "sha256": "8e80bf65d2dffd83c56ceddb2b037d3316c91c4e601fa0d94ea06a8ed9595ef8"
+      "bytes": 13720,
+      "sha256": "fa25c54d8fb1f0eb10e2108b5c7538fc0b54b36361b44217cdf33508dcf634b5"
     },
     "learn/floor-8": {
-      "width": 286,
+      "width": 272,
       "height": 51,
       "density": 3,
-      "bytes": 16058,
-      "sha256": "fd4ffe4a9cc5f11ab7387ba3e0542a53ee3c59d737c77b135355e519f28f2a74"
+      "bytes": 16399,
+      "sha256": "5a5123eff81e406357bc8f6a206d11bcc8475d026dbe06b6aefbf31dc0d1b6b8"
     },
     "learn/floor-9": {
-      "width": 323,
+      "width": 306,
       "height": 56,
       "density": 3,
-      "bytes": 18002,
-      "sha256": "2dcafa772ddcafcbb8a3f86d645a82759ae1908264686cf91037d84b400d1d27"
+      "bytes": 17624,
+      "sha256": "53410230eb53ee6b5f79c28e0ca9c480ac68975b5083f189135892bd87d1676f"
     },
     "learn/floor-10": {
-      "width": 365,
-      "height": 62,
+      "width": 342,
+      "height": 61,
       "density": 3,
-      "bytes": 19757,
-      "sha256": "63379887f639e94982a653d9e3559cbc30b94d1e1ddd155ede68fb6146ff7975"
+      "bytes": 19027,
+      "sha256": "fca29136817381dc777899dde24946cbfb57588581effd576b23ee823f988610"
     },
     "learn/floor-11": {
-      "width": 407,
-      "height": 66,
+      "width": 382,
+      "height": 67,
       "density": 3,
-      "bytes": 21678,
-      "sha256": "5e4d5f9dc19471749db1f075dae8b2f0f48eb146ed409a431497b28115c43dbe"
+      "bytes": 20745,
+      "sha256": "a7a8ab763973b32a38f6c85e9ab81112c36e2e4bfdc108bedc0a87b32f76a89a"
     },
     "learn/floor-12": {
-      "width": 454,
-      "height": 73,
+      "width": 426,
+      "height": 74,
       "density": 3,
-      "bytes": 22131,
-      "sha256": "2b37a2245ed1215c22192f961de1b2c64329ecb27bf837dd3825b9631e24cdee"
+      "bytes": 22133,
+      "sha256": "90565ce7190e9301c2bb6438370775e9f509715f3ce1ecdb8bfb0c6c2b3d3300"
     },
     "learn/floor-13": {
-      "width": 507,
-      "height": 82,
+      "width": 471,
+      "height": 78,
       "density": 3,
-      "bytes": 25273,
-      "sha256": "4bb7cbc7773ab63c0a58e4b2f854dd2f453db3843776b3e22b1a78fc1bc6bd6e"
+      "bytes": 23502,
+      "sha256": "1ca27e3975493f5926b25acd288baefd5126b2b87355375f7a5a5e76a395ff4f"
     },
     "learn/floor-14": {
-      "width": 560,
+      "width": 521,
       "height": 87,
       "density": 3,
-      "bytes": 26018,
-      "sha256": "370b7cc6793271f7f096a5d397582a37df174c13891aa48283294fc70f2b5eb9"
+      "bytes": 25347,
+      "sha256": "7e51add9c18aa746255c357ffa6ca496b6504bf6fba3a274594593ecc948b051"
     },
     "learn/floor-15": {
-      "width": 620,
-      "height": 98,
+      "width": 576,
+      "height": 97,
       "density": 3,
-      "bytes": 28286,
-      "sha256": "6dcae326b45c9ef18ebbcc4a770093df6ab27425814dbeb33aa1be92fa359a81"
+      "bytes": 27618,
+      "sha256": "c25e875cffd823edc0ea00d63dfd318611fef2cd1d8cd3a6c0a8e0810c044c0d"
     },
     "learn/floor-16": {
       "width": 630,
-      "height": 110,
+      "height": 103,
       "density": 3,
-      "bytes": 30917,
-      "sha256": "269a2632e9b7006f8533632bc4306676e38f4b0a9ebbd3933a0b213b66bc05f7"
+      "bytes": 29745,
+      "sha256": "e5a0041e7e14045f202391dee151cb40134e5a421959eaa45da28fbe04599300"
     },
     "learn/floor-17": {
       "width": 630,
-      "height": 118,
+      "height": 115,
       "density": 3,
-      "bytes": 31452,
-      "sha256": "ff558cf817c84060368cad8ab5c6c56de061bf454f6375c052b6f6b7a92fe70a"
+      "bytes": 29891,
+      "sha256": "ab3bc22fc6d8e83083e3f598fbc9d79fdf49b36313ed3c1f9363ee5f1c4de370"
     },
     "learn/floor-18": {
       "width": 630,
-      "height": 134,
+      "height": 129,
       "density": 3,
-      "bytes": 30014,
-      "sha256": "f0223f42a30c11e120c54eb52c6bb993fe697501f9fdc2325a17ff7af3945f35"
+      "bytes": 32241,
+      "sha256": "c670b5ef9a3ce3525154594b48bb1aa2ed1fde3e2381e7fd68198af090c07a71"
+    },
+    "learn/floor-19": {
+      "width": 630,
+      "height": 138,
+      "density": 3,
+      "bytes": 31160,
+      "sha256": "1b59fd409882c67e3425e850796af843a1388fdea4f3c1da4e05eb7c263c9686"
     },
     "morning/prop-0": {
       "width": 100,
       "height": 240,
       "density": 4,
-      "bytes": 54426,
-      "sha256": "48efebf76489a02a752f0c61246a5edb14fcd944e890bd3cc31fc26d0a3fb6e7"
+      "bytes": 55761,
+      "sha256": "4577fa3aa42917b09d35123b360d469816f4511dc43065f022193552b4de27a8"
     },
     "morning/prop-1": {
       "width": 100,
       "height": 240,
       "density": 4,
-      "bytes": 31178,
-      "sha256": "3b9c76c737dd3857cb59def45a5da5cdb2394330170389695360f4a1c208a0a3"
+      "bytes": 32579,
+      "sha256": "367b62be7790af75e6bfe720238e30efae7d6fbfcd9cba8da78ae1c1508f604f"
     },
     "morning/prop-2": {
       "width": 100,
       "height": 240,
       "density": 4,
-      "bytes": 40519,
-      "sha256": "1bbafcf93f43a7c72ec30bd02ce903c36c0ee3cc88d6d7990a7753e872b411c3"
+      "bytes": 41986,
+      "sha256": "d05e50e1cbd796d2f3173a3d2bf955628378b0389ea159c99763f605c4809c6f"
     },
     "morning/prop-3": {
       "width": 100,
       "height": 240,
       "density": 4,
-      "bytes": 12863,
-      "sha256": "c7ba7b520e6f6cb68478186b7c43571abc19dcff2e030c2e3fe72c9f0d0f2250"
+      "bytes": 13632,
+      "sha256": "f91f24df2409e595a526f6574461da18bcbcf00cc7d46fe93a51f622e5826b7f"
     },
     "festival/prop-0": {
       "width": 100,
       "height": 240,
       "density": 4,
-      "bytes": 17273,
-      "sha256": "c0a287213ba31df5fd69b03ce7b62fa61b297f6954d83bd1e4af59610ed7d054"
+      "bytes": 17998,
+      "sha256": "e66cb4f3107a6ee6e02820b42431089307e7cd7c5c9b11eb5cfb1c80246a5ba5"
     },
     "festival/prop-1": {
       "width": 100,
       "height": 240,
       "density": 4,
-      "bytes": 22220,
-      "sha256": "58c5ed3600865c403d5182fbdd6b0e96061a99e16ad4691a73431452ed27f75d"
+      "bytes": 21696,
+      "sha256": "5410ad81b708ceab40dfec8b8181d87fb40611952f7b5a401cac7e316dcee3de"
     },
     "festival/prop-2": {
       "width": 100,
       "height": 240,
       "density": 4,
-      "bytes": 19669,
-      "sha256": "46e78049bf4a29ee42e9266be63239fdeaea076cecf9e4d3129243613d3fa5e3"
+      "bytes": 19673,
+      "sha256": "4517b63fa6992cdc66327b5c66aa45f331d819d2d65c076b15da3622715defd8"
     },
     "festival/prop-3": {
       "width": 100,
       "height": 240,
       "density": 4,
-      "bytes": 33884,
-      "sha256": "5b8eadbe127aed706c6fb359a13dd7d675d66d6aa762d3dd16ad1ce358b25042"
+      "bytes": 33632,
+      "sha256": "da0b350d492d3b75e9fab9cf93d708b9980bf4c2ee0e960c0ea9ba4903750888"
     },
     "morning/rail": {
       "width": 160,
@@ -1021,8 +1070,8 @@
       "width": 72,
       "height": 72,
       "density": 4,
-      "bytes": 7216,
-      "sha256": "41cbe195a99870dbedf5a230a45794dacfdc1a9298a4d7b62a5c76fb41bb1aa9"
+      "bytes": 6041,
+      "sha256": "98875059fe2c13be37f452aea1c7997e508c8e3ae5fcd91d0448e21938aa4542"
     },
     "actors/crab": {
       "width": 72,
@@ -1077,15 +1126,15 @@
       "width": 72,
       "height": 129.6,
       "density": 4,
-      "bytes": 22085,
-      "sha256": "b6d0011b2bf6a6dfa089069f7ec004f07918d2ddb4899ed42cacb6f6e5c7142d"
+      "bytes": 21018,
+      "sha256": "5464c885aac22c283e45b7ba8a323a7a05af869a41265578989860714c7d4fd1"
     },
     "actors/wall": {
       "width": 72,
       "height": 129.6,
       "density": 4,
-      "bytes": 18115,
-      "sha256": "6fc4a9e716aa04e5aecbe85303b90624518a0026c845ca97d1d6b39ed0897d75"
+      "bytes": 25890,
+      "sha256": "793e446f6950ea3fbd343cadd42a642b03f04ed5da7692b7b6a6851cbee84097"
     },
     "actors/shell": {
       "width": 30,
@@ -1190,116 +1239,116 @@
     },
     "canoe-still-0": {
       "width": 73,
-      "height": 64,
-      "bytes": 7145,
-      "sha256": "d1dd7793d972c30c566cd9dfa078b3bcb7d1c385a112af05cd9d6b55b86b996e"
+      "height": 65,
+      "bytes": 7284,
+      "sha256": "d572dd3cb6ab50f528324a9b1f5d34a08142f09e53082f2841250168f84844f8"
     },
     "canoe-moving-0": {
       "width": 73,
-      "height": 64,
-      "bytes": 9556,
-      "sha256": "13ce981cfe0741764e0b52960e9c029a3444d7facc163c9c06cbfe0324e2b278"
+      "height": 65,
+      "bytes": 9952,
+      "sha256": "d89ae078b4e594694d80d9130295770b4bdfca84c901b9e65d29ac99b67a8aba"
     },
     "canoe-still-1": {
       "width": 120,
-      "height": 100,
-      "bytes": 10965,
-      "sha256": "b7435926fbb32658fc5b4dfb754c6da35f8ae2305f8caf6385005e106a0e2b6c"
+      "height": 103,
+      "bytes": 11848,
+      "sha256": "580981a8b0c58c2380c62555526bd072e8589c3e3ee25387b0029f9e80e6a21c"
     },
     "canoe-moving-1": {
       "width": 120,
-      "height": 100,
-      "bytes": 14617,
-      "sha256": "cd863b634f4b9aa22d4e92b8cdb2ff042120a33f5f9ed3cd14013a79ce3a2041"
+      "height": 103,
+      "bytes": 16132,
+      "sha256": "a71c444cf3447b1cf5b143efbcc341e038b6432ca2657b0b1ebffcafb6ed02af"
     },
     "canoe-still-2": {
       "width": 172,
-      "height": 143,
-      "bytes": 15965,
-      "sha256": "5d72caadb43980e1d1749a056e06720617d7568fb74bce89fd37851d0c28c520"
+      "height": 146,
+      "bytes": 17613,
+      "sha256": "54325c6539b795adad7ea56c2a17c1e39f8d96c42137eec6c8a53f2ad7ccda6a"
     },
     "canoe-moving-2": {
       "width": 172,
-      "height": 143,
-      "bytes": 21521,
-      "sha256": "9cb8e6db4561c15d5ac6a9010a01f81b684993eac84a338c40d008bc67605f92"
+      "height": 146,
+      "bytes": 23923,
+      "sha256": "b74a371249172ef7a256d020d9f16781834b0acdae95104e258e8f9171803bf7"
     },
     "canoe-still-3": {
       "width": 249,
-      "height": 207,
-      "bytes": 24021,
-      "sha256": "1df486d7882feb177e61f0d0faca58748e19a44b708a4adbf4efa5df2a384a30"
+      "height": 211,
+      "bytes": 26963,
+      "sha256": "5344bc12672abdbd546e12d05f2bbd3086fe31b6b41d6feee72994fb23d467f0"
     },
     "canoe-moving-3": {
       "width": 249,
-      "height": 207,
-      "bytes": 31603,
-      "sha256": "c90320cf21988e1a7b69c133648c16bf6eb8a9c3ecc226f8f0c989d1c94bb734"
+      "height": 211,
+      "bytes": 35916,
+      "sha256": "f67f5cf8eb61619abf68e7099dc1c0c36a008be9671a271707edbc3ef7f6c3ea"
     }
   },
   "canoes": [
     {
       "depth": 0.1,
       "width": 73,
-      "height": 64,
+      "height": 65,
       "inverse": [
         0.0332304262070148,
-        0.004516317016317038,
-        -0.7277402920379508,
+        0.004201225131457717,
+        -0.7171111924553633,
         0,
-        -0.03959760777942592,
-        2.023820960184593,
+        -0.03683498398086139,
+        1.9306284507130174,
         0,
-        0.009032634032634075,
-        0.5383449883449866
+        0.008402450262915435,
+        0.5596031875101617
       ]
     },
     {
       "depth": 0.6,
       "width": 120,
-      "height": 100,
+      "height": 103,
       "inverse": [
-        0.020128824476650573,
-        0.0027356902356902237,
-        -0.7230237154150194,
+        0.02012882447665057,
+        0.0025448281262234677,
+        -0.7148039205673178,
         0,
-        -0.029097796143250695,
-        2.303650137741045,
+        -0.027067717342558827,
+        2.2162214107245832,
         0,
-        0.005471380471380447,
-        0.5668350168350191
+        0.0050896562524469354,
+        0.5832746065304221
       ]
     },
     {
       "depth": 1,
       "width": 172,
-      "height": 143,
+      "height": 146,
       "inverse": [
         0.01393534002229654,
-        0.0018939393939394066,
-        -0.7022879294618434,
+        0.0017618040873854874,
+        -0.6923689724498624,
         0,
-        -0.02125420875420873,
-        2.3889730639730606,
+        -0.019771356980659207,
+        2.2776603241719418,
         0,
-        0.0037878787878787928,
-        0.5742424242424237
+        0.003523608174770957,
+        0.5940803382663855
       ]
     },
     {
       "depth": 1.4,
       "width": 249,
-      "height": 207,
+      "height": 211,
       "inverse": [
         0.009647543092359148,
-        0.0013111888111888112,
-        -0.707071064387118,
+        0.0012197105220361063,
+        -0.6977951658670338,
         0,
-        -0.014423076923076933,
-        2.347115384615383,
+        -0.013416815742397177,
+        2.245080500894458,
         0,
-        0.0026223776223776234,
-        0.5732517482517487
+        0.0024394210440722135,
+        0.5918035452919168
       ]
     }
   ]

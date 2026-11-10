@@ -77,14 +77,15 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
   const lean = reduced ? 0 : s.lane-s.poseLane;
   const shake = reduced ? 0 : Math.max(0,s.cooldown/.3);
   // Camera is always visible. Its scale field carries speed-line intensity, not zoom.
-  p[CAMERA_SLOT]={x:-(contact.x-195)*.45-lean*5+Math.sin(s.time*95)*shake*5,y:reduced?0:Math.sin(s.travel*32)*1.1+Math.cos(s.time*83)*shake*3,angle:lean*.018,opacity:1,scale:reduced?0:Math.max(0,Math.min(.65,(runSpeed(s)-.42)*2.5))};
+  p[CAMERA_SLOT]={x:-(contact.x-195)*.3-lean*5+Math.sin(s.time*95)*shake*5,y:reduced?0:Math.sin(s.travel*32)*1.1+Math.cos(s.time*83)*shake*3,angle:lean*.018,opacity:1,scale:reduced?0:Math.max(0,Math.min(.65,(runSpeed(s)-.42)*2.5))};
   const next=s.rows.filter(r=>!r.passed).sort((a,b)=>b.z-a.z)[0];
   const move=next?.action==="idle"?4:next?.action==="jump"?1:2;
   // The cue's move rides in frame (same rule as runHud.teaching): pre-mounted variants switch by opacity, no render.
   const cue=next?.action==="jump"?0:next?.action==="duck"?1:next&&next.shellLane<s.lane?2:3;
   p[57]={x:260,y:78,frame:cue,opacity:!learn&&next&&next.z>.35&&(next.action!=="idle"||s.lane!==next.shellLane)&&!(s.learned&move)?1:0};
   const f=s.feedback/.45,scored=s.lastGain>0;
-  p[56]={x:Math.min(TRACK_WIDTH-88,contact.x+42),y:396-(1-f)*25,opacity:scored&&s.cue!=="shell"?f:0};
+  // +10 floats just above the runner's head and never sits on the track ahead.
+  p[56]={x:Math.max(8,Math.min(TRACK_WIDTH-72,contact.x-32)),y:contact.y-lift-132*HERO_SCALE-36-(1-f)*18,opacity:scored&&s.cue!=="shell"?f:0};
   for(const [start,lifetime] of [[26,s.cooldown],[NEAR_START,s.nearMiss]])if(lifetime>0&&!reduced)for(let i=0;i<6;i++){
     const t=Math.min(1,lifetime/.3),a=i*Math.PI/3;
     p[start+i]={x:contact.x+Math.cos(a)*(1-t)*50,y:contact.y-60+Math.sin(a)*(1-t)*50,opacity:t};

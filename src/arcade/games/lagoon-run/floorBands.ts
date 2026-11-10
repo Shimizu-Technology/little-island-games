@@ -17,7 +17,7 @@ export const FLOOR_PERIOD = BOARD * 2;
 export const FLOOR_FAR = -.6;
 /** The deck to the bottom of the tallest phone stage, with shake margin. */
 export const FLOOR_NEAR = 1.62;
-export const FLOOR_EDGES = [-.6, -.52, -.41, -.29, -.17, -.05, .08, .21, .34, .47, .6, .73, .85, .97, 1.09, 1.2, 1.31, 1.42, 1.52, 1.62] as const;
+export const FLOOR_EDGES = [-.6, -.52, -.41, -.3, -.18, -.06, .06, .18, .3, .42, .54, .66, .78, .9, 1.01, 1.12, 1.23, 1.33, 1.43, 1.53, 1.62] as const;
 /** Deck edge trim, just inside the rail posts at lanes 1 ± 1.55. */
 export const DECK_U0 = -.56, DECK_U1 = 2.56;
 /** Bands are baked @3x of their zoomed on-screen size at the band's nearest (largest) edge. */

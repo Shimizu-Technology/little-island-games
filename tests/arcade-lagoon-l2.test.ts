@@ -111,6 +111,10 @@ describe('L2 scrolling deck bands', () => {
       }
     }
   });
+  it('reaches the bottom of the tallest phone stage, with shake margin', () => {
+    const l = stageLayout(393, 800), bottom = projectTrack(1, FLOOR_BANDS.at(-1)!.near).y;
+    expect(stagePoint(l, 195, bottom).y).toBeGreaterThan(l.height + 20);
+  });
   it('locks seams to track depth: one period of travel returns the same matrix', () => {
     for (const band of FLOOR_BANDS) expect(floorBandMatrix(band, .2 + FLOOR_PERIOD, 0, 0).map(v => +v.toFixed(6))).toEqual(floorBandMatrix(band, .2, 0, 0).map(v => +v.toFixed(6)));
   });

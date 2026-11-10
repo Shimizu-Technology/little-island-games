@@ -13,7 +13,7 @@ import { HarborPlanks, HarborEnvironment, RunCamera, SpeedLines } from '../lagoo
 import { DeckBase, DeckHaze } from '../lagoon-run/Backdrop';
 import { RunArena } from '../lagoon-run/Arena';
 import { useStage } from '../lagoon-run/stage';
-import { HERO_SCALE, HERO_ZOOM } from '../lagoon-run/camera';
+import { CONTACT, HERO_SCALE, HERO_ZOOM, TRACK_HEIGHT } from '../lagoon-run/camera';
 import { FlightPalm, FlightForest, FlightShore, FlightSky, FlightWideSky } from "../fruit-bat-flight/Art";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, Platform, Pressable, View } from "react-native";
@@ -184,7 +184,7 @@ const RunScene=memo(function RunScene({poses,state,learn,world}:{poses:SharedVal
   const s=useRunSnapshot(state,sceneSpec);
   // The runner is live vector art: supersample it to the stage's total zoom so it stays sharp.
   const stage=useStage(),sample=Math.max(1,Math.min(2,Math.ceil(HERO_ZOOM*HERO_SCALE*stage.scale*4)/4));
-  const runner=useMemo(()=><LastHit dead={s.dead} x={195} y={554}><RunHit poses={poses}><RunnerRig poses={poses} sample={sample}/></RunHit></LastHit>,[poses,s.dead,sample]);
+  const runner=useMemo(()=><LastHit dead={s.dead} x={195} y={TRACK_HEIGHT*CONTACT}><RunHit poses={poses}><RunnerRig poses={poses} sample={sample}/></RunHit></LastHit>,[poses,s.dead,sample]);
   return <><RunLayer poses={poses} spec={s.spec} learn={learn} world={world} runner={runner}/><RunHitFlash poses={poses}/></>;
 });
 function displayRun(s:RunState) {"worklet";const h=runHud(s);return {level:h.level,passed:h.passed,score:h.score,lives:h.lives,powers:h.powers,next:h.next,shellNotes:runLearning(s)?0:s.shells};}
