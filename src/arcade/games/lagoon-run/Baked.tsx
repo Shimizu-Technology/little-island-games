@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Image } from 'react-native';
+import { Image, View } from 'react-native';
 import Animated, { useAnimatedReaction, useSharedValue, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import type { SpritePose } from '../../poses';
 import { projectTrack } from './camera';
@@ -7,21 +7,11 @@ import { matrix4, multiply3, quadHomography, type Quad } from './quad';
 import atlas from '../../../../assets/arcade/lagoon/manifest.json';
 import { canoeMatrix, deckFrame } from './bakedGeometry';
 import { RAMP_SECTIONS } from './surface';
+import { FLOOR_BANDS, floorBandMatrix, type FloorBand } from './floorBands';
+import { floorArt, hazardArt, powerArt, railArt, shellArt } from './art.generated';
+import { lagoonLook } from './look';
+import type { WorldId } from '../../types';
 export const TRAVEL_SLOT = 35;
-const floorSources = () => [
-  require('../../../../assets/arcade/lagoon/floor-0.png'),
-  require('../../../../assets/arcade/lagoon/floor-1.png'),
-  require('../../../../assets/arcade/lagoon/floor-2.png'),
-  require('../../../../assets/arcade/lagoon/floor-3.png'),
-  require('../../../../assets/arcade/lagoon/floor-4.png'),
-  require('../../../../assets/arcade/lagoon/floor-5.png'),
-  require('../../../../assets/arcade/lagoon/floor-6.png'),
-  require('../../../../assets/arcade/lagoon/floor-7.png'),
-  require('../../../../assets/arcade/lagoon/floor-8.png'),
-  require('../../../../assets/arcade/lagoon/floor-9.png'),
-  require('../../../../assets/arcade/lagoon/floor-10.png'),
-  require('../../../../assets/arcade/lagoon/floor-11.png'),
-];
 const stillCanoes = () => [
   require('../../../../assets/arcade/lagoon/canoe-still-0.png'),
   require('../../../../assets/arcade/lagoon/canoe-still-1.png'),
@@ -38,21 +28,22 @@ const deckSource = () => require('../../../../assets/arcade/lagoon/deck.png'), r
 const leftSource=()=>require('../../../../assets/arcade/lagoon/deck-side-left.png'),rightSource=()=>require('../../../../assets/arcade/lagoon/deck-side-right.png');
 const railSource = () => require('../../../../assets/arcade/lagoon/rail.png'), supportSource = () => require('../../../../assets/arcade/lagoon/support.png');
 const absolute={position:'absolute' as const,left:0,top:0};
-export function floorFrame(travel:number) {
-  'worklet';
-  return Math.floor(((travel % .065 + .065) % .065) / .065 * 12) % 12;
+/** One camera band of the scrolling deck: a static clip and one projective transform per frame. */
+function FloorBandView({poses,band,source}:{poses:SharedValue<SpritePose[]>;band:FloorBand;source:number}) {
+ const clipTop=Math.floor(band.top)-.5,clipHeight=Math.ceil(band.bottom)-Math.floor(band.top)+1;
+ const style=useAnimatedStyle(()=>{
+  const p=poses.value[TRAVEL_SLOT];
+  return {transform:[{matrix:floorBandMatrix(band,p?.opacity===0?0:p?.x??0,FLOOR_CLIP_LEFT,clipTop)}]};
+ });
+ return <View style={{position:'absolute',left:FLOOR_CLIP_LEFT,top:clipTop,width:390-2*FLOOR_CLIP_LEFT,height:clipHeight,overflow:'hidden'}}><Animated.View style={[absolute,{width:band.width,height:band.height,transformOrigin:[0,0,0]},style]}><Image accessible={false} source={source} style={{width:band.width,height:band.height}} fadeDuration={0}/></Animated.View></View>;
 }
-function FloorFrame({poses,frame}:{poses:SharedValue<SpritePose[]>;frame:number}) {
-  const visible=useSharedValue(frame===0);
-  useAnimatedReaction(()=>{const p=poses.value[TRAVEL_SLOT];return floorFrame(p?.opacity===0?0:p?.x??0)===frame;},next=>{if(next!==visible.value)visible.set(next);},[poses,frame]);
-  const style=useAnimatedStyle(()=>({opacity:visible.value?1:0}));
-  return <Animated.View style={[absolute,{top:290,width:390,height:370},style]}><Image accessible={false} source={floorSources()[frame]} resizeMode="stretch" style={{width:390,height:370}} fadeDuration={0}/></Animated.View>;
-}
-/** Twelve decoded material frames. No path generation, parsing or CPU SVG paint per frame. */
-export const BakedFloor=memo(function BakedFloor({poses}:{poses:SharedValue<SpritePose[]>}) {
- return <>{floorSources().map((_,frame)=><FloorFrame key={frame} poses={poses} frame={frame}/>)}<Rails poses={poses}/></>;
+const FLOOR_CLIP_LEFT=-460;
+/** Scrolling deck (floorBands.ts) and rails. Seams stay locked to track depth. */
+export const BakedFloor=memo(function BakedFloor({poses,world}:{poses:SharedValue<SpritePose[]>;world:WorldId}) {
+ const sources=floorArt[lagoonLook(world).id]();
+ return <>{FLOOR_BANDS.map((band,i)=><FloorBandView key={band.index} poses={poses} band={band} source={sources[i]}/>)}<Rails poses={poses} world={world}/></>;
 });
-function Rail({poses,index,side}:{poses:SharedValue<SpritePose[]>;index:number;side:number}) {
+function Rail({poses,index,side,source}:{poses:SharedValue<SpritePose[]>;index:number;side:number;source:number}) {
  const style=useAnimatedStyle(()=>{
   const travel=poses.value[TRAVEL_SLOT]?.x??0,z=((travel+index*.26)%2.86+2.86)%2.86-1.2;
   if(z<=-1.17||z>=1.45)return {opacity:0,transform:[{scale:0}]};
@@ -60,9 +51,9 @@ function Rail({poses,index,side}:{poses:SharedValue<SpritePose[]>;index:number;s
   const q:Quad=[a,b,{x:b.x,y:b.y-57*b.scale},{x:a.x,y:a.y-57*a.scale}];
   return {opacity:1,transform:[{matrix:matrix4(multiply3(quadHomography(q),[1/128,0,-16/128,0,-1/128,1,0,0,1]))}]};
  });
- return <Animated.View style={[absolute,{width:160,height:144,transformOrigin:[0,0,0]},style]}><Image accessible={false} source={railSource()} style={{width:160,height:144}} fadeDuration={0}/></Animated.View>;
+ return <Animated.View style={[absolute,{width:160,height:144,transformOrigin:[0,0,0]},style]}><Image accessible={false} source={source} style={{width:160,height:144}} fadeDuration={0}/></Animated.View>;
 }
-const Rails=memo(function Rails({poses}:{poses:SharedValue<SpritePose[]>}) {return <>{Array.from({length:11},(_,i)=><React.Fragment key={i}><Rail poses={poses} index={i} side={-1}/><Rail poses={poses} index={i} side={1}/></React.Fragment>)}</>;});
+const Rails=memo(function Rails({poses,world}:{poses:SharedValue<SpritePose[]>;world:WorldId}) {const source=railArt[lagoonLook(world).id]?.()??railSource();return <>{Array.from({length:11},(_,i)=><React.Fragment key={i}><Rail poses={poses} index={i} side={-1} source={source}/><Rail poses={poses} index={i} side={1} source={source}/></React.Fragment>)}</>;});
 function TextureQuad({frames,segment,face,source,width,height,side}:{frames:SharedValue<number[][][]>;segment:number;face:number;source:number;width:number;height:number;side?:'left'|'right'|'shadow'}) {
  const style=useAnimatedStyle(()=>{
   const matrix=frames.value[segment]?.[face];
@@ -107,3 +98,18 @@ function CanoeFrame({poses,index,frame,moving}:{poses:SharedValue<SpritePose[]>;
 export const BakedCanoe=memo(function BakedCanoe({poses,index,moving}:{poses:SharedValue<SpritePose[]>;index:number;moving:boolean}) {
  return <>{atlas.canoes.map((_,frame)=><CanoeFrame key={frame} poses={poses} index={index} frame={frame} moving={moving}/>)}</>;
 });
+
+/** Hazards, shells and power-ups as baked images (LG-S3 bake pipeline). A pre-mounted front twin
+ * shows an already-decoded image: nothing is drawn on the CPU when it first becomes visible. */
+export const BakedHazard=memo(function BakedHazard({kind,width,height,poses,index}:{kind:string;width:number;height:number;poses:SharedValue<SpritePose[]>;index:number}) {
+ const art=hazardArt()[kind];
+ if(!art)return null;
+ return <>{<Image accessible={false} source={art.art} style={{width,height}} fadeDuration={0}/>}{art.ball!==undefined&&<CoconutBall source={art.ball} width={width} height={height} poses={poses} index={index}/>}</>;
+});
+/** The ball rolls about its own centre (49,72 in the 100-unit source); its ground shadow stays put. */
+function CoconutBall({source,width,height,poses,index}:{source:number;width:number;height:number;poses:SharedValue<SpritePose[]>;index:number}) {
+ const style=useAnimatedStyle(()=>({transform:[{rotate:`${poses.value[index]?.angle??0}rad`}]}));
+ return <Animated.View style={[absolute,{width,height,transformOrigin:[width*.49,height*.72,0]},style]}><Image accessible={false} source={source} style={{width,height}} fadeDuration={0}/></Animated.View>;
+}
+export function BakedShell({size=30}:{size?:number}) { return <Image accessible={false} source={shellArt()} style={{width:size,height:size}} fadeDuration={0}/>; }
+export function BakedPower({kind,size=44}:{kind:string;size?:number}) { const source=powerArt()[kind]; return source===undefined?null:<Image accessible={false} source={source} style={{width:size,height:size}} fadeDuration={0}/>; }
