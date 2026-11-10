@@ -1,0 +1,20 @@
+{
+ "format": 1,
+ "family": "pearl-loop",
+ "seedBase": 1,
+ "attempts": 128,
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "budget": 200000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "seed": 48,
+  "string": 48,
+  "deep": 32
+ },
+ "sourceSha": "1aec8888cc0e23323a1946acebe817b19278cb1a",
+ "status": "complete"
+}

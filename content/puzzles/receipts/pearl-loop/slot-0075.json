@@ -1,0 +1,142 @@
+{
+ "format": 1,
+ "family": "pearl-loop",
+ "slot": 75,
+ "catalogRevision": 8,
+ "band": "string",
+ "ordinals": [
+  75824,
+  48
+ ],
+ "sourceSha": "1aec8888cc0e23323a1946acebe817b19278cb1a",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "19fd183614dfbcbee3d0bd2f055c4ead1bcf2a3543c71ad337e4a61bbbaf4b0a"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 128,
+  "kept": [
+   33564057,
+   33557497,
+   33555990,
+   33563886,
+   33557944,
+   33557248,
+   33557928,
+   33558793,
+   33557670,
+   33563545,
+   33556551,
+   33564582,
+   33560066,
+   33561802,
+   33561484,
+   33554964,
+   33557310,
+   33556012,
+   33563738,
+   33555954,
+   33555016,
+   33558464,
+   33558465,
+   33555820,
+   33555216,
+   33561736,
+   33562358,
+   33560688,
+   33563616,
+   33557053,
+   33560760,
+   33562223,
+   33559092,
+   33558493,
+   33555310,
+   33562982,
+   33557190,
+   33563756,
+   33558447,
+   33559168,
+   33557435,
+   33564912,
+   33556276,
+   33554657,
+   33556152,
+   33562351,
+   33556458,
+   33559515
+  ]
+ },
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 48,
+  "semantic": 48
+ },
+ "histograms": {
+  "technique": {
+   "what-if": 48
+  },
+  "template": {
+   "blob": 5,
+   "coral": 12,
+   "open": 11,
+   "twin": 9,
+   "wiggle": 11
+  },
+  "layout": {
+   "blob": 5,
+   "coral": 12,
+   "open": 11,
+   "twin": 9,
+   "wiggle": 11
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   16,
+   30
+  ],
+  "exact": 48
+ },
+ "proofHashes": {
+  "witness": "baac73f15c9b5bb4c0d4eea523469111b5096592b11af305281ff5cbbfd25953",
+  "trace": "b5319f4dd5455e30fda607f8c1f614f4fc761df41d9ab501c5739cd34f0bb3f5",
+  "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0,
+  "greedy": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Generated here from seeded loop shapes; clues are removed only while named loop techniques still finish the board with no guessing. No imported puzzles."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 5019,
+  "gzip": 913
+ },
+ "sha256": "c4a9cfff48e8a4cbd2ea307df88751bd0aab0bcb65e7e6288065d75b6048fac9",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}
