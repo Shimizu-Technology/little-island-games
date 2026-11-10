@@ -184,6 +184,18 @@ describe("See the winning move", () => {
     expect(flipped.kind).toBe("your-win");
     expect(flipped.text).toMatch(/more than half/);
   });
+  it("Shell Pits: a sow that let the rival force a win is named as such, never as thousands of shells", () => {
+    // The greedy grab against Ray from the start, as played on the simulator (17-31).
+    const moves = [2, 3, 9, 8, 9, 4, 7, 8, 5, 7, 0, 12, 1, 10, 2, 3, 12, 9, 12, 11, 4, 12, 10, 3, 7, 2, 8, 5];
+    const final = play("shell-pits", pits.create(1, 6, 0), moves);
+    expect(final.scores).toEqual([17, 31]);
+    const lesson = finish(reviewGame("shell-pits", final, 0))!;
+    expect(lesson.text).not.toMatch(/\d{3,} shells/);
+    expect(lesson.text).toMatch(/circle pit \d/);
+    const shells = lesson.text.match(/about (\d+) shells/);
+    if (shells) expect(Number(shells[1])).toBeLessThanOrEqual(48);
+    expect(lesson.show).not.toBe(lesson.played);
+  });
   it("Fishing Nets: a box left waiting, or a longer chain than needed", () => {
     let s = nets.create(2, 3, 0);
     const random = rng(2);

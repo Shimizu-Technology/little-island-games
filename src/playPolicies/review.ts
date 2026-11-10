@@ -37,7 +37,7 @@ export function replayStates(game: BenchGame, final: Position): Position[] {
 }
 const done = (value: KeyMoment | null): ReviewTask => ({ done: true, step: () => true, result: () => value });
 const column = (c: number) => `column ${c + 1}`;
-const pit = (m: number) => `pit ${m < 6 ? m + 1 : m - 6}`;
+const pit = (m: number) => (m < 6 ? `circle pit ${m + 1}` : `square pit ${m - 6}`);
 const box = (n: number, b: number) => `${String.fromCharCode(65 + (b % n))}${Math.floor(b / n) + 1}`;
 const dot = (n: number, i: number) => `${String.fromCharCode(65 + (i % (n + 1)))}${Math.floor(i / (n + 1)) + 1}`;
 const rope = (n: number, e: number) => {
@@ -128,7 +128,7 @@ function coconutLesson(states: Position[], final: Position, seat: Seat, mine: nu
       return next.outcome === null && !threatAfter(next);
     });
     if (safe !== undefined)
-      return make(i, safe, "stronger", "A move to look at again", `Dropping in ${column(safe)} would have blocked the other coconut's four.`);
+      return make(i, safe, "stronger", "A move to look at again", `Dropping in ${column(safe)} would have blocked the other coconut’s four.`);
   }
   return null;
 }
@@ -177,11 +177,16 @@ function pitsLesson(states: Position[], final: Position, mine: number[], make: M
     finishedAll = false;
   const strip = (p: Position): Position => ({ ...p, moves: [] });
   const choose = () => {
-    const win = rows.find((r) => r.bestScore >= WIN && r.playedScore < WIN && r.best !== final.moves[r.i]);
+    const missed = rows.filter((r) => r.best !== final.moves[r.i]);
+    const win = missed.find((r) => r.bestScore >= WIN && r.playedScore < WIN);
     if (win)
-      return make(win.i, win.best, "winning", "The winning move", `Sowing ${pit(win.best)} wins with best play from here. The computer checked eight sows ahead.`);
-    const drop = rows
-      .filter((r) => r.best !== final.moves[r.i])
+      return make(win.i, win.best, "winning", "The winning move", `Sowing ${pit(win.best)} wins with best play from here, looking eight sows ahead.`);
+    // The first sow after which the other side could force a win, when another sow kept the game open.
+    const opened = missed.find((r) => r.playedScore <= -WIN && r.bestScore > -WIN);
+    if (opened)
+      return make(opened.i, opened.best, "stronger", "A sow to look at again", `After the sow you chose, the other side could force a win. Sowing ${pit(opened.best)} kept the game open, looking eight sows ahead.`);
+    const drop = missed
+      .filter((r) => Math.abs(r.bestScore) < WIN && Math.abs(r.playedScore) < WIN)
       .reduce<(typeof rows)[number] | null>((a, r) => (r.bestScore - r.playedScore > (a ? a.bestScore - a.playedScore : 23) ? r : a), null);
     if (!drop) return null;
     const shells = Math.max(2, Math.round((drop.bestScore - drop.playedScore) / 12));

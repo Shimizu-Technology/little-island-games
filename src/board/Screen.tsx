@@ -580,7 +580,9 @@ function Round({
                 <Heading style={{ fontSize: 21 }}>{review.title}</Heading>
                 <Copy style={{ color: C.ink }}>{review.text}</Copy>
                 <Copy style={{ fontSize: 13 }}>
-                  The board as it was before that {s.game === "hidden-canoes" ? "search" : "move"}. The gold ring marks it.
+                  {s.game === "shell-pits"
+                    ? "The board as it was before that sow. The outlined pit is the sow to look at; the gold ring shows where its last shell lands."
+                    : `The board as it was before that ${s.game === "hidden-canoes" ? "search" : "move"}. Gold marks the ${s.game === "hidden-canoes" ? "search" : "move"}.`}
                 </Copy>
                 <Boards
                   key={`review:${review.ply}`}
@@ -590,6 +592,7 @@ function Round({
                   hint={review.show}
                   onMove={() => {}}
                   locked
+                  still
                   speak={play}
                 />
               </>

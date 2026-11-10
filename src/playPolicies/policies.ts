@@ -109,14 +109,14 @@ const netsPlays: Plays = {
   challenge: "Also counts chains, and gives you the shortest one.",
 };
 const canoesPlays: Plays = {
-  gentle: "Searches anywhere it hasn't looked.",
+  gentle: "Searches anywhere it hasn’t looked.",
   growing: "Searches next to its finds.",
   challenge: "Follows a line of finds, then searches in a checkerboard pattern.",
 };
 const pitsPlays: Plays = {
   gentle: "Looks at one sow at a time.",
   growing: "Looks three sows ahead.",
-  challenge: "Looks eight sows ahead. A greedy grab for extra turns won't fool it.",
+  challenge: "Looks eight sows ahead. A greedy grab for extra turns won’t fool it.",
 };
 const archivedPitsChallenge = "Looks six sows ahead. Kept only to finish rounds saved before 4.0.";
 const archivedCanoes = "The 3.0 searcher, kept only to finish rounds saved before 4.0.";

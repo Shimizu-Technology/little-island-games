@@ -19,6 +19,8 @@ type Props = {
   onMove: (m: number) => void;
   locked?: boolean;
   hint?: number | null;
+  /** Display only, for looking back at a finished game: no move controls. */
+  still?: boolean;
   flag?: boolean;
   speak: (key: string) => unknown;
 };
@@ -235,7 +237,7 @@ function Nets({ state: s, width, onMove, locked, hint }: Props) {
     </View>
   );
 }
-function Pits({ state: s, width, onMove, locked, hint, speak }: Props) {
+function Pits({ state: s, width, onMove, locked, hint, speak, still }: Props) {
   const [selected, setSelected] = useState<number | null>(null),
     [count, setCount] = useState(0),
     [counting, setCounting] = useState(false);
@@ -337,6 +339,8 @@ function Pits({ state: s, width, onMove, locked, hint, speak }: Props) {
           <Copy style={{ fontSize: 13 }}>
             {count ? `Counting: ${count} of ${path.length}` : "The gold ring marks the last pit."}
           </Copy>
+{!still && (
+            <>
           <Button
             quiet
             compact
@@ -351,6 +355,8 @@ function Pits({ state: s, width, onMove, locked, hint, speak }: Props) {
           <Button disabled={locked} onPress={() => onMove(pit)}>
             Sow shells
           </Button>
+            </>
+          )}
         </View>
       ) : (
         <Copy style={{ textAlign: "center", fontSize: 14 }}>

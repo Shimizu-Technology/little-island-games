@@ -32,7 +32,7 @@ export function headStarts(game: PolicyGame, size?: number): readonly HeadStart[
     case "coconut-drop":
       return [{ amount: 1, label: "One extra coconut", detail: "You begin with a coconut already in the middle column." }];
     case "shell-pits":
-      return [4, 8].map((n) => ({ amount: n, label: `${n} shells ahead`, detail: `${n} shells are added to your store's total at the end.` }));
+      return [4, 8].map((n) => ({ amount: n, label: `${n} shells ahead`, detail: `${n} shells are added to your store’s total at the end.` }));
     case "fishing-nets":
       return (size === 3 || size === undefined ? [1, 2] : [2, 3]).map((n) => ({
         amount: n,
