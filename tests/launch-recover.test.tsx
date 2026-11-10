@@ -15,6 +15,8 @@ import type { BankLoader } from '../src/puzzles/loader';
 import type { Save } from '../src/state/validation';
 
 // Slice F-recover: a save that names content this build doesn't have must never stop launch.
+// Its synthetic catalog fills ordinals that shipped registrations also use, so keep them out (as the save fixtures do).
+vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
 const db=vi.hoisted(()=>({raw:null as string|null,preserved:[] as string[],discarded:[] as string[],log:[] as string[],loader:null as BankLoader|null,get:null as null|(()=>Promise<string|null>)}));
 vi.mock('../src/puzzles/catalog',()=>({bankLoader:()=>db.loader!}));
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.get?db.get():db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async(raw:string)=>{db.preserved.push(raw);},discardSession:async(raw:string)=>{db.discarded.push(raw);},logLaunch:async(entry:string)=>{db.log.push(entry);},readDrafts:async()=>[],listRecovery:async()=>[],readRecovery:async()=>null}}));
