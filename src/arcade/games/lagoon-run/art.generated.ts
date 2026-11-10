@@ -27,6 +27,10 @@ export const hazardArt = (): Record<string, { art: number; ball?: number }> => (
   "wall": { art: require('../../../../assets/arcade/lagoon/actors/wall.png') },
 });
 export const shellArt = () => require('../../../../assets/arcade/lagoon/actors/shell.png');
+export const railArt: Partial<Record<string, () => number>> = {
+  morning: () => require('../../../../assets/arcade/lagoon/morning/rail.png'),
+  festival: () => require('../../../../assets/arcade/lagoon/festival/rail.png'),
+};
 export const powerArt = (): Record<string, number> => ({
   magnet: require('../../../../assets/arcade/lagoon/actors/power-magnet.png'),
   kite: require('../../../../assets/arcade/lagoon/actors/power-kite.png'),

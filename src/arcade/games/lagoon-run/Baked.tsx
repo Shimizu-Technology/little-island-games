@@ -8,7 +8,7 @@ import atlas from '../../../../assets/arcade/lagoon/manifest.json';
 import { canoeMatrix, deckFrame } from './bakedGeometry';
 import { RAMP_SECTIONS } from './surface';
 import { FLOOR_BANDS, floorBandMatrix, type FloorBand } from './floorBands';
-import { floorArt, hazardArt, powerArt, shellArt } from './art.generated';
+import { floorArt, hazardArt, powerArt, railArt, shellArt } from './art.generated';
 import { lagoonLook } from './look';
 import type { WorldId } from '../../types';
 export const TRAVEL_SLOT = 35;
@@ -41,9 +41,9 @@ const FLOOR_CLIP_LEFT=-460;
 /** Scrolling deck (floorBands.ts) and rails. Seams stay locked to track depth. */
 export const BakedFloor=memo(function BakedFloor({poses,world}:{poses:SharedValue<SpritePose[]>;world:WorldId}) {
  const sources=floorArt[lagoonLook(world).id]();
- return <>{FLOOR_BANDS.map((band,i)=><FloorBandView key={band.index} poses={poses} band={band} source={sources[i]}/>)}<Rails poses={poses}/></>;
+ return <>{FLOOR_BANDS.map((band,i)=><FloorBandView key={band.index} poses={poses} band={band} source={sources[i]}/>)}<Rails poses={poses} world={world}/></>;
 });
-function Rail({poses,index,side}:{poses:SharedValue<SpritePose[]>;index:number;side:number}) {
+function Rail({poses,index,side,source}:{poses:SharedValue<SpritePose[]>;index:number;side:number;source:number}) {
  const style=useAnimatedStyle(()=>{
   const travel=poses.value[TRAVEL_SLOT]?.x??0,z=((travel+index*.26)%2.86+2.86)%2.86-1.2;
   if(z<=-1.17||z>=1.45)return {opacity:0,transform:[{scale:0}]};
@@ -51,9 +51,9 @@ function Rail({poses,index,side}:{poses:SharedValue<SpritePose[]>;index:number;s
   const q:Quad=[a,b,{x:b.x,y:b.y-57*b.scale},{x:a.x,y:a.y-57*a.scale}];
   return {opacity:1,transform:[{matrix:matrix4(multiply3(quadHomography(q),[1/128,0,-16/128,0,-1/128,1,0,0,1]))}]};
  });
- return <Animated.View style={[absolute,{width:160,height:144,transformOrigin:[0,0,0]},style]}><Image accessible={false} source={railSource()} style={{width:160,height:144}} fadeDuration={0}/></Animated.View>;
+ return <Animated.View style={[absolute,{width:160,height:144,transformOrigin:[0,0,0]},style]}><Image accessible={false} source={source} style={{width:160,height:144}} fadeDuration={0}/></Animated.View>;
 }
-const Rails=memo(function Rails({poses}:{poses:SharedValue<SpritePose[]>}) {return <>{Array.from({length:11},(_,i)=><React.Fragment key={i}><Rail poses={poses} index={i} side={-1}/><Rail poses={poses} index={i} side={1}/></React.Fragment>)}</>;});
+const Rails=memo(function Rails({poses,world}:{poses:SharedValue<SpritePose[]>;world:WorldId}) {const source=railArt[lagoonLook(world).id]?.()??railSource();return <>{Array.from({length:11},(_,i)=><React.Fragment key={i}><Rail poses={poses} index={i} side={-1} source={source}/><Rail poses={poses} index={i} side={1} source={source}/></React.Fragment>)}</>;});
 function TextureQuad({frames,segment,face,source,width,height,side}:{frames:SharedValue<number[][][]>;segment:number;face:number;source:number;width:number;height:number;side?:'left'|'right'|'shadow'}) {
  const style=useAnimatedStyle(()=>{
   const matrix=frames.value[segment]?.[face];

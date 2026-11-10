@@ -50,7 +50,7 @@ export function floorBandSvg(band: FloorBand, look: LagoonLook, width: number, h
     }
     seams += `<path d="M${X(DECK_U0)} ${Y(w0)}H${X(DECK_U1)}" stroke="${look.seam}" stroke-opacity=".5" stroke-width="${f(Math.max(.7, height / length * BOARD * .07))}"/>`;
     // Painted lane cues: a soft dash on every other board, centred on the two lane dividers.
-    if (parity === 0) for (const u of [.5, 1.5]) cues += `<rect x="${X(u - .035)}" y="${Y(w0 + BOARD * .14)}" width="${f(X(u + .035) - X(u - .035))}" height="${f(Y(w1 - BOARD * .14) - Y(w0 + BOARD * .14))}" rx="${f((X(u + .035) - X(u - .035)) / 3)}" fill="${look.cue}" fill-opacity=".5"/>`;
+    if (parity === 0) for (const u of [.5, 1.5]) cues += `<rect x="${X(u - .02)}" y="${Y(w0 + BOARD * .05)}" width="${f(X(u + .02) - X(u - .02))}" height="${f(Y(w1 + BOARD * .55) - Y(w0 + BOARD * .05))}" fill="${look.cue}" fill-opacity=".55"/>`;
   }
   // Edge trim boards and one clear light direction across the deck.
   const trim = `<rect x="${X(DECK_U0)}" y="0" width="${f(X(-.5) - X(DECK_U0))}" height="${height}" fill="${look.side}"/><rect x="${X(2.5)}" y="0" width="${f(X(DECK_U1) - X(2.5))}" height="${height}" fill="${look.side}"/><path d="M${X(-.5)} 0V${height}M${X(2.5)} 0V${height}" stroke="${mix(lit, '#FFFFFF', .3)}" stroke-opacity=".55" stroke-width="${f(Math.max(.8, width / 500))}"/>`;
@@ -163,3 +163,9 @@ export const POWER_SVG: Record<string, string> = {
   shield: `<path d="M32 9L52 18V34Q48 49 32 57Q16 49 12 34V18Z" fill="#8EBE85"/><ellipse cx="32" cy="31" rx="14" ry="17" fill="#4F8A76"/><path d="M24 19L32 27L41 20M32 27V43M19 34L32 27L46 34" fill="none" stroke="#D5E5A1"/>`,
 };
 export const powerSvg = (kind: string) => `<circle cx="32" cy="32" r="29" fill="#FFF4CD" stroke="${INK}" stroke-width="3"/><g stroke="${INK}" stroke-width="3" stroke-linejoin="round">${POWER_SVG[kind]}</g>`;
+
+/** Rail post and rope span, 160×144 (post at x 8–24, rope to the next post at x 144). */
+export const RAILS: Record<string, (look: LagoonLook) => string> = {
+  morning: look => `<path d="M16 128L0 139H13L31 128Z" fill="${look.shade}" fill-opacity=".3"/><path d="M16 50Q80 84 144 50" fill="none" stroke="#F4E6C2" stroke-width="3"/>${[48, 80, 112].map((x, i) => `<path d="M${x} ${62 + (i === 1 ? 8 : 4)}v8" stroke="#F4E6C2" stroke-width="1.5"/><ellipse cx="${x}" cy="${76 + (i === 1 ? 8 : 4)}" rx="6" ry="4.5" fill="${i % 2 ? '#F6CF6A' : '#F28F6B'}" stroke="#3E424F" stroke-width="1.5"/>`).join('')}<path d="M8 128V30H24V128Z" fill="#A9774A" stroke="#5E3F2E" stroke-width="2"/><path d="M10 128V30" stroke="#DDAA70" stroke-width="3"/><path d="M5 30H27V38H5Z" fill="#7E5434" stroke="#5E3F2E" stroke-width="2"/><path d="M8 52H24M8 56H24" stroke="#F4E6C2" stroke-width="2"/>`,
+  festival: look => `<path d="M16 128L0 139H13L31 128Z" fill="${look.shade}" fill-opacity=".35"/><path d="M16 46Q80 80 144 46" fill="none" stroke="#5B3A2E" stroke-width="2"/>${Array.from({ length: 7 }, (_, i) => { const t = (i + .5) / 7, x = 16 + 128 * t, y = 46 + Math.sin(t * Math.PI) * 17; return `<path d="M${x - 6} ${y}L${x + 6} ${y + 1}L${x} ${y + 12}Z" fill="${['#F6C760', '#EE8A7E', '#7FC8C4', '#F4E6C2', '#B79AE0'][i % 5]}"/>`; }).join('')}<path d="M8 128V36H24V128Z" fill="#7E4E36" stroke="#3E2432" stroke-width="2"/><path d="M10 128V36" stroke="#B57A52" stroke-width="3"/><circle cx="16" cy="24" r="22" fill="${look.glow}" fill-opacity=".28"/><path d="M16 34v-4" stroke="#3E2432" stroke-width="2"/><ellipse cx="16" cy="22" rx="10" ry="12" fill="#F48A62" stroke="#3E2432" stroke-width="1.5"/><path d="M6 22H26M9 14H23M9 30H23" stroke="#FFD57A" stroke-width="1.2"/><path d="M11 10h10M11 34h10" stroke="#3E2432" stroke-width="2.5"/>`,
+};
