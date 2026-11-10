@@ -146,141 +146,141 @@
       "width": 86,
       "height": 24,
       "density": 3,
-      "bytes": 6003,
-      "sha256": "b5116aefa009a8b3e6adad876c0d6c5e7a30212123a9821f3d7040d7208027f6"
+      "bytes": 5923,
+      "sha256": "5ffc70fec57665e3cbca53eed4a19b86a74a6921a5695fcc56187fc4dbf8fbd6"
     },
     "festival/floor-1": {
       "width": 103,
       "height": 29,
       "density": 3,
-      "bytes": 7572,
-      "sha256": "14d8fffac2832debbe30f9e3fa5351e828b593f4107d8162462f151144592f23"
+      "bytes": 7479,
+      "sha256": "0b5b022175562f83f97e45cec7eac648994674315df25695cfb9025e9c3f1e05"
     },
     "festival/floor-2": {
       "width": 120,
       "height": 31,
       "density": 3,
-      "bytes": 8850,
-      "sha256": "8a6163439cd9b5a8514cf3504c083aa7ab321a1e3497a087c38b09108ffa02bf"
+      "bytes": 8659,
+      "sha256": "9260b0df42f8dfe7dec59316ee884aa958e63ff9cd4e4a9c7934a764ae27a69e"
     },
     "festival/floor-3": {
       "width": 141,
       "height": 35,
       "density": 3,
-      "bytes": 9771,
-      "sha256": "bb2b6e6d429a3beab1ca3495ff5482651bd1e1225c4af3491471ecfed330cb5e"
+      "bytes": 9635,
+      "sha256": "9a6a17a7b0570950a7b0208fb32f79626b7fcc46a0369fbdd5a387c70a8c7b12"
     },
     "festival/floor-4": {
       "width": 164,
       "height": 37,
       "density": 3,
-      "bytes": 10938,
-      "sha256": "1a2bcc816f57040bfb3b0241e974fe87ff03b03866ee5db8dd1423c7330c0c6d"
+      "bytes": 10663,
+      "sha256": "1f697e155d105e28a9b80a25b4eb84c87d7a115de439e6342064d6def36a2431"
     },
     "festival/floor-5": {
       "width": 188,
       "height": 40,
       "density": 3,
-      "bytes": 11540,
-      "sha256": "3c28c0f6bb626ab218aea2dd537b5eb33bfedebeebe84303b0d22a3d79dc1d7a"
+      "bytes": 11463,
+      "sha256": "e435e68aea421add4a14b0b1a131ad15d9ad7bf17cd208d30b94b1dac9d9eb30"
     },
     "festival/floor-6": {
       "width": 214,
       "height": 43,
       "density": 3,
-      "bytes": 13242,
-      "sha256": "442e7fbf69d1cce8a6f8557992a442370b01eb067d5fa8b79efcc4996a0ff5f1"
+      "bytes": 13138,
+      "sha256": "e1f182fb2ea379ac3febe74560519ea537d56e80eaa424f2fb989b2e85eca315"
     },
     "festival/floor-7": {
       "width": 242,
       "height": 47,
       "density": 3,
-      "bytes": 13673,
-      "sha256": "9f2f2e43dacf29434e8b3d784fba137e604110ab26d0fabc63cc97dd5831e028"
+      "bytes": 13553,
+      "sha256": "6d7d59b9abcb03e1664dcc2d362c7aa8ae783a81a0c2fdf6e3e1395339c7b690"
     },
     "festival/floor-8": {
       "width": 272,
       "height": 51,
       "density": 3,
-      "bytes": 16245,
-      "sha256": "c19ac2fe19821631ac1d5430d464d6982474e6efcc9d074e75cb8b4b6fdfbd25"
+      "bytes": 16092,
+      "sha256": "8bede3f19e5b9992a9cf66263488ee7779953b94a356007094defa21100c2e40"
     },
     "festival/floor-9": {
       "width": 306,
       "height": 56,
       "density": 3,
-      "bytes": 17606,
-      "sha256": "efd7468a8230f0ad6be06730a38fb81e197369f93d664ff172b96d92ab6a3709"
+      "bytes": 17419,
+      "sha256": "06e2bebb4ec5b5d3f4b2094eaca6827ecb0e275c3bfc4be01869927e081f3e4e"
     },
     "festival/floor-10": {
       "width": 342,
       "height": 61,
       "density": 3,
-      "bytes": 18984,
-      "sha256": "c9a105ccc7a2411bec8d6356484786d2def55cdfbe81b5a26e87c0944c3637ee"
+      "bytes": 18793,
+      "sha256": "34492264e3096908221f43adf2b9ac7fd198af97fee12b9d9b6b2bb93d93d701"
     },
     "festival/floor-11": {
       "width": 382,
       "height": 67,
       "density": 3,
-      "bytes": 20681,
-      "sha256": "f51dda6b080ae6b5f7748e47142fdfc3d2f64eca8f09f5d2d857667c76c218d4"
+      "bytes": 20472,
+      "sha256": "471cc8ffc79b2117e428e242c146a0778c58d7fc118e4eaf50e256ebf1a8c18c"
     },
     "festival/floor-12": {
       "width": 426,
       "height": 74,
       "density": 3,
-      "bytes": 22185,
-      "sha256": "a1f1a19055396d89cbbd282308ce9d3058327cebc939134ce3c6360c42df9c54"
+      "bytes": 22023,
+      "sha256": "f1e9e4a29331c6f649ee5609ac25d37a93e35f0a86edee8a8bba70aec02582e4"
     },
     "festival/floor-13": {
       "width": 471,
       "height": 78,
       "density": 3,
-      "bytes": 23398,
-      "sha256": "25d1a3be86c687ddb5b78309167ea6413b85478a4b80f14bc5362250aa53168c"
+      "bytes": 23218,
+      "sha256": "7890cd37b007e02801426b9c30043d9816bad8d4fdc97c5f0f20db21b95e3e4c"
     },
     "festival/floor-14": {
       "width": 521,
       "height": 87,
       "density": 3,
-      "bytes": 25520,
-      "sha256": "bab06f8c82ae0f4fca20ee010b62475f2126c3e2c7001e41af244165a8112c89"
+      "bytes": 25265,
+      "sha256": "209c1c8c1b95ab166678664ffb81d5985f3852f4387bcb06ebae558aeeb51c59"
     },
     "festival/floor-15": {
       "width": 576,
       "height": 97,
       "density": 3,
-      "bytes": 27442,
-      "sha256": "a7219daa54e6a6c5e7a4a41ec1e868a238a655b06fbb7bd6d3e437b0dc227346"
+      "bytes": 27289,
+      "sha256": "9ad784917c238c32d26b12024732911ff3f0705010cd9f850a4c72a78f118ec7"
     },
     "festival/floor-16": {
       "width": 630,
       "height": 103,
       "density": 3,
-      "bytes": 29955,
-      "sha256": "6aa48159143197b34a356f1497835ea124a851a5b08c779d5df092913f55aede"
+      "bytes": 29439,
+      "sha256": "c6f4debc59b8c811a96fe7603aa51c383f75298e694655b61c08bdff77eb055c"
     },
     "festival/floor-17": {
       "width": 630,
       "height": 115,
       "density": 3,
-      "bytes": 30242,
-      "sha256": "d67b92a20a51a3ed3bd00e70f399eb4ec5891b644e637b19eedbc06d5930b13b"
+      "bytes": 29690,
+      "sha256": "7a4a6aedcd60da4b96468d34f8dcc359c7365c3d01eb579b93527f3c36c65b4d"
     },
     "festival/floor-18": {
       "width": 630,
       "height": 129,
       "density": 3,
-      "bytes": 32066,
-      "sha256": "4ef2eb22defe02112bfa0a53671ffaa347156056c3a1d5c7f7e836a593caff71"
+      "bytes": 31717,
+      "sha256": "b4cecee451f2aaeff89df170caa8356dd1fa68760b1dec2f2f26bc815dab1353"
     },
     "festival/floor-19": {
       "width": 630,
       "height": 138,
       "density": 3,
-      "bytes": 31303,
-      "sha256": "b702064962d05450e97b0582a3a5ca022a964ffadcbd18a09a3da268c3063413"
+      "bytes": 31078,
+      "sha256": "62aa7d5f03884de8e6a3461e33d285cc828ba24b6b98e287f4388dbfed64d45a"
     },
     "sunset/floor-0": {
       "width": 86,
@@ -1126,8 +1126,8 @@
       "width": 72,
       "height": 129.6,
       "density": 4,
-      "bytes": 21018,
-      "sha256": "5464c885aac22c283e45b7ba8a323a7a05af869a41265578989860714c7d4fd1"
+      "bytes": 21772,
+      "sha256": "3a607f9fd8aa45a39b255d0c7299e13dbbf534806228857f66b819de1c00a5e1"
     },
     "actors/wall": {
       "width": 72,
