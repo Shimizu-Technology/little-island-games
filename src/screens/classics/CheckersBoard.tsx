@@ -10,7 +10,7 @@ import { Scoreboard } from "../../components/Match";
 import { newMatch } from "../../games/match";
 
 import { type Props, coords, Cell, BoardArea, BoardLayout } from "./shared";
-import { headStarts, rivalFor } from "../../playPolicies/rivals";
+import { rivalFor } from "../../playPolicies/rivals";
 import { reviewCheckers, type CheckersMoment } from "../../playPolicies/checkersReview";
 const strengthOf = { easy: "gentle", medium: "growing", hard: "challenge" } as const;
 function Piece({ red = false }: { red?: boolean }) {
