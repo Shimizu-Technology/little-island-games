@@ -64,7 +64,7 @@ describe('Sudoku in the Cove, through the real Store and packed bank', () => {
       await act(async () => { (cellButton(screen, other).props.onPress as () => void)(); });
       await press(screen, 'Notes off'); await press(screen, 'Note 1'); await press(screen, 'Note 2');
       expect(boardOf(p).notes[other]).toBe(3);
-      await press(screen, 'Where should I look?');
+      await press(screen, 'Hint: where should I look?');
       await waitFor(() => text(screen).includes('Why?'));
       expect(text(screen)).toMatch(/Look/);
       await press(screen, 'Why?');
@@ -85,7 +85,7 @@ describe('Sudoku in the Cove, through the real Store and packed bank', () => {
       await act(async () => { screen = create(<StoreProvider><Probe/><Round card={card}/></StoreProvider>); });
       await waitFor(() => !!cellButton(screen, 0));
       for (let i = 0; i < 20 && !text(screen).includes('Puzzle solved'); i++) {
-        await press(screen, 'Where should I look?');
+        await press(screen, 'Hint: where should I look?');
         await waitFor(() => !!button(screen, n => n.children.includes('Show me the move')));
         await press(screen, 'Show me the move');
         await settle();

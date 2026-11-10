@@ -339,8 +339,9 @@ export function planHint(p: LatinPuzzle, values: readonly number[], budget = 400
     let d = startDomains(p, values);
     const steps: Step[] = [], open = (i: number) => !values[i];
     for (let i = 0; i < 4096; i++) {
-      // Fast peer clearing first, so the explanation names only the step a person needs.
-      const quick = peerClear(p, d, work);
+      // Numbers on the board leave their peers. Only written numbers count: a deduced number that
+      // is not on the board yet would make a hint describe something the person cannot see.
+      const quick = peerClear(p, d, work, values);
       if (!quick) return { kind: 'none' };
       d = quick;
       const placed = cellsOf(p).find(c => open(c) && singleton(d[c]));
@@ -364,15 +365,12 @@ const conflictsOf = (p: LatinPuzzle, values: readonly number[]) => {
   for (const [id, clue] of p.sights) { const line = sightCells(p, id); if (line.every(i => values[i]) && visible(line.map(i => values[i])) !== clue) line.forEach(i => out.add(i)); }
   return [...out].sort((a, b) => a - b);
 };
-function peerClear(p: LatinPuzzle, start: readonly number[], work: Work): number[] | null {
+function peerClear(p: LatinPuzzle, start: readonly number[], work: Work, written: readonly number[]): number[] | null {
   const d = [...start], { peers } = shapeOf(p);
-  for (let moved = true; moved;) {
-    moved = false;
-    for (const i of cellsOf(p)) {
-      if (!singleton(d[i])) continue;
-      work.tick();
-      for (const j of peers[i]) if (d[j] & d[i]) { d[j] &= ~d[i]; if (!d[j]) return null; moved = true; }
-    }
+  for (const i of cellsOf(p)) {
+    if (!written[i]) continue;
+    work.tick();
+    for (const j of peers[i]) if (d[j] & bit(written[i])) { d[j] &= ~bit(written[i]); if (!d[j]) return null; }
   }
   return d;
 }

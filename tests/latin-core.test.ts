@@ -104,6 +104,8 @@ describe('Hints from the public board only', () => {
       expect(plan.kind).toBe('place');
       if (plan.kind !== 'place') break;
       expect(plan.value).toBe(answer[plan.cell]);
+      // A "one number left" hint is true of the visible board, not of numbers deduced but unwritten.
+      if (!plan.steps.length) expect([1, 2, 3, 4, 5, 6, 7, 8, 9].filter(v => !values.some((w, j) => w === v && j !== plan.cell && (Math.floor(j / 9) === Math.floor(plan.cell / 9) || j % 9 === plan.cell % 9 || Math.floor(j / 27) === Math.floor(plan.cell / 27) && Math.floor(j % 9 / 3) === Math.floor(plan.cell % 9 / 3))))).toEqual([plan.value]);
       const cue = cueFor(p, plan);
       expect(cue.look.length).toBeGreaterThan(5); expect(cue.think.length).toBeGreaterThan(5); expect(cue.focus).toContain(plan.cell);
       values = values.map((v, i) => i === plan.cell ? plan.value : v);

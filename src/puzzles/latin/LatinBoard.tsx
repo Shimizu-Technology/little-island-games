@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { Button, C, Copy, Heading } from '../../components/ui';
+import { Button, C, Copy } from '../../components/ui';
 import { Text } from '../../components/Text';
 import { GridShell } from '../grid/GridShell';
 import { gridAction, type GridAction } from '../grid/model';
@@ -80,6 +80,20 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
       {!!view.teaches && <Copy style={{ flexShrink: 1 }}>{`· ${techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches}`}</Copy>}
       <Copy accessibilityLabel={`${solvedCount} of ${total} cells filled`}>{`· ${solvedCount}/${total}`}</Copy>
     </View>
+    {!shown && <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+      <Button quiet compact disabled={!active || waiting} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint · where to look?'}</Button>
+      {!!placed && <Copy accessibilityLiveRegion="polite" style={{ flexShrink: 1 }}>{placed}</Copy>}
+    </View>}
+    {shown && <View accessibilityLiveRegion="polite" style={{ gap: 6, padding: 12, borderRadius: 14, backgroundColor: '#FBF2D5', borderWidth: 1, borderColor: C.gold }}>
+      <Text style={{ fontSize: 13, letterSpacing: 0.6, color: C.teal, fontWeight: '700' }}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'A NUMBER TO FIX' : techniqueNames[ladder.cue!.technique as keyof typeof techniqueNames]?.toUpperCase()}</Text>
+      <Copy>{ladder.cue!.look}</Copy>
+      {stage === 2 && <Copy>{ladder.cue!.think}</Copy>}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {stage === 1 && <Button quiet compact disabled={!active} onPress={() => setLadder(l => ({ ...l, stage: 2 }))}>Why?</Button>}
+        <Button compact disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Clear it for me' : 'Show me the move'}</Button>
+        <Button quiet compact onPress={() => setLadder(closed(state.edits, view.helps))}>I'll try</Button>
+      </View>
+    </View>}
     <View style={{ marginHorizontal: -bleed }}>
       <GridShell spec={spec} state={state} dispatch={gridSend} width={boardWidth} active={active} conflicts={conflictCells} mistakes={clashes ? 'Friendly' : preferences.mistakes === 'Rewind' ? 'Rewind' : 'Plain'} borders={borders} tints={tints} overlay={overlay} frame={frame} fillNotes={() => send({ type: 'fill-notes' })}/>
     </View>
@@ -87,25 +101,6 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       <Button quiet compact selected={clashes} disabled={!active} onPress={() => setClashes(on => !on)} label={`Show clashes ${clashes ? 'on' : 'off'}`}>{clashes ? 'Clashes shown' : 'Clashes hidden'}</Button>
       <Button quiet compact disabled={!active || state.values.every((v, i) => v === p.givens[i])} onPress={() => send({ type: 'reset' })}>Start over</Button>
-    </View>
-    <View style={{ gap: 8, padding: 14, borderRadius: 14, backgroundColor: C.paper, borderWidth: 1, borderColor: '#D9E2DA' }} accessibilityLiveRegion="polite">
-      <Heading style={{ fontSize: 20 }}>Stuck? Ask for a hint</Heading>
-      {stage === 0 && <>
-        {!!placed && <Copy>{placed}</Copy>}
-        <Copy>First where to look, then why, then the move. Take your time.</Copy>
-        <Button quiet disabled={!active} onPress={ask}>Where should I look?</Button>
-      </>}
-      {waiting && <Copy>Getting a hint ready…</Copy>}
-      {shown && <>
-        <Text style={{ fontSize: 13, letterSpacing: 0.6, color: C.teal, fontWeight: '700' }}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'A NUMBER TO FIX' : techniqueNames[ladder.cue!.technique as keyof typeof techniqueNames]?.toUpperCase()}</Text>
-        <Copy>{ladder.cue!.look}</Copy>
-        {stage === 2 && <Copy>{ladder.cue!.think}</Copy>}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {stage === 1 && <Button quiet compact disabled={!active} onPress={() => setLadder(l => ({ ...l, stage: 2 }))}>Why?</Button>}
-          <Button quiet compact disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Clear it for me' : 'Show me the move'}</Button>
-          <Button quiet compact onPress={() => setLadder(closed(state.edits, view.helps))}>I'll try</Button>
-        </View>
-      </>}
     </View>
   </View>;
 }
