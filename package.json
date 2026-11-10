@@ -73,7 +73,8 @@
     "check:words:receipt": "node scripts/words/check.mjs receipt",
     "deliver:web": "node scripts/words/delivery.mjs web --",
     "deliver:ios": "node scripts/words/delivery.mjs ios --",
-    "check:source": "npm run registry:check && npm run save:catalog && npm run puzzles:verify && npm run typecheck && npm run lint && npm test && npm run export:web"
+    "check:source": "npm run registry:check && npm run save:catalog && npm run puzzles:verify && npm run typecheck && npm run lint && npm test && npm run export:web",
+    "arcade:boundaries": "LITTLE_ISLAND_WRITE_ARCADE_TABLE=1 vitest run tests/arcade-boundaries.test.ts"
   },
   "private": true,
   "engines": {
