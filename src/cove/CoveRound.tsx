@@ -80,7 +80,7 @@ export function CoveRound({ entry, card, partner, width, replace = false, onBrow
   const open = entry.packed ? async (e: Parameters<typeof store.challengeOpen>[0]) => { await entry.packed!.prepare(round!.puzzle); return store.challengeOpen(e); } : store.challengeOpen;
   const changeAttempt = !!saved && replace && (!sameRef(saved.puzzle, card.ref) || !!remix);
   return <View style={{ gap: 14 }}>
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button quiet compact onPress={close}>← Cove</Button><Heading style={{ flexShrink: 1 }}>{infoFor(entry.game).name}</Heading></View><SaveStatus/>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button quiet compact onPress={close}>← Cove</Button><Heading style={{ flexShrink: 1, ...(entry.helpUI === 'board' ? { fontSize: 24 } : {}) }}>{infoFor(entry.game).name}</Heading></View><SaveStatus/>
     {!!message && <Copy accessibilityLiveRegion="polite">{message}</Copy>}
     {changeAttempt ? <><Copy>Your unfinished puzzle is kept until this new attempt saves. Its notes and undo will then be replaced. Finished history stays kept.</Copy><Button disabled={busy} onPress={() => void launch()}>Replace paused puzzle</Button><Button quiet onPress={onClose}>Keep paused puzzle</Button></> : round ? <>
       {entry.helpUI !== 'board' && <Copy>{actual?.title}</Copy>}

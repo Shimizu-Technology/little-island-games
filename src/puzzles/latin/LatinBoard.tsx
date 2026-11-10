@@ -30,13 +30,20 @@ export function boxBorders(p: LatinPuzzle) {
   };
 }
 /** The ladder belongs to one board: `edits` and `helpsAt` tie it to the revision it describes. */
+/** One line of rules beside each board, so nobody has to guess what the clues mean. */
+const rules: Record<string, string> = {
+  sudoku: '', 'cage-math': 'Each cage makes its number with its sign: 9+ adds to 9, 2− is a difference of 2, 12× multiplies to 12, 2÷ is one number twice the other. =5 is a one-square cage holding 5. No number repeats in a row or column.',
+  'greater-than': 'Each arrow points at the smaller number. No number repeats in a row or column.',
+  skyline: 'Each edge number counts the roofs you can see from there. Taller roofs hide shorter ones.',
+  killer: 'Each dashed cage adds up to its number (9+ adds to 9; =5 is one square holding 5), with no repeats inside it. Rows, columns and boxes are Sudoku.',
+};
 type Ladder = { stage: 0 | 1 | 2; cue: Cue | null; edits: number; helpsAt: number; placed: string };
 const closed = (edits: number, helpsAt: number): Ladder => ({ stage: 0, cue: null, edits, helpsAt, placed: '' });
 
 /** Sudoku and its Latin cousins on the shared Cove grid, with a three-rung teaching hint. */
 export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
   const { puzzle: p, state, spec } = view, preferences = useContext(GridPreferences);
-  const [clashes, setClashes] = useState(preferences.mistakes !== 'Plain');
+  const [clashes, setClashes] = useState(preferences.mistakes !== 'Plain'), [howTo, setHowTo] = useState(false);
   const [ladder, setLadder] = useState<Ladder>(() => closed(state.edits, view.helps));
   // The parent hands a fresh callback each render; the grid's gesture handler must survive that.
   const live = useRef({ view, dispatch, active });
@@ -75,23 +82,22 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
   // Wider than the page padding on phones, so a 9×9 cell stays about 42 points.
   const bleed = width < 520 ? 14 : 0, boardWidth = width + bleed * 2;
   return <View style={{ gap: 12 }}>
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 6 }}>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 6, rowGap: 6 }}>
       <Copy style={{ flexShrink: 1, fontWeight: '700' }}>{view.title}</Copy>
-      {!!view.teaches && <Copy style={{ flexShrink: 1 }}>{`· ${techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches}`}</Copy>}
+      {!!view.teaches && <Copy style={{ flexShrink: 1 }}>{`· skill: ${techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches}`}</Copy>}
       <Copy accessibilityLabel={`${solvedCount} of ${total} cells filled`}>{`· ${solvedCount}/${total}`}</Copy>
+      {!!rules[p.kind] && <Button quiet compact selected={howTo} onPress={() => setHowTo(on => !on)}>How to play</Button>}
+      {!shown && <Button quiet compact disabled={!active || waiting} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>}
     </View>
-    {!shown && <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-      <Button quiet compact disabled={!active || waiting} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint · where to look?'}</Button>
-      {!!placed && <Copy accessibilityLiveRegion="polite" style={{ flexShrink: 1 }}>{placed}</Copy>}
-    </View>}
+    {howTo && !!rules[p.kind] && <Copy style={{ color: C.ink }}>{rules[p.kind]}</Copy>}
+    {!!placed && !shown && <Copy accessibilityLiveRegion="polite">{placed}</Copy>}
     {shown && <View accessibilityLiveRegion="polite" style={{ gap: 6, padding: 12, borderRadius: 14, backgroundColor: '#FBF2D5', borderWidth: 1, borderColor: C.gold }}>
       <Text style={{ fontSize: 13, letterSpacing: 0.6, color: C.teal, fontWeight: '700' }}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'A NUMBER TO FIX' : techniqueNames[ladder.cue!.technique as keyof typeof techniqueNames]?.toUpperCase()}</Text>
-      <Copy>{ladder.cue!.look}</Copy>
-      {stage === 2 && <Copy>{ladder.cue!.think}</Copy>}
+      <Copy style={{ color: C.ink }}>{stage === 2 ? ladder.cue!.think : ladder.cue!.look}</Copy>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {stage === 1 && <Button quiet compact disabled={!active} onPress={() => setLadder(l => ({ ...l, stage: 2 }))}>Why?</Button>}
         <Button compact disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Clear it for me' : 'Show me the move'}</Button>
-        <Button quiet compact onPress={() => setLadder(closed(state.edits, view.helps))}>I'll try</Button>
+        <Button quiet compact onPress={() => { const target = ladder.cue?.target; setLadder(closed(state.edits, view.helps)); if (target !== undefined && target !== state.selected) send({ type: 'select', cell: target }); }}>I'll try it</Button>
       </View>
     </View>}
     <View style={{ marginHorizontal: -bleed }}>

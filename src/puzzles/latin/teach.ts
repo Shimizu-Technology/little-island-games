@@ -28,10 +28,10 @@ const list = (xs: readonly (string | number)[]) => xs.length < 2 ? String(xs[0] 
 export function explainStep(p: LatinPuzzle, s: Step): { look: string; think: string } {
   const [g, h] = s.groups, v = s.digits[0];
   switch (s.technique) {
-    case 'single': return { look: `Look at ${cellName(p, s.focus[0])}.`, think: 'Its row, column and box already use every other number.' };
-    case 'hidden-single': return { look: `Look for ${v} in ${groupName(p, g)}.`, think: `${v} has only one free place in ${groupName(p, g)}.` };
+    case 'single': return { look: `Look at ${cellName(p, s.focus[0])}.`, think: p.box ? 'This square can only be one number. Check its row, its column and its box.' : 'This square can only be one number. Check its row and its column.' };
+    case 'hidden-single': return { look: `Look for ${v} in ${groupName(p, g)}.`, think: `${groupName(p, g)[0].toUpperCase()}${groupName(p, g).slice(1)} needs a ${v}, and only one square can take it.` };
     case 'inequality': return { look: 'Look at the arrow between the shaded cells.', think: 'The arrow points at the smaller number. Some numbers are too big or too small to fit.' };
-    case 'cage-sum': return { look: `Look at ${g ? groupName(p, g) : 'the shaded cage'}.`, think: `Only some numbers can make ${s.digits[0]} together here. The others cannot fit.` };
+    case 'cage-sum': return g && p.cages[g.index]?.cells.length === 1 ? { look: `Look at the one-square cage of ${s.digits[0]}.`, think: `A cage with one square just holds its number: ${s.digits[0]}.` } : { look: `Look at ${g ? groupName(p, g) : 'the shaded cage'}.`, think: `Only some numbers can make ${s.digits[0]} together here. The others cannot fit.` };
     case 'skyline-line': return { look: 'Look along the shaded line from its clue.', think: `From that edge exactly ${v} roofs can be seen. A taller roof hides every shorter roof behind it.` };
     case 'locked-candidates': return { look: `Look for ${v} in ${groupName(p, g)}.`, think: `In ${groupName(p, g)}, ${v} can only be where it meets ${groupName(p, h)}. So the rest of ${groupName(p, h)} cannot have ${v}.` };
     case 'naked-pair': case 'naked-triple': return { look: `Look at the shaded cells in ${groupName(p, g)}.`, think: `These ${s.focus.length} cells can only hold ${list(s.digits)}. They use those numbers up, so no other cell in ${groupName(p, g)} can.` };
@@ -44,16 +44,17 @@ export function explainStep(p: LatinPuzzle, s: Step): { look: string; think: str
     case 'simple-coloring': return { look: `Follow the chain of ${v}s that come in pairs.`, think: `Along the chain, ${v} alternates: if one end is ${v}, the next is not. A cell that sees both colours cannot be ${v}.` };
   }
 }
-export type Cue = { look: string; think: string; show: string; focus: number[]; technique: Technique | 'clash' | 'mistake' | null };
+/** `target` is the square the move changes, so the person can be taken there to try it. */
+export type Cue = { look: string; think: string; show: string; focus: number[]; target?: number; technique: Technique | 'clash' | 'mistake' | null };
 /** Three rungs of help for one board: where to look, why, then the move itself. */
 export function cueFor(p: LatinPuzzle, plan: HintPlan): Cue {
-  if (plan.kind === 'clash') return { look: 'Look at the cells marked in red.', think: 'Two of them break a rule: the same number twice, or a total that does not match.', show: `Clear ${cellName(p, plan.erase)} and look again.`, focus: plan.cells, technique: 'clash' };
-  if (plan.kind === 'mistake') return { look: `Look at ${cellName(p, plan.cell)}.`, think: 'Following the starting numbers, this number cannot stay here. Nothing breaks yet, but it will.', show: `Clear ${cellName(p, plan.cell)} and look again.`, focus: [plan.cell], technique: 'mistake' };
+  if (plan.kind === 'clash') return { look: 'Look at the cells marked in red.', think: 'Two of them break a rule: the same number twice, or a total that does not match.', show: `Clear ${cellName(p, plan.erase)} and look again.`, focus: plan.cells, target: plan.erase, technique: 'clash' };
+  if (plan.kind === 'mistake') return { look: `Look at ${cellName(p, plan.cell)}.`, think: 'Following the starting numbers, this number cannot stay here. Nothing breaks yet, but it will.', show: `Clear ${cellName(p, plan.cell)} and look again.`, focus: [plan.cell], target: plan.cell, technique: 'mistake' };
   if (plan.kind === 'none') return { look: 'Every number is in place.', think: '', show: '', focus: [], technique: null };
   const key = plan.steps.at(-1);
   const named = key ? explainStep(p, key) : explainStep(p, { technique: 'single', focus: [plan.cell], groups: [], digits: [plan.value], remove: [] });
   const focus = key ? [...new Set([...key.focus, plan.cell])] : [plan.cell];
   const lead = plan.steps.length > 1 ? ' That leaves one place.' : '';
-  return { look: named.look, think: `${named.think}${lead}`, show: `${plan.value} goes in ${cellName(p, plan.cell)}.`, focus, technique: plan.technique };
+  return { look: named.look, think: `${named.think}${lead}`, show: `${plan.value} goes in ${cellName(p, plan.cell)}.`, focus, target: plan.cell, technique: plan.technique };
 }
 export const boxLabel = (p: LatinPuzzle, i: number) => boxNames(p)(boxOf(p, i));

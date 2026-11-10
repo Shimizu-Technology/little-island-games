@@ -6,6 +6,8 @@ import { C } from '../../components/ui';
 import type { LatinPuzzle } from './core';
 
 const opGlyph: Record<string, string> = { '+': '+', '-': '−', '*': '×', '/': '÷', '=': '' };
+/** A one-cell cage reads "=5", so it is not mistaken for a small starting number. */
+const cageLabel = (c: { op: string; target: number }) => c.op === '=' ? `=${c.target}` : `${c.target}${opGlyph[c.op]}`;
 /** Cage totals sit in each cage's first cell; Cage Sudoku also draws its cages as dashed outlines. */
 export function cageLayer(p: LatinPuzzle) {
   const n = p.size, cage = p.givens.map(() => -1);
@@ -28,7 +30,7 @@ export function cageLayer(p: LatinPuzzle) {
       {!!dashed && <Svg width={n * cell} height={n * cell} style={{ position: 'absolute' }}><Path d={dashed} stroke={C.teal} strokeWidth={1.4} strokeDasharray="4 3" fill="none"/></Svg>}
       {p.cages.map((c, k) => {
         const first = Math.min(...c.cells);
-        return <Text key={k} maxFontSizeMultiplier={1.2} numberOfLines={1} style={{ position: 'absolute', left: (first % n) * cell + inset + (p.kind === 'killer' ? 1 : 0), top: Math.floor(first / n) * cell + (p.kind === 'killer' ? inset - 1 : 2), fontSize: size, lineHeight: size * 1.15, fontWeight: '700', color: C.ink, backgroundColor: p.kind === 'killer' ? '#FFFDF7' : 'transparent', paddingHorizontal: p.kind === 'killer' ? 1 : 0, fontVariant: ['tabular-nums'] }}>{`${c.target}${opGlyph[c.op]}`}</Text>;
+        return <Text key={k} maxFontSizeMultiplier={1.2} numberOfLines={1} style={{ position: 'absolute', left: (first % n) * cell + inset + (p.kind === 'killer' ? 2 : 0), top: Math.floor(first / n) * cell + (p.kind === 'killer' ? inset + 1 : 2), fontSize: size, lineHeight: size * 1.15, fontWeight: '700', color: C.ink, fontVariant: ['tabular-nums'] }}>{cageLabel(c)}</Text>;
       })}
     </>;
   };
@@ -37,19 +39,21 @@ export function cageLayer(p: LatinPuzzle) {
 export function markLayer(p: LatinPuzzle) {
   const n = p.size;
   return function MarkLayer(cell: number) {
-    const s = Math.max(5, cell * 0.13);
-    let d = '';
+    const s = Math.max(5, cell * 0.12);
+    let d = '', knock = '';
     for (const [small, big] of p.less) {
       const rs = Math.floor(small / n), cs = small % n, rb = Math.floor(big / n), cb = big % n;
       if (rs === rb) {
         const x = Math.max(cs, cb) * cell, y = rs * cell + cell / 2, dir = cs < cb ? -1 : 1;
         d += `M${x - dir * s} ${y - s}L${x + dir * s * 0.2} ${y}L${x - dir * s} ${y + s}`;
+        knock += `M${x - s * 1.5} ${y}a${s * 1.5} ${s * 1.5} 0 1 0 ${s * 3} 0a${s * 1.5} ${s * 1.5} 0 1 0 ${-s * 3} 0`;
       } else {
         const x = cs * cell + cell / 2, y = Math.max(rs, rb) * cell, dir = rs < rb ? -1 : 1;
         d += `M${x - s} ${y - dir * s}L${x} ${y + dir * s * 0.2}L${x + s} ${y - dir * s}`;
+        knock += `M${x - s * 1.5} ${y}a${s * 1.5} ${s * 1.5} 0 1 0 ${s * 3} 0a${s * 1.5} ${s * 1.5} 0 1 0 ${-s * 3} 0`;
       }
     }
-    return <Svg width={n * cell} height={n * cell} style={{ position: 'absolute' }}><Path d={d} stroke={C.teal} strokeWidth={Math.max(2, cell * 0.05)} strokeLinecap="round" strokeLinejoin="round" fill="none"/></Svg>;
+    return <Svg width={n * cell} height={n * cell} style={{ position: 'absolute' }}><Path d={knock} fill={C.cream} stroke={C.line ?? '#D9E2DA'} strokeWidth={1}/><Path d={d} stroke={C.teal} strokeWidth={Math.max(3, cell * 0.075)} strokeLinecap="round" strokeLinejoin="round" fill="none"/></Svg>;
   };
 }
 /** Skyline clues in a gutter one clue wide around the board, each beside the line it watches. */
