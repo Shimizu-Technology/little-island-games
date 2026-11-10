@@ -69,7 +69,7 @@ describe("AR-10 Arcade dares: witnesses", () => {
       expect(found, `${game} ${level} helper=${helper} ${tried.join(" ")}`).toBeGreaterThanOrEqual(0);
     }
   }, 120000);
-  it("earns Your own ears with a slip and only two stars", () => {
+  it("earns Listen-only song with a slip and only two stars", () => {
     const l = song.songLevel("w1-6");
     let s = song.createSong(l, 42, false), slipped = false;
     for (let n = 0; n < 20000 && !song.songResult(s); n++) {

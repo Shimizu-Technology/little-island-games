@@ -20,8 +20,8 @@ const slot = (game: ArcadeId, n: number) => 4000 + arcadeIds.indexOf(game) * 8 +
 export const arcadeDares: readonly ArcadeDare[] = [
   { slot: slot("reef-builder", 0), game: "reef-builder", level: "w1-4", fact: "fish", at: "least", value: 4, title: "Free 4 fish", detail: "Clear a line through a fish to let it swim free." },
   { slot: slot("reef-builder", 1), game: "reef-builder", level: "w5-4", fact: "fish", at: "least", value: 8, title: "Free 8 fish", detail: "Clear lines through 8 fish, around the rocks." },
-  { slot: slot("shell-song", 0), game: "shell-song", level: "w1-6", fact: "replays", at: "most", value: 0, title: "Ears only", detail: "Play every song back without pressing Replay. A slip is fine." },
-  { slot: slot("shell-song", 1), game: "shell-song", level: "w3-6", fact: "replays", at: "most", value: 0, title: "Ears only, big song", detail: "Play every song back without pressing Replay. A slip is fine." },
+  { slot: slot("shell-song", 0), game: "shell-song", level: "w1-6", fact: "replays", at: "most", value: 0, title: "Listen-only song", detail: "Echo each song without tapping Replay. A slip is fine." },
+  { slot: slot("shell-song", 1), game: "shell-song", level: "w3-6", fact: "replays", at: "most", value: 0, title: "Listen-only chorus", detail: "Echo each song without tapping Replay. A slip is fine." },
   { slot: slot("rail-parade", 0), game: "rail-parade", level: "w1-5", fact: "streak", at: "least", value: 6, title: "6 chicks in a row", detail: "Collect 6 chicks in a row without a bump." },
   { slot: slot("rail-parade", 1), game: "rail-parade", level: "w4-3", fact: "streak", at: "least", value: 12, title: "12 chicks in a row", detail: "Collect 12 chicks in a row without a bump." },
   { slot: slot("crab-crossing", 0), game: "crab-crossing", level: "w2-2", fact: "clean", at: "least", value: 1, title: "One clean crossing", detail: "Make one whole crossing without a bump." },

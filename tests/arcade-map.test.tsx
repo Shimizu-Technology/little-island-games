@@ -48,11 +48,11 @@ describe("AR-10 dare marks and choices", () => {
     expect((html.match(/dare/g) ?? []).length).toBe(2);
     const [song] = arcadeDares.filter(d => d.game === "shell-song");
     const choice = renderToStaticMarkup(<DareChoice dares={[song]} selected={null} marked={() => false} onSelect={vi.fn()}/>);
-    expect(choice).toContain("Want a dare?"); expect(choice).toContain("Stars count the same either way."); expect(choice).toContain("Dare: Ears only"); expect(choice).not.toContain("checked");
-    expect(renderToStaticMarkup(<DareResult dare={song} proved marked/>)).toContain("You did the dare: Ears only!");
+    expect(choice).toContain("Want a dare?"); expect(choice).toContain("Stars count the same either way."); expect(choice).toContain("Dare: Listen-only song"); expect(choice).not.toContain("checked");
+    expect(renderToStaticMarkup(<DareResult dare={song} proved marked/>)).toContain("Dare done: Listen-only song!");
     expect(renderToStaticMarkup(<DareResult dare={song} proved={false} marked={false}/>)).toContain("Your dare will wait for you. Try it any time!");
     expect(renderToStaticMarkup(<DareResult dare={song} proved={false} marked/>)).toContain("Your dare mark stays yours.");
     // Every dare title reads in the result line without a broken sentence.
-    for (const d of arcadeDares) expect(renderToStaticMarkup(<DareResult dare={d} proved marked/>)).toContain(`You did the dare: ${d.title}!`);
+    for (const d of arcadeDares) expect(renderToStaticMarkup(<DareResult dare={d} proved marked/>)).toContain(`Dare done: ${d.title}!`);
   });
 });
