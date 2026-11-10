@@ -16,7 +16,7 @@ function solvedGrid(kind: LatinKind, n: number, rng: Rng): number[] | null {
 const unique = (p: LatinPuzzle) => { const c = search(p, 2, 600_000); return c.status === 'counted' && c.count === 1 ? 'one' : c.status === 'counted' && c.count === 0 ? 'none' : 'many'; };
 const target = (op: CageOp, vs: number[]) => op === '=' ? vs[0] : op === '+' ? vs.reduce((a, b) => a + b, 0) : op === '*' ? vs.reduce((a, b) => a * b, 1) : op === '-' ? Math.abs(vs[0] - vs[1]) : Math.max(...vs) / Math.min(...vs);
 /** Connected cages grown at random. Cage Sudoku cages never repeat a number. */
-function partition(kind: LatinKind, n: number, answer: number[], rng: Rng, [low, high]: [number, number]): number[][] {
+function partition(kind: LatinKind, n: number, answer: number[], rng: Rng, [low, high]: [number, number], style: string): number[][] {
   const free = new Set(digits(n * n).map(i => i - 1)), out: number[][] = [];
   for (const start of rng.shuffle([...free])) {
     if (!free.has(start)) continue;
@@ -25,7 +25,10 @@ function partition(kind: LatinKind, n: number, answer: number[], rng: Rng, [low,
     while (cells.length < want) {
       const options = [...free].filter(i => cells.some(j => near(n, i, j)) && (kind !== 'killer' || !cells.some(j => answer[j] === answer[i])));
       if (!options.length) break;
-      const next = options[rng.below(options.length)];
+      // The layout style shapes cages: long across, long down, compact blocks, or winding.
+      const score = (i: number) => style === 'across' ? Math.abs(Math.floor(i / n) - Math.floor(start / n)) : style === 'down' ? Math.abs(i % n - start % n) : style === 'blocks' ? Math.abs(Math.floor(i / n) - Math.floor(start / n)) + Math.abs(i % n - start % n) : 0;
+      const best = Math.min(...options.map(score)), pool = style === 'winding' ? options : options.filter(i => score(i) === best);
+      const next = pool[rng.below(pool.length)];
       cells.push(next); free.delete(next);
     }
     out.push(cells.sort((a, b) => a - b));
@@ -66,7 +69,7 @@ export function generateCages(kind: 'cage-math' | 'killer', rung: VariantRung, s
   const rng = createRng(seed), n = rung.size, answer = solvedGrid(kind, n, rng);
   if (!answer) return null;
   const ops = rung.ops ?? ['+'], p = blank(kind, n);
-  p.cages = partition(kind, n, answer, rng, rung.cage ?? [2, 3]).map(cells => cageFor(cells, answer, ops, rng));
+  p.cages = partition(kind, n, answer, rng, rung.cage ?? [2, 3], cageStyles[seed % 4]).map(cells => cageFor(cells, answer, ops, rng));
   for (let tries = 0; tries < n * n && unique(p) === 'many'; tries++) if (!pin(p, answer, ops, rng)) return null;
   if (unique(p) !== 'one' || p.cages.filter(c => c.op === '=').length > Math.ceil(n * n / 6)) return null;
   // The rung's newest operator must actually appear.
@@ -75,22 +78,17 @@ export function generateCages(kind: 'cage-math' | 'killer', rung: VariantRung, s
   p.cages = canonicalCages(p.cages);
   const g = grade(p, 2_000_000);
   if (g.status !== 'complete' || rank(g.ceiling) > rank(rung.max)) return null;
-  return { seed, puzzle: p, template: templateOf(p), grade: g };
+  return { seed, puzzle: p, template: cageStyles[seed % 4], grade: g };
 }
-/** Clue look families: the mix of cage sizes and operators. */
-function templateOf(p: LatinPuzzle): string {
-  if (p.kind === 'greater-than') return `marks-${Math.min(4, Math.floor(p.less.length / p.size))}-g${Math.min(3, p.givens.filter(Boolean).length)}`;
-  if (p.kind === 'skyline') return `edges-${Math.min(4, Math.round(4 * p.sights.length / (4 * p.size)))}-g${Math.min(2, p.givens.filter(Boolean).length)}`;
-  const big = p.cages.filter(c => c.cells.length >= 3).length, single = p.cages.filter(c => c.cells.length === 1).length;
-  return `c${Math.min(3, Math.floor(big * 4 / Math.max(1, p.cages.length)))}-s${Math.min(2, single)}`;
-}
+const cageStyles = ['across', 'down', 'blocks', 'winding'], markStyles = ['rows', 'columns', 'mixed', 'edge'], cityStyles = ['north', 'west', 'scatter', 'corners'];
 /** One Greater-Than Grid candidate: marks first, then as few starting numbers as stay unique. */
 export function generateGreater(rung: VariantRung, seed: number): Candidate | null {
   const rng = createRng(seed), n = rung.size, answer = solvedGrid('greater-than', n, rng);
   if (!answer) return null;
   const p = blank('greater-than', n), pairs: [number, number][] = [];
   for (let i = 0; i < n * n; i++) for (const j of [i % n < n - 1 ? i + 1 : -1, i < n * (n - 1) ? i + n : -1]) if (j >= 0) pairs.push(answer[i] < answer[j] ? [i, j] : [j, i]);
-  p.less = rng.shuffle(pairs).slice(0, Math.round(pairs.length * (rung.clues ?? 0.45)));
+  const style = markStyles[seed % 4], weight = ([a, b]: [number, number]) => style === 'rows' ? (Math.floor(a / n) === Math.floor(b / n) ? 0 : 1) : style === 'columns' ? (a % n === b % n ? 0 : 1) : style === 'edge' ? Math.min(Math.floor(a / n), a % n, n - 1 - Math.floor(b / n), n - 1 - b % n) : 0;
+  p.less = rng.shuffle(pairs).sort((x, y) => weight(x) - weight(y)).slice(0, Math.round(pairs.length * (rung.clues ?? 0.45)));
   p.givens = [...answer];
   for (const i of rng.shuffle(digits(n * n).map(x => x - 1))) {
     const v = p.givens[i]; p.givens[i] = 0;
@@ -104,7 +102,7 @@ export function generateGreater(rung: VariantRung, seed: number): Candidate | nu
   if (p.givens.filter(Boolean).length > (rung.givens ?? n)) return null;
   const g = grade(p, 2_000_000);
   if (g.status !== 'complete' || rank(g.ceiling) < rank(rung.min)) return null;
-  return { seed, puzzle: { ...p, less: [...p.less].sort((a, b) => a[0] - b[0] || a[1] - b[1]) }, template: templateOf(p), grade: g };
+  return { seed, puzzle: { ...p, less: [...p.less].sort((a, b) => a[0] - b[0] || a[1] - b[1]) }, template: style, grade: g };
 }
 /** One Skyline candidate: every edge clue, then remove clues while the city stays unique. */
 export function generateSkyline(rung: VariantRung, seed: number): Candidate | null {
@@ -116,7 +114,9 @@ export function generateSkyline(rung: VariantRung, seed: number): Candidate | nu
     // A few cities need a starting roof; add the most telling ones until unique.
     for (const i of rng.shuffle(digits(n * n).map(x => x - 1))) { if (unique(p) === 'one') break; p.givens[i] = answer[i]; }
   }
-  for (const s of rng.shuffle([...p.sights])) {
+  const style = cityStyles[seed % 4], side = (id: number) => Math.floor(id / n), order = (id: number) => style === 'north' ? (side(id) === 0 ? 1 : 0) : style === 'west' ? (side(id) === 3 ? 1 : 0) : style === 'corners' ? -Math.min(id % n, n - 1 - id % n) : 0;
+  // A style keeps some edges whole: the north edge, the west edge, or the clues near corners.
+  for (const s of rng.shuffle([...p.sights]).sort((a, b) => order(a[0]) - order(b[0]))) {
     const old = p.sights; p.sights = p.sights.filter(x => x !== s);
     if (unique(p) !== 'one' || grade(p, 1_000_000, p.givens, rank(rung.max)).status !== 'complete') p.sights = old;
   }
@@ -128,7 +128,7 @@ export function generateSkyline(rung: VariantRung, seed: number): Candidate | nu
   if (p.givens.filter(Boolean).length > (rung.givens ?? 2) || p.sights.length > Math.round(4 * n * (rung.clues ?? 1))) return null;
   const g = grade(p, 2_000_000);
   if (g.status !== 'complete') return null;
-  return { seed, puzzle: { ...p, sights: [...p.sights].sort((a, b) => a[0] - b[0]) }, template: templateOf(p), grade: g };
+  return { seed, puzzle: { ...p, sights: [...p.sights].sort((a, b) => a[0] - b[0]) }, template: style, grade: g };
 }
 const weights: Partial<Record<Technique, number>> = { 'hidden-single': 1, inequality: 1, 'cage-sum': 1, 'skyline-line': 2, 'locked-candidates': 4, 'naked-pair': 6, 'hidden-pair': 7, 'naked-triple': 9, 'hidden-triple': 10, 'x-wing': 14, swordfish: 18, 'xy-wing': 16, 'simple-coloring': 18 };
 export const variantWorkload = (c: Candidate) => Object.entries(c.grade.counts).reduce((a, [t, k]) => a + (weights[t as Technique] ?? 0) * (k ?? 0), 0) + c.puzzle.givens.filter(v => !v).length / 8;

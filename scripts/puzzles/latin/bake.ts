@@ -37,7 +37,11 @@ export function buildPool(gen: LatinGenerator, spec: FamilySpec<LatinPuzzle>, ru
  * over a quarter of the rung. Returned easiest first.
  */
 export function spread(gen: LatinGenerator, pool: readonly Candidate[], count: number): Candidate[] {
-  const sorted = [...pool].sort((a, b) => gen.workload(a) - gen.workload(b) || a.seed - b.seed), take = Math.min(count, sorted.length);
+  const sorted = [...pool].sort((a, b) => gen.workload(a) - gen.workload(b) || a.seed - b.seed), per0 = new Map<string, number>();
+  for (const c of sorted) per0.set(c.template, (per0.get(c.template) ?? 0) + 1);
+  // The largest rung the kit's 25% template rule allows from this pool, so every pick ships.
+  let take = Math.min(count, sorted.length);
+  while (take > 0 && [...per0.values()].reduce((n, k) => n + Math.min(k, Math.max(1, Math.floor(take / 4))), 0) < take) take--;
   const cap = Math.max(1, Math.floor(take / 4)), used = new Set<number>(), per = new Map<string, number>(), out: Candidate[] = [];
   for (let k = 0; k < take; k++) {
     const aim = take === 1 ? 0 : Math.round(k * (sorted.length - 1) / (take - 1));
