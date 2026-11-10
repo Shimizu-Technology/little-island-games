@@ -35,6 +35,7 @@ export type CargoState = {
   piece: CargoPiece; next: [CargoPiece, CargoPiece]; bag: number[]; held: CargoPiece | null; holdUsed: boolean;
   row: number; col: number; clock: number; grounded: number; resets: number; soft: boolean; elapsed: number;
   loads: number; lines: number; canoes: number; freed: number; score: number; combo: number;
+  /** Most rows one piece has sent at once this round (AR-10 dare evidence). */ bestRows: number;
   status: "playing" | "cleared" | "over" | "finished"; event: number; lastRows: number[]; lastBonus: number; lastPoints: number; bump: number;
   lastDrop: { cells: number[]; distance: number } | null; helped?: boolean;
 };
@@ -95,7 +96,7 @@ export function createCargo(level: CargoLevel | "endless", seed: number, helper:
     const gap = level.tide === "shift" ? (j * 2 + level.index) % 6 : level.tide === "crowded" ? (j % 2 ? 0 : 5) : (level.index + j) % 6;
     for (let col = 0; col < COLS; col++) if (col < gap || col >= gap + 4) board[(ROWS - 1 - j) * COLS + col] = { kind: "crate", value: targetSum ? Math.max(1, Math.min(3, Math.floor(targetSum / 9))) : 1, stuck: true };
   }
-  return { version: 2, level, seed: c.seed, bag: c.bag, helper, board, piece: a.piece, next: [b.piece, c.piece], held: null, holdUsed: false, row: 0, col: 3, clock: 0, grounded: 0, resets: 0, soft: false, elapsed: 0, loads: 0, lines: 0, canoes: 0, freed: 0, score: 0, combo: 0, status: "playing", event: 0, lastRows: [], lastBonus: 0, lastPoints: 0, bump: 0, lastDrop: null };
+  return { version: 2, level, seed: c.seed, bag: c.bag, helper, board, piece: a.piece, next: [b.piece, c.piece], held: null, holdUsed: false, row: 0, col: 3, clock: 0, grounded: 0, resets: 0, soft: false, elapsed: 0, loads: 0, lines: 0, canoes: 0, freed: 0, score: 0, combo: 0, bestRows: 0, status: "playing", event: 0, lastRows: [], lastBonus: 0, lastPoints: 0, bump: 0, lastDrop: null };
 }
 function spawn(s: CargoState): CargoState {
   const reset = { row: 0, col: 3, clock: 0, grounded: 0, resets: 0 };
@@ -117,7 +118,7 @@ function lock(s: CargoState): CargoState {
   }
   const remaining = board.filter((_, i) => !lastRows.includes(Math.floor(i / COLS)));
   const combo = lastRows.length ? s.combo + 1 : 0, lastPoints = lastRows.length * 100 + bonus * 100 + Math.max(0, combo - 1) * 40 + (lastRows.length > 1 ? lastRows.length * 40 : 0) + 5;
-  let next: CargoState = { ...s, board: [...Array(lastRows.length * COLS).fill(null), ...remaining], loads: s.loads + 1, lines: s.lines + lastRows.length, canoes: s.canoes + lastRows.length + bonus, freed: s.freed + freed, score: Math.min(99999999, s.score + lastPoints), combo, event: s.event + 1, lastRows, lastBonus: bonus, lastPoints, ...(missed || s.helped ? { helped: true } : {}) };
+  let next: CargoState = { ...s, board: [...Array(lastRows.length * COLS).fill(null), ...remaining], loads: s.loads + 1, lines: s.lines + lastRows.length, canoes: s.canoes + lastRows.length + bonus, freed: s.freed + freed, score: Math.min(99999999, s.score + lastPoints), combo, bestRows: Math.max(s.bestRows, lastRows.length), event: s.event + 1, lastRows, lastBonus: bonus, lastPoints, ...(missed || s.helped ? { helped: true } : {}) };
   if (s.level !== "endless" && cargoGoalValue(next) >= s.level.target) return { ...next, status: "cleared" };
   const every = s.level === "endless" ? Math.max(6, 14 - Math.floor(next.lines / 5)) : s.level.garbageEvery;
   // Tighten the tide cadence halfway through a level. Always leave a reachable channel.
@@ -189,7 +190,7 @@ export function cargoResult(s: CargoState): ArcadeResult | null {
   if (s.status === "playing") return null;
   const cleared = s.status === "cleared", stars = cleared && s.level !== "endless" ? s.loads <= s.level.par ? 3 : s.loads <= s.level.par + 4 ? 2 : 1 : 0;
   const hasCrates = s.freed > 0 || s.level !== "endless" && (s.level.opening > 0 || s.level.garbageEvery > 0);
-  return { cleared, outcome: cleared ? "cleared" : s.status === "finished" ? "stopped" : "game-over", stars, score: s.score, detail: `${s.canoes} canoes sailed${hasCrates ? ` · ${s.freed} crates freed` : ""} · ${s.loads} loads packed.${s.lastBonus ? " A target-sum delivery sailed twice!" : ""}` };
+  return { cleared, outcome: cleared ? "cleared" : s.status === "finished" ? "stopped" : "game-over", stars, score: s.score, detail: `${s.canoes} canoes sailed${hasCrates ? ` · ${s.freed} crates freed` : ""} · ${s.loads} loads packed.${s.lastBonus ? " A target-sum delivery sailed twice!" : ""}`, facts: { rows: s.bestRows } };
 }
 const exact = (v: unknown, keys: string[]): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).sort().join() === [...keys].sort().join();
 const uint = (v: unknown, max = 99999999): v is number => typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= max;
@@ -197,15 +198,15 @@ const finite = (v: unknown, max: number) => typeof v === "number" && Number.isFi
 function validPiece(v: unknown): v is CargoPiece { return exact(v, ["shape", "turn", "kind", "value"]) && uint(v.shape, 6) && uint(v.turn, 3) && cargoKinds.includes(v.kind as CargoKind) && uint(v.value, 3) && v.value >= 1; }
 export function validCargo(v: unknown): v is CargoState {
   if (v && typeof v === "object" && !Array.isArray(v) && "helped" in v) { const { helped, ...rest } = v as Record<string, unknown>; return typeof helped === "boolean" && validCargo(rest); }
-  if (!exact(v, ["version", "level", "seed", "helper", "board", "piece", "next", "bag", "held", "holdUsed", "row", "col", "clock", "grounded", "resets", "soft", "elapsed", "loads", "lines", "canoes", "freed", "score", "combo", "status", "event", "lastRows", "lastBonus", "lastPoints", "bump", "lastDrop"]) || v.version !== 2 || typeof v.helper !== "boolean" || typeof v.soft !== "boolean" || typeof v.holdUsed !== "boolean" || !uint(v.seed, 0xffffffff)) return false;
+  if (!exact(v, ["version", "level", "seed", "helper", "board", "piece", "next", "bag", "held", "holdUsed", "row", "col", "clock", "grounded", "resets", "soft", "elapsed", "loads", "lines", "canoes", "freed", "score", "combo", "bestRows", "status", "event", "lastRows", "lastBonus", "lastPoints", "bump", "lastDrop"]) || v.version !== 2 || typeof v.helper !== "boolean" || typeof v.soft !== "boolean" || typeof v.holdUsed !== "boolean" || !uint(v.seed, 0xffffffff)) return false;
   if (v.level !== "endless" && !cargoLevels.some(l => JSON.stringify(l) === JSON.stringify(v.level))) return false;
   if (!Array.isArray(v.board) || v.board.length !== COLS * ROWS || !v.board.every(c => c === null || (exact(c, ["kind", "value", "stuck"]) && cargoKinds.includes(c.kind as CargoKind) && uint(c.value, 3) && c.value >= 1 && typeof c.stuck === "boolean"))) return false;
   if (!validPiece(v.piece) || !Array.isArray(v.next) || v.next.length !== 2 || !v.next.every(validPiece) || !(v.held === null || validPiece(v.held)) || !Array.isArray(v.bag) || v.bag.length > 6 || new Set(v.bag).size !== v.bag.length || !v.bag.every(n => uint(n, 6))) return false;
-  if (!["loads", "lines", "canoes", "freed", "score", "combo", "event", "lastBonus", "lastPoints", "bump"].every(k => uint(v[k])) || !(typeof v.row === "number" && Number.isInteger(v.row) && v.row >= -3 && v.row < ROWS) || !uint(v.col, COLS - 1) || !finite(v.clock, 1) || !finite(v.grounded, LOCK_DELAY + .1) || !uint(v.resets, MAX_LOCK_RESETS) || !finite(v.elapsed, 99999999)) return false;
+  if (!["loads", "lines", "canoes", "freed", "score", "combo", "event", "lastBonus", "lastPoints", "bump"].every(k => uint(v[k])) || !uint(v.bestRows, 4) || !(typeof v.row === "number" && Number.isInteger(v.row) && v.row >= -3 && v.row < ROWS) || !uint(v.col, COLS - 1) || !finite(v.clock, 1) || !finite(v.grounded, LOCK_DELAY + .1) || !uint(v.resets, MAX_LOCK_RESETS) || !finite(v.elapsed, 99999999)) return false;
   if (v.lastDrop !== null && (!exact(v.lastDrop, ["cells", "distance"]) || !uint(v.lastDrop.distance, ROWS + 2) || !Array.isArray(v.lastDrop.cells) || v.lastDrop.cells.length !== 4 || new Set(v.lastDrop.cells).size !== 4 || !v.lastDrop.cells.every(n => typeof n === "number" && Number.isInteger(n) && n >= -3 * COLS && n < COLS * ROWS))) return false;
   if (!["playing", "cleared", "over", "finished"].includes(v.status as string) || !Array.isArray(v.lastRows) || v.lastRows.length > 4 || new Set(v.lastRows).size !== v.lastRows.length || !v.lastRows.every(r => uint(r, ROWS - 1))) return false;
   const s = v as CargoState;
-  return s.event === s.loads && s.lines <= s.loads * 4 && s.canoes >= s.lines && s.canoes <= s.lines * 2 && s.lastBonus <= s.lastRows.length && s.combo <= s.loads && (s.status !== "playing" || fits(s, s.piece, s.row, s.col)) && (s.status !== "cleared" || (s.level !== "endless" && cargoGoalValue(s) >= s.level.target)) && (s.status !== "finished" || s.level === "endless");
+  return s.event === s.loads && s.lines <= s.loads * 4 && s.canoes >= s.lines && s.canoes <= s.lines * 2 && s.lastBonus <= s.lastRows.length && s.combo <= s.loads && s.bestRows >= s.lastRows.length && s.bestRows <= s.lines && (s.status !== "playing" || fits(s, s.piece, s.row, s.col)) && (s.status !== "cleared" || (s.level !== "endless" && cargoGoalValue(s) >= s.level.target)) && (s.status !== "finished" || s.level === "endless");
 }
 export const cargoEngine: ArcadeEngine<CargoState, CargoInput, CargoLevel> = { create: createCargo, reduce: cargoTransition, step: cargoStep, result: cargoResult, validate: validCargo };
 

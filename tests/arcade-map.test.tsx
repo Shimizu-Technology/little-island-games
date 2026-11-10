@@ -37,3 +37,20 @@ describe("shared 56-level map", () => {
     expect(locked).not.toContain('disabled=""');
   });
 });
+describe("AR-10 dare marks and choices", () => {
+  it("marks dare levels on the map, earned or waiting, in the accessible name", async () => {
+    const { DareChoice, DareResult } = await import("../src/arcade/DareCard");
+    const { arcadeDares } = await import("../src/arcade/dares");
+    const props = { game: arcadeGames.find(g => g.id === "shell-song")!, person: emptyArcadeLearner(), levels: songLevels, onLevel: vi.fn(), onOutfits: vi.fn(), onChest: vi.fn(), active: false };
+    const html = renderToStaticMarkup(<LevelMap {...props} dareMark={id => id === "w1-6" ? "open" : id === "w1-2" ? "earned" : null}/>);
+    expect(html).toMatch(/aria-label="[^"]*level 6[^"]*, has a dare"/);
+    expect(html).toMatch(/aria-label="[^"]*level 2[^"]*, dare earned"/);
+    expect((html.match(/dare/g) ?? []).length).toBe(2);
+    const [song] = arcadeDares.filter(d => d.game === "shell-song");
+    const choice = renderToStaticMarkup(<DareChoice dares={[song]} selected={null} marked={() => false} onSelect={vi.fn()}/>);
+    expect(choice).toContain("Want a dare?"); expect(choice).toContain("Stars count the same either way."); expect(choice).toContain("Your own ears");
+    expect(renderToStaticMarkup(<DareResult dare={song} proved marked cleared/>)).toContain("Dare earned: Your own ears!");
+    expect(renderToStaticMarkup(<DareResult dare={song} proved={false} marked={false} cleared/>)).toContain("still waiting. Your stars are saved.");
+    expect(renderToStaticMarkup(<DareResult dare={song} proved={false} marked cleared={false}/>)).toContain("mark is kept");
+  });
+});

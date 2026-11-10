@@ -99,6 +99,9 @@ export type CrabState = {
   crossed: number;
   cursor: number;
   bumps: number;
+  /** Crossings finished with no bump since the crossing began, and the bump count at that start (AR-10 dare evidence). */
+  cleanCrossings: number;
+  crossingBumps: number;
   score: number;
   shield: number;
   lives: Lives;
@@ -181,6 +184,8 @@ export function createCrab(level: CrabState["level"], seed: number, helper = fal
     crossed: 0,
     cursor: 0,
     bumps: 0,
+    cleanCrossings: 0,
+    crossingBumps: 0,
     score: 0,
     shield: 0,
     lives: createLives(helper),
@@ -292,7 +297,7 @@ function landed(s: CrabState): CrabState {
   if (next.phase !== "play" || next.respawn > 0 || next.y !== 0) return next;
   const crossed = next.crossed + 1,
     score = Math.min(99999999, crossed * 100);
-  next = { ...next, crossed, score, event: next.event + 1, impact: { x: hop.toX, y: 0, kind: "score" } };
+  next = { ...next, crossed, score, cleanCrossings: next.cleanCrossings + Number(next.bumps === next.crossingBumps), crossingBumps: next.bumps, event: next.event + 1, impact: { x: hop.toX, y: 0, kind: "score" } };
   return crossed >= (s.level === "endless" ? Infinity : s.level.target)
     ? { ...next, phase: "cleared", queue: [], message: "Home by the sea!" }
     : { ...next, x: 4, y: 10, furthest: 10, respawn: 0.18, queue: [], message: "+100" };
@@ -335,6 +340,7 @@ export function crabResult(s: CrabState): ArcadeResult | null {
         stars: crabStars(s),
         score: s.score,
         detail: `${s.crossed} burrows · ${s.hops} hops · ${s.bumps} bumps`,
+        facts: { clean: s.cleanCrossings },
       };
 }
 export function validCrab(v: unknown): v is CrabState {
@@ -351,6 +357,8 @@ export function validCrab(v: unknown): v is CrabState {
       "crossed",
       "cursor",
       "bumps",
+      "cleanCrossings",
+      "crossingBumps",
       "score",
       "shield",
       "lives",
@@ -376,7 +384,9 @@ export function validCrab(v: unknown): v is CrabState {
     !integer(v.y, 10) ||
     !finite(v.time, 1000000) ||
     !finite(v.travel, 3000000) ||
-    ![v.hops, v.crossed, v.bumps, v.score, v.event].every((n) => integer(n)) ||
+    ![v.hops, v.crossed, v.bumps, v.score, v.event, v.cleanCrossings, v.crossingBumps].every((n) => integer(n)) ||
+    (v.cleanCrossings as number) > (v.crossed as number) ||
+    (v.crossingBumps as number) > (v.bumps as number) ||
     !integer(v.cursor, 9) ||
     !finite(v.shield, 1.2) ||
     !validLives(v.lives) ||

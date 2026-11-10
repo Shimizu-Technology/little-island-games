@@ -1,6 +1,6 @@
 import type { InlineBank } from '../src/state/bankFacts';
 import { catalogManifest } from '../src/state/catalogManifest';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { registerSaveContent, emptyChallenge, validChallengeProgress, type ChallengeProgress, type ChallengeSession, type SaveCatalog } from '../src/state/challenge';
 import { jsonBytes, pack, base64, plain } from '../src/state/saveBits';
@@ -9,6 +9,8 @@ import { encodeSave, migrateProfiles, projectProfile } from '../src/state/profil
 import { addCovePerson } from '../src/state/covePeople';
 import { parseSave, MAX_SAVE_BYTES } from '../src/state/validation';
 import { newLibraryChild, validLibraryData } from '../src/library/state';
+// Capacity fixtures occupy bank slots 312–511 and every dare slot; isolate them from the shipped Arcade dare registration.
+vi.mock('../src/arcade/dares',async original=>({...await original<typeof import('../src/arcade/dares')>(),arcadeDareCatalog:()=>({banks:new Map(),dares:new Map(),codecs:new Map(),contexts:new Set()})}));
 const hash='b'.repeat(64);
 const banks:InlineBank[]=[];let ordinal=0;
 // 54,000 Cove entries + 8,647 School entries; exactly 62,647 entries, not an all-ones invalid bitmap.

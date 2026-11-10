@@ -10,6 +10,7 @@ import { StarDisplay } from "./Art";
 import { Hero, HudPill } from "./Juice";
 import { PlayScene, type ArcadeSceneProps } from "./PlayScene";
 import { ChestArt } from "./TreasureArt";
+import { DareMark } from "./DareCard";
 import { type ArcadeGame, type ArcadeLevel, type LevelId, starCount } from "./types";
 import { type ArcadeLearner, gameProgress, levelOpen, endlessOpen } from "./progress";
 function CurrentNode({ children, active }: { children: React.ReactNode; active: boolean }) {
@@ -18,7 +19,7 @@ function CurrentNode({ children, active }: { children: React.ReactNode; active: 
   const style = useAnimatedStyle(() => ({ transform: [{ translateY: t.value }] }));
   return <Animated.View style={style}>{children}</Animated.View>;
 }
-export function LevelMap({ game, person, levels, onLevel, onOutfits, onChest, freeBest = 0, active = true, Scene, worldNote, learnerChip }: { learnerChip?: React.ReactNode; game: ArcadeGame; person: ArcadeLearner; levels: readonly ArcadeLevel[]; onLevel: (id: LevelId | "endless") => void; onOutfits: () => void; onChest: () => void; freeBest?: number; active?: boolean; Scene?: React.ComponentType<ArcadeSceneProps>; worldNote?: (world: ArcadeLevel["world"]) => string | undefined }) {
+export function LevelMap({ game, person, levels, onLevel, onOutfits, onChest, freeBest = 0, active = true, Scene, worldNote, learnerChip, dareMark }: { learnerChip?: React.ReactNode; dareMark?: (id: LevelId) => "open" | "earned" | null; game: ArcadeGame; person: ArcadeLearner; levels: readonly ArcadeLevel[]; onLevel: (id: LevelId | "endless") => void; onOutfits: () => void; onChest: () => void; freeBest?: number; active?: boolean; Scene?: React.ComponentType<ArcadeSceneProps>; worldNote?: (world: ArcadeLevel["world"]) => string | undefined }) {
   const p = gameProgress(person, game.id), { width } = useWindowDimensions(), pathWidth = Math.min(650, width - (width >= 600 ? 54 : 22)), unit = pathWidth / 4;
   const next = currentLevel(person, game.id, levels);
   const [selectedWorld, setSelectedWorld] = useState(next?.world ?? game.worlds[0].id);
@@ -41,10 +42,11 @@ export function LevelMap({ game, person, levels, onLevel, onOutfits, onChest, fr
         <View style={{ paddingTop: 20, paddingHorizontal: 20, gap: 5 }}><Copy style={{ color: "#FFF1C5", fontSize: 12, fontWeight: "800", letterSpacing: 2, backgroundColor: "#24536A", alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 }}>{world.learning ? "PLAY & DISCOVER" : `WORLD ${worldIndex + 1}`}</Copy><Heading style={{ fontSize: 28, color: "#FFF8E4", backgroundColor: "#24536A", alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>{world.name}</Heading><Copy style={{ color: "#FFF8E4", fontSize: 15, backgroundColor: "#24536A", paddingHorizontal: 9, paddingVertical: 5, borderRadius: 12 }}>{worldNote?.(world.id) ?? world.detail}</Copy></View>
         <View style={{ width: pathWidth, height: high, alignSelf: "center", marginTop: 10 }}><Svg width={pathWidth} height={high} style={{ position: "absolute" }} accessible={false}><Path d={d} fill="none" stroke="#325F77" strokeWidth={23} strokeLinecap="round" opacity={.5}/><Path d={d} fill="none" stroke="#F2DDA5" strokeWidth={16} strokeLinecap="round"/><Path d={d} fill="none" stroke="#FFF3CE" strokeWidth={3} strokeDasharray="2 13" strokeLinecap="round"/></Svg>
           {own.map((level, i) => {
-            const stars = p.stars[level.id] ?? 0, current = next?.id === level.id;
+            const stars = p.stars[level.id] ?? 0, current = next?.id === level.id, mark = dareMark?.(level.id) ?? null;
             const face = <View style={{ width: 62, height: 62, borderRadius: 25, justifyContent: "center", alignItems: "center", backgroundColor: current ? "#FFDD78" : stars ? "#357F80" : "#FFF4D8", borderWidth: 3, borderColor: current ? "#936035" : stars ? "#C3EAD1" : "#C9AC72", boxShadow: "0 5px 0 #285C6C" }}><Text style={{ color: stars ? "#FFF9EA" : "#684428", fontSize: 28, fontWeight: "900" }}>{level.index}</Text></View>;
-            const node = <PressableScale testID={`level-${level.id}`} disabled={!levelOpen(p, level.id)} accessibilityRole="button" accessibilityLabel={`${world.name}, level ${level.index}, ${level.name}, ${stars} stars`} onPress={() => onLevel(level.id)} style={{ width: 62, height: 62, borderRadius: 25 }}>
+            const node = <PressableScale testID={`level-${level.id}`} disabled={!levelOpen(p, level.id)} accessibilityRole="button" accessibilityLabel={`${world.name}, level ${level.index}, ${level.name}, ${stars} stars${mark === "earned" ? ", dare earned" : mark ? ", has a dare" : ""}`} onPress={() => onLevel(level.id)} style={{ width: 62, height: 62, borderRadius: 25 }}>
               {current ? <CurrentNode active={active}>{face}</CurrentNode> : face}
+              {mark && <View pointerEvents="none" style={{ position: "absolute", right: -9, top: -9 }}><DareMark earned={mark === "earned"} size={26}/></View>}
             </PressableScale>;
             return <View key={level.id} style={{ position: "absolute", left: xs[i] - unit / 2, top: ys[i] - 31, width: unit, alignItems: "center", gap: 3 }}>
               {current && <View style={{ position: "absolute", top: -23, backgroundColor: "#FFF1C7", paddingHorizontal: 9, paddingVertical: 2, borderRadius: 12 }}><Text style={{ color: "#5D3E2E", fontSize: 12, fontWeight: "900" }}>NEXT</Text></View>}{node}<StarDisplay stars={stars} size={18}/>

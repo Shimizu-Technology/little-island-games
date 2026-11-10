@@ -74,7 +74,8 @@
     "deliver:web": "node scripts/words/delivery.mjs web --",
     "deliver:ios": "node scripts/words/delivery.mjs ios --",
     "check:source": "npm run registry:check && npm run save:catalog && npm run puzzles:verify && npm run typecheck && npm run lint && npm test && npm run export:web",
-    "arcade:boundaries": "LITTLE_ISLAND_WRITE_ARCADE_TABLE=1 vitest run tests/arcade-boundaries.test.ts"
+    "arcade:boundaries": "LITTLE_ISLAND_WRITE_ARCADE_TABLE=1 vitest run tests/arcade-boundaries.test.ts",
+    "arcade:dares": "node --import ./scripts/puzzles/register.mjs scripts/arcade/dare-catalog.ts"
   },
   "private": true,
   "engines": {

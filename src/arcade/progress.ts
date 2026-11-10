@@ -1,6 +1,8 @@
 import { validReef, type ReefState } from "./games/reef-builder/engine";
 import { type PracticeResult, type PracticeSettings, validPracticeSettings } from "../practice/types";
-import { arcadeIds, allLevelIds, type ArcadeId, type LevelId, type Stars, type WorldId, validLevelId, worldIds, worldStars, starCount } from "./types";
+import { arcadeIds, allLevelIds, type ArcadeFacts, type ArcadeId, type LevelId, type Stars, type WorldId, validLevelId, worldIds, worldStars, starCount } from "./types";
+import { arcadeDare } from "./dares";
+import { validFacts } from "./terminal";
 export const stickerIds = ["reef-fish", "singing-shell", "little-crab", "sea-turtle", "moon-canoe", "sun-coral", "rainbow-fish", "star-shell", "coconut", "flying-fox", "lagoon-ray", "island-flower", "tiny-rail", "hermit-home", "sea-star", "jelly-light"] as const;
 export type StickerId = typeof stickerIds[number];
 export const outfitIds = ["island", "sunhat", "explorer", "starlight"] as const;
@@ -10,8 +12,10 @@ export const outfitStars: Record<OutfitId, number> = { island: 0, sunhat: 12, ex
 /** `openWorlds` is historical derived metadata kept valid for old saves. Play never reads it (Leon's D1: every world, level and Endless is open). */
 export type GameProgress = { stars: Partial<Record<LevelId, Stars>>; openWorlds: WorldId[]; best: number; outfit: OutfitId; unlockedOutfits: OutfitId[]; coached: boolean };
 export type ChestOffer = { game: ArcadeId; level: LevelId; round: string; sticker: StickerId };
-export type ReefSession = { version: 1; game: "reef-builder"; round: string; state: ReefState };
+/** `dare` is the launch descriptor's chosen dare, kept so a resumed reef finishes the same attempt. */
+export type ReefSession = { version: 1; game: "reef-builder"; round: string; state: ReefState; dare?: number };
 export function validReefSession(v: unknown): v is ReefSession {
+  if (obj(v) && Object.hasOwn(v, "dare")) { const { dare, ...rest } = v; const d = typeof dare === "number" ? arcadeDare(dare) : undefined; return !!d && d.game === "reef-builder" && validReefSession(rest) && rest.state.level !== "endless" && rest.state.level.id === d.level; }
   return exact(v, ["version", "game", "round", "state"]) && v.version === 1 && v.game === "reef-builder" && roundId(v.round) && validReef(v.state) && v.state.status === "playing";
 }
 export type ArcadeLearner = { session?: ReefSession; helper: boolean; helperDefaultV2?: true; games: Partial<Record<ArcadeId, GameProgress>>; stickers: StickerId[]; rounds: string[]; chest: ChestOffer | null };
@@ -23,7 +27,8 @@ export type ArcadeAction =
   | { type: "helper"; value: boolean }
   | { type: "coached"; game: ArcadeId }
   | { type: "outfit"; game: ArcadeId; outfit: OutfitId }
-  | { type: "finish"; game: ArcadeId; level: LevelId | "endless"; stars: 0 | Stars; score: number; round: string; name: string }
+  /** `dare` comes from the launch descriptor; `facts` and `helped` from the accepted terminal result. */
+  | { type: "finish"; game: ArcadeId; level: LevelId | "endless"; stars: 0 | Stars; score: number; round: string; name: string; dare?: number; facts?: ArcadeFacts; helped?: boolean }
   | { type: "skip-chest"; round: string }
   | { type: "claim-chest"; round: string; result: PracticeResult; config: PracticeSettings }
   | { type: "preferences"; music?: boolean; breakMinutes?: ArcadeSave["breakMinutes"] };
@@ -87,6 +92,8 @@ export function arcadeTransition(before: ArcadeSave | undefined, owner: string, 
     if (action.type === "coached") g = { ...progress, coached: true };
     if (action.type === "outfit" && progress.unlockedOutfits.includes(action.outfit)) g = { ...progress, outfit: action.outfit };
     if (action.type === "finish") {
+      const dare = action.dare === undefined ? null : arcadeDare(action.dare);
+      if ((action.facts !== undefined && !validFacts(action.facts)) || (action.helped !== undefined && typeof action.helped !== "boolean") || (action.dare !== undefined && (!dare || dare.game !== action.game || dare.level !== action.level))) return a;
       if (!roundId(action.round) || person.rounds.includes(action.round) || !int(action.score) || !int(action.stars, 3) || (action.level !== "endless" && (!validLevelId(action.level) || !levelOpen(progress, action.level))) || (action.level === "endless" && !endlessOpen(progress))) return a;
       const stars = { ...progress.stars };
       if (action.level !== "endless" && action.stars) stars[action.level] = Math.max(stars[action.level] ?? 0, action.stars) as Stars;
