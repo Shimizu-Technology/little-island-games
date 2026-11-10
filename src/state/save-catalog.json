@@ -1,6 +1,95 @@
 {
   "version": 2,
-  "banks": [],
+  "banks": [
+    {
+      "slot": 40,
+      "engine": "sudoku",
+      "rules": 1,
+      "first": 40960,
+      "count": 240,
+      "family": "sudoku",
+      "packHash": "2dce9e8829b7d8205b2e28d4dc02e831789151d2e19f24a93592eb87073c12e3",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 41,
+      "engine": "sudoku",
+      "rules": 1,
+      "first": 41200,
+      "count": 300,
+      "family": "sudoku",
+      "packHash": "cff3271bc23a773b3a27a21855739eb142da09ac73922fec159f2bb60cbc8f3b",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 42,
+      "engine": "sudoku",
+      "rules": 1,
+      "first": 41500,
+      "count": 300,
+      "family": "sudoku",
+      "packHash": "a7c9e748d23313869be550db9981fc17b9852f8fba7a53682f00e377a96af20b",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 43,
+      "engine": "sudoku",
+      "rules": 1,
+      "first": 41800,
+      "count": 365,
+      "family": "sudoku",
+      "packHash": "1a8eae26982b966b105f2f86127f2dbd10226054f81ab9db69147b28cb114563",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 44,
+      "engine": "sudoku",
+      "rules": 1,
+      "first": 42165,
+      "count": 365,
+      "family": "sudoku",
+      "packHash": "0152fd31f434b0c560c758f82650c8ca8419f2b893cc44f574651df290f8a43e",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 45,
+      "engine": "sudoku",
+      "rules": 1,
+      "first": 42530,
+      "count": 365,
+      "family": "sudoku",
+      "packHash": "304bd457fdcf6db7b14b981b427468ff7cce68d437ba4bcf7d5e5985fdf468ea",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 46,
+      "engine": "sudoku",
+      "rules": 1,
+      "first": 42895,
+      "count": 365,
+      "family": "sudoku",
+      "packHash": "3383e6eebe2ec6d9a237e3bfef0ceaec6c43c410ddf51af87dfe03fd05d74375",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 47,
+      "engine": "sudoku",
+      "rules": 1,
+      "first": 43260,
+      "count": 365,
+      "family": "sudoku",
+      "packHash": "5c53ab8d9bf15572abde6df939b34e282964dbaf4e624c5f41b5acfebd22b564",
+      "awards": 0,
+      "cove": true
+    }
+  ],
   "dares": [],
   "contexts": [
     "s0-1",
@@ -142,6 +231,12 @@
     "s27-2",
     "s27-3",
     "s27-4",
-    "s27-5"
+    "s27-5",
+    "sudoku-1",
+    "sudoku-2",
+    "sudoku-3",
+    "sudoku-4",
+    "sudoku-5",
+    "sudoku-6"
   ]
 }

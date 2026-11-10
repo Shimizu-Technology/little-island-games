@@ -18,10 +18,11 @@ vi.mock('../src/state/storage', () => ({ storage: { get: async () => db.raw, set
 vi.mock('react-native', () => ({ AccessibilityInfo: { isScreenReaderEnabled: async () => false, addEventListener: () => ({ remove() {} }) }, ScrollView: 'section', View: 'div', TextInput: 'input', Pressable: 'button', Platform: { OS: 'ios' }, useWindowDimensions: () => ({ width: 393, height: 852 }), PanResponder: { create: (handlers: unknown) => ({ panHandlers: handlers }) }, AppState: { addEventListener: () => ({ remove() {} }) } }));
 vi.mock('react-native-reanimated', async () => { const { useRef } = await import('react'); return { default: { View: 'animated' }, useAnimatedStyle: (fn: () => unknown) => fn(), useSharedValue: (value: number) => useRef({ value, get() { return this.value; }, set(n: number) { this.value = n; } }).current }; });
 vi.mock('react-native-svg', () => ({ default: 'svg', Path: 'path' }));
+vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main' }));
 vi.mock('expo-router', () => ({ useIsFocused: () => true, router: {} }));
 vi.mock('../src/components/Settings', () => ({ Settings: () => null }));
 vi.mock('../src/personalization/LearnerChip', () => ({ LearnerChip: () => null }));
-vi.mock('../src/components/ui', () => ({ Button: 'button', Copy: 'p', Heading: 'h2', ToggleRow: 'switch', C: {} }));
+vi.mock('../src/components/ui', () => ({ Button: 'button', Chip: 'button', Copy: 'p', Heading: 'h2', ToggleRow: 'switch', C: {}, styles: {} }));
 vi.mock('../src/components/Text', () => ({ Text: 'span' }));
 vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play: db.play }) }));
 vi.mock('../src/components/SaveStatus', () => ({ SaveStatus: () => null }));

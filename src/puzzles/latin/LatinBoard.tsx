@@ -8,15 +8,16 @@ import { GridPreferences } from '../grid/preferences';
 import { conflicts, type LatinPuzzle } from './core';
 import { planHint } from './solver';
 import { cueFor, techniqueNames, type Cue } from './teach';
+import { cageLayer, clueWords, markLayer, sightFrame } from './clues';
 import type { LatinBoardProps, LatinEvent } from './registration';
 
-/** Thick lines for box edges (Sudoku, Killer) or cage edges (Cage Math, Killer), in pixels for one cell size. */
+/** Thick lines for box edges (Sudoku, Cage Sudoku) or cage edges (Cage Math), in pixels for one cell size. */
 export function boxBorders(p: LatinPuzzle) {
   const n = p.size;
   return (cell: number) => {
     let d = `M0 0H${n * cell}V${n * cell}H0Z`;
     if (p.box) { const w = n / p.box; for (let r = p.box; r < n; r += p.box) d += `M0 ${r * cell}H${n * cell}`; for (let c = w; c < n; c += w) d += `M${c * cell} 0V${n * cell}`; }
-    if (p.cages.length && p.kind !== 'cross-sums') {
+    if (p.kind === 'cage-math') {
       const cage = p.givens.map(() => -1);
       p.cages.forEach((c, k) => c.cells.forEach(i => { cage[i] = k; }));
       for (let i = 0; i < n * n; i++) {
@@ -67,6 +68,9 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
     return out;
   }, [state.values, state.selected, shown, ladder.cue]);
   const borders = useMemo(() => boxBorders(p), [p]);
+  const overlay = useMemo(() => p.cages.length ? cageLayer(p) : p.less.length ? markLayer(p) : undefined, [p]);
+  const frame = useMemo(() => p.kind === 'skyline' ? { size: 0.7, layer: sightFrame(p) } : undefined, [p]);
+  const words = useMemo(() => clueWords(p), [p]);
   const solvedCount = state.values.filter(Boolean).length, total = p.givens.length - p.mask.filter(Boolean).length;
   // Wider than the page padding on phones, so a 9×9 cell stays about 42 points.
   const bleed = width < 520 ? 14 : 0, boardWidth = width + bleed * 2;
@@ -76,8 +80,9 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
       <Copy accessibilityLabel={`${solvedCount} of ${total} cells filled`}>{solvedCount}/{total} filled</Copy>
     </View>
     <View style={{ marginHorizontal: -bleed }}>
-      <GridShell spec={spec} state={state} dispatch={gridSend} width={boardWidth} active={active} conflicts={conflictCells} mistakes={clashes ? 'Friendly' : preferences.mistakes === 'Rewind' ? 'Rewind' : 'Plain'} borders={borders} tints={tints} fillNotes={() => send({ type: 'fill-notes' })}/>
+      <GridShell spec={spec} state={state} dispatch={gridSend} width={boardWidth} active={active} conflicts={conflictCells} mistakes={clashes ? 'Friendly' : preferences.mistakes === 'Rewind' ? 'Rewind' : 'Plain'} borders={borders} tints={tints} overlay={overlay} frame={frame} fillNotes={() => send({ type: 'fill-notes' })}/>
     </View>
+    {!!words && p.kind !== 'sudoku' && <Copy accessibilityRole="text" style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}>{words}</Copy>}
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       <Button quiet compact selected={clashes} disabled={!active} onPress={() => setClashes(on => !on)} label={`Show clashes ${clashes ? 'on' : 'off'}`}>{clashes ? 'Clashes shown' : 'Clashes hidden'}</Button>
       <Button quiet compact disabled={!active || state.values.every((v, i) => v === p.givens[i])} onPress={() => send({ type: 'reset' })}>Start over</Button>

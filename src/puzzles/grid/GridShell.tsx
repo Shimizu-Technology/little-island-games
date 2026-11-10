@@ -30,9 +30,13 @@ export type GridShellProps = {
   tints?: ReadonlyMap<number, 1 | 2>;
   /** A static layer above the cells and lines (cage sums, inequality marks). Never input. */
   overlay?: (cell: number) => React.ReactNode;
+  /** Edge clues outside the board: a gutter `size` cells wide on every side, drawn by `layer`. */
+  frame?: { size: number; layer: (cell: number, gutter: number) => React.ReactNode };
 };
 /** Input/render only. Adapters own truth, hint evidence, checkpoint codec and Store autosave. */
-export function GridShell({ spec, state, dispatch, width, active, mistakes: mistakeChoice, conflicts = [], borders, fillNotes, numberFirst = false, onAccepted, tints, overlay }: GridShellProps) {
+export function GridShell({ spec, state, dispatch, width: outer, active, mistakes: mistakeChoice, conflicts = [], borders, fillNotes, numberFirst = false, onAccepted, tints, overlay, frame }: GridShellProps) {
+  // A clue frame takes its share of the width, so the board's cells stay square and centred.
+  const width = frame ? outer * spec.columns / (spec.columns + 2 * frame.size) : outer;
   const feedback = useContext(GridFeedback), interaction = useContext(GridInteraction), adult = useContext(GridAdult), preferences = useContext(GridPreferences), mistakes = mistakeChoice ?? preferences.mistakes;
   const { height } = useWindowDimensions(), [zoom, setZoom] = useState(() => spec.kind !== 'digits' && gridGeometry(width, Math.min(height * .55, 620), spec, false).needsZoom), [first, setFirst] = useState(numberFirst), [line, setLine] = useState<number[]>([]);
   const [screenReader, setScreenReader] = useState(false);
@@ -134,6 +138,8 @@ export function GridShell({ spec, state, dispatch, width, active, mistakes: mist
     {Platform.OS === 'ios' && <TextInput ref={nativeKeyboard} testID="cove-native-keyboard" accessible={false} importantForAccessibility="no-hide-descendants" showSoftInputOnFocus={false} caretHidden contextMenuHidden autoCorrect={false} autoCapitalize="none" value="" onKeyPress={e => keyAction(e.nativeEvent.key)} onChangeText={() => nativeKeyboard.current?.clear()} style={{ position: 'absolute', width: 1, height: 1, opacity: 0, fontSize: 18 }}/>}
 
     <Copy>Selected row {Math.floor(state.selected / spec.columns) + 1}, column {state.selected % spec.columns + 1}{state.notes[state.selected] ? ` · Notes: ${spec.symbols.filter((_, i) => state.notes[state.selected] & 1 << i).join(', ')}` : ''}</Copy>
+    <View style={frame ? { alignSelf: 'center', padding: frame.size * cell } : { alignSelf: 'center' }}>
+    {frame && <View pointerEvents="none" accessible={false} style={{ position: 'absolute', left: 0, top: 0 }}>{frame.layer(cell, frame.size * cell)}</View>}
     <View style={{ width: Math.min(width, geometry.width), alignSelf: 'center', height: Math.min(geometry.height, height * .55, 620), overflow: 'hidden', borderRadius: 8, ...(Platform.OS === 'web' ? { touchAction: spec.kind === 'paint' || zoom ? 'none' as const : 'auto' as const } : {}) }}>
       <Animated.View style={[{ width: geometry.width, height: geometry.height }, panStyle]}>
         {Array.from({ length: spec.rows }, (_, r) => <View key={r} style={{ flexDirection: 'row' }}>{Array.from({ length: spec.columns }, (_, c) => { const i = r * spec.columns + c; return <Cell key={i} index={i} value={state.values[i]} notes={state.notes[i]} selected={state.selected === i} conflict={mistakes === 'Friendly' && conflicts.includes(i)} given={!!spec.givens[i]} cell={cell} columns={spec.columns} symbols={spec.symbols} paint={spec.kind === 'paint'} select={stableSelect} tint={tints?.get(i) ?? 0}/>; })}</View>)}
@@ -143,6 +149,7 @@ export function GridShell({ spec, state, dispatch, width, active, mistakes: mist
         <Animated.View pointerEvents="none" style={[{ position: 'absolute', left: 0, top: 0, width: cell, height: cell, borderWidth: 3, borderColor: C.gold }, cursorStyle]}/>
       </Animated.View>
       <View testID="cove-grid-input" accessible={false} importantForAccessibility="no" tabIndex={Platform.OS === 'web' ? 0 : undefined} onPointerDown={Platform.OS === 'web' ? e => e.currentTarget.focus() : undefined} {...responder.panHandlers} style={{ position: 'absolute', inset: 0 }}/>
+    </View>
     </View>
     {(enlarged || line.length > 0) && <Copy>Enlarged row {Math.floor((line[0] ?? state.selected) / spec.columns) + 1}: {state.values.slice(Math.floor((line[0] ?? state.selected) / spec.columns) * spec.columns, (Math.floor((line[0] ?? state.selected) / spec.columns) + 1) * spec.columns).map(v => spec.symbols[v - 1] ?? '·').join('  ')}</Copy>}
     {geometry.needsZoom && !screenReader && <><Button quiet compact selected={zoom} onPress={() => setZoom(!zoom)}>{zoom ? 'Fit whole board' : 'Enlarge cells'}</Button>{zoom && <><Copy>Two fingers move the board. One finger selects or paints.</Copy><Button quiet compact onPress={() => { panX.set(0); panY.set(0); }}>Return to top left</Button></>}</>}

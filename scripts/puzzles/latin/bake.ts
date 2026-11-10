@@ -17,7 +17,7 @@ import { describe, type Candidate, type LatinGenerator } from './family';
 import { generators } from './generators';
 
 /** SLOTS.md reserves banks 40–59 for G3. Each family starts at its own slot; ordinals at slot × 1024. */
-export const slotBase: Record<string, number> = { sudoku: 40, 'cage-math': 48, 'greater-than': 52, skyline: 54, killer: 56, 'cross-sums': 58 };
+export const slotBase: Record<string, number> = { sudoku: 40, 'cage-math': 48, 'greater-than': 53, skyline: 55, killer: 57, 'cross-sums': 59 };
 export const SLOT_END = 60;
 
 export type Pool = { rung: string; tried: number; kept: Candidate[] };

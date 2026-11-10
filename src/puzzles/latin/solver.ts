@@ -297,7 +297,7 @@ const clueStep = (p: LatinPuzzle, d: readonly number[], work: Work): Step | null
 /** MRV search with clue propagation. Exhaustion is never reported as zero solutions. */
 export function search(p: LatinPuzzle, cap = 2, budget = 400_000, random?: () => number) {
   let count = 0, first = null as number[] | null, nodes = 0, spent = false;
-  const work = new Work(budget), cells = cellsOf(p);
+  const work = new Work(budget), cells = cellsOf(p), found: number[][] = [];
   const walk = (start: number[]) => {
     if (count >= cap) return;
     work.tick(); nodes++;
@@ -305,13 +305,13 @@ export function search(p: LatinPuzzle, cap = 2, budget = 400_000, random?: () =>
     if (!d) return;
     let best = -1;
     for (const i of cells) if (!singleton(d[i]) && (best < 0 || countBits(d[i]) < countBits(d[best]))) best = i;
-    if (best < 0) { const v = d.map((m, i) => p.mask[i] ? 0 : only(m)); if (solved(p, v)) { count++; first ??= v; } return; }
+    if (best < 0) { const v = d.map((m, i) => p.mask[i] ? 0 : only(m)); if (solved(p, v)) { count++; first ??= v; found.push(v); } return; }
     const vs = valuesOf(d[best]);
     if (random) for (let j = vs.length - 1; j > 0; j--) { const k = Math.floor(random() * (j + 1)); [vs[j], vs[k]] = [vs[k], vs[j]]; }
     for (const v of vs) { const next = [...d]; next[best] = bit(v); walk(next); if (count >= cap) return; }
   };
   try { walk(startDomains(p)); } catch (e) { if (!(e instanceof Error) || e.message !== 'latin-budget') throw e; spent = true; }
-  return { status: spent ? 'budget-exhausted' as const : 'counted' as const, count, first, nodes };
+  return { status: spent ? 'budget-exhausted' as const : 'counted' as const, count, first, nodes, found };
 }
 
 export type HintPlan =
