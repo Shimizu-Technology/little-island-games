@@ -25,7 +25,8 @@ export function friendPlace(entity: SceneEntity): FriendPlace {
 export function friendLabel(entity: SceneEntity, here: RoomId): string {
   const name = friendNames[entity.character!.slot] ?? "Friend";
   const place = friendPlace(entity);
-  const where = place.waiting ? "waiting in the drawer" : place.room === here ? "in this room" : `in the ${roomNames[place.room]}`;
+  const where = place.waiting ? "waiting in the drawer" : place.room === here ? "in this room"
+    : place.room === "home" ? `in ${roomNames.home}` : `in the ${roomNames[place.room]}`;
   return `${name}, ${where}. Drag into the room, or tap to bring here.`;
 }
 function FriendCell({ entity, scene, here, size, offset, interaction, renderCharacter, onBring, onCarry }: {

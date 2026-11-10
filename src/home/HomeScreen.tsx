@@ -30,7 +30,7 @@ import { resolve, type DropProposal } from "./scene/proposal";
 import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
 import { screenToRoom } from "./scene/camera";
 import { SceneView } from "./runtime/SceneView";
-import { HomeChrome, Tool, navigationHeight as smallNavigationHeight, largeNavigationHeight } from "./runtime/HomeChrome";
+import { HomeChrome, Tool, navigationHeightFor } from "./runtime/HomeChrome";
 import { FriendDrawer } from "./runtime/FriendDrawer";
 import { HomePanels } from "./runtime/HomePanels";
 import { DesignTools, portraitDrawerHeight, type CatalogGhost } from "./runtime/DesignTools";
@@ -113,7 +113,7 @@ export function HomeScreen({
   const [headerHeight, setHeaderHeight] = useState(64 + inset.top);
   // HR-03: the grown-ups' larger-target mode, saved with this child's home.
   const large = !!store.access?.largeTargets;
-  const navigationHeight = large ? largeNavigationHeight : smallNavigationHeight;
+  const navigationHeight = navigationHeightFor(large, window.width);
   const [frameReport, setFrameReport] = useState<number[]>();
   const [releaseProbes, setReleaseProbes] = useState<ReleaseProbe[]>([]);
   const [probeMax, setProbeMax] = useState(0);
@@ -648,32 +648,39 @@ export function HomeScreen({
   // A JS timer, not a frame loop: nothing runs while waiting. Any touch starts the quiet over.
   const hints = useRef<HintState>(freshHints(0));
   React.useEffect(() => { hints.current = freshHints(Date.now()); }, []);
-  const [hintTick, setHintTick] = useState(0);
   const quiet = !designing && !overview && !selected && !placing && !more && !friends;
+  // Refs only: a hint or a touch never re-renders the screen, so the wiggle itself never stalls a frame.
+  const rearm = useRef<() => void>(() => {});
   React.useEffect(() => {
-    if (!quiet || reduced) return;
-    const due = nextHintAt(hints.current);
-    if (due === undefined) return;
-    const timer = setTimeout(() => {
-      // A touch since this was armed moved the quiet start later: wait again, without a render per touch.
-      const again = nextHintAt(hints.current);
-      if (again === undefined || again > Date.now() + 16) { setHintTick((n) => n + 1); return; }
-      const { scene } = live.current;
-      const candidates = Object.values(scene.rooms[room].entities)
-        .filter((e) => restingVisible(e, scene) && e.item && (isPortion(e.id) || capabilityOf(e.item.item).toggle))
-        .sort((a, b) => a.contact.x - b.contact.x)
-        .map((e) => e.id);
-      const next = takeHint(hints.current, Date.now(), candidates, reduced);
-      hints.current = next.state;
-      if (next.id) runtime.current?.showHint(next.id);
-      setHintTick((n) => n + 1);
-    }, Math.max(0, due - Date.now()));
-    return () => clearTimeout(timer);
-  }, [quiet, reduced, room, hintTick]);
+    if (!quiet || reduced) { rearm.current = () => {}; return; }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const arm = () => {
+      clearTimeout(timer);
+      timer = undefined;
+      const due = nextHintAt(hints.current);
+      if (due === undefined) return;
+      timer = setTimeout(() => {
+        // A touch since this was armed moved the quiet start later: wait again.
+        const again = nextHintAt(hints.current);
+        if (again === undefined || again > Date.now() + 16) { arm(); return; }
+        const { scene } = live.current;
+        const candidates = Object.values(scene.rooms[room].entities)
+          .filter((e) => restingVisible(e, scene) && e.item && (isPortion(e.id) || capabilityOf(e.item.item).toggle))
+          .sort((a, b) => a.contact.x - b.contact.x)
+          .map((e) => e.id);
+        const next = takeHint(hints.current, Date.now(), candidates, reduced);
+        hints.current = next.state;
+        if (next.id) runtime.current?.showHint(next.id);
+        arm();
+      }, Math.max(0, due - Date.now()));
+    };
+    rearm.current = () => { if (timer === undefined) arm(); };
+    arm();
+    return () => { clearTimeout(timer); rearm.current = () => {}; };
+  }, [quiet, reduced, room]);
   const touched = () => {
-    const spent = nextHintAt(hints.current) === undefined;
     hints.current = touchedHints(hints.current, Date.now());
-    if (spent) setHintTick((n) => n + 1);
+    rearm.current();
   };
   /** Bring a friend here. One who is elsewhere or waiting comes out of the drawer cell, visibly. */
   const bring = (id: string, slot: number, from?: { x: number; y: number }) => {
@@ -838,6 +845,7 @@ export function HomeScreen({
         drawerHover={interaction.drawerHover}
         onDrawerRect={onDrawerRect}
         large={large}
+        width={window.width}
         saveStatus={saveStatus}
       />
       <View style={{ flex: 1, flexDirection: vertical ? "row" : "column" }}>

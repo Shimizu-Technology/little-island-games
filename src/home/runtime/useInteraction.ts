@@ -325,11 +325,14 @@ export function useInteraction({
   const framesOn = useSharedValue(true);
   const frameId = useSharedValue(-1);
   const idleFrames = useSharedValue(0);
+  // The first frame after a restart reports the whole stopped time; it is neither motion time nor a dropped frame.
+  const restarted = useSharedValue(false);
   const wakeFrames = () => {
     "worklet";
     idleFrames.set(0);
     if (framesOn.value) return;
     framesOn.set(true);
+    restarted.set(true);
     if (onTrace) runOnJS(onTrace)({ type: "frames-active", at: eventTime() });
     const registry = (globalThis as { _frameCallbackRegistry?: { manageStateFrameCallback: (id: number, on: boolean) => void } })._frameCallbackRegistry;
     if (registry && frameId.value >= 0) registry.manageStateFrameCallback(frameId.value, true);
@@ -1077,7 +1080,9 @@ export function useInteraction({
 
   const frameCallback = useCallback((frame: FrameInfo) => {
     "worklet";
-    const dt = frame.timeSincePreviousFrame ?? 16.67;
+    const fresh = restarted.value;
+    if (fresh) restarted.set(false);
+    const dt = fresh ? 16.67 : frame.timeSincePreviousFrame ?? 16.67;
     if (onReleaseProbe) {
       const now = eventTime();
       const delta = Math.max(dt, probeLastAt.value ? now - probeLastAt.value : dt);
@@ -1126,10 +1131,10 @@ export function useInteraction({
       if (t === 1) revealPan.set(null);
     }
     if (onTrace) {
-      traceFrames.modify((times) => { "worklet"; times.push(dt); return times; });
+      if (!fresh) traceFrames.modify((times) => { "worklet"; times.push(dt); return times; });
       if (traceFrames.value.length >= 120 || (idleFrames.value >= 2 && traceFrames.value.length >= 12)) {
         const sorted = [...traceFrames.value].sort((a, b) => a - b), at = (q: number) => sorted[Math.floor(sorted.length * q)];
-        runOnJS(onTrace)({ type: "frames", at: eventTime(), samples: sorted.length, p50: at(.5), p95: at(.95), p99: at(.99), max: sorted[sorted.length - 1] });
+        runOnJS(onTrace)({ type: "frames", at: eventTime(), samples: sorted.length, p50: at(.5), p95: at(.95), p99: at(.99), max: sorted[sorted.length - 1], raw: sorted });
         traceFrames.set([]);
         if (catalogTimes.value.length) {
           const sorted = [...catalogTimes.value].sort((a, b) => a - b), at = (q: number) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * q))];

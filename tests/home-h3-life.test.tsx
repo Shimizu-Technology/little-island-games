@@ -79,3 +79,17 @@ describe('HM-11 friends blink and breathe at rest',()=>{
   await act(async()=>tree.unmount());
  });
 });
+import { nextLifeTick, BREATH_STEP_MS, LIFE_PERIOD as PERIOD, lifeBlink as blinkAt, lifeSeed as seedOf } from '../src/home/runtime/life';
+describe('HM-11 / HM-13 the life clock wakes rarely', () => {
+ it('ticks at every blink edge and at most every 250 ms, never per frame', () => {
+  const seeds = [0, 1, 2].map(seedOf), ticks: number[] = [];
+  for (let t = 0; t < 3 * PERIOD;) { ticks.push(t); const wait = nextLifeTick(t, seeds); expect(wait).toBeGreaterThan(0); expect(wait).toBeLessThanOrEqual(BREATH_STEP_MS); t += wait; }
+  // About 4 wakes a second plus blink edges, against 60 for a frame loop.
+  expect(ticks.length / (3 * PERIOD / 1000)).toBeLessThan(6);
+  for (const seed of seeds) for (let t = 0; t < 3 * PERIOD; t += 5) {
+   // Whatever is shown between ticks is what the last tick showed: every blink is seen, and ends on time.
+   const last = ticks.filter((x) => x <= t).at(-1)!;
+   expect(blinkAt(last, seed), `${seed}@${t}`).toBe(blinkAt(t, seed));
+  }
+ });
+});

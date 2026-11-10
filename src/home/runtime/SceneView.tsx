@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, View } from "react-native";
-import Animated, { Easing, cancelAnimation, useAnimatedStyle, useDerivedValue, useSharedValue, withRepeat, withTiming, type SharedValue } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useDerivedValue, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import { roomIds, roomNames } from "../catalogMore";
 import { RoomArt, ShoreArt } from "../art/Room";
@@ -17,7 +17,7 @@ import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { DragOverlay } from "./DragOverlay";
 import { layoutToken } from "./layout";
 import { anyIn, firstFollow, firstRest } from "./restingState";
-import { BREATH_SCALE, LIFE_PERIOD, lifeBlink, lifeBreath, lifeSeed } from "./life";
+import { BREATH_SCALE, lifeBlink, lifeBreath, lifeSeed, nextLifeTick } from "./life";
 import { isPortion, SHORE_TOP } from "./portions";
 import { entityLabels } from "../scene/labels";
 import type { Interaction, Pickup } from "./useInteraction";
@@ -272,9 +272,16 @@ export function SceneView({
   const living = !reduced && !!liveRoom;
   React.useEffect(() => {
     if (!living) return;
-    lifeClock.set(0);
-    lifeClock.set(withRepeat(withTiming(LIFE_PERIOD, { duration: LIFE_PERIOD, easing: Easing.linear }), -1, false));
-    return () => cancelAnimation(lifeClock);
+    // A timer that wakes only at blink edges and breath steps, not a per-frame animation.
+    const start = Date.now(), seeds = [0, 1, 2].map(lifeSeed);
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const clock = Date.now() - start;
+      lifeClock.set(clock);
+      timer = setTimeout(tick, nextLifeTick(clock, seeds));
+    };
+    tick();
+    return () => clearTimeout(timer);
   }, [living, lifeClock]);
   const cameraStyle = useAnimatedStyle(() => ({
     transformOrigin: "left top",

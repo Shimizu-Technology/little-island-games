@@ -19,7 +19,7 @@ vi.mock('../src/components/Audio', () => ({ useSounds: () => () => {} }));
 vi.mock('../src/home/runtime/useIdleCharacters', () => ({ useIdleCharacters: () => ({ sleeping: {}, wake: () => {} }) }));
 vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options: any) => { harness.options = options; return { isCurrent: () => true, finish: harness.finish, camera: { get: () => ({ a: .5, b: 0, c: 0, d: .5, tx: 0, ty: 0 }), set: () => {} }, slots: { get: () => [{}, {}] }, cancelAll: () => {}, animateCamera: () => {}, showHint: harness.hint, dropZones: { set: () => {} } }; } }));
 vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: () => null }));
-vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: (props: any) => { harness.chrome = props; return null; }, Tool: () => null, navigationHeight: 60 }));
+vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: (props: any) => { harness.chrome = props; return null; }, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
 vi.mock('../src/home/runtime/HomePanels', () => ({ HomePanels: () => null }));
 vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: () => null, portraitDrawerHeight: 200 }));
 vi.mock('../src/home/runtime/StagingTray', () => ({ StagingTray: () => null }));

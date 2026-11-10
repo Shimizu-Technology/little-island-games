@@ -49,6 +49,8 @@ describe("HR-01 the friends drawer (rules 4, 47)", () => {
     }
     expect(cells[0].props.accessibilityLabel).toBe("Islander, in the Kitchen. Drag into the room, or tap to bring here.");
     expect(cells[1].props.accessibilityLabel).toBe("Pip, in this room. Drag into the room, or tap to bring here.");
+    const { friendLabel } = await import("../src/home/runtime/FriendDrawer");
+    expect(friendLabel(scene.entities["character/1"], "kitchen")).toBe("Pip, in My room. Drag into the room, or tap to bring here.");
     // A friend elsewhere shows where they are, as a picture.
     expect(cells[0].findAll((n) => (n.type as unknown) === "ItemArt")).toHaveLength(1);
     expect(cells[1].findAll((n) => (n.type as unknown) === "ItemArt")).toHaveLength(0);

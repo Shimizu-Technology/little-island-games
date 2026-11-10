@@ -597,3 +597,30 @@ describe("HR-02 one quiet wiggle", () => {
     await act(async () => renderer.unmount());
   });
 });
+describe("HM-13 timing after a restart", () => {
+  it("the first frame after the callback restarts does not count the stopped time as a frame", async () => {
+    vi.stubGlobal("requestAnimationFrame", () => 1);
+    const events: any[] = [];
+    function Traced({ scene }: { scene: Scene }) {
+      const interaction = useInteraction({ scene, building: fixtureBuilding, viewport: fixtureViewport, initialCamera: identityCamera, reduced: false,
+        designing: false, onCameraChange: cameraChange, onPickup: (p) => { current.ready(p.slot, p.id); }, onTap: () => {}, onClear: noop,
+        onCommit: commitFixture, onTrace: (e) => events.push(e) });
+      React.useLayoutEffect(() => { current = interaction; });
+      return null;
+    }
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Traced scene={fixture()} />); });
+    frames(20);
+    expect(events.some((e) => e.type === "frames-idle")).toBe(true);
+    touch("down", 100, 200); flushJS();
+    harness.frames[0]({ timeSincePreviousFrame: 4000 }); flushJS();
+    touch("move", 160, 240);
+    for (let i = 0; i < 14; i++) { touch("move", 160 + i, 240); frame(); flushJS(); }
+    touch("up", 174, 240); flushJS();
+    act(() => current.cancelAll()); frames(10);
+    const batches = events.filter((e) => e.type === "frames");
+    expect(batches.length).toBeGreaterThan(0);
+    for (const b of batches) expect(b.max).toBeLessThan(100);
+    await act(async () => renderer.unmount());
+  });
+});

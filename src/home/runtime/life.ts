@@ -2,6 +2,8 @@
  * Controlled life at rest (rule 42, HM-11). The schedule matches `rigIdle`: four blinks in an
  * 18 s cycle, never more than 6 s apart, and a 0.4% breath. The resting SVG never re-renders:
  * a closed-eye copy swaps in by opacity and the breath is a wrapper scale, both on the UI thread.
+ * The clock is not a 60 fps loop: it ticks only at blink edges and in 250 ms breath steps
+ * (one step is under 0.1% of a friend's height), so a resting room costs almost nothing.
  */
 export const LIFE_PERIOD = 18000;
 export const BREATH_PERIOD = 3600;
@@ -28,4 +30,18 @@ export function longestBlinkWait(): number {
     longest = Math.max(longest, ((next - at + LIFE_PERIOD) % LIFE_PERIOD) || LIFE_PERIOD);
   }
   return longest;
+}
+export const BREATH_STEP_MS = 250;
+/** Milliseconds until the life clock next needs to move: the next blink edge of any friend, or the next breath step. */
+export function nextLifeTick(clock: number, seeds: readonly number[]): number {
+  let wait = BREATH_STEP_MS - (((clock % BREATH_STEP_MS) + BREATH_STEP_MS) % BREATH_STEP_MS) || BREATH_STEP_MS;
+  for (const seed of seeds) {
+    const phase = (((clock + seed) % LIFE_PERIOD) + LIFE_PERIOD) % LIFE_PERIOD;
+    for (const [at, duration] of blinks)
+      for (const edge of [at, at + duration]) {
+        const until = (((edge - phase) % LIFE_PERIOD) + LIFE_PERIOD) % LIFE_PERIOD;
+        if (until > 0 && until < wait) wait = until;
+      }
+  }
+  return wait;
 }

@@ -173,7 +173,10 @@ function HomeChromeView({
   friendsOpen = false,
   drawerHover,
   onDrawerRect,
+  width = 1024,
 }: {
+  /** Window width; decides whether the larger-target bar needs two rows. */
+  width?: number;
   friendsOpen?: boolean;
   drawerHover?: SharedValue<boolean>;
   onDrawerRect?: (rect: WindowRect) => void;
@@ -205,6 +208,7 @@ function HomeChromeView({
   onDesign: () => void;
   onRoom: (room: RoomId) => void;
 }) {
+  const barHeight = navigationHeightFor(large, width), wrap = large && width < LARGE_ROW;
   return (
     <>
       <View
@@ -226,9 +230,8 @@ function HomeChromeView({
         />
         <Tool label="More home controls" symbol="···" onPress={onMore} large={large} />
       </View>
-      <View testID="home-bottom-bar" style={[styles.navigation, { bottom, height: large ? largeNavigationHeight : navigationHeight }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navigationItems}
-          onScrollEndDrag={onScrolled} onMomentumScrollEnd={onScrolled}>
+      <View testID="home-bottom-bar" style={[styles.navigation, { bottom, height: barHeight }]}>
+        <Bar wrap={wrap} onScrolled={onScrolled}>
           <Tool label="Whole house" symbol="⌂" selected={overview} onPress={onOverview} large={large} />
           {roomIds.map((id) => (
             <RoomButton key={id} id={id} selected={room === id && !overview} onRoom={onRoom} onFriends={onFriends}
@@ -243,10 +246,10 @@ function HomeChromeView({
             <FindIcon />
           </Pressable>
           <FriendsButton open={friendsOpen} onPress={onFriends} hover={drawerHover} onRect={onDrawerRect} size={large ? 64 : 48} token={measureToken} />
-        </ScrollView>
+        </Bar>
       </View>
       {saveStatus && (
-        <View style={{ position: "absolute", right: 8, bottom: bottom + (large ? largeNavigationHeight : navigationHeight) }}>{saveStatus}</View>
+        <View style={{ position: "absolute", right: 8, bottom: bottom + barHeight }}>{saveStatus}</View>
       )}
     </>
   );
@@ -254,6 +257,20 @@ function HomeChromeView({
 export const navigationHeight = 60;
 /** HR-03: the bottom bar with 64 pt buttons. */
 export const largeNavigationHeight = 76;
+const LARGE_ROW = 7 * 64 + 6 * 3 + 12;
+/** HR-03: the 64 pt bar wraps to two rows when one row would hide buttons off-screen. */
+export function navigationHeightFor(large: boolean, width: number): number {
+  return !large ? navigationHeight : width >= LARGE_ROW ? largeNavigationHeight : 2 * 64 + 3 + 2 * 6 + 4;
+}
+function Bar({ wrap, onScrolled, children }: { wrap: boolean; onScrolled?: () => void; children: React.ReactNode }) {
+  if (wrap) return <View testID="home-bottom-bar-wrapped" style={[styles.navigationItems, { flexDirection: "row", flexWrap: "wrap" }]}>{children}</View>;
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navigationItems}
+      onScrollEndDrag={onScrolled} onMomentumScrollEnd={onScrolled}>
+      {children}
+    </ScrollView>
+  );
+}
 const styles = StyleSheet.create({
   navigation: {
     position: "absolute",
