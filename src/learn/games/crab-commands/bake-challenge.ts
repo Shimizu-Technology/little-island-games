@@ -45,5 +45,4 @@ const certify=(d:Descriptor)=>{
 };
 const output={version:1,replays:replays.map(certify),debug:debug.map(certify),mud:mud.map(certify)};
 writeFileSync(new URL('./challenge-content.json',import.meta.url),JSON.stringify(output,null,2)+'\n');
-writeFileSync(new URL('./repair-plans.json',import.meta.url),JSON.stringify(output.debug.map(p=>({id:p.descriptor.level.id,starter:p.descriptor.starter,plan:p.witness})),null,2)+'\n');
 console.log(output.mud.map(p=>`${p.descriptor.level.id}: ${p.cards} cards / ${p.steps} steps`).join('\n'));
