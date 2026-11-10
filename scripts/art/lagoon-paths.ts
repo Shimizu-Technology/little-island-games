@@ -1,8 +1,8 @@
 import type { SpritePose } from '../../src/arcade/poses';
 /**
  * Outrigger canoe in its projected quad (LG-S3 redraw). It lies across its lane, so the runner sees
- * its whole side: a slim hull with upturned ends, the float behind it on two booms, lashed cargo
- * amidships. It stays inside its own lane (±0.39 lanes). a=near-left, b=near-right, c=far-right,
+ * its whole side: a slim hull with upturned ends, the float behind it on two short booms, round
+ * sacks lashed amidships. It stays inside its own lane (±0.39 lanes). a=near-left, b=near-right, c=far-right,
  * d=far-left.
  */
 type P = { x: number; y: number };
@@ -28,21 +28,15 @@ export function canoePath(p: SpritePose[], index: number, part: string) {
   if (part === 'inside') return `${line(ts.slice(1, -1).map(near))}${ts.slice(1, -1).reverse().map(t => `L${f(far(t))}`).join('')}Z`;
   if (part === 'rail') return `${line(ts.map(near))} ${line(ts.slice(1, -1).map(far))}`;
   if (part === 'cargo') {
-    // A rolled sail lashed amidships (low and round: never a crate) and a paddle across the hull.
-    const roll = (t: number, top: number) => at(t, .42, top);
-    const ts2 = [.3, .36, .44, .5, .56, .64, .7];
-    const body = `${line(ts2.map(t => roll(t, 26)))}${ts2.slice().reverse().map(t => `L${f(roll(t, 16))}`).join('')}Z`;
-    const bands = [.38, .5, .62].map(t => `M${f(roll(t, 26))}L${f(roll(t, 16))}`).join('');
-    // A short mast with the sail furled: the canoe is a go-around blocker, never a jump.
-    const m0 = at(.5, .44, 18), m1 = at(.5, .44, 74), s0 = at(.47, .44, 28), s1 = at(.53, .44, 70);
-    const mast = `M${f(m0)}L${f(m1)} M${f(s0)}L${f(at(.53, .44, 28))}L${f(s1)}L${f(at(.47, .44, 70))}Z`;
-    return `${body} ${bands} ${mast}`;
+    // Three round sacks lashed amidships: tall enough to say "go around", never a box or a cabin.
+    const sack = (t: number, u: number, up: number, rx: number, ry: number) => { const c = at(t, u, up), s = ns + (fs - ns) * u; return `M${(c.x - rx * s).toFixed(2)} ${c.y.toFixed(2)}a${(rx * s).toFixed(2)} ${(ry * s).toFixed(2)} 0 1 0 ${(2 * rx * s).toFixed(2)} 0a${(rx * s).toFixed(2)} ${(ry * s).toFixed(2)} 0 1 0 ${(-2 * rx * s).toFixed(2)} 0Z`; };
+    return `${sack(.4, .44, 24, 11, 9)} ${sack(.6, .44, 24, 11, 9)} ${sack(.5, .44, 38, 10, 8)}`;
   }
   if (part === 'float') {
     // Float behind the hull, joined by two booms.
-    const fts = ts.slice(2, -2), ama = (t: number, up: number) => at(t, 1.0, up);
+    const fts = ts.slice(2, -2), ama = (t: number, up: number) => at(t, .95, up + 4);
     const body = `${line(fts.map(t => ama(t, 7 + 3 * Math.pow(Math.abs(t - .5) / .5, 2))))}${fts.slice().reverse().map(t => `L${f(ama(t, 1))}`).join('')}Z`;
-    const booms = [.2, .78].map(t => `M${f(at(t, .55, sheer(t) - 2))}L${f(at(t, 1.0, 6))}L${f(at(t + .03, 1.0, 6))}L${f(at(t + .03, .55, sheer(t + .03) - 2))}Z`).join(' ');
+    const booms = [.22, .74].map(t => `M${f(at(t, .55, sheer(t) - 2))}L${f(at(t, .95, 10))}L${f(at(t + .03, .95, 10))}L${f(at(t + .03, .55, sheer(t + .03) - 2))}Z`).join(' ');
     return `${booms} ${body}`;
   }
   // Wake curls off both tips, only on the moving canoe.

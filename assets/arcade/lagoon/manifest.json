@@ -1049,8 +1049,8 @@
       "width": 160,
       "height": 144,
       "density": 3,
-      "bytes": 14482,
-      "sha256": "48b18c27b9f805d01c8583b85aff675b0f4d3d1a6603b4a80f9ce5923a8116dd"
+      "bytes": 14425,
+      "sha256": "c098cdd81117c5b7e397207ff295f53849bfff7168a115943d4ffb2a24b20c3c"
     },
     "actors/log": {
       "width": 72,
@@ -1222,14 +1222,14 @@
     "deck-side-left": {
       "width": 32,
       "height": 32,
-      "bytes": 645,
-      "sha256": "7e3743936b48c77eacdacad66ed607c50a6adaba2cd9211bee8e0e2e55678ca2"
+      "bytes": 642,
+      "sha256": "d3e58ac41bd66b1726580566590e77c88b9d362e1fb526aaf5f848cf44803dd8"
     },
     "deck-side-right": {
       "width": 32,
       "height": 32,
-      "bytes": 651,
-      "sha256": "945af55a1e860505546fa4ee70f0eaa1ecc3ec6ce6970b6a9712c7dde5358d7d"
+      "bytes": 647,
+      "sha256": "126485bb3d227cc35ea529efedb8fff6a24263aebb340925ea9b89afa4a4e284"
     },
     "support": {
       "width": 16,
@@ -1240,50 +1240,50 @@
     "canoe-still-0": {
       "width": 73,
       "height": 65,
-      "bytes": 7524,
-      "sha256": "85d31076ca363d9714d2e2b9a51fe2122551cefcb782dda92c0ca5f76d3e8eb8"
+      "bytes": 8462,
+      "sha256": "aef385d8422e66fdb8cd3403fb6c6d2324d6bcedd8b1f5c5641d3330e1171d37"
     },
     "canoe-moving-0": {
       "width": 73,
       "height": 65,
-      "bytes": 12934,
-      "sha256": "a12cf9be060beb0697b2ff9d3587591644f4378428936d360d4303abbc2eacde"
+      "bytes": 13767,
+      "sha256": "20e7c38a3c8bee5853dcf8778d9a41451b3123813e9b1804422cd398a8d8c042"
     },
     "canoe-still-1": {
       "width": 120,
       "height": 103,
-      "bytes": 11890,
-      "sha256": "2bf5901c49f3b7b0d1beda307bed2473763f5bf213a26f3a72fe52968e334f35"
+      "bytes": 14133,
+      "sha256": "4873dff19e26fc9dc792ab6cab82f185567ba5befa096ebaa79b04194a5b26fa"
     },
     "canoe-moving-1": {
       "width": 120,
       "height": 103,
-      "bytes": 20765,
-      "sha256": "465f2653ad99a208a38b5c0c89d1e35b4303d9d6b11654fe69d553faf8fb1e23"
+      "bytes": 22892,
+      "sha256": "8220d7a3bd5038ed8296178c04fbe192c518c4758fc0f602d97408551b49c7ef"
     },
     "canoe-still-2": {
       "width": 172,
       "height": 146,
-      "bytes": 17294,
-      "sha256": "12299f8401cddf23703db21d5c86792f85f8f78985392c81cc46c2d48440830f"
+      "bytes": 21226,
+      "sha256": "272b931ae86715fa2bdbdd7a0d47ef95a97f93b7ba2ede521e81666d5f1e530e"
     },
     "canoe-moving-2": {
       "width": 172,
       "height": 146,
-      "bytes": 30033,
-      "sha256": "4996833893a982a1904fdba2b5aa8aadaec9d282fc9fe833bd5596345e42ea98"
+      "bytes": 33792,
+      "sha256": "402f38fed900ac7f283b2faf4083761122b09517e61624097e0b54a8966118e0"
     },
     "canoe-still-3": {
       "width": 249,
       "height": 211,
-      "bytes": 25984,
-      "sha256": "228daf30d5da4f9412571cf6519a7426668cb2de8bae6d44f2584723bd07e86f"
+      "bytes": 32179,
+      "sha256": "6dc1e3f80176d221223eae3e885051ee5a9d6934e51ebd3a5c3e2cd13d5d3dfb"
     },
     "canoe-moving-3": {
       "width": 249,
       "height": 211,
-      "bytes": 44345,
-      "sha256": "69f5e8349234e01992947dcc875527495bf7b09af3064d64e4a5406126525105"
+      "bytes": 50192,
+      "sha256": "43bad8dca206b37cf96ead40b4f3ba8dacfdcd4eac3ec86a49752fbd96c287c1"
     }
   },
   "canoes": [

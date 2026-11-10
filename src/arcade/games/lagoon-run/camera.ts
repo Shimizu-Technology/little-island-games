@@ -25,8 +25,8 @@ export const CAMERA_SLOT = 311;
 /** One optical zoom keeps runner, duck clearance, ramps and shadows in the same camera.
  * LG-S3: 1.25 (was 1.7), so the child sees the lane ahead and the sky. */
 export const HERO_ZOOM = 1.25;
-/** The runner is drawn 24% smaller than the track scale, so it never hides the next hazard in its lane. */
-export const HERO_SCALE = .76;
+/** The runner is drawn 28% smaller than the track scale, so it never hides the next hazard in its lane. */
+export const HERO_SCALE = .72;
 /** Speed widens the view slightly: at most 3.5% wider at full speed (none with Reduce Motion). */
 export const FOV_KICK = .035;
 /** Horizon sits at 34% of the visible stage height on every screen. */

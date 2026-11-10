@@ -79,8 +79,8 @@ bake('rail',160,144,'<path d="M16 128L0 139H13L31 128Z" fill="#183F69" fill-opac
 bake('rope',128,24,'<path d="M0 3Q64 35 128 3" fill="none" stroke="#FFF0A7" stroke-width="3"/>');
 bake('deck-left',16,16,'<rect width="16" height="16" fill="#A0643E" stroke="#674B3E"/>');
 bake('deck-right',16,16,'<rect width="16" height="16" fill="#704A36" stroke="#674B3E"/>');
-bake('deck-side-left',32,32,'<path d="M0 0H32L0 32Z" fill="#9A6440"/><path d="M0 0H32" stroke="#E2B074" stroke-width="3"/>');
-bake('deck-side-right',32,32,'<path d="M0 0H32L0 32Z" fill="#6B4533"/><path d="M0 0H32" stroke="#B58050" stroke-width="3"/>');
+bake('deck-side-left',32,32,'<path d="M0 0H32L0 32Z" fill="#C08A5A"/><path d="M0 0H32" stroke="#E2B074" stroke-width="3"/>');
+bake('deck-side-right',32,32,'<path d="M0 0H32L0 32Z" fill="#95663F"/><path d="M0 0H32" stroke="#B58050" stroke-width="3"/>');
 bake('support',16,128,'<path d="M2 1H14V127H2Z" fill="#78513A" stroke="#674B3E" stroke-width="2"/><path d="M3 6H13" stroke="#E9B56B" stroke-width="4"/>');
 const depths=[.1,.6,1,1.4],canoes=[];
 for(let f=0;f<depths.length;f++) {
@@ -92,7 +92,7 @@ for(let f=0;f<depths.length;f++) {
  const [shadow,wake,hull,side,inside,cargo,rail,float]=all;
  // LG-S3 redraw: slim outrigger hull, lit gunwale, shaded side, lashed cargo, float on two booms.
  const wood=moving?['#E9A85E','#C9813F','#8E5530']:['#C98257','#A5643F','#6E3F2B'];
- bake(`canoe-${moving?'moving':'still'}-${f}`,width,height,`<g transform="translate(${-minX} ${-minY})" stroke-linejoin="round" stroke-linecap="round"><path d="${shadow}" fill="#1D4F5C" fill-opacity=".26"/>${moving?`<path d="${wake}" fill="none" stroke="#1E6E7A" stroke-opacity=".45" stroke-width="6"/><path d="${wake}" fill="none" stroke="#FFFFFF" stroke-width="3.5"/>`:''}<path d="${float}" fill="${wood[0]}" stroke="#3E424F" stroke-width="2"/><path d="${hull}" fill="${wood[1]}" stroke="#3E424F" stroke-width="2"/><path d="${side}" fill="${wood[2]}" fill-opacity=".55"/><path d="${inside}" fill="#5A4134"/><path d="${rail}" fill="none" stroke="#FFE0A2" stroke-width="2.6"/>${moving?`<path d="${rail}" fill="none" stroke="#2F8F87" stroke-width="1.2" stroke-dasharray="6 5"/>`:''}<path d="${cargo}" fill="#F1E6CC" stroke="#674B3E" stroke-width="2"/></g>`);
+ bake(`canoe-${moving?'moving':'still'}-${f}`,width,height,`<g transform="translate(${-minX} ${-minY})" stroke-linejoin="round" stroke-linecap="round"><path d="${shadow}" fill="#1D4F5C" fill-opacity=".26"/>${moving?`<path d="${wake}" fill="none" stroke="#1E6E7A" stroke-opacity=".45" stroke-width="6"/><path d="${wake}" fill="none" stroke="#FFFFFF" stroke-width="3.5"/>`:''}<path d="${float}" fill="${wood[0]}" stroke="#3E424F" stroke-width="2"/><path d="${hull}" fill="${wood[1]}" stroke="#3E424F" stroke-width="2"/><path d="${side}" fill="${wood[2]}" fill-opacity=".55"/><path d="${inside}" fill="#5A4134"/><path d="${rail}" fill="none" stroke="#FFE0A2" stroke-width="2.6"/>${moving?`<path d="${rail}" fill="none" stroke="#2F8F87" stroke-width="1.2" stroke-dasharray="6 5"/>`:''}<path d="${cargo}" fill="#E7D2A6" stroke="#674B3E" stroke-width="2"/></g>`);
  }
  canoes.push({depth:z,width,height,inverse:inverse3(quadHomography(p.map(a=>({x:a.x-minX,y:a.y-minY})) as [typeof p[0],typeof p[0],typeof p[0],typeof p[0]]))});
 }

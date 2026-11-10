@@ -103,7 +103,7 @@ function Bunting({ look, W, hz }: { look: LagoonLook; W: number; hz: number }) {
   return <G>
     <Path d={`M-8 ${y0}Q${W / 2} ${y0 + sag * 2} ${W + 8} ${y0}`} fill="none" stroke={look.shade} strokeWidth={1.6} opacity={.8}/>
     {Array.from({ length: flags }, (_, i) => { const a = point((i + .2) / flags), b = point((i + .8) / flags); return <Path key={i} d={`M${a.x} ${a.y}L${b.x} ${b.y}L${(a.x + b.x) / 2} ${(a.y + b.y) / 2 + 17}Z`} fill={colors[i % colors.length]} stroke={look.shade} strokeWidth={.8} strokeOpacity={.5}/>; })}
-    {[.22, .5, .78].map(t => { const p = point(t); return <G key={t}><Path d={`M${p.x} ${p.y}V${p.y + 10}`} stroke={look.shade} strokeWidth={1}/><Circle cx={p.x} cy={p.y + 20} r={14} fill={look.glow} opacity={.25}/><Ellipse cx={p.x} cy={p.y + 20} rx={7} ry={9} fill="#F48A62" stroke={look.shade} strokeWidth={1}/><Path d={`M${p.x - 7} ${p.y + 20}H${p.x + 7}M${p.x} ${p.y + 11}V${p.y + 29}`} stroke="#FFD57A" strokeWidth={1}/></G>; })}
+    {[.22, .5, .78].map(t => { const p = point(t); return <G key={t}><Path d={`M${p.x} ${p.y}V${p.y + 10}`} stroke={look.shade} strokeWidth={1}/><Circle cx={p.x} cy={p.y + 20} r={20} fill={look.glow} opacity={.4}/><Ellipse cx={p.x} cy={p.y + 20} rx={7} ry={9} fill="#F48A62" stroke={look.shade} strokeWidth={1}/><Path d={`M${p.x - 7} ${p.y + 20}H${p.x + 7}M${p.x} ${p.y + 11}V${p.y + 29}`} stroke="#FFD57A" strokeWidth={1}/></G>; })}
   </G>;
 }
 
