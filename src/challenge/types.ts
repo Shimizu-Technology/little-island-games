@@ -66,6 +66,8 @@ export type ChallengeEntry = {
   completionFacts?: (session: ChallengeSession) => CompletionFacts | null;
   /** The frame supplies Help unless the board declares its own help UI. */
   helpUI?: 'board';
+  /** Words for the way back, for games without School Levels 1–5. */
+  backLabel?: string;
   controls: { help: () => unknown; reset: () => unknown };
 };
 export type TypedRegistration<P,A,S> = ChallengeEntry & { readonly types?: { Payload: P; Action: A; State: S } };

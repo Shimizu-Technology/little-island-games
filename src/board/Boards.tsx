@@ -6,9 +6,10 @@ import { Button, C, Copy, PressableScale, font } from "../components/ui";
 import { other } from "../games/match";
 import { Piece } from "./Art";
 import { BoardId, engines, Position } from "./index";
+import { edgeOf } from "./types";
 import { edgeDots, edgeFromDots } from "./fishing-nets/engine";
 import { lines } from "./coconut-drop/engine";
-import { coordinate } from "./hidden-canoes/engine";
+import { coordinate, target } from "./hidden-canoes/engine";
 import { sowPath } from "./shell-pits/engine";
 import { urchins } from "./reef-sweep/engine";
 type Props = {
@@ -228,7 +229,8 @@ function Nets({ state: s, width, onMove, locked, hint }: Props) {
         })}
       </View>
       <Copy style={{ fontSize: 14 }}>
-        ● {s.scores[0]} nets · ■ {s.scores[1]} nets
+        ● {s.scores[0]}{edgeOf(s)[0] ? ` + ${edgeOf(s)[0]} head start` : ""} nets · ■ {s.scores[1]}
+        {edgeOf(s)[1] ? ` + ${edgeOf(s)[1]} head start` : ""} nets
       </Copy>
     </View>
   );
@@ -313,6 +315,7 @@ function Pits({ state: s, width, onMove, locked, hint, speak }: Props) {
           >
             <NumberText size={17}>
               {i === 13 ? "■" : "●"} Store {s.board[i]}
+              {edgeOf(s)[i === 13 ? 1 : 0] ? ` + ${edgeOf(s)[i === 13 ? 1 : 0]}` : ""}
             </NumberText>
           </View>
         ))}
@@ -423,7 +426,10 @@ function Canoes({ state: s, width, onMove, locked, hint }: Props) {
           </View>
         ))}
       </View>
-      <Copy style={{ fontSize: 14 }}>{s.scores[seat]} of 7 canoe spaces found</Copy>
+      <Copy style={{ fontSize: 14 }}>
+        {s.scores[seat]} of {target(s, seat)} canoe spaces found
+        {edgeOf(s)[seat] ? ` · head start: ${edgeOf(s)[seat]} already counted` : ""}
+      </Copy>
     </View>
   );
 }

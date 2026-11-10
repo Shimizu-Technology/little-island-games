@@ -105,7 +105,7 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
       </>}
       {full&&!saved&&<View style={{gap:10}}><Heading style={{fontSize:20}}>Your paused spaces are full</Heading><Copy>Finish a saved puzzle, export a backup, or choose one to replace. Your marks stay kept.</Copy>{progress.paused.filter(s=>!s.credited).map(s=><View key={s.game} style={{gap:6}}><Button quiet onPress={()=>router.replace({pathname:'/challenge',params:{game:s.game}})}>Continue {gameName(s.game)}</Button><Chip selected={replacementGame===s.game} onPress={()=>setReplacementGame(replacementGame===s.game?undefined:s.game)}>Replace {gameName(s.game)}</Chip></View>)}<Button quiet onPress={()=>setSettings(true)}>Export backup in Settings</Button></View>}
       {!fresh&&(!saved || replace)&&(!full||!!saved||!!replacementGame) ? <Button disabled={busy} onPress={()=>void launch()}>Start this puzzle</Button>:null}
-      <Button quiet onPress={back}>Easier choice · Levels 1–5</Button>
+      <Button quiet onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button>
     </> : round ? <>
       <Heading style={{fontSize:22}}>{entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.title}</Heading>
       {/* The registered Board receives dispatch only as an event callback; render does not invoke it. */}
@@ -119,7 +119,7 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
           onChoose={chooseNext} onAnother={()=>chooseNext('same')}
           onRest={back}/>
       </> : null}
-      {!round.result&&<><Button quiet disabled={busy} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>Easier choice · Levels 1–5</Button></>}
+      {!round.result&&<><Button quiet disabled={busy} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>}
     </>:null}
   </ScrollView><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;
 }

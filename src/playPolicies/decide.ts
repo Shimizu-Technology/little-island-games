@@ -26,16 +26,24 @@ export function hintTask(s: BoardSession, seat: Seat = s.position.turn): PolicyT
   );
 }
 export type Cancel = { cancelled: boolean };
-/** Spends at most `sliceMs` per frame, then yields. Same answer as running it straight through. */
-export function runTask(task: PolicyTask, cancel: Cancel, sliceMs = 8, now = () => Date.now()): Promise<number | null> {
+/** Spends at most `sliceMs` per frame, then yields. Same answer as running straight through. */
+export function runSteps<T>(
+  task: { readonly done: boolean; step: (quota: number) => boolean },
+  answer: () => T,
+  cancel: Cancel,
+  sliceMs = 8,
+  now = () => Date.now()
+): Promise<T | null> {
   return new Promise((resolve) => {
     const tick = () => {
       if (cancel.cancelled) return resolve(null);
       const start = now();
       while (!task.done && now() - start < sliceMs) task.step(256);
-      if (task.done) resolve(task.move());
+      if (task.done) resolve(answer());
       else setTimeout(tick, 0);
     };
     tick();
   });
 }
+export const runTask = (task: PolicyTask, cancel: Cancel, sliceMs = 8, now = () => Date.now()) =>
+  runSteps(task, () => task.move(), cancel, sliceMs, now);
