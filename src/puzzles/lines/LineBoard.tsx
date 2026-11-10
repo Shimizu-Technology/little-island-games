@@ -98,6 +98,8 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
       drag.current = null; interaction(false);
       if (!d) return;
       const { active: on, dispatch: send, marks: m } = live.current;
+      // The last move sample can land short of where the finger stopped: finish the walk to that dot.
+      if (d.at >= 0 && d.moved) { const end = nearestDot(d.x + g.dx, d.y + g.dy, cell * 0.5); if (end >= 0 && end !== d.at) walk(d, end); }
       if (on && d.moved && d.changes.size) send({ type: 'set', changes: [...d.changes] });
       else if (on && !d.moved && Math.hypot(g.dx, g.dy) < cell * 0.35) {
         const e = nearestEdge(d.x, d.y);
