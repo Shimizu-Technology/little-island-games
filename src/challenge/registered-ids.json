@@ -1,7 +1,10 @@
 [
+  "bridges",
   "cage-math",
   "greater-than",
   "killer",
+  "loop",
+  "pearl-loop",
   "skyline",
   "sudoku"
 ]
