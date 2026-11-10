@@ -6,6 +6,9 @@ import {
   contains,
   movingGroup,
   occludedFraction,
+  catalogCovered,
+  catalogNeighbours,
+  bandCovers,
   overlaps,
   standingContact,
   translatedBounds,
@@ -36,7 +39,10 @@ export type EntityMove = {
 };
 type ProposalData = EntityMove & {
   revision: string;
+  /** Geometry used by the preview, retained for authoritative catalog revalidation. */
+  catalogIntent?: Pick<ResolveContext, "scale" | "aim" | "contact">;
   reason: string;
+  refusal?: "capacity";
   /** Includes the subject, descendants and displaced objects, exactly once. */
   moves: EntityMove[];
   target?: string;
@@ -64,6 +70,8 @@ export type ResolveContext = {
   floorOnly?: boolean;
   /** Interactive Design placement also protects visible furniture silhouettes. */
   avoidFurnitureOverlap?: boolean;
+  /** Uncommitted catalog placement requires at least half its art to remain visible. */
+  catalog?: boolean;
   reservations?: Record<string, EntityId>;
   target?: string;
   kinds?: Target["kind"][];
@@ -176,7 +184,7 @@ function movedGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, gr
   }
   return moves;
 }
-function fitsGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, group: SceneEntity[], avoidFurnitureOverlap = false): boolean {
+function fitsGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, group: SceneEntity[], avoidFurnitureOverlap = false, catalog = false): boolean {
   "worklet";
   const moves = movedGroup(index, subject, root, group);
   return moves.every((move) => {
@@ -186,7 +194,21 @@ function fitsGroup(index: RoomIndex, subject: SceneEntity, root: EntityMove, gro
     if (!contained(placed)) return false;
     // Grid footprints alone do not describe tall/wide fixture silhouettes. A Design
     // move must not hide a neighbouring piece of floor furniture behind its art.
-    if (avoidFurnitureOverlap && entity.body?.layer === "furniture" && !entity.body.small && move.attachment.kind === "floor") {
+    if (catalog && (occludedFraction(placed, move.contact.y, index.occlusionBands.filter(b => !group.some(g => g.id === b.id))) > .5 || catalogCovered(entity, move.contact, move.contact.y, index.occlusionBands.filter(b => !group.some(g => g.id === b.id))) > .4)) return false;
+    if (catalog && avoidFurnitureOverlap && move.attachment.kind === "floor") {
+      const added = { id: entity.id, bounds: placed, depth: move.contact.y, shapes: entity.shapes, contact: move.contact };
+      for (const other of index.catalogNeighbours ?? catalogNeighbours(index.entities, index.occlusionBands)) {
+        if (group.some(member => member.id === other.id) || added.depth <= other.depth || !overlaps(placed, other.bounds)) continue;
+        let before = 0, newlyCovered = 0;
+        for (const sample of other.samples) {
+          if (sample.blockers.some(id => !group.some(member => member.id === id))) before++;
+          else if (bandCovers(added, sample.x, sample.y)) newlyCovered++;
+        }
+        // Compare integer counts: exactly the original after <= max(.5, before) rule.
+        if (before + newlyCovered > Math.max(other.samples.length / 2, before)) return false;
+      }
+    }
+    if (!catalog && avoidFurnitureOverlap && entity.body?.layer === "furniture" && !entity.body.small && move.attachment.kind === "floor") {
       for (const other of Object.values(index.entities)) {
         if (other.room !== index.room || group.some((member) => member.id === other.id) || other.attachment.kind !== "floor" ||
             other.body?.layer !== "furniture" || other.body.small) continue;
@@ -338,7 +360,7 @@ function exactFloorMove(index: RoomIndex, subject: SceneEntity, point: RoomPoint
     if (occludedFraction(translatedBounds(anchorsFor(slot, "stand", "front").bounds, contact), contact.y + 1, index.occlusionBands) > 0.25) return;
   }
   const exact = rootMove(subject, index.room, { kind: "floor", room: index.room, at: contact }, contact, slot !== undefined ? "stand" : subject.base, subject.facing, cell);
-  return fitsGroup(index, subject, exact, group, ctx.avoidFurnitureOverlap) ? exact : undefined;
+  return fitsGroup(index, subject, exact, group, ctx.avoidFurnitureOverlap, ctx.catalog) ? exact : undefined;
 }
 function placedInRoom(index: RoomIndex, entity: SceneEntity): boolean {
   "worklet";
@@ -362,6 +384,7 @@ function placedInRoom(index: RoomIndex, entity: SceneEntity): boolean {
 export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoint, ctx: ResolveContext): DropProposal {
   "worklet";
   const group = movingGroup(index, subject);
+  const catalogIntent = ctx.catalog ? { scale: ctx.scale, aim: ctx.aim, contact: ctx.contact } : undefined;
   if (ctx.intent === "staging")
     return makeProposal(
       index,
@@ -433,7 +456,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
         );
         if (!contains(support, point) || overlap / supportWidth < 0.6) continue;
       }
-      if (!fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap)) continue;
+      if (!fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap, ctx.catalog)) continue;
       candidates.push({
         target,
         distance,
@@ -498,7 +521,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       });
       proposal.moves.push(...fallback.moves);
     }
-    return proposal;
+    return { ...proposal, catalogIntent };
   }
   let best: EntityMove | undefined;
   let bestDistance = Infinity;
@@ -508,8 +531,12 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
     return floorCellAllowed(index, subject, group, cell, overlapProps);
   };
   const exact = !capacityOverflow && exactFloorMove(index, subject, point, group, ctx);
-  if (exact) return { ...makeProposal(index, subject, exact, group, "floor", "Exact contained visible floor support"), pending };
-  for (const location of index.floor) {
+  if (exact) return { ...makeProposal(index, subject, exact, group, "floor", "Exact contained visible floor support"), pending, catalogIntent };
+  const floor = ctx.catalog ? [...index.floor].sort((a, b) => {
+    const ac = wall ? gridToRoom(a.cell, true) : a.contact, bc = wall ? gridToRoom(b.cell, true) : b.contact;
+    return (ac.x - point.x) ** 2 + (ac.y - point.y) ** 2 - (bc.x - point.x) ** 2 - (bc.y - point.y) ** 2;
+  }) : index.floor;
+  for (const location of floor) {
     const cell = location.cell;
     if (capacityOverflow) continue;
     if (wall && (cell.x >= 16 || cell.y >= 4)) continue;
@@ -533,13 +560,14 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
       cell
     );
     const distance = (contact.x - point.x) ** 2 + (contact.y - point.y) ** 2;
-    if (distance >= bestDistance || !fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap)) continue;
+    if (distance >= bestDistance || !fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap, ctx.catalog)) continue;
     best = move;
     bestDistance = distance;
+    if (ctx.catalog) break;
   }
   // Portable props may overlap harmlessly if every collision-free support is full.
   if (!best && subject.body?.small && !capacityOverflow) {
-    for (const location of index.floor) {
+    for (const location of floor) {
       if (!allowed(location.cell, true)) continue;
       const contact = location.contact;
       const move = rootMove(
@@ -552,9 +580,10 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
         location.cell
       );
       const distance = (contact.x - point.x) ** 2 + (contact.y - point.y) ** 2;
-      if (distance < bestDistance && fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap)) {
+      if (distance < bestDistance && fitsGroup(index, subject, move, group, ctx.avoidFurnitureOverlap, ctx.catalog)) {
         best = move;
         bestDistance = distance;
+        if (ctx.catalog) break;
       }
     }
   }
@@ -562,6 +591,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
     return {
       ...makeProposal(index, subject, best, group, "floor", "Nearest contained visible floor support"),
       pending,
+      catalogIntent,
     };
   const staging = rootMove(
     subject,
@@ -572,6 +602,7 @@ export function resolve(index: RoomIndex, subject: SceneEntity, anchor: RoomPoin
   );
   return {
     ...makeProposal(index, subject, staging, group, "staging", "No legal support; recoverable visible staging tray"),
+    refusal: capacityOverflow ? "capacity" : undefined,
     pending,
   };
 }

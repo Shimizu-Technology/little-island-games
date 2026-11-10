@@ -24,7 +24,7 @@ describe('interruptible guide journey', () => {
  });
 });
 describe('map target geometry', () => {
- it.each([[195,590,1],[320,590,1],[390,590,1],[1100,590,1],[390,710,1],[430,798,1],[744,999,1],[1100,610,1],[390,1240,2],[320,1550,2.5]])('separates seven full targets at %s×%s / font scale %s', (width,height,scale) => {
+ it.each([[195,590,1],[320,590,1],[390,590,1],[1100,590,1],[390,710,1],[430,798,1],[744,999,1],[1100,610,1],[390,1240,2],[320,1550,2.5]])('separates eight full targets at %s×%s / font scale %s', (width,height,scale) => {
   const { targets } = mapLayout(width,height,scale);
   for (const a of targets) {
    expect(a.left).toBeGreaterThanOrEqual(0); expect(a.top).toBeGreaterThanOrEqual(0);

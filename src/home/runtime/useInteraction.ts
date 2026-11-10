@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
-import { runOnJS, useFrameCallback, useSharedValue, type SharedValue, type FrameInfo } from "react-native-reanimated";
+import { runOnJS, runOnUI, useFrameCallback, useSharedValue, type SharedValue, type FrameInfo } from "react-native-reanimated";
 import { roomIds } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
 import { transition, idleController, type ControllerState, type ControllerEvent } from "../scene/controller";
@@ -29,6 +29,7 @@ import {
 import { translatedBounds } from "../scene/spatial";
 import { carriedCentre } from "./carry";
 import { prepareHits, pickEntity, onShapes } from "./pick";
+import { pickupScene, type PickupScene } from "./pickupScene";
 import { layoutToken } from "./layout";
 import { settleProgress, canRevealResting } from "./settle";
 import { releaseWindow, type ProbeFrame, type ProbeRelease, type ReleaseProbe } from "./frameProbe";
@@ -45,6 +46,12 @@ export type DragSlot = CaptureToken & {
   carryBounds?: Bounds;
   pointer: number;
   ready: boolean;
+  painted: boolean;
+  readyFrame: number;
+  synthetic?: boolean;
+  catalog?: boolean;
+  duration?: number;
+  landedAt?: number;
   phase: "pending" | "dragging" | "settling";
   consumed: boolean;
   absoluteX: number;
@@ -73,12 +80,14 @@ export type DragSlot = CaptureToken & {
   revision: string;
   finished: boolean;
   commitRequested?: boolean;
+  /** Resting art and overlay overlap for two presented ticks before clearing. */
+  revealFrame?: number;
   proposal?: DropProposal;
 };
 export type Pickup = CaptureToken & {
   id: EntityId;
   slot: number;
-  scene: Scene;
+  scene: PickupScene;
   grip?: { x: number; y: number };
   destination?: Scene;
   identities?: Record<string, string>;
@@ -99,6 +108,8 @@ export const emptyDragSlot = (): DragSlot => {
     id: "",
     pointer: -1,
     ready: false,
+    painted: false,
+    readyFrame: 0,
     phase: "dragging",
     x: 0,
     y: 0,
@@ -155,7 +166,7 @@ export function useInteraction({
   onPickup: (pickup: Pickup) => void;
   onCommit: (slot: number, proposal: DropProposal, at: { x: number; y: number }, token: CaptureToken) => void;
   onTap: (id: EntityId | undefined, point: ScreenPoint, now: number) => void;
-  onClear: (slot: number) => void;
+  onClear: (slot: number, id?: string, reason?: "capacity") => void;
   onDestination?: (slot: number, scene: Scene) => void;
   onFrameReport?: (times: number[]) => void;
   onReleaseProbe?: (probe: ReleaseProbe) => void;
@@ -177,7 +188,14 @@ export function useInteraction({
     }),
     [scene]
   );
+  // Transfer one string, then materialize plain UI objects before a gesture.
+  // Thousands of lazy shareable getters otherwise land on the first drag frame.
+  const encodedScene = useMemo(() => JSON.stringify({ ...scene, rooms: Object.fromEntries(
+    Object.entries(scene.rooms).map(([id, index]) => [id, { ...index, entities: {} }])
+  ) }), [scene]);
   const prepared = useSharedValue(resolverScene);
+  const stagingContacts = useSharedValue<Record<string, { x: number; y: number }>>({});
+  const externalSubjects = useSharedValue<Record<string, SceneEntity>>({});
   const hits = useMemo(() => prepareHits(scene), [scene]);
   const hitTable = useSharedValue(hits);
   const renderedRevision = useSharedValue(scene.revision);
@@ -185,6 +203,7 @@ export function useInteraction({
   const layoutTokens = useSharedValue(expectedLayout);
   const laidOut = useSharedValue<Record<string, string>>({});
   const poseLayouts = useSharedValue<Record<string, string>>({});
+  const overlayLayouts = useSharedValue<Record<string, { generation: number; bounds?: Bounds }>>({});
   const acknowledgePose = (index: number, token: string) => {
     poseLayouts.modify((current) => { "worklet";
       current[index] = token; current[`${index}:${token}`] = token; return current;
@@ -197,6 +216,7 @@ export function useInteraction({
   const slots = useSharedValue<DragSlot[]>([emptyDragSlot(), emptyDragSlot()]);
   const frameTimes = useSharedValue<number[]>([]);
   const traceFrames = useSharedValue<number[]>([]);
+  const catalogTimes = useSharedValue<number[]>([]);
   const probeRing = useSharedValue<ProbeFrame[]>([]);
   const probeCursor = useSharedValue(0);
   const probeLastAt = useSharedValue(0);
@@ -215,7 +235,12 @@ export function useInteraction({
   const fixtureNudges = useSharedValue<Record<string, number>>({});
   const cameraGesture = useSharedValue(false);
   useLayoutEffect(() => {
-    prepared.set(resolverScene);
+    runOnUI((encoded: string) => {
+      "worklet";
+      const next = JSON.parse(encoded) as Scene;
+      for (const index of Object.values(next.rooms)) index.entities = next.entities;
+      prepared.set(next);
+    })(encodedScene);
     hitTable.set(hits);
     renderedRevision.set(scene.revision);
     layoutTokens.set(expectedLayout);
@@ -231,7 +256,7 @@ export function useInteraction({
           Math.abs(origin.x + entity.contact.x - slot.targetX) < 0.01 &&
           Math.abs(origin.y + entity.contact.y - slot.targetY) < 0.01 &&
           entity.base === (slot.proposal?.base ?? slot.subject?.base);
-        const restoredTray = !slot.proposal && entity?.attachment.kind === "staging";
+        const restoredTray = entity?.attachment.kind === "staging";
         if (sameContact || restoredTray) return { ...slot, revision: scene.revision };
         // A later transaction may displace the landing or finish a held action.
         // Continue from the visible transform toward that authoritative resting state.
@@ -258,7 +283,7 @@ export function useInteraction({
       })
     );
     refreshed.forEach((index) => onDestination?.(index, scene));
-  }, [scene, resolverScene, hits, prepared, hitTable, renderedRevision, slots, building, onDestination, expectedLayout, layoutTokens]);
+  }, [scene, resolverScene, encodedScene, hits, prepared, hitTable, renderedRevision, slots, building, onDestination, expectedLayout, layoutTokens]);
 
   const movable = useSharedValue<Record<string, boolean>>({});
   useLayoutEffect(() => {
@@ -276,9 +301,10 @@ export function useInteraction({
     const slot = slots.value.find((s) => s.id === id);
     return id
       ? (prepared.value.entities[slot?.restId ?? id] ??
+          externalSubjects.value[id] ??
           (slot && !slot.consumed && !slot.committed ? slot.subject : undefined))
       : undefined;
-  }, [prepared, slots]);
+  }, [prepared, slots, externalSubjects]);
   const originFor = useCallback((id?: string) => {
     "worklet";
     const entity = subjectFor(id);
@@ -311,11 +337,13 @@ export function useInteraction({
         }
       }
     }
-    return resolve(prepared.value.rooms[destination], subject, anchor, {
+    const started = onTrace && slot.catalog ? eventTime() : undefined;
+    const proposal = resolve(prepared.value.rooms[destination], subject, anchor, {
       scale: camera.value.a,
       aim: centre && roomPoint(centre.x, centre.y),
       contact: index >= 0 ? screenToRoom(screenPoint(slot.pointerX, slot.pointerY), camera.value, housePoint(origin.x, origin.y)) : undefined,
       avoidFurnitureOverlap: designing,
+      catalog: slot.catalog,
       silhouette:
         index >= 0 && subject.character ? translatedBounds(slot.carryBounds ?? subject.bounds, anchor) : undefined,
       previous: slot.proposal,
@@ -323,7 +351,9 @@ export function useInteraction({
       now: eventTime(),
       reservations,
     });
-  }, [subjectFor, slots, prepared, camera, building, designing, reduced]);
+    if (started !== undefined) catalogTimes.modify(times => { "worklet"; times.push(eventTime() - started); return times; });
+    return proposal;
+  }, [subjectFor, slots, prepared, camera, building, designing, reduced, onTrace, catalogTimes]);
   const isCurrent = (index: number, token: CaptureToken) => {
     const slot = slots.get()[index];
     return (
@@ -349,6 +379,8 @@ export function useInteraction({
     if (!slot.id) return;
     const origin = proposal ? roomOrigin(roomIds.indexOf(proposal.room), building) : { x: 0, y: 0 };
     const restEntity = destination && destination.entities[identity ?? proposal?.id ?? slot.restId ?? slot.id];
+    const retargeted = committed && proposal && !(slot.synthetic && proposal.kind === "staging") &&
+      (Math.abs(origin.x + proposal.contact.x - slot.targetX) > .01 || Math.abs(origin.y + proposal.contact.y - slot.targetY) > .01);
     slots.set(
       current.map((s, i) =>
         i !== index
@@ -356,27 +388,40 @@ export function useInteraction({
           : {
               ...s,
               phase: "settling",
-              releaseX: s.settleAt && committed ? s.releaseX : s.x,
-              releaseY: s.settleAt && committed ? s.releaseY : s.y,
-              targetX: committed && proposal ? origin.x + proposal.contact.x : s.sourceX,
-              targetY: committed && proposal ? origin.y + proposal.contact.y : s.sourceY,
+              releaseX: s.settleAt && committed && !retargeted ? s.releaseX : s.x,
+              releaseY: s.settleAt && committed && !retargeted ? s.releaseY : s.y,
+              targetX: committed && proposal ? s.synthetic && proposal.kind === "staging" ? s.targetX : origin.x + proposal.contact.x : s.sourceX,
+              targetY: committed && proposal ? s.synthetic && proposal.kind === "staging" ? s.targetY : origin.y + proposal.contact.y : s.sourceY,
               proposal,
-              consumed: committed && proposal?.kind === "mouth" && !restEntity,
+              consumed: s.catalog && !committed || committed && proposal?.kind === "mouth" && !restEntity,
               restId: restEntity?.id ?? (committed && proposal ? proposal.id : (s.restId ?? s.id)),
               subject: restEntity ?? s.subject,
               committed: true,
               revision: revision ?? renderedRevision.get(),
-              settleAt: s.settleAt && committed ? s.settleAt : eventTime(),
-              travelDelay: s.settleAt && committed ? s.travelDelay : 0,
-              finished: committed && s.finished,
+              settleAt: s.settleAt && committed && !retargeted ? s.settleAt : eventTime(),
+              travelDelay: s.settleAt && committed && !retargeted ? s.travelDelay : 0,
+              finished: committed && s.finished && !retargeted,
+              landedAt: retargeted ? undefined : s.landedAt,
+              revealFrame: undefined,
             }
       )
     );
   };
-  const ready = (index: number, id: string, carryBounds?: Bounds) => {
+  const unready = useCallback((id: string) => {
+    overlayLayouts.modify(layouts => { "worklet"; delete layouts[id]; return layouts; });
+  }, [overlayLayouts]);
+  const ready = (index: number, id: string, carryBounds?: Bounds, generation?: number) => {
+    overlayLayouts.modify((layouts) => { "worklet"; layouts[id] = { generation: generation ?? slots.get().find(s => s.id === id)?.generation ?? 0, bounds: carryBounds }; return layouts; });
     slots.modify((current) => { "worklet";
       const slot = current[index];
-      if (slot.id === id) { slot.ready = true; slot.carryBounds = carryBounds; }
+      if (slot?.id === id) {
+        if (!slot.ready) {
+          slot.liftedAt = eventTime();
+          slot.readyFrame = 0;
+          if (slot.phase === "settling") slot.settleAt = slot.synthetic ? 0 : eventTime();
+        }
+        slot.ready = true; slot.carryBounds = carryBounds;
+      }
       return current;
     });
     if (onTrace) {
@@ -401,7 +446,7 @@ export function useInteraction({
     }
     if (replay && event.type === "up") {
       const pointer = event.pointer;
-      const slot = slots.value.find((s) => s.id && s.pointer === pointer);
+      const slot = slots.value.find((s) => s.id && s.pointer === pointer && s.phase !== "settling");
       const proposal = slot?.proposal;
       if (onReleaseProbe && slot?.phase === "dragging")
         probePending.set([...probePending.value, { at: event.now, id: slot.id,
@@ -482,7 +527,11 @@ export function useInteraction({
           absoluteY: pointer.point.y + offset.value.y,
           restId: visible?.restId,
           subject: entity,
-          ready: visible?.ready ?? false,
+          carryBounds: visible?.carryBounds ?? overlayLayouts.value[effect.entity]?.bounds,
+          ready: visible?.ready ?? (!!entity.body?.small && overlayLayouts.value[effect.entity] !== undefined),
+          painted: visible?.painted ?? false,
+          readyFrame: visible?.readyFrame ?? 0,
+          catalog: visible?.catalog ?? !!externalSubjects.value[effect.entity],
           pointer: pointer.pointer,
           phase: effect.type === "contact" ? "pending" as const : "dragging" as const,
           x: visible?.x ?? entity.contact.x + origin.x,
@@ -499,7 +548,7 @@ export function useInteraction({
           gripY: pointer.grip.y,
           pointerX: pointer.point.x,
           pointerY: pointer.point.y,
-          liftedAt: eventTime(),
+          liftedAt: effect.type === "pickup" && (visible?.ready || !!entity.body?.small && overlayLayouts.value[effect.entity] !== undefined) ? eventTime() : visible?.liftedAt ?? 0,
           edgeAt: 0,
         };
         captureSequence.set(Math.max(captureSequence.value, slot.generation));
@@ -508,9 +557,7 @@ export function useInteraction({
           runOnJS(onPickup)({
             id: effect.entity,
             slot: index,
-            scene: prepared.value.entities[effect.entity]
-              ? prepared.value
-              : { ...prepared.value, entities: { ...prepared.value.entities, [effect.entity]: entity } },
+            scene: pickupScene(prepared.value, entity),
             grip: { x: pointer.grip.x, y: pointer.grip.y },
             generation: slot.generation,
             epoch: slot.epoch,
@@ -537,7 +584,7 @@ export function useInteraction({
           absoluteX: pointer.point.x + offset.value.x,
           absoluteY: pointer.point.y + offset.value.y,
           tilt: reduced ? 0 : slot.tilt + (Math.max(-6, Math.min(6, (vx / 500) * 6)) - slot.tilt) * alpha,
-          lag: reduced ? 0 : Math.max(-10, Math.min(10, (-vx / 500) * 10)),
+          lag: reduced ? 0 : slot.lag + (Math.max(-10, Math.min(10, (-vx / 500) * 10)) - slot.lag) * alpha,
           edgeAt: pointer.point.x < 48 || pointer.point.x > viewport.width - 48 ? slot.edgeAt || now : 0,
         };
         nextSlot.proposal = proposalFor(nextSlot);
@@ -561,13 +608,13 @@ export function useInteraction({
         const pending = slots.value.findIndex((s) => s.id === effect.entity && s.phase === "pending" && !s.committed);
         if (pending >= 0) {
           const s = slots.value[pending];
-          if (s.pausedElapsed > 0 && s.proposal) {
+          if (s.proposal) {
             slots.set(slots.value.map((slot, i) => i === pending ? { ...slot, phase: "settling",
-              settleAt: eventTime() - s.pausedElapsed, commitRequested: false } : slot));
+              settleAt: s.synthetic && !s.pausedElapsed ? 0 : eventTime() - s.pausedElapsed, commitRequested: false } : slot));
             continue;
           }
           slots.set(slots.value.map((s, i) => i === pending ? { ...s, id: "", ready: false } : s));
-          runOnJS(onClear)(pending);
+          runOnJS(onClear)(pending, effect.entity);
           continue;
         }
         const index = slots.value.findIndex((s) => s.id === effect.entity);
@@ -586,6 +633,7 @@ export function useInteraction({
                     settleAt: eventTime(),
                     travelDelay: 0,
                     committed: true,
+                    consumed: !!s.catalog && !prepared.value.entities[s.restId ?? s.id],
                     revision: renderedRevision.value,
                   }
                 : slot
@@ -701,8 +749,14 @@ export function useInteraction({
     "worklet";
     const pending = slots.value.findIndex((s) => s.id && s.pointer === pointer && s.phase === "pending" && !s.committed);
     if (pending >= 0) {
+      const paused = slots.value[pending];
+      if (paused.proposal) {
+        slots.set(slots.value.map((s, i) => i === pending ? { ...s, phase: "settling",
+          settleAt: s.synthetic && !s.pausedElapsed ? 0 : eventTime() - s.pausedElapsed } : s));
+        return;
+      }
       slots.set(slots.value.map((s, i) => i === pending ? { ...s, id: "", ready: false } : s));
-      runOnJS(onClear)(pending);
+      runOnJS(onClear)(pending, paused.id);
       return;
     }
     slots.set(
@@ -803,7 +857,7 @@ export function useInteraction({
           const capture = controller.value.pointers.find((p) => p.pointer === touch.id);
           if (capture?.phase === "dragging")
             send({ type: "move", pointer: touch.id, point: screenPoint(touch.x, touch.y) });
-          const slot = slots.value.find((s) => s.pointer === touch.id && s.id);
+          const slot = slots.value.find((s) => s.pointer === touch.id && s.id && s.phase === "dragging");
           const proposal = slot?.proposal;
           if (onTrace && capture?.phase === "dragging" && slot) {
             const origin = originFor(slot.id);
@@ -864,7 +918,7 @@ export function useInteraction({
       });
       if (due.length) probePending.set(probePending.value.filter((p) => now < p.at + 520));
     }
-    lastFrame.set(eventTime());
+    if (slots.value.some(s => !!s.id) || Object.values(fixtureNudges.value).some(at => lastFrame.value < at + 220)) lastFrame.set(eventTime());
     if (queuedInput.value.length && !slots.value.some((s) => s.id && s.commitRequested &&
       (!s.committed || s.revision !== renderedRevision.value))) {
       const events = queuedInput.value;
@@ -887,6 +941,11 @@ export function useInteraction({
         const sorted = [...traceFrames.value].sort((a, b) => a - b), at = (q: number) => sorted[Math.floor(sorted.length * q)];
         runOnJS(onTrace)({ type: "frames", at: eventTime(), samples: sorted.length, p50: at(.5), p95: at(.95), p99: at(.99), max: sorted[sorted.length - 1] });
         traceFrames.set([]);
+        if (catalogTimes.value.length) {
+          const sorted = [...catalogTimes.value].sort((a, b) => a - b), at = (q: number) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * q))];
+          runOnJS(onTrace)({ type: "catalog-resolve", at: eventTime(), samples: sorted.length, p50: at(.5), p95: at(.95), p99: at(.99), max: sorted[sorted.length - 1] });
+          catalogTimes.set([]);
+        }
       }
     }
     if (onFrameReport && frameCount.value < 3600) {
@@ -924,6 +983,10 @@ export function useInteraction({
         for (let i = 0; i < 2; i++) {
           const slot = current[i];
           if (!slot.id) continue;
+          if (slot.ready && !slot.painted) {
+            if (slot.readyFrame > 0) slot.painted = true;
+            else slot.readyFrame = now;
+          }
           if (
             slot.phase === "dragging" &&
             now - slot.lastMoveAt > 24 &&
@@ -952,15 +1015,25 @@ export function useInteraction({
               slot.proposal = proposalFor(slot);
             }
           }
+          const earlyLayout = overlayLayouts.value[slot.id];
+          if (!slot.ready && earlyLayout && (earlyLayout.generation === slot.generation || slot.subject?.body?.small)) {
+            slot.ready = true; slot.liftedAt = now; slot.readyFrame = 0; slot.carryBounds = earlyLayout.bounds;
+            if (slot.phase === "settling") slot.settleAt = slot.synthetic ? 0 : now;
+          }
           if (slot.phase === "dragging" && slot.proposal?.pending && now - slot.proposal.pending.since >= 60)
             slot.proposal = proposalFor(slot);
-          if (slot.phase === "settling" && slot.settleAt) {
-            const progress = settleProgress(now - slot.settleAt - slot.travelDelay, reduced);
+          if (slot.phase === "settling" && slot.ready && slot.synthetic && !slot.settleAt) {
+            slot.settleAt = now;
+            slot.liftedAt = now;
+          }
+          if (slot.phase === "settling" && slot.settleAt && slot.ready) {
+            const progress = settleProgress(now - slot.settleAt - slot.travelDelay, reduced, slot.duration);
             slot.x = slot.releaseX + (slot.targetX - slot.releaseX) * progress;
             slot.y = slot.releaseY + (slot.targetY - slot.releaseY) * progress;
             slot.tilt *= 1 - progress;
             slot.lag *= 1 - progress;
             slot.finished = progress === 1;
+            if (slot.finished && slot.catalog && !slot.landedAt) slot.landedAt = now;
             // Motion and pose start at release on UI. Apply/save only after travel;
             // the pre-mounted target remains visible while JS/native acknowledge.
             if (slot.finished && !slot.committed && !slot.commitRequested && slot.proposal) {
@@ -973,7 +1046,7 @@ export function useInteraction({
               (laidOut.value[entity.id] === layoutTokens.value[entity.id] &&
                 (!entity.character || poseLayouts.value[i] === layoutTokens.value[entity.id] ||
                   poseLayouts.value[`${i}:${poseToken(entity.base, entity.facing, entity.action)}`] === poseToken(entity.base, entity.facing, entity.action)))));
-            if (nativeReady && canRevealResting(slot, renderedRevision.value)) {
+            if (nativeReady && (!slot.catalog || reduced || !!slot.landedAt && now - slot.landedAt >= 160) && canRevealResting(slot, renderedRevision.value)) {
               if (entity?.character && !slot.consumed && slot.proposal) {
                 const origin = roomOrigin(roomIds.indexOf(entity.room), building);
                 const bounds = translatedBounds(
@@ -983,6 +1056,12 @@ export function useInteraction({
                 const next = includeBounds(camera.value, bounds, viewport, building);
                 if (next.tx !== camera.value.tx || next.ty !== camera.value.ty)
                   revealPan.set({ from: camera.value, to: next, since: now });
+              }
+              // Native opacity publication and removal need separate presented ticks.
+              // Reveal the acknowledged resting tree before retiring the carry tree.
+              if (slot.synthetic && !slot.consumed && entity?.attachment.kind !== "staging") {
+                slot.revealFrame = (slot.revealFrame ?? 0) + 1;
+                if (slot.revealFrame < 3) continue;
               }
               let settled = transition(
                 controller.value,
@@ -1005,9 +1084,11 @@ export function useInteraction({
                   housePoint(0, 0)
                 ).state;
               controller.set(settled);
+              if (slot.catalog) externalSubjects.modify((subjects) => { "worklet"; delete subjects[slot.id]; return subjects; });
+              const cleared = slot.id;
               slot.id = "";
               slot.ready = false;
-              runOnJS(onClear)(i);
+              runOnJS(onClear)(i, cleared);
             }
           }
         }
@@ -1016,8 +1097,8 @@ export function useInteraction({
   // send/resumePending read these shared channels. Keeping their render-local
   // identities out of dependencies preserves the native callback clock.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onTrace, traceFrames, onReleaseProbe, probeRing, probeCursor, probeLastAt, probePending, queuedInput, slots, prepared, renderedRevision, laidOut, layoutTokens,
-    poseLayouts, lastFrame, revealPan, controller, reduced, camera, onFrameReport, frameCount, frameTimes, inertia,
+  }, [onTrace, traceFrames, catalogTimes, onReleaseProbe, probeRing, probeCursor, probeLastAt, probePending, queuedInput, slots, prepared, renderedRevision, laidOut, layoutTokens,
+    poseLayouts, overlayLayouts, fixtureNudges, externalSubjects, lastFrame, revealPan, controller, reduced, camera, onFrameReport, frameCount, frameTimes, inertia,
     viewport, building, offset, proposalFor, onCommit, onClear]));
   const cancelAll = () => {
     revealPan.set(null);
@@ -1025,12 +1106,16 @@ export function useInteraction({
     controller.set(idleController);
     inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
     queuedInput.set([]);
+    externalSubjects.set({});
     slots.set([emptyDragSlot(), emptyDragSlot()]);
     onClear(0);
     onClear(1);
   };
-  const externalDown = (pointer: number, id: string, point: ScreenPoint) => {
+  const externalDown = (pointer: number, id: string, point: ScreenPoint, subject?: SceneEntity) => {
     "worklet";
+    const begin = () => {
+      "worklet";
+    if (subject) externalSubjects.set({ ...externalSubjects.value, [id]: subject });
     send({
       type: "down",
       pointer,
@@ -1039,6 +1124,8 @@ export function useInteraction({
       contact: screenToRoom(point, camera.value, originFor(id)),
       now: eventTime(),
     });
+    };
+    if (globalThis._WORKLET) begin(); else runOnUI(begin)();
   };
   const externalMove = (pointer: number, point: ScreenPoint) => {
     "worklet";
@@ -1046,7 +1133,18 @@ export function useInteraction({
   };
   const externalUp = (pointer: number, cancel: boolean) => {
     "worklet";
-    const slot = slots.value.find((s) => s.id && s.pointer === pointer);
+    const slot = slots.value.find((s) => s.id && s.pointer === pointer && s.phase !== "settling");
+    if (slot?.catalog && (cancel || !slot.proposal || slot.proposal.kind === "staging")) {
+      controller.set(transition(controller.value, { type: "cancel", pointer, now: eventTime() }, camera.value, originFor(slot.id)).state);
+      externalSubjects.modify((subjects) => { "worklet"; delete subjects[slot.id]; return subjects; });
+      const index = slots.value.indexOf(slot);
+      slots.set(slots.value.map((s, i) => i === index ? emptyDragSlot() : s));
+      runOnJS(onClear)(index, slot.id, !cancel ? slot.proposal?.refusal : undefined);
+      return;
+    }
+    if (!cancel && slot?.proposal && onTrace) runOnJS(onTrace)({ type: "release", at: eventTime(), id: slot.id,
+      kind: slot.proposal.kind, target: slot.proposal.target, finger: { x: slot.pointerX, y: slot.pointerY },
+      anchor: { x: slot.x, y: slot.y }, contact: slot.proposal.contact, room: slot.proposal.room });
     send({
       type: cancel ? "cancel" : "up",
       pointer,
@@ -1054,12 +1152,77 @@ export function useInteraction({
       proposal: slot?.proposal,
     });
   };
+  const externalDrop = (pointer: number, point: ScreenPoint, cancel: boolean) => {
+    runOnUI(() => {
+      "worklet";
+      externalMove(pointer, point);
+      externalUp(pointer, cancel);
+    })();
+  };
+  /** Non-drag moves own a normal slot and the same commit/re-grab gates. */
+  const animateProposal = (proposal: DropProposal, subjectOverride?: SceneEntity, start?: { x: number; y: number }, onAccepted?: (accepted: boolean) => void) => {
+    const subject = subjectOverride ?? subjectFor(proposal.id);
+    const current = slots.get();
+    if (!subject || current.some(s => s.id === subject.id || s.restId === subject.id)) return false;
+    const index = current.findIndex(s => !s.id);
+    if (index < 0) return false;
+    const origin = roomOrigin(roomIds.indexOf(subject.room), building);
+    const dest = roomOrigin(roomIds.indexOf(proposal.room), building);
+    const staged = subject.attachment.kind === "staging" ? stagingContacts.get()[subject.id] : undefined;
+    if (subject.attachment.kind === "staging" && !start && !staged) return false;
+    const from = start ?? (staged ? screenToRoom(screenPoint(staged.x - offset.get().x, staged.y - offset.get().y), camera.get(), housePoint(0, 0)) : undefined) ?? { x: origin.x + subject.contact.x, y: origin.y + subject.contact.y };
+    const end = proposal.kind === "staging"
+      ? screenToRoom(screenPoint(112, viewport.height - 48), camera.get(), housePoint(0, 0))
+      : { x: dest.x + proposal.contact.x, y: dest.y + proposal.contact.y };
+    const requestedEpoch = epoch.get();
+    // JS SharedValue writes are asynchronous on native. Allocate, publish, then
+    // notify JS in one UI transaction so pickup cannot read an empty old slot.
+    runOnUI(() => {
+      "worklet";
+      if (epoch.value !== requestedEpoch) { if (onAccepted) runOnJS(onAccepted)(false); return; }
+      const current = slots.value;
+      const index = current.findIndex(s => !s.id);
+      if (index < 0 || current.some(s => s.id === subject.id || s.restId === subject.id)) {
+        if (onAccepted) runOnJS(onAccepted)(false); return;
+      }
+      const generation = captureSequence.value + 1;
+      captureSequence.set(generation);
+      const warm = !subjectOverride && overlayLayouts.value[subject.id] !== undefined && (!!subject.body?.small || !!subject.character && index === 0);
+      const now = eventTime();
+      const slot: DragSlot = { ...emptyDragSlot(), id: subject.id, subject, pointer: -1000 - index,
+        generation, epoch: epoch.value, phase: "settling", synthetic: true, catalog: !!subjectOverride,
+        carryBounds: warm ? overlayLayouts.value[subject.id]?.bounds : undefined,
+        ready: warm, liftedAt: warm ? now : 0,
+        sourceX: from.x, sourceY: from.y, releaseX: from.x, releaseY: from.y, x: from.x, y: from.y,
+        targetX: end.x, targetY: end.y,
+        proposal, settleAt: 0, duration: Math.min(400, Math.max(240,
+          Math.hypot(end.x - from.x, end.y - from.y) * camera.value.a * 1.2)),
+      };
+      slots.set(current.map((s, i) => i === index ? slot : s));
+      if (onAccepted) runOnJS(onAccepted)(true);
+      runOnJS(onPickup)({ id: subject.id, slot: index,
+        scene: pickupScene(prepared.value, subject),
+        generation, epoch: slot.epoch, grip: { x: 0, y: 0 } });
+      if (reduced) {
+        slots.modify(current => { "worklet";
+          current[index] = { ...current[index], ready: warm, painted: false, finished: true,
+            x: slot.targetX, y: slot.targetY, commitRequested: true };
+          return current;
+        });
+        runOnJS(onCommit)(index, proposal, from, { generation, epoch: slot.epoch });
+      }
+    })();
+    return true;
+  };
   const resetFrames = () => {
     frameTimes.set([]);
     frameCount.set(0);
   };
   return {
     isCurrent,
+    animateProposal,
+    stagingContacts,
+    externalDrop,
     externalDown,
     externalMove,
     externalUp,
@@ -1069,6 +1232,7 @@ export function useInteraction({
     controller,
     slots,
     ready,
+    unready,
     finish,
     cancelAll,
     frameTimes,

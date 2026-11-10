@@ -27,12 +27,12 @@ describe('visible hub destinations and preserved list behavior', () => {
    ...['reading','numbers','science','thinking','coding'].map(island=>({pathname:'/shelf',params:{island}})), {pathname:'/learn',params:{game:'hafa-adai'}}]);
   await act(()=>screen.unmount());
  });
- it('renders every catalog item in All games, all seven places, and editable favorites', async () => {
+ it('renders every catalog item in All games, all eight places, and editable favorites', async () => {
   fixture.store.save=emptySave(); fixture.params={}; let screen!:ReactTestRenderer;
   await act(()=>{ screen=create(<Everything/>); });
   const all=screen.root.findByProps({testID:'all-games'});
   expect(all.findAll(n=>n.type==='button' && n.props.accessibilityRole==='button').map(n=>n.props.accessibilityLabel)).toEqual(shelfGames.map(game=>`Play ${game.name}`));
-  expect(screen.root.findAll(n=>n.type==='button' && n.props.accessibilityLabel?.startsWith('Visit '))).toHaveLength(7);
+  expect(screen.root.findAll(n=>n.type==='button' && n.props.accessibilityLabel?.startsWith('Visit '))).toHaveLength(8);
   const star=all.findAll(n=>n.type==='button' && n.props.label?.startsWith('Favorite '))[0];
   await act(()=>star.props.onPress()); expect(fixture.store.toggleGameFavorite).toHaveBeenLastCalledWith(shelfGames[0].id);
   await act(()=>screen.unmount());

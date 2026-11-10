@@ -26,7 +26,7 @@ export function SettleArt({ source, destination = source, grip = { x: 0, y: 0 },
   const from = useAnimatedStyle(() => {
     const s = slots.value[index];
     const active = (s.phase === "settling" && s.settleAt > 0) || (s.phase === "pending" && s.pausedElapsed > 0);
-    const p = active ? settleProgress(s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt, reduced) : 0;
+    const p = active ? settleProgress(s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt, reduced, s.duration) : 0;
     const base = s.proposal?.base ?? source.base, facing = s.proposal?.facing ?? source.facing;
     const pose = poses[poseToken(base, facing, destination.action)];
     const attachment = s.proposal?.attachment;
@@ -63,7 +63,7 @@ function TargetPose({ entity, source, startHead, interaction, index, reduced, su
     if (!selected.value) return 0;
     const s = slots.value[index];
     const active = s.phase === "settling" && s.settleAt > 0 || s.phase === "pending" && s.pausedElapsed > 0;
-    return active ? settleProgress(s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt, reduced) : 0;
+    return active ? settleProgress(s.phase === "pending" ? s.pausedElapsed : clock.value - s.settleAt, reduced, s.duration) : 0;
   });
   const style = useAnimatedStyle(() => {
     const p = progress.value;

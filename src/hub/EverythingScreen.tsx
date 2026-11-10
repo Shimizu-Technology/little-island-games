@@ -13,6 +13,7 @@ import { returnLabel } from '../arcade/presentation';
 import { Landmark } from './Landmarks';
 import { places } from './model';
 import { openGame, placeRoute } from './navigation';
+import { CoveLists } from '../cove/HubCove';
 export default function EverythingScreen() {
  const { section } = useLocalSearchParams<{ section?: string }>(), store = useStore();
  const { width, fontScale } = useWindowDimensions(), narrow = width < 340 || fontScale > 1.5;
@@ -32,9 +33,9 @@ export default function EverythingScreen() {
   <View style={{ padding: 16, gap: 10, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}><Button quiet compact onPress={() => router.canGoBack() ? router.back() : router.replace('/')} label="Back to map">← Map</Button><Heading style={{ fontSize: 26, flex: 1, ...(narrow ? { flexBasis: '100%' as const } : {}) }}>{pocket ? 'Your pocket' : 'Everything'}</Heading></View>
   <SaveStatus/>
   <ScrollView contentContainerStyle={{ width: '100%', maxWidth: 760, alignSelf: 'center', padding: 20, gap: 28 }}>
-   {section === 'favorites' ? fav : section === 'ideas' ? suggestions : <>
+   {section === 'favorites' ? <>{fav}<CoveLists favorites/></> : section === 'ideas' ? suggestions : <>
     <View style={{ gap: 8 }}><Heading style={{ fontSize: 24 }}>Continue</Heading>{resume ? <><Copy>{returnLabel(resume)}</Copy>{rows([shelfGames.find(game => game.id === resume)!])}</> : <Copy>Saved games will be here when you’re ready.</Copy>}</View>
-    {suggestions}{fav}
+    {suggestions}{fav}<CoveLists/>
     <View style={{ gap: 8 }}><Heading style={{ fontSize: 24 }}>Places</Heading>{places.map(place => <PressableScale key={place.id} accessibilityRole="button" accessibilityLabel={`Visit ${place.name}`} onPress={() => router.push(placeRoute(place.id))} style={{ flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 8, borderBottomColor: C.line, borderBottomWidth: 1 }}><View style={{ width: 84, height: 66 }}><Landmark id={place.id}/></View><View style={{ flex: 1 }}><Heading style={{ fontSize: 20 }}>{place.name}</Heading><Copy>{place.hint}</Copy></View></PressableScale>)}</View>
     <View testID="all-games"><Heading style={{ fontSize: 24 }}>All games</Heading>{rows(shelfGames)}</View>
    </>}

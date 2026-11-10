@@ -1,6 +1,6 @@
 import type { Scene, SceneEntity } from "../scene/types";
 import { capabilityOf } from "../world";
-export function groupIds(scene: Scene, id: string): string[] {
+export function groupIds(scene: Pick<Scene, "entities">, id: string): string[] {
   const result: string[] = [];
   const visit = (key: string) => {
     if (result.includes(key)) return;
@@ -43,7 +43,7 @@ export function paintEntries(
 }
 
 /** Stored descendants are represented by their container and its pictorial contents chooser. */
-export function restingVisible(entity: SceneEntity, scene: Scene, capturedRoot?: string): boolean {
+export function restingVisible(entity: SceneEntity, scene: Pick<Scene, "entities">, capturedRoot?: string): boolean {
   let current: SceneEntity | undefined = entity;
   const visited = new Set<string>();
   while (current && !visited.has(current.id)) {
