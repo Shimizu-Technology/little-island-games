@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Pressable, Text as PlainText, View } from "react-native";
-import type { ErrorBoundaryProps } from "expo-router";
+import { router, type ErrorBoundaryProps } from "expo-router";
 import { noteLaunch } from "../state/launchLog";
 
 /**
@@ -15,6 +15,10 @@ export function LaunchError({ error, retry }: ErrorBoundaryProps) {
       <PlainText style={{ fontSize: 18, lineHeight: 26, color: "#183F39" }}>Something stopped this screen from opening. Your saved work is kept.</PlainText>
       <Pressable accessibilityRole="button" onPress={() => void retry()} style={{ minHeight: 52, borderRadius: 26, backgroundColor: "#246858", alignItems: "center", justifyContent: "center", paddingHorizontal: 20 }}>
         <PlainText style={{ fontSize: 18, fontWeight: "700", color: "#FFFFFF" }}>Try again</PlainText>
+      </Pressable>
+      {/* The boundary replaces the whole stack, so a screen that keeps failing needs a way out. */}
+      <Pressable accessibilityRole="button" onPress={() => { try { router.replace("/"); } catch { /* navigation itself may be down; retry still runs */ } void retry(); }} style={{ minHeight: 52, borderRadius: 26, borderWidth: 2, borderColor: "#246858", alignItems: "center", justifyContent: "center", paddingHorizontal: 20 }}>
+        <PlainText style={{ fontSize: 18, fontWeight: "700", color: "#183F39" }}>Back to the map</PlainText>
       </Pressable>
     </View>
   );

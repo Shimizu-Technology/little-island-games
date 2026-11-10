@@ -5,12 +5,12 @@ import { emptySave } from '../src/state/validation';
 import type { SessionOpenResult } from '../src/state/sessionContent';
 
 // Slice F-recover: every recovery or waiting state on the launch path is visible, never blank.
-const fixture = vi.hoisted(() => ({ store: {} as Record<string, unknown>, noteLaunch: vi.fn(), params: { game: 'sudoku' } as Record<string, string> }));
+const fixture = vi.hoisted(() => ({ store: {} as Record<string, unknown>, noteLaunch: vi.fn(), replace: vi.fn(), params: { game: 'sudoku' } as Record<string, string> }));
 vi.mock('react-native', () => ({ ScrollView: 'section', View: 'div', Pressable: 'button', Text: 'span', TextInput: 'input', useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1 }) }));
 vi.mock('react-native-safe-area-context', () => ({ SafeAreaView: 'main', SafeAreaProvider: 'div', useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 vi.mock('react-native-gesture-handler', () => ({ GestureHandlerRootView: 'div' }));
 vi.mock('expo-status-bar', () => ({ StatusBar: () => null }));
-vi.mock('expo-router', () => ({ Stack: Object.assign(() => null, { Screen: () => null }), Redirect: () => null, router: {}, useFocusEffect: () => {}, useLocalSearchParams: () => fixture.params, useIsFocused: () => true }));
+vi.mock('expo-router', () => ({ Stack: Object.assign(() => null, { Screen: () => null }), Redirect: () => null, router: { replace: fixture.replace }, useFocusEffect: () => {}, useLocalSearchParams: () => fixture.params, useIsFocused: () => true }));
 vi.mock('../src/components/ui', () => ({ Button: ({ children, onPress, disabled }: { children: React.ReactNode; onPress?: () => void; disabled?: boolean }) => <button onClick={onPress} disabled={disabled}>{children}</button>, Chip: 'button', Copy: 'p', Heading: 'h2', IconButton: 'button', PressableScale: 'button', Sheet: () => null, ToggleRow: 'switch', C: { cream: '#FCFAF4' }, font: undefined, styles: { content: {} } }));
 vi.mock('../src/components/Text', () => ({ TextLayoutProvider: 'div' }));
 vi.mock('../src/components/motion', () => ({ useReducedMotion: () => false }));
@@ -110,5 +110,8 @@ it('a render error anywhere below the root shows a recovery screen with Try agai
   expect(text(view!.root)).toContain('Something stopped this screen from opening. Your saved work is kept.');
   expect(fixture.noteLaunch).toHaveBeenCalledWith('render', error);
   await act(async () => button('Try again').props.onPress());
-  expect(retry).toHaveBeenCalledOnce();
+  expect(retry).toHaveBeenCalledOnce();expect(fixture.replace).not.toHaveBeenCalled();
+  // A screen that keeps failing still has a way out.
+  await act(async () => button('Back to the map').props.onPress());
+  expect(fixture.replace).toHaveBeenCalledWith('/');expect(retry).toHaveBeenCalledTimes(2);
 });
