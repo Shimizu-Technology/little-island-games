@@ -1,0 +1,25 @@
+{
+ "format": 1,
+ "family": "sudoku",
+ "seedBase": 1,
+ "attempts": 2665,
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "budget": 200000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "sprout": 240,
+  "shell": 300,
+  "coral": 300,
+  "lagoon": 365,
+  "tidepool": 365,
+  "reef": 365,
+  "deep": 365,
+  "trench": 365
+ },
+ "sourceSha": "d6c28418de1e6cd9e27877999bb6c51da7d22a15",
+ "status": "complete"
+}

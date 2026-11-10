@@ -83,3 +83,18 @@ it('13 confirms Together at a solo finish and credits both people in one save', 
     expect(JSON.stringify(screen.toJSON())).toContain('Together with ');
   } finally { if (screen) await act(async () => screen.unmount()); vi.unstubAllGlobals(); }
 });
+
+it('G3 R1 saves a Family practice solo finish immediately and retains it across relaunch', async () => {
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); registerSaveContent(registration.catalog, catalogManifest(registration.catalog));
+  db.rows = []; db.raw = JSON.stringify(emptySave()); let screen!: ReactTestRenderer;
+  try {
+    await act(async () => { screen = create(<StoreProvider><Probe/><Ready/></StoreProvider>); });
+    for (let i = 0; i < 40 && screen.root.findAllByType('button').some(b => b.children.includes('Next legal step')); i++) await press(screen, 'Next legal step');
+    expect(store.save.challenge!.paused).toEqual([]);
+    expect(completion(progressFor(store.save, 'family')!, puzzle.ref, entry)).toBe(5);
+    expect(JSON.stringify(screen.toJSON())).toContain('Puzzle solved');
+    await act(async () => { await store.backup(); screen.unmount(); });
+    await act(async () => { screen = create(<StoreProvider><Probe/></StoreProvider>); });
+    expect(completion(progressFor(store.save, 'family')!, puzzle.ref, entry)).toBe(5);
+  } finally { if (screen) await act(async () => screen.unmount()); vi.unstubAllGlobals(); }
+});
