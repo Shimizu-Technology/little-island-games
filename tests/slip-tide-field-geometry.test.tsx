@@ -73,3 +73,11 @@ it('R9: help draws the cue it was given and nothing else', () => {
   expect(root.root.findAllByProps({ testID: 'hint-blocker' }).length).toBeGreaterThan(0);
   act(() => { root.unmount(); });
 });
+it('largest text: the caption keeps a minimum width and the controls wrap below it', () => {
+  let root!: ReactTestRenderer;
+  act(() => { root = create(<Playfield {...props(402, 874)} />); });
+  const header = root.root.findByProps({ testID: 'board-header' });
+  expect(header.props.style.flexWrap).toBe('wrap');
+  expect((header.children[0] as ReactTestRenderer['root']).props.style.minWidth).toBeGreaterThanOrEqual(150);
+  act(() => { root.unmount(); });
+});

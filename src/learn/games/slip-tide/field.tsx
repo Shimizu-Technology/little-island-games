@@ -162,8 +162,9 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
   const boardSize = cell * n + boardPad * 2;
   const caption = coach?.active && !steps ? (together ? 'Each person has two arrows. Talk it through.' : 'Swipe the water to slide every crab.') : notice || title;
   return <View style={{ gap: 12, alignItems: 'center' }}>
-    <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch', gap: 8, paddingHorizontal: 2, minHeight: 46 }}>
-      <View style={{ flex: 1 }}>
+    {/* At the largest text sizes Undo and Reset wrap below the caption instead of squeezing it out. */}
+    <View testID="board-header" style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', alignSelf: 'stretch', gap: 8, paddingHorizontal: 2, minHeight: 46 }}>
+      <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: 150, minWidth: 150 }}>
         <Copy numberOfLines={2} style={{ fontWeight: '900', color: C.ink, fontSize: 15, lineHeight: 19 }}>{caption}</Copy>
         <Copy accessibilityLabel={steps === 1 ? '1 swipe so far' : `${steps} swipes so far`} style={{ color: C.ink, fontSize: 13, lineHeight: 17 }}>{steps === 1 ? '1 swipe' : `${steps} swipes`}</Copy>
       </View>
