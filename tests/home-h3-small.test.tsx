@@ -98,6 +98,9 @@ it('HR-02 after 6 s of quiet one usable thing wiggles once; never more than once
   const id = harness.hint.mock.calls[0][0] as string;
   const instance = starterHome().rooms.home.instances.find((i) => id.endsWith(`/item/${i.id}`));
   expect(id.includes('/item/portion-') || (instance && capabilityOf(instance.item).toggle)).toBeTruthy();
+  // Something you can switch on comes before food and shells when the room has one.
+  const toggles = starterHome().rooms.home.instances.filter((i) => capabilityOf(i.item).toggle);
+  if (toggles.length) expect(instance && capabilityOf(instance.item).toggle).toBeTruthy();
   await act(async () => { vi.advanceTimersByTime(19000); });
   expect(harness.hint).toHaveBeenCalledTimes(1);
   await act(async () => { vi.advanceTimersByTime(1200); });

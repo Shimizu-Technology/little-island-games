@@ -664,9 +664,11 @@ export function HomeScreen({
         const again = nextHintAt(hints.current);
         if (again === undefined || again > Date.now() + 16) { arm(); return; }
         const { scene } = live.current;
+        // Things you can switch first (fridge, lamp, sink), then food, then beach shells.
+        const rank = (e: SceneEntity) => (e.item && capabilityOf(e.item.item).toggle ? 0 : e.id.includes("/item/portion-shore-") ? 2 : 1);
         const candidates = Object.values(scene.rooms[room].entities)
           .filter((e) => restingVisible(e, scene) && e.item && (isPortion(e.id) || capabilityOf(e.item.item).toggle))
-          .sort((a, b) => a.contact.x - b.contact.x)
+          .sort((a, b) => rank(a) - rank(b) || a.contact.x - b.contact.x)
           .map((e) => e.id);
         const next = takeHint(hints.current, Date.now(), candidates, reduced);
         hints.current = next.state;
