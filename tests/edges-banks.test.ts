@@ -10,8 +10,10 @@ import { grade as gradeBridges, rank as rankBridges } from '../src/puzzles/edges
 import { lineAdapter } from '../src/puzzles/lines/adapter';
 import { loopRungs, pearlRungs } from '../src/puzzles/lines/rungs';
 import { grade as gradeLine, rank as rankLine } from '../src/puzzles/lines/solver';
-import { bridgesWorkload } from '../scripts/puzzles/edges/bridges';
-import { lineWorkload } from '../scripts/puzzles/lines/loops';
+import { bridgesWeights, bridgesWorkload } from '../scripts/puzzles/edges/bridges';
+import { lineWeights, lineWorkload } from '../scripts/puzzles/lines/loops';
+import { techniques as bridgesTechniques } from '../src/puzzles/edges/solver';
+import { techniquesOf } from '../src/puzzles/lines/solver';
 import type { BridgesPuzzle } from '../src/puzzles/edges/core';
 import type { LinePuzzle } from '../src/puzzles/lines/core';
 
@@ -24,6 +26,10 @@ function rows(family: string, slot: number, band: string) {
 }
 
 describe('G5 banks', () => {
+  it('weighs every technique when ordering a rung (regression: a missing weight made Deep Channel unordered)', () => {
+    expect(bridgesWeights.length).toBe(bridgesTechniques.length);
+    for (const kind of ['loop', 'pearl-loop'] as const) expect(lineWeights[kind].length).toBe(techniquesOf(kind).length);
+  });
   it('registers exactly the packaged facts, inside G5’s slots 60–79 and their ordinals', () => {
     expect(readFileSync(factsFile, 'utf8')).toBe(factsText(edgeFacts()));
     const facts = edgeFacts();

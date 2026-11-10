@@ -101,8 +101,10 @@ export function generateLine(kind: LinePuzzle['kind'], rung: LineRung, seed: num
   if (rung.needs && !g.steps.some(s => s.technique === rung.needs)) return null;
   return { seed, puzzle, template: style.id, grade: g };
 }
+/** Effort per step, by technique, one weight per technique (checked by the banks test). */
+export const lineWeights = { loop: [0.3, 1, 2, 3, 6, 12], 'pearl-loop': [0.3, 1.5, 5, 10] } as const;
 export const lineWorkload = (kind: LinePuzzle['kind'], g: Extract<Grade, { status: 'complete' }>) => {
-  const weights = kind === 'loop' ? [0.3, 1, 2, 3, 6, 12] : [0.3, 1.5, 5, 10];
+  const weights = lineWeights[kind];
   return g.steps.reduce((n, s) => n + weights[rank(kind, s.technique)], 0);
 };
 const loopSupply: Record<string, [number, number]> = { pebble: [240, 100], cove: [240, 100], reef: [240, 100], kelp: [240, 100], current: [240, 100], abyss: [200, 64] };

@@ -62,8 +62,11 @@ function grow(rng: Rng, width: number, height: number, islands: number, style: S
   return { kind: 'bridges', width, height, clues };
 }
 
+/** Effort per step, by technique (tidy … chain). One weight per technique, checked by the banks test. */
+export const bridgesWeights = [0, 1, 2.5, 4, 6, 9, 14];
+const weights = bridgesWeights;
 export const bridgesWorkload = (g: Extract<Grade, { status: 'complete' }>, p: BridgesPuzzle) =>
-  g.steps.reduce((n, s) => n + [0, 1, 2.5, 4, 6, 14][rank(s.technique)], 0) + shapeOf(p).islands.length * 0.2;
+  g.steps.reduce((n, s) => n + weights[rank(s.technique)], 0) + shapeOf(p).islands.length * 0.2;
 
 /** One candidate for a rung, or null when the board misses the rung's technique window. */
 /** The seeded layout alone, before grading. */

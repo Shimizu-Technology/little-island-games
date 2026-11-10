@@ -6,7 +6,7 @@ import { Text } from '../../components/Text';
 import { GridFeedback, GridInteraction } from '../grid/preferences';
 import type { MarkEvent } from '../edges/marks';
 import type { EdgeBoardProps } from '../edges/registration';
-import { BLACK, CROSS, EMPTY, LINE, brokenClues, latticeOf, type LinePuzzle } from './core';
+import { BLACK, CROSS, EMPTY, LINE, brokenClues, latticeOf, solved, type LinePuzzle } from './core';
 import { cueFor, techniqueNames, type Cue } from './teach';
 
 const PAPER = '#FBF7EC', GRIDLINE = '#E6DFCB', INK = '#1E4A43', DOT = '#7C8C86';
@@ -119,7 +119,7 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
   const focusCells = new Set(shown ? ladder.cue!.cells : []), focusDots = new Set(shown ? ladder.cue!.dots : []), focusEdges = new Set(shown ? ladder.cue!.edges : []);
   const done = p.kind === 'loop' ? p.clues.filter((n, c) => n >= 0 && l.sides[c].filter(e => marks[e] === LINE).length === n).length : p.pearls.filter((k, v) => k && l.around[v].filter(e => marks[e] === LINE).length === 2 && !broken.has(v)).length;
   const total = p.kind === 'loop' ? p.clues.filter(n => n >= 0).length : p.pearls.filter(Boolean).length;
-  const thick = Math.max(3.5, cell * 0.13);
+  const thick = Math.max(3.5, cell * 0.13), finished = !pending && solved(p, marks.map(m => m === CROSS ? EMPTY : m)), lineColour = finished ? C.teal : INK;
 
   const background = useMemo(() => {
     const out: React.ReactElement[] = [<Rect key="bg" x={0} y={0} width={W} height={H} rx={Math.min(16, cell * 0.35)} fill={PAPER}/>];
@@ -129,7 +129,7 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
   }, [W, H, cell, pad, pearl, p]);
   const edgeLines = l.edges.map(([a, b], e) => {
     const m = shownMarks[e], A = pos(a), B = pos(b);
-    if (m === LINE) return <Line key={e} x1={A.x} y1={A.y} x2={B.x} y2={B.y} stroke={focusEdges.has(e) ? C.gold : INK} strokeWidth={thick} strokeLinecap="round"/>;
+    if (m === LINE) return <Line key={e} x1={A.x} y1={A.y} x2={B.x} y2={B.y} stroke={focusEdges.has(e) ? C.gold : lineColour} strokeWidth={thick} strokeLinecap="round"/>;
     if (m === CROSS) { const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2, k = cell * 0.09; return <G key={e}><Line x1={mx - k} y1={my - k} x2={mx + k} y2={my + k} stroke={C.coral} strokeWidth={2}/><Line x1={mx - k} y1={my + k} x2={mx + k} y2={my - k} stroke={C.coral} strokeWidth={2}/></G>; }
     if (focusEdges.has(e)) return <Line key={e} x1={A.x} y1={A.y} x2={B.x} y2={B.y} stroke={C.gold} strokeWidth={thick * 0.8} strokeDasharray={`${cell * 0.12} ${cell * 0.08}`} strokeLinecap="round"/>;
     return null;
