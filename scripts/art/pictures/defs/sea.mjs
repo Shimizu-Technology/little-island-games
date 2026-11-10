@@ -115,11 +115,11 @@ export default [
     ],
   },
   {
-    word: 'URCHIN', meaning: 'a sea urchin', alt: 'A round dark purple sea urchin covered all over in long spines, sitting on a rock under the sea.',
+    word: 'URCHIN', meaning: 'a sea urchin', alt: 'A round dark spiky sea urchin covered all over in long black spines, sitting on a rock under the sea.',
     draw: () => [
       path('M22 112Q24 96 60 94Q96 96 98 112Z', P.stone),
-      ...Array.from({ length: 18 }, (_, i) => { const a = (i * 2 * Math.PI) / 18, d = `M${60 + 24 * Math.cos(a)} ${60 + 24 * Math.sin(a)}L${60 + 50 * Math.cos(a)} ${60 + 50 * Math.sin(a)}`; return [line(d, { stroke: P.ink, sw: 7 }), line(d, { stroke: P.purple, sw: 3 })]; }).flat(),
-      circle(60, 60, 28, P.purple), circle(60, 60, 5, P.pink, { sw: 2 }), patch('M44 48Q48 40 56 38Q50 46 50 54Z', P.pink),
+      ...Array.from({ length: 20 }, (_, i) => { const a = (i * 2 * Math.PI) / 20, d = `M${60 + 24 * Math.cos(a)} ${58 + 24 * Math.sin(a)}L${60 + 52 * Math.cos(a)} ${58 + 52 * Math.sin(a)}`; return [line(d, { stroke: P.ink, sw: 6 }), line(d, { stroke: P.charcoal, sw: 2.5 })]; }).flat(),
+      circle(60, 58, 28, P.purple), ...[[50, 50], [66, 46], [72, 62], [54, 68], [60, 58]].map(([x, y]) => circle(x, y, 3, P.charcoal, { ns: true })),
     ],
   },
   {
@@ -231,13 +231,13 @@ export default [
     ],
   },
   {
-    word: 'RAFT', meaning: 'a wooden raft', alt: 'A flat raft of logs tied together with rope, floating on blue water, with a paddle lying across it.',
+    word: 'RAFT', meaning: 'a wooden raft', alt: 'A raft made of logs tied side by side, floating on blue water, with a small mast and a white sail.',
     draw: () => [
-      path('M2 92Q16 86 30 92Q44 98 60 92Q76 86 90 92Q104 98 118 92V108H2Z', P.blue),
-      path('M8 70L22 46H110L96 70Z', P.wood), path('M8 70H96V84H8Z', P.wood),
-      line('M24 46L12 70M42 46L30 70M60 46L48 70M78 46L66 70M96 46L84 70', { stroke: P.brown, sw: 2.5 }), line('M8 77H96', { stroke: P.brown, sw: 2 }),
-      ...[20, 40, 60, 80].map(x => circle(x, 77, 2, P.brown, { ns: true })),
-      line('M30 62L70 52', { stroke: P.sand, sw: 4 }), line('M46 60L102 30', { stroke: P.ink, sw: 6 }), line('M46 60L102 30', { stroke: P.wood, sw: 2 }), path('M96 26L112 18L114 26L100 34Z', P.wood),
+      path('M6 92Q20 86 34 92Q48 98 60 92Q72 86 86 92Q100 98 114 92V104H6Z', P.blue),
+      line('M60 46V8', { stroke: P.brown, sw: 4 }), path('M62 12L94 40H62Z', P.paper),
+      rect(14, 46, 92, 10, 5, P.wood), rect(14, 58, 92, 10, 5, P.wood), rect(14, 70, 92, 10, 5, P.wood), rect(14, 82, 92, 10, 5, P.wood),
+      line('M30 44V94M90 44V94', { stroke: P.sand, sw: 4 }), line('M26 44V94M34 44V94M86 44V94M94 44V94', { sw: 2 }),
+      circle(19, 51, 2, P.brown, { ns: true }), circle(19, 63, 2, P.brown, { ns: true }), circle(19, 75, 2, P.brown, { ns: true }), circle(19, 87, 2, P.brown, { ns: true }),
     ],
   },
   {
@@ -269,12 +269,12 @@ export default [
     ],
   },
   {
-    word: 'PADDLE', meaning: 'a canoe paddle', alt: 'A short wooden canoe paddle with a T-shaped grip and a very wide flat blade, dipping into the water.',
+    word: 'PADDLE', meaning: 'a canoe paddle', alt: 'A long wooden canoe paddle with a straight shaft, a T-grip at the top and a long oval blade dipping into the water.',
     draw: () => [
-      path('M40 106Q56 98 72 106Q86 114 100 106', undefined, { stroke: P.blue, sw: 4 }),
-      group({ t: 'rotate(25 60 60)' },
-        line('M44 10H76M60 10V52', { stroke: P.ink, sw: 11 }), line('M44 10H76M60 10V52', { stroke: P.wood, sw: 6 }),
-        path('M60 46Q30 50 30 78Q32 110 60 116Q88 110 90 78Q90 50 60 46Z', P.wood), line('M60 58V104', { stroke: P.brown, sw: 2 })),
+      path('M38 104Q54 96 70 104Q84 112 100 104', undefined, { stroke: P.blue, sw: 4 }),
+      group({ t: 'rotate(28 60 60)' },
+        line('M50 4H70M60 4V64', { stroke: P.ink, sw: 9 }), line('M50 4H70M60 4V64', { stroke: P.wood, sw: 4.5 }),
+        path('M60 58Q44 62 44 86Q46 114 60 120Q74 114 76 86Q76 62 60 58Z', P.wood), line('M60 68V108', { stroke: P.brown, sw: 2 })),
     ],
   },
 ];

@@ -63,11 +63,11 @@ export default [
     ],
   },
   {
-    word: 'ERASER', meaning: 'a pencil eraser', alt: 'A pink rubber eraser rubbing out a grey pencil scribble, leaving little crumbs behind.',
+    word: 'ERASER', meaning: 'a pencil eraser', alt: 'A slanted red and blue school eraser rubbing out a grey pencil line, with crumbs falling off.',
     draw: () => [
-      path('M10 96Q20 82 30 96Q40 110 50 96', undefined, { stroke: P.slate, sw: 3 }),
-      circle(58, 102, 2.4, P.pink, { sw: 1.5 }), circle(66, 108, 2, P.pink, { sw: 1.5 }), circle(54, 112, 1.8, P.pink, { sw: 1.5 }),
-      group({ t: 'rotate(-30 76 56)' }, path('M44 46L54 34H110L100 46Z', P.coral), path('M100 46L110 34V62L100 74Z', P.coral), path('M44 46H100V74H54L44 64Z', P.pink)),
+      path('M8 98Q20 84 32 98Q44 112 56 98', undefined, { stroke: P.slate, sw: 3 }),
+      circle(62, 104, 2.4, P.pink, { sw: 1.5 }), circle(70, 110, 2, P.pink, { sw: 1.5 }), circle(58, 112, 1.8, P.pink, { sw: 1.5 }),
+      group({ t: 'rotate(-30 76 56)' }, path('M44 40L54 28H110L100 40Z', P.coral), path('M100 40L110 28V58L100 70Z', P.navy), path('M44 40H72V70H54L44 60Z', P.red), path('M72 40H100V70H72Z', P.blue)),
     ],
   },
   {

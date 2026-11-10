@@ -33,12 +33,12 @@ export default [
     ],
   },
   {
-    word: 'GUAVA', meaning: 'a guava fruit', alt: 'A whole green guava with a leaf at its stem, beside a cut half showing pink flesh full of small seeds.',
+    word: 'GUAVA', meaning: 'a guava fruit', alt: 'A round green guava with a leaf at its stem and a little crown at the other end, beside a cut half showing pink flesh full of small seeds.',
     draw: () => [
-      path('M44 16Q62 2 80 8Q72 22 50 22Z', P.forest), line('M46 18L42 10', { stroke: P.brown, sw: 3 }),
-      path('M40 18Q14 22 12 48Q14 76 40 78Q66 76 68 48Q66 22 40 18Z', P.leaf), patch('M20 40Q24 30 32 28Q26 36 26 46Z', P.mint),
-      circle(80, 80, 32, P.mint), circle(80, 80, 26, P.pink, { sw: 2 }), circle(80, 80, 13, P.coral, { ns: true }),
-      ...[[74, 74], [86, 74], [80, 86], [72, 84], [88, 84], [80, 70], [70, 78], [90, 78]].map(([x, y]) => circle(x, y, 2.2, P.cream, { ns: true })),
+      path('M44 16Q62 2 80 8Q72 22 50 22Z', P.forest), line('M44 20L42 12', { stroke: P.brown, sw: 3 }),
+      circle(40, 50, 30, P.leaf), patch('M20 42Q24 32 32 30Q26 38 26 48Z', P.mint), path('M30 78L34 72L38 78L42 72L46 78', undefined, { stroke: P.forest, sw: 2 }),
+      circle(82, 82, 30, P.mint), circle(82, 82, 24, P.pink, { sw: 2 }), circle(82, 82, 12, P.coral, { ns: true }),
+      ...[[76, 76], [88, 76], [82, 88], [74, 86], [90, 86], [82, 72], [72, 80], [92, 80]].map(([x, y]) => circle(x, y, 2.2, P.cream, { ns: true })),
     ],
   },
   {
@@ -78,23 +78,14 @@ export default [
     ],
   },
   {
-    word: 'REEF', meaning: 'a coral reef', alt: 'An underwater coral reef in blue water: pink branching coral, orange round coral, green seaweed and a yellow fish.',
+    word: 'CLIFF', fit: [0.922, 60.0, 54.5], meaning: 'a sea cliff', alt: 'A tall sheer rocky cliff with grass and a little tree on top, dropping straight down to the sea, with waves crashing at its foot.',
     draw: () => [
-      rect(8, 10, 104, 100, 16, P.sky, { ns: true }), patch('M8 90Q30 82 60 88Q90 82 112 90V96Q112 110 98 110H22Q8 110 8 96Z', P.sand),
-      line('M32 92V66M32 76L20 56M32 70L46 50M32 62L28 42M20 56L14 46M46 50L52 40', { stroke: P.ink, sw: 10 }), line('M32 92V66M32 76L20 56M32 70L46 50M32 62L28 42M20 56L14 46M46 50L52 40', { stroke: P.pink, sw: 5 }),
-      path('M68 94Q50 94 50 78Q50 60 68 58Q86 58 86 76Q86 94 68 94Z', P.orange), line('M58 70Q68 74 78 68M56 80Q68 84 82 78', { sw: 2 }),
-      line('M102 94Q94 74 102 58Q108 46 102 34', { stroke: P.ink, sw: 7 }), line('M102 94Q94 74 102 58Q108 46 102 34', { stroke: P.leaf, sw: 3 }),
-      path('M58 30Q70 20 82 30Q70 40 58 30ZM58 30L50 24V36Z', P.yellow), dot(76, 29, 1.8), rect(8, 10, 104, 100, 16),
-    ],
-  },
-  {
-    word: 'CLIFF', meaning: 'a sea cliff', alt: 'A tall rocky cliff with grass on top and a sheer rock face dropping straight down to the sea, with waves crashing at its foot.',
-    draw: () => [
-      path('M6 90Q20 84 34 90Q48 96 60 90Q72 84 86 90Q100 96 114 90V110H6Z', P.blue),
-      path('M6 96V16H66L70 34L62 52L72 70L64 96Z', P.stone),
-      line('M18 34H40M30 50H56M14 66H40M44 80H62M48 26L58 36', { stroke: P.slate, sw: 2.5 }),
-      path('M6 20Q8 6 22 8Q34 0 48 6Q62 2 70 12L70 22Q40 16 6 24Z', P.leaf),
-      path('M60 92Q66 78 78 84Q86 88 92 82', undefined, { stroke: P.paper, sw: 4 }), circle(80, 76, 2.5, P.paper, { sw: 1.5 }), circle(70, 74, 2, P.paper, { sw: 1.5 }),
+      path('M6 92Q20 86 34 92Q48 98 60 92Q72 86 86 92Q100 98 114 92V110H6Z', P.blue),
+      path('M6 98V26H66L70 42L62 58L72 74L64 98Z', P.stone),
+      line('M18 42H40M30 56H56M14 70H40M44 84H62M48 34L58 44', { stroke: P.slate, sw: 2.5 }),
+      path('M6 30Q8 16 22 18Q34 10 48 16Q62 12 70 22L70 32Q40 26 6 34Z', P.leaf),
+      rect(38, 4, 5, 14, 1, P.brown), circle(40, 6, 7, P.forest),
+      path('M60 94Q66 80 78 86Q86 90 92 84', undefined, { stroke: P.paper, sw: 4 }), circle(80, 78, 2.5, P.paper, { sw: 2 }), circle(70, 76, 2, P.paper, { sw: 2 }),
     ],
   },
   {
@@ -115,15 +106,14 @@ export default [
     ],
   },
   {
-    word: 'BUFFALO', meaning: 'a water buffalo (carabao)', alt: 'A dark grey water buffalo standing in muddy water, its head turned to you, with huge crescent horns sweeping back.',
+    word: 'BUFFALO', meaning: 'a water buffalo (carabao)', alt: 'A dark grey water buffalo wallowing in a muddy pool, only its back and head above the water, with huge flat horns curving back.',
     draw: () => [
-      ...[18, 32, 58, 72].map(x => rect(x, 72, 10, 26, 4, P.charcoal)),
-      path('M4 96Q20 88 50 92Q80 86 116 96Q112 112 60 112Q8 112 4 96Z', P.brown), line('M12 102q8-3 16 0M70 104q8-3 16 0', { stroke: P.wood, sw: 2.5 }),
-      line('M14 54Q6 66 10 82', { sw: 3 }), ellipse(48, 62, 38, 22, P.charcoal),
-      path('M74 42Q48 44 42 22Q42 10 52 8Q52 28 76 32ZM98 42Q124 44 118 20Q116 8 108 8Q110 28 94 32Z', P.cream),
-      path('M74 38Q86 32 98 38L98 70Q96 82 86 82Q76 82 74 70Z', P.slate), ellipse(86, 74, 10, 7, P.stone, { sw: 2 }),
-      dot(82, 74, 1.6), dot(90, 74, 1.6), circle(79, 52, 3, P.paper, { ns: true }), circle(93, 52, 3, P.paper, { ns: true }), dot(79, 52, 1.6), dot(93, 52, 1.6),
-      path('M74 44L62 42L72 52ZM98 44L110 42L100 52Z', P.slate),
+      path('M4 70Q30 62 60 66Q90 62 116 70V102Q116 112 104 112H16Q4 112 4 102Z', P.wood),
+      path('M10 78Q14 52 44 50Q62 50 70 60L70 78Z', P.charcoal),
+      path('M62 40Q30 38 18 22Q16 12 24 10Q32 24 64 28ZM88 40Q118 38 112 20Q110 10 102 12Q102 26 86 30Z', P.cream),
+      path('M62 30Q74 24 86 30L86 64Q84 76 74 76Q64 76 62 64Z', P.slate), ellipse(74, 68, 10, 7, P.stone, { sw: 2 }),
+      dot(70, 68, 1.6), dot(78, 68, 1.6), circle(67, 44, 3, P.paper, { ns: true }), circle(81, 44, 3, P.paper, { ns: true }), dot(67, 44, 1.6), dot(81, 44, 1.6),
+      path('M4 78Q30 72 60 78Q90 72 116 78', undefined, { stroke: P.brown, sw: 3 }), line('M20 92q8-3 16 0M80 96q8-3 16 0', { stroke: P.brown, sw: 2.5 }),
     ],
   },
   {

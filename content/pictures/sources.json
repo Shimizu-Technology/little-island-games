@@ -549,12 +549,6 @@
       "meaning": "a small thatched hut"
     },
     {
-      "id": "reef",
-      "wordId": "en-reef",
-      "queue": "tiers",
-      "meaning": "a coral reef"
-    },
-    {
       "id": "cliff",
       "wordId": "en-cliff",
       "queue": "tiers",
@@ -2075,12 +2069,6 @@
       "wordId": "en-pliers",
       "queue": "tiers",
       "meaning": "pliers"
-    },
-    {
-      "id": "trowel",
-      "wordId": "en-trowel",
-      "queue": "tiers",
-      "meaning": "a garden trowel"
     },
     {
       "id": "funnel",

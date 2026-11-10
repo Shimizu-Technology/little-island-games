@@ -163,14 +163,14 @@ export default [
     ],
   },
   {
-    word: 'TOP', meaning: 'a spinning top', otherMeaning: 'the top of something', alt: 'A tilted spinning top with red and yellow stripes, a knob on top and its point spinning on the floor, with swirl lines around it.',
+    word: 'TOP', meaning: 'a spinning top', otherMeaning: 'the top of something', alt: 'A round wooden spinning top balanced on its point, with a short stem on top, coloured bands and spin lines around it.',
     draw: () => [
-      line('M8 108H112', { stroke: P.stone, sw: 3 }), path('M24 92Q40 100 60 98M66 30Q90 24 104 40', undefined, { stroke: P.slate, sw: 3 }),
-      group({ t: 'rotate(15 60 70)' },
-        line('M60 6V28', { stroke: P.ink, sw: 9 }), line('M60 6V28', { stroke: P.brown, sw: 4.5 }),
-        path('M60 108L16 62Q16 30 60 30Q104 30 104 62Z', P.yellow),
-        path('M60 108L16 62Q22 54 36 52Z', P.red, { sw: 2 }), path('M60 108L48 50Q60 48 72 50Z', P.red, { sw: 2 }), path('M60 108L84 52Q98 54 104 62Z', P.red, { sw: 2 }),
-        ellipse(60, 42, 44, 12, P.blue), path('M60 108L16 62Q16 30 60 30Q104 30 104 62Z')),
+      line('M18 112H102', { stroke: P.stone, sw: 3 }),
+      path('M14 52Q8 60 14 68M106 52Q112 60 106 68M24 92Q34 100 46 100M96 92Q86 100 74 100', undefined, { stroke: P.slate, sw: 3 }),
+      line('M60 6V24', { stroke: P.ink, sw: 9 }), line('M60 6V24', { stroke: P.brown, sw: 4.5 }),
+      path('M60 22Q96 22 100 50Q102 74 64 106L60 112L56 106Q18 74 20 50Q24 22 60 22Z', P.red),
+      path('M21 44Q60 52 99 44L100 56Q60 64 20 56Z', P.yellow, { sw: 2 }), path('M24 70Q60 78 96 70L90 80Q60 86 30 80Z', P.blue, { sw: 2 }),
+      path('M60 22Q96 22 100 50Q102 74 64 106L60 112L56 106Q18 74 20 50Q24 22 60 22Z'),
     ],
   },
   {

@@ -4,12 +4,12 @@ const rod = (d, fill, w = 7) => [line(d, { stroke: P.ink, sw: w }), line(d, { st
 
 export default [
   {
-    word: 'HAMMER', fit: [0.922, 44.0, 52.5], meaning: 'a hammer', alt: 'A hammer with a wooden handle, a flat round striking face on one side and a split claw on the other.',
+    word: 'HAMMER', fit: [1, 44.5, 62.0], meaning: 'a hammer', alt: 'A hammer with a long wooden handle and a metal head: a flat round striking face on one side and a split curved claw on the other.',
     draw: () => [
       group({ t: 'rotate(-30 60 62)' },
-        rect(53, 40, 14, 74, 6, P.wood), line('M60 96V108', { stroke: P.brown, sw: 2 }),
-        path('M24 22H66V48H24Z', P.stone), rect(12, 18, 14, 34, 4, P.slate),
-        path('M66 24Q86 24 100 10Q104 20 96 32L88 34L98 40Q102 50 90 48Q78 46 66 46Z', P.stone)),
+        rect(53, 36, 14, 80, 6, P.wood), line('M60 96V108', { stroke: P.brown, sw: 2 }),
+        rect(28, 18, 50, 22, 3, P.stone), rect(14, 14, 16, 30, 4, P.slate),
+        path('M78 22Q94 22 104 34L98 40Q90 32 78 34ZM78 36Q92 36 98 48L92 52Q86 44 78 42Z', P.stone)),
     ],
   },
   {
@@ -21,11 +21,10 @@ export default [
     ],
   },
   {
-    word: 'NAIL', meaning: 'a metal nail', otherMeaning: 'a fingernail', alt: 'A long metal nail standing upright, half hammered into a wooden plank, with a flat round head.',
+    word: 'NAIL', meaning: 'a metal nail', otherMeaning: 'a fingernail', alt: 'A long metal nail lying on a slant, with a flat round head and a sharp point.',
     draw: () => [
-      rect(6, 82, 108, 28, 4, P.wood), line('M14 92H50M64 100H104', { stroke: P.brown, sw: 2 }),
-      path('M52 22H68V82H52Z', P.stone), line('M56 28V78', { stroke: P.paper, sw: 2.5 }), ellipse(60, 18, 26, 8, P.stone),
-      line('M86 30l10-6M88 44h12M34 30l-10-6M32 44h-12', { stroke: P.slate, sw: 3 }),
+      group({ t: 'rotate(40 60 60)' },
+        rect(30, 6, 60, 14, 6, P.stone), path('M52 20H68V92L60 116L52 92Z', P.stone), line('M56 28V90', { stroke: P.paper, sw: 2.5 })),
     ],
   },
   {
@@ -144,16 +143,6 @@ export default [
       line('M44 20l8-2M46 28l8-2M48 36l8-2M76 20l-8-2M74 28l-8-2M72 36l-8-2', { sw: 2 }),
       circle(60, 60, 10, P.slate), circle(60, 60, 4, P.charcoal, { ns: true }),
       path('M54 66L28 112Q32 118 40 114L64 68Z', P.blue), path('M66 66L92 112Q88 118 80 114L56 68Z', P.blue),
-    ],
-  },
-  {
-    word: 'TROWEL', meaning: 'a garden trowel', alt: 'A big garden trowel with a green handle and a pointed metal scoop, stuck into a mound of brown soil.',
-    draw: () => [
-      path('M6 112Q16 84 60 82Q104 84 114 112Z', P.brown), circle(30, 100, 2, P.wood, { ns: true }), circle(88, 98, 2, P.wood, { ns: true }), circle(60, 104, 2, P.wood, { ns: true }),
-      group({ t: 'rotate(-20 60 50)' },
-        rect(52, 2, 16, 40, 7, P.leaf), rect(56, 40, 8, 14, 2, P.stone),
-        path('M60 52Q86 52 86 74Q84 98 60 116Q36 98 34 74Q34 52 60 52Z', P.stone), line('M60 60V104', { stroke: P.paper, sw: 2.5 })),
-      path('M6 112Q16 92 60 92Q104 92 114 112Z', P.brown),
     ],
   },
   {

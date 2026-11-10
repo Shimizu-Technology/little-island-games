@@ -1,4 +1,4 @@
-import { P, circle, ellipse, rect, path, line, patch, eyes, group } from '../style.mjs';
+import { P, circle, ellipse, path, line, patch, eyes, group } from '../style.mjs';
 
 const hand = fill => path('M38 112V74L22 54Q16 46 22 42Q28 38 34 46L42 56V20Q42 12 49 12Q56 12 56 20V50V12Q56 4 63 4Q70 4 70 12V50V16Q70 8 77 8Q84 8 84 16V54V28Q84 20 91 20Q98 20 98 28V78Q98 96 86 104V112Z', fill);
 
@@ -66,20 +66,19 @@ export default [
     ],
   },
   {
-    word: 'ARM', meaning: 'an arm', alt: 'A whole arm reaching out from a short blue sleeve: shoulder, elbow, forearm and an open hand.',
+    word: 'ARM', meaning: 'an arm', alt: 'A long straight arm reaching out from a blue T-shirt sleeve, with the elbow crease in the middle and an open hand at the end.',
     draw: () => [
-      path('M30 40Q50 44 64 62L86 96L76 104L54 72Q42 60 28 58Z', P.skin),
-      path('M84 92Q90 82 100 84L112 88Q116 90 112 94L104 94L114 100Q116 104 112 104L102 102L110 110Q110 114 104 112L94 106Q96 112 90 112Q80 108 76 102Z', P.skin),
-      path('M52 66Q56 60 62 62', undefined, { stroke: P.skinDeep, sw: 2 }),
-      path('M6 30Q6 18 18 18H30Q40 18 40 30V60Q40 66 34 66H12Q6 66 6 60Z', P.blue),
+      path('M30 50H84V72H30Z', P.skin), path('M56 54Q58 61 56 68', undefined, { stroke: P.skinDeep, sw: 2 }),
+      path('M82 46Q94 42 104 46L114 50Q118 54 112 56L102 56L114 60Q116 64 110 64L100 64L110 70Q110 74 104 74L94 72Q88 78 82 74Z', P.skin), path('M88 46Q92 36 100 36Q104 38 100 44', P.skin),
+      path('M6 40Q6 30 16 30H30Q40 30 40 40V82Q40 90 32 90H14Q6 90 6 82Z', P.blue), line('M10 84H36', { stroke: P.navy, sw: 3 }),
     ],
   },
   {
-    word: 'LEG', meaning: 'a leg', alt: 'A whole bare leg standing straight, from a pair of shorts at the top down past the knee to the ankle and foot.',
+    word: 'LEG', meaning: 'a leg', alt: 'A whole bare leg standing straight below a pair of blue shorts: thigh, knee, shin, ankle and foot.',
     draw: () => [
-      path('M44 18H70L68 50Q70 60 66 66L64 98Q78 100 94 102Q102 104 100 110Q98 114 90 114H52Q44 114 46 106L48 66Q44 58 46 50Z', P.skin),
-      path('M48 58Q56 62 66 58', undefined, { stroke: P.skinDeep, sw: 2 }), line('M80 106v8M88 106v8M94 108v6', { stroke: P.skinDeep, sw: 1.5 }),
-      rect(36, 4, 42, 22, 4, P.navy),
+      path('M44 26H70L68 54Q70 62 66 68L64 98Q78 100 94 102Q102 104 100 110Q98 114 90 114H52Q44 114 46 106L48 68Q44 60 46 54Z', P.skin),
+      path('M48 60Q56 64 66 60', undefined, { stroke: P.skinDeep, sw: 2 }), line('M80 106v8M88 106v8M94 108v6', { stroke: P.skinDeep, sw: 1.5 }),
+      path('M30 4H84L82 30H58L56 22L54 30H34Z', P.blue), line('M30 10H84', { stroke: P.navy, sw: 3 }),
     ],
   },
   {

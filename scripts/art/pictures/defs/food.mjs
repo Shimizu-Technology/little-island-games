@@ -199,11 +199,13 @@ export default [
     ],
   },
   {
-    word: 'OLIVE', meaning: 'olives', alt: 'Two shiny oval olives, one green and one black, with a small olive leaf.',
+    word: 'OLIVE', fit: [0.815, 56.0, 50.0], meaning: 'olives', alt: 'Two shiny oval olives, one green and one black, hanging from a twig with long narrow silver-green olive leaves.',
     draw: () => [
-      path('M20 30Q40 6 70 14Q50 30 20 30Z', P.mint), line('M22 30Q46 22 68 16', { stroke: P.forest, sw: 2 }),
-      ellipse(42, 70, 24, 32, P.leaf, { t: 'rotate(-20 42 70)' }), patch('M30 52Q34 42 42 40Q36 50 36 60Z', P.paper),
-      ellipse(84, 76, 22, 30, P.charcoal, { t: 'rotate(15 84 76)' }), patch('M76 58Q80 50 88 48Q82 56 82 66Z', P.slate),
+      line('M8 22Q60 8 112 18', { stroke: P.ink, sw: 7 }), line('M8 22Q60 8 112 18', { stroke: P.brown, sw: 3 }),
+      ...[[18, 20, 150], [34, 16, -30], [70, 12, -20], [92, 14, 30], [104, 16, 160]].map(([x, y, r]) => path('M0 0Q14 -6 30 -2Q14 4 0 0Z', P.mint, { t: `translate(${x} ${y}) rotate(${r})` })),
+      line('M44 16V36M80 14V40', { stroke: P.brown, sw: 2.5 }),
+      ellipse(42, 70, 22, 30, P.leaf, { t: 'rotate(-15 42 70)' }), patch('M30 54Q34 44 42 42Q36 52 36 62Z', P.paper),
+      ellipse(82, 74, 20, 28, P.charcoal, { t: 'rotate(15 82 74)' }), patch('M74 58Q78 50 86 48Q80 56 80 66Z', P.slate),
     ],
   },
   {
@@ -426,10 +428,11 @@ export default [
     ],
   },
   {
-    word: 'CABBAGE', meaning: 'a cabbage', alt: 'A round pale green cabbage head with tightly wrapped leaves and thick white veins.',
+    word: 'CABBAGE', meaning: 'a cabbage', alt: 'A round green cabbage seen from the side, with big curling outer leaves wrapped around a pale tight head, and white veins.',
     draw: () => [
-      circle(60, 62, 48, P.leaf), path('M28 30Q60 6 92 30Q84 50 60 50Q36 50 28 30Z', P.mint), path('M36 50Q60 34 84 50Q80 70 60 72Q40 70 36 50Z', P.mint),
-      path('M60 110V74M60 92L36 74M60 92L84 74M60 98L22 86M60 98L98 86M60 74L46 58M60 74L74 58', undefined, { stroke: P.paper, sw: 4 }), circle(60, 62, 48),
+      path('M10 72Q6 42 30 38Q50 30 60 44Q72 30 92 38Q116 44 110 72Q106 106 60 108Q14 106 10 72Z', P.leaf),
+      circle(60, 64, 30, P.mint), path('M38 48Q60 30 82 48', undefined, { stroke: P.leaf, sw: 3 }),
+      line('M60 106V84M60 94L36 82M60 98L84 84M18 78Q30 86 38 100M102 78Q90 86 82 100M60 64V90M60 70L48 58M60 70L72 58', { stroke: P.paper, sw: 3 }),
     ],
   },
   {

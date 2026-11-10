@@ -79,12 +79,11 @@ export default [
     ],
   },
   {
-    word: 'SANDAL', meaning: 'a sandal', alt: 'A brown sandal seen from above: a foot-shaped sole with two wide crossing straps and a gold buckle.',
+    word: 'SANDAL', meaning: 'a sandal', alt: 'A brown sandal seen straight from above: a foot-shaped sole with two wide crossing straps and a gold buckle.',
     draw: () => [
-      group({ t: 'rotate(-25 60 60)' },
-        path('M60 4Q84 4 86 30Q88 50 82 66Q80 90 78 104Q74 116 60 116Q46 116 42 104Q40 90 38 66Q32 50 34 30Q36 4 60 4Z', P.sand),
-        path('M34 26L86 46V60L34 40Z', P.brown), path('M86 26L34 46V60L86 40Z', P.wood),
-        path('M38 80H82V94H38Z', P.brown), rect(72, 78, 14, 18, 3, P.gold), rect(76, 84, 6, 6, 1, P.brown, { sw: 1.5 })),
+      path('M60 4Q84 4 86 30Q88 50 82 66Q80 90 78 104Q74 116 60 116Q46 116 42 104Q40 90 38 66Q32 50 34 30Q36 4 60 4Z', P.sand),
+      path('M34 26L86 46V60L34 40Z', P.brown), path('M86 26L34 46V60L86 40Z', P.wood),
+      path('M38 80H82V94H38Z', P.brown), rect(72, 78, 14, 18, 3, P.gold), rect(76, 84, 6, 6, 1, P.brown, { sw: 1.5 }),
     ],
   },
   {

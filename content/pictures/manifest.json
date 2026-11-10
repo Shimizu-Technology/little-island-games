@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "viewBox": "0 0 120 120",
-  "count": 405,
-  "totalBytes": 308741,
+  "count": 403,
+  "totalBytes": 307617,
   "categories": [
     "animals",
     "sea",
@@ -537,9 +537,9 @@
       "id": "urchin",
       "word": "URCHIN",
       "category": "sea",
-      "alt": "A round dark purple sea urchin covered all over in long spines, sitting on a rock under the sea.",
-      "bytes": 2825,
-      "sha256": "7666f4cc738757d5a89f2021a3233caa81ca49926cc051a25a28482106856d33"
+      "alt": "A round dark spiky sea urchin covered all over in long black spines, sitting on a rock under the sea.",
+      "bytes": 3332,
+      "sha256": "09a6e4acce2a260925673c387922c5b0a4de413258f33027fb0774c13c01f288"
     },
     {
       "id": "eel",
@@ -633,9 +633,9 @@
       "id": "raft",
       "word": "RAFT",
       "category": "sea",
-      "alt": "A flat raft of logs tied together with rope, floating on blue water, with a paddle lying across it.",
-      "bytes": 981,
-      "sha256": "61936d9c4803e083c9499421206fc27bd9f4b5ed44a3aca34d3e57efa072da48"
+      "alt": "A raft made of logs tied side by side, floating on blue water, with a small mast and a white sail.",
+      "bytes": 988,
+      "sha256": "7c46b998416d5cc7dab3a7148afb7ec11cc991decb09c7077bc8829a7c560714"
     },
     {
       "id": "anchor",
@@ -665,9 +665,9 @@
       "id": "paddle",
       "word": "PADDLE",
       "category": "sea",
-      "alt": "A short wooden canoe paddle with a T-shaped grip and a very wide flat blade, dipping into the water.",
-      "bytes": 556,
-      "sha256": "a9ac8976db3316b17e8d66f45939b7e0cef991286000e81cf1fc1888a71543d5"
+      "alt": "A long wooden canoe paddle with a straight shaft, a T-grip at the top and a long oval blade dipping into the water.",
+      "bytes": 553,
+      "sha256": "c39eae223a812ce7a2a1ff2abe80b59c00863af9efc34c75c3efccd0030cd722"
     },
     {
       "id": "coconut",
@@ -697,9 +697,9 @@
       "id": "guava",
       "word": "GUAVA",
       "category": "island",
-      "alt": "A whole green guava with a leaf at its stem, beside a cut half showing pink flesh full of small seeds.",
-      "bytes": 1105,
-      "sha256": "5d8f80df3abf0baba035a5ec39f5cce49fcef16af846676e0fc50721452d0cc7"
+      "alt": "A round green guava with a leaf at its stem and a little crown at the other end, beside a cut half showing pink flesh full of small seeds.",
+      "bytes": 1146,
+      "sha256": "d0e2ca37047996f7f764366ed4cb8958b7594e1ec7fa3cb1073360658d253d3f"
     },
     {
       "id": "breadfruit",
@@ -734,20 +734,12 @@
       "sha256": "b96ce9f0f70bdc632f735f80f154515710a9c85f6274c9658a13b38d99e41946"
     },
     {
-      "id": "reef",
-      "word": "REEF",
-      "category": "island",
-      "alt": "An underwater coral reef in blue water: pink branching coral, orange round coral, green seaweed and a yellow fish.",
-      "bytes": 1082,
-      "sha256": "81d64031d36578ace34351f92c54b8c774d1c259a7cac095b69a0a89aa305e34"
-    },
-    {
       "id": "cliff",
       "word": "CLIFF",
       "category": "island",
-      "alt": "A tall rocky cliff with grass on top and a sheer rock face dropping straight down to the sea, with waves crashing at its foot.",
-      "bytes": 705,
-      "sha256": "5bef9922f626e4394485b2f20e1d25bd670769a1e16e8d3b7d0c402c8064401a"
+      "alt": "A tall sheer rocky cliff with grass and a little tree on top, dropping straight down to the sea, with waves crashing at its foot.",
+      "bytes": 884,
+      "sha256": "79460abced9cbc957eb55e98e5ad472f870affc809381de158c74256f5deab19"
     },
     {
       "id": "cave",
@@ -769,9 +761,9 @@
       "id": "buffalo",
       "word": "BUFFALO",
       "category": "island",
-      "alt": "A dark grey water buffalo standing in muddy water, its head turned to you, with huge crescent horns sweeping back.",
-      "bytes": 1399,
-      "sha256": "5a653da086efae204a2a61b8d3e6563308a6e5c9a9c41dc228156b445e3fb127"
+      "alt": "A dark grey water buffalo wallowing in a muddy pool, only its back and head above the water, with huge flat horns curving back.",
+      "bytes": 1115,
+      "sha256": "4f8ae3417e11368e9283c68108bc62f821887b0e5f4a8d4bc7e55adcaad4dca3"
     },
     {
       "id": "grill",
@@ -977,9 +969,9 @@
       "id": "olive",
       "word": "OLIVE",
       "category": "food",
-      "alt": "Two shiny oval olives, one green and one black, with a small olive leaf.",
-      "bytes": 607,
-      "sha256": "58c02d39690554f16e492cb8ff22cd9b9135f53d193dca4e1b65e87d701bea24"
+      "alt": "Two shiny oval olives, one green and one black, hanging from a twig with long narrow silver-green olive leaves.",
+      "bytes": 1215,
+      "sha256": "a278d28bab1bb5cd130196c92b687a43741705cfaa63a933d46307ebf91f3f36"
     },
     {
       "id": "egg",
@@ -1185,9 +1177,9 @@
       "id": "cabbage",
       "word": "CABBAGE",
       "category": "food",
-      "alt": "A round pale green cabbage head with tightly wrapped leaves and thick white veins.",
-      "bytes": 515,
-      "sha256": "f72e8b5512e12d2c6025eabb741380241fa47e2a816080f7744d176634abcf15"
+      "alt": "A round green cabbage seen from the side, with big curling outer leaves wrapped around a pale tight head, and white veins.",
+      "bytes": 543,
+      "sha256": "90a54c4234005139081c50ff1226440bc2431910226f9746fbed6bb95c43e352"
     },
     {
       "id": "avocado",
@@ -1305,9 +1297,9 @@
       "id": "spoon",
       "word": "SPOON",
       "category": "home",
-      "alt": "A silver spoon lying on a slant, with a round bowl and a long handle.",
-      "bytes": 441,
-      "sha256": "5b0464b8b60caa3332396eb4ee7519fab1b1ee1335bda182818dfaad4a689340"
+      "alt": "A silver spoon lying on a slant, with a long narrow bowl and a handle that widens to a rounded end.",
+      "bytes": 550,
+      "sha256": "88ece2f78999c56ceecf1bb56d472fc34d27f306517634df018bd0dd7f738cb1"
     },
     {
       "id": "fork",
@@ -1873,9 +1865,9 @@
       "id": "top",
       "word": "TOP",
       "category": "play",
-      "alt": "A tilted spinning top with red and yellow stripes, a knob on top and its point spinning on the floor, with swirl lines around it.",
-      "bytes": 842,
-      "sha256": "ec1619c964dc924264f80d7346d71f1644fa00b5a975f95d32f0e82646817800"
+      "alt": "A round wooden spinning top balanced on its point, with a short stem on top, coloured bands and spin lines around it.",
+      "bytes": 806,
+      "sha256": "741e45360063a8025da178327515e5061dd66f7fdd070bfbf793efac0ef6ad21"
     },
     {
       "id": "dice",
@@ -2033,9 +2025,9 @@
       "id": "eraser",
       "word": "ERASER",
       "category": "school",
-      "alt": "A pink rubber eraser rubbing out a grey pencil scribble, leaving little crumbs behind.",
-      "bytes": 638,
-      "sha256": "8c0d293aa946ab3a62cc04239173d6f68d9be564aa26550846ec2b953ce76db3"
+      "alt": "A slanted red and blue school eraser rubbing out a grey pencil line, with crumbs falling off.",
+      "bytes": 680,
+      "sha256": "d37a62021a85fc421aec0b5d55f7c1a7873e47be4f2cb090df57c90dca035c58"
     },
     {
       "id": "desk",
@@ -2217,9 +2209,9 @@
       "id": "sandal",
       "word": "SANDAL",
       "category": "clothes",
-      "alt": "A brown sandal seen from above: a foot-shaped sole with two wide crossing straps and a gold buckle.",
-      "bytes": 627,
-      "sha256": "59993185dd22e5a78171907dc06241b6c78d5358a31c4aa6daeacf647a8d737d"
+      "alt": "A brown sandal seen straight from above: a foot-shaped sole with two wide crossing straps and a gold buckle.",
+      "bytes": 590,
+      "sha256": "394321754bc45c3a350ffb50ff24569204ea631334d3f88601feaeb2aef2e68f"
     },
     {
       "id": "coat",
@@ -2417,17 +2409,17 @@
       "id": "arm",
       "word": "ARM",
       "category": "body",
-      "alt": "A whole arm reaching out from a short blue sleeve: shoulder, elbow, forearm and an open hand.",
-      "bytes": 563,
-      "sha256": "32c5c0c11d4ebf4d17747a6a950f4d6f0f6acf14c532d894acd1f0456cdc4261"
+      "alt": "A long straight arm reaching out from a blue T-shirt sleeve, with the elbow crease in the middle and an open hand at the end.",
+      "bytes": 620,
+      "sha256": "d8f106369569df2c43c3b66a3238ccf12a099729e52517c4b8fe8345b26edbeb"
     },
     {
       "id": "leg",
       "word": "LEG",
       "category": "body",
-      "alt": "A whole bare leg standing straight, from a pair of shorts at the top down past the knee to the ankle and foot.",
-      "bytes": 513,
-      "sha256": "4bf140d630f53f0e021a399523b92409c27949c0e86cec3aaa7b3a304d371295"
+      "alt": "A whole bare leg standing straight below a pair of blue shorts: thigh, knee, shin, ankle and foot.",
+      "bytes": 563,
+      "sha256": "5f9fd9befd6b5d5d1a11ccba349b9edc8ca2eb9101144e58554c7f51e007b62f"
     },
     {
       "id": "finger",
@@ -2577,9 +2569,9 @@
       "id": "comet",
       "word": "COMET",
       "category": "weather",
-      "alt": "A comet in a dark night sky: a bright icy head with a long wide glowing tail streaming behind it, and a few small stars.",
-      "bytes": 893,
-      "sha256": "ec2721c6e282d24ed1eca5c6c8752421946bc0bb95662696993ccf1efcac33e8"
+      "alt": "A comet: a bright icy ball with a long, wide, two-part glowing tail fanning out behind it.",
+      "bytes": 504,
+      "sha256": "ed7b16da7e269cadc406422be44c0bbb6af6d2880edf761f72e819fdba75de0c"
     },
     {
       "id": "sunset",
@@ -2601,9 +2593,9 @@
       "id": "hammer",
       "word": "HAMMER",
       "category": "tools",
-      "alt": "A hammer with a wooden handle, a flat round striking face on one side and a split claw on the other.",
-      "bytes": 603,
-      "sha256": "b8364a43c610d9a4b1d68d933ff0fe48c33a98b86692113e2cce1452efc4d0c9"
+      "alt": "A hammer with a long wooden handle and a metal head: a flat round striking face on one side and a split curved claw on the other.",
+      "bytes": 628,
+      "sha256": "8028cd61972c742383f5b4a24a547b6eb9e1aaabe5527bb3732cbf073d197b69"
     },
     {
       "id": "saw",
@@ -2617,9 +2609,9 @@
       "id": "nail",
       "word": "NAIL",
       "category": "tools",
-      "alt": "A long metal nail standing upright, half hammered into a wooden plank, with a flat round head.",
-      "bytes": 545,
-      "sha256": "bc34c2c8a6bee00afef60a0c3ec0eec31bf943f0df73d5e45e1c7a8227390eb4"
+      "alt": "A long metal nail lying on a slant, with a flat round head and a sharp point.",
+      "bytes": 380,
+      "sha256": "993b330c3c6fb4613a65d1164beb9990e7b782bafb281326c16af87ddeea1d33"
     },
     {
       "id": "screw",
@@ -2732,14 +2724,6 @@
       "alt": "A pair of pliers with big ridged grey jaws, a round pivot bolt and long blue handles.",
       "bytes": 602,
       "sha256": "c5788c1e215bb1d3c7c17c7d9ab2355746c11cb0ba79f6959ea8c438606cee42"
-    },
-    {
-      "id": "trowel",
-      "word": "TROWEL",
-      "category": "tools",
-      "alt": "A big garden trowel with a green handle and a pointed metal scoop, stuck into a mound of brown soil.",
-      "bytes": 781,
-      "sha256": "ed589a4788bc3c55c5fdb703faa07fb64f22216c6ad4c0bd44b1c81df6fd37e0"
     },
     {
       "id": "funnel",

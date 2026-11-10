@@ -90,12 +90,11 @@ export default [
     ],
   },
   {
-    word: 'COMET', meaning: 'a comet', alt: 'A comet in a dark night sky: a bright icy head with a long wide glowing tail streaming behind it, and a few small stars.',
+    word: 'COMET', meaning: 'a comet', alt: 'A comet: a bright icy ball with a long, wide, two-part glowing tail fanning out behind it.',
     draw: () => [
-      rect(8, 10, 104, 100, 16, P.navy, { ns: true }),
-      path('M86 30Q50 30 10 64Q50 54 74 52Q46 64 18 100Q62 74 86 58Z', P.sky, { ns: true }), path('M88 34Q60 42 30 64Q58 56 80 54Z', P.paper, { ns: true }),
-      circle(88, 42, 16, P.yellow), patch('M80 36Q84 30 90 30Q84 36 84 42Z', P.paper),
-      ...[[30, 26], [56, 20], [100, 80], [80, 98], [20, 82]].map(([x, y]) => circle(x, y, 2, P.paper, { ns: true })), rect(8, 10, 104, 100, 16),
+      path('M86 26Q50 26 6 54Q50 50 72 50Q44 62 14 100Q60 74 84 58Z', P.sky), path('M88 30Q60 38 28 60Q58 54 80 54Z', P.paper, { sw: 2 }),
+      path('M90 46Q70 70 54 112Q80 82 98 56Z', P.mint),
+      circle(90, 40, 20, P.yellow), patch('M80 34Q84 26 92 26Q86 32 86 40Z', P.paper),
     ],
   },
   {

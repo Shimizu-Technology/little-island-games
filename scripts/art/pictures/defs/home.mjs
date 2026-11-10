@@ -98,9 +98,11 @@ export default [
     ],
   },
   {
-    word: 'SPOON', meaning: 'a spoon', alt: 'A silver spoon lying on a slant, with a round bowl and a long handle.',
+    word: 'SPOON', meaning: 'a spoon', alt: 'A silver spoon lying on a slant, with a long narrow bowl and a handle that widens to a rounded end.',
     draw: () => [
-      group({ t: 'rotate(40 60 60)' }, rect(54, 50, 12, 64, 6, P.stone), ellipse(60, 30, 20, 26, P.stone), ellipse(60, 30, 12, 18, P.paper, { ns: true }), ellipse(60, 30, 20, 26)),
+      group({ t: 'rotate(40 60 60)' },
+        path('M57 50Q56 72 51 100Q50 116 60 116Q70 116 69 100Q64 72 63 50Z', P.stone),
+        ellipse(60, 28, 16, 26, P.stone), ellipse(60, 30, 10, 19, P.slate, { ns: true }), patch('M54 18Q57 12 61 12Q56 20 56 30Z', P.paper), line('M60 62V100', { stroke: P.paper, sw: 2.5 })),
     ],
   },
   {

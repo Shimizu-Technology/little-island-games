@@ -3,7 +3,7 @@
   "checkedOn": "2026-11-10",
   "source": "W1 word pipeline queues (private, see the W4 report); checks: present in a queue, validateWord, answerAllowed, lemma, not proper noun or abbreviation",
   "counts": {
-    "tiers": 395,
+    "tiers": 393,
     "local": 10
   },
   "words": {
@@ -449,11 +449,6 @@
     },
     "HUT": {
       "wordId": "en-hut",
-      "queue": "tiers",
-      "readerLevel": "Little"
-    },
-    "REEF": {
-      "wordId": "en-reef",
       "queue": "tiers",
       "readerLevel": "Little"
     },
@@ -1699,11 +1694,6 @@
     },
     "PLIERS": {
       "wordId": "en-pliers",
-      "queue": "tiers",
-      "readerLevel": "Little"
-    },
-    "TROWEL": {
-      "wordId": "en-trowel",
       "queue": "tiers",
       "readerLevel": "Little"
     },
