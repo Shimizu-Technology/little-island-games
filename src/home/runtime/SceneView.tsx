@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from "react";
 import { Platform, Pressable, View } from "react-native";
-import Animated, { useAnimatedStyle, useDerivedValue, type SharedValue } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
 import { roomIds, roomNames } from "../catalogMore";
 import { RoomArt, ShoreArt } from "../art/Room";
@@ -16,10 +16,10 @@ import { SeatRimCue, TargetCue } from "./TargetCue";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { DragOverlay } from "./DragOverlay";
 import { layoutToken } from "./layout";
-import { pickupTransform } from "./handFeel";
+import { anyIn, firstFollow, firstRest } from "./restingState";
 import { isPortion } from "./portions";
 import { entityLabels } from "../scene/labels";
-import type { Interaction, Pickup, DragSlot } from "./useInteraction";
+import type { Interaction, Pickup } from "./useInteraction";
 import type { Viewport } from "./CameraController";
 
 function ancestors(entity: SceneEntity, scene: Scene): string[] {
@@ -36,12 +36,9 @@ const RestingEntity = memo(function RestingEntity({
   sceneRevision,
   name,
   ownerKey,
-  slots,
-  controller,
-  camera,
+  restingFlags,
+  restingMotion,
   landingKey,
-  fixtureNudges,
-  clock,
   acknowledgeLayout,
   reduced,
   renderCharacter,
@@ -60,12 +57,9 @@ const RestingEntity = memo(function RestingEntity({
   /** Accessible name; numbered when the room holds several of the same thing. */
   name: string;
   ownerKey: string;
-  slots: SharedValue<DragSlot[]>;
-  controller?: Interaction["controller"];
-  camera: Interaction["camera"];
+  restingFlags: Interaction["restingFlags"];
+  restingMotion: Interaction["restingMotion"];
   landingKey: string;
-  fixtureNudges: Interaction["fixtureNudges"];
-  clock: Interaction["clock"];
   acknowledgeLayout: Interaction["acknowledgeLayout"];
   reduced: boolean;
   renderCharacter?: CharacterRender;
@@ -90,45 +84,30 @@ const RestingEntity = memo(function RestingEntity({
   if (stamp.token !== token) setStamp({ token, value: stamp.value + 1 });
   const owners = useMemo(() => ownerKey.split("|"), [ownerKey]);
   const anticipationTargets = useMemo(() => targetKey.split("|"), [targetKey]);
-  const visible = useDerivedValue(() => {
-    if (front && slots.value.some((s) => s.id && s.ready && (s.settleAt > 0 || s.pausedElapsed > 0) &&
-      (s.proposal?.attachment ?? s.subject?.attachment)?.kind === "socket" &&
-      ((s.proposal?.attachment ?? s.subject?.attachment) as { item: string }).item === entity.id)) return 0;
-    for (const slot of slots.value) if (slot.id && owners.includes(slot.restId ?? slot.id))
-      return !slot.revealFrame && slot.ready && slot.painted !== false && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 0 : 1;
-    return 1;
-  });
-  const wobble = useDerivedValue(() => {
-    const at = fixtureNudges.value[entity.id];
-    if (!at || reduced) return 0;
-    const elapsed = clock.value - at;
-    return elapsed < 0 || elapsed >= 220 ? 0 : Math.sin(elapsed / 220 * Math.PI * 4) * 1.5 * (1 - elapsed / 220);
-  });
   const landingTargets = useMemo(() => landingKey.split("|"), [landingKey]);
-  const landing = useDerivedValue(() => slots.value.some(s => s.id && s.phase === "dragging" && s.proposal?.target && landingTargets.includes(s.proposal.target)));
-  const motion = useDerivedValue(() => {
-    const slot = slots.value.find(s => s.id && owners.includes(s.restId ?? s.id));
-    return slot && !(slot.committed && slot.revision === sceneRevision) && slot.phase !== "pending" && !(slot.ready && slot.painted !== false)
-      ? pickupTransform(slot, slot.subject ?? entity, camera.value.a, clock.value, reduced) : undefined;
-  });
+  // HM-13: one shared resting state, changed only on pickup, press, target and front edges.
+  // The motion channel carries per-frame values only while art follows before its overlay
+  // is ready, or while something wobbles; otherwise nothing here runs during a drag.
   const style = useAnimatedStyle(() => {
-    const slot = slots.value.find(s => s.id && owners.includes(s.restId ?? s.id));
-    const moving = slot && !(slot.committed && slot.revision === sceneRevision) && slot.phase !== "pending" && !(slot.ready && slot.painted !== false);
-    const transform = motion.value;
-    const pressed = controller?.value.pointers.some(p => p.phase === "pending" && p.entity && owners.includes(p.entity));
-    return { opacity: visible.value,
-      transformOrigin: [slot ? slot.gripX - frame.left : -frame.left, slot ? slot.gripY - frame.top : -frame.top, 0],
+    const flags = restingFlags.value, motion = restingMotion.value;
+    const rest = firstRest(flags, owners);
+    const follow = firstFollow(motion, owners);
+    const pressed = anyIn(flags.pressed, owners);
+    const landing = anyIn(flags.dragTargets, landingTargets);
+    const wobble = reduced ? 0 : motion.wobble[entity.id] ?? 0;
+    const hidden = (front && flags.fronts.includes(entity.id)) || (rest?.hide ?? false);
+    return { opacity: hidden ? 0 : 1,
+      transformOrigin: [rest ? rest.gx - frame.left : -frame.left, rest ? rest.gy - frame.top : -frame.top, 0],
       transform: [
-        { translateX: moving ? slot.x - slot.sourceX : 0 },
-        { translateY: moving ? slot.y - slot.sourceY - (transform?.lift ?? 0) : landing.value && !reduced ? -3 : 0 },
-        { rotate: `${transform?.tilt ?? wobble.value}deg` },
-        { scaleX: transform?.scaleX ?? (pressed || landing.value ? 1.02 : 1) },
-        { scaleY: transform?.scaleY ?? (pressed ? entity.character ? .99 : 1.02 : landing.value ? 1.02 : 1) },
+        { translateX: follow ? follow.dx : 0 },
+        { translateY: follow ? follow.dy : landing && !reduced ? -3 : 0 },
+        { rotate: `${follow ? follow.tilt : wobble}deg` },
+        { scaleX: follow ? follow.sx : (pressed || landing ? 1.02 : 1) },
+        { scaleY: follow ? follow.sy : (pressed ? entity.character ? .99 : 1.02 : landing ? 1.02 : 1) },
       ] };
   });
-  const rimStyle = useAnimatedStyle(() => ({ opacity: landing.value ? 1 : 0 }));
-  const anticipating = useDerivedValue(() => entity.character &&
-    slots.value.some((s) => s.id && s.proposal?.target && anticipationTargets.includes(s.proposal.target)) ? 1 : 0);
+  const rimStyle = useAnimatedStyle(() => ({ opacity: anyIn(restingFlags.value.dragTargets, landingTargets) ? 1 : 0 }));
+  const anticipating = useDerivedValue(() => entity.character && anyIn(restingFlags.value.targets, anticipationTargets) ? 1 : 0);
   const normal = useAnimatedStyle(() => ({ opacity: 1 - anticipating.value }));
   const anticipate = useAnimatedStyle(() => ({ opacity: anticipating.value }));
   return (
@@ -343,12 +322,9 @@ export function SceneView({
                           .filter((t) => t.owner === entity.id && (t.kind === "mouth" || t.kind === "hand"))
                           .map((t) => t.id)
                           .join("|")}
-                        slots={interaction.slots}
-                        controller={interaction.controller}
-                        camera={interaction.camera}
+                        restingFlags={interaction.restingFlags}
+                        restingMotion={interaction.restingMotion}
                         landingKey={scene.rooms[roomId].targets.filter(t => t.owner === entity.id && t.kind !== "mouth" && t.kind !== "hand").map(t => t.id).join("|")}
-                        fixtureNudges={interaction.fixtureNudges}
-                        clock={interaction.clock}
                         acknowledgeLayout={interaction.acknowledgeLayout}
                         reduced={reduced}
                         renderCharacter={renderCharacter}
@@ -357,7 +333,7 @@ export function SceneView({
                         onMove={onMove}
                       />,
                     ])}
-                    {scene.rooms[roomId].targets.filter((target) => !target.rim).map((target) => (
+                    {scene.rooms[roomId].targets.filter((target) => !target.rim && (target.kind === "hand" || target.kind === "surface")).map((target) => (
                       <TargetCue key={target.id} target={target} interaction={interaction} />
                     ))}
                     {stress && roomId === "home" && (

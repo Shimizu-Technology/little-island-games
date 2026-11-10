@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import { runOnJS, runOnUI, useFrameCallback, useSharedValue, type SharedValue, type FrameInfo } from "react-native-reanimated";
 import { roomIds } from "../catalogMore";
@@ -36,6 +36,14 @@ import { releaseWindow, type ProbeFrame, type ProbeRelease, type ReleaseProbe } 
 import { anchorsFor } from "../scene/species";
 import { poseToken } from "./poseBank";
 import type { TraceEvent } from "./trace";
+import {
+  emptyRestingFlags,
+  emptyRestingMotion,
+  restingFlagsOf,
+  restingMotionOf,
+  type RestingFlags,
+  type RestingMotion,
+} from "./restingState";
 
 export type CaptureToken = { generation: number; epoch: number };
 export type DragSlot = CaptureToken & {
@@ -93,6 +101,28 @@ export type Pickup = CaptureToken & {
   identities?: Record<string, string>;
   committedId?: string;
 };
+/** Each room's index (without the shared entity map) and its own entities, as one string. */
+export function roomPayloadsOf(scene: Scene): Record<string, string> {
+  const byRoom: Record<string, SceneEntity[]> = {};
+  for (const entity of Object.values(scene.entities)) (byRoom[entity.room] ??= []).push(entity);
+  return Object.fromEntries(Object.entries(scene.rooms).map(([id, index]) =>
+    [id, JSON.stringify({ index: { ...index, entities: {} }, entities: byRoom[id] ?? [] })]));
+}
+/** Replaces only the sent rooms; every room index shares one entity map, as before. */
+export function mergeRoomPayloads(previous: Scene, rooms: Record<string, string>, revision: string): Scene {
+  "worklet";
+  const entities: Scene["entities"] = {};
+  const sent = Object.keys(rooms);
+  for (const key in previous.entities) if (!sent.includes(previous.entities[key].room)) entities[key] = previous.entities[key];
+  const indexes: Record<string, Scene["rooms"][keyof Scene["rooms"]]> = { ...previous.rooms };
+  for (const id of sent) {
+    const payload = JSON.parse(rooms[id]) as { index: Scene["rooms"][keyof Scene["rooms"]]; entities: SceneEntity[] };
+    for (const entity of payload.entities) entities[entity.id] = entity;
+    indexes[id] = payload.index;
+  }
+  for (const id in indexes) indexes[id] = { ...indexes[id], revision: indexes[id].revision, entities };
+  return { revision, entities, rooms: indexes as Scene["rooms"] };
+}
 function eventTime(): number {
   "worklet";
   return Date.now();
@@ -188,11 +218,11 @@ export function useInteraction({
     }),
     [scene]
   );
-  // Transfer one string, then materialize plain UI objects before a gesture.
+  // Transfer strings, then materialize plain UI objects before a gesture.
   // Thousands of lazy shareable getters otherwise land on the first drag frame.
-  const encodedScene = useMemo(() => JSON.stringify({ ...scene, rooms: Object.fromEntries(
-    Object.entries(scene.rooms).map(([id, index]) => [id, { ...index, entities: {} }])
-  ) }), [scene]);
+  // HM-13: one string per room, and only rooms whose contents changed are sent.
+  const roomPayloads = useMemo(() => roomPayloadsOf(scene), [scene]);
+  const sentRooms = useRef<Record<string, string>>({});
   const prepared = useSharedValue(resolverScene);
   const stagingContacts = useSharedValue<Record<string, { x: number; y: number }>>({});
   const externalSubjects = useSharedValue<Record<string, SceneEntity>>({});
@@ -233,15 +263,36 @@ export function useInteraction({
   // acknowledged scene/identity. Never invalidate an in-flight transaction.
   const queuedInput = useSharedValue<ControllerEvent[]>([]);
   const fixtureNudges = useSharedValue<Record<string, number>>({});
+  const hint = useSharedValue<{ id: string; at: number } | null>(null);
   const cameraGesture = useSharedValue(false);
+  // HM-13: resting art reads these, never `slots`. They change only on meaningful edges.
+  const restingFlags = useSharedValue<RestingFlags>(emptyRestingFlags());
+  const restingMotion = useSharedValue<RestingMotion>(emptyRestingMotion());
+  // The frame callback stops itself when nothing needs a frame; UI-thread input restarts it.
+  const framesOn = useSharedValue(true);
+  const frameId = useSharedValue(-1);
+  const idleFrames = useSharedValue(0);
+  const wakeFrames = () => {
+    "worklet";
+    idleFrames.set(0);
+    if (framesOn.value) return;
+    framesOn.set(true);
+    if (onTrace) runOnJS(onTrace)({ type: "frames-active", at: eventTime() });
+    const registry = (globalThis as { _frameCallbackRegistry?: { manageStateFrameCallback: (id: number, on: boolean) => void } })._frameCallbackRegistry;
+    if (registry && frameId.value >= 0) registry.manageStateFrameCallback(frameId.value, true);
+  };
+
+
   useLayoutEffect(() => {
-    runOnUI((encoded: string) => {
+    const changed: Record<string, string> = {};
+    for (const id of Object.keys(roomPayloads)) if (sentRooms.current[id] !== roomPayloads[id]) changed[id] = roomPayloads[id];
+    sentRooms.current = roomPayloads;
+    const changedHits = Object.fromEntries(Object.keys(changed).map((id) => [id, hits[id]]));
+    runOnUI((rooms: Record<string, string>, revision: string, roomHits: typeof hits) => {
       "worklet";
-      const next = JSON.parse(encoded) as Scene;
-      for (const index of Object.values(next.rooms)) index.entities = next.entities;
-      prepared.set(next);
-    })(encodedScene);
-    hitTable.set(hits);
+      prepared.set(mergeRoomPayloads(prepared.value, rooms, revision));
+      hitTable.modify((table) => { "worklet"; for (const id in roomHits) table[id] = roomHits[id]; return table; });
+    })(changed, scene.revision, changedHits);
     renderedRevision.set(scene.revision);
     layoutTokens.set(expectedLayout);
     const refreshed: number[] = [];
@@ -283,7 +334,7 @@ export function useInteraction({
       })
     );
     refreshed.forEach((index) => onDestination?.(index, scene));
-  }, [scene, resolverScene, encodedScene, hits, prepared, hitTable, renderedRevision, slots, building, onDestination, expectedLayout, layoutTokens]);
+  }, [scene, resolverScene, roomPayloads, hits, prepared, hitTable, renderedRevision, slots, building, onDestination, expectedLayout, layoutTokens]);
 
   const movable = useSharedValue<Record<string, boolean>>({});
   useLayoutEffect(() => {
@@ -430,7 +481,21 @@ export function useInteraction({
     }
   };
 
-  const send = (event: ControllerEvent, replay = false) => {
+  const publish = () => {
+    "worklet";
+    // Set only on change, so an unchanged frame triggers no mapper.
+    // Returning the previous object with forceUpdate=false wakes nothing.
+    restingFlags.modify((previous) => {
+      "worklet";
+      const next = restingFlagsOf(slots.value, controller.value.pointers);
+      return next.key === previous.key ? previous : next;
+    }, false);
+    restingMotion.modify((previous) => {
+      "worklet";
+      const next = restingMotionOf(slots.value, renderedRevision.value, camera.value.a, eventTime(), reduced, fixtureNudges.value, hint.value);
+      return next.key === previous.key ? previous : next;
+    }, false);
+  };  const sendEvent = (event: ControllerEvent, replay = false) => {
     "worklet";
     if (!replay && event.type !== "settled" && (queuedInput.value.length ||
       slots.value.some((s) => s.id && s.commitRequested && !s.committed))) {
@@ -689,6 +754,12 @@ export function useInteraction({
       }
     }
   };
+  const send = (event: ControllerEvent, replay = false) => {
+    "worklet";
+    wakeFrames();
+    sendEvent(event, replay);
+    publish();
+  };
   const capturedRelative = (id: string): boolean => {
     "worklet";
     for (const capture of controller.value.pointers) {
@@ -894,7 +965,7 @@ export function useInteraction({
       manager.end();
     });
 
-  useFrameCallback(useCallback((frame: FrameInfo) => {
+  const frameCallback = useCallback((frame: FrameInfo) => {
     "worklet";
     const dt = frame.timeSincePreviousFrame ?? 16.67;
     if (onReleaseProbe) {
@@ -918,7 +989,9 @@ export function useInteraction({
       });
       if (due.length) probePending.set(probePending.value.filter((p) => now < p.at + 520));
     }
-    if (slots.value.some(s => !!s.id) || Object.values(fixtureNudges.value).some(at => lastFrame.value < at + 220)) lastFrame.set(eventTime());
+    const nudging = Object.values(fixtureNudges.value).some(at => lastFrame.value < at + 220) ||
+      (!!hint.value && lastFrame.value < hint.value.at + 220);
+    if (slots.value.some(s => !!s.id) || nudging) lastFrame.set(eventTime());
     if (queuedInput.value.length && !slots.value.some((s) => s.id && s.commitRequested &&
       (!s.committed || s.revision !== renderedRevision.value))) {
       const events = queuedInput.value;
@@ -937,7 +1010,7 @@ export function useInteraction({
     }
     if (onTrace) {
       traceFrames.modify((times) => { "worklet"; times.push(dt); return times; });
-      if (traceFrames.value.length >= 120) {
+      if (traceFrames.value.length >= 120 || (idleFrames.value >= 2 && traceFrames.value.length >= 12)) {
         const sorted = [...traceFrames.value].sort((a, b) => a - b), at = (q: number) => sorted[Math.floor(sorted.length * q)];
         runOnJS(onTrace)({ type: "frames", at: eventTime(), samples: sorted.length, p50: at(.5), p95: at(.95), p99: at(.99), max: sorted[sorted.length - 1] });
         traceFrames.set([]);
@@ -1094,12 +1167,37 @@ export function useInteraction({
         }
         return current;
       });
+    publish();
+    const busy = !!slots.value[0].id || !!slots.value[1].id || queuedInput.value.length > 0 || !!revealPan.value ||
+      !!inertia.value.since || nudging || probePending.value.length > 0 || controller.value.pointers.some((p) => !!p.entity);
+    if (busy) idleFrames.set(0);
+    else {
+      idleFrames.set(idleFrames.value + 1);
+      if (idleFrames.value >= 3 && framesOn.value) {
+        framesOn.set(false);
+        if (onTrace) runOnJS(onTrace)({ type: "frames-idle", at: eventTime() });
+        const registry = (globalThis as { _frameCallbackRegistry?: { manageStateFrameCallback: (id: number, on: boolean) => void } })._frameCallbackRegistry;
+        if (registry && frameId.value >= 0) registry.manageStateFrameCallback(frameId.value, false);
+      }
+    }
   // send/resumePending read these shared channels. Keeping their render-local
   // identities out of dependencies preserves the native callback clock.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onTrace, traceFrames, catalogTimes, onReleaseProbe, probeRing, probeCursor, probeLastAt, probePending, queuedInput, slots, prepared, renderedRevision, laidOut, layoutTokens,
     poseLayouts, overlayLayouts, fixtureNudges, externalSubjects, lastFrame, revealPan, controller, reduced, camera, onFrameReport, frameCount, frameTimes, inertia,
-    viewport, building, offset, proposalFor, onCommit, onClear]));
+    viewport, building, offset, proposalFor, onCommit, onClear]);
+  const frames = useFrameCallback(frameCallback) as ReturnType<typeof useFrameCallback> | undefined;
+  // A new callback registers active (in the hook's own effect, which runs first); tell the
+  // UI side its id so it can stop and restart it.
+  useEffect(() => {
+    const id = frames?.callbackId ?? -1;
+    runOnUI(() => {
+      "worklet";
+      frameId.set(id);
+      framesOn.set(true);
+      idleFrames.set(0);
+    })();
+  }, [frameCallback, frames, frameId, framesOn, idleFrames]);
   const cancelAll = () => {
     revealPan.set(null);
     epoch.set(epoch.get() + 1);
@@ -1108,6 +1206,8 @@ export function useInteraction({
     queuedInput.set([]);
     externalSubjects.set({});
     slots.set([emptyDragSlot(), emptyDragSlot()]);
+    restingFlags.set(emptyRestingFlags());
+    restingMotion.set(emptyRestingMotion());
     onClear(0);
     onClear(1);
   };
@@ -1179,6 +1279,7 @@ export function useInteraction({
     // notify JS in one UI transaction so pickup cannot read an empty old slot.
     runOnUI(() => {
       "worklet";
+      wakeFrames();
       if (epoch.value !== requestedEpoch) { if (onAccepted) runOnJS(onAccepted)(false); return; }
       const current = slots.value;
       const index = current.findIndex(s => !s.id);
@@ -1214,6 +1315,15 @@ export function useInteraction({
     })();
     return true;
   };
+  /** HR-02: one quiet wiggle on `id`. The frame callback runs only for its 180 ms. */
+  const showHint = (id: string) => {
+    runOnUI(() => {
+      "worklet";
+      if (controller.value.pointers.length || slots.value.some((s) => !!s.id)) return;
+      hint.set({ id, at: eventTime() });
+      wakeFrames();
+    })();
+  };
   const resetFrames = () => {
     frameTimes.set([]);
     frameCount.set(0);
@@ -1241,6 +1351,9 @@ export function useInteraction({
     acknowledgePose,
     poseLayouts,
     fixtureNudges,
+    restingFlags,
+    restingMotion,
+    showHint,
     clock: lastFrame,
   };
 }
