@@ -19,6 +19,11 @@ export const storage: StorageAdapter = {
     if (previous) { const old = parseDraft(previous); if (old.session.id !== row.session.id || old.session.ordinal !== row.session.ordinal || old.session.revision >= row.session.revision) throw new Error('This draft has been replaced.'); }
     localStorage.setItem(key,raw);
   },
+  logLaunch: async entry => {
+    const index = Number(localStorage.getItem('little-island.launch-log-cursor') ?? 0) % 8;
+    localStorage.setItem(`little-island.launch-log-${index}`, entry);
+    localStorage.setItem('little-island.launch-log-cursor', String(index + 1));
+  },
   get: async () => {
     const raw = localStorage.getItem("little-island.save");
     // Heal the non-authoritative cache after a crash between the envelope commit and cache update.

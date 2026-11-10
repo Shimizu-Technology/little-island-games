@@ -1,4 +1,4 @@
-import { prepareSessionContent, sessionContentReady, retainSessionContent, captureSessionContent, contentMessage, type SessionOpenResult } from './sessionContent';
+import { prepareSessionContent, sessionContentReady, retainSessionContent, captureSessionContent, contentMessage, resumeMessage, type SessionOpenResult } from './sessionContent';
 import { challengeFor } from '../challenge/catalog';
 import { completedSignal } from '../challenge/offers';
 import { saveCatalog, progressBytes, challengeLimit, emptyChallenge, validChallengeProgress, validChallengeSession, type ChallengeProgress, type Signal, type ChallengeSession } from './challenge';
@@ -24,6 +24,8 @@ import { GameId, GameState } from "../games";
 import { storage } from "./storage";
 import { Save, emptySave, parseSave, withinSaveLimit } from "./validation";
 import { preserveAndReplace } from "./replacement";
+import { setAsideUnresolved, type SetAside } from "./setAside";
+import { noteLaunch } from "./launchLog";
 import { applySessionAction } from "./sessionAction";
 import { recordWordRound } from "./wordRecords";
 import { ActivityId, ActivitySession } from "./activities";
@@ -85,6 +87,9 @@ type Store = {
   libraryFlush: () => Promise<boolean>;
   exploreUpdate: (next: ExploreProgress, expectedEpoch: number, completedTopic?: string, expectedLearner?: string) => void;
   save: Save;
+  /** Paused puzzles and marks this build couldn't open at launch. The preserved original still holds them. */
+  setAside: SetAside[];
+  dismissSetAside: (owner: string) => void;
   ready: boolean;
   error: string | null;
   recovery: string | null;
@@ -97,12 +102,17 @@ type Store = {
   startFresh: () => Promise<void>;
 };
 const Context = createContext<Store | null>(null);
+/** Far beyond a slow device's real launch; only a stuck read or write gets here. */
+export const BOOT_TIMEOUT_MS = 15_000;
+export const bootTimeoutMessage = "Your island is taking too long to open. Your saved work is kept. Try opening again.";
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [save, setSave] = useState(emptySave),
     [ready, setReady] = useState(false),
     [error, setError] = useState<string | null>(null),
     [recovery, setRecovery] = useState<string | null>(null),
-    [raw, setRaw] = useState<string | null>(null);
+    [raw, setRaw] = useState<string | null>(null),
+    [setAside, setSetAside] = useState<SetAside[]>([]);
+  const settled = useRef(false);
   const [badgeResult, setBadgeResult] = useState<Store["badgeResult"]>(null);
   const [challengeRefusal, setChallengeRefusal] = useState<ChallengeRefusal | null>(null);
   const [saving, setSaving] = useState(false);
@@ -174,13 +184,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       encoded = await storage.get();
       setRaw(encoded);
-      const before=encoded?parseSave(encoded):emptySave();
+      // Content this build can't resolve is set aside from a copy; the original bytes are preserved below.
+      const aside=encoded?setAsideUnresolved(encoded,saveCatalog):{raw:null,setAside:[]};
+      const before=aside.raw?parseSave(aside.raw):emptySave();
       if(!live())return;
       const recovered = await recoverChallengeDrafts(migrateProfiles(before),storage,saveCatalog,{live});
       let next=syncProfile(backfillRewards(migrateLibrary(recovered, { existingLearners: encoded !== null })));
       // Cove identity is temporary. Keep all people and boards, but launch as the learner.
       if (next.cove?.active) next = { ...next, cove: { ...next.cove, active: null } };
-      const replacementNeeded = !!encoded && (before.version !== 3 || !before.library || before.library.version === 1 || learnersChanged(before,next));
+      const replacementNeeded = !!encoded && (aside.setAside.length > 0 || before.version !== 3 || !before.library || before.library.version === 1 || learnersChanged(before,next));
       if (replacementNeeded) next = { ...next, saveRevision:newSaveRevision() };
       if (!validLibraryData(next.library)) throw new Error("This Library could not be opened. Your original is kept. Export it or restore a previous backup.");
       if (!withinSaveLimit(encodeSave(next))) throw new Error("This save needs more room to upgrade. Your original is kept. Export it and open it in the previous build to manage saved work, or restore a smaller backup.");
@@ -200,15 +212,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setRecovery(null); uncertainWrite.current = false;
       setError(null);
       lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false;
+      if (aside.setAside.length) noteLaunch('set-aside', `${aside.setAside.map(a => `${a.owner}: ${a.games.join(',') || 'no rounds'}, ${a.marks} marks rows`).join('; ')}`);
+      setSetAside(aside.setAside);
+      settled.current = true;
       setReady(true);
     } catch (e) {
       if(!live())return;
+      noteLaunch('load', e);
       if(encoded)try{
         const newest = (await storage.listRecovery?.())?.[0];
         if (!newest || await storage.readRecovery?.(newest.key) !== encoded) await storage.preserve(encoded);
       }catch{/* Original remains in active storage; do not publish or replace it. */}
       if(!live())return;
       setRecovery(e instanceof Error ? e.message : "Saved games could not be opened. Please retry.");
+      settled.current = true;
       setReady(true);
     }
   }, []);
@@ -216,8 +233,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     mounted.current = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrates asynchronously from external device storage.
     void load();
+    // A load that never settles must not leave a blank or waiting screen. The load keeps running and
+    // still publishes if it finishes; until then nothing is writable, so nothing can overwrite the save.
+    const guard = setTimeout(() => {
+      if (settled.current || !mounted.current) return;
+      noteLaunch('timeout', `Saved games did not open within ${BOOT_TIMEOUT_MS / 1000} seconds.`);
+      setRecovery(bootTimeoutMessage); setReady(true);
+    }, BOOT_TIMEOUT_MS);
     return () => {
       mounted.current = false;
+      clearTimeout(guard);
     };
   }, [load]);
   useEffect(() => {
@@ -567,6 +592,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         latest.current = next;
         retainSessionContent(syncProfile(next),saveCatalog); setSave(next);
         setRaw(encodeSave(next));
+        setSetAside([]);
         setRecovery(null); uncertainWrite.current = false;
         setError(null);
         lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false;
@@ -600,7 +626,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try {
       await prepareSessionContent(session,saveCatalog,{live});
       if(!live())return stale;
-      if(!validChallengeSession(session,expected.owner,saveCatalog,expected.owner.startsWith('cove-')))return {ok:false,kind:'invalid-session',message:contentMessage};
+      if(!validChallengeSession(session,expected.owner,saveCatalog,expected.owner.startsWith('cove-')))return {ok:false,kind:'invalid-session',message:resumeMessage};
       retainSessionContent(syncProfile(before),saveCatalog);
       return {ok:true};
     } catch(error) {
@@ -716,7 +742,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   return (
     <Context.Provider
       value={{
-        save, backup, challengeWorking, challengeRefusal, challengeOpen, challengeSave, challengeDiscard, covePerson,
+        save, setAside, dismissSetAside: (owner: string) => setSetAside(list => list.filter(a => a.owner !== owner)), backup, challengeWorking, challengeRefusal, challengeOpen, challengeSave, challengeDiscard, covePerson,
         badgeResult, dismissBadge: () => setBadgeResult(null),
         personalize, renameLearner, removeLearner, saving, assignEarlier: assignEarlierWork,
         arcade,
