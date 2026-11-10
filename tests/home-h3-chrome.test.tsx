@@ -42,6 +42,8 @@ describe("HR-01 / HR-03 chrome", () => {
     // On an iPhone the 64 pt bar wraps to two rows, so Find and Friends are never scrolled away.
     await act(async () => tree.update(chrome(true, () => {}, 402)));
     expect(tree.root.findAllByProps({ testID: "home-bottom-bar-wrapped" })).toHaveLength(1);
+    // Four 64 pt columns, so the second row lines up under the first.
+    expect(flat(tree.root.findByProps({ testID: "home-bottom-bar-wrapped" }).props.style).width).toBe(4 * 64 + 3 * 3 + 12);
     expect(tree.root.findAllByType("ScrollView" as never)).toHaveLength(0);
     expect(flat(tree.root.findByProps({ testID: "home-bottom-bar" }).props.style).height).toBe(navigationHeightFor(true, 402));
     expect(navigationHeightFor(true, 402)).toBeGreaterThanOrEqual(2 * 64);

@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Platform, View } from "react-native";
-import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue } from "react-native-reanimated";
+import Animated, { runOnJS, useAnimatedReaction, useAnimatedStyle, useDerivedValue, withTiming } from "react-native-reanimated";
 import { paintedBounds } from "../art/silhouettes";
 import { roomIds } from "../catalogMore";
 import { roomOrigin, type Building } from "../camera";
@@ -12,7 +12,7 @@ import { groupIds, restingVisible } from "./group";
 import { LandingPreview } from "./LandingPreview";
 import { SettleArt } from "./SettleArt";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
-import { emptyDragSlot, type Interaction, type Pickup } from "./useInteraction";
+import { emptyDragSlot, zoneAt, type Interaction, type Pickup } from "./useInteraction";
 import { capabilityOf } from "../world";
 import { pickupTransform, footprintShadow } from "./handFeel";
 
@@ -90,6 +90,11 @@ const OverlayGroup = memo(function OverlayGroup({
   const style = useAnimatedStyle(() => {
     const slot = slots.value[index];
     const motion = pickupTransform(slot, root, camera.value.a, clock.value, reduced);
+    // Over a room button or the Friends button, the carried thing shrinks and rises above the
+    // finger so the button can be seen taking it.
+    const over = slot.phase === "dragging" && !slot.catalog && !!zoneAt(interaction.dropZones?.value ?? [], slot.absoluteX, slot.absoluteY);
+    const k = over ? 0.62 : 1, rise = over ? -44 / Math.max(0.1, camera.value.a) : 0;
+    const shrink = reduced ? k : withTiming(k, { duration: 120 }), up = reduced ? rise : withTiming(rise, { duration: 120 });
     return {
       opacity: slot.id === id && slot.ready && (slot.phase !== "pending" || slot.committed || slot.pausedElapsed > 0) ? 1 : 0,
       transformOrigin: [slot.gripX, slot.gripY, 0],
@@ -102,9 +107,11 @@ const OverlayGroup = memo(function OverlayGroup({
             root.contact.y -
             motion.lift,
         },
+        { translateY: up as unknown as number },
         { rotate: `${motion.tilt}deg` },
         { scaleX: motion.scaleX },
         { scaleY: motion.scaleY },
+        { scale: shrink as unknown as number },
       ],
     };
   });

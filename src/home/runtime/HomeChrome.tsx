@@ -31,7 +31,8 @@ export function Tool({
       onPress={onPress}
       style={({ pressed }) => [
         styles.tool,
-        large && { minWidth: 64, minHeight: 64, borderRadius: 32 },
+        // In the larger mode every button shows its shape, so a 64 pt target looks like one.
+        large && { minWidth: 64, minHeight: 64, borderRadius: 32, backgroundColor: "#F1E6CF" },
         selected && { backgroundColor: "#D6E9C8" },
         { opacity: disabled ? 0.35 : pressed ? 0.65 : 1 },
       ]}
@@ -83,7 +84,7 @@ function RoomButton({ id, selected, onRoom, onFriends, hover, onRect, size, toke
   React.useEffect(() => { if (token) measure(); }, [token, measure]);
   const ring = useAnimatedStyle(() => {
     const on = hover?.value?.room === id;
-    return { opacity: on ? 1 : 0, transform: [{ scale: on ? 1.12 : 1 }] };
+    return { opacity: on ? 1 : 0, transform: [{ scale: on ? 1.22 : 1 }] };
   });
   const fill = useAnimatedStyle(() => ({ height: `${(hover?.value?.room === id ? hover.value.progress : 0) * 100}%` }));
   return (
@@ -120,7 +121,7 @@ function FriendsButton({ open, onPress, hover, onRect, size, token }: {
   const ref = React.useRef<View>(null);
   const measure = React.useCallback(() => ref.current?.measureInWindow((x, y, width, height) => onRect?.({ x, y, width, height })), [onRect]);
   React.useEffect(() => { if (token) measure(); }, [token, measure]);
-  const ring = useAnimatedStyle(() => ({ opacity: hover?.value ? 1 : 0, transform: [{ scale: hover?.value ? 1.12 : 1 }] }));
+  const ring = useAnimatedStyle(() => ({ opacity: hover?.value ? 1 : 0, transform: [{ scale: hover?.value ? 1.22 : 1 }] }));
   return (
     <Pressable
       ref={ref}
@@ -131,7 +132,7 @@ function FriendsButton({ open, onPress, hover, onRect, size, token }: {
       accessibilityHint="Opens the friends drawer. Carry a friend here to let them wait."
       accessibilityState={{ expanded: open }}
       onPress={onPress}
-      style={[styles.tool, { minWidth: size, minHeight: size, borderRadius: size / 2 }, open && { backgroundColor: "#D6E9C8" }]}
+      style={[styles.tool, { minWidth: size, minHeight: size, borderRadius: size / 2 }, size > 48 && { backgroundColor: "#F1E6CF" }, open && { backgroundColor: "#D6E9C8" }]}
     >
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: size / 2, borderWidth: 3, borderColor: "#477D60",
         backgroundColor: "#8FC48A" }, ring]} />
@@ -241,7 +242,7 @@ function HomeChromeView({
             accessibilityRole="button"
             accessibilityLabel="Find my Islander"
             onPress={onFind}
-            style={[styles.tool, large && { minWidth: 64, minHeight: 64, borderRadius: 32 }]}
+            style={[styles.tool, large && { minWidth: 64, minHeight: 64, borderRadius: 32, backgroundColor: "#F1E6CF" }]}
           >
             <FindIcon />
           </Pressable>
@@ -263,7 +264,9 @@ export function navigationHeightFor(large: boolean, width: number): number {
   return !large ? navigationHeight : width >= LARGE_ROW ? largeNavigationHeight : 2 * 64 + 3 + 2 * 6 + 4;
 }
 function Bar({ wrap, onScrolled, children }: { wrap: boolean; onScrolled?: () => void; children: React.ReactNode }) {
-  if (wrap) return <View testID="home-bottom-bar-wrapped" style={[styles.navigationItems, { flexDirection: "row", flexWrap: "wrap" }]}>{children}</View>;
+  // Four columns: the second row lines up under the first instead of floating between them.
+  if (wrap) return <View testID="home-bottom-bar-wrapped" style={[styles.navigationItems, { flexDirection: "row", flexWrap: "wrap",
+    justifyContent: "flex-start", alignSelf: "center", flexGrow: 0, width: 4 * 64 + 3 * 3 + 12 }]}>{children}</View>;
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navigationItems}
       onScrollEndDrag={onScrolled} onMomentumScrollEnd={onScrolled}>
