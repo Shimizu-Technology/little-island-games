@@ -1,0 +1,126 @@
+{
+ "format": 1,
+ "family": "pearl-loop",
+ "slot": 76,
+ "catalogRevision": 8,
+ "band": "deep",
+ "ordinals": [
+  75872,
+  32
+ ],
+ "sourceSha": "1aec8888cc0e23323a1946acebe817b19278cb1a",
+ "hashes": {
+  "kit": "a7c5a3af06bc2079fbf9f588174201e1919055b9526f915d098ac64ef5a11fd0",
+  "family": "19fd183614dfbcbee3d0bd2f055c4ead1bcf2a3543c71ad337e4a61bbbaf4b0a"
+ },
+ "rng": 1,
+ "rules": 1,
+ "seeds": {
+  "base": 1,
+  "attempts": 128,
+  "kept": [
+   50343262,
+   50335654,
+   50341866,
+   50334810,
+   50344570,
+   50337005,
+   50345653,
+   50337539,
+   50336032,
+   50337631,
+   50331695,
+   50333775,
+   50333813,
+   50335906,
+   50336003,
+   50334127,
+   50340121,
+   50333684,
+   50331930,
+   50336047,
+   50335809,
+   50339860,
+   50336215,
+   50332764,
+   50336245,
+   50332202,
+   50341848,
+   50336527,
+   50334480,
+   50339051,
+   50338491,
+   50337265
+  ]
+ },
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "distinct": {
+  "exact": 32,
+  "semantic": 32
+ },
+ "histograms": {
+  "technique": {
+   "chain": 32
+  },
+  "template": {
+   "blob": 4,
+   "coral": 7,
+   "open": 7,
+   "twin": 8,
+   "wiggle": 6
+  },
+  "layout": {
+   "blob": 4,
+   "coral": 7,
+   "open": 7,
+   "twin": 8,
+   "wiggle": 6
+  }
+ },
+ "solve": {
+  "status": "solved",
+  "budget": 200000,
+  "budgetExhausted": 0,
+  "timedOut": false,
+  "bounds": [
+   20,
+   46
+  ],
+  "exact": 32
+ },
+ "proofHashes": {
+  "witness": "eabe981b226074ec8db7b6ec6cad5e06c8c9c126c2c9018863f06d91ba172d30",
+  "trace": "a4740d093c1858501d4e2c4de1086f70f696fa51cd744a7f2ceb24a70ab559a8",
+  "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ },
+ "bots": {
+  "repeat-first": 0,
+  "repeat-last": 0,
+  "alternate": 0,
+  "cycle": 0,
+  "random": 0,
+  "scan": 0,
+  "greedy": 0
+ },
+ "provenance": {
+  "source": "original",
+  "note": "Generated here from seeded loop shapes; clues are removed only while named loop techniques still finish the board with no guessing. No imported puzzles."
+ },
+ "review": {
+  "ids": [],
+  "complete": false,
+  "subject": null
+ },
+ "speech": 0,
+ "bytes": {
+  "raw": 3787,
+  "gzip": 790
+ },
+ "sha256": "2ca1cf752cd0e64d28bc4839dd45dc8a56cabe91971f152dac12af95032bd528",
+ "native": [],
+ "machineGates": true,
+ "allShippingGates": false
+}

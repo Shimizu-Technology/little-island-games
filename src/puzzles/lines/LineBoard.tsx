@@ -9,7 +9,7 @@ import type { EdgeBoardProps } from '../edges/registration';
 import { BLACK, CROSS, EMPTY, LINE, brokenClues, latticeOf, solved, type LinePuzzle } from './core';
 import { cueFor, techniqueNames, type Cue } from './teach';
 
-const PAPER = '#FBF7EC', GRIDLINE = '#E6DFCB', INK = '#1E4A43', DOT = '#7C8C86';
+const PAPER = '#FBF7EC', GRIDLINE = '#D9CEB0', RIM = '#CFE0D8', INK = '#1E4A43', DOT = '#7C8C86';
 type Ladder = { stage: 0 | 1 | 2; cue: Cue | null; edits: number; helpsAt: number; placed: string };
 const closed = (edits: number, helpsAt: number): Ladder => ({ stage: 0, cue: null, edits, helpsAt, placed: '' });
 const rulesText: Record<LinePuzzle['kind'], string> = {
@@ -23,7 +23,8 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
   const { height } = useWindowDimensions(), feedback = useContext(GridFeedback), interaction = useContext(GridInteraction);
   // Loop dots sit on cell corners; Pearl Loop dots sit at cell centres.
   const span = pearl ? 0.5 : 0, cellsX = p.cols, cellsY = p.rows;
-  const cell = Math.max(22, Math.min(88, Math.floor(Math.min((width - 8) / cellsX, Math.max(300, height * 0.6) / cellsY)))), pad = Math.round(cell * 0.32);
+  // The board, its rim included, fits the column: no side overhang on a phone.
+  const cell = Math.max(22, Math.min(88, Math.floor(Math.min(width / (cellsX + 0.64), Math.max(300, height * 0.6) / (cellsY + 0.64))))), pad = Math.round(cell * 0.32);
   const W = cell * cellsX + pad * 2, H = cell * cellsY + pad * 2;
   const pos = (v: number) => ({ x: pad + (v % l.vc + span) * cell, y: pad + (Math.floor(v / l.vc) + span) * cell });
   const [pending, setPending] = useState<Map<number, number> | null>(null), [rules, setRules] = useState(false);
@@ -116,13 +117,20 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
   const ask = () => { const cue = cueFor(p, marks); if (!cue) return; setLadder({ stage: 1, cue, edits: view.board.edits, helpsAt: view.helps, placed: '' }); dispatch({ type: 'help' }); };
   const show = () => { if (!ladder.cue) return; setLadder(x => ({ ...x, placed: x.cue?.show ?? '' })); dispatch({ type: 'hint' }); };
   const send = (event: MarkEvent) => dispatch(event);
-  const focusCells = new Set(shown ? ladder.cue!.cells : []), focusDots = new Set(shown ? ladder.cue!.dots : []), focusEdges = new Set(shown ? ladder.cue!.edges : []);
-  const done = p.kind === 'loop' ? p.clues.filter((n, c) => n >= 0 && l.sides[c].filter(e => marks[e] === LINE).length === n).length : p.pearls.filter((k, v) => k && l.around[v].filter(e => marks[e] === LINE).length === 2 && !broken.has(v)).length;
+  // The card points at numbers, pearls or dots; the edges it will change stay hidden until Show me (a mark to fix is shown).
+  const fixing = shown && (ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake');
+  const focusCells = new Set(shown ? ladder.cue!.cells : []), focusDots = new Set(shown ? ladder.cue!.dots : []), focusEdges = new Set(fixing ? ladder.cue!.edges : []);
+  // A number is done when its lines match it (a 0 once its sides are all crossed); a pearl once the loop passes it truly.
+  const met = (marks2: readonly number[], c: number) => { if (p.kind !== 'loop') return false; const n = p.clues[c], four = l.sides[c]; return n > 0 ? four.filter(e => marks2[e] === LINE).length === n : n === 0 && four.every(e => marks2[e] === CROSS); };
+  const threaded = (v: number) => p.kind === 'pearl-loop' && p.pearls[v] > 0 && l.around[v].filter(e => shownMarks[e] === LINE).length === 2 && !broken.has(v);
+  const done = p.kind === 'loop' ? p.clues.filter((n, c) => n >= 0 && met(marks, c)).length : p.pearls.filter((k, v) => k && threaded(v)).length;
   const total = p.kind === 'loop' ? p.clues.filter(n => n >= 0).length : p.pearls.filter(Boolean).length;
+  const firstBroken = [...broken][0];
+  const trouble = branches.size ? 'Three lines meet at one place. The loop never branches.' : firstBroken === undefined ? '' : p.kind === 'loop' ? `This ${p.clues[firstBroken]} doesn’t fit its lines.` : `This ${p.pearls[firstBroken] === BLACK ? 'black' : 'white'} pearl’s rule is broken.`;
   const thick = Math.max(3.5, cell * 0.13), finished = !pending && solved(p, marks.map(m => m === CROSS ? EMPTY : m)), lineColour = finished ? C.teal : INK;
 
   const background = useMemo(() => {
-    const out: React.ReactElement[] = [<Rect key="bg" x={0} y={0} width={W} height={H} rx={Math.min(16, cell * 0.35)} fill={PAPER}/>];
+    const out: React.ReactElement[] = [<Rect key="bg" x={1} y={1} width={W - 2} height={H - 2} rx={Math.min(16, cell * 0.35)} fill={PAPER} stroke={RIM} strokeWidth={1.5}/>];
     if (pearl) for (let r = 0; r <= p.rows; r++) out.push(<Line key={`h${r}`} x1={pad} y1={pad + r * cell} x2={pad + p.cols * cell} y2={pad + r * cell} stroke={GRIDLINE} strokeWidth={1}/>);
     if (pearl) for (let c = 0; c <= p.cols; c++) out.push(<Line key={`v${c}`} x1={pad + c * cell} y1={pad} x2={pad + c * cell} y2={pad + p.rows * cell} stroke={GRIDLINE} strokeWidth={1}/>);
     return out;
@@ -136,15 +144,16 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
   });
   const clues = p.kind === 'loop' ? p.clues.flatMap((n, c) => {
     if (n < 0 && !focusCells.has(c)) return [];
-    const x = pad + (c % p.cols + 0.5) * cell, y = pad + (Math.floor(c / p.cols) + 0.5) * cell, met = n >= 0 && l.sides[c].filter(e => shownMarks[e] === LINE).length === n;
+    const x = pad + (c % p.cols + 0.5) * cell, y = pad + (Math.floor(c / p.cols) + 0.5) * cell, ok = met(shownMarks, c);
     return [<G key={`c${c}`}>
       {focusCells.has(c) && <Rect x={x - cell * 0.42} y={y - cell * 0.42} width={cell * 0.84} height={cell * 0.84} rx={cell * 0.16} fill="#FBEFC9" stroke={C.gold} strokeWidth={2}/>}
-      {n >= 0 && <SvgText x={x} y={y + cell * 0.17} fontSize={cell * 0.48} fontWeight="700" textAnchor="middle" fill={broken.has(c) ? C.error : met ? '#8FA79F' : INK}>{String(n)}</SvgText>}
+      {n >= 0 && <SvgText x={x} y={y + cell * 0.17} fontSize={cell * 0.48} fontWeight="700" textAnchor="middle" fill={broken.has(c) ? C.error : ok ? C.teal : INK}>{String(n)}</SvgText>}
     </G>];
   }) : p.pearls.flatMap((k, v) => {
     const at = pos(v), bad = broken.has(v);
     return [<G key={`p${v}`}>
       {focusDots.has(v) && <Circle cx={at.x} cy={at.y} r={cell * 0.44} fill="#FBEFC9" stroke={C.gold} strokeWidth={2.5}/>}
+      {k > 0 && threaded(v) && <Circle cx={at.x} cy={at.y} r={cell * 0.38} fill="none" stroke={C.teal} strokeWidth={Math.max(3, cell * 0.06)}/>}
       {k > 0 && <Circle cx={at.x} cy={at.y} r={cell * 0.3} fill={k === BLACK ? '#24302E' : '#FFFFFF'} stroke={bad ? C.error : '#24302E'} strokeWidth={bad ? 3.5 : 2.5}/>}
     </G>];
   });
@@ -171,19 +180,10 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
       {!!view.teaches && <Copy style={{ flexShrink: 1 }}>{`· skill: ${techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches}`}</Copy>}
       <Copy accessibilityLabel={`${done} of ${total} ${pearl ? 'pearls' : 'numbers'} done`}>{`· ${done}/${total}`}</Copy>
       <Button quiet compact selected={rules} onPress={() => setRules(on => !on)}>How to play</Button>
-      {!shown && <Button quiet compact disabled={!active || waiting} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>}
+      {/* Always present, so opening the card never re-wraps this row and moves the board. */}
+      <Button quiet compact disabled={!active || waiting || shown} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>
     </View>
     {rules && <Copy style={{ color: C.ink }}>{rulesText[p.kind]}</Copy>}
-    {!!placed && !shown && <Copy accessibilityLiveRegion="polite">{placed}</Copy>}
-    {shown && <View accessibilityLiveRegion="polite" style={{ gap: 6, padding: 12, borderRadius: 14, backgroundColor: '#FBF2D5', borderWidth: 1, borderColor: C.gold }}>
-      <Text style={{ fontSize: 13, letterSpacing: 0.6, color: C.teal, fontWeight: '700' }}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'A MARK TO FIX' : techniqueNames[ladder.cue!.technique].toUpperCase()}</Text>
-      <Copy style={{ color: C.ink }}>{stage === 2 ? ladder.cue!.think : ladder.cue!.look}</Copy>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {stage === 1 && <Button quiet compact disabled={!active} onPress={() => setLadder(x => ({ ...x, stage: 2 }))}>Why?</Button>}
-        <Button compact disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Fix it for me' : 'Show me'}</Button>
-        <Button quiet compact onPress={() => setLadder(closed(view.board.edits, view.helps))}>I’ll try it</Button>
-      </View>
-    </View>}
     <View style={{ alignSelf: 'center', width: W, height: H }} {...responder.panHandlers}>
       <Svg width={W} height={H} pointerEvents="none">
         {background}
@@ -194,6 +194,18 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
         {dotMarks}
       </Svg>
       {a11y}
+    </View>
+    {/* Everything that answers a move sits under the board, so the board itself never jumps. */}
+    <View style={{ minHeight: 24 }}>
+      {shown ? <View accessibilityLiveRegion="polite" style={{ gap: 6, padding: 12, borderRadius: 14, backgroundColor: '#FBF2D5', borderWidth: 1, borderColor: C.gold }}>
+      <Text style={{ fontSize: 13, letterSpacing: 0.6, color: C.teal, fontWeight: '700' }}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'A MARK TO FIX' : techniqueNames[ladder.cue!.technique].toUpperCase()}</Text>
+      <Copy style={{ color: C.ink }}>{stage === 2 ? ladder.cue!.think : ladder.cue!.look}</Copy>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {stage === 1 && <Button quiet compact disabled={!active} onPress={() => setLadder(x => ({ ...x, stage: 2 }))}>Why?</Button>}
+        <Button compact disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Fix it for me' : 'Show me'}</Button>
+        <Button quiet compact onPress={() => setLadder(closed(view.board.edits, view.helps))}>I’ll try it</Button>
+      </View>
+    </View> : trouble ? <Copy accessibilityLiveRegion="polite" style={{ color: C.error }}>{trouble}</Copy> : placed ? <Copy accessibilityLiveRegion="polite">{placed}</Copy> : null}
     </View>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       <Button quiet compact disabled={!active || !view.board.undo.length} onPress={() => send({ type: 'undo' })}>Undo</Button>

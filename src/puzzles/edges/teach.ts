@@ -32,10 +32,14 @@ export function cueFor(p: BridgesPuzzle, counts: Counts, plan: Plan = planHint(p
   const show = `${total === 1 ? 'One bridge' : `${total} bridges`} added ${places}.`;
   const focus = [plan.island, ...plan.links.map(e => links[e].a === plan.island ? links[e].b : links[e].a)];
   switch (plan.technique) {
-    case 'full': return { technique: 'full', focus, links: plan.links, look: `Look at this ${n}.`,
-      think: `Count the bridges its neighbours still have room for. It needs ${word(n - have)} more, and that is exactly how many fit, so every place gets all it can take.`, show };
+    case 'full': {
+      // Full fills every place with room, so one place filled means it was the only one left.
+      const only = plan.links.length === 1;
+      return { technique: 'full', focus, links: plan.links, look: `Look at this ${n}.`,
+        think: only ? `Only one neighbour still has room, so its ${n - have === 1 ? 'bridge goes' : 'bridges go'} there.` : `It still needs ${word(n - have)}. Its neighbours have room for exactly that many, so every place fills up.`, show };
+    }
     case 'must-reach': return { technique: 'must-reach', focus, links: plan.links, look: `Look at this ${n} and its neighbours.`,
-      think: `Even if every other neighbour took as many bridges as it could, this ${n} would still be short. So it needs a bridge ${places}.`, show };
+      think: `Even if every other neighbour took all the bridges it could, this ${n} would still be short. So a bridge goes ${places}.`, show };
     case 'isolation': return { technique: 'isolation', focus, links: plan.links, look: 'Look at this little group of islands.',
       think: 'If they used up all their bridges on each other, they would be cut off from the rest of the map. So a bridge has to reach out.', show };
     case 'way-out': return { technique: 'way-out', focus, links: plan.links, look: 'Look at how this part of the map joins the rest.',

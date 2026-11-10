@@ -1,0 +1,24 @@
+{
+ "format": 1,
+ "family": "bridges",
+ "seedBase": 1,
+ "attempts": 2040,
+ "rejects": {
+  "template-cap": 0,
+  "layout-repeat": 0
+ },
+ "budget": 200000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "ripple": 240,
+  "shallows": 300,
+  "stepping": 300,
+  "sandbar": 300,
+  "archipelago": 300,
+  "atoll": 300,
+  "channel": 300
+ },
+ "sourceSha": "2f7080f5bdb1359c06074a7bedf3984fc61c5db3",
+ "status": "complete"
+}

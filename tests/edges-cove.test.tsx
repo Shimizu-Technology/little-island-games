@@ -69,7 +69,7 @@ describe('Bridges in the Cove, through the real Store and packed bank', () => {
       await act(async () => { screen = create(<StoreProvider><Probe/><Round entry={bridges} card={card}/></StoreProvider>); });
       await waitFor(() => !!paused('bridges') && !!surface(screen));
       const p = (bridgesRegistered.render(paused('bridges'), () => {}, false, 353) as React.ReactElement<EdgeBoardProps<BridgesPuzzle>>).props.view.puzzle;
-      const { islands, links } = shapeOf(p), cell = Math.floor(Math.min(353 / p.width, Math.max(300, 852 * 0.62) / p.height)), at = (i: number) => [(islands[i].x + 0.5) * cell, (islands[i].y + 0.5) * cell];
+      const { islands, links } = shapeOf(p), cell = Math.floor(Math.min(353 / (p.width + 0.4), Math.max(300, 852 * 0.62) / (p.height + 0.4))), rim = Math.round(cell * 0.2), at = (i: number) => [rim + (islands[i].x + 0.5) * cell, rim + (islands[i].y + 0.5) * cell];
       const e = 0, l = links[e], [ax, ay] = at(l.a), [bx, by] = at(l.b);
       // Drag from one island toward its neighbour: one bridge, one sound.
       await gesture(screen, ax, ay, bx - ax, by - ay);
@@ -113,13 +113,13 @@ describe('Bridges in the Cove, through the real Store and packed bank', () => {
     try {
       await act(async () => { screen = create(<StoreProvider><Probe/><Round entry={bridges} card={card}/></StoreProvider>); });
       await waitFor(() => !!paused('bridges') && !!surface(screen));
-      const { islands, links } = shapeOf(p), cell = Math.floor(Math.min(353 / p.width, Math.max(300, 852 * 0.62) / p.height)), mid = (e: number) => { const l = links[e], A = islands[l.a], B = islands[l.b]; return [((A.x + B.x) / 2 + 0.5) * cell, ((A.y + B.y) / 2 + 0.5) * cell]; };
+      const { islands, links } = shapeOf(p), cell = Math.floor(Math.min(353 / (p.width + 0.4), Math.max(300, 852 * 0.62) / (p.height + 0.4))), rim = Math.round(cell * 0.2), mid = (e: number) => { const l = links[e], A = islands[l.a], B = islands[l.b]; return [rim + ((A.x + B.x) / 2 + 0.5) * cell, rim + ((A.y + B.y) / 2 + 0.5) * cell]; };
       const [x1, y1] = mid(a); await gesture(screen, x1, y1);
       await waitFor(() => marksOf('bridges')[a] === '1');
       const before = paused('bridges');
       // Drag from an end island of the crossing link toward its partner.
       const lb = links[b], A = islands[lb.a], B = islands[lb.b];
-      await gesture(screen, (A.x + 0.5) * cell, (A.y + 0.5) * cell, (B.x - A.x) * cell, (B.y - A.y) * cell);
+      await gesture(screen, rim + (A.x + 0.5) * cell, rim + (A.y + 0.5) * cell, (B.x - A.x) * cell, (B.y - A.y) * cell);
       await settle();
       expect(paused('bridges')).toEqual(before);
       expect(text(screen)).toContain('Bridges can’t cross');
@@ -137,7 +137,7 @@ describe('Loop in the Cove', () => {
       await act(async () => { screen = create(<StoreProvider><Probe/><Round entry={loop} card={card}/></StoreProvider>); });
       await waitFor(() => !!paused('loop') && !!surface(screen));
       const p = (loopRegistered.render(paused('loop'), () => {}, false, 353) as React.ReactElement<EdgeBoardProps<LinePuzzle>>).props.view.puzzle, l = latticeOf(p);
-      const cell = Math.max(22, Math.floor(Math.min((353 - 8) / p.cols, Math.max(300, 852 * 0.6) / p.rows))), pad = Math.round(cell * 0.32);
+      const cell = Math.max(22, Math.floor(Math.min(353 / (p.cols + 0.64), Math.max(300, 852 * 0.6) / (p.rows + 0.64)))), pad = Math.round(cell * 0.32);
       // From the top-left dot, right three dots: three lines.
       await gesture(screen, pad, pad, cell * 3, 0);
       await waitFor(() => marksOf('loop').slice(0, 3) === '111');

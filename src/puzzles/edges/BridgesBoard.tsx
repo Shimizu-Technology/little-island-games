@@ -19,9 +19,11 @@ const howTo = 'Each island’s number is how many bridges it needs. Bridges go s
 export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<BridgesPuzzle>) {
   const p = view.puzzle, marks = view.board.marks, shape = useMemo(() => shapeOf(p), [p]), { islands, links, crosses } = shape;
   const { height } = useWindowDimensions(), feedback = useContext(GridFeedback), interaction = useContext(GridInteraction);
-  const cell = Math.max(24, Math.min(84, Math.floor(Math.min(width / p.width, Math.max(300, height * 0.62) / p.height)))), W = cell * p.width, H = cell * p.height, r = cell * 0.4;
-  const at = useCallback((i: number) => ({ x: (islands[i].x + 0.5) * cell, y: (islands[i].y + 0.5) * cell }), [islands, cell]);
-  const [selected, setSelected] = useState<number | null>(null), [preview, setPreview] = useState<{ link: number; blocked: number[] } | null>(null);
+  // A rim of water around the grid keeps rings and edge islands whole.
+  const cell = Math.max(24, Math.min(84, Math.floor(Math.min(width / (p.width + 0.4), Math.max(300, height * 0.62) / (p.height + 0.4))))), rim = Math.round(cell * 0.2);
+  const W = cell * p.width + rim * 2, H = cell * p.height + rim * 2, r = cell * 0.4;
+  const at = useCallback((i: number) => ({ x: rim + (islands[i].x + 0.5) * cell, y: rim + (islands[i].y + 0.5) * cell }), [islands, cell, rim]);
+  const [selected, setSelected] = useState<number | null>(null), [preview, setPreview] = useState<{ link: number; blocked: number[]; to: number } | null>(null);
   const [blocked, setBlocked] = useState<number[]>([]), [message, setMessage] = useState(''), [rules, setRules] = useState(false);
   const [ladder, setLadder] = useState<Ladder>(() => closed(view.board.edits, view.helps));
   const live = useRef({ marks, active, dispatch, selected });
@@ -79,7 +81,7 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
       if (Math.max(Math.abs(dx), Math.abs(dy)) < cell * 0.55) { if (d.link >= 0) { d.link = -1; setPreview(null); } return; }
       d.moved = true;
       const link = linkToward(d.island, dx, dy);
-      if (link !== d.link) { d.link = link; setPreview(link >= 0 ? { link, blocked: live.current.marks[link] < 2 ? blockersOf(link, live.current.marks) : [] } : null); }
+      if (link !== d.link) { d.link = link; setPreview(link >= 0 ? { link, blocked: live.current.marks[link] < 2 ? blockersOf(link, live.current.marks) : [], to: links[link].a === d.island ? links[link].b : links[link].a } : null); }
     },
     onPanResponderRelease: () => {
       const d = drag.current;
@@ -107,8 +109,10 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
   const send = (event: MarkEvent) => { setMessage(''); setSelected(null); dispatch(event); };
 
   const over = useMemo(() => new Set(overfull(p, marks)), [p, marks]);
-  const finished = islands.filter((s, i) => degree(p, marks, i) === s.clue).length;
-  const focus = new Set(shown ? ladder.cue!.focus : []), hinted = new Set(shown ? ladder.cue!.links : []);
+  const finished = islands.filter((s, i) => degree(p, marks, i) === s.clue).length, first = [...over][0];
+  const tooMany = first === undefined ? '' : `This ${islands[first].clue} has too many bridges.`;
+  // Look rings the one island to think about; Why adds the neighbours it depends on. The answer stays hidden until Show me.
+  const focus = new Set(shown ? (stage === 2 ? ladder.cue!.focus : ladder.cue!.focus.slice(0, 1)) : []);
   const neighbours = selected === null ? new Set<number>() : new Set(shape.around[selected].map(e => links[e].a === selected ? links[e].b : links[e].a));
   const plank = (e: number, count: number, color: string, dashed = false) => {
     const l = links[e], a = at(l.a), b = at(l.b), gap = r + 1, ox = l.horizontal ? 0 : 1, oy = l.horizontal ? 1 : 0;
@@ -117,7 +121,7 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
     const offsets = count === 2 ? [-off, off] : [0];
     return offsets.map((o, k) => <Line key={`${e}-${k}-${color}`} x1={x1 + ox * o} y1={y1 + oy * o} x2={x2 + ox * o} y2={y2 + oy * o} stroke={color} strokeWidth={thick} strokeLinecap="round" strokeDasharray={dash}/>);
   };
-  const dots = useMemo(() => p.clues.flatMap((c, i) => c ? [] : [<Circle key={i} cx={(i % p.width + 0.5) * cell} cy={(Math.floor(i / p.width) + 0.5) * cell} r={Math.max(1.5, cell * 0.045)} fill={DOT}/>]), [p, cell]);
+  const dots = useMemo(() => p.clues.flatMap((c, i) => c ? [] : [<Circle key={i} cx={rim + (i % p.width + 0.5) * cell} cy={rim + (Math.floor(i / p.width) + 0.5) * cell} r={Math.max(1.5, cell * 0.045)} fill={DOT}/>]), [p, cell, rim]);
   const describe = (i: number) => {
     const s = islands[i], has = degree(p, marks, i);
     return `Island ${s.clue}, row ${s.y + 1}, column ${s.x + 1}. ${has} of ${s.clue} bridges${has === s.clue ? ', finished' : has > s.clue ? ', too many' : ''}.`;
@@ -130,33 +134,25 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
       {!!view.teaches && <Copy style={{ flexShrink: 1 }}>{`· skill: ${techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches}`}</Copy>}
       <Copy accessibilityLabel={`${finished} of ${islands.length} islands finished`}>{`· ${finished}/${islands.length}`}</Copy>
       <Button quiet compact selected={rules} onPress={() => setRules(on => !on)}>How to play</Button>
-      {!shown && <Button quiet compact disabled={!active || waiting} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>}
+      {/* Always present, so opening the card never re-wraps this row and moves the board. */}
+      <Button quiet compact disabled={!active || waiting || shown} onPress={ask} label="Hint: where should I look?">{waiting ? 'Getting a hint…' : 'Hint'}</Button>
     </View>
     {rules && <Copy style={{ color: C.ink }}>{howTo}</Copy>}
-    {!!placed && !shown && <Copy accessibilityLiveRegion="polite">{placed}</Copy>}
-    {shown && <View accessibilityLiveRegion="polite" style={{ gap: 6, padding: 12, borderRadius: 14, backgroundColor: '#FBF2D5', borderWidth: 1, borderColor: C.gold }}>
-      <Text style={{ fontSize: 13, letterSpacing: 0.6, color: C.teal, fontWeight: '700' }}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'A BRIDGE TO FIX' : techniqueNames[ladder.cue!.technique].toUpperCase()}</Text>
-      <Copy style={{ color: C.ink }}>{stage === 2 ? ladder.cue!.think : ladder.cue!.look}</Copy>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {stage === 1 && <Button quiet compact disabled={!active} onPress={() => setLadder(l => ({ ...l, stage: 2 }))}>Why?</Button>}
-        <Button compact disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Fix it for me' : 'Show me'}</Button>
-        <Button quiet compact onPress={() => setLadder(closed(view.board.edits, view.helps))}>I’ll try it</Button>
-      </View>
-    </View>}
     <View style={{ alignSelf: 'center', width: W, height: H }} {...responder.panHandlers} accessible={false}>
       <Svg width={W} height={H} pointerEvents="none">
         <Rect x={0} y={0} width={W} height={H} rx={Math.min(16, cell * 0.4)} fill={SEA}/>
         {dots}
         <G>{links.flatMap((_, e) => marks[e] ? plank(e, marks[e], blocked.includes(e) ? C.error : PLANK) : [])}</G>
-        {/* What letting go would do: one more bridge in blue, taking both away in grey, refused in red. */}
-        {preview && plank(preview.link, marks[preview.link] === 2 ? 2 : marks[preview.link] + 1, preview.blocked.length ? C.error : marks[preview.link] === 2 ? C.muted : C.blue, true)}
+        {/* What letting go would do: a ghost bridge (two when it would become a double), grey dashes when both would go, red when refused. */}
+        {preview && <G opacity={preview.blocked.length || marks[preview.link] === 2 ? 1 : 0.5}>{plank(preview.link, marks[preview.link] === 2 ? 2 : marks[preview.link] + 1, preview.blocked.length ? C.error : marks[preview.link] === 2 ? C.muted : PLANK, !!preview.blocked.length || marks[preview.link] === 2)}</G>}
         {preview?.blocked.flatMap(e => plank(e, marks[e], C.error))}
         {blocked.length > 0 && marks[blocked[0]] === 0 && plank(blocked[0], 1, C.error, true)}
-        {[...hinted].flatMap(e => plank(e, 1, C.gold, true))}
         {islands.map((s, i) => {
           const c = at(i), done = degree(p, marks, i) === s.clue, bad = over.has(i);
           return <G key={i}>
-            {focus.has(i) && <Circle cx={c.x} cy={c.y} r={r + Math.max(4, cell * 0.12)} fill="none" stroke={C.gold} strokeWidth={Math.max(3, cell * 0.1)}/>}
+            {preview?.to === i && !preview.blocked.length && <Circle cx={c.x} cy={c.y} r={r + Math.max(3, cell * 0.09)} fill="none" stroke={C.gold} strokeWidth={Math.max(3, cell * 0.08)}/>}
+            {/* The island to think about gets the full gold ring; its neighbours (once Why is open) a thinner one. */}
+            {focus.has(i) && <Circle cx={c.x} cy={c.y} r={r + Math.max(4, cell * 0.12)} fill="none" stroke={C.gold} strokeWidth={i === ladder.cue?.focus[0] ? Math.max(3, cell * 0.1) : Math.max(2, cell * 0.045)}/>}
             {selected === i && <Circle cx={c.x} cy={c.y} r={r + Math.max(3, cell * 0.09)} fill="none" stroke={C.blue} strokeWidth={Math.max(3, cell * 0.08)}/>}
             {neighbours.has(i) && <Circle cx={c.x} cy={c.y} r={r + 2} fill="none" stroke={C.blue} strokeWidth={2} strokeDasharray="4 3"/>}
             <Circle cx={c.x} cy={c.y} r={r} fill={bad ? OVER : done ? DONE : SAND} stroke={bad ? C.error : done ? C.teal : SHORE} strokeWidth={Math.max(2, cell * 0.06)}/>
@@ -169,7 +165,18 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
         onAccessibilityAction={(event: AccessibilityActionEvent) => { const e = Number(event.nativeEvent.actionName.replace('link-', '')); if (Number.isInteger(e)) cycle(e); }}
         style={{ position: 'absolute', left: c.x - r, top: c.y - r, width: r * 2, height: r * 2 }} pointerEvents="none"/>; })}
     </View>
-    {!!message && <Copy accessibilityLiveRegion="polite" style={{ color: C.error }}>{message}</Copy>}
+    {/* Everything that answers a move sits under the board, so the board itself never jumps. */}
+    <View style={{ minHeight: 24 }}>
+      {shown ? <View accessibilityLiveRegion="polite" style={{ gap: 6, padding: 12, borderRadius: 14, backgroundColor: '#FBF2D5', borderWidth: 1, borderColor: C.gold }}>
+      <Text style={{ fontSize: 13, letterSpacing: 0.6, color: C.teal, fontWeight: '700' }}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'A BRIDGE TO FIX' : techniqueNames[ladder.cue!.technique].toUpperCase()}</Text>
+      <Copy style={{ color: C.ink }}>{stage === 2 ? ladder.cue!.think : ladder.cue!.look}</Copy>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {stage === 1 && <Button quiet compact disabled={!active} onPress={() => setLadder(l => ({ ...l, stage: 2 }))}>Why?</Button>}
+        <Button compact disabled={!active} onPress={show}>{ladder.cue!.technique === 'clash' || ladder.cue!.technique === 'mistake' ? 'Fix it for me' : 'Show me'}</Button>
+        <Button quiet compact onPress={() => setLadder(closed(view.board.edits, view.helps))}>I’ll try it</Button>
+      </View>
+    </View> : message ? <Copy accessibilityLiveRegion="polite" style={{ color: C.error }}>{message}</Copy> : tooMany ? <Copy accessibilityLiveRegion="polite" style={{ color: C.error }}>{tooMany}</Copy> : placed ? <Copy accessibilityLiveRegion="polite">{placed}</Copy> : null}
+    </View>
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       <Button quiet compact disabled={!active || !view.board.undo.length} onPress={() => send({ type: 'undo' })}>Undo</Button>
       <Button quiet compact disabled={!active || !view.board.redo.length} onPress={() => send({ type: 'redo' })}>Redo</Button>
