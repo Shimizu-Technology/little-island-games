@@ -9,8 +9,8 @@ import { encodeSave, migrateProfiles, projectProfile } from '../src/state/profil
 import { addCovePerson } from '../src/state/covePeople';
 import { parseSave, MAX_SAVE_BYTES } from '../src/state/validation';
 import { newLibraryChild, validLibraryData } from '../src/library/state';
-
-vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
+// Capacity fixtures occupy every dare slot; isolate them from shipped registrations.
+vi.mock('../src/challenge/registry.generated',()=>({challengeEntries:[]}));
 const hash='b'.repeat(64);
 const banks:InlineBank[]=[];let ordinal=0;
 // 54,000 Cove entries + 8,647 School entries; exactly 62,647 entries, not an all-ones invalid bitmap.
