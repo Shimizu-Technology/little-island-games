@@ -105,6 +105,7 @@ export type Pickup = CaptureToken & {
   committedId?: string;
 };
 export const ROOM_HOVER_MS = 300;
+export const BACKGROUND_TAP_MS = 500;
 export type DropZone =
   | { kind: "room"; room: RoomId; x: number; y: number; width: number; height: number }
   | { kind: "drawer"; x: number; y: number; width: number; height: number };
@@ -301,6 +302,8 @@ export function useInteraction({
   const pinchMid = useSharedValue({ x: 0, y: 0 });
   const pinchDistance = useSharedValue(0);
   const suppressed = useSharedValue<number[]>([]);
+  // HM-18: a second finger makes this touch sequence a two-finger gesture; it is never a tap.
+  const multiTouch = useSharedValue(false);
   // Raw down/move/up events survive the JS commit interval, including a whole
   // fast grab/release. Replay before hiding the landing overlay, against the
   // acknowledged scene/identity. Never invalidate an in-flight transaction.
@@ -927,6 +930,7 @@ export function useInteraction({
     .onTouchesDown((event, manager) => {
       manager.activate();
       if (!controller.value.pointers.length) cameraGesture.set(false);
+      if (controller.value.pointers.length + event.changedTouches.length > 1 || suppressed.value.length) multiTouch.set(true);
       inertia.set({ x: 0, y: 0, since: 0, lastMove: 0 });
       revealPan.set(null);
       // A carried thing keeps an explicit room move running; a new hand on the room takes over.
@@ -1019,7 +1023,9 @@ export function useInteraction({
           if (onReleaseProbe && capture?.phase === "dragging" && slot)
             probePending.set([...probePending.value, { at: eventTime(), id: slot.id,
               kind: proposal?.kind ?? "restore", target: proposal?.target }]);
-          if (capture && !capture.entity && capture.phase === "pending")
+          // HM-18: only a short single-finger background touch is a tap (500 ms, like objects).
+          if (capture && !capture.entity && capture.phase === "pending" && !multiTouch.value &&
+            eventTime() - capture.startedAt <= BACKGROUND_TAP_MS)
             runOnJS(onTap)(undefined, screenPoint(touch.x, touch.y), eventTime());
           if (capture?.phase === "camera" && !capture.entity && pinchDistance.value === 0)
             inertia.set({ ...inertia.value, since: eventTime() });
@@ -1029,6 +1035,7 @@ export function useInteraction({
         suppressed.set(suppressed.value.filter((id) => id !== touch.id));
       }
       if (event.numberOfTouches === 0) {
+        multiTouch.set(false);
         pinchDistance.set(0);
         manager.end();
         const index = roomAtScreen(viewport.width / 2, viewport.height / 2, camera.value, building);
@@ -1042,6 +1049,7 @@ export function useInteraction({
     .onTouchesCancelled((event, manager) => {
       for (const touch of event.changedTouches) send({ type: "cancel", pointer: touch.id, now: eventTime() });
       suppressed.set([]);
+      multiTouch.set(false);
       pinchDistance.set(0);
       manager.end();
     });

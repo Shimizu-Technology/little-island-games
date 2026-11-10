@@ -36,6 +36,7 @@ import { DesignTools, portraitDrawerHeight, type CatalogGhost } from "./runtime/
 import { StagingTray } from "./runtime/StagingTray";
 import { Destinations } from "./runtime/Destinations";
 import { DebugOverlay } from "./runtime/DebugOverlay";
+import { CapacityCue, CAPACITY_CUE_MS, CAPACITY_MESSAGE } from "./runtime/CapacityCue";
 import { type CharacterRender } from "./runtime/EntityArt";
 import { boundCamera, fitCamera, focusCamera, roomScale, roomAtScreen, zoomCamera } from "./runtime/CameraController";
 import { useInteraction, type Interaction, type Pickup, type CaptureToken } from "./runtime/useInteraction";
@@ -53,6 +54,7 @@ const labKit: { trace: typeof import("./runtime/trace"); overlay: typeof import(
     ? { trace: require("./runtime/trace"), overlay: require("./runtime/HullOverlay") }
     : undefined;
 
+export const REDO_VISIBLE_MS = 10000;
 export type HomeScreenProps = Ownership & {
   badges?: BadgeId[];
   initialItem?: string;
@@ -100,6 +102,11 @@ export function HomeScreen({
   const reactionTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   React.useEffect(() => () => Object.values(reactionTimers.current).forEach(clearTimeout), []);
   const [catalogItem, setCatalogItem] = useState<ItemId>();
+  // HM-18: Redo shows in Play for 10 s after an Undo; a full room shows a picture, not just words.
+  const [redoWindow, setRedoWindow] = useState(false);
+  const redoTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [capacityShown, setCapacityShown] = useState(false);
+  React.useEffect(() => () => clearTimeout(redoTimer.current), []);
   const catalogSeeds = useRef<Record<string, { seed: HomeStateV2 }>>({});
   const [headerHeight, setHeaderHeight] = useState(64 + inset.top);
   const [frameReport, setFrameReport] = useState<number[]>();
@@ -154,6 +161,12 @@ export function HomeScreen({
     });
     return () => cancelAnimationFrame(frame);
   }, [scene.revision, focusId]);
+  React.useEffect(() => {
+    if (store.message !== CAPACITY_MESSAGE || !store.messageSerial) return;
+    setCapacityShown(true);
+    const timer = setTimeout(() => setCapacityShown(false), CAPACITY_CUE_MS);
+    return () => clearTimeout(timer);
+  }, [store.message, store.messageSerial]);
   const live = useRef({ store, scene, selected, placing, room, designing });
   useLayoutEffect(() => {
     live.current = { store, scene, selected, placing, room, designing };
@@ -189,7 +202,7 @@ export function HomeScreen({
         const pending = catalogCommit(current.store.getState(), catalog, id, proposal);
         if (!pending) {
           if (proposal && placedInstances(current.store.getState().rooms[proposal.room]).length >= MAX_INSTANCES)
-            current.store.setMessage("Put something away to make room.");
+            current.store.setMessage(CAPACITY_MESSAGE);
           return undefined;
         }
         const next = current.store.commitProposal(pending.proposal, pending.seed, stillCurrent);
@@ -221,7 +234,7 @@ export function HomeScreen({
           };
           if (!proposal || proposal.kind === "staging") {
             current.store.setMessage(proposal?.refusal === "capacity" || placedInstances(latest.rooms[destination]).length >= MAX_INSTANCES
-              ? "Put something away to make room." : "Choose a free hand or place.");
+              ? CAPACITY_MESSAGE : "Choose a free hand or place.");
             return undefined;
           }
           // Materialize the preview, never resolve the raw release anchor again.
@@ -366,7 +379,7 @@ export function HomeScreen({
   );
   const onClear = useCallback(
     (index: number, id?: string, reason?: "capacity") => {
-      if (reason === "capacity") live.current.store.setMessage("Put something away to make room.");
+      if (reason === "capacity") live.current.store.setMessage(CAPACITY_MESSAGE);
       if (id) clearCatalogSeed(catalogSeeds.current, id);
       // A UI-thread re-grab can outrun this queued clear callback.
       if (runtime.current?.slots.get()[index].id) return;
@@ -660,7 +673,7 @@ export function HomeScreen({
     if (!owns(item, ownership)) { store.setMessage("This showpiece is in the Locker."); return; }
     const current = live.current.store.getState(), dest = destination ?? live.current.room;
     if (destination && placedInstances(current.rooms[dest]).length >= MAX_INSTANCES) {
-      store.setMessage("Put something away to make room."); return;
+      store.setMessage(CAPACITY_MESSAGE); return;
     }
     const created = instance(`home-${Date.now().toString(36)}-${++sequence.current}`, item, 0, 0);
     const seed = { ...current, rooms: { ...current.rooms,
@@ -727,7 +740,11 @@ export function HomeScreen({
         onUndo={() => {
           interaction.cancelAll();
           store.dispatch({ type: "undo" });
+          setRedoWindow(true);
+          clearTimeout(redoTimer.current);
+          redoTimer.current = setTimeout(() => setRedoWindow(false), REDO_VISIBLE_MS);
         }}
+        showRedo={redoWindow && store.canRedo}
         onRedo={() => {
           interaction.cancelAll();
           store.dispatch({ type: "redo" });
@@ -915,6 +932,7 @@ export function HomeScreen({
       <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
         {store.message}
       </Text>
+      {capacityShown && <CapacityCue bottom={inset.bottom + navigationHeight + 14} />}
       {lab && frameReport && (
         <Text testID="frame-report" style={{ position: "absolute", left: 75, bottom: 2, fontSize: 10 }}>
           {JSON.stringify({

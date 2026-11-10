@@ -11,6 +11,7 @@ import { freeFloor } from "./freeFloor";
 import { roomDefaultTheme } from "./art/roomDefaults";
 import { moreCatalog, roomIds, tintIds, type RoomId, type TintId } from "./catalogMore";
 import { clearFootprint } from "./placement";
+import { undoPast, validUndoShape, type HomeUndo } from "./undoHistory";
 import {
   badgeIds,
   floorThemes,
@@ -80,7 +81,16 @@ export type HomeState = {
   theme: { wallpaper: (typeof wallThemes)[number]; floor: (typeof floorThemes)[number] };
 };
 export type RoomState = Pick<HomeState, "instances" | "characters" | "theme">;
-export type HomeStateV2 = { version: 2 | 3 | 4; current: RoomId; rooms: Record<RoomId, RoomState> };
+export type HomeStateV2 = {
+  version: 2 | 3 | 4;
+  current: RoomId;
+  rooms: Record<RoomId, RoomState>;
+  /** v4 only. The last saved undo steps (HM-18, rule 57). Never part of history itself. */
+  undo?: HomeUndo;
+  /** v4 only. Grown-up access choices for this child's home (HR-03). Outside history. */
+  access?: HomeAccess;
+};
+export type HomeAccess = { largeTargets: true };
 export type HomeSave = HomeState | HomeStateV2;
 export const currentRoom = (state: HomeStateV2): RoomState => state.rooms[state.current];
 export type Ownership = {
@@ -273,18 +283,39 @@ export function validHome(v: unknown): v is HomeSave {
     if (!exact(v, ["version", "scene", "instances", "characters", "theme"]) || s.scene !== "room-1") return false;
     return validRoom({ instances: s.instances, characters: s.characters, theme: s.theme }, true);
   }
+  const optional = s.version === 4 ? (["undo", "access"] as const).filter((k) => Object.hasOwn(v, k)) : [];
   if (
-    !exact(v, ["version", "current", "rooms"]) ||
+    !exact(v, ["version", "current", "rooms", ...optional]) ||
     ![2, 3, 4].includes(s.version) ||
     !member(roomIds, s.current) ||
     !exact(s.rooms, [...roomIds]) ||
-    !roomIds.every((id) => validRoom(s.rooms[id], false, s.version >= 3, s.version === 4))
+    !validRooms(s, roomIds)
   )
     return false;
+  if (s.version === 4 && s.access !== undefined && !(exact(s.access, ["largeTargets"]) && s.access.largeTargets === true)) return false;
+  // Every saved undo step must rebuild a valid earlier home; one bad step makes the save invalid.
+  // A step only changes the rooms it names, so only those rooms are validated again.
+  if (s.version === 4 && s.undo !== undefined) {
+    if (!validUndoShape(s.undo)) return false;
+    const steps = s.undo.steps;
+    let past: HomeStateV2[];
+    try {
+      past = undoPast({ version: 4, current: s.current, rooms: s.rooms }, s.undo);
+    } catch {
+      return false;
+    }
+    if (!past.every((state, i) => exact(state.rooms, [...roomIds]) && validRooms(state, Object.keys(steps[i]) as RoomId[])))
+      return false;
+  }
+  return true;
+}
+/** Per-room validity plus the cross-room rules, for the rooms named in `changed`. */
+function validRooms(s: HomeStateV2, changed: readonly RoomId[]): boolean {
+  if (!changed.every((id) => validRoom(s.rooms[id], false, s.version >= 3, s.version === 4))) return false;
   // Friends may live in different rooms; duplicate slots across rooms are corrupt data.
   const slots = roomIds.flatMap((id) => s.rooms[id].characters.map((c) => c.slot));
   if (new Set(slots).size !== slots.length) return false;
-  return roomIds.every((id) => {
+  return changed.every((id) => {
     const room = s.rooms[id],
       occupied = room.characters.filter((c) => c.socket).map((c) => `${c.socket!.itemId}:${c.socket!.socketId}`),
       held = room.characters.flatMap((c) => (c.holding ? [c.holding] : []));

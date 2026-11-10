@@ -136,6 +136,7 @@ function HomeChromeView({
   saveStatus,
   roomHover,
   onRoomRect,
+  showRedo = false,
   large = false,
   measureToken = 0,
   onScrolled,
@@ -143,6 +144,8 @@ function HomeChromeView({
   measureToken?: number;
   onScrolled?: () => void;
   roomHover?: SharedValue<RoomHover | null>;
+  /** HM-18: Redo stays reachable in Play for 10 s after an Undo. */
+  showRedo?: boolean;
   onRoomRect?: (room: RoomId, rect: WindowRect) => void;
   /** HR-03: the grown-ups' larger-target mode. */
   large?: boolean;
@@ -177,7 +180,7 @@ function HomeChromeView({
           {title ?? (overview ? "Our house" : roomNames[room])}
         </Text>
         <Tool label="Undo" symbol="↶" disabled={!canUndo} onPress={onUndo} />
-        {designing && <Tool label="Redo" symbol="↷" disabled={!canRedo} onPress={onRedo} />}
+        {(designing || showRedo) && <Tool label="Redo" symbol="↷" disabled={!canRedo} onPress={onRedo} />}
         <Tool
           label={designing ? "Done designing" : "Design"}
           symbol={designing ? "✓" : "✎"}
