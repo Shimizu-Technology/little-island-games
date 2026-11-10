@@ -264,7 +264,7 @@ function Pits({ state: s, width, onMove, locked, hint, speak, still }: Props) {
     <PressableScale
       key={i}
       accessibilityRole="button"
-      accessibilityLabel={`Pit ${i < 6 ? i + 1 : i - 6}, ${i < 6 ? "circle" : "square"} side, ${s.board[i]} shells`}
+      accessibilityLabel={`Pit ${i < 6 ? i + 1 : i - 6}, ${i < 6 ? "circle" : "square"} side, ${s.board[i]} ${s.board[i] === 1 ? "shell" : "shells"}`}
       accessibilityState={{ disabled: !!locked || !legal.includes(i), selected: pit === i }}
       disabled={locked || !legal.includes(i)}
       onPress={() => {
@@ -328,7 +328,7 @@ function Pits({ state: s, width, onMove, locked, hint, speak, still }: Props) {
       {pit !== null && path.length > 0 ? (
         <View style={{ gap: 8, padding: 6 }}>
           <Copy style={{ fontSize: 14, color: C.ink }}>
-            {s.board[pit]} shells. Last shell →{" "}
+            {s.board[pit]} {s.board[pit] === 1 ? "shell" : "shells"}. Last shell →{" "}
             {last === 6
               ? "circle store"
               : last === 13

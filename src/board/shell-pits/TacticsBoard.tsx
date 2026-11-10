@@ -28,7 +28,7 @@ export function TacticsBoard({ state: s, dispatch, active, width }: ChallengeVie
       : s.hint === null
         ? "No sure win from here. Undo a sow or start again."
         : s.hint !== undefined
-          ? `Help: try ${pitName(s.hint)}. The gold ring marks it.`
+          ? `Help: try ${pitName(s.hint)}. It has the outline; the gold ring shows where its last shell lands.`
           : last?.replies.length
             ? `Ray sowed ${last.replies.map(pitName).join(", then ")}. Your turn.`
             : last
