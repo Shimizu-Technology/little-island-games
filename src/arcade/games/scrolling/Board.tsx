@@ -10,7 +10,7 @@ import { fixtureInput } from "../lagoon-run/fixtures";
 import { runLevels } from "./content";
 import { RunHud, HUD_TOP } from '../lagoon-run/Hud';
 import { HarborPlanks, HarborEnvironment, RunCamera, SpeedLines } from '../lagoon-run/World';
-import { DeckBase, DeckHaze } from '../lagoon-run/Backdrop';
+import { DeckBase, DeckHaze, DeckLight } from '../lagoon-run/Backdrop';
 import { RunArena } from '../lagoon-run/Arena';
 import { useStage } from '../lagoon-run/stage';
 import { CONTACT, HERO_SCALE, HERO_ZOOM, TRACK_HEIGHT } from '../lagoon-run/camera';
@@ -165,7 +165,7 @@ const LAYER={position:"absolute" as const,left:0,top:0,width:W,height:H};
  * off between its pre-mounted twins by opacity only.
  */
 export const RunLayer = memo(function RunLayer({ poses, spec, learn, world, runner }: { poses: SharedValue<SpritePose[]>; spec: RunRowSpec[]; learn: boolean; world: WorldId; runner?: React.ReactNode }) {
-  return <RunCamera poses={poses}><View testID="run-art" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ position: "absolute", width: W, height: H }}><DeckBase world={world}/><HarborPlanks poses={poses} world={world}/><DeckHaze world={world}/><HarborEnvironment poses={poses} world={world}/><ArcadeSprite poses={poses} index={50} width={70} height={14}><Svg width={70} height={14}><Path d="M2 7Q35-5 68 7Q35 20 2 7Z" fill="#173F67" opacity={.48}/></Svg></ArcadeSprite>
+  return <RunCamera poses={poses}><View testID="run-art" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ position: "absolute", width: W, height: H }}><DeckBase world={world}/><HarborPlanks poses={poses} world={world}/><DeckHaze world={world}/><DeckLight world={world}/><HarborEnvironment poses={poses} world={world}/><ArcadeSprite poses={poses} index={50} width={70} height={14}><Svg width={70} height={14}><Path d="M2 7Q35-5 68 7Q35 20 2 7Z" fill="#173F67" opacity={.48}/></Svg></ArcadeSprite>
     <View collapsable={false} style={LAYER}>{spec.map((row,i)=><React.Fragment key={i}><Deck poses={poses} index={147+i*4} surface={row.surface}/>{row.surface==="ramp"&&<Deck poses={poses} index={INCLINE_START+i*INCLINE_STRIDE} surface={row.surface} incline/>}</React.Fragment>)}</View>
     <View collapsable={false} testID="run-behind" style={LAYER}>{spec.map((row,i)=><RunRow key={i} row={row} i={i} poses={poses} learn={learn}/>)}</View>
     <RunEffects poses={poses}/>

@@ -73,6 +73,14 @@ export const DeckBase = memo(function DeckBase({ world }: { world: WorldId }) {
     <Path d={`M${h.x - .6} ${h.y}L${farR.x} ${farR.y}H${farL.x}Z`} fill="url(#lr-far)"/>
   </Svg>;
 });
+/** Near-deck light falloff: the boards darken gently toward the camera, away from the light. */
+export const DeckLight = memo(function DeckLight({ world }: { world: WorldId }) {
+  const look = lagoonLook(world), c = projectTrack(1, .7), b = projectTrack(1, 1.62);
+  return <Svg width={390} height={660} style={{ position: 'absolute', overflow: 'visible' }} accessible={false}>
+    <Defs><LinearGradient id="lr-near" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.shade} stopOpacity={0}/><Stop offset="1" stopColor={look.shade} stopOpacity={.22}/></LinearGradient></Defs>
+    <Rect x={-300} y={c.y} width={990} height={b.y - c.y + 40} fill="url(#lr-near)"/>
+  </Svg>;
+});
 /** Over the deck but under every actor: the far deck and rails melt into the air. */
 export const DeckHaze = memo(function DeckHaze({ world }: { world: WorldId }) {
   const look = lagoonLook(world), h = projectTrack(1, -1.2), far = projectTrack(1, -.35);
@@ -89,16 +97,8 @@ export const RunForeground = memo(function RunForeground({ world, layout, width,
     {look.id === 'festival' ? <Bunting look={look} W={W} hz={hz}/> : null}
   </Svg>;
 });
-function Fronds({ look, W, hz }: { look: LagoonLook; W: number; hz: number }) {
-  const leaf = (x: number, y: number, s: number, flip: number) => `M${x} ${y}q${flip * 44 * s} ${-6 * s} ${flip * 92 * s} ${34 * s}q${-flip * 40 * s} ${-14 * s} ${-flip * 92 * s} ${-34 * s}Z`;
-  const top = Math.max(60, hz * .22);
-  return <G fill={look.shade} opacity={.82}>
-    {[[0, top, 1.1, 1], [0, top + 26, .9, 1], [0, top - 30, .8, 1], [W, top + 6, 1.05, -1], [W, top - 26, .85, -1]].map(([x, y, s, flip], i) => <Path key={i} d={leaf(x, y, s, flip)}/>)}
-    <Path d={`M0 ${top - 50}q30 6 26 70q-12-30-26-36Z M${W} ${top - 40}q-28 8-22 60q10-26 22-30Z`}/>
-  </G>;
-}
 function Bunting({ look, W, hz }: { look: LagoonLook; W: number; hz: number }) {
-  const y0 = Math.max(70, hz * .28), sag = 26, flags = 13, colors = ['#F6C760', '#EE8A7E', '#7FC8C4', '#F4E6C2', '#B79AE0'];
+  const y0 = Math.max(128, hz * .48), sag = 22, flags = 13, colors = ['#F6C760', '#EE8A7E', '#7FC8C4', '#F4E6C2', '#B79AE0'];
   const point = (t: number) => ({ x: -8 + (W + 16) * t, y: y0 + Math.sin(t * Math.PI) * sag });
   return <G>
     <Path d={`M-8 ${y0}Q${W / 2} ${y0 + sag * 2} ${W + 8} ${y0}`} fill="none" stroke={look.shade} strokeWidth={1.6} opacity={.8}/>
@@ -132,7 +132,7 @@ function Gull({ index, layout, moving }: { index: number; layout: StageLayout; m
     const p = t.value % 1;
     return { transform: [{ translateX: -40 + p * (W + 80) }, { translateY: y + Math.sin(p * 18 + index) * 5 }, { scaleY: .75 + .25 * Math.abs(Math.sin(p * 60)) }] };
   });
-  return <Animated.View style={[{ position: 'absolute', left: 0, top: 0, width: 24, height: 10 }, style]}><Svg width={24} height={10}><Path d="M1 7Q6 0 12 6Q18 0 23 7" fill="none" stroke="#2E5566" strokeWidth={1.8} strokeLinecap="round"/></Svg></Animated.View>;
+  return <Animated.View style={[{ position: 'absolute', left: 0, top: 0, width: 36, height: 15 }, style]}><Svg width={36} height={15} viewBox="0 0 24 10"><Path d="M1 7Q6 0 12 6Q18 0 23 7" fill="none" stroke="#2E5566" strokeWidth={2} strokeLinecap="round"/></Svg></Animated.View>;
 }
 function Petal({ index, layout, moving }: { index: number; layout: StageLayout; moving: boolean }) {
   const t = useLoop(moving, 9000 + index * 1300, (index * .29) % 1);

@@ -33,14 +33,16 @@ export function canoePath(p: SpritePose[], index: number, part: string) {
     const ts2 = [.3, .36, .44, .5, .56, .64, .7];
     const body = `${line(ts2.map(t => roll(t, 26)))}${ts2.slice().reverse().map(t => `L${f(roll(t, 16))}`).join('')}Z`;
     const bands = [.38, .5, .62].map(t => `M${f(roll(t, 26))}L${f(roll(t, 16))}`).join('');
-    const paddle = `M${f(at(.1, .36, 22))}L${f(at(.86, .48, 25))}`;
-    return `${body} ${bands} ${paddle}`;
+    // A short mast with the sail furled: the canoe is a go-around blocker, never a jump.
+    const m0 = at(.5, .44, 18), m1 = at(.5, .44, 74), s0 = at(.47, .44, 28), s1 = at(.53, .44, 70);
+    const mast = `M${f(m0)}L${f(m1)} M${f(s0)}L${f(at(.53, .44, 28))}L${f(s1)}L${f(at(.47, .44, 70))}Z`;
+    return `${body} ${bands} ${mast}`;
   }
   if (part === 'float') {
     // Float behind the hull, joined by two booms.
-    const fts = ts.slice(2, -2), ama = (t: number, up: number) => at(t, 1.05, up + 6);
+    const fts = ts.slice(2, -2), ama = (t: number, up: number) => at(t, 1.0, up);
     const body = `${line(fts.map(t => ama(t, 7 + 3 * Math.pow(Math.abs(t - .5) / .5, 2))))}${fts.slice().reverse().map(t => `L${f(ama(t, 1))}`).join('')}Z`;
-    const booms = [.2, .78].map(t => `M${f(at(t, .55, sheer(t) - 2))}L${f(at(t, 1.05, 15))}L${f(at(t + .03, 1.05, 15))}L${f(at(t + .03, .55, sheer(t + .03) - 2))}Z`).join(' ');
+    const booms = [.2, .78].map(t => `M${f(at(t, .55, sheer(t) - 2))}L${f(at(t, 1.0, 6))}L${f(at(t + .03, 1.0, 6))}L${f(at(t + .03, .55, sheer(t + .03) - 2))}Z`).join(' ');
     return `${booms} ${body}`;
   }
   // Wake curls off both tips, only on the moving canoe.
