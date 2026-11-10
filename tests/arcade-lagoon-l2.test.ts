@@ -115,3 +115,16 @@ describe('L2 scrolling deck bands', () => {
     for (const band of FLOOR_BANDS) expect(floorBandMatrix(band, .2 + FLOOR_PERIOD, 0, 0).map(v => +v.toFixed(6))).toEqual(floorBandMatrix(band, .2, 0, 0).map(v => +v.toFixed(6)));
   });
 });
+
+describe('L2 native layer structure', () => {
+  it('never lets Fabric flatten the behind, runner and front layers into one zIndex list', async () => {
+    const { readFileSync } = await import('node:fs');
+    const board = readFileSync('src/arcade/games/scrolling/Board.tsx', 'utf8');
+    for (const id of ['run-behind', 'run-front']) expect(board).toMatch(new RegExp(`<View collapsable=\\{false\\} testID="${id}"`));
+    const layer = board.slice(board.indexOf('export const RunLayer'), board.indexOf('function selectRun'));
+    // Behind layer, effects, runner, front layer: in that document order.
+    const order = ['testID="run-behind"', '<RunEffects', '{runner}', 'testID="run-front"'].map(k => layer.indexOf(k));
+    expect(order.every(i => i > 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+});

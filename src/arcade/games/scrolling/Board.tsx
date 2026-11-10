@@ -158,17 +158,19 @@ function RunTeaching({poses}:{poses:SharedValue<SpritePose[]>}) {
 }
 const LAYER={position:"absolute" as const,left:0,top:0,width:W,height:H};
 /**
+ * Layer containers are never collapsed: flattening would merge every zIndex into one sibling list
+ * and draw actors over the runner.
  * Fixed native draw order: scene, decks, actors behind the runner, effects, runner, actors in
  * front of the runner. Nothing reorders past the runner (see DepthSprite); a passing row hands
  * off between its pre-mounted twins by opacity only.
  */
 export const RunLayer = memo(function RunLayer({ poses, spec, learn, world, runner }: { poses: SharedValue<SpritePose[]>; spec: RunRowSpec[]; learn: boolean; world: WorldId; runner?: React.ReactNode }) {
   return <RunCamera poses={poses}><View testID="run-art" pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ position: "absolute", width: W, height: H }}><DeckBase world={world}/><HarborPlanks poses={poses} world={world}/><DeckHaze world={world}/><HarborEnvironment poses={poses} world={world}/><ArcadeSprite poses={poses} index={50} width={70} height={14}><Svg width={70} height={14}><Path d="M2 7Q35-5 68 7Q35 20 2 7Z" fill="#173F67" opacity={.48}/></Svg></ArcadeSprite>
-    <View style={LAYER}>{spec.map((row,i)=><React.Fragment key={i}><Deck poses={poses} index={147+i*4} surface={row.surface}/>{row.surface==="ramp"&&<Deck poses={poses} index={INCLINE_START+i*INCLINE_STRIDE} surface={row.surface} incline/>}</React.Fragment>)}</View>
-    <View testID="run-behind" style={LAYER}>{spec.map((row,i)=><RunRow key={i} row={row} i={i} poses={poses} learn={learn}/>)}</View>
+    <View collapsable={false} style={LAYER}>{spec.map((row,i)=><React.Fragment key={i}><Deck poses={poses} index={147+i*4} surface={row.surface}/>{row.surface==="ramp"&&<Deck poses={poses} index={INCLINE_START+i*INCLINE_STRIDE} surface={row.surface} incline/>}</React.Fragment>)}</View>
+    <View collapsable={false} testID="run-behind" style={LAYER}>{spec.map((row,i)=><RunRow key={i} row={row} i={i} poses={poses} learn={learn}/>)}</View>
     <RunEffects poses={poses}/>
     <View collapsable={false} style={LAYER}>{runner}<RunnerPowers poses={poses}/></View>
-    <View testID="run-front" style={LAYER}>{spec.map((row,i)=><RunRow key={i} row={row} i={i} poses={poses} learn={learn} front/>)}</View>
+    <View collapsable={false} testID="run-front" style={LAYER}>{spec.map((row,i)=><RunRow key={i} row={row} i={i} poses={poses} learn={learn} front/>)}</View>
     <SpeedLines poses={poses}/></View></RunCamera>;
 });
 function selectRun(s: RunState) { "worklet"; return {helped:s.helped,status:s.status,learned:s.learned}; }
@@ -208,17 +210,19 @@ function ArrowToggle({ shown, onToggle }: { shown: boolean; onToggle: () => void
 // Runtime-only teaching memory is deliberately outside saves; reload starts a new app session.
 let learnedRunMoves = 0;
 export function RunBoard(props: BoardProps) {
-  const params = useLocalSearchParams<{replay?:string;witness?:string;quietHud?:string}>(), replay = props.debug && params.replay === "1" && lagoonMeasurement(Constants.expoConfig,props.debug);
+  const params = useLocalSearchParams<{replay?:string;witness?:string;quietHud?:string;level?:string}>(), replay = props.debug && params.replay === "1" && lagoonMeasurement(Constants.expoConfig,props.debug);
   const witness=replay && /^\d+$/.test(params.witness??'')?Math.min(10000,Number(params.witness)):0;
-  return <RunRound key={`${replay?"replay":"play"}-${witness}`} {...props} replay={replay} witness={witness} quietHud={replay && params.quietHud==="1"}/>;
+    // Look witnesses may replay another authored level (dev measurement build only); meter receipts use W1-8.
+  const replayLevel=replay?runLevels.find(l=>l.id===params.level)??runLevels[7]:runLevels[7];
+  return <RunRound key={`${replay?"replay":"play"}-${witness}-${replayLevel.id}`} {...props} replay={replay} witness={witness} replayLevel={replayLevel} quietHud={replay && params.quietHud==="1"}/>;
 }
-function RunRound(props:BoardProps & {replay:boolean;witness:number;quietHud:boolean}) {
-  const { helper, onTone, debug, replay, witness, quietHud } = props, reduced = useReducedMotion();
+function RunRound(props:BoardProps & {replay:boolean;witness:number;quietHud:boolean;replayLevel:typeof runLevels[number]}) {
+  const { helper, onTone, debug, replay, witness, quietHud, replayLevel } = props, reduced = useReducedMotion();
   // Mount and decode the complete scene during a short ready beat, before time advances.
   const [ready,setReady]=useState(false);
   useEffect(()=>{const timer=setTimeout(()=>setReady(true),120);return()=>clearTimeout(timer);},[]);
   const active=props.active && ready;
-  const level = replay ? runLevels[7] : props.level, seed = replay ? 771 : props.seed;
+  const level = replay ? replayLevel : props.level, seed = replay ? 771 : props.seed;
   const tick = useSharedValue(0), tags = useSharedValue<string[]>([]);
   const playEvents=useCallback((sounds:string[])=>{for(const sound of sounds)onTone(sound,sound==="run-hit"||["run-magnet","run-kite","run-sandals","run-shield","clear"].includes(sound));},[onTone]);
   const observe=useCallback((a:RunState,b:RunState)=>{ "worklet";
@@ -229,9 +233,9 @@ function RunRound(props:BoardProps & {replay:boolean;witness:number;quietHud:boo
   const step = useCallback((s:RunState,i:Commands<RunInput>,dt:number)=>{ "worklet";
     if (!replay) return runFrame(s,i,dt);
     if(witness && Math.round(s.time*60)>=witness)return s;
-    if (runResult(s)) s=createRun(runLevels[7],771,false);
+    if (runResult(s)) s=createRun(replayLevel,771,false);
     return runFrame(s,{...i,helper:false,queue:[{id:s.command+1,action:fixtureInput(s)}]},dt);
-  },[replay,witness]);
+  },[replay,witness,replayLevel]);
   const resultFn = useCallback((s:RunState)=>{ "worklet"; return replay ? null : runResult(s); },[replay]);
   const [initial] = useState(() => ({...createRun(level, seed, replay?false:helper),learned:replay?0:learnedRunMoves})), poses = useSharedValue<SpritePose[]>(Array(RUN_SLOTS).fill(still));
   const { input, send } = useMailbox<RunInput>(helper, active);
@@ -250,6 +254,6 @@ function RunRound(props:BoardProps & {replay:boolean;witness:number;quietHud:boo
   const [arrows,setArrows]=useRunArrows();
   const toggleArrows=useCallback(()=>setArrows(!arrows),[arrows,setArrows]);
   const controls = <>{arrows&&<View style={{ position: "absolute", left: 12, right: 12, bottom: 10, flexDirection: "row", justifyContent: "center", gap: 10 }}><Control overlay disabled={!active} label="Move left" glyph="←" mailbox={input} action={{ type: "left" }} feedback={() => actionTone({ type: "left" })} onPress={() => action({ type: "left" })}/><Control overlay disabled={!active} label="Jump" glyph="↑" mailbox={input} action={{ type: "jump" }} feedback={() => actionTone({ type: "jump" })} onPress={() => action({ type: "jump" })}/><Control overlay disabled={!active} label="Roll or drop" glyph="↓" mailbox={input} action={{ type: "duck" }} feedback={() => actionTone({ type: "duck" })} onPress={() => action({ type: "duck" })}/><Control overlay disabled={!active} label="Move right" glyph="→" mailbox={input} action={{ type: "right" }} feedback={() => actionTone({ type: "right" })} onPress={() => action({ type: "right" })}/></View>}<ArrowToggle shown={arrows} onToggle={toggleArrows}/>{level === "endless" && <View style={{ position: "absolute", bottom: 76, right: 12 }}><Button compact quiet onPress={() => send({ type: "finish" })}>Finish free run</Button></View>}</>;
-  return <RunArena active={active} world={level === "endless" ? "w3" : level.world} controls={controls} hud={quietHud?null:<><RunReadout state={state} learn={learn}/><RunTeaching poses={poses}/></>} overlay={learn && <RunEquation state={state}/>}><RunScene poses={poses} state={state} learn={learn} world={level === "endless" ? "w3" : level.world}/><GestureDetector gesture={swipe} touchAction="none"><Animated.View collapsable={false} testID="run-touch" accessible accessibilityRole="button" accessibilityLabel="Lagoon track. Swipe to steer, up to jump, down to duck" style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}/></GestureDetector>{debug && <Text testID="lagoon-meter" pointerEvents="none" style={{position:"absolute",top:150,left:5,color:"white",backgroundColor:"#14273E",fontSize:11}}>{witness?`W1-8 / 771 / frozen tick ${witness} | `:""}{meterLabel}</Text>}</RunArena>;
+  return <RunArena active={active} world={level === "endless" ? "w3" : level.world} controls={controls} hud={quietHud?null:<><RunReadout state={state} learn={learn}/><RunTeaching poses={poses}/></>} overlay={learn && <RunEquation state={state}/>}><RunScene poses={poses} state={state} learn={learn} world={level === "endless" ? "w3" : level.world}/><GestureDetector gesture={swipe} touchAction="none"><Animated.View collapsable={false} testID="run-touch" accessible accessibilityRole="button" accessibilityLabel="Lagoon track. Swipe to steer, up to jump, down to duck" style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}/></GestureDetector>{debug && <Text testID="lagoon-meter" pointerEvents="none" style={{position:"absolute",top:150,left:5,color:"white",backgroundColor:"#14273E",fontSize:11}}>{witness?`${replayLevel.id.toUpperCase()} / 771 / frozen tick ${witness} | `:""}{meterLabel}</Text>}</RunArena>;
 }
 export function ScrollBoard({ game, ...props }: BoardProps & { game: ScrollGame }) { return game === "fruit-bat-flight" ? <FlightBoard {...props}/> : <RunBoard {...props}/>; }
