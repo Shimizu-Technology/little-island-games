@@ -7,13 +7,13 @@ import { songLevels } from "../src/arcade/games/shell-song/engine";
 import { emptyArcadeLearner } from "../src/arcade/progress";
 import { allLevelIds } from "../src/arcade/types";
 const viewport = vi.hoisted(() => ({ width: 390, height: 844 }));
-vi.mock("react-native", () => ({ View: ({ children, testID }: { children?: React.ReactNode; testID?: string }) => <div data-testid={testID}>{children}</div>, useWindowDimensions: () => viewport }));
+vi.mock("react-native", () => ({ View: ({ children, testID }: { children?: React.ReactNode; testID?: string }) => <div data-testid={testID}>{children}</div>, Switch: ({ value, accessibilityLabel }: { value: boolean; accessibilityLabel?: string }) => <input type="checkbox" aria-label={accessibilityLabel} checked={value} readOnly/>, useWindowDimensions: () => viewport }));
 vi.mock("react-native-reanimated", () => ({ default: { View: ({ children }: { children?: React.ReactNode }) => <div>{children}</div> }, useSharedValue: (value: unknown) => ({ value }), useAnimatedStyle: () => ({}), cancelAnimation: () => {}, Easing: {}, withDelay: () => {}, withRepeat: () => {}, withSequence: () => {}, withTiming: () => {} }));
 vi.mock("react-native-svg", () => ({ default: () => null, Circle: () => null, Path: () => null, Rect: () => null }));
 vi.mock("../src/components/ui", () => {
   const Text = ({ children }: { children?: React.ReactNode }) => <span>{children}</span>;
   const Button = ({ children, disabled, accessibilityLabel, testID }: { children?: React.ReactNode; disabled?: boolean; accessibilityLabel?: string; testID?: string }) => <button disabled={disabled} aria-label={accessibilityLabel} data-testid={testID}>{children}</button>;
-  return { Button, Copy: Text, Heading: Text, PressableScale: Button };
+  return { Button, Copy: Text, Heading: Text, PressableScale: Button, C: { line: "#ccc", paper: "#fff", ink: "#000" }, font: undefined };
 });
 vi.mock("../src/components/Text", () => ({ Text: ({ children }: { children?: React.ReactNode }) => <span>{children}</span> }));
 vi.mock("../src/components/motion", () => ({ useReducedMotion: () => true }));
@@ -48,9 +48,11 @@ describe("AR-10 dare marks and choices", () => {
     expect((html.match(/dare/g) ?? []).length).toBe(2);
     const [song] = arcadeDares.filter(d => d.game === "shell-song");
     const choice = renderToStaticMarkup(<DareChoice dares={[song]} selected={null} marked={() => false} onSelect={vi.fn()}/>);
-    expect(choice).toContain("Want a dare?"); expect(choice).toContain("Stars count the same either way."); expect(choice).toContain("Your own ears");
-    expect(renderToStaticMarkup(<DareResult dare={song} proved marked cleared/>)).toContain("Dare earned: Your own ears!");
-    expect(renderToStaticMarkup(<DareResult dare={song} proved={false} marked={false} cleared/>)).toContain("still waiting. Your stars are saved.");
-    expect(renderToStaticMarkup(<DareResult dare={song} proved={false} marked cleared={false}/>)).toContain("mark is kept");
+    expect(choice).toContain("Want a dare?"); expect(choice).toContain("Stars count the same either way."); expect(choice).toContain("Dare: Ears only"); expect(choice).not.toContain("checked");
+    expect(renderToStaticMarkup(<DareResult dare={song} proved marked/>)).toContain("You did the dare: Ears only!");
+    expect(renderToStaticMarkup(<DareResult dare={song} proved={false} marked={false}/>)).toContain("Your dare will wait for you. Try it any time!");
+    expect(renderToStaticMarkup(<DareResult dare={song} proved={false} marked/>)).toContain("Your dare mark stays yours.");
+    // Every dare title reads in the result line without a broken sentence.
+    for (const d of arcadeDares) expect(renderToStaticMarkup(<DareResult dare={d} proved marked/>)).toContain(`You did the dare: ${d.title}!`);
   });
 });

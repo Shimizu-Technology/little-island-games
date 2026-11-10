@@ -53,6 +53,12 @@ Other rules:
   - Latte stones are not used as game pieces.
 - **Speech.** New spoken lines are English and are registered with the existing narration generator source (`scripts/generate-neural-audio.py`). Workers do not run Kokoro; the lead generates both voice banks once at integration. Until then, games must work with the clip missing: text stays visible and the tone falls back.
 
+## 4.0 Arcade changes (slice A1, November 2026)
+
+- **Open worlds (AR-13, D1).** Every world, level and Endless opens with zero stars. Stars, stickers and outfits are unchanged; outfits stay earned showpieces at 12/30/60 stars. The grown-up unlock-all is retired: an old `unlockAll` value is kept byte for byte and ignored. `tests/fixtures/arcade/arcade-d1-shipped.json`, produced with the shipped 3.0.0 source, proves an old save keeps everything through envelope 3.
+- **Boundary table (AR-00).** `docs/ARCADE_BOUNDARIES.md` is generated from the real descriptors by `npm run arcade:boundaries`. Each easing between adjacent levels is a named rest beat or carries a reason and the ledger row that owns it, in `src/arcade/restBeats.ts`. An unexplained easing, a stale note or a Helper value harder than Helper off fails `npm test`.
+- **Dares (AR-10).** Two optional dares per game, listed in `src/arcade/dares.ts`. A child picks one on the level card before Start, or none. The engine publishes a few counts with its terminal result (`facts`), and a cleared finish that meets the dare writes one permanent mark in the learner's Challenge marks, in the same save as the stars. Missing a dare costs nothing. No dare needs three stars, a hit-free level, Helper off or a chosen Beach Ball rival. Two-player matches and young-child mode show no dares. Real-time rounds still never resume; a paused reef keeps its chosen dare. The catalog lives in inline banks 500–508 and dare slots 4000–4071 of `src/state/save-catalog.json`; `npm run arcade:dares` re-appends them after a merge.
+
 ## Arcade games (new Arcade island on Home)
 
 | Game | Inspired by | Island version | Learning world |
