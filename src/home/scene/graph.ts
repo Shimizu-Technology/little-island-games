@@ -1,4 +1,4 @@
-import { worldRevision, translatedBounds, standingContact, occludedFraction } from "./spatial";
+import { worldRevision, translatedBounds, standingContact, occludedFraction, catalogSamples, catalogNeighbours } from "./spatial";
 
 import { roomIds, type RoomId } from "../catalogMore";
 import { decorSpec, itemSpec } from "../catalog";
@@ -173,7 +173,10 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
       if (parent.band === "foreground") entity.band = "foreground";
     }
   };
-  for (const entity of Object.values(entities)) transform(entity);
+  for (const entity of Object.values(entities)) {
+    transform(entity);
+    if (entity.item) entity.catalogSamples = catalogSamples(entity);
+  }
   const occlusionBands = Object.values(entities)
     .filter((e) => e.item?.layer === "furniture" && !e.parent && !e.item.staged)
     .flatMap((e) => (e.occluders ?? []).map((bounds) => ({ id: e.id, bounds: translatedBounds(bounds, e.contact), depth: e.depth })));
@@ -318,6 +321,7 @@ export function buildRoomIndex(room: RoomId, state: RoomState, revision = JSON.s
     targets,
     buckets,
     occlusionBands,
+    catalogNeighbours: catalogNeighbours(entities, occlusionBands),
     surfaces: targets.filter((t) => t.kind === "surface"),
     sockets: targets.filter((t) => t.kind === "socket"),
     hitProxies: Object.values(entities).flatMap((e) =>

@@ -4,7 +4,7 @@ import { places, placeGames, subjects, subjectGames } from '../src/hub/model';
 
 describe('living island hub contract', () => {
   it('offers every current destination without an empty Nursery teaser', () => {
-    expect(places.map(place => place.id)).toEqual(['school', 'library', 'arcade', 'hall', 'home', 'locker', 'badges']);
+    expect(places.map(place => place.id)).toEqual(['school', 'library', 'arcade', 'hall', 'home', 'locker', 'badges', 'cove']);
   });
   it('preserves every game exactly once across School, Arcade and Game Hall', () => {
     const ids = ['school', 'arcade', 'hall'].flatMap(place => placeGames(place as 'school' | 'arcade' | 'hall').map(game => game.id));

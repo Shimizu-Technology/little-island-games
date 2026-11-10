@@ -13,10 +13,10 @@ export const settleSpring = {
   energyThreshold: 0.00001,
 } as const;
 /** Exact critically damped curve; at the cap the destination is exact. */
-export function settleProgress(elapsed: number, reduced = false): number {
+export function settleProgress(elapsed: number, reduced = false, duration = 240): number {
   "worklet";
-  if (reduced || elapsed >= 240) return 1;
-  const t = Math.max(0, elapsed) / 1000;
+  if (reduced || elapsed >= duration) return 1;
+  const t = Math.max(0, elapsed) * 240 / duration / 1000;
   const omega = Math.sqrt(settleSpring.stiffness / settleSpring.mass);
   return 1 - (1 + omega * t) * Math.exp(-omega * t);
 }

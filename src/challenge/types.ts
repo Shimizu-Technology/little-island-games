@@ -39,15 +39,46 @@ export type ReplayEngine<D,P,A,S> = {
   validAction: (value: unknown) => value is A;
   step: (state: S, action: A, descriptor: D) => { state: S; event: ReplayEvent; correct?: boolean } | null;
   inspect: (state: S, descriptor: D) => EngineInspection;
+  /** Optional evidence carried from an earlier attempt of the same puzzle, merged into runs and failed. */
+  prior?: (initial: P) => { runs: number; failed: boolean } | null;
 };
-export type ChallengeViewProps<S,A> = { state: S; dispatch: (action: A) => void; active: boolean; width: number; onSettled?: () => void; header?: ReactNode; footer?: ReactNode };
+export type ChallengeViewProps<S,A> = {
+  state: S; dispatch: (action: A) => void; active: boolean; width: number;
+  /** Optional in standalone renders. Includes owner, epoch, puzzle and accepted revision. */
+  sessionKey?: string;
+  onFresh?: () => void;
+  commit?: (action: A, expectedKey: string) => Promise<{ key: string; state: S } | null>;
+  /** Animated boards report when a run's playback has finished, so the frame can show the result. */
+  onSettled?: () => void;
+  /** Frame chrome placed inside a pinned board's own scrolling controls. */
+  header?: ReactNode; footer?: ReactNode;
+};
+export type ChallengeRenderHost = {
+  onFresh?: () => void;
+  key: string;
+  commit: (action: unknown, expectedKey: string) => Promise<{ key: string; session: ChallengeSession } | null>;
+  onSettled?: () => void;
+  header?: ReactNode; footer?: ReactNode;
+};
+export type CompletionFacts = { helpUsed: boolean; failed: boolean };
 export type ChallengeCard = Omit<Puzzle<unknown>, 'descriptor'|'awards'>;
 /** Erasure happens only after a typed registration validates its own payload. No action bags. */
 export type ChallengeEntry = {
-  game: string; codec: string; cove: boolean; animatedRuns?: boolean; restart?: (session: ChallengeSession, id: string, progress: ChallengeProgress) => ChallengeSession; contextFor: (ref: PuzzleRef) => string; puzzles: readonly ChallengeCard[]; catalog: SaveCatalog;
+  game: string; codec: string; cove: boolean; animatedRuns?: boolean; restart?: (session: ChallengeSession, id: string, progress: ChallengeProgress) => ChallengeSession;
+  /** True when a rejected move was refused because the attempt's log is full, so restart is the way on. */
+  full?: (session: ChallengeSession) => boolean;
+  /** Game-specific line in the dare picker about how help affects dare marks. */
+  dareHelp?: string;
+  contextFor: (ref: PuzzleRef) => string; puzzles: readonly ChallengeCard[]; catalog: SaveCatalog;
   start: (puzzle: PuzzleRef, owner: string, id: string, progress: ChallengeProgress, options: LaunchOptions, dares: number[]) => ChallengeSession;
   move: (session: ChallengeSession, action: unknown) => ChallengeSession | null;
-  render: (session: ChallengeSession, dispatch: (action: unknown) => void, active: boolean, width: number, onSettled?: () => void, chrome?: {header?: ReactNode;footer?: ReactNode}) => ReactNode;
+  render: (session: ChallengeSession, dispatch: (action: unknown) => void, active: boolean, width: number, host?: ChallengeRenderHost) => ReactNode;
+  /** Specific praise supplied by the real engine's game, never speed-based. */
+  completionText?: (ref: PuzzleRef, result: Terminal, facts: CompletionFacts | null) => string;
+  /** Praise facts re-derived from the accepted replay, never persisted or inferred from Terminal. */
+  completionFacts?: (session: ChallengeSession) => CompletionFacts | null;
+  /** The frame supplies Help unless the board declares its own help UI. */
+  helpUI?: 'board';
   controls: { help: () => unknown; reset: () => unknown };
 };
 export type TypedRegistration<P,A,S> = ChallengeEntry & { readonly types?: { Payload: P; Action: A; State: S } };

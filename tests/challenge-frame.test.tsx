@@ -99,7 +99,7 @@ it.each([['blind',3003,'supportOff'],['own-read',3007,'ownRead']] as const)('P2-
 
 it('P2-6: a finish frees its slot; Another puzzle starts directly; reopening has no old result',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;
- try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});await press(r,'Start this puzzle');for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');expect(store.save.challenge!.paused).toEqual([]);expect(JSON.stringify(r.toJSON())).toContain('Puzzle solved!');await press(r,'Another puzzle');expect(JSON.stringify(r.toJSON())).not.toContain('Continue saved puzzle');await press(r,'Start this puzzle');expect(store.save.challenge!.paused[0].ordinal).toBe(2);
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});await press(r,'Start this puzzle');for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');expect(store.save.challenge!.paused).toEqual([]);expect(JSON.stringify(r.toJSON())).toContain('Puzzle solved!');await press(r,'Try another');expect(JSON.stringify(r.toJSON())).not.toContain('Continue saved puzzle');await press(r,'Start this puzzle');expect(store.save.challenge!.paused[0].ordinal).toBe(2);
   for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');await act(async()=>r.unmount());await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});expect(JSON.stringify(r.toJSON())).not.toContain('Puzzle solved!');expect(JSON.stringify(r.toJSON())).toContain('Start this puzzle');
  }finally{await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
@@ -128,7 +128,7 @@ it('P3-8: older draft completions cannot unlock a pending terminal boundary',asy
 });
 it('Crab P2-6: keeps the final board mounted and waits for arrival before showing the result',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;let settle:(()=>void)|undefined;
- const animated={...entry,animatedRuns:true,render:(s:Parameters<typeof registration.move>[0],dispatch:(a:unknown)=>void,_active:boolean,_width:number,onSettled?:()=>void)=>{settle=onSettled;return <div data-testid="final-beach">{entry.render(s,dispatch)}</div>;}};
+ const animated={...entry,animatedRuns:true,render:(s:Parameters<typeof registration.move>[0],dispatch:(a:unknown)=>void,_active:boolean,_width:number,host?:{onSettled?:()=>void})=>{settle=host?.onSettled;return <div data-testid="final-beach">{entry.render(s,dispatch)}</div>;}};
  try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame selectedEntry={animated}/></StoreProvider>);});await press(r,'Start this puzzle');
   for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');
   expect(r.root.findAllByProps({'data-testid':'final-beach'})).toHaveLength(1);expect(JSON.stringify(r.toJSON())).not.toContain('Puzzle solved!');expect(settle).toBeTypeOf('function');
@@ -155,4 +155,24 @@ it('a requested School replay opens its picker while preserving an existing Chal
   expect(r.root.findAllByType('switch').some(s=>s.props.label==='Start another attempt')).toBe(true);
   expect(store.save.challenge!.paused[0]).toEqual(paused);expect(JSON.stringify(r.toJSON())).toContain('Continue saved puzzle');expect(JSON.stringify(r.toJSON())).not.toContain('Start this puzzle');
  }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+
+it('F4: end choices are equal and a one-card tier returns to the chooser without carrying dares',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame/></StoreProvider>);});await press(r,'blind · Help welcome');await press(r,'Start this puzzle');for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');
+  const choices=r.root.findByProps({testID:'tide-choices'}).findAllByType('button');expect(choices.map(b=>b.props.quiet)).toEqual([true,true,true]);expect(choices.map(b=>b.children.join(''))).toEqual(['Easier','Same','Harder']);
+  await press(r,'Try another');expect(store.save.challenge!.paused).toHaveLength(0);await press(r,'Start this puzzle');expect(store.save.challenge!.paused).toHaveLength(1);expect(store.save.challenge!.paused[0].ordinal).toBe(2);expect(store.save.challenge!.paused[0].selectedDares).toEqual([]);expect(store.challengeRefusal).toBeNull();
+ }finally{await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+
+it('F4: a hint commit returns the durable accepted revision and rejects a stale expected key',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer,host:import('../src/challenge/types').ChallengeRenderHost|undefined;
+ const selectedEntry:ChallengeEntry={...entry};
+ selectedEntry.render=(session,dispatch,active,width,h)=>{host=h;return entry.render(session,dispatch);};
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame selectedEntry={selectedEntry}/></StoreProvider>);});await press(r,'Start this puzzle');
+  const before=host!,key=before.key;let result:Awaited<ReturnType<typeof before.commit>>=null;
+  await act(async()=>{result=await before.commit({type:'help'},key);});
+  expect(result).not.toBeNull();expect(result!.session.revision).toBe(1);expect(result!.key).toBe(host!.key);expect(result!.key).not.toBe(key);
+  const saved=store.save.challenge!.paused[0];await act(async()=>{expect(await host!.commit({type:'help'},key)).toBeNull();});expect(store.save.challenge!.paused[0]).toEqual(saved);
+ }finally{await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
