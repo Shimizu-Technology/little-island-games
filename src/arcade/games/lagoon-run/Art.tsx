@@ -51,7 +51,8 @@ export const PowerIcon = memo(function PowerIcon({kind,size=42}:{kind:PowerKind;
   </G></Svg>;
 });
 export function PowerRing({kind,remaining,state}:{kind:Exclude<PowerKind,'none'>;remaining:number;state?:SharedValue<RunState>}) {
-  const ring=useAnimatedProps(()=>{const t=state?.value;const v=kind==='shield'?1:t?t[kind]/POWER_SECONDS[kind]:remaining/POWER_SECONDS[kind];return {strokeDasharray:[138.23*v,138.23]};});
+  // Quantized to 48 steps: a few small redraws a second, never an SVG repaint every frame (L2).
+  const ring=useAnimatedProps(()=>{const t=state?.value;const v=kind==='shield'?1:t?t[kind]/POWER_SECONDS[kind]:remaining/POWER_SECONDS[kind];return {strokeDasharray:[138.23*Math.ceil(v*48)/48,138.23]};});
   const fraction=kind==='shield'?1:remaining/POWER_SECONDS[kind];
   return <View accessible accessibilityLabel={`${POWER_LABELS[kind]}${kind==='shield'?' ready':` ${Math.ceil(remaining)} seconds`}`} testID={`run-power-${kind}`} style={{alignItems:'center',width:52}}><View style={{width:48,height:48}}><PowerIcon kind={kind} size={48}/><Svg width={48} height={48} style={{position:'absolute'}} viewBox="0 0 48 48"><AnimatedCircle animatedProps={ring} cx={24} cy={24} r={22} fill="none" stroke="#2F806F" strokeWidth={4} strokeDasharray={`${138.23*fraction} 138.23`} rotation={-90} origin="24,24"/>{kind!=="shield"&&<><Circle cx={39} cy={38} r={9} fill="#293B49"/><SvgText x={39} y={42} fontSize={11} fontWeight="900" textAnchor="middle" fill="#FFF4CD">{Math.ceil(remaining)}</SvgText></>}</Svg></View></View>;
 }
