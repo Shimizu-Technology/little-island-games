@@ -26,6 +26,7 @@ vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: () => null, por
 vi.mock('../src/home/runtime/StagingTray', () => ({ StagingTray: () => null }));
 vi.mock('../src/home/runtime/Destinations', () => ({ Destinations: () => null }));
 vi.mock('../src/home/runtime/DebugOverlay', () => ({ DebugOverlay: () => null }));
+vi.mock('../src/home/runtime/CapacityCue', () => ({ CapacityCue: () => null, CAPACITY_CUE_MS: 3200, CAPACITY_MESSAGE: 'Put something away to make room.' }));
 vi.mock('../src/home/art/Items', () => ({ ItemArt: () => null }));
 vi.mock('../src/home/art/More', () => ({ MoreItemArt: () => null }));
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;

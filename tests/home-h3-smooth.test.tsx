@@ -2,7 +2,7 @@ import React from "react";
 import TestRenderer, { act } from "react-test-renderer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { layoutToken } from "../src/home/runtime/layout";
-import { useInteraction, mergeRoomPayloads, roomPayloadsOf, cameraTweenSample, CAMERA_EASE_MS, DOOR_MS, type Pickup, type Interaction } from "../src/home/runtime/useInteraction";
+import { useInteraction, mergeRoomPayloads, roomPayloadsOf, cameraTweenSample, CAMERA_EASE_MS, DOOR_MS, BACKGROUND_TAP_MS, type Pickup, type Interaction } from "../src/home/runtime/useInteraction";
 import { buildingLayout } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
 import { gridCell, roomPoint, type Scene, type SceneEntity } from "../src/home/scene/types";
@@ -146,7 +146,7 @@ const commitFixture: Parameters<typeof useInteraction>[0]["onCommit"] = (index, 
   if (!current.isCurrent(index, token)) return;
   current.finish(index, true, proposal, "committed", undefined, token);
 };
-function Probe({ scene, layout = true, designing = false, reduced = false }: { scene: Scene; layout?: boolean; designing?: boolean; reduced?: boolean }) {
+function Probe({ scene, layout = true, designing = false, reduced = false, onTap = () => {} }: { scene: Scene; layout?: boolean; designing?: boolean; reduced?: boolean; onTap?: (...args: any[]) => void }) {
   const interaction = useInteraction({
     scene,
     building: fixtureBuilding,
@@ -162,7 +162,7 @@ function Probe({ scene, layout = true, designing = false, reduced = false }: { s
         { current.ready(pickup.slot, pickup.id);
           current.acknowledgePose(pickup.slot, layoutToken(pickup.scene.entities[pickup.id])); }
     },
-    onTap: () => {},
+    onTap,
     onClear: noop,
     onDestination: noop,
     onCommit: commitFixture,
@@ -477,6 +477,36 @@ describe("HM-15 the sand drops onto the floor visibly; HC-02 beach shells", () =
     const slot = current.slots.get()[0];
     expect(slot.targetX).toBe(slot.sourceX);
     expect(slot.targetY).toBe(slot.sourceY);
+    await act(async () => renderer.unmount());
+  });
+});
+
+describe("HM-18 background taps", () => {
+  function both(type: string, a: [number, number], b: [number, number]) {
+    harness.handlers[type](
+      { changedTouches: [{ x: a[0], y: a[1], id: 1 }, { x: b[0], y: b[1], id: 2 }], numberOfTouches: type === "up" ? 0 : 2 },
+      manager
+    );
+  }
+  it("a short single-finger background touch is a tap; a hold over 500 ms is not", async () => {
+    const onTap = vi.fn();
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} onTap={onTap} />); });
+    touch("down", 700, 500); vi.advanceTimersByTime(120); touch("up", 700, 500); flushJS();
+    expect(onTap).toHaveBeenCalledTimes(1);
+    touch("down", 700, 500); vi.advanceTimersByTime(BACKGROUND_TAP_MS + 80); touch("up", 700, 500); flushJS();
+    expect(onTap).toHaveBeenCalledTimes(1);
+    await act(async () => renderer.unmount());
+  });
+  it("a two-finger tap is ignored, so it can neither zoom nor move a selection", async () => {
+    const onTap = vi.fn();
+    let renderer!: TestRenderer.ReactTestRenderer;
+    await act(async () => { renderer = TestRenderer.create(<Probe scene={fixture()} onTap={onTap} />); });
+    both("down", [600, 400], [700, 420]); vi.advanceTimersByTime(60); both("up", [600, 400], [700, 420]); flushJS();
+    expect(onTap).not.toHaveBeenCalled();
+    // The next ordinary tap still counts.
+    touch("down", 700, 500); touch("up", 700, 500); flushJS();
+    expect(onTap).toHaveBeenCalledTimes(1);
     await act(async () => renderer.unmount());
   });
 });
