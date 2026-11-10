@@ -328,6 +328,21 @@ describe("HM-12 explicit camera moves ease on the UI thread", () => {
     expect(cameraTweenSample(tween, DOOR_MS / 2).camera).toEqual(to);
     expect(cameraTweenSample(tween, DOOR_MS)).toMatchObject({ camera: to, veil: 0, done: true });
     expect(CAMERA_EASE_MS).toBe(180);
+    // Whatever 60 Hz frame lands near the swap, the veil is fully closed on both sides of it.
+    for (let offset = 0; offset < 16.7; offset += 1) {
+      const swap = [...Array(Math.ceil(DOOR_MS / 16.7) + 1).keys()].map((n) => offset + n * 16.7)
+        .filter((at) => at <= DOOR_MS).map((at) => cameraTweenSample(tween, at));
+      const changed = swap.findIndex((f) => f.camera === to);
+      expect(swap[changed].veil).toBeCloseTo(1);
+      expect(swap[changed - 1].veil).toBeCloseTo(1);
+    }
+  });
+  it("a same-floor move does most of its travel in the first third, then settles", () => {
+    const tween = { from: identityCamera, to, since: 0, duration: CAMERA_EASE_MS, door: false };
+    const at = (ms: number) => (cameraTweenSample(tween, ms).camera.tx - identityCamera.tx) / (to.tx - identityCamera.tx);
+    expect(at(CAMERA_EASE_MS / 3)).toBeGreaterThan(0.6);
+    expect(at(17)).toBeGreaterThan(0.2);
+    expect(at(CAMERA_EASE_MS)).toBe(1);
   });
   it("a new hand on the room finishes the move at once and takes the camera", async () => {
     let renderer!: TestRenderer.ReactTestRenderer;

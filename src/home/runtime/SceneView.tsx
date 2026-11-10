@@ -293,8 +293,12 @@ export function SceneView({
         testID={Platform.OS === "web" ? "house-viewport" : undefined}
         accessible={false}
         collapsable={false}
-        style={{ width: viewport.width, height: viewport.height, overflow: "hidden", backgroundColor: "#BEE4DD" }}
+        style={{ width: viewport.width, height: viewport.height }}
       >
+        {/* The rooms are clipped to the play area; the carried layer below is not, so a thing
+            carried onto a room button or the Friends button stays visible above the bar. */}
+        <View pointerEvents="box-none" style={{ position: "absolute", left: 0, top: 0, width: viewport.width, height: viewport.height,
+          overflow: "hidden", backgroundColor: "#BEE4DD" }}>
         <Animated.View
           testID={Platform.OS === "web" ? "house-camera" : undefined}
           accessible={false}
@@ -399,6 +403,10 @@ export function SceneView({
             <BuildingTrim building={building} />
           </View>
           {debugLayer}
+        </Animated.View>
+        </View>
+        <Animated.View accessible={false} importantForAccessibility="no" pointerEvents="none"
+          style={[{ position: "absolute", width: building.width, height: building.height }, cameraStyle]}>
           <DragOverlay
             activeRoom={state.current}
             scene={scene}

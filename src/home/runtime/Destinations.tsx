@@ -108,8 +108,8 @@ export function Destinations({
       style={[{
         position: "absolute",
         bottom,
-        left: 72,
-        right: 72,
+        alignSelf: "center",
+        maxWidth: "94%",
         maxHeight: cell + 16,
         borderRadius: 18,
         backgroundColor: "#FFF8E9F5",
@@ -117,7 +117,7 @@ export function Destinations({
         zIndex: 35,
       }, lift]}
     >
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxWidth: "100%" }} contentContainerStyle={{ gap: 8 }}>
         {store && (
           <Pressable
             accessibilityRole="button"

@@ -3,6 +3,7 @@ import { Pressable, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from "react-native-reanimated";
 import { roomNames, type RoomId } from "../catalogMore";
+import Svg, { Path } from "react-native-svg";
 import { ItemArt } from "../art/Items";
 import { screenPoint, type Scene, type SceneEntity } from "../scene/types";
 import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
@@ -95,9 +96,13 @@ function FriendCell({ entity, scene, here, size, offset, interaction, renderChar
             </View>
           )}
           {!place.waiting && place.room !== here && (
-            <View pointerEvents="none" style={{ position: "absolute", right: 3, top: 3, width: 22, height: 22, borderRadius: 11,
-              backgroundColor: "#FFF8E9", alignItems: "center", justifyContent: "center" }}>
-              <ItemArt item={roomIcon[place.room]} size={18} reduced />
+            <View pointerEvents="none" style={badge}>
+              <ItemArt item={roomIcon[place.room]} size={24} reduced />
+            </View>
+          )}
+          {place.waiting && (
+            <View pointerEvents="none" style={badge} testID={`friend-waiting-${slot}`}>
+              <WaitingBasket />
             </View>
           )}
         </Pressable>
@@ -105,11 +110,24 @@ function FriendCell({ entity, scene, here, size, offset, interaction, renderChar
     </GestureDetector>
   );
 }
-export function FriendDrawer({ open, scene, here, bottom, interaction, offset, reduced, large = false, renderCharacter, onBring, onClose, onCarry }: {
+const badge = { position: "absolute" as const, right: 2, top: 2, width: 28, height: 28, borderRadius: 14, backgroundColor: "#FFF8E9",
+  borderWidth: 1.5, borderColor: "#D7C29A", alignItems: "center" as const, justifyContent: "center" as const };
+/** A friend waiting in the drawer: the same woven basket as the tray, so "put away" always looks the same. */
+function WaitingBasket() {
+  return (
+    <Svg width={22} height={20} viewBox="0 0 52 40" accessible={false}>
+      <Path d="M5 14Q26 6 47 14L42 34Q26 39 10 34Z" fill="#D7AE74" stroke="#385451" strokeWidth={3} />
+      <Path d="M5 14Q26 23 47 14M15 22L17 33M26 24V35M37 22L35 33" fill="none" stroke="#FFF1D3" strokeWidth={3} />
+    </Svg>
+  );
+}
+export function FriendDrawer({ open, scene, here, bottom, top, interaction, offset, reduced, large = false, renderCharacter, onBring, onClose, onCarry }: {
   open: boolean;
   scene: Scene;
   here: RoomId;
   bottom: number;
+  /** HR-03 on a phone: the 64 pt bar is two rows, so the drawer opens at the top of the play area instead of over the floor. */
+  top?: number;
   interaction: Interaction;
   offset: SharedValue<{ x: number; y: number }>;
   reduced: boolean;
@@ -125,7 +143,7 @@ export function FriendDrawer({ open, scene, here, bottom, interaction, offset, r
     const to = open && !carrying ? 1 : 0;
     shown.set(reduced ? to : withTiming(to, { duration: DRAWER_MS }));
   }, [open, carrying, reduced, shown]);
-  const style = useAnimatedStyle(() => ({ opacity: shown.value, transform: [{ translateY: (1 - shown.value) * 18 }] }));
+  const style = useAnimatedStyle(() => ({ opacity: shown.value, transform: [{ translateY: (1 - shown.value) * (top === undefined ? 18 : -18) }] }));
   const friends = Object.values(scene.entities).filter((e) => e.character).sort((a, b) => a.character!.slot - b.character!.slot);
   const size = large ? 76 : 64;
   return (
@@ -135,7 +153,7 @@ export function FriendDrawer({ open, scene, here, bottom, interaction, offset, r
       pointerEvents={open ? "box-none" : "none"}
       importantForAccessibility={open ? "auto" : "no-hide-descendants"}
       accessibilityElementsHidden={!open}
-      style={[{ position: "absolute", bottom, alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 8, padding: 8,
+      style={[{ position: "absolute", ...(top === undefined ? { bottom } : { top }), alignSelf: "center", flexDirection: "row", alignItems: "center", gap: 8, padding: 8,
         borderRadius: 20, backgroundColor: "#FFF8E9", borderWidth: 2, borderColor: "#D7C29A", zIndex: 41 }, style]}
     >
       {friends.map((entity) => (

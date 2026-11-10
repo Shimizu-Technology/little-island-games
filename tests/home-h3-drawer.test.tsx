@@ -56,6 +56,21 @@ describe("HR-01 the friends drawer (rules 4, 47)", () => {
     expect(cells[1].findAll((n) => (n.type as unknown) === "ItemArt")).toHaveLength(0);
     await act(async () => tree.unmount());
   });
+  it("a waiting friend shows the basket picture, and on a phone in large mode the drawer opens at the top", async () => {
+    let state = labHome();
+    const scene0 = buildScene(state), pip = scene0.entities["character/1"];
+    state = (apply(state, resolve({ ...scene0.rooms.home, entities: scene0.entities }, pip, pip.contact, { scale: 1, intent: "staging", release: true })) as any).state;
+    const scene = buildScene(state);
+    let tree!: TestRenderer.ReactTestRenderer;
+    await act(async () => { tree = TestRenderer.create(<FriendDrawer open scene={scene} here="home" bottom={70} top={120} large interaction={interaction}
+      offset={offset} reduced={false} onBring={() => {}} onClose={() => {}} onCarry={() => {}} />); });
+    expect(tree.root.findAllByProps({ testID: "friend-waiting-1" }).length).toBeGreaterThan(0);
+    expect(tree.root.findAllByProps({ testID: "friend-waiting-0" })).toHaveLength(0);
+    const style = flat(tree.root.findByProps({ testID: "friend-drawer" }).props.style);
+    expect(style.top).toBe(120);
+    expect(style.bottom).toBeUndefined();
+    await act(async () => tree.unmount());
+  });
   it("opens and closes within 180 ms, and when closed cannot be touched or read", async () => {
     timing.durations = [];
     const scene = buildScene(labHome());

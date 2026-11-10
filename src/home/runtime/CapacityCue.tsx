@@ -7,14 +7,22 @@ export const CAPACITY_CUE_MS = 3200;
 const ink = "#284F4B";
 
 /** A full room, drawn: a crowded room and a curved arrow into the basket. */
-export function FullRoomPicture({ size = 64 }: { size?: number }) {
+export function FullRoomPicture({ size = 76 }: { size?: number }) {
   return (
     <Svg width={size} height={size * 0.7} viewBox="0 0 64 45" accessible={false}>
       <Path d="M3 17L19 5L35 17V41H3Z" fill="#FFF8E9" stroke={ink} strokeWidth={2.4} strokeLinejoin="round" />
-      <Rect x={7} y={29} width={9} height={9} rx={2} fill="#E8B07A" stroke={ink} strokeWidth={1.5} />
-      <Circle cx={23} cy={34} r={4.4} fill="#F08069" stroke={ink} strokeWidth={1.5} />
-      <Path d="M27 39q2-12 5-6q-1-6 0-12" fill="none" stroke="#5E9A6B" strokeWidth={2.4} strokeLinecap="round" />
-      <Rect x={11} y={19} width={10} height={8} rx={2} fill="#8CC4E8" stroke={ink} strokeWidth={1.5} />
+      {/* Packed to the roof: three rows of things and one that no longer fits through the wall. */}
+      <Rect x={5.5} y={32} width={7} height={7} rx={1.5} fill="#E8B07A" stroke={ink} strokeWidth={1.2} />
+      <Circle cx={16.5} cy={35.5} r={3.6} fill="#F08069" stroke={ink} strokeWidth={1.2} />
+      <Rect x={21} y={32} width={6} height={7} rx={1.5} fill="#8CC4E8" stroke={ink} strokeWidth={1.2} />
+      <Rect x={28} y={31} width={5.5} height={8} rx={1.5} fill="#F2D27A" stroke={ink} strokeWidth={1.2} />
+      <Rect x={6} y={24} width={8} height={7} rx={1.5} fill="#B9D98C" stroke={ink} strokeWidth={1.2} />
+      <Circle cx={18.5} cy={27.5} r={3.4} fill="#F7B6C8" stroke={ink} strokeWidth={1.2} />
+      <Rect x={23} y={23.5} width={9} height={7.5} rx={1.5} fill="#E8B07A" stroke={ink} strokeWidth={1.2} />
+      <Rect x={10} y={16} width={7} height={7} rx={1.5} fill="#8CC4E8" stroke={ink} strokeWidth={1.2} />
+      <Circle cx={22} cy={19.5} r={3.3} fill="#F2D27A" stroke={ink} strokeWidth={1.2} />
+      <Rect x={15.5} y={9.5} width={7} height={6} rx={1.5} fill="#F08069" stroke={ink} strokeWidth={1.2} />
+      <Rect x={31} y={19} width={7} height={6.5} rx={1.5} fill="#B9D98C" stroke={ink} strokeWidth={1.2} transform="rotate(18 34.5 22)" />
       <Path d="M24 13Q42 1 49 18" fill="none" stroke="#477D60" strokeWidth={2.6} strokeLinecap="round" />
       <Path d="M44 16l5 3 2-6" fill="none" stroke="#477D60" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
       <Path d="M40 26H62L58 42H44Z" fill="#E5C48F" stroke={ink} strokeWidth={2.2} strokeLinejoin="round" />

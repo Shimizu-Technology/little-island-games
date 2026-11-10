@@ -103,7 +103,7 @@ function RoomButton({ id, selected, onRoom, onFriends, hover, onRect, size, toke
     >
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: 15, borderWidth: 3, borderColor: "#477D60",
         backgroundColor: "#FFF8E9", overflow: "hidden", justifyContent: "flex-end" }, ring]}>
-        <Animated.View style={[{ width: "100%", backgroundColor: "#CFE6B8" }, fill]} />
+        <Animated.View style={[{ width: "100%", backgroundColor: "#8FC48A" }, fill]} />
       </Animated.View>
       <ItemArt
         item={({ home: "bed", kitchen: "fridge", treehouse: "plant", beach: "shell" } as const)[id]}
@@ -134,7 +134,7 @@ function FriendsButton({ open, onPress, hover, onRect, size, token }: {
       style={[styles.tool, { minWidth: size, minHeight: size, borderRadius: size / 2 }, open && { backgroundColor: "#D6E9C8" }]}
     >
       <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { borderRadius: size / 2, borderWidth: 3, borderColor: "#477D60",
-        backgroundColor: "#CFE6B8" }, ring]} />
+        backgroundColor: "#8FC48A" }, ring]} />
       <FriendsIcon />
     </Pressable>
   );

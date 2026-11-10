@@ -30,7 +30,7 @@ import { resolve, type DropProposal } from "./scene/proposal";
 import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
 import { screenToRoom } from "./scene/camera";
 import { SceneView } from "./runtime/SceneView";
-import { HomeChrome, Tool, navigationHeightFor } from "./runtime/HomeChrome";
+import { HomeChrome, Tool, navigationHeightFor, largeNavigationHeight } from "./runtime/HomeChrome";
 import { FriendDrawer } from "./runtime/FriendDrawer";
 import { HomePanels } from "./runtime/HomePanels";
 import { DesignTools, portraitDrawerHeight, type CatalogGhost } from "./runtime/DesignTools";
@@ -848,7 +848,8 @@ export function HomeScreen({
         width={window.width}
         saveStatus={saveStatus}
       />
-      <View style={{ flex: 1, flexDirection: vertical ? "row" : "column" }}>
+      {/* Above the bars (zIndex 30) so carried art is never hidden under them; box-none keeps the bars touchable. */}
+      <View pointerEvents="box-none" style={{ flex: 1, flexDirection: vertical ? "row" : "column", zIndex: 31 }}>
         <View ref={canvas} onLayout={measure} style={{ width: viewport.width, height: viewport.height }}>
           <SceneView
             state={{ ...store.state, current: room }}
@@ -1009,6 +1010,7 @@ export function HomeScreen({
         scene={scene}
         here={room}
         bottom={inset.bottom + navigationHeight + 8}
+        top={large && navigationHeight > largeNavigationHeight ? headerHeight + 8 : undefined}
         interaction={interaction}
         offset={viewportOffset}
         reduced={reduced}
