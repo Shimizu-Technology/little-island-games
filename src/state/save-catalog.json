@@ -88,6 +88,127 @@
       "packHash": "5c53ab8d9bf15572abde6df939b34e282964dbaf4e624c5f41b5acfebd22b564",
       "awards": 0,
       "cove": true
+    },
+    {
+      "slot": 48,
+      "engine": "cage-math",
+      "rules": 1,
+      "first": 49152,
+      "count": 200,
+      "family": "cage-math",
+      "packHash": "460fdc65fc64af60d3f01e33656a0dba33d5c0ef8325bde1e376489906624b42",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 49,
+      "engine": "cage-math",
+      "rules": 1,
+      "first": 49352,
+      "count": 200,
+      "family": "cage-math",
+      "packHash": "885313dc650c7aab3df18c192f5e7a49e9ff5f83725192015fc7ae1c649fb927",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 50,
+      "engine": "cage-math",
+      "rules": 1,
+      "first": 49552,
+      "count": 200,
+      "family": "cage-math",
+      "packHash": "c1813e40a33c740a1de831f1afa4ee25a201457f9962607b8364a669b758051a",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 51,
+      "engine": "cage-math",
+      "rules": 1,
+      "first": 49752,
+      "count": 200,
+      "family": "cage-math",
+      "packHash": "0317f90e63ac36b970a9395bb1aca9cfffe46209f2adf8a856d5bb8534e456d1",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 52,
+      "engine": "cage-math",
+      "rules": 1,
+      "first": 49952,
+      "count": 160,
+      "family": "cage-math",
+      "packHash": "bbfae11c6390077a478994f0d1ff593f8cdfdf8bd35fc07a7c262180cda184df",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 53,
+      "engine": "greater-than",
+      "rules": 1,
+      "first": 54272,
+      "count": 160,
+      "family": "greater-than",
+      "packHash": "012e7ca23f77c74f0b291a3c668ae35dd588695d286ff9798420081cebca8e04",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 54,
+      "engine": "greater-than",
+      "rules": 1,
+      "first": 54432,
+      "count": 160,
+      "family": "greater-than",
+      "packHash": "e84d965b5fb4301da5e17679c1e0210f88de015ec81764384f180ce5296b31f5",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 55,
+      "engine": "skyline",
+      "rules": 1,
+      "first": 56320,
+      "count": 160,
+      "family": "skyline",
+      "packHash": "3a7ae536294243bf9189d85552c55ff094dee34c396000677ba85775f7dfd261",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 56,
+      "engine": "skyline",
+      "rules": 1,
+      "first": 56480,
+      "count": 160,
+      "family": "skyline",
+      "packHash": "0ab2c9cbf9c3878f8f367ecbda96c95ed23923d5f8f82f860ac72136a0e7406d",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 57,
+      "engine": "killer",
+      "rules": 1,
+      "first": 58368,
+      "count": 160,
+      "family": "killer",
+      "packHash": "a642ad163b8bd8170a64ce31aa93f291fb88f3bf7ff0ae7e7b73e404975b55ed",
+      "awards": 0,
+      "cove": true
+    },
+    {
+      "slot": 58,
+      "engine": "killer",
+      "rules": 1,
+      "first": 58528,
+      "count": 160,
+      "family": "killer",
+      "packHash": "0d0f751a252b601e879f91ca9882a1964812192a7407faaf49cb1c1c4ee9edbe",
+      "awards": 0,
+      "cove": true
     }
   ],
   "dares": [],
@@ -237,6 +358,17 @@
     "sudoku-3",
     "sudoku-4",
     "sudoku-5",
-    "sudoku-6"
+    "sudoku-6",
+    "cage-math-1",
+    "cage-math-2",
+    "cage-math-3",
+    "cage-math-4",
+    "cage-math-6",
+    "greater-than-2",
+    "greater-than-4",
+    "skyline-2",
+    "skyline-4",
+    "killer-3",
+    "killer-5"
   ]
 }

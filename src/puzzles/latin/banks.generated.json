@@ -64,5 +64,101 @@
    "rules": 1,
    "band": "trench"
   }
+ ],
+ "cage-math": [
+  {
+   "slot": 48,
+   "first": 49152,
+   "count": 200,
+   "packHash": "460fdc65fc64af60d3f01e33656a0dba33d5c0ef8325bde1e376489906624b42",
+   "rules": 1,
+   "band": "add"
+  },
+  {
+   "slot": 49,
+   "first": 49352,
+   "count": 200,
+   "packHash": "885313dc650c7aab3df18c192f5e7a49e9ff5f83725192015fc7ae1c649fb927",
+   "rules": 1,
+   "band": "take"
+  },
+  {
+   "slot": 50,
+   "first": 49552,
+   "count": 200,
+   "packHash": "c1813e40a33c740a1de831f1afa4ee25a201457f9962607b8364a669b758051a",
+   "rules": 1,
+   "band": "times"
+  },
+  {
+   "slot": 51,
+   "first": 49752,
+   "count": 200,
+   "packHash": "0317f90e63ac36b970a9395bb1aca9cfffe46209f2adf8a856d5bb8534e456d1",
+   "rules": 1,
+   "band": "seven"
+  },
+  {
+   "slot": 52,
+   "first": 49952,
+   "count": 160,
+   "packHash": "bbfae11c6390077a478994f0d1ff593f8cdfdf8bd35fc07a7c262180cda184df",
+   "rules": 1,
+   "band": "nine"
+  }
+ ],
+ "greater-than": [
+  {
+   "slot": 53,
+   "first": 54272,
+   "count": 160,
+   "packHash": "012e7ca23f77c74f0b291a3c668ae35dd588695d286ff9798420081cebca8e04",
+   "rules": 1,
+   "band": "gentle"
+  },
+  {
+   "slot": 54,
+   "first": 54432,
+   "count": 160,
+   "packHash": "e84d965b5fb4301da5e17679c1e0210f88de015ec81764384f180ce5296b31f5",
+   "rules": 1,
+   "band": "tall"
+  }
+ ],
+ "skyline": [
+  {
+   "slot": 55,
+   "first": 56320,
+   "count": 160,
+   "packHash": "3a7ae536294243bf9189d85552c55ff094dee34c396000677ba85775f7dfd261",
+   "rules": 1,
+   "band": "low"
+  },
+  {
+   "slot": 56,
+   "first": 56480,
+   "count": 160,
+   "packHash": "0ab2c9cbf9c3878f8f367ecbda96c95ed23923d5f8f82f860ac72136a0e7406d",
+   "rules": 1,
+   "band": "high"
+  }
+ ],
+ "killer": [
+  {
+   "slot": 57,
+   "first": 58368,
+   "count": 160,
+   "packHash": "a642ad163b8bd8170a64ce31aa93f291fb88f3bf7ff0ae7e7b73e404975b55ed",
+   "rules": 1,
+   "band": "small"
+  },
+  {
+   "slot": 58,
+   "first": 58528,
+   "count": 160,
+   "packHash": "0d0f751a252b601e879f91ca9882a1964812192a7407faaf49cb1c1c4ee9edbe",
+   "rules": 1,
+   "band": "full"
+  }
  ]
 }

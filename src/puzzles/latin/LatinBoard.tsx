@@ -75,9 +75,10 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
   // Wider than the page padding on phones, so a 9×9 cell stays about 42 points.
   const bleed = width < 520 ? 14 : 0, boardWidth = width + bleed * 2;
   return <View style={{ gap: 12 }}>
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-      <Copy style={{ flexShrink: 1 }}>{view.teaches ? `Teaches: ${techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches}` : ''}</Copy>
-      <Copy accessibilityLabel={`${solvedCount} of ${total} cells filled`}>{solvedCount}/{total} filled</Copy>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 6 }}>
+      <Copy style={{ flexShrink: 1, fontWeight: '700' }}>{view.title}</Copy>
+      {!!view.teaches && <Copy style={{ flexShrink: 1 }}>{`· ${techniqueNames[view.teaches as keyof typeof techniqueNames] ?? view.teaches}`}</Copy>}
+      <Copy accessibilityLabel={`${solvedCount} of ${total} cells filled`}>{`· ${solvedCount}/${total}`}</Copy>
     </View>
     <View style={{ marginHorizontal: -bleed }}>
       <GridShell spec={spec} state={state} dispatch={gridSend} width={boardWidth} active={active} conflicts={conflictCells} mistakes={clashes ? 'Friendly' : preferences.mistakes === 'Rewind' ? 'Rewind' : 'Plain'} borders={borders} tints={tints} overlay={overlay} frame={frame} fillNotes={() => send({ type: 'fill-notes' })}/>
