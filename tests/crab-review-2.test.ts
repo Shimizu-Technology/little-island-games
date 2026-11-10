@@ -57,7 +57,7 @@ it('R2 P1-2: certified reserve — from the ordinary-edit ceiling, the full ladd
   const dare=[...p.dares].filter(d=>!d.retired&&d.rule.kind==='par').sort((a,b)=>b.slot-a.slot)[0];
   let s=registration.start(p.ref,'a','reserve',emptyChallenge(),options,dare?[dare.slot]:[]);
   const good=solution(p.descriptor)!,last=good.length-1,other=cardCodes.indexOf(commands(p.descriptor.level.pace).find(c=>c!==good[last])!);
-  for(const _ of p.descriptor.starter)s=registration.move(s,['x',0])!;
+  for(let i=p.descriptor.starter.length;i>0;i--)s=registration.move(s,['x',0])!;
   s=add(s,good);
   // Longest edits (insert, remove) or shortest (add, undo) until ordinary play is refused, ending on the winning plan.
   const [edit,undo]:Action[]=wall==='bytes'?[['i',last,other],['x',last]]:[['a',other],['u']];
