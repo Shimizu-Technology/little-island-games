@@ -12,6 +12,8 @@ export function libraryGestureEnabled(params: object | undefined) {
   const { place, id } = (params ?? {}) as NonNullable<LibraryParams>;
   return !((place === "make" && !!id) || place === "little");
 }
+/** Any render error below the root, including the Store and the first screen, lands here instead of a blank app. */
+export { LaunchError as ErrorBoundary } from "../components/LaunchError";
 export default function Layout() {
   // The platform push shows where a screen came from; Reduce Motion swaps it for a short fade.
   const reduced = useReducedMotion();

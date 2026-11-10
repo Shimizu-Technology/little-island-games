@@ -109,7 +109,7 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
     </> : round ? <>
       <Heading style={{fontSize:22}}>{entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.title}</Heading>
       {/* The registered Board receives dispatch only as an event callback; render does not invoke it. */}
-      {!round.result&&!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={store.challengeOpen} expected={expected(round)} render={()=><>
+      {!round.result&&!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={store.challengeOpen} expected={expected(round)} onStartFresh={()=>store.challengeDiscard(expected(round))} render={()=><>
         {entry.render(round,a=>void dispatch(a),focused&&!busy,width-40,{key:sessionKey(round),onFresh:freshPuzzle,commit:async(action,key)=>{const current=accepted.current;if(!current||key!==sessionKey(current))return null;const session=await dispatch(action);return session?{key:sessionKey(session),session}:null;}})}
         {entry.helpUI!=='board'&&<Button quiet disabled={!focused||busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}
       </>}/>}

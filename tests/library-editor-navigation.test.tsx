@@ -9,6 +9,7 @@ vi.mock("react-native-safe-area-context", () => ({ SafeAreaProvider: "SafeAreaPr
 vi.mock("../src/components/Text", () => ({ TextLayoutProvider: "TextLayoutProvider" }));
 vi.mock("../src/components/motion", () => ({ useReducedMotion: () => false }));
 vi.mock("../src/state/Store", () => ({ StoreProvider: "StoreProvider" }));
+vi.mock("../src/components/LaunchError", () => ({ LaunchError: () => null }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 describe("native Library drawing navigation", () => {
   it("disables the ancestor UIKit pop recognizer before the editor can receive touches", async () => {

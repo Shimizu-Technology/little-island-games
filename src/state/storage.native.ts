@@ -50,6 +50,15 @@ export const storage: StorageAdapter = {
       await tx.runAsync("INSERT OR REPLACE INTO app_data (key,value) VALUES (?,?)",'discard-cursor',String(index+1));
     });
   },
+  logLaunch: async entry => {
+    const db = await database;
+    await db.withExclusiveTransactionAsync(async tx => {
+      const counter = await tx.getFirstAsync<{value:string}>("SELECT value FROM app_data WHERE key = ?",'launch-log-cursor');
+      const index = Number(counter?.value ?? 0) % 8;
+      await tx.runAsync("INSERT OR REPLACE INTO app_data (key,value) VALUES (?,?)",`launch-log-${index}`,entry);
+      await tx.runAsync("INSERT OR REPLACE INTO app_data (key,value) VALUES (?,?)",'launch-log-cursor',String(index+1));
+    });
+  },
   quarantineDraft: async raw => {
     const db = await database;
     await db.withExclusiveTransactionAsync(async tx => {
