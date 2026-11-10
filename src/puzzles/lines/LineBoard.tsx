@@ -9,7 +9,7 @@ import type { EdgeBoardProps } from '../edges/registration';
 import { BLACK, CROSS, EMPTY, LINE, brokenClues, latticeOf, solved, type LinePuzzle } from './core';
 import { cueFor, techniqueNames, type Cue } from './teach';
 
-const PAPER = '#FBF7EC', GRIDLINE = '#D9CEB0', RIM = '#CFE0D8', INK = '#1E4A43', DOT = '#7C8C86';
+const CROSSMARK = '#7E968F', DONEDISC = '#D3EBCF', PAPER = '#FBF7EC', GRIDLINE = '#D9CEB0', RIM = '#CFE0D8', INK = '#1E4A43', DOT = '#7C8C86';
 type Ladder = { stage: 0 | 1 | 2; cue: Cue | null; edits: number; helpsAt: number; placed: string };
 const closed = (edits: number, helpsAt: number): Ladder => ({ stage: 0, cue: null, edits, helpsAt, placed: '' });
 const rulesText: Record<LinePuzzle['kind'], string> = {
@@ -126,7 +126,7 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
   const done = p.kind === 'loop' ? p.clues.filter((n, c) => n >= 0 && met(marks, c)).length : p.pearls.filter((k, v) => k && threaded(v)).length;
   const total = p.kind === 'loop' ? p.clues.filter(n => n >= 0).length : p.pearls.filter(Boolean).length;
   const firstBroken = [...broken][0];
-  const trouble = branches.size ? 'Three lines meet at one place. The loop never branches.' : firstBroken === undefined ? '' : p.kind === 'loop' ? `This ${p.clues[firstBroken]} doesn’t fit its lines.` : `This ${p.pearls[firstBroken] === BLACK ? 'black' : 'white'} pearl’s rule is broken.`;
+  const trouble = branches.size ? 'Three lines meet at one place. The loop never branches.' : firstBroken === undefined ? '' : p.kind === 'loop' ? `This ${p.clues[firstBroken]} doesn’t fit its lines.` : p.pearls[firstBroken] === BLACK ? 'A black pearl turns, then goes straight on through the next cell on both sides.' : 'A white pearl goes straight through, and the line turns just before or after it.';
   const thick = Math.max(3.5, cell * 0.13), finished = !pending && solved(p, marks.map(m => m === CROSS ? EMPTY : m)), lineColour = finished ? C.teal : INK;
 
   const background = useMemo(() => {
@@ -138,7 +138,7 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
   const edgeLines = l.edges.map(([a, b], e) => {
     const m = shownMarks[e], A = pos(a), B = pos(b);
     if (m === LINE) return <Line key={e} x1={A.x} y1={A.y} x2={B.x} y2={B.y} stroke={focusEdges.has(e) ? C.gold : lineColour} strokeWidth={thick} strokeLinecap="round"/>;
-    if (m === CROSS) { const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2, k = cell * 0.09; return <G key={e}><Line x1={mx - k} y1={my - k} x2={mx + k} y2={my + k} stroke={C.coral} strokeWidth={2}/><Line x1={mx - k} y1={my + k} x2={mx + k} y2={my - k} stroke={C.coral} strokeWidth={2}/></G>; }
+    if (m === CROSS) { const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2, k = Math.max(4.5, cell * 0.11); return <G key={e}><Line x1={mx - k} y1={my - k} x2={mx + k} y2={my + k} stroke={CROSSMARK} strokeWidth={2.5} strokeLinecap="round"/><Line x1={mx - k} y1={my + k} x2={mx + k} y2={my - k} stroke={CROSSMARK} strokeWidth={2.5} strokeLinecap="round"/></G>; }
     if (focusEdges.has(e)) return <Line key={e} x1={A.x} y1={A.y} x2={B.x} y2={B.y} stroke={C.gold} strokeWidth={thick * 0.8} strokeDasharray={`${cell * 0.12} ${cell * 0.08}`} strokeLinecap="round"/>;
     return null;
   });
@@ -146,6 +146,7 @@ export function LineBoard({ view, dispatch, active, width }: EdgeBoardProps<Line
     if (n < 0 && !focusCells.has(c)) return [];
     const x = pad + (c % p.cols + 0.5) * cell, y = pad + (Math.floor(c / p.cols) + 0.5) * cell, ok = met(shownMarks, c);
     return [<G key={`c${c}`}>
+      {ok && !focusCells.has(c) && <Circle cx={x} cy={y} r={cell * 0.32} fill={DONEDISC}/>}
       {focusCells.has(c) && <Rect x={x - cell * 0.42} y={y - cell * 0.42} width={cell * 0.84} height={cell * 0.84} rx={cell * 0.16} fill="#FBEFC9" stroke={C.gold} strokeWidth={2}/>}
       {n >= 0 && <SvgText x={x} y={y + cell * 0.17} fontSize={cell * 0.48} fontWeight="700" textAnchor="middle" fill={broken.has(c) ? C.error : ok ? C.teal : INK}>{String(n)}</SvgText>}
     </G>];

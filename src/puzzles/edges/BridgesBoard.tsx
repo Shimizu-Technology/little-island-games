@@ -21,7 +21,7 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
   const { height } = useWindowDimensions(), feedback = useContext(GridFeedback), interaction = useContext(GridInteraction);
   // A rim of water around the grid keeps rings and edge islands whole.
   const cell = Math.max(24, Math.min(84, Math.floor(Math.min(width / (p.width + 0.4), Math.max(300, height * 0.62) / (p.height + 0.4))))), rim = Math.round(cell * 0.2);
-  const W = cell * p.width + rim * 2, H = cell * p.height + rim * 2, r = cell * 0.4;
+  const W = cell * p.width + rim * 2, H = cell * p.height + rim * 2, r = cell * (cell < 40 ? 0.44 : 0.4);
   const at = useCallback((i: number) => ({ x: rim + (islands[i].x + 0.5) * cell, y: rim + (islands[i].y + 0.5) * cell }), [islands, cell, rim]);
   const [selected, setSelected] = useState<number | null>(null), [preview, setPreview] = useState<{ link: number; blocked: number[]; to: number } | null>(null);
   const [blocked, setBlocked] = useState<number[]>([]), [message, setMessage] = useState(''), [rules, setRules] = useState(false);
@@ -121,7 +121,10 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
     const offsets = count === 2 ? [-off, off] : [0];
     return offsets.map((o, k) => <Line key={`${e}-${k}-${color}`} x1={x1 + ox * o} y1={y1 + oy * o} x2={x2 + ox * o} y2={y2 + oy * o} stroke={color} strokeWidth={thick} strokeLinecap="round" strokeDasharray={dash}/>);
   };
-  const dots = useMemo(() => p.clues.flatMap((c, i) => c ? [] : [<Circle key={i} cx={rim + (i % p.width + 0.5) * cell} cy={rim + (Math.floor(i / p.width) + 0.5) * cell} r={Math.max(1.5, cell * 0.045)} fill={DOT}/>]), [p, cell, rim]);
+  /** Where an across link and a down link meet. */
+  const crossPoint = (e: number, f: number) => { const h = links[e].horizontal ? e : f, v = h === e ? f : e; return { x: at(links[v].a).x, y: at(links[h].a).y }; };
+  const covered = useMemo(() => new Set(links.flatMap((l, e) => marks[e] ? l.water : [])), [links, marks]);
+  const dots = useMemo(() => p.clues.flatMap((c, i) => c || covered.has(i) ? [] : [<Circle key={i} cx={rim + (i % p.width + 0.5) * cell} cy={rim + (Math.floor(i / p.width) + 0.5) * cell} r={Math.max(1.5, cell * 0.045)} fill={DOT}/>]), [p, cell, rim, covered]);
   const describe = (i: number) => {
     const s = islands[i], has = degree(p, marks, i);
     return `Island ${s.clue}, row ${s.y + 1}, column ${s.x + 1}. ${has} of ${s.clue} bridges${has === s.clue ? ', finished' : has > s.clue ? ', too many' : ''}.`;
@@ -142,11 +145,13 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
       <Svg width={W} height={H} pointerEvents="none">
         <Rect x={0} y={0} width={W} height={H} rx={Math.min(16, cell * 0.4)} fill={SEA}/>
         {dots}
-        <G>{links.flatMap((_, e) => marks[e] ? plank(e, marks[e], blocked.includes(e) ? C.error : PLANK) : [])}</G>
+        <G>{links.flatMap((_, e) => !marks[e] ? [] : preview?.link === e && marks[e] === 2 ? [<G key={`fade-${e}`} opacity={0.3}>{plank(e, 2, PLANK)}</G>] : plank(e, marks[e], PLANK))}</G>
         {/* What letting go would do: a ghost bridge (two when it would become a double), grey dashes when both would go, red when refused. */}
         {preview && <G opacity={preview.blocked.length || marks[preview.link] === 2 ? 1 : 0.5}>{plank(preview.link, marks[preview.link] === 2 ? 2 : marks[preview.link] + 1, preview.blocked.length ? C.error : marks[preview.link] === 2 ? C.muted : PLANK, !!preview.blocked.length || marks[preview.link] === 2)}</G>}
-        {preview?.blocked.flatMap(e => plank(e, marks[e], C.error))}
+        {/* A refused bridge: only the attempt is red, with a cross where it meets the bridge in the way. */}
         {blocked.length > 0 && marks[blocked[0]] === 0 && plank(blocked[0], 1, C.error, true)}
+        {blocked.length > 0 && blocked.slice(1).map(e => { const k = crossPoint(blocked[0], e), d = cell * 0.16; return <G key={`x-${e}`}><Circle cx={k.x} cy={k.y} r={cell * 0.22} fill={SEA}/><Line x1={k.x - d} y1={k.y - d} x2={k.x + d} y2={k.y + d} stroke={C.error} strokeWidth={3} strokeLinecap="round"/><Line x1={k.x - d} y1={k.y + d} x2={k.x + d} y2={k.y - d} stroke={C.error} strokeWidth={3} strokeLinecap="round"/></G>; })}
+        {preview && preview.blocked.length > 0 && preview.blocked.map(e => { const k = crossPoint(preview.link, e), d = cell * 0.16; return <G key={`px-${e}`}><Line x1={k.x - d} y1={k.y - d} x2={k.x + d} y2={k.y + d} stroke={C.error} strokeWidth={3} strokeLinecap="round"/><Line x1={k.x - d} y1={k.y + d} x2={k.x + d} y2={k.y - d} stroke={C.error} strokeWidth={3} strokeLinecap="round"/></G>; })}
         {islands.map((s, i) => {
           const c = at(i), done = degree(p, marks, i) === s.clue, bad = over.has(i);
           return <G key={i}>
@@ -156,7 +161,7 @@ export function BridgesBoard({ view, dispatch, active, width }: EdgeBoardProps<B
             {selected === i && <Circle cx={c.x} cy={c.y} r={r + Math.max(3, cell * 0.09)} fill="none" stroke={C.blue} strokeWidth={Math.max(3, cell * 0.08)}/>}
             {neighbours.has(i) && <Circle cx={c.x} cy={c.y} r={r + 2} fill="none" stroke={C.blue} strokeWidth={2} strokeDasharray="4 3"/>}
             <Circle cx={c.x} cy={c.y} r={r} fill={bad ? OVER : done ? DONE : SAND} stroke={bad ? C.error : done ? C.teal : SHORE} strokeWidth={Math.max(2, cell * 0.06)}/>
-            <SvgText x={c.x} y={c.y + cell * 0.165} fontSize={cell * 0.46} fontWeight="700" textAnchor="middle" fill={bad ? C.error : done ? C.teal : C.ink}>{String(s.clue)}</SvgText>
+            <SvgText x={c.x} y={c.y + cell * 0.165} fontSize={cell * (cell < 40 ? 0.52 : 0.46)} fontWeight="700" textAnchor="middle" fill={bad ? C.error : done ? C.teal : C.ink}>{String(s.clue)}</SvgText>
           </G>;
         })}
       </Svg>
