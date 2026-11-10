@@ -87,12 +87,14 @@ const OverlayGroup = memo(function OverlayGroup({
     const binding = root.character ? carryBinding(root, pickup.grip ?? { x: 0, y: 0 }) : { x: 0, y: 0 };
     interaction.ready(interaction.slots.value.findIndex(s => s.id === id), id, bounds && { ...bounds, left: bounds.left + binding.x, top: bounds.top + binding.y }, pickup.generation);
   };
+  // Only the shared value goes into the worklet; the interaction object holds the native recognizer.
+  const dropZones = interaction.dropZones as Interaction["dropZones"] | undefined;
   const style = useAnimatedStyle(() => {
     const slot = slots.value[index];
     const motion = pickupTransform(slot, root, camera.value.a, clock.value, reduced);
     // Over a room button or the Friends button, the carried thing shrinks and rises above the
     // finger so the button can be seen taking it.
-    const over = slot.phase === "dragging" && !slot.catalog && !!zoneAt(interaction.dropZones?.value ?? [], slot.absoluteX, slot.absoluteY);
+    const over = slot.phase === "dragging" && !slot.catalog && !!zoneAt(dropZones?.value ?? [], slot.absoluteX, slot.absoluteY);
     const k = over ? 0.62 : 1, rise = over ? -44 / Math.max(0.1, camera.value.a) : 0;
     const shrink = reduced ? k : withTiming(k, { duration: 120 }), up = reduced ? rise : withTiming(rise, { duration: 120 });
     return {
