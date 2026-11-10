@@ -241,11 +241,11 @@ export default [
     ],
   },
   {
-    word: 'MILK', meaning: 'a carton of milk', alt: 'A white and blue milk carton with a peaked top and a white milk drop on the front.',
+    word: 'MILK', meaning: 'milk', alt: 'A white and blue milk carton with a peaked top, beside a full glass of white milk.',
     draw: () => [
-      path('M32 40L44 10H76L88 40Z', P.sky), path('M44 10L56 40H32ZM76 10L88 40H64Z', P.blue, { sw: 2 }), rect(42, 4, 36, 7, 2, P.sky, { sw: 2 }),
-      rect(32, 40, 56, 72, 4, P.paper), rect(32, 86, 56, 26, 0, P.blue, { sw: 2 }),
-      path('M60 50Q72 66 70 72Q68 80 60 80Q52 80 50 72Q48 66 60 50Z', P.sky, { sw: 2 }), rect(32, 40, 56, 72, 4),
+      path('M16 40L26 12H58L68 40Z', P.sky), path('M26 12L36 40H16ZM58 12L68 40H48Z', P.blue, { sw: 2 }), rect(24, 6, 36, 7, 2, P.sky, { sw: 2 }),
+      rect(16, 40, 52, 70, 4, P.paper), rect(16, 84, 52, 26, 0, P.blue, { sw: 2 }), path('M42 50Q54 66 52 72Q50 80 42 80Q34 80 32 72Q30 66 42 50Z', P.sky, { sw: 2 }), rect(16, 40, 52, 70, 4),
+      path('M74 54H110L104 112H80Z', P.paper), line('M76 68H108', { stroke: P.stone, sw: 2 }), patch('M82 74h4l2 32h-4Z', P.cream),
     ],
   },
   {

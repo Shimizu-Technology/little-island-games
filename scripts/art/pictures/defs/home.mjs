@@ -215,11 +215,12 @@ export default [
     ],
   },
   {
-    word: 'MIRROR', meaning: 'a hand mirror', alt: 'A round hand mirror with a gold frame and handle, its shiny glass showing bright light streaks and sparkles.',
+    word: 'MIRROR', meaning: 'a mirror', alt: 'A tall oval mirror in a wooden frame standing on two legs, its glass shining with bright light streaks.',
     draw: () => [
-      line('M60 84V114', { stroke: P.ink, sw: 13 }), line('M60 84V114', { stroke: P.gold, sw: 8 }), circle(60, 46, 40, P.gold), circle(60, 46, 32, P.sky),
-      line('M36 36L54 18M38 54L72 20M50 66L80 36', { stroke: P.paper, sw: 5 }),
-      path('M96 8l3 7 7 3-7 3-3 7-3-7-7-3 7-3Z', P.yellow, { sw: 2 }), path('M18 74l2 5 5 2-5 2-2 5-2-5-5-2 5-2Z', P.yellow, { sw: 2 }),
+      line('M38 96L28 114M82 96L92 114', { stroke: P.ink, sw: 9 }), line('M38 96L28 114M82 96L92 114', { stroke: P.brown, sw: 4.5 }),
+      ellipse(60, 54, 36, 48, P.wood), ellipse(60, 54, 28, 40, P.sky),
+      line('M44 46L64 22M44 66L76 30M58 78L78 52', { stroke: P.paper, sw: 5 }),
+      path('M100 10l3 7 7 3-7 3-3 7-3-7-7-3 7-3Z', P.yellow, { sw: 2 }),
     ],
   },
   {

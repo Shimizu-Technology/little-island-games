@@ -82,12 +82,13 @@ export default [
     ],
   },
   {
-    word: 'FINGER', meaning: 'a finger', alt: 'A hand pointing to the side with one straight finger, the other fingers curled in.',
+    word: 'FINGER', meaning: 'a finger', alt: 'One index finger held straight up at the side of a closed hand, with its fingernail showing and the thumb folded across the other fingers.',
     draw: () => [
-      path('M60 42H106Q114 42 114 50Q114 58 106 58H60Z', P.skin), patch('M100 45h6v10h-6Z', P.pink),
-      path('M14 56Q14 42 28 42H66V100Q66 108 58 108H30Q14 108 14 92Z', P.skin),
-      path('M66 58H76Q84 58 84 66Q84 74 76 74H66ZM66 74H74Q82 74 82 82Q82 90 74 90H66ZM66 90H72Q80 90 80 98Q80 106 72 106H62', P.skin),
-      path('M22 44Q30 30 46 36L58 44', undefined, { stroke: P.skinDeep, sw: 2 }),
+      path('M74 60V16Q74 6 84 6Q94 6 94 16V60Z', P.skin), path('M78 16Q78 10 84 10Q90 10 90 16V24H78Z', P.pink, { sw: 2 }),
+      line('M78 40H90', { stroke: P.skinDeep, sw: 2 }),
+      path('M24 66Q24 54 36 54H84Q96 54 96 66V92Q96 112 74 112H44Q24 112 24 92Z', P.skin),
+      path('M24 66H60M24 80H58M26 94H56', undefined, { stroke: P.skinDeep, sw: 2 }),
+      path('M96 70Q104 82 92 88L62 88Q56 88 56 82Q56 76 62 76L86 76Q90 66 96 70Z', P.skin),
     ],
   },
   {

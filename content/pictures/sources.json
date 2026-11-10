@@ -759,7 +759,7 @@
       "id": "milk",
       "wordId": "en-milk",
       "queue": "tiers",
-      "meaning": "a carton of milk"
+      "meaning": "milk"
     },
     {
       "id": "cake",
@@ -1060,7 +1060,7 @@
       "id": "mirror",
       "wordId": "en-mirror",
       "queue": "tiers",
-      "meaning": "a hand mirror"
+      "meaning": "a mirror"
     },
     {
       "id": "pillow",

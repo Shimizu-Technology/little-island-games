@@ -6,7 +6,8 @@ These pictures are clues and list pictures for children aged 4 to 9. A seven-yea
 
 - `viewBox="0 0 120 120"`, transparent background. The game draws the tile behind it; the Library tile is `#FFF9E6` with rounded corners, and the contact sheets use it.
 - The object fills about 80 to 100 units of its longer side, centred, inside a 6-unit margin. Long thin things (a pencil, a snake) lie on a diagonal so they still fill the box.
-- One object per picture. A pair is allowed when the word is one thing made of two (shoe laces, not "shoes"). No scenes, no background, no ground line unless the word is a place or a thing defined by where it is (a puddle, a beach, a river).
+- One object per picture. A pair is allowed when the word is one thing made of two, or when the word is usually a plural (dice, olives). No background and no ground line unless the word is a place or a thing defined by where it is (a puddle, a raft on water, a hen on its nest).
+- Scene words that are a view rather than an object (beach, desert, road, river, sunset) sit in a rounded scene panel, so they read as one kind of picture. Keep this to words that need it.
 
 ## Line
 

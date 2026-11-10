@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "viewBox": "0 0 120 120",
   "count": 403,
-  "totalBytes": 307617,
+  "totalBytes": 307797,
   "categories": [
     "animals",
     "sea",
@@ -1009,9 +1009,9 @@
       "id": "milk",
       "word": "MILK",
       "category": "food",
-      "alt": "A white and blue milk carton with a peaked top and a white milk drop on the front.",
-      "bytes": 667,
-      "sha256": "f80e641818eac048babe651854e0840be635a48892996cccab193eb227df7abe"
+      "alt": "A white and blue milk carton with a peaked top, beside a full glass of white milk.",
+      "bytes": 830,
+      "sha256": "103f47f8949a7abb2d51cd6877aae2640a5c398ea1e0bc05d074b796db3f10b2"
     },
     {
       "id": "cake",
@@ -1409,9 +1409,9 @@
       "id": "mirror",
       "word": "MIRROR",
       "category": "home",
-      "alt": "A round hand mirror with a gold frame and handle, its shiny glass showing bright light streaks and sparkles.",
-      "bytes": 615,
-      "sha256": "b9cc9e060d9b1981326a63af7592a47e8d7e3bdac36f52a5d966e15e48e9d1a4"
+      "alt": "A tall oval mirror in a wooden frame standing on two legs, its glass shining with bright light streaks.",
+      "bytes": 591,
+      "sha256": "2e7acd02b6aadba2fccfc30238aa5636e5ab97c4f95df8e51f1d720963123731"
     },
     {
       "id": "pillow",
@@ -2425,9 +2425,9 @@
       "id": "finger",
       "word": "FINGER",
       "category": "body",
-      "alt": "A hand pointing to the side with one straight finger, the other fingers curled in.",
-      "bytes": 587,
-      "sha256": "97fece9f5d2b6fcf0acf20df2b4bb80605cbe3b459433ccbc248361759810b34"
+      "alt": "One index finger held straight up at the side of a closed hand, with its fingernail showing and the thumb folded across the other fingers.",
+      "bytes": 628,
+      "sha256": "6bc4c744d52453c253951486a0ee89da669f9c23b3763e1be06126742fe6cc3b"
     },
     {
       "id": "thumb",
