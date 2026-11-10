@@ -6,14 +6,12 @@ import { parsePack } from '../src/puzzles/bank';
 import { decodeRow } from '../src/puzzles/descriptor';
 import { bridgesAdapter } from '../src/puzzles/edges/adapter';
 import { bridgesRungs } from '../src/puzzles/edges/rungs';
-import { grade as gradeBridges, rank as rankBridges } from '../src/puzzles/edges/solver';
+import { grade as gradeBridges, rank as rankBridges, techniques as bridgesTechniques } from '../src/puzzles/edges/solver';
 import { lineAdapter } from '../src/puzzles/lines/adapter';
 import { loopRungs, pearlRungs } from '../src/puzzles/lines/rungs';
-import { grade as gradeLine, rank as rankLine } from '../src/puzzles/lines/solver';
+import { grade as gradeLine, rank as rankLine, techniquesOf } from '../src/puzzles/lines/solver';
 import { bridgesWeights, bridgesWorkload } from '../scripts/puzzles/edges/bridges';
 import { lineWeights, lineWorkload } from '../scripts/puzzles/lines/loops';
-import { techniques as bridgesTechniques } from '../src/puzzles/edges/solver';
-import { techniquesOf } from '../src/puzzles/lines/solver';
 import type { BridgesPuzzle } from '../src/puzzles/edges/core';
 import type { LinePuzzle } from '../src/puzzles/lines/core';
 
