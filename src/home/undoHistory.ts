@@ -15,9 +15,14 @@ import type { Character, HomeStateV2, Instance, RoomState } from "./model";
  * A removal must stay recoverable for its whole 20 steps, so `undoAdmits` refuses an edit
  * that could ever push a removal out. Every later step has HOME_UNDO_RESERVE bytes kept for it.
  * A Restore room that can't keep that promise asks the child first (F3, useHomeStore).
+ *
+ * HOME_UNDO_BYTES limits writes only. Reading still accepts the previous build's 20,480 bytes
+ * (HOME_UNDO_READ_BYTES), so its saves and backups keep loading; the first write after loading
+ * such a history trims its oldest steps to fit and tells the child (R3-F1, useHomeStore).
  */
 export const HOME_UNDO_STEPS = 20;
 export const HOME_UNDO_BYTES = 15_000;
+export const HOME_UNDO_READ_BYTES = 20_480;
 export const HOME_UNDO_RESERVE = 512;
 
 type Put<T> = { index: number; value: T };
@@ -138,6 +143,8 @@ export function boundedUndo(entries: readonly UndoEntry[]): HomeUndo | undefined
   while (kept.length && listBytes(kept) > HOME_UNDO_BYTES) kept = kept.slice(1);
   return kept.length ? { version: 1, steps: kept.map((e) => e.step) } : undefined;
 }
+/** Whether the last 20 steps fit the write budget as they are, with nothing dropped. */
+export const undoFits = (entries: readonly UndoEntry[]) => listBytes(entries.slice(-HOME_UNDO_STEPS)) <= HOME_UNDO_BYTES;
 /**
  * R1: whether saving these steps keeps every promise. The newest step must fit. Every removal
  * still among the last 20 steps must survive until it ages out: it, everything newer, and
@@ -169,10 +176,11 @@ function validPuts(puts: unknown, max: number): boolean {
   return Array.isArray(puts) && puts.length <= max && puts.every((p) => plain(p) && Object.keys(p).length === 2 &&
     Number.isSafeInteger(p.index) && (p.index as number) >= 0 && (p.index as number) < max && plain(p.value));
 }
-/** Structure only; the save validator also checks every rebuilt state with `validHome`. */
+/** Structure only; the save validator also checks every rebuilt state with `validHome`.
+ * Size uses the read limit: what older builds wrote stays readable (R3-F1). */
 export function validUndoShape(v: unknown): v is HomeUndo {
   if (!plain(v) || Object.keys(v).length !== 2 || v.version !== 1 || !Array.isArray(v.steps)) return false;
-  if (!v.steps.length || v.steps.length > HOME_UNDO_STEPS || JSON.stringify(v).length > HOME_UNDO_BYTES) return false;
+  if (!v.steps.length || v.steps.length > HOME_UNDO_STEPS || JSON.stringify(v).length > HOME_UNDO_READ_BYTES) return false;
   return v.steps.every((step) => plain(step) && Object.keys(step).length > 0 && keysWithin(step, roomIds) &&
     Object.values(step).every((patch) => {
       if (!plain(patch)) return false;

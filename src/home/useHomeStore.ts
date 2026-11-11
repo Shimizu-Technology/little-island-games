@@ -10,7 +10,7 @@ import {
   type HomeStateV2,
   type Ownership,
 } from "./model";
-import { boundedUndo, HOME_UNDO_STEPS, undoAdmits, undoEntry, undoPast, undoStep, type UndoEntry } from "./undoHistory";
+import { boundedUndo, HOME_UNDO_STEPS, undoAdmits, undoEntry, undoFits, undoPast, undoStep, type UndoEntry } from "./undoHistory";
 export type History = { present: HomeStateV2; past: HomeStateV2[]; future: HomeStateV2[] };
 /** History states are immutable and reused, so each adjacent pair is diffed once. */
 const stepCache = new WeakMap<HomeStateV2, WeakMap<HomeStateV2, UndoEntry>>();
@@ -47,12 +47,25 @@ export const RESTORE_NOTE: Record<Exclude<RestoreCost, "undoable">, string> = {
   "no-undo": "Back to the start! Undo can't bring the old room back.",
   "drops-older": "Back to the start! Your oldest undo steps are gone.",
 };
+/** R3-F1: the first write after loading a history an older build kept under its larger budget. */
+export const UNDO_TRIMMED_NOTE = "Your oldest undo steps are gone.";
 /** Messages that the Home screen shows as a visible note, not only to a screen reader. */
-export const UNDO_NOTES: readonly string[] = [UNDO_FULL_MESSAGE, ...Object.values(RESTORE_NOTE)];
+export const UNDO_NOTES: readonly string[] = [UNDO_FULL_MESSAGE, ...Object.values(RESTORE_NOTE), UNDO_TRIMMED_NOTE];
 /** F3: the newest steps whose promises still hold. The oldest go first, an older removal with them. */
 export function trimmedHistory(history: History): History {
   let past = history.past;
   while (past.length && !historyAdmits({ ...history, past })) past = past.slice(1);
+  return past === history.past ? history : { ...history, past };
+}
+/**
+ * R3-F1: a loaded history fitted to today's write budget. The oldest steps go until the rest is
+ * saved whole and keeps every promise, so an ordinary edit is never refused because of what an
+ * older build kept. Returns `history` itself when it already fits. Never mutates its input.
+ */
+export function fittedHistory(history: History): History {
+  const fits = (h: History) => h.present.version !== 4 || (historyAdmits(h) && undoFits(savedEntries(h)));
+  let past = history.past;
+  while (past.length && !fits({ ...history, past })) past = past.slice(1);
   return past === history.past ? history : { ...history, past };
 }
 /** Whether restoring a room keeps Undo's promises, and if not, what a confirmed restore gives up. */
@@ -109,13 +122,18 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
   const initialValid = useMemo(() => initial === undefined || !!migrateHome(initial), [initial]);
   const [session, setSession] = useState(() => {
     const migrated = migrateHome(initial);
+    const history = migrated ? restoredHistory(migrated) : ({ present: starterHome(), past: [], future: [] } as History);
     return {
-      history: migrated ? restoredHistory(migrated) : ({ present: starterHome(), past: [], future: [] } as History),
+      history,
       access: migrated?.access,
       message: "Your own little place by the sea.",
       serial: 0,
+      /** R3-F1: what an older build saved is kept as loaded until the first write fits it. */
+      inherited: fittedHistory(history) !== history,
     };
   });
+  /** The history every write starts from: a loaded older history is fitted first. */
+  const base = (current: typeof session) => (current.inherited ? fittedHistory(current.history) : current.history);
   const live = useRef(session);
   const identities = useRef<Record<string, string>>({});
   /** `anyway`: a Restore room the child confirmed after being told what Undo gives up (F3). */
@@ -125,13 +143,14 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
       setSession({ ...current, message: "This room needs recovery before it can be changed.", serial: current.serial + 1 });
       return;
     }
+    const start = base(current);
     const result =
       action.type !== "undo" && action.type !== "redo"
-        ? homeReducer(current.history.present, action as HomeAction, ownership)
+        ? homeReducer(start.present, action as HomeAction, ownership)
         : undefined;
-    let history = editHistory(current.history, action, ownership, result);
+    let history = editHistory(start, action, ownership, result);
     let note: string | undefined;
-    if (history !== current.history && action.type !== "undo" && action.type !== "redo" && !historyAdmits(history)) {
+    if (history !== start && action.type !== "undo" && action.type !== "redo" && !historyAdmits(history)) {
       if (options?.anyway && action.type === "reset") {
         history = trimmedHistory(history);
         note = RESTORE_NOTE[history.past.length ? "drops-older" : "no-undo"];
@@ -142,18 +161,24 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
         return;
       }
     }
-    if (history !== current.history && persist && !persist(savedHistory(history, current.access))) {
+    const changed = history !== start;
+    if (changed && persist && !persist(savedHistory(history, current.access))) {
       const next = { ...current, message: "Your room could not be updated. Please try again.", serial: current.serial + 1 };
       live.current = next;
       setSession(next);
       return;
     }
     const next = {
-      history,
+      // Nothing changed, nothing written: a loaded older history stays as it was.
+      history: changed ? history : current.history,
       access: current.access,
       serial: current.serial + 1,
       message:
-        note ?? result?.message ?? (action.type === "undo" ? "Undone." : action.type === "redo" ? "Redone." : "Room updated."),
+        note ??
+        (changed && current.inherited ? UNDO_TRIMMED_NOTE : undefined) ??
+        result?.message ??
+        (action.type === "undo" ? "Undone." : action.type === "redo" ? "Redone." : "Room updated."),
+      inherited: current.inherited && !changed,
     };
     live.current = next;
     setSession(next);
@@ -168,9 +193,10 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
     if (stillCurrent && !stillCurrent()) return undefined;
     const result = apply(seed ?? current.history.present, proposal);
     if ("stale" in result || (stillCurrent && !stillCurrent())) return undefined;
+    const start = base(current);
     const history = {
       present: bare(result.state),
-      past: [...current.history.past, current.history.present].slice(-60),
+      past: [...start.past, start.present].slice(-60),
       future: [],
     };
     if (!historyAdmits(history)) {
@@ -186,7 +212,13 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
       return undefined;
     }
     identities.current = result.identities;
-    const next = { history, access: current.access, message: "Room updated.", serial: current.serial + 1 };
+    const next = {
+      history,
+      access: current.access,
+      message: current.inherited ? UNDO_TRIMMED_NOTE : "Room updated.",
+      serial: current.serial + 1,
+      inherited: false,
+    };
     live.current = next;
     setSession(next);
     return result.state;
@@ -199,8 +231,11 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
   /** HR-03: grown-up access choices are saved with the home but are never undo steps. */
   const setAccess = (access: HomeAccess | undefined) => {
     const current = live.current;
-    if (!initialValid || (persist && !persist(savedHistory(current.history, access)))) return false;
-    const next = { ...current, access };
+    const history = base(current);
+    if (!initialValid || (persist && !persist(savedHistory(history, access)))) return false;
+    const next = current.inherited
+      ? { ...current, history, access, message: UNDO_TRIMMED_NOTE, serial: current.serial + 1, inherited: false }
+      : { ...current, access };
     live.current = next;
     setSession(next);
     return true;
@@ -218,7 +253,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
     access: session.access,
     setAccess,
     /** F3: asked before Design shows its Restore question. */
-    restoreCost: (roomId: HomeAction["roomId"]) => restoreCostOf(live.current.history, roomId, ownership),
+    restoreCost: (roomId: HomeAction["roomId"]) => restoreCostOf(base(live.current), roomId, ownership),
     canUndo: session.history.past.length > 0,
     canRedo: session.history.future.length > 0,
     recoveryOriginal: !initialValid ? initial : undefined,
