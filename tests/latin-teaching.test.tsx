@@ -47,8 +47,13 @@ describe('colour-chain hints explain the deduction they made (review R6)', () =>
   it('a wrap says one colour sees itself; a trap says a square sees both', () => {
     const wrap = chains.find(c => c.s.chain?.kind === 'wrap')!, trap = chains.find(c => c.s.chain?.kind === 'trap')!;
     const w = explainStep(wrap.p, wrap.s).think, t = explainStep(trap.p, trap.s).think;
-    expect(w).toMatch(/Two dots see each other/); expect(w).not.toMatch(/sees both/);
-    expect(t).toMatch(/sees both a dot and a ring/);
+    // A wrap names the two dots that see each other; a trap names the squares that see both marks.
+    const [x, y] = wrap.s.chain!.proof;
+    expect(w).toContain(`The dots at row ${Math.floor(x / 9) + 1}, column ${x % 9 + 1} and row ${Math.floor(y / 9) + 1}, column ${y % 9 + 1} see each other`); expect(w).not.toMatch(/both a dot and a ring/);
+    expect(wrap.s.chain!.colours[0]).toEqual(expect.arrayContaining([x, y]));
+    expect(t).toMatch(/(sees|each see) both a dot and a ring/);
+    expect(trap.s.chain!.proof).toEqual(trap.s.remove.map(([i]) => i));
+    for (const { s } of chains) expect(s.chain!.links.every(([a, b]) => [...s.chain!.colours[0], ...s.chain!.colours[1]].includes(a) && s.focus.includes(b))).toBe(true);
     expect(explainStep(wrap.p, wrap.s).look).toContain(`dots ${chainMarks[0]} and rings ${chainMarks[1]}`);
   });
   it('the board shows the two colours as dots and rings a screen reader can hear', async () => {
@@ -68,7 +73,10 @@ describe('colour-chain hints explain the deduction they made (review R6)', () =>
       expect(all.filter(l => l.endsWith(', chain ring')).length).toBe(cue.marks![1].length);
       await act(async () => { (screen.root.findAllByType('button').find(b => b.children.includes('Why?'))!.props.onPress as () => void)(); });
       expect(text(screen)).toContain(cue.think.slice(0, 40));
-      expect(cue.think).toMatch(/Two dots see each other/);
+      expect(cue.think).toMatch(/The dots at .* see each other/);
+      // The chain's links are drawn: one line per linked pair.
+      expect(cue.links!.length).toBeGreaterThan(1);
+      expect(screen.root.findAllByType('path').some(n => (n.props.d as string)?.split('M').length - 1 === cue.links!.length)).toBe(true);
     } finally { await act(async () => screen.unmount()); }
   });
 });

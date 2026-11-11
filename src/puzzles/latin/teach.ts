@@ -49,18 +49,21 @@ export function explainStep(p: LatinPuzzle, s: Step): { look: string; think: str
     }
     case 'xy-wing': return { look: `Look at the three shaded cells, each with two numbers.`, think: `Whichever number the middle cell takes, one of the other two becomes ${s.digits[2]}. A cell that sees both of them cannot be ${s.digits[2]}.` };
     case 'simple-coloring': {
-      const look = `Follow the chain of ${v}s marked with dots ${chainMarks[0]} and rings ${chainMarks[1]}. In each linked pair, one square is ${v} and the other is not.`;
+      const look = `Follow the line through the squares where ${v} could go, marked with dots ${chainMarks[0]} and rings ${chainMarks[1]}. Each line joins the only two places for ${v} in a row, column or box: one of them is ${v} and the other is not.`;
+      const turns = `So dots and rings take turns: either every dot is ${v} or every ring is.`, proof = s.chain?.proof ?? [];
       // `wrap`: two dots see each other, so every dot is false. `trap`: an outside square sees both marks.
-      if (s.chain?.kind === 'wrap') return { look, think: `Dots and rings take turns along the chain, so either every dot is ${v} or every ring is. Two dots see each other and cannot both be ${v}, so no dot is ${v}. The ${v}s go on the rings.` };
-      return { look, think: `Dots and rings take turns along the chain, so either every dot is ${v} or every ring is. A square that sees both a dot and a ring cannot be ${v}.` };
+      if (s.chain?.kind === 'wrap') return { look, think: `${turns} The dots at ${list(proof.map(i => cellName(p, i)))} see each other and cannot both be ${v}, so no dot is ${v}. The ${v}s go on the rings.` };
+      if (!proof.length) return { look, think: `${turns} A square that sees both a dot and a ring cannot be ${v}.` };
+      const who = list(proof.map(i => cellName(p, i)));
+      return { look, think: `${turns} ${who[0].toUpperCase()}${who.slice(1)} ${proof.length > 1 ? 'each see' : 'sees'} both a dot and a ring, so ${proof.length > 1 ? 'none of them' : 'it'} can be ${v}.` };
     }
   }
 }
 /**
  * `target` is the square the move changes, so the person can be taken there to try it. `marks` are a
- * colour chain's two colours, drawn with `chainMarks`.
+ * colour chain's two colours, drawn with `chainMarks`; `links` are the pairs that join it.
  */
-export type Cue = { look: string; think: string; show: string; focus: number[]; target?: number; technique: Technique | 'clash' | 'mistake' | null; marks?: [number[], number[]] };
+export type Cue = { look: string; think: string; show: string; focus: number[]; target?: number; technique: Technique | 'clash' | 'mistake' | null; marks?: [number[], number[]]; links?: [number, number][] };
 const opWords: Record<string, (t: number) => string> = { '+': t => `add up to ${t}`, '-': t => `have a difference of ${t}`, '*': t => `multiply to ${t}`, '/': t => `have one ${t} times the other`, '=': t => `be ${t}` };
 /** What a clash breaks, in words that fit the rule. The squares named are the gold ones on the board. */
 export function clashWords(p: LatinPuzzle, rule: ClashRule): string {
@@ -79,6 +82,6 @@ export function cueFor(p: LatinPuzzle, plan: HintPlan): Cue {
   const named = key ? explainStep(p, key) : explainStep(p, { technique: 'single', focus: [plan.cell], groups: [], digits: [plan.value], remove: [] });
   const focus = key ? [...new Set([...key.focus, plan.cell])] : [plan.cell];
   const lead = plan.steps.length > 1 ? ' That leaves one place.' : '';
-  return { look: named.look, think: `${named.think}${lead}`, show: `${plan.value} goes in ${cellName(p, plan.cell)}.`, focus, target: plan.cell, technique: plan.technique, ...(key?.chain ? { marks: key.chain.colours } : {}) };
+  return { look: named.look, think: `${named.think}${lead}`, show: `${plan.value} goes in ${cellName(p, plan.cell)}.`, focus, target: plan.cell, technique: plan.technique, ...(key?.chain ? { marks: key.chain.colours, links: key.chain.links } : {}) };
 }
 export const boxLabel = (p: LatinPuzzle, i: number) => boxNames(p)(boxOf(p, i));

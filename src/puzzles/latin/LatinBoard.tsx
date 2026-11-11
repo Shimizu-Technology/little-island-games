@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { Button, C, Copy } from '../../components/ui';
 import { Text } from '../../components/Text';
 import { GridShell, type GridTint } from '../grid/GridShell';
@@ -28,6 +29,12 @@ export function boxBorders(p: LatinPuzzle) {
     }
     return d;
   };
+}
+/** Lines between the centres of linked chain squares. */
+function chainLines(n: number, links: readonly [number, number][], cell: number) {
+  const at = (i: number) => [(i % n + 0.5) * cell, (Math.floor(i / n) + 0.5) * cell];
+  const d = links.map(([a, b]) => { const [x1, y1] = at(a), [x2, y2] = at(b); return `M${x1} ${y1}L${x2} ${y2}`; }).join('');
+  return <Svg width={n * cell} height={n * cell} style={{ position: 'absolute' }}><Path d={d} stroke={C.ink} strokeOpacity={0.55} strokeWidth={Math.max(2, cell * 0.06)} strokeLinecap="round" fill="none"/></Svg>;
 }
 /** A few plain sentences beside each board, so nobody has to know the game already. Size-aware. */
 export function rulesFor(p: LatinPuzzle): string {
@@ -75,7 +82,8 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
   const conflictCells = useMemo(() => conflicts(p, state.values), [p, state.values]);
   const tints = useMemo(() => {
     const out = new Map<number, GridTint>(), v = state.values[state.selected], cue = ladder.cue;
-    if (v) state.values.forEach((x, i) => { if (x === v) out.set(i, 1); });
+    // The quiet same-number echo would compete with a chain's two colours, so it rests meanwhile.
+    if (v && !(shown && cue?.marks)) state.values.forEach((x, i) => { if (x === v) out.set(i, 1); });
     if (shown && cue) {
       for (const i of cue.focus) out.set(i, 2);
       // A colour chain shows its two colours as dots and rings, the square the hint fills included:
@@ -85,7 +93,10 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
     return out;
   }, [state.values, state.selected, shown, ladder.cue]);
   const borders = useMemo(() => boxBorders(p), [p]);
-  const overlay = useMemo(() => p.cages.length ? cageLayer(p) : p.less.length ? markLayer(p) : undefined, [p]);
+  const clues = useMemo(() => p.cages.length ? cageLayer(p) : p.less.length ? markLayer(p) : undefined, [p]);
+  // A shown colour chain draws the lines that join it, under any clue layer.
+  const links = shown ? ladder.cue?.links : undefined;
+  const overlay = useMemo(() => links?.length ? (cell: number) => <>{chainLines(p.size, links, cell)}{clues?.(cell)}</> : clues, [links, clues, p.size]);
   const frame = useMemo(() => p.kind === 'skyline' ? { size: 0.7, layer: sightFrame(p) } : undefined, [p]);
   const words = useMemo(() => clueWords(p), [p]), cellWords = useMemo(() => p.cages.length || p.less.length ? cellClueWords(p) : undefined, [p]), rules = useMemo(() => rulesFor(p), [p]);
   const solvedCount = state.values.filter(Boolean).length, total = p.givens.length - p.mask.filter(Boolean).length;

@@ -28,7 +28,7 @@ export type Step = {
    * For a colour chain: the two colours, and which deduction it is. `wrap`: two squares of one colour
    * see each other, so that whole colour is false. `trap`: squares outside the chain see both colours.
    */
-  chain?: { kind: 'wrap' | 'trap'; colours: [number[], number[]] };
+  chain?: { kind: 'wrap' | 'trap'; colours: [number[], number[]]; links: [number, number][]; proof: number[] };
 };
 export class Work {
   left: number;
@@ -221,17 +221,20 @@ export function nextDeduction(p: LatinPuzzle, d: readonly number[], work = new W
       work.tick(color.size);
       if (color.size < 3) continue;
       const chain = [...color.keys()], colours: [number[], number[]] = [chain.filter(i => color.get(i) === 0), chain.filter(i => color.get(i) === 1)];
+      // The pairs that link the chain, for drawing it; each pair is the only two places for v in a group.
+      const linked = chain.flatMap(a => (links.get(a) ?? []).filter(b => a < b).map(b => [a, b] as [number, number]));
       for (const c of [0, 1] as const) {
         const same = colours[c];
-        if (same.some(a => same.some(b => a !== b && peers[a].includes(b)))) {
+        const a = same.find(x => same.some(y => x !== y && peers[x].includes(y)));
+        if (a !== undefined) {
           const s = trim(d, same, same.map(i => d[i] & ~bit(v)), 'simple-coloring', chain, [], [v]);
-          // The false colour comes first, so teaching can name it.
-          if (s) return { ...s, chain: { kind: 'wrap', colours: [same, colours[1 - c]] } };
+          // The false colour comes first, so teaching can name it, with the two squares that prove it.
+          if (s) return { ...s, chain: { kind: 'wrap', colours: [same, colours[1 - c]], links: linked, proof: [a, same.find(y => y !== a && peers[a].includes(y))!] } };
         }
       }
       const rest = cellsOf(p).filter(i => !color.has(i) && (d[i] & bit(v)) && [0, 1].every(c => chain.some(j => color.get(j) === c && peers[i].includes(j))));
       const s = trim(d, rest, rest.map(i => d[i] & ~bit(v)), 'simple-coloring', chain, [], [v]);
-      if (s) return { ...s, chain: { kind: 'trap', colours } };
+      if (s) return { ...s, chain: { kind: 'trap', colours, links: linked, proof: s.remove.map(([i]) => i) } };
     }
   }
   return null;

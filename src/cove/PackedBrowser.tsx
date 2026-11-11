@@ -45,6 +45,7 @@ export function PackedBrowser({ entry, progress, initialBand, hidden = [], onCho
     {busy && <Copy accessibilityLiveRegion="polite">Opening your puzzle…</Copy>}
     {!!message && <Copy accessibilityLiveRegion="polite">{message}</Copy>}
     {current && <><Heading style={{ fontSize: 22 }}>{current.title} · {shown(current)} puzzles · {finished(current.bank)} finished</Heading>
+      {hiddenAt(current.bank).size > 0 && <Copy>{hiddenAt(current.bank).size} hidden by a grown-up on this device, so their numbers are skipped.</Copy>}
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Chip selected={!list!.album} onPress={() => setList({ bank: current.bank, album: false })}>All puzzles</Chip><Chip selected={list!.album} onPress={() => setList({ bank: current.bank, album: true })}>Album · finished puzzles</Chip></View></>}
     {!current && (banks.length ? banks.map(b => { const info = summaryOf(entry.game, b); return <View key={b.bank} style={{ gap: 8, paddingVertical: 6 }}>
       <Heading style={{ fontSize: 22 }}>{b.title}{info ? ` · ${info.size}×${info.size}` : ''}</Heading>
