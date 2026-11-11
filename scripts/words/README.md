@@ -183,7 +183,8 @@ other than `s`; ordinary English contractions and plural possessives stay Englis
 The iOS preview wrapper validates **before restoring** the default generated
 Library files. The release gate accepts changes only to the four known generated
 files and regenerates them to scratch for byte equality. Its fresh iOS JavaScript
-export inherits preview mode. Every non-identifier Hermes string-table entry must
+export inherits preview mode and uses `--no-minify` to preserve the compiler input
+function names; Expo skips Terser when producing Hermes bytecode. Every non-identifier Hermes string-table entry must
 also exist in that JavaScript export's decoded strings, keys or identifier tokens;
 compiler function names can occupy string entries. Mismatches fail closed and the
 receipt explicitly records the successful binding. Hermes still receives all its

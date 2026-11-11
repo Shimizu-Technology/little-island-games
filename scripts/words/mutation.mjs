@@ -197,6 +197,9 @@ r4Edges.push(
 r4Edges.push(
  ['artifact-views','decoded source position view','sensitiveGrids, densitySource };','sensitiveGrids, densitySource:undefined };',['R4 decoded JavaScript source proximity']]
 );
+r4Edges.push(
+ ['check','native compiler input names',"'--no-minify',",'', ['release gate requires Hermes and checks current receipt artifacts']]
+);
 for(const [file,label,before,after,tests] of r4Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R4 mutation target '+label);custom(file,'R4 '+label,original.replace(before,after),tests);}
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');

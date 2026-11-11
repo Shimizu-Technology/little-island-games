@@ -49,7 +49,7 @@ export function checkRelease(root, web, ios, output, run=execFileSync) {
   const temporary=mkdtempSync(join(tmpdir(),'li-word-ios-js-'));
   let iosJavaScript;
   try {
-    run(process.execPath,[resolve(root,'node_modules/expo/bin/cli'),'export','--platform','ios','--no-bytecode','--output-dir',temporary],{cwd:root,stdio:'pipe',env:{...process.env,CI:'1'},maxBuffer:64*1024*1024});
+    run(process.execPath,[resolve(root,'node_modules/expo/bin/cli'),'export','--platform','ios','--no-bytecode','--no-minify','--output-dir',temporary],{cwd:root,stdio:'pipe',env:{...process.env,CI:'1'},maxBuffer:64*1024*1024});
     let js=false;const exportedStrings=new Set();
     function findJS(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const p=join(dir,e.name);if(e.isDirectory())findJS(p);else if(/\.(?:js|bundle)$/.test(e.name)){js=true;const text=readFileSync(p,'utf8'),view=javascriptStrings(text);for(const value of [...view.strings,...view.keys,...(text.match(/[\p{L}_$][\p{L}\p{N}_$]*/gu)??[])])exportedStrings.add(value);}}}
     findJS(temporary);requireThat(js,'Native platform JavaScript export required');

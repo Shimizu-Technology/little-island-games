@@ -46,7 +46,7 @@ const {privatePath}=await import(pathToFileURL(join(root,'scripts/words/paths.mj
 const {isPrivateWordFile}=await import(pathToFileURL(resolve(process.env.WORD_TEST_EXPORT_FILE??'scripts/export-public.mjs')));
 const {checkExport,checkRelease:realCheckRelease,verifyReleaseReceipt}=await import(pathToFileURL(join(root,'scripts/words/check.mjs')));
 function syntheticIOSExport(command,args,options) {
- assert.equal(command,process.execPath);assert.deepEqual(args.slice(1,6),['export','--platform','ios','--no-bytecode','--output-dir']);assert.equal(options.cwd,root);
+ assert.equal(command,process.execPath);assert.deepEqual(args.slice(1,7),['export','--platform','ios','--no-bytecode','--no-minify','--output-dir']);assert.equal(options.cwd,root);
  writeFileSync(join(args.at(-1),'native.js'),'var global; hello; globalThis.safe="Native platform fixture";');
 }
 const checkRelease=(...args)=>realCheckRelease(...args,syntheticIOSExport);
