@@ -60,7 +60,7 @@ export function HomePanels({
           accessibilityRole="button"
           accessibilityLabel="Friends drawer"
           onPress={onFriends}
-          style={{ alignItems: "center", justifyContent: "center", minWidth: 100, minHeight: large ? 64 : 48 }}
+          style={[{ alignItems: "center", justifyContent: "center", minWidth: 100, minHeight: large ? 64 : 48 }, large && { borderRadius: 32, backgroundColor: "#F1E6CF" }]}
         >
           <FriendsIcon />
         </Pressable>

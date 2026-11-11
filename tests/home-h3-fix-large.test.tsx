@@ -27,6 +27,8 @@ describe('R5: larger-target mode covers More and Design', () => {
     for (const button of child) {
       expect(size(button).w, label(button)).toBeGreaterThanOrEqual(64);
       expect(size(button).h, label(button)).toBeGreaterThanOrEqual(64);
+      // A 64 pt target also looks like one.
+      expect(flat(button.props.style).backgroundColor, label(button)).toBeTruthy();
     }
     await act(async () => tree.unmount());
   });
@@ -64,6 +66,10 @@ describe('R5: larger-target mode covers More and Design', () => {
     await act(async () => { const room = pressables(tree).find((n) => n.props.accessibilityRole === 'tab' && label(n) === 'Room')!; room.props.onPress(); });
     await act(async () => pressables(tree).find((n) => n.props.accessibilityLabel === 'Restore this room')!.props.onPress());
     check();
+    for (const name of ['Restore room', 'Keep playing']) {
+      const button = pressables(tree).find((n) => label(n) === name)!;
+      expect(flat(button.props.style).backgroundColor, name).toBeTruthy();
+    }
     for (const name of ['Close catalog', 'Rotate', 'Mirror', 'Put away', 'Restore this room', 'Restore room', 'Keep playing']) expect(checked, name).toContain(name);
     expect([...checked].some((n) => n.endsWith('colour'))).toBe(true);
     expect([...checked].some((n) => n.endsWith('walls'))).toBe(true);

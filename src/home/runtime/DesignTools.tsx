@@ -27,6 +27,8 @@ export const portraitDrawerHeight = 220;
 /** R5: the 64 pt tabs and tool row need 36 pt more, so the catalog row keeps its full height. */
 export const portraitDrawerHeightFor = (large = false) => portraitDrawerHeight + (large ? 36 : 0);
 const big = (large: boolean) => (large ? { minWidth: 64, minHeight: 64, justifyContent: "center" as const } : null);
+/** In the larger mode a text-only button shows its shape too, like the large Tools. */
+const shape = (large: boolean) => (large ? { backgroundColor: "#F1E6CF", borderRadius: 18, paddingHorizontal: 18 } : null);
 export type CatalogGhost = { item?: ItemId; x: number; y: number; active: boolean };
 function Thumbnail({
   id,
@@ -311,11 +313,11 @@ export function DesignTools({
                 dispatch({ type: "reset" });
                 setConfirm(false);
               }}
-              style={[{ padding: 12 }, big(large)]}
+              style={[{ padding: 12 }, big(large), shape(large)]}
             >
               <Text>Restore room</Text>
             </Pressable>
-            <Pressable accessibilityRole="button" onPress={() => setConfirm(false)} style={[{ padding: 12 }, big(large)]}>
+            <Pressable accessibilityRole="button" onPress={() => setConfirm(false)} style={[{ padding: 12 }, big(large), shape(large)]}>
               <Text>Keep playing</Text>
             </Pressable>
           </View>
