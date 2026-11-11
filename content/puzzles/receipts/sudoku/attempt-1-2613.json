@@ -2,7 +2,7 @@
  "format": 1,
  "family": "sudoku",
  "seedBase": 1,
- "attempts": 2665,
+ "attempts": 2613,
  "rejects": {
   "template-cap": 0,
   "layout-repeat": 0
@@ -11,15 +11,15 @@
  "budgetHits": 0,
  "timedOut": false,
  "counts": {
-  "sprout": 240,
+  "sprout": 212,
   "shell": 300,
   "coral": 300,
   "lagoon": 365,
-  "tidepool": 365,
-  "reef": 365,
-  "deep": 365,
-  "trench": 365
+  "tidepool": 364,
+  "reef": 364,
+  "deep": 344,
+  "trench": 364
  },
- "sourceSha": "d6c28418de1e6cd9e27877999bb6c51da7d22a15",
+ "sourceSha": "c2c943581a7e84d33d1f55c6ecd9ab25b2ec05a0",
  "status": "complete"
 }

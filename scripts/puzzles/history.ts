@@ -3,8 +3,8 @@ import { relative, resolve } from 'node:path';
 import { assertFamilyAppendOnly, assertRootAppendOnly, validFamily, validRoot, type RootIndex } from '../../src/puzzles/bank';
 import { productionDirs, readCatalog, type CatalogDirs } from './pipeline';
 
-/** Refs whose catalog has reached a family: the integration branch and the release branch. */
-export const publishedRefs = ['origin/program/4.0', 'origin/main'] as const;
+import { publishedHistory, publishedRefs } from '../published-refs.mjs';
+export { publishedRefs };
 export type HistoryResult = { generations: number; checked: number; unpublished: number; refs: string[] };
 
 /**
@@ -17,10 +17,8 @@ export type HistoryResult = { generations: number; checked: number; unpublished:
 export function verifyHistory(options: { cwd?: string; dirs?: CatalogDirs; refs?: readonly string[] } = {}): HistoryResult {
   const { cwd = process.cwd(), dirs = productionDirs, refs: wanted = publishedRefs } = options;
   const git = (...args: string[]) => execFileSync('git', args, { cwd, encoding: 'utf8', maxBuffer: 1 << 28 });
-  const succeeds = (...args: string[]) => { try { execFileSync('git', args, { cwd, stdio: 'ignore' }); return true; } catch { return false; } };
   if (git('rev-parse', '--is-shallow-repository').trim() === 'true') throw new Error('Catalog immutability needs full Git history. Fetch with --unshallow before checking.');
-  const refs = wanted.filter(ref => succeeds('rev-parse', '--verify', '--quiet', `${ref}^{commit}`));
-  const published = (commit: string) => !refs.length || refs.some(ref => succeeds('merge-base', '--is-ancestor', commit, ref));
+  const { refs, published } = publishedHistory(cwd, wanted);
   const { root, families: current } = readCatalog(dirs), content = relative(cwd, resolve(cwd, dirs.content)), file = `${content}/root.json`;
   const commits = git('log', '--full-history', '--format=%H', '--', file).trim().split('\n').filter(Boolean);
   let checked = 0;

@@ -3,64 +3,64 @@
   {
    "slot": 40,
    "first": 40960,
-   "count": 240,
-   "packHash": "2dce9e8829b7d8205b2e28d4dc02e831789151d2e19f24a93592eb87073c12e3",
+   "count": 212,
+   "packHash": "b90ef608cee084be653bc794df1255ac66d499cd7d2275c18dab30ac151973d6",
    "rules": 1,
    "band": "sprout"
   },
   {
    "slot": 41,
-   "first": 41200,
+   "first": 41172,
    "count": 300,
-   "packHash": "cff3271bc23a773b3a27a21855739eb142da09ac73922fec159f2bb60cbc8f3b",
+   "packHash": "3bb721de019287d1f31dff8affba0da8aaf87c36c132fbb9d126f262ac814d22",
    "rules": 1,
    "band": "shell"
   },
   {
    "slot": 42,
-   "first": 41500,
+   "first": 41472,
    "count": 300,
-   "packHash": "a7c9e748d23313869be550db9981fc17b9852f8fba7a53682f00e377a96af20b",
+   "packHash": "6dc925724de8a23f238929171943571378594685c6e9f9a8e7d8a3889cccf929",
    "rules": 1,
    "band": "coral"
   },
   {
    "slot": 43,
-   "first": 41800,
+   "first": 41772,
    "count": 365,
-   "packHash": "1a8eae26982b966b105f2f86127f2dbd10226054f81ab9db69147b28cb114563",
+   "packHash": "1e5eee8f5b3b94f5b4324f818a06b538039a4372826220946bf70f69f5a7e98b",
    "rules": 1,
    "band": "lagoon"
   },
   {
    "slot": 44,
-   "first": 42165,
-   "count": 365,
-   "packHash": "0152fd31f434b0c560c758f82650c8ca8419f2b893cc44f574651df290f8a43e",
+   "first": 42137,
+   "count": 364,
+   "packHash": "56a58c3c0f49b525fee2d805a1c6d81842500ce9512049c9e4d778bb134889fd",
    "rules": 1,
    "band": "tidepool"
   },
   {
    "slot": 45,
-   "first": 42530,
-   "count": 365,
-   "packHash": "304bd457fdcf6db7b14b981b427468ff7cce68d437ba4bcf7d5e5985fdf468ea",
+   "first": 42501,
+   "count": 364,
+   "packHash": "b4a4d52f2a59f7f90d4db0de6614a077e43d3638f11999b9b277ee7444fb0d0d",
    "rules": 1,
    "band": "reef"
   },
   {
    "slot": 46,
-   "first": 42895,
-   "count": 365,
-   "packHash": "3383e6eebe2ec6d9a237e3bfef0ceaec6c43c410ddf51af87dfe03fd05d74375",
+   "first": 42865,
+   "count": 344,
+   "packHash": "394ae8e4cadeff24d4b7490ed670b171b863e7d987e409d0523b24f5887f875d",
    "rules": 1,
    "band": "deep"
   },
   {
    "slot": 47,
-   "first": 43260,
-   "count": 365,
-   "packHash": "5c53ab8d9bf15572abde6df939b34e282964dbaf4e624c5f41b5acfebd22b564",
+   "first": 43209,
+   "count": 364,
+   "packHash": "727c04a3dca63b443f1111022c1a61b284826baf57c769c9d5d5cb141a79f794",
    "rules": 1,
    "band": "trench"
   }
@@ -70,7 +70,7 @@
    "slot": 48,
    "first": 49152,
    "count": 200,
-   "packHash": "460fdc65fc64af60d3f01e33656a0dba33d5c0ef8325bde1e376489906624b42",
+   "packHash": "b532b1e674153354d080308541fc212b5bb39a8924468a2cfc2cd414b131056c",
    "rules": 1,
    "band": "add"
   },
@@ -78,7 +78,7 @@
    "slot": 49,
    "first": 49352,
    "count": 200,
-   "packHash": "885313dc650c7aab3df18c192f5e7a49e9ff5f83725192015fc7ae1c649fb927",
+   "packHash": "0544b8f2c9195e0ddb957810f7be8aed80e63b0fbca568bb413810f34c4e71cd",
    "rules": 1,
    "band": "take"
   },
@@ -86,7 +86,7 @@
    "slot": 50,
    "first": 49552,
    "count": 200,
-   "packHash": "c1813e40a33c740a1de831f1afa4ee25a201457f9962607b8364a669b758051a",
+   "packHash": "fe795e7b4e61104899b43c5d03f3da3c08668b33dfbba9685781191b3b3b2c1c",
    "rules": 1,
    "band": "times"
   },
@@ -94,7 +94,7 @@
    "slot": 51,
    "first": 49752,
    "count": 200,
-   "packHash": "0317f90e63ac36b970a9395bb1aca9cfffe46209f2adf8a856d5bb8534e456d1",
+   "packHash": "b89f1f4ffcc7d05581e40668539333b74da7971f39118de2105944c02fa4ed23",
    "rules": 1,
    "band": "seven"
   },
@@ -102,7 +102,7 @@
    "slot": 52,
    "first": 49952,
    "count": 160,
-   "packHash": "bbfae11c6390077a478994f0d1ff593f8cdfdf8bd35fc07a7c262180cda184df",
+   "packHash": "c01234da9e211abc9dc6758232d39d6a1a5ad2b136caa6d70c8b9846ed5e20d5",
    "rules": 1,
    "band": "nine"
   }
@@ -112,7 +112,7 @@
    "slot": 53,
    "first": 54272,
    "count": 160,
-   "packHash": "012e7ca23f77c74f0b291a3c668ae35dd588695d286ff9798420081cebca8e04",
+   "packHash": "3a3ea7b343df2629b8422605335f8c11391d6cae3c5cba5c798b04a36b6abb04",
    "rules": 1,
    "band": "gentle"
   },
@@ -120,43 +120,51 @@
    "slot": 54,
    "first": 54432,
    "count": 160,
-   "packHash": "e84d965b5fb4301da5e17679c1e0210f88de015ec81764384f180ce5296b31f5",
+   "packHash": "7566156668a468078cc100059afb6a81d8213d70269a03b283826f75e313729a",
    "rules": 1,
    "band": "tall"
+  },
+  {
+   "slot": 55,
+   "first": 54592,
+   "count": 160,
+   "packHash": "5973b7ac616a2c66223ac46918d7dd3a8ac5cf329d4f339bafd3e0061895c597",
+   "rules": 1,
+   "band": "steep"
   }
  ],
  "skyline": [
   {
-   "slot": 55,
-   "first": 56320,
+   "slot": 56,
+   "first": 57344,
    "count": 160,
-   "packHash": "3a7ae536294243bf9189d85552c55ff094dee34c396000677ba85775f7dfd261",
+   "packHash": "746342e1fed85d28e56f5dc4d1a802fd49116b7259c46fd7b416c437a7ed03cc",
    "rules": 1,
    "band": "low"
   },
   {
-   "slot": 56,
-   "first": 56480,
+   "slot": 57,
+   "first": 57504,
    "count": 160,
-   "packHash": "0ab2c9cbf9c3878f8f367ecbda96c95ed23923d5f8f82f860ac72136a0e7406d",
+   "packHash": "3117d212c85862f5512fda99f940d6cb90353172be3dcd106704c7ab22ed5149",
    "rules": 1,
    "band": "high"
   }
  ],
  "killer": [
   {
-   "slot": 57,
-   "first": 58368,
+   "slot": 58,
+   "first": 59392,
    "count": 160,
-   "packHash": "a642ad163b8bd8170a64ce31aa93f291fb88f3bf7ff0ae7e7b73e404975b55ed",
+   "packHash": "79b9a70c8f6972434b7f99743e463d8fafb87c0d834671f41f13e1167a461940",
    "rules": 1,
    "band": "small"
   },
   {
-   "slot": 58,
-   "first": 58528,
-   "count": 160,
-   "packHash": "0d0f751a252b601e879f91ca9882a1964812192a7407faaf49cb1c1c4ee9edbe",
+   "slot": 59,
+   "first": 59552,
+   "count": 144,
+   "packHash": "ad20895f3c2fb09eaa692b8c9ea6c869bd29cd3d502e89c117974974777464bd",
    "rules": 1,
    "band": "full"
   }

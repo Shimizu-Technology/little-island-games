@@ -13,7 +13,6 @@ vi.mock('../src/components/Text', () => ({ Text: 'span' }));
 vi.mock('../src/components/Audio', () => ({ AudioPreferences: createContext({}), useSoundControls: () => ({ play() {} }) }));
 
 const settle = () => act(async () => { for (let i = 0; i < 20; i++) await new Promise(r => setTimeout(r, 0)); });
-const text = (screen: ReactTestRenderer) => JSON.stringify(screen.toJSON());
 const label = (n: { children: unknown[] }) => n.children.filter(c => typeof c === 'string').join('');
 beforeEach(() => { vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); });
 afterEach(() => { vi.unstubAllGlobals(); });
@@ -41,7 +40,7 @@ describe('Hide this puzzle works for packed puzzles (review R5)', () => {
     await act(async () => { screen = create(<PackedBrowser entry={sudoku} progress={emptyChallenge()} initialBand={first.tier} hidden={[ref.hash]} onChoose={() => {}} onBand={() => {}} onBack={() => {}}/>); });
     try {
       await settle();
-      expect(text(screen)).toContain(`${first.count - 1} puzzles · 0 finished · 1 hidden on this device`);
+      expect(screen.root.findAllByType('p').map(n => label(n as never))).toContain(`${first.count - 1} puzzles · 0 finished · 1 hidden on this device`);
       await act(async () => { (screen.root.findAllByType('button').find(b => label(b as never) === `All ${first.count - 1}`)!.props.onPress as () => void)(); });
       const rows = screen.root.findAllByType('button').map(b => label(b as never)).filter(l => l.startsWith(`${first.title} `));
       expect(rows).toHaveLength(first.count - 1);

@@ -24,7 +24,7 @@ const cage = v('cage-sum'), arrow = v('inequality'), roof = v('skyline-line');
 export const latinRungs: Record<LatinKind, readonly RungInfo[]> = {
   sudoku: [
     r('sprout', 1, 4, 'Sprout', '4×4, from plenty of starting numbers down to just a few.', 'single', 'hidden-single'),
-    r('shell', 2, 6, 'Shell', '6×6 with boxes of two rows. Every cell has one number left.', 'single', 'single'),
+    r('shell', 2, 6, 'Shell', '6×6, a bigger board, so the ideas start simple again: every cell has one number left.', 'single', 'single'),
     r('coral', 2, 6, 'Coral', '6×6 where a number has only one place in a row, column or box.', 'hidden-single', 'hidden-single'),
     r('lagoon', 3, 9, 'Lagoon', 'Full 9×9, a bigger board, so the ideas start simple again. Every step is a cell with one number left.', 'single', 'single'),
     r('tidepool', 3, 9, 'Tide Pool', '9×9 that needs “only one place for this number”.', 'hidden-single', 'hidden-single'),

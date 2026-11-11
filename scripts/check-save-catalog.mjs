@@ -3,10 +3,13 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { assertFrozenCatalog } from '../src/state/catalogManifest.ts';
+import { publishedHistory } from './published-refs.mjs';
 if (execFileSync('git',['rev-parse','--is-shallow-repository'],{encoding:'utf8'}).trim() === 'true') throw new Error('Save catalog validation needs full Git history. Fetch with --unshallow before checking.');
 const file='src/state/save-catalog.json', current=JSON.parse(readFileSync(file,'utf8'));
-// Every committed generation in this branch is a constraint, including additions after the first freeze.
-const commits=execFileSync('git',['log','--full-history','--format=%H','--',file],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
+// Every committed generation a published ref contains is a constraint, including additions after the
+// first freeze. A branch-only generation may still be replaced by its branch (scripts/published-refs.mjs).
+const history=publishedHistory();
+const all=execFileSync('git',['log','--full-history','--format=%H','--',file],{encoding:'utf8'}).trim().split('\n').filter(Boolean), commits=all.filter(history.published);
 const sha=text=>createHash('sha256').update(text).digest('hex');
 const entries=bank=>{
  if('entries' in bank)return bank.entries;
@@ -26,4 +29,4 @@ const entries=bank=>{
 // Resolve every packed bank at build time as well as any old inline-to-range conversion.
 for(const bank of current.banks)entries(bank);
 for (const commit of commits) assertFrozenCatalog(JSON.parse(execFileSync('git',['show',`${commit}:${file}`],{encoding:'utf8'})),current,entries);
-console.log(`Save catalog immutable history: ${commits.length} generations checked.`);
+console.log(`Save catalog immutable history: ${commits.length} generations checked${all.length>commits.length?` (${all.length-commits.length} unpublished branch generations may still be replaced; published refs: ${history.refs.join(', ')})`:''}.`);

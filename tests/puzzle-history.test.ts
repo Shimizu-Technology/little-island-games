@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { verifyHistory } from '../scripts/puzzles/history';
+import { publishedHistory, publishedTexts } from '../scripts/published-refs.mjs';
 import { bakeFamily, type CatalogDirs } from '../scripts/puzzles/pipeline';
 import { toyCore, toySpec } from './helpers/puzzle-toy';
 
@@ -45,6 +46,13 @@ describe('catalog history: unpublished branch generations may be replaced', () =
       expect(() => verifyHistory({ cwd: r.cwd, dirs: r.dirs, refs: ['main', 'released'] })).toThrow(/toy-two/);
       // With no published ref at all, every generation counts as published.
       expect(() => verifyHistory({ cwd: r.cwd, dirs: r.dirs, refs: ['origin/none'] })).toThrow(/toy-two/);
+
+      // The save catalog gate and writer use the same test of what is published.
+      const h = publishedHistory(r.cwd, ['main', 'origin/none']);
+      expect(h.refs).toEqual(['main']);
+      expect(h.published(first)).toBe(false);
+      expect(h.published(r.git('rev-parse', 'main').trim())).toBe(true);
+      expect(publishedTexts('content/root.json', r.cwd, ['main']).map(t => JSON.parse(t).families.map((f: [string]) => f[0]))).toEqual([['toy']]);
 
       // A published family is never replaceable from a branch.
       unlist(r.dirs, 'toy');
