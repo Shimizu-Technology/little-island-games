@@ -34,6 +34,7 @@ import { carriedCentre } from "./carry";
 import { prepareHits, pickEntity, onShapes } from "./pick";
 import { pickupScene, type PickupScene } from "./pickupScene";
 import { layoutToken } from "./layout";
+import { acknowledgePoseIn, forgetPoseIn, poseLaidOut, type PoseAcks } from "./poseAck";
 import { settleProgress, canRevealResting } from "./settle";
 import { releaseWindow, type ProbeFrame, type ProbeRelease, type ReleaseProbe } from "./frameProbe";
 import { anchorsFor } from "../scene/species";
@@ -277,16 +278,15 @@ export function useInteraction({
   const expectedLayout = useMemo(() => Object.fromEntries(Object.values(scene.entities).map((e) => [e.id, layoutToken(e)])), [scene]);
   const layoutTokens = useSharedValue(expectedLayout);
   const laidOut = useSharedValue<Record<string, string>>({});
-  const poseLayouts = useSharedValue<Record<string, string>>({});
+  const poseLayouts = useSharedValue<PoseAcks>({});
   const overlayLayouts = useSharedValue<Record<string, { generation: number; bounds?: Bounds }>>({});
-  const acknowledgePose = (index: number, token: string) => {
-    poseLayouts.modify((current) => { "worklet";
-      current[index] = token; current[`${index}:${token}`] = token; return current;
-    });
+  /** F1: keyed by the overlay's actor and pose token; the value is the mount that laid it out. */
+  const acknowledgePose = (actor: string, token: string, mount: number) => {
+    poseLayouts.modify((current) => { "worklet"; return acknowledgePoseIn(current, actor, token, mount); });
   };
-  /** R4: an unmounted target pose is no longer laid out; a stale acknowledgement must not count. */
-  const forgetPose = useCallback((index: number, token: string) => {
-    poseLayouts.modify((current) => { "worklet"; delete current[`${index}:${token}`]; return current; });
+  /** R4/F1: an unmounted target pose is no longer laid out. It clears only its own acknowledgement. */
+  const forgetPose = useCallback((actor: string, token: string, mount: number) => {
+    poseLayouts.modify((current) => { "worklet"; return forgetPoseIn(current, actor, token, mount); });
   }, [poseLayouts]);
   const acknowledgeLayout = (id: string, token: string) => {
     laidOut.modify((current) => { "worklet"; current[id] = token; return current; });
@@ -1103,7 +1103,7 @@ export function useInteraction({
           return { id: s.id, phase: s.phase, committed: s.committed, finished: s.finished,
             revisionReady: s.revision === renderedRevision.value,
             layoutReady: !!entity && laidOut.value[entity.id] === layoutTokens.value[entity.id],
-            poseReady: !!pose && poseLayouts.value[`${index}:${pose}`] === pose,
+            poseReady: !!pose && poseLaidOut(poseLayouts.value, s.id, pose),
             pose, poseKeys: Object.keys(poseLayouts.value),
           };
         }),
@@ -1245,8 +1245,7 @@ export function useInteraction({
             const entity = prepared.value.entities[slot.restId ?? slot.id];
             const nativeReady = slot.consumed || (entity && (entity.attachment.kind === "staging" ||
               (laidOut.value[entity.id] === layoutTokens.value[entity.id] &&
-                (!entity.character || poseLayouts.value[i] === layoutTokens.value[entity.id] ||
-                  poseLayouts.value[`${i}:${poseToken(entity.base, entity.facing, entity.action)}`] === poseToken(entity.base, entity.facing, entity.action)))));
+                (!entity.character || poseLaidOut(poseLayouts.value, slot.id, poseToken(entity.base, entity.facing, entity.action))))));
             if (nativeReady && (!slot.catalog || reduced || !!slot.landedAt && now - slot.landedAt >= 160) && canRevealResting(slot, renderedRevision.value)) {
               if (entity?.character && !slot.consumed && slot.proposal) {
                 const origin = roomOrigin(roomIds.indexOf(entity.room), building);

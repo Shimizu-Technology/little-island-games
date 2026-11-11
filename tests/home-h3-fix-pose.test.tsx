@@ -6,6 +6,7 @@ import { buildScene } from '../src/home/scene/graph';
 import { starterHome } from '../src/home/model';
 import { socketBasesOf } from '../src/home/runtime/DragOverlay';
 import { poseToken } from '../src/home/runtime/poseBank';
+import { acknowledgePoseIn, forgetPoseIn, poseLaidOut, type PoseAcks } from '../src/home/runtime/poseAck';
 vi.mock('../src/home/runtime/useInteraction', () => ({ emptyDragSlot: () => ({}), zoneAt: () => undefined }));
 vi.mock('react-native', () => ({ View: 'View', Platform: { OS: 'ios' } }));
 vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useAnimatedStyle: (fn: any) => ({ evaluate: fn }), useDerivedValue: (fn: any) => ({ get value() { return fn(); } }) }));
@@ -19,17 +20,24 @@ function carried() {
   const scene = buildScene(starterHome());
   const source = { ...scene.entities['character/0'], room: 'kitchen' as const, base: 'stand' as const };
   const slot = { phase: 'settling', settleAt: 100, releaseX: 0, releaseY: 0, targetX: 400, targetY: 400, travelDelay: 0, proposal: { base: 'lie', facing: 'front', room: 'home' } };
-  const poseLayouts = { value: {} as Record<string, string> };
+  const poseLayouts = { value: {} as PoseAcks };
   const interaction: any = { slots: { value: [slot] }, clock: { value: 500 }, poseLayouts,
-    acknowledgePose: (i: number, t: string) => { poseLayouts.value[i] = t; poseLayouts.value[`${i}:${t}`] = t; },
-    forgetPose: (i: number, t: string) => { delete poseLayouts.value[`${i}:${t}`]; } };
+    acknowledgePose: (a: string, t: string, m: number) => acknowledgePoseIn(poseLayouts.value, a, t, m),
+    forgetPose: (a: string, t: string, m: number) => forgetPoseIn(poseLayouts.value, a, t, m) };
   return { scene, source, interaction, poseLayouts, lie: poseToken('lie', 'front', source.action) };
+}
+/** Native layout arriving for the mounted target pose(s) of one base, as onLayout would. */
+function layOut(tree: TestRenderer.ReactTestRenderer, base: string, actor?: string) {
+  const views = tree.root.findAll((n) => typeof n.props?.onLayout === 'function' && (n.type as any) === 'View' &&
+    n.findAll((c) => (c.type as any) === 'EntityArt' && c.props.entity.base === base && (!actor || c.props.entity.id === actor)).length > 0);
+  for (const view of views) view.props.onLayout();
+  return views.length;
 }
 const opacities = (tree: TestRenderer.ReactTestRenderer) => tree.root.findAll((n) => (n.type as any) === 'AnimatedView')
   .map((n) => n.props.style?.find?.((s: any) => s?.evaluate)?.evaluate().opacity).filter((v) => typeof v === 'number') as number[];
 
 it('R4: the carried friend stays visible until the destination pose is mounted and laid out', async () => {
-  const { scene, source, interaction, lie } = carried();
+  const { scene, source, interaction } = carried();
   const kitchen: any = ['stand', ...socketBasesOf(scene).kitchen];
   expect(kitchen).not.toContain('lie');
   let tree!: TestRenderer.ReactTestRenderer;
@@ -43,7 +51,7 @@ it('R4: the carried friend stays visible until the destination pose is mounted a
   // The lie pose lays out (its onLayout acknowledges it): it takes over and the carry goes.
   const layouts = tree.root.findAll((n) => typeof n.props.onLayout === 'function');
   expect(layouts).toHaveLength(opacities(tree).length - 1);
-  interaction.acknowledgePose(0, lie);
+  expect(layOut(tree, 'lie')).toBeGreaterThan(0);
   expect(opacities(tree)[0]).toBe(0);
   expect(opacities(tree).filter((o) => o === 1)).toHaveLength(1);
   await act(async () => tree.unmount());
@@ -52,10 +60,10 @@ it('R4: a pose unmounted since an earlier drag does not count as laid out', asyn
   const { source, interaction, poseLayouts, lie } = carried();
   let tree!: TestRenderer.ReactTestRenderer;
   await act(async () => { tree = TestRenderer.create(<SettleArt source={source} interaction={interaction} index={0} reduced={false} bases={['stand', 'sit', 'lie']} />); });
-  interaction.acknowledgePose(0, lie);
+  layOut(tree, 'lie');
   expect(opacities(tree)[0]).toBe(0);
   await act(async () => tree.update(<SettleArt source={source} interaction={interaction} index={0} reduced={false} bases={['stand', 'sit']} />));
-  expect(poseLayouts.value[`0:${lie}`]).toBeUndefined();
+  expect(poseLaidOut(poseLayouts.value, source.id, lie)).toBe(false);
   // Remounted by a later reach, but not yet laid out natively: the carry stays.
   await act(async () => tree.update(<SettleArt source={source} interaction={interaction} index={0} reduced={false} bases={['stand', 'sit', 'lie']} />));
   expect(opacities(tree)[0]).toBe(1);
@@ -66,12 +74,12 @@ it('R4: a re-render with a new interaction object keeps the acknowledgements of 
   let tree!: TestRenderer.ReactTestRenderer;
   const bases = ['stand', 'sit', 'lie'] as const;
   await act(async () => { tree = TestRenderer.create(<SettleArt source={source} interaction={interaction} index={0} reduced={false} bases={bases} />); });
-  interaction.acknowledgePose(0, lie);
+  layOut(tree, 'lie');
   // The Home screen re-renders mid-carry: useInteraction hands out new function identities.
-  const next = { ...interaction, forgetPose: (i: number, t: string) => { delete poseLayouts.value[`${i}:${t}`]; } };
+  const next = { ...interaction, forgetPose: (a: string, t: string, m: number) => forgetPoseIn(poseLayouts.value, a, t, m) };
   await act(async () => tree.update(<SettleArt source={source} interaction={next} index={0} reduced={false} bases={bases} />));
-  expect(poseLayouts.value[`0:${lie}`]).toBe(lie);
+  expect(poseLaidOut(poseLayouts.value, source.id, lie)).toBe(true);
   expect(opacities(tree)[0]).toBe(0);
   await act(async () => tree.unmount());
-  expect(poseLayouts.value[`0:${lie}`]).toBeUndefined();
+  expect(poseLaidOut(poseLayouts.value, source.id, lie)).toBe(false);
 });

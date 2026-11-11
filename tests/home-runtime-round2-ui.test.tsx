@@ -1,7 +1,7 @@
 import React from "react";
 import TestRenderer, { act } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
-import { layoutToken } from "../src/home/runtime/layout";
+import { poseAckKey } from "../src/home/runtime/poseAck";
 import { poseToken } from "../src/home/runtime/poseBank";
 import { SettleArt } from "../src/home/runtime/SettleArt";
 import { HomeChrome } from "../src/home/runtime/HomeChrome";
@@ -36,9 +36,9 @@ describe("round 2 pose and chrome", () => {
     const destination = { ...source, base: "lie" as const };
     const slot = { phase: "settling", settleAt: 1000, committed: true, pausedElapsed: 0, proposal: { base: "lie", facing: "front" } },
       clock = { value: 1000 };
-    // acknowledgePose writes both keys; R4 gates the carry on the requested pose's own key.
+    // R4/F1: the carry hands off once this actor's requested pose has its own acknowledgement.
     const lie = poseToken("lie", "front", destination.action);
-    const interaction = { slots: { value: [slot] }, clock, poseLayouts: { value: { 0: layoutToken(destination), [`0:${lie}`]: lie } } } as unknown as Interaction;
+    const interaction = { slots: { value: [slot] }, clock, poseLayouts: { value: { [poseAckKey(source.id, lie)]: 1 } } } as unknown as Interaction;
     let tree!: TestRenderer.ReactTestRenderer;
     await act(async () => {
       tree = TestRenderer.create(

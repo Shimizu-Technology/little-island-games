@@ -2,6 +2,7 @@ import React from "react";
 import TestRenderer, { act } from "react-test-renderer";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { layoutToken } from "../src/home/runtime/layout";
+import { poseToken } from "../src/home/runtime/poseBank";
 import { useInteraction, mergeRoomPayloads, roomPayloadsOf, cameraTweenSample, CAMERA_EASE_MS, DOOR_MS, BACKGROUND_TAP_MS, type Pickup, type Interaction } from "../src/home/runtime/useInteraction";
 import { buildingLayout } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
@@ -14,6 +15,7 @@ import { EDGE_BAND, edgeVelocity, focusCamera } from "../src/home/runtime/Camera
 import { withPortions, shoreShellId, shoreShells } from "../src/home/runtime/portions";
 import { prepareHits, pickEntity } from "../src/home/runtime/pick";
 import { settleProgress } from "../src/home/runtime/settle";
+const poseOf = (e: SceneEntity) => poseToken(e.base, e.facing, e.action);
 const harness = vi.hoisted(() => ({
   deferUI: false,
   pickups: [] as Pickup[],
@@ -167,7 +169,7 @@ function Probe({ scene, layout = true, designing = false, reduced = false, onTap
       const slot = current.slots.get()[pickup.slot];
       if (slot.id === pickup.id && slot.generation === pickup.generation && slot.epoch === pickup.epoch)
         { current.ready(pickup.slot, pickup.id);
-          current.acknowledgePose(pickup.slot, layoutToken(pickup.scene.entities[pickup.id])); }
+          current.acknowledgePose(pickup.id, poseOf(pickup.scene.entities[pickup.id]), 0); }
     },
     onTap,
     onClear: noop,
@@ -180,7 +182,7 @@ function Probe({ scene, layout = true, designing = false, reduced = false, onTap
       interaction.acknowledgeLayout(entity.id, layoutToken(entity));
     if (layout) for (const slot of interaction.slots.get()) {
       const entity = scene.entities[slot.restId ?? slot.id];
-      if (entity) interaction.acknowledgePose(interaction.slots.get().indexOf(slot), layoutToken(entity));
+      if (entity) interaction.acknowledgePose(slot.id, poseOf(entity), 0);
     }
   });
   return null;

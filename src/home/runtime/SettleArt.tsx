@@ -6,6 +6,7 @@ import { EntityArt, artFrame, type CharacterRender } from "./EntityArt";
 import { CarriedCharacter } from "./CarriedCharacter";
 import { carryBinding, renderAnchors, limbBottom } from "./rigGeometry";
 import { poseToken, poseVariants } from "./poseBank";
+import { nextPoseMount, poseLaidOut } from "./poseAck";
 import { settleProgress } from "./settle";
 import { poseHandoff, type SupportPlane } from "./poseHandoff";
 import type { Interaction } from "./useInteraction";
@@ -20,6 +21,7 @@ export function SettleArt({ source, destination = source, grip = { x: 0, y: 0 },
   interaction: Interaction; index: number; reduced: boolean; supportPlanes?: Record<string, SupportPlane>; renderCharacter?: CharacterRender;
 }) {
   const { slots, clock, poseLayouts } = interaction;
+  const actor = source.id;
   const start = carryBinding(source, grip), head = renderAnchors(source, true).head;
   const variants = poseVariants({ ...source, action: destination.action });
   const mounted = variants.filter((v) => !bases || bases.includes(v.base));
@@ -36,7 +38,8 @@ export function SettleArt({ source, destination = source, grip = { x: 0, y: 0 },
     const pose = poses[requested] ?? poses[poseToken("stand", "front", destination.action)];
     // R4: the carried art stays until the requested pose is mounted and natively laid out. A room
     // reached mid-carry mounts its poses through JS, which can lag the UI-thread proposal.
-    const landed = mountedTokens.includes(requested) && poseLayouts?.value[`${index}:${requested}`] === requested;
+    // F1: the acknowledgement must be this actor's own, not another friend's on the same slot.
+    const landed = mountedTokens.includes(requested) && poseLaidOut(poseLayouts?.value, actor, requested);
     const attachment = s.proposal?.attachment;
     const support = attachment?.kind === "socket" ? supportPlanes?.[attachment.item] : undefined;
     const sample = poseHandoff(p, { x: s.releaseX, y: s.releaseY }, { x: s.targetX, y: s.targetY },
@@ -63,10 +66,21 @@ function TargetPose({ entity, source, startHead, interaction, index, reduced, su
   const token = poseToken(entity.base, entity.facing, entity.action);
   const bottom = limbBottom(entity);
   const angle = entity.base === "lie" ? (entity.facing === "left" ? 90 : -90) : 0;
+  // F1: this mount's own identity. Its native layout acknowledgement is keyed by the actor and
+  // pose, and only this mount can clear it: another friend unmounting leaves it alone.
+  const actor = source.id;
+  const [mount] = React.useState(nextPoseMount);
+  const laid = React.useRef(false);
   // Forget only when this pose unmounts; a re-render hands out new function identities.
   const forget = React.useRef(interaction.forgetPose);
-  React.useLayoutEffect(() => { forget.current = interaction.forgetPose; });
-  React.useEffect(() => () => forget.current?.(index, token), [index, token]);
+  const acknowledge = React.useRef(interaction.acknowledgePose);
+  React.useLayoutEffect(() => { forget.current = interaction.forgetPose; acknowledge.current = interaction.acknowledgePose; });
+  React.useEffect(() => {
+    // An already laid-out view that changes owner keeps its layout; nothing re-lays it out.
+    if (laid.current) acknowledge.current?.(actor, token, mount);
+    return () => forget.current?.(actor, token, mount);
+  }, [actor, token, mount]);
+  const onLayout = () => { laid.current = true; interaction.acknowledgePose(actor, token, mount); };
   const selected = useDerivedValue(() => {
     const s = slots.value[index];
     return poseToken(s.proposal?.base ?? source.base, s.proposal?.facing ?? source.facing, entity.action) === token;
@@ -91,7 +105,7 @@ function TargetPose({ entity, source, startHead, interaction, index, reduced, su
 
   });
   return <Animated.View pointerEvents="none" style={[{ position: "absolute", left: frame.left, top: frame.top }, style]}>
-    <View collapsable={false} onLayout={() => interaction.acknowledgePose(index, token)} style={{ width: frame.width, height: frame.height }}>
+    <View collapsable={false} onLayout={onLayout} style={{ width: frame.width, height: frame.height }}>
       <EntityArt entity={entity} reduced={reduced} renderCharacter={renderCharacter} />
     </View>
   </Animated.View>;
