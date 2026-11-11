@@ -112,8 +112,11 @@ it('the G5 stale dev save launches without Recovery and keeps the learner, look,
 
 it('setAsideUnresolved never changes resolvable saves or its input',()=>{
  const raw=seed(()=>{});expect(setAsideUnresolved(raw)).toEqual({raw,setAside:[]});
+ const unknown=seed(c=>{c.paused[2]={...c.paused[2],puzzle:{...c.paused[2].puzzle,bank:300}};});
+ const copy=unknown;expect(setAsideUnresolved(unknown).setAside).toHaveLength(1);expect(unknown).toBe(copy);
+ // A fragment that isn't a whole progress record is damage, not other content: validation decides.
  const bad='{"version":3,"profiles":{"people":{"family":{"challenge":{"paused":[{"puzzle":{"bank":300}}]}}}}}';
- const copy=bad;expect(setAsideUnresolved(bad).setAside).toHaveLength(1);expect(bad).toBe(copy);
+ expect(setAsideUnresolved(bad)).toEqual({raw:bad,setAside:[]});
  for(const raw of ['not json','{"version":2}','[]'])expect(setAsideUnresolved(raw)).toEqual({raw,setAside:[]});
 });
 

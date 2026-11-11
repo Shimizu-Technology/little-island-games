@@ -21,10 +21,10 @@ import { newExploreProgress, ExploreProgress, validExploreProgress } from "../ex
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { GameId, GameState } from "../games";
-import { storage } from "./storage";
 import { Save, emptySave, parseSave, withinSaveLimit } from "./validation";
 import { preserveAndReplace } from "./replacement";
-import { setAsideUnresolved, type SetAside } from "./setAside";
+import { encodeNotices, mergeNotices, parseNotices, setAsideUnresolved, type SetAside } from "./setAside";
+import { changingWritesSettled, fencedStorage } from "./writeFence";
 import { noteLaunch } from "./launchLog";
 import { applySessionAction } from "./sessionAction";
 import { recordWordRound } from "./wordRecords";
@@ -105,6 +105,10 @@ const Context = createContext<Store | null>(null);
 /** Far beyond a slow device's real launch; only a stuck read or write gets here. */
 export const BOOT_TIMEOUT_MS = 15_000;
 export const bootTimeoutMessage = "Your island is taking too long to open. Your saved work is kept. Try opening again.";
+// The root error boundary can unmount this provider and mount a new one. The old one's accepted work
+// is handed over here once its writes have settled: null when everything it accepted reached storage.
+let retired: Promise<Save | null> = Promise.resolve(null);
+const ownersOf = (save: Save) => [...Object.keys(save.profiles?.people ?? {}), ...Object.keys(save.cove?.people ?? {})];
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [save, setSave] = useState(emptySave),
     [ready, setReady] = useState(false),
@@ -129,6 +133,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     mounted = useRef(true),
     uncertainWrite = useRef(false),
     restoring = useRef(false);
+  // Every write this Store makes. Once it unmounts it can start no more; ones already running finish.
+  // eslint-disable-next-line react-hooks/refs -- The check runs at write time, never during render.
+  const [disk] = useState(() => fencedStorage(() => mounted.current));
+  // Each load is one attempt. A retry, restore or newer load supersedes it, and its writes are refused.
+  const loadAttempt = useRef(0), accepting = useRef(false);
+  const notices = useRef<SetAside[]>([]);
   const admitEnvelope = useCallback((encoded: string) => {
     let message: string;
     if (!withinSaveLimit(encoded)) message = 'This change exceeds the save limit. Your saved work is kept. Export it before managing paused games or people.';
@@ -149,7 +159,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     pendingWrites.current++; setSaving(true);
     queue.current = queue.current
       .catch(() => {})
-      .then(() => storage.set(encoded,envelopeWrite(durable)))
+      .then(() => disk.set(encoded,envelopeWrite(durable)))
       .then(() => {
         lastWriteFailed.current = false;
         if (mounted.current && !libraryRejected.current && !admissionRejected.current) setError(null);
@@ -159,7 +169,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (mounted.current) setError("Your latest changes could not be saved. Keep the app open and try again.");
       }).finally(() => { pendingWrites.current--; if (mounted.current && pendingWrites.current === 0) setSaving(false); });
     return queue.current;
-  }, [admitEnvelope]);
+  }, [admitEnvelope, disk]);
   const [draftWriter] = useState(() => new DraftQueue());
   const writeDraft = useCallback((key:string,raw:string) => draftWriter.enqueue(key,raw,{schedule:work => {
     pendingWrites.current++; setSaving(true);
@@ -167,28 +177,62 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       pendingWrites.current--; if (mounted.current && pendingWrites.current === 0) setSaving(false);
     });
   }, write:async raw => {
-    if (!storage.writeDraft) throw new Error('Draft storage unavailable.');
-    await storage.writeDraft(raw);
+    if (!disk.writeDraft) throw new Error('Draft storage unavailable.');
+    await disk.writeDraft(raw);
     lastWriteFailed.current = false;
   }, failed:() => {
     writeFailures.current++; lastWriteFailed.current = true;
     if (mounted.current) setError('Your latest moves could not be saved. Keep the app open and try again, or export a backup of the accepted moves.');
-  }}),[draftWriter]);
+  }}),[draftWriter,disk]);
   const refuseChallenge = useCallback((reason: ChallengeRefusal) => {
     setChallengeRefusal(reason); setError(refusalMessage[reason]); return false;
   }, []);
   const load = useCallback(async () => {
     let encoded:string|null=null;
-    const startGeneration=generation.current;
-    const live=()=>mounted.current && generation.current===startGeneration && !restoring.current;
+    const attempt=++loadAttempt.current, startGeneration=generation.current;
+    const current=()=>mounted.current && loadAttempt.current===attempt;
+    // A timed-out load keeps running, but once anything newer starts it can no longer write.
+    const store=fencedStorage(current);
+    const live=()=>current() && generation.current===startGeneration && !restoring.current;
+    const publish=(next:Save,kept:SetAside[])=>{
+      generation.current += 1;
+      setEpoch(generation.current);
+      admittedBytes.current = utf8Bytes(encodeSave(next));
+      latest.current = next;
+      retainSessionContent(syncProfile(next),saveCatalog); setSave(next);
+      setRecovery(null); uncertainWrite.current = false;
+      setError(null);
+      lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false;
+      notices.current = kept; setSetAside(kept);
+      settled.current = true;
+      setReady(true);
+    };
     try {
-      encoded = await storage.get();
+      // Writes an earlier load or a retired Store already started land before this one reads.
+      await changingWritesSettled();
+      let handed = await retired;
+      if(!live())return;
+      retired = Promise.resolve(null);
+      // Cove identity is temporary, as on any launch.
+      if (handed?.cove?.active) handed = { ...handed, cove: { ...handed.cove, active: null } };
+      if (handed) {
+        // The previous Store accepted this but couldn't confirm it reached storage. Keep it, as it did.
+        const kept = parseNotices(await store.readNotices?.().catch(() => null), ownersOf(handed));
+        if(!live())return;
+        setRaw(encodeSave(handed)); publish(handed,kept);
+        noteLaunch('handoff', 'Kept accepted changes from before the error screen and saved them again.');
+        void persist(handed);
+        return;
+      }
+      encoded = await store.get();
+      if(!live())return;
       setRaw(encoded);
       // Content this build can't resolve is set aside from a copy; the original bytes are preserved below.
       const aside=encoded?setAsideUnresolved(encoded,saveCatalog):{raw:null,setAside:[]};
       const before=aside.raw?parseSave(aside.raw):emptySave();
+      const stored = encoded ? await store.readNotices?.().catch(() => null) : null;
       if(!live())return;
-      const recovered = await recoverChallengeDrafts(migrateProfiles(before),storage,saveCatalog,{live});
+      const recovered = await recoverChallengeDrafts(migrateProfiles(before),store,saveCatalog,{live});
       let next=syncProfile(backfillRewards(migrateLibrary(recovered, { existingLearners: encoded !== null })));
       // Cove identity is temporary. Keep all people and boards, but launch as the learner.
       if (next.cove?.active) next = { ...next, cove: { ...next.cove, active: null } };
@@ -198,37 +242,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (!withinSaveLimit(encodeSave(next))) throw new Error("This save needs more room to upgrade. Your original is kept. Export it and open it in the previous build to manage saved work, or restore a smaller backup.");
       parseSave(encodeSave(next));
       assertMigratedHomes(next);
+      // Notices not yet put away stay until their person taps OK, across launches.
+      const kept = mergeNotices(parseNotices(stored, ownersOf(next)), aside.setAside);
       if(encoded) {
         if (replacementNeeded) {
-          await preserveAndReplace(storage, encodeSave(next), encoded,envelopeWrite(next));
-        } else await preserveLearnerMigration(storage,encoded,before,next);
+          await preserveAndReplace(store, encodeSave(next), encoded,{...envelopeWrite(next),...(aside.setAside.length?{notices:encodeNotices(kept)}:{})});
+        } else await preserveLearnerMigration(store,encoded,before,next);
       }
       if(!live())return;
-      generation.current += 1;
-      setEpoch(generation.current);
-      admittedBytes.current = utf8Bytes(encodeSave(next));
-      latest.current = next;
-      retainSessionContent(syncProfile(next),saveCatalog); setSave(next);
-      setRecovery(null); uncertainWrite.current = false;
-      setError(null);
-      lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false;
       if (aside.setAside.length) noteLaunch('set-aside', `${aside.setAside.map(a => `${a.owner}: ${a.games.join(',') || 'no rounds'}, ${a.marks} marks rows`).join('; ')}`);
-      setSetAside(aside.setAside);
-      settled.current = true;
-      setReady(true);
+      publish(next,kept);
     } catch (e) {
       if(!live())return;
       noteLaunch('load', e);
       if(encoded)try{
-        const newest = (await storage.listRecovery?.())?.[0];
-        if (!newest || await storage.readRecovery?.(newest.key) !== encoded) await storage.preserve(encoded);
+        const newest = (await store.listRecovery?.())?.[0];
+        if (!newest || await store.readRecovery?.(newest.key) !== encoded) await store.preserve(encoded);
       }catch{/* Original remains in active storage; do not publish or replace it. */}
       if(!live())return;
       setRecovery(e instanceof Error ? e.message : "Saved games could not be opened. Please retry.");
       settled.current = true;
       setReady(true);
     }
-  }, []);
+  }, [persist]);
   useEffect(() => {
     mounted.current = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrates asynchronously from external device storage.
@@ -243,8 +279,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return () => {
       mounted.current = false;
       clearTimeout(guard);
+      // Hand over to a Store mounted after this one (the root error boundary's Try again). It waits
+      // until every write this one started has settled, then keeps its accepted state if any failed.
+      const accepted = accepting.current, chain = queue.current, failed = lastWriteFailed, uncertain = uncertainWrite, last = latest;
+      retired = chain.catch(() => {}).then(changingWritesSettled).then(() => accepted && (failed.current || uncertain.current) ? last.current : null);
     };
   }, [load]);
+  useEffect(() => { accepting.current = ready && !recovery; }, [ready, recovery]);
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
       if (state !== "active" && ready && !recovery) void persist(latest.current);
@@ -414,13 +455,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     // Drain write-behind before deciding whether a fold is needed.
     let pending: Promise<void>;
     do { pending = queue.current; await pending; } while (pending !== queue.current);
-    if (await storage.readDrafts?.().then(rows => rows.length > 0)) await persist(latest.current);
+    if (await disk.readDrafts?.().then(rows => rows.length > 0)) await persist(latest.current);
     // Include writes appended while the previous tail is settling.
     let tail: Promise<void>;
     do { tail = queue.current; await tail; } while (tail !== queue.current);
     return mounted.current && !restoring.current && startEpoch === generation.current &&
       writeFailures.current === failures && !lastWriteFailed.current && !libraryRejected.current && !admissionRejected.current;
-  }, [ready, recovery, persist]);
+  }, [ready, recovery, persist, disk]);
   const backup = useCallback(async () => {
     // Flush health is a Library gate, never a gate on recovering accepted work.
     let clean = false;
@@ -527,13 +568,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     restoring.current = true;
     try {
       await queue.current;
-      const pending = draftRecovery(id); if (pending) await storage.preserve(pending);
-      await preserveAndReplace(storage, encodeSave(next), encodeSave(before),envelopeWrite(next));
+      const pending = draftRecovery(id); if (pending) await disk.preserve(pending);
+      await preserveAndReplace(disk, encodeSave(next), encodeSave(before),envelopeWrite(next));
       clearPageDrafts(id);
       generation.current++; setEpoch(generation.current);
       admittedBytes.current = utf8Bytes(encodeSave(next)); latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
     } finally { restoring.current = false; }
-  }, [ready, recovery]);
+  }, [ready, recovery, disk]);
   const assignEarlierWork = useCallback(async (key: string, learner: string | null, expectedEpoch: number) => {
     if (!ready || recovery || restoring.current || expectedEpoch !== generation.current) return false;
     const before = latest.current, next = assignEarlier(before, key, learner);
@@ -543,11 +584,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     restoring.current = true;
     try {
       await queue.current;
-      await preserveAndReplace(storage, encodeSave(next), encodeSave(before),envelopeWrite(next));
+      await preserveAndReplace(disk, encodeSave(next), encodeSave(before),envelopeWrite(next));
       generation.current++; setEpoch(generation.current);
       admittedBytes.current = utf8Bytes(encodeSave(next)); latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setBadgeResult(null); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
     } finally { restoring.current = false; }
-  }, [ready, recovery]);
+  }, [ready, recovery, disk]);
   const recordWarmup = useCallback((results: PracticeResult[], config: PracticeSettings, round: string, expectedEpoch: number) => {
     if (expectedEpoch !== generation.current || !ready || recovery || restoring.current) return;
     const before = latest.current, next = applyWarmup(before, results, config, round);
@@ -570,21 +611,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     async (encoded: string) => {
       if (restoring.current) throw new Error("A restore is already running.");
       restoring.current = true;
+      // A load still running (one that timed out) can't write after this, and any write it began lands first.
+      loadAttempt.current++;
       try {
+        await changingWritesSettled();
         let next: Save, incoming: Save;
         try { incoming=parseSave(encoded); next = { ...syncProfile(backfillRewards(migrateLibrary(migrateProfiles(incoming)))), saveRevision:newSaveRevision() }; if (next.cove?.active) next = { ...next, cove: { ...next.cove, active: null } }; assertMigratedHomes(next); parseSave(encodeSave(next)); if (!validLibraryData(next.library)) throw new Error("This Library could not be opened. Your original is kept. Export it or restore a previous backup.");
       if (!withinSaveLimit(encodeSave(next))) throw new Error("This save needs more room to upgrade. Your original is kept. Export it and open it in the previous build to manage saved work, or restore a smaller backup."); }
         catch (error) {
           // Keep both the rejected import and the current live save. Never repair imported bytes.
-          const newest=(await storage.listRecovery?.())?.[0];
-          if(!newest || await storage.readRecovery?.(newest.key)!==encoded)await storage.preserve(encoded);
+          const newest=(await disk.listRecovery?.())?.[0];
+          if(!newest || await disk.readRecovery?.(newest.key)!==encoded)await disk.preserve(encoded);
           generation.current++; setEpoch(generation.current);
           setRaw(encoded); setRecovery(error instanceof Error ? error.message : 'This backup is invalid. Your original has been kept.');
           throw error;
         }
         await queue.current;
-        const pending = draftRecovery(); if (pending) await storage.preserve(pending);
-        await preserveImportedLearners(storage, encoded, incoming, next, recovery && !uncertainWrite.current ? null : encodeSave(latest.current), incoming.version !== 3 || !incoming.profiles || !incoming.library || incoming.library.version === 1);
+        const pending = draftRecovery(); if (pending) await disk.preserve(pending);
+        await preserveImportedLearners(disk, encoded, incoming, next, recovery && !uncertainWrite.current ? null : encodeSave(latest.current), incoming.version !== 3 || !incoming.profiles || !incoming.library || incoming.library.version === 1);
         clearPageDrafts();
         generation.current += 1;
         setEpoch(generation.current);
@@ -592,7 +636,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         latest.current = next;
         retainSessionContent(syncProfile(next),saveCatalog); setSave(next);
         setRaw(encodeSave(next));
-        setSetAside([]);
+        // Notices described the save that was just replaced.
+        notices.current = []; setSetAside([]);
+        await disk.writeNotices?.(null).catch(() => {});
         setRecovery(null); uncertainWrite.current = false;
         setError(null);
         lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false;
@@ -601,7 +647,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         restoring.current = false;
       }
     },
-    [recovery]
+    [recovery, disk]
   );
   const challengeWorking = useCallback((patch: WorkingPatch, expected:WorkingExpected) => {
     const before=latest.current, progress=progressFor(before,expected.owner);
@@ -677,15 +723,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const folded=progress?.paused.filter(s=>!progressFor(next,session.owner)?.paused.some(p=>p.id===s.id))??[];
       if(expected.replace){
         const removed=folded.find(s=>s.game===expected.replace!.game);
-        if(!removed||!storage.discardSession)throw new Error('Replacement preservation unavailable.');
-        await storage.discardSession(JSON.stringify(removed));
+        if(!removed||!disk.discardSession)throw new Error('Replacement preservation unavailable.');
+        await disk.discardSession(JSON.stringify(removed));
       }
       const metadata=envelopeWrite(next);
-      try { await storage.set(encoded,{...metadata,folded:[...metadata.folded,...folded,...(session.result?[session]:[])]}); }
+      try { await disk.set(encoded,{...metadata,folded:[...metadata.folded,...folded,...(session.result?[session]:[])]}); }
       catch (error) {
         // A committed write can lose its acknowledgement. Reconcile before allowing another persist.
         let head: string | null;
-        try { head = await storage.get(); }
+        try { head = await disk.get(); }
         catch { uncertainWrite.current = true; setRaw(encodeSave(latest.current)); setRecovery('The saved state could not be confirmed. Keep the app open and export before retrying.'); throw error; }
         if (head !== encoded) throw error;
       }
@@ -694,7 +740,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     } catch {
       setError('This change could not be saved. Your saved work is kept. Keep the app open and try again, or export a backup.'); return false;
     } finally { restoring.current = false; }
-  },[ready,recovery,writeDraft,refuseChallenge]);
+  },[ready,recovery,writeDraft,refuseChallenge,disk]);
   const challengeDiscard = useCallback(async (expected: ChallengeExpected) => {
     if (!ready || recovery || restoring.current || uncertainWrite.current || expected.epoch !== generation.current) return false;
     restoring.current = true;
@@ -705,16 +751,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       let next = putProgress(before,expected.owner,{ ...progress!, paused:progress!.paused.filter(s => s.game !== expected.game) });
       next = { ...next, saveRevision:newSaveRevision() };
       const encoded = encodeSave(next); parseSave(encoded);
-      if (!storage.discardSession) throw new Error('Discard recovery storage is unavailable.');
-      await storage.discardSession(JSON.stringify(slot));
+      if (!disk.discardSession) throw new Error('Discard recovery storage is unavailable.');
+      await disk.discardSession(JSON.stringify(slot));
       const meta = envelopeWrite(next);
-      await storage.set(encoded,{ ...meta, folded:[...meta.folded,slot] });
+      await disk.set(encoded,{ ...meta, folded:[...meta.folded,slot] });
       admittedBytes.current = utf8Bytes(encoded); generation.current++; setEpoch(generation.current);
       latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); return true;
     } catch {
       setError('This paused game could not be removed. Your saved work is kept. Please try again.'); return false;
     } finally { restoring.current = false; }
-  },[ready,recovery]);
+  },[ready,recovery,disk]);
   const covePerson = useCallback(async (action: Parameters<Store['covePerson']>[0], expectedEpoch:number) => {
     // A blur cleanup waits for the current boundary, then rechecks its captured epoch.
     if (action.type === 'select' && action.id === null) while (restoring.current && mounted.current && expectedEpoch === generation.current) await new Promise(resolve => setTimeout(resolve, 25));
@@ -727,22 +773,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (next === before) return false;
       next = { ...next, saveRevision:newSaveRevision() };
       const encoded = encodeSave(next); parseSave(encoded);
-      if (action.type === 'remove') await preserveAndReplace(storage,encoded,encodeSave(before),envelopeWrite(next));
-      else await storage.set(encoded,envelopeWrite(next));
+      if (action.type === 'remove') await preserveAndReplace(disk,encoded,encodeSave(before),envelopeWrite(next));
+      else await disk.set(encoded,envelopeWrite(next));
       admittedBytes.current = utf8Bytes(encoded);
       generation.current++; setEpoch(generation.current);
       latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setBadgeResult(null); return true;
     } catch {
       setError('This person could not be updated. Your saved work is kept. Please try again.'); return false;
     } finally { restoring.current = false; }
-  },[ready,recovery]);
+  },[ready,recovery,disk]);
+  const dismissSetAside = useCallback((owner: string) => {
+    const next = notices.current.filter(a => a.owner !== owner);
+    if (next.length === notices.current.length) return;
+    notices.current = next; setSetAside(next);
+    const raw = encodeNotices(next);
+    // On the write queue, so it can't cross a save that rewrites the notices row.
+    queue.current = queue.current.catch(() => {}).then(() => disk.writeNotices?.(raw)).catch(() => { /* It shows again next launch; better than lost. */ });
+  }, [disk]);
   const startFresh = useCallback(async () => {
     await restore(JSON.stringify(migrateLibrary(emptySave(), { existingLearners: false })));
   }, [restore]);
   return (
     <Context.Provider
       value={{
-        save, setAside, dismissSetAside: (owner: string) => setSetAside(list => list.filter(a => a.owner !== owner)), backup, challengeWorking, challengeRefusal, challengeOpen, challengeSave, challengeDiscard, covePerson,
+        save, setAside, dismissSetAside, backup, challengeWorking, challengeRefusal, challengeOpen, challengeSave, challengeDiscard, covePerson,
         badgeResult, dismissBadge: () => setBadgeResult(null),
         personalize, renameLearner, removeLearner, saving, assignEarlier: assignEarlierWork,
         arcade,

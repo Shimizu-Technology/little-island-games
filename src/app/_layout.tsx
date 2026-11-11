@@ -6,14 +6,19 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { TextLayoutProvider } from "../components/Text";
 import { useReducedMotion } from "../components/motion";
 import { StoreProvider } from "../state/Store";
+import { ScreenBoundary } from "../components/LaunchError";
 type LibraryParams = { place?: string; id?: string } | undefined;
 /** No interactive pop where a stray swipe would cost a child their drawing or let a baby out. */
 export function libraryGestureEnabled(params: object | undefined) {
   const { place, id } = (params ?? {}) as NonNullable<LibraryParams>;
   return !((place === "make" && !!id) || place === "little");
 }
-/** Any render error below the root, including the Store and the first screen, lands here instead of a blank app. */
+/** A render error above the screens (the providers, the Store, the navigator) lands here instead of a blank app. */
 export { LaunchError as ErrorBoundary } from "../components/LaunchError";
+/** A screen's own render error stays inside that screen, so the Store above it keeps its accepted work. */
+export function screenLayout({ children }: { children: React.ReactElement }) {
+  return <ScreenBoundary>{children}</ScreenBoundary>;
+}
 export default function Layout() {
   // The platform push shows where a screen came from; Reduce Motion swaps it for a short fade.
   const reduced = useReducedMotion();
@@ -23,6 +28,7 @@ export default function Layout() {
         <StoreProvider>
           <StatusBar style="dark" />
           <Stack
+            screenLayout={screenLayout}
             screenOptions={{
               headerShown: false,
               animation: reduced ? "fade" : "default",

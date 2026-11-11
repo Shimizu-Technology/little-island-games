@@ -115,3 +115,11 @@ it('a render error anywhere below the root shows a recovery screen with Try agai
   await act(async () => button('Back to the map').props.onPress());
   expect(fixture.replace).toHaveBeenCalledWith('/');expect(retry).toHaveBeenCalledTimes(2);
 });
+
+it('each screen in the Stack has its own boundary below the Store', async () => {
+  const { screenLayout } = await import('../src/app/_layout');
+  const { ScreenBoundary } = await import('../src/components/LaunchError');
+  const child = <article/>;
+  const wrapped = screenLayout({ children: child });
+  expect(wrapped.type).toBe(ScreenBoundary);expect(wrapped.props.children).toBe(child);
+});
