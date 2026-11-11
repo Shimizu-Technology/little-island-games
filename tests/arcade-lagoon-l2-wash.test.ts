@@ -16,12 +16,12 @@ describe('Lagoon backdrop washes', () => {
       expect(WASH_SPAN.x + WASH_SPAN.width, `${w}×${h}`).toBeGreaterThan(right + 20);
     }
   });
-  it('the haze and near-light rects use that span', () => {
+  it('the haze and near-light washes stretch a 390-wide Svg (it clips to its frame) about the camera centre', () => {
+    expect(WASH_SPAN.x + WASH_SPAN.width / 2).toBe(TRACK_WIDTH / 2);
     const source = readFileSync('src/arcade/games/lagoon-run/Backdrop.tsx', 'utf8');
-    for (const fill of ['url(#lr-deckhaze)', 'url(#lr-near)']) {
-      const rect = source.match(new RegExp(`<Rect [^>]*fill="${fill.replace(/[()#]/g, '\\$&')}"`))?.[0];
-      expect(rect, fill).toMatch(/x=\{WASH_SPAN\.x\}/);
-      expect(rect, fill).toMatch(/width=\{WASH_SPAN\.width\}/);
-    }
+    const wash = source.slice(source.indexOf('function Wash('), source.indexOf('/** Near-deck light falloff'));
+    expect(wash).toMatch(/<Svg width=\{390\}[^>]*transform: \[\{ scaleX: WASH_SPAN\.width \/ 390 \}\]/);
+    expect(wash).toMatch(/<Rect x=\{0\} y=\{y\} width=\{390\}/);
+    for (const id of ['lr-near', 'lr-deckhaze']) expect(source).toContain(`<Wash id="${id}"`);
   });
 });

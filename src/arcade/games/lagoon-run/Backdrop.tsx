@@ -73,21 +73,26 @@ export const DeckBase = memo(function DeckBase({ world }: { world: WorldId }) {
     <Path d={`M${h.x - .6} ${h.y}L${farR.x} ${farR.y}H${farL.x}Z`} fill="url(#lr-far)"/>
   </Svg>;
 });
+/**
+ * A full-width vertical wash. An Svg clips to its own 390-unit frame, and a wider bitmap would cost
+ * tens of MB, so it is drawn 390 wide and stretched about the camera centre to WASH_SPAN. A purely
+ * vertical gradient is unchanged by horizontal stretching.
+ */
+function Wash({ id, y, height, children }: { id: string; y: number; height: number; children: React.ReactNode }) {
+  return <Svg width={390} height={660} style={{ position: 'absolute', transform: [{ scaleX: WASH_SPAN.width / 390 }] }} accessible={false}>
+    <Defs>{children}</Defs>
+    <Rect x={0} y={y} width={390} height={height} fill={`url(#${id})`}/>
+  </Svg>;
+}
 /** Near-deck light falloff: the boards darken gently toward the camera, away from the light. */
 export const DeckLight = memo(function DeckLight({ world }: { world: WorldId }) {
   const look = lagoonLook(world), c = projectTrack(1, .7), b = projectTrack(1, 1.62);
-  return <Svg width={390} height={660} style={{ position: 'absolute', overflow: 'visible' }} accessible={false}>
-    <Defs><LinearGradient id="lr-near" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.shade} stopOpacity={0}/><Stop offset="1" stopColor={look.shade} stopOpacity={.22}/></LinearGradient></Defs>
-    <Rect x={WASH_SPAN.x} y={c.y} width={WASH_SPAN.width} height={b.y - c.y + 40} fill="url(#lr-near)"/>
-  </Svg>;
+  return <Wash id="lr-near" y={c.y} height={b.y - c.y + 40}><LinearGradient id="lr-near" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.shade} stopOpacity={0}/><Stop offset="1" stopColor={look.shade} stopOpacity={.22}/></LinearGradient></Wash>;
 });
 /** Over the deck but under every actor: the far deck and rails melt into the air. */
 export const DeckHaze = memo(function DeckHaze({ world }: { world: WorldId }) {
   const look = lagoonLook(world), h = projectTrack(1, -1.2), far = projectTrack(1, -.35);
-  return <Svg width={390} height={660} style={{ position: 'absolute', overflow: 'visible' }} accessible={false}>
-    <Defs><LinearGradient id="lr-deckhaze" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.haze} stopOpacity={look.hazeOpacity + .2}/><Stop offset="1" stopColor={look.haze} stopOpacity={0}/></LinearGradient></Defs>
-    <Rect x={WASH_SPAN.x} y={h.y - 2} width={WASH_SPAN.width} height={far.y - h.y + 2} fill="url(#lr-deckhaze)"/>
-  </Svg>;
+  return <Wash id="lr-deckhaze" y={h.y - 2} height={far.y - h.y + 2}><LinearGradient id="lr-deckhaze" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.haze} stopOpacity={look.hazeOpacity + .2}/><Stop offset="1" stopColor={look.haze} stopOpacity={0}/></LinearGradient></Wash>;
 });
 
 /** Screen-space frame above the horizon only, so it can never hide a hazard. */
