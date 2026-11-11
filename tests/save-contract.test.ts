@@ -1,5 +1,5 @@
 import { assertFrozenCatalog, catalogManifest } from '../src/state/catalogManifest';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { emptySave, parseSave, MAX_SAVE_BYTES } from '../src/state/validation';
@@ -11,6 +11,8 @@ import { complete, mergeProgressFacts, registerSaveContent, creditProgress, empt
 import { challengeTransition, finishChallenge, parseDraft, recoverChallengeDrafts, type ChallengeExpected } from '../src/state/challengeDrafts';
 import { checkpointBudget, checkpointPaint, checkpointPaintUndo, checkpointAudit, checkpointEdit, newCheckpoint, validCheckpoint } from '../src/state/checkpoint';
 import { fixtureCatalog, installFixture, moved, session } from './helpers/save-contract';
+
+vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
 installFixture();
 const fresh=()=>migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')});
 const expected=(s:ReturnType<typeof session>,epoch=1):ChallengeExpected=>({epoch,owner:s.owner,game:s.game,id:s.id,revision:s.revision});
