@@ -46,28 +46,6 @@ export function buildPool(gen: LatinGenerator, spec: FamilySpec<LatinPuzzle>, ru
   }
   return { rung: rung.id, tried, kept };
 }
-/**
- * Evenly spaced picks through the workload order, so a rung spans easy to hard, with no template
- * over a quarter of the rung. Returned easiest first.
- */
-export function spread(gen: LatinGenerator, pool: readonly Candidate[], count: number): Candidate[] {
-  const sorted = [...pool].sort((a, b) => gen.workload(a) - gen.workload(b) || a.seed - b.seed), per0 = new Map<string, number>();
-  for (const c of sorted) per0.set(c.template, (per0.get(c.template) ?? 0) + 1);
-  // The largest rung the kit's 25% template rule allows from this pool, so every pick ships.
-  let take = Math.min(count, sorted.length);
-  while (take > 0 && [...per0.values()].reduce((n, k) => n + Math.min(k, Math.max(1, Math.floor(take / 4))), 0) < take) take--;
-  const cap = Math.max(1, Math.floor(take / 4)), used = new Set<number>(), per = new Map<string, number>(), out: Candidate[] = [];
-  for (let k = 0; k < take; k++) {
-    const aim = take === 1 ? 0 : Math.round(k * (sorted.length - 1) / (take - 1));
-    for (let reach = 0; reach < sorted.length; reach++) {
-      const at = [aim + reach, aim - reach].find(i => i >= 0 && i < sorted.length && !used.has(i) && (per.get(sorted[i].template) ?? 0) < cap);
-      if (at === undefined) continue;
-      used.add(at); per.set(sorted[at].template, (per.get(sorted[at].template) ?? 0) + 1); out.push(sorted[at]);
-      break;
-    }
-  }
-  return out.sort((a, b) => gen.workload(a) - gen.workload(b) || a.seed - b.seed);
-}
 type Laid = CertifiedEntry<LatinPuzzle> & { candidate: Candidate };
 const laid = (c: Candidate): Laid => ({ candidate: c, core: { layout: c.template, template: c.template } } as unknown as Laid);
 /** Exactly what `bakeFamily` does to an accepted band before it writes packs: cap templates, then order layouts, twice. */
@@ -76,47 +54,53 @@ export function kitOrder(list: readonly Candidate[]): Candidate[] {
   return settle(settle(list.map(laid))).map(e => e.candidate);
 }
 /**
- * The shipped rung in publishing order. The kit never puts one layout twice in a row and decides
- * which layout comes next from how many of each are left, so the layout sequence is fixed by the
- * counts. The difficulty aim at each position is the same quantile of the weakest layout's supply,
- * which every layout can reach, and nothing above that layout's hardest is used; each position takes its layout's candidate nearest that aim, never more than the allowed step below the hardest so far. The kit's own
- * ordering functions must give back the same list.
+ * The shipped rung in publishing order. The kit never puts one layout twice in a row and takes the
+ * most plentiful layout next, so layouts with equal counts are dealt round and round from the first
+ * puzzle to the last. Each chosen layout gets an equal share, no more than a quarter of the rung.
+ * Every position has a common difficulty aim rising through the pool's own spread, from the easiest
+ * level every layout can start at; it takes its layout's easiest unused candidate at or above both
+ * the aim and the allowed step below the hardest so far. When a layout runs short of hard puzzles,
+ * the aim's top comes down until no puzzle steps back too far. Of the layout choices that give the
+ * full rung, the widest gentle one wins. The kit's own ordering functions must give back the list.
  */
 export function arrange(gen: LatinGenerator, pool: readonly Candidate[], count: number): Candidate[] {
-  const picks = spread(gen, pool, count);
-  if (picks.length < 2) return picks;
-  const load = new Map(pool.map(c => [c, gen.workload(c)])), counts = new Map<string, number>();
-  for (const c of picks) counts.set(c.template, (counts.get(c.template) ?? 0) + 1);
-  const supply = new Map<string, Candidate[]>();
-  for (const c of [...pool].sort((a, b) => load.get(a)! - load.get(b)! || a.seed - b.seed)) if (counts.has(c.template)) supply.set(c.template, [...(supply.get(c.template) ?? []), c]);
-  const quantile = (f: number) => Math.min(...[...supply.values()].map(xs => load.get(xs[Math.round(f * (xs.length - 1))])!));
-  const lows = [...supply.values()].map(xs => load.get(xs[0])!), back = allowedBack(quantile(1) - Math.min(...lows)) * 0.9;
-  // Above the hardest level every layout reaches, a candidate would force a later drop.
-  const roof = quantile(1) + back;
-  for (const [t, xs] of supply) { const kept = xs.filter(c => load.get(c)! <= roof); if (kept.length >= counts.get(t)!) supply.set(t, kept); }
-  let firsts = [...counts.keys()].sort((a, b) => counts.get(b)! - counts.get(a)! || (a < b ? -1 : 1));
-  for (let round = 0; round < 8; round++) {
-    const sequence = orderLayouts(firsts.flatMap(t => Array.from({ length: counts.get(t)! }, () => laid({ template: t } as Candidate)))).ordered.map(e => e.core.layout);
-    const free = new Map([...supply].map(([t, xs]) => [t, [...xs]]));
-    const out: Candidate[] = [];
-    let top = -Infinity;
-    sequence.forEach((t, k) => {
-      const options = free.get(t)!, floor = top - back, aim = Math.max(quantile(k / (sequence.length - 1)), top - back / 2);
-      // Nearest the aim without overshooting it by much, since an overshoot raises the floor for
-      // every later position; overshoot only when nothing else is hard enough.
-      const nearest = (ok: (w: number) => boolean) => { let at = -1; options.forEach((c, i) => { const w = load.get(c)!; if (ok(w) && (at < 0 || Math.abs(w - aim) < Math.abs(load.get(options[at])! - aim))) at = i; }); return at; };
-      let at = nearest(w => w >= floor && w <= aim + back);
-      if (at < 0) at = nearest(w => w >= floor);
-      // Nothing of this layout is hard enough: take its hardest left; worstBack reports it.
-      if (at < 0) at = options.length - 1;
-      const [c] = options.splice(at, 1);
-      out.push(c); top = Math.max(top, load.get(c)!);
-    });
-    const kit = kitOrder(out);
-    if (kit.length === out.length && kit.every((c, i) => c === out[i])) return out;
-    firsts = [...new Set(out.map(c => c.template))];
+  const load = new Map(pool.map(c => [c, gen.workload(c)])), supply = new Map<string, Candidate[]>();
+  for (const c of [...pool].sort((a, b) => load.get(a)! - load.get(b)! || a.seed - b.seed)) supply.set(c.template, [...(supply.get(c.template) ?? []), c]);
+  const layouts = [...supply.keys()].sort((a, b) => supply.get(b)!.length - supply.get(a)!.length || (a < b ? -1 : 1));
+  const gentle = (out: readonly Candidate[]) => { const b = worstBack(out.map(c => load.get(c)!)); return b.worst <= b.allowed; };
+  let best: { out: Candidate[]; span: number } | null = null;
+  for (let k = layouts.length; k >= 4; k--) {
+    const chosen = layouts.slice(0, k), n = Math.min(count, k * Math.min(...chosen.map(t => supply.get(t)!.length)), k * Math.floor(count / 4));
+    if (best && n < best.out.length) continue;
+    const counts = new Map(chosen.map((t, i) => [t, Math.floor(n / k) + (i < n % k ? 1 : 0)]));
+    if (chosen.some(t => counts.get(t)! > Math.max(1, Math.floor(n / 4)))) continue;
+    const values = chosen.map(t => supply.get(t)!.map(c => load.get(c)!)), all = values.flat().sort((a, b) => a - b);
+    const low = Math.max(...values.map(xs => xs[0])), high = Math.min(...values.map(xs => xs.at(-1)!));
+    const sequence = orderLayouts(chosen.flatMap(t => Array.from({ length: counts.get(t)! }, () => laid({ template: t } as Candidate)))).ordered.map(e => e.core.layout);
+    const build = (top: number): Candidate[] => {
+      const band = all.filter(w => w >= low && w <= top), back = allowedBack(top - low) * 0.999, free = new Map(chosen.map(t => [t, [...supply.get(t)!]]));
+      let peak = -Infinity;
+      return sequence.map((t, j) => {
+        const options = free.get(t)!, aim = Math.max(band[Math.round(j / Math.max(1, sequence.length - 1) * (band.length - 1))] ?? low, peak - back);
+        let at = options.findIndex(c => load.get(c)! >= aim);
+        // Nothing of this layout is hard enough: take its hardest left; worstBack reports it.
+        if (at < 0) at = options.length - 1;
+        const [c] = options.splice(at, 1);
+        peak = Math.max(peak, load.get(c)!);
+        return c;
+      });
+    };
+    for (let step = 0; step <= 60; step++) {
+      const top = high - (high - low) * step / 60, out = build(top);
+      if (!gentle(out)) continue;
+      const span = Math.max(...out.map(c => load.get(c)!)) - Math.min(...out.map(c => load.get(c)!));
+      const kit = kitOrder(out);
+      if (kit.length === out.length && kit.every((c, i) => c === out[i]) && (!best || n > best.out.length || span > best.span)) best = { out, span };
+      break;
+    }
   }
-  throw new Error('The kit would reorder this rung; no stable publishing order was found.');
+  if (!best) throw new Error('No gentle publishing order the kit keeps was found for this rung.');
+  return best.out;
 }
 /** The largest drop below the hardest puzzle so far, and what the policy allows for this order. */
 export function worstBack(loads: readonly number[]): { worst: number; allowed: number } {
