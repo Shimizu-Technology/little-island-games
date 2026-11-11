@@ -53,7 +53,7 @@ A full undo ring drops its oldest delta, never the canonical draft. Check/help/h
 
 ## Capacity and recovery
 
-The [measured capacity receipt](evidence/f1-save/SIZE.json) uses the actual packed formats and whole-save validator: 62,647 catalog entries, five learners including Family, four Cove-only people, maximum-size paused-session allocations, 80 Library drawings and 999,900 Library bytes. Structural test codecs measure storage; they do not establish reachability or correctness of future game engines. New Home storage and undo formats must be measured again when their owning slices land.
+The [measured capacity receipt](evidence/f1-save/SIZE.json) uses the actual packed formats and whole-save validator: 62,647 catalog entries, five learners including Family, four Cove-only people, maximum-size paused-session allocations, 80 Library drawings and 999,900 Library bytes. Structural test codecs measure storage; they do not establish reachability or correctness of future game engines. New Home storage and undo formats must be measured again when their owning slices land. Its `homeUndo` section adds five full Island Home undo histories to the same envelope; `HOME_UNDO_BYTES` (15,000) is chosen so more than 10% of the remaining headroom stays spare (see `ISLAND_HOME_3.md`).
 
 The 2,000,000-byte whole-save and 1,000,000-byte shared Library boundaries remain unchanged. A valid near-full legacy fixture can migrate but refuse additional dense Challenge data. Failure retains accepted state and exact originals; nothing is silently pruned. Export first, then explicitly finish or replace a selected paused game, or remove a person through grown-up management. A whole-device restore replaces every person's newer work; Previous saves is not per-child undo.
 

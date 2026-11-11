@@ -100,11 +100,6 @@ describe("HM-18 saved undo history", () => {
     expect(savedHistory(history).undo!.steps.length).toBe(before);
     expect(savedHistory(history).current).toBe("beach");
   });
-  it("five learners' worst-case undo fits the measured whole-save headroom", async () => {
-    const { readFileSync } = await import("node:fs");
-    const size = JSON.parse(readFileSync("docs/evidence/f1-save/SIZE.json", "utf8")) as { remainingBytes: number };
-    expect(5 * (HOME_UNDO_BYTES + 32)).toBeLessThan(size.remainingBytes);
-  });
   it("a reducer edit that is refused leaves the saved history alone", () => {
     const history = play();
     const refused = editHistory(history, { type: "move", id: "missing", x: 0, y: 0, roomId: "home" } as HomeAction);

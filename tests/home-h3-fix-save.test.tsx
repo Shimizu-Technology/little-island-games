@@ -72,8 +72,9 @@ describe('R1: the newest removal survives the byte cap and a relaunch', () => {
   it('a second big restore inside the window is refused rather than pushing the first one out', async () => {
     const saves: HomeStateV2[] = [];
     let store!: ReturnType<typeof useHomeStore>;
-    const initial = basketHome(100, 'home', 'a');
-    initial.rooms.kitchen.instances.push(...basketHome(100, 'kitchen', 'b').rooms.kitchen.instances.slice(7));
+    // F2: 48 basket things each, as the cap is now derived from the whole-save envelope.
+    const initial = basketHome(48, 'home', 'a');
+    initial.rooms.kitchen.instances.push(...basketHome(48, 'kitchen', 'b').rooms.kitchen.instances.slice(7));
     expect(validHome(initial)).toBe(true);
     function Host() { store = useHomeStore({}, initial, (s) => { saves.push(roundTrip(s)); return true; }); return null; }
     let root!: ReactTestRenderer;
@@ -87,7 +88,7 @@ describe('R1: the newest removal survives the byte cap and a relaunch', () => {
       expect(canon(reopened.present)).toEqual(canon(initial));
     }
     expect(store.state.rooms.home.instances).toHaveLength(6);
-    expect(store.state.rooms.kitchen.instances).toHaveLength(107);
+    expect(store.state.rooms.kitchen.instances).toHaveLength(55);
     expect(store.message).toMatch(/Undo/);
     await act(async () => root.unmount());
   });

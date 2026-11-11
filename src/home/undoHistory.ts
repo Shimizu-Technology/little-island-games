@@ -8,14 +8,16 @@ import type { Character, HomeStateV2, Instance, RoomState } from "./model";
  * HOME_UNDO_BYTES of them, are kept in the save; the oldest go first. Navigation is never
  * part of history.
  *
- * HOME_UNDO_BYTES is 20 KB (it was 6 KB) so a restored room's things fit: restoring a room
- * with 48 basket shells takes about 4.3 KB in the compact form below. Five learners at the
- * cap still fit the measured whole-save headroom (docs/evidence/f1-save/SIZE.json).
+ * HOME_UNDO_BYTES comes from the whole-save envelope: five dense learners, four adults and a
+ * full Library leave 84,407 of the 2,000,000 bytes, and five full undo histories at 15,000
+ * bytes still leave more than 10% of that spare (tests/save-capacity-v3.test.ts,
+ * docs/evidence/f1-save/SIZE.json). Restoring a room with 48 basket shells takes about 4.6 KB.
  * A removal must stay recoverable for its whole 20 steps, so `undoAdmits` refuses an edit
  * that could ever push a removal out. Every later step has HOME_UNDO_RESERVE bytes kept for it.
+ * A Restore room that can't keep that promise asks the child first (F3, useHomeStore).
  */
 export const HOME_UNDO_STEPS = 20;
-export const HOME_UNDO_BYTES = 20_480;
+export const HOME_UNDO_BYTES = 15_000;
 export const HOME_UNDO_RESERVE = 512;
 
 type Put<T> = { index: number; value: T };
