@@ -32,7 +32,7 @@ async function design(cost: RestoreCost | undefined, large = false) {
 }
 
 describe('F3: Design asks before a Restore that Undo cannot keep', () => {
-  it.each(['no-undo', 'drops-older'] as const)('%s: a picture and the words, with Restore and Keep my room', async (cost) => {
+  it.each(['no-undo', 'drops-older'] as const)('%s: a picture and the words, with Make it new and Keep my room', async (cost) => {
     const { tree, dispatch, anyway, open, modal } = await design(cost);
     await open();
     expect(modal().props.visible).toBe(true);
@@ -49,9 +49,9 @@ describe('F3: Design asks before a Restore that Undo cannot keep', () => {
     expect(modal().props.visible).toBe(false);
     expect(dispatch).not.toHaveBeenCalled();
     expect(anyway).not.toHaveBeenCalled();
-    // Restore does it.
+    // Make it new does it.
     await open();
-    await press(tree, 'Restore');
+    await press(tree, 'Make it new');
     expect(modal().props.visible).toBe(false);
     expect(anyway).toHaveBeenCalledTimes(1);
     expect(dispatch).not.toHaveBeenCalled();
@@ -70,7 +70,7 @@ describe('F3: Design asks before a Restore that Undo cannot keep', () => {
   it('in the larger-target mode both choices are 64 pt with a visible shape', async () => {
     const { tree, open } = await design('no-undo', true);
     await open();
-    for (const name of ['Restore', 'Keep my room']) {
+    for (const name of ['Make it new', 'Keep my room']) {
       const style = flat(pressables(tree).find((n) => label(n) === name)!.props.style);
       expect(style.minWidth, name).toBeGreaterThanOrEqual(64);
       expect(style.minHeight, name).toBeGreaterThanOrEqual(64);

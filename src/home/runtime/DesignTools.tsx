@@ -331,7 +331,7 @@ export function DesignTools({
               }}
               style={[{ padding: 12, alignSelf: "stretch", alignItems: "center", backgroundColor: "#F1E6CF", borderRadius: 14 }, big(large), shape(large)]}
             >
-              <Text>Restore</Text>
+              <Text>Make it new</Text>
             </Pressable>
             <Pressable accessibilityRole="button" onPress={() => setConfirm(false)}
               style={[{ padding: 12, alignSelf: "stretch", alignItems: "center", backgroundColor: "#CFE3D6", borderRadius: 14 }, big(large), shape(large)]}>

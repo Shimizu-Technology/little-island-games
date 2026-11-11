@@ -40,8 +40,8 @@ export const UNDO_FULL_MESSAGE = "That's too much to change at once. Undo couldn
 /** F3: what Design → Restore room costs Undo. */
 export type RestoreCost = "undoable" | "no-undo" | "drops-older";
 export const RESTORE_QUESTION: Record<Exclude<RestoreCost, "undoable">, string> = {
-  "no-undo": "This change can't be undone. Restore the room anyway?",
-  "drops-older": "After this, Undo can't bring back your older changes. Restore the room anyway?",
+  "no-undo": "This is a big change. You can't undo it. Make the room new again?",
+  "drops-older": "This is a big change. Undo will forget your older changes. Make the room new again?",
 };
 export const RESTORE_NOTE: Record<Exclude<RestoreCost, "undoable">, string> = {
   "no-undo": "Back to the start! Undo can't bring the old room back.",
