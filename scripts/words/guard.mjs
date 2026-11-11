@@ -1,10 +1,11 @@
 import { readFileSync, readdirSync, lstatSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { Buffer } from 'node:buffer';
 import { tmpdir } from 'node:os';
 import { privatePath } from './paths.mjs';
 import { resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlViews, workletStrings, puzzleStrings, jsonUnits, chamoruValues, chamoruGrids, chamoruSource, shortWords, listString, proseTokens } from './artifact-views.mjs';
+import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlViews, workletStrings, puzzleStrings, jsonUnits, chamoruValues, chamoruGrids, chamoruSource, shortWords, listString, proseTokens, tracedLibraryUnit } from './artifact-views.mjs';
 import { scanGrid } from './scan.mjs';
 import { requireThat, digest, sha256, foldScan } from './core.mjs';
 import { contentPolicy } from './policy.mjs';
@@ -54,7 +55,7 @@ function byteViews(bytes) {
 }
 
 /** Raw views are reserved for unconditional private-byte detection. */
-export function artifactScanner(policy) {
+export function artifactScanner(policy, library=[]) {
   const excluded=[...policy.scan,...policy.core,...policy.exact,...policy.lemmas,...(policy.chamoruSensitive??[])];
   const broad=rawTermMatcher([...new Set(policy.scan.filter(w=>w.length>=5 && !(policy.chamoruSensitive??[]).some(s=>foldScan(s)===foldScan(w))).map(w=>w.toUpperCase()))]);
   const literal=rawTermMatcher([...new Set([...policy.core,...policy.exact,...policy.lemmas].map(w=>w.toUpperCase()))]);
@@ -89,7 +90,7 @@ export function artifactScanner(policy) {
     const leakStrings=[...strings,...keys];
     const contentStrings=new Set(strings);
     const stringHits=leakStrings.filter(text=>!technicalString(text)).map(text=>({sha256:sha256(text),listShaped:listString(text,excluded),broad:[...broad(text.toUpperCase())],literal:contentStrings.has(text)?[...literal(text.toUpperCase())]:[]}));
-    const unitHits=units.map(unit=>({sha256:sha256(JSON.stringify(unit)),listShaped:!proseTokens(unit,excluded),broad:unit.filter(text=>!technicalString(text)).flatMap(text=>[...broad(text.toUpperCase())]),literal:[]}));
+    const unitHits=units.map(unit=>({sha256:sha256(JSON.stringify(unit)),listShaped:!proseTokens(unit,excluded) && !tracedLibraryUnit(unit,library),broad:unit.filter(text=>!technicalString(text)).flatMap(text=>[...broad(text.toUpperCase())]),literal:[]}));
     return {views,uppers:[...uppers,...strings.map(text=>text.toUpperCase())],strings,grids,sensitiveStrings,sensitiveGrids,semantic,stringHits,unitHits,broadHits:new Set(stringHits.flatMap(s=>s.broad)),literalHits:new Set(stringHits.flatMap(s=>s.literal))};
   };
 }
@@ -148,7 +149,6 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   }
   const sensitiveOnly=new Set((policy.chamoruSensitive??[]).map(foldScan));
   const gridTerms=[...new Set([...policy.scan.filter(w=>!sensitiveOnly.has(foldScan(w))),...policy.core,...policy.exact,...policy.lemmas].map(foldScan).filter(w=>/^[A-Z]{3,40}$/.test(w)))];
-  const scan=artifactScanner(policy);
   const entries=[];
   function collect(dir) {
     for(const entry of readdirSync(dir,{withFileTypes:true})) {
@@ -163,6 +163,20 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   if((policy.chamoruSensitive??[]).length && entries.some(e=>e.bytes.subarray(0,8).equals(hermesMagic) || /\.(?:[cm]?js|bundle|hbc|html)$/.test(e.name))) {
     requireThat(existsSync(join(sourceRoot,'src/learn/content/chamoru.ts')),'CHamoru source companion required for bundle scan');
     for(const dir of ['src','content','scripts/learn'])sourceScan(join(sourceRoot,dir));
+  }
+  let library=[];
+  if(entries.some(e=>/\.(?:[cm]?js|bundle|json)$/.test(e.name) && /(?:["']?(?:items|index)["']?)\s*:\s*\[/.test(e.bytes.toString('utf8'))) && existsSync(join(sourceRoot,'src/library/search.ts')) && (existsSync(join(sourceRoot,'content/library/items.json')) || existsSync(join(sourceRoot,'src/library/catalog.generated.json')))) {
+    const runner=fileURLToPath(new URL('./library-source.mjs',import.meta.url));
+    const result=spawnSync(process.execPath,['--experimental-strip-types',runner],{cwd:sourceRoot,encoding:'utf8',maxBuffer:64*1024*1024,timeout:120000});
+    requireThat(result.status===0,'Cannot derive Library token provenance');
+    library=JSON.parse(result.stdout);
+  }
+  const scan=artifactScanner(policy,library);
+  // Check the authored strings where the derived tokens originated. These
+  // receive the same literal/list-shaped string checks as exported prose.
+  for(const item of library)for(const text of item.source) {
+    const view=scan(Buffer.from(JSON.stringify(text)),'source.json');
+    if(view.literalHits.size || view.stringHits.some(hit=>hit.listShaped && new Set(hit.broad).size>=3))findings.push('content/library:blocked-source-text');
   }
   const packs=entries.filter(e=>/\.lipuzzle$/i.test(e.name));
   if(packs.length) {

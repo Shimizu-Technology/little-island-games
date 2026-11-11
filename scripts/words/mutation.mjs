@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync } f
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-const files=['bake','review','policy','shipping','guard','artifact-views','paths','core','scan','check'];
+const files=['bake','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check'];
 const mutations=[],sources=new Map(),patches=new Map();
 for(const file of files){const path=`scripts/words/${file}.mjs`,source=readFileSync(path,'utf8'),tree=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true);sources.set(file,source);patches.set(file,[]);
  function visit(n){if(ts.isCallExpression(n)&&n.expression.getText(tree)==='requireThat'){
@@ -70,15 +70,19 @@ custom('artifact-views','regex fragment leak view',sources.get('artifact-views')
 custom('guard','CHamoru tagged literal detector',sources.get('guard').replace('if(sensitiveStrings.some(text=>sensitive(text.toUpperCase()).size))','if(false)'),['guard CHamoru tagged label','guard CHamoru tagged speech','guard CHamoru matching label']);
 custom('guard','CHamoru source detector',sources.get('guard').replace('if(view.strings.some(text=>sensitive(text.toUpperCase()).size) || view.grids.some(grid=>scanGrid(grid,(policy.chamoruSensitive??[]).map(foldScan)).length))','if(false)'),['guard CHamoru canonical term','guard CHamoru tagged source','guard CHamoru tagged speech source']);
 custom('guard','CHamoru grid detector',sources.get('guard').replace('sensitiveGrids.some(grid=>scanGrid(grid,(policy.chamoruSensitive??[]).map(foldScan)).length)','false'),['guard CHamoru grid keeps sensitive term']);
-custom('artifact-views','array leak unit extraction',sources.get('artifact-views').replace('units.push(node.elements.map(n=>n.text))','units.push([])'),['guard three broad JS words']);
+custom('artifact-views','array leak unit extraction',sources.get('artifact-views').replace('addUnit(node.elements.map(n=>n.text),node)','addUnit([],node)'),['guard three broad JS words']);
 custom('guard','decoded row leak unit extraction',sources.get('guard').replace('units=(decodedPack.rows??[]).map(row=>puzzleStrings(row).filter(shortWords));','units=[];'),['guard packed metadata partial list']);
 custom('guard','private advisory writer',sources.get('guard').replace('if(advisories.length) {','if(false) {'),['guard advisory is private and does not fail build']);
 custom('artifact-views','separator list classification',sources.get('artifact-views').replace('export function listString(text, excluded=[]) {','export function listString(text, excluded=[]) { return false; /*').replace('return !words.some(word=>safeFunctionWords(excluded).has(word.toLowerCase()));','*/'),['guard comma list fragment','guard pipe list fragment','guard newline list fragment','guard tab list fragment']);
-custom('artifact-views','object list unit extraction',sources.get('artifact-views').replace('units.push(node.properties.map(p=>p.name.text))','units.push([])'),['guard broad unquoted keys']);
+custom('artifact-views','object list unit extraction',sources.get('artifact-views').replace('addUnit(node.properties.map(p=>p.name.text),node)','addUnit([],node)'),['guard broad unquoted keys']);
 custom('artifact-views','prose advisory boundary',sources.get('artifact-views').replace('/tokens.length>=0.25','/tokens.length>=0.3'),['guard tokenized prose at quarter threshold']);
 custom('artifact-views','prose ratio threshold',sources.get('artifact-views').replace('/tokens.length>=0.25','/tokens.length>=0.2'),['guard padded list below quarter threshold']);
 custom('artifact-views','prose minimum sample',sources.get('artifact-views').replace('tokens.length>=12','true'),['guard short list with one function word remains strict']);
 custom('artifact-views','private function word disjointness',sources.get('artifact-views').replace('!forbidden.has(w)','true'),['guard private function word overlap cannot excuse list']);
+custom('artifact-views','Library every-token trace',sources.get('artifact-views').replace('tokens.every(token=>allowed.has(token))','true'),['guard Library planted untraceable token']);
+custom('artifact-views','Library item attachment',sources.get('artifact-views').replace('if(!unit.library?.scope)return false;',''),['guard Library unattached token array']);
+custom('artifact-views','Library item identity',sources.get('artifact-views').replace('library.find(row=>row.id===id)','library[0]'),['guard Library other item cannot provide tokens']);
+custom('library-source','Library tokenizer parity',sources.get('library-source').replace('source.some(s=>libraryNormalize(s)!==normalize(s))','false'),['guard Library tokenizer drift fails closed']);
 custom('check','compressed policy expansion bound',sources.get('check').replace('{maxOutputLength:4*1024*1024}','{}'),['compressed CI policy is decoded, locked, used and bounded']);
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
 mkdirSync(join(scratch,'scripts'),{recursive:true});cpSync('scripts/words',toolRoot,{recursive:true});

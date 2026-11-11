@@ -456,3 +456,37 @@ const listUnit=JSON.stringify(['ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE']);
 exportCase('guard exact reviewed list unit','app.js','globalThis.words=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];',stringPolicy([listUnit]));
 exportCase('guard changed reviewed list unit','app.js','globalThis.words=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE","NEUTRAL"];',stringPolicy([listUnit]),true);
 exportCase('guard list exception path is anchored','other.js','globalThis.words=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];',stringPolicy([listUnit]),true);
+
+function libraryTraceCase(name,source,rejected=false,sourceTitle='ALPHANONSENSE BETANONSENSE GAMMANONSENSE',indexOnly=false) {
+ test(name,()=>{
+  const sourceRoot=join(scratch,name.replaceAll(' ','-')),dir=join(sourceRoot,'dist');
+  mkdirSync(join(sourceRoot,'src/library'),{recursive:true});mkdirSync(join(sourceRoot,'content/library'),{recursive:true});mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
+  writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),'export const chamoruWords=[];');
+  cpSync(resolve('src/library/search.ts'),join(sourceRoot,'src/library/search.ts'));
+  const authored=[{id:'synthetic-item',title:sourceTitle,aliases:[],tags:[]}];
+  writeFileSync(join(sourceRoot,'content/library/items.json'),JSON.stringify(authored));
+  if(indexOnly)writeFileSync(join(sourceRoot,'src/library/catalog.generated.json'),JSON.stringify({items:[],index:[{id:'other-item',terms:['alphanonsense','betanonsense','gammanonsense']}]}));
+  writeFileSync(join(dir,source.startsWith('globalThis')?'data.js':'data.json'),source);
+  if(rejected)assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/leaked|derive Library/);else assert.equal(guardTree(dir,policy,[],{sourceRoot}).passed,true);
+ });
+}
+const tracedRecord=JSON.stringify({index:[{id:'synthetic-item',terms:['alphanonsense','betanonsense','gammanonsense']}]});
+libraryTraceCase('guard Library traced tokens advisory',tracedRecord,false,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
+libraryTraceCase('guard Library planted untraceable token',tracedRecord,true,'The ALPHANONSENSE is BETANONSENSE rather than NEUTRAL.');
+libraryTraceCase('guard Library unattached token array',JSON.stringify({id:'synthetic-item',terms:['alphanonsense','betanonsense','gammanonsense']}),true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
+libraryTraceCase('guard Library other item cannot provide tokens',JSON.stringify({index:[{id:'other-item',terms:['alphanonsense','betanonsense','gammanonsense']}]}),true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
+libraryTraceCase('guard Library generated terms are not their own source',JSON.stringify({index:[{id:'other-item',terms:['alphanonsense','betanonsense','gammanonsense']}]}),true,'A neutral source.',true);
+libraryTraceCase('guard Library authored list string remains strict',tracedRecord,true);
+libraryTraceCase('guard Library core word remains blocked',JSON.stringify({index:[{id:'synthetic-item',terms:['cold']}]}),true,'The COLD word remains blocked.');
+test('guard Library malformed provenance fails closed',()=>{
+ const sourceRoot=join(scratch,'library-invalid'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/library'),{recursive:true});mkdirSync(join(sourceRoot,'content/library'),{recursive:true});mkdirSync(dir);
+ cpSync(resolve('src/library/search.ts'),join(sourceRoot,'src/library/search.ts'));writeFileSync(join(sourceRoot,'content/library/items.json'),'{');writeFileSync(join(dir,'data.json'),'{"index":[]}');assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/Cannot derive Library token provenance/);
+});
+
+libraryTraceCase('guard Library JS traced tokens advisory','globalThis.catalog='+tracedRecord+';',false,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
+libraryTraceCase('guard Library JS planted untraceable token','globalThis.catalog='+tracedRecord+';',true,'The ALPHANONSENSE is BETANONSENSE rather than NEUTRAL.');
+libraryTraceCase('guard Library JS unattached token array','globalThis.data='+JSON.stringify({id:'synthetic-item',terms:['alphanonsense','betanonsense','gammanonsense']})+';',true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
+test('guard Library tokenizer drift fails closed',()=>{
+ const sourceRoot=join(scratch,'library-tokenizer-drift'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/library'),{recursive:true});mkdirSync(join(sourceRoot,'content/library'),{recursive:true});mkdirSync(dir);
+ writeFileSync(join(sourceRoot,'src/library/search.ts'),'export const normalize=s=>s.toUpperCase();export const phonetic=s=>s;');writeFileSync(join(sourceRoot,'content/library/items.json'),JSON.stringify([{id:'one',title:'Plain source prose.'}]));writeFileSync(join(dir,'data.json'),'{"index":[]}');assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/Cannot derive Library token provenance/);
+});

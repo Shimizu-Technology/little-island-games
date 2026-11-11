@@ -42,6 +42,20 @@ export function javascriptStrings(text) {
   const tree = ts.createSourceFile('artifact.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   requireThat(tree.parseDiagnostics.length === 0, 'Cannot parse exported JavaScript');
   const strings = [], keys = [], units = [];
+  const propertyName=n=>n && (ts.isIdentifier(n)||ts.isStringLiteralLike(n))?n.text:undefined;
+  function attachment(node) {
+    const ids=[];let scope=false,field;
+    for(let p=node.parent;p;p=p.parent) {
+      if(ts.isFunctionLike(p))break;
+      if(ts.isPropertyAssignment(p)) {const name=propertyName(p.name);field??=name;scope ||= ['items','index'].includes(name);}
+      if(ts.isObjectLiteralExpression(p)) {
+        const id=p.properties.find(v=>ts.isPropertyAssignment(v)&&propertyName(v.name)==='id'&&ts.isStringLiteralLike(v.initializer));
+        if(id)ids.push(id.initializer.text);
+      }
+    }
+    return {ids,scope,field};
+  }
+  function addUnit(values,node) {values.library=attachment(node);units.push(values);}
   const comments=new Map();
   function recordComments(pos) {
     for(const range of [...(ts.getLeadingCommentRanges(text,pos)??[]),...(ts.getTrailingCommentRanges(text,pos)??[])]) comments.set(range.pos,text.slice(range.pos,range.end));
@@ -50,9 +64,9 @@ export function javascriptStrings(text) {
     recordComments(node.pos);recordComments(node.end);
     // A container owns its immediate data, never strings in other records,
     // nested containers, callbacks or functions elsewhere in the bundle.
-    if (ts.isArrayLiteralExpression(node) && node.elements.length && node.elements.every(ts.isStringLiteralLike) && node.elements.every(n=>shortWords(n.text))) units.push(node.elements.map(n=>n.text));
+    if (ts.isArrayLiteralExpression(node) && node.elements.length && node.elements.every(ts.isStringLiteralLike) && node.elements.every(n=>shortWords(n.text))) addUnit(node.elements.map(n=>n.text),node);
     // Homogeneous short-word keys can encode a list (including library tables).
-    if (ts.isObjectLiteralExpression(node) && node.properties.length && node.properties.every(p=>ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteralLike(p.name)) && shortWords(p.name.text) && (ts.isNumericLiteral(p.initializer) || [ts.SyntaxKind.TrueKeyword,ts.SyntaxKind.FalseKeyword].includes(p.initializer.kind)))) units.push(node.properties.map(p=>p.name.text));
+    if (ts.isObjectLiteralExpression(node) && node.properties.length && node.properties.every(p=>ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteralLike(p.name)) && shortWords(p.name.text) && (ts.isNumericLiteral(p.initializer) || [ts.SyntaxKind.TrueKeyword,ts.SyntaxKind.FalseKeyword].includes(p.initializer.kind)))) addUnit(node.properties.map(p=>p.name.text),node);
     if (ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) strings.push(node.text);
     if ((ts.isPropertyAssignment(node) || ts.isMethodDeclaration(node)) && ts.isIdentifier(node.name) && /^\p{L}+$/u.test(node.name.text)) keys.push(node.name.text);
     if (ts.isRegularExpressionLiteral(node)) keys.push(node.text);
@@ -138,10 +152,12 @@ export function puzzleStrings(value) {
 }
 
 /** One JSON container at a time; sibling records never form a list fragment. */
-export function jsonUnits(value) {
+export function jsonUnits(value, context={ids:[],scope:false}) {
   if (!value || typeof value !== 'object') return [];
   const direct=Array.isArray(value) ? (value.every(v=>typeof v==='string' && shortWords(v))?value:[]) : (Object.entries(value).every(([k,v])=>shortWords(k) && ['number','boolean'].includes(typeof v))?Object.keys(value):[]);
-  return [direct,...Object.values(value).flatMap(jsonUnits)];
+  const ids=typeof value.id==='string'?[value.id,...context.ids]:context.ids;
+  const unit=[...direct];unit.library={ids,scope:context.scope,field:context.field};
+  return [unit,...Object.entries(value).flatMap(([key,v])=>jsonUnits(v,{ids,scope:context.scope||['items','index'].includes(key),field:key}))];
 }
 
 const chamoru = value => typeof value==='string' && ['ch','chamoru','chamorro'].includes(value.toLowerCase());
@@ -214,4 +230,27 @@ export function proseTokens(strings, excluded=[]) {
   const tokens=strings.flatMap(text=>text.toLowerCase().split(/\s+/)),functions=safeFunctionWords(excluded);
   // Small arrays remain lists: one connective cannot excuse three leaked words.
   return tokens.length>=12 && tokens.filter(token=>functions.has(token)).length/tokens.length>=0.25;
+}
+
+/** Provenance is structural and item-local. A matching token elsewhere in the
+ * Library, an unattached array, or a generated terms/sounds field alone cannot
+ * manufacture authored provenance. Exact/core checks are independent of this.
+ */
+export function tracedLibraryUnit(unit, library) {
+  if(!unit.library?.scope)return false;
+  return unit.library.ids.some(id=>{
+    const source=library.find(row=>row.id===id);
+    if(!source)return false;
+    const allowed=new Set(unit.library.field==='sounds'?source.sounds:source.tokens);
+    return unit.length>0 && unit.every(text=>{
+      const tokens=libraryNormalize(text).split(' ').filter(Boolean);
+      return tokens.length>0 && tokens.every(token=>allowed.has(token));
+    });
+  });
+}
+
+// Kept byte-for-byte equivalent to src/library/search.ts normalize. The source
+// bridge checks it against the generator for every authored field before use.
+export function libraryNormalize(value) {
+  return value.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').trim().replace(/\s+/g,' ');
 }
