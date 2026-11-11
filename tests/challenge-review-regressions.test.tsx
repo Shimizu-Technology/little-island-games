@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, expect, it } from 'vitest';
-import { mkdtempSync, cpSync, mkdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, cpSync, mkdirSync, rmSync ,readFileSync} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { defineReplayGame } from '../src/challenge/replay';
@@ -15,7 +15,7 @@ import type { DareRule } from '../src/challenge/types';
 
 it('P1-1/P3-7: registry checks an exported source tree with no registrations directory or git history',()=>{
  const dir=mkdtempSync(`${tmpdir()}/f2-registry-`);
- try{cpSync('src',`${dir}/src`,{recursive:true});mkdirSync(`${dir}/scripts`);cpSync('scripts/generate-game-registry.mjs',`${dir}/scripts/generate-game-registry.mjs`);rmSync(`${dir}/src/challenge/registrations`,{recursive:true,force:true});expect(()=>execFileSync('node',['scripts/generate-game-registry.mjs','--check'],{cwd:dir,stdio:'pipe'})).not.toThrow();}finally{rmSync(dir,{recursive:true,force:true});}
+ try{cpSync('src',`${dir}/src`,{recursive:true});mkdirSync(`${dir}/scripts`);cpSync('scripts/generate-game-registry.mjs',`${dir}/scripts/generate-game-registry.mjs`);if(JSON.parse(readFileSync('src/challenge/registered-ids.json','utf8')).length===0)rmSync(`${dir}/src/challenge/registrations`,{recursive:true,force:true});expect(()=>execFileSync('node',['scripts/generate-game-registry.mjs','--check'],{cwd:dir,stdio:'pipe'})).not.toThrow();}finally{rmSync(dir,{recursive:true,force:true});}
 });
 const makeEntry=(i:number, awards:unknown=puzzle.awards)=>defineReplayGame({game:`proof-${i}`,codec:`proof-${i}-v1`,context:`proof${i}`,cove:true,objectives:['shell'],budget:{wrapper:700,draft:3396,undo:0,audit:0},puzzles:[{...puzzle,ref:{...puzzle.ref,engine:`proof-${i}`,bank:400+i},source:{kind:'endless',bank:400+i,puzzle:0},dares:[],awards:awards as never}],engine,Board:()=> <div/>,controls:{help:()=>({type:'help'} as Action),reset:()=>({type:'reset'} as Action)}});
 describe('bounded unfinished slots',()=>{

@@ -21,7 +21,7 @@ describe('public source export boundary', () => {
         return;
       }
       run(resolve('scripts/export-public.mjs'), snapshot);
-      for (const name of ['src/app/index.tsx', 'modules/island-nearby/ios/IslandNearbyModule.swift', 'tests/fixtures/neural-audio.json', 'README.md', 'LICENSE']) expect(existsSync(join(snapshot, name)), name).toBe(true);
+      for (const name of ['src/app/index.tsx', 'modules/island-nearby/ios/IslandNearbyModule.swift', 'tests/fixtures/neural-audio.json', 'patches/expo-audio+57.0.5.patch', 'README.md', 'LICENSE']) expect(existsSync(join(snapshot, name)), name).toBe(true);
       for (const name of ['docs', '.git', 'node_modules', 'ios', 'android', 'dist', 'artifacts']) expect(existsSync(join(snapshot, name)), name).toBe(false);
       const app = JSON.parse(readFileSync(join(snapshot, 'app.json'), 'utf8'));
       expect(app.expo.ios.appleTeamId).toBeUndefined();

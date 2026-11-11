@@ -35,8 +35,8 @@ export function PuzzleHelp<V, A>({ snapshot, rules, commit, onFresh, kind, faile
       if (!current(start.key) || abort.signal.aborted || result.status === 'cancelled') return;
       if (result.status === 'unavailable') {
         setCue(null); setStage(3);
-        if (step === 'show-me') { setUnavailable(true); setMessage('Your entries are kept. Try a fresh puzzle with the same idea.'); }
-        else setMessage('Your entries are kept. Choose Show me or try another puzzle.');
+        if (step === 'show-me') { setUnavailable(true); setMessage(rules.unavailable ?? 'Your entries are kept. Try a fresh puzzle with the same idea.'); }
+        else setMessage(rules.unavailable ?? 'Your entries are kept. Choose Show me or try another puzzle.');
         return;
       }
       const accepted = await commit({ kind: 'help' }, start.key);
