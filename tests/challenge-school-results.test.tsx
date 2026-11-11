@@ -29,7 +29,9 @@ vi.mock('../src/learn/Celebrate',()=>({Celebrate:()=>null}));
 vi.mock('../src/learn/LevelPath',()=>({LevelPath:()=>null}));
 vi.mock('../src/learn/growth/Board',()=>({GrowthBoard:()=>null}));
 vi.mock('../src/learn/games/hafa-adai/view',()=>({LastPicnicWord:()=>null}));
-vi.mock('../src/learn/views',()=>({views:new Proxy({},{get:()=>({Board:()=>null,Art:()=>null})})}));
+const boardHold=vi.hoisted(()=>({fn:null as null|((held:boolean)=>void)}));
+// Boards render nothing here; each one records the page-scroll hold it was given.
+vi.mock('../src/learn/views',async()=>{const {useContext}=await import('react');const {GridInteraction}=await import('../src/puzzles/grid/preferences');return {views:new Proxy({},{get:()=>({Board:()=>{boardHold.fn=useContext(GridInteraction);return null;},Art:()=>null})})};});
 vi.mock('../src/badges/ResultCard',()=>({BadgeResultCard:()=>null}));
 let store:ReturnType<typeof useStore>;
 function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return s.ready?<LearnFrame id="letter-lagoon"/>:null;}
@@ -57,4 +59,19 @@ it.each(['family','a'])('P2-4: bridge works for %s and dismissal survives anothe
 });
 it('P2-7: School invitation retains its recorded Hear action',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);let r!:ReactTestRenderer;try{r=await mount('a','a','solo',2);await press(r,'Hear the invitation');expect(sound).toHaveBeenCalledWith('learning-try-level-3');}finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+
+// Integration rehearsal: a page scroll that started on the Slip Tide board also moved the crabs. A board that owns a
+// touch now holds the School page still until release, as Cove grids do.
+it('a board that owns a touch holds the School page scroll until release',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);boardHold.fn=null;
+ const save=migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')});
+ save.learn={'letter-lagoon':{...startSession('letter-lagoon',{options:optionsAtLevel({mode:'solo',pace:'easy'},2)},{},42),learner:'a'}};
+ db.raw=encodeSave(save);let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/></StoreProvider>);});
+  const page=()=>r.root.findByType('section' as never);
+  expect(boardHold.fn).not.toBeNull();expect(page().props.scrollEnabled).toBe(true);
+  await act(async()=>boardHold.fn!(true));expect(page().props.scrollEnabled).toBe(false);
+  await act(async()=>boardHold.fn!(false));expect(page().props.scrollEnabled).toBe(true);
+ }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });

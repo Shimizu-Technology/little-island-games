@@ -18,6 +18,7 @@ import { progressFor, selectedOwner } from '../state/challengeDrafts';
 import { learningComfort } from '../state/validation';
 import { shelfGames } from '../learn/home';
 import type { ChallengeCard, ChallengeEntry, ChallengePath, PackedBand } from './types';
+import { GridInteraction } from '../puzzles/grid/preferences';
 type Choice = ChallengeCard | PackedBand;
 const isBand = (c: Choice | undefined): c is PackedBand => !!c && 'kind' in c && c.kind === 'band';
 const gameName = (game: string) => shelfGames.find(item=>item.id===game)?.name ?? game.replace(/(^|-)([a-z0-9])/g,(_match,separator:string,letter:string)=>`${separator?' ':''}${letter.toUpperCase()}`);
@@ -34,6 +35,8 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
   const [selection,setSelection]=useState<Choice>(()=>every.find(p=>progress.choice?.[0]===entry.game&&p.path===progress.choice?.[1]&&p.tier===progress.choice?.[2])??every[0]);
   const [completed,setCompleted]=useState<ChallengeSession>(), [settings,setSettings]=useState(false), [replacementGame,setReplacementGame]=useState<string>(), [dares,setDares]=useState<number[]>([]), [picking,setPicking]=useState(!saved), [busy,setBusy]=useState(false), [launching,setLaunching]=useState(false), [message,setMessage]=useState(''), [replace,setReplace]=useState(false);
   const [fresh,setFresh]=useState<'choose'|'confirm'|null>(null);
+  // A board that owns a touch holds the page scroll until release (Cove grids and Slip Tide).
+  const [held,setHeld]=useState(false);
   const accepted=useRef(saved), lock=useRef(false), dispatchToken=useRef(0);
   // Store accepts a draft synchronously before durability; render receives that accepted revision.
   useLayoutEffect(()=>{if(saved && (!accepted.current || saved.id!==accepted.current.id || saved.revision>=accepted.current.revision)){accepted.current=saved;if(!saved.result)lock.current=false;}},[saved]);
@@ -104,7 +107,7 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
   const completionFacts=round?.result?entry.completionFacts?.(round)??null:null;
   const defaultPraise=round?.result?.event==='together'?'You worked through this puzzle together.':completionFacts?.helpUsed?'You finished this puzzle with help.':completionFacts?.failed?'You kept trying and solved it.':'You completed this puzzle.';
   const back=()=>router.canGoBack()?router.back():router.replace('/');
-  return <SafeAreaView style={styles.page}><ScrollView contentContainerStyle={[styles.content,{gap:14,padding:20}]}>
+  return <SafeAreaView style={styles.page}><GridInteraction.Provider value={setHeld}><ScrollView scrollEnabled={!held} contentContainerStyle={[styles.content,{gap:14,padding:20}]}>
     <View style={{flexDirection:'row',flexWrap:'wrap',gap:10,alignItems:'center'}}><Button quiet compact onPress={back}>Back</Button><Heading>Challenge</Heading><LearnerChip compact/></View>
     <Copy>Deep Water is a big stretch. Endless Tide has more puzzles. Every choice is open.</Copy><Copy>Your marks: {marks}. Marks are kept and never spent.</Copy><SaveStatus/>
     {!!message&&<View accessibilityLiveRegion="polite"><Copy>{message}</Copy></View>}
@@ -136,5 +139,5 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
       </> : null}
       {!round.result&&<><Button quiet disabled={busy} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>Easier choice · Levels 1–5</Button></>}
     </>:null}
-  </ScrollView><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;
+  </ScrollView></GridInteraction.Provider><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;
 }

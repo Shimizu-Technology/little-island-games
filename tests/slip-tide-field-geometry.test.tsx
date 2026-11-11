@@ -5,7 +5,7 @@ import { Playfield, boardCell, type PlayfieldProps } from '../src/learn/games/sl
 
 const motion = vi.hoisted(() => ({ reduced: false, animated: [] as number[] }));
 vi.mock('react-native', () => ({ View: 'View' }));
-vi.mock('react-native-gesture-handler', () => ({ Gesture: { Pan: () => { const g: Record<string, () => unknown> = {}; for (const key of ['enabled', 'maxPointers', 'minDistance', 'onUpdate', 'onFinalize']) g[key] = () => g; return g; } }, GestureDetector: 'GestureDetector' }));
+vi.mock('react-native-gesture-handler', () => ({ Gesture: { Pan: () => { const g: Record<string, () => unknown> = {}; for (const key of ['enabled', 'maxPointers', 'minDistance', 'onBegin', 'onUpdate', 'onFinalize']) g[key] = () => g; return g; } }, GestureDetector: 'GestureDetector' }));
 vi.mock('react-native-reanimated', async () => {
   const { useRef } = await import('react');
   type Shared = { value: unknown; get(): unknown; set(x: unknown): void };

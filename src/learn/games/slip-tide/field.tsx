@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { Easing, cancelAnimation, runOnJS, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
 import { useReducedMotion } from '../../../components/motion';
 import { Button, C, Copy, PressableScale } from '../../../components/ui';
 import type { HintCue } from '../../../puzzles/hints';
+import { GridInteraction } from '../../../puzzles/grid/preferences';
 import { CoachSpot, Hand } from '../../Coach';
 import { Arrow, CrabSprite, HomeEyes, LagoonArt, PoolBadge } from './art';
 import { describeBoard, focusOf, slipView } from './help';
@@ -140,7 +141,13 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
     nudgeY.set(withSequence(withTiming(dy * 7, { duration: 55 }), withSpring(0, { damping: 8, stiffness: 320 })));
   }, [nudgeX, nudgeY, reduced]);
   const swipe = useCallback((d: Dir) => { if (!solved && !apply(d)) nudge(d); }, [apply, nudge, solved]);
+  // As a Cove grid does, the board owns the page scroll from touch-down to release, so a drag that starts on the
+  // water is a swipe only: the page never scrolls under it, and a page scroll never moves the crabs.
+  const hold = useContext(GridInteraction);
+  useEffect(() => () => hold(false), [hold]);
+  useEffect(() => { if (together) hold(false); }, [hold, together]);
   const pan = useMemo(() => Gesture.Pan().enabled(!together).maxPointers(1).minDistance(3)
+    .onBegin(() => { 'worklet'; runOnJS(hold)(true); })
     .onUpdate(e => {
       'worklet';
       if (fired.get()) return;
@@ -149,7 +156,7 @@ export function Playfield({ puzzle, crabs, title, steps, active, width, height, 
       fired.set(true);
       runOnJS(swipe)(ax > ay ? (e.translationX > 0 ? 1 : 3) : e.translationY > 0 ? 2 : 0);
     })
-    .onFinalize(() => { 'worklet'; fired.set(false); }), [fired, swipe, together]);
+    .onFinalize(() => { 'worklet'; fired.set(false); runOnJS(hold)(false); }), [fired, hold, swipe, together]);
   // Help draws only what its saved cue names, and nothing once the board is finished.
   const focus = solved ? { crab: null, stop: null, blocker: null } : focusOf(cue);
   const atXY = (c: number) => cellXY(c, n, cell);

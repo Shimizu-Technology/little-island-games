@@ -17,6 +17,7 @@ import type { ChallengeEntry } from '../src/challenge/types';
 import { migrateProfiles, encodeSave } from '../src/state/profiles';
 import { putProgress } from '../src/state/challengeDrafts';
 import { startSession } from '../src/learn/session';
+import { GridInteraction } from '../src/puzzles/grid/preferences';
 const db=vi.hoisted(()=>({raw:null as string|null,block:null as Promise<void>|null,fail:false,boundaryBlock:null as Promise<void>|null}));
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{if(db.fail)throw new Error('disk full');if(db.boundaryBlock)await db.boundaryBlock;db.raw=raw;},preserve:async()=>{},writeDraft:async()=>{if(db.block)await db.block;},discardSession:async()=>{}}}));
 vi.mock('react-native',()=>({ScrollView:'section',View:'div',useWindowDimensions:()=>({width:320,height:667}),AppState:{addEventListener:()=>({remove(){}})}}));
@@ -176,4 +177,20 @@ for(const [name,prior] of [['the direct invitation',1],['the "Too easy" face',2]
    expect(text).toContain('Puzzle solved!');
   }
  }finally{spy.mockRestore();if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+// Integration rehearsal: a page scroll that started on the Slip Tide board also moved the crabs. A board that owns a
+// touch now holds the Challenge page still until release, as Cove grids do (GridScroll does the same after G3).
+it('a board that owns a touch holds the Challenge page scroll until release',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));
+ let hold:((held:boolean)=>void)|null=null;
+ function Holder(){hold=React.useContext(GridInteraction);return null;}
+ const holding={...entry,render:()=><Holder/>};
+ db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame selectedEntry={holding}/></StoreProvider>);});
+  await press(r,'Start this puzzle');
+  const page=()=>r.root.findByType('section' as never);
+  expect(hold).not.toBeNull();expect(page().props.scrollEnabled).toBe(true);
+  await act(async()=>hold!(true));expect(page().props.scrollEnabled).toBe(false);
+  await act(async()=>hold!(false));expect(page().props.scrollEnabled).toBe(true);
+ }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
