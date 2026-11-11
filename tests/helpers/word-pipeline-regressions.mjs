@@ -276,7 +276,7 @@ exportCase('guard blocked visible string','app.js','globalThis.label="Hear COLD 
 exportCase('guard escaped blocked visible string','app.js','globalThis.label="Hear \\u0043OLD today";',policy,true);
 exportCase('guard template blocked visible string','app.js','globalThis.label=`Hear COLD ${name} today`;',policy,true);
 exportCase('guard three broad JS words','app.js','globalThis.words=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];',policy,true);
-exportCase('guard bare object keys are identifiers','app.js','globalThis.words={ALPHANONSENSE:1,BETANONSENSE:2,GAMMANONSENSE:3};');
+exportCase('guard broad unquoted keys','app.js','globalThis.words={ALPHANONSENSE:1,BETANONSENSE:2,GAMMANONSENSE:3};',policy,true);
 exportCase('guard broad JSON words','bank.json','["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"]',policy,true);
 exportCase('guard Unicode letter boundaries','app.js','globalThis.label="éCOLD COLDñ";');
 exportCase('guard punctuation boundaries','app.js','globalThis.label="(cold)!";',policy,true);
@@ -361,3 +361,5 @@ test('multiple bounded CI policy chunks decode together',async()=>{const {gzipSy
 
 packedCase('guard packed metadata partial list','numeric-code',{values:[1,2,3]},true,['alphanonsense','betanonsense','gammanonsense']);
 exportCase('guard regexp comment delimiters are code','app.js','globalThis.r=/[//]/; const ALPHANONSENSE=1,BETANONSENSE=2,GAMMANONSENSE=3;');
+
+exportCase('guard property key is not displayed text','app.js','globalThis.fields={COLD:1};');

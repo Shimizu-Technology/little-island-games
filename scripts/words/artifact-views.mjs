@@ -36,7 +36,7 @@ export function hermesStrings(bytes) {
 
 /** The parser decodes escapes and template segments, and excludes variables,
  * member names, regex bodies and comments from the blocked-word content view.
- * Quoted keys and comments remain in the leak view; bare property names are identifiers.
+ * Property names and comments remain in the partial-list leak view; only literals supply displayed-word checks.
  */
 export function javascriptStrings(text) {
   const tree = ts.createSourceFile('artifact.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
@@ -49,6 +49,7 @@ export function javascriptStrings(text) {
   function visit(node) {
     recordComments(node.pos);recordComments(node.end);
     if (ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) strings.push(node.text);
+    if ((ts.isPropertyAssignment(node) || ts.isMethodDeclaration(node)) && ts.isIdentifier(node.name) && /^\p{L}+$/u.test(node.name.text)) keys.push(node.name.text);
     ts.forEachChild(node, visit);
   }
   visit(tree);
