@@ -30,11 +30,19 @@ export function boxBorders(p: LatinPuzzle) {
     return d;
   };
 }
-/** Lines between the centres of linked chain squares. */
-function chainLines(n: number, links: readonly [number, number][], cell: number) {
-  const at = (i: number) => [(i % n + 0.5) * cell, (Math.floor(i / n) + 0.5) * cell];
-  const d = links.map(([a, b]) => { const [x1, y1] = at(a), [x2, y2] = at(b); return `M${x1} ${y1}L${x2} ${y2}`; }).join('');
-  return <Svg width={n * cell} height={n * cell} style={{ position: 'absolute' }}><Path d={d} stroke={C.ink} strokeOpacity={0.4} strokeWidth={Math.max(2, cell * 0.045)} strokeLinecap="round" fill="none"/></Svg>;
+/**
+ * Lines between linked chain squares, stopping at each mark's edge. On the Why step the squares it
+ * names get a bold ring, joined by a dashed line when they are the two dots that see each other.
+ */
+function chainLines(n: number, links: readonly [number, number][], cell: number, proof: readonly number[] = [], wrap = false) {
+  const at = (i: number) => [(i % n + 0.5) * cell, (Math.floor(i / n) + 0.5) * cell], gap = cell * 0.22;
+  const segment = (a: number, b: number) => { const [x1, y1] = at(a), [x2, y2] = at(b), len = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / len, uy = (y2 - y1) / len; return `M${x1 + ux * gap} ${y1 + uy * gap}L${x2 - ux * gap} ${y2 - uy * gap}`; };
+  const rings = proof.map(i => { const [x, y] = at(i), r = cell * 0.44; return `M${x - r} ${y}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`; }).join('');
+  return <Svg width={n * cell} height={n * cell} style={{ position: 'absolute' }}>
+    <Path d={links.map(([a, b]) => segment(a, b)).join('')} stroke={C.ink} strokeOpacity={0.4} strokeWidth={Math.max(2, cell * 0.045)} strokeLinecap="round" fill="none"/>
+    {!!rings && <Path d={rings} stroke={C.teal} strokeWidth={Math.max(3, cell * 0.07)} fill="none"/>}
+    {wrap && proof.length === 2 && <Path d={segment(proof[0], proof[1])} stroke={C.teal} strokeWidth={Math.max(3, cell * 0.06)} strokeDasharray={`${cell * 0.12} ${cell * 0.08}`} fill="none"/>}
+  </Svg>;
 }
 /** A few plain sentences beside each board, so nobody has to know the game already. Size-aware. */
 export function rulesFor(p: LatinPuzzle): string {
@@ -95,8 +103,8 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
   const borders = useMemo(() => boxBorders(p), [p]);
   const clues = useMemo(() => p.cages.length ? cageLayer(p) : p.less.length ? markLayer(p) : undefined, [p]);
   // A shown colour chain draws the lines that join it, under any clue layer.
-  const links = shown ? ladder.cue?.links : undefined;
-  const overlay = useMemo(() => links?.length ? (cell: number) => <>{chainLines(p.size, links, cell)}{clues?.(cell)}</> : clues, [links, clues, p.size]);
+  const links = shown ? ladder.cue?.links : undefined, proof = shown && stage === 2 ? ladder.cue?.proof : undefined, wrap = !!proof && proof.length === 2 && proof.every(i => ladder.cue?.marks?.[0].includes(i));
+  const overlay = useMemo(() => links?.length ? (cell: number) => <>{chainLines(p.size, links, cell, proof, wrap)}{clues?.(cell)}</> : clues, [links, proof, wrap, clues, p.size]);
   const frame = useMemo(() => p.kind === 'skyline' ? { size: 0.7, layer: sightFrame(p) } : undefined, [p]);
   const words = useMemo(() => clueWords(p), [p]), cellWords = useMemo(() => p.cages.length || p.less.length ? cellClueWords(p) : undefined, [p]), rules = useMemo(() => rulesFor(p), [p]);
   const solvedCount = state.values.filter(Boolean).length, total = p.givens.length - p.mask.filter(Boolean).length;

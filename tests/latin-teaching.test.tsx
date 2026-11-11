@@ -74,6 +74,10 @@ describe('colour-chain hints explain the deduction they made (review R6)', () =>
       await act(async () => { (screen.root.findAllByType('button').find(b => b.children.includes('Why?'))!.props.onPress as () => void)(); });
       expect(text(screen)).toContain(cue.think.slice(0, 40));
       expect(cue.think).toMatch(/The dots at .* see each other/);
+      // The Why step rings the two dots it names and joins them with a dashed line.
+      const paths = screen.root.findAllByType('path');
+      expect(paths.some(n => ((n.props.d as string)?.match(/a/g) ?? []).length === 4)).toBe(true);
+      expect(paths.some(n => !!n.props.strokeDasharray && (n.props.d as string)?.split('M').length === 2)).toBe(true);
       // The chain's links are drawn: one line per linked pair.
       expect(cue.links!.length).toBeGreaterThan(1);
       expect(screen.root.findAllByType('path').some(n => (n.props.d as string)?.split('M').length - 1 === cue.links!.length)).toBe(true);
