@@ -33,6 +33,7 @@
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.0",
     "expo-doctor": "^1.21.5",
+    "patch-package": "^8.0.1",
     "react-test-renderer": "19.2.3",
     "typescript": "~6.0.3",
     "vitest": "^5.0.5"
@@ -58,7 +59,7 @@
     "library:validate:shipping": "node scripts/library/validate.mjs --shipping",
     "library:index": "node --experimental-strip-types scripts/library/build-index.mjs",
     "export:library-fixtures": "EXPO_PUBLIC_LIBRARY_FIXTURES=1 npm run export:web",
-    "postinstall": "npm run library:validate && npm run library:index",
+    "postinstall": "patch-package --error-on-fail --error-on-warn && npm run library:validate && npm run library:index",
     "library:destinations": "node scripts/library/destinations.mjs",
     "library:decisions": "node scripts/library/record-decisions.mjs",
     "ios:preview-bundle-prep": "node scripts/ios-preview-bundle.mjs prep",
