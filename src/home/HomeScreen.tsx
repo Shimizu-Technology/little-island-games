@@ -24,18 +24,21 @@ import { ItemArt } from "./art/Items";
 import { MoreItemArt } from "./art/More";
 import { moreCatalog } from "./catalogMore";
 import { itemIds, type ItemId } from "./catalog";
-import { useHomeStore } from "./useHomeStore";
+import { useHomeStore, RESTORE_NOTE, UNDO_NOTES } from "./useHomeStore";
+import { UndoNote } from "./runtime/UndoNote";
 import { buildScene, createSceneBuilder } from "./scene/graph";
 import { resolve, type DropProposal } from "./scene/proposal";
 import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
 import { screenToRoom } from "./scene/camera";
 import { SceneView } from "./runtime/SceneView";
-import { HomeChrome, Tool, navigationHeight } from "./runtime/HomeChrome";
+import { HomeChrome, Tool, navigationHeightFor, largeNavigationHeight } from "./runtime/HomeChrome";
+import { FriendDrawer } from "./runtime/FriendDrawer";
 import { HomePanels } from "./runtime/HomePanels";
-import { DesignTools, portraitDrawerHeight, type CatalogGhost } from "./runtime/DesignTools";
+import { DesignTools, portraitDrawerHeightFor, type CatalogGhost } from "./runtime/DesignTools";
 import { StagingTray } from "./runtime/StagingTray";
 import { Destinations } from "./runtime/Destinations";
 import { DebugOverlay } from "./runtime/DebugOverlay";
+import { CapacityCue, CAPACITY_CUE_MS, CAPACITY_MESSAGE } from "./runtime/CapacityCue";
 import { type CharacterRender } from "./runtime/EntityArt";
 import { boundCamera, fitCamera, focusCamera, roomScale, roomAtScreen, zoomCamera } from "./runtime/CameraController";
 import { useInteraction, type Interaction, type Pickup, type CaptureToken } from "./runtime/useInteraction";
@@ -43,6 +46,8 @@ import { groupIds, restingVisible } from "./runtime/group";
 import { anchorsFor } from "./scene/species";
 import { useIdleCharacters } from "./runtime/useIdleCharacters";
 import { isPortion, withPortions } from "./runtime/portions";
+import { freshHints, nextHintAt, takeHint, touchedHints, type HintState } from "./runtime/quietHints";
+import { useHomeVisible } from "./runtime/visibility";
 import type { ReleaseProbe } from "./runtime/frameProbe";
 import { writeProbe } from "./runtime/probeReceipt";
 import type { HomeTrace } from "./runtime/trace";
@@ -53,6 +58,7 @@ const labKit: { trace: typeof import("./runtime/trace"); overlay: typeof import(
     ? { trace: require("./runtime/trace"), overlay: require("./runtime/HullOverlay") }
     : undefined;
 
+export const REDO_VISIBLE_MS = 10000;
 export type HomeScreenProps = Ownership & {
   badges?: BadgeId[];
   initialItem?: string;
@@ -73,7 +79,8 @@ export function HomeScreen({
 }: HomeScreenProps) {
   const window = useWindowDimensions(),
     inset = useSafeAreaInsets(),
-    reduced = useReducedMotion();
+    reduced = useReducedMotion(),
+    visible = useHomeVisible();
   const app = useStore(),
     sound = useSounds(app.save.settings.sound);
   const store = useHomeStore(ownership, initialState, persist);
@@ -100,8 +107,16 @@ export function HomeScreen({
   const reactionTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   React.useEffect(() => () => Object.values(reactionTimers.current).forEach(clearTimeout), []);
   const [catalogItem, setCatalogItem] = useState<ItemId>();
+  // HM-18: Redo shows in Play for 10 s after an Undo; a full room shows a picture, not just words.
+  const [redoWindow, setRedoWindow] = useState(false);
+  const redoTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [capacityGone, setCapacityGone] = useState(0);
+  React.useEffect(() => () => clearTimeout(redoTimer.current), []);
   const catalogSeeds = useRef<Record<string, { seed: HomeStateV2 }>>({});
   const [headerHeight, setHeaderHeight] = useState(64 + inset.top);
+  // HR-03: the grown-ups' larger-target mode, saved with this child's home.
+  const large = !!store.access?.largeTargets;
+  const navigationHeight = navigationHeightFor(large, window.width);
   const [frameReport, setFrameReport] = useState<number[]>();
   const [releaseProbes, setReleaseProbes] = useState<ReleaseProbe[]>([]);
   const [probeMax, setProbeMax] = useState(0);
@@ -127,10 +142,10 @@ export function HomeScreen({
           inset.bottom -
           headerHeight -
           navigationHeight -
-          (designing && !vertical ? portraitDrawerHeight : 0)
+          (designing && !vertical ? portraitDrawerHeightFor(large) : 0)
       ),
     }),
-    [window.width, window.height, vertical, designing, inset, headerHeight]
+    [window.width, window.height, vertical, designing, inset, headerHeight, navigationHeight, large]
   );
   const building = useMemo(
     () => buildingLayout(roomIds.length, window.width / window.height > 1.8),
@@ -138,7 +153,9 @@ export function HomeScreen({
   );
   const buildRuntimeScene = useMemo(() => createSceneBuilder(), []);
   const baseScene = useMemo(() => buildRuntimeScene(store.state), [store.state.rooms, buildRuntimeScene]); // Navigation is outside the scene revision.
-  const scene = useMemo(() => withPortions(baseScene), [baseScene]);
+  // HC-02: ground-floor rooms have a beach whose shells can be picked up.
+  const shoreRooms = useMemo(() => roomIds.slice(0, building.columns), [building.columns]);
+  const scene = useMemo(() => withPortions(baseScene, shoreRooms), [baseScene, shoreRooms]);
   const { sleeping, wake } = useIdleCharacters(scene, pickups);
   useLayoutEffect(() => {
     if (!focusId) return;
@@ -152,6 +169,17 @@ export function HomeScreen({
     });
     return () => cancelAnimationFrame(frame);
   }, [scene.revision, focusId]);
+  // Each refusal is a new message serial, so a second refusal shows the picture again.
+  const capacityShown = store.message === CAPACITY_MESSAGE && !!store.messageSerial && capacityGone !== store.messageSerial;
+  React.useEffect(() => {
+    if (store.message !== CAPACITY_MESSAGE || !store.messageSerial) return;
+    const serial = store.messageSerial;
+    const timer = setTimeout(() => setCapacityGone(serial), CAPACITY_CUE_MS);
+    return () => clearTimeout(timer);
+  }, [store.message, store.messageSerial]);
+  // F3: an undo note stays until the next message or a tap; reading is never timed.
+  const [noteGone, setNoteGone] = useState<number>();
+  const undoNote = UNDO_NOTES.includes(store.message) && noteGone !== store.messageSerial;
   const live = useRef({ store, scene, selected, placing, room, designing });
   useLayoutEffect(() => {
     live.current = { store, scene, selected, placing, room, designing };
@@ -187,7 +215,7 @@ export function HomeScreen({
         const pending = catalogCommit(current.store.getState(), catalog, id, proposal);
         if (!pending) {
           if (proposal && placedInstances(current.store.getState().rooms[proposal.room]).length >= MAX_INSTANCES)
-            current.store.setMessage("Put something away to make room.");
+            current.store.setMessage(CAPACITY_MESSAGE);
           return undefined;
         }
         const next = current.store.commitProposal(pending.proposal, pending.seed, stillCurrent);
@@ -201,7 +229,7 @@ export function HomeScreen({
         return undefined;
       if (!next) {
         const latest = current.store.getState();
-        const fresh = withPortions(buildScene(latest));
+        const fresh = withPortions(buildScene(latest), shoreRooms);
         const candidate = fresh.entities[id];
         if (!candidate) return undefined;
         if (isPortion(id)) {
@@ -218,7 +246,8 @@ export function HomeScreen({
             },
           };
           if (!proposal || proposal.kind === "staging") {
-            current.store.setMessage("Choose a free hand or place.");
+            current.store.setMessage(proposal?.refusal === "capacity" || placedInstances(latest.rooms[destination]).length >= MAX_INSTANCES
+              ? CAPACITY_MESSAGE : "Choose a free hand or place.");
             return undefined;
           }
           // Materialize the preview, never resolve the raw release anchor again.
@@ -269,7 +298,7 @@ export function HomeScreen({
       }
       return { state: next, proposal: proposal!, identities: current.store.getCommittedIdentities() };
     },
-    []
+    [shoreRooms]
   );
   const showReaction = (proposal: DropProposal) => {
     if (proposal.kind !== "mouth") return;
@@ -363,7 +392,7 @@ export function HomeScreen({
   );
   const onClear = useCallback(
     (index: number, id?: string, reason?: "capacity") => {
-      if (reason === "capacity") live.current.store.setMessage("Put something away to make room.");
+      if (reason === "capacity") live.current.store.setMessage(CAPACITY_MESSAGE);
       if (id) clearCatalogSeed(catalogSeeds.current, id);
       // A UI-thread re-grab can outrun this queued clear callback.
       if (runtime.current?.slots.get()[index].id) return;
@@ -431,7 +460,7 @@ export function HomeScreen({
       if (now - prior.at < 300 && Math.hypot(point.x - prior.x, point.y - prior.y) < 28) {
         const c = runtime.current!.camera.get();
         const scale = c.a > roomScale(viewport) * 1.2 ? roomScale(viewport) : (viewport.height / 620) * 1.4;
-        interaction.camera.set(zoomCamera(c, scale / c.a, point.x, point.y, viewport, building));
+        interaction.animateCamera(zoomCamera(c, scale / c.a, point.x, point.y, viewport, building));
         lastTap.current.at = 0;
         return;
       }
@@ -480,7 +509,26 @@ export function HomeScreen({
     onReleaseProbe: lab ? onReleaseProbe : undefined,
     onTrace: lab && labKit ? onTrace : undefined,
     viewportOffset,
+    currentRoom: room,
+    // HM-14: a carried thing held on a room button takes the child there, still carried.
+    onRoomHover: (next) => {
+      setOverview(false);
+      setRoom(next);
+      live.current.store.dispatch({ type: "room", room: next });
+    },
   });
+  const zoneRects = useRef<Record<string, { x: number; y: number; width: number; height: number }>>({});
+  const publishZones = useCallback(() => runtime.current?.dropZones.set(Object.entries(zoneRects.current).map(([id, r]) =>
+    id === "drawer" ? { kind: "drawer" as const, ...r } : { kind: "room" as const, room: id as RoomId, ...r })), []);
+  const onRoomRect = useCallback((id: RoomId, rect: { x: number; y: number; width: number; height: number }) => {
+    zoneRects.current[id] = rect;
+    publishZones();
+  }, [publishZones]);
+  // HR-01: the Friends button is where a carried friend goes to wait.
+  const onDrawerRect = useCallback((rect: { x: number; y: number; width: number; height: number }) => {
+    zoneRects.current.drawer = rect;
+    publishZones();
+  }, [publishZones]);
   useLayoutEffect(() => {
     runtime.current = interaction;
   });
@@ -597,7 +645,68 @@ export function HomeScreen({
     setRoom(id);
     setOverview(false);
     store.dispatch({ type: "room", room: id });
-    interaction.camera.set(focusCamera(roomIds.indexOf(id), viewport, building));
+    // HR-02: another floor is a door, not a jump; the same floor eases across.
+    interaction.animateCamera(focusCamera(roomIds.indexOf(id), viewport, building),
+      !overview && floorOf(id) !== floorOf(room));
+  };
+  const floorOf = (id: RoomId) => Math.floor(roomIds.indexOf(id) / building.columns);
+  // HR-02 (rule 52): after 6 s without a touch, one thing you can use gives one small wiggle.
+  // A JS timer, not a frame loop: nothing runs while waiting. Any touch starts the quiet over.
+  const hints = useRef<HintState>(freshHints(0));
+  // R3: hidden or backgrounded, nothing waits; coming back starts a fresh quiet spell.
+  React.useEffect(() => { if (visible) hints.current = freshHints(Date.now()); }, [visible]);
+  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends;
+  // Refs only: a hint or a touch never re-renders the screen, so the wiggle itself never stalls a frame.
+  const rearm = useRef<() => void>(() => {});
+  React.useEffect(() => {
+    if (!quiet || reduced) { rearm.current = () => {}; return; }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const arm = () => {
+      clearTimeout(timer);
+      timer = undefined;
+      const due = nextHintAt(hints.current);
+      if (due === undefined) return;
+      timer = setTimeout(() => {
+        timer = undefined;
+        // A touch since this was armed moved the quiet start later: wait again.
+        const again = nextHintAt(hints.current);
+        if (again === undefined || again > Date.now() + 16) { arm(); return; }
+        const { scene } = live.current;
+        // Only small things wiggle (a whole cabinet tilting looks broken): a small thing you can
+        // switch, such as a lamp, then food, then beach shells.
+        const rank = (e: SceneEntity) => (e.item && capabilityOf(e.item.item).toggle ? 0 : e.id.includes("/item/portion-shore-") ? 2 : 1);
+        const candidates = Object.values(scene.rooms[room].entities)
+          .filter((e) => restingVisible(e, scene) && e.item && !!e.body?.small && (isPortion(e.id) || capabilityOf(e.item.item).toggle))
+          .sort((a, b) => rank(a) - rank(b) || a.contact.x - b.contact.x)
+          .map((e) => e.id);
+        // R2: nothing here to hint at. Stop until a touch, a room change or a return to Home.
+        if (!candidates.length) return;
+        const next = takeHint(hints.current, Date.now(), candidates, reduced);
+        hints.current = next.state;
+        if (next.id) runtime.current?.showHint(next.id);
+        arm();
+      }, Math.max(0, due - Date.now()));
+    };
+    rearm.current = () => { if (timer === undefined) arm(); };
+    arm();
+    return () => { clearTimeout(timer); rearm.current = () => {}; };
+  }, [quiet, reduced, room]);
+  const touched = () => {
+    hints.current = touchedHints(hints.current, Date.now());
+    rearm.current();
+  };
+  /** Bring a friend here. One who is elsewhere or waiting comes out of the drawer cell, visibly. */
+  const bring = (id: string, slot: number, from?: { x: number; y: number }) => {
+    const subject = live.current.scene.entities[id];
+    if (subject) {
+      const nearby = subject.room === room && subject.attachment.kind !== "staging";
+      const c = interaction.camera.get();
+      const start = !nearby && from
+        ? screenToRoom(screenPoint(from.x - canvasOrigin.current.x, from.y - canvasOrigin.current.y), c, housePoint(0, 0)) : undefined;
+      runtime.current!.animateProposal(resolve({ ...scene.rooms[room], entities: scene.entities }, subject,
+        roomPoint(350 + slot * 90, 490), { scale: c.a, release: true }), undefined, start);
+    }
+    setFriends(false);
   };
   const find = () => {
     const hero = scene.entities["character/0"];
@@ -605,7 +714,8 @@ export function HomeScreen({
     setRoom(hero.room);
     setOverview(false);
     store.dispatch({ type: "room", room: hero.room });
-    interaction.camera.set(focusCamera(roomIds.indexOf(hero.room), viewport, building, hero.contact));
+    interaction.animateCamera(focusCamera(roomIds.indexOf(hero.room), viewport, building, hero.contact),
+      !overview && floorOf(hero.room) !== floorOf(room));
     setSelected(undefined);
     setMore(false);
     setFriends(false);
@@ -641,7 +751,7 @@ export function HomeScreen({
     if (!owns(item, ownership)) { store.setMessage("This showpiece is in the Locker."); return; }
     const current = live.current.store.getState(), dest = destination ?? live.current.room;
     if (destination && placedInstances(current.rooms[dest]).length >= MAX_INSTANCES) {
-      store.setMessage("Put something away to make room."); return;
+      store.setMessage(CAPACITY_MESSAGE); return;
     }
     const created = instance(`home-${Date.now().toString(36)}-${++sequence.current}`, item, 0, 0);
     const seed = { ...current, rooms: { ...current.rooms,
@@ -680,15 +790,17 @@ export function HomeScreen({
     runtime.current!.externalDrop(-500, screenPoint(x - canvasOrigin.current.x, y - canvasOrigin.current.y), cancel || roomAtScreen(x - canvasOrigin.current.x, y - canvasOrigin.current.y,
       runtime.current!.camera.get(), building) < 0);
   };
-  const { slots: catalogSlots } = interaction;
+  const { slots: catalogSlots, veil } = interaction;
+  const veilStyle = useAnimatedStyle(() => ({ opacity: veil.value }));
   const ghostStyle = useAnimatedStyle(() => ({
     opacity: ghost.value.active && !catalogSlots.value.some(s => s.pointer === -500 && s.ready && s.painted) ? 1 : 0,
     transform: [{ translateX: ghost.value.x - 35 }, { translateY: ghost.value.y - 70 }],
   }));
   const target = selected ? scene.entities[selected]?.item : undefined;
-  const staged = Object.values(baseScene.entities).filter((e) => e.attachment.kind === "staging");
+  // Friends who are put away wait in the friends drawer, not in the basket (HR-01).
+  const staged = Object.values(baseScene.entities).filter((e) => e.attachment.kind === "staging" && !e.character);
   return (
-    <View style={{ flex: 1, backgroundColor: "#FFF8E9", paddingBottom: inset.bottom }}>
+    <View style={{ flex: 1, backgroundColor: "#FFF8E9", paddingBottom: inset.bottom }} onTouchStart={touched}>
       <HomeChrome
         room={room}
         overview={overview}
@@ -707,17 +819,22 @@ export function HomeScreen({
         onUndo={() => {
           interaction.cancelAll();
           store.dispatch({ type: "undo" });
+          setRedoWindow(true);
+          clearTimeout(redoTimer.current);
+          redoTimer.current = setTimeout(() => setRedoWindow(false), REDO_VISIBLE_MS);
         }}
+        showRedo={redoWindow && store.canRedo}
         onRedo={() => {
           interaction.cancelAll();
           store.dispatch({ type: "redo" });
         }}
         onFind={find}
         onFriends={() => {
+          // Opening or closing the drawer never moves the camera (rule 47).
           interaction.cancelAll();
           setSelected(undefined);
           setMore(false);
-          setFriends(true);
+          setFriends(!friends);
         }}
         onOverview={() => {
           interaction.cancelAll();
@@ -726,7 +843,7 @@ export function HomeScreen({
           setFriends(false);
           const next = true;
           setOverview(next);
-          interaction.camera.set(
+          interaction.animateCamera(
             next ? fitCamera(viewport, building) : focusCamera(roomIds.indexOf(room), viewport, building)
           );
         }}
@@ -735,9 +852,17 @@ export function HomeScreen({
           setPlacing(undefined);
         }}
         onRoom={goRoom}
+        roomHover={interaction.roomHover}
+        onRoomRect={onRoomRect}
+        friendsOpen={friends}
+        drawerHover={interaction.drawerHover}
+        onDrawerRect={onDrawerRect}
+        large={large}
+        width={window.width}
         saveStatus={saveStatus}
       />
-      <View style={{ flex: 1, flexDirection: vertical ? "row" : "column" }}>
+      {/* Above the bars (zIndex 30) so carried art is never hidden under them; box-none keeps the bars touchable. */}
+      <View pointerEvents="box-none" style={{ flex: 1, flexDirection: vertical ? "row" : "column", zIndex: 31 }}>
         <View ref={canvas} onLayout={measure} style={{ width: viewport.width, height: viewport.height }}>
           <SceneView
             state={{ ...store.state, current: room }}
@@ -750,6 +875,7 @@ export function HomeScreen({
             pickups={pickups}
             reduced={reduced}
             renderCharacter={renderCharacter}
+            liveRoom={overview || !visible ? undefined : room}
             debugLayer={lab && labKit && hulls ? <labKit.overlay.HullOverlay scene={scene} building={building} scale={roomScale(viewport)} /> : undefined}
             selected={selected}
             reactions={reactions}
@@ -759,6 +885,8 @@ export function HomeScreen({
             onMove={moveAccessible}
             stress={stress}
           />
+          <Animated.View testID="room-door-veil" pointerEvents="none"
+            style={[{ position: "absolute", left: 0, top: 0, width: viewport.width, height: viewport.height, backgroundColor: "#FFF8E9" }, veilStyle]} />
           {debug && (
             <DebugOverlay
               interaction={interaction}
@@ -828,6 +956,9 @@ export function HomeScreen({
             offset={viewportOffset}
             dispatch={dispatch}
             onClose={() => setDesigning(false)}
+            large={large}
+            restoreCost={() => store.restoreCost(room)}
+            onRestoreAnyway={() => store.dispatch({ type: "reset", roomId: room } as HomeAction, { anyway: true })}
           />
         )}
       </View>
@@ -837,11 +968,17 @@ export function HomeScreen({
           selected={selected}
           designing={designing}
           scale={1}
+          camera={interaction.camera}
+          building={building}
+          canvasTop={headerHeight}
+          windowHeight={window.height}
+          renderCharacter={renderCharacter}
+          large={large}
           onSelect={setSelected}
           bottom={
             inset.bottom +
             navigationHeight +
-            (designing && !vertical ? portraitDrawerHeight + 6 : staged.length ? 100 : 10)
+            (designing && !vertical ? portraitDrawerHeightFor(large) + 6 : staged.length ? 100 : 10)
           }
           onChoose={(proposal) => {
             if (runtime.current!.animateProposal(proposal)) { setSelected(undefined); setRoom(proposal.room); }
@@ -875,21 +1012,38 @@ export function HomeScreen({
         }}
         onZoom={(ratio) => {
           interaction.cancelAll();
-          interaction.camera.set(
+          interaction.animateCamera(
             zoomCamera(interaction.camera.get(), ratio, viewport.width / 2, viewport.height / 2, viewport, building)
           );
           if (ratio > 1) setOverview(false);
         }}
-        onBring={(id, slot) => {
-          const subject = live.current.scene.entities[id];
-          if (subject) runtime.current!.animateProposal(resolve({ ...scene.rooms[room], entities: scene.entities }, subject,
-            roomPoint(350 + slot * 90, 490), { scale: interaction.camera.get().a, release: true }));
-          setFriends(false);
-        }}
+        onBring={bring}
+        large={large}
+        onLarge={(on) => store.setAccess(on ? { largeTargets: true } : undefined)}
       />
+      <FriendDrawer
+        open={friends && !overview && !more}
+        scene={scene}
+        here={room}
+        bottom={inset.bottom + navigationHeight + 8}
+        top={large && navigationHeight > largeNavigationHeight ? headerHeight + 8 : undefined}
+        interaction={interaction}
+        offset={viewportOffset}
+        reduced={reduced}
+        large={large}
+        renderCharacter={renderCharacter}
+        onBring={bring}
+        onClose={() => setFriends(false)}
+        onCarry={(carrying) => { if (!carrying) setFriends(false); }}
+      />
+      {/* Undo notes are spoken by the visible note only, and stay out of here once it's dismissed too (R3-F2). */}
       <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
-        {store.message}
+        {UNDO_NOTES.includes(store.message) ? "" : store.message}
       </Text>
+      {capacityShown && <CapacityCue bottom={inset.bottom + navigationHeight + 14} />}
+      {undoNote && <UndoNote message={store.message} restored={Object.values(RESTORE_NOTE).includes(store.message)}
+        top={headerHeight + 10}
+        onDismiss={() => setNoteGone(store.messageSerial)} />}
       {lab && frameReport && (
         <Text testID="frame-report" style={{ position: "absolute", left: 75, bottom: 2, fontSize: 10 }}>
           {JSON.stringify({
