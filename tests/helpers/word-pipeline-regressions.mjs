@@ -296,15 +296,15 @@ for(const [name,source,fail] of [
 
 // Synthetic codec uses the real row decoder, with isolated family bindings.
 // Its symbol string stands for numeric cells, like cage IDs in numeric packs.
-function packedCase(name,encoded,decoded,rejected=false) {
+function packedCase(name,encoded,decoded,rejected=false,objectives=0) {
  test(name,()=>{
   const source=join(scratch,`pack-source-${name.replaceAll(' ','-')}`),dir=join(source,'dist');
   mkdirSync(join(source,'scripts/puzzles/families'),{recursive:true});mkdirSync(join(source,'src/puzzles'),{recursive:true});mkdirSync(join(source,'src/state'));mkdirSync(dir);
   symlinkSync(resolve('node_modules'),join(source,'node_modules'));
-  for(const file of ['scripts/puzzles/register.mjs','scripts/puzzles/hooks.mjs','src/puzzles/descriptor.ts','src/puzzles/types.ts','src/state/saveBits.ts']) cpSync(resolve(file),join(source,file));
-  writeFileSync(join(source,'scripts/puzzles/families/index.ts'),`export const families=[{id:'synthetic',adapter:{rules:1,decodePayload:x=>x===${JSON.stringify(encoded)}?${JSON.stringify(decoded)}:null,isPayload:x=>!!x}}];`);
+  for(const file of ['scripts/puzzles/register.mjs','scripts/puzzles/hooks.mjs','src/puzzles/descriptor.ts','src/puzzles/bank.ts','src/puzzles/types.ts','src/state/saveBits.ts']) cpSync(resolve(file),join(source,file));
+  writeFileSync(join(source,'scripts/puzzles/families/index.ts'),`export const families=[{id:'synthetic',bands:[{id:'a'}],adapter:{rules:1,decodePayload:x=>x===${JSON.stringify(encoded)}?${JSON.stringify(decoded)}:null,isPayload:x=>!!x}}];`);
   const header={format:1,family:'synthetic',slot:0,first:0,count:1,band:'a',rules:1,rng:1};
-  writeFileSync(join(dir,'p0.lipuzzle'),JSON.stringify(header)+'\n'+JSON.stringify([1,'layout','template',encoded]));
+  writeFileSync(join(dir,'p0.lipuzzle'),JSON.stringify(header)+'\n'+JSON.stringify([1,'layout','template',encoded,0,objectives]));
   const original=process.cwd();try{process.chdir(source);if(rejected)assert.throws(()=>guardTree(dir,policy),/leaked/);else assert.equal(guardTree(dir,policy).passed,true);}finally{process.chdir(original);}
  });
 }
@@ -358,3 +358,5 @@ exportCase('guard HTML inline array leak','index.html','<script>globalThis.words
 exportCase('guard serialized worklet identifiers','app.js','globalThis.code='+JSON.stringify('function f(COLD){const ALPHANONSENSE=1,BETANONSENSE=2,GAMMANONSENSE=3;return COLD+ALPHANONSENSE+BETANONSENSE+GAMMANONSENSE;}')+';');
 exportCase('guard serialized worklet user string','app.js','globalThis.code='+JSON.stringify('function f(){return "COLD";}')+';',policy,true);
 test('multiple bounded CI policy chunks decode together',async()=>{const {gzipSync}=await import('node:zlib');const encoded=gzipSync(Buffer.from(JSON.stringify(policy))).toString('base64'),dir=join(scratch,'multi-secret-export');mkdirSync(dir);writeFileSync(join(dir,'app.js'),'hello');const r=spawnSync(process.execPath,[join(root,'scripts/words/check.mjs'),'export',dir],{cwd:root,encoding:'utf8',env:{...process.env,LITTLE_ISLAND_WORD_POLICY_LOCK:'',LITTLE_ISLAND_WORD_POLICY_JSON:'',LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64:encoded.slice(0,40),LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64_2:encoded.slice(40,80),LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64_3:encoded.slice(80)}});assert.equal(r.status,0,r.stdout+r.stderr);assert.equal(JSON.parse(r.stdout).guard.policyDataChecked,true);});
+
+packedCase('guard packed metadata partial list','numeric-code',{values:[1,2,3]},true,['alphanonsense','betanonsense','gammanonsense']);

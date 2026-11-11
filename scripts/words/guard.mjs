@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, lstatSync } from 'node:fs';
 import { resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlStrings, workletStrings } from './artifact-views.mjs';
+import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlStrings, workletStrings, puzzleStrings } from './artifact-views.mjs';
 import { scanGrid } from './scan.mjs';
 import { requireThat, digest, sha256, foldScan } from './core.mjs';
 import { contentPolicy } from './policy.mjs';
@@ -60,7 +60,7 @@ export function artifactScanner(policy) {
     let strings=[],keys=[],grids=[],semantic=true;
     if(bytes.subarray(0,8).equals(hermesMagic) || /\.hbc$/i.test(name)) strings=hermesStrings(bytes);
     else if(/\.(?:[cm]?js|bundle)$/i.test(name)) ({strings,keys}=javascriptStrings(views[1]));
-    else if(decodedPack) {strings=jsonStrings(decodedPack);grids=letterGrids(decodedPack);}
+    else if(decodedPack) {strings=puzzleStrings([decodedPack.payloads,decodedPack.speech]);keys=puzzleStrings(decodedPack.metadata);grids=letterGrids(decodedPack.payloads);}
     else if(/\.(?:json|lipuzzle|webmanifest)$/i.test(name)) {
       let value;
       try {value=JSON.parse(views[1]);} catch {requireThat(false,'Cannot parse exported JSON');}
@@ -124,10 +124,7 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   }
   requireThat(!lstatSync(root).isSymbolicLink(),'Symlink in export tree');
   collect(root);
-  const packs=entries.filter(e=>{
-    if(!/\.lipuzzle$/i.test(e.name))return false;
-    try {JSON.parse(e.bytes.toString('utf8'));return false;} catch {return true;}
-  });
+  const packs=entries.filter(e=>/\.lipuzzle$/i.test(e.name));
   if(packs.length) {
     const runner=fileURLToPath(new URL('./decode-packs.mjs',import.meta.url));
     const result=spawnSync(process.execPath,['--import',resolve('scripts/puzzles/register.mjs'),runner],{input:JSON.stringify(packs.map(e=>e.bytes.toString('utf8'))),encoding:'utf8',maxBuffer:64*1024*1024,timeout:120000});

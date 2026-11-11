@@ -117,3 +117,13 @@ export function workletStrings(strings, depth=0) {
   }
   return {strings:output,keys};
 }
+
+/** Decoded payload values are content. Object field names and the validated
+ * puzzle-kind discriminator are codec metadata, rather than displayed words.
+ */
+export function puzzleStrings(value) {
+  if(typeof value==='string')return [value];
+  if(Array.isArray(value))return value.flatMap(puzzleStrings);
+  if(value && typeof value==='object')return Object.entries(value).filter(([key])=>key!=='kind').flatMap(([,v])=>puzzleStrings(v));
+  return [];
+}
