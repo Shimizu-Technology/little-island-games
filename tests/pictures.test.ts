@@ -34,7 +34,7 @@ describe("island picture dictionary files", () => {
     ];
     for (const [text, problem] of variants) expect(checkPicture(text).join("\n")).toMatch(problem);
     // A wide ink stroke is fine when a coloured stroke of the same shape sits on it.
-    expect(checkPicture(svg([line("M0 0H9", { stroke: P.ink, sw: 8 }), line("M0 0H9", { stroke: P.sand, sw: 3.5 })]))).toEqual([]);
+    expect(checkPicture(svg([line("M10 10H19", { stroke: P.ink, sw: 8 }), line("M10 10H19", { stroke: P.sand, sw: 3.5 })]))).toEqual([]);
   });
 
   it("parses strictly", () => {

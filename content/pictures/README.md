@@ -22,13 +22,22 @@ The pictures are drawn as code in `scripts/art/pictures/defs/` with the kit in `
 ```sh
 node scripts/art/pictures/build.mjs            # write svg/, manifest, sources, approvals and the loader's asset table
 node scripts/art/pictures/check.mjs            # static checks (also run by npm test via tests/pictures.test.ts)
-node scripts/art/pictures/render-check.mjs <new report.json>   # host: renders, stays in frame, fills the frame
+LITTLE_ISLAND_PICTURE_W1_QUEUES=<W1 queues dir> node scripts/art/pictures/check.mjs   # also checks every word against W1 itself
+node scripts/art/pictures/render-check.mjs <new report.json>   # host: geometry, renders, stays in frame, fills the frame
 node scripts/art/pictures/sheets.mjs <new dir>                 # labelled contact sheets, 50 a sheet, 44 pt and 120 pt
 node scripts/art/pictures/sheets.mjs <new dir> --blind <seed> --key <new key path outside dir>   # numbered, shuffled
 node scripts/art/pictures/allowlist.mjs <W1 queues dir> <new private receipt>                  # rewrite allowlist.json
 ```
 
 `render-check.mjs` and `sheets.mjs` need `rsvg-convert` and ImageMagick on the host. `allowlist.mjs` needs W1's private queues (`tiers.queue.json`, `local.queue.json`, `safety-policy.private.json`) and writes its receipt outside the repository.
+
+### What the checks prove
+
+- **W1 membership.** `allowlist.json` is a record, not proof. Membership is checked only when `LITTLE_ISLAND_PICTURE_W1_QUEUES` names W1's queue directory: the check then reruns W1's `validateWord`, `answerAllowed` and lemma rules on the queue records themselves and requires `allowlist.json` and `sources.json` to match them. Without it, the check reads only the shape of `allowlist.json` and says that membership was not checked. Once any app code imports `src/content/pictures`, the normal test run fails unless membership is checked, so whoever integrates the dictionary must supply the queues (locally, and in CI as a provisioned secret).
+- **Geometry.** Path data, point lists, numbers, dash lists and transform lists are parsed by strict grammars (`scripts/art/pictures/geometry.mjs`). Unknown commands, missing arguments, non-finite numbers and unconsumed syntax fail, because a renderer quietly skips what it cannot read.
+- **Line weight.** Ink widths are measured on both principal scales of the composed transform, so a squash or shear cannot pass.
+- **Frame.** The unclipped bounds of every shape, after transforms and with half its stroke, must stay within one unit of the 120 frame. The render check also widens its canvas to those bounds, so nothing drawn can hide outside the measured area.
+- **Loading.** The loader refuses any SVG whose SHA-256 or size differs from the manifest.
 
 ## Review
 

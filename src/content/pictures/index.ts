@@ -1,4 +1,5 @@
 import manifest from "../../../content/pictures/manifest.json";
+import { createSha256 } from "../../puzzles/sha256";
 import { pictureAssets } from "./assets.generated";
 
 /**
@@ -41,7 +42,7 @@ export const picturesInCategory = (category: string): PictureEntry[] => pictureI
 
 /**
  * Loads picture SVG text on demand and keeps the most recent few in memory.
- * A picture whose bytes differ from the manifest is refused, not drawn.
+ * A picture whose size or SHA-256 differs from the manifest is refused, not drawn.
  */
 export function createPictureLoader(transport: PictureTransport, assets: Record<string, () => number> = pictureAssets, keep = 48) {
   const cache = new Map<string, Promise<string>>();
@@ -56,8 +57,10 @@ export function createPictureLoader(transport: PictureTransport, assets: Record<
         return hit;
       }
       const pending = transport.read(asset).then((xml) => {
-        const bytes = new TextEncoder().encode(xml).length;
-        if (bytes !== entry.bytes || !xml.startsWith('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">')) throw new Error(`Picture ${id} does not match its manifest entry.`);
+        const digest = createSha256();
+        digest.update(xml);
+        const hex = digest.hex();
+        if (hex !== entry.sha256 || digest.bytes() !== entry.bytes || !xml.startsWith('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">')) throw new Error(`Picture ${id} does not match its manifest entry.`);
         return xml;
       });
       pending.catch(() => cache.delete(id));

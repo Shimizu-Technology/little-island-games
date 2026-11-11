@@ -71,6 +71,8 @@ Island words are drawn as they look on Guam today: a breadfruit tree's bumpy fru
 
 - No `<text>`, `<image>`, `<use>`, gradients, filters, masks, clip paths, ids, titles or comments. Allowed elements: `svg`, `g`, `path`, `circle`, `ellipse`, `rect`, `polygon`.
 - Numbers have at most two decimals. One `<g>` carries the ink defaults.
+- Geometry must be well formed: path data starts with M and every command has whole argument groups; transforms are SVG transform functions with the right number of arguments. Ink line widths hold on both axes after transforms, so use rotation, reflection, translation and small uniform scales, not squashes or shears.
+- Nothing is drawn more than one unit outside the 120 frame, counting half of each stroke.
 - Each file at most 4,096 bytes; the whole set at most 1 MiB, well inside the plan's 2 to 5 MB for Cove and picture art.
 - `scripts/art/pictures/check.mjs` enforces every rule in this file that a machine can check.
 

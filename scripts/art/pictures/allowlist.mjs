@@ -7,6 +7,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { answerAllowed, validateWord } from '../../words/core.mjs';
 import { privatePath } from '../../words/paths.mjs';
 import { definitions } from './defs/index.mjs';
@@ -32,19 +33,27 @@ export function checkWords(words, queues, policy) {
   return { results, failures };
 }
 
-if (process.argv[1]?.endsWith('allowlist.mjs')) {
+const QUEUE_FILES = ['tiers.queue.json', 'local.queue.json', 'safety-policy.private.json'];
+/** Reads the W1 queues and private policy straight from W1's queue directory. */
+export function readW1Queues(dir) {
+  const bytes = Object.fromEntries(QUEUE_FILES.map(f => [f, readFileSync(join(dir, f))]));
+  return {
+    bytes,
+    queues: { tiers: JSON.parse(bytes['tiers.queue.json']).words, local: JSON.parse(bytes['local.queue.json']).words },
+    policy: JSON.parse(bytes['safety-policy.private.json']),
+  };
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [dir, receiptPath] = process.argv.slice(2);
   if (!dir || !receiptPath) { console.error('Usage: allowlist.mjs <W1 queues directory> <new private receipt path>'); process.exit(1); }
   if (existsSync(receiptPath)) { console.error('Receipt path already exists; give a new one.'); process.exit(1); }
   privatePath(receiptPath);
-  const files = ['tiers.queue.json', 'local.queue.json', 'safety-policy.private.json'];
-  const bytes = Object.fromEntries(files.map(f => [f, readFileSync(join(dir, f))]));
-  const queues = { tiers: JSON.parse(bytes['tiers.queue.json']).words, local: JSON.parse(bytes['local.queue.json']).words };
-  const policy = JSON.parse(bytes['safety-policy.private.json']);
+  const { bytes, queues, policy } = readW1Queues(dir);
   const words = definitions().map(d => d.word);
   const { results, failures } = checkWords(words, queues, policy);
   const broadHits = words.filter(w => policy.scan.map(s => s.toUpperCase()).includes(w)).length;
-  writeFileSync(receiptPath, `${JSON.stringify({ schemaVersion: 1, checkedAt: new Date().toISOString(), queueDirectory: dir, sha256: Object.fromEntries(files.map(f => [f, sha256(bytes[f])])), words: words.length, failures, wordsAlsoOnBroadScanList: broadHits, note: 'Broad-scan membership does not block an answer (answerAllowed uses exact/lemma lists); it matters for the export guard once labels ship in a bundle.' }, null, 2)}\n`);
+  writeFileSync(receiptPath, `${JSON.stringify({ schemaVersion: 1, checkedAt: new Date().toISOString(), queueDirectory: dir, sha256: Object.fromEntries(QUEUE_FILES.map(f => [f, sha256(bytes[f])])), words: words.length, failures, wordsAlsoOnBroadScanList: broadHits, note: 'Broad-scan membership does not block an answer (answerAllowed uses exact/lemma lists); it matters for the export guard once labels ship in a bundle.' }, null, 2)}\n`);
   if (failures.length) { console.error(failures.join('\n')); process.exit(1); }
   const counts = Object.values(results).reduce((c, r) => ({ ...c, [r.queue]: (c[r.queue] ?? 0) + 1 }), {});
   writeFileSync(join(OUT, 'allowlist.json'), `${JSON.stringify({ schemaVersion: 1, checkedOn: new Date().toISOString().slice(0, 10), source: 'W1 word pipeline queues (private, see the W4 report); checks: present in a queue, validateWord, answerAllowed, lemma, not proper noun or abbreviation', counts, words: results }, null, 2)}\n`);
