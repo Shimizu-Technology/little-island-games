@@ -24,6 +24,6 @@ export function RunArena({ world, children, hud, overlay, controls, active }: { 
     <RunForeground world={world} layout={layout} width={size.w} height={size.h}/>
     <View pointerEvents="box-none" style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>{hud}</View>
     {overlay}
-    <View pointerEvents="box-none" testID="run-controls" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 140 }}>{controls}</View>
+    <View pointerEvents="box-none" testID="run-controls" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}>{controls}</View>
   </View>;
 }

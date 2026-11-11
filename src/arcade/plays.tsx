@@ -46,6 +46,8 @@ export type ArcadeBoardProps = {
   /** Measured space below the shared top bar, excluding native safe areas. */
   width: number;
   height: number;
+  /** Height of the shared top bar when it overlays the arena (Crab, Lagoon); otherwise 0. */
+  overlayTop?: number;
   family: ArcadeFamily;
 };
 export type ArcadePlay = {

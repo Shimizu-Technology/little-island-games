@@ -1,6 +1,6 @@
 import { harborSceneryPose } from '../lagoon-run/scenery';
 import { CANOE_DEPTH, isCanoe, visualRunHeight } from "../lagoon-run/geometry";
-import { HAZARDS } from "../lagoon-run/course";
+import { hazardBox } from "../lagoon-run/course";
 import { HIDDEN_POSE, rankPainterPoses, type SpritePose } from "../../poses";
 import { runSpeed, runnerHeight, shellHeight, obstacleLane, runLearning, type RunState } from "../lagoon-run/engine";
 import { RAMP_DEPTH, RAMP_SECTIONS, surfaceProfile, surfaceSpan } from "../lagoon-run/surface";
@@ -39,7 +39,7 @@ export function runPoses(s: RunState, reduced = false): SpritePose[] {
         }
         return {identity:row.serial,x:0,y:0,painterDepth:projectTrack(1,row.z).scale,painterKey:row.serial*7+actor%3,opacity:1};
       }
-      const a=trackSprite(lane,row.z,HAZARDS[kind]==="duck"?112:72,HAZARDS[kind]==="jump"?72:129.6),height=surfaceProfile(row,row.surface==="gap"?RAMP_DEPTH:0,lane); return {identity:row.serial,...a,painterDepth:a.scale,painterKey:row.serial*7+actor%3,opacity:a.opacity===0?0:arrivalOpacity(row.z),y:a.y-height*85*a.scale,angle:kind === "coconut" && !reduced ? s.time*3 : 0}; };
+      const box=hazardBox(kind),a=trackSprite(lane,row.z,box.width,box.height),height=surfaceProfile(row,row.surface==="gap"?RAMP_DEPTH:0,lane); return {identity:row.serial,...a,painterDepth:a.scale,painterKey:row.serial*7+actor%3,opacity:a.opacity===0?0:arrivalOpacity(row.z),y:a.y-height*85*a.scale,angle:kind === "coconut" && !reduced ? s.time*3 : 0}; };
     p[1+i*2]=visible?hazardPose(obstacleLane(row,s.time),row.kind,i*3):HIDDEN_POSE;
     p[2+i*2]=visible&&row.second>=0?hazardPose(row.second,row.secondKind,i*3+1):HIDDEN_POSE;
     p[75+i]=visible&&row.third?hazardPose(row.shellLane,row.kind,i*3+2):HIDDEN_POSE;

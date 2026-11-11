@@ -8,7 +8,7 @@ import { useLagoonUiLoop } from "../lagoon-run/useLagoonUiLoop";
 import { useRunMeter, runEventTags } from "../lagoon-run/useRunMeter";
 import { fixtureInput } from "../lagoon-run/fixtures";
 import { runLevels } from "./content";
-import { RunHud, HUD_TOP } from '../lagoon-run/Hud';
+import { RunHud, HUD_TEXT_MAX } from '../lagoon-run/Hud';
 import { HarborPlanks, HarborEnvironment, RunCamera, SpeedLines } from '../lagoon-run/World';
 import { DeckBase, DeckHaze, DeckLight } from '../lagoon-run/Backdrop';
 import { RunArena } from '../lagoon-run/Arena';
@@ -40,7 +40,7 @@ import { Deck, Canoe, PowerRing, RunTeachingCue, KiteRig } from "../lagoon-run/A
 import { BakedHazard, BakedPower, BakedShell } from "../lagoon-run/Baked";
 import { DepthSprite } from "../lagoon-run/DepthSprite";
 
-import { HAZARDS, type HazardKind } from "../lagoon-run/course";
+import { hazardBox } from "../lagoon-run/course";
 import { equation, type ScrollGame, type ScrollLevel } from "./content";
 import { Fruit, palette } from "./Art";
 import { BatRig, RunnerRig, LastHit } from "./FeelArt";
@@ -48,7 +48,7 @@ import { batAngle } from "../fruit-bat-flight/hull";
 import { runPoses, RUN_SLOTS, NEAR_START, CANOE_START, INCLINE_START, INCLINE_STRIDE, POWER_AURA } from "./render";
 
 import { flightFrame, runFrame, type Commands } from "./commands";
-export type BoardProps = { level: ScrollLevel | "endless"; seed: number; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped: boolean) => void; onTone: (key: string, haptic?: boolean) => void; onPause?: () => void; debug: boolean };
+export type BoardProps = { level: ScrollLevel | "endless"; seed: number; active: boolean; helper: boolean; outfit: OutfitId; onResult: (result: ArcadeResult, helped: boolean) => void; onTone: (key: string, haptic?: boolean) => void; onPause?: () => void; debug: boolean; overlayTop?: number };
 const W = 390, H = 660, still = HIDDEN_POSE;
 const Portal = memo(function Portal({ value, index }: { value: number; index: number }) { return <Svg width={64} height={64} viewBox="0 0 64 64"><Rect x={3} y={3} width={58} height={58} rx={16} fill={["#F6C76D", "#A9E7E1", "#DEB1EF"][index]} stroke="#374565" strokeWidth={3}/><SvgText x={32} y={45} textAnchor="middle" fill="#27364E" fontWeight="900" fontSize={36}>{value}</SvgText></Svg>; });
 const Particle = memo(function Particle() { return <Svg width={12} height={12}><Path d="M6 0L8 4L12 6L8 8L6 12L4 8L0 6L4 4Z" fill="#FFE294"/></Svg>; });
@@ -143,7 +143,8 @@ export function FlightBoard(props: BoardProps) {
 }
 type RunRowSpec=ReturnType<typeof runHud>["spec"][number];
 const RunRow=memo(function RunRow({poses,row,i,learn,front=false}:{poses:SharedValue<SpritePose[]>;row:RunRowSpec;i:number;learn:boolean;front?:boolean}) {
-  return <><DepthSprite front={front} poses={poses} index={1 + i * 2} rotate={row.kind!=="coconut"} width={isCanoe(row.kind)?390:HAZARDS[row.kind as HazardKind]==="duck"?112:72} height={isCanoe(row.kind)?660:HAZARDS[row.kind as HazardKind]==="jump"?72:129.6}>{isCanoe(row.kind)?<Canoe poses={poses} index={CANOE_START+(i*3)*4} moving={row.kind==="moving-canoe"}/>:<BakedHazard kind={row.kind} width={HAZARDS[row.kind as HazardKind]==="duck"?112:72} height={HAZARDS[row.kind as HazardKind]==="jump"?72:129.6} poses={poses} index={1 + i * 2}/>}</DepthSprite><DepthSprite front={front} poses={poses} index={2 + i * 2} rotate={row.secondKind!=="coconut"} width={isCanoe(row.secondKind)?390:HAZARDS[row.secondKind as HazardKind]==="duck"?112:72} height={isCanoe(row.secondKind)?660:HAZARDS[row.secondKind as HazardKind]==="jump"?72:129.6}>{isCanoe(row.secondKind)?<Canoe poses={poses} index={CANOE_START+(i*3+1)*4} moving={row.secondKind==="moving-canoe"}/>:<BakedHazard kind={row.secondKind} width={HAZARDS[row.secondKind as HazardKind]==="duck"?112:72} height={HAZARDS[row.secondKind as HazardKind]==="jump"?72:129.6} poses={poses} index={2 + i * 2}/>}</DepthSprite><DepthSprite front={front} poses={poses} index={75 + i} rotate={row.kind!=="coconut"} width={isCanoe(row.kind)?390:HAZARDS[row.kind as HazardKind]==="duck"?112:72} height={isCanoe(row.kind)?660:HAZARDS[row.kind as HazardKind]==="jump"?72:129.6}>{isCanoe(row.kind)?<Canoe poses={poses} index={CANOE_START+(i*3+2)*4} moving={row.kind==="moving-canoe"}/>:<BakedHazard kind={row.kind} width={HAZARDS[row.kind as HazardKind]==="duck"?112:72} height={HAZARDS[row.kind as HazardKind]==="jump"?72:129.6} poses={poses} index={75 + i}/>}</DepthSprite><DepthSprite front={front} poses={poses} index={167+i} width={44} height={44}><BakedPower kind={row.power} size={44}/></DepthSprite>{[0, 1, 2].map(c => <DepthSprite key={c} front={front} poses={poses} index={11 + i * 3 + c} width={30} height={30}><BakedShell size={30}/></DepthSprite>)}{learn && !front && row.choices.map((n, c) => <DepthSprite key={`a${c}`} poses={poses} index={60 + i * 3 + c} width={64} height={64}><Portal value={n} index={c}/></DepthSprite>)}</>;
+  const actor=(kind:RunRowSpec["kind"],index:number,canoe:number)=>{const box=isCanoe(kind)?{width:390,height:660}:hazardBox(kind);return <DepthSprite front={front} poses={poses} index={index} rotate={kind!=="coconut"} width={box.width} height={box.height}>{isCanoe(kind)?<Canoe poses={poses} index={CANOE_START+canoe*4} moving={kind==="moving-canoe"}/>:<BakedHazard kind={kind} width={box.width} height={box.height} poses={poses} index={index}/>}</DepthSprite>;};
+  return <>{actor(row.kind,1+i*2,i*3)}{actor(row.secondKind,2+i*2,i*3+1)}{actor(row.kind,75+i,i*3+2)}<DepthSprite front={front} poses={poses} index={167+i} width={44} height={44}><BakedPower kind={row.power} size={44}/></DepthSprite>{[0, 1, 2].map(c => <DepthSprite key={c} front={front} poses={poses} index={11 + i * 3 + c} width={30} height={30}><BakedShell size={30}/></DepthSprite>)}{learn && !front && row.choices.map((n, c) => <DepthSprite key={`a${c}`} poses={poses} index={60 + i * 3 + c} width={64} height={64}><Portal value={n} index={c}/></DepthSprite>)}</>;
 },(a,b)=>a.poses===b.poses && a.i===b.i && a.learn===b.learn && a.front===b.front && samePublication(a.row,b.row));
 /** Effects never depend on the course, so a spawn or crossing cannot re-render them. */
 const RunEffects=memo(function RunEffects({poses}:{poses:SharedValue<SpritePose[]>}) {
@@ -152,10 +153,6 @@ const RunEffects=memo(function RunEffects({poses}:{poses:SharedValue<SpritePose[
 const RunnerPowers=memo(function RunnerPowers({poses}:{poses:SharedValue<SpritePose[]>}) {
   return <><ArcadeSprite poses={poses} index={POWER_AURA} width={112} height={154}><Svg width={112} height={154}><Path d="M20 127Q-12 72 17 29M95 127Q125 72 96 29" fill="none" stroke="#B1FFF2" strokeWidth={4} strokeDasharray="8 7"/><Path d="M6 72L17 66M101 66L110 72M12 105L22 99M91 99L103 105" stroke="#FFE49A" strokeWidth={3}/></Svg></ArcadeSprite><ArcadeSprite poses={poses} index={POWER_AURA+1} width={86} height={28}><Svg width={86} height={28}><Path d="M10 22Q24 7 37 20M49 20Q62 7 78 22" stroke="#FFF5A3" strokeWidth={7} fill="none"/><Path d="M8 5L13 12M77 5L72 12" stroke="#FFF5A3" strokeWidth={3}/></Svg></ArcadeSprite><ArcadeSprite poses={poses} index={172} width={72} height={110}><KiteRig/></ArcadeSprite><ArcadeSprite poses={poses} index={173} width={96} height={142}><Svg width={96} height={142}><Path d="M48 3C109 3 109 139 48 139C-13 139-13 3 48 3Z" fill="#AEE1BA" fillOpacity={.18} stroke="#E9FFD3" strokeWidth={3}/></Svg></ArcadeSprite></>;
 });
-/** Screen-space teaching cue under the HUD. It subscribes to nothing: the pose carries the move. */
-function RunTeaching({poses}:{poses:SharedValue<SpritePose[]>}) {
-  return <View pointerEvents="none" style={{position:"absolute",right:10,top:HUD_TOP+44,width:110,height:60}}><RunTeachingCue poses={poses}/></View>;
-}
 const LAYER={position:"absolute" as const,left:0,top:0,width:W,height:H};
 /**
  * Layer containers are never collapsed: flattening would merge every zIndex into one sibling list
@@ -188,12 +185,19 @@ const RunScene=memo(function RunScene({poses,state,learn,world}:{poses:SharedVal
   return <><RunLayer poses={poses} spec={s.spec} learn={learn} world={world} runner={runner}/><RunHitFlash poses={poses}/></>;
 });
 function displayRun(s:RunState) {"worklet";const h=runHud(s);return {level:h.level,passed:h.passed,score:h.score,lives:h.lives,powers:h.powers,next:h.next,shellNotes:runLearning(s)?0:s.shells};}
-function RunReadout({state,learn}:{state:SharedValue<RunState>;learn:boolean}) {
+/**
+ * Top chrome in one column under the shared header's measured height (P2-2): the slim HUD, then the
+ * learning equation, then power rings and the teaching cue. Each sits below the content before it,
+ * so nothing is placed by a fixed offset that larger text could overrun. The cue subscribes to
+ * nothing: the pose carries the move.
+ */
+export function RunTopChrome({state,learn,poses,top}:{state:SharedValue<RunState>;learn:boolean;poses:SharedValue<SpritePose[]>;top:number}) {
   const s=useRunSnapshot(state,displayRun);
-  return <><RunHud s={s} learning={learn}/><View pointerEvents="none" style={{position:"absolute",left:10,top:HUD_TOP+44,flexDirection:"row",gap:4}}>{(["magnet","kite","sandals","shield"] as const).filter(k=>s.powers[k]>0).map(k=><PowerRing key={k} kind={k} remaining={s.powers[k]} state={state}/>)}</View></>;
-}
-function RunEquation({state}:{state:SharedValue<RunState>}) {
-  const s=useRunSnapshot(state,displayRun);return s.next?<View pointerEvents="none" style={{position:"absolute",top:HUD_TOP+44,alignSelf:"center",padding:8,borderRadius:14,backgroundColor:"#192B49"}}><Text testID="math-fact" style={{color:"#FFF4D3",fontSize:28,fontWeight:"900"}}>{equation(s.next)}</Text></View>:null;
+  return <View pointerEvents="none" testID="run-top" style={{position:"absolute",left:10,right:10,top:top+4,gap:6}}>
+    <RunHud s={s} learning={learn}/>
+    {learn&&s.next?<View style={{alignSelf:"center",padding:8,borderRadius:14,backgroundColor:"#192B49"}}><Text testID="math-fact" maxFontSizeMultiplier={HUD_TEXT_MAX} style={{color:"#FFF4D3",fontSize:28,fontWeight:"900"}}>{equation(s.next)}</Text></View>:null}
+    <View style={{flexDirection:"row",justifyContent:"space-between",alignItems:"flex-start"}}><View style={{flexDirection:"row",gap:4}}>{(["magnet","kite","sandals","shield"] as const).filter(k=>s.powers[k]>0).map(k=><PowerRing key={k} kind={k} remaining={s.powers[k]} state={state}/>)}</View><RunTeachingCue poses={poses}/></View>
+  </View>;
 }
 /** Arrow buttons are an option, not the default look (LG-S3). The choice lasts for this app
  * session only, like teaching memory: no save field. VoiceOver users get them by default. */
@@ -204,8 +208,21 @@ function useRunArrows(): [boolean, (v: boolean) => void] {
   const set = useCallback((v: boolean) => { runArrowsChoice = v; setChoice(v); }, []);
   return [choice ?? screenReader, set];
 }
+const TOGGLE_SLOP=8, BUTTON_SLOP=4;
 function ArrowToggle({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
-  return <Pressable accessibilityRole="switch" accessibilityState={{ checked: shown }} accessibilityLabel="Arrow buttons" onPress={onToggle} hitSlop={8} style={{ position: "absolute", right: 12, bottom: shown ? 68 : 14, width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: shown ? "#FFF2CCDD" : "#10303ECC", borderWidth: 1, borderColor: "#FFF2CC" }}><Text style={{ fontSize: 18, fontWeight: "900", color: shown ? "#34354D" : "#FFF2CC" }}>✥</Text></Pressable>;
+  return <Pressable accessibilityRole="switch" accessibilityState={{ checked: shown }} accessibilityLabel="Arrow buttons" onPress={onToggle} hitSlop={TOGGLE_SLOP} style={{ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: shown ? "#FFF2CCDD" : "#10303ECC", borderWidth: 1, borderColor: "#FFF2CC" }}><Text maxFontSizeMultiplier={1} style={{ fontSize: 18, fontWeight: "900", color: shown ? "#34354D" : "#FFF2CC" }}>✥</Text></Pressable>;
+}
+/**
+ * Bottom chrome (P2-1). Finish and the arrow switch share one flex row with a gap wider than both
+ * touch slops, so their hit areas can never overlap at any text size (a long Finish wraps above the
+ * switch). The arrow pad has its own row underneath. Nothing here is absolutely placed.
+ */
+export const OPTION_GAP = TOGGLE_SLOP + BUTTON_SLOP + 2;
+export function RunControls({ arrows, onToggle, pad, finish }: { arrows: boolean; onToggle: () => void; pad: React.ReactNode; finish?: React.ReactNode }) {
+  return <View pointerEvents="box-none" testID="run-chrome-bottom" style={{ position: "absolute", left: 12, right: 12, bottom: 10, gap: 10 }}>
+    <View pointerEvents="box-none" testID="run-option-row" style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center", gap: OPTION_GAP }}>{finish}<ArrowToggle shown={arrows} onToggle={onToggle}/></View>
+    {arrows && <View pointerEvents="box-none" style={{ flexDirection: "row", justifyContent: "center", gap: 10 }}>{pad}</View>}
+  </View>;
 }
 // Runtime-only teaching memory is deliberately outside saves; reload starts a new app session.
 let learnedRunMoves = 0;
@@ -253,7 +270,8 @@ function RunRound(props:BoardProps & {replay:boolean;witness:number;quietHud:boo
   const learn = level !== "endless" && level.world === "learn";
   const [arrows,setArrows]=useRunArrows();
   const toggleArrows=useCallback(()=>setArrows(!arrows),[arrows,setArrows]);
-  const controls = <>{arrows&&<View style={{ position: "absolute", left: 12, right: 12, bottom: 10, flexDirection: "row", justifyContent: "center", gap: 10 }}><Control overlay disabled={!active} label="Move left" glyph="←" mailbox={input} action={{ type: "left" }} feedback={() => actionTone({ type: "left" })} onPress={() => action({ type: "left" })}/><Control overlay disabled={!active} label="Jump" glyph="↑" mailbox={input} action={{ type: "jump" }} feedback={() => actionTone({ type: "jump" })} onPress={() => action({ type: "jump" })}/><Control overlay disabled={!active} label="Roll or drop" glyph="↓" mailbox={input} action={{ type: "duck" }} feedback={() => actionTone({ type: "duck" })} onPress={() => action({ type: "duck" })}/><Control overlay disabled={!active} label="Move right" glyph="→" mailbox={input} action={{ type: "right" }} feedback={() => actionTone({ type: "right" })} onPress={() => action({ type: "right" })}/></View>}<ArrowToggle shown={arrows} onToggle={toggleArrows}/>{level === "endless" && <View style={{ position: "absolute", bottom: 76, right: 12 }}><Button compact quiet onPress={() => send({ type: "finish" })}>Finish free run</Button></View>}</>;
-  return <RunArena active={active} world={level === "endless" ? "w3" : level.world} controls={controls} hud={quietHud?null:<><RunReadout state={state} learn={learn}/><RunTeaching poses={poses}/></>} overlay={learn && <RunEquation state={state}/>}><RunScene poses={poses} state={state} learn={learn} world={level === "endless" ? "w3" : level.world}/><GestureDetector gesture={swipe} touchAction="none"><Animated.View collapsable={false} testID="run-touch" accessible accessibilityRole="button" accessibilityLabel="Lagoon track. Swipe to steer, up to jump, down to duck" style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}/></GestureDetector>{debug && <Text testID="lagoon-meter" pointerEvents="none" style={{position:"absolute",top:150,left:5,color:"white",backgroundColor:"#14273E",fontSize:11}}>{witness?`${replayLevel.id.toUpperCase()} / 771 / frozen tick ${witness} | `:""}{meterLabel}</Text>}</RunArena>;
+  const pad = <><Control overlay disabled={!active} label="Move left" glyph="←" mailbox={input} action={{ type: "left" }} feedback={() => actionTone({ type: "left" })} onPress={() => action({ type: "left" })}/><Control overlay disabled={!active} label="Jump" glyph="↑" mailbox={input} action={{ type: "jump" }} feedback={() => actionTone({ type: "jump" })} onPress={() => action({ type: "jump" })}/><Control overlay disabled={!active} label="Roll or drop" glyph="↓" mailbox={input} action={{ type: "duck" }} feedback={() => actionTone({ type: "duck" })} onPress={() => action({ type: "duck" })}/><Control overlay disabled={!active} label="Move right" glyph="→" mailbox={input} action={{ type: "right" }} feedback={() => actionTone({ type: "right" })} onPress={() => action({ type: "right" })}/></>;
+  const controls = <RunControls arrows={arrows} onToggle={toggleArrows} pad={pad} finish={level === "endless" ? <Button compact quiet onPress={() => send({ type: "finish" })}>Finish free run</Button> : undefined}/>;
+  return <RunArena active={active} world={level === "endless" ? "w3" : level.world} controls={controls} hud={quietHud?null:<RunTopChrome state={state} learn={learn} poses={poses} top={props.overlayTop ?? 0}/>}><RunScene poses={poses} state={state} learn={learn} world={level === "endless" ? "w3" : level.world}/><GestureDetector gesture={swipe} touchAction="none"><Animated.View collapsable={false} testID="run-touch" accessible accessibilityRole="button" accessibilityLabel="Lagoon track. Swipe to steer, up to jump, down to duck" style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0, ...(Platform.OS === "web" ? { touchAction: "none" as const } : {}) }}/></GestureDetector>{debug && <Text testID="lagoon-meter" pointerEvents="none" style={{position:"absolute",top:150,left:5,color:"white",backgroundColor:"#14273E",fontSize:11}}>{witness?`${replayLevel.id.toUpperCase()} / 771 / frozen tick ${witness} | `:""}{meterLabel}</Text>}</RunArena>;
 }
 export function ScrollBoard({ game, ...props }: BoardProps & { game: ScrollGame }) { return game === "fruit-bat-flight" ? <FlightBoard {...props}/> : <RunBoard {...props}/>; }
