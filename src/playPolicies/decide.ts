@@ -38,7 +38,8 @@ export function runSteps<T>(
     const tick = () => {
       if (cancel.cancelled) return resolve(null);
       const start = now();
-      while (!task.done && now() - start < sliceMs) task.step(128);
+      do task.step(128);
+      while (!task.done && now() - start < sliceMs);
       if (task.done) resolve(answer());
       else setTimeout(tick, 0);
     };

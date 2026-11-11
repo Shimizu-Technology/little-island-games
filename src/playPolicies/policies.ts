@@ -5,7 +5,7 @@ import * as nets from "../board/fishing-nets/engine";
 import * as canoes from "../board/hidden-canoes/engine";
 import * as pits from "../board/shell-pits/engine";
 import { IterativeSearch, type SearchRules } from "./search";
-import { finished, type BoardPolicy, type CanoesView, type OpenView, type PolicyGame, type PolicyId, type PolicyTask, type PublicView } from "./types";
+import { finished, type BoardPolicy, type SearchBudget, type CanoesView, type OpenView, type PolicyGame, type PolicyId, type PolicyTask, type PublicView } from "./types";
 import { openPosition } from "./views";
 
 /** Extra turns first, then captures, then pit order. Only search speed depends on it. */
@@ -23,15 +23,15 @@ export function pitsOrder(p: Position, moves: number[]): number[] {
   };
   return moves.map((m) => [key(m), m]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(([, m]) => m);
 }
-export const pitsRules: SearchRules<Position> = {
+export const pitsRules: Readonly<SearchRules<Position>> = Object.freeze({
   legal: pits.legal,
   move: pits.move,
-  turn: (p) => p.turn,
-  outcome: (p) => p.outcome,
+  turn: (p: Position) => p.turn,
+  outcome: (p: Position) => p.outcome,
   evaluate: pits.evaluate,
   order: pitsOrder,
-};
-export const pitsChallengeLimits = { depth: 8, nodes: 50_000 } as const;
+});
+export const pitsChallengeLimits: SearchBudget = Object.freeze({ depth: 8, nodes: 50_000 });
 
 const openOnly = (v: PublicView): OpenView => {
   if (v.game === "hidden-canoes") throw new Error("This policy reads an open board.");
@@ -41,7 +41,7 @@ const canoesOnly = (v: PublicView): CanoesView => {
   if (v.game !== "hidden-canoes") throw new Error("This policy reads a Hidden Canoes chart.");
   return v;
 };
-function searchTask(root: Position, rules: SearchRules<Position>, limits: { depth: number; nodes: number }): PolicyTask {
+function searchTask(root: Position, rules: Readonly<SearchRules<Position>>, limits: SearchBudget): PolicyTask {
   const search = new IterativeSearch(root, rules, limits);
   return {
     get done() {
@@ -136,15 +136,20 @@ const legacyOpen = (game: "coconut-drop" | "fishing-nets" | "shell-pits", streng
   },
 });
 const strengths: Strength[] = ["gentle", "growing", "challenge"];
-/** Every policy that has ever shipped. Entries are append-only. */
-export const boardPolicies: readonly BoardPolicy[] = Object.freeze([
+/** Freezes a policy and its limits, so its ID always means the same search. */
+const seal = (p: BoardPolicy): BoardPolicy => {
+  if (p.limits) Object.freeze(p.limits);
+  return Object.freeze(p);
+};
+/** Every policy that has ever shipped. Entries are append-only and frozen. */
+export const boardPolicies: readonly BoardPolicy[] = Object.freeze(([
   ...strengths.map((s) => legacyOpen("coconut-drop", s, coconutPlays[s])),
   ...strengths.map((s) => legacyOpen("fishing-nets", s, netsPlays[s])),
   legacyOpen("shell-pits", "gentle", pitsPlays.gentle),
   legacyOpen("shell-pits", "growing", pitsPlays.growing),
   legacyOpen("shell-pits", "challenge", archivedPitsChallenge),
   {
-    id: "shell-pits/challenge@2",
+    id: "shell-pits/challenge@2" as const,
     game: "shell-pits",
     strength: "challenge",
     revision: 2,
@@ -180,27 +185,59 @@ export const boardPolicies: readonly BoardPolicy[] = Object.freeze([
       choose: (view, random) => finished(canoesChoice(canoesOnly(view), s, random)),
     })
   ),
-]);
+] satisfies BoardPolicy[]).map(seal));
 /** Revision 1 of Hidden Canoes needs the saved position, exactly as 3.0 read it. */
 export function archivedChoice(policy: BoardPolicy, p: Position): number | null {
   if (policy.publicOnly || policy.game !== "hidden-canoes") throw new Error("Not an archived policy.");
   return canoes.choose(p, policy.strength);
 }
 
-/** Checkers keeps its 3.0 search, unchanged. Registered so rivals and saves can name it. */
-export const checkersPolicies = Object.freeze(
-  (["gentle", "growing", "challenge"] as const).map((strength) => ({
-    id: `checkers/${strength}@1` as PolicyId,
-    strength,
-    revision: 1,
-    plays:
-      strength === "gentle"
-        ? "Picks any legal move."
-        : strength === "growing"
-          ? "Looks two moves ahead."
-          : "Looks four moves ahead.",
-  }))
+/**
+ * Checkers' computer player. Revision 1 is the 3.0 search: a fixed depth and node cap, but
+ * each root branch also stopped after 8 ms, so a slow device played weaker. It stays only
+ * to finish rounds saved without a policy. Revision 2 is the same search with no clock:
+ * the same depth and node cap, run in slices, so strength is the same on every device.
+ */
+export type CheckersPolicy = Readonly<{
+  id: PolicyId;
+  strength: Strength;
+  revision: number;
+  /** Depth and node cap; null picks any legal move. */
+  limits: SearchBudget | null;
+  /** True only for revision 1, whose search also stopped on the clock. */
+  timed: boolean;
+  plays: string;
+}>;
+const checkersPlays: Plays = {
+  gentle: "Picks any legal move.",
+  growing: "Looks two moves ahead.",
+  challenge: "Looks four moves ahead.",
+};
+const checkersLimits: Record<Strength, SearchBudget | null> = {
+  gentle: null,
+  growing: Object.freeze({ depth: 2, nodes: 1800 }),
+  challenge: Object.freeze({ depth: 4, nodes: 9000 }),
+};
+/** Every Checkers policy that has ever shipped. Append-only and frozen. */
+export const checkersPolicies: readonly CheckersPolicy[] = Object.freeze(
+  [1, 2].flatMap((revision) =>
+    strengths.map(
+      (strength): CheckersPolicy =>
+        Object.freeze({
+          id: `checkers/${strength}@${revision}` as PolicyId,
+          strength,
+          revision,
+          limits: checkersLimits[strength],
+          timed: revision === 1 && strength !== "gentle",
+          plays: checkersPlays[strength],
+        })
+    )
+  )
 );
+export const checkersPolicyById = (id: unknown): CheckersPolicy | undefined => checkersPolicies.find((p) => p.id === id);
+/** The revision a new Checkers round starts with. Saved rounds keep theirs. */
+export const currentCheckersPolicy = (strength: Strength): CheckersPolicy =>
+  checkersPolicies.filter((p) => p.strength === strength).reduce((a, b) => (b.revision > a.revision ? b : a));
 
 export const policyById = (id: unknown): BoardPolicy | undefined => boardPolicies.find((p) => p.id === id);
 /** The revision a new round starts with. Saved rounds keep theirs. */

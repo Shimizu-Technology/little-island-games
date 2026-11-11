@@ -1,6 +1,6 @@
 import type { Strength } from "../board/types";
 import type { PolicyGame } from "./types";
-import { checkersPolicies, currentPolicy } from "./policies";
+import { currentCheckersPolicy, currentPolicy } from "./policies";
 
 /**
  * A rival is a name and a way of playing. The words come from the policy that
@@ -13,10 +13,7 @@ const people: Record<Strength, { name: string; who: string }> = {
   challenge: { name: "Ray", who: "a manta ray" },
 };
 export function rivalFor(game: PolicyGame, strength: Strength): Rival {
-  const plays =
-    game === "checkers"
-      ? checkersPolicies.find((p) => p.strength === strength)!.plays
-      : currentPolicy(game, strength).plays;
+  const plays = game === "checkers" ? currentCheckersPolicy(strength).plays : currentPolicy(game, strength).plays;
   return { strength, ...people[strength], plays };
 }
 export const rivalNames = Object.values(people).map((p) => p.name);

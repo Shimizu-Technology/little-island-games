@@ -57,11 +57,14 @@ export class IterativeSearch<P> {
   private finished: SearchResult | null = null;
   private completed: { move: number | null; depth: number; score: number } | null = null;
   nodes = 0;
+  private readonly limits: Readonly<SearchLimits>;
   constructor(
     private readonly root: P,
-    private readonly rules: SearchRules<P>,
-    private readonly limits: SearchLimits
+    private readonly rules: Readonly<SearchRules<P>>,
+    limits: Readonly<SearchLimits>
   ) {
+    // A private copy: the caller's object can't change the budget part way through.
+    this.limits = Object.freeze({ ...limits });
     this.seat = rules.turn(root);
     this.order = rules.legal(root);
     if (!this.order.length || rules.outcome(root) !== null)

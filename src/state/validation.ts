@@ -10,7 +10,9 @@ import { BoardId, BoardSessions, boardIds, isBoardId, validBoardSessions } from 
 import { ExploreProgress } from "../explore/progress";
 import { validLibraryData, validLegacyExplore, type LibraryData } from "../library/state";
 import { GameId, GameState, gameIds } from "../games";
-import { checkersResult } from "../games/checkers";
+import { checkersResult, checkersStrength } from "../games/checkers";
+import { checkersPolicyById } from "../playPolicies/policies";
+import type { Difficulty } from "../games/types";
 import { ticOutcome, lines } from "../games/tic";
 import { memoryKey, validMemoryCard } from "../games/memory";
 import { WordRecords, validWordRecords } from "./wordRecords";
@@ -253,6 +255,9 @@ export function validSession(v: unknown): v is GameState {
     }
     case "checkers":
       return (
+        // A frozen policy must be a known Checkers revision for this round's own strength.
+        (v.policy === undefined ||
+          checkersPolicyById(v.policy)?.strength === checkersStrength[v.options.difficulty as Difficulty]) &&
         validPosition(v.position) &&
         Array.isArray(v.history) &&
         v.history.length <= 160 &&

@@ -53,7 +53,11 @@ export type PolicyTask = {
   move: () => number | null;
   readonly nodes: number;
 };
-export type BoardPolicy = {
+/**
+ * A shipped policy. Every field is readonly and every policy object, its limits and the
+ * rules its chooser reads are frozen at runtime: the ID fixes the real search budget.
+ */
+export type BoardPolicy = Readonly<{
   id: PolicyId;
   game: Exclude<PolicyGame, "checkers">;
   strength: Strength;
@@ -64,9 +68,10 @@ export type BoardPolicy = {
    */
   publicOnly: boolean;
   /** Fixed by the ID. No caller can change a policy's depth or node budget. */
-  limits: { depth: number; nodes: number } | null;
+  limits: SearchBudget | null;
   /** Plain words a child can read. Each claim is checked by a test. */
   plays: string;
   choose: (view: PublicView, rng: () => number) => PolicyTask;
-};
+}>;
+export type SearchBudget = Readonly<{ depth: number; nodes: number }>;
 export const finished = (move: number | null): PolicyTask => ({ done: true, step: () => true, move: () => move, nodes: 0 });
