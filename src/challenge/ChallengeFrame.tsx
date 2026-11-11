@@ -77,8 +77,11 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
   const round=saved??completed, full=progress.paused.filter(s=>!s.credited).length>=(owner.startsWith('cove-')?4:8), marks=dareBits(progress.dares)?.filter(Boolean).length??0;
   const currentCard = round && cardOf(round.puzzle);
   const currentChoice:Choice|undefined = currentCard && (bands.find(b=>b.bank===currentCard.ref.bank)??currentCard);
+  // A dare invitation opens a card that has a dare: this one, or else an authored card of the same path and tier
+  // (packed bands carry no dares). With neither, nothing offers a dare.
+  const dareChoice:ChallengeCard|undefined = currentChoice && (!isBand(currentChoice)&&currentChoice.dares.length>0?currentChoice:entry.puzzles.find(p=>p.path===currentChoice.path&&p.tier===currentChoice.tier&&p.dares.length>0));
   const offerContext = round ? entry.contextFor(round.puzzle) : '';
-  const offerFacts = {atPar:round?.result?.event==='independent'&&round.result.cost!==null&&round.result.cost<=(currentCard?.par?.upper??-1),firstHigher:false,dare:entry.puzzles.some(p=>p.dares.length>0),easier:every.some(p=>p.tier<(currentCard?.tier??1)),harder:every.some(p=>p.tier>(currentCard?.tier??6))};
+  const offerFacts = {atPar:round?.result?.event==='independent'&&round.result.cost!==null&&round.result.cost<=(currentCard?.par?.upper??-1),firstHigher:false,dare:!!dareChoice,easier:every.some(p=>p.tier<(currentCard?.tier??1)),harder:every.some(p=>p.tier>(currentCard?.tier??6))};
   const signal=progress.signals.find(s=>s[0]===offerContext);
   const personal=owner!=='family'&&round?.partner===null;
   const hasOffer=!!(personal&&comfort.offers&&!comfort.youngChild&&signal&&!signal[4]&&(ratingDue(progress,offerContext)||resultOffer(signal,comfort,offerFacts)));
@@ -126,7 +129,7 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
         {entry.helpUI!=='board'&&<Button quiet disabled={!focused||busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}
       </>}/>}
       {round.result ? <><Heading>{round.result.event==='together'?'You solved it together!':'Puzzle solved!'}</Heading><Copy>{round.result.dares.length?'Your dare mark is kept.':'Your finished puzzle is kept. Helped finishes count too.'}</Copy>
-        {hasOffer&&<ResultOffer progress={progress} context={offerContext} comfort={comfort} facts={offerFacts} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=currentChoice;const next=kind==='dare'?current:every.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);setFresh(null);}}/>}
+        {hasOffer&&<ResultOffer progress={progress} context={offerContext} comfort={comfort} facts={offerFacts} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=currentChoice;const next=kind==='dare'?dareChoice:every.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);setFresh(null);}}/>}
         <PuzzleEnding praise={entry.completionText?.(round.puzzle,round.result,completionFacts) ?? defaultPraise} disabled={busy} showDirections={showDirections}
           onChoose={chooseNext} onAnother={()=>chooseNext('same')}
           onRest={back}/>

@@ -6,6 +6,8 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ChallengeFrame } from '../src/challenge/ChallengeFrame';
 import { StoreProvider, useStore } from '../src/state/Store';
 import { emptyChallenge, registerSaveContent } from '../src/state/challenge';
+import { completedSignal } from '../src/challenge/offers';
+import * as challengeCatalog from '../src/challenge/catalog';
 import { encodeSave, migrateProfiles } from '../src/state/profiles';
 import { putProgress } from '../src/state/challengeDrafts';
 import { catalogManifest } from '../src/state/catalogManifest';
@@ -51,7 +53,7 @@ const settle = () => act(async () => { for (let i = 0; i < 6; i++) await new Pro
 const waitFor = async (done: () => boolean) => { for (let i = 0; i < 200 && !done(); i++) await settle(); expect(done()).toBe(true); };
 const row = (slot: number, index: number) => readFileSync(`src/content/puzzles/assets/p${slot}.lipuzzle`, 'utf8').trim().split('\n')[index + 1];
 beforeEach(() => { vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); field = undefined; });
-afterEach(() => { vi.unstubAllGlobals(); });
+afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 it('R8: Endless Tide starts, plays, finishes and reopens packed bank entries through the Store content check', async () => {
   registerSaveContent(registration.catalog, catalogManifest(registration.catalog));
@@ -113,5 +115,52 @@ it('R8: a saved packed entry whose fingerprint no longer matches is kept and not
   expect(store.save.challenge!.paused[0].puzzle.hash).toBe('e'.repeat(64));
   expect(text).toContain('could not open');
   expect(text).toContain('Try opening again');
+  await act(async () => root.unmount());
+});
+
+// Review round 2, F3: a packed band has no dares, so a dare invitation after a packed finish must open an authored
+// card that has one (here the authored Lagoon cards at the same path and tier), both directly and from "Too easy".
+const lagoonCard = registration.puzzles.find(p => p.path === 'endless' && p.tier === 3 && p.dares.length > 0)!;
+const label = (n: { children: unknown[] }) => n.children.filter(c => typeof c === 'string' || typeof c === 'number').join('');
+async function solvePackedLagoon(progress = emptyChallenge()) {
+  registerSaveContent(registration.catalog, catalogManifest(registration.catalog));
+  db.raw = encodeSave(putProgress(migrateProfiles({ ...emptySave(), learning: addLearner(undefined, 'A', 'a') }), 'a', progress));
+  // Signals are recorded through the registry, which the lead's registration step fills; here it returns this entry.
+  vi.spyOn(challengeCatalog, 'challengeFor').mockReturnValue(entry);
+  let root!: ReactTestRenderer;
+  await act(async () => { root = create(<StoreProvider><Probe /><Ready /></StoreProvider>); });
+  await press(root, 'Start this puzzle');
+  await waitFor(() => !!store.save.challenge?.paused.length && !!field);
+  expect(store.save.challenge!.paused[0].puzzle.bank).toBe(3);
+  for (const d of [...tuplePuzzle(JSON.parse(row(3, 0))[3])!.route].map(dirOf)) { await act(async () => { field!.onMove(d); }); await settle(); }
+  expect(JSON.stringify(root.toJSON())).toContain('Puzzle solved!');
+  return root;
+}
+async function expectDareCardChosen(root: ReactTestRenderer) {
+  const text = JSON.stringify(root.toJSON());
+  expect(text).toContain('An optional dare');
+  const selected = root.root.findAllByType('button' as never).filter(b => b.props.selected === true).map(label);
+  expect(selected).toContain(`${lagoonCard.title} · Tide 3`);
+  const dare = lagoonCard.dares[0];
+  await press(root, `${dare.label} · ${dare.help === 'allowed' ? 'Help welcome' : 'On my own'}`);
+  await press(root, 'Start this puzzle');
+  await waitFor(() => store.save.challenge!.paused.length === 1);
+  expect(store.save.challenge!.paused[0].puzzle).toEqual(lagoonCard.ref);
+  expect(store.save.challenge!.paused[0].selectedDares).toEqual([dare.slot]);
+}
+it('F3: "Try a dare?" after a packed finish opens an authored card with its dare, which can start', async () => {
+  const root = await solvePackedLagoon();
+  expect(JSON.stringify(root.toJSON())).toContain('Try a dare?');
+  await press(root, 'Try a related challenge');
+  await expectDareCardChosen(root);
+  await act(async () => root.unmount());
+});
+it('F3: "Too easy" after a packed finish opens the same authored dare card', async () => {
+  const ref = await registration.packed!.choose(3, emptyChallenge()), context = registration.contextFor(ref);
+  // Two earlier finishes in this context make the third one ask how it felt.
+  const root = await solvePackedLagoon([0, 1].reduce(p => completedSignal(p, context, true, true), emptyChallenge()));
+  expect(JSON.stringify(root.toJSON())).toContain('How did that feel?');
+  await press(root, 'Too easy');
+  await expectDareCardChosen(root);
   await act(async () => root.unmount());
 });
