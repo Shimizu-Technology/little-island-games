@@ -80,9 +80,11 @@ export function repairStep(program:readonly Command[], plan:Command[]):Repair|un
  return {op:'change',at,card:plan[at]};
 }
 type Node = { walker: Walker; cost: number; next: [Command, number][] };
+type Graph = { layers: Node[][]; goals: number[] };
 /** Every card-optimal winner as a layered graph: each path of L cards from the start to a
- * goal is one shortest winning program. Mud keeps the walking cost in the node. */
-function* winnerGraph(d: Descriptor): Generator<void, {layers: Node[][]; goals: number[]} | null> {
+ * goal is one shortest winning program. Mud keeps the walking cost in the node. Each yield
+ * covers one node, so pruning and expansion never run unbroken through a whole layer. */
+function* winnerGraph(d: Descriptor): Generator<void, Graph | null> {
   const layers: Node[][] = [[{walker:start(d.level),cost:0,next:[]}]];
   while(layers.length<=80) {
     const index=new Map<string,number>(), layer:Node[]=[], goals:number[]=[];
@@ -101,66 +103,92 @@ function* winnerGraph(d: Descriptor): Generator<void, {layers: Node[][]; goals: 
     layers.push(layer);
     if(goals.length) {
       // Keep only edges that still reach a goal in exactly the remaining cards.
-      let alive=new Set(goals);
-      for(let k=layers.length-2;k>=0;k--) {
-        const keep=new Set<number>();
-        layers[k].forEach((node,i)=>{node.next=node.next.filter(([,to])=>alive.has(to));if(node.next.length)keep.add(i);});
-        alive=keep;
+      const alive=layers.map(l=>new Uint8Array(l.length));
+      for(const g of goals)alive[layers.length-1][g]=1;
+      for(let k=layers.length-2;k>=0;k--)for(let u=0;u<layers[k].length;u++) {
+        yield;
+        const node=layers[k][u], next=alive[k+1];
+        node.next=node.next.filter(([,to])=>next[to]===1);if(node.next.length)alive[k][u]=1;
       }
       return {layers,goals};
     }
   }
   return null;
 }
+const INF=0x3fffffff;
+/** One DP row per live node, allocated when first reached: cost, predecessor node (-1 start,
+ * -2 the same node one program card back) and how it was reached. */
+type Row = { cost: Int32Array; from: Int32Array; move: Int8Array };
+const row=(n:number):Row=>({cost:new Int32Array(n+1).fill(INF),from:new Int32Array(n+1).fill(-1),move:new Int8Array(n+1).fill(-1)});
+const at=(rows:(Row|undefined)[],v:number,n:number)=>rows[v]??(rows[v]=row(n));
 /** The card-optimal winner fewest edits away from the child's program (change, insert, remove). */
 function* nearestWinner(d: Descriptor, program: readonly Command[]): Generator<void, Command[] | null> {
   const graph=yield* winnerGraph(d);if(!graph)return null;
   const {layers,goals}=graph;
-  const n=program.length, L=layers.length-1;
-  type Cell = { cost: number; from: [number, number, number] | null; card: Command | null };
-  const table=layers.map(layer=>layer.map(()=>Array.from({length:n+1},():Cell=>({cost:Infinity,from:null,card:null}))));
-  table[0][0][0].cost=0;
+  const n=program.length, L=layers.length-1, cards=program.map(c=>cardCodes.indexOf(c));
+  // move: card index * 2, plus 1 when the card is inserted without using a program card.
+  const table:(Row|undefined)[][]=layers.map(()=>[]);
+  at(table[0],0,n).cost[0]=0;
   for(let k=0;k<=L;k++)for(let u=0;u<layers[k].length;u++) {
+    const r=table[k][u];if(!r)continue;
     yield;
-    const row=table[k][u];
-    for(let i=0;i<n;i++)if(row[i].cost+1<row[i+1].cost)row[i+1]={cost:row[i].cost+1,from:[k,u,i],card:null};
-    for(const [c,v] of layers[k][u].next)for(let i=0;i<=n;i++) {
-      const here=row[i].cost;if(here===Infinity)continue;
-      const target=table[k+1][v];
-      if(i<n){const cost=here+(program[i]===c?0:1);if(cost<target[i+1].cost)target[i+1]={cost,from:[k,u,i],card:c};}
-      if(here+1<target[i].cost)target[i]={cost:here+1,from:[k,u,i],card:c};
+    const cost=r.cost;
+    for(let i=0;i<n;i++)if(cost[i]+1<cost[i+1]){cost[i+1]=cost[i]+1;r.from[i+1]=-2;r.move[i+1]=-1;}
+    for(const [c,v] of layers[k][u].next) {
+      yield;
+      const t=at(table[k+1],v,n), card=cardCodes.indexOf(c);
+      for(let i=0;i<=n;i++) {
+        const here=cost[i];if(here>=INF)continue;
+        if(i<n){const next=here+(cards[i]===card?0:1);if(next<t.cost[i+1]){t.cost[i+1]=next;t.from[i+1]=u;t.move[i+1]=card*2;}}
+        if(here+1<t.cost[i]){t.cost[i]=here+1;t.from[i]=u;t.move[i]=card*2+1;}
+      }
     }
   }
-  const best=goals.reduce((g,h)=>table[L][h][n].cost<table[L][g][n].cost?h:g);
-  if(table[L][best][n].cost===Infinity)return null;
-  const plan:Command[]=[];let at:[number,number,number]|null=[L,best,n];
-  while(at){const cell:Cell=table[at[0]][at[1]][at[2]];if(cell.card)plan.unshift(cell.card);at=cell.from;}
+  const final=(g:number)=>table[L][g]!.cost[n];
+  const best=goals.reduce((g,h)=>final(h)<final(g)?h:g);
+  if(final(best)>=INF)return null;
+  const plan:Command[]=[];
+  for(let k=L,u=best,i=n;;) {
+    const r=table[k][u]!, from=r.from[i], move=r.move[i];
+    if(from===-1)break;
+    if(from===-2){i--;continue;}
+    plan.unshift(cardCodes[move>>1]);if(!(move&1))i--;k--;u=from;
+  }
   return plan;
 }
 /** Editors that can only take a card out or add one at the end (the School board). The nearest
  * card-optimal winner keeps the longest run of the child's cards that starts one, in order. */
 function* nearestAppendWinner(d: Descriptor, program: readonly Command[]): Generator<void, {plan: Command[]; remove: number | null} | null> {
   const graph=yield* winnerGraph(d);if(!graph)return null;
-  const {layers}=graph, n=program.length, L=layers.length-1;
-  type Cell = { cost: number; from: [number, number, number] | null; skipped: boolean };
-  const table=layers.map(layer=>layer.map(()=>Array.from({length:n+1},():Cell=>({cost:Infinity,from:null,skipped:false}))));
-  table[0][0][0].cost=0;
+  const {layers}=graph, n=program.length, L=layers.length-1, cards=program.map(c=>cardCodes.indexOf(c));
+  const table:(Row|undefined)[][]=layers.map(()=>[]);
+  at(table[0],0,n).cost[0]=0;
   let best:[number,number]|null=null, bestCost=Infinity;
   for(let k=0;k<=L;k++)for(let u=0;u<layers[k].length;u++) {
+    const r=table[k][u];if(!r)continue;
     yield;
-    const row=table[k][u];
+    // The first edge for each card, as a lookup per program card.
+    const edge=new Int32Array(cardCodes.length).fill(-1);
+    for(const [c,v] of layers[k][u].next){const card=cardCodes.indexOf(c);if(edge[card]<0)edge[card]=v;}
+    const cost=r.cost;
     for(let i=0;i<n;i++) {
-      if(row[i].cost===Infinity)continue;
-      if(row[i].cost+1<row[i+1].cost)row[i+1]={cost:row[i].cost+1,from:[k,u,i],skipped:true};
-      const edge=layers[k][u].next.find(([c])=>c===program[i]);
-      if(edge&&row[i].cost<table[k+1][edge[1]][i+1].cost)table[k+1][edge[1]][i+1]={cost:row[i].cost,from:[k,u,i],skipped:false};
+      if(cost[i]>=INF)continue;
+      if(cost[i]+1<cost[i+1]){cost[i+1]=cost[i]+1;r.from[i+1]=-2;}
+      const v=edge[cards[i]];
+      if(v>=0){const t=at(table[k+1],v,n);if(cost[i]<t.cost[i+1]){t.cost[i+1]=cost[i];t.from[i+1]=u;}}
+      if((i&31)===31)yield;
     }
     // Every alive node still reaches a goal in exactly the remaining cards, added at the end.
-    if(row[n].cost+L-k<bestCost){bestCost=row[n].cost+L-k;best=[k,u];}
+    if(cost[n]<INF&&cost[n]+L-k<bestCost){bestCost=cost[n]+L-k;best=[k,u];}
   }
   if(!best)return null;
-  const kept:Command[]=[];let remove:number|null=null,at:[number,number,number]|null=[best[0],best[1],n];
-  while(at){const cell:Cell=table[at[0]][at[1]][at[2]];if(cell.from){if(cell.skipped)remove=cell.from[2];else kept.unshift(program[cell.from[2]]);}at=cell.from;}
+  const kept:Command[]=[];let remove:number|null=null;
+  for(let k=best[0],u=best[1],i=n;;) {
+    const from=table[k][u]!.from[i];
+    if(from===-1)break;
+    if(from===-2)remove=i-1;else{kept.unshift(program[i-1]);k--;u=from;}
+    i--;
+  }
   const plan=[...kept];for(let k=best[0],u=best[1];k<L;k++){const [c,v]=layers[k][u].next[0];plan.push(c);u=v;}
   return {plan,remove};
 }
@@ -181,13 +209,16 @@ function* hintWork(d: Descriptor, program: readonly Command[], edits: HintEdits 
 export function nextHint(d: Descriptor, program: readonly Command[], edits: HintEdits = 'any'):Hint {
   const work=hintWork(d,program,edits);let result=work.next();while(!result.done)result=work.next();return result.value;
 }
-/** Hint work is cancellable and returns to the event loop at most every 8 ms. */
+/** Hint work is cancellable and returns to the event loop at most every 8 ms. Each step of the
+ * search is one node or one edge, so a slice pauses early when its longest step so far would
+ * carry it past the budget. */
 export async function nextHintSliced(d:Descriptor,program:readonly Command[], options:{cancelled:()=>boolean;now?:()=>number;pause?:()=>Promise<void>;budgetMs?:number;edits?:HintEdits}):Promise<Hint|null> {
  const now=options.now??(()=>performance.now()), pause=options.pause??(()=>new Promise<void>(resolve=>setTimeout(resolve,0))), budget=Math.min(8,options.budgetMs??8), work=hintWork(d,program,options.edits);
- let deadline=now()+budget;
+ let began=now(), last=began, longest=0;
  while(!options.cancelled()) {
   const result=work.next();if(result.done)return options.cancelled()?null:result.value;
-  if(now()>=deadline){await pause();if(options.cancelled())return null;deadline=now()+budget;}
+  const t=now();longest=Math.max(longest,t-last);last=t;
+  if(t-began+Math.min(longest,budget/2)>=budget){await pause();if(options.cancelled())return null;began=last=now();}
  }
  return null;
 }
