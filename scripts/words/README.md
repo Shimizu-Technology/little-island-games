@@ -156,8 +156,10 @@ and exclusion of the CHamoru-sensitive-only group. Two moving windows count
 The cap passes; cap+1 fails. Repetition does not increase the count. There is no
 density exception or Library-provenance bypass. The ten-snapshot calibration
 records every real exported file and all its text views in the private worker
-evidence. Raw code peaks at 11 in the long window; including decoded string
-sequences raises the observed long peak to 15. The short-window peak is 9.
+evidence. JavaScript views preserve source positions while decoding literals. The real
+long-window peak is 11 and the short-window peak is 8, leaving 45% and 50%
+headroom at the respective caps. Earlier string-pool concatenations are
+superseded by these source-order measurements.
 The complete broad set, including short everyday words, reaches 42 in raw code;
 the minimum length applies only to the broad detectors.
 
