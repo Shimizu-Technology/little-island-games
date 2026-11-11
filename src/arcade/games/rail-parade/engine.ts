@@ -170,6 +170,9 @@ export type RailState = {
   decoy: Cell;
   collected: number;
   bumps: number;
+  /** Chicks collected since the last bump, and the longest such run (AR-10 dare evidence). */
+  streak: number;
+  bestStreak: number;
   moves: number;
   score: number;
   elapsed: number;
@@ -272,6 +275,8 @@ export function createRail(level: RailState["level"], seed: number, helper = fal
     decoy: { x: 8, y: 8 },
     collected: 0,
     bumps: 0,
+    streak: 0,
+    bestStreak: 0,
     moves: 0,
     score: 0,
     elapsed: 0,
@@ -300,6 +305,7 @@ function bump(s: RailState, impact: Cell): RailState {
     impactKind: "splat",
     impact: { x: Math.max(0, Math.min(9, impact.x)), y: Math.max(0, Math.min(9, impact.y)) },
     bumps: Math.min(99999999, s.bumps + 1),
+    streak: 0,
     event: s.event + 1,
     queue: [],
     elapsed: 0,
@@ -324,6 +330,7 @@ export function railMove(s: RailState, direction: Direction): RailState {
     return {
       ...s,
       bumps: s.bumps + 1,
+      streak: 0,
       event: s.event + 1,
       message: `Find ${s.level !== "endless" ? s.level.sequence[s.collected] : "the next tile"} first`,
     };
@@ -336,6 +343,8 @@ export function railMove(s: RailState, direction: Direction): RailState {
     body,
     direction,
     collected,
+    streak: s.streak + Number(eat),
+    bestStreak: Math.max(s.bestStreak, s.streak + Number(eat)),
     moves: Math.min(99999999, s.moves + 1),
     score: Math.min(99999999, s.score + (eat ? 40 : 0)),
     elapsed: 0,
@@ -402,6 +411,7 @@ export function railResult(s: RailState): ArcadeResult | null {
         stars: railStars(s),
         score: s.score,
         detail: `${s.collected} chicks · ${s.moves} steps · ${s.bumps} bumps`,
+        facts: { streak: s.bestStreak },
       };
 }
 export function validRail(v: unknown): v is RailState {
@@ -418,6 +428,8 @@ export function validRail(v: unknown): v is RailState {
       "decoy",
       "collected",
       "bumps",
+      "streak",
+      "bestStreak",
       "moves",
       "score",
       "elapsed",
@@ -452,7 +464,9 @@ export function validRail(v: unknown): v is RailState {
     !cell(v.food, 10, 10) ||
     !cell(v.decoy, 10, 10) ||
     same(v.food, v.decoy) ||
-    ![v.collected, v.bumps, v.moves, v.score, v.event].every((n) => integer(n)) ||
+    ![v.collected, v.bumps, v.moves, v.score, v.event, v.streak, v.bestStreak].every((n) => integer(n)) ||
+    (v.streak as number) > (v.bestStreak as number) ||
+    (v.bestStreak as number) > (v.collected as number) ||
     !integer(v.patrol, 9999) ||
     !finite(v.elapsed, 2) ||
     !finite(v.respawn, RAIL_RESPAWN) ||

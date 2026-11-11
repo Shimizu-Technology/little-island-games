@@ -100,7 +100,7 @@ export function flightResult(s: FlightState): ArcadeResult | null {
   "worklet";
   if (s.status === "playing") return null;
   const cleared = s.status === "cleared", target = s.level === "endless" ? Infinity : s.level.target;
-  return { cleared, outcome: cleared ? "cleared" : s.status === "rest" ? "stopped" : "game-over", stars: cleared ? s.bumps === 0 && s.fruit >= Math.ceil(target * .85) ? 3 : s.bumps <= 1 ? 2 : 1 : 0, score: s.score, detail: `${s.passed} ${flightLearning(s) ? "answers" : "palms passed"} · ${s.fruit} fruit · ${s.bumps} hits` };
+  return { cleared, outcome: cleared ? "cleared" : s.status === "rest" ? "stopped" : "game-over", stars: cleared ? s.bumps === 0 && s.fruit >= Math.ceil(target * .85) ? 3 : s.bumps <= 1 ? 2 : 1 : 0, score: s.score, detail: `${s.passed} ${flightLearning(s) ? "answers" : "palms passed"} · ${s.fruit} fruit · ${s.bumps} hits`, facts: { fruit: s.fruit } };
 }
 export function validFlight(v: unknown): v is FlightState {
   if (!record(v) || !canonicalLevel(v.level, flightLevels) || !uint(v.seed, 0xffffffff) || typeof v.helper !== "boolean" || typeof v.helped !== "boolean" || !validLives(v.lives) || !uint(v.command) || !finite(v.y, 0, 1) || !finite(v.vy, -.7, 1.2) || !Array.isArray(v.gates) || v.gates.length !== 4) return false;
