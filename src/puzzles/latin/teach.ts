@@ -50,7 +50,7 @@ export function explainStep(p: LatinPuzzle, s: Step): { look: string; think: str
     case 'xy-wing': return { look: `Look at the three shaded cells, each with two numbers.`, think: `Whichever number the middle cell takes, one of the other two becomes ${s.digits[2]}. A cell that sees both of them cannot be ${s.digits[2]}.` };
     case 'simple-coloring': {
       const look = `Follow the line through the squares where ${v} could go, marked with dots ${chainMarks[0]} and rings ${chainMarks[1]}. Each line joins the only two places for ${v} in a row, column or box: one of them is ${v} and the other is not.`;
-      const turns = `So dots and rings take turns: either every dot is ${v} or every ring is.`, proof = s.chain?.proof ?? [];
+      const turns = `Dots and rings take turns along the lines, so either every dot is ${v} or every ring is.`, proof = s.chain?.proof ?? [];
       // `wrap`: two dots see each other, so every dot is false. `trap`: an outside square sees both marks.
       if (s.chain?.kind === 'wrap') return { look, think: `${turns} The dots at ${list(proof.map(i => cellName(p, i)))} see each other and cannot both be ${v}, so no dot is ${v}. The ${v}s go on the rings.` };
       if (!proof.length) return { look, think: `${turns} A square that sees both a dot and a ring cannot be ${v}.` };

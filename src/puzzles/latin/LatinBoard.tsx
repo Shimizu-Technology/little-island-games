@@ -34,7 +34,7 @@ export function boxBorders(p: LatinPuzzle) {
 function chainLines(n: number, links: readonly [number, number][], cell: number) {
   const at = (i: number) => [(i % n + 0.5) * cell, (Math.floor(i / n) + 0.5) * cell];
   const d = links.map(([a, b]) => { const [x1, y1] = at(a), [x2, y2] = at(b); return `M${x1} ${y1}L${x2} ${y2}`; }).join('');
-  return <Svg width={n * cell} height={n * cell} style={{ position: 'absolute' }}><Path d={d} stroke={C.ink} strokeOpacity={0.55} strokeWidth={Math.max(2, cell * 0.06)} strokeLinecap="round" fill="none"/></Svg>;
+  return <Svg width={n * cell} height={n * cell} style={{ position: 'absolute' }}><Path d={d} stroke={C.ink} strokeOpacity={0.4} strokeWidth={Math.max(2, cell * 0.045)} strokeLinecap="round" fill="none"/></Svg>;
 }
 /** A few plain sentences beside each board, so nobody has to know the game already. Size-aware. */
 export function rulesFor(p: LatinPuzzle): string {
