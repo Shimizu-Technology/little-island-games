@@ -61,6 +61,8 @@ describe('P2-1: arrow switch and Finish free run', () => {
       expect(toggle(r).props.accessibilityState.checked).toBe(shown);
       const button = finish(r);
       expect(button).toHaveLength(1);
+      // Largest text: the label stops growing at the HUD cap, so it never covers the runner.
+      expect(button[0].props.maxFontSizeMultiplier).toBeLessThanOrEqual(1.5);
       const row = r.root.find(n => n.props.testID === 'run-option-row');
       expect(flat(row.props.style).flexDirection).toBe('row');
       expect(flat(row.props.style).gap).toBe(OPTION_GAP);
@@ -87,6 +89,7 @@ describe('P2-1: arrow switch and Finish free run', () => {
       const shown = i % 2 ? !start : start;
       expect(toggle(r).props.accessibilityState.checked).toBe(shown);
       expect(pad()).toBe(shown ? 1 : 0);
+      if (shown) expect(r.root.find(n => String(n.type) === 'UiPlayTarget' && n.props.accessibilityLabel === 'Jump').find(n => String(n.type) === 'Text').props.maxFontSizeMultiplier).toBe(1.5);
       expect(finish(r)).toHaveLength(1);
     }
     expect(probe.initials.size).toBe(rounds);
