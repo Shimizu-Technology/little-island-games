@@ -285,9 +285,9 @@ export function useInteraction({
     });
   };
   /** R4: an unmounted target pose is no longer laid out; a stale acknowledgement must not count. */
-  const forgetPose = (index: number, token: string) => {
+  const forgetPose = useCallback((index: number, token: string) => {
     poseLayouts.modify((current) => { "worklet"; delete current[`${index}:${token}`]; return current; });
-  };
+  }, [poseLayouts]);
   const acknowledgeLayout = (id: string, token: string) => {
     laidOut.modify((current) => { "worklet"; current[id] = token; return current; });
   };

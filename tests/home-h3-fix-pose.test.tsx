@@ -61,3 +61,17 @@ it('R4: a pose unmounted since an earlier drag does not count as laid out', asyn
   expect(opacities(tree)[0]).toBe(1);
   await act(async () => tree.unmount());
 });
+it('R4: a re-render with a new interaction object keeps the acknowledgements of mounted poses', async () => {
+  const { source, interaction, poseLayouts, lie } = carried();
+  let tree!: TestRenderer.ReactTestRenderer;
+  const bases = ['stand', 'sit', 'lie'] as const;
+  await act(async () => { tree = TestRenderer.create(<SettleArt source={source} interaction={interaction} index={0} reduced={false} bases={bases} />); });
+  interaction.acknowledgePose(0, lie);
+  // The Home screen re-renders mid-carry: useInteraction hands out new function identities.
+  const next = { ...interaction, forgetPose: (i: number, t: string) => { delete poseLayouts.value[`${i}:${t}`]; } };
+  await act(async () => tree.update(<SettleArt source={source} interaction={next} index={0} reduced={false} bases={bases} />));
+  expect(poseLayouts.value[`0:${lie}`]).toBe(lie);
+  expect(opacities(tree)[0]).toBe(0);
+  await act(async () => tree.unmount());
+  expect(poseLayouts.value[`0:${lie}`]).toBeUndefined();
+});

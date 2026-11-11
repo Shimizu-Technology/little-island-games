@@ -63,8 +63,10 @@ function TargetPose({ entity, source, startHead, interaction, index, reduced, su
   const token = poseToken(entity.base, entity.facing, entity.action);
   const bottom = limbBottom(entity);
   const angle = entity.base === "lie" ? (entity.facing === "left" ? 90 : -90) : 0;
-  const forget = interaction.forgetPose;
-  React.useEffect(() => () => forget?.(index, token), [forget, index, token]);
+  // Forget only when this pose unmounts; a re-render hands out new function identities.
+  const forget = React.useRef(interaction.forgetPose);
+  React.useLayoutEffect(() => { forget.current = interaction.forgetPose; });
+  React.useEffect(() => () => forget.current?.(index, token), [index, token]);
   const selected = useDerivedValue(() => {
     const s = slots.value[index];
     return poseToken(s.proposal?.base ?? source.base, s.proposal?.facing ?? source.facing, entity.action) === token;
