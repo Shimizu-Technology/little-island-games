@@ -126,7 +126,7 @@ const edges=[
  ['artifact-views','singleton exemption width',"value[0].length===1 && typeof value[0][0]==='string' && /^\\p{L}$/u.test(value[0][0])","value[0].length>=1",['R3 singleton matrix digraph js','R3 singleton matrix horizontal json']],
  ['guard','untagged grid conservative sensitivity','sensitiveGrids.push(...grids.filter(grid=>!grid.languageDeclared && !grid.supplemental));','',['R3 untagged recognised sensitive grid']],
  ['ci','versioned secret mapping','secrets.LITTLE_ISLAND_WORD_POLICY_V2_GZIP_BASE64','secrets.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64',['R3 CI versioned secret mapping']],
- ['artifact-views','odd entries','return values.flatMap(value=>{','if(!values.every(shortWords))return [];return values.flatMap(value=>{',['R3 odd empty js','R3 odd weights json','R3 odd records js']],
+ ['artifact-views','odd entries','return values.flatMap(value=>{','if(!values.every(shortWords))return [];return values.flatMap(value=>{',['R4 legacy sparse odd array']],
  ['artifact-views','language recognizer',"/^(?:ch(?:-|$)|cha$|chamoru$|chamorro$)/i.test(value.trim())",'false',['R3 source constant','R3 source spread']],
  ['artifact-views','language characters',"/[åʼ]/iu.test(text.normalize('NFC'))",'false',['R3 characters 72 229']],
  ['guard','unknown extension fallback',"if(isUtf8(bytes) && !/[\\x00-\\x08\\x0e-\\x1f]/.test(views[1]))",'if(false)',['R3 text extension md']],

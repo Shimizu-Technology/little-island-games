@@ -799,9 +799,11 @@ test('R4 preview-only list checked before restore',async()=>{
  const {previewGeneratedFiles}=await import(pathToFileURL(join(root,'scripts/words/check.mjs'))),old=process.env.EXPO_PUBLIC_LIBRARY_PREVIEW;
  const file=join(root,previewGeneratedFiles[0]),preview=JSON.stringify({preview:true,w:r3words});
  writeFileSync(join(root,'scripts/library/build-index.mjs'),'import {writeFileSync} from "node:fs";import {join} from "node:path";for(const file of '+JSON.stringify(previewGeneratedFiles.map(file=>file.split('/').at(-1)))+')writeFileSync(join(process.argv.at(-1),file),file.endsWith(".json")?'+JSON.stringify(preview)+':\'export const generated="Preview";\');');initGit();
+ const previewIOS=join(scratch,'preview-only-ios'),previewInput=join(scratch,'preview-only.js');mkdirSync(previewIOS);writeFileSync(previewInput,'globalThis.words='+JSON.stringify(r3words)+';');
+ const compiled=spawnSync(hermesc,['-emit-binary','-out',join(previewIOS,'main.hbc'),previewInput],{encoding:'utf8'});assert.equal(compiled.status,0,compiled.stderr);assert.equal(guardTree(previewIOS,policy).passed,true);
  try {
   for(const name of previewGeneratedFiles)writeFileSync(join(root,name),name.endsWith('.json')?preview:'export const generated="Preview";');process.env.EXPO_PUBLIC_LIBRARY_PREVIEW='1';
-  assert.throws(()=>realCheckRelease(root,join(scratch,'release-web'),join(scratch,'release-ios'),join(scratch,'preview-only-receipt'),(cmd,args,opts)=>{assert.equal(opts.env.EXPO_PUBLIC_LIBRARY_PREVIEW,'1');const value=JSON.parse(readFileSync(file));assert.equal(value.preview,true);writeFileSync(join(args.at(-1),'native.js'),'globalThis.words='+JSON.stringify(value.w)+';');}),/partial-list/);
+  assert.throws(()=>realCheckRelease(root,join(scratch,'release-web'),previewIOS,join(scratch,'preview-only-receipt'),(cmd,args,opts)=>{assert.equal(opts.env.EXPO_PUBLIC_LIBRARY_PREVIEW,'1');const value=JSON.parse(readFileSync(file));assert.equal(value.preview,true);writeFileSync(join(args.at(-1),'native.js'),'globalThis.words='+JSON.stringify(value.w)+';');}),/partial-list/);
  }finally{for(const name of previewGeneratedFiles)writeFileSync(join(root,name),'Default fixture');if(old===undefined)delete process.env.EXPO_PUBLIC_LIBRARY_PREVIEW;else process.env.EXPO_PUBLIC_LIBRARY_PREVIEW=old;}
 });
 for(const field of ['overflow','coverage'])test(`R4 Hermes kind ${field}`,()=>{
@@ -834,3 +836,4 @@ exportCase('R4 encoded object three','data.js','globalThis.data='+JSON.stringify
 test('R4 teaching JSON non-literal field',()=>{
  const sourceRoot=join(scratch,'teaching-json-field'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),'export const words=[];');writeFileSync(join(sourceRoot,'src/learn/content/chamoru-extra.json'),JSON.stringify([{id:'x',term:'Plain',example:{text:'Safe'}}]));writeFileSync(join(dir,'data.js'),'globalThis.safe=1;');assert.throws(()=>guardTree(dir,sensitivePolicy,[],{sourceRoot}),/plain string literals/);
 });
+exportCase('R4 legacy sparse odd array','data.js','globalThis.words='+JSON.stringify([...r3words,...Array(6).fill('NEUTRAL'),null])+';',policy,true);
