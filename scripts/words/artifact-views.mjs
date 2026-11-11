@@ -330,7 +330,7 @@ export function chamoruSource(text, name) {
     return unknown;
   }
   const namedTeaching=/src\/learn\/content\/chamoru[^/]*\.[jt]sx?$/.test(name);
-  const teaching=namedTeaching||/\bChamoruWord\b/.test(text)||/src\/learn\//.test(name) && /\bterm\s*:/.test(text) && /\benglish\s*:/.test(text);
+  const teaching=namedTeaching||/\bChamoruWord\b/.test(text)||/src\/learn\//.test(name) && /["']?term["']?\s*:/.test(text) && /["']?english["']?\s*:/.test(text);
   function visit(n) {
     if(namedTeaching && ts.isPropertyAssignment(n))requireThat(ts.isStringLiteral(n.initializer), 'blocked CHamoru teaching fields must be plain string literals');
     if(teaching && ts.isObjectLiteralExpression(n)) {
@@ -354,6 +354,9 @@ export function chamoruSource(text, name) {
   visit(tree);return {strings,grids,teachingEntries};
 }
 
+export function teachingRecordData(value) {
+  return !!value && typeof value==='object' && (!Array.isArray(value) && 'term' in value && 'english' in value || Object.values(value).some(teachingRecordData));
+}
 export function teachingJSON(value) {
   const teachingEntries=[],strings=[];
   function visit(v) {

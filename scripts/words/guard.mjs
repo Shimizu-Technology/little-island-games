@@ -5,7 +5,7 @@ import { privatePath } from './paths.mjs';
 import { resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlViews, svgViews, isSvgDocument, workletStrings, puzzleStrings, jsonUnits, chamoruValues, chamoruGrids, chamoruSource, shortWords, listString, proseTokens, tracedLibraryUnit, chamoruCharacters, requireGridLanguages, untracedLibraryUnit, validLanguage, singleLetterMatrix, teachingJSON } from './artifact-views.mjs';
+import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlViews, svgViews, isSvgDocument, workletStrings, puzzleStrings, jsonUnits, chamoruValues, chamoruGrids, chamoruSource, shortWords, listString, proseTokens, tracedLibraryUnit, chamoruCharacters, requireGridLanguages, untracedLibraryUnit, validLanguage, singleLetterMatrix, teachingJSON, teachingRecordData } from './artifact-views.mjs';
 import { normalizedText, densityScanner, densityThreshold, shortDensityWindow, shortDensityThreshold, decodedTextViews, wordTokens } from './density.mjs';
 import { scanGrid } from './scan.mjs';
 import { requireThat, digest, sha256, foldScan } from './core.mjs';
@@ -155,9 +155,9 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       if(entry.isDirectory())sourceScan(path);
       else if(/\.(?:[cm]?[jt]sx?|json)$/.test(name)) {
         const text=readFileSync(path,'utf8');
-        if(!/chamoru[^/]*\.(?:[jt]sx?|json)$/i.test(name) && !/(?:language|lang|locale|ChamoruWord)|\bterm\s*:/.test(text) && !chamoruCharacters(text))continue;
+        if(!/chamoru[^/]*\.(?:[jt]sx?|json)$/i.test(name) && !/(?:language|lang|locale|ChamoruWord)|\bterm\s*:/.test(text) && !(/src\/learn\//.test(name) && /["']?term["']?\s*:/.test(text)) && !chamoruCharacters(text))continue;
         sourceFiles++;
-        const view=/\.json$/.test(name) ? (/src\/learn\/content\/chamoru[^/]*\.json$/i.test(name)?teachingJSON(JSON.parse(text)):{strings:chamoruValues(JSON.parse(text)),grids:chamoruGrids(JSON.parse(text))}) : chamoruSource(text,name);
+        const view=/\.json$/.test(name) ? (/src\/learn\/content\/chamoru[^/]*\.json$/i.test(name) || /src\/learn\//.test(name) && teachingRecordData(JSON.parse(text))?teachingJSON(JSON.parse(text)):{strings:chamoruValues(JSON.parse(text)),grids:chamoruGrids(JSON.parse(text))}) : chamoruSource(text,name);
         for(const entry of view.teachingEntries??[]) {
           const allowance=name==='src/learn/content/chamoru.ts' && allowances.find(rule=>rule.entryId===entry.id && rule.terms.includes(entry.term) && Object.values(entry.fields).every(value=>typeof value==='string') && !Object.keys(entry.fields).some(key=>['kind','cells','grid','board','rows','words','spelling'].includes(key)));
           const remaining=(policy.chamoruSensitive??[]).filter(term=>!allowance || teachingFold(entry.term)!==teachingFold(term));
