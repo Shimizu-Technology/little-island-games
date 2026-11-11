@@ -137,7 +137,8 @@ function coconutLesson(states: Position[], final: Position, seat: Seat, mine: nu
 /**
  * Fishing Nets advice is shown only when it is proven: a box whose rope touches nothing
  * else is always right to take, and any other advice must beat the played rope in an
- * exact search, which runs only once 16 or fewer ropes are open. The boxes named are the ones the rope really closes.
+ * exact search, which runs only once 16 or fewer ropes are open. The boxes named are
+ * the ones the rope really closes.
  */
 function netsLesson(states: Position[], final: Position, mine: number[], make: Make): ReviewTask {
   const n = final.size;

@@ -188,7 +188,7 @@ export async function checkersChoice(
   sliceMs = 8
 ): Promise<CheckersMove | null> {
   const policy = checkersPolicy(s);
-  if (policy.timed) return archivedCheckersChoice(s, cancelled);
+  if (policy.revision === 1) return archivedCheckersChoice(s, cancelled);
   if (s.position.outcome) return null;
   const rules = checkersRules(s),
     moves = checkersMoves(s.position, rules);
