@@ -276,7 +276,7 @@ exportCase('guard blocked visible string','app.js','globalThis.label="Hear COLD 
 exportCase('guard escaped blocked visible string','app.js','globalThis.label="Hear \\u0043OLD today";',policy,true);
 exportCase('guard template blocked visible string','app.js','globalThis.label=`Hear COLD ${name} today`;',policy,true);
 exportCase('guard three broad JS words','app.js','globalThis.words=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];',policy,true);
-exportCase('guard broad unquoted keys','app.js','globalThis.words={ALPHANONSENSE:1,BETANONSENSE:2,GAMMANONSENSE:3};',policy,true);
+exportCase('guard bare object keys are identifiers','app.js','globalThis.words={ALPHANONSENSE:1,BETANONSENSE:2,GAMMANONSENSE:3};');
 exportCase('guard broad JSON words','bank.json','["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"]',policy,true);
 exportCase('guard Unicode letter boundaries','app.js','globalThis.label="éCOLD COLDñ";');
 exportCase('guard punctuation boundaries','app.js','globalThis.label="(cold)!";',policy,true);
@@ -330,7 +330,8 @@ for(const kind of ['header','version','file length','tables','overflow','string 
   const table=128+bytes.readUInt32LE(40)*12+bytes.readUInt32LE(44)*4+bytes.readUInt32LE(48)*4;
   bytes.writeUInt32LE(kind==='overflow'?0xfffffffe:0x0afffffe,table);
  }
- assert.throws(()=>hermesStrings(bytes),/Invalid Hermes|Unsupported Hermes/);
+ const messages={header:'Invalid Hermes header',version:'Unsupported Hermes bytecode version','file length':'Invalid Hermes file length',tables:'Invalid Hermes string tables',overflow:'Invalid Hermes overflow string','string range':'Invalid Hermes string range'};
+ assert.throws(()=>hermesStrings(bytes),e=>e.message===messages[kind]);
 });
 function stringPolicy(texts) {
  return {...policy,artifactStringExceptions:[{path:'app.js',strings:texts.map(text=>({sha256:sha256(text),occurrences:1,terms:[...policy.scan.map(term=>({term,check:'broad',reason:'Synthetic inherited collision',evidence:'synthetic'})),{term:'COLD',check:'literal',reason:'Synthetic inherited collision',evidence:'synthetic'}]}))}]};

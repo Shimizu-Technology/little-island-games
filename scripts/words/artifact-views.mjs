@@ -36,7 +36,7 @@ export function hermesStrings(bytes) {
 
 /** The parser decodes escapes and template segments, and excludes variables,
  * member names, regex bodies and comments from the blocked-word content view.
- * Property keys remain in the leak view, including unquoted object keys.
+ * Quoted keys and comments remain in the leak view; bare property names are identifiers.
  */
 export function javascriptStrings(text) {
   const tree = ts.createSourceFile('artifact.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
@@ -48,7 +48,6 @@ export function javascriptStrings(text) {
   }
   function visit(node) {
     if (ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) strings.push(node.text);
-    if ((ts.isPropertyAssignment(node) || ts.isMethodDeclaration(node)) && ts.isIdentifier(node.name)) keys.push(node.name.text);
     ts.forEachChild(node, visit);
   }
   visit(tree);
@@ -83,7 +82,8 @@ export function letterGrids(value) {
  * Keep their original bytes in the unconditional leak view.
  */
 export function technicalString(text) {
-  return /^[a-f0-9]{16,64}$/i.test(text)
+  return /^[A-Z0-9]+(?:_[A-Z0-9]+)+$/.test(text)
+    || /^[a-f0-9]{16,64}$/i.test(text)
     || /^assets\/[a-f0-9]{32}$/i.test(text)
     || /^(?:\.?\/)?(?:assets\/)+[^\s]*[.-][a-f0-9]{32}\.(?:m4a|mp3|wav|png|jpe?g|webp|gif|svg|ttf|woff2?|lipuzzle)$/i.test(text)
     || /^\/?_expo\/static\/js\/[^\s]*-[a-f0-9]{32}\.(?:js|hbc)$/i.test(text);
