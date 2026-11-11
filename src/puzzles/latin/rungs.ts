@@ -36,17 +36,17 @@ export const latinRungs: Record<LatinKind, readonly RungInfo[]> = {
     cage('add', 1, 4, 'Add', '4×4 cages that add up. No number repeats in a row or column.'),
     cage('take', 2, 5, 'Take Away', '5×5 with adding and taking away: a difference cage holds two numbers that far apart.'),
     cage('times', 3, 6, 'Times', '6×6 with all four: add, take away, times and share.'),
-    cage('seven', 4, 7, 'Seven', '7×7 with all four operations and bigger cages. Some need pointing and claiming.'),
+    cage('seven', 4, 7, 'Seven', '7×7 with all four operations and bigger cages.'),
     cage('nine', 6, 9, 'Nine', '9×9 for grown-ups, all four operations.'),
   ],
   'greater-than': [
     arrow('gentle', 2, 5, 'Gentle', '5×5 with arrows between cells. Each arrow points at the smaller number.'),
-    arrow('tall', 4, 7, 'Tall', '7×7 with fewer arrows and fewer starting numbers. Some need pointing and claiming.'),
+    arrow('tall', 4, 7, 'Tall', '7×7 with fewer arrows and fewer starting numbers.'),
     arrow('steep', 6, 7, 'Steep', '7×7 for grown-ups: every one needs matching pairs, fish or wings.', 'naked-pair'),
   ],
   skyline: [
     roof('low', 2, 4, 'Low Town', '4×4 rooftops: the edge numbers say how many roofs you can see from there.'),
-    roof('high', 4, 6, 'High Town', '6×6 rooftops with some edge numbers missing. Some need pointing and claiming.'),
+    roof('high', 4, 6, 'High Town', '6×6 rooftops with some edge numbers missing.'),
   ],
   killer: [
     cage('small', 3, 6, 'Small Cages', '6×6 Sudoku with dashed cages: each cage adds to its number and never repeats one.'),
