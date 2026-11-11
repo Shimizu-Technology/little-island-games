@@ -27,9 +27,28 @@ const clauseSpecs = {
  shipping:['entry.sha256===sha256(bytes)'],
  check:["r.source===execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim()", 'r.policySha256===lock.policySha256','r.scanListSha256===lock.scanListSha256','r.admission?.full===true','r.admission.passed===true','r.web?.passed===true','r.ios?.passed===true','r.ios.sha256===treeHash(ios)'],
 };
+const clauseTests={
+ "row.reviewerB.verdict === 'keep'":'clause reviewer B must keep',
+ "familySample.decision === 'keep'":'clause family decision must keep',
+ 'lead.reconciliationSha256 === digest(reconciled)':'clause lead reconciliation hash',
+ 'lead.fixture === false':'clause lead fixture must be false',
+ 'a.runId !== b.runId':'clause distinct run IDs',
+ 'a.transcriptSha256 !== b.transcriptSha256':'clause distinct transcript hashes',
+ "v.verdict === 'keep'":'clause variant verdict',
+ "v.relation === 'spelling-variant'":'clause variant relation',
+ 's.ship === true':'clause source ship permission',
+ "word.language === 'en'":'clause clue {"language":"ch"}',
+ 'clue.answer === word.spelling':'clause clue {"answer":"REED"}',
+ "slots.every(text => answers.some(w => w.spelling.replaceAll(' ','') === text))":'clause crossword unreviewed runs beside a reviewed run',
+ 'lock.policySha256 === sha256(bytes)':'clause lock policySha256 without supplied policy',
+ 'lock.scanListSha256 === digest([...policy.scan].sort())':'clause lock scanListSha256 without supplied policy',
+ 'entry.sha256===sha256(bytes)':'clause manifest same-length edit hash',
+};
 for(const [file,clauses] of Object.entries(clauseSpecs)) for(const clause of clauses) {
  const source=sources.get(file);if(!source.includes(clause))throw new Error('Missing mutation target: '+clause);
- custom(file,'R2 clause '+clause,source.replace(clause,'true'));
+ const test=clauseTests[clause]??(file==='check'?'clause release receipt '+({"r.source===execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim()":'source','r.policySha256===lock.policySha256':'policySha256','r.scanListSha256===lock.scanListSha256':'scanListSha256','r.admission?.full===true':'admission.full','r.admission.passed===true':'admission.passed','r.web?.passed===true':'web.passed','r.ios?.passed===true':'ios.passed','r.ios.sha256===treeHash(ios)':'ios.sha256'}[clause]):undefined);
+ if(!test)throw new Error('Missing clause regression');
+ custom(file,'R2 clause '+clause,source.replace(clause,'true'),[test]);
 }
 custom('core','R2 sensitive headword rejection',sources.get('core').replace('if (sensitive.has(foldScan(word.spelling)) || sensitive.has(foldScan(word.lemma))) return false;','if (false) return false;'),['clause CHamoru sensitive spelling and lemma rejection']);
 custom('bake','asset listed raw object',sources.get('bake').replace('listed:listed.map(({wordId,answer,cells})=>({wordId,answer,cells}))','listed'),['listed projection strips private fields']);
@@ -46,11 +65,13 @@ custom('guard','private blob detector',sources.get('guard').replaceAll('blobs.so
 custom('check','compressed policy expansion bound',sources.get('check').replace('{maxOutputLength:4*1024*1024}','{}'),['compressed CI policy is decoded, locked, used and bounded']);
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
 mkdirSync(join(scratch,'scripts'),{recursive:true});cpSync('scripts/words',toolRoot,{recursive:true});
+const harness=join(scratch,'word-pipeline-regressions.mjs');writeFileSync(harness,readFileSync('tests/helpers/word-pipeline-regressions.mjs'));
+process.once('SIGTERM',()=>{rmSync(scratch,{recursive:true,force:true});process.exit(143);});
 let failed=0;
 try{
  // Freeze all source files for this run.
  for(const [file,source] of sources){let patched=source;for(const p of patches.get(file).sort((a,b)=>b.start-a.start))patched=patched.slice(0,p.start)+`(${source.slice(p.start,p.end)} || (globalThis.__wordRecordGate?.(${p.id}), false))`+patched.slice(p.end);writeFileSync(join(toolRoot,`${file}.mjs`),patched);}
- const run=(env,pattern)=>spawnSync(process.execPath,['--test',...(pattern?['--test-name-pattern',pattern]:[]),'tests/helpers/word-pipeline-regressions.mjs'],{encoding:'utf8',env:{...process.env,...env,WORD_TEST_TOOL_ROOT:resolve(toolRoot)},timeout:120000,maxBuffer:8*1024*1024});
+ const run=(env,pattern)=>spawnSync(process.execPath,['--test',...(pattern?['--test-name-pattern',pattern]:[]),harness],{encoding:'utf8',env:{...process.env,...env,WORD_TEST_TOOL_ROOT:resolve(toolRoot)},timeout:120000,maxBuffer:8*1024*1024});
  const baseline=run({WORD_MUTATION_TRACE:trace});
  if(baseline.status!==0){console.error(baseline.stdout+baseline.stderr);throw new Error('Instrumented unmutated baseline must pass');}
  for(const [file,source] of sources)writeFileSync(join(toolRoot,`${file}.mjs`),source);
