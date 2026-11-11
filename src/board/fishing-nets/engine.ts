@@ -1,5 +1,5 @@
 import { other, Seat } from "../../games/match";
-import { blank, integer, Position, replayValidator, shuffle, Strength, tally } from "../types";
+import { blank, Edge, integer, Position, replayValidator, shuffle, Strength, tally, withEdge } from "../types";
 export const edgeCount = (n: number) => 2 * n * (n + 1);
 export function boxEdges(n: number, box: number): number[] {
   const r = Math.floor(box / n),
@@ -7,9 +7,11 @@ export function boxEdges(n: number, box: number): number[] {
     vertical = n * (n + 1);
   return [r * n + c, (r + 1) * n + c, vertical + r * (n + 1) + c, vertical + r * (n + 1) + c + 1];
 }
-export function create(seed = 1, size = 3, starter: Seat = 0): Position {
+/** Head start: boxes counted for that seat at the end, beside the ones it closes. */
+export const maxEdge = 3;
+export function create(seed = 1, size = 3, starter: Seat = 0, edge?: Edge): Position {
   const n = [3, 4, 5].includes(size) ? size : 3;
-  return blank(seed, n, starter, Array(edgeCount(n)).fill(-1), Array(n * n).fill(-1));
+  return blank(seed, n, starter, Array(edgeCount(n)).fill(-1), Array(n * n).fill(-1), edge);
 }
 export function legal(s: Position): number[] {
   return s.outcome !== null ? [] : s.board.flatMap((v, i) => (v === -1 ? [i] : []));
@@ -34,7 +36,7 @@ export function move(s: Position, edge: number): Position {
     scores,
     moves: [...s.moves, edge],
     turn: caught ? s.turn : other(s.turn),
-    outcome: marks.every((m) => m !== -1) ? tally(scores) : null,
+    outcome: marks.every((m) => m !== -1) ? tally(withEdge(s, scores)) : null,
   };
 }
 const sides = (s: Position, b: number) => boxEdges(s.size, b).filter((e) => s.board[e] !== -1).length;
@@ -76,7 +78,7 @@ export function choose(s: Position, strength: Strength): number | null {
   // Chain phase: open the shortest chain rather than handing over an entire lagoon.
   return strength === "challenge" ? [...all].sort((a, b) => giveaway(s, a) - giveaway(s, b))[0] : all[0];
 }
-export const validate = replayValidator(create, move, [3, 4, 5], 60);
+export const validate = replayValidator(create, move, [3, 4, 5], 60, maxEdge);
 export function edgeDots(n: number, edge: number): [number, number] {
   const h = n * (n + 1);
   if (edge < h) {

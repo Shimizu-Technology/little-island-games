@@ -1,5 +1,5 @@
 import { other, Seat } from "../../games/match";
-import { blank, integer, minimax, Position, replayValidator, Strength } from "../types";
+import { blank, Edge, integer, minimax, Position, replayValidator, Strength } from "../types";
 export const lines: number[][] = [];
 for (let r = 0; r < 6; r++)
   for (let c = 0; c < 7; c++)
@@ -12,8 +12,13 @@ for (let r = 0; r < 6; r++)
       if (r + 3 * dr < 6 && c + 3 * dc >= 0 && c + 3 * dc < 7)
         lines.push(Array.from({ length: 4 }, (_, n) => (r + n * dr) * 7 + c + n * dc));
     }
-export function create(seed = 1, _size = 7, starter: Seat = 0): Position {
-  return blank(seed, 7, starter, Array(42).fill(-1));
+/** Head start: one extra coconut for that seat, already resting in the middle column. */
+export const maxEdge = 1;
+export function create(seed = 1, _size = 7, starter: Seat = 0, edge?: Edge): Position {
+  const board = Array(42).fill(-1);
+  if (edge?.[0]) board[38] = 0;
+  else if (edge?.[1]) board[38] = 1;
+  return blank(seed, 7, starter, board, [], edge);
 }
 export function legal(s: Position): number[] {
   return s.outcome !== null ? [] : [3, 2, 4, 1, 5, 0, 6].filter((c) => s.board[c] === -1);
@@ -41,7 +46,7 @@ function evaluate(s: Position, seat: Seat): number {
 export function choose(s: Position, strength: Strength): number | null {
   return minimax(s, strength === "gentle" ? 1 : strength === "growing" ? 3 : 5, legal, move, evaluate);
 }
-export const validate = replayValidator(create, move, [7], 42);
+export const validate = replayValidator(create, move, [7], 42, maxEdge);
 
 export function hintReason(s: Position, column: number): string {
   if (!legal(s).includes(column)) return "Choose an open column.";

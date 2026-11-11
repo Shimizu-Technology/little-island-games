@@ -79,6 +79,8 @@ export type ChallengeEntry = {
   completionFacts?: (session: ChallengeSession) => CompletionFacts | null;
   /** The frame supplies Help unless the board declares its own help UI. */
   helpUI?: 'board';
+  /** Words for the way back, for games without School Levels 1–5. */
+  backLabel?: string;
   controls: { help: () => unknown; reset: () => unknown };
   /** Absent for inline-only registrations, which behave exactly as before. */
   packed?: PackedChallenge;

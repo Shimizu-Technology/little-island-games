@@ -19,6 +19,13 @@ export const storage: StorageAdapter = {
     if (previous) { const old = parseDraft(previous); if (old.session.id !== row.session.id || old.session.ordinal !== row.session.ordinal || old.session.revision >= row.session.revision) throw new Error('This draft has been replaced.'); }
     localStorage.setItem(key,raw);
   },
+  logLaunch: async entry => {
+    const index = Number(localStorage.getItem('little-island.launch-log-cursor') ?? 0) % 8;
+    localStorage.setItem(`little-island.launch-log-${index}`, entry);
+    localStorage.setItem('little-island.launch-log-cursor', String(index + 1));
+  },
+  readNotices: async () => localStorage.getItem('little-island.set-aside-notices'),
+  writeNotices: async raw => { if (raw === null) localStorage.removeItem('little-island.set-aside-notices'); else localStorage.setItem('little-island.set-aside-notices', raw); },
   get: async () => {
     const raw = localStorage.getItem("little-island.save");
     // Heal the non-authoritative cache after a crash between the envelope commit and cache update.
@@ -32,10 +39,11 @@ export const storage: StorageAdapter = {
     // Preservation can fail on quota. In that case the authoritative envelope is untouched.
     for (const key of draftKeys) { const row = localStorage.getItem(key); if (row !== null && !isFolded(row,metadata)) localStorage.setItem(`little-island.${recoveryKey()}`,row); }
     // Stage the cache first. If the envelope write fails, roll it back; old rows remain untouched.
-    const previous = localStorage.getItem('little-island.draft-head');
+    const previous = localStorage.getItem('little-island.draft-head'), previousNotices = localStorage.getItem('little-island.set-aside-notices');
+    const putNotices = (raw: string | null) => { if (raw === null) localStorage.removeItem('little-island.set-aside-notices'); else localStorage.setItem('little-island.set-aside-notices', raw); };
     localStorage.setItem('little-island.draft-head',revision);
-    try { localStorage.setItem("little-island.save", value); }
-    catch (error) { if (previous === null) localStorage.removeItem('little-island.draft-head'); else localStorage.setItem('little-island.draft-head',previous); throw error; }
+    try { if (metadata && metadata.notices !== undefined) putNotices(metadata.notices); localStorage.setItem("little-island.save", value); }
+    catch (error) { putNotices(previousNotices); if (previous === null) localStorage.removeItem('little-island.draft-head'); else localStorage.setItem('little-island.draft-head',previous); throw error; }
     for (const key of draftKeys) localStorage.removeItem(key);
     // A crash before this cleanup leaves obsolete rows, already preserved and never applied to a new base.
   },
