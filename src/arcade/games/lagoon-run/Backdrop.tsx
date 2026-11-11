@@ -6,7 +6,7 @@ import type { WorldId } from '../../types';
 import { useReducedMotion } from '../../../components/motion';
 import { Landmark } from '../scrolling/Environment';
 import { lagoonLook, type LagoonLook } from './look';
-import { HERO_ZOOM, projectTrack, roadEdge, type StageLayout } from './camera';
+import { HERO_ZOOM, WASH_SPAN, projectTrack, roadEdge, type StageLayout } from './camera';
 import { FLOOR_FAR } from './floorBands';
 
 /**
@@ -78,7 +78,7 @@ export const DeckLight = memo(function DeckLight({ world }: { world: WorldId }) 
   const look = lagoonLook(world), c = projectTrack(1, .7), b = projectTrack(1, 1.62);
   return <Svg width={390} height={660} style={{ position: 'absolute', overflow: 'visible' }} accessible={false}>
     <Defs><LinearGradient id="lr-near" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.shade} stopOpacity={0}/><Stop offset="1" stopColor={look.shade} stopOpacity={.22}/></LinearGradient></Defs>
-    <Rect x={-300} y={c.y} width={990} height={b.y - c.y + 40} fill="url(#lr-near)"/>
+    <Rect x={WASH_SPAN.x} y={c.y} width={WASH_SPAN.width} height={b.y - c.y + 40} fill="url(#lr-near)"/>
   </Svg>;
 });
 /** Over the deck but under every actor: the far deck and rails melt into the air. */
@@ -86,7 +86,7 @@ export const DeckHaze = memo(function DeckHaze({ world }: { world: WorldId }) {
   const look = lagoonLook(world), h = projectTrack(1, -1.2), far = projectTrack(1, -.35);
   return <Svg width={390} height={660} style={{ position: 'absolute', overflow: 'visible' }} accessible={false}>
     <Defs><LinearGradient id="lr-deckhaze" x1="0" y1="0" x2="0" y2="1"><Stop offset="0" stopColor={look.haze} stopOpacity={look.hazeOpacity + .2}/><Stop offset="1" stopColor={look.haze} stopOpacity={0}/></LinearGradient></Defs>
-    <Rect x={-300} y={h.y - 2} width={990} height={far.y - h.y + 2} fill="url(#lr-deckhaze)"/>
+    <Rect x={WASH_SPAN.x} y={h.y - 2} width={WASH_SPAN.width} height={far.y - h.y + 2} fill="url(#lr-deckhaze)"/>
   </Svg>;
 });
 

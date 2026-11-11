@@ -29,6 +29,9 @@ export const HERO_ZOOM = 1.25;
 export const HERO_SCALE = .72;
 /** Speed widens the view slightly: at most 3.5% wider at full speed (none with Reduce Motion). */
 export const FOV_KICK = .035;
+/** Camera-frame x span for full-width washes (deck haze, near light). It must cover the widest
+ * stage (iPhone landscape, iPad) at the widest FOV kick and lane follow, or their edges show. */
+export const WASH_SPAN = { x: -2000, width: 4390 };
 /** Horizon sits at 34% of the visible stage height on every screen. */
 export const SKY_LINE = .34;
 export type StageLayout = {
