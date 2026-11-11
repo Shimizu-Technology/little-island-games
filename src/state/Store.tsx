@@ -759,7 +759,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   },[ready,recovery,writeDraft,refuseChallenge,disk]);
   const challengeDiscard = useCallback(async (expected: ChallengeExpected) => {
     if (!ready || recovery || restoring.current || uncertainWrite.current || expected.epoch !== generation.current) return false;
-    restoring.current = true;
+    boundaryRefused.current = false; restoring.current = true;
     try {
       await queue.current;
       const before = latest.current, progress = progressFor(before,expected.owner), slot = progress?.paused.find(s => s.game === expected.game);
@@ -772,7 +772,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const meta = envelopeWrite(next);
       await disk.set(encoded,{ ...meta, folded:[...meta.folded,slot] });
       // The envelope holds every accepted move, so draft debt it folded is paid.
-      admittedBytes.current = utf8Bytes(encoded); envelopeSaved(); if (mounted.current && allSaved()) setError(null); generation.current++; setEpoch(generation.current);
+      admittedBytes.current = utf8Bytes(encoded); envelopeSaved(); if (mounted.current && !boundaryRefused.current && allSaved()) setError(null); generation.current++; setEpoch(generation.current);
       latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); return true;
     } catch {
       setError('This paused game could not be removed. Your saved work is kept. Please try again.'); return false;
@@ -782,7 +782,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     // A blur cleanup waits for the current boundary, then rechecks its captured epoch.
     if (action.type === 'select' && action.id === null) while (restoring.current && mounted.current && expectedEpoch === generation.current) await new Promise(resolve => setTimeout(resolve, 25));
     if (!ready || recovery || restoring.current || expectedEpoch !== generation.current) return false;
-    restoring.current = true;
+    boundaryRefused.current = false; restoring.current = true;
     try {
       await queue.current;
       const before = latest.current;
@@ -792,7 +792,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const encoded = encodeSave(next); parseSave(encoded);
       if (action.type === 'remove') await preserveAndReplace(disk,encoded,encodeSave(before),envelopeWrite(next));
       else await disk.set(encoded,envelopeWrite(next));
-      admittedBytes.current = utf8Bytes(encoded); envelopeSaved(); if (mounted.current && allSaved()) setError(null);
+      admittedBytes.current = utf8Bytes(encoded); envelopeSaved(); if (mounted.current && !boundaryRefused.current && allSaved()) setError(null);
       generation.current++; setEpoch(generation.current);
       latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setBadgeResult(null); return true;
     } catch {
