@@ -1041,7 +1041,7 @@ export function HomeScreen({
       </Text>
       {capacityShown && <CapacityCue bottom={inset.bottom + navigationHeight + 14} />}
       {undoNote && <UndoNote message={store.message} restored={store.message !== UNDO_FULL_MESSAGE}
-        bottom={inset.bottom + navigationHeight + (designing && !vertical ? portraitDrawerHeightFor(large) : 0) + 14}
+        top={headerHeight + 10}
         onDismiss={() => setNoteGone(store.messageSerial)} />}
       {lab && frameReport && (
         <Text testID="frame-report" style={{ position: "absolute", left: 75, bottom: 2, fontSize: 10 }}>
