@@ -6,9 +6,9 @@ import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync } f
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-const files=['bake','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','density','ci'];
+const files=['bake','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','density','preview','ci'];
 const mutations=[],sources=new Map(),patches=new Map();
-for(const file of files){const path=file==='ci'?'.github/workflows/ci.yml':`scripts/words/${file}.mjs`,source=readFileSync(path,'utf8'),tree=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true);sources.set(file,source);patches.set(file,[]);
+for(const file of files){const path=file==='ci'?'.github/workflows/ci.yml':file==='preview'?'scripts/ios-preview-bundle.mjs':`scripts/words/${file}.mjs`,source=readFileSync(path,'utf8'),tree=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true);sources.set(file,source);patches.set(file,[]);
  function visit(n){if(ts.isCallExpression(n)&&n.expression.getText(tree)==='requireThat'){
   const message=n.arguments[1].getText(tree);
   if(file==='check' && /release <|receipt </.test(message))return;
@@ -183,6 +183,9 @@ r4Edges.push(
  ['guard','hard terms ignore length',"[...policy.core,...policy.exact,...policy.lemmas].map(normalizedText)","[...policy.core,...policy.exact,...policy.lemmas].filter(w=>w.length>=5).map(normalizedText)",['R4 short core normalised','R4 short exact normalised']],
  ['guard','decoded JSON views','strings.push(...decodedTextViews(strings));','',['R4 encoded JSON core','R4 encoded JSON unicode density']]
 );
+r4Edges.push(
+ ['preview','validate before restoring', 'gateDelivery(cwd,{...env,EXPO_PUBLIC_LIBRARY_PREVIEW:"1"});\n    putBack();', 'putBack();\n    gateDelivery(cwd,{...env,EXPO_PUBLIC_LIBRARY_PREVIEW:"1"});',['native preview build and npm delivery scripts are gated']]
+);
 for(const [file,label,before,after,tests] of r4Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R4 mutation target '+label);custom(file,'R4 '+label,original.replace(before,after),tests);}
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
@@ -193,7 +196,7 @@ let failed=0;
 try{
  // Freeze all source files for this run.
  for(const [file,source] of sources){let patched=source;for(const p of patches.get(file).sort((a,b)=>b.start-a.start))patched=patched.slice(0,p.start)+`(${source.slice(p.start,p.end)} || (globalThis.__wordRecordGate?.(${p.id}), false))`+patched.slice(p.end);writeFileSync(join(toolRoot,`${file}.mjs`),patched);}
- const run=(env,pattern)=>spawnSync(process.execPath,['--test',...(pattern?['--test-name-pattern',pattern]:[]),harness],{encoding:'utf8',env:{...process.env,...env,WORD_TEST_TOOL_ROOT:resolve(toolRoot),WORD_TEST_WORKFLOW_FILE:join(toolRoot,'ci.mjs')},timeout:120000,maxBuffer:8*1024*1024});
+ const run=(env,pattern)=>spawnSync(process.execPath,['--test',...(pattern?['--test-name-pattern',pattern]:[]),harness],{encoding:'utf8',env:{...process.env,...env,WORD_TEST_TOOL_ROOT:resolve(toolRoot),WORD_TEST_WORKFLOW_FILE:join(toolRoot,'ci.mjs'),WORD_TEST_PREVIEW_FILE:join(toolRoot,'preview.mjs')},timeout:process.env.LITTLE_ISLAND_SLOW_HOST==='1'?300000:120000,maxBuffer:8*1024*1024});
  const baseline=run({WORD_MUTATION_TRACE:trace});
  if(baseline.status!==0){console.error(baseline.stdout+baseline.stderr);throw new Error('Instrumented unmutated baseline must pass');}
  for(const [file,source] of sources)writeFileSync(join(toolRoot,`${file}.mjs`),source);

@@ -21,10 +21,12 @@ export function hermesStrings(bytes, options={}) {
   requireThat(storage + storageSize <= bytes.length, 'Invalid Hermes string tables');
   const strings = [];
   // Each kind run encodes its count in 31 low bits; the high bit marks identifiers.
-  const totalStrings=count,identifierIds=new Set();let cursor=0;
-  for(let i=0;i<kinds;i++) {const run=bytes.readUInt32LE(128+functions*12+i*4),count=run&0x7fffffff;requireThat(cursor+count<=totalStrings,'Invalid Hermes string kind run');if(run>>>31)for(let id=cursor;id<cursor+count;id++)identifierIds.add(id);cursor+=count;}
-
+  const identifierIds=new Set(),runs=[];let cursor=0;
+  for(let i=0;i<kinds;i++) {const run=bytes.readUInt32LE(128+functions*12+i*4),length=run&0x7fffffff;runs.push({start:cursor,length,identifier:run>>>31});cursor+=length;}
+  // Validate all counts before allocating identifier ranges. This also rejects
+  // oversized intermediate runs without an overlapping, redundant predicate.
   requireThat(cursor===count,'Invalid Hermes string kind coverage');
+  if(options.identifiers===false)for(const run of runs)if(run.identifier)for(let id=run.start;id<run.start+run.length;id++)identifierIds.add(id);
   for (let i = 0; i < count; i++) {
     const entry = bytes.readUInt32LE(table + i * 4), utf16 = entry & 1;
     let offset = (entry >>> 1) & 0x7fffff, length = entry >>> 24;
