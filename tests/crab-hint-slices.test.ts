@@ -54,34 +54,37 @@ describe('Crab hint search', () => {
   console.info('Crab hint oracle cases',checked);expect(checked).toBeGreaterThan(500);
  });
  // Real event-loop pauses (the production setTimeout), measured outside the slicer: an active
- // slice is the time from resuming to the next pause. Host jitter allowance: 1 ms, and a search
+ // slice runs from resuming to the next pause. The limit is on the JS thread's own CPU time in
+ // the slice, so a shared host that preempts the worker cannot fail it, while a missing yield
+ // still does; wall time is reported beside it. Host jitter allowance: 1 ms, and a search
  // fails only if it overruns on three separate runs (a missing yield overruns every time; a
- // scheduler or GC stall on this shared host does not repeat). Not a device timing claim.
+ // GC pause does not repeat). Not a device timing claim.
  const sliceMs=8, jitterMs=1;
+ const cpu=()=>{const u=process.threadCpuUsage();return (u.user+u.system)/1000;};
  async function measure(d:Descriptor,program:Command[],edits:HintEdits) {
-  const slices:number[]=[], began=performance.now();let last=began, step=0, previous=began;
+  const slices:number[]=[], walls:number[]=[], began=performance.now();let last=began, lastCpu=cpu();
   const hint=await nextHintSliced(d,program,{cancelled:()=>false,edits,
-   now:()=>{const t=performance.now();step=Math.max(step,t-previous);previous=t;return t;},
-   pause:async()=>{slices.push(performance.now()-last);await new Promise<void>(resolve=>setTimeout(resolve,0));last=previous=performance.now();}});
-  slices.push(performance.now()-last);
-  return {hint,slices,max:Math.max(...slices),active:slices.reduce((a,b)=>a+b,0),total:performance.now()-began,step};
+   pause:async()=>{slices.push(cpu()-lastCpu);walls.push(performance.now()-last);await new Promise<void>(resolve=>setTimeout(resolve,0));last=performance.now();lastCpu=cpu();}});
+  slices.push(cpu()-lastCpu);walls.push(performance.now()-last);
+  return {hint,slices,max:Math.max(...slices),wall:Math.max(...walls),active:walls.reduce((a,b)=>a+b,0),total:performance.now()-began};
  }
  const full=(d:Descriptor,seed:number)=>{const cs=commands(d.level.pace);return [Array(80).fill('turn-left') as Command[],Array.from({length:80},(_,j)=>cs[(j*7+seed)%cs.length])];};
  it('keeps every uninterrupted slice within 8 ms at the maximum program length, in both editors, on every registered beach', async () => {
-  const report:{name:string;mode:HintEdits;max:number;active:number;total:number;step:number;slices:number;tries:number}[]=[];
+  const report:{name:string;mode:HintEdits;max:number;wall:number;active:number;total:number;slices:number;tries:number}[]=[];
   for(const {name,d} of beaches)for(const mode of modes)for(const [j,program] of full(d,name.length).entries()) {
    let m=await measure(d,program,mode), tries=1;
    while(m.max>sliceMs+jitterMs&&tries<3){m=await measure(d,program,mode);tries++;}
    expect(m.hint).toEqual(nextHint(d,program,mode));
-   report.push({name:`${name}#${j}`,mode,max:m.max,active:m.active,total:m.total,step:m.step,slices:m.slices.length,tries});
+   report.push({name:`${name}#${j}`,mode,max:m.max,wall:m.wall,active:m.active,total:m.total,slices:m.slices.length,tries});
   }
   report.sort((a,b)=>b.max-a.max);
-  console.info('Crab hint slices host ms',JSON.stringify({searches:report.length,retried:report.filter(r=>r.tries>1).length,maxSlice:report[0].max,maxStep:Math.max(...report.map(r=>r.step)),maxActive:Math.max(...report.map(r=>r.active)),worst:report.slice(0,5)}));
-  for(const r of report)expect(r.max,`${r.name} ${r.mode}: ${r.max.toFixed(2)} ms slice`).toBeLessThanOrEqual(sliceMs+jitterMs);
+  const quiet=report.filter(r=>r.wall<=sliceMs+jitterMs).length;
+  console.info('Crab hint slices host ms',JSON.stringify({searches:report.length,retried:report.filter(r=>r.tries>1).length,maxCpuSlice:report[0].max,maxWallSlice:Math.max(...report.map(r=>r.wall)),wallWithinLimit:quiet,maxActive:Math.max(...report.map(r=>r.active)),worst:report.slice(0,5)}));
+  for(const r of report)expect(r.max,`${r.name} ${r.mode}: ${r.max.toFixed(2)} ms CPU in one slice`).toBeLessThanOrEqual(sliceMs+jitterMs);
  });
  it('stops within one slice when cancelled from outside, and at the next step when polled', async () => {
   // The longest searches at full length; a 2 ms budget also forces several pauses into each.
-  // The same three-run rule as above applies to each latency.
+  // Latency is the JS thread's CPU work after the cancel, with the same three-run rule.
   const heavy=['school/h3','school/h5','10/0','9/4'].map(name=>beaches.find(b=>b.name===name)!.d);
   let stopped=0, worstTap=0, worstPoll=0;
   for(const d of heavy)for(const edits of modes)for(const budgetMs of [8,2])for(const delay of [0,2,5]) {
@@ -89,18 +92,19 @@ describe('Crab hint search', () => {
    // A tap that lands while the search works can only run at the next pause, so the search
    // either stops there or has already finished; both happen within one slice of the tap.
    const tap=async()=>{
-    let cancelled=false,due=0;
+    let cancelled=false,due=0,dueCpu=0;
     const timer=new Promise<void>(resolve=>{due=performance.now()+delay;setTimeout(()=>{cancelled=true;resolve();},delay);});
-    const answer=await nextHintSliced(d,program,{cancelled:()=>cancelled,edits,budgetMs});const done=performance.now();await timer;
+    const answer=await nextHintSliced(d,program,{cancelled:()=>cancelled,edits,budgetMs,now:()=>{const t=performance.now();if(t>=due&&!dueCpu)dueCpu=cpu();return t;}});
+    const latency=dueCpu?cpu()-dueCpu:0;await timer;
     if(answer)expect(answer).toEqual(whole);
-    return {stopped:!answer,latency:Math.max(0,done-due)};
+    return {stopped:!answer,latency};
    };
    // A cancel check that turns true mid-slice is seen at the next step, with no further work.
    const poll=async()=>{
     const stop=performance.now()+delay;let seen=0;
-    const answer=await nextHintSliced(d,program,{cancelled:()=>{const t=performance.now();if(t>=stop&&!seen)seen=t;return t>=stop;},edits,budgetMs});
+    const answer=await nextHintSliced(d,program,{cancelled:()=>{const t=performance.now();if(t>=stop&&!seen)seen=cpu();return t>=stop;},edits,budgetMs});
     if(answer){expect(answer).toEqual(whole);expect(seen).toBe(0);return {stopped:false,latency:0};}
-    return {stopped:true,latency:performance.now()-seen};
+    return {stopped:true,latency:cpu()-seen};
    };
    for(const [run,limit,name] of [[tap,sliceMs+jitterMs,'tap'],[poll,jitterMs,'poll']] as const) {
     let r=await run();for(let tries=1;r.latency>limit&&tries<3;tries++)r=await run();
@@ -109,7 +113,7 @@ describe('Crab hint search', () => {
     if(name==='tap')worstTap=Math.max(worstTap,r.latency);else worstPoll=Math.max(worstPoll,r.latency);
    }
   }
-  console.info('Crab hint cancel host ms',JSON.stringify({stopped,worstTap,worstPoll}));
+  console.info('Crab hint cancel host CPU ms',JSON.stringify({stopped,worstTap,worstPoll}));
   expect(stopped).toBeGreaterThan(20);
  });
 });
