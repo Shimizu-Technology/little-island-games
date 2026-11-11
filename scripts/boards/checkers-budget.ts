@@ -58,8 +58,8 @@ const randomPlayer = (seed: number): Player => {
     return m.length ? m[Math.floor(r() * m.length)] : null;
   };
 };
-async function play(red: Player, blue: Player, opening: number) {
-  let p = createCheckers(defaultOptions).position;
+async function play(red: Player, blue: Player, opening: number, headStart = false) {
+  let p = createCheckers({ ...defaultOptions, checkersHeadStart: headStart ? 1 : undefined }).position;
   // A short seeded random opening gives distinct games.
   const r = random(opening * 7919 + 1);
   for (let i = 0; i < 4 && !p.outcome; i++) {
@@ -131,6 +131,17 @@ const main = async () => {
     report[`${strength}HeadToHead`] = h2h;
     console.log(strength, h2h);
   }
+  // 3. The declared head start: a Growing stand-in for the child (red) against the Challenge rival (blue).
+  const standIn: Player = async (p) => budgeted(p, "growing").move,
+    ray: Player = async (p) => budgeted(p, "challenge").move;
+  const headStart: Record<string, Record<string, number>> = {};
+  for (const [name, on] of [["none", false], ["onePieceFewer", true]] as const) {
+    const t: Record<string, number> = { red: 0, blue: 0, draw: 0, unfinished: 0 };
+    for (let g = 0; g < games; g++) t[await play(standIn, ray, g, on)]++;
+    headStart[name] = t;
+  }
+  report.headStartGrowingStandInVsChallenge = headStart;
+  console.log("head start", headStart);
   if (out) writeFileSync(out, JSON.stringify(report, null, 2) + "\n");
 };
 void main();
