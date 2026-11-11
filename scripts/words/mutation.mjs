@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync } f
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-const files=['bake','review','policy','shipping','guard','paths','core','scan','check'];
+const files=['bake','review','policy','shipping','guard','artifact-views','paths','core','scan','check'];
 const mutations=[],sources=new Map(),patches=new Map();
 for(const file of files){const path=`scripts/words/${file}.mjs`,source=readFileSync(path,'utf8'),tree=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true);sources.set(file,source);patches.set(file,[]);
  function visit(n){if(ts.isCallExpression(n)&&n.expression.getText(tree)==='requireThat'){
@@ -39,7 +39,10 @@ custom('paths','symlink ancestor canonicalization',sources.get('paths').replace(
 custom('guard','partial-list detector',sources.get('guard').replace('if(broadHits.size>=(allowed.broad.size ? 1 : 3))','if(false)'),['guard partial-array','guard keys','guard newlines']);
 custom('guard','individual blocked-literal detector',sources.get('guard').replace('if(literalHits.size)','if(false)'),['guard core','guard chamoru']);
 custom('guard','private filename detector',sources.get('guard').replaceAll('bannedNames.test(name)','false'),['guard filename receipt.private.json']);
-custom('guard','canary detector',sources.get('guard').replace('if(uppers.some(upper=>upper.includes(word.toUpperCase())))','if(false)'),['guard canary']);
+custom('guard','canary detector',sources.get('guard').replace('if(uppers.some(upper=>upper.includes(word.toUpperCase())))','if(false)').replace("if((policy.canaries??[]).some(word=>raw.uppers.some(upper=>upper.includes(word.toUpperCase()))))",'if(false)'),['guard canary']);
+custom('guard','word-search grid detector',sources.get('guard').replace('if(grids.some(', 'if(false && grids.some('),['guard actual word grid','guard decoded packed word grid']);
+custom('guard','private hash detector',sources.get('guard').replaceAll('[...hashes].some(h=>upper.includes(h.toUpperCase()))','false'),['guard scan-hash']);
+custom('guard','private blob detector',sources.get('guard').replaceAll('blobs.some(b=>upper.includes(b.toUpperCase()))','false'),['guard private blob despite exceptions']);
 custom('check','compressed policy expansion bound',sources.get('check').replace('{maxOutputLength:4*1024*1024}','{}'),['compressed CI policy is decoded, locked, used and bounded']);
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
 mkdirSync(join(scratch,'scripts'),{recursive:true});cpSync('scripts/words',toolRoot,{recursive:true});

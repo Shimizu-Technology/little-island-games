@@ -50,7 +50,7 @@ if(process.argv[1] && realpathSync(process.argv[1])===fileURLToPath(import.meta.
   try {
     if (!process.env.LITTLE_ISLAND_WORD_POLICY_LOCK && (process.env.LITTLE_ISLAND_WORD_POLICY_JSON || process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64)) {
       privateDirectory=mkdtempSync(join(tmpdir(),'li-word-ci-'));
-      const policyFile=join(privateDirectory,'policy.private.json'),bytes=process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64 ? gunzipSync(Buffer.from(process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64+(process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64_2??''),'base64'),{maxOutputLength:4*1024*1024}) : Buffer.from(process.env.LITTLE_ISLAND_WORD_POLICY_JSON);
+      const policyFile=join(privateDirectory,'policy.private.json'),bytes=process.env.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64 ? gunzipSync(Buffer.from(Array.from({length:16},(_,i)=>process.env['LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64'+(i?'_'+(i+1):'')]??'').join(''),'base64'),{maxOutputLength:4*1024*1024}) : Buffer.from(process.env.LITTLE_ISLAND_WORD_POLICY_JSON);
       const policy=JSON.parse(bytes);
       writeFileSync(policyFile,bytes,{mode:0o600});
       const lockFile=join(privateDirectory,'lock.private.json');
