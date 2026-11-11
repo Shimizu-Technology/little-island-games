@@ -93,13 +93,15 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
     ? lessonComplete
       ? "You’ve got it!"
       : lesson.title
-    : outcome === "draw"
-      ? "A well-played draw!"
-      : outcome
-        ? `${outcome === "red" ? "Red" : "Blue"} wins this round!`
-        : computer
-          ? `${rival?.name ?? "Your island friend"} is thinking…`
-          : `${s.position.turn === 1 ? "Red" : "Blue"} to move`;
+    : moment
+      ? "Looking back: the board before that move"
+      : outcome === "draw"
+        ? "A well-played draw!"
+        : outcome
+          ? `${outcome === "red" ? "Red" : "Blue"} wins this round!`
+          : computer
+            ? `${rival?.name ?? "Your island friend"} is thinking…`
+            : `${s.position.turn === 1 ? "Red" : "Blue"} to move`;
   return (
     <BoardLayout>
       <Status
@@ -107,15 +109,17 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
         detail={
           lesson
             ? lesson.text
-            : outcome
-              ? "Play again whenever you like."
-              : locked
-                ? "Keep jumping with this same piece."
-                : moves.some((m) => m.captured.length)
-                  ? rules === "friendly"
-                    ? "A jump is available. You can jump or choose another move."
-                    : "A jump is available. Classic rules: take a jump."
-                  : "Tap a piece, then tap its next square."
+            : moment
+              ? "This is how the board looked earlier. The game is still over."
+              : outcome
+                ? "Play again whenever you like."
+                : locked
+                  ? "Keep jumping with this same piece."
+                  : moves.some((m) => m.captured.length)
+                    ? rules === "friendly"
+                      ? "A jump is available. You can jump or choose another move."
+                      : "A jump is available. Classic rules: take a jump."
+                    : "Tap a piece, then tap its next square."
         }
         success={!!outcome || lessonComplete}
       />
@@ -150,7 +154,7 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
           </Text>
           <Copy style={{ color: C.ink }}>
             {moment
-              ? `${moment.text} The board below shows the moment before; the gold squares mark the move.`
+              ? `${moment.text} The board above shows that moment. Gold squares mark the move.`
               : "The look-back didn’t find one move that clearly changed this game. Play again, or try a head start."}
           </Copy>
           <Button quiet compact onPress={() => setReview(null)}>
