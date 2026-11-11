@@ -2,17 +2,19 @@ import React, { memo, useEffect } from 'react';
 import { View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { mapLayout } from './model';
+import { useAppForeground } from './foreground';
 import Animated, { cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withTiming, Easing } from 'react-native-reanimated';
-/** Small composited overlays keep idle motion off the static SVG scene. */
+/** Small composited overlays keep idle motion off the static SVG scene. The tide runs only while the map has
+ * focus and the app is in front; it stops in the background and starts again from rest on return. */
 export const IslandLife = memo(function IslandLife({ width, height, reduced, active, fontScale }: { width: number; height: number; reduced: boolean; active: boolean; fontScale: number }) {
  const { targets, artWidth, artHeight } = mapLayout(width, height, fontScale);
  const school = targets.find(place => place.id === 'school')!, home = targets.find(place => place.id === 'home')!;
- const tide = useSharedValue(0);
+ const tide = useSharedValue(0), foreground = useAppForeground(), moving = active && foreground && !reduced;
  useEffect(() => {
-  if (reduced || !active) { cancelAnimation(tide); tide.set(0); return; }
+  if (!moving) { cancelAnimation(tide); tide.set(0); return; }
   tide.set(withRepeat(withTiming(1, { duration: 3400, easing: Easing.inOut(Easing.sin) }), -1, true));
   return () => cancelAnimation(tide);
- }, [reduced, active, tide]);
+ }, [moving, tide]);
  const waves = useAnimatedStyle(() => ({ opacity: .35 + tide.get() * .35, transform: [{ translateY: tide.get() * 4 }] }));
  const boat = useAnimatedStyle(() => ({ transform: [{ translateY: tide.get() * 3 }, { rotate: `${tide.get() * 3 - 1.5}deg` }] }));
  const flag = useAnimatedStyle(() => ({ transform: [{ scaleX: 1 - tide.get() * .12 }] }));
