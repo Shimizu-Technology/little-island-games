@@ -9,7 +9,7 @@ import type { Character, HomeStateV2, Instance, RoomState } from "./model";
  * part of history.
  *
  * HOME_UNDO_BYTES is 20 KB (it was 6 KB) so a restored room's things fit: restoring a room
- * with 48 basket shells takes about 4.6 KB in the compact form below. Five learners at the
+ * with 48 basket shells takes about 4.3 KB in the compact form below. Five learners at the
  * cap still fit the measured whole-save headroom (docs/evidence/f1-save/SIZE.json).
  * A removal must stay recoverable for its whole 20 steps, so `undoAdmits` refuses an edit
  * that could ever push a removal out. Every later step has HOME_UNDO_RESERVE bytes kept for it.
