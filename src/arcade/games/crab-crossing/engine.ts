@@ -298,6 +298,9 @@ function landed(s: CrabState): CrabState {
     event: s.event + 1,
     message: cursor > s.cursor ? `${crabConfig(s).numbers[s.cursor]} · Great!` : "",
   });
+  // Walking back onto the starting shore also begins a whole new crossing; a splash to the
+  // halfway island stays dirty until the crab is back at row 10.
+  if (next.phase === "play" && next.respawn === 0 && next.y === 10 && next.crossingBumps !== next.bumps) next = { ...next, crossingBumps: next.bumps };
   if (next.phase !== "play" || next.respawn > 0 || next.y !== 0) return next;
   const crossed = next.crossed + 1,
     score = Math.min(99999999, crossed * 100);
