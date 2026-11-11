@@ -16,8 +16,11 @@ function test(name,fn) {
 if(process.env.WORD_MUTATION_TRACE) globalThis.__wordRecordGate=id=>appendFileSync(process.env.WORD_MUTATION_TRACE,JSON.stringify({id,test:globalThis.__wordGateTest})+'\n');
 const scratch=mkdtempSync(join(tmpdir(),'li-word-SYNTHETIC-'));
 after(()=>rmSync(scratch,{recursive:true,force:true}));
+process.env.LITTLE_ISLAND_WORD_ADVISORY_DIR=join(scratch,'advisories');
 const root=join(scratch,'repo'), sources=join(scratch,'sources');
 mkdirSync(join(root,'scripts'),{recursive:true});mkdirSync(join(root,'content/words'),{recursive:true});mkdirSync(sources);
+mkdirSync(join(root,'src/learn/content'),{recursive:true});
+writeFileSync(join(root,'src/learn/content/chamoru.ts'),'export const chamoruWords=[];');
 symlinkSync(resolve('node_modules'),join(root,'node_modules'));
 cpSync(resolve(process.env.WORD_TEST_TOOL_ROOT ?? 'scripts/words'),join(root,'scripts/words'),{recursive:true});
 writeFileSync(join(root,'content/words/supplement.draft.json'),'{"entries":[]}');
@@ -106,7 +109,7 @@ for(const [name,surface,rx] of [
  ])test(name,()=>{const words=surface.wordIds.map(w=>word(w.toUpperCase()));assert.throws(()=>checkSurfaces({words,surfaces:[surface],policy}),rx);});
 test('surface uses honored',()=>assert.throws(()=>checkSurfaces({words:[{...word(),uses:['matching']}],surfaces:[{id:'s',kind:'wheel',wordIds:['reef'],letters:'REEF'}],policy}),/uses/));
 test('independent bent and wheel verifier',()=>{for(const board of [{id:'b',kind:'builder',cells:[['C','Q','D'],['Q','O','L']]},{id:'w',kind:'wheel',letters:'DLOCQ'}])assert.throws(()=>independentlyVerify([board],policy.scan,policy.core),/verification failed/);});
-for(const [name,contents] of [['partial-array','["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"]'],['keys','{"ALPHANONSENSE":1,"BETANONSENSE":1,"GAMMANONSENSE":1}'],['newlines','ALPHANONSENSE\nBETANONSENSE\nGAMMANONSENSE'],['core','COLD'],['chamoru','SYNTHETICHEADWORD'],['canary','PRIVATECANARYNONWORD'],['scan-hash',lock.scanListSha256]])test(`guard ${name}`,()=>{const dir=join(scratch,'guard');mkdirSync(dir,{recursive:true});writeFileSync(join(dir,'app.bin'),contents);assert.throws(()=>guardTree(dir,policy),/leaked/);rmSync(dir,{recursive:true});});
+for(const [name,contents] of [['partial-array','["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"]'],['newlines','ALPHANONSENSE BETANONSENSE GAMMANONSENSE'],['core','COLD'],['canary','PRIVATECANARYNONWORD'],['scan-hash',lock.scanListSha256]])test(`guard ${name}`,()=>{const dir=join(scratch,'guard');mkdirSync(dir,{recursive:true});writeFileSync(join(dir,'app.bin'),contents);assert.throws(()=>guardTree(dir,policy),/leaked/);rmSync(dir,{recursive:true});});
 for(const name of ['receipt.private.json','safety-policy.private.json','tiers.queue.json','reconcile.pending.json'])test(`guard filename ${name}`,()=>{const dir=join(scratch,'names');mkdirSync(dir);writeFileSync(join(dir,name),'{}');assert.throws(()=>guardTree(dir,policy),/leaked/);rmSync(dir,{recursive:true});});
 const hermesPlatform={darwin:'osx-bin',linux:'linux64-bin',win32:'win64-bin'}[process.platform];
 assert.ok(hermesPlatform,`Unsupported Hermes test platform: ${process.platform}`);
@@ -288,7 +291,7 @@ exportCase('guard private blob despite exceptions','app.js','globalThis.leak='+J
 for(const [name,source,fail] of [
  ['whole word','globalThis.label="COLD";',true],
  ['regex fragment','globalThis.pattern=/ALPHANONSENSE|BETANONSENSE|GAMMANONSENSE/;',true],
- ['three broad words','globalThis.leak=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];',true],
+ ['three broad words','globalThis.leak="ALPHANONSENSE BETANONSENSE GAMMANONSENSE";',true],
  ['separate storage boundaries','globalThis.words=["XCOL","D","ALPHANONSENSEB","BETANONSENSEB","GAMMANONSENSEB"];',false],
  ['UTF16 word','globalThis.label="COLD Å";',true],
  ['overflow word','globalThis.label='+JSON.stringify('Q'.repeat(300)+' COLD')+';',true],
@@ -341,7 +344,7 @@ exportCase('guard exact reviewed string','app.js','globalThis.label="COLD safe";
 exportCase('guard changed reviewed string rejected','app.js','globalThis.label="COLD new";',stringPolicy(['COLD safe']),true);
 exportCase('guard additional reviewed occurrence rejected','app.js','globalThis.label="COLD safe";globalThis.another="COLD safe";',stringPolicy(['COLD safe']),true);
 exportCase('guard legacy semantic term exception cannot hide word','app.js','globalThis.label="COLD new";',{...policy,artifactTermExceptions:[{path:'app.js',terms:[{term:'COLD',check:'literal',reason:'Synthetic inherited collision',evidence:'synthetic'}]}]},true);
-exportCase('guard additional broad array despite reviewed words','app.js','globalThis.old=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];globalThis.leak=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];',stringPolicy(['ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE']),true);
+exportCase('guard additional broad array despite reviewed words','app.js','globalThis.old=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];globalThis.leak=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];',stringPolicy(['ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE',JSON.stringify(['ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE'])]),true);
 for(const [name,value,rx] of [
  ['array',{},/Invalid artifact string exceptions/],
  ['path',[{path:'../app.js',strings:[]}],/string exception path/],
@@ -368,3 +371,88 @@ exportCase('guard regex partial list','app.js','globalThis.pattern=/ALPHANONSENS
 exportCase('guard regex single term is code','app.js','globalThis.pattern=/COLD/;');
 exportCase('guard HTML regex partial list','index.html','<script>globalThis.pattern=/ALPHANONSENSE|BETANONSENSE|GAMMANONSENSE/;</script>',policy,true);
 exportCase('guard HTML key map partial list','index.html','<script>globalThis.words={ALPHANONSENSE:1,BETANONSENSE:2,GAMMANONSENSE:3};</script>',policy,true);
+
+// Round 2 uses only placeholder terms. Scope is part of the safety contract.
+exportCase('guard independent UI strings are advisory','app.js','globalThis.a="ALPHANONSENSE";globalThis.b="BETANONSENSE";globalThis.c="GAMMANONSENSE";');
+exportCase('guard independent objects do not aggregate','app.js','globalThis.a={label:"ALPHANONSENSE"};globalThis.b={label:"BETANONSENSE"};globalThis.c={label:"GAMMANONSENSE"};');
+exportCase('guard independent JSON records do not aggregate','bank.json','[{"label":"ALPHANONSENSE"},{"label":"BETANONSENSE"},{"label":"GAMMANONSENSE"}]');
+exportCase('guard single string partial list','app.js','globalThis.a="ALPHANONSENSE BETANONSENSE GAMMANONSENSE";',policy,true);
+exportCase('guard English sensitive headword allowed','app.js','globalThis.label="SYNTHETICHEADWORD";');
+exportCase('guard CHamoru tagged label','bank.json','{"language":"ch","label":"SYNTHETICHEADWORD"}',policy,true);
+exportCase('guard CHamoru tagged speech','bank.json','{"language":"ch","speech":["SYNTHETICHEADWORD"]}',policy,true);
+exportCase('guard English tagged label','bank.json','{"language":"en","label":"SYNTHETICHEADWORD"}');
+exportCase('guard CHamoru matching label','bank.json','{"language":"ch","words":[{"spelling":"SYNTHETICHEADWORD"}]}',policy,true);
+const sensitiveGridPolicy={...policy,scan:[...policy.scan,'ZORPLE'],chamoruSensitive:['ZORPLE']};
+exportCase('guard English grid skips sensitive-only term','bank.json','{"language":"en","cells":[["Z","O","R","P","L","E"]]}',sensitiveGridPolicy);
+exportCase('guard CHamoru grid keeps sensitive term','bank.json','{"language":"ch","cells":[["Z","O","R","P","L","E"]]}',sensitiveGridPolicy,true);
+for(const [name,source] of [
+ ['canonical term','export const chamoruWords=[{term:"SYNTHETICHEADWORD",english:"Safe"}];'],
+ ['tagged source','export const records=[{language:"ch",label:"SYNTHETICHEADWORD"}];'],
+ ['tagged speech source','export const records=[{language:"ch",speech:["SYNTHETICHEADWORD"]}];']
+])test(`guard CHamoru ${name}`,()=>{
+ const sourceRoot=join(scratch,`ch-source-${name.replaceAll(' ','-')}`),dir=join(sourceRoot,'dist');
+ mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
+ writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),source);writeFileSync(join(dir,'app.js'),'globalThis.label="Safe";');
+ assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/blocked-chamoru-source/);
+});
+test('guard missing source companion fails closed',()=>{
+ const sourceRoot=join(scratch,'missing-ch-source'),dir=join(sourceRoot,'dist');mkdirSync(dir,{recursive:true});writeFileSync(join(dir,'app.js'),'globalThis.a="SYNTHETICHEADWORD";');
+ assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/source companion required/);
+});
+test('guard advisory is private and does not fail build',()=>{
+ const dir=join(scratch,'advisory-case');mkdirSync(dir);writeFileSync(join(dir,'app.js'),'globalThis.a="ALPHANONSENSE";');
+ const result=guardTree(dir,policy);assert.equal(result.passed,true);assert.equal(result.advisoryCount,1);
+ const receipt=JSON.parse(readFileSync(result.advisoryFile));assert.deepEqual(receipt.advisories[0].terms,['ALPHANONSENSE']);
+ assert.ok(!result.advisoryFile.startsWith(dir));
+});
+
+test('guard source tree symlink rejected',()=>{
+ const sourceRoot=join(scratch,'source-dir-link'),dir=join(sourceRoot,'dist');mkdirSync(dir,{recursive:true});
+ symlinkSync(resolve('src'),join(sourceRoot,'src'));writeFileSync(join(dir,'app.js'),'globalThis.safe=1;');
+ assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/Symlink in CHamoru source tree/);
+});
+test('guard source file symlink rejected',()=>{
+ const sourceRoot=join(scratch,'source-file-link'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
+ symlinkSync(resolve('src/learn/content/chamoru.ts'),join(sourceRoot,'src/learn/content/chamoru.ts'));writeFileSync(join(dir,'app.js'),'globalThis.safe=1;');
+ assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/Symlink in CHamoru source tree/);
+});
+test('guard malformed CHamoru source fails closed',()=>{
+ const sourceRoot=join(scratch,'source-invalid'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
+ writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),'export const words=[{term:"unterminated');writeFileSync(join(dir,'app.js'),'globalThis.safe=1;');
+ assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/Cannot parse CHamoru content source/);
+});
+test('guard separate Hermes entries are advisory',()=>{
+ const dir=join(scratch,'separate-hbc');mkdirSync(dir);const source=join(scratch,'separate-hbc.js');writeFileSync(source,'globalThis.a="ALPHANONSENSE";globalThis.b="BETANONSENSE";globalThis.c="GAMMANONSENSE";');
+ const r=spawnSync(hermesc,['-emit-binary','-out',join(dir,'app.hbc'),source],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);assert.equal(guardTree(dir,policy).passed,true);
+});
+
+exportCase('guard sentence with broad words is advisory','app.js','globalThis.label="The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.";');
+exportCase('guard prose array is advisory','app.js','globalThis.labels=["The ALPHANONSENSE is here.","The BETANONSENSE is there.","The GAMMANONSENSE is ready."];');
+exportCase('guard mixed UI object is advisory','app.js','globalThis.card={id:"ALPHANONSENSE",label:"BETANONSENSE",description:"GAMMANONSENSE"};');
+exportCase('guard comma list fragment','app.js','globalThis.leak="ALPHANONSENSE, BETANONSENSE, GAMMANONSENSE";',policy,true);
+exportCase('guard pipe list fragment','app.js','globalThis.leak="ALPHANONSENSE|BETANONSENSE|GAMMANONSENSE";',policy,true);
+exportCase('guard newline list fragment','app.js','globalThis.leak="ALPHANONSENSE\\nBETANONSENSE\\nGAMMANONSENSE";',policy,true);
+exportCase('guard tab list fragment','app.js','globalThis.leak="ALPHANONSENSE\\tBETANONSENSE\\tGAMMANONSENSE";',policy,true);
+exportCase('guard short phrase array fragment','app.js','globalThis.leak=["ALPHANONSENSE berry","BETANONSENSE fruit","GAMMANONSENSE flower"];',policy,true);
+exportCase('guard long short word array fragment','app.js','globalThis.leak='+JSON.stringify([...Array(50).fill('NEUTRAL'),'ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE'])+';',policy,true);
+exportCase('guard English sensitive list is advisory','app.js','globalThis.labels=["ZORPLE","ZORPLETWO","ZORPLETHREE"];',{...policy,scan:['ZORPLE','ZORPLETWO','ZORPLETHREE','UNUSEDMARKER'],chamoruSensitive:['ZORPLE','ZORPLETWO','ZORPLETHREE','OTHERPRIVATE']});
+
+test('guard dynamic CHamoru teaching term fails closed',()=>{
+ const sourceRoot=join(scratch,'source-dynamic'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
+ writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),'export const words=[{term:makeTerm()}];');writeFileSync(join(dir,'app.js'),'globalThis.safe=1;');
+ assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/teaching term must be static text/);
+});
+
+exportCase('guard comma prose without final stop is advisory','app.js','globalThis.label="The ALPHANONSENSE is BETANONSENSE, with GAMMANONSENSE";');
+exportCase('guard comma list with connective word','app.js','globalThis.leak="ALPHANONSENSE, BETANONSENSE, the, GAMMANONSENSE";',policy,true);
+
+const boundaryTokens=['the','and','of','ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE',...Array(6).fill('NEUTRAL')];
+exportCase('guard tokenized prose at quarter threshold','app.js','globalThis.tokens='+JSON.stringify(boundaryTokens)+';');
+exportCase('guard padded list below quarter threshold','app.js','globalThis.tokens='+JSON.stringify([...boundaryTokens,'NEUTRAL'])+';',policy,true);
+exportCase('guard short list with one function word remains strict','app.js','globalThis.tokens=["the","ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];',policy,true);
+exportCase('guard private function word overlap cannot excuse list','app.js','globalThis.tokens='+JSON.stringify(boundaryTokens)+';',{...policy,scan:[...policy.scan,'THE','AND','OF']},true);
+
+const listUnit=JSON.stringify(['ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE']);
+exportCase('guard exact reviewed list unit','app.js','globalThis.words=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];',stringPolicy([listUnit]));
+exportCase('guard changed reviewed list unit','app.js','globalThis.words=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE","NEUTRAL"];',stringPolicy([listUnit]),true);
+exportCase('guard list exception path is anchored','other.js','globalThis.words=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];',stringPolicy([listUnit]),true);

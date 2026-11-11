@@ -27,7 +27,7 @@ export function checkExport(root, directory) {
   // Before the first bank, a policy-free structural check is explicit in the receipt.
   const configuration=process.env.LITTLE_ISLAND_WORD_POLICY_LOCK ? lockedPolicy() : undefined;
   // A bank can only reach here after full rebake with the operator policy lock.
-  return {admission,guard:guardTree(directory,configuration?.policy,configuration?[configuration.lock]:[])};
+  return {admission,guard:guardTree(directory,configuration?.policy,configuration?[configuration.lock]:[],{sourceRoot:root})};
 }
 export function checkRelease(root, web, ios, output) {
   requireCleanSource(root);
@@ -36,7 +36,7 @@ export function checkRelease(root, web, ios, output) {
   let hbc=false;
   function find(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const p=join(dir,e.name);requireThat(!e.isSymbolicLink(),'Symlink in iOS artifact');if(e.isDirectory())find(p);else {const bytes=readFileSync(p);if(bytes.subarray(0,8).equals(Buffer.from('c61fbc03c103191f','hex')))hbc=true;}}}
   find(ios);requireThat(hbc,'Real embedded Hermes iOS bundle required');
-  const receipt={schemaVersion:1,source:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),policySha256:lock.policySha256,scanListSha256:lock.scanListSha256,admission,web:{path:resolve(web),sha256:treeHash(web),...guardTree(web,policy,[lock])},ios:{path:resolve(ios),sha256:treeHash(ios),...guardTree(ios,policy,[lock])}};
+  const receipt={schemaVersion:1,source:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),policySha256:lock.policySha256,scanListSha256:lock.scanListSha256,admission,web:{path:resolve(web),sha256:treeHash(web),...guardTree(web,policy,[lock],{sourceRoot:root})},ios:{path:resolve(ios),sha256:treeHash(ios),...guardTree(ios,policy,[lock],{sourceRoot:root})}};
   writeFileSync(privatePath(output),JSON.stringify(receipt,null,2)+'\n',{flag:'wx'});return receipt;
 }
 export function verifyReleaseReceipt(root,file,web,ios) {

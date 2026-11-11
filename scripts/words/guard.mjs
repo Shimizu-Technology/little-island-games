@@ -1,8 +1,10 @@
-import { readFileSync, readdirSync, lstatSync } from 'node:fs';
+import { readFileSync, readdirSync, lstatSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { privatePath } from './paths.mjs';
 import { resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlViews, workletStrings, puzzleStrings } from './artifact-views.mjs';
+import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlViews, workletStrings, puzzleStrings, jsonUnits, chamoruValues, chamoruGrids, chamoruSource, shortWords, listString, proseTokens } from './artifact-views.mjs';
 import { scanGrid } from './scan.mjs';
 import { requireThat, digest, sha256, foldScan } from './core.mjs';
 import { contentPolicy } from './policy.mjs';
@@ -53,30 +55,42 @@ function byteViews(bytes) {
 
 /** Raw views are reserved for unconditional private-byte detection. */
 export function artifactScanner(policy) {
-  const broad=rawTermMatcher([...new Set(policy.scan.filter(w=>w.length>=5).map(w=>w.toUpperCase()))]);
-  const literal=rawTermMatcher([...new Set([...policy.core,...policy.exact,...policy.lemmas,...(policy.chamoruSensitive??[])].map(w=>w.toUpperCase()))]);
+  const excluded=[...policy.scan,...policy.core,...policy.exact,...policy.lemmas,...(policy.chamoruSensitive??[])];
+  const broad=rawTermMatcher([...new Set(policy.scan.filter(w=>w.length>=5 && !(policy.chamoruSensitive??[]).some(s=>foldScan(s)===foldScan(w))).map(w=>w.toUpperCase()))]);
+  const literal=rawTermMatcher([...new Set([...policy.core,...policy.exact,...policy.lemmas].map(w=>w.toUpperCase()))]);
   return (bytes,name='artifact.bin',decodedPack,raw=byteViews(bytes)) => {
     const {views,uppers}=raw;
-    let strings=[],keys=[],grids=[],semantic=true;
+    let strings=[],keys=[],units=[],grids=[],sensitiveStrings=[],sensitiveGrids=[],semantic=true;
     if(bytes.subarray(0,8).equals(hermesMagic) || /\.hbc$/i.test(name)) strings=hermesStrings(bytes);
-    else if(/\.(?:[cm]?js|bundle)$/i.test(name)) ({strings,keys}=javascriptStrings(views[1]));
-    else if(decodedPack) {strings=puzzleStrings([decodedPack.payloads,decodedPack.speech]);keys=puzzleStrings(decodedPack.metadata);grids=letterGrids(decodedPack.payloads);}
+    else if(/\.(?:[cm]?js|bundle)$/i.test(name)) ({strings,keys,units}=javascriptStrings(views[1]));
+    else if(decodedPack) {
+      strings=puzzleStrings([decodedPack.payloads,decodedPack.speech]);keys=puzzleStrings(decodedPack.metadata);grids=letterGrids(decodedPack.payloads);
+      units=(decodedPack.rows??[]).map(row=>puzzleStrings(row).filter(shortWords));
+      sensitiveStrings=chamoruValues(decodedPack.rows??[]);sensitiveGrids=chamoruGrids(decodedPack.rows??[]);
+    }
     else if(/\.(?:json|lipuzzle|webmanifest)$/i.test(name)) {
       let value;
       try {value=JSON.parse(views[1]);} catch {requireThat(false,'Cannot parse exported JSON');}
-      strings=jsonStrings(value);grids=letterGrids(value);
-    } else if(/\.html$/i.test(name)) ({strings,keys}=htmlViews(views[1]));
-    else if(/\.(?:txt|css|svg|xml|bin)$/i.test(name)) {strings=views;semantic=false;}
+      strings=jsonStrings(value);units=jsonUnits(value);grids=letterGrids(value);sensitiveStrings=chamoruValues(value);sensitiveGrids=chamoruGrids(value);
+    } else if(/\.html$/i.test(name)) ({strings,keys,units}=htmlViews(views[1]));
+    else if(/\.(?:txt|css|svg|xml|bin)$/i.test(name)) {
+      // Printable standalone text has line units. Binary storage is not a
+      // giant string literal, and never accumulates broad hits across a file.
+      if(!/[\x00-\x08\x0e-\x1f\ufffd]/.test(views[1])) {
+        try {const value=JSON.parse(views[1]);strings=jsonStrings(value);units=jsonUnits(value);} catch {strings=views[1].split(/\r?\n/);}
+      }
+      semantic=false;
+    }
     else semantic=false;
     if(bytes.subarray(0,8).equals(hermesMagic) || /\.(?:[cm]?js|bundle)$/i.test(name)) {
-      const parsed=workletStrings(strings);strings=parsed.strings;keys.push(...parsed.keys);
+      const parsed=workletStrings(strings);strings=parsed.strings;keys.push(...parsed.keys);units.push(...parsed.units);
     }
-    // Binary media is not vocabulary. Partial-list leaks still get a raw,
-    // whole-word scan, in addition to unconditional blob/hash/canary checks.
-    const leakStrings=strings.length || /\.(?:[cm]?js|bundle)$/i.test(name) ? [...strings,...keys] : views;
+    // Binary media retains unconditional blob/hash/canary checks.
+    const leakStrings=[...strings,...keys];
     const contentStrings=new Set(strings);
-    const stringHits=leakStrings.filter(text=>!technicalString(text)).map(text=>({sha256:sha256(text),broad:[...broad(text.toUpperCase())],literal:contentStrings.has(text)?[...literal(text.toUpperCase())]:[]}));
-    return {views,uppers:[...uppers,...strings.map(text=>text.toUpperCase())],strings,grids,semantic,stringHits,broadHits:new Set(stringHits.flatMap(s=>s.broad)),literalHits:new Set(stringHits.flatMap(s=>s.literal))};
+    const stringHits=leakStrings.filter(text=>!technicalString(text)).map(text=>({sha256:sha256(text),listShaped:listString(text,excluded),broad:[...broad(text.toUpperCase())],literal:contentStrings.has(text)?[...literal(text.toUpperCase())]:[]}));
+    const unitHits=units.map(unit=>({sha256:sha256(JSON.stringify(unit)),listShaped:!proseTokens(unit,excluded),broad:unit.filter(text=>!technicalString(text)).flatMap(text=>[...broad(text.toUpperCase())]),literal:[]}));
+    return {views,uppers:[...uppers,...strings.map(text=>text.toUpperCase())],strings,grids,sensitiveStrings,sensitiveGrids,semantic,stringHits,unitHits,broadHits:new Set(stringHits.flatMap(s=>s.broad)),literalHits:new Set(stringHits.flatMap(s=>s.literal))};
   };
 }
 
@@ -85,13 +99,34 @@ export function artifactScanner(policy) {
  * @param {any} [policy]
  * @param {any[]} [privateReceipts]
  */
-export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]}, privateReceipts = []) {
+export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[],chamoruSensitive:[],canaries:[]}, privateReceipts = [], options = {}) {
   const root=resolve(directory);
   const groups=['scan','core','exact','lemmas','chamoruSensitive','canaries'].map(k=>policy[k] ?? []);
   const hashes=new Set([digest([...policy.scan].sort()),digest(policy),digest(contentPolicy(policy)),...groups.filter(a=>a.length).map(a=>digest([...a].sort())),...privateReceipts.flatMap(r=>[r.scanListSha256,r.vocabularySha256,r.policySha256])].filter(Boolean));
   const blobs=groups.filter(a=>a.length).flatMap(a=>[JSON.stringify(a),...(a.length>1?[a.join('\n')]:[])]);
   const bannedNames=/(?:^|\/)(?:private|scan-list|block-list|review-[ab])(?:[/.]|$)|\.private\.|\.queue\.json$|reconcil|\.draft\.|sources\.lock\.json$/i;
-  const findings=[];let files=0,termExceptionsUsed=0;
+  const findings=[],advisories=[];let files=0,termExceptionsUsed=0;
+  const sensitive=rawTermMatcher((policy.chamoruSensitive??[]).map(w=>w.toUpperCase()));
+  const sourceRoot=resolve(options.sourceRoot??process.cwd());
+  let sourceFiles=0;
+  // Bundles erase the language tag. Pair the artifact with its exact exporting
+  // source tree and scan source-backed terms and explicitly tagged records.
+  function sourceScan(dir) {
+    if(!existsSync(dir))return;
+    requireThat(!lstatSync(dir).isSymbolicLink(),'Symlink in CHamoru source tree');
+    for(const entry of readdirSync(dir,{withFileTypes:true})) {
+      const path=join(dir,entry.name),name=relative(sourceRoot,path).replaceAll('\\','/');
+      requireThat(!entry.isSymbolicLink(),'Symlink in CHamoru source tree');
+      if(entry.isDirectory())sourceScan(path);
+      else if(/\.(?:[cm]?[jt]sx?|json)$/.test(name)) {
+        const text=readFileSync(path,'utf8');
+        if(name!=='src/learn/content/chamoru.ts' && !/(?:language|lang|locale)/i.test(text))continue;
+        sourceFiles++;
+        const view=/\.json$/.test(name) ? {strings:chamoruValues(JSON.parse(text)),grids:chamoruGrids(JSON.parse(text))} : chamoruSource(text,name);
+        if(view.strings.some(text=>sensitive(text.toUpperCase()).size) || view.grids.some(grid=>scanGrid(grid,(policy.chamoruSensitive??[]).map(foldScan)).length))findings.push(`${name}:blocked-chamoru-source`);
+      }
+    }
+  }
   // Exceptions identify a reviewed term collision in a narrow artifact path,
   // never an entire file. A changed app bundle still receives every check.
   const exceptions=policy.artifactTermExceptions ?? [];
@@ -111,7 +146,8 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       for(const e of item.terms) requireThat(['broad','literal'].includes(e.check) && typeof e.term==='string' && e.term.length>0 && typeof e.reason==='string' && e.reason.trim().length>0 && typeof e.evidence==='string' && e.evidence.trim().length>0,'Unreviewed artifact string exception');
     }
   }
-  const gridTerms=[...new Set([...policy.scan,...policy.core,...policy.exact,...policy.lemmas,...(policy.chamoruSensitive??[])].map(foldScan).filter(w=>/^[A-Z]{3,40}$/.test(w)))];
+  const sensitiveOnly=new Set((policy.chamoruSensitive??[]).map(foldScan));
+  const gridTerms=[...new Set([...policy.scan.filter(w=>!sensitiveOnly.has(foldScan(w))),...policy.core,...policy.exact,...policy.lemmas].map(foldScan).filter(w=>/^[A-Z]{3,40}$/.test(w)))];
   const scan=artifactScanner(policy);
   const entries=[];
   function collect(dir) {
@@ -124,10 +160,14 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   }
   requireThat(!lstatSync(root).isSymbolicLink(),'Symlink in export tree');
   collect(root);
+  if((policy.chamoruSensitive??[]).length && entries.some(e=>e.bytes.subarray(0,8).equals(hermesMagic) || /\.(?:[cm]?js|bundle|hbc|html)$/.test(e.name))) {
+    requireThat(existsSync(join(sourceRoot,'src/learn/content/chamoru.ts')),'CHamoru source companion required for bundle scan');
+    for(const dir of ['src','content','scripts/learn'])sourceScan(join(sourceRoot,dir));
+  }
   const packs=entries.filter(e=>/\.lipuzzle$/i.test(e.name));
   if(packs.length) {
     const runner=fileURLToPath(new URL('./decode-packs.mjs',import.meta.url));
-    const result=spawnSync(process.execPath,['--import',resolve('scripts/puzzles/register.mjs'),runner],{input:JSON.stringify(packs.map(e=>e.bytes.toString('utf8'))),encoding:'utf8',maxBuffer:64*1024*1024,timeout:120000});
+    const result=spawnSync(process.execPath,['--import',resolve(sourceRoot,'scripts/puzzles/register.mjs'),runner],{input:JSON.stringify(packs.map(e=>e.bytes.toString('utf8'))),encoding:'utf8',maxBuffer:64*1024*1024,timeout:120000,cwd:sourceRoot});
     requireThat(result.status===0,'Cannot decode exported puzzle packs');
     const decoded=JSON.parse(result.stdout);
     packs.forEach((e,i)=>{e.decoded=decoded[i];});
@@ -138,8 +178,9 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       if(bannedNames.test(name) || hashes.has(fileHash) || raw.uppers.some(upper=>[...hashes].some(h=>upper.includes(h.toUpperCase())) || blobs.some(b=>upper.includes(b.toUpperCase())))) {findings.push(name);continue;}
       if((policy.canaries??[]).some(word=>raw.uppers.some(upper=>upper.includes(word.toUpperCase())))) {findings.push(`${name}:canary`);continue;}
       // Bytecode string storage is not guaranteed to begin at an even offset.
-      const {uppers,broadHits,literalHits,grids,semantic,stringHits}=scan(bytes,name,decoded,raw);
-      if(grids.some(grid=>scanGrid(grid,gridTerms).length)) findings.push(`${name}:blocked-grid`);
+      const {uppers,broadHits,literalHits,grids,sensitiveStrings,sensitiveGrids,semantic,stringHits,unitHits}=scan(bytes,name,decoded,raw);
+      if(sensitiveStrings.some(text=>sensitive(text.toUpperCase()).size)) findings.push(`${name}:blocked-chamoru`);
+      if(grids.some(grid=>scanGrid(grid,gridTerms).length) || sensitiveGrids.some(grid=>scanGrid(grid,(policy.chamoruSensitive??[]).map(foldScan)).length)) findings.push(`${name}:blocked-grid`);
       if (bannedNames.test(name) || hashes.has(fileHash) || uppers.some(upper=>[...hashes].some(h=>upper.includes(h.toUpperCase())) || blobs.some(b=>upper.includes(b.toUpperCase())))) findings.push(name);
       const allowed={broad:new Set(),literal:new Set()};
       for(const rule of exceptions) if(!semantic && pathMatches(rule.path,name)) for(const e of rule.terms) allowed[e.check].add(e.term.toUpperCase());
@@ -152,22 +193,30 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
         for(const rule of stringExceptions) if(pathMatches(rule.path,name)) for(const item of rule.strings) {
           const rows=scoped.get(item.sha256)??[];rows.push(item);scoped.set(item.sha256,rows);
         }
-        for(const hit of stringHits) {
+        for(const hit of [...stringHits,...unitHits]) {
           const occurrence=(seen.get(hit.sha256)??0)+1;seen.set(hit.sha256,occurrence);
           const reviewed={broad:new Set(),literal:new Set()};
           for(const item of scoped.get(hit.sha256)??[]) {
             if(occurrence<=item.occurrences) for(const e of item.terms) reviewed[e.check].add(e.term.toUpperCase());
           }
           for(const [check,hits] of [['broad',broadHits],['literal',literalHits]]) for(const term of hit[check]) {
-            if(reviewed[check].has(term))termExceptionsUsed++;else hits.add(term);
+            if(reviewed[check].has(term)) {termExceptionsUsed++;hit[check]=hit[check].filter(t=>t!==term);} else hits.add(term);
           }
         }
       }
-      if(broadHits.size>=(allowed.broad.size ? 1 : 3)) findings.push(`${name}:partial-list`);
+      if([...stringHits,...unitHits].some(hit=>hit.listShaped && new Set(hit.broad).size>=3)) findings.push(`${name}:partial-list`);
+      for(const hit of stringHits)if(hit.broad.length)advisories.push({file:name,stringSha256:hit.sha256,terms:hit.broad});
       if(literalHits.size) findings.push(`${name}:blocked-literal`);
       for(const word of policy.canaries??[]) if(uppers.some(upper=>upper.includes(word.toUpperCase()))) findings.push(`${name}:canary`);
 
   }
+  let advisoryFile;
+  if(advisories.length) {
+    const directory=privatePath(options.advisoryDirectory??process.env.LITTLE_ISLAND_WORD_ADVISORY_DIR??join(tmpdir(),'little-island-word-review'));
+    mkdirSync(directory,{recursive:true,mode:0o700});
+    advisoryFile=join(mkdtempSync(join(directory,'scan-')),'advisories.private.json');
+    writeFileSync(advisoryFile,JSON.stringify({schemaVersion:1,artifactRoot:root,advisories},null,2)+'\n',{mode:0o600,flag:'wx'});
+  }
   requireThat(findings.length===0,`Private word data leaked: ${[...new Set(findings)].join(', ')}`);
-  return {passed:true,files,termExceptionsUsed,privateHashesChecked:hashes.size,policyDataChecked:policy.scan.length>0};
+  return {passed:true,files,termExceptionsUsed,privateHashesChecked:hashes.size,policyDataChecked:policy.scan.length>0,sourceFiles,advisoryCount:advisories.length,advisoryFile};
 }

@@ -41,13 +41,18 @@ export function hermesStrings(bytes) {
 export function javascriptStrings(text) {
   const tree = ts.createSourceFile('artifact.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   requireThat(tree.parseDiagnostics.length === 0, 'Cannot parse exported JavaScript');
-  const strings = [], keys = [];
+  const strings = [], keys = [], units = [];
   const comments=new Map();
   function recordComments(pos) {
     for(const range of [...(ts.getLeadingCommentRanges(text,pos)??[]),...(ts.getTrailingCommentRanges(text,pos)??[])]) comments.set(range.pos,text.slice(range.pos,range.end));
   }
   function visit(node) {
     recordComments(node.pos);recordComments(node.end);
+    // A container owns its immediate data, never strings in other records,
+    // nested containers, callbacks or functions elsewhere in the bundle.
+    if (ts.isArrayLiteralExpression(node) && node.elements.length && node.elements.every(ts.isStringLiteralLike) && node.elements.every(n=>shortWords(n.text))) units.push(node.elements.map(n=>n.text));
+    // Homogeneous short-word keys can encode a list (including library tables).
+    if (ts.isObjectLiteralExpression(node) && node.properties.length && node.properties.every(p=>ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteralLike(p.name)) && shortWords(p.name.text) && (ts.isNumericLiteral(p.initializer) || [ts.SyntaxKind.TrueKeyword,ts.SyntaxKind.FalseKeyword].includes(p.initializer.kind)))) units.push(node.properties.map(p=>p.name.text));
     if (ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) strings.push(node.text);
     if ((ts.isPropertyAssignment(node) || ts.isMethodDeclaration(node)) && ts.isIdentifier(node.name) && /^\p{L}+$/u.test(node.name.text)) keys.push(node.name.text);
     if (ts.isRegularExpressionLiteral(node)) keys.push(node.text);
@@ -55,7 +60,7 @@ export function javascriptStrings(text) {
   }
   visit(tree);
   keys.push(...comments.values());
-  return { strings, keys };
+  return { strings, keys, units };
 }
 
 export function jsonStrings(value) {
@@ -95,31 +100,31 @@ export function technicalString(text) {
 
 export function htmlViews(text) {
   // HTML shell content, accessible text attributes and inline script literals.
-  const strings=[],keys=[];
-  for(const match of text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) if(match[1].trim()) {const parsed=javascriptStrings(match[1]),worklets=workletStrings(parsed.strings);strings.push(...worklets.strings);keys.push(...parsed.keys,...worklets.keys);}
+  const strings=[],keys=[],units=[];
+  for(const match of text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) if(match[1].trim()) {const parsed=javascriptStrings(match[1]),worklets=workletStrings(parsed.strings);strings.push(...worklets.strings);keys.push(...parsed.keys,...worklets.keys);units.push(...parsed.units,...worklets.units);}
   const visible=text.replace(/<!--[\s\S]*?-->|<(?:script|style)\b[^>]*>[\s\S]*?<\/(?:script|style)>/gi,'');
   for(const match of visible.matchAll(/\b(?:alt|title|aria-label|placeholder)\s*=\s*["']([^"']*)["']/gi)) strings.push(match[1]);
-  strings.push(visible.replace(/<[^>]*>/g,' '));
-  return {strings,keys};
+  for(const match of visible.matchAll(/>([^<]+)</g)) strings.push(match[1]);
+  return {strings,keys,units};
 }
 
 /** Reanimated serializes complete functions into string literals. Scan their
  * source as code too, so identifier text is never mistaken for UI vocabulary.
  */
 export function workletStrings(strings, depth=0) {
-  const output=[],keys=[];
+  const output=[],keys=[],units=[];
   for(const text of strings) {
     if(depth<4 && /^function(?:\s|\()/.test(text) && /}\s*$/.test(text)) {
       const source='('+text+')';
       const tree=ts.createSourceFile('worklet.js',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
       if(tree.parseDiagnostics.length===0) {
         const parsed=javascriptStrings(source),nested=workletStrings(parsed.strings,depth+1);
-        output.push(...nested.strings);keys.push(...parsed.keys,...nested.keys);continue;
+        output.push(...nested.strings);keys.push(...parsed.keys,...nested.keys);units.push(...parsed.units,...nested.units);continue;
       }
     }
     output.push(text);
   }
-  return {strings:output,keys};
+  return {strings:output,keys,units};
 }
 
 /** Decoded payload values are content. Object field names and the validated
@@ -130,4 +135,83 @@ export function puzzleStrings(value) {
   if(Array.isArray(value))return value.flatMap(puzzleStrings);
   if(value && typeof value==='object')return Object.entries(value).filter(([key])=>key!=='kind').flatMap(([,v])=>puzzleStrings(v));
   return [];
+}
+
+/** One JSON container at a time; sibling records never form a list fragment. */
+export function jsonUnits(value) {
+  if (!value || typeof value !== 'object') return [];
+  const direct=Array.isArray(value) ? (value.every(v=>typeof v==='string' && shortWords(v))?value:[]) : (Object.entries(value).every(([k,v])=>shortWords(k) && ['number','boolean'].includes(typeof v))?Object.keys(value):[]);
+  return [direct,...Object.values(value).flatMap(jsonUnits)];
+}
+
+const chamoru = value => typeof value==='string' && ['ch','chamoru','chamorro'].includes(value.toLowerCase());
+/** Tagged banks/labels/speech inherit language only inside their own record. */
+export function chamoruValues(value, tagged=false) {
+  if(typeof value==='string')return tagged?[value]:[];
+  if(Array.isArray(value))return value.flatMap(v=>chamoruValues(v,tagged));
+  if(!value || typeof value!=='object')return [];
+  const active=chamoru(value.language??value.lang??value.locale) || tagged;
+  return Object.entries(value).filter(([key])=>!['english','sourceNote'].includes(key)).flatMap(([,v])=>chamoruValues(v,active));
+}
+
+/** Source-backed teaching terms and explicit language tags survive minification
+ * only in the source. Do not infer language from an English UI collision. */
+export function chamoruSource(text, name) {
+  const tree=ts.createSourceFile(name,text,ts.ScriptTarget.Latest,true, /\.tsx$/.test(name)?ts.ScriptKind.TSX:ts.ScriptKind.TS);
+  requireThat(tree.parseDiagnostics.length===0,'Cannot parse CHamoru content source');
+  const strings=[],grids=[];
+  function data(n) {
+    if(ts.isStringLiteralLike(n))return n.text;
+    if(ts.isArrayLiteralExpression(n))return n.elements.map(data);
+    if(ts.isObjectLiteralExpression(n))return Object.fromEntries(n.properties.filter(ts.isPropertyAssignment).map(p=>[p.name.getText(tree).replace(/^['"]|['"]$/g,''),data(p.initializer)]));
+    return null;
+  }
+  function visit(n) {
+    if(ts.isObjectLiteralExpression(n)) {
+      const value=data(n);
+      if(chamoru(value.language??value.lang??value.locale)) {strings.push(...chamoruValues(value));grids.push(...letterGrids(value));return;}
+      if(name.endsWith('src/learn/content/chamoru.ts') && 'term' in value) {
+        requireThat(typeof value.term==='string','CHamoru teaching term must be static text');
+        strings.push(value.term);
+      }
+    }
+    ts.forEachChild(n,visit);
+  }
+  visit(tree);return {strings,grids};
+}
+
+export function chamoruGrids(value, tagged=false) {
+  if(!value || typeof value!=='object')return [];
+  const active=tagged || (!Array.isArray(value) && chamoru(value.language??value.lang??value.locale));
+  if(active)return letterGrids(value);
+  return Object.values(value).flatMap(v=>chamoruGrids(v));
+}
+
+/** Lists contain short words, not identifiers, paths, sentences or UI records.
+ * Three distinct broad terms remain the threshold, even in a long short-word
+ * array: lowering it would reject ordinary pairs without adding leak evidence.
+ */
+export function shortWords(text) {
+  return typeof text==='string' && text.length<=64 && /^[\p{L}\p{M}]+(?:['’'-][\p{L}\p{M}]+)*(?:[ ]+[\p{L}\p{M}]+(?:['’'-][\p{L}\p{M}]+)*)?$/u.test(text.trim());
+}
+export function listString(text, excluded=[]) {
+  const trimmed=text.trim().replace(/^\/\/\s*|^\/\*\s*|\s*\*\/$/g,'').replace(/^\/(.*)\/[a-z]*$/s,'$1');
+  const words=trimmed.split(/[\s,|;]+/).filter(Boolean);
+  if(words.length<3 || !words.every(shortWords))return false;
+  // Explicit list separators are stronger evidence than connective words.
+  if(/[,|;\n\t]/.test(trimmed) && trimmed.split(/[,|;\n\t]+/).every(part=>/^[\p{L}\p{M}'’-]+$/u.test(part.trim())))return true;
+  return !words.some(word=>safeFunctionWords(excluded).has(word.toLowerCase()));
+}
+
+// Public English grammar vocabulary. It is disjoint from the current private
+// broad/core lists; runtime subtraction keeps that invariant under policy drift.
+export const functionWords = ["a", "an", "the", "and", "or", "of", "in", "on", "as", "is", "it", "its", "how", "why", "does", "into", "with", "at", "by", "for", "from", "to", "than", "that", "this", "these", "those", "are", "was", "were", "be", "been", "being", "can", "could", "do", "did", "has", "have", "had", "if", "not", "only", "our", "their", "them", "we", "you", "your", "which", "who", "what", "when", "where", "while", "will", "would"];
+function safeFunctionWords(excluded) {
+  const forbidden=new Set(excluded.map(w=>w.toLowerCase()));
+  return new Set(functionWords.filter(w=>!forbidden.has(w)));
+}
+export function proseTokens(strings, excluded=[]) {
+  const tokens=strings.flatMap(text=>text.toLowerCase().split(/\s+/)),functions=safeFunctionWords(excluded);
+  // Small arrays remain lists: one connective cannot excuse three leaked words.
+  return tokens.length>=12 && tokens.filter(token=>functions.has(token)).length/tokens.length>=0.25;
 }

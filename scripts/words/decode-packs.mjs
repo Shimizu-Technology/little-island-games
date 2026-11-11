@@ -13,7 +13,7 @@ try {
     let manifest;try {manifest=JSON.parse(text);} catch { /* Multi-line row pack. */ }
     if(manifest) {
       if(!validFamily(manifest))throw new Error();
-      result.push({payloads:[],metadata:manifest});continue;
+      result.push({payloads:[],metadata:manifest,rows:[manifest]});continue;
     }
     const [first] = text.split('\n'), header = JSON.parse(first);
     const family = families.find(f => f.id === header.family);
@@ -25,7 +25,7 @@ try {
       if (!value) throw new Error();
       return value;
     });
-    result.push({payloads:decoded.map(row=>row.payload),speech:decoded.map(row=>row.speech),metadata:{header,rows:decoded.map(({payload,speech,...identifiers})=>identifiers)}});
+    result.push({rows:decoded,payloads:decoded.map(row=>row.payload),speech:decoded.map(row=>row.speech),metadata:{header,rows:decoded.map(({payload,speech,...identifiers})=>identifiers)}});
   }
   process.stdout.write(JSON.stringify(result));
 } catch {
