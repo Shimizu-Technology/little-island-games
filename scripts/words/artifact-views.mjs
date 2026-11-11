@@ -76,11 +76,11 @@ export function javascriptStrings(text, teachings=[]) {
       const values=node.elements.map(n=>staticData(n));
       addUnit(plainEntries(values),node);
       const wordUnit=plainEntries(values);wordUnit.library=attachment(node);
-      let container=node.parent,language;
-      while(container && !ts.isFunctionLike(container)) {if(ts.isObjectLiteralExpression(container)){const value=staticData(container);language??=value.language??value.lang??value.locale??value.languages;}container=container.parent;}
+      let container=node.parent,language,puzzle=false,languagePresent=false;
+      while(container && !ts.isFunctionLike(container)) {if(ts.isObjectLiteralExpression(container)){const value=staticData(container);languagePresent ||= tagKeys.some(key=>key in value);language??=value.language??value.lang??value.locale??value.languages;puzzle ||= /(?:word.?search|crossword|word.?grid|builder|scramble)/i.test(value.kind??value.family??'');}container=container.parent;}
       const field=ts.isBinaryExpression(node.parent)&&ts.isPropertyAccessExpression(node.parent.left)?node.parent.left.name.text:wordUnit.library.field;
       const gridValue={[field??'unknown']:values};
-      for(const grid of values.every(row=>typeof row==='string'||Array.isArray(row)&&row.every(cell=>typeof cell==='string'))?letterGrids(gridValue,validLanguage(language)):[]){grid.wordUnit=wordUnit;grid.language=language;grid.container=field;grid.offset=node.getStart(tree);grids.push(grid);}
+      for(const grid of values.every(row=>typeof row==='string'||Array.isArray(row)&&row.every(cell=>typeof cell==='string'))?letterGrids(gridValue,validLanguage(language)||puzzle):[]){grid.wordUnit=wordUnit;grid.language=language;grid.container=field;grid.offset=node.getStart(tree);grid.puzzle=puzzle;grid.languagePresent=languagePresent;grid.languageDeclared=validLanguage(language);grids.push(grid);}
     }
     if(ts.isObjectLiteralExpression(node)) {const value=staticData(node);if(tagged(value)){sensitiveStrings.push(...chamoruValues(value,false,teachings));sensitiveGrids.push(...chamoruGrids(value));}}
     // Homogeneous short-word keys can encode a list (including library tables).
@@ -107,6 +107,11 @@ export function jsonStrings(value) {
   return [];
 }
 
+/** A lone letter cannot spell a multi-letter word; other matrix shapes stay declared. */
+export function singleLetterMatrix(value) {
+  return Array.isArray(value) && value.length===1 && Array.isArray(value[0]) && value[0].length===1 && typeof value[0][0]==='string' && /^\p{L}$/u.test(value[0][0]);
+}
+
 /** Detect actual letter matrices, including digraph cells and row strings.
  * Grid scanning deliberately has no word boundaries: adjacent cells form words.
  */
@@ -117,9 +122,9 @@ export function letterGrids(value, declared=false) {
     if(!Array.isArray(x))active ||= tagKeys.some(name=>validLanguage(x[name]));
     if (Array.isArray(x)) {
       const rows=x.map(row=>typeof row==='string' && (active || /^(?:cells|grid|board|rows)$/i.test(key??''))?[...row]:row);
-      const cell=c=>typeof c==='string' && /^(?:CH|NG|[A-ZÅÑʼ’']|[^\p{L}]|)$/iu.test(c);
+      const cell=c=>typeof c==='string' && (/^(?:CH|NG|[A-ZÅÑʼ’']|[^\p{L}]|)$/iu.test(c) || rows.length===1 && rows[0]?.length===1 && /^[\p{L}ʼ’']+$/u.test(c));
       if(rows.length && rows.length<=25 && rows.every(row=>Array.isArray(row) && row.length>0 && row.length<=25 && row.length===rows[0].length && row.every(cell)) && rows.flat().some(c=>/\p{L}/u.test(c))) {
-        const grid=rows.map(row=>row.map(c=>/[ʼ’']/.test(c)?"'":/\p{L}/u.test(c)?c.toUpperCase():'#'));grid.languageDeclared=active;grid.container=key;grids.push(grid);
+        const grid=rows.map(row=>row.map(c=>/\p{L}/u.test(c)?c.toUpperCase().replace(/[ʼ’]/g,"'"):/['ʼ’]/.test(c)?"'":'#'));grid.languageDeclared=active;grid.container=key;grids.push(grid);
       } else x.forEach(child=>visit(child,key,active));
     } else Object.entries(x).forEach(([name,child])=>visit(child,name,active));
   }
@@ -306,7 +311,7 @@ export function requireGridLanguages(value, language, key, puzzle=false) {
   if(puzzle && Array.isArray(value) && value.every(row=>typeof row==='string') && letterGrids(value,true).length)requireThat(/^(?:cells|grid|board|rows)$/i.test(key??'') || declared!==undefined,'Puzzle grid needs a recognised container or language declaration');
   if(letterGrids(key?{[key]:value}:value,validLanguage(declared)).length) {
     // A child declaration can supply its own grid's language.
-    if(Array.isArray(value) && value.every(row=>typeof row==='string'||Array.isArray(row)&&row.every(c=>typeof c==='string')))requireThat(/^(?:cells|grid|board|rows)$/i.test(key??'') || validLanguage(declared),'Grid needs a recognised container or language declaration');
+    if(Array.isArray(value) && value.every(row=>typeof row==='string'||Array.isArray(row)&&row.every(c=>typeof c==='string')) && !(singleLetterMatrix(value) && !puzzle && declared===undefined && !/^(?:cells|grid|board|rows)$/i.test(key??'')))requireThat(/^(?:cells|grid|board|rows)$/i.test(key??'') || validLanguage(declared),'Grid needs a recognised container or language declaration');
   }
   Object.entries(value).forEach(([name,v])=>requireGridLanguages(v,declared,Array.isArray(value)?key:name,puzzle));
 }

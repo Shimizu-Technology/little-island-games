@@ -5,7 +5,7 @@ import { privatePath } from './paths.mjs';
 import { resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlViews, svgViews, isSvgDocument, workletStrings, puzzleStrings, jsonUnits, chamoruValues, chamoruGrids, chamoruSource, shortWords, listString, proseTokens, tracedLibraryUnit, chamoruCharacters, requireGridLanguages, untracedLibraryUnit, validLanguage } from './artifact-views.mjs';
+import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlViews, svgViews, isSvgDocument, workletStrings, puzzleStrings, jsonUnits, chamoruValues, chamoruGrids, chamoruSource, shortWords, listString, proseTokens, tracedLibraryUnit, chamoruCharacters, requireGridLanguages, untracedLibraryUnit, validLanguage, singleLetterMatrix } from './artifact-views.mjs';
 import { scanGrid } from './scan.mjs';
 import { requireThat, digest, sha256, foldScan } from './core.mjs';
 import { contentPolicy } from './policy.mjs';
@@ -97,7 +97,7 @@ export function artifactScanner(policy, library=[], teachings=[]) {
     }
     strings=displayStrings;
     grids=grids.filter(grid=>!tracedLibraryUnit(grid.wordUnit??[],library));
-    requireThat(grids.every(grid=>!grid.wordUnit || (grid.language===undefined || validLanguage(grid.language)) && (/^(?:cells|grid|board|rows)$/i.test(grid.container??'') || validLanguage(grid.language))),'JavaScript grid needs a recognised container or language declaration');
+    requireThat(grids.every(grid=>!grid.wordUnit || (!grid.languagePresent || validLanguage(grid.language)) && (/^(?:cells|grid|board|rows)$/i.test(grid.container??'') || validLanguage(grid.language) || singleLetterMatrix(grid) && !grid.puzzle && !grid.languagePresent)),'JavaScript grid needs a recognised container or language declaration');
     sensitiveGrids.push(...grids.filter(grid=>!grid.languageDeclared));
     // Binary media retains unconditional blob/hash/canary checks.
     if(!bytes.subarray(0,8).equals(hermesMagic) && !/\.(?:[cm]?js|bundle|json|lipuzzle|webmanifest)$/i.test(name))sensitiveStrings.push(...strings.filter(chamoruCharacters));

@@ -51,7 +51,7 @@ function syntheticIOSExport(command,args,options) {
 }
 const checkRelease=(...args)=>realCheckRelease(...args,syntheticIOSExport);
 const {scanGrid,scanLetterWheel}=await import(pathToFileURL(join(root,'scripts/words/scan.mjs')));
-const {hermesStrings}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));
+const {hermesStrings,proseTokens:classifyProse}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));
 const policy={scan:['COLD','ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE'],core:['COLD'],exact:['COLD'],lemmas:['COLD'],chamoruSensitive:['SYNTHETICHEADWORD'],canaries:['PRIVATECANARYNONWORD']};
 const policyFile=join(scratch,'policy.private.json'),lockFile=join(scratch,'policy-lock.private.json');
 writeFileSync(policyFile,JSON.stringify(policy));
@@ -556,7 +556,6 @@ for(const kind of ['array','object'])test(`R3 Hermes native ${kind} probe`,()=>{
  rmSync(join(ios,'native.hbc'));
 });
 test('R3 native export failure closes gate',()=>{initGit();assert.throws(()=>realCheckRelease(root,join(scratch,'release-web'),join(scratch,'release-ios'),join(scratch,'native-export-failure'),()=>{throw new Error('Synthetic exporter failure');}),/exporter failure/);});
-const {proseTokens:classifyProse}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));
 test('R3 prose quarter positive',()=>assert.equal(classifyProse(['the','bird','is','near','a','garden',...Array(6).fill('neutral')],policy.scan),true));
 test('R3 prose ratio negative',()=>assert.equal(classifyProse(['the','bird','is','near','a','garden',...Array(7).fill('neutral')],policy.scan),false));
 test('R3 prose minimum negative',()=>assert.equal(classifyProse(['the','bird','is','near','a','garden','is','green','and','wide'],policy.scan),false));
@@ -683,3 +682,31 @@ exportCase('R3 blank language fails closed','data.json',JSON.stringify({language
 exportCase('R3 spaced CHamoru language tag','data.json',JSON.stringify({language:' ch-GU ',rows:['KAPSENSE']}),sensitivePolicy,true);
 exportCase('R3 blank language array entry fails closed','data.json',JSON.stringify({languages:[' '],rows:['KAPSENSE']}),sensitivePolicy,true);
 r3source('R3 JSON source unresolved language',JSON.stringify({language:42,label:'KAPSENSE'}),true,'content/phrases.json');
+
+// Lead-approved native boundary: declaration relief only for one letter in one cell.
+for(const kind of ['js','json'])for(const [label,value,rejected] of [
+ ['single letter',[['Z']],false],['digraph',[['CH']],true],['long cell',[['REEF']],true],['horizontal',[['R','E']],true],['vertical',[['R'],['E']],true],
+])exportCase(`R3 singleton matrix ${label} ${kind}`,`data.${kind}`,kind==='js'?`globalThis.payload=${JSON.stringify(value)};`:JSON.stringify({payload:value}),policy,rejected);
+for(const kind of ['js','json'])exportCase(`R3 singleton puzzle still declares ${kind}`,`data.${kind}`,kind==='js'?'globalThis.payload={kind:"word-search",odd:[["Z"]]};':JSON.stringify({kind:'word-search',odd:[['Z']]}),policy,true);
+exportCase('R3 singleton literal still scanned','data.js','globalThis.payload=[["Z"]];globalThis.label="COLD";',policy,true);
+
+const reviewedTableKeys=[...r3words,...Array.from({length:147},(_,i)=>'SAFE'+String.fromCharCode(65+Math.floor(i/26),65+i%26))];
+const reviewedTable=Object.fromEntries(reviewedTableKeys.map(key=>[key,1]));
+const nativeTablePolicy={...policy,artifactStringExceptions:['web','ios'].map(platform=>({path:`_expo/static/js/${platform}/entry-*.js`,strings:[{sha256:sha256(JSON.stringify(reviewedTableKeys)),occurrences:1,terms:r3words.map(term=>({term,check:'broad',reason:'Synthetic reviewed library table',evidence:'Synthetic exact table'}))}]}))};
+for(const [name,path,code,rejected] of [
+ ['web','_expo/static/js/web/entry-test.js',`globalThis.table=${JSON.stringify(reviewedTable)};`,false],
+ ['ios','_expo/static/js/ios/entry-test.js',`globalThis.table=${JSON.stringify(reviewedTable)};`,false],
+ ['changed','_expo/static/js/ios/entry-test.js',`globalThis.table=${JSON.stringify({...reviewedTable,EXTRA:1})};`,true],
+ ['second occurrence','_expo/static/js/ios/entry-test.js',`globalThis.table=${JSON.stringify(reviewedTable)};globalThis.other=${JSON.stringify(reviewedTable)};`,true],
+ ['other platform','_expo/static/js/android/entry-test.js',`globalThis.table=${JSON.stringify(reviewedTable)};`,true],
+ ['nested path','_expo/static/js/ios/nested/entry-test.js',`globalThis.table=${JSON.stringify(reviewedTable)};`,true],
+ ['other basename','_expo/static/js/ios/other-test.js',`globalThis.table=${JSON.stringify(reviewedTable)};`,true],
+])test(`R3 native reviewed table ${name}`,()=>{const dir=join(scratch,'native-table-'+name.replaceAll(' ','-'));mkdirSync(join(dir,path,'..'),{recursive:true});writeFileSync(join(dir,path),code);if(rejected)assert.throws(()=>guardTree(dir,nativeTablePolicy),/partial-list/);else assert.equal(guardTree(dir,nativeTablePolicy).passed,true);});
+
+exportCase('R3 unknown JS puzzle row container','data.js','globalThis.payload={kind:"word-search",odd:["reef"]};',policy,true);
+exportCase('R3 singleton JS puzzle row still declares','data.js','globalThis.payload={kind:"word-search",odd:["Z"]};',policy,true);
+
+exportCase('R3 singleton cell literal still scanned','data.js','globalThis.payload=[["Z"]];',{...policy,core:[...policy.core,'Z']},true);
+for(const [label,tag] of [['dynamic','choose()'],['numeric','42']])exportCase(`R3 singleton unresolved language ${label}`,'data.js',`globalThis.payload={language:${tag},odd:[["Z"]]};`,policy,true);
+
+exportCase('R3 singleton recognised grid invalid language','data.js','globalThis.payload={language:choose(),grid:[["Z"]]};',policy,true);
