@@ -4,15 +4,17 @@ export function normalizedText(text) {
 }
 export const wordTokens = text => normalizedText(text).match(/\p{L}+/gu)??[];
 export const densityWindow = 1000;
-export const densityThreshold = 25; // Calibrated against the historical export matrix; see README.
-export function densityScanner(terms) {
+export const densityThreshold = 16; // Calibrated against the historical export matrix; see README.
+export const shortDensityWindow = 200;
+export const shortDensityThreshold = 12; // Historical text-view peak 9; 33% margin, checked again on current exports.
+export function densityScanner(terms, window=densityWindow) {
   const vocabulary=new Set(terms.map(normalizedText));
   return text=>{
     const tokens=wordTokens(text),counts=new Map();let maximum=0;
     for(let i=0;i<tokens.length;i++) {
       if(vocabulary.has(tokens[i]))counts.set(tokens[i],(counts.get(tokens[i])??0)+1);
-      if(i>=densityWindow && vocabulary.has(tokens[i-densityWindow])) {
-        const word=tokens[i-densityWindow],count=counts.get(word)-1;
+      if(i>=window && vocabulary.has(tokens[i-window])) {
+        const word=tokens[i-window],count=counts.get(word)-1;
         if(count)counts.set(word,count);else counts.delete(word);
       }
       maximum=Math.max(maximum,counts.size);

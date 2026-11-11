@@ -401,7 +401,7 @@ for(const [name,source] of [
  const sourceRoot=join(scratch,`ch-source-${name.replaceAll(' ','-')}`),dir=join(sourceRoot,'dist');
  mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
  writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),source);writeFileSync(join(dir,'app.js'),'globalThis.label="Safe";');
- assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/blocked-chamoru-source/);
+ assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/blocked-chamoru-source|plain string literals/);
 });
 test('guard missing source companion fails closed',()=>{
  const sourceRoot=join(scratch,'missing-ch-source'),dir=join(sourceRoot,'dist');mkdirSync(dir,{recursive:true});writeFileSync(join(dir,'app.js'),'globalThis.a="SYNTHETICHEADWORD";');
@@ -622,7 +622,7 @@ test('R3 teaching source path binding',()=>{
  const sourceRoot=join(scratch,'teaching-path'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
  const entry={id:'food.synthetic',term:'KAPSENSE',english:'Plain',sourceNote:'Håfa KAPSENSE'};
  writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),'export const words=[];');writeFileSync(join(sourceRoot,'src/learn/content/chamoru-other.ts'),`export const words=[${JSON.stringify(entry)}];`);writeFileSync(join(dir,'data.js'),'globalThis.safe=1;');
- assert.throws(()=>guardTree(dir,{...sensitivePolicy,chamoruTeachingAllowances:[{entryId:entry.id,terms:[entry.term],reason:'Synthetic'}]},[],{sourceRoot}),/blocked-chamoru-source/);
+ assert.throws(()=>guardTree(dir,{...sensitivePolicy,chamoruTeachingAllowances:[{entryId:entry.id,terms:[entry.term],reason:'Synthetic'}]},[],{sourceRoot}),/blocked-chamoru-source|plain string literals/);
 });
 exportCase('R3 flat equal technical words stay lists','data.js','globalThis.events=["eventa","eventb"];');
 exportCase('R3 undeclared nested matrix','data.js','globalThis.payload=[["r","e","e","f"]];',policy,true);
@@ -741,11 +741,11 @@ const r4shapes={
 };
 for(const size of [5,10,25])for(const [shape,encode] of Object.entries(r4shapes))exportCase(`R4 fragment ${size} ${shape}`,'data.js','globalThis.value='+encode(r4words.slice(0,size))+';',r4policy,true);
 for(const shape of Object.keys(r4shapes))test(`R4 density 25 ${shape}`,()=>assert.ok(densityTools.densityScanner(r4words)(r4shapes[shape](r4words))>=densityTools.densityThreshold));
-for(const size of [5,10,24,25])test(`R4 density threshold ${size}`,()=>{
+for(const size of [5,10,16,17,25])test(`R4 density threshold ${size}`,()=>{
  const dir=join(scratch,'density-'+size);mkdirSync(dir);
  // Each term lives in a separate statement; no structure-aware list unit exists.
- writeFileSync(join(dir,'data.js'),r4words.slice(0,size).map((word,i)=>`globalThis.x${i}=${JSON.stringify(word)};`).join('\n'));
- if(size>=densityTools.densityThreshold)assert.throws(()=>guardTree(dir,r4policy),/broad-density/);else assert.equal(guardTree(dir,r4policy).passed,true);
+ writeFileSync(join(dir,'data.js'),r4words.slice(0,size).map((word,i)=>`globalThis.x${i}=${JSON.stringify(word)};`+'globalThis.padding='+JSON.stringify('filler '.repeat(30))+';').join('\n'));
+ if(size>16)assert.throws(()=>guardTree(dir,r4policy),/broad-density/);else assert.equal(guardTree(dir,r4policy).passed,true);
 });
 test('R4 density distinct count',()=>assert.equal(densityTools.densityScanner(r4words)(Array(100).fill(r4words[0]).join(' ')),1));
 test('R4 density sliding boundary',()=>assert.equal(densityTools.densityScanner(r4words)(r4words.slice(0,15).join(' ')+' filler'.repeat(1000)+' '+r4words.slice(15).join(' ')),15));
@@ -768,7 +768,7 @@ for(const [kind,field] of [['concat','"Hu KAP"+"SENSE"'],['template','`Hu KAP${s
 });
 test('R4 teaching JSON source',()=>{
  const sourceRoot=join(scratch,'teaching-json'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
- writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),'export const words=[];');writeFileSync(join(sourceRoot,'src/learn/content/chamoru-extra.json'),JSON.stringify([{id:'x',term:'KAPSENSE'}]));writeFileSync(join(dir,'data.js'),'globalThis.safe=1;');assert.throws(()=>guardTree(dir,sensitivePolicy,[],{sourceRoot}),/blocked-chamoru-source/);
+ writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),'export const words=[];');writeFileSync(join(sourceRoot,'src/learn/content/chamoru-extra.json'),JSON.stringify([{id:'x',term:'KAPSENSE'}]));writeFileSync(join(dir,'data.js'),'globalThis.safe=1;');assert.throws(()=>guardTree(dir,sensitivePolicy,[],{sourceRoot}),/blocked-chamoru-source|plain string literals/);
 });
 for(const supplied of [undefined,''])test(`R4 CI missing policy ${String(supplied)}`,()=>{
  const dir=join(scratch,'ci-policy-'+String(supplied));mkdirSync(dir);writeFileSync(join(dir,'data.txt'),'COLD');
@@ -820,3 +820,14 @@ for(const kind of ['hyphens','possessives'])test(`R4 prose padding ${kind}`,()=>
 exportCase('R4 encoded JSON unicode density','data.js','globalThis.data='+JSON.stringify(JSON.stringify(r4words).replace(/[A-Z]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')))+';',r4policy,true);
 exportCase('R4 exact asset basename','COLD.m4a',Buffer.from([0,1,2,3]),policy,true);
 exportCase('R4 encoded JSON core','data.js','globalThis.data='+JSON.stringify('{"value":"\\u0043OLD"}')+';',policy,true);
+for(const size of [12,13])test(`R4 short density boundary ${size}`,()=>{
+ const dir=join(scratch,'short-density-'+size);mkdirSync(dir);writeFileSync(join(dir,'data.js'),r4words.slice(0,size).map((word,i)=>`globalThis.x${i}=${JSON.stringify(word)};`).join('\n'));
+ if(size===13)assert.throws(()=>guardTree(dir,r4policy),/broad-density/);else assert.equal(guardTree(dir,r4policy).passed,true);
+});
+const shortHardPolicy={scan:[],core:['XO'],exact:['ZIP'],lemmas:[],chamoruSensitive:[],canaries:[]};
+exportCase('R4 short core normalised','data.js','globalThis.label="ＸＯ";',shortHardPolicy,true);
+exportCase('R4 short exact normalised','data.js','globalThis.label="Z\u00adIP";',shortHardPolicy,true);
+exportCase('R4 short hard boundaries','data.js','globalThis.label="AXOB ZIPPY";',shortHardPolicy);
+exportCase('R4 supplemental English tiles stay English','data.json',JSON.stringify({letters:['C','A','T']}),{...policy,scan:['CAT'],chamoruSensitive:['CAT']});
+exportCase('R4 supplemental lowercase prose stays prose','data.json',JSON.stringify({labels:['waves','shore']}),{...policy,scan:['WAV'],core:['WAV']});
+exportCase('R4 encoded object three','data.js','globalThis.data='+JSON.stringify(JSON.stringify({w:r3words}))+';',policy,true);

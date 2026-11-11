@@ -148,22 +148,27 @@ non-letter. Core/exact/lemma content checks use the same normalization and whole
 word boundaries; they remain unconditional and cannot be excepted.
 
 The broad leak vocabulary retains the existing minimum length of five letters
-and exclusion of the CHamoru-sensitive-only group. A moving 1,000-token window
-fails at **16 distinct broad terms**. Repetition does not increase the count;
-there is no density exception or Library-provenance bypass. Initial calibration
-of the ten retained code snapshots peaks at 11 (five terms of margin). Full
-export and native observations are recorded in the worker evidence. The complete
-broad set, including short everyday words, reaches 42 in the same real code;
-using that set would require a different threshold.
+and exclusion of the CHamoru-sensitive-only group. Two moving windows count
+**distinct** terms: a cap of **16 per 1,000 tokens** and **12 per 200 tokens**.
+The cap passes; cap+1 fails. Repetition does not increase the count. There is no
+density exception or Library-provenance bypass. The ten-snapshot calibration
+records every real exported file and all its text views in the private worker
+evidence. Raw code peaks at 11 in the long window; including decoded string
+sequences raises the observed long peak to 15. The short-window peak is 9.
+The complete broad set, including short everyday words, reaches 42 in raw code;
+the minimum length applies only to the broad detectors.
 
-This backstop guarantees detection of 16 qualifying distinct terms occurring
-within 1,000 normalized letter tokens. It does **not** guarantee an arbitrary
-five- or ten-term leak, a fragment padded beyond that window, or words encoded
-by an unrecognized runtime cipher. Synthetic five-, ten- and 25-term probes in
-the reviewed data/code shapes also exercise the existing strict structural rules,
-including tuples, filenames, encoded JSON, regexes, record maps, branch labels,
-enums and templates. Smaller fragments and ordinary prose remain a separate
-content-review boundary.
+The long window guarantees detection of **17 qualifying distinct terms within
+1,000 normalized letter tokens**; the short window guarantees **13 within 200**.
+Neither guarantees an arbitrary five- or ten-term leak, padding beyond the window,
+or an unrecognized runtime cipher. Synthetic five-, ten- and 25-term probes also
+exercise structural rules for tuples, filenames, encoded JSON, regexes, record
+maps, branch labels, enums and templates. New encoding units require at least
+half their letter tokens to be broad vocabulary; sparse ordinary catalogs retain
+the density check. Existing strict list units keep their original rule. Prose
+requires interleaved function words and either content diversity or a finite verb.
+Supplemental uppercase tile/row candidates receive hard core/exact/lemma scans;
+existing declared puzzle grids retain their full scans and declaration rules.
 
 Teaching entries require plain string literals in every field, including files
 using the teaching type and the named JSON teaching sources. Unresolved or

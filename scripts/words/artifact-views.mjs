@@ -69,7 +69,8 @@ export function javascriptStrings(text, teachings=[]) {
     const names=new Set(n.properties.filter(ts.isPropertyAssignment).map(p=>propertyName(p.name)));
     return ['items','index','preview','bytes','fixtures'].every(key=>names.has(key));
   }
-  function addUnit(values,node) {values.library=attachment(node);units.push(values);}
+  function addUnit(values,node) {values.library=attachment(node);values.origin={kind:ts.SyntaxKind[node.kind],offset:node.getStart(tree)};units.push(values);}
+  function addCompact(values,node){values.compact=true;addUnit(values,node);}
   const comments=new Map();
   function recordComments(pos) {
     for(const range of [...(ts.getLeadingCommentRanges(text,pos)??[]),...(ts.getTrailingCommentRanges(text,pos)??[])]) comments.set(range.pos,text.slice(range.pos,range.end));
@@ -81,7 +82,8 @@ export function javascriptStrings(text, teachings=[]) {
     if (ts.isArrayLiteralExpression(node)) {
       const values=node.elements.map(n=>staticData(n));
       addUnit(plainEntries(values),node);
-      for(const unit of recordUnits(values))addUnit(unit,node);
+      const compact=compactEntries(values);if(JSON.stringify(compact)!==JSON.stringify(plainEntries(values)))addCompact(compact,node);
+      for(const unit of recordUnits(values))addCompact(unit,node);
       const wordUnit=plainEntries(values);wordUnit.library=attachment(node);
       let container=node.parent,language,puzzle=false,languagePresent=false;
       while(container && !ts.isFunctionLike(container)) {if(ts.isObjectLiteralExpression(container)){const value=staticData(container);languagePresent ||= tagKeys.some(key=>key in value);language??=value.language??value.lang??value.locale??value.languages;puzzle ||= /(?:word.?search|crossword|word.?grid|builder|scramble)/i.test(value.kind??value.family??'');}container=container.parent;}
@@ -90,14 +92,14 @@ export function javascriptStrings(text, teachings=[]) {
       for(const grid of values.every(row=>typeof row==='string'||Array.isArray(row)&&row.every(cell=>typeof cell==='string'))?letterGrids(gridValue,validLanguage(language)||puzzle):[]){grid.wordUnit=wordUnit;grid.language=language;grid.container=field;grid.offset=node.getStart(tree);grid.puzzle=puzzle;grid.languagePresent=languagePresent;grid.languageDeclared=validLanguage(language);grids.push(grid);}
     }
     if(ts.isObjectLiteralExpression(node)) {const value=staticData(node);if(tagged(value)){sensitiveStrings.push(...chamoruValues(value,false,teachings));sensitiveGrids.push(...chamoruGrids(value));}}
-    if(ts.isObjectLiteralExpression(node))for(const unit of objectUnits(staticData(node)))addUnit(unit,node);
-    if(ts.isTemplateExpression(node))addUnit([[node.head.text,...node.templateSpans.map(span=>span.literal.text)].join(' ')],node);
+    if(ts.isObjectLiteralExpression(node))for(const unit of objectUnits(staticData(node)))addCompact(unit,node);
+    if(ts.isTemplateExpression(node))addCompact([[node.head.text,...node.templateSpans.map(span=>span.literal.text)].join(' ')],node);
     if(ts.isBlock(node)) {
-      const names=[];function enumKeys(n){if(ts.isBinaryExpression(n) && n.operatorToken.kind===ts.SyntaxKind.EqualsToken && ts.isElementAccessExpression(n.left) && ts.isBinaryExpression(n.left.argumentExpression) && ts.isStringLiteralLike(n.right))names.push(n.right.text);if(!ts.isFunctionLike(n))ts.forEachChild(n,enumKeys);}enumKeys(node);if(names.length)addUnit(names,node);
+      const names=[];function enumKeys(n){if(ts.isBinaryExpression(n) && n.operatorToken.kind===ts.SyntaxKind.EqualsToken && ts.isElementAccessExpression(n.left) && ts.isBinaryExpression(n.left.argumentExpression) && ts.isStringLiteralLike(n.right))names.push(n.right.text);if(!ts.isFunctionLike(n))ts.forEachChild(n,enumKeys);}enumKeys(node);if(names.length)addCompact(names,node);
     }
-    if(ts.isCaseBlock(node))addUnit(node.clauses.filter(ts.isCaseClause).map(c=>staticData(c.expression)).filter(shortWords),node);
+    if(ts.isCaseBlock(node))addCompact(node.clauses.filter(ts.isCaseClause).map(c=>staticData(c.expression)).filter(shortWords),node);
     if(ts.isBinaryExpression(node) && [ts.SyntaxKind.BarBarToken,ts.SyntaxKind.AmpersandAmpersandToken].includes(node.operatorToken.kind) && !(ts.isBinaryExpression(node.parent) && node.parent.operatorToken.kind===node.operatorToken.kind)) {
-      const labels=[];function comparisons(n){if(ts.isStringLiteralLike(n))labels.push(n.text);ts.forEachChild(n,comparisons);}comparisons(node);addUnit(labels,node);
+      const labels=[];function comparisons(n){if(ts.isStringLiteralLike(n))labels.push(n.text);ts.forEachChild(n,comparisons);}comparisons(node);addCompact(labels,node);
     }
     // Homogeneous short-word keys can encode a list (including library tables).
     if (ts.isObjectLiteralExpression(node) && node.properties.length && node.properties.every(p=>ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteralLike(p.name)) && shortWords(p.name.text) && (ts.isNumericLiteral(p.initializer) || [ts.SyntaxKind.TrueKeyword,ts.SyntaxKind.FalseKeyword].includes(p.initializer.kind)))) addUnit(node.properties.map(p=>p.name.text),node);
@@ -137,10 +139,10 @@ export function letterGrids(value, declared=false) {
     if (!x || typeof x !== 'object') return;
     if(!Array.isArray(x))active ||= tagKeys.some(name=>validLanguage(x[name]));
     if (Array.isArray(x)) {
-      if(x.length>=3 && x.every(c=>typeof c==='string' && /^(?:CH|NG|[A-ZÅÑ])$/iu.test(c))) {
+      if(x.length>=3 && x.every(c=>typeof c==='string' && /^(?:CH|NG|[A-ZÅÑ])$/u.test(c))) {
         const grid=[x.map(c=>c.toUpperCase())];grid.languageDeclared=active;grid.container=key;grid.supplemental=true;grids.push(grid);return;
       }
-      const supplemental=!active && !/^(?:cells|grid|board|rows)$/i.test(key??'') && x.length>=2 && x.every(row=>typeof row==='string' && /^[A-ZÅÑ]{3,25}$/iu.test(row) && row.length===x[0].length);
+      const supplemental=!active && !/^(?:cells|grid|board|rows)$/i.test(key??'') && x.length>=2 && x.every(row=>typeof row==='string' && /^[A-ZÅÑ]{3,25}$/u.test(row) && row.length===x[0].length);
       const rows=x.map(row=>typeof row==='string' && (active || supplemental || /^(?:cells|grid|board|rows)$/i.test(key??''))?[...row]:row);
       const cell=c=>typeof c==='string' && (/^(?:CH|NG|[A-ZÅÑʼ’']|[^\p{L}]|)$/iu.test(c) || rows.length===1 && rows[0]?.length===1 && /^[\p{L}ʼ’']+$/u.test(c));
       if(rows.length && rows.length<=25 && rows.every(row=>Array.isArray(row) && row.length>0 && row.length<=25 && row.length===rows[0].length && row.every(cell)) && rows.flat().some(c=>/\p{L}/u.test(c))) {
@@ -155,12 +157,21 @@ export function letterGrids(value, declared=false) {
 export function plainEntries(values) {
   return values.flatMap(value=>{
     if(shortWords(value))return [value];
-    if(Array.isArray(value))return plainEntries(value);
+    if(value && !Array.isArray(value) && typeof value==='object' && Object.keys(value).length===1)return Object.values(value).filter(shortWords);
+    return [];
+  });
+}
+// New encoding views are strict only for compact concentrations; the global
+// density windows independently cover larger fragments. Ordinary app catalogs
+// contain isolated broad English words across many records.
+function compactEntries(values) {
+  return values.flatMap(value=>{
+    if(shortWords(value))return [value];
+    if(Array.isArray(value))return compactEntries(value);
     if(typeof value==='string') {
       const word=value.replace(/^\w+:/,'').replace(/\.[a-z0-9]{1,8}$/i,'').replace(/[-_]?\d+$/,'');
       if(/^\p{L}+$/u.test(word))return [word];
     }
-    if(value && !Array.isArray(value) && typeof value==='object' && Object.keys(value).length===1)return Object.values(value).filter(shortWords);
     return [];
   });
 }
@@ -263,7 +274,9 @@ export function jsonUnits(value, context={ids:[],scope:false}) {
   const ids=typeof value.id==='string'?[value.id]:context.ids;
   const unit=[...direct];unit.library={ids,scope:context.scope,field:context.field};
   const catalog=!Array.isArray(value) && ['items','index','preview','bytes','fixtures'].every(key=>key in value);
-  return [unit,...(Array.isArray(value)?recordUnits(value):objectUnits(value)),...Object.entries(value).flatMap(([key,v])=>jsonUnits(v,{ids,scope:catalog && ['items','index'].includes(key) || context.scope && (Array.isArray(value) || typeof value.id==='string' && ['terms','sounds'].includes(key)),field:Array.isArray(value)?context.field:key}))];
+  const compact=Array.isArray(value)?compactEntries(value):[];
+  const added=[...(JSON.stringify(compact)!==JSON.stringify(direct)?[compact]:[]),...(Array.isArray(value)?recordUnits(value):objectUnits(value))].map(entry=>{entry.compact=true;entry.library=unit.library;return entry;});
+  return [unit,...added,...Object.entries(value).flatMap(([key,v])=>jsonUnits(v,{ids,scope:catalog && ['items','index'].includes(key) || context.scope && (Array.isArray(value) || typeof value.id==='string' && ['terms','sounds'].includes(key)),field:Array.isArray(value)?context.field:key}))];
 }
 
 export const chamoru = value => typeof value==='string' && /^(?:ch(?:-|$)|cha$|chamoru$|chamorro$)/i.test(value.trim());
@@ -366,7 +379,7 @@ export function requireGridLanguages(value, language, key, puzzle=false) {
   if(!Array.isArray(value) && tagKeys.some(key=>key in value))requireThat(tagKeys.filter(key=>key in value).every(key=>validLanguage(value[key])),'Invalid grid language declaration');
   const declared=Array.isArray(value)?language:(value.language??value.lang??value.locale??value.languages??language);
   if(puzzle && Array.isArray(value) && value.every(row=>typeof row==='string') && letterGrids(value,true).length)requireThat(/^(?:cells|grid|board|rows)$/i.test(key??'') || declared!==undefined,'Puzzle grid needs a recognised container or language declaration');
-  if(letterGrids(key?{[key]:value}:value,validLanguage(declared)).length) {
+  if(letterGrids(key?{[key]:value}:value,validLanguage(declared)).some(grid=>!grid.supplemental)) {
     // A child declaration can supply its own grid's language.
     if(Array.isArray(value) && value.every(row=>typeof row==='string'||Array.isArray(row)&&row.every(c=>typeof c==='string')) && !(singleLetterMatrix(value) && !puzzle && declared===undefined && !/^(?:cells|grid|board|rows)$/i.test(key??'')))requireThat(/^(?:cells|grid|board|rows)$/i.test(key??'') || validLanguage(declared),'Grid needs a recognised container or language declaration');
   }
@@ -392,15 +405,17 @@ export function listString(text, excluded=[]) {
   }
   const functions=safeFunctionWords(excluded),flags=words.map(word=>functions.has(word.toLowerCase()));
   let switches=0;for(let i=1;i<flags.length;i++)if(flags[i]!==flags[i-1])switches++;
-  const sentence=words.length>=5 && switches>=3 && policyShare(words,excluded)<0.5 && new Set(words.filter((_,i)=>flags[i]).map(word=>word.toLowerCase())).size>=2;
+  const sentence=words.length>=5 && switches>=3 && (policyShare(words,excluded)<0.5 || /\b(?:is|are|was|were|be|does|do|did|has|have|had|can|could|will|would)\b/i.test(trimmed)) && new Set(words.filter((_,i)=>flags[i]).map(word=>word.toLowerCase())).size>=2;
   return !sentence;
 }
 
 // Public English grammar vocabulary. It is disjoint from the current private
 // broad/core lists; runtime subtraction keeps that invariant under policy drift.
 export const functionWords = ["a", "an", "the", "and", "or", "of", "in", "on", "as", "is", "it", "its", "how", "why", "does", "into", "with", "at", "by", "for", "from", "to", "than", "that", "this", "these", "those", "are", "was", "were", "be", "been", "being", "can", "could", "do", "did", "has", "have", "had", "if", "not", "only", "our", "their", "them", "we", "you", "your", "which", "who", "what", "when", "where", "while", "will", "would"];
+const normalizedPolicyCache=new WeakMap();
 function policyShare(words, excluded) {
-  const functions=safeFunctionWords(excluded),policy=new Set(excluded.flatMap(wordTokens));
+  const functions=safeFunctionWords(excluded);
+  let policy=normalizedPolicyCache.get(excluded);if(!policy){policy=new Set(excluded.flatMap(wordTokens));normalizedPolicyCache.set(excluded,policy);}
   const content=words.flatMap(wordTokens).filter(word=>!functions.has(word.toLowerCase()));
   return content.filter(word=>policy.has(word)).length/Math.max(1,content.length);
 }
