@@ -31,7 +31,7 @@ vi.mock('../src/learn/growth/Board',()=>({GrowthBoard:()=>null}));
 vi.mock('../src/learn/games/hafa-adai/view',()=>({LastPicnicWord:()=>null}));
 const boardHold=vi.hoisted(()=>({fn:null as null|((held:boolean)=>void)}));
 // Boards render nothing here; each one records the page-scroll hold it was given.
-vi.mock('../src/learn/views',async()=>{const {useContext}=await import('react');const {GridInteraction}=await import('../src/puzzles/grid/preferences');return {views:new Proxy({},{get:()=>({Board:()=>{boardHold.fn=useContext(GridInteraction);return null;},Art:()=>null})})};});
+vi.mock('../src/learn/views',async()=>{const {useContext,useLayoutEffect}=await import('react');const {GridInteraction}=await import('../src/puzzles/grid/preferences');return {views:new Proxy({},{get:()=>({Board:()=>{const hold=useContext(GridInteraction);useLayoutEffect(()=>{boardHold.fn=hold;},[hold]);return null;},Art:()=>null})})};});
 vi.mock('../src/badges/ResultCard',()=>({BadgeResultCard:()=>null}));
 let store:ReturnType<typeof useStore>;
 function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return s.ready?<LearnFrame id="letter-lagoon"/>:null;}

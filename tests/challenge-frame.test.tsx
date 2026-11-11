@@ -182,15 +182,15 @@ for(const [name,prior] of [['the direct invitation',1],['the "Too easy" face',2]
 // touch now holds the Challenge page still until release, as Cove grids do (GridScroll does the same after G3).
 it('a board that owns a touch holds the Challenge page scroll until release',async()=>{
  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));
- let hold:((held:boolean)=>void)|null=null;
- function Holder(){hold=React.useContext(GridInteraction);return null;}
+ const board={hold:null as null|((held:boolean)=>void)};
+ function Holder(){const hold=React.useContext(GridInteraction);useLayoutEffect(()=>{board.hold=hold;},[hold]);return null;}
  const holding={...entry,render:()=><Holder/>};
  db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;
  try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame selectedEntry={holding}/></StoreProvider>);});
   await press(r,'Start this puzzle');
   const page=()=>r.root.findByType('section' as never);
-  expect(hold).not.toBeNull();expect(page().props.scrollEnabled).toBe(true);
-  await act(async()=>hold!(true));expect(page().props.scrollEnabled).toBe(false);
-  await act(async()=>hold!(false));expect(page().props.scrollEnabled).toBe(true);
+  expect(board.hold).not.toBeNull();expect(page().props.scrollEnabled).toBe(true);
+  await act(async()=>board.hold!(true));expect(page().props.scrollEnabled).toBe(false);
+  await act(async()=>board.hold!(false));expect(page().props.scrollEnabled).toBe(true);
  }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
