@@ -1,0 +1,27 @@
+{
+ "format": 1,
+ "family": "slip-tide",
+ "seedBase": 20261109,
+ "attempts": 20213,
+ "rejects": {
+  "construction": 18385,
+  "duplicate-semantic": 5,
+  "template-cap": 0,
+  "layout-repeat": 0,
+  "bot-beat": 19
+ },
+ "budget": 200000,
+ "budgetHits": 0,
+ "timedOut": false,
+ "counts": {
+  "a": 120,
+  "b": 200,
+  "c": 300,
+  "d": 400,
+  "e": 400,
+  "f": 256,
+  "g": 128
+ },
+ "sourceSha": "8be501bd2d783ffc236beb7c0b66aa878bbdc818",
+ "status": "complete"
+}

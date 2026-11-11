@@ -22,4 +22,4 @@ export function buildCatalog(entries = challengeEntries): SaveCatalog {
 registerSaveContent(buildCatalog());
 // AR-10: Arcade dare marks use inline banks with no session codec; real-time rounds never pause.
 registerSaveContent(arcadeDareCatalog());
-export const challengeFor = (game: string) => challengeEntries.find(entry=>entry.game===game && entry.puzzles.length>0);
+export const challengeFor = (game: string) => challengeEntries.find(entry=>entry.game===game && (entry.puzzles.length>0 || !!entry.packed?.bands.length));
