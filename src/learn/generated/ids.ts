@@ -27,7 +27,8 @@ export const learnIds = [
   "treasure-algebra",
   "letter-lagoon",
   "word-workshop",
-  "story-studio"
+  "story-studio",
+  "slip-tide"
 ] as const;
 export type LearnId = (typeof learnIds)[number];
 export const learningGroups = {
@@ -58,5 +59,6 @@ export const learningGroups = {
   "treasure-algebra": "levels",
   "letter-lagoon": "levels",
   "word-workshop": "levels",
-  "story-studio": "levels"
+  "story-studio": "levels",
+  "slip-tide": "originals"
 } as const;

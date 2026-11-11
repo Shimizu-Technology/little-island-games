@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { bankSize, type PackedBank } from '../src/state/bankFacts';
 import { catalogManifest, assertFrozenCatalog } from '../src/state/catalogManifest';
 import { registerSaveContent, saveCatalog, emptyChallenge, validChallengeProgress, validChallengeSession, creditProgress, type ChallengeSession } from '../src/state/challenge';
@@ -8,6 +8,8 @@ import { parseSaveWithContent, parseSave } from '../src/state/validation';
 import { encodeSave } from '../src/state/profiles';
 import { recoverChallengeDrafts } from '../src/state/challengeDrafts';
 import { fixture, envelope } from './helpers/save-packed';
+
+vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
 describe('range-based save catalog',()=>{
  it('loads no entries for completion, award bounds or ordinal metadata',()=>{
   const f=fixture(), bank=f.banks.get(100)!;

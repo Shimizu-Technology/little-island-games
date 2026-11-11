@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useIsFocused } from 'expo-router';
 import { Button, Chip, Copy, Heading, ToggleRow, styles } from '../components/ui';
 import { Settings } from '../components/Settings';
-import type { ChallengeSession } from '../state/challenge';
+import type { ChallengeSession, PuzzleRef } from '../state/challenge';
 import { SaveStatus } from '../components/SaveStatus';
 import { LearnerChip } from '../personalization/LearnerChip';
 import { useStore } from '../state/Store';
@@ -17,25 +17,38 @@ import { dareBits, emptyChallenge } from '../state/challenge';
 import { progressFor, selectedOwner } from '../state/challengeDrafts';
 import { learningComfort } from '../state/validation';
 import { shelfGames } from '../learn/home';
-import type { ChallengeCard, ChallengeEntry, ChallengePath } from './types';
+import type { ChallengeCard, ChallengeEntry, ChallengePath, PackedBand } from './types';
+import { GridInteraction } from '../puzzles/grid/preferences';
+type Choice = ChallengeCard | PackedBand;
+const isBand = (c: Choice | undefined): c is PackedBand => !!c && 'kind' in c && c.kind === 'band';
 const gameName = (game: string) => shelfGames.find(item=>item.id===game)?.name ?? game.replace(/(^|-)([a-z0-9])/g,(_match,separator:string,letter:string)=>`${separator?' ':''}${letter.toUpperCase()}`);
 /** A separate slot: entering or leaving Challenge never replaces a School round. */
 export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
   const store=useStore(), owner=selectedOwner(store.save), focused=useIsFocused(), {width}=useWindowDimensions();
   const progress=progressFor(store.save,owner)??emptyChallenge(), saved=progress.paused.find(s=>s.game===entry.game&&!s.result&&!s.credited);
   const comfort=learningComfort(store.save,owner);
-  const [selection,setSelection]=useState<ChallengeCard>(()=>entry.puzzles.find(p=>progress.choice?.[0]===entry.game&&p.path===progress.choice?.[1]&&p.tier===progress.choice?.[2])??entry.puzzles[0]);
+  // Packed banks are offered whole, before the authored cards of their path. Inline-only entries have none.
+  const bands=entry.packed?.bands??[], every:Choice[]=[...bands,...entry.puzzles];
+  const choices=(path:ChallengePath)=>every.filter(p=>p.path===path);
+  const cardOf=(ref:PuzzleRef)=>entry.puzzles.find(p=>p.ref.bank===ref.bank&&p.ref.puzzle===ref.puzzle)??entry.packed?.card(ref);
+  const choiceOf=(bank:number,puzzle:number):Choice|undefined=>entry.puzzles.find(p=>p.ref.bank===bank&&p.ref.puzzle===puzzle)??bands.find(b=>b.bank===bank);
+  const [selection,setSelection]=useState<Choice>(()=>every.find(p=>progress.choice?.[0]===entry.game&&p.path===progress.choice?.[1]&&p.tier===progress.choice?.[2])??every[0]);
   const [completed,setCompleted]=useState<ChallengeSession>(), [settings,setSettings]=useState(false), [replacementGame,setReplacementGame]=useState<string>(), [dares,setDares]=useState<number[]>([]), [picking,setPicking]=useState(!saved), [busy,setBusy]=useState(false), [launching,setLaunching]=useState(false), [message,setMessage]=useState(''), [replace,setReplace]=useState(false);
   const [fresh,setFresh]=useState<'choose'|'confirm'|null>(null);
+  // A board that owns a touch holds the page scroll until release (Cove grids and Slip Tide).
+  const [held,setHeld]=useState(false);
   const accepted=useRef(saved), lock=useRef(false), dispatchToken=useRef(0);
   // Store accepts a draft synchronously before durability; render receives that accepted revision.
   useLayoutEffect(()=>{if(saved && (!accepted.current || saved.id!==accepted.current.id || saved.revision>=accepted.current.revision)){accepted.current=saved;if(!saved.result)lock.current=false;}},[saved]);
   const expected=(s:ChallengeSession|undefined)=>({owner,game:entry.game,epoch:store.epoch,id:s?.id??null,revision:s?.revision??null});
-  async function launch(target: ChallengeCard = selection, chosenDares: number[] = dares, replaceSaved = false) {
+  async function launch(choice: Choice = selection, chosenDares: number[] = dares, replaceSaved = false) {
     if(lock.current || saved && !replace && !replaceSaved)return;
     const token=++dispatchToken.current;
     lock.current=true;setBusy(true);setLaunching(true);setMessage('');
     try {
+      // A band picks a concrete entry and verifies its content before anything is constructed.
+      const target=isBand(choice)?entry.packed?.card(await entry.packed.choose(choice.bank,progress,(saved??completed)?.puzzle)):choice;
+      if(!target)throw new Error('Unknown puzzle.');
       const selected=comfort.youngChild?[]:chosenDares;
       const options={supportOff:target.dares.some(d=>selected.includes(d.slot)&&d.rule.kind==='blind'),ownRead:target.dares.some(d=>selected.includes(d.slot)&&d.rule.kind==='own-read')};
       // Construct first: a throwing adapter cannot discard accepted work.
@@ -65,23 +78,28 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
     }finally{if(dispatchToken.current===token){lock.current=false;setBusy(false);}}
   }
   const round=saved??completed, full=progress.paused.filter(s=>!s.credited).length>=(owner.startsWith('cove-')?4:8), marks=dareBits(progress.dares)?.filter(Boolean).length??0;
-  const currentCard = round && entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle);
+  const currentCard = round && cardOf(round.puzzle);
+  const currentChoice:Choice|undefined = currentCard && (bands.find(b=>b.bank===currentCard.ref.bank)??currentCard);
+  // A dare invitation opens a card that has a dare: this one, or else an authored card of the same path and tier
+  // (packed bands carry no dares). With neither, nothing offers a dare.
+  const dareChoice:ChallengeCard|undefined = currentChoice && (!isBand(currentChoice)&&currentChoice.dares.length>0?currentChoice:entry.puzzles.find(p=>p.path===currentChoice.path&&p.tier===currentChoice.tier&&p.dares.length>0));
   const offerContext = round ? entry.contextFor(round.puzzle) : '';
-  const offerFacts = {atPar:round?.result?.event==='independent'&&round.result.cost!==null&&round.result.cost<=(currentCard?.par?.upper??-1),firstHigher:false,dare:entry.puzzles.some(p=>p.dares.length>0),easier:entry.puzzles.some(p=>p.tier<(currentCard?.tier??1)),harder:entry.puzzles.some(p=>p.tier>(currentCard?.tier??6))};
+  const offerFacts = {atPar:round?.result?.event==='independent'&&round.result.cost!==null&&round.result.cost<=(currentCard?.par?.upper??-1),firstHigher:false,dare:!!dareChoice,easier:every.some(p=>p.tier<(currentCard?.tier??1)),harder:every.some(p=>p.tier>(currentCard?.tier??6))};
   const signal=progress.signals.find(s=>s[0]===offerContext);
   const personal=owner!=='family'&&round?.partner===null;
   const hasOffer=!!(personal&&comfort.offers&&!comfort.youngChild&&signal&&!signal[4]&&(ratingDue(progress,offerContext)||resultOffer(signal,comfort,offerFacts)));
   const showDirections=comfort.offers&&!comfort.youngChild&&!hasOffer&&!(personal&&signal?.[4]);
+  const recentChoices=()=>progress.recent.flatMap(([bank,puzzle])=>{const c=choiceOf(bank,puzzle);return c?[c]:[];});
+  // The same band deals another of its own entries; directions move between bands and cards of the path.
+  const nextChoice=(here:Choice,direction:'easier'|'same'|'harder')=>direction==='same'&&isBand(here)?here:adjacentTide(choices(here.path),here,direction,recentChoices());
   function chooseNext(direction: 'easier'|'same'|'harder') {
-    if(!currentCard)return;
-    const recent=progress.recent.flatMap(([bank,puzzle])=>entry.puzzles.filter(p=>p.ref.bank===bank&&p.ref.puzzle===puzzle));
-    const next=adjacentTide(entry.puzzles.filter(p=>p.path===currentCard.path),currentCard,direction,recent);
+    if(!currentChoice)return;
+    const next=nextChoice(currentChoice,direction);
     if(next){setSelection(next);setDares([]);void launch(next,[]);}else{setPicking(true);setReplace(false);setDares([]);}
   }
   function freshPuzzle() {
-    if(!currentCard)return;
-    const recent=progress.recent.flatMap(([bank,puzzle])=>entry.puzzles.filter(p=>p.ref.bank===bank&&p.ref.puzzle===puzzle));
-    const next=adjacentTide(entry.puzzles.filter(p=>p.path===currentCard.path),currentCard,'same',recent);
+    if(!currentChoice)return;
+    const next=nextChoice(currentChoice,'same');
     setPicking(true);setReplace(false);setDares([]);setFresh(next&&saved?'choose':null);
     if(next)setSelection(next);
     else setMessage('There is no other puzzle at this tide. Your draft is kept. Continue it or choose another tide.');
@@ -89,14 +107,14 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
   const completionFacts=round?.result?entry.completionFacts?.(round)??null:null;
   const defaultPraise=round?.result?.event==='together'?'You worked through this puzzle together.':completionFacts?.helpUsed?'You finished this puzzle with help.':completionFacts?.failed?'You kept trying and solved it.':'You completed this puzzle.';
   const back=()=>router.canGoBack()?router.back():router.replace('/');
-  return <SafeAreaView style={styles.page}><ScrollView contentContainerStyle={[styles.content,{gap:14,padding:20}]}>
+  return <SafeAreaView style={styles.page}><GridInteraction.Provider value={setHeld}><ScrollView scrollEnabled={!held} contentContainerStyle={[styles.content,{gap:14,padding:20}]}>
     <View style={{flexDirection:'row',flexWrap:'wrap',gap:10,alignItems:'center'}}><Button quiet compact onPress={back}>Back</Button><Heading>Challenge</Heading><LearnerChip compact/></View>
     <Copy>Deep Water is a big stretch. Endless Tide has more puzzles. Every choice is open.</Copy><Copy>Your marks: {marks}. Marks are kept and never spent.</Copy><SaveStatus/>
     {!!message&&<View accessibilityLiveRegion="polite"><Copy>{message}</Copy></View>}
     {picking ? <>
-      <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>{(['deep-water','endless'] as ChallengePath[]).filter(path=>entry.puzzles.some(p=>p.path===path)).map(path=><Chip key={path} selected={selection.path===path} onPress={()=>{setSelection(entry.puzzles.find(p=>p.path===path)!);setDares([]);setFresh(null);}}>{path==='deep-water'?'Deep Water · A big stretch':'Endless Tide'}</Chip>)}</View>
-      {entry.puzzles.filter(p=>p.path===selection.path).map(p=><Button quiet key={`${p.ref.bank}-${p.ref.puzzle}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{p.title} · Tide {p.tier}</Button>)}
-      {!comfort.youngChild&&selection.dares.length>0&&<><Heading style={{fontSize:20}}>An optional dare</Heading><Copy>A miss leaves no mark and no penalty. Help is always here.</Copy>{selection.dares.map(d=><Chip key={d.slot} selected={dares.includes(d.slot)} onPress={()=>setDares(dares.includes(d.slot)?dares.filter(n=>n!==d.slot):[d.slot])}>{d.label} · {d.help==='allowed'?'Help welcome':'On my own'}</Chip>)}</>}
+      <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>{(['deep-water','endless'] as ChallengePath[]).filter(path=>every.some(p=>p.path===path)).map(path=><Chip key={path} selected={selection.path===path} onPress={()=>{setSelection(choices(path)[0]);setDares([]);setFresh(null);}}>{path==='deep-water'?'Deep Water · A big stretch':'Endless Tide'}</Chip>)}</View>
+      {choices(selection.path).map(p=>isBand(p)?<Button quiet key={`band-${p.bank}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{`${p.title} · Tide ${p.tier} · ${p.count} puzzles`}</Button>:<Button quiet key={`${p.ref.bank}-${p.ref.puzzle}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{p.title} · Tide {p.tier}</Button>)}
+      {!comfort.youngChild&&!isBand(selection)&&selection.dares.length>0&&<><Heading style={{fontSize:20}}>An optional dare</Heading><Copy>A miss leaves no mark and no penalty. Help is always here.</Copy>{selection.dares.map(d=><Chip key={d.slot} selected={dares.includes(d.slot)} onPress={()=>setDares(dares.includes(d.slot)?dares.filter(n=>n!==d.slot):[d.slot])}>{d.label} · {d.help==='allowed'?'Help welcome':'On my own'}</Chip>)}</>}
       {saved&&!fresh&&<><Copy>Your saved Challenge puzzle stays available until a new attempt is saved. Replacing it removes it from Continue.</Copy><ToggleRow label="Start another attempt" value={replace} onChange={setReplace}/><Button quiet onPress={()=>{setPicking(false);setReplace(false);}}>Continue saved puzzle</Button></>}
       {saved&&fresh&&<>
         <Copy>{fresh==='confirm'?'Start this fresh puzzle and replace your saved draft?':'A fresh puzzle with the same idea is ready. Your draft stays saved until you start.'}</Copy>
@@ -107,19 +125,19 @@ export function ChallengeFrame({entry}:{entry:ChallengeEntry}) {
       {!fresh&&(!saved || replace)&&(!full||!!saved||!!replacementGame) ? <Button disabled={busy} onPress={()=>void launch()}>Start this puzzle</Button>:null}
       <Button quiet onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button>
     </> : round ? <>
-      <Heading style={{fontSize:22}}>{entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle)?.title}</Heading>
+      <Heading style={{fontSize:22}}>{cardOf(round.puzzle)?.title}</Heading>
       {/* The registered Board receives dispatch only as an event callback; render does not invoke it. */}
-      {!round.result&&!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={store.challengeOpen} expected={expected(round)} render={()=><>
+      {!round.result&&!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={entry.packed?async e=>{await entry.packed!.prepare(round.puzzle);return store.challengeOpen(e);}:store.challengeOpen} expected={expected(round)} render={()=><>
         {entry.render(round,a=>void dispatch(a),focused&&!busy,width-40,{key:sessionKey(round),onFresh:freshPuzzle,commit:async(action,key)=>{const current=accepted.current;if(!current||key!==sessionKey(current))return null;const session=await dispatch(action);return session?{key:sessionKey(session),session}:null;}})}
         {entry.helpUI!=='board'&&<Button quiet disabled={!focused||busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}
       </>}/>}
       {round.result ? <><Heading>{round.result.event==='together'?'You solved it together!':'Puzzle solved!'}</Heading><Copy>{round.result.dares.length?'Your dare mark is kept.':'Your finished puzzle is kept. Helped finishes count too.'}</Copy>
-        {hasOffer&&<ResultOffer progress={progress} context={offerContext} comfort={comfort} facts={offerFacts} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle);const next=kind==='dare'?current:entry.puzzles.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);setFresh(null);}}/>}
+        {hasOffer&&<ResultOffer progress={progress} context={offerContext} comfort={comfort} facts={offerFacts} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=currentChoice;const next=kind==='dare'?dareChoice:every.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);setFresh(null);}}/>}
         <PuzzleEnding praise={entry.completionText?.(round.puzzle,round.result,completionFacts) ?? defaultPraise} disabled={busy} showDirections={showDirections}
           onChoose={chooseNext} onAnother={()=>chooseNext('same')}
           onRest={back}/>
       </> : null}
       {!round.result&&<><Button quiet disabled={busy} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>{entry.backLabel??'Easier choice · Levels 1–5'}</Button></>}
     </>:null}
-  </ScrollView><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;
+  </ScrollView></GridInteraction.Provider><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;
 }

@@ -28,6 +28,7 @@ import { levelOf, levelTitle, optionsAtLevel, type LearningLevel } from "./level
 import { roundStars } from "./schoolProgress";
 import { activeLearner } from "./learners";
 import { views } from "./views";
+import { GridInteraction } from "../puzzles/grid/preferences";
 import { LastPicnicWord } from "./games/hafa-adai/view";
 import type { IslandState } from "./games/hafa-adai/engine";
 import { Celebrate } from "./Celebrate";
@@ -59,6 +60,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
     view = views[id];
   const saved = store.save.learn?.[id];
   const scroll = useRef<ScrollView | null>(null);
+  // A board that owns a touch (Slip Tide's water) holds the page scroll until release, as Cove grids do.
+  const [held, setHeld] = useState(false);
   const growthState = saved && isGrowth(saved.state) ? saved.state as GrowthState : undefined;
   const growthStep = saved && growthState ? growthProgress(growthState, growthQuestions(id, saved.options, growthState)).index : saved && (engine.ownLevels||engine.nativeStages) ? (saved.state as { index?: number }).index : undefined;
   useLayoutEffect(() => {
@@ -292,7 +295,8 @@ export function LearnFrame({ id }: { id: LearnId }) {
     <SafeAreaView style={[styles.page, { backgroundColor: theme.sky }]}>
       <IslandBackdrop island={island} colors={theme}/>
       {width < 600 && <View style={{ paddingHorizontal: 16 }}>{header}</View>}
-      <ScrollView key={saved?.id ?? "setup"} ref={scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
+      <GridInteraction.Provider value={setHeld}>
+      <ScrollView key={saved?.id ?? "setup"} ref={scroll} scrollEnabled={!held} keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.content, { maxWidth: 1280, paddingHorizontal: 16 }]}>
         {width >= 600 && header}
         {width >= 600 && saved && (
           <Copy style={{ fontSize: 12, marginBottom: 8 }}>
@@ -371,6 +375,7 @@ export function LearnFrame({ id }: { id: LearnId }) {
           </View>
         )}
       </ScrollView>
+      </GridInteraction.Provider>
       <Sheet
         visible={setup || !saved}
         onClose={() => (saved ? setSetup(false) : back())}
