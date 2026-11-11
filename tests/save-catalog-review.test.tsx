@@ -10,6 +10,8 @@ import { prepareSessionContent, prepareSaveContent, contentUnavailable, sessionC
 import { parseSaveWithContent } from '../src/state/validation';
 import { recoverChallengeDrafts } from '../src/state/challengeDrafts';
 import { type BankLoader } from '../src/puzzles/loader';
+
+vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
 const db=vi.hoisted(()=>({raw:null as string|null,preserved:[] as string[],drafts:[] as string[],loader:null as Pick<BankLoader,'savedHash'>|null,onSet:null as (()=>Promise<void>)|null}));
 vi.mock('../src/puzzles/catalog',()=>({bankLoader:()=>db.loader!}));
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{await db.onSet?.();db.raw=raw;},preserve:async(raw:string)=>{db.preserved.push(raw);},readDrafts:async()=>db.drafts,listRecovery:async()=>db.preserved.length?[{key:'newest'}]:[],readRecovery:async()=>db.preserved.at(-1)??null}}));

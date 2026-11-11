@@ -19,4 +19,4 @@ export function buildCatalog(entries = challengeEntries): SaveCatalog {
   return {banks,dares,codecs,contexts};
 }
 registerSaveContent(buildCatalog());
-export const challengeFor = (game: string) => challengeEntries.find(entry=>entry.game===game && entry.puzzles.length>0);
+export const challengeFor = (game: string) => challengeEntries.find(entry=>entry.game===game && (entry.puzzles.length>0 || !!entry.packed?.bands.length));

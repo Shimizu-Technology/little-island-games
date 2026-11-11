@@ -29,9 +29,9 @@ it('allows the six originals only when their complete registrations land, and re
     learnIds.forEach((id,i)=>register(id,i));execFileSync('git',['init','-q'],{cwd:root});execFileSync('git',['-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','--allow-empty','-qm','Initial'],{cwd:root});
     execFileSync('node',['scripts/generate-game-registry.mjs'],{cwd:root});
     expect(JSON.parse(readFileSync(join(root,'src/learn/registered-ids.json'),'utf8'))).toHaveLength(learnIds.length);
-    const originals=['slip-tide','canoe-seats','gate-crab','every-stone','shell-scale','sail-fold'];originals.forEach((id,i)=>register(id,learnIds.length+i,'originals'));
+    const originals=['slip-tide','canoe-seats','gate-crab','every-stone','shell-scale','sail-fold'].filter(id=>!learnIds.includes(id as never));originals.forEach((id,i)=>register(id,learnIds.length+i,'originals'));
     execFileSync('node',['scripts/generate-game-registry.mjs'],{cwd:root});
-    expect(JSON.parse(readFileSync(join(root,'src/learn/registered-ids.json'),'utf8')).slice(-6)).toEqual(originals);
+    expect(JSON.parse(readFileSync(join(root,'src/learn/registered-ids.json'),'utf8')).slice(-originals.length)).toEqual(originals);
     execFileSync('git',['add','.'],{cwd:root});execFileSync('git',['-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','Fixture registration'],{cwd:root});
     rmSync(join(root,'src/learn/games/slip-tide/registration.json'));
     expect(()=>execFileSync('node',['scripts/generate-game-registry.mjs','--check'],{cwd:root,stdio:'pipe'})).toThrow();

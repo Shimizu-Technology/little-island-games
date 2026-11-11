@@ -7,6 +7,8 @@ import { catalogManifest } from '../src/state/catalogManifest';
 import { encodeSave, projectProfile } from '../src/state/profiles';
 import { StoreProvider, useStore } from '../src/state/Store';
 import { createBankLoader, type BankLoader } from '../src/puzzles/loader';
+
+vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
 const db=vi.hoisted(()=>({raw:null as string|null,preserved:[] as string[],loader:null as BankLoader|null}));
 vi.mock('../src/puzzles/catalog',()=>({bankLoader:()=>db.loader!}));
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{db.raw=raw;},preserve:async(raw:string)=>{db.preserved.push(raw);},readDrafts:async()=>[],listRecovery:async()=>[],readRecovery:async()=>null}}));
