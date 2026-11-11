@@ -34,7 +34,7 @@ vi.mock('../src/arcade/games/fruit-bat-flight/Art', () => ({ FlightPalm: () => n
 vi.mock('../src/arcade/games/scrolling/Art', () => ({ Fruit: () => null, palette: () => ['#000', '#000', '#000'] }));
 vi.mock('../src/arcade/games/scrolling/FeelArt', () => ({ BatRig: () => null, RunnerRig: () => null, LastHit: ({ children }: { children: React.ReactNode }) => children }));
 
-const { RunBoard, OPTION_GAP } = await import('../src/arcade/games/scrolling/Board');
+const { RunBoard, OPTION_GAP, PAD_GAP } = await import('../src/arcade/games/scrolling/Board');
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 type Style = Record<string, unknown>;
 const flat = (style: unknown): Style => Array.isArray(style) ? Object.assign({}, ...style.map(flat)) : (style ?? {}) as Style;
@@ -66,6 +66,10 @@ describe('P2-1: arrow switch and Finish free run', () => {
       const row = r.root.find(n => n.props.testID === 'run-option-row');
       expect(flat(row.props.style).flexDirection).toBe('row');
       expect(flat(row.props.style).gap).toBe(OPTION_GAP);
+      // Opposite ends of the row, and the arrow pad well clear below it.
+      expect(flat(row.props.style).justifyContent).toBe('space-between');
+      expect(flat(row.parent!.props.style).gap).toBe(PAD_GAP);
+      expect(PAD_GAP).toBeGreaterThanOrEqual(20);
       expect(OPTION_GAP).toBeGreaterThan(toggle(r).props.hitSlop);
       // Neither control, nor anything between it and the shared row, is absolutely placed.
       for (const control of [toggle(r), button[0]]) {

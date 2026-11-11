@@ -213,15 +213,15 @@ function ArrowToggle({ shown, onToggle }: { shown: boolean; onToggle: () => void
   return <Pressable accessibilityRole="switch" accessibilityState={{ checked: shown }} accessibilityLabel="Arrow buttons" onPress={onToggle} hitSlop={TOGGLE_SLOP} style={{ width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", backgroundColor: shown ? "#FFF2CCDD" : "#10303ECC", borderWidth: 1, borderColor: "#FFF2CC" }}><Text maxFontSizeMultiplier={1} style={{ fontSize: 18, fontWeight: "900", color: shown ? "#34354D" : "#FFF2CC" }}>✥</Text></Pressable>;
 }
 /**
- * Bottom chrome (P2-1). Finish and the arrow switch share one flex row with a gap wider than both
- * touch slops, so their hit areas can never overlap at any text size (a long Finish wraps above the
- * switch). The arrow pad has its own row underneath. Nothing here is absolutely placed. Their
+ * Bottom chrome (P2-1). Finish and the arrow switch share one flex row, at opposite ends, with at
+ * least a gap wider than both touch slops, so their hit areas can never overlap at any text size (a
+ * long Finish wraps above the switch). The arrow pad has its own row, PAD_GAP below. Nothing here is absolutely placed. Their
  * labels stop growing at the HUD cap so the largest text never covers the runner.
  */
-export const OPTION_GAP = TOGGLE_SLOP + BUTTON_SLOP + 2;
+export const OPTION_GAP = TOGGLE_SLOP + BUTTON_SLOP + 2, PAD_GAP = 24;
 export function RunControls({ arrows, onToggle, pad, finish }: { arrows: boolean; onToggle: () => void; pad: React.ReactNode; finish?: React.ReactNode }) {
-  return <View pointerEvents="box-none" testID="run-chrome-bottom" style={{ position: "absolute", left: 12, right: 12, bottom: 10, gap: 10 }}>
-    <View pointerEvents="box-none" testID="run-option-row" style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center", gap: OPTION_GAP }}>{finish}<ArrowToggle shown={arrows} onToggle={onToggle}/></View>
+  return <View pointerEvents="box-none" testID="run-chrome-bottom" style={{ position: "absolute", left: 12, right: 12, bottom: 10, gap: PAD_GAP }}>
+    <View pointerEvents="box-none" testID="run-option-row" style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: OPTION_GAP }}>{finish ?? <View/>}<ArrowToggle shown={arrows} onToggle={onToggle}/></View>
     {arrows && <View pointerEvents="box-none" style={{ flexDirection: "row", justifyContent: "center", gap: 10 }}>{pad}</View>}
   </View>;
 }

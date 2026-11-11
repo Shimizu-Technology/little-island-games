@@ -16,7 +16,7 @@ export function RunHud({s,learning}:{s:Pick<ReturnType<typeof runHud>,'level'|'p
   return <View pointerEvents="none" style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',gap:8}}>
     <View accessible accessibilityLabel={`Score ${s.score}. ${learning?`${s.passed} answers`:`${s.shellNotes} shells. ${s.passed} trail markers`}. ${target?`Goal ${target}`:"Free run"}`} testID="run-score-panel" style={{flex:1,flexDirection:'row',alignItems:'center',gap:8}}>
       {!learning&&<View style={pill}><Shell size={22}/><Text maxFontSizeMultiplier={HUD_TEXT_MAX} style={{fontSize:20,fontWeight:'900',color:'#FFF2C4',fontVariant:['tabular-nums']}}>{s.shellNotes}</Text></View>}
-      <View style={[pill,{flex:1,maxWidth:220}]}>
+      <View style={[pill,target?{flex:1,maxWidth:220}:null]}>
         {target?<><View style={{flex:1,height:6,borderRadius:3,backgroundColor:'#0B242F'}}><View style={{height:6,width:`${progress*100}%`,borderRadius:3,backgroundColor:'#FFD86E'}}/></View><Text testID="scroll-progress" maxFontSizeMultiplier={HUD_TEXT_MAX} style={{color:'#FFE6A3',fontWeight:'900',fontSize:13,fontVariant:['tabular-nums']}}>{s.passed}/{target}</Text></>
           :<Text testID="scroll-progress" maxFontSizeMultiplier={HUD_TEXT_MAX} style={{color:'#FFE6A3',fontWeight:'900',fontSize:15,fontVariant:['tabular-nums']}}>Score {s.score}</Text>}
       </View>
