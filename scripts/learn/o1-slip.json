@@ -1,0 +1,9 @@
+{
+  "slip-intro": "Swipe the water. Every crab slides until something stops it.",
+  "slip-help": "Swipe up, down, left or right. Every crab slides that way until a wall, a rock or another crab stops it. A crab that reaches its own pool goes home. Undo and Reset are free, so try anything.",
+  "slip-hint-look": "Look at this crab. It gets home first.",
+  "slip-hint-think": "See what stops it, right there.",
+  "slip-stuck": "These crabs cannot get home from here. Undo or Reset, and nothing is lost.",
+  "slip-home": "All home!",
+  "slip-together": "Each person has two arrows. Talk it through."
+}
