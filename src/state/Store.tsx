@@ -26,6 +26,7 @@ import { preserveAndReplace } from "./replacement";
 import { encodeNotices, mergeNotices, parseNotices, setAsideUnresolved, type SetAside } from "./setAside";
 import { changingWritesSettled, fencedStorage } from "./writeFence";
 import { noteLaunch } from "./launchLog";
+import type { StorageAdapter } from "./storage";
 import { applySessionAction } from "./sessionAction";
 import { recordWordRound } from "./wordRecords";
 import { ActivityId, ActivitySession } from "./activities";
@@ -105,9 +106,22 @@ const Context = createContext<Store | null>(null);
 /** Far beyond a slow device's real launch; only a stuck read or write gets here. */
 export const BOOT_TIMEOUT_MS = 15_000;
 export const bootTimeoutMessage = "Your island is taking too long to open. Your saved work is kept. Try opening again.";
-// The root error boundary can unmount this provider and mount a new one. The old one's accepted work
-// is handed over here once its writes have settled: null when everything it accepted reached storage.
-let retired: Promise<Save | null> = Promise.resolve(null);
+/** How long a backup waits for queued writes before exporting the accepted state anyway. */
+export const BACKUP_FLUSH_MS = 4_000;
+export const noticesReadMessage = "Your island couldn’t finish opening. Your saved work is kept. Try opening again.";
+// The Store is mounted above the UI error boundary, so nothing remounts it while the app runs. If it fails,
+// the root boundary shows a restart screen and no Store replaces it: its accepted writes still drain. Only a
+// Store mounted after it (a test, or a fast refresh) takes over, and then the old one starts no more writes.
+let liveStore = 0;
+/** The notices row, read twice before giving up. A failed read is an error, never an empty row. */
+async function readNotices(store: StorageAdapter) {
+  if (!store.readNotices) return null;
+  try { return await store.readNotices(); }
+  catch {
+    try { return await store.readNotices(); }
+    catch (error) { noteLaunch('notices', error); throw new Error(noticesReadMessage); }
+  }
+}
 const ownersOf = (save: Save) => [...Object.keys(save.profiles?.people ?? {}), ...Object.keys(save.cove?.people ?? {})];
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [save, setSave] = useState(emptySave),
@@ -122,6 +136,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [saving, setSaving] = useState(false);
   const pendingWrites = useRef(0);
   const writeFailures = useRef(0), lastWriteFailed = useRef(false), libraryRejected = useRef(false), admissionRejected = useRef(false);
+  // Draft rows are per game. A draft that saved for one game says nothing about another game's failed one.
+  const failedDrafts = useRef(new Set<string>());
+  const unsaved = () => lastWriteFailed.current || failedDrafts.current.size > 0;
+  /** A full envelope reached storage. It holds every accepted move, so earlier draft failures are covered. */
+  const envelopeSaved = () => { lastWriteFailed.current = false; failedDrafts.current.clear(); };
   const [epoch, setEpoch] = useState(0);
   const audioPreferences = useMemo(() => ({ ...save.settings, epoch }), [save.settings, epoch]);
   const generation = useRef(0);
@@ -133,11 +152,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     mounted = useRef(true),
     uncertainWrite = useRef(false),
     restoring = useRef(false);
-  // Every write this Store makes. Once it unmounts it can start no more; ones already running finish.
+  // Every write this Store makes, refused once a newer Store has mounted. Ones already running finish.
+  const owner = useRef(0);
   // eslint-disable-next-line react-hooks/refs -- The check runs at write time, never during render.
-  const [disk] = useState(() => fencedStorage(() => mounted.current));
+  const [disk] = useState(() => fencedStorage(() => owner.current !== 0 && owner.current === liveStore));
   // Each load is one attempt. A retry, restore or newer load supersedes it, and its writes are refused.
-  const loadAttempt = useRef(0), accepting = useRef(false);
+  const loadAttempt = useRef(0);
   const notices = useRef<SetAside[]>([]);
   const admitEnvelope = useCallback((encoded: string) => {
     let message: string;
@@ -161,7 +181,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       .catch(() => {})
       .then(() => disk.set(encoded,envelopeWrite(durable)))
       .then(() => {
-        lastWriteFailed.current = false;
+        envelopeSaved();
         if (mounted.current && !libraryRejected.current && !admissionRejected.current) setError(null);
       })
       .catch(() => {
@@ -179,9 +199,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, write:async raw => {
     if (!disk.writeDraft) throw new Error('Draft storage unavailable.');
     await disk.writeDraft(raw);
-    lastWriteFailed.current = false;
+  }, saved:() => {
+    // The newest draft for this game holds all of its moves; other games keep their own status.
+    failedDrafts.current.delete(key);
+    if (mounted.current && !unsaved() && !libraryRejected.current && !admissionRejected.current) setError(null);
   }, failed:() => {
-    writeFailures.current++; lastWriteFailed.current = true;
+    writeFailures.current++; failedDrafts.current.add(key);
     if (mounted.current) setError('Your latest moves could not be saved. Keep the app open and try again, or export a backup of the accepted moves.');
   }}),[draftWriter,disk]);
   const refuseChallenge = useCallback((reason: ChallengeRefusal) => {
@@ -202,35 +225,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       retainSessionContent(syncProfile(next),saveCatalog); setSave(next);
       setRecovery(null); uncertainWrite.current = false;
       setError(null);
-      lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false;
+      envelopeSaved(); libraryRejected.current = false; admissionRejected.current = false;
       notices.current = kept; setSetAside(kept);
       settled.current = true;
       setReady(true);
     };
     try {
-      // Writes an earlier load or a retired Store already started land before this one reads.
+      // Writes an earlier load or Store already started land before this one reads.
       await changingWritesSettled();
-      let handed = await retired;
       if(!live())return;
-      retired = Promise.resolve(null);
-      // Cove identity is temporary, as on any launch.
-      if (handed?.cove?.active) handed = { ...handed, cove: { ...handed.cove, active: null } };
-      if (handed) {
-        // The previous Store accepted this but couldn't confirm it reached storage. Keep it, as it did.
-        const kept = parseNotices(await store.readNotices?.().catch(() => null), ownersOf(handed));
-        if(!live())return;
-        setRaw(encodeSave(handed)); publish(handed,kept);
-        noteLaunch('handoff', 'Kept accepted changes from before the error screen and saved them again.');
-        void persist(handed);
-        return;
-      }
       encoded = await store.get();
       if(!live())return;
       setRaw(encoded);
       // Content this build can't resolve is set aside from a copy; the original bytes are preserved below.
       const aside=encoded?setAsideUnresolved(encoded,saveCatalog):{raw:null,setAside:[]};
       const before=aside.raw?parseSave(aside.raw):emptySave();
-      const stored = encoded ? await store.readNotices?.().catch(() => null) : null;
+      const stored = encoded ? await readNotices(store) : null;
       if(!live())return;
       const recovered = await recoverChallengeDrafts(migrateProfiles(before),store,saveCatalog,{live});
       let next=syncProfile(backfillRewards(migrateLibrary(recovered, { existingLearners: encoded !== null })));
@@ -264,10 +274,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       settled.current = true;
       setReady(true);
     }
-  }, [persist]);
+  }, []);
   useEffect(() => {
-    mounted.current = true;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrates asynchronously from external device storage.
+    mounted.current = true; owner.current = ++liveStore;
+    // Hydrates asynchronously from external device storage.
     void load();
     // A load that never settles must not leave a blank or waiting screen. The load keeps running and
     // still publishes if it finishes; until then nothing is writable, so nothing can overwrite the save.
@@ -279,13 +289,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return () => {
       mounted.current = false;
       clearTimeout(guard);
-      // Hand over to a Store mounted after this one (the root error boundary's Try again). It waits
-      // until every write this one started has settled, then keeps its accepted state if any failed.
-      const accepted = accepting.current, chain = queue.current, failed = lastWriteFailed, uncertain = uncertainWrite, last = latest;
-      retired = chain.catch(() => {}).then(changingWritesSettled).then(() => accepted && (failed.current || uncertain.current) ? last.current : null);
     };
   }, [load]);
-  useEffect(() => { accepting.current = ready && !recovery; }, [ready, recovery]);
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
       if (state !== "active" && ready && !recovery) void persist(latest.current);
@@ -408,7 +413,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     // A delayed reader/drawing autosave must never undo a grown-up's policy.
     const next = { ...child, policy: current.policy };
     if (JSON.stringify(current) === JSON.stringify(next)) {
-      libraryRejected.current = false; if (!lastWriteFailed.current) setError(null); return true;
+      libraryRejected.current = false; if (!unsaved()) setError(null); return true;
     }
     const library = { ...data, profiles: { ...data.profiles, [owner]: JSON.parse(JSON.stringify(next)) as LibraryChildState } };
     // Reading and scrolling don't count as newer work; only a child's own content ends the old-model fill.
@@ -441,7 +446,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const next = { ...child, policy: JSON.parse(JSON.stringify(policy)) as LibraryPolicy };
     if (!validLibraryChild(next)) { rejectLibraryWrite(); return; }
     if (JSON.stringify(child) === JSON.stringify(next)) {
-      libraryRejected.current = false; if (!lastWriteFailed.current) setError(null); return;
+      libraryRejected.current = false; if (!unsaved()) setError(null); return;
     }
     const library = { ...data, profiles: { ...data.profiles, [childId]: next } };
     const updated = { ...before, library };
@@ -460,12 +465,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     let tail: Promise<void>;
     do { tail = queue.current; await tail; } while (tail !== queue.current);
     return mounted.current && !restoring.current && startEpoch === generation.current &&
-      writeFailures.current === failures && !lastWriteFailed.current && !libraryRejected.current && !admissionRejected.current;
+      writeFailures.current === failures && !unsaved() && !libraryRejected.current && !admissionRejected.current;
   }, [ready, recovery, persist, disk]);
   const backup = useCallback(async () => {
     // Flush health is a Library gate, never a gate on recovering accepted work.
-    let clean = false;
-    try { clean = await libraryFlush(); } catch { /* Encoding the coherent accepted state still works. */ }
+    // A write that never finishes mustn't hold the backup: past the wait, export what was accepted.
+    let clean = false, timer: ReturnType<typeof setTimeout> | undefined;
+    const waited = new Promise<boolean>(resolve => { timer = setTimeout(() => resolve(false), BACKUP_FLUSH_MS); });
+    try { clean = await Promise.race([libraryFlush(), waited]); } catch { /* Encoding the coherent accepted state still works. */ }
+    finally { clearTimeout(timer); }
     const encoded = encodeSave(latest.current); parseSave(encoded);
     if (!clean) setError('This backup contains the latest accepted work. Some changes could not be saved on this device.');
     return encoded;
@@ -572,7 +580,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       await preserveAndReplace(disk, encodeSave(next), encodeSave(before),envelopeWrite(next));
       clearPageDrafts(id);
       generation.current++; setEpoch(generation.current);
-      admittedBytes.current = utf8Bytes(encodeSave(next)); latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
+      admittedBytes.current = utf8Bytes(encodeSave(next)); latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setError(null); envelopeSaved(); libraryRejected.current = false; admissionRejected.current = false; return true;
     } finally { restoring.current = false; }
   }, [ready, recovery, disk]);
   const assignEarlierWork = useCallback(async (key: string, learner: string | null, expectedEpoch: number) => {
@@ -586,7 +594,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       await queue.current;
       await preserveAndReplace(disk, encodeSave(next), encodeSave(before),envelopeWrite(next));
       generation.current++; setEpoch(generation.current);
-      admittedBytes.current = utf8Bytes(encodeSave(next)); latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setBadgeResult(null); setError(null); lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false; return true;
+      admittedBytes.current = utf8Bytes(encodeSave(next)); latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setBadgeResult(null); setError(null); envelopeSaved(); libraryRejected.current = false; admissionRejected.current = false; return true;
     } finally { restoring.current = false; }
   }, [ready, recovery, disk]);
   const recordWarmup = useCallback((results: PracticeResult[], config: PracticeSettings, round: string, expectedEpoch: number) => {
@@ -628,7 +636,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
         await queue.current;
         const pending = draftRecovery(); if (pending) await disk.preserve(pending);
-        await preserveImportedLearners(disk, encoded, incoming, next, recovery && !uncertainWrite.current ? null : encodeSave(latest.current), incoming.version !== 3 || !incoming.profiles || !incoming.library || incoming.library.version === 1);
+        // Notices described the save being replaced, so they're cleared in the same write, or not at all.
+        await preserveImportedLearners(disk, encoded, incoming, next, recovery && !uncertainWrite.current ? null : encodeSave(latest.current), incoming.version !== 3 || !incoming.profiles || !incoming.library || incoming.library.version === 1, { notices: null });
         clearPageDrafts();
         generation.current += 1;
         setEpoch(generation.current);
@@ -636,12 +645,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         latest.current = next;
         retainSessionContent(syncProfile(next),saveCatalog); setSave(next);
         setRaw(encodeSave(next));
-        // Notices described the save that was just replaced.
         notices.current = []; setSetAside([]);
-        await disk.writeNotices?.(null).catch(() => {});
         setRecovery(null); uncertainWrite.current = false;
         setError(null);
-        lastWriteFailed.current = false; libraryRejected.current = false; admissionRejected.current = false;
+        envelopeSaved(); libraryRejected.current = false; admissionRejected.current = false;
         setReady(true);
       } finally {
         restoring.current = false;
@@ -708,7 +715,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const bytes = admittedBytes.current + draftGrowth(old,session);
       if (bytes > 2_000_000) return refuseChallenge('full-save');
       // Accept before the first await. Later moves and ordinary commits see this revision immediately.
-      admittedBytes.current = bytes; latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setChallengeRefusal(null); setError(null);
+      admittedBytes.current = bytes; latest.current = next; retainSessionContent(syncProfile(next),saveCatalog); setSave(next); setChallengeRefusal(null); if (!unsaved()) setError(null);
       return writeDraft(JSON.stringify([before.saveRevision,session.owner,session.game]),JSON.stringify({version:1,base:before.saveRevision,session}));
     }
     // Hold exact proofs locally across the write; transient cache pressure cannot undo a commit.

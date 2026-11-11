@@ -16,6 +16,8 @@ import type { Save } from '../src/state/validation';
 // Launch recovery, independent review round: R1 (timed-out load writes late), R2 (boundary retry
 // remounts the Store mid-write), R3 (the pre-pass hid corruption), R4 (notices didn't persist).
 const db=vi.hoisted(()=>({raw:null as string|null,notices:null as string|null,preserved:[] as string[],log:[] as string[],sets:[] as {raw:string;metadata?:EnvelopeWrite}[],loader:null as BankLoader|null,gets:0}));
+// The fixture's banks stand in for the real registry, whose packed ordinals would overlap them.
+vi.mock('../src/challenge/registry.generated',()=>({challengeEntries:[]}));
 vi.mock('../src/puzzles/catalog',()=>({bankLoader:()=>db.loader!}));
 vi.mock('../src/state/storage',()=>({storage:{
  get:async()=>{db.gets++;return db.raw;},
@@ -110,30 +112,21 @@ it('R1: with nothing newer, a load that finishes after the timeout still opens t
  expect(store.recovery).toBeNull();expect(family().paused).toHaveLength(7);expect(encodeSave(store.save)).toBe(db.raw);
 });
 
-// R2: the root boundary's Try again remounts the Store. Accepted state must survive, written or not.
-it('R2: a Store remounted while a save is still being written keeps that save',async()=>{
+// R2: a Store mounted after another (a cold start in the same runtime, as in these tests) never takes over
+// the old one's memory. It waits for writes already running, then reads storage. (The app itself never
+// remounts the Store: see launch-recover-store-above.)
+it('R2: a Store mounted while the last one\'s save is still being written waits for it and reads it',async()=>{
  seed(()=>{});await mount();
  const held=await hold('set');
  await act(async()=>{store.settings({sound:false});});expect(held.blocked).toBe(true);
- await unmount();await mount(); // what Expo Router's root Try does on error, then on retry
+ await unmount();await mount();expect(store.ready).toBe(false);
  await act(async()=>{held.release();});
  expect(store.ready).toBe(true);expect(store.save.settings.sound).toBe(false);
  await act(async()=>{store.settings({help:false});});
  expect(JSON.parse(db.raw!).settings).toMatchObject({sound:false,help:false});
 });
 
-it('R2: a Store remounted after a failed save keeps the accepted change and saves it again',async()=>{
- seed(()=>{});await mount();
- const {storage}=await import('../src/state/storage');
- const set=vi.spyOn(storage,'set').mockRejectedValueOnce(new Error('disk full'));
- await act(async()=>{store.settings({sound:false});});
- expect(store.error).not.toBeNull();expect(JSON.parse(db.raw!).settings.sound).toBe(true);
- await unmount();await mount();
- expect(store.ready).toBe(true);expect(store.recovery).toBeNull();expect(store.save.settings.sound).toBe(false);
- expect(set).toHaveBeenCalledTimes(2);expect(JSON.parse(db.raw!).settings.sound).toBe(false);
-});
-
-it('R2: a Store whose writes all landed hands nothing over; the next one reads storage',async()=>{
+it('R2: the next Store reads storage, not the last one\'s memory',async()=>{
  seed(()=>{});await mount();
  await act(async()=>{store.settings({sound:false});});
  await unmount();db.raw=db.raw!.replace('"sound":false','"sound":true');
