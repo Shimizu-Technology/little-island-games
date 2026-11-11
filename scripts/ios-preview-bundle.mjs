@@ -94,8 +94,8 @@ export function build(command, cwd = process.cwd(), env = process.env) {
       env: { ...env, EXPO_PUBLIC_LIBRARY_PREVIEW: "1" },
     });
     if(result.status!==0) return result.status ?? 1;
+    gateDelivery(cwd,{...env,EXPO_PUBLIC_LIBRARY_PREVIEW:"1"});
     putBack();
-    gateDelivery(cwd,env);
     return 0;
   } finally {
     putBack();

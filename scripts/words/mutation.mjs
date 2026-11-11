@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync } f
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-const files=['bake','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','ci'];
+const files=['bake','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','density','ci'];
 const mutations=[],sources=new Map(),patches=new Map();
 for(const file of files){const path=file==='ci'?'.github/workflows/ci.yml':`scripts/words/${file}.mjs`,source=readFileSync(path,'utf8'),tree=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true);sources.set(file,source);patches.set(file,[]);
  function visit(n){if(ts.isCallExpression(n)&&n.expression.getText(tree)==='requireThat'){
@@ -129,7 +129,7 @@ const edges=[
  ['ci','versioned secret mapping','secrets.LITTLE_ISLAND_WORD_POLICY_V2_GZIP_BASE64','secrets.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64',['R3 CI versioned secret mapping']],
  ['artifact-views','odd entries','return values.flatMap(value=>{','if(!values.every(shortWords))return [];return values.flatMap(value=>{',['R3 odd empty js','R3 odd weights json','R3 odd records js']],
  ['artifact-views','language recognizer',"/^(?:ch(?:-|$)|cha$|chamoru$|chamorro$)/i.test(value.trim())",'false',['R3 source constant','R3 source spread']],
- ['artifact-views','language characters',"/[åʼ]/iu.test(text)",'false',['R3 characters 72 229']],
+ ['artifact-views','language characters',"/[åʼ]/iu.test(text.normalize('NFC'))",'false',['R3 characters 72 229']],
  ['guard','unknown extension fallback',"if(isUtf8(bytes) && !/[\\x00-\\x08\\x0e-\\x1f]/.test(views[1]))",'if(false)',['R3 text extension md']],
  ['guard','technical list view'," || /^[A-Z0-9]+(?:_[A-Z0-9]+)+$/.test(text)",'',['R3 list snake']],
  ['guard','literal string scope','literal:contentStrings.has(text)','literal:false',['guard blocked visible string']],
@@ -147,6 +147,36 @@ const edges=[
  ['check','native JavaScript scan','...guardTree(temporary,policy,[lock],{sourceRoot:root})','passed:true',['R3 Hermes native array probe','R3 Hermes native object probe']],
 ];
 for(const [file,label,before,after,tests] of edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R3 mutation target '+label);custom(file,'R3 '+label,original.replace(before,after),tests);}
+const r4Edges=[
+ ['density','normalization NFKC',".normalize('NFKC')",'', ['R4 normalised core fullwidth']],
+ ['density','normalization invisibles',".replace(/\\p{Default_Ignorable_Code_Point}/gu,'')",'', ['R4 normalised core soft hyphen','R4 normalised core zero width']],
+ ['density','normalization diacritics',".normalize('NFD').replace(/\\p{M}/gu,'')",'', ['R4 normalised core decomposed']],
+ ['density','threshold','densityThreshold = 25','densityThreshold = 26',['R4 density threshold 25']],
+ ['density','window eviction','counts.delete(word)','counts.set(word,1)',['R4 density sliding boundary']],
+ ['guard','density gate','if(scanned.densityMaximum>=densityThreshold)','if(false)',['R4 density threshold 25']],
+ ['guard','JSON teaching source','teachingJSON(JSON.parse(text))',"{strings:[],grids:[]}",['R4 teaching JSON source']],
+ ['artifact-views','tuple flatten','if(Array.isArray(value))return plainEntries(value);','',['R4 fragment 5 tuples']],
+ ['artifact-views','filename normalization',"if(/^\\p{L}+$/u.test(word))return [word];",'',['R4 fragment 5 filenames']],
+ ['artifact-views','JSON strings',"if(decoded && typeof decoded==='object')return jsonUnits(decoded).some(unit=>unit.length>=3);",'',['R4 fragment 5 encodedObject']],
+ ['artifact-views','string prose share','policyShare(words,excluded)<0.5','true',['R4 fragment 5 article']],
+ ['artifact-views','tagged keys','...(tagged(value)||active||chamoruCharacters(key)?[key]:[])','',['R4 tagged keys']],
+ ['check','Hermes receipt binding','r.iosJavaScript?.hermesStringsMatched===true','true',['R4 receipt requires Hermes binding']],
+];
+r4Edges.push(
+ ['artifact-views','record columns','for(const unit of recordUnits(values))addUnit(unit,node);','',['R4 fragment 5 records']],
+ ['artifact-views','record maps','if(ts.isObjectLiteralExpression(node))for(const unit of objectUnits(staticData(node)))addUnit(unit,node);','',['R4 fragment 5 keymap','R4 fragment 5 valuemap']],
+ ['artifact-views','switch labels','if(ts.isCaseBlock(node))addUnit(node.clauses.filter(ts.isCaseClause).map(c=>staticData(c.expression)).filter(shortWords),node);','',['R4 fragment 5 switch']],
+ ['artifact-views','comparison labels','comparisons(node);addUnit(labels,node);','comparisons(node);',['R4 fragment 5 equality']],
+ ['artifact-views','enum labels','if(names.length)addUnit(names,node);','',['R4 fragment 5 enum']],
+ ['artifact-views','template segments',"if(ts.isTemplateExpression(node))addUnit([[node.head.text,...node.templateSpans.map(span=>span.literal.text)].join(' ')],node);",'',['R4 fragment 5 template']],
+ ['artifact-views','normalized short list',"if(typeof text==='string')text=text.normalize('NFKC').replace(/\\p{Default_Ignorable_Code_Point}/gu,'');",'',['R4 normalised broad list']],
+ ['artifact-views','prose token splitting',"wordTokens(text.replace(/['’]s\\b/gi,'')).map(w=>w.toLowerCase())","text.toLowerCase().split(/\\s+/)",['R4 prose padding hyphens','R4 prose padding possessives']],
+ ['artifact-views','curly marker rule'," || /\\p{L}’(?!(?:s|t|re|ll|ve|d|m)\\b)\\p{L}|(?!s)\\p{L}’(?!\\p{L})/iu.test(text.normalize('NFC'))",'', ['R4 narrow apostrophe middle','R4 narrow apostrophe final']],
+ ['artifact-views','marker canonical composition',"text.normalize('NFC')",'text',['R4 decomposed marker']],
+ ['artifact-views','flat tiles',"x.length>=3 && x.every(c=>typeof c==='string' && /^(?:CH|NG|[A-ZÅÑ])$/iu.test(c))",'false',['R4 flat answer tiles']],
+ ['artifact-views','row strings any key','active || supplemental ||','active ||',['R4 unknown row strings']]
+);
+for(const [file,label,before,after,tests] of r4Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R4 mutation target '+label);custom(file,'R4 '+label,original.replace(before,after),tests);}
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
 mkdirSync(join(scratch,'scripts'),{recursive:true});cpSync('scripts/words',toolRoot,{recursive:true});

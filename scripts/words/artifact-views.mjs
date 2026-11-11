@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer';
 import ts from 'typescript';
+import { wordTokens } from './density.mjs';
 import { requireThat } from './core.mjs';
 
 export const hermesMagic = Buffer.from('c61fbc03c103191f', 'hex');
@@ -9,7 +10,7 @@ export const hermesMagic = Buffer.from('c61fbc03c103191f', 'hex');
  * Fail closed when the compiler changes its format. Includes identifier strings:
  * a literal can share an identifier ID, and leaked object keys must stay visible.
  */
-export function hermesStrings(bytes) {
+export function hermesStrings(bytes, options={}) {
   requireThat(bytes.length >= 128 && bytes.subarray(0, 8).equals(hermesMagic), 'Invalid Hermes header');
   requireThat(bytes.readUInt32LE(8) === 98, 'Unsupported Hermes bytecode version');
   requireThat(bytes.readUInt32LE(32) === bytes.length, 'Invalid Hermes file length');
@@ -19,6 +20,11 @@ export function hermesStrings(bytes) {
   const overflow = table + count * 4, storage = overflow + overflows * 8;
   requireThat(storage + storageSize <= bytes.length, 'Invalid Hermes string tables');
   const strings = [];
+  // Each kind run encodes its count in 31 low bits; the high bit marks identifiers.
+  const totalStrings=count,identifierIds=new Set();let cursor=0;
+  for(let i=0;i<kinds;i++) {const run=bytes.readUInt32LE(128+functions*12+i*4),count=run&0x7fffffff;requireThat(cursor+count<=totalStrings,'Invalid Hermes string kind run');if(run>>>31)for(let id=cursor;id<cursor+count;id++)identifierIds.add(id);cursor+=count;}
+
+  requireThat(cursor===count,'Invalid Hermes string kind coverage');
   for (let i = 0; i < count; i++) {
     const entry = bytes.readUInt32LE(table + i * 4), utf16 = entry & 1;
     let offset = (entry >>> 1) & 0x7fffff, length = entry >>> 24;
@@ -29,7 +35,7 @@ export function hermesStrings(bytes) {
     }
     const size = length * (utf16 ? 2 : 1);
     requireThat(offset + size <= storageSize, 'Invalid Hermes string range');
-    strings.push(bytes.subarray(storage + offset, storage + offset + size).toString(utf16 ? 'utf16le' : 'latin1'));
+    if(options.identifiers!==false || !identifierIds.has(i))strings.push(bytes.subarray(storage + offset, storage + offset + size).toString(utf16 ? 'utf16le' : 'latin1'));
   }
   return strings;
 }
@@ -75,6 +81,7 @@ export function javascriptStrings(text, teachings=[]) {
     if (ts.isArrayLiteralExpression(node)) {
       const values=node.elements.map(n=>staticData(n));
       addUnit(plainEntries(values),node);
+      for(const unit of recordUnits(values))addUnit(unit,node);
       const wordUnit=plainEntries(values);wordUnit.library=attachment(node);
       let container=node.parent,language,puzzle=false,languagePresent=false;
       while(container && !ts.isFunctionLike(container)) {if(ts.isObjectLiteralExpression(container)){const value=staticData(container);languagePresent ||= tagKeys.some(key=>key in value);language??=value.language??value.lang??value.locale??value.languages;puzzle ||= /(?:word.?search|crossword|word.?grid|builder|scramble)/i.test(value.kind??value.family??'');}container=container.parent;}
@@ -83,6 +90,15 @@ export function javascriptStrings(text, teachings=[]) {
       for(const grid of values.every(row=>typeof row==='string'||Array.isArray(row)&&row.every(cell=>typeof cell==='string'))?letterGrids(gridValue,validLanguage(language)||puzzle):[]){grid.wordUnit=wordUnit;grid.language=language;grid.container=field;grid.offset=node.getStart(tree);grid.puzzle=puzzle;grid.languagePresent=languagePresent;grid.languageDeclared=validLanguage(language);grids.push(grid);}
     }
     if(ts.isObjectLiteralExpression(node)) {const value=staticData(node);if(tagged(value)){sensitiveStrings.push(...chamoruValues(value,false,teachings));sensitiveGrids.push(...chamoruGrids(value));}}
+    if(ts.isObjectLiteralExpression(node))for(const unit of objectUnits(staticData(node)))addUnit(unit,node);
+    if(ts.isTemplateExpression(node))addUnit([[node.head.text,...node.templateSpans.map(span=>span.literal.text)].join(' ')],node);
+    if(ts.isBlock(node)) {
+      const names=[];function enumKeys(n){if(ts.isBinaryExpression(n) && n.operatorToken.kind===ts.SyntaxKind.EqualsToken && ts.isElementAccessExpression(n.left) && ts.isBinaryExpression(n.left.argumentExpression) && ts.isStringLiteralLike(n.right))names.push(n.right.text);if(!ts.isFunctionLike(n))ts.forEachChild(n,enumKeys);}enumKeys(node);if(names.length)addUnit(names,node);
+    }
+    if(ts.isCaseBlock(node))addUnit(node.clauses.filter(ts.isCaseClause).map(c=>staticData(c.expression)).filter(shortWords),node);
+    if(ts.isBinaryExpression(node) && [ts.SyntaxKind.BarBarToken,ts.SyntaxKind.AmpersandAmpersandToken].includes(node.operatorToken.kind) && !(ts.isBinaryExpression(node.parent) && node.parent.operatorToken.kind===node.operatorToken.kind)) {
+      const labels=[];function comparisons(n){if(ts.isStringLiteralLike(n))labels.push(n.text);ts.forEachChild(n,comparisons);}comparisons(node);addUnit(labels,node);
+    }
     // Homogeneous short-word keys can encode a list (including library tables).
     if (ts.isObjectLiteralExpression(node) && node.properties.length && node.properties.every(p=>ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteralLike(p.name)) && shortWords(p.name.text) && (ts.isNumericLiteral(p.initializer) || [ts.SyntaxKind.TrueKeyword,ts.SyntaxKind.FalseKeyword].includes(p.initializer.kind)))) addUnit(node.properties.map(p=>p.name.text),node);
     if (ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) {strings.push(node.text);
@@ -121,10 +137,14 @@ export function letterGrids(value, declared=false) {
     if (!x || typeof x !== 'object') return;
     if(!Array.isArray(x))active ||= tagKeys.some(name=>validLanguage(x[name]));
     if (Array.isArray(x)) {
-      const rows=x.map(row=>typeof row==='string' && (active || /^(?:cells|grid|board|rows)$/i.test(key??''))?[...row]:row);
+      if(x.length>=3 && x.every(c=>typeof c==='string' && /^(?:CH|NG|[A-ZÅÑ])$/iu.test(c))) {
+        const grid=[x.map(c=>c.toUpperCase())];grid.languageDeclared=active;grid.container=key;grid.supplemental=true;grids.push(grid);return;
+      }
+      const supplemental=!active && !/^(?:cells|grid|board|rows)$/i.test(key??'') && x.length>=2 && x.every(row=>typeof row==='string' && /^[A-ZÅÑ]{3,25}$/iu.test(row) && row.length===x[0].length);
+      const rows=x.map(row=>typeof row==='string' && (active || supplemental || /^(?:cells|grid|board|rows)$/i.test(key??''))?[...row]:row);
       const cell=c=>typeof c==='string' && (/^(?:CH|NG|[A-ZÅÑʼ’']|[^\p{L}]|)$/iu.test(c) || rows.length===1 && rows[0]?.length===1 && /^[\p{L}ʼ’']+$/u.test(c));
       if(rows.length && rows.length<=25 && rows.every(row=>Array.isArray(row) && row.length>0 && row.length<=25 && row.length===rows[0].length && row.every(cell)) && rows.flat().some(c=>/\p{L}/u.test(c))) {
-        const grid=rows.map(row=>row.map(c=>/\p{L}/u.test(c)?c.toUpperCase().replace(/[ʼ’]/g,"'"):/['ʼ’]/.test(c)?"'":'#'));grid.languageDeclared=active;grid.container=key;grids.push(grid);
+        const grid=rows.map(row=>row.map(c=>/\p{L}/u.test(c)?c.toUpperCase().replace(/[ʼ’]/g,"'"):/['ʼ’]/.test(c)?"'":'#'));grid.languageDeclared=active;grid.container=key;grid.supplemental=supplemental;grids.push(grid);
       } else x.forEach(child=>visit(child,key,active));
     } else Object.entries(x).forEach(([name,child])=>visit(child,name,active));
   }
@@ -135,6 +155,11 @@ export function letterGrids(value, declared=false) {
 export function plainEntries(values) {
   return values.flatMap(value=>{
     if(shortWords(value))return [value];
+    if(Array.isArray(value))return plainEntries(value);
+    if(typeof value==='string') {
+      const word=value.replace(/^\w+:/,'').replace(/\.[a-z0-9]{1,8}$/i,'').replace(/[-_]?\d+$/,'');
+      if(/^\p{L}+$/u.test(word))return [word];
+    }
     if(value && !Array.isArray(value) && typeof value==='object' && Object.keys(value).length===1)return Object.values(value).filter(shortWords);
     return [];
   });
@@ -145,6 +170,8 @@ function staticData(n) {
   if(staticDataCache.has(n))return staticDataCache.get(n);
   let value;
   if(ts.isStringLiteralLike(n))value=n.text;
+  else if(ts.isNumericLiteral(n))value=Number(n.text);
+  else if(n.kind===ts.SyntaxKind.TrueKeyword || n.kind===ts.SyntaxKind.FalseKeyword)value=n.kind===ts.SyntaxKind.TrueKeyword;
   else if(ts.isArrayLiteralExpression(n))value=n.elements.map(staticData);
   else if(ts.isObjectLiteralExpression(n))value=Object.fromEntries(n.properties.filter(ts.isPropertyAssignment).map(p=>[p.name.getText().replace(/^['"]|['"]$/g,''),staticData(p.initializer)]));
   staticDataCache.set(n,value);return value;
@@ -218,20 +245,32 @@ export function puzzleStrings(value) {
 }
 
 /** One JSON container at a time; sibling records never form a list fragment. */
+function objectUnits(value) {
+  if(!value || Array.isArray(value) || typeof value!=='object')return [];
+  const keys=Object.keys(value),values=Object.values(value);
+  return [...(keys.length>=3 && keys.every(shortWords) && values.every(v=>typeof v===typeof values[0] && typeof v==='string')?[keys]:[]),...(values.length>=3 && !keys.some(key=>['id','label','title','description','text'].includes(key)) && values.every(shortWords)?[values]:[])];
+}
+function recordUnits(values) {
+  if(values.length<3 || !values.every(v=>v && !Array.isArray(v) && typeof v==='object'))return [];
+  const keys=Object.keys(values[0]).sort();
+  if(keys.some(key=>['id','label','title','description','text','terms','sounds'].includes(key)))return [];
+  if(!values.every(v=>JSON.stringify(Object.keys(v).sort())===JSON.stringify(keys)))return [];
+  return keys.map(key=>values.map(v=>v[key])).filter(unit=>unit.every(shortWords) && new Set(unit).size===unit.length);
+}
 export function jsonUnits(value, context={ids:[],scope:false}) {
   if (!value || typeof value !== 'object') return [];
   const direct=Array.isArray(value)?plainEntries(value):(Object.entries(value).every(([k,v])=>shortWords(k) && ['number','boolean'].includes(typeof v))?Object.keys(value):[]);
   const ids=typeof value.id==='string'?[value.id]:context.ids;
   const unit=[...direct];unit.library={ids,scope:context.scope,field:context.field};
   const catalog=!Array.isArray(value) && ['items','index','preview','bytes','fixtures'].every(key=>key in value);
-  return [unit,...Object.entries(value).flatMap(([key,v])=>jsonUnits(v,{ids,scope:catalog && ['items','index'].includes(key) || context.scope && (Array.isArray(value) || typeof value.id==='string' && ['terms','sounds'].includes(key)),field:Array.isArray(value)?context.field:key}))];
+  return [unit,...(Array.isArray(value)?recordUnits(value):objectUnits(value)),...Object.entries(value).flatMap(([key,v])=>jsonUnits(v,{ids,scope:catalog && ['items','index'].includes(key) || context.scope && (Array.isArray(value) || typeof value.id==='string' && ['terms','sounds'].includes(key)),field:Array.isArray(value)?context.field:key}))];
 }
 
 export const chamoru = value => typeof value==='string' && /^(?:ch(?:-|$)|cha$|chamoru$|chamorro$)/i.test(value.trim());
 export function validLanguage(value) {
   return typeof value==='string' ? value.trim().length>0 : Array.isArray(value) && value.length>0 && value.every(entry=>typeof entry==='string' && entry.trim().length>0);
 }
-export const chamoruCharacters = text => /[åʼ]/iu.test(text);
+export const chamoruCharacters = text => /[åʼ]/iu.test(text.normalize('NFC')) || /\p{L}’(?!(?:s|t|re|ll|ve|d|m)\b)\p{L}|(?!s)\p{L}’(?!\p{L})/iu.test(text.normalize('NFC'));
 const tagKeys=['language','lang','locale','languages'];
 function tagged(value) {return tagKeys.some(key=>Array.isArray(value[key])?value[key].some(chamoru):chamoru(value[key]));}
 export function approvedTeaching(value, teachings) {
@@ -243,7 +282,7 @@ export function chamoruValues(value, active=false, teachings=[]) {
   if(!value || typeof value!=='object')return [];
   if(Object.keys(value).some(key=>/^(?:label|title|text|term|example|words|speech|spelling|cells|grid|board|rows)$/.test(key)) && tagKeys.some(key=>key in value))requireThat(tagKeys.filter(key=>key in value).every(key=>validLanguage(value[key])),'Unresolved JSON content language tag');
   if(approvedTeaching(value,teachings))return [];
-  return Object.values(value).flatMap(v=>chamoruValues(v,tagged(value)||active,teachings));
+  return Object.entries(value).flatMap(([key,v])=>[...(tagged(value)||active||chamoruCharacters(key)?[key]:[]),...chamoruValues(v,tagged(value)||active,teachings)]);
 }
 
 /** Resolve local static constants, shorthand and spreads without evaluating code.
@@ -275,11 +314,14 @@ export function chamoruSource(text, name) {
     }
     return unknown;
   }
-  const teaching=/src\/learn\/content\/chamoru[^/]*\.[jt]sx?$/.test(name)||/\bChamoruWord\b/.test(text);
+  const namedTeaching=/src\/learn\/content\/chamoru[^/]*\.[jt]sx?$/.test(name);
+  const teaching=namedTeaching||/\bChamoruWord\b/.test(text)||/src\/learn\//.test(name) && /\bterm\s*:/.test(text) && /\benglish\s*:/.test(text);
   function visit(n) {
+    if(namedTeaching && ts.isPropertyAssignment(n))requireThat(ts.isStringLiteral(n.initializer), 'blocked CHamoru teaching fields must be plain string literals');
     if(teaching && ts.isObjectLiteralExpression(n)) {
       const fields=data(n);if('term' in fields) {
         requireThat(typeof fields.term==='string','CHamoru teaching term must be static text');
+        requireThat(n.properties.every(p=>ts.isPropertyAssignment(p) && ts.isStringLiteral(p.initializer)), 'blocked CHamoru teaching fields must be plain string literals');
         teachingEntries.push({id:fields.id,term:fields.term,fields,strings:jsonStrings(fields),grids:letterGrids(fields)});return;
       }
     }
@@ -296,6 +338,21 @@ export function chamoruSource(text, name) {
   }
   visit(tree);return {strings,grids,teachingEntries};
 }
+
+export function teachingJSON(value) {
+  const teachingEntries=[],strings=[];
+  function visit(v) {
+    if(typeof v==='string'){strings.push(v);return;}
+    if(!v || typeof v!=='object')return;
+    if(!Array.isArray(v) && 'term' in v) {
+      requireThat(Object.values(v).every(field=>typeof field==='string'), 'blocked CHamoru teaching fields must be plain string literals');
+      teachingEntries.push({id:v.id,term:v.term,fields:v,strings:jsonStrings(v),grids:letterGrids(v)});return;
+    }
+    Object.values(v).forEach(visit);
+  }
+  visit(value);return {strings,grids:[],teachingEntries};
+}
+
 export function chamoruGrids(value, active=false) {
   if(!value || typeof value!=='object')return [];
   if(!Array.isArray(value))active||=tagged(value);
@@ -321,12 +378,13 @@ export function requireGridLanguages(value, language, key, puzzle=false) {
  * array: lowering it would reject ordinary pairs without adding leak evidence.
  */
 export function shortWords(text) {
+  if(typeof text==='string')text=text.normalize('NFKC').replace(/\p{Default_Ignorable_Code_Point}/gu,'');
   return typeof text==='string' && text.length<=64 && /^[\p{L}\p{M}]+(?:['’'-][\p{L}\p{M}]+)*(?:[ ]+[\p{L}\p{M}]+(?:['’'-][\p{L}\p{M}]+)*)?$/u.test(text.trim());
 }
 export function listString(text, excluded=[]) {
   const trimmed=text.trim().replace(/^\/\/\s*|^\/\*\s*|\s*\*\/$/g,'').replace(/^\/(.*)\/[a-z]*$/s,'$1');
-  try {const decoded=JSON.parse(trimmed);if(Array.isArray(decoded))return plainEntries(decoded).length>=3;}catch { /* Text list. */ }
-  const words=trimmed.split(/[\s,|;_]+/).map(word=>word.replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu,'')).filter(shortWords);
+  try {const decoded=JSON.parse(trimmed);if(decoded && typeof decoded==='object')return jsonUnits(decoded).some(unit=>unit.length>=3);}catch { /* Text list. */ }
+  const words=trimmed.replace(/\\[bBdDsSwW]|\(\?:/g,' ').split(/[\s,|;_]+/).map(word=>word.replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu,'')).filter(shortWords);
   if(words.length<3)return false;
   if(/[,|;\n\t_]/.test(trimmed)) {
     const parts=trimmed.split(/[,|;\n\t_]+/).map(part=>part.trim().replace(/^\d+[.)]\s*/,'').replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu,''));
@@ -334,13 +392,18 @@ export function listString(text, excluded=[]) {
   }
   const functions=safeFunctionWords(excluded),flags=words.map(word=>functions.has(word.toLowerCase()));
   let switches=0;for(let i=1;i<flags.length;i++)if(flags[i]!==flags[i-1])switches++;
-  const sentence=words.length>=5 && switches>=3 && new Set(words.filter((_,i)=>flags[i]).map(word=>word.toLowerCase())).size>=2;
+  const sentence=words.length>=5 && switches>=3 && policyShare(words,excluded)<0.5 && new Set(words.filter((_,i)=>flags[i]).map(word=>word.toLowerCase())).size>=2;
   return !sentence;
 }
 
 // Public English grammar vocabulary. It is disjoint from the current private
 // broad/core lists; runtime subtraction keeps that invariant under policy drift.
 export const functionWords = ["a", "an", "the", "and", "or", "of", "in", "on", "as", "is", "it", "its", "how", "why", "does", "into", "with", "at", "by", "for", "from", "to", "than", "that", "this", "these", "those", "are", "was", "were", "be", "been", "being", "can", "could", "do", "did", "has", "have", "had", "if", "not", "only", "our", "their", "them", "we", "you", "your", "which", "who", "what", "when", "where", "while", "will", "would"];
+function policyShare(words, excluded) {
+  const functions=safeFunctionWords(excluded),policy=new Set(excluded.flatMap(wordTokens));
+  const content=words.flatMap(wordTokens).filter(word=>!functions.has(word.toLowerCase()));
+  return content.filter(word=>policy.has(word)).length/Math.max(1,content.length);
+}
 const grammarCache=new WeakMap();
 function safeFunctionWords(excluded) {
   if(grammarCache.has(excluded))return grammarCache.get(excluded);
@@ -349,7 +412,7 @@ function safeFunctionWords(excluded) {
 }
 const broadTokenCache=new WeakMap();
 export function proseTokens(strings, excluded=[]) {
-  const tokens=strings.flatMap(text=>text.toLowerCase().split(/\s+/)),functions=safeFunctionWords(excluded);
+  const tokens=strings.flatMap(text=>wordTokens(text.replace(/['’]s\b/gi,'')).map(w=>w.toLowerCase())),functions=safeFunctionWords(excluded);
   const flags=tokens.map(token=>functions.has(token));
   // Require sentence-like interleaving, never a prefix/suffix cluster or repeated
   // article affixes. Broad vocabulary must be under 20% of content tokens.

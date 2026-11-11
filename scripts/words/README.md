@@ -136,3 +136,51 @@ node scripts/words/mutation.mjs
 ```
 
 `smoke.mjs` labels every synthetic reviewer result, transcript and receipt TEST ONLY, sets `fixture:true`, and proves that it cannot ship. Its synthetic times/disagreement rate are transport assertions, not measured reviewer throughput. It never calls a reviewer. `probe.mjs` checks the actual 87-word policy probe and 32 unapproved scan-clean QA boards with both implementations. It does not reproduce the audit's 600,000-grid experiment. Real review/reconcile throughput remains unmeasured until the lead runs the calibration.
+
+### Normalized density backstop and preview binding
+
+Every exported text file also receives a structure-independent density pass over
+its raw UTF-8 text, parsed/decoded strings (including Hermes strings), and the
+space-separated sequence of those strings. Binary media is content-sniffed and
+keeps the raw blob/hash/canary checks. Text is NFKC-normalized, default-ignorable
+characters are removed, case and diacritics are folded, and tokens split at every
+non-letter. Core/exact/lemma content checks use the same normalization and whole
+word boundaries; they remain unconditional and cannot be excepted.
+
+The broad leak vocabulary retains the existing minimum length of five letters
+and exclusion of the CHamoru-sensitive-only group. A moving 1,000-token window
+fails at **16 distinct broad terms**. Repetition does not increase the count;
+there is no density exception or Library-provenance bypass. Initial calibration
+of the ten retained code snapshots peaks at 11 (five terms of margin). Full
+export and native observations are recorded in the worker evidence. The complete
+broad set, including short everyday words, reaches 42 in the same real code;
+using that set would require a different threshold.
+
+This backstop guarantees detection of 16 qualifying distinct terms occurring
+within 1,000 normalized letter tokens. It does **not** guarantee an arbitrary
+five- or ten-term leak, a fragment padded beyond that window, or words encoded
+by an unrecognized runtime cipher. Synthetic five-, ten- and 25-term probes in
+the reviewed data/code shapes also exercise the existing strict structural rules,
+including tuples, filenames, encoded JSON, regexes, record maps, branch labels,
+enums and templates. Smaller fragments and ordinary prose remain a separate
+content-review boundary.
+
+Teaching entries require plain string literals in every field, including files
+using the teaching type and the named JSON teaching sources. Unresolved or
+computed fields and spreads fail closed. Tagged record keys are sensitive text.
+NFD characters are recognized. A curly apostrophe marks CHamoru only inside a
+word when its suffix is not an English contraction, or word-final after a letter
+other than `s`; ordinary English contractions and plural possessives stay English.
+
+The iOS preview wrapper validates **before restoring** the default generated
+Library files. The release gate accepts changes only to the four known generated
+files and regenerates them to scratch for byte equality. Its fresh iOS JavaScript
+export inherits preview mode. Every non-identifier Hermes string-table entry must
+also exist in that JavaScript export's decoded strings, keys or identifier tokens;
+compiler function names can occupy string entries. Mismatches fail closed and the
+receipt explicitly records the successful binding. Hermes still receives all its
+usual checks, including identifier strings in the leak view.
+
+`CI=true` requires a nonempty, valid locked policy for `check:words:export`. Missing
+or empty policy fails. Local policy-free export checks explicitly print
+`policy not checked`; they do not establish private-policy acceptance.

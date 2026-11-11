@@ -5,7 +5,8 @@ import { privatePath } from './paths.mjs';
 import { resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlViews, svgViews, isSvgDocument, workletStrings, puzzleStrings, jsonUnits, chamoruValues, chamoruGrids, chamoruSource, shortWords, listString, proseTokens, tracedLibraryUnit, chamoruCharacters, requireGridLanguages, untracedLibraryUnit, validLanguage, singleLetterMatrix } from './artifact-views.mjs';
+import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlViews, svgViews, isSvgDocument, workletStrings, puzzleStrings, jsonUnits, chamoruValues, chamoruGrids, chamoruSource, shortWords, listString, proseTokens, tracedLibraryUnit, chamoruCharacters, requireGridLanguages, untracedLibraryUnit, validLanguage, singleLetterMatrix, teachingJSON } from './artifact-views.mjs';
+import { normalizedText, densityScanner, densityThreshold, decodedTextViews } from './density.mjs';
 import { scanGrid } from './scan.mjs';
 import { requireThat, digest, sha256, foldScan } from './core.mjs';
 import { contentPolicy } from './policy.mjs';
@@ -50,7 +51,7 @@ function rawTermMatcher(terms) {
 }
 
 function sensitiveText(value) {
-  return value.normalize('NFD').replace(/\p{M}/gu,'').replace(/['ʼ’]/g,'').replace(/\s+/g,' ').toUpperCase();
+  return normalizedText(value).normalize('NFD').replace(/\p{M}/gu,'').replace(/['ʼ’]/g,'').replace(/\s+/g,' ').toUpperCase();
 }
 
 function byteViews(bytes) {
@@ -61,8 +62,9 @@ function byteViews(bytes) {
 /** Raw views are reserved for unconditional private-byte detection. */
 export function artifactScanner(policy, library=[], teachings=[]) {
   const excluded=[...policy.scan,...policy.core,...policy.exact,...policy.lemmas,...(policy.chamoruSensitive??[])];
-  const broad=rawTermMatcher([...new Set(policy.scan.filter(w=>w.length>=5 && !(policy.chamoruSensitive??[]).some(s=>foldScan(s)===foldScan(w))).map(w=>w.toUpperCase()))]);
-  const literal=rawTermMatcher([...new Set([...policy.core,...policy.exact,...policy.lemmas].map(w=>w.toUpperCase()))]);
+  const broad=rawTermMatcher([...new Set(policy.scan.filter(w=>w.length>=5 && !(policy.chamoruSensitive??[]).some(s=>foldScan(s)===foldScan(w))).map(normalizedText))]);
+  const density=densityScanner(policy.scan.filter(w=>w.length>=5 && !(policy.chamoruSensitive??[]).some(s=>foldScan(s)===foldScan(w))));
+  const literal=rawTermMatcher([...new Set([...policy.core,...policy.exact,...policy.lemmas].map(normalizedText))]);
   return (bytes,name='artifact.bin',decodedPack,raw=byteViews(bytes)) => {
     const {views,uppers}=raw;
     let strings=[],keys=[],units=[],grids=[],sensitiveStrings=[],sensitiveGrids=[],semantic=true;
@@ -85,9 +87,16 @@ export function artifactScanner(policy, library=[], teachings=[]) {
         try {const value=JSON.parse(views[1]);requireGridLanguages(value);strings=jsonStrings(value);units=jsonUnits(value);grids=letterGrids(value);sensitiveStrings=chamoruValues(value,false,teachings);} catch(e) {if(e.message.includes('language'))throw e;const lines=views[1].split(/\r?\n/);strings=lines.length>1?[views[1],...lines]:lines;}
       }
     }
+    strings.push(...decodedTextViews(strings));
     if(bytes.subarray(0,8).equals(hermesMagic) || /\.(?:[cm]?js|bundle)$/i.test(name)) {
       const parsed=workletStrings(strings);strings=parsed.strings;keys.push(...parsed.keys);units.push(...parsed.units);grids.push(...parsed.grids);sensitiveStrings.push(...parsed.sensitiveStrings);sensitiveGrids.push(...parsed.sensitiveGrids);
     }
+    const textViews=[...(isUtf8(bytes) && !/[\x00-\x08\x0e-\x1f]/.test(views[1])?[views[1]]:[]),...strings,...keys,...(decodedPack?[JSON.stringify(decodedPack)]:[])];
+    // Joining decoded strings preserves words split by encoded punctuation without
+    // concatenating letter runs from separate string-table entries.
+    textViews.push([...strings,...keys].join(' '));
+    textViews.push(...textViews.filter(text=>text.includes('\\')).map(text=>text.replace(/\\[bBdDsSwW]/g,' ')));
+    const densityMaximum=textViews.reduce((maximum,text)=>Math.max(maximum,density(text)),0);
     const originalStrings=[...strings],displayStrings=[];
     const vector=isSvgDocument;
     sensitiveStrings=sensitiveStrings.filter(text=>!vector(text));
@@ -97,15 +106,15 @@ export function artifactScanner(policy, library=[], teachings=[]) {
     }
     strings=displayStrings;
     grids=grids.filter(grid=>!tracedLibraryUnit(grid.wordUnit??[],library));
-    requireThat(grids.every(grid=>!grid.wordUnit || (!grid.languagePresent || validLanguage(grid.language)) && (/^(?:cells|grid|board|rows)$/i.test(grid.container??'') || validLanguage(grid.language) || singleLetterMatrix(grid) && !grid.puzzle && !grid.languagePresent)),'JavaScript grid needs a recognised container or language declaration');
+    requireThat(grids.every(grid=>!grid.wordUnit || grid.supplemental || (!grid.languagePresent || validLanguage(grid.language)) && (/^(?:cells|grid|board|rows)$/i.test(grid.container??'') || validLanguage(grid.language) || singleLetterMatrix(grid) && !grid.puzzle && !grid.languagePresent)),'JavaScript grid needs a recognised container or language declaration');
     sensitiveGrids.push(...grids.filter(grid=>!grid.languageDeclared));
     // Binary media retains unconditional blob/hash/canary checks.
     if(!bytes.subarray(0,8).equals(hermesMagic) && !/\.(?:[cm]?js|bundle|json|lipuzzle|webmanifest)$/i.test(name))sensitiveStrings.push(...strings.filter(chamoruCharacters));
     const leakStrings=[...strings,...keys];
     const contentStrings=new Set(strings);
-    const stringHits=leakStrings.filter(text=>!technicalString(text) || /^[A-Z0-9]+(?:_[A-Z0-9]+)+$/.test(text)).map(text=>({sha256:sha256(text),advisory:contentStrings.has(text)&&!technicalString(text),listShaped:listString(text,excluded),broad:[...broad(text.toUpperCase())],literal:contentStrings.has(text)&&!technicalString(text)?[...literal(text.toUpperCase())]:[]}));
-    const unitHits=units.map(unit=>{const remaining=untracedLibraryUnit(unit,library);return {sha256:sha256(JSON.stringify(unit)),listShaped:!proseTokens(remaining,excluded),broad:remaining.filter(text=>!technicalString(text)).flatMap(text=>[...broad(text.toUpperCase())]),literal:[]};});
-    return {views,uppers:[...uppers,...originalStrings.map(text=>text.toUpperCase()),...strings.map(text=>text.toUpperCase())],strings,grids,sensitiveStrings,sensitiveGrids,semantic,stringHits,unitHits,broadHits:new Set(stringHits.flatMap(s=>s.broad)),literalHits:new Set(stringHits.flatMap(s=>s.literal))};
+    const stringHits=leakStrings.filter(text=>!technicalString(text) || /^[A-Z0-9]+(?:_[A-Z0-9]+)+$/.test(text)).map(text=>({sha256:sha256(text),advisory:contentStrings.has(text)&&!technicalString(text),listShaped:listString(text,excluded),broad:[...broad(normalizedText(text))],literal:contentStrings.has(text)&&!technicalString(text)?[...literal(normalizedText(text))]:[]}));
+    const unitHits=units.map(unit=>{const remaining=untracedLibraryUnit(unit,library);return {sha256:sha256(JSON.stringify(unit)),listShaped:!proseTokens(remaining,excluded),broad:remaining.filter(text=>!technicalString(text)).flatMap(text=>[...broad(normalizedText(text))]),literal:[]};});
+    return {views,uppers:[...uppers,...originalStrings.map(text=>text.toUpperCase()),...strings.map(text=>text.toUpperCase())],strings,grids,sensitiveStrings,sensitiveGrids,semantic,stringHits,unitHits,densityMaximum,broadHits:new Set(stringHits.flatMap(s=>s.broad)),literalHits:new Set(stringHits.flatMap(s=>s.literal))};
   };
 }
 
@@ -120,7 +129,9 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
   const hashes=new Set([digest([...policy.scan].sort()),digest(policy),digest(contentPolicy(policy)),...groups.filter(a=>a.length).map(a=>digest([...a].sort())),...privateReceipts.flatMap(r=>[r.scanListSha256,r.vocabularySha256,r.policySha256])].filter(Boolean));
   const blobs=groups.filter(a=>a.length).flatMap(a=>[JSON.stringify(a),...(a.length>1?[a.join('\n')]:[])]);
   const bannedNames=/(?:^|\/)(?:private|scan-list|block-list|review-[ab])(?:[/.]|$)|\.private\.|\.queue\.json$|reconcil|\.draft\.|sources\.lock\.json$/i;
-  const findings=[],advisories=[];let files=0,termExceptionsUsed=0;
+  const findings=[],advisories=[];let files=0,termExceptionsUsed=0,densityMaximum=0;
+  const basenameMatcher=rawTermMatcher([...policy.core,...policy.exact,...policy.lemmas].map(normalizedText));
+  const literalBasename=name=>basenameMatcher(normalizedText(name.split('/').at(-1).replace(/(?:[.-][a-f0-9]{32})?\.[^.]+$/i,'')));
   const sensitive=rawTermMatcher((policy.chamoruSensitive??[]).map(sensitiveText));
   const sourceRoot=resolve(options.sourceRoot??process.cwd());
   let sourceFiles=0;
@@ -138,9 +149,9 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       if(entry.isDirectory())sourceScan(path);
       else if(/\.(?:[cm]?[jt]sx?|json)$/.test(name)) {
         const text=readFileSync(path,'utf8');
-        if(!/chamoru[^/]*\.[jt]sx?$/i.test(name) && !/(?:language|lang|locale|ChamoruWord)|[åʼ]/iu.test(text))continue;
+        if(!/chamoru[^/]*\.(?:[jt]sx?|json)$/i.test(name) && !/(?:language|lang|locale|ChamoruWord)|\bterm\s*:/.test(text) && !chamoruCharacters(text))continue;
         sourceFiles++;
-        const view=/\.json$/.test(name) ? {strings:chamoruValues(JSON.parse(text)),grids:chamoruGrids(JSON.parse(text))} : chamoruSource(text,name);
+        const view=/\.json$/.test(name) ? (/src\/learn\/content\/chamoru[^/]*\.json$/i.test(name)?teachingJSON(JSON.parse(text)):{strings:chamoruValues(JSON.parse(text)),grids:chamoruGrids(JSON.parse(text))}) : chamoruSource(text,name);
         for(const entry of view.teachingEntries??[]) {
           const allowance=name==='src/learn/content/chamoru.ts' && allowances.find(rule=>rule.entryId===entry.id && rule.terms.includes(entry.term) && Object.values(entry.fields).every(value=>typeof value==='string') && !Object.keys(entry.fields).some(key=>['kind','cells','grid','board','rows','words','spelling'].includes(key)));
           const remaining=(policy.chamoruSensitive??[]).filter(term=>!allowance || teachingFold(entry.term)!==teachingFold(term));
@@ -213,6 +224,9 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
       // Bytecode string storage is not guaranteed to begin at an even offset.
       let scanned;try {scanned=scan(bytes,name,decoded,raw);}catch(e){throw new Error(name+': '+e.message);}
       const {uppers,broadHits,literalHits,grids,sensitiveStrings,sensitiveGrids,semantic,stringHits,unitHits}=scanned;
+      densityMaximum=Math.max(densityMaximum,scanned.densityMaximum);
+      if(scanned.densityMaximum>=densityThreshold)findings.push(`${name}:broad-density`);
+      if(literalBasename(name).size)findings.push(`${name}:blocked-literal`);
       if(sensitiveStrings.some(text=>sensitive(sensitiveText(text)).size)) findings.push(`${name}:blocked-chamoru`);
       if(grids.some(grid=>scanGrid(grid,gridTerms).length) || sensitiveGrids.some(grid=>scanGrid(grid,(policy.chamoruSensitive??[]).map(foldScan)).length)) findings.push(`${name}:blocked-grid`);
       if (bannedNames.test(name) || hashes.has(fileHash) || uppers.some(upper=>[...hashes].some(h=>upper.includes(h.toUpperCase())) || blobs.some(b=>upper.includes(b.toUpperCase())))) findings.push(name);
@@ -247,5 +261,5 @@ export function guardTree(directory, policy = {scan:[],core:[],exact:[],lemmas:[
     writeFileSync(advisoryFile,JSON.stringify({schemaVersion:1,artifactRoot:root,advisories},null,2)+'\n',{mode:0o600,flag:'wx'});
   }
   requireThat(findings.length===0,`Private word data leaked: ${[...new Set(findings)].join(', ')}`);
-  return {passed:true,files,termExceptionsUsed,privateHashesChecked:hashes.size,policyDataChecked:policy.scan.length>0,sourceFiles,advisoryCount:advisories.length,advisoryFile};
+  return {passed:true,files,termExceptionsUsed,densityMaximum,privateHashesChecked:hashes.size,policyDataChecked:policy.scan.length>0,sourceFiles,advisoryCount:advisories.length,advisoryFile};
 }
