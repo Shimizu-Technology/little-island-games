@@ -7,7 +7,7 @@ it('P2-7 build gate rejects changes to a committed bank length, hash or order an
  const root=mkdtempSync(join(tmpdir(),'li-catalog-freeze-'));
  try{
   mkdirSync(join(root,'scripts'));mkdirSync(join(root,'src/state'),{recursive:true});
-  for(const file of ['scripts/check-save-catalog.mjs','src/state/catalogManifest.ts'])writeFileSync(join(root,file),readFileSync(file));
+  for(const file of ['scripts/check-save-catalog.mjs','scripts/published-refs.mjs','src/state/catalogManifest.ts'])writeFileSync(join(root,file),readFileSync(file));
   const file=join(root,'src/state/save-catalog.json');
   const bank={slot:0,engine:'proof',rules:1,cove:true,awards:[3,3],entries:[{ordinal:0,hash:'a'.repeat(64)},{ordinal:1,hash:'b'.repeat(64)}]};
   const snapshot={version:1,banks:[bank],dares:[],contexts:[]};const write=(v:unknown)=>writeFileSync(file,JSON.stringify(v));write(snapshot);
@@ -32,7 +32,7 @@ it('history verifies the packaged chain before converting inline hashes to range
  const root=mkdtempSync(join(tmpdir(),'li-packed-history-'));
  try{
   mkdirSync(join(root,'scripts'));mkdirSync(join(root,'src/state'),{recursive:true});mkdirSync(join(root,'src/content/puzzles/assets'),{recursive:true});
-  for(const file of ['scripts/check-save-catalog.mjs','src/state/catalogManifest.ts'])writeFileSync(join(root,file),readFileSync(file));
+  for(const file of ['scripts/check-save-catalog.mjs','scripts/published-refs.mjs','src/state/catalogManifest.ts'])writeFileSync(join(root,file),readFileSync(file));
   writeFileSync(join(root,'src/content/puzzles/root.json'),JSON.stringify(f.root));
   for(const [asset,text] of f.files)writeFileSync(join(root,'src/content/puzzles/assets',`${asset}.lipuzzle`),text);
   const entries=Array.from({length:b.count},(_,i)=>({ordinal:b.first+i,hash:f.session('family',0,i).puzzle.hash}));
