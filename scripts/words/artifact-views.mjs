@@ -42,15 +42,17 @@ export function javascriptStrings(text) {
   const tree = ts.createSourceFile('artifact.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   requireThat(tree.parseDiagnostics.length === 0, 'Cannot parse exported JavaScript');
   const strings = [], keys = [];
-  const scanner = ts.createScanner(ts.ScriptTarget.Latest, false, ts.LanguageVariant.Standard, text);
-  for(let token=scanner.scan();token!==ts.SyntaxKind.EndOfFileToken;token=scanner.scan()) {
-    if(token===ts.SyntaxKind.SingleLineCommentTrivia || token===ts.SyntaxKind.MultiLineCommentTrivia) keys.push(scanner.getTokenText());
+  const comments=new Map();
+  function recordComments(pos) {
+    for(const range of [...(ts.getLeadingCommentRanges(text,pos)??[]),...(ts.getTrailingCommentRanges(text,pos)??[])]) comments.set(range.pos,text.slice(range.pos,range.end));
   }
   function visit(node) {
+    recordComments(node.pos);recordComments(node.end);
     if (ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) strings.push(node.text);
     ts.forEachChild(node, visit);
   }
   visit(tree);
+  keys.push(...comments.values());
   return { strings, keys };
 }
 
