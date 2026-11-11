@@ -6,10 +6,9 @@ import { registerSaveContent } from '../src/state/challenge';
 import { catalogManifest } from '../src/state/catalogManifest';
 import { encodeSave, projectProfile } from '../src/state/profiles';
 import { pack } from '../src/state/saveBits';
-import { BOOT_TIMEOUT_MS, StoreProvider, useStore } from '../src/state/Store';
+import { StoreProvider, useStore } from '../src/state/Store';
 import type { EnvelopeWrite } from '../src/state/storage';
 import type { BankLoader } from '../src/puzzles/loader';
-import type { LibraryPolicy } from '../src/library/state';
 import type { Save } from '../src/state/validation';
 
 // Launch follow-ups. (1) Replaying the Store's hydration effect, as Fast Refresh or a development double
@@ -46,8 +45,6 @@ type S=ReturnType<typeof useStore>;
 let store:S,views:ReactTestRenderer[]=[];
 function Probe({into}:{into?:(s:S)=>void}){const s=useStore();useLayoutEffect(()=>{(into??(x=>{store=x;}))(s);},[s,into]);return null;}
 const mount=async(into?:(s:S)=>void)=>{await act(async()=>{views.push(create(<StoreProvider><Probe into={into}/></StoreProvider>));});};
-/** The Store's hydration effect runs again with its hooks kept: cleanup, then setup. */
-const replay=async(at=effects.length-1)=>{await act(async()=>{const e=effects[at];e.cleanup?.();const next=e.setup();e.cleanup=typeof next==='function'?next:null;});};
 afterEach(async()=>{for(const e of effects)e.cleanup?.();effects.length=0;for(const v of views)await act(async()=>v.unmount());views=[];vi.useRealTimers();vi.unstubAllGlobals();vi.restoreAllMocks();});
 const f=fixture();
 registerSaveContent(f.catalog,catalogManifest(f.catalog));
@@ -60,7 +57,6 @@ function seed(){
  for(const p of Object.values(s.profiles!.people))p.challenge!.banks=[marks(101),marks(105)];
  db.raw=encodeSave(projectProfile({...s,learning:{...s.learning!,active:'family'}}));
 }
-const quiet=()=>{vi.spyOn(console,'error').mockImplementation(()=>{});vi.spyOn(console,'warn').mockImplementation(()=>{});};
 
 for(const boundary of ['discard','cove'] as const)it(`${boundary} keeps the error for a change refused during its envelope write`,async()=>{
  seed();await mount();
