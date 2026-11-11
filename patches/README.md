@@ -18,7 +18,7 @@ The audio session was measured and ruled out. `setActive(true)` in `play()` took
 
 Lock-screen updates already hop to the main queue in `MediaController`.
 
-**Result.** With the first version of the patch, the same replay on iOS 18.5 had 0/117 slow pickup windows in three runs at 60 fps. The current version was re-measured the same way. The evidence is in the 4.0 program artifacts (`v4/a2-audio/REPORT.md` and `FIX-REPORT.md`).
+**Result.** With this version, the same replay had 0/117 slow pickup windows in three runs on iOS 18.5 and three on iOS 26.5, at 59.7–60.0 fps with a p99 of 16.7 ms. Status callbacks ran off the main queue in every logged case (384 of 384 on 18.5, 200 of 200 on 26.5). The evidence is in the 4.0 program artifacts (`v4/a2-audio/REPORT.md` and `FIX-REPORT.md`).
 
 **Guards.**
 - `tests/expo-audio-status-patch.test.ts` fails if the installed expo-audio is not 57.0.5, if the patch file, `AudioStatusQueue.swift` or the `postinstall` step is missing, if any periodic observer is delivered on the main queue, if a status producer bypasses the queue, if `ref` is assigned outside the snapshot lock, or if the patch grows to touch the session, audio mode or playback.
