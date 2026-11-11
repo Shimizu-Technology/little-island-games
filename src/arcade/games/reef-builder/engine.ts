@@ -1,7 +1,7 @@
 import { allLevelIds, levelNumber, nextRandom, worldOf, type ArcadeEngine, type ArcadeLevel, type ArcadeResult, type LevelId } from "../../types";
 export type ReefLevel = ArcadeLevel & { goal: "lines" | "fish" | "score"; target: number; greatMoves: number; goodMoves: number; startingRows: number; complexity: number; rocks: number[]; targetSum?: number };
 export type CoralPiece = { cells: readonly (readonly [number, number])[]; value: number; color: number };
-export type ReefState = { version: 2; appearance: number[]; level: ReefLevel | "endless"; board: number[]; fish: number[]; pieces: (CoralPiece | null)[]; seed: number; helper: boolean; moves: number; lines: number; rescued: number; score: number; status: "playing" | "cleared" | "full" | "stopped"; event: number; lastClear: number[]; lastFish: number; lastFishCells: number[]; lastPoints: number; message: string; /** Set once a learning-world sum was too big; the finish counts as helped practice. */ helped?: boolean };
+export type ReefState = { version: 2; appearance: number[]; level: ReefLevel | "endless"; board: number[]; fish: number[]; pieces: (CoralPiece | null)[]; seed: number; helper: boolean; moves: number; lines: number; rescued: number; score: number; status: "playing" | "cleared" | "full" | "stopped"; event: number; lastClear: number[]; lastFish: number; lastFishCells: number[]; lastPoints: number; message: string; /** Set once a learning-world sum was too big or Helper was on; it never clears, so a resumed round stays helped. */ helped?: boolean };
 export type ReefInput = { type: "place"; slot: number; row: number; col: number } | { type: "reroll"; slot: number } | { type: "helper"; value: boolean } | { type: "finish" };
 /** Original coral silhouettes; complexity grows after each tray is used. */
 export const SHAPES: readonly (readonly (readonly [number, number])[])[] = [
@@ -88,7 +88,8 @@ export function hasReefMove(s: ReefState): boolean {
 export const reefGoalValue = (s: ReefState) => s.level === "endless" ? s.score : s.level.goal === "lines" ? s.lines : s.level.goal === "fish" ? s.rescued : s.score;
 export function reefTransition(s: ReefState, input: ReefInput): ReefState {
   if (!input || typeof input !== "object" || s.status !== "playing") return s;
-  if (input.type === "helper") return typeof input.value === "boolean" ? { ...s, helper: input.value } : s;
+  // Helper use latches `helped`: turning Helper off again, or saving and resuming, keeps the round helped.
+  if (input.type === "helper") return typeof input.value === "boolean" ? { ...s, helper: input.value, ...(s.helper || input.value || s.helped ? { helped: true } : {}) } : s;
   if (input.type === "finish") return s.level === "endless" ? { ...s, status: "stopped", message: "Your reef is ready to rest." } : s;
   // Legacy command is deliberately inert. Helper previews legal moves and cannot manufacture a fit.
   if (input.type === "reroll") return s;

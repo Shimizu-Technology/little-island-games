@@ -14,6 +14,10 @@ export type GameProgress = { stars: Partial<Record<LevelId, Stars>>; openWorlds:
 export type ChestOffer = { game: ArcadeId; level: LevelId; round: string; sticker: StickerId };
 /** `dare` is the launch descriptor's chosen dare, kept so a resumed reef finishes the same attempt. */
 export type ReefSession = { version: 1; game: "reef-builder"; round: string; state: ReefState; dare?: number };
+/** Whether a saved reef round has used Helper: its saved switch, or the latched `helped` flag. */
+export const reefSessionHelped = (session: ReefSession) => session.state.helper || !!session.state.helped;
+/** The round's monotonic help record goes into the saved state, so a resume can never make it independent. */
+export const withReefHelp = (state: ReefState, used: boolean): ReefState => used && !state.helped ? { ...state, helped: true } : state;
 export function validReefSession(v: unknown): v is ReefSession {
   if (obj(v) && Object.hasOwn(v, "dare")) { const { dare, ...rest } = v; const d = typeof dare === "number" ? arcadeDare(dare) : undefined; return !!d && d.game === "reef-builder" && validReefSession(rest) && rest.state.level !== "endless" && rest.state.level.id === d.level; }
   return exact(v, ["version", "game", "round", "state"]) && v.version === 1 && v.game === "reef-builder" && roundId(v.round) && validReef(v.state) && v.state.status === "playing";

@@ -203,12 +203,16 @@ function bump(s: CrabState, kind: "splat" | "splash"): CrabState {
   const lives = hitLives(s.lives);
   if (lives === s.lives) return s;
   const p = crabPosition(s),
-    y = p.y <= 5 ? 5 : 10;
+    y = p.y <= 5 ? 5 : 10,
+    bumps = Math.min(99999999, s.bumps + 1);
   return {
     ...s,
     lives,
     shield: lives.invulnerable,
-    bumps: Math.min(99999999, s.bumps + 1),
+    bumps,
+    // Back at the start row a whole new crossing begins, so its clean count starts here.
+    // A splash back to the halfway island keeps the bump: that crossing is still under way.
+    ...(y === 10 ? { crossingBumps: bumps } : {}),
     x: 4,
     y,
     hop: null,
@@ -224,7 +228,7 @@ function collision(s: CrabState): CrabState {
   if (crabLearning(s)) return s;
   const p = crabPosition(s);
   if (s.shield > 0)
-    return p.x < 0 || p.x > 8 ? { ...s, x: 4, y: p.y <= 5 ? 5 : 10, hop: null, queue: [], respawn: CRAB_RESPAWN } : s;
+    return p.x < 0 || p.x > 8 ? { ...s, x: 4, y: p.y <= 5 ? 5 : 10, hop: null, queue: [], respawn: CRAB_RESPAWN, ...(p.y > 5 ? { crossingBumps: s.bumps } : {}) } : s;
   if (p.x < 0 || p.x > 8) return bump(s, "splash");
   for (const lane of crabLanes(s)) {
     if (waterLane(lane)) {

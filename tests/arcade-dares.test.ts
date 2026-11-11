@@ -3,19 +3,23 @@ import { describe, expect, it } from "vitest";
 import "../src/challenge/catalog";
 import { arcadeDare, arcadeDareBank, arcadeDareCatalog, arcadeDares, dareMet, dareRef, daresFor } from "../src/arcade/dares";
 import { applyArcadeAction, dareMarked } from "../src/arcade/saveAction";
-import { arcadeLearner, arcadeTransition, emptyArcade, gameProgress, validReefSession, type ArcadeAction } from "../src/arcade/progress";
+import { arcadeLearner, arcadeTransition, emptyArcade, gameProgress, reefSessionHelped, validReefSession, withReefHelp, type ArcadeAction } from "../src/arcade/progress";
 import { validTerminalResult } from "../src/arcade/terminal";
 import { arcadeIds, validLevelId, type ArcadeId, type LevelId } from "../src/arcade/types";
-import { createReef, reefLevel } from "../src/arcade/games/reef-builder/engine";
+import { createReef, reefLevel, reefResult, reefTransition } from "../src/arcade/games/reef-builder/engine";
 import * as song from "../src/arcade/games/shell-song/engine";
 import * as rail from "../src/arcade/games/rail-parade/engine";
+import * as crab from "../src/arcade/games/crab-crossing/engine";
+import * as beach from "../src/arcade/games/beach-ball/engine";
+import { unpack } from "../src/state/saveBits";
 import { catalogManifest } from "../src/state/catalogManifest";
 import { saveCatalog } from "../src/state/challenge";
 import { progressFor } from "../src/state/challengeDrafts";
 import { encodeSave, migrateProfiles } from "../src/state/profiles";
 import { emptySave, parseSave, type Save } from "../src/state/validation";
 import { addLearner, familyLearners } from "../src/learn/learners";
-import { pilot } from "./helpers/arcade-pilots";
+import { pilotRun } from "./helpers/arcade-pilots";
+import { crabAdvance, crossingPath } from "./grid-fixtures";
 
 const save = (): Save => migrateProfiles({ ...emptySave(), learning: addLearner(familyLearners(), "Kai", "kai") });
 const expected = (s: Save) => ({ epoch: 3, learner: s.learning!.active });
@@ -60,15 +64,32 @@ describe("AR-10 Arcade dares: witnesses", () => {
   it.each(arcadeDares.map(d => [d.game, d.level, d.title, d.slot] as const))("%s %s %s has a legal-play witness, Helper off and on", (game, level, _title, slot) => {
     const d = arcadeDare(slot)!;
     // The fixture seed first, then up to 16 more: a witness proves the dare can be met with legal input.
+    // Every attempt must really run in the Helper mode it is labelled with.
     for (const helper of [false, true]) {
       const tried: string[] = [];
       const found = [undefined, ...Array.from({ length: 16 }, (_, i) => i + 1)].findIndex(seed => {
-        const r = pilot(game, level, seed, helper); tried.push(JSON.stringify(r?.facts));
+        const run = pilotRun(game, level, seed, helper, d.value), r = run.result;
+        expect(run.helper, `${game} ${level} seed ${seed} ran with helper=${run.helper}`).toBe(helper);
+        tried.push(JSON.stringify(r?.facts));
         return !!r && r.cleared && validTerminalResult(r) && dareMet(d, true, r.facts);
       });
       expect(found, `${game} ${level} helper=${helper} ${tried.join(" ")}`).toBeGreaterThanOrEqual(0);
     }
   }, 120000);
+  it("runs every game's pilot in the Helper mode it is asked for", () => {
+    // Review finding 5: Reef, Cargo and Song pilots used to drop the Helper argument.
+    for (const game of arcadeIds) {
+      const level = arcadeDares.find(d => d.game === game)!.level;
+      for (const helper of [false, true]) expect(pilotRun(game, level, undefined, helper).helper, `${game} helper=${helper}`).toBe(helper);
+    }
+  });
+  it("earns Three canoes at once with Helper's own garbage schedule", () => {
+    // The recorded W5-2 moves stall once Helper delays the garbage; the planner plays the Helper round itself.
+    const d = daresFor("canoe-cargo", "w5-2")[0], run = pilotRun("canoe-cargo", "w5-2", undefined, true, d.value);
+    expect(run.helper).toBe(true);
+    expect(run.result?.cleared).toBe(true);
+    expect(dareMet(d, true, run.result?.facts)).toBe(true);
+  }, 30000);
   it("earns Listen-only song with a slip and only two stars", () => {
     const l = song.songLevel("w1-6");
     let s = song.createSong(l, 42, false), slipped = false;
@@ -137,7 +158,99 @@ describe("AR-10 Arcade dares: accepted terminal result and atomic credit", () =>
   });
 });
 
+describe("AR-10 Arcade dares: counts mean what the dare says", () => {
+  /** Hops toward the road until a vehicle bumps the crab back to the start row, then waits out the shield. */
+  const roadBump = (s: crab.CrabState) => {
+    const before = s.bumps;
+    for (let n = 0; n < 2; n++) s = crabAdvance(crab.crabTransition(s, { type: "hop", direction: "up" }));
+    for (let f = 0; f < 1000 && s.bumps === before; f++) s = crabAdvance(s, 1);
+    expect(s.bumps).toBe(before + 1); expect(s.y).toBe(10);
+    return crabAdvance(s, 140);
+  };
+  const cross = (s: crab.CrabState) => { for (const d of crossingPath(s)) s = crabAdvance(d === "wait" ? s : crab.crabTransition(s, { type: "hop", direction: d })); return s; };
+  it("counts a whole clean crossing that starts again after a road bump", () => {
+    // Review probe, W2-2 seed 120: bump on the road, respawn on row 10, then cross with no bump. Twice.
+    let s = crab.createCrab(crab.crabLevel("w2-2"), 120, false);
+    for (let c = 0; c < 2; c++) {
+      s = roadBump(s);
+      const bumps = s.bumps;
+      s = cross(s);
+      expect(s.bumps).toBe(bumps); expect(s.cleanCrossings).toBe(c + 1); expect(crab.validCrab(s)).toBe(true);
+      if (s.phase === "play") s = crabAdvance(s, 12);
+    }
+    const r = crab.crabResult(s)!;
+    expect(r.cleared).toBe(true); expect(r.facts).toEqual({ clean: 2 });
+    expect(dareMet(daresFor("crab-crossing", "w2-2")[0], r.cleared, r.facts)).toBe(true);
+  });
+  it("keeps a crossing dirty after a splash back to the halfway island", () => {
+    let s = crab.createCrab(crab.crabLevel("w2-2"), 120, false);
+    for (const d of crossingPath(s)) { s = crabAdvance(d === "wait" ? s : crab.crabTransition(s, { type: "hop", direction: d })); if (s.y <= 4 && !s.hop) break; }
+    expect(s.y).toBeLessThanOrEqual(4);
+    // Ride the log until it carries the crab off the edge: a splash sends it back to row 5, mid-crossing.
+    for (let f = 0; f < 3000 && s.bumps === 0; f++) s = crabAdvance(s, 1);
+    expect(s.bumps).toBe(1); expect(s.y).toBe(5);
+    s = cross(crabAdvance(s, 140));
+    expect(s.crossed).toBe(1); expect(s.bumps).toBe(1); expect(s.cleanCrossings).toBe(0);
+  });
+  it("never adds two balls together into one rally", () => {
+    // Review probe, W4-1 seed 6, Helper off: the shared counter reaches 8, but neither ball rallies past 6.
+    let s = beach.createBeach(beach.beachLevel("w4-1"), 6, false);
+    const hits = [0, 0];
+    let longest = 0;
+    for (let f = 0; f < 40000 && s.phase === "play"; f++) {
+      const b = s.balls.filter(b => b.vy > 0).sort((a, b) => (513 - a.y) / a.vy - (513 - b.y) / b.vy)[0] ?? s.balls[0];
+      const aim = beach.reflectedX(b.x + b.vx * Math.max(0, (513 - b.y) / Math.max(1, b.vy)));
+      const before = beach.beachTransition(s, { type: "paddle", seat: 0, x: aim + (aim > 180 ? -29 : 29) });
+      s = beach.beachStep(before, { type: "tick" }, 1 / 60);
+      // Count each ball's paddle hits independently, resetting on its own serve.
+      for (let i = 0; i < s.balls.length; i++) {
+        const a = before.balls[i], n = s.balls[i];
+        if ((a.vy > 0 && n.vy < 0 && a.y > 480 && n.y > 480) || (a.vy < 0 && n.vy > 0 && a.y < 115 && n.y < 115)) longest = Math.max(longest, ++hits[i]);
+        if ((a.y > 590 && n.y < 500) || (a.y < 10 && n.y > 100)) hits[i] = 0;
+      }
+    }
+    const r = beach.beachResult(s)!;
+    expect(s.bestRally).toBe(8); expect(longest).toBe(6);
+    expect(r.cleared).toBe(true); expect(r.facts).toEqual({ rally: 6 }); expect(beach.validBeach(s)).toBe(true);
+    expect(dareMet(daresFor("beach-ball", "w4-1")[0], r.cleared, r.facts)).toBe(false);
+  });
+  it("starts each served ball's rally at zero and checks it against the best", () => {
+    const s = beach.createBeach(beach.beachLevel("w4-1"), 6, false);
+    expect(s.balls.map(b => b.rally)).toEqual([0, 0]);
+    expect(beach.validBeach({ ...s, balls: [{ ...s.balls[0], rally: 3 }, s.balls[1]], ballRally: 2 })).toBe(false);
+    expect(beach.validBeach({ ...s, balls: [{ ...s.balls[0], rally: 3 }, s.balls[1]], ballRally: 3 })).toBe(true);
+  });
+});
+
 describe("AR-10 Arcade dares: honest rounds", () => {
+  it("keeps Helper use with a saved reef, so a resumed helped round stays helped", () => {
+    // Review probe: Helper on (Show a fit), Helper off, quit, reload, resume, finish.
+    const d = reefDare(), owner = "family", exp = { epoch: 3, learner: owner };
+    let s = reefTransition(reefTransition(createReef(reefLevel(d.level), 42, false), { type: "helper", value: true }), { type: "helper", value: false });
+    expect(s.helper).toBe(false); expect(s.helped).toBe(true);
+    let saved = applyArcadeAction(migrateProfiles(emptySave()), { type: "save-round", session: { version: 1, game: "reef-builder", round: "resume-help", state: s, dare: d.slot } }, exp, 3);
+    saved = parseSave(encodeSave(saved));
+    const session = arcadeLearner(saved.arcade, owner).session!;
+    expect(session.dare).toBe(d.slot); expect(reefSessionHelped(session)).toBe(true);
+    s = session.state;
+    const fixtures = JSON.parse(readFileSync("tests/fixtures/puzzle-feel.json", "utf8")) as { reef: { id: string; moves: { slot: number; row: number; col: number }[] }[] };
+    for (const m of fixtures.reef.find(f => f.id === d.level)!.moves) s = reefTransition(s, { type: "place", ...m });
+    const r = reefResult(s)!;
+    expect(r.cleared).toBe(true);
+    const done = applyArcadeAction(saved, { type: "finish", game: d.game, level: d.level, round: session.round, name: "Family", stars: r.stars, score: r.score, dare: d.slot, facts: r.facts, helped: reefSessionHelped(session) }, exp, 3);
+    // The dare is still earned with Helper, and the completion is helped (2), not independent (5).
+    expect(dareMarked(done, owner, d.slot)).toBe(true);
+    expect(unpack(bankState(done, owner, arcadeDareBank["reef-builder"])![1], 2, 3)![0]).toBe(2);
+  });
+  it("marks a saved reef helped when Helper was used outside the board", () => {
+    const state = createReef(reefLevel("w1-4"), 42, false);
+    expect(withReefHelp(state, false)).toBe(state);
+    expect(withReefHelp(state, true).helped).toBe(true);
+    expect(reefSessionHelped({ version: 1, game: "reef-builder", round: "r", state: withReefHelp(state, true) })).toBe(true);
+    expect(reefSessionHelped({ version: 1, game: "reef-builder", round: "r", state })).toBe(false);
+    // An untouched Helper switch latches nothing.
+    expect(reefTransition(state, { type: "helper", value: false }).helped).toBeUndefined();
+  });
   it("keeps a reef dare with its paused round, and no other game's dare", () => {
     const state = createReef(reefLevel(reefDare().level), 42, false), base = { version: 1 as const, game: "reef-builder" as const, round: "reef-dare", state };
     expect(validReefSession(base)).toBe(true);

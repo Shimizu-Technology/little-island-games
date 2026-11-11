@@ -38,7 +38,7 @@ import { acknowledgeArcadeBreak, arcadeBreakDue, markArcadePlaying } from "./bre
 import { useArcadeForeground } from "./loop";
 import { arcadeShelfGames } from "./registry";
 import { arcadePlays } from "./plays";
-import { arcadeLearner, gameProgress, levelOpen, endlessOpen, type ChestOffer } from "./progress";
+import { arcadeLearner, gameProgress, levelOpen, endlessOpen, reefSessionHelped, withReefHelp, type ChestOffer } from "./progress";
 import { allLevelIds, type ArcadeGame, type ArcadeLevel, type ArcadeResult, type LevelId, starCount } from "./types";
 export function ArcadeLobby() {
   const store = useStore(), person = arcadeLearner(store.save.arcade, activeLearner(store.save.learning).id);
@@ -70,7 +70,6 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   const together = !!play.familyMatch && mode === "together";
   const family: ArcadeFamily = { mode, strength, names: together ? match.names : [name, { gentle: "Bibi", steady: "Bibi ••", zippy: "Bibi •••" }[strength]] };
   const helperUsed = useRef(person.helper);
-  useEffect(() => { if (playing && person.helper) helperUsed.current = true; }, [playing, person.helper]);
   const startAfterTeach = useRef(false), credited = useRef(""), [reminder, setReminder] = useState(false), scroll = useRef<ScrollView>(null);
   const [finishError, setFinishError] = useState(""), [invalidResult,setInvalidResult]=useState(false);
   const failedResult = useRef<{ result: ArcadeResult; helped: boolean; winner?: 0 | 1 | null } | null>(null);
@@ -94,6 +93,15 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
   const active = foreground && playing && !paused && !sheet && !finishError, sound = useArcadeAudio(game.id, store.save.settings, store.save.arcade?.music ?? false, foreground && !paused, !!sheet);
   useEffect(() => { markArcadePlaying(active); return () => markArcadePlaying(false); }, [active]);
   const { arcade } = store;
+  useEffect(() => {
+    if (!playing || !person.helper) return;
+    helperUsed.current = true;
+    // Helper switched on from the pause sheet reaches no reef move, so mark the saved round helped now.
+    const session = person.session;
+    if (session && session.round === liveRound.current && !session.state.helped) arcade({ type: "save-round", session: { ...session, state: withReefHelp(session.state, true) } }, expected);
+    // Only a change of Helper or play state latches; the session is read fresh each time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playing, person.helper]);
   useEffect(() => { arcade({ type: "visit", game: game.id }, expected); }, [arcade, expected, game.id]);
   // eslint-disable-next-line react-hooks/set-state-in-effect -- Latch a visible pause after external focus/background loss; returning never silently resumes a round.
   useEffect(() => { if (playing && !foreground) setPaused(true); }, [playing, foreground]);
@@ -122,14 +130,14 @@ export function ArcadeGameScreen({ game, debug = false }: { game: ArcadeGame; de
     sound.say((play.startSpeech ?? play.speech)(level !== "endless" && level?.world === "learn", together)); toTop();
   }
   const onSaveReef = useCallback((state: ReefState) => {
-    if (round) arcade({ type: "save-round", session: { version: 1, game: "reef-builder", round, state, ...(launchDare.current !== null && liveRound.current === round ? { dare: launchDare.current } : {}) } }, expected);
+    if (round) arcade({ type: "save-round", session: { version: 1, game: "reef-builder", round, state: withReefHelp(state, helperUsed.current), ...(launchDare.current !== null && liveRound.current === round ? { dare: launchDare.current } : {}) } }, expected);
   }, [arcade, round, expected]);
   function resumeReef() {
     const session = person.session;
     if (!session || session.game !== game.id) return;
     liveRound.current = session.round; launchDare.current = session.dare ?? null; setDare(session.dare ?? null); setRoundDare(session.dare ?? null);
     setSavedReef(session.state); setRound(session.round); setLevel(session.state.level);
-    helperUsed.current = session.state.helper || !!session.state.helped;
+    helperUsed.current = reefSessionHelped(session);
     setResult(null); setPaused(false); setPlaying(true); setSheet(null); toTop();
   }
   function teach(andStart: boolean) { startAfterTeach.current = andStart; setSheet("teach"); sound.say(play.speech(level !== "endless" && level?.world === "learn", together)); }

@@ -59,7 +59,7 @@ function beachPilot(initial: BeachState) {
   }
   return s;
 }
-const ball = (v: Partial<Ball> = {}): Ball => ({ x: 180, y: 300, vx: 0, vy: 250, wait: 0, spin: 0, squash: 0, ...v });
+const ball = (v: Partial<Ball> = {}): Ball => ({ x: 180, y: 300, vx: 0, vy: 250, wait: 0, spin: 0, squash: 0, rally: 0, ...v });
 describe("uniform action camera and pointer ownership", () => {
   for (const [w, h] of [
     [390, 782],
