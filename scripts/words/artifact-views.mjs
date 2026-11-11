@@ -38,22 +38,30 @@ export function hermesStrings(bytes) {
  * member names, regex bodies and comments from the blocked-word content view.
  * Property names and comments remain in the partial-list leak view; only literals supply displayed-word checks.
  */
-export function javascriptStrings(text) {
+export function javascriptStrings(text, teachings=[]) {
   const tree = ts.createSourceFile('artifact.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   requireThat(tree.parseDiagnostics.length === 0, 'Cannot parse exported JavaScript');
-  const strings = [], keys = [], units = [];
+  const strings = [], keys = [], units = [], grids = [], sensitiveStrings=[], sensitiveGrids=[];
   const propertyName=n=>n && (ts.isIdentifier(n)||ts.isStringLiteralLike(n))?n.text:undefined;
   function attachment(node) {
-    const ids=[];let scope=false,field;
+    let id,scope=false,field,record;
     for(let p=node.parent;p;p=p.parent) {
       if(ts.isFunctionLike(p))break;
-      if(ts.isPropertyAssignment(p)) {const name=propertyName(p.name);field??=name;scope ||= ['items','index'].includes(name);}
-      if(ts.isObjectLiteralExpression(p)) {
-        const id=p.properties.find(v=>ts.isPropertyAssignment(v)&&propertyName(v.name)==='id'&&ts.isStringLiteralLike(v.initializer));
-        if(id)ids.push(id.initializer.text);
+      if(ts.isPropertyAssignment(p))field??=propertyName(p.name);
+      if(ts.isObjectLiteralExpression(p) && !record) {
+        const property=p.properties.find(v=>ts.isPropertyAssignment(v)&&propertyName(v.name)==='id'&&ts.isStringLiteralLike(v.initializer));
+        if(property) {id=property.initializer.text;record=p;}
+      }
+      if(record && ts.isArrayLiteralExpression(p) && p.elements.includes(record) && ts.isPropertyAssignment(p.parent) && ['items','index'].includes(propertyName(p.parent.name))) {
+        scope=catalogShape(p.parent.parent);break;
       }
     }
-    return {ids,scope,field};
+    return {ids:id?[id]:[],scope,field};
+  }
+  function catalogShape(n) {
+    if(!ts.isObjectLiteralExpression(n))return false;
+    const names=new Set(n.properties.filter(ts.isPropertyAssignment).map(p=>propertyName(p.name)));
+    return ['items','index','preview','bytes','fixtures'].every(key=>names.has(key));
   }
   function addUnit(values,node) {values.library=attachment(node);units.push(values);}
   const comments=new Map();
@@ -64,17 +72,32 @@ export function javascriptStrings(text) {
     recordComments(node.pos);recordComments(node.end);
     // A container owns its immediate data, never strings in other records,
     // nested containers, callbacks or functions elsewhere in the bundle.
-    if (ts.isArrayLiteralExpression(node) && node.elements.length && node.elements.every(ts.isStringLiteralLike) && node.elements.every(n=>shortWords(n.text))) addUnit(node.elements.map(n=>n.text),node);
+    if (ts.isArrayLiteralExpression(node)) {
+      const values=node.elements.map(n=>staticData(n));
+      addUnit(plainEntries(values),node);
+      const wordUnit=plainEntries(values);wordUnit.library=attachment(node);
+      let container=node.parent,language;
+      while(container && !ts.isFunctionLike(container)) {if(ts.isObjectLiteralExpression(container)){const value=staticData(container);language??=value.language??value.lang??value.locale??value.languages;}container=container.parent;}
+      const field=ts.isBinaryExpression(node.parent)&&ts.isPropertyAccessExpression(node.parent.left)?node.parent.left.name.text:wordUnit.library.field;
+      const gridValue={[field??'unknown']:values};
+      for(const grid of values.every(row=>typeof row==='string'||Array.isArray(row)&&row.every(cell=>typeof cell==='string'))?letterGrids(gridValue,validLanguage(language)):[]){grid.wordUnit=wordUnit;grid.language=language;grid.container=field;grid.offset=node.getStart(tree);grids.push(grid);}
+    }
+    if(ts.isObjectLiteralExpression(node)) {const value=staticData(node);if(tagged(value)){sensitiveStrings.push(...chamoruValues(value,false,teachings));sensitiveGrids.push(...chamoruGrids(value));}}
     // Homogeneous short-word keys can encode a list (including library tables).
     if (ts.isObjectLiteralExpression(node) && node.properties.length && node.properties.every(p=>ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteralLike(p.name)) && shortWords(p.name.text) && (ts.isNumericLiteral(p.initializer) || [ts.SyntaxKind.TrueKeyword,ts.SyntaxKind.FalseKeyword].includes(p.initializer.kind)))) addUnit(node.properties.map(p=>p.name.text),node);
-    if (ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) strings.push(node.text);
+    if (ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) {strings.push(node.text);
+      if(chamoruCharacters(node.text)) {
+        let parent=node.parent;while(parent && !ts.isObjectLiteralExpression(parent) && !ts.isFunctionLike(parent))parent=parent.parent;
+        if(!parent || !ts.isObjectLiteralExpression(parent) || !approvedTeaching(staticData(parent),teachings))sensitiveStrings.push(node.text);
+      }
+    }
     if ((ts.isPropertyAssignment(node) || ts.isMethodDeclaration(node)) && ts.isIdentifier(node.name) && /^\p{L}+$/u.test(node.name.text)) keys.push(node.name.text);
     if (ts.isRegularExpressionLiteral(node)) keys.push(node.text);
     ts.forEachChild(node, visit);
   }
   visit(tree);
   keys.push(...comments.values());
-  return { strings, keys, units };
+  return { strings, keys, units, grids, sensitiveStrings, sensitiveGrids };
 }
 
 export function jsonStrings(value) {
@@ -87,18 +110,39 @@ export function jsonStrings(value) {
 /** Detect actual letter matrices, including digraph cells and row strings.
  * Grid scanning deliberately has no word boundaries: adjacent cells form words.
  */
-export function letterGrids(value) {
+export function letterGrids(value, declared=false) {
   const grids = [];
-  function visit(x, key) {
+  function visit(x,key,active=declared) {
     if (!x || typeof x !== 'object') return;
+    if(!Array.isArray(x))active ||= tagKeys.some(name=>validLanguage(x[name]));
     if (Array.isArray(x)) {
-      const rows = x.map(row => typeof row === 'string' && /^(?:cells|grid|board)$/i.test(key??'') ? [...row] : row);
-      if (rows.length && rows.length <= 25 && rows.every(row => Array.isArray(row) && row.length > 0 && row.length <= 25 && row.length === rows[0].length && row.every(c => typeof c === 'string' && /^(?:CH|NG|[A-ZÅÑ']|#)$/u.test(c)))) grids.push(rows);
-      else x.forEach(child => visit(child, key));
-    } else Object.entries(x).forEach(([name, child]) => visit(child, name));
+      const rows=x.map(row=>typeof row==='string' && (active || /^(?:cells|grid|board|rows)$/i.test(key??''))?[...row]:row);
+      const cell=c=>typeof c==='string' && /^(?:CH|NG|[A-ZÅÑʼ’']|[^\p{L}]|)$/iu.test(c);
+      if(rows.length && rows.length<=25 && rows.every(row=>Array.isArray(row) && row.length>0 && row.length<=25 && row.length===rows[0].length && row.every(cell)) && rows.flat().some(c=>/\p{L}/u.test(c))) {
+        const grid=rows.map(row=>row.map(c=>/[ʼ’']/.test(c)?"'":/\p{L}/u.test(c)?c.toUpperCase():'#'));grid.languageDeclared=active;grid.container=key;grids.push(grid);
+      } else x.forEach(child=>visit(child,key,active));
+    } else Object.entries(x).forEach(([name,child])=>visit(child,name,active));
   }
-  visit(value);
-  return grids;
+  visit(value);return grids;
+}
+
+// Ignore odd entries without dropping the plain-word portion of a list.
+export function plainEntries(values) {
+  return values.flatMap(value=>{
+    if(shortWords(value))return [value];
+    if(value && !Array.isArray(value) && typeof value==='object' && Object.keys(value).length===1)return Object.values(value).filter(shortWords);
+    return [];
+  });
+}
+const staticDataCache=new WeakMap();
+function staticData(n) {
+  if(!n)return undefined;
+  if(staticDataCache.has(n))return staticDataCache.get(n);
+  let value;
+  if(ts.isStringLiteralLike(n))value=n.text;
+  else if(ts.isArrayLiteralExpression(n))value=n.elements.map(staticData);
+  else if(ts.isObjectLiteralExpression(n))value=Object.fromEntries(n.properties.filter(ts.isPropertyAssignment).map(p=>[p.name.getText().replace(/^['"]|['"]$/g,''),staticData(p.initializer)]));
+  staticDataCache.set(n,value);return value;
 }
 
 /** Metro-generated asset URIs and digest identifiers are not spoken/display text.
@@ -112,33 +156,50 @@ export function technicalString(text) {
     || /^\/?_expo\/static\/js\/[^\s]*-[a-f0-9]{32}\.(?:js|hbc)$/i.test(text);
 }
 
-export function htmlViews(text) {
+export function htmlViews(text,teachings=[]) {
   // HTML shell content, accessible text attributes and inline script literals.
-  const strings=[],keys=[],units=[];
-  for(const match of text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) if(match[1].trim()) {const parsed=javascriptStrings(match[1]),worklets=workletStrings(parsed.strings);strings.push(...worklets.strings);keys.push(...parsed.keys,...worklets.keys);units.push(...parsed.units,...worklets.units);}
+  const strings=[],keys=[],units=[],grids=[],sensitiveStrings=[],sensitiveGrids=[];
+  for(const match of text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) if(match[1].trim()) {const parsed=javascriptStrings(match[1],teachings),worklets=workletStrings(parsed.strings);grids.push(...parsed.grids,...worklets.grids);sensitiveStrings.push(...parsed.sensitiveStrings,...worklets.sensitiveStrings);sensitiveGrids.push(...parsed.sensitiveGrids,...worklets.sensitiveGrids);strings.push(...worklets.strings);keys.push(...parsed.keys,...worklets.keys);units.push(...parsed.units,...worklets.units);}
   const visible=text.replace(/<!--[\s\S]*?-->|<(?:script|style)\b[^>]*>[\s\S]*?<\/(?:script|style)>/gi,'');
-  for(const match of visible.matchAll(/\b(?:alt|title|aria-label|placeholder)\s*=\s*["']([^"']*)["']/gi)) strings.push(match[1]);
+  for(const match of visible.matchAll(/\b(?:alt|title|aria-label|placeholder|content|value)\s*=\s*["']([^"']*)["']/gi)) strings.push(match[1]);
   for(const match of visible.matchAll(/>([^<]+)</g)) strings.push(match[1]);
-  return {strings,keys,units};
+  return {strings,keys,units,grids,sensitiveStrings,sensitiveGrids};
+}
+
+/** Inline vectors contain XML syntax rather than one displayed sentence.
+ * Keep each visible label, attribute list and comment as its own unit.
+ */
+export function isSvgDocument(text) {
+  return /^\s*(?:<\?xml[^>]*>\s*)?<svg\b[\s\S]*<\/svg>\s*$/i.test(text)
+    || /^\s*(?:<\?xml[^>]*>\s*)?<svg\b[^>]*\/>\s*$/i.test(text);
+}
+export function svgViews(text,teachings=[]) {
+  requireThat(isSvgDocument(text),'Cannot parse embedded SVG');
+  const parsed=htmlViews(text,teachings);
+  for(const match of text.matchAll(/\b[\w:-]+\s*=\s*["']([^"']*)["']/g))parsed.keys.push(match[1]);
+  for(const match of text.matchAll(/<!--([\s\S]*?)-->/g))parsed.keys.push(match[1]);
+  const language=text.match(/\b(?:xml:)?lang\s*=\s*["']([^"']+)["']/i)?.[1];
+  if(chamoru(language))parsed.sensitiveStrings.push(...parsed.strings);
+  return parsed;
 }
 
 /** Reanimated serializes complete functions into string literals. Scan their
  * source as code too, so identifier text is never mistaken for UI vocabulary.
  */
 export function workletStrings(strings, depth=0) {
-  const output=[],keys=[],units=[];
+  const output=[],keys=[],units=[],grids=[],sensitiveStrings=[],sensitiveGrids=[];
   for(const text of strings) {
     if(depth<4 && /^function(?:\s|\()/.test(text) && /}\s*$/.test(text)) {
       const source='('+text+')';
       const tree=ts.createSourceFile('worklet.js',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS);
       if(tree.parseDiagnostics.length===0) {
         const parsed=javascriptStrings(source),nested=workletStrings(parsed.strings,depth+1);
-        output.push(...nested.strings);keys.push(...parsed.keys,...nested.keys);units.push(...parsed.units,...nested.units);continue;
+        grids.push(...parsed.grids,...nested.grids);sensitiveStrings.push(...parsed.sensitiveStrings,...nested.sensitiveStrings);sensitiveGrids.push(...parsed.sensitiveGrids,...nested.sensitiveGrids);output.push(...nested.strings);keys.push(...parsed.keys,...nested.keys);units.push(...parsed.units,...nested.units);continue;
       }
     }
     output.push(text);
   }
-  return {strings:output,keys,units};
+  return {strings:output,keys,units,grids,sensitiveStrings,sensitiveGrids};
 }
 
 /** Decoded payload values are content. Object field names and the validated
@@ -154,53 +215,100 @@ export function puzzleStrings(value) {
 /** One JSON container at a time; sibling records never form a list fragment. */
 export function jsonUnits(value, context={ids:[],scope:false}) {
   if (!value || typeof value !== 'object') return [];
-  const direct=Array.isArray(value) ? (value.every(v=>typeof v==='string' && shortWords(v))?value:[]) : (Object.entries(value).every(([k,v])=>shortWords(k) && ['number','boolean'].includes(typeof v))?Object.keys(value):[]);
-  const ids=typeof value.id==='string'?[value.id,...context.ids]:context.ids;
+  const direct=Array.isArray(value)?plainEntries(value):(Object.entries(value).every(([k,v])=>shortWords(k) && ['number','boolean'].includes(typeof v))?Object.keys(value):[]);
+  const ids=typeof value.id==='string'?[value.id]:context.ids;
   const unit=[...direct];unit.library={ids,scope:context.scope,field:context.field};
-  return [unit,...Object.entries(value).flatMap(([key,v])=>jsonUnits(v,{ids,scope:context.scope||['items','index'].includes(key),field:key}))];
+  const catalog=!Array.isArray(value) && ['items','index','preview','bytes','fixtures'].every(key=>key in value);
+  return [unit,...Object.entries(value).flatMap(([key,v])=>jsonUnits(v,{ids,scope:catalog && ['items','index'].includes(key) || context.scope && (Array.isArray(value) || typeof value.id==='string' && ['terms','sounds'].includes(key)),field:Array.isArray(value)?context.field:key}))];
 }
 
-const chamoru = value => typeof value==='string' && ['ch','chamoru','chamorro'].includes(value.toLowerCase());
-/** Tagged banks/labels/speech inherit language only inside their own record. */
-export function chamoruValues(value, tagged=false) {
-  if(typeof value==='string')return tagged?[value]:[];
-  if(Array.isArray(value))return value.flatMap(v=>chamoruValues(v,tagged));
+export const chamoru = value => typeof value==='string' && /^(?:ch(?:-|$)|cha$|chamoru$|chamorro$)/i.test(value.trim());
+export function validLanguage(value) {
+  return typeof value==='string' ? value.trim().length>0 : Array.isArray(value) && value.length>0 && value.every(entry=>typeof entry==='string' && entry.trim().length>0);
+}
+export const chamoruCharacters = text => /[åʼ]/iu.test(text);
+const tagKeys=['language','lang','locale','languages'];
+function tagged(value) {return tagKeys.some(key=>Array.isArray(value[key])?value[key].some(chamoru):chamoru(value[key]));}
+export function approvedTeaching(value, teachings) {
+  return value && !Array.isArray(value) && Object.values(value).every(v=>typeof v==='string') && !Object.keys(value).some(key=>['kind','cells','grid','board','rows','words','spelling'].includes(key)) && teachings.some(entry=>entry.id===value.id && entry.term===value.term && JSON.stringify(Object.entries(entry.fields).sort())===JSON.stringify(Object.entries(value).sort()));
+}
+export function chamoruValues(value, active=false, teachings=[]) {
+  if(typeof value==='string')return active||chamoruCharacters(value)?[value]:[];
+  if(Array.isArray(value))return value.flatMap(v=>chamoruValues(v,active,teachings));
   if(!value || typeof value!=='object')return [];
-  const active=chamoru(value.language??value.lang??value.locale) || tagged;
-  return Object.entries(value).filter(([key])=>!['english','sourceNote'].includes(key)).flatMap(([,v])=>chamoruValues(v,active));
+  if(Object.keys(value).some(key=>/^(?:label|title|text|term|example|words|speech|spelling|cells|grid|board|rows)$/.test(key)) && tagKeys.some(key=>key in value))requireThat(tagKeys.filter(key=>key in value).every(key=>validLanguage(value[key])),'Unresolved JSON content language tag');
+  if(approvedTeaching(value,teachings))return [];
+  return Object.values(value).flatMap(v=>chamoruValues(v,tagged(value)||active,teachings));
 }
 
-/** Source-backed teaching terms and explicit language tags survive minification
- * only in the source. Do not infer language from an English UI collision. */
+/** Resolve local static constants, shorthand and spreads without evaluating code.
+ * Unresolved language on content records rejects; runtime option objects with no
+ * authored text are not language declarations for a content surface.
+ */
 export function chamoruSource(text, name) {
-  const tree=ts.createSourceFile(name,text,ts.ScriptTarget.Latest,true, /\.tsx$/.test(name)?ts.ScriptKind.TSX:ts.ScriptKind.TS);
+  const tree=ts.createSourceFile(name,text,ts.ScriptTarget.Latest,true,/\.tsx$/.test(name)?ts.ScriptKind.TSX:ts.ScriptKind.TS);
   requireThat(tree.parseDiagnostics.length===0,'Cannot parse CHamoru content source');
-  const strings=[],grids=[];
-  function data(n) {
+  const strings=[],grids=[],teachingEntries=[],declarations=new Map();
+  function collect(n) {if(ts.isParameter(n)&&ts.isIdentifier(n.name))declarations.set(n.name.text,null);if(ts.isVariableDeclaration(n)&&ts.isIdentifier(n.name)&&n.initializer)declarations.set(n.name.text,declarations.has(n.name.text)?null:n.initializer);ts.forEachChild(n,collect);}
+  collect(tree);
+  const unknown=Symbol('dynamic');
+  function data(n,seen=new Set()) {
+    if(!n)return unknown;
     if(ts.isStringLiteralLike(n))return n.text;
-    if(ts.isArrayLiteralExpression(n))return n.elements.map(data);
-    if(ts.isObjectLiteralExpression(n))return Object.fromEntries(n.properties.filter(ts.isPropertyAssignment).map(p=>[p.name.getText(tree).replace(/^['"]|['"]$/g,''),data(p.initializer)]));
-    return null;
-  }
-  function visit(n) {
+    if(ts.isNumericLiteral(n))return Number(n.text);
+    if(ts.isAsExpression(n)||ts.isSatisfiesExpression(n)||ts.isParenthesizedExpression(n))return data(n.expression,seen);
+    if(ts.isIdentifier(n)&&declarations.get(n.text)&&!seen.has(n.text))return data(declarations.get(n.text),new Set([...seen,n.text]));
+    if(ts.isArrayLiteralExpression(n))return n.elements.map(v=>data(v,seen));
     if(ts.isObjectLiteralExpression(n)) {
-      const value=data(n);
-      if(chamoru(value.language??value.lang??value.locale)) {strings.push(...chamoruValues(value));grids.push(...letterGrids(value));return;}
-      if(name.endsWith('src/learn/content/chamoru.ts') && 'term' in value) {
-        requireThat(typeof value.term==='string','CHamoru teaching term must be static text');
-        strings.push(value.term);
+      const value={};
+      for(const p of n.properties) {
+        if(ts.isSpreadAssignment(p)) {const spread=data(p.expression,seen);if(spread && typeof spread==='object' && !Array.isArray(spread))Object.assign(value,spread);else value.__unknownSpread=unknown;}
+        else if(ts.isPropertyAssignment(p))value[p.name.getText(tree).replace(/^['"]|['"]$/g,'')]=data(p.initializer,seen);
+        else if(ts.isShorthandPropertyAssignment(p))value[p.name.text]=data(p.name,seen);
+      }
+      return value;
+    }
+    return unknown;
+  }
+  const teaching=/src\/learn\/content\/chamoru[^/]*\.[jt]sx?$/.test(name)||/\bChamoruWord\b/.test(text);
+  function visit(n) {
+    if(teaching && ts.isObjectLiteralExpression(n)) {
+      const fields=data(n);if('term' in fields) {
+        requireThat(typeof fields.term==='string','CHamoru teaching term must be static text');
+        teachingEntries.push({id:fields.id,term:fields.term,fields,strings:jsonStrings(fields),grids:letterGrids(fields)});return;
+      }
+    }
+    if(ts.isStringLiteralLike(n) && (teaching||chamoruCharacters(n.text)))strings.push(n.text);
+    if(ts.isObjectLiteralExpression(n)) {
+      const value=data(n),hasText=Object.keys(value).some(key=>/^(?:label|title|text|term|example|words|speech|spelling|cells|grid|board|rows)$/.test(key));
+      if(hasText && tagKeys.some(key=>key in value))requireThat(tagKeys.filter(key=>key in value).every(key=>validLanguage(value[key])),'Unresolved content language tag');
+      if(tagged(value)) {
+        requireThat(!('__unknownSpread' in value),'Unresolved spread in tagged content');
+        strings.push(...chamoruValues(value));grids.push(...letterGrids(value));
       }
     }
     ts.forEachChild(n,visit);
   }
-  visit(tree);return {strings,grids};
+  visit(tree);return {strings,grids,teachingEntries};
 }
-
-export function chamoruGrids(value, tagged=false) {
+export function chamoruGrids(value, active=false) {
   if(!value || typeof value!=='object')return [];
-  const active=tagged || (!Array.isArray(value) && chamoru(value.language??value.lang??value.locale));
+  if(!Array.isArray(value))active||=tagged(value);
   if(active)return letterGrids(value);
   return Object.values(value).flatMap(v=>chamoruGrids(v));
+}
+
+export function requireGridLanguages(value, language, key, puzzle=false) {
+  if(!value || typeof value!=='object')return;
+  puzzle ||= /(?:word.?search|crossword|word.?grid|builder|scramble)/i.test(value.kind??value.family??'');
+  if(!Array.isArray(value) && tagKeys.some(key=>key in value))requireThat(tagKeys.filter(key=>key in value).every(key=>validLanguage(value[key])),'Invalid grid language declaration');
+  const declared=Array.isArray(value)?language:(value.language??value.lang??value.locale??value.languages??language);
+  if(puzzle && Array.isArray(value) && value.every(row=>typeof row==='string') && letterGrids(value,true).length)requireThat(/^(?:cells|grid|board|rows)$/i.test(key??'') || declared!==undefined,'Puzzle grid needs a recognised container or language declaration');
+  if(letterGrids(key?{[key]:value}:value,validLanguage(declared)).length) {
+    // A child declaration can supply its own grid's language.
+    if(Array.isArray(value) && value.every(row=>typeof row==='string'||Array.isArray(row)&&row.every(c=>typeof c==='string')))requireThat(/^(?:cells|grid|board|rows)$/i.test(key??'') || validLanguage(declared),'Grid needs a recognised container or language declaration');
+  }
+  Object.entries(value).forEach(([name,v])=>requireGridLanguages(v,declared,Array.isArray(value)?key:name,puzzle));
 }
 
 /** Lists contain short words, not identifiers, paths, sentences or UI records.
@@ -212,24 +320,40 @@ export function shortWords(text) {
 }
 export function listString(text, excluded=[]) {
   const trimmed=text.trim().replace(/^\/\/\s*|^\/\*\s*|\s*\*\/$/g,'').replace(/^\/(.*)\/[a-z]*$/s,'$1');
-  const words=trimmed.split(/[\s,|;]+/).filter(Boolean);
-  if(words.length<3 || !words.every(shortWords))return false;
-  // Explicit list separators are stronger evidence than connective words.
-  if(/[,|;\n\t]/.test(trimmed) && trimmed.split(/[,|;\n\t]+/).every(part=>/^[\p{L}\p{M}'’-]+$/u.test(part.trim())))return true;
-  return !words.some(word=>safeFunctionWords(excluded).has(word.toLowerCase()));
+  try {const decoded=JSON.parse(trimmed);if(Array.isArray(decoded))return plainEntries(decoded).length>=3;}catch { /* Text list. */ }
+  const words=trimmed.split(/[\s,|;_]+/).map(word=>word.replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu,'')).filter(shortWords);
+  if(words.length<3)return false;
+  if(/[,|;\n\t_]/.test(trimmed)) {
+    const parts=trimmed.split(/[,|;\n\t_]+/).map(part=>part.trim().replace(/^\d+[.)]\s*/,'').replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu,''));
+    if(parts.filter(shortWords).length>=3)return true;
+  }
+  const functions=safeFunctionWords(excluded),flags=words.map(word=>functions.has(word.toLowerCase()));
+  let switches=0;for(let i=1;i<flags.length;i++)if(flags[i]!==flags[i-1])switches++;
+  const sentence=words.length>=5 && switches>=3 && new Set(words.filter((_,i)=>flags[i]).map(word=>word.toLowerCase())).size>=2;
+  return !sentence;
 }
 
 // Public English grammar vocabulary. It is disjoint from the current private
 // broad/core lists; runtime subtraction keeps that invariant under policy drift.
 export const functionWords = ["a", "an", "the", "and", "or", "of", "in", "on", "as", "is", "it", "its", "how", "why", "does", "into", "with", "at", "by", "for", "from", "to", "than", "that", "this", "these", "those", "are", "was", "were", "be", "been", "being", "can", "could", "do", "did", "has", "have", "had", "if", "not", "only", "our", "their", "them", "we", "you", "your", "which", "who", "what", "when", "where", "while", "will", "would"];
+const grammarCache=new WeakMap();
 function safeFunctionWords(excluded) {
+  if(grammarCache.has(excluded))return grammarCache.get(excluded);
   const forbidden=new Set(excluded.map(w=>w.toLowerCase()));
-  return new Set(functionWords.filter(w=>!forbidden.has(w)));
+  const safe=new Set(functionWords.filter(w=>!forbidden.has(w)));grammarCache.set(excluded,safe);return safe;
 }
+const broadTokenCache=new WeakMap();
 export function proseTokens(strings, excluded=[]) {
   const tokens=strings.flatMap(text=>text.toLowerCase().split(/\s+/)),functions=safeFunctionWords(excluded);
-  // Small arrays remain lists: one connective cannot excuse three leaked words.
-  return tokens.length>=12 && tokens.filter(token=>functions.has(token)).length/tokens.length>=0.25;
+  const flags=tokens.map(token=>functions.has(token));
+  // Require sentence-like interleaving, never a prefix/suffix cluster or repeated
+  // article affixes. Broad vocabulary must be under 20% of content tokens.
+  const content=tokens.filter((_,i)=>!flags[i]);
+  let broad=broadTokenCache.get(excluded);if(!broad){broad=new Set(excluded.map(w=>w.toLowerCase()));broadTokenCache.set(excluded,broad);}
+  const hits=content.filter(token=>broad.has(token)).length;
+  let switches=0;for(let i=1;i<flags.length;i++)if(flags[i]!==flags[i-1])switches++;
+  return tokens.length>=12 && flags.filter(Boolean).length/tokens.length>=0.25 && switches>=5 && hits/Math.max(1,content.length)<0.2;
+
 }
 
 /** Provenance is structural and item-local. A matching token elsewhere in the
@@ -237,7 +361,7 @@ export function proseTokens(strings, excluded=[]) {
  * manufacture authored provenance. Exact/core checks are independent of this.
  */
 export function tracedLibraryUnit(unit, library) {
-  if(!unit.library?.scope)return false;
+  if(!unit.library?.scope || !['terms','sounds'].includes(unit.library.field))return false;
   return unit.library.ids.some(id=>{
     const source=library.find(row=>row.id===id);
     if(!source)return false;
@@ -247,6 +371,17 @@ export function tracedLibraryUnit(unit, library) {
       return tokens.length>0 && tokens.every(token=>allowed.has(token));
     });
   });
+}
+
+/** Unknown tokens keep the entire unit strict. Only established body tokens
+ * may leave the list view; recognized authored metadata stays as a strict list.
+ */
+export function untracedLibraryUnit(unit,library) {
+  if(!unit.library?.scope || !['terms','sounds'].includes(unit.library.field))return unit;
+  const source=library.find(row=>row.id===unit.library.ids[0]);if(!source)return unit;
+  const all=new Set(unit.library.field==='sounds'?source.allSounds:source.allTokens);
+  if(!unit.every(text=>libraryNormalize(text).split(' ').filter(Boolean).every(token=>all.has(token))))return unit;
+  return unit.filter(text=>{const entry=[text];entry.library=unit.library;return !tracedLibraryUnit(entry,library);});
 }
 
 // Kept byte-for-byte equivalent to src/library/search.ts normalize. The source

@@ -37,12 +37,19 @@ const sourceRecords=['scowl','hafagpt-canonical'].map((id,i)=>{const file=i?'can
 writeFileSync(join(root,'scripts/words/sources.lock.json'),JSON.stringify({sources:sourceRecords}));
 const {bakeBank,checkSurfaces,independentlyVerify}=await import(pathToFileURL(join(root,'scripts/words/bake.mjs')));
 const review=await import(pathToFileURL(join(root,'scripts/words/review.mjs')));
-const {guardTree}=await import(pathToFileURL(join(root,'scripts/words/guard.mjs')));
+const {guardTree:rawGuardTree}=await import(pathToFileURL(join(root,'scripts/words/guard.mjs')));
+const testWorkingDirectory=process.cwd();
+const guardTree=(directory,p,receipts=[],options={})=>rawGuardTree(directory,p,receipts,{sourceRoot:process.cwd()===testWorkingDirectory?root:process.cwd(),...options});
 const {registrySource}=await import(pathToFileURL(join(root,'scripts/words/registry.mjs')));
 const {checkShippingTree}=await import(pathToFileURL(join(root,'scripts/words/shipping.mjs')));
 const {privatePath}=await import(pathToFileURL(join(root,'scripts/words/paths.mjs')));
 const {isPrivateWordFile}=await import(pathToFileURL(resolve(process.env.WORD_TEST_EXPORT_FILE??'scripts/export-public.mjs')));
-const {checkExport,checkRelease,verifyReleaseReceipt}=await import(pathToFileURL(join(root,'scripts/words/check.mjs')));
+const {checkExport,checkRelease:realCheckRelease,verifyReleaseReceipt}=await import(pathToFileURL(join(root,'scripts/words/check.mjs')));
+function syntheticIOSExport(command,args,options) {
+ assert.equal(command,process.execPath);assert.deepEqual(args.slice(1,6),['export','--platform','ios','--no-bytecode','--output-dir']);assert.equal(options.cwd,root);
+ writeFileSync(join(args.at(-1),'native.js'),'globalThis.safe="Native platform fixture";');
+}
+const checkRelease=(...args)=>realCheckRelease(...args,syntheticIOSExport);
 const {scanGrid,scanLetterWheel}=await import(pathToFileURL(join(root,'scripts/words/scan.mjs')));
 const {hermesStrings}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));
 const policy={scan:['COLD','ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE'],core:['COLD'],exact:['COLD'],lemmas:['COLD'],chamoruSensitive:['SYNTHETICHEADWORD'],canaries:['PRIVATECANARYNONWORD']};
@@ -242,12 +249,12 @@ for(const [name,contents] of [
 for(const [file,text] of [['content/words/puzzles.ts',"export const puzzles = ['COLD', 'REEF'];"],['content/words/puzzles.txt','COLD\nREEF']])test(`round2 admission ${file}`,()=>{const dir=join(scratch,'literal-admission');mkdirSync(join(dir,file,'..'),{recursive:true});writeFileSync(join(dir,file),text);try{assert.throws(()=>checkShippingTree(dir),/Unadmitted/);}finally{rmSync(dir,{recursive:true});}});
 for(const source of ["require.context('../scripts/words')","require.resolve('../scripts/words/core.mjs')","import '../scripts/./words/core.mjs';","import '../scripts//words/core.mjs';"])test(`round2 dependency ${source}`,()=>{const dir=join(scratch,'dependency');mkdirSync(join(dir,'src'),{recursive:true});writeFileSync(join(dir,'src/x.ts'),source);try{assert.throws(()=>checkShippingTree(dir),/Private word dependency/);}finally{rmSync(dir,{recursive:true});}});
 test('Hermes UTF16 string scan catches unconditional canary',()=>{const dir=join(scratch,'hbc-utf16');mkdirSync(dir);const source=join(scratch,'leak-utf16.js');writeFileSync(source,'globalThis.leak='+JSON.stringify([...policy.scan,policy.canaries[0]].join(' ')+' Å'));const r=spawnSync(hermesc,['-emit-binary','-out',join(dir,'main.hbc'),source],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);assert.throws(()=>guardTree(dir,policy),/canary/);});
-test('term exceptions survive ordinary app edits but reject new terms and list blobs',()=>{const dir=join(scratch,'term-exceptions');mkdirSync(dir);const file=join(dir,'entry-first.bin');const p={...policy,artifactTermExceptions:[{path:'entry-*.bin',terms:[{term:'COLD',check:'literal',reason:'Synthetic ordinary app prose',evidence:'synthetic-reviewed-context'},{term:'ALPHANONSENSE',check:'broad',reason:'Synthetic baseline collision',evidence:'synthetic-reviewed-context'}]}]};writeFileSync(file,'COLD ALPHANONSENSE ordinary app text');assert.equal(guardTree(dir,p).passed,true);writeFileSync(file,'COLD ALPHANONSENSE ordinary app text changed');assert.equal(guardTree(dir,p).passed,true);writeFileSync(file,'COLD ALPHANONSENSE BETANONSENSE GAMMANONSENSE DELTANONSENSE');assert.throws(()=>guardTree(dir,p),/leaked/);writeFileSync(file,policy.canaries[0]);assert.throws(()=>guardTree(dir,p),/canary/);writeFileSync(file,JSON.stringify(policy.scan));assert.throws(()=>guardTree(dir,p),/leaked/);});
+test('term exceptions are rejected after migration',()=>{const dir=join(scratch,'term-exception-migration');mkdirSync(dir);writeFileSync(join(dir,'data.txt'),'Synthetic');assert.throws(()=>guardTree(dir,{...policy,artifactTermExceptions:[]}),/Legacy artifact term exceptions/);});
 test('guard exceptions do not invalidate unchanged bank inputs',()=>{const d=input(),p={...policy,artifactTermExceptions:[],legacyArtifactSha256:['a'.repeat(64)],legacyArtifactSource:'changed inherited source, not word policy'};try{writeFileSync(policyFile,JSON.stringify(p));writeFileSync(lockFile,JSON.stringify({...lock,policySha256:sha256(readFileSync(policyFile))}));assert.equal(bakeBank(d).asset.words.length,1);}finally{writeFileSync(policyFile,JSON.stringify(policy));writeFileSync(lockFile,JSON.stringify(lock));}});
 test('dropping a rejected record preserves retained record reviews and family sample',()=>{const records=[word(),word('REED')],d=input(records),ev=d.evidence.reef;for(let i=0;i<2;i++){ev.reviews[i].items.find(r=>r.id==='reed').verdict='reject';ev.reviews[i]=seal(ev.reviews[i]);}rebind(ev);ev.lead.items.find(r=>r.id==='reed').decision='reject';d.words=[records[0]];d.surfaces[0].wordIds=['reef'];delete d.evidence.reed;assert.equal(bakeBank(d).asset.words.length,1);});
 test('separate batches bind their records in a larger bank',()=>{const d=input([word(),word('REED')]);d.evidence.reef=evidenceFor([d.words[0]]);d.evidence.reed=evidenceFor([d.words[1]]);assert.equal(bakeBank(d).asset.words.length,2);});
 test('CLI separate vocabulary prepares and bakes 300 words in two batches',()=>{const words=Array.from({length:300},(_,i)=>word('R'+String.fromCharCode(65+Math.floor(i/676),65+Math.floor(i/26)%26,65+i%26))),d={fixture:false,words,surfaces:[{id:'match',kind:'matching',wordIds:words.map(w=>w.id)}],canonicalTerms,policy,sourceDirectory:sources,evidence:{},reviewBatches:{}};for(let i=0;i<2;i++){const records=words.slice(i*250,(i+1)*250),file=join(scratch,`cli-input-${i}.private.json`),out=join(scratch,`cli-prepared-${i}`);writeFileSync(file,JSON.stringify({fixture:false,words:records,vocabulary:words}));const r=spawnSync(process.execPath,[join(root,'scripts/words/cli.mjs'),'prepare-words',file,policyFile,out,`batch-${i}`],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);const prepared=JSON.parse(readFileSync(join(out,'prepared.private.json')));assert.equal(prepared.batch.records.length,records.length);assert.equal(prepared.batch.vocabularySha256,digest(words));d.reviewBatches[`batch-${i}`]=evidenceFor(records,words,'word',prepared);for(const w of records)d.evidence[w.id]=`batch-${i}`;}assert.equal(bakeBank(d).asset.words.length,300);});
-for(const field of ['source','policySha256','scanListSha256','admission.full','admission.passed','web.passed','ios.passed','ios.sha256'])test(`clause release receipt ${field}`,()=>{initGit();const web=join(scratch,'release-web'),ios=join(scratch,'release-ios'),file=join(scratch,`receipt-${field}.private.json`);checkRelease(root,web,ios,file);const r=JSON.parse(readFileSync(file));const keys=field.split('.');let target=r;for(const k of keys.slice(0,-1))target=target[k];const key=keys.at(-1);target[key]=typeof target[key]==='boolean'?false:'a'.repeat(64);writeFileSync(file,JSON.stringify(r));assert.throws(()=>verifyReleaseReceipt(root,file,web,ios),/receipt/);});
+for(const field of ['iosJavaScript.passed','source','policySha256','scanListSha256','admission.full','admission.passed','web.passed','ios.passed','ios.sha256'])test(`clause release receipt ${field}`,()=>{initGit();const web=join(scratch,'release-web'),ios=join(scratch,'release-ios'),file=join(scratch,`receipt-${field}.private.json`);checkRelease(root,web,ios,file);const r=JSON.parse(readFileSync(file));const keys=field.split('.');let target=r;for(const k of keys.slice(0,-1))target=target[k];const key=keys.at(-1);target[key]=typeof target[key]==='boolean'?false:'a'.repeat(64);writeFileSync(file,JSON.stringify(r));assert.throws(()=>verifyReleaseReceipt(root,file,web,ios),/receipt/);});
 test('release and receipt refuse uncommitted source data',()=>{initGit();const file=join(root,'uncommitted.txt');writeFileSync(file,'Synthetic change');try{assert.throws(()=>checkRelease(root,join(scratch,'release-web'),join(scratch,'release-ios'),join(scratch,'dirty-receipt')),/clean source/);assert.throws(()=>verifyReleaseReceipt(root,join(scratch,'release-receipt.private.json'),join(scratch,'release-web'),join(scratch,'release-ios')),/clean source/);}finally{rmSync(file);}});
 test('delivery commands call release then receipt immediately before action',async()=>{const {deliver}=await import(pathToFileURL(join(root,'scripts/words/delivery.mjs')));const env={LITTLE_ISLAND_WORD_WEB_ARTIFACT:'web',LITTLE_ISLAND_WORD_IOS_ARTIFACT:'ios',LITTLE_ISLAND_WORD_RELEASE_RECEIPT:'private-receipt'};for(const platform of ['web','ios']){const calls=[];assert.equal(deliver(platform,['synthetic-delivery'],root,env,(cmd,args)=>{calls.push([cmd,...args]);return {status:0};}),0);assert.deepEqual(calls,[['npm','run','check:words:release','--','web','ios','private-receipt'],['npm','run','check:words:receipt','--','private-receipt','web','ios'],['synthetic-delivery']]);for(const failed of ['check:words:release','check:words:receipt']){const rejected=[];assert.throws(()=>deliver(platform,['synthetic-delivery'],root,env,(cmd,args)=>{rejected.push(cmd);return {status:args.includes(failed)?1:0};}),/Delivery blocked/);assert.ok(!rejected.includes('synthetic-delivery'));}}});
 test('native preview build and npm delivery scripts are gated',()=>{const scripts=JSON.parse(readFileSync(process.env.WORD_TEST_PACKAGE_FILE??resolve('package.json'))).scripts;assert.match(scripts['deliver:web'],/words\/delivery.mjs web/);assert.match(scripts['deliver:ios'],/words\/delivery.mjs ios/);const native=readFileSync(resolve('scripts/ios-preview-bundle.mjs'),'utf8');assert.match(native,/checkShippingTree\(cwd,env.LITTLE_ISLAND_WORD_RECEIPTS,\{full:true\}\)/);assert.match(native,/putBack\(\);\s*gateDelivery\(cwd,env\)/);});
@@ -258,18 +265,18 @@ test('word-search rejects unscanned letters',()=>{const d=input();d.surfaces=[{i
 for(const field of ['topic','cells'])test(`runtime rejects object-valued ${field}`,()=>{const {dir,name,asset}=stagedBank();try{if(field==='topic')asset.words[0].topic={core:['COLD']};else {asset.surfaces[0]={id:'search',kind:'word-search',wordIds:['reef'],cells:{scan:['COLD']},listed:[]};}const bytes=JSON.stringify(asset);writeFileSync(join(dir,name),bytes);const manifest=JSON.parse(readFileSync(join(dir,'content/words/banks.manifest.json')));manifest.banks[0].sha256=sha256(bytes);manifest.banks[0].bytes=Buffer.byteLength(bytes);writeFileSync(join(dir,'content/words/banks.manifest.json'),JSON.stringify(manifest));assert.throws(()=>checkShippingTree(dir),/Private/);}finally{rmSync(dir,{recursive:true,force:true});}});
 
 test('split compressed CI secret is decoded as one bounded policy',async()=>{const {gzipSync}=await import('node:zlib');const encoded=gzipSync(Buffer.from(JSON.stringify(policy))).toString('base64');const dir=join(scratch,'split-secret-export');mkdirSync(dir);writeFileSync(join(dir,'app.js'),'hello');const r=spawnSync(process.execPath,[join(root,'scripts/words/check.mjs'),'export',dir],{cwd:root,encoding:'utf8',env:{...process.env,LITTLE_ISLAND_WORD_POLICY_LOCK:'',LITTLE_ISLAND_WORD_POLICY_JSON:'',LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64:encoded.slice(0,40),LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64_2:encoded.slice(40)}});assert.equal(r.status,0,r.stdout+r.stderr);assert.equal(JSON.parse(r.stdout).guard.policyDataChecked,true);});
-for(const [name,value,rx] of [['array',{},/Invalid artifact term exceptions/],['path',[{path:'../app.js',terms:[]}],/exception path/],['review',[{path:'app.js',terms:[{term:'COLD',check:'literal',reason:'',evidence:''}]}],/Unreviewed artifact/]])test(`guard exception requires ${name}`,()=>{const dir=join(scratch,`invalid-exception-${name}`);mkdirSync(dir);writeFileSync(join(dir,'app.js'),'hello');assert.throws(()=>guardTree(dir,{...policy,artifactTermExceptions:value}),rx);});
+for(const [name,value,rx] of [['array',{},/Legacy artifact term exceptions/],['path',[{path:'../app.js',terms:[]}],/Legacy artifact term exceptions/],['review',[{path:'app.js',terms:[{term:'COLD',check:'literal',reason:'',evidence:''}]}],/Legacy artifact term exceptions/]])test(`guard exception requires ${name}`,()=>{const dir=join(scratch,`invalid-exception-${name}`);mkdirSync(dir);writeFileSync(join(dir,'app.js'),'hello');assert.throws(()=>guardTree(dir,{...policy,artifactTermExceptions:value}),rx);});
 test('frozen inherited pack cannot admit a changed record',()=>{const dir=join(scratch,'frozen-pack');mkdirSync(join(dir,'content/words'),{recursive:true});writeFileSync(join(dir,'content/words/legacy-word-rescue.ts'),"export const legacyWordRescue=[['COLD','Synthetic','Synthetic']];");assert.throws(()=>checkShippingTree(dir),/Unadmitted edit/);});
 test('runtime wheel letters must be a string',()=>{const {dir,name,asset}=stagedBank();try{asset.surfaces=[{id:'wheel',kind:'wheel',wordIds:['reef'],letters:{scan:['COLD']}}];const bytes=JSON.stringify(asset);writeFileSync(join(dir,name),bytes);const manifest=JSON.parse(readFileSync(join(dir,'content/words/banks.manifest.json')));manifest.banks[0].sha256=sha256(bytes);manifest.banks[0].bytes=Buffer.byteLength(bytes);writeFileSync(join(dir,'content/words/banks.manifest.json'),JSON.stringify(manifest));assert.throws(()=>checkShippingTree(dir),/Private/);}finally{rmSync(dir,{recursive:true,force:true});}});
 
 test('runtime listed entries reject private extras on a valid search surface',()=>{const {dir,name,asset}=stagedBank();try{asset.surfaces=[{id:'search',kind:'word-search',wordIds:['reef'],cells:[['R','E','E','F']],listed:[{wordId:'reef',answer:'REEF',cells:[[0,0],[0,1],[0,2],[0,3]],reviewNote:'PRIVATE'}]}];const bytes=JSON.stringify(asset);writeFileSync(join(dir,name),bytes);const manifest=JSON.parse(readFileSync(join(dir,'content/words/banks.manifest.json')));manifest.banks[0].sha256=sha256(bytes);manifest.banks[0].bytes=Buffer.byteLength(bytes);writeFileSync(join(dir,'content/words/banks.manifest.json'),JSON.stringify(manifest));assert.throws(()=>checkShippingTree(dir),/listed path/);}finally{rmSync(dir,{recursive:true,force:true});}});
 
-test('artifact exceptions cannot exempt case-folded hashes or full lists',()=>{const dir=join(scratch,'folded-unconditional');mkdirSync(dir);const p={...policy,artifactTermExceptions:[{path:'app.js',terms:[{term:'COLD',check:'literal',reason:'Synthetic inherited text',evidence:'synthetic-context'}]}]};for(const text of [lock.scanListSha256.toUpperCase(),JSON.stringify(policy.core).toLowerCase()]){writeFileSync(join(dir,'app.js'),'globalThis.text='+JSON.stringify(text));assert.throws(()=>guardTree(dir,p),/leaked/);}});
+test('artifact exceptions cannot exempt case-folded hashes or full lists',()=>{const dir=join(scratch,'folded-unconditional');mkdirSync(dir);const p={...policy,artifactTermExceptions:[{path:'app.js',terms:[{term:'COLD',check:'literal',reason:'Synthetic inherited text',evidence:'synthetic-context'}]}]};for(const text of [lock.scanListSha256.toUpperCase(),JSON.stringify(policy.core).toLowerCase()]){writeFileSync(join(dir,'app.js'),'globalThis.text='+JSON.stringify(text));assert.throws(()=>guardTree(dir,p),/leaked|Legacy artifact term exceptions/);}});
 
 // W-guard: placeholder terms only. These cases describe exported meanings,
 // never the actual private lists or a content approval.
 function exportCase(name, file, text, p=policy, rejected=false) {
- test(name,()=>{const dir=join(scratch,name.replaceAll(' ','-'));mkdirSync(dir);writeFileSync(join(dir,file),text);if(rejected)assert.throws(()=>guardTree(dir,p),/leaked/);else assert.equal(guardTree(dir,p).passed,true);});
+ test(name,()=>{const dir=join(scratch,name.replaceAll(' ','-'));mkdirSync(dir);writeFileSync(join(dir,file),text);if(rejected)assert.throws(()=>guardTree(dir,p),/leaked|forbidden|exception|language/);else assert.equal(guardTree(dir,p).passed,true);});
 }
 exportCase('guard longer visible word','app.js','globalThis.label="COLDER";');
 exportCase('guard minified identifiers','app.js','function COLD(a){const ALPHANONSENSE=1,BETANONSENSE=2,GAMMANONSENSE=3;return a+ALPHANONSENSE+BETANONSENSE+GAMMANONSENSE;}');
@@ -283,11 +290,11 @@ exportCase('guard broad unquoted keys','app.js','globalThis.words={ALPHANONSENSE
 exportCase('guard broad JSON words','bank.json','["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"]',policy,true);
 exportCase('guard Unicode letter boundaries','app.js','globalThis.label="éCOLD COLDñ";');
 exportCase('guard punctuation boundaries','app.js','globalThis.label="(cold)!";',policy,true);
-exportCase('guard actual word grid','bank.json',JSON.stringify({cells:[['C','O','L','D']]}),policy,true);
-exportCase('guard reversed word grid','bank.json',JSON.stringify({cells:[['D','L','O','C']]}),policy,true);
-exportCase('guard vertical word grid','bank.json',JSON.stringify({cells:[['C'],['O'],['L'],['D']]}),policy,true);
+exportCase('guard actual word grid','bank.json',JSON.stringify({language:'en',cells:[['C','O','L','D']]}),policy,true);
+exportCase('guard reversed word grid','bank.json',JSON.stringify({language:'en',cells:[['D','L','O','C']]}),policy,true);
+exportCase('guard vertical word grid','bank.json',JSON.stringify({language:'en',cells:[['C'],['O'],['L'],['D']]}),policy,true);
 exportCase('guard benign media encoding','picture.png',Buffer.from('noiseCOLDnoiseALPHANONSENSEnoiseBETANONSENSEnoiseGAMMANONSENSEnoise'));
-exportCase('guard private blob despite exceptions','app.js','globalThis.leak='+JSON.stringify(JSON.stringify(policy.core).toLowerCase()),{...policy,artifactStringExceptions:[{path:'app.js',strings:[{sha256:sha256(JSON.stringify(policy.core).toLowerCase()),occurrences:1,terms:[{term:'COLD',check:'literal',reason:'Synthetic reviewed collision',evidence:'synthetic'}]}]}]},true);
+exportCase('guard private blob despite exceptions','app.js','globalThis.leak='+JSON.stringify(JSON.stringify(policy.chamoruSensitive).toLowerCase()),{...policy,artifactStringExceptions:[]},true);
 for(const [name,source,fail] of [
  ['whole word','globalThis.label="COLD";',true],
  ['regex fragment','globalThis.pattern=/ALPHANONSENSE|BETANONSENSE|GAMMANONSENSE/;',true],
@@ -314,11 +321,11 @@ function packedCase(name,encoded,decoded,rejected=false,objectives=0) {
 }
 packedCase('guard numeric encoded pack collision','COLD',{values:[2,14,11,3]});
 packedCase('guard base64 numeric pack collision','XCOLDbXALPHANONSENSEBETANONSENSEGAMMANONSENSEZ==',{values:[1,2,3]});
-packedCase('guard decoded packed word grid','numeric-code',{cells:[['C','O','L','D']]},true);
+packedCase('guard decoded packed word grid','numeric-code',{language:'en',cells:[['C','O','L','D']]},true);
 packedCase('guard decoded packed visible word','numeric-code',{clue:'COLD'},true);
 exportCase('guard partial list comment','app.js','// ALPHANONSENSE BETANONSENSE GAMMANONSENSE\nglobalThis.label="safe";',policy,true);
 exportCase('guard row string grid','bank.json',JSON.stringify({grid:['COLD']}),policy,true);
-exportCase('guard word list is not a grid','bank.json',JSON.stringify({words:['XCOL','DXXX']}));
+exportCase('guard word list is not a grid','bank.json',JSON.stringify({language:'en',words:['XCOL','DXXX']}));
 test('guard malformed JavaScript fails closed',()=>{const dir=join(scratch,'invalid-js');mkdirSync(dir);writeFileSync(join(dir,'app.js'),'globalThis.x="unterminated');assert.throws(()=>guardTree(dir,policy),/Cannot parse exported JavaScript/);});
 test('guard malformed JSON fails closed',()=>{const dir=join(scratch,'invalid-json');mkdirSync(dir);writeFileSync(join(dir,'bank.json'),'{');assert.throws(()=>guardTree(dir,policy),/Cannot parse exported JSON/);});
 for(const kind of ['header','version','file length','tables','overflow','string range'])test(`guard Hermes invalid ${kind}`,()=>{
@@ -338,11 +345,11 @@ for(const kind of ['header','version','file length','tables','overflow','string 
  assert.throws(()=>hermesStrings(bytes),e=>e.message===messages[kind]);
 });
 function stringPolicy(texts) {
- return {...policy,artifactStringExceptions:[{path:'app.js',strings:texts.map(text=>({sha256:sha256(text),occurrences:1,terms:[...policy.scan.map(term=>({term,check:'broad',reason:'Synthetic inherited collision',evidence:'synthetic'})),{term:'COLD',check:'literal',reason:'Synthetic inherited collision',evidence:'synthetic'}]}))}]};
+ return {...policy,artifactStringExceptions:[{path:'app.js',strings:texts.map(text=>({sha256:sha256(text),occurrences:1,terms:policy.scan.filter(term=>!policy.core.includes(term)).map(term=>({term,check:'broad',reason:'Synthetic inherited collision',evidence:'synthetic'}))}))}]};
 }
-exportCase('guard exact reviewed string','app.js','globalThis.label="COLD safe";',stringPolicy(['COLD safe']));
-exportCase('guard changed reviewed string rejected','app.js','globalThis.label="COLD new";',stringPolicy(['COLD safe']),true);
-exportCase('guard additional reviewed occurrence rejected','app.js','globalThis.label="COLD safe";globalThis.another="COLD safe";',stringPolicy(['COLD safe']),true);
+exportCase('guard exact reviewed string','app.js','globalThis.label="ALPHANONSENSE BETANONSENSE GAMMANONSENSE";',stringPolicy(['ALPHANONSENSE BETANONSENSE GAMMANONSENSE']));
+exportCase('guard changed reviewed string rejected','app.js','globalThis.label="ALPHANONSENSE BETANONSENSE GAMMANONSENSE extra";',stringPolicy(['ALPHANONSENSE BETANONSENSE GAMMANONSENSE']),true);
+exportCase('guard additional reviewed occurrence rejected','app.js','globalThis.label="ALPHANONSENSE BETANONSENSE GAMMANONSENSE";globalThis.another="ALPHANONSENSE BETANONSENSE GAMMANONSENSE";',stringPolicy(['ALPHANONSENSE BETANONSENSE GAMMANONSENSE']),true);
 exportCase('guard legacy semantic term exception cannot hide word','app.js','globalThis.label="COLD new";',{...policy,artifactTermExceptions:[{path:'app.js',terms:[{term:'COLD',check:'literal',reason:'Synthetic inherited collision',evidence:'synthetic'}]}]},true);
 exportCase('guard additional broad array despite reviewed words','app.js','globalThis.old=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];globalThis.leak=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];',stringPolicy(['ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE',JSON.stringify(['ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE'])]),true);
 for(const [name,value,rx] of [
@@ -375,7 +382,7 @@ exportCase('guard HTML key map partial list','index.html','<script>globalThis.wo
 // Round 2 uses only placeholder terms. Scope is part of the safety contract.
 exportCase('guard independent UI strings are advisory','app.js','globalThis.a="ALPHANONSENSE";globalThis.b="BETANONSENSE";globalThis.c="GAMMANONSENSE";');
 exportCase('guard independent objects do not aggregate','app.js','globalThis.a={label:"ALPHANONSENSE"};globalThis.b={label:"BETANONSENSE"};globalThis.c={label:"GAMMANONSENSE"};');
-exportCase('guard independent JSON records do not aggregate','bank.json','[{"label":"ALPHANONSENSE"},{"label":"BETANONSENSE"},{"label":"GAMMANONSENSE"}]');
+exportCase('guard independent JSON records do not aggregate','bank.json','[{"label":"ALPHANONSENSE","id":1},{"label":"BETANONSENSE","id":2},{"label":"GAMMANONSENSE","id":3}]');
 exportCase('guard single string partial list','app.js','globalThis.a="ALPHANONSENSE BETANONSENSE GAMMANONSENSE";',policy,true);
 exportCase('guard English sensitive headword allowed','app.js','globalThis.label="SYNTHETICHEADWORD";');
 exportCase('guard CHamoru tagged label','bank.json','{"language":"ch","label":"SYNTHETICHEADWORD"}',policy,true);
@@ -447,7 +454,7 @@ exportCase('guard comma prose without final stop is advisory','app.js','globalTh
 exportCase('guard comma list with connective word','app.js','globalThis.leak="ALPHANONSENSE, BETANONSENSE, the, GAMMANONSENSE";',policy,true);
 
 const boundaryTokens=['the','and','of','ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE',...Array(6).fill('NEUTRAL')];
-exportCase('guard tokenized prose at quarter threshold','app.js','globalThis.tokens='+JSON.stringify(boundaryTokens)+';');
+exportCase('guard tokenized prose at quarter threshold','app.js','globalThis.tokens='+JSON.stringify(boundaryTokens)+';',policy,true);
 exportCase('guard padded list below quarter threshold','app.js','globalThis.tokens='+JSON.stringify([...boundaryTokens,'NEUTRAL'])+';',policy,true);
 exportCase('guard short list with one function word remains strict','app.js','globalThis.tokens=["the","ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];',policy,true);
 exportCase('guard private function word overlap cannot excuse list','app.js','globalThis.tokens='+JSON.stringify(boundaryTokens)+';',{...policy,scan:[...policy.scan,'THE','AND','OF']},true);
@@ -463,30 +470,216 @@ function libraryTraceCase(name,source,rejected=false,sourceTitle='ALPHANONSENSE 
   mkdirSync(join(sourceRoot,'src/library'),{recursive:true});mkdirSync(join(sourceRoot,'content/library'),{recursive:true});mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
   writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),'export const chamoruWords=[];');
   cpSync(resolve('src/library/search.ts'),join(sourceRoot,'src/library/search.ts'));
-  const authored=[{id:'synthetic-item',title:sourceTitle,aliases:[],tags:[]}];
+  const authored=[{language:'en',id:'synthetic-item',title:sourceTitle,aliases:[],tags:[]}];
   writeFileSync(join(sourceRoot,'content/library/items.json'),JSON.stringify(authored));
-  if(indexOnly)writeFileSync(join(sourceRoot,'src/library/catalog.generated.json'),JSON.stringify({items:[],index:[{id:'other-item',terms:['alphanonsense','betanonsense','gammanonsense']}]}));
+  if(indexOnly)writeFileSync(join(sourceRoot,'src/library/catalog.generated.json'),JSON.stringify({items:[],preview:true,bytes:0,fixtures:[],index:[{id:'other-item',terms:['alphanonsense','betanonsense','gammanonsense']}]}));
   writeFileSync(join(dir,source.startsWith('globalThis')?'data.js':'data.json'),source);
-  if(rejected)assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/leaked|derive Library/);else assert.equal(guardTree(dir,policy,[],{sourceRoot}).passed,true);
+  if(rejected)assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/leaked|derive Library|language declaration/);else assert.equal(guardTree(dir,policy,[],{sourceRoot}).passed,true);
  });
 }
-const tracedRecord=JSON.stringify({index:[{id:'synthetic-item',terms:['alphanonsense','betanonsense','gammanonsense']}]});
+const tracedRecord=JSON.stringify({items:[],preview:true,bytes:0,fixtures:[],index:[{id:'synthetic-item',terms:['alphanonsense','betanonsense','gammanonsense']}]});
 libraryTraceCase('guard Library traced tokens advisory',tracedRecord,false,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
 libraryTraceCase('guard Library planted untraceable token',tracedRecord,true,'The ALPHANONSENSE is BETANONSENSE rather than NEUTRAL.');
-libraryTraceCase('guard Library unattached token array',JSON.stringify({index:[{id:'synthetic-item',terms:['neutral']}],stray:{id:'synthetic-item',terms:['alphanonsense','betanonsense','gammanonsense']}}),true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
-libraryTraceCase('guard Library other item cannot provide tokens',JSON.stringify({index:[{id:'other-item',terms:['alphanonsense','betanonsense','gammanonsense']}]}),true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
-libraryTraceCase('guard Library generated terms are not their own source',JSON.stringify({index:[{id:'other-item',terms:['alphanonsense','betanonsense','gammanonsense']}]}),true,'A neutral source.',true);
+libraryTraceCase('guard Library unattached token array',JSON.stringify({items:[],preview:true,bytes:0,fixtures:[],index:[{language:'en',id:'synthetic-item',terms:['neutral']}],stray:{id:'synthetic-item',terms:['alphanonsense','betanonsense','gammanonsense']}}),true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
+libraryTraceCase('guard Library other item cannot provide tokens',JSON.stringify({items:[],preview:true,bytes:0,fixtures:[],index:[{id:'other-item',terms:['alphanonsense','betanonsense','gammanonsense']}]}),true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
+libraryTraceCase('guard Library generated terms are not their own source',JSON.stringify({items:[],preview:true,bytes:0,fixtures:[],index:[{id:'other-item',terms:['alphanonsense','betanonsense','gammanonsense']}]}),true,'A neutral source.',true);
 libraryTraceCase('guard Library authored list string remains strict',tracedRecord,true);
-libraryTraceCase('guard Library core word remains blocked',JSON.stringify({index:[{id:'synthetic-item',terms:['cold']}]}),true,'The COLD word remains blocked.');
+libraryTraceCase('guard Library core word remains blocked',JSON.stringify({items:[],preview:true,bytes:0,fixtures:[],index:[{id:'synthetic-item',terms:['cold']}]}),true,'The COLD word remains blocked.');
 test('guard Library malformed provenance fails closed',()=>{
  const sourceRoot=join(scratch,'library-invalid'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/library'),{recursive:true});mkdirSync(join(sourceRoot,'content/library'),{recursive:true});mkdirSync(dir);
- cpSync(resolve('src/library/search.ts'),join(sourceRoot,'src/library/search.ts'));writeFileSync(join(sourceRoot,'content/library/items.json'),'{');writeFileSync(join(dir,'data.json'),'{"index":[]}');assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/Cannot derive Library token provenance/);
+ cpSync(resolve('src/library/search.ts'),join(sourceRoot,'src/library/search.ts'));writeFileSync(join(sourceRoot,'content/library/items.json'),'{');writeFileSync(join(dir,'data.json'),'{"items":[],"preview":true,"bytes":0,"fixtures":[],"index":[]}');assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/Cannot derive Library token provenance/);
 });
 
 libraryTraceCase('guard Library JS traced tokens advisory','globalThis.catalog='+tracedRecord+';',false,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
 libraryTraceCase('guard Library JS planted untraceable token','globalThis.catalog='+tracedRecord+';',true,'The ALPHANONSENSE is BETANONSENSE rather than NEUTRAL.');
-libraryTraceCase('guard Library JS unattached token array','globalThis.data='+JSON.stringify({index:[{id:'synthetic-item',terms:['neutral']}],stray:{id:'synthetic-item',terms:['alphanonsense','betanonsense','gammanonsense']}})+';',true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
+libraryTraceCase('guard Library JS unattached token array','globalThis.data='+JSON.stringify({items:[],preview:true,bytes:0,fixtures:[],index:[{language:'en',id:'synthetic-item',terms:['neutral']}],stray:{id:'synthetic-item',terms:['alphanonsense','betanonsense','gammanonsense']}})+';',true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
 test('guard Library tokenizer drift fails closed',()=>{
  const sourceRoot=join(scratch,'library-tokenizer-drift'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/library'),{recursive:true});mkdirSync(join(sourceRoot,'content/library'),{recursive:true});mkdirSync(dir);
- writeFileSync(join(sourceRoot,'src/library/search.ts'),'export const normalize=s=>s.toUpperCase();export const phonetic=s=>s;');writeFileSync(join(sourceRoot,'content/library/items.json'),JSON.stringify([{id:'one',title:'Plain source prose.'}]));writeFileSync(join(dir,'data.json'),'{"index":[]}');assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/Cannot derive Library token provenance/);
+ writeFileSync(join(sourceRoot,'src/library/search.ts'),'export const normalize=s=>s.toUpperCase();export const phonetic=s=>s;');writeFileSync(join(sourceRoot,'content/library/items.json'),JSON.stringify([{id:'one',title:'Plain source prose.'}]));writeFileSync(join(dir,'data.json'),'{"items":[],"preview":true,"bytes":0,"fixtures":[],"index":[]}');assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/Cannot derive Library token provenance/);
 });
+
+// Round 3: review-derived negative fixtures contain synthetic vocabulary only.
+const r3words=['ALPHANONSENSE','BETANONSENSE','GAMMANONSENSE'];
+for(const [shape,value] of [
+ ['empty',[...r3words,'']],['weights',[r3words[0],1,r3words[1],2,r3words[2],3]],
+ ['null',[...r3words,null]],['long',[...r3words,'a longer odd entry']],
+ ['records',r3words.map(w=>({w}))],
+])for(const kind of ['js','json'])exportCase(`R3 odd ${shape} ${kind}`,`data.${kind}`,kind==='js'?`globalThis.words=${JSON.stringify(value)};`:JSON.stringify({words:value}),policy,true);
+for(const [shape,value] of [
+ ['encoded',JSON.stringify(r3words)],['csv',r3words.join(', ')+'.'],
+ ['tsv',r3words.map((w,i)=>w+'\t'+i).join('\n')],['numbered',r3words.map((w,i)=>`${i+1}. ${w}`).join('\n')],
+ ['pipe',r3words.join('|')+'|12'],['snake',r3words.join('_')],
+])exportCase(`R3 list ${shape}`,'data.js',`globalThis.words=${JSON.stringify(value)};`,policy,true);
+for(const [name,tokens] of [['cluster',[...r3words,...Array(6).fill('NEUTRAL'),'the','of','and']],['affix',r3words.flatMap(w=>[`${w} the`,`${w} the`])]])exportCase(`R3 prose padding ${name}`,'data.js',`globalThis.words=${JSON.stringify(tokens)};`,policy,true);
+const sentenceTokens='the plain bird is on the wide branch and a quiet wind is in the garden with our small family'.split(' ');
+exportCase('R3 readable interleaving','data.js',`globalThis.tokens=${JSON.stringify(sentenceTokens)};`);
+for(const extension of ['md','csv','tsv','map','yml','htm','jsx','unknown','png'])exportCase(`R3 text extension ${extension}`,`data.${extension}`,'Tap COLD now',policy,true);
+exportCase('R3 actual binary media','data.png',Buffer.from([137,80,78,71,0,13,10,26,10]));
+for(const attribute of ['content','value'])exportCase(`R3 HTML ${attribute}`,'data.html',`<meta ${attribute}="Tap COLD now">`,policy,true);
+const sensitivePolicy={...policy,chamoruSensitive:['KAPSENSE','UNUSEDCHAMORU']};
+for(const text of ['Håfa KAPSENSE','aʼa KAPSENSE'])exportCase(`R3 characters ${text.codePointAt(0)} ${text.codePointAt(1)}`,'data.js',`globalThis.label=${JSON.stringify(text)};`,sensitivePolicy,true);
+for(const tag of [{locale:'ch-GU'},{languages:['en','cha']},{language:'chamoru'}])exportCase(`R3 tag ${JSON.stringify(tag)}`,'data.json',JSON.stringify({...tag,label:'KAPSENSE'}),sensitivePolicy,true);
+function r3source(name,code,rejected=true,path='src/learn/content/phrases.ts') {
+ test(name,()=>{
+  const sourceRoot=join(scratch,name.replaceAll(' ','-')),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
+  writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),'export const words=[];');
+  mkdirSync(join(sourceRoot,path,'..'),{recursive:true});writeFileSync(join(sourceRoot,path),code);writeFileSync(join(dir,'data.js'),'globalThis.safe=1;');
+  if(rejected)assert.throws(()=>guardTree(dir,sensitivePolicy,[],{sourceRoot}),/blocked-chamoru|Unresolved|static text/);else assert.equal(guardTree(dir,sensitivePolicy,[],{sourceRoot}).passed,true);
+ });
+}
+r3source('R3 source constant','const CH="ch";export const rows=[{language:CH,label:"KAPSENSE"}];');
+r3source('R3 source shorthand','const language="ch";export const rows=[{language,label:"KAPSENSE"}];');
+r3source('R3 source spread','const tag={locale:"ch-GU"};export const rows=[{...tag,label:"KAPSENSE"}];');
+r3source('R3 source unresolved','export const rows=[{language:choose(),label:"KAPSENSE"}];');
+r3source('R3 source unresolved spread','export const rows=[{language:"ch",...choose(),label:"Safe"}];');
+r3source('R3 teaching example','export const rows=[{term:"Plain",example:"KAPSENSE"}];',true,'src/learn/content/chamoru.ts');
+r3source('R3 teaching sibling','export const rows=[{term:"KAPSENSE"}];',true,'src/learn/content/chamoru-phrases.ts');
+r3source('R3 teaching type','import type {ChamoruWord} from "./types";export const rows:ChamoruWord[]=[{term:"KAPSENSE"}];');
+r3source('R3 source content root','export const rows=[{language:"ch",label:"KAPSENSE"}];',true,'content/phrases.ts');
+r3source('R3 source speech root','export const rows=[{language:"ch",label:"KAPSENSE"}];',true,'scripts/learn/phrases.ts');
+r3source('R3 source English','export const rows=[{language:"en",label:"KAPSENSE"}];',false);
+for(const [name,grid] of [
+ ['lower',[['c','o','l','d']]],['empty',[['c','o','l','d','']]],['dot',[['c','o','l','d','.']]],['rows',['cold']],['vertical',[['c'],['o'],['l'],['d']]],
+])for(const kind of ['js','json'])exportCase(`R3 grid ${name} ${kind}`,`data.${kind}`,kind==='js'?`globalThis.grid=${JSON.stringify(grid)};`:JSON.stringify({language:'en',rows:grid}),policy,true);
+exportCase('R3 missing grid language','data.json',JSON.stringify({odd:[['r','e','e','f']]}),policy,true);
+for(const check of ['literal','broad'])test(`R3 core exception forbidden ${check}`,()=>{
+ const dir=join(scratch,`core-exception-${check}`);mkdirSync(dir);writeFileSync(join(dir,'data.js'),'globalThis.label="Tap COLD now";');
+ assert.throws(()=>guardTree(dir,{...policy,artifactStringExceptions:[{path:'data.js',strings:[{sha256:sha256('Tap COLD now'),occurrences:1,terms:[{term:'COLD',check,reason:'Synthetic',evidence:'Synthetic'}]}]}]}),/Unreviewed artifact string exception/);
+});
+test('R3 legacy fallback exception forbidden',()=>{const dir=join(scratch,'legacy-fallback');mkdirSync(dir);writeFileSync(join(dir,'data.txt'),'COLD');assert.throws(()=>guardTree(dir,{...policy,artifactTermExceptions:[{path:'*',terms:[{term:'COLD',check:'literal',reason:'Synthetic',evidence:'Synthetic'}]}]}),/Legacy artifact term exceptions/);});
+for(const kind of ['array','object'])test(`R3 Hermes native ${kind} probe`,()=>{
+ initGit();const web=join(scratch,'release-web'),ios=join(scratch,'release-ios');
+ const code=`globalThis.w=${kind==='array'?JSON.stringify(r3words):'{ALPHANONSENSE:1,BETANONSENSE:1,GAMMANONSENSE:1}'};`;
+ const input=join(scratch,`native-${kind}.js`);writeFileSync(input,code);
+ const r=spawnSync(hermesc,['-emit-binary','-out',join(ios,'native.hbc'),input],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);
+ assert.throws(()=>realCheckRelease(root,web,ios,join(scratch,`native-${kind}-receipt`),(cmd,args,opts)=>{syntheticIOSExport(cmd,args,opts);writeFileSync(join(args.at(-1),'native.js'),code);}),/partial-list/);
+ rmSync(join(ios,'native.hbc'));
+});
+test('R3 native export failure closes gate',()=>{initGit();assert.throws(()=>realCheckRelease(root,join(scratch,'release-web'),join(scratch,'release-ios'),join(scratch,'native-export-failure'),()=>{throw new Error('Synthetic exporter failure');}),/exporter failure/);});
+const {proseTokens:classifyProse}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));
+test('R3 prose quarter positive',()=>assert.equal(classifyProse(['the','bird','is','near','a','garden',...Array(6).fill('neutral')],policy.scan),true));
+test('R3 prose ratio negative',()=>assert.equal(classifyProse(['the','bird','is','near','a','garden',...Array(7).fill('neutral')],policy.scan),false));
+test('R3 prose minimum negative',()=>assert.equal(classifyProse(['the','bird','is','near','a','garden','is','green','and','wide'],policy.scan),false));
+for(const [field,value] of [['tags',r3words],['aliases',r3words]])test(`R3 Library authored ${field}`,()=>{
+ const sourceRoot=join(scratch,`authored-${field}`),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/library'),{recursive:true});mkdirSync(join(sourceRoot,'content/library'),{recursive:true});mkdirSync(dir);
+ cpSync(resolve('src/library/search.ts'),join(sourceRoot,'src/library/search.ts'));
+ writeFileSync(join(sourceRoot,'content/library/items.json'),JSON.stringify([{id:'one',title:'A safe source.',[field]:value}]));
+ writeFileSync(join(dir,'data.json'),JSON.stringify({items:[],index:[{id:'one',terms:value}],preview:true,bytes:0,fixtures:[]}));
+ assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/blocked-source-text/);
+});
+libraryTraceCase('R3 Library authored field no trace',JSON.stringify({items:[],index:[{id:'synthetic-item',tags:r3words.map(w=>w.toLowerCase())}],preview:true,bytes:0,fixtures:[]}),true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
+libraryTraceCase('R3 Library nearest id',JSON.stringify({items:[],index:[{id:'synthetic-item',nested:{id:'other',terms:r3words.map(w=>w.toLowerCase())}}],preview:true,bytes:0,fixtures:[]}),true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
+libraryTraceCase('R3 Library foreign catalog shape',JSON.stringify({index:[{id:'synthetic-item',terms:r3words.map(w=>w.toLowerCase())}]}),true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
+libraryTraceCase('R3 Library sounds use phonetic trace',JSON.stringify({items:[],index:[{id:'synthetic-item',sounds:r3words.map(w=>w.toLowerCase())}],preview:true,bytes:0,fixtures:[]}),true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
+
+test('R3 CI versioned secret mapping',()=>{
+ const workflow=readFileSync(process.env.WORD_TEST_WORKFLOW_FILE??resolve('.github/workflows/ci.yml'),'utf8');
+ assert.match(workflow,/LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64: \$\{\{ secrets\.LITTLE_ISLAND_WORD_POLICY_V2_GZIP_BASE64 \}\}/);
+ assert.doesNotMatch(workflow,/secrets\.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64/);
+});
+test('R3 prose clustered grammar',()=>assert.equal(classifyProse([...Array(9).fill('neutral'),'the','of','and'],policy.scan),false));
+test('R3 grammar excludes policy vocabulary',()=>assert.equal(classifyProse(sentenceTokens,['THE','IS','A']),false));
+test('R3 JSON nearest identity structure',async()=>{const {jsonUnits}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));const unit=jsonUnits({id:'outer',nested:{id:'inner',terms:r3words}}).find(unit=>unit.length===3);assert.deepEqual(unit.library.ids,['inner']);});
+test('R3 advisory deduplicates content and excludes keys',()=>{
+ const dir=join(scratch,'advisory-dedupe');mkdirSync(dir);writeFileSync(join(dir,'data.js'),'globalThis.a="ALPHANONSENSE";globalThis.b="ALPHANONSENSE";globalThis.c={BETANONSENSE:1};');
+ const r=guardTree(dir,policy);assert.equal(r.advisoryCount,1);
+});
+
+exportCase('R3 English curly apostrophe','data.js','globalThis.label="It’s KAPSENSE today";',sensitivePolicy);
+exportCase('R3 English speech contraction','growth.json',JSON.stringify({line:'It’s KAPSENSE today'}),sensitivePolicy);
+test('R3 native export must contain JavaScript',()=>{initGit();assert.throws(()=>realCheckRelease(root,join(scratch,'release-web'),join(scratch,'release-ios'),join(scratch,'native-empty'),()=>{}),/Native platform JavaScript export required/);});
+test('R3 authored field trace classification',async()=>{const {tracedLibraryUnit}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));const unit=[...r3words];unit.library={scope:true,field:'tags',ids:['one']};assert.equal(tracedLibraryUnit(unit,[{id:'one',tokens:r3words.map(w=>w.toLowerCase())}]),false);});
+test('R3 catalog shape classification',async()=>{const {jsonUnits}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));const units=jsonUnits({index:[{id:'one',terms:r3words}]});assert.equal(units.find(unit=>unit.length===3).library.scope,false);});
+test('R3 sounds trace classification',async()=>{const {tracedLibraryUnit}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));const unit=[...r3words];unit.library={scope:true,field:'sounds',ids:['one']};assert.equal(tracedLibraryUnit(unit,[{id:'one',tokens:r3words.map(w=>w.toLowerCase()),sounds:['different']}]),false);});
+function teachingCase(name,change={},rejected=false) {
+ test(name,()=>{
+  const sourceRoot=join(scratch,name.replaceAll(' ','-')),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
+  const entry={id:'food.synthetic',term:'KAPSENSE',english:'Plain gloss',sourceNote:'Håfa KAPSENSE'};
+  const p={...sensitivePolicy,chamoruTeachingAllowances:[{entryId:entry.id,terms:[entry.term],reason:'Synthetic reviewed teaching entry only'}]};
+  Object.assign(p,change.policy);const sourceEntry={...entry,...change.entry};
+  writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),`export const words=[${JSON.stringify(sourceEntry)}];`);
+  writeFileSync(join(dir,change.file??'data.js'),change.code??`globalThis.words=[${JSON.stringify(sourceEntry)}];`);
+  if(rejected)assert.throws(()=>guardTree(dir,p,[],{sourceRoot}),/blocked|allowance/);else assert.equal(guardTree(dir,p,[],{sourceRoot}).passed,true);
+ });
+}
+teachingCase('R3 exact reviewed teaching entry');
+teachingCase('R3 teaching changed identity',{entry:{id:'other'}},true);
+teachingCase('R3 teaching changed term',{entry:{term:'kapsense'}},true);
+teachingCase('R3 teaching unbound text',{code:'globalThis.label="Håfa KAPSENSE";'},true);
+teachingCase('R3 teaching new field',{code:'globalThis.words=[{id:"food.synthetic",term:"KAPSENSE",english:"Plain gloss",sourceNote:"Håfa KAPSENSE",label:"Håfa KAPSENSE"}];'},true);
+teachingCase('R3 teaching JSON own fields',{file:'data.json',code:JSON.stringify({id:'food.synthetic',term:'KAPSENSE',english:'Plain gloss',sourceNote:'Håfa KAPSENSE'})});
+teachingCase('R3 teaching cannot exempt word search',{file:'data.json',code:JSON.stringify({language:'ch',kind:'word-search',words:['KAPSENSE']})},true);
+teachingCase('R3 teaching cannot exempt grid',{file:'data.json',code:JSON.stringify({language:'ch',cells:[...'KAPSENSE'].map(c=>[c])})},true);
+teachingCase('R3 teaching cannot exempt JS grid',{code:'globalThis.data='+JSON.stringify({language:'ch',cells:[...'KAPSENSE'].map(c=>[c])})+';'},true);
+test('R3 teaching not admitted to generated word search',()=>{
+ const p={...policy,chamoruSensitive:['CHOTDA'],chamoruTeachingAllowances:[{entryId:'food.synthetic',terms:['Chotda'],reason:'Synthetic teaching only'}]};
+ const data=input();data.policy=p;data.words=[{...word('Chotda'),language:'ch',canonicalId:'ch-test',uses:['word-search'],fluentReaderChecked:false}];data.surfaces=[{id:'s',kind:'word-search',wordIds:['chotda'],cells:[['CH','O','T','D','A']],listed:[{wordId:'chotda',answer:'Chotda',cells:[[0,0],[0,1],[0,2],[0,3],[0,4]]}]}];
+ assert.equal(core.answerAllowed(data.words[0],p),false);
+ try {writeFileSync(policyFile,JSON.stringify(p));writeFileSync(lockFile,JSON.stringify({...lock,policySha256:sha256(readFileSync(policyFile))}));assert.throws(()=>bakeBank(data),/Exact\/lemma-blocked answer/);}finally {writeFileSync(policyFile,JSON.stringify(policy));writeFileSync(lockFile,JSON.stringify(lock));}
+});
+teachingCase('R3 teaching own grid remains forbidden',{entry:{cells:[...'KAPSENSE'].map(c=>[c])},code:'globalThis.safe=1;'},true);
+test('R3 teaching source path binding',()=>{
+ const sourceRoot=join(scratch,'teaching-path'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);
+ const entry={id:'food.synthetic',term:'KAPSENSE',english:'Plain',sourceNote:'Håfa KAPSENSE'};
+ writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),'export const words=[];');writeFileSync(join(sourceRoot,'src/learn/content/chamoru-other.ts'),`export const words=[${JSON.stringify(entry)}];`);writeFileSync(join(dir,'data.js'),'globalThis.safe=1;');
+ assert.throws(()=>guardTree(dir,{...sensitivePolicy,chamoruTeachingAllowances:[{entryId:entry.id,terms:[entry.term],reason:'Synthetic'}]},[],{sourceRoot}),/blocked-chamoru-source/);
+});
+exportCase('R3 flat equal technical words stay lists','data.js','globalThis.events=["eventa","eventb"];');
+exportCase('R3 undeclared nested matrix','data.js','globalThis.payload=[["r","e","e","f"]];',policy,true);
+exportCase('R3 declared nested matrix','data.js','globalThis.payload={language:"en",cells:[["r","e","e","f"]]};');
+exportCase('R3 declared odd row container','data.json',JSON.stringify({language:'en',odd:['cold']}),policy,true);
+exportCase('R3 unknown puzzle grid container fails closed','data.json',JSON.stringify({kind:'word-search',odd:['reef']}),policy,true);
+exportCase('R3 recognised puzzle grid declares its shape','data.json',JSON.stringify({kind:'word-search',rows:['reef']}));
+exportCase('R3 declared puzzle grid source','data.json',JSON.stringify({kind:'word-search',language:'en',rows:['reef']}));
+r3source('R3 ambiguous constant fails closed','const CH="ch";function other(){const CH="en";}export const rows=[{language:CH,label:"KAPSENSE"}];');
+teachingCase('R3 teaching own word bank remains forbidden',{entry:{words:['KAPSENSE']}},true);
+teachingCase('R3 teaching source generated kind',{entry:{kind:'word-search'},code:'globalThis.safe=1;'},true);
+teachingCase('R3 teaching source isolated grid',{entry:{term:'Neutral',sourceNote:'Plain source',cells:[...'KAPSENSE'].map(c=>[c])},code:'globalThis.safe=1;'},true);
+test('R3 invalid teaching allowance rejected',()=>{const dir=join(scratch,'bad-teaching-policy');mkdirSync(dir);writeFileSync(join(dir,'data.js'),'globalThis.safe=1;');assert.throws(()=>guardTree(dir,{...policy,chamoruTeachingAllowances:[{entryId:'synthetic',terms:[],reason:''}]}),/Invalid CHamoru teaching allowance/);});
+exportCase('R3 untagged recognised sensitive grid','data.json',JSON.stringify({rows:['KAPSENSE']}),sensitivePolicy,true);
+exportCase('R3 declared English homograph grid','data.json',JSON.stringify({language:'en',rows:['KAPSENSE']}),sensitivePolicy);
+r3source('R3 parameter language cannot borrow constant','const language="en";function make(language){return {language,label:"KAPSENSE"};}');
+exportCase('R3 invalid JSON language tag','data.json',JSON.stringify({language:42,label:'KAPSENSE'}),sensitivePolicy,true);
+exportCase('R3 HTML embedded grid','data.html','<script>globalThis.data={language:"en",cells:[["c","o","l","d"]]};</script>',policy,true);
+exportCase('R3 serialized worklet grid','data.js','globalThis.code='+JSON.stringify('function f(){return {language:"en",cells:[["c","o","l","d"]]};}')+';',policy,true);
+teachingCase('R3 teaching extra policy term cannot widen fields',{policy:{chamoruSensitive:['KAPSENSE','KAPOTHER'],chamoruTeachingAllowances:[{entryId:'food.synthetic',terms:['KAPSENSE','KAPOTHER'],reason:'Synthetic'}]},entry:{sourceNote:'Håfa KAPOTHER'},code:'globalThis.safe=1;'},true);
+exportCase('R3 digit blank cell','data.json',JSON.stringify({language:'en',cells:[['c','o','l','d','0']]}),policy,true);
+exportCase('R3 modifier glottal grid','data.json',JSON.stringify({language:'ch',cells:[['c','o','ʼ','l','d']]}),policy,true);
+test('R3 modifier glottal scan folding',()=>assert.equal(core.foldScan('CʼOLD'),'COLD'));
+libraryTraceCase('R3 Library JS nearest identity','globalThis.catalog='+JSON.stringify({items:[],index:[{id:'synthetic-item',nested:{id:'other',terms:r3words.map(w=>w.toLowerCase())}}],preview:true,bytes:0,fixtures:[]})+';',true,'The ALPHANONSENSE is BETANONSENSE rather than GAMMANONSENSE.');
+test('R3 receipt native JavaScript digest format',()=>{initGit();const web=join(scratch,'release-web'),ios=join(scratch,'release-ios'),file=join(scratch,'native-js-receipt.private.json');checkRelease(root,web,ios,file);const receipt=JSON.parse(readFileSync(file));receipt.iosJavaScript.sha256='bad';writeFileSync(file,JSON.stringify(receipt));assert.throws(()=>verifyReleaseReceipt(root,file,web,ios),/receipt/);});
+test('R3 authored aliases cannot contribute traced search tokens',()=>{
+ const sourceRoot=join(scratch,'alias-derived'),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/library'),{recursive:true});mkdirSync(join(sourceRoot,'content/library'),{recursive:true});mkdirSync(dir);
+ cpSync(resolve('src/library/search.ts'),join(sourceRoot,'src/library/search.ts'));
+ writeFileSync(join(sourceRoot,'content/library/items.json'),JSON.stringify([{id:'one',title:'A safe source.',aliases:['ALPHANONSENSE','BETANONSENSE'],tags:['GAMMANONSENSE']}]));
+ writeFileSync(join(dir,'data.json'),JSON.stringify({items:[],index:[{id:'one',terms:r3words.map(w=>w.toLowerCase())}],preview:true,bytes:0,fixtures:[]}));
+ assert.throws(()=>guardTree(dir,policy,[],{sourceRoot}),/partial-list/);
+});
+
+test('R3 JS nearest identity structure',async()=>{const {javascriptStrings}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));const source='globalThis.catalog='+JSON.stringify({items:[],index:[{id:'outer',nested:{id:'inner',terms:r3words}}],preview:true,bytes:0,fixtures:[]})+';';assert.deepEqual(javascriptStrings(source).units.find(unit=>unit.length===3).library.ids,['inner']);});
+test('R3 body trace every token classification',async()=>{const {tracedLibraryUnit}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));const unit=[...r3words];unit.library={scope:true,field:'terms',ids:['one']};assert.equal(tracedLibraryUnit(unit,[{id:'one',tokens:[]}]),false);});
+test('R3 trace requires catalog attachment',async()=>{const {tracedLibraryUnit}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));const unit=[...r3words];unit.library={scope:false,field:'terms',ids:['one']};assert.equal(tracedLibraryUnit(unit,[{id:'one',tokens:r3words.map(w=>w.toLowerCase())}]),false);});
+test('R3 trace requires exact item',async()=>{const {tracedLibraryUnit}=await import(pathToFileURL(join(root,'scripts/words/artifact-views.mjs')));const unit=[...r3words];unit.library={scope:true,field:'terms',ids:['other']};assert.equal(tracedLibraryUnit(unit,[{id:'one',tokens:r3words.map(w=>w.toLowerCase())}]),false);});
+for(const [name,file,text] of [['TSV','words.tsv',r3words.map((word,i)=>word+'\t'+i).join('\n')],['CSV','words.csv',r3words.join(',\n')+','],['numbered','words.md',r3words.map((word,i)=>`${i+1}. ${word}`).join('\n')]])exportCase(`R3 standalone ${name} list`,file,text,policy,true);
+const svgTechnical='<svg xmlns="http://www.w3.org/2000/svg" data-a="ALPHANONSENSE" data-b="BETANONSENSE" data-c="GAMMANONSENSE"><path d="M0 0L1 1"/></svg>';
+exportCase('R3 inline SVG separate technical attributes','data.js','globalThis.vector='+JSON.stringify(svgTechnical)+';');
+exportCase('R3 SVG separate technical attributes','data.svg',svgTechnical);
+exportCase('R3 SVG visible core label','data.js','globalThis.vector='+JSON.stringify('<svg><text>Tap COLD now</text></svg>')+';',policy,true);
+exportCase('R3 SVG metadata list leak','data.js','globalThis.vector='+JSON.stringify('<svg data-words="ALPHANONSENSE,BETANONSENSE,GAMMANONSENSE"></svg>')+';',policy,true);
+exportCase('R3 SVG comment list leak','data.js','globalThis.vector='+JSON.stringify('<svg><!-- ALPHANONSENSE BETANONSENSE GAMMANONSENSE --></svg>')+';',policy,true);
+exportCase('R3 SVG decoded canary retained','data.js','globalThis.vector='+JSON.stringify('<svg data-marker="PRIVATECANARYNONWORD"></svg>').replace('PRIVATECANARYNONWORD','\\u0050RIVATECANARYNONWORD')+';',policy,true);
+exportCase('R3 SVG CHamoru visible label','data.js','globalThis.vector='+JSON.stringify('<svg lang="ch"><text>KAPSENSE</text></svg>')+';',sensitivePolicy,true);
+test('R3 malformed embedded SVG fails closed',()=>{const dir=join(scratch,'malformed-svg');mkdirSync(dir);writeFileSync(join(dir,'data.svg'),'<svg><text>Safe</text>');assert.throws(()=>guardTree(dir,policy),/Cannot parse embedded SVG/);});
+exportCase('R3 accented CHamoru sensitive surface','data.js','globalThis.label="KÅPSENSE";',sensitivePolicy,true);
+exportCase('R3 glottal CHamoru sensitive surface','data.js','globalThis.label="KAPʼSENSE";',sensitivePolicy,true);
+teachingCase('R3 exact accented teaching allowance',{policy:{chamoruTeachingAllowances:[{entryId:'food.synthetic',terms:['KÅPSENSE'],reason:'Synthetic teaching only'}]},entry:{term:'KÅPSENSE'}});
+
+exportCase('R3 SVG construction prefix','data.js','globalThis.prefix='+JSON.stringify('<svg xmlns="http://www.w3.org/2000/svg">')+';');
+exportCase('R3 self-closing SVG','data.js','globalThis.vector="<svg/>";');
+exportCase('R3 valid UTF8 replacement remains text','data.unknown','Tap COLD \uFFFD now',policy,true);
+exportCase('R3 invalid UTF8 binary remains binary','data.unknown',Buffer.concat([Buffer.from([255]),Buffer.from('Tap COLD now')]));
+exportCase('R3 empty language array fails closed','data.json',JSON.stringify({languages:[],rows:['KAPSENSE']}),sensitivePolicy,true);
+exportCase('R3 blank language fails closed','data.json',JSON.stringify({language:'  ',rows:['KAPSENSE']}),sensitivePolicy,true);
+exportCase('R3 spaced CHamoru language tag','data.json',JSON.stringify({language:' ch-GU ',rows:['KAPSENSE']}),sensitivePolicy,true);
+exportCase('R3 blank language array entry fails closed','data.json',JSON.stringify({languages:[' '],rows:['KAPSENSE']}),sensitivePolicy,true);
+r3source('R3 JSON source unresolved language',JSON.stringify({language:42,label:'KAPSENSE'}),true,'content/phrases.json');

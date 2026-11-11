@@ -6,9 +6,9 @@ import { readFileSync, writeFileSync, mkdtempSync, cpSync, rmSync, mkdirSync } f
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-const files=['bake','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check'];
+const files=['bake','review','policy','shipping','guard','artifact-views','library-source','paths','core','scan','check','ci'];
 const mutations=[],sources=new Map(),patches=new Map();
-for(const file of files){const path=`scripts/words/${file}.mjs`,source=readFileSync(path,'utf8'),tree=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true);sources.set(file,source);patches.set(file,[]);
+for(const file of files){const path=file==='ci'?'.github/workflows/ci.yml':`scripts/words/${file}.mjs`,source=readFileSync(path,'utf8'),tree=ts.createSourceFile(path,source,ts.ScriptTarget.Latest,true);sources.set(file,source);patches.set(file,[]);
  function visit(n){if(ts.isCallExpression(n)&&n.expression.getText(tree)==='requireThat'){
   const message=n.arguments[1].getText(tree);
   if(file==='check' && /release <|receipt </.test(message))return;
@@ -65,25 +65,83 @@ custom('guard','private blob detector',sources.get('guard').replaceAll('blobs.so
 custom('guard','reviewed string occurrence cap',sources.get('guard').replace('occurrence<=item.occurrences','true'),['guard additional reviewed occurrence rejected','guard additional broad array despite reviewed words']);
 custom('guard','reviewed string identity',sources.get('guard').replace('scoped.get(hit.sha256)??[]','[...scoped.values()].flat()'),['guard changed reviewed string rejected']);
 custom('artifact-views','Hermes string content detector',sources.get('artifact-views').replace('  return strings;','  return [];'),['guard Hermes whole word','guard Hermes three broad words']);
-custom('artifact-views','serialized worklet string extraction',sources.get('artifact-views').replace('const parsed=javascriptStrings(source),nested=workletStrings(parsed.strings,depth+1);','const parsed={strings:[],keys:[]},nested=workletStrings(parsed.strings,depth+1);'),['guard serialized worklet user string']);
+custom('artifact-views','serialized worklet string extraction',sources.get('artifact-views').replace('const parsed=javascriptStrings(source),nested=workletStrings(parsed.strings,depth+1);','const parsed={strings:[],keys:[],units:[],grids:[],sensitiveStrings:[],sensitiveGrids:[]},nested=workletStrings(parsed.strings,depth+1);'),['guard serialized worklet user string']);
 custom('artifact-views','regex fragment leak view',sources.get('artifact-views').replace('    if (ts.isRegularExpressionLiteral(node)) keys.push(node.text);',''),['guard regex partial list','guard HTML regex partial list']);
-custom('guard','CHamoru tagged literal detector',sources.get('guard').replace('if(sensitiveStrings.some(text=>sensitive(text.toUpperCase()).size))','if(false)'),['guard CHamoru tagged label','guard CHamoru tagged speech','guard CHamoru matching label']);
-custom('guard','CHamoru source detector',sources.get('guard').replace('if(view.strings.some(text=>sensitive(text.toUpperCase()).size) || view.grids.some(grid=>scanGrid(grid,(policy.chamoruSensitive??[]).map(foldScan)).length))','if(false)'),['guard CHamoru canonical term','guard CHamoru tagged source','guard CHamoru tagged speech source']);
+custom('guard','CHamoru tagged literal detector',sources.get('guard').replace('if(sensitiveStrings.some(text=>sensitive(sensitiveText(text)).size))','if(false)'),['guard CHamoru tagged label','guard CHamoru tagged speech','guard CHamoru matching label']);
+custom('guard','CHamoru source detector',sources.get('guard').replace('if(view.strings.some(text=>sensitive(sensitiveText(text)).size) || view.grids.some(grid=>scanGrid(grid,(policy.chamoruSensitive??[]).map(foldScan)).length))','if(false)'),['guard CHamoru canonical term','guard CHamoru tagged source','guard CHamoru tagged speech source']);
 custom('guard','CHamoru grid detector',sources.get('guard').replace('sensitiveGrids.some(grid=>scanGrid(grid,(policy.chamoruSensitive??[]).map(foldScan)).length)','false'),['guard CHamoru grid keeps sensitive term']);
-custom('artifact-views','array leak unit extraction',sources.get('artifact-views').replace('addUnit(node.elements.map(n=>n.text),node)','addUnit([],node)'),['guard three broad JS words']);
+custom('artifact-views','array leak unit extraction',sources.get('artifact-views').replace('addUnit(plainEntries(values),node)','addUnit([],node)'),['guard three broad JS words']);
 custom('guard','decoded row leak unit extraction',sources.get('guard').replace('units=(decodedPack.rows??[]).map(row=>puzzleStrings(row).filter(shortWords));','units=[];'),['guard packed metadata partial list']);
 custom('guard','private advisory writer',sources.get('guard').replace('if(advisories.length) {','if(false) {'),['guard advisory is private and does not fail build']);
-custom('artifact-views','separator list classification',sources.get('artifact-views').replace('export function listString(text, excluded=[]) {','export function listString(text, excluded=[]) { return false; /*').replace('return !words.some(word=>safeFunctionWords(excluded).has(word.toLowerCase()));','*/'),['guard comma list fragment','guard pipe list fragment','guard newline list fragment','guard tab list fragment']);
+custom('artifact-views','separator list classification',sources.get('artifact-views').replace('if(words.length<3)return false;','return false;'),['guard comma list fragment','guard pipe list fragment','guard newline list fragment','guard tab list fragment']);
 custom('artifact-views','object list unit extraction',sources.get('artifact-views').replace('addUnit(node.properties.map(p=>p.name.text),node)','addUnit([],node)'),['guard broad unquoted keys']);
-custom('artifact-views','prose advisory boundary',sources.get('artifact-views').replace('/tokens.length>=0.25','/tokens.length>=0.3'),['guard tokenized prose at quarter threshold']);
-custom('artifact-views','prose ratio threshold',sources.get('artifact-views').replace('/tokens.length>=0.25','/tokens.length>=0.2'),['guard padded list below quarter threshold']);
-custom('artifact-views','prose minimum sample',sources.get('artifact-views').replace('tokens.length>=12','true'),['guard short list with one function word remains strict']);
-custom('artifact-views','private function word disjointness',sources.get('artifact-views').replace('!forbidden.has(w)','true'),['guard private function word overlap cannot excuse list']);
-custom('artifact-views','Library every-token trace',sources.get('artifact-views').replace('tokens.every(token=>allowed.has(token))','true'),['guard Library planted untraceable token']);
-custom('artifact-views','Library item attachment',sources.get('artifact-views').replace('if(!unit.library?.scope)return false;',''),['guard Library unattached token array']);
-custom('artifact-views','Library item identity',sources.get('artifact-views').replace('library.find(row=>row.id===id)','library[0]'),['guard Library other item cannot provide tokens']);
+custom('artifact-views','prose advisory boundary',sources.get('artifact-views').replace('/tokens.length>=0.25','/tokens.length>=0.3'),['R3 prose quarter positive']);
+custom('artifact-views','prose ratio threshold',sources.get('artifact-views').replace('/tokens.length>=0.25','/tokens.length>=0.2'),['R3 prose ratio negative']);
+custom('artifact-views','prose minimum sample',sources.get('artifact-views').replace('tokens.length>=12','true'),['R3 prose minimum negative']);
+custom('artifact-views','private function word disjointness',sources.get('artifact-views').replace('!forbidden.has(w)','true'),['R3 grammar excludes policy vocabulary']);
+custom('artifact-views','Library every-token trace',sources.get('artifact-views').replace('tokens.every(token=>allowed.has(token))','true'),['R3 body trace every token classification']);
+custom('artifact-views','Library item attachment',sources.get('artifact-views').replace("if(!unit.library?.scope || !['terms','sounds'].includes(unit.library.field))return false;",''),['R3 trace requires catalog attachment']);
+custom('artifact-views','Library item identity',sources.get('artifact-views').replace('library.find(row=>row.id===id)','library[0]'),['R3 trace requires exact item']);
 custom('library-source','Library tokenizer parity',sources.get('library-source').replace('source.some(s=>libraryNormalize(s)!==normalize(s))','false'),['guard Library tokenizer drift fails closed']);
 custom('check','compressed policy expansion bound',sources.get('check').replace('{maxOutputLength:4*1024*1024}','{}'),['compressed CI policy is decoded, locked, used and bounded']);
+// R3 protection-weakening edges, each tied to synthetic counterexamples.
+const edges=[
+ ['artifact-views','blank language array entry','entry.trim().length>0','true',['R3 blank language array entry fails closed']],
+ ['artifact-views','empty language array is not a declaration','value.length>0 && value.every','value.every',['R3 empty language array fails closed']],
+ ['artifact-views','blank language is not a declaration','value.trim().length>0','true',['R3 blank language fails closed']],
+ ['artifact-views','trimmed CHamoru language tag','/i.test(value.trim())','/i.test(value)',['R3 spaced CHamoru language tag']],
+ ['guard','valid replacement character remains text',"!/[\\x00-\\x08\\x0e-\\x1f]/.test(views[1])","!/[\\x00-\\x08\\x0e-\\x1f\\ufffd]/.test(views[1])",['R3 valid UTF8 replacement remains text']],
+ ['guard','invalid UTF8 is binary','isUtf8(bytes)','true',['R3 invalid UTF8 binary remains binary']],
+ ['guard','only complete vectors get XML views','const vector=isSvgDocument;',"const vector=text=>/^\\s*<svg\\b/i.test(text);",['R3 SVG construction prefix']],
+ ['guard','CHamoru accent normalization',".normalize('NFD').replace(/\\p{M}/gu,'')",'',['R3 accented CHamoru sensitive surface']],
+ ['guard','CHamoru glottal normalization',".replace(/['ʼ’]/g,'')",'',['R3 glottal CHamoru sensitive surface']],
+ ['artifact-views','SVG attribute leak unit','parsed.keys.push(match[1]);','',['R3 SVG metadata list leak']],
+ ['artifact-views','SVG comment leak unit',"for(const match of text.matchAll(/<!--([\\s\\S]*?)-->/g))parsed.keys.push(match[1]);",'',['R3 SVG comment list leak']],
+ ['guard','SVG displayed labels','displayStrings.push(...parsed.strings);','',['R3 SVG visible core label']],
+ ['guard','decoded SVG unconditional leak view','...originalStrings.map(text=>text.toUpperCase()),','',['R3 SVG decoded canary retained']],
+ ['artifact-views','SVG language declaration','if(chamoru(language))parsed.sensitiveStrings.push(...parsed.strings);','',['R3 SVG CHamoru visible label']],
+ ['guard','structured text file list unit','strings=lines.length>1?[views[1],...lines]:lines;','strings=lines;',['R3 standalone TSV list']],
+ ['artifact-views','authored metadata keeps strict residual','return unit.filter(text=>{const entry=[text];entry.library=unit.library;return !tracedLibraryUnit(entry,library);});','return [];',['R3 authored aliases cannot contribute traced search tokens']],
+ ['artifact-views','complete provenance required before body residual',"if(!unit.every(text=>libraryNormalize(text).split(' ').filter(Boolean).every(token=>all.has(token))))return unit;",'',['guard Library planted untraceable token']],
+ ['library-source','only body supplies token provenance','strings(item,true,!authored.some(row=>row.id===id)).flatMap','source.flatMap',['R3 authored aliases cannot contribute traced search tokens']],
+ ['check','native JavaScript receipt result','r.iosJavaScript?.passed===true','true',['clause release receipt iosJavaScript.passed']],
+ ['check','native JavaScript receipt hash','/^[a-f0-9]{64}$/.test(r.iosJavaScript.sha256)','true',['R3 receipt native JavaScript digest format']],
+ ['artifact-views','nearest JS item identity','ts.isObjectLiteralExpression(p) && !record','ts.isObjectLiteralExpression(p)',['R3 JS nearest identity structure']],
+ ['artifact-views','nonletter grid blanks','[^\\p{L}]','[^\\p{L}\\p{N}]',['R3 digit blank cell']],
+ ['core','modifier glottal folding',"/['ʼ’\\s-]/g","/['’\\s-]/g",['R3 modifier glottal scan folding']],
+ ['guard','teaching allowance may filter only its own term','teachingFold(entry.term)!==teachingFold(term)','false',['R3 teaching extra policy term cannot widen fields']],
+ ['artifact-views','parameter language binding',"if(ts.isParameter(n)&&ts.isIdentifier(n.name))declarations.set(n.name.text,null);",'',['R3 parameter language cannot borrow constant']],
+ ['artifact-views','HTML grid propagation','grids.push(...parsed.grids,...worklets.grids);','',['R3 HTML embedded grid']],
+ ['artifact-views','worklet grid propagation','grids.push(...parsed.grids,...nested.grids);','',['R3 serialized worklet grid']],
+ ['guard','teaching source path',"name==='src/learn/content/chamoru.ts' && allowances.find",'allowances.find',['R3 teaching source path binding']],
+ ['guard','teaching entry identity','rule.entryId===entry.id','true',['R3 teaching changed identity']],
+ ['guard','teaching term identity','rule.terms.includes(entry.term)','true',['R3 teaching changed term']],
+ ['guard','teaching source grid hard failure','entry.grids.some(grid=>scanGrid(grid,(policy.chamoruSensitive??[]).map(foldScan)).length)','false',['R3 teaching source isolated grid']],
+ ['guard','teaching source generated type',"!Object.keys(entry.fields).some(key=>['kind','cells','grid','board','rows','words','spelling'].includes(key))",'true',['R3 teaching source generated kind']],
+ ['artifact-views','teaching exact exported fields','JSON.stringify(Object.entries(entry.fields).sort())===JSON.stringify(Object.entries(value).sort())','true',['R3 teaching new field']],
+ ['guard','untagged grid conservative sensitivity','sensitiveGrids.push(...grids.filter(grid=>!grid.languageDeclared));','',['R3 untagged recognised sensitive grid']],
+ ['ci','versioned secret mapping','secrets.LITTLE_ISLAND_WORD_POLICY_V2_GZIP_BASE64','secrets.LITTLE_ISLAND_WORD_POLICY_GZIP_BASE64',['R3 CI versioned secret mapping']],
+ ['artifact-views','odd entries','return values.flatMap(value=>{','if(!values.every(shortWords))return [];return values.flatMap(value=>{',['R3 odd empty js','R3 odd weights json','R3 odd records js']],
+ ['artifact-views','language recognizer',"/^(?:ch(?:-|$)|cha$|chamoru$|chamorro$)/i.test(value.trim())",'false',['R3 source constant','R3 source spread']],
+ ['artifact-views','language characters',"/[åʼ]/iu.test(text)",'false',['R3 characters 72 229']],
+ ['guard','unknown extension fallback',"if(isUtf8(bytes) && !/[\\x00-\\x08\\x0e-\\x1f]/.test(views[1]))",'if(false)',['R3 text extension md']],
+ ['guard','technical list view'," || /^[A-Z0-9]+(?:_[A-Z0-9]+)+$/.test(text)",'',['R3 list snake']],
+ ['guard','literal string scope','literal:contentStrings.has(text)','literal:false',['guard blocked visible string']],
+ ['guard','source scan roots',"['src','content','scripts/learn']","['src']",['R3 source content root','R3 source speech root']],
+ ['guard','source file selection',"const text=readFileSync(path,'utf8');","const text=readFileSync(path,'utf8');if(!name.endsWith('chamoru.ts'))continue;",['R3 source shorthand']],
+ ['guard','authored arrays','[...item.source,...item.sourceUnits]','item.source',['R3 Library authored tags','R3 Library authored aliases']],
+ ['artifact-views','authored field trace'," || !['terms','sounds'].includes(unit.library.field)",'',['R3 authored field trace classification']],
+ ['artifact-views','nearest JSON id',"const ids=typeof value.id==='string'?[value.id]:context.ids;","const ids=typeof value.id==='string'?[...context.ids,value.id]:context.ids;",['R3 JSON nearest identity structure']],
+ ['artifact-views','catalog shape',"['items','index','preview','bytes','fixtures'].every(key=>key in value)","'index' in value",['R3 catalog shape classification']],
+ ['artifact-views','sounds token scope',"unit.library.field==='sounds'?source.sounds:source.tokens",'source.tokens',['R3 sounds trace classification']],
+ ['artifact-views','JS grid path','grids.push(grid);','',['R3 grid vertical js']],
+ ['artifact-views','grid case folding','/iu.test(c)', '/u.test(c)', ['R3 grid lower json']],
+ ['artifact-views','sentence order','switches>=5','true',['R3 prose clustered grammar']],
+ ['artifact-views','broad prose ratio','hits/Math.max(1,content.length)<0.2','true',['R3 prose padding affix']],
+ ['check','native JavaScript scan','...guardTree(temporary,policy,[lock],{sourceRoot:root})','passed:true',['R3 Hermes native array probe','R3 Hermes native object probe']],
+];
+for(const [file,label,before,after,tests] of edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R3 mutation target '+label);custom(file,'R3 '+label,original.replace(before,after),tests);}
+for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
 mkdirSync(join(scratch,'scripts'),{recursive:true});cpSync('scripts/words',toolRoot,{recursive:true});
 const harness=join(scratch,'word-pipeline-regressions.mjs');writeFileSync(harness,readFileSync('tests/helpers/word-pipeline-regressions.mjs'));
@@ -92,7 +150,7 @@ let failed=0;
 try{
  // Freeze all source files for this run.
  for(const [file,source] of sources){let patched=source;for(const p of patches.get(file).sort((a,b)=>b.start-a.start))patched=patched.slice(0,p.start)+`(${source.slice(p.start,p.end)} || (globalThis.__wordRecordGate?.(${p.id}), false))`+patched.slice(p.end);writeFileSync(join(toolRoot,`${file}.mjs`),patched);}
- const run=(env,pattern)=>spawnSync(process.execPath,['--test',...(pattern?['--test-name-pattern',pattern]:[]),harness],{encoding:'utf8',env:{...process.env,...env,WORD_TEST_TOOL_ROOT:resolve(toolRoot)},timeout:120000,maxBuffer:8*1024*1024});
+ const run=(env,pattern)=>spawnSync(process.execPath,['--test',...(pattern?['--test-name-pattern',pattern]:[]),harness],{encoding:'utf8',env:{...process.env,...env,WORD_TEST_TOOL_ROOT:resolve(toolRoot),WORD_TEST_WORKFLOW_FILE:join(toolRoot,'ci.mjs')},timeout:120000,maxBuffer:8*1024*1024});
  const baseline=run({WORD_MUTATION_TRACE:trace});
  if(baseline.status!==0){console.error(baseline.stdout+baseline.stderr);throw new Error('Instrumented unmutated baseline must pass');}
  for(const [file,source] of sources)writeFileSync(join(toolRoot,`${file}.mjs`),source);

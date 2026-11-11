@@ -29,20 +29,30 @@ export function checkExport(root, directory) {
   // A bank can only reach here after full rebake with the operator policy lock.
   return {admission,guard:guardTree(directory,configuration?.policy,configuration?[configuration.lock]:[],{sourceRoot:root})};
 }
-export function checkRelease(root, web, ios, output) {
+export function checkRelease(root, web, ios, output, run=execFileSync) {
   requireCleanSource(root);
   const {policy,lock}=lockedPolicy();
   const admission=checkShippingTree(root,process.env.LITTLE_ISLAND_WORD_RECEIPTS,{full:true});
   let hbc=false;
   function find(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const p=join(dir,e.name);requireThat(!e.isSymbolicLink(),'Symlink in iOS artifact');if(e.isDirectory())find(p);else {const bytes=readFileSync(p);if(bytes.subarray(0,8).equals(Buffer.from('c61fbc03c103191f','hex')))hbc=true;}}}
   find(ios);requireThat(hbc,'Real embedded Hermes iOS bundle required');
-  const receipt={schemaVersion:1,source:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),policySha256:lock.policySha256,scanListSha256:lock.scanListSha256,admission,web:{path:resolve(web),sha256:treeHash(web),...guardTree(web,policy,[lock],{sourceRoot:root})},ios:{path:resolve(ios),sha256:treeHash(ios),...guardTree(ios,policy,[lock],{sourceRoot:root})}};
+  const temporary=mkdtempSync(join(tmpdir(),'li-word-ios-js-'));
+  let iosJavaScript;
+  try {
+    run(process.execPath,[resolve(root,'node_modules/expo/bin/cli'),'export','--platform','ios','--no-bytecode','--output-dir',temporary],{cwd:root,stdio:'pipe',env:{...process.env,CI:'1'},maxBuffer:64*1024*1024});
+    let js=false;
+    function findJS(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const p=join(dir,e.name);if(e.isDirectory())findJS(p);else if(/\.(?:js|bundle)$/.test(e.name))js=true;}}
+    findJS(temporary);requireThat(js,'Native platform JavaScript export required');
+    iosJavaScript={sha256:treeHash(temporary),...guardTree(temporary,policy,[lock],{sourceRoot:root})};
+    requireCleanSource(root);
+  } finally {rmSync(temporary,{recursive:true,force:true});}
+  const receipt={schemaVersion:2,iosJavaScript,source:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),policySha256:lock.policySha256,scanListSha256:lock.scanListSha256,admission,web:{path:resolve(web),sha256:treeHash(web),...guardTree(web,policy,[lock],{sourceRoot:root})},ios:{path:resolve(ios),sha256:treeHash(ios),...guardTree(ios,policy,[lock],{sourceRoot:root})}};
   writeFileSync(privatePath(output),JSON.stringify(receipt,null,2)+'\n',{flag:'wx'});return receipt;
 }
 export function verifyReleaseReceipt(root,file,web,ios) {
   requireCleanSource(root);
   const r=JSON.parse(readFileSync(privatePath(file),'utf8')),{lock}=lockedPolicy();
-  requireThat(r.schemaVersion===1 && r.source===execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim() && r.policySha256===lock.policySha256 && r.scanListSha256===lock.scanListSha256 && r.admission?.full===true && r.admission.passed===true && r.web?.passed===true && r.ios?.passed===true && r.web.sha256===treeHash(web) && r.ios.sha256===treeHash(ios),'Stale/missing private word release receipt');
+  requireThat(r.schemaVersion===2 && r.iosJavaScript?.passed===true && /^[a-f0-9]{64}$/.test(r.iosJavaScript.sha256) && r.source===execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim() && r.policySha256===lock.policySha256 && r.scanListSha256===lock.scanListSha256 && r.admission?.full===true && r.admission.passed===true && r.web?.passed===true && r.ios?.passed===true && r.web.sha256===treeHash(web) && r.ios.sha256===treeHash(ios),'Stale/missing private word release receipt');
   return {passed:true};
 }
 if(process.argv[1] && realpathSync(process.argv[1])===fileURLToPath(import.meta.url)) {
