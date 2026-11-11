@@ -291,6 +291,12 @@ export function palmMarchSpeed(s: PalmState) {
     (1 + 0.2 * Math.min(1, s.waveTime / 22))
   );
 }
+/** Seconds between dives; the cadence quickens as a wave goes on. Zero when the level has no divers. */
+export function palmDiveInterval(s: PalmState) {
+  "worklet";
+  const every = palmConfig(s).diveEvery;
+  return every ? every / (1 + 0.3 * Math.min(1, s.waveTime / 22)) : 0;
+}
 export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmState {
   "worklet";
   if (input.type !== "tick") return palmTransition(before, input);
@@ -326,7 +332,7 @@ export function palmStep(before: PalmState, input: PalmInput, dt: number): PalmS
       for (const b of march) b.x += dx;
     }
     if (config.diveEvery) s.diveClock += dt;
-    if (config.diveEvery && s.diveClock >= config.diveEvery / (1 + 0.3 * Math.min(1, s.waveTime / 22))) {
+    if (config.diveEvery && s.diveClock >= palmDiveInterval(s)) {
       s.diveClock = 0;
       const divers = march.filter((b) => b.diver && !b.boss);
       if (divers.length) {
@@ -440,6 +446,7 @@ export function palmResult(s: PalmState): ArcadeResult | null {
     detail: learning
       ? `${s.fact} facts matched · ${s.misses} retries`
       : `${s.caught} netted · ${Math.round(accuracy * 100)}% aim · ${s.lives.hit} hearts lost · ${Math.round(s.time)}s`,
+    facts: { aim: learning ? 0 : Math.floor(accuracy * 100) },
   };
 }
 export function validPalm(v: unknown): v is PalmState {

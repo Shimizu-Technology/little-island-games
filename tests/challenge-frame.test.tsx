@@ -17,6 +17,7 @@ import type { ChallengeEntry } from '../src/challenge/types';
 import { migrateProfiles, encodeSave } from '../src/state/profiles';
 import { putProgress } from '../src/state/challengeDrafts';
 import { startSession } from '../src/learn/session';
+import { GridInteraction } from '../src/puzzles/grid/preferences';
 const db=vi.hoisted(()=>({raw:null as string|null,block:null as Promise<void>|null,fail:false,boundaryBlock:null as Promise<void>|null}));
 vi.mock('../src/state/storage',()=>({storage:{get:async()=>db.raw,set:async(raw:string)=>{if(db.fail)throw new Error('disk full');if(db.boundaryBlock)await db.boundaryBlock;db.raw=raw;},preserve:async()=>{},writeDraft:async()=>{if(db.block)await db.block;},discardSession:async()=>{}}}));
 vi.mock('react-native',()=>({ScrollView:'section',View:'div',useWindowDimensions:()=>({width:320,height:667}),AppState:{addEventListener:()=>({remove(){}})}}));
@@ -145,4 +146,51 @@ it('F4: a hint commit returns the durable accepted revision and rejects a stale 
   expect(result).not.toBeNull();expect(result!.session.revision).toBe(1);expect(result!.key).toBe(host!.key);expect(result!.key).not.toBe(key);
   const saved=store.save.challenge!.paused[0];await act(async()=>{expect(await host!.commit({type:'help'},key)).toBeNull();});expect(store.save.challenge!.paused[0]).toEqual(saved);
  }finally{await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+// Review round 2, F3 (generic): a dare is offered only when a card with a dare is reachable from the finished card.
+// Here only a different tier has dares, so neither the invitation nor "Too easy" may open a picker without one.
+for(const [name,prior] of [['the direct invitation',1],['the "Too easy" face',2]] as const) it(`F3: no dare target means no dare offer through ${name}`,async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);
+ const plain={...puzzle,ref:{...puzzle.ref,engine:'nodare-proof',bank:432},source:{kind:'endless' as const,bank:432,puzzle:0},dares:[]};
+ const puzzles=[plain,{...plain,title:'A higher test maze',tier:2 as const,ref:{...plain.ref,puzzle:1,hash:'b'.repeat(64)},source:{kind:'endless' as const,bank:432,puzzle:1},dares:[{...puzzle.dares[1],slot:3500,id:'nodare-higher'}]}];
+ // The test maze reports its shell objective; no card here has a pick-up dare, so the game declares it.
+ const registered=defineReplayGame({game:'nodare-proof',codec:'nodare-proof-v1',context:'nodare',cove:true,objectives:['shell'],budget:{wrapper:700,draft:3396,undo:0,audit:0},puzzles,engine,Board:()=>null,controls:{help:()=>({type:'help'} as Action),reset:()=>({type:'reset'} as Action)}});
+ const selectedEntry={...registered,render:entry.render};
+ registerSaveContent(registered.catalog,catalogManifest(registered.catalog));
+ // One prior clean finish gives the invitation on a clean finish; two make this the third, which asks how it felt.
+ const progress=Array.from({length:prior},()=>0).reduce(p=>completedSignal(p,'nodare-1',true,true),emptyChallenge());
+ db.raw=encodeSave(putProgress(migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')}),'a',progress));
+ const spy=vi.spyOn(challengeCatalog,'challengeFor').mockReturnValue(selectedEntry);let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame selectedEntry={selectedEntry}/></StoreProvider>);});
+  await press(r,'Start this puzzle');
+  for(let i=0;i<40&&store.save.challenge!.paused.length;i++)await press(r,'Next maze step');
+  let text=JSON.stringify(r.toJSON());
+    expect(text).toContain('Puzzle solved!');
+  expect(text).not.toContain('Try a dare?');
+  if(prior===2){
+   expect(text).toContain('How did that feel?');
+   await press(r,'Too easy');
+   text=JSON.stringify(r.toJSON());
+   // The rating is kept and the finished puzzle stays on screen; no picker opens.
+   expect(store.save.challenge!.signals.find(s=>s[0]==='nodare-1')?.[3]).toBe('easy');
+   expect(text).not.toContain('Start this puzzle');
+   expect(text).toContain('Puzzle solved!');
+  }
+ }finally{spy.mockRestore();if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+// Integration rehearsal: a page scroll that started on the Slip Tide board also moved the crabs. A board that owns a
+// touch now holds the Challenge page still until release, as Cove grids do (GridScroll does the same after G3).
+it('a board that owns a touch holds the Challenge page scroll until release',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);registerSaveContent(registration.catalog,catalogManifest(registration.catalog));
+ const board={hold:null as null|((held:boolean)=>void)};
+ function Holder(){const hold=React.useContext(GridInteraction);useLayoutEffect(()=>{board.hold=hold;},[hold]);return null;}
+ const holding={...entry,render:()=><Holder/>};
+ db.raw=JSON.stringify({...emptySave(),learning:addLearner(undefined,'A','a')});let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/><ReadyFrame selectedEntry={holding}/></StoreProvider>);});
+  await press(r,'Start this puzzle');
+  const page=()=>r.root.findByType('section' as never);
+  expect(board.hold).not.toBeNull();expect(page().props.scrollEnabled).toBe(true);
+  await act(async()=>board.hold!(true));expect(page().props.scrollEnabled).toBe(false);
+  await act(async()=>board.hold!(false));expect(page().props.scrollEnabled).toBe(true);
+ }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });

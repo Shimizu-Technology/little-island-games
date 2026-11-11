@@ -5,6 +5,8 @@ import { installFixture, session, moved } from './helpers/save-contract';
 import { emptySave } from '../src/state/validation';
 import { encodeSave, migrateProfiles } from '../src/state/profiles';
 import { envelopeWrite, putProgress, parseDraft } from '../src/state/challengeDrafts';
+
+vi.mock('../src/challenge/registry.generated', () => ({ challengeEntries: [] }));
 // Actual SQLite SQL/transaction semantics under Node; Expo transport stays a separate device gate.
 const sqlite=await vi.hoisted(async()=>{
  const {DatabaseSync}=await import('node:sqlite');const db=new DatabaseSync(':memory:');

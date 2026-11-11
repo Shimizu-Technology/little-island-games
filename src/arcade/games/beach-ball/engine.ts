@@ -75,7 +75,8 @@ export function beachLevel(id: LevelId) {
   "worklet";
   return beachLevels.find((l) => l.id === id)!;
 }
-export type Ball = { x: number; y: number; vx: number; vy: number; wait: number; spin: number; squash: number };
+/** `rally` counts this ball's paddle hits since its own serve. */
+export type Ball = { x: number; y: number; vx: number; vy: number; wait: number; spin: number; squash: number; rally: number };
 export type BeachEffect = { id: number; x: number; y: number; remaining: number; duration: number; point: boolean };
 export type BeachState = {
   level: BeachLevel | "endless";
@@ -89,8 +90,11 @@ export type BeachState = {
   balls: Ball[];
   points: [number, number];
   hits: number;
+  /** Paddle hits since the last point, across every ball in play. */
   rally: number;
   bestRally: number;
+  /** Longest rally of one ball, from its serve to its point (AR-10 dare evidence). */
+  ballRally: number;
   event: number;
   effects: BeachEffect[];
   feedback: string;
@@ -142,6 +146,7 @@ function serve(s: BeachState, i: number, toward: number): [Ball, number] {
       wait: SERVE_SECONDS + (i ? 0.45 : 0),
       spin: 0,
       squash: 0,
+      rally: 0,
     },
     seed,
   ];
@@ -167,6 +172,7 @@ export function createBeach(
     hits: 0,
     rally: 0,
     bestRally: 0,
+    ballRally: 0,
     event: 0,
     effects: [],
     feedback: "",
@@ -323,6 +329,8 @@ export function beachStep(before: BeachState, input: BeachInput, dt: number): Be
       s.hits++;
       s.rally++;
       s.bestRally = Math.max(s.bestRally, s.rally);
+      b.rally++;
+      s.ballRally = Math.max(s.ballRally, b.rally);
       s.score = Math.min(99999999, s.score + 10);
       cue(s, "paddle", contactX, contactY + (seat === 0 ? BALL_RADIUS : -BALL_RADIUS), "", 0.2);
     }
@@ -378,14 +386,16 @@ export function beachResult(s: BeachState): ArcadeResult | null {
     outcome: cleared ? "cleared" : s.winner === null ? "stopped" : "game-over",
     stars: !cleared ? 0 : losing === 0 ? 3 : losing <= 1 ? 2 : 1,
     score: s.score,
-    detail: `${s.points[0] * count} : ${s.points[1] * count} · best rally ${s.bestRally}`,
+    detail: `${s.points[0] * count} : ${s.points[1] * count} · best rally ${s.ballRally}`,
+    // One ball's own rally: two balls in play never add up to one rally.
+    facts: { rally: s.ballRally },
   };
 }
 export function validBeach(v: unknown): v is BeachState {
   if (
     !exact(
       v,
-      "level seed helper mode strength phase time paddles balls points hits rally bestRally event effects feedback feedbackX feedbackY cue pulse winner score aiClock aiTarget"
+      "level seed helper mode strength phase time paddles balls points hits rally bestRally ballRally event effects feedback feedbackX feedbackY cue pulse winner score aiClock aiTarget"
     ) ||
     !(v.level === "endless" || canonicalLevel(v.level, beachLevels)) ||
     !integer(v.seed, 0xffffffff) ||
@@ -419,7 +429,9 @@ export function validBeach(v: unknown): v is BeachState {
     v.balls.length <= 2 &&
     v.balls.every(
       (b) =>
-        exact(b, "x y vx vy wait spin squash") &&
+        exact(b, "x y vx vy wait spin squash rally") &&
+        integer(b.rally) &&
+        (b.rally as number) <= (v.ballRally as number) &&
         finite(b.x, 0, 360) &&
         finite(b.y, -BALL_RADIUS, 600 + BALL_RADIUS) &&
         finite(b.vx, -450.001, 450.001) &&
@@ -432,7 +444,7 @@ export function validBeach(v: unknown): v is BeachState {
     Array.isArray(v.points) &&
     v.points.length === 2 &&
     v.points.every((n) => integer(n)) &&
-    [v.hits, v.rally, v.bestRally, v.event, v.score].every((n) => integer(n)) &&
+    [v.hits, v.rally, v.bestRally, v.ballRally, v.event, v.score].every((n) => integer(n)) &&
     (v.bestRally as number) >= (v.rally as number) &&
     typeof v.feedback === "string" &&
     v.feedback.length <= 30 &&

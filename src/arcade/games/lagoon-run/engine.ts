@@ -160,7 +160,7 @@ export function runResult(s: RunState): ArcadeResult | null {
   "worklet";
   if (s.status === "playing") return null;
   const cleared = s.status === "cleared", target = s.level === "endless" ? Infinity : s.level.target;
-  return { cleared, outcome: cleared ? "cleared" : s.status === "rest" ? "stopped" : "game-over", stars: cleared ? s.bumps === 0 && s.shells >= Math.ceil(target * 3 * .85) ? 3 : s.bumps <= 1 ? 2 : 1 : 0, score: s.score, detail: `${s.passed} ${runLearning(s) ? "answers" : "trail markers"} · ${s.shells} shells · ${s.bumps} hits` };
+  return { cleared, outcome: cleared ? "cleared" : s.status === "rest" ? "stopped" : "game-over", stars: cleared ? s.bumps === 0 && s.shells >= Math.ceil(target * 3 * .85) ? 3 : s.bumps <= 1 ? 2 : 1 : 0, score: s.score, detail: `${s.passed} ${runLearning(s) ? "answers" : "trail markers"} · ${s.shells} shells · ${s.bumps} hits`, facts: { shells: s.shells } };
 }
 export function validRun(v: unknown): v is RunState {
   if (!record(v) || !canonicalLevel(v.level, runLevels) || !uint(v.seed, 0xffffffff) || typeof v.helper !== "boolean" || typeof v.helped !== "boolean" || !validLives(v.lives) || !uint(v.command) || !uint(v.lane, 2) || !finite(v.poseLane, 0, 2) || !finite(v.laneFrom, 0, 2) || !finite(v.laneTime, 0, LANE_SECONDS) || !finite(v.landing, 0, .13) || !Array.isArray(v.rows) || v.rows.length !== 5) return false;
