@@ -9,7 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useIsFocused } from 'expo-router';
 import { Button, Chip, Copy, Heading, ToggleRow, styles } from '../components/ui';
 import { Settings } from '../components/Settings';
-import type { ChallengeSession } from '../state/challenge';
+import type { ChallengeSession, PuzzleRef } from '../state/challenge';
 import { SaveStatus } from '../components/SaveStatus';
 import { LearnerChip } from '../personalization/LearnerChip';
 import { useStore } from '../state/Store';
@@ -17,28 +17,42 @@ import { dareBits, emptyChallenge } from '../state/challenge';
 import { progressFor, selectedOwner } from '../state/challengeDrafts';
 import { learningComfort } from '../state/validation';
 import { shelfGames } from '../learn/home';
-import type { ChallengeCard, ChallengeEntry, ChallengePath } from './types';
+import type { ChallengeCard, ChallengeEntry, ChallengePath, PackedBand } from './types';
+import { GridInteraction } from '../puzzles/grid/preferences';
+type Choice = ChallengeCard | PackedBand;
+const isBand = (c: Choice | undefined): c is PackedBand => !!c && 'kind' in c && c.kind === 'band';
 const gameName = (game: string) => shelfGames.find(item=>item.id===game)?.name ?? game.replace(/(^|-)([a-z0-9])/g,(_match,separator:string,letter:string)=>`${separator?' ':''}${letter.toUpperCase()}`);
 /** A separate slot: entering or leaving Challenge never replaces a School round. */
 export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;requestedPuzzle?:string}) {
   const store=useStore(), owner=selectedOwner(store.save), focused=useIsFocused(), {width}=useWindowDimensions();
   const progress=progressFor(store.save,owner)??emptyChallenge(), saved=progress.paused.find(s=>s.game===entry.game&&!s.result&&!s.credited);
   const comfort=learningComfort(store.save,owner);
-  const requested=entry.puzzles.find(p=>!p.retired&&`${p.ref.bank}:${p.ref.puzzle}`===requestedPuzzle);
-  const [selection,setSelection]=useState<ChallengeCard>(()=>requested??entry.puzzles.find(p=>!p.retired&&progress.choice?.[0]===entry.game&&p.path===progress.choice?.[1]&&p.tier===progress.choice?.[2])??entry.puzzles.find(p=>!p.retired)!);
+  // Packed banks are offered whole, before the authored cards of their path. Inline-only entries have none.
+  // Retired cards stay resolvable for saved rounds but are never offered or dealt.
+  const playable=entry.puzzles.filter(p=>!p.retired), bands=entry.packed?.bands??[], every:Choice[]=[...bands,...playable];
+  const choices=(path:ChallengePath)=>every.filter(p=>p.path===path);
+  const cardOf=(ref:PuzzleRef)=>entry.puzzles.find(p=>p.ref.bank===ref.bank&&p.ref.puzzle===ref.puzzle)??entry.packed?.card(ref);
+  const choiceOf=(bank:number,puzzle:number):Choice|undefined=>playable.find(p=>p.ref.bank===bank&&p.ref.puzzle===puzzle)??bands.find(b=>b.bank===bank);
+  const requested=playable.find(p=>`${p.ref.bank}:${p.ref.puzzle}`===requestedPuzzle);
+  const [selection,setSelection]=useState<Choice>(()=>requested??every.find(p=>progress.choice?.[0]===entry.game&&p.path===progress.choice?.[1]&&p.tier===progress.choice?.[2])??every[0]);
   const [completed,setCompleted]=useState<ChallengeSession>(), [settings,setSettings]=useState(false), [replacementGame,setReplacementGame]=useState<string>(), [dares,setDares]=useState<number[]>([]), [picking,setPicking]=useState(!!requested||!saved), [busy,setBusy]=useState(false), [launching,setLaunching]=useState(false), [message,setMessage]=useState(''), [replace,setReplace]=useState(false);
   const [fresh,setFresh]=useState<'choose'|'confirm'|null>(null);
   const [settling,setSettling]=useState(false), [capacity,setCapacity]=useState(false);
+  // A board that owns a touch holds the page scroll until release (Cove grids and Slip Tide).
+  const [held,setHeld]=useState(false);
   const onSettled=useCallback(()=>setSettling(false),[]);
   const accepted=useRef(saved), lock=useRef(false), dispatchToken=useRef(0);
   // Store accepts a draft synchronously before durability; render receives that accepted revision.
   useLayoutEffect(()=>{if(saved && (!accepted.current || saved.id!==accepted.current.id || saved.revision>=accepted.current.revision)){accepted.current=saved;if(!saved.result)lock.current=false;}},[saved]);
   const expected=(s:ChallengeSession|undefined)=>({owner,game:entry.game,epoch:store.epoch,id:s?.id??null,revision:s?.revision??null});
-  async function launch(target: ChallengeCard = selection, chosenDares: number[] = dares, replaceSaved = false) {
+  async function launch(choice: Choice = selection, chosenDares: number[] = dares, replaceSaved = false) {
     if(lock.current || saved && !replace && !replaceSaved)return;
     const token=++dispatchToken.current;
     lock.current=true;setBusy(true);setLaunching(true);setMessage('');
     try {
+      // A band picks a concrete entry and verifies its content before anything is constructed.
+      const target=isBand(choice)?entry.packed?.card(await entry.packed.choose(choice.bank,progress,(saved??completed)?.puzzle)):choice;
+      if(!target)throw new Error('Unknown puzzle.');
       const selected=comfort.youngChild?[]:chosenDares;
       const options={supportOff:target.dares.some(d=>selected.includes(d.slot)&&(d.rule.kind==='blind'||d.rule.kind==='plan')),ownRead:target.dares.some(d=>selected.includes(d.slot)&&d.rule.kind==='own-read')};
       // Construct first: a throwing adapter cannot discard accepted work.
@@ -80,26 +94,31 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
     }catch{setMessage('Your original plan is kept. Try saving again before starting fresh.');}
     finally{lock.current=false;setBusy(false);}
   }
-  const round=saved??completed, playable=entry.puzzles.filter(p=>!p.retired), full=progress.paused.filter(s=>!s.credited).length>=(owner.startsWith('cove-')?4:8), marks=dareBits(progress.dares)?.filter(Boolean).length??0;
-  const currentCard = round && entry.puzzles.find(p=>p.ref.bank===round.puzzle.bank&&p.ref.puzzle===round.puzzle.puzzle);
+  const round=saved??completed, full=progress.paused.filter(s=>!s.credited).length>=(owner.startsWith('cove-')?4:8), marks=dareBits(progress.dares)?.filter(Boolean).length??0;
+  const currentCard = round && cardOf(round.puzzle);
+  const currentChoice:Choice|undefined = currentCard && (bands.find(b=>b.bank===currentCard.ref.bank)??currentCard);
+  // A dare invitation opens a card that has a playable dare: this one, or else a playable authored card of the same
+  // path and tier (packed bands carry no dares; retired dares never count). With neither, nothing offers a dare.
+  const dareChoice:ChallengeCard|undefined = currentChoice && (!isBand(currentChoice)&&currentChoice.dares.some(d=>!d.retired)?currentChoice:playable.find(p=>p.path===currentChoice.path&&p.tier===currentChoice.tier&&p.dares.some(d=>!d.retired)));
   const offerContext = round ? entry.contextFor(round.puzzle) : '';
   // Offers stay on the current puzzle and path, and never deal a retired card.
-  const pathCards = currentCard ? playable.filter(p=>p.path===currentCard.path) : [];
-  const offerFacts = {atPar:round?.result?.event==='independent'&&round.result.cost!==null&&round.result.cost<=(currentCard?.par?.upper??-1),firstHigher:false,dare:!!currentCard?.dares.some(d=>!d.retired),easier:pathCards.some(p=>p.tier<(currentCard?.tier??1)),harder:pathCards.some(p=>p.tier>(currentCard?.tier??6))};
+  const pathChoices = currentChoice ? choices(currentChoice.path) : [];
+  const offerFacts = {atPar:round?.result?.event==='independent'&&round.result.cost!==null&&round.result.cost<=(currentCard?.par?.upper??-1),firstHigher:false,dare:!!dareChoice,easier:pathChoices.some(p=>p.tier<(currentChoice?.tier??1)),harder:pathChoices.some(p=>p.tier>(currentChoice?.tier??6))};
   const signal=progress.signals.find(s=>s[0]===offerContext);
   const personal=owner!=='family'&&round?.partner===null;
   const hasOffer=!!(personal&&comfort.offers&&!comfort.youngChild&&signal&&!signal[4]&&(ratingDue(progress,offerContext)||resultOffer(signal,comfort,offerFacts)));
   const showDirections=comfort.offers&&!comfort.youngChild&&!hasOffer&&!(personal&&signal?.[4]);
+  const recentChoices=()=>progress.recent.flatMap(([bank,puzzle])=>{const c=choiceOf(bank,puzzle);return c?[c]:[];});
+  // The same band deals another of its own entries; directions move between bands and cards of the path.
+  const nextChoice=(here:Choice,direction:'easier'|'same'|'harder')=>direction==='same'&&isBand(here)?here:adjacentTide(choices(here.path),here,direction,recentChoices());
   function chooseNext(direction: 'easier'|'same'|'harder') {
-    if(!currentCard)return;
-    const recent=progress.recent.flatMap(([bank,puzzle])=>playable.filter(p=>p.ref.bank===bank&&p.ref.puzzle===puzzle));
-    const next=adjacentTide(pathCards,currentCard,direction,recent);
+    if(!currentChoice)return;
+    const next=nextChoice(currentChoice,direction);
     if(next){setSelection(next);setDares([]);void launch(next,[]);}else{setPicking(true);setReplace(false);setDares([]);}
   }
   function freshPuzzle() {
-    if(!currentCard)return;
-    const recent=progress.recent.flatMap(([bank,puzzle])=>playable.filter(p=>p.ref.bank===bank&&p.ref.puzzle===puzzle));
-    const next=adjacentTide(pathCards,currentCard,'same',recent);
+    if(!currentChoice)return;
+    const next=nextChoice(currentChoice,'same');
     setPicking(true);setReplace(false);setDares([]);setFresh(next&&saved?'choose':null);
     if(next)setSelection(next);
     else setMessage('There is no other puzzle at this tide. Your draft is kept. Continue it or choose another tide.');
@@ -109,16 +128,16 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
   const back=()=>router.canGoBack()?router.back():router.replace('/');
   const keepPlan='Keep my plan in a new attempt';
   const pinned=!!entry.animatedRuns&&!picking&&!!round&&(!round.result||settling);
-  return <SafeAreaView style={styles.page}><ScrollView scrollEnabled={!pinned} contentContainerStyle={[styles.content,{gap:pinned?8:14,padding:20,...(pinned?{flex:1,paddingHorizontal:12,paddingTop:10,paddingBottom:10}: {})}]}>
+  return <SafeAreaView style={styles.page}><GridInteraction.Provider value={setHeld}><ScrollView scrollEnabled={!pinned&&!held} contentContainerStyle={[styles.content,{gap:pinned?8:14,padding:20,...(pinned?{flex:1,paddingHorizontal:12,paddingTop:10,paddingBottom:10}: {})}]}>
     <View style={{flexDirection:'row',flexWrap:'wrap',gap:10,alignItems:'center'}}><Button quiet compact maxFontSizeMultiplier={pinned?1.3:undefined} onPress={back}>Back</Button>{!pinned&&<Heading>Challenge</Heading>}<LearnerChip compact/></View>
     {!pinned&&<><Copy>Deep Water is a big stretch. Endless Tide has more puzzles. Every choice is open.</Copy><Copy>Your marks: {marks}. Marks are kept and never spent.</Copy></>}
     {!pinned&&<SaveStatus/>}
     {!pinned&&!!message&&<View accessibilityLiveRegion="polite"><Copy>{message}</Copy></View>}
     {!pinned&&capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{keepPlan}</Button>}
     {picking ? <>
-      <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>{(['deep-water','endless'] as ChallengePath[]).filter(path=>playable.some(p=>p.path===path)).map(path=><Chip key={path} selected={selection.path===path} onPress={()=>{setSelection(playable.find(p=>p.path===path)!);setDares([]);setFresh(null);}}>{path==='deep-water'?'Deep Water · A big stretch':'Endless Tide'}</Chip>)}</View>
-      {playable.filter(p=>p.path===selection.path).map(p=><Button quiet key={`${p.ref.bank}-${p.ref.puzzle}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{p.title} · Tide {p.tier}</Button>)}
-      {!comfort.youngChild&&selection.dares.some(d=>!d.retired)&&<><Heading style={{fontSize:20}}>An optional dare</Heading><Copy>A miss leaves no mark and no penalty. Help is always here.{entry.dareHelp?` ${entry.dareHelp}`:''}</Copy>{selection.dares.filter(d=>!d.retired).map(d=><Chip key={d.slot} selected={dares.includes(d.slot)} onPress={()=>setDares(dares.includes(d.slot)?dares.filter(n=>n!==d.slot):[d.slot])}>{d.label} · {d.help==='allowed'?'Help welcome':'On my own'}</Chip>)}</>}
+      <View style={{flexDirection:'row',flexWrap:'wrap',gap:8}}>{(['deep-water','endless'] as ChallengePath[]).filter(path=>every.some(p=>p.path===path)).map(path=><Chip key={path} selected={selection.path===path} onPress={()=>{setSelection(choices(path)[0]);setDares([]);setFresh(null);}}>{path==='deep-water'?'Deep Water · A big stretch':'Endless Tide'}</Chip>)}</View>
+      {choices(selection.path).map(p=>isBand(p)?<Button quiet key={`band-${p.bank}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{`${p.title} · Tide ${p.tier} · ${p.count} puzzles`}</Button>:<Button quiet key={`${p.ref.bank}-${p.ref.puzzle}`} selected={p===selection} onPress={()=>{setSelection(p);setDares([]);setFresh(null);}}>{p.title} · Tide {p.tier}</Button>)}
+      {!comfort.youngChild&&!isBand(selection)&&selection.dares.some(d=>!d.retired)&&<><Heading style={{fontSize:20}}>An optional dare</Heading><Copy>A miss leaves no mark and no penalty. Help is always here.{entry.dareHelp?` ${entry.dareHelp}`:''}</Copy>{selection.dares.filter(d=>!d.retired).map(d=><Chip key={d.slot} selected={dares.includes(d.slot)} onPress={()=>setDares(dares.includes(d.slot)?dares.filter(n=>n!==d.slot):[d.slot])}>{d.label} · {d.help==='allowed'?'Help welcome':'On my own'}</Chip>)}</>}
       {saved&&!fresh&&<><Copy>Your saved Challenge puzzle stays available until a new attempt is saved. Replacing it removes it from Continue.</Copy><ToggleRow label="Start another attempt" value={replace} onChange={setReplace}/><Button quiet onPress={()=>{setPicking(false);setReplace(false);}}>Continue saved puzzle</Button></>}
       {saved&&fresh&&<>
         <Copy>{fresh==='confirm'?'Start this fresh puzzle and replace your saved draft?':'A fresh puzzle with the same idea is ready. Your draft stays saved until you start.'}</Copy>
@@ -131,7 +150,7 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
     </> : round ? <>
       {!pinned&&<Heading style={{fontSize:22}}>{currentCard?.title}</Heading>}
       {/* The registered Board receives dispatch only as an event callback; render does not invoke it. */}
-      {(!round.result||entry.animatedRuns)&&!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={store.challengeOpen} expected={expected(round)} render={()=><>
+      {(!round.result||entry.animatedRuns)&&!launching&&<SessionGate key={`${owner}:${store.epoch}:${round.id}:${JSON.stringify(round.puzzle)}`} open={entry.packed?async e=>{await entry.packed!.prepare(round.puzzle);return store.challengeOpen(e);}:store.challengeOpen} expected={expected(round)} render={()=><>
         {entry.render(round,a=>void dispatch(a),focused&&(!busy||settling),width-(pinned?24:40),{key:sessionKey(round),onFresh:freshPuzzle,onSettled,commit:async(action,key)=>{const current=accepted.current;if(!current||key!==sessionKey(current))return null;const session=await dispatch(action);return session?{key:sessionKey(session),session}:null;},...(pinned?{
           header:<><Heading style={{fontSize:22}}>{currentCard?.title}</Heading><SaveStatus/>{!!message&&<Copy accessibilityLiveRegion="polite">{message}</Copy>}{capacity&&entry.restart&&<Button quiet disabled={busy} onPress={()=>void restart()}>{keepPlan}</Button>}</>,
           footer:<><Button quiet disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>Easier choice · Levels 1–5</Button></>,
@@ -139,12 +158,12 @@ export function ChallengeFrame({entry,requestedPuzzle}:{entry:ChallengeEntry;req
         {entry.helpUI!=='board'&&<Button quiet disabled={!focused||busy} onPress={()=>void dispatch(entry.controls.help())}>Help</Button>}
       </>}/>}
       {round.result&&!settling ? <><Heading>{round.result.event==='together'?'You solved it together!':'Puzzle solved!'}</Heading><Copy>{round.result.dares.length?'Your dare mark is kept.':'Your finished puzzle is kept. Helped finishes count too.'}</Copy>
-        {hasOffer&&<ResultOffer progress={progress} context={offerContext} comfort={comfort} facts={offerFacts} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const next=kind==='dare'?currentCard:pathCards.find(p=>kind==='harder'?p.tier>(currentCard?.tier??1):p.tier<(currentCard?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);setFresh(null);}}/>}
+        {hasOffer&&<ResultOffer progress={progress} context={offerContext} comfort={comfort} facts={offerFacts} onChange={p=>store.challengeWorking({signal:p.signals.find(s=>s[0]===entry.contextFor(round.puzzle))},{owner,epoch:store.epoch,game:entry.game,id:round.id,revision:round.revision,kind:'challenge'})} onChoose={kind=>{const current=currentChoice;const next=kind==='dare'?dareChoice:pathChoices.find(p=>kind==='harder'?p.tier>(current?.tier??1):p.tier<(current?.tier??1));if(next)setSelection(next);if(kind!=='dare')setDares([]);setPicking(true);setReplace(false);setFresh(null);}}/>}
         <PuzzleEnding praise={entry.completionText?.(round.puzzle,round.result,completionFacts) ?? defaultPraise} disabled={busy} showDirections={showDirections}
           onChoose={chooseNext} onAnother={()=>chooseNext('same')}
           onRest={back}/>
       </> : null}
       {!pinned&&!round.result&&<><Button quiet disabled={busy||settling} onPress={()=>{setPicking(true);setReplace(false);setFresh(null);}}>Another puzzle</Button><Button quiet onPress={back}>Easier choice · Levels 1–5</Button></>}
     </>:null}
-  </ScrollView><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;
+  </ScrollView></GridInteraction.Provider><Settings visible={settings} onClose={()=>setSettings(false)}/></SafeAreaView>;
 }

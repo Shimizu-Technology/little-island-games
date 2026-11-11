@@ -1,6 +1,7 @@
 import { registerSaveContent, type Bank, type Dare, type SaveCatalog, type SessionCodec } from '../state/challenge';
 import { learnIds } from '../learn/generated/ids';
 import { challengeEntries } from './registry.generated';
+import { arcadeDareCatalog } from '../arcade/dares';
 export { challengeEntries } from './registry.generated';
 export const schoolContext = (game: string, level: number) => `s${learnIds.indexOf(game as typeof learnIds[number])}-${level}`;
 /** Side-effect-free aggregation is also used by registration/route tests. */
@@ -19,4 +20,6 @@ export function buildCatalog(entries = challengeEntries): SaveCatalog {
   return {banks,dares,codecs,contexts};
 }
 registerSaveContent(buildCatalog());
-export const challengeFor = (game: string) => challengeEntries.find(entry=>entry.game===game && entry.puzzles.length>0);
+// AR-10: Arcade dare marks use inline banks with no session codec; real-time rounds never pause.
+registerSaveContent(arcadeDareCatalog());
+export const challengeFor = (game: string) => challengeEntries.find(entry=>entry.game===game && (entry.puzzles.length>0 || !!entry.packed?.bands.length));

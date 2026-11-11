@@ -62,6 +62,19 @@ export type ChallengeRenderHost = {
 };
 export type CompletionFacts = { helpUsed: boolean; failed: boolean };
 export type ChallengeCard = Omit<Puzzle<unknown>, 'descriptor'|'awards'>;
+/** One whole packed bank offered as a single choice. Its entries load lazily; none carries a dare slot. */
+export type PackedBand = { kind: 'band'; bank: number; path: ChallengePath; tier: 1|2|3|4|5|6; title: string; count: number };
+/**
+ * Optional packed-bank seam. `choose` picks a concrete entry and makes its verified descriptor resident;
+ * `prepare` does the same for a saved ref before it is opened. Both use the shared bank loader and the
+ * Store's session-open hash check, and throw on a mismatch. `card` describes a resident or known ref.
+ */
+export type PackedChallenge = {
+  bands: readonly PackedBand[];
+  choose: (bank: number, progress: ChallengeProgress, avoid?: PuzzleRef) => Promise<PuzzleRef>;
+  prepare: (ref: PuzzleRef) => Promise<void>;
+  card: (ref: PuzzleRef) => ChallengeCard | undefined;
+};
 /** Erasure happens only after a typed registration validates its own payload. No action bags. */
 export type ChallengeEntry = {
   game: string; codec: string; cove: boolean; animatedRuns?: boolean; restart?: (session: ChallengeSession, id: string, progress: ChallengeProgress) => ChallengeSession;
@@ -80,6 +93,8 @@ export type ChallengeEntry = {
   /** The frame supplies Help unless the board declares its own help UI. */
   helpUI?: 'board';
   controls: { help: () => unknown; reset: () => unknown };
+  /** Absent for inline-only registrations, which behave exactly as before. */
+  packed?: PackedChallenge;
 };
 export type TypedRegistration<P,A,S> = ChallengeEntry & { readonly types?: { Payload: P; Action: A; State: S } };
 export type CodecRegistration = { bank: Bank; codec: SessionCodec; terminal: Terminal | null };

@@ -32,7 +32,9 @@ vi.mock('../src/learn/Celebrate',()=>({Celebrate:()=>null}));
 vi.mock('../src/learn/LevelPath',()=>({LevelPath:()=>null}));
 vi.mock('../src/learn/growth/Board',()=>({GrowthBoard:()=>null}));
 vi.mock('../src/learn/games/hafa-adai/view',()=>({LastPicnicWord:()=>null}));
-vi.mock('../src/learn/views',()=>({views:new Proxy({},{get:()=>({Board:()=>null,Art:()=>null})})}));
+const boardHold=vi.hoisted(()=>({fn:null as null|((held:boolean)=>void)}));
+// Boards render nothing here; each one records the page-scroll hold it was given.
+vi.mock('../src/learn/views',async()=>{const {useContext,useLayoutEffect}=await import('react');const {GridInteraction}=await import('../src/puzzles/grid/preferences');return {views:new Proxy({},{get:()=>({Board:()=>{const hold=useContext(GridInteraction);useLayoutEffect(()=>{boardHold.fn=hold;},[hold]);return null;},Art:()=>null})})};});
 vi.mock('../src/badges/ResultCard',()=>({BadgeResultCard:()=>null}));
 let store:ReturnType<typeof useStore>;
 function Probe(){const s=useStore();useLayoutEffect(()=>{store=s;},[s]);return s.ready?<LearnFrame id="letter-lagoon"/>:null;}
@@ -86,5 +88,20 @@ it.each(['e7','e6'])('Crab P2-7: finished %s beach offers same-puzzle only when 
  const completed=ids.map(id=>solve(levels.find(l=>l.id===id)!));save.learn={'crab-commands':{...round,learner:'a',state:{...round.state as object,levels:ids,completed,program:[],cursor:0,running:false,cards:completed.flat().length}}};
  let progress=completedSignal(emptyChallenge(),schoolContext('crab-commands',1),true,true);progress=completedSignal(progress,schoolContext('crab-commands',1),true,true);progress.signals[0][3]='easy';save.challenge=progress;save.profiles!.people.a.challenge=progress;db.raw=encodeSave(save);let r!:ReactTestRenderer;
  try{await act(async()=>{r=create(<StoreProvider><CrabProbe/></StoreProvider>);});await press(r,id==='e7'?'Try this beach with a dare':'Try a related challenge');expect(router.push).toHaveBeenCalledWith({pathname:'/challenge',params:{game:'crab-commands',...(id==='e7'?{puzzle:'7:3'}:{})}});
+ }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
+});
+
+// Integration rehearsal: a page scroll that started on the Slip Tide board also moved the crabs. A board that owns a
+// touch now holds the School page still until release, as Cove grids do.
+it('a board that owns a touch holds the School page scroll until release',async()=>{
+ vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);boardHold.fn=null;
+ const save=migrateProfiles({...emptySave(),learning:addLearner(undefined,'A','a')});
+ save.learn={'letter-lagoon':{...startSession('letter-lagoon',{options:optionsAtLevel({mode:'solo',pace:'easy'},2)},{},42),learner:'a'}};
+ db.raw=encodeSave(save);let r!:ReactTestRenderer;
+ try{await act(async()=>{r=create(<StoreProvider><Probe/></StoreProvider>);});
+  const page=()=>r.root.findByType('section' as never);
+  expect(boardHold.fn).not.toBeNull();expect(page().props.scrollEnabled).toBe(true);
+  await act(async()=>boardHold.fn!(true));expect(page().props.scrollEnabled).toBe(false);
+  await act(async()=>boardHold.fn!(false));expect(page().props.scrollEnabled).toBe(true);
  }finally{if(r)await act(async()=>r.unmount());vi.unstubAllGlobals();}
 });
