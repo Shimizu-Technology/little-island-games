@@ -2,7 +2,7 @@ import React, { memo, useMemo } from "react";
 import { Platform, Pressable, View } from "react-native";
 import Animated, { useAnimatedStyle, useDerivedValue, useSharedValue, type SharedValue } from "react-native-reanimated";
 import { GestureDetector } from "react-native-gesture-handler";
-import { roomIds, roomNames } from "../catalogMore";
+import { roomIds, roomNames, type RoomId } from "../catalogMore";
 import { RoomArt, ShoreArt } from "../art/Room";
 import { RoomShellArt } from "../art/More";
 import { BuildingArt, BuildingTrim, TerraceArt } from "../BuildingArt";
@@ -269,7 +269,10 @@ export function SceneView({
   const { camera } = interaction;
   // One UI-thread clock for every friend on screen; nothing re-renders an SVG.
   const lifeClock = useSharedValue(0);
-  const living = !reduced && !!liveRoom;
+  // R3: the clock runs only while a friend on screen actually blinks and breathes with it.
+  const alive = (entity: SceneEntity) => !!entity.character && entity.room === liveRoom && !sleeping[entity.id] &&
+    !reactions[entity.id] && !entity.action && restingVisible(entity, scene);
+  const living = !reduced && !!liveRoom && Object.values(scene.rooms[liveRoom as RoomId]?.entities ?? {}).some(alive);
   React.useEffect(() => {
     if (!living) return;
     // A timer that wakes only at blink edges and breath steps, not a per-frame animation.
@@ -341,8 +344,7 @@ export function SceneView({
                 selected={!front && selected === entity.id}
                 onSelect={onSelect}
                 onMove={onMove}
-                life={living && !front && entity.character && entity.room === liveRoom && !sleeping[entity.id] &&
-                  !reactions[entity.id] && !entity.action ? lifeClock : undefined}
+                life={living && !front && alive(entity) ? lifeClock : undefined}
               />
             );
             return (

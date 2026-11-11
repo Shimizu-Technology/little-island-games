@@ -284,6 +284,10 @@ export function useInteraction({
       current[index] = token; current[`${index}:${token}`] = token; return current;
     });
   };
+  /** R4: an unmounted target pose is no longer laid out; a stale acknowledgement must not count. */
+  const forgetPose = (index: number, token: string) => {
+    poseLayouts.modify((current) => { "worklet"; delete current[`${index}:${token}`]; return current; });
+  };
   const acknowledgeLayout = (id: string, token: string) => {
     laidOut.modify((current) => { "worklet"; current[id] = token; return current; });
   };
@@ -481,7 +485,7 @@ export function useInteraction({
     });
     if (started !== undefined) catalogTimes.modify(times => { "worklet"; times.push(eventTime() - started); return times; });
     return proposal;
-  }, [subjectFor, slots, prepared, camera, building, designing, reduced, onTrace, catalogTimes]);
+  }, [subjectFor, slots, prepared, camera, building, designing, reduced, onTrace, catalogTimes, dropZones]);
   const isCurrent = (index: number, token: CaptureToken) => {
     const slot = slots.get()[index];
     return (
@@ -1513,6 +1517,7 @@ export function useInteraction({
     renderedRevision,
     acknowledgeLayout,
     acknowledgePose,
+    forgetPose,
     poseLayouts,
     fixtureNudges,
     restingFlags,

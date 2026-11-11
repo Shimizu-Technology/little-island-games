@@ -24,6 +24,9 @@ const categoryNames: Record<string, string> = {
   "wall-art": "Wall art",
 };
 export const portraitDrawerHeight = 220;
+/** R5: the 64 pt tabs and tool row need 36 pt more, so the catalog row keeps its full height. */
+export const portraitDrawerHeightFor = (large = false) => portraitDrawerHeight + (large ? 36 : 0);
+const big = (large: boolean) => (large ? { minWidth: 64, minHeight: 64, justifyContent: "center" as const } : null);
 export type CatalogGhost = { item?: ItemId; x: number; y: number; active: boolean };
 function Thumbnail({
   id,
@@ -122,7 +125,10 @@ export function DesignTools({
   offset,
   dispatch,
   onClose,
+  large = false,
 }: {
+  /** HR-03 / R5: every child-used button here is at least 64 pt in the larger-target mode. */
+  large?: boolean;
   initialItem?: string;
   state: HomeStateV2;
   ownership: Ownership;
@@ -156,7 +162,7 @@ export function DesignTools({
       testID="design-drawer"
       style={{
         width: vertical ? 220 : "100%",
-        height: vertical ? "100%" : portraitDrawerHeight,
+        height: vertical ? "100%" : portraitDrawerHeightFor(large),
         backgroundColor: "#E8D9BF",
         padding: 8,
         gap: 6,
@@ -165,7 +171,7 @@ export function DesignTools({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={{ maxHeight: 44 }}
+        style={{ maxHeight: large ? 64 : 44 }}
         contentContainerStyle={{ gap: 8 }}
       >
         {["Furniture", ...Object.keys(categoryNames), "Stickers", "Room", "Colours"].map((name) => (
@@ -174,17 +180,17 @@ export function DesignTools({
             onPress={() => setTab(name)}
             accessibilityRole="tab"
             accessibilityState={{ selected: tab === name }}
-            style={{
+            style={[{
               paddingHorizontal: 12,
               paddingVertical: 10,
               backgroundColor: tab === name ? "#D5E6C8" : "#FFF8E9",
               borderRadius: 14,
-            }}
+            }, big(large)]}
           >
             <Text style={{ color: "#284F4B" }}>{categoryNames[name] ?? name}</Text>
           </Pressable>
         ))}
-        <Tool label="Close catalog" symbol="✓" onPress={onClose} />
+        <Tool label="Close catalog" symbol="✓" onPress={onClose} large={large} />
       </ScrollView>
       {catalogVisible && (
         <FlatList
@@ -225,7 +231,7 @@ export function DesignTools({
                 accessibilityRole="button"
                 accessibilityLabel={`${id} walls`}
                 onPress={() => dispatch({ type: "theme", wallpaper: id })}
-                style={{ padding: 14, backgroundColor: "#FFF8E9", borderRadius: 12 }}
+                style={[{ padding: 14, backgroundColor: "#FFF8E9", borderRadius: 12 }, big(large)]}
               >
                 <Text>{id.replaceAll("-", " ")}</Text>
               </Pressable>
@@ -238,12 +244,12 @@ export function DesignTools({
                 accessibilityRole="button"
                 accessibilityLabel={`${id} floor`}
                 onPress={() => dispatch({ type: "theme", floor: id })}
-                style={{ padding: 14, backgroundColor: "#FFF8E9", borderRadius: 12 }}
+                style={[{ padding: 14, backgroundColor: "#FFF8E9", borderRadius: 12 }, big(large)]}
               >
                 <Text>{id.replaceAll("-", " ")}</Text>
               </Pressable>
             ))}
-          <Tool label="Restore this room" symbol="↺" onPress={() => setConfirm(true)} />
+          <Tool label="Restore this room" symbol="↺" onPress={() => setConfirm(true)} large={large} />
         </ScrollView>
       )}
       {tab === "Colours" && (
@@ -255,7 +261,7 @@ export function DesignTools({
                 accessibilityRole="button"
                 accessibilityLabel={`${tint} colour`}
                 onPress={() => dispatch({ type: "tint", id: target.id, tint })}
-                style={{ minWidth: 48, minHeight: 48, padding: 8 }}
+                style={{ minWidth: large ? 64 : 48, minHeight: large ? 64 : 48, padding: 8, alignItems: "center", justifyContent: "center" }}
               >
                 <View
                   style={{
@@ -274,7 +280,7 @@ export function DesignTools({
           )}
         </ScrollView>
       )}
-      <View style={{ height: 48 }}>
+      <View style={{ height: large ? 64 : 48 }}>
         {target && (
           <View style={{ flexDirection: "row", gap: 6 }}>
             <Tool
@@ -282,14 +288,16 @@ export function DesignTools({
               symbol="⟳"
               disabled={itemSpec(target.item).rotations.length < 2}
               onPress={() => dispatch({ type: "rotate", id: target.id })}
+              large={large}
             />
             <Tool
               label="Mirror"
               symbol="⇆"
               disabled={!itemSpec(target.item).mirror}
               onPress={() => dispatch({ type: "mirror", id: target.id })}
+              large={large}
             />
-            <Tool label="Put away" symbol="▱" onPress={() => dispatch({ type: "put-away", id: target.id })} />
+            <Tool label="Put away" symbol="▱" onPress={() => dispatch({ type: "put-away", id: target.id })} large={large} />
           </View>
         )}
       </View>
@@ -303,11 +311,11 @@ export function DesignTools({
                 dispatch({ type: "reset" });
                 setConfirm(false);
               }}
-              style={{ padding: 12 }}
+              style={[{ padding: 12 }, big(large)]}
             >
               <Text>Restore room</Text>
             </Pressable>
-            <Pressable accessibilityRole="button" onPress={() => setConfirm(false)} style={{ padding: 12 }}>
+            <Pressable accessibilityRole="button" onPress={() => setConfirm(false)} style={[{ padding: 12 }, big(large)]}>
               <Text>Keep playing</Text>
             </Pressable>
           </View>

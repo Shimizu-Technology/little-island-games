@@ -51,16 +51,16 @@ export function HomePanels({
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
         <Text style={{ flex: 1, color: "#284F4B", fontWeight: "700" }}>Home controls</Text>
-        <Tool label="Close home controls" symbol="×" onPress={onClose} />
+        <Tool label="Close home controls" symbol="×" onPress={onClose} large={large} />
       </View>
       <View style={{ flexDirection: "row", justifyContent: "space-evenly" }}>
-        <Tool label="Zoom in" symbol="+" onPress={() => onZoom(1.3)} />
-        <Tool label="Zoom out" symbol="−" onPress={() => onZoom(1 / 1.3)} />
+        <Tool label="Zoom in" symbol="+" onPress={() => onZoom(1.3)} large={large} />
+        <Tool label="Zoom out" symbol="−" onPress={() => onZoom(1 / 1.3)} large={large} />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Friends drawer"
           onPress={onFriends}
-          style={{ alignItems: "center", minWidth: 100 }}
+          style={{ alignItems: "center", justifyContent: "center", minWidth: 100, minHeight: large ? 64 : 48 }}
         >
           <FriendsIcon />
         </Pressable>

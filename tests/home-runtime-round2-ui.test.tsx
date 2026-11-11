@@ -2,6 +2,7 @@ import React from "react";
 import TestRenderer, { act } from "react-test-renderer";
 import { describe, expect, it, vi } from "vitest";
 import { layoutToken } from "../src/home/runtime/layout";
+import { poseToken } from "../src/home/runtime/poseBank";
 import { SettleArt } from "../src/home/runtime/SettleArt";
 import { HomeChrome } from "../src/home/runtime/HomeChrome";
 import { HomePanels } from "../src/home/runtime/HomePanels";
@@ -35,7 +36,9 @@ describe("round 2 pose and chrome", () => {
     const destination = { ...source, base: "lie" as const };
     const slot = { phase: "settling", settleAt: 1000, committed: true, pausedElapsed: 0, proposal: { base: "lie", facing: "front" } },
       clock = { value: 1000 };
-    const interaction = { slots: { value: [slot] }, clock, poseLayouts: { value: { 0: layoutToken(destination) } } } as unknown as Interaction;
+    // acknowledgePose writes both keys; R4 gates the carry on the requested pose's own key.
+    const lie = poseToken("lie", "front", destination.action);
+    const interaction = { slots: { value: [slot] }, clock, poseLayouts: { value: { 0: layoutToken(destination), [`0:${lie}`]: lie } } } as unknown as Interaction;
     let tree!: TestRenderer.ReactTestRenderer;
     await act(async () => {
       tree = TestRenderer.create(

@@ -7,6 +7,13 @@ import { buildingLayout } from "../src/home/camera";
 import { identityCamera } from "../src/home/scene/camera";
 import { gridCell, roomPoint, type Scene, type SceneEntity } from "../src/home/scene/types";
 import { roomIds } from "../src/home/catalogMore";
+import { buildScene } from "../src/home/scene/graph";
+import { apply, resolve as resolveDrop } from "../src/home/scene/proposal";
+import { labHome } from "../src/home/runtime/lab";
+import { EDGE_BAND, edgeVelocity, focusCamera } from "../src/home/runtime/CameraController";
+import { withPortions, shoreShellId, shoreShells } from "../src/home/runtime/portions";
+import { prepareHits, pickEntity } from "../src/home/runtime/pick";
+import { settleProgress } from "../src/home/runtime/settle";
 const harness = vi.hoisted(() => ({
   deferUI: false,
   pickups: [] as Pickup[],
@@ -358,10 +365,6 @@ describe("HM-12 explicit camera moves ease on the UI thread", () => {
     await act(async () => renderer.unmount());
   });
 });
-import { buildScene } from "../src/home/scene/graph";
-import { apply, resolve as resolveDrop } from "../src/home/scene/proposal";
-import { labHome } from "../src/home/runtime/lab";
-import { EDGE_BAND, edgeVelocity, focusCamera } from "../src/home/runtime/CameraController";
 describe("HM-14 room buttons are drop targets (D7)", () => {
   const hovered = vi.fn();
   function Hover({ scene, room = "home" }: { scene: Scene; room?: "home" | "kitchen" }) {
@@ -453,9 +456,6 @@ describe("HM-14 room buttons are drop targets (D7)", () => {
     expect(edgeVelocity(1024 - 47, 1024, 200)).toBeLessThan(0);
   });
 });
-import { withPortions, shoreShellId, shoreShells } from "../src/home/runtime/portions";
-import { prepareHits, pickEntity } from "../src/home/runtime/pick";
-import { settleProgress } from "../src/home/runtime/settle";
 describe("HM-15 the sand drops onto the floor visibly; HC-02 beach shells", () => {
   it("a friend let go on the sand lands on the nearest open floor, with visible travel", async () => {
     let renderer!: TestRenderer.ReactTestRenderer;

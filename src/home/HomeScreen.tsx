@@ -33,7 +33,7 @@ import { SceneView } from "./runtime/SceneView";
 import { HomeChrome, Tool, navigationHeightFor, largeNavigationHeight } from "./runtime/HomeChrome";
 import { FriendDrawer } from "./runtime/FriendDrawer";
 import { HomePanels } from "./runtime/HomePanels";
-import { DesignTools, portraitDrawerHeight, type CatalogGhost } from "./runtime/DesignTools";
+import { DesignTools, portraitDrawerHeightFor, type CatalogGhost } from "./runtime/DesignTools";
 import { StagingTray } from "./runtime/StagingTray";
 import { Destinations } from "./runtime/Destinations";
 import { DebugOverlay } from "./runtime/DebugOverlay";
@@ -46,6 +46,7 @@ import { anchorsFor } from "./scene/species";
 import { useIdleCharacters } from "./runtime/useIdleCharacters";
 import { isPortion, withPortions } from "./runtime/portions";
 import { freshHints, nextHintAt, takeHint, touchedHints, type HintState } from "./runtime/quietHints";
+import { useHomeVisible } from "./runtime/visibility";
 import type { ReleaseProbe } from "./runtime/frameProbe";
 import { writeProbe } from "./runtime/probeReceipt";
 import type { HomeTrace } from "./runtime/trace";
@@ -77,7 +78,8 @@ export function HomeScreen({
 }: HomeScreenProps) {
   const window = useWindowDimensions(),
     inset = useSafeAreaInsets(),
-    reduced = useReducedMotion();
+    reduced = useReducedMotion(),
+    visible = useHomeVisible();
   const app = useStore(),
     sound = useSounds(app.save.settings.sound);
   const store = useHomeStore(ownership, initialState, persist);
@@ -139,10 +141,10 @@ export function HomeScreen({
           inset.bottom -
           headerHeight -
           navigationHeight -
-          (designing && !vertical ? portraitDrawerHeight : 0)
+          (designing && !vertical ? portraitDrawerHeightFor(large) : 0)
       ),
     }),
-    [window.width, window.height, vertical, designing, inset, headerHeight, navigationHeight]
+    [window.width, window.height, vertical, designing, inset, headerHeight, navigationHeight, large]
   );
   const building = useMemo(
     () => buildingLayout(roomIds.length, window.width / window.height > 1.8),
@@ -647,8 +649,9 @@ export function HomeScreen({
   // HR-02 (rule 52): after 6 s without a touch, one thing you can use gives one small wiggle.
   // A JS timer, not a frame loop: nothing runs while waiting. Any touch starts the quiet over.
   const hints = useRef<HintState>(freshHints(0));
-  React.useEffect(() => { hints.current = freshHints(Date.now()); }, []);
-  const quiet = !designing && !overview && !selected && !placing && !more && !friends;
+  // R3: hidden or backgrounded, nothing waits; coming back starts a fresh quiet spell.
+  React.useEffect(() => { if (visible) hints.current = freshHints(Date.now()); }, [visible]);
+  const quiet = visible && !designing && !overview && !selected && !placing && !more && !friends;
   // Refs only: a hint or a touch never re-renders the screen, so the wiggle itself never stalls a frame.
   const rearm = useRef<() => void>(() => {});
   React.useEffect(() => {
@@ -660,6 +663,7 @@ export function HomeScreen({
       const due = nextHintAt(hints.current);
       if (due === undefined) return;
       timer = setTimeout(() => {
+        timer = undefined;
         // A touch since this was armed moved the quiet start later: wait again.
         const again = nextHintAt(hints.current);
         if (again === undefined || again > Date.now() + 16) { arm(); return; }
@@ -671,6 +675,8 @@ export function HomeScreen({
           .filter((e) => restingVisible(e, scene) && e.item && !!e.body?.small && (isPortion(e.id) || capabilityOf(e.item.item).toggle))
           .sort((a, b) => rank(a) - rank(b) || a.contact.x - b.contact.x)
           .map((e) => e.id);
+        // R2: nothing here to hint at. Stop until a touch, a room change or a return to Home.
+        if (!candidates.length) return;
         const next = takeHint(hints.current, Date.now(), candidates, reduced);
         hints.current = next.state;
         if (next.id) runtime.current?.showHint(next.id);
@@ -865,7 +871,7 @@ export function HomeScreen({
             pickups={pickups}
             reduced={reduced}
             renderCharacter={renderCharacter}
-            liveRoom={overview ? undefined : room}
+            liveRoom={overview || !visible ? undefined : room}
             debugLayer={lab && labKit && hulls ? <labKit.overlay.HullOverlay scene={scene} building={building} scale={roomScale(viewport)} /> : undefined}
             selected={selected}
             reactions={reactions}
@@ -946,6 +952,7 @@ export function HomeScreen({
             offset={viewportOffset}
             dispatch={dispatch}
             onClose={() => setDesigning(false)}
+            large={large}
           />
         )}
       </View>
@@ -965,7 +972,7 @@ export function HomeScreen({
           bottom={
             inset.bottom +
             navigationHeight +
-            (designing && !vertical ? portraitDrawerHeight + 6 : staged.length ? 100 : 10)
+            (designing && !vertical ? portraitDrawerHeightFor(large) + 6 : staged.length ? 100 : 10)
           }
           onChoose={(proposal) => {
             if (runtime.current!.animateProposal(proposal)) { setSelected(undefined); setRoom(proposal.room); }

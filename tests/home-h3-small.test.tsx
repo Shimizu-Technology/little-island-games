@@ -9,7 +9,7 @@ import { resolve } from '../src/home/scene/proposal';
 import { buildingLayout, roomOrigin } from '../src/home/camera';
 import { roomIds } from '../src/home/catalogMore';
 const harness = vi.hoisted(() => ({ options: {} as any, chrome: {} as any, finish: vi.fn(), hint: vi.fn(), reduced: false }));
-vi.mock('expo-router', () => ({ router: {} }));
+vi.mock('expo-router', () => ({ router: {}, useFocusEffect: () => {} }));
 vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'web' }, AppState: { addEventListener: () => ({ remove() {} }) }, useWindowDimensions: () => ({ width: 390, height: 844 }) }));
 vi.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0 }) }));
 vi.mock('react-native-reanimated', () => ({ default: { View: 'AnimatedView' }, useSharedValue: (v: any) => { const ref = React.useRef(v); return { get: () => ref.current, set: (n: any) => { ref.current = n; } }; }, useAnimatedStyle: () => ({}) }));
@@ -21,7 +21,7 @@ vi.mock('../src/home/runtime/useInteraction', () => ({ useInteraction: (options:
 vi.mock('../src/home/runtime/SceneView', () => ({ SceneView: () => null }));
 vi.mock('../src/home/runtime/HomeChrome', () => ({ HomeChrome: (props: any) => { harness.chrome = props; return null; }, Tool: () => null, navigationHeight: 60, navigationHeightFor: () => 60 }));
 vi.mock('../src/home/runtime/HomePanels', () => ({ HomePanels: () => null }));
-vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: () => null, portraitDrawerHeight: 200 }));
+vi.mock('../src/home/runtime/DesignTools', () => ({ DesignTools: () => null, portraitDrawerHeight: 200, portraitDrawerHeightFor: () => 200 }));
 vi.mock('../src/home/runtime/StagingTray', () => ({ StagingTray: () => null }));
 vi.mock('../src/home/runtime/Destinations', () => ({ Destinations: () => null }));
 vi.mock('../src/home/runtime/DebugOverlay', () => ({ DebugOverlay: () => null }));

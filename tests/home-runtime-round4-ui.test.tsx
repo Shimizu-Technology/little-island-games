@@ -30,7 +30,7 @@ vi.mock('../src/home/BuildingArt',()=>({BuildingArt:()=>null,BuildingTrim:()=>nu
 function context(id:string,reduced=false) {
  const state=labHome();state.rooms.kitchen.instances.find(i=>i.id==='fridge')!.powered=true;const scene=withPortions(buildScene(state)),clock={value:1000};
  const slot={id,ready:true,painted:true,phase:'dragging',liftedAt:0,x:0,y:0,gripX:0,gripY:0,tilt:0,lag:0,settleAt:0,pausedElapsed:0};
- const interaction={clock,slots:{value:[slot,{}]},camera:{value:{a:1}},fixtureNudges:{value:{}},acknowledgeLayout:()=>{},acknowledgePose:()=>{},ready:()=>{}} as unknown as Interaction;
+ const interaction={clock,slots:{value:[slot,{}]},camera:{value:{a:1}},fixtureNudges:{value:{}},acknowledgeLayout:()=>{},acknowledgePose:()=>{},poseLayouts: { value: new Proxy({}, { get: (_t: object, k: string | symbol) => String(k).split(':').slice(1).join(':') }) },ready:()=>{}} as unknown as Interaction;
  // HM-13: resting art reads the published state; derive it from the same fake channels.
  const live=interaction as any;
  live.restingFlags={get value(){return restingFlagsOf(live.slots.value.filter((s:any)=>s.id!==undefined).map((s:any)=>({...s})),live.controller?.value.pointers??[]);}};
