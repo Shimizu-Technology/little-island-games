@@ -140,8 +140,11 @@ node scripts/words/mutation.mjs
 ### Normalized density backstop and preview binding
 
 Every exported text file also receives a structure-independent density pass over
-its raw UTF-8 text, parsed/decoded strings (including Hermes strings), and the
-space-separated sequence of those strings. Binary media is content-sniffed and
+its raw UTF-8 text, parsed/decoded strings (including each Hermes entry), and
+the source-ordered decoded string sequence for JavaScript. Hermes entries are
+scanned individually: the compiler deduplicates and reorders its string table,
+so joining it creates artificial adjacency. Hermes proximity is enforced through
+the bound iOS JavaScript export, not the string table. Binary media is content-sniffed and
 keeps the raw blob/hash/canary checks. Text is NFKC-normalized, default-ignorable
 characters are removed, case and diacritics are folded, and tokens split at every
 non-letter. Core/exact/lemma content checks use the same normalization and whole

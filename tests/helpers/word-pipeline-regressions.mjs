@@ -840,3 +840,7 @@ exportCase('R4 legacy sparse odd array','data.js','globalThis.words='+JSON.strin
 for(const file of ['words.json','words.ts'])test(`R4 teaching record shape ${file}`,()=>{
  const sourceRoot=join(scratch,'teaching-shape-'+file),dir=join(sourceRoot,'dist');mkdirSync(join(sourceRoot,'src/learn/content'),{recursive:true});mkdirSync(dir);writeFileSync(join(sourceRoot,'src/learn/content/chamoru.ts'),'export const words=[];');const data=JSON.stringify([{id:'x',term:'KAPSENSE',english:'Safe gloss'}]);writeFileSync(join(sourceRoot,'src/learn/content',file),file.endsWith('.json')?data:'export const rows='+data+';');writeFileSync(join(dir,'data.js'),'globalThis.safe=1;');assert.throws(()=>guardTree(dir,sensitivePolicy,[],{sourceRoot}),/blocked-chamoru-source/);
 });
+for(const single of [false,true])test(`R4 Hermes entry density ${single?'single list':'separate strings'}`,()=>{
+ const dir=join(scratch,'hermes-entry-'+single);mkdirSync(dir);const input=join(scratch,'hermes-entry-'+single+'.js');const code=single?'globalThis.label='+JSON.stringify('There is '+r4words.join(' and there is '))+';':r4words.map((word,i)=>`globalThis.x${i}=${JSON.stringify(word)};`).join('\n');writeFileSync(input,code);const compiled=spawnSync(hermesc,['-emit-binary','-out',join(dir,'main.hbc'),input],{encoding:'utf8'});assert.equal(compiled.status,0,compiled.stderr);
+ if(single)assert.throws(()=>guardTree(dir,r4policy),/broad-density/);else assert.equal(guardTree(dir,r4policy).passed,true);
+});

@@ -72,8 +72,9 @@ export function artifactScanner(policy, library=[], teachings=[]) {
   const literal=rawTermMatcher([...new Set([...policy.core,...policy.exact,...policy.lemmas].map(normalizedText))]);
   return (bytes,name='artifact.bin',decodedPack,raw=byteViews(bytes)) => {
     const {views,uppers}=raw;
+    const isHermes=bytes.subarray(0,8).equals(hermesMagic) || /\.hbc$/i.test(name);
     let strings=[],keys=[],units=[],grids=[],sensitiveStrings=[],sensitiveGrids=[],semantic=true;
-    if(bytes.subarray(0,8).equals(hermesMagic) || /\.hbc$/i.test(name)) strings=hermesStrings(bytes);
+    if(isHermes) strings=hermesStrings(bytes);
     else if(/\.(?:[cm]?js|bundle)$/i.test(name)) ({strings,keys,units,grids,sensitiveStrings,sensitiveGrids}=javascriptStrings(views[1],teachings));
     else if(decodedPack) {
       strings=puzzleStrings([decodedPack.payloads,decodedPack.speech]);keys=puzzleStrings(decodedPack.metadata);grids=letterGrids(decodedPack.payloads);
@@ -93,13 +94,14 @@ export function artifactScanner(policy, library=[], teachings=[]) {
       }
     }
     strings.push(...decodedTextViews(strings));
+    const densityEntries=[...strings];
     if(bytes.subarray(0,8).equals(hermesMagic) || /\.(?:[cm]?js|bundle)$/i.test(name)) {
       const parsed=workletStrings(strings);strings=parsed.strings;keys.push(...parsed.keys);units.push(...parsed.units);grids.push(...parsed.grids);sensitiveStrings.push(...parsed.sensitiveStrings);sensitiveGrids.push(...parsed.sensitiveGrids);
     }
-    const textViews=[...(isUtf8(bytes) && !/[\x00-\x08\x0e-\x1f]/.test(views[1])?[views[1]]:[]),...strings,...keys,...(decodedPack?[JSON.stringify(decodedPack)]:[])];
+    const textViews=[...(isUtf8(bytes) && !/[\x00-\x08\x0e-\x1f]/.test(views[1])?[views[1]]:[]),...densityEntries,...strings,...keys,...(decodedPack?[JSON.stringify(decodedPack)]:[])];
     // Joining decoded strings preserves words split by encoded punctuation without
     // concatenating letter runs from separate string-table entries.
-    textViews.push([...strings,...keys].join(' '));
+    if(!isHermes)textViews.push([...strings,...keys].join(' '));
     textViews.push(...textViews.filter(text=>text.includes('\\')).map(text=>text.replace(/\\[bBdDsSwW]/g,' ')));
     const densityMaximum=textViews.reduce((maximum,text)=>Math.max(maximum,density(text)),0);
     const shortDensityMaximum=textViews.reduce((maximum,text)=>Math.max(maximum,shortDensity(text)),0);

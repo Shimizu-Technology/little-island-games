@@ -190,6 +190,10 @@ r4Edges.push(
  ['guard','JSON teaching shape'," || /src\\/learn\\//.test(name) && teachingRecordData(JSON.parse(text))",'', ['R4 teaching record shape words.json']],
  ['artifact-views','TS teaching shape',"||/src\\/learn\\//.test(name) && /[\"']?term[\"']?\\s*:/.test(text) && /[\"']?english[\"']?\\s*:/.test(text)",'',['R4 teaching record shape words.ts']]
 );
+r4Edges.push(
+ ['guard','Hermes individual density entries','...densityEntries,...strings,...keys,',"...(isHermes?[]:densityEntries),...(isHermes?[]:strings),...keys,",['R4 Hermes entry density single list']],
+ ['guard','Hermes artificial adjacency',"if(!isHermes)textViews.push([...strings,...keys].join(' '));","textViews.push([...strings,...keys].join(' '));",['R4 Hermes entry density separate strings']]
+);
 for(const [file,label,before,after,tests] of r4Edges){const original=sources.get(file);if(!original.includes(before))throw new Error('Missing R4 mutation target '+label);custom(file,'R4 '+label,original.replace(before,after),tests);}
 for(const m of mutations) {if(m.source===sources.get(m.file))throw new Error('Unchanged mutant '+m.message);if(m.file!=='ci' && ts.createSourceFile('mutant.mjs',m.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS).parseDiagnostics.length)throw new Error('Invalid mutant '+m.message);}
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
