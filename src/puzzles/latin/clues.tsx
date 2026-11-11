@@ -30,7 +30,7 @@ export function cageLayer(p: LatinPuzzle) {
       {!!dashed && <Svg width={n * cell} height={n * cell} style={{ position: 'absolute' }}><Path d={dashed} stroke={C.teal} strokeWidth={2} strokeDasharray="5 3" fill="none"/></Svg>}
       {p.cages.map((c, k) => {
         const first = Math.min(...c.cells);
-        return <Text key={k} maxFontSizeMultiplier={1.2} numberOfLines={1} style={{ position: 'absolute', left: (first % n) * cell + inset + (p.kind === 'killer' ? 2 : 0), top: Math.floor(first / n) * cell + (p.kind === 'killer' ? inset + 1 : 2), fontSize: size, lineHeight: size * 1.15, fontWeight: '700', color: C.ink, fontVariant: ['tabular-nums'], ...(p.kind === 'killer' ? { backgroundColor: '#FFFDF7', paddingHorizontal: 1 } : {}) }}>{cageLabel(c)}</Text>;
+        return <Text key={k} maxFontSizeMultiplier={1.2} numberOfLines={1} style={{ position: 'absolute', left: (first % n) * cell + inset + (p.kind === 'killer' ? 2 : 0), top: Math.floor(first / n) * cell + (p.kind === 'killer' ? inset + 1 : 2), fontSize: size, lineHeight: size * 1.15, fontWeight: '700', color: C.ink, fontVariant: ['tabular-nums'] }}>{cageLabel(c)}</Text>;
       })}
     </>;
   };
