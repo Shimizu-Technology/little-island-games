@@ -37,7 +37,7 @@ The 3.0 Checkers search had a fixed depth and node cap (Growing depth 2 and 1,80
   | Revision 1 with its clock stopped: same move as revision 2 | 335 of 335 | 335 of 335 |
   | Largest search, positions | 100 | 1,513 (cap 9,000) |
 
-  So revision 2 plays as revision 1 always played on a fast machine, and a slow device no longer cuts the Challenge search short (38 of 335 decisions there). Both revisions beat a random player 40 of 40. Revision 2 against revision 1 with colours swapped gave the same win counts both ways (Growing 8 to 4, Challenge 2 to 1, the rest drawn or past 200 plies).
+  So revision 2 plays as revision 1 always played on a fast machine, and a slow device no longer cuts the Challenge search short (38 of 335 decisions there). Both revisions beat a random player 40 of 40. Revision 2 against revision 1 with colours swapped gave the same win counts both ways (Growing 8 to 4, Challenge 2 to 1, the rest drawn or past 200 plies). Interpreted on the loaded host, where revision 1's clock ran out, revision 2 won 17 Challenge games to revision 1's 6 over the same 80 games. The head-start results are identical in both runs, because revision 2 doesn't read the clock.
 - Revision 2 search time on the Mac (whole decision, before slicing): Challenge p95 6.9 ms and worst 13.9 ms with JIT; p95 136 ms and worst 215 ms interpreted on a loaded host. It runs in 8 ms slices after the 320 ms thinking pause. **The iPad mini (6th generation) time is still unmeasured.**
 
 ## Shell Pits Challenge, revision 2 (BD-06)
