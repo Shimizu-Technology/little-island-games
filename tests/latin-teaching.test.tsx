@@ -64,8 +64,8 @@ describe('colour-chain hints explain the deduction they made (review R6)', () =>
       await screen.helped();
       expect(text(screen)).toContain(`dots ${chainMarks[0]} and rings ${chainMarks[1]}`);
       const all = labels(screen);
-      expect(all.filter(l => l.endsWith(', chain dot')).length).toBe(cue.marks![0].filter(i => i !== cue.target).length);
-      expect(all.filter(l => l.endsWith(', chain ring')).length).toBe(cue.marks![1].filter(i => i !== cue.target).length);
+      expect(all.filter(l => l.endsWith(', chain dot')).length).toBe(cue.marks![0].length);
+      expect(all.filter(l => l.endsWith(', chain ring')).length).toBe(cue.marks![1].length);
       await act(async () => { (screen.root.findAllByType('button').find(b => b.children.includes('Why?'))!.props.onPress as () => void)(); });
       expect(text(screen)).toContain(cue.think.slice(0, 40));
       expect(cue.think).toMatch(/Two dots see each other/);

@@ -78,8 +78,9 @@ export function LatinBoard({ view, dispatch, active, width }: LatinBoardProps) {
     if (v) state.values.forEach((x, i) => { if (x === v) out.set(i, 1); });
     if (shown && cue) {
       for (const i of cue.focus) out.set(i, 2);
-      // A colour chain shows its two colours as dots and rings; the square the hint fills stays gold.
-      cue.marks?.forEach((cells, k) => cells.forEach(i => { if (i !== cue.target) out.set(i, k === 0 ? 3 : 4); }));
+      // A colour chain shows its two colours as dots and rings, the square the hint fills included:
+      // it may be one of the two squares that prove the step.
+      cue.marks?.forEach((cells, k) => cells.forEach(i => out.set(i, k === 0 ? 3 : 4)));
     }
     return out;
   }, [state.values, state.selected, shown, ladder.cue]);
