@@ -15,7 +15,7 @@ const fixtures = join(root, "tests/fixtures/expo-audio-status");
 const installed = join(root, "node_modules/expo-audio/ios");
 // xcrun supplies the macOS SDK that swiftc needs.
 const swiftc = process.platform === "darwin" && spawnSync("xcrun", ["--find", "swiftc"]).status === 0;
-const scenarios = ["player-race", "player-order", "player-seek", "playlist-race", "playlist-order"];
+const scenarios = ["player-race", "player-order", "player-seek", "player-release", "playlist-race", "playlist-order", "playlist-edits", "playlist-release"];
 const slow = process.env.LITTLE_ISLAND_SLOW_HOST === "1" ? 4 : 1;
 
 describe.skipIf(!swiftc)("expo-audio status queue under ThreadSanitizer", () => {

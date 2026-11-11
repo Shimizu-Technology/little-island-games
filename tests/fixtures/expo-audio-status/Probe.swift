@@ -174,6 +174,49 @@ func playerSeek() {
   print("PASS player-seek")
 }
 
+// Release closes status delivery for good. A status already being built, a seek completion that arrives after
+// release, a later producer and a media-services reset racing release emit nothing; the seek still resumes once.
+func playerRelease() {
+  let player = AudioPlayer(ProbePlayer(fixed: ProbeItem()), interval: 10, source: source)
+  player.play(at: 1)
+  settle()
+  holdNextRead()
+  player.updateStatus(with: [:])
+  ProbeItem.waitForHeldRead()
+  let resumed = startSeek { await player.seekTo(seconds: 0) }
+  let before = Events.of(player, "playbackStatusUpdate").count
+  player.sharedObjectWillRelease()
+  ProbeItem.releaseHeldRead()
+  player.updateStatus(with: [:])
+  player.handleMediaServicesReset()
+  awaitResumedOnce(resumed, "player-release")
+  let after = Events.of(player, "playbackStatusUpdate").dropFirst(before)
+  if !after.isEmpty { fail("player-release: \(after.count) status(es) emitted after release: \(describe(Array(after)))") }
+  print("PASS player-release")
+}
+
+// Starts a seek on another thread and returns once its completion is queued on main, not yet run.
+func startSeek(_ seek: @escaping @Sendable () async -> Void) -> DispatchSemaphore {
+  let resumed = DispatchSemaphore(value: 0)
+  Task.detached {
+    await seek()
+    resumed.signal()
+  }
+  if ProbePlayer.seekQueued.wait(timeout: .now() + 5) != .success { fail("the seek never reached the player") }
+  return resumed
+}
+
+// A double resume traps in CheckedContinuation; a missing one never signals.
+func awaitResumedOnce(_ resumed: DispatchSemaphore, _ scenario: String) {
+  let deadline = Date().addingTimeInterval(5)
+  while resumed.wait(timeout: .now()) != .success {
+    if Date() > deadline { fail("\(scenario): seekTo never resumed after release") }
+    pump(0.01)
+  }
+  settle()
+  if resumed.wait(timeout: .now()) == .success { fail("\(scenario): seekTo resumed twice") }
+}
+
 func playlist(_ count: Int) -> (AudioPlaylist, ProbePlayer) {
   let items: [AVPlayerItem?] = (0..<count).map { _ in ProbeItem() }
   let queue = ProbePlayer(items: items.compactMap { $0 })
@@ -218,12 +261,77 @@ func playlistOrder() {
   print("PASS playlist-order")
 }
 
+// Track-list edits don't stop a continuing playback's progress. After an append, an insert and each branch of
+// remove, the latest observer's callbacks are emitted, and callbacks from every removed observer stay rejected.
+func playlistEdits() {
+  let (list, queue) = playlist(4)
+  var tick = 0.0
+  func expectProgress(after step: String, index: Int, count: Int) {
+    settle()
+    if list.currentTrackIndex != index || list.trackCount != count {
+      fail("playlist-edits: after \(step) expected track \(index) of \(count), got \(list.currentTrackIndex) of \(list.trackCount)")
+    }
+    let observers = queue.allObservers
+    let before = Events.of(list, "playlistStatusUpdate").count
+    var removed: Set<Double> = []
+    for observer in observers.dropLast() {
+      tick += 1
+      removed.insert(tick)
+      observer.fire(tick)
+    }
+    tick += 1
+    observers.last!.fire(tick)
+    settle()
+    let times = Events.of(list, "playlistStatusUpdate").dropFirst(before).compactMap(time)
+    if !times.contains(tick) { fail("playlist-edits: no progress after \(step): \(times)") }
+    if let stale = times.first(where: removed.contains) {
+      fail("playlist-edits: a removed observer's callback (\(stale)) was emitted after \(step)")
+    }
+  }
+  list.play(at: 1)
+  expectProgress(after: "play", index: 0, count: 4)
+  list.add(source: source)
+  expectProgress(after: "an append", index: 0, count: 5)
+  list.insert(source: source, at: 0)
+  expectProgress(after: "an insert before the current track", index: 1, count: 6)
+  list.remove(at: 1)
+  expectProgress(after: "removing the current track", index: 1, count: 5)
+  list.remove(at: 0)
+  expectProgress(after: "removing an earlier track", index: 0, count: 4)
+  list.remove(at: 3)
+  expectProgress(after: "removing a later track", index: 0, count: 3)
+  list.sharedObjectWillRelease()
+  print("PASS playlist-edits")
+}
+
+// The playlist's release closes status delivery the same way.
+func playlistRelease() {
+  let (list, _) = playlist(2)
+  list.play(at: 1)
+  settle()
+  holdNextRead()
+  list.updateStatus(with: [:])
+  ProbeItem.waitForHeldRead()
+  let resumed = startSeek { await list.seekTo(seconds: 0) }
+  let before = Events.of(list, "playlistStatusUpdate").count
+  list.sharedObjectWillRelease()
+  ProbeItem.releaseHeldRead()
+  list.updateStatus(with: [:])
+  awaitResumedOnce(resumed, "playlist-release")
+  let after = Events.of(list, "playlistStatusUpdate").dropFirst(before)
+  if !after.isEmpty { fail("playlist-release: \(after.count) status(es) emitted after release: \(describe(Array(after)))") }
+  print("PASS playlist-release")
+}
+
 let scenarios: [String: () -> Void] = [
   "player-race": playerRace,
   "player-order": playerOrder,
   "player-seek": playerSeek,
+  "player-release": playerRelease,
   "playlist-race": playlistRace,
-  "playlist-order": playlistOrder
+  "playlist-order": playlistOrder,
+  "playlist-edits": playlistEdits,
+  "playlist-release": playlistRelease
 ]
 guard CommandLine.arguments.count == 2, let run = scenarios[CommandLine.arguments[1]] else {
   print("usage: probe <\(scenarios.keys.sorted().joined(separator: "|"))>")

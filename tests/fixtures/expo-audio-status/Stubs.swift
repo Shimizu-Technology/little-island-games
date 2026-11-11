@@ -43,7 +43,9 @@ extension AVPlayer {
 // A queue player whose periodic observers, playback state and seeks the probe drives by hand, the way
 // AVFoundation would: each observer block runs on the queue it was registered with (main when nil), and a
 // removed observer's block may still be in flight. With a fixed item, it answers the status getters itself,
-// so AVFoundation's internal locks can't hide a race in the code under test from ThreadSanitizer.
+// so AVFoundation's internal locks can't hide a race in the code under test from ThreadSanitizer. Built from a
+// list of items (playlists), it keeps the queue itself: the probe's items can't load, and AVFoundation would
+// skip past them.
 final class ProbePlayer: AVQueuePlayer {
   struct Observer {
     let queue: DispatchQueue
@@ -52,10 +54,13 @@ final class ProbePlayer: AVQueuePlayer {
   }
 
   static let lock = NSLock()
+  // Signalled once a seek's completion has been queued on main, so the probe can release before it runs.
+  static let seekQueued = DispatchSemaphore(value: 0)
   nonisolated(unsafe) static var made: [ProbePlayer] = []
   private var observers: [Observer] = []
   private var fakeStatus: AVPlayer.TimeControlStatus = .paused
   private let fixed: ProbeItem?
+  private var queued: [AVPlayerItem] = []
 
   init(fixed item: ProbeItem) {
     fixed = item
@@ -63,7 +68,7 @@ final class ProbePlayer: AVQueuePlayer {
     unobserved(ProbePlayer.lock) { ProbePlayer.made.append(self) }
   }
 
-  override var currentItem: AVPlayerItem? { fixed ?? super.currentItem }
+  override var currentItem: AVPlayerItem? { fixed ?? unobserved(ProbePlayer.lock) { queued.first } }
   override var status: AVPlayer.Status { .readyToPlay }
   override var rate: Float {
     get { 1 }
@@ -77,8 +82,50 @@ final class ProbePlayer: AVQueuePlayer {
 
   override init(items: [AVPlayerItem]) {
     fixed = nil
-    super.init(items: items)
+    queued = items
+    super.init()
     unobserved(ProbePlayer.lock) { ProbePlayer.made.append(self) }
+  }
+
+  // The fixed-item player leaves its queue to AVFoundation.
+  override func items() -> [AVPlayerItem] {
+    fixed == nil ? unobserved(ProbePlayer.lock) { queued } : super.items()
+  }
+
+  override func insert(_ item: AVPlayerItem, after afterItem: AVPlayerItem?) {
+    guard fixed == nil else { return super.insert(item, after: afterItem) }
+    editQueue { queue in
+      let index = afterItem.flatMap { after in queue.firstIndex { $0 === after } }.map { $0 + 1 } ?? queue.count
+      queue.insert(item, at: index)
+    }
+  }
+
+  override func remove(_ item: AVPlayerItem) {
+    guard fixed == nil else { return super.remove(item) }
+    editQueue { $0.removeAll { $0 === item } }
+  }
+
+  override func removeAllItems() {
+    guard fixed == nil else { return super.removeAllItems() }
+    editQueue { $0.removeAll() }
+  }
+
+  override func advanceToNextItem() {
+    guard fixed == nil else { return super.advanceToNextItem() }
+    editQueue { if !$0.isEmpty { $0.removeFirst() } }
+  }
+
+  private func editQueue(_ edit: (inout [AVPlayerItem]) -> Void) {
+    let current = currentItem
+    var next = unobserved(ProbePlayer.lock) { queued }
+    edit(&next)
+    if next.first === current {
+      unobserved(ProbePlayer.lock) { queued = next }
+      return
+    }
+    willChangeValue(forKey: "currentItem")
+    unobserved(ProbePlayer.lock) { queued = next }
+    didChangeValue(forKey: "currentItem")
   }
 
   override init() {
@@ -88,6 +135,11 @@ final class ProbePlayer: AVQueuePlayer {
 
   var lastObserver: Observer {
     unobserved(ProbePlayer.lock) { observers.last! }
+  }
+
+  // Every observer registered so far, oldest first; all but the last have been removed.
+  var allObservers: [Observer] {
+    unobserved(ProbePlayer.lock) { observers }
   }
 
   override func addPeriodicTimeObserver(forInterval interval: CMTime, queue: DispatchQueue?, using block: @escaping @Sendable (CMTime) -> Void) -> Any {
@@ -111,10 +163,12 @@ final class ProbePlayer: AVQueuePlayer {
 
   override func seek(to time: CMTime, completionHandler: @escaping @Sendable (Bool) -> Void) {
     DispatchQueue.main.async { completionHandler(true) }
+    ProbePlayer.seekQueued.signal()
   }
 
   override func seek(to time: CMTime, toleranceBefore: CMTime, toleranceAfter: CMTime, completionHandler: @escaping @Sendable (Bool) -> Void) {
     DispatchQueue.main.async { completionHandler(true) }
+    ProbePlayer.seekQueued.signal()
   }
 
   static func drainAll() {

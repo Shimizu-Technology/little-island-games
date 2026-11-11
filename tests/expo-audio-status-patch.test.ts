@@ -39,14 +39,17 @@ describe("expo-audio status-queue patch", () => {
       const update = between(swift, "func updateStatus(with dict:", "private func deliverStatus");
       expect(update).toMatch(/statusQueue\.async \{ \[weak self\] generation in\s*self\?\.deliverStatus\(with: dict, kind: kind, generation: generation\)\s*completion\?\(\)/);
       expect(swift).toMatch(/"didJustFinish": true\s*\], kind: \.terminal\)/);
-      // Release drops queued and in-flight statuses.
-      expect(between(swift, "override func sharedObjectWillRelease()", "ref.currentItem?.cancelPendingSeeks()")).toMatch(/statusQueue\.invalidate\(\)/);
+      // Release closes the queue before cancelling seeks: queued, in-flight and later statuses are all dropped.
+      expect(between(swift, "override func sharedObjectWillRelease()", "ref.currentItem?.cancelPendingSeeks()")).toMatch(/statusQueue\.close\(\)/);
       // Seek completion resumes JS only after its status is emitted on the queue.
       expect(between(swift, "func seekTo(", "\n  }\n")).toMatch(/self\.updateStatus\(with: \[:\]\) \{\s*continuation\.resume\(\)\s*\}/);
     }
     const queue = read(`${ios}/AudioStatusQueue.swift`);
     expect(queue).toMatch(/dispatchPrecondition\(condition: \.onQueue\(queue\)\)/);
-    expect(queue).toMatch(/generation == expected && !\(kind == \.periodic && ended\)/);
+    expect(queue).toMatch(/!closed && generation == expected && !\(kind == \.periodic && ended\)/);
+    // Closing is permanent: invalidate never reopens the queue.
+    expect(between(queue, "func close()", "\n  }\n")).toMatch(/locked \{\s*closed = true/);
+    expect(queue.match(/^\s*closed = /gm)).toEqual([expect.stringMatching(/closed = $/)]);
   });
 
   it("replaces the player only under the status snapshot lock, and snapshots it there", () => {
@@ -64,6 +67,18 @@ describe("expo-audio status-queue patch", () => {
       expect(swift).toMatch(new RegExp(`var ${name}: [^{]+\\{\\s*get \\{ statusQueue\\.locked \\{ guarded`));
     }
     expect(swift).toMatch(/self\.guardedSources = sources\s*self\.guardedPlayerItems = items\s*super\.init\(ref\)/);
+  });
+
+  it("keeps a registered playlist observer reporting across track-list edits", () => {
+    const swift = playlist();
+    // Edits start a new generation only through trackListChanged, which re-registers a registered observer.
+    expect([...swift.matchAll(/statusQueue\.invalidate\(\)/g)]).toHaveLength(2);
+    expect(between(swift, "private func trackListChanged()", "\n  }\n")).toMatch(/if timeToken != nil \{\s*registerTimeObserver\(\)\s*\} else \{\s*statusQueue\.invalidate\(\)\s*\}/);
+    for (const edit of ["func add(source:", "func clear()", "private func rebuildPlaylist("]) {
+      expect(between(swift, edit, "\n  }\n"), edit).toMatch(/trackListChanged\(\)/);
+    }
+    // remove() rebuilds before play() registers its observer; only the branch that doesn't rebuild invalidates.
+    expect(between(swift, "func remove(at index:", "\n  }\n")).toMatch(/if index > current \{\s*trackListChanged\(\)\s*\}\s*updateStatus/);
   });
 
   it("changes only expo-audio's iOS status delivery: no audio mode, session or playback logic", () => {
