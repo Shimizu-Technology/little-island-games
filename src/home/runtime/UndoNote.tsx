@@ -1,5 +1,5 @@
 import React from "react";
-import { AccessibilityInfo, Pressable, Text } from "react-native";
+import { AccessibilityInfo, Pressable, Text, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 
 const ink = "#284F4B";
@@ -57,9 +57,13 @@ export function UndoNote({ message, restored, top, onDismiss }: { message: strin
       }}
     >
       <UndoGonePicture size={72} restored={restored} />
-      <Text maxFontSizeMultiplier={1.4} style={{ color: ink, fontSize: 15, fontWeight: "600", maxWidth: 190 }}>
+      <Text maxFontSizeMultiplier={1.4} style={{ color: ink, fontSize: 15, fontWeight: "600", maxWidth: 210 }}>
         {message}
       </Text>
+      {/* It goes away when tapped; the little cross says so. */}
+      <View accessible={false} style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: "#F1E6CF", alignItems: "center", justifyContent: "center" }}>
+        <Text accessible={false} style={{ color: ink, fontSize: 14, fontWeight: "700" }}>✕</Text>
+      </View>
     </Pressable>
   );
 }

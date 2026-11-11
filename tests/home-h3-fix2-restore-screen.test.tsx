@@ -52,7 +52,9 @@ it('F3: the reviewer\'s 246-thing room restores once confirmed, with a visible n
   expect(harness.design.state.rooms.home.instances).toHaveLength(6);
   expect(note()).toHaveLength(1);
   expect(note()[0].props.accessibilityLabel).toBe(RESTORE_NOTE['no-undo']);
-  expect(note()[0].findAll((n) => (n.type as unknown) === 'Text').map((n) => n.props.children)).toEqual([RESTORE_NOTE['no-undo']]);
+  expect(note()[0].findAll((n) => (n.type as unknown) === 'Text' && n.props.accessible !== false).map((n) => n.props.children)).toEqual([RESTORE_NOTE['no-undo']]);
+  // A visible cross says it can be tapped away.
+  expect(note()[0].findAll((n) => (n.type as unknown) === 'Text' && n.props.children === '✕')).toHaveLength(1);
   expect(note()[0].findAll((n) => (n.type as unknown) === 'Svg')).toHaveLength(1);
   expect(harness.announce).toContain(RESTORE_NOTE['no-undo']);
   expect(hidden().join('')).not.toMatch(/undo/i);

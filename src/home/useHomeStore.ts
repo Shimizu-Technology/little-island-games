@@ -44,8 +44,8 @@ export const RESTORE_QUESTION: Record<Exclude<RestoreCost, "undoable">, string> 
   "drops-older": "After this, Undo can't bring back your older changes. Restore the room anyway?",
 };
 export const RESTORE_NOTE: Record<Exclude<RestoreCost, "undoable">, string> = {
-  "no-undo": "Your room is back to the start. Undo can't bring it back.",
-  "drops-older": "Your room is back to the start. Your oldest undo steps are gone.",
+  "no-undo": "Back to the start! Undo can't bring the old room back.",
+  "drops-older": "Back to the start! Your oldest undo steps are gone.",
 };
 /** Messages that the Home screen shows as a visible note, not only to a screen reader. */
 export const UNDO_NOTES: readonly string[] = [UNDO_FULL_MESSAGE, ...Object.values(RESTORE_NOTE)];
