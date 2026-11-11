@@ -24,6 +24,11 @@ export type Step = {
   groups: Group[];
   digits: number[];
   remove: [cell: number, mask: number][];
+  /**
+   * For a colour chain: the two colours, and which deduction it is. `wrap`: two squares of one colour
+   * see each other, so that whole colour is false. `trap`: squares outside the chain see both colours.
+   */
+  chain?: { kind: 'wrap' | 'trap'; colours: [number[], number[]] };
 };
 export class Work {
   left: number;
@@ -215,17 +220,18 @@ export function nextDeduction(p: LatinPuzzle, d: readonly number[], work = new W
       for (let q = 0; q < queue.length; q++) { const a = queue[q]; seen.add(a); for (const b of links.get(a) ?? []) if (!color.has(b)) { color.set(b, color.get(a) ? 0 : 1); queue.push(b); } }
       work.tick(color.size);
       if (color.size < 3) continue;
-      const chain = [...color.keys()];
+      const chain = [...color.keys()], colours: [number[], number[]] = [chain.filter(i => color.get(i) === 0), chain.filter(i => color.get(i) === 1)];
       for (const c of [0, 1] as const) {
-        const same = chain.filter(i => color.get(i) === c);
+        const same = colours[c];
         if (same.some(a => same.some(b => a !== b && peers[a].includes(b)))) {
           const s = trim(d, same, same.map(i => d[i] & ~bit(v)), 'simple-coloring', chain, [], [v]);
-          if (s) return s;
+          // The false colour comes first, so teaching can name it.
+          if (s) return { ...s, chain: { kind: 'wrap', colours: [same, colours[1 - c]] } };
         }
       }
       const rest = cellsOf(p).filter(i => !color.has(i) && (d[i] & bit(v)) && [0, 1].every(c => chain.some(j => color.get(j) === c && peers[i].includes(j))));
       const s = trim(d, rest, rest.map(i => d[i] & ~bit(v)), 'simple-coloring', chain, [], [v]);
-      if (s) return s;
+      if (s) return { ...s, chain: { kind: 'trap', colours } };
     }
   }
   return null;
@@ -316,7 +322,7 @@ export function search(p: LatinPuzzle, cap = 2, budget = 400_000, random?: () =>
 
 export type HintPlan =
   /** A number the board already breaks a rule with: the public rule names the clash. */
-  | { kind: 'clash'; cells: number[]; erase: number }
+  | { kind: 'clash'; cells: number[]; erase: number; rule: ClashRule }
   /** An entry that no chain of public deductions from the givens can keep. */
   | { kind: 'mistake'; cell: number }
   | { kind: 'place'; cell: number; value: number; technique: Technique; steps: Step[] }
@@ -331,7 +337,7 @@ export function planHint(p: LatinPuzzle, values: readonly number[], budget = 400
   const wrong = (i: number) => !p.givens[i] && values[i] && opening && opening[i] !== values[i];
   if (clash.length) {
     const erase = clash.find(wrong) ?? clash.find(i => !p.givens[i]);
-    if (erase !== undefined) return { kind: 'clash', cells: clash, erase };
+    if (erase !== undefined) { const rule = clashRules(p, values).find(r => r.cells.includes(erase)) ?? clashRules(p, values)[0]; return { kind: 'clash', cells: rule.cells, erase, rule }; }
   }
   const mistake = cellsOf(p).find(i => wrong(i));
   if (mistake !== undefined) return { kind: 'mistake', cell: mistake };
@@ -356,6 +362,21 @@ export function planHint(p: LatinPuzzle, values: readonly number[], budget = 400
     }
   } catch (e) { if (!(e instanceof Error) || e.message !== 'latin-budget') throw e; }
   return { kind: 'none' };
+}
+/** Which public rule a clash breaks, with the squares that show it. */
+export type ClashRule =
+  | { kind: 'repeat'; group: Group; value: number; cells: number[] }
+  | { kind: 'cage'; cage: number; cells: number[] }
+  | { kind: 'less'; cells: number[] }
+  | { kind: 'sight'; edge: number; clue: number; cells: number[] };
+/** Every broken public rule on the board, in the order a person would check them. */
+export function clashRules(p: LatinPuzzle, values: readonly number[]): ClashRule[] {
+  const out: ClashRule[] = [];
+  for (const g of groups(p)) for (const v of new Set(g.cells.map(i => values[i]).filter(Boolean))) { const cells = g.cells.filter(i => values[i] === v); if (cells.length > 1) out.push({ kind: 'repeat', group: g, value: v, cells }); }
+  p.cages.forEach((c, k) => { if (c.cells.every(i => values[i]) && !cageOK(c, c.cells.map(i => values[i]))) out.push({ kind: 'cage', cage: k, cells: [...c.cells] }); });
+  for (const [a, b] of p.less) if (values[a] && values[b] && values[a] >= values[b]) out.push({ kind: 'less', cells: [a, b] });
+  for (const [id, clue] of p.sights) { const line = sightCells(p, id); if (line.every(i => values[i]) && visible(line.map(i => values[i])) !== clue) out.push({ kind: 'sight', edge: id, clue, cells: line }); }
+  return out;
 }
 const conflictsOf = (p: LatinPuzzle, values: readonly number[]) => {
   const out = new Set<number>();

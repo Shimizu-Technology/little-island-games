@@ -1,35 +1,19 @@
 import { execFileSync } from 'node:child_process';
-import { assertFamilyAppendOnly, assertRootAppendOnly, validFamily, validRoot, type RootIndex } from '../../src/puzzles/bank';
 import { families } from './families';
-import { bakeFamily, productionDirs, readCatalog, verifyCatalog } from './pipeline';
+import { verifyHistory } from './history';
+import { bakeFamily, productionDirs, verifyCatalog } from './pipeline';
 
 const [command, ...rest] = process.argv.slice(2);
 const flag = (name: string) => { const i = rest.indexOf(`--${name}`); return i < 0 ? undefined : rest[i + 1]; };
 const has = (name: string) => rest.includes(`--${name}`);
 const git = (...args: string[]) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 1 << 28 });
 
-function verifyHistory(): number {
-  if (git('rev-parse', '--is-shallow-repository').trim() === 'true') throw new Error('Catalog immutability needs full Git history. Fetch with --unshallow before checking.');
-  const { root, families: current } = readCatalog(productionDirs), file = `${productionDirs.content}/root.json`;
-  const commits = git('log', '--full-history', '--format=%H', '--', file).trim().split('\n').filter(Boolean);
-  for (const commit of commits) {
-    const old: unknown = JSON.parse(git('show', `${commit}:${file}`));
-    if (!validRoot(old)) throw new Error(`Historic root at ${commit} is invalid.`);
-    assertRootAppendOnly(old as RootIndex, root);
-    for (const [id, asset] of old.families) {
-      const manifest: unknown = JSON.parse(git('show', `${commit}:${productionDirs.content}/assets/${asset}.lipuzzle`));
-      const next = current.get(id);
-      if (!validFamily(manifest) || !next) throw new Error(`Historic family ${id} is missing.`);
-      assertFamilyAppendOnly(manifest, next);
-    }
-  }
-  return commits.length;
-}
 if (command === 'verify') {
   const { errors, stats } = verifyCatalog(productionDirs, families, { shipping: has('shipping') });
-  const generations = verifyHistory();
+  const history = verifyHistory();
   if (errors.length) { console.error(errors.join('\n')); process.exit(1); }
-  console.log(`Puzzle catalog ok: ${stats.families} families, ${stats.packs} packs, ${stats.entries} entries replayed through their engines, ${generations} root generations append-only.`);
+  const exempt = history.unpublished ? ` (${history.unpublished} unpublished branch generations may still be replaced; published refs: ${history.refs.join(', ')})` : '';
+  console.log(`Puzzle catalog ok: ${stats.families} families, ${stats.packs} packs, ${stats.entries} entries replayed through their engines, ${history.checked} root generations append-only${exempt}.`);
 } else if (command === 'bake') {
   const id = flag('family');
   const spec = families.find(f => f.id === id);

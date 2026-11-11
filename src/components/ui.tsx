@@ -1,5 +1,6 @@
 import { Text } from "./Text";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { stillPress } from "./stillPress";
 import {
   Animated,
   KeyboardAvoidingView,
@@ -123,6 +124,7 @@ export function Button({
   textStyle,
   numberOfLines,
   maxFontSizeMultiplier,
+  stillOnly = false,
 }: {
   children: React.ReactNode;
   onPress: () => void;
@@ -136,18 +138,28 @@ export function Button({
   textStyle?: TextStyle;
   numberOfLines?: number;
   maxFontSizeMultiplier?: number;
+  /** Press only when the finger did not slide: for keys beside a board or a scrolling page. */
+  stillOnly?: boolean;
 }) {
   const [pressed, setPressed] = useState(false);
+  const latest = useRef(onPress);
+  useEffect(() => { latest.current = onPress; }, [onPress]);
+  const [still] = useState(() => stillPress(() => latest.current()));
   const textColor = selected ? C.paper : quiet ? C.ink : "#FFF";
   return (
     <PressableScale
-      onPressIn={() => setPressed(true)}
+      onPressIn={(e) => { setPressed(true); if (stillOnly) still.onPressIn(e); }}
       onPressOut={() => setPressed(false)}
+      onPressMove={stillOnly ? still.onPressMove : undefined}
+      onTouchStart={stillOnly ? still.onTouchStart : undefined}
+      onTouchMove={stillOnly ? still.onTouchMove : undefined}
+      onTouchEnd={stillOnly ? still.onTouchEnd : undefined}
+      onTouchCancel={stillOnly ? still.onTouchCancel : undefined}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled, selected }}
       disabled={disabled}
-      onPress={onPress}
+      onPress={stillOnly ? still.onPress : onPress}
       style={[
         styles.button,
         quiet && styles.quiet,
