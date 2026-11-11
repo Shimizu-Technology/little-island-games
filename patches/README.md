@@ -4,16 +4,24 @@
 
 ## expo-audio+57.0.5.patch
 
-**Targets:** expo-audio 57.0.5 (Expo SDK 57). It changes `ios/AudioPlayer.swift` and `ios/AudioPlaylist.swift` only. Android, web, the audio session and the audio mode are unchanged.
+**Targets:** expo-audio 57.0.5 (Expo SDK 57). It changes `ios/AudioPlayer.swift` and `ios/AudioPlaylist.swift` and adds `ios/AudioStatusQueue.swift`. Android, web, `AudioModule.swift`, the audio session and the audio mode are unchanged.
 
 **Problem.** Each player registers a periodic status observer with `addPeriodicTimeObserver(..., queue: nil)`, which means the main queue. AVFoundation fires that observer as soon as the player's rate changes, so on every `play()`. The observer builds a status event, and reading `-[AVPlayerItem currentTime]` waits on a MediaToolbox item lock (`itemfig_GetCurrentTime` → `__psynch_mutexwait`) that is contended while the player starts. On the iOS 18.5 simulator, the main thread spent about 4% of its time in that wait (613 of 14,143 samples over 20 seconds). It stalled UI frames on most Arcade tones: in the Lagoon Run W1-8 replay (seed 771), 56–58 of 117 pickup windows had a frame gap over 33.4 ms. The seek completion handler, which AVFoundation also calls on the main queue, made the same read.
 
 The audio session was measured and ruled out. `setActive(true)` in `play()` took a median of 0.06 ms, on the JavaScript thread. Keeping the session active, with no deactivations, still left 56/117 slow windows.
 
-**Patch.** A serial `audioStatusQueue` (user-initiated QoS) delivers the periodic observers of `AudioPlayer` and `AudioPlaylist`, and the status update in `AudioPlayer.seekTo`'s completion. The seek still resumes JavaScript only after its status event is emitted. Status events reach JavaScript as before, and lock-screen updates already hop to the main queue in `MediaController`.
+**Patch.** Each player and playlist owns an `AudioStatusQueue`: one serial queue that every status producer uses. The periodic observer is delivered on it. Seek completion, playback end, KVO, loop changes, playlist changes and media-services reset queue their status on it, in the order they happen, and it builds and emits each status there, off the main queue. Seek still resumes JavaScript only after its status is emitted.
 
-**Result.** With the patch, the same replay on iOS 18.5 had 0/117 slow pickup windows in three runs at 60 fps. The evidence is in the 4.0 program artifacts (`v4/a2-audio/REPORT.md`).
+- **Generations.** A counter advances on `play()` (a replay), item replacement, player replacement after a media-services reset, playlist changes and release. Each status remembers the generation it was queued in and is dropped if the generation moved on before it is emitted. The periodic observer captures the generation of the `play()` that registered it, so callbacks from a removed observer that are still in flight are dropped.
+- **Terminal status.** After a `didJustFinish` status, the periodic observer of that generation emits nothing more, so completion is never followed by an older periodic status.
+- **Snapshots.** A status takes its player reference under the queue's lock, the same lock `replacePlayer` holds when it assigns `ref`. It then reads that player and one current item without the lock, because those AVFoundation reads can block. A playlist's track list (`sources`, `playerItems`, `previousTrackIndex`) is read and written under the same lock. No AVFoundation call is made, and no object is released, while the lock is held.
 
-**Guard.** `tests/expo-audio-status-patch.test.ts` fails if the installed expo-audio is not 57.0.5, if the patch file or the `postinstall` step is missing, if any periodic observer is still delivered on the main queue, if the seek completion reads status on the main queue, or if the patch grows to touch the session, audio mode or playback.
+Lock-screen updates already hop to the main queue in `MediaController`.
 
-**On an SDK upgrade.** The version check fails first. Read the new `AudioPlayer.swift` and `AudioPlaylist.swift`. If upstream no longer delivers status on the main queue, delete the patch, this section and the test. Otherwise port the patch, regenerate it with `npx patch-package expo-audio`, change the target version in the test, and repeat the iOS 18.5 replay measurement before shipping.
+**Result.** With the first version of the patch, the same replay on iOS 18.5 had 0/117 slow pickup windows in three runs at 60 fps. The current version was re-measured the same way. The evidence is in the 4.0 program artifacts (`v4/a2-audio/REPORT.md` and `FIX-REPORT.md`).
+
+**Guards.**
+- `tests/expo-audio-status-patch.test.ts` fails if the installed expo-audio is not 57.0.5, if the patch file, `AudioStatusQueue.swift` or the `postinstall` step is missing, if any periodic observer is delivered on the main queue, if a status producer bypasses the queue, if `ref` is assigned outside the snapshot lock, or if the patch grows to touch the session, audio mode or playback.
+- `tests/expo-audio-status-queue.test.ts` (macOS with Xcode; skipped on Linux CI) compiles the installed Swift files unchanged against host stand-ins in `tests/fixtures/expo-audio-status/` with ThreadSanitizer. It drives them as AVFoundation and `AudioModule` do: held and concurrent periodic reads during media-services resets, playback ending while a read is in flight, replay, release, seek, and playlist rebuilds. The first version of this patch fails four of its five scenarios, and unpatched expo-audio fails them too.
+
+**On an SDK upgrade.** The version check fails first. Read the new `AudioPlayer.swift` and `AudioPlaylist.swift`. If upstream no longer delivers status on the main queue, delete the patch, this section, both tests and the fixtures. Otherwise port the patch, regenerate it with `npx patch-package expo-audio`, change the target version in the tests, and repeat the iOS 18.5 replay measurement before shipping.
