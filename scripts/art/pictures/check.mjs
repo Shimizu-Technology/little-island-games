@@ -75,7 +75,7 @@ export function inspectPicture(text) {
     for (const k of ['fill', 'stroke']) { const v = node.attrs[k]; if (v !== undefined && v !== 'none' && !PALETTE.has(v)) problems.push(`${k} ${v} is not in the palette`); }
     let matrix = inherited.matrix, width = inherited.width;
     try { matrix = multiply(inherited.matrix, parseTransform(node.attrs.transform)); } catch (e) { problems.push(`bad geometry on <${node.name}>: ${e.message}`); }
-    try { if (node.attrs['stroke-width'] !== undefined) width = parseNumber(node.attrs['stroke-width']); if (node.attrs['stroke-dasharray'] !== undefined) parseDashes(node.attrs['stroke-dasharray']); } catch (e) { problems.push(`bad geometry on <${node.name}>: ${e.message}`); }
+    try { if (node.attrs['stroke-width'] !== undefined) { width = parseNumber(node.attrs['stroke-width']); if (width < 0) throw new Error(`stroke-width ${width} is negative`); } if (node.attrs['stroke-dasharray'] !== undefined) parseDashes(node.attrs['stroke-dasharray']); } catch (e) { problems.push(`bad geometry on <${node.name}>: ${e.message}`); }
     const state = { stroke: node.attrs.stroke ?? inherited.stroke, fill: node.attrs.fill ?? inherited.fill, width, matrix, scales: principalScales(matrix) };
     node.state = state;
     if (node.name !== 'g' && node.name !== 'svg') {
@@ -127,7 +127,7 @@ export function dictionaryReachable(root = ROOT) {
   for (const file of files) {
     const rel = relative(root, file).split(sep).join('/');
     if (inside(rel)) continue;
-    for (const [, spec] of readFileSync(file, 'utf8').matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|\bimport\s+)["'`]([^"'`]+)["'`]/g)) {
+    for (const [, spec] of readFileSync(file, 'utf8').matchAll(/(?:\bfrom(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)*|\bimport(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)*\((?:\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)*|\brequire(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)*\((?:\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)*|\bimport(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)*)["'`]([^"'`]+)["'`]/g)) {
       if (inside(spec.startsWith('.') ? posix.normalize(posix.join(posix.dirname(rel), spec)) : spec) || /(?:^|\/)content\/pictures(?:\/|$)/.test(spec)) return true;
     }
   }

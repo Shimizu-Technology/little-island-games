@@ -4,7 +4,6 @@
 // Pure and dependency-free; check.mjs and render-check.mjs share it.
 
 const NUMBER = /[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/y;
-const SEPARATOR = /[\s,]*/y;
 const ARGS = { M: 2, L: 2, H: 1, V: 1, C: 6, S: 4, Q: 4, T: 2, A: 7, Z: 0 };
 const TRANSFORM_ARGS = { matrix: [6], translate: [1, 2], scale: [1, 2], rotate: [1, 3], skewX: [1], skewY: [1] };
 
@@ -18,32 +17,46 @@ export function parseNumber(text) {
   return value;
 }
 
-/** A reader over one attribute string that refuses anything it cannot consume. */
+/**
+ * A reader over one attribute string that refuses anything it cannot consume. Separators follow
+ * the SVG comma-wsp rule: whitespace, or at most one comma, and a comma only between two
+ * arguments. A leading, repeated or dangling comma fails, because renderers drop or misplace
+ * shapes they cannot read rather than reporting them.
+ */
 function reader(text, what) {
-  let i = 0;
-  const skip = () => { SEPARATOR.lastIndex = i; SEPARATOR.exec(text); i = SEPARATOR.lastIndex; };
+  let i = 0, afterArg = false, comma = false;
+  const fail = message => { throw new Error(`${what}: ${message} at ${i} in "${text}"`); };
+  const ws = () => { while (i < text.length && /\s/.test(text[i])) i++; };
+  const startsNum = () => /[\d.+-]/.test(text[i] ?? '');
+  // Reads one optional comma-wsp. A comma is remembered until the next argument consumes it.
+  const sep = () => {
+    ws();
+    if (text[i] !== ',') return;
+    if (!afterArg || comma) fail('unexpected comma');
+    i++; ws();
+    if (text[i] === ',') fail('repeated comma');
+    comma = true;
+  };
+  const arg = read => { if (!comma) sep(); else ws(); comma = false; const value = read(); afterArg = true; return value; };
   return {
-    skip,
-    done: () => (skip(), i >= text.length),
-    take() { const c = text[i]; i++; return c; },
-    number() {
-      skip();
+    done() { sep(); if (i >= text.length) { if (comma) fail('dangling comma'); return true; } return false; },
+    take() { ws(); if (comma) fail('comma before a command'); const c = text[i]; i++; afterArg = false; return c; },
+    number: () => arg(() => {
       NUMBER.lastIndex = i;
       const m = NUMBER.exec(text);
-      if (!m) throw new Error(`${what}: expected a number at ${i} in "${text}"`);
+      if (!m) fail('expected a number');
       const value = Number(m[0]);
       if (!Number.isFinite(value)) throw new Error(`${what}: ${m[0]} is not finite`);
       i = NUMBER.lastIndex;
       return value;
-    },
-    flag() {
-      skip();
+    }),
+    flag: () => arg(() => {
       const c = text[i];
-      if (c !== '0' && c !== '1') throw new Error(`${what}: expected an arc flag at ${i} in "${text}"`);
+      if (c !== '0' && c !== '1') fail('expected an arc flag');
       i++;
       return c === '1';
-    },
-    startsNumber() { skip(); return /[\d.+-]/.test(text[i] ?? ''); },
+    }),
+    startsNumber() { sep(); if (startsNum()) return true; if (comma) fail('dangling comma'); return false; },
   };
 }
 
@@ -131,9 +144,10 @@ export const apply = (m, [px, py]) => [m[0] * px + m[2] * py + m[4], m[1] * px +
 /** The full SVG transform-list grammar for the functions SVG defines; nothing unconsumed. */
 export function parseTransform(text = '') {
   let m = IDENTITY, i = 0;
-  const name = /[\s,]*([a-zA-Z]+)\s*\(/y;
+  const name = /([a-zA-Z]+)\s*\(/y;
   while (true) {
-    const rest = /[\s,]*/y; rest.lastIndex = i; rest.exec(text); i = rest.lastIndex;
+    const rest = /\s*(,?)\s*/y; rest.lastIndex = i; const between = rest.exec(text); i = rest.lastIndex;
+    if (between[1] && (m === IDENTITY || i >= text.length)) throw new Error(`transform "${text}" has a stray comma`);
     if (i >= text.length) break;
     name.lastIndex = i;
     const n = name.exec(text);

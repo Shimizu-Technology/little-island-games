@@ -155,3 +155,49 @@ describe("the spill check sees geometry beyond any padding (finding 5)", () => {
     expect((renderPicture("probe", svg([shape])) as Measured).spills).toBe(false);
   });
 });
+
+// Regressions from the W4 code review, round 2 (review-code/REVIEW-2.md findings 1–3).
+describe("round 2: comments in an import still count as importing the dictionary", () => {
+  it("finds an import with a block or line comment before the module string", () => {
+    const root = mkdtempSync(join(tmpdir(), "pictures-reach2-"));
+    try {
+      mkdirSync(join(root, "src/content/pictures"), { recursive: true });
+      writeFileSync(join(root, "src/content/pictures/index.ts"), "export const x = 1;\n");
+      writeFileSync(join(root, "src/review2-import.ts"), "import { pictureForWord } from /* offline art */ './content/pictures';\n");
+      expect(dictionaryReachable(root)).toBe(true);
+      writeFileSync(join(root, "src/review2-import.ts"), "const p = require( // art\n  './content/pictures');\n");
+      expect(dictionaryReachable(root)).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("round 2: separators follow the SVG comma-wsp grammar", () => {
+  const big = path("M20 20H100V100H20Z", P.gold);
+  const bad: [string, string[]][] = [
+    ["a repeated comma between coordinates", [path("M10,,10H110V110H10Z", P.gold)]],
+    ["a comma right after a command", [path("M,10 10H110V110H10Z", P.gold)]],
+    ["a dangling comma before a command", [path("M10 10,H110V110H10Z", P.gold)]],
+    ["a trailing comma", [path("M10 10H110V110H10Z,", P.gold)]],
+    ["a leading comma in a transform", [group({ t: "translate(,70 0)" }, circle(0, 0, 8, P.gold))]],
+    ["a repeated comma in a transform", [group({ t: "translate(70,,0)" }, circle(0, 0, 8, P.gold))]],
+    ["a stray comma before the first transform", [group({ t: ",translate(70 0)" }, circle(0, 0, 8, P.gold))]],
+    ["a leading comma in a point list", ['<polygon points=",10 10 20 20 30 10" fill="#F0C86D"/>']],
+  ];
+  for (const [name, body] of bad) {
+    it(`rejects ${name} beside valid, large art`, () => {
+      expect(problemsOf([big, ...body])).toMatch(/comma|geometry|path data|transform|points/i);
+      expect(renderPlan(svg([shape, big, ...body])).problems.length).toBeGreaterThan(0);
+    });
+  }
+  it("still accepts one comma between arguments and between coordinate pairs", () => {
+    expect(problemsOf([path("M10,10 L20,20, 30,30 Z", P.gold), path("M10 10 , 20 20Z", P.gold), group({ t: "translate(70,60), scale(1)" }, circle(0, 0, 8, P.gold)), '<polygon points="10,10, 20,20 30,10" fill="#F0C86D"/>'])).toBe("");
+  });
+});
+
+describe("round 2: a negative stroke width is refused", () => {
+  it("rejects a coloured stroke with a negative width", () => {
+    expect(problemsOf(['<circle cx="300" cy="60" r="5" fill="none" stroke="#F0C86D" stroke-width="-700"/>'])).toMatch(/negative/);
+  });
+});
