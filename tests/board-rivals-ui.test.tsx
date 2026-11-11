@@ -1,7 +1,8 @@
 import React from "react";
 import { act, create, type ReactTestRenderer } from "react-test-renderer";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createSession, type BoardSession } from "../src/board";
+import { createSession, undo, type BoardSession } from "../src/board";
+import { rng } from "../src/board/types";
 import * as coconut from "../src/board/coconut-drop/engine";
 import * as canoes from "../src/board/hidden-canoes/engine";
 import * as pits from "../src/board/shell-pits/engine";
@@ -129,7 +130,7 @@ describe("board rivals on screen", () => {
     expect((fixture.store.boardUpdate.mock.calls[0][1] as BoardSession).position.moves).toEqual([pits.choose(v1.position, "challenge")]);
     await act(() => r.unmount());
   });
-  it("after the game, See the winning move shows the moment and its move, then goes back", async () => {
+  it("after the game, See the best move shows the moment and its move, then goes back", async () => {
     let position = coconut.create(1, 7, 0);
     for (const m of [0, 5, 1, 5, 2, 5, 6, 5]) position = coconut.move(position, m);
     expect(position.outcome).toBe(1);
@@ -141,7 +142,7 @@ describe("board rivals on screen", () => {
     });
     expect(text(r)).toContain("Coral wins this time.");
     await act(async () => {
-      button(r, "See the winning move").props.onPress();
+      button(r, "See the best move").props.onPress();
       await Promise.resolve();
     });
     expect(text(r)).toContain("The winning move");
@@ -157,7 +158,7 @@ describe("board rivals on screen", () => {
     await act(() => {
       r = create(<BoardScreen game="hidden-canoes" />);
     });
-    expect(text(r)).not.toContain("See the winning move");
+    expect(text(r)).not.toContain("See the best move");
     await act(() => r.unmount());
     fixture.store.save.board = { "hidden-canoes": { ...s, position: canoes.create(2, 6, 0, [1, 0]) } };
     await act(() => {
@@ -165,6 +166,90 @@ describe("board rivals on screen", () => {
     });
     expect(text(r)).toContain("Find 6 canoe spaces.");
     expect(text(r)).not.toContain("Find all seven");
+    await act(() => r.unmount());
+  });
+  it("P2-3: undo after a look-back, then a different finish, never shows the old look-back", async () => {
+    let position = coconut.create(1, 7, 0);
+    for (const m of [0, 5, 1, 5, 2, 5, 6, 5]) position = coconut.move(position, m);
+    const s: BoardSession = { ...createSession("coconut-drop", { seed: 1, names: ["You", "Coral"] }), position, taught: true };
+    fixture.store.save.board = { "coconut-drop": s };
+    let r!: ReactTestRenderer;
+    await act(() => {
+      r = create(<BoardScreen game="coconut-drop" />);
+    });
+    await act(async () => {
+      button(r, "See the best move").props.onPress();
+      await Promise.resolve();
+    });
+    expect(text(r)).toContain("Dropping in column 4 would have finished four in a line right away.");
+    // Undo back to the opening under the same round, then win another way: column 1, straight up.
+    let back = s;
+    while (undo(back) !== back) back = undo(back);
+    expect(back.id).toBe(s.id);
+    expect(back.position.moves).toEqual([]);
+    fixture.store.save.board = { "coconut-drop": back };
+    await act(() => r.update(<BoardScreen game="coconut-drop" />));
+    expect(text(r)).not.toContain("Dropping in column 4");
+    let won = back.position;
+    for (const m of [0, 6, 0, 6, 0, 5, 0]) won = coconut.move(won, m);
+    expect(won.outcome).toBe(0);
+    fixture.store.save.board = { "coconut-drop": { ...back, position: won } };
+    await act(() => r.update(<BoardScreen game="coconut-drop" />));
+    expect(text(r)).toContain("You win!");
+    expect(text(r)).not.toContain("Dropping in column 4");
+    expect(text(r)).not.toContain("The winning move");
+    // The new finish gets its own look-back.
+    await act(async () => {
+      button(r, "See the best move").props.onPress();
+      await Promise.resolve();
+    });
+    expect(text(r)).toContain("Your winning move");
+    expect(text(r)).toContain("Dropping in column 1 finished four in a line.");
+    await act(() => r.unmount());
+  });
+  it("P2-3: an analysis still running when Undo is pressed is cancelled and never attaches to a later finish", async () => {
+    // Real clock, held timers: the look-back runs one 8 ms slice, then waits.
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    // A Shell Pits game the player loses, so the look-back searches over several slices.
+    let final = pits.create(5, 6, 0);
+    for (let seed = 11; final.outcome !== 1; seed++) {
+      const random = rng(seed);
+      final = pits.create(5, 6, 0);
+      while (final.outcome === null) {
+        const legal = pits.legal(final);
+        final = pits.move(final, legal[Math.floor(random() * legal.length)]);
+      }
+    }
+    const s: BoardSession = { ...createSession("shell-pits", { seed: 5, strength: "growing", starter: 0, names: ["You", "Coral"] }), position: final, taught: true };
+    fixture.store.save.board = { "shell-pits": s };
+    let r!: ReactTestRenderer;
+    await act(() => {
+      r = create(<BoardScreen game="shell-pits" />);
+    });
+    await act(async () => {
+      button(r, "See the best move").props.onPress();
+      await Promise.resolve();
+    });
+    expect(text(r)).toContain("Looking back over the game…");
+    // Undo (three times) while it is still searching.
+    const back = undo(undo(undo(s)));
+    expect(back.position.outcome).toBeNull();
+    fixture.store.save.board = { "shell-pits": back };
+    await act(() => r.update(<BoardScreen game="shell-pits" />));
+    expect(text(r)).not.toContain("Looking back over the game…");
+    // Finish along a different line under the same round; the old answer must not appear.
+    let other = back.position;
+    while (other.outcome === null) other = pits.move(other, pits.legal(other).at(-1)!);
+    expect(other.moves).not.toEqual(final.moves);
+    fixture.store.save.board = { "shell-pits": { ...back, position: other } };
+    await act(() => r.update(<BoardScreen game="shell-pits" />));
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+    expect(text(r)).not.toContain("Looking back over the game…");
+    expect(text(r)).not.toContain("A better sow");
+    expect(text(r)).not.toContain("No single turning point");
+    expect(button(r, "See the best move")).toBeDefined();
     await act(() => r.unmount());
   });
 });

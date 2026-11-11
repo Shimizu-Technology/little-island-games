@@ -139,7 +139,7 @@ export function CheckersBoard({ state: s, commit, width, sound, help, active }: 
               sound("tap");
             }}
           >
-            See the winning move
+            See the best move
           </Button>
         </Controls>
       )}

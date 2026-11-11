@@ -7,6 +7,7 @@ import * as nets from "../board/fishing-nets/engine";
 import * as canoes from "../board/hidden-canoes/engine";
 import * as pits from "../board/shell-pits/engine";
 import { IterativeSearch } from "./search";
+import { closedBy, exactBudget, isolatedCapture, NetsExact } from "./netsExact";
 import { pitsChallengeLimits, pitsRules } from "./policies";
 import type { BenchGame } from "./benchmark";
 
@@ -48,7 +49,7 @@ const rope = (n: number, e: number) => {
 const decisions = (states: Position[], seat: Seat) =>
   states.slice(0, -1).flatMap((s, i) => (s.turn === seat ? [i] : []));
 
-/** "See the winning move": the decision worth looking at again, for `seat`. */
+/** "See the best move": the decision worth looking at again, for `seat`. */
 export function reviewGame(game: BenchGame, final: Position, seat: Seat): ReviewTask {
   if (final.outcome === null) return done(null);
   const states = replayStates(game, final),
@@ -68,7 +69,7 @@ export function reviewGame(game: BenchGame, final: Position, seat: Seat): Review
     case "coconut-drop":
       return done(coconutLesson(states, final, seat, mine, moment));
     case "fishing-nets":
-      return done(netsLesson(states, final, mine, moment));
+      return netsLesson(states, final, mine, moment);
     case "shell-pits":
       return pitsLesson(states, final, mine, moment);
     case "hidden-canoes":
@@ -133,18 +134,24 @@ function coconutLesson(states: Position[], final: Position, seat: Seat, mine: nu
   return null;
 }
 
-function netsLesson(states: Position[], final: Position, mine: number[], make: Make): KeyMoment | null {
+/**
+ * Fishing Nets advice is shown only when it is proven: a box whose rope touches nothing
+ * else is always right to take, and any other advice must beat the played rope in an
+ * exact search, which runs only once 16 or fewer ropes are open. The boxes named are the ones the rope really closes.
+ */
+function netsLesson(states: Position[], final: Position, mine: number[], make: Make): ReviewTask {
   const n = final.size;
+  type Check = { i: number; ropes: number[]; text: (s: Position, rope: number) => string; title: string };
+  const waiting = (s: Position, e: number) =>
+    `Tying ${rope(n, e)} would have closed ${closedBy(s, e).map((b) => box(n, b)).join(" and ")} and kept your turn.`;
+  const checks: Check[] = [];
   for (const i of mine) {
     const s = states[i],
       captures = nets.scoring(s);
-    if (captures.length && !captures.includes(final.moves[i])) {
-      const best = [...captures].sort((a, b) => nets.giveaway(s, b) - nets.giveaway(s, a))[0];
-      const closes = s.marks.flatMap((v, b) => (v === -1 && nets.boxEdges(n, b).includes(best) ? [b] : []));
-      return make(i, best, "stronger", "A box was waiting", `Tying ${rope(n, best)} would have closed ${closes.map((b) => box(n, b)).join(" and ")} and kept your turn.`);
-    }
+    if (captures.length && !captures.includes(final.moves[i]))
+      checks.push({ i, ropes: [...captures].sort((a, b) => nets.giveaway(s, b) - nets.giveaway(s, a)), text: waiting, title: "A box was waiting" });
   }
-  let worst: { i: number; better: number; gap: number; gave: number; least: number } | null = null;
+  const gifts: { i: number; better: number; gap: number; gave: number; least: number }[] = [];
   for (const i of mine) {
     const s = states[i],
       played = final.moves[i];
@@ -153,16 +160,58 @@ function netsLesson(states: Position[], final: Position, mine: number[], make: M
     if (!gave) continue;
     const options = nets.legal(s).filter((e) => !nets.scoring(s).includes(e)).map((e) => [e, nets.giveaway(s, e)] as const);
     const [better, least] = options.reduce((a, b) => (b[1] < a[1] ? b : a));
-    if (least < gave && (!worst || gave - least > worst.gap)) worst = { i, better, gap: gave - least, gave, least };
+    if (least < gave) gifts.push({ i, better, gap: gave - least, gave, least });
   }
-  if (!worst) return null;
-  return make(
-    worst.i,
-    worst.better,
-    "stronger",
-    "A rope to look at again",
-    `That rope let the other player close ${worst.gave} ${worst.gave === 1 ? "box" : "boxes"}. Tying ${rope(n, worst.better)} ${worst.least ? `gave only ${worst.least}` : "gave none"}.`
-  );
+  // The biggest giveaway first, as before; equal gaps keep the earlier decision.
+  for (const g of [...gifts].sort((a, b) => b.gap - a.gap || a.i - b.i))
+    checks.push({
+      i: g.i,
+      ropes: [g.better],
+      title: "A rope to look at again",
+      text: (_, e) =>
+        `That rope let the other player close ${g.gave} ${g.gave === 1 ? "box" : "boxes"}. Tying ${rope(n, e)} ${g.least ? `gave only ${g.least}` : "gave none"}.`,
+    });
+  let k = 0,
+    exact: NetsExact | null = null,
+    answer: KeyMoment | null = null,
+    ready = false;
+  const show = (c: Check, e: number) => {
+    answer = make(c.i, e, "stronger", c.title, c.text(states[c.i], e));
+    ready = true;
+  };
+  return {
+    get done() {
+      return ready;
+    },
+    result: () => answer,
+    step(quota) {
+      while (!ready && quota > 0) {
+        const c = checks[k];
+        if (!c) return (ready = true);
+        const s = states[c.i],
+          played = final.moves[c.i];
+        // Proven without a search.
+        const free = c.title === "A box was waiting" ? c.ropes.find((e) => isolatedCapture(s, e)) : undefined;
+        if (free !== undefined) {
+          show(c, free);
+          break;
+        }
+        exact ??= new NetsExact(s, exactBudget);
+        // The quota counts ropes the exact search looks at.
+        const finished = exact.step(quota);
+        quota = 0;
+        if (!finished) break;
+        const solved = exact;
+        exact = null;
+        k++;
+        if (!solved.solved) continue;
+        const beat = solved.valueOf(played)!,
+          best = c.ropes.filter((e) => solved.valueOf(e)! > beat).sort((a, b) => solved.valueOf(b)! - solved.valueOf(a)!)[0];
+        if (best !== undefined) show(c, best);
+      }
+      return ready;
+    },
+  };
 }
 
 /** Search both the best move and the played move at every decision, a slice at a time. */

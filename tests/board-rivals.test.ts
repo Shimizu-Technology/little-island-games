@@ -150,7 +150,7 @@ describe("declared head starts", () => {
   });
 });
 
-describe("See the winning move", () => {
+describe("See the best move", () => {
   it("never runs before the game ends", () => {
     for (const game of ["coconut-drop", "fishing-nets", "hidden-canoes", "shell-pits"] as const)
       expect(finish(reviewGame(game, engines[game].create(1), 0))).toBe(null);

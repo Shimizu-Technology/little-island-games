@@ -315,23 +315,29 @@ function Round({
     },
     [token]
   );
-  const [review, setReview] = useState<KeyMoment | null | "working" | "none">(null);
+  // A look-back belongs to one finished game: this round and exactly these moves. Undo,
+  // a different finish or a new round changes the key, which cancels and hides it.
+  const reviewKey = `${s.id}|${p.outcome}|${p.moves.join(".")}`;
+  const [reviewed, setReviewed] = useState<{ key: string; moment: KeyMoment | "working" | "none" } | null>(null);
+  const review = reviewed?.key === reviewKey ? reviewed.moment : null;
   const reviewRun = useRef<Cancel | null>(null);
   useEffect(
     () => () => {
       if (reviewRun.current) reviewRun.current.cancelled = true;
+      setReviewed(null);
     },
-    [s.id]
+    [reviewKey]
   );
   const reviewSeat = s.mode === "solo" ? 0 : typeof p.outcome === "number" ? p.outcome : null;
-  const seeWinningMove = () => {
+  const seeBestMove = () => {
     if (s.game === "reef-sweep" || reviewSeat === null || p.outcome === null) return;
-    const cancel: Cancel = { cancelled: false };
+    const cancel: Cancel = { cancelled: false },
+      key = reviewKey;
     reviewRun.current = cancel;
-    setReview("working");
+    setReviewed({ key, moment: "working" });
     const task = reviewGame(s.game, p, reviewSeat);
     void runSteps(task, () => task.result(), cancel).then((moment) => {
-      if (!cancel.cancelled) setReview(moment ?? "none");
+      if (!cancel.cancelled) setReviewed({ key, moment: moment ?? "none" });
     });
     play("tap");
   };
@@ -523,8 +529,8 @@ function Round({
             </Button>
           )}
           {p.outcome !== null && s.game !== "reef-sweep" && reviewSeat !== null && review === null && (
-            <Button quiet compact onPress={seeWinningMove}>
-              See the winning move
+            <Button quiet compact onPress={seeBestMove}>
+              See the best move
             </Button>
           )}
           {(s.mode === "solo" || s.game === "reef-sweep") && s.game !== "hidden-canoes" && (
@@ -597,7 +603,7 @@ function Round({
                 />
               </>
             )}
-            <Button quiet compact onPress={() => setReview(null)}>
+            <Button quiet compact onPress={() => setReviewed(null)}>
               Back to the final board
             </Button>
           </View>

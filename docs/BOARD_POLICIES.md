@@ -47,7 +47,7 @@ There are 16 endgames in tiers 1–4, with par 2, 3, 4 and 5–6 sows, registere
 - **The strongest bot punishes the exploit but isn't a forced loss.** Greedy loses all four opening cases (above). A depth-14 search beats revision 2 from every starter and seat; the four winning lines are replayed move by move in `tests/shell-pits-tactics.test.ts`.
 - Reach the endgames from Shell Pits setup: *Endgame puzzles · win in a few sows*. The frame's way back reads *Back to Shell Pits* through the new optional `backLabel`.
 
-## Rivals, head starts and See the winning move (PP-01)
+## Rivals, head starts and See the best move (PP-01)
 
 **Rivals.** Pebble the hermit crab (Gentle), Coral the sea turtle (Growing) and Ray the manta ray (Challenge). Each game describes its rival's play in words taken from the policy itself, and tests check the claims. For example, Coral blocks a four you could finish next, and Ray in Fishing Nets hands over the shortest chain. The rival's name appears in the score, the turn line and the result.
 
@@ -65,7 +65,7 @@ There are 16 endgames in tiers 1–4, with par 2, 3, 4 and 5–6 sows, registere
 
 With 8 shells ahead, the greedy grab still wins only 20 of 144 Shell Pits games. A head start makes a close game likelier; none makes a win certain. Fishing Nets 5×5 gains little, which is recorded rather than tuned away.
 
-**See the winning move** appears only after a game ends, so nothing hidden can show early. It looks back in slices of at most 8 ms:
+**See the best move** appears only after a game ends, so nothing hidden can show early. It looks back in slices of at most 8 ms:
 
 - after a win, it shows your winning move. In Shell Pits and Fishing Nets that's the move after which the other side couldn't catch up;
 - after a loss or draw:
