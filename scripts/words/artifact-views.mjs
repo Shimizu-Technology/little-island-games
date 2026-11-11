@@ -406,14 +406,16 @@ export function listString(text, excluded=[]) {
   try {const decoded=JSON.parse(trimmed);if(decoded && typeof decoded==='object')return jsonUnits(decoded).some(unit=>unit.length>=3);}catch { /* Text list. */ }
   const words=trimmed.replace(/\\[bBdDsSwW]|\(\?:/g,' ').split(/[\s,|;_]+/).map(word=>word.replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu,'')).filter(shortWords);
   if(words.length<3)return false;
+  const functions=safeFunctionWords(excluded),flags=words.map(word=>functions.has(word.toLowerCase()));
+  let switches=0;for(let i=1;i<flags.length;i++)if(flags[i]!==flags[i-1])switches++;
+  const sentence=words.length>=5 && switches>=3 && (policyShare(words,excluded)<0.5 || /\b(?:is|are|was|were|be|does|do|did|has|have|had|can|could|will|would)\b/i.test(trimmed)) && new Set(words.filter((_,i)=>flags[i]).map(word=>word.toLowerCase())).size>=2;
+  if(sentence)return false;
   if(/[,|;\n\t_]/.test(trimmed)) {
     const parts=trimmed.split(/[,|;\n\t_]+/).map(part=>part.trim().replace(/^\d+[.)]\s*/,'').replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu,''));
     if(parts.filter(shortWords).length>=3)return true;
   }
-  const functions=safeFunctionWords(excluded),flags=words.map(word=>functions.has(word.toLowerCase()));
-  let switches=0;for(let i=1;i<flags.length;i++)if(flags[i]!==flags[i-1])switches++;
-  const sentence=words.length>=5 && switches>=3 && (policyShare(words,excluded)<0.5 || /\b(?:is|are|was|were|be|does|do|did|has|have|had|can|could|will|would)\b/i.test(trimmed)) && new Set(words.filter((_,i)=>flags[i]).map(word=>word.toLowerCase())).size>=2;
-  return !sentence;
+
+  return true;
 }
 
 // Public English grammar vocabulary. It is disjoint from the current private

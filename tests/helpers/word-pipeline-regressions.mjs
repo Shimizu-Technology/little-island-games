@@ -845,3 +845,5 @@ for(const single of [false,true])test(`R4 Hermes entry density ${single?'single 
  if(single)assert.throws(()=>guardTree(dir,r4policy),/broad-density/);else assert.equal(guardTree(dir,r4policy).passed,true);
 });
 exportCase('R4 decoded JavaScript source proximity','data.js',r4words.map((word,i)=>`globalThis.x${i}="${[...word].map(c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')).join('')}";`).join('\n'),r4policy,true);
+exportCase('R4 prose before inline enum','data.js','/** Use one of API.{ALPHANONSENSE, BETANONSENSE, GAMMANONSENSE}.\n * The operation is available on the device and it does return a value. */\nglobalThis.safe=1;',policy);
+exportCase('R4 comment list remains strict','data.js','/*\nALPHANONSENSE\nBETANONSENSE\nGAMMANONSENSE\n*/\nglobalThis.safe=1;',policy,true);
