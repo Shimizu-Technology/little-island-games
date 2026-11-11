@@ -5,17 +5,16 @@
  * row again and writes packs and receipts). Slots and ordinals come from G3's reserved range.
  */
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { validRoot } from '../../../src/puzzles/bank';
-import { certify, type CertifyContext } from '../../../src/puzzles/checks';
+import { BANK_CAPS, parsePack, validRoot } from '../../../src/puzzles/bank';
+import { certify, type CertifiedEntry, type CertifyContext } from '../../../src/puzzles/checks';
 import type { LatinPuzzle } from '../../../src/puzzles/latin/core';
 import type { DescriptorCore, FamilySpec } from '../../../src/puzzles/types';
 import { families } from '../families';
 import { bakeFamily, capTemplates, orderLayouts, productionDirs, readCatalog, readPackText, type CatalogDirs } from '../pipeline';
-import { BANK_CAPS, parsePack } from '../../../src/puzzles/bank';
 import { decodeRow } from '../../../src/puzzles/descriptor';
-import type { CertifiedEntry } from '../../../src/puzzles/checks';
+import { grade } from '../../../src/puzzles/latin/solver';
 import { describe, type Candidate, type LatinGenerator } from './family';
 import { generators } from './generators';
 
@@ -36,14 +35,24 @@ export const allowedBack = (span: number) => Math.max(STEP_BACK * span, STEP_SLA
 
 export type Pool = { rung: string; tried: number; kept: Candidate[] };
 /** Certified, semantically distinct candidates for one rung, generated from consecutive seeds. */
-export function buildPool(gen: LatinGenerator, spec: FamilySpec<LatinPuzzle>, rungIndex: number, ctx: CertifyContext, want: number, maxTries: number): Pool {
+export function buildPool(gen: LatinGenerator, spec: FamilySpec<LatinPuzzle>, rungIndex: number, ctx: CertifyContext, want: number, maxTries: number, cache?: string): Pool {
   const rung = gen.rungs[rungIndex], band = spec.bands[rungIndex], kept: Candidate[] = [];
+  // A cached pool holds the certified puzzles of an earlier run of the same seeds; each is graded and
+  // certified again here (into this run's shared context), so the cache only saves the search.
+  const file = cache && join(cache, `pool-${gen.kind}-${rung.id}.json`);
+  if (file && existsSync(file)) {
+    const saved = JSON.parse(readFileSync(file, 'utf8')) as { tried: number; kept: Pick<Candidate, 'seed' | 'template' | 'puzzle'>[] };
+    for (const c of saved.kept) { const g = grade(c.puzzle, 800_000); if (g.status === 'complete' && certify(spec, band, describe({ ...c, grade: g }, rung.id), ctx).ok) kept.push({ ...c, grade: g }); }
+    if (kept.length >= Math.min(want, saved.kept.length)) return { rung: rung.id, tried: saved.tried, kept: kept.slice(0, want) };
+  }
+  kept.length = 0;
   let tried = 0;
   for (let j = 0; j < maxTries && kept.length < want; j++) {
     tried++;
     const seed = ((rungIndex + 1) * 0x01000000 + j) >>> 0, c = gen.generate(rung, seed);
     if (c && certify(spec, band, describe(c, rung.id), ctx).ok) kept.push(c);
   }
+  if (file) { mkdirSync(cache!, { recursive: true }); writeFileSync(file, JSON.stringify({ tried, kept: kept.map(c => ({ seed: c.seed, template: c.template, puzzle: c.puzzle })) })); }
   return { rung: rung.id, tried, kept };
 }
 type Laid = CertifiedEntry<LatinPuzzle> & { candidate: Candidate };
@@ -61,7 +70,8 @@ export function kitOrder(list: readonly Candidate[]): Candidate[] {
  * level every layout can start at; it takes its layout's easiest unused candidate at or above both
  * the aim and the allowed step below the hardest so far. When a layout runs short of hard puzzles,
  * the aim's top comes down until no puzzle steps back too far. Of the layout choices that give the
- * full rung, the widest gentle one wins. The kit's own ordering functions must give back the list.
+ * largest rung, the widest gentle one wins; a rung shrinks only when nothing at full size is gentle.
+ * The kit's own ordering functions must give back the list.
  */
 export function arrange(gen: LatinGenerator, pool: readonly Candidate[], count: number): Candidate[] {
   const load = new Map(pool.map(c => [c, gen.workload(c)])), supply = new Map<string, Candidate[]>();
@@ -69,8 +79,9 @@ export function arrange(gen: LatinGenerator, pool: readonly Candidate[], count: 
   const layouts = [...supply.keys()].sort((a, b) => supply.get(b)!.length - supply.get(a)!.length || (a < b ? -1 : 1));
   const gentle = (out: readonly Candidate[]) => { const b = worstBack(out.map(c => load.get(c)!)); return b.worst <= b.allowed; };
   let best: { out: Candidate[]; span: number } | null = null;
-  for (let k = layouts.length; k >= 4; k--) {
-    const chosen = layouts.slice(0, k), n = Math.min(count, k * Math.min(...chosen.map(t => supply.get(t)!.length)), k * Math.floor(count / 4));
+  // Full size first; a rung only shrinks (in steps of a twentieth) when no layout choice is gentle.
+  for (let size = count; !best && size >= Math.ceil(count / 2); size -= Math.max(1, Math.ceil(count / 20))) for (let k = layouts.length; k >= 4; k--) {
+    const chosen = layouts.slice(0, k), n = Math.min(size, k * Math.min(...chosen.map(t => supply.get(t)!.length)), k * Math.floor(size / 4));
     if (best && n < best.out.length) continue;
     const counts = new Map(chosen.map((t, i) => [t, Math.floor(n / k) + (i < n % k ? 1 : 0)]));
     if (chosen.some(t => counts.get(t)! > Math.max(1, Math.floor(n / 4)))) continue;
@@ -123,7 +134,9 @@ if (process.argv[1]?.endsWith('bake.ts')) {
   const factor = Number(process.env.LATIN_POOL ?? 2), tries = Number(process.env.LATIN_TRIES ?? 60000);
   const ctx: CertifyContext = { budget: 200_000, seenExact: new Set(), seenSemantic: new Set() };
   const chosen = gen.rungs.map((rung, i) => {
-    const started = Date.now(), pool = buildPool(gen, spec, i, ctx, Math.ceil(rung.target * factor), tries), picked = arrange(gen, pool.kept, rung.target);
+    const started = Date.now(), pool = buildPool(gen, spec, i, ctx, Math.ceil(rung.target * factor), tries, process.env.LATIN_CACHE);
+    let picked: Candidate[] = [];
+    try { picked = arrange(gen, pool.kept, rung.target); } catch (e) { console.error(`${rung.id}: ${e instanceof Error ? e.message : String(e)}`); }
     console.log(JSON.stringify({ rung: rung.id, tried: pool.tried, pool: pool.kept.length, picked: picked.length, target: rung.target, floor: rung.floor, back: worstBack(picked.map(gen.workload)), seconds: Math.round((Date.now() - started) / 1000) }));
     return picked;
   });

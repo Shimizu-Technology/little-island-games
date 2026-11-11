@@ -1,6 +1,6 @@
 import { Text } from "./Text";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { stillPress } from "./stillPress";
+import React, { useEffect, useMemo, useState } from "react";
+import { stillGesture } from "./stillPress";
 import {
   Animated,
   KeyboardAvoidingView,
@@ -142,9 +142,7 @@ export function Button({
   stillOnly?: boolean;
 }) {
   const [pressed, setPressed] = useState(false);
-  const latest = useRef(onPress);
-  useEffect(() => { latest.current = onPress; }, [onPress]);
-  const [still] = useState(() => stillPress(() => latest.current()));
+  const [still] = useState(stillGesture);
   const textColor = selected ? C.paper : quiet ? C.ink : "#FFF";
   return (
     <PressableScale
@@ -159,7 +157,7 @@ export function Button({
       accessibilityLabel={label}
       accessibilityState={{ disabled, selected }}
       disabled={disabled}
-      onPress={stillOnly ? still.onPress : onPress}
+      onPress={stillOnly ? () => { if (still.take()) onPress(); } : onPress}
       style={[
         styles.button,
         quiet && styles.quiet,

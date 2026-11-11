@@ -15,7 +15,7 @@ import type { ChallengeCard, ChallengeEntry } from '../challenge/types';
 import { openGame } from '../hub/navigation';
 import { Landmark } from '../hub/Landmarks';
 import { PeoplePicker, solvingPeople } from './PeoplePicker';
-import { cardFor, coveEntries, infoFor, readers, rowNames, shownCount, suggested, suggestedPacked, tideTable } from './catalog';
+import { cardFor, coveEntries, dealPacked, hiddenPackedCount, infoFor, readers, rowNames, shownCount, suggested, suggestedPacked, tideTable } from './catalog';
 import { civilDate } from '../puzzles/today';
 import { defaults } from './local';
 import { useCoveLocal } from './useCoveLocal';
@@ -61,6 +61,13 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
   const [gridTouch, setGridTouch] = useState(false), [browse, setBrowse] = useState<ChallengeEntry | null>(null), [partner, setPartner] = useState<string | null>(null), [options, setOptions] = useState(false), [pinning, setPinning] = useState(false), [adult, setAdult] = useState(false), [answer, setAnswer] = useState(''), [gate, setGate] = useState(makeGate), [message, setMessage] = useState('');
   const preferences = local.data.people[owner] ?? defaults(), people = solvingPeople(store.save), cardWidth = Math.min(260, width - 52);
   const [dealing, setDealing] = useState(false);
+  // Hidden packed puzzles are found by hash in their banks, only when something is hidden.
+  const [packedHidden, setPackedHidden] = useState<Record<string, number>>({}), hiddenKey = local.data.hidden.join('|');
+  useEffect(() => {
+    let live = true;
+    void Promise.all(entries.filter(e => e.packed).map(async e => [e.game, await hiddenPackedCount(e, local.data.hidden).catch(() => 0)] as const)).then(rows => { if (live) setPackedHidden(Object.fromEntries(rows)); });
+    return () => { live = false; };
+  }, [hiddenKey]); // eslint-disable-line react-hooks/exhaustive-deps -- Recount only when the hidden list changes.
   /** A packed game deals its next entry here; content is verified before the round mounts. */
   const deal = async (entry: ChallengeEntry, pick: () => Promise<ChallengeCard | undefined>, replace: boolean) => {
     if (dealing) return;
@@ -70,7 +77,7 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
     finally { setDealing(false); }
   };
   const choose = (entry: ChallengeEntry, card?: ChallengeCard, replace = false) => {
-    if (!card && !entry.puzzles.length && entry.packed) { void deal(entry, () => suggestedPacked(entry, progress, preferences.band), replace); return; }
+    if (!card && !entry.puzzles.length && entry.packed) { void deal(entry, () => suggestedPacked(entry, progress, preferences.band, local.data.hidden), replace); return; }
     setBrowse(null); setSelection({ entry, card: card ?? suggested({ ...entry, puzzles: entry.puzzles.filter(p => !local.data.hidden.includes(p.ref.hash)) }, progress, preferences.band), replace });
   };
   const opened = useRef(false);
@@ -95,10 +102,10 @@ function CoveInterior({ local }: { local: ReturnType<typeof useCoveLocal> }) {
     {selection ? <><GridInteraction.Provider value={setGridTouch}><GridAdult.Provider value={adult}><GridPreferences.Provider value={preferences}><CoveRound key={`${selection.entry.game}:${selection.card.ref.hash}:${selection.replace}:${selection.remix ?? ""}`} {...selection} partner={partner} width={Math.min(width, 960) - 40} onClose={close} onBrowse={() => { setBrowse(selection.entry); setSelection(null); }}/></GridPreferences.Provider></GridAdult.Provider></GridInteraction.Provider><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}><Button quiet onPress={() => setPinning(true)}>Try this one · pin to a person</Button><Button quiet onPress={() => setOptions(true)}>Cove choices</Button></View></> : <>
       <View style={{ flexDirection: fontScale > 1.5 ? 'column' : 'row', gap: 16, alignItems: 'center' }}><View style={{ width: 110, height: 90 }}><Landmark id="cove"/></View><View style={{ flex: 1 }}><Heading style={{ fontSize: 24 }}>Think as long as you like.</Heading><Copy>Every band is open. Your puzzles wait for you.</Copy></View></View>
       {row('Keep going', [...progress.paused.filter(s => !s.result && !s.credited).flatMap(s => { const entry = entries.find(e => e.game === s.game), card = cardFor(s.puzzle, entries); return entry && card ? [tile(s.id, infoFor(s.game).name, local.data.hidden.includes(card.ref.hash) ? 'Continue your saved puzzle · hidden from packs' : 'Continue your saved puzzle', () => choose(entry, card))] : []; }), ...(local.data.pins[owner] ?? []).flatMap(pin => { const entry = items.find(e => e.game === pin.ref.engine), card = cardFor(pin.ref, entries); return entry && card && !hidden(card) ? [<View key={`pin-${card.ref.hash}`} style={{ gap: 6 }}>{tile(card.ref.hash, infoFor(entry.game).name, `Try this one · from ${people.find(p => p.id === pin.from)?.name ?? 'family'}`, () => choose(entry, card, true))}<Button quiet compact onPress={() => void local.change({ type: 'unpin', owner, hash: pin.ref.hash })}>Put pin away</Button></View>] : []; })])}
-      {row('Today · Tide Table', tideTable(civilDate(new Date()), visibleEntries).map(p => tile(p.size, `${p.size} · ${infoFor(p.entry.game).name}`, p.title, () => p.card ? choose(p.entry, p.card, true) : void deal(p.entry, async () => p.entry.packed!.card(await p.entry.packed!.choose(p.bank!, progress)), true))))}<Copy>Today is a shortcut into the packs. No expiry. Past days stay in their packs.</Copy>
+      {row('Today · Tide Table', tideTable(civilDate(new Date()), visibleEntries).map(p => tile(p.size, `${p.size} · ${infoFor(p.entry.game).name}`, p.title, () => p.card ? choose(p.entry, p.card, true) : void deal(p.entry, () => dealPacked(p.entry, p.bank!, progress, local.data.hidden), true))))}<Copy>Today is a shortcut into the packs. No expiry. Past days stay in their packs.</Copy>
       {rowNames.map(name => {
         const games = items.filter(e => infoFor(e.game).row === name);
-        const children: React.ReactNode[] = games.map(e => <View key={e.game} style={{ gap: 6 }}>{tile(e.game, infoFor(e.game).name, `${shownCount(e)} puzzles · all bands open`, () => choose(e))}<View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}><Button quiet compact onPress={() => setBrowse(e)}>Bands & packs</Button><Button quiet compact disabled={!local.ready} onPress={() => void local.change({ type: 'favorite', game: e.game })}>{local.data.favorites.includes(e.game) ? '★ Favorite' : '☆ Favorite'}</Button></View></View>);
+        const children: React.ReactNode[] = games.map(e => <View key={e.game} style={{ gap: 6 }}>{tile(e.game, infoFor(e.game).name, `${shownCount(e, [], packedHidden[e.game] ?? 0)} puzzles · all bands open`, () => choose(e))}<View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}><Button quiet compact onPress={() => setBrowse(e)}>Bands & packs</Button><Button quiet compact disabled={!local.ready} onPress={() => void local.change({ type: 'favorite', game: e.game })}>{local.data.favorites.includes(e.game) ? '★ Favorite' : '☆ Favorite'}</Button></View></View>);
         if (name === 'Logic') children.push(tile('reef-sweep', 'Reef Sweep', 'A shortcut to the same saved game in the Hall', () => void leave(() => openGame('reef-sweep'))));
         if (name === 'Island originals') children.push(...shelfGames.filter(g => (learningGroups as Partial<Record<string, 'levels' | 'originals'>>)[g.id] === 'originals').map(g => tile(g.id, g.name, 'Same game, same saved work as School', () => void leave(() => openGame(g.id)))));
         return row(name, children);

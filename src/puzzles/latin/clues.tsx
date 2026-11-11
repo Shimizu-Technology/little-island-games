@@ -67,11 +67,29 @@ export function sightFrame(p: LatinPuzzle) {
     </View>;
   })}</>; };
 }
+const place = (n: number, i: number) => `row ${Math.floor(i / n) + 1} column ${i % n + 1}`;
+const joined = (xs: readonly string[]) => xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`;
+const cageRule: Record<string, (t: number) => string> = { '+': t => `adds to ${t}`, '-': t => `has a difference of ${t}`, '*': t => `multiplies to ${t}`, '/': t => `has one number ${t} times the other`, '=': t => `holds ${t}` };
+/** One cage in words: its rule and every square in it. */
+export const cageWords = (p: LatinPuzzle, k: number) => { const c = p.cages[k]; return c.cells.length === 1 ? `a one-square cage that ${cageRule[c.op](c.target)}` : `a cage of ${c.cells.length} squares that ${cageRule[c.op](c.target)}${p.kind === 'killer' ? ' with no repeats' : ''}: ${joined(c.cells.map(i => place(p.size, i)))}`; };
+/**
+ * What a screen reader adds to each square's own label: the cage it belongs to, or the arrows that
+ * touch it. The square's label then carries the public clue it is part of.
+ */
+export function cellClueWords(p: LatinPuzzle): (i: number) => string {
+  const n = p.size, cageOf = p.givens.map(() => -1);
+  p.cages.forEach((c, k) => c.cells.forEach(i => { cageOf[i] = k; }));
+  return i => {
+    if (cageOf[i] >= 0) { const c = p.cages[cageOf[i]], others = c.cells.filter(j => j !== i); return c.cells.length === 1 ? `in ${cageWords(p, cageOf[i])}` : `in a cage that ${cageRule[c.op](c.target)} with ${joined(others.map(j => place(n, j)))}`; }
+    const arrows = p.less.flatMap(([a, b]) => a === i ? [`smaller than ${place(n, b)}`] : b === i ? [`bigger than ${place(n, a)}`] : []);
+    return arrows.length ? joined(arrows) : '';
+  };
+}
 /** The clues in words, for screen readers and for reading aloud together. */
 export function clueWords(p: LatinPuzzle): string {
   const n = p.size, sides = ['From the top', 'From the right', 'From the bottom', 'From the left'];
   if (p.kind === 'skyline') return sides.map((side, k) => { const xs = p.sights.filter(([id]) => Math.floor(id / n) === k).map(([id, c]) => `${k === 0 || k === 2 ? 'column' : 'row'} ${id % n + 1} sees ${c}`); return xs.length ? `${side}: ${xs.join(', ')}.` : ''; }).filter(Boolean).join(' ');
   if (p.kind === 'greater-than') return `${p.less.length} marks. ${p.less.slice(0, 40).map(([a, b]) => `row ${Math.floor(a / n) + 1} column ${a % n + 1} is smaller than row ${Math.floor(b / n) + 1} column ${b % n + 1}`).join('; ')}.`;
-  if (p.cages.length) return `${p.cages.length} cages.`;
+  if (p.cages.length) return `${p.cages.length} cages. Each square also says its cage. ${p.cages.map((_, k) => `${cageWords(p, k)[0].toUpperCase()}${cageWords(p, k).slice(1)}.`).join(' ')}`;
   return '';
 }

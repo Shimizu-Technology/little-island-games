@@ -2,12 +2,13 @@
 export const PRESS_SLOP = 10;
 type PressPoint = { nativeEvent: { pageX: number; pageY: number } };
 /**
- * Press handlers that act only when the finger stayed put. React Native keeps a press alive while a
- * finger slides a good way off a key, so a scroll that starts on a number pad could enter a number.
- * The key's own touch events bound one gesture: once it moves past the slop it never presses, even
- * if it slides back onto the key. A press with no touch (an accessibility activation) still acts.
+ * Touch tracking for a key that acts only when the finger stayed put. React Native keeps a press
+ * alive while a finger slides a good way off a key, so a scroll that starts on a number pad could
+ * enter a number. The key's own touch events bound one gesture: once it moves past the slop it never
+ * presses, even if it slides back onto the key. `take()` says whether a press may act, and starts
+ * over. A press with no touch (an accessibility activation) may always act.
  */
-export function stillPress(onPress: () => void, slop = PRESS_SLOP) {
+export function stillGesture(slop = PRESS_SLOP) {
   let start: { x: number; y: number } | null = null, moved = false;
   const begin = (e: PressPoint) => { start = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY }; moved = false; };
   const move = (e: PressPoint) => { if (start && Math.hypot(e.nativeEvent.pageX - start.x, e.nativeEvent.pageY - start.y) > slop) moved = true; };
@@ -17,6 +18,11 @@ export function stillPress(onPress: () => void, slop = PRESS_SLOP) {
     onTouchStart: begin, onTouchMove: move, onTouchEnd: end, onTouchCancel: end,
     onPressIn: (e: PressPoint) => { if (!start) begin(e); },
     onPressMove: move,
-    onPress: () => { const act = !moved; start = null; moved = false; if (act) onPress(); },
+    take: () => { const act = !moved; start = null; moved = false; return act; },
   };
+}
+/** The same, as a complete set of press handlers around one callback. */
+export function stillPress(onPress: () => void, slop = PRESS_SLOP) {
+  const g = stillGesture(slop);
+  return { ...g, onPress: () => { if (g.take()) onPress(); } };
 }
