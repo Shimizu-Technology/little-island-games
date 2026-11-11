@@ -42,7 +42,7 @@ describe("arcade progress and recovery", () => {
   });
   it("opens worlds/outfits from stars, keeps Helper stars, and opens every level and Endless without prerequisites", () => {
     let a = emptyArcade(); for (let n = 1; n <= 8; n++) a = arcadeTransition(a, "family", { ...finish(`round-${n}`), level: `w1-${n}` } as ArcadeAction);
-    const p = arcadeLearner(a).games["reef-builder"]!; expect(p.openWorlds).toEqual(["w1", "w2", "learn"]); expect(p.unlockedOutfits).toEqual(["island", "sunhat"]); expect(endlessOpen(p)).toBe(true); expect(levelOpen(p, "w2-1")).toBe(true); expect(levelOpen(p, "w2-2")).toBe(true); expect(levelOpen(p, "w3-8", true)).toBe(true);
+    const p = arcadeLearner(a).games["reef-builder"]!; expect(p.openWorlds).toEqual(["w1", "w2", "learn"]); expect(p.unlockedOutfits).toEqual(["island", "sunhat"]); expect(endlessOpen(p)).toBe(true); expect(levelOpen(p, "w2-1")).toBe(true); expect(levelOpen(p, "w2-2")).toBe(true); expect(levelOpen(p, "w3-8")).toBe(true);
     expect(openedWorlds({ "w1-1": 3 })).toEqual(["w1", "learn"]); expect(openedOutfits({})).toEqual(["island"]); expect(endlessOpen(emptyGameProgress())).toBe(true);
     const scores = arcadeTransition(a, "family", { type: "finish", game: "reef-builder", level: "endless", stars: 0, score: 200, round: "free-1", name: "Alex" }); expect(scores.scores[0]).toEqual({ game: "reef-builder", name: "Alex", score: 200 });
   });

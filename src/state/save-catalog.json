@@ -2,6 +2,50 @@
   "version": 2,
   "banks": [
     {
+      "slot": 3,
+      "engine": "slip-tide",
+      "rules": 1,
+      "first": 620,
+      "count": 400,
+      "family": "slip-tide",
+      "packHash": "f50b64c55987b0613e222aee68afb39aa42ce8c7d80425f05a3ee00e3ecc668d",
+      "awards": 3,
+      "cove": false
+    },
+    {
+      "slot": 4,
+      "engine": "slip-tide",
+      "rules": 1,
+      "first": 1020,
+      "count": 400,
+      "family": "slip-tide",
+      "packHash": "c31e7f9c7defb83beb4023264d377247fc23f3d665ecfa4ddb235dfe37d2aa97",
+      "awards": 3,
+      "cove": false
+    },
+    {
+      "slot": 5,
+      "engine": "slip-tide",
+      "rules": 1,
+      "first": 1420,
+      "count": 256,
+      "family": "slip-tide",
+      "packHash": "9881a46925e5a784b89113233865768d82bd23470cafd856edd83b842e1002e6",
+      "awards": 3,
+      "cove": false
+    },
+    {
+      "slot": 6,
+      "engine": "slip-tide",
+      "rules": 1,
+      "first": 1676,
+      "count": 128,
+      "family": "slip-tide",
+      "packHash": "ce9bb7b00d80a173e614178e923ee3c2d13ef60d1ea099ba39206b7ce34fd43b",
+      "awards": 3,
+      "cove": false
+    },
+    {
       "slot": 298,
       "engine": "slip-tide",
       "rules": 1,
@@ -172,47 +216,183 @@
       "cove": false
     },
     {
-      "slot": 3,
-      "engine": "slip-tide",
+      "slot": 500,
+      "engine": "reef-builder",
       "rules": 1,
-      "first": 620,
-      "count": 400,
-      "family": "slip-tide",
-      "packHash": "f50b64c55987b0613e222aee68afb39aa42ce8c7d80425f05a3ee00e3ecc668d",
-      "awards": 3,
+      "entries": [
+        {
+          "ordinal": 512000,
+          "hash": "14fa790f53fb4e0dcf579eb0ada0870a9d26407e380f9e721014d95fd11873cb"
+        },
+        {
+          "ordinal": 512001,
+          "hash": "841d7c881dae049f6d1e327f18d9fdb7c6e5e43788f0c89eae97f59094edb258"
+        }
+      ],
+      "awards": [
+        0,
+        0
+      ],
       "cove": false
     },
     {
-      "slot": 4,
-      "engine": "slip-tide",
+      "slot": 501,
+      "engine": "shell-song",
       "rules": 1,
-      "first": 1020,
-      "count": 400,
-      "family": "slip-tide",
-      "packHash": "c31e7f9c7defb83beb4023264d377247fc23f3d665ecfa4ddb235dfe37d2aa97",
-      "awards": 3,
+      "entries": [
+        {
+          "ordinal": 513024,
+          "hash": "94413d87e1b7343fc0ab10ff1c17a88c9798c931fbae1e2b3ae1d56cc600f6cf"
+        },
+        {
+          "ordinal": 513025,
+          "hash": "4d0b6a11e14563cdd3c48c31f67c67c1fa704ec06b89eee295644edf1f01dd03"
+        }
+      ],
+      "awards": [
+        0,
+        0
+      ],
       "cove": false
     },
     {
-      "slot": 5,
-      "engine": "slip-tide",
+      "slot": 502,
+      "engine": "rail-parade",
       "rules": 1,
-      "first": 1420,
-      "count": 256,
-      "family": "slip-tide",
-      "packHash": "9881a46925e5a784b89113233865768d82bd23470cafd856edd83b842e1002e6",
-      "awards": 3,
+      "entries": [
+        {
+          "ordinal": 514048,
+          "hash": "581ca15c91dab19995ea832c78546e3aba24319ec7256833cea3bf4beb3ac4ba"
+        },
+        {
+          "ordinal": 514049,
+          "hash": "0e1c537217322252557db7fe1f5a4756d6ec1050bca66dc28c38001b3d0a10e3"
+        }
+      ],
+      "awards": [
+        0,
+        0
+      ],
       "cove": false
     },
     {
-      "slot": 6,
-      "engine": "slip-tide",
+      "slot": 503,
+      "engine": "crab-crossing",
       "rules": 1,
-      "first": 1676,
-      "count": 128,
-      "family": "slip-tide",
-      "packHash": "ce9bb7b00d80a173e614178e923ee3c2d13ef60d1ea099ba39206b7ce34fd43b",
-      "awards": 3,
+      "entries": [
+        {
+          "ordinal": 515072,
+          "hash": "b0f716df3e38c1799c23455023dfc860fd5680f9c7aa171960c02257d675f2d7"
+        },
+        {
+          "ordinal": 515073,
+          "hash": "2f1c7768748943cc06b484d9e97307eea311ea42168c86501cdf51f540447c63"
+        }
+      ],
+      "awards": [
+        0,
+        0
+      ],
+      "cove": false
+    },
+    {
+      "slot": 504,
+      "engine": "palm-patrol",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 516096,
+          "hash": "57ea846e9164b5054d4c82e3d372e1834a6d440f8fb6162b2340eeeeb0266eaf"
+        },
+        {
+          "ordinal": 516097,
+          "hash": "902b6485aa0327180c885078621ef25be137d74315fae89ac162570282e56d1a"
+        }
+      ],
+      "awards": [
+        0,
+        0
+      ],
+      "cove": false
+    },
+    {
+      "slot": 505,
+      "engine": "beach-ball",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 517120,
+          "hash": "485f8ad3236413aad2a8f6b2172941cb0d568267979bb75d86effd2b45f9b06f"
+        },
+        {
+          "ordinal": 517121,
+          "hash": "e6f59f7d7e5805990c1d073006aee16e2de11dc6d603f54819e570b80d5c143b"
+        }
+      ],
+      "awards": [
+        0,
+        0
+      ],
+      "cove": false
+    },
+    {
+      "slot": 506,
+      "engine": "fruit-bat-flight",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 518144,
+          "hash": "fd7958fdc751ad2730b8775874a57df913bb4a4768a48f8c7b726928ee6713b5"
+        },
+        {
+          "ordinal": 518145,
+          "hash": "cd60d943ce10d063faf59f2213c06ca4e5a84eb5292d487259920eb663543903"
+        }
+      ],
+      "awards": [
+        0,
+        0
+      ],
+      "cove": false
+    },
+    {
+      "slot": 507,
+      "engine": "lagoon-run",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 519168,
+          "hash": "700067b69d2e796f22190a4cabf12817cf442163f81a8118784d70aa7d56ad68"
+        },
+        {
+          "ordinal": 519169,
+          "hash": "a879c5eaf330e7b5104110ef785c494216b52798d0c0861dba4ad68c282fa6f6"
+        }
+      ],
+      "awards": [
+        0,
+        0
+      ],
+      "cove": false
+    },
+    {
+      "slot": 508,
+      "engine": "canoe-cargo",
+      "rules": 1,
+      "entries": [
+        {
+          "ordinal": 520192,
+          "hash": "dad753ab609da5174328db1ea439368fb8920385dff935248873ffb010728b35"
+        },
+        {
+          "ordinal": 520193,
+          "hash": "26d211263e84edb1513f26dc2908e03899b8a730f731d8b8499514a96231feb4"
+        }
+      ],
+      "awards": [
+        0,
+        0
+      ],
       "cove": false
     }
   ],
@@ -755,6 +935,168 @@
         "help": "independent",
         "bank": 299,
         "puzzle": 15
+      }
+    ],
+    [
+      4000,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 500,
+        "puzzle": 0
+      }
+    ],
+    [
+      4001,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 500,
+        "puzzle": 1
+      }
+    ],
+    [
+      4008,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 501,
+        "puzzle": 0
+      }
+    ],
+    [
+      4009,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 501,
+        "puzzle": 1
+      }
+    ],
+    [
+      4016,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 502,
+        "puzzle": 0
+      }
+    ],
+    [
+      4017,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 502,
+        "puzzle": 1
+      }
+    ],
+    [
+      4024,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 503,
+        "puzzle": 0
+      }
+    ],
+    [
+      4025,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 503,
+        "puzzle": 1
+      }
+    ],
+    [
+      4032,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 504,
+        "puzzle": 0
+      }
+    ],
+    [
+      4033,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 504,
+        "puzzle": 1
+      }
+    ],
+    [
+      4040,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 505,
+        "puzzle": 0
+      }
+    ],
+    [
+      4041,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 505,
+        "puzzle": 1
+      }
+    ],
+    [
+      4048,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 506,
+        "puzzle": 0
+      }
+    ],
+    [
+      4049,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 506,
+        "puzzle": 1
+      }
+    ],
+    [
+      4056,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 507,
+        "puzzle": 0
+      }
+    ],
+    [
+      4057,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 507,
+        "puzzle": 1
+      }
+    ],
+    [
+      4064,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 508,
+        "puzzle": 0
+      }
+    ],
+    [
+      4065,
+      {
+        "kind": "pick-up",
+        "help": "allowed",
+        "bank": 508,
+        "puzzle": 1
       }
     ]
   ],
