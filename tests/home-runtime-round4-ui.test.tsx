@@ -26,6 +26,7 @@ vi.mock('../src/home/art/More',()=>({RoomShellArt:()=>null,MoreItemArt:()=>null}
 vi.mock('../src/home/art/Items',()=>({ItemArt:()=>null}));
 vi.mock('../src/home/runtime/HomeChrome',()=>({Tool:()=>null}));
 vi.mock('../src/home/BuildingArt',()=>({BuildingArt:()=>null,BuildingTrim:()=>null,TerraceArt:()=>null}));
+vi.mock('../src/home/runtime/UndoNote', () => ({ UndoNote: () => null, UndoGonePicture: () => null }));
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;
 function context(id:string,reduced=false) {
  const state=labHome();state.rooms.kitchen.instances.find(i=>i.id==='fridge')!.powered=true;const scene=withPortions(buildScene(state)),clock={value:1000};

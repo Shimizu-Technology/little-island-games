@@ -24,7 +24,8 @@ import { ItemArt } from "./art/Items";
 import { MoreItemArt } from "./art/More";
 import { moreCatalog } from "./catalogMore";
 import { itemIds, type ItemId } from "./catalog";
-import { useHomeStore } from "./useHomeStore";
+import { useHomeStore, UNDO_FULL_MESSAGE, UNDO_NOTES } from "./useHomeStore";
+import { UndoNote } from "./runtime/UndoNote";
 import { buildScene, createSceneBuilder } from "./scene/graph";
 import { resolve, type DropProposal } from "./scene/proposal";
 import { housePoint, roomPoint, screenPoint, type ScreenPoint, type SceneEntity, type Scene } from "./scene/types";
@@ -176,6 +177,9 @@ export function HomeScreen({
     const timer = setTimeout(() => setCapacityGone(serial), CAPACITY_CUE_MS);
     return () => clearTimeout(timer);
   }, [store.message, store.messageSerial]);
+  // F3: an undo note stays until the next message or a tap; reading is never timed.
+  const [noteGone, setNoteGone] = useState<number>();
+  const undoNote = UNDO_NOTES.includes(store.message) && noteGone !== store.messageSerial;
   const live = useRef({ store, scene, selected, placing, room, designing });
   useLayoutEffect(() => {
     live.current = { store, scene, selected, placing, room, designing };
@@ -953,6 +957,8 @@ export function HomeScreen({
             dispatch={dispatch}
             onClose={() => setDesigning(false)}
             large={large}
+            restoreCost={() => store.restoreCost(room)}
+            onRestoreAnyway={() => store.dispatch({ type: "reset", roomId: room } as HomeAction, { anyway: true })}
           />
         )}
       </View>
@@ -1031,9 +1037,12 @@ export function HomeScreen({
         onCarry={(carrying) => { if (!carrying) setFriends(false); }}
       />
       <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
-        {store.message}
+        {undoNote ? "" : store.message}
       </Text>
       {capacityShown && <CapacityCue bottom={inset.bottom + navigationHeight + 14} />}
+      {undoNote && <UndoNote message={store.message} restored={store.message !== UNDO_FULL_MESSAGE}
+        bottom={inset.bottom + navigationHeight + (designing && !vertical ? portraitDrawerHeightFor(large) : 0) + 14}
+        onDismiss={() => setNoteGone(store.messageSerial)} />}
       {lab && frameReport && (
         <Text testID="frame-report" style={{ position: "absolute", left: 75, bottom: 2, fontSize: 10 }}>
           {JSON.stringify({

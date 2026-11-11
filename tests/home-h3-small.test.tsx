@@ -29,6 +29,7 @@ vi.mock('../src/home/runtime/FriendDrawer', () => ({ FriendDrawer: () => null })
 vi.mock('../src/home/runtime/CapacityCue', () => ({ CapacityCue: 'CapacityCue', CAPACITY_CUE_MS: 3200, CAPACITY_MESSAGE: 'Put something away to make room.' }));
 vi.mock('../src/home/art/Items', () => ({ ItemArt: () => null }));
 vi.mock('../src/home/art/More', () => ({ MoreItemArt: () => null }));
+vi.mock('../src/home/runtime/UndoNote', () => ({ UndoNote: () => null, UndoGonePicture: () => null }));
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 vi.stubGlobal('requestAnimationFrame', () => 1);
 vi.stubGlobal('cancelAnimationFrame', () => {});

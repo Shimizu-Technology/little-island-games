@@ -37,6 +37,31 @@ export function savedHistory(history: History, access?: HomeAccess): HomeStateV2
 /** R1: an edit is kept only if the saved undo can still bring back everything it promised. */
 export const historyAdmits = (history: History) => history.present.version !== 4 || undoAdmits(savedEntries(history));
 export const UNDO_FULL_MESSAGE = "That's too much to change at once. Undo couldn't bring it all back.";
+/** F3: what Design → Restore room costs Undo. */
+export type RestoreCost = "undoable" | "no-undo" | "drops-older";
+export const RESTORE_QUESTION: Record<Exclude<RestoreCost, "undoable">, string> = {
+  "no-undo": "This change can't be undone. Restore the room anyway?",
+  "drops-older": "After this, Undo can't bring back your older changes. Restore the room anyway?",
+};
+export const RESTORE_NOTE: Record<Exclude<RestoreCost, "undoable">, string> = {
+  "no-undo": "Room restored. This one can't be undone.",
+  "drops-older": "Room restored. Your oldest undo steps are gone.",
+};
+/** Messages that the Home screen shows as a visible note, not only to a screen reader. */
+export const UNDO_NOTES: readonly string[] = [UNDO_FULL_MESSAGE, ...Object.values(RESTORE_NOTE)];
+/** F3: the newest steps whose promises still hold. The oldest go first, an older removal with them. */
+export function trimmedHistory(history: History): History {
+  let past = history.past;
+  while (past.length && !historyAdmits({ ...history, past })) past = past.slice(1);
+  return past === history.past ? history : { ...history, past };
+}
+/** Whether restoring a room keeps Undo's promises, and if not, what a confirmed restore gives up. */
+export function restoreCostOf(history: History, roomId: HomeAction["roomId"], ownership: Ownership = {}): RestoreCost | undefined {
+  const next = editHistory(history, { type: "reset", roomId } as HomeAction, ownership);
+  if (next === history) return undefined;
+  if (historyAdmits(next)) return "undoable";
+  return trimmedHistory(next).past.length ? "drops-older" : "no-undo";
+}
 /** Rebuilds the saved undo steps after a relaunch. Never mutates `saved`. */
 export function restoredHistory(saved: HomeStateV2): History {
   const present = bare(saved);
@@ -93,7 +118,8 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
   });
   const live = useRef(session);
   const identities = useRef<Record<string, string>>({});
-  const dispatch = (action: HomeAction | { type: "undo" | "redo" }) => {
+  /** `anyway`: a Restore room the child confirmed after being told what Undo gives up (F3). */
+  const dispatch = (action: HomeAction | { type: "undo" | "redo" }, options?: { anyway?: boolean }) => {
     const current = live.current;
     if (!initialValid) {
       setSession({ ...current, message: "This room needs recovery before it can be changed.", serial: current.serial + 1 });
@@ -103,12 +129,18 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
       action.type !== "undo" && action.type !== "redo"
         ? homeReducer(current.history.present, action as HomeAction, ownership)
         : undefined;
-    const history = editHistory(current.history, action, ownership, result);
+    let history = editHistory(current.history, action, ownership, result);
+    let note: string | undefined;
     if (history !== current.history && action.type !== "undo" && action.type !== "redo" && !historyAdmits(history)) {
-      const next = { ...current, message: UNDO_FULL_MESSAGE, serial: current.serial + 1 };
-      live.current = next;
-      setSession(next);
-      return;
+      if (options?.anyway && action.type === "reset") {
+        history = trimmedHistory(history);
+        note = RESTORE_NOTE[history.past.length ? "drops-older" : "no-undo"];
+      } else {
+        const next = { ...current, message: UNDO_FULL_MESSAGE, serial: current.serial + 1 };
+        live.current = next;
+        setSession(next);
+        return;
+      }
     }
     if (history !== current.history && persist && !persist(savedHistory(history, current.access))) {
       const next = { ...current, message: "Your room could not be updated. Please try again.", serial: current.serial + 1 };
@@ -121,7 +153,7 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
       access: current.access,
       serial: current.serial + 1,
       message:
-        result?.message ?? (action.type === "undo" ? "Undone." : action.type === "redo" ? "Redone." : "Room updated."),
+        note ?? result?.message ?? (action.type === "undo" ? "Undone." : action.type === "redo" ? "Redone." : "Room updated."),
     };
     live.current = next;
     setSession(next);
@@ -185,6 +217,8 @@ export function useHomeStore(ownership: Ownership = {}, initial?: unknown, persi
     setMessage,
     access: session.access,
     setAccess,
+    /** F3: asked before Design shows its Restore question. */
+    restoreCost: (roomId: HomeAction["roomId"]) => restoreCostOf(live.current.history, roomId, ownership),
     canUndo: session.history.past.length > 0,
     canRedo: session.history.future.length > 0,
     recoveryOriginal: !initialValid ? initial : undefined,

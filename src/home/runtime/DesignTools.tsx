@@ -12,6 +12,8 @@ import type { ItemId } from "../catalog";
 import { screenPoint } from "../scene/types";
 import type { Interaction } from "./useInteraction";
 import { Tool } from "./HomeChrome";
+import { UndoGonePicture } from "./UndoNote";
+import { RESTORE_QUESTION, type RestoreCost } from "../useHomeStore";
 
 const categoryNames: Record<string, string> = {
   "beds-seats": "Beds & seats",
@@ -128,7 +130,13 @@ export function DesignTools({
   dispatch,
   onClose,
   large = false,
+  restoreCost,
+  onRestoreAnyway,
 }: {
+  /** F3: what restoring this room would cost Undo, asked when the Restore question opens. */
+  restoreCost?: () => RestoreCost | undefined;
+  /** F3: the child chose Restore after being told Undo can't keep it all. */
+  onRestoreAnyway?: () => void;
   /** HR-03 / R5: every child-used button here is at least 64 pt in the larger-target mode. */
   large?: boolean;
   initialItem?: string;
@@ -152,7 +160,8 @@ export function DesignTools({
           ? "Stickers"
           : "Furniture"
     ),
-    [confirm, setConfirm] = useState(false);
+    [confirm, setConfirm] = useState(false),
+    [cost, setCost] = useState<RestoreCost>();
   const items = itemIds.filter((id) =>
     tab === "Stickers"
       ? id.startsWith("sticker:") && owns(id, ownership)
@@ -251,7 +260,7 @@ export function DesignTools({
                 <Text>{id.replaceAll("-", " ")}</Text>
               </Pressable>
             ))}
-          <Tool label="Restore this room" symbol="↺" onPress={() => setConfirm(true)} large={large} />
+          <Tool label="Restore this room" symbol="↺" onPress={() => { setCost(restoreCost?.()); setConfirm(true); }} large={large} />
         </ScrollView>
       )}
       {tab === "Colours" && (
@@ -305,6 +314,31 @@ export function DesignTools({
       </View>
       <Modal visible={confirm} transparent onRequestClose={() => setConfirm(false)} animationType="none">
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#284F4B66" }}>
+          {cost === "no-undo" || cost === "drops-older" ? (
+          // F3: Undo can't keep all of this restore. Say so first, in a picture and words; never refuse silently.
+          <View testID="restore-anyway" accessibilityViewIsModal
+            style={{ backgroundColor: "#FFF8E9", padding: 24, borderRadius: 20, maxWidth: 340, gap: 14, alignItems: "center" }}>
+            <UndoGonePicture size={112} />
+            <Text accessibilityRole="header" accessibilityLiveRegion="polite" maxFontSizeMultiplier={1.6}
+              style={{ color: "#284F4B", fontSize: 17, fontWeight: "600", textAlign: "center" }}>
+              {RESTORE_QUESTION[cost]}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                onRestoreAnyway?.();
+                setConfirm(false);
+              }}
+              style={[{ padding: 12, alignSelf: "stretch", alignItems: "center", backgroundColor: "#F1E6CF", borderRadius: 14 }, big(large), shape(large)]}
+            >
+              <Text>Restore</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={() => setConfirm(false)}
+              style={[{ padding: 12, alignSelf: "stretch", alignItems: "center", backgroundColor: "#CFE3D6", borderRadius: 14 }, big(large), shape(large)]}>
+              <Text style={{ fontWeight: "600" }}>Keep my room</Text>
+            </Pressable>
+          </View>
+          ) : (
           <View style={{ backgroundColor: "#FFF8E9", padding: 24, borderRadius: 20, maxWidth: 340, gap: 14 }}>
             <Text>Restore this room? Undo can bring it back.</Text>
             <Pressable
@@ -321,6 +355,7 @@ export function DesignTools({
               <Text>Keep playing</Text>
             </Pressable>
           </View>
+          )}
         </View>
       </Modal>
     </View>
