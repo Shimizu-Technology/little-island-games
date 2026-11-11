@@ -50,6 +50,7 @@ export function javascriptStrings(text) {
     recordComments(node.pos);recordComments(node.end);
     if (ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) strings.push(node.text);
     if ((ts.isPropertyAssignment(node) || ts.isMethodDeclaration(node)) && ts.isIdentifier(node.name) && /^\p{L}+$/u.test(node.name.text)) keys.push(node.name.text);
+    if (ts.isRegularExpressionLiteral(node)) keys.push(node.text);
     ts.forEachChild(node, visit);
   }
   visit(tree);
@@ -92,14 +93,14 @@ export function technicalString(text) {
     || /^\/?_expo\/static\/js\/[^\s]*-[a-f0-9]{32}\.(?:js|hbc)$/i.test(text);
 }
 
-export function htmlStrings(text) {
+export function htmlViews(text) {
   // HTML shell content, accessible text attributes and inline script literals.
-  const strings=[];
-  for(const match of text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) if(match[1].trim()) strings.push(...javascriptStrings(match[1]).strings);
+  const strings=[],keys=[];
+  for(const match of text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) if(match[1].trim()) {const parsed=javascriptStrings(match[1]),worklets=workletStrings(parsed.strings);strings.push(...worklets.strings);keys.push(...parsed.keys,...worklets.keys);}
   const visible=text.replace(/<!--[\s\S]*?-->|<(?:script|style)\b[^>]*>[\s\S]*?<\/(?:script|style)>/gi,'');
   for(const match of visible.matchAll(/\b(?:alt|title|aria-label|placeholder)\s*=\s*["']([^"']*)["']/gi)) strings.push(match[1]);
   strings.push(visible.replace(/<[^>]*>/g,' '));
-  return strings;
+  return {strings,keys};
 }
 
 /** Reanimated serializes complete functions into string literals. Scan their

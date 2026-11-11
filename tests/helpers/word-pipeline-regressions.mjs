@@ -287,6 +287,7 @@ exportCase('guard benign media encoding','picture.png',Buffer.from('noiseCOLDnoi
 exportCase('guard private blob despite exceptions','app.js','globalThis.leak='+JSON.stringify(JSON.stringify(policy.core).toLowerCase()),{...policy,artifactStringExceptions:[{path:'app.js',strings:[{sha256:sha256(JSON.stringify(policy.core).toLowerCase()),occurrences:1,terms:[{term:'COLD',check:'literal',reason:'Synthetic reviewed collision',evidence:'synthetic'}]}]}]},true);
 for(const [name,source,fail] of [
  ['whole word','globalThis.label="COLD";',true],
+ ['regex fragment','globalThis.pattern=/ALPHANONSENSE|BETANONSENSE|GAMMANONSENSE/;',true],
  ['three broad words','globalThis.leak=["ALPHANONSENSE","BETANONSENSE","GAMMANONSENSE"];',true],
  ['separate storage boundaries','globalThis.words=["XCOL","D","ALPHANONSENSEB","BETANONSENSEB","GAMMANONSENSEB"];',false],
  ['UTF16 word','globalThis.label="COLD Å";',true],
@@ -363,3 +364,7 @@ packedCase('guard packed metadata partial list','numeric-code',{values:[1,2,3]},
 exportCase('guard regexp comment delimiters are code','app.js','globalThis.r=/[//]/; const ALPHANONSENSE=1,BETANONSENSE=2,GAMMANONSENSE=3;');
 
 exportCase('guard property key is not displayed text','app.js','globalThis.fields={COLD:1};');
+exportCase('guard regex partial list','app.js','globalThis.pattern=/ALPHANONSENSE|BETANONSENSE|GAMMANONSENSE/;',policy,true);
+exportCase('guard regex single term is code','app.js','globalThis.pattern=/COLD/;');
+exportCase('guard HTML regex partial list','index.html','<script>globalThis.pattern=/ALPHANONSENSE|BETANONSENSE|GAMMANONSENSE/;</script>',policy,true);
+exportCase('guard HTML key map partial list','index.html','<script>globalThis.words={ALPHANONSENSE:1,BETANONSENSE:2,GAMMANONSENSE:3};</script>',policy,true);

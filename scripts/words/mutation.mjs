@@ -66,6 +66,8 @@ custom('guard','reviewed string occurrence cap',sources.get('guard').replace('oc
 custom('guard','reviewed string identity',sources.get('guard').replace('scoped.get(hit.sha256)??[]','[...scoped.values()].flat()'),['guard changed reviewed string rejected']);
 custom('artifact-views','Hermes string content detector',sources.get('artifact-views').replace('  return strings;','  return [];'),['guard Hermes whole word','guard Hermes three broad words']);
 custom('artifact-views','serialized worklet string extraction',sources.get('artifact-views').replace('const parsed=javascriptStrings(source),nested=workletStrings(parsed.strings,depth+1);','const parsed={strings:[],keys:[]},nested=workletStrings(parsed.strings,depth+1);'),['guard serialized worklet user string']);
+custom('artifact-views','regex fragment leak view',sources.get('artifact-views').replace('    if (ts.isRegularExpressionLiteral(node)) keys.push(node.text);',''),['guard regex partial list','guard HTML regex partial list']);
+custom('artifact-views','HTML metadata leak view',sources.get('artifact-views').replace('keys.push(...parsed.keys,...worklets.keys);',''),['guard HTML key map partial list']);
 custom('check','compressed policy expansion bound',sources.get('check').replace('{maxOutputLength:4*1024*1024}','{}'),['compressed CI policy is decoded, locked, used and bounded']);
 const scratch=mkdtempSync(join(tmpdir(),'li-word-mutation-suite-')),toolRoot=join(scratch,'scripts/words'),trace=join(scratch,'trace.jsonl');
 mkdirSync(join(scratch,'scripts'),{recursive:true});cpSync('scripts/words',toolRoot,{recursive:true});

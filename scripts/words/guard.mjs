@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, lstatSync } from 'node:fs';
 import { resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlStrings, workletStrings, puzzleStrings } from './artifact-views.mjs';
+import { hermesMagic, hermesStrings, javascriptStrings, jsonStrings, letterGrids, technicalString, htmlViews, workletStrings, puzzleStrings } from './artifact-views.mjs';
 import { scanGrid } from './scan.mjs';
 import { requireThat, digest, sha256, foldScan } from './core.mjs';
 import { contentPolicy } from './policy.mjs';
@@ -65,7 +65,7 @@ export function artifactScanner(policy) {
       let value;
       try {value=JSON.parse(views[1]);} catch {requireThat(false,'Cannot parse exported JSON');}
       strings=jsonStrings(value);grids=letterGrids(value);
-    } else if(/\.html$/i.test(name)) strings=htmlStrings(views[1]);
+    } else if(/\.html$/i.test(name)) ({strings,keys}=htmlViews(views[1]));
     else if(/\.(?:txt|css|svg|xml|bin)$/i.test(name)) {strings=views;semantic=false;}
     else semantic=false;
     if(bytes.subarray(0,8).equals(hermesMagic) || /\.(?:[cm]?js|bundle)$/i.test(name)) {
