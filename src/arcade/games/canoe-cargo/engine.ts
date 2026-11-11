@@ -120,9 +120,7 @@ function lock(s: CargoState): CargoState {
   const combo = lastRows.length ? s.combo + 1 : 0, lastPoints = lastRows.length * 100 + bonus * 100 + Math.max(0, combo - 1) * 40 + (lastRows.length > 1 ? lastRows.length * 40 : 0) + 5;
   let next: CargoState = { ...s, board: [...Array(lastRows.length * COLS).fill(null), ...remaining], loads: s.loads + 1, lines: s.lines + lastRows.length, canoes: s.canoes + lastRows.length + bonus, freed: s.freed + freed, score: Math.min(99999999, s.score + lastPoints), combo, bestRows: Math.max(s.bestRows, lastRows.length), event: s.event + 1, lastRows, lastBonus: bonus, lastPoints, ...(missed || s.helped ? { helped: true } : {}) };
   if (s.level !== "endless" && cargoGoalValue(next) >= s.level.target) return { ...next, status: "cleared" };
-  const every = s.level === "endless" ? Math.max(6, 14 - Math.floor(next.lines / 5)) : s.level.garbageEvery;
-  // Tighten the tide cadence halfway through a level. Always leave a reachable channel.
-  const cadence = every ? Math.max(5, every - (s.level !== "endless" && cargoGoalValue(next) >= s.level.target / 2 ? 1 : 0)) : 0;
+  const cadence = cargoCadence(next);
   if (cadence && next.loads % (cadence + (s.helper ? 2 : 0)) === 0) {
     if (next.board.slice(0, COLS).some(Boolean)) return { ...next, status: "over" };
     const [seed, r] = nextRandom(next.seed), tide = s.level === "endless" ? "wide" : s.level.tide;
@@ -172,6 +170,12 @@ export function cargoGravity(s: CargoState): number {
   const base = s.level === "endless" ? Math.max(.1, .65 - s.lines * .012) : s.level.fall;
   const progress = s.level === "endless" ? 0 : Math.min(1, cargoGoalValue(s) / s.level.target);
   return base * (s.helper ? 1.25 : 1) * (1 - .15 * progress);
+}
+/** Loads between garbage rows before Helper's two extra loads; zero when a level has no garbage. */
+export function cargoCadence(s: CargoState): number {
+  const every = s.level === "endless" ? Math.max(6, 14 - Math.floor(s.lines / 5)) : s.level.garbageEvery;
+  // Tighten the tide cadence halfway through a level. Always leave a reachable channel.
+  return every ? Math.max(5, every - (s.level !== "endless" && cargoGoalValue(s) >= s.level.target / 2 ? 1 : 0)) : 0;
 }
 export function cargoStep(s: CargoState, _input: CargoInput, dt: number): CargoState {
   if (s.status !== "playing" || !Number.isFinite(dt) || dt <= 0 || dt > .1) return s;
