@@ -84,8 +84,9 @@ function fakeNav(){
 }
 /** Stands in for the Stack: it fails when told to, and mounts on the map. */
 const broken={on:0};
+const failsNow=()=>{if(broken.on<=0)return false;broken.on--;return true;};
 function Navigator({nav}:{nav:ReturnType<typeof fakeNav>}){
- if(broken.on>0){broken.on--;throw new Error('The navigator failed');}
+ if(failsNow())throw new Error('The navigator failed');
  useEffect(()=>{nav.go({name:'index'});},[nav]);
  return <article/>;
 }
