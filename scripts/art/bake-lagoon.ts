@@ -9,7 +9,7 @@ import { quadHomography, inverse3 } from '../../src/arcade/games/lagoon-run/quad
 import { FLOOR_BANDS, FLOOR_DENSITY } from '../../src/arcade/games/lagoon-run/floorBands';
 import { LOOKS } from '../../src/arcade/games/lagoon-run/look';
 import { canoePath } from './lagoon-paths';
-import { floorBandSvg, PROPS, PROP_SIZE, RAILS, HAZARD_ART, HAZARD_FRAMES, SHELL_SVG, powerSvg } from './lagoon-art';
+import { floorBandSvg, PROPS, PROP_SIZE, RAILS, HAZARD_ART, HAZARD_FRAMES, SHELL_SVG, powerSvg, actorSvgDocument } from './lagoon-art';
 const dir='assets/arcade/lagoon';mkdirSync(dir,{recursive:true});
 const manifest:Record<string,unknown>={density:3,source:'scripts/art/bake-lagoon.ts',assets:{}};
 /** Body already drawn in output pixels (density applied by the caller). */
@@ -52,7 +52,7 @@ mkdirSync(`${dir}/actors`,{recursive:true});
 const actorLines:string[]=[];
 const viewBoxed=(name:string,width:number,height:number,vb:readonly number[],body:string,density=4)=>{
  const w=Math.ceil(width*density),h=Math.ceil(height*density);
- writeFileSync(`${dir}/${name}.svg`,`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${vb[0]} ${vb[1]}" preserveAspectRatio="none">${body}</svg>`);
+ writeFileSync(`${dir}/${name}.svg`,actorSvgDocument(width,height,vb,body,density));
  execFileSync('rsvg-convert',['-w',String(w),'-h',String(h),'-o',`${dir}/${name}.png`,`${dir}/${name}.svg`]);
  const bytes=readFileSync(`${dir}/${name}.png`);
  (manifest.assets as Record<string,unknown>)[name]={width,height,density,bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')};

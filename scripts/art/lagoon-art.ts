@@ -135,6 +135,10 @@ export const PROP_SIZE = { width: 100, height: 240 } as const;
 const INK = '#3E424F';
 /** Frame (points) and viewBox per action: jump is low, roll is high with a gap below, lane is tall. */
 export const HAZARD_FRAMES = { jump: { width: 72, height: 72, vb: [100, 100] }, duck: { width: 112, height: 129.6, vb: [100, 180] }, lane: { width: 72, height: 129.6, vb: [100, 180] } } as const;
+/** The exact SVG document the bake rasterizes for an actor (also used to certify the committed source). */
+export function actorSvgDocument(width: number, height: number, vb: readonly number[], body: string, density = 4) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.ceil(width * density)}" height="${Math.ceil(height * density)}" viewBox="0 0 ${vb[0]} ${vb[1]}" preserveAspectRatio="none">${body}</svg>`;
+}
 const g = (body: string) => `<g stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${body}</g>`;
 function duckFrame(fill: string, inner: string) {
   return g(`<path d="M5 177V26L13 21V172M87 172V21L95 26V177" fill="#B48358"/><path d="M4 27L12 20H88L96 27V92L88 101H12L4 92Z" fill="${fill}"/><path d="M4 27L12 20H88L96 27Z" fill="#D2D998" stroke-width="0"/><path d="M88 29L96 27V92L88 101Z" fill="#214E52" fill-opacity=".3" stroke-width="0"/><path d="M4 27H96M12 101H88" stroke="#FFE2AA" stroke-width="5"/>${inner}<path d="M8 120V151M92 120V151" stroke="#F0C78B" stroke-width="2"/>`);
