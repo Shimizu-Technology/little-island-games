@@ -36,6 +36,9 @@ export const storage: StorageAdapter = {
     await db.withExclusiveTransactionAsync(async (tx) => {
       await tx.runAsync("INSERT OR REPLACE INTO app_data (key,value) VALUES (?,?)", "save", value);
       await tx.runAsync("INSERT OR REPLACE INTO app_data (key,value) VALUES (?,?)", "draft-head", metadata?.revision ?? '');
+      // Notices are written with the save they describe, so one can't land without the other.
+      if (metadata?.notices === null) await tx.runAsync("DELETE FROM app_data WHERE key = ?", "set-aside-notices");
+      else if (metadata?.notices !== undefined) await tx.runAsync("INSERT OR REPLACE INTO app_data (key,value) VALUES (?,?)", "set-aside-notices", metadata.notices);
       const rows = await tx.getAllAsync<{value:string}>("SELECT value FROM app_data WHERE key LIKE ?", 'draft:%');
       for (const row of rows) if (!isFolded(row.value,metadata)) await tx.runAsync("INSERT INTO app_data (key,value) VALUES (?,?)",recoveryKey(),row.value);
       await tx.runAsync("DELETE FROM app_data WHERE key LIKE ?", 'draft:%');
@@ -48,6 +51,21 @@ export const storage: StorageAdapter = {
       const index = Number(counter?.value ?? 0) % 8;
       await tx.runAsync("INSERT OR REPLACE INTO app_data (key,value) VALUES (?,?)",`discarded-session-${index}`,raw);
       await tx.runAsync("INSERT OR REPLACE INTO app_data (key,value) VALUES (?,?)",'discard-cursor',String(index+1));
+    });
+  },
+  readNotices: async () => (await (await database).getFirstAsync<{ value: string }>("SELECT value FROM app_data WHERE key = ?", "set-aside-notices"))?.value ?? null,
+  writeNotices: async raw => {
+    const db = await database;
+    if (raw === null) await db.runAsync("DELETE FROM app_data WHERE key = ?", "set-aside-notices");
+    else await db.runAsync("INSERT OR REPLACE INTO app_data (key,value) VALUES (?,?)", "set-aside-notices", raw);
+  },
+  logLaunch: async entry => {
+    const db = await database;
+    await db.withExclusiveTransactionAsync(async tx => {
+      const counter = await tx.getFirstAsync<{value:string}>("SELECT value FROM app_data WHERE key = ?",'launch-log-cursor');
+      const index = Number(counter?.value ?? 0) % 8;
+      await tx.runAsync("INSERT OR REPLACE INTO app_data (key,value) VALUES (?,?)",`launch-log-${index}`,entry);
+      await tx.runAsync("INSERT OR REPLACE INTO app_data (key,value) VALUES (?,?)",'launch-log-cursor',String(index+1));
     });
   },
   quarantineDraft: async raw => {

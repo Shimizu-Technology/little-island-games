@@ -6,11 +6,21 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { TextLayoutProvider } from "../components/Text";
 import { useReducedMotion } from "../components/motion";
 import { StoreProvider } from "../state/Store";
+import { ScreenBoundary, UIBoundary } from "../components/LaunchError";
 type LibraryParams = { place?: string; id?: string } | undefined;
 /** No interactive pop where a stray swipe would cost a child their drawing or let a baby out. */
 export function libraryGestureEnabled(params: object | undefined) {
   const { place, id } = (params ?? {}) as NonNullable<LibraryParams>;
   return !((place === "make" && !!id) || place === "little");
+}
+/**
+ * Only a failure of the Store or the providers around it lands here: a plain restart screen that never
+ * mounts another Store. Anything under the Store is caught by UIBoundary below it.
+ */
+export { StoreFailure as ErrorBoundary } from "../components/LaunchError";
+/** A screen's own render error stays inside that screen, so the Store above it keeps its accepted work. */
+export function screenLayout({ children }: { children: React.ReactElement }) {
+  return <ScreenBoundary>{children}</ScreenBoundary>;
 }
 export default function Layout() {
   // The platform push shows where a screen came from; Reduce Motion swaps it for a short fade.
@@ -19,8 +29,13 @@ export default function Layout() {
     <GestureHandlerRootView style={{ flex: 1 }}><SafeAreaProvider>
       <TextLayoutProvider>
         <StoreProvider>
+          {/* Try again here remounts only the navigator and screens. The Store and its writes stay mounted. */}
+          <UIBoundary>
           <StatusBar style="dark" />
           <Stack
+            // A navigator mounted again after an error starts on the map, not the first declared screen.
+            initialRouteName="index"
+            screenLayout={screenLayout}
             screenOptions={{
               headerShown: false,
               animation: reduced ? "fade" : "default",
@@ -36,6 +51,7 @@ export default function Layout() {
                 their explicit Back button / hold-to-exit lock still work. */}
             <Stack.Screen name="library" options={({ route }) => ({ gestureEnabled: libraryGestureEnabled(route.params) })} />
           </Stack>
+          </UIBoundary>
         </StoreProvider>
       </TextLayoutProvider>
     </SafeAreaProvider></GestureHandlerRootView>
