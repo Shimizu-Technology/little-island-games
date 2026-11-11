@@ -2,8 +2,9 @@ import React from 'react';
 import { act, create } from 'react-test-renderer';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { HomeScreen } from '../src/home/HomeScreen';
-import { starterHome, instance } from '../src/home/model';
-import { RESTORE_NOTE, UNDO_FULL_MESSAGE } from '../src/home/useHomeStore';
+import { starterHome, instance, type HomeAction } from '../src/home/model';
+import { editHistory, restoredHistory, savedHistory, RESTORE_NOTE, UNDO_FULL_MESSAGE, UNDO_TRIMMED_NOTE } from '../src/home/useHomeStore';
+import twentySteps from './fixtures/home-undo-legacy/twenty-steps.json';
 const harness = vi.hoisted(() => ({ chrome: {} as any, design: {} as any, announce: [] as string[] }));
 vi.mock('expo-router', () => ({ router: {}, useFocusEffect: (effect: () => void | (() => void)) => { React.useEffect(() => effect(), [effect]); } }));
 vi.mock('react-native', () => ({ View: 'View', Text: 'Text', Pressable: 'Pressable', Platform: { OS: 'ios' },
@@ -63,6 +64,28 @@ it('F3: the reviewer\'s 246-thing room restores once confirmed, with a visible n
   expect(note()).toHaveLength(1);
   await act(async () => note()[0].props.onPress());
   expect(note()).toHaveLength(0);
+  // R3-F2: dismissed, its words don't come back in the hidden region either.
+  expect(hidden().join('')).toBe('');
+});
+it('F3 drops-older on the real screen: the note shows, and once dismissed the hidden region stays blank', async () => {
+  const state = starterHome();
+  for (const room of ['kitchen', 'home'] as const)
+    state.rooms[room].instances.push(...Array.from({ length: 48 }, (_, i) => ({ ...instance(`${room}-${i}`, 'shell', 0, 0), staged: true as const })));
+  // The Kitchen basket was restored earlier, so its removal is in the saved undo.
+  const saved = savedHistory(editHistory(restoredHistory(state), { type: 'reset', roomId: 'kitchen' } as HomeAction));
+  expect(saved.undo?.steps).toHaveLength(1);
+  const saves: any[] = [];
+  await act(async () => { root = create(<HomeScreen initialState={saved} persist={(s) => { saves.push(s); return true; }} />); });
+  await act(async () => harness.chrome.onDesign());
+  expect(harness.design.restoreCost()).toBe('drops-older');
+  await act(async () => harness.design.onRestoreAnyway());
+  expect(saves).toHaveLength(1);
+  expect(note().map((n) => n.props.accessibilityLabel)).toEqual([RESTORE_NOTE['drops-older']]);
+  expect(harness.announce).toContain(RESTORE_NOTE['drops-older']);
+  expect(hidden().join('')).toBe('');
+  await act(async () => note()[0].props.onPress());
+  expect(note()).toHaveLength(0);
+  expect(hidden().join('')).toBe('');
 });
 it('F3: a refusal is never silent either: it shows the same kind of note', async () => {
   const state = starterHome();
@@ -74,8 +97,36 @@ it('F3: a refusal is never silent either: it shows the same kind of note', async
   expect(saves).toHaveLength(0);
   expect(note().map((n) => n.props.accessibilityLabel)).toEqual([UNDO_FULL_MESSAGE]);
   expect(hidden().join('')).not.toMatch(/undo/i);
+  // R3-F2: dismissed, the refusal stays out of the hidden region.
+  await act(async () => note()[0].props.onPress());
+  expect(note()).toHaveLength(0);
+  expect(hidden().join('')).toBe('');
+  // A second refusal is news again.
+  await act(async () => harness.design.dispatch({ type: 'reset' }));
+  expect(note().map((n) => n.props.accessibilityLabel)).toEqual([UNDO_FULL_MESSAGE]);
   // The next message replaces it.
   await act(async () => harness.design.dispatch({ type: 'theme', wallpaper: 'lagoon' }));
   expect(saves).toHaveLength(1);
+  expect(note()).toHaveLength(0);
+  expect(hidden().join('')).not.toBe('');
+});
+it('R3-F1: the first edit on a Home saved by the previous head succeeds and shows the note once', async () => {
+  const state = JSON.parse(JSON.stringify(twentySteps));
+  const saves: any[] = [];
+  await act(async () => { root = create(<HomeScreen initialState={state} persist={(s) => { saves.push(s); return true; }} />); });
+  expect(note()).toHaveLength(0);
+  await act(async () => harness.chrome.onDesign());
+  await act(async () => harness.design.dispatch({ type: 'theme', wallpaper: 'lagoon' }));
+  expect(saves).toHaveLength(1);
+  expect(note().map((n) => n.props.accessibilityLabel)).toEqual([UNDO_TRIMMED_NOTE]);
+  // Undo still works for the newer steps, so the picture is the crossed arrow alone, not a restored room.
+  expect(note()[0].findAll((n) => (n.type as unknown) === 'Rect')).toHaveLength(0);
+  expect(harness.announce).toContain(UNDO_TRIMMED_NOTE);
+  expect(hidden().join('')).toBe('');
+  await act(async () => note()[0].props.onPress());
+  expect(note()).toHaveLength(0);
+  expect(hidden().join('')).toBe('');
+  await act(async () => harness.design.dispatch({ type: 'theme', wallpaper: 'cream' }));
+  expect(saves).toHaveLength(2);
   expect(note()).toHaveLength(0);
 });

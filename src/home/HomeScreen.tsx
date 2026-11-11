@@ -24,7 +24,7 @@ import { ItemArt } from "./art/Items";
 import { MoreItemArt } from "./art/More";
 import { moreCatalog } from "./catalogMore";
 import { itemIds, type ItemId } from "./catalog";
-import { useHomeStore, UNDO_FULL_MESSAGE, UNDO_NOTES } from "./useHomeStore";
+import { useHomeStore, RESTORE_NOTE, UNDO_NOTES } from "./useHomeStore";
 import { UndoNote } from "./runtime/UndoNote";
 import { buildScene, createSceneBuilder } from "./scene/graph";
 import { resolve, type DropProposal } from "./scene/proposal";
@@ -1036,11 +1036,12 @@ export function HomeScreen({
         onClose={() => setFriends(false)}
         onCarry={(carrying) => { if (!carrying) setFriends(false); }}
       />
+      {/* Undo notes are spoken by the visible note only, and stay out of here once it's dismissed too (R3-F2). */}
       <Text accessibilityLiveRegion="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden" }}>
-        {undoNote ? "" : store.message}
+        {UNDO_NOTES.includes(store.message) ? "" : store.message}
       </Text>
       {capacityShown && <CapacityCue bottom={inset.bottom + navigationHeight + 14} />}
-      {undoNote && <UndoNote message={store.message} restored={store.message !== UNDO_FULL_MESSAGE}
+      {undoNote && <UndoNote message={store.message} restored={Object.values(RESTORE_NOTE).includes(store.message)}
         top={headerHeight + 10}
         onDismiss={() => setNoteGone(store.messageSerial)} />}
       {lab && frameReport && (
