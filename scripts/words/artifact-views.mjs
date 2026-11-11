@@ -49,7 +49,7 @@ export function hermesStrings(bytes, options={}) {
 export function javascriptStrings(text, teachings=[]) {
   const tree = ts.createSourceFile('artifact.js', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
   requireThat(tree.parseDiagnostics.length === 0, 'Cannot parse exported JavaScript');
-  const strings = [], keys = [], units = [], grids = [], sensitiveStrings=[], sensitiveGrids=[];
+  const strings = [], keys = [], units = [], grids = [], sensitiveStrings=[], sensitiveGrids=[],decodedRanges=[];
   const propertyName=n=>n && (ts.isIdentifier(n)||ts.isStringLiteralLike(n))?n.text:undefined;
   function attachment(node) {
     let id,scope=false,field,record;
@@ -105,7 +105,7 @@ export function javascriptStrings(text, teachings=[]) {
     }
     // Homogeneous short-word keys can encode a list (including library tables).
     if (ts.isObjectLiteralExpression(node) && node.properties.length && node.properties.every(p=>ts.isPropertyAssignment(p) && (ts.isIdentifier(p.name) || ts.isStringLiteralLike(p.name)) && shortWords(p.name.text) && (ts.isNumericLiteral(p.initializer) || [ts.SyntaxKind.TrueKeyword,ts.SyntaxKind.FalseKeyword].includes(p.initializer.kind)))) addUnit(node.properties.map(p=>p.name.text),node);
-    if (ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) {strings.push(node.text);
+    if (ts.isStringLiteralLike(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) {strings.push(node.text);decodedRanges.push({start:node.getStart(tree),end:node.end,text:node.text});
       if(chamoruCharacters(node.text)) {
         let parent=node.parent;while(parent && !ts.isObjectLiteralExpression(parent) && !ts.isFunctionLike(parent))parent=parent.parent;
         if(!parent || !ts.isObjectLiteralExpression(parent) || !approvedTeaching(staticData(parent),teachings))sensitiveStrings.push(node.text);
@@ -117,7 +117,9 @@ export function javascriptStrings(text, teachings=[]) {
   }
   visit(tree);
   keys.push(...comments.values());
-  return { strings, keys, units, grids, sensitiveStrings, sensitiveGrids };
+  let cursor=0,densitySource='';
+  for(const range of decodedRanges.sort((a,b)=>a.start-b.start)){densitySource+=text.slice(cursor,range.start)+' '+range.text+' ';cursor=range.end;}densitySource+=text.slice(cursor);
+  return { strings, keys, units, grids, sensitiveStrings, sensitiveGrids, densitySource };
 }
 
 export function jsonStrings(value) {

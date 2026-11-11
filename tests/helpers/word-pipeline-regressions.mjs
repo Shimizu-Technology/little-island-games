@@ -844,3 +844,4 @@ for(const single of [false,true])test(`R4 Hermes entry density ${single?'single 
  const dir=join(scratch,'hermes-entry-'+single);mkdirSync(dir);const input=join(scratch,'hermes-entry-'+single+'.js');const code=single?'globalThis.label='+JSON.stringify('There is '+r4words.join(' and there is '))+';':r4words.map((word,i)=>`globalThis.x${i}=${JSON.stringify(word)};`).join('\n');writeFileSync(input,code);const compiled=spawnSync(hermesc,['-emit-binary','-out',join(dir,'main.hbc'),input],{encoding:'utf8'});assert.equal(compiled.status,0,compiled.stderr);
  if(single)assert.throws(()=>guardTree(dir,r4policy),/broad-density/);else assert.equal(guardTree(dir,r4policy).passed,true);
 });
+exportCase('R4 decoded JavaScript source proximity','data.js',r4words.map((word,i)=>`globalThis.x${i}="${[...word].map(c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0')).join('')}";`).join('\n'),r4policy,true);
