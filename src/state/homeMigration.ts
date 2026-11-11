@@ -2,7 +2,7 @@ import { envelopeWrite } from './challengeDrafts';
 import { encodeSave } from "./profiles";
 import {validHome} from '../home/model';
 import type {Save} from './validation';
-import type {StorageAdapter} from './storage';
+import type {EnvelopeWrite, StorageAdapter} from './storage';
 import {preserveAndReplace} from './replacement';
 /** Hydration publishes no writable state until the exact pre-migration bytes are safe. */
 export async function preserveLearnerMigration(adapter:StorageAdapter,encoded:string,before:Save,after:Save){
@@ -19,10 +19,10 @@ export function learnersChanged(before:Save,after:Save){
  return Object.entries(after.personalization?.people??{}).some(([id,person])=>Object.hasOwn(people,id)?JSON.stringify(people[id])!==JSON.stringify(person):!!person.earned.length||person.milestones.some(milestone=>milestone!=='migration:badges-v1'));
 }
 /** Restore retains the incoming pre-migration bytes AND the device's persisted/live originals. */
-export async function preserveImportedLearners(adapter:StorageAdapter,encoded:string,before:Save,after:Save,current:string|null,upgraded=false){
+export async function preserveImportedLearners(adapter:StorageAdapter,encoded:string,before:Save,after:Save,current:string|null,upgraded=false,extra?:Pick<EnvelopeWrite,'notices'>){
  try{assertMigratedHomes(after);}catch(error){await adapter.preserve(encoded);throw error;}
  if(upgraded||learnersChanged(before,after))await adapter.preserve(encoded);
- await preserveAndReplace(adapter,encodeSave(after),current,envelopeWrite(after));
+ await preserveAndReplace(adapter,encodeSave(after),current,{...envelopeWrite(after),...extra});
 }
 
 /** A migration is never a license to publish an unreadable active save. */

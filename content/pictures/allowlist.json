@@ -1,0 +1,2026 @@
+{
+  "schemaVersion": 1,
+  "checkedOn": "2026-11-10",
+  "source": "W1 word pipeline queues (private, see the W4 report); checks: present in a queue, validateWord, answerAllowed, lemma, not proper noun or abbreviation",
+  "counts": {
+    "tiers": 393,
+    "local": 10
+  },
+  "words": {
+    "DOG": {
+      "wordId": "en-dog",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CAT": {
+      "wordId": "en-cat",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PIG": {
+      "wordId": "en-pig",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "COW": {
+      "wordId": "en-cow",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "HORSE": {
+      "wordId": "en-horse",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "GOAT": {
+      "wordId": "en-goat",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SHEEP": {
+      "wordId": "en-sheep",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "HEN": {
+      "wordId": "en-hen",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ROOSTER": {
+      "wordId": "en-rooster",
+      "queue": "local",
+      "readerLevel": "Growing"
+    },
+    "CHICK": {
+      "wordId": "en-chick",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DUCK": {
+      "wordId": "en-duck",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FROG": {
+      "wordId": "en-frog",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BIRD": {
+      "wordId": "en-bird",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "OWL": {
+      "wordId": "en-owl",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BEE": {
+      "wordId": "en-bee",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ANT": {
+      "wordId": "en-ant",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SNAIL": {
+      "wordId": "en-snail",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WORM": {
+      "wordId": "en-worm",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SPIDER": {
+      "wordId": "en-spider",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "MOUSE": {
+      "wordId": "en-mouse",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "RABBIT": {
+      "wordId": "en-rabbit",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BEAR": {
+      "wordId": "en-bear",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "LION": {
+      "wordId": "en-lion",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TIGER": {
+      "wordId": "en-tiger",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ELEPHANT": {
+      "wordId": "en-elephant",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "ZEBRA": {
+      "wordId": "en-zebra",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "MONKEY": {
+      "wordId": "en-monkey",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DEER": {
+      "wordId": "en-deer",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PARROT": {
+      "wordId": "en-parrot",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PENGUIN": {
+      "wordId": "en-penguin",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "EAGLE": {
+      "wordId": "en-eagle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BAT": {
+      "wordId": "en-bat",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DONKEY": {
+      "wordId": "en-donkey",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CAMEL": {
+      "wordId": "en-camel",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "LLAMA": {
+      "wordId": "en-llama",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PANDA": {
+      "wordId": "en-panda",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SNAKE": {
+      "wordId": "en-snake",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "LIZARD": {
+      "wordId": "en-lizard",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FOX": {
+      "wordId": "en-fox",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SWAN": {
+      "wordId": "en-swan",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TURKEY": {
+      "wordId": "en-turkey",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TOUCAN": {
+      "wordId": "en-toucan",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BEETLE": {
+      "wordId": "en-beetle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FLY": {
+      "wordId": "en-fly",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WALRUS": {
+      "wordId": "en-walrus",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "KOALA": {
+      "wordId": "en-koala",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SKUNK": {
+      "wordId": "en-skunk",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BEAVER": {
+      "wordId": "en-beaver",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "MOOSE": {
+      "wordId": "en-moose",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "NEST": {
+      "wordId": "en-nest",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FEATHER": {
+      "wordId": "en-feather",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "PAW": {
+      "wordId": "en-paw",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FISH": {
+      "wordId": "en-fish",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CRAB": {
+      "wordId": "en-crab",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SHARK": {
+      "wordId": "en-shark",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WHALE": {
+      "wordId": "en-whale",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DOLPHIN": {
+      "wordId": "en-dolphin",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "OCTOPUS": {
+      "wordId": "en-octopus",
+      "queue": "local",
+      "readerLevel": "Growing"
+    },
+    "JELLYFISH": {
+      "wordId": "en-jellyfish",
+      "queue": "local",
+      "readerLevel": "Strong"
+    },
+    "STARFISH": {
+      "wordId": "en-starfish",
+      "queue": "local",
+      "readerLevel": "Growing"
+    },
+    "SHELL": {
+      "wordId": "en-shell",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CORAL": {
+      "wordId": "en-coral",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "LOBSTER": {
+      "wordId": "en-lobster",
+      "queue": "local",
+      "readerLevel": "Growing"
+    },
+    "SHRIMP": {
+      "wordId": "en-shrimp",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "URCHIN": {
+      "wordId": "en-urchin",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "EEL": {
+      "wordId": "en-eel",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SEAL": {
+      "wordId": "en-seal",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TURTLE": {
+      "wordId": "en-turtle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CLAM": {
+      "wordId": "en-clam",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "GULL": {
+      "wordId": "en-gull",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WAVE": {
+      "wordId": "en-wave",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BEACH": {
+      "wordId": "en-beach",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BUCKET": {
+      "wordId": "en-bucket",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "UMBRELLA": {
+      "wordId": "en-umbrella",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "ISLAND": {
+      "wordId": "en-island",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "NET": {
+      "wordId": "en-net",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "RAFT": {
+      "wordId": "en-raft",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ANCHOR": {
+      "wordId": "en-anchor",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "COOLER": {
+      "wordId": "en-cooler",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "KAYAK": {
+      "wordId": "en-kayak",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PADDLE": {
+      "wordId": "en-paddle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "COCONUT": {
+      "wordId": "en-coconut",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "MANGO": {
+      "wordId": "en-mango",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PAPAYA": {
+      "wordId": "en-papaya",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "GUAVA": {
+      "wordId": "en-guava",
+      "queue": "local",
+      "readerLevel": "Growing"
+    },
+    "BREADFRUIT": {
+      "wordId": "en-breadfruit",
+      "queue": "local",
+      "readerLevel": "Strong"
+    },
+    "PALM": {
+      "wordId": "en-palm",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CANOE": {
+      "wordId": "en-canoe",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "HUT": {
+      "wordId": "en-hut",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CLIFF": {
+      "wordId": "en-cliff",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CAVE": {
+      "wordId": "en-cave",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BAMBOO": {
+      "wordId": "en-bamboo",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BUFFALO": {
+      "wordId": "en-buffalo",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "GRILL": {
+      "wordId": "en-grill",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BASKET": {
+      "wordId": "en-basket",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "APPLE": {
+      "wordId": "en-apple",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BANANA": {
+      "wordId": "en-banana",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ORANGE": {
+      "wordId": "en-orange",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "GRAPE": {
+      "wordId": "en-grape",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PEAR": {
+      "wordId": "en-pear",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CHERRY": {
+      "wordId": "en-cherry",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WATERMELON": {
+      "wordId": "en-watermelon",
+      "queue": "local",
+      "readerLevel": "Strong"
+    },
+    "PINEAPPLE": {
+      "wordId": "en-pineapple",
+      "queue": "local",
+      "readerLevel": "Strong"
+    },
+    "LEMON": {
+      "wordId": "en-lemon",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "LIME": {
+      "wordId": "en-lime",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PEACH": {
+      "wordId": "en-peach",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PLUM": {
+      "wordId": "en-plum",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "KIWI": {
+      "wordId": "en-kiwi",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CARROT": {
+      "wordId": "en-carrot",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CORN": {
+      "wordId": "en-corn",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "POTATO": {
+      "wordId": "en-potato",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TOMATO": {
+      "wordId": "en-tomato",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ONION": {
+      "wordId": "en-onion",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PEPPER": {
+      "wordId": "en-pepper",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CHILI": {
+      "wordId": "en-chili",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PEA": {
+      "wordId": "en-pea",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "RADISH": {
+      "wordId": "en-radish",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "GARLIC": {
+      "wordId": "en-garlic",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "OLIVE": {
+      "wordId": "en-olive",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "EGG": {
+      "wordId": "en-egg",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BREAD": {
+      "wordId": "en-bread",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TOAST": {
+      "wordId": "en-toast",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CHEESE": {
+      "wordId": "en-cheese",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "MILK": {
+      "wordId": "en-milk",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CAKE": {
+      "wordId": "en-cake",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "COOKIE": {
+      "wordId": "en-cookie",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PIE": {
+      "wordId": "en-pie",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PIZZA": {
+      "wordId": "en-pizza",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SANDWICH": {
+      "wordId": "en-sandwich",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "BURGER": {
+      "wordId": "en-burger",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FRIES": {
+      "wordId": "en-fries",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TACO": {
+      "wordId": "en-taco",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "NOODLE": {
+      "wordId": "en-noodle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "RICE": {
+      "wordId": "en-rice",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SOUP": {
+      "wordId": "en-soup",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "HONEY": {
+      "wordId": "en-honey",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CANDY": {
+      "wordId": "en-candy",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CHOCOLATE": {
+      "wordId": "en-chocolate",
+      "queue": "tiers",
+      "readerLevel": "Strong"
+    },
+    "SUNDAE": {
+      "wordId": "en-sundae",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PEANUT": {
+      "wordId": "en-peanut",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SALAD": {
+      "wordId": "en-salad",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "MUFFIN": {
+      "wordId": "en-muffin",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "JUICE": {
+      "wordId": "en-juice",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WATER": {
+      "wordId": "en-water",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CABBAGE": {
+      "wordId": "en-cabbage",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "AVOCADO": {
+      "wordId": "en-avocado",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "WAFFLE": {
+      "wordId": "en-waffle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "HOUSE": {
+      "wordId": "en-house",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DOOR": {
+      "wordId": "en-door",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WINDOW": {
+      "wordId": "en-window",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BED": {
+      "wordId": "en-bed",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CHAIR": {
+      "wordId": "en-chair",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TABLE": {
+      "wordId": "en-table",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "COUCH": {
+      "wordId": "en-couch",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "LAMP": {
+      "wordId": "en-lamp",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CLOCK": {
+      "wordId": "en-clock",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CUP": {
+      "wordId": "en-cup",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PLATE": {
+      "wordId": "en-plate",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BOWL": {
+      "wordId": "en-bowl",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SPOON": {
+      "wordId": "en-spoon",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FORK": {
+      "wordId": "en-fork",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "KNIFE": {
+      "wordId": "en-knife",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "POT": {
+      "wordId": "en-pot",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PAN": {
+      "wordId": "en-pan",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TEAPOT": {
+      "wordId": "en-teapot",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SINK": {
+      "wordId": "en-sink",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FAUCET": {
+      "wordId": "en-faucet",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BATHTUB": {
+      "wordId": "en-bathtub",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "TOILET": {
+      "wordId": "en-toilet",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SOAP": {
+      "wordId": "en-soap",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TOWEL": {
+      "wordId": "en-towel",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BRUSH": {
+      "wordId": "en-brush",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "COMB": {
+      "wordId": "en-comb",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "MIRROR": {
+      "wordId": "en-mirror",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PILLOW": {
+      "wordId": "en-pillow",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "KEY": {
+      "wordId": "en-key",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "LOCK": {
+      "wordId": "en-lock",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BELL": {
+      "wordId": "en-bell",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CANDLE": {
+      "wordId": "en-candle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BOX": {
+      "wordId": "en-box",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BAG": {
+      "wordId": "en-bag",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BROOM": {
+      "wordId": "en-broom",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "MOP": {
+      "wordId": "en-mop",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SPONGE": {
+      "wordId": "en-sponge",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "VASE": {
+      "wordId": "en-vase",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FAN": {
+      "wordId": "en-fan",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PHONE": {
+      "wordId": "en-phone",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "RADIO": {
+      "wordId": "en-radio",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TELEVISION": {
+      "wordId": "en-television",
+      "queue": "tiers",
+      "readerLevel": "Strong"
+    },
+    "COMPUTER": {
+      "wordId": "en-computer",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "CAMERA": {
+      "wordId": "en-camera",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "LADDER": {
+      "wordId": "en-ladder",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "STAIRS": {
+      "wordId": "en-stairs",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FENCE": {
+      "wordId": "en-fence",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "GATE": {
+      "wordId": "en-gate",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "MAILBOX": {
+      "wordId": "en-mailbox",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "HANGER": {
+      "wordId": "en-hanger",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "IRON": {
+      "wordId": "en-iron",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BOTTLE": {
+      "wordId": "en-bottle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "JAR": {
+      "wordId": "en-jar",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "OVEN": {
+      "wordId": "en-oven",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CRIB": {
+      "wordId": "en-crib",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "RATTLE": {
+      "wordId": "en-rattle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DIAPER": {
+      "wordId": "en-diaper",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PACIFIER": {
+      "wordId": "en-pacifier",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "GIFT": {
+      "wordId": "en-gift",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "LADLE": {
+      "wordId": "en-ladle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WHISK": {
+      "wordId": "en-whisk",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "APRON": {
+      "wordId": "en-apron",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "VACUUM": {
+      "wordId": "en-vacuum",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "KEYBOARD": {
+      "wordId": "en-keyboard",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "YARN": {
+      "wordId": "en-yarn",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BALL": {
+      "wordId": "en-ball",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "KITE": {
+      "wordId": "en-kite",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DOLL": {
+      "wordId": "en-doll",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ROBOT": {
+      "wordId": "en-robot",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PUZZLE": {
+      "wordId": "en-puzzle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BALLOON": {
+      "wordId": "en-balloon",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "DRUM": {
+      "wordId": "en-drum",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "GUITAR": {
+      "wordId": "en-guitar",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PIANO": {
+      "wordId": "en-piano",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TRUMPET": {
+      "wordId": "en-trumpet",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "FLUTE": {
+      "wordId": "en-flute",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "VIOLIN": {
+      "wordId": "en-violin",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WHISTLE": {
+      "wordId": "en-whistle",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "SWING": {
+      "wordId": "en-swing",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SLIDE": {
+      "wordId": "en-slide",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SEESAW": {
+      "wordId": "en-seesaw",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BIKE": {
+      "wordId": "en-bike",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WAGON": {
+      "wordId": "en-wagon",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TOP": {
+      "wordId": "en-top",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DICE": {
+      "wordId": "en-dice",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DOMINO": {
+      "wordId": "en-domino",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CARDS": {
+      "wordId": "en-cards",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TROPHY": {
+      "wordId": "en-trophy",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "MEDAL": {
+      "wordId": "en-medal",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BUBBLE": {
+      "wordId": "en-bubble",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PUPPET": {
+      "wordId": "en-puppet",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "RACKET": {
+      "wordId": "en-racket",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SKATE": {
+      "wordId": "en-skate",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CROWN": {
+      "wordId": "en-crown",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WAND": {
+      "wordId": "en-wand",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "HARP": {
+      "wordId": "en-harp",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BOOK": {
+      "wordId": "en-book",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PENCIL": {
+      "wordId": "en-pencil",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PEN": {
+      "wordId": "en-pen",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CRAYON": {
+      "wordId": "en-crayon",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SCISSORS": {
+      "wordId": "en-scissors",
+      "queue": "local",
+      "readerLevel": "Growing"
+    },
+    "GLUE": {
+      "wordId": "en-glue",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "RULER": {
+      "wordId": "en-ruler",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ERASER": {
+      "wordId": "en-eraser",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DESK": {
+      "wordId": "en-desk",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CHALK": {
+      "wordId": "en-chalk",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "EASEL": {
+      "wordId": "en-easel",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "MAGNET": {
+      "wordId": "en-magnet",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TAPE": {
+      "wordId": "en-tape",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "STAMP": {
+      "wordId": "en-stamp",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ENVELOPE": {
+      "wordId": "en-envelope",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "MAP": {
+      "wordId": "en-map",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "GLOBE": {
+      "wordId": "en-globe",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CALENDAR": {
+      "wordId": "en-calendar",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "TELESCOPE": {
+      "wordId": "en-telescope",
+      "queue": "tiers",
+      "readerLevel": "Strong"
+    },
+    "COMPASS": {
+      "wordId": "en-compass",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "HAT": {
+      "wordId": "en-hat",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CAP": {
+      "wordId": "en-cap",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SHIRT": {
+      "wordId": "en-shirt",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DRESS": {
+      "wordId": "en-dress",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SKIRT": {
+      "wordId": "en-skirt",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PANTS": {
+      "wordId": "en-pants",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SHORTS": {
+      "wordId": "en-shorts",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SOCK": {
+      "wordId": "en-sock",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SHOE": {
+      "wordId": "en-shoe",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BOOT": {
+      "wordId": "en-boot",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SANDAL": {
+      "wordId": "en-sandal",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "COAT": {
+      "wordId": "en-coat",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SCARF": {
+      "wordId": "en-scarf",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "GLOVE": {
+      "wordId": "en-glove",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BELT": {
+      "wordId": "en-belt",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BUTTON": {
+      "wordId": "en-button",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ZIPPER": {
+      "wordId": "en-zipper",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "RING": {
+      "wordId": "en-ring",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WATCH": {
+      "wordId": "en-watch",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "GLASSES": {
+      "wordId": "en-glasses",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "TIE": {
+      "wordId": "en-tie",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "HELMET": {
+      "wordId": "en-helmet",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "VEST": {
+      "wordId": "en-vest",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PURSE": {
+      "wordId": "en-purse",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "EARRING": {
+      "wordId": "en-earring",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "WALLET": {
+      "wordId": "en-wallet",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "HAND": {
+      "wordId": "en-hand",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FOOT": {
+      "wordId": "en-foot",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "EYE": {
+      "wordId": "en-eye",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "EAR": {
+      "wordId": "en-ear",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "NOSE": {
+      "wordId": "en-nose",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "MOUTH": {
+      "wordId": "en-mouth",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TOOTH": {
+      "wordId": "en-tooth",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TONGUE": {
+      "wordId": "en-tongue",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "LIP": {
+      "wordId": "en-lip",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ARM": {
+      "wordId": "en-arm",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "LEG": {
+      "wordId": "en-leg",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FINGER": {
+      "wordId": "en-finger",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "THUMB": {
+      "wordId": "en-thumb",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BONE": {
+      "wordId": "en-bone",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BRAIN": {
+      "wordId": "en-brain",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SKELETON": {
+      "wordId": "en-skeleton",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "FACE": {
+      "wordId": "en-face",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SUN": {
+      "wordId": "en-sun",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "MOON": {
+      "wordId": "en-moon",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "STAR": {
+      "wordId": "en-star",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CLOUD": {
+      "wordId": "en-cloud",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "RAIN": {
+      "wordId": "en-rain",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "RAINBOW": {
+      "wordId": "en-rainbow",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "LIGHTNING": {
+      "wordId": "en-lightning",
+      "queue": "tiers",
+      "readerLevel": "Strong"
+    },
+    "SNOW": {
+      "wordId": "en-snow",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WIND": {
+      "wordId": "en-wind",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PUDDLE": {
+      "wordId": "en-puddle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PLANET": {
+      "wordId": "en-planet",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ROCKET": {
+      "wordId": "en-rocket",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "COMET": {
+      "wordId": "en-comet",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SUNSET": {
+      "wordId": "en-sunset",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DROP": {
+      "wordId": "en-drop",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "HAMMER": {
+      "wordId": "en-hammer",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SAW": {
+      "wordId": "en-saw",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "NAIL": {
+      "wordId": "en-nail",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SCREW": {
+      "wordId": "en-screw",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WRENCH": {
+      "wordId": "en-wrench",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DRILL": {
+      "wordId": "en-drill",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "RAKE": {
+      "wordId": "en-rake",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SHOVEL": {
+      "wordId": "en-shovel",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ROPE": {
+      "wordId": "en-rope",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "NEEDLE": {
+      "wordId": "en-needle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "HOOK": {
+      "wordId": "en-hook",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CHAIN": {
+      "wordId": "en-chain",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "WHEEL": {
+      "wordId": "en-wheel",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "GEAR": {
+      "wordId": "en-gear",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BATTERY": {
+      "wordId": "en-battery",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "BULB": {
+      "wordId": "en-bulb",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PLIERS": {
+      "wordId": "en-pliers",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FUNNEL": {
+      "wordId": "en-funnel",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CAR": {
+      "wordId": "en-car",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BUS": {
+      "wordId": "en-bus",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TRUCK": {
+      "wordId": "en-truck",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TRAIN": {
+      "wordId": "en-train",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PLANE": {
+      "wordId": "en-plane",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "HELICOPTER": {
+      "wordId": "en-helicopter",
+      "queue": "tiers",
+      "readerLevel": "Strong"
+    },
+    "SHIP": {
+      "wordId": "en-ship",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BOAT": {
+      "wordId": "en-boat",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TAXI": {
+      "wordId": "en-taxi",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "VAN": {
+      "wordId": "en-van",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CRANE": {
+      "wordId": "en-crane",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CART": {
+      "wordId": "en-cart",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BLIMP": {
+      "wordId": "en-blimp",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SCHOOL": {
+      "wordId": "en-school",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CHURCH": {
+      "wordId": "en-church",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SHOP": {
+      "wordId": "en-shop",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CASTLE": {
+      "wordId": "en-castle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BARN": {
+      "wordId": "en-barn",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BRIDGE": {
+      "wordId": "en-bridge",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "MOUNTAIN": {
+      "wordId": "en-mountain",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "RIVER": {
+      "wordId": "en-river",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "POND": {
+      "wordId": "en-pond",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ROAD": {
+      "wordId": "en-road",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FOUNTAIN": {
+      "wordId": "en-fountain",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "WELL": {
+      "wordId": "en-well",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CITY": {
+      "wordId": "en-city",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FACTORY": {
+      "wordId": "en-factory",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "GARAGE": {
+      "wordId": "en-garage",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TUNNEL": {
+      "wordId": "en-tunnel",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DESERT": {
+      "wordId": "en-desert",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FOREST": {
+      "wordId": "en-forest",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CIRCUS": {
+      "wordId": "en-circus",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TENT": {
+      "wordId": "en-tent",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FLAG": {
+      "wordId": "en-flag",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TREE": {
+      "wordId": "en-tree",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FLOWER": {
+      "wordId": "en-flower",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "LEAF": {
+      "wordId": "en-leaf",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ROSE": {
+      "wordId": "en-rose",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "DAISY": {
+      "wordId": "en-daisy",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TULIP": {
+      "wordId": "en-tulip",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CACTUS": {
+      "wordId": "en-cactus",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ACORN": {
+      "wordId": "en-acorn",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "GRASS": {
+      "wordId": "en-grass",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BUSH": {
+      "wordId": "en-bush",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "BRANCH": {
+      "wordId": "en-branch",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "LOG": {
+      "wordId": "en-log",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "STUMP": {
+      "wordId": "en-stump",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "FERN": {
+      "wordId": "en-fern",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CLOVER": {
+      "wordId": "en-clover",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SPROUT": {
+      "wordId": "en-sprout",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "PINE": {
+      "wordId": "en-pine",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CIRCLE": {
+      "wordId": "en-circle",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SQUARE": {
+      "wordId": "en-square",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "TRIANGLE": {
+      "wordId": "en-triangle",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "RECTANGLE": {
+      "wordId": "en-rectangle",
+      "queue": "tiers",
+      "readerLevel": "Strong"
+    },
+    "DIAMOND": {
+      "wordId": "en-diamond",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "OVAL": {
+      "wordId": "en-oval",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "HEART": {
+      "wordId": "en-heart",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CUBE": {
+      "wordId": "en-cube",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CONE": {
+      "wordId": "en-cone",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "CYLINDER": {
+      "wordId": "en-cylinder",
+      "queue": "tiers",
+      "readerLevel": "Growing"
+    },
+    "ARROW": {
+      "wordId": "en-arrow",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "SPIRAL": {
+      "wordId": "en-spiral",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    },
+    "ZIGZAG": {
+      "wordId": "en-zigzag",
+      "queue": "tiers",
+      "readerLevel": "Little"
+    }
+  }
+}

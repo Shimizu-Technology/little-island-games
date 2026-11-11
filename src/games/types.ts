@@ -8,6 +8,8 @@ export type Options = {
   mode: Mode;
   computerFirst: boolean;
   checkersRules?: CheckersRules;
+  /** A declared head start against the computer: it begins with one back-row piece fewer. */
+  checkersHeadStart?: 1;
   wordRules?: WordRules;
 };
 export const defaultOptions: Options = { difficulty: "easy", mode: "solo", computerFirst: false };
