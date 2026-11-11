@@ -108,7 +108,7 @@ function Coconuts({ state: s, width, onMove, locked, hint }: Props) {
     </View>
   );
 }
-function Nets({ state: s, width, onMove, locked, hint }: Props) {
+function Nets({ state: s, width, onMove, locked, hint, still }: Props) {
   const [dot, setDot] = useState<number | null>(null),
     [notice, setNotice] = useState("");
   const n = s.size,
@@ -143,14 +143,17 @@ function Nets({ state: s, width, onMove, locked, hint }: Props) {
   const hinted: number[] = hint === null || hint === undefined ? [] : edgeDots(n, hint);
   return (
     <View style={{ alignItems: "center", gap: 8 }}>
-      <Copy style={{ textAlign: "center", fontSize: 14 }}>
-        {notice ||
-          (s.outcome !== null
-            ? "Every net is tied. Count your reef shapes!"
-            : dot === null
-              ? "Tap a dot, then its neighbor to tie a rope."
-              : "Now tap a neighboring dot.")}
-      </Copy>
+      {/* A display-only board (the look-back) gives no play instructions. */}
+      {!still && (
+        <Copy style={{ textAlign: "center", fontSize: 14 }}>
+          {notice ||
+            (s.outcome !== null
+              ? "Every net is tied. Count your reef shapes!"
+              : dot === null
+                ? "Tap a dot, then its neighbor to tie a rope."
+                : "Now tap a neighboring dot.")}
+        </Copy>
+      )}
       <View style={{ width: total, height: total, backgroundColor: "#E0EFEB", borderRadius: 20 }}>
         <Svg pointerEvents="none" width={total} height={total} accessible={false}>
           {s.marks.map((owner, b) => {

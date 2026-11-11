@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createSession, undo, type BoardSession } from "../src/board";
 import { rng } from "../src/board/types";
 import * as coconut from "../src/board/coconut-drop/engine";
+import * as nets from "../src/board/fishing-nets/engine";
 import * as canoes from "../src/board/hidden-canoes/engine";
 import * as pits from "../src/board/shell-pits/engine";
 import { computerTask } from "../src/playPolicies/decide";
@@ -250,6 +251,29 @@ describe("board rivals on screen", () => {
     expect(text(r)).not.toContain("A better sow");
     expect(text(r)).not.toContain("No single turning point");
     expect(button(r, "See the best move")).toBeDefined();
+    await act(() => r.unmount());
+  });
+  it("P2-2 on screen: the Fishing Nets look-back names only the box the rope closes, with no play instructions", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    let position = nets.create(0, 3, 0);
+    for (const m of [5, 9, 13, 17, 1, 10, 19, 14, 0, 16, 6, 11, 18, 22, 4, 23, 20, 7, 15, 8, 2, 3, 12, 21]) position = nets.move(position, m);
+    const s: BoardSession = { ...createSession("fishing-nets", { seed: 0, size: 3, strength: "challenge", starter: 0, names: ["You", "Ray"] }), position, taught: true };
+    fixture.store.save.board = { "fishing-nets": s };
+    let r!: ReactTestRenderer;
+    await act(() => {
+      r = create(<BoardScreen game="fishing-nets" />);
+    });
+    await act(async () => {
+      button(r, "See the best move").props.onPress();
+      await Promise.resolve();
+    });
+    // The exact check runs in slices.
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+    expect(text(r)).toContain("A box was waiting");
+    expect(text(r)).toContain("Tying B2 to C2 would have closed B1 and kept your turn.");
+    expect(text(r)).not.toContain("Tap a dot, then its neighbor");
     await act(() => r.unmount());
   });
 });
