@@ -48,6 +48,9 @@ for(const id of ['lagoon-run','reef-builder'] as const) it(`${id}: the board get
   try{
     await act(async()=>{root=TestRenderer.create(<StoreProvider><ArcadeGameScreen game={game(id)}/></StoreProvider>);});
     await act(async()=>{root.root.findAllByType('button').find(n=>n.children.includes('Choose w1-1'))!.props.onClick();});
+    // Largest text: before a round, the header (title and Settings) stops growing at 2x so the level map stays on screen.
+    expect(root.root.find(n=>String(n.type)==='Heading'&&n.props.children==='Lagoon Run').props.maxFontSizeMultiplier).toBe(2);
+    expect(root.root.find(n=>String(n.type)==='Button'&&n.props.children==='Settings').props.maxFontSizeMultiplier).toBe(2);
     await act(async()=>{root.root.findAll(n=>String(n.type)==='Button'&&n.props.children==='Show me & play')[0].props.onPress();});
     await act(async()=>{root.root.findAllByType('button').find(n=>n.children.includes('Teach play'))!.props.onClick();});
     const header=root.root.find(n=>n.props.testID==='arcade-header'&&String(n.type)==='View');
