@@ -22,7 +22,8 @@ function Probe() { const s = useStore(); useLayoutEffect(() => { store = s; }, [
 /** The route's wiring: the active learner's saved home, written through Store.personalize. */
 function Home() {
   const s = useStore(), owner = s.save.learning?.active ?? 'family', expected = { learner: owner, epoch: s.epoch };
-  home = useHomeStore({}, personFor(s.save).home, (next) => s.personalize({ home: next }, expected));
+  const h = useHomeStore({}, personFor(s.save).home, (next) => s.personalize({ home: next }, expected));
+  useLayoutEffect(() => { home = h; }, [h]);
   return null;
 }
 /** Like the route: Home mounts once the save is ready, and again for each new save epoch. */
