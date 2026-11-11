@@ -1,12 +1,16 @@
 import { other, Seat } from "../../games/match";
-import { blank, integer, minimax, Position, replayValidator, Strength, tally } from "../types";
+import { blank, Edge, integer, minimax, Position, replayValidator, Strength, tally, withEdge } from "../types";
 /** Counterclockwise: seat 0 pits 0..5, store 6; seat 1 pits 7..12, store 13. */
-export function create(seed = 1, _size = 6, starter: Seat = 0): Position {
+/** Head start: shells counted for that seat at the end. The 48 board shells never change. */
+export const maxEdge = 8;
+export function create(seed = 1, _size = 6, starter: Seat = 0, edge?: Edge): Position {
   return blank(
     seed,
     6,
     starter,
-    Array.from({ length: 14 }, (_, i) => (i === 6 || i === 13 ? 0 : 4))
+    Array.from({ length: 14 }, (_, i) => (i === 6 || i === 13 ? 0 : 4)),
+    [],
+    edge
   );
 }
 export function legal(s: Position): number[] {
@@ -52,13 +56,16 @@ export function move(s: Position, pit: number): Position {
     scores,
     moves: [...s.moves, pit],
     turn: last === store ? s.turn : other(s.turn),
-    outcome: ended ? tally(scores) : null,
+    outcome: ended ? tally(withEdge(s, scores)) : null,
   };
 }
-export function choose(s: Position, strength: Strength): number | null {
-  return minimax(s, strength === "gentle" ? 1 : strength === "growing" ? 3 : 6, legal, move, (p, seat) => {
-    const material = p.board.slice(0, 6).reduce((a, b) => a + b, 0) - p.board.slice(7, 13).reduce((a, b) => a + b, 0);
-    return (seat === 0 ? 1 : -1) * ((p.board[6] - p.board[13]) * 12 + material) + (p.turn === seat ? 3 : -3);
-  });
+/** Store lead first, then shells still on each side, then whose turn it is. */
+export function evaluate(p: Position, seat: Seat): number {
+  const material = p.board.slice(0, 6).reduce((a, b) => a + b, 0) - p.board.slice(7, 13).reduce((a, b) => a + b, 0);
+  return (seat === 0 ? 1 : -1) * ((p.board[6] - p.board[13]) * 12 + material) + (p.turn === seat ? 3 : -3);
 }
-export const validate = replayValidator(create, move, [6], 4096);
+/** Archived revision 1 for every strength. Challenge revision 2 lives in src/playPolicies. */
+export function choose(s: Position, strength: Strength): number | null {
+  return minimax(s, strength === "gentle" ? 1 : strength === "growing" ? 3 : 6, legal, move, evaluate);
+}
+export const validate = replayValidator(create, move, [6], 4096, maxEdge);
