@@ -710,3 +710,5 @@ exportCase('R3 singleton cell literal still scanned','data.js','globalThis.paylo
 for(const [label,tag] of [['dynamic','choose()'],['numeric','42']])exportCase(`R3 singleton unresolved language ${label}`,'data.js',`globalThis.payload={language:${tag},odd:[["Z"]]};`,policy,true);
 
 exportCase('R3 singleton recognised grid invalid language','data.js','globalThis.payload={language:choose(),grid:[["Z"]]};',policy,true);
+
+exportCase('R3 invalid JSON metadata tag','data.json',JSON.stringify({language:42,payload:'Plain'}),policy,true);
