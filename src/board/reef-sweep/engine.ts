@@ -6,6 +6,8 @@ export function neighbors(n: number, cell: number): number[] {
     (i) => i !== cell && Math.abs(Math.floor(i / n) - Math.floor(cell / n)) <= 1 && Math.abs((i % n) - (cell % n)) <= 1
   );
 }
+/** A solo puzzle: no rival, so no head start. */
+export const maxEdge = 0;
 export function create(seed = 1, size = 5, _starter: Seat = 0): Position {
   const n = [5, 6, 7].includes(size) ? size : 5;
   return blank(seed, n, 0, Array(n * n).fill(0), Array(n * n).fill(0));

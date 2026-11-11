@@ -12,9 +12,17 @@ export type Position = {
   marks: number[];
   scores: [number, number];
   outcome: RoundResult;
+  /**
+   * A declared head start, per seat, in the game's own units. Present only when
+   * nonzero, so every older saved position keeps its exact shape.
+   */
+  edge?: [number, number];
 };
+export type Edge = [number, number];
 export type Engine = {
-  create: (seed?: number, size?: number, starter?: Seat) => Position;
+  create: (seed?: number, size?: number, starter?: Seat, edge?: Edge) => Position;
+  /** Largest head start the rules allow for one seat. 0 means none. */
+  maxEdge: number;
   move: (state: Position, move: number) => Position;
   legal: (state: Position) => number[];
   choose: (state: Position, strength: Strength) => number | null;
@@ -39,18 +47,35 @@ export function shuffle<T>(values: readonly T[], seed: number): T[] {
   }
   return a;
 }
-export function blank(seed: number, size: number, starter: Seat, board: number[], marks: number[] = []): Position {
-  return { seed: seed >>> 0, size, starter, turn: starter, board, marks, scores: [0, 0], moves: [], outcome: null };
+export function blank(seed: number, size: number, starter: Seat, board: number[], marks: number[] = [], edge?: Edge): Position {
+  const p: Position = { seed: seed >>> 0, size, starter, turn: starter, board, marks, scores: [0, 0], moves: [], outcome: null };
+  return edge && (edge[0] || edge[1]) ? { ...p, edge: [edge[0], edge[1]] } : p;
 }
+export const edgeOf = (s: Position): Edge => s.edge ?? [0, 0];
+/** Scores plus any declared head start. */
+export const withEdge = (s: Position, scores: readonly number[] = s.scores): [number, number] => {
+  const e = edgeOf(s);
+  return [scores[0] + e[0], scores[1] + e[1]];
+};
+export const validEdge = (v: unknown, max: number): v is Edge =>
+  Array.isArray(v) && v.length === 2 && v.every((n) => integer(n, 0, max)) && (v[0] > 0 || v[1] > 0) && (v[0] === 0 || v[1] === 0);
 export function tally(scores: readonly number[]): RoundResult {
   return scores[0] === scores[1] ? "draw" : scores[0] > scores[1] ? 0 : 1;
 }
 /** Replaying rejects forged outcomes, wrong turns, duplicate/illegal moves and unreachable boards. */
-export function replayValidator(create: Engine["create"], move: Engine["move"], sizes: number[], maxMoves: number) {
+export function replayValidator(
+  create: Engine["create"],
+  move: Engine["move"],
+  sizes: number[],
+  maxMoves: number,
+  maxEdge = 0
+) {
   return (value: unknown): value is Position => {
+    if (!object(value)) return false;
+    const keys = Object.keys(value).sort().join();
     if (
-      !object(value) ||
-      Object.keys(value).sort().join() !== "board,marks,moves,outcome,scores,seed,size,starter,turn" ||
+      (keys !== "board,marks,moves,outcome,scores,seed,size,starter,turn" &&
+        !(keys === "board,edge,marks,moves,outcome,scores,seed,size,starter,turn" && validEdge(value.edge, maxEdge))) ||
       !integer(value.seed, 0, 0xffffffff) ||
       !sizes.includes(value.size as number) ||
       !validSeat(value.starter) ||
@@ -59,7 +84,7 @@ export function replayValidator(create: Engine["create"], move: Engine["move"], 
       !value.moves.every((m) => integer(m, 0, 1000))
     )
       return false;
-    let state = create(value.seed, value.size as number, value.starter);
+    let state = create(value.seed, value.size as number, value.starter, value.edge as Edge | undefined);
     for (const action of value.moves) {
       const next = move(state, action);
       if (next === state) return false;

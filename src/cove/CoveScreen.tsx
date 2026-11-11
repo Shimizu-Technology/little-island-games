@@ -29,8 +29,9 @@ export default function CoveScreen() {
   // A native Back/swipe or another destination has the same identity boundary as Map.
   // A cleanup captured before a person/restore change is rejected by Store's epoch guard.
   useFocusEffect(useCallback(() => () => { if (active) void covePerson({ type: 'select', id: null }, epoch); }, [active, epoch, covePerson]));
-  if (!store.ready) return <SafeAreaView><Heading>Getting your Cove ready…</Heading></SafeAreaView>;
-  if (store.recovery) return <SafeAreaView><Recovery/></SafeAreaView>;
+  // Recovery is a flex:1 ScrollView; without flex here it has no height and the screen looks blank.
+  if (!store.ready) return <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}><Heading>Getting your Cove ready…</Heading></SafeAreaView>;
+  if (store.recovery) return <SafeAreaView style={{ flex: 1, backgroundColor: C.cream }}><Recovery/></SafeAreaView>;
   return <ResumeCovePerson><CoveLocalGate key={`${selectedOwner(store.save)}:${store.epoch}`}/></ResumeCovePerson>;
 }
 /** A named shortcut is an explicit request, never the launch identity. */
