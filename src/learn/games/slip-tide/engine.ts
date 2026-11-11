@@ -91,11 +91,15 @@ const certifiedAt = (level: number) => {
   return rows;
 };
 const same = (a: readonly number[], b: readonly number[]) => a.length === b.length && a.every((c, i) => c === b[i]);
-/** One swipe joins each remembered position to the next. Four slides per step, never a search. */
-const oneSwipe = (p: SlipPuzzle, from: readonly number[], to: readonly number[]) => dirs.some(d => same(slideOn(gridOf(p), from, d), to));
+/**
+ * One real swipe joins each remembered position to the next: it started on an unfinished board and moved
+ * something, because swipeBoard records neither a blocked swipe nor one after a win. Four slides, never a search.
+ */
+const oneSwipe = (p: SlipPuzzle, from: readonly number[], to: readonly number[]) => !homeAll(from) && !same(from, to) && dirs.some(d => same(slideOn(gridOf(p), from, d), to));
 /**
  * Shape, certified boards, and a history that could have happened: a finished board took at least its
- * shortest route, zero swipes means the starting position, and Undo remembers real one-swipe steps.
+ * shortest route and still holds its winning swipe, zero swipes means the starting position, and Undo
+ * remembers real one-swipe steps that each moved a crab on an unfinished board.
  * Anything else is rejected whole, so the frame keeps the original and offers recovery.
  */
 export function validSlip(v: unknown, level?: number): v is SlipState {
@@ -111,7 +115,8 @@ export function validSlip(v: unknown, level?: number): v is SlipState {
   const current = boards[s.index];
   if (!legalCrabs(current, s.crabs) || !s.undo.every(u => legalCrabs(current, u)) || s.undo.length > s.steps) return false;
   if (!s.steps && !same(s.crabs, current.crabs)) return false;
-  if (homeAll(s.crabs) && s.steps < parOf(current)) return false;
+  // A finished board keeps the swipe that finished it: every win pushes its unfinished position, and Undo is off once home.
+  if (homeAll(s.crabs) && (s.steps < parOf(current) || !s.undo.length)) return false;
   const chain = [...s.undo, s.crabs];
   if (s.undo.length === s.steps && s.steps && !same(s.undo[0], current.crabs)) return false;
   return chain.every((at, i) => !i || oneSwipe(current, chain[i - 1], at));

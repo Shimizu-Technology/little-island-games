@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
-import { engine, startRound, swipeBoard, nextBoard, undoBoard, validSlip, ROUND, type SlipState } from '../src/learn/games/slip-tide/engine';
+import { engine, startRound, swipeBoard, nextBoard, undoBoard, validSlip, ROUND, UNDO_LIMIT, type SlipState } from '../src/learn/games/slip-tide/engine';
 import { crabNames, crabsKey, dirOf, dirs, gridOf, HOME, homeAll, slideOn, tuplePuzzle, type Crabs, type Dir, type SlipPuzzle } from '../src/learn/games/slip-tide/rules';
 import { describeBoard, slipHelpRules, slipView } from '../src/learn/games/slip-tide/help';
 import { requestHint } from '../src/puzzles/hints';
@@ -18,6 +18,7 @@ vi.mock('../src/puzzles/bankAssets', async () => {
 });
 
 const rng = (() => { let x = 11; return () => { x = (x * 16807) % 2147483647; return (x - 1) / 2147483646; }; })();
+const deepFreeze = <T>(v: T): T => { if (v && typeof v === 'object') { Object.values(v).forEach(deepFreeze); Object.freeze(v); } return v; };
 const options = (level: number) => ({ mode: 'solo' as const, pace: (['easy', 'medium', 'hard'] as const)[Math.min(level, 3) - 1], ...(level > 3 ? { stage: level === 4 ? 'stretch' as const : 'deep' as const } : {}) });
 
 describe('R7: School saves bind to certified rows and a possible history', () => {
@@ -75,6 +76,70 @@ describe('R7: School saves bind to certified rows and a possible history', () =>
       s = nextBoard(s); expect(validSlip(s)).toBe(true);
     }
     expect(engine.outcome(s, options(3))).toBe('done');
+  });
+});
+
+// Review round 2, F2: the reviewer's Level 2 board, tuple [5,"017n","6","9","DRURU"].
+describe('F2: School histories must be ones play could make', () => {
+  const level2 = () => startRound(2, () => 0.5);
+  it('is the reviewer\'s board', () => {
+    expect(level2().puzzles[0]).toEqual([5, '017n', '6', '9', 'DRURU']);
+  });
+  it('rejects a counted swipe that moved nothing, which swipeBoard never records', () => {
+    const s = level2(), p = tuplePuzzle(s.puzzles[0])!, blocked = dirs.find(d => slideOn(gridOf(p), s.crabs, d) === s.crabs)!;
+    expect(blocked).toBeDefined();
+    expect(swipeBoard(s, blocked)).toBe(s);
+    const noOp = { ...s, steps: 1, undo: [[...s.crabs]] };
+    expect(validSlip(noOp)).toBe(false);
+    expect(engine.validate(noOp, options(2))).toBe(false);
+    // The same no-op hidden inside a real history.
+    const moved = swipeBoard(s, dirOf(p.route[0]));
+    expect(validSlip({ ...moved, steps: 2, undo: [...moved.undo, [...moved.crabs]] })).toBe(false);
+  });
+  it('rejects a finished board with no winning swipe remembered, at or above par', () => {
+    const s = level2(), p = tuplePuzzle(s.puzzles[0])!;
+    for (const steps of [p.route.length, p.route.length + 3]) {
+      const finished = { ...s, steps, crabs: s.crabs.map(() => HOME), undo: [] };
+      expect(validSlip(finished)).toBe(false);
+      expect(engine.validate(finished, options(2))).toBe(false);
+    }
+  });
+  it('rejects a remembered swipe that starts on a finished board', () => {
+    const s = level2(), p = tuplePuzzle(s.puzzles[0])!, won = [...p.route].map(dirOf).reduce(swipeBoard, s);
+    expect(validSlip(won)).toBe(true);
+    expect(validSlip({ ...won, steps: won.steps + 1, undo: [...won.undo, [...won.crabs]] })).toBe(false);
+  });
+  it('keeps both originals untouched, so the frame preserves them and offers recovery', () => {
+    const s = level2(), p = tuplePuzzle(s.puzzles[0])!;
+    for (const forged of [
+      deepFreeze({ ...s, steps: 1, undo: [[...s.crabs]] }),
+      deepFreeze({ ...s, steps: p.route.length, crabs: s.crabs.map(() => HOME), undo: [] }),
+    ]) {
+      const before = JSON.stringify(forged);
+      expect(engine.validate(forged, options(2))).toBe(false);
+      expect(JSON.stringify(forged)).toBe(before);
+    }
+  });
+  it('still accepts real play: the winning swipe, Undo, and a history longer than Undo remembers', () => {
+    const s = level2(), p = tuplePuzzle(s.puzzles[0])!;
+    let at = s;
+    for (const letter of p.route) { at = swipeBoard(at, dirOf(letter)); expect(validSlip(at)).toBe(true); }
+    expect(homeAll(at.crabs)).toBe(true);
+    expect(at.undo).toHaveLength(p.route.length);
+    // Wander on a bigger board past the Undo limit without finishing, then step back.
+    let w = startRound(5, rng);
+    const q = tuplePuzzle(w.puzzles[0])!;
+    for (let i = 0; w.steps < UNDO_LIMIT + 12 && i < 1000; i++) {
+      const d = dirs[(i * 7 + (i >> 2)) % 4], next = slideOn(gridOf(q), w.crabs, d);
+      if (next === w.crabs || homeAll(next)) continue;
+      w = swipeBoard(w, d);
+      expect(validSlip(w)).toBe(true);
+    }
+    expect(w.steps).toBe(UNDO_LIMIT + 12);
+    expect(w.undo).toHaveLength(UNDO_LIMIT);
+    for (let i = 0; i < UNDO_LIMIT; i++) { w = undoBoard(w); expect(validSlip(w)).toBe(true); }
+    expect(w.undo).toHaveLength(0);
+    expect(w.steps).toBe(12);
   });
 });
 
